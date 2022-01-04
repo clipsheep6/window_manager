@@ -15,7 +15,6 @@
 
 #ifndef OHOS_ROSEN_WINDOW_ADAPTER_H
 #define OHOS_ROSEN_WINDOW_ADAPTER_H
-#define _NEW_RENDERSERVER_
 #include <string.h>
 #include <cstdint>
 #include <cstdio>
