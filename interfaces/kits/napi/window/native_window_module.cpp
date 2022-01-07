@@ -57,6 +57,10 @@ struct Param {
 
 void Async(napi_env env, std::unique_ptr<Param>& param)
 {
+    if (!param || !param->ability || !param->ability->GetScene() ||
+        !param->ability->GetScene()) {
+        return;
+    }
     param->ability->GetScene()->GetMainWindow()->Resize(param->width, param->height);
 }
 
@@ -90,6 +94,10 @@ struct Param {
 
 void Async(napi_env env, std::unique_ptr<Param>& param)
 {
+    if (!param || !param->ability || !param->ability->GetScene() ||
+        !param->ability->GetScene()) {
+        return;
+    }
     param->ability->GetScene()->GetMainWindow()->MoveTo(param->x, param->y);
 }
 
@@ -122,6 +130,10 @@ struct Param {
 
 void Async(napi_env env, std::unique_ptr<Param>& param)
 {
+    if (!param || !param->ability || !param->ability->GetScene() ||
+        !param->ability->GetScene()) {
+        return;
+    }
     param->ability->GetScene()->GetMainWindow()->SetWindowType(static_cast<WindowType>(param->windowType));
 }
 
@@ -163,6 +175,10 @@ struct Param {
 
 void Async(napi_env env, std::unique_ptr<Param> &param)
 {
+    if (!param || !param->ability || !param->ability->GetScene() ||
+        !param->ability->GetScene()) {
+        return;
+    }
     param->window = param->ability->GetScene()->GetMainWindow();
     if (param->window == nullptr) {
         GNAPI_LOG("Get main-window failed!");
