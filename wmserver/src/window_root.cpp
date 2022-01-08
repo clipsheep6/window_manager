@@ -34,7 +34,7 @@ sptr<WindowNodeContainer> WindowRoot::GetOrCreateWindowNodeContainer(int32_t dis
         return nullptr;
     }
     WLOGFI("create new window node container display width:%{public}d, height:%{public}d, screenId:%{public}llu",
-        abstractDisplay->GetWidth(), abstractDisplay->GetHeight(), abstractDisplay->GetId());
+        abstractDisplay->GetWidth(), abstractDisplay->GetHeight(), static_cast<unsigned long long>(abstractDisplay->GetId()));
 
     UpdateFocusStatusFunc focusStatusFunc = std::bind(&WindowRoot::UpdateFocusStatus, this, std::placeholders::_1,
         std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);

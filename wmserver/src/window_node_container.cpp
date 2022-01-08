@@ -428,7 +428,7 @@ void WindowNodeContainer::TraverseWindowNode(sptr<WindowNode>& node, std::vector
 
 void WindowNodeContainer::DumpScreenWindowTree()
 {
-    WLOGFI("-------- Screen %{public}llu dump window info begin---------", screenId_);
+    WLOGFI("-------- Screen %{public}llu dump window info begin---------", static_cast<unsigned long long>(screenId_));
     WLOGFI("WinId Type Mode Flag ZOrd [   x    y    w    h]");
     std::vector<sptr<WindowNode>> windowNodes;
     TraverseContainer(windowNodes);
@@ -439,7 +439,7 @@ void WindowNodeContainer::DumpScreenWindowTree()
             "%{public}4d %{public}4d]", node->GetWindowId(), node->GetWindowType(), node->GetWindowMode(),
             node->GetWindowFlags(), --zOrder, rect.posX_, rect.posY_, rect.width_, rect.height_);
     }
-    WLOGFI("-------- Screen %{public}llu dump window info end  ---------", screenId_);
+    WLOGFI("-------- Screen %{public}llu dump window info end  ---------", static_cast<unsigned long long>(screenId_));
 }
 
 uint64_t WindowNodeContainer::GetScreenId() const

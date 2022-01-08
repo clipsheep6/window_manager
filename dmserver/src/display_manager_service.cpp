@@ -68,7 +68,7 @@ ScreenId DisplayManagerService::GetScreenIdFromDisplayId(DisplayId displayId)
 DisplayId DisplayManagerService::GetDefaultDisplayId()
 {
     ScreenId screenId = AbstractDisplayManager::GetInstance().GetDefaultScreenId();
-    WLOGFI("GetDefaultDisplayId %{public}llu", screenId);
+    WLOGFI("GetDefaultDisplayId %{public}llu", static_cast<unsigned long long>(screenId));
     return GetDisplayIdFromScreenId(screenId);
 }
 
@@ -89,7 +89,7 @@ DisplayId DisplayManagerService::CreateVirtualDisplay(const VirtualDisplayInfo &
 {
     WLOGFI("name %{public}s, width %{public}u, height %{public}u, mirrotId %{public}llu, flags %{public}d",
         virtualDisplayInfo.name_.c_str(), virtualDisplayInfo.width_, virtualDisplayInfo.height_,
-        virtualDisplayInfo.displayIdToMirror_, virtualDisplayInfo.flags_);
+        static_cast<unsigned long long>(virtualDisplayInfo.displayIdToMirror_), virtualDisplayInfo.flags_);
     ScreenId screenId = AbstractDisplayManager::GetInstance().CreateVirtualScreen(virtualDisplayInfo, surface);
     return GetDisplayIdFromScreenId(screenId);
 }
