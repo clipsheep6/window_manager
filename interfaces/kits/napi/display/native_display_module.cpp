@@ -35,7 +35,7 @@ void Async(napi_env env, std::unique_ptr<Param> &param)
         return;
     }
     GNAPI_LOG("GetDefaultDisplay: id %{public}llu, w %{public}d, h %{public}d",
-        param->display->GetId(), param->display->GetWidth(), param->display->GetHeight());
+        static_cast<unsigned long long>(param->display->GetId()), param->display->GetWidth(), param->display->GetHeight());
     param->wret = WMError::WM_OK;
 }
 
@@ -50,7 +50,7 @@ napi_value Resolve(napi_env env, std::unique_ptr<Param> &param)
     DisplayId id = param->display->GetId();
     int32_t width = param->display->GetWidth();
     int32_t height = param->display->GetHeight();
-    GNAPI_LOG("id        : %{public}llu", id);
+    GNAPI_LOG("id        : %{public}llu", static_cast<unsigned long long>(id));
     GNAPI_LOG("width     : %{public}d", width);
     GNAPI_LOG("height    : %{public}d", height);
 
