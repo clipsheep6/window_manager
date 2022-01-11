@@ -225,6 +225,11 @@ void WindowManagerService::OnWindowEvent(Event event, uint32_t windowId)
     }
 }
 
+std::shared_ptr<RSDisplayNode> WindowManagerService::GetDisplayNode(int32_t displayId) const
+{
+    return windowRoot_->GetOrCreateWindowNodeContainer(displayId)->GetDisplayNode();
+}
+
 WMError WindowManagerService::NotifyDisplaySuspend()
 {
     WLOGFI("NotifyDisplaySuspend");
@@ -238,6 +243,5 @@ void WindowManagerService::RestoreSuspendedWindows()
     WLOGFI("RestoreSuspendedWindows");
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     // TODO: restore windows covered by keyguard
-}
 }
 }

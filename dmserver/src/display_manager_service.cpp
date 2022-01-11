@@ -23,6 +23,7 @@
 #include <system_ability_definition.h>
 
 #include "window_manager_hilog.h"
+#include "window_manager_service.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -68,7 +69,7 @@ ScreenId DisplayManagerService::GetScreenIdFromDisplayId(DisplayId displayId)
 DisplayId DisplayManagerService::GetDefaultDisplayId()
 {
     ScreenId screenId = AbstractDisplayManager::GetInstance().GetDefaultScreenId();
-    WLOGFI("GetDefaultDisplayId %{public}llu", screenId);
+    WLOGFI("GetDefaultDisplayId %{public}" PRIu64"", screenId);
     return GetDisplayIdFromScreenId(screenId);
 }
 
@@ -87,10 +88,20 @@ DisplayInfo DisplayManagerService::GetDisplayInfoById(DisplayId displayId)
 DisplayId DisplayManagerService::CreateVirtualDisplay(const VirtualDisplayInfo &virtualDisplayInfo,
     sptr<Surface> surface)
 {
-    WLOGFI("name %{public}s, width %{public}u, height %{public}u, mirrotId %{public}llu, flags %{public}d",
+    WLOGFI("name %{public}s, width %{public}u, height %{public}u, mirrotId %{public}" PRIu64", flags %{public}d",
         virtualDisplayInfo.name_.c_str(), virtualDisplayInfo.width_, virtualDisplayInfo.height_,
         virtualDisplayInfo.displayIdToMirror_, virtualDisplayInfo.flags_);
     ScreenId screenId = AbstractDisplayManager::GetInstance().CreateVirtualScreen(virtualDisplayInfo, surface);
+#ifdef FOUNDATION_DMSERVER_RSDISPLAYNODE
+    if (virtualDisplayInfo.displayIdToMirror_ != DISPLAY_ID_INVALD) {
+        std::shared_ptr<RSDisplayNode> displayNode =
+            SingletonContainer::Get<WindowManagerService>().GetDisplayNode(virtualDisplayInfo.displayIdToMirror_);
+        NodeId id = displayNode->GetId();
+        struct RSDisplayNodeConfig config = {screenId, true, id};
+        displayNodeMap_[screenId] = RSDisplayNode::Create(config);
+        WLOGFI("DisplayManagerService::NodeId: %{public}" PRIu64 "", id >> 32);
+    }
+#endif
     return GetDisplayIdFromScreenId(screenId);
 }
 
@@ -98,6 +109,10 @@ bool DisplayManagerService::DestroyVirtualDisplay(DisplayId displayId)
 {
     WLOGFI("DisplayManagerService::DestroyVirtualDisplay");
     ScreenId screenId = GetScreenIdFromDisplayId(displayId);
+#ifdef FOUNDATION_DMSERVER_RSDISPLAYNODE
+    displayNodeMap_[screenId]->RemoveFromTree();
+    displayNodeMap_.erase(screenId);
+#endif
     return AbstractDisplayManager::GetInstance().DestroyVirtualScreen(screenId);
 }
 

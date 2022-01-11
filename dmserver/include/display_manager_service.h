@@ -21,6 +21,7 @@
 
 #include <system_ability.h>
 #include <surface.h>
+#include <ui/rs_display_node.h>
 
 #include "abstract_display.h"
 #include "abstract_display_manager.h"
@@ -28,6 +29,7 @@
 #include "display_power_controller.h"
 #include "single_instance.h"
 #include "singleton_delegator.h"
+#include "transaction/rs_interfaces.h"
 
 namespace OHOS::Rosen {
 class DisplayManagerService : public SystemAbility, public DisplayManagerStub {
@@ -60,6 +62,9 @@ private:
 
     static inline SingletonDelegator<DisplayManagerService> delegator_;
     std::map<int32_t, sptr<AbstractDisplay>> abstractDisplayMap_;
+#ifdef FOUNDATION_DMSERVER_RSDISPLAYNODE
+    std::map<ScreenId, std::shared_ptr<RSDisplayNode>> displayNodeMap_;
+#endif
     DisplayPowerController displayPowerController_;
 };
 } // namespace OHOS::Rosen

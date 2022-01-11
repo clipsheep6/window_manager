@@ -63,7 +63,7 @@ ScreenId AbstractDisplayManager::CreateVirtualScreen(const VirtualDisplayInfo &v
     }
     ScreenId result = rsInterface_->CreateVirtualScreen(virtualDisplayInfo.name_, virtualDisplayInfo.width_,
         virtualDisplayInfo.height_, surface, virtualDisplayInfo.displayIdToMirror_, virtualDisplayInfo.flags_);
-    WLOGFI("AbstractDisplayManager::CreateVirtualDisplay id: %{public}llu", result >> 32);
+    WLOGFI("AbstractDisplayManager::CreateVirtualDisplay id: %{public}" PRIu64"", result >> 32);
     return result;
 }
 

@@ -68,7 +68,7 @@ std::vector<const sptr<AbstractDisplay>> DisplayManagerServiceInner::GetAllDispl
         if (display != nullptr) {
             res.push_back(display);
         } else {
-            WLOGFE("GetAllDisplays display %" PRIu64" nullptr!", displayId);
+            WLOGFE("GetAllDisplays display %{public}" PRIu64" nullptr!", displayId);
         }
     }
     return res;
