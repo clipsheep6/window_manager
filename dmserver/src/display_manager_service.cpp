@@ -91,6 +91,16 @@ DisplayId DisplayManagerService::CreateVirtualDisplay(const VirtualDisplayInfo &
         virtualDisplayInfo.name_.c_str(), virtualDisplayInfo.width_, virtualDisplayInfo.height_,
         virtualDisplayInfo.displayIdToMirror_, virtualDisplayInfo.flags_);
     ScreenId screenId = AbstractDisplayManager::GetInstance().CreateVirtualScreen(virtualDisplayInfo, surface);
+#ifdef FOUNDATION_DMSERVER_RSDISPLAYNODE
+    if (virtualDisplayInfo.displayIdToMirror_ != DISPLAY_ID_INVALD) {
+        std::shared_ptr<RSDisplayNode> displayNode =
+            SingletonContainer::Get<WindowManagerService>().GetDisplayNode(virtualDisplayInfo.displayIdToMirror_);
+        NodeId id = displayNode->GetId();
+        struct RSDisplayNodeConfig config = {screenId, true, id};
+        displayNodeMap_[screenId] = RSDisplayNode::Create(config);
+        WLOGFI("DisplayManagerService::NodeId: %{public}" PRIu64 "", id >> 32);
+    }
+#endif
     return GetDisplayIdFromScreenId(screenId);
 }
 
@@ -98,6 +108,10 @@ bool DisplayManagerService::DestroyVirtualDisplay(DisplayId displayId)
 {
     WLOGFI("DisplayManagerService::DestroyVirtualDisplay");
     ScreenId screenId = GetScreenIdFromDisplayId(displayId);
+#ifdef FOUNDATION_DMSERVER_RSDISPLAYNODE
+    displayNodeMap_[screenId]->RemoveFromTree();
+    displayNodeMap_.erase(screenId);
+#endif
     return AbstractDisplayManager::GetInstance().DestroyVirtualScreen(screenId);
 }
 
