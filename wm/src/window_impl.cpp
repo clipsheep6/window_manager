@@ -460,6 +460,7 @@ void WindowImpl::RegisterWindowSystemBarChangeListener(sptr<IWindowSystemBarChan
 {
     systemBarChangeListener_ = listener;
 }
+
 void WindowImpl::UpdateRect(const struct Rect& rect)
 {
     WLOGFI("winId:%{public}d, rect[%{public}d, %{public}d, %{public}d, %{public}d]", GetWindowId(), rect.posX_,
@@ -513,6 +514,21 @@ void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
 }
 void WindowImpl::ConsumePointerEvent(std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
+    static int cnt = 0;
+    if (GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+        MMI::PointerEvent::PointerItem pointerItem;
+        auto getReady = pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem);
+        if (getReady && pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_MOVE) {
+            cnt++;
+            if (cnt % 10 == 0) {
+                auto res = MoveTo(pointerItem.GetGlobalX(), pointerItem.GetGlobalY());
+                if (res != WMError::WM_OK) {
+                    WLOGFE("ConsumePointerEvent divider move failed!");
+                }
+            }
+        }
+        return;
+    }
     if (uiContent_ == nullptr) {
         WLOGE("ConsumePointerEvent uiContent is nullptr");
         return;

@@ -106,8 +106,23 @@ WMError WindowController::MoveTo(uint32_t windowId, int32_t x, int32_t y)
     }
     auto property = node->GetWindowProperty();
     Rect lastRect = property->GetWindowRect();
-    Rect newRect = { x, y, lastRect.width_, lastRect.height_ };
+    Rect newRect;
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+        newRect = { x, lastRect.posY_, lastRect.width_, lastRect.height_ };
+    } else {
+        newRect = { x, y, lastRect.width_, lastRect.height_ };
+    }
     property->SetWindowRect(newRect);
+
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+        WLOGFI("Moving divider");
+        WMError res = windowRoot_->LayoutDividerWindow(node);
+        if (res != WMError::WM_OK) {
+            WLOGFE("layout divider window failed");
+            return res;
+        };
+    }    
+    
     WMError res = windowRoot_->UpdateWindowNode(windowId);
     if (res != WMError::WM_OK) {
         return res;

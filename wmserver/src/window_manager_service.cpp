@@ -24,6 +24,9 @@
 #include "window_manager_hilog.h"
 #include "wm_trace.h"
 
+#include "window_inner_manager.h"
+#include "singleton_container.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -46,6 +49,8 @@ void WindowManagerService::OnStart()
     if (!Init()) {
         return;
     }
+
+    SingletonContainer::Get<WindowInnerManager>().Init();
 }
 
 bool WindowManagerService::Init()
@@ -63,6 +68,7 @@ bool WindowManagerService::Init()
 
 void WindowManagerService::OnStop()
 {
+    SingletonContainer::Get<WindowInnerManager>().SendMessage(INNER_WM_DESTROY_THREAD);
     WLOGFI("ready to stop service.");
 }
 

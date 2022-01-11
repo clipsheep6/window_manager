@@ -32,16 +32,25 @@ WindowLayoutPolicy::WindowLayoutPolicy(const sptr<WindowNode>& belowAppNode,
     aboveAppWindowNode_ = aboveAppNode;
 }
 
-void WindowLayoutPolicy::UpdateDisplayInfo(const Rect& displayRect)
+void WindowLayoutPolicy::UpdateDisplayInfo(const Rect& primaryRect,
+                                           const Rect& secondaryRect,
+                                           const Rect& displayRect)
 {
-    displayRect_ = displayRect;
-    limitRect_ = displayRect_;
+    dependRects.priRect_ = primaryRect;
+    dependRects.limitPriRect_ = primaryRect;
+
+    dependRects.secRect_ = secondaryRect;
+    dependRects.limitSecRect_ = secondaryRect;
+
+    dependRects.fullRect_ = displayRect;
+    dependRects.limitFullRect_ = displayRect;
+
     avoidNodes_.clear();
 }
 
 void WindowLayoutPolicy::LayoutWindowTree()
 {
-    limitRect_ = displayRect_;
+    ResetDependLimitRects();
     avoidNodes_.clear();
     std::vector<sptr<WindowNode>> rootNodes = { aboveAppWindowNode_, appWindowNode_, belowAppWindowNode_ };
     for (auto& node : rootNodes) { // ensure that the avoid area windows are traversed first
@@ -119,16 +128,18 @@ void WindowLayoutPolicy::UpdateLayoutRect(sptr<WindowNode>& node)
     bool floatingWindow = (mode == WindowMode::WINDOW_MODE_FLOATING);
     const Rect& layoutRect = node->GetLayoutRect();
     Rect lastRect = layoutRect;
-    Rect limitRect = displayRect_;
+    Rect displayRect = GetDisplayRect(mode);
+    Rect limitRect = displayRect;
     Rect winRect = node->GetWindowProperty()->GetWindowRect();
+
     WLOGFI("Id:%{public}d, avoid:%{public}d parLimit:%{public}d floating:%{public}d, sub:%{public}d," \
         "type:%{public}d, requestRect:[%{public}d, %{public}d, %{public}d, %{public}d]",
         node->GetWindowId(), needAvoid, parentLimit, floatingWindow, subWindow,
         static_cast<uint32_t>(type), winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
-
     if (needAvoid) {
-        limitRect = limitRect_;
+        limitRect = GetLimitRect(mode);
     }
+
     if (!floatingWindow) { // fullscreen window
         winRect = limitRect;
     } else { // floating window
@@ -147,10 +158,11 @@ void WindowLayoutPolicy::UpdateLayoutRect(sptr<WindowNode>& node)
         }
     }
     // Limit window to the maximum window size
-    winRect.width_ = std::min(displayRect_.width_, winRect.width_);
-    winRect.height_ = std::min(displayRect_.height_, winRect.height_);
+    winRect.width_ = std::min(displayRect.width_, winRect.width_);
+    winRect.height_ = std::min(displayRect.height_, winRect.height_);
     winRect.width_ = std::max(1u, winRect.width_);
     winRect.height_ = std::max(1u, winRect.height_);
+
     node->SetLayoutRect(winRect);
     if (IsLayoutChanged(lastRect, winRect)) {
         node->GetWindowToken()->UpdateWindowRect(winRect);
@@ -158,22 +170,58 @@ void WindowLayoutPolicy::UpdateLayoutRect(sptr<WindowNode>& node)
     }
 }
 
-void WindowLayoutPolicy::UpdateLimitRect(const sptr<WindowNode>& node)
+Rect& WindowLayoutPolicy::GetLimitRect(const WindowMode& mode)
+{
+    if (mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY) {
+        return dependRects.limitPriRect_;
+    } else if (mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        return dependRects.limitSecRect_;
+    } else {
+        return dependRects.limitFullRect_;
+    }
+}
+
+Rect& WindowLayoutPolicy::GetDisplayRect(const WindowMode& mode)
+{
+    if (mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY) {
+        return dependRects.priRect_;
+    } else if (mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        return dependRects.secRect_;
+    } else {
+        return dependRects.fullRect_;
+    }
+}
+
+void WindowLayoutPolicy::UpdateLimitRect(const sptr<WindowNode>& node, Rect& limitRect)
 {
     auto& layoutRect = node->GetLayoutRect();
     if (node->GetWindowType() == WindowType::WINDOW_TYPE_STATUS_BAR) { // STATUS_BAR
-        int32_t boundTop = limitRect_.posY_;
+        int32_t boundTop = limitRect.posY_;
         int32_t rectBottom = layoutRect.posY_ + layoutRect.height_;
         int32_t offsetH = rectBottom - boundTop;
-        limitRect_.posY_ += offsetH;
-        limitRect_.height_ -= offsetH;
+        limitRect.posY_ += offsetH;
+        limitRect.height_ -= offsetH;
     } else if (node->GetWindowType() == WindowType::WINDOW_TYPE_NAVIGATION_BAR) { // NAVIGATION_BAR
-        int32_t boundBottom = limitRect_.posY_ + limitRect_.height_;
+        int32_t boundBottom = limitRect.posY_ + limitRect.height_;
         int32_t offsetH = boundBottom - layoutRect.posY_;
-        limitRect_.height_ -= offsetH;
+        limitRect.height_ -= offsetH;
     }
     WLOGFI("Type: %{public}d, limitRect: %{public}d %{public}d %{public}d %{public}d",
-        node->GetWindowType(), limitRect_.posX_, limitRect_.posY_, limitRect_.width_, limitRect_.height_);
+        node->GetWindowType(), limitRect.posX_, limitRect.posY_, limitRect.width_, limitRect.height_);
+}
+
+void WindowLayoutPolicy::ResetDependLimitRects()
+{
+    dependRects.limitPriRect_ = dependRects.priRect_;
+    dependRects.limitSecRect_ = dependRects.secRect_;
+    dependRects.limitFullRect_ = dependRects.fullRect_;
+}
+
+void WindowLayoutPolicy::UpdateDependLimitRects(const sptr<WindowNode>& node)
+{
+    UpdateLimitRect(node, dependRects.limitPriRect_);
+    UpdateLimitRect(node, dependRects.limitSecRect_);
+    UpdateLimitRect(node, dependRects.limitFullRect_);
 }
 
 void WindowLayoutPolicy::RecordAvoidRect(const sptr<WindowNode>& node)
@@ -181,12 +229,12 @@ void WindowLayoutPolicy::RecordAvoidRect(const sptr<WindowNode>& node)
     uint32_t id = node->GetWindowId();
     if (avoidNodes_.find(id) == avoidNodes_.end()) { // new avoid rect
         avoidNodes_.insert(std::pair<uint32_t, sptr<WindowNode>>(id, node));
-        UpdateLimitRect(node);
+        UpdateDependLimitRects(node);
     } else { // update existing avoid rect
-        limitRect_ = displayRect_;
+        ResetDependLimitRects();
         avoidNodes_[id] = node;
         for (auto item : avoidNodes_) {
-            UpdateLimitRect(item.second);
+            UpdateDependLimitRects(node);
         }
     }
 }
