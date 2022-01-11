@@ -16,11 +16,12 @@
 #include "window_manager_service.h"
 
 #include <cinttypes>
-
 #include <ipc_skeleton.h>
 #include <system_ability_definition.h>
 
 #include "dm_common.h"
+#include "singleton_container.h"
+#include "window_inner_manager.h"
 #include "window_manager_hilog.h"
 #include "wm_trace.h"
 
@@ -46,6 +47,8 @@ void WindowManagerService::OnStart()
     if (!Init()) {
         return;
     }
+
+    SingletonContainer::Get<WindowInnerManager>().Init();
 }
 
 bool WindowManagerService::Init()
@@ -63,6 +66,7 @@ bool WindowManagerService::Init()
 
 void WindowManagerService::OnStop()
 {
+    SingletonContainer::Get<WindowInnerManager>().SendMessage(INNER_WM_DESTROY_THREAD);
     WLOGFI("ready to stop service.");
 }
 
@@ -84,6 +88,10 @@ WMError WindowManagerService::CreateWindow(sptr<IWindow>& window, sptr<WindowPro
 
 WMError WindowManagerService::AddWindow(sptr<WindowProperty>& property)
 {
+    // if (property->GetWindowType() == WindowType::WINDOW_TYPE_NAVIGATION_BAR) {
+    //     SingletonContainer::Get<WindowInnerManager>().SendMessage(INNER_WM_CREATE_DIVIDER, 0 , {1180, 0, 200, 1600});
+    // }
+    
     Rect rect = property->GetWindowRect();
     WLOGFI("[WMS] Add: %{public}5d %{public}4d %{public}4d %{public}4d [%{public}4d %{public}4d " \
         "%{public}4d %{public}4d]", property->GetWindowId(), property->GetWindowType(), property->GetWindowMode(),

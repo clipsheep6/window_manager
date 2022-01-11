@@ -52,6 +52,7 @@ ohos_shared_library("libwms") {
     "src/window_node_container.cpp",
     "src/window_root.cpp",
     "src/window_zorder_policy.cpp",
+    "src/window_inner_manager.cpp",
   ]
 
   configs = [ ":libwms_config" ]
@@ -61,6 +62,7 @@ ohos_shared_library("libwms") {
     "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//utils/native/base:utils",
+    "//foundation/windowmanager/wm:libwm",
   ]
 
   public_deps = [
@@ -72,6 +74,7 @@ ohos_shared_library("libwms") {
 
     # RSSurface
     "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/ace/ace_engine/build/external_config/flutter/skia:ace_skia_ohos",
 
     # IMS
     "//foundation/multimodalinput/input/frameworks/proxy:libmmi-client",
