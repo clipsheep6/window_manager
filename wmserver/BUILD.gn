@@ -26,6 +26,16 @@ config("libwms_config") {
     "//foundation/windowmanager/utils/include",
     "//foundation/windowmanager/dm/include",
     "//foundation/windowmanager/dmserver/include",
+
+    # for abilityContext
+    "//foundation/aafwk/standard/frameworks/kits/ability/ability_runtime/include",
+    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base/include",
+    "//base/global/resmgr_standard/interfaces/innerkits/include",
+    "//third_party/node/deps/icu-small/source/common",
+    "//foundation/aafwk/standard/interfaces/innerkits/ability_manager/include",
+    "//foundation/aafwk/standard/interfaces/innerkits/want/include/ohos/aafwk/content",
+    "//foundation/distributedschedule/dmsfwk/services/dtbschedmgr/include",
+    "//foundation/aafwk/standard/interfaces/innerkits/base/include",
   ]
 }
 
@@ -50,6 +60,7 @@ ohos_shared_library("libwms") {
     "src/window_node_container.cpp",
     "src/window_root.cpp",
     "src/window_zorder_policy.cpp",
+    "src/window_inner_manager.cpp",
   ]
 
   configs = [ ":libwms_config" ]
@@ -59,6 +70,7 @@ ohos_shared_library("libwms") {
     "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
     "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
     "//utils/native/base:utils",
+    "//foundation/windowmanager/wm:libwm",
   ]
 
   public_deps = [
