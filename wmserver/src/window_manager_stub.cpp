@@ -132,6 +132,20 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             UnregisterFocusChangedListener(windowManagerAgentProxy);
             break;
         }
+        case TRANS_ID_REGISTER_SYSTEM_BAR_CHANGED_LISTENER: {
+            sptr<IRemoteObject> windowManagerAgentObject = data.ReadRemoteObject();
+            sptr<IWindowManagerAgent> windowManagerAgentProxy =
+                iface_cast<IWindowManagerAgent>(windowManagerAgentObject);
+            RegisterSystemBarChangedListener(windowManagerAgentProxy);
+            break;
+        }
+        case TRANS_ID_UNREGISTER_SYSTEM_BAR_CHANGED_LISTENER: {
+            sptr<IRemoteObject> windowManagerAgentObject = data.ReadRemoteObject();
+            sptr<IWindowManagerAgent> windowManagerAgentProxy =
+                iface_cast<IWindowManagerAgent>(windowManagerAgentObject);
+            UnregisterSystemBarChangedListener(windowManagerAgentProxy);
+            break;
+        }
         default:
             WLOGFW("unknown transaction code");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);

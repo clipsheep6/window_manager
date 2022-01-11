@@ -55,6 +55,8 @@ public:
 
     void RegisterFocusChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     void UnregisterFocusChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent) override;
+    void RegisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent) override;
+    void UnregisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent) override;
 
     // Inner interfaces
     WMError NotifyDisplaySuspend();

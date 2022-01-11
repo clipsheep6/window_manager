@@ -49,6 +49,8 @@ public:
 
     virtual void RegisterFocusChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent);
     virtual void UnregisterFocusChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent);
+    virtual void RegisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent);
+    virtual void UnregisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent);
 
     virtual void ClearWindowAdapter();
 private:

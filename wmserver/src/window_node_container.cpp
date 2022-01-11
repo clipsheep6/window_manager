@@ -27,7 +27,10 @@ namespace {
 }
 
 WindowNodeContainer::WindowNodeContainer(uint64_t screenId, uint32_t width, uint32_t height,
-    UpdateFocusStatusFunc callback) : screenId_(screenId), focusStatusCallBack_(callback)
+    UpdateFocusStatusFunc focusCallback, UpdateSystemBarPropsFunc sysBarCallback) : 
+        screenId_(screenId),
+        focusStatusCallBack_(focusCallback),
+        systemBarChangedCallBack_(sysBarCallback)
 {
     struct RSDisplayNodeConfig config = {screenId};
     displayNode_ = RSDisplayNode::Create(config);
@@ -361,15 +364,14 @@ void WindowNodeContainer::NotifySystemBarIfChanged()
 {
     DumpScreenWindowTree();
     auto node = GetTopImmersiveNode();
+    SystemBarProps props;
     if (node == nullptr) { // use default system bar
         for (auto it : sysBarPropMap_) {
             if (it.second == SystemBarProperty()) {
                 continue;
             }
             sysBarPropMap_[it.first] = SystemBarProperty();
-            if (sysBarNodeMap_[it.first] != nullptr) {
-                sysBarNodeMap_[it.first]->GetWindowToken()->UpdateSystemBarProperty(SystemBarProperty());
-            }
+            props.push_back({it.first, SystemBarProperty()});
         }
     } else { // use node-defined system bar
         auto& sysBarPropMap = node->GetSystemBarProperty();
@@ -386,11 +388,10 @@ void WindowNodeContainer::NotifySystemBarIfChanged()
                 node->GetWindowId(), static_cast<int32_t>(it.first),
                 prop.enable_, prop.backgroundColor_, prop.contentColor_);
             sysBarPropMap_[it.first] = prop;
-            if (sysBarNodeMap_[it.first] != nullptr) {
-                sysBarNodeMap_[it.first]->GetWindowToken()->UpdateSystemBarProperty(prop);
-            }
+            props.push_back({it.first, prop});
         }
     }
+    systemBarChangedCallBack_(static_cast<int32_t>(screenId_), props);
 }
 
 void WindowNodeContainer::TraverseContainer(std::vector<sptr<WindowNode>>& windowNodes)
