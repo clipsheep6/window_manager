@@ -44,12 +44,12 @@ bool JsWindowListener::AddJsListenerObject(std::string type, NativeValue* jsList
     std::unique_ptr<NativeReference> callbackRef;
     callbackRef.reset(engine_->CreateReference(jsListenerObject, 1));
     if (IsCallbackExists(type, jsListenerObject)) {
-        WLOGFI("JsWindowListener::AddJsListenerObject jsWinodwListenerObjectMap_ size: %{public}d!",
+        WLOGFI("JsWindowListener::AddJsListenerObject failed jsWinodwListenerObjectMap_ size: %{public}d!",
             jsWinodwListenerObjectMap_[type].size());
         return false;
     }
     jsWinodwListenerObjectMap_[type].insert(std::move(callbackRef));
-    WLOGFI("JsWindowListener::AddJsListenerObject failed jsWinodwListenerObjectMap_ size: %{public}d!",
+    WLOGFI("JsWindowListener::AddJsListenerObject success jsWinodwListenerObjectMap_ size: %{public}d!",
         jsWinodwListenerObjectMap_[type].size());
     return true;
 }
@@ -62,9 +62,7 @@ void JsWindowListener::RemoveJsListenerObject(std::string type, NativeValue* jsL
         WLOGFE("methodName %{public}s not exist!", type.c_str());
         return;
     }
-    if (jsListenerObject == nullptr) {
-        jsWinodwListenerObjectMap_.erase(type);
-    } else {
+    if (jsListenerObject != nullptr) {
         for (auto iter = jsWinodwListenerObjectMap_[type].begin();
                 iter != jsWinodwListenerObjectMap_[type].end(); iter++) {
             if (jsListenerObject->StrictEquals((*iter)->Get())) {
@@ -72,6 +70,7 @@ void JsWindowListener::RemoveJsListenerObject(std::string type, NativeValue* jsL
             }
         }
     }
+    jsWinodwListenerObjectMap_.erase(type);
     WLOGFI("JsWindowListener::RemoveJsListenerObject jsWinodwListenerObjectMap_ size: %{public}d!",
         jsWinodwListenerObjectMap_[type].size());
     WLOGFI("JsWindowListener::RemoveJsListenerObject success!");
@@ -80,6 +79,14 @@ void JsWindowListener::RemoveJsListenerObject(std::string type, NativeValue* jsL
 void JsWindowListener::OnSizeChange(Rect rect)
 {
     WLOGFI("JsWindowListener::OnSizeChange is called");
+    if (jsWinodwListenerObjectMap_.find("windowSizeChange") == jsWinodwListenerObjectMap_.end()) {
+        WLOGFE("JsWindowListener::OnSizeChange windowSizeChanged not exists!");
+        return;
+    }
+    if (jsWinodwListenerObjectMap_["windowSizeChange"].empty()) {
+        WLOGFE("JsWindowListener::OnSizeChange didn't register!");
+        return;
+    }
     NativeValue* sizeValue = engine_->CreateObject();
     NativeObject* object = ConvertNativeValueTo<NativeObject>(sizeValue);
     if (object == nullptr) {
@@ -90,6 +97,26 @@ void JsWindowListener::OnSizeChange(Rect rect)
     object->SetProperty("height", CreateJsValue(*engine_, rect.height_));
     NativeValue* argv[] = {sizeValue};
     CallJsMethod("windowSizeChange", argv, ArraySize(argv));
+}
+
+void JsWindowListener::OnSystemBarPropertyChange(uint32_t displayId,
+    WindowType type, const SystemBarProperty& prop)
+{
+    WLOGFI("JsWindowListener::OnSystemBarPropertyChange is called");
+    if (jsWinodwListenerObjectMap_["systemUiTintChange"].empty()) {
+        WLOGFE("JsWindowListener::OnSystemBarPropertyChange didn't register!");
+        return;
+    }
+    NativeValue* propertyValue = engine_->CreateObject();
+    NativeObject* object = ConvertNativeValueTo<NativeObject>(propertyValue);
+    if (object == nullptr) {
+        WLOGFE("Failed to convert prop to jsObject");
+        return;
+    }
+    object->SetProperty("displayId", CreateJsValue(*engine_, displayId));
+    object->SetProperty("regionTint", CreateJsSystemBarRegionTintObject(*engine_, prop, type));
+    NativeValue* argv[] = {propertyValue};
+    CallJsMethod("systemUiTintChange", argv, ArraySize(argv));
 }
 
 void JsWindowListener::CallJsMethod(const char* methodName, NativeValue* const* argv, size_t argc)

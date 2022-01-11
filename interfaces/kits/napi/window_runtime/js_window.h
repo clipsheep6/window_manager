@@ -40,7 +40,10 @@ public:
     static NativeValue* GetProperties(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RegisterWindowCallback(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* UnRegisterWindowCallback(NativeEngine* engine, NativeCallbackInfo* info);
-
+    static NativeValue* SetFullScreen(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* SetLayoutFullScreen(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* SetSystemBarEnable(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* SetSystemBarProperties(NativeEngine* engine, NativeCallbackInfo* info);
 private:
     NativeValue* OnShow(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnDestroy(NativeEngine& engine, NativeCallbackInfo& info);
@@ -52,6 +55,10 @@ private:
     NativeValue* OnGetProperties(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRegisterWindowCallback(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnUnRegisterWindowCallback(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnSetFullScreen(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnSetLayoutFullScreen(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnSetSystemBarEnable(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnSetSystemBarProperties(NativeEngine& engine, NativeCallbackInfo& info);
     sptr<Window> windowToken_ = nullptr;
     sptr<JsWindowListener> windowListener_ = nullptr;
 };

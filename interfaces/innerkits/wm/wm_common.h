@@ -94,8 +94,8 @@ enum class WindowFlag : uint32_t {
 };
 
 namespace {
-    constexpr uint32_t SYSTEM_COLOR_WHITE = 0xE5FFFFFF;
-    constexpr uint32_t SYSTEM_COLOR_BLACK = 0x66000000;
+    constexpr uint32_t SYSTEM_COLOR_WHITE = 0xFFFFFFE5;
+    constexpr uint32_t SYSTEM_COLOR_BLACK = 0x00000066;
 }
 
 struct SystemBarProperty {
