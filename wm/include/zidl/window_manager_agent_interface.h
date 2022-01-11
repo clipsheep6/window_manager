@@ -27,10 +27,12 @@ public:
 
     enum {
         TRANS_ID_UPDATE_FOCUS_STATUS = 1,
+        TRANS_ID_UPDATE_SYSTEM_BAR_PROPS = 2,
     };
 
     virtual void UpdateFocusStatus(uint32_t windowId, const sptr<IRemoteObject>& abilityToken, WindowType windowType,
         int32_t displayId, bool focused) = 0;
+    virtual void UpdateSystemBarProperties(uint32_t displayId, const SystemBarProps& props) = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -43,6 +43,8 @@ public:
 
     void RegisterFocusChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent);
     void UnregisterFocusChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent);
+    void RegisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent);
+    void UnregisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent);
 
 private:
     uint32_t GenWindowId();

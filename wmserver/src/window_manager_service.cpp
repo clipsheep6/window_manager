@@ -214,6 +214,26 @@ void WindowManagerService::UnregisterFocusChangedListener(const sptr<IWindowMana
     windowController_->UnregisterFocusChangedListener(windowManagerAgent);
 }
 
+void WindowManagerService::RegisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent)
+{
+    if ((windowManagerAgent == nullptr) || (windowManagerAgent->AsObject() == nullptr)) {
+        WLOGFE("failed to get window manager agent");
+        return;
+    }
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    windowController_->RegisterSystemBarChangedListener(windowManagerAgent);
+}
+
+void WindowManagerService::UnregisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent)
+{
+    if ((windowManagerAgent == nullptr) || (windowManagerAgent->AsObject() == nullptr)) {
+        WLOGFE("windowManagerAgent is null");
+        return;
+    }
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    windowController_->UnregisterSystemBarChangedListener(windowManagerAgent);
+}
+
 void WindowManagerService::OnWindowEvent(Event event, uint32_t windowId)
 {
     switch (event) {

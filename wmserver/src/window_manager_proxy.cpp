@@ -387,5 +387,45 @@ void WindowManagerProxy::UnregisterFocusChangedListener(const sptr<IWindowManage
         WLOGFE("SendRequest failed");
     }
 }
+
+void WindowManagerProxy::RegisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+
+    if (!data.WriteRemoteObject(windowManagerAgent->AsObject())) {
+        WLOGFE("Write IWindowManagerAgent failed");
+        return;
+    }
+
+    if (Remote()->SendRequest(TRANS_ID_REGISTER_SYSTEM_BAR_CHANGED_LISTENER, data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+    }
+}
+
+void WindowManagerProxy::UnregisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+
+    if (!data.WriteRemoteObject(windowManagerAgent->AsObject())) {
+        WLOGFE("Write IWindowManagerAgent failed");
+        return;
+    }
+
+    if (Remote()->SendRequest(TRANS_ID_UNREGISTER_SYSTEM_BAR_CHANGED_LISTENER, data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+    }
+}
 }
 }

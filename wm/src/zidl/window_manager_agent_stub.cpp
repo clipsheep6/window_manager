@@ -42,6 +42,18 @@ int WindowManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
             UpdateFocusStatus(windowId, abilityToken, windowType, displayId, focused);
             break;
         }
+        case TRANS_ID_UPDATE_SYSTEM_BAR_PROPS: {
+            uint32_t displayId = data.ReadUint32();
+            SystemBarProps props;
+            uint32_t size = data.ReadUint32();
+            for (uint32_t i = 0; i < size; i++) {
+                WindowType type = static_cast<WindowType>(data.ReadUint32());
+                SystemBarProperty prop = { data.ReadBool(), data.ReadUint32(), data.ReadUint32() };
+                props.push_back({type, prop});
+            }
+            UpdateSystemBarProperties(displayId, props);
+            break;
+        }
         default:
             break;
     }

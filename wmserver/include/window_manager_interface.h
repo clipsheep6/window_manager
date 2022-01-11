@@ -43,6 +43,8 @@ public:
         TRANS_ID_SEND_ABILITY_TOKEN,
         TRANS_ID_REGISTER_FOCUS_CHANGED_LISTENER,
         TRANS_ID_UNREGISTER_FOCUS_CHANGED_LISTENER,
+        TRANS_ID_REGISTER_SYSTEM_BAR_CHANGED_LISTENER,
+        TRANS_ID_UNREGISTER_SYSTEM_BAR_CHANGED_LISTENER,
     };
     virtual WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, uint32_t& windowId)  = 0;
@@ -60,6 +62,8 @@ public:
 
     virtual void RegisterFocusChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent) = 0;
     virtual void UnregisterFocusChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent) = 0;
+    virtual void RegisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent) = 0;
+    virtual void UnregisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent) = 0;
 };
 }
 }
