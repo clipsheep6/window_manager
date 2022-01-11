@@ -239,5 +239,10 @@ void WindowManagerService::RestoreSuspendedWindows()
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     // TODO: restore windows covered by keyguard
 }
+
+std::shared_ptr<RSDisplayNode> WindowManagerService::GetDisplayNode(int32_t displayId) const
+{
+    return windowRoot_->GetOrCreateWindowNodeContainer(displayId)->GetDisplayNode();
+}
 }
 }
