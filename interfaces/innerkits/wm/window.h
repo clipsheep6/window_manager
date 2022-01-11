@@ -40,12 +40,12 @@ class AbilityContext;
 
 namespace OHOS {
 namespace Rosen {
-class IWindowChangeListener : public RefBase {
+class IWindowChangeListener : virtual public RefBase {
 public:
     virtual void OnSizeChange(Rect rect) = 0;
 };
 
-class IWindowSystemBarChangeListener : public RefBase {
+class IWindowSystemBarChangeListener : virtual public RefBase {
 public:
     virtual void OnSystemBarPropertyChange(uint32_t displayId, WindowType type, const SystemBarProperty& prop) = 0;
 };

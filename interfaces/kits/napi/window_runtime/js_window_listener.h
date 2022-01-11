@@ -19,23 +19,28 @@
 #include <map>
 #include <mutex>
 #include <unordered_set>
+#include "js_window_utils.h"
 #include "native_engine/native_engine.h"
 #include "native_engine/native_value.h"
 #include "window.h"
 namespace OHOS {
 namespace Rosen {
-class JsWindowListener : public IWindowChangeListener {
+class JsWindowListener : public IWindowChangeListener,
+                         public IWindowSystemBarChangeListener {
 public:
     explicit JsWindowListener(NativeEngine* engine) : engine_(engine) {}
     virtual ~JsWindowListener() = default;
     void OnSizeChange(Rect rect) override;
+    void OnSystemBarPropertyChange(uint32_t displayId, WindowType type,
+        const SystemBarProperty& prop) override;
     bool AddJsListenerObject(std::string type, NativeValue* jsListenerObject);
     void RemoveJsListenerObject(std::string type, NativeValue* jsListenerObject);
 private:
     void CallJsMethod(const char* methodName, NativeValue* const* argv = nullptr, size_t argc = 0);
     bool IsCallbackExists(std::string type, NativeValue* jsListenerObject);
     NativeEngine* engine_ = nullptr;
-    std::map<std::string, std::unordered_set<std::unique_ptr<NativeReference>>> jsWinodwListenerObjectMap_;
+    std::map<std::string, std::unordered_set<
+        std::unique_ptr<NativeReference>>> jsWinodwListenerObjectMap_;
     std::mutex listenerMutex_;
 };
 }  // namespace Rosen

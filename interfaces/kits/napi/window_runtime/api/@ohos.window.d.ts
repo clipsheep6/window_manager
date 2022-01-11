@@ -76,6 +76,7 @@ declare namespace windowmanager {
      */
     WINDOW_MODE_PIP
   }
+
   interface WindowManager {
     /**
      * Create a sub window with a specific id and type.
@@ -106,6 +107,82 @@ declare namespace windowmanager {
      */
     find(id: string): Promise<Window>;
 
+  }
+  /**
+   * Properties of status bar and navigation bar, it couldn't update automatically
+   * @devices tv, phone, tablet, wearable, car
+   * @since 6
+   */
+  interface SystemBarProperties {
+    /**
+     * the color of the status bar.
+     * @since 6
+     */
+    statusBarColor?: string;
+
+    /**
+     * the light icon of the status bar.
+     * @since 7
+     */
+    isStatusBarLightIcon?: boolean;
+
+    /**
+     * the color of the navigation bar.
+     * @since 6
+     */
+    navigationBarColor?: string;
+
+    /**
+     * the light icon of the navigation bar.
+     * @since 7
+     */
+    isNavigationBarLightIcon?: boolean;
+  }
+  /**
+   * system bar tint of region
+   * @devices tv, phone, tablet, wearable, car
+   * @SystemAPI
+   * @since 8
+   */
+  interface SystemBarRegionTint {
+    /**
+     * system bar type
+     */
+    type: WindowType;
+    /**
+     * the visibility of system bar
+     */
+    isEnable?: boolean;
+    /**
+     * the region of system bar
+     */
+    region?: Rect;
+    /**
+     * the background color of the system bar.
+     */
+    backgroundColor?: string;
+    /**
+     * the content color of the system bar.
+     */
+    contentColor?: string
+
+  }
+
+  /**
+   * system bar tint state for systemui
+   * @devices tv, phone, tablet, wearable, car
+   * @SystemAPI
+   * @since 8
+   */
+  interface SystemBarTintState {
+    /**
+     * id of display
+     */
+    displayId: number;
+    /**
+     * region tint of systembar
+     */
+    regionTint: Array<SystemBarRegionTint>;
   }
   /**
    * Rectangle
@@ -227,7 +304,63 @@ declare namespace windowmanager {
       * @since 6
       */
     getProperties(): Promise<WindowProperties>;
+    /**
+     * set the flag of the window is shown full screen
+     * @param isFullScreen the flag of the window is shown full screen
+     * @devices tv, phone, tablet, wearable, car
+     * @since 6
+     */
+    setFullScreen(isFullScreen: boolean, callback: AsyncCallback<void>): void;
+    /**
+     * set the flag of the window is shown full screen
+     * @param isFullScreen the flag of the window is shown full screen
+     * @devices tv, phone, tablet, wearable, car
+     * @since 6
+     */
+    setFullScreen(isFullScreen: boolean): Promise<void>;
+    /**
+     * set the property of the window can layout in full screen
+     * @param isLayoutFullScreen the window can layout in full screen
+     * @devices tv, phone, tablet, wearable, car
+     * @since 7
+     */
+    setLayoutFullScreen(isLayoutFullScreen: boolean, callback: AsyncCallback<void>): void;
+    /**
+     * set the property of the window can layout in full screen
+     * @param isLayoutFullScreen the window can layout in full screen
+     * @devices tv, phone, tablet, wearable, car
+     * @since 7
+     */
+    setLayoutFullScreen(isLayoutFullScreen: boolean): Promise<void>;
+    /**
+     * set the system bar to have visible.
+     * @param names the set of system bar
+     * @devices tv, phone, tablet, wearable, car
+     * @since 7
+     */
+    setSystemBarEnable(names: Array<'status'|'navigation'>, callback: AsyncCallback<void>): void;
+    /**
+     * set the system bar to have visible.
+     * @param names the set of system bar
+     * @devices tv, phone, tablet, wearable, car
+     * @since 7
+     */
+    setSystemBarEnable(names: Array<'status'|'navigation'>): Promise<void>;
 
+    /**
+     * set the background color of statusbar
+     * @param color the background color of statusbar
+     * @devices tv, phone, tablet, wearable, car
+     * @since 6
+     */
+    setSystemBarProperties(systemBarProperties: SystemBarProperties, callback: AsyncCallback<void>): void;
+    /**
+     * set the background color of statusbar
+     * @param color the background color of statusbar
+     * @devices tv, phone, tablet, wearable, car
+     * @since 6
+     */
+    setSystemBarProperties(systemBarProperties: SystemBarProperties): Promise<void>;
     /**
      * register the callback of windowSizeChange
      * @param type: 'windowSizeChange'
@@ -243,6 +376,24 @@ declare namespace windowmanager {
      * @since 7
      */
     off(type: 'windowSizeChange', callback?: Callback<Size>): void;
+
+    /**
+     * register the callback of systemBarTintChange
+     * @param type: 'systemBarTintChange'
+     * @devices tv, phone, tablet, wearable, car
+     * @SystemAPI
+     * @since 8
+     */
+    on(type: 'systemBarTintChange', callback: Callback<SystemBarTintState>): void;
+
+    /**
+     * unregister the callback of systemBarTintChange
+     * @param type: 'systemBarTintChange'
+     * @devices tv, phone, tablet, wearable, car
+     * @SystemAPI
+     * @since 8
+     */
+    off(type: 'systemBarTintChange', callback?: Callback<SystemBarTintState>): void;
   }
 }
 

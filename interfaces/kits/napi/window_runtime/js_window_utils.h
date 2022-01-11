@@ -15,6 +15,7 @@
 
 #ifndef OHOS_JS_WINDOW_UTILS_H
 #define OHOS_JS_WINDOW_UTILS_H
+#include <map>
 #include "native_engine/native_engine.h"
 #include "native_engine/native_value.h"
 #include "window.h"
@@ -30,6 +31,12 @@ namespace {
 }
 
     NativeValue* CreateJsWindowPropertiesObject(NativeEngine& engine, sptr<Window>& window);
+    bool SetSystemBarPropertiesFromJs(NativeEngine& engine, NativeObject* jsObject,
+        std::map<WindowType, SystemBarProperty>& properties, sptr<Window>& window);
+    bool GetSystemBarStatus(std::map<WindowType, SystemBarProperty>& systemBarProperties,
+        NativeEngine& engine, NativeCallbackInfo& info, sptr<Window>& window);
+    NativeValue* CreateJsSystemBarRegionTintObject(NativeEngine& engine,
+        const SystemBarProperty& prop, WindowType type);
 }
 }
 #endif
