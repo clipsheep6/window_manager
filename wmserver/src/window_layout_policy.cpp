@@ -53,6 +53,10 @@ void WindowLayoutPolicy::LayoutWindowNode(sptr<WindowNode>& node)
         return;
     }
     if (node->parent_ != nullptr) { // isn't root node
+        if (!node->currentVisibility_) {
+            WLOGFI("window[%{public}d] currently not visible, no need layout", node->GetWindowId());
+            return;
+        }
         UpdateLayoutRect(node);
         if (avoidTypes_.find(node->GetWindowType()) != avoidTypes_.end()) {
             UpdateLimitRect(node);

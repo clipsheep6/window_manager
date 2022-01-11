@@ -101,16 +101,35 @@ bool DisplayManagerService::DestroyVirtualDisplay(DisplayId displayId)
     return AbstractDisplayManager::GetInstance().DestroyVirtualScreen(screenId);
 }
 
-// TODO: fix me
-// sptr<Media::PixelMap> DisplayManagerService::GetDispalySnapshot(DisplayId displayId)
-// {
-//     ScreenId screenId = GetScreenIdFromDisplayId(displayId);
-//     sptr<Media::PixelMap> screenSnapshot = AbstractDisplayManager::GetInstance().GetScreenSnapshot(screenId);
-//     return screenSnapshot;
-// }
+sptr<Media::PixelMap> DisplayManagerService::GetDispalySnapshot(DisplayId displayId)
+{
+    ScreenId screenId = GetScreenIdFromDisplayId(displayId);
+    sptr<Media::PixelMap> screenSnapshot = AbstractDisplayManager::GetInstance().GetScreenSnapshot(screenId);
+    return screenSnapshot;
+}
 
 void DisplayManagerService::OnStop()
 {
     WLOGFI("ready to stop display service.");
+}
+
+bool DisplayManagerService::SuspendBegin(PowerStateChangeReason reason)
+{
+    return displayPowerController_.SuspendBegin(reason);
+}
+
+bool DisplayManagerService::SetDisplayState(DisplayState state)
+{
+    return displayPowerController_.SetDisplayState(state);
+}
+
+DisplayState DisplayManagerService::GetDisplayState(uint64_t displayId)
+{
+    return displayPowerController_.GetDisplayState(displayId);
+}
+
+void DisplayManagerService::NotifyDisplayEvent(DisplayEvent event)
+{
+    displayPowerController_.NotifyDisplayEvent(event);
 }
 } // namespace OHOS::Rosen

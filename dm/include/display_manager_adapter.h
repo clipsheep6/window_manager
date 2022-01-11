@@ -38,13 +38,21 @@ public:
     DisplayId CreateVirtualDisplay(const VirtualDisplayInfo &virtualDisplayInfo,
         sptr<Surface> surface);
     bool DestroyVirtualDisplay(DisplayId displayId);
-    // TODO: fix me
-    // sptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId);
+    sptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId);
+
+    bool SuspendBegin(PowerStateChangeReason reason);
+    bool SetDisplayState(DisplayState state, DisplayStateCallback callback);
+    DisplayState GetDisplayState(uint64_t displayId);
+    void NotifyDisplayEvent(DisplayEvent event);
+
     void Clear();
+
 private:
     DisplayManagerAdapter() = default;
     ~DisplayManagerAdapter() = default;
     bool InitDMSProxyLocked();
+    void NotifyDisplayChange(DisplayState state);
+
     static inline SingletonDelegator<DisplayManagerAdapter> delegator;
 
     std::mutex mutex_;
@@ -52,6 +60,7 @@ private:
     sptr<DMSDeathRecipient> dmsDeath_ = nullptr;
     std::map<DisplayId, sptr<Display>> displayMap_;
     DisplayId defaultDisplayId_;
+    DisplayStateCallback callback_;
 };
 } // namespace OHOS::Rosen
 #endif // FOUNDATION_DM_DISPLAY_MANAGER_ADAPTER_H

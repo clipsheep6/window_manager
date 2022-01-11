@@ -57,6 +57,11 @@ public:
     void UnregisterFocusChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     void RegisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     void UnregisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent) override;
+
+    // Inner interfaces
+    WMError NotifyDisplaySuspend();
+    void RestoreSuspendedWindows();
+
 protected:
     WindowManagerService();
     virtual ~WindowManagerService() = default;

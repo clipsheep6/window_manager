@@ -64,20 +64,19 @@ sptr<Display> DisplayManagerAdapter::GetDisplayById(DisplayId displayId)
     return display;
 }
 
-// TODO: fix me
-// sptr<Media::PixelMap> DisplayManagerAdapter::GetDisplaySnapshot(DisplayId displayId)
-// {
-//     std::lock_guard<std::mutex> lock(mutex_);
+sptr<Media::PixelMap> DisplayManagerAdapter::GetDisplaySnapshot(DisplayId displayId)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
 
-//     if (!InitDMSProxyLocked()) {
-//         WLOGFE("displayManagerAdapter::GetDisplaySnapshot: InitDMSProxyLocked failed!");
-//         return nullptr;
-//     }
+    if (!InitDMSProxyLocked()) {
+        WLOGFE("displayManagerAdapter::GetDisplaySnapshot: InitDMSProxyLocked failed!");
+        return nullptr;
+    }
 
-//     sptr<Media::PixelMap> dispalySnapshot = displayManagerServiceProxy_->GetDispalySnapshot(displayId);
+    sptr<Media::PixelMap> dispalySnapshot = displayManagerServiceProxy_->GetDispalySnapshot(displayId);
 
-//     return dispalySnapshot;
-// }
+    return dispalySnapshot;
+}
 
 DisplayId DisplayManagerAdapter::CreateVirtualDisplay(const VirtualDisplayInfo &virtualDisplayInfo,
     sptr<Surface> surface)
@@ -96,6 +95,57 @@ bool DisplayManagerAdapter::DestroyVirtualDisplay(DisplayId displayId)
     }
     WLOGFI("DisplayManagerAdapter::DestroyVirtualDisplay");
     return displayManagerServiceProxy_->DestroyVirtualDisplay(displayId);
+}
+
+bool DisplayManagerAdapter::SuspendBegin(PowerStateChangeReason reason)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!InitDMSProxyLocked()) {
+        return false;
+    }
+    return displayManagerServiceProxy_->SuspendBegin(reason);
+}
+
+bool DisplayManagerAdapter::SetDisplayState(DisplayState state, DisplayStateCallback callback)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!InitDMSProxyLocked()) {
+        return false;
+    }
+    callback_ = callback;
+    bool ret = displayManagerServiceProxy_->SetDisplayState(state);
+    if (state == DisplayState::OFF) {
+        NotifyDisplayChange(state);
+    }
+    // TODO: NotifyDisplayChange ON when keyguard is drawn
+    return ret;
+}
+
+DisplayState DisplayManagerAdapter::GetDisplayState(uint64_t displayId)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!InitDMSProxyLocked()) {
+        return DisplayState::UNKNOWN;
+    }
+    return displayManagerServiceProxy_->GetDisplayState(displayId);
+}
+
+void DisplayManagerAdapter::NotifyDisplayEvent(DisplayEvent event)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!InitDMSProxyLocked()) {
+        return;
+    }
+    displayManagerServiceProxy_->NotifyDisplayEvent(event);
+}
+
+void DisplayManagerAdapter::NotifyDisplayChange(DisplayState state)
+{
+    if (callback_) {
+        callback_(state);
+        return;
+    }
+    WLOGFW("callback_ target is not set!");
 }
 
 bool DisplayManagerAdapter::InitDMSProxyLocked()

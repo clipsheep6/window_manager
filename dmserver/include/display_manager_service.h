@@ -25,6 +25,7 @@
 #include "abstract_display.h"
 #include "abstract_display_manager.h"
 #include "display_manager_stub.h"
+#include "display_power_controller.h"
 #include "single_instance.h"
 #include "singleton_delegator.h"
 
@@ -43,8 +44,13 @@ public:
 
     DisplayId GetDefaultDisplayId() override;
     DisplayInfo GetDisplayInfoById(DisplayId displayId) override;
-    // TODO: fix me
-    // sptr<Media::PixelMap> GetDispalySnapshot(DisplayId displayId) override;
+    sptr<Media::PixelMap> GetDispalySnapshot(DisplayId displayId) override;
+
+    bool SuspendBegin(PowerStateChangeReason reason) override;
+    bool SetDisplayState(DisplayState state) override;
+    DisplayState GetDisplayState(uint64_t displayId) override;
+    void NotifyDisplayEvent(DisplayEvent event) override;
+
 private:
     DisplayManagerService();
     ~DisplayManagerService() = default;
@@ -54,6 +60,7 @@ private:
 
     static inline SingletonDelegator<DisplayManagerService> delegator_;
     std::map<int32_t, sptr<AbstractDisplay>> abstractDisplayMap_;
+    DisplayPowerController displayPowerController_;
 };
 } // namespace OHOS::Rosen
 
