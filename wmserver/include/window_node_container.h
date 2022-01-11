@@ -45,6 +45,7 @@ public:
     Rect GetDisplayRect() const;
     sptr<WindowNode> GetTopImmersiveNode() const;
     void NotifySystemBarIfChanged();
+    std::shared_ptr<RSDisplayNode> GetDisplayNode() const;
 
 private:
     void AssignZOrder(sptr<WindowNode>& node);
