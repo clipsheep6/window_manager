@@ -26,6 +26,7 @@
 #include "abstract_display.h"
 #include "abstract_display_manager.h"
 #include "display_manager_stub.h"
+#include "display_power_controller.h"
 #include "single_instance.h"
 #include "singleton_delegator.h"
 #include "transaction/rs_interfaces.h"
@@ -46,6 +47,12 @@ public:
     DisplayId GetDefaultDisplayId() override;
     DisplayInfo GetDisplayInfoById(DisplayId displayId) override;
     sptr<Media::PixelMap> GetDispalySnapshot(DisplayId displayId) override;
+
+    bool SuspendBegin(PowerStateChangeReason reason) override;
+    bool SetDisplayState(DisplayState state) override;
+    DisplayState GetDisplayState(uint64_t displayId) override;
+    void NotifyDisplayEvent(DisplayEvent event) override;
+
 private:
     DisplayManagerService();
     ~DisplayManagerService() = default;
@@ -58,6 +65,7 @@ private:
 #ifdef FOUNDATION_DMSERVER_RSDISPLAYNODE
     std::map<ScreenId, std::shared_ptr<RSDisplayNode>> displayNodeMap_;
 #endif
+    DisplayPowerController displayPowerController_;
 };
 } // namespace OHOS::Rosen
 

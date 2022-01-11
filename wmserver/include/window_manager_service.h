@@ -57,6 +57,10 @@ public:
     void UnregisterFocusChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     std::shared_ptr<RSDisplayNode> GetDisplayNode(int32_t displayId) const;
 
+    // Inner interfaces
+    WMError NotifyDisplaySuspend();
+    void RestoreSuspendedWindows();
+
 protected:
     WindowManagerService();
     virtual ~WindowManagerService() = default;
