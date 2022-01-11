@@ -70,13 +70,17 @@ public:
 
     void RegisterFocusChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent);
     void UnregisterFocusChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent);
+    void RegisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent);
+    void UnregisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent);
 
 private:
     void OnRemoteDied(const sptr<IRemoteObject>& remoteObject);
     void ClearWindowManagerAgent(const sptr<IRemoteObject>& remoteObject);
     void UnregisterFocusChangedListener(const sptr<IRemoteObject>& windowManagerAgent);
+    void UnregisterSystemBarChangedListener(const sptr<IRemoteObject>& windowManagerAgent);
     void UpdateFocusStatus(uint32_t windowId, const sptr<IRemoteObject>& abilityToken, WindowType windowType,
         int32_t displayId, bool focused);
+    void UpdateSystemBarProperties(int32_t displayId, const SystemBarProps& props);
     WMError DestroyWindowInner(sptr<WindowNode>& node);
 
     std::recursive_mutex& mutex_;
@@ -85,6 +89,7 @@ private:
     std::map<sptr<IRemoteObject>, uint32_t> windowIdMap_;
 
     std::vector<sptr<IWindowManagerAgent>> focusChangedListenerAgents_;
+    std::vector<sptr<IWindowManagerAgent>> systemBarChangedListenerAgents_;
 
     sptr<WindowDeathRecipient> windowDeath_ = new WindowDeathRecipient(std::bind(&WindowRoot::OnRemoteDied,
         this, std::placeholders::_1));

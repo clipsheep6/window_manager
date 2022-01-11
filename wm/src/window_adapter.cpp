@@ -146,6 +146,26 @@ void WindowAdapter::UnregisterFocusChangedListener(const sptr<IWindowManagerAgen
     return windowManagerServiceProxy_->UnregisterFocusChangedListener(windowManagerAgent);
 }
 
+void WindowAdapter::RegisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (!InitWMSProxyLocked()) {
+        return;
+    }
+    return windowManagerServiceProxy_->RegisterSystemBarChangedListener(windowManagerAgent);
+}
+
+void WindowAdapter::UnregisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (!InitWMSProxyLocked()) {
+        return;
+    }
+    return windowManagerServiceProxy_->UnregisterSystemBarChangedListener(windowManagerAgent);
+}
+
 bool WindowAdapter::InitWMSProxyLocked()
 {
     if (!windowManagerServiceProxy_) {

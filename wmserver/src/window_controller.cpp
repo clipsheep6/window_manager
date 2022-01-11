@@ -220,5 +220,15 @@ void WindowController::UnregisterFocusChangedListener(const sptr<IWindowManagerA
 {
     windowRoot_->UnregisterFocusChangedListener(windowManagerAgent);
 }
+
+void WindowController::RegisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent)
+{
+    windowRoot_->RegisterSystemBarChangedListener(windowManagerAgent);
+}
+
+void WindowController::UnregisterSystemBarChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent)
+{
+    windowRoot_->UnregisterSystemBarChangedListener(windowManagerAgent);
+}
 }
 }
