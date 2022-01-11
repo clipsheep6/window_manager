@@ -224,5 +224,10 @@ void WindowManagerService::OnWindowEvent(Event event, uint32_t windowId)
             break;
     }
 }
+
+std::shared_ptr<RSDisplayNode> WindowManagerService::GetDisplayNode(int32_t displayId) const
+{
+    return windowRoot_->GetOrCreateWindowNodeContainer(displayId)->GetDisplayNode();
+}
 }
 }
