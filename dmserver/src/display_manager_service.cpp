@@ -91,6 +91,31 @@ DisplayId DisplayManagerService::CreateVirtualDisplay(const VirtualDisplayInfo &
         virtualDisplayInfo.name_.c_str(), virtualDisplayInfo.width_, virtualDisplayInfo.height_,
         virtualDisplayInfo.displayIdToMirror_, virtualDisplayInfo.flags_);
     ScreenId screenId = AbstractDisplayManager::GetInstance().CreateVirtualScreen(virtualDisplayInfo, surface);
+    if (screenId == DISPLAY_ID_INVALD) {
+        WLOGFE("DisplayManagerService: Get virtualScreenId failed");
+        return DISPLAY_ID_INVALD;
+    }
+#ifdef FOUNDATION_DMSERVER_RSDISPLAYNODE
+    if (virtualDisplayInfo.displayIdToMirror_ != DISPLAY_ID_INVALD) {
+        std::shared_ptr<RSDisplayNode> displayNode =
+            SingletonContainer::Get<WindowManagerService>().GetDisplayNode(virtualDisplayInfo.displayIdToMirror_);
+        if (displayNode == nullptr) {
+            WLOGFE("DisplayManagerService: GetDisplayNode failed, displayNode is nullptr");
+            AbstractDisplayManager::GetInstance().DestroyVirtualScreen(screenId);
+            return DISPLAY_ID_INVALD;
+        }
+        NodeId nodeId = displayNode->GetId();
+        if (nodeId == nullptr) {
+            WLOGFE("DisplayManagerService: Mirror mode failed, displayNodeId is nullptr");
+            AbstractDisplayManager::GetInstance().DestroyVirtualScreen(screenId);
+            return DISPLAY_ID_INVALD;
+        }
+        
+        struct RSDisplayNodeConfig config = {screenId, true, nodeId};
+        displayNodeMap_[screenId] = RSDisplayNode::Create(config);
+        WLOGFI("DisplayManagerService::NodeId: %{public}" PRIu64 "", nodeId >> 32);
+    }
+#endif
     return GetDisplayIdFromScreenId(screenId);
 }
 
@@ -98,6 +123,18 @@ bool DisplayManagerService::DestroyVirtualDisplay(DisplayId displayId)
 {
     WLOGFI("DisplayManagerService::DestroyVirtualDisplay");
     ScreenId screenId = GetScreenIdFromDisplayId(displayId);
+#ifdef FOUNDATION_DMSERVER_RSDISPLAYNODE
+    if (screenId == DISPLAY_ID_INVALD) {
+        WLOGFE("DisplayManagerService: virtualScreenId is invalid");
+        return false;
+    }
+    if (displayNodeMap_[screenId] == nullptr) {
+        WLOGFE("DisplayManagerService: Mirror mode failed, displayNodeId is nullptr");
+        return AbstractDisplayManager::GetInstance().DestroyVirtualScreen(screenId);
+    }
+    displayNodeMap_[screenId]->RemoveFromTree();
+    displayNodeMap_.erase(screenId);
+#endif
     return AbstractDisplayManager::GetInstance().DestroyVirtualScreen(screenId);
 }
 
