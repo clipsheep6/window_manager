@@ -13,23 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef UNITTEST_MOCK_WINDOW_ADAPTER_H
-#define UNITTEST_MOCK_WINDOW_ADAPTER_H
+#ifndef FRAMEWORKS_WM_TEST_UT_INPUT_TRANSFER_STATION_TEST_H
+#define FRAMEWORKS_WM_TEST_UT_INPUT_TRANSFER_STATION_TEST_H
 
-#include <gmock/gmock.h>
-
-#include "window_adapter.h"
+#include <gtest/gtest.h>
+#include "input_manager.h"
+#include "input_transfer_station.h"
+#include "window_impl.h"
 
 namespace OHOS {
 namespace Rosen {
-class MockWindowAdapter : public WindowAdapter {
+class InputTransferStationTest : public testing::Test {
 public:
-    MOCK_METHOD1(AddWindow, WMError(sptr<WindowProperty>& windowProperty));
-    MOCK_METHOD1(RemoveWindow, WMError(uint32_t windowId));
-    MOCK_METHOD0(ClearWindowAdapter, void());
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    virtual void SetUp() override;
+    virtual void TearDown() override;
+    static inline sptr<WindowImpl> window_;
 };
-}
+} // namespace ROSEN
 } // namespace OHOS
 
-
-#endif
+#endif // FRAMEWORKS_WM_TEST_UT_INPUT_TRANSFER_STATION_TEST_H

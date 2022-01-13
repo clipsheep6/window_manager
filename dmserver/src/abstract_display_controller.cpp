@@ -18,6 +18,7 @@
 #include "window_manager_hilog.h"
 #include "window_manager_service.h"
 
+#include <cinttypes>
 #include <surface.h>
 
 namespace OHOS::Rosen {
@@ -64,7 +65,7 @@ ScreenId AbstractDisplayController::CreateVirtualScreen(const VirtualDisplayInfo
     }
     ScreenId result = rsInterface_->CreateVirtualScreen(virtualDisplayInfo.name_, virtualDisplayInfo.width_,
         virtualDisplayInfo.height_, surface, virtualDisplayInfo.displayIdToMirror_, virtualDisplayInfo.flags_);
-    WLOGFI("AbstractDisplayController::CreateVirtualDisplay id: %{public}llu", result);
+    WLOGFI("AbstractDisplayController::CreateVirtualDisplay id: %{public}" PRIu64"", result);
     return result;
 }
 

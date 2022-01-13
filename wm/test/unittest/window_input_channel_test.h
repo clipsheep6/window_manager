@@ -13,25 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef UNITTEST_WINDOW_IMPL_TEST_H
-#define UNITTEST_WINDOW_IMPL_TEST_H
+#ifndef FRAMEWORKS_WM_TEST_UT_WINDOW_INPUT_CHANNEL_TEST_H
+#define FRAMEWORKS_WM_TEST_UT_WINDOW_INPUT_CHANNEL_TEST_H
 
 #include <gtest/gtest.h>
 #include "window_impl.h"
+#include "window_input_channel.h"
 
 namespace OHOS {
 namespace Rosen {
-class WindowImplTest : public testing::Test {
+class WindowInputChannelTest : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();
     virtual void SetUp() override;
     virtual void TearDown() override;
-
-    static inline sptr<Window> window_ = nullptr;
-    static inline sptr<WindowProperty> property_ = nullptr;
+    static inline sptr<WindowImpl> window_;
 };
 } // namespace ROSEN
 } // namespace OHOS
 
-#endif // FRAMEWORKS_WM_TEST_UNITTEST_WINDOW_IMPL_TEST_H
+#endif // FRAMEWORKS_WM_TEST_UT_WINDOW_INPUT_CHANNEL_TEST_H

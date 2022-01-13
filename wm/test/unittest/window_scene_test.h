@@ -13,27 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_STATIC_CALL_H
-#define OHOS_STATIC_CALL_H
+#ifndef FRAMEWORKS_WM_TEST_UT_WINDOW_SCENE_TEST_H
+#define FRAMEWORKS_WM_TEST_UT_WINDOW_SCENE_TEST_H
 
-#include <iremote_object.h>
-#include "singleton_delegator.h"
-#include "single_instance.h"
-#include "window.h"
-#include "window_option.h"
+#include <gtest/gtest.h>
+#include "window_scene.h"
+
 namespace OHOS {
 namespace Rosen {
-class StaticCall {
-DECLARE_SINGLE_INSTANCE_BASE(StaticCall);
+class WindowSceneTest : public testing::Test {
 public:
-    virtual sptr<Window> CreateWindow(const std::string& windowName,
-        sptr<WindowOption>& option, std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext = nullptr);
-protected:
-    StaticCall() = default;
-private:
-    static inline SingletonDelegator<StaticCall> delegator_;
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    virtual void SetUp() override;
+    virtual void TearDown() override;
+
+    static inline sptr<WindowScene> scene_ = nullptr;
+    static inline std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext_;
 };
 } // namespace ROSEN
 } // namespace OHOS
 
-#endif // FRAMEWORKS_WM_TEST_UT_STATIC_CALL_H
+#endif // FRAMEWORKS_WM_TEST_UT_WINDOW_SCENE_TEST_H

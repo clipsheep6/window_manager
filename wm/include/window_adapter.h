@@ -20,8 +20,8 @@
 #include <zidl/window_manager_agent_interface.h>
 
 #include "window.h"
-#include "window_proxy.h"
-#include "single_instance.h"
+#include "window_interface.h"
+#include "wm_single_instance.h"
 #include "singleton_delegator.h"
 #include "window_property.h"
 #include "window_manager_interface.h"
@@ -33,7 +33,7 @@ public:
 };
 
 class WindowAdapter {
-DECLARE_SINGLE_INSTANCE(WindowAdapter);
+WM_DECLARE_SINGLE_INSTANCE(WindowAdapter);
 public:
     virtual WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& windowProperty,
         std::shared_ptr<RSSurfaceNode> surfaceNode, uint32_t& windowId);
@@ -47,8 +47,10 @@ public:
     virtual WMError SetWindowFlags(uint32_t windowId, uint32_t flags);
     virtual WMError SetSystemBarProperty(uint32_t windowId, WindowType type, const SystemBarProperty& property);
 
-    virtual void RegisterFocusChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent);
-    virtual void UnregisterFocusChangedListener(const sptr<IWindowManagerAgent>& windowManagerAgent);
+    virtual void RegisterWindowManagerAgent(WindowManagerAgentType type,
+        const sptr<IWindowManagerAgent>& windowManagerAgent);
+    virtual void UnregisterWindowManagerAgent(WindowManagerAgentType type,
+        const sptr<IWindowManagerAgent>& windowManagerAgent);
 
     virtual void ClearWindowAdapter();
 private:

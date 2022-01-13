@@ -25,12 +25,12 @@
 #include <refbase.h>
 #include <vsync_helper.h>
 
-#include "single_instance.h"
+#include "wm_single_instance.h"
 
 namespace OHOS {
 namespace Rosen {
 class VsyncStation {
-DECLARE_SINGLE_INSTANCE_BASE(VsyncStation);
+WM_DECLARE_SINGLE_INSTANCE_BASE(VsyncStation);
 using OnCallback = std::function<void(int64_t)>;
 public:
     enum class CallbackType {
@@ -48,6 +48,7 @@ private:
     VsyncStation() = default;
     static void OnVsync(int64_t nanoTimestamp, void* client);
     void VsyncCallbackInner(int64_t nanoTimestamp);
+    const std::string VSYNC_THREAD_ID = "vsync_thread";
     std::shared_ptr<AppExecFwk::EventHandler> mainHandler_ = nullptr;
     std::mutex lock_;
     std::atomic_bool hasRequestedVsync_ {false};
