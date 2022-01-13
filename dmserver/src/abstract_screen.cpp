@@ -15,6 +15,8 @@
 
 #include "abstract_screen.h"
 
+#include "abstract_screen_controller.h"
+
 namespace OHOS::Rosen {
 AbstractScreen::AbstractScreen(ScreenId dmsId, ScreenId rsId)
     : dmsId_(dmsId), rsId_(rsId)
@@ -25,11 +27,41 @@ AbstractScreen::~AbstractScreen()
 {
 }
 
+sptr<AbstractScreenGroup> AbstractScreen::GetGroup() const
+{
+    //sptr<AbstractScreenGroup> group = AbstractScreenController::GetInstance().GetAbstractScreenGroup(groupDmsId_);
+    //return group;
+    return nullptr;
+}
+
 AbstractScreenGroup::AbstractScreenGroup(ScreenId dmsId, ScreenId rsId) : AbstractScreen(dmsId, rsId)
 {
+    type_ = ScreenType::UNDEFINE;
 }
 
 AbstractScreenGroup::~AbstractScreenGroup()
 {
+}
+
+void AbstractScreenGroup::AddChild(ScreenCombination type, sptr<AbstractScreen>& dmsScreen, Point& startPoint)
+{
+}
+
+void AbstractScreenGroup::AddChild(ScreenCombination type,
+    std::vector<sptr<AbstractScreen>>& dmsScreens,
+    std::vector<Point>& startPoints)
+{
+}
+
+std::vector<sptr<AbstractScreen>> AbstractScreenGroup::GetChildren() const
+{
+    std::vector<sptr<AbstractScreen>> tmp;
+    return tmp;
+}
+
+std::vector<Point> AbstractScreenGroup::GetChildrenPosition() const
+{
+    std::vector<Point> tmp;
+    return tmp;
 }
 } // namespace OHOS::Rosen

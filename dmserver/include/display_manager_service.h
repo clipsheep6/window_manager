@@ -62,7 +62,8 @@ private:
     std::recursive_mutex mutex_;
     static inline SingletonDelegator<DisplayManagerService> delegator_;
     std::map<int32_t, sptr<AbstractDisplay>> abstractDisplayMap_;
-    AbstractScreenController screenController_ = AbstractScreenController(mutex_);
+    sptr<AbstractScreenController> abstractScreenController_;
+    sptr<AbstractDisplayController> abstractDisplayController_;
     DisplayPowerController displayPowerController_;
 };
 } // namespace OHOS::Rosen
