@@ -109,6 +109,8 @@ ohos_shared_library("libwm") {
     "../dm/src/display_manager.cpp",
     "../dm/src/display_manager_adapter.cpp",
     "../dm/src/screen.cpp",
+    "../dm/src/screen_group.cpp",
+    "../dm/src/screen_manager.cpp",
     "../dmserver/src/display_manager_proxy.cpp",
     "../wmserver/src/window_manager_proxy.cpp",
     "src/input_transfer_station.cpp",
