@@ -45,6 +45,25 @@ public:
     Rect GetDisplayRect() const;
     sptr<WindowNode> GetTopImmersiveNode() const;
     void NotifySystemBarIfChanged();
+    void LayoutDividerWindow(sptr<WindowNode>& node);
+    void UpdateDisplayInfo();
+    
+    class DisplayRects : public RefBase {
+    public:
+        DisplayRects() = default;
+        ~DisplayRects() = default;
+
+        void InitRect(Rect& oriDisplayRect);
+        void SetSplitRect(float ratio = 0.5);  // 0.5 is the default ratio
+        void SetSplitRect(const Rect& rect);
+        Rect GetRectByWindowMode(const WindowMode& mode) const;
+        Rect GetDividerRect() const;
+    private:
+        Rect primaryRect_   = {0, 0, 0, 0};
+        Rect secondaryRect_ = {0, 0, 0, 0};
+        Rect displayRect_   = {0, 0, 0, 0};
+        Rect dividerRect_   = {0, 0, 0, 0};
+    };
 
 private:
     void AssignZOrder(sptr<WindowNode>& node);
@@ -73,10 +92,10 @@ private:
     };
     uint32_t zOrder_ { 0 };
     uint32_t focusedWindow_ { 0 };
-    Rect displayRect_;
     uint64_t screenId_ = 0;
     UpdateFocusStatusFunc focusStatusCallBack_;
     void DumpScreenWindowTree();
+    sptr<DisplayRects> displayRects_ = new DisplayRects();
 };
 }
 }

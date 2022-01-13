@@ -17,8 +17,9 @@
 
 #include <refbase.h>
 #include <iremote_object.h>
-#include "zidl/window_manager_agent_interface.h"
+#include "display_manager_service_inner.h"
 #include "window_node_container.h"
+#include "zidl/window_manager_agent_interface.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -64,6 +65,7 @@ public:
     WMError RemoveWindowNode(uint32_t windowId);
     WMError DestroyWindow(uint32_t windowId);
     WMError UpdateWindowNode(uint32_t windowId);
+    WMError LayoutDividerWindow(sptr<WindowNode>& node);
 
     WMError RequestFocus(uint32_t windowId);
     WMError MinimizeOtherFullScreenAbility(sptr<WindowNode>& node);
@@ -80,6 +82,7 @@ private:
     void UpdateFocusStatus(uint32_t windowId, const sptr<IRemoteObject>& abilityToken, WindowType windowType,
         int32_t displayId, bool focused);
     WMError DestroyWindowInner(sptr<WindowNode>& node);
+    bool CheckDisplayScreenInfo(const sptr<AbstractDisplay>& display);
 
     std::recursive_mutex& mutex_;
     std::map<int32_t, sptr<WindowNodeContainer>> windowNodeContainerMap_;
