@@ -214,6 +214,11 @@ void WindowManagerService::UnregisterFocusChangedListener(const sptr<IWindowMana
     windowController_->UnregisterFocusChangedListener(windowManagerAgent);
 }
 
+std::shared_ptr<RSDisplayNode> WindowManagerService::GetDisplayNode(int32_t displayId) const
+{
+    return windowRoot_->GetOrCreateWindowNodeContainer(displayId)->GetDisplayNode();
+}
+
 void WindowManagerService::OnWindowEvent(Event event, uint32_t windowId)
 {
     switch (event) {

@@ -64,7 +64,7 @@ sptr<Display> DisplayManagerAdapter::GetDisplayById(DisplayId displayId)
     return display;
 }
 
-sptr<Media::PixelMap> DisplayManagerAdapter::GetDisplaySnapshot(DisplayId displayId)
+std::shared_ptr<Media::PixelMap> DisplayManagerAdapter::GetDisplaySnapshot(DisplayId displayId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
 
@@ -73,7 +73,7 @@ sptr<Media::PixelMap> DisplayManagerAdapter::GetDisplaySnapshot(DisplayId displa
         return nullptr;
     }
 
-    sptr<Media::PixelMap> dispalySnapshot = displayManagerServiceProxy_->GetDispalySnapshot(displayId);
+    std::shared_ptr<Media::PixelMap> dispalySnapshot = displayManagerServiceProxy_->GetDispalySnapshot(displayId);
 
     return dispalySnapshot;
 }
