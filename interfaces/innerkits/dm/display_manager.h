@@ -44,10 +44,6 @@ public:
 
     std::vector<DisplayId> GetAllDisplayIds();
 
-    DisplayId CreateVirtualDisplay(const std::string &name, uint32_t width, uint32_t height,
-        sptr<Surface> surface, DisplayId displayIdToMirror, int32_t flags);
-
-    bool DestroyVirtualDisplay(DisplayId displayId);
     std::shared_ptr<Media::PixelMap> GetScreenshot(DisplayId displayId);
     std::shared_ptr<Media::PixelMap> GetScreenshot(DisplayId displayId, const Media::Rect &rect,
                                         const Media::Size &size, int rotation);

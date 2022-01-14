@@ -59,11 +59,13 @@ private:
     sptr<WindowNode> belowAppWindowNode_ = new WindowNode();
     sptr<WindowNode> appWindowNode_ = new WindowNode();
     sptr<WindowNode> aboveAppWindowNode_ = new WindowNode();
+
     const std::set<WindowType> avoidTypes_ {
         WindowType::WINDOW_TYPE_STATUS_BAR,
         WindowType::WINDOW_TYPE_NAVIGATION_BAR,
     };
     void UpdateLimitRect(const sptr<WindowNode>& node, Rect& limitRect);
+
     void LayoutWindowTree();
     void LayoutWindowNode(sptr<WindowNode>& node);
     AvoidPosType GetAvoidPosType(const Rect& rect);

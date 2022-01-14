@@ -16,24 +16,119 @@ import("//build/ohos.gni")
 ## Build snapshot {{{
 config("snapshot_config") {
   visibility = [ ":*" ]
+
+  include_dirs = [
+    ".",
+
+# for abilityContext
+    "//foundation/aafwk/standard/frameworks/kits/ability/ability_runtime/include",
+    "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base/include",
+    "//base/global/resmgr_standard/interfaces/innerkits/include",
+    "//third_party/node/deps/icu-small/source/common",
+    "//foundation/aafwk/standard/interfaces/innerkits/ability_manager/include",
+    "//foundation/aafwk/standard/interfaces/innerkits/want/include/ohos/aafwk/content",
+    "//foundation/distributedschedule/dmsfwk/services/dtbschedmgr/include",
+    "//foundation/aafwk/standard/interfaces/innerkits/base/include",
+
+# RSSurface
+    "//foundation/graphic/standard/rosen/modules/render_service_client",
+    # "//foundation/graphic/standard/rosen/modules/render_service_base",
+  ]
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-g3",
+  ]
+}
+
+ohos_static_library("snapshot_utils") {
+  include_dirs = [
+    ".",
+  ]
+  sources = [ "snapshot_utils.cpp" ]
+  configs = [ ":snapshot_config" ]
+  public_deps = [
+    "//third_party/libpng:libpng", # png
+    "//foundation/windowmanager/wm:libwm",
+    "//foundation/multimedia/image_standard/interfaces/innerkits:image_native", # PixelMap
+    "//foundation/ace/ace_engine/build/external_config/flutter/skia:ace_skia_ohos",
+    "//foundation/graphic/standard/rosen/modules/2d_graphics:2d_graphics",
+    # "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
+  ]
 }
 
 ohos_executable("snapshot_display") {
   install_enable = false
+
   sources = [
     "snapshot_display.cpp",
-    "snapshot_utils.cpp",
   ]
 
   configs = [ ":snapshot_config" ]
 
   deps = [
-    "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",  # PixelMap
-    "//foundation/windowmanager/dm:libdm",
+    ":snapshot_utils",
+    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
+    "//foundation/graphic/standard:libvsync_client",
+    "//foundation/graphic/standard:libwmclient",
+    "//foundation/graphic/standard:libwmservice",
+    "//third_party/zlib:libz",
+    "//foundation/windowmanager/wm:libwm",
+    "//foundation/windowmanager/wmserver:libwms",
+    "//foundation/windowmanager/wm:libwmutil",
+
+# native value
+    "//foundation/ace/napi:ace_napi",
+# ace
+    "//foundation/ace/ace_engine/interfaces/innerkits/ace:ace_uicontent",
+# libpng
+    "//third_party/libpng:libpng",
+# PixelMap
+    "//foundation/multimedia/image_standard/interfaces/innerkits/:image_native"
+  ]
+
+  part_name = "window_manager"
+  subsystem_name = "window"
+}
+
+ohos_executable("snapshot_virtual_screen") {
+  install_enable = false
+
+  sources = [
+    "snapshot_virtual_display.cpp",
+    "image_reader.cpp",
+    "image_reader_handler_impl.cpp",
+  ]
+
+  configs = [ ":snapshot_config" ]
+
+  deps = [
+    ":snapshot_utils",
+    "//foundation/distributedschedule/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
+    "//foundation/graphic/standard:libvsync_client",
+    "//foundation/graphic/standard:libwmclient",
+    "//foundation/graphic/standard:libwmservice",
+    "//third_party/zlib:libz",
     "//foundation/windowmanager/wm:libwm",
     "//foundation/windowmanager/wm:libwmutil",
     "//third_party/libpng:libpng",  # png
+    "//foundation/windowmanager/dm:libdm",
+    "//foundation/windowmanager/wmserver:libwms",
+
+# native value
+    "//foundation/ace/napi:ace_napi",
+# ace
+    "//foundation/ace/ace_engine/interfaces/innerkits/ace:ace_uicontent",
+# libpng
+    "//third_party/libpng:libpng",
+# PixelMap
+    "//foundation/multimedia/image_standard/interfaces/innerkits/:image_native",
+
+    "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
   ]
+
+  public_deps = [ "//foundation/ace/ace_engine/build/external_config/flutter/skia:ace_skia_ohos" ]
 
   part_name = "window_manager"
   subsystem_name = "window"

@@ -14,6 +14,7 @@
  */
 
 #include "display_manager_service.h"
+#include "window_manager_service.h"
 
 #include <cinttypes>
 #include <unistd.h>
@@ -23,6 +24,8 @@
 #include <system_ability_definition.h>
 
 #include "window_manager_hilog.h"
+
+#include "transaction/rs_interfaces.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -88,20 +91,29 @@ DisplayInfo DisplayManagerService::GetDisplayInfoById(DisplayId displayId)
     return displayInfo;
 }
 
-DisplayId DisplayManagerService::CreateVirtualDisplay(const VirtualDisplayInfo &virtualDisplayInfo,
-    sptr<Surface> surface)
+ScreenId DisplayManagerService::CreateVirtualScreen(VirtualScreenOption option)
 {
-    WLOGFI("name %{public}s, width %{public}u, height %{public}u, mirrotId %{public}" PRIu64", flags %{public}d",
-        virtualDisplayInfo.name_.c_str(), virtualDisplayInfo.width_, virtualDisplayInfo.height_,
-        virtualDisplayInfo.displayIdToMirror_, virtualDisplayInfo.flags_);
-    ScreenId screenId = abstractDisplayController_->CreateVirtualScreen(virtualDisplayInfo, surface);
-    return GetDisplayIdFromScreenId(screenId);
+    ScreenId screenId = abstractDisplayController_->CreateVirtualScreen(option);
+    if (screenId == SCREEN_ID_INVALD) {
+        WLOGFE("DisplayManagerService::CreateVirtualScreen: Get virtualScreenId failed");
+        return SCREEN_ID_INVALD;
+    }
+    return screenId;
 }
 
-bool DisplayManagerService::DestroyVirtualDisplay(DisplayId displayId)
+DMError DisplayManagerService::DestroyVirtualScreen(ScreenId screenId)
 {
-    WLOGFI("DisplayManagerService::DestroyVirtualDisplay");
-    ScreenId screenId = GetScreenIdFromDisplayId(displayId);
+    WLOGFI("DisplayManagerService::DestroyVirtualScreen");
+    if (screenId == DISPLAY_ID_INVALD) {
+        WLOGFE("DisplayManagerService: virtualScreenId is invalid");
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    if (displayNodeMap_[screenId] == nullptr) {
+        WLOGFE("DisplayManagerService: Mirror mode failed, displayNodeId is nullptr");
+        return abstractDisplayController_->DestroyVirtualScreen(screenId);
+    }
+    displayNodeMap_[screenId]->RemoveFromTree();
+    displayNodeMap_.erase(screenId);
     return abstractDisplayController_->DestroyVirtualScreen(screenId);
 }
 
@@ -258,5 +270,25 @@ void DMAgentDeathRecipient::OnRemoteDied(const wptr<IRemoteObject>& wptrDeath)
     }
     WLOGFI("call OnRemoteDied callback");
     callback_(object);
+}
+
+void DisplayManagerService::AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId)
+{
+    if (mainScreenId != DISPLAY_ID_INVALD) {
+        std::shared_ptr<RSDisplayNode> displayNode =
+            SingletonContainer::Get<WindowManagerService>().GetDisplayNode(mainScreenId);
+        if (displayNode == nullptr) {
+            WLOGFE("DisplayManagerService::AddMirror: GetDisplayNode failed, displayNode is nullptr");
+        }
+        NodeId nodeId = displayNode->GetId();
+
+        struct RSDisplayNodeConfig config = {mirrorScreenId, true, nodeId};
+        WLOGFI("AddMirror: mainScreenId: %{public}" PRIu64 ", mirrorScreenId: %{public}" PRIu64 "",
+            mainScreenId, mirrorScreenId);
+        displayNodeMap_[mainScreenId] = RSDisplayNode::Create(config);
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        transactionProxy->FlushImplicitTransaction();
+        WLOGFI("DisplayManagerService::AddMirror: NodeId: %{public}" PRIu64 "", nodeId >> 32);
+    }
 }
 } // namespace OHOS::Rosen

@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021-2021. All rights reserved.
+ * Description: snapshot screen
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,6 +15,7 @@
  */
 
 #include <cstdio>
+#include <securec.h>
 
 #include "snapshot_utils.h"
 
@@ -26,23 +28,14 @@ int main(int argc, char *argv[])
     CmdArgments cmdArgments;
     cmdArgments.fileName = "/data/snapshot_display_1.png";
 
-    if (!SnapShotUtils::ProcessArgs(argc, argv, cmdArgments)) {
+    if (SnapShotUtils::ProcessArgs(argc, argv, cmdArgments) <= 0) {
         return 0;
     }
 
     // get PixelMap from DisplayManager API
     auto pixelMap = DisplayManager::GetInstance().GetScreenshot(cmdArgments.displayId);
-    bool ret = false;
-    if (pixelMap != nullptr) {
-        ret = SnapShotUtils::WriteToPngWithPixelMap(cmdArgments.fileName, *pixelMap);
-    }
-    if (!ret) {
-        printf("error: snapshot display %" PRIu64 ", write to %s as png failed!\n",
-            cmdArgments.displayId, cmdArgments.fileName.c_str());
-        return -1;
-    }
 
-    printf("success: snapshot display %" PRIu64 ", write to %s as png\n",
-        cmdArgments.displayId, cmdArgments.fileName.c_str());
-    return 0;
+    printf("snapshot display %" PRIu64 ", write to %s as png\n", cmdArgments.displayId, cmdArgments.fileName.c_str());
+
+    return SnapShotUtils::WriteToPngWithPixelMap(cmdArgments.fileName, *pixelMap);
 }

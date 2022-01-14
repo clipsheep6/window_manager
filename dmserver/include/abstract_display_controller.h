@@ -21,6 +21,8 @@
 #include <surface.h>
 #include <transaction/rs_interfaces.h>
 
+#include "screen.h"
+#include "dm_common.h"
 #include "abstract_display.h"
 #include "abstract_screen_controller.h"
 #include "transaction/rs_interfaces.h"
@@ -35,8 +37,9 @@ public:
     void Init(sptr<AbstractScreenController> abstractScreenController);
     ScreenId GetDefaultScreenId();
     RSScreenModeInfo GetScreenActiveMode(ScreenId id);
-    ScreenId CreateVirtualScreen(const VirtualDisplayInfo &virtualDisplayInfo, sptr<Surface> surface);
-    bool DestroyVirtualScreen(ScreenId screenId);
+
+    ScreenId CreateVirtualScreen(VirtualScreenOption option);
+    DMError DestroyVirtualScreen(ScreenId screenId);
     std::shared_ptr<Media::PixelMap> GetScreenSnapshot(DisplayId displayId, ScreenId screenId);
 
 private:
