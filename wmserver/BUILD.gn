@@ -19,6 +19,7 @@ config("libwms_config") {
 
   include_dirs = [
     "include",
+    "include/window_snapshot",
     "//utils/system/safwk/native/include",
     "//foundation/windowmanager/interfaces/innerkits/wm",
     "//foundation/windowmanager/interfaces/innerkits/dm",
@@ -26,6 +27,8 @@ config("libwms_config") {
     "//foundation/windowmanager/utils/include",
     "//foundation/windowmanager/dm/include",
     "//foundation/windowmanager/dmserver/include",
+    "//foundation/graphic/standard/rosen/modules/render_service_client",
+    "//foundation/graphic/standard/rosen/modules/render_service_base",
   ]
 }
 
@@ -47,6 +50,9 @@ ohos_shared_library("libwms") {
     "src/window_node.cpp",
     "src/window_node_container.cpp",
     "src/window_root.cpp",
+    "src/window_snapshot/snapshot_controller.cpp",
+    "src/window_snapshot/snapshot_proxy.cpp",
+    "src/window_snapshot/snapshot_stub.cpp",
     "src/window_zorder_policy.cpp",
   ]
 
@@ -67,6 +73,8 @@ ohos_shared_library("libwms") {
     "//foundation/graphic/standard/rosen/modules/render_service_base:librender_service_base",
 
     # RSSurface
+    "//foundation/graphic/standard:libsurface",
+    "//foundation/graphic/standard/rosen/modules/render_service_base:librender_service_base",
     "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
 
     # IMS
