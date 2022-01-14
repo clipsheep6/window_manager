@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2021-2021. All rights reserved.
+ * Description: snapshot utils
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,14 +18,44 @@
 
 #include <cstdio>
 #include <getopt.h>
-#include <png.h>
+#include <climits>
+#include <cstdlib>
+
+#include "render_context/render_context.h"
+#include "ui/rs_surface_extractor.h"
+#include "png.h"
+
+#define ACE_ENABLE_GL
 
 using namespace OHOS::Media;
 using namespace OHOS::Rosen;
 
-namespace OHOS {
-constexpr int BITMAP_DEPTH = 8;
+namespace detail {
+RenderContext *g_renderContext = nullptr;
 
+template<typename Duration>
+using SysTime = std::chrono::time_point<std::chrono::system_clock, Duration>;
+using SysMicroSeconds = SysTime<std::chrono::microseconds>;
+
+std::time_t MicroSecondsSinceEpoch()
+{
+    SysMicroSeconds tmp = std::chrono::system_clock::now();
+    return tmp.time_since_epoch().count();
+}
+
+RenderContext *GetRenderContext()
+{
+    if (g_renderContext != nullptr) {
+        return g_renderContext;
+    }
+
+    g_renderContext = RenderContextFactory::GetInstance().CreateEngine();
+    g_renderContext->InitializeEglContext();
+    return g_renderContext;
+}
+} // namespace detail
+
+namespace OHOS {
 void SnapShotUtils::PrintUsage(const std::string &cmdLine)
 {
     printf("usage: %s [-i displayId] [-f output_file]\n", cmdLine.c_str());
@@ -42,36 +73,34 @@ bool SnapShotUtils::CheckFileNameValid(const std::string &fileName)
     char resolvedPath[PATH_MAX] = { 0 };
     char *realPath = realpath(fileDir.c_str(), resolvedPath);
     if (realPath == nullptr) {
-        printf("error: fileName %s invalid, nullptr!\n", fileName.c_str());
+        printf("fileName %s invalid, nullptr!\n", fileName.c_str());
         return false;
     }
     std::string realPathString = realPath;
     if (realPathString.find("/data") != 0) {
-        printf("error: fileName %s invalid, %s must dump at dir: /data \n", fileName.c_str(), realPathString.c_str());
+        printf("fileName %s invalid, %s must dump at dir: /data \n", fileName.c_str(), realPathString.c_str());
         return false;
     }
     return true;
 }
 
+
 bool SnapShotUtils::WriteToPng(const std::string &fileName, const WriteToPngParam &param)
 {
-    if (!CheckFileNameValid(fileName)) {
-        return false;
-    }
     png_structp pngStruct = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     if (pngStruct == nullptr) {
-        printf("error: png_create_write_struct nullptr!\n");
+        printf("png_create_write_struct error, nullptr!\n");
         return false;
     }
     png_infop pngInfo = png_create_info_struct(pngStruct);
     if (pngInfo == nullptr) {
-        printf("error: png_create_info_struct error nullptr!\n");
+        printf("png_create_info_struct error, nullptr!\n");
         png_destroy_write_struct(&pngStruct, nullptr);
         return false;
     }
     FILE *fp = fopen(fileName.c_str(), "wb");
     if (fp == nullptr) {
-        printf("error: open file [%s] error, %d [%s]!\n", fileName.c_str(), errno, strerror(errno));
+        printf("open file [%s] error, nullptr!\n", fileName.c_str());
         png_destroy_write_struct(&pngStruct, &pngInfo);
         return false;
     }
@@ -96,9 +125,7 @@ bool SnapShotUtils::WriteToPng(const std::string &fileName, const WriteToPngPara
 
     // free
     png_destroy_write_struct(&pngStruct, &pngInfo);
-    if (fclose(fp) != 0) {
-        return false;
-    }
+    fclose(fp);
     return true;
 }
 
@@ -111,6 +138,73 @@ bool SnapShotUtils::WriteToPngWithPixelMap(const std::string &fileName, PixelMap
     param.stride = pixelMap.GetRowBytes();
     param.bitDepth = BITMAP_DEPTH;
     return SnapShotUtils::WriteToPng(fileName, param);
+}
+
+void SnapShotUtils::DrawSurface(
+    SkRect surfaceGeometry, uint32_t color, SkRect shapeGeometry, std::shared_ptr<RSSurfaceNode> surfaceNode)
+{
+    auto x = surfaceGeometry.x();
+    auto y = surfaceGeometry.y();
+    auto width = surfaceGeometry.width();
+    auto height = surfaceGeometry.height();
+    surfaceNode->SetBounds(x, y, width, height);
+    std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
+    if (rsSurface == nullptr) {
+        return;
+    }
+#ifdef ACE_ENABLE_GL
+    rsSurface->SetRenderContext(detail::GetRenderContext());
+#endif
+    auto framePtr = rsSurface->RequestFrame(width, height);
+    if (framePtr == nullptr) {
+        printf(": framePtr is nullptr!\n");
+        return;
+    }
+    auto canvas = framePtr->GetCanvas();
+    SkPaint paint;
+    paint.setAntiAlias(true);
+    paint.setStyle(SkPaint::kFill_Style);
+    paint.setStrokeWidth(20); // stroken width 20
+    paint.setStrokeJoin(SkPaint::kRound_Join);
+    paint.setColor(color);
+
+    canvas->drawRect(shapeGeometry, paint);
+    framePtr->SetDamageRegion(0, 0, width, height);
+    rsSurface->FlushFrame(framePtr);
+}
+
+void SnapShotUtils::DumpBuffer(const sptr<SurfaceBuffer> &buf)
+{
+    if (access("/data", F_OK) < 0) {
+        printf("ImageReader::DumpBuffer(): Can't access data directory!\n");
+        return;
+    }
+
+    std::string dumpFileName = "/data/snapshot_virtual_display_0.png";
+    BufferHandle *bufferHandle =  buf->GetBufferHandle();
+    if (bufferHandle == nullptr) {
+        printf("bufferHandle nullptr!\n");
+    } else {
+        printf("bufferHandle width: %d\n", bufferHandle->width);
+        printf("bufferHandle height: %d\n", bufferHandle->height);
+        printf("bufferHandle stride: %d\n", bufferHandle->stride);
+        printf("bufferHandle format: %d\n", bufferHandle->format);
+    }
+
+    WriteToPngParam param;
+    param.width = buf->GetWidth();
+    param.height = buf->GetHeight();
+    param.data = (const uint8_t *)buf->GetVirAddr();
+    param.stride = buf->GetBufferHandle()->stride;
+    param.bitDepth = BITMAP_DEPTH;
+    SnapShotUtils::WriteToPng(dumpFileName, param);
+    printf("ImageReader::DumpBuffer(): dump %s succeed.", dumpFileName.c_str());
+}
+
+std::shared_ptr<RSSurfaceNode> SnapShotUtils::CreateSurface()
+{
+    RSSurfaceNodeConfig config;
+    return RSSurfaceNode::Create(config);
 }
 
 static bool ProcessDisplayId(DisplayId &displayId)
@@ -127,8 +221,8 @@ static bool ProcessDisplayId(DisplayId &displayId)
             }
         }
         if (!validFlag) {
-            printf("error: displayId %" PRIu64 " invalid!\n", displayId);
-            printf("tips: supported displayIds:\n");
+            printf("displayId %" PRIu64 " invalid!\n", displayId);
+            printf("supported displayIds:\n");
             for (auto id: displayIds) {
                 printf("\t%" PRIu64 "\n", id);
             }
@@ -138,7 +232,7 @@ static bool ProcessDisplayId(DisplayId &displayId)
     return true;
 }
 
-bool SnapShotUtils::ProcessArgs(int argc, char * const argv[], CmdArgments &cmdArgments)
+int SnapShotUtils::ProcessArgs(int argc, char * const argv[], CmdArgments &cmdArgments)
 {
     int opt = 0;
     const struct option longOption[] = {
@@ -157,22 +251,22 @@ bool SnapShotUtils::ProcessArgs(int argc, char * const argv[], CmdArgments &cmdA
                 break;
             case 'h': // help
                 SnapShotUtils::PrintUsage(argv[0]);
-                return false;
+                return 0;
             default:
                 SnapShotUtils::PrintUsage(argv[0]);
-                return false;
+                return 0;
         }
     }
 
     if (!ProcessDisplayId(cmdArgments.displayId)) {
-        return false;
+        return -1;
     }
 
     // check fileName
-    if (!SnapShotUtils::CheckFileNameValid(cmdArgments.fileName)) {
-        printf("error: filename %s invalid!\n", cmdArgments.fileName.c_str());
-        return false;
+    if (SnapShotUtils::CheckFileNameValid(cmdArgments.fileName) == false) {
+        printf("filename %s invalid!\n", cmdArgments.fileName.c_str());
+        return -1;
     }
-    return true;
+    return 1;
 }
 }

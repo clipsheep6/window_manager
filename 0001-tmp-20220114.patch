@@ -1,0 +1,881 @@
+From d241672c00196a5020f5ec6f0b18940801d6cbc0 Mon Sep 17 00:00:00 2001
+From: fanby01 <yaojian7@huawei.com>
+Date: Fri, 14 Jan 2022 20:11:44 +0800
+Subject: [PATCH] tmp 20220114
+
+Change-Id: Ic29364126b80645462c2e18f17e56a4fa7bb94a4
+---
+ dm/include/display_manager_adapter.h          | 10 ++-
+ dm/src/display_manager.cpp                    | 14 ----
+ dm/src/display_manager_adapter.cpp            | 26 ++++--
+ dm/src/screen_manager.cpp                     | 26 +++++-
+ .../include/abstract_display_controller.h     |  7 +-
+ dmserver/include/abstract_screen.h            |  9 +-
+ dmserver/include/display_manager_interface.h  | 12 +--
+ dmserver/include/display_manager_proxy.h      | 10 ++-
+ dmserver/include/display_manager_service.h    | 11 ++-
+ dmserver/src/abstract_display_controller.cpp  | 15 ++--
+ dmserver/src/display_manager_proxy.cpp        | 83 +++++++++++++------
+ dmserver/src/display_manager_service.cpp      | 53 +++++++++---
+ dmserver/src/display_manager_stub.cpp         | 40 +++++++--
+ interfaces/innerkits/dm/display_manager.h     |  4 -
+ interfaces/innerkits/dm/dm_common.h           | 13 +++
+ interfaces/innerkits/dm/screen.h              |  2 +-
+ interfaces/innerkits/dm/screen_manager.h      | 11 ++-
+ wmserver/include/window_layout_policy.h       |  2 +
+ wmserver/include/window_manager_service.h     |  2 +-
+ wmserver/include/window_node_container.h      |  1 +
+ wmserver/src/window_layout_policy.cpp         |  1 +
+ wmserver/src/window_manager_service.cpp       | 10 +--
+ 22 files changed, 245 insertions(+), 117 deletions(-)
+
+diff --git a/dm/include/display_manager_adapter.h b/dm/include/display_manager_adapter.h
+index 666f0ac..597472d 100644
+--- a/dm/include/display_manager_adapter.h
++++ b/dm/include/display_manager_adapter.h
+@@ -20,6 +20,8 @@
+ #include <surface.h>
+ 
+ #include "display.h"
++#include "screen.h"
++#include "dm_common.h"
+ #include "display_manager_interface.h"
+ #include "singleton_delegator.h"
+ 
+@@ -34,9 +36,9 @@ WM_DECLARE_SINGLE_INSTANCE_BASE(DisplayManagerAdapter);
+ public:
+     DisplayId GetDefaultDisplayId();
+     sptr<Display> GetDisplayById(DisplayId displayId);
+-    DisplayId CreateVirtualDisplay(const VirtualDisplayInfo &virtualDisplayInfo,
+-        sptr<Surface> surface);
+-    bool DestroyVirtualDisplay(DisplayId displayId);
++
++    ScreenId CreateVirtualScreen(VirtualScreenOption option);
++    DMError DestroyVirtualScreen(ScreenId screenId);
+     std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId);
+ 
+     void RegisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
+@@ -51,7 +53,7 @@ public:
+     bool SetDisplayState(DisplayState state, DisplayStateCallback callback);
+     DisplayState GetDisplayState(uint64_t displayId);
+     void NotifyDisplayEvent(DisplayEvent event);
+-
++    void AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId);
+     void Clear();
+ 
+ private:
+diff --git a/dm/src/display_manager.cpp b/dm/src/display_manager.cpp
+index 43a6331..faca0d8 100644
+--- a/dm/src/display_manager.cpp
++++ b/dm/src/display_manager.cpp
+@@ -154,20 +154,6 @@ std::vector<const sptr<Display>> DisplayManager::GetAllDisplays()
+     return res;
+ }
+ 
+-DisplayId DisplayManager::CreateVirtualDisplay(const std::string &name, uint32_t width, uint32_t height,
+-    sptr<Surface> surface, DisplayId displayIdToMirror, int32_t flags)
+-{
+-    WLOGFI("DisplayManager::CreateVirtualDisplay multi params");
+-    VirtualDisplayInfo info(name, width, height, displayIdToMirror, flags);
+-    return SingletonContainer::Get<DisplayManagerAdapter>().CreateVirtualDisplay(info, surface);
+-}
+-
+-bool DisplayManager::DestroyVirtualDisplay(DisplayId displayId)
+-{
+-    WLOGFI("DisplayManager::DestroyVirtualDisplay override params");
+-    return SingletonContainer::Get<DisplayManagerAdapter>().DestroyVirtualDisplay(displayId);
+-}
+-
+ void DisplayManager::RegisterDisplayPowerEventListener(sptr<IDisplayPowerEventListener> listener)
+ {
+     if (listener == nullptr) {
+diff --git a/dm/src/display_manager_adapter.cpp b/dm/src/display_manager_adapter.cpp
+index bd804d7..138527c 100644
+--- a/dm/src/display_manager_adapter.cpp
++++ b/dm/src/display_manager_adapter.cpp
+@@ -78,23 +78,22 @@ std::shared_ptr<Media::PixelMap> DisplayManagerAdapter::GetDisplaySnapshot(Displ
+     return dispalySnapshot;
+ }
+ 
+-DisplayId DisplayManagerAdapter::CreateVirtualDisplay(const VirtualDisplayInfo &virtualDisplayInfo,
+-    sptr<Surface> surface)
++ScreenId DisplayManagerAdapter::CreateVirtualScreen(VirtualScreenOption option)
+ {
+     if (!InitDMSProxyLocked()) {
+-        return DISPLAY_ID_INVALD;
++        return SCREEN_ID_INVALD;
+     }
+-    WLOGFI("DisplayManagerAdapter::CreateVirtualDisplay");
+-    return displayManagerServiceProxy_->CreateVirtualDisplay(virtualDisplayInfo, surface);
++    WLOGFI("DisplayManagerAdapter::CreateVirtualScreen");
++    return displayManagerServiceProxy_->CreateVirtualScreen(option);
+ }
+ 
+-bool DisplayManagerAdapter::DestroyVirtualDisplay(DisplayId displayId)
++DMError DisplayManagerAdapter::DestroyVirtualScreen(ScreenId screenId)
+ {
+     if (!InitDMSProxyLocked()) {
+-        return false;
++        return DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED;
+     }
+-    WLOGFI("DisplayManagerAdapter::DestroyVirtualDisplay");
+-    return displayManagerServiceProxy_->DestroyVirtualDisplay(displayId);
++    WLOGFI("DisplayManagerAdapter::DestroyVirtualScreen");
++    return displayManagerServiceProxy_->DestroyVirtualScreen(screenId);
+ }
+ 
+ void DisplayManagerAdapter::RegisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
+@@ -265,4 +264,13 @@ void DisplayManagerAdapter::Clear()
+     }
+     displayManagerServiceProxy_ = nullptr;
+ }
++
++void DisplayManagerAdapter::AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId)
++{
++    if (!InitDMSProxyLocked()) {
++        WLOGFE("DisplayManagerAdapter::AddMirror: InitDMSProxyLocked failed");
++    }
++    WLOGFI("DisplayManagerAdapter::AddMirror");
++    displayManagerServiceProxy_->AddMirror(mainScreenId, mirrorScreenId);
++}
+ } // namespace OHOS::Rosen
+\ No newline at end of file
+diff --git a/dm/src/screen_manager.cpp b/dm/src/screen_manager.cpp
+index d13344a..f31c39e 100644
+--- a/dm/src/screen_manager.cpp
++++ b/dm/src/screen_manager.cpp
+@@ -14,11 +14,17 @@
+  */
+ 
+ #include "screen_manager.h"
++#include "window_manager_hilog.h"
++#include "display_manager_adapter.h"
++
+ 
+ #include <map>
+ #include <vector>
+ 
+ namespace OHOS::Rosen {
++namespace {
++    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, 0, "ScreenManager"};
++}
+ class ScreenManager::Impl : public RefBase {
+ friend class ScreenManager;
+ private:
+@@ -53,18 +59,32 @@ void ScreenManager::RegisterScreenChangeListener(sptr<IScreenChangeListener> lis
+ {
+ }
+ 
+-sptr<ScreenGroup> ScreenManager::makeExpand(std::vector<ScreenId> screenId, std::vector<Point> startPoint)
++sptr<ScreenGroup> ScreenManager::MakeExpand(std::vector<ScreenId> screenId, std::vector<Point> startPoint)
+ {
+     return nullptr;
+ }
+ 
+-sptr<ScreenGroup> ScreenManager::makeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId)
++sptr<ScreenGroup> ScreenManager::MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId)
+ {
+     return nullptr;
+ }
+ 
+-sptr<Screen> ScreenManager::createVirtualScreen(VirtualScreenOption option)
++sptr<ScreenGroup> ScreenManager::AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId)
+ {
++    WLOGFI("ScreenManager::AddMirror");
++    SingletonContainer::Get<DisplayManagerAdapter>().AddMirror(mainScreenId, mirrorScreenId);
+     return nullptr;
+ }
++
++ScreenId ScreenManager::CreateVirtualScreen(VirtualScreenOption option)
++{
++    WLOGFI("ScreenManager::CreateVirtualScreen");
++    return SingletonContainer::Get<DisplayManagerAdapter>().CreateVirtualScreen(option);
++}
++
++DMError ScreenManager::DestroyVirtualScreen(ScreenId screenId)
++{
++    WLOGFI("ScreenManager::DestroyVirtualScreen");
++    return SingletonContainer::Get<DisplayManagerAdapter>().DestroyVirtualScreen(screenId);
++}
+ } // namespace OHOS::Rosen
+\ No newline at end of file
+diff --git a/dmserver/include/abstract_display_controller.h b/dmserver/include/abstract_display_controller.h
+index 3d588e7..d94be07 100644
+--- a/dmserver/include/abstract_display_controller.h
++++ b/dmserver/include/abstract_display_controller.h
+@@ -21,6 +21,8 @@
+ #include <surface.h>
+ #include <transaction/rs_interfaces.h>
+ 
++#include "screen.h"
++#include "dm_common.h"
+ #include "abstract_display.h"
+ #include "abstract_screen_controller.h"
+ #include "transaction/rs_interfaces.h"
+@@ -35,8 +37,9 @@ public:
+     void Init(sptr<AbstractScreenController> abstractScreenController);
+     ScreenId GetDefaultScreenId();
+     RSScreenModeInfo GetScreenActiveMode(ScreenId id);
+-    ScreenId CreateVirtualScreen(const VirtualDisplayInfo &virtualDisplayInfo, sptr<Surface> surface);
+-    bool DestroyVirtualScreen(ScreenId screenId);
++
++    ScreenId CreateVirtualScreen(VirtualScreenOption option);
++    DMError DestroyVirtualScreen(ScreenId screenId);
+     std::shared_ptr<Media::PixelMap> GetScreenSnapshot(DisplayId displayId, ScreenId screenId);
+ 
+ private:
+diff --git a/dmserver/include/abstract_screen.h b/dmserver/include/abstract_screen.h
+index 9b9a0c3..517ccbb 100644
+--- a/dmserver/include/abstract_screen.h
++++ b/dmserver/include/abstract_screen.h
+@@ -16,19 +16,16 @@
+ #ifndef FOUNDATION_DMSERVER_ABSTRACT_SCREEN_H
+ #define FOUNDATION_DMSERVER_ABSTRACT_SCREEN_H
+ 
+-#include <vector>
+ 
++#include <vector>
+ #include <refbase.h>
+ #include <screen_manager/screen_types.h>
+ 
++#include "screen.h"
++
+ namespace OHOS::Rosen {
+ constexpr static ScreenId SCREEN_ID_INVALID = INVALID_SCREEN_ID;
+ 
+-struct Point {
+-    int32_t posX_;
+-    int32_t posY_;
+-};
+-
+ enum class ScreenCombination : uint32_t {
+     SCREEN_ALONE,
+     SCREEN_EXPAND,
+diff --git a/dmserver/include/display_manager_interface.h b/dmserver/include/display_manager_interface.h
+index 6834d9c..dae7bfc 100644
+--- a/dmserver/include/display_manager_interface.h
++++ b/dmserver/include/display_manager_interface.h
+@@ -21,6 +21,7 @@
+ #include <surface.h>
+ 
+ #include "dm_common.h"
++#include "screen.h"
+ #include "display_info.h"
+ #include "virtual_display_info.h"
+ #include "zidl/display_manager_agent_interface.h"
+@@ -33,8 +34,8 @@ public:
+     enum {
+         TRANS_ID_GET_DEFAULT_DISPLAY_ID = 0,
+         TRANS_ID_GET_DISPLAY_BY_ID,
+-        TRANS_ID_CREATE_VIRTUAL_DISPLAY,
+-        TRANS_ID_DESTROY_VIRTUAL_DISPLAY,
++        TRANS_ID_CREATE_VIRTUAL_SCREEN,
++        TRANS_ID_DESTROY_VIRTUAL_SCREEN,
+         TRANS_ID_GET_DISPLAY_SNAPSHOT,
+         TRANS_ID_REGISTER_DISPLAY_MANAGER_AGENT,
+         TRANS_ID_UNREGISTER_DISPLAY_MANAGER_AGENT,
+@@ -46,14 +47,14 @@ public:
+         TRANS_ID_SET_DISPLAY_STATE,
+         TRANS_ID_GET_DISPLAY_STATE,
+         TRANS_ID_NOTIFY_DISPLAY_EVENT,
++        TRANS_ID_ADD_MIRROR
+     };
+ 
+     virtual DisplayId GetDefaultDisplayId() = 0;
+     virtual DisplayInfo GetDisplayInfoById(DisplayId displayId) = 0;
+ 
+-    virtual DisplayId CreateVirtualDisplay(const VirtualDisplayInfo &virtualDisplayInfo,
+-        sptr<Surface> surface) = 0;
+-    virtual bool DestroyVirtualDisplay(DisplayId displayId) = 0;
++    virtual ScreenId CreateVirtualScreen(VirtualScreenOption option) = 0;
++    virtual DMError DestroyVirtualScreen(ScreenId screenId) = 0;
+     virtual std::shared_ptr<Media::PixelMap> GetDispalySnapshot(DisplayId displayId) = 0;
+ 
+     virtual void RegisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
+@@ -68,6 +69,7 @@ public:
+     virtual bool SetDisplayState(DisplayState state) = 0;
+     virtual DisplayState GetDisplayState(uint64_t displayId) = 0;
+     virtual void NotifyDisplayEvent(DisplayEvent event) = 0;
++    virtual void AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId) = 0;
+ };
+ } // namespace OHOS::Rosen
+ 
+diff --git a/dmserver/include/display_manager_proxy.h b/dmserver/include/display_manager_proxy.h
+index cc4fa0c..631dec2 100644
+--- a/dmserver/include/display_manager_proxy.h
++++ b/dmserver/include/display_manager_proxy.h
+@@ -18,6 +18,10 @@
+ 
+ #include "display_manager_interface.h"
+ 
++#include "dm_common.h"
++
++#include "screen.h"
++
+ #include <iremote_proxy.h>
+ 
+ namespace OHOS::Rosen {
+@@ -30,9 +34,8 @@ public:
+     DisplayId GetDefaultDisplayId() override;
+     DisplayInfo GetDisplayInfoById(DisplayId displayId) override;
+ 
+-    DisplayId CreateVirtualDisplay(const VirtualDisplayInfo &virtualDisplayInfo,
+-        sptr<Surface> surface) override;
+-    bool DestroyVirtualDisplay(DisplayId displayId) override;
++    ScreenId CreateVirtualScreen(VirtualScreenOption option) override;
++    DMError DestroyVirtualScreen(ScreenId screenId) override;
+     std::shared_ptr<Media::PixelMap> GetDispalySnapshot(DisplayId displayId) override;
+ 
+     void RegisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
+@@ -47,6 +50,7 @@ public:
+     bool SetDisplayState(DisplayState state) override;
+     DisplayState GetDisplayState(uint64_t displayId) override;
+     void NotifyDisplayEvent(DisplayEvent event) override;
++    void AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId) override;
+ 
+ private:
+     static inline BrokerDelegator<DisplayManagerProxy> delegator_;
+diff --git a/dmserver/include/display_manager_service.h b/dmserver/include/display_manager_service.h
+index 1ea7380..7b67606 100644
+--- a/dmserver/include/display_manager_service.h
++++ b/dmserver/include/display_manager_service.h
+@@ -22,6 +22,8 @@
+ #include <system_ability.h>
+ #include <surface.h>
+ 
++#include "dm_common.h"
++#include "screen.h"
+ #include "abstract_display.h"
+ #include "abstract_display_controller.h"
+ #include "abstract_screen_controller.h"
+@@ -50,9 +52,8 @@ WM_DECLARE_SINGLE_INSTANCE_BASE(DisplayManagerService);
+ public:
+     void OnStart() override;
+     void OnStop() override;
+-    DisplayId CreateVirtualDisplay(const VirtualDisplayInfo &virtualDisplayInfo,
+-        sptr<Surface> surface) override;
+-    bool DestroyVirtualDisplay(DisplayId displayId) override;
++    ScreenId CreateVirtualScreen(VirtualScreenOption option) override;
++    DMError DestroyVirtualScreen(ScreenId screenId) override;
+ 
+     DisplayId GetDefaultDisplayId() override;
+     DisplayInfo GetDisplayInfoById(DisplayId displayId) override;
+@@ -71,8 +72,9 @@ public:
+     DisplayState GetDisplayState(uint64_t displayId) override;
+     void NotifyDisplayEvent(DisplayEvent event) override;
+     bool NotifyDisplayPowerEvent(DisplayPowerEvent event, EventStatus status);
+-
+     sptr<AbstractScreenController> GetAbstractScreenController();
++    void AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId) override;
++
+ 
+ private:
+     DisplayManagerService();
+@@ -101,6 +103,7 @@ private:
+     std::map<DisplayManagerAgentType, std::vector<sptr<IDisplayManagerAgent>> > displayManagerAgentMap_;
+     sptr<DMAgentDeathRecipient> dmAgentDeath_ = new DMAgentDeathRecipient(
+         std::bind(&DisplayManagerService::RemoveDisplayManagerAgent, this, std::placeholders::_1));
++    std::map<ScreenId, std::shared_ptr<RSDisplayNode>> displayNodeMap_;
+ };
+ } // namespace OHOS::Rosen
+ 
+diff --git a/dmserver/src/abstract_display_controller.cpp b/dmserver/src/abstract_display_controller.cpp
+index 0304b9e..96fd031 100644
+--- a/dmserver/src/abstract_display_controller.cpp
++++ b/dmserver/src/abstract_display_controller.cpp
+@@ -70,26 +70,25 @@ RSScreenModeInfo AbstractDisplayController::GetScreenActiveMode(ScreenId id)
+     return rsInterface_->GetScreenActiveMode(id);
+ }
+ 
+-ScreenId AbstractDisplayController::CreateVirtualScreen(const VirtualDisplayInfo &virtualDisplayInfo,
+-    sptr<Surface> surface)
++ScreenId AbstractDisplayController::CreateVirtualScreen(VirtualScreenOption option)
+ {
+     if (rsInterface_ == nullptr) {
+         return SCREEN_ID_INVALID;
+     }
+-    ScreenId result = rsInterface_->CreateVirtualScreen(virtualDisplayInfo.name_, virtualDisplayInfo.width_,
+-        virtualDisplayInfo.height_, surface, virtualDisplayInfo.displayIdToMirror_, virtualDisplayInfo.flags_);
+-    WLOGFI("AbstractDisplayController::CreateVirtualDisplay id: %{public}" PRIu64"", result);
++    ScreenId result = rsInterface_->CreateVirtualScreen(option.name_, option.width_,
++        option.height_, option.surface_, INVALID_SCREEN_ID, option.flags_);
++    WLOGFI("AbstractDisplayController::CreateVirtualScreen id: %{public}" PRIu64"", result);
+     return result;
+ }
+ 
+-bool AbstractDisplayController::DestroyVirtualScreen(ScreenId screenId)
++DMError AbstractDisplayController::DestroyVirtualScreen(ScreenId screenId)
+ {
+     if (rsInterface_ == nullptr) {
+-        return false;
++        return DMError::DM_ERROR_NULLPTR;
+     }
+     WLOGFI("AbstractDisplayController::DestroyVirtualScreen");
+     rsInterface_->RemoveVirtualScreen(screenId);
+-    return true;
++    return DMError::DM_OK;
+ }
+ 
+ std::shared_ptr<Media::PixelMap> AbstractDisplayController::GetScreenSnapshot(DisplayId displayId, ScreenId screenId)
+diff --git a/dmserver/src/display_manager_proxy.cpp b/dmserver/src/display_manager_proxy.cpp
+index c69c99c..0059f71 100644
+--- a/dmserver/src/display_manager_proxy.cpp
++++ b/dmserver/src/display_manager_proxy.cpp
+@@ -81,58 +81,63 @@ DisplayInfo DisplayManagerProxy::GetDisplayInfoById(DisplayId displayId)
+     return *info;
+ }
+ 
+-DisplayId DisplayManagerProxy::CreateVirtualDisplay(const VirtualDisplayInfo &virtualDisplayInfo,
+-    sptr<Surface> surface)
++ScreenId DisplayManagerProxy::CreateVirtualScreen(VirtualScreenOption virtualOption)
+ {
+     sptr<IRemoteObject> remote = Remote();
+     if (remote == nullptr) {
+-        WLOGFW("create virtual display: remote is nullptr");
+-        return DISPLAY_ID_INVALD;
++        WLOGFW("DisplayManagerProxy::CreateVirtualScreen: remote is nullptr");
++        return SCREEN_ID_INVALD;
+     }
+ 
+     MessageParcel data;
+     MessageParcel reply;
+     MessageOption option;
+     if (!data.WriteInterfaceToken(GetDescriptor())) {
+-        WLOGFE("create virtual display: WriteInterfaceToken failed");
+-        return DISPLAY_ID_INVALD;
+-    }
+-    bool res = data.WriteParcelable(&virtualDisplayInfo) &&
+-        data.WriteRemoteObject(surface->GetProducer()->AsObject());
++        WLOGFE("DisplayManagerProxy::CreateVirtualScreen: WriteInterfaceToken failed");
++        return SCREEN_ID_INVALD;
++    }
++    WLOGFI("DisplayManagerProxy::CreateVirtualScreen: name %{public}s, width %{public}u, height %{public}u, mirrotId %{public}f, flags %{public}d",
++        virtualOption.name_.c_str(), virtualOption.width_, virtualOption.height_,
++        virtualOption.density_, virtualOption.flags_);
++    bool res = data.WriteString(virtualOption.name_) && data.WriteUint32(virtualOption.width_) &&
++        data.WriteUint32(virtualOption.height_) && data.WriteFloat(virtualOption.density_) &&
++        data.WriteRemoteObject(virtualOption.surface_->GetProducer()->AsObject()) &&
++        data.WriteInt32(virtualOption.flags_);
+     if (!res) {
+-        return DISPLAY_ID_INVALD;
++        WLOGFE("DisplayManagerProxy::Write data failed");
++        return SCREEN_ID_INVALD;
+     }
+-    if (remote->SendRequest(TRANS_ID_CREATE_VIRTUAL_DISPLAY, data, reply, option) != ERR_NONE) {
+-        WLOGFW("create virtual display: SendRequest failed");
+-        return DISPLAY_ID_INVALD;
++    if (remote->SendRequest(TRANS_ID_CREATE_VIRTUAL_SCREEN, data, reply, option) != ERR_NONE) {
++        WLOGFW("DisplayManagerProxy::CreateVirtualScreen: SendRequest failed");
++        return SCREEN_ID_INVALD;
+     }
+ 
+-    DisplayId displayId = reply.ReadUint64();
+-    WLOGFI("DisplayManagerProxy::CreateVirtualDisplay %" PRIu64"", displayId);
+-    return displayId;
++    ScreenId screenId = static_cast<ScreenId>(reply.ReadUint64());
++    WLOGFI("DisplayManagerProxy::CreateVirtualScreen %" PRIu64"", screenId);
++    return screenId;
+ }
+ 
+-bool DisplayManagerProxy::DestroyVirtualDisplay(DisplayId displayId)
++DMError DisplayManagerProxy::DestroyVirtualScreen(ScreenId screenId)
+ {
+     sptr<IRemoteObject> remote = Remote();
+     if (remote == nullptr) {
+-        WLOGFW("destroy virtual display: remote is nullptr");
+-        return false;
++        WLOGFW("DisplayManagerProxy::DestroyVirtualScreen: remote is nullptr");
++        return DMError::DM_ERROR_REMOTE_CREATE_FAILED;
+     }
+ 
+     MessageParcel data;
+     MessageParcel reply;
+     MessageOption option;
+     if (!data.WriteInterfaceToken(GetDescriptor())) {
+-        WLOGFE("destroy virtual display: WriteInterfaceToken failed");
+-        return false;
++        WLOGFE("DisplayManagerProxy::DestroyVirtualScreen: WriteInterfaceToken failed");
++        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+     }
+-    data.WriteUint64(static_cast<uint64_t>(displayId));
+-    if (remote->SendRequest(TRANS_ID_DESTROY_VIRTUAL_DISPLAY, data, reply, option) != ERR_NONE) {
+-        WLOGFW("destroy virtual display: SendRequest failed");
+-        return false;
++    data.WriteUint64(static_cast<uint64_t>(screenId));
++    if (remote->SendRequest(TRANS_ID_DESTROY_VIRTUAL_SCREEN, data, reply, option) != ERR_NONE) {
++        WLOGFW("DisplayManagerProxy::DestroyVirtualScreen: SendRequest failed");
++        return DMError::DM_ERROR_IPC_FAILED;
+     }
+-    return reply.ReadBool();
++    return static_cast<DMError>(reply.ReadInt32());
+ }
+ 
+ std::shared_ptr<Media::PixelMap> DisplayManagerProxy::GetDispalySnapshot(DisplayId displayId)
+@@ -375,4 +380,30 @@ void DisplayManagerProxy::NotifyDisplayEvent(DisplayEvent event)
+         return;
+     }
+ }
++
++void DisplayManagerProxy::AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId)
++{
++    sptr<IRemoteObject> remote = Remote();
++    if (remote == nullptr) {
++        WLOGFW("DisplayManagerProxy::AddMirror: remote is nullptr");
++    }
++
++    MessageParcel data;
++    MessageParcel reply;
++    MessageOption option;
++    if (!data.WriteInterfaceToken(GetDescriptor())) {
++        WLOGFE("DisplayManagerProxy::AddMirror: WriteInterfaceToken failed");
++    }
++    bool res = data.WriteUint64(static_cast<uint64_t>(mainScreenId)) &&
++        data.WriteUint64(static_cast<uint64_t>(mirrorScreenId));
++    if (!res) {
++        WLOGFE("DisplayManagerProxy::AddMirror: data write failed");
++    }
++    if (remote->SendRequest(TRANS_ID_ADD_MIRROR, data, reply, option) != ERR_NONE) {
++        WLOGFW("DisplayManagerProxy::AddMirror: SendRequest failed");
++    }
++
++    // ScreenId screenId = reply.ReadUint64();
++    WLOGFI("DisplayManagerProxy::AddMirror");
++}
+ } // namespace OHOS::Rosen
+\ No newline at end of file
+diff --git a/dmserver/src/display_manager_service.cpp b/dmserver/src/display_manager_service.cpp
+index f9a609c..2be676d 100644
+--- a/dmserver/src/display_manager_service.cpp
++++ b/dmserver/src/display_manager_service.cpp
+@@ -14,6 +14,7 @@
+  */
+ 
+ #include "display_manager_service.h"
++#include "window_manager_service.h"
+ 
+ #include <cinttypes>
+ #include <unistd.h>
+@@ -24,6 +25,8 @@
+ 
+ #include "window_manager_hilog.h"
+ 
++#include "transaction/rs_interfaces.h"
++
+ namespace OHOS::Rosen {
+ namespace {
+     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, 0, "DisplayManagerService"};
+@@ -88,21 +91,31 @@ DisplayInfo DisplayManagerService::GetDisplayInfoById(DisplayId displayId)
+     return displayInfo;
+ }
+ 
+-DisplayId DisplayManagerService::CreateVirtualDisplay(const VirtualDisplayInfo &virtualDisplayInfo,
+-    sptr<Surface> surface)
++ScreenId DisplayManagerService::CreateVirtualScreen(VirtualScreenOption option)
+ {
+-    WLOGFI("name %{public}s, width %{public}u, height %{public}u, mirrotId %{public}" PRIu64", flags %{public}d",
+-        virtualDisplayInfo.name_.c_str(), virtualDisplayInfo.width_, virtualDisplayInfo.height_,
+-        virtualDisplayInfo.displayIdToMirror_, virtualDisplayInfo.flags_);
+-    ScreenId screenId = abstractDisplayController_->CreateVirtualScreen(virtualDisplayInfo, surface);
+-    return GetDisplayIdFromScreenId(screenId);
++    ScreenId screenId = abstractDisplayController_->CreateVirtualScreen(option);
++    if (screenId == SCREEN_ID_INVALD) {
++        WLOGFE("DisplayManagerService::CreateVirtualScreen: Get virtualScreenId failed");
++        return SCREEN_ID_INVALD;
++    }
++    return screenId;
+ }
+ 
+-bool DisplayManagerService::DestroyVirtualDisplay(DisplayId displayId)
++DMError DisplayManagerService::DestroyVirtualScreen(ScreenId screenId)
+ {
+-    WLOGFI("DisplayManagerService::DestroyVirtualDisplay");
+-    ScreenId screenId = GetScreenIdFromDisplayId(displayId);
++    WLOGFI("DisplayManagerService::DestroyVirtualScreen");
++    if (screenId == DISPLAY_ID_INVALD) {
++        WLOGFE("DisplayManagerService: virtualScreenId is invalid");
++        return DMError::DM_ERROR_INVALID_PARAM;
++    }
++    if (displayNodeMap_[screenId] == nullptr) {
++        WLOGFE("DisplayManagerService: Mirror mode failed, displayNodeId is nullptr");
++        return abstractDisplayController_->DestroyVirtualScreen(screenId);
++    }
++    displayNodeMap_[screenId]->RemoveFromTree();
++    displayNodeMap_.erase(screenId);
+     return abstractDisplayController_->DestroyVirtualScreen(screenId);
++
+ }
+ 
+ std::shared_ptr<Media::PixelMap> DisplayManagerService::GetDispalySnapshot(DisplayId displayId)
+@@ -259,4 +272,24 @@ void DMAgentDeathRecipient::OnRemoteDied(const wptr<IRemoteObject>& wptrDeath)
+     WLOGFI("call OnRemoteDied callback");
+     callback_(object);
+ }
++
++void DisplayManagerService::AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId)
++{
++    if (mainScreenId != DISPLAY_ID_INVALD) {
++        std::shared_ptr<RSDisplayNode> displayNode =
++            SingletonContainer::Get<WindowManagerService>().GetDisplayNode(mainScreenId);
++        if (displayNode == nullptr) {
++            WLOGFE("DisplayManagerService::AddMirror: GetDisplayNode failed, displayNode is nullptr");
++        }
++        NodeId nodeId = displayNode->GetId();
++
++        struct RSDisplayNodeConfig config = {mirrorScreenId, true, nodeId};
++        WLOGFI("DisplayManagerService::AddMirror: mainScreenId: %{public}" PRIu64 ", mirrorScreenId: %{public}" PRIu64 "", mainScreenId, mirrorScreenId);
++        displayNodeMap_[mainScreenId] = RSDisplayNode::Create(config);
++        auto transactionProxy = RSTransactionProxy::GetInstance();
++        transactionProxy->FlushImplicitTransaction();
++        WLOGFI("DisplayManagerService::AddMirror: NodeId: %{public}" PRIu64 "", nodeId >> 32);
++
++    }
++}
+ } // namespace OHOS::Rosen
+\ No newline at end of file
+diff --git a/dmserver/src/display_manager_stub.cpp b/dmserver/src/display_manager_stub.cpp
+index b0232b6..dfee7c1 100644
+--- a/dmserver/src/display_manager_stub.cpp
++++ b/dmserver/src/display_manager_stub.cpp
+@@ -15,6 +15,8 @@
+ 
+ #include "display_manager_stub.h"
+ 
++#include "dm_common.h"
++
+ #include <ipc_skeleton.h>
+ 
+ #include "window_manager_hilog.h"
+@@ -46,20 +48,34 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
+             reply.WriteParcelable(&info);
+             break;
+         }
+-        case TRANS_ID_CREATE_VIRTUAL_DISPLAY: {
+-            VirtualDisplayInfo* virtualDisplayInfo = data.ReadParcelable<VirtualDisplayInfo>();
++        case TRANS_ID_CREATE_VIRTUAL_SCREEN: {
++            std::string name = data.ReadString();
++            uint32_t width = data.ReadUint32();
++            uint32_t height = data.ReadUint32();
++            float density = data.ReadFloat();
+             sptr<IRemoteObject> surfaceObject = data.ReadRemoteObject();
+             sptr<IBufferProducer> bp = iface_cast<IBufferProducer>(surfaceObject);
+             sptr<Surface> surface = Surface::CreateSurfaceAsProducer(bp);
+-            DisplayId virtualId = CreateVirtualDisplay(*virtualDisplayInfo, surface);
+-            reply.WriteUint64(virtualId);
+-            virtualDisplayInfo = nullptr;
++            int32_t flags = data.ReadInt32();
++            VirtualScreenOption option = {
++                .name_ = name,
++                .width_ = width,
++                .height_ = height,
++                .density_ = density,
++                .surface_ = surface,
++                .flags_ = flags
++            };
++            WLOGFI("DisplayManagerStub::OnRemoteRequest: name %{public}s, width %{public}u, height %{public}u, density %{public}f, flags %{public}d",
++            option.name_.c_str(), option.width_, option.height_,
++            option.density_, option.flags_);
++                ScreenId screenId = CreateVirtualScreen(option);
++            reply.WriteUint64(static_cast<uint64_t>(screenId));
+             break;
+         }
+-        case TRANS_ID_DESTROY_VIRTUAL_DISPLAY: {
+-            DisplayId virtualId = static_cast<DisplayId>(data.ReadUint64());
+-            bool result = DestroyVirtualDisplay(virtualId);
+-            reply.WriteBool(result);
++        case TRANS_ID_DESTROY_VIRTUAL_SCREEN: {
++            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
++            DMError result = DestroyVirtualScreen(screenId);
++            reply.WriteInt32(static_cast<int32_t>(result));
+             break;
+         }
+         case TRANS_ID_GET_DISPLAY_SNAPSHOT: {
+@@ -122,6 +138,12 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
+             NotifyDisplayEvent(event);
+             break;
+         }
++        case TRANS_ID_ADD_MIRROR: {
++            ScreenId mainScreenId = static_cast<ScreenId>(data.ReadUint64());
++            ScreenId mirrorScreenId = static_cast<ScreenId>(data.ReadUint64());
++            AddMirror(mainScreenId, mirrorScreenId);
++            break;
++        }
+         default:
+             WLOGFW("unknown transaction code");
+             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+diff --git a/interfaces/innerkits/dm/display_manager.h b/interfaces/innerkits/dm/display_manager.h
+index 80f1c1f..6fae0ec 100644
+--- a/interfaces/innerkits/dm/display_manager.h
++++ b/interfaces/innerkits/dm/display_manager.h
+@@ -44,10 +44,6 @@ public:
+ 
+     std::vector<DisplayId> GetAllDisplayIds();
+ 
+-    DisplayId CreateVirtualDisplay(const std::string &name, uint32_t width, uint32_t height,
+-        sptr<Surface> surface, DisplayId displayIdToMirror, int32_t flags);
+-
+-    bool DestroyVirtualDisplay(DisplayId displayId);
+     std::shared_ptr<Media::PixelMap> GetScreenshot(DisplayId displayId);
+     std::shared_ptr<Media::PixelMap> GetScreenshot(DisplayId displayId, const Media::Rect &rect,
+                                         const Media::Size &size, int rotation);
+diff --git a/interfaces/innerkits/dm/dm_common.h b/interfaces/innerkits/dm/dm_common.h
+index 4bd1624..2e049de 100644
+--- a/interfaces/innerkits/dm/dm_common.h
++++ b/interfaces/innerkits/dm/dm_common.h
+@@ -43,6 +43,19 @@ enum class DisplayState : uint32_t {
+ enum class DisplayEvent : uint32_t {
+     UNLOCK
+ };
++
++enum class DMError : int32_t {
++    DM_OK = 0,
++    DM_ERROR_INIT_DMS_PROXY_LOCKED = 100,
++    DM_ERROR_IPC_FAILED = 101,
++    DM_ERROR_REMOTE_CREATE_FAILED = 110,
++    DM_ERROR_NULLPTR = 120,
++    DM_ERROR_INVALID_PARAM = 130,
++    DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED = 140,
++    DM_ERROR_DEATH_RECIPIENT = 150,
++    DM_ERROR_INVALID_MODE_ID = 160,
++    DM_ERROR_UNKNOWN,
++};
+ using DisplayStateCallback = std::function<void(DisplayState)>;
+ 
+ enum class DisplayPowerEvent : uint32_t {
+diff --git a/interfaces/innerkits/dm/screen.h b/interfaces/innerkits/dm/screen.h
+index ae22213..cc902bd 100644
+--- a/interfaces/innerkits/dm/screen.h
++++ b/interfaces/innerkits/dm/screen.h
+@@ -31,7 +31,7 @@ struct Point {
+ };
+ 
+ struct VirtualScreenOption {
+-    const std::string& name_;
++    const std::string name_;
+     uint32_t width_;
+     uint32_t height_;
+     float density_;
+diff --git a/interfaces/innerkits/dm/screen_manager.h b/interfaces/innerkits/dm/screen_manager.h
+index 7900ef8..3310d2f 100644
+--- a/interfaces/innerkits/dm/screen_manager.h
++++ b/interfaces/innerkits/dm/screen_manager.h
+@@ -18,8 +18,10 @@
+ 
+ #include <refbase.h>
+ #include "screen.h"
++#include "dm_common.h"
+ #include "screen_group.h"
+ #include "wm_single_instance.h"
++#include "wm_single_instance.h"
+ 
+ namespace OHOS::Rosen {
+ class IScreenChangeListener : public RefBase {
+@@ -34,10 +36,13 @@ WM_DECLARE_SINGLE_INSTANCE_BASE(ScreenManager);
+ public:
+     sptr<Screen> GetScreenById(ScreenId id);
+     std::vector<const sptr<Screen>> GetAllScreens();
++
+     void RegisterScreenChangeListener(sptr<IScreenChangeListener> listener);
+-    sptr<ScreenGroup> makeExpand(std::vector<ScreenId> screenId, std::vector<Point> startPoint);
+-    sptr<ScreenGroup> makeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId);
+-    sptr<Screen> createVirtualScreen(VirtualScreenOption option);
++    sptr<ScreenGroup> MakeExpand(std::vector<ScreenId> screenId, std::vector<Point> startPoint);
++    sptr<ScreenGroup> MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId);
++    sptr<ScreenGroup> AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId);
++    ScreenId CreateVirtualScreen(VirtualScreenOption option);
++    DMError DestroyVirtualScreen(ScreenId screenId);
+ 
+ private:
+     ScreenManager();
+diff --git a/wmserver/include/window_layout_policy.h b/wmserver/include/window_layout_policy.h
+index a9dc89d..3c31635 100644
+--- a/wmserver/include/window_layout_policy.h
++++ b/wmserver/include/window_layout_policy.h
+@@ -59,11 +59,13 @@ private:
+     sptr<WindowNode> belowAppWindowNode_ = new WindowNode();
+     sptr<WindowNode> appWindowNode_ = new WindowNode();
+     sptr<WindowNode> aboveAppWindowNode_ = new WindowNode();
++
+     const std::set<WindowType> avoidTypes_ {
+         WindowType::WINDOW_TYPE_STATUS_BAR,
+         WindowType::WINDOW_TYPE_NAVIGATION_BAR,
+     };
+     void UpdateLimitRect(const sptr<WindowNode>& node, Rect& limitRect);
++
+     void LayoutWindowTree();
+     void LayoutWindowNode(sptr<WindowNode>& node);
+     AvoidPosType GetAvoidPosType(const Rect& rect);
+diff --git a/wmserver/include/window_manager_service.h b/wmserver/include/window_manager_service.h
+index dce096d..07f39ff 100644
+--- a/wmserver/include/window_manager_service.h
++++ b/wmserver/include/window_manager_service.h
+@@ -54,7 +54,6 @@ public:
+     WMError SetWindowFlags(uint32_t windowId, uint32_t flags) override;
+     WMError SetSystemBarProperty(uint32_t windowId, WindowType type, const SystemBarProperty& prop) override;
+ 
+-    std::shared_ptr<RSDisplayNode> GetDisplayNode(int32_t displayId) const;
+     void RegisterWindowManagerAgent(WindowManagerAgentType type,
+         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
+     void UnregisterWindowManagerAgent(WindowManagerAgentType type,
+@@ -63,6 +62,7 @@ public:
+     // Inner interfaces
+     WMError NotifyDisplaySuspend();
+     void RestoreSuspendedWindows();
++    std::shared_ptr<RSDisplayNode> GetDisplayNode(int32_t displayId) const;
+ 
+ protected:
+     WindowManagerService();
+diff --git a/wmserver/include/window_node_container.h b/wmserver/include/window_node_container.h
+index 47a2061..bb2ecdf 100644
+--- a/wmserver/include/window_node_container.h
++++ b/wmserver/include/window_node_container.h
+@@ -52,6 +52,7 @@ public:
+     sptr<WindowNode> GetTopImmersiveNode() const;
+     void NotifySystemBarIfChanged();
+     std::shared_ptr<RSDisplayNode> GetDisplayNode() const;
++
+     void LayoutDividerWindow(sptr<WindowNode>& node);
+     void UpdateDisplayInfo();
+ 
+diff --git a/wmserver/src/window_layout_policy.cpp b/wmserver/src/window_layout_policy.cpp
+index 92fe42c..8a79a31 100644
+--- a/wmserver/src/window_layout_policy.cpp
++++ b/wmserver/src/window_layout_policy.cpp
+@@ -245,6 +245,7 @@ void WindowLayoutPolicy::UpdateLimitRect(const sptr<WindowNode>& node, Rect& lim
+     }
+     WLOGFI("Type: %{public}d, limitRect: %{public}d %{public}d %{public}d %{public}d",
+         node->GetWindowType(), limitRect.posX_, limitRect.posY_, limitRect.width_, limitRect.height_);
++
+ }
+ }
+ }
+diff --git a/wmserver/src/window_manager_service.cpp b/wmserver/src/window_manager_service.cpp
+index ef1cdb5..7381737 100644
+--- a/wmserver/src/window_manager_service.cpp
++++ b/wmserver/src/window_manager_service.cpp
+@@ -231,11 +231,6 @@ void WindowManagerService::UnregisterWindowManagerAgent(WindowManagerAgentType t
+     windowController_->UnregisterWindowManagerAgent(type, windowManagerAgent);
+ }
+ 
+-std::shared_ptr<RSDisplayNode> WindowManagerService::GetDisplayNode(int32_t displayId) const
+-{
+-    return windowRoot_->GetOrCreateWindowNodeContainer(displayId)->GetDisplayNode();
+-}
+-
+ void WindowManagerService::OnWindowEvent(Event event, uint32_t windowId)
+ {
+     switch (event) {
+@@ -261,5 +256,10 @@ void WindowManagerService::RestoreSuspendedWindows()
+     std::lock_guard<std::recursive_mutex> lock(mutex_);
+     // TODO: restore windows covered by keyguard
+ }
++
++std::shared_ptr<RSDisplayNode> WindowManagerService::GetDisplayNode(int32_t displayId) const
++{
++    return windowRoot_->GetOrCreateWindowNodeContainer(displayId)->GetDisplayNode();
++}
+ }
+ }
+\ No newline at end of file
+-- 
+2.25.1
+

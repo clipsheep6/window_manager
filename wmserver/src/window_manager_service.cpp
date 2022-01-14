@@ -231,11 +231,6 @@ void WindowManagerService::UnregisterWindowManagerAgent(WindowManagerAgentType t
     windowController_->UnregisterWindowManagerAgent(type, windowManagerAgent);
 }
 
-std::shared_ptr<RSDisplayNode> WindowManagerService::GetDisplayNode(int32_t displayId) const
-{
-    return windowRoot_->GetOrCreateWindowNodeContainer(displayId)->GetDisplayNode();
-}
-
 void WindowManagerService::OnWindowEvent(Event event, uint32_t windowId)
 {
     switch (event) {
@@ -260,6 +255,11 @@ void WindowManagerService::RestoreSuspendedWindows()
     WLOGFI("RestoreSuspendedWindows");
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     // TODO: restore windows covered by keyguard
+}
+
+std::shared_ptr<RSDisplayNode> WindowManagerService::GetDisplayNode(int32_t displayId) const
+{
+    return windowRoot_->GetOrCreateWindowNodeContainer(displayId)->GetDisplayNode();
 }
 }
 }

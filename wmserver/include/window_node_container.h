@@ -52,6 +52,7 @@ public:
     sptr<WindowNode> GetTopImmersiveNode() const;
     void NotifySystemBarIfChanged();
     std::shared_ptr<RSDisplayNode> GetDisplayNode() const;
+
     void LayoutDividerWindow(sptr<WindowNode>& node);
     void UpdateDisplayInfo();
 
