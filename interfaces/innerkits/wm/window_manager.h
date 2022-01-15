@@ -39,6 +39,11 @@ public:
     virtual void OnSystemBarPropertyChange(uint64_t displayId, const SystemBarProps& props) = 0;
 };
 
+class IAvoidAreaChangedListener : public RefBase {
+public:
+    virtual void OnAvoidAreaChanged(const std::vector<Rect> avoidArea) = 0;
+};
+
 class WindowManager {
 WM_DECLARE_SINGLE_INSTANCE_BASE(WindowManager);
 friend class WindowManagerAgent;
@@ -47,6 +52,8 @@ public:
     void UnregisterFocusChangedListener(const sptr<IFocusChangedListener>& listener);
     void RegisterSystemBarChangedListener(const sptr<ISystemBarChangedListener>& listener);
     void UnregisterSystemBarChangedListener(const sptr<ISystemBarChangedListener>& listener);
+    void RegisterAvoidAreaChangedListener(const sptr<IAvoidAreaChangedListener>& listener);
+    void UnregisterAvoidAreaChangedListener(const sptr<IAvoidAreaChangedListener>& listener);
 
 private:
     WindowManager();
@@ -57,6 +64,7 @@ private:
     void UpdateFocusStatus(uint32_t windowId, const sptr<IRemoteObject>& abilityToken, WindowType windowType,
         int32_t displayId, bool focused) const;
     void UpdateSystemBarProperties(uint64_t displayId, const SystemBarProps& props) const;
+    void UpdateAvoidArea(const std::vector<Rect>& avoidArea) const;
 };
 } // namespace Rosen
 } // namespace OHOS

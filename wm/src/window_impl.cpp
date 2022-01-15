@@ -114,6 +114,20 @@ SystemBarProperty WindowImpl::GetSystemBarPropertyByType(WindowType type)
     return curProperties[type];
 }
 
+WMError WindowImpl::GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea)
+{
+    WLOGFI("GetAvoidAreaByType Start. Search type :%{public}u", type);
+    std::vector<Rect> avoidAreaVec;
+    uint32_t windowId = property_->GetWindowId();
+    WMError ret = SingletonContainer::Get<WindowAdapter>().GetAvoidAreaByType(windowId, type, avoidAreaVec);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("GetAvoidAreaByType errCode:%{public}d winId:%{public}u type:%{public}u",
+            static_cast<int32_t>(ret), property_->GetWindowId(), static_cast<uint32_t>(type));
+    }
+    avoidArea = {avoidAreaVec[0], avoidAreaVec[1], avoidAreaVec[2], avoidAreaVec[3]}; // 0:left 1:top 2:right 3:bottom
+    return ret;
+}
+
 WMError WindowImpl::SetWindowType(WindowType type)
 {
     WLOGFI("window id: %{public}d, type:%{public}d", property_->GetWindowId(), static_cast<uint32_t>(type));

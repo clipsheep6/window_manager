@@ -34,6 +34,7 @@ public:
     void NotifyUnfocused(uint32_t windowId, const sptr<IRemoteObject>& abilityToken,
         WindowType windowType, int32_t displayId) const;
     void NotifySystemBarChanged(uint64_t displayId, const SystemBarProps& props) const;
+    void NotifyAvoidAreaChanged(const std::vector<Rect>& avoidArea) const;
     static inline SingletonDelegator<WindowManager> delegator_;
 
     std::mutex mutex_;
@@ -41,6 +42,8 @@ public:
     sptr<WindowManagerAgent> focusChangedListenerAgent_;
     std::vector<sptr<ISystemBarChangedListener>> systemBarChangedListeners_;
     sptr<WindowManagerAgent> systemBarChangedListenerAgent_;
+    std::vector<sptr<IAvoidAreaChangedListener>> avoidAreaChangedListeners_;
+    sptr<WindowManagerAgent> avoidAreaChangedListenerAgent_;
 };
 
 void WindowManager::Impl::NotifyFocused(uint32_t windowId, const sptr<IRemoteObject>& abilityToken,
@@ -72,6 +75,16 @@ void WindowManager::Impl::NotifySystemBarChanged(uint64_t displayId, const Syste
     }
     for (auto& listener : systemBarChangedListeners_) {
         listener->OnSystemBarPropertyChange(displayId, props);
+    }
+}
+
+void WindowManager::Impl::NotifyAvoidAreaChanged(const std::vector<Rect>& avoidArea) const
+{
+    WLOGFI("WindowManager::Impl::NotifyAvoidAreaChanged. Avoid area size: %{public}d",static_cast<int32_t>(avoidArea.size()));
+    for (auto& listener : avoidAreaChangedListeners_) {
+        if (listener != nullptr) {
+            listener->OnAvoidAreaChanged(avoidArea);
+        }
     }
 }
 
@@ -156,6 +169,43 @@ void WindowManager::UnregisterSystemBarChangedListener(const sptr<ISystemBarChan
     }
 }
 
+void WindowManager::RegisterAvoidAreaChangedListener(const sptr<IAvoidAreaChangedListener>& listener)
+{
+    if (listener == nullptr) {
+        WLOGFE("listener could not be null");
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(pImpl_->mutex_);
+    pImpl_->avoidAreaChangedListeners_.push_back(listener);
+    if (pImpl_->avoidAreaChangedListenerAgent_ == nullptr) {
+        pImpl_->avoidAreaChangedListenerAgent_ = new WindowManagerAgent();
+        SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_AVOID_AREA, pImpl_->avoidAreaChangedListenerAgent_);
+    }
+}
+
+void WindowManager::UnregisterAvoidAreaChangedListener(const sptr<IAvoidAreaChangedListener>& listener)
+{
+    if (listener == nullptr) {
+        WLOGFE("listener could not be null");
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(pImpl_->mutex_);
+    auto iter = std::find(pImpl_->avoidAreaChangedListeners_.begin(), pImpl_->avoidAreaChangedListeners_.end(),
+        listener);
+    if (iter == pImpl_->avoidAreaChangedListeners_.end()) {
+        WLOGFE("could not find this listener");
+        return;
+    }
+    pImpl_->avoidAreaChangedListeners_.erase(iter);
+    if (pImpl_->avoidAreaChangedListeners_.empty() && pImpl_->avoidAreaChangedListenerAgent_ != nullptr) {
+        SingletonContainer::Get<WindowAdapter>().UnregisterWindowManagerAgent(
+            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_AVOID_AREA, pImpl_->avoidAreaChangedListenerAgent_);
+    }
+}
+
 void WindowManager::UpdateFocusStatus(uint32_t windowId, const sptr<IRemoteObject>& abilityToken, WindowType windowType,
     int32_t displayId, bool focused) const
 {
@@ -167,10 +217,14 @@ void WindowManager::UpdateFocusStatus(uint32_t windowId, const sptr<IRemoteObjec
     }
 }
 
-void WindowManager::UpdateSystemBarProperties(uint64_t displayId,
-    const SystemBarProps& props) const
+void WindowManager::UpdateSystemBarProperties(uint64_t displayId, const SystemBarProps& props) const
 {
     pImpl_->NotifySystemBarChanged(displayId, props);
+}
+
+void WindowManager::UpdateAvoidArea(const std::vector<Rect>& avoidArea) const
+{
+    pImpl_->NotifyAvoidAreaChanged(avoidArea);
 }
 } // namespace Rosen
 } // namespace OHOS

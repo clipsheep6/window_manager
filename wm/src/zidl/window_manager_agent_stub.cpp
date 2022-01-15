@@ -55,6 +55,16 @@ int WindowManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
             UpdateSystemBarProperties(displayId, props);
             break;
         }
+        case TRANS_ID_UPDATE_AVOID_AREA: {
+            std::vector<Rect> avoidArea;
+            uint32_t len = data.ReadUint32();
+            for (uint32_t i = 0; i < len; ++i) {
+                Rect rect { data.ReadInt32(), data.ReadInt32(), data.ReadUint32(), data.ReadUint32() };
+                avoidArea.push_back(rect);
+            }
+            UpdateAvoidArea(avoidArea);
+            break;
+        }
         default:
             break;
     }

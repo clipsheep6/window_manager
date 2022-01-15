@@ -225,6 +225,14 @@ WMError WindowController::SetSystemBarProperty(uint32_t windowId, WindowType typ
     return res;
 }
 
+std::vector<Rect> WindowController::GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType)
+{
+    std::vector<Rect> avoidArea = windowRoot_->GetAvoidAreaByType(windowId, avoidAreaType);
+    RSTransaction::FlushImplicitTransaction();
+    WLOGFI("UpdateSystemBarProperty FlushImplicitTransaction end");
+    return avoidArea;
+}
+
 void WindowController::RegisterWindowManagerAgent(WindowManagerAgentType type,
     const sptr<IWindowManagerAgent>& windowManagerAgent)
 {

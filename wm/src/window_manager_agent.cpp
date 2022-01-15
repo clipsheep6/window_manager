@@ -29,5 +29,10 @@ void WindowManagerAgent::UpdateSystemBarProperties(uint64_t displayId, const Sys
 {
     SingletonContainer::Get<WindowManager>().UpdateSystemBarProperties(displayId, props);
 }
+
+void WindowManagerAgent::UpdateAvoidArea(const std::vector<Rect>& avoidArea)
+{
+    SingletonContainer::Get<WindowManager>().UpdateAvoidArea(avoidArea);
+}
 } // namespace Rosen
 } // namespace OHOS

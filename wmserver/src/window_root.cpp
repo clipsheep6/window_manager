@@ -49,9 +49,12 @@ sptr<WindowNodeContainer> WindowRoot::GetOrCreateWindowNodeContainer(int32_t dis
         std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
     UpdateSystemBarPropsFunc sysBarUpdateFunc = std::bind(&WindowRoot::UpdateSystemBarProperties, this,
         std::placeholders::_1, std::placeholders::_2);
+    UpdateAvoidAreaWinRootFunc avoidAreaWinRootFunc = std::bind(&WindowRoot::UpdateAvoidArea, this,
+        std::placeholders::_1);
     WindowNodeContainerCallbacks callbacks = {
         focusStatusFunc,
-        sysBarUpdateFunc
+        sysBarUpdateFunc,
+        avoidAreaWinRootFunc,
     };
     sptr<WindowNodeContainer> container = new WindowNodeContainer(abstractDisplay->GetId(),
         static_cast<uint32_t>(abstractDisplay->GetWidth()), static_cast<uint32_t>(abstractDisplay->GetHeight()),
@@ -126,6 +129,23 @@ WMError WindowRoot::MinimizeOtherFullScreenAbility(sptr<WindowNode>& node)
         return WMError::WM_ERROR_NULLPTR;
     }
     return container->MinimizeOtherFullScreenAbility();
+}
+
+std::vector<Rect> WindowRoot::GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType)
+{
+    std::vector<Rect> avoidArea;
+    auto node = GetWindowNode(windowId);
+    if (node == nullptr) {
+        WLOGFE("could not find window");
+        return avoidArea;
+    }
+    auto container = GetOrCreateWindowNodeContainer(node->GetDisplayId());
+    if (container == nullptr) {
+        WLOGFE("add window failed, window container could not be found");
+        return avoidArea;
+    }
+    avoidArea = container->GetAvoidAreaByType(avoidAreaType);
+    return avoidArea;
 }
 
 WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node)
@@ -314,6 +334,13 @@ void WindowRoot::UpdateSystemBarProperties(uint64_t displayId, const SystemBarPr
     }
     for (auto& agent : windowManagerAgents_[WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_SYSTEM_BAR]) {
         agent->UpdateSystemBarProperties(displayId, props);
+    }
+}
+
+void WindowRoot::UpdateAvoidArea(const std::vector<Rect>& avoidArea)
+{
+    for (auto& agent : windowManagerAgents_[WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_AVOID_AREA]) {
+        agent->UpdateAvoidArea(avoidArea);
     }
 }
 

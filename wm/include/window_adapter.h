@@ -46,6 +46,7 @@ public:
     virtual WMError RequestFocus(uint32_t windowId);
     virtual WMError SetWindowFlags(uint32_t windowId, uint32_t flags);
     virtual WMError SetSystemBarProperty(uint32_t windowId, WindowType type, const SystemBarProperty& property);
+    virtual WMError GetAvoidAreaByType(uint32_t windowId, AvoidAreaType type, std::vector<Rect>& avoidRect);
 
     virtual void RegisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent);

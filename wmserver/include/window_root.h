@@ -69,6 +69,7 @@ public:
 
     WMError RequestFocus(uint32_t windowId);
     WMError MinimizeOtherFullScreenAbility(sptr<WindowNode>& node);
+    std::vector<Rect> GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType);
 
     void RegisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent);
@@ -84,6 +85,7 @@ private:
     void UpdateFocusStatus(uint32_t windowId, const sptr<IRemoteObject>& abilityToken, WindowType windowType,
         int32_t displayId, bool focused);
     void UpdateSystemBarProperties(uint64_t displayId, const SystemBarProps& props);
+    void UpdateAvoidArea(const std::vector<Rect>& avoidArea);
     WMError DestroyWindowInner(sptr<WindowNode>& node);
     bool CheckDisplayInfo(const sptr<AbstractDisplay>& display);
 
