@@ -28,6 +28,7 @@ public:
     void UpdateFocusStatus(uint32_t windowId, const sptr<IRemoteObject>& abilityToken, WindowType windowType,
         int32_t displayId, bool focused) override;
     void UpdateSystemBarProperties(uint64_t displayId, const SystemBarProps& props) override;
+    void UpdateAvoidArea(const std::vector<Rect>& avoidArea) override;
 };
 } // namespace Rosen
 } // namespace OHOS

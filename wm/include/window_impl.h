@@ -57,6 +57,7 @@ public:
     virtual WMError RemoveWindowFlag(WindowFlag flag) override;
     virtual WMError SetWindowFlags(uint32_t flags) override;
     virtual WMError SetSystemBarProperty(WindowType type, const SystemBarProperty& property) override;
+    virtual WMError GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea) override;
 
     WMError Create(const std::string& parentName,
         const std::shared_ptr<AbilityRuntime::AbilityContext>& abilityContext = nullptr);

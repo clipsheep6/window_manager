@@ -17,6 +17,7 @@
 #define OHOS_ROSEN_WINDOW_NODE_CONTAINER_H
 
 #include <ui/rs_display_node.h>
+#include "avoid_area_controller.h"
 #include "window_layout_policy.h"
 #include "window_node.h"
 #include "window_zorder_policy.h"
@@ -27,10 +28,12 @@ namespace Rosen {
 using UpdateFocusStatusFunc = std::function<void (uint32_t windowId, const sptr<IRemoteObject>& abilityToken,
     WindowType windowType, int32_t displayId, bool focused)>;
 using UpdateSystemBarPropsFunc = std::function<void (uint64_t displayId, const SystemBarProps& props)>;
+using UpdateAvoidAreaWinRootFunc = std::function<void (const std::vector<Rect>& avoidArea)>;
 
 struct WindowNodeContainerCallbacks {
     UpdateFocusStatusFunc focusStatusCallBack_;
     UpdateSystemBarPropsFunc systemBarChangedCallBack_;
+    UpdateAvoidAreaWinRootFunc avoidAreaChangeWinRootCallBack_;
 };
 
 class WindowNodeContainer : public RefBase {
@@ -45,12 +48,14 @@ public:
     void AssignZOrder();
     WMError SetFocusWindow(uint32_t windowId);
     uint32_t GetFocusWindow() const;
+    std::vector<Rect> GetAvoidAreaByType(AvoidAreaType avoidAreaType);
     WMError MinimizeOtherFullScreenAbility(); // adapt to api7
     void TraverseContainer(std::vector<sptr<WindowNode>>& windowNodes);
     uint64_t GetScreenId() const;
     Rect GetDisplayRect() const;
     sptr<WindowNode> GetTopImmersiveNode() const;
     void NotifySystemBarIfChanged();
+    void OnWmsAvoidAreaChange(const std::vector<Rect>& avoidArea);
     std::shared_ptr<RSDisplayNode> GetDisplayNode() const;
     void LayoutDividerWindow(sptr<WindowNode>& node);
     void UpdateDisplayInfo();
@@ -81,6 +86,7 @@ private:
     void UpdateFocusStatus(uint32_t id, bool focused) const;
     void UpdateWindowTree(sptr<WindowNode>& node);
     bool UpdateRSTree(sptr<WindowNode>& node, bool isAdd);
+    sptr<AvoidAreaController> avoidController_;
     sptr<WindowZorderPolicy> zorderPolicy_ = new WindowZorderPolicy();
     sptr<WindowNode> belowAppWindowNode_ = new WindowNode();
     sptr<WindowNode> appWindowNode_ = new WindowNode();
