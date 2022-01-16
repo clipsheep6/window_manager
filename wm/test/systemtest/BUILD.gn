@@ -19,7 +19,6 @@ group("systemtest") {
   testonly = true
 
   deps = [
-    ":wm_window_immersive_test",
     ":wm_window_layout_test",
     ":wm_window_multi_ability_test",
     ":wm_window_subwindow_test",
@@ -58,17 +57,6 @@ ohos_systemtest("wm_window_subwindow_test") {
 }
 
 ## SystemTest wm_window_subwindow_test }}}
-
-## SystemTest wm_window_immersive_test {{{
-ohos_systemtest("wm_window_immersive_test") {
-  module_out_path = module_out_path
-
-  sources = [ "window_immersive_test.cpp" ]
-
-  deps = [ ":wm_systemtest_common" ]
-}
-
-## SystemTest wm_window_immersive_test }}}
 
 ## Build wm_systemtest_common.a {{{
 config("wm_systemtest_common_public_config") {
@@ -124,6 +112,6 @@ ohos_static_library("wm_systemtest_common") {
     "//utils/native/base:utils",
   ]
 
-  external_deps = [ "aafwk_standard:ability_context_native" ]
+  external_deps = [ "ability_runtime:ability_context_native" ]
 }
 ## Build wm_systemtest_common.a }}}
