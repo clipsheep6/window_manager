@@ -49,6 +49,7 @@ public:
     void SendMessage(InnerWMCmd cmdType, uint32_t displayId = 0);
     void SendMessage(InnerWMCmd cmdType, uint32_t displayId, const Rect& rect);
     void HandleMessage();
+    sptr<Window> GetDividerWindow(uint32_t displayId) const;
 private:
     static inline SingletonDelegator<WindowInnerManager> delegator;
 
@@ -57,7 +58,7 @@ private:
     void HideAndDestroyDivider();
     void DestroyThread();
     void DrawSurface(const sptr<Window>& window, uint32_t color);
-    sptr<Window> GetDividerWindow(uint32_t displayId) const;
+    // sptr<Window> GetDividerWindow(uint32_t displayId) const;
 
     std::mutex mutex_;
     std::condition_variable conVar_;

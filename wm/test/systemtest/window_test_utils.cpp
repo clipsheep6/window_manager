@@ -103,5 +103,40 @@ bool WindowTestUtils::RectEqualTo(const sptr<Window>& window, const Rect& r)
     }
     return res;
 }
+
+void WindowTestUtils::InitSplitRect(const Rect& screenRect)
+{
+    const float splitRatio = 0.5;
+    const uint32_t dividerWidth = 50;
+    splitRects_.displayRect = screenRect;
+
+    splitRects_.dividerRect = { static_cast<uint32_t>((splitRects_.displayRect.width_ - dividerWidth) * splitRatio), 0,
+        dividerWidth, splitRects_.displayRect.height_ };
+
+    SetSplitRect(splitRects_.dividerRect.posX_);
+}
+
+void WindowTestUtils::UpdateSplitRect(int32_t divPosX)
+{
+    splitRects_.dividerRect.posX_ = divPosX;
+
+    splitRects_.primaryRect.width_ = divPosX;
+    splitRects_.primaryRect.height_ = displayRect_.height_;
+
+    splitRects_.secondaryRect.posX_ = divPosX + splitRects_.dividerRect.width_;
+    splitRects_.secondaryRect.width_ = displayRect_.width_ - splitRects_.secondaryRect.posX_;
+    splitRects_.secondaryRect.height_ = displayRect_.height_;
+}
+
+bool WindowTestUtils::SplitRectEqualTo(const sptr<Window>& window, const Rect& r)
+{
+    Rect l = window->GetRect();
+    bool res = ((l.posX_ == r.posX_) && (l.posY_ == r.posY_) && (l.width_ == r.width_));
+    if (!res) {
+        printf("GetLayoutRect: %d %d %d %d, Expect: %d %d %d %d\n", l.posX_, l.posY_, l.width_, l.height_,
+            r.posX_, r.posY_, r.width_, r.height_);
+    }
+    return res;
+}
 } // namespace ROSEN
 } // namespace OHOS

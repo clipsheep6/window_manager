@@ -25,6 +25,12 @@
 
 namespace OHOS {
 namespace Rosen {
+    struct SplitRects {
+        Rect primaryRect;
+        Rect secondaryRect;
+        Rect displayRect;
+        Rect dividerRect;
+    };
 class WindowTestUtils {
 public:
     struct TestWindowInfo {
@@ -40,12 +46,17 @@ public:
     static Rect statusBarRect_;
     static Rect naviBarRect_;
     static Rect defaultAppRect_;
+    SplitRects splitRects_;
     static void InitByScreenRect(const Rect& screenRect);
     static sptr<Window> CreateTestWindow(const TestWindowInfo& info);
     static sptr<Window> CreateStatusBarWindow();
     static sptr<Window> CreateNavigationBarWindow();
     static sptr<WindowScene> CreateWindowScene();
     static bool RectEqualTo(const sptr<Window>& window, const Rect& r);
+
+    void InitSplitRect(const Rect& screenRect);
+    void UpdateSplitRect(int32_t divPosX);
+    bool SplitRectEqualTo(const sptr<Window>& window, const Rect& r);
 };
 } // namespace ROSEN
 } // namespace OHOS
