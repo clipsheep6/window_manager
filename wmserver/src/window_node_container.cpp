@@ -23,6 +23,7 @@
 #include "window_manager_agent_controller.h"
 #include "window_inner_manager.h"
 #include "window_manager_hilog.h"
+#include "wm_common.h"
 #include "wm_trace.h"
 #include "common_event_manager.h"
 
@@ -133,6 +134,11 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
     }
     NotifyIfSystemBarTintChanged();
     DumpScreenWindowTree();
+    if (node->currentVisibility_) {
+        uint32_t windowId = node->GetWindowId();
+        WLOGFI("ycz window added: %{public}d", windowId);
+        NotifyWindowUpdate(windowId, WindowUpdateType::WINDOW_UPDATE_ADDED);
+    }
     WLOGFI("AddWindowNode windowId: %{public}d end", node->GetWindowId());
     return WMError::WM_OK;
 }
@@ -255,6 +261,7 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
     }
     NotifyIfSystemBarTintChanged();
     DumpScreenWindowTree();
+    NotifyWindowUpdate(node->GetWindowId(), WindowUpdateType::WINDOW_UPDATE_REMOVED);
     WLOGFI("RemoveWindowNode windowId: %{public}d end", node->GetWindowId());
     return WMError::WM_OK;
 }
@@ -310,6 +317,10 @@ sptr<WindowNode> WindowNodeContainer::FindWindowNodeById(uint32_t id) const
 void WindowNodeContainer::UpdateFocusStatus(uint32_t id, bool focused) const
 {
     auto node = FindWindowNodeById(id);
+    if (focused) {
+        WLOGFI("window is focused,window id:%{public}d", id);
+        NotifyWindowUpdate(node->GetWindowId(), WindowUpdateType::WINDOW_UPDATE_FOCUSED);
+    }
     if (node == nullptr) {
         WLOGFW("cannot find focused window id:%{public}d", id);
     } else {
@@ -490,6 +501,22 @@ void WindowNodeContainer::RaiseWindowToTop(uint32_t windowId, std::vector<sptr<W
         AssignZOrder();
         WLOGFI("raise window to top %{public}d", node->GetWindowId());
     }
+}
+
+void WindowNodeContainer::NotifyWindowUpdate(uint32_t windowId, WindowUpdateType type) const
+{
+    auto node = FindWindowNodeById(windowId);
+    sptr<WindowInfo> windowInfo = new WindowInfo();
+    windowInfo->wid_ = windowId;
+    Rect windowRect = node->GetLayoutRect();
+    windowInfo->width_ = windowRect.width_;
+    windowInfo->height_ = windowRect.height_;
+    windowInfo->positionX_ = windowRect.posX_;
+    windowInfo->positionY_ = windowRect.posY_;
+    windowInfo->focused_ = true;
+    windowInfo->mode_ = node->GetWindowMode();
+    windowInfo->type_ = node->GetWindowType();
+    WindowManagerAgentController::GetInstance().UpdateWindowStatus(windowInfo, type);
 }
 
 void WindowNodeContainer::TraverseContainer(std::vector<sptr<WindowNode>>& windowNodes) const

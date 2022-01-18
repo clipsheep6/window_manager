@@ -47,6 +47,7 @@ public:
     Rect GetDisplayRect() const;
     sptr<WindowNode> GetTopImmersiveNode() const;
     WMError HandleSplitWindowModeChange(sptr<WindowNode>& triggerNode, bool isChangeToSplit);
+    void NotifyWindowUpdate(uint32_t windowId, WindowUpdateType type) const;
 
     void OnAvoidAreaChange(const std::vector<Rect>& avoidAreas);
     std::shared_ptr<RSDisplayNode> GetDisplayNode() const;
