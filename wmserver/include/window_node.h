@@ -19,7 +19,7 @@
 #include <ipc_skeleton.h>
 #include <refbase.h>
 #include <ui/rs_surface_node.h>
-#include "window_interface.h"
+#include "iwindow.h"
 #include "window_manager_hilog.h"
 
 namespace OHOS {

@@ -16,7 +16,7 @@
 #ifndef OHOS_WINDOW_PROXY_H
 #define OHOS_WINDOW_PROXY_H
 
-#include "window_interface.h"
+#include "iwindow.h"
 #include "iremote_proxy.h"
 
 namespace OHOS {

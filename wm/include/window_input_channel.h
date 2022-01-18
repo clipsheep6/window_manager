@@ -12,12 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef OHOS_WINDOW_INPUT_CHANNEL
+#define OHOS_WINDOW_INPUT_CHANNEL
 
 #include <window.h>
 #include "refbase.h"
 #include "vsync_station.h"
-#ifndef OHOS_WINDOW_INPUT_CHANNEL
-#define OHOS_WINDOW_INPUT_CHANNEL
 
 namespace OHOS {
 namespace Rosen {
