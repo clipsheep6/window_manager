@@ -15,11 +15,11 @@
 
 #include <ability.h>
 
-#include "native_window_module.h"
 #include "window.h"
 #include "window_scene.h"
 #include "wm_common.h"
 #include "wm_napi_common.h"
+#include "native_window_module.h"
 
 namespace OHOS {
 namespace Rosen {
