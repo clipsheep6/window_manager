@@ -20,7 +20,7 @@
 #include "transaction/rs_transaction.h"
 #include "ui/rs_surface_extractor.h"
 
-#include "window_life_cycle_interface.h"
+#include "iwindow_life_cycle.h"
 #include "window_manager_hilog.h"
 #include "window_option.h"
 

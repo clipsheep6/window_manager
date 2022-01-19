@@ -46,7 +46,7 @@ sptr<WindowNodeContainer> WindowRoot::GetOrCreateWindowNodeContainer(int32_t dis
         abstractDisplay->GetWidth(), abstractDisplay->GetHeight(), abstractDisplay->GetId());
     sptr<WindowNodeContainer> container = new WindowNodeContainer(abstractDisplay->GetId(),
         static_cast<uint32_t>(abstractDisplay->GetWidth()), static_cast<uint32_t>(abstractDisplay->GetHeight()));
-    windowNodeContainerMap_.insert({ displayId, container });
+    windowNodeContainerMap_.insert( { displayId, container } );
     return container;
 }
 
@@ -94,7 +94,7 @@ WMError WindowRoot::SaveWindow(const sptr<WindowNode>& node)
         return WMError::WM_ERROR_NULLPTR;
     }
     WLOGFI("save windowId %{public}d", node->GetWindowId());
-    windowNodeMap_.insert({ node->GetWindowId(), node });
+    windowNodeMap_.insert( { node->GetWindowId(), node } );
     auto remoteObject = node->GetWindowToken()->AsObject();
     windowIdMap_.insert({ remoteObject, node->GetWindowId() });
 

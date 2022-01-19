@@ -22,7 +22,7 @@
 #include "display.h"
 #include "screen.h"
 #include "dm_common.h"
-#include "display_manager_interface.h"
+#include "idisplay_manager.h"
 #include "singleton_delegator.h"
 
 namespace OHOS::Rosen {

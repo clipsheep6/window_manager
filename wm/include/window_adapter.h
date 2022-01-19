@@ -20,7 +20,7 @@
 #include <zidl/window_manager_agent_interface.h>
 
 #include "window.h"
-#include "window_interface.h"
+#include "iwindow.h"
 #include "wm_single_instance.h"
 #include "singleton_delegator.h"
 #include "window_property.h"

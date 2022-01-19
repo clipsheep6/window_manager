@@ -27,7 +27,7 @@
 #include "foundation/appexecfwk/standard/kits/appkit/native/ability_runtime/context/context.h"
 #include "wm_common.h"
 #include "window_option.h"
-#include "window_life_cycle_interface.h"
+#include "iwindow_life_cycle.h"
 
 class NativeValue;
 class NativeEngine;
