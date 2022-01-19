@@ -293,7 +293,7 @@ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<
             return ret;
         }
     }
-    windowMap_.insert({ name_, std::pair<uint32_t, sptr<Window>>(windowId, this) });
+    windowMap_.insert( { name_, std::pair<uint32_t, sptr<Window>>(windowId, this) } );
     if (parentName != "") { // add to subWindowMap_
         subWindowMap_[property_->GetParentId()].push_back(this);
     }
@@ -389,7 +389,7 @@ WMError WindowImpl::MoveTo(int32_t x, int32_t y)
     }
     if (state_ == STATE_HIDDEN || state_ == STATE_CREATED) {
         Rect rect = GetRect();
-        property_->SetWindowRect({ x, y, rect.width_, rect.height_ });
+        property_->SetWindowRect( { x, y, rect.width_, rect.height_ } );
         WLOGFI("window is hidden or created! id: %{public}d, rect: [%{public}d, %{public}d, %{public}d, %{public}d]",
                property_->GetWindowId(), rect.posX_, rect.posY_, x, y);
         return WMError::WM_OK;
@@ -405,7 +405,7 @@ WMError WindowImpl::Resize(uint32_t width, uint32_t height)
     }
     if (state_ == STATE_HIDDEN || state_ == STATE_CREATED) {
         Rect rect = GetRect();
-        property_->SetWindowRect({ rect.posX_, rect.posY_, width, height });
+        property_->SetWindowRect( { rect.posX_, rect.posY_, width, height } );
         WLOGFI("window is hidden or created! id: %{public}d, rect: [%{public}d, %{public}d, %{public}d, %{public}d]",
                property_->GetWindowId(), rect.posX_, rect.posY_, width, height);
         return WMError::WM_OK;

@@ -17,7 +17,7 @@
 #include <gtest/gtest.h>
 #include <ability_context.h>
 #include "window.h"
-#include "window_life_cycle_interface.h"
+#include "iwindow_life_cycle.h"
 #include "window_option.h"
 #include "window_scene.h"
 #include "wm_common.h"

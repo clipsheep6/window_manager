@@ -16,7 +16,7 @@
 #ifndef OHOS_WINDOW_STUB_H
 #define OHOS_WINDOW_STUB_H
 
-#include "window_interface.h"
+#include "iwindow.h"
 #include "iremote_stub.h"
 
 namespace OHOS {

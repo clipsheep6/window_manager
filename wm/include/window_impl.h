@@ -35,7 +35,7 @@ class WindowImpl : public Window {
         if (uiContent_ != nullptr) { \
             uiContent_->uiContentCb(); \
         } \
-    } while (0);
+    } while (0)
 
 public:
     WindowImpl(const sptr<WindowOption>& option);

@@ -16,7 +16,7 @@
 #ifndef FOUNDATION_DMSERVER_DISPLAY_MANAGER_STUB_H
 #define FOUNDATION_DMSERVER_DISPLAY_MANAGER_STUB_H
 
-#include "display_manager_interface.h"
+#include "idisplay_manager.h"
 
 #include <iremote_stub.h>
 
