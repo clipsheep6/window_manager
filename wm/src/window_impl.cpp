@@ -52,14 +52,6 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
     name_ = option->GetWindowName();
     callback_->onCallback = std::bind(&WindowImpl::OnVsync, this, std::placeholders::_1);
 
-    layerConfig_.enable = false;
-    layerConfig_.name = "";
-    layerConfig_.icon = "";
-    layerConfig_.Maximize = nullptr;
-    layerConfig_.Minimize = nullptr;
-    layerConfig_.Recover = nullptr;
-    layerConfig_.Close = nullptr;
-
     struct RSSurfaceNodeConfig rsSurfaceNodeConfig;
     surfaceNode_ = RSSurfaceNode::Create(rsSurfaceNodeConfig);
 }
@@ -223,15 +215,10 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
         WLOGFE("fail to SetUIContent id: %{public}d", property_->GetWindowId());
         return WMError::WM_ERROR_NULLPTR;
     }
-    if (WindowHelper::IsMainWindow(property_->GetWindowType()) && abilityContext_ != nullptr)
-    {
-        layerConfig_.enable = true;
-        layerConfig_.name = abilityContext_->GetAbilityInfo()->name;
-        layerConfig_.icon = abilityContext_->GetAbilityInfo()->iconPath;
-        layerConfig_.Maximize = &Window::Maximize;
-        layerConfig_.Minimize = &Window::Minimize;
-        layerConfig_.Recover = &Window::Recover;
-        layerConfig_.Close = &Window::Close;
+    if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
+        isDecorEnable_ = true;
+    } else {
+        isDecorEnable_ = false;
     }
     if (isdistributed) {
         uiContent_->Restore(this, contentInfo, storage);
@@ -433,9 +420,9 @@ WMError WindowImpl::Resize(uint32_t width, uint32_t height)
     return SingletonContainer::Get<WindowAdapter>().Resize(property_->GetWindowId(), width, height);
 }
 
-Window::WindowContainerLayerConfig WindowImpl::GetWindowContainerLayerConfig()
+bool WindowImpl::IsDecorEnable()
 {
-    return layerConfig_;
+    return isDecorEnable_;
 }
 
 WMError WindowImpl::Maximize()
@@ -445,11 +432,12 @@ WMError WindowImpl::Maximize()
         WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    if(WindowHelper::IsMainWindow(property_->GetWindowType())) {
+    if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
         SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
     }
     return WMError::WM_OK;
 }
+
 WMError WindowImpl::Minimize()
 {
     WLOGFI("[Client] Window %{public}d Minimize", property_->GetWindowId());
@@ -457,7 +445,7 @@ WMError WindowImpl::Minimize()
         WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    if(WindowHelper::IsMainWindow(property_->GetWindowType())) {
+    if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
         if (abilityContext_ != nullptr) {
             AAFwk::AbilityManagerClient::GetInstance()->MinimizeAbility(abilityContext_->GetAbilityToken());
         } else {
@@ -466,6 +454,7 @@ WMError WindowImpl::Minimize()
     }
     return WMError::WM_OK;
 }
+
 WMError WindowImpl::Recover()
 {
     WLOGFI("[Client] Window %{public}d Normalize", property_->GetWindowId());
@@ -473,11 +462,12 @@ WMError WindowImpl::Recover()
         WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    if(WindowHelper::IsMainWindow(property_->GetWindowType())) {
+    if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
         SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
     }
     return WMError::WM_OK;
 }
+
 WMError WindowImpl::Close()
 {
     WLOGFI("[Client] Window %{public}d Close", property_->GetWindowId());
@@ -485,7 +475,7 @@ WMError WindowImpl::Close()
         WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    if(WindowHelper::IsMainWindow(property_->GetWindowType())) {
+    if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
         if (abilityContext_ != nullptr) {
             abilityContext_->TerminateSelf();
         } else {
