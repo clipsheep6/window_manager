@@ -96,6 +96,20 @@ public:
     virtual WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
         NativeValue* storage, bool isdistributed = false) = 0;
     virtual const std::string& GetContentInfo() = 0;
+    struct WindowContainerLayerConfig {
+        bool enable;
+        std::string name;
+        std::string icon;
+        WMError (Window::*Maximize)();
+        WMError (Window::*Minimize)();
+        WMError (Window::*Recover)();
+        WMError (Window::*Close)();
+    };
+    virtual Window::WindowContainerLayerConfig GetWindowContainerLayerConfig() = 0;
+    virtual WMError Maximize() = 0;
+    virtual WMError Minimize() = 0;
+    virtual WMError Recover() = 0;
+    virtual WMError Close() = 0;
 };
 }
 }

@@ -23,6 +23,8 @@
 #include "window_helper.h"
 #include "window_manager_hilog.h"
 
+#include <ability_manager_client.h>
+
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -49,6 +51,14 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
     }
     name_ = option->GetWindowName();
     callback_->onCallback = std::bind(&WindowImpl::OnVsync, this, std::placeholders::_1);
+
+    layerConfig_.enable = false;
+    layerConfig_.name = "";
+    layerConfig_.icon = "";
+    layerConfig_.Maximize = nullptr;
+    layerConfig_.Minimize = nullptr;
+    layerConfig_.Recover = nullptr;
+    layerConfig_.Close = nullptr;
 
     struct RSSurfaceNodeConfig rsSurfaceNodeConfig;
     surfaceNode_ = RSSurfaceNode::Create(rsSurfaceNodeConfig);
@@ -212,6 +222,16 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
     if (uiContent_ == nullptr) {
         WLOGFE("fail to SetUIContent id: %{public}d", property_->GetWindowId());
         return WMError::WM_ERROR_NULLPTR;
+    }
+    if (WindowHelper::IsMainWindow(property_->GetWindowType()) && abilityContext_ != nullptr)
+    {
+        layerConfig_.enable = true;
+        layerConfig_.name = abilityContext_->GetAbilityInfo()->name;
+        layerConfig_.icon = abilityContext_->GetAbilityInfo()->iconPath;
+        layerConfig_.Maximize = &Window::Maximize;
+        layerConfig_.Minimize = &Window::Minimize;
+        layerConfig_.Recover = &Window::Recover;
+        layerConfig_.Close = &Window::Close;
     }
     if (isdistributed) {
         uiContent_->Restore(this, contentInfo, storage);
@@ -411,6 +431,68 @@ WMError WindowImpl::Resize(uint32_t width, uint32_t height)
         return WMError::WM_OK;
     }
     return SingletonContainer::Get<WindowAdapter>().Resize(property_->GetWindowId(), width, height);
+}
+
+Window::WindowContainerLayerConfig WindowImpl::GetWindowContainerLayerConfig()
+{
+    return layerConfig_;
+}
+
+WMError WindowImpl::Maximize()
+{
+    WLOGFI("[Client] Window %{public}d Maximize", property_->GetWindowId());
+    if (!IsWindowValid()) {
+        WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    if(WindowHelper::IsMainWindow(property_->GetWindowType())) {
+        SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    }
+    return WMError::WM_OK;
+}
+WMError WindowImpl::Minimize()
+{
+    WLOGFI("[Client] Window %{public}d Minimize", property_->GetWindowId());
+    if (!IsWindowValid()) {
+        WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    if(WindowHelper::IsMainWindow(property_->GetWindowType())) {
+        if (abilityContext_ != nullptr) {
+            AAFwk::AbilityManagerClient::GetInstance()->MinimizeAbility(abilityContext_->GetAbilityToken());
+        } else {
+            Hide();
+        }
+    }
+    return WMError::WM_OK;
+}
+WMError WindowImpl::Recover()
+{
+    WLOGFI("[Client] Window %{public}d Normalize", property_->GetWindowId());
+    if (!IsWindowValid()) {
+        WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    if(WindowHelper::IsMainWindow(property_->GetWindowType())) {
+        SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+    }
+    return WMError::WM_OK;
+}
+WMError WindowImpl::Close()
+{
+    WLOGFI("[Client] Window %{public}d Close", property_->GetWindowId());
+    if (!IsWindowValid()) {
+        WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    if(WindowHelper::IsMainWindow(property_->GetWindowType())) {
+        if (abilityContext_ != nullptr) {
+            abilityContext_->TerminateSelf();
+        } else {
+            Destroy();
+        }
+    }
+    return WMError::WM_OK;
 }
 
 WMError WindowImpl::RequestFocus() const

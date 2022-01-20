@@ -129,6 +129,7 @@ ohos_shared_library("libwm") {
 
     "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base:appexecfwk_base",
     "//foundation/appexecfwk/standard/kits:app_context",
+    "//foundation/aafwk/standard/interfaces/innerkits/ability_manager:ability_manager",
   ]
 
   external_deps = [

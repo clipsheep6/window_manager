@@ -67,6 +67,12 @@ public:
     virtual WMError MoveTo(int32_t x, int32_t y) override;
     virtual WMError Resize(uint32_t width, uint32_t height) override;
 
+    virtual WMError Maximize() override;
+    virtual WMError Minimize() override;
+    virtual WMError Recover() override;
+    virtual WMError Close() override;
+    virtual Window::WindowContainerLayerConfig GetWindowContainerLayerConfig() override;
+
     virtual WMError RequestFocus() const override;
     virtual void AddInputEventListener(std::shared_ptr<MMI::IInputEventConsumer>& inputEventListener) override;
 
@@ -143,6 +149,8 @@ private:
     const float NAVIGATION_BAR_RATIO = 0.07;
     const float SYSTEM_ALARM_WINDOW_WIDTH_RATIO = 0.8;
     const float SYSTEM_ALARM_WINDOW_HEIGHT_RATIO = 0.3;
+
+    WindowContainerLayerConfig layerConfig_;
 };
 }
 }

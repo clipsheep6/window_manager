@@ -36,6 +36,15 @@ void WindowProperty::SetWindowMode(WindowMode mode)
     if (!WindowHelper::IsSplitWindowMode(mode_)) {
         lastMode_ = mode_;
     }
+    if (mode_ == WindowMode::WINDOW_MODE_FLOATING && mode != WindowMode::WINDOW_MODE_FLOATING) {
+        lastWindowRect_ = windowRect_;
+    }
+    if (mode == WindowMode::WINDOW_MODE_FLOATING && mode_ != WindowMode::WINDOW_MODE_FLOATING) {
+        if (lastWindowRect_.posX_ != 0 || lastWindowRect_.posY_ != 0
+            || lastWindowRect_.width_ != 0 || lastWindowRect_.height_ != 0) {
+            windowRect_ = lastWindowRect_;
+        }
+    }
     mode_ = mode;
 }
 

@@ -64,6 +64,7 @@ public:
     static sptr<WindowProperty> Unmarshalling(Parcel& parcel);
 private:
     Rect windowRect_ { 0, 0, 0, 0 };
+    Rect lastWindowRect_ { 0, 0, 0, 0 };
     WindowType type_ { WindowType::WINDOW_TYPE_APP_MAIN_WINDOW };
     WindowMode mode_ { WindowMode::WINDOW_MODE_FULLSCREEN };
     WindowMode lastMode_ { WindowMode::WINDOW_MODE_FULLSCREEN };
