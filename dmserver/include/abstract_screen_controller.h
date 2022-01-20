@@ -33,7 +33,7 @@ using OnAbstractScreenCallback = std::function<void(sptr<AbstractScreen>)>;
 public:
     struct AbstractScreenCallback : public RefBase {
         OnAbstractScreenCallback onConnected_;
-        OnAbstractScreenCallback onDisconnected_;
+        std::function<void(sptr<AbstractScreen>, sptr<AbstractScreenGroup>)> onDisconnected_;
         OnAbstractScreenCallback onChanged_;
     };
 
