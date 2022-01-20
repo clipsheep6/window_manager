@@ -147,7 +147,7 @@ void AbstractScreenController::ProcessScreenDisconnected(ScreenId rsScreenId)
     if (dmsScreenMapIter != dmsScreenMap_.end()) {
         sptr<AbstractScreenGroup> screenGroup = RemoveFromGroupLocked(dmsScreenMapIter->second);
         if (screenGroup != nullptr && abstractScreenCallback_ != nullptr) {
-            abstractScreenCallback_->onDisconnected_(dmsScreenMapIter->second);
+            abstractScreenCallback_->onDisconnected_(dmsScreenMapIter->second, screenGroup);
         }
         dmsScreenMap_.erase(dmsScreenMapIter);
         auto firstIter = dmsScreenMap_.begin();

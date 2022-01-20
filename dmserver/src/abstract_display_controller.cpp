@@ -47,7 +47,7 @@ void AbstractDisplayController::Init(sptr<AbstractScreenController> abstractScre
     abstractScreenCallback_->onConnected_
         = std::bind(&AbstractDisplayController::OnAbstractScreenConnected, this, std::placeholders::_1);
     abstractScreenCallback_->onDisconnected_
-        = std::bind(&AbstractDisplayController::OnAbstractScreenDisconnected, this, std::placeholders::_1);
+        = std::bind(&AbstractDisplayController::OnAbstractScreenDisconnected, this, std::placeholders::_1, std::placeholders::_2);
     abstractScreenCallback_->onChanged_
         = std::bind(&AbstractDisplayController::OnAbstractScreenChanged, this, std::placeholders::_1);
     abstractScreenController->RegisterAbstractScreenCallback(abstractScreenCallback_);
@@ -128,8 +128,47 @@ void AbstractDisplayController::OnAbstractScreenConnected(sptr<AbstractScreen> a
     }
 }
 
-void AbstractDisplayController::OnAbstractScreenDisconnected(sptr<AbstractScreen> absScreen)
+void AbstractDisplayController::OnAbstractScreenDisconnected(sptr<AbstractScreen> absScreen, sptr<AbstractScreenGroup> screenGroup)
 {
+    WLOGI("disconnect new screen. id:%{public}" PRIu64"", absScreen->dmsId_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (absScreen == nullptr) {
+        WLOGE("the information of the screen is wrong");
+        return;
+    }
+    if (screenGroup == nullptr) {
+        WLOGE("the group information of the screen is wrong");
+        return;
+    }
+    if (absScreen->type_ == ScreenType::REAL) {
+        if (screenGroup->combination_ == ScreenCombination::SCREEN_ALONE
+            || screenGroup->combination_ == ScreenCombination::SCREEN_MIRROR) {
+            ProcessScreenDisconnectedForMirrorOrAloneMode(absScreen, screenGroup);
+        } else {
+            WLOGE("support in future. combination:%{public}ud", screenGroup->combination_);
+        }
+    }
+}
+
+void AbstractDisplayController::ProcessScreenDisconnectedForMirrorOrAloneMode(sptr<AbstractScreen> absScreen, sptr<AbstractScreenGroup> screenGroup)
+{
+    sptr<AbstractScreen> defaultScreen;
+    if (screenGroup->GetChildCount() > 0) {
+        defaultScreen = screenGroup->GetChildren()[0];
+    }
+    for (auto iter = abstractDisplayMap_.begin(); iter!= abstractDisplayMap_.end(); iter++) {
+        sptr<AbstractDisplay> abstractDisplay = iter->second;
+        if (abstractDisplay->GetAbstractScreenId() != absScreen->dmsId_) {
+            continue;
+        }
+        abstractDisplay->BindAbstractScreen(defaultScreen);
+        if (screenGroup->GetChildCount() == 0) {
+            abstractDisplayMap_.erase(iter);
+        }
+    }
+    if (dummyDisplay_ != nullptr) {
+        dummyDisplay_->BindAbstractScreen(defaultScreen);
+    }
 }
 
 void AbstractDisplayController::OnAbstractScreenChanged(sptr<AbstractScreen> absScreen)
@@ -154,7 +193,7 @@ void AbstractDisplayController::BindAloneScreenLocked(sptr<AbstractScreen> realA
         } else {
             WLOGI("bind display for new screen. screen:%{public}" PRIu64", display:%{public}" PRIu64"",
                 realAbsScreen->dmsId_, dummyDisplay_->GetId());
-            dummyDisplay_->BindAbstractScreenId(realAbsScreen->dmsId_);
+            dummyDisplay_->BindAbstractScreen(realAbsScreen->dmsId_);
             dummyDisplay_ = nullptr;
         }
     } else {
