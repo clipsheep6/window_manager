@@ -46,8 +46,11 @@ public:
     void SetFreshRate(uint32_t freshRate);
 
 private:
-    class Impl;
-    sptr<Impl> pImpl_;
+    std::string name_;
+    DisplayId id_ {DISPLAY_ID_INVALD};
+    int32_t width_ {0};
+    int32_t height_ {0};
+    uint32_t freshRate_ {0};
 };
 } // namespace OHOS::Rosen
 
