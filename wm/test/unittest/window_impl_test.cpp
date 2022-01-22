@@ -554,6 +554,17 @@ HWTEST_F(WindowImplTest, GetSystemBarPropertyByType03, Function | SmallTest | Le
     EXPECT_CALL(m_->Mock(), RemoveWindow(_)).Times(1).WillOnce(Return(WMError::WM_ERROR_IPC_FAILED));
     window_->Hide();
 }
+
+/**
+ * @tc.name: GetSystemBarPropertyByType03
+ * @tc.desc: GetSystemBarPropertyByType with not systemBar type
+ * @tc.type: FUNC
+ * @tc.require: AR000GGTVD
+ */
+HWTEST_F(WindowImplTest, IsDecorEnable01, Function | SmallTest | Level3)
+{
+    
+}
 }
 } // namespace Rosen
 } // namespace OHOS

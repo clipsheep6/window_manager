@@ -168,6 +168,19 @@ WMError WindowManagerService::Resize(uint32_t windowId, uint32_t width, uint32_t
     return res;
 }
 
+WMError WindowManagerService::LayoutRect(uint32_t windowId, Rect& rect)
+{
+    WLOGFI("[WMS] Resize: %{public}d [%{public}d, %{public}d, %{public}d, %{public}d]",
+        windowId, rect.posX_, rect.posY_, rect.width_, rect.height_);
+    WM_SCOPED_TRACE("wms:LayoutRect");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    WMError res = windowController_->LayoutRect(windowId, rect);
+    if (res == WMError::WM_OK) {
+        inputWindowMonitor_->UpdateInputWindow(windowId);
+    }
+    return res;
+}
+
 WMError WindowManagerService::RequestFocus(uint32_t windowId)
 {
     WLOGFI("[WMS] RequestFocus: %{public}d", windowId);

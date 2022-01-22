@@ -491,6 +491,60 @@ WMError WindowImpl::Close()
     return WMError::WM_OK;
 }
 
+WMError WindowImpl::StartDrag()
+{
+    WLOGFI("[Client] Window %{public}d StartDrag", property_->GetWindowId());
+    if (!IsWindowValid()) {
+        WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    isStartDrag_ = true;
+    beginRect_ = property_->GetWindowRect();
+    if (beginX_ < beginRect_.posX_) {
+        ctrlType_ |= X_LEFT;
+    } else if (beginX_ > (beginRect_.posX_ + beginRect_.width_)) {
+        ctrlType_ |= X_RIGHT;
+    } else {
+        ctrlType_ |= X_MIDDLE;
+    }
+    if (beginY_ < beginRect_.posY_) {
+        ctrlType_ |= Y_TOP;
+    } else if (beginY_ > (beginRect_.posY_ + beginRect_.height_)) {
+        ctrlType_ |= Y_BOTTOM;
+    } else {
+        ctrlType_ |= Y_MIDDLE;
+    }
+    return WMError::WM_OK;
+}
+
+WMError WindowImpl::StartMove()
+{
+    WLOGFI("[Client] Window %{public}d StartMove", property_->GetWindowId());
+    if (!IsWindowValid()) {
+        WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    isStartDrag_ = true;
+    ctrlType_ = CTRL_TYPE_MOVE;
+    beginRect_ = property_->GetWindowRect();
+    return WMError::WM_OK;
+}
+
+WMError WindowImpl::LayoutRect(Rect& rect)
+{
+    if (!IsWindowValid()) {
+        WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    if (state_ == STATE_HIDDEN || state_ == STATE_CREATED) {
+        property_->SetWindowRect(rect);
+        WLOGFI("window is hidden or created! id: %{public}d, rect: [%{public}d, %{public}d, %{public}d, %{public}d]",
+               property_->GetWindowId(), rect.posX_, rect.posY_, rect.width_, rect.height_);
+        return WMError::WM_OK;
+    }
+    return SingletonContainer::Get<WindowAdapter>().LayoutRect(property_->GetWindowId(), rect);
+}
+
 WMError WindowImpl::RequestFocus() const
 {
     if (!IsWindowValid()) {
@@ -637,6 +691,81 @@ void WindowImpl::ConsumePointerEvent(std::shared_ptr<MMI::PointerEvent>& pointer
         ConsumeDividerPointerEvent(pointerEvent);
         return;
     }
+    int32_t action = pointerEvent->GetPointerAction();
+    switch (action) {
+        case MMI::PointerEvent::POINTER_ACTION_DOWN: {
+            MMI::PointerEvent::PointerItem pointerItem;
+            pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem);
+            beginX_ = pointerItem.GetGlobalX();
+            beginY_ = pointerItem.GetGlobalY();
+            // to support multi display, the pointerItem.GetDeviceId() should be recorded and handle
+            break;
+        }
+        case MMI::PointerEvent::POINTER_ACTION_MOVE: {
+            if (isStartDrag_ && ctrlType_ != WindowDragCtrlType::CTRL_TYPE_UNKNOWN) {
+                MMI::PointerEvent::PointerItem pointerItem;
+                pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem);
+                int32_t endX = pointerItem.GetGlobalX();
+                int32_t endY = pointerItem.GetGlobalY();
+                int32_t x_diff = endX - beginX_;
+                int32_t y_diff = endY - beginY_;
+                Rect curr = GetRect();
+                switch (ctrlType_) {
+                    case WindowDragCtrlType::CTRL_TYPE_LEFT:
+                        curr.posX_ += x_diff;
+                        curr.width_ -= x_diff;
+                        break;
+                    case WindowDragCtrlType::CTRL_TYPE_RIGHT:
+                        curr.width_ += x_diff;
+                        break;
+                    case WindowDragCtrlType::CTRL_TYPE_TOP:
+                        curr.posY_ += y_diff;
+                        curr.height_ -= y_diff;
+                        break;
+                    case WindowDragCtrlType::CTRL_TYPE_BOTTOM:
+                        curr.height_ += y_diff;
+                        break;
+                    case WindowDragCtrlType::CTRL_TYPE_LEFT_TOP:
+                        curr.posX_ += x_diff;
+                        curr.posY_ += y_diff;
+                        curr.width_ -= x_diff;
+                        curr.height_ -= y_diff;
+                        break;
+                    case WindowDragCtrlType::CTRL_TYPE_LEFT_BOTTOM:
+                        curr.posX_ += x_diff;
+                        curr.width_ -= x_diff;
+                        curr.height_ += y_diff;
+                        break;
+                    case WindowDragCtrlType::CTRL_TYPE_RIGHT_TOP:
+                        curr.width_ += x_diff;
+                        curr.posY_ += y_diff;
+                        curr.height_ -= y_diff;
+                        break;
+                    case WindowDragCtrlType::CTRL_TYPE_MOVE:
+                        curr.posX_ += x_diff;
+                        curr.posY_ += y_diff;
+                        break;
+                    default:
+                        break;
+                }
+                property_->SetWindowRect(curr);
+                LayoutRect(curr);
+            }
+            break;
+        }
+        case MMI::PointerEvent::POINTER_ACTION_UP:
+        case MMI::PointerEvent::POINTER_ACTION_CANCEL: {
+            isStartDrag_ = false;
+            ctrlType_ = WindowDragCtrlType::CTRL_TYPE_UNKNOWN;
+            beginX_ = 0;
+            beginY_ = 0;
+            beginRect_  = { 0, 0, 0, 0 };
+            break;
+        }
+        default:
+            break;
+    }
+
     if (uiContent_ == nullptr) {
         WLOGE("ConsumePointerEvent uiContent is nullptr");
         return;
