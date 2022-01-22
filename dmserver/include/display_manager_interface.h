@@ -44,9 +44,11 @@ public:
         TRANS_ID_SET_DISPLAY_STATE,
         TRANS_ID_GET_DISPLAY_STATE,
         TRANS_ID_NOTIFY_DISPLAY_EVENT,
-        TRANS_ID_CREATE_VIRTUAL_SCREEN = 100000,
+        TRANS_ID_CREATE_VIRTUAL_SCREEN = 1000,
         TRANS_ID_DESTROY_VIRTUAL_SCREEN,
-        TRANS_ID_ADD_MIRROR,
+        TRANS_ID_SCREENGROUP_BASE = 1100,
+        TRANS_ID_SCREEN_CREAT_MIRROR = TRANS_ID_SCREENGROUP_BASE,
+        TRANS_ID_SCREEN_ADD_MIRROR,
     };
 
     virtual DisplayId GetDefaultDisplayId() = 0;
@@ -68,7 +70,7 @@ public:
     virtual bool SetDisplayState(DisplayState state) = 0;
     virtual DisplayState GetDisplayState(uint64_t displayId) = 0;
     virtual void NotifyDisplayEvent(DisplayEvent event) = 0;
-    virtual DMError AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId) = 0;
+    virtual DMError CreateMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId) = 0;
 };
 } // namespace OHOS::Rosen
 

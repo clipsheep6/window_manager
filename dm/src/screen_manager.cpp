@@ -59,21 +59,17 @@ void ScreenManager::RegisterScreenChangeListener(sptr<IScreenChangeListener> lis
 {
 }
 
-sptr<ScreenGroup> ScreenManager::MakeExpand(std::vector<ScreenId> screenId, std::vector<Point> startPoint)
+sptr<ScreenGroup> ScreenManager::CreateExpand(std::vector<ScreenId> screenId, std::vector<Point> startPoint)
 {
     return nullptr;
 }
 
-sptr<ScreenGroup> ScreenManager::MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId)
+sptr<ScreenGroup> ScreenManager::CreateMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId)
 {
-    return nullptr;
-}
-
-sptr<ScreenGroup> ScreenManager::AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId)
-{
-    DMError result = SingletonContainer::Get<DisplayManagerAdapter>().AddMirror(mainScreenId, mirrorScreenId);
+    WLOGFI("create mirror for screen: %{public}" PRIu64"", mainScreenId);
+    DMError result = SingletonContainer::Get<DisplayManagerAdapter>().CreateMirror(mainScreenId, mirrorScreenId);
     if (result == DMError::DM_OK) {
-        WLOGFI("AddMirror::Successful");
+        WLOGFI("create mirror success");
     }
     return nullptr;
 }

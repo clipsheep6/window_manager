@@ -30,8 +30,10 @@ enum class ScreenCombination : uint32_t {
 class ScreenGroup : public Screen {
 public:
     ScreenCombination GetCombination() const;
-    std::vector<sptr<Screen>> GetChildren() const;
-    std::vector<Point> GetChildrenPosition() const;
+    std::vector<sptr<Screen>> GetChild() const;
+    std::vector<Point> GetChildPosition() const;
+    bool AddChild(std::vector<ScreenId> id);
+    bool AddChild(std::vector<sptr<Screen>> child);
 
 private:
     ScreenGroup();

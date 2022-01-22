@@ -81,7 +81,7 @@ std::shared_ptr<Media::PixelMap> DisplayManagerAdapter::GetDisplaySnapshot(Displ
 ScreenId DisplayManagerAdapter::CreateVirtualScreen(VirtualScreenOption option)
 {
     if (!InitDMSProxyLocked()) {
-        return SCREEN_ID_INVALD;
+        return SCREEN_ID_INVALID;
     }
     WLOGFI("DisplayManagerAdapter::CreateVirtualScreen");
     return displayManagerServiceProxy_->CreateVirtualScreen(option);
@@ -250,13 +250,11 @@ void DisplayManagerAdapter::Clear()
     displayManagerServiceProxy_ = nullptr;
 }
 
-DMError DisplayManagerAdapter::AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId)
+DMError DisplayManagerAdapter::CreateMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId)
 {
     if (!InitDMSProxyLocked()) {
-        WLOGFE("DisplayManagerAdapter::AddMirror: InitDMSProxyLocked failed");
         return DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED;
     }
-    WLOGFI("DisplayManagerAdapter::AddMirror");
-    return displayManagerServiceProxy_->AddMirror(mainScreenId, mirrorScreenId);
+    return displayManagerServiceProxy_->CreateMirror(mainScreenId, mirrorScreenId);
 }
 } // namespace OHOS::Rosen

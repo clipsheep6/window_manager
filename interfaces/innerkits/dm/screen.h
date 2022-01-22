@@ -22,8 +22,9 @@
 #include <surface.h>
 
 namespace OHOS::Rosen {
+class ScreenGroup;
 using ScreenId = uint64_t;
-static constexpr ScreenId SCREEN_ID_INVALD = -1ULL;
+static constexpr ScreenId SCREEN_ID_INVALID = -1ULL;
 
 struct Point {
     int32_t posX_;
@@ -50,7 +51,7 @@ public:
     uint32_t GetVirtualWidth() const;
     uint32_t GetVirtualHeight() const;
     float GetVirtualPixelRatio() const;
-    sptr<Screen> GetParent() const;
+    sptr<ScreenGroup> GetParent() const;
 
 private:
     class Impl;

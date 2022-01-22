@@ -93,9 +93,9 @@ ScreenId DisplayManagerService::CreateVirtualScreen(VirtualScreenOption option)
 {
     WM_SCOPED_TRACE("dms:CreateVirtualScreen(%s)", option.name_.c_str());
     ScreenId screenId = abstractScreenController_->CreateVirtualScreen(option);
-    if (screenId == SCREEN_ID_INVALD) {
+    if (screenId == SCREEN_ID_INVALID) {
         WLOGFE("DisplayManagerService::CreateVirtualScreen: Get virtualScreenId failed");
-        return SCREEN_ID_INVALD;
+        return SCREEN_ID_INVALID;
     }
     return screenId;
 }
@@ -212,26 +212,30 @@ sptr<AbstractScreenController> DisplayManagerService::GetAbstractScreenControlle
     return abstractScreenController_;
 }
 
-DMError DisplayManagerService::AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId)
+DMError DisplayManagerService::CreateMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenIds)
 {
-    if (mainScreenId == SCREEN_ID_INVALID || mirrorScreenId == SCREEN_ID_INVALID) {
+    if (mainScreenId == SCREEN_ID_INVALID || mirrorScreenIds.empty()) {
+        WLOGFI("create mirror fail, screen is invalid. Screen :%{public}" PRIu64", size :%{public}u",
+            mainScreenId, mirrorScreenIds.size());
         return DMError::DM_ERROR_INVALID_PARAM;
     }
-    WM_SCOPED_TRACE("dms:AddMirror");
-    WLOGFI("AddMirror::ScreenId: %{public}" PRIu64 "", mirrorScreenId);
+    WM_SCOPED_TRACE("dms:CreateMirror");
+    WLOGFI("create mirror. Screen: %{public}" PRIu64"", mainScreenId);
     std::shared_ptr<RSDisplayNode> displayNode =
         SingletonContainer::Get<WindowManagerService>().GetDisplayNode(mainScreenId);
     if (displayNode == nullptr) {
-        WLOGFE("DisplayManagerService::AddMirror: GetDisplayNode failed, displayNode is nullptr");
+        WLOGFE("create mirror fail, cannot get DisplayNode");
         return DMError::DM_ERROR_NULLPTR;
     }
     NodeId nodeId = displayNode->GetId();
-
-    struct RSDisplayNodeConfig config = {mirrorScreenId, true, nodeId};
-    displayNodeMap_[mirrorScreenId] = RSDisplayNode::Create(config);
+    for (ScreenId mirrorScreenId : mirrorScreenIds) {
+        struct RSDisplayNodeConfig config = { mirrorScreenId, true, nodeId };
+        displayNodeMap_[mirrorScreenId] = RSDisplayNode::Create(config);
+        WLOGFI("add mirror screen: %{public}" PRIu64"", mirrorScreenId);
+    }
     auto transactionProxy = RSTransactionProxy::GetInstance();
     transactionProxy->FlushImplicitTransaction();
-    WLOGFI("DisplayManagerService::AddMirror: NodeId: %{public}" PRIu64 "", nodeId >> 32);
+    WLOGFI("create mirror. NodeId: %{public}" PRIu64"", nodeId);
     return DMError::DM_OK;
 }
 } // namespace OHOS::Rosen

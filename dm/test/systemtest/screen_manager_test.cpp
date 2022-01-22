@@ -88,7 +88,7 @@ HWTEST_F(ScreenManagerTest, ScreenManager01, Function | MediumTest | Level1)
     ASSERT_TRUE(utils.CreateSurface());
     defaultoption_.surface_ = utils.psurface_;
     ScreenId virtualScreenId = ScreenManager::GetInstance().CreateVirtualScreen(defaultoption_);
-    ASSERT_NE(SCREEN_ID_INVALD, virtualScreenId);
+    ASSERT_NE(SCREEN_ID_INVALID, virtualScreenId);
     ASSERT_EQ(DMError::DM_OK, ScreenManager::GetInstance().DestroyVirtualScreen(virtualScreenId));
 }
 
@@ -103,8 +103,10 @@ HWTEST_F(ScreenManagerTest, ScreenManager02, Function | MediumTest | Level1)
     ASSERT_TRUE(utils.CreateSurface());
     defaultoption_.surface_ = utils.psurface_;
     ScreenId virtualScreenId = ScreenManager::GetInstance().CreateVirtualScreen(defaultoption_);
-    ScreenManager::GetInstance().AddMirror(defaultDisplayId_, virtualScreenId);
-    ASSERT_NE(SCREEN_ID_INVALD, virtualScreenId);
+    std::vector<ScreenId> mirrorIds;
+    mirrorIds.push_back(virtualScreenId);
+    ScreenManager::GetInstance().CreateMirror(defaultDisplayId_, mirrorIds);
+    ASSERT_NE(SCREEN_ID_INVALID, virtualScreenId);
     ASSERT_EQ(DMError::DM_OK, ScreenManager::GetInstance().DestroyVirtualScreen(virtualScreenId));
 }
 
@@ -120,7 +122,7 @@ HWTEST_F(ScreenManagerTest, ScreenManager03, Function | MediumTest | Level1)
     defaultoption_.surface_ = utils.psurface_;
     for (uint32_t i = 0; i < execTimes_; i++) {
         ScreenId virtualScreenId = ScreenManager::GetInstance().CreateVirtualScreen(defaultoption_);
-        ASSERT_NE(SCREEN_ID_INVALD, virtualScreenId);
+        ASSERT_NE(SCREEN_ID_INVALID, virtualScreenId);
         ASSERT_EQ(DMError::DM_OK, ScreenManager::GetInstance().DestroyVirtualScreen(virtualScreenId));
     }
 }
@@ -137,8 +139,10 @@ HWTEST_F(ScreenManagerTest, ScreenManager04, Function | MediumTest | Level1)
     defaultoption_.surface_ = utils.psurface_;
     for (uint32_t i = 0; i < execTimes_; i++) {
         ScreenId virtualScreenId = ScreenManager::GetInstance().CreateVirtualScreen(defaultoption_);
-        ScreenManager::GetInstance().AddMirror(static_cast<ScreenId>(defaultDisplayId_), virtualScreenId);
-        ASSERT_NE(SCREEN_ID_INVALD, virtualScreenId);
+        std::vector<ScreenId> mirrorIds;
+        mirrorIds.push_back(virtualScreenId);
+        ScreenManager::GetInstance().CreateMirror(static_cast<ScreenId>(defaultDisplayId_), mirrorIds);
+        ASSERT_NE(SCREEN_ID_INVALID, virtualScreenId);
         ASSERT_EQ(DMError::DM_OK, ScreenManager::GetInstance().DestroyVirtualScreen(virtualScreenId));
     }
 }
@@ -156,9 +160,11 @@ HWTEST_F(ScreenManagerTest, ScreenManager05, Function | MediumTest | Level1)
     defaultoption_.surface_ = utils.psurface_;
     ScreenId virtualScreenId = ScreenManager::GetInstance().CreateVirtualScreen(defaultoption_);
 
-    ASSERT_NE(SCREEN_ID_INVALD, virtualScreenId);
+    ASSERT_NE(SCREEN_ID_INVALID, virtualScreenId);
     uint32_t lastCount = -1u;
-    ScreenManager::GetInstance().AddMirror(static_cast<ScreenId>(defaultDisplayId_), virtualScreenId);
+    std::vector<ScreenId> mirrorIds;
+    mirrorIds.push_back(virtualScreenId);
+    ScreenManager::GetInstance().CreateMirror(static_cast<ScreenId>(defaultDisplayId_), mirrorIds);
     while (utils.successCount_ < acquireFrames_ && waitCount_ <=  maxWaitCount_) {
         if (lastCount != utils.successCount_) {
             lastCount = utils.successCount_;

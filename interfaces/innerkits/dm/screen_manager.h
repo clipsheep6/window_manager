@@ -38,9 +38,8 @@ public:
     std::vector<const sptr<Screen>> GetAllScreens();
 
     void RegisterScreenChangeListener(sptr<IScreenChangeListener> listener);
-    sptr<ScreenGroup> MakeExpand(std::vector<ScreenId> screenId, std::vector<Point> startPoint);
-    sptr<ScreenGroup> MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId);
-    sptr<ScreenGroup> AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId);
+    sptr<ScreenGroup> CreateExpand(std::vector<ScreenId> screenId, std::vector<Point> startPoint);
+    sptr<ScreenGroup> CreateMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId);
     ScreenId CreateVirtualScreen(VirtualScreenOption option);
     DMError DestroyVirtualScreen(ScreenId screenId);
 

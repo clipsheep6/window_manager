@@ -15,6 +15,8 @@
 
 #include "screen.h"
 
+#include "screen_group.h"
+
 namespace OHOS::Rosen {
 class Screen::Impl : public RefBase {
 friend class Screen;
@@ -22,13 +24,13 @@ public:
     Impl() = default;
     ~Impl() = default;
 
-    ScreenId id_ { SCREEN_ID_INVALD };
+    ScreenId id_ { SCREEN_ID_INVALID };
     uint32_t width_ { 0 };
     uint32_t height_ { 0 };
     uint32_t virtualWidth_ { 0 };
     uint32_t virtualHeight_ { 0 };
     float virtualPixelRatio_ { 0.0 };
-    sptr<Screen> parent_ { nullptr };
+    sptr<ScreenGroup> parent_ { nullptr };
     bool hasChild_ { false };
 };
 
@@ -76,7 +78,7 @@ float Screen::GetVirtualPixelRatio() const
     return pImpl_->virtualPixelRatio_;
 }
 
-sptr<Screen> Screen::GetParent() const
+sptr<ScreenGroup> Screen::GetParent() const
 {
     return pImpl_->parent_;
 }

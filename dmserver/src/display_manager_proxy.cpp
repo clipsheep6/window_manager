@@ -86,7 +86,7 @@ ScreenId DisplayManagerProxy::CreateVirtualScreen(VirtualScreenOption virtualOpt
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         WLOGFW("DisplayManagerProxy::CreateVirtualScreen: remote is nullptr");
-        return SCREEN_ID_INVALD;
+        return SCREEN_ID_INVALID;
     }
 
     MessageParcel data;
@@ -94,7 +94,7 @@ ScreenId DisplayManagerProxy::CreateVirtualScreen(VirtualScreenOption virtualOpt
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("DisplayManagerProxy::CreateVirtualScreen: WriteInterfaceToken failed");
-        return SCREEN_ID_INVALD;
+        return SCREEN_ID_INVALID;
     }
     bool res = data.WriteString(virtualOption.name_) && data.WriteUint32(virtualOption.width_) &&
         data.WriteUint32(virtualOption.height_) && data.WriteFloat(virtualOption.density_) &&
@@ -102,11 +102,11 @@ ScreenId DisplayManagerProxy::CreateVirtualScreen(VirtualScreenOption virtualOpt
         data.WriteInt32(virtualOption.flags_);
     if (!res) {
         WLOGFE("DisplayManagerProxy::Write data failed");
-        return SCREEN_ID_INVALD;
+        return SCREEN_ID_INVALID;
     }
     if (remote->SendRequest(TRANS_ID_CREATE_VIRTUAL_SCREEN, data, reply, option) != ERR_NONE) {
         WLOGFW("DisplayManagerProxy::CreateVirtualScreen: SendRequest failed");
-        return SCREEN_ID_INVALD;
+        return SCREEN_ID_INVALID;
     }
 
     ScreenId screenId = static_cast<ScreenId>(reply.ReadUint64());
@@ -382,11 +382,11 @@ void DisplayManagerProxy::NotifyDisplayEvent(DisplayEvent event)
     }
 }
 
-DMError DisplayManagerProxy::AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId)
+DMError DisplayManagerProxy::CreateMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId)
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        WLOGFW("DisplayManagerProxy::AddMirror: remote is nullptr");
+        WLOGFW("create mirror fail: remote is null");
         return DMError::DM_ERROR_REMOTE_CREATE_FAILED;
     }
 
@@ -394,20 +394,19 @@ DMError DisplayManagerProxy::AddMirror(ScreenId mainScreenId, ScreenId mirrorScr
     MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("DisplayManagerProxy::AddMirror: WriteInterfaceToken failed");
+        WLOGFE("create mirror fail: WriteInterfaceToken failed");
         return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
     }
     bool res = data.WriteUint64(static_cast<uint64_t>(mainScreenId)) &&
-        data.WriteUint64(static_cast<uint64_t>(mirrorScreenId));
+        data.WriteUInt64Vector(mirrorScreenId);
     if (!res) {
-        WLOGFE("DisplayManagerProxy::AddMirror: data write failed");
+        WLOGFE("create mirror fail: data write failed");
         return DMError::DM_ERROR_WRITE_DATA_FAILED;
     }
-    if (remote->SendRequest(TRANS_ID_ADD_MIRROR, data, reply, option) != ERR_NONE) {
-        WLOGFW("DisplayManagerProxy::AddMirror: SendRequest failed");
+    if (remote->SendRequest(TRANS_ID_SCREEN_CREAT_MIRROR, data, reply, option) != ERR_NONE) {
+        WLOGFW("create mirror fail: SendRequest failed");
         return DMError::DM_ERROR_IPC_FAILED;
     }
-    WLOGFI("DisplayManagerProxy::AddMirror");
     return static_cast<DMError>(reply.ReadInt32());
 }
 } // namespace OHOS::Rosen
