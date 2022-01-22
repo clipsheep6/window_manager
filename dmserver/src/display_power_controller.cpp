@@ -34,8 +34,8 @@ bool DisplayPowerController::SetDisplayState(DisplayState state)
 {
     WLOGFI("state:%{public}u", state);
     if (displayState_ == state) {
-        WLOGFI("state is already set");
-        return true;
+        WLOGFE("state is already set");
+        return false;
     }
     switch (state) {
         case DisplayState::ON: {
@@ -70,6 +70,8 @@ void DisplayPowerController::NotifyDisplayEvent(DisplayEvent event)
     if (event == DisplayEvent::UNLOCK) {
         WLOGFI("DisplayEvent UNLOCK");
         // TODO: WindowManagerServiceInner::GetInstance().RestoreSuspendedWindows();
+        DisplayManagerAgentController::GetInstance().NotifyDisplayPowerEvent(DisplayPowerEvent::DESKTOP_READY,
+            EventStatus::BEGIN);
         return;
     }
     // TODO: set displayState_ ON when keyguard is drawn

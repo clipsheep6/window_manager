@@ -20,6 +20,20 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+    const SystemBarProperty SYS_BAR_PROP_DEFAULT;
+    const SystemBarProperty SYS_BAR_PROP_1(true, 0xE5111111, 0xE5222222);
+    const SystemBarProperty SYS_BAR_PROP_2(false, 0xE5222222, 0xE5333333);
+    const std::unordered_map<WindowType, SystemBarProperty>& SYS_BAR_PROPS_TEST = {
+        { WindowType::WINDOW_TYPE_STATUS_BAR, SYS_BAR_PROP_1 },
+        { WindowType::WINDOW_TYPE_NAVIGATION_BAR, SYS_BAR_PROP_2 },
+    };
+    const std::unordered_map<WindowType, SystemBarProperty>& SYS_BAR_PROPS_DEFAULT = {
+        { WindowType::WINDOW_TYPE_STATUS_BAR,     SYS_BAR_PROP_DEFAULT },
+        { WindowType::WINDOW_TYPE_NAVIGATION_BAR, SYS_BAR_PROP_DEFAULT },
+    };
+}
+
 void WindowOptionTest::SetUpTestCase()
 {
 }
@@ -81,6 +95,71 @@ HWTEST_F(WindowOptionTest, WindowMode01, Function | SmallTest | Level2)
     ASSERT_EQ(WindowMode::WINDOW_MODE_FULLSCREEN, option->GetWindowMode());
 }
 
+/**
+ * @tc.name: WindowMode02
+ * @tc.desc: SetWindowMode/GetWindowMode
+ * @tc.type: FUNC
+ * @tc.require: AR000GGTV7
+ */
+HWTEST_F(WindowOptionTest, WindowMode02, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    WindowMode defaultMode = option->GetWindowMode();
+    option->SetWindowMode(WindowMode::WINDOW_MODE_UNDEFINED);
+    ASSERT_EQ(defaultMode, option->GetWindowMode());
+}
+
+/**
+ * @tc.name: WindowMode03
+ * @tc.desc: SetWindowMode/GetWindowMode
+ * @tc.type: FUNC
+ * @tc.require: AR000GGTV7
+ */
+HWTEST_F(WindowOptionTest, WindowMode03, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowMode(WindowMode::WINDOW_MODE_SPLIT_PRIMARY);
+    ASSERT_EQ(WindowMode::WINDOW_MODE_SPLIT_PRIMARY, option->GetWindowMode());
+}
+
+/**
+ * @tc.name: WindowMode04
+ * @tc.desc: SetWindowMode/GetWindowMode
+ * @tc.type: FUNC
+ * @tc.require: AR000GGTV7
+ */
+HWTEST_F(WindowOptionTest, WindowMode04, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowMode(WindowMode::WINDOW_MODE_SPLIT_SECONDARY);
+    ASSERT_EQ(WindowMode::WINDOW_MODE_SPLIT_SECONDARY, option->GetWindowMode());
+}
+
+/**
+ * @tc.name: WindowMode05
+ * @tc.desc: SetWindowMode/GetWindowMode
+ * @tc.type: FUNC
+ * @tc.require: AR000GGTV7
+ */
+HWTEST_F(WindowOptionTest, WindowMode05, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+    ASSERT_EQ(WindowMode::WINDOW_MODE_FLOATING, option->GetWindowMode());
+}
+
+/**
+ * @tc.name: WindowMode06
+ * @tc.desc: SetWindowMode/GetWindowMode
+ * @tc.type: FUNC
+ * @tc.require: AR000GGTV7
+ */
+HWTEST_F(WindowOptionTest, WindowMode06, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowMode(WindowMode::WINDOW_MODE_PIP);
+    ASSERT_EQ(WindowMode::WINDOW_MODE_PIP, option->GetWindowMode());
+}
 /**
  * @tc.name: Focusable01
  * @tc.desc: SetFocusable/GetFocusable
@@ -185,6 +264,46 @@ HWTEST_F(WindowOptionTest, WindowFlag03, Function | SmallTest | Level2)
     option->AddWindowFlag(WindowFlag::WINDOW_FLAG_PARENT_LIMIT);
     option->RemoveWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
     ASSERT_EQ(static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_PARENT_LIMIT), option->GetWindowFlags());
+}
+
+/**
+ * @tc.name: SetGetSystemBarProperty01
+ * @tc.desc: SetSystemBarProperty with test param and get
+ * @tc.type: FUNC
+ * @tc.require: AR000GGTVD
+ */
+HWTEST_F(WindowOptionTest, SetGetSystemBarProperty01, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetSystemBarProperty(WindowType::WINDOW_TYPE_STATUS_BAR, SYS_BAR_PROP_1);
+    option->SetSystemBarProperty(WindowType::WINDOW_TYPE_NAVIGATION_BAR, SYS_BAR_PROP_2);
+    ASSERT_EQ(SYS_BAR_PROPS_TEST, option->GetSystemBarProperty());
+}
+
+/**
+ * @tc.name: SetGetSystemBarProperty02
+ * @tc.desc: SetSystemBarProperty with invalid type and get
+ * @tc.type: FUNC
+ * @tc.require: AR000GGTVD
+ */
+HWTEST_F(WindowOptionTest, SetGetSystemBarProperty02, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetSystemBarProperty(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW, SYS_BAR_PROP_1);
+    option->SetSystemBarProperty(WindowType::WINDOW_TYPE_MEDIA, SYS_BAR_PROP_2);
+    ASSERT_EQ(SYS_BAR_PROPS_DEFAULT, option->GetSystemBarProperty());
+}
+
+/**
+ * @tc.name: SetGetSystemBarProperty03
+ * @tc.desc: GetSystemBarProperty with no set
+ * @tc.type: FUNC
+ * @tc.require: AR000GGTVD
+ */
+HWTEST_F(WindowOptionTest, SetGetSystemBarProperty03, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    ASSERT_EQ(SYS_BAR_PROPS_DEFAULT, option->GetSystemBarProperty());
 }
 }
 } // namespace Rosen

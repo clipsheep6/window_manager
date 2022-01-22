@@ -19,13 +19,11 @@
 #include <vector>
 #include <mutex>
 #include <pixel_map.h>
-#include <surface.h>
 
 #include "display.h"
 #include "dm_common.h"
 #include "singleton_delegator.h"
 // #include "wm_common.h"
-
 
 namespace OHOS::Rosen {
 class DisplayManagerAdapter;
@@ -47,8 +45,8 @@ public:
     std::shared_ptr<Media::PixelMap> GetScreenshot(DisplayId displayId, const Media::Rect &rect,
                                         const Media::Size &size, int rotation);
 
-    void RegisterDisplayPowerEventListener(sptr<IDisplayPowerEventListener> listener);
-    void UnregisterDisplayPowerEventListener(sptr<IDisplayPowerEventListener> listener);
+    bool RegisterDisplayPowerEventListener(sptr<IDisplayPowerEventListener> listener);
+    bool UnregisterDisplayPowerEventListener(sptr<IDisplayPowerEventListener> listener);
     bool WakeUpBegin(PowerStateChangeReason reason);
     bool WakeUpEnd();
     bool SuspendBegin(PowerStateChangeReason reason);
@@ -65,13 +63,14 @@ private:
     DisplayManager();
     ~DisplayManager();
     bool CheckRectValid(const Media::Rect &rect, int32_t oriHeight, int32_t oriWidth) const;
-    bool CheckSizeValid(const Media::Size &size, int32_t oriHeight, int32_t oriWidth);
+    bool CheckSizeValid(const Media::Size &size, int32_t oriHeight, int32_t oriWidth) const;
     void NotifyDisplayPowerEvent(DisplayPowerEvent event, EventStatus status);
     void NotifyDisplayStateChanged(DisplayState state);
+    void ClearDisplayStateCallback();
 
     static inline SingletonDelegator<DisplayManager> delegator;
     const int32_t MAX_RESOLUTION_SIZE_SCREENSHOT = 15360; // max resolution, 16K
-    std::mutex mutex_;
+    std::recursive_mutex mutex_;
     std::vector<sptr<IDisplayPowerEventListener>> powerEventListeners_;
     sptr<DisplayManagerAgent> powerEventListenerAgent_;
     sptr<DisplayManagerAgent> displayStateAgent_;

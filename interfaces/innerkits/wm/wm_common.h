@@ -78,14 +78,6 @@ enum class WMError : int32_t {
     WM_ERROR_INVALID_WINDOW = 160,
     WM_ERROR_INVALID_OPERATION = 170,
     WM_ERROR_UNKNOWN,
-
-    /* weston adater */
-    WM_ERROR_WINDOWMANAGER_GETINSTANCE = 100000,
-    WM_ERROR_WINDOWMANAGER_INIT = 100001,
-    WM_ERROR_WINDOWMANAGER_SHOW = 100002,
-    WM_ERROR_WINDOWMANAGER_HIDE = 100003,
-    WM_ERROR_WINDOWMANAGER_MOVE = 100004,
-    WM_ERROR_WINDOWMANAGER_RESIZE = 100005,
 };
 
 enum class WindowFlag : uint32_t {
@@ -99,11 +91,17 @@ struct Rect {
     int32_t posY_;
     uint32_t width_;
     uint32_t height_;
+    bool operator == (const Rect& a) const
+    {
+        return (posX_ == a.posX_ && posY_ == a.posY_ && width_ == a.width_ && height_ == a.height_);
+    }
 };
 
 namespace {
     constexpr uint32_t SYSTEM_COLOR_WHITE = 0xFFFFFFE5;
     constexpr uint32_t SYSTEM_COLOR_BLACK = 0x00000066;
+    constexpr float DEFAULT_SPLIT_RATIO = 0.5;
+    constexpr uint32_t DIVIDER_WIDTH = 8;
 }
 
 struct SystemBarProperty {
@@ -118,8 +116,6 @@ struct SystemBarProperty {
         return (enable_ == a.enable_ && backgroundColor_ == a.backgroundColor_ && contentColor_ == a.contentColor_);
     }
 };
-
-using SystemBarProps = std::vector<std::pair<WindowType, SystemBarProperty>>;
 
 enum class AvoidAreaType : uint32_t {
     TYPE_SYSTEM,           // area of SystemUI

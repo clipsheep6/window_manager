@@ -2,15 +2,33 @@
     "name": "@openharmony/window_manager",
     "version": "3.1.0",
     "description": "window_manager",
-    "author": {},
     "repository": "",
     "license": "Apache License 2.0",
     "component": {
       "name": "window_manager",
       "subsystem": "window",
       "adapted_system_type": [ "standard" ],
+      "rom": {},
+      "ram": {},
       "deps": {
         "components": [
+          "libhilog",
+          "ipc_core",
+          "system_ability_fwk",
+          "samgr_proxy",
+          "image_native",
+          "utils",
+          "bytrace_core",
+          "surface",
+          "ability_context_native",
+          "ability_manager",
+          "want",
+          "ace_uicontent",
+          "appexecfwk_base",
+          "appexecfwk_core",
+          "inputmethod_client",
+          "libmmi-client",
+          "ace_napi"
         ],
         "third_party": [
         ]
@@ -19,7 +37,6 @@
         "sub_component": [
           "//foundation/windowmanager/interfaces/kits/js/declaration:window",
           "//foundation/windowmanager/sa_profile:wms_sa_profile",
-          "//foundation/windowmanager/adapter:libwmadapter",
           "//foundation/windowmanager/dm:libdm",
           "//foundation/windowmanager/dmserver:libdms",
           "//foundation/windowmanager/wm:libwm",

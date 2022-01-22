@@ -17,6 +17,7 @@
 #define FOUNDATION_DM_DISPLAY_MANAGER_ADAPTER_H
 
 #include <map>
+#include <mutex>
 #include <surface.h>
 
 #include "display.h"
@@ -41,9 +42,9 @@ public:
     virtual DMError DestroyVirtualScreen(ScreenId screenId);
     virtual std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId);
 
-    virtual void RegisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
+    virtual bool RegisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
         DisplayManagerAgentType type);
-    virtual void UnregisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
+    virtual bool UnregisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
         DisplayManagerAgentType type);
     virtual bool WakeUpBegin(PowerStateChangeReason reason);
     virtual bool WakeUpEnd();
@@ -61,7 +62,7 @@ private:
 
     static inline SingletonDelegator<DisplayManagerAdapter> delegator;
 
-    std::mutex mutex_;
+    std::recursive_mutex mutex_;
     sptr<IDisplayManager> displayManagerServiceProxy_ = nullptr;
     sptr<DMSDeathRecipient> dmsDeath_ = nullptr;
     std::map<DisplayId, sptr<Display>> displayMap_;

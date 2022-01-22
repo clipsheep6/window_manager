@@ -26,14 +26,36 @@ namespace {
 
 constexpr Rect EMPTY_RECT = {0, 0, 0, 0};
 
+static std::map<std::string, std::shared_ptr<NativeReference>> g_jsWindowMap;
+std::recursive_mutex g_mutex;
 JsWindow::JsWindow(const sptr<Window>& window) : windowToken_(window)
 {
+}
+
+JsWindow::~JsWindow()
+{
+    WLOGFI("JsWindow::~JsWindow is called");
+}
+
+std::string JsWindow::GetWindowName()
+{
+    if (windowToken_ == nullptr) {
+        return "";
+    }
+    return windowToken_->GetWindowName();
 }
 
 void JsWindow::Finalizer(NativeEngine* engine, void* data, void* hint)
 {
     WLOGFI("JsWindow::Finalizer is called");
-    std::unique_ptr<JsWindow>(static_cast<JsWindow*>(data));
+    auto jsWin = std::unique_ptr<JsWindow>(static_cast<JsWindow*>(data));
+    std::string windowName = jsWin->GetWindowName();
+    WLOGFI("JsWindow::Finalizer windowName : %{public}s", windowName.c_str());
+    std::lock_guard<std::recursive_mutex> lock(g_mutex);
+    if (g_jsWindowMap.find(windowName) != g_jsWindowMap.end()) {
+        WLOGFI("JsWindow::windowName %{public}s is destroyed", windowName.c_str());
+        g_jsWindowMap.erase(windowName);
+    }
 }
 
 NativeValue* JsWindow::Show(NativeEngine* engine, NativeCallbackInfo* info)
@@ -148,6 +170,20 @@ NativeValue* JsWindow::GetAvoidArea(NativeEngine* engine, NativeCallbackInfo* in
     return (me != nullptr) ? me->OnGetAvoidArea(*engine, *info) : nullptr;
 }
 
+NativeValue* JsWindow::GetWindowMode(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGFI("JsWindow::GetWindowMode is called");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
+    return (me != nullptr) ? me->OnGetWindowMode(*engine, *info) : nullptr;
+}
+
+NativeValue* JsWindow::IsShowing(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGFI("JsWindow::IsShowing is called");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
+    return (me != nullptr) ? me->OnIsShowing(*engine, *info) : nullptr;
+}
+
 NativeValue* JsWindow::OnShow(NativeEngine& engine, NativeCallbackInfo& info)
 {
     WLOGFI("JsWindow::OnShow is called");
@@ -183,13 +219,19 @@ NativeValue* JsWindow::OnDestroy(NativeEngine& engine, NativeCallbackInfo& info)
     AsyncTask::CompleteCallback complete =
         [this](NativeEngine& engine, AsyncTask& task, int32_t status) {
             WMError ret = windowToken_->Destroy();
-            windowToken_ = nullptr;
-            if (ret == WMError::WM_OK) {
-                task.Resolve(engine, engine.CreateUndefined());
-                WLOGFI("JsWindow::OnDestroy success");
-            } else {
+            if (ret != WMError::WM_OK) {
                 task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(ret), "JsWindow::OnDestroy failed."));
+                return;
             }
+            std::string windowName = windowToken_->GetWindowName();
+            std::lock_guard<std::recursive_mutex> lock(g_mutex);
+            if (g_jsWindowMap.find(windowName) != g_jsWindowMap.end()) {
+                g_jsWindowMap.erase(windowName);
+                WLOGFI("JsWindow::OnDestroy windowName %{public}s is destroyed", windowName.c_str());
+            }
+            // FIX ME: windowToken = nullptr in aync task and don't affect other async task
+            task.Resolve(engine, engine.CreateUndefined());
+            WLOGFI("JsWindow::OnDestroy success");
         };
 
     NativeValue* lastParam = (info.argc == 0) ? nullptr : info.argv[0];
@@ -789,9 +831,65 @@ NativeValue* JsWindow::OnGetAvoidArea(NativeEngine& engine, NativeCallbackInfo& 
     return result;
 }
 
+NativeValue* JsWindow::OnGetWindowMode(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    WLOGFI("JsWindow::OnGetWindowMode is called");
+    AsyncTask::CompleteCallback complete =
+        [this](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            if (windowToken_ == nullptr) {
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(WMError::WM_ERROR_NULLPTR),
+                    "JsWindow::OnGetWindowMode failed."));
+                WLOGFE("JsWindow windowToken_ is nullptr");
+                return;
+            }
+            WindowMode mode = windowToken_->GetMode();
+            task.Resolve(engine, CreateJsValue(engine, mode));
+        };
+
+    NativeValue* lastParam = (info.argc == 0) ? nullptr : info.argv[0];
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule(
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
+NativeValue* JsWindow::OnIsShowing(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    WLOGFI("JsWindow::OnIsShowing is called");
+    AsyncTask::CompleteCallback complete =
+        [this](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            if (windowToken_ == nullptr) {
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(WMError::WM_ERROR_NULLPTR),
+                    "JsWindow::OnIsShowing failed."));
+                WLOGFE("JsWindow windowToken_ is nullptr");
+                return;
+            }
+            bool state = windowToken_->GetShowState();
+            task.Resolve(engine, CreateJsValue(engine, state));
+        };
+
+    NativeValue* lastParam = (info.argc == 0) ? nullptr : info.argv[0];
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule(
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
+std::shared_ptr<NativeReference> FindJsWindowObject(std::string windowName)
+{
+    WLOGFI("JsWindow::FindJsWindowObject is called");
+    std::lock_guard<std::recursive_mutex> lock(g_mutex);
+    if (g_jsWindowMap.find(windowName) == g_jsWindowMap.end()) {
+        WLOGFI("JsWindow::FindJsWindowObject window %{public}s not exist!", windowName.c_str());
+        return nullptr;
+    }
+    return g_jsWindowMap[windowName];
+}
+
 NativeValue* CreateJsWindowObject(NativeEngine& engine, sptr<Window>& window)
 {
     WLOGFI("JsWindow::CreateJsWindow is called");
+    std::lock_guard<std::recursive_mutex> lock(g_mutex);
     NativeValue* objValue = engine.CreateObject();
     NativeObject* object = ConvertNativeValueTo<NativeObject>(objValue);
 
@@ -814,6 +912,12 @@ NativeValue* CreateJsWindowObject(NativeEngine& engine, sptr<Window>& window)
     BindNativeFunction(engine, *object, "setSystemBarEnable", JsWindow::SetSystemBarEnable);
     BindNativeFunction(engine, *object, "setSystemBarProperties", JsWindow::SetSystemBarProperties);
     BindNativeFunction(engine, *object, "getAvoidArea", JsWindow::GetAvoidArea);
+    BindNativeFunction(engine, *object, "getWindowMode", JsWindow::GetWindowMode);
+    BindNativeFunction(engine, *object, "isShowing", JsWindow::IsShowing);
+    std::shared_ptr<NativeReference> jsWindowRef;
+    jsWindowRef.reset(engine.CreateReference(objValue, 1));
+    std::string windowName = window->GetWindowName();
+    g_jsWindowMap[windowName] = jsWindowRef;
     return objValue;
 }
 }  // namespace Rosen

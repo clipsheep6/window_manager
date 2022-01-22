@@ -24,11 +24,11 @@
 namespace OHOS {
 namespace Rosen {
 NativeValue* CreateJsWindowObject(NativeEngine& engine, sptr<Window>& window);
-
+std::shared_ptr<NativeReference> FindJsWindowObject(std::string windowName);
 class JsWindow final {
 public:
     explicit JsWindow(const sptr<Window>& window);
-    ~JsWindow() = default;
+    ~JsWindow();
     static void Finalizer(NativeEngine* engine, void* data, void* hint);
     static NativeValue* Show(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* Destroy(NativeEngine* engine, NativeCallbackInfo* info);
@@ -46,12 +46,15 @@ public:
     static NativeValue* SetSystemBarEnable(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetSystemBarProperties(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* GetAvoidArea(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* GetWindowMode(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* IsShowing(NativeEngine* engine, NativeCallbackInfo* info);
 
 private:
     bool IfCallbackRegistered(std::string type, NativeValue* jsListenerObject);
     void RegisterWindowListenerWithType(NativeEngine& engine, std::string type, NativeValue* value);
     void UnregisterWindowListenerWithType(std::string type, NativeValue* value);
     void UnregisterAllWindowListenerWithType(std::string type);
+    std::string GetWindowName();
     NativeValue* OnShow(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnDestroy(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnHide(NativeEngine& engine, NativeCallbackInfo& info);
@@ -68,7 +71,8 @@ private:
     NativeValue* OnSetSystemBarProperties(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnLoadContent(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnGetAvoidArea(NativeEngine& engine, NativeCallbackInfo& info);
-
+    NativeValue* OnGetWindowMode(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnIsShowing(NativeEngine& engine, NativeCallbackInfo& info);
     sptr<Window> windowToken_ = nullptr;
     std::map<std::string, std::vector<std::unique_ptr<NativeReference>>> jsCallbackMap_;
     std::map<std::string, sptr<JsWindowListener>> jsListenerMap_;

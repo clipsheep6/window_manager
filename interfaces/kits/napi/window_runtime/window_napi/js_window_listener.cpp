@@ -27,12 +27,12 @@ constexpr uint32_t AVOID_AREA_NUM = 4;
 
 void JsWindowListener::AddCallback(NativeValue* jsListenerObject)
 {
-    WLOGFI("JsWindowListener::AddCallbackAndRegister is called");
+    WLOGFI("JsWindowListener::AddCallback is called");
     std::lock_guard<std::mutex> lock(mtx_);
     std::unique_ptr<NativeReference> callbackRef;
     callbackRef.reset(engine_->CreateReference(jsListenerObject, 1));
     jsCallBack_.push_back(std::move(callbackRef));
-    WLOGFI("JsWindowListener::AddCallbackAndRegister success jsCallBack_ size: %{public}d!",
+    WLOGFI("JsWindowListener::AddCallback success jsCallBack_ size: %{public}d!",
         static_cast<uint32_t>(jsCallBack_.size()));
     return;
 }
@@ -96,7 +96,7 @@ void JsWindowListener::OnSizeChange(Rect rect)
     CallJsMethod("windowSizeChange", argv, ArraySize(argv));
 }
 
-void JsWindowListener::OnSystemBarPropertyChange(uint64_t displayId, SystemBarProps props)
+void JsWindowListener::OnSystemBarPropertyChange(uint64_t displayId, const SystemBarRegionTints& tints)
 {
     std::lock_guard<std::mutex> lock(mtx_);
     WLOGFI("JsWindowListener::OnSystemBarPropertyChange is called");
@@ -111,7 +111,7 @@ void JsWindowListener::OnSystemBarPropertyChange(uint64_t displayId, SystemBarPr
         return;
     }
     object->SetProperty("displayId", CreateJsValue(*engine_, static_cast<uint32_t>(displayId)));
-    object->SetProperty("regionTint", CreateJsSystemBarRegionTintArrayObject(*engine_, props));
+    object->SetProperty("regionTint", CreateJsSystemBarRegionTintArrayObject(*engine_, tints));
     NativeValue* argv[] = {propertyValue};
     CallJsMethod("systemUiTintChange", argv, ArraySize(argv));
 }

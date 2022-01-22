@@ -129,8 +129,10 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
     UpdateFocusWindow();
     if (avoidController_->IsAvoidAreaNode(node)) {
         avoidController_->AddAvoidAreaNode(node);
+        NotifyIfSystemBarRegionChanged();
     }
-    NotifySystemBarIfChanged();
+    NotifyIfSystemBarTintChanged();
+    DumpScreenWindowTree();
     WLOGFI("AddWindowNode windowId: %{public}d end", node->GetWindowId());
     return WMError::WM_OK;
 }
@@ -144,8 +146,10 @@ WMError WindowNodeContainer::UpdateWindowNode(sptr<WindowNode>& node)
     layoutPolicy_->UpdateWindowNode(node);
     if (avoidController_->IsAvoidAreaNode(node)) {
         avoidController_->UpdateAvoidAreaNode(node);
+        NotifyIfSystemBarRegionChanged();
     }
-    NotifySystemBarIfChanged();
+    NotifyIfSystemBarTintChanged();
+    DumpScreenWindowTree();
     WLOGFI("UpdateWindowNode windowId: %{public}d end", node->GetWindowId());
     return WMError::WM_OK;
 }
@@ -154,6 +158,7 @@ void WindowNodeContainer::UpdateWindowTree(sptr<WindowNode>& node)
 {
     WM_FUNCTION_TRACE();
     node->priority_ = zorderPolicy_->GetWindowPriority(node->GetWindowType());
+    RaiseInputMethodWindowPriorityIfNeeded(node);
     auto parentNode = node->parent_;
     auto position = parentNode->children_.end();
     for (auto iter = parentNode->children_.begin(); iter < parentNode->children_.end(); ++iter) {
@@ -247,8 +252,10 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
     layoutPolicy_->RemoveWindowNode(node);
     if (avoidController_->IsAvoidAreaNode(node)) {
         avoidController_->RemoveAvoidAreaNode(node);
+        NotifyIfSystemBarRegionChanged();
     }
-    NotifySystemBarIfChanged();
+    NotifyIfSystemBarTintChanged();
+    DumpScreenWindowTree();
     WLOGFI("RemoveWindowNode windowId: %{public}d end", node->GetWindowId());
     return WMError::WM_OK;
 }
@@ -403,42 +410,63 @@ sptr<WindowNode> WindowNodeContainer::GetTopImmersiveNode() const
     return nullptr;
 }
 
-void WindowNodeContainer::NotifySystemBarIfChanged()
+void WindowNodeContainer::NotifyIfSystemBarTintChanged()
 {
-    DumpScreenWindowTree();
+    WM_FUNCTION_TRACE();
     auto node = GetTopImmersiveNode();
-    SystemBarProps props;
+    SystemBarRegionTints tints;
     if (node == nullptr) { // use default system bar
         WLOGFI("no immersive window on top");
-        for (auto it : sysBarPropMap_) {
-            if (it.second == SystemBarProperty()) {
+        for (auto it : sysBarTintMap_) {
+            if (it.second.prop_ == SystemBarProperty()) {
                 continue;
             }
-            sysBarPropMap_[it.first] = SystemBarProperty();
-            std::pair<WindowType, SystemBarProperty> item = { it.first, SystemBarProperty() };
-            props.emplace_back(item);
+            WLOGFI("system bar prop change to default");
+            sysBarTintMap_[it.first].prop_ = SystemBarProperty();
+            sysBarTintMap_[it.first].type_ = it.first;
+            tints.emplace_back(sysBarTintMap_[it.first]);
         }
     } else { // use node-defined system bar
         WLOGFI("top immersive window id: %{public}d", node->GetWindowId());
         auto& sysBarPropMap = node->GetSystemBarProperty();
-        for (auto it : sysBarPropMap_) {
+        for (auto it : sysBarTintMap_) {
             if (sysBarPropMap.find(it.first) == sysBarPropMap.end()) {
-                return;
-            }
-            auto& prop = sysBarPropMap.find(it.first)->second;
-            if (it.second == prop) {
                 continue;
             }
-            WLOGFI("Set systemBar prop winId: %{public}d, type: %{public}d" \
+            auto& prop = sysBarPropMap.find(it.first)->second;
+            if (it.second.prop_ == prop) {
+                continue;
+            }
+            WLOGFI("system bar prop update winId: %{public}d, type: %{public}d" \
                 "visible: %{public}d, Color: %{public}x | %{public}x",
                 node->GetWindowId(), static_cast<int32_t>(it.first),
                 prop.enable_, prop.backgroundColor_, prop.contentColor_);
-            sysBarPropMap_[it.first] = prop;
-            std::pair<WindowType, SystemBarProperty> item = { it.first, prop };
-            props.emplace_back(item);
+            sysBarTintMap_[it.first].prop_ = prop;
+            sysBarTintMap_[it.first].type_ = it.first;
+            tints.emplace_back(sysBarTintMap_[it.first]);
         }
     }
-    WindowManagerAgentController::GetInstance().UpdateSystemBarProperties(screenId_, props);
+    WindowManagerAgentController::GetInstance().UpdateSystemBarRegionTints(screenId_, tints);
+}
+
+void WindowNodeContainer::NotifyIfSystemBarRegionChanged()
+{
+    WM_FUNCTION_TRACE();
+    SystemBarRegionTints tints;
+    for (auto it : sysBarTintMap_) { // split screen mode not support yet
+        auto sysNode = sysBarNodeMap_[it.first];
+        if (sysNode == nullptr || it.second.region_ == sysNode->GetLayoutRect()) {
+            continue;
+        }
+        auto& newRegion = sysNode->GetLayoutRect();
+        sysBarTintMap_[it.first].region_ = newRegion;
+        sysBarTintMap_[it.first].type_ = it.first;
+        tints.emplace_back(sysBarTintMap_[it.first]);
+        WLOGFI("system bar region update, type: %{public}d" \
+            "region: [%{public}d, %{public}d, %{public}d, %{public}d]",
+            static_cast<int32_t>(it.first), newRegion.posX_, newRegion.posY_, newRegion.width_, newRegion.height_);
+    }
+    WindowManagerAgentController::GetInstance().UpdateSystemBarRegionTints(screenId_, tints);
 }
 
 void WindowNodeContainer::TraverseContainer(std::vector<sptr<WindowNode>>& windowNodes)
@@ -498,13 +526,12 @@ void WindowNodeContainer::DisplayRects::InitRect(Rect& oriDisplayRect)
         isVertical_ = true;
     }
     displayRect_ = oriDisplayRect;
-    const uint32_t dividerWidth = 50;
     if (!isVertical_) {
-        dividerRect_ = { static_cast<uint32_t>((displayRect_.width_ - dividerWidth) * DEFAULT_SPLIT_RATIO), 0,
-                dividerWidth, displayRect_.height_ };
+        dividerRect_ = { static_cast<uint32_t>((displayRect_.width_ - DIVIDER_WIDTH) * DEFAULT_SPLIT_RATIO), 0,
+                DIVIDER_WIDTH, displayRect_.height_ };
     } else {
-        dividerRect_ = { 0, static_cast<uint32_t>((displayRect_.height_ - dividerWidth) * DEFAULT_SPLIT_RATIO),
-               displayRect_.width_, dividerWidth };
+        dividerRect_ = { 0, static_cast<uint32_t>((displayRect_.height_ - DIVIDER_WIDTH) * DEFAULT_SPLIT_RATIO),
+               displayRect_.width_, DIVIDER_WIDTH };
     }
     WLOGFI("init dividerRect :[%{public}d, %{public}d, %{public}d, %{public}d]",
         dividerRect_.posX_, dividerRect_.posY_, dividerRect_.width_, dividerRect_.height_);
@@ -514,9 +541,11 @@ void WindowNodeContainer::DisplayRects::InitRect(Rect& oriDisplayRect)
 void WindowNodeContainer::DisplayRects::SetSplitRect(float ratio)
 {
     if (!isVertical_) {
-        dividerRect_.posX_ = displayDependRect_.posX_ +  static_cast<uint32_t>(displayDependRect_.width_ * ratio);
+        dividerRect_.posX_ = displayDependRect_.posX_ +
+            static_cast<uint32_t>((displayDependRect_.width_ - dividerRect_.width_) * ratio);
     } else {
-        dividerRect_.posY_ = displayDependRect_.posY_ +  static_cast<uint32_t>(displayDependRect_.height_ * ratio);
+        dividerRect_.posY_ = displayDependRect_.posY_ +
+            static_cast<uint32_t>((displayDependRect_.height_ - dividerRect_.height_) * ratio);
     }
     WLOGFI("set dividerRect :[%{public}d, %{public}d, %{public}d, %{public}d]",
         dividerRect_.posX_, dividerRect_.posY_, dividerRect_.width_, dividerRect_.height_);
@@ -528,16 +557,22 @@ void WindowNodeContainer::DisplayRects::SetSplitRect(const Rect& divRect)
     dividerRect_.width_ = divRect.width_;
     dividerRect_.height_ = divRect.height_;
     if (!isVertical_) {
+        primaryRect_.posX_ = displayRect_.posX_;
+        primaryRect_.posY_ = displayRect_.posY_;
         primaryRect_.width_ = divRect.posX_;
         primaryRect_.height_ = displayRect_.height_;
 
         secondaryRect_.posX_ = divRect.posX_ + dividerRect_.width_;
+        secondaryRect_.posY_ = displayRect_.posY_;
         secondaryRect_.width_ = displayRect_.width_ - secondaryRect_.posX_;
         secondaryRect_.height_ = displayRect_.height_;
     } else {
+        primaryRect_.posX_ = displayRect_.posX_;
+        primaryRect_.posY_ = displayRect_.posY_;
         primaryRect_.height_ = divRect.posY_;
         primaryRect_.width_ = displayRect_.width_;
 
+        secondaryRect_.posX_ = displayRect_.posX_;
         secondaryRect_.posY_ = divRect.posY_ + dividerRect_.height_;
         secondaryRect_.height_ = displayRect_.height_ - secondaryRect_.posY_;
         secondaryRect_.width_ = displayRect_.width_;
@@ -649,7 +684,6 @@ sptr<WindowNode> WindowNodeContainer::FindSplitPairNode(sptr<WindowNode>& trigge
 
 WMError WindowNodeContainer::HandleModeChangeToSplit(sptr<WindowNode>& triggerNode)
 {
-    WM_FUNCTION_TRACE();
     WLOGFI("HandleModeChangeToSplit %{public}d", triggerNode->GetWindowId());
     auto pairNode = FindSplitPairNode(triggerNode);
     displayRects_->displayDependRect_ = layoutPolicy_->GetDependDisplayRects(); // get depend display rect for split
@@ -699,6 +733,7 @@ WMError WindowNodeContainer::HandleModeChangeFromSplit(sptr<WindowNode>& trigger
 
 WMError WindowNodeContainer::HandleSplitWindowModeChange(sptr<WindowNode>& triggerNode, bool isChangeToSplit)
 {
+    WM_FUNCTION_TRACE();
     return isChangeToSplit ? HandleModeChangeToSplit(triggerNode) : HandleModeChangeFromSplit(triggerNode);
 }
 
@@ -744,6 +779,21 @@ WMError WindowNodeContainer::UpdateWindowPairInfo(sptr<WindowNode>& triggerNode,
     Rect dividerRect = displayRects_->GetDividerRect();
     SingletonContainer::Get<WindowInnerManager>().SendMessage(INNER_WM_CREATE_DIVIDER, screenId_, dividerRect);
     return WMError::WM_OK;
+}
+
+void WindowNodeContainer::RaiseInputMethodWindowPriorityIfNeeded(const sptr<WindowNode>& node) const
+{
+    if (node->GetWindowType() != WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
+        return;
+    }
+    auto iter = std::find_if(aboveAppWindowNode_->children_.begin(), aboveAppWindowNode_->children_.end(),
+                             [](sptr<WindowNode> node) {
+        return node->GetWindowType() == WindowType::WINDOW_TYPE_KEYGUARD;
+    });
+    if (iter != aboveAppWindowNode_->children_.end()) {
+        WLOGFI("raise input method float window priority.");
+        node->priority_ = WINDOW_TYPE_RAISED_INPUT_METHOD;
+    }
 }
 }
 }

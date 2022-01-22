@@ -23,23 +23,23 @@ namespace {
 }
 WM_IMPLEMENT_SINGLE_INSTANCE(DisplayManagerAgentController)
 
-void DisplayManagerAgentController::RegisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
+bool DisplayManagerAgentController::RegisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
     DisplayManagerAgentType type)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    dmAgentContainer_.RegisterAgentLocked(displayManagerAgent, type);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    return dmAgentContainer_.RegisterAgentLocked(displayManagerAgent, type);
 }
 
-void DisplayManagerAgentController::UnregisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
+bool DisplayManagerAgentController::UnregisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
     DisplayManagerAgentType type)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    dmAgentContainer_.UnregisterAgentLocked(displayManagerAgent, type);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    return dmAgentContainer_.UnregisterAgentLocked(displayManagerAgent, type);
 }
 
 bool DisplayManagerAgentController::NotifyDisplayPowerEvent(DisplayPowerEvent event, EventStatus status)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     auto agents = dmAgentContainer_.GetAgentsByType(DisplayManagerAgentType::DISPLAY_POWER_EVENT_LISTENER);
     if (agents.empty()) {
         return false;
@@ -53,7 +53,7 @@ bool DisplayManagerAgentController::NotifyDisplayPowerEvent(DisplayPowerEvent ev
 
 bool DisplayManagerAgentController::NotifyDisplayStateChanged(DisplayState state)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     auto agents = dmAgentContainer_.GetAgentsByType(DisplayManagerAgentType::DISPLAY_STATE_LISTENER);
     if (agents.empty()) {
         return false;

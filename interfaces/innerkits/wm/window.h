@@ -16,31 +16,31 @@
 #ifndef OHOS_ROSEN_WINDOW_H
 #define OHOS_ROSEN_WINDOW_H
 
-#include <i_input_event_consumer.h>
-#include <iremote_object.h>
-#include <input_event.h>
 #include <refbase.h>
-#include <ui/rs_surface_node.h>
-#include <key_event.h>
-#include <pointer_event.h>
-#include <axis_event.h>
-#include "foundation/appexecfwk/standard/kits/appkit/native/ability_runtime/context/context.h"
+
 #include "wm_common.h"
 #include "window_option.h"
 #include "window_life_cycle_interface.h"
 
 class NativeValue;
 class NativeEngine;
+namespace OHOS::MMI {
+    struct IInputEventConsumer;
+    class PointerEvent;
+    class KeyEvent;
+}
 namespace OHOS::AppExecFwk {
     class Configuration;
 }
 
 namespace OHOS::AbilityRuntime {
     class AbilityContext;
+    class Context;
 }
 
 namespace OHOS {
 namespace Rosen {
+class RSSurfaceNode;
 class IWindowChangeListener : virtual public RefBase {
 public:
     virtual void OnSizeChange(Rect rect) = 0;
@@ -48,7 +48,7 @@ public:
 
 class IAvoidAreaChangedListener : virtual public RefBase {
 public:
-    virtual void OnAvoidAreaChanged(const std::vector<Rect> avoidAreas) = 0;
+    virtual void OnAvoidAreaChanged(std::vector<Rect> avoidAreas) = 0;
 };
 
 class Window : public RefBase {
@@ -64,9 +64,13 @@ public:
     virtual WindowMode GetMode() const = 0;
     virtual const std::string& GetWindowName() const = 0;
     virtual uint32_t GetWindowId() = 0;
-    virtual uint32_t GetWindowFlags() = 0;
-    virtual SystemBarProperty GetSystemBarPropertyByType(WindowType type) = 0;
-
+    virtual uint32_t GetWindowFlags() const = 0;
+    virtual bool GetShowState() const = 0;
+    virtual bool GetFocusable() const = 0;
+    virtual bool GetTouchable() const = 0;
+    virtual SystemBarProperty GetSystemBarPropertyByType(WindowType type) const = 0;
+    virtual bool IsFullScreen() const = 0;
+    virtual bool IsLayoutFullScreen() const = 0;
     virtual WMError SetWindowType(WindowType type) = 0;
     virtual WMError SetWindowMode(WindowMode mode) = 0;
     virtual WMError AddWindowFlag(WindowFlag flag) = 0;
@@ -96,6 +100,12 @@ public:
     virtual WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
         NativeValue* storage, bool isdistributed = false) = 0;
     virtual const std::string& GetContentInfo() = 0;
+
+    virtual bool IsDecorEnable() const = 0;
+    virtual WMError Maximize() = 0;
+    virtual WMError Minimize() = 0;
+    virtual WMError Recover() = 0;
+    virtual WMError Close() = 0;
 };
 }
 }

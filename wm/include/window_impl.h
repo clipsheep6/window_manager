@@ -17,6 +17,8 @@
 #define OHOS_ROSEN_WINDOW_IMPL_H
 #include <map>
 #include <ability_context.h>
+#include <i_input_event_consumer.h>
+#include <key_event.h>
 #include <refbase.h>
 #include <ui_content.h>
 #include "input_transfer_station.h"
@@ -47,10 +49,15 @@ public:
     virtual Rect GetRect() const override;
     virtual WindowType GetType() const override;
     virtual WindowMode GetMode() const override;
+    virtual bool GetShowState() const override;
+    virtual bool GetFocusable() const override;
+    virtual bool GetTouchable() const override;
     virtual const std::string& GetWindowName() const override;
     virtual uint32_t GetWindowId() override;
-    virtual uint32_t GetWindowFlags() override;
-    virtual SystemBarProperty GetSystemBarPropertyByType(WindowType type) override;
+    virtual uint32_t GetWindowFlags() const override;
+    virtual SystemBarProperty GetSystemBarPropertyByType(WindowType type) const override;
+    virtual bool IsFullScreen() const override;
+    virtual bool IsLayoutFullScreen() const override;
     virtual WMError SetWindowType(WindowType type) override;
     virtual WMError SetWindowMode(WindowMode mode) override;
     virtual WMError AddWindowFlag(WindowFlag flag) override;
@@ -66,6 +73,12 @@ public:
     virtual WMError Hide() override;
     virtual WMError MoveTo(int32_t x, int32_t y) override;
     virtual WMError Resize(uint32_t width, uint32_t height) override;
+
+    virtual bool IsDecorEnable() const override;
+    virtual WMError Maximize() override;
+    virtual WMError Minimize() override;
+    virtual WMError Recover() override;
+    virtual WMError Close() override;
 
     virtual WMError RequestFocus() const override;
     virtual void AddInputEventListener(std::shared_ptr<MMI::IInputEventConsumer>& inputEventListener) override;

@@ -20,6 +20,7 @@ group("systemtest") {
 
   deps = [
     ":wm_window_immersive_test",
+    ":wm_window_input_method_test",
     ":wm_window_layout_test",
     ":wm_window_multi_ability_test",
     ":wm_window_split_test",
@@ -82,6 +83,17 @@ ohos_systemtest("wm_window_split_test") {
 
 ## SystemTest wm_window_split_test }}}
 
+## SystemTest window_input_method_test {{{
+ohos_systemtest("wm_window_input_method_test") {
+  module_out_path = module_out_path
+
+  sources = [ "window_input_method_test.cpp" ]
+
+  deps = [ ":wm_systemtest_common" ]
+}
+
+## SystemTest window_input_method_test }}}
+
 ## Build wm_systemtest_common.a {{{
 config("wm_systemtest_common_public_config") {
   include_dirs = [
@@ -97,13 +109,15 @@ config("wm_systemtest_common_public_config") {
     # for abilityContext
     "//foundation/aafwk/standard/frameworks/kits/ability/ability_runtime/include",
     "//foundation/appexecfwk/standard/interfaces/innerkits/appexecfwk_base/include",
-    "//foundation/appexecfwk/standard/kits/appkit/native/ability_runtime/context",
+    "//foundation/aafwk/standard/frameworks/kits/appkit/native/ability_runtime/context",
     "//base/global/resmgr_standard/interfaces/innerkits/include",
     "//third_party/node/deps/icu-small/source/common",
     "//foundation/aafwk/standard/interfaces/innerkits/ability_manager/include",
     "//foundation/aafwk/standard/interfaces/innerkits/want/include/ohos/aafwk/content",
     "//foundation/distributedschedule/dmsfwk/services/dtbschedmgr/include",
     "//foundation/aafwk/standard/interfaces/innerkits/base/include",
+    "//third_party/jsoncpp/include",
+    "//third_party/json/include",
 
     # abilityContext end
   ]
@@ -127,7 +141,13 @@ ohos_static_library("wm_systemtest_common") {
 
   public_deps = [
     "//foundation/ace/ace_engine/interfaces/innerkits/ace:ace_uicontent",
+
+    # todo need delete it for abilitycontext
+    "//foundation/ace/napi:ace_napi",
+    "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
     "//foundation/multimodalinput/input/frameworks/proxy:libmmi-client",
+    "//foundation/windowmanager/dm:libdm",
+    "//foundation/windowmanager/dmserver:libdms",
     "//foundation/windowmanager/utils:libwmutil",
     "//foundation/windowmanager/wm:libwm",
     "//foundation/windowmanager/wmserver:libwms",
@@ -135,7 +155,5 @@ ohos_static_library("wm_systemtest_common") {
     "//third_party/googletest:gtest_main",
     "//utils/native/base:utils",
   ]
-
-  external_deps = [ "aafwk_standard:ability_context_native" ]
 }
 ## Build wm_systemtest_common.a }}}

@@ -37,16 +37,18 @@ public:
     ScreenId GetDefaultScreenId();
     RSScreenModeInfo GetScreenActiveMode(ScreenId id);
 
-    std::shared_ptr<Media::PixelMap> GetScreenSnapshot(DisplayId displayId, ScreenId screenId);
+    std::shared_ptr<Media::PixelMap> GetScreenSnapshot(DisplayId displayId);
 
 private:
     void OnAbstractScreenConnected(sptr<AbstractScreen> absScreen);
     void OnAbstractScreenDisconnected(sptr<AbstractScreen> absScreen);
     void OnAbstractScreenChanged(sptr<AbstractScreen> absScreen);
-    void CreateAndBindDisplayLocked(sptr<AbstractScreen> absScreen);
+    void BindAloneScreenLocked(sptr<AbstractScreen> absScreen);
+    void AddScreenToMirrorLocked(sptr<AbstractScreenGroup> group, sptr<AbstractScreen> realAbsScreen);
 
     std::recursive_mutex& mutex_;
-    volatile DisplayId displayCount_;
+    std::atomic<DisplayId> displayCount_ { 0 };
+    sptr<AbstractDisplay> dummyDisplay_;
     std::map<DisplayId, sptr<AbstractDisplay>> abstractDisplayMap_;
     sptr<AbstractScreenController> abstractScreenController_;
     sptr<AbstractScreenController::AbstractScreenCallback> abstractScreenCallback_;

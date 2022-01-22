@@ -16,15 +16,16 @@
 #include "window_impl.h"
 
 #include <cmath>
+#include <ui/rs_surface_node.h>
+
 #include "display_manager.h"
 #include "singleton_container.h"
 #include "window_adapter.h"
 #include "window_agent.h"
 #include "window_helper.h"
 #include "window_manager_hilog.h"
-#ifndef _NEW_RENDERSERVER_
-#include "adapter.h"
-#endif
+
+#include <ability_manager_client.h>
 
 namespace OHOS {
 namespace Rosen {
@@ -53,10 +54,8 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
     name_ = option->GetWindowName();
     callback_->onCallback = std::bind(&WindowImpl::OnVsync, this, std::placeholders::_1);
 
-#ifdef _NEW_RENDERSERVER_
     struct RSSurfaceNodeConfig rsSurfaceNodeConfig;
     surfaceNode_ = RSSurfaceNode::Create(rsSurfaceNodeConfig);
-#endif
 }
 
 WindowImpl::~WindowImpl()
@@ -93,6 +92,21 @@ WindowMode WindowImpl::GetMode() const
     return property_->GetWindowMode();
 }
 
+bool WindowImpl::GetShowState() const
+{
+    return state_ == STATE_SHOWN;
+}
+
+bool WindowImpl::GetFocusable() const
+{
+    return property_->GetFocusable();
+}
+
+bool WindowImpl::GetTouchable() const
+{
+    return property_->GetTouchable();
+}
+
 const std::string& WindowImpl::GetWindowName() const
 {
     return name_;
@@ -103,12 +117,12 @@ uint32_t WindowImpl::GetWindowId()
     return property_->GetWindowId();
 }
 
-uint32_t WindowImpl::GetWindowFlags()
+uint32_t WindowImpl::GetWindowFlags() const
 {
     return property_->GetWindowFlags();
 }
 
-SystemBarProperty WindowImpl::GetSystemBarPropertyByType(WindowType type)
+SystemBarProperty WindowImpl::GetSystemBarPropertyByType(WindowType type) const
 {
     auto curProperties = property_->GetSystemBarProperty();
     return curProperties[type];
@@ -208,15 +222,16 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
     NativeEngine* engine, NativeValue* storage, bool isdistributed)
 {
     WLOGFI("SetUIContent");
-    if (context_.get() == nullptr) {
-        WLOGFE("SetUIContent context_ is nullptr id: %{public}d", property_->GetWindowId());
-        return WMError::WM_ERROR_NULLPTR;
-    }
     WLOGFI("contentInfo: %{public}s, context_:%{public}p", contentInfo.c_str(), context_.get());
     uiContent_ = Ace::UIContent::Create(context_.get(), engine);
     if (uiContent_ == nullptr) {
         WLOGFE("fail to SetUIContent id: %{public}d", property_->GetWindowId());
         return WMError::WM_ERROR_NULLPTR;
+    }
+    if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
+        property_->SetDecorEnable(true);
+    } else {
+        property_->SetDecorEnable(false);
     }
     if (isdistributed) {
         uiContent_->Restore(this, contentInfo, storage);
@@ -238,6 +253,10 @@ const std::string& WindowImpl::GetContentInfo()
 
 WMError WindowImpl::SetSystemBarProperty(WindowType type, const SystemBarProperty& property)
 {
+    WLOGFI("[Client] Window %{public}d SetSystemBarProperty type %{public}d " \
+        "enable:%{public}d, backgroundColor:%{public}x, contentColor:%{public}x ",
+        property_->GetWindowId(), static_cast<uint32_t>(type), property.enable_,
+        property.backgroundColor_, property.contentColor_);
     if (!IsWindowValid()) {
         WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
         return WMError::WM_ERROR_INVALID_WINDOW;
@@ -261,7 +280,6 @@ WMError WindowImpl::SetSystemBarProperty(WindowType type, const SystemBarPropert
 WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<AbilityRuntime::Context>& context)
 {
     WLOGFI("[Client] Window Create");
-#ifdef _NEW_RENDERSERVER_
     // check window name, same window names are forbidden
     if (windowMap_.find(name_) != windowMap_.end()) {
         WLOGFE("WindowName(%{public}s) already exists.", name_.c_str());
@@ -306,16 +324,11 @@ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<
     state_ = STATE_CREATED;
     InputTransferStation::GetInstance().AddInputWindow(this);
     return ret;
-#else
-    /* weston adapter */
-    return WMError::WM_OK;
-#endif
 }
 
 WMError WindowImpl::Destroy()
 {
     NotifyBeforeDestroy();
-#ifdef _NEW_RENDERSERVER_
     WLOGFI("[Client] Window %{public}d Destroy", property_->GetWindowId());
     // should destroy surface here
     if (!IsWindowValid()) {
@@ -338,16 +351,10 @@ WMError WindowImpl::Destroy()
     state_ = STATE_DESTROYED;
     InputTransferStation::GetInstance().RemoveInputWindow(this);
     return ret;
-#else
-    InputTransferStation::GetInstance().RemoveInputWindow(this);
-    Adapter::DestroyWestonWindow();
-#endif
-    return WMError::WM_OK;
 }
 
 WMError WindowImpl::Show()
 {
-#ifdef _NEW_RENDERSERVER_
     WLOGFI("[Client] Window %{public}d Show", property_->GetWindowId());
     if (!IsWindowValid()) {
         WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
@@ -375,24 +382,10 @@ WMError WindowImpl::Show()
         WLOGFE("show errCode:%{public}d for winId:%{public}d", static_cast<int32_t>(ret), property_->GetWindowId());
     }
     return ret;
-#else
-    /* weston adapter */
-    WMError rtn = Adapter::Show();
-    if (rtn == WMError::WM_OK) {
-        NotifyAfterForeground();
-        NotifyAfterFocused();
-        WLOGFI("Show AfterForeground was invoked");
-    } else {
-        WLOGFE("Show error=%d", static_cast<int>(rtn));
-    }
-    InputTransferStation::GetInstance().AddInputWindow(this);
-    return rtn;
-#endif
 }
 
 WMError WindowImpl::Hide()
 {
-#ifdef _NEW_RENDERSERVER_
     WLOGFI("[Client] Window %{public}d Hide", property_->GetWindowId());
     if (!IsWindowValid()) {
         WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
@@ -410,25 +403,10 @@ WMError WindowImpl::Hide()
     state_ = STATE_HIDDEN;
     NotifyAfterBackground();
     return ret;
-#else
-    /* weston adapter */
-    WMError rtn = Adapter::Hide();
-    if (rtn == WMError::WM_OK) {
-        NotifyAfterUnFocused();
-        NotifyAfterBackground();
-        WLOGFI("WindowImpl::Show AfterBackground was ivoked");
-    } else {
-        WLOGFE("WindowImpl::Show error=%d", static_cast<int>(rtn));
-    }
-    InputTransferStation::GetInstance().RemoveInputWindow(this);
-    return rtn;
-#endif
 }
 
 WMError WindowImpl::MoveTo(int32_t x, int32_t y)
 {
-    /* weston adapter */
-#ifdef _NEW_RENDERSERVER_
     if (!IsWindowValid()) {
         WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
         return WMError::WM_ERROR_INVALID_WINDOW;
@@ -441,15 +419,10 @@ WMError WindowImpl::MoveTo(int32_t x, int32_t y)
         return WMError::WM_OK;
     }
     return SingletonContainer::Get<WindowAdapter>().MoveTo(property_->GetWindowId(), x, y);
-#else
-    return Adapter::MoveTo(x, y);
-#endif
 }
 
 WMError WindowImpl::Resize(uint32_t width, uint32_t height)
 {
-    /* weston adapter */
-#ifdef _NEW_RENDERSERVER_
     if (!IsWindowValid()) {
         WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
         return WMError::WM_ERROR_INVALID_WINDOW;
@@ -462,9 +435,71 @@ WMError WindowImpl::Resize(uint32_t width, uint32_t height)
         return WMError::WM_OK;
     }
     return SingletonContainer::Get<WindowAdapter>().Resize(property_->GetWindowId(), width, height);
-#else
-    return Adapter::Resize(width, height);
-#endif
+}
+
+bool WindowImpl::IsDecorEnable() const
+{
+    return property_->GetDecorEnable();
+}
+
+WMError WindowImpl::Maximize()
+{
+    WLOGFI("[Client] Window %{public}d Maximize", property_->GetWindowId());
+    if (!IsWindowValid()) {
+        WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
+        SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    }
+    return WMError::WM_OK;
+}
+
+WMError WindowImpl::Minimize()
+{
+    WLOGFI("[Client] Window %{public}d Minimize", property_->GetWindowId());
+    if (!IsWindowValid()) {
+        WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
+        if (abilityContext_ != nullptr) {
+            AAFwk::AbilityManagerClient::GetInstance()->MinimizeAbility(abilityContext_->GetAbilityToken());
+        } else {
+            Hide();
+        }
+    }
+    return WMError::WM_OK;
+}
+
+WMError WindowImpl::Recover()
+{
+    WLOGFI("[Client] Window %{public}d Normalize", property_->GetWindowId());
+    if (!IsWindowValid()) {
+        WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
+        SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+    }
+    return WMError::WM_OK;
+}
+
+WMError WindowImpl::Close()
+{
+    WLOGFI("[Client] Window %{public}d Close", property_->GetWindowId());
+    if (!IsWindowValid()) {
+        WLOGFI("window is already destroyed or not created! id: %{public}d", property_->GetWindowId());
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
+        if (abilityContext_ != nullptr) {
+            abilityContext_->TerminateSelf();
+        } else {
+            Destroy();
+        }
+    }
+    return WMError::WM_OK;
 }
 
 WMError WindowImpl::RequestFocus() const
@@ -700,6 +735,11 @@ void WindowImpl::SetDefaultOption()
             property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
             break;
         }
+        case WindowType::WINDOW_TYPE_KEYGUARD: {
+            RemoveWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
+            property_->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+            break;
+        }
         case WindowType::WINDOW_TYPE_DRAGGING_EFFECT: {
             property_->SetWindowFlags(0);
             break;
@@ -711,6 +751,28 @@ void WindowImpl::SetDefaultOption()
 bool WindowImpl::IsWindowValid() const
 {
     return ((state_ > STATE_INITIAL) && (state_ < STATE_BOTTOM));
+}
+
+bool WindowImpl::IsLayoutFullScreen() const
+{
+    uint32_t flags = GetWindowFlags();
+    auto mode = GetMode();
+    bool needAvoid = (flags & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID));
+    if (mode == WindowMode::WINDOW_MODE_FULLSCREEN && !needAvoid) {
+        return true;
+    }
+    return false;
+}
+
+bool WindowImpl::IsFullScreen() const
+{
+    auto mode = GetMode();
+    auto statusProperty = GetSystemBarPropertyByType(WindowType::WINDOW_TYPE_STATUS_BAR);
+    auto navProperty = GetSystemBarPropertyByType(WindowType::WINDOW_TYPE_NAVIGATION_BAR);
+    if (mode == WindowMode::WINDOW_MODE_FULLSCREEN && !statusProperty.enable_ && !navProperty.enable_) {
+        return true;
+    }
+    return false;
 }
 }
 }

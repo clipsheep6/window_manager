@@ -20,6 +20,8 @@ group("systemtest") {
 
   deps = [
     ":dm_display_minimal_test",
+    ":dm_display_power_test",
+    ":dm_screen_manager_test",
     ":dm_screenshot_cmd_test",
     ":dm_screenshot_test",
   ]
@@ -30,6 +32,15 @@ ohos_systemtest("dm_display_minimal_test") {
   module_out_path = module_out_path
 
   sources = [ "display_minimal_test.cpp" ]
+
+  deps = [ ":dm_systemtest_common" ]
+}
+
+## SystemTest dm_display_power_test {{{
+ohos_systemtest("dm_display_power_test") {
+  module_out_path = module_out_path
+
+  sources = [ "display_power_test.cpp" ]
 
   deps = [ ":dm_systemtest_common" ]
 }
@@ -58,6 +69,17 @@ ohos_systemtest("dm_screenshot_cmd_test") {
 
 ## SystemTest dm_screenshot_cmd_test }}}
 
+## SystemTest dm_screen_manager_test {{{
+ohos_systemtest("dm_screen_manager_test") {
+  module_out_path = module_out_path
+
+  sources = [ "screen_manager_test.cpp" ]
+
+  deps = [ ":dm_systemtest_common" ]
+}
+
+## SystemTest dm_screen_manager_test }}}
+
 ## Build dm_systemtest_common.a {{{
 config("dm_systemtest_common_public_config") {
   include_dirs = [
@@ -65,6 +87,9 @@ config("dm_systemtest_common_public_config") {
     "//foundation/windowmanager/dmserver/include",
     "//foundation/windowmanager/interfaces/innerkits/dm",
     "//foundation/windowmanager/utils/include",
+
+    # RSSurface
+    "//foundation/graphic/standard/rosen/modules/render_service_client",
   ]
 }
 
@@ -77,7 +102,10 @@ ohos_static_library("dm_systemtest_common") {
   public_configs = [ ":dm_systemtest_common_public_config" ]
 
   public_deps = [
+    "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
     "//foundation/multimodalinput/input/frameworks/proxy:libmmi-client",
+    "//foundation/windowmanager/dm:libdm",
+    "//foundation/windowmanager/dmserver:libdms",
     "//foundation/windowmanager/utils:libwmutil",
     "//foundation/windowmanager/wm:libwm",
     "//foundation/windowmanager/wmserver:libwms",

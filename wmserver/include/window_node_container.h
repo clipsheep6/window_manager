@@ -19,6 +19,7 @@
 #include <ui/rs_display_node.h>
 #include "avoid_area_controller.h"
 #include "window_layout_policy.h"
+#include "window_manager.h"
 #include "window_node.h"
 #include "window_zorder_policy.h"
 #include "wm_common.h"
@@ -44,7 +45,6 @@ public:
     uint64_t GetScreenId() const;
     Rect GetDisplayRect() const;
     sptr<WindowNode> GetTopImmersiveNode() const;
-    void NotifySystemBarIfChanged();
     WMError HandleSplitWindowModeChange(sptr<WindowNode>& triggerNode, bool isChangeToSplit);
 
     void OnAvoidAreaChange(const std::vector<Rect>& avoidAreas);
@@ -72,7 +72,6 @@ public:
         Rect displayRect_   = {0, 0, 0, 0};
         Rect dividerRect_   = {0, 0, 0, 0};
     };
-    static constexpr float DEFAULT_SPLIT_RATIO = 0.5;
 
 private:
     void AssignZOrder(sptr<WindowNode>& node);
@@ -89,6 +88,8 @@ private:
     WMError HandleModeChangeToSplit(sptr<WindowNode>& triggerNode);
     WMError HandleModeChangeFromSplit(sptr<WindowNode>& triggerNode);
     WMError UpdateWindowPairInfo(sptr<WindowNode>& triggerNode, sptr<WindowNode>& pairNode);
+    void NotifyIfSystemBarTintChanged();
+    void NotifyIfSystemBarRegionChanged();
 
     sptr<AvoidAreaController> avoidController_;
     sptr<WindowZorderPolicy> zorderPolicy_ = new WindowZorderPolicy();
@@ -103,9 +104,9 @@ private:
         { WindowType::WINDOW_TYPE_STATUS_BAR,     nullptr },
         { WindowType::WINDOW_TYPE_NAVIGATION_BAR, nullptr },
     };
-    std::unordered_map<WindowType, SystemBarProperty> sysBarPropMap_ {
-        { WindowType::WINDOW_TYPE_STATUS_BAR,     SystemBarProperty() },
-        { WindowType::WINDOW_TYPE_NAVIGATION_BAR, SystemBarProperty() },
+    std::unordered_map<WindowType, SystemBarRegionTint> sysBarTintMap_ {
+        { WindowType::WINDOW_TYPE_STATUS_BAR,     SystemBarRegionTint() },
+        { WindowType::WINDOW_TYPE_NAVIGATION_BAR, SystemBarRegionTint() },
     };
     uint32_t zOrder_ { 0 };
     uint32_t focusedWindow_ { 0 };
@@ -118,6 +119,8 @@ private:
     };
     std::unordered_map<uint32_t, WindowPairInfo> pairedWindowMap_;
     sptr<DisplayRects> displayRects_ = new DisplayRects();
+    void RaiseInputMethodWindowPriorityIfNeeded(const sptr<WindowNode>& node) const;
+    const int32_t WINDOW_TYPE_RAISED_INPUT_METHOD = 115;
 };
 }
 }
