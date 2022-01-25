@@ -19,6 +19,7 @@
 #include <iremote_broker.h>
 #include <pixel_map.h>
 #include <surface.h>
+#include <transaction/rs_interfaces.h>
 
 #include "dm_common.h"
 #include "screen.h"
@@ -47,11 +48,14 @@ public:
         TRANS_ID_CREATE_VIRTUAL_SCREEN = 100000,
         TRANS_ID_DESTROY_VIRTUAL_SCREEN,
         TRANS_ID_ADD_MIRROR,
+        TRANS_ID_SET_SCREEN_ACTIVE_MODE,
+        TRANS_ID_GET_SCREEN_SUPPORTED_MODES,
     };
 
     virtual DisplayId GetDefaultDisplayId() = 0;
     virtual DisplayInfo GetDisplayInfoById(DisplayId displayId) = 0;
-
+    virtual DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) = 0;
+    virtual std::vector<RSScreenModeInfo> GetScreenSupportedModes(ScreenId screenId) = 0;
     virtual ScreenId CreateVirtualScreen(VirtualScreenOption option) = 0;
     virtual DMError DestroyVirtualScreen(ScreenId screenId) = 0;
     virtual std::shared_ptr<Media::PixelMap> GetDispalySnapshot(DisplayId displayId) = 0;

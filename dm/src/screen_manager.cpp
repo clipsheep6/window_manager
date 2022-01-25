@@ -87,4 +87,14 @@ DMError ScreenManager::DestroyVirtualScreen(ScreenId screenId)
 {
     return SingletonContainer::Get<DisplayManagerAdapter>().DestroyVirtualScreen(screenId);
 }
+
+DMError ScreenManager::SetScreenActiveMode(ScreenId screenId, uint32_t modeId)
+{
+    return SingletonContainer::Get<DisplayManagerAdapter>().SetScreenActiveMode(screenId, modeId);
+}
+
+std::vector<RSScreenModeInfo> ScreenManager::GetScreenSupportedModes(ScreenId screenId)
+{
+    return SingletonContainer::Get<DisplayManagerAdapter>().GetScreenSupportedModes(screenId);
+}
 } // namespace OHOS::Rosen

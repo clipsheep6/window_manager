@@ -171,6 +171,24 @@ HWTEST_F(ScreenManagerTest, ScreenManager05, Function | MediumTest | Level1)
     ASSERT_GT(utils.successCount_, 0);
     ASSERT_GT(maxWaitCount_, waitCount_);
 }
+
+/**
+ * @tc.name: ScreenManager06
+ * @tc.desc: Get and set screenMode
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenManagerTest, ScreenManager06, Function | MediumTest | Level1)
+{
+    ScreenId defaultScreenId = static_cast<ScreenId>(defaultDisplayId_);
+    std::vector<RSScreenModeInfo> rsScreenModeInfo =
+        ScreenManager::GetInstance().GetScreenSupportedModes(defaultScreenId);
+
+    ASSERT_GT(rsScreenModeInfo.size(), 0);
+    for (auto info : rsScreenModeInfo) {
+        ASSERT_EQ(DMError::DM_OK,
+            ScreenManager::GetInstance().SetScreenActiveMode(defaultScreenId, info.GetScreenModeId()));
+    }
+}
 }
 } // namespace Rosen
 } // namespace OHOS

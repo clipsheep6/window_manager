@@ -39,6 +39,8 @@ WM_DECLARE_SINGLE_INSTANCE_BASE(DisplayManagerService);
 public:
     void OnStart() override;
     void OnStop() override;
+    DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) override;
+    std::vector<RSScreenModeInfo> GetScreenSupportedModes(ScreenId screenId) override;
     ScreenId CreateVirtualScreen(VirtualScreenOption option) override;
     DMError DestroyVirtualScreen(ScreenId screenId) override;
 

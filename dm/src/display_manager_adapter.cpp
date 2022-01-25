@@ -78,6 +78,30 @@ std::shared_ptr<Media::PixelMap> DisplayManagerAdapter::GetDisplaySnapshot(Displ
     return dispalySnapshot;
 }
 
+DMError DisplayManagerAdapter::SetScreenActiveMode(ScreenId screenId, uint32_t modeId)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+
+    if (!InitDMSProxyLocked()) {
+        WLOGFE("displayManagerAdapter::SetScreenActiveMode: InitDMSProxyLocked failed!");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    return displayManagerServiceProxy_->SetScreenActiveMode(screenId, modeId);
+}
+
+std::vector<RSScreenModeInfo> DisplayManagerAdapter::GetScreenSupportedModes(ScreenId screenId)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+
+    std::vector<RSScreenModeInfo> screenSupportedModes;
+
+    if (!InitDMSProxyLocked()) {
+        WLOGFE("displayManagerAdapter::GetScreenSupportedModes: InitDMSProxyLocked failed!");
+        return screenSupportedModes;
+    }
+    return displayManagerServiceProxy_->GetScreenSupportedModes(screenId);
+}
+
 ScreenId DisplayManagerAdapter::CreateVirtualScreen(VirtualScreenOption option)
 {
     if (!InitDMSProxyLocked()) {

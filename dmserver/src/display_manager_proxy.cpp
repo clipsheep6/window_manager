@@ -81,6 +81,69 @@ DisplayInfo DisplayManagerProxy::GetDisplayInfoById(DisplayId displayId)
     return *info;
 }
 
+DMError DisplayManagerProxy::SetScreenActiveMode(ScreenId screenId, uint32_t modeId)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("SetScreenActiveMode: remote is nullptr");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("SetScreenActiveMode: WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    data.WriteUint64(static_cast<uint64_t>(screenId));
+    data.WriteUint32(static_cast<uint32_t>(modeId));
+    if (remote->SendRequest(TRANS_ID_SET_SCREEN_ACTIVE_MODE, data, reply, option) != ERR_NONE) {
+        WLOGFW("SetScreenActiveMode: SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+
+    DMError res = static_cast<DMError>(reply.ReadInt32());
+    return res;
+}
+
+std::vector<RSScreenModeInfo> DisplayManagerProxy::GetScreenSupportedModes(ScreenId screenId)
+{
+    std::vector<RSScreenModeInfo> screenSupportedModes;
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("GetScreenSupportedModes: remote is nullptr");
+        return screenSupportedModes;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFW("GetScreenSupportedModes: WriteInterfaceToken failed");
+        return screenSupportedModes;
+    }
+    option.SetFlags(MessageOption::TF_SYNC);
+    data.WriteUint64(static_cast<uint64_t>(screenId));
+    if (remote->SendRequest(TRANS_ID_GET_SCREEN_SUPPORTED_MODES, data, reply, option) != NO_ERROR) {
+        WLOGFW("GetScreenSupportedModes: SendRequest failed");
+        return screenSupportedModes;
+    }
+
+    uint32_t modeCount = reply.ReadUint32();
+    screenSupportedModes.resize(modeCount);
+    for (uint32_t modeIndex = 0; modeIndex < modeCount; modeIndex++) {
+        sptr<RSScreenModeInfo> itemScreenMode = reply.ReadParcelable<RSScreenModeInfo>();
+        if (itemScreenMode == nullptr) {
+            break;
+        } else {
+            screenSupportedModes[modeIndex] = *itemScreenMode;
+        }
+    }
+    return screenSupportedModes;
+}
+
 ScreenId DisplayManagerProxy::CreateVirtualScreen(VirtualScreenOption virtualOption)
 {
     sptr<IRemoteObject> remote = Remote();
