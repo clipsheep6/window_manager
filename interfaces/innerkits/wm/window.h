@@ -107,6 +107,8 @@ public:
     virtual WMError Minimize() = 0;
     virtual WMError Recover() = 0;
     virtual WMError Close() = 0;
+    virtual WMError StartDrag() = 0;
+    virtual WMError StartMove() = 0;
 };
 }
 }

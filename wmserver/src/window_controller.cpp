@@ -154,6 +154,23 @@ WMError WindowController::Resize(uint32_t windowId, uint32_t width, uint32_t hei
     return WMError::WM_OK;
 }
 
+WMError WindowController::LayoutRect(uint32_t windowId, Rect& rect)
+{
+    auto node = windowRoot_->GetWindowNode(windowId);
+    if (node == nullptr) {
+        WLOGFE("could not find window");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    auto property = node->GetWindowProperty();
+    property->SetWindowRect(rect);
+    WMError res = windowRoot_->UpdateWindowNode(windowId);
+    if (res != WMError::WM_OK) {
+        return res;
+    }
+    RSTransaction::FlushImplicitTransaction();
+    return WMError::WM_OK;
+}
+
 WMError WindowController::RequestFocus(uint32_t windowId)
 {
     return windowRoot_->RequestFocus(windowId);

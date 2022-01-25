@@ -81,6 +81,8 @@ public:
     virtual WMError Minimize() override;
     virtual WMError Recover() override;
     virtual WMError Close() override;
+    virtual WMError StartDrag() override;
+    virtual WMError StartMove() override;
 
     virtual WMError RequestFocus() const override;
     virtual void AddInputEventListener(std::shared_ptr<MMI::IInputEventConsumer>& inputEventListener) override;
@@ -131,6 +133,8 @@ private:
     bool IsWindowValid() const;
     void OnVsync(int64_t timeStamp);
 
+    WMError LayoutRect(Rect& rect);
+
     enum WindowState {
         STATE_INITIAL,
         STATE_CREATED,
@@ -138,6 +142,25 @@ private:
         STATE_HIDDEN,
         STATE_DESTROYED,
         STATE_BOTTOM = STATE_DESTROYED,
+    };
+
+    const static uint32_t X_LEFT = 1 << 0;
+    const static uint32_t X_MIDDLE = 1 << 1;
+    const static uint32_t X_RIGHT = 1 << 2;
+    const static uint32_t Y_TOP = 1 << 3;
+    const static uint32_t Y_MIDDLE = 1 << 4;
+    const static uint32_t Y_BOTTOM = 1 << 5;
+    enum WindowDragCtrlType : uint32_t {
+        CTRL_TYPE_UNKNOWN = 0,
+        CTRL_TYPE_LEFT = X_LEFT | Y_MIDDLE,
+        CTRL_TYPE_RIGHT = X_RIGHT | Y_MIDDLE,
+        CTRL_TYPE_TOP = X_MIDDLE | Y_TOP,
+        CTRL_TYPE_BOTTOM = X_MIDDLE | Y_BOTTOM,
+        CTRL_TYPE_LEFT_TOP = X_LEFT | Y_TOP,
+        CTRL_TYPE_LEFT_BOTTOM = X_LEFT | Y_BOTTOM,
+        CTRL_TYPE_RIGHT_TOP = X_RIGHT | Y_TOP,
+        CTRL_TYPE_RIGHT_BOTTOM = X_RIGHT | Y_BOTTOM,
+        CTRL_TYPE_MOVE,
     };
 
     std::shared_ptr<VsyncStation::VsyncCallback> callback_ =
@@ -158,6 +181,12 @@ private:
     const float NAVIGATION_BAR_RATIO = 0.07;
     const float SYSTEM_ALARM_WINDOW_WIDTH_RATIO = 0.8;
     const float SYSTEM_ALARM_WINDOW_HEIGHT_RATIO = 0.3;
+
+    bool isStartDrag_ = false;
+    Rect beginRect_ { 0, 0, 0, 0 };
+    int32_t beginX_ = 0;
+    int32_t beginY_ = 0;
+    uint32_t ctrlType_ = WindowDragCtrlType::CTRL_TYPE_UNKNOWN;
 };
 }
 }
