@@ -33,7 +33,8 @@ public:
 
     DisplayId GetDefaultDisplayId() override;
     DisplayInfo GetDisplayInfoById(DisplayId displayId) override;
-
+    DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) override;
+    std::vector<RSScreenModeInfo> GetScreenSupportedModes(ScreenId screenId) override;
     ScreenId CreateVirtualScreen(VirtualScreenOption option) override;
     DMError DestroyVirtualScreen(ScreenId screenId) override;
     std::shared_ptr<Media::PixelMap> GetDispalySnapshot(DisplayId displayId) override;

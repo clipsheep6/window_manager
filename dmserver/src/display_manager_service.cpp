@@ -102,6 +102,16 @@ DisplayInfo DisplayManagerService::GetDisplayInfoById(DisplayId displayId)
     return displayInfo;
 }
 
+DMError DisplayManagerService::SetScreenActiveMode(ScreenId screenId, uint32_t modeId)
+{
+    return abstractScreenController_->SetScreenActiveMode(screenId, modeId);
+}
+
+std::vector<RSScreenModeInfo> DisplayManagerService::GetScreenSupportedModes(ScreenId screenId)
+{
+    return abstractScreenController_->GetScreenSupportedModes(screenId);
+}
+
 ScreenId DisplayManagerService::CreateVirtualScreen(VirtualScreenOption option)
 {
     WM_SCOPED_TRACE("dms:CreateVirtualScreen(%s)", option.name_.c_str());

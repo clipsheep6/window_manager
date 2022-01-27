@@ -48,6 +48,22 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
             reply.WriteParcelable(&info);
             break;
         }
+        case TRANS_ID_SET_SCREEN_ACTIVE_MODE: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            uint32_t modeId = static_cast<uint32_t>(data.ReadUint32());
+            DMError res = SetScreenActiveMode(screenId, modeId);
+            reply.WriteInt32(static_cast<int32_t>(res));
+            break;
+        }
+        case TRANS_ID_GET_SCREEN_SUPPORTED_MODES: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            std::vector<RSScreenModeInfo> screenSupportedModes = GetScreenSupportedModes(screenId);
+            reply.WriteUint32(static_cast<uint32_t>(screenSupportedModes.size()));
+            for (uint32_t modeIndex = 0; modeIndex < screenSupportedModes.size(); modeIndex++) {
+                reply.WriteParcelable(&screenSupportedModes[modeIndex]);
+            }
+            break;
+        }
         case TRANS_ID_CREATE_VIRTUAL_SCREEN: {
             std::string name = data.ReadString();
             uint32_t width = data.ReadUint32();

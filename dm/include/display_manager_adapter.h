@@ -19,6 +19,7 @@
 #include <map>
 #include <mutex>
 #include <surface.h>
+#include <transaction/rs_interfaces.h>
 
 #include "display.h"
 #include "screen.h"
@@ -37,7 +38,8 @@ WM_DECLARE_SINGLE_INSTANCE(DisplayManagerAdapter);
 public:
     virtual DisplayId GetDefaultDisplayId();
     virtual sptr<Display> GetDisplayById(DisplayId displayId);
-
+    virtual DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId);
+    virtual std::vector<RSScreenModeInfo> GetScreenSupportedModes(ScreenId screenId);
     virtual ScreenId CreateVirtualScreen(VirtualScreenOption option);
     virtual DMError DestroyVirtualScreen(ScreenId screenId);
     virtual std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId);

@@ -22,6 +22,7 @@
 #include "screen_group.h"
 #include "wm_single_instance.h"
 #include "wm_single_instance.h"
+#include "transaction/rs_interfaces.h"
 
 namespace OHOS::Rosen {
 class IScreenChangeListener : public RefBase {
@@ -43,6 +44,8 @@ public:
     sptr<ScreenGroup> AddMirror(ScreenId mainScreenId, ScreenId mirrorScreenId);
     ScreenId CreateVirtualScreen(VirtualScreenOption option);
     DMError DestroyVirtualScreen(ScreenId screenId);
+    DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId);
+    std::vector<RSScreenModeInfo> GetScreenSupportedModes(ScreenId screenId);
 
 private:
     ScreenManager();

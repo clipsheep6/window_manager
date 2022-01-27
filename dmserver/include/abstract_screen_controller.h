@@ -48,6 +48,8 @@ public:
     ScreenId ConvertToRsScreenId(ScreenId dmsScreenId);
     ScreenId ConvertToDmsScreenId(ScreenId rsScreenId);
     void RegisterAbstractScreenCallback(sptr<AbstractScreenCallback> cb);
+    DMError SetScreenActiveMode(ScreenId id, uint32_t modeId);
+    std::vector<RSScreenModeInfo> GetScreenSupportedModes(ScreenId id) const;
     ScreenId CreateVirtualScreen(VirtualScreenOption option);
     DMError DestroyVirtualScreen(ScreenId screenId);
     bool IsScreenGroup(ScreenId screenId) const;

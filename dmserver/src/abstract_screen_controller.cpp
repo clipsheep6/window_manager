@@ -305,6 +305,36 @@ sptr<AbstractScreenGroup> AbstractScreenController::AddAsSuccedentScreenLocked(s
     return screenGroup;
 }
 
+DMError AbstractScreenController::SetScreenActiveMode(ScreenId id, uint32_t modeId)
+{
+    if (rsInterface_ == nullptr) {
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    WLOGFI("AbstractScreenController::SetScreenActiveMode id: %{public}" PRIu64", mode: %{public}d", id, modeId);
+    std::vector<RSScreenModeInfo> screenSupportedModes =
+        rsInterface_->GetScreenSupportedModes(id);
+    int32_t modeSize = screenSupportedModes.size();
+    if (modeSize <= modeId) {
+        WLOGFE("SetScreenActiveMode failed on modeId %{public}u", modeId);
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    rsInterface_->SetScreenActiveMode(id, modeId);
+    return DMError::DM_OK;
+}
+
+std::vector<RSScreenModeInfo> AbstractScreenController::GetScreenSupportedModes(ScreenId id) const
+{
+    if (rsInterface_ == nullptr) {
+        std::vector<RSScreenModeInfo> screenSupportedModes;
+        return screenSupportedModes;
+    }
+    if (id == SCREEN_ID_INVALID) {
+        std::vector<RSScreenModeInfo> screenSupportedModes;
+        return screenSupportedModes;
+    }
+    return rsInterface_->GetScreenSupportedModes(id);
+}
+
 ScreenId AbstractScreenController::CreateVirtualScreen(VirtualScreenOption option)
 {
     if (rsInterface_ == nullptr) {
