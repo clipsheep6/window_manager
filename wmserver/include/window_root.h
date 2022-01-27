@@ -36,8 +36,8 @@ public:
     WindowRoot(std::recursive_mutex& mutex, Callback callback) : mutex_(mutex), callback_(callback) {}
     ~WindowRoot() = default;
 
-    sptr<WindowNodeContainer> GetOrCreateWindowNodeContainer(int32_t displayId);
-    void NotifyDisplayRemoved(int32_t displayId);
+    sptr<WindowNodeContainer> GetOrCreateWindowNodeContainer(DisplayId displayId);
+    void NotifyDisplayRemoved(DisplayId displayId);
     sptr<WindowNode> GetWindowNode(uint32_t windowId) const;
 
     WMError SaveWindow(const sptr<WindowNode>& node);
@@ -54,6 +54,8 @@ public:
     WMError MinimizeAllAppNodeAbility(sptr<WindowNode>& node);
     WMError HandleSplitWindowModeChange(sptr<WindowNode>& node, bool isChangeToSplit);
     std::shared_ptr<RSSurfaceNode> GetSurfaceNodeByAbilityToken(const sptr<IRemoteObject>& abilityToken) const;
+
+    void NotifyWindowStateChange(WindowState state, WindowStateChangeReason reason);
 
 private:
     void OnRemoteDied(const sptr<IRemoteObject>& remoteObject);

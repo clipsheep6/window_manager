@@ -517,6 +517,14 @@ void WindowNodeContainer::UpdateDisplayInfo()
     layoutPolicy_->UpdateDisplayInfo(primaryRect, secondaryRect, displayRect);
 }
 
+void WindowNodeContainer::UpdateSplitInfo()
+{
+    // update for split
+    const Rect& primaryRect = displayRects_->GetRectByWindowMode(WindowMode::WINDOW_MODE_SPLIT_PRIMARY);
+    const Rect& secondaryRect =  displayRects_->GetRectByWindowMode(WindowMode::WINDOW_MODE_SPLIT_SECONDARY);
+    layoutPolicy_->UpdateSplitInfo(primaryRect, secondaryRect);
+}
+
 void WindowNodeContainer::LayoutDividerWindow(sptr<WindowNode>& node)
 {
     layoutPolicy_->UpdateLayoutRect(node);
@@ -654,6 +662,42 @@ bool WindowNodeContainer::isVerticalDisplay() const
     return displayRects_->isVertical_;
 }
 
+void WindowNodeContainer::NotifyWindowStateChange(WindowState state, WindowStateChangeReason reason)
+{
+    switch (reason) {
+        case WindowStateChangeReason::KEYGUARD: {
+            int32_t topPriority = zorderPolicy_->GetWindowPriority(WindowType::WINDOW_TYPE_KEYGUARD);
+            TraverseAndUpdateWindowState(state, topPriority);
+            break;
+        }
+        default:
+            return;
+    }
+}
+
+void WindowNodeContainer::TraverseAndUpdateWindowState(WindowState state, int32_t topPriority)
+{
+    std::vector<sptr<WindowNode>> rootNodes = { belowAppWindowNode_, appWindowNode_, aboveAppWindowNode_ };
+    for (auto& node : rootNodes) {
+        UpdateWindowState(node, topPriority, state);
+    }
+}
+
+void WindowNodeContainer::UpdateWindowState(sptr<WindowNode> node, int32_t topPriority, WindowState state)
+{
+    if (node == nullptr) {
+        return;
+    }
+    if (node->parent_ != nullptr && node->currentVisibility_) {
+        if (node->priority_ < topPriority) {
+            node->GetWindowToken()->UpdateWindowState(state);
+        }
+    }
+    for (auto& childNode : node->children_) {
+        UpdateWindowState(childNode, topPriority, state);
+    }
+}
+
 void WindowNodeContainer::SendSplitScreenEvent(WindowMode mode)
 {
     // should define in common_event_support.h and @ohos.commonEvent.d.ts
@@ -709,7 +753,7 @@ WMError WindowNodeContainer::HandleModeChangeToSplit(sptr<WindowNode>& triggerNo
         displayRects_->SetSplitRect(DEFAULT_SPLIT_RATIO);
         SendSplitScreenEvent(triggerNode->GetWindowMode());
     }
-    UpdateDisplayInfo();
+    UpdateSplitInfo();
     return WMError::WM_OK;
 }
 
@@ -730,7 +774,7 @@ WMError WindowNodeContainer::HandleModeChangeFromSplit(sptr<WindowNode>& trigger
             triggerNode->GetWindowMode(), pairNode->GetWindowMode());
     } else {
         WLOGFE("Split out, but can not find pair in map  %{public}d", triggerNode->GetWindowId());
-        return WMError::WM_ERROR_INVALID_WINDOW;
+        return WMError::WM_OK;
     }
     if (pairedWindowMap_.empty()) {
         WLOGFI("Notify devider to destroy");
