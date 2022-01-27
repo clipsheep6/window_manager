@@ -14,6 +14,8 @@
  */
 #include "js_window_manager.h"
 #include <ability.h>
+#include "event_handler.h"
+#include "event_runner.h"
 #include "js_runtime_utils.h"
 #include "js_window.h"
 #include "js_window_listener.h"
@@ -78,6 +80,15 @@ private:
     std::weak_ptr<Context> context_;
     std::map<std::string, std::map<std::unique_ptr<NativeReference>, sptr<JsWindowListener>>> jsCbMap_;
     std::mutex mtx_;
+    std::shared_ptr<AppExecFwk::EventHandler> mainHandler_;
+
+    std::shared_ptr<AppExecFwk::EventHandler> GetMainHandler()
+    {
+        if (!mainHandler_) {
+            mainHandler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+        }
+        return mainHandler_;
+    }
 
     bool GetNativeContext(NativeValue* nativeContext)
     {
@@ -219,7 +230,9 @@ private:
         }
         std::unique_ptr<NativeReference> callbackRef;
         callbackRef.reset(engine.CreateReference(value, 1));
-        sptr<JsWindowListener> windowManagerListener = new JsWindowListener(&engine);
+
+        auto mainHandler = GetMainHandler();
+        sptr<JsWindowListener> windowManagerListener = new JsWindowListener(&engine, mainHandler);
         if (type.compare("systemUiTintChange") == 0) {
             sptr<ISystemBarChangedListener> thisListener(windowManagerListener);
             SingletonContainer::Get<WindowManager>().RegisterSystemBarChangedListener(thisListener);

@@ -125,25 +125,41 @@ void JsWindowListener::OnAvoidAreaChanged(const std::vector<Rect> avoidAreas)
         return;
     }
 
-    NativeValue* avoidAreaValue = engine_->CreateObject();
-    NativeObject* object = ConvertNativeValueTo<NativeObject>(avoidAreaValue);
-    if (object == nullptr) {
-        WLOGFE("Failed to convert rect to jsObject");
+    if (!mainHandler_) {
+        WLOGFE("mainHandler_ is nullptr");
         return;
     }
+    // wptr<JsMissionListener> wpListener = this;
+    // auto task = [wpListener, methodName, missionId]() {
+    //     auto listener = wpListener.promote();
+    //     if (listener) {
+    //         listener->HandleMissionCallback(methodName.c_str(), missionId);
+    //     }
+    // };
+    // wptr<JsMissionListener> wpListener = this;
+    auto task = [this, avoidAreas]() {
+        NativeValue* avoidAreaValue = engine_->CreateObject();
+        NativeObject* object = ConvertNativeValueTo<NativeObject>(avoidAreaValue);
+        if (object == nullptr) {
+            WLOGFE("Failed to convert rect to jsObject");
+            return;
+        }
 
-    if (static_cast<uint32_t>(avoidAreas.size()) != AVOID_AREA_NUM) {
-        WLOGFE("AvoidAreas size is not 4 (left, top, right, bottom). Current avoidAreas size is %{public}u",
-            static_cast<uint32_t>(avoidAreas.size()));
-        return;
-    }
+        if (static_cast<uint32_t>(avoidAreas.size()) != AVOID_AREA_NUM) {
+            WLOGFE("AvoidAreas size is not 4 (left, top, right, bottom). Current avoidAreas size is %{public}u",
+                static_cast<uint32_t>(avoidAreas.size()));
+            return;
+        }
 
-    object->SetProperty("leftRect", GetRectAndConvertToJsValue(*engine_, avoidAreas[0]));   // idx 0 : leftRect
-    object->SetProperty("topRect", GetRectAndConvertToJsValue(*engine_, avoidAreas[1]));    // idx 1 : topRect
-    object->SetProperty("rightRect", GetRectAndConvertToJsValue(*engine_, avoidAreas[2]));  // idx 2 : rightRect
-    object->SetProperty("bottomRect", GetRectAndConvertToJsValue(*engine_, avoidAreas[3])); // idx 3 : bottomRect
-    NativeValue* argv[] = {avoidAreaValue};
-    CallJsMethod("systemAvoidAreaChange", argv, ArraySize(argv));
+        object->SetProperty("leftRect", GetRectAndConvertToJsValue(*engine_, avoidAreas[0]));   // idx 0 : leftRect
+        object->SetProperty("topRect", GetRectAndConvertToJsValue(*engine_, avoidAreas[1]));    // idx 1 : topRect
+        object->SetProperty("rightRect", GetRectAndConvertToJsValue(*engine_, avoidAreas[2]));  // idx 2 : rightRect
+        object->SetProperty("bottomRect", GetRectAndConvertToJsValue(*engine_, avoidAreas[3])); // idx 3 : bottomRect
+        NativeValue* argv[] = {avoidAreaValue};
+        CallJsMethod("systemAvoidAreaChange", argv, ArraySize(argv));
+    };
+
+    mainHandler_->PostTask(task);
 }
 } // namespace Rosen
 } // namespace OHOS

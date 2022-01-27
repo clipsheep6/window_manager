@@ -436,6 +436,14 @@ bool JsWindow::IfCallbackRegistered(std::string type, NativeValue* jsListenerObj
     return false;
 }
 
+std::shared_ptr<OHOS::AppExecFwk::EventHandler> JsWindow::GetMainHandler()
+{
+    if (!mainHandler_) {
+        mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(OHOS::AppExecFwk::EventRunner::GetMainEventRunner());
+    }
+    return mainHandler_;
+}
+
 void JsWindow::RegisterWindowListenerWithType(NativeEngine& engine, std::string type, NativeValue* value)
 {
     if (IfCallbackRegistered(type, value)) {
@@ -445,7 +453,10 @@ void JsWindow::RegisterWindowListenerWithType(NativeEngine& engine, std::string 
     std::unique_ptr<NativeReference> callbackRef;
     callbackRef.reset(engine.CreateReference(value, 1));
     if (jsListenerMap_.find(type) == jsListenerMap_.end()) {
-        sptr<JsWindowListener> windowListener = new JsWindowListener(&engine);
+
+        auto mainHandler = GetMainHandler();
+
+        sptr<JsWindowListener> windowListener = new JsWindowListener(&engine, mainHandler);
         if (type.compare("windowSizeChange") == 0) {
             sptr<IWindowChangeListener> thisListener(windowListener);
             windowToken_->RegisterWindowChangeListener(thisListener);
