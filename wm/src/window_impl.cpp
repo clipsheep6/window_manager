@@ -429,7 +429,9 @@ WMError WindowImpl::Show()
     if (state_ == STATE_SHOWN && property_->GetWindowType() == WindowType::WINDOW_TYPE_WALLPAPER) {
         WLOGFI("Minimize all app window");
         WMError ret = SingletonContainer::Get<WindowAdapter>().MinimizeAllAppNodeAbility(property_->GetWindowId());
-        if (ret != WMError::WM_OK) {
+        if (ret == WMError::WM_OK || ret == WMError::WM_ERROR_DEATH_RECIPIENT) {
+            NotifyAfterForeground();
+        } else {
             WLOGFE("Minimize all app errCode:%{public}d for winId:%{public}d",
                 static_cast<int32_t>(ret), property_->GetWindowId());
         }
