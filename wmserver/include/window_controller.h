@@ -53,6 +53,7 @@ public:
 private:
     uint32_t GenWindowId();
     void FlushWindowInfo(uint32_t windowId);
+    void FlushWindowInfoWithDisplayId(DisplayId displayId);
 
     sptr<WindowRoot> windowRoot_;
     sptr<InputWindowMonitor> inputWindowMonitor_;
