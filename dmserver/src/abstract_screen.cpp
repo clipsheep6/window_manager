@@ -35,11 +35,16 @@ AbstractScreen::~AbstractScreen()
 
 sptr<AbstractScreenInfo> AbstractScreen::GetActiveScreenInfo() const
 {
-    if (activeIdx_ < 0 || activeIdx_ >= infos_.size()) {
+    if (activeIdx_ < 0 || activeIdx_ >= modes_.size()) {
         WLOGE("active mode index is wrong: %{public}d", activeIdx_);
         return nullptr;
     }
-    return infos_[activeIdx_];
+    return modes_[activeIdx_];
+}
+
+std::vector<sptr<AbstractScreenInfo>> AbstractScreen::GetAbstractScreenModes() const
+{
+    return modes_;
 }
 
 sptr<AbstractScreenGroup> AbstractScreen::GetGroup() const
@@ -57,8 +62,8 @@ const sptr<ScreenInfo> AbstractScreen::ConvertToScreenInfo() const
 void AbstractScreen::FillScreenInfo(sptr<ScreenInfo> info) const
 {
     info->id_ = dmsId_;
-    if (activeIdx_ >= 0 && activeIdx_ < infos_.size()) {
-        sptr<AbstractScreenInfo> abstractScreenInfo = infos_[activeIdx_];
+    if (activeIdx_ >= 0 && activeIdx_ < modes_.size()) {
+        sptr<AbstractScreenInfo> abstractScreenInfo = modes_[activeIdx_];
         info->height_ = abstractScreenInfo->height_;
         info->width_ = abstractScreenInfo->width_;
     }
@@ -67,6 +72,8 @@ void AbstractScreen::FillScreenInfo(sptr<ScreenInfo> info) const
     info->virtualWidth_ = virtualPixelRatio * info->width_;
     info->parent_ = groupDmsId_;
     info->hasChild_ = DisplayManagerService::GetInstance().GetAbstractScreenController()->IsScreenGroup(dmsId_);
+    info->modeId_ = activeIdx_;
+    info->modes_ = modes_;
 }
 
 AbstractScreenGroup::AbstractScreenGroup(ScreenId dmsId, ScreenId rsId, ScreenCombination combination)

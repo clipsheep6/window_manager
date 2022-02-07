@@ -163,6 +163,7 @@ void AbstractScreenController::OnRsScreenChange(ScreenId rsScreenId, ScreenEvent
             WLOGE("reconnect screen, screenId=%{public}" PRIu64"", rsScreenId);
         }
     } else if (screenEvent == ScreenEvent::DISCONNECTED) {
+
         ProcessScreenDisconnected(rsScreenId);
     } else {
         WLOGE("unknow message:%{public}ud", static_cast<uint8_t>(screenEvent));
@@ -207,7 +208,7 @@ bool AbstractScreenController::FillAbstractScreen(sptr<AbstractScreen>& absScree
         info->width_ = rsScreenModeInfo.GetScreenWidth();
         info->height_ = rsScreenModeInfo.GetScreenHeight();
         info->freshRate_ = rsScreenModeInfo.GetScreenFreshRate();
-        absScreen->infos_.push_back(info);
+        absScreen->modes_.push_back(info);
         WLOGD("fill screen w/h:%{public}d/%{public}d", info->width_, info->height_);
     }
     int32_t activeModeId = rsInterface_->GetScreenActiveMode(rsScreenId).GetScreenModeId();
@@ -354,5 +355,12 @@ bool AbstractScreenController::IsScreenGroup(ScreenId screenId) const
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     return dmsScreenGroupMap_.find(screenId) != dmsScreenGroupMap_.end();
+}
+
+bool AbstractScreenController::SetScreenActiveMode(ScreenId screenId, uint32_t modeId)
+{
+    auto screen = GetAbstractScreen(screenId);
+    screen->activeIdx_ = modeId;
+    return true;
 }
 } // namespace OHOS::Rosen
