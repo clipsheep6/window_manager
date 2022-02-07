@@ -39,8 +39,10 @@ public:
     float virtualPixelRatio_ { 0.0 };
     ScreenId parent_ { 0 };
     bool hasChild_ { false };
+    uint32_t modeId_ { 0 };
+    std::vector<sptr<AbstractScreenInfo>> modes_ {};
 protected:
     ScreenInfo* InnerUnmarshalling(Parcel& parcel);
-    };
+};
 } // namespace OHOS::Rosen
 #endif // FOUNDATION_DMSERVER_DISPLAY_INFO_H

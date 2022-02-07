@@ -15,8 +15,8 @@
 
 #include "screen.h"
 #include "screen_info.h"
-
 #include "screen_group.h"
+#include "display_manager_adapter.h"
 
 namespace OHOS::Rosen {
 class Screen::Impl : public RefBase {
@@ -33,6 +33,8 @@ public:
     float virtualPixelRatio_ { 0.0 };
     ScreenId parent_ { SCREEN_ID_INVALID };
     bool hasChild_ { false };
+    uint32_t modeId_ { 0 };
+    std::vector<sptr<AbstractScreenInfo>> modes_ {};
 };
 
 Screen::Screen(const ScreenInfo* info)
@@ -46,6 +48,8 @@ Screen::Screen(const ScreenInfo* info)
     pImpl_->virtualPixelRatio_ = info->virtualPixelRatio_;
     pImpl_->parent_ = info->parent_;
     pImpl_->hasChild_ = info->hasChild_;
+	pImpl_->modeId_ = info->modeId_;
+    pImpl_->modes_ = info->modes_;
 }
 
 Screen::~Screen()
@@ -100,5 +104,24 @@ bool Screen::RequestRotation(Rotation rotation)
 ScreenId Screen::GetParentId() const
 {
     return pImpl_->parent_;
+}
+
+uint32_t Screen::GetModeId() const
+{
+    return pImpl_->modeId_;
+}
+
+std::vector<sptr<AbstractScreenInfo>> Screen::GetSupportedModes() const
+{
+    return pImpl_->modes_;
+}
+
+bool Screen::SetScreenActiveMode(ScreenId screenId, uint32_t modeId)
+{
+    if (DisplayManagerAdapter::GetInstance().SetScreenActiveMode(screenId, modeId)) {
+        pImpl_->modeId_ = modeId;
+        return true;
+    }
+    return false;
 }
 } // namespace OHOS::Rosen
