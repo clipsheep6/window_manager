@@ -446,7 +446,7 @@ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<
     // FIX ME: use context_
     abilityContext_ = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(context);
     if (abilityContext_ != nullptr) {
-        ret = SingletonContainer::Get<WindowAdapter>().SaveAbilityToken(abilityContext_->GetAbilityToken(), windowId);
+        ret = SingletonContainer::Get<WindowAdapter>().SaveAbilityToken(abilityContext_->GetToken(), windowId);
         if (ret != WMError::WM_OK) {
             WLOGFE("SaveAbilityToken failed with errCode:%{public}d", static_cast<int32_t>(ret));
             return ret;
