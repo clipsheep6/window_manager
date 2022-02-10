@@ -10,11 +10,11 @@
 
 ## 简介
 
-**Graphic子系统** 提供了图形接口能力和窗口管理接口能力，
+**Graphic 子系统** 提供了图形接口能力和窗口管理接口能力，
 
 其主要的结构如下图所示：
 
-![Graphic子系统架构图](./figures/graphic.png)
+![Graphic 子系统架构图](./figures/graphic.png)
 
 - **Surface**
 
@@ -58,18 +58,18 @@
 foundation/graphic/standard/
 ├── frameworks              # 框架代码目录
 │   ├── bootanimation       # 开机动画目录
-│   ├── surface             # Surface代码
-│   ├── vsync               # Vsync代码
-│   └── wm                  # WindowManager代码
+│   ├── surface             # Surface 代码
+│   ├── vsync               # Vsync 代码
+│   └── wm                  # WindowManager 代码
 ├── interfaces              # 对外接口存放目录
-│   ├── innerkits           # native接口存放目录
-│   └── kits                # js/napi接口存放目录
+│   ├── innerkits           # native 接口存放目录
+│   └── kits                # js/napi 接口存放目录
 └── utils                   # 小部件存放目录
 ```
 
 ## 约束
 - 语言版本
-    - C++11或以上
+    - C++11 或以上
 
 ## 编译构建
 可以依赖的接口有:
@@ -83,7 +83,7 @@ foundation/graphic/standard/
 
 | 接口名          | 职责                        |
 |-----------------|-----------------------------|
-| GetInstance     | 获取WindowManager的单例指针 |
+| GetInstance     | 获取 WindowManager 的单例指针 |
 | GetMaxWidth     | 获取当前屏幕宽度            |
 | GetMaxHeight    | 获取当前屏幕高度            |
 | CreateWindow    | 创建一个标准窗口            |
@@ -102,26 +102,26 @@ foundation/graphic/standard/
 | ChangeWindowType            | 更改当前窗口类型             |
 | ReSize                      | 调整当前窗口至指定大小       |
 | Rotate                      | 旋转当前窗口                 |
-| RegistPointerButtonCb       | 注册鼠标Button事件回调       |
-| RegistPointerEnterCb        | 注册鼠标Enter事件回调        |
-| RegistPointerLeaveCb        | 注册鼠标Leave事件回调        |
-| RegistPointerMotionCb       | 注册鼠标Motion事件回调       |
-| RegistPointerAxisDiscreteCb | 注册鼠标AxisDiscrete事件回调 |
-| RegistPointerAxisSourceCb   | 注册鼠标AxisSource事件回调   |
-| RegistPointerAxisStopCb     | 注册鼠标AxisStop事件回调     |
-| RegistPointerAxisCb         | 注册鼠标Axis事件回调         |
-| RegistTouchUpCb             | 注册TouchUp事件回调          |
-| RegistTouchDownCb           | 注册TouchDown事件回调        |
-| RegistTouchEmotionCb        | 注册TouchEmotion事件回调     |
-| RegistTouchFrameCb          | 注册TouchFrame事件回调       |
-| RegistTouchCancelCb         | 注册TouchCancel事件回调      |
-| RegistTouchShapeCb          | 注册TouchShape事件回调       |
-| RegistTouchOrientationCb    | 注册TouchOrientation事件回调 |
-| RegistKeyboardKeyCb         | 注册键盘Key事件回调          |
-| RegistKeyboardKeyMapCb      | 注册键盘KeyMap事件回调       |
-| RegistKeyboardLeaveCb       | 注册键盘Leave事件回调        |
-| RegistKeyboardEnterCb       | 注册键盘Enter事件回调        |
-| RegistKeyboardRepeatInfoCb  | 注册键盘RepeatInfo事件回调   |
+| RegistPointerButtonCb       | 注册鼠标 Button 事件回调       |
+| RegistPointerEnterCb        | 注册鼠标 Enter 事件回调        |
+| RegistPointerLeaveCb        | 注册鼠标 Leave 事件回调        |
+| RegistPointerMotionCb       | 注册鼠标 Motion 事件回调       |
+| RegistPointerAxisDiscreteCb | 注册鼠标 AxisDiscrete 事件回调 |
+| RegistPointerAxisSourceCb   | 注册鼠标 AxisSource 事件回调   |
+| RegistPointerAxisStopCb     | 注册鼠标 AxisStop 事件回调     |
+| RegistPointerAxisCb         | 注册鼠标 Axis 事件回调         |
+| RegistTouchUpCb             | 注册 TouchUp 事件回调          |
+| RegistTouchDownCb           | 注册 TouchDown 事件回调        |
+| RegistTouchEmotionCb        | 注册 TouchEmotion 事件回调     |
+| RegistTouchFrameCb          | 注册 TouchFrame 事件回调       |
+| RegistTouchCancelCb         | 注册 TouchCancel 事件回调      |
+| RegistTouchShapeCb          | 注册 TouchShape 事件回调       |
+| RegistTouchOrientationCb    | 注册 TouchOrientation 事件回调 |
+| RegistKeyboardKeyCb         | 注册键盘 Key 事件回调          |
+| RegistKeyboardKeyMapCb      | 注册键盘 KeyMap 事件回调       |
+| RegistKeyboardLeaveCb       | 注册键盘 Leave 事件回调        |
+| RegistKeyboardEnterCb       | 注册键盘 Enter 事件回调        |
+| RegistKeyboardRepeatInfoCb  | 注册键盘 RepeatInfo 事件回调   |
 
 ### SubWindow
 | 接口名           | 职责               |
@@ -132,55 +132,55 @@ foundation/graphic/standard/
 ### Surface
 | 接口名                     | 职责                                                              |
 |----------------------------|-------------------------------------------------------------------|
-| CreateSurfaceAsConsumer    | Buffer的消费者来使用该函数创建一个Surface                         |
-| CreateSurfaceAsProducer    | Buffer的生产者使用该函数创建一个Surface，只能使用与生产相关的接口 |
-| GetProducer                | 获得一个Surface内部的IBufferProducer对象                          |
-| RequestBuffer              | 请求一个待生产的SurfaceBuffer对象                                 |
-| CancelBuffer               | 取消、归还一个待生产的SurfaceBuffer对象                           |
-| FlushBuffer                | 归还一个生产好的SurfaceBuffer对象并携带一些信息                   |
-| AcquireBuffer              | 请求一个待消费的SurfaceBuffer对象                                 |
-| ReleaseBuffer              | 归还一个已消费的SurfaceBuffer对象                                 |
-| GetQueueSize               | 获得当前同时能并存buffer的数量                                    |
-| SetQueueSize               | 设置当前同时能并存buffer的数量                                    |
+| CreateSurfaceAsConsumer    | Buffer 的消费者来使用该函数创建一个 Surface                         |
+| CreateSurfaceAsProducer    | Buffer 的生产者使用该函数创建一个 Surface，只能使用与生产相关的接口 |
+| GetProducer                | 获得一个 Surface 内部的 IBufferProducer 对象                          |
+| RequestBuffer              | 请求一个待生产的 SurfaceBuffer 对象                                 |
+| CancelBuffer               | 取消、归还一个待生产的 SurfaceBuffer 对象                           |
+| FlushBuffer                | 归还一个生产好的 SurfaceBuffer 对象并携带一些信息                   |
+| AcquireBuffer              | 请求一个待消费的 SurfaceBuffer 对象                                 |
+| ReleaseBuffer              | 归还一个已消费的 SurfaceBuffer 对象                                 |
+| GetQueueSize               | 获得当前同时能并存 buffer 的数量                                    |
+| SetQueueSize               | 设置当前同时能并存 buffer 的数量                                    |
 | SetDefaultWidthAndHeight   | 设置默认宽和高                                                    |
 | GetDefaultWidth            | 获得默认宽度                                                      |
 | GetDefaultHeight           | 获得默认高度                                                      |
-| SetUserData                | 存贮字符串数据，不随着IPC传递                                     |
+| SetUserData                | 存贮字符串数据，不随着 IPC 传递                                     |
 | GetUserData                | 取出字符串数据                                                    |
-| RegisterConsumerListener   | 注册一个消费监听器，监听Buffer的Flush事件                         |
+| RegisterConsumerListener   | 注册一个消费监听器，监听 Buffer 的 Flush 事件                         |
 | UnregisterConsumerListener | 取消监听                                                          |
 
 ### SurfaceBuffer
 | 接口名          | 职责                                |
 |-----------------|-------------------------------------|
-| GetBufferHandle | 获得SurfaceBuffer的BufferHandle指针 |
-| GetWidth        | 获得SurfaceBuffer的宽度             |
-| GetHeight       | 获得SurfaceBuffer的高度             |
-| GetFormat       | 获得SurfaceBuffer的颜色格式         |
-| GetUsage        | 获得SurfaceBuffer的用途             |
-| GetPhyAddr      | 获得SurfaceBuffer的物理地址         |
-| GetKey          | 获得SurfaceBuffer的key              |
-| GetVirAddr      | 获得SurfaceBuffer的虚拟地址         |
-| GetSize         | 获得SurfaceBuffer的文件句柄         |
-| SetInt32        | 获得SurfaceBuffer的缓冲区大小       |
-| GetInt32        | 设置SurfaceBuffer的32位整数         |
-| SetInt64        | 获得SurfaceBuffer的32位整数         |
-| GetInt64        | 设置SurfaceBuffer的64位整数         |
+| GetBufferHandle | 获得 SurfaceBuffer 的 BufferHandle 指针 |
+| GetWidth        | 获得 SurfaceBuffer 的宽度             |
+| GetHeight       | 获得 SurfaceBuffer 的高度             |
+| GetFormat       | 获得 SurfaceBuffer 的颜色格式         |
+| GetUsage        | 获得 SurfaceBuffer 的用途             |
+| GetPhyAddr      | 获得 SurfaceBuffer 的物理地址         |
+| GetKey          | 获得 SurfaceBuffer 的 key              |
+| GetVirAddr      | 获得 SurfaceBuffer 的虚拟地址         |
+| GetSize         | 获得 SurfaceBuffer 的文件句柄         |
+| SetInt32        | 获得 SurfaceBuffer 的缓冲区大小       |
+| GetInt32        | 设置 SurfaceBuffer 的 32 位整数         |
+| SetInt64        | 获得 SurfaceBuffer 的 32 位整数         |
+| GetInt64        | 设置 SurfaceBuffer 的 64 位整数         |
 
 ### VsyncHelper
 | 接口名               | 职责                              |
 |----------------------|-----------------------------------|
-| Current              | 获取当前runner对应的VsyncHelper   |
-| VsyncHelper          | 用EventHandler对象构造VsyncHelper |
+| Current              | 获取当前 runner 对应的 VsyncHelper   |
+| VsyncHelper          | 用 EventHandler 对象构造 VsyncHelper |
 | RequestFrameCallback | 注册一个帧回调                    |
 
 ## 使用说明
 
-### 具名服务-传递一个生产型Surface
+### 具名服务-传递一个生产型 Surface
 
 #### 注册
 ```cpp
-// 拿到一个消费型Surface
+// 拿到一个消费型 Surface
 sptr<Surface> surface = Surface::CreateSurfaceAsConsumer();
 
 // 拿出里面的生产者对象
@@ -191,23 +191,23 @@ auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
 sm->AddSystemAbility(IPC_SA_ID, producer->AsObject());
 ```
 
-#### 客户端获得生产型Surface
+#### 客户端获得生产型 Surface
 ```cpp
 // 获得远程对象
 auto sm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
 sptr<IRemoteObject> robj = sm->GetSystemAbility(IPC_SA_ID);
 
-// 构造Surface
+// 构造 Surface
 sptr<IBufferProducer> bp = iface_cast<IBufferProducer>(robj);
 sptr<Surface> surface = Surface::CreateSurfaceAsProducer(bp);
 ```
 
-### 匿名服务-传递一个生产型Surface
-场景: 在一次IPC过程中
+### 匿名服务-传递一个生产型 Surface
+场景: 在一次 IPC 过程中
 
 #### 发送
 ```cpp
-// 拿到一个消费型Surface
+// 拿到一个消费型 Surface
 sptr<Surface> surface = CreateSurfaceAsConsumer();
 
 // 拿出里面的生产者对象
@@ -217,24 +217,24 @@ sptr<IRemoteObject> producer = surface->GetProducer();
 parcel.WriteRemoteObject(producer);
 ```
 
-#### 接受并获得生产型Surface
+#### 接受并获得生产型 Surface
 ```cpp
 // 获得远程对象
 sptr<IRemoteObject> remoteObject = parcel.ReadRemoteObject();
 
-// 构造Surface
+// 构造 Surface
 sptr<IBufferProducer> bp = iface_cast<IBufferProducer>(robj);
 sptr<Surface> surface = Surface::CreateSurfaceAsProducer(bp);
 ```
 
-### 生产一个SurfaceBuffer
-条件： 一个生产型Surface
+### 生产一个 SurfaceBuffer
+条件： 一个生产型 Surface
 
 ```cpp
 BufferRequestConfig requestConfig = {
     .width = 1920, // 屏幕宽度
     .height = 1080, // 屏幕高度
-    .strideAlignment = 8, // stride对齐字节
+    .strideAlignment = 8, // stride 对齐字节
     .format = PIXEL_FMT_RGBA_8888, // 颜色格式
     .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA, // 用法
     .timeout = 0, // 时延
@@ -255,7 +255,7 @@ BufferFlushConfig flushConfig = {
         .w = buffer->GetWidth(),  // 区域宽度
         .h = buffer->GetHeight(), // 区域高度
     },
-    .timestamp = 0 // 给消费者看的时间，0为使用当前时间
+    .timestamp = 0 // 给消费者看的时间，0 为使用当前时间
 };
 
 ret = surface->FlushBuffer(buffer, -1, flushConfig);
@@ -264,8 +264,8 @@ if (ret != SURFACE_ERROR_OK) {
 }
 ```
 
-### 消费一个SurfaceBuffer
-条件： 一个消费型Surface
+### 消费一个 SurfaceBuffer
+条件： 一个消费型 Surface
 
 ```cpp
 class TestConsumerListener : public IBufferConsumerListener {
@@ -295,7 +295,7 @@ if (ret != SURFACE_ERROR_OK) {
 }
 ```
 
-### 给SurfaceBuffer带上自定义数据
+### 给 SurfaceBuffer 带上自定义数据
 ```cpp
 sptr<SurfaceBuffer> buffer;
 SurfaceError ret = buffer->SetInt32(1, 3);
@@ -310,8 +310,8 @@ if (ret != SURFACE_ERROR_OK) {
 }
 ```
 
-### 注册一个Vsync回调事件
-#### 用handler构造VsyncHelper
+### 注册一个 Vsync 回调事件
+#### 用 handler 构造 VsyncHelper
 ```cpp
 auto runner = AppExecFwk::EventRunner::Create(true);
 auto handler = std::make_shared<AppExecFwk::EventHandler>(runner);
@@ -331,7 +331,7 @@ if (ret != VSYNC_ERROR_OK) {
 }
 ```
 
-#### 在handler里用Current
+#### 在 handler 里用 Current
 ```cpp
 auto runner = AppExecFwk::EventRunner::Create(true);
 auto handler = std::make_shared<AppExecFwk::EventHandler>(runner);
