@@ -129,6 +129,7 @@ WMError WindowNodeContainer::UpdateWindowNode(sptr<WindowNode>& node)
         WLOGFE("surface node or display node is nullptr!");
         return WMError::WM_ERROR_NULLPTR;
     }
+    SwitchLayoutPolicy(WindowLayoutMode::CASCADE);
     layoutPolicy_->UpdateWindowNode(node);
     if (avoidController_->IsAvoidAreaNode(node)) {
         avoidController_->UpdateAvoidAreaNode(node);
@@ -207,7 +208,7 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
         WLOGFE("window node or surface node is nullptr, invalid");
         return WMError::WM_ERROR_DESTROYED_OBJECT;
     }
-
+    SwitchLayoutPolicy(WindowLayoutMode::CASCADE);
     if (node->parent_ == nullptr) {
         WLOGFW("can't find parent of this node");
     } else {
@@ -867,7 +868,7 @@ WMError WindowNodeContainer::UpdateWindowPairInfo(sptr<WindowNode>& triggerNode,
     return WMError::WM_OK;
 }
 
-WMError WindowNodeContainer::SwitchLayoutPolicy(WindowLayoutMode mode)
+WMError WindowNodeContainer::SwitchLayoutPolicy(WindowLayoutMode mode, bool reorder)
 {
     if (mode == layoutMode_) {
         WLOGFI("curret layout mode is allready: %{public}d", static_cast<uint32_t>(mode));
@@ -875,10 +876,19 @@ WMError WindowNodeContainer::SwitchLayoutPolicy(WindowLayoutMode mode)
     }
     WLOGFI("SwitchLayoutPolicy src: %{public}d dst: %{public}d",
         static_cast<uint32_t>(layoutMode_), static_cast<uint32_t>(mode));
+    if (layoutMode_ == mode) {
+        if (reorder) {
+            layoutPolicy_->Reorder();
+        }
+        return WMError::WM_OK;
+    }
     layoutMode_ = mode;
     layoutPolicy_->Clean();
     layoutPolicy_ = layoutPolicys_[mode];
     layoutPolicy_->Launch();
+    if (reorder) {
+        layoutPolicy_->Reorder();
+    }
     return WMError::WM_OK;
 }
 
