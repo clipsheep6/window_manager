@@ -24,6 +24,7 @@
 
 #include <refbase.h>
 #include <vsync_helper.h>
+#include <vsync_receiver.h>
 
 #include "wm_single_instance.h"
 
@@ -45,7 +46,7 @@ public:
 
 private:
     FrameCallback callback_;
-    VsyncStation() = default;
+    VsyncStation();
     static void OnVsync(int64_t nanoTimestamp, void* client);
     void VsyncCallbackInner(int64_t nanoTimestamp);
     const std::string VSYNC_THREAD_ID = "vsync_thread";
@@ -56,6 +57,7 @@ private:
         {CallbackType::CALLBACK_INPUT, {}},
         {CallbackType::CALLBACK_FRAME, {}},
     };
+    std::shared_ptr<OHOS::Rosen::VSyncReceiver> receiver_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

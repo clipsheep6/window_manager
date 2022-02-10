@@ -26,6 +26,10 @@ config("libwm_private_config") {
     "//foundation/aafwk/standard/interfaces/innerkits/app_manager/include/appmgr",
     "//third_party/jsoncpp/include",
     "//third_party/json/include",
+
+    # vsync
+    "//foundation/graphic/standard/rosen/modules/composer/vsync/include",
+    "//foundation/graphic/standard/rosen/modules/render_service_client/core",
   ]
 
   if (defined(product_name) &&
@@ -73,6 +77,7 @@ ohos_shared_library("libwm") {
 
     # vsync
     "//foundation/graphic/standard:libvsync_client",
+    "//foundation/graphic/standard/rosen/modules/composer:libcomposer",
   ]
 
   external_deps = [
