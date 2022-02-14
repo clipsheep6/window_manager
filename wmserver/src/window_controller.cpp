@@ -40,8 +40,8 @@ WMError WindowController::CreateWindow(sptr<IWindow>& window, sptr<WindowPropert
     windowId = GenWindowId();
     property->SetWindowId(windowId);
 
-    // set default transition effect for window
-    static auto effect = RSTransitionEffect::Create()->Scale({ 0.0f, 0.0f, 0.0f })->Opacity(0.0f);
+    // set default transition effect for window: scale from 1.0 to 0.7, fade from 1.0 to 0.0
+    static auto effect = RSTransitionEffect::Create()->Scale(Vector3f(0.7f, 0.7f, 0.0f))->Opacity(0.0f);
     if (surfaceNode != nullptr) {
         surfaceNode->SetTransitionEffect(effect);
     }
