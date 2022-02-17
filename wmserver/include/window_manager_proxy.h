@@ -60,6 +60,9 @@ public:
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
 
 private:
+    WMError SendRequest(IWindowManager::Message code, MessageParcel &data, MessageParcel &reply);
+
+private:
     static inline BrokerDelegator<WindowManagerProxy> delegator_;
 };
 }
