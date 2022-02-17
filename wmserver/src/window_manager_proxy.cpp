@@ -29,165 +29,138 @@ WMError WindowManagerProxy::CreateWindow(sptr<IWindow>& window, sptr<WindowPrope
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
     if (!data.WriteRemoteObject(window->AsObject())) {
         WLOGFE("Write IWindow failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
     if (!data.WriteParcelable(property.GetRefPtr())) {
         WLOGFE("Write windowProperty failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
     if (!data.WriteParcelable(surfaceNode.get())) {
         WLOGFE("Write windowProperty failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
-    if (Remote()->SendRequest(TRANS_ID_CREATE_WINDOW, data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_IPC_FAILED;
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_CREATE_WINDOW, data, reply);
+    if (ret == WMError::WM_OK) {
+        windowId = reply.ReadUint32();
+        ret = static_cast<WMError>(reply.ReadInt32()); // err code from stub
     }
-    windowId = reply.ReadUint32();
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WMError>(ret);
+    return ret;
 }
 
 WMError WindowManagerProxy::AddWindow(sptr<WindowProperty>& property)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
     if (!data.WriteParcelable(property.GetRefPtr())) {
         WLOGFE("Write windowProperty failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
-    if (Remote()->SendRequest(TRANS_ID_ADD_WINDOW, data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_IPC_FAILED;
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_ADD_WINDOW, data, reply);
+    if (ret == WMError::WM_OK) {
+        ret = static_cast<WMError>(reply.ReadInt32()); // err code from stub
     }
-
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WMError>(ret);
+    return ret;
 }
 
 WMError WindowManagerProxy::RemoveWindow(uint32_t windowId)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
     if (!data.WriteUint32(windowId)) {
         WLOGFE("Write windowId failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
-    if (Remote()->SendRequest(TRANS_ID_REMOVE_WINDOW, data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_IPC_FAILED;
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_REMOVE_WINDOW, data, reply);;
+    if (ret == WMError::WM_OK) {
+        ret = static_cast<WMError>(reply.ReadInt32()); // err code from stub
     }
-
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WMError>(ret);
+    return ret;
 }
 
 WMError WindowManagerProxy::DestroyWindow(uint32_t windowId, bool /* onlySelf */)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
     if (!data.WriteUint32(windowId)) {
         WLOGFE("Write windowId failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
-    if (Remote()->SendRequest(TRANS_ID_DESTROY_WINDOW, data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_IPC_FAILED;
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_DESTROY_WINDOW, data, reply);;
+    if (ret == WMError::WM_OK) {
+        ret = static_cast<WMError>(reply.ReadInt32()); // err code from stub
     }
-
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WMError>(ret);
+    return ret;
 }
 
 WMError WindowManagerProxy::ResizeRect(uint32_t windowId, const Rect& rect, WindowSizeChangeReason reason)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
     if (!data.WriteUint32(windowId)) {
         WLOGFE("Write windowId failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
     if (!(data.WriteInt32(rect.posX_) && data.WriteInt32(rect.posY_) &&
         data.WriteUint32(rect.width_) && data.WriteUint32(rect.height_))) {
         WLOGFE("Write rect failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
     if (!data.WriteUint32(static_cast<uint32_t>(reason))) {
         WLOGFE("Write WindowSizeChangeReason failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
-    if (Remote()->SendRequest(TRANS_ID_RESIZE_RECT, data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_IPC_FAILED;
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_RESIZE_RECT, data, reply);
+    if (ret == WMError::WM_OK) {
+        ret = static_cast<WMError>(reply.ReadInt32()); // err code from stub
     }
-
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WMError>(ret);
+    return ret;
 }
 
 WMError WindowManagerProxy::RequestFocus(uint32_t windowId)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
     if (!data.WriteUint32(windowId)) {
         WLOGFE("Write windowId failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-    if (Remote()->SendRequest(TRANS_ID_REQUEST_FOCUS, data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_IPC_FAILED;
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_REQUEST_FOCUS, data, reply);
+    if (ret == WMError::WM_OK) {
+        ret = static_cast<WMError>(reply.ReadInt32()); // err code from stub
     }
-
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WMError>(ret);
+    return ret;
 }
 
 WMError WindowManagerProxy::SetWindowMode(uint32_t windowId, WindowMode mode)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
@@ -200,19 +173,17 @@ WMError WindowManagerProxy::SetWindowMode(uint32_t windowId, WindowMode mode)
         WLOGFE("Write type failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-    if (Remote()->SendRequest(TRANS_ID_UPDATE_MODE, data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_IPC_FAILED;
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_UPDATE_MODE, data, reply);
+    if (ret == WMError::WM_OK) {
+        ret = static_cast<WMError>(reply.ReadInt32()); // err code from stub
     }
-
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WMError>(ret);
+    return ret;
 }
 
 WMError WindowManagerProxy::SetWindowBackgroundBlur(uint32_t windowId, WindowBlurLevel level)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
@@ -225,19 +196,17 @@ WMError WindowManagerProxy::SetWindowBackgroundBlur(uint32_t windowId, WindowBlu
         WLOGFE("Write blur level failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-    if (Remote()->SendRequest(TRANS_ID_SET_BACKGROUND_BLUR, data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_IPC_FAILED;
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_SET_BACKGROUND_BLUR, data, reply);
+    if (ret == WMError::WM_OK) {
+        ret = static_cast<WMError>(reply.ReadInt32()); // err code from stub
     }
-
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WMError>(ret);
+    return ret;
 }
 
 WMError WindowManagerProxy::SetAlpha(uint32_t windowId, float alpha)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
@@ -250,19 +219,17 @@ WMError WindowManagerProxy::SetAlpha(uint32_t windowId, float alpha)
         WLOGFE("Write alpha failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-    if (Remote()->SendRequest(TRANS_ID_SET_APLPHA, data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_IPC_FAILED;
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_SET_APLPHA, data, reply);
+    if (ret == WMError::WM_OK) {
+        ret = static_cast<WMError>(reply.ReadInt32()); // err code from stub
     }
-
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WMError>(ret);
+    return ret;
 }
 
 WMError WindowManagerProxy::SetWindowType(uint32_t windowId, WindowType type)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
@@ -275,19 +242,17 @@ WMError WindowManagerProxy::SetWindowType(uint32_t windowId, WindowType type)
         WLOGFE("Write type failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-    if (Remote()->SendRequest(TRANS_ID_UPDATE_TYPE, data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_IPC_FAILED;
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_UPDATE_TYPE, data, reply);
+    if (ret == WMError::WM_OK) {
+        ret = static_cast<WMError>(reply.ReadInt32()); // err code from stub
     }
-
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WMError>(ret);
+    return ret;
 }
 
 WMError WindowManagerProxy::SetWindowFlags(uint32_t windowId, uint32_t flags)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
@@ -300,19 +265,17 @@ WMError WindowManagerProxy::SetWindowFlags(uint32_t windowId, uint32_t flags)
         WLOGFE("Write type failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-    if (Remote()->SendRequest(TRANS_ID_UPDATE_FLAGS, data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_IPC_FAILED;
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_UPDATE_FLAGS, data, reply);
+    if (ret == WMError::WM_OK) {
+        ret = static_cast<WMError>(reply.ReadInt32()); // err code from stub
     }
-
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WMError>(ret);
+    return ret;
 }
 
 WMError WindowManagerProxy::SetSystemBarProperty(uint32_t windowId, WindowType type, const SystemBarProperty& prop)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
@@ -330,68 +293,59 @@ WMError WindowManagerProxy::SetSystemBarProperty(uint32_t windowId, WindowType t
         WLOGFE("Write property failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-    if (Remote()->SendRequest(TRANS_ID_UPDATE_SYSTEM_BAR_PROPERTY, data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_IPC_FAILED;
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_UPDATE_SYSTEM_BAR_PROPERTY, data, reply);
+    if (ret == WMError::WM_OK) {
+        ret = static_cast<WMError>(reply.ReadInt32()); // err code from stub
     }
-
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WMError>(ret);
+    return ret;
 }
 
 WMError WindowManagerProxy::SaveAbilityToken(const sptr<IRemoteObject>& abilityToken, uint32_t windowId)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
     if (!data.WriteRemoteObject(abilityToken)) {
         WLOGFE("Write abilityToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
     if (!data.WriteUint32(windowId)) {
         WLOGFE("Write windowId failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-
-    if (Remote()->SendRequest(TRANS_ID_SEND_ABILITY_TOKEN, data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_IPC_FAILED;
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_SEND_ABILITY_TOKEN, data, reply);
+    if (ret == WMError::WM_OK) {
+        ret = static_cast<WMError>(reply.ReadInt32()); // err code from stub
     }
-
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WMError>(ret);
+    return ret;
 }
 
 std::vector<Rect> WindowManagerProxy::GetAvoidAreaByType(uint32_t windowId, AvoidAreaType type)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
-
     std::vector<Rect> avoidArea;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return avoidArea;
     }
-
     if (!data.WriteUint32(windowId)) {
         WLOGFE("Write windowId failed");
         return avoidArea;
     }
-
     if (!data.WriteUint32(static_cast<uint32_t>(type))) {
         WLOGFE("Write AvoidAreaType failed");
         return avoidArea;
     }
 
-    if (Remote()->SendRequest(TRANS_ID_GET_AVOID_AREA, data, reply, option) != ERR_NONE) {
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_GET_AVOID_AREA, data, reply);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("Get avoid by type failed");
         return avoidArea;
     }
-
     uint32_t avoidNum = reply.ReadUint32();
     for (uint32_t i = 0; i < avoidNum; ++i) {
         int32_t x = reply.ReadInt32();
@@ -409,24 +363,22 @@ void WindowManagerProxy::RegisterWindowManagerAgent(WindowManagerAgentType type,
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return;
     }
-
     if (!data.WriteUint32(static_cast<uint32_t>(type))) {
         WLOGFE("Write type failed");
         return;
     }
-
     if (!data.WriteRemoteObject(windowManagerAgent->AsObject())) {
         WLOGFE("Write IWindowManagerAgent failed");
         return;
     }
 
-    if (Remote()->SendRequest(TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT, data, reply, option) != ERR_NONE) {
-        WLOGFE("SendRequest failed");
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT, data, reply);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("Register window manager agent failed");
     }
 }
 
@@ -435,24 +387,22 @@ void WindowManagerProxy::UnregisterWindowManagerAgent(WindowManagerAgentType typ
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return;
     }
-
     if (!data.WriteUint32(static_cast<uint32_t>(type))) {
         WLOGFE("Write type failed");
         return;
     }
-
     if (!data.WriteRemoteObject(windowManagerAgent->AsObject())) {
         WLOGFE("Write IWindowManagerAgent failed");
         return;
     }
 
-    if (Remote()->SendRequest(TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT, data, reply, option) != ERR_NONE) {
-        WLOGFE("SendRequest failed");
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT, data, reply);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("Unregister window manager agent failed");
     }
 }
 
@@ -460,7 +410,6 @@ void WindowManagerProxy::ProcessWindowTouchedEvent(uint32_t windowId)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return;
@@ -469,8 +418,9 @@ void WindowManagerProxy::ProcessWindowTouchedEvent(uint32_t windowId)
         WLOGFE("Write windowId failed");
         return;
     }
-    if (Remote()->SendRequest(TRANS_ID_PROCESS_WINDOW_TOUCHED_EVENT, data, reply, option) != ERR_NONE) {
-        WLOGFE("SendRequest failed");
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_PROCESS_WINDOW_TOUCHED_EVENT, data, reply);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("Process windows touch event failed");
     }
 }
 
@@ -478,7 +428,6 @@ void WindowManagerProxy::MinimizeAllAppWindows(DisplayId displayId)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return;
@@ -487,8 +436,10 @@ void WindowManagerProxy::MinimizeAllAppWindows(DisplayId displayId)
         WLOGFE("Write displayId failed");
         return;
     }
-    if (Remote()->SendRequest(TRANS_ID_MINIMIZE_ALL_APP_WINDOWS, data, reply, option) != ERR_NONE) {
-        WLOGFE("SendRequest failed");
+
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_MINIMIZE_ALL_APP_WINDOWS, data, reply);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("Minimize all app windows failed");
     }
 }
 
@@ -496,7 +447,6 @@ bool WindowManagerProxy::IsSupportWideGamut(uint32_t windowId)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return false;
@@ -505,23 +455,19 @@ bool WindowManagerProxy::IsSupportWideGamut(uint32_t windowId)
         WLOGFE("Write windowId failed");
         return false;
     }
-    if (Remote()->SendRequest(TRANS_ID_IS_SUPPORT_WIDE_GAMUT, data, reply, option) != ERR_NONE) {
-        WLOGFE("SendRequest failed");
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_IS_SUPPORT_WIDE_GAMUT, data, reply);
+    if (ret != WMError::WM_OK) {
         return false;
     }
-
-    int32_t ret = reply.ReadUint32();
-    return static_cast<bool>(ret);
+    return static_cast<bool>(reply.ReadUint32()); //err code form stub
 }
 
 void WindowManagerProxy::SetColorSpace(uint32_t windowId, ColorSpace colorSpace)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
-        return;
     }
     if (!data.WriteUint32(windowId)) {
         WLOGFE("Write windowId failed");
@@ -531,9 +477,9 @@ void WindowManagerProxy::SetColorSpace(uint32_t windowId, ColorSpace colorSpace)
         WLOGFE("Write colorSpace failed");
         return;
     }
-    if (Remote()->SendRequest(TRANS_ID_SET_COLOR_SPACE, data, reply, option) != ERR_NONE) {
-        WLOGFE("SendRequest failed");
-        return;
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_SET_COLOR_SPACE, data, reply);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("Set colorSpace failed");
     }
 }
 
@@ -541,7 +487,6 @@ ColorSpace WindowManagerProxy::GetColorSpace(uint32_t windowId)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return ColorSpace::COLOR_SPACE_DEFAULT;
@@ -550,20 +495,17 @@ ColorSpace WindowManagerProxy::GetColorSpace(uint32_t windowId)
         WLOGFE("Write windowId failed");
         return ColorSpace::COLOR_SPACE_DEFAULT;
     }
-    if (Remote()->SendRequest(TRANS_ID_GET_COLOR_SPACE, data, reply, option) != ERR_NONE) {
-        WLOGFE("SendRequest failed");
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_GET_COLOR_SPACE, data, reply);
+    if (ret == WMError::WM_OK) {
         return ColorSpace::COLOR_SPACE_DEFAULT;
     }
-
-    int32_t ret = reply.ReadUint32();
-    return static_cast<ColorSpace>(ret);
+    return ColorSpace::COLOR_SPACE_DEFAULT;
 }
 
 WMError WindowManagerProxy::SetWindowLayoutMode(DisplayId displayId, WindowLayoutMode mode)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
@@ -576,35 +518,44 @@ WMError WindowManagerProxy::SetWindowLayoutMode(DisplayId displayId, WindowLayou
         WLOGFE("Write mode failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-    if (Remote()->SendRequest(TRANS_ID_UPDATE_LAYOUT_MODE, data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_IPC_FAILED;
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_UPDATE_LAYOUT_MODE, data, reply);
+    if (ret == WMError::WM_OK) {
+        ret = static_cast<WMError>(reply.ReadInt32()); // err code from stub
     }
-
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WMError>(ret);
+    return ret;
 }
 
 WMError WindowManagerProxy::GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
 
     if (!data.WriteUint32(mainWinId)) {
         WLOGFE("Write mainWinId failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
+    WMError ret = SendRequest(IWindowManager::Message::TRANS_ID_GET_TOP_WINDOW_ID, data, reply);
+    if (ret == WMError::WM_OK) {
+        topWinId = reply.ReadUint32();
+        ret = static_cast<WMError>(reply.ReadInt32()); // err code from stub
+    }
+    return ret;
+}
 
-    if (Remote()->SendRequest(TRANS_ID_GET_TOP_WINDOW_ID, data, reply, option) != ERR_NONE) {
+WMError WindowManagerProxy::SendRequest(IWindowManager::Message code, MessageParcel &data, MessageParcel &reply)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFE("Remote is nullptr, %{public}d", code);
         return WMError::WM_ERROR_IPC_FAILED;
     }
-    topWinId = reply.ReadUint32();
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WMError>(ret);
+    MessageOption option(MessageOption::TF_SYNC);
+    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    if (result != ERR_NONE) {
+        WLOGFE("Failed to SendRequest %{public}d, error code: %{public}d", code, result);
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    return WMError::WM_OK;
 }
 }
 }
