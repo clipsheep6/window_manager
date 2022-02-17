@@ -59,6 +59,7 @@ ohos_shared_library("libwm") {
     "src/window_option.cpp",
     "src/window_scene.cpp",
     "src/window_stub.cpp",
+    "src/window_system_option.cpp",
     "src/zidl/window_manager_agent_stub.cpp",
   ]
 

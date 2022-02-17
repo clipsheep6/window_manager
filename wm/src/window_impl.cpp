@@ -24,6 +24,7 @@
 #include "window_agent.h"
 #include "window_helper.h"
 #include "window_manager_hilog.h"
+#include "window_system_option.h"
 #include "wm_common.h"
 
 #include <ability_manager_client.h>
@@ -608,7 +609,15 @@ WMError WindowImpl::Show()
         WLOGFI("window is already shown id: %{public}d", property_->GetWindowId());
         return WMError::WM_OK;
     }
-    SetDefaultOption();
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_KEYGUARD) {
+        WMError ret = RemoveWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
+        if (ret != WMError::WM_OK) {
+            WLOGFE("set window type keyguard option failed:%{public}d", static_cast<uint32_t>(ret));
+            return ret;
+        }
+        property_->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    }
+    WindowSystemOption::SetDefaultOption(property_);
     WMError ret = SingletonContainer::Get<WindowAdapter>().AddWindow(property_);
     if (ret == WMError::WM_OK || ret == WMError::WM_ERROR_DEATH_RECIPIENT) {
         state_ = WindowState::STATE_SHOWN;
@@ -1162,73 +1171,6 @@ void WindowImpl::UpdateDragEvent(const PointInfo& point, DragEvent event)
     }
 }
 
-void WindowImpl::SetDefaultOption()
-{
-    auto display = DisplayManager::GetInstance().GetDisplayById(property_->GetDisplayId());
-    if (display == nullptr) {
-        WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u", property_->GetDisplayId(),
-            property_->GetWindowId());
-        return;
-    }
-    uint32_t width = static_cast<uint32_t>(display->GetWidth());
-    uint32_t height = static_cast<uint32_t>(display->GetHeight());
-    WLOGFI("width:%{public}u, height:%{public}u, displayId:%{public}" PRIu64"",
-        width, height, property_->GetDisplayId());
-
-    Rect rect;
-    switch (property_->GetWindowType()) {
-        case WindowType::WINDOW_TYPE_STATUS_BAR: {
-            rect = { 0, 0, width, static_cast<uint32_t>((static_cast<float>(height) * STATUS_BAR_RATIO)) };
-            property_->SetWindowRect(rect);
-            property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
-            property_->SetFocusable(false);
-            break;
-        }
-        case WindowType::WINDOW_TYPE_NAVIGATION_BAR: {
-            uint32_t navHeight = static_cast<uint32_t>((static_cast<float>(height) * NAVIGATION_BAR_RATIO));
-            rect = { 0, static_cast<int32_t>(height - navHeight), width, navHeight };
-            property_->SetWindowRect(rect);
-            property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
-            property_->SetFocusable(false);
-            break;
-        }
-        case WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW: {
-            uint32_t alarmWidth = static_cast<uint32_t>((static_cast<float>(width) *
-                SYSTEM_ALARM_WINDOW_WIDTH_RATIO));
-            uint32_t alarmHeight = static_cast<uint32_t>((static_cast<float>(height) *
-                SYSTEM_ALARM_WINDOW_HEIGHT_RATIO));
-
-            rect = { static_cast<int32_t>((width - alarmWidth) / 2), static_cast<int32_t>((height - alarmHeight) / 2),
-                     alarmWidth, alarmHeight };
-            property_->SetWindowRect(rect);
-            property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
-            break;
-        }
-        case WindowType::WINDOW_TYPE_KEYGUARD: {
-            RemoveWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
-            property_->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
-            break;
-        }
-        case WindowType::WINDOW_TYPE_DRAGGING_EFFECT: {
-            property_->SetWindowFlags(0);
-            break;
-        }
-        case WindowType::WINDOW_TYPE_VOLUME_OVERLAY: {
-            property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
-            break;
-        }
-        case WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT: {
-            property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
-            break;
-        }
-        case WindowType::WINDOW_TYPE_POINTER: {
-            property_->SetFocusable(false);
-            break;
-        }
-        default:
-            break;
-    }
-}
 bool WindowImpl::IsWindowValid() const
 {
     bool res = ((state_ > WindowState::STATE_INITIAL) && (state_ < WindowState::STATE_BOTTOM));
