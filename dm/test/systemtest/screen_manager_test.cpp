@@ -214,11 +214,13 @@ HWTEST_F(ScreenManagerTest, ScreenManager06, Function | MediumTest | Level2)
 {
     sptr<Screen> screen = ScreenManager::GetInstance().GetScreenById(defaultScreenId_);
     auto modes = screen->GetSupportedModes();
+    auto defaultModeId = screen->GetModeId();
     ASSERT_GT(modes.size(), 0);
     for (uint32_t modeIdx = 0; modeIdx < modes.size(); modeIdx++) {
         ASSERT_EQ(true, screen->SetScreenActiveMode(modeIdx));
         ASSERT_EQ(modeIdx, screen->GetModeId());
     }
+    ASSERT_EQ(true, screen->SetScreenActiveMode(defaultModeId));
 }
 
 /**
