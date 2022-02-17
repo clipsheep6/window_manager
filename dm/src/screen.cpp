@@ -39,6 +39,7 @@ public:
     uint32_t modeId_ { 0 };
     std::vector<sptr<SupportedScreenModes>> modes_ {};
     Rotation rotation_ { Rotation::ROTATION_0 };
+    Orientation orientation_ { Orientation::UNSPECIFIED };
 };
 
 Screen::Screen(const ScreenInfo* info)
@@ -112,10 +113,15 @@ Rotation Screen::GetRotation()
     return pImpl_->rotation_;
 }
 
-bool Screen::RequestRotation(Rotation rotation)
+Orientation Screen::GetOrientation()
 {
-    WLOGFD("rotation the screen");
-    return SingletonContainer::Get<DisplayManagerAdapter>().RequestRotation(pImpl_->id_, rotation);
+    return pImpl_->orientation_;
+}
+
+bool Screen::SetOrientation(Orientation orientation)
+{
+    WLOGFD("set orientation %{public}u", orientation);
+    return SingletonContainer::Get<DisplayManagerAdapter>().SetOrientation(pImpl_->id_, orientation);
 }
 
 DMError Screen::GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut>& colorGamuts) const

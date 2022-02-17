@@ -67,12 +67,13 @@ public:
     uint32_t GetVirtualWidth() const;
     uint32_t GetVirtualHeight() const;
     float GetVirtualPixelRatio() const;
-    bool RequestRotation(Rotation rotation);
     Rotation GetRotation();
+    Orientation GetOrientation();
     ScreenId GetParentId() const;
     uint32_t GetModeId() const;
     std::vector<sptr<SupportedScreenModes>> GetSupportedModes() const;
     bool SetScreenActiveMode(uint32_t modeId);
+    bool SetOrientation(Orientation orientation);
 
     // colorspace, gamut
     DMError GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut>& colorGamuts) const;

@@ -89,14 +89,14 @@ declare namespace screen {
 
     readonly activeModeIndex: number;
 
+    readonly orientation: ScreenOrientation;
+
     /**
-     * get the rotation of the screen
+     * set the orientation of the screen
      * @devices tv, phone, tablet, wearable
      * @since 8
      */
-    readonly rotation: Rotation;
-
-    requestRotation(rotation: Rotation): Promise<boolean>;
+    setOrientation(orientation: ScreenOrientation): Promise<boolean>;
 
     setScreenActiveMode(modeIndex: number): Promise<boolean>;
   }
@@ -152,28 +152,15 @@ declare namespace screen {
     CHANGE_GROUP = 2,
   }
 
-  /**
-   * rotation degree of screen
-   * @devices tv, phone, tablet, wearable
-   * @since 8
-   */
-   enum Rotation {
-    /**
-     * 0 degree
-     */
-    ROTATION_0 = 0,
-    /**
-     * 90 degree
-     */
-    ROTATION_90 = 1,
-    /**
-     * 180 degree
-     */
-    ROTATION_180 = 2,
-    /**
-     * 270 degree
-     */
-    ROTATION_270 = 3,
+  enum ScreenOrientation {
+    UNSPECIFIED = 0,
+    VERTICAL = 1,
+    HORIZONTAL = 2,
+    REVERSE_VERTICAL = 3,
+    REVERSE_HORIZONTAL = 4,
+    SENSOR = 5,
+    SENSOR_VERTICAL = 6,
+    SENSOR_HORIZONTAL = 7,
   }
 
   interface ScreenModeInfo {

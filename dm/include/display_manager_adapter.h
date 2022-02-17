@@ -42,7 +42,7 @@ public:
     virtual ScreenId CreateVirtualScreen(VirtualScreenOption option);
     virtual DMError DestroyVirtualScreen(ScreenId screenId);
     virtual DMError SetVirtualScreenSurface(ScreenId screenId, sptr<Surface> surface);
-    virtual bool RequestRotation(ScreenId screenId, Rotation rotation);
+    virtual bool SetOrientation(ScreenId screenId, Orientation orientation);
     virtual std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId);
 
     // colorspace, gamut

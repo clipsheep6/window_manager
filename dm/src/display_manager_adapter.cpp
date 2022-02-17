@@ -84,7 +84,7 @@ sptr<Display> DisplayManagerAdapter::GetDisplayById(DisplayId displayId)
     return display;
 }
 
-bool DisplayManagerAdapter::RequestRotation(ScreenId screenId, Rotation rotation)
+bool DisplayManagerAdapter::SetOrientation(ScreenId screenId, Orientation orientation)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (!InitDMSProxyLocked()) {
@@ -92,7 +92,7 @@ bool DisplayManagerAdapter::RequestRotation(ScreenId screenId, Rotation rotation
         return false;
     }
 
-    return displayManagerServiceProxy_->RequestRotation(screenId, rotation);
+    return displayManagerServiceProxy_->SetOrientation(screenId, orientation);
 }
 
 std::shared_ptr<Media::PixelMap> DisplayManagerAdapter::GetDisplaySnapshot(DisplayId displayId)
