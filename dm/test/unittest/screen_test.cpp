@@ -166,6 +166,34 @@ HWTEST_F(ScreenTest, SetScreenColorTransform01, Function | SmallTest | Level2)
     auto res = screen->SetScreenColorTransform();
     ASSERT_EQ(DMError::DM_OK, res);
 }
+
+/**
+ * @tc.name: SetOrientation01
+ * @tc.desc: SetOrientation
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenTest, SetOrientation01, Function | SmallTest | Level2)
+{
+    auto screen = ScreenManager::GetInstance().GetScreenById(defaultScreenId_);
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    EXPECT_CALL(m->Mock(), SetOrientation(_)).Times(1).WillOnce(Return(true));
+    auto res = screen->SetOrientation(Orientation::REVERSE_HORIZONTAL);
+    ASSERT_EQ(true, res);
+}
+
+/**
+ * @tc.name: SetOrientation02
+ * @tc.desc: SetOrientation
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenTest, SetOrientation02, Function | SmallTest | Level2)
+{
+    auto screen = ScreenManager::GetInstance().GetScreenById(defaultScreenId_);
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    EXPECT_CALL(m->Mock(), SetOrientation(_)).Times(1).WillOnce(Return(true));
+    auto res = screen->SetOrientation(Orientation::UNSPECIFIED);
+    ASSERT_EQ(true, res);
+}
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -503,25 +503,34 @@ DMError AbstractScreenController::SetVirtualScreenSurface(ScreenId screenId, spt
     return DMError::DM_OK;
 }
 
-bool AbstractScreenController::RequestRotation(ScreenId screenId, Rotation rotation)
+bool AbstractScreenController::SetOrientation(ScreenId screenId, Orientation orientation)
 {
-    WLOGD("request rotation: screen %{public}" PRIu64"", screenId);
+    WLOGD("set orientation: screen %{public}" PRIu64" orientation %{public}u", screenId, orientation);
     auto screen = GetAbstractScreen(screenId);
     if (screen == nullptr) {
-        WLOGFE("fail to request rotation, cannot find screen %{public}" PRIu64"", screenId);
+        WLOGFE("fail to set orientation, cannot find screen %{public}" PRIu64"", screenId);
         return false;
     }
     if (screen->canHasChild_) {
-        WLOGE("cannot rotate the combination screen: %{public}" PRIu64"", screenId);
+        WLOGE("cannot set orientation to the combination screen: %{public}" PRIu64"", screenId);
         return false;
     }
-    if (!rsInterface_.RequestRotation(screenId, static_cast<ScreenRotation>(rotation))) {
+    Rotation after = screen->CalcRotation(orientation);
+    if (after == screen->rotation_) {
+        WLOGI("rotation not changed: %{public}" PRIu64" rotation %{public}u", screenId, after);
+        return true;
+    }
+    if (!rsInterface_.RequestRotation(screenId, static_cast<ScreenRotation>(after))) {
         WLOGE("rotate screen fail: %{public}" PRIu64"", screenId);
         return false;
     }
     Rotation before = screen->rotation_;
-    screen->RequestRotation(rotation);
-    OnScreenRotate(screenId, before, rotation);
+    if (!screen->SetOrientation(orientation)) {
+         WLOGE("fail to set orientation, screen: %{public}" PRIu64"", screenId);
+        return false;
+    }
+    screen->rotation_ = after;
+    OnScreenRotate(screenId, before, after);
     return true;
 }
 

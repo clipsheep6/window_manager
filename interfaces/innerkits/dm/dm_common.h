@@ -98,6 +98,19 @@ enum class Rotation : uint32_t {
     ROTATION_270,
 };
 
+enum class Orientation : uint32_t {
+    BEGIN = 0,
+    UNSPECIFIED = BEGIN,
+    VERTICAL = 1,
+    HORIZONTAL = 2,
+    REVERSE_VERTICAL = 3,
+    REVERSE_HORIZONTAL = 4,
+    SENSOR = 5,
+    SENSOR_VERTICAL = 6,
+    SENSOR_HORIZONTAL = 7,
+    END = SENSOR_HORIZONTAL,
+};
+
 enum class DisplayChangeEvent : uint32_t {
     UPDATE_ROTATION,
     DISPLAY_SIZE_CHANGED,

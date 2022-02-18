@@ -14,65 +14,49 @@
  */
 
 #include <cstdio>
-
-#include "snapshot_utils.h"
+#include <unistd.h>
+#include <refbase.h>
+#include "screen.h"
+#include "screen_manager.h"
+#include "display_manager.h"
 
 using namespace OHOS;
-using namespace OHOS::Media;
 using namespace OHOS::Rosen;
+
+namespace {
+    class MyScreenListener : public OHOS::Rosen::ScreenManager::IScreenListener {
+        void OnConnect(ScreenId) {
+        }
+        void OnDisconnect(ScreenId) {
+        }
+        void OnChange(const std::vector<ScreenId>&, ScreenChangeEvent) {
+        }
+    };
+
+    class MyDisplayListener : public OHOS::Rosen::DisplayManager::IDisplayListener {
+    public:
+        void OnCreate(DisplayId) {
+        }
+        void OnDestroy(DisplayId) {
+        }
+        void OnChange(DisplayId, DisplayChangeEvent) {
+        }
+    };
+}
 
 int main(int argc, char *argv[])
 {
-    CmdArgments cmdArgments;
-    cmdArgments.fileName = "/data/snapshot_display_1.png";
-
-    if (!SnapShotUtils::ProcessArgs(argc, argv, cmdArgments)) {
-        return 0;
-    }
-
-    auto display = DisplayManager::GetInstance().GetDisplayById(cmdArgments.displayId);
-    if (display == nullptr) {
-        printf("error: GetDisplayById %" PRIu64 " error!\n", cmdArgments.displayId);
-        return -1;
-    }
-
-    printf("process: display %" PRIu64 ": width %d, height %d\n",
-        cmdArgments.displayId, display->GetWidth(), display->GetHeight());
-
-    // get PixelMap from DisplayManager API
-    std::shared_ptr<OHOS::Media::PixelMap> pixelMap = nullptr;
-    if (!cmdArgments.isWidthSet && !cmdArgments.isHeightSet) {
-        pixelMap = DisplayManager::GetInstance().GetScreenshot(cmdArgments.displayId); // default width & height
-    } else {
-        if (!cmdArgments.isWidthSet) {
-            cmdArgments.width = display->GetWidth();
-            printf("process: reset to display's width %d\n", cmdArgments.width);
-        }
-        if (!cmdArgments.isHeightSet) {
-            cmdArgments.height = display->GetHeight();
-            printf("process: reset to display's height %d\n", cmdArgments.height);
-        }
-        if (!SnapShotUtils::CheckWidthAndHeightValid(cmdArgments)) {
-            printf("error: width %d, height %d invalid!\n", cmdArgments.width, cmdArgments.height);
-            return -1;
-        }
-        const Media::Rect rect = {0, 0, display->GetWidth(), display->GetHeight()};
-        const Media::Size size = {cmdArgments.width, cmdArgments.height};
-        constexpr int rotation = 0;
-        pixelMap = DisplayManager::GetInstance().GetScreenshot(cmdArgments.displayId, rect, size, rotation);
-    }
-
-    bool ret = false;
-    if (pixelMap != nullptr) {
-        ret = SnapShotUtils::WriteToPngWithPixelMap(cmdArgments.fileName, *pixelMap);
-    }
-    if (!ret) {
-        printf("\nerror: snapshot display %" PRIu64 ", write to %s as png failed!\n",
-            cmdArgments.displayId, cmdArgments.fileName.c_str());
-        return -1;
-    }
-
-    printf("\nsuccess: snapshot display %" PRIu64 ", write to %s as png, width %d, height %d\n",
-        cmdArgments.displayId, cmdArgments.fileName.c_str(), pixelMap->GetWidth(), pixelMap->GetHeight());
-    return 0;
+    //std::vector<sptr<Screen>> screens = ScreenManager::GetInstance().GetAllScreens();
+    DisplayManager::GetInstance().RegisterDisplayListener(new MyDisplayListener());
+    ScreenManager::GetInstance().RegisterScreenListener(new MyScreenListener());
+    auto screens = ScreenManager::GetInstance().GetAllScreens();
+    Orientation orientation = static_cast<Orientation>(atoi(argv[1]));
+    printf("orientation = %u\n", orientation);
+    screens[0]->SetOrientation(orientation);
+    printf("end orientation = %u\n", orientation);
+    usleep(3E6);
+    orientation = Orientation::UNSPECIFIED;
+    printf("end orientation = %u\n", orientation); 
+    screens[0]->SetOrientation(orientation);
+    return -1;
 }

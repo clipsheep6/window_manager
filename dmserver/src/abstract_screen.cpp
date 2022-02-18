@@ -199,14 +199,38 @@ void AbstractScreen::FillScreenInfo(sptr<ScreenInfo> info) const
     info->modes_ = modes_;
 }
 
-Rotation AbstractScreen::GetRotation() const
+bool AbstractScreen::SetOrientation(Orientation orientation)
 {
-    return rotation_;
+    orientation_ = orientation;
+    return true;
 }
 
-void AbstractScreen::RequestRotation(Rotation rotation)
+Rotation AbstractScreen::CalcRotation(Orientation orientation) const
 {
-    rotation_ = rotation;
+    sptr<SupportedScreenModes> info = AbstractScreen::GetActiveScreenMode();
+    // true: phone(Plugin screen); false: pad & external screen
+    bool isVerticalScreen = info->width_ < info->height_;
+    switch (orientation) {
+        case Orientation::UNSPECIFIED: {
+            return Rotation::ROTATION_0;
+        }
+        case Orientation::VERTICAL: {
+            return isVerticalScreen ? Rotation::ROTATION_0 : Rotation::ROTATION_90;
+        }
+        case Orientation::HORIZONTAL: {
+            return isVerticalScreen ? Rotation::ROTATION_90 : Rotation::ROTATION_0;
+        }
+        case Orientation::REVERSE_VERTICAL: {
+            return isVerticalScreen ? Rotation::ROTATION_180 : Rotation::ROTATION_270;
+        }
+        case Orientation::REVERSE_HORIZONTAL: {
+            return isVerticalScreen ? Rotation::ROTATION_270 : Rotation::ROTATION_180;
+        }
+        default: {
+            WLOGE("unknown orientation %{public}u", orientation);
+            return Rotation::ROTATION_0;
+        }
+    }
 }
 
 AbstractScreenGroup::AbstractScreenGroup(ScreenId dmsId, ScreenId rsId, ScreenCombination combination)
