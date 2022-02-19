@@ -588,11 +588,24 @@ WMError WindowImpl::Destroy()
     return ret;
 }
 
-WMError WindowImpl::Show()
+WMError WindowImpl::Show(uint32_t reason)
 {
     WLOGFI("[Client] Window [name:%{public}s, id:%{public}d] Show", name_.c_str(), property_->GetWindowId());
     if (!IsWindowValid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    auto changeReason = static_cast<WindowStateChangeReason>(reason);
+    switch (changeReason) {
+        case WindowStateChangeReason::NORMAL: {
+            break;
+        }
+        case WindowStateChangeReason::KEYGUARD: {
+            NotifyAfterForeground();
+            return WMError::WM_OK;
+        }
+        default: {
+            return WMError::WM_ERROR_INVALID_PARAM;
+        }
     }
     if (state_ == WindowState::STATE_SHOWN && property_->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
         WLOGFI("Minimize all app windows");
@@ -619,11 +632,24 @@ WMError WindowImpl::Show()
     return ret;
 }
 
-WMError WindowImpl::Hide()
+WMError WindowImpl::Hide(uint32_t reason)
 {
     WLOGFI("[Client] Window [name:%{public}s, id:%{public}d] Hide", name_.c_str(), property_->GetWindowId());
     if (!IsWindowValid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    auto changeReason = static_cast<WindowStateChangeReason>(reason);
+    switch (changeReason) {
+        case WindowStateChangeReason::NORMAL: {
+            break;
+        }
+        case WindowStateChangeReason::KEYGUARD: {
+            NotifyAfterBackground();
+            return WMError::WM_OK;
+        }
+        default: {
+            return WMError::WM_ERROR_INVALID_PARAM;
+        }
     }
     if (state_ == WindowState::STATE_HIDDEN || state_ == WindowState::STATE_CREATED) {
         WLOGFI("window is already hidden id: %{public}d", property_->GetWindowId());
