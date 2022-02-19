@@ -99,18 +99,7 @@ WMError WindowScene::GoForeground(uint32_t reason)
     if (mainWindow_ == nullptr) {
         return WMError::WM_ERROR_NULLPTR;
     }
-    auto changeReason = static_cast<WindowStateChangeReason>(reason);
-    switch (changeReason) {
-        case WindowStateChangeReason::NORMAL: {
-            return mainWindow_->Show();
-        }
-        case WindowStateChangeReason::KEYGUARD: {
-            return WMError::WM_OK;
-        }
-        default: {
-            return WMError::WM_ERROR_INVALID_PARAM;
-        }
-    }
+    return mainWindow_->Show(reason);
 }
 
 WMError WindowScene::GoBackground(uint32_t reason)
@@ -119,18 +108,7 @@ WMError WindowScene::GoBackground(uint32_t reason)
     if (mainWindow_ == nullptr) {
         return WMError::WM_ERROR_NULLPTR;
     }
-    auto changeReason = static_cast<WindowStateChangeReason>(reason);
-    switch (changeReason) {
-        case WindowStateChangeReason::NORMAL: {
-            return mainWindow_->Hide();
-        }
-        case WindowStateChangeReason::KEYGUARD: {
-            return WMError::WM_OK;
-        }
-        default: {
-            return WMError::WM_ERROR_INVALID_PARAM;
-        }
-    }
+    return mainWindow_->Hide(reason);
 }
 
 WMError WindowScene::GoDestroy()
