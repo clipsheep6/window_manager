@@ -26,6 +26,7 @@ namespace OHOS::Rosen {
 class DisplayInfo : public Parcelable {
 friend class AbstractDisplay;
 public:
+    DisplayInfo() = default;
     ~DisplayInfo() = default;
     DisplayInfo(const DisplayInfo&) = delete;
     DisplayInfo(DisplayInfo&&) = delete;
@@ -35,17 +36,15 @@ public:
     virtual bool Marshalling(Parcel& parcel) const override;
     static DisplayInfo *Unmarshalling(Parcel& parcel);
 
-    DEFINE_VAR_DEFAULT_FUNC_GET(DisplayId, DisplayId, id, DISPLAY_ID_INVALD);
+    DEFINE_VAR_DEFAULT_FUNC_GET_SET(DisplayId, DisplayId, id, DISPLAY_ID_INVALD);
     DEFINE_VAR_DEFAULT_FUNC_GET(DisplayType, DisplayType, type, DisplayType::DEFAULT);
-    DEFINE_VAR_DEFAULT_FUNC_GET(int32_t, Width, width, 0);
-    DEFINE_VAR_DEFAULT_FUNC_GET(int32_t, Height, height, 0);
-    DEFINE_VAR_DEFAULT_FUNC_GET(uint32_t, FreshRate, freshRate, 0);
+    DEFINE_VAR_DEFAULT_FUNC_GET_SET(int32_t, Width, width, 0);
+    DEFINE_VAR_DEFAULT_FUNC_GET_SET(int32_t, Height, height, 0);
+    DEFINE_VAR_DEFAULT_FUNC_GET_SET(uint32_t, FreshRate, freshRate, 0);
     DEFINE_VAR_DEFAULT_FUNC_GET(ScreenId, ScreenId, screenId, SCREEN_ID_INVALID);
     DEFINE_VAR_DEFAULT_FUNC_GET(float, XDpi, xDpi, 0.0f);
     DEFINE_VAR_DEFAULT_FUNC_GET(float, YDpi, yDpi, 0.0f);
     DEFINE_VAR_DEFAULT_FUNC_GET(Rotation, Rotation, rotation, Rotation::ROTATION_0);
-private:
-    DisplayInfo() = default;
 };
 } // namespace OHOS::Rosen
 #endif // FOUNDATION_DMSERVER_DISPLAY_INFO_H
