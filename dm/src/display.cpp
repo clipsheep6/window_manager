@@ -15,18 +15,31 @@
 
 #include "display.h"
 #include "display_info.h"
+#include "display_manager_adapter.h"
 
 namespace OHOS::Rosen {
 class Display::Impl : public RefBase {
 friend class Display;
 private:
+    void UpdateDisplay(DisplayInfo& info);
+
     std::string name_;
     DisplayId id_ { DISPLAY_ID_INVALD };
     int32_t width_ { 0 };
     int32_t height_ { 0 };
     uint32_t freshRate_ { 0 };
     ScreenId screenId_ {SCREEN_ID_INVALID};
+    Rotation rotation_ { Rotation::ROTATION_0 };
 };
+
+void Display::Impl::UpdateDisplay(DisplayInfo& info)
+{
+    width_ = info.width_;
+    height_ = info.height_;
+    freshRate_ = info.freshRate_;
+    screenId_ = info.screenId_;
+    rotation_ = info.rotation_;
+}
 
 Display::Display(const std::string& name, DisplayInfo* info)
     : pImpl_(new Impl())
@@ -37,6 +50,7 @@ Display::Display(const std::string& name, DisplayInfo* info)
     pImpl_->height_ = info->height_;
     pImpl_->freshRate_ = info->freshRate_;
     pImpl_->screenId_ = info->screenId_;
+    pImpl_->rotation_ = info->rotation_;
 }
 
 DisplayId Display::GetId() const
@@ -46,21 +60,29 @@ DisplayId Display::GetId() const
 
 int32_t Display::GetWidth() const
 {
+    DisplayInfo info = SingletonContainer::Get<DisplayManagerAdapter>().GetDisplayInfo(pImpl_->id_);
+    pImpl_->UpdateDisplay(info);
     return pImpl_->width_;
 }
 
 int32_t Display::GetHeight() const
 {
+    DisplayInfo info = SingletonContainer::Get<DisplayManagerAdapter>().GetDisplayInfo(pImpl_->id_);
+    pImpl_->UpdateDisplay(info);
     return pImpl_->height_;
 }
 
 uint32_t Display::GetFreshRate() const
 {
+    DisplayInfo info = SingletonContainer::Get<DisplayManagerAdapter>().GetDisplayInfo(pImpl_->id_);
+    pImpl_->UpdateDisplay(info);
     return pImpl_->freshRate_;
 }
 
 ScreenId Display::GetScreenId() const
 {
+    DisplayInfo info = SingletonContainer::Get<DisplayManagerAdapter>().GetDisplayInfo(pImpl_->id_);
+    pImpl_->UpdateDisplay(info);
     return pImpl_->screenId_;
 }
 
