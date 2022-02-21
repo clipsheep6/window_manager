@@ -50,14 +50,17 @@ const sptr<AbstractDisplay> DisplayManagerServiceInner::GetDisplayById(DisplayId
 
 const sptr<AbstractDisplay> DisplayManagerServiceInner::GetDefaultDisplay()
 {
+    DisplayId defaultDisplayId = GetDefaultDisplayId();
+    if (defaultDisplayId == DISPLAY_ID_INVALD) {
+        WLOGFE("Fail to get default displayId");
+        return nullptr;
+    }
     return GetDisplayById(GetDefaultDisplayId());
 }
 
 std::vector<DisplayId> DisplayManagerServiceInner::GetAllDisplayIds()
 {
-    std::vector<DisplayId> res;
-    res.push_back(GetDefaultDisplayId());
-    return res;
+    return DisplayManagerService::GetInstance().GetAllDisplayIds();
 }
 
 std::vector<const sptr<AbstractDisplay>> DisplayManagerServiceInner::GetAllDisplays()

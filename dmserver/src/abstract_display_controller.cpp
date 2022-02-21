@@ -86,6 +86,27 @@ sptr<AbstractDisplay> AbstractDisplayController::GetAbstractDisplay(DisplayId di
     return iter->second;
 }
 
+DisplayId AbstractDisplayController::GetDisplayIdByScreenId(ScreenId id) const
+{
+    for (auto iter = abstractDisplayMap_.begin(); iter != abstractDisplayMap_.end(); iter++) {
+        if (iter->second->GetAbstractScreenId() != id) {
+            continue;
+        }
+        return iter->first;
+    }
+    WLOGFE("Failed to get AbstractDisplayId by screenId %{public}" PRIu64", return nullptr!", id);
+    return DISPLAY_ID_INVALD;
+}
+
+std::vector<DisplayId> AbstractDisplayController::GetAllDisplayIds() const
+{
+    std::vector<DisplayId> res;
+    for (auto iter = abstractDisplayMap_.begin(); iter != abstractDisplayMap_.end(); iter++) {
+        res.push_back(iter->first);
+    }
+    return res;
+}
+
 std::shared_ptr<Media::PixelMap> AbstractDisplayController::GetScreenSnapshot(DisplayId displayId)
 {
     sptr<AbstractDisplay> abstractDisplay = GetAbstractDisplay(displayId);
