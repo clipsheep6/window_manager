@@ -86,6 +86,7 @@ public:
     sptr<ScreenInfo> GetScreenInfoById(ScreenId screenId) override;
     sptr<ScreenGroupInfo> GetScreenGroupInfoById(ScreenId screenId) override;
     std::vector<sptr<ScreenInfo>> GetAllScreenInfos() override;
+    std::vector<DisplayId> GetAllDisplayIds() const;
     DMError MakeExpand(std::vector<ScreenId> screenId, std::vector<Point> startPoint) override;
     bool SetScreenActiveMode(ScreenId screenId, uint32_t modeId) override;
 
