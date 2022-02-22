@@ -1,78 +1,77 @@
-/*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 #include <cstdio>
-
-#include "snapshot_utils.h"
+#include <unistd.h>
+#include <refbase.h>
+#include "screen.h"
+#include "screen_manager.h"
+#include "display_manager.h"
+#include "window.h"
+#include "ui/rs_surface_node.h"
+#include "ui/rs_display_node.h"
 
 using namespace OHOS;
-using namespace OHOS::Media;
 using namespace OHOS::Rosen;
+
+namespace {
+    class MyScreenListener : public OHOS::Rosen::ScreenManager::IScreenListener {
+        void OnConnect(ScreenId) {
+        }
+        void OnDisconnect(ScreenId) {
+        }
+        void OnChange(const std::vector<ScreenId>& array, ScreenChangeEvent) {
+            auto screen = ScreenManager::GetInstance().GetScreenById(array[0]);
+            printf("ScreenManager::OnChange id=%u, w/h=%u/%u",
+                static_cast<uint32_t>(array[0]), screen->GetWidth(), screen->GetHeight());
+        }
+    };
+
+    class MyDisplayListener : public OHOS::Rosen::DisplayManager::IDisplayListener {
+    public:
+        void OnCreate(DisplayId) {
+        }
+        void OnDestroy(DisplayId) {
+        }
+        void OnChange(DisplayId id, DisplayChangeEvent event) {
+            auto display = DisplayManager::GetInstance().GetDisplayById(id);
+            printf("DisplayManager::OnChange id=%u, w/h=%d/%d",
+                static_cast<uint32_t>(id), display->GetWidth(), display->GetHeight());
+        }
+    };
+}
 
 int main(int argc, char *argv[])
 {
-    CmdArgments cmdArgments;
-    cmdArgments.fileName = "/data/snapshot_display_1.png";
-
-    if (!SnapShotUtils::ProcessArgs(argc, argv, cmdArgments)) {
-        return 0;
+    // 创建VirtualScreen
+    sptr<Surface> csurface = Surface::CreateSurfaceAsConsumer();
+    sptr<IBufferProducer> producer = csurface->GetProducer();
+    sptr<Surface> psurface = Surface::CreateSurfaceAsProducer(producer);
+    psurface = Surface::CreateSurfaceAsProducer(producer);
+    VirtualScreenOption option = {"virtualscreen", 480, 320, 1.0, psurface, 0, false};
+    ScreenId screenId = ScreenManager::GetInstance().CreateVirtualScreen(option);
+    if (screenId == SCREEN_ID_INVALID) {
+        printf("CreateVirtualScreen fail\n");
+        return -1;
     }
 
-    auto display = DisplayManager::GetInstance().GetDisplayById(cmdArgments.displayId);
+    // 组件扩展
+    std::vector<ExpandOption> options;
+    options.push_back({screenId, 0, 0});
+    options.push_back({0, 480, 320});
+    ScreenId groupId = ScreenManager::GetInstance().MakeExpand(options);
+    if (groupId == SCREEN_ID_INVALID) {
+        printf("MakeExpand fail\n");
+        return -1;
+    }
+
+    // 查找扩展屏的Display
+    sptr<Display> display = DisplayManager::GetInstance().GetDisplayByScreen(screenId);
     if (display == nullptr) {
-        printf("error: GetDisplayById %" PRIu64 " error!\n", cmdArgments.displayId);
+        printf("Cannot get display from virtualScreen\n");
         return -1;
     }
 
-    printf("process: display %" PRIu64 ": width %d, height %d\n",
-        cmdArgments.displayId, display->GetWidth(), display->GetHeight());
-
-    // get PixelMap from DisplayManager API
-    std::shared_ptr<OHOS::Media::PixelMap> pixelMap = nullptr;
-    if (!cmdArgments.isWidthSet && !cmdArgments.isHeightSet) {
-        pixelMap = DisplayManager::GetInstance().GetScreenshot(cmdArgments.displayId); // default width & height
-    } else {
-        if (!cmdArgments.isWidthSet) {
-            cmdArgments.width = display->GetWidth();
-            printf("process: reset to display's width %d\n", cmdArgments.width);
-        }
-        if (!cmdArgments.isHeightSet) {
-            cmdArgments.height = display->GetHeight();
-            printf("process: reset to display's height %d\n", cmdArgments.height);
-        }
-        if (!SnapShotUtils::CheckWidthAndHeightValid(cmdArgments)) {
-            printf("error: width %d, height %d invalid!\n", cmdArgments.width, cmdArgments.height);
-            return -1;
-        }
-        const Media::Rect rect = {0, 0, display->GetWidth(), display->GetHeight()};
-        const Media::Size size = {cmdArgments.width, cmdArgments.height};
-        constexpr int rotation = 0;
-        pixelMap = DisplayManager::GetInstance().GetScreenshot(cmdArgments.displayId, rect, size, rotation);
-    }
-
-    bool ret = false;
-    if (pixelMap != nullptr) {
-        ret = SnapShotUtils::WriteToPngWithPixelMap(cmdArgments.fileName, *pixelMap);
-    }
-    if (!ret) {
-        printf("\nerror: snapshot display %" PRIu64 ", write to %s as png failed!\n",
-            cmdArgments.displayId, cmdArgments.fileName.c_str());
-        return -1;
-    }
-
-    printf("\nsuccess: snapshot display %" PRIu64 ", write to %s as png, width %d, height %d\n",
-        cmdArgments.displayId, cmdArgments.fileName.c_str(), pixelMap->GetWidth(), pixelMap->GetHeight());
+    sptr<WindowOption> winop;
+    winop->SetDisplayId(display->GetId());
+    sptr<Window> win = Window::Create("widnow", winop);
+    ScreenManager::GetInstance().DestroyVirtualScreen(screenId);
     return 0;
 }
