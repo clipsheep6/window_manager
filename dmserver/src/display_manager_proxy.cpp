@@ -84,6 +84,38 @@ sptr<DisplayInfo> DisplayManagerProxy::GetDisplayInfoById(DisplayId displayId)
     return info;
 }
 
+sptr<DisplayInfo> DisplayManagerProxy::GetDisplayInfoByScreen(ScreenId screenId)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("GetDisplayInfoByScreen: remote is nullptr");
+        return nullptr;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("GetDisplayInfoByScreen: WriteInterfaceToken failed");
+        return nullptr;
+    }
+    if (!data.WriteUint64(screenId)) {
+        WLOGFW("GetDisplayInfoByScreen: WriteUint64 displayId failed");
+        return nullptr;
+    }
+    if (remote->SendRequest(TRANS_ID_GET_DISPLAY_BY_SCREEN, data, reply, option) != ERR_NONE) {
+        WLOGFW("GetDisplayInfoByScreen: SendRequest failed");
+        return nullptr;
+    }
+
+    sptr<DisplayInfo> info = reply.ReadParcelable<DisplayInfo>();
+    if (info == nullptr) {
+        WLOGFW("GetDisplayInfoByScreen SendRequest nullptr.");
+        return nullptr;
+    }
+    return info;
+}
+
 ScreenId DisplayManagerProxy::CreateVirtualScreen(VirtualScreenOption virtualOption)
 {
     sptr<IRemoteObject> remote = Remote();

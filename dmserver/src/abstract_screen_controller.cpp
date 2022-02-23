@@ -81,6 +81,7 @@ std::vector<ScreenId> AbstractScreenController::GetAllExpandOrMirrorScreenIds(
     for (ScreenId screenId : mirrorScreenIds) {
         auto iter = dmsScreenMap_.find(screenId);
         if (iter != dmsScreenMap_.end()) {
+            WLOGI("MakeExpand, GetAllExpandOrMirrorScreenIds id:%{public}" PRIu64"", screenId);
             screenIds.emplace_back(screenId);
         }
     }

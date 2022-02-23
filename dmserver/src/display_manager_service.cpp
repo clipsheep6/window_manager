@@ -99,6 +99,16 @@ sptr<DisplayInfo> DisplayManagerService::GetDisplayInfoById(DisplayId displayId)
     return display->ConvertToDisplayInfo();
 }
 
+sptr<DisplayInfo> DisplayManagerService::GetDisplayInfoByScreen(ScreenId screenId)
+{
+    sptr<AbstractDisplay> display = GetDisplayByScreen(screenId);
+    if (display == nullptr) {
+        WLOGFE("GetDisplayInfoByScreen: Get invalid display!");
+        return nullptr;
+    }
+    return display->ConvertToDisplayInfo();
+}
+
 sptr<AbstractDisplay> DisplayManagerService::GetAbstractDisplay(DisplayId displayId)
 {
     return abstractDisplayController_->GetAbstractDisplay(displayId);
@@ -330,6 +340,11 @@ sptr<AbstractDisplay> DisplayManagerService::GetDisplayByDisplayId(DisplayId dis
     return abstractDisplayController_->GetAbstractDisplay(displayId);
 }
 
+sptr<AbstractDisplay> DisplayManagerService::GetDisplayByScreen(ScreenId screenId) const
+{
+    return abstractDisplayController_->GetAbstractDisplayByScreen(screenId);
+}
+
 sptr<AbstractScreenController> DisplayManagerService::GetAbstractScreenController()
 {
     return abstractScreenController_;
@@ -481,6 +496,7 @@ ScreenId DisplayManagerService::MakeExpand(std::vector<ScreenId> expandScreenIds
     if (iter != allExpandScreenIds.end()) {
         allExpandScreenIds.erase(iter);
     }
+    WLOGI("MakeExpand, expandScreenIds size=%{public}u", expandScreenIds.size());
     for (ScreenId expandScreenId : allExpandScreenIds) {
         auto expandScreen = abstractScreenController_->GetAbstractScreen(expandScreenId);
         abstractDisplayController_->AddDisplayForExpandScreen(expandScreen);
