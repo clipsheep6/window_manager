@@ -223,7 +223,15 @@ void WindowLayoutPolicyCascade::UpdateLayoutRect(sptr<WindowNode>& node)
     CalcAndSetNodeHotZone(winRect, node);
     if (IsLayoutChanged(lastRect, winRect) || node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
         node->GetWindowToken()->UpdateWindowRect(winRect, node->GetWindowSizeChangeReason());
-        node->surfaceNode_->SetBounds(winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
+        if (node->GetWindowSizeChangeReason() == WindowSizeChangeReason::MAXIMIZE ||
+            node->GetWindowSizeChangeReason() == WindowSizeChangeReason::RECOVER) {
+            const RSAnimationTimingProtocol timingProtocol(400);
+            RSNode::Animate(timingProtocol, RSAnimationTimingCurve::EASE_OUT, [=]() {
+                node->surfaceNode_->SetBounds(winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
+            });
+        } else {
+            node->surfaceNode_->SetBounds(winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
+        }
     }
 }
 
