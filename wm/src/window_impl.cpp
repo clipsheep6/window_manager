@@ -582,7 +582,8 @@ WMError WindowImpl::Destroy()
 
     WLOGFI("[Client] Window %{public}d Destroy", property_->GetWindowId());
 
-    // FixMe: Remove "NotifyBeforeDestroy()" because of ACE bug, add when fixed
+    NotifyBeforeDestroy();
+
     WMError ret = SingletonContainer::Get<WindowAdapter>().DestroyWindow(property_->GetWindowId());
     windowMap_.erase(GetWindowName());
     if (subWindowMap_.count(property_->GetParentId()) > 0) { // remove from subWindowMap_
