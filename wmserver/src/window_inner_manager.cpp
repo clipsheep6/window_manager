@@ -71,14 +71,14 @@ void WindowInnerManager::DrawSurface(const sptr<Window>& window)
         isDividerImageLoaded_ = DecodeImageFile(splitIconPath_, dividerBitmap_);
     }
     if (!dividerBitmap_.isNull() && dividerBitmap_.width() != 0 && dividerBitmap_.height() != 0) {
-        DrawBitmap(rsSurface, width, height);
+        DrawBitmap(rsSurface, static_cast<int32_t>(width), static_cast<int32_t>(height));
     } else {
         DrawColor(rsSurface, width, height);
     }
     return;
 }
 
-void WindowInnerManager::DrawBitmap(std::shared_ptr<RSSurface>& rsSurface, uint32_t width, uint32_t height)
+void WindowInnerManager::DrawBitmap(std::shared_ptr<RSSurface>& rsSurface, int32_t width, int32_t height)
 {
     std::unique_ptr<RSSurfaceFrame> frame = rsSurface->RequestFrame(width, height);
     if (frame == nullptr) {

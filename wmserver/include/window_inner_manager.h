@@ -61,7 +61,7 @@ private:
     void DestroyThread(std::unique_ptr<WindowMessage> msg);
     void DrawSurface(const sptr<Window>& window);
     void DrawColor(std::shared_ptr<RSSurface>& rsSurface, uint32_t width, uint32_t height);
-    void DrawBitmap(std::shared_ptr<RSSurface>& rsSurface, uint32_t width, uint32_t height);
+    void DrawBitmap(std::shared_ptr<RSSurface>& rsSurface, int32_t width, int32_t height);
     sptr<Window> GetDividerWindow(DisplayId displayId) const;
     bool DecodeImageFile(const char* filename, SkBitmap& bitmap);
 
