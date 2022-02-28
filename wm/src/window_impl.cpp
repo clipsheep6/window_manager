@@ -832,22 +832,28 @@ void WindowImpl::UnregisterWindowChangeListener(sptr<IWindowChangeListener>& lis
         }), windowChangeListeners_.end());
 }
 
-void WindowImpl::RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener)
+WMError WindowImpl::RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener)
 {
+    if (listener == nullptr) {
+        WLOGFE("RegisterAvoidAreaChangeListener failed. listener is nullptr");
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
     if (avoidAreaChangeListener_ != nullptr) {
-        WLOGFE("RegisterAvoidAreaChangeListener failed. AvoidAreaChangeListene is not nullptr");
-        return;
+        WLOGFE("RegisterAvoidAreaChangeListener failed. AvoidAreaChangeListener is not nullptr");
+        return WMError::WM_ERROR_INVALID_PARAM;
     }
     avoidAreaChangeListener_ = listener;
+    return WMError::WM_OK;
 }
 
-void WindowImpl::UnregisterAvoidAreaChangeListener()
+WMError WindowImpl::UnregisterAvoidAreaChangeListener()
 {
     if (avoidAreaChangeListener_ == nullptr) {
         WLOGFE("UnregisterAvoidAreaChangeListener failed. AvoidAreaChangeListene is nullptr");
-        return;
+        return WMError::WM_ERROR_NULLPTR;
     }
     avoidAreaChangeListener_ = nullptr;
+    return WMError::WM_OK;
 }
 
 void WindowImpl::RegisterDragListener(sptr<IWindowDragListener>& listener)

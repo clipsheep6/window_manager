@@ -418,7 +418,7 @@ HWTEST_F(WindowImmersiveTest, OnAvoidAreaChangedTest01, Function | MediumTest | 
     // Add full screenwindow for RegisterAvoidAreaChangeListener
     const sptr<Window>& window = utils::CreateTestWindow(fullScreenAppinfo_);
     sptr<IAvoidAreaChangedListener> thisListener(testAvoidAreaChangedListener_);
-    window->RegisterAvoidAreaChangeListener(thisListener);
+    ASSERT_EQ(WMError::WM_OK, window->RegisterAvoidAreaChangeListener(thisListener));
     activeWindows_.push_back(window);
     ASSERT_EQ(WMError::WM_OK, window->Show());
 
@@ -461,7 +461,7 @@ HWTEST_F(WindowImmersiveTest, OnAvoidAreaChangedTest02, Function | MediumTest | 
     // Add full screenwindow for call UpdateAvoidChange
     const sptr<Window>& window = utils::CreateTestWindow(fullScreenAppinfo_);
     sptr<IAvoidAreaChangedListener> thisListener(testAvoidAreaChangedListener_);
-    window->RegisterAvoidAreaChangeListener(thisListener);
+    ASSERT_EQ(WMError::WM_OK, window->RegisterAvoidAreaChangeListener(thisListener));
     activeWindows_.push_back(window);
     ASSERT_EQ(WMError::WM_OK, window->Show());
 
@@ -487,6 +487,40 @@ HWTEST_F(WindowImmersiveTest, OnAvoidAreaChangedTest02, Function | MediumTest | 
     ASSERT_TRUE(utils::RectEqualToRect(EMPTY_RECT, avoidArea2[0])); // 0: left Rect
 
     window->UnregisterAvoidAreaChangeListener();
+}
+
+/**
+ * @tc.name: OnAvoidAreaChangedTest03
+ * @tc.desc: Regeister nullptr.Test OnAvoidAreaChanged listener
+ * @tc.type: FUNC
+ * @tc.require: AR000GGTVD
+ */
+HWTEST_F(WindowImmersiveTest, OnAvoidAreaChangedTest03, Function | MediumTest | Level3)
+{
+    // Add full screenwindow for call UpdateAvoidChange
+    const sptr<Window>& window = utils::CreateTestWindow(fullScreenAppinfo_);
+    sptr<IAvoidAreaChangedListener> thisListener(nullptr);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_PARAM, window->RegisterAvoidAreaChangeListener(thisListener));
+    activeWindows_.push_back(window);
+    ASSERT_EQ(WMError::WM_OK, window->Show());
+    ASSERT_EQ(WMError::WM_OK, window->Hide());
+}
+
+/**
+ * @tc.name: OnAvoidAreaChangedTest04
+ * @tc.desc: UnRegeister avoidListener before regeister.Test OnAvoidAreaChanged listener
+ * @tc.type: FUNC
+ * @tc.require: AR000GGTVD
+ */
+HWTEST_F(WindowImmersiveTest, OnAvoidAreaChangedTest04, Function | MediumTest | Level3)
+{
+    // Add full screenwindow for call UpdateAvoidChange
+    const sptr<Window>& window = utils::CreateTestWindow(fullScreenAppinfo_);
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->UnregisterAvoidAreaChangeListener());
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->UnregisterAvoidAreaChangeListener());
+    activeWindows_.push_back(window);
+    ASSERT_EQ(WMError::WM_OK, window->Show());
+    ASSERT_EQ(WMError::WM_OK, window->Hide());
 }
 }
 } // namespace Rosen
