@@ -59,6 +59,7 @@ public:
     virtual Rect GetRect() const override;
     virtual WindowType GetType() const override;
     virtual WindowMode GetMode() const override;
+    virtual DisplayId GetDisplayId() const override;
     virtual WindowBlurLevel GetWindowBackgroundBlur() const override;
     virtual float GetAlpha() const override;
     virtual bool GetShowState() const override;
