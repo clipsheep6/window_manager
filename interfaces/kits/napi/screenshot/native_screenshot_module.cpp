@@ -146,28 +146,36 @@ static void GetImageSize(napi_env env, std::unique_ptr<Param> &param, napi_value
     }
 }
 
-static void AsyncGetScreenshotByDisplayId(napi_env env, std::unique_ptr<Param> &param)
+static void AsyncGetScreenshotByDefaultOption(napi_env env, std::unique_ptr<Param> &param)
 {
-    GNAPI_LOG("Get Screenshot by displayId");
+    GNAPI_LOG("yqj Get Screenshot by displayId");
+    GNAPI_LOG("yqj 11 GetDefaultDisplayId: displayId: %{public}" PRIu64"", param->option.displayId);
     param->image = DisplayManager::GetInstance().GetScreenshot(param->option.displayId);
     if (param->image == nullptr) {
-        GNAPI_LOG("Get Screenshot failed!");
+        GNAPI_LOG("yqj 11 Get Screenshot failed!");
         param->wret = WMError::WM_ERROR_NULLPTR;
         return;
     }
+    GNAPI_LOG("yqj 11 Get Screenshot failed!");
     param->wret = WMError::WM_OK;
 }
 
-static void AsyncGetScreenshotByOption(napi_env env, std::unique_ptr<Param> &param)
+static void AsyncGetScreenshotByInputOption(napi_env env, std::unique_ptr<Param> &param)
 {
-    GNAPI_LOG("Get Screenshot by option");
+    GNAPI_LOG("yqj Get Screenshot by option");
+    GNAPI_LOG("yqj Get Screenshot by option: displayId: %{public}" PRIu64", rect: Height %{public}d, Width %{public}d, left %{public}d, top %{public}d, "
+        "size: Height %{public}d, Width %{public}d, rotation: %{public}d",
+        param->option.displayId,
+        param->option.rect.height, param->option.rect.width, param->option.rect.left, param->option.rect.top,
+        param->option.size.height, param->option.size.width, param->option.rotation);
     param->image = DisplayManager::GetInstance().GetScreenshot(param->option.displayId,
         param->option.rect, param->option.size, param->option.rotation);
     if (param->image == nullptr) {
-        GNAPI_LOG("Get Screenshot failed!");
+        GNAPI_LOG("yqj Get Screenshot failed!");
         param->wret = WMError::WM_ERROR_NULLPTR;
         return;
     }
+    GNAPI_LOG("yqj Get Screenshot success!");
     param->wret = WMError::WM_OK;
 }
 
@@ -188,32 +196,57 @@ napi_value Resolve(napi_env env, std::unique_ptr<Param> &param)
 napi_value MainFunc(napi_env env, napi_callback_info info)
 {
     GNAPI_LOG("%{public}s called", __PRETTY_FUNCTION__);
-    napi_value argv[1] = {0};
-    size_t argc = 1;
+    napi_value argv[2] = {0};
+    size_t argc = 2;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr));
     auto param = std::make_unique<Param>();
     param->option.displayId = DisplayManager::GetInstance().GetDefaultDisplayId();
+    GNAPI_LOG("yqj GetDefaultDisplayId: displayId: %{public}" PRIu64"", param->option.displayId);
     
+    napi_ref ref = nullptr;
+
+    GNAPI_LOG("yqj 111 argv[0]: %{public}d, argv[1]: %{public}d", GetType(env, argv[0]), GetType(env, argv[1]));
+
     if (argc == 0) {
-        GNAPI_LOG("argc == 0");
-        return CreatePromise<Param>(env, __PRETTY_FUNCTION__, AsyncGetScreenshotByDisplayId, Resolve, param);
+        GNAPI_LOG("yqj argc == 0");
+        return CreatePromise<Param>(env, __PRETTY_FUNCTION__,AsyncGetScreenshotByDefaultOption,
+            Resolve, ref, param);
     } else if (argc == 1) {
-        GNAPI_LOG("argc == 1");
+        GNAPI_LOG("yqj argc == 1");
         if (GetType(env, argv[0]) == napi_object) {
             GNAPI_LOG("argv[0]'s type is napi_object");
             GetDisplayId(env, param, argv[0]);
             GetRotation(env, param, argv[0]);
             GetScreenRect(env, param, argv[0]);
             GetImageSize(env, param, argv[0]);
-            return CreatePromise<Param>(env, __PRETTY_FUNCTION__, AsyncGetScreenshotByOption, Resolve, param);
+            return CreatePromise<Param>(env, __PRETTY_FUNCTION__, AsyncGetScreenshotByInputOption,
+                Resolve, ref, param);
         }
-        GNAPI_LOG("argv[0]'s type is not napi_object");
+        if (GetType(env, argv[0]) == napi_function) {
+            GNAPI_LOG("yqj argv[0]'s type is napi_function");
+            NAPI_CALL(env, napi_create_reference(env, argv[0], 1, &ref));
+            return CreatePromise<Param>(env, __PRETTY_FUNCTION__, AsyncGetScreenshotByDefaultOption,
+                Resolve, ref, param);
+        }
+        GNAPI_LOG("yqj argv[0]'s type is not napi_object or napi_function");
         return nullptr;
+    } else if (argc == 2) {
+        GNAPI_LOG("yqj argc == 2");
+        if (GetType(env, argv[0]) == napi_object && GetType(env, argv[1]) == napi_function) {
+            GNAPI_LOG("yqj argv[0]'s type is napi_object, argv[0]'s type is napi_function");
+            GetDisplayId(env, param, argv[0]);
+            GetRotation(env, param, argv[0]);
+            GetScreenRect(env, param, argv[0]);
+            GetImageSize(env, param, argv[0]);
+            NAPI_CALL(env, napi_create_reference(env, argv[1], 1, &ref));
+            return CreatePromise<Param>(env, __PRETTY_FUNCTION__, AsyncGetScreenshotByInputOption,
+                Resolve, ref, param);
+        }
     } else {
-        GNAPI_LOG("argc number missmatch");
+        GNAPI_LOG("yqj argc number missmatch");
         return nullptr;
     }
-    GNAPI_LOG("argc number missmatch");
+    GNAPI_LOG("yqj argc number missmatch");
     return nullptr;
 }
 } // namespace save
