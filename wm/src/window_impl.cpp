@@ -586,7 +586,8 @@ WMError WindowImpl::Destroy()
 
     WLOGFI("[Client] Window %{public}d Destroy", property_->GetWindowId());
 
-    // FixMe: Remove "NotifyBeforeDestroy()" because of ACE bug, add when fixed
+    NotifyBeforeDestroy();
+
     WMError ret = SingletonContainer::Get<WindowAdapter>().DestroyWindow(property_->GetWindowId());
     if (ret != WMError::WM_OK) {
         WLOGFE("destroy window failed with errCode:%{public}d", static_cast<int32_t>(ret));
