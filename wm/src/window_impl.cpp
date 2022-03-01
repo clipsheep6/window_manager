@@ -1008,25 +1008,27 @@ void WindowImpl::HandleDragEvent(int32_t posX, int32_t posY, int32_t pointId)
     int32_t diffX = posX - startPointPosX_;
     int32_t diffY = posY - startPointPosY_;
     Rect newRect = startPointRect_;
-    if (startPointPosX_ <= startPointRect_.posX_) {
+    if (startPointPosX_ <= startPointRect_.posX_ + static_cast<int32_t>(WINDOW_FRAME_WIDTH)) {
         if (diffX > static_cast<int32_t>(startPointRect_.width_)) {
             diffX = static_cast<int32_t>(startPointRect_.width_);
         }
         newRect.posX_ += diffX;
         newRect.width_ = static_cast<uint32_t>(static_cast<int32_t>(newRect.width_) - diffX);
-    } else if (startPointPosX_ >= startPointRect_.posX_ + static_cast<int32_t>(startPointRect_.width_)) {
+    } else if (startPointPosX_ >= startPointRect_.posX_ +
+                                  static_cast<int32_t>(startPointRect_.width_ - WINDOW_FRAME_WIDTH)) {
         if (diffX < 0 && (-diffX > static_cast<int32_t>(startPointRect_.width_))) {
             diffX = -(static_cast<int32_t>(startPointRect_.width_));
         }
         newRect.width_ = static_cast<uint32_t>(static_cast<int32_t>(newRect.width_) + diffX);
     }
-    if (startPointPosY_ <= startPointRect_.posY_) {
+    if (startPointPosY_ <= startPointRect_.posY_ + static_cast<int32_t>(WINDOW_FRAME_TOP_WIDTH)) {
         if (diffY > static_cast<int32_t>(startPointRect_.height_)) {
             diffY = static_cast<int32_t>(startPointRect_.height_);
         }
         newRect.posY_ += diffY;
         newRect.height_ = static_cast<uint32_t>(static_cast<int32_t>(newRect.height_) - diffY);
-    } else if (startPointPosY_ >= startPointRect_.posY_ + static_cast<int32_t>(startPointRect_.height_)) {
+    } else if (startPointPosY_ >= startPointRect_.posY_ +
+                                  static_cast<int32_t>(startPointRect_.height_ - WINDOW_FRAME_WIDTH)) {
         if (diffY < 0 && (-diffY > static_cast<int32_t>(startPointRect_.height_))) {
             diffY = -(static_cast<int32_t>(startPointRect_.height_));
         }
