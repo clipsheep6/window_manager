@@ -113,10 +113,10 @@ public:
 
     static bool IsPointInWindow(int32_t pointPosX, int32_t pointPosY, Rect pointRect)
     {
-        if ((pointPosX > pointRect.posX_) &&
-            (pointPosX < (pointRect.posX_ + static_cast<int32_t>(pointRect.width_))) &&
-            (pointPosY > pointRect.posY_) &&
-            (pointPosY < (pointRect.posY_ + static_cast<int32_t>(pointRect.height_)))) {
+        if ((pointPosX > pointRect.posX_ + static_cast<int32_t>(WINDOW_FRAME_WIDTH)) &&
+            (pointPosX < (pointRect.posX_ + static_cast<int32_t>(pointRect.width_ - WINDOW_FRAME_WIDTH))) &&
+            (pointPosY > pointRect.posY_ + static_cast<int32_t>(WINDOW_FRAME_TOP_WIDTH)) &&
+            (pointPosY < (pointRect.posY_ + static_cast<int32_t>(pointRect.height_ - WINDOW_FRAME_WIDTH)))) {
             return true;
         }
         return false;
