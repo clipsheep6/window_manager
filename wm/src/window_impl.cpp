@@ -264,23 +264,14 @@ WMError WindowImpl::SetWindowMode(WindowMode mode)
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (state_ == WindowState::STATE_CREATED || state_ == WindowState::STATE_HIDDEN) {
-        property_->SetWindowMode(mode);
+        UpdateMode(mode);
     } else if (state_ == WindowState::STATE_SHOWN) {
-        property_->SetWindowMode(mode);
         WMError ret = SingletonContainer::Get<WindowAdapter>().SetWindowMode(property_->GetWindowId(), mode);
-        if (ret == WMError::WM_OK) {
-            WLOGFD("notify window mode changed");
-            for (auto& listener : windowChangeListeners_) {
-                if (listener != nullptr) {
-                    listener->OnModeChange(mode);
-                }
-            }
-            if (uiContent_ != nullptr) {
-                uiContent_->UpdateWindowMode(mode);
-                WLOGFI("notify uiContent window mode change end");
-            }
+        if (ret != WMError::WM_OK) {
+            return ret;
         }
-        return ret;
+        // set client window mode if success.
+        UpdateMode(mode);
     }
     if (property_->GetWindowMode() != mode) {
         WLOGFE("set window mode filed! id: %{public}d", property_->GetWindowId());
@@ -744,9 +735,15 @@ WMError WindowImpl::Maximize()
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
-        SetFullScreen(true);
+        WMError ret = SingletonContainer::Get<WindowAdapter>().MaxmizeWindow(property_->GetWindowId());
+        if (ret == WMError::WM_OK) {
+            UpdateMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+        }
+        return ret;
+    } else {
+        WLOGFI("Maximize Window failed. The window is not main window");
+        return WMError::WM_ERROR_INVALID_PARAM;
     }
-    return WMError::WM_OK;
 }
 
 WMError WindowImpl::Minimize()
@@ -1287,6 +1284,8 @@ void WindowImpl::SetDefaultOption()
             property_->SetWindowFlags(0);
             break;
         }
+        case WindowType::WINDOW_TYPE_TOAST:
+        case WindowType::WINDOW_TYPE_SEARCHING_BAR:
         case WindowType::WINDOW_TYPE_VOLUME_OVERLAY: {
             property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
             break;

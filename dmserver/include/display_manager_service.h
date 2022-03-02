@@ -54,7 +54,7 @@ public:
     sptr<DisplayInfo> GetDisplayInfoById(DisplayId displayId) override;
     sptr<DisplayInfo> GetDisplayInfoByScreen(ScreenId screenId) override;
     bool SetOrientation(ScreenId screenId, Orientation orientation) override;
-    std::shared_ptr<Media::PixelMap> GetDispalySnapshot(DisplayId displayId) override;
+    std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId) override;
     ScreenId GetRSScreenId(DisplayId displayId) const;
 
     // colorspace, gamut
@@ -86,6 +86,7 @@ public:
     sptr<AbstractDisplay> GetDisplayByScreen(ScreenId screenId) const;
     ScreenId MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId) override;
     ScreenId MakeExpand(std::vector<ScreenId> screenId, std::vector<Point> startPoint) override;
+    void RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens) override;
     sptr<ScreenInfo> GetScreenInfoById(ScreenId screenId) override;
     sptr<ScreenGroupInfo> GetScreenGroupInfoById(ScreenId screenId) override;
     std::vector<sptr<ScreenInfo>> GetAllScreenInfos() override;
