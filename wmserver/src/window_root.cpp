@@ -154,6 +154,9 @@ WMError WindowRoot::MaxmizeWindow(uint32_t windowId)
         WLOGFE("could not find window");
         return WMError::WM_ERROR_NULLPTR;
     }
+    auto property = node->GetWindowProperty();
+    uint32_t updateFlags = property->GetWindowFlags() & (~(WindowFlag::WINDOW_FLAG_NEED_AVOID));
+    property->SetWindowFlags(updateFlags);
     auto container = GetOrCreateWindowNodeContainer(node->GetDisplayId());
     if (container == nullptr) {
         WLOGFE("add window failed, window container could not be found");
