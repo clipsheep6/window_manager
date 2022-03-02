@@ -65,6 +65,7 @@ void AvoidAreaControllerTest::SetUpTestCase()
     auto display = DisplayManager::GetInstance().GetDisplayById(0);
     if (display == nullptr) {
         WLOGFE("GetDefaultDisplay: failed!");
+        return;
     } else {
         WLOGFI("GetDefaultDisplay: id %{public}" PRIu64", w %{public}d, h %{public}d, fps %{public}u",
             display->GetId(), display->GetWidth(), display->GetHeight(), display->GetFreshRate());
