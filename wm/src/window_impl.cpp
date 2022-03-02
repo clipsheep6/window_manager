@@ -184,6 +184,11 @@ float WindowImpl::GetAlpha() const
     return property_->GetAlpha();
 }
 
+DisplayId WindowImpl::GetDisplayId() const
+{
+    return property_->GetDisplayId();
+}
+
 bool WindowImpl::GetShowState() const
 {
     return state_ == WindowState::STATE_SHOWN;
@@ -1255,6 +1260,7 @@ void WindowImpl::UpdateDisplayId(DisplayId from, DisplayId to)
             listener->OnDisplayMove(from, to);
         }
     }
+    property_->SetDisplayId(to);
 }
 
 void WindowImpl::SetDefaultOption()
