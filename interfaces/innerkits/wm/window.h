@@ -80,6 +80,7 @@ public:
     virtual Rect GetRect() const = 0;
     virtual WindowType GetType() const = 0;
     virtual WindowMode GetMode() const = 0;
+    virtual DisplayId GetDisplayId() const = 0;
     virtual WindowBlurLevel GetWindowBackgroundBlur() const = 0;
     virtual float GetAlpha() const = 0;
     virtual const std::string& GetWindowName() const = 0;
