@@ -104,8 +104,8 @@ public:
     virtual void RegisterWindowChangeListener(sptr<IWindowChangeListener>& listener) override;
     virtual void UnregisterLifeCycleListener(sptr<IWindowLifeCycle>& listener) override;
     virtual void UnregisterWindowChangeListener(sptr<IWindowChangeListener>& listener) override;
-    virtual void RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener) override;
-    virtual void UnregisterAvoidAreaChangeListener() override;
+    virtual WMError RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener) override;
+    virtual WMError UnregisterAvoidAreaChangeListener() override;
     virtual void RegisterDragListener(sptr<IWindowDragListener>& listener) override;
     virtual void UnregisterDragListener(sptr<IWindowDragListener>& listener) override;
     virtual void RegisterDisplayMoveListener(sptr<IDisplayMoveListener>& listener) override;
