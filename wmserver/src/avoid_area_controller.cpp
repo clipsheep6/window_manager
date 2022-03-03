@@ -14,6 +14,7 @@
  */
 
 #include "avoid_area_controller.h"
+#include "display_manager_service_inner.h"
 #include "window_helper.h"
 #include "window_manager_hilog.h"
 #include "wm_trace.h"
@@ -41,94 +42,72 @@ bool AvoidAreaController::IsAvoidAreaNode(const sptr<WindowNode>& node) const
     return true;
 }
 
-static AvoidPos GetAvoidPosType(const Rect& rect)
+AvoidPos AvoidAreaController::GetAvoidPosType(const Rect& rect) const
 {
-    if (rect.width_ >=  rect.height_) {
+    auto display = DisplayManagerServiceInner::GetInstance().GetDisplayById(displayId_);
+    if (display == nullptr) {
+        WLOGFE("GetAvoidPosType fail. Get display fail. displayId:%{public}" PRIu64"", displayId_);
+        return AvoidPos::AVOID_POS_UNKNOWN;  // Use DefaultVPR 1.0
+    }
+    uint32_t displayWidth = display->GetWidth();
+    uint32_t displayHeight = display->GetHeight();
+
+    if (rect.width_ ==  displayWidth) {
         if (rect.posY_ == 0) {
             return AvoidPos::AVOID_POS_TOP;
         } else {
             return AvoidPos::AVOID_POS_BOTTOM;
             }
-    } else {
+    } else if (rect.height_ ==  displayHeight){
         if (rect.posX_ == 0) {
             return AvoidPos::AVOID_POS_LEFT;
         } else {
             return AvoidPos::AVOID_POS_RIGHT;
         }
     }
+
     return AvoidPos::AVOID_POS_UNKNOWN;
 }
 
-WMError AvoidAreaController::AddAvoidAreaNode(const sptr<WindowNode>& node)
+WMError AvoidAreaController::AvoidControl(const sptr<WindowNode>& node, AvoidControlType type)
 {
     WM_FUNCTION_TRACE();
     if (!IsAvoidAreaNode(node)) {
-        WLOGFE("AddAvoidAreaNode check param Failed.");
+        WLOGFE("AvoidControl check param Failed. Type: %{public}u", type);
         return WMError::WM_ERROR_INVALID_PARAM;
     }
 
     uint32_t windowId = node->GetWindowId();
     auto iter = avoidNodes_.find(windowId);
-    if (iter != avoidNodes_.end()) {
-        WLOGFE("windowId: %{public}d is added.AddAvoidAreaNode Failed", windowId);
+
+    // do not add a exist node(the same id)
+    if (type == AvoidControlType::AVOID_NODE_ADD && iter != avoidNodes_.end()) {
+        WLOGFE("WinId:%{public}d is added. AvoidControl Add Failed. Type: %{public}u", windowId, type);
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    // do not update or removew a unexist node
+    if (type != AvoidControlType::AVOID_NODE_ADD && iter == avoidNodes_.end()) {
+        WLOGFE("WinId:%{public}d not exist. AvoidControl Update or Remove Failed. Type: %{public}u", windowId, type);
         return WMError::WM_ERROR_INVALID_PARAM;
     }
 
-    // add
-    avoidNodes_[windowId] = node;
-    WLOGFI("AvoidArea, WindowId:%{public}d add. And the windowType is %{public}d", windowId, node->GetWindowType());
-
-    // get all Area info and notify windowcontainer
-    std::vector<Rect> avoidAreas = GetAvoidArea();
-    DumpAvoidArea(avoidAreas);
-    UseCallbackNotifyAvoidAreaChanged(avoidAreas);
-    return WMError::WM_OK;
-}
-
-WMError AvoidAreaController::RemoveAvoidAreaNode(const sptr<WindowNode>& node)
-{
-    WM_FUNCTION_TRACE();
-    if (!IsAvoidAreaNode(node)) {
-        WLOGFE("RemoveAvoidAreaNode check param Failed.");
-        return WMError::WM_ERROR_INVALID_PARAM;
+    switch (type) {
+        case AvoidControlType::AVOID_NODE_ADD:
+            avoidNodes_[windowId] = node;
+            WLOGFI("WinId:%{public}d add. And the windowType is %{public}d", windowId, node->GetWindowType());
+            break;
+        case AvoidControlType::AVOID_NODE_UPDATE:
+            avoidNodes_[windowId] = node;
+            WLOGFI("WinId:%{public}d update. And the windowType is %{public}d", windowId, node->GetWindowType());
+            break;
+        case AvoidControlType::AVOID_NODE_REMOVE:
+            avoidNodes_.erase(iter);
+            WLOGFI("WinId:%{public}d remove. And the windowType is %{public}d", windowId, node->GetWindowType());
+            break;
+        default:
+            WLOGFE("invalid AvoidControlType: %{public}u", type);
+            return WMError::WM_ERROR_INVALID_PARAM;
     }
-
-    uint32_t windowId = node->GetWindowId();
-    auto iter = avoidNodes_.find(windowId);
-    if (iter == avoidNodes_.end()) {
-        WLOGFE("windowId: %{public}d not exist. RemoveAvoidAreaNode Failed.", windowId);
-        return WMError::WM_ERROR_INVALID_PARAM;
-    }
-
-    // remove
-    avoidNodes_.erase(iter);
-    WLOGFI("AvoidArea, WindowId:%{public}d remove. And the windowType is %{public}d", windowId, node->GetWindowType());
-
-    // get all Area info and notify windowcontainer
-    std::vector<Rect> avoidAreas = GetAvoidArea();
-    DumpAvoidArea(avoidAreas);
-    UseCallbackNotifyAvoidAreaChanged(avoidAreas);
-    return WMError::WM_OK;
-}
-
-WMError AvoidAreaController::UpdateAvoidAreaNode(const sptr<WindowNode>& node)
-{
-    WM_FUNCTION_TRACE();
-    if (!IsAvoidAreaNode(node)) {
-        WLOGFE("UpdateAvoidAreaNode check param Failed.");
-        return WMError::WM_ERROR_INVALID_PARAM;
-    }
-
-    uint32_t windowId = node->GetWindowId();
-    auto iter = avoidNodes_.find(windowId);
-    if (iter == avoidNodes_.end()) {
-        WLOGFE("windowId: %{public}d not exist. UpdateAvoidAreaNode Failed.", windowId);
-        return WMError::WM_ERROR_INVALID_PARAM;
-    }
-
-    // update
-    avoidNodes_[windowId] = node;
-    WLOGFI("AvoidArea, WindowId:%{public}d Update. And the windowType is %{public}d", windowId, node->GetWindowType());
 
     // get all Area info and notify windowcontainer
     std::vector<Rect> avoidAreas = GetAvoidArea();

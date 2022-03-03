@@ -120,8 +120,8 @@ public:
     virtual void RegisterWindowChangeListener(sptr<IWindowChangeListener>& listener) = 0;
     virtual void UnregisterLifeCycleListener(sptr<IWindowLifeCycle>& listener) = 0;
     virtual void UnregisterWindowChangeListener(sptr<IWindowChangeListener>& listener) = 0;
-    virtual void RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener) = 0;
-    virtual void UnregisterAvoidAreaChangeListener() = 0;
+    virtual WMError RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener) = 0;
+    virtual WMError UnregisterAvoidAreaChangeListener() = 0;
     virtual void RegisterDragListener(sptr<IWindowDragListener>& listener) = 0;
     virtual void UnregisterDragListener(sptr<IWindowDragListener>& listener) = 0;
     virtual void RegisterDisplayMoveListener(sptr<IDisplayMoveListener>& listener) = 0;

@@ -14,7 +14,7 @@
  */
 
 #include "window_layout_policy.h"
-#include "display_manager.h"
+#include "display_manager_service_inner.h"
 #include "window_helper.h"
 #include "window_manager_hilog.h"
 #include "wm_common_inner.h"
@@ -354,7 +354,7 @@ void WindowLayoutPolicy::Reset()
 
 float WindowLayoutPolicy::GetVirtualPixelRatio() const
 {
-    auto display = DisplayManager::GetInstance().GetDisplayById(screenId_);
+    auto display = DisplayManagerServiceInner::GetInstance().GetDisplayById(screenId_);
     if (display == nullptr) {
         WLOGFE("GetVirtualPixel fail. Get display fail. displayId:%{public}" PRIu64", use Default vpr:1.0", screenId_);
         return 1.0;  // Use DefaultVPR 1.0

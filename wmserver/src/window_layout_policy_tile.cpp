@@ -58,6 +58,10 @@ void WindowLayoutPolicyTile::InitTileWindowRects()
 {
     constexpr uint32_t edgeInterval = 48;
     constexpr uint32_t midInterval = 24;
+    float virtualPixelRatio = GetVirtualPixelRatio();
+    uint32_t edgeIntervalVp = static_cast<uint32_t>(edgeInterval * virtualPixelRatio);
+    uint32_t midIntervalVp = static_cast<uint32_t>(midInterval * virtualPixelRatio);
+
     constexpr float ratio = 0.75;  // 0.75: default height/width ratio
     constexpr float edgeRatio = 0.125;
     constexpr int half = 2;
@@ -67,17 +71,17 @@ void WindowLayoutPolicyTile::InitTileWindowRects()
     uint32_t h = limitRect_.height_ * ratio;
     singleRect_ = { x, y, w, h };
     WLOGFI("singleRect_: %{public}d %{public}d %{public}d %{public}d", x, y, w, h);
-    x = edgeInterval;
-    w = (limitRect_.width_ - edgeInterval * half - midInterval) / half;
+    x = edgeIntervalVp;
+    w = (limitRect_.width_ - edgeIntervalVp * half - midIntervalVp) / half;
     // calc doubleRect
     doubleRects_[0] = {x, y, w, h};
-    doubleRects_[1] = {x + w + midInterval, y, w, h};
+    doubleRects_[1] = {x + w + midIntervalVp, y, w, h};
     WLOGFI("doubleRects_: %{public}d %{public}d %{public}d %{public}d", x, y, w, h);
     // calc tripleRect
-    w = (limitRect_.width_ - edgeInterval * half - midInterval * half) / MAX_WIN_NUM_HORIZONTAL;
+    w = (limitRect_.width_ - edgeIntervalVp * half - midIntervalVp * half) / MAX_WIN_NUM_HORIZONTAL;
     tripleRects_[0] = {x, y, w, h};
-    tripleRects_[1] = {x + w + midInterval, y, w, h};
-    tripleRects_[2] = {x + w * half + midInterval * half, y, w, h}; // 2 is third index
+    tripleRects_[1] = {x + w + midIntervalVp, y, w, h};
+    tripleRects_[2] = {x + w * half + midIntervalVp * half, y, w, h}; // 2 is third index
     WLOGFI("tripleRects_: %{public}d %{public}d %{public}d %{public}d", x, y, w, h);
 }
 
