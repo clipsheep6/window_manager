@@ -553,7 +553,6 @@ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<
         return ret;
     }
     context_ = context;
-    // FIX ME: use context_
     abilityContext_ = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(context);
     if (abilityContext_ != nullptr) {
         ret = SingletonContainer::Get<WindowAdapter>().SaveAbilityToken(abilityContext_->GetToken(), windowId);
@@ -582,7 +581,7 @@ WMError WindowImpl::Destroy()
 
     WLOGFI("[Client] Window %{public}d Destroy", property_->GetWindowId());
 
-    NotifyBeforeDestroy();
+    NotifyBeforeDestroy(GetWindowName());
     if (subWindowMap_.count(GetWindowId()) > 0) {
         for (auto& subWindow : subWindowMap_.at(GetWindowId())) {
             NotifyBeforeSubWindowDestroy(subWindow);
@@ -907,6 +906,11 @@ void WindowImpl::UnregisterDisplayMoveListener(sptr<IDisplayMoveListener>& liste
     displayMoveListeners_.erase(iter);
 }
 
+void WindowImpl::RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func)
+{
+    notifyNativefunc_ = std::move(func);
+}
+
 void WindowImpl::UpdateRect(const struct Rect& rect, WindowSizeChangeReason reason)
 {
     auto display = DisplayManager::GetInstance().GetDisplayById(property_->GetDisplayId());
@@ -964,7 +968,6 @@ void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
             WLOGI("ConsumeKeyEvent keyEvent is consumed");
             return;
         }
-        // FIX ME: use context_
         if (abilityContext_ != nullptr) {
             WLOGI("ConsumeKeyEvent ability TerminateSelf");
             abilityContext_->TerminateSelf();

@@ -133,7 +133,7 @@ void JsWindowStage::LifeCycleCallBack(WindowStageEventType type)
 NativeValue* JsWindowStage::OnSetUIContent(NativeEngine& engine, NativeCallbackInfo& info)
 {
     WLOGFI("JsWindowStage::OnSetUIContent is called");
-    if (info.argc < 2) { // 2: minimum param nums
+    if (info.argc < 2) { // 2: minimum param num
         WLOGFE("JsWindowStage::OnSetUIContent Not enough params");
         return engine.CreateUndefined();
     }
@@ -165,15 +165,11 @@ NativeValue* JsWindowStage::OnSetUIContent(NativeEngine& engine, NativeCallbackI
 NativeValue* JsWindowStage::OnGetMainWindow(NativeEngine& engine, NativeCallbackInfo& info)
 {
     WLOGFI("JsWindowStage::OnGetMainWindow is called");
-    WMError errCode = WMError::WM_OK;
-    if (windowScene_ == nullptr) {
-        WLOGFE("JsWindowStage::OnGetMainWindow windowScene_ is nullptr");
-        errCode = WMError::WM_ERROR_INVALID_PARAM;
-    }
     AsyncTask::CompleteCallback complete =
         [=](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            if (errCode != WMError::WM_OK) {
-                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode), "Invalidate params."));
+            if (windowScene_ == nullptr) {
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(WMError::WM_ERROR_NULLPTR)));
+                WLOGFE("JsWindowStage windowScene_ is nullptr!");
                 return;
             }
             auto window = windowScene_->GetMainWindow();
@@ -186,8 +182,7 @@ NativeValue* JsWindowStage::OnGetMainWindow(NativeEngine& engine, NativeCallback
                     "JsWindowStage::OnGetMainWindow failed."));
             }
         };
-    NativeValue* callback = (info.argc == 0) ? nullptr :
-        (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
+    NativeValue* callback = (info.argv[0]->TypeOf() == NATIVE_FUNCTION) ? info.argv[0] : nullptr;
     NativeValue* result = nullptr;
     AsyncTask::Schedule(
         engine, CreateAsyncTaskWithLastParam(engine, callback, nullptr, std::move(complete), &result));
@@ -199,11 +194,6 @@ NativeValue* JsWindowStage::OnEvent(NativeEngine& engine, NativeCallbackInfo& in
     WLOGFI("JsWindowStage::OnEvent is called");
     if (windowScene_ == nullptr) {
         WLOGFE("JsWindowStage::OnEvent windowScene_ is nullptr");
-        return engine.CreateUndefined();
-    }
-
-    if (info.argc < 2) { // 2: minimum param nums
-        WLOGFE("JsWindowStage::OnEvent wrong input params");
         return engine.CreateUndefined();
     }
 
@@ -252,10 +242,6 @@ NativeValue* JsWindowStage::OffEvent(NativeEngine& engine, NativeCallbackInfo& i
         WLOGFE("JsWindowStage::OffEvent windowScene_ is nullptr");
         return engine.CreateUndefined();
     }
-    if (info.argc < 1 || info.argc > 2) { // 1: minimum param nums, 2: maximum param nums
-        WLOGFE("JsWindowStage::OffEvent wrong input params");
-        return engine.CreateUndefined();
-    }
 
     // Parse info->argv[0] as string
     std::string eventString;
@@ -292,10 +278,6 @@ NativeValue* JsWindowStage::OnLoadContent(NativeEngine& engine, NativeCallbackIn
 {
     WLOGFI("JsWindowStage::OnLoadContent is called");
     WMError errCode = WMError::WM_OK;
-    if (info.argc <= 0 || windowScene_ == nullptr) {
-        WLOGFE("JsWindowStage param not match or windowScene_ is nullptr");
-        errCode = WMError::WM_ERROR_INVALID_PARAM;
-    }
     std::string contextUrl;
     if (!ConvertFromJsValue(engine, info.argv[0], contextUrl)) {
         WLOGFE("Failed to convert parameter to context url");
@@ -303,8 +285,8 @@ NativeValue* JsWindowStage::OnLoadContent(NativeEngine& engine, NativeCallbackIn
     }
     NativeValue* storage = nullptr;
     NativeValue* callBack = nullptr;
-    NativeValue* value1 = info.argv[INDEX_ONE];
-    NativeValue* value2 = info.argv[INDEX_TWO];
+    NativeValue* value1 = info.argv[1];
+    NativeValue* value2 = info.argv[2]; // 2: param index
     if (value1->TypeOf() == NATIVE_FUNCTION) {
         callBack = value1;
     } else if (value1->TypeOf() == NATIVE_OBJECT) {
@@ -317,8 +299,9 @@ NativeValue* JsWindowStage::OnLoadContent(NativeEngine& engine, NativeCallbackIn
         std::shared_ptr<NativeReference>(engine.CreateReference(storage, 1));
     AsyncTask::CompleteCallback complete =
         [=](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            if (errCode != WMError::WM_OK) {
-                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode), "Invalidate params."));
+            if (windowScene_ == nullptr) {
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(WMError::WM_ERROR_NULLPTR)));
+                WLOGFE("JsWindowStage windowScene_ is nullptr!");
                 return;
             }
             auto win = windowScene_->GetMainWindow();
@@ -344,15 +327,11 @@ NativeValue* JsWindowStage::OnLoadContent(NativeEngine& engine, NativeCallbackIn
 NativeValue* JsWindowStage::OnGetWindowMode(NativeEngine& engine, NativeCallbackInfo& info)
 {
     WLOGFI("JsWindowStage::OnGetWindowMode is called");
-    WMError errCode = WMError::WM_OK;
-    if (info.argc > ARGC_ONE || windowScene_ == nullptr) {
-        WLOGFE("JsWindowStage::OnGetWindowMode params not match or windowScene is nullptr!");
-        errCode = WMError::WM_ERROR_INVALID_PARAM;
-    }
     AsyncTask::CompleteCallback complete =
         [=](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            if (errCode != WMError::WM_OK) {
-                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode), "Invalidate params."));
+            if (windowScene_ == nullptr) {
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(WMError::WM_ERROR_NULLPTR)));
+                WLOGFE("JsWindowStage windowScene_ is nullptr!");
                 return;
             }
             auto window = windowScene_->GetMainWindow();
@@ -371,8 +350,7 @@ NativeValue* JsWindowStage::OnGetWindowMode(NativeEngine& engine, NativeCallback
                 WLOGFI("JsWindowStage OnGetWindowMode success, but not in apimode");
             }
         };
-    NativeValue* callback = (info.argc == 0) ? nullptr :
-        (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
+    NativeValue* callback = (info.argv[0]->TypeOf() == NATIVE_FUNCTION) ? info.argv[0] : nullptr;
     NativeValue* result = nullptr;
     AsyncTask::Schedule(
         engine, CreateAsyncTaskWithLastParam(engine, callback, nullptr, std::move(complete), &result));
@@ -383,10 +361,6 @@ NativeValue* JsWindowStage::OnCreateSubWindow(NativeEngine& engine, NativeCallba
 {
     WLOGFI("JsWindowStage::OnCreateSubWindow is called");
     WMError errCode = WMError::WM_OK;
-    if (info.argc < ARGC_ONE || windowScene_ == nullptr) {
-        WLOGFE("JsWindowStage::OnCreateSubWindow params less than 1!");
-        errCode = WMError::WM_ERROR_INVALID_PARAM;
-    }
     std::string windowName;
     if (!ConvertFromJsValue(engine, info.argv[0], windowName)) {
         WLOGFE("Failed to convert parameter to windowName");
@@ -394,8 +368,9 @@ NativeValue* JsWindowStage::OnCreateSubWindow(NativeEngine& engine, NativeCallba
     }
     AsyncTask::CompleteCallback complete =
         [=](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            if (errCode != WMError::WM_OK) {
-                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode), "Invalidate params."));
+            if (windowScene_ == nullptr || errCode != WMError::WM_OK) {
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode)));
+                WLOGFE("JsWindowStage windowScene_ is nullptr or invaliad params!");
                 return;
             }
             sptr<Rosen::WindowOption> windowOption = new Rosen::WindowOption();
@@ -411,8 +386,7 @@ NativeValue* JsWindowStage::OnCreateSubWindow(NativeEngine& engine, NativeCallba
             task.Resolve(engine, CreateJsWindowObject(engine, window));
             WLOGFI("JsWindowStage OnCreateSubWindow success");
         };
-    NativeValue* callback = (info.argc <= 1) ? nullptr :
-        (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
+    NativeValue* callback = (info.argv[1]->TypeOf() == NATIVE_FUNCTION) ? info.argv[1] : nullptr;
     NativeValue* result = nullptr;
     AsyncTask::Schedule(
         engine, CreateAsyncTaskWithLastParam(engine, callback, nullptr, std::move(complete), &result));
@@ -439,23 +413,18 @@ NativeValue* JsWindowStage::CreateJsSubWindowArrayObject(NativeEngine& engine,
 NativeValue* JsWindowStage::OnGetSubWindow(NativeEngine& engine, NativeCallbackInfo& info)
 {
     WLOGFI("JsWindowStage::OnGetSubWindow is called");
-    WMError errCode = WMError::WM_OK;
-    if (info.argc > 1 || windowScene_ == nullptr) {
-        WLOGFE("JsWindowStage::OnGetSubWindow params not match or windowScene is nullptr!");
-        errCode = WMError::WM_ERROR_INVALID_PARAM;
-    }
     AsyncTask::CompleteCallback complete =
         [=](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            if (errCode != WMError::WM_OK) {
-                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode), "Invalidate params."));
+            if (windowScene_ == nullptr) {
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(WMError::WM_ERROR_NULLPTR)));
+                WLOGFE("JsWindowStage windowScene_ is nullptr!");
                 return;
             }
             std::vector<sptr<Window>> subWindowVec = windowScene_->GetSubWindow();
             task.Resolve(engine, CreateJsSubWindowArrayObject(engine, subWindowVec));
             WLOGFI("JsWindowStage OnGetSubWindow success");
         };
-    NativeValue* callback = (info.argc == 0) ? nullptr :
-        (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
+    NativeValue* callback = (info.argv[0]->TypeOf() == NATIVE_FUNCTION) ? info.argv[0] : nullptr;
     NativeValue* result = nullptr;
     AsyncTask::Schedule(
         engine, CreateAsyncTaskWithLastParam(engine, callback, nullptr, std::move(complete), &result));

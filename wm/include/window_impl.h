@@ -110,7 +110,7 @@ public:
     virtual void UnregisterDragListener(const sptr<IWindowDragListener>& listener) override;
     virtual void RegisterDisplayMoveListener(sptr<IDisplayMoveListener>& listener) override;
     virtual void UnregisterDisplayMoveListener(sptr<IDisplayMoveListener>& listener) override;
-
+    virtual void RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func) override;
     void UpdateRect(const struct Rect& rect, WindowSizeChangeReason reason);
     void UpdateMode(WindowMode mode);
     virtual void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent) override;
@@ -153,11 +153,12 @@ private:
     {
         CALL_LIFECYCLE_LISTENER(AfterUnfocused, UnFocus);
     }
-    inline void NotifyBeforeDestroy() const
+    inline void NotifyBeforeDestroy(std::string windowName) const
     {
         if (uiContent_ != nullptr) {
             uiContent_->Destroy();
         }
+        notifyNativefunc_(windowName);
     }
     inline void NotifyBeforeSubWindowDestroy(sptr<Window>& window) const
     {
@@ -165,6 +166,7 @@ private:
         if (uiContent != nullptr) {
             uiContent->Destroy();
         }
+        notifyNativefunc_(window->GetWindowName());
     }
     void SetDefaultOption(); // for api7
     bool IsWindowValid() const;
@@ -200,6 +202,7 @@ private:
     sptr<IAvoidAreaChangedListener> avoidAreaChangeListener_;
     std::vector<sptr<IWindowDragListener>> windowDragListeners_;
     std::vector<sptr<IDisplayMoveListener>> displayMoveListeners_;
+    NotifyNativeWinDestroyFunc notifyNativefunc_;
     std::shared_ptr<RSSurfaceNode> surfaceNode_;
     std::string name_;
     std::unique_ptr<Ace::UIContent> uiContent_;
