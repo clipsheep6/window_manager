@@ -188,7 +188,7 @@ namespace {
  * @tc.desc: drag left
  * @tc.type: FUNC
  */
-HWTEST_F(WindowMoveDragTest, DragWindow01, Function | MediumTest | Level3)
+HWTEST_F(WindowMoveDragTest, DragWindow01, TestSize.Level0)
 {
     ASSERT_EQ(WMError::WM_OK, window_->Show());
     usleep(WAIT_SYANC_MS);
@@ -206,7 +206,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow01, Function | MediumTest | Level3)
  * @tc.desc: drag left top
  * @tc.type: FUNC
  */
-HWTEST_F(WindowMoveDragTest, DragWindow02, Function | MediumTest | Level3)
+HWTEST_F(WindowMoveDragTest, DragWindow02, TestSize.Level0)
 {
     ASSERT_EQ(WMError::WM_OK, window_->Show());
     usleep(WAIT_SYANC_MS);
@@ -225,7 +225,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow02, Function | MediumTest | Level3)
  * @tc.desc: drag left bottom
  * @tc.type: FUNC
  */
-HWTEST_F(WindowMoveDragTest, DragWindow03, Function | MediumTest | Level3)
+HWTEST_F(WindowMoveDragTest, DragWindow03, TestSize.Level0)
 {
     ASSERT_EQ(WMError::WM_OK, window_->Show());
     usleep(WAIT_SYANC_MS);
@@ -246,7 +246,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow03, Function | MediumTest | Level3)
  * @tc.desc: drag right
  * @tc.type: FUNC
  */
-HWTEST_F(WindowMoveDragTest, DragWindow04, Function | MediumTest | Level3)
+HWTEST_F(WindowMoveDragTest, DragWindow04, TestSize.Level0)
 {
     ASSERT_EQ(WMError::WM_OK, window_->Show());
     usleep(WAIT_SYANC_MS);
@@ -266,7 +266,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow04, Function | MediumTest | Level3)
  * @tc.desc: drag right top
  * @tc.type: FUNC
  */
-HWTEST_F(WindowMoveDragTest, DragWindow05, Function | MediumTest | Level3)
+HWTEST_F(WindowMoveDragTest, DragWindow05, TestSize.Level0)
 {
     ASSERT_EQ(WMError::WM_OK, window_->Show());
     usleep(WAIT_SYANC_MS);
@@ -286,7 +286,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow05, Function | MediumTest | Level3)
  * @tc.desc: drag right bottom
  * @tc.type: FUNC
  */
-HWTEST_F(WindowMoveDragTest, DragWindow06, Function | MediumTest | Level3)
+HWTEST_F(WindowMoveDragTest, DragWindow06, TestSize.Level0)
 {
     ASSERT_EQ(WMError::WM_OK, window_->Show());
     usleep(WAIT_SYANC_MS);
@@ -309,7 +309,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow06, Function | MediumTest | Level3)
  * @tc.desc: drag top
  * @tc.type: FUNC
  */
-HWTEST_F(WindowMoveDragTest, DragWindow07, Function | MediumTest | Level3)
+HWTEST_F(WindowMoveDragTest, DragWindow07, TestSize.Level0)
 {
     ASSERT_EQ(WMError::WM_OK, window_->Show());
     usleep(WAIT_SYANC_MS);
@@ -328,7 +328,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow07, Function | MediumTest | Level3)
  * @tc.desc: drag bottom
  * @tc.type: FUNC
  */
-HWTEST_F(WindowMoveDragTest, DragWindow08, Function | MediumTest | Level3)
+HWTEST_F(WindowMoveDragTest, DragWindow08, TestSize.Level0)
 {
     ASSERT_EQ(WMError::WM_OK, window_->Show());
     usleep(WAIT_SYANC_MS);
@@ -348,7 +348,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow08, Function | MediumTest | Level3)
  * @tc.desc: point in decorZone, uiContent is nullptr
  * @tc.type: FUNC
  */
-HWTEST_F(WindowMoveDragTest, DragWindow09, Function | MediumTest | Level3)
+HWTEST_F(WindowMoveDragTest, DragWindow09, TestSize.Level0)
 {
     ASSERT_EQ(WMError::WM_OK, window_->Show());
     usleep(WAIT_SYANC_MS);
@@ -367,7 +367,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow09, Function | MediumTest | Level3)
  * @tc.desc: point in decorZone, start move
  * @tc.type: FUNC
  */
-HWTEST_F(WindowMoveDragTest, DragWindow10, Function | MediumTest | Level3)
+HWTEST_F(WindowMoveDragTest, DragWindow10, TestSize.Level0)
 {
     ASSERT_EQ(WMError::WM_OK, window_->Show());
     usleep(WAIT_SYANC_MS);
@@ -388,7 +388,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow10, Function | MediumTest | Level3)
  * @tc.desc: drag inner
  * @tc.type: FUNC
  */
-HWTEST_F(WindowMoveDragTest, DragWindow11, Function | MediumTest | Level3)
+HWTEST_F(WindowMoveDragTest, DragWindow11, TestSize.Level0)
 {
     ASSERT_EQ(WMError::WM_OK, window_->Show());
     usleep(WAIT_SYANC_MS);
