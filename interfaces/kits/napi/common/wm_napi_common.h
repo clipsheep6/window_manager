@@ -16,6 +16,7 @@
 #ifndef INTERFACES_KITS_NAPI_GRAPHIC_COMMON_COMMON_H
 #define INTERFACES_KITS_NAPI_GRAPHIC_COMMON_COMMON_H
 
+#include <cstring>
 #include <memory>
 #include <string>
 
@@ -56,11 +57,12 @@ napi_status SetMemberInt32(napi_env env, napi_value result, const char *key, int
 napi_status SetMemberUint32(napi_env env, napi_value result, const char *key, uint32_t value);
 napi_status SetMemberUndefined(napi_env env, napi_value result, const char *key);
 
+bool CheckCallingPermission(std::string permission);
 void ProcessPromise(napi_env env, Rosen::WMError wret, napi_deferred deferred, napi_value result[]);
 void ProcessCallback(napi_env env, napi_ref ref, napi_value result[]);
 
 template<typename ParamT>
-napi_value CreatePromise(napi_env env,
+napi_value AsyncProcess(napi_env env,
                          std::string funcname,
                          void(*async)(napi_env env, std::unique_ptr<ParamT>& param),
                          napi_value(*resolve)(napi_env env, std::unique_ptr<ParamT>& param),
@@ -105,15 +107,32 @@ napi_value CreatePromise(napi_env env,
     auto completeFunc = [](napi_env env, napi_status status, void *data) {
         AsyncCallbackInfo *info = reinterpret_cast<AsyncCallbackInfo *>(data);
         napi_value result[2] = {0}; // 2: callback func input number, also reused by Promise
-        napi_get_undefined(env, &result[0]);
-        napi_get_undefined(env, &result[1]);
-        if (info->resolve) {
+        if (info->param->wret == Rosen::WMError::WM_OK) {
+            napi_get_undefined(env, &result[0]);
             result[1] = info->resolve(env, info->param);
+        } else {
+            napi_value message = nullptr;
+            auto errMessage = info->param->errMessage.c_str();
+            napi_create_string_utf8(env, errMessage, strlen(errMessage), &message);
+            napi_create_error(env, nullptr, message, &result[0]);
+            napi_get_undefined(env, &result[1]);
         }
         if (info->deferred) {
-            ProcessPromise(env, info->param->wret, info->deferred, result);
+            GNAPI_LOG("Process Promise");
+            if (info->param->wret == Rosen::WMError::WM_OK) {
+                GNAPI_LOG("Process Promise resolve");
+                napi_resolve_deferred(env, info->deferred, result[1]);
+            } else {
+                GNAPI_LOG("Process Promise reject");
+                napi_reject_deferred(env, info->deferred, result[0]);                
+            }
         } else {
-            ProcessCallback(env, info->ref, result);
+            GNAPI_LOG("Process Callback");
+            napi_value callback = nullptr;
+            napi_value returnVal = nullptr;
+            napi_get_reference_value(env, info->ref, &callback);
+            napi_call_function(env, nullptr, callback, 2, result, &returnVal); // 2: callback func input number
+            napi_delete_reference(env, info->ref);
         }
         napi_delete_async_work(env, info->asyncWork);
         delete info;

@@ -14,8 +14,10 @@
  */
 
 #include "wm_napi_common.h"
-
 #include <hilog/log.h>
+#include "accesstoken_kit.h"
+#include "bundle_constants.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 napi_status SetMemberInt32(napi_env env, napi_value result, const char *key, int32_t value)
@@ -42,15 +44,34 @@ napi_status SetMemberUndefined(napi_env env, napi_value result, const char *key)
     return napi_ok;
 }
 
+bool CheckCallingPermission(std::string permission)
+{
+    WLOGFI("Screenshot::CheckCallingPermission, permission:%{public}s", permission.c_str());
+    WLOGFI("Screenshot::IPCSkeleton::GetCallingTokenID(): %{public}d", IPCSkeleton::GetCallingTokenID());
+    WLOGFI("Screenshot::AccessTokenKit::VerifyAccessToken(): %{public}d",
+        Security::AccessToken::AccessTokenKit::VerifyAccessToken(IPCSkeleton::GetCallingTokenID(), permission));
+    WLOGFI("Screenshot::Constants::PERMISSION_GRANTED(): %{public}d", AppExecFwk::Constants::PERMISSION_GRANTED);
+    
+    if (!permission.empty() &&
+        Security::AccessToken::AccessTokenKit::VerifyAccessToken(IPCSkeleton::GetCallingTokenID(), permission)
+        != AppExecFwk::Constants::PERMISSION_GRANTED) {
+        WLOGFE("PERMISSION_GRANTED: %{public}d", AppExecFwk::Constants::PERMISSION_GRANTED);
+        WLOGFE("%{public}s permission not granted.", permission.c_str());
+        return false;
+    }
+    WLOGFI("Screenshot::CheckCallingPermission end.");
+    return true;
+}
+
 void ProcessPromise(napi_env env, Rosen::WMError wret, napi_deferred deferred, napi_value result[])
 {
     GNAPI_LOG("Process Promise");
     if (wret != Rosen::WMError::WM_OK) {
-        GNAPI_LOG("ProcessPromise, reject");
+        GNAPI_LOG("Process Promise reject");
         napi_reject_deferred(env, deferred, result[0]);
         return;
     }
-    GNAPI_LOG("ProcessPromise, resolve");
+    GNAPI_LOG("Process Promise resolve");
     napi_resolve_deferred(env, deferred, result[1]);
 }
 
