@@ -31,7 +31,7 @@ namespace {
 int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
-    WLOGFI("OnRemoteRequest code is %{public}d", code);
+    WLOGFI("OnRemoteRequest code is %{public}u", code);
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         WLOGFE("InterfaceToken check failed");
         return -1;
@@ -180,10 +180,6 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
         case TRANS_ID_GET_SCREEN_INFO_BY_ID: {
             ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
             auto screenInfo = GetScreenInfoById(screenId);
-            for (auto& mode : screenInfo->GetModes()) {
-                WLOGFI("info modes is width: %{public}u, height: %{public}u, refreshRate: %{public}u",
-                    mode->width_, mode->height_, mode->refreshRate_);
-            }
             reply.WriteStrongParcelable(screenInfo);
             break;
         }

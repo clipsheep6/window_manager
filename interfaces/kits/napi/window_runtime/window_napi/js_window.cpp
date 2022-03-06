@@ -23,12 +23,13 @@ namespace Rosen {
 using namespace AbilityRuntime;
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsWindow"};
-    constexpr Rect EMPTY_RECT = {0, 0, 0, 0};
+    constexpr Rect g_emptyRect = {0, 0, 0, 0};
 }
 
 static std::map<std::string, std::shared_ptr<NativeReference>> g_jsWindowMap;
 std::recursive_mutex g_mutex;
-JsWindow::JsWindow(const sptr<Window>& window) : windowToken_(window)
+JsWindow::JsWindow(const sptr<Window>& window, bool isOldApi)
+    : windowToken_(window), registerManager_(std::make_unique<JsWindowRegisterManager>()), isOldApi_(isOldApi)
 {
     NotifyNativeWinDestroyFunc func = [](std::string windowName) {
         WLOGE("NotifyNativeWinDestroyFunc is called %{public}s", windowName.c_str());
@@ -174,7 +175,7 @@ NativeValue* JsWindow::SetSystemBarEnable(NativeEngine* engine, NativeCallbackIn
 
 NativeValue* JsWindow::SetSystemBarProperties(NativeEngine* engine, NativeCallbackInfo* info)
 {
-    WLOGFI("JsWindow::SetBarProperties is called");
+    WLOGFI("JsWindow::SetSystemBarProperties is called");
     JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
     return (me != nullptr) ? me->OnSetSystemBarProperties(*engine, *info) : nullptr;
 }
@@ -526,113 +527,6 @@ NativeValue* JsWindow::OnGetProperties(NativeEngine& engine, NativeCallbackInfo&
     return result;
 }
 
-bool JsWindow::IsCallbackRegistered(std::string type, NativeValue* jsListenerObject)
-{
-    if (jsCallbackMap_.empty() || jsCallbackMap_.find(type) == jsCallbackMap_.end()) {
-        WLOGFI("JsWindow::IsCallbackRegistered methodName %{public}s not registertd!", type.c_str());
-        return false;
-    }
-
-    for (auto iter = jsCallbackMap_[type].begin(); iter != jsCallbackMap_[type].end(); iter++) {
-        if (jsListenerObject->StrictEquals((*iter)->Get())) {
-            WLOGFE("JsWindow::IsCallbackRegistered callback already registered!");
-            return true;
-        }
-    }
-    return false;
-}
-
-void JsWindow::RegisterWindowListenerWithType(NativeEngine& engine, std::string type, NativeValue* value)
-{
-    if (IsCallbackRegistered(type, value)) {
-        WLOGFE("JsWindow::RegisterWindowListenerWithType callback already registered!");
-        return;
-    }
-    std::unique_ptr<NativeReference> callbackRef;
-    callbackRef.reset(engine.CreateReference(value, 1));
-    if (jsListenerMap_.find(type) == jsListenerMap_.end()) {
-        sptr<JsWindowListener> windowListener = new(std::nothrow) JsWindowListener(&engine);
-        if (windowListener == nullptr) {
-            WLOGFE("JsWindow::RegisterWindowListenerWithType windowListener malloc failed");
-            return;
-        }
-        if (type.compare(WINDOW_SIZE_CHANGE_CB) == 0) {
-            sptr<IWindowChangeListener> thisListener(windowListener);
-            windowToken_->RegisterWindowChangeListener(thisListener);
-            WLOGFI("JsWindow::RegisterWindowListenerWithType windowSizeChange success");
-        } else if (type.compare(SYSTEM_AVOID_AREA_CHANGE_CB) == 0) {
-            sptr<IAvoidAreaChangedListener> thisListener(windowListener);
-            windowToken_->RegisterAvoidAreaChangeListener(thisListener);
-            WLOGFI("JsWindow::RegisterWindowListenerWithType systemAvoidAreaChange success");
-        } else {
-            WLOGFE("JsWindow::RegisterWindowListenerWithType failed method: %{public}s not support!",
-                type.c_str());
-            return;
-        }
-        windowListener->AddCallback(value);
-        jsListenerMap_[type] = windowListener;
-    } else {
-        jsListenerMap_[type]->AddCallback(value);
-    }
-    jsCallbackMap_[type].push_back(std::move(callbackRef));
-    return;
-}
-
-void JsWindow::UnregisterAllWindowListenerWithType(std::string type)
-{
-    if (jsListenerMap_.empty() || jsListenerMap_.find(type) == jsListenerMap_.end()) {
-        WLOGFI("JsWindow::UnregisterAllWindowListenerWithType methodName %{public}s not registerted!",
-            type.c_str());
-        return;
-    }
-    jsListenerMap_[type]->RemoveAllCallback();
-    if (type.compare(WINDOW_SIZE_CHANGE_CB) == 0) {
-        sptr<IWindowChangeListener> thisListener(jsListenerMap_[type]);
-        windowToken_->UnregisterWindowChangeListener(thisListener);
-        WLOGFI("JsWindow::UnregisterAllWindowListenerWithType windowSizeChange success");
-    }
-    if (type.compare(SYSTEM_AVOID_AREA_CHANGE_CB) == 0) {
-        windowToken_->UnregisterAvoidAreaChangeListener();
-        WLOGFI("JsWindow::UnregisterAllWindowListenerWithType systemAvoidAreaChange success");
-    }
-    jsListenerMap_.erase(type);
-    jsCallbackMap_.erase(type);
-    return;
-}
-
-void JsWindow::UnregisterWindowListenerWithType(std::string type, NativeValue* value)
-{
-    if (jsListenerMap_.empty() || jsListenerMap_.find(type) == jsListenerMap_.end()) {
-        WLOGFI("JsWindow::UnregisterWindowListenerWithType methodName %{public}s not registerted!",
-            type.c_str());
-        return;
-    }
-    for (auto it = jsCallbackMap_[type].begin(); it != jsCallbackMap_[type].end();) {
-        if (value->StrictEquals((*it)->Get())) {
-            jsListenerMap_[type]->RemoveCallback(value);
-            jsCallbackMap_[type].erase(it++);
-            break;
-        } else {
-            it++;
-        }
-    }
-    // one type with multi jscallback, erase type when there is no callback in one type
-    if (jsCallbackMap_[type].empty()) {
-        if (type.compare(WINDOW_SIZE_CHANGE_CB) == 0) {
-            sptr<IWindowChangeListener> thisListener(jsListenerMap_[type]);
-            windowToken_->UnregisterWindowChangeListener (thisListener);
-            WLOGFI("JsWindow::UnregisterWindowListenerWithType windowSizeChange success");
-        }
-        if (type.compare(SYSTEM_AVOID_AREA_CHANGE_CB) == 0) {
-            windowToken_->UnregisterAvoidAreaChangeListener();
-            WLOGFI("JsWindow::UnregisterWindowListenerWithType systemAvoidAreaChange success");
-        }
-        jsCallbackMap_.erase(type);
-        jsListenerMap_.erase(type);
-    }
-    return;
-}
-
 NativeValue* JsWindow::OnRegisterWindowCallback(NativeEngine& engine, NativeCallbackInfo& info)
 
 {
@@ -655,20 +549,15 @@ NativeValue* JsWindow::OnRegisterWindowCallback(NativeEngine& engine, NativeCall
         WLOGFI("JsWindow::OnRegisterWindowCallback info->argv[1] is not callable");
         return engine.CreateUndefined();
     }
-    std::lock_guard<std::mutex> lock(mtx_);
-    RegisterWindowListenerWithType(engine, cbType, value);
+    registerManager_->RegisterListener(windowToken_, cbType, CaseType::CASE_WINDOW, engine, value);
     return engine.CreateUndefined();
 }
 
 NativeValue* JsWindow::OnUnregisterWindowCallback(NativeEngine& engine, NativeCallbackInfo& info)
 {
     WLOGFI("JsWindow::OnUnregisterWindowCallback is called");
-    if (windowToken_ == nullptr) {
-        WLOGFE("JsWindow windowToken_ is nullptr");
-        return engine.CreateUndefined();
-    }
-    if (info.argc == 0) {
-        WLOGFE("Params not match");
+    if (windowToken_ == nullptr || info.argc < 1 || info.argc > 2) { // 2: maximum params nums
+        WLOGFE("JsWindow windowToken_ is nullptr or params not match");
         return engine.CreateUndefined();
     }
     std::string cbType;
@@ -676,16 +565,15 @@ NativeValue* JsWindow::OnUnregisterWindowCallback(NativeEngine& engine, NativeCa
         WLOGFE("Failed to convert parameter to callbackType");
         return engine.CreateUndefined();
     }
-    std::lock_guard<std::mutex> lock(mtx_);
     if (info.argc == 1) {
-        UnregisterAllWindowListenerWithType(cbType);
+        registerManager_->UnregisterListener(windowToken_, cbType, CaseType::CASE_WINDOW, nullptr);
     } else {
         NativeValue* value = info.argv[1];
         if (!value->IsCallable()) {
             WLOGFI("JsWindow::OnUnregisterWindowManagerCallback info->argv[1] is not callable");
             return engine.CreateUndefined();
         }
-        UnregisterWindowListenerWithType(cbType, value);
+        registerManager_->UnregisterListener(windowToken_, cbType, CaseType::CASE_WINDOW, value);
     }
 
     return engine.CreateUndefined();
@@ -722,9 +610,9 @@ NativeValue* JsWindow::OnLoadContent(NativeEngine& engine, NativeCallbackInfo& i
         std::shared_ptr<NativeReference>(engine.CreateReference(storage, 1));
     AsyncTask::CompleteCallback complete =
         [=](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            if (windowToken_ == nullptr || errCode != WMError::WM_OK) {
+            if (windowToken_ == nullptr || errCode != WMError::WM_OK || isOldApi_) {
                 task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode)));
-                WLOGFE("JsWindow windowToken_ is nullptr or invalid param");
+                WLOGFE("JsWindow windowToken_ is nullptr or invalid param or is old version API");
                 return;
             }
             NativeValue* nativeStorage = (contentStorage == nullptr) ? nullptr : contentStorage->Get();
@@ -916,7 +804,7 @@ NativeValue* JsWindow::OnSetSystemBarProperties(NativeEngine& engine, NativeCall
 
 NativeValue* JsWindow::OnGetAvoidArea(NativeEngine& engine, NativeCallbackInfo& info)
 {
-    WLOGFI("JsWindow::OnGetAvoidArea is called");
+    WLOGFI("JsWindow::OnGetAvoidArea is called info.argc: %{public}d", info.argc);
     WMError errCode = WMError::WM_OK;
     if (info.argc < 1 || info.argc > 2) { // 2: maximum params num
         WLOGFE("JsWindow params not match!");
@@ -946,7 +834,7 @@ NativeValue* JsWindow::OnGetAvoidArea(NativeEngine& engine, NativeCallbackInfo& 
                 WLOGFI("JsWindow::OnGetAvoidArea GetAvoidAreaByType Success");
             } else {
                 WLOGFE("JsWindow::OnGetAvoidArea GetAvoidAreaByType Failed");
-                avoidArea = { EMPTY_RECT, EMPTY_RECT, EMPTY_RECT, EMPTY_RECT }; // left, top, right, bottom
+                avoidArea = { g_emptyRect, g_emptyRect, g_emptyRect, g_emptyRect }; // left, top, right, bottom
             }
             // native avoidArea -> js avoidArea
             NativeValue* avoidAreaObj = ChangeAvoidAreaToJsValue(engine, avoidArea);
@@ -1103,7 +991,7 @@ std::shared_ptr<NativeReference> FindJsWindowObject(std::string windowName)
     return g_jsWindowMap[windowName];
 }
 
-NativeValue* CreateJsWindowObject(NativeEngine& engine, sptr<Window>& window)
+NativeValue* CreateJsWindowObject(NativeEngine& engine, sptr<Window>& window, bool isOldApi)
 {
     WLOGFI("JsWindow::CreateJsWindow is called");
     std::string windowName = window->GetWindowName();
@@ -1116,7 +1004,8 @@ NativeValue* CreateJsWindowObject(NativeEngine& engine, sptr<Window>& window)
     NativeValue* objValue = engine.CreateObject();
     NativeObject* object = ConvertNativeValueTo<NativeObject>(objValue);
 
-    std::unique_ptr<JsWindow> jsWindow = std::make_unique<JsWindow>(window);
+    WLOGFI("JsWindow::CreateJsWindow isOldApi %{public}d", isOldApi);
+    std::unique_ptr<JsWindow> jsWindow = std::make_unique<JsWindow>(window, isOldApi);
     object->SetNativePointer(jsWindow.release(), JsWindow::Finalizer, nullptr);
 
     BindNativeFunction(engine, *object, "show", JsWindow::Show);
