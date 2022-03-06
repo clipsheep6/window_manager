@@ -270,15 +270,15 @@ AvoidPosType WindowTestUtils::GetAvoidPosType(const Rect& rect)
     return AvoidPosType::AVOID_POS_UNKNOWN;
 }
 
-void WindowTestUtils::InitSplitRects()
+bool WindowTestUtils::InitSplitRects()
 {
     auto display = DisplayManager::GetInstance().GetDisplayById(0);
     if (display == nullptr) {
         WLOGFE("GetDefaultDisplay: failed!");
-    } else {
-        WLOGFI("GetDefaultDisplay: id %{public}" PRIu64", w %{public}d, h %{public}d, fps %{public}u",
-            display->GetId(), display->GetWidth(), display->GetHeight(), display->GetFreshRate());
+        return false;
     }
+    WLOGFI("GetDefaultDisplay: id %{public}" PRIu64", w %{public}d, h %{public}d, fps %{public}u",
+        display->GetId(), display->GetWidth(), display->GetHeight(), display->GetRefreshRate());
 
     Rect displayRect = {0, 0, display->GetWidth(), display->GetHeight()};
     displayRect_ = displayRect;
@@ -301,6 +301,7 @@ void WindowTestUtils::InitSplitRects()
                                     dividerWidth,
                                     displayRect_.height_ };
     }
+    return true;
 }
 
 void WindowTestUtils::UpdateSplitRects(const sptr<Window>& window)
@@ -355,7 +356,7 @@ void WindowTestUtils::UpdateLimitDisplayRect(Rect& avoidRect)
             limitDisplayRect_.width_ -= offsetW;
             break;
         default:
-            WLOGFE("invaild avoidPosType: %{public}d", avoidPosType);
+            WLOGFE("invalid avoidPosType: %{public}d", avoidPosType);
     }
 }
 

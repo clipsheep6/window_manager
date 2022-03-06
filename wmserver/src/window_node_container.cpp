@@ -149,7 +149,7 @@ WMError WindowNodeContainer::UpdateWindowNode(sptr<WindowNode>& node, WindowUpda
         WLOGFE("surface node is nullptr!");
         return WMError::WM_ERROR_NULLPTR;
     }
-    if (WindowHelper::IsMainWindow(node->GetWindowType()) && reason != WindowUpdateReason::UPDATE_OTHER_PROPS) {
+    if (WindowHelper::IsMainWindow(node->GetWindowType()) && WindowHelper::IsSwitchCascadeReason(reason)) {
         SwitchLayoutPolicy(WindowLayoutMode::CASCADE);
     }
     layoutPolicy_->UpdateWindowNode(node);
@@ -242,7 +242,7 @@ WMError WindowNodeContainer::DestroyWindowNode(sptr<WindowNode>& node, std::vect
 
 WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
 {
-    if (node == nullptr || !node->surfaceNode_) {
+    if (node == nullptr) {
         WLOGFE("window node or surface node is nullptr, invalid");
         return WMError::WM_ERROR_DESTROYED_OBJECT;
     }
@@ -480,6 +480,23 @@ void WindowNodeContainer::NotifyIfSystemBarRegionChanged()
     WindowManagerAgentController::GetInstance().UpdateSystemBarRegionTints(displayId_, tints);
 }
 
+void WindowNodeContainer::NotifySystemBarDismiss(sptr<WindowNode>& node)
+{
+    WM_FUNCTION_TRACE();
+    SystemBarRegionTints tints;
+    auto& sysBarPropMapNode = node->GetSystemBarProperty();
+    for (auto it : sysBarPropMapNode) {
+        if (sysBarTintMap_[it.first].prop_.enable_) {
+            sysBarTintMap_[it.first].prop_.enable_ = false;
+            it.second.enable_ = false;
+            node->SetSystemBarProperty(it.first, it.second);
+            tints.emplace_back(sysBarTintMap_[it.first]);
+            WLOGFI("system bar dismiss, type: %{public}d", static_cast<int32_t>(it.first));
+        }
+    }
+    WindowManagerAgentController::GetInstance().UpdateSystemBarRegionTints(displayId_, tints);
+}
+
 void WindowNodeContainer::NotifySystemBarTints()
 {
     WM_FUNCTION_TRACE();
@@ -648,8 +665,8 @@ void WindowNodeContainer::DumpScreenWindowTree()
         Rect rect = node->GetLayoutRect();
         const std::string& windowName = node->GetWindowName().size() < WINDOW_NAME_MAX_LENGTH ?
             node->GetWindowName() : node->GetWindowName().substr(0, WINDOW_NAME_MAX_LENGTH);
-        WLOGI("DumpScreenWindowTree: %{public}10s %{public}5d %{public}4d %{public}4d %{public}4d %{public}4d " \
-            "[%{public}4d %{public}4d %{public}4d %{public}4d]",
+        WLOGI("DumpScreenWindowTree: %{public}10s %{public}5u %{public}4u %{public}4u %{public}4u %{public}4u " \
+            "[%{public}4d %{public}4d %{public}4u %{public}4u]",
             windowName.c_str(), node->GetWindowId(), node->GetWindowType(), node->GetWindowMode(),
             node->GetWindowFlags(), --zOrder, rect.posX_, rect.posY_, rect.width_, rect.height_);
         return false;
@@ -862,8 +879,7 @@ void WindowNodeContainer::MinimizeWindowFromAbility(const sptr<WindowNode>& node
         WLOGFW("Target abilityToken is nullptr, windowId:%{public}u", node->GetWindowId());
         return;
     }
-    AAFwk::AbilityManagerClient::GetInstance()->DoAbilityBackground(node->abilityToken_,
-        static_cast<uint32_t>(WindowStateChangeReason::NORMAL));
+    AAFwk::AbilityManagerClient::GetInstance()->MinimizeAbility(node->abilityToken_, true);
 }
 
 WMError WindowNodeContainer::MinimizeAppNodeExceptOptions(const std::vector<uint32_t> &exceptionalIds,
@@ -1001,7 +1017,7 @@ WMError WindowNodeContainer::SwitchLayoutPolicy(WindowLayoutMode dstMode, bool r
         layoutPolicy_->Launch();
         DumpScreenWindowTree();
     } else {
-        WLOGFI("Curret layout mode is allready: %{public}d", static_cast<uint32_t>(dstMode));
+        WLOGFI("Current layout mode is already: %{public}d", static_cast<uint32_t>(dstMode));
     }
     if (reorder) {
         if (!pairedWindowMap_.empty()) {

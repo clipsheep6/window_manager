@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,7 +32,7 @@ DisplayId DisplayManagerProxy::GetDefaultDisplayId()
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
         WLOGFW("GetDefaultDisplayId: remote is nullptr");
-        return DISPLAY_ID_INVALD;
+        return DISPLAY_ID_INVALID;
     }
 
     MessageParcel data;
@@ -40,11 +40,11 @@ DisplayId DisplayManagerProxy::GetDefaultDisplayId()
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("GetDefaultDisplayId: WriteInterfaceToken failed");
-        return DISPLAY_ID_INVALD;
+        return DISPLAY_ID_INVALID;
     }
     if (remote->SendRequest(TRANS_ID_GET_DEFAULT_DISPLAY_ID, data, reply, option) != ERR_NONE) {
         WLOGFW("GetDefaultDisplayId: SendRequest failed");
-        return DISPLAY_ID_INVALD;
+        return DISPLAY_ID_INVALID;
     }
 
     DisplayId displayId = reply.ReadUint64();
@@ -247,11 +247,11 @@ bool DisplayManagerProxy::SetOrientation(ScreenId screenId, Orientation orientat
     return reply.ReadBool();
 }
 
-std::shared_ptr<Media::PixelMap> DisplayManagerProxy::GetDispalySnapshot(DisplayId displayId)
+std::shared_ptr<Media::PixelMap> DisplayManagerProxy::GetDisplaySnapshot(DisplayId displayId)
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        WLOGFW("GetDispalySnapshot: remote is nullptr");
+        WLOGFW("GetDisplaySnapshot: remote is nullptr");
         return nullptr;
     }
 
@@ -259,7 +259,7 @@ std::shared_ptr<Media::PixelMap> DisplayManagerProxy::GetDispalySnapshot(Display
     MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("GetDispalySnapshot: WriteInterfaceToken failed");
+        WLOGFE("GetDisplaySnapshot: WriteInterfaceToken failed");
         return nullptr;
     }
 
@@ -269,13 +269,13 @@ std::shared_ptr<Media::PixelMap> DisplayManagerProxy::GetDispalySnapshot(Display
     }
 
     if (remote->SendRequest(TRANS_ID_GET_DISPLAY_SNAPSHOT, data, reply, option) != ERR_NONE) {
-        WLOGFW("GetDispalySnapshot: SendRequest failed");
+        WLOGFW("GetDisplaySnapshot: SendRequest failed");
         return nullptr;
     }
 
     std::shared_ptr<Media::PixelMap> pixelMap(reply.ReadParcelable<Media::PixelMap>());
     if (pixelMap == nullptr) {
-        WLOGFW("DisplayManagerProxy::GetDispalySnapshot SendRequest nullptr.");
+        WLOGFW("DisplayManagerProxy::GetDisplaySnapshot SendRequest nullptr.");
         return nullptr;
     }
     return pixelMap;
@@ -589,7 +589,7 @@ bool DisplayManagerProxy::SuspendEnd()
     return reply.ReadBool();
 }
 
-bool DisplayManagerProxy::SetScreenPowerForAll(DisplayPowerState state, PowerStateChangeReason reason)
+bool DisplayManagerProxy::SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -599,7 +599,7 @@ bool DisplayManagerProxy::SetScreenPowerForAll(DisplayPowerState state, PowerSta
         return false;
     }
     if (!data.WriteUint32(static_cast<uint32_t>(state))) {
-        WLOGFE("Write DisplayPowerState failed");
+        WLOGFE("Write ScreenPowerState failed");
         return false;
     }
     if (!data.WriteUint32(static_cast<uint32_t>(reason))) {
@@ -748,8 +748,8 @@ sptr<ScreenInfo> DisplayManagerProxy::GetScreenInfoById(ScreenId screenId)
         return nullptr;
     }
     for (auto& mode : info->GetModes()) {
-        WLOGFI("info modes is width: %{public}u, height: %{public}u, freshRate: %{public}u",
-            mode->width_, mode->height_, mode->freshRate_);
+        WLOGFI("info modes is width: %{public}u, height: %{public}u, refreshRate: %{public}u",
+            mode->width_, mode->height_, mode->refreshRate_);
     }
     return info;
 }
@@ -850,6 +850,31 @@ ScreenId DisplayManagerProxy::MakeExpand(std::vector<ScreenId> screenId, std::ve
         return SCREEN_ID_INVALID;
     }
     return static_cast<ScreenId>(reply.ReadUint64());
+}
+
+void DisplayManagerProxy::RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("cancel make mirror or expand fail: remote is null");
+        return;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("cancel make mirror or expand fail: WriteInterfaceToken failed");
+        return;
+    }
+    bool res = data.WriteUInt64Vector(screens);
+    if (!res) {
+        WLOGFE("cancel make mirror or expand fail: write screens failed.");
+        return;
+    }
+    if (remote->SendRequest(TRANS_ID_REMOVE_VIRTUAL_SCREEN_FROM_SCREEN_GROUP, data, reply, option) != ERR_NONE) {
+        WLOGFW("cancel make mirror or expand fail: SendRequest failed");
+    }
 }
 
 bool DisplayManagerProxy::SetScreenActiveMode(ScreenId screenId, uint32_t modeId)
