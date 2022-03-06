@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,7 +30,7 @@ public:
     }
     ~Impl() = default;
 
-    DEFINE_VAR_FUNC_GET_SET(sptr<ScreenGroupInfo>, ScreenGroupInfo, screenGroupInfo);
+    DEFINE_VAR_FUNC_GET_SET_WITH_LOCK(sptr<ScreenGroupInfo>, ScreenGroupInfo, screenGroupInfo);
 };
 
 ScreenGroup::ScreenGroup(sptr<ScreenGroupInfo> info)

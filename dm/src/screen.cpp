@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,7 +30,7 @@ public:
         screenInfo_ = info;
     }
     ~Impl() = default;
-    DEFINE_VAR_FUNC_GET_SET(sptr<ScreenInfo>, ScreenInfo, screenInfo);
+    DEFINE_VAR_FUNC_GET_SET_WITH_LOCK(sptr<ScreenInfo>, ScreenInfo, screenInfo);
 };
 
 Screen::Screen(sptr<ScreenInfo> info)
@@ -46,6 +46,11 @@ bool Screen::IsGroup() const
 {
     UpdateScreenInfo();
     return pImpl_->GetScreenInfo()->GetCanHasChild();
+}
+
+const std::string Screen::GetName() const
+{
+    return pImpl_->GetScreenInfo()->GetName();
 }
 
 ScreenId Screen::GetId() const
@@ -103,6 +108,12 @@ Orientation Screen::GetOrientation() const
 {
     UpdateScreenInfo();
     return pImpl_->GetScreenInfo()->GetOrientation();
+}
+
+bool Screen::IsReal() const
+{
+    UpdateScreenInfo();
+    return pImpl_->GetScreenInfo()->GetType() == ScreenType::REAL;
 }
 
 bool Screen::SetOrientation(Orientation orientation) const

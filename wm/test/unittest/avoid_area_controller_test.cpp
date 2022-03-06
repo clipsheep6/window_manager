@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,12 +63,9 @@ void AvoidAreaControllerTest::InitByScreenRect(const Rect& screenRect)
 void AvoidAreaControllerTest::SetUpTestCase()
 {
     auto display = DisplayManager::GetInstance().GetDisplayById(0);
-    if (display == nullptr) {
-        WLOGFE("GetDefaultDisplay: failed!");
-    } else {
-        WLOGFI("GetDefaultDisplay: id %{public}" PRIu64", w %{public}d, h %{public}d, fps %{public}u",
-            display->GetId(), display->GetWidth(), display->GetHeight(), display->GetFreshRate());
-    }
+    ASSERT_TRUE((display != nullptr));
+    WLOGFI("GetDefaultDisplay: id %{public}" PRIu64", w %{public}d, h %{public}d, fps %{public}u",
+        display->GetId(), display->GetWidth(), display->GetHeight(), display->GetRefreshRate());
     Rect screenRect = {0, 0, display->GetWidth(), display->GetHeight()};
     AvoidAreaControllerTest::InitByScreenRect(screenRect);
 }
@@ -90,7 +87,6 @@ namespace {
  * @tc.name: IsAvoidAreaNode01
  * @tc.desc: Create a APP Window. Test IsAvoidAreaNode
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, IsAvoidAreaNode01, Function | SmallTest | Level2)
 {
@@ -109,7 +105,6 @@ HWTEST_F(AvoidAreaControllerTest, IsAvoidAreaNode01, Function | SmallTest | Leve
  * @tc.name: IsAvoidAreaNode02
  * @tc.desc: Create a Status Bar Window. Test IsAvoidAreaNode
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, IsAvoidAreaNode02, Function | SmallTest | Level2)
 {
@@ -127,7 +122,6 @@ HWTEST_F(AvoidAreaControllerTest, IsAvoidAreaNode02, Function | SmallTest | Leve
  * @tc.name: IsAvoidAreaNode03
  * @tc.desc: Create a Dock_Slice Window. Test IsAvoidAreaNode
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, IsAvoidAreaNode03, Function | SmallTest | Level2)
 {
@@ -145,7 +139,6 @@ HWTEST_F(AvoidAreaControllerTest, IsAvoidAreaNode03, Function | SmallTest | Leve
  * @tc.name: IsAvoidAreaNode04
  * @tc.desc: Create a Dock_Slice Window. Test IsAvoidAreaNode
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, IsAvoidAreaNode04, Function | SmallTest | Level2)
 {
@@ -158,7 +151,6 @@ HWTEST_F(AvoidAreaControllerTest, IsAvoidAreaNode04, Function | SmallTest | Leve
  * @tc.name: AddAvoidAreaNode01
  * @tc.desc: Add a new avoid area Node
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, AddAvoidAreaNode01, Function | SmallTest | Level2)
 {
@@ -178,7 +170,6 @@ HWTEST_F(AvoidAreaControllerTest, AddAvoidAreaNode01, Function | SmallTest | Lev
  * @tc.name: AddAvoidAreaNode02
  * @tc.desc: Add a exist avoid area Node
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, AddAvoidAreaNode02, Function | SmallTest | Level2)
 {
@@ -206,7 +197,6 @@ HWTEST_F(AvoidAreaControllerTest, AddAvoidAreaNode02, Function | SmallTest | Lev
  * @tc.name: AddAvoidAreaNode03
  * @tc.desc: Add two new avoid area Nodes
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, AddAvoidAreaNode03, Function | SmallTest | Level2)
 {
@@ -233,7 +223,6 @@ HWTEST_F(AvoidAreaControllerTest, AddAvoidAreaNode03, Function | SmallTest | Lev
  * @tc.name: AddAvoidAreaNode04
  * @tc.desc: Add nullptr
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, AddAvoidAreaNode04, Function | SmallTest | Level2)
 {
@@ -245,7 +234,6 @@ HWTEST_F(AvoidAreaControllerTest, AddAvoidAreaNode04, Function | SmallTest | Lev
  * @tc.name: RemoveAvoidAreaNode01
  * @tc.desc: Add a new avoid area. And Remove this.
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, RemoveAvoidAreaNode01, Function | SmallTest | Level2)
 {
@@ -266,7 +254,6 @@ HWTEST_F(AvoidAreaControllerTest, RemoveAvoidAreaNode01, Function | SmallTest | 
  * @tc.name: RemoveAvoidAreaNode02
  * @tc.desc: Remove a unexist avoid area.
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, RemoveAvoidAreaNode02, Function | SmallTest | Level2)
 {
@@ -285,7 +272,6 @@ HWTEST_F(AvoidAreaControllerTest, RemoveAvoidAreaNode02, Function | SmallTest | 
  * @tc.name: RemoveAvoidAreaNode03
  * @tc.desc: Remove nullptr
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, RemoveAvoidAreaNode03, Function | SmallTest | Level2)
 {
@@ -297,7 +283,6 @@ HWTEST_F(AvoidAreaControllerTest, RemoveAvoidAreaNode03, Function | SmallTest | 
  * @tc.name: UpdateAvoidAreaNode01
  * @tc.desc: Add a new avoid area node and update this
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, UpdateAvoidAreaNode01, Function | SmallTest | Level2)
 {
@@ -319,7 +304,6 @@ HWTEST_F(AvoidAreaControllerTest, UpdateAvoidAreaNode01, Function | SmallTest | 
  * @tc.name: UpdateAvoidAreaNode02
  * @tc.desc: update a unexist avoid area node
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, UpdateAvoidAreaNode02, Function | SmallTest | Level2)
 {
@@ -339,7 +323,6 @@ HWTEST_F(AvoidAreaControllerTest, UpdateAvoidAreaNode02, Function | SmallTest | 
  * @tc.name: UpdateAvoidAreaNode03
  * @tc.desc: Update nullptr
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, UpdateAvoidAreaNode03, Function | SmallTest | Level2)
 {
@@ -351,7 +334,6 @@ HWTEST_F(AvoidAreaControllerTest, UpdateAvoidAreaNode03, Function | SmallTest | 
  * @tc.name: GetAvoidArea01
  * @tc.desc: GetAvoidArea
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, GetAvoidArea01, Function | SmallTest | Level2)
 {
@@ -369,7 +351,6 @@ HWTEST_F(AvoidAreaControllerTest, GetAvoidArea01, Function | SmallTest | Level2)
  * @tc.name: GetAvoidArea02
  * @tc.desc: Add a new node. And GetAvoidArea
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, GetAvoidArea02, Function | SmallTest | Level2)
 {
@@ -395,7 +376,6 @@ HWTEST_F(AvoidAreaControllerTest, GetAvoidArea02, Function | SmallTest | Level2)
  * @tc.name: GetAvoidArea03
  * @tc.desc: Add a new node. Update this node. And GetAvoidArea
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, GetAvoidArea03, Function | SmallTest | Level2)
 {
@@ -424,7 +404,6 @@ HWTEST_F(AvoidAreaControllerTest, GetAvoidArea03, Function | SmallTest | Level2)
  * @tc.name: GetAvoidAreaByType01
  * @tc.desc: Search a unexist AvoidAreaType. And GetAvoidAreaByType
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, GetAvoidAreaByType01, Function | SmallTest | Level2)
 {
@@ -442,7 +421,6 @@ HWTEST_F(AvoidAreaControllerTest, GetAvoidAreaByType01, Function | SmallTest | L
  * @tc.name: GetAvoidAreaByType02
  * @tc.desc: Add a new node. And GetAvoidAreaByType
  * @tc.type: FUNC
- * @tc.require: AR000GGTVD
  */
 HWTEST_F(AvoidAreaControllerTest, GetAvoidAreaByType02, Function | SmallTest | Level2)
 {
