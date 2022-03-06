@@ -269,10 +269,6 @@ void WindowLayoutPolicy::LimitWindowSize(const sptr<WindowNode>& node, const Rec
     WindowType windowType = node->GetWindowType();
     WindowMode windowMode = node->GetWindowMode();
     bool isVertical = (displayRect.height_ > displayRect.width_) ? true : false;
-    if (!WindowHelper::IsMainFloatingWindow(windowType, windowMode)) {
-        winRect.width_ = std::min(displayRect.width_ - winRect.posX_, winRect.width_);
-        winRect.height_ = std::min(displayRect.height_ - winRect.posY_, winRect.height_);
-    }
     if ((windowMode == WindowMode::WINDOW_MODE_FLOATING) && !WindowHelper::IsSystemWindow(windowType)) {
         if (isVertical) {
             winRect.width_ = std::max(minVerticalFloatingW, winRect.width_);
@@ -339,7 +335,7 @@ void WindowLayoutPolicy::UpdateLimitRect(const sptr<WindowNode>& node, Rect& lim
                 limitW -= offsetW;
                 break;
             default:
-                WLOGFE("invaild avoidPosType: %{public}d", avoidPosType);
+                WLOGFE("invalid avoidPosType: %{public}d", avoidPosType);
         }
     }
     limitRect.height_ = static_cast<uint32_t>(limitH < 0 ? 0 : limitH);

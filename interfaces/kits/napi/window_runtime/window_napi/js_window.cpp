@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,6 +14,7 @@
  */
 
 #include "js_window.h"
+#include <new>
 #include "window.h"
 #include "window_manager_hilog.h"
 #include "window_option.h"
@@ -22,12 +23,13 @@ namespace Rosen {
 using namespace AbilityRuntime;
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsWindow"};
-    constexpr Rect EMPTY_RECT = {0, 0, 0, 0};
+    constexpr Rect g_emptyRect = {0, 0, 0, 0};
 }
 
 static std::map<std::string, std::shared_ptr<NativeReference>> g_jsWindowMap;
 std::recursive_mutex g_mutex;
-JsWindow::JsWindow(const sptr<Window>& window) : windowToken_(window)
+JsWindow::JsWindow(const sptr<Window>& window)
+    : windowToken_(window), registerManager_(std::make_unique<JsWindowRegisterManager>())
 {
 }
 
@@ -161,7 +163,7 @@ NativeValue* JsWindow::SetSystemBarEnable(NativeEngine* engine, NativeCallbackIn
 
 NativeValue* JsWindow::SetSystemBarProperties(NativeEngine* engine, NativeCallbackInfo* info)
 {
-    WLOGFI("JsWindow::SetBarProperties is called");
+    WLOGFI("JsWindow::SetSystemBarProperties is called");
     JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
     return (me != nullptr) ? me->OnSetSystemBarProperties(*engine, *info) : nullptr;
 }
@@ -257,7 +259,6 @@ NativeValue* JsWindow::OnDestroy(NativeEngine& engine, NativeCallbackInfo& info)
                 g_jsWindowMap.erase(windowName);
                 WLOGFI("JsWindow::OnDestroy windowName %{public}s is destroyed", windowName.c_str());
             }
-            // FIX ME: windowToken = nullptr in aync task and don't affect other async task
             task.Resolve(engine, engine.CreateUndefined());
             WLOGFI("JsWindow::OnDestroy success");
         };
@@ -397,10 +398,8 @@ NativeValue* JsWindow::OnSetWindowType(NativeEngine& engine, NativeCallbackInfo&
         if (nativeType == nullptr) {
             WLOGFE("Failed to convert parameter to windowType");
             errCode = WMError::WM_ERROR_INVALID_PARAM;
-        }
-        // adapt to the old version
-        if (static_cast<uint32_t>(*nativeType) >= static_cast<uint32_t>(WindowType::SYSTEM_WINDOW_BASE)) {
-            winType = static_cast<WindowType>(static_cast<uint32_t>(*nativeType));
+        } else if (static_cast<uint32_t>(*nativeType) >= static_cast<uint32_t>(WindowType::SYSTEM_WINDOW_BASE)) {
+            winType = static_cast<WindowType>(static_cast<uint32_t>(*nativeType)); // adapt to the old version
         } else {
             if (JS_TO_NATIVE_WINDOW_TYPE_MAP.count(
                 static_cast<ApiWindowType>(static_cast<uint32_t>(*nativeType))) != 0) {
@@ -412,6 +411,7 @@ NativeValue* JsWindow::OnSetWindowType(NativeEngine& engine, NativeCallbackInfo&
             }
         }
     }
+
     AsyncTask::CompleteCallback complete =
         [=](NativeEngine& engine, AsyncTask& task, int32_t status) {
             if (errCode != WMError::WM_OK) {
@@ -450,8 +450,9 @@ NativeValue* JsWindow::OnSetWindowMode(NativeEngine& engine, NativeCallbackInfo&
         if (nativeMode == nullptr) {
             WLOGFE("Failed to convert parameter to windowMode");
             errCode = WMError::WM_ERROR_INVALID_PARAM;
+        } else {
+            winMode = static_cast<WindowMode>(static_cast<uint32_t>(*nativeMode));
         }
-        winMode = static_cast<WindowMode>(static_cast<uint32_t>(*nativeMode));
     }
 
     AsyncTask::CompleteCallback complete =
@@ -511,109 +512,6 @@ NativeValue* JsWindow::OnGetProperties(NativeEngine& engine, NativeCallbackInfo&
     return result;
 }
 
-bool JsWindow::IsCallbackRegistered(std::string type, NativeValue* jsListenerObject)
-{
-    if (jsCallbackMap_.empty() || jsCallbackMap_.find(type) == jsCallbackMap_.end()) {
-        WLOGFI("JsWindow::IsCallbackRegistered methodName %{public}s not registertd!", type.c_str());
-        return false;
-    }
-
-    for (auto iter = jsCallbackMap_[type].begin(); iter != jsCallbackMap_[type].end(); iter++) {
-        if (jsListenerObject->StrictEquals((*iter)->Get())) {
-            WLOGFE("JsWindow::IsCallbackRegistered callback already registered!");
-            return true;
-        }
-    }
-    return false;
-}
-
-void JsWindow::RegisterWindowListenerWithType(NativeEngine& engine, std::string type, NativeValue* value)
-{
-    if (IsCallbackRegistered(type, value)) {
-        WLOGFE("JsWindow::RegisterWindowListenerWithType callback already registered!");
-        return;
-    }
-    std::unique_ptr<NativeReference> callbackRef;
-    callbackRef.reset(engine.CreateReference(value, 1));
-    if (jsListenerMap_.find(type) == jsListenerMap_.end()) {
-        sptr<JsWindowListener> windowListener = new JsWindowListener(&engine);
-        if (type.compare(WINDOW_SIZE_CHANGE_CB) == 0) {
-            sptr<IWindowChangeListener> thisListener(windowListener);
-            windowToken_->RegisterWindowChangeListener(thisListener);
-            WLOGFI("JsWindow::RegisterWindowListenerWithType windowSizeChange success");
-        } else if (type.compare(SYSTEM_AVOID_AREA_CHANGE_CB) == 0) {
-            sptr<IAvoidAreaChangedListener> thisListener(windowListener);
-            windowToken_->RegisterAvoidAreaChangeListener(thisListener);
-            WLOGFI("JsWindow::RegisterWindowListenerWithType systemAvoidAreaChange success");
-        } else {
-            WLOGFE("JsWindow::RegisterWindowListenerWithType failed method: %{public}s not support!",
-                type.c_str());
-            return;
-        }
-        windowListener->AddCallback(value);
-        jsListenerMap_[type] = windowListener;
-    } else {
-        jsListenerMap_[type]->AddCallback(value);
-    }
-    jsCallbackMap_[type].push_back(std::move(callbackRef));
-    return;
-}
-
-void JsWindow::UnregisterAllWindowListenerWithType(std::string type)
-{
-    if (jsListenerMap_.empty() || jsListenerMap_.find(type) == jsListenerMap_.end()) {
-        WLOGFI("JsWindow::UnregisterAllWindowListenerWithType methodName %{public}s not registerted!",
-            type.c_str());
-        return;
-    }
-    jsListenerMap_[type]->RemoveAllCallback();
-    if (type.compare(WINDOW_SIZE_CHANGE_CB) == 0) {
-        sptr<IWindowChangeListener> thisListener(jsListenerMap_[type]);
-        windowToken_->UnregisterWindowChangeListener(thisListener);
-        WLOGFI("JsWindow::UnregisterAllWindowListenerWithType windowSizeChange success");
-    }
-    if (type.compare(SYSTEM_AVOID_AREA_CHANGE_CB) == 0) {
-        windowToken_->UnregisterAvoidAreaChangeListener();
-        WLOGFI("JsWindow::UnregisterAllWindowListenerWithType systemAvoidAreaChange success");
-    }
-    jsListenerMap_.erase(type);
-    jsCallbackMap_.erase(type);
-    return;
-}
-
-void JsWindow::UnregisterWindowListenerWithType(std::string type, NativeValue* value)
-{
-    if (jsListenerMap_.empty() || jsListenerMap_.find(type) == jsListenerMap_.end()) {
-        WLOGFI("JsWindow::UnregisterWindowListenerWithType methodName %{public}s not registerted!",
-            type.c_str());
-        return;
-    }
-    for (auto it = jsCallbackMap_[type].begin(); it != jsCallbackMap_[type].end();) {
-        if (value->StrictEquals((*it)->Get())) {
-            jsListenerMap_[type]->RemoveCallback(value);
-            jsCallbackMap_[type].erase(it++);
-            break;
-        } else {
-            it++;
-        }
-    }
-    // one type with multi jscallback, erase type when there is no callback in one type
-    if (jsCallbackMap_[type].empty()) {
-        if (type.compare(WINDOW_SIZE_CHANGE_CB) == 0) {
-            sptr<IWindowChangeListener> thisListener(jsListenerMap_[type]);
-            windowToken_->UnregisterWindowChangeListener (thisListener);
-            WLOGFI("JsWindow::UnregisterWindowListenerWithType windowSizeChange success");
-        }
-        if (type.compare(SYSTEM_AVOID_AREA_CHANGE_CB) == 0) {
-            windowToken_->UnregisterAvoidAreaChangeListener();
-            WLOGFI("JsWindow::UnregisterWindowListenerWithType systemAvoidAreaChange success");
-        }
-        jsCallbackMap_.erase(type);
-        jsListenerMap_.erase(type);
-    }
-    return;
-}
-
 NativeValue* JsWindow::OnRegisterWindowCallback(NativeEngine& engine, NativeCallbackInfo& info)
 
 {
@@ -636,20 +534,15 @@ NativeValue* JsWindow::OnRegisterWindowCallback(NativeEngine& engine, NativeCall
         WLOGFI("JsWindow::OnRegisterWindowCallback info->argv[1] is not callable");
         return engine.CreateUndefined();
     }
-    std::lock_guard<std::mutex> lock(mtx_);
-    RegisterWindowListenerWithType(engine, cbType, value);
+    registerManager_->RegisterListener(windowToken_, cbType, CaseType::CASE_WINDOW, engine, value);
     return engine.CreateUndefined();
 }
 
 NativeValue* JsWindow::OnUnregisterWindowCallback(NativeEngine& engine, NativeCallbackInfo& info)
 {
     WLOGFI("JsWindow::OnUnregisterWindowCallback is called");
-    if (windowToken_ == nullptr) {
-        WLOGFE("JsWindow windowToken_ is nullptr");
-        return engine.CreateUndefined();
-    }
-    if (info.argc == 0) {
-        WLOGFE("Params not match");
+    if (windowToken_ == nullptr || info.argc < 1 || info.argc > 2) { // 2: maximum params nums
+        WLOGFE("JsWindow windowToken_ is nullptr or params not match");
         return engine.CreateUndefined();
     }
     std::string cbType;
@@ -657,16 +550,15 @@ NativeValue* JsWindow::OnUnregisterWindowCallback(NativeEngine& engine, NativeCa
         WLOGFE("Failed to convert parameter to callbackType");
         return engine.CreateUndefined();
     }
-    std::lock_guard<std::mutex> lock(mtx_);
     if (info.argc == 1) {
-        UnregisterAllWindowListenerWithType(cbType);
+        registerManager_->UnregisterListener(windowToken_, cbType, CaseType::CASE_WINDOW, nullptr);
     } else {
         NativeValue* value = info.argv[ARGC_ONE];
         if (!value->IsCallable()) {
             WLOGFI("JsWindow::OnUnregisterWindowManagerCallback info->argv[1] is not callable");
             return engine.CreateUndefined();
         }
-        UnregisterWindowListenerWithType(cbType, value);
+        registerManager_->UnregisterListener(windowToken_, cbType, CaseType::CASE_WINDOW, value);
     }
 
     return engine.CreateUndefined();
@@ -736,8 +628,9 @@ NativeValue* JsWindow::OnSetFullScreen(NativeEngine& engine, NativeCallbackInfo&
         if (nativeVal == nullptr) {
             WLOGFE("Failed to convert parameter to isFullScreen");
             errCode = WMError::WM_ERROR_INVALID_PARAM;
+        } else {
+            isFullScreen = static_cast<bool>(*nativeVal);
         }
-        isFullScreen = static_cast<bool>(*nativeVal);
     }
 
     AsyncTask::CompleteCallback complete =
@@ -778,8 +671,9 @@ NativeValue* JsWindow::OnSetLayoutFullScreen(NativeEngine& engine, NativeCallbac
         if (nativeVal == nullptr) {
             WLOGFE("Failed to convert parameter to isLayoutFullScreen");
             errCode = WMError::WM_ERROR_INVALID_PARAM;
+        } else {
+            isLayoutFullScreen = static_cast<bool>(*nativeVal);
         }
-        isLayoutFullScreen = static_cast<bool>(*nativeVal);
     }
     AsyncTask::CompleteCallback complete =
         [=](NativeEngine& engine, AsyncTask& task, int32_t status) {
@@ -857,11 +751,11 @@ NativeValue* JsWindow::OnSetSystemBarProperties(NativeEngine& engine, NativeCall
         if (nativeObj == nullptr) {
             WLOGFE("Failed to convert object to SystemBarProperties");
             errCode = WMError::WM_ERROR_INVALID_PARAM;
-        }
-
-        if (!SetSystemBarPropertiesFromJs(engine, nativeObj, systemBarProperties, windowToken_)) {
-            WLOGFE("Failed to GetSystemBarProperties From Js Object");
-            errCode = WMError::WM_ERROR_INVALID_PARAM;
+        } else {
+            if (!SetSystemBarPropertiesFromJs(engine, nativeObj, systemBarProperties, windowToken_)) {
+                WLOGFE("Failed to GetSystemBarProperties From Js Object");
+                errCode = WMError::WM_ERROR_INVALID_PARAM;
+            }
         }
     }
     AsyncTask::CompleteCallback complete =
@@ -893,9 +787,9 @@ NativeValue* JsWindow::OnSetSystemBarProperties(NativeEngine& engine, NativeCall
 
 NativeValue* JsWindow::OnGetAvoidArea(NativeEngine& engine, NativeCallbackInfo& info)
 {
-    WLOGFI("JsWindow::OnGetAvoidArea is called");
+    WLOGFI("JsWindow::OnGetAvoidArea is called info.argc: %{public}d", info.argc);
     WMError errCode = WMError::WM_OK;
-    if (windowToken_ == nullptr || info.argc < ARGC_ONE) {
+    if (windowToken_ == nullptr || info.argc < 1 || info.argc > 2) { // 2 is max num of argv
         WLOGFE("JsWindow windowToken_ is nullptr or param is too small!");
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
@@ -906,9 +800,9 @@ NativeValue* JsWindow::OnGetAvoidArea(NativeEngine& engine, NativeCallbackInfo& 
         if (nativeMode == nullptr) {
             WLOGFE("Failed to convert parameter to AvoidAreaType");
             errCode = WMError::WM_ERROR_INVALID_PARAM;
+        } else {
+            avoidAreaType = static_cast<AvoidAreaType>(static_cast<uint32_t>(*nativeMode));
         }
-        avoidAreaType = static_cast<AvoidAreaType>(static_cast<uint32_t>(*nativeMode));
-        WLOGFI("JsWindow::OnGetAvoidArea get avoidAreaType success %{public}u", avoidAreaType);
     }
     AsyncTask::CompleteCallback complete =
         [=](NativeEngine& engine, AsyncTask& task, int32_t status) {
@@ -923,7 +817,7 @@ NativeValue* JsWindow::OnGetAvoidArea(NativeEngine& engine, NativeCallbackInfo& 
                 WLOGFI("JsWindow::OnGetAvoidArea GetAvoidAreaByType Success");
             } else {
                 WLOGFE("JsWindow::OnGetAvoidArea GetAvoidAreaByType Failed");
-                avoidArea = { EMPTY_RECT, EMPTY_RECT, EMPTY_RECT, EMPTY_RECT }; // left, top, right, bottom
+                avoidArea = { g_emptyRect, g_emptyRect, g_emptyRect, g_emptyRect }; // left, top, right, bottom
             }
             // native avoidArea -> js avoidArea
             NativeValue* avoidAreaObj = ChangeAvoidAreaToJsValue(engine, avoidArea);
@@ -1010,7 +904,13 @@ NativeValue* JsWindow::OnSetColorSpace(NativeEngine& engine, NativeCallbackInfo&
             WLOGFE("JsWindow::OnSetColorSpace Failed to convert parameter to ColorSpace");
         } else {
             colorSpace = static_cast<ColorSpace>(static_cast<uint32_t>(*nativeType));
-            WLOGFI("JsWindow::OnSetColorSpace %{public}u", static_cast<uint32_t>(colorSpace));
+            if (colorSpace > ColorSpace::COLOR_SPACE_WIDE_GAMUT) {
+                WLOGFE("JsWindow::OnSetColorSpace Failed, colorSpace %{public}u invalid!",
+                    static_cast<uint32_t>(colorSpace));
+                errCode = WMError::WM_ERROR_INVALID_PARAM;
+            } else {
+                WLOGFI("JsWindow::OnSetColorSpace %{public}u", static_cast<uint32_t>(colorSpace));
+            }
         }
     }
 
@@ -1071,7 +971,7 @@ NativeValue* CreateJsWindowObject(NativeEngine& engine, sptr<Window>& window)
 {
     WLOGFI("JsWindow::CreateJsWindow is called");
     std::string windowName = window->GetWindowName();
-    // avoid repeatly creat js window when getWindow
+    // avoid repeatedly create js window when getWindow
     std::shared_ptr<NativeReference> jsWindowObj = FindJsWindowObject(windowName);
     if (jsWindowObj != nullptr && jsWindowObj->Get() != nullptr) {
         WLOGFI("JsWindow::CreateJsWindow FindJsWindowObject %{public}s", windowName.c_str());

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,7 +51,7 @@ public:
         displayId_ = displayId;
     }
     bool isCallbackCalled_ { false };
-    DisplayId displayId_ { DISPLAY_ID_INVALD };
+    DisplayId displayId_ { DISPLAY_ID_INVALID };
 };
 
 class DisplayChangeTest : public testing::Test {
@@ -71,13 +71,13 @@ public:
     static sptr<DisplayChangeEventListener> listener_;
     static inline uint32_t times_ = 0;
 };
-DisplayId DisplayChangeTest::defaultDisplayId_ = DISPLAY_ID_INVALD;
+DisplayId DisplayChangeTest::defaultDisplayId_ = DISPLAY_ID_INVALID;
 sptr<DisplayChangeEventListener> DisplayChangeTest::listener_ = new DisplayChangeEventListener();
 
 void DisplayChangeTest::SetUpTestCase()
 {
     defaultDisplayId_ = DisplayManager::GetInstance().GetDefaultDisplayId();
-    if (defaultDisplayId_ == DISPLAY_ID_INVALD) {
+    if (defaultDisplayId_ == DISPLAY_ID_INVALID) {
         WLOGE("DisplayId is invalid!");
     }
     if (!DisplayManager::GetInstance().RegisterDisplayListener(listener_)) {
@@ -103,7 +103,7 @@ void DisplayChangeTest::TearDown()
 void DisplayChangeTest::ResetDisplayChangeListener()
 {
     listener_->isCallbackCalled_ = false;
-    listener_->displayId_ = DISPLAY_ID_INVALD;
+    listener_->displayId_ = DISPLAY_ID_INVALID;
 }
 
 bool DisplayChangeTest::CheckDisplayChangeEventCallback(bool valueExpected)
@@ -124,6 +124,10 @@ bool DisplayChangeTest::CheckDisplayChangeEventCallback(bool valueExpected)
 
 bool DisplayChangeTest::ScreenSizeEqual(const sptr<Screen> screen, const sptr<SupportedScreenModes> curInfo)
 {
+    if (screen == nullptr || curInfo == nullptr) {
+        WLOGFI("param is nullptr");
+        return false;
+    }
     uint32_t sWidth = screen->GetWidth();
     uint32_t sHeight = screen->GetHeight();
     WLOGI("ScreenSizeEqual: ScreenSize: %{public}u %{public}u, ActiveModeInfoSize: %{public}u %{public}u",
@@ -133,6 +137,10 @@ bool DisplayChangeTest::ScreenSizeEqual(const sptr<Screen> screen, const sptr<Su
 
 bool DisplayChangeTest::DisplaySizeEqual(const sptr<Display> display, const sptr<SupportedScreenModes> curInfo)
 {
+    if (display == nullptr || curInfo == nullptr) {
+        WLOGFI("param is nullptr");
+        return false;
+    }
     uint32_t dWidth = static_cast<uint32_t>(display->GetWidth());
     uint32_t dHeight = static_cast<uint32_t>(display->GetHeight());
     WLOGI("DisplaySizeEqual:: DisplaySize: %{public}u %{public}u, ActiveModeInfoSize: %{public}u %{public}u",
@@ -216,6 +224,7 @@ HWTEST_F(DisplayChangeTest, CheckDisplayStateChange01, Function | SmallTest | Le
 {
     WLOGFI("CheckDisplayStateChange01");
     sptr<Display> defaultDisplay = DisplayManager::GetInstance().GetDisplayById(defaultDisplayId_);
+    ASSERT_NE(nullptr, defaultDisplay);
     ScreenId screenId = defaultDisplay->GetScreenId();
     sptr<Screen> screen = ScreenManager::GetInstance().GetScreenById(screenId);
     ASSERT_NE(nullptr, screen);
@@ -234,6 +243,7 @@ HWTEST_F(DisplayChangeTest, CheckDisplayStateChange02, Function | SmallTest | Le
 {
     WLOGFI("CheckDisplayStateChange02");
     sptr<Display> defaultDisplay = DisplayManager::GetInstance().GetDisplayById(defaultDisplayId_);
+    ASSERT_NE(nullptr, defaultDisplay);
     ScreenId screenId = defaultDisplay->GetScreenId();
     sptr<Screen> screen = ScreenManager::GetInstance().GetScreenById(screenId);
     ASSERT_NE(nullptr, screen);
@@ -266,6 +276,7 @@ HWTEST_F(DisplayChangeTest, CheckDisplaySizeChange01, Function | MediumTest | Le
 {
     WLOGFI("CheckDisplaySizeChange01");
     sptr<Display> defaultDisplay = DisplayManager::GetInstance().GetDisplayById(defaultDisplayId_);
+    ASSERT_NE(nullptr, defaultDisplay);
     ScreenId screenId = defaultDisplay->GetScreenId();
     sptr<Screen> screen = ScreenManager::GetInstance().GetScreenById(screenId);
     ASSERT_NE(nullptr, screen);
@@ -298,6 +309,7 @@ HWTEST_F(DisplayChangeTest, CheckDisplaySizeChange02, Function | MediumTest | Le
 {
     WLOGFI("CheckDisplaySizeChange02");
     sptr<Display> defaultDisplay = DisplayManager::GetInstance().GetDisplayById(defaultDisplayId_);
+    ASSERT_NE(nullptr, defaultDisplay);
     ScreenId screenId = defaultDisplay->GetScreenId();
     sptr<Screen> screen = ScreenManager::GetInstance().GetScreenById(screenId);
     ASSERT_NE(nullptr, screen);
@@ -311,6 +323,7 @@ HWTEST_F(DisplayChangeTest, CheckDisplaySizeChange02, Function | MediumTest | Le
             WLOGFI("SetScreenActiveMode: %{public}u -> %{public}u", usedModeIdx, modeIdx);
             ASSERT_EQ(true, CheckDisplayChangeEventCallback(true));
             defaultDisplay = DisplayManager::GetInstance().GetDisplayById(defaultDisplayId_);
+            ASSERT_NE(nullptr, defaultDisplay);
             ASSERT_EQ(true, DisplaySizeEqual(defaultDisplay, modes[modeIdx]));
             break;
         }
