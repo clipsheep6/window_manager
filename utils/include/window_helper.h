@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -120,6 +120,12 @@ public:
             return true;
         }
         return false;
+    }
+
+    static inline bool IsSwitchCascadeReason(WindowUpdateReason reason)
+    {
+        return (reason >= WindowUpdateReason::NEED_SWITCH_CASCADE_BASE) &&
+            (reason < WindowUpdateReason::NEED_SWITCH_CASCADE_END);
     }
 
     WindowHelper() = default;
