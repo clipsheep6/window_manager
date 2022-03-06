@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,10 +32,7 @@ class ScreenGroup : public Screen {
 friend class ScreenManager;
 public:
     ~ScreenGroup();
-    ScreenGroup(const ScreenGroup&) = delete;
-    ScreenGroup(ScreenGroup&&) = delete;
-    ScreenGroup& operator=(const ScreenGroup&) = delete;
-    ScreenGroup& operator=(ScreenGroup&&) = delete;
+    WM_DISALLOW_COPY_AND_MOVE(ScreenGroup);
     ScreenCombination GetCombination() const;
     std::vector<ScreenId> GetChildIds() const;
     std::vector<Point> GetChildPositions() const;
