@@ -60,6 +60,7 @@ public:
         TRANS_ID_SCREENGROUP_BASE = 1100,
         TRANS_ID_SCREEN_MAKE_MIRROR = TRANS_ID_SCREENGROUP_BASE,
         TRANS_ID_SCREEN_MAKE_EXPAND,
+        TRANS_ID_SCREEN_MAKE_MIRROR_OR_EXPAND_CANCELED,
         TRANS_ID_SCREEN_GAMUT_BASE = 1200,
         TRANS_ID_SCREEN_GET_SUPPORTED_COLOR_GAMUTS = TRANS_ID_SCREEN_GAMUT_BASE,
         TRANS_ID_SCREEN_GET_COLOR_GAMUT,
@@ -77,7 +78,7 @@ public:
     virtual DMError DestroyVirtualScreen(ScreenId screenId) = 0;
     virtual DMError SetVirtualScreenSurface(ScreenId screenId, sptr<Surface> surface) = 0;
     virtual bool SetOrientation(ScreenId screenId, Orientation orientation) = 0;
-    virtual std::shared_ptr<Media::PixelMap> GetDispalySnapshot(DisplayId displayId) = 0;
+    virtual std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId) = 0;
 
     // colorspace, gamut
     virtual DMError GetScreenSupportedColorGamuts(ScreenId screenId, std::vector<ScreenColorGamut>& colorGamuts) = 0;
@@ -105,6 +106,7 @@ public:
     virtual std::vector<sptr<ScreenInfo>> GetAllScreenInfos() = 0;
     virtual ScreenId MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId) = 0;
     virtual ScreenId MakeExpand(std::vector<ScreenId> screenId, std::vector<Point> startPoint) = 0;
+    virtual void RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens) = 0;
     virtual bool SetScreenActiveMode(ScreenId screenId, uint32_t modeId) = 0;
 };
 } // namespace OHOS::Rosen

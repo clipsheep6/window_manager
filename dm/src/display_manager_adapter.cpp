@@ -49,11 +49,11 @@ sptr<DisplayInfo> DisplayManagerAdapter::GetDisplayInfoByScreenId(ScreenId scree
 std::shared_ptr<Media::PixelMap> DisplayManagerAdapter::GetDisplaySnapshot(DisplayId displayId)
 {
     if (!InitDMSProxy()) {
-        WLOGFE("displayManagerAdapter::GetDisplaySnapshot: InitDMSProxy failed!");
+        WLOGFE("GetDisplaySnapshot: init dms proxy failed!");
         return nullptr;
     }
 
-    return displayManagerServiceProxy_->GetDispalySnapshot(displayId);
+    return displayManagerServiceProxy_->GetDisplaySnapshot(displayId);
 }
 
 DMError ScreenManagerAdapter::GetScreenSupportedColorGamuts(ScreenId screenId,
@@ -376,6 +376,14 @@ ScreenId ScreenManagerAdapter::MakeExpand(std::vector<ScreenId> screenId, std::v
         return SCREEN_ID_INVALID;
     }
     return displayManagerServiceProxy_->MakeExpand(screenId, startPoint);
+}
+
+void ScreenManagerAdapter::RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens)
+{
+    if (!InitDMSProxy()) {
+        return;
+    }
+    displayManagerServiceProxy_->RemoveVirtualScreenFromGroup(screens);
 }
 
 bool ScreenManagerAdapter::SetScreenActiveMode(ScreenId screenId, uint32_t modeId)

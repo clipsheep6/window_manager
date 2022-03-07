@@ -108,7 +108,7 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
         }
         case TRANS_ID_GET_DISPLAY_SNAPSHOT: {
             DisplayId displayId = data.ReadUint64();
-            std::shared_ptr<Media::PixelMap> dispalySnapshot = GetDispalySnapshot(displayId);
+            std::shared_ptr<Media::PixelMap> dispalySnapshot = GetDisplaySnapshot(displayId);
             if (dispalySnapshot == nullptr) {
                 reply.WriteParcelable(nullptr);
                 break;
@@ -221,6 +221,15 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
             }
             ScreenId result = MakeExpand(screenId, startPoint);
             reply.WriteUint64(static_cast<uint64_t>(result));
+            break;
+        }
+        case TRANS_ID_SCREEN_MAKE_MIRROR_OR_EXPAND_CANCELED: {
+            std::vector<ScreenId> screenId;
+            if (!data.ReadUInt64Vector(&screenId)) {
+                WLOGE("fail to receive screens in stub.");
+                break;
+            }
+            RemoveVirtualScreenFromGroup(screenId);
             break;
         }
         case TRANS_ID_SET_SCREEN_ACTIVE_MODE: {
