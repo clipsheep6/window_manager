@@ -990,6 +990,10 @@ WMError WindowNodeContainer::SwitchLayoutPolicy(WindowLayoutMode dstMode, bool r
 {
     WLOGFI("SwitchLayoutPolicy src: %{public}d dst: %{public}d reorder: %{public}d",
         static_cast<uint32_t>(layoutMode_), static_cast<uint32_t>(dstMode), static_cast<uint32_t>(reorder));
+    if (static_cast<uint32_t>(layoutMode_) >= layoutPolicys_.size()) {
+        WLOGFE("invalid layout mode");
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
     if (layoutMode_ != dstMode) {
         if (layoutMode_ == WindowLayoutMode::CASCADE && !pairedWindowMap_.empty()) {
             pairedWindowMap_.clear();
