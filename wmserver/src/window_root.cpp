@@ -337,6 +337,9 @@ void WindowRoot::UpdateFocusWindowWithWindowRemoved(const sptr<WindowNode>& node
         if (windowId != focusedWindowId) {
             return;
         }
+    } else if (node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+        WLOGFI("window is divider, do not get next focus window.");
+        return;
     }
     auto nextFocusableWindow = container->GetNextFocusableWindow(windowId);
     if (nextFocusableWindow != nullptr) {
