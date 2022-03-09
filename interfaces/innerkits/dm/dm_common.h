@@ -27,6 +27,8 @@ namespace {
     constexpr DisplayId DISPLAY_ID_INVALID = -1ULL;
     constexpr ScreenId SCREEN_ID_INVALID = -1ULL;
     const static std::string DEFAULT_SCREEN_NAME = "buildIn";
+    const static uint32_t MAX_SCREEN_SIZE = 32;
+    const static uint32_t MAX_DISPLAY_SIZE = 32;
 }
 
 enum class PowerStateChangeReason : uint32_t {
