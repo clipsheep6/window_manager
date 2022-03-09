@@ -56,6 +56,7 @@ enum class WindowType : uint32_t {
     WINDOW_TYPE_LAUNCHER_RECENT,
     WINDOW_TYPE_LAUNCHER_DOCK,
     WINDOW_TYPE_BOOT_ANIMATION,
+    WINDOW_TYPE_FREEZE_DISPLAY,
     ABOVE_APP_SYSTEM_WINDOW_END,
 
     SYSTEM_WINDOW_END = ABOVE_APP_SYSTEM_WINDOW_END,
@@ -111,8 +112,10 @@ enum class WindowSizeChangeReason : uint32_t {
 };
 
 enum class WindowLayoutMode : uint32_t {
-    CASCADE = 0,
+    BASE = 0,
+    CASCADE = BASE,
     TILE = 1,
+    END,
 };
 
 enum class DragEvent : uint32_t {
@@ -193,6 +196,12 @@ enum class WindowUpdateType : int32_t {
     WINDOW_UPDATE_FOCUSED,
     WINDOW_UPDATE_BOUNDS,
     WINDOW_UPDATE_ACTIVE,
+};
+
+enum class WindowDumpType : uint32_t {
+    ALL,
+    TREE,
+    CLEAR
 };
 }
 }

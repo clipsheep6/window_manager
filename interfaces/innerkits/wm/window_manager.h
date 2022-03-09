@@ -57,10 +57,10 @@ public:
 class IFocusChangedListener : public RefBase {
 public:
     virtual void OnFocused(uint32_t windowId, sptr<IRemoteObject> abilityToken,
-        WindowType windowType, DisplayId displayId) = 0;
+        WindowType windowType, DisplayId displayId);
 
     virtual void OnUnfocused(uint32_t windowId, sptr<IRemoteObject> abilityToken,
-        WindowType windowType, DisplayId displayId) = 0;
+        WindowType windowType, DisplayId displayId);
 
     virtual void OnFocused(const sptr<FocusChangeInfo>& focusChangeInfo);
 
@@ -126,6 +126,7 @@ public:
     void UnregisterVisibilityChangedListener(const sptr<IVisibilityChangedListener>& listener);
     void MinimizeAllAppWindows(DisplayId displayId);
     WMError SetWindowLayoutMode(WindowLayoutMode mode, DisplayId displayId);
+    WMError DumpWindowTree(std::vector<std::string> &windowTreeInfos, WindowDumpType type);
 
 private:
     WindowManager();

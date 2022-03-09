@@ -263,7 +263,7 @@ std::shared_ptr<Media::PixelMap> DisplayManagerProxy::GetDisplaySnapshot(Display
     }
 
     if (!data.WriteUint64(displayId)) {
-        WLOGFE("Write dispalyId failed");
+        WLOGFE("Write displayId failed");
         return nullptr;
     }
 
@@ -684,6 +684,31 @@ void DisplayManagerProxy::NotifyDisplayEvent(DisplayEvent event)
         WLOGFW("SendRequest failed");
         return;
     }
+}
+
+bool DisplayManagerProxy::SetFreeze(std::vector<DisplayId> displayIds, bool isFreeze)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return false;
+    }
+    if (!data.WriteUInt64Vector(displayIds)) {
+        WLOGFE("set freeze fail: write displayId failed.");
+        return false;
+    }
+    if (!data.WriteBool(isFreeze)) {
+        WLOGFE("set freeze fail: write freeze flag failed.");
+        return false;
+    }
+
+    if (Remote()->SendRequest(TRANS_ID_SET_FREEZE_EVENT, data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return false;
+    }
+    return true;
 }
 
 ScreenId DisplayManagerProxy::MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId)

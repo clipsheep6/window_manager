@@ -15,7 +15,13 @@
 
 #include "wm_napi_common.h"
 
+#include <string>
+
 #include <hilog/log.h>
+
+#include "accesstoken_kit.h"
+#include "bundle_constants.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 napi_status SetMemberInt32(napi_env env, napi_value result, const char *key, int32_t value)
@@ -42,21 +48,57 @@ napi_status SetMemberUndefined(napi_env env, napi_value result, const char *key)
     return napi_ok;
 }
 
-void ProcessPromise(napi_env env, Rosen::WMError wret, napi_deferred deferred, napi_value result[])
+bool CheckCallingPermission(const std::string &permission)
 {
-    GNAPI_LOG("Process Promise");
-    if (wret != Rosen::WMError::WM_OK) {
-        GNAPI_LOG("ProcessPromise, reject");
-        napi_reject_deferred(env, deferred, result[0]);
-        return;
+    WLOGFI("CheckCallingPermission, permission:%{public}s", permission.c_str());
+    if (!permission.empty() &&
+        Security::AccessToken::AccessTokenKit::VerifyAccessToken(IPCSkeleton::GetCallingTokenID(), permission)
+        != AppExecFwk::Constants::PERMISSION_GRANTED) {
+        WLOGFE("%{public}s permission not granted.", permission.c_str());
+        return false;
     }
-    GNAPI_LOG("ProcessPromise, resolve");
-    napi_resolve_deferred(env, deferred, result[1]);
+    WLOGFI("CheckCallingPermission end.");
+    return true;
 }
 
-void ProcessCallback(napi_env env, napi_ref ref, napi_value result[])
+void SetErrorInfo(napi_env env, Rosen::WMError wret, std::string errMessage, napi_value result[], int count)
 {
-    GNAPI_LOG("Process Callback");
+    if (count != 2 || result == nullptr) { // input param number is 2
+        GNAPI_LOG("Error, input param number must be 2");
+        return;
+    }
+    napi_value code = nullptr;
+    napi_value message = nullptr;
+    auto errorCode = static_cast<int32_t>(wret);
+    napi_create_string_utf8(env, errMessage.c_str(), strlen(errMessage.c_str()), &message);
+    napi_create_uint32(env, errorCode, &code);
+    napi_create_error(env, code, message, &result[0]);
+    napi_get_undefined(env, &result[1]);
+}
+
+void ProcessPromise(napi_env env, Rosen::WMError wret, napi_deferred deferred, napi_value result[], int count)
+{
+    if (count != 2 || result == nullptr) { // input param number is 2
+        GNAPI_LOG("Error, input param number must be 2");
+        return;
+    }
+    GNAPI_LOG("AsyncProcess: Promise");
+    if (wret == Rosen::WMError::WM_OK) {
+        GNAPI_LOG("AsyncProcess: Promise resolve");
+        napi_resolve_deferred(env, deferred, result[1]);
+    } else {
+        GNAPI_LOG("AsyncProcess: Promise reject");
+        napi_reject_deferred(env, deferred, result[0]);
+    }
+}
+
+void ProcessCallback(napi_env env, napi_ref ref, napi_value result[], int count)
+{
+    if (count != 2 || result == nullptr) { // input param number is 2
+        GNAPI_LOG("Error, input param number must be 2");
+        return;
+    }
+    GNAPI_LOG("AsyncProcess Callback");
     napi_value callback = nullptr;
     napi_value returnVal = nullptr;
     napi_get_reference_value(env, ref, &callback);

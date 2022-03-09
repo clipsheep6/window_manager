@@ -16,6 +16,7 @@
 #ifndef INTERFACES_KITS_NAPI_GRAPHIC_COMMON_COMMON_H
 #define INTERFACES_KITS_NAPI_GRAPHIC_COMMON_COMMON_H
 
+#include <cstring>
 #include <memory>
 #include <string>
 
@@ -23,6 +24,7 @@
 #include <napi/native_api.h>
 #include <napi/native_common.h>
 #include <napi/native_node_api.h>
+
 #include "js_native_api.h"
 #include "js_native_api_types.h"
 #include "wm_common.h"
@@ -30,6 +32,8 @@
 
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, OHOS::Rosen::HILOG_DOMAIN_WINDOW,
                                                 "NapiWindowManagerCommonLayer" };
+
+const int PARAMNUMBER = 2; // 2: callback func input number, also reused by Promise
 
 #define GNAPI_LOG(fmt, ...) OHOS::HiviewDFX::HiLog::Info(LABEL, \
     "%{public}s:%{public}d " fmt, __func__, __LINE__, ##__VA_ARGS__)
@@ -56,16 +60,20 @@ napi_status SetMemberInt32(napi_env env, napi_value result, const char *key, int
 napi_status SetMemberUint32(napi_env env, napi_value result, const char *key, uint32_t value);
 napi_status SetMemberUndefined(napi_env env, napi_value result, const char *key);
 
-void ProcessPromise(napi_env env, Rosen::WMError wret, napi_deferred deferred, napi_value result[]);
-void ProcessCallback(napi_env env, napi_ref ref, napi_value result[]);
+bool CheckCallingPermission(const std::string &permission);
+void SetErrorInfo(napi_env env, Rosen::WMError wret, std::string errMessage,
+    napi_value result[], int count);
+void ProcessPromise(napi_env env, Rosen::WMError wret, napi_deferred deferred,
+    napi_value result[], int cout);
+void ProcessCallback(napi_env env, napi_ref ref, napi_value result[], int count);
 
 template<typename ParamT>
-napi_value CreatePromise(napi_env env,
-                         std::string funcname,
-                         void(*async)(napi_env env, std::unique_ptr<ParamT>& param),
-                         napi_value(*resolve)(napi_env env, std::unique_ptr<ParamT>& param),
-                         napi_ref& callbackRef,
-                         std::unique_ptr<ParamT>& param)
+napi_value AsyncProcess(napi_env env,
+                        std::string funcname,
+                        void(*async)(napi_env env, std::unique_ptr<ParamT>& param),
+                        napi_value(*resolve)(napi_env env, std::unique_ptr<ParamT>& param),
+                        napi_ref& callbackRef,
+                        std::unique_ptr<ParamT>& param)
 {
     struct AsyncCallbackInfo {
         napi_async_work asyncWork;
@@ -84,8 +92,7 @@ napi_value CreatePromise(napi_env env,
     };
 
     napi_value resourceName = nullptr;
-    NAPI_CALL(env, napi_create_string_latin1(env,
-        funcname.c_str(), NAPI_AUTO_LENGTH, &resourceName));
+    NAPI_CALL(env, napi_create_string_latin1(env, funcname.c_str(), NAPI_AUTO_LENGTH, &resourceName));
 
     // decide use promise or callback
     napi_value result = nullptr;
@@ -104,16 +111,17 @@ napi_value CreatePromise(napi_env env,
 
     auto completeFunc = [](napi_env env, napi_status status, void *data) {
         AsyncCallbackInfo *info = reinterpret_cast<AsyncCallbackInfo *>(data);
-        napi_value result[2] = {0}; // 2: callback func input number, also reused by Promise
-        napi_get_undefined(env, &result[0]);
-        napi_get_undefined(env, &result[1]);
-        if (info->resolve) {
+        napi_value result[PARAMNUMBER] = {0};
+        if (info->param->wret == Rosen::WMError::WM_OK) {
+            napi_get_undefined(env, &result[0]);
             result[1] = info->resolve(env, info->param);
+        } else {
+            SetErrorInfo(env, info->param->wret, info->param->errMessage, result, PARAMNUMBER);
         }
         if (info->deferred) {
-            ProcessPromise(env, info->param->wret, info->deferred, result);
+            ProcessPromise(env, info->param->wret, info->deferred, result, PARAMNUMBER);
         } else {
-            ProcessCallback(env, info->ref, result);
+            ProcessCallback(env, info->ref, result, PARAMNUMBER);
         }
         napi_delete_async_work(env, info->asyncWork);
         delete info;

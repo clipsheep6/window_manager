@@ -24,6 +24,7 @@
 #include <system_ability.h>
 #include "display_change_listener.h"
 #include "drag_controller.h"
+#include "freeze_controller.h"
 #include "singleton_delegator.h"
 #include "wm_single_instance.h"
 #include "window_controller.h"
@@ -73,7 +74,7 @@ public:
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     void UnregisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
-
+    WMError DumpWindowTree(std::vector<std::string> &windowTreeInfo, WindowDumpType type) override;
 protected:
     WindowManagerService();
     virtual ~WindowManagerService() = default;
@@ -91,6 +92,7 @@ private:
     sptr<InputWindowMonitor> inputWindowMonitor_;
     sptr<SnapshotController> snapshotController_;
     sptr<DragController> dragController_;
+    sptr<FreezeController> freezeDisplayController_;
 };
 }
 }

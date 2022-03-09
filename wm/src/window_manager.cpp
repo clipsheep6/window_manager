@@ -199,6 +199,16 @@ WindowManager::~WindowManager()
 {
 }
 
+void IFocusChangedListener::OnFocused(uint32_t windowId, sptr<IRemoteObject> abilityToken,
+    WindowType windowType, DisplayId displayId)
+{
+}
+
+void IFocusChangedListener::OnUnfocused(uint32_t windowId, sptr<IRemoteObject> abilityToken,
+    WindowType windowType, DisplayId displayId)
+{
+}
+
 void IFocusChangedListener::OnFocused(const sptr<FocusChangeInfo>& focusChangeInfo)
 {
 }
@@ -405,6 +415,11 @@ void WindowManager::UpdateWindowVisibilityInfo(
     const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos) const
 {
     pImpl_->NotifyWindowVisibilityInfoChanged(windowVisibilityInfos);
+}
+
+WMError WindowManager::DumpWindowTree(std::vector<std::string> &windowTreeInfos, WindowDumpType type)
+{
+    return SingletonContainer::Get<WindowAdapter>().DumpWindowTree(windowTreeInfos, type);
 }
 } // namespace Rosen
 } // namespace OHOS

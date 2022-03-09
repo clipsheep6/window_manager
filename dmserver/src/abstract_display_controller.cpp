@@ -55,7 +55,7 @@ void AbstractDisplayController::Init(sptr<AbstractScreenController> abstractScre
     abstractScreenController_->ScreenConnectionInDisplayInit(abstractScreenCallback_);
     abstractScreenController->RegisterAbstractScreenCallback(abstractScreenCallback_);
 
-    // TODO: Active the code after "rsDisplayNode_->SetScreenId(rsScreenId)" is provided.
+    // Active the code after "rsDisplayNode_->SetScreenId(rsScreenId)" is provided.
     /*std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (dummyDisplay_ == nullptr) {
         sptr<AbstractDisplay> display = new AbstractDisplay(this, displayCount_.fetch_add(1), SCREEN_ID_INVALID,
@@ -352,12 +352,12 @@ void AbstractDisplayController::BindAloneScreenLocked(sptr<AbstractScreen> realA
             WLOGE("The first real screen should be default for Phone. %{public}" PRIu64"", realAbsScreen->dmsId_);
             return;
         }
+        sptr<SupportedScreenModes> info = realAbsScreen->GetActiveScreenMode();
+        if (info == nullptr) {
+            WLOGE("bind alone screen error, cannot get info.");
+            return;
+        }
         if (dummyDisplay_ == nullptr) {
-            sptr<SupportedScreenModes> info = realAbsScreen->GetActiveScreenMode();
-            if (info == nullptr) {
-                WLOGE("bind alone screen error, cannot get info.");
-                return;
-            }
             sptr<AbstractDisplay> display = new AbstractDisplay(displayCount_.fetch_add(1),
                 realAbsScreen->dmsId_, info->width_, info->height_, info->refreshRate_);
             abstractDisplayMap_.insert((std::make_pair(display->GetId(), display)));
@@ -367,7 +367,11 @@ void AbstractDisplayController::BindAloneScreenLocked(sptr<AbstractScreen> realA
         } else {
             WLOGI("bind display for new screen. screen:%{public}" PRIu64", display:%{public}" PRIu64"",
                 realAbsScreen->dmsId_, dummyDisplay_->GetId());
+            bool updateFlag = dummyDisplay_->GetHeight() == info->height_ && dummyDisplay_->GetWidth() == info->width_;
             dummyDisplay_->BindAbstractScreen(realAbsScreen->dmsId_);
+            if (updateFlag) {
+                DisplayManagerAgentController::GetInstance().OnDisplayCreate(dummyDisplay_->ConvertToDisplayInfo());
+            }
             dummyDisplay_ = nullptr;
         }
     } else {
@@ -419,8 +423,46 @@ void AbstractDisplayController::AddDisplayForExpandScreen(sptr<AbstractScreen> a
             return;
         }
     }
-    WLOGI("screenId: %{public}" PRIu64" has no corresponding display, create new dispaly.",
+    WLOGI("screenId: %{public}" PRIu64" has no corresponding display, create new display.",
         absScreen->dmsId_);
     AddScreenToExpandLocked(absScreen);
+}
+
+
+void AbstractDisplayController::SetFreeze(std::vector<DisplayId> displayIds, bool toFreeze)
+{
+    WM_SCOPED_TRACE("dms:SetAllFreeze");
+    DisplayStateChangeType type = toFreeze ? DisplayStateChangeType::FREEZE : DisplayStateChangeType::UNFREEZE;
+    DisplayChangeEvent event
+        = toFreeze ? DisplayChangeEvent::DISPLAY_FREEZED : DisplayChangeEvent::DISPLAY_UNFREEZED;
+    for (DisplayId displayId : displayIds) {
+        sptr<AbstractDisplay> abstractDisplay;
+        WM_SCOPED_TRACE("dms:SetFreeze(%" PRIu64")", displayId);
+        {
+            WLOGI("setfreeze display %{public}" PRIu64"", displayId);
+            std::lock_guard<std::recursive_mutex> lock(mutex_);
+            auto iter = abstractDisplayMap_.find(displayId);
+            if (iter == abstractDisplayMap_.end()) {
+                WLOGI("setfreeze fail, cannot get display %{public}" PRIu64"", displayId);
+                continue;
+            }
+            abstractDisplay = iter->second;
+            FreezeFlag curFlag = abstractDisplay->GetFreezeFlag();
+            if ((toFreeze && (curFlag == FreezeFlag::FREEZING))
+                || (!toFreeze && (curFlag == FreezeFlag::UNFREEZING))) {
+                WLOGI("setfreeze fail, display %{public}" PRIu64" freezeflag is %{public}u",
+                    displayId, curFlag);
+                continue;
+            }
+            FreezeFlag flag = toFreeze ? FreezeFlag::FREEZING : FreezeFlag::UNFREEZING;
+            abstractDisplay->SetFreezeFlag(flag);
+        }
+
+        // Notify freeze event to WMS
+        DisplayManagerService::GetInstance().NotifyDisplayStateChange(displayId, type);
+        // Notify freeze event to DisplayManager
+        sptr<DisplayInfo> displayInfo = abstractDisplay->ConvertToDisplayInfo();
+        DisplayManagerAgentController::GetInstance().OnDisplayChange(displayInfo, event);
+    }
 }
 } // namespace OHOS::Rosen

@@ -108,12 +108,12 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
         }
         case TRANS_ID_GET_DISPLAY_SNAPSHOT: {
             DisplayId displayId = data.ReadUint64();
-            std::shared_ptr<Media::PixelMap> dispalySnapshot = GetDisplaySnapshot(displayId);
-            if (dispalySnapshot == nullptr) {
+            std::shared_ptr<Media::PixelMap> displaySnapshot = GetDisplaySnapshot(displayId);
+            if (displaySnapshot == nullptr) {
                 reply.WriteParcelable(nullptr);
                 break;
             }
-            reply.WriteParcelable(dispalySnapshot.get());
+            reply.WriteParcelable(displaySnapshot.get());
         }
         case TRANS_ID_REGISTER_DISPLAY_MANAGER_AGENT: {
             auto agent = iface_cast<IDisplayManagerAgent>(data.ReadRemoteObject());
@@ -164,6 +164,12 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
         case TRANS_ID_NOTIFY_DISPLAY_EVENT: {
             DisplayEvent event = static_cast<DisplayEvent>(data.ReadUint32());
             NotifyDisplayEvent(event);
+            break;
+        }
+        case TRANS_ID_SET_FREEZE_EVENT: {
+            std::vector<DisplayId> ids;
+            data.ReadUInt64Vector(&ids);
+            SetFreeze(ids, data.ReadBool());
             break;
         }
         case TRANS_ID_SCREEN_MAKE_MIRROR: {
