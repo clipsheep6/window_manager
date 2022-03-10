@@ -1076,7 +1076,17 @@ void WindowImpl::HandleDragEvent(int32_t posX, int32_t posY, int32_t pointId)
         }
         newRect.height_ = static_cast<uint32_t>(static_cast<int32_t>(newRect.height_) + diffY);
     }
-    auto res = Drag(newRect);
+
+    auto display = DisplayManager::GetInstance().GetDisplayById(property_->GetDisplayId());
+    if (display == nullptr) {
+        WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u", property_->GetDisplayId(),
+            property_->GetWindowId());
+        return;
+    }
+    bool isVerticalDisplay = display->GetWidth() < display->GetHeight() ? true : false;
+    Rect newFixedRect = WindowHelper::GetFixedWindowRectByLimitSize(newRect, GetRect(),
+        isVerticalDisplay, display->GetVirtualPixelRatio());
+    auto res = Drag(newFixedRect);
     if (res != WMError::WM_OK) {
         WLOGFE("drag window: %{public}u failed", GetWindowId());
     }
