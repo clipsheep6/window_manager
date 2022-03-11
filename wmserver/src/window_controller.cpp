@@ -81,14 +81,15 @@ WMError WindowController::AddWindowNode(sptr<WindowProperty>& property)
         sysBarWinId_[node->GetWindowType()] = node->GetWindowId();
     }
 
-    if (node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
-        WindowHelper::IsAppWindow(node->GetWindowType())) {
-        WM_SCOPED_TRACE_BEGIN("controller:MinimizeStructuredAppWindowsExceptSelf");
-        res = windowRoot_->MinimizeStructuredAppWindowsExceptSelf(node);
-        WM_SCOPED_TRACE_END();
-        if (res != WMError::WM_OK) {
-            WLOGFE("Minimize other structured window failed");
-            return res;
+    if (node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN) {
+        if (WindowHelper::IsAppWindow(node->GetWindowType()) || node->GetWindowType() == WindowType::WINDOW_TYPE_LAUNCHER_RECENT) {
+            WM_SCOPED_TRACE_BEGIN("controller:MinimizeStructuredAppWindowsExceptSelf");
+            res = windowRoot_->MinimizeStructuredAppWindowsExceptSelf(node);
+            WM_SCOPED_TRACE_END();
+            if (res != WMError::WM_OK) {
+                WLOGFE("Minimize other structured window failed");
+                return res;
+            }
         }
     }
     StopBootAnimationIfNeed(node->GetWindowType());
