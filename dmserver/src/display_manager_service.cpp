@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,10 +31,20 @@ namespace {
 WM_IMPLEMENT_SINGLE_INSTANCE(DisplayManagerService)
 const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(&SingletonContainer::Get<DisplayManagerService>());
 
+#define CHECK_SCREEN_AND_RETURN(ret) \
+    do { \
+        if (screenId == SCREEN_ID_INVALID) { \
+            WLOGFE("screenId invalid"); \
+            return ret; \
+        } \
+    } while (false)
+
 DisplayManagerService::DisplayManagerService() : SystemAbility(DISPLAY_MANAGER_SERVICE_SA_ID, true),
-    abstractDisplayController_(new AbstractDisplayController(mutex_)),
+    abstractDisplayController_(new AbstractDisplayController(mutex_,
+    std::bind(&DisplayManagerService::NotifyDisplayStateChange, this, std::placeholders::_1, std::placeholders::_2))),
     abstractScreenController_(new AbstractScreenController(mutex_)),
-    displayPowerController_(new DisplayPowerController(mutex_))
+    displayPowerController_(new DisplayPowerController(mutex_,
+    std::bind(&DisplayManagerService::NotifyDisplayStateChange, this, std::placeholders::_1, std::placeholders::_2)))
 {
 }
 
@@ -42,6 +52,7 @@ void DisplayManagerService::OnStart()
 {
     WLOGFI("DisplayManagerService::OnStart start");
     if (!Init()) {
+        WLOGFW("Init failed");
         return;
     }
 }
@@ -68,36 +79,27 @@ void DisplayManagerService::RegisterDisplayChangeListener(sptr<IDisplayChangeLis
 
 void DisplayManagerService::NotifyDisplayStateChange(DisplayId id, DisplayStateChangeType type)
 {
+    WLOGFI("DisplayId %{public}" PRIu64"", id);
     if (displayChangeListener_ != nullptr) {
         displayChangeListener_->OnDisplayStateChange(id, type);
     }
 }
 
-DisplayId DisplayManagerService::GetDisplayIdFromScreenId(ScreenId screenId)
-{
-    return (DisplayId)screenId;
-}
-
-ScreenId DisplayManagerService::GetScreenIdFromDisplayId(DisplayId displayId)
-{
-    return (ScreenId)displayId;
-}
-
 DisplayId DisplayManagerService::GetDefaultDisplayId()
 {
-    ScreenId dmsScreenId = abstractScreenController_->GetDefaultScreenId();
+    ScreenId dmsScreenId = abstractScreenController_->GetDefaultAbstractScreenId();
     WLOGFI("GetDefaultDisplayId %{public}" PRIu64"", dmsScreenId);
-    sptr<AbstractDisplay> display = GetDisplayByScreen(dmsScreenId);
+    sptr<AbstractDisplay> display = abstractDisplayController_->GetAbstractDisplayByScreen(dmsScreenId);
     if (display == nullptr) {
         WLOGFE("fail to get displayInfo by id: invalid display");
-        return DISPLAY_ID_INVALD;
+        return DISPLAY_ID_INVALID;
     }
     return display->GetId();
 }
 
 sptr<DisplayInfo> DisplayManagerService::GetDisplayInfoById(DisplayId displayId)
 {
-    sptr<AbstractDisplay> display = GetDisplayByDisplayId(displayId);
+    sptr<AbstractDisplay> display = abstractDisplayController_->GetAbstractDisplay(displayId);
     if (display == nullptr) {
         WLOGFE("fail to get displayInfo by id: invalid display");
         return nullptr;
@@ -107,7 +109,7 @@ sptr<DisplayInfo> DisplayManagerService::GetDisplayInfoById(DisplayId displayId)
 
 sptr<DisplayInfo> DisplayManagerService::GetDisplayInfoByScreen(ScreenId screenId)
 {
-    sptr<AbstractDisplay> display = GetDisplayByScreen(screenId);
+    sptr<AbstractDisplay> display = abstractDisplayController_->GetAbstractDisplayByScreen(screenId);
     if (display == nullptr) {
         WLOGFE("fail to get displayInfo by screenId: invalid display");
         return nullptr;
@@ -115,21 +117,12 @@ sptr<DisplayInfo> DisplayManagerService::GetDisplayInfoByScreen(ScreenId screenI
     return display->ConvertToDisplayInfo();
 }
 
-sptr<AbstractDisplay> DisplayManagerService::GetAbstractDisplay(DisplayId displayId)
-{
-    return abstractDisplayController_->GetAbstractDisplay(displayId);
-}
- 
 ScreenId DisplayManagerService::CreateVirtualScreen(VirtualScreenOption option)
 {
     WM_SCOPED_TRACE("dms:CreateVirtualScreen(%s)", option.name_.c_str());
-    WLOGFI("DumpScreenInfo before Create VirtualScreen");
-    abstractScreenController_->DumpScreenInfo();
     ScreenId screenId = abstractScreenController_->CreateVirtualScreen(option);
-    if (screenId == SCREEN_ID_INVALID) {
-        WLOGFE("DisplayManagerService::CreateVirtualScreen: Get virtualScreenId failed");
-        return SCREEN_ID_INVALID;
-    }
+    CHECK_SCREEN_AND_RETURN(SCREEN_ID_INVALID);
+
     WLOGFI("DumpScreenInfo after Create VirtualScreen");
     abstractScreenController_->DumpScreenInfo();
     return screenId;
@@ -138,10 +131,8 @@ ScreenId DisplayManagerService::CreateVirtualScreen(VirtualScreenOption option)
 DMError DisplayManagerService::DestroyVirtualScreen(ScreenId screenId)
 {
     WLOGFI("DestroyVirtualScreen::ScreenId: %{public}" PRIu64 "", screenId);
-    if (screenId == SCREEN_ID_INVALID) {
-        WLOGFE("DisplayManagerService: virtualScreenId is invalid");
-        return DMError::DM_ERROR_INVALID_PARAM;
-    }
+    CHECK_SCREEN_AND_RETURN(DMError::DM_ERROR_INVALID_PARAM);
+
     WM_SCOPED_TRACE("dms:DestroyVirtualScreen(%" PRIu64")", screenId);
     auto rsScreenId = abstractScreenController_->ConvertToRsScreenId(screenId);
     std::map<ScreenId, std::shared_ptr<RSDisplayNode>>::iterator iter = displayNodeMap_.find(rsScreenId);
@@ -162,10 +153,8 @@ DMError DisplayManagerService::DestroyVirtualScreen(ScreenId screenId)
 DMError DisplayManagerService::SetVirtualScreenSurface(ScreenId screenId, sptr<Surface> surface)
 {
     WLOGFI("SetVirtualScreenSurface::ScreenId: %{public}" PRIu64 "", screenId);
-    if (screenId == SCREEN_ID_INVALID) {
-        WLOGFE("SetVirtualScreenSurface: virtualScreenId is invalid");
-        return DMError::DM_ERROR_INVALID_PARAM;
-    }
+    CHECK_SCREEN_AND_RETURN(DMError::DM_ERROR_INVALID_PARAM);
+
     WM_SCOPED_TRACE("dms:SetVirtualScreenSurface(%" PRIu64")", screenId);
     return abstractScreenController_->SetVirtualScreenSurface(screenId, surface);
 }
@@ -176,9 +165,9 @@ bool DisplayManagerService::SetOrientation(ScreenId screenId, Orientation orient
     return abstractScreenController_->SetOrientation(screenId, orientation);
 }
 
-std::shared_ptr<Media::PixelMap> DisplayManagerService::GetDispalySnapshot(DisplayId displayId)
+std::shared_ptr<Media::PixelMap> DisplayManagerService::GetDisplaySnapshot(DisplayId displayId)
 {
-    WM_SCOPED_TRACE("dms:GetDispalySnapshot(%" PRIu64")", displayId);
+    WM_SCOPED_TRACE("dms:GetDisplaySnapshot(%" PRIu64")", displayId);
     std::shared_ptr<Media::PixelMap> screenSnapshot
         = abstractDisplayController_->GetScreenSnapshot(displayId);
     return screenSnapshot;
@@ -194,10 +183,8 @@ DMError DisplayManagerService::GetScreenSupportedColorGamuts(ScreenId screenId,
     std::vector<ScreenColorGamut>& colorGamuts)
 {
     WLOGFI("GetScreenSupportedColorGamuts::ScreenId: %{public}" PRIu64 "", screenId);
-    if (screenId == SCREEN_ID_INVALID) {
-        WLOGFE("DisplayManagerService: ScreenId is invalid");
-        return DMError::DM_ERROR_INVALID_PARAM;
-    }
+    CHECK_SCREEN_AND_RETURN(DMError::DM_ERROR_INVALID_PARAM);
+
     WM_SCOPED_TRACE("dms:GetScreenSupportedColorGamuts(%" PRIu64")", screenId);
 
     return abstractScreenController_->GetScreenSupportedColorGamuts(screenId, colorGamuts);
@@ -206,10 +193,8 @@ DMError DisplayManagerService::GetScreenSupportedColorGamuts(ScreenId screenId,
 DMError DisplayManagerService::GetScreenColorGamut(ScreenId screenId, ScreenColorGamut& colorGamut)
 {
     WLOGFI("GetScreenColorGamut::ScreenId: %{public}" PRIu64 "", screenId);
-    if (screenId == SCREEN_ID_INVALID) {
-        WLOGFE("DisplayManagerService: ScreenId is invalid");
-        return DMError::DM_ERROR_INVALID_PARAM;
-    }
+    CHECK_SCREEN_AND_RETURN(DMError::DM_ERROR_INVALID_PARAM);
+
     WM_SCOPED_TRACE("dms:GetScreenColorGamut(%" PRIu64")", screenId);
 
     return abstractScreenController_->GetScreenColorGamut(screenId, colorGamut);
@@ -218,10 +203,8 @@ DMError DisplayManagerService::GetScreenColorGamut(ScreenId screenId, ScreenColo
 DMError DisplayManagerService::SetScreenColorGamut(ScreenId screenId, int32_t colorGamutIdx)
 {
     WLOGFI("SetScreenColorGamut::ScreenId: %{public}" PRIu64 ", colorGamutIdx %{public}d", screenId, colorGamutIdx);
-    if (screenId == SCREEN_ID_INVALID) {
-        WLOGFE("DisplayManagerService: ScreenId is invalid");
-        return DMError::DM_ERROR_INVALID_PARAM;
-    }
+    CHECK_SCREEN_AND_RETURN(DMError::DM_ERROR_INVALID_PARAM);
+
     WM_SCOPED_TRACE("dms:SetScreenColorGamut(%" PRIu64")", screenId);
 
     return abstractScreenController_->SetScreenColorGamut(screenId, colorGamutIdx);
@@ -230,10 +213,8 @@ DMError DisplayManagerService::SetScreenColorGamut(ScreenId screenId, int32_t co
 DMError DisplayManagerService::GetScreenGamutMap(ScreenId screenId, ScreenGamutMap& gamutMap)
 {
     WLOGFI("GetScreenGamutMap::ScreenId: %{public}" PRIu64 "", screenId);
-    if (screenId == SCREEN_ID_INVALID) {
-        WLOGFE("DisplayManagerService: ScreenId is invalid");
-        return DMError::DM_ERROR_INVALID_PARAM;
-    }
+    CHECK_SCREEN_AND_RETURN(DMError::DM_ERROR_INVALID_PARAM);
+
     WM_SCOPED_TRACE("dms:GetScreenGamutMap(%" PRIu64")", screenId);
 
     return abstractScreenController_->GetScreenGamutMap(screenId, gamutMap);
@@ -243,10 +224,8 @@ DMError DisplayManagerService::SetScreenGamutMap(ScreenId screenId, ScreenGamutM
 {
     WLOGFI("SetScreenGamutMap::ScreenId: %{public}" PRIu64 ", ScreenGamutMap %{public}u",
         screenId, static_cast<uint32_t>(gamutMap));
-    if (screenId == SCREEN_ID_INVALID) {
-        WLOGFE("DisplayManagerService: ScreenId is invalid");
-        return DMError::DM_ERROR_INVALID_PARAM;
-    }
+    CHECK_SCREEN_AND_RETURN(DMError::DM_ERROR_INVALID_PARAM);
+
     WM_SCOPED_TRACE("dms:SetScreenGamutMap(%" PRIu64")", screenId);
 
     return abstractScreenController_->SetScreenGamutMap(screenId, gamutMap);
@@ -255,10 +234,8 @@ DMError DisplayManagerService::SetScreenGamutMap(ScreenId screenId, ScreenGamutM
 DMError DisplayManagerService::SetScreenColorTransform(ScreenId screenId)
 {
     WLOGFI("SetScreenColorTransform::ScreenId: %{public}" PRIu64 "", screenId);
-    if (screenId == SCREEN_ID_INVALID) {
-        WLOGFE("DisplayManagerService: ScreenId is invalid");
-        return DMError::DM_ERROR_INVALID_PARAM;
-    }
+    CHECK_SCREEN_AND_RETURN(DMError::DM_ERROR_INVALID_PARAM);
+
     WM_SCOPED_TRACE("dms:SetScreenColorTransform(%" PRIu64")", screenId);
 
     return abstractScreenController_->SetScreenColorTransform(screenId);
@@ -317,12 +294,15 @@ bool DisplayManagerService::SuspendEnd()
         EventStatus::END);
 }
 
-bool DisplayManagerService::SetScreenPowerForAll(DisplayPowerState state, PowerStateChangeReason reason)
+bool DisplayManagerService::SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason)
 {
     WLOGFI("SetScreenPowerForAll");
-    return DisplayManagerAgentController::GetInstance().NotifyDisplayPowerEvent(
-        state == DisplayPowerState::POWER_ON ? DisplayPowerEvent::DISPLAY_ON :
-        DisplayPowerEvent::DISPLAY_OFF, EventStatus::END);
+    return abstractScreenController_->SetScreenPowerForAll(state, reason);
+}
+
+ScreenPowerState DisplayManagerService::GetScreenPower(ScreenId dmsScreenId)
+{
+    return abstractScreenController_->GetScreenPower(dmsScreenId);
 }
 
 bool DisplayManagerService::SetDisplayState(DisplayState state)
@@ -340,21 +320,6 @@ ScreenId DisplayManagerService::GetScreenIdByDisplayId(DisplayId displayId) cons
     return abstractDisplay->GetAbstractScreenId();
 }
 
-sptr<AbstractDisplay> DisplayManagerService::GetDisplayByDisplayId(DisplayId displayId) const
-{
-    return abstractDisplayController_->GetAbstractDisplay(displayId);
-}
-
-sptr<AbstractDisplay> DisplayManagerService::GetDisplayByScreen(ScreenId screenId) const
-{
-    return abstractDisplayController_->GetAbstractDisplayByScreen(screenId);
-}
-
-sptr<AbstractScreenController> DisplayManagerService::GetAbstractScreenController()
-{
-    return abstractScreenController_;
-}
-
 DisplayState DisplayManagerService::GetDisplayState(DisplayId displayId)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -366,15 +331,18 @@ void DisplayManagerService::NotifyDisplayEvent(DisplayEvent event)
     displayPowerController_->NotifyDisplayEvent(event);
 }
 
+bool DisplayManagerService::SetFreeze(std::vector<DisplayId> displayIds, bool isFreeze)
+{
+    abstractDisplayController_->SetFreeze(displayIds, isFreeze);
+    return true;
+}
 
 std::shared_ptr<RSDisplayNode> DisplayManagerService::GetRSDisplayNodeByDisplayId(DisplayId displayId) const
 {
-    ScreenId dmsScreenId = GetScreenIdByDisplayId(displayId);
-    if (dmsScreenId == SCREEN_ID_INVALID) {
-        WLOGFE("GetRSDisplayNodeByDisplayId: ScreenId invalid");
-        return nullptr;
-    }
-    return abstractScreenController_->GetRSDisplayNodeByScreenId(dmsScreenId);
+    ScreenId screenId = GetScreenIdByDisplayId(displayId);
+    CHECK_SCREEN_AND_RETURN(nullptr);
+
+    return abstractScreenController_->GetRSDisplayNodeByScreenId(screenId);
 }
 
 void DisplayManagerService::SetShotScreen(ScreenId mainScreenId, std::vector<ScreenId> shotScreenIds)
@@ -400,13 +368,14 @@ void DisplayManagerService::SetShotScreen(ScreenId mainScreenId, std::vector<Scr
         displayNodeMap_[shotScreenId] = RSDisplayNode::Create(config);
     }
     auto transactionProxy = RSTransactionProxy::GetInstance();
-    transactionProxy->FlushImplicitTransaction();
+    if (transactionProxy != nullptr) {
+        transactionProxy->FlushImplicitTransaction();
+    }
 }
 
 ScreenId DisplayManagerService::MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenIds)
 {
     WLOGFI("MakeMirror. mainScreenId :%{public}" PRIu64"", mainScreenId);
-    abstractScreenController_->DumpScreenInfo();
     auto shotScreenIds = abstractScreenController_->GetShotScreenIds(mirrorScreenIds);
     auto iter = std::find(shotScreenIds.begin(), shotScreenIds.end(), mainScreenId);
     if (iter != shotScreenIds.end()) {
@@ -436,15 +405,19 @@ ScreenId DisplayManagerService::MakeMirror(ScreenId mainScreenId, std::vector<Sc
     return screen->groupDmsId_;
 }
 
+void DisplayManagerService::RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens)
+{
+    abstractScreenController_->RemoveVirtualScreenFromGroup(screens);
+}
+
 void DisplayManagerService::UpdateRSTree(DisplayId displayId, std::shared_ptr<RSSurfaceNode>& surfaceNode,
     bool isAdd)
 {
     WLOGI("UpdateRSTree");
-    ScreenId dmsScreenId = GetScreenIdByDisplayId(displayId);
-    if (dmsScreenId == SCREEN_ID_INVALID) {
-        return;
-    }
-    abstractScreenController_->UpdateRSTree(dmsScreenId, surfaceNode, isAdd);
+    ScreenId screenId = GetScreenIdByDisplayId(displayId);
+    CHECK_SCREEN_AND_RETURN();
+
+    abstractScreenController_->UpdateRSTree(screenId, surfaceNode, isAdd);
 }
 
 sptr<ScreenInfo> DisplayManagerService::GetScreenInfoById(ScreenId screenId)
@@ -496,7 +469,6 @@ ScreenId DisplayManagerService::MakeExpand(std::vector<ScreenId> expandScreenIds
             static_cast<uint32_t>(expandScreenIds.size()), static_cast<uint32_t>(startPoints.size()));
         return SCREEN_ID_INVALID;
     }
-    abstractScreenController_->DumpScreenInfo();
     ScreenId defaultScreenId = abstractScreenController_->GetDefaultAbstractScreenId();
     WLOGI("MakeExpand, defaultScreenId:%{public}" PRIu64"", defaultScreenId);
     auto shotScreenIds = abstractScreenController_->GetShotScreenIds(expandScreenIds);

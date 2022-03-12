@@ -88,8 +88,7 @@ void DisplayManagerAgentController::OnScreenDisconnect(ScreenId screenId)
     }
 }
 
-void DisplayManagerAgentController::OnScreenChange(const sptr<ScreenInfo> screenInfo,
-    ScreenChangeEvent screenChangeEvent)
+void DisplayManagerAgentController::OnScreenChange(sptr<ScreenInfo> screenInfo, ScreenChangeEvent screenChangeEvent)
 {
     if (screenInfo == nullptr) {
         return;
@@ -119,17 +118,26 @@ void DisplayManagerAgentController::OnScreenGroupChange(
     const std::vector<sptr<ScreenInfo>>& screenInfos, ScreenGroupChangeEvent groupEvent)
 {
     auto agents = dmAgentContainer_.GetAgentsByType(DisplayManagerAgentType::SCREEN_EVENT_LISTENER);
-    if (agents.empty() || screenInfos.empty()) {
+    std::vector<sptr<ScreenInfo>> infos;
+    for (auto& screenInfo : screenInfos) {
+        if (screenInfo != nullptr) {
+            infos.emplace_back(screenInfo);
+        }
+    }
+    if (agents.empty() || infos.empty()) {
         return;
     }
     WLOGFI("OnScreenGroupChange");
     for (auto& agent : agents) {
-        agent->OnScreenGroupChange(screenInfos, groupEvent);
+        agent->OnScreenGroupChange(infos, groupEvent);
     }
 }
 
 void DisplayManagerAgentController::OnDisplayCreate(sptr<DisplayInfo> displayInfo)
 {
+    if (displayInfo == nullptr) {
+        return;
+    }
     auto agents = dmAgentContainer_.GetAgentsByType(DisplayManagerAgentType::DISPLAY_EVENT_LISTENER);
     if (agents.empty()) {
         return;
@@ -155,6 +163,9 @@ void DisplayManagerAgentController::OnDisplayDestroy(DisplayId displayId)
 void DisplayManagerAgentController::OnDisplayChange(
     sptr<DisplayInfo> displayInfo, DisplayChangeEvent displayChangeEvent)
 {
+    if (displayInfo == nullptr) {
+        return;
+    }
     auto agents = dmAgentContainer_.GetAgentsByType(DisplayManagerAgentType::DISPLAY_EVENT_LISTENER);
     if (agents.empty()) {
         return;

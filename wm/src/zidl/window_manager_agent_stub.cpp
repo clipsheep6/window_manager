@@ -42,6 +42,13 @@ int WindowManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
             UpdateFocusStatus(windowId, abilityToken, windowType, displayId, focused);
             break;
         }
+        case TRANS_ID_UPDATE_FOCUS: {
+            sptr<FocusChangeInfo> info = data.ReadParcelable<FocusChangeInfo>();
+            info->abilityToken_ = data.ReadRemoteObject();
+            bool focused = data.ReadBool();
+            UpdateFocusChangeInfo(info, focused);
+            break;
+        }
         case TRANS_ID_UPDATE_SYSTEM_BAR_PROPS: {
             DisplayId displayId = data.ReadUint64();
             SystemBarRegionTints tints;
@@ -57,9 +64,9 @@ int WindowManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
             break;
         }
         case TRANS_ID_UPDATE_WINDOW_STATUS: {
-            sptr<WindowInfo> windowInfo = data.ReadParcelable<WindowInfo>();
+            sptr<AccessibilityWindowInfo> windowInfo = data.ReadParcelable<AccessibilityWindowInfo>();
             WindowUpdateType type = static_cast<WindowUpdateType>(data.ReadUint32());
-            UpdateWindowStatus(windowInfo, type);
+            NotifyAccessibilityWindowInfo(windowInfo, type);
             break;
         }
         case TRANS_ID_UPDATE_WINDOW_VISIBILITY: {

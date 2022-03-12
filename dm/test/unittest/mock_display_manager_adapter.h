@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,7 +36,6 @@ public:
     MOCK_METHOD0(WakeUpEnd, bool());
     MOCK_METHOD1(SuspendBegin, bool(PowerStateChangeReason reason));
     MOCK_METHOD0(SuspendEnd, bool());
-    MOCK_METHOD2(SetScreenPowerForAll, bool(DisplayPowerState state, PowerStateChangeReason reason));
     MOCK_METHOD1(SetDisplayState, bool(DisplayState state));
     MOCK_METHOD1(GetDisplayState, DisplayState(DisplayId displayId));
     MOCK_METHOD1(NotifyDisplayEvent, void(DisplayEvent event));
@@ -60,6 +59,8 @@ public:
     MOCK_METHOD2(MakeExpand, ScreenId(std::vector<ScreenId> screenId, std::vector<Point> startPoint));
     MOCK_METHOD2(SetScreenActiveMode, bool(ScreenId screenId, uint32_t modeId));
     MOCK_METHOD1(GetScreenInfo, sptr<ScreenInfo>(ScreenId screenId));
+    MOCK_METHOD2(SetScreenPowerForAll, bool(ScreenPowerState state, PowerStateChangeReason reason));
+    MOCK_METHOD1(GetScreenPower, ScreenPowerState(ScreenId dmsScreenId));
 
     MOCK_METHOD2(GetScreenSupportedColorGamuts, DMError(ScreenId screenId, std::vector<ScreenColorGamut>& colorGamuts));
     MOCK_METHOD2(GetScreenColorGamut, DMError(ScreenId screenId, ScreenColorGamut& colorGamut));

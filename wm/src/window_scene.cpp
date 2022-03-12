@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,7 +14,7 @@
  */
 
 #include "window_scene.h"
-
+#include <new>
 #include <configuration.h>
 
 #include "static_call.h"
@@ -43,9 +43,14 @@ WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRunt
 {
     displayId_ = displayId;
     if (option == nullptr) {
-        option = new WindowOption();
+        option = new(std::nothrow) WindowOption();
+        if (option == nullptr) {
+            WLOGFW("alloc WindowOption failed");
+            return WMError::WM_ERROR_NULLPTR;
+        }
     }
     option->SetDisplayId(displayId);
+    option->SetWindowTag(WindowTag::MAIN_WINDOW);
 
     mainWindow_ = SingletonContainer::Get<StaticCall>().CreateWindow(
         GenerateMainWindowName(context), option, context);
@@ -64,7 +69,7 @@ std::string WindowScene::GenerateMainWindowName(const std::shared_ptr<AbilityRun
     } else {
         std::string windowName = context->GetBundleName() + std::to_string(count++);
         std::size_t pos = windowName.find_last_of('.');
-        return (pos < 0) ? windowName : windowName.substr(pos + 1); // skip '.'
+        return (pos == std::string::npos) ? windowName : windowName.substr(pos + 1); // skip '.'
     }
 }
 
@@ -75,6 +80,7 @@ sptr<Window> WindowScene::CreateWindow(const std::string& windowName, sptr<Windo
         return nullptr;
     }
     option->SetParentName(mainWindow_->GetWindowName());
+    option->SetWindowTag(WindowTag::SUB_WINDOW);
     return SingletonContainer::Get<StaticCall>().CreateWindow(windowName, option, mainWindow_->GetContext());
 }
 
@@ -99,18 +105,7 @@ WMError WindowScene::GoForeground(uint32_t reason)
     if (mainWindow_ == nullptr) {
         return WMError::WM_ERROR_NULLPTR;
     }
-    auto changeReason = static_cast<WindowStateChangeReason>(reason);
-    switch (changeReason) {
-        case WindowStateChangeReason::NORMAL: {
-            return mainWindow_->Show();
-        }
-        case WindowStateChangeReason::KEYGUARD: {
-            return WMError::WM_OK;
-        }
-        default: {
-            return WMError::WM_ERROR_INVALID_PARAM;
-        }
-    }
+    return mainWindow_->Show(reason);
 }
 
 WMError WindowScene::GoBackground(uint32_t reason)
@@ -119,18 +114,7 @@ WMError WindowScene::GoBackground(uint32_t reason)
     if (mainWindow_ == nullptr) {
         return WMError::WM_ERROR_NULLPTR;
     }
-    auto changeReason = static_cast<WindowStateChangeReason>(reason);
-    switch (changeReason) {
-        case WindowStateChangeReason::NORMAL: {
-            return mainWindow_->Hide();
-        }
-        case WindowStateChangeReason::KEYGUARD: {
-            return WMError::WM_OK;
-        }
-        default: {
-            return WMError::WM_ERROR_INVALID_PARAM;
-        }
-    }
+    return mainWindow_->Hide(reason);
 }
 
 WMError WindowScene::GoDestroy()
@@ -166,6 +150,10 @@ WMError WindowScene::RequestFocus() const
 
 void WindowScene::UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
+    if (mainWindow_ == nullptr) {
+        WLOGFE("mainWindow_ is null");
+        return;
+    }
     WLOGFI("notify mainWindow winId:%{public}d", mainWindow_->GetWindowId());
     mainWindow_->UpdateConfiguration(configuration);
 }

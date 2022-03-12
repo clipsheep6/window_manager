@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,13 +37,24 @@ enum class WindowStateChangeReason : uint32_t {
 };
 
 enum class WindowUpdateReason : uint32_t {
-    UPDATE_ALL,
+    NEED_SWITCH_CASCADE_BASE,
+    UPDATE_ALL = NEED_SWITCH_CASCADE_BASE,
     UPDATE_MODE,
     UPDATE_RECT,
     UPDATE_FLAGS,
     UPDATE_TYPE,
+    NEED_SWITCH_CASCADE_END,
     UPDATE_OTHER_PROPS,
 };
+
+enum class AvoidPosType : uint32_t {
+    AVOID_POS_LEFT,
+    AVOID_POS_TOP,
+    AVOID_POS_RIGHT,
+    AVOID_POS_BOTTOM,
+    AVOID_POS_UNKNOWN
+};
+
 namespace {
     constexpr float DEFAULT_SPLIT_RATIO = 0.5;
     constexpr uint32_t DIVIDER_WIDTH = 8;
@@ -55,6 +66,7 @@ namespace {
     constexpr uint32_t MIN_VERTICAL_FLOATING_HEIGHT = 320;
     constexpr uint32_t MIN_VERTICAL_SPLIT_HEIGHT = 426;
     constexpr uint32_t MIN_HORIZONTAL_SPLIT_WIDTH = 426;
+    constexpr uint32_t MAX_FLOATING_SIZE = 2560;
 }
 }
 }

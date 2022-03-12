@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,7 +31,7 @@ namespace {
 int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
-    WLOGFI("OnRemoteRequest code is %{public}d", code);
+    WLOGFI("OnRemoteRequest code is %{public}u", code);
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         WLOGFE("InterfaceToken check failed");
         return -1;
@@ -108,12 +108,9 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
         }
         case TRANS_ID_GET_DISPLAY_SNAPSHOT: {
             DisplayId displayId = data.ReadUint64();
-            std::shared_ptr<Media::PixelMap> dispalySnapshot = GetDispalySnapshot(displayId);
-            if (dispalySnapshot == nullptr) {
-                reply.WriteParcelable(nullptr);
-                break;
-            }
-            reply.WriteParcelable(dispalySnapshot.get());
+            std::shared_ptr<Media::PixelMap> displaySnapshot = GetDisplaySnapshot(displayId);
+            reply.WriteParcelable(displaySnapshot == nullptr ? nullptr : displaySnapshot.get());
+            break;
         }
         case TRANS_ID_REGISTER_DISPLAY_MANAGER_AGENT: {
             auto agent = iface_cast<IDisplayManagerAgent>(data.ReadRemoteObject());
@@ -146,9 +143,18 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
             break;
         }
         case TRANS_ID_SET_SCREEN_POWER_FOR_ALL: {
-            DisplayPowerState state = static_cast<DisplayPowerState>(data.ReadUint32());
+            ScreenPowerState state = static_cast<ScreenPowerState>(data.ReadUint32());
             PowerStateChangeReason reason = static_cast<PowerStateChangeReason>(data.ReadUint32());
             reply.WriteBool(SetScreenPowerForAll(state, reason));
+            break;
+        }
+        case TRANS_ID_GET_SCREEN_POWER: {
+            ScreenId dmsScreenId;
+            if (!data.ReadUint64(dmsScreenId)) {
+                WLOGFE("fail to read dmsScreenId.");
+                break;
+            }
+            reply.WriteUint32(static_cast<uint32_t>(GetScreenPower(dmsScreenId)));
             break;
         }
         case TRANS_ID_SET_DISPLAY_STATE: {
@@ -166,6 +172,12 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
             NotifyDisplayEvent(event);
             break;
         }
+        case TRANS_ID_SET_FREEZE_EVENT: {
+            std::vector<DisplayId> ids;
+            data.ReadUInt64Vector(&ids);
+            SetFreeze(ids, data.ReadBool());
+            break;
+        }
         case TRANS_ID_SCREEN_MAKE_MIRROR: {
             ScreenId mainScreenId = static_cast<ScreenId>(data.ReadUint64());
             std::vector<ScreenId> mirrorScreenId;
@@ -180,10 +192,6 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
         case TRANS_ID_GET_SCREEN_INFO_BY_ID: {
             ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
             auto screenInfo = GetScreenInfoById(screenId);
-            for (auto& mode : screenInfo->GetModes()) {
-                WLOGFI("info modes is width: %{public}u, height: %{public}u, freshRate: %{public}u",
-                    mode->width_, mode->height_, mode->freshRate_);
-            }
             reply.WriteStrongParcelable(screenInfo);
             break;
         }
@@ -215,12 +223,37 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
             }
             std::vector<Point> startPoint;
             uint32_t nums = data.ReadUint32();
+            if (nums > data.GetReadableBytes() || nums > startPoint.max_size()) {
+                WLOGE("fail to receive startPoint size.");
+                break;
+            }
+            startPoint.resize(nums);
+            if (startPoint.size() < nums) {
+                WLOGE("fail to resize startPoint.");
+                break;
+            }
+            bool readVectorRes = true;
             for (uint32_t i = 0; i < nums; ++i) {
-                Point point { data.ReadInt32(), data.ReadInt32() };
-                startPoint.push_back(point);
+                readVectorRes = data.ReadInt32(startPoint[i].posX_) && data.ReadInt32(startPoint[i].posY_);
+                if (!readVectorRes) {
+                    WLOGE("fail to ReadInt32. index:%{public}u, nums:%{public}u", i, nums);
+                    break;
+                }
+            }
+            if (!readVectorRes) {
+                break;
             }
             ScreenId result = MakeExpand(screenId, startPoint);
             reply.WriteUint64(static_cast<uint64_t>(result));
+            break;
+        }
+        case TRANS_ID_REMOVE_VIRTUAL_SCREEN_FROM_SCREEN_GROUP: {
+            std::vector<ScreenId> screenId;
+            if (!data.ReadUInt64Vector(&screenId)) {
+                WLOGE("fail to receive screens in stub.");
+                break;
+            }
+            RemoveVirtualScreenFromGroup(screenId);
             break;
         }
         case TRANS_ID_SET_SCREEN_ACTIVE_MODE: {

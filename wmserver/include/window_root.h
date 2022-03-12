@@ -55,15 +55,18 @@ public:
     std::shared_ptr<RSSurfaceNode> GetSurfaceNodeByAbilityToken(const sptr<IRemoteObject>& abilityToken) const;
     WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId);
     void MinimizeAllAppWindows(DisplayId displayId);
+    WMError MaxmizeWindow(uint32_t windowId);
     WMError SetWindowLayoutMode(DisplayId displayId, WindowLayoutMode mode);
 
     void NotifyWindowStateChange(WindowState state, WindowStateChangeReason reason);
-    void NotifyDisplayChange(sptr<AbstractDisplay> abstractDisplay);
+    void NotifyDisplayChange(sptr<DisplayInfo> abstractDisplay);
     void NotifyDisplayDestroy(DisplayId displayId);
     void NotifySystemBarTints();
     WMError RaiseZOrderForAppWindow(sptr<WindowNode>& node);
     void FocusFaultDetection() const;
+    WMError DumpWindowTree(std::vector<std::string> &windowTreeInfos, WindowDumpType type);
     float GetVirtualPixelRatio(DisplayId displayId) const;
+    Rect GetDisplayLimitRect(DisplayId displayId) const;
 
 private:
     void OnRemoteDied(const sptr<IRemoteObject>& remoteObject);
@@ -71,7 +74,7 @@ private:
     void UpdateFocusWindowWithWindowRemoved(const sptr<WindowNode>& node,
         const sptr<WindowNodeContainer>& container) const;
     std::string GenAllWindowsLogInfo() const;
-    bool CheckDisplayInfo(const sptr<AbstractDisplay>& display);
+    bool CheckDisplayInfo(const sptr<DisplayInfo>& display);
 
     std::recursive_mutex& mutex_;
     std::map<int32_t, sptr<WindowNodeContainer>> windowNodeContainerMap_;

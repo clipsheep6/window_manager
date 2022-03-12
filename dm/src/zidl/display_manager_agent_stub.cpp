@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -75,11 +75,22 @@ int32_t DisplayManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& d
                 WLOGFE("Read ScreenChangeEvent failed");
                 return -1;
             }
-
-            for (uint32_t i = 0; i < size; i++) {
-                screenInfos.push_back(data.ReadParcelable<ScreenInfo>());
+            if (size > data.GetReadableBytes() || size > screenInfos.max_size()) {
+                WLOGE("fail to receive screenInfos size.");
+                break;
             }
-
+            bool readVectorRes = true;
+            for (uint32_t i = 0; i < size; i++) {
+                sptr<ScreenInfo> screenInfo = data.ReadParcelable<ScreenInfo>();
+                if (screenInfo == nullptr) {
+                    readVectorRes = false;
+                    break;
+                }
+                screenInfos.push_back(screenInfo);
+            }
+            if (!readVectorRes) {
+                break;
+            }
             uint32_t event;
             if (!data.ReadUint32(event)) {
                 WLOGFE("Read ScreenChangeEvent failed");

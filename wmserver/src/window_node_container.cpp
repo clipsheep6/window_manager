@@ -21,6 +21,7 @@
 #include <ctime>
 
 #include "common_event_manager.h"
+#include "datetime_ex.h"
 #include "display_manager_service_inner.h"
 #include "dm_common.h"
 #include "window_helper.h"
@@ -39,6 +40,7 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowNodeContainer"};
     constexpr int WINDOW_NAME_MAX_LENGTH = 10;
     const std::string SPLIT_SCREEN_EVENT_NAME = "common.event.SPLIT_SCREEN";
+    const char DISABLE_WINDOW_ANIMATION_PATH[] = "/etc/disable_window_animation";
 }
 
 WindowNodeContainer::WindowNodeContainer(DisplayId displayId, uint32_t width, uint32_t height) : displayId_(displayId)
@@ -58,7 +60,8 @@ WindowNodeContainer::WindowNodeContainer(DisplayId displayId, uint32_t width, ui
     layoutPolicy_ = layoutPolicys_[WindowLayoutMode::CASCADE];
     layoutPolicy_->Launch();
     UpdateAvoidAreaFunc func = std::bind(&WindowNodeContainer::OnAvoidAreaChange, this, std::placeholders::_1);
-    avoidController_ = new AvoidAreaController(func);
+    avoidController_ = new AvoidAreaController(displayId, func);
+    wmRecorderPtr_ = new WindowManagerRecorder();
 }
 
 WindowNodeContainer::~WindowNodeContainer()
@@ -82,7 +85,7 @@ WMError WindowNodeContainer::MinimizeStructuredAppWindowsExceptSelf(const sptr<W
 {
     std::vector<uint32_t> exceptionalIds = { node->GetWindowId() };
     std::vector<WindowMode> exceptionalModes = { WindowMode::WINDOW_MODE_FLOATING, WindowMode::WINDOW_MODE_PIP };
-    return MinimizeAppNodeExceptOptions(exceptionalIds, exceptionalModes);
+    return MinimizeAppNodeExceptOptions(false, exceptionalIds, exceptionalModes);
 }
 
 WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode)
@@ -130,7 +133,7 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
     AssignZOrder();
     layoutPolicy_->AddWindowNode(node);
     if (WindowHelper::IsAvoidAreaWindow(node->GetWindowType())) {
-        avoidController_->AddAvoidAreaNode(node);
+        avoidController_->AvoidControl(node, AvoidControlType::AVOID_NODE_ADD);
         NotifyIfSystemBarRegionChanged();
     } else {
         NotifyIfSystemBarTintChanged();
@@ -138,7 +141,8 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
     std::vector<sptr<WindowVisibilityInfo>> infos;
     UpdateWindowVisibilityInfos(infos);
     DumpScreenWindowTree();
-    UpdateWindowStatus(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
+    RecordWindowHistory(node, RecordType::ADD_WINDOW);
+    NotifyAccessibilityWindowInfo(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
     WLOGFI("AddWindowNode windowId: %{public}d end", node->GetWindowId());
     return WMError::WM_OK;
 }
@@ -149,17 +153,18 @@ WMError WindowNodeContainer::UpdateWindowNode(sptr<WindowNode>& node, WindowUpda
         WLOGFE("surface node is nullptr!");
         return WMError::WM_ERROR_NULLPTR;
     }
-    if (WindowHelper::IsMainWindow(node->GetWindowType()) && reason != WindowUpdateReason::UPDATE_OTHER_PROPS) {
+    if (WindowHelper::IsMainWindow(node->GetWindowType()) && WindowHelper::IsSwitchCascadeReason(reason)) {
         SwitchLayoutPolicy(WindowLayoutMode::CASCADE);
     }
     layoutPolicy_->UpdateWindowNode(node);
     if (WindowHelper::IsAvoidAreaWindow(node->GetWindowType())) {
-        avoidController_->UpdateAvoidAreaNode(node);
+        avoidController_->AvoidControl(node, AvoidControlType::AVOID_NODE_UPDATE);
         NotifyIfSystemBarRegionChanged();
     } else {
         NotifyIfSystemBarTintChanged();
     }
     DumpScreenWindowTree();
+    RecordWindowHistory(node, RecordType::UPDATE_WINDOW);
     WLOGFI("UpdateWindowNode windowId: %{public}d end", node->GetWindowId());
     return WMError::WM_OK;
 }
@@ -242,7 +247,7 @@ WMError WindowNodeContainer::DestroyWindowNode(sptr<WindowNode>& node, std::vect
 
 WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
 {
-    if (node == nullptr || !node->surfaceNode_) {
+    if (node == nullptr) {
         WLOGFE("window node or surface node is nullptr, invalid");
         return WMError::WM_ERROR_DESTROYED_OBJECT;
     }
@@ -284,14 +289,15 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
     UpdateRSTree(node, false);
     layoutPolicy_->RemoveWindowNode(node);
     if (WindowHelper::IsAvoidAreaWindow(node->GetWindowType())) {
-        avoidController_->RemoveAvoidAreaNode(node);
+        avoidController_->AvoidControl(node, AvoidControlType::AVOID_NODE_REMOVE);
         NotifyIfSystemBarRegionChanged();
     } else {
         NotifyIfSystemBarTintChanged();
     }
     UpdateWindowVisibilityInfos(infos);
     DumpScreenWindowTree();
-    UpdateWindowStatus(node, WindowUpdateType::WINDOW_UPDATE_REMOVED);
+    RecordWindowHistory(node, RecordType::REMOVE_WINDOW);
+    NotifyAccessibilityWindowInfo(node, WindowUpdateType::WINDOW_UPDATE_REMOVED);
     WLOGFI("RemoveWindowNode windowId: %{public}d end", node->GetWindowId());
     return WMError::WM_OK;
 }
@@ -355,6 +361,10 @@ void WindowNodeContainer::UpdateFocusStatus(uint32_t id, bool focused) const
         }
         WindowManagerAgentController::GetInstance().UpdateFocusStatus(
             node->GetWindowId(), node->abilityToken_, node->GetWindowType(), node->GetDisplayId(), focused);
+        sptr<FocusChangeInfo> focusChangeInfo = new FocusChangeInfo(node->GetWindowId(), node->GetDisplayId(),
+            node->GetCallingPid(), node->GetCallingUid(), node->GetWindowType(), node->abilityToken_);
+        WindowManagerAgentController::GetInstance().UpdateFocusChangeInfo(
+            focusChangeInfo, focused);
     }
 }
 
@@ -382,7 +392,7 @@ WMError WindowNodeContainer::SetFocusWindow(uint32_t windowId)
     UpdateFocusStatus(focusedWindow_, false);
     focusedWindow_ = windowId;
     sptr<WindowNode> node = FindWindowNodeById(windowId);
-    UpdateWindowStatus(node, WindowUpdateType::WINDOW_UPDATE_FOCUSED);
+    NotifyAccessibilityWindowInfo(node, WindowUpdateType::WINDOW_UPDATE_FOCUSED);
     UpdateFocusStatus(focusedWindow_, true);
     return WMError::WM_OK;
 }
@@ -413,27 +423,24 @@ std::unordered_map<WindowType, SystemBarProperty> WindowNodeContainer::GetExpect
         { WindowType::WINDOW_TYPE_NAVIGATION_BAR, SystemBarProperty() },
     };
 
-    // default systemBar Type
-    if (appWindowNode_->children_.empty()) {
-        WLOGFI("No immersive window on top. Use default systembar Property");
-        return sysBarPropMap;
-    }
-
-    for (auto iter = appWindowNode_->children_.rbegin(); iter < appWindowNode_->children_.rend(); ++iter) {
-        auto& sysBarPropMapNode = (*iter)->GetSystemBarProperty();
-        if (IsFullImmersiveNode(*iter)) {
-            WLOGFI("Top fullscreen immersive window id: %{public}d. Use full immersice prop", (*iter)->GetWindowId());
-            for (auto it : sysBarPropMap) {
-                sysBarPropMap[it.first] = (sysBarPropMapNode.find(it.first))->second;
+    std::vector<sptr<WindowNode>> rootNodes = { aboveAppWindowNode_, appWindowNode_, belowAppWindowNode_ };
+    for (auto& node : rootNodes) {
+        for (auto iter = node->children_.rbegin(); iter < node->children_.rend(); ++iter) {
+            auto& sysBarPropMapNode = (*iter)->GetSystemBarProperty();
+            if (IsFullImmersiveNode(*iter)) {
+                WLOGFI("Top immersive window id: %{public}d. Use full immersive prop", (*iter)->GetWindowId());
+                for (auto it : sysBarPropMap) {
+                    sysBarPropMap[it.first] = (sysBarPropMapNode.find(it.first))->second;
+                }
+                return sysBarPropMap;
+            } else if (IsSplitImmersiveNode(*iter)) {
+                WLOGFI("Top split window id: %{public}d. Use split immersive prop", (*iter)->GetWindowId());
+                for (auto it : sysBarPropMap) {
+                    sysBarPropMap[it.first] = (sysBarPropMapNode.find(it.first))->second;
+                    sysBarPropMap[it.first].enable_ = false;
+                }
+                return sysBarPropMap;
             }
-            return sysBarPropMap;
-        } else if (IsSplitImmersiveNode(*iter)) {
-            WLOGFI("Top split immersive window id: %{public}d. Use split immersice prop", (*iter)->GetWindowId());
-            for (auto it : sysBarPropMap) {
-                sysBarPropMap[it.first] = (sysBarPropMapNode.find(it.first))->second;
-                sysBarPropMap[it.first].enable_ = false;
-            }
-            return sysBarPropMap;
         }
     }
 
@@ -476,6 +483,29 @@ void WindowNodeContainer::NotifyIfSystemBarRegionChanged()
         WLOGFI("system bar region update, type: %{public}d" \
             "region: [%{public}d, %{public}d, %{public}d, %{public}d]",
             static_cast<int32_t>(it.first), newRegion.posX_, newRegion.posY_, newRegion.width_, newRegion.height_);
+    }
+    WindowManagerAgentController::GetInstance().UpdateSystemBarRegionTints(displayId_, tints);
+}
+
+void WindowNodeContainer::NotifySystemBarDismiss(sptr<WindowNode>& node)
+{
+    WM_FUNCTION_TRACE();
+    if (node == nullptr) {
+        WLOGE("could not find window");
+        return;
+    }
+    SystemBarRegionTints tints;
+    auto& sysBarPropMapNode = node->GetSystemBarProperty();
+    for (auto it : sysBarPropMapNode) {
+        it.second.enable_ = false;
+        node->SetSystemBarProperty(it.first, it.second);
+        WLOGFI("set system bar enable to false, id: %{public}u, type: %{public}d",
+            node->GetWindowId(), static_cast<int32_t>(it.first));
+        if (sysBarTintMap_[it.first].prop_.enable_) {
+            sysBarTintMap_[it.first].prop_.enable_ = false;
+            tints.emplace_back(sysBarTintMap_[it.first]);
+            WLOGFI("notify system bar dismiss, type: %{public}d", static_cast<int32_t>(it.first));
+        }
     }
     WindowManagerAgentController::GetInstance().UpdateSystemBarRegionTints(displayId_, tints);
 }
@@ -555,7 +585,7 @@ void WindowNodeContainer::RaiseWindowToTop(uint32_t windowId, std::vector<sptr<W
     }
 }
 
-void WindowNodeContainer::UpdateWindowStatus(const sptr<WindowNode>& node, WindowUpdateType type) const
+void WindowNodeContainer::NotifyAccessibilityWindowInfo(const sptr<WindowNode>& node, WindowUpdateType type) const
 {
     if (node == nullptr) {
         WLOGFE("window node is null");
@@ -580,13 +610,33 @@ void WindowNodeContainer::UpdateWindowStatus(const sptr<WindowNode>& node, Windo
             break;
     }
     if (isNeedNotify) {
+        std::vector<sptr<WindowInfo>> windowList;
+        GetWindowList(windowList);
         sptr<WindowInfo> windowInfo = new WindowInfo();
         windowInfo->wid_ = static_cast<int32_t>(node->GetWindowId());
         windowInfo->windowRect_ = node->GetLayoutRect();
         windowInfo->focused_ = node->GetWindowId() == focusedWindow_;
         windowInfo->mode_ = node->GetWindowMode();
         windowInfo->type_ = node->GetWindowType();
-        WindowManagerAgentController::GetInstance().UpdateWindowStatus(windowInfo, type);
+        sptr<AccessibilityWindowInfo> accessibilityWindowInfo = new AccessibilityWindowInfo();
+        accessibilityWindowInfo->currentWindowInfo_ = windowInfo;
+        accessibilityWindowInfo->windowList_ = windowList;
+        WindowManagerAgentController::GetInstance().NotifyAccessibilityWindowInfo(accessibilityWindowInfo, type);
+    }
+}
+
+void WindowNodeContainer::GetWindowList(std::vector<sptr<WindowInfo>>& windowList) const
+{
+    std::vector<sptr<WindowNode>> windowNodes;
+    TraverseContainer(windowNodes);
+    for (auto node : windowNodes) {
+        sptr<WindowInfo> windowInfo = new WindowInfo();
+        windowInfo->wid_ = static_cast<int32_t>(node->GetWindowId());
+        windowInfo->windowRect_ = node->GetLayoutRect();
+        windowInfo->focused_ = node->GetWindowId() == focusedWindow_;
+        windowInfo->mode_ = node->GetWindowMode();
+        windowInfo->type_ = node->GetWindowType();
+        windowList.emplace_back(windowInfo);
     }
 }
 
@@ -648,8 +698,8 @@ void WindowNodeContainer::DumpScreenWindowTree()
         Rect rect = node->GetLayoutRect();
         const std::string& windowName = node->GetWindowName().size() < WINDOW_NAME_MAX_LENGTH ?
             node->GetWindowName() : node->GetWindowName().substr(0, WINDOW_NAME_MAX_LENGTH);
-        WLOGI("DumpScreenWindowTree: %{public}10s %{public}5d %{public}4d %{public}4d %{public}4d %{public}4d " \
-            "[%{public}4d %{public}4d %{public}4d %{public}4d]",
+        WLOGI("DumpScreenWindowTree: %{public}10s %{public}5u %{public}4u %{public}4u %{public}4u %{public}4u " \
+            "[%{public}4d %{public}4d %{public}4u %{public}4u]",
             windowName.c_str(), node->GetWindowId(), node->GetWindowType(), node->GetWindowMode(),
             node->GetWindowFlags(), --zOrder, rect.posX_, rect.posY_, rect.width_, rect.height_);
         return false;
@@ -671,6 +721,11 @@ DisplayId WindowNodeContainer::GetDisplayId() const
 Rect WindowNodeContainer::GetDisplayRect() const
 {
     return displayRect_;
+}
+
+Rect WindowNodeContainer::GetDisplayLimitRect() const
+{
+    return layoutPolicy_->GetDisplayLimitRect();
 }
 
 bool WindowNodeContainer::isVerticalDisplay() const
@@ -788,6 +843,7 @@ WMError WindowNodeContainer::RaiseZOrderForAppWindow(sptr<WindowNode>& node, spt
     AssignZOrder();
     WLOGFI("RaiseZOrderForAppWindow finished");
     DumpScreenWindowTree();
+    RecordWindowHistory(node, RecordType::RAISE_WINDOW);
     return WMError::WM_OK;
 }
 
@@ -812,7 +868,7 @@ sptr<WindowNode> WindowNodeContainer::GetNextFocusableWindow(uint32_t windowId) 
 
 void WindowNodeContainer::MinimizeAllAppWindows()
 {
-    WMError ret =  MinimizeAppNodeExceptOptions();
+    WMError ret =  MinimizeAppNodeExceptOptions(true);
     SwitchLayoutPolicy(WindowLayoutMode::CASCADE);
     if (ret != WMError::WM_OK) {
         WLOGFE("Minimize all app window failed");
@@ -856,17 +912,16 @@ sptr<WindowNode> WindowNodeContainer::FindSplitPairNode(sptr<WindowNode>& trigge
     return nullptr;
 }
 
-void WindowNodeContainer::MinimizeWindowFromAbility(const sptr<WindowNode>& node)
+void WindowNodeContainer::MinimizeWindowFromAbility(const sptr<WindowNode>& node, bool fromUser)
 {
     if (node->abilityToken_ == nullptr) {
         WLOGFW("Target abilityToken is nullptr, windowId:%{public}u", node->GetWindowId());
         return;
     }
-    AAFwk::AbilityManagerClient::GetInstance()->DoAbilityBackground(node->abilityToken_,
-        static_cast<uint32_t>(WindowStateChangeReason::NORMAL));
+    AAFwk::AbilityManagerClient::GetInstance()->MinimizeAbility(node->abilityToken_, fromUser);
 }
 
-WMError WindowNodeContainer::MinimizeAppNodeExceptOptions(const std::vector<uint32_t> &exceptionalIds,
+WMError WindowNodeContainer::MinimizeAppNodeExceptOptions(bool fromUser, const std::vector<uint32_t> &exceptionalIds,
                                                           const std::vector<WindowMode> &exceptionalModes)
 {
     if (appWindowNode_->children_.empty()) {
@@ -882,7 +937,7 @@ WMError WindowNodeContainer::MinimizeAppNodeExceptOptions(const std::vector<uint
         }
         // minimize window
         WLOGFI("minimize window, windowId:%{public}u", appNode->GetWindowId());
-        MinimizeWindowFromAbility(appNode);
+        MinimizeWindowFromAbility(appNode, fromUser);
     }
     return WMError::WM_OK;
 }
@@ -905,7 +960,7 @@ WMError WindowNodeContainer::EnterSplitWindowMode(sptr<WindowNode>& node)
             exceptionalIds.emplace_back(iter->first);
         }
         std::vector<WindowMode> exceptionalModes = { WindowMode::WINDOW_MODE_FLOATING, WindowMode::WINDOW_MODE_PIP };
-        ret = MinimizeAppNodeExceptOptions(exceptionalIds, exceptionalModes);
+        ret = MinimizeAppNodeExceptOptions(false, exceptionalIds, exceptionalModes);
         if (ret != WMError::WM_OK) {
             return ret;
         }
@@ -990,6 +1045,10 @@ WMError WindowNodeContainer::SwitchLayoutPolicy(WindowLayoutMode dstMode, bool r
 {
     WLOGFI("SwitchLayoutPolicy src: %{public}d dst: %{public}d reorder: %{public}d",
         static_cast<uint32_t>(layoutMode_), static_cast<uint32_t>(dstMode), static_cast<uint32_t>(reorder));
+    if (dstMode < WindowLayoutMode::BASE || dstMode >= WindowLayoutMode::END) {
+        WLOGFE("invalid layout mode");
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
     if (layoutMode_ != dstMode) {
         if (layoutMode_ == WindowLayoutMode::CASCADE && !pairedWindowMap_.empty()) {
             pairedWindowMap_.clear();
@@ -1000,8 +1059,9 @@ WMError WindowNodeContainer::SwitchLayoutPolicy(WindowLayoutMode dstMode, bool r
         layoutPolicy_ = layoutPolicys_[dstMode];
         layoutPolicy_->Launch();
         DumpScreenWindowTree();
+        RecordWindowHistory(nullptr, RecordType::SWITCH_LAYOUT);
     } else {
-        WLOGFI("Curret layout mode is allready: %{public}d", static_cast<uint32_t>(dstMode));
+        WLOGFI("Current layout mode is already: %{public}d", static_cast<uint32_t>(dstMode));
     }
     if (reorder) {
         if (!pairedWindowMap_.empty()) {
@@ -1010,6 +1070,7 @@ WMError WindowNodeContainer::SwitchLayoutPolicy(WindowLayoutMode dstMode, bool r
             SingletonContainer::Get<WindowInnerManager>().SendMessage(INNER_WM_DESTROY_DIVIDER, displayId_);
         }
         layoutPolicy_->Reorder();
+        RecordWindowHistory(nullptr, RecordType::SWITCH_LAYOUT);
         DumpScreenWindowTree();
     }
     return WMError::WM_OK;
@@ -1172,16 +1233,67 @@ float WindowNodeContainer::GetVirtualPixelRatio() const
     return layoutPolicy_->GetVirtualPixelRatio();
 }
 
-namespace {
-    const char DISABLE_WINDOW_ANIMATION_PATH[] = "/etc/disable_window_animation";
-}
-
 bool WindowNodeContainer::ReadIsWindowAnimationEnabledProperty()
 {
     if (access(DISABLE_WINDOW_ANIMATION_PATH, F_OK) == 0) {
         return false;
     }
     return true;
+}
+
+void WindowNodeContainer::RecordWindowHistory(const sptr<WindowNode>& node, RecordType reason)
+{
+    if (node == nullptr) {
+        RecordCurrentWindowTree();
+        return;
+    }
+    WindowManagerRecordInfo record;
+    record.id = node->GetWindowId();
+    record.name = node->GetWindowName().size() < WINDOW_NAME_MAX_LENGTH ?
+        node->GetWindowName() : node->GetWindowName().substr(0, WINDOW_NAME_MAX_LENGTH);
+    record.flag = node->GetWindowFlags();
+    record.type = node->GetWindowType();
+    record.mode = node->GetWindowMode();
+    record.reason = reason;
+    record.rect = node->GetLayoutRect();
+    struct tm recordTime = {0};
+    if (GetSystemCurrentTime(&recordTime)) {
+        record.recordTime = recordTime;
+    }
+    wmRecorderPtr_->AddNodeRecord(record);
+    if (reason != RecordType::OTHERS) {
+        // record window tree
+        RecordCurrentWindowTree();
+    }
+}
+
+void WindowNodeContainer::RecordCurrentWindowTree()
+{
+    std::vector<sptr<WindowNode>> windowNodes;
+    TraverseContainer(windowNodes);
+    wmRecorderPtr_->AddTreeRecord(windowNodes);
+}
+
+void WindowNodeContainer::DumpWindowTree(std::vector<std::string> &windowTreeInfos, WindowDumpType type)
+{
+    WLOGFI("DumpWindowTree");
+    switch (type) {
+        case WindowDumpType::ALL : {
+            wmRecorderPtr_->DumpWindowRecord(windowTreeInfos);
+            break;
+        }
+        case WindowDumpType::TREE : {
+            windowTreeInfos = {wmRecorderPtr_->GetCurrentWindowTree()};
+            break;
+        }
+        case WindowDumpType::CLEAR : {
+            wmRecorderPtr_->Clear();
+            break;
+        }
+        default : {
+            break;
+        }
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

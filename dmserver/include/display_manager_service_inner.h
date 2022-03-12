@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,8 @@
 #define FOUNDATION_DMSERVER_DISPLAY_MANAGER_SERVICE_INNER_H
 
 #include <vector>
+
+#include <pixel_map.h>
 #include <system_ability.h>
 
 #include "abstract_display.h"
@@ -29,14 +31,15 @@ class DisplayManagerServiceInner {
 WM_DECLARE_SINGLE_INSTANCE(DisplayManagerServiceInner);
 
 public:
-    std::vector<const sptr<AbstractDisplay>> GetAllDisplays();
-    DisplayId GetDefaultDisplayId();
-    const sptr<AbstractDisplay> GetDefaultDisplay();
-    const sptr<AbstractDisplay> GetDisplayById(DisplayId displayId);
-    std::vector<DisplayId> GetAllDisplayIds();
+    std::vector<sptr<DisplayInfo>> GetAllDisplays() const;
+    DisplayId GetDefaultDisplayId() const;
+    sptr<DisplayInfo> GetDefaultDisplay() const;
+    sptr<DisplayInfo> GetDisplayById(DisplayId displayId) const;
+    std::vector<DisplayId> GetAllDisplayIds() const;
     ScreenId GetRSScreenId(DisplayId displayId) const;
-    const sptr<ScreenInfo> GetScreenInfoByDisplayId(DisplayId displayId) const;
-    const sptr<SupportedScreenModes> GetScreenModesByDisplayId(DisplayId displayId);
+    sptr<ScreenInfo> GetScreenInfoByDisplayId(DisplayId displayId) const;
+    sptr<SupportedScreenModes> GetScreenModesByDisplayId(DisplayId displayId) const;
+    std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId) const;
     void UpdateRSTree(DisplayId displayId, std::shared_ptr<RSSurfaceNode>& surfaceNode, bool isAdd);
     void RegisterDisplayChangeListener(sptr<IDisplayChangeListener> listener);
 };

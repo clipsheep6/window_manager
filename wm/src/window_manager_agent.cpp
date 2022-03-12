@@ -26,14 +26,20 @@ void WindowManagerAgent::UpdateFocusStatus(uint32_t windowId, const sptr<IRemote
     SingletonContainer::Get<WindowManager>().UpdateFocusStatus(windowId, abilityToken, windowType, displayId, focused);
 }
 
+void WindowManagerAgent::UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused)
+{
+    SingletonContainer::Get<WindowManager>().UpdateFocusChangeInfo(focusChangeInfo, focused);
+}
+
 void WindowManagerAgent::UpdateSystemBarRegionTints(DisplayId displayId, const SystemBarRegionTints& tints)
 {
     SingletonContainer::Get<WindowManager>().UpdateSystemBarRegionTints(displayId, tints);
 }
 
-void WindowManagerAgent::UpdateWindowStatus(const sptr<WindowInfo>& windowInfo, WindowUpdateType type)
+void WindowManagerAgent::NotifyAccessibilityWindowInfo(const sptr<AccessibilityWindowInfo>& windowInfo,
+    WindowUpdateType type)
 {
-    SingletonContainer::Get<WindowManager>().UpdateWindowStatus(windowInfo, type);
+    SingletonContainer::Get<WindowManager>().NotifyAccessibilityWindowInfo(windowInfo, type);
 }
 
 void WindowManagerAgent::UpdateWindowVisibilityInfo(const std::vector<sptr<WindowVisibilityInfo>>& visibilityInfos)

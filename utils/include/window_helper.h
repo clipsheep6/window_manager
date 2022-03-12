@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -85,12 +85,13 @@ public:
         return (r.posX_ == 0 && r.posY_ == 0 && r.width_ == 0 && r.height_ == 0);
     }
 
-    static Rect GetFixedWindowRectByMinRect(const Rect& oriDstRect, const Rect& lastRect, bool isVertical,
+    static Rect GetFixedWindowRectByLimitSize(const Rect& oriDstRect, const Rect& lastRect, bool isVertical,
         float virtualPixelRatio)
     {
         uint32_t minVerticalFloatingW = static_cast<uint32_t>(MIN_VERTICAL_FLOATING_WIDTH * virtualPixelRatio);
         uint32_t minVerticalFloatingH = static_cast<uint32_t>(MIN_VERTICAL_FLOATING_HEIGHT * virtualPixelRatio);
         Rect dstRect = oriDstRect;
+        // fix minimum size
         if (isVertical) {
             dstRect.width_ = std::max(minVerticalFloatingW, oriDstRect.width_);
             dstRect.height_ = std::max(minVerticalFloatingH, oriDstRect.height_);
@@ -98,6 +99,10 @@ public:
             dstRect.width_ = std::max(minVerticalFloatingH, oriDstRect.width_);
             dstRect.height_ = std::max(minVerticalFloatingW, oriDstRect.height_);
         }
+
+        // fix maximum size
+        dstRect.width_ = std::min(static_cast<uint32_t>(MAX_FLOATING_SIZE * virtualPixelRatio), dstRect.width_);
+        dstRect.height_ = std::min(static_cast<uint32_t>(MAX_FLOATING_SIZE * virtualPixelRatio), dstRect.height_);
 
         // limit position by fixed width or height
         if (oriDstRect.posX_ != lastRect.posX_) {
@@ -111,6 +116,38 @@ public:
         return dstRect;
     }
 
+    static Rect GetFixedWindowRectByLimitPosition(const Rect& oriDstRect, const Rect& lastRect,
+        float virtualPixelRatio, const Rect& displayLimitRect)
+    {
+        Rect dstRect = oriDstRect;
+        uint32_t windowTitleBarH = static_cast<uint32_t>(WINDOW_TITLE_BAR_HEIGHT * virtualPixelRatio);
+        // minimum (x + width)
+        if (dstRect.posX_ < (displayLimitRect.posX_ + static_cast<int32_t>(windowTitleBarH - oriDstRect.width_))) {
+            if (oriDstRect.width_ != lastRect.width_) {
+                dstRect.width_ = static_cast<uint32_t>(displayLimitRect.posX_  - oriDstRect.posX_) + windowTitleBarH;
+            }
+        }
+        // maximum position x
+        if (dstRect.posX_ > (displayLimitRect.posX_ +
+                             static_cast<int32_t>(displayLimitRect.width_ - windowTitleBarH))) {
+            dstRect.posX_ = displayLimitRect.posX_ + static_cast<int32_t>(displayLimitRect.width_ - windowTitleBarH);
+            if (oriDstRect.width_ != lastRect.width_) {
+                dstRect.width_ = lastRect.width_;
+            }
+        }
+        // minimum position y
+        dstRect.posY_ = std::max(displayLimitRect.posY_, oriDstRect.posY_);
+        // maximum position y
+        if (dstRect.posY_ > (displayLimitRect.posY_ +
+                             static_cast<int32_t>(displayLimitRect.height_ - windowTitleBarH))) {
+            dstRect.posY_ = displayLimitRect.posY_ + static_cast<int32_t>(displayLimitRect.height_ - windowTitleBarH);
+            if (oriDstRect.height_ != lastRect.height_) {
+                dstRect.height_ = lastRect.height_;
+            }
+        }
+        return dstRect;
+    }
+
     static bool IsPointInTargetRect(int32_t pointPosX, int32_t pointPosY, const Rect& targetRect)
     {
         if ((pointPosX > targetRect.posX_) &&
@@ -120,6 +157,31 @@ public:
             return true;
         }
         return false;
+    }
+
+    static inline bool IsSwitchCascadeReason(WindowUpdateReason reason)
+    {
+        return (reason >= WindowUpdateReason::NEED_SWITCH_CASCADE_BASE) &&
+            (reason < WindowUpdateReason::NEED_SWITCH_CASCADE_END);
+    }
+
+    static AvoidPosType GetAvoidPosType(const Rect& rect, uint32_t displayWidth, uint32_t displayHeight)
+    {
+        if (rect.width_ ==  displayWidth) {
+            if (rect.posY_ == 0) {
+                return AvoidPosType::AVOID_POS_TOP;
+            } else {
+                return AvoidPosType::AVOID_POS_BOTTOM;
+            }
+        } else if (rect.height_ ==  displayHeight) {
+            if (rect.posX_ == 0) {
+                return AvoidPosType::AVOID_POS_LEFT;
+            } else {
+                return AvoidPosType::AVOID_POS_RIGHT;
+            }
+        }
+
+        return AvoidPosType::AVOID_POS_UNKNOWN;
     }
 
     WindowHelper() = default;

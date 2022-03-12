@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,29 +13,34 @@
  * limitations under the License.
  */
 #include "screen_manager.h"
+
+#include <map>
+#include <vector>
+
+#include <transaction/rs_interfaces.h>
+
 #include "display_manager_adapter.h"
 #include "display_manager_agent_default.h"
 #include "singleton_delegator.h"
 #include "window_manager_hilog.h"
 
-#include <map>
-#include <vector>
 
 namespace OHOS::Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "ScreenManager"};
+    const static uint32_t MAX_SCREEN_SIZE = 32;
 }
 class ScreenManager::Impl : public RefBase {
 public:
     Impl() = default;
-    ~Impl() = default;
+    ~Impl();
     static inline SingletonDelegator<ScreenManager> delegator;
     bool RegisterScreenListener(sptr<IScreenListener> listener);
     bool UnregisterScreenListener(sptr<IScreenListener> listener);
     bool RegisterScreenGroupListener(sptr<IScreenGroupListener> listener);
     bool UnregisterScreenGroupListener(sptr<IScreenGroupListener> listener);
-    sptr<Screen> GetScreenById(ScreenId screenId);
-    sptr<ScreenGroup> GetScreenGroupById(ScreenId screenId);
+    sptr<Screen> GetScreen(ScreenId screenId);
+    sptr<ScreenGroup> GetScreenGroup(ScreenId screenId);
     std::vector<sptr<Screen>> GetAllScreens();
 
 private:
@@ -50,8 +55,8 @@ private:
     std::map<ScreenId, sptr<Screen>> screenMap_;
     std::map<ScreenId, sptr<ScreenGroup>> screenGroupMap_;
     std::recursive_mutex mutex_;
-    std::vector<sptr<IScreenListener>> screenListeners_;
-    std::vector<sptr<IScreenGroupListener>> screenGroupListeners_;
+    std::set<sptr<IScreenListener>> screenListeners_;
+    std::set<sptr<IScreenGroupListener>> screenGroupListeners_;
 };
 
 class ScreenManager::Impl::ScreenManagerListener : public DisplayManagerAgentDefault {
@@ -145,7 +150,22 @@ ScreenManager::~ScreenManager()
 {
 }
 
-sptr<Screen> ScreenManager::Impl::GetScreenById(ScreenId screenId)
+ScreenManager::Impl::~Impl()
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    bool res = true;
+    if (screenManagerListener_ != nullptr) {
+        res = SingletonContainer::Get<ScreenManagerAdapter>().UnregisterDisplayManagerAgent(
+            screenManagerListener_,
+            DisplayManagerAgentType::SCREEN_EVENT_LISTENER);
+    }
+    screenManagerListener_ = nullptr;
+    if (!res) {
+        WLOGFW("UnregisterDisplayManagerAgent SCREEN_EVENT_LISTENER failed !");
+    }
+}
+
+sptr<Screen> ScreenManager::Impl::GetScreen(ScreenId screenId)
 {
     auto screenInfo = SingletonContainer::Get<ScreenManagerAdapter>().GetScreenInfo(screenId);
     std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -158,10 +178,10 @@ sptr<Screen> ScreenManager::Impl::GetScreenById(ScreenId screenId)
 
 sptr<Screen> ScreenManager::GetScreenById(ScreenId screenId)
 {
-    return pImpl_->GetScreenById(screenId);
+    return pImpl_->GetScreen(screenId);
 }
 
-sptr<ScreenGroup> ScreenManager::Impl::GetScreenGroupById(ScreenId screenId)
+sptr<ScreenGroup> ScreenManager::Impl::GetScreenGroup(ScreenId screenId)
 {
     auto screenGroupInfo = SingletonContainer::Get<ScreenManagerAdapter>().GetScreenGroupInfoById(screenId);
     std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -181,9 +201,9 @@ sptr<ScreenGroup> ScreenManager::Impl::GetScreenGroupById(ScreenId screenId)
     return screenGroup;
 }
 
-sptr<ScreenGroup> ScreenManager::GetScreenGroupById(ScreenId screenId)
+sptr<ScreenGroup> ScreenManager::GetScreenGroup(ScreenId screenId)
 {
-    return pImpl_->GetScreenGroupById(screenId);
+    return pImpl_->GetScreenGroup(screenId);
 }
 
 std::vector<sptr<Screen>> ScreenManager::Impl::GetAllScreens()
@@ -211,14 +231,20 @@ std::vector<sptr<Screen>> ScreenManager::GetAllScreens()
 bool ScreenManager::Impl::RegisterScreenListener(sptr<IScreenListener> listener)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
-    screenListeners_.push_back(listener);
+    bool ret = true;
     if (screenManagerListener_ == nullptr) {
         screenManagerListener_ = new ScreenManagerListener(this);
-        SingletonContainer::Get<ScreenManagerAdapter>().RegisterDisplayManagerAgent(
+        ret = SingletonContainer::Get<ScreenManagerAdapter>().RegisterDisplayManagerAgent(
             screenManagerListener_,
             DisplayManagerAgentType::SCREEN_EVENT_LISTENER);
     }
-    return true;
+    if (!ret) {
+        WLOGFW("RegisterScreenListener failed !");
+        screenManagerListener_ = nullptr;
+    } else {
+        screenListeners_.insert(listener);
+    }
+    return ret;
 }
 
 bool ScreenManager::RegisterScreenListener(sptr<IScreenListener> listener)
@@ -238,14 +264,15 @@ bool ScreenManager::Impl::UnregisterScreenListener(sptr<IScreenListener> listene
         WLOGFE("could not find this listener");
         return false;
     }
+    bool ret = true;
     screenListeners_.erase(iter);
-    if (screenListeners_.empty() && screenManagerListener_ != nullptr) {
-        SingletonContainer::Get<ScreenManagerAdapter>().UnregisterDisplayManagerAgent(
+    if (screenListeners_.empty() && screenGroupListeners_.empty() && screenManagerListener_ != nullptr) {
+        ret = SingletonContainer::Get<ScreenManagerAdapter>().UnregisterDisplayManagerAgent(
             screenManagerListener_,
             DisplayManagerAgentType::SCREEN_EVENT_LISTENER);
         screenManagerListener_ = nullptr;
     }
-    return true;
+    return ret;
 }
 
 bool ScreenManager::UnregisterScreenListener(sptr<IScreenListener> listener)
@@ -260,14 +287,20 @@ bool ScreenManager::UnregisterScreenListener(sptr<IScreenListener> listener)
 bool ScreenManager::Impl::RegisterScreenGroupListener(sptr<IScreenGroupListener> listener)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
-    screenGroupListeners_.push_back(listener);
+    bool ret = true;
     if (screenManagerListener_ == nullptr) {
         screenManagerListener_ = new ScreenManagerListener(this);
-        SingletonContainer::Get<ScreenManagerAdapter>().RegisterDisplayManagerAgent(
+        ret = SingletonContainer::Get<ScreenManagerAdapter>().RegisterDisplayManagerAgent(
             screenManagerListener_,
             DisplayManagerAgentType::SCREEN_EVENT_LISTENER);
     }
-    return true;
+    if (!ret) {
+        WLOGFW("RegisterScreenGroupListener failed !");
+        screenManagerListener_ = nullptr;
+    } else {
+        screenGroupListeners_.insert(listener);
+    }
+    return ret;
 }
 
 bool ScreenManager::RegisterScreenGroupListener(sptr<IScreenGroupListener> listener)
@@ -287,14 +320,15 @@ bool ScreenManager::Impl::UnregisterScreenGroupListener(sptr<IScreenGroupListene
         WLOGFE("could not find this listener");
         return false;
     }
+    bool ret = true;
     screenGroupListeners_.erase(iter);
-    if (screenGroupListeners_.empty() && screenManagerListener_ != nullptr) {
-        SingletonContainer::Get<ScreenManagerAdapter>().UnregisterDisplayManagerAgent(
+    if (screenGroupListeners_.empty() && screenGroupListeners_.empty() && screenManagerListener_ != nullptr) {
+        ret = SingletonContainer::Get<ScreenManagerAdapter>().UnregisterDisplayManagerAgent(
             screenManagerListener_,
             DisplayManagerAgentType::SCREEN_EVENT_LISTENER);
         screenManagerListener_ = nullptr;
     }
-    return true;
+    return ret;
 }
 
 bool ScreenManager::UnregisterScreenGroupListener(sptr<IScreenGroupListener> listener)
@@ -308,19 +342,26 @@ bool ScreenManager::UnregisterScreenGroupListener(sptr<IScreenGroupListener> lis
 
 ScreenId ScreenManager::MakeExpand(const std::vector<ExpandOption>& options)
 {
-    WLOGFI("make expand");
+    WLOGFI("Make expand");
     if (options.empty()) {
+        return SCREEN_ID_INVALID;
+    }
+    if (options.size() > MAX_SCREEN_SIZE) {
+        WLOGFW("Make expand failed. The options size is bigger than %{public}u.", MAX_SCREEN_SIZE);
         return SCREEN_ID_INVALID;
     }
     std::vector<ScreenId> screenIds;
     std::vector<Point> startPoints;
     for (auto& option: options) {
+        if (std::find(screenIds.begin(), screenIds.end(), option.screenId_) != screenIds.end()) {
+            continue;
+        }
         screenIds.emplace_back(option.screenId_);
         startPoints.emplace_back(Point(option.startX_, option.startY_));
     }
     ScreenId group = SingletonContainer::Get<ScreenManagerAdapter>().MakeExpand(screenIds, startPoints);
     if (group == SCREEN_ID_INVALID) {
-        WLOGFI("make expand failed");
+        WLOGFI("Make expand failed");
     }
     return group;
 }
@@ -328,12 +369,28 @@ ScreenId ScreenManager::MakeExpand(const std::vector<ExpandOption>& options)
 ScreenId ScreenManager::MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId)
 {
     WLOGFI("create mirror for screen: %{public}" PRIu64"", mainScreenId);
-    // TODO: "record screen" should use another function, "MakeMirror" should return group id.
+    if (mirrorScreenId.size() > MAX_SCREEN_SIZE) {
+        WLOGFW("Make Mirror failed. The mirrorScreenId size is bigger than %{public}u.", MAX_SCREEN_SIZE);
+        return SCREEN_ID_INVALID;
+    }
     ScreenId group = SingletonContainer::Get<ScreenManagerAdapter>().MakeMirror(mainScreenId, mirrorScreenId);
     if (group == SCREEN_ID_INVALID) {
         WLOGFI("create mirror failed");
     }
     return group;
+}
+
+void ScreenManager::RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens)
+{
+    if (screens.empty()) {
+        WLOGFW("RemoveVirtualScreenFromGroup failed. screens is empty.");
+        return;
+    }
+    if (screens.size() > MAX_SCREEN_SIZE) {
+        WLOGFW("RemoveVirtualScreenFromGroup failed. The screens size is bigger than %{public}u.", MAX_SCREEN_SIZE);
+        return;
+    }
+    SingletonContainer::Get<ScreenManagerAdapter>().RemoveVirtualScreenFromGroup(screens);
 }
 
 ScreenId ScreenManager::CreateVirtualScreen(VirtualScreenOption option)
@@ -349,6 +406,17 @@ DMError ScreenManager::DestroyVirtualScreen(ScreenId screenId)
 DMError ScreenManager::SetVirtualScreenSurface(ScreenId screenId, sptr<Surface> surface)
 {
     return SingletonContainer::Get<ScreenManagerAdapter>().SetVirtualScreenSurface(screenId, surface);
+}
+
+bool ScreenManager::SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason)
+{
+    WLOGFI("state:%{public}u, reason:%{public}u", state, reason);
+    return SingletonContainer::Get<ScreenManagerAdapter>().SetScreenPowerForAll(state, reason);
+}
+
+ScreenPowerState ScreenManager::GetScreenPower(ScreenId dmsScreenId)
+{
+    return SingletonContainer::Get<ScreenManagerAdapter>().GetScreenPower(dmsScreenId);
 }
 
 void ScreenManager::Impl::NotifyScreenConnect(sptr<ScreenInfo> info)

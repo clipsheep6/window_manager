@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,14 +25,17 @@
 
 #include "screen.h"
 #include "abstract_display.h"
+#include "display_change_listener.h"
 #include "transaction/rs_interfaces.h"
 #include "future.h"
 
 namespace OHOS::Rosen {
 class AbstractDisplayController : public RefBase {
+using DisplayStateChangeListener = std::function<void(DisplayId, DisplayStateChangeType)>;
 public:
-    AbstractDisplayController(std::recursive_mutex& mutex);
+    AbstractDisplayController(std::recursive_mutex& mutex, DisplayStateChangeListener);
     ~AbstractDisplayController();
+    WM_DISALLOW_COPY_AND_MOVE(AbstractDisplayController);
 
     void Init(sptr<AbstractScreenController> abstractScreenController);
     ScreenId GetDefaultScreenId();
@@ -43,6 +46,7 @@ public:
     sptr<AbstractDisplay> GetAbstractDisplayByScreen(ScreenId screenId) const;
     std::vector<DisplayId> GetAllDisplayIds() const;
     void AddDisplayForExpandScreen(sptr<AbstractScreen> absScreen);
+    void SetFreeze(std::vector<DisplayId> displayIds, bool isFreeze);
 
 private:
     void OnAbstractScreenConnect(sptr<AbstractScreen> absScreen);
@@ -64,6 +68,7 @@ private:
     sptr<AbstractScreenController> abstractScreenController_;
     sptr<AbstractScreenController::AbstractScreenCallback> abstractScreenCallback_;
     OHOS::Rosen::RSInterfaces& rsInterface_;
+    DisplayStateChangeListener displayStateChangeListener_;
 
     class ScreenshotCallback : public SurfaceCaptureCallback, public Future<std::shared_ptr<Media::PixelMap>> {
     public:
