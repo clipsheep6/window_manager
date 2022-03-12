@@ -667,13 +667,8 @@ WMError WindowImpl::Show(uint32_t reason)
         return WMError::WM_OK;
     }
     if (state_ == WindowState::STATE_SHOWN) {
-        if (property_->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
-            WLOGFI("desktop window [id:%{public}d] is shown, minimize all app windows", property_->GetWindowId());
-            SingletonContainer::Get<WindowAdapter>().MinimizeAllAppWindows(property_->GetDisplayId());
-        } else {
-            WLOGFI("window is already shown id: %{public}d, raise to top", property_->GetWindowId());
-            SingletonContainer::Get<WindowAdapter>().ProcessWindowTouchedEvent(property_->GetWindowId());
-        }
+        WLOGFI("window is already shown id: %{public}d, raise to top", property_->GetWindowId());
+        SingletonContainer::Get<WindowAdapter>().ProcessWindowTouchedEvent(property_->GetWindowId());
         for (auto& listener : lifecycleListeners_) {
             if (listener != nullptr) {
                 listener->AfterForeground();
