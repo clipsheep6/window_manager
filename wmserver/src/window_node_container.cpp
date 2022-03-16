@@ -175,6 +175,7 @@ void WindowNodeContainer::UpdateWindowTree(sptr<WindowNode>& node)
     for (auto iter = parentNode->children_.begin(); iter < parentNode->children_.end(); ++iter) {
         if ((*iter)->priority_ > node->priority_) {
             position = iter;
+            ;
             break;
         }
     }
