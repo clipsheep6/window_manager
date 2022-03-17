@@ -910,7 +910,7 @@ WMError WindowImpl::RequestFocus() const
 
 void WindowImpl::AddInputEventListener(std::shared_ptr<MMI::IInputEventConsumer>& inputEventListener)
 {
-    InputTransferStation::GetInstance().SetInputListener(GetWindowId(), inputEventListener);
+    // InputTransferStation::GetInstance().SetInputListener(GetWindowId(), inputEventListener);
 }
 
 void WindowImpl::RegisterLifeCycleListener(sptr<IWindowLifeCycle>& listener)
@@ -1008,6 +1008,26 @@ void WindowImpl::UnregisterDisplayMoveListener(sptr<IDisplayMoveListener>& liste
     displayMoveListeners_.erase(iter);
 }
 
+void WindowImpl::RegisterInputEventListener(sptr<IInputEventListener>& listener)
+{
+    if (listener == nullptr) {
+        return;
+    }
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    inputEventListeners_.emplace_back(listener);
+}
+
+void WindowImpl::UnregisterInputEventListener(sptr<IInputEventListener>& listener)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    auto iter = std::find(inputEventListeners_.begin(), inputEventListeners_.end(), listener);
+    if (iter == inputEventListeners_.end()) {
+        WLOGFE("could not find the listener");
+        return;
+    }
+    inputEventListeners_.erase(iter);
+}
+
 void WindowImpl::RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func)
 {
     WLOGFE("JS RegisterWindowDestroyedListener the listener");
@@ -1064,6 +1084,13 @@ void WindowImpl::UpdateMode(WindowMode mode)
 
 void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
+        
+    for (auto& listener : inputEventListeners_) {
+        if (listener != nullptr) {
+            WLOGI("ConsumeKeyEvent keyEvent is old api consumed");
+            listener->OnKeyEvent(keyEvent);
+        }
+    }
     int32_t keyCode = keyEvent->GetKeyCode();
     int32_t keyAction = keyEvent->GetKeyAction();
     WLOGFI("ConsumeKeyEvent: enter GetKeyCode: %{public}d, action: %{public}d", keyCode, keyAction);
@@ -1277,6 +1304,12 @@ void WindowImpl::ConsumePointerEvent(std::shared_ptr<MMI::PointerEvent>& pointer
 
     if (IsPointerEventConsumed()) {
         return;
+    }
+    for (auto& listener : inputEventListeners_) {
+        if (listener != nullptr) {
+            WLOGI("ConsumePointEvent pointerEvent is old api consumed");
+            listener->OnPointerEvent(pointerEvent);
+        }
     }
     if (uiContent_ == nullptr) {
         WLOGE("ConsumePointerEvent uiContent is nullptr, windowId: %{public}u", GetWindowId());
