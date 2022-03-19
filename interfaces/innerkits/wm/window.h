@@ -67,6 +67,12 @@ public:
     virtual void OnDisplayMove(DisplayId from, DisplayId to) = 0;
 };
 
+class IInputEventListener : virtual public RefBase {
+public:
+    virtual void OnKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent) = 0;
+    virtual void OnPointerEvent(std::shared_ptr<MMI::PointerEvent>& pointerEvent) = 0;
+};
+
 
 class Window : public RefBase {
 public:
@@ -132,6 +138,8 @@ public:
     virtual void UnregisterDragListener(const sptr<IWindowDragListener>& listener) = 0;
     virtual void RegisterDisplayMoveListener(sptr<IDisplayMoveListener>& listener) = 0;
     virtual void UnregisterDisplayMoveListener(sptr<IDisplayMoveListener>& listener) = 0;
+    virtual void RegisterInputEventListener(sptr<IInputEventListener>& listener) = 0;
+    virtual void UnregisterInputEventListener(sptr<IInputEventListener>& listener) = 0;
     virtual void RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func) = 0;
     virtual WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
         NativeValue* storage, bool isdistributed = false) = 0;
