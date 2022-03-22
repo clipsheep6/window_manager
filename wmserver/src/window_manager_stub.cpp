@@ -16,7 +16,7 @@
 #include "window_manager_stub.h"
 #include <ipc_skeleton.h>
 #include "window_manager_hilog.h"
-
+#include "ui/rs_surface_alias_node.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -36,7 +36,9 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             sptr<IRemoteObject> windowObject = data.ReadRemoteObject();
             sptr<IWindow> windowProxy = iface_cast<IWindow>(windowObject);
             sptr<WindowProperty> windowProperty = data.ReadStrongParcelable<WindowProperty>();
-            std::shared_ptr<RSSurfaceNode> surfaceNode(data.ReadParcelable<RSSurfaceNode>());
+            NodeId nodeId = data.ReadInt64();
+            std::string nodeName = data.ReadString();
+            std::shared_ptr<RSSurfaceNode> surfaceNode(RSSurfaceAliasNode::Create(nodeId, nodeName));
             uint32_t windowId;
             sptr<IRemoteObject> token = nullptr;
             if (windowProperty && windowProperty->GetTokenState()) {
