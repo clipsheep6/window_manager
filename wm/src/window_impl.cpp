@@ -349,6 +349,7 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
     } else {
         property_->SetDecorEnable(false);
     }
+    // windowDragType_ = DRAGTYPE::DRAG_FREEDOM;
     if (isdistributed) {
         uiContent_->Restore(this, contentInfo, storage);
     } else {
@@ -782,7 +783,7 @@ WMError WindowImpl::Maximize()
     if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
         WMError ret = SingletonContainer::Get<WindowAdapter>().MaxmizeWindow(property_->GetWindowId());
         if (ret == WMError::WM_OK) {
-            UpdateMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+            property_->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
         }
         return ret;
     } else {
@@ -1105,6 +1106,52 @@ void WindowImpl::HandleDragEvent(int32_t posX, int32_t posY, int32_t pointId)
     }
 }
 
+void WindowImpl::HandleDragEventProportion(int32_t posX, int32_t posY, int32_t pointId)
+{
+    if (!startDragFlag_ || (pointId != startPointerId_)) {
+        return;
+    }
+    float proportion = static_cast<float>(startPointRect_.width_) / static_cast<float>(startPointRect_.height_);
+    int32_t diffX = posX - startPointPosX_;
+    int32_t diffY = posY - startPointPosY_;
+    Rect newRect = startPointRect_;
+    if (startPointPosX_ <= startRectExceptFrame_.posX_) {
+        if (diffX > static_cast<int32_t>(startPointRect_.width_)) {
+            diffX = static_cast<int32_t>(startPointRect_.width_);
+        }
+        newRect.posX_ += diffX;
+        newRect.width_ = static_cast<uint32_t>(static_cast<int32_t>(newRect.width_) - diffX);
+        newRect.height_ = static_cast<uint32_t>(static_cast<float>(newRect.width_) / proportion);
+    } else if (startPointPosX_ >= startRectExceptFrame_.posX_ + static_cast<int32_t>(startRectExceptFrame_.width_)) {
+        if (diffX < 0 && (-diffX > static_cast<int32_t>(startPointRect_.width_))) {
+            diffX = -(static_cast<int32_t>(startPointRect_.width_));
+        }
+        newRect.width_ = static_cast<uint32_t>(static_cast<int32_t>(newRect.width_) + diffX);
+        newRect.height_ = static_cast<uint32_t>(static_cast<float>(newRect.width_) / proportion);
+    }
+
+    if (startPointPosY_ <= startRectExceptFrame_.posY_) {
+        if (diffY > static_cast<int32_t>(startPointRect_.height_)) {
+            diffY = static_cast<int32_t>(startPointRect_.height_);
+        }
+        newRect.posY_ += diffY;
+        newRect.height_ = static_cast<uint32_t>(static_cast<int32_t>(newRect.height_) - diffY);
+        newRect.width_ = static_cast<uint32_t>(static_cast<float>(newRect.height_) * proportion);
+    } else if (startPointPosY_ >= startRectExceptFrame_.posY_ + static_cast<int32_t>(startRectExceptFrame_.height_)) {
+        if (diffY < 0 && (-diffY > static_cast<int32_t>(startPointRect_.height_))) {
+            diffY = -(static_cast<int32_t>(startPointRect_.height_));
+        }
+        newRect.height_ = static_cast<uint32_t>(static_cast<int32_t>(newRect.height_) + diffY);
+        newRect.width_ = static_cast<uint32_t>(static_cast<float>(newRect.height_) * proportion);
+    }
+
+    auto res = Drag(newRect);
+    WLOGFE("drag window: %{public}d %{public}d  %{public}u %{public}u %{public}f", newRect.posX_, newRect.posY_, newRect.width_, newRect.height_, proportion);
+    if (res != WMError::WM_OK) {
+        WLOGFE("drag window: %{public}u failed", GetWindowId());
+    }
+}
+
 void WindowImpl::EndMoveOrDragWindow(int32_t pointId)
 {
     if (pointId != startPointerId_) {
@@ -1160,6 +1207,22 @@ void WindowImpl::ReadyToMoveOrDragWindow(int32_t globalX, int32_t globalY, int32
     } else if (!WindowHelper::IsPointInTargetRect(startPointPosX_, startPointPosY_, startRectExceptFrame_)) {
         startDragFlag_ = true;
         SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(), true);
+        if (windowDragType_ == DRAGTYPE::DRAG_PROPORTION) {
+            if (startPointPosX_ < (startPointRect_.posX_ + startPointRect_.width_ / 2)) {
+                if (startPointPosY_ < (startPointRect_.posY_ + startPointRect_.height_ / 2)) {
+                    dragController_ = 1;
+                } else {
+                    dragController_ = 2;
+                }
+            } else {
+                if (startPointPosY_ < (startPointRect_.posY_ + startPointRect_.height_ / 2)) {
+                    dragController_ = 3;
+                } else {
+                    dragController_ = 4;
+                }
+            }
+        }
+        WLOGFE("dragController_ :%{public}d", dragController_);
     }
     return;
 }
@@ -1191,7 +1254,11 @@ void WindowImpl::ConsumeMoveOrDragEvent(std::shared_ptr<MMI::PointerEvent>& poin
         // Start to move or darg
         case MMI::PointerEvent::POINTER_ACTION_MOVE: {
             HandleMoveEvent(pointGlobalX, pointGlobalY, pointId);
-            HandleDragEvent(pointGlobalX, pointGlobalY, pointId);
+            if (windowDragType_ == DRAGTYPE::DRAG_FREEDOM) {
+                HandleDragEventProportion(pointGlobalX, pointGlobalY, pointId);
+            } else if (windowDragType_ == DRAGTYPE::DRAG_PROPORTION) {
+                HandleDragEventProportion(pointGlobalX, pointGlobalY, pointId);
+            }
             break;
         }
         // End move or drag
