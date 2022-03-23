@@ -489,12 +489,6 @@ WMError WindowImpl::SetLayoutFullScreen(bool status)
 WMError WindowImpl::SetFullScreen(bool status)
 {
     WLOGFI("[Client] Window %{public}d SetFullScreen: %{public}d", property_->GetWindowId(), status);
-    WMError ret = SetLayoutFullScreen(status);
-    if (ret != WMError::WM_OK) {
-        WLOGFE("SetLayoutFullScreen errCode:%{public}d winId:%{public}d",
-            static_cast<int32_t>(ret), property_->GetWindowId());
-        return ret;
-    }
     SystemBarProperty statusProperty = GetSystemBarPropertyByType(
         WindowType::WINDOW_TYPE_STATUS_BAR);
     SystemBarProperty naviProperty = GetSystemBarPropertyByType(
@@ -506,7 +500,7 @@ WMError WindowImpl::SetFullScreen(bool status)
         statusProperty.enable_ = true;
         naviProperty.enable_ = true;
     }
-    ret = SetSystemBarProperty(WindowType::WINDOW_TYPE_STATUS_BAR, statusProperty);
+    WMError ret = SetSystemBarProperty(WindowType::WINDOW_TYPE_STATUS_BAR, statusProperty);
     if (ret != WMError::WM_OK) {
         WLOGFE("SetSystemBarProperty errCode:%{public}d winId:%{public}d",
             static_cast<int32_t>(ret), property_->GetWindowId());
@@ -516,6 +510,12 @@ WMError WindowImpl::SetFullScreen(bool status)
     if (ret != WMError::WM_OK) {
         WLOGFE("SetSystemBarProperty errCode:%{public}d winId:%{public}d",
             static_cast<int32_t>(ret), property_->GetWindowId());
+    }
+    ret = SetLayoutFullScreen(status);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("SetLayoutFullScreen errCode:%{public}d winId:%{public}d",
+            static_cast<int32_t>(ret), property_->GetWindowId());
+        return ret;
     }
     return ret;
 }
@@ -837,10 +837,7 @@ WMError WindowImpl::Maximize()
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
-        WMError ret = SingletonContainer::Get<WindowAdapter>().MaxmizeWindow(property_->GetWindowId());
-        if (ret == WMError::WM_OK) {
-            UpdateMode(WindowMode::WINDOW_MODE_FULLSCREEN);
-        }
+        WMError ret = SetFullScreen(true);
         return ret;
     } else {
         WLOGFI("Maximize Window failed. The window is not main window");
