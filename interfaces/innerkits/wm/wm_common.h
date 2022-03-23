@@ -186,6 +186,11 @@ enum class OccupiedAreaType : uint32_t {
     TYPE_INPUT, // area of input window
 };
 
+enum class DRAGTYPE : uint32_t {
+    DRAG_FREEDOM = 0,
+    DRAG_PROPORTION,
+};
+
 enum class ColorSpace : uint32_t {
     COLOR_SPACE_DEFAULT = 0, // Default color space.
     COLOR_SPACE_WIDE_GAMUT,  // Wide gamut color space. The specific wide color gamut depends on thr screen.
