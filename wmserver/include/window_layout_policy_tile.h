@@ -44,6 +44,7 @@ private:
     std::vector<std::vector<Rect>> presetRects_;
     std::deque<sptr<WindowNode>> foregroundNodes_;
     void UpdateDisplayInfo() override;
+    uint32_t GetMaxTileWinNum() const;
     void InitTileWindowRects();
     void AssignNodePropertyForTileWindows();
     void LayoutForegroundNodeQueue();
