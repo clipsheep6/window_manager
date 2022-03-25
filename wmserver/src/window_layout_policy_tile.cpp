@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -223,7 +223,6 @@ void WindowLayoutPolicyTile::UpdateLayoutRect(sptr<WindowNode>& node)
     Rect displayRect = displayRect_;
     Rect limitRect = displayRect;
     Rect winRect = node->GetWindowProperty()->GetWindowRect();
-
     WLOGFI("Id:%{public}d, avoid:%{public}d parLimit:%{public}d floating:%{public}d, sub:%{public}d, " \
         "deco:%{public}d, type:%{public}d, requestRect:[%{public}d, %{public}d, %{public}d, %{public}d]",
         node->GetWindowId(), needAvoid, parentLimit, floatingWindow, subWindow, decorEnbale,
@@ -231,7 +230,6 @@ void WindowLayoutPolicyTile::UpdateLayoutRect(sptr<WindowNode>& node)
     if (needAvoid) {
         limitRect = limitRect_;
     }
-
     if (!floatingWindow) { // fullscreen window
         winRect = limitRect;
     } else { // floating window
