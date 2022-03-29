@@ -35,7 +35,7 @@ WindowLayoutPolicy::WindowLayoutPolicy(const Rect& displayRect, const uint64_t& 
 void WindowLayoutPolicy::UpdateDisplayInfo()
 {
     limitRect_ = displayRect_;
-    UpdateDefaultFoatingRect();
+    UpdateDefaultFloatingRect();
 }
 
 void WindowLayoutPolicy::Launch()
@@ -95,7 +95,7 @@ void WindowLayoutPolicy::AddWindowNode(sptr<WindowNode>& node)
     UpdateWindowNode(node); // currently, update and add do the same process
 }
 
-void WindowLayoutPolicy::UpdateDefaultFoatingRect()
+void WindowLayoutPolicy::UpdateDefaultFloatingRect()
 {
     constexpr uint32_t half = 2;
     constexpr float ratio = 0.75;  // 0.75: default height/width ratio
@@ -114,6 +114,20 @@ void WindowLayoutPolicy::UpdateDefaultFoatingRect()
         resRect.posY_ = centerPosY - static_cast<int32_t>(defaultH / half);
     }
     defaultFloatingRect_ = resRect;
+}
+
+void WindowLayoutPolicy::UpdateClientRectAndResetReason(sptr<WindowNode>& node,
+    const Rect& lastLayoutRect, const Rect& winRect)
+{
+    if ((!(lastLayoutRect == winRect)) || node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+        auto reason = node->GetWindowSizeChangeReason();
+        if (node->GetWindowToken()) {
+            node->GetWindowToken()->UpdateWindowRect(node->GetLayoutRect(), reason);
+        }
+        if (reason == WindowSizeChangeReason::DRAG || reason == WindowSizeChangeReason::DRAG_END) {
+            node->ResetWindowSizeChangeReason();
+        }
+    }
 }
 
 void WindowLayoutPolicy::SetRectForFloating(const sptr<WindowNode>& node)
@@ -149,7 +163,9 @@ void WindowLayoutPolicy::RemoveWindowNode(sptr<WindowNode>& node)
     Rect winRect = node->GetWindowProperty()->GetWindowRect();
     Rect emptyRect = { 0, 0, 0, 0 };
     node->SetLayoutRect(emptyRect);
-    node->GetWindowToken()->UpdateWindowRect(winRect, WindowSizeChangeReason::HIDE);
+    if (node->GetWindowToken()) {
+        node->GetWindowToken()->UpdateWindowRect(winRect, WindowSizeChangeReason::HIDE);
+    }
 }
 
 void WindowLayoutPolicy::UpdateWindowNode(sptr<WindowNode>& node, bool isAddWindow)

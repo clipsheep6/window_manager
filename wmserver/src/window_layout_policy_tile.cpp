@@ -134,7 +134,9 @@ void WindowLayoutPolicyTile::RemoveWindowNode(sptr<WindowNode>& node)
         LayoutForegroundNodeQueue();
     }
     Rect winRect = node->GetWindowProperty()->GetWindowRect();
-    node->GetWindowToken()->UpdateWindowRect(winRect, WindowSizeChangeReason::HIDE);
+    if (node->GetWindowToken()) {
+        node->GetWindowToken()->UpdateWindowRect(winRect, WindowSizeChangeReason::HIDE);
+    }
 }
 
 void WindowLayoutPolicyTile::LayoutForegroundNodeQueue()
@@ -145,7 +147,9 @@ void WindowLayoutPolicyTile::LayoutForegroundNodeQueue()
         node->SetLayoutRect(winRect);
         CalcAndSetNodeHotZone(winRect, node);
         if (!(lastRect == winRect)) {
-            node->GetWindowToken()->UpdateWindowRect(winRect, node->GetWindowSizeChangeReason());
+            if (node->GetWindowToken()) {
+                node->GetWindowToken()->UpdateWindowRect(winRect, node->GetWindowSizeChangeReason());
+            }
             node->surfaceNode_->SetBounds(winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
         }
         for (auto& childNode : node->children_) {
@@ -211,7 +215,9 @@ void WindowLayoutPolicyTile::AssignNodePropertyForTileWindows()
     for (auto node : foregroundNodes_) {
         auto& rect = (*rectIt);
         node->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
-        node->GetWindowToken()->UpdateWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+        if (node->GetWindowToken()) {
+            node->GetWindowToken()->UpdateWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+        }
         node->SetWindowRect(rect);
         node->hasDecorated_ = true;
         WLOGFI("set rect for qwin id: %{public}u [%{public}d %{public}d %{public}u %{public}u]",
@@ -259,13 +265,7 @@ void WindowLayoutPolicyTile::UpdateLayoutRect(sptr<WindowNode>& node)
     LimitWindowSize(node, displayRect, winRect);
     node->SetLayoutRect(winRect);
     CalcAndSetNodeHotZone(winRect, node);
-    if (!(lastRect == winRect)) {
-        auto reason = node->GetWindowSizeChangeReason();
-        node->GetWindowToken()->UpdateWindowRect(winRect, reason);
-        if (reason == WindowSizeChangeReason::DRAG || reason == WindowSizeChangeReason::DRAG_END) {
-            node->ResetWindowSizeChangeReason();
-        }
-    }
+    UpdateClientRectAndResetReason(node, lastRect, winRect);
     // update node bounds
     if (node->surfaceNode_ != nullptr) {
         node->surfaceNode_->SetBounds(winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);

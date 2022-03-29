@@ -212,6 +212,7 @@ NativeValue* CreateJsWindowPropertiesObject(NativeEngine& engine, sptr<Window>& 
     object->SetProperty("isPrivacyMode", CreateJsValue(engine, window->IsPrivacyMode()));
     return objValue;
 }
+
 static std::string GetHexColor(uint32_t color)
 {
     std::stringstream ioss;

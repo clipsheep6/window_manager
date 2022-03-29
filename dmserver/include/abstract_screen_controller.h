@@ -28,6 +28,7 @@
 #include "display_manager_agent_controller.h"
 #include "dm_common.h"
 #include "screen.h"
+#include "ui/rs_ui_director.h"
 #include "zidl/display_manager_agent_interface.h"
 
 namespace OHOS::Rosen {
@@ -136,6 +137,7 @@ private:
     std::map<sptr<IRemoteObject>, std::vector<ScreenId>> screenAgentMap_;
     sptr<AbstractScreenCallback> abstractScreenCallback_;
     std::shared_ptr<AppExecFwk::EventHandler> controllerHandler_;
+    std::shared_ptr<RSUIDirector> rsUiDirector_;
 };
 } // namespace OHOS::Rosen
 #endif // FOUNDATION_DMSERVER_ABSTRACT_SCREEN_CONTROLLER_H

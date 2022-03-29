@@ -37,7 +37,8 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             sptr<IRemoteObject> windowObject = data.ReadRemoteObject();
             sptr<IWindow> windowProxy = iface_cast<IWindow>(windowObject);
             sptr<WindowProperty> windowProperty = data.ReadStrongParcelable<WindowProperty>();
-            std::shared_ptr<RSSurfaceNode> surfaceNode(data.ReadParcelable<RSSurfaceNode>());
+            [[maybe_unused]] auto junkdata = data.ReadUint32();
+            std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
             uint32_t windowId;
             sptr<IRemoteObject> token = nullptr;
             if (windowProperty && windowProperty->GetTokenState()) {
