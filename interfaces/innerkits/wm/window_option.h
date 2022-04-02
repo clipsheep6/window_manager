@@ -19,6 +19,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "../dm/dm_common.h"
 #include "wm_common.h"
 
 namespace OHOS {
@@ -63,6 +64,8 @@ public:
     const std::unordered_map<WindowType, SystemBarProperty>& GetSystemBarProperty() const;
     const PointInfo& GetHitOffset() const;
     WindowTag GetWindowTag() const;
+    Orientation GetRequestedOrientation() const;
+    void SetRequestedOrientation(Orientation orientation);
 private:
     Rect windowRect_ { 0, 0, 0, 0 };
     WindowType type_ { WindowType::WINDOW_TYPE_APP_MAIN_WINDOW };
@@ -83,6 +86,7 @@ private:
         { WindowType::WINDOW_TYPE_STATUS_BAR,     SystemBarProperty() },
         { WindowType::WINDOW_TYPE_NAVIGATION_BAR, SystemBarProperty() },
     };
+    Orientation requestedOrientation_ { Orientation::UNSPECIFIED };
 };
 } // namespace Rosen
 } // namespace OHOS

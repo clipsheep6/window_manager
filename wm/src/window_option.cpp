@@ -202,6 +202,16 @@ bool WindowOption::IsTurnScreenOn() const
 {
     return turnScreenOn_;
 }
+
+Orientation WindowOption::GetRequestedOrientation() const
+{
+    return requestedOrientation_;
+}
+
+void WindowOption::SetRequestedOrientation(Orientation orientation)
+{
+    requestedOrientation_ = orientation;
+}
 } // namespace Rosen
 } // namespace OHOS
 

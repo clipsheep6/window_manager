@@ -388,6 +388,10 @@ bool WindowProperty::Marshalling(Parcel& parcel) const
     if (!parcel.WriteUint32(static_cast<uint32_t>(windowSizeChangeReason_))) {
         return false;
     }
+
+    if (!parcel.WriteUint32(static_cast<uint32_t>(requestedOrientation_))) {
+        return false;
+    }
     return true;
 }
 
@@ -417,6 +421,7 @@ sptr<WindowProperty> WindowProperty::Unmarshalling(Parcel& parcel)
     property->SetHitOffset(offset);
     property->SetAnimationFlag(parcel.ReadUint32());
     property->SetWindowSizeChangeReason(static_cast<WindowSizeChangeReason>(parcel.ReadUint32()));
+    property->SetRequestedOrientation(static_cast<Orientation>(parcel.ReadUint32()));
     return property;
 }
 
@@ -443,7 +448,7 @@ void WindowProperty::CopyFrom(const sptr<WindowProperty>& property)
     windowSizeChangeReason_ = property->windowSizeChangeReason_;
     sysBarPropMap_ = property->sysBarPropMap_;
     isDecorEnable_ = property->isDecorEnable_;
-    isDecorEnable_ = property->isDecorEnable_;
+    requestedOrientation_ = property->requestedOrientation_;
 }
 }
 }

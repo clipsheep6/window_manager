@@ -59,6 +59,7 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
     property_->SetDisplayId(option->GetDisplayId());
     property_->SetWindowFlags(option->GetWindowFlags());
     property_->SetHitOffset(option->GetHitOffset());
+    property_->SetRequestedOrientation(option->GetRequestedOrientation());
     windowTag_ = option->GetWindowTag();
     keepScreenOn_ = option->IsKeepScreenOn();
     turnScreenOn_ = option->IsTurnScreenOn();
@@ -1584,6 +1585,20 @@ bool WindowImpl::IsFullScreen() const
     auto statusProperty = GetSystemBarPropertyByType(WindowType::WINDOW_TYPE_STATUS_BAR);
     auto naviProperty = GetSystemBarPropertyByType(WindowType::WINDOW_TYPE_NAVIGATION_BAR);
     return (IsLayoutFullScreen() && !statusProperty.enable_ && !naviProperty.enable_);
+}
+
+void WindowImpl::SetRequestedOrientation(Orientation orientation)
+{
+    if (property_->GetRequestedOrientation() == orientation) {
+        return;
+    }
+    property_->SetRequestedOrientation(orientation);
+    UpdateProperty(PropertyChangeAction::ACTION_UPDATE_ORIENTATION);
+}
+
+Orientation WindowImpl::GetRequestedOrientation()
+{
+    return property_->GetRequestedOrientation();
 }
 }
 }
