@@ -741,6 +741,38 @@ HWTEST_F(ScreenManagerTest, ScreenManager17, Function | MediumTest | Level2)
         ASSERT_NE(SCREEN_ID_INVALID, virtualScreenId);
     }
 }
+
+/**
+ * @tc.name: ScreenManager18
+ * @tc.desc: Connect the second screen as expansion of default screen, create windowNode on it, then make
+ * the window on foreground
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenManagerTest, ScreenManager18, Function | MediumTest | Level2)
+{
+    std::vector<ExpandOption> options = {{defaultScreenId_, 0, 0}, {2, defaultWidth_, 0}};
+    ScreenId expansionId = ScreenManager::GetInstance().MakeExpand(options);
+    
+    sleep(TEST_SPEEP_S);
+    ASSERT_NE(SCREEN_ID_INVALID, expansionId);
+    DisplayId secDisplayId = DisplayManager::GetInstance().GetDisplayByScreen(2)->GetId();
+    ASSERT_NE(DISPLAY_ID_INVALID, secDisplayId);
+    sptr<Window> window = CreateWindowByDisplayId(secDisplayId);
+    ASSERT_NE(nullptr, window);
+    sleep(TEST_SPEEP_S);
+    auto surfaceNode = window->GetSurfaceNode();
+    auto rsUiDirector = RSUIDirector::Create();
+    rsUiDirector->Init();
+    RSTransaction::FlushImplicitTransaction();
+    sleep(TEST_SPEEP_S);
+    rsUiDirector->SetRSSurfaceNode(surfaceNode);
+    RootNodeInit(rsUiDirector, 200, 400);
+    rsUiDirector->SendMessages();
+    sleep(TEST_SPEEP_S);
+    window->Show();
+    sleep(TEST_SPEEP_S_LONG);
+    window->Destroy();
+}
 }
 } // namespace Rosen
 } // namespace OHOS
