@@ -229,7 +229,12 @@ bool WindowNodeContainer::UpdateRSTree(sptr<WindowNode>& node, bool isAdd)
         // default transition curve: EASE OUT
         static const Rosen::RSAnimationTimingCurve curve = Rosen::RSAnimationTimingCurve::EASE_OUT;
         // add or remove window with transition animation
-        RSNode::Animate(timingProtocol, curve, updateRSTreeFunc);
+        if (node && node->surfaceNode_) {
+            auto implicitAnimator = node->surfaceNode_->MakeImplicitAnimator();
+            RSNode::Animate(timingProtocol, curve, updateRSTreeFunc, implicitAnimator);
+        } else {
+            RSNode::Animate(timingProtocol, curve, updateRSTreeFunc, nullptr);
+        }
     } else {
         // add or remove window without animation
         updateRSTreeFunc();
