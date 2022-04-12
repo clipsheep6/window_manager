@@ -23,7 +23,6 @@ config("libwm_private_config") {
     "//foundation/aafwk/standard/interfaces/innerkits/ability_manager/include",
     "//foundation/aafwk/standard/interfaces/innerkits/app_manager/include/appmgr",
     "//third_party/jsoncpp/include",
-    "//third_party/json/include",
   ]
 }
 
@@ -66,7 +65,10 @@ ohos_shared_library("libwm") {
 
     # vsync
     "//foundation/graphic/standard/rosen/modules/composer:libcomposer",
+    "//third_party/json:nlohmann_json_static",
   ]
+
+  ldflags = [ "-Wl,--exclude-libs,libnlohmann_json_static.a" ]
 
   external_deps = [
     "ability_base:want",
