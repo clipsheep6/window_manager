@@ -376,6 +376,7 @@ void AbstractDisplayController::BindAloneScreenLocked(sptr<AbstractScreen> realA
             abstractDisplayMap_.insert((std::make_pair(display->GetId(), display)));
             WLOGI("create display for new screen. screen:%{public}" PRIu64", display:%{public}" PRIu64"",
                 realAbsScreen->dmsId_, display->GetId());
+            displayStateChangeListener_(display->GetId(), DisplayStateChangeType::CREATE);
             DisplayManagerAgentController::GetInstance().OnDisplayCreate(display->ConvertToDisplayInfo());
         } else {
             WLOGI("bind display for new screen. screen:%{public}" PRIu64", display:%{public}" PRIu64"",
@@ -435,6 +436,7 @@ void AbstractDisplayController::AddScreenToExpandLocked(sptr<AbstractScreen> abs
     abstractDisplayMap_.insert((std::make_pair(display->GetId(), display)));
     WLOGI("create display for new screen. screen:%{public}" PRIu64", display:%{public}" PRIu64"",
         absScreen->dmsId_, display->GetId());
+    displayStateChangeListener_(display->GetId(), DisplayStateChangeType::CREATE);
     DisplayManagerAgentController::GetInstance().OnDisplayCreate(display->ConvertToDisplayInfo());
 }
 

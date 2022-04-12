@@ -25,11 +25,12 @@
 
 namespace OHOS {
 namespace Rosen {
+using RootNodeVectorPtr = std::unique_ptr<std::vector<sptr<WindowNode>>>;
+using WindowNodeMaps = std::map<DisplayId, std::map<WindowRootNodeType, RootNodeVectorPtr>>;
 class WindowLayoutPolicy : public RefBase {
 public:
     WindowLayoutPolicy() = delete;
-    WindowLayoutPolicy(const Rect& displayRect, const uint64_t& screenId,
-        sptr<WindowNode>& belowAppNode, sptr<WindowNode>& appNode, sptr<WindowNode>& aboveAppNode);
+    WindowLayoutPolicy(const std::map<DisplayId, Rect>& displayRectMap, std::unique_ptr<WindowNodeMaps> windowNodeMaps);
     ~WindowLayoutPolicy() = default;
     virtual void Launch();
     virtual void Clean();
@@ -37,36 +38,36 @@ public:
     virtual void Reorder();
     virtual void UpdateDisplayInfo();
     virtual void AddWindowNode(sptr<WindowNode>& node);
-    virtual void LayoutWindowTree();
+    virtual void LayoutWindowTree(DisplayId displayId);
     virtual void RemoveWindowNode(sptr<WindowNode>& node);
     virtual void UpdateWindowNode(sptr<WindowNode>& node, bool isAddWindow = false);
     virtual void UpdateLayoutRect(sptr<WindowNode>& node) = 0;
-    void UpdateDefaultFoatingRect();
-    float GetVirtualPixelRatio() const;
-    Rect GetDisplayLimitRect() const;
+    void UpdateDefaultFoatingRect(DisplayId displayId);
+    float GetVirtualPixelRatio(DisplayId displayId) const;
+    Rect GetDisplayLimitRect(DisplayId displayId) const;
 
 protected:
-    const Rect& displayRect_;
-    const uint64_t& screenId_;
-    sptr<WindowNode>& belowAppWindowNode_;
-    sptr<WindowNode>& appWindowNode_;
-    sptr<WindowNode>& aboveAppWindowNode_;
-    Rect limitRect_ = { 0, 0, 0, 0 };
+    void UpdateFloatingLayoutRect(Rect& limitRect, Rect& winRect);
+    void UpdateLimitRect(const sptr<WindowNode>& node, Rect& limitRect);
+    virtual void LayoutWindowNode(sptr<WindowNode>& node);
+    AvoidPosType GetAvoidPosType(const Rect& rect, DisplayId displayId);
+    void CalcAndSetNodeHotZone(Rect layoutOutRect, sptr<WindowNode>& node);
+    void LimitWindowSize(const sptr<WindowNode>& node, const Rect& displayRect, Rect& winRect);
+    void SetRectForFloating(const sptr<WindowNode>& node);
+    Rect ComputeDecoratedWindowRect(const Rect& winRect, DisplayId displayId);
+    bool IsVerticalDisplay(DisplayId displayId) const;
+    bool IsFullScreenRecentWindowExist(const std::vector<sptr<WindowNode>>& nodeVec) const;
+    void LayoutWindowNodesByRootType(std::vector<sptr<WindowNode>>& nodeVec);
+    std::map<WindowRootNodeType, RootNodeVectorPtr> GetWindowNodeMapOfDisplay(DisplayId displayId);
+
     const std::set<WindowType> avoidTypes_ {
         WindowType::WINDOW_TYPE_STATUS_BAR,
         WindowType::WINDOW_TYPE_NAVIGATION_BAR,
     };
-    void UpdateFloatingLayoutRect(Rect& limitRect, Rect& winRect);
-    void UpdateLimitRect(const sptr<WindowNode>& node, Rect& limitRect);
-    virtual void LayoutWindowNode(sptr<WindowNode>& node);
-    AvoidPosType GetAvoidPosType(const Rect& rect);
-    void CalcAndSetNodeHotZone(Rect layoutOutRect, sptr<WindowNode>& node);
-    void LimitWindowSize(const sptr<WindowNode>& node, const Rect& displayRect, Rect& winRect);
-    void SetRectForFloating(const sptr<WindowNode>& node);
-    Rect ComputeDecoratedWindowRect(const Rect& winRect);
-    bool IsVertical() const;
-    bool IsFullScreenRecentWindowExist() const;
-    Rect defaultFloatingRect_ = { 0, 0, 0, 0 };
+    std::map<DisplayId, Rect> displayRectMap_;
+    std::map<DisplayId, Rect> limitRectMap_;
+    std::map<DisplayId, Rect> defaultFloatingRectMap_;
+    std::unique_ptr<WindowNodeMaps> windowNodeMaps_;
 };
 }
 }

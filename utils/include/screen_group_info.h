@@ -33,6 +33,7 @@ public:
 
     DEFINE_VAR_FUNC_GET(std::vector<ScreenId>, Children, children);
     DEFINE_VAR_FUNC_GET(std::vector<Point>, Position, position);
+    DEFINE_VAR_FUNC_GET(ScreenId, ScreenGroupId, groupDmsId);
     DEFINE_VAR_DEFAULT_FUNC_GET(ScreenCombination, Combination, combination, ScreenCombination::SCREEN_ALONE);
 private:
     ScreenGroupInfo() = default;

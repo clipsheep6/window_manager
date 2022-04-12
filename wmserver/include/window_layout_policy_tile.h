@@ -30,8 +30,8 @@ namespace Rosen {
 class WindowLayoutPolicyTile : public WindowLayoutPolicy {
 public:
     WindowLayoutPolicyTile() = delete;
-    WindowLayoutPolicyTile(const Rect& displayRect, const uint64_t& screenId,
-        sptr<WindowNode>& belowAppNode, sptr<WindowNode>& appNode, sptr<WindowNode>& aboveAppNode);
+    WindowLayoutPolicyTile(const std::map<DisplayId, Rect>& displayRectMap,
+                           std::unique_ptr<WindowNodeMaps> windowNodeMaps);
     ~WindowLayoutPolicyTile() = default;
     void Launch() override;
     void AddWindowNode(sptr<WindowNode>& node) override;
@@ -41,15 +41,16 @@ public:
 
 private:
     uint32_t maxTileWinNum_ = 1;
-    std::vector<std::vector<Rect>> presetRects_;
-    std::deque<sptr<WindowNode>> foregroundNodes_;
+    std::map<DisplayId, uint32_t> maxTileWinNumMap_;
+    std::map<DisplayId, std::vector<std::vector<Rect>>> presetRectsMap_;
+    std::map<DisplayId, std::deque<sptr<WindowNode>>> foregroundNodesMap_;
     void UpdateDisplayInfo() override;
-    uint32_t GetMaxTileWinNum() const;
-    void InitTileWindowRects();
-    void AssignNodePropertyForTileWindows();
-    void LayoutForegroundNodeQueue();
+    uint32_t GetMaxTileWinNum(DisplayId displayId) const;
+    void InitTileWindowRects(DisplayId displayId);
+    void AssignNodePropertyForTileWindows(DisplayId displayId);
+    void LayoutForegroundNodeQueue(DisplayId displayId);
     void InitForegroundNodeQueue();
-    void ForegroundNodeQueuePushBack(sptr<WindowNode>& node);
+    void ForegroundNodeQueuePushBack(sptr<WindowNode>& node, DisplayId displayId);
     void ForegroundNodeQueueRemove(sptr<WindowNode>& node);
 };
 }

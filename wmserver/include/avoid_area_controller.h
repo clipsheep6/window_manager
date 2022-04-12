@@ -34,27 +34,28 @@ enum class AvoidControlType : uint32_t {
     AVOID_NODE_UNKNOWN,
 };
 
-using UpdateAvoidAreaFunc = std::function<void (std::vector<Rect>& avoidArea)>;
+using UpdateAvoidAreaFunc = std::function<void (std::vector<Rect>& avoidArea, DisplayId displayId)>;
+using AvoidNodesMapPtr = std::unique_ptr<std::map<uint32_t, sptr<WindowNode>>>;
 
 class AvoidAreaController : public RefBase {
 public:
-    AvoidAreaController(DisplayId displayId, UpdateAvoidAreaFunc callback)
-        : displayId_(displayId), updateAvoidAreaCallBack_(callback) {};
+    AvoidAreaController(DisplayId displayId, UpdateAvoidAreaFunc callback);
     ~AvoidAreaController() = default;
 
     WMError AvoidControl(const sptr<WindowNode>& node, AvoidControlType type);
 
     bool IsAvoidAreaNode(const sptr<WindowNode>& node) const;
-    std::vector<Rect> GetAvoidArea() const;
-    std::vector<Rect> GetAvoidAreaByType(AvoidAreaType avoidAreaType) const;
+    std::vector<Rect> GetAvoidArea(DisplayId displayId) const;
+    std::vector<Rect> GetAvoidAreaByType(AvoidAreaType avoidAreaType, DisplayId displayId) const;
 
 private:
-    DisplayId displayId_ = 0;
-    std::map<uint32_t, sptr<WindowNode>> avoidNodes_;    // key: windowId
-    UpdateAvoidAreaFunc updateAvoidAreaCallBack_;
-    void UseCallbackNotifyAvoidAreaChanged(std::vector<Rect>& avoidArea) const;
+    AvoidNodesMapPtr GetAvoidNodesByDisplayId(DisplayId displayId);
+    void UseCallbackNotifyAvoidAreaChanged(std::vector<Rect>& avoidArea, DisplayId displayId) const;
     void DumpAvoidArea(const std::vector<Rect>& avoidArea) const;
-    AvoidPosType GetAvoidPosType(const Rect& rect) const;
+    AvoidPosType GetAvoidPosType(const Rect& rect, DisplayId displayId) const;
+
+    std::map<DisplayId, AvoidNodesMapPtr> avoidNodesMaps_;
+    UpdateAvoidAreaFunc updateAvoidAreaCallBack_;
 };
 }
 }
