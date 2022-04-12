@@ -29,8 +29,8 @@ namespace Rosen {
 class WindowLayoutPolicyCascade : public WindowLayoutPolicy {
 public:
     WindowLayoutPolicyCascade() = delete;
-    WindowLayoutPolicyCascade(const Rect& displayRect, const uint64_t& screenId,
-        sptr<WindowNode>& belowAppNode, sptr<WindowNode>& appNode, sptr<WindowNode>& aboveAppNode);
+    WindowLayoutPolicyCascade(const std::map<DisplayId, Rect>& displayRectMap,
+                              std::unique_ptr<WindowNodeMaps> windowNodeMaps);
     ~WindowLayoutPolicyCascade() = default;
     void Launch() override;
     void Clean() override;
@@ -42,31 +42,32 @@ public:
     void UpdateLayoutRect(sptr<WindowNode>& node) override;
 
 private:
-    // Rects for split screen
-    Rect primaryRect_ = {0, 0, 0, 0};
-    Rect secondaryRect_ = {0, 0, 0, 0};
-    Rect dividerRect_ = {0, 0, 0, 0};
-    Rect primaryLimitRect_ = {0, 0, 0, 0};
-    Rect secondaryLimitRect_ = {0, 0, 0, 0};
-    // cascade mode rect
-    Rect firstCascadeRect_ = {0, 0, 0, 0};
-
-    void InitSplitRects();
-    void SetSplitRectByRatio(float ratio);
-    void SetSplitRect(const Rect& rect);
+    void InitSplitRects(DisplayId displayId);
+    void SetSplitRectByRatio(float ratio, DisplayId displayId);
+    void SetSplitRect(const Rect& rect, DisplayId displayId);
     void UpdateSplitLimitRect(const Rect& limitRect, Rect& limitSplitRect);
     void LayoutWindowNode(sptr<WindowNode>& node) override;
-    void LayoutWindowTree() override;
-    void InitLimitRects();
-    void LimitMoveBounds(Rect& rect);
-    void InitCascadeRect();
+    void LayoutWindowTree(DisplayId displayId) override;
+    void InitLimitRects(DisplayId displayId);
+    void LimitMoveBounds(Rect& rect, DisplayId displayId);
+    void InitCascadeRect(DisplayId displayId);
     void SetCascadeRect(const sptr<WindowNode>& node);
 
     Rect GetRectByWindowMode(const WindowMode& mode) const;
-    Rect GetLimitRect(const WindowMode mode) const;
-    Rect GetDisplayRect(const WindowMode mode) const;
+    Rect GetLimitRect(const WindowMode mode, DisplayId displayId) const;
+    Rect GetDisplayRect(const WindowMode mode, DisplayId displayId) const;
     Rect GetCurCascadeRect(const sptr<WindowNode>& node) const;
-    Rect StepCascadeRect(Rect rect) const;
+    Rect StepCascadeRect(Rect rect, DisplayId displayId) const;
+
+    struct CascadeRects {
+        Rect primaryRect;
+        Rect secondaryRect;
+        Rect primaryLimitRect;
+        Rect secondaryLimitRect;
+        Rect dividerRect;
+        Rect firstCascadeRect;
+    };
+    std::map<DisplayId, CascadeRects> cascadeRectsMap_;
 };
 }
 }

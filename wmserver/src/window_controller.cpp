@@ -262,11 +262,11 @@ void WindowController::NotifyDisplayStateChange(DisplayId displayId, DisplayStat
     WLOGFD("DisplayStateChangeType:%{public}u", type);
     switch (type) {
         case DisplayStateChangeType::BEFORE_SUSPEND: {
-            windowRoot_->NotifyWindowStateChange(WindowState::STATE_FROZEN, WindowStateChangeReason::KEYGUARD);
+            windowRoot_->ProcessWindowStateChange(WindowState::STATE_FROZEN, WindowStateChangeReason::KEYGUARD);
             break;
         }
         case DisplayStateChangeType::BEFORE_UNLOCK: {
-            windowRoot_->NotifyWindowStateChange(WindowState::STATE_UNFROZEN, WindowStateChangeReason::KEYGUARD);
+            windowRoot_->ProcessWindowStateChange(WindowState::STATE_UNFROZEN, WindowStateChangeReason::KEYGUARD);
             break;
         }
         case DisplayStateChangeType::SIZE_CHANGE:
@@ -274,8 +274,13 @@ void WindowController::NotifyDisplayStateChange(DisplayId displayId, DisplayStat
             ProcessDisplayChange(displayId, type);
             break;
         }
+        case DisplayStateChangeType::CREATE: {
+            windowRoot_->ProcessDisplayCreate(displayId);
+            WLOGFI("liuqi create new display %{public}" PRId64"", displayId);
+            break;
+        }
         case DisplayStateChangeType::DESTROY: {
-            windowRoot_->NotifyDisplayDestroy(displayId);
+            windowRoot_->ProcessDisplayDestroy(displayId);
             break;
         }
         default: {

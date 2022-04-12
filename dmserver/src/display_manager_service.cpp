@@ -116,7 +116,7 @@ sptr<DisplayInfo> DisplayManagerService::GetDisplayInfoByScreen(ScreenId screenI
     }
     return display->ConvertToDisplayInfo();
 }
- 
+
 ScreenId DisplayManagerService::CreateVirtualScreen(VirtualScreenOption option,
     const sptr<IRemoteObject>& displayManagerAgent)
 {
@@ -399,6 +399,17 @@ sptr<ScreenGroupInfo> DisplayManagerService::GetScreenGroupInfoById(ScreenId scr
     }
     return screenGroup->ConvertToScreenGroupInfo();
 }
+
+ScreenId DisplayManagerService::GetScreenGroupIdById(ScreenId screenId)
+{
+    auto screenGroup = abstractScreenController_->GetAbstractScreenGroup(screenId);
+    if (screenGroup == nullptr) {
+        WLOGE("cannot find screenGroupInfo: %{public}" PRIu64"", screenId);
+        return SCREEN_ID_INVALID;
+    }
+    return screenGroup->GetScreenGroupId();
+}
+
 
 std::vector<DisplayId> DisplayManagerService::GetAllDisplayIds()
 {

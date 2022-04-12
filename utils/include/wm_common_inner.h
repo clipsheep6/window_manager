@@ -55,6 +55,12 @@ enum class AvoidPosType : uint32_t {
     AVOID_POS_UNKNOWN
 };
 
+enum class WindowRootNodeType : uint32_t {
+    AppWindowNode,
+    AboveWindowNode,
+    BelowWindowNode,
+};
+
 enum class PropertyChangeAction : uint32_t {
     ACTION_UPDATE_RECT = 1,
     ACTION_UPDATE_MODE = 1 << 1,

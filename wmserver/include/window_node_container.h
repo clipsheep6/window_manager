@@ -28,6 +28,8 @@
 namespace OHOS {
 namespace Rosen {
 using WindowNodeOperationFunc = std::function<bool(sptr<WindowNode>)>; // return true indicates to stop traverse
+using SysBarNodeMap = std::unordered_map<WindowType, sptr<WindowNode>>;
+using SysBarTintMap = std::unordered_map<WindowType, SystemBarRegionTint>;
 class WindowNodeContainer : public RefBase {
 public:
     WindowNodeContainer(DisplayId displayId, uint32_t width, uint32_t height);
@@ -44,41 +46,42 @@ public:
     void SetDisplayBrightness(float brightness);
     float GetDisplayBrightness() const;
     uint32_t GetActiveWindow() const;
-    std::vector<Rect> GetAvoidAreaByType(AvoidAreaType avoidAreaType);
+    std::vector<Rect> GetAvoidAreaByType(AvoidAreaType avoidAreaType, DisplayId displayId);
     WMError MinimizeStructuredAppWindowsExceptSelf(const sptr<WindowNode>& node);
     void TraverseContainer(std::vector<sptr<WindowNode>>& windowNodes) const;
-    uint64_t GetScreenId() const;
-    DisplayId GetDisplayId() const;
-    Rect GetDisplayRect() const;
-    Rect GetDisplayLimitRect() const;
+    uint64_t GetScreenId(DisplayId displayId) const;
+    Rect GetDisplayRect(DisplayId displayId) const;
+    Rect GetDisplayLimitRect(DisplayId displayId) const;
     std::unordered_map<WindowType, SystemBarProperty> GetExpectImmersiveProperty() const;
     void NotifyAccessibilityWindowInfo(const sptr<WindowNode>& windowId, WindowUpdateType type) const;
-    void UpdateDisplayRect(uint32_t width, uint32_t height);
+    // void UpdateDisplayRect(uint32_t width, uint32_t height, DisplayId displayId);
 
-    void OnAvoidAreaChange(const std::vector<Rect>& avoidAreas);
-    bool isVerticalDisplay() const;
+    void OnAvoidAreaChange(const std::vector<Rect>& avoidAreas, DisplayId displayId);
+    bool isVerticalDisplay(DisplayId displayId) const;
     WMError RaiseZOrderForAppWindow(sptr<WindowNode>& node, sptr<WindowNode>& parentNode);
     sptr<WindowNode> GetNextFocusableWindow(uint32_t windowId) const;
     sptr<WindowNode> GetNextActiveWindow(uint32_t windowId) const;
-    void MinimizeAllAppWindows();
-    void NotifyWindowStateChange(WindowState state, WindowStateChangeReason reason);
-    void NotifySystemBarTints();
+    void MinimizeAllAppWindows(DisplayId displayId);
+    void ProcessWindowStateChange(WindowState state, WindowStateChangeReason reason);
+    void NotifySystemBarTints(std::vector<DisplayId> displayIdVec);
     void NotifySystemBarDismiss(sptr<WindowNode>& node);
     WMError MinimizeAppNodeExceptOptions(bool fromUser, const std::vector<uint32_t> &exceptionalIds = {},
                                          const std::vector<WindowMode> &exceptionalModes = {});
     WMError EnterSplitWindowMode(sptr<WindowNode>& node);
     WMError ExitSplitWindowMode(sptr<WindowNode>& node);
-    WMError SwitchLayoutPolicy(WindowLayoutMode mode, bool reorder = false);
+    WMError SwitchLayoutPolicy(WindowLayoutMode mode, DisplayId displayId, bool reorder = false);
     void RaiseSplitRelatedWindowToTop(sptr<WindowNode>& node);
     void MoveWindowNode(sptr<WindowNodeContainer>& container);
-    float GetVirtualPixelRatio() const;
+    float GetVirtualPixelRatio(DisplayId displayId) const;
     void TraverseWindowTree(const WindowNodeOperationFunc& func, bool isFromTopToBottom = true) const;
     void UpdateSizeChangeReason(sptr<WindowNode>& node, WindowSizeChangeReason reason);
     void GetWindowList(std::vector<sptr<WindowInfo>>& windowList) const;
+    void ProcessDisplayCreate(DisplayId displayId);
 
 private:
     void TraverseWindowNode(sptr<WindowNode>& root, std::vector<sptr<WindowNode>>& windowNodes) const;
-    sptr<WindowNode> FindRoot(WindowType type) const;
+    sptr<WindowNode> FindRootAndGetRootType(WindowType type, WindowRootNodeType& rootType) const;
+    RootNodeVectorPtr FindRootOfDisplay(DisplayId displayId, WindowRootNodeType type);
     sptr<WindowNode> FindWindowNodeById(uint32_t id) const;
     void UpdateFocusStatus(uint32_t id, bool focused) const;
     void UpdateActiveStatus(uint32_t id, bool isActive) const;
@@ -89,8 +92,8 @@ private:
     void SendSplitScreenEvent(sptr<WindowNode>& node);
     sptr<WindowNode> FindSplitPairNode(sptr<WindowNode>& node) const;
     WMError UpdateWindowPairInfo(sptr<WindowNode>& triggerNode, sptr<WindowNode>& pairNode);
-    void NotifyIfSystemBarTintChanged();
-    void NotifyIfSystemBarRegionChanged();
+    void NotifyIfSystemBarTintChanged(DisplayId displayId);
+    void NotifyIfSystemBarRegionChanged(DisplayId displayId);
     void TraverseAndUpdateWindowState(WindowState state, int32_t topPriority);
     void UpdateWindowState(sptr<WindowNode> node, int32_t topPriority, WindowState state);
     bool IsTopAppWindow(uint32_t windowId) const;
@@ -108,41 +111,42 @@ private:
     void UpdateWindowVisibilityInfos(std::vector<sptr<WindowVisibilityInfo>>& infos);
     void RaiseOrderedWindowToTop(std::vector<uint32_t> orderedIds, std::vector<sptr<WindowNode>>& windowNodes);
     static bool ReadIsWindowAnimationEnabledProperty();
+    void DumpScreenWindowTree();
+    void RaiseInputMethodWindowPriorityIfNeeded(const sptr<WindowNode>& node) const;
+    void RaiseShowWhenLockedWindowIfNeeded(const sptr<WindowNode>& node) const;
 
-    sptr<AvoidAreaController> avoidController_;
-    sptr<WindowZorderPolicy> zorderPolicy_ = new WindowZorderPolicy();
-    sptr<WindowNode> belowAppWindowNode_ = new WindowNode();
-    sptr<WindowNode> appWindowNode_ = new WindowNode();
-    sptr<WindowNode> aboveAppWindowNode_ = new WindowNode();
-    std::vector<uint32_t> removedIds_;
-    DisplayId displayId_ = 0;
-    Rect displayRect_;
-    std::vector<Rect> currentCoveredArea_;
-    std::unordered_map<WindowType, sptr<WindowNode>> sysBarNodeMap_ {
-        { WindowType::WINDOW_TYPE_STATUS_BAR,     nullptr },
-        { WindowType::WINDOW_TYPE_NAVIGATION_BAR, nullptr },
-    };
-    std::unordered_map<WindowType, SystemBarRegionTint> sysBarTintMap_ {
-        { WindowType::WINDOW_TYPE_STATUS_BAR,     SystemBarRegionTint() },
-        { WindowType::WINDOW_TYPE_NAVIGATION_BAR, SystemBarRegionTint() },
-    };
-    std::unordered_map<WindowLayoutMode, sptr<WindowLayoutPolicy>> layoutPolicys_;
-    WindowLayoutMode layoutMode_ = WindowLayoutMode::CASCADE;
-    sptr<WindowLayoutPolicy> layoutPolicy_;
+
+    void InitSysBarMapForDisplay(DisplayId displayId);
+    void InitWindowNodeMapForDisplay(DisplayId displayId);
+    WMError AddWindowNodeOnTree(sptr<WindowNode>& node, sptr<WindowNode>& parentNode);
+
+    const int32_t WINDOW_TYPE_RAISED_INPUT_METHOD = 115;
+    float displayBrightness_ = UNDEFINED_BRIGHTNESS;
     uint32_t zOrder_ { 0 };
     uint32_t focusedWindow_ { INVALID_WINDOW_ID };
     uint32_t activeWindow_ = INVALID_WINDOW_ID;
-    float displayBrightness_ = UNDEFINED_BRIGHTNESS;
-    void DumpScreenWindowTree();
+
+    sptr<AvoidAreaController> avoidController_;
+    sptr<WindowZorderPolicy> zorderPolicy_ = new WindowZorderPolicy();
+    std::unordered_map<WindowLayoutMode, sptr<WindowLayoutPolicy>> layoutPolicys_;
+    WindowLayoutMode layoutMode_ = WindowLayoutMode::CASCADE;
+    sptr<WindowLayoutPolicy> layoutPolicy_;
+
+    std::vector<Rect> currentCoveredArea_;
+    std::map<DisplayId, SysBarNodeMap> sysBarNodeMaps_;
+    std::map<DisplayId, SysBarTintMap> sysBarTintMaps_;
 
     struct WindowPairInfo {
         sptr<WindowNode> pairNode_;
         float splitRatio_;
     };
     std::unordered_map<uint32_t, WindowPairInfo> pairedWindowMap_;
-    void RaiseInputMethodWindowPriorityIfNeeded(const sptr<WindowNode>& node) const;
-    void RaiseShowWhenLockedWindowIfNeeded(const sptr<WindowNode>& node) const;
-    const int32_t WINDOW_TYPE_RAISED_INPUT_METHOD = 115;
+    std::vector<uint32_t> removedIds_;
+    sptr<WindowNode> belowAppWindowNode_ = new WindowNode();
+    sptr<WindowNode> appWindowNode_ = new WindowNode();
+    sptr<WindowNode> aboveAppWindowNode_ = new WindowNode();
+    std::map<DisplayId, Rect> displayRectMap_;
+    std::unique_ptr<WindowNodeMaps> windowNodeMaps_;
 };
 } // namespace Rosen
 } // namespace OHOS

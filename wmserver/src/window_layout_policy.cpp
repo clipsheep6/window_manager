@@ -25,17 +25,19 @@ namespace Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowLayoutPolicy"};
 }
-WindowLayoutPolicy::WindowLayoutPolicy(const Rect& displayRect, const uint64_t& screenId,
-    sptr<WindowNode>& belowAppNode, sptr<WindowNode>& appNode, sptr<WindowNode>& aboveAppNode)
-    : displayRect_(displayRect), screenId_(screenId),
-    belowAppWindowNode_(belowAppNode), appWindowNode_(appNode), aboveAppWindowNode_(aboveAppNode)
+WindowLayoutPolicy::WindowLayoutPolicy(const std::map<DisplayId, Rect>& displayRectMap,
+    std::unique_ptr<WindowNodeMaps> windowNodeMaps)
+    : displayRectMap_(displayRectMap), windowNodeMaps_(std::move(windowNodeMaps))
 {
 }
 
 void WindowLayoutPolicy::UpdateDisplayInfo()
 {
-    limitRect_ = displayRect_;
-    UpdateDefaultFoatingRect();
+    for(auto& iter : displayRectMap_) {
+        limitRectMap_[iter.first] = iter.second;
+        WLOGFD("reset limitRect by displayRect, displayId: %{public}" PRId64"", iter.first);
+        UpdateDefaultFoatingRect(iter.first);
+    }
 }
 
 void WindowLayoutPolicy::Launch()
@@ -54,16 +56,41 @@ void WindowLayoutPolicy::Reorder()
     WLOGFI("WindowLayoutPolicy::Reorder");
 }
 
-void WindowLayoutPolicy::LayoutWindowTree()
+std::map<WindowRootNodeType, RootNodeVectorPtr> WindowLayoutPolicy::GetWindowNodeMapOfDisplay(DisplayId displayId)
 {
-    limitRect_ = displayRect_;
-    LayoutWindowNode(aboveAppWindowNode_); // ensure that the avoid area windows are traversed first
-    if (IsFullScreenRecentWindowExist()) {
+    std::map<WindowRootNodeType, RootNodeVectorPtr> windowNodeMap;
+    auto iter = windowNodeMaps_->find(displayId);
+    if (iter != windowNodeMaps_->end()) {
+        for (auto& childIter : iter->second) {
+            windowNodeMap.insert(std::make_pair(childIter.first, std::move(childIter.second)));
+        }
+    }
+    return windowNodeMap;
+}
+
+void WindowLayoutPolicy::LayoutWindowNodesByRootType(std::vector<sptr<WindowNode>>& nodeVec)
+{
+    if (nodeVec.empty()) {
+        WLOGE("The node vector is empty!");
+        return;
+    }
+    for (auto& node : nodeVec) {
+        LayoutWindowNode(node);
+    }
+}
+
+void WindowLayoutPolicy::LayoutWindowTree(DisplayId displayId)
+{
+    auto windowNodeMap = GetWindowNodeMapOfDisplay(displayId);
+    limitRectMap_[displayId] = displayRectMap_[displayId];
+    // ensure that the avoid area windows are traversed first
+    LayoutWindowNodesByRootType(*(windowNodeMap[WindowRootNodeType::AboveWindowNode]));
+    if (IsFullScreenRecentWindowExist(*(windowNodeMap[WindowRootNodeType::AboveWindowNode]))) {
         WLOGFI("recent window on top, early exit layout tree");
         return;
     }
-    LayoutWindowNode(appWindowNode_);
-    LayoutWindowNode(belowAppWindowNode_);
+    LayoutWindowNodesByRootType(*(windowNodeMap[WindowRootNodeType::AppWindowNode]));
+    LayoutWindowNodesByRootType(*(windowNodeMap[WindowRootNodeType::BelowWindowNode]));
 }
 
 void WindowLayoutPolicy::LayoutWindowNode(sptr<WindowNode>& node)
@@ -71,6 +98,7 @@ void WindowLayoutPolicy::LayoutWindowNode(sptr<WindowNode>& node)
     if (node == nullptr) {
         return;
     }
+    WLOGFI("liuqi LayoutWindowNode, window[%{public}u]", node->GetWindowId());
     if (node->parent_ != nullptr) { // isn't root node
         if (!node->currentVisibility_) {
             WLOGFI("window[%{public}u] currently not visible, no need layout", node->GetWindowId());
@@ -78,7 +106,7 @@ void WindowLayoutPolicy::LayoutWindowNode(sptr<WindowNode>& node)
         }
         UpdateLayoutRect(node);
         if (avoidTypes_.find(node->GetWindowType()) != avoidTypes_.end()) {
-            UpdateLimitRect(node, limitRect_);
+            UpdateLimitRect(node, limitRectMap_[node->GetDisplayId()]);
         }
     }
     for (auto& childNode : node->children_) {
@@ -95,34 +123,36 @@ void WindowLayoutPolicy::AddWindowNode(sptr<WindowNode>& node)
     UpdateWindowNode(node); // currently, update and add do the same process
 }
 
-void WindowLayoutPolicy::UpdateDefaultFoatingRect()
+void WindowLayoutPolicy::UpdateDefaultFoatingRect(DisplayId displayId)
 {
     constexpr uint32_t half = 2;
     constexpr float ratio = 0.75;  // 0.75: default height/width ratio
+    const Rect& displayRect = displayRectMap_[displayId];
+    const Rect& limitRect = limitRectMap_[displayId];
 
     // calculate default H and w
-    uint32_t defaultW = static_cast<uint32_t>(displayRect_.width_ * ratio);
-    uint32_t defaultH = static_cast<uint32_t>(displayRect_.height_ * ratio);
+    uint32_t defaultW = static_cast<uint32_t>(displayRect.width_ * ratio);
+    uint32_t defaultH = static_cast<uint32_t>(displayRect.height_ * ratio);
 
     // calculate default x and y
     Rect resRect = {0, 0, defaultW, defaultH};
-    if (defaultW <= limitRect_.width_ && defaultH <= limitRect_.height_) {
-        int32_t centerPosX = limitRect_.posX_ + static_cast<int32_t>(limitRect_.width_ / half);
+    if (defaultW <= limitRect.width_ && defaultH <= limitRect.height_) {
+        int32_t centerPosX = limitRect.posX_ + static_cast<int32_t>(limitRect.width_ / half);
         resRect.posX_ = centerPosX - static_cast<int32_t>(defaultW / half);
 
-        int32_t centerPosY = limitRect_.posY_ + static_cast<int32_t>(limitRect_.height_ / half);
+        int32_t centerPosY = limitRect.posY_ + static_cast<int32_t>(limitRect.height_ / half);
         resRect.posY_ = centerPosY - static_cast<int32_t>(defaultH / half);
     }
-    defaultFloatingRect_ = resRect;
+    defaultFloatingRectMap_[displayId] = resRect;
 }
 
 void WindowLayoutPolicy::SetRectForFloating(const sptr<WindowNode>& node)
 {
-    float virtualPixelRatio = GetVirtualPixelRatio();
+    float virtualPixelRatio = GetVirtualPixelRatio(node->GetDisplayId());
     uint32_t winFrameW = static_cast<uint32_t>(WINDOW_FRAME_WIDTH * virtualPixelRatio);
     uint32_t winTitleBarH = static_cast<uint32_t>(WINDOW_TITLE_BAR_HEIGHT * virtualPixelRatio);
     // deduct decor size
-    Rect rect = defaultFloatingRect_;
+    Rect rect = defaultFloatingRectMap_[node->GetDisplayId()];
     if (node->GetWindowProperty()->GetDecorEnable()) {
         rect.width_ -= (winFrameW + winFrameW);
         rect.height_ -= (winTitleBarH + winFrameW);
@@ -131,9 +161,10 @@ void WindowLayoutPolicy::SetRectForFloating(const sptr<WindowNode>& node)
     node->SetWindowRect(rect);
 }
 
-bool WindowLayoutPolicy::IsVertical() const
+bool WindowLayoutPolicy::IsVerticalDisplay(DisplayId displayId) const
 {
-    return displayRect_.width_ < displayRect_.height_;
+    return (const_cast<WindowLayoutPolicy*>(this)->displayRectMap_)[displayId].width_ <
+        (const_cast<WindowLayoutPolicy*>(this)->displayRectMap_)[displayId].height_;
 }
 
 void WindowLayoutPolicy::RemoveWindowNode(sptr<WindowNode>& node)
@@ -142,9 +173,9 @@ void WindowLayoutPolicy::RemoveWindowNode(sptr<WindowNode>& node)
     auto type = node->GetWindowType();
     // affect other windows, trigger off global layout
     if (avoidTypes_.find(type) != avoidTypes_.end()) {
-        LayoutWindowTree();
+        LayoutWindowTree(node->GetDisplayId());
     } else if (type == WindowType::WINDOW_TYPE_DOCK_SLICE) { // split screen mode
-        LayoutWindowTree();
+        LayoutWindowTree(node->GetDisplayId());
     }
     Rect winRect = node->GetWindowProperty()->GetWindowRect();
     Rect emptyRect = { 0, 0, 0, 0 };
@@ -158,9 +189,9 @@ void WindowLayoutPolicy::UpdateWindowNode(sptr<WindowNode>& node, bool isAddWind
     auto type = node->GetWindowType();
     // affect other windows, trigger off global layout
     if (avoidTypes_.find(type) != avoidTypes_.end()) {
-        LayoutWindowTree();
+        LayoutWindowTree(node->GetDisplayId());
     } else if (type == WindowType::WINDOW_TYPE_DOCK_SLICE) { // split screen mode
-        LayoutWindowTree();
+        LayoutWindowTree(node->GetDisplayId());
     } else { // layout single window
         LayoutWindowNode(node);
     }
@@ -180,9 +211,9 @@ void WindowLayoutPolicy::UpdateFloatingLayoutRect(Rect& limitRect, Rect& winRect
         winRect.posY_);
 }
 
-Rect WindowLayoutPolicy::ComputeDecoratedWindowRect(const Rect& winRect)
+Rect WindowLayoutPolicy::ComputeDecoratedWindowRect(const Rect& winRect, DisplayId displayId)
 {
-    float virtualPixelRatio = GetVirtualPixelRatio();
+    float virtualPixelRatio = GetVirtualPixelRatio(displayId);
     uint32_t winFrameW = static_cast<uint32_t>(WINDOW_FRAME_WIDTH * virtualPixelRatio);
     uint32_t winTitleBarH = static_cast<uint32_t>(WINDOW_TITLE_BAR_HEIGHT * virtualPixelRatio);
 
@@ -197,7 +228,7 @@ Rect WindowLayoutPolicy::ComputeDecoratedWindowRect(const Rect& winRect)
 void WindowLayoutPolicy::CalcAndSetNodeHotZone(Rect layoutOutRect, sptr<WindowNode>& node)
 {
     Rect rect = layoutOutRect;
-    float virtualPixelRatio = GetVirtualPixelRatio();
+    float virtualPixelRatio = GetVirtualPixelRatio(node->GetDisplayId());
     uint32_t hotZone = static_cast<uint32_t>(HOTZONE * virtualPixelRatio);
 
     if (node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
@@ -209,7 +240,7 @@ void WindowLayoutPolicy::CalcAndSetNodeHotZone(Rect layoutOutRect, sptr<WindowNo
             rect.height_ += (hotZone + hotZone);
         }
     } else if (node->GetWindowType() == WindowType::WINDOW_TYPE_LAUNCHER_RECENT) {
-        rect = displayRect_;
+        rect = displayRectMap_[node->GetDisplayId()];
     } else if (WindowHelper::IsMainFloatingWindow(node->GetWindowType(), node->GetWindowMode())) {
         rect.posX_ -= hotZone;
         rect.posY_ -= hotZone;
@@ -221,7 +252,7 @@ void WindowLayoutPolicy::CalcAndSetNodeHotZone(Rect layoutOutRect, sptr<WindowNo
 
 void WindowLayoutPolicy::LimitWindowSize(const sptr<WindowNode>& node, const Rect& displayRect, Rect& winRect)
 {
-    float virtualPixelRatio = GetVirtualPixelRatio();
+    float virtualPixelRatio = GetVirtualPixelRatio(node->GetDisplayId());
     uint32_t minVerticalFloatingW = static_cast<uint32_t>(MIN_VERTICAL_FLOATING_WIDTH * virtualPixelRatio);
     uint32_t minVerticalFloatingH = static_cast<uint32_t>(MIN_VERTICAL_FLOATING_HEIGHT * virtualPixelRatio);
     uint32_t windowTitleBarH = static_cast<uint32_t>(WINDOW_TITLE_BAR_HEIGHT * virtualPixelRatio);
@@ -246,24 +277,25 @@ void WindowLayoutPolicy::LimitWindowSize(const sptr<WindowNode>& node, const Rec
         winRect.height_ = std::min(static_cast<uint32_t>(MAX_FLOATING_SIZE * virtualPixelRatio), winRect.height_);
     }
 
+    const Rect& limitRect = limitRectMap_[node->GetDisplayId()];
     // limit position of the main floating window(window which support dragging)
     if (WindowHelper::IsMainFloatingWindow(windowType, windowMode)) {
-        winRect.posY_ = std::max(limitRect_.posY_, winRect.posY_);
-        winRect.posY_ = std::min(limitRect_.posY_ + static_cast<int32_t>(limitRect_.height_ - windowTitleBarH),
+        winRect.posY_ = std::max(limitRect.posY_, winRect.posY_);
+        winRect.posY_ = std::min(limitRect.posY_ + static_cast<int32_t>(limitRect.height_ - windowTitleBarH),
                                  winRect.posY_);
 
-        winRect.posX_ = std::max(limitRect_.posX_ + static_cast<int32_t>(windowTitleBarH - winRect.width_),
+        winRect.posX_ = std::max(limitRect.posX_ + static_cast<int32_t>(windowTitleBarH - winRect.width_),
                                  winRect.posX_);
-        winRect.posX_ = std::min(limitRect_.posX_ + static_cast<int32_t>(limitRect_.width_ - windowTitleBarH),
+        winRect.posX_ = std::min(limitRect.posX_ + static_cast<int32_t>(limitRect.width_ - windowTitleBarH),
                                  winRect.posX_);
     }
 }
 
-AvoidPosType WindowLayoutPolicy::GetAvoidPosType(const Rect& rect)
+AvoidPosType WindowLayoutPolicy::GetAvoidPosType(const Rect& rect, DisplayId displayId)
 {
-    auto display = DisplayManagerServiceInner::GetInstance().GetDisplayById(screenId_);
+    auto display = DisplayManagerServiceInner::GetInstance().GetDisplayById(displayId);
     if (display == nullptr) {
-        WLOGFE("GetAvoidPosType fail. Get display fail. displayId:%{public}" PRIu64"", screenId_);
+        WLOGFE("GetAvoidPosType fail. Get display fail. displayId: %{public}" PRIu64"", displayId);
         return AvoidPosType::AVOID_POS_UNKNOWN;
     }
     uint32_t displayWidth = display->GetWidth();
@@ -281,7 +313,7 @@ void WindowLayoutPolicy::UpdateLimitRect(const sptr<WindowNode>& node, Rect& lim
     int32_t layoutW = static_cast<int32_t>(layoutRect.width_);
     if (node->GetWindowType() == WindowType::WINDOW_TYPE_STATUS_BAR ||
         node->GetWindowType() == WindowType::WINDOW_TYPE_NAVIGATION_BAR) {
-        auto avoidPosType = GetAvoidPosType(layoutRect);
+        auto avoidPosType = GetAvoidPosType(layoutRect, node->GetDisplayId());
         int32_t offsetH = 0;
         int32_t offsetW = 0;
         switch (avoidPosType) {
@@ -317,38 +349,38 @@ void WindowLayoutPolicy::Reset()
 {
 }
 
-float WindowLayoutPolicy::GetVirtualPixelRatio() const
+float WindowLayoutPolicy::GetVirtualPixelRatio(DisplayId displayId) const
 {
-    auto display = DisplayManagerServiceInner::GetInstance().GetDisplayById(screenId_);
+    auto display = DisplayManagerServiceInner::GetInstance().GetDisplayById(displayId);
     if (display == nullptr) {
-        WLOGFE("GetVirtualPixel fail. Get display fail. displayId:%{public}" PRIu64", use Default vpr:1.0", screenId_);
+        WLOGFE("GetVirtualPixel fail. Get display fail. displayId:%{public}" PRIu64", use Default vpr:1.0", displayId);
         return 1.0;  // Use DefaultVPR 1.0
     }
 
     float virtualPixelRatio = display->GetVirtualPixelRatio();
     if (virtualPixelRatio == 0.0) {
-        WLOGFE("GetVirtualPixel fail. vpr is 0.0. displayId:%{public}" PRIu64", use Default vpr:1.0", screenId_);
+        WLOGFE("GetVirtualPixel fail. vpr is 0.0. displayId:%{public}" PRIu64", use Default vpr:1.0", displayId);
         return 1.0;  // Use DefaultVPR 1.0
     }
 
-    WLOGFI("GetVirtualPixel success. displayId:%{public}" PRIu64", vpr:%{public}f", screenId_, virtualPixelRatio);
+    WLOGFI("GetVirtualPixel success. displayId:%{public}" PRIu64", vpr:%{public}f", displayId, virtualPixelRatio);
     return virtualPixelRatio;
 }
 
-bool WindowLayoutPolicy::IsFullScreenRecentWindowExist() const
+bool WindowLayoutPolicy::IsFullScreenRecentWindowExist(const std::vector<sptr<WindowNode>>& nodeVec) const
 {
-    for (auto& childNode : aboveAppWindowNode_->children_) {
-        if (childNode->GetWindowType() == WindowType::WINDOW_TYPE_LAUNCHER_RECENT &&
-            childNode->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN) {
+    for (auto& node : nodeVec) {
+        if (node->GetWindowType() == WindowType::WINDOW_TYPE_LAUNCHER_RECENT &&
+            node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN) {
             return true;
         }
     }
     return false;
 }
 
-Rect WindowLayoutPolicy::GetDisplayLimitRect() const
+Rect WindowLayoutPolicy::GetDisplayLimitRect(DisplayId displayId) const
 {
-    return limitRect_;
+    return (const_cast<WindowLayoutPolicy*>(this)->limitRectMap_)[displayId];
 }
 }
 }
