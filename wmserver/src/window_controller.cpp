@@ -543,11 +543,7 @@ void WindowController::UpdateWindowAnimation(const sptr<WindowNode>& node)
     uint32_t animationFlag = node->GetWindowProperty()->GetAnimationFlag();
     uint32_t windowId = node->GetWindowProperty()->GetWindowId();
     WLOGFI("windowId: %{public}u, animationFlag: %{public}u", windowId, animationFlag);
-    if (animationFlag == static_cast<uint32_t>(WindowAnimation::DEFAULT)) {
-        // set default transition effect for window: scale from 1.0 to 0.7, fade from 1.0 to 0.0
-        static const auto effect = RSTransitionEffect::Create()->Scale(Vector3f(0.7f, 0.7f, 0.0f))->Opacity(0.0f);
-        node->surfaceNode_->SetTransitionEffect(effect);
-    } else {
+    if (animationFlag != static_cast<uint32_t>(WindowAnimation::DEFAULT)) {
         node->surfaceNode_->SetTransitionEffect(nullptr);
     }
 }

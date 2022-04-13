@@ -86,12 +86,8 @@ WMError WindowNodeContainer::MinimizeStructuredAppWindowsExceptSelf(const sptr<W
     return MinimizeAppNodeExceptOptions(false, exceptionalIds, exceptionalModes);
 }
 
-WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode)
+WMError WindowNodeContainer::UpdateWindowNodeVisibilityWithShow(sptr<WindowNode>& node, sptr<WindowNode>& parentNode)
 {
-    if (!node->surfaceNode_) {
-        WLOGFE("surface node is nullptr!");
-        return WMError::WM_ERROR_NULLPTR;
-    }
     sptr<WindowNode> root = FindRoot(node->GetWindowType());
     if (root == nullptr) {
         WLOGFE("root window node is nullptr!");
@@ -115,7 +111,19 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
         }
     }
     node->parent_ = parentNode;
+    return WMError::WM_OK;
+}
 
+WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode)
+{
+    if (!node->surfaceNode_) {
+        WLOGFE("surface node is nullptr!");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    WMError res = UpdateWindowNodeVisibilityWithShow(node, parentNode);
+    if (res != WMError::WM_OK) {
+        return res;
+    }
     if (node->IsSplitMode()) {
         WMError ret = EnterSplitWindowMode(node);
         if (ret != WMError::WM_OK) {
@@ -123,12 +131,22 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
             return ret;
         }
     }
-    UpdateWindowTree(node);
-    if (node->IsSplitMode() || node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
-        RaiseSplitRelatedWindowToTop(node);
+    if (!node->isOnRsTree_) {
+        UpdateRSTree(node, true);
+        node->isOnRsTree_ = true;
     }
-    UpdateRSTree(node, true);
-    AssignZOrder();
+
+    if (!node->isPlayAnimationShow_) {
+        UpdateWindowTree(node);
+        if (node->IsSplitMode() || node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+            RaiseSplitRelatedWindowToTop(node);
+        }
+        UpdateRSNode(node, true);
+        AssignZOrder();
+    } else {
+        node->isPlayAnimationShow_ = false;
+    }
+
     layoutPolicy_->AddWindowNode(node);
     if (WindowHelper::IsAvoidAreaWindow(node->GetWindowType())) {
         avoidController_->AvoidControl(node, AvoidControlType::AVOID_NODE_ADD);
@@ -167,6 +185,10 @@ WMError WindowNodeContainer::UpdateWindowNode(sptr<WindowNode>& node, WindowUpda
 
 void WindowNodeContainer::UpdateSizeChangeReason(sptr<WindowNode>& node, WindowSizeChangeReason reason)
 {
+    if (!node->GetWindowToken()) {
+        WLOGFE("windowToken is null");
+        return;
+    }
     if (node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
         for (auto& childNode : appWindowNode_->children_) {
             if (childNode->IsSplitMode()) {
@@ -201,50 +223,127 @@ void WindowNodeContainer::UpdateWindowTree(sptr<WindowNode>& node)
     parentNode->children_.insert(position, node);
 }
 
-bool WindowNodeContainer::UpdateRSTree(sptr<WindowNode>& node, bool isAdd)
+void WindowNodeContainer::UpdateRSTree(sptr<WindowNode>& node, bool isAdd)
+{
+    WM_FUNCTION_TRACE();
+    WLOGFI("UpdateRSTree id:%{public}d!", node->GetWindowId());
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto& dms = DisplayManagerServiceInner::GetInstance();
+    if (isAdd) {
+        dms.UpdateRSTree(displayId_, node->surfaceNode_, true);
+        for (auto& child : node->children_) {
+            if (child->currentVisibility_) {
+                dms.UpdateRSTree(displayId_, child->surfaceNode_, true);
+                child->isOnRsTree_ = true;
+            }
+        }
+    } else { // remove child
+        dms.UpdateRSTree(displayId_, node->surfaceNode_, false);
+        for (auto& child : node->children_) {
+            dms.UpdateRSTree(displayId_, child->surfaceNode_, false);
+            child->isOnRsTree_ = false;
+        }
+    }
+    return;
+}
+
+static void UpdateRSNodeWithoutAnimation(sptr<WindowNode>& node, bool isAdd)
+{
+    if (isAdd) {
+        node->surfaceNode_->SetVisible(true);
+        for (auto& child : node->children_) {
+            if (child->currentVisibility_) {
+                child->surfaceNode_->SetVisible(true);
+            }
+        }
+    } else {
+        node->surfaceNode_->SetVisible(false);
+        for (auto& child : node->children_) {
+            child->surfaceNode_->SetVisible(false);
+        }
+    }
+}
+
+static void SetSurfaceNodeScaleAndAlpha(float data, std::vector<std::shared_ptr<RSSurfaceNode>> nodelist)
+{
+    for (auto& surfaceNode : nodelist) {
+        surfaceNode->SetScale(data);
+        surfaceNode->SetAlpha(data);
+    }
+}
+
+bool WindowNodeContainer::UpdateRSNode(sptr<WindowNode>& node, bool isAdd, bool isDestroy)
 {
     WM_FUNCTION_TRACE();
     static const bool IsWindowAnimationEnabled = ReadIsWindowAnimationEnabledProperty();
-
-    auto updateRSTreeFunc = [&]() {
-        auto& dms = DisplayManagerServiceInner::GetInstance();
-        if (isAdd) {
-            dms.UpdateRSTree(displayId_, node->surfaceNode_, true);
-            for (auto& child : node->children_) {
-                if (child->currentVisibility_) {
-                    dms.UpdateRSTree(displayId_, child->surfaceNode_, true);
-                }
-            }
-        } else {
-            dms.UpdateRSTree(displayId_, node->surfaceNode_, false);
-            for (auto& child : node->children_) {
-                dms.UpdateRSTree(displayId_, child->surfaceNode_, false);
+    // default transition duration: 350ms
+    static const RSAnimationTimingProtocol timingProtocol(350);
+    // default transition curve: EASE OUT
+    static const Rosen::RSAnimationTimingCurve curve = Rosen::RSAnimationTimingCurve::EASE_OUT;
+    if (!IsWindowAnimationEnabled) {
+        UpdateRSNodeWithoutAnimation(node, isAdd);
+        return true;
+    }
+    std::vector<std::shared_ptr<RSSurfaceNode>> nodelist {node->surfaceNode_};
+    if (isAdd) {
+        // step 1: set visible
+        node->surfaceNode_->SetVisible(true);
+        for (auto& child : node->children_) {
+            if (child->currentVisibility_) {
+                child->surfaceNode_->SetVisible(true);
+                nodelist.push_back(child->surfaceNode_);
             }
         }
-    };
-
-    if (IsWindowAnimationEnabled) {
-        // default transition duration: 350ms
-        static const RSAnimationTimingProtocol timingProtocol(350);
-        // default transition curve: EASE OUT
-        static const Rosen::RSAnimationTimingCurve curve = Rosen::RSAnimationTimingCurve::EASE_OUT;
-        // add or remove window with transition animation
-        RSNode::Animate(timingProtocol, curve, updateRSTreeFunc);
+        if (!WindowHelper::IsAppWindow(node->GetWindowType())) {
+            return true;
+        }
+        // step 2: set start status with 0.7
+        SetSurfaceNodeScaleAndAlpha(0.7, nodelist);
+        // show window with transition animation
+        RSNode::Animate(timingProtocol, curve, [nodelist]() {
+        // step 3: set animate to end status
+            SetSurfaceNodeScaleAndAlpha(1.0, nodelist);
+        });
     } else {
-        // add or remove window without animation
-        updateRSTreeFunc();
+        for (auto& child : node->children_) {
+            nodelist.push_back(child->surfaceNode_);
+        }
+        if (!WindowHelper::IsAppWindow(node->GetWindowType())) {
+            node->surfaceNode_->SetVisible(false);
+            return true;
+        }
+        // step 1: set start status
+        SetSurfaceNodeScaleAndAlpha(1.0, nodelist);
+        // hide window with transition animation
+        RSNode::Animate(timingProtocol, curve, [nodelist]() {
+        // step 2: set animate to end status with 0.7
+            SetSurfaceNodeScaleAndAlpha(0.7, nodelist);
+        }, [this, nodelist, node, isDestroy]() mutable {
+            // step 3: set window unvisable
+            for (auto& surfaceNode : nodelist) {
+                surfaceNode->SetVisible(false);
+            }
+            if (isDestroy) {
+                UpdateRSTree(node, false);
+            }
+            RSTransaction::FlushImplicitTransaction();
+        });
     }
-
     return true;
 }
 
 WMError WindowNodeContainer::DestroyWindowNode(sptr<WindowNode>& node, std::vector<uint32_t>& windowIds)
 {
-    WMError ret = RemoveWindowNode(node);
+    WMError ret = RemoveWindowNode(node, true);
     if (ret != WMError::WM_OK) {
         WLOGFE("RemoveWindowNode failed");
         return ret;
     }
+    if (!WindowHelper::IsAppWindow(node->GetWindowType())) {
+        WLOGFE("UpdateRSTree after  RemoveWindowNode id:%{public}d", node->GetWindowId());
+        UpdateRSTree(node, false);
+    }
+
     node->surfaceNode_ = nullptr;
     windowIds.push_back(node->GetWindowId());
 
@@ -260,12 +359,8 @@ WMError WindowNodeContainer::DestroyWindowNode(sptr<WindowNode>& node, std::vect
     return WMError::WM_OK;
 }
 
-WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
+static void UpdateWindowNodeVisibilityWithRemove(sptr<WindowNode>& node, std::vector<sptr<WindowVisibilityInfo>>& infos)
 {
-    if (node == nullptr) {
-        WLOGFE("window node or surface node is nullptr, invalid");
-        return WMError::WM_ERROR_DESTROYED_OBJECT;
-    }
     if (node->parent_ == nullptr) {
         WLOGFW("can't find parent of this node");
     } else {
@@ -282,8 +377,6 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
     node->currentVisibility_ = false;
     node->hasDecorated_ = node->isDefultLayoutRect_ ? true : false;
     node->isCovered_ = true;
-    std::vector<sptr<WindowVisibilityInfo>> infos = {new WindowVisibilityInfo(node->GetWindowId(),
-        node->GetCallingPid(), node->GetCallingUid(), false)};
     for (auto& child : node->children_) {
         if (child->currentVisibility_) {
             child->currentVisibility_ = false;
@@ -292,6 +385,17 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
                 child->GetCallingUid(), false));
         }
     }
+}
+
+WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node, bool isDestroy)
+{
+    if (node == nullptr) {
+        WLOGFE("window node or surface node is nullptr, invalid");
+        return WMError::WM_ERROR_DESTROYED_OBJECT;
+    }
+    std::vector<sptr<WindowVisibilityInfo>> infos = {new WindowVisibilityInfo(node->GetWindowId(),
+        node->GetCallingPid(), node->GetCallingUid(), false)};
+    UpdateWindowNodeVisibilityWithRemove(node, infos);
 
     if (node->IsSplitMode()) {
         WMError ret = ExitSplitWindowMode(node);
@@ -301,7 +405,12 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
         }
     }
 
-    UpdateRSTree(node, false);
+    if (!node->isPlayAnimationHide_) {
+        UpdateRSNode(node, false, isDestroy);
+    } else {
+        node->isPlayAnimationHide_ = false;
+    }
+
     layoutPolicy_->RemoveWindowNode(node);
     if (WindowHelper::IsAvoidAreaWindow(node->GetWindowType())) {
         avoidController_->AvoidControl(node, AvoidControlType::AVOID_NODE_REMOVE);
@@ -379,7 +488,9 @@ void WindowNodeContainer::UpdateFocusStatus(uint32_t id, bool focused) const
     if (node == nullptr) {
         WLOGFW("cannot find focused window id:%{public}d", id);
     } else {
-        node->GetWindowToken()->UpdateFocusStatus(focused);
+        if (node->GetWindowToken()) {
+            node->GetWindowToken()->UpdateFocusStatus(focused);
+        }
         if (node->abilityToken_ == nullptr) {
             WLOGFI("abilityToken is null, window : %{public}d", id);
         }
@@ -401,7 +512,9 @@ void WindowNodeContainer::UpdateActiveStatus(uint32_t id, bool isActive) const
         WLOGFE("cannot find active window id: %{public}d", id);
         return;
     }
-    node->GetWindowToken()->UpdateActiveStatus(isActive);
+    if (node->GetWindowToken()) {
+        node->GetWindowToken()->UpdateActiveStatus(isActive);
+    }
 }
 
 void WindowNodeContainer::UpdateBrightness(uint32_t id, bool byRemoved)
@@ -788,7 +901,7 @@ std::vector<Rect> WindowNodeContainer::GetAvoidAreaByType(AvoidAreaType avoidAre
 
 void WindowNodeContainer::OnAvoidAreaChange(const std::vector<Rect>& avoidArea)
 {
-    layoutPolicy_->UpdateDefaultFoatingRect();
+    layoutPolicy_->UpdateDefaultFloatingRect();
     for (auto& node : appWindowNode_->children_) {
         if (node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN && node->GetWindowToken() != nullptr) {
             // notify client
@@ -868,7 +981,7 @@ void WindowNodeContainer::UpdateWindowState(sptr<WindowNode> node, int32_t topPr
         return;
     }
     if (node->parent_ != nullptr && node->currentVisibility_) {
-        if (node->priority_ < topPriority) {
+        if ((node->priority_ < topPriority) && (node->GetWindowToken())) {
             node->GetWindowToken()->UpdateWindowState(state);
         }
     }
@@ -922,7 +1035,6 @@ void WindowNodeContainer::RaiseSplitRelatedWindowToTop(sptr<WindowNode>& node)
         // raise self if not paired
         RaiseWindowToTop(node->GetWindowId(), appWindowNode_->children_);
     }
-    AssignZOrder();
     return;
 }
 
@@ -1142,11 +1254,15 @@ WMError WindowNodeContainer::ExitSplitWindowMode(sptr<WindowNode>& node)
     WM_FUNCTION_TRACE();
     WLOGFI("exit split window mode %{public}u", node->GetWindowId());
     node->GetWindowProperty()->ResumeLastWindowMode();
-    node->GetWindowToken()->UpdateWindowMode(node->GetWindowMode());
+    if (node->GetWindowToken()) {
+        node->GetWindowToken()->UpdateWindowMode(node->GetWindowMode());
+    }
     if (pairedWindowMap_.count(node->GetWindowId()) != 0) {
         auto pairNode = pairedWindowMap_.at(node->GetWindowId()).pairNode_;
         pairNode->GetWindowProperty()->ResumeLastWindowMode();
-        pairNode->GetWindowToken()->UpdateWindowMode(pairNode->GetWindowMode());
+        if (pairNode->GetWindowToken()) {
+            pairNode->GetWindowToken()->UpdateWindowMode(pairNode->GetWindowMode());
+        }
         pairedWindowMap_.erase(pairNode->GetWindowId());
         pairedWindowMap_.erase(node->GetWindowId());
         WLOGFI("resume pair node mode, Id[%{public}u, %{public}u], Mode[%{public}d, %{public}d]", node->GetWindowId(),
@@ -1169,7 +1285,9 @@ WMError WindowNodeContainer::UpdateWindowPairInfo(sptr<WindowNode>& triggerNode,
         WindowMode pairDstMode = (triggerMode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY) ?
             WindowMode::WINDOW_MODE_SPLIT_SECONDARY : WindowMode::WINDOW_MODE_SPLIT_PRIMARY;
         pairNode->SetWindowMode(pairDstMode);
-        pairNode->GetWindowToken()->UpdateWindowMode(pairDstMode);
+        if (pairNode->GetWindowToken()) {
+            pairNode->GetWindowToken()->UpdateWindowMode(pairDstMode);
+        }
         WMError ret = UpdateWindowNode(pairNode, WindowUpdateReason::UPDATE_MODE);
         if (ret != WMError::WM_OK) {
             WLOGFE("Update window pair info failed");
@@ -1184,8 +1302,9 @@ WMError WindowNodeContainer::UpdateWindowPairInfo(sptr<WindowNode>& triggerNode,
             WLOGFI("%{public}d node is paird , pre paired id is %{public}d,",
                 pairNode->GetWindowId(), prevPairNode->GetWindowId());
             prevPairNode->GetWindowProperty()->ResumeLastWindowMode();
-            prevPairNode->GetWindowToken()->UpdateWindowMode(prevPairNode->GetWindowMode());
-
+            if (prevPairNode->GetWindowToken()) {
+                prevPairNode->GetWindowToken()->UpdateWindowMode(prevPairNode->GetWindowMode());
+            }
             pairedWindowMap_.erase(prevPairNode->GetWindowId());
             pairedWindowMap_.erase(pairNode->GetWindowId());
 

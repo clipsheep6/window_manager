@@ -41,7 +41,8 @@ public:
     virtual void RemoveWindowNode(sptr<WindowNode>& node);
     virtual void UpdateWindowNode(sptr<WindowNode>& node, bool isAddWindow = false);
     virtual void UpdateLayoutRect(sptr<WindowNode>& node) = 0;
-    void UpdateDefaultFoatingRect();
+    void UpdateDefaultFloatingRect();
+    void UpdateClientRectAndResetReason(sptr<WindowNode>& node, const Rect& lastLayoutRect, const Rect& winRect);
     float GetVirtualPixelRatio() const;
     Rect GetDisplayLimitRect() const;
 

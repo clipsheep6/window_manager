@@ -215,6 +215,7 @@ NativeValue* CreateJsWindowPropertiesObject(NativeEngine& engine, sptr<Window>& 
     object->SetProperty("isTransparent", CreateJsValue(engine, window->IsTransparent()));
     return objValue;
 }
+
 static std::string GetHexColor(uint32_t color)
 {
     std::stringstream ioss;

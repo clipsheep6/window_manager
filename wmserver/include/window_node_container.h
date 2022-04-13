@@ -33,7 +33,7 @@ public:
     WindowNodeContainer(DisplayId displayId, uint32_t width, uint32_t height);
     ~WindowNodeContainer();
     WMError AddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode);
-    WMError RemoveWindowNode(sptr<WindowNode>& node);
+    WMError RemoveWindowNode(sptr<WindowNode>& node, bool isDestroy = false);
     WMError UpdateWindowNode(sptr<WindowNode>& node, WindowUpdateReason reason);
     WMError DestroyWindowNode(sptr<WindowNode>& node, std::vector<uint32_t>& windowIds);
     const std::vector<uint32_t>& Destroy();
@@ -77,6 +77,7 @@ public:
     void GetWindowList(std::vector<sptr<WindowInfo>>& windowList) const;
 
 private:
+    WMError UpdateWindowNodeVisibilityWithShow(sptr<WindowNode>& node, sptr<WindowNode>& parentNode);
     void TraverseWindowNode(sptr<WindowNode>& root, std::vector<sptr<WindowNode>>& windowNodes) const;
     sptr<WindowNode> FindRoot(WindowType type) const;
     sptr<WindowNode> FindWindowNodeById(uint32_t id) const;
@@ -84,7 +85,8 @@ private:
     void UpdateActiveStatus(uint32_t id, bool isActive) const;
     void UpdateBrightness(uint32_t id, bool byRemoved);
     void UpdateWindowTree(sptr<WindowNode>& node);
-    bool UpdateRSTree(sptr<WindowNode>& node, bool isAdd);
+    void UpdateRSTree(sptr<WindowNode>& node, bool isAdd);
+    bool UpdateRSNode(sptr<WindowNode>& node, bool isAdd, bool isDestroy = false);
 
     void SendSplitScreenEvent(sptr<WindowNode>& node);
     sptr<WindowNode> FindSplitPairNode(sptr<WindowNode>& node) const;
@@ -143,6 +145,7 @@ private:
     void RaiseInputMethodWindowPriorityIfNeeded(const sptr<WindowNode>& node) const;
     void RaiseShowWhenLockedWindowIfNeeded(const sptr<WindowNode>& node) const;
     const int32_t WINDOW_TYPE_RAISED_INPUT_METHOD = 115;
+    std::mutex mutex_;
 };
 } // namespace Rosen
 } // namespace OHOS

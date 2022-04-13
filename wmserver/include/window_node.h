@@ -88,7 +88,9 @@ public:
     bool hasDecorated_ { false };
     bool isDefultLayoutRect_ { false };
     bool isCovered_ { true }; // initial value true to ensure notification when this window is shown
-
+    bool isPlayAnimationShow_ = false;
+    bool isPlayAnimationHide_ = false;
+    bool isOnRsTree_ = false;
 private:
     sptr<WindowProperty> property_;
     sptr<IWindow> windowToken_;

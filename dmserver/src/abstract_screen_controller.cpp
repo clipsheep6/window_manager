@@ -38,6 +38,11 @@ AbstractScreenController::AbstractScreenController(std::recursive_mutex& mutex)
 {
     auto runner = AppExecFwk::EventRunner::Create(CONTROLLER_THREAD_ID);
     controllerHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
+    rsUiDirector_ = RSUIDirector::Create();
+    rsUiDirector_->Init();
+    rsUiDirector_->SetUITaskRunner([this](const std::function<void()>& task) {
+        controllerHandler_->PostTask(task);
+    });
 }
 
 AbstractScreenController::~AbstractScreenController()
@@ -566,7 +571,7 @@ DMError AbstractScreenController::DestroyVirtualScreen(ScreenId screenId)
             transactionProxy->FlushImplicitTransaction();
         }
     }
-    
+
     if (rsScreenId != SCREEN_ID_INVALID && GetAbstractScreen(screenId) != nullptr) {
         ProcessScreenDisconnected(rsScreenId);
     }
