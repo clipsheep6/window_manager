@@ -16,8 +16,11 @@
 #ifndef OHOS_ROSEN_WINDOW_NODE_CONTAINER_H
 #define OHOS_ROSEN_WINDOW_NODE_CONTAINER_H
 
+#include <event_handler.h>
 #include <ui/rs_display_node.h>
+
 #include "avoid_area_controller.h"
+#include "future.h"
 #include "window_layout_policy.h"
 #include "window_manager.h"
 #include "window_node.h"
@@ -69,6 +72,7 @@ public:
     sptr<WindowNode> GetNextActiveWindow(uint32_t windowId) const;
     void MinimizeAllAppWindows(DisplayId displayId);
     void MinimizeOldestAppWindow();
+    void ToggleShownStateForAllAppWindow(std::function<bool(uint32_t)> restoreFunc);
     void ProcessWindowStateChange(WindowState state, WindowStateChangeReason reason);
     void NotifySystemBarTints(std::vector<DisplayId> displayIdVec);
     void NotifySystemBarDismiss(sptr<WindowNode>& node);
@@ -141,6 +145,10 @@ private:
     uint32_t activeWindow_ = INVALID_WINDOW_ID;
 
     sptr<AvoidAreaController> avoidController_;
+    std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
+    std::vector<uint32_t> backupWindowIds_;
+    RunnableFuture<uint32_t> windowAddedNotifier_;
+    std::atomic<bool> isRestoring_ { false };
     sptr<WindowZorderPolicy> zorderPolicy_ = new WindowZorderPolicy();
     std::unordered_map<WindowLayoutMode, sptr<WindowLayoutPolicy>> layoutPolicys_;
     WindowLayoutMode layoutMode_ = WindowLayoutMode::CASCADE;

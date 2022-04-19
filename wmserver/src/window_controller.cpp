@@ -496,6 +496,11 @@ void WindowController::MinimizeAllAppWindows(DisplayId displayId)
     windowRoot_->MinimizeAllAppWindows(displayId);
 }
 
+void WindowController::ToggleShownStateForAllAppWindow(DisplayId displayId)
+{
+    windowRoot_->ToggleShownStateForAllAppWindow(displayId);
+}
+
 WMError WindowController::MaxmizeWindow(uint32_t windowId)
 {
     WMError ret = SetWindowMode(windowId, WindowMode::WINDOW_MODE_FULLSCREEN);

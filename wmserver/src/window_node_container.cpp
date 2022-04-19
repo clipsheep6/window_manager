@@ -20,6 +20,7 @@
 #include <cinttypes>
 #include <ctime>
 #include <display_power_mgr_client.h>
+#include <event_runner.h>
 #include <power_mgr_client.h>
 
 #include "common_event_manager.h"
@@ -43,6 +44,7 @@ namespace {
     const std::string SPLIT_SCREEN_EVENT_NAME = "common.event.SPLIT_SCREEN";
     const char DISABLE_WINDOW_ANIMATION_PATH[] = "/etc/disable_window_animation";
     constexpr uint32_t MAX_BRIGHTNESS = 255;
+    const std::string THREAD_ID = "window_node_container_thread";
 }
 
 WindowNodeContainer::WindowNodeContainer(DisplayId displayId, uint32_t width, uint32_t height)
@@ -72,6 +74,9 @@ WindowNodeContainer::WindowNodeContainer(DisplayId displayId, uint32_t width, ui
 
     // init systembar map
     InitSysBarMapForDisplay(displayId);
+
+    auto runner = AppExecFwk::EventRunner::Create(THREAD_ID);
+    eventHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
 }
 
 WindowNodeContainer::~WindowNodeContainer()
@@ -254,6 +259,13 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
     DumpScreenWindowTree();
     NotifyAccessibilityWindowInfo(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
     WLOGFI("AddWindowNode windowId: %{public}u end", node->GetWindowId());
+    if (isRestoring_) {
+        windowAddedNotifier_.SetValue(node->GetWindowId());
+    } else if (WindowHelper::IsAppWindow(node->GetWindowType())) {
+        backupWindowIds_.clear();
+    } else {
+        WLOGFD("The added window is not a restoring window or a app window.");
+    }
     return WMError::WM_OK;
 }
 
@@ -1222,6 +1234,53 @@ void WindowNodeContainer::MinimizeOldestAppWindow()
         }
     }
     WLOGFI("no window needs to minimize");
+}
+
+void WindowNodeContainer::ToggleShownStateForAllAppWindow(std::function<bool(uint32_t)> restoreFunc)
+{
+    WLOGFI("ToggleShownStateForAllAppWindow");
+    bool isRestoring = isRestoring_;
+    if (!isRestoring && !appWindowNode_->children_.empty()) {
+        // backup
+        WLOGFI("backup");
+        for (auto& appNode : appWindowNode_->children_) {
+            // exclude exceptional window
+            if (!WindowHelper::IsMainWindow(appNode->GetWindowType())) {
+                WLOGFE("is not main window, windowId:%{public}u", appNode->GetWindowId());
+                continue;
+            }
+            // minimize window
+            WLOGFD("minimize window, windowId:%{public}u", appNode->GetWindowId());
+            backupWindowIds_.emplace_back(appNode->GetWindowId());
+            appNode->GetWindowToken()->UpdateWindowState(WindowState::STATE_HIDDEN);
+        }
+    } else if (!isRestoring && !backupWindowIds_.empty() && appWindowNode_->children_.empty()) {
+        // restore
+        auto task = [this, restoreFunc] {
+            WLOGFI("restore");
+            for (auto windowId: backupWindowIds_) {
+                windowAddedNotifier_.Reset(0);
+                if (!restoreFunc(windowId)) {
+                    WLOGFE("restore %{public}u failed", windowId);
+                    continue;
+                }
+                WLOGFD("restore %{public}u", windowId);
+                // 100ms timeout
+                if (windowAddedNotifier_.GetResult(100) != windowId) {
+                    break;
+                }
+            }
+            windowAddedNotifier_.Reset(0);
+            backupWindowIds_.clear();
+            isRestoring_ = false;
+        };
+        if (!isRestoring_.exchange(true, std::memory_order_acq_rel)) {
+            eventHandler_->PostTask(task, AppExecFwk::EventQueue::Priority::HIGH);
+        }
+    } else {
+        std::string reason = isRestoring ? "isRestoring." : "shown app windows is empty and backup windows is empty.";
+        WLOGFI("do nothing because %{public}s", reason.c_str());
+    }
 }
 
 void WindowNodeContainer::MinimizeWindowFromAbility(const sptr<WindowNode>& node, bool fromUser)

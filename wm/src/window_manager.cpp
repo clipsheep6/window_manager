@@ -366,6 +366,12 @@ void WindowManager::MinimizeAllAppWindows(DisplayId displayId)
     SingletonContainer::Get<WindowAdapter>().MinimizeAllAppWindows(displayId);
 }
 
+void WindowManager::ToggleShownStateForAllAppWindow(DisplayId displayId)
+{
+    WLOGFI("displayId %{public}" PRIu64"", displayId);
+    SingletonContainer::Get<WindowAdapter>().ToggleShownStateForAllAppWindow(displayId);
+}
+
 WMError WindowManager::SetWindowLayoutMode(WindowLayoutMode mode, DisplayId displayId)
 {
     WLOGFI("set window layout mode: %{public}u, displayId %{public}" PRIu64"", mode, displayId);
