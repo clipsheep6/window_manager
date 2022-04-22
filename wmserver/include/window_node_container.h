@@ -59,6 +59,7 @@ public:
     std::unordered_map<WindowType, SystemBarProperty> GetExpectImmersiveProperty() const;
     void NotifyAccessibilityWindowInfo(const sptr<WindowNode>& windowId, WindowUpdateType type) const;
     void UpdateDisplayRect(uint32_t width, uint32_t height);
+    int GetWindowNumber(WindowType windowType);
 
     void OnAvoidAreaChange(const std::vector<Rect>& avoidAreas);
     bool isVerticalDisplay() const;
@@ -66,6 +67,7 @@ public:
     sptr<WindowNode> GetNextFocusableWindow(uint32_t windowId) const;
     sptr<WindowNode> GetNextActiveWindow(uint32_t windowId) const;
     void MinimizeAllAppWindows();
+    void MinimizeFirstAppWindow();
     void NotifyWindowStateChange(WindowState state, WindowStateChangeReason reason);
     void NotifySystemBarTints();
     void NotifySystemBarDismiss(sptr<WindowNode>& node);
