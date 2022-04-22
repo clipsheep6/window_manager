@@ -83,6 +83,19 @@ void WindowNodeContainer::UpdateDisplayRect(uint32_t width, uint32_t height)
     layoutPolicy_->LayoutWindowTree();
 }
 
+int WindowNodeContainer::GetWindowNumber(WindowType windowType)
+{
+    int windowNumber = 0;
+    auto counter = [&windowNumber, &windowType](sptr<WindowNode>& windowNode){
+        if(windowNode->GetWindowType() == windowType) ++windowNumber;
+    };
+    std::for_each(belowAppWindowNode_->children_.begin(), belowAppWindowNode_->children_.end(), counter);
+    std::for_each(appWindowNode_->children_.begin(), appWindowNode_->children_.end(), counter);
+    std::for_each(aboveAppWindowNode_->children_.begin(), aboveAppWindowNode_->children_.end(), counter);
+    return windowNumber;
+
+}
+
 WMError WindowNodeContainer::MinimizeStructuredAppWindowsExceptSelf(const sptr<WindowNode>& node)
 {
     std::vector<uint32_t> exceptionalIds = { node->GetWindowId() };
@@ -1055,6 +1068,18 @@ void WindowNodeContainer::MinimizeAllAppWindows()
         WLOGFE("Minimize all app window failed");
     }
     return;
+}
+
+void WindowNodeContainer::MinimizeFirstAppWindow()
+{
+    for (auto& appNode : appWindowNode_->children_) {
+        if (appNode->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+            WLOGFI("minimize window, windowId:%{public}u", appNode->GetWindowId());
+            MinimizeWindowFromAbility(appNode, true);
+            return;
+        }
+    }
+    WLOGFI("no window needs to minimize");
 }
 
 void WindowNodeContainer::MinimizeWindowFromAbility(const sptr<WindowNode>& node, bool fromUser)
