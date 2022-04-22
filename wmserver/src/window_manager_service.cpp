@@ -155,6 +155,18 @@ bool WindowManagerService::ParseChildNode(xmlNode* child)
         } else {
             WLOGFW("Invalid resource prop");
         }
+    } else if (!xmlStrcmp(child->name, reinterpret_cast<const xmlChar*>("minimizeByOther"))) {
+        char* enable = reinterpret_cast<char*>(xmlGetProp(child, reinterpret_cast<const xmlChar*>("enable")));
+        if (!enable) {
+            return false;
+        }
+        if (!strcmp(enable, "false")) {
+            windowRoot_->SetMinimizedByOtherWindow(false);
+        } else if (!strcmp(enable, "true")) {
+            windowRoot_->SetMinimizedByOtherWindow(true);
+        } else {
+            WLOGFW("Invalid resource prop");
+        }
     }
     return true;
 }
