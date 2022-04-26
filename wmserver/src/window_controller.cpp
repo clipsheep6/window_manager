@@ -14,9 +14,12 @@
  */
 
 #include "window_controller.h"
+#include <ability_manager_client.h>
 #include <parameters.h>
 #include <power_mgr_client.h>
+#include <rs_window_animation_target.h>
 #include <transaction/rs_transaction.h>
+#include "rs_window_animation_finished_callback.h"
 #include "window_manager_hilog.h"
 #include "window_helper.h"
 #include "wm_common.h"
@@ -26,22 +29,162 @@ namespace OHOS {
 namespace Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowController"};
+    static SkBitmap g_bitmap;
+
 }
+
 uint32_t WindowController::GenWindowId()
 {
     return ++windowId_;
 }
 
-void WindowController::CreateDesWindowNodeAndShow(sptr<WindowNode>& desNode, const WindowTransitionInfo& toInfo)
+void WindowController::CreateDesWindowNodeAndShow(sptr<WindowNode>& desNode, sptr<WindowTransitionInfo>& toInfo)
 {
+    sptr<WindowProperty> property = new WindowProperty();
+    property->SetRequestRect(toInfo->GetWindowRect());
+    property->SetWindowMode(toInfo->GetWindowMode());
+    property->SetDisplayId(toInfo->GetDisplayId());
+    property->SetWindowType(toInfo->GetWindowType());
+    if (toInfo->GetShowFlagWhenLocked()) {
+        property->AddWindowFlag(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED);
+    }
+    auto winId = GenWindowId();
+    property->SetWindowId(winId);
+    sptr<WindowNode> node = new(std::nothrow) WindowNode(property);
+    if (node == nullptr) {
+        WLOGFE("malloc window node failed.");
+        return;
+    }
+    node->abilityToken_ = toInfo->GetAbilityToken();
+    WMError res = windowRoot_->SaveDesWindowNode(node);
+    if (res != WMError::WM_OK) {
+        WLOGFE("SaveDesWindowNode failed with ret %{public}d.", res);
+        return;
+    }
+    res = windowRoot_->ShowInTransition(node);
+    if (res != WMError::WM_OK) {
+        WLOGFE("ShowInTransition failed with ret %{public}d.", res);
+        return;
+    }
+    // draw starting Window
+    Rect rect = node->GetWindowRect();
+    // node->leashWinSurfaceNode_->SetBounds(rect.posX_, rect.posY_, rect.width_, rect.height_);
+    // node->startingWinSurfaceNode_->SetBounds(0, 0, rect.width_, rect.height_);
+    const char *staringImgPath_ = "/etc/window/resources/starting_window.png";
+    if (!surfaceDraw_.DecodeImageFile(staringImgPath_, g_bitmap)) {
+        WLOGFE("load starting image failed");
+        return;
+    }
+    surfaceDraw_.DrawBitmap(node->startingWinSurfaceNode_, rect, g_bitmap, 0xffffffff);
+    // surfaceDraw_.DrawSurface(node->startingWinSurfaceNode_, rect);
+    desNode = node;
+}
+
+static bool NeedMinimize(sptr<WindowNode> fromNode, sptr<WindowNode> toNode)
+{
+    if (fromNode == nullptr || toNode == nullptr) {
+        return false;
+    }
+    if (fromNode->GetWindowId() == toNode->GetWindowId()) {
+        return false;
+    }
+    return (toNode->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN) &&
+        (WindowHelper::IsAppWindow(toNode->GetWindowType())) && (fromNode->GetWindowMode() ==
+        WindowMode::WINDOW_MODE_FULLSCREEN) && (WindowHelper::IsMainWindow(fromNode->GetWindowType()));
+}
+
+void WindowController::NotifyAnimationTransition(sptr<WindowTransitionInfo>& fromInfo,
+    sptr<WindowTransitionInfo>& toInfo, sptr<WindowNode> fromNode, sptr<WindowNode> toNode)
+{
+
+    sptr<RSWindowAnimationTarget> fromTarget = new RSWindowAnimationTarget();
+    fromTarget->bundleName_ = fromInfo->GetBundleName();
+    fromTarget->abilityName_ = fromInfo->GetAbilityName();
+    if (fromNode != nullptr) {
+        if (WindowHelper::IsAppWindow(fromNode->GetWindowType())) {
+            fromTarget->surfaceNode_ = fromNode->leashWinSurfaceNode_;
+        } else {
+            fromTarget->surfaceNode_ = fromNode->surfaceNode_;
+        }
+    }
+
+    sptr<RSWindowAnimationTarget> toTarget = new RSWindowAnimationTarget();
+    toTarget->bundleName_ = toInfo->GetBundleName();
+    toTarget->abilityName_ = toInfo->GetAbilityName();
+    if (WindowHelper::IsAppWindow(toNode->GetWindowType())) {
+        toTarget->surfaceNode_ = toNode->leashWinSurfaceNode_;
+    } else {
+        toTarget->surfaceNode_ = toNode->surfaceNode_;
+    }
+    if (NeedMinimize(fromNode, toNode)) { // from App To App
+        fromTarget->actionType_ = WindowAnimationActionType::GO_BACKGROUND;
+        toTarget->actionType_ = WindowAnimationActionType::GO_FOREGROUND;
+        fromNode->isPlayAnimationHide_ = true;
+        toNode->isPlayAnimationShow_ = true;
+    } else {
+        // from launcher/recent/aa to app
+        fromTarget->actionType_ = WindowAnimationActionType::NO_CHANGE;
+        toTarget->actionType_ = WindowAnimationActionType::GO_FOREGROUND;
+        toNode->isPlayAnimationShow_ = true;
+    }
+    auto callback = [fromNode, toNode]() {
+        if (NeedMinimize(fromNode, toNode)) {
+            WM_SCOPED_TRACE_BEGIN("controller:Minimize  fromNode in transition");
+            if (fromNode->abilityToken_ == nullptr) {
+                WLOGFE("Target abilityToken is nullptr, windowId:%{public}u", fromNode->GetWindowId());
+                return;
+            }
+            AAFwk::AbilityManagerClient::GetInstance()->MinimizeAbility(fromNode->abilityToken_, false);
+        }
+    };
+    // TODO: add time out check
+    sptr<RSWindowAnimationFinishedCallback> finishedCallback = new(std::nothrow) RSWindowAnimationFinishedCallback(
+        callback);
+    if (finishedCallback == nullptr) {
+        WLOGFE("New RSIWindowAnimationFinishedCallback failed");
+        return;
+    }
+    // windowAnimationController_->OnTransition(fromTarget, toTarget, finishedCallback);
 }
 
 void WindowController::NotifyWindowTransition(
-    const WindowTransitionInfo& fromInfo, const WindowTransitionInfo& toInfo)
+    sptr<WindowTransitionInfo>& fromInfo, sptr<WindowTransitionInfo>& toInfo)
 {
-    if (!windowAnimationController_) {
-        return;
+    // if (windowAnimationController_ == nullptr) {
+    //     WLOGFI("not use transition animation because windowAnimationController_ not set.");
+    //     return;
+    // }
+    auto desNode = windowRoot_->FindWindowNodeWithToken(toInfo->GetAbilityToken());
+    if (desNode == nullptr) {
+        if (toInfo->GetAbilityToken() == nullptr) { // back event
+            WLOGFI("target window abilityToken is null");
+        } else {
+            CreateDesWindowNodeAndShow(desNode, toInfo);
+        }
+    } else {
+        WMError res = windowRoot_->ShowInTransition(desNode);
+        if (res != WMError::WM_OK) {
+            WLOGFE("ShowInTransition failed with ret %{public}d.", res);
+            return;
+        }
     }
+    if (desNode != nullptr) {
+        WLOGFI("Id:%{public}u, windowRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
+            desNode->GetWindowId(), desNode->GetWindowRect().posX_, desNode->GetWindowRect().posY_,
+            desNode->GetWindowRect().width_, desNode->GetWindowRect().height_);
+        WLOGFI("Id:%{public}u, requestRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
+            desNode->GetWindowId(), desNode->GetRequestRect().posX_, desNode->GetRequestRect().posY_,
+            desNode->GetRequestRect().width_, desNode->GetRequestRect().height_);
+        StopBootAnimationIfNeed(desNode->GetWindowType());
+        FlushWindowInfo(desNode->GetWindowId());
+    }
+    auto fromNode = windowRoot_->FindWindowNodeWithToken(fromInfo->GetAbilityToken());
+    // recent/aa abilityToken is null
+    if (desNode != nullptr) {
+        NotifyAnimationTransition(fromInfo, toInfo, fromNode, desNode);
+    }
+    // TODO: process back event/ recent event
+    return;
 }
 
 WMError WindowController::CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
@@ -52,13 +195,40 @@ WMError WindowController::CreateWindow(sptr<IWindow>& window, sptr<WindowPropert
         WLOGFE("create window failed, type is error");
         return WMError::WM_ERROR_INVALID_TYPE;
     }
-    windowId = GenWindowId();
-    sptr<WindowProperty> windowProperty = new WindowProperty(property);
-    windowProperty->SetWindowId(windowId);
-    sptr<WindowNode> node = new WindowNode(windowProperty, window, surfaceNode);
-    node->abilityToken_ = token;
-    UpdateWindowAnimation(node);
-    return windowRoot_->SaveWindow(node);
+    sptr<WindowNode> node = windowRoot_->FindWindowNodeWithToken(token);
+    if (node == nullptr || (!WindowHelper::IsMainWindow(property->GetWindowType()))) {
+        windowId = GenWindowId();
+        sptr<WindowProperty> windowProperty = new WindowProperty(property);
+        windowProperty->SetWindowId(windowId);
+        node = new WindowNode(windowProperty, window, surfaceNode);
+        node->abilityToken_ = token;
+        UpdateWindowAnimation(node);
+        return windowRoot_->SaveWindow(node);
+    }
+    windowId = node->GetWindowId();
+    node->surfaceNode_ = surfaceNode;
+    node->SetWindowToken(window);
+    node->SetCallingPid();
+    node->SetCallingUid();
+    sptr<WindowProperty> windowProperty = new(std::nothrow) WindowProperty(property);
+    if (windowProperty == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    // mode & type should same as pre property
+    windowProperty->SetWindowId(node->GetWindowId());
+    // using starting window rect if client rect is empty
+    if (WindowHelper::IsEmptyRect(property->GetRequestRect())) { // for tile and cascade
+        WLOGFI("Id:%{public}u, windowRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
+            node->GetWindowId(), node->GetWindowRect().posX_, node->GetWindowRect().posY_, node->GetWindowRect().width_, node->GetWindowRect().height_);
+        WLOGFI("before Id:%{public}u, requestRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
+            node->GetWindowId(), node->GetRequestRect().posX_, node->GetRequestRect().posY_, node->GetRequestRect().width_, node->GetRequestRect().height_);
+        windowProperty->SetRequestRect(node->GetRequestRect());
+        windowProperty->SetWindowRect(node->GetWindowRect());
+    }
+    node->SetWindowProperty(windowProperty);
+    WLOGFI("after set Id:%{public}u, requestRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
+        node->GetWindowId(), node->GetRequestRect().posX_, node->GetRequestRect().posY_, node->GetRequestRect().width_, node->GetRequestRect().height_);
+    return windowRoot_->SaveWindowWithWindowToken(node);
 }
 
 WMError WindowController::AddWindowNode(sptr<WindowProperty>& property)
@@ -68,11 +238,20 @@ WMError WindowController::AddWindowNode(sptr<WindowProperty>& property)
         WLOGFE("could not find window");
         return WMError::WM_ERROR_NULLPTR;
     }
-    if (node->currentVisibility_) {
+    if (node->currentVisibility_ && !node->isPlayAnimationShow_) {
         WLOGFE("current window is visible, windowId: %{public}u", node->GetWindowId());
         return WMError::WM_ERROR_INVALID_OPERATION;
     }
     ReSizeSystemBarPropertySizeIfNeed(property);
+    // using starting window rect if client rect is empty
+    if (WindowHelper::IsEmptyRect(property->GetRequestRect())) { // for tile and cascade
+        WLOGFI("Id:%{public}u, windowRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
+            node->GetWindowId(), node->GetWindowRect().posX_, node->GetWindowRect().posY_, node->GetWindowRect().width_, node->GetWindowRect().height_);
+        WLOGFI("Id:%{public}u, requestRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
+            node->GetWindowId(), node->GetRequestRect().posX_, node->GetRequestRect().posY_, node->GetRequestRect().width_, node->GetRequestRect().height_);
+        property->SetRequestRect(node->GetRequestRect());
+        property->SetWindowRect(node->GetWindowRect());
+    }
     node->GetWindowProperty()->CopyFrom(property);
 
     // Need 'check permission'
@@ -91,7 +270,7 @@ WMError WindowController::AddWindowNode(sptr<WindowProperty>& property)
     }
 
     if (node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
-        WindowHelper::IsAppWindow(node->GetWindowType())) {
+        WindowHelper::IsAppWindow(node->GetWindowType()) && !node->isPlayAnimationHide_) {
         WM_SCOPED_TRACE_BEGIN("controller:MinimizeStructuredAppWindowsExceptSelf");
         res = windowRoot_->MinimizeStructuredAppWindowsExceptSelf(node);
         WM_SCOPED_TRACE_END();

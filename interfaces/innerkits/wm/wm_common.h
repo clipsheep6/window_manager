@@ -140,7 +140,6 @@ struct Rect {
     int32_t posY_;
     uint32_t width_;
     uint32_t height_;
-
     bool operator==(const Rect& a) const
     {
         return (posX_ == a.posX_ && posY_ == a.posY_ && width_ == a.width_ && height_ == a.height_);

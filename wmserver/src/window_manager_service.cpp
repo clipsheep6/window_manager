@@ -97,6 +97,38 @@ void WindowManagerService::RegisterSnapshotHandler()
 
 void WindowManagerService::RegisterWindowManagerServiceHandler()
 {
+    if (wmsHandler_ == nullptr) {
+        wmsHandler_ = new WindowManagerServiceHandler();
+    }
+    if (AAFwk::AbilityManagerClient::GetInstance()->RegisterWindowManagerServiceHandler(wmsHandler_) != ERR_OK) {
+        WLOGFW("WindowManagerService::RegisterWindowManagerServiceHandler failed, create async thread!");
+        auto fun = [this]() {
+            WLOGFI("WindowManagerService::RegisterWindowManagerServiceHandler async thread enter!");
+            int counter = 0;
+            while (AAFwk::AbilityManagerClient::GetInstance()->RegisterWindowManagerServiceHandler(wmsHandler_) != ERR_OK) {
+                usleep(10000); // 10000us equals to 10ms
+                counter++;
+                if (counter >= 2000) { // wait for 2000 * 10ms = 20s
+                    WLOGFE("WindowManagerService::RegisterWindowManagerServiceHandler timeout!");
+                    return;
+                }
+            }
+            WLOGFI("WindowManagerService::RegisterWindowManagerServiceHandler async thread register handler successfully!");
+        };
+        std::thread thread(fun);
+        thread.detach();
+        WLOGFI("WindowManagerService::RegisterWindowManagerServiceHandler async thread has been detached!");
+    } else {
+        WLOGFI("WindowManagerService::RegisterWindowManagerServiceHandler OnStart succeed!");
+    }
+}
+
+void WindowManagerServiceHandler::NotifyWindowTransition(
+    sptr<AAFwk::WindowTransitionInfo> from, sptr<AAFwk::WindowTransitionInfo> to)
+{
+    sptr<Rosen::WindowTransitionInfo> fromInfo = new Rosen::WindowTransitionInfo(from);
+    sptr<Rosen::WindowTransitionInfo> toInfo = new Rosen::WindowTransitionInfo(to);
+    WindowManagerService::GetInstance().NotifyWindowTransition(fromInfo, toInfo);
 }
 
 bool WindowManagerService::Init()
@@ -152,9 +184,10 @@ void WindowManagerService::OnStop()
     WLOGFI("ready to stop service.");
 }
 
-void WindowManagerService::NotifyWindowTransition(WindowTransitionInfo fromInfo, WindowTransitionInfo toInfo)
+void WindowManagerService::NotifyWindowTransition(sptr<WindowTransitionInfo>& from, sptr<WindowTransitionInfo>& to)
 {
-    windowController_->NotifyWindowTransition(fromInfo, toInfo);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    windowController_->NotifyWindowTransition(from, to);
 }
 
 WMError WindowManagerService::CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,

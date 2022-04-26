@@ -25,6 +25,7 @@
 #include "singleton_delegator.h"
 #include "window_property.h"
 #include "window_manager_interface.h"
+
 namespace OHOS {
 namespace Rosen {
 class WMSDeathRecipient : public IRemoteObject::DeathRecipient {
@@ -60,7 +61,7 @@ public:
         const sptr<IWindowManagerAgent>& windowManagerAgent);
 
     virtual WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller);
-
+    virtual void NotifyWindowTransition(sptr<WindowTransitionInfo> from, sptr<WindowTransitionInfo> to);
     virtual void ClearWindowAdapter();
 
     virtual WMError GetAccessibilityWindowInfo(sptr<AccessibilityWindowInfo>& windowInfo);
