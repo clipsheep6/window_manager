@@ -18,11 +18,11 @@
 
 #include <refbase.h>
 #include <rs_iwindow_animation_controller.h>
-
 #include "input_window_monitor.h"
 #include "surface_draw.h"
 #include "zidl/window_manager_agent_interface.h"
 #include "window_root.h"
+#include "window_transition_info.h"
 #include "wm_common.h"
 
 namespace OHOS {
@@ -39,7 +39,7 @@ public:
     WMError AddWindowNode(sptr<WindowProperty>& property);
     WMError RemoveWindowNode(uint32_t windowId);
     void NotifyWindowTransition(
-        const WindowTransitionInfo& fromInfo, const WindowTransitionInfo& toInfo);
+        sptr<WindowTransitionInfo>& fromInfo, sptr<WindowTransitionInfo>& toInfo);
     WMError DestroyWindow(uint32_t windowId, bool onlySelf);
     WMError RequestFocus(uint32_t windowId);
     WMError SetWindowBackgroundBlur(uint32_t windowId, WindowBlurLevel level);
@@ -59,7 +59,9 @@ public:
         ModeChangeHotZones& hotZones, const ModeChangeHotZonesConfig& config);
 
 private:
-    void CreateDesWindowNodeAndShow(sptr<WindowNode>& desNode, const WindowTransitionInfo& toInfo);
+    void CreateDesWindowNodeAndShow(sptr<WindowNode>& desNode, sptr<WindowTransitionInfo>& toInfo);
+    void NotifyAnimationTransition(sptr<WindowTransitionInfo>& fromInfo, sptr<WindowTransitionInfo>& toInfo,
+        sptr<WindowNode> fromNode, sptr<WindowNode> toNode);
     uint32_t GenWindowId();
     void FlushWindowInfo(uint32_t windowId);
     void FlushWindowInfoWithDisplayId(DisplayId displayId);

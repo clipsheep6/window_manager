@@ -290,7 +290,15 @@ void WindowLayoutPolicyCascade::UpdateLayoutRect(const sptr<WindowNode>& node)
 
     UpdateClientRectAndResetReason(node, lastWinRect, winRect);
     // update node bounds
-    if (node->surfaceNode_ != nullptr) {
+    if (node->leashWinSurfaceNode_) {
+        node->leashWinSurfaceNode_->SetBounds(winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
+        if (node->startingWinSurfaceNode_) {
+            node->startingWinSurfaceNode_->SetBounds(0, 0, winRect.width_, winRect.height_);
+        }
+        if (node->surfaceNode_) {
+            node->surfaceNode_->SetBounds(0, 0, winRect.width_, winRect.height_);
+        }
+    } else if (node->surfaceNode_) {
         node->surfaceNode_->SetBounds(winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
     }
 }

@@ -109,14 +109,14 @@ bool WindowLayoutPolicy::IsVerticalDisplay(DisplayId displayId) const
 void WindowLayoutPolicy::UpdateClientRectAndResetReason(const sptr<WindowNode>& node,
     const Rect& lastLayoutRect, const Rect& winRect)
 {
-    if ((!(lastLayoutRect == winRect)) || node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
-        auto reason = node->GetWindowSizeChangeReason();
-        if (node->GetWindowToken()) {
-            node->GetWindowToken()->UpdateWindowRect(winRect, node->GetDecoStatus(), reason);
-        }
-        if (reason == WindowSizeChangeReason::DRAG || reason == WindowSizeChangeReason::DRAG_END) {
-            node->ResetWindowSizeChangeReason();
-        }
+    auto reason = node->GetWindowSizeChangeReason();
+    if (node->GetWindowToken()) {
+        WLOGFE("notify client id: %{public}d windowRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
+            node->GetWindowId(), winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
+        node->GetWindowToken()->UpdateWindowRect(winRect, node->GetDecoStatus(), reason);
+    }
+    if (reason == WindowSizeChangeReason::DRAG || reason == WindowSizeChangeReason::DRAG_END) {
+        node->ResetWindowSizeChangeReason();
     }
 }
 

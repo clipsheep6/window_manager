@@ -153,18 +153,85 @@ sptr<WindowNode> WindowRoot::FindWindowNodeWithToken(const sptr<IRemoteObject>& 
 
 WMError WindowRoot::ShowInTransition(sptr<WindowNode>& node)
 {
-    return WMError::WM_OK;
+    if (node == nullptr) {
+        WLOGFE("ShowInTransition failed, node is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    auto container = GetOrCreateWindowNodeContainer(node->GetDisplayId());
+    if (container == nullptr) {
+        WLOGFE("add window failed, window container could not be found");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    WMError res = container->ShowInTransition(node);
+    if (res == WMError::WM_OK && WindowHelper::IsMainWindow(node->GetWindowType()) &&
+        node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN) {
+        DisplayManagerServiceInner::GetInstance().
+            SetOrientationFromWindow(node->GetDisplayId(), node->GetRequestedOrientation());
+    }
+    WLOGFI("ShowInTransition success windowId %{public}d", node->GetWindowId());
+    return res;
 }
 
 // NotifyWindowTransition Create
 WMError WindowRoot::SaveDesWindowNode(sptr<WindowNode>& node)
 {
+    if (node == nullptr) {
+        WLOGFE("SaveDesWindowNode failed, node is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    auto winId = node->GetWindowId();
+    WLOGFI("SaveDesWindowNode save windowId %{public}d", node->GetWindowId());
+    struct RSSurfaceNodeConfig rsSurfaceNodeConfig;
+    rsSurfaceNodeConfig.SurfaceNodeName = "leashWindow" + std::to_string(winId);
+    node->leashWinSurfaceNode_ = RSSurfaceNode::Create(rsSurfaceNodeConfig);
+    if (node->leashWinSurfaceNode_ == nullptr) {
+        WLOGFE("node->leashWinSurfaceNode_  is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    rsSurfaceNodeConfig.SurfaceNodeName = "startingWindow" + std::to_string(winId);
+    node->startingWinSurfaceNode_ = RSSurfaceNode::Create(rsSurfaceNodeConfig);
+    if (node->startingWinSurfaceNode_ == nullptr) {
+        WLOGFE("node->startingWinSurfaceNode_  is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    windowNodeMap_.insert(std::make_pair(node->GetWindowId(), node));
     return WMError::WM_OK;
 }
 
 // ability create
 WMError WindowRoot::SaveWindowWithWindowToken(sptr<WindowNode> node)
 {
+    sptr<IRemoteObject> remoteObject = nullptr;
+    WLOGFI("SaveWindowWithWindowToken windowId %{public}d", node->GetWindowId());
+    if (node->GetWindowToken()) {
+        remoteObject = node->GetWindowToken()->AsObject();
+        windowIdMap_.insert(std::make_pair(remoteObject, node->GetWindowId()));
+    } else {
+        WLOGFE("windowToken is null with windowId %{public}d", node->GetWindowId());
+    }
+
+    if (windowDeath_ == nullptr) {
+        WLOGFI("failed to create death Recipient ptr WindowDeathRecipient");
+        return WMError::WM_OK;
+    }
+    if (!remoteObject->AddDeathRecipient(windowDeath_)) {
+        WLOGFI("failed to add death recipient");
+    }
+    if (node->surfaceNode_ == nullptr) {
+        WLOGFI("surfaceNode is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    // Register FirstFrame Callback to rs, replace startwin
+    auto firstFrameCompleteCallback = [node]() {
+        node->leashWinSurfaceNode_->RemoveChild(node->startingWinSurfaceNode_);
+        node->leashWinSurfaceNode_->AddChild(node->surfaceNode_, -1);
+        RSTransaction::FlushImplicitTransaction();
+    };
+    node->surfaceNode_->SetBufferAvailableCallback(firstFrameCompleteCallback);
+    RSTransaction::FlushImplicitTransaction();
     return WMError::WM_OK;
 }
 
@@ -259,9 +326,7 @@ WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node)
     }
 
     auto parentNode = GetWindowNode(parentId);
-
     // limit number of main window
-
     int mainWindowNumber = container->GetWindowCountByType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
     if (mainWindowNumber >= maxAppWindowNumber_) {
         container->MinimizeOldestAppWindow();
@@ -489,7 +554,6 @@ WMError WindowRoot::DestroyWindowInner(sptr<WindowNode>& node)
         }
         windowIdMap_.erase(window->AsObject());
     }
-
     windowNodeMap_.erase(node->GetWindowId());
     return WMError::WM_OK;
 }
