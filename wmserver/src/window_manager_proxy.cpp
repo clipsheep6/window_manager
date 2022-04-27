@@ -24,7 +24,6 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowManagerProxy"};
 }
 
-
 WMError WindowManagerProxy::CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
     const std::shared_ptr<RSSurfaceNode>& surfaceNode, uint32_t& windowId, sptr<IRemoteObject> token)
 {
@@ -46,7 +45,7 @@ WMError WindowManagerProxy::CreateWindow(sptr<IWindow>& window, sptr<WindowPrope
         return WMError::WM_ERROR_IPC_FAILED;
     }
 
-    if (!data.WriteParcelable(surfaceNode.get())) {
+    if (!data.WriteUint64(surfaceNode->GetId()) || !data.WriteString(surfaceNode->GetName())) {
         WLOGFE("Write windowProperty failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
