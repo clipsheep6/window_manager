@@ -160,19 +160,27 @@ void WindowLayoutPolicyTile::RemoveWindowNode(const sptr<WindowNode>& node)
 void WindowLayoutPolicyTile::LayoutForegroundNodeQueue(DisplayId displayId)
 {
     for (auto& node : foregroundNodesMap_[displayId]) {
-        Rect lastRect = node->GetWindowRect();
+        // Rect lastRect = node->GetWindowRect();
         Rect winRect = node->GetRequestRect();
         node->SetWindowRect(winRect);
         CalcAndSetNodeHotZone(winRect, node);
-        if (!(lastRect == winRect)) {
+        // if (!(lastRect == winRect) || node->leashWinSurfaceNode_) {
             if (node->GetWindowToken()) {
                 node->GetWindowToken()->UpdateWindowRect(
                     winRect, node->GetDecoStatus(), node->GetWindowSizeChangeReason());
             }
-            if (node->surfaceNode_) {
+            if (node->leashWinSurfaceNode_ != nullptr) {
+                node->leashWinSurfaceNode_->SetBounds(winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
+                if (node->startingWinSurfaceNode_) {
+                    node->startingWinSurfaceNode_->SetBounds(0, 0, winRect.width_, winRect.height_);
+                }
+                if (node->surfaceNode_ != nullptr) {
+                    node->surfaceNode_->SetBounds(0, 0, winRect.width_, winRect.height_);
+                }
+            } else if (node->surfaceNode_ != nullptr) {
                 node->surfaceNode_->SetBounds(winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
             }
-        }
+        // }
         for (auto& childNode : node->children_) {
             LayoutWindowNode(childNode);
         }
@@ -198,8 +206,15 @@ void WindowLayoutPolicyTile::ForegroundNodeQueuePushBack(const sptr<WindowNode>&
     if (node == nullptr) {
         return;
     }
-    WLOGFI("add win in tile, displayId: %{public}" PRIu64", winId: %{public}d", displayId, node->GetWindowId());
     auto& foregroundNodes = foregroundNodesMap_[displayId];
+    auto iter = std::find_if(foregroundNodes.begin(), foregroundNodes.end(),
+                                [node](sptr<WindowNode> foregroundNode) {
+                                    return foregroundNode->GetWindowId() == node->GetWindowId();
+                                });
+    if (iter != foregroundNodes.end()) {
+        return;
+    }
+    WLOGFI("add win in tile, displayId: %{public}" PRIu64", winId: %{public}d", displayId, node->GetWindowId());
     while (foregroundNodes.size() >= maxTileWinNumMap_[displayId]) {
         auto removeNode = foregroundNodes.front();
         foregroundNodes.pop_front();
@@ -296,7 +311,15 @@ void WindowLayoutPolicyTile::UpdateLayoutRect(const sptr<WindowNode>& node)
     CalcAndSetNodeHotZone(winRect, node);
     UpdateClientRectAndResetReason(node, lastRect, winRect);
     // update node bounds
-    if (node->surfaceNode_ != nullptr) {
+    if (node->leashWinSurfaceNode_) {
+        node->leashWinSurfaceNode_->SetBounds(winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
+        if (node->startingWinSurfaceNode_) {
+            node->startingWinSurfaceNode_->SetBounds(0, 0, winRect.width_, winRect.height_);
+        }
+        if (node->surfaceNode_) {
+            node->surfaceNode_->SetBounds(0, 0, winRect.width_, winRect.height_);
+        }
+    } else if (node->surfaceNode_) {
         node->surfaceNode_->SetBounds(winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
     }
 }

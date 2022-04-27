@@ -218,30 +218,57 @@ WMError WindowNodeContainer::AddWindowNodeOnWindowTree(sptr<WindowNode>& node, s
 
 WMError WindowNodeContainer::ShowInTransition(sptr<WindowNode>& node)
 {
+    WM_SCOPED_TRACE_BEGIN("WindowNodeContainer::ShowInTransition");
+    sptr<WindowNode> parentNode = nullptr;
+    WMError res = AddWindowNodeOnWindowTree(node, parentNode);
+    if (res != WMError::WM_OK) {
+        return res;
+    }
+    windowPair_->UpdateIfSplitRelated(node);
+    UpdateWindowTree(node);
+    auto& dms = DisplayManagerServiceInner::GetInstance();
+    DisplayId displayId = node->GetDisplayId();
+    if (!node->surfaceNode_) {
+        if (!WindowHelper::IsMainWindow(node->GetWindowType())) {
+            WLOGFE("window id:%{public}d type: %{public}u is not Main Window!",
+                node->GetWindowId(), static_cast<uint32_t>(node->GetWindowType()));
+        }
+        dms.UpdateRSTree(displayId, node->leashWinSurfaceNode_, true);
+        node->leashWinSurfaceNode_->AddChild(node->startingWinSurfaceNode_, -1);
+    } else {
+        if (node->leashWinSurfaceNode_) { // to app
+            dms.UpdateRSTree(displayId, node->leashWinSurfaceNode_, true);
+        } else { // to launcher
+            dms.UpdateRSTree(displayId, node->surfaceNode_, true);
+        }
+
+    }
+    UpdateWindowNodeMaps();
+    AssignZOrder();
+    layoutPolicy_->AddWindowNode(node);
+    WM_SCOPED_TRACE_END();
+    WLOGFI("ShowInTransition windowId: %{public}d end", node->GetWindowId());
     return WMError::WM_OK;
 }
 
 WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode)
 {
-    if (!node->surfaceNode_) {
-        WLOGFE("surface node is nullptr!");
-        return WMError::WM_ERROR_NULLPTR;
+    WMError res = AddWindowNodeOnWindowTree(node, parentNode);
+    if (res != WMError::WM_OK) {
+        return res;
     }
-
-    WMError ret = AddWindowNodeOnWindowTree(node, parentNode);
-    if (ret != WMError::WM_OK) {
-        WLOGFE("Add window failed!");
-        return ret;
-    }
-
     windowPair_->UpdateIfSplitRelated(node);
-
-    UpdateWindowTree(node);
-    if (node->IsSplitMode() || node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
-        RaiseSplitRelatedWindowToTop(node);
+    if (!node->isPlayAnimationShow_) {
+        UpdateWindowTree(node);
+        if (node->IsSplitMode() || node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+            RaiseSplitRelatedWindowToTop(node);
+        }
+        UpdateRSTree(node, true, node->isPlayAnimationShow_);
+        AssignZOrder();
+    } else {
+        node->isPlayAnimationShow_ = false;
     }
-    UpdateRSTree(node, true, node->isPlayAnimationShow_);
-    AssignZOrder();
+
     layoutPolicy_->AddWindowNode(node);
     if (WindowHelper::IsAvoidAreaWindow(node->GetWindowType())) {
         avoidController_->AvoidControl(node, AvoidControlType::AVOID_NODE_ADD);
@@ -435,6 +462,7 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
     DumpScreenWindowTree();
     NotifyAccessibilityWindowInfo(node, WindowUpdateType::WINDOW_UPDATE_REMOVED);
     RcoveryScreenDefaultOrientationIfNeed(node->GetDisplayId());
+    node->isPlayAnimationHide_ = false;
     WLOGFI("RemoveWindowNode windowId: %{public}u end", node->GetWindowId());
     return WMError::WM_OK;
 }
@@ -567,11 +595,26 @@ void WindowNodeContainer::AssignZOrder()
 {
     zOrder_ = 0;
     WindowNodeOperationFunc func = [this](sptr<WindowNode> node) {
-        if (node->surfaceNode_ == nullptr) {
-            WLOGE("AssignZOrder: surfaceNode is nullptr, window Id:%{public}u", node->GetWindowId());
+        bool setOrder = false;
+        if (node->leashWinSurfaceNode_ != nullptr) {
+            node->leashWinSurfaceNode_->SetPositionZ(zOrder_);
+            setOrder = true;
+        }
+
+        if (node->surfaceNode_ != nullptr) {
+            node->surfaceNode_->SetPositionZ(zOrder_);
+            setOrder = true;
+        }
+
+        if (node->startingWinSurfaceNode_ != nullptr) {
+            node->startingWinSurfaceNode_->SetPositionZ(zOrder_);
+            setOrder = true;
+        }
+
+        if (!setOrder) {
+            WLOGFE("Assign Zorder failed because null surfaceNode");
             return false;
         }
-        node->surfaceNode_->SetPositionZ(zOrder_);
         ++zOrder_;
         return false;
     };
