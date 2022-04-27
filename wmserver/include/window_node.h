@@ -60,6 +60,7 @@ public:
     DisplayId GetDisplayId() const;
     const Rect& GetLayoutRect() const;
     Rect GetHotZoneRect() const;
+    Rect GetWindowRect() const;
     WindowType GetWindowType() const;
     WindowMode GetWindowMode() const;
     WindowBlurLevel GetWindowBackgroundBlur() const;
