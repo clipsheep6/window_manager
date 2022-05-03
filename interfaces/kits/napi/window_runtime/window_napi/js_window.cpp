@@ -29,6 +29,41 @@ namespace {
 
 static thread_local std::map<std::string, std::shared_ptr<NativeReference>> g_jsWindowMap;
 std::recursive_mutex g_mutex;
+const std::vector<std::pair<const char*, NativeCallback>> g_jsFunctionMap = {
+    {"show", JsWindow::Show},
+    {"destroy", JsWindow::Destroy},
+    {"hide", JsWindow::Hide},
+    {"moveTo", JsWindow::MoveTo},
+    {"resetSize", JsWindow::Resize},
+    {"setWindowType", JsWindow::SetWindowType},
+    {"setWindowMode", JsWindow::SetWindowMode},
+    {"getProperties", JsWindow::GetProperties},
+    {"on", JsWindow::RegisterWindowCallback},
+    {"off", JsWindow::UnregisterWindowCallback},
+    {"loadContent", JsWindow::LoadContent},
+    {"setFullScreen", JsWindow::SetFullScreen},
+    {"setLayoutFullScreen", JsWindow::SetLayoutFullScreen},
+    {"setSystemBarEnable", JsWindow::SetSystemBarEnable},
+    {"setSystemBarProperties", JsWindow::SetSystemBarProperties},
+    {"getAvoidArea", JsWindow::GetAvoidArea},
+    {"isShowing", JsWindow::IsShowing},
+    {"isSupportWideGamut", JsWindow::IsSupportWideGamut},
+    {"setColorSpace", JsWindow::SetColorSpace},
+    {"getColorSpace", JsWindow::GetColorSpace},
+    {"setBackgroundColor", JsWindow::SetBackgroundColor},
+    {"setBrightness", JsWindow::SetBrightness},
+    {"setDimBehind", JsWindow::SetDimBehind},
+    {"setFocusable", JsWindow::SetFocusable},
+    {"setKeepScreenOn", JsWindow::SetKeepScreenOn},
+    {"setOutsideTouchable", JsWindow::SetOutsideTouchable},
+    {"setPrivacyMode", JsWindow::SetPrivacyMode},
+    {"setTouchable", JsWindow::SetTouchable},
+    {"setTransparent", JsWindow::SetTransparent},
+    {"setCallingWindow", JsWindow::SetCallingWindow},
+    {"disableWindowDecor", JsWindow::DisableWindowDecor},
+    {"dump", JsWindow::Dump},
+    {"setStretchable", JsWindow::SetStretchable}
+};
 JsWindow::JsWindow(const sptr<Window>& window)
     : windowToken_(window), registerManager_(std::make_unique<JsWindowRegisterManager>())
 {
@@ -269,6 +304,13 @@ NativeValue* JsWindow::SetCallingWindow(NativeEngine* engine, NativeCallbackInfo
     WLOGFI("[NAPI]SetCallingWindow");
     JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
     return (me != nullptr) ? me->OnSetCallingWindow(*engine, *info) : nullptr;
+}
+
+NativeValue* JsWindow::SetStretchable(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGFI("[NAPI]SetStretchable");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
+    return (me != nullptr) ? me->OnSetStretchable(*engine, *info) : nullptr;
 }
 
 NativeValue* JsWindow::DisableWindowDecor(NativeEngine* engine, NativeCallbackInfo* info)
@@ -977,6 +1019,44 @@ NativeValue* JsWindow::OnIsShowing(NativeEngine& engine, NativeCallbackInfo& inf
     return result;
 }
 
+NativeValue* JsWindow::OnSetStretchable(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    WMError errCode = WMError::WM_OK;
+    if (info.argc < 1 || info.argc > 2) { // 2: maximum params num
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+    }
+    bool stretchable = true;
+    if (errCode == WMError::WM_OK) {
+        NativeBoolean* nativeVal = ConvertNativeValueTo<NativeBoolean>(info.argv[0]);
+        if (nativeVal == nullptr) {
+            WLOGFE("[NAPI]Failed to convert parameter to stretchable");
+            errCode = WMError::WM_ERROR_INVALID_PARAM;
+        } else {
+            stretchable = static_cast<bool>(*nativeVal);
+        }
+    }
+
+    AsyncTask::CompleteCallback complete =
+        [=](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            if (windowToken_ == nullptr || errCode != WMError::WM_OK) {
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode), "Invalidate params."));
+                return;
+            }
+            windowToken_->SetStretchable(stretchable);
+            task.Resolve(engine, engine.CreateUndefined());
+            WLOGFI("[NAPI]Window [%{public}u, %{public}s] set stretchable state end",
+                windowToken_->GetWindowId(), windowToken_->GetWindowName().c_str());
+        };
+
+    NativeValue* lastParam = (info.argc <= 1) ? nullptr :
+        (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule(
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
 NativeValue* JsWindow::OnIsSupportWideGamut(NativeEngine& engine, NativeCallbackInfo& info)
 {
     WMError errCode = WMError::WM_OK;
@@ -1498,38 +1578,9 @@ NativeValue* CreateJsWindowObject(NativeEngine& engine, sptr<Window>& window)
     std::unique_ptr<JsWindow> jsWindow = std::make_unique<JsWindow>(window);
     object->SetNativePointer(jsWindow.release(), JsWindow::Finalizer, nullptr);
 
-    BindNativeFunction(engine, *object, "show", JsWindow::Show);
-    BindNativeFunction(engine, *object, "destroy", JsWindow::Destroy);
-    BindNativeFunction(engine, *object, "hide", JsWindow::Hide);
-    BindNativeFunction(engine, *object, "moveTo", JsWindow::MoveTo);
-    BindNativeFunction(engine, *object, "resetSize", JsWindow::Resize);
-    BindNativeFunction(engine, *object, "setWindowType", JsWindow::SetWindowType);
-    BindNativeFunction(engine, *object, "setWindowMode", JsWindow::SetWindowMode);
-    BindNativeFunction(engine, *object, "getProperties", JsWindow::GetProperties);
-    BindNativeFunction(engine, *object, "on", JsWindow::RegisterWindowCallback);
-    BindNativeFunction(engine, *object, "off", JsWindow::UnregisterWindowCallback);
-    BindNativeFunction(engine, *object, "loadContent", JsWindow::LoadContent);
-    BindNativeFunction(engine, *object, "setFullScreen", JsWindow::SetFullScreen);
-    BindNativeFunction(engine, *object, "setLayoutFullScreen", JsWindow::SetLayoutFullScreen);
-    BindNativeFunction(engine, *object, "setSystemBarEnable", JsWindow::SetSystemBarEnable);
-    BindNativeFunction(engine, *object, "setSystemBarProperties", JsWindow::SetSystemBarProperties);
-    BindNativeFunction(engine, *object, "getAvoidArea", JsWindow::GetAvoidArea);
-    BindNativeFunction(engine, *object, "isShowing", JsWindow::IsShowing);
-    BindNativeFunction(engine, *object, "isSupportWideGamut", JsWindow::IsSupportWideGamut);
-    BindNativeFunction(engine, *object, "setColorSpace", JsWindow::SetColorSpace);
-    BindNativeFunction(engine, *object, "getColorSpace", JsWindow::GetColorSpace);
-    BindNativeFunction(engine, *object, "setBackgroundColor", JsWindow::SetBackgroundColor);
-    BindNativeFunction(engine, *object, "setBrightness", JsWindow::SetBrightness);
-    BindNativeFunction(engine, *object, "setDimBehind", JsWindow::SetDimBehind);
-    BindNativeFunction(engine, *object, "setFocusable", JsWindow::SetFocusable);
-    BindNativeFunction(engine, *object, "setKeepScreenOn", JsWindow::SetKeepScreenOn);
-    BindNativeFunction(engine, *object, "setOutsideTouchable", JsWindow::SetOutsideTouchable);
-    BindNativeFunction(engine, *object, "setPrivacyMode", JsWindow::SetPrivacyMode);
-    BindNativeFunction(engine, *object, "setTouchable", JsWindow::SetTouchable);
-    BindNativeFunction(engine, *object, "setTransparent", JsWindow::SetTransparent);
-    BindNativeFunction(engine, *object, "setCallingWindow", JsWindow::SetCallingWindow);
-    BindNativeFunction(engine, *object, "disableWindowDecor", JsWindow::DisableWindowDecor);
-    BindNativeFunction(engine, *object, "dump", JsWindow::Dump);
+    for (const auto& f : g_jsFunctionMap) {
+        BindNativeFunction(engine, *object, f.first, f.second);
+    }
 
     std::shared_ptr<NativeReference> jsWindowRef;
     jsWindowRef.reset(engine.CreateReference(objValue, 1));
