@@ -233,6 +233,23 @@ void WindowRoot::MinimizeAllAppWindows(DisplayId displayId)
     return container->MinimizeAllAppWindows(displayId);
 }
 
+void WindowRoot::ToggleShownStateForAllAppWindow(DisplayId displayId)
+{
+    auto container = GetOrCreateWindowNodeContainer(displayId);
+    if (container == nullptr) {
+        WLOGFE("can't find window node container, failed!");
+        return;
+    }
+    return container->ToggleShownStateForAllAppWindow([this](uint32_t windowId) {
+        auto windowNode = GetWindowNode(windowId);
+        if (windowNode == nullptr) {
+            return false;
+        }
+        windowNode->GetWindowToken()->UpdateWindowState(WindowState::STATE_SHOWN);
+        return true;
+    });
+}
+
 WMError WindowRoot::MaxmizeWindow(uint32_t windowId)
 {
     auto node = GetWindowNode(windowId);

@@ -142,6 +142,13 @@ void WindowAdapter::MinimizeAllAppWindows(DisplayId displayId)
     windowManagerServiceProxy_->MinimizeAllAppWindows(displayId);
 }
 
+void WindowAdapter::ToggleShownStateForAllAppWindow(DisplayId displayId)
+{
+    INIT_PROXY_CHECK_RETURN();
+
+    windowManagerServiceProxy_->ToggleShownStateForAllAppWindow(displayId);
+}
+
 WMError WindowAdapter::MaxmizeWindow(uint32_t windowId)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);

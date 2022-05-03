@@ -318,6 +318,13 @@ void WindowManagerService::MinimizeAllAppWindows(DisplayId displayId)
     windowController_->MinimizeAllAppWindows(displayId);
 }
 
+void WindowManagerService::ToggleShownStateForAllAppWindow(DisplayId displayId)
+{
+    WLOGFI("displayId %{public}" PRIu64"", displayId);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    windowController_->ToggleShownStateForAllAppWindow(displayId);
+}
+
 WMError WindowManagerService::MaxmizeWindow(uint32_t windowId)
 {
     WM_SCOPED_TRACE("wms:MaxmizeWindow");
