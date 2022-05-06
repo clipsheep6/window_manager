@@ -59,6 +59,7 @@ public:
     static NativeValue* SetTouchable(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetTransparent(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetCallingWindow(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* SetStretchable(NativeEngine* engine, NativeCallbackInfo* info);
 
     static NativeValue* DisableWindowDecor(NativeEngine* engine, NativeCallbackInfo* info);
     // colorspace, gamut
@@ -86,6 +87,7 @@ private:
     NativeValue* OnLoadContent(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnGetAvoidArea(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnIsShowing(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnSetStretchable(NativeEngine& engine, NativeCallbackInfo& info);
 
     // colorspace, gamut
     NativeValue* OnIsSupportWideGamut(NativeEngine& engine, NativeCallbackInfo& info);
