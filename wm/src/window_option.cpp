@@ -182,6 +182,36 @@ const std::unordered_map<WindowType, SystemBarProperty>& WindowOption::GetSystem
 {
     return sysBarPropMap_;
 }
+
+void WindowOption::SetKeepScreenOn(bool keepScreenOn)
+{
+    keepScreenOn_ = keepScreenOn;
+}
+
+bool WindowOption::IsKeepScreenOn() const
+{
+    return keepScreenOn_;
+}
+
+void WindowOption::SetTurnScreenOn(bool turnScreenOn)
+{
+    turnScreenOn_ = turnScreenOn;
+}
+
+bool WindowOption::IsTurnScreenOn() const
+{
+    return turnScreenOn_;
+}
+
+Orientation WindowOption::GetRequestedOrientation() const
+{
+    return requestedOrientation_;
+}
+
+void WindowOption::SetRequestedOrientation(Orientation orientation)
+{
+    requestedOrientation_ = orientation;
+}
 } // namespace Rosen
 } // namespace OHOS
 

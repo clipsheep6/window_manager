@@ -40,6 +40,8 @@ public:
     void AssignZOrder();
     WMError SetFocusWindow(uint32_t windowId);
     uint32_t GetFocusWindow() const;
+    WMError SetActiveWindow(uint32_t windowId);
+    uint32_t GetActiveWindow() const;
     std::vector<Rect> GetAvoidAreaByType(AvoidAreaType avoidAreaType);
     WMError MinimizeStructuredAppWindowsExceptSelf(const sptr<WindowNode>& node);
     void TraverseContainer(std::vector<sptr<WindowNode>>& windowNodes) const;
@@ -55,6 +57,7 @@ public:
     bool isVerticalDisplay() const;
     WMError RaiseZOrderForAppWindow(sptr<WindowNode>& node, sptr<WindowNode>& parentNode);
     sptr<WindowNode> GetNextFocusableWindow(uint32_t windowId) const;
+    sptr<WindowNode> GetNextActiveWindow(uint32_t windowId) const;
     void MinimizeAllAppWindows();
     void NotifyWindowStateChange(WindowState state, WindowStateChangeReason reason);
     void NotifySystemBarTints();
@@ -75,6 +78,7 @@ private:
     sptr<WindowNode> FindRoot(WindowType type) const;
     sptr<WindowNode> FindWindowNodeById(uint32_t id) const;
     void UpdateFocusStatus(uint32_t id, bool focused) const;
+    void UpdateActiveStatus(uint32_t id, bool isActive) const;
     void UpdateWindowTree(sptr<WindowNode>& node);
     bool UpdateRSTree(sptr<WindowNode>& node, bool isAdd);
 
@@ -95,7 +99,7 @@ private:
     bool IsSplitImmersiveNode(sptr<WindowNode> node) const;
     bool TraverseFromTopToBottom(sptr<WindowNode> node, const WindowNodeOperationFunc& func) const;
     bool TraverseFromBottomToTop(sptr<WindowNode> node, const WindowNodeOperationFunc& func) const;
-
+    void RcoveryScreenDefaultOrientationIfNeed();
     // cannot determine in case of a window covered by union of several windows or with transparent value
     void UpdateWindowVisibilityInfos(std::vector<sptr<WindowVisibilityInfo>>& infos);
     void RaiseOrderedWindowToTop(std::vector<uint32_t> orderedIds, std::vector<sptr<WindowNode>>& windowNodes);
@@ -124,6 +128,7 @@ private:
     sptr<WindowLayoutPolicy> layoutPolicy_;
     uint32_t zOrder_ { 0 };
     uint32_t focusedWindow_ { INVALID_WINDOW_ID };
+    uint32_t activeWindow_ = INVALID_WINDOW_ID;
     void DumpScreenWindowTree();
 
     struct WindowPairInfo {

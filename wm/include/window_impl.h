@@ -22,6 +22,7 @@
 #include <i_input_event_consumer.h>
 #include <key_event.h>
 #include <refbase.h>
+#include <running_lock.h>
 #include <ui_content.h>
 #include <ui/rs_surface_node.h>
 
@@ -35,13 +36,17 @@
 namespace OHOS {
 namespace Rosen {
 class WindowImpl : public Window {
-#define CALL_LIFECYCLE_LISTENER(windowLifecycleCb, uiContentCb) \
+#define CALL_LIFECYCLE_LISTENER(windowLifecycleCb)              \
     do {                                                        \
         for (auto& listener : lifecycleListeners_) {            \
             if (listener != nullptr) {                          \
                 listener->windowLifecycleCb();                  \
             }                                                   \
         }                                                       \
+    } while (0)
+
+#define CALL_UI_CONTENT(uiContentCb)                            \
+    do {                                                        \
         if (uiContent_ != nullptr) {                            \
             uiContent_->uiContentCb();                          \
         }                                                       \
@@ -62,7 +67,9 @@ public:
     virtual WindowBlurLevel GetWindowBackgroundBlur() const override;
     virtual float GetAlpha() const override;
     virtual bool GetShowState() const override;
+    virtual void SetFocusable(bool isFocusable) override;
     virtual bool GetFocusable() const override;
+    virtual void SetTouchable(bool isTouchable) override;
     virtual bool GetTouchable() const override;
     virtual const std::string& GetWindowName() const override;
     virtual uint32_t GetWindowId() const override;
@@ -97,6 +104,10 @@ public:
     virtual WMError Hide(uint32_t reason = 0) override;
     virtual WMError MoveTo(int32_t x, int32_t y) override;
     virtual WMError Resize(uint32_t width, uint32_t height) override;
+    virtual void SetKeepScreenOn(bool keepScreenOn) override;
+    virtual bool IsKeepScreenOn() const override;
+    virtual void SetTurnScreenOn(bool turnScreenOn) override;
+    virtual bool IsTurnScreenOn() const override;
 
     virtual bool IsDecorEnable() const override;
     virtual WMError Maximize() override;
@@ -133,12 +144,15 @@ public:
     void UpdateDragEvent(const PointInfo& point, DragEvent event);
     void UpdateDisplayId(DisplayId from, DisplayId to);
     void UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info);
+    void UpdateActiveStatus(bool isActive);
 
     virtual WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
         NativeValue* storage, bool isdistributed) override;
     virtual std::string GetContentInfo() override;
     virtual const std::shared_ptr<AbilityRuntime::Context> GetContext() const override;
     virtual Ace::UIContent* GetUIContent() const override;
+    virtual void SetRequestedOrientation(Orientation) override;
+    virtual Orientation GetRequestedOrientation() override;
 
     // colorspace, gamut
     virtual bool IsSupportWideGamut() override;
@@ -149,33 +163,31 @@ public:
 private:
     inline void NotifyAfterForeground() const
     {
-        CALL_LIFECYCLE_LISTENER(AfterForeground, Foreground);
+        CALL_LIFECYCLE_LISTENER(AfterForeground);
+        CALL_UI_CONTENT(Foreground);
     }
     inline void NotifyAfterBackground() const
     {
-        CALL_LIFECYCLE_LISTENER(AfterBackground, Background);
+        CALL_LIFECYCLE_LISTENER(AfterBackground);
+        CALL_UI_CONTENT(Background);
     }
     inline void NotifyAfterFocused() const
     {
-        CALL_LIFECYCLE_LISTENER(AfterFocused, Focus);
+        CALL_LIFECYCLE_LISTENER(AfterFocused);
+        CALL_UI_CONTENT(Focus);
     }
     inline void NotifyAfterUnfocused() const
     {
-        CALL_LIFECYCLE_LISTENER(AfterUnfocused, UnFocus);
+        CALL_LIFECYCLE_LISTENER(AfterUnfocused);
+        CALL_UI_CONTENT(UnFocus);
     }
     inline void NotifyListenerAfterUnfocused() const
     {
-        for (auto& listener : lifecycleListeners_) {
-            if (listener != nullptr) {
-                listener->AfterUnfocused();
-            }
-        }
+        CALL_LIFECYCLE_LISTENER(AfterUnfocused);
     }
     inline void NotifyBeforeDestroy(std::string windowName) const
     {
-        if (uiContent_ != nullptr) {
-            uiContent_->Destroy();
-        }
+        CALL_UI_CONTENT(Destroy);
         if (notifyNativefunc_) {
             notifyNativefunc_(windowName);
         }
@@ -189,6 +201,14 @@ private:
         if (window->GetNativeDestroyCallback()) {
             window->GetNativeDestroyCallback()(window->GetWindowName());
         }
+    }
+    inline void NotifyAfterActive() const
+    {
+        CALL_LIFECYCLE_LISTENER(AfterActive);
+    }
+    inline void NotifyAfterInactive() const
+    {
+        CALL_LIFECYCLE_LISTENER(AfterInactive);
     }
     void DestroyFloatingWindow();
     void DestroySubWindow();
@@ -206,6 +226,10 @@ private:
     void AdjustWindowAnimationFlag();
     void MapFloatingWindowToAppIfNeeded();
     WMError Destroy(bool needNotifyServer);
+    WMError UpdateProperty(PropertyChangeAction action);
+    void HandleKeepScreenOn(bool keepScreenOn);
+    void HandleTurnScreenOn();
+
     // colorspace, gamut
     using ColorSpaceConvertMap = struct {
         ColorSpace colorSpace;
@@ -248,6 +272,9 @@ private:
     Rect startPointRect_ = { 0, 0, 0, 0 };
     Rect startRectExceptFrame_ = { 0, 0, 0, 0 };
     Rect startRectExceptCorner_ = { 0, 0, 0, 0 };
+    bool keepScreenOn_ = false;
+    bool turnScreenOn_ = false;
+    std::shared_ptr<PowerMgr::RunningLock> keepScreenLock_;
 };
 }
 }

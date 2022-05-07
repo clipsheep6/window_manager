@@ -217,7 +217,18 @@ WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node)
         container->SetFocusWindow(node->GetWindowId());
         needCheckFocusWindow = true;
     }
-    NotifyKeyboardSizeChangeInfo(node, container, node->GetLayoutRect());
+    if (res == WMError::WM_OK) {
+        container->SetActiveWindow(node->GetWindowId());
+        NotifyKeyboardSizeChangeInfo(node, container, node->GetLayoutRect());
+    }
+    WLOGFI("windowId:%{public}u, name:%{public}s, orientation:%{public}u, type:%{public}u, isMainWindow:%{public}d",
+        node->GetWindowId(), node->GetWindowName().c_str(), static_cast<uint32_t>(node->GetRequestedOrientation()),
+        node->GetWindowType(), WindowHelper::IsMainWindow(node->GetWindowType()));
+    if (res == WMError::WM_OK && WindowHelper::IsMainWindow(node->GetWindowType()) &&
+        node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN) {
+        DisplayManagerServiceInner::GetInstance().
+            SetOrientationFromWindow(node->GetDisplayId(), node->GetRequestedOrientation());
+    }
     return res;
 }
 
@@ -234,7 +245,7 @@ WMError WindowRoot::RemoveWindowNode(uint32_t windowId)
         return WMError::WM_ERROR_NULLPTR;
     }
     UpdateFocusWindowWithWindowRemoved(node, container);
-
+    UpdateActiveWindowWithWindowRemoved(node, container);
     WMError res = container->RemoveWindowNode(node);
     if (res == WMError::WM_OK) {
         Rect rect = { 0, 0, 0, 0 };
@@ -304,6 +315,7 @@ WMError WindowRoot::DestroyWindow(uint32_t windowId, bool onlySelf)
     auto container = GetOrCreateWindowNodeContainer(node->GetDisplayId());
     if (container != nullptr) {
         UpdateFocusWindowWithWindowRemoved(node, container);
+        UpdateActiveWindowWithWindowRemoved(node, container);
         if (onlySelf) {
             for (auto& child : node->children_) {
                 child->parent_ = nullptr;
@@ -371,6 +383,7 @@ void WindowRoot::UpdateFocusWindowWithWindowRemoved(const sptr<WindowNode>& node
     }
     uint32_t windowId = node->GetWindowId();
     uint32_t focusedWindowId = container->GetFocusWindow();
+    WLOGFI("current window: %{public}u, focus window: %{public}u", windowId, focusedWindowId);
     if (WindowHelper::IsMainWindow(node->GetWindowType())) {
         if (windowId != focusedWindowId) {
             auto iter = std::find_if(node->children_.begin(), node->children_.end(),
@@ -387,7 +400,7 @@ void WindowRoot::UpdateFocusWindowWithWindowRemoved(const sptr<WindowNode>& node
                 windowId = firstChild->GetWindowId();
             }
         }
-    } else if (WindowHelper::IsSubWindow(node->GetWindowType())) {
+    } else {
         if (windowId != focusedWindowId) {
             return;
         }
@@ -396,6 +409,44 @@ void WindowRoot::UpdateFocusWindowWithWindowRemoved(const sptr<WindowNode>& node
     if (nextFocusableWindow != nullptr) {
         WLOGFI("adjust focus window, next focus window id: %{public}u", nextFocusableWindow->GetWindowId());
         container->SetFocusWindow(nextFocusableWindow->GetWindowId());
+    }
+}
+
+void WindowRoot::UpdateActiveWindowWithWindowRemoved(const sptr<WindowNode>& node,
+    const sptr<WindowNodeContainer>& container) const
+{
+    if (node == nullptr || container == nullptr) {
+        WLOGFE("window is invalid");
+        return;
+    }
+    uint32_t windowId = node->GetWindowId();
+    uint32_t activeWindowId = container->GetActiveWindow();
+    WLOGFI("current window: %{public}u, active window: %{public}u", windowId, activeWindowId);
+    if (WindowHelper::IsMainWindow(node->GetWindowType())) {
+        if (windowId != activeWindowId) {
+            auto iter = std::find_if(node->children_.begin(), node->children_.end(),
+                                     [activeWindowId](sptr<WindowNode> node) {
+                                         return node->GetWindowId() == activeWindowId;
+                                     });
+            if (iter == node->children_.end()) {
+                return;
+            }
+        }
+        if (!node->children_.empty()) {
+            auto firstChild = node->children_.front();
+            if (firstChild->priority_ < 0) {
+                windowId = firstChild->GetWindowId();
+            }
+        }
+    } else {
+        if (windowId != activeWindowId) {
+            return;
+        }
+    }
+    auto nextActiveWindow = container->GetNextActiveWindow(windowId);
+    if (nextActiveWindow != nullptr) {
+        WLOGFI("adjust active window, next active window id: %{public}u", nextActiveWindow->GetWindowId());
+        container->SetActiveWindow(nextActiveWindow->GetWindowId());
     }
 }
 
@@ -429,6 +480,30 @@ WMError WindowRoot::RequestFocus(uint32_t windowId)
         return container->SetFocusWindow(windowId);
     }
     return WMError::WM_ERROR_INVALID_OPERATION;
+}
+
+WMError WindowRoot::RequestActiveWindow(uint32_t windowId)
+{
+    auto node = GetWindowNode(windowId);
+    if (node == nullptr) {
+        WLOGFE("could not find window");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    auto container = GetOrCreateWindowNodeContainer(node->GetDisplayId());
+    if (container == nullptr) {
+        WLOGFE("window container could not be found");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    auto res =  container->SetActiveWindow(windowId);
+    WLOGFI("windowId:%{public}u, name:%{public}s, orientation:%{public}u, type:%{public}u, isMainWindow:%{public}d",
+        windowId, node->GetWindowName().c_str(), static_cast<uint32_t>(node->GetRequestedOrientation()),
+        node->GetWindowType(), WindowHelper::IsMainWindow(node->GetWindowType()));
+    if (res == WMError::WM_OK && WindowHelper::IsMainWindow(node->GetWindowType()) &&
+        node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN) {
+        DisplayManagerServiceInner::GetInstance().
+            SetOrientationFromWindow(node->GetDisplayId(), node->GetRequestedOrientation());
+    }
+    return res;
 }
 
 std::shared_ptr<RSSurfaceNode> WindowRoot::GetSurfaceNodeByAbilityToken(const sptr<IRemoteObject> &abilityToken) const

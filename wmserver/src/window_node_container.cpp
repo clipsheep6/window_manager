@@ -312,8 +312,18 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
     UpdateWindowVisibilityInfos(infos);
     DumpScreenWindowTree();
     NotifyAccessibilityWindowInfo(node, WindowUpdateType::WINDOW_UPDATE_REMOVED);
-    WLOGFI("RemoveWindowNode windowId: %{public}d end", node->GetWindowId());
+    RcoveryScreenDefaultOrientationIfNeed();
+    WLOGFI("RemoveWindowNode windowId: %{public}u end", node->GetWindowId());
     return WMError::WM_OK;
+}
+
+void WindowNodeContainer::RcoveryScreenDefaultOrientationIfNeed()
+{
+    if (appWindowNode_->children_.empty()) {
+        WLOGFI("appWindowNode_ child is empty in display  %{public}" PRIu64"", displayId_);
+        DisplayManagerServiceInner::GetInstance().
+            SetOrientationFromWindow(displayId_, Orientation::UNSPECIFIED);
+    }
 }
 
 const std::vector<uint32_t>& WindowNodeContainer::Destroy()
@@ -373,13 +383,21 @@ void WindowNodeContainer::UpdateFocusStatus(uint32_t id, bool focused) const
         if (node->abilityToken_ == nullptr) {
             WLOGFI("abilityToken is null, window : %{public}d", id);
         }
-        WindowManagerAgentController::GetInstance().UpdateFocusStatus(
-            node->GetWindowId(), node->abilityToken_, node->GetWindowType(), node->GetDisplayId(), focused);
         sptr<FocusChangeInfo> focusChangeInfo = new FocusChangeInfo(node->GetWindowId(), node->GetDisplayId(),
             node->GetCallingPid(), node->GetCallingUid(), node->GetWindowType(), node->abilityToken_);
         WindowManagerAgentController::GetInstance().UpdateFocusChangeInfo(
             focusChangeInfo, focused);
     }
+}
+
+void WindowNodeContainer::UpdateActiveStatus(uint32_t id, bool isActive) const
+{
+    auto node = FindWindowNodeById(id);
+    if (node == nullptr) {
+        WLOGFE("cannot find active window id: %{public}d", id);
+        return;
+    }
+    node->GetWindowToken()->UpdateActiveStatus(isActive);
 }
 
 void WindowNodeContainer::AssignZOrder()
@@ -400,7 +418,7 @@ void WindowNodeContainer::AssignZOrder()
 WMError WindowNodeContainer::SetFocusWindow(uint32_t windowId)
 {
     if (focusedWindow_ == windowId) {
-        WLOGFI("focused window do not change");
+        WLOGFI("focused window do not change, id: %{public}u", windowId);
         return WMError::WM_DO_NOTHING;
     }
     UpdateFocusStatus(focusedWindow_, false);
@@ -414,6 +432,23 @@ WMError WindowNodeContainer::SetFocusWindow(uint32_t windowId)
 uint32_t WindowNodeContainer::GetFocusWindow() const
 {
     return focusedWindow_;
+}
+
+WMError WindowNodeContainer::SetActiveWindow(uint32_t windowId)
+{
+    if (activeWindow_ == windowId) {
+        WLOGFI("active window do not change, id: %{public}u", windowId);
+        return WMError::WM_DO_NOTHING;
+    }
+    UpdateActiveStatus(activeWindow_, false);
+    activeWindow_ = windowId;
+    UpdateActiveStatus(activeWindow_, true);
+    return WMError::WM_OK;
+}
+
+uint32_t WindowNodeContainer::GetActiveWindow() const
+{
+    return activeWindow_;
 }
 
 bool WindowNodeContainer::IsAboveSystemBarNode(sptr<WindowNode> node) const
@@ -719,16 +754,17 @@ void WindowNodeContainer::OnAvoidAreaChange(const std::vector<Rect>& avoidArea)
 void WindowNodeContainer::DumpScreenWindowTree()
 {
     WLOGFI("-------- display %{public}" PRIu64" dump window info begin---------", displayId_);
-    WLOGFI("WindowName WinId Type Mode Flag ZOrd [   x    y    w    h]");
+    WLOGFI("WindowName WinId Type Mode Flag ZOrd Orientation [   x    y    w    h]");
     uint32_t zOrder = zOrder_;
     WindowNodeOperationFunc func = [&zOrder](sptr<WindowNode> node) {
         Rect rect = node->GetLayoutRect();
         const std::string& windowName = node->GetWindowName().size() < WINDOW_NAME_MAX_LENGTH ?
             node->GetWindowName() : node->GetWindowName().substr(0, WINDOW_NAME_MAX_LENGTH);
         WLOGI("DumpScreenWindowTree: %{public}10s %{public}5u %{public}4u %{public}4u %{public}4u %{public}4u " \
-            "[%{public}4d %{public}4d %{public}4u %{public}4u]",
+            "%{public}11u [%{public}4d %{public}4d %{public}4u %{public}4u]",
             windowName.c_str(), node->GetWindowId(), node->GetWindowType(), node->GetWindowMode(),
-            node->GetWindowFlags(), --zOrder, rect.posX_, rect.posY_, rect.width_, rect.height_);
+            node->GetWindowFlags(), --zOrder, static_cast<uint32_t>(node->GetRequestedOrientation()),
+            rect.posX_, rect.posY_, rect.width_, rect.height_);
         return false;
     };
     TraverseWindowTree(func, true);
@@ -890,6 +926,50 @@ sptr<WindowNode> WindowNodeContainer::GetNextFocusableWindow(uint32_t windowId) 
     };
     TraverseWindowTree(func, true);
     return nextFocusableWindow;
+}
+
+sptr<WindowNode> WindowNodeContainer::GetNextActiveWindow(uint32_t windowId) const
+{
+    auto currentNode = FindWindowNodeById(windowId);
+    if (currentNode == nullptr) {
+        WLOGFE("cannot find window id: %{public}u by tree", windowId);
+        return nullptr;
+    }
+    WLOGFI("current window: [%{public}u, %{public}u]", windowId, static_cast<uint32_t>(currentNode->GetWindowType()));
+    if (WindowHelper::IsSystemWindow(currentNode->GetWindowType())) {
+        for (auto& node : appWindowNode_->children_) {
+            if (node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+                continue;
+            }
+            return node;
+        }
+        for (auto& node : belowAppWindowNode_->children_) {
+            if (node->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
+                return node;
+            }
+        }
+    } else if (WindowHelper::IsAppWindow(currentNode->GetWindowType())) {
+        std::vector<sptr<WindowNode>> windowNodes;
+        TraverseContainer(windowNodes);
+        auto iter = std::find_if(windowNodes.begin(), windowNodes.end(), [windowId](sptr<WindowNode>& node) {
+            return node->GetWindowId() == windowId;
+            });
+        if (iter == windowNodes.end()) {
+            WLOGFE("could not find this window");
+            return nullptr;
+        }
+        int index = std::distance(windowNodes.begin(), iter);
+        for (size_t i = index + 1; i < windowNodes.size(); i++) {
+            if (windowNodes[i]->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+                continue;
+            }
+            return windowNodes[i];
+        }
+    } else {
+        // do nothing
+    }
+    WLOGFE("could not get next active window");
+    return nullptr;
 }
 
 void WindowNodeContainer::MinimizeAllAppWindows()

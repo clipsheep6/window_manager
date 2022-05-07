@@ -21,7 +21,6 @@
 
 #include "wm_common.h"
 #include "window_option.h"
-#include "window_life_cycle_interface.h"
 
 class NativeValue;
 class NativeEngine;
@@ -47,6 +46,17 @@ namespace OHOS {
 namespace Rosen {
 using NotifyNativeWinDestroyFunc = std::function<void(std::string windowName)>;
 class RSSurfaceNode;
+
+class IWindowLifeCycle : virtual public RefBase {
+public:
+    virtual void AfterForeground() = 0;
+    virtual void AfterBackground() = 0;
+    virtual void AfterFocused() = 0;
+    virtual void AfterUnfocused() = 0;
+    virtual void AfterActive() {}
+    virtual void AfterInactive() {}
+};
+
 class IWindowChangeListener : virtual public RefBase {
 public:
     virtual void OnSizeChange(Rect rect, WindowSizeChangeReason reason) = 0;
@@ -106,7 +116,9 @@ public:
     virtual uint32_t GetWindowId() const = 0;
     virtual uint32_t GetWindowFlags() const = 0;
     virtual bool GetShowState() const = 0;
+    virtual void SetFocusable(bool isFocusable) = 0;
     virtual bool GetFocusable() const = 0;
+    virtual void SetTouchable(bool isTouchable) = 0;
     virtual bool GetTouchable() const = 0;
     virtual SystemBarProperty GetSystemBarPropertyByType(WindowType type) const = 0;
     virtual bool IsFullScreen() const = 0;
@@ -128,6 +140,10 @@ public:
 
     virtual WMError MoveTo(int32_t x, int32_t y) = 0;
     virtual WMError Resize(uint32_t width, uint32_t height) = 0;
+    virtual void SetKeepScreenOn(bool keepScreenOn) = 0;
+    virtual bool IsKeepScreenOn() const = 0;
+    virtual void SetTurnScreenOn(bool turnScreenOn) = 0;
+    virtual bool IsTurnScreenOn() const = 0;
 
     virtual WMError RequestFocus() const = 0;
     // AddInputEventListener is for api 7
@@ -154,6 +170,8 @@ public:
         NativeValue* storage, bool isdistributed = false) = 0;
     virtual std::string GetContentInfo() = 0;
     virtual Ace::UIContent* GetUIContent() const = 0;
+    virtual void SetRequestedOrientation(Orientation) = 0;
+    virtual Orientation GetRequestedOrientation() = 0;
 
     virtual bool IsDecorEnable() const = 0;
     virtual WMError Maximize() = 0;
