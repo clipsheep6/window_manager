@@ -18,6 +18,10 @@
 
 #include <vector>
 #include <map>
+#include <thread>
+#include <condition_variable>
+#include <functional>
+#include <future>
 
 #include <input_window_monitor.h>
 #include <nocopyable.h>
@@ -47,6 +51,30 @@ public:
         sptr<AAFwk::AbilityTransitionInfo> from, sptr<AAFwk::AbilityTransitionInfo> to) override;
     int32_t GetFocusWindow(sptr<IRemoteObject>& abilityToken) override;
 };
+
+namespace Detail {
+template<typename Task>
+class ScheduledTask : public RefBase {
+public:
+    static auto Create(Task&& task)
+    {
+        sptr<ScheduledTask<Task>> t(new ScheduledTask(std::forward<Task&&>(task)));
+        return std::make_pair(t, t->task_.get_future());
+    }
+
+    void Run()
+    {
+        task_();
+    }
+
+private:
+    explicit ScheduledTask(Task&& task) : task_(std::move(task)) {}
+    ~ScheduledTask() {}
+
+    using Return = std::invoke_result_t<Task>;
+    std::packaged_task<Return()> task_;
+};
+}
 
 class WindowManagerService : public SystemAbility, public WindowManagerStub {
 friend class DisplayChangeListener;
@@ -101,6 +129,17 @@ private:
     void NotifyDisplayStateChange(DisplayId id, DisplayStateChangeType type);
     WMError GetFocusWindowInfo(sptr<IRemoteObject>& abilityToken);
     void ConfigureWindowManagerService();
+    using Task = std::function<void()>;
+    void HandleTasks();
+    void PostTask(Task task);
+
+    template<typename Task, typename Return = std::invoke_result_t<Task>>
+    std::future<Return> ScheduleTask(Task&& task)
+    {
+        auto [scheduledTask, taskFuture] = Detail::ScheduledTask<Task>::Create(std::forward<Task&&>(task));
+        PostTask([t(std::move(scheduledTask))]() { t->Run(); });
+        return std::move(taskFuture);
+    }
 
     static inline SingletonDelegator<WindowManagerService> delegator;
     std::recursive_mutex mutex_;
@@ -114,6 +153,9 @@ private:
     sptr<WindowDumper> windowDumper_;
     bool isSystemDecorEnable_ = true;
     ModeChangeHotZonesConfig hotZonesConfig_ { false, 0, 0, 0 };
+    std::mutex mutex_thread_;
+    std::condition_variable cv_;
+    std::vector<WindowManagerService::Task> tasks_;
 };
 }
 }
