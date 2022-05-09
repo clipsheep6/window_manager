@@ -1325,11 +1325,19 @@ void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSize
     }
 
     if (uiContent_ != nullptr) {
+        Rect rectToAce = rect;
+        if (isStretchable_ && GetMode() == WindowMode::WINDOW_MODE_FLOATING) {
+            if (reason == WindowSizeChangeReason::RESIZE || reason == WindowSizeChangeReason::RECOVER) {
+                originRect_ = GetRect();
+            } else {
+                rectToAce = originRect_;
+            }
+        }
         Ace::ViewportConfig config;
         WLOGFI("UpdateViewportConfig Id:%{public}u, windowRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
-            property_->GetWindowId(), rect.posX_, rect.posY_, rect.width_, rect.height_);
-        config.SetSize(rect.width_, rect.height_);
-        config.SetPosition(rect.posX_, rect.posY_);
+            property_->GetWindowId(), rectToAce.posX_, rectToAce.posY_, rectToAce.width_, rectToAce.height_);
+        config.SetSize(rectToAce.width_, rectToAce.height_);
+        config.SetPosition(rectToAce.posX_, rectToAce.posY_);
         config.SetDensity(virtualPixelRatio);
         uiContent_->UpdateViewportConfig(config, reason);
         WLOGFI("notify uiContent window size change end");
@@ -1478,6 +1486,24 @@ void WindowImpl::HandleModeChangeHotZones(int32_t posX, int32_t posY)
         }
     }
 }
+
+void WindowImpl::UpdatePointerEventForStretchableWindow(std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
+    MMI::PointerEvent::PointerItem pointerItem;
+    if (!pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem)) {
+        WLOGFW("Point item is invalid");
+        return;
+    }
+    PointInfo originPos =
+        WindowHelper::CalculateOriginPosition(originRect_, GetRect(),
+        { pointerItem.GetGlobalX(), pointerItem.GetGlobalY() });
+    pointerItem.SetGlobalX(originPos.x);
+    pointerItem.SetGlobalY(originPos.y);
+    pointerItem.SetLocalX(originPos.x - originRect_.posX_);
+    pointerItem.SetLocalY(originPos.y - originRect_.posY_);
+    pointerEvent->UpdatePointerItem(pointerEvent->GetPointerId(), pointerItem);
+}
+
 
 void WindowImpl::EndMoveOrDragWindow(int32_t posX, int32_t posY, int32_t pointId)
 {
@@ -1640,6 +1666,10 @@ void WindowImpl::ConsumePointerEvent(std::shared_ptr<MMI::PointerEvent>& pointer
             WLOGI("ConsumePointEvent pointerEvent is old api consumed");
             listener->OnPointerInputEvent(pointerEvent);
         }
+    }
+     if (isStretchable_ && GetMode() == WindowMode::WINDOW_MODE_FLOATING) {
+        WLOGFI("update pointer event for stretchable window");
+        UpdatePointerEventForStretchableWindow(pointerEvent);
     }
     if (uiContent_ == nullptr) {
         WLOGE("ConsumePointerEvent uiContent is nullptr, windowId: %{public}u", GetWindowId());
@@ -1806,6 +1836,12 @@ void WindowImpl::UpdateActiveStatus(bool isActive)
     } else {
         NotifyAfterInactive();
     }
+}
+
+void WindowImpl::UpdateWindowStretchable(bool stretchable)
+{
+    WLOGFI("window stretchable: %{public}d, id: %{public}u", stretchable, property_->GetWindowId());
+    isStretchable_ = stretchable;
 }
 
 Rect WindowImpl::GetSystemAlarmWindowDefaultSize(Rect defaultRect)

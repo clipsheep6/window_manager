@@ -177,6 +177,7 @@ public:
     void UpdateDisplayId(DisplayId from, DisplayId to);
     void UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info);
     void UpdateActiveStatus(bool isActive);
+    void UpdateWindowStretchable(bool stretchable);
 
     virtual WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
         NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability) override;
@@ -264,6 +265,7 @@ private:
     uint32_t GetBackgroundColor() const;
     Rect GetSystemAlarmWindowDefaultSize(Rect defaultRect);
     void HandleModeChangeHotZones(int32_t posX, int32_t posY);
+    void UpdatePointerEventForStretchableWindow(std::shared_ptr<MMI::PointerEvent>& pointerEvent);
 
     // colorspace, gamut
     using ColorSpaceConvertMap = struct {
@@ -308,8 +310,10 @@ private:
     Rect startPointRect_ = { 0, 0, 0, 0 };
     Rect startRectExceptFrame_ = { 0, 0, 0, 0 };
     Rect startRectExceptCorner_ = { 0, 0, 0, 0 };
+    Rect originRect_ = {0, 0, 0, 0};
     bool isAppDecorEnbale_ = true;
     bool isSystemDecorEnable_ = true;
+    bool isStretchable_ = false;
 };
 }
 }

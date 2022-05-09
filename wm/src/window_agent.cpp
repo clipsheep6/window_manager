@@ -109,6 +109,15 @@ void WindowAgent::UpdateActiveStatus(bool isActive)
     window_->UpdateActiveStatus(isActive);
 }
 
+void WindowAgent::UpdateWindowStretchable(bool isActive)
+{
+    if (window_ == nullptr) {
+        WLOGFE("window is null");
+        return;
+    }
+    window_->UpdateWindowStretchable(isActive);
+}
+
 sptr<WindowProperty> WindowAgent::GetWindowProperty()
 {
     if (window_ == nullptr) {
