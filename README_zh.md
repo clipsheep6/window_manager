@@ -36,8 +36,8 @@ foundation/windowmanager/
 ├── dm                      # Dislplay Manager Client实现代码
 ├── dmserver                # Dislplay Manager Service实现代码
 ├── interfaces              # 对外接口存放目录
-│   ├── innerkits           # native接口存放目录
-│   └── kits                # js/napi接口存放目录
+│   ├── innerkits           # native接口存放目录
+│   └── kits                # js/napi接口存放目录
 ├── resources               # 框架使用资源文件存放目录
 ├── sa_profile              # 系统服务配置文件
 ├── snapshot                # 截屏命令行工具实现代码
@@ -56,7 +56,7 @@ foundation/windowmanager/
 - [Display](https://gitee.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis/js-apis-display.md)
 
 ## 相关仓
-- graphic_standard
-- ace_ace_engine
-- aafwk_standard
-- multimodalinput_input
+- [graphic_standard](https://gitee.com/openharmony/graphic_standard)
+- [ace_ace_engine](https://gitee.com/openharmony/ace_ace_engine)
+- [aafwk_standard](https://gitee.com/openharmony/aafwk_standard)
+- [multimodalinput_input](https://gitee.com/openharmony/multimodalinput_input)
