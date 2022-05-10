@@ -66,6 +66,34 @@ void WindowManagerService::OnStart()
     DisplayManagerServiceInner::GetInstance().RegisterDisplayChangeListener(listener);
     RegisterSnapshotHandler();
     RegisterWindowManagerServiceHandler();
+    std::thread innerThread(&WindowManagerService::HandleTasks, this);
+    innerThread.detach();
+}
+
+void WindowManagerService::HandleTasks()
+{
+    std::vector<WindowManagerService::Task> taskList;
+    while(true) {
+        {
+            std::unique_lock<std::mutex> lk(mutex_thread_);
+            cv_.wait(lk, [](){ !tasks_.empty(); });
+            for (auto& iter:: tasks_) {
+                taskList.push_back(std::move(iter));
+            }
+            tasks_.clear();
+        }
+        for(auto& task :: taskList) {
+            task();
+        }
+        taskList.clear();
+    }
+}
+
+void WindowManagerService::PostTask(WindowManagerService::Task task)
+{
+    std::unique_lock<std::mutex> lk(mutex_thread_);
+    tasks_.push_back(std::move(task));
+    cv_.notify_one();
 }
 
 void WindowManagerService::RegisterSnapshotHandler()
@@ -258,8 +286,10 @@ WMError WindowManagerService::CreateWindow(sptr<IWindow>& window, sptr<WindowPro
         WLOGFE("failed to get window agent");
         return WMError::WM_ERROR_NULLPTR;
     }
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return windowController_->CreateWindow(window, property, surfaceNode, windowId, token);
+
+    return ScheduleTask([=, &windowId]() {
+        return windowController_->CreateWindow(window, property, surfaceNode, windowId, token);
+    }).get();
 }
 
 WMError WindowManagerService::AddWindow(sptr<WindowProperty>& property)
@@ -399,8 +429,9 @@ void DisplayChangeListener::OnDisplayStateChange(DisplayId id, DisplayStateChang
 
 void WindowManagerService::ProcessPointDown(uint32_t windowId, bool isStartDrag)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    windowController_->ProcessPointDown(windowId, isStartDrag);
+    PostTask([=]() {
+        windowController_->ProcessPointDown(windowId, isStartDrag);
+    });
 }
 
 void WindowManagerService::ProcessPointUp(uint32_t windowId)
