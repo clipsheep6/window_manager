@@ -28,7 +28,7 @@ enum DumpType : uint32_t {
 };
 class WindowDumper : public RefBase {
 public:
-    WindowDumper(const sptr<WindowRoot>& root, std::recursive_mutex& mutex) : windowRoot_(root), mutex_(mutex) {}
+    WindowDumper(const sptr<WindowRoot>& root) : windowRoot_(root) {}
     WMError Dump(int fd, const std::vector<std::u16string>& args) const;
 
 private:
@@ -38,7 +38,6 @@ private:
     void ShowHelpInfo(std::string& dumpInfo) const;
     void ShowIllegalArgsInfo(std::string& dumpInfo) const;
     const sptr<WindowRoot> windowRoot_;
-    std::recursive_mutex& mutex_;
 };
 }
 }

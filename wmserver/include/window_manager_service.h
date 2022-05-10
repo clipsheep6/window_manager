@@ -33,6 +33,7 @@
 #include "window_dumper.h"
 #include "window_root.h"
 #include "snapshot_controller.h"
+#include "window_event_loop.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -88,6 +89,7 @@ public:
     WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller) override;
     WMError GetSystemDecorEnable(bool& isSystemDecorEnable) override;
     WMError GetModeChangeHotZones(DisplayId displayId, ModeChangeHotZones& hotZones) override;
+    uint32_t GetWindowId(const sptr<IRemoteObject>& remoteObject) const;
 
 protected:
     WindowManagerService();
@@ -103,7 +105,6 @@ private:
     void ConfigureWindowManagerService();
 
     static inline SingletonDelegator<WindowManagerService> delegator;
-    std::recursive_mutex mutex_;
     sptr<WindowRoot> windowRoot_;
     sptr<WindowController> windowController_;
     sptr<InputWindowMonitor> inputWindowMonitor_;
@@ -114,6 +115,7 @@ private:
     sptr<WindowDumper> windowDumper_;
     bool isSystemDecorEnable_ = true;
     ModeChangeHotZonesConfig hotZonesConfig_ { false, 0, 0, 0 };
+    EventLoop wmEventLoop_;
 };
 }
 }

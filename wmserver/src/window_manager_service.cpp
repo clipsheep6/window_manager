@@ -45,7 +45,7 @@ const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(&SingletonCon
 
 WindowManagerService::WindowManagerService() : SystemAbility(WINDOW_MANAGER_SERVICE_ID, true)
 {
-    windowRoot_ = new WindowRoot(mutex_,
+    windowRoot_ = new WindowRoot(
         std::bind(&WindowManagerService::OnWindowEvent, this, std::placeholders::_1, std::placeholders::_2));
     inputWindowMonitor_ = new InputWindowMonitor(windowRoot_);
     windowController_ = new WindowController(windowRoot_, inputWindowMonitor_);
@@ -65,6 +65,8 @@ void WindowManagerService::OnStart()
     DisplayManagerServiceInner::GetInstance().RegisterDisplayChangeListener(listener);
     RegisterSnapshotHandler();
     RegisterWindowManagerServiceHandler();
+    std::thread th([this](){wmEventLoop_.Start();});
+    th.detach();
 }
 
 void WindowManagerService::RegisterSnapshotHandler()
@@ -155,10 +157,12 @@ bool WindowManagerService::Init()
 
 int WindowManagerService::Dump(int fd, const std::vector<std::u16string>& args)
 {
-    if (windowDumper_ == nullptr) {
-        windowDumper_ = new WindowDumper(windowRoot_, mutex_);
-    }
-    return static_cast<int>(windowDumper_->Dump(fd, args));
+    return wmEventLoop_.ScheduleTask([](){
+        if (windowDumper_ == nullptr) {
+            windowDumper_ = new WindowDumper(windowRoot_);
+        }
+        return static_cast<int>(windowDumper_->Dump(fd, args));
+    }).get();
 }
 
 void WindowManagerService::ConfigureWindowManagerService()
@@ -201,20 +205,21 @@ void WindowManagerService::OnStop()
 WMError WindowManagerService::NotifyWindowTransition(
     sptr<WindowTransitionInfo>& fromInfo, sptr<WindowTransitionInfo>& toInfo)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return windowController_->NotifyWindowTransition(fromInfo, toInfo);
+    return wmEventLoop_.ScheduleTask([](){
+        return windowController_->NotifyWindowTransition(fromInfo, toInfo);
+    }).get();
 }
 
 WMError WindowManagerService::GetFocusWindowInfo(sptr<IRemoteObject>& abilityToken)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return windowController_->GetFocusWindowInfo(abilityToken);
+    return wmEventLoop_.ScheduleTask([](){
+        return windowController_->GetFocusWindowInfo(abilityToken);
+    }).get();
 }
 
 WMError WindowManagerService::CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
     const std::shared_ptr<RSSurfaceNode>& surfaceNode, uint32_t& windowId, sptr<IRemoteObject> token)
 {
-    WM_SCOPED_TRACE("wms:CreateWindow(%u)", windowId);
     if (window == nullptr || property == nullptr || surfaceNode == nullptr) {
         WLOGFE("window is invalid");
         return WMError::WM_ERROR_NULLPTR;
@@ -223,73 +228,89 @@ WMError WindowManagerService::CreateWindow(sptr<IWindow>& window, sptr<WindowPro
         WLOGFE("failed to get window agent");
         return WMError::WM_ERROR_NULLPTR;
     }
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return windowController_->CreateWindow(window, property, surfaceNode, windowId, token);
+    
+    return wmEventLoop_.ScheduleTask([=, &windowId](){
+        WM_SCOPED_TRACE("wms:CreateWindow(%u)", windowId);
+        return windowController_->CreateWindow(window, property, surfaceNode, windowId, token);
+    }).get();
 }
 
 WMError WindowManagerService::AddWindow(sptr<WindowProperty>& property)
 {
-    Rect rect = property->GetRequestRect();
-    uint32_t windowId = property->GetWindowId();
-    WLOGFI("[WMS] Add: %{public}5d %{public}4d %{public}4d %{public}4d [%{public}4d %{public}4d " \
-        "%{public}4d %{public}4d]", windowId, property->GetWindowType(), property->GetWindowMode(),
-        property->GetWindowFlags(), rect.posX_, rect.posY_, rect.width_, rect.height_);
-    WM_SCOPED_TRACE("wms:AddWindow(%u)", windowId);
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    WMError res = windowController_->AddWindowNode(property);
-    if (property->GetWindowType() == WindowType::WINDOW_TYPE_DRAGGING_EFFECT) {
-        dragController_->StartDrag(windowId);
-    }
-    return res;
+    return wmEventLoop_.ScheduleTask([](){
+        Rect rect = property->GetRequestRect();
+        uint32_t windowId = property->GetWindowId();
+        WLOGFI("[WMS] Add: %{public}5d %{public}4d %{public}4d %{public}4d [%{public}4d %{public}4d " \
+            "%{public}4d %{public}4d]", windowId, property->GetWindowType(), property->GetWindowMode(),
+            property->GetWindowFlags(), rect.posX_, rect.posY_, rect.width_, rect.height_);
+        WM_SCOPED_TRACE("wms:AddWindow(%u)", windowId);
+        WMError res = windowController_->AddWindowNode(property);
+        if (property->GetWindowType() == WindowType::WINDOW_TYPE_DRAGGING_EFFECT) {
+            dragController_->StartDrag(windowId);
+        }
+        return res;
+    }).get();
 }
 
 WMError WindowManagerService::RemoveWindow(uint32_t windowId)
 {
-    WLOGFI("[WMS] Remove: %{public}u", windowId);
-    WM_SCOPED_TRACE("wms:RemoveWindow(%u)", windowId);
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return windowController_->RemoveWindowNode(windowId);
+    return wmEventLoop_.ScheduleTask([](){
+        WLOGFI("[WMS] Remove: %{public}u", windowId);
+        WM_SCOPED_TRACE("wms:RemoveWindow(%u)", windowId);
+        return windowController_->RemoveWindowNode(windowId);
+    }).get();
+}
+
+uint32_t WindowManagerService::GetWindowId(const sptr<IRemoteObject>& remoteObject){
+    return wmEventLoop_.ScheduleTask([](){
+        return windowRoot_.GetWindowId(remoteObject);
+    }).get();
 }
 
 WMError WindowManagerService::DestroyWindow(uint32_t windowId, bool onlySelf)
 {
-    WLOGFI("[WMS] Destroy: %{public}u", windowId);
-    WM_SCOPED_TRACE("wms:DestroyWindow(%u)", windowId);
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    auto node = windowRoot_->GetWindowNode(windowId);
-    if (node != nullptr && node->GetWindowType() == WindowType::WINDOW_TYPE_DRAGGING_EFFECT) {
-        dragController_->FinishDrag(windowId);
-    }
-    return windowController_->DestroyWindow(windowId, onlySelf);
+    return wmEventLoop_.ScheduleTask([](){
+        WLOGFI("[WMS] Destroy: %{public}u", windowId);
+        WM_SCOPED_TRACE("wms:DestroyWindow(%u)", windowId);
+        auto node = windowRoot_->GetWindowNode(windowId);
+        if (node != nullptr && node->GetWindowType() == WindowType::WINDOW_TYPE_DRAGGING_EFFECT) {
+            dragController_->FinishDrag(windowId);
+        }
+        return windowController_->DestroyWindow(windowId, onlySelf);
+    }).get();
 }
 
 WMError WindowManagerService::RequestFocus(uint32_t windowId)
 {
-    WLOGFI("[WMS] RequestFocus: %{public}u", windowId);
-    WM_SCOPED_TRACE("wms:RequestFocus");
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return windowController_->RequestFocus(windowId);
+    return wmEventLoop_.ScheduleTask([](){
+        WLOGFI("[WMS] RequestFocus: %{public}u", windowId);
+        WM_SCOPED_TRACE("wms:RequestFocus");
+        return windowController_->RequestFocus(windowId);
+    }).get();
 }
 
 WMError WindowManagerService::SetWindowBackgroundBlur(uint32_t windowId, WindowBlurLevel level)
 {
-    WM_SCOPED_TRACE("wms:SetWindowBackgroundBlur");
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return windowController_->SetWindowBackgroundBlur(windowId, level);
+    return wmEventLoop_.ScheduleTask([](){
+        WM_SCOPED_TRACE("wms:SetWindowBackgroundBlur");
+        return windowController_->SetWindowBackgroundBlur(windowId, level);
+    }).get();
 }
 
 WMError WindowManagerService::SetAlpha(uint32_t windowId, float alpha)
 {
-    WM_SCOPED_TRACE("wms:SetAlpha");
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return windowController_->SetAlpha(windowId, alpha);
+    return wmEventLoop_.ScheduleTask([](){
+        WM_SCOPED_TRACE("wms:SetAlpha");
+        return windowController_->SetAlpha(windowId, alpha);
+    }).get();
 }
 
 std::vector<Rect> WindowManagerService::GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType)
 {
-    WLOGFI("[WMS] GetAvoidAreaByType: %{public}u, Type: %{public}u", windowId, static_cast<uint32_t>(avoidAreaType));
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return windowController_->GetAvoidAreaByType(windowId, avoidAreaType);
+    return wmEventLoop_.ScheduleTask([](){
+        WLOGFI("[WMS] GetAvoidAreaByType: %{public}u, Type: %{public}u", windowId, static_cast<uint32_t>(avoidAreaType));
+        return windowController_->GetAvoidAreaByType(windowId, avoidAreaType);
+    }).get();
 }
 
 void WindowManagerService::RegisterWindowManagerAgent(WindowManagerAgentType type,
@@ -299,11 +320,13 @@ void WindowManagerService::RegisterWindowManagerAgent(WindowManagerAgentType typ
         WLOGFE("windowManagerAgent is null");
         return;
     }
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    WindowManagerAgentController::GetInstance().RegisterWindowManagerAgent(windowManagerAgent, type);
-    if (type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_SYSTEM_BAR) { // if system bar, notify once
-        windowController_->NotifySystemBarTints();
-    }
+
+    wmEventLoop_.PostTask([](){
+        WindowManagerAgentController::GetInstance().RegisterWindowManagerAgent(windowManagerAgent, type);
+        if (type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_SYSTEM_BAR) { // if system bar, notify once
+            windowController_->NotifySystemBarTints();
+        }
+    });
 }
 
 void WindowManagerService::UnregisterWindowManagerAgent(WindowManagerAgentType type,
@@ -313,8 +336,10 @@ void WindowManagerService::UnregisterWindowManagerAgent(WindowManagerAgentType t
         WLOGFE("windowManagerAgent is null");
         return;
     }
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    WindowManagerAgentController::GetInstance().UnregisterWindowManagerAgent(windowManagerAgent, type);
+    
+    wmEventLoop_.PostTask([](){
+        WindowManagerAgentController::GetInstance().UnregisterWindowManagerAgent(windowManagerAgent, type);
+    });
 }
 
 WMError WindowManagerService::SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller)
@@ -324,8 +349,9 @@ WMError WindowManagerService::SetWindowAnimationController(const sptr<RSIWindowA
         return WMError::WM_ERROR_NULLPTR;
     }
 
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return windowController_->SetWindowAnimationController(controller);
+    return wmEventLoop_.ScheduleTask([](){
+        return windowController_->SetWindowAnimationController(controller);
+    }).get();
 }
 
 void WindowManagerService::OnWindowEvent(Event event, uint32_t windowId)
@@ -342,9 +368,10 @@ void WindowManagerService::NotifyDisplayStateChange(DisplayId id, DisplayStateCh
         freezeDisplayController_->FreezeDisplay(id);
     } else if (type == DisplayStateChangeType::UNFREEZE) {
         freezeDisplayController_->UnfreezeDisplay(id);
-    } else {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        return windowController_->NotifyDisplayStateChange(id, type);
+    } else { 
+        wmEventLoop_.PostTask([](){
+            windowController_->NotifyDisplayStateChange(id, type);
+        });
     }
 }
 
@@ -355,50 +382,57 @@ void DisplayChangeListener::OnDisplayStateChange(DisplayId id, DisplayStateChang
 
 void WindowManagerService::ProcessPointDown(uint32_t windowId, bool isStartDrag)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    windowController_->ProcessPointDown(windowId, isStartDrag);
+    wmEventLoop_.PostTask([](){
+        windowController_->ProcessPointDown(windowId, isStartDrag);
+    });
 }
 
 void WindowManagerService::ProcessPointUp(uint32_t windowId)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    windowController_->ProcessPointUp(windowId);
+    wmEventLoop_.PostTask([](){
+        windowController_->ProcessPointUp(windowId);
+    });
 }
 
 void WindowManagerService::MinimizeAllAppWindows(DisplayId displayId)
 {
-    WLOGFI("displayId %{public}" PRIu64"", displayId);
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    windowController_->MinimizeAllAppWindows(displayId);
+    wmEventLoop_.PostTask([](){
+        WLOGFI("displayId %{public}" PRIu64"", displayId);
+        windowController_->MinimizeAllAppWindows(displayId);
+    });
 }
 
 void WindowManagerService::ToggleShownStateForAllAppWindows()
 {
-    WM_SCOPED_TRACE("wms:ToggleShownStateForAllAppWindows");
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    windowController_->ToggleShownStateForAllAppWindows();
+    wmEventLoop_.PostTask([](){
+        WM_SCOPED_TRACE("wms:ToggleShownStateForAllAppWindows");
+        windowController_->ToggleShownStateForAllAppWindows();
+    });
 }
 
 WMError WindowManagerService::MaxmizeWindow(uint32_t windowId)
 {
-    WM_SCOPED_TRACE("wms:MaxmizeWindow");
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return windowController_->MaxmizeWindow(windowId);
+    return wmEventLoop_.ScheduleTask([](){
+        WM_SCOPED_TRACE("wms:MaxmizeWindow");
+        return windowController_->MaxmizeWindow(windowId);
+    }).get();
 }
 
 WMError WindowManagerService::GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId)
 {
-    WM_SCOPED_TRACE("wms:GetTopWindowId(%u)", mainWinId);
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return windowController_->GetTopWindowId(mainWinId, topWinId);
+    return wmEventLoop_.ScheduleTask([=, &topWinId](){
+        WM_SCOPED_TRACE("wms:GetTopWindowId(%u)", mainWinId);
+        return windowController_->GetTopWindowId(mainWinId, topWinId);
+    }).get();
 }
 
 WMError WindowManagerService::SetWindowLayoutMode(WindowLayoutMode mode)
 {
-    WLOGFI("layoutMode: %{public}u", mode);
-    WM_SCOPED_TRACE("wms:SetWindowLayoutMode");
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return windowController_->SetWindowLayoutMode(mode);
+    return wmEventLoop_.ScheduleTask([](){
+        WLOGFI("layoutMode: %{public}u", mode);
+        WM_SCOPED_TRACE("wms:SetWindowLayoutMode");
+        return windowController_->SetWindowLayoutMode(mode);
+    }).get();
 }
 
 WMError WindowManagerService::UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action)
@@ -407,14 +441,16 @@ WMError WindowManagerService::UpdateProperty(sptr<WindowProperty>& windowPropert
         WLOGFE("property is invalid");
         return WMError::WM_ERROR_NULLPTR;
     }
-    WM_SCOPED_TRACE("wms:UpdateProperty");
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    WMError res = windowController_->UpdateProperty(windowProperty, action);
-    if (action == PropertyChangeAction::ACTION_UPDATE_RECT && res == WMError::WM_OK &&
+    
+    return wmEventLoop_.ScheduleTask([](){
+        WM_SCOPED_TRACE("wms:UpdateProperty");
+        WMError res = windowController_->UpdateProperty(windowProperty, action);
+        if (action == PropertyChangeAction::ACTION_UPDATE_RECT && res == WMError::WM_OK &&
         windowProperty->GetWindowSizeChangeReason() == WindowSizeChangeReason::MOVE) {
-        dragController_->UpdateDragInfo(windowProperty->GetWindowId());
-    }
-    return res;
+            dragController_->UpdateDragInfo(windowProperty->GetWindowId());
+        }
+        return res;
+    }).get();
 }
 
 WMError WindowManagerService::GetAccessibilityWindowInfo(sptr<AccessibilityWindowInfo>& windowInfo)
@@ -423,10 +459,11 @@ WMError WindowManagerService::GetAccessibilityWindowInfo(sptr<AccessibilityWindo
         WLOGFE("windowInfo is invalid");
         return WMError::WM_ERROR_NULLPTR;
     }
-    WM_SCOPED_TRACE("wms:GetAccessibilityWindowInfo");
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    WMError res = windowRoot_->GetAccessibilityWindowInfo(windowInfo);
-    return res;
+    
+    return wmEventLoop_.ScheduleTask([&windowInfo](){
+        WM_SCOPED_TRACE("wms:GetAccessibilityWindowInfo");
+        return windowRoot_->GetAccessibilityWindowInfo(windowInfo);
+    }).get();
 }
 
 WMError WindowManagerService::GetSystemDecorEnable(bool& isSystemDecorEnable)
@@ -441,7 +478,9 @@ WMError WindowManagerService::GetModeChangeHotZones(DisplayId displayId, ModeCha
         return WMError::WM_DO_NOTHING;
     }
 
-    return windowController_->GetModeChangeHotZones(displayId, hotZones, hotZonesConfig_);
+    return wmEventLoop_.ScheduleTask([=, &hotZones](){
+        return windowController_->GetModeChangeHotZones(displayId, hotZones, hotZonesConfig_);
+    }).get()
 }
 } // namespace Rosen
 } // namespace OHOS

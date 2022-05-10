@@ -33,7 +33,7 @@ class WindowRoot : public RefBase {
 using Callback = std::function<void (Event event, uint32_t windowId)>;
 
 public:
-    WindowRoot(std::recursive_mutex& mutex, Callback callback) : mutex_(mutex), callback_(callback) {}
+    WindowRoot(Callback callback) : callback_(callback) {}
     ~WindowRoot() = default;
 
     sptr<WindowNodeContainer> GetOrCreateWindowNodeContainer(DisplayId displayId);
@@ -80,6 +80,7 @@ public:
         ModeChangeHotZones& hotZones, const ModeChangeHotZonesConfig& config);
     void NotifyVirtualPixelRatioChange(sptr<DisplayInfo> displayInfo);
     std::vector<DisplayId> GetAllDisplayIds() const;
+    uint32_t GetWindowId(const sptr<IRemoteObject>& remoteObject) const;
 
 private:
     void OnRemoteDied(const sptr<IRemoteObject>& remoteObject);
@@ -95,8 +96,7 @@ private:
         const sptr<WindowNodeContainer>& container, Rect rect);
     ScreenId GetScreenGroupId(DisplayId displayId, bool& isRecordedDisplay);
     void ProcessExpandDisplayCreate(DisplayId displayId, ScreenId screenGroupId);
-
-    std::recursive_mutex& mutex_;
+    
     std::map<uint32_t, sptr<WindowNode>> windowNodeMap_;
     std::map<sptr<IRemoteObject>, uint32_t> windowIdMap_;
     std::map<ScreenId, sptr<WindowNodeContainer>> windowNodeContainerMap_;
