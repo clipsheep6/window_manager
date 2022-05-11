@@ -55,14 +55,17 @@ bool RemoteAnimation::CheckTransition(sptr<WindowTransitionInfo> srcInfo, const 
     sptr<WindowTransitionInfo> dstInfo, const sptr<WindowNode>& dstNode)
 {
     if (srcNode != nullptr && !srcNode->leashWinSurfaceNode_ && !srcNode->surfaceNode_) {
+        WLOGFD("RSWindowAnimation: srcNode has no surface!");
         return false;
     }
 
     if (dstNode != nullptr && !dstNode->leashWinSurfaceNode_ && !dstNode->surfaceNode_) {
+        WLOGFD("RSWindowAnimation: dstNode has no surface!");
         return false;
     }
 
     if (windowAnimationController_ == nullptr) {
+        WLOGFD("RSWindowAnimation: windowAnimationController_ null!");
         return false;
     }
     return true;
@@ -80,6 +83,7 @@ TransitionEvent RemoteAnimation::GetTransitionEvent(sptr<WindowTransitionInfo> s
     sptr<WindowTransitionInfo> dstInfo, const sptr<WindowNode>& srcNode, const sptr<WindowNode>& dstNode)
 {
     auto transitionReason = srcInfo->GetTransitionReason(); // src reason same as dst reason
+    WLOGFE("transitionReason:%{public}d", static_cast<uint32_t>(transitionReason));
     if (srcNode != nullptr && eventMap_.find(transitionReason) != eventMap_.end()) {
         return eventMap_[transitionReason];
     }
@@ -103,6 +107,10 @@ WMError RemoteAnimation::NotifyAnimationTransition(sptr<WindowTransitionInfo> sr
     sptr<WindowTransitionInfo> dstInfo, const sptr<WindowNode>& srcNode,
     const sptr<WindowNode>&  dstNode, bool needMinimizeSrcNode)
 {
+    // if (!dstNode->startingWindowShown_) {
+    //     WLOGFE("RSWindowAnimation: no startingWindow!");
+    //     return WMError::WM_ERROR_NO_REMOTE_ANIMATION;
+    // }
     WLOGFD("RSWindowAnimation: nofity animation transition!");
     sptr<RSWindowAnimationFinishedCallback> finishedCallback = new(std::nothrow) RSWindowAnimationFinishedCallback(
         [srcNode, dstNode, needMinimizeSrcNode]() {
@@ -138,7 +146,7 @@ WMError RemoteAnimation::NotifyAnimationTransition(sptr<WindowTransitionInfo> sr
     // start app from launcher
     if (srcNode != nullptr && srcNode->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
         WLOGFD("RSWindowAnimation: start app from launcher!");
-        windowAnimationController_->OnStartApp(StartingAppType::FROM_LAUNCHER, dstTarget, finishedCallback);
+        // windowAnimationController_->OnStartApp(StartingAppType::FROM_LAUNCHER, dstTarget, finishedCallback);
         return WMError::WM_OK;
     }
 
