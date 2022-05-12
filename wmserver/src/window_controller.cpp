@@ -53,7 +53,7 @@ bool WindowController::IsWindowNeedMinimizedByOther(const sptr<WindowNode>& targ
 void WindowController::StartingWindow(sptr<WindowTransitionInfo> info, sptr<Media::PixelMap> pixelMap,
     uint32_t bkgColor, bool isColdStart)
 {
-    if (!info || info->GetAbilityToken() == nullptr || info->GetBundleName().find("permission") != std::string::npos) {
+    if (!info || info->GetAbilityToken() == nullptr) {
         WLOGFE("info or AbilityToken is nullptr!");
         return;
     }
@@ -116,11 +116,11 @@ WMError WindowController::NotifyWindowTransition(sptr<WindowTransitionInfo>& src
             return RemoteAnimation::NotifyAnimationMinimize(srcInfo, srcNode);
         case TransitionEvent::CLOSE:
             return RemoteAnimation::NotifyAnimationClose(srcInfo, srcNode);
-        default:
+        default: {
             return WMError::WM_ERROR_NO_REMOTE_ANIMATION;
+        }
     }
     // Minimize Other judge need : isMinimizedByOtherWindow_, self type.mode
-    WLOGFI("NotifyWindowTransition Success!");
     return WMError::WM_OK;
 }
 

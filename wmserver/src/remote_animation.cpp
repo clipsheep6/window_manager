@@ -107,11 +107,11 @@ WMError RemoteAnimation::NotifyAnimationTransition(sptr<WindowTransitionInfo> sr
     sptr<WindowTransitionInfo> dstInfo, const sptr<WindowNode>& srcNode,
     const sptr<WindowNode>&  dstNode, bool needMinimizeSrcNode)
 {
-    // if (!dstNode->startingWindowShown_) {
-    //     WLOGFE("RSWindowAnimation: no startingWindow!");
-    //     return WMError::WM_ERROR_NO_REMOTE_ANIMATION;
-    // }
-    WLOGFD("RSWindowAnimation: nofity animation transition!");
+    if (!dstNode && !dstNode->leashWinSurfaceNode_) {
+        WLOGFE("RSWindowAnimation: no startingWindow for dst window id:%{public}u!", dstNode->GetWindowId());
+        return WMError::WM_ERROR_NO_REMOTE_ANIMATION;
+    }
+    WLOGFD("RSWindowAnimation: nofity animation transition with dst currId:%{public}u!", dstNode->GetWindowId());
     sptr<RSWindowAnimationFinishedCallback> finishedCallback = new(std::nothrow) RSWindowAnimationFinishedCallback(
         [srcNode, dstNode, needMinimizeSrcNode]() {
             WLOGFD("RSWindowAnimation: on finish transition!");
@@ -139,26 +139,27 @@ WMError RemoteAnimation::NotifyAnimationTransition(sptr<WindowTransitionInfo> sr
         auto srcTarget = CreateWindowAnimationTarget(srcInfo, srcNode);
         srcNode->isPlayAnimationHide_ = true;
 
-        WLOGFD("RSWindowAnimation: app transition!");
+        WLOGFD("RSWindowAnimation: app transition from id:%{public}u to id:%{public}u!",
+            srcNode->GetWindowId(), dstNode->GetWindowId());
         windowAnimationController_->OnAppTransition(srcTarget, dstTarget, finishedCallback);
         return WMError::WM_OK;
     }
     // start app from launcher
     if (srcNode != nullptr && srcNode->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
-        WLOGFD("RSWindowAnimation: start app from launcher!");
-        // windowAnimationController_->OnStartApp(StartingAppType::FROM_LAUNCHER, dstTarget, finishedCallback);
+        WLOGFD("RSWindowAnimation: start app id:%{public}u from launcher!", dstNode->GetWindowId());
+        windowAnimationController_->OnStartApp(StartingAppType::FROM_LAUNCHER, dstTarget, finishedCallback);
         return WMError::WM_OK;
     }
 
     // start app from recent
     if (srcInfo != nullptr && srcInfo->GetIsRecent()) {
-        WLOGFD("RSWindowAnimation: start app from recent!");
+        WLOGFD("RSWindowAnimation: start app id:%{public}u from recent!", dstNode->GetWindowId());
         windowAnimationController_->OnStartApp(StartingAppType::FROM_RECENT, dstTarget, finishedCallback);
         return WMError::WM_OK;
     }
 
     // start app from other
-    WLOGFD("RSWindowAnimation: start app from other!");
+    WLOGFD("RSWindowAnimation: start app id:%{public}u from other!", dstNode->GetWindowId());
     windowAnimationController_->OnStartApp(StartingAppType::FROM_OTHER, dstTarget, finishedCallback);
     return WMError::WM_OK;
 }
@@ -166,10 +167,10 @@ WMError RemoteAnimation::NotifyAnimationTransition(sptr<WindowTransitionInfo> sr
 WMError RemoteAnimation::NotifyAnimationMinimize(sptr<WindowTransitionInfo> srcInfo, const sptr<WindowNode>& srcNode)
 {
     sptr<RSWindowAnimationTarget> srcTarget = CreateWindowAnimationTarget(srcInfo, srcNode);
-
     if (srcTarget == nullptr) {
         return WMError::WM_ERROR_NO_MEM;
     }
+    WLOGFD("RSWindowAnimation: nofity animation minimize Id:%{public}u!", srcNode->GetWindowId());
     srcNode->isPlayAnimationHide_ = true;
     auto minimizeFunc = [srcNode]() {
         if (srcNode != nullptr && srcNode->abilityToken_ != nullptr) {
@@ -191,10 +192,10 @@ WMError RemoteAnimation::NotifyAnimationMinimize(sptr<WindowTransitionInfo> srcI
 WMError RemoteAnimation::NotifyAnimationClose(sptr<WindowTransitionInfo> srcInfo, const sptr<WindowNode>& srcNode)
 {
     sptr<RSWindowAnimationTarget> srcTarget = CreateWindowAnimationTarget(srcInfo, srcNode);
-
     if (srcTarget == nullptr) {
         return WMError::WM_ERROR_NO_MEM;
     }
+    WLOGFD("RSWindowAnimation: nofity animation close id:%{public}u!", srcNode->GetWindowId());
     srcNode->isPlayAnimationHide_ = true;
     auto closeFunc = [srcNode]() {
         if (srcNode != nullptr && srcNode->abilityToken_ != nullptr) {
