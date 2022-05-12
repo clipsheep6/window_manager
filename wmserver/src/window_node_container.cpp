@@ -209,13 +209,13 @@ WMError WindowNodeContainer::AddWindowNodeOnWindowTree(sptr<WindowNode>& node, c
     return WMError::WM_OK;
 }
 
-WMError WindowNodeContainer::ShowInTransition(sptr<WindowNode>& node)
+WMError WindowNodeContainer::ShowStartingWindow(sptr<WindowNode>& node)
 {
     if (node->currentVisibility_) {
         WLOGFE("current window is visible, windowId: %{public}u", node->GetWindowId());
         return WMError::WM_ERROR_INVALID_OPERATION;
     }
-    WM_SCOPED_TRACE_BEGIN("WindowNodeContainer::ShowInTransition");
+    WM_SCOPED_TRACE_BEGIN("WindowNodeContainer::ShowStartingWindow");
     WMError res = AddWindowNodeOnWindowTree(node, nullptr);
     if (res != WMError::WM_OK) {
         return res;
@@ -230,7 +230,7 @@ WMError WindowNodeContainer::ShowInTransition(sptr<WindowNode>& node)
     AssignZOrder();
     layoutPolicy_->AddWindowNode(node);
     WM_SCOPED_TRACE_END();
-    WLOGFI("ShowInTransition windowId: %{public}u end", node->GetWindowId());
+    WLOGFI("ShowStartingWindow windowId: %{public}u end", node->GetWindowId());
     return WMError::WM_OK;
 }
 

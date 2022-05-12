@@ -306,7 +306,7 @@ WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, boo
         return WMError::WM_ERROR_NULLPTR;
     }
     if (fromStartingWin) {
-        return container->ShowInTransition(node);
+        return container->ShowStartingWindow(node);
     }
     // limit number of main window
     int mainWindowNumber = container->GetWindowCountByType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
