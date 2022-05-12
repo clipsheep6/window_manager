@@ -17,6 +17,7 @@
 #include <ability_manager_client.h>
 #include <display_manager_service_inner.h>
 #include <transaction/rs_transaction.h>
+#include "remote_animation.h"
 #include "window_helper.h"
 #include "window_manager_hilog.h"
 
@@ -114,7 +115,7 @@ void StartingWindow::HandleClientWindowCreate(sptr<WindowNode>& node, sptr<IWind
 
     // Register FirstFrame Callback to rs, replace startwin
     auto firstFrameCompleteCallback = [node]() {
-        WLOGFI("Replace surfaceNode, id: %{public}u", node->GetWindowId());
+        WLOGFI("StartingWindow::Replace surfaceNode, id: %{public}u", node->GetWindowId());
         node->leashWinSurfaceNode_->RemoveChild(node->startingWinSurfaceNode_);
         node->leashWinSurfaceNode_->AddChild(node->surfaceNode_, -1);
         AAFwk::AbilityManagerClient::GetInstance()->CompleteFirstFrameDrawing(node->abilityToken_);
@@ -126,21 +127,26 @@ void StartingWindow::HandleClientWindowCreate(sptr<WindowNode>& node, sptr<IWind
 
 void StartingWindow::UpdateRSTree(sptr<WindowNode>& node)
 {
+    if (!node->leashWinSurfaceNode_) {
+        WLOGFE("window id:%{public}u leashWinSurfaceNode_ is null!", node->GetWindowId());
+        return;
+    }
     auto& dms = DisplayManagerServiceInner::GetInstance();
     DisplayId displayId = node->GetDisplayId();
+    if (RemoteAnimation::CheckAnimationController()) {
+        node->leashWinSurfaceNode_->SetVisible(false);
+        WLOGFI("id:%{public}u startingWindow is unvisable because remoteAnimation is enabled", node->GetWindowId());
+    }
     if (!node->surfaceNode_) { // cold start
         if (!WindowHelper::IsMainWindow(node->GetWindowType())) {
-            WLOGFE("window id:%{public}d type: %{public}u is not Main Window!",
+            WLOGFE("window id:%{public}u type: %{public}u is not Main Window!",
                 node->GetWindowId(), static_cast<uint32_t>(node->GetWindowType()));
+            return;
         }
         dms.UpdateRSTree(displayId, node->leashWinSurfaceNode_, true);
         node->leashWinSurfaceNode_->AddChild(node->startingWinSurfaceNode_, -1);
     } else { // hot start
-        if (node->leashWinSurfaceNode_) { // to app
-            dms.UpdateRSTree(displayId, node->leashWinSurfaceNode_, true);
-        } else { // to launcher
-            dms.UpdateRSTree(displayId, node->surfaceNode_, true);
-        }
+        dms.UpdateRSTree(displayId, node->leashWinSurfaceNode_, true);
     }
 }
 } // Rosen
