@@ -172,6 +172,8 @@ void WindowRoot::AddDeathRecipient(sptr<WindowNode> node)
     if (!remoteObject->AddDeathRecipient(windowDeath_)) {
         WLOGFI("failed to add death recipient");
     }
+
+    node->GetWindowToken()->UpdateWindowStretchable(isWindowStretchable_);
 }
 
 WMError WindowRoot::SaveWindow(const sptr<WindowNode>& node)
@@ -185,7 +187,6 @@ WMError WindowRoot::SaveWindow(const sptr<WindowNode>& node)
     windowNodeMap_.insert(std::make_pair(node->GetWindowId(), node));
     if (node->GetWindowToken()) {
         AddDeathRecipient(node);
-        node->GetWindowToken()->UpdateWindowStretchable(isWindowStretchable_);
     }
     // Register FirstFrame Callback to rs, inform ability to get snapshot
     auto firstFrameCompleteCallback = [node]() {
