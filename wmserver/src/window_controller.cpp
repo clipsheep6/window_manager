@@ -398,11 +398,6 @@ void WindowController::NotifyDisplayStateChange(DisplayId displayId, DisplayStat
             isScreenLocked_ = false;
             break;
         }
-        case DisplayStateChangeType::SIZE_CHANGE:
-        case DisplayStateChangeType::UPDATE_ROTATION: {
-            ProcessDisplayChange(displayId, type);
-            break;
-        }
         case DisplayStateChangeType::CREATE: {
             windowRoot_->ProcessDisplayCreate(displayId);
             break;
@@ -411,10 +406,10 @@ void WindowController::NotifyDisplayStateChange(DisplayId displayId, DisplayStat
             windowRoot_->ProcessDisplayDestroy(displayId);
             break;
         }
+        case DisplayStateChangeType::SIZE_CHANGE:
+        case DisplayStateChangeType::UPDATE_ROTATION:
         case DisplayStateChangeType::VIRTUAL_PIXEL_RATIO_CHANGE: {
             ProcessDisplayChange(displayId, type);
-            const sptr<DisplayInfo> displayInfo_ = DisplayManagerServiceInner::GetInstance().GetDisplayById(displayId);
-            windowRoot_->NotifyVirtualPixelRatioChange(displayInfo_);
             break;
         }
         default: {
@@ -474,7 +469,6 @@ void WindowController::ProcessDisplayChange(DisplayId displayId, DisplayStateCha
         case DisplayStateChangeType::UPDATE_ROTATION: {
             ProcessSystemBarChange(displayInfo);
             windowRoot_->ProcessDisplayChange(displayInfo, type);
-            break;
         }
         case DisplayStateChangeType::VIRTUAL_PIXEL_RATIO_CHANGE: {
             windowRoot_->ProcessDisplayChange(displayInfo, type);

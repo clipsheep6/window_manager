@@ -147,6 +147,12 @@ void WindowNode::SetRequestedOrientation(Orientation orientation)
     property_->SetRequestedOrientation(orientation);
 }
 
+void WindowNode::SetShownDisplay(const std::vector<DisplayId>& displayIdVec)
+{
+    shownDisplay_.clear();
+    shownDisplay_.assign(displayIdVec.begin(), displayIdVec.end());
+}
+
 void WindowNode::ResetWindowSizeChangeReason()
 {
     windowSizeChangeReason_ = WindowSizeChangeReason::UNDEFINED;
@@ -286,6 +292,11 @@ WindowSizeChangeReason WindowNode::GetWindowSizeChangeReason() const
 Orientation WindowNode::GetRequestedOrientation() const
 {
     return property_->GetRequestedOrientation();
+}
+
+std::vector<DisplayId> WindowNode::GetShownDisplay()
+{
+    return shownDisplay_;
 }
 } // namespace Rosen
 } // namespace OHOS
