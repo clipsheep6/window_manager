@@ -185,7 +185,6 @@ WMError WindowRoot::SaveWindow(const sptr<WindowNode>& node)
     windowNodeMap_.insert(std::make_pair(node->GetWindowId(), node));
     if (node->GetWindowToken()) {
         AddDeathRecipient(node);
-        node->GetWindowToken()->UpdateWindowStretchable(isWindowStretchable_);
     }
     // Register FirstFrame Callback to rs, inform ability to get snapshot
     auto firstFrameCompleteCallback = [node]() {
@@ -1018,12 +1017,6 @@ void WindowRoot::NotifyVirtualPixelRatioChange(sptr<DisplayInfo> displayInfo)
         return;
     }
     container->UpdateVirtualPixelRatio(displayInfo->GetDisplayId(), displayInfo->GetVirtualPixelRatio());
-}
-
-void WindowRoot::SetWindowStretchable(bool stretchable)
-{
-    WLOGFI("set window stretchable to %{publec}d", stretchable);
-    isWindowStretchable_ = stretchable;
 }
 } // namespace Rosen
 } // namespace OHOS

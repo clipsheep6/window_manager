@@ -221,6 +221,13 @@ enum class WindowUpdateType : int32_t {
     WINDOW_UPDATE_BOUNDS,
     WINDOW_UPDATE_ACTIVE,
 };
+
+struct SystemConfig
+{
+    bool isSystemDecorEnable_;
+    bool isStretchable_;
+};
+
 }
 }
 #endif // OHOS_ROSEN_WM_COMMON_H
