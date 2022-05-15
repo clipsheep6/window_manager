@@ -27,7 +27,9 @@ config("libwmutil_private_config") {
 }
 
 config("libwmutil_public_config") {
-  include_dirs = [ "//foundation/windowmanager/utils/include" ]
+  include_dirs = [
+    "//foundation/windowmanager/utils/include",
+    "//foundation/graphic/graphic/rosen/modules/render_service_base/src",]
 }
 
 ## Build libwmutil.so
