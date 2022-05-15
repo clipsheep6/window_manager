@@ -141,7 +141,7 @@ int32_t WindowManagerServiceHandler::GetFocusWindow(sptr<IRemoteObject>& ability
 void WindowManagerServiceHandler::StartingWindow(
     sptr<AAFwk::AbilityTransitionInfo> info, sptr<Media::PixelMap> pixelMap)
 {
-    return;
+    // return;
     sptr<WindowTransitionInfo> windowInfo = new WindowTransitionInfo(info);
     WLOGFI("hot start is called");
     WindowManagerService::GetInstance().StartingWindow(windowInfo, pixelMap, false);
@@ -150,7 +150,7 @@ void WindowManagerServiceHandler::StartingWindow(
 void WindowManagerServiceHandler::StartingWindow(
     sptr<AAFwk::AbilityTransitionInfo> info, sptr<Media::PixelMap> pixelMap, uint32_t bgColor)
 {
-    return;
+    // return;
     sptr<WindowTransitionInfo> windowInfo = new WindowTransitionInfo(info);
     WLOGFI("cold start is called");
     WindowManagerService::GetInstance().StartingWindow(windowInfo, pixelMap, true, bgColor);
