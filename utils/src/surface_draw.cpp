@@ -24,6 +24,7 @@
 #include "include/core/SkData.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkPixmap.h"
+#include "platform/ohos/backend/rs_surface_ohos_raster.h"
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -33,25 +34,26 @@ namespace {
 void SurfaceDraw::Init()
 {
 #ifdef ACE_ENABLE_GL
-    WLOGFI("Draw divider on gpu");
-    if (!rc_) {
-        rc_ = std::make_unique<RenderContext>();
-        rc_->InitializeEglContext();
-        WLOGFI("Draw Init Success");
-    }
+    // WLOGFI("Draw divider on gpu");
+    // if (!rc_) {
+    //     rc_ = std::make_unique<RenderContext>();
+    //     rc_->InitializeEglContext();
+    //     WLOGFI("Draw Init Success");
+    // }
 #endif
 }
 
 std::shared_ptr<RSSurface> SurfaceDraw::PrepareDraw(std::shared_ptr<RSSurfaceNode> surfaceNode,
     std::unique_ptr<RSSurfaceFrame>& frame, SkCanvas*& canvas, uint32_t width, uint32_t height)
 {
-    std::shared_ptr<RSSurface> rsSurface = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
+    std::shared_ptr<RSSurface> rsSurface0 = RSSurfaceExtractor::ExtractRSSurface(surfaceNode);
+    auto rsSurface = std::static_pointer_cast<RSSurfaceOhosRaster>(rsSurface0);
     if (rsSurface == nullptr) {
         WLOGFE("RSSurface is nullptr");
         return nullptr;
     }
 #ifdef ACE_ENABLE_GL
-    rsSurface->SetRenderContext(rc_.get());
+    // rsSurface->SetRenderContext(rc_.get());
 #endif
     frame = rsSurface->RequestFrame(width, height);
     if (frame == nullptr) {

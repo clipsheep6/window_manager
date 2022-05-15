@@ -43,7 +43,7 @@ private:
         std::unique_ptr<RSSurfaceFrame>& frame, SkCanvas*& canvas, uint32_t width, uint32_t height);
 
 #ifdef ACE_ENABLE_GL
-    std::unique_ptr<RenderContext> rc_ = nullptr;
+    // std::unique_ptr<RenderContext> rc_ = nullptr;
 #endif
 };
 } // Rosen
