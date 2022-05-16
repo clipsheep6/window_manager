@@ -189,6 +189,37 @@ bool SnapShotUtils::WriteToPng(const std::string &fileName, const WriteToPngPara
     return true;
 }
 
+
+bool SnapShotUtils::WriteToRaw(const std::string &fileName, const WriteToPngParam &param)
+{
+    if (!CheckFileNameValid(fileName)) {
+        return false;
+    }
+    if (!CheckParamValid(param)) {
+        return false;
+    }
+
+    WM_SCOPED_TRACE("snapshot:WriteToRaw(%s)", fileName.c_str());
+    char fileN[256] = {0};
+    memcpy(fileN, fileName.c_str(), strlen(fileName.c_str()));
+    strcat(fileN, "raw");
+    printf("fileN = %s\n", fileN);
+    FILE *fp = fopen(fileN, "wb");
+    if (fp == nullptr) {
+        printf("error: open file [%s] error, %d!\n", fileN, errno);
+        return false;
+    }
+
+    for (uint32_t i = 0; i < param.height; i++) {
+        fwrite(param.data + (i * param.stride), 1, param.stride, fp);
+    }
+
+    if (fclose(fp) != 0) {
+        return false;
+    }
+    return true;
+}
+
 bool SnapShotUtils::WriteToPngWithPixelMap(const std::string &fileName, PixelMap &pixelMap)
 {
     WriteToPngParam param;
@@ -197,6 +228,7 @@ bool SnapShotUtils::WriteToPngWithPixelMap(const std::string &fileName, PixelMap
     param.data = pixelMap.GetPixels();
     param.stride = static_cast<uint32_t>(pixelMap.GetRowBytes());
     param.bitDepth = BITMAP_DEPTH;
+    SnapShotUtils::WriteToRaw(fileName, param);
     return SnapShotUtils::WriteToPng(fileName, param);
 }
 
