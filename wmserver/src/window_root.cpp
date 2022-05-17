@@ -30,9 +30,9 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowRoot"};
 }
 
-std::map<uint32_t, sptr<WindowNode>> WindowRoot::GetWindowNodeMap()
+uint32_t WindowRoot::GetTotalWindowNum()
 {
-    return windowNodeMap_;
+    return static_cast<uint32_t>(windowNodeMap_.size());
 }
 
 ScreenId WindowRoot::GetScreenGroupId(DisplayId displayId, bool& isRecordedDisplay)
@@ -297,6 +297,20 @@ WMError WindowRoot::MaxmizeWindow(uint32_t windowId)
     return WMError::WM_OK;
 }
 
+void WindowRoot::DestroyLeakStartingWindow()
+{
+    std::vector<uint32_t> destroyIds;
+    for (auto& iter : windowNodeMap_) {
+        if (iter.second->startingWindowShown_) {
+            destroyIds.push_back(iter.second->GetWindowId());
+        }
+    }
+    for (auto& id : destroyIds) {
+        WLOGFI("Destroy Window id:%{public}u", id);
+        DestroyWindow(id, false);
+    }
+}
+
 WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, bool fromStartingWin)
 {
     if (node == nullptr) {
@@ -320,6 +334,7 @@ WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, boo
 
     auto parentNode = GetWindowNode(parentId);
     WMError res = container->AddWindowNode(node, parentNode);
+    DestroyLeakStartingWindow();
     if (res == WMError::WM_OK && WindowHelper::IsSubWindow(node->GetWindowType())) {
         if (parentNode == nullptr) {
             WLOGFE("window type is invalid");
@@ -351,6 +366,7 @@ WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, boo
         DisplayManagerServiceInner::GetInstance().
             SetOrientationFromWindow(node->GetDisplayId(), node->GetRequestedOrientation());
     }
+
     return res;
 }
 
