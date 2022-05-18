@@ -38,24 +38,10 @@ uint32_t WindowController::GenWindowId()
     return ++windowId_;
 }
 
-bool WindowController::IsWindowNeedMinimizedByOther(const sptr<WindowNode>& target, const sptr<WindowNode>& other)
-{
-    if (target == nullptr || other == nullptr) {
-        return false;
-    }
-    if (!isMinimizedByOtherWindow_ || (target->GetWindowId() == other->GetWindowId())) {
-        return false;
-    }
-
-    return (other->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN) &&
-        (WindowHelper::IsAppWindow(other->GetWindowType())) && (target->GetWindowMode() ==
-        WindowMode::WINDOW_MODE_FULLSCREEN) && (WindowHelper::IsMainWindow(target->GetWindowType()));
-}
-
 void WindowController::StartingWindow(sptr<WindowTransitionInfo> info, sptr<Media::PixelMap> pixelMap,
     uint32_t bkgColor, bool isColdStart)
 {
-    if (!info || info->GetAbilityToken() == nullptr || info->GetBundleName().find("permission") != std::string::npos) {
+    if (!info || info->GetAbilityToken() == nullptr) {
         WLOGFE("info or AbilityToken is nullptr!");
         return;
     }
@@ -71,6 +57,9 @@ void WindowController::StartingWindow(sptr<WindowTransitionInfo> info, sptr<Medi
         }
         if (windowRoot_->SaveWindow(node) != WMError::WM_OK) {
             return;
+        }
+        if (!RemoteAnimation::CheckAnimationController()) {
+            UpdateWindowAnimation(node);
         }
     } else {
         if (isColdStart) {
@@ -94,6 +83,7 @@ void WindowController::CancelStartingWindow(sptr<IRemoteObject> abilityToken)
         WLOGFI("cannot find windowNode!");
         return;
     }
+    WM_SCOPED_TRACE("wms:CancelStartingWindow(%u)", node->GetWindowId());
     DestroyWindow(node->GetWindowId(), true);
 }
 
@@ -110,10 +100,13 @@ WMError WindowController::NotifyWindowTransition(sptr<WindowTransitionInfo>& src
         return WMError::WM_ERROR_NO_REMOTE_ANIMATION;
     }
     auto transitionEvent = RemoteAnimation::GetTransitionEvent(srcInfo, dstInfo, srcNode, dstNode);
-    auto needMinimizeSrcNode = IsWindowNeedMinimizedByOther(srcNode, dstNode);
     switch (transitionEvent) {
-        case TransitionEvent::APP_TRANSITION:
-            return RemoteAnimation::NotifyAnimationTransition(srcInfo, dstInfo, srcNode, dstNode, needMinimizeSrcNode);
+        case TransitionEvent::APP_TRANSITION: {
+            if (dstNode->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN) {
+                windowRoot_->MinimizeStructuredAppWindowsExceptSelf(dstNode); // avoid split/float mode minimize
+            }
+            return RemoteAnimation::NotifyAnimationTransition(srcInfo, dstInfo, srcNode, dstNode);
+        }
         case TransitionEvent::MINIMIZE:
             return RemoteAnimation::NotifyAnimationMinimize(srcInfo, srcNode);
         case TransitionEvent::CLOSE:
@@ -122,7 +115,6 @@ WMError WindowController::NotifyWindowTransition(sptr<WindowTransitionInfo>& src
             return WMError::WM_ERROR_NO_REMOTE_ANIMATION;
     }
     // Minimize Other judge need : isMinimizedByOtherWindow_, self type.mode
-    WLOGFI("NotifyWindowTransition Success!");
     return WMError::WM_OK;
 }
 
@@ -186,10 +178,22 @@ WMError WindowController::AddWindowNode(sptr<WindowProperty>& property)
     }
     node->GetWindowProperty()->CopyFrom(property);
 
+    if (node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
+        WindowHelper::IsAppWindow(node->GetWindowType()) && !node->isPlayAnimationShow_) {
+        WM_SCOPED_TRACE_BEGIN("controller:MinimizeStructuredAppWindowsExceptSelf");
+        WMError res = windowRoot_->MinimizeStructuredAppWindowsExceptSelf(node);
+        WM_SCOPED_TRACE_END();
+        if (res != WMError::WM_OK) {
+            WLOGFE("Minimize other structured window failed");
+            MinimizeApp::ClearNodesWithReason(MinimizeReason::OTHER_WINDOW);
+            return res;
+        }
+    }
     // Need 'check permission'
     // Need 'adjust property'
     WMError res = windowRoot_->AddWindowNode(property->GetParentId(), node);
     if (res != WMError::WM_OK) {
+        MinimizeApp::ClearNodesWithReason(MinimizeReason::OTHER_WINDOW);
         return res;
     }
     windowRoot_->FocusFaultDetection();
@@ -202,16 +206,6 @@ WMError WindowController::AddWindowNode(sptr<WindowProperty>& property)
         ReSizeSystemBarPropertySizeIfNeed(node);
     }
 
-    if (node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
-        WindowHelper::IsAppWindow(node->GetWindowType()) && !node->isPlayAnimationHide_) {
-        WM_SCOPED_TRACE_BEGIN("controller:MinimizeStructuredAppWindowsExceptSelf");
-        res = windowRoot_->MinimizeStructuredAppWindowsExceptSelf(node);
-        WM_SCOPED_TRACE_END();
-        if (res != WMError::WM_OK) {
-            WLOGFE("Minimize other structured window failed");
-            return res;
-        }
-    }
     StopBootAnimationIfNeed(node->GetWindowType());
     MinimizeApp::ExecuteMinimizeAll();
     return WMError::WM_OK;
@@ -399,11 +393,6 @@ void WindowController::NotifyDisplayStateChange(DisplayId displayId, DisplayStat
             isScreenLocked_ = false;
             break;
         }
-        case DisplayStateChangeType::SIZE_CHANGE:
-        case DisplayStateChangeType::UPDATE_ROTATION: {
-            ProcessDisplayChange(displayId, type);
-            break;
-        }
         case DisplayStateChangeType::CREATE: {
             windowRoot_->ProcessDisplayCreate(displayId);
             break;
@@ -412,10 +401,10 @@ void WindowController::NotifyDisplayStateChange(DisplayId displayId, DisplayStat
             windowRoot_->ProcessDisplayDestroy(displayId);
             break;
         }
+        case DisplayStateChangeType::SIZE_CHANGE:
+        case DisplayStateChangeType::UPDATE_ROTATION:
         case DisplayStateChangeType::VIRTUAL_PIXEL_RATIO_CHANGE: {
             ProcessDisplayChange(displayId, type);
-            const sptr<DisplayInfo> displayInfo_ = DisplayManagerServiceInner::GetInstance().GetDisplayById(displayId);
-            windowRoot_->NotifyVirtualPixelRatioChange(displayInfo_);
             break;
         }
         default: {
@@ -472,13 +461,11 @@ void WindowController::ProcessDisplayChange(DisplayId displayId, DisplayStateCha
     }
     switch (type) {
         case DisplayStateChangeType::SIZE_CHANGE:
-        case DisplayStateChangeType::UPDATE_ROTATION: {
+        case DisplayStateChangeType::UPDATE_ROTATION:
             ProcessSystemBarChange(displayInfo);
-            windowRoot_->ProcessDisplayChange(displayInfo, type);
-            break;
-        }
+            [[fallthrough]];
         case DisplayStateChangeType::VIRTUAL_PIXEL_RATIO_CHANGE: {
-            windowRoot_->ProcessDisplayChange(displayInfo, type);
+            windowRoot_->ProcessDisplayChange(displayId, type);
             break;
         }
         default: {
@@ -658,7 +645,7 @@ void WindowController::FlushWindowInfoWithDisplayId(DisplayId displayId)
 
 void WindowController::UpdateWindowAnimation(const sptr<WindowNode>& node)
 {
-    if (node == nullptr || node->surfaceNode_ == nullptr) {
+    if (node == nullptr || (node->leashWinSurfaceNode_ == nullptr && node->surfaceNode_ == nullptr)) {
         WLOGFE("windowNode or surfaceNode is nullptr");
         return;
     }
@@ -669,9 +656,19 @@ void WindowController::UpdateWindowAnimation(const sptr<WindowNode>& node)
     if (animationFlag == static_cast<uint32_t>(WindowAnimation::DEFAULT)) {
         // set default transition effect for window: scale from 1.0 to 0.7, fade from 1.0 to 0.0
         static const auto effect = RSTransitionEffect::Create()->Scale(Vector3f(0.7f, 0.7f, 0.0f))->Opacity(0.0f);
-        node->surfaceNode_->SetTransitionEffect(effect);
+        if (node->leashWinSurfaceNode_) {
+            node->leashWinSurfaceNode_->SetTransitionEffect(effect);
+        }
+        if (node->surfaceNode_) {
+            node->surfaceNode_->SetTransitionEffect(effect);
+        }
     } else {
-        node->surfaceNode_->SetTransitionEffect(nullptr);
+        if (node->leashWinSurfaceNode_) {
+            node->leashWinSurfaceNode_->SetTransitionEffect(nullptr);
+        }
+        if (node->surfaceNode_) {
+            node->surfaceNode_->SetTransitionEffect(nullptr);
+        }
     }
 }
 
@@ -774,11 +771,6 @@ WMError WindowController::GetModeChangeHotZones(DisplayId displayId,
     ModeChangeHotZones& hotZones, const ModeChangeHotZonesConfig& config)
 {
     return windowRoot_->GetModeChangeHotZones(displayId, hotZones, config);
-}
-
-void WindowController::SetMinimizedByOtherWindow(bool isMinimizedByOtherWindow)
-{
-    isMinimizedByOtherWindow_ = isMinimizedByOtherWindow;
 }
 } // namespace OHOS
 } // namespace Rosen

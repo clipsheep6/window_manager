@@ -17,17 +17,21 @@
 #include <ability_manager_client.h>
 #include <display_manager_service_inner.h>
 #include <transaction/rs_transaction.h>
+#include "remote_animation.h"
 #include "window_helper.h"
 #include "window_manager_hilog.h"
-
 namespace OHOS {
 namespace Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "StartingWindow"};
+    const char DISABLE_WINDOW_ANIMATION_PATH[] = "/etc/disable_window_animation";
 }
 
 SurfaceDraw StartingWindow::surfaceDraw_;
 static bool g_hasInit = false;
+std::recursive_mutex StartingWindow::mutex_;
+static bool g_initStart = false;
+static std::shared_ptr<RSSurfaceNode> g_startingWinSurfaceNode = nullptr;
 
 sptr<WindowNode> StartingWindow::CreateWindowNode(sptr<WindowTransitionInfo> info, uint32_t winId)
 {
@@ -65,14 +69,17 @@ WMError StartingWindow::CreateLeashAndStartingSurfaceNode(sptr<WindowNode>& node
         WLOGFE("create leashWinSurfaceNode failed");
         return WMError::WM_ERROR_NULLPTR;
     }
-
-    rsSurfaceNodeConfig.SurfaceNodeName = "startingWindow" + std::to_string(node->GetWindowId());
-    node->startingWinSurfaceNode_ = RSSurfaceNode::Create(rsSurfaceNodeConfig);
-    if (node->startingWinSurfaceNode_ == nullptr) {
-        WLOGFE("create startingWinSurfaceNode failed");
-        node->leashWinSurfaceNode_ = nullptr;
-        return WMError::WM_ERROR_NULLPTR;
+    if (!g_initStart) {
+        rsSurfaceNodeConfig.SurfaceNodeName = "startingWindow";
+        g_startingWinSurfaceNode = RSSurfaceNode::Create(rsSurfaceNodeConfig);
+        if (g_startingWinSurfaceNode == nullptr) {
+            WLOGFE("create startingWinSurfaceNode failed");
+            node->leashWinSurfaceNode_ = nullptr;
+            return WMError::WM_ERROR_NULLPTR;
+        }
+        g_initStart = true;
     }
+    node->startingWinSurfaceNode_ = g_startingWinSurfaceNode;
     WLOGFI("Create leashWinSurfaceNode and startingWinSurfaceNode success!");
     return WMError::WM_OK;
 }
@@ -114,9 +121,15 @@ void StartingWindow::HandleClientWindowCreate(sptr<WindowNode>& node, sptr<IWind
 
     // Register FirstFrame Callback to rs, replace startwin
     auto firstFrameCompleteCallback = [node]() {
-        WLOGFI("Replace surfaceNode, id: %{public}u", node->GetWindowId());
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        if (node->leashWinSurfaceNode_ == nullptr) {
+            WLOGFE("leashWinSurfaceNode_ is nullptr");
+            return;
+        }
+        WLOGFI("StartingWindow::Replace surfaceNode, id: %{public}u", node->GetWindowId());
         node->leashWinSurfaceNode_->RemoveChild(node->startingWinSurfaceNode_);
         node->leashWinSurfaceNode_->AddChild(node->surfaceNode_, -1);
+        node->startingWinSurfaceNode_ = nullptr;
         AAFwk::AbilityManagerClient::GetInstance()->CompleteFirstFrameDrawing(node->abilityToken_);
         RSTransaction::FlushImplicitTransaction();
     };
@@ -124,23 +137,53 @@ void StartingWindow::HandleClientWindowCreate(sptr<WindowNode>& node, sptr<IWind
     RSTransaction::FlushImplicitTransaction();
 }
 
+void StartingWindow::ReleaseStartWinSurfaceNode(sptr<WindowNode>& node)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (!node->leashWinSurfaceNode_) {
+        return;
+    }
+    node->leashWinSurfaceNode_->RemoveChild(node->startingWinSurfaceNode_);
+    node->leashWinSurfaceNode_->RemoveChild(node->surfaceNode_);
+    node->leashWinSurfaceNode_ = nullptr;
+    node->startingWinSurfaceNode_ = nullptr;
+    WLOGFI("Release startwindow surfaceNode end id:%{public}u", node->GetWindowId());
+}
+
 void StartingWindow::UpdateRSTree(sptr<WindowNode>& node)
 {
-    auto& dms = DisplayManagerServiceInner::GetInstance();
-    DisplayId displayId = node->GetDisplayId();
-    if (!node->surfaceNode_) { // cold start
-        if (!WindowHelper::IsMainWindow(node->GetWindowType())) {
-            WLOGFE("window id:%{public}d type: %{public}u is not Main Window!",
-                node->GetWindowId(), static_cast<uint32_t>(node->GetWindowType()));
-        }
-        dms.UpdateRSTree(displayId, node->leashWinSurfaceNode_, true);
-        node->leashWinSurfaceNode_->AddChild(node->startingWinSurfaceNode_, -1);
-    } else { // hot start
-        if (node->leashWinSurfaceNode_) { // to app
+    auto updateRSTreeFunc = [&]() {
+        auto& dms = DisplayManagerServiceInner::GetInstance();
+        DisplayId displayId = node->GetDisplayId();
+        if (!node->surfaceNode_) { // cold start
+            if (!WindowHelper::IsMainWindow(node->GetWindowType())) {
+                WLOGFE("window id:%{public}d type: %{public}u is not Main Window!",
+                    node->GetWindowId(), static_cast<uint32_t>(node->GetWindowType()));
+            }
             dms.UpdateRSTree(displayId, node->leashWinSurfaceNode_, true);
-        } else { // to launcher
-            dms.UpdateRSTree(displayId, node->surfaceNode_, true);
+            node->leashWinSurfaceNode_->AddChild(node->startingWinSurfaceNode_, -1);
+        } else { // hot start
+            const auto& displayIdVec = node->GetShowingDisplays();
+            for (auto& shownDisplayId : displayIdVec) {
+                if (node->leashWinSurfaceNode_) { // to app
+                    dms.UpdateRSTree(shownDisplayId, node->leashWinSurfaceNode_, true);
+                } else { // to launcher
+                    dms.UpdateRSTree(shownDisplayId, node->surfaceNode_, true);
+                }
+            }
         }
+    };
+    static const bool IsWindowAnimationEnabled = access(DISABLE_WINDOW_ANIMATION_PATH, F_OK) == 0 ? false : true;
+    if (IsWindowAnimationEnabled && !RemoteAnimation::CheckAnimationController()) {
+        // default transition duration: 350ms
+        static const RSAnimationTimingProtocol timingProtocol(350);
+        // default transition curve: EASE OUT
+        static const Rosen::RSAnimationTimingCurve curve = Rosen::RSAnimationTimingCurve::EASE_OUT;
+        // add window with transition animation
+        RSNode::Animate(timingProtocol, curve, updateRSTreeFunc);
+    } else {
+        // add or remove window without animation
+        updateRSTreeFunc();
     }
 }
 } // Rosen

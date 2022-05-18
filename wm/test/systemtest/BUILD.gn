@@ -269,6 +269,11 @@ ohos_static_library("wm_systemtest_common") {
     "//third_party/googletest:gtest_main",
     "//utils/native/base:utils",
   ]
-  external_deps = [ "bundle_framework:appexecfwk_base" ]
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_base:zuri",
+    "bundle_framework:appexecfwk_base",
+  ]
 }
 ## Build wm_systemtest_common.a }}}

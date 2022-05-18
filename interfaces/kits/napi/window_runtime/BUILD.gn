@@ -87,6 +87,7 @@ ohos_shared_library("window_napi") {
   ]
 
   external_deps = [
+    "ability_base:want",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
     "ability_runtime:runtime",

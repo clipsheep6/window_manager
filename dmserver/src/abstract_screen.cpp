@@ -194,6 +194,7 @@ void AbstractScreen::FillScreenInfo(sptr<ScreenInfo> info) const
         return;
     }
     info->id_ = dmsId_;
+    info->name_ = name_;
     uint32_t width = 0;
     uint32_t height = 0;
     sptr<SupportedScreenModes> abstractScreenModes = GetActiveScreenMode();
@@ -379,12 +380,14 @@ bool AbstractScreenGroup::RemoveChild(sptr<AbstractScreen>& dmsScreen)
     }
     ScreenId screenId = dmsScreen->dmsId_;
     dmsScreen->groupDmsId_ = SCREEN_ID_INVALID;
-    if (rsDisplayNode_ != nullptr) {
-        rsDisplayNode_->RemoveFromTree();
+    if (dmsScreen->rsDisplayNode_ != nullptr) {
+        dmsScreen->rsDisplayNode_->SetDisplayOffset(0, 0);
+        dmsScreen->rsDisplayNode_->RemoveFromTree();
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {
             transactionProxy->FlushImplicitTransaction();
         }
+        dmsScreen->rsDisplayNode_ = nullptr;
     }
     return abstractScreenMap_.erase(screenId);
 }
@@ -410,6 +413,16 @@ std::vector<Point> AbstractScreenGroup::GetChildrenPosition() const
         res.push_back(iter->second.second);
     }
     return res;
+}
+
+Point AbstractScreenGroup::GetChildPosition(ScreenId screenId) const
+{
+    Point point;
+    auto iter = abstractScreenMap_.find(screenId);
+    if (iter != abstractScreenMap_.end()) {
+        point = iter->second.second;
+    }
+    return point;
 }
 
 size_t AbstractScreenGroup::GetChildCount() const

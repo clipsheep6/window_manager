@@ -193,6 +193,7 @@ ohos_static_library("wm_unittest_common") {
   ]
 
   external_deps = [
+    "ability_base:want",
     "ability_runtime:ability_context_native",
     "bundle_framework:appexecfwk_base",
   ]
