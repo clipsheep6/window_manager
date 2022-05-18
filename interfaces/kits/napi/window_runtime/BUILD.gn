@@ -13,9 +13,7 @@
 
 import("//ark/ts2abc/ts2panda/ts2abc_config.gni")
 import("//build/ohos.gni")
-
-aainnerkits_path = "//foundation/aafwk/standard/interfaces/innerkits"
-aakits_path = "//foundation/aafwk/standard/frameworks/kits"
+import("//foundation//windowmanager//windowmanager_aafwk.gni")
 
 config("window_manager_napi_config") {
   visibility = [ ":*" ]
@@ -79,10 +77,10 @@ ohos_shared_library("window_napi") {
   configs = [ ":window_manager_napi_config" ]
   deps = [
     ":window_native_kit",
-    "${aainnerkits_path}/want:want",
-    "${aakits_path}/ability/native:abilitykit_native",
-    "${aakits_path}/appkit:app_context",
-    "${aakits_path}/appkit:appkit_native",
+    "${aafwk_inner_api_path}/want:want",
+    "${aafwk_kits_path}/ability/native:abilitykit_native",
+    "${aafwk_kits_path}/appkit:app_context",
+    "${aafwk_kits_path}/appkit:appkit_native",
     "//foundation/windowmanager/utils:libwmutil",
     "//foundation/windowmanager/wm:libwm",
     "//foundation/windowmanager/wmserver:libwms",
