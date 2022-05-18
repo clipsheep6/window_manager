@@ -77,7 +77,6 @@ ohos_shared_library("window_napi") {
   configs = [ ":window_manager_napi_config" ]
   deps = [
     ":window_native_kit",
-    "${aafwk_inner_api_path}/want:want",
     "${aafwk_kits_path}/ability/native:abilitykit_native",
     "${aafwk_kits_path}/appkit:app_context",
     "${aafwk_kits_path}/appkit:appkit_native",
