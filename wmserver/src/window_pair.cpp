@@ -315,6 +315,8 @@ void WindowPair::UpdateWindowPairStatus()
         status_ == WindowPairStatus::STATUS_PAIRING) {
         // create divider
         SendInnerMessage(InnerWMCmd::INNER_WM_CREATE_DIVIDER, displayId_);
+        // minimize other fullscreen window
+        MinimizeAllFullScreenAppWindow();
     } else if ((prevStatus == WindowPairStatus::STATUS_PAIRED_DONE || prevStatus == WindowPairStatus::STATUS_PAIRING) &&
         (status_ != WindowPairStatus::STATUS_PAIRED_DONE && status_ != WindowPairStatus::STATUS_PAIRING)) {
         // clear pair
@@ -428,6 +430,21 @@ void WindowPair::HandleRemoveWindow(sptr<WindowNode>& node)
     } else if (Find(node) != nullptr) {
         WLOGI("Pairing window id: %{public}u is remove, clear window pair", node->GetWindowId());
         Clear();
+    }
+}
+
+void WindowPair::MinimizeAllFullScreenAppWindow()
+{
+    auto& appNodeVec = *(windowNodeMaps_[displayId_][WindowRootNodeType::APP_WINDOW_NODE]);
+    for (auto iter = appNodeVec.rbegin(); iter != appNodeVec.rend(); iter++) {
+        auto targetNode = *iter;
+        if (targetNode == nullptr) {
+            continue;
+        }
+        if (targetNode->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN) {
+            MinimizeApp::AddNeedMinimizeApp(targetNode, MinimizeReason::OTHER_WINDOW);
+            WLOGFI("Minimize fullscreen window id: %{public}u", targetNode->GetWindowId());
+        }
     }
 }
 } // namespace Rosen

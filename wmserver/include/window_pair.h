@@ -202,6 +202,12 @@ private:
     void SendInnerMessage(InnerWMCmd cmd, DisplayId displayId);
 
     /**
+     * Minimize all fullscreen app window.
+     *
+     */
+    void MinimizeAllFullScreenAppWindow();
+
+    /**
      * Find pairable window frome window trees.
      *
      * @param node the node waiting to be paired

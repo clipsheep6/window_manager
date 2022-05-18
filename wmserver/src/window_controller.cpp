@@ -189,8 +189,6 @@ WMError WindowController::AddWindowNode(sptr<WindowProperty>& property)
             return res;
         }
     }
-    // Need 'check permission'
-    // Need 'adjust property'
     WMError res = windowRoot_->AddWindowNode(property->GetParentId(), node);
     if (res != WMError::WM_OK) {
         MinimizeApp::ClearNodesWithReason(MinimizeReason::OTHER_WINDOW);
