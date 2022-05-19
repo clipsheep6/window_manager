@@ -127,7 +127,8 @@ void DisplayGroupController::ProcessCrossNodes(DisplayStateChangeType type)
                     if (displayId == newDisplayId) {
                         continue;
                     }
-                    windowNodeContainer_->UpdateRSTree(node, displayId, false);
+                    windowNodeContainer_->RemoveNodeFromRSTree(node, displayId, false,
+                        windowNodeContainer_->GetLayoutPolicy()->IsMultiDisplay(), newDisplayId);
                 }
                 // update shown displays and displayId
                 MoveCrossNodeToTargetDisplay(node, newDisplayId);
@@ -359,8 +360,10 @@ void DisplayGroupController::ProcessNotCrossNodesOnDestroiedDisplay(DisplayId di
             MoveNotCrossNodeToDefaultDisplay(node, displayId);
 
             // update RS tree
-            windowNodeContainer_->UpdateRSTree(node, displayId, false);
-            windowNodeContainer_->UpdateRSTree(node, defaultDisplayId_, true);
+            windowNodeContainer_->RemoveNodeFromRSTree(node, displayId,
+                windowNodeContainer_->GetLayoutPolicy()->IsMultiDisplay(), defaultDisplayId_);
+            windowNodeContainer_->AddNodeOnRSTree(node, defaultDisplayId_,
+                windowNodeContainer_->GetLayoutPolicy()->IsMultiDisplay(), defaultDisplayId_);
         }
     }
 }

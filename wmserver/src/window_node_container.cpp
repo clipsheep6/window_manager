@@ -138,7 +138,7 @@ WMError WindowNodeContainer::ShowStartingWindow(sptr<WindowNode>& node)
     }
 
     displayGroupController_->PreProcessWindowNode(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
-    StartingWindow::UpdateRSTree(node);
+    StartingWindow::AddNodeOnRSTree(node, layoutPolicy_->IsMultiDisplay());
     AssignZOrder();
 
     layoutPolicy_->AddWindowNode(node);
@@ -167,7 +167,7 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
         displayGroupController_->PreProcessWindowNode(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
         // add node on RSTree
         for (auto& displayId : node->GetShowingDisplays()) {
-            UpdateRSTree(node, displayId, true, node->isPlayAnimationShow_);
+            AddNodeOnRSTree(node, displayId, layoutPolicy_->IsMultiDisplay(), displayId, node->isPlayAnimationShow_);
         }
     } else {
         node->isPlayAnimationShow_ = false;
@@ -201,14 +201,14 @@ void WindowNodeContainer::UpdateRSTreeWhenShowingDisplaysChange(sptr<WindowNode>
     // Update RSTree
     for (auto& displayId : lastShowingDisplays) {
         if (std::find(curShowingDisplays.begin(), curShowingDisplays.end(), displayId) == curShowingDisplays.end()) {
-            UpdateRSTree(node, displayId, false);
+            RemoveNodeFromRSTree(node, displayId, layoutPolicy_->IsMultiDisplay(), *(curShowingDisplays.begin()));
             WLOGFI("remove from RSTree : %{public}" PRIu64"", displayId);
         }
     }
 
     for (auto& displayId : curShowingDisplays) {
         if (std::find(lastShowingDisplays.begin(), lastShowingDisplays.end(), displayId) == lastShowingDisplays.end()) {
-            UpdateRSTree(node, displayId, true);
+            AddNodeOnRSTree(node, displayId, layoutPolicy_->IsMultiDisplay(), displayId);
             WLOGFI("add on RSTree : %{public}" PRIu64"", displayId);
         }
     }
@@ -283,7 +283,7 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
 
     // Remove node from RSTree
     for (auto& displayId : node->GetShowingDisplays()) {
-        UpdateRSTree(node, displayId, false, node->isPlayAnimationHide_);
+        RemoveNodeFromRSTree(node, displayId, layoutPolicy_->IsMultiDisplay(), displayId, node->isPlayAnimationHide_);
     }
     auto emptyVec = std::vector<DisplayId>();
     node->showingDisplays_.swap(emptyVec);
@@ -379,7 +379,8 @@ void WindowNodeContainer::UpdateWindowTree(sptr<WindowNode>& node)
     parentNode->children_.insert(position, node);
 }
 
-bool WindowNodeContainer::UpdateRSTree(sptr<WindowNode>& node, DisplayId displayId, bool isAdd, bool animationPlayed)
+bool WindowNodeContainer::AddNodeOnRSTree(sptr<WindowNode>& node, DisplayId displayId, bool isMultiDisplay,
+    DisplayId parentDisplayId, bool animationPlayed)
 {
     WM_FUNCTION_TRACE();
     if (node->GetWindowType() == WindowType::WINDOW_TYPE_APP_COMPONENT) {
@@ -389,27 +390,20 @@ bool WindowNodeContainer::UpdateRSTree(sptr<WindowNode>& node, DisplayId display
     static const bool IsWindowAnimationEnabled = ReadIsWindowAnimationEnabledProperty();
     auto updateRSTreeFunc = [&]() {
         auto& dms = DisplayManagerServiceInner::GetInstance();
-        WLOGFI("UpdateRSTree windowId: %{public}d, displayId: %{public}" PRIu64", isAdd: %{public}d",
-            node->GetWindowId(), displayId, isAdd);
-        if (isAdd) {
-            auto& surfaceNode = node->leashWinSurfaceNode_ != nullptr ? node->leashWinSurfaceNode_ : node->surfaceNode_;
-            dms.UpdateRSTree(displayId, surfaceNode, true);
-            for (auto& child : node->children_) {
-                if (child->currentVisibility_) {
-                    dms.UpdateRSTree(displayId, child->surfaceNode_, true);
-                }
-            }
-        } else {
-            auto& surfaceNode = node->leashWinSurfaceNode_ != nullptr ? node->leashWinSurfaceNode_ : node->surfaceNode_;
-            dms.UpdateRSTree(displayId, surfaceNode, false);
-            for (auto& child : node->children_) {
-                dms.UpdateRSTree(displayId, child->surfaceNode_, false);
+        WLOGFI("AddNodeOnRSTree windowId: %{public}d, displayId: %{public}" PRIu64", isMultiDisplay: %{public}d, "
+            "parentDisplayId: %{public}" PRIu64", animationPlayed: %{public}d",
+            node->GetWindowId(), displayId, isMultiDisplay, parentDisplayId, animationPlayed);
+        auto& surfaceNode = node->leashWinSurfaceNode_ != nullptr ? node->leashWinSurfaceNode_ : node->surfaceNode_;
+        dms.UpdateRSTree(displayId, surfaceNode, true, isMultiDisplay, parentDisplayId);
+        for (auto& child : node->children_) {
+            if (child->currentVisibility_) {
+                dms.UpdateRSTree(displayId, child->surfaceNode_, true, isMultiDisplay, parentDisplayId);
             }
         }
     };
 
     if (IsWindowAnimationEnabled && !animationPlayed) {
-        WLOGFI("add or remove window with animation");
+        WLOGFI("add window with animation");
         // default transition duration: 350ms
         static const RSAnimationTimingProtocol timingProtocol(350);
         // default transition curve: EASE OUT
@@ -418,7 +412,44 @@ bool WindowNodeContainer::UpdateRSTree(sptr<WindowNode>& node, DisplayId display
         RSNode::Animate(timingProtocol, curve, updateRSTreeFunc);
     } else {
         // add or remove window without animation
-        WLOGFI("add or remove window without animation");
+        WLOGFI("add window without animation");
+        updateRSTreeFunc();
+    }
+    return true;
+}
+
+bool WindowNodeContainer::RemoveNodeFromRSTree(sptr<WindowNode>& node, DisplayId displayId, bool isMultiDisplay,
+    DisplayId parentDisplayId, bool animationPlayed)
+{
+    WM_FUNCTION_TRACE();
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_APP_COMPONENT) {
+        WLOGFI("WINDOW_TYPE_APP_COMPONENT not need to update RsTree");
+        return true;
+    }
+    static const bool IsWindowAnimationEnabled = ReadIsWindowAnimationEnabledProperty();
+    auto updateRSTreeFunc = [&]() {
+        auto& dms = DisplayManagerServiceInner::GetInstance();
+        WLOGFI("RemoveNodeFromRSTree windowId: %{public}d, displayId: %{public}" PRIu64", isMultiDisplay: %{public}d, "
+            "parentDisplayId: %{public}" PRIu64", animationPlayed: %{public}d",
+            node->GetWindowId(), displayId, isMultiDisplay, parentDisplayId, animationPlayed);
+        auto& surfaceNode = node->leashWinSurfaceNode_ != nullptr ? node->leashWinSurfaceNode_ : node->surfaceNode_;
+        dms.UpdateRSTree(displayId, surfaceNode, false, isMultiDisplay, parentDisplayId);
+        for (auto& child : node->children_) {
+            dms.UpdateRSTree(displayId, child->surfaceNode_, false, isMultiDisplay, parentDisplayId);
+        }
+    };
+
+    if (IsWindowAnimationEnabled && !animationPlayed) {
+        WLOGFI("remove window with animation");
+        // default transition duration: 350ms
+        static const RSAnimationTimingProtocol timingProtocol(350);
+        // default transition curve: EASE OUT
+        static const Rosen::RSAnimationTimingCurve curve = Rosen::RSAnimationTimingCurve::EASE_OUT;
+        // add window with transition animation
+        RSNode::Animate(timingProtocol, curve, updateRSTreeFunc);
+    } else {
+        // add or remove window without animation
+        WLOGFI("remove window without animation");
         updateRSTreeFunc();
     }
     return true;

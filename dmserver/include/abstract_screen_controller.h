@@ -63,7 +63,8 @@ public:
 
     bool SetScreenActiveMode(ScreenId screenId, uint32_t modeId);
     std::shared_ptr<RSDisplayNode> GetRSDisplayNodeByScreenId(ScreenId dmsScreenId) const;
-    void UpdateRSTree(ScreenId dmsScreenId, std::shared_ptr<RSSurfaceNode>& surfaceNode, bool isAdd);
+    void UpdateRSTree(ScreenId dmsScreenId, std::shared_ptr<RSSurfaceNode>& surfaceNode,
+        bool isAdd, bool isMultiDisplay, ScreenId parentScreenId);
     bool MakeMirror(ScreenId, std::vector<ScreenId> screens);
     bool MakeExpand(std::vector<ScreenId> screenIds, std::vector<Point> startPoints);
     void SetShotScreen(ScreenId mainScreenId, std::vector<ScreenId> shotScreenIds);

@@ -35,7 +35,7 @@ public:
         uint32_t& windowId, const std::shared_ptr<RSSurfaceNode>& surfaceNode);
     static void DrawStartingWindow(sptr<WindowNode>& node, sptr<Media::PixelMap> pixelMap, uint32_t bkgColor,
         bool isColdStart);
-    static void UpdateRSTree(sptr<WindowNode>& node);
+    static void AddNodeOnRSTree(sptr<WindowNode>& node, bool isMultiDisplay);
     static void ReleaseStartWinSurfaceNode(sptr<WindowNode>& node);
 private:
     static SurfaceDraw surfaceDraw_;
