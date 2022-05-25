@@ -104,6 +104,8 @@ private:
     std::shared_ptr<RSDisplayNode> GetRSDisplayNodeByDisplayId(DisplayId displayId) const;
     void ConfigureDisplayManagerService();
 
+    bool CheckCallingPermission(std::string permission);
+
     std::recursive_mutex mutex_;
     static inline SingletonDelegator<DisplayManagerService> delegator_;
     sptr<AbstractDisplayController> abstractDisplayController_;
