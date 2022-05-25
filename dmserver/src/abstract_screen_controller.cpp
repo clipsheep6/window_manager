@@ -147,14 +147,19 @@ std::shared_ptr<RSDisplayNode> AbstractScreenController::GetRSDisplayNodeByScree
 }
 
 void AbstractScreenController::UpdateRSTree(ScreenId dmsScreenId, std::shared_ptr<RSSurfaceNode>& surfaceNode,
-    bool isAdd)
+    bool isAdd, bool isMultiDisplay, ScreenId parentScreenId)
 {
     sptr<AbstractScreen> abstractScreen = GetAbstractScreen(dmsScreenId);
-    if (abstractScreen == nullptr) {
-        WLOGE("AbstractScreenController::UpdateRSTree can not find abstractScreen");
+    sptr<AbstractScreen> parentAbstractScreen = GetAbstractScreen(parentScreenId);
+    if (abstractScreen == nullptr || parentAbstractScreen == nullptr) {
+        WLOGE("AbstractScreenController::UpdateRSTree can not find abstractScreen or parentAbstractScreen");
         return;
     }
-    abstractScreen->UpdateRSTree(surfaceNode, isAdd);
+    if (parentAbstractScreen->rsDisplayNode_ == nullptr) {
+        WLOGE("rsDisplayNode of parentAbstractScreen is nullptr");
+        return;
+    }
+    abstractScreen->UpdateRSTree(surfaceNode, isAdd, isMultiDisplay, parentAbstractScreen->rsDisplayNode_->GetId());
 }
 
 sptr<AbstractScreen> AbstractScreenController::GetAbstractScreen(ScreenId dmsScreenId) const

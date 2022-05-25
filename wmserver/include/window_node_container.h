@@ -96,7 +96,10 @@ public:
         ModeChangeHotZones& hotZones, const ModeChangeHotZonesConfig& config);
     sptr<DisplayInfo> GetDisplayInfo(DisplayId displayId);
     float GetDisplayVirtualPixelRatio(DisplayId displayId) const;
-    bool UpdateRSTree(sptr<WindowNode>& node, DisplayId displayId, bool isAdd, bool animationPlayed = false);
+    bool AddNodeOnRSTree(sptr<WindowNode>& node, DisplayId displayId,
+        bool isMultiDisplay, DisplayId parentDisplayId, bool animationPlayed = false);
+    bool RemoveNodeFromRSTree(sptr<WindowNode>& node,
+        DisplayId displayId, bool isMultiDisplay, DisplayId parentDisplayId, bool animationPlayed = false);
 
     sptr<WindowLayoutPolicy> GetLayoutPolicy() const;
     sptr<AvoidAreaController> GetAvoidController() const;
