@@ -18,6 +18,7 @@
 #include <cinttypes>
 #include <iservice_registry.h>
 #include <system_ability_definition.h>
+#include <securec.h>
 
 #include "display_manager_agent_controller.h"
 #include "transaction/rs_interfaces.h"
@@ -25,6 +26,10 @@
 #include "wm_trace.h"
 #include "display_manager_config.h"
 #include "dm_common.h"
+
+#include "accesstoken_kit.h"
+#include "bundle_constants.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -188,9 +193,25 @@ bool DisplayManagerService::SetOrientationFromWindow(ScreenId screenId, Orientat
 std::shared_ptr<Media::PixelMap> DisplayManagerService::GetDisplaySnapshot(DisplayId displayId)
 {
     WM_SCOPED_TRACE("dms:GetDisplaySnapshot(%" PRIu64")", displayId);
+    if (!CheckCallingPermission("ohos.permission.CAPTURE_SCREEN")) {
+        WLOGFE("Get Screenshot failed. Do not have permission!");
+        return nullptr;
+    }
     std::shared_ptr<Media::PixelMap> screenSnapshot
         = abstractDisplayController_->GetScreenSnapshot(displayId);
     return screenSnapshot;
+}
+
+bool DisplayManagerService::CheckCallingPermission(std::string permission)
+{
+    WLOGFI("Permission: %{public}s", permission.c_str());
+    if (!permission.empty() &&
+        Security::AccessToken::AccessTokenKit::VerifyAccessToken(IPCSkeleton::GetCallingTokenID(), permission)
+        != AppExecFwk::Constants::PERMISSION_GRANTED) {
+        WLOGFE("Permission %{public}s is not granted", permission.c_str());
+        return false;
+    }
+    return true;
 }
 
 ScreenId DisplayManagerService::GetRSScreenId(DisplayId displayId) const
