@@ -15,6 +15,7 @@
 
 #include "displaymanager_fuzzer.h"
 
+#include <securec.h>
 #include "display_manager.h"
 
 namespace OHOS ::Rosen {
@@ -45,7 +46,7 @@ size_t GetObject(T &object, const uint8_t *data, size_t size)
     if (objectSize > size) {
         return 0;
     }
-    std::memcpy(&object, data, objectSize);
+    memcpy_s(&object, objectSize, data, objectSize);
     return objectSize;
 }
 
