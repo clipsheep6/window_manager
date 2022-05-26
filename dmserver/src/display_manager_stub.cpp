@@ -19,6 +19,8 @@
 
 #include <ipc_skeleton.h>
 
+#include "accesstoken_kit.h"
+#include "bundle_constants.h"
 #include "marshalling_helper.h"
 #include "window_manager_hilog.h"
 
@@ -27,6 +29,15 @@
 namespace OHOS::Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "DisplayManagerStub"};
+}
+
+bool DisplayManagerStub::CheckCallingPermission(const std::string &permission)
+{
+    if (Security::AccessToken::AccessTokenKit::VerifyAccessToken(IPCSkeleton::GetCallingTokenID(), permission) !=
+        AppExecFwk::Constants::PERMISSION_GRANTED) {
+        return false;
+    }
+    return true;
 }
 
 int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
@@ -110,6 +121,12 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
             break;
         }
         case DisplayManagerMessage::TRANS_ID_GET_DISPLAY_SNAPSHOT: {
+            if (!CheckCallingPermission("ohos.permission.CAPTURE_SCREEN")) {
+                WLOGFE("check permission failed!");
+                reply.WriteParcelable(nullptr);
+                break;
+            }
+
             DisplayId displayId = data.ReadUint64();
             std::shared_ptr<Media::PixelMap> displaySnapshot = GetDisplaySnapshot(displayId);
             reply.WriteParcelable(displaySnapshot == nullptr ? nullptr : displaySnapshot.get());
