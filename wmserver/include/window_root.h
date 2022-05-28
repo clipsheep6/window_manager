@@ -63,9 +63,9 @@ public:
     WMError SetWindowLayoutMode(DisplayId displayId, WindowLayoutMode mode);
 
     void ProcessWindowStateChange(WindowState state, WindowStateChangeReason reason);
-    void ProcessDisplayChange(DisplayId displayId, DisplayStateChangeType type);
-    void ProcessDisplayDestroy(DisplayId displayId);
-    void ProcessDisplayCreate(DisplayId displayId);
+    void ProcessDisplayChange(DisplayId displayId, ScreenId groupId, DisplayStateChangeType type);
+    void ProcessDisplayDestroy(DisplayId displayId, ScreenId groupId);
+    void ProcessDisplayCreate(DisplayId displayId, ScreenId groupId, sptr<DisplayInfo> info);
 
     void NotifySystemBarTints();
     WMError RaiseZOrderForAppWindow(sptr<WindowNode>& node);
@@ -97,7 +97,7 @@ private:
     void NotifyKeyboardSizeChangeInfo(const sptr<WindowNode>& node,
         const sptr<WindowNodeContainer>& container, Rect rect);
     ScreenId GetScreenGroupId(DisplayId displayId, bool& isRecordedDisplay);
-    void ProcessExpandDisplayCreate(DisplayId displayId, ScreenId screenGroupId);
+    void ProcessExpandDisplayCreate(DisplayId displayId, ScreenId screenGroupId, sptr<DisplayInfo> displayInfo);
     std::map<DisplayId, sptr<DisplayInfo>> GetAllDisplayInfos(const std::vector<DisplayId>& displayIdVec);
     std::map<DisplayId, Rect> GetAllDisplayRects(const std::vector<DisplayId>& displayIdVec);
     void MoveNotShowingWindowToDefaultDisplay(DisplayId displayId);
