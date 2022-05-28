@@ -99,7 +99,7 @@ private:
     DisplayManagerService();
     ~DisplayManagerService() = default;
     bool Init();
-    void NotifyDisplayStateChange(DisplayId id, DisplayStateChangeType type);
+    void NotifyDisplayStateChange(DisplayId id, ScreenId groupid, sptr<DisplayInfo> info, DisplayStateChangeType type);
     ScreenId GetScreenIdByDisplayId(DisplayId displayId) const;
     std::shared_ptr<RSDisplayNode> GetRSDisplayNodeByDisplayId(DisplayId displayId) const;
     void ConfigureDisplayManagerService();
