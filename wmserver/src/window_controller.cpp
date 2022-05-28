@@ -378,7 +378,8 @@ WMError WindowController::SetAlpha(uint32_t windowId, float dstAlpha)
     return WMError::WM_OK;
 }
 
-void WindowController::NotifyDisplayStateChange(DisplayId displayId, DisplayStateChangeType type)
+void WindowController::NotifyDisplayStateChange(
+    DisplayId displayId, ScreenId groupid, sptr<DisplayInfo> info, DisplayStateChangeType type)
 {
     WLOGFD("DisplayStateChangeType:%{public}u", type);
     switch (type) {
@@ -393,17 +394,17 @@ void WindowController::NotifyDisplayStateChange(DisplayId displayId, DisplayStat
             break;
         }
         case DisplayStateChangeType::CREATE: {
-            windowRoot_->ProcessDisplayCreate(displayId);
+            windowRoot_->ProcessDisplayCreate(displayId, groupid, info);
             break;
         }
         case DisplayStateChangeType::DESTROY: {
-            windowRoot_->ProcessDisplayDestroy(displayId);
+            windowRoot_->ProcessDisplayDestroy(displayId, groupid);
             break;
         }
         case DisplayStateChangeType::SIZE_CHANGE:
         case DisplayStateChangeType::UPDATE_ROTATION:
         case DisplayStateChangeType::VIRTUAL_PIXEL_RATIO_CHANGE: {
-            ProcessDisplayChange(displayId, type);
+            ProcessDisplayChange(displayId, groupid, info, type);
             break;
         }
         default: {
@@ -451,20 +452,20 @@ void WindowController::ProcessSystemBarChange(const sptr<DisplayInfo>& displayIn
     ResizeRect(sysBarWinId_[WindowType::WINDOW_TYPE_NAVIGATION_BAR], newRect, WindowSizeChangeReason::DRAG);
 }
 
-void WindowController::ProcessDisplayChange(DisplayId displayId, DisplayStateChangeType type)
+void WindowController::ProcessDisplayChange(
+    DisplayId displayId, ScreenId groupid, sptr<DisplayInfo> info, DisplayStateChangeType type)
 {
-    const sptr<DisplayInfo> displayInfo = DisplayManagerServiceInner::GetInstance().GetDisplayById(displayId);
-    if (displayInfo == nullptr) {
+    if (info == nullptr) {
         WLOGFE("get display failed displayId:%{public}" PRIu64 "", displayId);
         return;
     }
     switch (type) {
         case DisplayStateChangeType::SIZE_CHANGE:
         case DisplayStateChangeType::UPDATE_ROTATION:
-            ProcessSystemBarChange(displayInfo);
+            ProcessSystemBarChange(info);
             [[fallthrough]];
         case DisplayStateChangeType::VIRTUAL_PIXEL_RATIO_CHANGE: {
-            windowRoot_->ProcessDisplayChange(displayId, type);
+            windowRoot_->ProcessDisplayChange(displayId, groupid, type);
             break;
         }
         default: {
