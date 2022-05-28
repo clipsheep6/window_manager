@@ -421,7 +421,7 @@ void WindowManagerService::OnWindowEvent(Event event, const sptr<IRemoteObject>&
     }
 }
 
-void WindowManagerService::NotifyDisplayStateChange(DisplayId id, DisplayStateChangeType type)
+void WindowManagerService::NotifyDisplayStateChange(DisplayId id, ScreenId groupid, sptr<DisplayInfo> info, DisplayStateChangeType type)
 {
     WM_SCOPED_TRACE("wms:NotifyDisplayStateChange(%u)", type);
     if (type == DisplayStateChangeType::FREEZE) {
@@ -429,13 +429,13 @@ void WindowManagerService::NotifyDisplayStateChange(DisplayId id, DisplayStateCh
     } else if (type == DisplayStateChangeType::UNFREEZE) {
         freezeDisplayController_->UnfreezeDisplay(id);
     } else {
-        return windowController_->NotifyDisplayStateChange(id, type);
+        return windowController_->NotifyDisplayStateChange(id, groupid, info, type);
     }
 }
 
-void DisplayChangeListener::OnDisplayStateChange(DisplayId id, DisplayStateChangeType type)
+void DisplayChangeListener::OnDisplayStateChange(DisplayId id, ScreenId groupid, sptr<DisplayInfo> info, DisplayStateChangeType type)
 {
-    WindowManagerService::GetInstance().NotifyDisplayStateChange(id, type);
+    WindowManagerService::GetInstance().NotifyDisplayStateChange(id, groupid, info, type);
 }
 
 void WindowManagerService::ProcessPointDown(uint32_t windowId, bool isStartDrag)

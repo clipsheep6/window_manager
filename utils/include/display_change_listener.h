@@ -33,7 +33,7 @@ enum class DisplayStateChangeType : uint32_t {
 };
 class IDisplayChangeListener : public RefBase {
 public:
-    virtual void OnDisplayStateChange(DisplayId id, DisplayStateChangeType type) = 0;
+    virtual void OnDisplayStateChange(DisplayId id, ScreenId groupid, sptr<DisplayInfo> info, DisplayStateChangeType type) = 0;
 };
 }
 }
