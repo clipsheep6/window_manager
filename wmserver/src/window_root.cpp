@@ -71,7 +71,8 @@ sptr<WindowNodeContainer> WindowRoot::GetOrCreateWindowNodeContainer(DisplayId d
     if (iter != windowNodeContainerMap_.end()) {
         // if container exist for screenGroup and display is not be recorded, process expand display
         if (!isRecordedDisplay) {
-            ProcessExpandDisplayCreate(displayId, displayGroupId);
+            sptr<DisplayInfo> displayInfo = DisplayManagerServiceInner::GetInstance().GetDisplayById(displayId);
+            ProcessExpandDisplayCreate(displayId, displayGroupId, displayInfo);
         }
         return iter->second;
     }
@@ -966,9 +967,8 @@ void WindowRoot::FocusFaultDetection() const
     }
 }
 
-void WindowRoot::ProcessExpandDisplayCreate(DisplayId displayId, ScreenId displayGroupId)
+void WindowRoot::ProcessExpandDisplayCreate(DisplayId displayId, ScreenId displayGroupId, sptr<DisplayInfo> displayInfo)
 {
-    const sptr<DisplayInfo> displayInfo = DisplayManagerServiceInner::GetInstance().GetDisplayById(displayId);
         if (displayInfo == nullptr || !CheckDisplayInfo(displayInfo)) {
             WLOGFE("get display failed or get invailed display info, displayId :%{public}" PRIu64 "", displayId);
             return;
@@ -1014,20 +1014,19 @@ std::map<DisplayId, Rect> WindowRoot::GetAllDisplayRects(const std::vector<Displ
     return displayRectMap;
 }
 
-void WindowRoot::ProcessDisplayCreate(DisplayId displayId)
+void WindowRoot::ProcessDisplayCreate(DisplayId displayId, ScreenId groupId, sptr<DisplayInfo> info)
 {
-    ScreenId displayGroupId = DisplayManagerServiceInner::GetInstance().GetScreenGroupIdByDisplayId(displayId);
-    auto iter = windowNodeContainerMap_.find(displayGroupId);
+    auto iter = windowNodeContainerMap_.find(groupId);
     if (iter == windowNodeContainerMap_.end()) {
         CreateWindowNodeContainer(displayId);
         WLOGFI("[Display Create] Create new container for display, displayId: %{public}" PRIu64"", displayId);
     } else {
-        auto& displayIdVec = displayIdMap_[displayGroupId];
+        auto& displayIdVec = displayIdMap_[groupId];
         if (std::find(displayIdVec.begin(), displayIdVec.end(), displayId) != displayIdVec.end()) {
             WLOGFI("[Display Create] Current display is already exist, displayId: %{public}" PRIu64"", displayId);
             return;
         }
-        ProcessExpandDisplayCreate(displayId, displayGroupId);
+        ProcessExpandDisplayCreate(displayId, groupId, info);
     }
 }
 
@@ -1048,11 +1047,10 @@ void WindowRoot::MoveNotShowingWindowToDefaultDisplay(DisplayId displayId)
     }
 }
 
-void WindowRoot::ProcessDisplayDestroy(DisplayId displayId)
+void WindowRoot::ProcessDisplayDestroy(DisplayId displayId, ScreenId groupid)
 {
-    ScreenId displayGroupId = DisplayManagerServiceInner::GetInstance().GetScreenGroupIdByDisplayId(displayId);
-    auto& displayIdVec = displayIdMap_[displayGroupId];
-    auto iter = windowNodeContainerMap_.find(displayGroupId);
+    auto& displayIdVec = displayIdMap_[groupid];
+    auto iter = windowNodeContainerMap_.find(groupid);
     if (iter == windowNodeContainerMap_.end() || std::find(displayIdVec.begin(),
         displayIdVec.end(), displayId) == displayIdVec.end()) {
         WLOGFE("[Display Destroy] could not find display, destroy failed, displayId: %{public}" PRIu64"", displayId);
@@ -1085,11 +1083,10 @@ void WindowRoot::ProcessDisplayDestroy(DisplayId displayId)
     WLOGFI("[Display Destroy] displayId: %{public}" PRIu64" ", displayId);
 }
 
-void WindowRoot::ProcessDisplayChange(DisplayId displayId, DisplayStateChangeType type)
+void WindowRoot::ProcessDisplayChange(DisplayId displayId, ScreenId groupId, DisplayStateChangeType type)
 {
-    ScreenId displayGroupId = DisplayManagerServiceInner::GetInstance().GetScreenGroupIdByDisplayId(displayId);
-    auto& displayIdVec = displayIdMap_[displayGroupId];
-    auto iter = windowNodeContainerMap_.find(displayGroupId);
+    auto& displayIdVec = displayIdMap_[groupId];
+    auto iter = windowNodeContainerMap_.find(groupId);
     if (iter == windowNodeContainerMap_.end() || std::find(displayIdVec.begin(),
         displayIdVec.end(), displayId) == displayIdVec.end()) {
         WLOGFE("[Display Change] could not find display, change failed, displayId: %{public}" PRIu64"", displayId);

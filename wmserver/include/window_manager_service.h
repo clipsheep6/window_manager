@@ -39,7 +39,7 @@ namespace OHOS {
 namespace Rosen {
 class DisplayChangeListener : public IDisplayChangeListener {
 public:
-    virtual void OnDisplayStateChange(DisplayId id, DisplayStateChangeType type) override;
+    virtual void OnDisplayStateChange(DisplayId id, ScreenId groupid, sptr<DisplayInfo> info, DisplayStateChangeType type) override;
 };
 
 class WindowManagerServiceHandler : public AAFwk::WindowManagerServiceHandlerStub {
@@ -105,7 +105,7 @@ private:
     void RegisterSnapshotHandler();
     void RegisterWindowManagerServiceHandler();
     void OnWindowEvent(Event event, const sptr<IRemoteObject>& remoteObject);
-    void NotifyDisplayStateChange(DisplayId id, DisplayStateChangeType type);
+    void NotifyDisplayStateChange(DisplayId id, ScreenId groupid, sptr<DisplayInfo> info, DisplayStateChangeType type);
     WMError GetFocusWindowInfo(sptr<IRemoteObject>& abilityToken);
     void ConfigureWindowManagerService();
 
