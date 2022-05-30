@@ -1,0 +1,9 @@
+{
+  "message": {
+    "hello": "hello world"
+  },
+  "color": {
+    "gray": "gray",
+    "black": "black"
+  }
+}

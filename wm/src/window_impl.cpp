@@ -2038,6 +2038,11 @@ void WindowImpl::SetDefaultOption()
             property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
             break;
         }
+        case WindowType::WINDOW_TYPE_DOCK_SLICE: {
+            property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+            property_->SetFocusable(false);
+            break;
+        }
         default:
             break;
     }
