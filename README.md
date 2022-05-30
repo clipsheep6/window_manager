@@ -53,7 +53,7 @@ foundation/windowmanager/
 
 ## Repositories Involved
 
-- [graphic_standard](https://gitee.com/openharmony/graphic_standard)
+- [graphic_graphic_2d](https://gitee.com/openharmony/graphic_graphic_2d)
 - [ace_ace_engine](https://gitee.com/openharmony/ace_ace_engine)
 - [aafwk_standard](https://gitee.com/openharmony/aafwk_standard)
 - [multimodalinput_input](https://gitee.com/openharmony/multimodalinput_input)

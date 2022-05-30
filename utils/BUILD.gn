@@ -58,7 +58,7 @@ ohos_shared_library("libwmutil") {
 
   external_deps = [
     "ability_runtime:ability_manager",
-    "graphic_standard:surface",
+    "graphic_graphic_2d:surface",
     "hilog_native:libhilog",
     "hitrace_native:hitrace_meter",
     "ipc:ipc_core",
