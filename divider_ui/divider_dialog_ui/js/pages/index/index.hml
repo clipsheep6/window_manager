@@ -17,29 +17,7 @@
 
 <div class="container" style="background-color: {{ backgroundColor }}"
      ontouchend="onTouchEnd" ontouchstart="onTouching">
-    <button class="but-exchange" onclick="onExchange" ondoubleclick="onExchangeDoubleClick"
+    <button class="divider-but" onclick="onExchange" ondoubleclick="onExchangeDoubleClick"
             click-effect="spring-small">
     </button>
-<!--    <button class="but-confirm" onclick="onCancel">-->
-<!--        取消-->
-<!--    </button>-->
-<!--    <button class="but-exit" onclick="onExit">-->
-<!--        退出-->
-<!--    </button>-->
-<!--    <menu id="apiMenu" onselected="onMenuSelected">-->
-<!--        <option value="1">1:1</option>-->
-<!--        <option value="2">2:1</option>-->
-<!--        <option value="3">3:1</option>-->
-<!--    </menu>-->
-<!--    <select class="changeFruit" @change="changeFruit">-->
-<!--        <option value="bananaValue">-->
-<!--            1:2-->
-<!--        </option>-->
-<!--        <option value="appleValue" selected="true">-->
-<!--            1:1-->
-<!--        </option>-->
-<!--        <option value="pearValue">-->
-<!--            2:1-->
-<!--        </option>-->
-<!--    </select>-->
 </div>

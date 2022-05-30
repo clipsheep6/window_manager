@@ -45,13 +45,6 @@ public:
         STATE_NOT_START,
         STATE_RUNNING,
     };
-    enum class CallbackType {
-        CALLBACK_INPUT = 0,
-        CALLBACK_FRAME = 1,
-    };
-    struct VsyncCallback {
-        OnCallback onCallback;
-    };
     ~InnerWindowManager();
 
 private:

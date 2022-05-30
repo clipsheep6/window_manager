@@ -24,78 +24,22 @@
     height: 100%;
 }
 
-.title {
-    font-size: 80px;
-    text-align: center;
-    font-weight: 800;
-    width: 100%;
-    height: 40%;
-    margin: 10px;
-}
-.apiMenu {
-    width: 30%;
-    font-size: 40px;
-    height: 80px;
-    border: 1px solid #e7e7e7;
-    border-radius: 50px;
-    margin-top: 5px;
-}
-
-.but-confirm {
-    width: 30%;
-    font-size: 40px;
-    height: 80px;
-    border: 1px solid #e7e7e7;
-    border-radius: 50px;
-    margin-top: 5px;
-}
-
-.but-exchange {
-/*    justify-content: space-around;*/
-/*    width: 100%;*/
-/*    font-size: 40px;*/
-/*    height: 80px;*/
-/*    border: 1px solid #e7e7e7;*/
-/*    border-radius: 50px;*/
-/*    margin-top: 5px;*/
-/*    width: 90%;*/
-/*   height: 10%;*/
+.divider-but {
     flex-direction: row;
     justify-content: space-around;
     background-color: whitesmoke;
 }
 
-.changeFruit {
-    width: 100%;
-    font-size: 40px;
-    height: 100px;
-/*    border: 1px solid #e7e7e7;*/
-/*    border-radius: 50px;*/
-    margin-top: 5px;
-}
-.but-exit {
-    width: 30%;
-    font-size: 40px;
-    height: 80px;
-    border: 1px solid #e7e7e7;
-    border-radius: 50px;
-    margin-top: 5px;
-}
+
 @media screen and (device-type: phone) and (orientation: portrait) {
-    .title {
-        font-size: 60px;
-    }
-    .but-exchange {
+    .divider-but {
         width: 10%;
         height: 90%;
     }
 }
 
 @media screen and (device-type: tablet) and (orientation: landscape) {
-    .title {
-        font-size: 100px;
-    }
-    .but-exchange {
+    .divider-but {
         width: 90%;
         height: 10%;
     }
