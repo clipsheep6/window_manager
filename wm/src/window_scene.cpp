@@ -141,14 +141,6 @@ WMError WindowScene::OnNewWant(const AAFwk::Want& want)
     return WMError::WM_OK;
 }
 
-WMError WindowScene::SetSystemBarProperty(WindowType type, const SystemBarProperty& property) const
-{
-    if (mainWindow_ == nullptr) {
-        return WMError::WM_ERROR_NULLPTR;
-    }
-    return mainWindow_->SetSystemBarProperty(type, property);
-}
-
 WMError WindowScene::RequestFocus() const
 {
     if (mainWindow_ == nullptr) {

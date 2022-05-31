@@ -730,14 +730,6 @@ bool WindowNodeContainer::IsAboveSystemBarNode(sptr<WindowNode> node) const
     return false;
 }
 
-bool WindowNodeContainer::IsFullImmersiveNode(sptr<WindowNode> node) const
-{
-    auto mode = node->GetWindowMode();
-    auto flags = node->GetWindowFlags();
-    return mode == WindowMode::WINDOW_MODE_FULLSCREEN &&
-        !(flags & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID));
-}
-
 bool WindowNodeContainer::IsSplitImmersiveNode(sptr<WindowNode> node) const
 {
     auto type = node->GetWindowType();
@@ -758,7 +750,7 @@ std::unordered_map<WindowType, SystemBarProperty> WindowNodeContainer::GetExpect
             if (IsAboveSystemBarNode(*iter)) {
                 continue;
             }
-            if (IsFullImmersiveNode(*iter)) {
+            if (WindowHelper::IsFullScreenWindow((*iter)->GetWindowMode()) && (*iter)->isSystemBarPropSetted_) {
                 WLOGFI("Top immersive window id: %{public}d. Use full immersive prop", (*iter)->GetWindowId());
                 for (auto it : sysBarPropMap) {
                     sysBarPropMap[it.first] = (sysBarPropMapNode.find(it.first))->second;
@@ -790,6 +782,10 @@ void WindowNodeContainer::NotifyIfSystemBarTintChanged(DisplayId displayId)
         if (it.second.prop_ == expectProp) {
             continue;
         }
+        if (expectProp.backgroundColor_ == UINT32_MAX && expectProp.contentColor_ == UINT32_MAX) {
+            continue;
+        }
+
         WLOGFI("System bar prop update, Type: %{public}d, Visible: %{public}d, Color: %{public}x | %{public}x",
             static_cast<int32_t>(it.first), expectProp.enable_, expectProp.backgroundColor_, expectProp.contentColor_);
         sysBarTintMap[it.first].prop_ = expectProp;

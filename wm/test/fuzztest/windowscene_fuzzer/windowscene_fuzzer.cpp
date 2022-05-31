@@ -172,11 +172,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     uint32_t reason;
     startPos += GetObject<uint32_t>(reason, data + startPos, size - startPos);
     windowScene->GoForeground(reason);
-    SystemBarProperty systemBarProperty;
-    WindowType type;
-    startPos += GetObject<SystemBarProperty>(systemBarProperty, data + startPos, size - startPos);
-    startPos += GetObject<WindowType>(type, data + startPos, size - startPos);
-    windowScene->SetSystemBarProperty(type, systemBarProperty);
     startPos += GetObject<uint32_t>(reason, data + startPos, size - startPos);
     windowScene->GoBackground(reason);
     if (window != nullptr) {
