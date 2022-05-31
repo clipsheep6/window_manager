@@ -87,6 +87,10 @@ void WindowController::CancelStartingWindow(sptr<IRemoteObject> abilityToken)
         WLOGFE("CancelStartingWindow failed because client window has shown");
         return;
     }
+    if (!node->GetWindowToken()) {
+        WLOGFE("CancelStartingWindow failed because client window has created but not shown");
+        return;
+    }
     WLOGFI("CancelStartingWindow with id:%{public}u!", node->GetWindowId());
     node->isAppCrash_ = true;
     WMError res = windowRoot_->DestroyWindow(node->GetWindowId(), false);
