@@ -29,8 +29,33 @@
 #include "wm_single_instance.h"
 #include "wm_common.h"
 
+#include "include/core/SkBitmap.h"
+#ifdef ACE_ENABLE_GL
+#include "render_context/render_context.h"
+#endif
+#include "transaction/rs_transaction.h"
+#include "ui/rs_surface_extractor.h"
+#include "window.h"
+
 namespace OHOS {
 namespace Rosen {
+// enum class DialogWindowCallbackType {
+//     DIALOG_CALLBACK_ON_CLICK,
+//     DIALOG_CALLBACK_ON_DOUBLECLICK,
+//     DIALOG_CALLBACK_ON_TOUCHING
+// };
+// class InnerDialogWindowInterface {
+// public:
+//     virtual void Init() = 0;
+//     virtual bool Show() = 0;
+//     virtual bool Destroy() = 0;
+//     virtual void AddCallback(DialogWindowCallbackType callbackType) = 0;
+// };
+// class DialogDividerWindow : public InnerDialogWindowInterface {
+//     void void Init() override;
+//     void bool Show() override;
+//     void bool Destroy();
+// };
 class InnerWindowManager : public RefBase {
 WM_DECLARE_SINGLE_INSTANCE_BASE(InnerWindowManager);
 using EventRunner = OHOS::AppExecFwk::EventRunner;
@@ -39,6 +64,7 @@ using OnCallback = std::function<void(int64_t)>;
 public:
     void Start();
     void CreateWindow(std::string name, WindowType type, Rect rect);
+    void CreateInnerWindow(WindowMode mode, DisplayId displayId);
     void DestroyWindow();
 public:
     enum class InnerWMRunningState {
@@ -53,6 +79,12 @@ private:
     void Stop();
     void HandleCreateWindow(std::string name, WindowType type, Rect rect);
     void HandleDestroyWindow();
+    void HandleCreateInnerWindow(WindowMode mode, DisplayId displayId);
+
+    void DrawSurface(const sptr<Window>& window);
+    void DrawColor(std::shared_ptr<RSSurface>& rsSurface, uint32_t width, uint32_t height);
+    void DrawBitmap(std::shared_ptr<RSSurface>& rsSurface, uint32_t width, uint32_t height);
+    bool DecodeImageFile(const char* filename, SkBitmap& bitmap);
 
 private:
     std::shared_ptr<EventHandler> eventHandler_;
@@ -60,6 +92,13 @@ private:
     InnerWMRunningState state_;
     int32_t dialogId_ = -1;
     const std::string INNER_WM_THREAD_NAME = "inner_window_manager";
+    const char *splitIconPath_ = "/etc/window/resources/bg_place_holder.png";
+    uint32_t DIVIDER_HANDLE_COLOR = 0xff808080; // gray
+    SkBitmap dividerBitmap_;
+    bool isDividerImageLoaded_ = false;
+#ifdef ACE_ENABLE_GL
+    std::unique_ptr<RenderContext> renderContext_;
+#endif
 };
 } // namespace Rosen
 } // namespace OHOS

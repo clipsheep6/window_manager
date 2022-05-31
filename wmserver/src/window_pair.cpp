@@ -53,6 +53,7 @@ void WindowPair::SendBroadcastMsg(sptr<WindowNode>& node)
     if (node == nullptr) {
         return;
     }
+    InnerWindowManager::GetInstance().CreateInnerWindow(WindowMode::WINDOW_MODE_SPLIT_SECONDARY, node->GetDisplayId());
     // reset ipc identity
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     AAFwk::Want want;
@@ -333,8 +334,8 @@ void WindowPair::UpdateWindowPairStatus()
         status_ == WindowPairStatus::STATUS_PAIRING) {
         // create divider
         // SendInnerMessage(InnerWMCmd::INNER_WM_CREATE_DIVIDER, displayId_);
-        Rect rect {0, 300, 720, 8};
-        InnerWindowManager::GetInstance().CreateWindow("dialog_divider_ui", WindowType::WINDOW_TYPE_DOCK_SLICE, rect);
+        InnerWindowManager::GetInstance().CreateWindow("dialog_divider_ui",
+            WindowType::WINDOW_TYPE_DOCK_SLICE, initalDivderRect_);
     } else if ((prevStatus == WindowPairStatus::STATUS_PAIRED_DONE || prevStatus == WindowPairStatus::STATUS_PAIRING) &&
         (status_ != WindowPairStatus::STATUS_PAIRED_DONE && status_ != WindowPairStatus::STATUS_PAIRING)) {
         // clear pair
@@ -456,6 +457,11 @@ void WindowPair::HandleRemoveWindow(sptr<WindowNode>& node)
 void WindowPair::SetAllAppWindowsRestoring(bool isAllAppWindowsRestoring)
 {
     isAllAppWindowsRestoring_ = isAllAppWindowsRestoring;
+}
+
+void WindowPair::SetInitalDividerRect(const Rect& rect)
+{
+    initalDivderRect_ = rect;
 }
 } // namespace Rosen
 } // namespace OHOS

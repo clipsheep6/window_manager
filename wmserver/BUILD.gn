@@ -42,6 +42,13 @@ ohos_prebuilt_etc("window_divider_image") {
   relative_install_dir = "window/resources"
 }
 
+ohos_prebuilt_etc("wind_place_holder_image") {
+  source = "//foundation/windowmanager/resources/media/bg_place_holder.png"
+  part_name = "window_manager"
+  subsystem_name = "window"
+  relative_install_dir = "window/resources"
+}
+
 ohos_prebuilt_etc("window_manager_config") {
   if (device_name == "rk3568") {
     source =
@@ -105,6 +112,7 @@ ohos_shared_library("libwms") {
     ":window_divider_image",
     ":window_manager_config",
     ":window_starting_image",
+    ":wind_place_holder_image",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/windowmanager/dm:libdm",
     "//foundation/windowmanager/dmserver:libdms",

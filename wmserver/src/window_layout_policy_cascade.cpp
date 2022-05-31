@@ -30,7 +30,7 @@ WindowLayoutPolicyCascade::WindowLayoutPolicyCascade(const sptr<DisplayGroupInfo
     DisplayGroupWindowTree& displayGroupWindowTree)
     : WindowLayoutPolicy(displayGroupInfo, displayGroupWindowTree)
 {
-    CascadeRects cascadeRects {
+    LayoutRects cascadeRects {
         .primaryRect_        = {0, 0, 0, 0},
         .secondaryRect_      = {0, 0, 0, 0},
         .primaryLimitRect_   = {0, 0, 0, 0},
@@ -183,6 +183,11 @@ void WindowLayoutPolicyCascade::AddWindowNode(const sptr<WindowNode>& node)
             node->SetRequestRect(restoringDividerWindowRects_[displayId]);
         }
         restoringDividerWindowRects_.erase(displayId);
+    } else if (node->GetWindowType() == WindowType::WINDOW_TYPE_PLACE_HOLDER) {
+        Rect placeHolderRect = node->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ?
+            cascadeRectsMap_[node->GetDisplayId()].primaryLimitRect_ :
+            cascadeRectsMap_[node->GetDisplayId()].secondaryLimitRect_;
+        node->SetRequestRect(placeHolderRect); // init place holder window
     }
     UpdateWindowNode(node, true); // currently, update and add do the same process
 }
@@ -247,20 +252,12 @@ void WindowLayoutPolicyCascade::ApplyWindowRectConstraints(const sptr<WindowNode
 {
     WLOGFI("Before apply constraints winRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
         winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
-    auto reason = node->GetWindowSizeChangeReason();
-    
     if (node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) { // if divider, limit position
         LimitMoveBounds(winRect, node->GetDisplayId());
     }
 
-    // if drag or move window, limit size and position
-    if (reason == WindowSizeChangeReason::DRAG || reason == WindowSizeChangeReason::MOVE) {
-        LimitMainFloatingWindowPositionWithDrag(node, winRect);
-    } else {
-        // Limit window to the maximum window size if size change is other reason, such as init window rect when show
-        LimitFloatingWindowSize(node, displayGroupInfo_->GetDisplayRect(node->GetDisplayId()), winRect);
-        LimitMainFloatingWindowPosition(node, winRect);
-    }
+    LimitFloatingWindowSize(node, displayGroupInfo_->GetDisplayRect(node->GetDisplayId()), winRect);
+    LimitMainFloatingWindowPosition(node, winRect);
 
     WLOGFI("After apply constraints winRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
         winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
@@ -537,6 +534,14 @@ void WindowLayoutPolicyCascade::SetCascadeRect(const sptr<WindowNode>& node)
         rect.posX_, rect.posY_, rect.width_, rect.height_);
     node->SetRequestRect(rect);
     node->SetDecoStatus(true);
+}
+Rect WindowLayoutPolicyCascade::GetInitalDividerRect(DisplayId displayId) const
+{
+    Rect dividerRect = {0, 0, 0, 0};
+    if (cascadeRectsMap_.find(displayId) != std::end(cascadeRectsMap_)) {
+        dividerRect = cascadeRectsMap_[displayId].dividerRect_;
+    }
+    return dividerRect;
 }
 } // Rosen
 } // OHOS

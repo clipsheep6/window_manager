@@ -167,6 +167,8 @@ public:
      */
     void SetAllAppWindowsRestoring(bool isAllAppWindowsRestoring);
 
+    void SetInitalDividerRect(const Rect& rect);
+
 private:
     /**
      * Gets whether the window is related to split window.
@@ -248,6 +250,7 @@ private:
     WindowPairStatus status_ = {WindowPairStatus::STATUS_EMPTY};
     DisplayGroupWindowTree& displayGroupWindowTree_;
     bool isAllAppWindowsRestoring_ { false };
+    Rect initalDivderRect_ {0, 0, 0, 0};
 };
 } // namespace Rosen
 } // namespace OHOS

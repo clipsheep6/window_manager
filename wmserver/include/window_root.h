@@ -84,6 +84,8 @@ public:
     uint32_t GetTotalWindowNum() const;
     uint32_t GetWindowIdByObject(const sptr<IRemoteObject>& remoteObject);
     sptr<WindowNode> GetWindowForDumpAceHelpInfo() const;
+    void DestroyLeakStartingWindow();
+    void SetFloatingWindowLimitsConfig(const FloatingWindowLimitsConfig& floatingWindowLimitsConfig);
 private:
     void OnRemoteDied(const sptr<IRemoteObject>& remoteObject);
     WMError DestroyWindowInner(sptr<WindowNode>& node);
@@ -97,11 +99,10 @@ private:
     void NotifyKeyboardSizeChangeInfo(const sptr<WindowNode>& node,
         const sptr<WindowNodeContainer>& container, Rect rect);
     ScreenId GetScreenGroupId(DisplayId displayId, bool& isRecordedDisplay);
-    void ProcessExpandDisplayCreate(DisplayId displayId, ScreenId screenGroupId);
+    void ProcessExpandDisplayCreate(DisplayId displayId, ScreenId displayGroupId);
     std::map<DisplayId, sptr<DisplayInfo>> GetAllDisplayInfos(const std::vector<DisplayId>& displayIdVec);
     std::map<DisplayId, Rect> GetAllDisplayRects(const std::vector<DisplayId>& displayIdVec);
     void MoveNotShowingWindowToDefaultDisplay(DisplayId displayId);
-    void DestroyLeakStartingWindow();
     WMError PostProcessAddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode,
         sptr<WindowNodeContainer>& container);
     std::map<uint32_t, sptr<WindowNode>> windowNodeMap_;
@@ -117,6 +118,7 @@ private:
         this, std::placeholders::_1));
     Callback callback_;
     int maxAppWindowNumber_ = 100;
+    FloatingWindowLimitsConfig floatingWindowLimitsConfig_;
 };
 }
 }
