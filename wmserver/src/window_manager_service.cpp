@@ -37,6 +37,8 @@
 #include "wm_common.h"
 #include "wm_trace.h"
 
+#include "inner_window_manager.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -67,6 +69,7 @@ void WindowManagerService::OnStart()
         return;
     }
     SingletonContainer::Get<WindowInnerManager>().Init();
+    InnerWindowManager::GetInstance().Start();
     sptr<IDisplayChangeListener> listener = new DisplayChangeListener();
     DisplayManagerServiceInner::GetInstance().RegisterDisplayChangeListener(listener);
     RegisterSnapshotHandler();

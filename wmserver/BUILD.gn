@@ -96,6 +96,7 @@ ohos_shared_library("libwms") {
     "src/window_task_looper.cpp",
     "src/window_zorder_policy.cpp",
     "src/zidl/window_manager_stub.cpp",
+    "src/inner_window_manager.cpp"
   ]
 
   configs = [ ":libwms_config" ]
@@ -111,6 +112,8 @@ ohos_shared_library("libwms") {
     "//foundation/windowmanager/wm:libwm",
     "//third_party/flutter/build/skia:ace_skia_ohos",
     "//third_party/libxml2:xml2",
+    "//foundation/arkui/ace_engine/interfaces/inner_api/ui_service_manager:ui_service_mgr",
+    "//foundation/windowmanager/divider_ui/divider_dialog_ui/js:dialog_divider_ui_js_files_etc"
   ]
 
   public_deps = [
