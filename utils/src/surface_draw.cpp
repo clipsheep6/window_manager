@@ -78,6 +78,7 @@ void SurfaceDraw::DrawBackgroundColor(std::shared_ptr<RSSurfaceNode> surfaceNode
     if (rsSurface == nullptr) {
         return;
     }
+    // todo: bkgColor < 8位，set colortransparent
     canvas->clear(bkgColor);
     frame->SetDamageRegion(0, 0, width, height);
     rsSurface->FlushFrame(frame);

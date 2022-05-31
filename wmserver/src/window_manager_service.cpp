@@ -292,9 +292,9 @@ void WindowManagerService::CancelStartingWindow(sptr<IRemoteObject> abilityToken
         WLOGFI("startingWindow not open!");
         return;
     }
-    return wmsTaskLooper_->ScheduleTask([this, &abilityToken]() {
+    return wmsTaskLooper_->PostTask([this, abilityToken]() {
         return windowController_->CancelStartingWindow(abilityToken);
-    }).wait();
+    });
 }
 
 WMError WindowManagerService::CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
