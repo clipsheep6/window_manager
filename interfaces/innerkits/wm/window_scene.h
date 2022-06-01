@@ -122,15 +122,6 @@ public:
     void UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration);
 
     /**
-     * Set main window system bar property
-     *
-     * @param type the type of window
-     * @param property the property of system bar
-     * @return the error code of window
-     */
-    WMError SetSystemBarProperty(WindowType type, const SystemBarProperty& property) const;
-
-    /**
      * Get content info of main window.
      *
      * @return content info of main window

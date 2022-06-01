@@ -781,6 +781,10 @@ void WindowNodeContainer::NotifyIfSystemBarTintChanged(DisplayId displayId)
         if (it.second.prop_ == expectProp) {
             continue;
         }
+        if (expectProp.backgroundColor_ == UINT32_MAX && expectProp.contentColor_ == UINT32_MAX) {
+            continue;
+        }
+
         WLOGFI("System bar prop update, Type: %{public}d, Visible: %{public}d, Color: %{public}x | %{public}x",
             static_cast<int32_t>(it.first), expectProp.enable_, expectProp.backgroundColor_, expectProp.contentColor_);
         sysBarTintMap[it.first].prop_ = expectProp;
