@@ -158,8 +158,8 @@ struct PointInfo {
 };
 
 namespace {
-    constexpr uint32_t SYSTEM_COLOR_WHITE = 0xE5FFFFFF;
-    constexpr uint32_t SYSTEM_COLOR_BLACK = 0x66000000;
+    constexpr uint32_t SYSTEM_COLOR_WHITE = UINT32_MAX;
+    constexpr uint32_t SYSTEM_COLOR_BLACK = UINT32_MAX;
     constexpr uint32_t INVALID_WINDOW_ID = 0;
     constexpr float UNDEFINED_BRIGHTNESS = -1.0f;
     constexpr float MINIMUM_BRIGHTNESS = 0.0f;
