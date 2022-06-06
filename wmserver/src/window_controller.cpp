@@ -84,6 +84,10 @@ void WindowController::CancelStartingWindow(sptr<IRemoteObject> abilityToken)
         WLOGFI("cannot find windowNode!");
         return;
     }
+    if (!node->startingWindowShown_) {
+        WLOGFE("CancelStartingWindow failed because client window has shown id:%{public}u", node->GetWindowId());
+        return;
+    }
     WLOGFI("CancelStartingWindow with id:%{public}u!", node->GetWindowId());
     WMError res = windowRoot_->DestroyWindow(node->GetWindowId(), false);
     if (res != WMError::WM_OK) {
