@@ -75,8 +75,8 @@ public:
 class WindowVisibilityInfo : public Parcelable {
 public:
     WindowVisibilityInfo() = default;
-    WindowVisibilityInfo(uint32_t winId, int32_t pid, int32_t uid, bool visibility)
-        : windowId_(winId), pid_(pid), uid_(uid), isVisible_(visibility) {};
+    WindowVisibilityInfo(uint32_t winId, int32_t pid, int32_t uid, bool visibility, WindowType winType)
+        : windowId_(winId), pid_(pid), uid_(uid), isVisible_(visibility), windowType_(winType) {};
     ~WindowVisibilityInfo() = default;
 
     virtual bool Marshalling(Parcel& parcel) const override;
@@ -86,6 +86,7 @@ public:
     int32_t pid_ { 0 };
     int32_t uid_ { 0 };
     bool isVisible_ { false };
+    WindowType windowType_ { WindowType::WINDOW_TYPE_APP_MAIN_WINDOW };
 };
 
 class IVisibilityChangedListener : public RefBase {
