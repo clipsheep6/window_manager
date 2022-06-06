@@ -1,0 +1,62 @@
+diff --git a/snapshot/snapshot_utils.cpp b/snapshot/snapshot_utils.cpp
+index 1482bde..62484aa 100644
+--- a/snapshot/snapshot_utils.cpp
++++ b/snapshot/snapshot_utils.cpp
+@@ -187,6 +187,37 @@ bool SnapShotUtils::WriteToPng(const std::string &fileName, const WriteToPngPara
+     return true;
+ }
+ 
++
++bool SnapShotUtils::WriteToRaw(const std::string &fileName, const WriteToPngParam &param)
++{
++    if (!CheckFileNameValid(fileName)) {
++        return false;
++    }
++    if (!CheckParamValid(param)) {
++        return false;
++    }
++
++    WM_SCOPED_TRACE("snapshot:WriteToRaw(%s)", fileName.c_str());
++    char fileN[256] = {0};
++    memcpy(fileN, fileName.c_str(), strlen(fileName.c_str()));
++    strcat(fileN, "raw");
++    printf("fileN = %s\n", fileN);
++    FILE *fp = fopen(fileN, "wb");
++    if (fp == nullptr) {
++        printf("error: open file [%s] error, %d!\n", fileN, errno);
++        return false;
++    }
++
++    for (uint32_t i = 0; i < param.height; i++) {
++        fwrite(param.data + (i * param.stride), 1, param.stride, fp);
++    }
++
++    if (fclose(fp) != 0) {
++        return false;
++    }
++    return true;
++}
++
+ bool SnapShotUtils::WriteToPngWithPixelMap(const std::string &fileName, PixelMap &pixelMap)
+ {
+     WriteToPngParam param;
+@@ -195,6 +226,7 @@ bool SnapShotUtils::WriteToPngWithPixelMap(const std::string &fileName, PixelMap
+     param.data = pixelMap.GetPixels();
+     param.stride = static_cast<uint32_t>(pixelMap.GetRowBytes());
+     param.bitDepth = BITMAP_DEPTH;
++    SnapShotUtils::WriteToRaw(fileName, param);
+     return SnapShotUtils::WriteToPng(fileName, param);
+ }
+ 
+diff --git a/snapshot/snapshot_utils.h b/snapshot/snapshot_utils.h
+index ee3de45..7049781 100644
+--- a/snapshot/snapshot_utils.h
++++ b/snapshot/snapshot_utils.h
+@@ -50,6 +50,7 @@ public:
+     static std::string GenerateFileName(int offset = 0);
+     static bool CheckWidthAndHeightValid(const CmdArgments& cmdArgments);
+     static bool WriteToPng(const std::string &fileName, const WriteToPngParam &param);
++    static bool WriteToRaw(const std::string &fileName, const WriteToPngParam &param);
+     static bool WriteToPngWithPixelMap(const std::string &fileName, Media::PixelMap &pixelMap);
+     static bool ProcessArgs(int argc, char * const argv[], CmdArgments& cmdArgments);
+ private:
