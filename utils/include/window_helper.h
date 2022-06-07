@@ -101,6 +101,20 @@ public:
         return (r.posX_ == 0 && r.posY_ == 0 && r.width_ == 0 && r.height_ == 0);
     }
 
+    static inline bool HasOverlap(const Rect& r1, const Rect& r2)
+    {
+        return (HasOverlap(r1.posX_, r1.width_, r2.posX_, r2.width_)
+            && HasOverlap(r1.posY_, r1.height_, r2.posY_, r2.height_));
+    }
+
+    static inline bool HasOverlap(const int32_t start1, const uint32_t len1, const int32_t start2, const uint32_t len2)
+    {
+        int32_t end1 = start1 + static_cast<int32_t>(len1);
+        int32_t end2 = start2 + static_cast<int32_t>(len2);
+        bool no = (start1 < start2 && end1 < end2) || (start1 > start2 && end1 > end2);
+        return !no;
+    }
+
     static bool IsWindowModeSupported(uint32_t modeSupportInfo, WindowMode mode)
     {
         switch (mode) {

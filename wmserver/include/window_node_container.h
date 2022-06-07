@@ -88,7 +88,7 @@ public:
     Rect GetDisplayGroupRect() const;
     void TraverseWindowTree(const WindowNodeOperationFunc& func, bool isFromTopToBottom = true) const;
     void UpdateSizeChangeReason(sptr<WindowNode>& node, WindowSizeChangeReason reason);
-    void GetWindowList(std::vector<sptr<WindowInfo>>& windowList) const;
+    void GetWindowList(std::vector<sptr<WindowInfo>>& windowList) const;    
     void DropShowWhenLockedWindowIfNeeded(const sptr<WindowNode>& node);
 
     void SetMinimizedByOther(bool isMinimizedByOther);
@@ -111,8 +111,10 @@ private:
     void UpdateFocusStatus(uint32_t id, bool focused) const;
     void UpdateActiveStatus(uint32_t id, bool isActive) const;
 
-    void NotifyIfSystemBarTintChanged(DisplayId displayId);
-    void NotifyIfSystemBarRegionChanged(DisplayId displayId);
+    void NotifyIfAvoidAreaChanged(const sptr<WindowNode>& node, AvoidControlType avoidType) const;
+    void NotifyIfSystemBarTintChanged(DisplayId displayId) const;
+    void NotifyIfSystemBarRegionChanged(DisplayId displayId) const;
+    void NotifyIfKeyboardRegionChanged(const sptr<WindowNode>& node) const;
     void TraverseAndUpdateWindowState(WindowState state, int32_t topPriority);
     void UpdateWindowTree(sptr<WindowNode>& node);
     void UpdateWindowState(sptr<WindowNode> node, int32_t topPriority, WindowState state);

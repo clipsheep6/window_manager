@@ -119,7 +119,7 @@ bool WindowRoot::CheckDisplayInfo(const sptr<DisplayInfo>& display)
 }
 
 void WindowRoot::NotifyKeyboardSizeChangeInfo(const sptr<WindowNode>& node,
-    const sptr<WindowNodeContainer>& container, Rect rect)
+    const sptr<WindowNodeContainer>& container, const Rect& rect)
 {
     if (node == nullptr || container == nullptr) {
         WLOGFE("invalid parameter");
@@ -139,6 +139,10 @@ void WindowRoot::NotifyKeyboardSizeChangeInfo(const sptr<WindowNode>& node,
         (callingWindow->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN ||
         callingWindow->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
         callingWindow->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_SECONDARY)) {
+        if (!WindowHelper::HasOverlap(callingWindow->GetWindowRect(), rect)) {
+            WLOGFD("no overlap between two windows");
+            return;
+        }
         WLOGFI("keyboard size change callingWindow: [%{public}s, %{public}u], " \
             "input rect: [%{public}d, %{public}d, %{public}u, %{public}u]",
             callingWindow->GetWindowName().c_str(), callingWindow->GetWindowId(),
@@ -372,7 +376,9 @@ WMError WindowRoot::PostProcessAddWindowNode(sptr<WindowNode>& node, sptr<Window
         needCheckFocusWindow = true;
     }
     container->SetActiveWindow(node->GetWindowId(), false);
-    NotifyKeyboardSizeChangeInfo(node, container, node->GetWindowRect());
+
+    // const Rect rect = node->GetWindowRect();
+    // NotifyKeyboardSizeChangeInfo(node, container, rect);
     for (auto& child : node->children_) {
         if (child == nullptr || !child->currentVisibility_) {
             break;
