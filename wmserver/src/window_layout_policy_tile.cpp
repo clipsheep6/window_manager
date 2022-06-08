@@ -252,6 +252,7 @@ void WindowLayoutPolicyTile::AssignNodePropertyForTileWindows(DisplayId displayI
                 node->GetWindowToken()->UpdateWindowMode(WindowMode::WINDOW_MODE_FLOATING);
             }
             node->SetRequestRect(rect);
+            node->SetWindowSizeChangeReason(WindowSizeChangeReason::RESIZE);
             node->SetDecoStatus(true);
             WLOGFI("set rect for qwin id: %{public}d [%{public}d %{public}d %{public}d %{public}d]",
                 node->GetWindowId(), rect.posX_, rect.posY_, rect.width_, rect.height_);
