@@ -93,7 +93,7 @@ void AbstractScreen::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& start
     rsDisplayNode_->SetDisplayOffset(startPoint.posX_, startPoint.posY_);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
-        transactionProxy->FlushImplicitTransaction();
+        transactionProxy->FlushImplicitTransaction(0);
     }
 }
 
@@ -386,7 +386,7 @@ bool AbstractScreenGroup::RemoveChild(sptr<AbstractScreen>& dmsScreen)
         dmsScreen->rsDisplayNode_->RemoveFromTree();
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {
-            transactionProxy->FlushImplicitTransaction();
+            transactionProxy->FlushImplicitTransaction(0);
         }
         dmsScreen->rsDisplayNode_ = nullptr;
     }

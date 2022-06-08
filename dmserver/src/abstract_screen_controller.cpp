@@ -565,7 +565,7 @@ DMError AbstractScreenController::DestroyVirtualScreen(ScreenId screenId)
         displayNodeMap_.erase(rsScreenId);
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {
-            transactionProxy->FlushImplicitTransaction();
+            transactionProxy->FlushImplicitTransaction(0);
         }
     }
 
@@ -916,7 +916,7 @@ void AbstractScreenController::SetShotScreen(ScreenId mainScreenId, std::vector<
     }
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
-        transactionProxy->FlushImplicitTransaction();
+        transactionProxy->FlushImplicitTransaction(0);
     }
 }
 
