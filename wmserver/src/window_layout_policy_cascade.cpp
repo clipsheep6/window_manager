@@ -472,6 +472,7 @@ void WindowLayoutPolicyCascade::Reorder()
                 rect = StepCascadeRect(rect, displayId);
             }
             node->SetRequestRect(rect);
+            node->SetWindowSizeChangeReason(WindowSizeChangeReason::RESIZE);
             node->SetDecoStatus(true);
             if (node->GetWindowMode() != WindowMode::WINDOW_MODE_FLOATING &&
                 WindowHelper::IsWindowModeSupported(node->GetModeSupportInfo(), WindowMode::WINDOW_MODE_FLOATING)) {
