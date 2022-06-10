@@ -115,7 +115,7 @@ const std::map<ApiWindowMode, WindowMode> JS_TO_NATIVE_WINDOW_MODE_MAP {
     {ApiWindowMode::FLOATING,   WindowMode::WINDOW_MODE_FLOATING        },
 };
 
-    NativeValue* GetRectAndConvertToJsValue(NativeEngine& engine, const Rect rect);
+    NativeValue* GetRectAndConvertToJsValue(NativeEngine& engine, const Rect& rect);
     NativeValue* CreateJsWindowPropertiesObject(NativeEngine& engine, sptr<Window>& window);
     bool SetSystemBarPropertiesFromJs(NativeEngine& engine, NativeObject* jsObject,
         std::map<WindowType, SystemBarProperty>& properties, sptr<Window>& window);

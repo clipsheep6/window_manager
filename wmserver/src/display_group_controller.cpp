@@ -357,7 +357,6 @@ void DisplayGroupController::ProcessDisplayCreate(DisplayId displayId,
     defaultDisplayId_ = DisplayManagerServiceInner::GetInstance().GetDefaultDisplayId();
     WLOGFI("defaultDisplay, displayId: %{public}" PRIu64"", defaultDisplayId_);
 
-    windowNodeContainer_->GetAvoidController()->UpdateAvoidNodesMap(displayId, true);
     InitNewDisplay(displayId);
 
     // add displayInfo in displayGroupInfo
@@ -376,8 +375,6 @@ void DisplayGroupController::ProcessDisplayDestroy(DisplayId displayId,
                                                    const std::map<DisplayId, Rect>& displayRectMap,
                                                    std::vector<uint32_t>& windowIds)
 {
-    windowNodeContainer_->GetAvoidController()->UpdateAvoidNodesMap(displayId, false);
-
     // delete nodes and map element of deleted display
     ProcessNotCrossNodesOnDestroiedDisplay(displayId, windowIds);
     // modify RSTree and window tree of displayGroup for cross-display nodes

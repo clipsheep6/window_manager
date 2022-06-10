@@ -35,7 +35,8 @@ namespace Rosen {
 using WindowNodeOperationFunc = std::function<bool(sptr<WindowNode>)>; // return true indicates to stop traverse
 class WindowNodeContainer : public RefBase {
 public:
-    WindowNodeContainer(const sptr<DisplayInfo>& displayInfo, ScreenId displayGroupId);
+    WindowNodeContainer(const sptr<DisplayInfo>& displayInfo, ScreenId displayGroupId,
+        std::map<uint32_t, sptr<WindowNode>>& nodeMap);
     ~WindowNodeContainer();
     WMError ShowStartingWindow(sptr<WindowNode>& node);
     WMError AddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode);
@@ -56,7 +57,7 @@ public:
     uint32_t ToOverrideBrightness(float brightness);
     void UpdateBrightness(uint32_t id, bool byRemoved);
     void HandleKeepScreenOn(const sptr<WindowNode>& node, bool requireLock);
-    std::vector<Rect> GetAvoidAreaByType(AvoidAreaType avoidAreaType, DisplayId displayId);
+    AvoidArea GetAvoidAreaByType(const sptr<WindowNode>& node, AvoidAreaType avoidAreaType);
     WMError MinimizeStructuredAppWindowsExceptSelf(const sptr<WindowNode>& node);
     void TraverseContainer(std::vector<sptr<WindowNode>>& windowNodes) const;
     uint64_t GetScreenId(DisplayId displayId) const;
@@ -68,7 +69,6 @@ public:
     bool IsDockSliceInExitSplitModeArea(DisplayId displayId) const;
     void ExitSplitMode(DisplayId displayId);
 
-    void OnAvoidAreaChange(const std::vector<Rect>& avoidAreas, DisplayId displayId);
     bool isVerticalDisplay(DisplayId displayId) const;
     WMError RaiseZOrderForAppWindow(sptr<WindowNode>& node, sptr<WindowNode>& parentNode);
     sptr<WindowNode> GetNextFocusableWindow(uint32_t windowId) const;
@@ -105,6 +105,7 @@ public:
     sptr<DisplayGroupController> GetMutiDisplayController() const;
     sptr<WindowNode> GetRootNode(WindowRootNodeType type) const;
     void NotifyDockWindowStateChanged(sptr<WindowNode>& node, bool isEnable);
+    void UpdateAvoidAreaListener(sptr<WindowNode>& windowNode, bool haveAvoidAreaListener);
 
 private:
     void TraverseWindowNode(sptr<WindowNode>& root, std::vector<sptr<WindowNode>>& windowNodes) const;
@@ -116,7 +117,6 @@ private:
     void NotifyIfAvoidAreaChanged(const sptr<WindowNode>& node, const AvoidControlType avoidType) const;
     void NotifyIfSystemBarTintChanged(DisplayId displayId) const;
     void NotifyIfSystemBarRegionChanged(DisplayId displayId) const;
-    void NotifyIfKeyboardRegionChanged(const sptr<WindowNode>& node, const AvoidControlType avoidType) const;
     void TraverseAndUpdateWindowState(WindowState state, int32_t topPriority);
     void UpdateWindowTree(sptr<WindowNode>& node);
     void UpdateWindowState(sptr<WindowNode> node, int32_t topPriority, WindowState state);

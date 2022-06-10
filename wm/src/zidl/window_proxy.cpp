@@ -97,7 +97,7 @@ void WindowProxy::UpdateFocusStatus(bool focused)
     return;
 }
 
-void WindowProxy::UpdateAvoidArea(const std::vector<Rect>& avoidArea)
+void WindowProxy::UpdateAvoidArea(const sptr<AvoidArea>& avoidArea)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -106,19 +106,9 @@ void WindowProxy::UpdateAvoidArea(const std::vector<Rect>& avoidArea)
         WLOGFE("WriteInterfaceToken failed");
         return;
     }
-
-    uint32_t len = static_cast<uint32_t>(avoidArea.size());
-    if (!data.WriteUint32(len)) {
-        WLOGFE("Write UpdateAvoidArea Vector Size failed");
+    if (!data.WriteStrongParcelable(avoidArea)) {
+        WLOGFE("Write WindowRect failed");
         return;
-    }
-
-    for (auto avoid : avoidArea) {
-        if (!(data.WriteInt32(avoid.posX_) && data.WriteInt32(avoid.posY_) &&
-            data.WriteUint32(avoid.width_) && data.WriteUint32(avoid.height_))) {
-            WLOGFE("Write WindowRect failed");
-            return;
-        }
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowMessage::TRANS_ID_UPDATE_AVOID_AREA),

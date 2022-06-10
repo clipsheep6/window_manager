@@ -22,8 +22,6 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsWindowListener"};
 }
 
-constexpr uint32_t AVOID_AREA_NUM = 4;
-
 void JsWindowListener::CallJsMethod(const char* methodName, NativeValue* const* argv, size_t argc)
 {
     WLOGFI("[NAPI]CallJsMethod methodName = %{public}s", methodName);
@@ -92,12 +90,12 @@ void JsWindowListener::OnSystemBarPropertyChange(DisplayId displayId, const Syst
     AsyncTask::Schedule(*engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
 }
 
-void JsWindowListener::OnAvoidAreaChanged(const std::vector<Rect> avoidAreas)
+void JsWindowListener::OnAvoidAreaChanged(const AvoidArea avoidArea)
 {
     WLOGFI("[NAPI]OnAvoidAreaChanged");
     // js callback should run in js thread
     std::unique_ptr<AsyncTask::CompleteCallback> complete = std::make_unique<AsyncTask::CompleteCallback> (
-        [this, avoidAreas] (NativeEngine &engine, AsyncTask &task, int32_t status) {
+        [this, avoidArea] (NativeEngine &engine, AsyncTask &task, int32_t status) {
             NativeValue* avoidAreaValue = engine_->CreateObject();
             NativeObject* object = ConvertNativeValueTo<NativeObject>(avoidAreaValue);
             if (object == nullptr) {
@@ -105,16 +103,10 @@ void JsWindowListener::OnAvoidAreaChanged(const std::vector<Rect> avoidAreas)
                 return;
             }
 
-            if (static_cast<uint32_t>(avoidAreas.size()) != AVOID_AREA_NUM) {
-                WLOGFE("[NAPI]AvoidAreas size is not 4 (left, top, right, bottom), size is %{public}u",
-                    static_cast<uint32_t>(avoidAreas.size()));
-                return;
-            }
-
-            object->SetProperty("leftRect", GetRectAndConvertToJsValue(*engine_, avoidAreas[0]));   // idx 0 : left
-            object->SetProperty("topRect", GetRectAndConvertToJsValue(*engine_, avoidAreas[1]));    // idx 1 : top
-            object->SetProperty("rightRect", GetRectAndConvertToJsValue(*engine_, avoidAreas[2]));  // idx 2 : right
-            object->SetProperty("bottomRect", GetRectAndConvertToJsValue(*engine_, avoidAreas[3])); // idx 3 : bottom
+            object->SetProperty("leftRect", GetRectAndConvertToJsValue(*engine_, avoidArea.leftRect_));
+            object->SetProperty("topRect", GetRectAndConvertToJsValue(*engine_, avoidArea.topRect_));
+            object->SetProperty("rightRect", GetRectAndConvertToJsValue(*engine_, avoidArea.rightRect_));
+            object->SetProperty("bottomRect", GetRectAndConvertToJsValue(*engine_, avoidArea.bottomRect_));
             NativeValue* argv[] = {avoidAreaValue};
             CallJsMethod(SYSTEM_AVOID_AREA_CHANGE_CB.c_str(), argv, ArraySize(argv));
         }

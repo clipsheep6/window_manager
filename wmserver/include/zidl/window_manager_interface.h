@@ -58,6 +58,7 @@ public:
         TRANS_ID_GET_SYSTEM_CONFIG,
         TRANS_ID_NOTIFY_WINDOW_TRANSITION,
         TRANS_ID_GET_FULLSCREEN_AND_SPLIT_HOT_ZONE,
+        TRANS_ID_UPDATE_AVOIDAREA_LISTENER,
     };
     virtual WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode,
@@ -68,7 +69,7 @@ public:
     virtual WMError RequestFocus(uint32_t windowId) = 0;
     virtual WMError SetWindowBackgroundBlur(uint32_t windowId, WindowBlurLevel level) = 0;
     virtual WMError SetAlpha(uint32_t windowId, float alpha) = 0;
-    virtual std::vector<Rect> GetAvoidAreaByType(uint32_t windowId, AvoidAreaType type) = 0;
+    virtual AvoidArea GetAvoidAreaByType(uint32_t windowId, AvoidAreaType type) = 0;
     virtual WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId) = 0;
     virtual void ProcessPointDown(uint32_t windowId, bool isStartDrag) = 0;
     virtual void ProcessPointUp(uint32_t windowId) = 0;
@@ -86,6 +87,7 @@ public:
     virtual WMError GetSystemConfig(SystemConfig& systemConfig) = 0;
     virtual WMError NotifyWindowTransition(sptr<WindowTransitionInfo>& from, sptr<WindowTransitionInfo>& to) = 0;
     virtual WMError GetModeChangeHotZones(DisplayId displayId, ModeChangeHotZones& hotZones) = 0;
+    virtual WMError UpdateAvoidAreaListener(uint32_t windowId, bool haveListener) = 0;
 };
 }
 }

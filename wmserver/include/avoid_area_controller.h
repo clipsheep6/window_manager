@@ -18,7 +18,9 @@
 
 #include <map>
 #include <set>
+#include <unordered_map>
 #include <vector>
+
 #include <refbase.h>
 
 #include "window_node.h"
@@ -34,28 +36,28 @@ enum class AvoidControlType : uint32_t {
     AVOID_NODE_UNKNOWN,
 };
 
-using UpdateAvoidAreaFunc = std::function<void (std::vector<Rect>& avoidArea, DisplayId displayId)>;
-
 class AvoidAreaController : public RefBase {
 public:
-    AvoidAreaController(DisplayId displayId, UpdateAvoidAreaFunc callback);
+    AvoidAreaController(std::map<uint32_t, sptr<WindowNode>>& nodeMap, uint32_t& focusedWindow) : 
+        windowNodeMap_(nodeMap), focusedWindow_(focusedWindow) {};
     ~AvoidAreaController() = default;
 
-    WMError AvoidControl(const sptr<WindowNode>& node, AvoidControlType type);
-
-    bool IsAvoidAreaNode(const sptr<WindowNode>& node) const;
-    std::vector<Rect> GetAvoidArea(DisplayId displayId) const;
-    std::vector<Rect> GetAvoidAreaByType(AvoidAreaType avoidAreaType, DisplayId displayId) const;
-    void UpdateAvoidNodesMap(DisplayId displayId, bool isAdd);
+    void UpdateAvoidAreaListener(sptr<WindowNode>& windowNode, bool haveAvoidAreaListener);
+    void ProcessWindowChange(const sptr<WindowNode>& windowNode, AvoidControlType avoidType);
+    AvoidArea GetAvoidAreaByType(const sptr<WindowNode>& node, AvoidAreaType avoidAreaType) const;
 
 private:
-    std::map<uint32_t, sptr<WindowNode>>* GetAvoidNodesByDisplayId(DisplayId displayId);
-    void UseCallbackNotifyAvoidAreaChanged(std::vector<Rect>& avoidArea, DisplayId displayId) const;
-    void DumpAvoidArea(const std::vector<Rect>& avoidArea) const;
-    AvoidPosType GetAvoidPosType(const Rect& rect, DisplayId displayId) const;
+    void AddOrRemoveOverlayWindowIfNeed(const sptr<WindowNode>& overlayNode, bool isAdding);
+    void AddOrRemoveKeyboard(const sptr<WindowNode>& keyboardNode, bool isAdding);
+    void UpdateOverlayWindowIfNeed(const sptr<WindowNode>& node);
+    sptr<AvoidArea> CalcOverlayRect(const sptr<WindowNode>& node,
+        const sptr<WindowNode>& overlayNode, bool isRemoving) const;
+    sptr<AvoidArea> BuildAvoidArea(const uint32_t width, const uint32_t height, const Rect& overlayRect) const;
 
-    std::map<DisplayId, std::unique_ptr<std::map<uint32_t, sptr<WindowNode>>>> avoidNodesMaps_;
-    UpdateAvoidAreaFunc updateAvoidAreaCallBack_;
+    std::map<uint32_t, sptr<WindowNode>>& windowNodeMap_;
+    uint32_t& focusedWindow_;
+    std::unordered_map<uint32_t, sptr<WindowNode>> overlayWindowMap_;
+    std::set<sptr<WindowNode>> haveListenerNodes_;
 };
 }
 }

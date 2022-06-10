@@ -202,7 +202,7 @@ NativeValue* WindowLayoutModeInit(NativeEngine* engine)
     return objValue;
 }
 
-NativeValue* GetRectAndConvertToJsValue(NativeEngine& engine, const Rect rect)
+NativeValue* GetRectAndConvertToJsValue(NativeEngine& engine, const Rect& rect)
 {
     NativeValue* objValue = engine.CreateObject();
     NativeObject* object = ConvertNativeValueTo<NativeObject>(objValue);
@@ -429,10 +429,10 @@ NativeValue* ChangeAvoidAreaToJsValue(NativeEngine& engine, const AvoidArea& avo
         WLOGFE("[NAPI]Failed to convert rect to jsObject");
         return engine.CreateUndefined();
     }
-    object->SetProperty("leftRect", GetRectAndConvertToJsValue(engine, avoidArea.leftRect));
-    object->SetProperty("topRect", GetRectAndConvertToJsValue(engine, avoidArea.topRect));
-    object->SetProperty("rightRect", GetRectAndConvertToJsValue(engine, avoidArea.rightRect));
-    object->SetProperty("bottomRect", GetRectAndConvertToJsValue(engine, avoidArea.bottomRect));
+    object->SetProperty("leftRect", GetRectAndConvertToJsValue(engine, avoidArea.leftRect_));
+    object->SetProperty("topRect", GetRectAndConvertToJsValue(engine, avoidArea.topRect_));
+    object->SetProperty("rightRect", GetRectAndConvertToJsValue(engine, avoidArea.rightRect_));
+    object->SetProperty("bottomRect", GetRectAndConvertToJsValue(engine, avoidArea.bottomRect_));
     return objValue;
 }
 

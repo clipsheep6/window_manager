@@ -175,7 +175,7 @@ public:
     virtual void RequestFrame() override;
     void UpdateFocusStatus(bool focused);
     virtual void UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration) override;
-    void UpdateAvoidArea(const std::vector<Rect>& avoidAreas);
+    void UpdateAvoidArea(const sptr<AvoidArea>& avoidArea);
     void UpdateWindowState(WindowState state);
     sptr<WindowProperty> GetWindowProperty();
     void UpdateDragEvent(const PointInfo& point, DragEvent event);

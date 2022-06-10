@@ -49,7 +49,7 @@ public:
     void OnSystemBarPropertyChange(DisplayId displayId, const SystemBarRegionTints& tints) override;
     void OnSizeChange(Rect rect, WindowSizeChangeReason reason) override;
     void OnModeChange(WindowMode mode) override;
-    void OnAvoidAreaChanged(std::vector<Rect> avoidAreas) override;
+    void OnAvoidAreaChanged(const AvoidArea avoidAreas) override;
     void AfterForeground() override;
     void AfterBackground() override;
     void AfterFocused() override;

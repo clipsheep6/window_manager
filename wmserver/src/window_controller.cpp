@@ -571,10 +571,9 @@ WMError WindowController::SetWindowAnimationController(const sptr<RSIWindowAnima
     return RemoteAnimation::SetWindowAnimationController(controller);
 }
 
-std::vector<Rect> WindowController::GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType)
+AvoidArea WindowController::GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType)
 {
-    std::vector<Rect> avoidArea = windowRoot_->GetAvoidAreaByType(windowId, avoidAreaType);
-    return avoidArea;
+    return windowRoot_->GetAvoidAreaByType(windowId, avoidAreaType);
 }
 
 WMError WindowController::ProcessPointDown(uint32_t windowId, bool isStartDrag)

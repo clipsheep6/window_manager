@@ -43,7 +43,7 @@ public:
     WMError RequestFocus(uint32_t windowId);
     WMError SetWindowBackgroundBlur(uint32_t windowId, WindowBlurLevel level);
     WMError SetAlpha(uint32_t windowId, float alpha);
-    std::vector<Rect> GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType);
+    AvoidArea GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType);
     WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId);
     void NotifyDisplayStateChange(DisplayId id, DisplayStateChangeType type);
     WMError ProcessPointDown(uint32_t windowId, bool isStartDrag);
