@@ -415,13 +415,15 @@ void DisplayManagerService::RemoveVirtualScreenFromGroup(std::vector<ScreenId> s
 }
 
 void DisplayManagerService::UpdateRSTree(DisplayId displayId, std::shared_ptr<RSSurfaceNode>& surfaceNode,
-    bool isAdd)
+    bool isAdd, bool isMultiDisplay, DisplayId parentDisplayId)
 {
-    WLOGI("UpdateRSTree");
+    WLOGFI("UpdateRSTree, currentDisplayId: %{public}" PRIu64", isAdd: %{public}d, isMultiDisplay: %{public}d, "
+        "parentDisplayId: %{public}" PRIu64"", displayId, isAdd, isMultiDisplay, parentDisplayId);
     ScreenId screenId = GetScreenIdByDisplayId(displayId);
+    ScreenId parentScreenId = GetScreenIdByDisplayId(parentDisplayId);
     CHECK_SCREEN_AND_RETURN();
 
-    abstractScreenController_->UpdateRSTree(screenId, surfaceNode, isAdd);
+    abstractScreenController_->UpdateRSTree(screenId, surfaceNode, isAdd, isMultiDisplay, parentScreenId);
 }
 
 sptr<ScreenInfo> DisplayManagerService::GetScreenInfoById(ScreenId screenId)

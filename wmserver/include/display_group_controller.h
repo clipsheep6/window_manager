@@ -73,7 +73,7 @@ private:
                                        const std::vector<DisplayId>& curShowingDisplays);
     void UpdateWindowDisplayId(const sptr<WindowNode>& node, DisplayId newDisplayId);
     void ClearMapOfDestroiedDisplay(DisplayId displayId);
-    void ChangeToRectInDisplayGroup(const sptr<WindowNode>& node);
+    void ChangeToRectInDisplayGroup(const sptr<WindowNode>& node, DisplayId displayId);
 
     sptr<WindowNodeContainer> windowNodeContainer_;
     sptr<DisplayGroupInfo> displayGroupInfo_;

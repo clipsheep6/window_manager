@@ -127,7 +127,8 @@ void DisplayGroupController::ProcessCrossNodes(DisplayId defaultDisplayId, Displ
                     if (displayId == newDisplayId) {
                         continue;
                     }
-                    windowNodeContainer_->UpdateRSTree(node, displayId, false);
+                    windowNodeContainer_->RemoveNodeFromRSTree(node, displayId,
+                        WindowUpdateType::WINDOW_UPDATE_ACTIVE, newDisplayId);
                 }
                 // update shown displays and displayId
                 MoveCrossNodeToTargetDisplay(node, newDisplayId);
@@ -210,10 +211,10 @@ void DisplayGroupController::UpdateWindowDisplayIdIfNeeded(const sptr<WindowNode
     }
 }
 
-void DisplayGroupController::ChangeToRectInDisplayGroup(const sptr<WindowNode>& node)
+void DisplayGroupController::ChangeToRectInDisplayGroup(const sptr<WindowNode>& node, DisplayId displayId)
 {
     Rect requestRect = node->GetRequestRect();
-    const Rect& displayRect = displayGroupInfo_->GetDisplayRect(node->GetDisplayId());
+    const Rect& displayRect = displayGroupInfo_->GetDisplayRect(displayId);
     requestRect.posX_ += displayRect.posX_;
     requestRect.posY_ += displayRect.posY_;
     node->SetRequestRect(requestRect);
@@ -240,7 +241,7 @@ void DisplayGroupController::PreProcessWindowNode(const sptr<WindowNode>& node, 
         case WindowUpdateType::WINDOW_UPDATE_ADDED: {
             if (!node->isShowingOnMultiDisplays_) {
                 // change rect to rect in display group
-                ChangeToRectInDisplayGroup(node);
+                ChangeToRectInDisplayGroup(node, node->GetDisplayId());
             }
             UpdateWindowShowingDisplays(node, node->GetRequestRect());
             WLOGFI("preprocess node when add window");
@@ -249,7 +250,7 @@ void DisplayGroupController::PreProcessWindowNode(const sptr<WindowNode>& node, 
         case WindowUpdateType::WINDOW_UPDATE_ACTIVE: {
             // MoveTo can be called by user, calculate rect in display group if the reason is move
             if (node->GetWindowSizeChangeReason() == WindowSizeChangeReason::MOVE) {
-                ChangeToRectInDisplayGroup(node);
+                ChangeToRectInDisplayGroup(node, defaultDisplayId_);
             }
             UpdateWindowShowingDisplays(node, node->GetRequestRect());
             const auto& curShowingDisplays = node->GetShowingDisplays();
@@ -345,8 +346,8 @@ void DisplayGroupController::ProcessNotCrossNodesOnDestroiedDisplay(DisplayId di
             MoveNotCrossNodeToDefaultDisplay(node, displayId);
 
             // update RS tree
-            windowNodeContainer_->UpdateRSTree(node, displayId, false);
-            windowNodeContainer_->UpdateRSTree(node, defaultDisplayId_, true);
+            windowNodeContainer_->RemoveNodeFromRSTree(node, displayId, WindowUpdateType::WINDOW_UPDATE_ACTIVE, defaultDisplayId_);
+            windowNodeContainer_->AddNodeOnRSTree(node, defaultDisplayId_, WindowUpdateType::WINDOW_UPDATE_ACTIVE, defaultDisplayId_);
         }
     }
 }
