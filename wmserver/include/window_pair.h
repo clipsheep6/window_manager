@@ -161,11 +161,24 @@ public:
     bool IsForbidDockSliceMove() const;
 
     /**
+     * when dock slice in exit split screen mode area,
+     * exit split screen mode.
+     */
+    void ExitSplitMode();
+
+    /**
+     * whether dock slice in exit split screen mode area
+     */
+    bool IsDockSliceInExitSplitModeArea(const std::vector<int32_t>& exitSplitPoints);
+
+    /**
      * Set all app windows are restoring.
      *
      * @param ratio Indicates whether all app windows are restoring.
      */
     void SetAllAppWindowsRestoring(bool isAllAppWindowsRestoring);
+
+    void SetInitalDividerRect(const Rect& rect);
 
 private:
     /**
@@ -208,14 +221,6 @@ private:
     void DumpPairInfo();
 
     /**
-     * Send inner window message.
-     *
-     * @param cmd the message of inner window manager
-     * @param displayId the id of target display
-     */
-    void SendInnerMessage(InnerWMCmd cmd, DisplayId displayId);
-
-    /**
      * Find pairable window frome window trees.
      *
      * @param node the node waiting to be paired
@@ -248,6 +253,7 @@ private:
     WindowPairStatus status_ = {WindowPairStatus::STATUS_EMPTY};
     DisplayGroupWindowTree& displayGroupWindowTree_;
     bool isAllAppWindowsRestoring_ { false };
+    Rect initalDivderRect_ {0, 0, 0, 0};
 };
 } // namespace Rosen
 } // namespace OHOS

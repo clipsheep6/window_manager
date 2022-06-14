@@ -65,6 +65,8 @@ public:
     void NotifyAccessibilityWindowInfo(const sptr<WindowNode>& windowId, WindowUpdateType type) const;
     int GetWindowCountByType(WindowType windowType);
     bool IsForbidDockSliceMove(DisplayId displayId) const;
+    bool IsDockSliceInExitSplitModeArea(DisplayId displayId) const;
+    void ExitSplitMode(DisplayId displayId);
 
     void OnAvoidAreaChange(const std::vector<Rect>& avoidAreas, DisplayId displayId);
     bool isVerticalDisplay(DisplayId displayId) const;
@@ -73,7 +75,7 @@ public:
     sptr<WindowNode> GetNextActiveWindow(uint32_t windowId) const;
     void MinimizeAllAppWindows(DisplayId displayId);
     void MinimizeOldestAppWindow();
-    void ToggleShownStateForAllAppWindows(std::function<bool(uint32_t, WindowMode)> restoreFunc, bool restore);
+    WMError ToggleShownStateForAllAppWindows(std::function<bool(uint32_t, WindowMode)> restoreFunc, bool restore);
     void RestoreAllAppWindows(std::function<bool(uint32_t, WindowMode)> restoreFunc);
     bool IsAppWindowsEmpty() const;
     void ProcessWindowStateChange(WindowState state, WindowStateChangeReason reason);
@@ -111,8 +113,10 @@ private:
     void UpdateFocusStatus(uint32_t id, bool focused) const;
     void UpdateActiveStatus(uint32_t id, bool isActive) const;
 
-    void NotifyIfSystemBarTintChanged(DisplayId displayId);
-    void NotifyIfSystemBarRegionChanged(DisplayId displayId);
+    void NotifyIfAvoidAreaChanged(const sptr<WindowNode>& node, const AvoidControlType avoidType) const;
+    void NotifyIfSystemBarTintChanged(DisplayId displayId) const;
+    void NotifyIfSystemBarRegionChanged(DisplayId displayId) const;
+    void NotifyIfKeyboardRegionChanged(const sptr<WindowNode>& node, const AvoidControlType avoidType) const;
     void TraverseAndUpdateWindowState(WindowState state, int32_t topPriority);
     void UpdateWindowTree(sptr<WindowNode>& node);
     void UpdateWindowState(sptr<WindowNode> node, int32_t topPriority, WindowState state);
@@ -122,7 +126,6 @@ private:
     void RaiseWindowToTop(uint32_t windowId, std::vector<sptr<WindowNode>>& windowNodes);
     void ResetLayoutPolicy();
     bool IsAboveSystemBarNode(sptr<WindowNode> node) const;
-    bool IsFullImmersiveNode(sptr<WindowNode> node) const;
     bool IsSplitImmersiveNode(sptr<WindowNode> node) const;
     bool TraverseFromTopToBottom(sptr<WindowNode> node, const WindowNodeOperationFunc& func) const;
     bool TraverseFromBottomToTop(sptr<WindowNode> node, const WindowNodeOperationFunc& func) const;
@@ -143,6 +146,7 @@ private:
     void UpdateRSTreeWhenShowingDisplaysChange(sptr<WindowNode>& node,
                                                const std::vector<DisplayId>& lastShowingDisplays,
                                                const std::vector<DisplayId>& curShowingDisplays);
+    void FillWindowInfo(sptr<WindowInfo>& windowInfo, const sptr<WindowNode>& node) const;
 
     float displayBrightness_ = UNDEFINED_BRIGHTNESS;
     uint32_t brightnessWindow_ = INVALID_WINDOW_ID;

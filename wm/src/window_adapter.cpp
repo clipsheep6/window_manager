@@ -245,17 +245,26 @@ WMError WindowAdapter::SetWindowLayoutMode(WindowLayoutMode mode)
     return windowManagerServiceProxy_->SetWindowLayoutMode(mode);
 }
 
-WMError WindowAdapter::UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action)
+WMError WindowAdapter::UpdateProperty(sptr<WindowProperty>& windowProperty,
+    PropertyChangeAction action, uint64_t dirtyState)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
-    return windowManagerServiceProxy_->UpdateProperty(windowProperty, action);
+    return windowManagerServiceProxy_->UpdateProperty(windowProperty, action, dirtyState);
 }
 
 WMError WindowAdapter::NotifyWindowTransition(sptr<WindowTransitionInfo> from, sptr<WindowTransitionInfo> to)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
 
-    return windowManagerServiceProxy_->NotifyWindowTransition(from, to);
+    return windowManagerServiceProxy_->NotifyWindowTransition(from, to, true);
+}
+
+void WindowAdapter::MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
+    sptr<RSIWindowAnimationFinishedCallback>& finishCallback)
+{
+    INIT_PROXY_CHECK_RETURN();
+    windowManagerServiceProxy_->MinimizeWindowsByLauncher(windowIds, isAnimated, finishCallback);
+    return;
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -27,6 +27,12 @@ WindowInputChannel::WindowInputChannel(const sptr<Window>& window): window_(wind
     callback_->onCallback = std::bind(&WindowInputChannel::OnVsync, this, std::placeholders::_1);
 }
 
+WindowInputChannel::~WindowInputChannel()
+{
+    WLOGFI("windowName: %{public}s, windowId: %{public}d", window_->GetWindowName().c_str(), window_->GetWindowId());
+    window_->SetNeedRemoveWindowInputChannel(false);
+}
+
 void WindowInputChannel::HandleKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
     if (keyEvent == nullptr) {
@@ -59,6 +65,12 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
         return;
     }
     if (inputListener_ != nullptr) {
+        // divider window consumes pointer events directly
+        if (window_->GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+            window_->ConsumePointerEvent(pointerEvent);
+            inputListener_->OnInputEvent(pointerEvent);
+            return;
+        }
         int32_t action = pointerEvent->GetPointerAction();
         if (action == MMI::PointerEvent::POINTER_ACTION_DOWN ||
             action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {

@@ -476,7 +476,8 @@ WMError WindowManagerProxy::SetWindowLayoutMode(WindowLayoutMode mode)
     return static_cast<WMError>(ret);
 }
 
-WMError WindowManagerProxy::UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action)
+WMError WindowManagerProxy::UpdateProperty(sptr<WindowProperty>& windowProperty,
+    PropertyChangeAction action, uint64_t dirtyState)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -486,7 +487,7 @@ WMError WindowManagerProxy::UpdateProperty(sptr<WindowProperty>& windowProperty,
         return WMError::WM_ERROR_IPC_FAILED;
     }
 
-    if (!data.WriteParcelable(windowProperty.GetRefPtr())) {
+    if (!windowProperty->Write(data, dirtyState)) {
         WLOGFE("Write windowProperty failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
@@ -570,7 +571,8 @@ WMError WindowManagerProxy::GetSystemConfig(SystemConfig& systemConfig)
     return static_cast<WMError>(ret);
 }
 
-WMError WindowManagerProxy::NotifyWindowTransition(sptr<WindowTransitionInfo>& from, sptr<WindowTransitionInfo>& to)
+WMError WindowManagerProxy::NotifyWindowTransition(sptr<WindowTransitionInfo>& from, sptr<WindowTransitionInfo>& to,
+    bool isFromClient)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -591,6 +593,10 @@ WMError WindowManagerProxy::NotifyWindowTransition(sptr<WindowTransitionInfo>& f
         return WMError::WM_ERROR_IPC_FAILED;
     }
 
+    if (!data.WriteBool(isFromClient)) {
+        WLOGFE("Failed to write to isFromClient!");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
     auto error = Remote()->SendRequest(static_cast<uint32_t>(WindowManagerMessage::TRANS_ID_NOTIFY_WINDOW_TRANSITION),
         data, reply, option);
     if (error != ERR_NONE) {
@@ -638,6 +644,51 @@ WMError WindowManagerProxy::GetModeChangeHotZones(DisplayId displayId, ModeChang
         hotZones.secondary_.height_ = reply.ReadUint32();
     }
     return ret;
+}
+
+void WindowManagerProxy::MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
+    sptr<RSIWindowAnimationFinishedCallback>& finishCallback)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+    uint32_t size = static_cast<uint32_t>(windowIds.size());
+    const uint32_t maxWindowNum = 100;
+    if (size > maxWindowNum) {
+        WLOGFE("windowNum cannot exceeds than 100");
+        return;
+    }
+    if (!data.WriteUint32(size)) {
+        WLOGFE("Write windowNum failed");
+        return;
+    }
+    for (auto id : windowIds) {
+        if (!data.WriteUint32(id)) {
+            WLOGFE("Write windowId failed");
+            return;
+        }
+    }
+    if (!data.WriteBool(isAnimated)) {
+        WLOGFE("Write isAnimated failed");
+        return;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerMessage::TRANS_ID_GET_ANIMATION_CALLBACK),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("Send request error");
+        return;
+    }
+    ;
+    if (reply.ReadBool()) {
+        sptr<IRemoteObject> finishcallbackObject = reply.ReadRemoteObject();
+        finishCallback = iface_cast<RSIWindowAnimationFinishedCallback>(finishcallbackObject);
+    } else {
+        finishCallback = nullptr;
+    }
+    return;
 }
 } // namespace Rosen
 } // namespace OHOS

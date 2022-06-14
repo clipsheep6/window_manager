@@ -31,6 +31,8 @@ enum class MinimizeReason : uint32_t {
     LAYOUT_TILE,
     MAX_APP_COUNT,
     SPLIT_REPLACE,
+    SPLIT_QUIT,
+    GESTURE_ANIMATION,
     OTHER_WINDOW,
 };
 
@@ -45,12 +47,13 @@ public:
     static void SetMinimizedByOtherConfig(bool isMinimizedByOther);
     static void ClearNodesWithReason(MinimizeReason reason);
     static bool IsNodeNeedMinimize(const sptr<WindowNode>& node);
+    static std::vector<wptr<WindowNode>> GetNeedMinimizeAppNodes();
 private:
     static inline bool IsFromUser(MinimizeReason reason)
     {
         return (reason == MinimizeReason::MINIMIZE_ALL || reason == MinimizeReason::MINIMIZE_BUTTOM ||
             reason == MinimizeReason::MAX_APP_COUNT || reason == MinimizeReason::LAYOUT_TILE ||
-            reason == MinimizeReason::SPLIT_REPLACE);
+            reason == MinimizeReason::SPLIT_REPLACE || reason == MinimizeReason::SPLIT_QUIT);
     }
 
     static std::map<MinimizeReason, std::vector<wptr<WindowNode>>> needMinimizeAppNodes_;

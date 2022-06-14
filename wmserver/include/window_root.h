@@ -37,7 +37,7 @@ public:
     ~WindowRoot() = default;
 
     sptr<WindowNodeContainer> GetOrCreateWindowNodeContainer(DisplayId displayId);
-    sptr<WindowNodeContainer> CreateWindowNodeContainer(DisplayId displayId);
+    sptr<WindowNodeContainer> CreateWindowNodeContainer(sptr<DisplayInfo> displayInfo);
     sptr<WindowNode> GetWindowNode(uint32_t windowId) const;
 
     WMError SaveWindow(const sptr<WindowNode>& node);
@@ -49,6 +49,8 @@ public:
     WMError UpdateWindowNode(uint32_t windowId, WindowUpdateReason reason);
     bool isVerticalDisplay(sptr<WindowNode>& node) const;
     bool IsForbidDockSliceMove(DisplayId displayId) const;
+    bool IsDockSliceInExitSplitModeArea(DisplayId displayId) const;
+    void ExitSplitMode(DisplayId displayId);
 
     WMError RequestFocus(uint32_t windowId);
     WMError RequestActiveWindow(uint32_t windowId);
@@ -58,14 +60,17 @@ public:
     std::shared_ptr<RSSurfaceNode> GetSurfaceNodeByAbilityToken(const sptr<IRemoteObject>& abilityToken) const;
     WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId);
     void MinimizeAllAppWindows(DisplayId displayId);
-    void ToggleShownStateForAllAppWindows();
+    WMError ToggleShownStateForAllAppWindows();
     WMError MaxmizeWindow(uint32_t windowId);
     WMError SetWindowLayoutMode(DisplayId displayId, WindowLayoutMode mode);
 
     void ProcessWindowStateChange(WindowState state, WindowStateChangeReason reason);
-    void ProcessDisplayChange(DisplayId displayId, DisplayStateChangeType type);
-    void ProcessDisplayDestroy(DisplayId displayId);
-    void ProcessDisplayCreate(DisplayId displayId);
+    void ProcessDisplayChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
+        const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type);
+    void ProcessDisplayDestroy(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
+        const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap);
+    void ProcessDisplayCreate(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
+        const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap);
 
     void NotifySystemBarTints();
     WMError RaiseZOrderForAppWindow(sptr<WindowNode>& node);
@@ -84,6 +89,11 @@ public:
     uint32_t GetTotalWindowNum() const;
     uint32_t GetWindowIdByObject(const sptr<IRemoteObject>& remoteObject);
     sptr<WindowNode> GetWindowForDumpAceHelpInfo() const;
+    void DestroyLeakStartingWindow();
+    void SetFloatingWindowLimitsConfig(const FloatingWindowLimitsConfig& floatingWindowLimitsConfig);
+    void SetSplitRatios(const std::vector<float>& splitRatioNumbers);
+    void SetExitSplitRatios(const std::vector<float>& exitSplitRatios);
+    void MinimizeTargetWindows(std::vector<uint32_t>& windowIds);
 private:
     void OnRemoteDied(const sptr<IRemoteObject>& remoteObject);
     WMError DestroyWindowInner(sptr<WindowNode>& node);
@@ -94,14 +104,14 @@ private:
     void UpdateBrightnessWithWindowRemoved(uint32_t windowId, const sptr<WindowNodeContainer>& container) const;
     std::string GenAllWindowsLogInfo() const;
     bool CheckDisplayInfo(const sptr<DisplayInfo>& display);
-    void NotifyKeyboardSizeChangeInfo(const sptr<WindowNode>& node,
-        const sptr<WindowNodeContainer>& container, Rect rect);
     ScreenId GetScreenGroupId(DisplayId displayId, bool& isRecordedDisplay);
-    void ProcessExpandDisplayCreate(DisplayId displayId, ScreenId screenGroupId);
+    void ProcessExpandDisplayCreate(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
+        std::map<DisplayId, Rect>& displayRectMap);
     std::map<DisplayId, sptr<DisplayInfo>> GetAllDisplayInfos(const std::vector<DisplayId>& displayIdVec);
-    std::map<DisplayId, Rect> GetAllDisplayRects(const std::vector<DisplayId>& displayIdVec);
-    void MoveNotShowingWindowToDefaultDisplay(DisplayId displayId);
-    void DestroyLeakStartingWindow();
+    std::map<DisplayId, Rect> GetAllDisplayRectsByDMS(sptr<DisplayInfo> displayInfo);
+    std::map<DisplayId, Rect> GetAllDisplayRectsByDisplayInfo(
+        const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap);
+    void MoveNotShowingWindowToDefaultDisplay(DisplayId defaultDisplayId, DisplayId displayId);
     WMError PostProcessAddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode,
         sptr<WindowNodeContainer>& container);
     std::map<uint32_t, sptr<WindowNode>> windowNodeMap_;
@@ -117,6 +127,8 @@ private:
         this, std::placeholders::_1));
     Callback callback_;
     int maxAppWindowNumber_ = 100;
+    FloatingWindowLimitsConfig floatingWindowLimitsConfig_;
+    SplitRatioConfig splitRatioConfig_ = {0.1, 0.9, {}};
 };
 }
 }

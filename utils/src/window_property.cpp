@@ -19,6 +19,43 @@
 
 namespace OHOS {
 namespace Rosen {
+const std::unordered_map<uint64_t, MemberVariable> WindowProperty::dataTypeMap_ = {
+    {WPRS_RequestRect, {PrimitiveType::PT_Rect,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->requestRect_)}},
+    {WPRS_DecoStatus, {PrimitiveType::PT_Bool,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->decoStatus_)}},
+    {WPRS_Mode, {PrimitiveType::PT_Uint32,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->mode_)}},
+    {WPRS_Flags, {PrimitiveType::PT_Uint32,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->flags_)}},
+    {WPRS_Focusable, {PrimitiveType::PT_Bool,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->focusable_)}},
+    {WPRS_Touchable, {PrimitiveType::PT_Bool,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->touchable_)}},
+    {WPRS_Brightness, {PrimitiveType::PT_Float,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->brightness_)}},
+    {WPRS_WindowId, {PrimitiveType::PT_Uint32,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->windowId_)}},
+    {WPRS_SysBarPropMap, {PrimitiveType::PT_SysBarPropMap,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->sysBarPropMap_)}},
+    {WPRS_WindowSizeChangeReason, {PrimitiveType::PT_Uint32,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->windowSizeChangeReason_)}},
+    {WPRS_CallingWindow, {PrimitiveType::PT_Uint32,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->callingWindow_)}},
+    {WPRS_RequestedOrientation, {PrimitiveType::PT_Uint32,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->requestedOrientation_)}},
+    {WPRS_TurnScreenOn, {PrimitiveType::PT_Bool,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->turnScreenOn_)}},
+    {WPRS_KeepScreenOn, {PrimitiveType::PT_Bool,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->keepScreenOn_)}},
+    {WPRS_ModeSupportInfo, {PrimitiveType::PT_Uint32,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->modeSupportInfo_)}},
+    {WPRS_DragType, {PrimitiveType::PT_Uint32,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->dragType_)}},
+    {WPRS_OriginRect, {PrimitiveType::PT_Rect,
+        (size_t) & (static_cast<WindowProperty*>(nullptr)->originRect_)}},
+};
+
 WindowProperty::WindowProperty(const sptr<WindowProperty>& property)
 {
     CopyFrom(property);
@@ -163,6 +200,21 @@ void WindowProperty::SetAnimationFlag(uint32_t animationFlag)
 void WindowProperty::SetWindowSizeChangeReason(WindowSizeChangeReason reason)
 {
     windowSizeChangeReason_ = reason;
+}
+
+void WindowProperty::SetDragType(DragType dragType)
+{
+    dragType_ = dragType;
+}
+
+void WindowProperty::SetStretchable(bool stretchable)
+{
+    isStretchable_ = stretchable;
+}
+
+void WindowProperty::SetOriginRect(const Rect& rect)
+{
+    originRect_ = rect;
 }
 
 WindowSizeChangeReason WindowProperty::GetWindowSizeChangeReason() const
@@ -335,6 +387,21 @@ bool WindowProperty::GetTokenState() const
     return tokenState_;
 }
 
+DragType WindowProperty::GetDragType() const
+{
+    return dragType_;
+}
+
+const Rect& WindowProperty::GetOriginRect() const
+{
+    return originRect_;
+}
+
+bool WindowProperty::GetStretchable() const
+{
+    return isStretchable_;
+}
+
 bool WindowProperty::MapMarshalling(Parcel& parcel) const
 {
     auto size = sysBarPropMap_.size();
@@ -384,7 +451,10 @@ bool WindowProperty::Marshalling(Parcel& parcel) const
         parcel.WriteUint32(static_cast<uint32_t>(windowSizeChangeReason_)) && parcel.WriteBool(tokenState_) &&
         parcel.WriteUint32(callingWindow_) && parcel.WriteUint32(static_cast<uint32_t>(requestedOrientation_)) &&
         parcel.WriteBool(turnScreenOn_) && parcel.WriteBool(keepScreenOn_) &&
-        parcel.WriteUint32(modeSupportInfo_);
+        parcel.WriteUint32(modeSupportInfo_) && parcel.WriteUint32(static_cast<uint32_t>(dragType_)) &&
+        parcel.WriteUint32(originRect_.width_) && parcel.WriteUint32(originRect_.height_) &&
+        parcel.WriteBool(isStretchable_);
+    ;
 }
 
 WindowProperty* WindowProperty::Unmarshalling(Parcel& parcel)
@@ -426,7 +496,114 @@ WindowProperty* WindowProperty::Unmarshalling(Parcel& parcel)
     property->SetTurnScreenOn(parcel.ReadBool());
     property->SetKeepScreenOn(parcel.ReadBool());
     property->SetModeSupportInfo(parcel.ReadUint32());
+    property->SetDragType(static_cast<DragType>(parcel.ReadUint32()));
+    uint32_t w = parcel.ReadUint32();
+    uint32_t h = parcel.ReadUint32();
+    property->SetOriginRect(Rect { 0, 0, w, h });
+    property->SetStretchable(parcel.ReadBool());
     return property;
+}
+
+bool WindowProperty::WriteMemberVariable(Parcel& parcel, const MemberVariable& mv)
+{
+    void* mvData = reinterpret_cast<uint8_t*>(this) + mv.offset_;
+    switch (mv.primitiveType_) {
+        case PrimitiveType::PT_Uint32:
+            if (!parcel.WriteUint32(*reinterpret_cast<uint32_t*>(mvData))) {
+                return false;
+            }
+            break;
+        case PrimitiveType::PT_Float:
+            if (!parcel.WriteFloat(*reinterpret_cast<float*>(mvData))) {
+                return false;
+            }
+            break;
+        case PrimitiveType::PT_Bool:
+            if (!parcel.WriteBool(*reinterpret_cast<bool*>(mvData))) {
+                return false;
+            }
+            break;
+        case PrimitiveType::PT_String:
+            if (!parcel.WriteString(*reinterpret_cast<std::string*>(mvData))) {
+                return false;
+            }
+            break;
+        case PrimitiveType::PT_Rect:
+            if (!parcel.WriteInt32(reinterpret_cast<Rect*>(mvData)->posX_) ||
+                !parcel.WriteInt32(reinterpret_cast<Rect*>(mvData)->posY_) ||
+                !parcel.WriteUint32(reinterpret_cast<Rect*>(mvData)->width_) ||
+                !parcel.WriteUint32(reinterpret_cast<Rect*>(mvData)->height_)) {
+                return false;
+            }
+            break;
+        case PrimitiveType::PT_SysBarPropMap:
+            if (!MapMarshalling(parcel)) {
+                return false;
+            }
+            break;
+        default:
+            break;
+    }
+    return true;
+}
+void WindowProperty::ReadMemberVariable(Parcel& parcel, const MemberVariable& mv)
+{
+    void* mvData = reinterpret_cast<uint8_t*>(this) + mv.offset_;
+    switch (mv.primitiveType_) {
+        case PrimitiveType::PT_Uint32:
+            *reinterpret_cast<uint32_t*>(mvData) = parcel.ReadUint32();
+            break;
+        case PrimitiveType::PT_Float:
+            *reinterpret_cast<float*>(mvData) = parcel.ReadFloat();
+            break;
+        case PrimitiveType::PT_Bool:
+            *reinterpret_cast<bool*>(mvData) = parcel.ReadBool();
+            break;
+        case PrimitiveType::PT_String:
+            *reinterpret_cast<std::string*>(mvData) = parcel.ReadString();
+            break;
+        case PrimitiveType::PT_Rect:
+            *reinterpret_cast<Rect*>(mvData) = {
+                parcel.ReadInt32(), parcel.ReadInt32(), parcel.ReadUint32(), parcel.ReadUint32() };
+            break;
+        case PrimitiveType::PT_SysBarPropMap:
+            MapUnmarshalling(parcel, this);
+            break;
+        default:
+            break;
+    }
+}
+
+bool WindowProperty::Write(Parcel& parcel, uint64_t inDirtyState)
+{
+    uint64_t dirtyState = inDirtyState;
+    uint64_t replicationState;
+    if (!parcel.WriteUint64(inDirtyState)) {
+        return false;
+    }
+    while (dirtyState) {
+        replicationState = dirtyState & (~dirtyState + 1);
+        if (dataTypeMap_.count(replicationState)) {
+            if (!WriteMemberVariable(parcel, dataTypeMap_.at(replicationState))) {
+                return false;
+            }
+        }
+        dirtyState -= replicationState;
+    }
+    return true;
+}
+
+void WindowProperty::Read(Parcel& parcel)
+{
+    uint64_t dirtyState = parcel.ReadUint64();
+    uint64_t replicationState;
+    while (dirtyState) {
+        replicationState = dirtyState & (~dirtyState + 1);
+        if (dataTypeMap_.count(replicationState)) {
+            ReadMemberVariable(parcel, dataTypeMap_.at(replicationState));
+        }
+        dirtyState -= replicationState;
+    }
 }
 
 void WindowProperty::CopyFrom(const sptr<WindowProperty>& property)
@@ -461,6 +638,9 @@ void WindowProperty::CopyFrom(const sptr<WindowProperty>& property)
     turnScreenOn_ = property->turnScreenOn_;
     keepScreenOn_ = property->keepScreenOn_;
     modeSupportInfo_ = property->modeSupportInfo_;
+    dragType_ = property->dragType_;
+    originRect_ = property->originRect_;
+    isStretchable_ = property->isStretchable_;
 }
 }
 }

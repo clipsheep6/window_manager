@@ -24,7 +24,7 @@
 #include "display_manager.h"
 
 namespace OHOS {
-using  WriteToPngParam = struct {
+struct WriteToPngParam {
     uint32_t width;
     uint32_t height;
     uint32_t stride;
@@ -32,7 +32,7 @@ using  WriteToPngParam = struct {
     const uint8_t *data;
 };
 
-using CmdArgments = struct {
+struct CmdArgments {
     bool isDisplayIdSet = false;
     Rosen::DisplayId displayId = Rosen::DISPLAY_ID_INVALID;
     std::string fileName;
@@ -52,7 +52,9 @@ public:
     static std::string GenerateFileName(int offset = 0);
     static bool CheckWidthAndHeightValid(const CmdArgments& cmdArgments);
     static bool WriteToPng(const std::string &fileName, const WriteToPngParam &param);
+    static bool WriteToPng(int fd, const WriteToPngParam &param);
     static bool WriteToPngWithPixelMap(const std::string &fileName, Media::PixelMap &pixelMap);
+    static bool WriteToPngWithPixelMap(int fd, Media::PixelMap &pixelMap);
     static bool ProcessArgs(int argc, char * const argv[], CmdArgments& cmdArgments);
 private:
 };

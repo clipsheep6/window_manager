@@ -159,7 +159,8 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             break;
         }
         case WindowManagerMessage::TRANS_ID_UPDATE_PROPERTY: {
-            sptr<WindowProperty> windowProperty = data.ReadStrongParcelable<WindowProperty>();
+            sptr<WindowProperty> windowProperty = new WindowProperty();
+            windowProperty->Read(data);
             PropertyChangeAction action = static_cast<PropertyChangeAction>(data.ReadUint32());
             WMError errCode = UpdateProperty(windowProperty, action);
             reply.WriteInt32(static_cast<int32_t>(errCode));
@@ -190,7 +191,8 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
         case WindowManagerMessage::TRANS_ID_NOTIFY_WINDOW_TRANSITION: {
             sptr<WindowTransitionInfo> from = data.ReadParcelable<WindowTransitionInfo>();
             sptr<WindowTransitionInfo> to = data.ReadParcelable<WindowTransitionInfo>();
-            WMError errCode = NotifyWindowTransition(from, to);
+            bool isFromClient = data.ReadBool();
+            WMError errCode = NotifyWindowTransition(from, to, isFromClient);
             reply.WriteInt32(static_cast<int32_t>(errCode));
             break;
         }
@@ -214,6 +216,28 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             reply.WriteInt32(hotZones.secondary_.posY_);
             reply.WriteUint32(hotZones.secondary_.width_);
             reply.WriteUint32(hotZones.secondary_.height_);
+            break;
+        }
+        case WindowManagerMessage::TRANS_ID_GET_ANIMATION_CALLBACK: {
+            std::vector<uint32_t> windowIds;
+            uint32_t windowNum = data.ReadUint32();
+            for (uint32_t i = 0; i < windowNum; ++i) {
+                windowIds.push_back(data.ReadUint32());
+            }
+            bool isAnimated = data.ReadBool();
+            sptr<RSIWindowAnimationFinishedCallback> finishedCallback = nullptr;
+            MinimizeWindowsByLauncher(windowIds, isAnimated, finishedCallback);
+            if (finishedCallback == nullptr) {
+                if (!reply.WriteBool(false)) {
+                    WLOGFE("finishedCallback is nullptr and failed to write!");
+                    return 0;
+                }
+            } else {
+                if (!reply.WriteBool(true) || !reply.WriteRemoteObject(finishedCallback->AsObject())) {
+                    WLOGFE("finishedCallback is not nullptr and failed to write!");
+                    return 0;
+                }
+            }
             break;
         }
         default:

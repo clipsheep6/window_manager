@@ -62,6 +62,19 @@ NativeValue* WindowTypeInit(NativeEngine* engine)
         static_cast<int32_t>(ApiWindowType::TYPE_NAVIGATION_BAR)));
     object->SetProperty("TYPE_FLOAT", CreateJsValue(*engine,
         static_cast<int32_t>(ApiWindowType::TYPE_FLOAT)));
+    object->SetProperty("TYPE_WALLPAPER", CreateJsValue(*engine,
+        static_cast<int32_t>(ApiWindowType::TYPE_WALLPAPER)));
+    object->SetProperty("TYPE_DESKTOP", CreateJsValue(*engine,
+        static_cast<int32_t>(ApiWindowType::TYPE_DESKTOP)));
+    object->SetProperty("TYPE_LAUNCHER_RECENT", CreateJsValue(*engine,
+        static_cast<int32_t>(ApiWindowType::TYPE_LAUNCHER_RECENT)));
+    object->SetProperty("TYPE_LAUNCHER_DOCK", CreateJsValue(*engine,
+        static_cast<int32_t>(ApiWindowType::TYPE_LAUNCHER_DOCK)));
+    object->SetProperty("TYPE_VOICE_INTERACTION", CreateJsValue(*engine,
+        static_cast<int32_t>(ApiWindowType::TYPE_VOICE_INTERACTION)));
+    object->SetProperty("TYPE_POINTER", CreateJsValue(*engine,
+        static_cast<int32_t>(ApiWindowType::TYPE_POINTER)));
+
     return objValue;
 }
 
@@ -261,7 +274,11 @@ static NativeValue* CreateJsSystemBarRegionTintObject(NativeEngine& engine, cons
         WLOGFE("[NAPI]Failed to convert SystemBarProperty to jsObject");
         return nullptr;
     }
-    object->SetProperty("type", CreateJsValue(engine, static_cast<uint32_t>(tint.type_)));
+    if (NATIVE_JS_TO_WINDOW_TYPE_MAP.count(tint.type_) != 0) {
+        object->SetProperty("type", CreateJsValue(engine, NATIVE_JS_TO_WINDOW_TYPE_MAP.at(tint.type_)));
+    } else {
+        object->SetProperty("type", CreateJsValue(engine, tint.type_));
+    }
     object->SetProperty("isEnable", CreateJsValue(engine, tint.prop_.enable_));
     std::string bkgColor = GetHexColor(tint.prop_.backgroundColor_);
     object->SetProperty("backgroundColor", CreateJsValue(engine, bkgColor));

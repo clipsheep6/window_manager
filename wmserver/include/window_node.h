@@ -69,6 +69,9 @@ public:
     void SetRequestedOrientation(Orientation orientation);
     void SetShowingDisplays(const std::vector<DisplayId>& displayIdVec);
     void SetModeSupportInfo(uint32_t modeSupportInfo);
+    void SetDragType(DragType dragType);
+    void SetOriginRect(const Rect& rect);
+
     const sptr<IWindow>& GetWindowToken() const;
     uint32_t GetWindowId() const;
     uint32_t GetParentId() const;
@@ -95,6 +98,9 @@ public:
     Orientation GetRequestedOrientation() const;
     std::vector<DisplayId> GetShowingDisplays() const;
     uint32_t GetModeSupportInfo() const;
+    DragType GetDragType() const;
+    bool GetStretchable() const;
+    const Rect& GetOriginRect() const;
     void ResetWindowSizeChangeReason();
 
     sptr<WindowNode> parent_;
@@ -108,6 +114,7 @@ public:
     bool requestedVisibility_ { false };
     bool currentVisibility_ { false };
     bool isCovered_ { true }; // initial value true to ensure notification when this window is shown
+    bool isAppCrash_ { false };
     bool isPlayAnimationShow_ { false };
     bool isPlayAnimationHide_ { false };
     bool startingWindowShown_ { false };

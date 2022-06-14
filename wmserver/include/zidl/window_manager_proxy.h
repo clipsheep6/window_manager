@@ -32,7 +32,8 @@ public:
         uint32_t& windowId, sptr<IRemoteObject> token) override;
     WMError AddWindow(sptr<WindowProperty>& property) override;
     WMError RemoveWindow(uint32_t windowId) override;
-    WMError NotifyWindowTransition(sptr<WindowTransitionInfo>& from, sptr<WindowTransitionInfo>& to) override;
+    WMError NotifyWindowTransition(sptr<WindowTransitionInfo>& from, sptr<WindowTransitionInfo>& to,
+        bool isFromClient = false) override;
     WMError DestroyWindow(uint32_t windowId, bool onlySelf = false) override;
     WMError RequestFocus(uint32_t windowId) override;
     WMError SetWindowBackgroundBlur(uint32_t windowId, WindowBlurLevel level) override;
@@ -45,7 +46,8 @@ public:
     WMError ToggleShownStateForAllAppWindows() override;
     WMError MaxmizeWindow(uint32_t windowId) override;
     WMError SetWindowLayoutMode(WindowLayoutMode mode) override;
-    WMError UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action) override;
+    WMError UpdateProperty(sptr<WindowProperty>& windowProperty,
+        PropertyChangeAction action, uint64_t dirtyState) override;
 
     void RegisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
@@ -56,7 +58,8 @@ public:
     WMError GetAccessibilityWindowInfo(sptr<AccessibilityWindowInfo>& windowInfo) override;
     WMError GetSystemConfig(SystemConfig& systemConfig) override;
     WMError GetModeChangeHotZones(DisplayId displayId, ModeChangeHotZones& hotZones) override;
-
+    void MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
+        sptr<RSIWindowAnimationFinishedCallback>& finishCallback) override;
 private:
     static inline BrokerDelegator<WindowManagerProxy> delegator_;
 };

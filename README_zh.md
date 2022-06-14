@@ -57,6 +57,6 @@ foundation/windowmanager/
 
 ## 相关仓
 - [graphic_graphic_2d](https://gitee.com/openharmony/graphic_graphic_2d)
-- [ace_ace_engine](https://gitee.com/openharmony/ace_ace_engine)
-- [aafwk_standard](https://gitee.com/openharmony/aafwk_standard)
+- [arkui_ace_engine](https://gitee.com/openharmony/arkui_ace_engine)
+- [ability_ability_runtime](https://gitee.com/openharmony/ability_ability_runtime)
 - [multimodalinput_input](https://gitee.com/openharmony/multimodalinput_input)

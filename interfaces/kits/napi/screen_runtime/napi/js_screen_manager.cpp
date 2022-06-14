@@ -136,6 +136,9 @@ NativeValue* CreateJsScreenVectorObject(NativeEngine& engine, std::vector<sptr<S
     }
     size_t i = 0;
     for (auto& screen : screens) {
+        if (screen == nullptr) {
+            continue;
+        }
         array->SetElement(i++, CreateJsScreenObject(engine, screen));
     }
     return arrayValue;
@@ -178,7 +181,7 @@ void RegisterScreenListenerWithType(NativeEngine& engine, const std::string& typ
             type.c_str());
         return;
     }
-    screenListener->AddCallback(value);
+    screenListener->AddCallback(type, value);
     jsCbMap_[type][std::move(callbackRef)] = screenListener;
 }
 
@@ -214,7 +217,7 @@ void UnRegisterScreenListenerWithType(const std::string& type, NativeValue* valu
     }
     for (auto it = jsCbMap_[type].begin(); it != jsCbMap_[type].end();) {
         if (value->StrictEquals(it->first->Get())) {
-            it->second->RemoveCallback(value);
+            it->second->RemoveCallback(type, value);
             if (type == EVENT_CONNECT || type == EVENT_DISCONNECT || type == EVENT_CHANGE) {
                 sptr<ScreenManager::IScreenListener> thisListener(it->second);
                 SingletonContainer::Get<ScreenManager>().UnregisterScreenListener(thisListener);

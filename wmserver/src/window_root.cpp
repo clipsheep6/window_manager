@@ -67,29 +67,34 @@ sptr<WindowNodeContainer> WindowRoot::GetOrCreateWindowNodeContainer(DisplayId d
 {
     bool isRecordedDisplay;
     ScreenId displayGroupId = GetScreenGroupId(displayId, isRecordedDisplay);
+    sptr<DisplayInfo> displayInfo = DisplayManagerServiceInner::GetInstance().GetDisplayById(displayId);
     auto iter = windowNodeContainerMap_.find(displayGroupId);
     if (iter != windowNodeContainerMap_.end()) {
         // if container exist for screenGroup and display is not be recorded, process expand display
         if (!isRecordedDisplay) {
-            ProcessExpandDisplayCreate(displayId, displayGroupId);
+            // add displayId in displayId vector
+            displayIdMap_[displayGroupId].push_back(displayId);
+            auto displayRectMap = GetAllDisplayRectsByDMS(displayInfo);
+            DisplayId defaultDisplayId = DisplayManagerServiceInner::GetInstance().GetDefaultDisplayId();
+            ProcessExpandDisplayCreate(defaultDisplayId, displayInfo, displayRectMap);
         }
         return iter->second;
     }
 
     // In case of have no container for default display, create container
     WLOGFE("Create container for current display, displayId: %{public}" PRIu64 "", displayId);
-    return CreateWindowNodeContainer(displayId);
+    return CreateWindowNodeContainer(displayInfo);
 }
 
-sptr<WindowNodeContainer> WindowRoot::CreateWindowNodeContainer(DisplayId displayId)
+sptr<WindowNodeContainer> WindowRoot::CreateWindowNodeContainer(sptr<DisplayInfo> displayInfo)
 {
-    const sptr<DisplayInfo> displayInfo = DisplayManagerServiceInner::GetInstance().GetDisplayById(displayId);
     if (displayInfo == nullptr || !CheckDisplayInfo(displayInfo)) {
-        WLOGFE("get display failed or get invailed display info, displayId :%{public}" PRIu64 "", displayId);
+        WLOGFE("get display failed or get invailed display info");
         return nullptr;
     }
 
-    ScreenId displayGroupId = DisplayManagerServiceInner::GetInstance().GetScreenGroupIdByDisplayId(displayId);
+    DisplayId displayId = displayInfo->GetDisplayId();
+    ScreenId displayGroupId = displayInfo->GetScreenGroupId();
     WLOGFI("create new container for display, width: %{public}d, height: %{public}d, "
         "displayGroupId:%{public}" PRIu64", displayId:%{public}" PRIu64"", displayInfo->GetWidth(),
         displayInfo->GetHeight(), displayGroupId, displayId);
@@ -97,6 +102,12 @@ sptr<WindowNodeContainer> WindowRoot::CreateWindowNodeContainer(DisplayId displa
     windowNodeContainerMap_.insert(std::make_pair(displayGroupId, container));
     std::vector<DisplayId> displayVec = { displayId };
     displayIdMap_.insert(std::make_pair(displayGroupId, displayVec));
+    if (container == nullptr) {
+        WLOGFE("create container failed, displayId :%{public}" PRIu64 "", displayId);
+        return nullptr;
+    }
+    container->GetLayoutPolicy()->SetFloatingWindowLimitsConfig(floatingWindowLimitsConfig_);
+    container->GetLayoutPolicy()->SetSplitRatioConfig(splitRatioConfig_);
     return container;
 }
 
@@ -111,38 +122,6 @@ bool WindowRoot::CheckDisplayInfo(const sptr<DisplayInfo>& display)
         return false;
     }
     return true;
-}
-
-void WindowRoot::NotifyKeyboardSizeChangeInfo(const sptr<WindowNode>& node,
-    const sptr<WindowNodeContainer>& container, Rect rect)
-{
-    if (node == nullptr || container == nullptr) {
-        WLOGFE("invalid parameter");
-        return;
-    }
-
-    if (node->GetWindowType() != WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
-        return;
-    }
-
-    auto callingWindow = GetWindowNode(node->GetCallingWindow());
-    if (callingWindow == nullptr) {
-        WLOGFI("callingWindow: %{public}u does not be set", node->GetCallingWindow());
-        callingWindow = GetWindowNode(container->GetFocusWindow());
-    }
-    if (callingWindow != nullptr && callingWindow->GetWindowToken() != nullptr &&
-        (callingWindow->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN ||
-        callingWindow->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
-        callingWindow->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_SECONDARY)) {
-        WLOGFI("keyboard size change callingWindow: [%{public}s, %{public}u], " \
-            "input rect: [%{public}d, %{public}d, %{public}u, %{public}u]",
-            callingWindow->GetWindowName().c_str(), callingWindow->GetWindowId(),
-            rect.posX_, rect.posY_, rect.width_, rect.height_);
-        sptr<OccupiedAreaChangeInfo> info = new OccupiedAreaChangeInfo(OccupiedAreaType::TYPE_INPUT, rect);
-        callingWindow->GetWindowToken()->UpdateOccupiedAreaChangeInfo(info);
-        return;
-    }
-    WLOGFE("does not have correct callingWindow for input method window");
 }
 
 sptr<WindowNode> WindowRoot::GetWindowNode(uint32_t windowId) const
@@ -232,6 +211,21 @@ WMError WindowRoot::MinimizeStructuredAppWindowsExceptSelf(sptr<WindowNode>& nod
     return container->MinimizeStructuredAppWindowsExceptSelf(node);
 }
 
+void WindowRoot::MinimizeTargetWindows(std::vector<uint32_t>& windowIds)
+{
+    for (auto& windowId : windowIds) {
+        if (windowNodeMap_.count(windowId) != 0) {
+            auto windowNode = windowNodeMap_[windowId];
+            if (windowNode->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+                MinimizeApp::AddNeedMinimizeApp(windowNode, MinimizeReason::GESTURE_ANIMATION);
+            } else {
+                WLOGFE("Minimize window failed id: %{public}u, type: %{public}u",
+                    windowNode->GetWindowId(), static_cast<uint32_t>(windowNode->GetWindowType()));
+            }
+        }
+    }
+}
+
 bool WindowRoot::IsForbidDockSliceMove(DisplayId displayId) const
 {
     auto container = const_cast<WindowRoot*>(this)->GetOrCreateWindowNodeContainer(displayId);
@@ -240,6 +234,26 @@ bool WindowRoot::IsForbidDockSliceMove(DisplayId displayId) const
         return true;
     }
     return container->IsForbidDockSliceMove(displayId);
+}
+
+bool WindowRoot::IsDockSliceInExitSplitModeArea(DisplayId displayId) const
+{
+    auto container = const_cast<WindowRoot*>(this)->GetOrCreateWindowNodeContainer(displayId);
+    if (container == nullptr) {
+        WLOGFE("can't find container");
+        return false;
+    }
+    return container->IsDockSliceInExitSplitModeArea(displayId);
+}
+
+void WindowRoot::ExitSplitMode(DisplayId displayId)
+{
+    auto container = GetOrCreateWindowNodeContainer(displayId);
+    if (container == nullptr) {
+        WLOGFE("can't find container");
+        return;
+    }
+    container->ExitSplitMode(displayId);
 }
 
 std::vector<Rect> WindowRoot::GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType)
@@ -269,7 +283,7 @@ void WindowRoot::MinimizeAllAppWindows(DisplayId displayId)
     return container->MinimizeAllAppWindows(displayId);
 }
 
-void WindowRoot::ToggleShownStateForAllAppWindows()
+WMError WindowRoot::ToggleShownStateForAllAppWindows()
 {
     std::vector<DisplayId> displays = DisplayManagerServiceInner::GetInstance().GetAllDisplayIds();
     std::vector<sptr<WindowNodeContainer>> containers;
@@ -283,8 +297,9 @@ void WindowRoot::ToggleShownStateForAllAppWindows()
         containers.emplace_back(container);
         isAllAppWindowsEmpty = isAllAppWindowsEmpty && container->IsAppWindowsEmpty();
     }
+    WMError res = WMError::WM_OK;
     std::for_each(containers.begin(), containers.end(),
-        [this, isAllAppWindowsEmpty] (sptr<WindowNodeContainer> container) {
+        [this, isAllAppWindowsEmpty, &res] (sptr<WindowNodeContainer> container) {
         auto restoreFunc = [this](uint32_t windowId, WindowMode mode) {
             auto windowNode = GetWindowNode(windowId);
             if (windowNode == nullptr) {
@@ -305,12 +320,15 @@ void WindowRoot::ToggleShownStateForAllAppWindows()
             WindowManagerService::GetInstance().HandleAddWindow(property);
             return true;
         };
+        WMError tmpRes = WMError::WM_OK;
         if (isAllAppWindowsEmpty) {
-            container->ToggleShownStateForAllAppWindows(restoreFunc, true);
+            tmpRes = container->ToggleShownStateForAllAppWindows(restoreFunc, true);
         } else {
-            container->ToggleShownStateForAllAppWindows(restoreFunc, false);
+            tmpRes = container->ToggleShownStateForAllAppWindows(restoreFunc, false);
         }
+        res = (res == WMError::WM_OK) ? tmpRes : res;
     });
+    return res;
 }
 
 WMError WindowRoot::MaxmizeWindow(uint32_t windowId)
@@ -334,6 +352,7 @@ WMError WindowRoot::MaxmizeWindow(uint32_t windowId)
 
 void WindowRoot::DestroyLeakStartingWindow()
 {
+    WLOGFI("DestroyLeakStartingWindow is called");
     std::vector<uint32_t> destroyIds;
     for (auto& iter : windowNodeMap_) {
         if (iter.second->startingWindowShown_ && !iter.second->GetWindowToken()) {
@@ -362,7 +381,7 @@ WMError WindowRoot::PostProcessAddWindowNode(sptr<WindowNode>& node, sptr<Window
         needCheckFocusWindow = true;
     }
     container->SetActiveWindow(node->GetWindowId(), false);
-    NotifyKeyboardSizeChangeInfo(node, container, node->GetWindowRect());
+
     for (auto& child : node->children_) {
         if (child == nullptr || !child->currentVisibility_) {
             break;
@@ -404,7 +423,11 @@ WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, boo
         }
     }
     if (fromStartingWin) {
-        return container->ShowStartingWindow(node);
+        WMError res = container->ShowStartingWindow(node);
+        if (res != WMError::WM_OK) {
+            MinimizeApp::ClearNodesWithReason(MinimizeReason::OTHER_WINDOW);
+        }
+        return res;
     }
     // limit number of main window
     int mainWindowNumber = container->GetWindowCountByType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
@@ -443,8 +466,6 @@ WMError WindowRoot::RemoveWindowNode(uint32_t windowId)
     UpdateBrightnessWithWindowRemoved(windowId, container);
     WMError res = container->RemoveWindowNode(node);
     if (res == WMError::WM_OK) {
-        Rect rect = { 0, 0, 0, 0 };
-        NotifyKeyboardSizeChangeInfo(node, container, rect);
         for (auto& child : node->children_) {
             if (child == nullptr) {
                 break;
@@ -566,7 +587,8 @@ WMError WindowRoot::DestroyWindow(uint32_t windowId, bool onlySelf)
 {
     auto node = GetWindowNode(windowId);
     if (node == nullptr) {
-        return WMError::WM_ERROR_DESTROYED_OBJECT;
+        WLOGFW("Window mode is destroyed or not created");
+        return WMError::WM_OK;
     }
     WMError res;
     auto container = GetOrCreateWindowNodeContainer(node->GetDisplayId());
@@ -593,10 +615,6 @@ WMError WindowRoot::DestroyWindow(uint32_t windowId, bool onlySelf)
                     HandleKeepScreenOn(id, false);
                     DestroyWindowInner(node);
                 }
-            }
-            if (res == WMError::WM_OK) {
-                Rect rect = { 0, 0, 0, 0 };
-                NotifyKeyboardSizeChangeInfo(node, container, rect);
             }
             return res;
         }
@@ -966,26 +984,23 @@ void WindowRoot::FocusFaultDetection() const
     }
 }
 
-void WindowRoot::ProcessExpandDisplayCreate(DisplayId displayId, ScreenId displayGroupId)
+void WindowRoot::ProcessExpandDisplayCreate(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
+    std::map<DisplayId, Rect>& displayRectMap)
 {
-    const sptr<DisplayInfo> displayInfo = DisplayManagerServiceInner::GetInstance().GetDisplayById(displayId);
-        if (displayInfo == nullptr || !CheckDisplayInfo(displayInfo)) {
-            WLOGFE("get display failed or get invailed display info, displayId :%{public}" PRIu64 "", displayId);
-            return;
-        }
-        auto container = windowNodeContainerMap_[displayGroupId];
-        if (container == nullptr) {
-            WLOGFE("window node container is nullptr, displayId :%{public}" PRIu64 "", displayId);
-        }
-        // add displayId in displayId vector
-        displayIdMap_[displayGroupId].push_back(displayId);
+    if (displayInfo == nullptr || !CheckDisplayInfo(displayInfo)) {
+        WLOGFE("get display failed or get invailed display info");
+        return;
+    }
+    DisplayId displayId = displayInfo->GetDisplayId();
+    ScreenId displayGroupId = displayInfo->GetScreenGroupId();
+    auto container = windowNodeContainerMap_[displayGroupId];
+    if (container == nullptr) {
+        WLOGFE("window node container is nullptr, displayId :%{public}" PRIu64 "", displayId);
+    }
 
-        WLOGFI("[Display Create] before add new display, displayId: %{public}" PRIu64"", displayId);
-
-        auto displayRectMap = GetAllDisplayRects(displayIdMap_[displayGroupId]);
-        container->GetMutiDisplayController()->ProcessDisplayCreate(displayId, displayRectMap);
-
-        WLOGFI("[Display Create] Container exist, add new display, displayId: %{public}" PRIu64"", displayId);
+    WLOGFI("[Display Create] before add new display, displayId: %{public}" PRIu64"", displayId);
+    container->GetMutiDisplayController()->ProcessDisplayCreate(defaultDisplayId, displayInfo, displayRectMap);
+    WLOGFI("[Display Create] Container exist, add new display, displayId: %{public}" PRIu64"", displayId);
 }
 
 std::map<DisplayId, sptr<DisplayInfo>> WindowRoot::GetAllDisplayInfos(const std::vector<DisplayId>& displayIdVec)
@@ -999,13 +1014,13 @@ std::map<DisplayId, sptr<DisplayInfo>> WindowRoot::GetAllDisplayInfos(const std:
     return displayInfoMap;
 }
 
-std::map<DisplayId, Rect> WindowRoot::GetAllDisplayRects(const std::vector<DisplayId>& displayIdVec)
+std::map<DisplayId, Rect> WindowRoot::GetAllDisplayRectsByDMS(sptr<DisplayInfo> displayInfo)
 {
     std::map<DisplayId, Rect> displayRectMap;
-    for (auto& displayId : displayIdVec) {
-        auto displayInfo = DisplayManagerServiceInner::GetInstance().GetDisplayById(displayId);
-        Rect displayRect = { displayInfo->GetOffsetX(), displayInfo->GetOffsetY(),
-            displayInfo->GetWidth(), displayInfo->GetHeight() };
+
+    for (auto& displayId : displayIdMap_[displayInfo->GetScreenGroupId()]) {
+        auto info = DisplayManagerServiceInner::GetInstance().GetDisplayById(displayId);
+        Rect displayRect = { info->GetOffsetX(), info->GetOffsetY(), info->GetWidth(), info->GetHeight() };
         displayRectMap.insert(std::make_pair(displayId, displayRect));
 
         WLOGFI("displayId: %{public}" PRIu64", displayRect: [ %{public}d, %{public}d, %{public}d, %{public}d]",
@@ -1014,12 +1029,31 @@ std::map<DisplayId, Rect> WindowRoot::GetAllDisplayRects(const std::vector<Displ
     return displayRectMap;
 }
 
-void WindowRoot::ProcessDisplayCreate(DisplayId displayId)
+std::map<DisplayId, Rect> WindowRoot::GetAllDisplayRectsByDisplayInfo(
+    const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap)
 {
-    ScreenId displayGroupId = DisplayManagerServiceInner::GetInstance().GetScreenGroupIdByDisplayId(displayId);
+    std::map<DisplayId, Rect> displayRectMap;
+
+    for (auto& iter : displayInfoMap) {
+        auto id = iter.first;
+        auto info = iter.second;
+        Rect displayRect = { info->GetOffsetX(), info->GetOffsetY(), info->GetWidth(), info->GetHeight() };
+        displayRectMap.insert(std::make_pair(id, displayRect));
+
+        WLOGFI("displayId: %{public}" PRIu64", displayRect: [ %{public}d, %{public}d, %{public}d, %{public}d]",
+            id, displayRect.posX_, displayRect.posY_, displayRect.width_, displayRect.height_);
+    }
+    return displayRectMap;
+}
+
+void WindowRoot::ProcessDisplayCreate(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
+    const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap)
+{
+    DisplayId displayId = (displayInfo == nullptr) ? DISPLAY_ID_INVALID : displayInfo->GetDisplayId();
+    ScreenId displayGroupId = (displayInfo == nullptr) ? SCREEN_ID_INVALID : displayInfo->GetScreenGroupId();
     auto iter = windowNodeContainerMap_.find(displayGroupId);
     if (iter == windowNodeContainerMap_.end()) {
-        CreateWindowNodeContainer(displayId);
+        CreateWindowNodeContainer(displayInfo);
         WLOGFI("[Display Create] Create new container for display, displayId: %{public}" PRIu64"", displayId);
     } else {
         auto& displayIdVec = displayIdMap_[displayGroupId];
@@ -1027,13 +1061,15 @@ void WindowRoot::ProcessDisplayCreate(DisplayId displayId)
             WLOGFI("[Display Create] Current display is already exist, displayId: %{public}" PRIu64"", displayId);
             return;
         }
-        ProcessExpandDisplayCreate(displayId, displayGroupId);
+        // add displayId in displayId vector
+        displayIdMap_[displayGroupId].push_back(displayId);
+        auto displayRectMap = GetAllDisplayRectsByDisplayInfo(displayInfoMap);
+        ProcessExpandDisplayCreate(defaultDisplayId, displayInfo, displayRectMap);
     }
 }
 
-void WindowRoot::MoveNotShowingWindowToDefaultDisplay(DisplayId displayId)
+void WindowRoot::MoveNotShowingWindowToDefaultDisplay(DisplayId defaultDisplayId, DisplayId displayId)
 {
-    DisplayId defaultDisplayId = DisplayManagerServiceInner::GetInstance().GetDefaultDisplayId();
     for (auto& elem : windowNodeMap_) {
         auto& windowNode = elem.second;
         if (windowNode->GetDisplayId() == displayId && !windowNode->currentVisibility_) {
@@ -1048,13 +1084,17 @@ void WindowRoot::MoveNotShowingWindowToDefaultDisplay(DisplayId displayId)
     }
 }
 
-void WindowRoot::ProcessDisplayDestroy(DisplayId displayId)
+void WindowRoot::ProcessDisplayDestroy(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
+    const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap)
 {
-    ScreenId displayGroupId = DisplayManagerServiceInner::GetInstance().GetScreenGroupIdByDisplayId(displayId);
+    DisplayId displayId = (displayInfo == nullptr) ? DISPLAY_ID_INVALID : displayInfo->GetDisplayId();
+    ScreenId displayGroupId = (displayInfo == nullptr) ? SCREEN_ID_INVALID : displayInfo->GetScreenGroupId();
     auto& displayIdVec = displayIdMap_[displayGroupId];
+
     auto iter = windowNodeContainerMap_.find(displayGroupId);
-    if (iter == windowNodeContainerMap_.end() || std::find(displayIdVec.begin(),
-        displayIdVec.end(), displayId) == displayIdVec.end()) {
+    if (iter == windowNodeContainerMap_.end() ||
+        std::find(displayIdVec.begin(), displayIdVec.end(), displayId) == displayIdVec.end() ||
+        displayInfoMap.find(displayId) == displayInfoMap.end()) {
         WLOGFE("[Display Destroy] could not find display, destroy failed, displayId: %{public}" PRIu64"", displayId);
         return;
     }
@@ -1072,8 +1112,12 @@ void WindowRoot::ProcessDisplayDestroy(DisplayId displayId)
     WLOGFI("[Display Destroy] displayId: %{public}" PRIu64"", displayId);
 
     std::vector<uint32_t> needDestoryWindows;
-    auto displayRectMap = GetAllDisplayRects(displayIdVec);
-    container->GetMutiDisplayController()->ProcessDisplayDestroy(displayId, displayRectMap, needDestoryWindows);
+    auto displayRectMap = GetAllDisplayRectsByDisplayInfo(displayInfoMap);
+    // erase displayId in displayRectMap
+    auto displayRectIter = displayRectMap.find(displayId);
+    displayRectMap.erase(displayRectIter);
+    container->GetMutiDisplayController()->ProcessDisplayDestroy(
+        defaultDisplayId, displayInfo, displayRectMap, needDestoryWindows);
     for (auto id : needDestoryWindows) {
         auto node = GetWindowNode(id);
         if (node != nullptr) {
@@ -1081,13 +1125,19 @@ void WindowRoot::ProcessDisplayDestroy(DisplayId displayId)
         }
     }
     // move window which is not showing on destroied display to default display
-    MoveNotShowingWindowToDefaultDisplay(displayId);
+    MoveNotShowingWindowToDefaultDisplay(defaultDisplayId, displayId);
     WLOGFI("[Display Destroy] displayId: %{public}" PRIu64" ", displayId);
 }
 
-void WindowRoot::ProcessDisplayChange(DisplayId displayId, DisplayStateChangeType type)
+void WindowRoot::ProcessDisplayChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
+    const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type)
 {
-    ScreenId displayGroupId = DisplayManagerServiceInner::GetInstance().GetScreenGroupIdByDisplayId(displayId);
+    if (displayInfo == nullptr) {
+        WLOGFE("get display failed");
+        return;
+    }
+    DisplayId displayId = displayInfo->GetDisplayId();
+    ScreenId displayGroupId = displayInfo->GetScreenGroupId();
     auto& displayIdVec = displayIdMap_[displayGroupId];
     auto iter = windowNodeContainerMap_.find(displayGroupId);
     if (iter == windowNodeContainerMap_.end() || std::find(displayIdVec.begin(),
@@ -1102,8 +1152,8 @@ void WindowRoot::ProcessDisplayChange(DisplayId displayId, DisplayStateChangeTyp
         return;
     }
 
-    auto displayRectMap = GetAllDisplayRects(displayIdVec);
-    container->GetMutiDisplayController()->ProcessDisplayChange(displayId, displayRectMap, type);
+    auto displayRectMap = GetAllDisplayRectsByDisplayInfo(displayInfoMap);
+    container->GetMutiDisplayController()->ProcessDisplayChange(defaultDisplayId, displayInfo, displayRectMap, type);
 }
 
 float WindowRoot::GetVirtualPixelRatio(DisplayId displayId) const
@@ -1145,6 +1195,36 @@ void WindowRoot::SetMaxAppWindowNumber(int windowNum)
     maxAppWindowNumber_ = windowNum;
 }
 
+void WindowRoot::SetSplitRatios(const std::vector<float>& splitRatioNumbers)
+{
+    auto& splitRatios = splitRatioConfig_.splitRatios;
+    splitRatios.clear();
+    splitRatios = splitRatioNumbers;
+    for (auto iter = splitRatios.begin(); iter != splitRatios.end();) {
+        if (*iter > 0 && *iter < 1) { // valid ratio range (0, 1)
+            iter++;
+        } else {
+            iter = splitRatios.erase(iter);
+        }
+    }
+    std::sort(splitRatios.begin(), splitRatios.end());
+    auto iter = std::unique(splitRatios.begin(), splitRatios.end());
+    splitRatios.erase(iter, splitRatios.end()); // remove duplitcate ratios
+}
+
+void WindowRoot::SetExitSplitRatios(const std::vector<float>& exitSplitRatios)
+{
+    if (exitSplitRatios.size() != 2) {
+        return;
+    }
+    if (exitSplitRatios[0] > 0 && exitSplitRatios[0] < DEFAULT_SPLIT_RATIO) {
+        splitRatioConfig_.exitSplitStartRatio = exitSplitRatios[0];
+    }
+    if (exitSplitRatios[1] > DEFAULT_SPLIT_RATIO && exitSplitRatios[1] < 1) {
+        splitRatioConfig_.exitSplitEndRatio = exitSplitRatios[1];
+    }
+}
+
 WMError WindowRoot::GetModeChangeHotZones(DisplayId displayId,
     ModeChangeHotZones& hotZones, const ModeChangeHotZonesConfig& config)
 {
@@ -1155,6 +1235,11 @@ WMError WindowRoot::GetModeChangeHotZones(DisplayId displayId,
     }
     container->GetModeChangeHotZones(displayId, hotZones, config);
     return WMError::WM_OK;
+}
+
+void WindowRoot::SetFloatingWindowLimitsConfig(const FloatingWindowLimitsConfig& floatingWindowLimitsConfig)
+{
+    floatingWindowLimitsConfig_ = floatingWindowLimitsConfig;
 }
 } // namespace Rosen
 } // namespace OHOS

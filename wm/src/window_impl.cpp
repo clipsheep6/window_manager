@@ -81,6 +81,7 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
 
 WindowImpl::~WindowImpl()
 {
+    WLOGFI("windowName: %{public}s, windowId: %{public}d", GetWindowName().c_str(), GetWindowId());
     Destroy();
 }
 
@@ -619,7 +620,51 @@ void WindowImpl::MapFloatingWindowToAppIfNeeded()
 
 WMError WindowImpl::UpdateProperty(PropertyChangeAction action)
 {
-    return SingletonContainer::Get<WindowAdapter>().UpdateProperty(property_, action);
+    uint64_t dirtyState = 0;
+    dirtyState |= WindowProperty::WPRS_WindowId;
+    switch (action) {
+        case PropertyChangeAction::ACTION_UPDATE_RECT:
+            dirtyState |= WindowProperty::WPRS_DecoStatus | WindowProperty::WPRS_DragType |
+                        WindowProperty::WPRS_OriginRect | WindowProperty::WPRS_RequestRect |
+                        WindowProperty::WPRS_WindowSizeChangeReason;
+            break;
+        case PropertyChangeAction::ACTION_UPDATE_MODE:
+            dirtyState |= WindowProperty::WPRS_Mode;
+            break;
+        case PropertyChangeAction::ACTION_UPDATE_FLAGS:
+            dirtyState |= WindowProperty::WPRS_Flags;
+            break;
+        case PropertyChangeAction::ACTION_UPDATE_OTHER_PROPS:
+            dirtyState |= WindowProperty::WPRS_SysBarPropMap;
+            break;
+        case PropertyChangeAction::ACTION_UPDATE_FOCUSABLE:
+            dirtyState |= WindowProperty::WPRS_Focusable;
+            break;
+        case PropertyChangeAction::ACTION_UPDATE_TOUCHABLE:
+            dirtyState |= WindowProperty::WPRS_Touchable;
+            break;
+        case PropertyChangeAction::ACTION_UPDATE_CALLING_WINDOW:
+            dirtyState |= WindowProperty::WPRS_CallingWindow;
+            break;
+        case PropertyChangeAction::ACTION_UPDATE_ORIENTATION:
+            dirtyState |= WindowProperty::WPRS_RequestedOrientation;
+            break;
+        case PropertyChangeAction::ACTION_UPDATE_TURN_SCREEN_ON:
+            dirtyState |= WindowProperty::WPRS_TurnScreenOn;
+            break;
+        case PropertyChangeAction::ACTION_UPDATE_KEEP_SCREEN_ON:
+            dirtyState |= WindowProperty::WPRS_KeepScreenOn;
+            break;
+        case PropertyChangeAction::ACTION_UPDATE_SET_BRIGHTNESS:
+            dirtyState |= WindowProperty::WPRS_Brightness;
+            break;
+        case PropertyChangeAction::ACTION_UPDATE_MODE_SUPPORT_INFO:
+            dirtyState |= WindowProperty::WPRS_ModeSupportInfo;
+            break;
+        default:
+            break;
+    }
+    return SingletonContainer::Get<WindowAdapter>().UpdateProperty(property_, action, dirtyState);
 }
 
 WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<AbilityRuntime::Context>& context)
@@ -643,12 +688,23 @@ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<
     context_ = context;
     sptr<WindowImpl> window(this);
     sptr<IWindow> windowAgent(new WindowAgent(window));
-    uint32_t windowId = 0;
+    static std::atomic<uint32_t> tempWindowId = 0;
+    uint32_t windowId = tempWindowId++; // for test
     sptr<IRemoteObject> token = nullptr;
     if (context_ != nullptr) {
         token = context_->GetToken();
         if (token != nullptr) {
             property_->SetTokenState(true);
+        }
+    }
+    if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
+        if (SingletonContainer::Get<WindowAdapter>().GetSystemConfig(windowSystemConfig_) == WMError::WM_OK) {
+            WLOGFE("get system decor enable:%{public}d", windowSystemConfig_.isSystemDecorEnable_);
+            if (windowSystemConfig_.isSystemDecorEnable_) {
+                property_->SetDecorEnable(true);
+            }
+            WLOGFI("get stretchable enable:%{public}d", windowSystemConfig_.isStretchable_);
+            property_->SetStretchable(windowSystemConfig_.isStretchable_);
         }
     }
     WMError ret = SingletonContainer::Get<WindowAdapter>().CreateWindow(windowAgent, property_, surfaceNode_,
@@ -658,14 +714,6 @@ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<
         return ret;
     }
     property_->SetWindowId(windowId);
-    if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
-        if (SingletonContainer::Get<WindowAdapter>().GetSystemConfig(windowSystemConfig_) == WMError::WM_OK) {
-            WLOGFE("get system decor enable:%{public}d", windowSystemConfig_.isSystemDecorEnable_);
-            if (windowSystemConfig_.isSystemDecorEnable_) {
-                property_->SetDecorEnable(true);
-            }
-        }
-    }
     windowMap_.insert(std::make_pair(name_, std::pair<uint32_t, sptr<Window>>(windowId, this)));
     if (parentName != "") { // add to subWindowMap_
         subWindowMap_[property_->GetParentId()].push_back(this);
@@ -675,6 +723,7 @@ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<
 
     state_ = WindowState::STATE_CREATED;
     InputTransferStation::GetInstance().AddInputWindow(this);
+    needRemoveWindowInputChannel_ = true;
     return ret;
 }
 
@@ -745,7 +794,6 @@ WMError WindowImpl::Destroy(bool needNotifyServer)
     }
 
     WLOGFI("[Client] Window %{public}u Destroy", property_->GetWindowId());
-    InputTransferStation::GetInstance().RemoveInputWindow(property_->GetWindowId());
     WMError ret = WMError::WM_OK;
     if (needNotifyServer) {
         NotifyBeforeDestroy(GetWindowName());
@@ -763,13 +811,18 @@ WMError WindowImpl::Destroy(bool needNotifyServer)
         WLOGFI("Do not need to notify server to destroy window");
     }
 
+    if (needRemoveWindowInputChannel_) {
+        InputTransferStation::GetInstance().RemoveInputWindow(property_->GetWindowId());
+    }
     windowMap_.erase(GetWindowName());
     DestroySubWindow();
     DestroyFloatingWindow();
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         state_ = WindowState::STATE_DESTROYED;
-        VsyncStation::GetInstance().RemoveCallback(VsyncStation::CallbackType::CALLBACK_FRAME, callback_);
+        if (isWaitingFrame_) {
+            VsyncStation::GetInstance().RemoveCallback(VsyncStation::CallbackType::CALLBACK_FRAME, callback_);
+        }
     }
     return ret;
 }
@@ -1059,6 +1112,7 @@ WMError WindowImpl::Drag(const Rect& rect)
     Rect requestRect = rect;
     property_->SetRequestRect(requestRect);
     property_->SetWindowSizeChangeReason(WindowSizeChangeReason::DRAG);
+    property_->SetDragType(dragType_);
     return UpdateProperty(PropertyChangeAction::ACTION_UPDATE_RECT);
 }
 
@@ -1416,32 +1470,30 @@ void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSize
         return;
     }
     property_->SetWindowRect(rect);
-
-    // update originRect when window show for the first time.
-    if (!isStretchableSet_) {
-        originRect_ = rect;
-        isStretchableSet_ = true;
+    const Rect& originRect = property_->GetOriginRect();
+    // update originRect when floating window show for the first time.
+    if (!isOriginRectSet_ && WindowHelper::IsMainFloatingWindow(GetType(), GetMode())) {
+        property_->SetOriginRect(rect);
+        isOriginRectSet_ = true;
     }
-
     Rect rectToAce = rect;
-
     // update rectToAce for stretchable window
-    if (windowSystemConfig_.isStretchable_ && GetMode() == WindowMode::WINDOW_MODE_FLOATING) {
-        if (reason == WindowSizeChangeReason::RESIZE ||
-        reason == WindowSizeChangeReason::RECOVER) {
-            originRect_ = rect;
+    if (windowSystemConfig_.isStretchable_ && WindowHelper::IsMainFloatingWindow(GetType(), GetMode())) {
+        if (reason == WindowSizeChangeReason::DRAG ||
+            reason == WindowSizeChangeReason::DRAG_END ||
+            reason == WindowSizeChangeReason::DRAG_START ||
+            reason == WindowSizeChangeReason::RECOVER) {
+            rectToAce = originRect;
         } else {
-            rectToAce = originRect_;
+            property_->SetOriginRect(rect);
         }
     }
-
     WLOGFI("sizeChange callback size: %{public}lu", (unsigned long)windowChangeListeners_.size());
     for (auto& listener : windowChangeListeners_) {
         if (listener != nullptr) {
             listener->OnSizeChange(rectToAce, reason);
         }
     }
-
     if (uiContent_ != nullptr) {
         Ace::ViewportConfig config;
         WLOGFI("UpdateViewportConfig Id:%{public}u, windowRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
@@ -1495,8 +1547,12 @@ void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
         }
         auto abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(context_);
         if (abilityContext != nullptr) {
-            WLOGI("ConsumeKeyEvent ability TerminateSelf");
-            abilityContext->TerminateSelf();
+            WMError ret = NotifyWindowTransition(TransitionReason::BACK);
+            if (ret != WMError::WM_OK) {
+                WLOGFI("[Client] Window %{public}u terminate without remote animation ret:%{public}u",
+                    property_->GetWindowId(), static_cast<uint32_t>(ret));
+                abilityContext->TerminateSelf();
+            }
         } else {
             WLOGI("ConsumeKeyEvent destroy window");
             Destroy();
@@ -1604,13 +1660,14 @@ void WindowImpl::UpdatePointerEventForStretchableWindow(std::shared_ptr<MMI::Poi
         WLOGFW("Point item is invalid");
         return;
     }
+    const Rect& originRect = property_->GetOriginRect();
     PointInfo originPos =
-        WindowHelper::CalculateOriginPosition(originRect_, GetRect(),
+        WindowHelper::CalculateOriginPosition(originRect, GetRect(),
         { pointerItem.GetGlobalX(), pointerItem.GetGlobalY() });
     pointerItem.SetGlobalX(originPos.x);
     pointerItem.SetGlobalY(originPos.y);
-    pointerItem.SetLocalX(originPos.x - originRect_.posX_);
-    pointerItem.SetLocalY(originPos.y - originRect_.posY_);
+    pointerItem.SetLocalX(originPos.x - originRect.posX_);
+    pointerItem.SetLocalY(originPos.y - originRect.posY_);
     pointerEvent->UpdatePointerItem(pointerEvent->GetPointerId(), pointerItem);
 }
 
@@ -1634,6 +1691,23 @@ void WindowImpl::EndMoveOrDragWindow(int32_t posX, int32_t posY, int32_t pointId
         HandleModeChangeHotZones(posX, posY);
     }
     pointEventStarted_ = false;
+}
+
+void WindowImpl::UpdateDragType()
+{
+    if (!startDragFlag_) {
+        dragType_ = DragType::DRAG_UNDEFINED;
+        return;
+    }
+    if (startPointPosX_ > startRectExceptCorner_.posX_ &&
+        (startPointPosX_ < startRectExceptCorner_.posX_ + static_cast<int32_t>(startRectExceptCorner_.width_))) {
+        dragType_ = DragType::DRAG_HEIGHT;
+    } else if (startPointPosY_ > startRectExceptCorner_.posY_ &&
+        (startPointPosY_ < startRectExceptCorner_.posY_ + static_cast<int32_t>(startRectExceptCorner_.height_))) {
+        dragType_ = DragType::DRAG_WIDTH;
+    } else {
+        dragType_ = DragType::DRAG_CORNER;
+    }
 }
 
 void WindowImpl::ReadyToMoveOrDragWindow(int32_t globalX, int32_t globalY, int32_t pointId, const Rect& rect)
@@ -1683,6 +1757,9 @@ void WindowImpl::ReadyToMoveOrDragWindow(int32_t globalX, int32_t globalY, int32
         startDragFlag_ = true;
         SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(), true);
     }
+
+    UpdateDragType();
+
     return;
 }
 
@@ -1763,8 +1840,11 @@ void WindowImpl::ConsumePointerEvent(std::shared_ptr<MMI::PointerEvent>& pointer
         SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId());
     }
 
+    // If point event type is up, should reset start move flag
     if (WindowHelper::IsMainFloatingWindow(GetType(), GetMode()) ||
-        GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+        GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE ||
+        (action == MMI::PointerEvent::POINTER_ACTION_UP || action == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP ||
+        action == MMI::PointerEvent::POINTER_ACTION_CANCEL)) {
         ConsumeMoveOrDragEvent(pointerEvent);
     }
 
@@ -1791,6 +1871,10 @@ void WindowImpl::ConsumePointerEvent(std::shared_ptr<MMI::PointerEvent>& pointer
 
 void WindowImpl::OnVsync(int64_t timeStamp)
 {
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        isWaitingFrame_ = false;
+    }
     uiContent_->ProcessVsyncEvent(static_cast<uint64_t>(timeStamp));
 }
 
@@ -1802,6 +1886,7 @@ void WindowImpl::RequestFrame()
         return;
     }
     VsyncStation::GetInstance().RequestVsync(VsyncStation::CallbackType::CALLBACK_FRAME, callback_);
+    isWaitingFrame_ = true;
 }
 
 void WindowImpl::UpdateFocusStatus(bool focused)
@@ -1961,6 +2046,11 @@ void WindowImpl::NotifyOutsidePressed()
     }
 }
 
+void WindowImpl::SetNeedRemoveWindowInputChannel(bool needRemoveWindowInputChannel)
+{
+    needRemoveWindowInputChannel_ = needRemoveWindowInputChannel;
+}
+
 Rect WindowImpl::GetSystemAlarmWindowDefaultSize(Rect defaultRect)
 {
     auto display = DisplayManager::GetInstance().GetDisplayById(property_->GetDisplayId());
@@ -1988,7 +2078,9 @@ void WindowImpl::SetDefaultOption()
 {
     switch (property_->GetWindowType()) {
         case WindowType::WINDOW_TYPE_STATUS_BAR:
-        case WindowType::WINDOW_TYPE_NAVIGATION_BAR: {
+        case WindowType::WINDOW_TYPE_NAVIGATION_BAR:
+        case WindowType::WINDOW_TYPE_VOLUME_OVERLAY:
+        case WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT: {
             property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
             property_->SetFocusable(false);
             break;
@@ -2014,19 +2106,10 @@ void WindowImpl::SetDefaultOption()
         }
         case WindowType::WINDOW_TYPE_TOAST:
         case WindowType::WINDOW_TYPE_FLOAT:
+        case WindowType::WINDOW_TYPE_VOICE_INTERACTION:
         case WindowType::WINDOW_TYPE_LAUNCHER_DOCK:
         case WindowType::WINDOW_TYPE_SEARCHING_BAR: {
             property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
-            break;
-        }
-        case WindowType::WINDOW_TYPE_VOLUME_OVERLAY: {
-            property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
-            property_->SetFocusable(false);
-            break;
-        }
-        case WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT: {
-            property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
-            property_->SetFocusable(false);
             break;
         }
         case WindowType::WINDOW_TYPE_BOOT_ANIMATION:
@@ -2034,8 +2117,9 @@ void WindowImpl::SetDefaultOption()
             property_->SetFocusable(false);
             break;
         }
-        case WindowType::WINDOW_TYPE_VOICE_INTERACTION: {
+        case WindowType::WINDOW_TYPE_DOCK_SLICE: {
             property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+            property_->SetFocusable(false);
             break;
         }
         default:

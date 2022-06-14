@@ -64,6 +64,11 @@ public:
         return ((IsMainWindow(type)) && (mode == WindowMode::WINDOW_MODE_FULLSCREEN));
     }
 
+    static inline bool IsMainNotFloatingWindow(WindowType type, WindowMode mode)
+    {
+        return ((IsMainWindow(type)) && (mode != WindowMode::WINDOW_MODE_FLOATING));
+    }
+
     static inline bool IsFloatintWindow(WindowMode mode)
     {
         return mode == WindowMode::WINDOW_MODE_FLOATING;
@@ -99,6 +104,28 @@ public:
     static inline bool IsEmptyRect(const Rect& r)
     {
         return (r.posX_ == 0 && r.posY_ == 0 && r.width_ == 0 && r.height_ == 0);
+    }
+
+    static inline bool HasOverlap(const Rect& r1, const Rect& r2)
+    {
+        int32_t r1XEnd = r1.posX_ + r1.width_;
+        int32_t r1YEnd = r1.posY_ + r1.height_;
+        int32_t r2XEnd = r2.posX_ + r2.width_;
+        int32_t r2YEnd = r2.posY_ + r2.height_;
+        return !(r1XEnd < r2.posX_ || r1.posX_ > r2XEnd || r1YEnd < r2.posY_ || r1.posY_ > r2YEnd);
+    }
+
+    static inline Rect GetOverlap(const Rect& rect1, const Rect& rect2, const int offsetX, const int offsetY)
+    {
+        const static Rect noOverlapRect = { 0, 0, 0, 0};
+        int32_t x_begin = std::max(rect1.posX_, rect2.posX_);
+        int32_t x_end = std::min(rect1.posX_ + rect1.width_, rect2.posX_ + rect2.width_);
+        int32_t y_begin = std::max(rect1.posY_, rect2.posY_);
+        int32_t y_end = std::min(rect1.posY_ + rect1.height_, rect2.posY_ + rect2.height_);
+        if (y_begin > y_end || x_begin > x_end) {
+            return noOverlapRect;
+        }
+        return { x_begin - offsetX, y_begin - offsetY, x_end - x_begin + 1, y_end - y_begin + 1 };
     }
 
     static bool IsWindowModeSupported(uint32_t modeSupportInfo, WindowMode mode)
@@ -171,43 +198,6 @@ public:
         return dstRect;
     }
 
-    static Rect GetFixedWindowRectByLimitPosition(const Rect& oriDstRect, const Rect& lastRect,
-        float virtualPixelRatio, const Rect& displayLimitRect)
-    {
-        Rect dstRect = oriDstRect;
-        uint32_t windowTitleBarH = static_cast<uint32_t>(WINDOW_TITLE_BAR_HEIGHT * virtualPixelRatio);
-        // minimum (x + width)
-        if (dstRect.posX_ < (displayLimitRect.posX_ + static_cast<int32_t>(windowTitleBarH - oriDstRect.width_))) {
-            if (oriDstRect.width_ != lastRect.width_) {
-                dstRect.width_ = static_cast<uint32_t>(displayLimitRect.posX_  - oriDstRect.posX_) + windowTitleBarH;
-            }
-        }
-        // maximum position x
-        if (dstRect.posX_ > (displayLimitRect.posX_ +
-                             static_cast<int32_t>(displayLimitRect.width_ - windowTitleBarH))) {
-            dstRect.posX_ = displayLimitRect.posX_ + static_cast<int32_t>(displayLimitRect.width_ - windowTitleBarH);
-            if (oriDstRect.width_ != lastRect.width_) {
-                dstRect.width_ = lastRect.width_;
-            }
-        }
-        // minimum position y
-        if (oriDstRect.posY_ < displayLimitRect.posY_) {
-            dstRect.posY_ = displayLimitRect.posY_;
-            if (oriDstRect.height_ != lastRect.height_) {
-                dstRect.height_ = lastRect.height_;
-            }
-        }
-        // maximum position y
-        if (dstRect.posY_ > (displayLimitRect.posY_ +
-                             static_cast<int32_t>(displayLimitRect.height_ - windowTitleBarH))) {
-            dstRect.posY_ = displayLimitRect.posY_ + static_cast<int32_t>(displayLimitRect.height_ - windowTitleBarH);
-            if (oriDstRect.height_ != lastRect.height_) {
-                dstRect.height_ = lastRect.height_;
-            }
-        }
-        return dstRect;
-    }
-
     static bool IsPointInTargetRect(int32_t pointPosX, int32_t pointPosY, const Rect& targetRect)
     {
         if ((pointPosX > targetRect.posX_) &&
@@ -259,6 +249,17 @@ public:
     {
         for (int32_t i = 0; i < static_cast<int32_t>(str.size()); i++) {
             if (str.at(i) < '0' || str.at(i) > '9') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    static inline bool IsFloatingNumber(std::string str)
+    {
+        for (int32_t i = 0; i < static_cast<int32_t>(str.size()); i++) {
+            if ((str.at(i) < '0' || str.at(i) > '9') &&
+                (str.at(i) != '.' || std::count(str.begin(), str.end(), '.') > 1)) {
                 return false;
             }
         }

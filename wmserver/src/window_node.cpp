@@ -188,6 +188,31 @@ void WindowNode::SetCallingUid(int32_t uid)
     callingUid_ = uid;
 }
 
+void WindowNode::SetDragType(DragType dragType)
+{
+    property_->SetDragType(dragType);
+}
+
+void WindowNode::SetOriginRect(const Rect& rect)
+{
+    property_->SetOriginRect(rect);
+}
+
+DragType WindowNode::GetDragType() const
+{
+    return property_->GetDragType();
+}
+
+bool WindowNode::GetStretchable() const
+{
+    return property_->GetStretchable();
+}
+
+const Rect& WindowNode::GetOriginRect() const
+{
+    return property_->GetOriginRect();
+}
+
 DisplayId WindowNode::GetDisplayId() const
 {
     return property_->GetDisplayId();
@@ -280,7 +305,7 @@ int32_t WindowNode::GetCallingPid() const
 
 int32_t WindowNode::GetCallingUid() const
 {
-    return callingPid_;
+    return callingUid_;
 }
 
 const std::unordered_map<WindowType, SystemBarProperty>& WindowNode::GetSystemBarProperty() const

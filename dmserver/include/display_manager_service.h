@@ -24,6 +24,7 @@
 #include <ui/rs_display_node.h>
 
 #include "dm_common.h"
+#include "display_dumper.h"
 #include "screen.h"
 #include "abstract_display.h"
 #include "abstract_display_controller.h"
@@ -42,6 +43,7 @@ DECLARE_SYSTEM_ABILITY(DisplayManagerService);
 WM_DECLARE_SINGLE_INSTANCE_BASE(DisplayManagerService);
 
 public:
+    int Dump(int fd, const std::vector<std::u16string>& args) override;
     void OnStart() override;
     void OnStop() override;
     ScreenId CreateVirtualScreen(VirtualScreenOption option,
@@ -49,7 +51,7 @@ public:
     DMError DestroyVirtualScreen(ScreenId screenId) override;
     DMError SetVirtualScreenSurface(ScreenId screenId, sptr<Surface> surface) override;
 
-    DisplayId GetDefaultDisplayId() override;
+    sptr<DisplayInfo> GetDefaultDisplayInfo() override;
     sptr<DisplayInfo> GetDisplayInfoById(DisplayId displayId) override;
     sptr<DisplayInfo> GetDisplayInfoByScreen(ScreenId screenId) override;
     bool SetOrientation(ScreenId screenId, Orientation orientation) override;
@@ -99,7 +101,8 @@ private:
     DisplayManagerService();
     ~DisplayManagerService() = default;
     bool Init();
-    void NotifyDisplayStateChange(DisplayId id, DisplayStateChangeType type);
+    void NotifyDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
+        const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type);
     ScreenId GetScreenIdByDisplayId(DisplayId displayId) const;
     std::shared_ptr<RSDisplayNode> GetRSDisplayNodeByDisplayId(DisplayId displayId) const;
     void ConfigureDisplayManagerService();
@@ -110,6 +113,7 @@ private:
     sptr<AbstractScreenController> abstractScreenController_;
     sptr<DisplayPowerController> displayPowerController_;
     sptr<IDisplayChangeListener> displayChangeListener_;
+    sptr<DisplayDumper> displayDumper_;
     static float customVirtualPixelRatio_;
 };
 } // namespace OHOS::Rosen

@@ -54,6 +54,12 @@ static NativeValue* GetDefaultDisplay(NativeEngine* engine, NativeCallbackInfo* 
     return (me != nullptr) ? me->OnGetDefaultDisplay(*engine, *info) : nullptr;
 }
 
+static NativeValue* GetDefaultDisplaySync(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    JsDisplayManager* me = CheckParamsAndGetThis<JsDisplayManager>(engine, info);
+    return (me != nullptr) ? me->OnGetDefaultDisplaySync(*engine, *info) : nullptr;
+}
+
 static NativeValue* GetAllDisplay(NativeEngine* engine, NativeCallbackInfo* info)
 {
     JsDisplayManager* me = CheckParamsAndGetThis<JsDisplayManager>(engine, info);
@@ -108,6 +114,21 @@ NativeValue* OnGetDefaultDisplay(NativeEngine& engine, NativeCallbackInfo& info)
     AsyncTask::Schedule(
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
+}
+
+NativeValue* OnGetDefaultDisplaySync(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    WLOGFI("JsDisplayManager::OnGetDefaultDisplaySync is called");
+    if (info.argc != 0) {
+        WLOGFE("JsDisplayManager::OnGetDefaultDisplaySync params not match");
+        return engine.CreateUndefined();
+    }
+    sptr<Display> display = SingletonContainer::Get<DisplayManager>().GetDefaultDisplay();
+    if (display == nullptr) {
+        WLOGFE("JsDisplayManager::OnGetDefaultDisplaySync, display is nullptr.");
+        return engine.CreateUndefined();
+    }
+    return CreateJsDisplayObject(engine, display);
 }
 
 NativeValue* OnGetAllDisplay(NativeEngine& engine, NativeCallbackInfo& info)
@@ -166,7 +187,7 @@ void RegisterDisplayListenerWithType(NativeEngine& engine, const std::string& ty
                type.c_str());
         return;
     }
-    displayListener->AddCallback(value);
+    displayListener->AddCallback(type, value);
     jsCbMap_[type][std::move(callbackRef)] = displayListener;
 }
 
@@ -214,7 +235,7 @@ void UnRegisterDisplayListenerWithType(const std::string& type, NativeValue* val
     }
     for (auto it = jsCbMap_[type].begin(); it != jsCbMap_[type].end();) {
         if (value->StrictEquals(it->first->Get())) {
-            it->second->RemoveCallback(value);
+            it->second->RemoveCallback(type, value);
             if (type == EVENT_ADD || type == EVENT_REMOVE || type == EVENT_CHANGE) {
                 sptr<DisplayManager::IDisplayListener> thisListener(it->second);
                 SingletonContainer::Get<DisplayManager>().UnregisterDisplayListener(thisListener);
@@ -298,6 +319,9 @@ NativeValue* CreateJsDisplayArrayObject(NativeEngine& engine, std::vector<sptr<D
     }
     int32_t i = 0;
     for (auto& display : displays) {
+        if (display == nullptr) {
+            continue;
+        }
         array->SetElement(i++, CreateJsDisplayObject(engine, display));
     }
     return arrayValue;
@@ -323,6 +347,7 @@ NativeValue* JsDisplayManagerInit(NativeEngine* engine, NativeValue* exportObj)
     object->SetNativePointer(jsDisplayManager.release(), JsDisplayManager::Finalizer, nullptr);
 
     BindNativeFunction(*engine, *object, "getDefaultDisplay", JsDisplayManager::GetDefaultDisplay);
+    BindNativeFunction(*engine, *object, "getDefaultDisplaySync", JsDisplayManager::GetDefaultDisplaySync);
     BindNativeFunction(*engine, *object, "getAllDisplay", JsDisplayManager::GetAllDisplay);
     BindNativeFunction(*engine, *object, "on", JsDisplayManager::RegisterDisplayManagerCallback);
     BindNativeFunction(*engine, *object, "off", JsDisplayManager::UnregisterDisplayManagerCallback);

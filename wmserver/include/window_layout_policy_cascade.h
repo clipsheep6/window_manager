@@ -41,13 +41,17 @@ public:
     void UpdateLayoutRect(const sptr<WindowNode>& node) override;
     void SetSplitDividerWindowRects(std::map<DisplayId, Rect> dividerWindowRects) override;
     void RemoveWindowNode(const sptr<WindowNode>& node) override;
+    Rect GetInitalDividerRect(DisplayId displayId) const override;
+    std::vector<int32_t> GetExitSplitPoints(DisplayId displayId) const override;
 
 private:
     void InitAllRects();
     void InitSplitRects(DisplayId displayId);
-    void SetSplitRectByRatio(float ratio, DisplayId displayId);
+    int32_t GetSplitRatioPoint(float ratio, DisplayId displayId);
     void SetSplitRect(const Rect& rect, DisplayId displayId);
     void UpdateSplitLimitRect(const Rect& limitRect, Rect& limitSplitRect);
+    void UpdateSplitRatioPoints(DisplayId displayId);
+    void UpdateDockSlicePosition(DisplayId displayId, int32_t& origin) const;
     void LayoutWindowNode(const sptr<WindowNode>& node) override;
     void LayoutWindowTree(DisplayId displayId) override;
     void InitLimitRects(DisplayId displayId);
@@ -70,7 +74,7 @@ private:
         Rect dividerRect_;
         Rect firstCascadeRect_;
     };
-    mutable std::map<DisplayId, CascadeRects> cascadeRectsMap_;
+    mutable std::map<DisplayId, LayoutRects> cascadeRectsMap_;
     std::map<DisplayId, Rect> restoringDividerWindowRects_;
 };
 }

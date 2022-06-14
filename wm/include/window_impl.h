@@ -192,6 +192,7 @@ public:
     virtual void OnNewWant(const AAFwk::Want& want) override;
     virtual void SetRequestedOrientation(Orientation) override;
     virtual Orientation GetRequestedOrientation() override;
+    virtual void SetNeedRemoveWindowInputChannel(bool needRemoveWindowInputChannel) override;
 
     // colorspace, gamut
     virtual bool IsSupportWideGamut() override;
@@ -276,6 +277,7 @@ private:
     void HandleModeChangeHotZones(int32_t posX, int32_t posY);
     WMError NotifyWindowTransition(TransitionReason reason);
     void UpdatePointerEventForStretchableWindow(std::shared_ptr<MMI::PointerEvent>& pointerEvent);
+    void UpdateDragType();
 
     // colorspace, gamut
     using ColorSpaceConvertMap = struct {
@@ -321,10 +323,12 @@ private:
     Rect startPointRect_ = { 0, 0, 0, 0 };
     Rect startRectExceptFrame_ = { 0, 0, 0, 0 };
     Rect startRectExceptCorner_ = { 0, 0, 0, 0 };
-    Rect originRect_ = {0, 0, 0, 0};
+    DragType dragType_ = DragType::DRAG_UNDEFINED;
     bool isAppDecorEnbale_ = true;
     SystemConfig windowSystemConfig_ ;
-    bool isStretchableSet_ = false;
+    bool isOriginRectSet_ = false;
+    bool isWaitingFrame_ = false;
+    bool needRemoveWindowInputChannel_ = false;
 };
 }
 }

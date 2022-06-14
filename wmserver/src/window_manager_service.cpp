@@ -66,7 +66,7 @@ void WindowManagerService::OnStart()
     if (!Init()) {
         return;
     }
-    SingletonContainer::Get<WindowInnerManager>().Init();
+    WindowInnerManager::GetInstance().Start();
     sptr<IDisplayChangeListener> listener = new DisplayChangeListener();
     DisplayManagerServiceInner::GetInstance().RegisterDisplayChangeListener(listener);
     RegisterSnapshotHandler();
@@ -136,7 +136,7 @@ void WindowManagerServiceHandler::NotifyWindowTransition(
 {
     sptr<WindowTransitionInfo> fromInfo = new WindowTransitionInfo(from);
     sptr<WindowTransitionInfo> toInfo = new WindowTransitionInfo(to);
-    WindowManagerService::GetInstance().NotifyWindowTransition(fromInfo, toInfo);
+    WindowManagerService::GetInstance().NotifyWindowTransition(fromInfo, toInfo, false);
 }
 
 int32_t WindowManagerServiceHandler::GetFocusWindow(sptr<IRemoteObject>& abilityToken)
@@ -162,6 +162,7 @@ void WindowManagerServiceHandler::StartingWindow(
 
 void WindowManagerServiceHandler::CancelStartingWindow(sptr<IRemoteObject> abilityToken)
 {
+    WLOGFI("WindowManagerServiceHandler CancelStartingWindow!");
     WindowManagerService::GetInstance().CancelStartingWindow(abilityToken);
 }
 
@@ -191,10 +192,38 @@ int WindowManagerService::Dump(int fd, const std::vector<std::u16string>& args)
     }).get();
 }
 
+void WindowManagerService::ConfigFloatWindowLimits()
+{
+    const auto& intNumbersConfig = WindowManagerConfig::GetIntNumbersConfig();
+    const auto& floatNumbersConfig = WindowManagerConfig::GetFloatNumbersConfig();
+
+    FloatingWindowLimitsConfig floatingWindowLimitsConfig;
+    if (intNumbersConfig.count("floatingWindowLimitSize") != 0) {
+        auto numbers = intNumbersConfig.at("floatingWindowLimitSize");
+        if (numbers.size() == 4) { // 4, limitSize
+            floatingWindowLimitsConfig.maxWidth_ = static_cast<uint32_t>(numbers[0]);  // 0 max width
+            floatingWindowLimitsConfig.maxHeight_ = static_cast<uint32_t>(numbers[1]); // 1 max height
+            floatingWindowLimitsConfig.minWidth_ = static_cast<uint32_t>(numbers[2]);  // 2 min width
+            floatingWindowLimitsConfig.minHeight_ = static_cast<uint32_t>(numbers[3]); // 3 min height
+            floatingWindowLimitsConfig.isFloatingWindowLimitsConfigured_ = true;
+        }
+    }
+    if (floatNumbersConfig.count("floatingWindowLimitRatio") != 0) {
+        auto numbers = floatNumbersConfig.at("floatingWindowLimitRatio");
+        if (numbers.size() == 2) { // 2, limitRatio
+            floatingWindowLimitsConfig.maxRatio_ = static_cast<float>(numbers[0]); // 0 max ratio
+            floatingWindowLimitsConfig.minRatio_ = static_cast<float>(numbers[1]); // 1 min ratio
+            floatingWindowLimitsConfig.isFloatingWindowLimitsConfigured_ = true;
+        }
+    }
+    windowRoot_->SetFloatingWindowLimitsConfig(floatingWindowLimitsConfig);
+}
+
 void WindowManagerService::ConfigureWindowManagerService()
 {
     const auto& enableConfig = WindowManagerConfig::GetEnableConfig();
-    const auto& numbersConfig = WindowManagerConfig::GetNumbersConfig();
+    const auto& intNumbersConfig = WindowManagerConfig::GetIntNumbersConfig();
+    const auto& floatNumbersConfig = WindowManagerConfig::GetFloatNumbersConfig();
 
     if (enableConfig.count("decor") != 0) {
         systemConfig_.isSystemDecorEnable_ = enableConfig.at("decor");
@@ -208,15 +237,15 @@ void WindowManagerService::ConfigureWindowManagerService()
         systemConfig_.isStretchable_ = enableConfig.at("stretchable");
     }
 
-    if (numbersConfig.count("maxAppWindowNumber") != 0) {
-        auto numbers = numbersConfig.at("maxAppWindowNumber");
+    if (intNumbersConfig.count("maxAppWindowNumber") != 0) {
+        auto numbers = intNumbersConfig.at("maxAppWindowNumber");
         if (numbers.size() == 1) {
             windowRoot_->SetMaxAppWindowNumber(numbers[0]);
         }
     }
 
-    if (numbersConfig.count("modeChangeHotZones") != 0) {
-        auto numbers = numbersConfig.at("modeChangeHotZones");
+    if (intNumbersConfig.count("modeChangeHotZones") != 0) {
+        auto numbers = intNumbersConfig.at("modeChangeHotZones");
         if (numbers.size() == 3) { // 3 hot zones
             hotZonesConfig_.fullscreenRange_ = static_cast<uint32_t>(numbers[0]); // 0 fullscreen
             hotZonesConfig_.primaryRange_ = static_cast<uint32_t>(numbers[1]);    // 1 primary
@@ -224,20 +253,39 @@ void WindowManagerService::ConfigureWindowManagerService()
             hotZonesConfig_.isModeChangeHotZoneConfigured_ = true;
         }
     }
+
+    ConfigFloatWindowLimits();
+
+    if (floatNumbersConfig.count("splitRatios") != 0) {
+        windowRoot_->SetSplitRatios(floatNumbersConfig.at("splitRatios"));
+    }
+
+    if (floatNumbersConfig.count("exitSplitRatios") != 0) {
+        windowRoot_->SetExitSplitRatios(floatNumbersConfig.at("exitSplitRatios"));
+    }
 }
 
 void WindowManagerService::OnStop()
 {
-    SingletonContainer::Get<WindowInnerManager>().SendMessage(InnerWMCmd::INNER_WM_DESTROY_THREAD);
+    WindowInnerManager::GetInstance().Stop();
     WLOGFI("ready to stop service.");
 }
 
 WMError WindowManagerService::NotifyWindowTransition(
-    sptr<WindowTransitionInfo>& fromInfo, sptr<WindowTransitionInfo>& toInfo)
+    sptr<WindowTransitionInfo>& fromInfo, sptr<WindowTransitionInfo>& toInfo, bool isFromClient)
 {
-    return wmsTaskLooper_->ScheduleTask([this, &fromInfo, &toInfo]() {
-        return windowController_->NotifyWindowTransition(fromInfo, toInfo);
-    }).get();
+    if (!isFromClient) {
+        WLOGFI("NotifyWindowTransition asynchronously.");
+        wmsTaskLooper_->PostTask([this, fromInfo, toInfo]() mutable {
+            return windowController_->NotifyWindowTransition(fromInfo, toInfo);
+        });
+        return WMError::WM_OK;
+    } else {
+        WLOGFI("NotifyWindowTransition synchronously.");
+        return wmsTaskLooper_->ScheduleTask([this, &fromInfo, &toInfo]() {
+            return windowController_->NotifyWindowTransition(fromInfo, toInfo);
+        }).get();
+    }
 }
 
 WMError WindowManagerService::GetFocusWindowInfo(sptr<IRemoteObject>& abilityToken)
@@ -254,20 +302,21 @@ void WindowManagerService::StartingWindow(sptr<WindowTransitionInfo> info, sptr<
         WLOGFI("startingWindow not open!");
         return;
     }
-    return wmsTaskLooper_->ScheduleTask([this, &info, &pixelMap, isColdStart, bkgColor]() {
+    return wmsTaskLooper_->PostTask([this, info, pixelMap, isColdStart, bkgColor]() {
         return windowController_->StartingWindow(info, pixelMap, bkgColor, isColdStart);
-    }).wait();
+    });
 }
 
 void WindowManagerService::CancelStartingWindow(sptr<IRemoteObject> abilityToken)
 {
+    WLOGFI("begin CancelStartingWindow!");
     if (!startingOpen_) {
         WLOGFI("startingWindow not open!");
         return;
     }
-    return wmsTaskLooper_->ScheduleTask([this, &abilityToken]() {
+    return wmsTaskLooper_->PostTask([this, abilityToken]() {
         return windowController_->CancelStartingWindow(abilityToken);
-    }).wait();
+    });
 }
 
 WMError WindowManagerService::CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
@@ -428,21 +477,24 @@ void WindowManagerService::OnWindowEvent(Event event, const sptr<IRemoteObject>&
     }
 }
 
-void WindowManagerService::NotifyDisplayStateChange(DisplayId id, DisplayStateChangeType type)
+void WindowManagerService::NotifyDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
+    const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type)
 {
     WM_SCOPED_TRACE("wms:NotifyDisplayStateChange(%u)", type);
+    DisplayId displayId = (displayInfo == nullptr) ? DISPLAY_ID_INVALID : displayInfo->GetDisplayId();
     if (type == DisplayStateChangeType::FREEZE) {
-        freezeDisplayController_->FreezeDisplay(id);
+        freezeDisplayController_->FreezeDisplay(displayId);
     } else if (type == DisplayStateChangeType::UNFREEZE) {
-        freezeDisplayController_->UnfreezeDisplay(id);
+        freezeDisplayController_->UnfreezeDisplay(displayId);
     } else {
-        return windowController_->NotifyDisplayStateChange(id, type);
+        windowController_->NotifyDisplayStateChange(defaultDisplayId, displayInfo, displayInfoMap, type);
     }
 }
 
-void DisplayChangeListener::OnDisplayStateChange(DisplayId id, DisplayStateChangeType type)
+void DisplayChangeListener::OnDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
+    const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type)
 {
-    WindowManagerService::GetInstance().NotifyDisplayStateChange(id, type);
+    WindowManagerService::GetInstance().NotifyDisplayStateChange(defaultDisplayId, displayInfo, displayInfoMap, type);
 }
 
 void WindowManagerService::ProcessPointDown(uint32_t windowId, bool isStartDrag)
@@ -501,7 +553,8 @@ WMError WindowManagerService::SetWindowLayoutMode(WindowLayoutMode mode)
     }).get();
 }
 
-WMError WindowManagerService::UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action)
+WMError WindowManagerService::UpdateProperty(sptr<WindowProperty>& windowProperty,
+    PropertyChangeAction action, uint64_t dirtyState)
 {
     if (windowProperty == nullptr) {
         WLOGFE("property is invalid");
@@ -544,6 +597,14 @@ WMError WindowManagerService::GetModeChangeHotZones(DisplayId displayId, ModeCha
     }
 
     return windowController_->GetModeChangeHotZones(displayId, hotZones, hotZonesConfig_);
+}
+
+void WindowManagerService::MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
+    sptr<RSIWindowAnimationFinishedCallback>& finishCallback)
+{
+    return wmsTaskLooper_->ScheduleTask([this, windowIds, isAnimated, &finishCallback]() mutable {
+        return windowController_->MinimizeWindowsByLauncher(windowIds, isAnimated, finishCallback);
+    }).get();
 }
 } // namespace Rosen
 } // namespace OHOS

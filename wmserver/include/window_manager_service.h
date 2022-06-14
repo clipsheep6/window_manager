@@ -39,7 +39,8 @@ namespace OHOS {
 namespace Rosen {
 class DisplayChangeListener : public IDisplayChangeListener {
 public:
-    virtual void OnDisplayStateChange(DisplayId id, DisplayStateChangeType type) override;
+    virtual void OnDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
+        const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type) override;
 };
 
 class WindowManagerServiceHandler : public AAFwk::WindowManagerServiceHandlerStub {
@@ -69,7 +70,8 @@ public:
         uint32_t& windowId, sptr<IRemoteObject> token) override;
     WMError AddWindow(sptr<WindowProperty>& property) override;
     WMError RemoveWindow(uint32_t windowId) override;
-    WMError NotifyWindowTransition(sptr<WindowTransitionInfo>& from, sptr<WindowTransitionInfo>& to) override;
+    WMError NotifyWindowTransition(sptr<WindowTransitionInfo>& from, sptr<WindowTransitionInfo>& to,
+        bool isFromClient = false) override;
     WMError DestroyWindow(uint32_t windowId, bool onlySelf = false) override;
     WMError RequestFocus(uint32_t windowId) override;
     WMError SetWindowBackgroundBlur(uint32_t windowId, WindowBlurLevel level) override;
@@ -82,7 +84,8 @@ public:
     WMError ToggleShownStateForAllAppWindows() override;
     WMError MaxmizeWindow(uint32_t windowId) override;
     WMError SetWindowLayoutMode(WindowLayoutMode mode) override;
-    WMError UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action) override;
+    WMError UpdateProperty(sptr<WindowProperty>& windowProperty,
+        PropertyChangeAction action, uint64_t dirtyState) override;
     WMError GetAccessibilityWindowInfo(sptr<AccessibilityWindowInfo>& windowInfo) override;
     WMError HandleAddWindow(sptr<WindowProperty>& property);
 
@@ -97,6 +100,8 @@ public:
     void StartingWindow(sptr<WindowTransitionInfo> info, sptr<Media::PixelMap> pixelMap,
         bool isColdStart, uint32_t bkgColor = 0xffffffff);
     void CancelStartingWindow(sptr<IRemoteObject> abilityToken);
+    void MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
+        sptr<RSIWindowAnimationFinishedCallback>& finishCallback) override;
 protected:
     WindowManagerService();
     virtual ~WindowManagerService() = default;
@@ -106,9 +111,11 @@ private:
     void RegisterSnapshotHandler();
     void RegisterWindowManagerServiceHandler();
     void OnWindowEvent(Event event, const sptr<IRemoteObject>& remoteObject);
-    void NotifyDisplayStateChange(DisplayId id, DisplayStateChangeType type);
+    void NotifyDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
+        const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type);
     WMError GetFocusWindowInfo(sptr<IRemoteObject>& abilityToken);
     void ConfigureWindowManagerService();
+    void ConfigFloatWindowLimits();
 
     static inline SingletonDelegator<WindowManagerService> delegator;
     sptr<WindowRoot> windowRoot_;

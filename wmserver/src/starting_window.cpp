@@ -20,6 +20,7 @@
 #include "remote_animation.h"
 #include "window_helper.h"
 #include "window_manager_hilog.h"
+#include "wm_trace.h"
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -83,6 +84,7 @@ void StartingWindow::DrawStartingWindow(sptr<WindowNode>& node,
     sptr<Media::PixelMap> pixelMap, uint32_t bkgColor, bool isColdStart)
 {
     // using snapshot to support hot start since node destroy when hide
+    WM_SCOPED_TRACE("wms:DrawStartingWindow(%u)", node->GetWindowId());
     if (!isColdStart) {
         return;
     }
@@ -119,6 +121,7 @@ void StartingWindow::HandleClientWindowCreate(sptr<WindowNode>& node, sptr<IWind
     wptr<WindowNode> weak = node;
     auto firstFrameCompleteCallback = [weak]() {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
+        WM_SCOPED_ASYNC_END(static_cast<int32_t>(TraceTaskId::STARTING_WINDOW), "wms:async:ShowStartingWindow");
         auto weakNode = weak.promote();
         if (weakNode == nullptr || weakNode->leashWinSurfaceNode_ == nullptr) {
             WLOGFE("windowNode or leashWinSurfaceNode_ is nullptr");
@@ -147,9 +150,10 @@ void StartingWindow::ReleaseStartWinSurfaceNode(sptr<WindowNode>& node)
     node->leashWinSurfaceNode_->RemoveChild(node->surfaceNode_);
     node->leashWinSurfaceNode_ = nullptr;
     node->startingWinSurfaceNode_ = nullptr;
-    WLOGFI("Release startwindow surfaceNode end id: %{public}u, [%{public}s]: use_count: %{public}ld, \
-        [startWinSurface]: use_count: %{public}ld ", node->GetWindowId(), leashName.c_str(),
+    WLOGFI("Release startwindow surfaceNode end id: %{public}u, [leashWinSurface]: use_count: %{public}ld, \
+        [startWinSurface]: use_count: %{public}ld ", node->GetWindowId(),
         node->leashWinSurfaceNode_.use_count(), node->startingWinSurfaceNode_.use_count());
+    RSTransaction::FlushImplicitTransaction();
 }
 
 void StartingWindow::UpdateRSTree(sptr<WindowNode>& node)

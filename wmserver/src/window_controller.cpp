@@ -17,6 +17,7 @@
 #include <ability_manager_client.h>
 #include <parameters.h>
 #include <power_mgr_client.h>
+#include <rs_window_animation_finished_callback.h>
 #include <transaction/rs_transaction.h>
 
 #include "minimize_app.h"
@@ -45,6 +46,7 @@ void WindowController::StartingWindow(sptr<WindowTransitionInfo> info, sptr<Medi
         WLOGFE("info or AbilityToken is nullptr!");
         return;
     }
+    WM_SCOPED_ASYNC_TRACE_BEGIN(static_cast<int32_t>(TraceTaskId::STARTING_WINDOW), "wms:async:ShowStartingWindow");
     auto node = windowRoot_->FindWindowNodeWithToken(info->GetAbilityToken());
     if (node == nullptr) {
         if (!isColdStart) {
@@ -78,13 +80,19 @@ void WindowController::StartingWindow(sptr<WindowTransitionInfo> info, sptr<Medi
 
 void WindowController::CancelStartingWindow(sptr<IRemoteObject> abilityToken)
 {
-    WLOGFI("begin CancelStartingWindow!");
     auto node = windowRoot_->FindWindowNodeWithToken(abilityToken);
     if (node == nullptr) {
         WLOGFI("cannot find windowNode!");
         return;
     }
+    if (!node->startingWindowShown_) {
+        WLOGFE("CancelStartingWindow failed because client window has shown id:%{public}u", node->GetWindowId());
+        return;
+    }
+    WM_SCOPED_TRACE("wms:CancelStartingWindow(%u)", node->GetWindowId());
+    WM_SCOPED_ASYNC_END(static_cast<int32_t>(TraceTaskId::STARTING_WINDOW), "wms:async:ShowStartingWindow");
     WLOGFI("CancelStartingWindow with id:%{public}u!", node->GetWindowId());
+    node->isAppCrash_ = true;
     WMError res = windowRoot_->DestroyWindow(node->GetWindowId(), false);
     if (res != WMError::WM_OK) {
         WLOGFE("DestroyWindow failed!");
@@ -104,6 +112,8 @@ WMError WindowController::NotifyWindowTransition(sptr<WindowTransitionInfo>& src
     if (!RemoteAnimation::CheckTransition(srcInfo, srcNode, dstInfo, dstNode)) {
         return WMError::WM_ERROR_NO_REMOTE_ANIMATION;
     }
+    WM_SCOPED_ASYNC_TRACE_BEGIN(static_cast<int32_t>(TraceTaskId::REMOTE_ANIMATION),
+        "wms:async:ShowRemoteAnimation");
     auto transitionEvent = RemoteAnimation::GetTransitionEvent(srcInfo, dstInfo, srcNode, dstNode);
     switch (transitionEvent) {
         case TransitionEvent::APP_TRANSITION: {
@@ -115,11 +125,12 @@ WMError WindowController::NotifyWindowTransition(sptr<WindowTransitionInfo>& src
         case TransitionEvent::MINIMIZE:
             return RemoteAnimation::NotifyAnimationMinimize(srcInfo, srcNode);
         case TransitionEvent::CLOSE:
-            return RemoteAnimation::NotifyAnimationClose(srcInfo, srcNode);
+            return RemoteAnimation::NotifyAnimationClose(srcInfo, srcNode, TransitionEvent::CLOSE);
+        case TransitionEvent::BACK:
+            return RemoteAnimation::NotifyAnimationClose(srcInfo, srcNode, TransitionEvent::BACK);
         default:
             return WMError::WM_ERROR_NO_REMOTE_ANIMATION;
     }
-    // Minimize Other judge need : isMinimizedByOtherWindow_, self type.mode
     return WMError::WM_OK;
 }
 
@@ -259,13 +270,25 @@ void WindowController::HandleTurnScreenOn(const sptr<WindowNode>& node)
 
 WMError WindowController::RemoveWindowNode(uint32_t windowId)
 {
-    WMError res = windowRoot_->RemoveWindowNode(windowId);
-    if (res != WMError::WM_OK) {
+    auto removeFunc = [this, windowId]() {
+        WMError res = windowRoot_->RemoveWindowNode(windowId);
+        if (res != WMError::WM_OK) {
+            WLOGFE("RemoveWindowNode failed");
+            return res;
+        }
+        windowRoot_->FocusFaultDetection();
+        FlushWindowInfo(windowId);
         return res;
+    };
+    auto windowNode = windowRoot_->GetWindowNode(windowId);
+    if (windowNode && windowNode->GetWindowType() == WindowType::WINDOW_TYPE_KEYGUARD) {
+        if (RemoteAnimation::NotifyAnimationScreenUnlock(removeFunc) == WMError::WM_OK) {
+            WLOGFI("NotifyAnimationScreenUnlock with remote animation");
+            return WMError::WM_OK;
+        }
     }
-    windowRoot_->FocusFaultDetection();
-    FlushWindowInfo(windowId);
-    return res;
+
+    return removeFunc();
 }
 
 WMError WindowController::DestroyWindow(uint32_t windowId, bool onlySelf)
@@ -379,7 +402,8 @@ WMError WindowController::SetAlpha(uint32_t windowId, float dstAlpha)
     return WMError::WM_OK;
 }
 
-void WindowController::NotifyDisplayStateChange(DisplayId displayId, DisplayStateChangeType type)
+void WindowController::NotifyDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
+    const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type)
 {
     WLOGFD("DisplayStateChangeType:%{public}u", type);
     switch (type) {
@@ -394,17 +418,17 @@ void WindowController::NotifyDisplayStateChange(DisplayId displayId, DisplayStat
             break;
         }
         case DisplayStateChangeType::CREATE: {
-            windowRoot_->ProcessDisplayCreate(displayId);
+            windowRoot_->ProcessDisplayCreate(defaultDisplayId, displayInfo, displayInfoMap);
             break;
         }
         case DisplayStateChangeType::DESTROY: {
-            windowRoot_->ProcessDisplayDestroy(displayId);
+            windowRoot_->ProcessDisplayDestroy(defaultDisplayId, displayInfo, displayInfoMap);
             break;
         }
         case DisplayStateChangeType::SIZE_CHANGE:
         case DisplayStateChangeType::UPDATE_ROTATION:
         case DisplayStateChangeType::VIRTUAL_PIXEL_RATIO_CHANGE: {
-            ProcessDisplayChange(displayId, type);
+            ProcessDisplayChange(defaultDisplayId, displayInfo, displayInfoMap, type);
             break;
         }
         default: {
@@ -459,20 +483,21 @@ void WindowController::ProcessSystemBarChange(const sptr<DisplayInfo>& displayIn
     }
 }
 
-void WindowController::ProcessDisplayChange(DisplayId displayId, DisplayStateChangeType type)
+void WindowController::ProcessDisplayChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
+    const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type)
 {
-    const sptr<DisplayInfo> displayInfo = DisplayManagerServiceInner::GetInstance().GetDisplayById(displayId);
     if (displayInfo == nullptr) {
-        WLOGFE("get display failed displayId:%{public}" PRIu64 "", displayId);
+        WLOGFE("get display failed");
         return;
     }
+    DisplayId displayId = displayInfo->GetDisplayId();
     switch (type) {
         case DisplayStateChangeType::SIZE_CHANGE:
         case DisplayStateChangeType::UPDATE_ROTATION:
             ProcessSystemBarChange(displayInfo);
             [[fallthrough]];
         case DisplayStateChangeType::VIRTUAL_PIXEL_RATIO_CHANGE: {
-            windowRoot_->ProcessDisplayChange(displayId, type);
+            windowRoot_->ProcessDisplayChange(defaultDisplayId, displayInfo, displayInfoMap, type);
             break;
         }
         default: {
@@ -606,6 +631,20 @@ WMError WindowController::ProcessPointUp(uint32_t windowId)
         WLOGFW("could not find window");
         return WMError::WM_ERROR_NULLPTR;
     }
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+        DisplayId displayId = node->GetDisplayId();
+        if (windowRoot_->IsDockSliceInExitSplitModeArea(displayId)) {
+            windowRoot_->ExitSplitMode(displayId);
+        } else {
+            auto property = node->GetWindowProperty();
+            node->SetWindowSizeChangeReason(WindowSizeChangeReason::DRAG_END);
+            property->SetRequestRect(property->GetWindowRect());
+            WMError res = windowRoot_->UpdateWindowNode(windowId, WindowUpdateReason::UPDATE_RECT);
+            if (res == WMError::WM_OK) {
+                FlushWindowInfo(windowId);
+            }
+        }
+    }
     WMError res = windowRoot_->UpdateSizeChangeReason(windowId, WindowSizeChangeReason::DRAG_END);
     if (res != WMError::WM_OK) {
         return res;
@@ -616,7 +655,9 @@ WMError WindowController::ProcessPointUp(uint32_t windowId)
 void WindowController::MinimizeAllAppWindows(DisplayId displayId)
 {
     windowRoot_->MinimizeAllAppWindows(displayId);
-    MinimizeApp::ExecuteMinimizeAll();
+    if (RemoteAnimation::NotifyAnimationByHome() != WMError::WM_OK) {
+        MinimizeApp::ExecuteMinimizeAll();
+    }
 }
 
 WMError WindowController::ToggleShownStateForAllAppWindows()
@@ -624,8 +665,7 @@ WMError WindowController::ToggleShownStateForAllAppWindows()
     if (isScreenLocked_) {
         return WMError::WM_DO_NOTHING;
     }
-    windowRoot_->ToggleShownStateForAllAppWindows();
-    return WMError::WM_OK;
+    return windowRoot_->ToggleShownStateForAllAppWindows();
 }
 
 WMError WindowController::MaxmizeWindow(uint32_t windowId)
@@ -719,6 +759,8 @@ WMError WindowController::UpdateProperty(sptr<WindowProperty>& property, Propert
     switch (action) {
         case PropertyChangeAction::ACTION_UPDATE_RECT: {
             node->SetDecoStatus(property->GetDecoStatus());
+            node->SetOriginRect(property->GetOriginRect());
+            node->SetDragType(property->GetDragType());
             return ResizeRect(windowId, property->GetRequestRect(), property->GetWindowSizeChangeReason());
         }
         case PropertyChangeAction::ACTION_UPDATE_MODE: {
@@ -839,6 +881,25 @@ uint32_t WindowController::GetEmbedNodeId(const std::vector<sptr<WindowNode>>& w
         }
     }
     return 0;
+}
+
+void WindowController::MinimizeWindowsByLauncher(std::vector<uint32_t>& windowIds, bool isAnimated,
+    sptr<RSIWindowAnimationFinishedCallback>& finishCallback)
+{
+    windowRoot_->MinimizeTargetWindows(windowIds);
+    auto func = []() {
+        MinimizeApp::ExecuteMinimizeTargetReason(MinimizeReason::GESTURE_ANIMATION);
+    };
+    if (!isAnimated) {
+        func();
+    } else {
+        finishCallback = new(std::nothrow) RSWindowAnimationFinishedCallback(func);
+        if (finishCallback == nullptr) {
+            WLOGFE("New RSIWindowAnimationFinishedCallback failed");
+            func();
+            return;
+        }
+    }
 }
 } // namespace OHOS
 } // namespace Rosen
