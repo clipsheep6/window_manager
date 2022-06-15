@@ -19,17 +19,20 @@
 
 #include "mock_display_manager_adapter.h"
 #include "singleton_mocker.h"
+#include "test_utils.h"
 
 using namespace testing;
 using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
+using utils = TestUtils;
 constexpr int32_t TEST_IMAGE_HEIGHT = 1080;
 constexpr int32_t TEST_IMAGE_WIDTH = 1920;
 using Mocker = SingletonMocker<DisplayManagerAdapter, MockDisplayManagerAdapter>;
 void ScreenshotTest::SetUpTestCase()
 {
+    TestUtils::InjectTokenInfoByHapName(0, "com.ohos.systemui", 0);
 }
 
 void ScreenshotTest::TearDownTestCase()
@@ -92,24 +95,24 @@ HWTEST_F(ScreenshotTest, GetScreenshot_default, Function | SmallTest | Level2)
 {
     std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
 
-    EXPECT_CALL(m->Mock(), GetDefaultDisplayId()).Times(1).WillOnce(Return(0ULL));
+    EXPECT_CALL(m->Mock(), GetDefaultDisplayInfo()).Times(1).WillOnce(Return(nullptr));
 
-    DisplayId displayId = DisplayManager::GetInstance().GetDefaultDisplayId();
+    DisplayManager::GetInstance().GetDefaultDisplayId();
 
     EXPECT_CALL(m->Mock(), GetDisplaySnapshot(_)).Times(1).WillOnce(Return(nullptr));
 
-    ASSERT_EQ(nullptr, DisplayManager::GetInstance().GetScreenshot(displayId));
+    ASSERT_EQ(nullptr, DisplayManager::GetInstance().GetScreenshot(0));
 }
 
 HWTEST_F(ScreenshotTest, GetScreenshot_01, Function | MediumTest | Level2)
 {
     std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
 
-    EXPECT_CALL(m->Mock(), GetDefaultDisplayId()).Times(1).WillOnce(Return(0ULL));
-    DisplayId displayId = DisplayManager::GetInstance().GetDefaultDisplayId();
+    EXPECT_CALL(m->Mock(), GetDefaultDisplayInfo()).Times(1).WillOnce(Return(nullptr));
+    DisplayManager::GetInstance().GetDefaultDisplayId();
 
     EXPECT_CALL(m->Mock(), GetDisplaySnapshot(_)).Times(1).WillOnce(Return(CreatePixelMap()));
-    auto screenshot = DisplayManager::GetInstance().GetScreenshot(displayId);
+    auto screenshot = DisplayManager::GetInstance().GetScreenshot(0);
     ASSERT_NE(nullptr, screenshot);
 
     uint32_t width = screenshot->GetWidth();
