@@ -161,7 +161,7 @@ sptr<IRemoteObject> JsWindowExtension::OnConnect(const AAFwk::Want& want)
     NativeReference* callback = nullptr;
     std::unique_ptr<AbilityRuntime::AsyncTask::ExecuteCallback> execute = nullptr;
     AbilityRuntime::AsyncTask::Schedule(engine,
-        std::make_unique<AbilityRuntime::AsyncTask>(callback, std::move(execute), std::move(complete)));
+        std::make_unique<AbilityRuntime::AsyncTask>("JsWindowExtension::OnConnect", callback, std::move(execute), std::move(complete)));
 
     if (!stub_) {
         WLOGFE("stub is nullptr.");
@@ -188,7 +188,7 @@ void JsWindowExtension::OnDisconnect(const AAFwk::Want& want)
     NativeReference* callback = nullptr;
     std::unique_ptr<AbilityRuntime::AsyncTask::ExecuteCallback> execute = nullptr;
     AbilityRuntime::AsyncTask::Schedule(engine,
-        std::make_unique<AbilityRuntime::AsyncTask>(callback, std::move(execute), std::move(complete)));
+        std::make_unique<AbilityRuntime::AsyncTask>("JsWindowExtension::OnDisconnect", callback, std::move(execute), std::move(complete)));
     WLOGFI("called.");
 }
 
@@ -248,7 +248,7 @@ void JsWindowExtension::OnWindowCreated() const
     NativeReference* callback = nullptr;
     std::unique_ptr<AbilityRuntime::AsyncTask::ExecuteCallback> execute = nullptr;
     AbilityRuntime::AsyncTask::Schedule(engine,
-        std::make_unique<AbilityRuntime::AsyncTask>(callback, std::move(execute), std::move(complete)));
+        std::make_unique<AbilityRuntime::AsyncTask>("JsWindowExtension::OnWindowCreated", callback, std::move(execute), std::move(complete)));
 }
 
 NativeValue* JsWindowExtension::CallJsMethod(const char* name, NativeValue* const* argv, size_t argc) const
