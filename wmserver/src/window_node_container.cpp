@@ -1006,6 +1006,7 @@ void WindowNodeContainer::FillWindowInfo(sptr<WindowInfo>& windowInfo, const spt
     auto property = node->GetWindowProperty();
     if (!property) {
         windowInfo->isDecorEnable_ = property->GetDecorEnable();
+        windowInfo->name_ = property->GetWindowName();
     }
 }
 
