@@ -112,7 +112,7 @@ NativeValue* OnGetDefaultDisplay(NativeEngine& engine, NativeCallbackInfo& info)
     }
     NativeValue* result = nullptr;
     AsyncTask::Schedule(
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        engine, CreateAsyncTaskWithLastParam(engine, __func__,  lastParam, nullptr, std::move(complete), &result));
     return result;
 }
 
@@ -162,7 +162,7 @@ NativeValue* OnGetAllDisplay(NativeEngine& engine, NativeCallbackInfo& info)
     }
     NativeValue* result = nullptr;
     AsyncTask::Schedule(
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        engine, CreateAsyncTaskWithLastParam(engine, __func__,  lastParam, nullptr, std::move(complete), &result));
     return result;
 }
 

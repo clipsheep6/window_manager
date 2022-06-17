@@ -70,7 +70,7 @@ void JsWindowListener::OnSizeChange(Rect rect, WindowSizeChangeReason reason)
 
     NativeReference* callback = nullptr;
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
-    AsyncTask::Schedule(*engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+    AsyncTask::Schedule(*engine_, std::make_unique<AsyncTask>("JsWindowListener::OnSizeChange", callback, std::move(execute), std::move(complete)));
 }
 
 void JsWindowListener::OnModeChange(WindowMode mode)
@@ -105,7 +105,7 @@ void JsWindowListener::OnSystemBarPropertyChange(DisplayId displayId, const Syst
 
     NativeReference* callback = nullptr;
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
-    AsyncTask::Schedule(*engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+    AsyncTask::Schedule(*engine_, std::make_unique<AsyncTask>("JsWindowListener::OnSystemBarPropertyChange", callback, std::move(execute), std::move(complete)));
 }
 
 void JsWindowListener::OnAvoidAreaChanged(const std::vector<Rect> avoidAreas)
@@ -144,7 +144,7 @@ void JsWindowListener::OnAvoidAreaChanged(const std::vector<Rect> avoidAreas)
 
     NativeReference* callback = nullptr;
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
-    AsyncTask::Schedule(*engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+    AsyncTask::Schedule(*engine_, std::make_unique<AsyncTask>("JsWindowListener::OnAvoidAreaChanged", callback, std::move(execute), std::move(complete)));
 }
 
 void JsWindowListener::LifeCycleCallBack(LifeCycleEventType eventType)
@@ -164,7 +164,7 @@ void JsWindowListener::LifeCycleCallBack(LifeCycleEventType eventType)
     );
     NativeReference* callback = nullptr;
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
-    AsyncTask::Schedule(*engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+    AsyncTask::Schedule(*engine_, std::make_unique<AsyncTask>("JsWindowListener::LifeCycleCallBack", callback, std::move(execute), std::move(complete)));
 }
 
 void JsWindowListener::AfterForeground()
@@ -208,7 +208,7 @@ void JsWindowListener::OnSizeChange(const sptr<OccupiedAreaChangeInfo>& info)
 
     NativeReference* callback = nullptr;
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
-    AsyncTask::Schedule(*engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+    AsyncTask::Schedule(*engine_, std::make_unique<AsyncTask>("JsWindowListener::OnSizeChange", callback, std::move(execute), std::move(complete)));
 }
 
 void JsWindowListener::OnOutsidePressed()
@@ -226,7 +226,7 @@ void JsWindowListener::OnOutsidePressed()
 
     NativeReference* callback = nullptr;
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
-    AsyncTask::Schedule(*engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+    AsyncTask::Schedule(*engine_, std::make_unique<AsyncTask>("JsWindowListener::OnOutsidePressed", callback, std::move(execute), std::move(complete)));
     WLOGFI("CALLED");
 }
 } // namespace Rosen

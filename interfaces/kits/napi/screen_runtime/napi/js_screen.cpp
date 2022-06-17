@@ -115,7 +115,7 @@ NativeValue* JsScreen::OnSetOrientation(NativeEngine& engine, NativeCallbackInfo
     }
     NativeValue* result = nullptr;
     AsyncTask::Schedule(
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        engine, CreateAsyncTaskWithLastParam(engine, __func__,  lastParam, nullptr, std::move(complete), &result));
     return result;
 }
 
@@ -166,7 +166,7 @@ NativeValue* JsScreen::OnSetScreenActiveMode(NativeEngine& engine, NativeCallbac
     }
     NativeValue* result = nullptr;
     AsyncTask::Schedule(
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        engine, CreateAsyncTaskWithLastParam(engine, __func__,  lastParam, nullptr, std::move(complete), &result));
     return result;
 }
 
@@ -216,7 +216,7 @@ NativeValue* JsScreen::OnSetDensityDpi(NativeEngine& engine, NativeCallbackInfo&
     }
     NativeValue* result = nullptr;
     AsyncTask::Schedule(
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        engine, CreateAsyncTaskWithLastParam(engine, __func__,  lastParam, nullptr, std::move(complete), &result));
     return result;
 }
 

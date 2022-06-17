@@ -122,7 +122,7 @@ NativeValue* OnGetAllScreens(NativeEngine& engine, NativeCallbackInfo& info)
     }
     NativeValue* result = nullptr;
     AsyncTask::Schedule(
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        engine, CreateAsyncTaskWithLastParam(engine, __func__,  lastParam, nullptr, std::move(complete), &result));
     return result;
 }
 
@@ -338,7 +338,7 @@ NativeValue* OnMakeMirror(NativeEngine& engine, NativeCallbackInfo& info)
     }
     NativeValue* result = nullptr;
     AsyncTask::Schedule(
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        engine, CreateAsyncTaskWithLastParam(engine, __func__,  lastParam, nullptr, std::move(complete), &result));
     return result;
 }
 
@@ -386,7 +386,7 @@ NativeValue* OnMakeExpand(NativeEngine& engine, NativeCallbackInfo& info)
     }
     NativeValue* result = nullptr;
     AsyncTask::Schedule(
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        engine, CreateAsyncTaskWithLastParam(engine, __func__,  lastParam, nullptr, std::move(complete), &result));
     return result;
 }
 
@@ -457,7 +457,7 @@ NativeValue* OnCreateVirtualScreen(NativeEngine& engine, NativeCallbackInfo& inf
     }
     NativeValue* result = nullptr;
     AsyncTask::Schedule(
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        engine, CreateAsyncTaskWithLastParam(engine, __func__,  lastParam, nullptr, std::move(complete), &result));
     return result;
 }
 
@@ -556,7 +556,7 @@ NativeValue* OnDestroyVirtualScreen(NativeEngine& engine, NativeCallbackInfo& in
     }
     NativeValue* result = nullptr;
     AsyncTask::Schedule(
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        engine, CreateAsyncTaskWithLastParam(engine, __func__,  lastParam, nullptr, std::move(complete), &result));
     return result;
 }
 
@@ -604,7 +604,7 @@ NativeValue* OnSetVirtualScreenSurface(NativeEngine& engine, NativeCallbackInfo&
     }
     NativeValue* result = nullptr;
     AsyncTask::Schedule(
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        engine, CreateAsyncTaskWithLastParam(engine, __func__,  lastParam, nullptr, std::move(complete), &result));
     return result;
 }
 };
