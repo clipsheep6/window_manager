@@ -147,4 +147,9 @@ bool DisplayManagerServiceInner::SetRotationFromWindow(DisplayId displayId, Rota
     return DisplayManagerService::GetInstance().
         SetRotationFromWindow(displayInfo->GetScreenId(), targetRotation);
 }
+
+void DisplayManagerServiceInner::SetGravitySensorSubscriptionEnabled()
+{
+    DisplayManagerService::GetInstance().SetGravitySensorSubscriptionEnabled();
+}
 } // namespace OHOS::Rosen

@@ -583,4 +583,9 @@ float DisplayManagerService::GetCustomVirtualPixelRatio()
 {
     return DisplayManagerService::customVirtualPixelRatio_;
 }
+
+void DisplayManagerService::SetGravitySensorSubscriptionEnabled()
+{
+    ScreenRotationController::SubscribeGravitySensor();
+}
 } // namespace OHOS::Rosen
