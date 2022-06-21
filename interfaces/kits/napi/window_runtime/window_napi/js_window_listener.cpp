@@ -76,25 +76,25 @@ void JsWindowListener::OnSizeChange(Rect rect, WindowSizeChangeReason reason)
 
 void JsWindowListener::OnModeChange(WindowMode mode)
 {
-    WLOGFI("[NAPI]OnModeChange %{public}u", mode);
+    WLOGFD("[NAPI]OnModeChange %{public}u", mode);
 }
 
 void JsWindowListener::OnSystemBarPropertyChange(DisplayId displayId, const SystemBarRegionTints& tints)
 {
-    WLOGFI("[NAPI]OnSystemBarPropertyChange");
+    WLOGFI("[NAPI][Immersive]OnSystemBarPropertyChange");
     // js callback should run in js thread
     std::unique_ptr<AsyncTask::CompleteCallback> complete = std::make_unique<AsyncTask::CompleteCallback> (
         [self = wptr<JsWindowListener>(this), displayId, tints, eng = engine_] (NativeEngine &engine,
             AsyncTask &task, int32_t status) {
             auto thisListener = self.promote();
             if (thisListener == nullptr || eng == nullptr) {
-                WLOGFE("[NAPI]this listener or engine is nullptr");
+                WLOGFE("[NAPI][Immersive]this listener or engine is nullptr");
                 return;
             }
             NativeValue* propertyValue = eng->CreateObject();
             NativeObject* object = ConvertNativeValueTo<NativeObject>(propertyValue);
             if (object == nullptr) {
-                WLOGFE("[NAPI]Failed to convert prop to jsObject");
+                WLOGFE("[NAPI][Immersive]Failed to convert prop to jsObject");
                 return;
             }
             object->SetProperty("displayId", CreateJsValue(*eng, static_cast<uint32_t>(displayId)));
@@ -112,25 +112,25 @@ void JsWindowListener::OnSystemBarPropertyChange(DisplayId displayId, const Syst
 
 void JsWindowListener::OnAvoidAreaChanged(const std::vector<Rect> avoidAreas)
 {
-    WLOGFI("[NAPI]OnAvoidAreaChanged");
+    WLOGFI("[NAPI][Immersive]OnAvoidAreaChanged");
     // js callback should run in js thread
     std::unique_ptr<AsyncTask::CompleteCallback> complete = std::make_unique<AsyncTask::CompleteCallback> (
         [self = wptr<JsWindowListener>(this), avoidAreas, eng = engine_] (NativeEngine &engine,
             AsyncTask &task, int32_t status) {
             auto thisListener = self.promote();
             if (thisListener == nullptr || eng == nullptr) {
-                WLOGFE("[NAPI]this listener or engine is nullptr");
+                WLOGFE("[NAPI][Immersive]this listener or engine is nullptr");
                 return;
             }
             NativeValue* avoidAreaValue = eng->CreateObject();
             NativeObject* object = ConvertNativeValueTo<NativeObject>(avoidAreaValue);
             if (object == nullptr) {
-                WLOGFE("[NAPI]Failed to convert rect to jsObject");
+                WLOGFE("[NAPI][Immersive]Failed to convert rect to jsObject");
                 return;
             }
 
             if (static_cast<uint32_t>(avoidAreas.size()) != AVOID_AREA_NUM) {
-                WLOGFE("[NAPI]AvoidAreas size is not 4 (left, top, right, bottom), size is %{public}u",
+                WLOGFE("[NAPI][Immersive]AvoidAreas size is not 4 (left, top, right, bottom), size is %{public}u",
                     static_cast<uint32_t>(avoidAreas.size()));
                 return;
             }
