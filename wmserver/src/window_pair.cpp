@@ -31,8 +31,8 @@ namespace {
     const std::string SPLIT_SCREEN_EVENT_NAME = "common.event.SPLIT_SCREEN";
 }
 
-WindowPair::WindowPair(const DisplayId& displayId, DisplayGroupWindowTree& displayGroupWindowTree)
-    : displayId_(displayId), displayGroupWindowTree_(displayGroupWindowTree) {
+WindowPair::WindowPair()
+{
 }
 
 WindowPair::~WindowPair()
@@ -271,52 +271,6 @@ std::vector<sptr<WindowNode>> WindowPair::GetPairedWindows()
     return orderedPair;
 }
 
-sptr<WindowNode> WindowPair::FindPairableWindow(sptr<WindowNode>& node)
-{
-    if (node == nullptr) {
-        return nullptr;
-    }
-    if (!node->IsSplitMode()) {
-        return nullptr;
-    }
-    auto& appNodeVec = *(displayGroupWindowTree_[displayId_][WindowRootNodeType::APP_WINDOW_NODE]);
-    WindowMode dstMode = (node->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ?
-        WindowMode::WINDOW_MODE_SPLIT_SECONDARY : WindowMode::WINDOW_MODE_SPLIT_PRIMARY);
-    for (auto iter = appNodeVec.rbegin(); iter != appNodeVec.rend(); iter++) {
-        auto pairNode = *iter;
-        if (pairNode == nullptr) {
-            continue;
-        }
-        if (pairNode->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
-            WindowHelper::IsWindowModeSupported(pairNode->GetModeSupportInfo(), dstMode)) {
-            pairNode->SetWindowMode(dstMode);
-            if (pairNode->GetWindowToken() != nullptr) {
-                pairNode->GetWindowToken()->UpdateWindowMode(pairNode->GetWindowMode());
-            }
-            WLOGFI("Find full screen pair window: %{public}u", static_cast<uint32_t>(pairNode->GetWindowId()));
-            return pairNode;
-        }
-    }
-    return nullptr;
-}
-
-sptr<WindowNode> WindowPair::GetPairableWindow(sptr<WindowNode>& node)
-{
-    if (node == nullptr) {
-        return nullptr;
-    }
-    // get pairable window from window tree or send broadcast msg to start pair window
-    sptr<WindowNode> pairableNode = FindPairableWindow(node);
-    if (pairableNode == nullptr) {
-        WLOGFI("Can not find pairable window from current tree.");
-        SendBroadcastMsg(node);
-        return nullptr;
-    }
-    WLOGFI("Find pairable window id: %{public}u", pairableNode->GetWindowId());
-    return pairableNode;
-}
-
-
 void WindowPair::UpdateIfSplitRelated(sptr<WindowNode>& node)
 {
     if (node == nullptr) {
@@ -332,10 +286,8 @@ void WindowPair::UpdateIfSplitRelated(sptr<WindowNode>& node)
     if (status_ == WindowPairStatus::STATUS_EMPTY) {
         Insert(node);
         if (!isAllAppWindowsRestoring_) {
-            // find pairable window from trees or send broadcast
-            sptr<WindowNode> pairableNode = GetPairableWindow(node);
-            // insert pairable node
-            Insert(pairableNode);
+            // send broadcast msg to start multi task applicatin
+            SendBroadcastMsg(node);
         }
     } else {
         if (Find(node) == nullptr) {

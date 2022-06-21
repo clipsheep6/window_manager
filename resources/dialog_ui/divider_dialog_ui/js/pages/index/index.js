@@ -13,9 +13,6 @@
     limitations under the License.
 */
 
-import router from '@ohos.router'
-import window from '@ohos.window';
-
 export default {
     data: {
         backgroundColor:"black"
@@ -28,22 +25,5 @@ export default {
     },
     onExit() {
         callNativeHandler("EVENT_CANCEL", "");
-    },
-    onExchange() {
-    },
-    onExchangeDoubleClick() {
-        console.info('double click exchange');
-    },
-    onFocus(){
-        this.backgroundColor = "black"
-    },
-    recoveryColor(){
-        this.backgroundColor = "gray"
-    },
-    onTouching(){
-        this.backgroundColor = "gray"
-    },
-    onTouchEnd(){
-        this.backgroundColor = "black"
     }
 }

@@ -51,10 +51,8 @@ public:
     /**
      * Constructor used to create an empty WindowPair instance.
      *
-     * @param displayId the disply of window pair
-     * @param appNode the window root of app window
      */
-    WindowPair(const DisplayId& displayId, DisplayGroupWindowTree& displayGroupWindowTree);
+    WindowPair();
 
     /**
      * Deconstructor used to deconstruct.
@@ -221,22 +219,6 @@ private:
     void DumpPairInfo();
 
     /**
-     * Find pairable window frome window trees.
-     *
-     * @param node the node waiting to be paired
-     * @return window node
-     */
-    sptr<WindowNode> FindPairableWindow(sptr<WindowNode>& node);
-
-    /**
-     * Get pairable node from trees or send split broadcast.
-     *
-     * @param node the node waiting to be paired
-     * @return pairable node
-     */
-    sptr<WindowNode> GetPairableWindow(sptr<WindowNode>& node);
-
-    /**
      * Send brodcast message of split event.
      *
      * @param node trigger node
@@ -245,13 +227,10 @@ private:
 
 private:
     float ratio_ = DEFAULT_SPLIT_RATIO;
-    DisplayId displayId_;
-    sptr<WindowNode> appWindowNode_;
     sptr<WindowNode> primary_;
     sptr<WindowNode> secondary_;
     sptr<WindowNode> divider_;
     WindowPairStatus status_ = {WindowPairStatus::STATUS_EMPTY};
-    DisplayGroupWindowTree& displayGroupWindowTree_;
     bool isAllAppWindowsRestoring_ { false };
     Rect initalDivderRect_ {0, 0, 0, 0};
 };
