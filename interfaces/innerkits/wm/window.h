@@ -123,6 +123,16 @@ public:
 class ITouchOutsideListener : virtual public RefBase {
 public:
     virtual void OnTouchOutside() = 0;
+class TransitionContext : virtual public RefBase {
+public:
+    sptr<Window> fromWindow;
+    sptr<Window> toWindow;
+    void completeTransiton(bool flag);
+};
+
+class TransitionController : virtual public RefBase{
+    virtual void animationForHideed(const std::shared_ptr<TransitionContext>& context) = 0;
+    virtual void animationForShowed(const std::shared_ptr<TransitionContext>& context) = 0;
 };
 
 class Window : public RefBase {
@@ -166,6 +176,8 @@ public:
     virtual WMError Destroy() = 0;
     virtual WMError Show(uint32_t reason = 0) = 0;
     virtual WMError Hide(uint32_t reason = 0) = 0;
+    //test
+    virtual sptr<TransitionController> CreateTransitionController() = 0;
 
     virtual WMError MoveTo(int32_t x, int32_t y) = 0;
     virtual WMError Resize(uint32_t width, uint32_t height) = 0;

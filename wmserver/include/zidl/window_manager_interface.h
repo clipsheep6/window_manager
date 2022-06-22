@@ -56,6 +56,7 @@ public:
         TRANS_ID_UPDATE_PROPERTY,
         TRANS_ID_GET_ACCCESSIBILITY_WIDDOW_INFO_ID,
         TRANS_ID_ANIMATION_SET_CONTROLLER,
+        TRANS_ID_SET_TRANSITION_CONTROLLER,
         TRANS_ID_GET_SYSTEM_CONFIG,
         TRANS_ID_NOTIFY_WINDOW_TRANSITION,
         TRANS_ID_GET_FULLSCREEN_AND_SPLIT_HOT_ZONE,
@@ -85,6 +86,8 @@ public:
         const sptr<IWindowManagerAgent>& windowManagerAgent) = 0;
     virtual WMError GetAccessibilityWindowInfo(sptr<AccessibilityWindowInfo>& windowInfo) = 0;
     virtual WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller) = 0;
+    //test
+    virtual WMError SetTransitionController(const sptr<TransitionController>& controller) = 0;
     virtual WMError GetSystemConfig(SystemConfig& systemConfig) = 0;
     virtual WMError NotifyWindowTransition(sptr<WindowTransitionInfo>& from, sptr<WindowTransitionInfo>& to,
         bool isFromClient = false) = 0;

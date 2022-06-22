@@ -473,6 +473,27 @@ WMError WindowManagerService::SetWindowAnimationController(const sptr<RSIWindowA
     }).get();
 }
 
+//test
+WMError WindowManagerService::SetTransitionController(const sptr<TransitionController>& controller)
+{
+    if (controller == nullptr) {
+        WLOGFE("RSWindowAnimation: Failed to set window animation controller, controller is null!");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    sptr<AgentDeathRecipient> deathRecipient = new AgentDeathRecipient(
+        [this](sptr<IRemoteObject>& remoteObject) {
+            wmsTaskLooper_->ScheduleTask([&remoteObject]() {
+                RemoteAnimation::OnRemoteDie(remoteObject);
+            }).wait();
+        }
+    );
+    controller->AsObject()->AddDeathRecipient(deathRecipient);
+    return wmsTaskLooper_->ScheduleTask([this, &controller]() {
+        return transitonController_->SetTransitionController(controller);
+    }).get();
+}
+
 void WindowManagerService::OnWindowEvent(Event event, const sptr<IRemoteObject>& remoteObject)
 {
     if (event == Event::REMOTE_DIED) {
