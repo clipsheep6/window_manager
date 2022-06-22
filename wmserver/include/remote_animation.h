@@ -45,6 +45,9 @@ public:
     static TransitionEvent GetTransitionEvent(sptr<WindowTransitionInfo> srcInfo,
         sptr<WindowTransitionInfo> dstInfo, const sptr<WindowNode>& srcNode, const sptr<WindowNode>& dstNode);
     static WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller);
+    //test
+    static WMError SetTransitionController(const sptr<TransitionController>& controller);
+
     static WMError NotifyAnimationTransition(sptr<WindowTransitionInfo> srcInfo, sptr<WindowTransitionInfo> dstInfo,
         const sptr<WindowNode>& srcNode, const sptr<WindowNode>& dstNode);
     static WMError NotifyAnimationMinimize(sptr<WindowTransitionInfo> srcInfo, const sptr<WindowNode>& srcNode);
@@ -58,6 +61,8 @@ private:
     static sptr<RSWindowAnimationTarget> CreateWindowAnimationTarget(sptr<WindowTransitionInfo> info,
         const sptr<WindowNode>& windowNode);
     static sptr<RSIWindowAnimationController> windowAnimationController_;
+    //test
+    static sptr<TransitionController> transtitionController_;
 };
 } // Rosen
 } // OHOS

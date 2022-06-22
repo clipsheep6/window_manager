@@ -56,6 +56,9 @@ public:
     WMError UpdateProperty(sptr<WindowProperty>& property, PropertyChangeAction action);
     void NotifySystemBarTints();
     WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller);
+    //test
+    WMError SetTransitionController(const sptr<TransitionController>& controller);
+
     WMError GetModeChangeHotZones(DisplayId displayId,
         ModeChangeHotZones& hotZones, const ModeChangeHotZonesConfig& config);
     void StartingWindow(sptr<WindowTransitionInfo> info, sptr<Media::PixelMap> pixelMap,
@@ -63,6 +66,7 @@ public:
     void CancelStartingWindow(sptr<IRemoteObject> abilityToken);
     void MinimizeWindowsByLauncher(std::vector<uint32_t>& windowIds, bool isAnimated,
         sptr<RSIWindowAnimationFinishedCallback>& finishCallback);
+    Orientation GetFullScreenWindowRequestedOrientation(DisplayId displayId);
 private:
     uint32_t GenWindowId();
     void FlushWindowInfo(uint32_t windowId);

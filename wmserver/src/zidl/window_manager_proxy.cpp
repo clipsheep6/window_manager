@@ -348,6 +348,38 @@ WMError WindowManagerProxy::SetWindowAnimationController(const sptr<RSIWindowAni
     int32_t ret = reply.ReadInt32();
     return static_cast<WMError>(ret);
 }
+//test
+WMError WindowManagerProxy::SetTransitionController(const sptr<TransitionController>& controller)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (controller == nullptr) {
+        WLOGFE("RSWindowAnimation Failed to set window animation controller, controller is null!");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("RSWindowAnimation Failed to WriteInterfaceToken!");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    // if (!data.WriteRemoteObject(controller->AsObject())) {
+    //     WLOGFE("RSWindowAnimation Failed to write controller!");
+    //     return WMError::WM_ERROR_IPC_FAILED;
+    // }
+
+    auto error = Remote()->SendRequest(static_cast<uint32_t>(WindowManagerMessage::TRANS_ID_SET_TRANSITION_CONTROLLER),
+        data, reply, option);
+    if (error != ERR_NONE) {
+        WLOGFE("RSWindowAnimation Send request error: %{public}d", error);
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WMError>(ret);
+}
 
 void WindowManagerProxy::ProcessPointDown(uint32_t windowId, bool isStartDrag)
 {

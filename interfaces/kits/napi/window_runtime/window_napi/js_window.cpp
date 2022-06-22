@@ -96,6 +96,14 @@ NativeValue* JsWindow::Hide(NativeEngine* engine, NativeCallbackInfo* info)
     return (me != nullptr) ? me->OnHide(*engine, *info) : nullptr;
 }
 
+//test
+NativeValue* JsWindow::CreateTransitionController(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGFI("[NAPI]CreateTransitionController");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
+    return (me != nullptr) ? me->OnCreateTransitionController(*engine, *info) : nullptr;
+}
+
 NativeValue* JsWindow::MoveTo(NativeEngine* engine, NativeCallbackInfo* info)
 {
     WLOGFI("[NAPI]MoveTo");
@@ -337,6 +345,42 @@ NativeValue* JsWindow::OnShow(NativeEngine& engine, NativeCallbackInfo& info)
     NativeValue* result = nullptr;
     AsyncTask::Schedule("JsWindow::OnShow",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+//test
+NativeValue* JsWindow::OnCreateTransitionController(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    WMError errCode = WMError::WM_OK;
+    if (info.argc > 1) {
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+    }
+    wptr<Window> weakToken(windowToken_);
+    AsyncTask::CompleteCallback complete =
+        [weakToken, errCode](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            auto weakWindow = weakToken.promote();
+            if (weakWindow == nullptr || errCode != WMError::WM_OK) {
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode)));
+                WLOGFE("[NAPI]window is nullptr or get invalid param");
+                return;
+            }
+
+            // auto objValue = CreateJsWindowTransitionControllerObject(engine);
+            // if (objValue != nullptr) {
+            //     task.Resolve(engine, objValue);
+            // } else {
+            //     task.Reject(engine, CreateJsError(engine,
+            //         static_cast<int32_t>(WMError::WM_ERROR_NULLPTR), "Window create transition controller failed"));
+            // }
+            // WLOGFI("[NAPI]Window [%{public}u, %{public}s] create transition controller end, objValue = %{public}p",
+            //     weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), objValue);
+        };
+
+    // NativeValue* lastParam = (info.argc == 0) ? nullptr :
+    //     (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
+    NativeValue* result = nullptr;
+    // AsyncTask::Schedule(
+    //     engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
 
@@ -1647,6 +1691,7 @@ NativeValue* CreateJsWindowObject(NativeEngine& engine, sptr<Window>& window)
     BindNativeFunction(engine, *object, "disableWindowDecor", JsWindow::DisableWindowDecor);
     BindNativeFunction(engine, *object, "dump", JsWindow::Dump);
     BindNativeFunction(engine, *object, "setForbidSplitMove", JsWindow::SetForbidSplitMove);
+    BindNativeFunction(engine, *object, "createTransitionController", JsWindow::CreateTransitionController);
 
     std::shared_ptr<NativeReference> jsWindowRef;
     jsWindowRef.reset(engine.CreateReference(objValue, 1));

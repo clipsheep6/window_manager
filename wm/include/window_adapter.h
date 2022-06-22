@@ -67,6 +67,9 @@ public:
     virtual WMError GetAccessibilityWindowInfo(sptr<AccessibilityWindowInfo>& windowInfo);
     virtual void MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
         sptr<RSIWindowAnimationFinishedCallback>& finishCallback);
+
+    //test
+    virtual WMError SetTransitionController(const sptr<TransitionController>& controller);
 private:
     static inline SingletonDelegator<WindowAdapter> delegator;
     bool InitWMSProxy();

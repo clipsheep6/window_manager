@@ -151,6 +151,8 @@ const std::map<ApiWindowMode, WindowMode> JS_TO_NATIVE_WINDOW_MODE_MAP {
         }
         return true;
     }
+    //test
+    NativeValue* CreateJsWindowTransitionControllerObject(NativeEngine& engine);
 }
 }
 #endif

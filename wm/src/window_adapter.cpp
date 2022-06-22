@@ -98,6 +98,13 @@ WMError WindowAdapter::SetWindowAnimationController(const sptr<RSIWindowAnimatio
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
     return windowManagerServiceProxy_->SetWindowAnimationController(controller);
 }
+//test
+WMError WindowAdapter::SetTransitionController(const sptr<TransitionController>& controller)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    windowManagerServiceProxy_->SetTransitionController(controller);
+    return WMError::WM_OK;
+}
 
 WMError WindowAdapter::GetAvoidAreaByType(uint32_t windowId, AvoidAreaType type, std::vector<Rect>& avoidRect)
 {

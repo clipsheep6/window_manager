@@ -180,6 +180,14 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             reply.WriteInt32(static_cast<int32_t>(errCode));
             break;
         }
+        //test
+        case WindowManagerMessage::TRANS_ID_SET_TRANSITION_CONTROLLER: {
+            // sptr<IRemoteObject> controllerObject = data.ReadRemoteObject();
+            // sptr<TransitionController> controller = iface_cast<TransitionController>(controllerObject);
+            // WMError errCode = SetTransitionController(controller);
+            // reply.WriteInt32(static_cast<int32_t>(errCode));
+            break;
+        }
         case WindowManagerMessage::TRANS_ID_GET_SYSTEM_CONFIG: {
             SystemConfig config;
             WMError errCode = GetSystemConfig(config);

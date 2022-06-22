@@ -41,6 +41,7 @@ class DisplayChangeListener : public IDisplayChangeListener {
 public:
     virtual void OnDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type) override;
+    virtual void OnGetFullScreenWindowRequestedOrientation(DisplayId displayId, Orientation &orientation) override;
 };
 
 class WindowManagerServiceHandler : public AAFwk::WindowManagerServiceHandlerStub {
@@ -94,6 +95,8 @@ public:
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
 
     WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller) override;
+    //test
+    WMError SetTransitionController(const sptr<TransitionController>& controller) override;
     WMError GetSystemConfig(SystemConfig& systemConfig) override;
     WMError GetModeChangeHotZones(DisplayId displayId, ModeChangeHotZones& hotZones) override;
     void StartingWindow(sptr<WindowTransitionInfo> info, sptr<Media::PixelMap> pixelMap,
@@ -101,6 +104,7 @@ public:
     void CancelStartingWindow(sptr<IRemoteObject> abilityToken);
     void MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
         sptr<RSIWindowAnimationFinishedCallback>& finishCallback) override;
+    void GetFullScreenWindowRequestedOrientation(DisplayId displayId, Orientation &orientation);
 protected:
     WindowManagerService();
     virtual ~WindowManagerService() = default;
@@ -130,6 +134,8 @@ private:
     ModeChangeHotZonesConfig hotZonesConfig_ { false, 0, 0, 0 };
     std::unique_ptr<WindowTaskLooper> wmsTaskLooper_;
     bool startingOpen_ = true;
+    //test
+    sptr<TransitionController> transitonController_;
 };
 }
 }

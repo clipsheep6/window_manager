@@ -905,6 +905,13 @@ WMError WindowImpl::Hide(uint32_t reason)
     return ret;
 }
 
+//test
+sptr<TransitionController> WindowImpl::CreateTransitionController()
+{
+    controller_ = std::make_shared<TransitionController>();
+    return controller_.get();
+}
+
 WMError WindowImpl::MoveTo(int32_t x, int32_t y)
 {
     WLOGFI("[Client] Window [name:%{public}s, id:%{public}d] MoveTo %{public}d %{public}d",

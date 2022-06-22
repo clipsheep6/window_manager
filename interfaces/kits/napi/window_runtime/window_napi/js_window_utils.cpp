@@ -480,5 +480,21 @@ bool GetAPI7Ability(NativeEngine& engine, AppExecFwk::Ability* &ability)
     }
     return true;
 }
+
+//test
+NativeValue* CreateJsWindowTransitionControllerObject(NativeEngine& engine)
+{
+    WLOGFI("[NAPI]CreateJsWindowTransitionControllerObject");
+    NativeValue* objValue = engine.CreateObject();
+    NativeObject* object = ConvertNativeValueTo<NativeObject>(objValue);
+    if (object == nullptr) {
+        WLOGFE("Failed to convert prop to jsObject");
+        return engine.CreateUndefined();
+    } 
+
+    // BindNativeFunction(engine, *object, "animationForHideed", JsWindow::animationForHideed);
+    // BindNativeFunction(engine, *object, "animationForShowed", JsWindow::animationForShowed);
+    return objValue;
+}
 } // namespace Rosen
 } // namespace OHOS

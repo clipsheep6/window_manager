@@ -514,6 +514,21 @@ declare namespace window {
     WIDE_GAMUT,
   }
 
+  interface TransitionControllerFinishedCallback {
+    completeTransiton(): void;
+  }
+  
+  interface TransitionContext {
+    fromWindow: Promise<Window>;
+    toWindow: Promise<Window>;
+    finishCallback: TransitionControllerFinishedCallback;
+  }
+
+  interface TransitionController {
+    animationForHideed(fromWindow: TransitionContext, toWindow: TransitionContext): void;
+    animationForShowed(fromWindow: TransitionContext, toWindow: TransitionContext): void;
+  }
+
   interface Window {
     /**
      * hide sub window.
@@ -951,6 +966,10 @@ declare namespace window {
      * @since 9
      */
      setForbidSplitMove(isForbidSplitMove: boolean): Promise<void>;
+
+     /*
+     */
+     createTransitionController(): Promise<TransitionController>;
   }
 
   enum WindowStageEventType {

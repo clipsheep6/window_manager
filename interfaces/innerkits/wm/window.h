@@ -125,6 +125,18 @@ public:
     virtual void OnTouchOutside() = 0;
 };
 
+class TransitionContext : public Parcelable {
+public:
+    sptr<Window> fromWindow;
+    sptr<Window> toWindow;
+    void completeTransiton(bool flag) {};
+};
+
+class TransitionController : public Parcelable {
+    void animationForHideed(const std::shared_ptr<TransitionContext>& context){};
+    void animationForShowed(const std::shared_ptr<TransitionContext>& context){};
+};
+
 class Window : public RefBase {
 public:
     static sptr<Window> Create(const std::string& windowName,
@@ -166,6 +178,8 @@ public:
     virtual WMError Destroy() = 0;
     virtual WMError Show(uint32_t reason = 0) = 0;
     virtual WMError Hide(uint32_t reason = 0) = 0;
+
+    virtual sptr<TransitionController> CreateTransitionController() = 0;
 
     virtual WMError MoveTo(int32_t x, int32_t y) = 0;
     virtual WMError Resize(uint32_t width, uint32_t height) = 0;
