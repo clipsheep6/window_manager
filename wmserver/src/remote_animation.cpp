@@ -238,7 +238,6 @@ WMError RemoteAnimation::NotifyAnimationByHome()
     }
     WLOGFI("RSWindowAnimation: notify animation by home");
     auto needMinimizeAppNodes = MinimizeApp::GetNeedMinimizeAppNodes();
-    std::vector<sptr<RSWindowAnimationTarget>> animationTargets;
     for (auto& weakNode : needMinimizeAppNodes) {
         auto srcNode = weakNode.promote();
         sptr<WindowTransitionInfo> srcInfo = new(std::nothrow) WindowTransitionInfo();
@@ -246,21 +245,22 @@ WMError RemoteAnimation::NotifyAnimationByHome()
         if (srcTarget == nullptr) {
             continue;
         }
-        srcNode->isPlayAnimationHide_ = true;
-        animationTargets.emplace_back(srcTarget);
+        auto func = [weakNode]() {
+            auto srcNode = weakNode.promote();
+            srcNode->isPlayAnimationHide_ = true;
+            WLOGFI("NotifyAnimationByHome in animation callback");
+            MinimizeApp::MinimizeTargetWindow(srcNode);
+            WM_SCOPED_ASYNC_END(static_cast<int32_t>(TraceTaskId::REMOTE_ANIMATION), "wms:async:ShowRemoteAnimation");
+        };
+        sptr<RSWindowAnimationFinishedCallback> finishedCallback = new(std::nothrow) RSWindowAnimationFinishedCallback(
+            func);
+        if (finishedCallback == nullptr) {
+            WLOGFE("New RSIWindowAnimationFinishedCallback failed");
+            return WMError::WM_ERROR_NO_MEM;
+        }
+        // need use OnMinimizeWindows with controller
     }
-    auto func = []() {
-        WLOGFI("NotifyAnimationByHome in animation callback");
-        MinimizeApp::ExecuteMinimizeAll();
-        WM_SCOPED_ASYNC_END(static_cast<int32_t>(TraceTaskId::REMOTE_ANIMATION), "wms:async:ShowRemoteAnimation");
-    };
-    sptr<RSWindowAnimationFinishedCallback> finishedCallback = new(std::nothrow) RSWindowAnimationFinishedCallback(
-        func);
-    if (finishedCallback == nullptr) {
-        WLOGFE("New RSIWindowAnimationFinishedCallback failed");
-        return WMError::WM_ERROR_NO_MEM;
-    }
-    // need use OnMinimizeWindows with controller
+    MinimizeApp::ClearAllNodes();
     return WMError::WM_OK;
 }
 

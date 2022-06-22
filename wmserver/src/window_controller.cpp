@@ -941,6 +941,9 @@ void WindowController::MinimizeWindowsByLauncher(std::vector<uint32_t>& windowId
     sptr<RSIWindowAnimationFinishedCallback>& finishCallback)
 {
     windowRoot_->MinimizeTargetWindows(windowIds);
+    // auto windowNode = windowRoot_->GetWindowNode(windowId);
+    // wptr<WindowNode> weakNode(windowNode);
+    // MinimizeTargetWindow
     auto func = []() {
         MinimizeApp::ExecuteMinimizeTargetReason(MinimizeReason::GESTURE_ANIMATION);
     };

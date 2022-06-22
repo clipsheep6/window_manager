@@ -86,6 +86,13 @@ void MinimizeApp::ClearNodesWithReason(MinimizeReason reason)
     }
 }
 
+void MinimizeApp::ClearAllNodes()
+{
+    WLOGFI("[Minimize] ClearAllNodes");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    needMinimizeAppNodes_.clear();
+}
+
 bool MinimizeApp::IsNodeNeedMinimize(const sptr<WindowNode>& node)
 {
     if (node == nullptr) {
@@ -115,6 +122,11 @@ void MinimizeApp::ExecuteMinimizeTargetReason(MinimizeReason reason)
         }
         needMinimizeAppNodes_.at(reason).clear();
     }
+}
+
+void MinimizeApp::MinimizeTargetWindow(sptr<WindowNode>& node, bool isFromUser)
+{
+    AAFwk::AbilityManagerClient::GetInstance()->MinimizeAbility(node->abilityToken_, isFromUser);
 }
 
 void MinimizeApp::SetMinimizedByOtherConfig(bool isMinimizedByOther)
