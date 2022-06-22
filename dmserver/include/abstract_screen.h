@@ -48,7 +48,8 @@ public:
     bool SetVirtualPixelRatio(float virtualPixelRatio);
     float GetVirtualPixelRatio() const;
 
-    void UpdateRSTree(std::shared_ptr<RSSurfaceNode>& surfaceNode, bool isAdd);
+    void UpdateRSTree(std::shared_ptr<RSSurfaceNode>& surfaceNode, bool isAdd,
+        bool isMultiDisplay, NodeId parentNodeId);
     void InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startPoint);
     ScreenId GetScreenGroupId() const;
 

@@ -156,7 +156,7 @@ void StartingWindow::ReleaseStartWinSurfaceNode(sptr<WindowNode>& node)
     RSTransaction::FlushImplicitTransaction();
 }
 
-void StartingWindow::UpdateRSTree(sptr<WindowNode>& node)
+void StartingWindow::AddNodeOnRSTree(sptr<WindowNode>& node, bool isMultiDisplay)
 {
     auto updateRSTreeFunc = [&]() {
         auto& dms = DisplayManagerServiceInner::GetInstance();
@@ -166,15 +166,15 @@ void StartingWindow::UpdateRSTree(sptr<WindowNode>& node)
                 WLOGFE("window id:%{public}d type: %{public}u is not Main Window!",
                     node->GetWindowId(), static_cast<uint32_t>(node->GetWindowType()));
             }
-            dms.UpdateRSTree(displayId, node->leashWinSurfaceNode_, true);
+            dms.UpdateRSTree(displayId, node->leashWinSurfaceNode_, true, isMultiDisplay, displayId);
             node->leashWinSurfaceNode_->AddChild(node->startingWinSurfaceNode_, -1);
         } else { // hot start
             const auto& displayIdVec = node->GetShowingDisplays();
             for (auto& shownDisplayId : displayIdVec) {
                 if (node->leashWinSurfaceNode_) { // to app
-                    dms.UpdateRSTree(shownDisplayId, node->leashWinSurfaceNode_, true);
+                    dms.UpdateRSTree(shownDisplayId, node->leashWinSurfaceNode_, true, isMultiDisplay, displayId);
                 } else { // to launcher
-                    dms.UpdateRSTree(shownDisplayId, node->surfaceNode_, true);
+                    dms.UpdateRSTree(shownDisplayId, node->surfaceNode_, true, isMultiDisplay, displayId);
                 }
             }
         }
