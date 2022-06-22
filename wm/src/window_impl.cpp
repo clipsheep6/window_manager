@@ -2259,6 +2259,11 @@ void WindowImpl::SetDefaultOption()
             property_->SetFocusable(false);
             break;
         }
+        case WindowType::WINDOW_TYPE_PLACE_HOLDER: {
+            AddWindowFlag(WindowFlag::WINDOW_FLAG_FORBID_SPLIT_MOVE);
+            property_->SetFocusable(false);
+            break;
+        }
         default:
             break;
     }

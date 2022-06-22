@@ -333,9 +333,12 @@ void WindowPair::UpdateIfSplitRelated(sptr<WindowNode>& node)
         Insert(node);
         if (!isAllAppWindowsRestoring_) {
             // find pairable window from trees or send broadcast
-            sptr<WindowNode> pairableNode = GetPairableWindow(node);
+            WindowMode holderMode = node->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ?
+                WindowMode::WINDOW_MODE_SPLIT_SECONDARY : WindowMode::WINDOW_MODE_SPLIT_PRIMARY;
+            WindowInnerManager::GetInstance().CreatePlaceHolderWindow(holderMode, displayId_);
+            // sptr<WindowNode> pairableNode = GetPairableWindow(node);
             // insert pairable node
-            Insert(pairableNode);
+            // Insert(pairableNode);
         }
     } else {
         if (Find(node) == nullptr) {
@@ -432,6 +435,10 @@ void WindowPair::Insert(sptr<WindowNode>& node)
     if (node == nullptr) {
         return;
     }
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_PLACE_HOLDER) {
+        placeholder_ = node;
+        return;
+    }
     WLOGI("Insert a window to pair id: %{public}u", node->GetWindowId());
     sptr<WindowNode> pairedNode;
     if (node->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY) {
@@ -447,6 +454,10 @@ void WindowPair::Insert(sptr<WindowNode>& node)
     // minimize invalid paired window
     if (pairedNode != nullptr && pairedNode->abilityToken_ != nullptr) {
         MinimizeApp::AddNeedMinimizeApp(pairedNode, MinimizeReason::SPLIT_REPLACE);
+    }
+    if (placeholder_ != nullptr) {
+        WindowInnerManager::GetInstance().DestroyPlaceHolderWindow();
+        placeholder_ = nullptr;
     }
     UpdateWindowPairStatus();
 }
