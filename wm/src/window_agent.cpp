@@ -112,7 +112,7 @@ void WindowAgent::UpdateActiveStatus(bool isActive)
 sptr<WindowProperty> WindowAgent::GetWindowProperty()
 {
     if (window_ == nullptr) {
-        WLOGFE("window_ is nullptr");
+        WLOGFE("window is nullptr");
         return nullptr;
     }
     return window_->GetWindowProperty();
@@ -121,10 +121,10 @@ sptr<WindowProperty> WindowAgent::GetWindowProperty()
 void WindowAgent::NotifyTouchOutside()
 {
     if (window_ == nullptr) {
-        WLOGFI("window is null");
+        WLOGFE("window is null");
         return;
     }
-    WLOGFI("called");
+    WLOGFD("called");
     window_->NotifyTouchOutside();
 }
 

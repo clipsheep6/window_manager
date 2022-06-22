@@ -546,14 +546,6 @@ WMError WindowManagerService::ToggleShownStateForAllAppWindows()
     return  WMError::WM_OK;
 }
 
-WMError WindowManagerService::MaxmizeWindow(uint32_t windowId)
-{
-    return wmsTaskLooper_->ScheduleTask([this, windowId]() {
-        WM_SCOPED_TRACE("wms:MaxmizeWindow");
-        return windowController_->MaxmizeWindow(windowId);
-    }).get();
-}
-
 WMError WindowManagerService::GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId)
 {
     return wmsTaskLooper_->ScheduleTask([this, &topWinId, mainWinId]() {
