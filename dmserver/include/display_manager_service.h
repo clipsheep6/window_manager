@@ -118,6 +118,7 @@ private:
     sptr<DisplayDumper> displayDumper_;
     static float customVirtualPixelRatio_;
     std::map<ScreenId, uint32_t> accessTokenIdMaps_;
+    bool isAutoRotationOpen_;
 };
 } // namespace OHOS::Rosen
 
