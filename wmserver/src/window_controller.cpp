@@ -35,7 +35,7 @@ namespace OHOS {
 namespace Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowController"};
-    constexpr uint32_t TOIUCH_HOT_AREA_MAX_NUM = 10;
+    constexpr uint32_t TOUCH_HOT_AREA_MAX_NUM = 10;
 }
 
 uint32_t WindowController::GenWindowId()
@@ -622,7 +622,7 @@ WMError WindowController::ProcessPointDown(uint32_t windowId, bool isStartDrag)
         return WMError::WM_ERROR_NULLPTR;
     }
     if (!node->currentVisibility_) {
-        WLOGFE("this window is not visibile and not in window tree, windowId: %{public}u", windowId);
+        WLOGFE("this window is not visible and not in window tree, windowId: %{public}u", windowId);
         return WMError::WM_ERROR_INVALID_OPERATION;
     }
 
@@ -690,13 +690,13 @@ WMError WindowController::ToggleShownStateForAllAppWindows()
     return windowRoot_->ToggleShownStateForAllAppWindows();
 }
 
-WMError WindowController::MaxmizeWindow(uint32_t windowId)
+WMError WindowController::MaximizeWindow(uint32_t windowId)
 {
     WMError ret = SetWindowMode(windowId, WindowMode::WINDOW_MODE_FULLSCREEN);
     if (ret != WMError::WM_OK) {
         return ret;
     }
-    ret = windowRoot_->MaxmizeWindow(windowId);
+    ret = windowRoot_->MaximizeWindow(windowId);
     FlushWindowInfo(windowId);
     return ret;
 }
@@ -845,7 +845,6 @@ WMError WindowController::UpdateProperty(sptr<WindowProperty>& property, Propert
             std::vector<Rect> rects;
             property->GetTouchHotAreas(rects);
             return UpdateTouchHotAreas(node, rects);
-            break;
         }
         default:
             break;
@@ -870,17 +869,24 @@ WMError WindowController::UpdateTouchHotAreas(const sptr<WindowNode>& node, cons
             oss <<", ";
         }
     }
-    WLOGFI("windowId: %{public}u, rects.size: %{public}d, %{public}s",
+    WLOGFI("windowId: %{public}u, size: %{public}d, rects: %{public}s",
         node->GetWindowId(), static_cast<int32_t>(rects.size()), oss.str().c_str());
-    Rect windowRect = node->GetWindowRect();
-    std::vector<Rect> hotAreas;
-    if (rects.size() > TOIUCH_HOT_AREA_MAX_NUM || !WindowHelper::CalculateTouchHotAreas(windowRect, rects, hotAreas)) {
+    if (rects.size() > TOUCH_HOT_AREA_MAX_NUM) {
+        WLOGFE("the number of touch hot areas exceeds the maximum");
         return WMError::WM_ERROR_INVALID_PARAM;
     }
-    node->GetWindowProperty()->SetTouchHotAreas(rects);
+
+    std::vector<Rect> hotAreas;
     if (rects.empty()) {
         hotAreas.emplace_back(node->GetFullWindowHotArea());
+    } else {
+        Rect windowRect = node->GetWindowRect();
+        if (!WindowHelper::CalculateTouchHotAreas(windowRect, rects, hotAreas)) {
+            WLOGFE("the requested touch hot areas are incorrect");
+            return WMError::WM_ERROR_INVALID_PARAM;
+        }
     }
+    node->GetWindowProperty()->SetTouchHotAreas(rects);
     node->SetTouchHotAreas(hotAreas);
     FlushWindowInfo(node->GetWindowId());
     return WMError::WM_OK;
@@ -955,6 +961,15 @@ void WindowController::MinimizeWindowsByLauncher(std::vector<uint32_t>& windowId
             return;
         }
     }
+}
+
+Orientation WindowController::GetFullScreenWindowRequestedOrientation(DisplayId displayId)
+{
+    sptr<WindowNodeContainer> windowNodeContainer = windowRoot_->GetOrCreateWindowNodeContainer(displayId);
+    if (windowNodeContainer != nullptr) {
+        return windowNodeContainer->GetFullScreenWindowRequestedOrientation();
+    }
+    return Orientation::UNSPECIFIED;
 }
 } // namespace OHOS
 } // namespace Rosen

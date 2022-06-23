@@ -226,7 +226,7 @@ bool WindowPair::IsSplitRelated(sptr<WindowNode>& node) const
 
 std::vector<sptr<WindowNode>> WindowPair::GetOrderedPair(sptr<WindowNode>& node)
 {
-    WLOGI("Get piared node in Z order");
+    WLOGI("Get paired node in Z order");
     std::vector<sptr<WindowNode>> orderedPair;
     if (node == nullptr || Find(node) == nullptr) {
         return orderedPair;
@@ -351,6 +351,38 @@ void WindowPair::UpdateIfSplitRelated(sptr<WindowNode>& node)
     }
 }
 
+// void WindowPair::UpdateIfSplitRelated(sptr<WindowNode>& node)
+// {
+//     if (node == nullptr) {
+//         WLOGI("Window is nullptr.");
+//         return;
+//     }
+//     if (Find(node) == nullptr && !IsSplitRelated(node)) {
+//         WLOGI("Window id: %{public}u is not split related and paired.", node->GetWindowId());
+//         return;
+//     }
+//     WindowMode mode = node->GetWindowMode();
+//     WindowType type = node->GetWindowType();
+//     switch(status_) {
+//         case WindowPairStatus::STATUS_EMPTY: {
+//             if ()
+//             break;
+//         }
+//         case WindowPairStatus::STATUS_SINGLE_PRIMARY: {
+//             break;
+//         }
+//         case WindowPairStatus::STATUS_SINGLE_SECONDARY: {
+//             break;
+//         }
+//         case WindowPairStatus::STATUS_PAIRING: {
+//             break;
+//         }
+//         case WindowPairStatus::STATUS_PAIRED_DONE {
+//             break;
+//         }
+//     }
+// }
+
 void WindowPair::UpdateWindowPairStatus()
 {
     WLOGI("Update window pair status.");
@@ -371,7 +403,7 @@ void WindowPair::UpdateWindowPairStatus()
         status_ == WindowPairStatus::STATUS_PAIRING) {
         // create divider
         WindowInnerManager::GetInstance().CreateWindow("dialog_divider_ui", WindowType::WINDOW_TYPE_DOCK_SLICE,
-            initalDivderRect_);
+            initalDividerRect_);
     } else if ((prevStatus == WindowPairStatus::STATUS_PAIRED_DONE || prevStatus == WindowPairStatus::STATUS_PAIRING) &&
         (status_ != WindowPairStatus::STATUS_PAIRED_DONE && status_ != WindowPairStatus::STATUS_PAIRING)) {
         // clear pair
@@ -435,10 +467,10 @@ void WindowPair::Insert(sptr<WindowNode>& node)
     if (node == nullptr) {
         return;
     }
-    if (node->GetWindowType() == WindowType::WINDOW_TYPE_PLACE_HOLDER) {
-        placeholder_ = node;
-        return;
-    }
+    // if (node->GetWindowType() == WindowType::WINDOW_TYPE_PLACE_HOLDER) {
+    //     placeholder_ = node;
+    //     return;
+    // }
     WLOGI("Insert a window to pair id: %{public}u", node->GetWindowId());
     sptr<WindowNode> pairedNode;
     if (node->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY) {
@@ -455,10 +487,10 @@ void WindowPair::Insert(sptr<WindowNode>& node)
     if (pairedNode != nullptr && pairedNode->abilityToken_ != nullptr) {
         MinimizeApp::AddNeedMinimizeApp(pairedNode, MinimizeReason::SPLIT_REPLACE);
     }
-    if (placeholder_ != nullptr) {
-        WindowInnerManager::GetInstance().DestroyPlaceHolderWindow();
-        placeholder_ = nullptr;
-    }
+    // if (placeholder_ != nullptr) {
+    //     WindowInnerManager::GetInstance().DestroyPlaceHolderWindow();
+    //     placeholder_ = nullptr;
+    // }
     UpdateWindowPairStatus();
 }
 
@@ -505,7 +537,7 @@ void WindowPair::SetAllAppWindowsRestoring(bool isAllAppWindowsRestoring)
 
 void WindowPair::SetInitalDividerRect(const Rect& rect)
 {
-    initalDivderRect_ = rect;
+    initalDividerRect_ = rect;
 }
 } // namespace Rosen
 } // namespace OHOS

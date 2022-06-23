@@ -314,7 +314,7 @@ WMError WindowImpl::SetWindowType(WindowType type)
             return WMError::WM_ERROR_INVALID_PARAM;
         }
         property_->SetWindowType(type);
-        if (isAppDecorEnbale_ && windowSystemConfig_.isSystemDecorEnable_) {
+        if (isAppDecorEnable_ && windowSystemConfig_.isSystemDecorEnable_) {
             property_->SetDecorEnable(WindowHelper::IsMainWindow(property_->GetWindowType()));
         }
         AdjustWindowAnimationFlag();
@@ -442,7 +442,7 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
         WLOGFE("fail to SetUIContent id: %{public}u", property_->GetWindowId());
         return WMError::WM_ERROR_NULLPTR;
     }
-    if (!isAppDecorEnbale_ || !windowSystemConfig_.isSystemDecorEnable_) {
+    if (!isAppDecorEnable_ || !windowSystemConfig_.isSystemDecorEnable_) {
         WLOGFI("app set decor enable false");
         property_->SetDecorEnable(false);
     }
@@ -490,7 +490,7 @@ std::string WindowImpl::GetContentInfo()
 ColorSpace WindowImpl::GetColorSpaceFromSurfaceGamut(ColorGamut ColorGamut)
 {
     for (auto item: colorSpaceConvertMap) {
-        if (item.sufaceColorGamut == ColorGamut) {
+        if (item.surfaceColorGamut == ColorGamut) {
             return item.colorSpace;
         }
     }
@@ -501,7 +501,7 @@ ColorGamut WindowImpl::GetSurfaceGamutFromColorSpace(ColorSpace colorSpace)
 {
     for (auto item: colorSpaceConvertMap) {
         if (item.colorSpace == colorSpace) {
-            return item.sufaceColorGamut;
+            return item.surfaceColorGamut;
         }
     }
     return ColorGamut::COLOR_GAMUT_SRGB;
@@ -625,7 +625,7 @@ WMError WindowImpl::SetFullScreen(bool status)
 
 void WindowImpl::MapFloatingWindowToAppIfNeeded()
 {
-    if (GetType() != WindowType::WINDOW_TYPE_FLOAT || context_.get() == nullptr) {
+    if (!WindowHelper::IsAppFloatingWindow(GetType()) || context_.get() == nullptr) {
         return;
     }
 
@@ -634,7 +634,8 @@ void WindowImpl::MapFloatingWindowToAppIfNeeded()
         if (win->GetType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW &&
             context_.get() == win->GetContext().get()) {
             appFloatingWindowMap_[win->GetWindowId()].push_back(this);
-            WLOGFI("Map FloatingWindow %{public}u to AppMainWindow %{public}u", GetWindowId(), win->GetWindowId());
+            WLOGFI("Map FloatingWindow %{public}u to AppMainWindow %{public}u, type is %{public}u",
+                GetWindowId(), win->GetWindowId(), GetType());
             return;
         }
     }
@@ -663,6 +664,12 @@ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<
             property_->SetParentId(parentId);
         }
     }
+
+    if (CheckCameraFloatingWindowMultiCreated(property_->GetWindowType())) {
+        WLOGFE("Camera Floating Window already exists.");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+
     context_ = context;
     sptr<WindowImpl> window(this);
     sptr<IWindow> windowAgent(new WindowAgent(window));
@@ -723,7 +730,8 @@ void WindowImpl::DestroyFloatingWindow()
 
     // Destroy app floating window if exist
     if (appFloatingWindowMap_.count(GetWindowId()) > 0) {
-        for (auto& floatingWindow : appFloatingWindowMap_.at(GetWindowId())) {
+        auto floatingWindows = appFloatingWindowMap_.at(GetWindowId());
+        for (auto& floatingWindow : floatingWindows) {
             if (floatingWindow == nullptr) {
                 continue;
             }
@@ -1139,7 +1147,7 @@ void WindowImpl::DisableAppWindowDecor()
         return;
     }
     WLOGFI("disable app window decoration.");
-    isAppDecorEnbale_ = false;
+    isAppDecorEnable_ = false;
 }
 
 bool WindowImpl::IsDecorEnable() const
@@ -1486,7 +1494,7 @@ void WindowImpl::SetModeSupportInfo(uint32_t modeSupportInfo)
     property_->SetModeSupportInfo(modeSupportInfo);
     UpdateProperty(PropertyChangeAction::ACTION_UPDATE_MODE_SUPPORT_INFO);
     if (!WindowHelper::IsWindowModeSupported(modeSupportInfo, GetMode())) {
-        WLOGFI("currunt window mode is not supported, force to transform to appropriate mode. window id:%{public}u",
+        WLOGFI("current window mode is not supported, force to transform to appropriate mode. window id:%{public}u",
                GetWindowId());
         WindowMode mode = WindowHelper::GetWindowModeFromModeSupportInfo(modeSupportInfo);
         if (mode != WindowMode::WINDOW_MODE_UNDEFINED) {
@@ -1940,7 +1948,7 @@ void WindowImpl::UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configura
 void WindowImpl::UpdateAvoidArea(const std::vector<Rect>& avoidArea)
 {
     WLOGFI("Window Update AvoidArea, id: %{public}u", property_->GetWindowId());
-    NotifyAviodAreaChange(avoidArea);
+    NotifyAvoidAreaChange(avoidArea);
 }
 
 void WindowImpl::UpdateWindowState(WindowState state)
@@ -2119,7 +2127,7 @@ void WindowImpl::NotifyPointEvent(std::shared_ptr<MMI::PointerEvent>& pointerEve
     });
 }
 
-void WindowImpl::NotifyAviodAreaChange(const std::vector<Rect>& avoidArea)
+void WindowImpl::NotifyAvoidAreaChange(const std::vector<Rect>& avoidArea)
 {
     std::vector<sptr<IAvoidAreaChangedListener>> avoidAreaChangeListeners;
     {
@@ -2207,7 +2215,7 @@ Rect WindowImpl::GetSystemAlarmWindowDefaultSize(Rect defaultRect)
         SYSTEM_ALARM_WINDOW_HEIGHT_RATIO));
 
     rect = { static_cast<int32_t>((width - alarmWidth) / 2), static_cast<int32_t>((height - alarmHeight) / 2),
-                alarmWidth, alarmHeight }; // devided by 2 to middle the window
+                alarmWidth, alarmHeight }; // divided by 2 to middle the window
     return rect;
 }
 
@@ -2243,6 +2251,7 @@ void WindowImpl::SetDefaultOption()
         }
         case WindowType::WINDOW_TYPE_TOAST:
         case WindowType::WINDOW_TYPE_FLOAT:
+        case WindowType::WINDOW_TYPE_FLOAT_CAMERA:
         case WindowType::WINDOW_TYPE_VOICE_INTERACTION:
         case WindowType::WINDOW_TYPE_LAUNCHER_DOCK:
         case WindowType::WINDOW_TYPE_SEARCHING_BAR: {
@@ -2261,7 +2270,6 @@ void WindowImpl::SetDefaultOption()
         }
         case WindowType::WINDOW_TYPE_PLACE_HOLDER: {
             AddWindowFlag(WindowFlag::WINDOW_FLAG_FORBID_SPLIT_MOVE);
-            property_->SetFocusable(false);
             break;
         }
         default:
@@ -2311,12 +2319,33 @@ Orientation WindowImpl::GetRequestedOrientation()
 
 WMError WindowImpl::SetTouchHotAreas(const std::vector<Rect>& rects)
 {
+    std::vector<Rect> lastTouchHotAreas;
+    property_->GetTouchHotAreas(lastTouchHotAreas);
+
     property_->SetTouchHotAreas(rects);
-    return UpdateProperty(PropertyChangeAction::ACTION_UPDATE_TOUCH_HOT_AREA);
+    WMError result = UpdateProperty(PropertyChangeAction::ACTION_UPDATE_TOUCH_HOT_AREA);
+    if (result != WMError::WM_OK) {
+        property_->SetTouchHotAreas(lastTouchHotAreas);
+    }
+    return result;
 }
 void WindowImpl::GetRequestedTouchHotAreas(std::vector<Rect>& rects) const
 {
     property_->GetTouchHotAreas(rects);
+}
+
+bool WindowImpl::CheckCameraFloatingWindowMultiCreated(WindowType type)
+{
+    if (type != WindowType::WINDOW_TYPE_FLOAT_CAMERA) {
+        return false;
+    }
+
+    for (auto& winPair : windowMap_) {
+        if (winPair.second.second->GetType() == WindowType::WINDOW_TYPE_FLOAT_CAMERA) {
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace Rosen
 } // namespace OHOS

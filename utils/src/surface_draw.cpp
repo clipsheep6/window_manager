@@ -24,10 +24,19 @@
 #include "include/core/SkData.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkPixmap.h"
+
+#include "image/bitmap.h"
+#include "image_source.h"
+#include "image_type.h"
+#include "image_utils.h"
+#include "pixel_map.h"
 namespace OHOS {
 namespace Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "SurfaceDraw"};
+    const std::string IMAGE_PLACE_HOLDER_PNG_PATH = "/etc/window/resources/bg_place_holder.png";
+    const int32_t IMAGE_WIDTH = 512;
+    const int32_t IMAGE_HEIGHT = 512;
 } // namespace
 
 void SurfaceDraw::Init()
@@ -233,6 +242,84 @@ void SurfaceDraw::DrawSkImage(std::shared_ptr<RSSurfaceNode> surfaceNode, Rect w
         return;
     }
     return;
+}
+
+sptr<OHOS::Surface> SurfaceDraw::GetLayer(sptr<OHOS::Rosen::Window> window)
+{
+    std::shared_ptr<OHOS::Rosen::RSSurfaceNode> surfaceNode = window->GetSurfaceNode();
+    if (surfaceNode == nullptr) {
+        return nullptr;
+    }
+    return surfaceNode != nullptr ? surfaceNode->GetSurface() : nullptr;
+}
+
+sptr<OHOS::SurfaceBuffer> SurfaceDraw::GetSurfaceBuffer(sptr<OHOS::Surface> layer) const
+{
+    sptr<OHOS::SurfaceBuffer> buffer;
+    int32_t releaseFence = 0;
+    OHOS::BufferRequestConfig config = {
+        .width = IMAGE_WIDTH,
+        .height = IMAGE_HEIGHT,
+        .strideAlignment = 0x8,
+        .format = PIXEL_FMT_RGBA_8888,
+        .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
+    };
+
+    OHOS::SurfaceError ret = layer->RequestBuffer(buffer, releaseFence, config);
+    if (ret != OHOS::SURFACE_ERROR_OK) {
+        WLOGFE("request buffer ret:%{public}s", SurfaceErrorStr(ret).c_str());
+        return nullptr;
+    }
+    return buffer;
+}
+
+std::unique_ptr<OHOS::Media::PixelMap> SurfaceDraw::DecodeImageToPixelMap(const std::string &imagePath)
+{
+    OHOS::Media::SourceOptions opts;
+    opts.formatHint = "image/png";
+    uint32_t ret = 0;
+    auto imageSource = OHOS::Media::ImageSource::CreateImageSource(imagePath, opts, ret);
+    // CHKPP(imageSource);
+    std::set<std::string> formats;
+    ret = imageSource->GetSupportedFormats(formats);
+    WLOGFD("get supported format ret:%{public}u", ret);
+
+    OHOS::Media::DecodeOptions decodeOpts;
+    std::unique_ptr<OHOS::Media::PixelMap> pixelMap = imageSource->CreatePixelMap(decodeOpts, ret);
+    if (pixelMap == nullptr) {
+        WLOGFE("pixelMap is nullptr");
+    }
+    return pixelMap;
+}
+
+void SurfaceDraw::DrawPixelmap(OHOS::Rosen::Drawing::Canvas &canvas)
+{
+    std::unique_ptr<OHOS::Media::PixelMap> pixelmap = DecodeImageToPixelMap(IMAGE_PLACE_HOLDER_PNG_PATH);
+    OHOS::Rosen::Drawing::Pen pen;
+    pen.SetAntiAlias(true);
+    pen.SetColor(OHOS::Rosen::Drawing::Color::COLOR_BLUE);
+    OHOS::Rosen::Drawing::scalar penWidth = 1;
+    pen.SetWidth(penWidth);
+    canvas.AttachPen(pen);
+    canvas.DrawBitmap(*pixelmap, 0, 0);
+}
+
+void SurfaceDraw::DoDraw(uint8_t *addr, uint32_t width, uint32_t height)
+{
+    OHOS::Rosen::Drawing::Bitmap bitmap;
+    OHOS::Rosen::Drawing::BitmapFormat format { OHOS::Rosen::Drawing::COLORTYPE_RGBA_8888,
+        OHOS::Rosen::Drawing::ALPHATYPE_OPAQUYE };
+    bitmap.Build(width, height, format);
+    OHOS::Rosen::Drawing::Canvas canvas;
+    canvas.Bind(bitmap);
+    canvas.Clear(OHOS::Rosen::Drawing::Color::COLOR_TRANSPARENT);
+    DrawPixelmap(canvas);
+    static constexpr uint32_t stride = 4;
+    uint32_t addrSize = width * height * stride;
+    errno_t ret = memcpy_s(addr, addrSize, bitmap.GetPixels(), addrSize);
+    if (ret != EOK) {
+        return;
+    }
 }
 } // Rosen
 } // OHOS

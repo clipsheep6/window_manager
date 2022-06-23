@@ -23,6 +23,11 @@
 #endif
 #include "refbase.h"
 #include "wm_common.h"
+#include "window.h"
+
+#include "draw/canvas.h"
+#include "nocopyable.h"
+#include "pixel_map.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -37,6 +42,16 @@ public:
     bool DecodeImageFile(const char* filename, SkBitmap& bitmap);
     void DrawSkImage(std::shared_ptr<RSSurfaceNode> surfaceNode, Rect winRect,
         sptr<Media::PixelMap> pixelMap, uint32_t bkgColor);
+
+    bool DrawWindow(sptr<OHOS::Rosen::Window> window, int32_t bufferWidth, int32_t bufferHeight,
+        Drawing::Color color);
+    bool DrawWindow(sptr<OHOS::Rosen::Window> window, int32_t bufferWidth, int32_t bufferHeight,
+        const std::string& imagePath);
+    sptr<OHOS::Surface> GetLayer(sptr<OHOS::Rosen::Window> window);
+    sptr<OHOS::SurfaceBuffer> GetSurfaceBuffer(sptr<OHOS::Surface> layer) const;
+    void DoDraw(uint8_t *addr, uint32_t width, uint32_t height);
+    void DrawPixelmap(OHOS::Rosen::Drawing::Canvas &canvas);
+    std::unique_ptr<OHOS::Media::PixelMap> DecodeImageToPixelMap(const std::string &imagePath);
 private:
 
     std::shared_ptr<RSSurface> PrepareDraw(std::shared_ptr<RSSurfaceNode> surfaceNode,

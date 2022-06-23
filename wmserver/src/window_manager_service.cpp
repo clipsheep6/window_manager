@@ -509,6 +509,11 @@ void DisplayChangeListener::OnDisplayStateChange(DisplayId defaultDisplayId, spt
     WindowManagerService::GetInstance().NotifyDisplayStateChange(defaultDisplayId, displayInfo, displayInfoMap, type);
 }
 
+void DisplayChangeListener::OnGetFullScreenWindowRequestedOrientation(DisplayId displayId, Orientation &orientation)
+{
+    WindowManagerService::GetInstance().GetFullScreenWindowRequestedOrientation(displayId, orientation);
+}
+
 void WindowManagerService::ProcessPointDown(uint32_t windowId, bool isStartDrag)
 {
     return wmsTaskLooper_->PostTask([this, windowId, isStartDrag]() {
@@ -541,11 +546,11 @@ WMError WindowManagerService::ToggleShownStateForAllAppWindows()
     return  WMError::WM_OK;
 }
 
-WMError WindowManagerService::MaxmizeWindow(uint32_t windowId)
+WMError WindowManagerService::MaximizeWindow(uint32_t windowId)
 {
     return wmsTaskLooper_->ScheduleTask([this, windowId]() {
-        WM_SCOPED_TRACE("wms:MaxmizeWindow");
-        return windowController_->MaxmizeWindow(windowId);
+        WM_SCOPED_TRACE("wms:MaximizeWindow");
+        return windowController_->MaximizeWindow(windowId);
     }).get();
 }
 
@@ -616,6 +621,13 @@ void WindowManagerService::MinimizeWindowsByLauncher(std::vector<uint32_t> windo
     return wmsTaskLooper_->ScheduleTask([this, windowIds, isAnimated, &finishCallback]() mutable {
         return windowController_->MinimizeWindowsByLauncher(windowIds, isAnimated, finishCallback);
     }).get();
+}
+
+void WindowManagerService::GetFullScreenWindowRequestedOrientation(DisplayId displayId, Orientation &orientation)
+{
+    wmsTaskLooper_->ScheduleTask([this, displayId, &orientation]() mutable {
+        orientation = windowController_->GetFullScreenWindowRequestedOrientation(displayId);
+    }).wait();
 }
 } // namespace Rosen
 } // namespace OHOS

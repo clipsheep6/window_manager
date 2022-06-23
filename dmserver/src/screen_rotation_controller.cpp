@@ -24,8 +24,8 @@ namespace OHOS {
 namespace Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "DisplaySensorController"};
-    constexpr int64_t ORIENTATION_SENSOR_SAMPING_RATE = 200000000; // 200ms
-    constexpr int64_t ORIENTATION_SENSOR_REPORTING_RATE = 200000000; // 200ms
+    constexpr int64_t ORIENTATION_SENSOR_SAMPLING_RATE = 200000000; // 200ms
+    constexpr int64_t ORIENTATION_SENSOR_REPORTING_RATE = 0;
     constexpr long ORIENTATION_SENSOR_CALLBACK_TIME_INTERVAL = 200; // 200ms
     constexpr int VALID_INCLINATION_ANGLE_THRESHOLD_COEFFICIENT = 3;
 }
@@ -54,7 +54,7 @@ void ScreenRotationController::SubscribeGravitySensor()
     user_.userData = nullptr;
     user_.callback = &HandleGravitySensorEventCallback;
     SubscribeSensor(SENSOR_TYPE_ID_GRAVITY, &user_);
-    SetBatch(SENSOR_TYPE_ID_GRAVITY, &user_, ORIENTATION_SENSOR_SAMPING_RATE, ORIENTATION_SENSOR_REPORTING_RATE);
+    SetBatch(SENSOR_TYPE_ID_GRAVITY, &user_, ORIENTATION_SENSOR_SAMPLING_RATE, ORIENTATION_SENSOR_REPORTING_RATE);
     SetMode(SENSOR_TYPE_ID_GRAVITY, &user_, SENSOR_ON_CHANGE);
     ActivateSensor(SENSOR_TYPE_ID_GRAVITY, &user_);
     isGravitySensorSubscribed_ = true;
@@ -100,7 +100,7 @@ void ScreenRotationController::HandleGravitySensorEventCallback(SensorEvent *eve
         WLOGE("dms: Orientation Sensor Callback is not SENSOR_TYPE_ID_GRAVITY");
         return;
     }
-    Orientation orientation = GetDisplayOrientation();
+    Orientation orientation = GetRequestedOrientation();
     if (!IsSensorRelatedOrientation(orientation)) {
         return;
     }
@@ -153,9 +153,11 @@ Rotation ScreenRotationController::GetCurrentDisplayRotation()
     return DisplayManagerServiceInner::GetInstance().GetDisplayById(defaultDisplayId_)->GetRotation();
 }
 
-Orientation ScreenRotationController::GetDisplayOrientation()
+Orientation ScreenRotationController::GetRequestedOrientation()
 {
-    return DisplayManagerServiceInner::GetInstance().GetDefaultDisplay()->GetOrientation();
+    Orientation orientation = Orientation::UNSPECIFIED;
+    DisplayManagerServiceInner::GetInstance().GetFullScreenWindowRequestedOrientation(defaultDisplayId_, orientation);
+    return orientation;
 }
 
 Rotation ScreenRotationController::CalcTargetDisplayRotation(

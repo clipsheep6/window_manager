@@ -24,6 +24,7 @@
 #include "display_manager_config.h"
 #include "dm_common.h"
 #include "permission.h"
+#include "parameters.h"
 #include "screen_rotation_controller.h"
 #include "transaction/rs_interfaces.h"
 #include "window_manager_hilog.h"
@@ -52,7 +53,9 @@ DisplayManagerService::DisplayManagerService() : SystemAbility(DISPLAY_MANAGER_S
     abstractScreenController_(new AbstractScreenController(mutex_)),
     displayPowerController_(new DisplayPowerController(mutex_,
         std::bind(&DisplayManagerService::NotifyDisplayStateChange, this,
-            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)))
+            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4))),
+    isAutoRotationOpen_(OHOS::system::GetParameter(
+        "persist.display.ar.enabled", "1") == "1") // autoRotation default enabled
 {
 }
 
@@ -127,6 +130,13 @@ void DisplayManagerService::NotifyDisplayStateChange(DisplayId defaultDisplayId,
     WLOGFI("DisplayId %{public}" PRIu64"", id);
     if (displayChangeListener_ != nullptr) {
         displayChangeListener_->OnDisplayStateChange(defaultDisplayId, displayInfo, displayInfoMap, type);
+    }
+}
+
+void DisplayManagerService::GetFullScreenWindowRequestedOrientation(DisplayId displayId, Orientation &orientation)
+{
+    if (displayChangeListener_ != nullptr) {
+        displayChangeListener_->OnGetFullScreenWindowRequestedOrientation(displayId, orientation);
     }
 }
 
@@ -366,7 +376,7 @@ ScreenId DisplayManagerService::GetScreenIdByDisplayId(DisplayId displayId) cons
 {
     sptr<AbstractDisplay> abstractDisplay = abstractDisplayController_->GetAbstractDisplay(displayId);
     if (abstractDisplay == nullptr) {
-        WLOGFE("GetScreenIdByDisplayId: GetAbstarctDisplay failed");
+        WLOGFE("GetScreenIdByDisplayId: GetAbstractDisplay failed");
         return SCREEN_ID_INVALID;
     }
     return abstractDisplay->GetAbstractScreenId();
@@ -558,5 +568,24 @@ bool DisplayManagerService::SetVirtualPixelRatio(ScreenId screenId, float virtua
 float DisplayManagerService::GetCustomVirtualPixelRatio()
 {
     return DisplayManagerService::customVirtualPixelRatio_;
+}
+
+bool DisplayManagerService::IsScreenRotationLocked()
+{
+    return ScreenRotationController::IsScreenRotationLocked();
+}
+
+void DisplayManagerService::SetScreenRotationLocked(bool isLocked)
+{
+    ScreenRotationController::SetScreenRotationLocked(isLocked);
+}
+
+void DisplayManagerService::SetGravitySensorSubscriptionEnabled()
+{
+    if (!isAutoRotationOpen_) {
+        WLOGFE("autoRotation is not open");
+        return;
+    }
+    ScreenRotationController::SubscribeGravitySensor();
 }
 } // namespace OHOS::Rosen

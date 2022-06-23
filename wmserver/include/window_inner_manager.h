@@ -39,9 +39,17 @@ class InputListener : public IInputEventListener {
     virtual void OnKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent);
     virtual void OnPointerInputEvent(std::shared_ptr<MMI::PointerEvent>& pointerEvent);
 };
+class LifeCycle : public IWindowLifeCycle {
+    virtual void AfterForeground() {};
+    virtual void AfterBackground() {};
+    virtual void AfterFocused() {};
+    virtual void AfterInactive();
+    virtual void AfterUnfocused() {};
+};
 class WindowInnerManager : public RefBase {
 friend class TouchOutsideListener;
 friend class InputListener;
+friend class LifeCycle;
 WM_DECLARE_SINGLE_INSTANCE_BASE(WindowInnerManager);
 using EventRunner = OHOS::AppExecFwk::EventRunner;
 using EventHandler = OHOS::AppExecFwk::EventHandler;

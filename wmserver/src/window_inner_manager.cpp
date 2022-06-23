@@ -88,13 +88,13 @@ void WindowInnerManager::Stop()
 void WindowInnerManager::HandleCreateWindow(std::string name, WindowType type, Rect rect)
 {
     auto dialogCallback = [this](int32_t id, const std::string& event, const std::string& params) {
-        if (params == "EVENT_CANCLE_CODE") {
+        if (params == "EVENT_CANCEL_CODE") {
             Ace::UIServiceMgrClient::GetInstance()->CancelDialog(id);
         }
     };
     Ace::UIServiceMgrClient::GetInstance()->ShowDialog(name, dividerParams_, type,
         rect.posX_, rect.posY_, rect.width_, rect.height_, dialogCallback, &dialogId_);
-    WLOGFI("create inner window id: %{public}d succes", dialogId_);
+    WLOGFI("create inner window id: %{public}d success", dialogId_);
     return;
 }
 
@@ -176,6 +176,12 @@ void InputListener::OnPointerInputEvent(std::shared_ptr<MMI::PointerEvent>& poin
 {
     WindowInnerManager::GetInstance().DestroyPlaceHolderWindow();
 }
+
+void LifeCycle::AfterInactive()
+{
+    WindowInnerManager::GetInstance().DestroyPlaceHolderWindow();
+}
+
 void WindowInnerManager::HandleCreatePlaceHolderWindow(WindowMode mode, DisplayId displayId)
 {
     if (placeHolderwindow_ != nullptr) {
@@ -195,9 +201,11 @@ void WindowInnerManager::HandleCreatePlaceHolderWindow(WindowMode mode, DisplayI
         return;
     }
     sptr<ITouchOutsideListener> touchOutsideListener = new TouchOutsideListener();
-    sptr<IInputEventListener> inputListener = new InputListener();
+    // sptr<IInputEventListener> inputListener = new InputListener();
+    sptr<IWindowLifeCycle> lifeCycleListener = new LifeCycle();
     placeHolderwindow_->RegisterTouchOutsideListener(touchOutsideListener);
-    placeHolderwindow_->RegisterInputEventListener(inputListener);
+    // placeHolderwindow_->RegisterInputEventListener(inputListener);
+    placeHolderwindow_->RegisterLifeCycleListener(lifeCycleListener);
     placeHolderwindow_->Show();
 
     sptr<OHOS::Surface> layer = GetLayer();
