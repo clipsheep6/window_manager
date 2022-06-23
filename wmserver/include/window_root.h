@@ -20,6 +20,7 @@
 
 #include "agent_death_recipient.h"
 #include "display_manager_service_inner.h"
+#include "window_dump_info_list.h"
 #include "window_node_container.h"
 #include "zidl/window_manager_agent_interface.h"
 
@@ -39,6 +40,7 @@ public:
     sptr<WindowNodeContainer> GetOrCreateWindowNodeContainer(DisplayId displayId);
     sptr<WindowNodeContainer> CreateWindowNodeContainer(sptr<DisplayInfo> displayInfo);
     sptr<WindowNode> GetWindowNode(uint32_t windowId) const;
+    void GetBackgroundNodes(std::vector<sptr<WindowNode>>& windowNodes);
 
     WMError SaveWindow(const sptr<WindowNode>& node);
     void AddDeathRecipient(sptr<WindowNode> node);
@@ -82,7 +84,7 @@ public:
     void HandleKeepScreenOn(uint32_t windowId, bool requireLock);
     void UpdateFocusableProperty(uint32_t windowId);
     WMError GetAccessibilityWindowInfo(sptr<AccessibilityWindowInfo>& windowInfo);
-    void SetMaxAppWindowNumber(int windowNum);
+    void SetMaxAppWindowNumber(uint32_t windowNum);
     WMError GetModeChangeHotZones(DisplayId displayId,
         ModeChangeHotZones& hotZones, const ModeChangeHotZonesConfig& config);
     std::vector<DisplayId> GetAllDisplayIds() const;
@@ -94,6 +96,8 @@ public:
     void SetSplitRatios(const std::vector<float>& splitRatioNumbers);
     void SetExitSplitRatios(const std::vector<float>& exitSplitRatios);
     void MinimizeTargetWindows(std::vector<uint32_t>& windowIds);
+    const WindowDumpInfoList& GetWindowDumpInfoList();
+    
 private:
     void OnRemoteDied(const sptr<IRemoteObject>& remoteObject);
     WMError DestroyWindowInner(sptr<WindowNode>& node);
@@ -115,6 +119,7 @@ private:
     WMError PostProcessAddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode,
         sptr<WindowNodeContainer>& container);
     std::map<uint32_t, sptr<WindowNode>> windowNodeMap_;
+    WindowDumpInfoList WindowDumpInfoList_;
     std::map<sptr<IRemoteObject>, uint32_t> windowIdMap_;
     std::map<ScreenId, sptr<WindowNodeContainer>> windowNodeContainerMap_;
     std::map<ScreenId, std::vector<DisplayId>> displayIdMap_;

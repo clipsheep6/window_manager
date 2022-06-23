@@ -133,6 +133,27 @@ sptr<WindowNode> WindowRoot::GetWindowNode(uint32_t windowId) const
     return iter->second;
 }
 
+void WindowRoot::GetBackgroundNodes(std::vector<sptr<WindowNode>>& windowNodes)
+{
+    windowNodes.clear();
+    for (auto& it : windowNodeMap_) {
+        windowNodes.push_back(it.second);
+    }
+    std::vector<sptr<WindowNode>> foregroundWindowNodes;
+    for (auto it = windowNodeContainerMap_.begin(); it != windowNodeContainerMap_.end(); it++) {
+        it->second->TraverseContainer(foregroundWindowNodes);
+    }
+    for (auto foregroundNode : foregroundWindowNodes) {
+        auto it = std::find_if(windowNodes.begin(), windowNodes.end(),
+            [&foregroundNode](const sptr<WindowNode>& node) {
+                return node->GetWindowId() == foregroundNode->GetWindowId();
+            });
+        if (it != windowNodes.end()) {
+                windowNodes.erase(it);
+        }
+    }
+}
+
 sptr<WindowNode> WindowRoot::FindWindowNodeWithToken(const sptr<IRemoteObject>& token) const
 {
     if (token == nullptr) {
@@ -224,6 +245,11 @@ void WindowRoot::MinimizeTargetWindows(std::vector<uint32_t>& windowIds)
             }
         }
     }
+}
+
+const WindowDumpInfoList& WindowRoot::GetWindowDumpInfoList()
+{
+    return WindowDumpInfoList_;
 }
 
 bool WindowRoot::IsForbidDockSliceMove(DisplayId displayId) const
@@ -430,7 +456,7 @@ WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, boo
         return res;
     }
     // limit number of main window
-    int mainWindowNumber = container->GetWindowCountByType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
+    uint32_t mainWindowNumber = container->GetWindowCountByType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
     if (mainWindowNumber >= maxAppWindowNumber_ && node->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
         container->MinimizeOldestAppWindow();
     }
@@ -631,6 +657,9 @@ WMError WindowRoot::DestroyWindowInner(sptr<WindowNode>& node)
         return WMError::WM_ERROR_DESTROYED_OBJECT;
     }
 
+    WindowDumpInfo info { node->GetWindowName(), node->GetWindowId(),
+        node->GetWindowMode(), node->GetWindowType() };
+
     sptr<IWindow> window = node->GetWindowToken();
     if ((window != nullptr) && (window->AsObject() != nullptr)) {
         if (windowIdMap_.count(window->AsObject()) == 0) {
@@ -645,6 +674,7 @@ WMError WindowRoot::DestroyWindowInner(sptr<WindowNode>& node)
     }
     windowNodeMap_.erase(node->GetWindowId());
     WLOGFI("destroy window node use_count:%{public}d", node->GetSptrRefCount());
+    WindowDumpInfoList_.Add(info);
     return WMError::WM_OK;
 }
 
@@ -1190,7 +1220,7 @@ WMError WindowRoot::GetAccessibilityWindowInfo(sptr<AccessibilityWindowInfo>& wi
     return WMError::WM_OK;
 }
 
-void WindowRoot::SetMaxAppWindowNumber(int windowNum)
+void WindowRoot::SetMaxAppWindowNumber(uint32_t windowNum)
 {
     maxAppWindowNumber_ = windowNum;
 }

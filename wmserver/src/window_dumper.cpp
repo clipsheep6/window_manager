@@ -98,20 +98,20 @@ WMError WindowDumper::DumpScreenGroupWindowInfo(ScreenId screenGroupId,
         const std::string& windowName = windowNode->GetWindowName().size() <= WINDOW_NAME_MAX_LENGTH ?
             windowNode->GetWindowName() : windowNode->GetWindowName().substr(0, WINDOW_NAME_MAX_LENGTH);
         // std::setw is used to set the output width and different width values are set to keep the format aligned.
-        oss << std::left << std::setw(21) << windowName
-            << std::left << std::setw(10) << windowNode->GetDisplayId()
-            << std::left << std::setw(5) << windowNode->GetCallingPid()
-            << std::left << std::setw(6) << windowNode->GetWindowId()
-            << std::left << std::setw(5) << static_cast<uint32_t>(windowNode->GetWindowType())
-            << std::left << std::setw(5) << static_cast<uint32_t>(windowNode->GetWindowMode())
-            << std::left << std::setw(5) << windowNode->GetWindowFlags()
-            << std::left << std::setw(5) << --zOrder
-            << std::left << std::setw(12) << static_cast<uint32_t>(windowNode->GetRequestedOrientation())
+        oss << std::left << 21_width << windowName
+            << std::left << 10_width << windowNode->GetDisplayId()
+            << std::left << 5_width << windowNode->GetCallingPid()
+            << std::left << 6_width << windowNode->GetWindowId()
+            << std::left << 5_width << static_cast<uint32_t>(windowNode->GetWindowType())
+            << std::left << 5_width << static_cast<uint32_t>(windowNode->GetWindowMode())
+            << std::left << 5_width << windowNode->GetWindowFlags()
+            << std::left << 5_width << --zOrder
+            << std::left << 12_width << static_cast<uint32_t>(windowNode->GetRequestedOrientation())
             << "[ "
-            << std::left << std::setw(5) << rect.posX_
-            << std::left << std::setw(5) << rect.posY_
-            << std::left << std::setw(5) << rect.width_
-            << std::left << std::setw(5) << rect.height_
+            << std::left << 5_width << rect.posX_
+            << std::left << 5_width << rect.posY_
+            << std::left << 5_width << rect.width_
+            << std::left << 5_width << rect.height_
             << "]"
             << std::endl;
     }
@@ -124,6 +124,7 @@ WMError WindowDumper::DumpScreenGroupWindowInfo(ScreenId screenGroupId,
 WMError WindowDumper::DumpAllWindowInfo(std::string& dumpInfo) const
 {
     std::map<ScreenId, sptr<WindowNodeContainer>> windowNodeContainers;
+    dumpInfo.append("-------------------------------------Foreground Window-------------------------------------\n");
     std::vector<DisplayId> displayIds = DisplayManagerServiceInner::GetInstance().GetAllDisplayIds();
     for (DisplayId displayId : displayIds) {
         ScreenId screenGroupId = DisplayManagerServiceInner::GetInstance().GetScreenGroupIdByDisplayId(displayId);
@@ -138,6 +139,35 @@ WMError WindowDumper::DumpAllWindowInfo(std::string& dumpInfo) const
             return ret;
         }
     }
+    std::ostringstream oss;
+    oss << "-------------------------------------Background Window-------------------------------------"
+    << std::endl;
+    oss << "WindowName           DisplayId Pid  WinId Type Mode Flag Orientation [ x    y    w    h    ]"
+        << std::endl;
+    std::vector<sptr<WindowNode>> backgroundNodes;
+    windowRoot_->GetBackgroundNodes(backgroundNodes);
+    for (auto& windowNode : backgroundNodes) {
+        Rect rect = windowNode->GetWindowRect();
+        const std::string& windowName = windowNode->GetWindowName().substr(0, WINDOW_NAME_MAX_LENGTH);
+        oss << std::left << 21_width << windowName
+            << std::left << 10_width << windowNode->GetDisplayId()
+            << std::left << 5_width << windowNode->GetCallingPid()
+            << std::left << 6_width << windowNode->GetWindowId()
+            << std::left << 5_width << static_cast<uint32_t>(windowNode->GetWindowType())
+            << std::left << 5_width << static_cast<uint32_t>(windowNode->GetWindowMode())
+            << std::left << 5_width<< windowNode->GetWindowFlags()
+            << std::left << 12_width << static_cast<uint32_t>(windowNode->GetRequestedOrientation())
+            << "[ "
+            << std::left << 5_width << rect.posX_
+            << std::left << 5_width << rect.posY_
+            << std::left << 5_width << rect.width_
+            << std::left << 5_width << rect.height_
+            << "]"
+            << std::endl;
+    }
+    oss << windowRoot_->GetWindowDumpInfoList();
+    dumpInfo.append(oss.str());
+
     return WMError::WM_OK;
 }
 
