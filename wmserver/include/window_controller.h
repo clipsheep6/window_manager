@@ -56,6 +56,9 @@ public:
     WMError UpdateProperty(sptr<WindowProperty>& property, PropertyChangeAction action);
     void NotifySystemBarTints();
     WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller);
+    //test
+    WMError SetTransitionController(const sptr<TransitionController>& controller);
+
     WMError GetModeChangeHotZones(DisplayId displayId,
         ModeChangeHotZones& hotZones, const ModeChangeHotZonesConfig& config);
     void StartingWindow(sptr<WindowTransitionInfo> info, sptr<Media::PixelMap> pixelMap,

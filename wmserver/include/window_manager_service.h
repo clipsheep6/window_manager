@@ -95,6 +95,8 @@ public:
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
 
     WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller) override;
+    //test
+    WMError SetTransitionController(const sptr<TransitionController>& controller) override;
     WMError GetSystemConfig(SystemConfig& systemConfig) override;
     WMError GetModeChangeHotZones(DisplayId displayId, ModeChangeHotZones& hotZones) override;
     void StartingWindow(sptr<WindowTransitionInfo> info, sptr<Media::PixelMap> pixelMap,
@@ -132,6 +134,8 @@ private:
     ModeChangeHotZonesConfig hotZonesConfig_ { false, 0, 0, 0 };
     std::unique_ptr<WindowTaskLooper> wmsTaskLooper_;
     bool startingOpen_ = true;
+    //test
+    sptr<TransitionController> transitonController_;
 };
 }
 }

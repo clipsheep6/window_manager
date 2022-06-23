@@ -15,6 +15,7 @@
 import { AsyncCallback, Callback } from './basic' ;
 import { Context } from  './app/context';
 import { ContenStorage } from './@internal/component/ets/stateManagement'
+import { TransitionController } from './@ohos.TransitionController'
 /**
  * Window manager.
  * @syscap SystemCapability.WindowManager.WindowManager.Core
@@ -540,6 +541,13 @@ declare namespace window {
       * @since 7
       */
     show(): Promise<void>;
+
+    //test
+    /**
+      * set transition controller.
+      * @since 9
+      */
+    CreateTransitionController(): Promise<TransitionController>;
 
     /**
      * Destroy the sub window.

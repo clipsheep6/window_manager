@@ -53,6 +53,8 @@ public:
     void UnregisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller) override;
+    //test
+    WMError SetTransitionController(const sptr<TransitionController>& controller) override;
 
     WMError GetAccessibilityWindowInfo(sptr<AccessibilityWindowInfo>& windowInfo) override;
     WMError GetSystemConfig(SystemConfig& systemConfig) override;

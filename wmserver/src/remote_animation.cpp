@@ -50,6 +50,22 @@ WMError RemoteAnimation::SetWindowAnimationController(const sptr<RSIWindowAnimat
     windowAnimationController_ = controller;
     return WMError::WM_OK;
 }
+//test
+WMError RemoteAnimation::SetTransitionController(const sptr<TransitionController>& controller)
+{
+    WLOGFI("RSWindowAnimation: set window animation controller!");
+    if (controller == nullptr) {
+        WLOGFE("RSWindowAnimation: failed to set window animation controller, controller is null!");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    if (transtitionController_ != nullptr) {
+        WLOGFI("RSWindowAnimation: maybe user switch!");
+    }
+
+    transtitionController_ = controller;
+    return WMError::WM_OK;
+}
 
 bool RemoteAnimation::CheckAnimationController()
 {
