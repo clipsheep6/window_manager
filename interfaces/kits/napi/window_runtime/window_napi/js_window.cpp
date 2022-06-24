@@ -96,6 +96,13 @@ NativeValue* JsWindow::Hide(NativeEngine* engine, NativeCallbackInfo* info)
     return (me != nullptr) ? me->OnHide(*engine, *info) : nullptr;
 }
 
+NativeValue* JsWindow::CreateTransitionController(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGFI("[NAPI]CreateTransitionController");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
+    return (me != nullptr) ? me->OnCreateTransitionController(*engine, *info) : nullptr;
+}
+
 NativeValue* JsWindow::MoveTo(NativeEngine* engine, NativeCallbackInfo* info)
 {
     WLOGFI("[NAPI]MoveTo");
@@ -320,6 +327,32 @@ NativeValue* JsWindow::OnShow(NativeEngine& engine, NativeCallbackInfo& info)
         WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
+
+    NativeValue* lastParam = nullptr;
+    bool isAnimated = false;
+    if (info.argc == 1) { // 1: num of params
+        NativeValue* value = info.argv[0];
+        if (value->TypeOf() == NATIVE_FUNCTION) {
+            lastParam = info.argv[0];
+        } else {
+            NativeBoolean* nativeVal = ConvertNativeValueTo<NativeBoolean>(info.argv[0]);
+            if (nativeVal == nullptr) {
+                WLOGFE("[NAPI]Failed to convert parameter to isAnimated");
+                errCode = WMError::WM_ERROR_INVALID_PARAM;
+            } else {
+                isAnimated = static_cast<bool>(*nativeVal);
+            }
+        }
+    } else if (info.argc == 2) { // 2: num of params
+        lastParam = info.argv[0];
+        NativeBoolean* nativeVal = ConvertNativeValueTo<NativeBoolean>(info.argv[1]);
+        if (nativeVal == nullptr) {
+            WLOGFE("[NAPI]Failed to convert parameter to isAnimated");
+            errCode = WMError::WM_ERROR_INVALID_PARAM;
+        } else {
+            isAnimated = static_cast<bool>(*nativeVal);
+        }
+    }
     wptr<Window> weakToken(windowToken_);
     AsyncTask::CompleteCallback complete =
         [weakToken, errCode](NativeEngine& engine, AsyncTask& task, int32_t status) {
@@ -329,7 +362,7 @@ NativeValue* JsWindow::OnShow(NativeEngine& engine, NativeCallbackInfo& info)
                 WLOGFE("[NAPI]window is nullptr or get invalid param");
                 return;
             }
-            WMError ret = weakWindow->Show();
+            WMError ret = weakWindow->Show(isAnimated);
             if (ret == WMError::WM_OK) {
                 task.Resolve(engine, engine.CreateUndefined());
             } else {
@@ -343,6 +376,42 @@ NativeValue* JsWindow::OnShow(NativeEngine& engine, NativeCallbackInfo& info)
         (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
     NativeValue* result = nullptr;
     AsyncTask::Schedule("JsWindow::OnShow",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
+NativeValue* JsWindow::OnCreateTransitionController(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    WMError errCode = WMError::WM_OK;
+    if (info.argc > 1) {
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+    }
+    wptr<Window> weakToken(windowToken_);
+    AsyncTask::CompleteCallback complete =
+        [weakToken, errCode](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            auto weakWindow = weakToken.promote();
+            if (weakWindow == nullptr || errCode != WMError::WM_OK) {
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode)));
+                WLOGFE("[NAPI]window is nullptr or get invalid param");
+                return;
+            }
+
+            auto objValue = weakWindow->CreateTransitionController();
+            if (objValue != nullptr) {
+                task.Resolve(engine, objValue);
+            } else {
+                task.Reject(engine, CreateJsError(engine,
+                    static_cast<int32_t>(WMError::WM_ERROR_NULLPTR), "Window create transition controller failed"));
+            }
+            WLOGFI("[NAPI]Window [%{public}u, %{public}s] create transition controller end, objValue = %{public}p",
+                weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), objValue);
+        };
+
+    NativeValue* lastParam = (info.argc == 0) ? nullptr :
+        (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule("JsWindow::OnCreateTransitionController",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -389,6 +458,32 @@ NativeValue* JsWindow::OnHide(NativeEngine& engine, NativeCallbackInfo& info)
         WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
+    NativeValue* lastParam = nullptr;
+    bool isAnimated = false;
+    if (info.argc == 1) { // 1: num of params
+        NativeValue* value = info.argv[0];
+        if (value->TypeOf() == NATIVE_FUNCTION) {
+            lastParam = info.argv[0];
+        } else {
+            NativeBoolean* nativeVal = ConvertNativeValueTo<NativeBoolean>(info.argv[0]);
+            if (nativeVal == nullptr) {
+                WLOGFE("[NAPI]Failed to convert parameter to isAnimated");
+                errCode = WMError::WM_ERROR_INVALID_PARAM;
+            } else {
+                isAnimated = static_cast<bool>(*nativeVal);
+            }
+        }
+    } else if (info.argc == 2) { // 2: num of params
+        lastParam = info.argv[0];
+        NativeBoolean* nativeVal = ConvertNativeValueTo<NativeBoolean>(info.argv[1]);
+        if (nativeVal == nullptr) {
+            WLOGFE("[NAPI]Failed to convert parameter to isAnimated");
+            errCode = WMError::WM_ERROR_INVALID_PARAM;
+        } else {
+            isAnimated = static_cast<bool>(*nativeVal);
+        }
+    }
+
     wptr<Window> weakToken(windowToken_);
     AsyncTask::CompleteCallback complete =
         [weakToken, errCode](NativeEngine& engine, AsyncTask& task, int32_t status) {
@@ -398,7 +493,7 @@ NativeValue* JsWindow::OnHide(NativeEngine& engine, NativeCallbackInfo& info)
                 WLOGFE("[NAPI]window is nullptr or get invalid param");
                 return;
             }
-            WMError ret = weakWindow->Hide();
+            WMError ret = weakWindow->Hide(isAnimated);
             if (ret == WMError::WM_OK) {
                 task.Resolve(engine, engine.CreateUndefined());
             } else {
@@ -408,8 +503,6 @@ NativeValue* JsWindow::OnHide(NativeEngine& engine, NativeCallbackInfo& info)
                 weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), ret);
         };
 
-    NativeValue* lastParam = (info.argc == 0) ? nullptr :
-        (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
     NativeValue* result = nullptr;
     AsyncTask::Schedule("JsWindow::OnHide",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
@@ -1713,6 +1806,7 @@ void BindFunctions(NativeEngine& engine, NativeObject* object)
     BindNativeFunction(engine, *object, "dump", JsWindow::Dump);
     BindNativeFunction(engine, *object, "setForbidSplitMove", JsWindow::SetForbidSplitMove);
     BindNativeFunction(engine, *object, "setRequestedOrientation", JsWindow::SetRequestedOrientation);
+    BindNativeFunction(engine, *object, "createTransitionController", JsWindow::CreateTransitionController);
 }
 }  // namespace Rosen
 }  // namespace OHOS
