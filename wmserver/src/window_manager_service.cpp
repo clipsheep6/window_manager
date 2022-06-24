@@ -594,7 +594,6 @@ WMError WindowManagerService::GetAccessibilityWindowInfo(sptr<AccessibilityWindo
         return WMError::WM_ERROR_NULLPTR;
     }
     return wmsTaskLooper_->ScheduleTask([this, &windowInfo]() {
-        WM_SCOPED_TRACE("wms:GetAccessibilityWindowInfo");
         return windowRoot_->GetAccessibilityWindowInfo(windowInfo);
     }).get();
 }
