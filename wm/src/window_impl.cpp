@@ -2032,13 +2032,11 @@ void WindowImpl::NotifyDragEvent(const PointInfo& point, DragEvent event)
         windowDragListeners = windowDragListeners_;
     }
     Rect rect = GetRect();
-    PostListenerTask([windowDragListeners, rect, point, event]() {
-        for (auto& listener : windowDragListeners) {
-            if (listener != nullptr) {
-                listener->OnDrag(point.x - rect.posX_, point.y - rect.posY_, event);
-            }
+    for (auto& listener : windowDragListeners) {
+        if (listener != nullptr) {
+            listener->OnDrag(point.x - rect.posX_, point.y - rect.posY_, event);
         }
-    });
+    }
 }
 
 void WindowImpl::UpdateDisplayId(DisplayId from, DisplayId to)
@@ -2071,13 +2069,11 @@ void WindowImpl::NotifyTouchOutside()
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         touchOutsideListeners = touchOutsideListeners_;
     }
-    PostListenerTask([touchOutsideListeners]() {
-        for (auto& touchOutsideListener : touchOutsideListeners) {
-            if (touchOutsideListener != nullptr) {
-                touchOutsideListener->OnTouchOutside();
-            }
+    for (auto& touchOutsideListener : touchOutsideListeners) {
+        if (touchOutsideListener != nullptr) {
+            touchOutsideListener->OnTouchOutside();
         }
-    });
+    }
 }
 
 void WindowImpl::NotifySizeChange(Rect rect, WindowSizeChangeReason reason)
@@ -2087,13 +2083,11 @@ void WindowImpl::NotifySizeChange(Rect rect, WindowSizeChangeReason reason)
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         windowChangeListeners = windowChangeListeners_;
     }
-    PostListenerTask([windowChangeListeners, rect, reason]() {
-        for (auto& listener : windowChangeListeners) {
-            if (listener != nullptr) {
-                listener->OnSizeChange(rect, reason);
-            }
+    for (auto& listener : windowChangeListeners) {
+        if (listener != nullptr) {
+            listener->OnSizeChange(rect, reason);
         }
-    });
+    }
 }
 
 void WindowImpl::NotifyKeyEvent(std::shared_ptr<MMI::KeyEvent> &keyEvent)
@@ -2103,13 +2097,11 @@ void WindowImpl::NotifyKeyEvent(std::shared_ptr<MMI::KeyEvent> &keyEvent)
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         inputEventListeners = inputEventListeners_;
     }
-    PostListenerTask([this, inputEventListeners, keyEvent]() mutable {
-        for (auto& listener : inputEventListeners) {
-            if (listener != nullptr) {
-                listener->OnKeyEvent(keyEvent);
-            }
+    for (auto& listener : inputEventListeners) {
+        if (listener != nullptr) {
+            listener->OnKeyEvent(keyEvent);
         }
-    });
+    }
 }
 
 void WindowImpl::NotifyPointEvent(std::shared_ptr<MMI::PointerEvent>& pointerEvent)
@@ -2119,13 +2111,11 @@ void WindowImpl::NotifyPointEvent(std::shared_ptr<MMI::PointerEvent>& pointerEve
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         inputEventListeners = inputEventListeners_;
     }
-    PostListenerTask([this, inputEventListeners, pointerEvent]() mutable {
-        for (auto& listener : inputEventListeners) {
-            if (listener != nullptr) {
-                listener->OnPointerInputEvent(pointerEvent);
-            }
+    for (auto& listener : inputEventListeners) {
+        if (listener != nullptr) {
+            listener->OnPointerInputEvent(pointerEvent);
         }
-    });
+    }
 }
 
 void WindowImpl::NotifyAvoidAreaChange(const std::vector<Rect>& avoidArea)
@@ -2135,13 +2125,11 @@ void WindowImpl::NotifyAvoidAreaChange(const std::vector<Rect>& avoidArea)
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         avoidAreaChangeListeners = avoidAreaChangeListeners_;
     }
-    PostListenerTask([avoidAreaChangeListeners, avoidArea]() {
-        for (auto& listener : avoidAreaChangeListeners) {
-            if (listener != nullptr) {
-                listener->OnAvoidAreaChanged(avoidArea);
-            }
+    for (auto& listener : avoidAreaChangeListeners) {
+        if (listener != nullptr) {
+            listener->OnAvoidAreaChanged(avoidArea);
         }
-    });
+    }
 }
 
 void WindowImpl::NotifyDisplayMoveChange(DisplayId from, DisplayId to)
@@ -2151,13 +2139,11 @@ void WindowImpl::NotifyDisplayMoveChange(DisplayId from, DisplayId to)
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         displayMoveListeners = displayMoveListeners_;
     }
-    PostListenerTask([displayMoveListeners, from, to]() {
-        for (auto& listener : displayMoveListeners) {
-            if (listener != nullptr) {
-                listener->OnDisplayMove(from, to);
-            }
+    for (auto& listener : displayMoveListeners) {
+        if (listener != nullptr) {
+            listener->OnDisplayMove(from, to);
         }
-    });
+    }
 }
 
 void WindowImpl::NotifyModeChange(WindowMode mode)
@@ -2167,13 +2153,11 @@ void WindowImpl::NotifyModeChange(WindowMode mode)
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         windowChangeListeners = windowChangeListeners_;
     }
-    PostListenerTask([windowChangeListeners, mode]() {
-        for (auto& listener : windowChangeListeners) {
-            if (listener != nullptr) {
-                listener->OnModeChange(mode);
-            }
+    for (auto& listener : windowChangeListeners) {
+        if (listener != nullptr) {
+            listener->OnModeChange(mode);
         }
-    });
+    }
 }
 
 void WindowImpl::NotifyOccupiedAreaChange(const sptr<OccupiedAreaChangeInfo>& info)
@@ -2183,13 +2167,11 @@ void WindowImpl::NotifyOccupiedAreaChange(const sptr<OccupiedAreaChangeInfo>& in
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         occupiedAreaChangeListeners = occupiedAreaChangeListeners_;
     }
-    PostListenerTask([occupiedAreaChangeListeners, info]() mutable {
-        for (auto& listener : occupiedAreaChangeListeners) {
-            if (listener != nullptr) {
-                listener->OnSizeChange(info);
-            }
+    for (auto& listener : occupiedAreaChangeListeners) {
+        if (listener != nullptr) {
+            listener->OnSizeChange(info);
         }
-    });
+    }
 }
 
 void WindowImpl::SetNeedRemoveWindowInputChannel(bool needRemoveWindowInputChannel)

@@ -219,37 +219,27 @@ public:
 private:
     inline void NotifyAfterForeground()
     {
-        PostListenerTask([this]() {
-            CALL_LIFECYCLE_LISTENER(AfterForeground);
-            CALL_UI_CONTENT(Foreground);
-        });
+        CALL_LIFECYCLE_LISTENER(AfterForeground);
+        CALL_UI_CONTENT(Foreground);
     }
     inline void NotifyAfterBackground()
     {
-        PostListenerTask([this]() {
-            CALL_LIFECYCLE_LISTENER(AfterBackground);
-            CALL_UI_CONTENT(Background);
-        });
+        CALL_LIFECYCLE_LISTENER(AfterBackground);
+        CALL_UI_CONTENT(Background);
     }
     inline void NotifyAfterFocused()
     {
-        PostListenerTask([this]() {
-            CALL_LIFECYCLE_LISTENER(AfterFocused);
-            CALL_UI_CONTENT(Focus);
-        });
+        CALL_LIFECYCLE_LISTENER(AfterFocused);
+        CALL_UI_CONTENT(Focus);
     }
     inline void NotifyAfterUnfocused()
     {
-        PostListenerTask([this]() {
-            CALL_LIFECYCLE_LISTENER(AfterUnfocused);
-            CALL_UI_CONTENT(UnFocus);
-        });
+        CALL_LIFECYCLE_LISTENER(AfterUnfocused);
+        CALL_UI_CONTENT(UnFocus);
     }
     inline void NotifyListenerAfterUnfocused()
     {
-        PostListenerTask([this]() {
-            CALL_LIFECYCLE_LISTENER(AfterUnfocused);
-        });
+        CALL_LIFECYCLE_LISTENER(AfterUnfocused);
     }
     inline void NotifyBeforeDestroy(std::string windowName)
     {
@@ -274,21 +264,15 @@ private:
     }
     inline void NotifyAfterActive()
     {
-        PostListenerTask([this]() {
-            CALL_LIFECYCLE_LISTENER(AfterActive);
-        });
+        CALL_LIFECYCLE_LISTENER(AfterActive);
     }
     inline void NotifyAfterInactive()
     {
-        PostListenerTask([this]() {
-            CALL_LIFECYCLE_LISTENER(AfterInactive);
-        });
+        CALL_LIFECYCLE_LISTENER(AfterInactive);
     }
     inline void NotifyForegroundFailed()
     {
-        PostListenerTask([this]() {
-            CALL_LIFECYCLE_LISTENER(ForegroundFailed);
-        });
+        CALL_LIFECYCLE_LISTENER(ForegroundFailed);
     }
     void DestroyFloatingWindow();
     void DestroySubWindow();
