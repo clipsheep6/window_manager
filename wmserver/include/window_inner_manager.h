@@ -21,7 +21,6 @@
 #include "event_runner.h"
 
 #include <ui/rs_surface_node.h>
-
 #include "draw/canvas.h"
 #include "nocopyable.h"
 #include "pixel_map.h"

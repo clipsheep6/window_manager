@@ -327,6 +327,12 @@ void WindowPair::UpdateIfSplitRelated(sptr<WindowNode>& node)
         WLOGI("Window id: %{public}u is not split related and paired.", node->GetWindowId());
         return;
     }
+    if ((node->GetWindowType() == WindowType::WINDOW_TYPE_PLACE_HOLDER) &&
+        ((primary_ != nullptr && primary_->GetWindowMode() == node->GetWindowMode()) ||
+        (secondary_ != nullptr && secondary_->GetWindowMode() == node->GetWindowMode()))) {
+        WindowInnerManager::GetInstance().DestroyPlaceHolderWindow();
+        return;
+    }
     WLOGI("Current status: %{public}u, window id: %{public}u mode: %{public}u",
         status_, node->GetWindowId(), node->GetWindowMode());
     if (status_ == WindowPairStatus::STATUS_EMPTY) {
@@ -336,9 +342,6 @@ void WindowPair::UpdateIfSplitRelated(sptr<WindowNode>& node)
             WindowMode holderMode = node->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ?
                 WindowMode::WINDOW_MODE_SPLIT_SECONDARY : WindowMode::WINDOW_MODE_SPLIT_PRIMARY;
             WindowInnerManager::GetInstance().CreatePlaceHolderWindow(holderMode, displayId_);
-            // sptr<WindowNode> pairableNode = GetPairableWindow(node);
-            // insert pairable node
-            // Insert(pairableNode);
         }
     } else {
         if (Find(node) == nullptr) {
@@ -350,38 +353,6 @@ void WindowPair::UpdateIfSplitRelated(sptr<WindowNode>& node)
         }
     }
 }
-
-// void WindowPair::UpdateIfSplitRelated(sptr<WindowNode>& node)
-// {
-//     if (node == nullptr) {
-//         WLOGI("Window is nullptr.");
-//         return;
-//     }
-//     if (Find(node) == nullptr && !IsSplitRelated(node)) {
-//         WLOGI("Window id: %{public}u is not split related and paired.", node->GetWindowId());
-//         return;
-//     }
-//     WindowMode mode = node->GetWindowMode();
-//     WindowType type = node->GetWindowType();
-//     switch(status_) {
-//         case WindowPairStatus::STATUS_EMPTY: {
-//             if ()
-//             break;
-//         }
-//         case WindowPairStatus::STATUS_SINGLE_PRIMARY: {
-//             break;
-//         }
-//         case WindowPairStatus::STATUS_SINGLE_SECONDARY: {
-//             break;
-//         }
-//         case WindowPairStatus::STATUS_PAIRING: {
-//             break;
-//         }
-//         case WindowPairStatus::STATUS_PAIRED_DONE {
-//             break;
-//         }
-//     }
-// }
 
 void WindowPair::UpdateWindowPairStatus()
 {

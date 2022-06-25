@@ -81,7 +81,6 @@ public:
     bool IsAppWindowsEmpty() const;
     void ProcessWindowStateChange(WindowState state, WindowStateChangeReason reason);
     void NotifySystemBarTints(std::vector<DisplayId> displayIdVec);
-    void NotifySystemBarDismiss(sptr<WindowNode>& node);
     WMError MinimizeAppNodeExceptOptions(MinimizeReason reason, const std::vector<uint32_t> &exceptionalIds = {},
                                          const std::vector<WindowMode> &exceptionalModes = {});
     WMError SetWindowMode(sptr<WindowNode>& node, WindowMode dstMode);
@@ -106,6 +105,7 @@ public:
     sptr<DisplayGroupController> GetMultiDisplayController() const;
     sptr<WindowNode> GetRootNode(WindowRootNodeType type) const;
     void NotifyDockWindowStateChanged(sptr<WindowNode>& node, bool isEnable);
+    void UpdateCameraFloatWindowStatus(const sptr<WindowNode>& node, bool isShowing);
 
 private:
     void TraverseWindowNode(sptr<WindowNode>& root, std::vector<sptr<WindowNode>>& windowNodes) const;

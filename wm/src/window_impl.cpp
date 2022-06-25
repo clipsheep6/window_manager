@@ -16,10 +16,11 @@
 #include "window_impl.h"
 
 #include <cmath>
+#include <sstream>
 
 #include <ability_manager_client.h>
 #include <hisysevent.h>
-#include <sstream>
+#include "ipc_skeleton.h"
 
 #include "color_parser.h"
 #include "display_manager.h"
@@ -1015,6 +1016,8 @@ WMError WindowImpl::SetBackgroundColor(const std::string& color)
     }
     uint32_t colorValue;
     if (ColorParser::Parse(color, colorValue)) {
+        WLOGFI("SetBackgroundColor: window: %{public}s, value: [%{public}s, %{public}u]",
+            name_.c_str(), color.c_str(), colorValue);
         return SetBackgroundColor(colorValue);
     }
     WLOGFE("invalid color string: %{public}s", color.c_str());
@@ -2345,6 +2348,9 @@ bool WindowImpl::CheckCameraFloatingWindowMultiCreated(WindowType type)
             return true;
         }
     }
+    uint32_t accessTokenId = static_cast<uint32_t>(IPCSkeleton::GetCallingTokenID());
+    property_->SetAccessTokenId(accessTokenId);
+    WLOGFI("Create camera float window, accessTokenId = %{public}u", accessTokenId);
     return false;
 }
 } // namespace Rosen

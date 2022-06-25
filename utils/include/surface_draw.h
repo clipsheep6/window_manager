@@ -43,14 +43,17 @@ public:
     void DrawSkImage(std::shared_ptr<RSSurfaceNode> surfaceNode, Rect winRect,
         sptr<Media::PixelMap> pixelMap, uint32_t bkgColor);
 
-    bool DrawWindow(sptr<OHOS::Rosen::Window> window, int32_t bufferWidth, int32_t bufferHeight,
-        Drawing::Color color);
-    bool DrawWindow(sptr<OHOS::Rosen::Window> window, int32_t bufferWidth, int32_t bufferHeight,
+    bool DrawWindow(std::shared_ptr<OHOS::Rosen::RSSurfaceNode> surfaceNode, int32_t bufferWidth, int32_t bufferHeight,
+        uint32_t color);
+    bool DrawWindow(std::shared_ptr<OHOS::Rosen::RSSurfaceNode> surfaceNode, int32_t bufferWidth, int32_t bufferHeight,
         const std::string& imagePath);
-    sptr<OHOS::Surface> GetLayer(sptr<OHOS::Rosen::Window> window);
-    sptr<OHOS::SurfaceBuffer> GetSurfaceBuffer(sptr<OHOS::Surface> layer) const;
-    void DoDraw(uint8_t *addr, uint32_t width, uint32_t height);
-    void DrawPixelmap(OHOS::Rosen::Drawing::Canvas &canvas);
+    bool DoDraw(uint8_t *addr, uint32_t width, uint32_t height, const std::string& imagePath);
+    bool DoDraw(uint8_t *addr, uint32_t width, uint32_t height, uint32_t color);
+    sptr<OHOS::Surface> GetLayer(std::shared_ptr<OHOS::Rosen::RSSurfaceNode> surfaceNode);
+    sptr<OHOS::SurfaceBuffer> GetSurfaceBuffer(sptr<OHOS::Surface> layer,
+        int32_t bufferWidth, int32_t bufferHeight) const;
+
+    void DrawPixelmap(OHOS::Rosen::Drawing::Canvas &canvas, const std::string& imagePath);
     std::unique_ptr<OHOS::Media::PixelMap> DecodeImageToPixelMap(const std::string &imagePath);
 private:
 

@@ -15,9 +15,9 @@
 
 #include "window_inner_manager.h"
 
+#include "draw_surface.h"
 #include "ui_service_mgr_client.h"
 #include "window_manager_hilog.h"
-
 #include "image/bitmap.h"
 #include "image_source.h"
 #include "image_type.h"
@@ -206,32 +206,36 @@ void WindowInnerManager::HandleCreatePlaceHolderWindow(WindowMode mode, DisplayI
     placeHolderwindow_->RegisterTouchOutsideListener(touchOutsideListener);
     // placeHolderwindow_->RegisterInputEventListener(inputListener);
     placeHolderwindow_->RegisterLifeCycleListener(lifeCycleListener);
-    placeHolderwindow_->Show();
-
-    sptr<OHOS::Surface> layer = GetLayer();
-    if (layer == nullptr) {
-        placeHolderwindow_->Destroy();
-        placeHolderwindow_ = nullptr;
-        return;
+    // placeHolderwindow_->Show();
+    if (!OHOS::Rosen::DrawSurface::DrawImage(placeHolderwindow_->GetSurfaceNode(),
+        IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_PLACE_HOLDER_PNG_PATH)) {
+            WLOGE("draw surface failed");
+            return;
     }
+    // sptr<OHOS::Surface> layer = GetLayer();
+    // if (layer == nullptr) {
+    //     placeHolderwindow_->Destroy();
+    //     placeHolderwindow_ = nullptr;
+    //     return;
+    // }
 
-    sptr<OHOS::SurfaceBuffer> buffer = GetSurfaceBuffer(layer);
-    if (buffer == nullptr || buffer->GetVirAddr() == nullptr) {
-        placeHolderwindow_->Destroy();
-        placeHolderwindow_ = nullptr;
-        return;
-    }
+    // sptr<OHOS::SurfaceBuffer> buffer = GetSurfaceBuffer(layer);
+    // if (buffer == nullptr || buffer->GetVirAddr() == nullptr) {
+    //     placeHolderwindow_->Destroy();
+    //     placeHolderwindow_ = nullptr;
+    //     return;
+    // }
 
-    auto addr = static_cast<uint8_t *>(buffer->GetVirAddr());
-    DoDraw(addr, buffer->GetWidth(), buffer->GetHeight());
-    OHOS::BufferFlushConfig flushConfig = {
-        .damage = {
-            .w = buffer->GetWidth(),
-            .h = buffer->GetHeight(),
-        },
-    };
-    OHOS::SurfaceError ret = layer->FlushBuffer(buffer, -1, flushConfig);
-    WLOGFD("draw pointer FlushBuffer ret:%{public}s", SurfaceErrorStr(ret).c_str());
+    // auto addr = static_cast<uint8_t *>(buffer->GetVirAddr());
+    // DoDraw(addr, buffer->GetWidth(), buffer->GetHeight());
+    // OHOS::BufferFlushConfig flushConfig = {
+    //     .damage = {
+    //         .w = buffer->GetWidth(),
+    //         .h = buffer->GetHeight(),
+    //     },
+    // };
+    // OHOS::SurfaceError ret = layer->FlushBuffer(buffer, -1, flushConfig);
+    // WLOGFD("draw pointer FlushBuffer ret:%{public}s", SurfaceErrorStr(ret).c_str());
     placeHolderwindow_->Show();
     return;
 }
