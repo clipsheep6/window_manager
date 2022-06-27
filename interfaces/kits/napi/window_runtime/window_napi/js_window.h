@@ -68,6 +68,7 @@ public:
     static NativeValue* GetColorSpace(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* Dump(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetForbidSplitMove(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* CreateTransitionController(NativeEngine* engine, NativeCallbackInfo* info);
 
 private:
     std::string GetWindowName();
@@ -89,6 +90,7 @@ private:
     NativeValue* OnGetAvoidArea(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnIsShowing(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnSetRequestedOrientation(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnCreateTransitionController(NativeEngine& engine, NativeCallbackInfo& info);
 
     // colorspace, gamut
     NativeValue* OnIsSupportWideGamut(NativeEngine& engine, NativeCallbackInfo& info);

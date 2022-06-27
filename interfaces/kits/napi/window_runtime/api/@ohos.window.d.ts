@@ -526,32 +526,55 @@ declare namespace window {
     WIDE_GAMUT,
   }
 
+  interface TransitionContext {
+    fromWindow: Window;
+    toWindow: Window;
+    completaTransition(isCompleted: boolean);
+  }
+
+  interface TransitionController {
+    animationForHidden(context: TransitionContext): void;
+    animationForShowed(context: TransitionContext): void;
+  }
+
   interface Window {
     /**
      * hide sub window.
      * @systemapi Hide this for inner system use.
      * @since 7
      */
-    hide (callback: AsyncCallback<void>): void;
+    hide (callback: AsyncCallback<void>, animated ?: boolean): void;
 
     /**
       * hide sub window.
       * @systemapi Hide this for inner system use.
       * @since 7
       */
-    hide(): Promise<void>;
+    hide(animated ?: boolean): Promise<void>;
 
     /**
       * show sub window.
       * @since 7
       */
-    show(callback: AsyncCallback<void>): void;
+    show(callback: AsyncCallback<void>, animated ?: boolean): void;
 
     /**
       * show sub window.
       * @since 7
       */
-    show(): Promise<void>;
+    show(animated ?: boolean): Promise<void>;
+
+    /**
+      * set transition controller.
+      * @since 9
+      */
+    createTransitionController(): Promise<TransitionController>;
+
+    /**
+      * set transition controller.
+      * @since 9
+      */
+    createTransitionController(callback: AsyncCallback<TransitionController>): void;
 
     /**
      * Destroy the sub window.
