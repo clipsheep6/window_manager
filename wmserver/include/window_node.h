@@ -46,7 +46,7 @@ public:
     ~WindowNode();
 
     void SetDisplayId(DisplayId displayId);
-    void SetHotZoneRect(const Rect& rect);
+    void SetFullWindowHotArea(const Rect& rect);
     void SetWindowRect(const Rect& rect);
     void SetDecoStatus(bool decoStatus);
     void SetRequestRect(const Rect& rect);
@@ -71,13 +71,14 @@ public:
     void SetModeSupportInfo(uint32_t modeSupportInfo);
     void SetDragType(DragType dragType);
     void SetOriginRect(const Rect& rect);
+    void SetTouchHotAreas(const std::vector<Rect>& rects);
 
     const sptr<IWindow>& GetWindowToken() const;
     uint32_t GetWindowId() const;
     uint32_t GetParentId() const;
     const std::string& GetWindowName() const;
     DisplayId GetDisplayId() const;
-    Rect GetHotZoneRect() const;
+    Rect GetFullWindowHotArea() const;
     Rect GetWindowRect() const;
     bool GetDecoStatus() const;
     Rect GetRequestRect() const;
@@ -102,6 +103,8 @@ public:
     bool GetStretchable() const;
     const Rect& GetOriginRect() const;
     void ResetWindowSizeChangeReason();
+    void GetTouchHotAreas(std::vector<Rect>& rects) const;
+    uint32_t GetAccessTokenId() const;
 
     sptr<WindowNode> parent_;
     std::vector<sptr<WindowNode>> children_;
@@ -113,7 +116,7 @@ public:
     int32_t priority_ { 0 };
     bool requestedVisibility_ { false };
     bool currentVisibility_ { false };
-    bool isCovered_ { true }; // initial value true to ensure notification when this window is shown
+    bool isVisible_ { false };
     bool isAppCrash_ { false };
     bool isPlayAnimationShow_ { false };
     bool isPlayAnimationHide_ { false };
@@ -124,7 +127,8 @@ public:
 private:
     sptr<WindowProperty> property_ = nullptr;
     sptr<IWindow> windowToken_ = nullptr;
-    Rect hotZoneRect_ { 0, 0, 0, 0 };
+    Rect fullWindowHotArea_ { 0, 0, 0, 0 };
+    std::vector<Rect> touchHotAreas_; // coordinates relative to display.
     int32_t callingPid_ = { 0 };
     int32_t callingUid_ = { 0 };
     WindowSizeChangeReason windowSizeChangeReason_ {WindowSizeChangeReason::UNDEFINED};

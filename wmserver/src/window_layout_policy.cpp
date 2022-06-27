@@ -85,7 +85,7 @@ void WindowLayoutPolicy::LimitWindowToBottomRightCorner(const sptr<WindowNode>& 
 void WindowLayoutPolicy::UpdateDisplayGroupRect()
 {
     Rect newDisplayGroupRect = { 0, 0, 0, 0 };
-    // current mutiDisplay is only support left-right combination, maxNum is two
+    // current multi-display is only support left-right combination, maxNum is two
     for (auto& elem : displayGroupInfo_->GetAllDisplayRects()) {
         newDisplayGroupRect.posX_ = std::min(displayGroupRect_.posX_, elem.second.posX_);
         newDisplayGroupRect.posY_ = std::min(displayGroupRect_.posY_, elem.second.posY_);
@@ -151,10 +151,10 @@ void WindowLayoutPolicy::UpdateMultiDisplayFlag()
 {
     if (displayGroupInfo_->GetAllDisplayRects().size() > 1) {
         isMultiDisplay_ = true;
-        WLOGFI("current mode is muti-display");
+        WLOGFI("current mode is multi-display");
     } else {
         isMultiDisplay_ = false;
-        WLOGFI("current mode is not muti-display");
+        WLOGFI("current mode is not multi-display");
     }
 }
 
@@ -355,7 +355,6 @@ void WindowLayoutPolicy::UpdateClientRectAndResetReason(const sptr<WindowNode>& 
 
 void WindowLayoutPolicy::RemoveWindowNode(const sptr<WindowNode>& node)
 {
-    WM_FUNCTION_TRACE();
     auto type = node->GetWindowType();
     // affect other windows, trigger off global layout
     if (avoidTypes_.find(type) != avoidTypes_.end()) {
@@ -371,7 +370,6 @@ void WindowLayoutPolicy::RemoveWindowNode(const sptr<WindowNode>& node)
 
 void WindowLayoutPolicy::UpdateWindowNode(const sptr<WindowNode>& node, bool isAddWindow)
 {
-    WM_FUNCTION_TRACE();
     auto type = node->GetWindowType();
     // affect other windows, trigger off global layout
     if (avoidTypes_.find(type) != avoidTypes_.end()) {
@@ -443,7 +441,18 @@ void WindowLayoutPolicy::CalcAndSetNodeHotZone(const Rect& winRect, const sptr<W
         rect.width_ += (hotZone + hotZone);
         rect.height_ += (hotZone + hotZone);
     }
-    node->SetHotZoneRect(rect);
+    node->SetFullWindowHotArea(rect);
+    std::vector<Rect> requestedHotAreas;
+    node->GetWindowProperty()->GetTouchHotAreas(requestedHotAreas);
+    std::vector<Rect> hotAreas;
+    if (requestedHotAreas.empty()) {
+        hotAreas.emplace_back(rect);
+    } else {
+        if (!WindowHelper::CalculateTouchHotAreas(winRect, requestedHotAreas, hotAreas)) {
+            WLOGFW("some parameters in requestedHotAreas are abnormal");
+        }
+    }
+    node->SetTouchHotAreas(hotAreas);
 }
 
 void WindowLayoutPolicy::FixWindowSizeByRatioIfDragBeyondLimitRegion(const sptr<WindowNode>& node, Rect& winRect,
@@ -527,8 +536,8 @@ FloatingWindowLimitsConfig WindowLayoutPolicy::GetCustomizedLimitsConfig(const R
     uint32_t configuredMaxHeight = static_cast<uint32_t>(floatingWindowLimitsConfig_.maxHeight_ * virtualPixelRatio);
     uint32_t configuredMinWidth = static_cast<uint32_t>(floatingWindowLimitsConfig_.minWidth_ * virtualPixelRatio);
     uint32_t configuredMinHeight = static_cast<uint32_t>(floatingWindowLimitsConfig_.minHeight_ * virtualPixelRatio);
-    float configuerdMaxRatio = floatingWindowLimitsConfig_.maxRatio_;
-    float configuerdMinRatio = floatingWindowLimitsConfig_.minRatio_;
+    float configuredMaxRatio = floatingWindowLimitsConfig_.maxRatio_;
+    float configuredMinRatio = floatingWindowLimitsConfig_.minRatio_;
 
     // calculate new limit size
     if (systemLimits.minWidth_ <= configuredMaxWidth && configuredMaxWidth <= systemLimits.maxWidth_) {
@@ -549,11 +558,11 @@ FloatingWindowLimitsConfig WindowLayoutPolicy::GetCustomizedLimitsConfig(const R
                                static_cast<float>(newLimitConfig.minHeight_);
     newLimitConfig.minRatio_ = static_cast<float>(newLimitConfig.minWidth_) /
                                static_cast<float>(newLimitConfig.maxHeight_);
-    if (newLimitConfig.minRatio_ <= configuerdMaxRatio && configuerdMaxRatio <= newLimitConfig.maxRatio_) {
-        newLimitConfig.maxRatio_ = configuerdMaxRatio;
+    if (newLimitConfig.minRatio_ <= configuredMaxRatio && configuredMaxRatio <= newLimitConfig.maxRatio_) {
+        newLimitConfig.maxRatio_ = configuredMaxRatio;
     }
-    if (newLimitConfig.minRatio_ <= configuerdMinRatio && configuerdMinRatio <= newLimitConfig.maxRatio_) {
-        newLimitConfig.minRatio_ = configuerdMinRatio;
+    if (newLimitConfig.minRatio_ <= configuredMinRatio && configuredMinRatio <= newLimitConfig.maxRatio_) {
+        newLimitConfig.minRatio_ = configuredMinRatio;
     }
 
     // recalculate limit size by new ratio
@@ -576,7 +585,7 @@ FloatingWindowLimitsConfig WindowLayoutPolicy::GetCustomizedLimitsConfig(const R
     return newLimitConfig;
 }
 
-void WindowLayoutPolicy::UpdateFloatongWindowSizeForStretchableWindow(const sptr<WindowNode>& node,
+void WindowLayoutPolicy::UpdateFloatingWindowSizeForStretchableWindow(const sptr<WindowNode>& node,
     const Rect& displayRect, Rect& winRect) const
 {
     if (node->GetWindowSizeChangeReason() == WindowSizeChangeReason::DRAG) {
@@ -671,7 +680,8 @@ void WindowLayoutPolicy::UpdateFloatingWindowSizeBySystemLimits(const sptr<Windo
         GetSystemLimitsConfig(displayRect, GetVirtualPixelRatio(node->GetDisplayId()));
 
     // limit minimum size of floating (not system type) window
-    if (!WindowHelper::IsSystemWindow(node->GetWindowType())) {
+    if (!WindowHelper::IsSystemWindow(node->GetWindowType()) ||
+        node->GetWindowType() == WindowType::WINDOW_TYPE_FLOAT_CAMERA) {
         winRect.width_ = std::max(systemLimits.minWidth_, winRect.width_);
         winRect.height_ = std::max(systemLimits.minHeight_, winRect.height_);
     }
@@ -699,7 +709,7 @@ void WindowLayoutPolicy::LimitFloatingWindowSize(const sptr<WindowNode>& node,
 
     if (node->GetStretchable() &&
         WindowHelper::IsMainFloatingWindow(node->GetWindowType(), node->GetWindowMode())) {
-        UpdateFloatongWindowSizeForStretchableWindow(node, displayRect, winRect);
+        UpdateFloatingWindowSizeForStretchableWindow(node, displayRect, winRect);
     }
 
     // fix size in case of moving window when dragging
@@ -803,7 +813,7 @@ void WindowLayoutPolicy::LimitWindowPositionWhenInitRectOrMove(const sptr<Window
     uint32_t windowTitleBarH = static_cast<uint32_t>(WINDOW_TITLE_BAR_HEIGHT * virtualPixelRatio);
 
     Rect limitRect;
-    // if is corss-display window, the limit rect should be full limitRect
+    // if is cross-display window, the limit rect should be full limitRect
     if (node->isShowingOnMultiDisplays_) {
         limitRect = displayGroupLimitRect_;
     } else {
@@ -947,14 +957,17 @@ bool WindowLayoutPolicy::IsFullScreenRecentWindowExist(const std::vector<sptr<Wi
     return false;
 }
 
-void WindowLayoutPolicy::UpdateSurfaceBounds(const sptr<WindowNode>& node, const Rect& winRect)
+void WindowLayoutPolicy::UpdateSurfaceBounds(const sptr<WindowNode>& node, const Rect& winRect, const Rect& preRect)
 {
     if (node->GetWindowType() == WindowType::WINDOW_TYPE_APP_COMPONENT) {
         WLOGFI("not need to update bounds");
         return;
     }
     if (node->leashWinSurfaceNode_) {
-        node->leashWinSurfaceNode_->SetBounds(winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
+        if (winRect != preRect) {
+            // avoid animation change suddenly when client coming
+            node->leashWinSurfaceNode_->SetBounds(winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
+        }
         if (node->startingWinSurfaceNode_) {
             node->startingWinSurfaceNode_->SetBounds(0, 0, winRect.width_, winRect.height_);
         }
@@ -983,7 +996,7 @@ void WindowLayoutPolicy::SetFloatingWindowLimitsConfig(const FloatingWindowLimit
 
 Rect WindowLayoutPolicy::GetInitalDividerRect(DisplayId displayId) const
 {
-    return IVALID_EMPTY_RECT;
+    return INVALID_EMPTY_RECT;
 }
 }
 }

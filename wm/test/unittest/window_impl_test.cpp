@@ -555,7 +555,7 @@ HWTEST_F(WindowImplTest, SetSystemBarProperty02, Function | SmallTest | Level3)
 
     EXPECT_CALL(m->Mock(), AddWindow(_)).Times(1).WillOnce(Return(WMError::WM_OK));
     window->Show();
-    EXPECT_CALL(m->Mock(), UpdateProperty(_, _, _)).Times(1).WillOnce(Return(WMError::WM_ERROR_SAMGR));
+    EXPECT_CALL(m->Mock(), UpdateProperty(_, _)).Times(1).WillOnce(Return(WMError::WM_ERROR_SAMGR));
     WindowType type = WindowType::WINDOW_TYPE_STATUS_BAR;
     const SystemBarProperty SYS_BAR_PROP(false, 0xE5222222, 0xE5333333);
     ASSERT_EQ(WMError::WM_ERROR_SAMGR, window->SetSystemBarProperty(type, SYS_BAR_PROP));
@@ -596,7 +596,7 @@ HWTEST_F(WindowImplTest, GetSystemBarPropertyByType01, Function | SmallTest | Le
 
     EXPECT_CALL(m->Mock(), AddWindow(_)).Times(1).WillOnce(Return(WMError::WM_OK));
     ASSERT_EQ(WMError::WM_OK, window->Show());
-    EXPECT_CALL(m->Mock(), UpdateProperty(_, _, _)).Times(1).WillOnce(Return(WMError::WM_OK));
+    EXPECT_CALL(m->Mock(), UpdateProperty(_, _)).Times(1).WillOnce(Return(WMError::WM_OK));
     WindowType type = WindowType::WINDOW_TYPE_STATUS_BAR;
     const SystemBarProperty SYS_BAR_PROP(false, 0xE5222222, 0xE5333344);
     ASSERT_EQ(WMError::WM_OK, window->SetSystemBarProperty(type, SYS_BAR_PROP));
@@ -623,7 +623,7 @@ HWTEST_F(WindowImplTest, GetSystemBarPropertyByType02, Function | SmallTest | Le
 
     EXPECT_CALL(m->Mock(), AddWindow(_)).Times(1).WillOnce(Return(WMError::WM_OK));
     window->Show();
-    EXPECT_CALL(m->Mock(), UpdateProperty(_, _, _)).Times(1).WillOnce(Return(WMError::WM_OK));
+    EXPECT_CALL(m->Mock(), UpdateProperty(_, _)).Times(1).WillOnce(Return(WMError::WM_OK));
     const SystemBarProperty SYS_BAR_PROP(false, 0xE5222222, 0xE5333333);
     const SystemBarProperty DEFAULT_PROP;
     ASSERT_EQ(WMError::WM_OK, window->SetSystemBarProperty(WindowType::WINDOW_TYPE_STATUS_BAR, SYS_BAR_PROP));
@@ -650,7 +650,7 @@ HWTEST_F(WindowImplTest, GetSystemBarPropertyByType03, Function | SmallTest | Le
 
     EXPECT_CALL(m->Mock(), AddWindow(_)).Times(1).WillOnce(Return(WMError::WM_OK));
     window->Show();
-    EXPECT_CALL(m->Mock(), UpdateProperty(_, _, _)).Times(1).WillOnce(Return(WMError::WM_OK));
+    EXPECT_CALL(m->Mock(), UpdateProperty(_, _)).Times(1).WillOnce(Return(WMError::WM_OK));
     const SystemBarProperty SYS_BAR_PROP(false, 0xE5222222, 0xE5333366);
     const SystemBarProperty DEFAULT_PROP;
     ASSERT_EQ(WMError::WM_OK, window->SetSystemBarProperty(WindowType::WINDOW_TYPE_STATUS_BAR, SYS_BAR_PROP));
@@ -704,7 +704,7 @@ HWTEST_F(WindowImplTest, Recover01, Function | SmallTest | Level3)
     window->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
     EXPECT_CALL(m->Mock(), AddWindow(_)).Times(1).WillOnce(Return(WMError::WM_OK));
     window->Show();
-    EXPECT_CALL(m->Mock(), UpdateProperty(_, _, _)).Times(1).WillOnce(Return(WMError::WM_OK));
+    EXPECT_CALL(m->Mock(), UpdateProperty(_, _)).Times(1).WillOnce(Return(WMError::WM_OK));
     window->Recover();
     ASSERT_EQ(WindowMode::WINDOW_MODE_FLOATING, window->GetMode());
     EXPECT_CALL(m->Mock(), RemoveWindow(_)).Times(1).WillOnce(Return(WMError::WM_OK));
@@ -1048,7 +1048,7 @@ HWTEST_F(WindowImplTest, SetTurnScreenOn02, Function | SmallTest | Level3)
     EXPECT_CALL(m->Mock(), AddWindow(_)).Times(1).WillOnce(Return(WMError::WM_OK));
     ASSERT_EQ(WMError::WM_OK, window->Show());
     ASSERT_FALSE(window->IsTurnScreenOn());
-    EXPECT_CALL(m->Mock(), UpdateProperty(_, _, _)).Times(2).WillOnce(Return(WMError::WM_OK))
+    EXPECT_CALL(m->Mock(), UpdateProperty(_, _)).Times(2).WillOnce(Return(WMError::WM_OK))
         .WillOnce(Return(WMError::WM_OK));
     ASSERT_EQ(WMError::WM_OK, window->SetTurnScreenOn(true));
     ASSERT_TRUE(window->IsTurnScreenOn());
@@ -1102,7 +1102,7 @@ HWTEST_F(WindowImplTest, SetKeepScreenOn02, Function | SmallTest | Level3)
     EXPECT_CALL(m->Mock(), AddWindow(_)).Times(1).WillOnce(Return(WMError::WM_OK));
     ASSERT_EQ(WMError::WM_OK, window->Show());
     ASSERT_FALSE(window->IsKeepScreenOn());
-    EXPECT_CALL(m->Mock(), UpdateProperty(_, _, _)).Times(2).WillOnce(Return(WMError::WM_OK))
+    EXPECT_CALL(m->Mock(), UpdateProperty(_, _)).Times(2).WillOnce(Return(WMError::WM_OK))
         .WillOnce(Return(WMError::WM_OK));;
     ASSERT_EQ(WMError::WM_OK, window->SetKeepScreenOn(true));
     ASSERT_TRUE(window->IsKeepScreenOn());
@@ -1158,7 +1158,7 @@ HWTEST_F(WindowImplTest, SetBrightness02, Function | SmallTest | Level3)
     EXPECT_CALL(m->Mock(), AddWindow(_)).Times(1).WillOnce(Return(WMError::WM_OK));
     ASSERT_EQ(WMError::WM_OK, window->Show());
     ASSERT_EQ(UNDEFINED_BRIGHTNESS, window->GetBrightness());
-    EXPECT_CALL(m->Mock(), UpdateProperty(_, _, _)).Times(2).WillOnce(Return(WMError::WM_OK))
+    EXPECT_CALL(m->Mock(), UpdateProperty(_, _)).Times(2).WillOnce(Return(WMError::WM_OK))
         .WillOnce(Return(WMError::WM_OK));
     ASSERT_EQ(WMError::WM_OK, window->SetBrightness(MAXIMUM_BRIGHTNESS));
     ASSERT_EQ(MAXIMUM_BRIGHTNESS, window->GetBrightness());
@@ -1240,7 +1240,7 @@ HWTEST_F(WindowImplTest, SetFocusable02, Function | SmallTest | Level3)
     EXPECT_CALL(m->Mock(), AddWindow(_)).Times(1).WillOnce(Return(WMError::WM_OK));
     ASSERT_EQ(WMError::WM_OK, window->Show());
     ASSERT_TRUE(window->GetFocusable());
-    EXPECT_CALL(m->Mock(), UpdateProperty(_, _, _)).Times(2).WillOnce(Return(WMError::WM_OK))
+    EXPECT_CALL(m->Mock(), UpdateProperty(_, _)).Times(2).WillOnce(Return(WMError::WM_OK))
         .WillOnce(Return(WMError::WM_OK));
     ASSERT_EQ(WMError::WM_OK, window->SetFocusable(false));
     ASSERT_FALSE(window->GetFocusable());
@@ -1296,7 +1296,7 @@ HWTEST_F(WindowImplTest, SetTouchable02, Function | SmallTest | Level3)
     EXPECT_CALL(m->Mock(), AddWindow(_)).Times(1).WillOnce(Return(WMError::WM_OK));
     ASSERT_EQ(WMError::WM_OK, window->Show());
     ASSERT_TRUE(window->GetTouchable());
-    EXPECT_CALL(m->Mock(), UpdateProperty(_, _, _)).Times(2).WillOnce(Return(WMError::WM_OK))
+    EXPECT_CALL(m->Mock(), UpdateProperty(_, _)).Times(2).WillOnce(Return(WMError::WM_OK))
         .WillOnce(Return(WMError::WM_OK));
     ASSERT_EQ(WMError::WM_OK, window->SetTouchable(false));
     ASSERT_FALSE(window->GetTouchable());
@@ -1309,7 +1309,7 @@ HWTEST_F(WindowImplTest, SetTouchable02, Function | SmallTest | Level3)
 
 /**
  * @tc.name: DisableAppWindowDecor01
- * @tc.desc: disbale app window decor
+ * @tc.desc: disable app window decor
  * @tc.type: FUNC
  */
 HWTEST_F(WindowImplTest, DisableAppWindowDecor01, Function | SmallTest | Level3)
@@ -1323,7 +1323,51 @@ HWTEST_F(WindowImplTest, DisableAppWindowDecor01, Function | SmallTest | Level3)
     window->DisableAppWindowDecor();
     EXPECT_CALL(m->Mock(), AddWindow(_)).Times(1).WillOnce(Return(WMError::WM_OK));
     ASSERT_EQ(WMError::WM_OK, window->Show());
-    ASSERT_FALSE(window->isAppDecorEnbale_);
+    ASSERT_FALSE(window->isAppDecorEnable_);
+    EXPECT_CALL(m->Mock(), DestroyWindow(_)).Times(1).WillOnce(Return(WMError::WM_OK));
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: SetTouchHotAreas01
+ * @tc.desc: create window with show, test SetTouchHotAreas
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, SetTouchHotAreas01, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("SetTouchHotAreas01");
+    option->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
+    option->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    sptr<WindowImpl> window = new WindowImpl(option);
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+
+    EXPECT_CALL(m->Mock(), CreateWindow(_, _, _, _, _)).Times(1).WillOnce(Return(WMError::WM_OK));
+    ASSERT_EQ(WMError::WM_OK, window->Create(""));
+    EXPECT_CALL(m->Mock(), AddWindow(_)).Times(1).WillOnce(Return(WMError::WM_OK));
+    ASSERT_EQ(WMError::WM_OK, window->Show());
+
+    std::vector<Rect> requestedTouchHotAreas;
+    window->GetRequestedTouchHotAreas(requestedTouchHotAreas);
+    ASSERT_TRUE(requestedTouchHotAreas.empty());
+
+    std::vector<Rect> rects;
+    rects.emplace_back(Rect{ 0, 0, 720, 400 });
+    rects.emplace_back(Rect{ 0, 800, 720, 300 });
+    EXPECT_CALL(m->Mock(), UpdateProperty(_, _)).Times(1).WillOnce(Return(WMError::WM_OK));
+    ASSERT_EQ(WMError::WM_OK, window->SetTouchHotAreas(rects));
+    window->GetRequestedTouchHotAreas(requestedTouchHotAreas);
+    ASSERT_EQ(rects.size(), requestedTouchHotAreas.size());
+    for (uint32_t i = 0; i < rects.size(); ++i) {
+        ASSERT_TRUE(rects[i] == requestedTouchHotAreas[i]);
+    }
+
+    EXPECT_CALL(m->Mock(), UpdateProperty(_, _)).Times(1).WillOnce(Return(WMError::WM_OK));
+    rects.clear();
+    ASSERT_EQ(WMError::WM_OK, window->SetTouchHotAreas(rects));
+    window->GetRequestedTouchHotAreas(requestedTouchHotAreas);
+    ASSERT_TRUE(requestedTouchHotAreas.empty());
+
     EXPECT_CALL(m->Mock(), DestroyWindow(_)).Times(1).WillOnce(Return(WMError::WM_OK));
     ASSERT_EQ(WMError::WM_OK, window->Destroy());
 }

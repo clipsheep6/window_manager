@@ -25,7 +25,7 @@
 #  // __BASE is used for defining the basic info of the event.
 #  // "type" optional values are: FAULT, STATISTICS, SECURITY, BEHAVIOR.
 #  // "level" optional values are: CRITICAL, MINOR.
-#  // "tag" set tags with may used by subscriber of this event, multiple tags devided by space.
+#  // "tag" set tags with may used by subscriber of this event, multiple tags divided by space.
 #  // "desc" full description of this event.
 #  @PARAMETER: {type: parameter type, arrsize: array length(optional), desc: parameter description}.
 #  // follow the __BASE block, each line defines a parameter of this event.
@@ -45,4 +45,14 @@ NO_FOCUS_WINDOW:
   UID: {type: INT32, desc: session uid}
   PACKAGE_NAME: {type: STRING, desc: package name}
   PROCESS_NAME: {type: STRING, desc: process name}
+  MSG: {type: STRING, desc: windowmanager event message}
+
+WINDOW_LIFE_CYCLE_EXCEPTION:
+  __BASE: {type: FAULT, level: CRITICAL, desc: The window life cycle is abnormal }
+  PID: {type: INT32, desc: session pid}
+  UID: {type: INT32, desc: session uid}
+  MSG: {type: STRING, desc: windowmanager event message}
+
+WINDOW_BOOT_ANIMATION_DONE:
+  __BASE: {type: BEHAVIOR, level: CRITICAL, desc: Boot animation done }
   MSG: {type: STRING, desc: windowmanager event message}

@@ -81,7 +81,7 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             reply.WriteInt32(static_cast<int32_t>(errCode));
             break;
         }
-        case WindowManagerMessage::TRANS_ID_SET_APLPHA: {
+        case WindowManagerMessage::TRANS_ID_SET_ALPHA: {
             uint32_t windowId = data.ReadUint32();
             float alpha = data.ReadFloat();
             WMError errCode = SetAlpha(windowId, alpha);
@@ -91,17 +91,9 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
         case WindowManagerMessage::TRANS_ID_GET_AVOID_AREA: {
             uint32_t windowId = data.ReadUint32();
             AvoidAreaType avoidAreaType = static_cast<AvoidAreaType>(data.ReadUint32());
-            std::vector<Rect> avoidArea = GetAvoidAreaByType(windowId, avoidAreaType);
+            AvoidArea avoidArea = GetAvoidAreaByType(windowId, avoidAreaType);
+            reply.WriteParcelable(&avoidArea);
 
-            // prepare reply data
-            uint32_t avoidAreaNum = static_cast<uint32_t>(avoidArea.size());
-            reply.WriteUint32(avoidAreaNum);
-            for (auto avoid : avoidArea) {
-                reply.WriteInt32(avoid.posX_);
-                reply.WriteInt32(avoid.posY_);
-                reply.WriteUint32(avoid.width_);
-                reply.WriteUint32(avoid.height_);
-            }
             break;
         }
         case WindowManagerMessage::TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT: {
@@ -148,10 +140,6 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             reply.WriteInt32(static_cast<int32_t>(errCode));
             break;
         }
-        case WindowManagerMessage::TRANS_ID_MAXMIZE_WINDOW: {
-            MaxmizeWindow(data.ReadUint32());
-            break;
-        }
         case WindowManagerMessage::TRANS_ID_UPDATE_LAYOUT_MODE: {
             WindowLayoutMode mode = static_cast<WindowLayoutMode>(data.ReadUint32());
             WMError errCode = SetWindowLayoutMode(mode);
@@ -159,14 +147,14 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             break;
         }
         case WindowManagerMessage::TRANS_ID_UPDATE_PROPERTY: {
-            sptr<WindowProperty> windowProperty = new WindowProperty();
-            windowProperty->Read(data);
             PropertyChangeAction action = static_cast<PropertyChangeAction>(data.ReadUint32());
+            sptr<WindowProperty> windowProperty = new WindowProperty();
+            windowProperty->Read(data, action);
             WMError errCode = UpdateProperty(windowProperty, action);
             reply.WriteInt32(static_cast<int32_t>(errCode));
             break;
         }
-        case WindowManagerMessage::TRANS_ID_GET_ACCCESSIBILITY_WIDDOW_INFO_ID: {
+        case WindowManagerMessage::TRANS_ID_GET_ACCESSIBILITY_WINDOW_INFO_ID: {
             sptr<AccessibilityWindowInfo> windowInfo = data.ReadParcelable<AccessibilityWindowInfo>();
             WMError errCode = GetAccessibilityWindowInfo(windowInfo);
             reply.WriteParcelable(windowInfo);
@@ -238,6 +226,13 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
                     return 0;
                 }
             }
+            break;
+        }
+        case WindowManagerMessage::TRANS_ID_UPDATE_AVOIDAREA_LISTENER: {
+            uint32_t windowId = data.ReadUint32();
+            bool haveAvoidAreaListener = data.ReadBool();
+            WMError errCode = UpdateAvoidAreaListener(windowId, haveAvoidAreaListener);
+            reply.WriteInt32(static_cast<int32_t>(errCode));
             break;
         }
         default:

@@ -17,6 +17,7 @@
 
 #include <refbase.h>
 #include <iremote_object.h>
+#include <transaction/rs_interfaces.h>
 
 #include "agent_death_recipient.h"
 #include "display_manager_service_inner.h"
@@ -37,6 +38,7 @@ public:
     ~WindowRoot() = default;
 
     sptr<WindowNodeContainer> GetOrCreateWindowNodeContainer(DisplayId displayId);
+    sptr<WindowNodeContainer> GetWindowNodeContainer(DisplayId displayId);
     sptr<WindowNodeContainer> CreateWindowNodeContainer(sptr<DisplayInfo> displayInfo);
     sptr<WindowNode> GetWindowNode(uint32_t windowId) const;
 
@@ -51,17 +53,18 @@ public:
     bool IsForbidDockSliceMove(DisplayId displayId) const;
     bool IsDockSliceInExitSplitModeArea(DisplayId displayId) const;
     void ExitSplitMode(DisplayId displayId);
+    void NotifyWindowVisibilityChange(std::shared_ptr<RSOcclusionData> occlusionData);
+    void AddSurfaceNodeIdWindowNodePair(uint64_t surfaceNodeId, sptr<WindowNode> node);
 
     WMError RequestFocus(uint32_t windowId);
     WMError RequestActiveWindow(uint32_t windowId);
     WMError MinimizeStructuredAppWindowsExceptSelf(sptr<WindowNode>& node);
-    std::vector<Rect> GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType);
+    AvoidArea GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType);
     WMError SetWindowMode(sptr<WindowNode>& node, WindowMode dstMode);
     std::shared_ptr<RSSurfaceNode> GetSurfaceNodeByAbilityToken(const sptr<IRemoteObject>& abilityToken) const;
     WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId);
     void MinimizeAllAppWindows(DisplayId displayId);
     WMError ToggleShownStateForAllAppWindows();
-    WMError MaxmizeWindow(uint32_t windowId);
     WMError SetWindowLayoutMode(DisplayId displayId, WindowLayoutMode mode);
 
     void ProcessWindowStateChange(WindowState state, WindowStateChangeReason reason);
@@ -114,8 +117,12 @@ private:
     void MoveNotShowingWindowToDefaultDisplay(DisplayId defaultDisplayId, DisplayId displayId);
     WMError PostProcessAddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode,
         sptr<WindowNodeContainer>& container);
+    std::vector<std::pair<uint64_t, bool>> GetWindowVisibilityChangeInfo(
+        std::shared_ptr<RSOcclusionData> occlusionData);
     std::map<uint32_t, sptr<WindowNode>> windowNodeMap_;
     std::map<sptr<IRemoteObject>, uint32_t> windowIdMap_;
+    std::map<uint64_t, sptr<WindowNode>> surfaceIdWindowNodeMap_;
+    std::shared_ptr<RSOcclusionData> lastOcclusionData_ = std::make_shared<RSOcclusionData>();
     std::map<ScreenId, sptr<WindowNodeContainer>> windowNodeContainerMap_;
     std::map<ScreenId, std::vector<DisplayId>> displayIdMap_;
 
@@ -126,7 +133,7 @@ private:
     sptr<AgentDeathRecipient> windowDeath_ = new AgentDeathRecipient(std::bind(&WindowRoot::OnRemoteDied,
         this, std::placeholders::_1));
     Callback callback_;
-    int maxAppWindowNumber_ = 100;
+    uint32_t maxAppWindowNumber_ = 100;
     FloatingWindowLimitsConfig floatingWindowLimitsConfig_;
     SplitRatioConfig splitRatioConfig_ = {0.1, 0.9, {}};
 };

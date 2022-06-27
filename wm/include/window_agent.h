@@ -30,14 +30,14 @@ public:
     void UpdateWindowRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason) override;
     void UpdateWindowMode(WindowMode mode) override;
     void UpdateFocusStatus(bool focused) override;
-    void UpdateAvoidArea(const std::vector<Rect>& avoidAreas) override;
+    void UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type) override;
     void UpdateWindowState(WindowState state) override;
     void UpdateWindowDragInfo(const PointInfo& point, DragEvent event) override;
     void UpdateDisplayId(DisplayId from, DisplayId to) override;
     void UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info) override;
     void UpdateActiveStatus(bool isActive) override;
     sptr<WindowProperty> GetWindowProperty() override;
-    void NotifyOutsidePressed() override;
+    void NotifyTouchOutside() override;
     void DumpInfo(const std::vector<std::string>& params, std::vector<std::string>& info) override;
 private:
     sptr<WindowImpl> window_;

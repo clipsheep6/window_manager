@@ -40,11 +40,12 @@ public:
 private:
     bool IsCallbackRegistered(std::string type, NativeValue* jsListenerObject);
     bool ProcessWindowChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
+    bool ProcessSystemAvoidAreaChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
     bool ProcessAvoidAreaChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
     bool ProcessLifeCycleEventRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
-    bool ProcesOccupiedAreaChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
+    bool ProcessOccupiedAreaChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
     bool ProcessSystemBarChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
-    bool ProcessOutsidePressedRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
+    bool ProcessTouchOutsideRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
     using Func_t = bool(JsWindowRegisterManager::*)(sptr<JsWindowListener>, sptr<Window> window, bool);
     std::map<std::string, std::map<std::shared_ptr<NativeReference>, sptr<JsWindowListener>>> jsCbMap_;
     std::mutex mtx_;

@@ -55,13 +55,13 @@ void WindowAgent::UpdateFocusStatus(bool focused)
     window_->UpdateFocusStatus(focused);
 }
 
-void WindowAgent::UpdateAvoidArea(const std::vector<Rect>& avoidArea)
+void WindowAgent::UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type)
 {
-    if (window_ == nullptr) {
-        WLOGFE("window_ is nullptr");
+    if (window_ == nullptr || avoidArea == nullptr) {
+        WLOGFE("window_ or avoidArea is nullptr.");
         return;
     }
-    window_->UpdateAvoidArea(avoidArea);
+    window_->UpdateAvoidArea(avoidArea, type);
 }
 
 void WindowAgent::UpdateWindowState(WindowState state)
@@ -118,14 +118,14 @@ sptr<WindowProperty> WindowAgent::GetWindowProperty()
     return window_->GetWindowProperty();
 }
 
-void WindowAgent::NotifyOutsidePressed()
+void WindowAgent::NotifyTouchOutside()
 {
     if (window_ == nullptr) {
         WLOGFI("window is null");
         return;
     }
     WLOGFI("called");
-    window_->NotifyOutsidePressed();
+    window_->NotifyTouchOutside();
 }
 
 void WindowAgent::DumpInfo(const std::vector<std::string>& params, std::vector<std::string>& info)

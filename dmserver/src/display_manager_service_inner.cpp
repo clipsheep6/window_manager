@@ -137,4 +137,24 @@ bool DisplayManagerServiceInner::SetOrientationFromWindow(DisplayId displayId, O
     return DisplayManagerService::GetInstance().
         SetOrientationFromWindow(displayInfo->GetScreenId(), orientation);
 }
+
+bool DisplayManagerServiceInner::SetRotationFromWindow(DisplayId displayId, Rotation targetRotation)
+{
+    auto displayInfo = GetDisplayById(displayId);
+    if (displayInfo == nullptr) {
+        return false;
+    }
+    return DisplayManagerService::GetInstance().
+        SetRotationFromWindow(displayInfo->GetScreenId(), targetRotation);
+}
+
+void DisplayManagerServiceInner::GetFullScreenWindowRequestedOrientation(DisplayId displayId, Orientation &orientation)
+{
+    DisplayManagerService::GetInstance().GetFullScreenWindowRequestedOrientation(displayId, orientation);
+}
+
+void DisplayManagerServiceInner::SetGravitySensorSubscriptionEnabled()
+{
+    DisplayManagerService::GetInstance().SetGravitySensorSubscriptionEnabled();
+}
 } // namespace OHOS::Rosen

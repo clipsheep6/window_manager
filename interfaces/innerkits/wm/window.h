@@ -71,7 +71,7 @@ public:
 
 class IAvoidAreaChangedListener : virtual public RefBase {
 public:
-    virtual void OnAvoidAreaChanged(std::vector<Rect> avoidAreas) = 0;
+    virtual void OnAvoidAreaChanged(const AvoidArea avoidArea, AvoidAreaType type) = 0;
 };
 
 class IWindowDragListener : virtual public RefBase {
@@ -120,15 +120,29 @@ public:
     virtual void OnPointerInputEvent(std::shared_ptr<MMI::PointerEvent>& pointerEvent) = 0;
 };
 
-class IOutsidePressedListener : virtual public RefBase {
+class ITouchOutsideListener : virtual public RefBase {
 public:
-    virtual void OnOutsidePressed() = 0;
+    virtual void OnTouchOutside() = 0;
 };
 
 class Window : public RefBase {
 public:
+    /**
+     * @brief create window, include main_window/sub_window/system_window
+     *
+     * @param windowName window name, identify window instance
+     * @param option window propertion
+     * @param context ability context
+     * @return sptr<Window> If create window success,return window instance;Otherwise, return nullptr
+     */
     static sptr<Window> Create(const std::string& windowName,
         sptr<WindowOption>& option, const std::shared_ptr<AbilityRuntime::Context>& context = nullptr);
+    /**
+     * @brief find window by windowName
+     *
+     * @param windowName
+     * @return sptr<Window> Return the window instance founded
+     */
     static sptr<Window> Find(const std::string& windowName);
     static sptr<Window> GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context = nullptr);
     static sptr<Window> GetTopWindowWithId(uint32_t mainWinId);
@@ -206,8 +220,8 @@ public:
     virtual void RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func) = 0;
     virtual void RegisterOccupiedAreaChangeListener(const sptr<IOccupiedAreaChangeListener>& listener) = 0;
     virtual void UnregisterOccupiedAreaChangeListener(const sptr<IOccupiedAreaChangeListener>& listener) = 0;
-    virtual void RegisterOutsidePressedListener(const sptr<IOutsidePressedListener>& listener) = 0;
-    virtual void UnregisterOutsidePressedListener(const sptr<IOutsidePressedListener>& listener) = 0;
+    virtual void RegisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener) = 0;
+    virtual void UnregisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener) = 0;
     virtual void SetAceAbilityHandler(const sptr<IAceAbilityHandler>& handler) = 0;
     virtual WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
         NativeValue* storage, bool isdistributed = false, AppExecFwk::Ability* ability = nullptr) = 0;
@@ -217,6 +231,9 @@ public:
     virtual void SetRequestedOrientation(Orientation) = 0;
     virtual Orientation GetRequestedOrientation() = 0;
     virtual void SetModeSupportInfo(uint32_t modeSupportInfo) = 0;
+    virtual uint32_t GetModeSupportInfo() const = 0;
+    virtual WMError SetTouchHotAreas(const std::vector<Rect>& rects) = 0;
+    virtual void GetRequestedTouchHotAreas(std::vector<Rect>& rects) const = 0;
 
     virtual bool IsDecorEnable() const = 0;
     virtual WMError Maximize() = 0;

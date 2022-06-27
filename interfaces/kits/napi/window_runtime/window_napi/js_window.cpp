@@ -271,6 +271,13 @@ NativeValue* JsWindow::SetCallingWindow(NativeEngine* engine, NativeCallbackInfo
     return (me != nullptr) ? me->OnSetCallingWindow(*engine, *info) : nullptr;
 }
 
+NativeValue* JsWindow::SetPreferredOrientation(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGFI("[NAPI]SetPreferredOrientation");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
+    return (me != nullptr) ? me->OnSetPreferredOrientation(*engine, *info) : nullptr;
+}
+
 NativeValue* JsWindow::DisableWindowDecor(NativeEngine* engine, NativeCallbackInfo* info)
 {
     WLOGFI("[NAPI]DisableWindowDecor");
@@ -335,7 +342,7 @@ NativeValue* JsWindow::OnShow(NativeEngine& engine, NativeCallbackInfo& info)
     NativeValue* lastParam = (info.argc == 0) ? nullptr :
         (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnShow",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -370,7 +377,7 @@ NativeValue* JsWindow::OnDestroy(NativeEngine& engine, NativeCallbackInfo& info)
     NativeValue* lastParam = (info.argc == 0) ? nullptr :
         (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnDestroy",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -404,7 +411,7 @@ NativeValue* JsWindow::OnHide(NativeEngine& engine, NativeCallbackInfo& info)
     NativeValue* lastParam = (info.argc == 0) ? nullptr :
         (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnHide",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -450,7 +457,7 @@ NativeValue* JsWindow::OnMoveTo(NativeEngine& engine, NativeCallbackInfo& info)
     NativeValue* lastParam = (info.argc <= 2) ? nullptr :
         (info.argv[2]->TypeOf() == NATIVE_FUNCTION ? info.argv[2] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnMoveTo",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -495,7 +502,7 @@ NativeValue* JsWindow::OnResize(NativeEngine& engine, NativeCallbackInfo& info)
     NativeValue* lastParam = (info.argc <= 2) ? nullptr :
         (info.argv[2]->TypeOf() == NATIVE_FUNCTION ? info.argv[2] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnResize",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -549,7 +556,7 @@ NativeValue* JsWindow::OnSetWindowType(NativeEngine& engine, NativeCallbackInfo&
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetWindowType",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -604,7 +611,7 @@ NativeValue* JsWindow::OnSetWindowMode(NativeEngine& engine, NativeCallbackInfo&
     NativeValue* lastParam = (info.argc == 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetWindowMode",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -639,7 +646,7 @@ NativeValue* JsWindow::OnGetProperties(NativeEngine& engine, NativeCallbackInfo&
     NativeValue* lastParam = (info.argc == 0) ? nullptr :
         (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnGetProperties",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -754,7 +761,7 @@ NativeValue* JsWindow::OnLoadContent(NativeEngine& engine, NativeCallbackInfo& i
             LoadContentTask(contentStorage, contextUrl, weakWindow, engine, task);
         };
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnLoadContent",
         engine, CreateAsyncTaskWithLastParam(engine, callBack, nullptr, std::move(complete), &result));
     return result;
 }
@@ -798,7 +805,7 @@ NativeValue* JsWindow::OnSetFullScreen(NativeEngine& engine, NativeCallbackInfo&
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetFullScreen",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -841,7 +848,7 @@ NativeValue* JsWindow::OnSetLayoutFullScreen(NativeEngine& engine, NativeCallbac
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetLayoutFullScreen",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -886,7 +893,7 @@ NativeValue* JsWindow::OnSetSystemBarEnable(NativeEngine& engine, NativeCallback
         lastParam = info.argv[1];
     }
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetSystemBarEnable",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -936,7 +943,7 @@ NativeValue* JsWindow::OnSetSystemBarProperties(NativeEngine& engine, NativeCall
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetSystemBarProperties",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -972,10 +979,13 @@ NativeValue* JsWindow::OnGetAvoidArea(NativeEngine& engine, NativeCallbackInfo& 
             AvoidArea avoidArea;
             WMError ret = weakWindow->GetAvoidAreaByType(avoidAreaType, avoidArea);
             if (ret != WMError::WM_OK) {
-                avoidArea = { g_emptyRect, g_emptyRect, g_emptyRect, g_emptyRect }; // left, top, right, bottom
+                avoidArea.topRect_ = g_emptyRect;
+                avoidArea.leftRect_ = g_emptyRect;
+                avoidArea.rightRect_ = g_emptyRect;
+                avoidArea.bottomRect_ = g_emptyRect;
             }
             // native avoidArea -> js avoidArea
-            NativeValue* avoidAreaObj = ChangeAvoidAreaToJsValue(engine, avoidArea);
+            NativeValue* avoidAreaObj = ConvertAvoidAreaToJsValue(engine, avoidArea, avoidAreaType);
             if (avoidAreaObj != nullptr) {
                 task.Resolve(engine, avoidAreaObj);
             } else {
@@ -988,7 +998,7 @@ NativeValue* JsWindow::OnGetAvoidArea(NativeEngine& engine, NativeCallbackInfo& 
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnGetAvoidArea",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -1018,7 +1028,54 @@ NativeValue* JsWindow::OnIsShowing(NativeEngine& engine, NativeCallbackInfo& inf
     NativeValue* lastParam = (info.argc == 0) ? nullptr :
         (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnIsShowing",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
+NativeValue* JsWindow::OnSetPreferredOrientation(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    WMError errCode = WMError::WM_OK;
+    Orientation requestedOrientation = Orientation::UNSPECIFIED;
+    if (info.argc < 1 || info.argc > 2) { // 2: maximum params num
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+    } else {
+        NativeNumber* nativeType = ConvertNativeValueTo<NativeNumber>(info.argv[0]);
+        if (nativeType == nullptr) {
+            errCode = WMError::WM_ERROR_INVALID_PARAM;
+            WLOGFE("[NAPI]Failed to convert parameter to Orientation");
+        } else {
+            requestedOrientation = JS_TO_NATIVE_ORIENTATION_MAP.at(
+                static_cast<ApiOrientation>(static_cast<uint32_t>(*nativeType)));
+            if (requestedOrientation < Orientation::BEGIN || requestedOrientation > Orientation::END) {
+                WLOGFE("[NAPI]Orientation %{public}u invalid!", static_cast<uint32_t>(requestedOrientation));
+                errCode = WMError::WM_ERROR_INVALID_PARAM;
+            }
+        }
+    }
+    wptr<Window> weakToken(windowToken_);
+    AsyncTask::CompleteCallback complete =
+        [weakToken, requestedOrientation, errCode](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            auto weakWindow = weakToken.promote();
+            if (weakWindow == nullptr || errCode != WMError::WM_OK) {
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode),
+                    "OnSetPreferredOrientation failed"));
+                WLOGFE("[NAPI]Window is nullptr or get invalid param");
+                return;
+            }
+            weakWindow->SetRequestedOrientation(requestedOrientation);
+            task.Resolve(engine, engine.CreateUndefined());
+            WLOGFI("[NAPI]Window [%{public}u, %{public}s] OnSetPreferredOrientation end, orientation = %{public}u",
+                weakWindow->GetWindowId(),
+                weakWindow->GetWindowName().c_str(),
+                static_cast<uint32_t>(requestedOrientation));
+        };
+
+    NativeValue* lastParam = (info.argc <= 1) ? nullptr :
+        (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule("JsWindow::OnSetPreferredOrientation",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -1048,7 +1105,7 @@ NativeValue* JsWindow::OnIsSupportWideGamut(NativeEngine& engine, NativeCallback
     NativeValue* lastParam = (info.argc == 0) ? nullptr :
         (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnIsSupportWideGamut",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -1088,7 +1145,7 @@ NativeValue* JsWindow::OnSetBackgroundColor(NativeEngine& engine, NativeCallback
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetBackgroundColor",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -1132,7 +1189,7 @@ NativeValue* JsWindow::OnSetBrightness(NativeEngine& engine, NativeCallbackInfo&
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetBrightness",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -1147,7 +1204,7 @@ NativeValue* JsWindow::OnSetDimBehind(NativeEngine& engine, NativeCallbackInfo& 
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetDimBehind",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -1191,7 +1248,7 @@ NativeValue* JsWindow::OnSetFocusable(NativeEngine& engine, NativeCallbackInfo& 
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetFocusable",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -1236,7 +1293,7 @@ NativeValue* JsWindow::OnSetKeepScreenOn(NativeEngine& engine, NativeCallbackInf
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetKeepScreenOn",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -1251,7 +1308,7 @@ NativeValue* JsWindow::OnSetOutsideTouchable(NativeEngine& engine, NativeCallbac
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetOutsideTouchable",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -1291,7 +1348,7 @@ NativeValue* JsWindow::OnSetPrivacyMode(NativeEngine& engine, NativeCallbackInfo
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetPrivacyMode",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -1335,7 +1392,7 @@ NativeValue* JsWindow::OnSetTouchable(NativeEngine& engine, NativeCallbackInfo& 
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetTouchable",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -1379,7 +1436,7 @@ NativeValue* JsWindow::OnSetTransparent(NativeEngine& engine, NativeCallbackInfo
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetTransparent",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -1424,7 +1481,7 @@ NativeValue* JsWindow::OnSetCallingWindow(NativeEngine& engine, NativeCallbackIn
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetCallingWindow",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -1479,7 +1536,7 @@ NativeValue* JsWindow::OnSetColorSpace(NativeEngine& engine, NativeCallbackInfo&
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnSetColorSpace",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -1509,7 +1566,7 @@ NativeValue* JsWindow::OnGetColorSpace(NativeEngine& engine, NativeCallbackInfo&
     NativeValue* lastParam = (info.argc == 0) ? nullptr :
         (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnGetColorSpace",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -1581,7 +1638,7 @@ NativeValue* JsWindow::OnSetForbidSplitMove(NativeEngine& engine, NativeCallback
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
     NativeValue* result = nullptr;
-    AsyncTask::Schedule(
+    AsyncTask::Schedule("JsWindow::OnDump",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
@@ -1614,6 +1671,17 @@ NativeValue* CreateJsWindowObject(NativeEngine& engine, sptr<Window>& window)
     std::unique_ptr<JsWindow> jsWindow = std::make_unique<JsWindow>(window);
     object->SetNativePointer(jsWindow.release(), JsWindow::Finalizer, nullptr);
 
+    BindFunctions(engine, object);
+
+    std::shared_ptr<NativeReference> jsWindowRef;
+    jsWindowRef.reset(engine.CreateReference(objValue, 1));
+    std::lock_guard<std::recursive_mutex> lock(g_mutex);
+    g_jsWindowMap[windowName] = jsWindowRef;
+    return objValue;
+}
+
+void BindFunctions(NativeEngine& engine, NativeObject* object)
+{
     BindNativeFunction(engine, *object, "show", JsWindow::Show);
     BindNativeFunction(engine, *object, "destroy", JsWindow::Destroy);
     BindNativeFunction(engine, *object, "hide", JsWindow::Hide);
@@ -1647,12 +1715,7 @@ NativeValue* CreateJsWindowObject(NativeEngine& engine, sptr<Window>& window)
     BindNativeFunction(engine, *object, "disableWindowDecor", JsWindow::DisableWindowDecor);
     BindNativeFunction(engine, *object, "dump", JsWindow::Dump);
     BindNativeFunction(engine, *object, "setForbidSplitMove", JsWindow::SetForbidSplitMove);
-
-    std::shared_ptr<NativeReference> jsWindowRef;
-    jsWindowRef.reset(engine.CreateReference(objValue, 1));
-    std::lock_guard<std::recursive_mutex> lock(g_mutex);
-    g_jsWindowMap[windowName] = jsWindowRef;
-    return objValue;
+    BindNativeFunction(engine, *object, "setPreferredOrientation", JsWindow::SetPreferredOrientation);
 }
 }  // namespace Rosen
 }  // namespace OHOS

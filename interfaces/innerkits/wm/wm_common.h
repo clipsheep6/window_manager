@@ -16,6 +16,8 @@
 #ifndef OHOS_ROSEN_WM_COMMON_H
 #define OHOS_ROSEN_WM_COMMON_H
 
+#include <parcel.h>
+
 namespace OHOS {
 namespace Rosen {
 using DisplayId = uint64_t;
@@ -59,6 +61,7 @@ enum class WindowType : uint32_t {
     WINDOW_TYPE_BOOT_ANIMATION,
     WINDOW_TYPE_FREEZE_DISPLAY,
     WINDOW_TYPE_VOICE_INTERACTION,
+    WINDOW_TYPE_FLOAT_CAMERA,
     ABOVE_APP_SYSTEM_WINDOW_END,
     SYSTEM_WINDOW_END = ABOVE_APP_SYSTEM_WINDOW_END,
 };
@@ -94,20 +97,22 @@ enum class WindowBlurLevel : uint32_t {
 
 enum class WMError : int32_t {
     WM_OK = 0,
-    WM_DO_NOTHING = 1,
-    WM_ERROR_SAMGR = 100,
-    WM_ERROR_IPC_FAILED = 101,
-    WM_ERROR_NO_MEM = 110,
-    WM_ERROR_NULLPTR = 120,
-    WM_ERROR_INVALID_PARAM = 130,
-    WM_ERROR_DESTROYED_OBJECT = 140,
-    WM_ERROR_DEATH_RECIPIENT = 150,
-    WM_ERROR_INVALID_WINDOW = 160,
-    WM_ERROR_INVALID_OPERATION = 170,
-    WM_ERROR_INVALID_TYPE = 180,
-    WM_ERROR_INVALID_PERMISSION = 190,
-    WM_ERROR_NO_REMOTE_ANIMATION = 200,
-    WM_ERROR_UNKNOWN,
+    WM_DO_NOTHING,
+    WM_ERROR_NO_MEM,
+    WM_ERROR_DESTROYED_OBJECT,
+    WM_ERROR_DEATH_RECIPIENT,
+    WM_ERROR_INVALID_WINDOW,
+    WM_ERROR_INVALID_OPERATION,
+    WM_ERROR_INVALID_PERMISSION,
+    WM_ERROR_NO_REMOTE_ANIMATION,
+
+    WM_ERROR_NEED_REPORT_BASE = 1000, // error code > 1000 means need report
+    WM_ERROR_NULLPTR,
+    WM_ERROR_INVALID_TYPE,
+    WM_ERROR_INVALID_PARAM,
+    WM_ERROR_SAMGR,
+    WM_ERROR_IPC_FAILED,
+    WM_ERROR_NEED_REPORT_END,
 };
 
 enum class WindowFlag : uint32_t {
@@ -196,6 +201,11 @@ struct Rect {
         return !this->operator==(a);
     }
 
+    bool isUninitializedRect() const
+    {
+        return (posX_ == 0 && posY_ == 0 && width_ == 0 && height_ == 0);
+    }
+
     bool IsInsideOf(const Rect& a) const
     {
         return (posX_ >= a.posX_ && posY_ >= a.posY_ &&
@@ -207,6 +217,7 @@ enum class AvoidAreaType : uint32_t {
     TYPE_SYSTEM,           // area of SystemUI
     TYPE_CUTOUT,           // cutout of screen
     TYPE_SYSTEM_GESTURE,   // area for system gesture
+    TYPE_KEYBOARD,         // area for soft input keyboard
 };
 
 enum class OccupiedAreaType : uint32_t {
@@ -223,11 +234,61 @@ enum class WindowAnimation : uint32_t {
     DEFAULT,
 };
 
-struct AvoidArea {
-    Rect leftRect;
-    Rect topRect;
-    Rect rightRect;
-    Rect bottomRect;
+class AvoidArea : public Parcelable {
+public:
+    Rect topRect_ { 0, 0, 0, 0 };
+    Rect leftRect_ { 0, 0, 0, 0 };
+    Rect rightRect_ { 0, 0, 0, 0 };
+    Rect bottomRect_ { 0, 0, 0, 0 };
+
+    bool operator==(const AvoidArea& a) const
+    {
+        return (leftRect_ == a.leftRect_ && topRect_ == a.topRect_ &&
+            rightRect_ == a.rightRect_ && bottomRect_ == a.bottomRect_);
+    }
+
+    bool operator!=(const AvoidArea& a) const
+    {
+        return !this->operator==(a);
+    }
+
+    bool isEmptyAvoidArea() const
+    {
+        return topRect_.isUninitializedRect() && leftRect_.isUninitializedRect() &&
+            rightRect_.isUninitializedRect() && bottomRect_.isUninitializedRect();
+    }
+
+    static inline bool WriteParcel(Parcel& parcel, const Rect& rect)
+    {
+        return parcel.WriteInt32(rect.posX_) && parcel.WriteInt32(rect.posY_) &&
+            parcel.WriteUint32(rect.width_) && parcel.WriteUint32(rect.height_);
+    }
+
+    static inline bool ReadParcel(Parcel& parcel, Rect& rect)
+    {
+        return parcel.ReadInt32(rect.posX_) && parcel.ReadInt32(rect.posY_) &&
+            parcel.ReadUint32(rect.width_) && parcel.ReadUint32(rect.height_);
+    }
+
+    virtual bool Marshalling(Parcel& parcel) const override
+    {
+        return (WriteParcel(parcel, leftRect_) && WriteParcel(parcel, topRect_) &&
+            WriteParcel(parcel, rightRect_) && WriteParcel(parcel, bottomRect_));
+    }
+
+    static AvoidArea* Unmarshalling(Parcel& parcel)
+    {
+        AvoidArea *avoidArea = new(std::nothrow) AvoidArea();
+        if (avoidArea == nullptr) {
+            return nullptr;
+        }
+        if (ReadParcel(parcel, avoidArea->leftRect_) && ReadParcel(parcel, avoidArea->topRect_) &&
+            ReadParcel(parcel, avoidArea->rightRect_) && ReadParcel(parcel, avoidArea->bottomRect_)) {
+            return avoidArea;
+        }
+        delete avoidArea;
+        return nullptr;
+    }
 };
 
 enum class WindowUpdateType : int32_t {

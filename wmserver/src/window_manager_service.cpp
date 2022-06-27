@@ -46,7 +46,8 @@ WM_IMPLEMENT_SINGLE_INSTANCE(WindowManagerService)
 
 const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(&SingletonContainer::Get<WindowManagerService>());
 
-WindowManagerService::WindowManagerService() : SystemAbility(WINDOW_MANAGER_SERVICE_ID, true)
+WindowManagerService::WindowManagerService() : SystemAbility(WINDOW_MANAGER_SERVICE_ID, true),
+    rsInterface_(RSInterfaces::GetInstance())
 {
     windowRoot_ = new WindowRoot(
         std::bind(&WindowManagerService::OnWindowEvent, this, std::placeholders::_1, std::placeholders::_2));
@@ -71,7 +72,51 @@ void WindowManagerService::OnStart()
     DisplayManagerServiceInner::GetInstance().RegisterDisplayChangeListener(listener);
     RegisterSnapshotHandler();
     RegisterWindowManagerServiceHandler();
+    RegisterWindowVisibilityChangeCallback();
     wmsTaskLooper_->Start();
+}
+
+
+void WindowManagerService::WindowVisibilityChangeCallback(std::shared_ptr<RSOcclusionData> occlusionData)
+{
+    WLOGFD("NotifyWindowVisibilityChange: enter");
+    std::weak_ptr<RSOcclusionData> weak(occlusionData);
+    return wmsTaskLooper_->ScheduleTask([this, weak]() {
+        auto weakOcclusionData = weak.lock();
+        if (weakOcclusionData == nullptr) {
+            WLOGFE("weak occlusionData is nullptr");
+            return;
+        }
+        windowRoot_->NotifyWindowVisibilityChange(weakOcclusionData);
+    }).wait();
+}
+
+void WindowManagerService::RegisterWindowVisibilityChangeCallback()
+{
+    auto windowVisibilityChangeCb = std::bind(&WindowManagerService::WindowVisibilityChangeCallback, this,
+        std::placeholders::_1);
+    if (rsInterface_.RegisterOcclusionChangeCallback(windowVisibilityChangeCb) != WM_OK) {
+        WLOGFW("WindowManagerService::RegisterWindowVisibilityChangeCallback failed, create async thread!");
+        auto fun = [this, windowVisibilityChangeCb]() {
+            WLOGFI("WindowManagerService::RegisterWindowVisibilityChangeCallback async thread enter!");
+            int counter = 0;
+            while (rsInterface_.RegisterOcclusionChangeCallback(windowVisibilityChangeCb) != WM_OK) {
+                usleep(10000); // 10000us equals to 10ms
+                counter++;
+                if (counter >= 2000) { // wait for 2000 * 10ms = 20s
+                    WLOGFE("WindowManagerService::RegisterWindowVisibilityChangeCallback timeout!");
+                    return;
+                }
+            }
+            WLOGFI("WindowManagerService::RegisterWindowVisibilityChangeCallback async thread register handler"
+                " successfully!");
+        };
+        std::thread thread(fun);
+        thread.detach();
+        WLOGFI("WindowManagerService::RegisterWindowVisibilityChangeCallback async thread has been detached!");
+    } else {
+        WLOGFI("WindowManagerService::RegisterWindowVisibilityChangeCallback OnStart succeed!");
+    }
 }
 
 void WindowManagerService::RegisterSnapshotHandler()
@@ -174,7 +219,7 @@ bool WindowManagerService::Init()
         WLOGFW("WindowManagerService::Init failed");
         return false;
     }
-    if (WindowManagerConfig::LoadConfigXml(WINDOW_MANAGER_CONFIG_XML)) {
+    if (WindowManagerConfig::LoadConfigXml()) {
         WindowManagerConfig::DumpConfig();
         ConfigureWindowManagerService();
     }
@@ -240,7 +285,9 @@ void WindowManagerService::ConfigureWindowManagerService()
     if (intNumbersConfig.count("maxAppWindowNumber") != 0) {
         auto numbers = intNumbersConfig.at("maxAppWindowNumber");
         if (numbers.size() == 1) {
-            windowRoot_->SetMaxAppWindowNumber(numbers[0]);
+            if (numbers[0] > 0) {
+                windowRoot_->SetMaxAppWindowNumber(static_cast<uint32_t>(numbers[0]));
+            }
         }
     }
 
@@ -349,6 +396,10 @@ WMError WindowManagerService::AddWindow(sptr<WindowProperty>& property)
 
 WMError WindowManagerService::HandleAddWindow(sptr<WindowProperty>& property)
 {
+    if (property == nullptr) {
+        WLOGFE("property is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
     Rect rect = property->GetRequestRect();
     uint32_t windowId = property->GetWindowId();
     WLOGFI("[WMS] Add: %{public}5d %{public}4d %{public}4d %{public}4d [%{public}4d %{public}4d " \
@@ -393,7 +444,6 @@ WMError WindowManagerService::RequestFocus(uint32_t windowId)
 {
     return wmsTaskLooper_->ScheduleTask([this, windowId]() {
         WLOGFI("[WMS] RequestFocus: %{public}u", windowId);
-        WM_SCOPED_TRACE("wms:RequestFocus");
         return windowController_->RequestFocus(windowId);
     }).get();
 }
@@ -401,7 +451,6 @@ WMError WindowManagerService::RequestFocus(uint32_t windowId)
 WMError WindowManagerService::SetWindowBackgroundBlur(uint32_t windowId, WindowBlurLevel level)
 {
     return wmsTaskLooper_->ScheduleTask([this, windowId, level]() {
-        WM_SCOPED_TRACE("wms:SetWindowBackgroundBlur");
         return windowController_->SetWindowBackgroundBlur(windowId, level);
     }).get();
 }
@@ -409,12 +458,11 @@ WMError WindowManagerService::SetWindowBackgroundBlur(uint32_t windowId, WindowB
 WMError WindowManagerService::SetAlpha(uint32_t windowId, float alpha)
 {
     return wmsTaskLooper_->ScheduleTask([this, windowId, alpha]() {
-        WM_SCOPED_TRACE("wms:SetAlpha");
         return windowController_->SetAlpha(windowId, alpha);
     }).get();
 }
 
-std::vector<Rect> WindowManagerService::GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType)
+AvoidArea WindowManagerService::GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType)
 {
     return wmsTaskLooper_->ScheduleTask([this, windowId, avoidAreaType]() {
         WLOGFI("[WMS] GetAvoidAreaByType: %{public}u, Type: %{public}u", windowId,
@@ -494,7 +542,9 @@ void WindowManagerService::NotifyDisplayStateChange(DisplayId defaultDisplayId, 
     } else if (type == DisplayStateChangeType::UNFREEZE) {
         freezeDisplayController_->UnfreezeDisplay(displayId);
     } else {
-        windowController_->NotifyDisplayStateChange(defaultDisplayId, displayInfo, displayInfoMap, type);
+        wmsTaskLooper_->PostTask([this, defaultDisplayId, displayInfo, displayInfoMap, type]() mutable {
+            windowController_->NotifyDisplayStateChange(defaultDisplayId, displayInfo, displayInfoMap, type);
+        });
     }
 }
 
@@ -502,6 +552,11 @@ void DisplayChangeListener::OnDisplayStateChange(DisplayId defaultDisplayId, spt
     const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type)
 {
     WindowManagerService::GetInstance().NotifyDisplayStateChange(defaultDisplayId, displayInfo, displayInfoMap, type);
+}
+
+void DisplayChangeListener::OnGetFullScreenWindowRequestedOrientation(DisplayId displayId, Orientation &orientation)
+{
+    WindowManagerService::GetInstance().GetFullScreenWindowRequestedOrientation(displayId, orientation);
 }
 
 void WindowManagerService::ProcessPointDown(uint32_t windowId, bool isStartDrag)
@@ -521,6 +576,7 @@ void WindowManagerService::ProcessPointUp(uint32_t windowId)
 void WindowManagerService::MinimizeAllAppWindows(DisplayId displayId)
 {
     return wmsTaskLooper_->PostTask([this, displayId]() {
+        WM_SCOPED_TRACE("wms:MinimizeAllAppWindows(%" PRIu64")", displayId);
         WLOGFI("displayId %{public}" PRIu64"", displayId);
         windowController_->MinimizeAllAppWindows(displayId);
     });
@@ -535,18 +591,9 @@ WMError WindowManagerService::ToggleShownStateForAllAppWindows()
     return  WMError::WM_OK;
 }
 
-WMError WindowManagerService::MaxmizeWindow(uint32_t windowId)
-{
-    return wmsTaskLooper_->ScheduleTask([this, windowId]() {
-        WM_SCOPED_TRACE("wms:MaxmizeWindow");
-        return windowController_->MaxmizeWindow(windowId);
-    }).get();
-}
-
 WMError WindowManagerService::GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId)
 {
     return wmsTaskLooper_->ScheduleTask([this, &topWinId, mainWinId]() {
-        WM_SCOPED_TRACE("wms:GetTopWindowId(%u)", mainWinId);
         return windowController_->GetTopWindowId(mainWinId, topWinId);
     }).get();
 }
@@ -560,8 +607,7 @@ WMError WindowManagerService::SetWindowLayoutMode(WindowLayoutMode mode)
     }).get();
 }
 
-WMError WindowManagerService::UpdateProperty(sptr<WindowProperty>& windowProperty,
-    PropertyChangeAction action, uint64_t dirtyState)
+WMError WindowManagerService::UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action)
 {
     if (windowProperty == nullptr) {
         WLOGFE("property is invalid");
@@ -585,7 +631,6 @@ WMError WindowManagerService::GetAccessibilityWindowInfo(sptr<AccessibilityWindo
         return WMError::WM_ERROR_NULLPTR;
     }
     return wmsTaskLooper_->ScheduleTask([this, &windowInfo]() {
-        WM_SCOPED_TRACE("wms:GetAccessibilityWindowInfo");
         return windowRoot_->GetAccessibilityWindowInfo(windowInfo);
     }).get();
 }
@@ -611,6 +656,31 @@ void WindowManagerService::MinimizeWindowsByLauncher(std::vector<uint32_t> windo
 {
     return wmsTaskLooper_->ScheduleTask([this, windowIds, isAnimated, &finishCallback]() mutable {
         return windowController_->MinimizeWindowsByLauncher(windowIds, isAnimated, finishCallback);
+    }).get();
+}
+
+void WindowManagerService::GetFullScreenWindowRequestedOrientation(DisplayId displayId, Orientation &orientation)
+{
+    wmsTaskLooper_->ScheduleTask([this, displayId, &orientation]() mutable {
+        orientation = windowController_->GetFullScreenWindowRequestedOrientation(displayId);
+    }).wait();
+}
+
+WMError WindowManagerService::UpdateAvoidAreaListener(uint32_t windowId, bool haveAvoidAreaListener)
+{
+    return wmsTaskLooper_->ScheduleTask([this, windowId, haveAvoidAreaListener]() {
+        sptr<WindowNode> node = windowRoot_->GetWindowNode(windowId);
+        if (node == nullptr) {
+            WLOGFE("get window node failed. win %{public}u", windowId);
+            return WMError::WM_DO_NOTHING;
+        }
+        sptr<WindowNodeContainer> container = windowRoot_->GetWindowNodeContainer(node->GetDisplayId());
+        if (container == nullptr) {
+            WLOGFE("get container failed. win %{public}u display %{public}" PRIu64"", windowId, node->GetDisplayId());
+            return WMError::WM_DO_NOTHING;
+        }
+        container->UpdateAvoidAreaListener(node, haveAvoidAreaListener);
+        return WMError::WM_OK;
     }).get();
 }
 } // namespace Rosen

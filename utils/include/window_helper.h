@@ -39,6 +39,11 @@ public:
         return (IsMainWindow(type) || IsSubWindow(type));
     }
 
+    static inline bool IsAppFloatingWindow(WindowType type)
+    {
+        return (type == WindowType::WINDOW_TYPE_FLOAT) || (type == WindowType::WINDOW_TYPE_FLOAT_CAMERA);
+    }
+
     static inline bool IsBelowSystemWindow(WindowType type)
     {
         return (type >= WindowType::BELOW_APP_SYSTEM_WINDOW_BASE && type < WindowType::BELOW_APP_SYSTEM_WINDOW_END);
@@ -69,14 +74,21 @@ public:
         return ((IsMainWindow(type)) && (mode != WindowMode::WINDOW_MODE_FLOATING));
     }
 
-    static inline bool IsFloatintWindow(WindowMode mode)
+    static inline bool IsFloatingWindow(WindowMode mode)
     {
         return mode == WindowMode::WINDOW_MODE_FLOATING;
     }
 
-    static inline bool IsAvoidAreaWindow(WindowType type)
+    static inline bool IsSystemBarWindow(WindowType type)
     {
         return (type == WindowType::WINDOW_TYPE_STATUS_BAR || type == WindowType::WINDOW_TYPE_NAVIGATION_BAR);
+    }
+
+    static inline bool IsOverlayWindow(WindowType type)
+    {
+        return (type == WindowType::WINDOW_TYPE_STATUS_BAR
+            || type == WindowType::WINDOW_TYPE_NAVIGATION_BAR
+            || type == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
     }
 
     static inline bool IsFullScreenWindow(WindowMode mode)
@@ -117,11 +129,11 @@ public:
 
     static inline Rect GetOverlap(const Rect& rect1, const Rect& rect2, const int offsetX, const int offsetY)
     {
-        const static Rect noOverlapRect = { 0, 0, 0, 0};
+        const static Rect noOverlapRect = { 0, 0, 0, 0 };
         int32_t x_begin = std::max(rect1.posX_, rect2.posX_);
-        int32_t x_end = std::min(rect1.posX_ + rect1.width_, rect2.posX_ + rect2.width_);
+        int32_t x_end = std::min(rect1.posX_ + rect1.width_ - 1, rect2.posX_ + rect2.width_ - 1);
         int32_t y_begin = std::max(rect1.posY_, rect2.posY_);
-        int32_t y_end = std::min(rect1.posY_ + rect1.height_, rect2.posY_ + rect2.height_);
+        int32_t y_end = std::min(rect1.posY_ + rect1.height_ - 1, rect2.posY_ + rect2.height_ - 1);
         if (y_begin > y_end || x_begin > x_end) {
             return noOverlapRect;
         }
@@ -293,6 +305,31 @@ public:
         ret.x += (pos.x - rActial.posX_) * rOrigin.width_ / rActial.width_;
         ret.y += (pos.y - rActial.posY_) * rOrigin.height_ / rActial.height_;
         return ret;
+    }
+
+    static bool CalculateTouchHotAreas(const Rect& windowRect, const std::vector<Rect>& requestRects,
+        std::vector<Rect>& outRects)
+    {
+        bool isOk = true;
+        for (const auto& rect : requestRects) {
+            if (rect.posX_ < 0 || rect.posY_ < 0 || rect.width_ == 0 || rect.height_ == 0) {
+                return false;
+            }
+            Rect hotArea;
+            if (rect.posX_ >= static_cast<int32_t>(windowRect.width_) ||
+                rect.posY_ >= static_cast<int32_t>(windowRect.height_)) {
+                isOk = false;
+                continue;
+            }
+            hotArea.posX_ = windowRect.posX_ + rect.posX_;
+            hotArea.posY_ = windowRect.posY_ + rect.posY_;
+            hotArea.width_ =
+                std::min(hotArea.posX_ + rect.width_, windowRect.posX_ + windowRect.width_) - hotArea.posX_;
+            hotArea.height_ =
+                std::min(hotArea.posY_ + rect.height_, windowRect.posY_ + windowRect.height_) - hotArea.posY_;
+            outRects.emplace_back(hotArea);
+        }
+        return isOk;
     }
 
 private:

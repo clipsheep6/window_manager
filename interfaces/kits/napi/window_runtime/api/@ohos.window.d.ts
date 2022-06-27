@@ -83,7 +83,13 @@ declare namespace window {
     /**
      * area for system gesture
      */
-    TYPE_SYSTEM_GESTURE
+    TYPE_SYSTEM_GESTURE,
+
+    /**
+     * area for soft input keyboard
+     * @since 9
+     */
+    TYPE_KEYBOARD
   }
   /**
    * Describes the window mode of an application
@@ -375,6 +381,12 @@ declare namespace window {
    * @since 7
    */
   interface AvoidArea {
+    /**
+     * Whether avoidArea is visible on screen
+     * @since 9
+     */
+    visible: boolean;
+
     /**
      * Rectangle on the left of the screen
      */
@@ -743,6 +755,7 @@ declare namespace window {
      * @param type: 'systemAvoidAreaChange'
      * @syscap SystemCapability.WindowManager.WindowManager.Core
      * @since 7
+     * @deprecated since 9, please use on_avoidAreaChange instead.
      */
     on(type: 'systemAvoidAreaChange', callback: Callback<AvoidArea>): void;
 
@@ -751,8 +764,25 @@ declare namespace window {
      * @param type: 'systemAvoidAreaChange'
      * @syscap SystemCapability.WindowManager.WindowManager.Core
      * @since 7
+     * @deprecated since 9, please use off_avoidAreaChange instead.
      */
     off(type: 'systemAvoidAreaChange', callback?: Callback<AvoidArea>): void;
+
+    /**
+     * register the callback of avoidAreaChange
+     * @param type: 'avoidAreaChange'
+     * @syscap SystemCapability.WindowManager.WindowManager.Core
+     * @since 9
+     */
+    on(type: 'avoidAreaChange', callback: Callback<{ type: AvoidAreaType, area: AvoidArea }>): void;
+
+    /**
+     * unregister the callback of avoidAreaChange
+     * @param type: 'avoidAreaChange'
+     * @syscap SystemCapability.WindowManager.WindowManager.Core
+     * @since 9
+     */
+    off(type: 'avoidAreaChange', callback?: Callback<{ type: AvoidAreaType, area: AvoidArea }>): void;
 
     /**
      * Whether the window supports thr wide gamut setting.
@@ -919,6 +949,20 @@ declare namespace window {
     setTransparent(isTransparent: boolean, callback: AsyncCallback<void>): void;
 
     /**
+     * Set the preferred orientation config of a window
+     * @param orientation the orientation config of a window
+     * @since 9
+     */
+    setPreferredOrientation(orientation: Orientation): Promise<void>;
+
+    /**
+     * Set the preferred orientation config of a window
+     * @param orientation the orientation config of a window
+     * @since 9
+     */
+    setPreferredOrientation(orientation: Orientation, callback: AsyncCallback<void>): void;
+  
+    /**
      * disable window decoration. It must be called before loadContent.
      * @systemapi
      * @since 9
@@ -1042,6 +1086,26 @@ declare namespace window {
      * @since 8
      */
     off(eventType: 'windowStageEvent', callback?: Callback<WindowStageEventType>): void;
+  }
+
+  /**
+   * screen orientation
+   * @syscap SystemCapability.WindowManager.WindowManager.Core
+   * @since 9
+   */
+  enum Orientation {
+    UNSPECIFIED = 0,
+    PORTRAIT = 1,
+    LANDSCAPE = 2,
+    PORTRAIT_INVERTED = 3,
+    LANDSCAPE_INVERTED = 4,
+    AUTO_ROTATION = 5,
+    AUTO_ROTATION_PORTRAIT = 6,
+    AUTO_ROTATION_LANDSCAPE = 7,
+    AUTO_ROTATION_RESTRICTED = 8,
+    AUTO_ROTATION_PORTRAIT_RESTRICTED = 9,
+    AUTO_ROTATION_LANDSCAPE_RESTRICTED = 10,
+    LOCKED = 11,
   }
 }
 

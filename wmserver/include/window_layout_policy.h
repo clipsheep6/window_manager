@@ -74,7 +74,7 @@ protected:
     bool IsVerticalDisplay(DisplayId displayId) const;
     bool IsFullScreenRecentWindowExist(const std::vector<sptr<WindowNode>>& nodeVec) const;
     void LayoutWindowNodesByRootType(const std::vector<sptr<WindowNode>>& nodeVec);
-    void UpdateSurfaceBounds(const sptr<WindowNode>& node, const Rect& winRect);
+    void UpdateSurfaceBounds(const sptr<WindowNode>& node, const Rect& winRect, const Rect& preRect);
     void UpdateRectInDisplayGroupForAllNodes(DisplayId displayId,
         const Rect& oriDisplayRect, const Rect& newDisplayRect);
     void UpdateRectInDisplayGroup(const sptr<WindowNode>& node,
@@ -89,7 +89,7 @@ protected:
     void LimitFloatingWindowSize(const sptr<WindowNode>& node, const Rect& displayRect, Rect& winRect) const;
     void LimitMainFloatingWindowPosition(const sptr<WindowNode>& node, Rect& winRect) const;
 
-    void UpdateFloatongWindowSizeForStretchableWindow(const sptr<WindowNode>& node,
+    void UpdateFloatingWindowSizeForStretchableWindow(const sptr<WindowNode>& node,
         const Rect& displayRect, Rect& winRect) const;
     void UpdateFloatingWindowSizeByCustomizedLimits(const sptr<WindowNode>& node,
         const Rect& displayRect, Rect& winRect) const;
@@ -113,7 +113,7 @@ protected:
         Rect secondaryLimitRect_;
         Rect dividerRect_;
         Rect firstCascadeRect_;
-        std::vector<int32_t> exitSplitPoints_; // 2 element, first elment < second element
+        std::vector<int32_t> exitSplitPoints_; // 2 element, first element < second element
         std::vector<int32_t> splitRatioPoints_;
     };
     sptr<DisplayGroupInfo> displayGroupInfo_;

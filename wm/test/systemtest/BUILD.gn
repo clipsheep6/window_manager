@@ -20,21 +20,23 @@ group("systemtest") {
   testonly = true
 
   deps = [
+    ":wm_window_app_floating_window_test",
     ":wm_window_drag_test",
     ":wm_window_effect_test",
     ":wm_window_focus_test",
     ":wm_window_gamut_test",
     ":wm_window_immersive_test",
     ":wm_window_input_method_test",
-    ":wm_window_layout_test",
+    ":wm_window_input_test",
+    ":wm_window_mode_support_info_test",
     ":wm_window_move_drag_test",
     ":wm_window_multi_ability_test",
     ":wm_window_occupied_area_change_test",
-    ":wm_window_outside_pressed_test",
     ":wm_window_rotation_test",
     ":wm_window_split_immersive_test",
     ":wm_window_split_test",
     ":wm_window_subwindow_test",
+    ":wm_window_touch_outside_test",
     ":wm_window_visibility_info_test",
   ]
 }
@@ -164,6 +166,17 @@ ohos_systemtest("wm_window_gamut_test") {
 
 ## SystemTest window_gamut_test }}}
 
+## SystemTest wm_window_input_test {{{
+ohos_systemtest("wm_window_input_test") {
+  module_out_path = module_out_path
+
+  sources = [ "window_input_test.cpp" ]
+
+  deps = [ ":wm_systemtest_common" ]
+}
+
+## SystemTest wm_window_input_test }}}
+
 ## SystemTest wm_window_visibility_info_test {{{
 ohos_systemtest("wm_window_visibility_info_test") {
   module_out_path = module_out_path
@@ -208,16 +221,38 @@ ohos_systemtest("wm_window_occupied_area_change_test") {
 
 ## SystemTest wm_window_occupied_area_change_test }}}
 
-## SystemTest wm_window_outside_pressed_test {{{
-ohos_systemtest("wm_window_outside_pressed_test") {
+## SystemTest wm_window_touch_outside_test {{{
+ohos_systemtest("wm_window_touch_outside_test") {
   module_out_path = module_out_path
 
-  sources = [ "window_outside_pressed_test.cpp" ]
+  sources = [ "window_touch_outside_test.cpp" ]
 
   deps = [ ":wm_systemtest_common" ]
 }
 
-## SystemTest wm_window_outside_pressed_test }}}
+## SystemTest wm_window_touch_outside_test }}}
+
+## SystemTest wm_window_mode_support_info_test {{{
+ohos_systemtest("wm_window_mode_support_info_test") {
+  module_out_path = module_out_path
+
+  sources = [ "window_mode_support_info_test.cpp" ]
+
+  deps = [ ":wm_systemtest_common" ]
+}
+
+## SystemTest wm_window_mode_support_info_test }}}
+
+## SystemTest wm_window_app_floating_window_test {{{
+ohos_systemtest("wm_window_app_floating_window_test") {
+  module_out_path = module_out_path
+
+  sources = [ "window_app_floating_window_test.cpp" ]
+
+  deps = [ ":wm_systemtest_common" ]
+}
+
+## SystemTest wm_window_app_floating_window_test }}}
 
 ## Build wm_systemtest_common.a {{{
 config("wm_systemtest_common_public_config") {
@@ -232,8 +267,8 @@ config("wm_systemtest_common_public_config") {
     "//third_party/googletest/googlemock/include",
 
     # for abilityContext
-    "${aafwk_kits_path}/ability/ability_runtime/include",
-    "${aafwk_kits_path}/appkit/native/ability_runtime/context",
+    "${aafwk_path}/interfaces/kits/native/ability/ability_runtime",
+    "${aafwk_path}/interfaces/kits/native/appkit/ability_runtime/context",
     "//base/global/resource_management/interfaces/inner_api/include",
     "//third_party/node/deps/icu-small/source/common",
     "${aafwk_inner_api_path}/ability_manager/include",
@@ -283,6 +318,7 @@ ohos_static_library("wm_systemtest_common") {
     "ability_base:base",
     "ability_base:want",
     "ability_base:zuri",
+    "ability_runtime:ability_context_native",
     "bundle_framework:appexecfwk_base",
   ]
 }

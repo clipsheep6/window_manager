@@ -91,6 +91,7 @@ ohos_shared_library("libwms") {
     "ability_base:want",
     "ability_runtime:ability_manager",
     "common_event_service:cesfwk_innerkits",
+    "config_policy:configpolicy_util",
     "display_manager_native:displaymgr",
     "graphic_graphic_2d:surface",
     "graphic_graphic_2d:window_animation",
@@ -106,9 +107,9 @@ ohos_shared_library("libwms") {
   ]
 
   if (is_standard_system) {
-    external_deps += [ "startup_l2:syspara" ]
+    external_deps += [ "init:libbegetutil" ]
   } else {
-    external_deps += [ "startup:syspara" ]
+    external_deps += [ "init_lite:libbegetutil" ]
   }
 
   part_name = "window_manager"
