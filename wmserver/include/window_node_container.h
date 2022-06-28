@@ -160,6 +160,7 @@ private:
     std::vector<uint32_t> backupWindowIds_;
     std::map<uint32_t, WindowMode> backupWindowMode_;
     std::map<DisplayId, Rect> backupDividerWindowRect_;
+    std::map<DisplayId, std::set<WindowMode>> backupDisplaySplitWindowMode_;
     sptr<WindowZorderPolicy> zorderPolicy_ = new WindowZorderPolicy();
     std::unordered_map<WindowLayoutMode, sptr<WindowLayoutPolicy>> layoutPolicies_;
     WindowLayoutMode layoutMode_ = WindowLayoutMode::CASCADE;
