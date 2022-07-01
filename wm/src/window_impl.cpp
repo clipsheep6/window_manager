@@ -689,21 +689,16 @@ void WindowImpl::GetConfigurationFromAbilityInfo()
 
     // get support modes configuration
     uint32_t modeSupportInfo = 0;
-    const auto& supportModes = abilityInfo->windowModes;
-    for (auto& mode : supportModes) {
-        if (static_cast<uint32_t>(mode) == static_cast<uint32_t>(0)) {         // 0 : fullScreen
-            modeSupportInfo |= WindowModeSupport::WINDOW_MODE_SUPPORT_FULLSCREEN;
-        } else if (static_cast<uint32_t>(mode) == static_cast<uint32_t>(1)) {  // 1 : split
-            modeSupportInfo |= (WindowModeSupport::WINDOW_MODE_SUPPORT_SPLIT_PRIMARY |
-                                WindowModeSupport::WINDOW_MODE_SUPPORT_SPLIT_SECONDARY);
-        } else if (static_cast<uint32_t>(mode) == static_cast<uint32_t>(2)) {  // 2 : floating
-            modeSupportInfo |= WindowModeSupport::WINDOW_MODE_SUPPORT_FLOATING;
-        }
+    std::vector<uint32_t> supportModes;
+    for (auto mode : abilityInfo->windowModes) {
+        supportModes.push_back(static_cast<uint32_t>(mode));
     }
+    WindowHelper::ConvertSupportModesToSupportInfo(modeSupportInfo, supportModes);
     if (modeSupportInfo == 0) {
-        WLOGFI("mode config param is 0, set all modes");
+        WLOGFI("mode config param is 0, all modes is supported");
         modeSupportInfo = WindowModeSupport::WINDOW_MODE_SUPPORT_ALL;
     }
+    WLOGFI("winId: %{public}u, modeSupportInfo: %{public}u", GetWindowId(), modeSupportInfo);
     SetRequestModeSupportInfo(modeSupportInfo);
 
     // get window size limits configuration
@@ -734,6 +729,18 @@ void WindowImpl::GetConfigurationFromAbilityInfo()
 void WindowImpl::UpdateTitleButtonVisibility()
 {
     WLOGFI("[Client] UpdateTitleButtonVisibility");
+    if (uiContent_ == nullptr || !isAppDecorEnable_) {
+        return;
+    }
+    auto modeSupportInfo = GetModeSupportInfo();
+    bool hideSplitButton = !(modeSupportInfo & WindowModeSupport::WINDOW_MODE_SUPPORT_SPLIT_PRIMARY);
+    // not support fullscreen in split and floating mode, or not support float in fullscreen mode
+    bool hideMaximizeButton = (!(modeSupportInfo & WindowModeSupport::WINDOW_MODE_SUPPORT_FULLSCREEN) &&
+        (GetMode() == WindowMode::WINDOW_MODE_FLOATING || WindowHelper::IsSplitWindowMode(GetMode()))) ||
+        (!(modeSupportInfo & WindowModeSupport::WINDOW_MODE_SUPPORT_FLOATING) &&
+        GetMode() == WindowMode::WINDOW_MODE_FULLSCREEN);
+    WLOGFI("[Client] [hideSplit, hideMaximize]: [%{public}d, %{public}d]", hideSplitButton, hideMaximizeButton);
+    uiContent_->HideWindowTitleButton(hideSplitButton, hideMaximizeButton, false);
 }
 
 WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<AbilityRuntime::Context>& context)
@@ -961,6 +968,9 @@ WMError WindowImpl::Show(uint32_t reason, bool isCustomAnimation)
     SetDefaultOption();
     // set true success when transitionController exist; set false when complete transition
     property_->SetCustomAnimation(isCustomAnimation);
+
+    WLOGFI("modeSupportInfo: %{public}u, windowMode: %{public}u, windowId: %{public}u",
+        GetModeSupportInfo(), GetMode(), property_->GetWindowId());
 
     // show failed when current mode is not support or window only supports split mode and can show when locked
     bool isShowWhenLocked = GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED);
@@ -1678,6 +1688,7 @@ void WindowImpl::UpdateMode(WindowMode mode)
 {
     WLOGI("UpdateMode %{public}u", mode);
     property_->SetWindowMode(mode);
+    UpdateTitleButtonVisibility();
     NotifyModeChange(mode);
     if (uiContent_ != nullptr) {
         uiContent_->UpdateWindowMode(mode);

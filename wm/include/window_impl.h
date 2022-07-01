@@ -312,6 +312,7 @@ private:
             CALL_LIFECYCLE_LISTENER(ForegroundFailed);
         });
     }
+    
     void DestroyFloatingWindow();
     void DestroySubWindow();
     void SetDefaultOption(); // for api7

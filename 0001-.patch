@@ -1,0 +1,335 @@
+From 5cab063dbaaf69ed1afdca4be4190368e2dcca76 Mon Sep 17 00:00:00 2001
+From: l00574490 <liuqi149@huawei.com>
+Date: Fri, 1 Jul 2022 18:43:56 +0800
+Subject: [PATCH] =?UTF-8?q?=E5=BA=94=E7=94=A8=E8=AE=BE=E7=BD=AE=E6=94=AF?=
+ =?UTF-8?q?=E6=8C=81=E7=9A=84=E6=A8=A1=E5=BC=8F=E5=BC=82=E5=B8=B8=E5=A4=84?=
+ =?UTF-8?q?=E7=90=86?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: l00574490 <liuqi149@huawei.com>
+Change-Id: I4548ed4b2cda65e7ed5379b2c9011568028cc244
+---
+ utils/include/window_helper.h         | 29 +++++++++++++++++++++--
+ utils/include/wm_common_inner.h       | 13 ++++++-----
+ utils/src/window_property.cpp         | 11 +++++----
+ wm/include/window_impl.h              |  1 +
+ wm/src/window_impl.cpp                | 33 ++++++++++++++++++---------
+ wmserver/include/starting_window.h    |  7 ++++--
+ wmserver/src/starting_window.cpp      | 26 +++++++++++++--------
+ wmserver/src/window_controller.cpp    |  8 +++++--
+ wmserver/src/window_layout_policy.cpp |  5 ++++
+ 9 files changed, 95 insertions(+), 38 deletions(-)
+
+diff --git a/utils/include/window_helper.h b/utils/include/window_helper.h
+index e3e552c0..5096c32a 100644
+--- a/utils/include/window_helper.h
++++ b/utils/include/window_helper.h
+@@ -17,8 +17,9 @@
+ #define OHOS_WM_INCLUDE_WM_HELPER_H
+ 
+ #include <vector>
+-#include <wm_common.h>
+-#include <wm_common_inner.h>
++#include "ability_info.h"
++#include "wm_common.h"
++#include "wm_common_inner.h"
+ 
+ namespace OHOS {
+ namespace Rosen {
+@@ -181,6 +182,21 @@ public:
+         }
+     }
+ 
++    static void ConvertSupportModesToSupportInfo(uint32_t& modeSupportInfo,
++                                                 const std::vector<uint32_t>& supportModes)
++    {
++        for (auto& mode : supportModes) {
++            if (mode == 0) {         // 0: fullscreen
++                modeSupportInfo |= WindowModeSupport::WINDOW_MODE_SUPPORT_FULLSCREEN;
++            } else if (mode == 1) {  // 1: split
++                modeSupportInfo |= (WindowModeSupport::WINDOW_MODE_SUPPORT_SPLIT_PRIMARY |
++                                    WindowModeSupport::WINDOW_MODE_SUPPORT_SPLIT_SECONDARY);
++            } else if (mode == 2) {  // 2: floating
++                modeSupportInfo |= WindowModeSupport::WINDOW_MODE_SUPPORT_FLOATING;
++            }
++        }
++    }
++
+     static Rect GetFixedWindowRectByLimitSize(const Rect& oriDstRect, const Rect& lastRect, bool isVertical,
+         float virtualPixelRatio)
+     {
+@@ -358,6 +374,15 @@ public:
+         return false;
+     }
+ 
++    static bool IsInvalidWindowInTileLayoutMode(uint32_t supportModeInfo, WindowLayoutMode layoutMode)
++    {
++        if ((!IsWindowModeSupported(supportModeInfo, WindowMode::WINDOW_MODE_FLOATING)) &&
++            (layoutMode == WindowLayoutMode::TILE)) {
++            return true;
++        }
++        return false;
++    }
++
+ private:
+     WindowHelper() = default;
+     ~WindowHelper() = default;
+diff --git a/utils/include/wm_common_inner.h b/utils/include/wm_common_inner.h
+index 18287c1f..2461417f 100644
+--- a/utils/include/wm_common_inner.h
++++ b/utils/include/wm_common_inner.h
+@@ -96,18 +96,19 @@ struct ModeChangeHotZonesConfig {
+ };
+ 
+ struct WindowSizeLimits {
++    bool isSizeLimitsUpdated_;
+     uint32_t maxWidth_;
+     uint32_t maxHeight_;
+     uint32_t minWidth_;
+     uint32_t minHeight_;
+     float maxRatio_;
+     float minRatio_;
+-    WindowSizeLimits() : maxWidth_(UINT32_MAX), maxHeight_(UINT32_MAX), minWidth_(0),
+-        minHeight_(0), maxRatio_(FLT_MAX), minRatio_(0.0f) {}
+-    WindowSizeLimits(uint32_t maxWidth, uint32_t maxHeight, uint32_t minWidth,
+-        uint32_t minHeight, float maxRatio, float minRatio)
+-        : maxWidth_(maxWidth), maxHeight_(maxHeight), minWidth_(minWidth),
+-        minHeight_(minHeight), maxRatio_(maxRatio), minRatio_(minRatio) {}
++    WindowSizeLimits() : isSizeLimitsUpdated_(false), maxWidth_(UINT32_MAX), maxHeight_(UINT32_MAX),
++        minWidth_(0),  minHeight_(0), maxRatio_(FLT_MAX), minRatio_(0.0f) {}
++    WindowSizeLimits(bool isSizeLimitsUpdated, uint32_t maxWidth, uint32_t maxHeight,
++        uint32_t minWidth, uint32_t minHeight, float maxRatio, float minRatio)
++        : isSizeLimitsUpdated_(isSizeLimitsUpdated), maxWidth_(maxWidth), maxHeight_(maxHeight),
++        minWidth_(minWidth), minHeight_(minHeight), maxRatio_(maxRatio), minRatio_(minRatio) {}
+ };
+ 
+ struct ModeChangeHotZones {
+diff --git a/utils/src/window_property.cpp b/utils/src/window_property.cpp
+index 046c7ac3..fdf652d5 100644
+--- a/utils/src/window_property.cpp
++++ b/utils/src/window_property.cpp
+@@ -502,9 +502,10 @@ void WindowProperty::UnmarshallingTransform(Parcel& parcel, WindowProperty* prop
+ 
+ bool WindowProperty::MarshallingWindowSizeLimits(Parcel& parcel) const
+ {
+-    if (parcel.WriteUint32(sizeLimits_.maxWidth_) && parcel.WriteUint32(sizeLimits_.maxHeight_) &&
+-        parcel.WriteUint32(sizeLimits_.minWidth_) && parcel.WriteUint32(sizeLimits_.minHeight_) &&
+-        parcel.WriteFloat(sizeLimits_.maxRatio_) && parcel.WriteFloat(sizeLimits_.minRatio_)) {
++    if (parcel.WriteBool(sizeLimits_.isSizeLimitsUpdated_) && parcel.WriteUint32(sizeLimits_.maxWidth_) &&
++        parcel.WriteUint32(sizeLimits_.maxHeight_) && parcel.WriteUint32(sizeLimits_.minWidth_) &&
++        parcel.WriteUint32(sizeLimits_.minHeight_) && parcel.WriteFloat(sizeLimits_.maxRatio_) &&
++        parcel.WriteFloat(sizeLimits_.minRatio_)) {
+         return true;
+     }
+     return false;
+@@ -512,8 +513,8 @@ bool WindowProperty::MarshallingWindowSizeLimits(Parcel& parcel) const
+ 
+ void WindowProperty::UnmarshallingWindowSizeLimits(Parcel& parcel, WindowProperty* property)
+ {
+-    WindowSizeLimits sizeLimits = { parcel.ReadUint32(), parcel.ReadUint32(), parcel.ReadUint32(), parcel.ReadUint32(),
+-                                    parcel.ReadFloat(), parcel.ReadFloat() };
++    WindowSizeLimits sizeLimits = { parcel.ReadBool(), parcel.ReadUint32(), parcel.ReadUint32(), parcel.ReadUint32(),
++                                    parcel.ReadUint32(), parcel.ReadFloat(), parcel.ReadFloat() };
+     property->SetSizeLimits(sizeLimits);
+ }
+ 
+diff --git a/wm/include/window_impl.h b/wm/include/window_impl.h
+index f15d6bd1..0183aa75 100644
+--- a/wm/include/window_impl.h
++++ b/wm/include/window_impl.h
+@@ -312,6 +312,7 @@ private:
+             CALL_LIFECYCLE_LISTENER(ForegroundFailed);
+         });
+     }
++    
+     void DestroyFloatingWindow();
+     void DestroySubWindow();
+     void SetDefaultOption(); // for api7
+diff --git a/wm/src/window_impl.cpp b/wm/src/window_impl.cpp
+index 571f532c..c282eb0e 100644
+--- a/wm/src/window_impl.cpp
++++ b/wm/src/window_impl.cpp
+@@ -689,21 +689,16 @@ void WindowImpl::GetConfigurationFromAbilityInfo()
+ 
+     // get support modes configuration
+     uint32_t modeSupportInfo = 0;
+-    const auto& supportModes = abilityInfo->windowModes;
+-    for (auto& mode : supportModes) {
+-        if (static_cast<uint32_t>(mode) == static_cast<uint32_t>(0)) {         // 0 : fullScreen
+-            modeSupportInfo |= WindowModeSupport::WINDOW_MODE_SUPPORT_FULLSCREEN;
+-        } else if (static_cast<uint32_t>(mode) == static_cast<uint32_t>(1)) {  // 1 : split
+-            modeSupportInfo |= (WindowModeSupport::WINDOW_MODE_SUPPORT_SPLIT_PRIMARY |
+-                                WindowModeSupport::WINDOW_MODE_SUPPORT_SPLIT_SECONDARY);
+-        } else if (static_cast<uint32_t>(mode) == static_cast<uint32_t>(2)) {  // 2 : floating
+-            modeSupportInfo |= WindowModeSupport::WINDOW_MODE_SUPPORT_FLOATING;
+-        }
++    std::vector<uint32_t> supportModes;
++    for (auto mode : abilityInfo->windowModes) {
++        supportModes.push_back(static_cast<uint32_t>(mode));
+     }
++    WindowHelper::ConvertSupportModesToSupportInfo(modeSupportInfo, supportModes);
+     if (modeSupportInfo == 0) {
+-        WLOGFI("mode config param is 0, set all modes");
++        WLOGFI("mode config param is 0, all modes is supported");
+         modeSupportInfo = WindowModeSupport::WINDOW_MODE_SUPPORT_ALL;
+     }
++    WLOGFI("winId: %{public}u, modeSupportInfo: %{public}u", GetWindowId(), modeSupportInfo);
+     SetRequestModeSupportInfo(modeSupportInfo);
+ 
+     // get window size limits configuration
+@@ -734,6 +729,18 @@ void WindowImpl::GetConfigurationFromAbilityInfo()
+ void WindowImpl::UpdateTitleButtonVisibility()
+ {
+     WLOGFI("[Client] UpdateTitleButtonVisibility");
++    if (uiContent_ == nullptr || !isAppDecorEnable_) {
++        return;
++    }
++    auto modeSupportInfo = GetModeSupportInfo();
++    bool hideSplitButton = !(modeSupportInfo & WindowModeSupport::WINDOW_MODE_SUPPORT_SPLIT_PRIMARY);
++    // not support fullscreen in split and floating mode, or not support float in fullscreen mode
++    bool hideMaximizeButton = (!(modeSupportInfo & WindowModeSupport::WINDOW_MODE_SUPPORT_FULLSCREEN) &&
++        (GetMode() == WindowMode::WINDOW_MODE_FLOATING || WindowHelper::IsSplitWindowMode(GetMode()))) ||
++        (!(modeSupportInfo & WindowModeSupport::WINDOW_MODE_SUPPORT_FLOATING) &&
++        GetMode() == WindowMode::WINDOW_MODE_FULLSCREEN);
++    WLOGFI("[Client] [hideSplit, hideMaximize]: [%{public}d, %{public}d]", hideSplitButton, hideMaximizeButton);
++    uiContent_->HideWindowTitleButton(hideSplitButton, hideMaximizeButton, false);
+ }
+ 
+ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<AbilityRuntime::Context>& context)
+@@ -962,6 +969,9 @@ WMError WindowImpl::Show(uint32_t reason, bool isCustomAnimation)
+     // set true success when transitionController exist; set false when complete transition
+     property_->SetCustomAnimation(isCustomAnimation);
+ 
++    WLOGFI("modeSupportInfo: %{public}u, windowMode: %{public}u, windowId: %{public}u",
++        GetModeSupportInfo(), GetMode(), property_->GetWindowId());
++
+     // show failed when current mode is not support or window only supports split mode and can show when locked
+     bool isShowWhenLocked = GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED);
+     if (!WindowHelper::IsWindowModeSupported(GetModeSupportInfo(), GetMode()) ||
+@@ -1678,6 +1688,7 @@ void WindowImpl::UpdateMode(WindowMode mode)
+ {
+     WLOGI("UpdateMode %{public}u", mode);
+     property_->SetWindowMode(mode);
++    UpdateTitleButtonVisibility();
+     NotifyModeChange(mode);
+     if (uiContent_ != nullptr) {
+         uiContent_->UpdateWindowMode(mode);
+diff --git a/wmserver/include/starting_window.h b/wmserver/include/starting_window.h
+index da718e8a..93223a0b 100644
+--- a/wmserver/include/starting_window.h
++++ b/wmserver/include/starting_window.h
+@@ -30,7 +30,7 @@ public:
+     StartingWindow() = delete;
+     ~StartingWindow() = default;
+ 
+-    static sptr<WindowNode> CreateWindowNode(sptr<WindowTransitionInfo> info,
++    static sptr<WindowNode> CreateWindowNode(const sptr<WindowTransitionInfo>& info,
+         uint32_t winId, WindowLayoutMode layoutMode);
+     static void HandleClientWindowCreate(sptr<WindowNode>& node, sptr<IWindow>& window,
+         uint32_t& windowId, const std::shared_ptr<RSSurfaceNode>& surfaceNode, sptr<WindowProperty>& property,
+@@ -39,9 +39,12 @@ public:
+         bool isColdStart);
+     static void UpdateRSTree(sptr<WindowNode>& node);
+     static void ReleaseStartWinSurfaceNode(sptr<WindowNode>& node);
++
+ private:
+-    static SurfaceDraw surfaceDraw_;
+     static WMError CreateLeashAndStartingSurfaceNode(sptr<WindowNode>& node);
++    static bool NeedCancelStartingWindow(uint32_t modeSupportInfo,
++        WindowLayoutMode layoutMode, const sptr<WindowTransitionInfo>& info);
++    static SurfaceDraw surfaceDraw_;
+     static std::recursive_mutex mutex_;
+ };
+ } // Rosen
+diff --git a/wmserver/src/starting_window.cpp b/wmserver/src/starting_window.cpp
+index ca88a923..bd749752 100644
+--- a/wmserver/src/starting_window.cpp
++++ b/wmserver/src/starting_window.cpp
+@@ -32,7 +32,19 @@ SurfaceDraw StartingWindow::surfaceDraw_;
+ static bool g_hasInit = false;
+ std::recursive_mutex StartingWindow::mutex_;
+ 
+-sptr<WindowNode> StartingWindow::CreateWindowNode(sptr<WindowTransitionInfo> info,
++bool StartingWindow::NeedCancelStartingWindow(uint32_t modeSupportInfo,
++    WindowLayoutMode layoutMode, const sptr<WindowTransitionInfo>& info)
++{
++    if ((!WindowHelper::IsWindowModeSupported(modeSupportInfo, info->GetWindowMode())) ||
++        (WindowHelper::IsInvalidWindowInTileLayoutMode(modeSupportInfo, layoutMode)) ||
++        (WindowHelper::IsOnlySupportSplitAndShowWhenLocked(info->GetShowFlagWhenLocked(), modeSupportInfo))) {
++        WLOGFI("window mode is not be supported or not support floating mode in tile, cancel starting window");
++        return true;
++    }
++    return false;
++}
++
++sptr<WindowNode> StartingWindow::CreateWindowNode(const sptr<WindowTransitionInfo>& info,
+     uint32_t winId, WindowLayoutMode layoutMode)
+ {
+     sptr<WindowProperty> property = new(std::nothrow) WindowProperty();
+@@ -40,16 +52,10 @@ sptr<WindowNode> StartingWindow::CreateWindowNode(sptr<WindowTransitionInfo> inf
+         return nullptr;
+     }
+ 
+-    uint32_t modeSupportInfo = 0;
+-    for (auto mode : info->GetWindowSupportModes()) {
+-        modeSupportInfo |= mode;
+-    }
+-
+     // if mode isn't be supported or don't support floating mode in tile mode, create starting window failed
+-    if ((!WindowHelper::IsWindowModeSupported(modeSupportInfo, info->GetWindowMode())) ||
+-        ((!WindowHelper::IsWindowModeSupported(modeSupportInfo, WindowMode::WINDOW_MODE_FLOATING)) &&
+-         (layoutMode == WindowLayoutMode::TILE)) ||
+-        (WindowHelper::IsOnlySupportSplitAndShowWhenLocked(info->GetShowFlagWhenLocked(), modeSupportInfo))) {
++    uint32_t modeSupportInfo = 0;
++    WindowHelper::ConvertSupportModesToSupportInfo(modeSupportInfo, info->GetWindowSupportModes());
++    if (NeedCancelStartingWindow(modeSupportInfo, layoutMode, info)) {
+         WLOGFI("window mode is not be supported or not support floating mode in tile, cancel starting window");
+         return nullptr;
+     }
+diff --git a/wmserver/src/window_controller.cpp b/wmserver/src/window_controller.cpp
+index 3bd19faa..d16acf17 100644
+--- a/wmserver/src/window_controller.cpp
++++ b/wmserver/src/window_controller.cpp
+@@ -197,8 +197,12 @@ WMError WindowController::AddWindowNode(sptr<WindowProperty>& property)
+         WLOGFE("could not find window");
+         return WMError::WM_ERROR_NULLPTR;
+     }
+-    if (node->currentVisibility_ && !node->startingWindowShown_) {
+-        WLOGFE("current window is visible, windowId: %{public}u", node->GetWindowId());
++
++    auto layoutMode = windowRoot_->GetCurrentLayoutMode(info->GetDisplayId());
++    if ((node->currentVisibility_ && !node->startingWindowShown_) ||
++        (WindowHelper::IsInvalidWindowInTileLayoutMode(node->GetModeSupportInfo(), layoutMode))) {
++        WLOGFE("current window is visible, or window doesn't support floating mode in tile, windowId: %{public}u",
++            node->GetWindowId());
+         return WMError::WM_ERROR_INVALID_OPERATION;
+     }
+     // using starting window rect if client rect is empty
+diff --git a/wmserver/src/window_layout_policy.cpp b/wmserver/src/window_layout_policy.cpp
+index 7e11e7cf..07fbc7e5 100644
+--- a/wmserver/src/window_layout_policy.cpp
++++ b/wmserver/src/window_layout_policy.cpp
+@@ -536,6 +536,10 @@ void WindowLayoutPolicy::UpdateWindowSizeLimits(const sptr<WindowNode>& node)
+     const auto& virtualPixelRatio = GetVirtualPixelRatio(node->GetDisplayId());
+     const auto& systemLimits = GetSystemSizeLimits(displayRect, virtualPixelRatio);
+     const auto& customizedLimits = node->GetWindowSizeLimits();
++    if (customizedLimits.isSizeLimitsUpdated_) {
++        WLOGFI("size limits have been updated");
++        return;
++    }
+     WindowSizeLimits newLimits = systemLimits;
+ 
+     // configured limits of floating window
+@@ -580,6 +584,7 @@ void WindowLayoutPolicy::UpdateWindowSizeLimits(const sptr<WindowNode>& node)
+     uint32_t newMinHeight = static_cast<uint32_t>(static_cast<float>(newLimits.minWidth_) / newLimits.maxRatio_);
+     newLimits.minHeight_ = std::max(newMinHeight, newLimits.minHeight_);
+ 
++    newLimits.isSizeLimitsUpdated_ = true;
+     WLOGFI("maxWidth: %{public}u, maxHeight: %{public}u, minWidth: %{public}u, minHeight: %{public}u, "
+         "maxRatio: %{public}f, minRatio: %{public}f", newLimits.maxWidth_, newLimits.maxHeight_,
+         newLimits.minWidth_, newLimits.minHeight_, newLimits.maxRatio_, newLimits.minRatio_);
+-- 
+2.25.1
+
