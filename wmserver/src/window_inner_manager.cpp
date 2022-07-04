@@ -15,14 +15,22 @@
 
 #include "window_inner_manager.h"
 
+#include "draw_surface.h"
 #include "ui_service_mgr_client.h"
 #include "window_manager_hilog.h"
-#include "window.h"
+#include "image/bitmap.h"
+#include "image_source.h"
+#include "image_type.h"
+#include "image_utils.h"
+#include "pixel_map.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowInnerManager"};
+    const std::string IMAGE_PLACE_HOLDER_PNG_PATH = "/etc/window/resources/bg_place_holder.png";
+    const int32_t IMAGE_WIDTH = 512;
+    const int32_t IMAGE_HEIGHT = 512;
 }
 WM_IMPLEMENT_SINGLE_INSTANCE(WindowInnerManager)
 
@@ -88,6 +96,179 @@ void WindowInnerManager::HandleCreateWindow(std::string name, WindowType type, R
         rect.posX_, rect.posY_, rect.width_, rect.height_, dialogCallback, &dialogId_);
     WLOGFI("create inner window id: %{public}d success", dialogId_);
     return;
+}
+
+std::unique_ptr<OHOS::Media::PixelMap> WindowInnerManager::DecodeImageToPixelMap(const std::string &imagePath)
+{
+    OHOS::Media::SourceOptions opts;
+    opts.formatHint = "image/png";
+    uint32_t ret = 0;
+    auto imageSource = OHOS::Media::ImageSource::CreateImageSource(imagePath, opts, ret);
+    // CHKPP(imageSource);
+    std::set<std::string> formats;
+    ret = imageSource->GetSupportedFormats(formats);
+    WLOGFD("get supported format ret:%{public}u", ret);
+
+    OHOS::Media::DecodeOptions decodeOpts;
+    std::unique_ptr<OHOS::Media::PixelMap> pixelMap = imageSource->CreatePixelMap(decodeOpts, ret);
+    if (pixelMap == nullptr) {
+        WLOGFE("pixelMap is nullptr");
+    }
+    return pixelMap;
+}
+
+void WindowInnerManager::DrawPixelmap(OHOS::Rosen::Drawing::Canvas &canvas)
+{
+    std::unique_ptr<OHOS::Media::PixelMap> pixelmap = DecodeImageToPixelMap(IMAGE_PLACE_HOLDER_PNG_PATH);
+    OHOS::Rosen::Drawing::Pen pen;
+    pen.SetAntiAlias(true);
+    pen.SetColor(OHOS::Rosen::Drawing::Color::COLOR_BLUE);
+    OHOS::Rosen::Drawing::scalar penWidth = 1;
+    pen.SetWidth(penWidth);
+    canvas.AttachPen(pen);
+    canvas.DrawBitmap(*pixelmap, 0, 0);
+}
+
+void WindowInnerManager::DoDraw(uint8_t *addr, uint32_t width, uint32_t height)
+{
+    OHOS::Rosen::Drawing::Bitmap bitmap;
+    OHOS::Rosen::Drawing::BitmapFormat format { OHOS::Rosen::Drawing::COLORTYPE_RGBA_8888,
+        OHOS::Rosen::Drawing::ALPHATYPE_OPAQUYE };
+    bitmap.Build(width, height, format);
+    OHOS::Rosen::Drawing::Canvas canvas;
+    canvas.Bind(bitmap);
+    canvas.Clear(OHOS::Rosen::Drawing::Color::COLOR_TRANSPARENT);
+    DrawPixelmap(canvas);
+    static constexpr uint32_t stride = 4;
+    uint32_t addrSize = width * height * stride;
+    errno_t ret = memcpy_s(addr, addrSize, bitmap.GetPixels(), addrSize);
+    if (ret != EOK) {
+        return;
+    }
+}
+void WindowInnerManager::DestroyPlaceHolderWindow()
+{
+    if (placeHolderwindow_ != nullptr) {
+        placeHolderwindow_->Destroy();
+        placeHolderwindow_ = nullptr;
+    }
+}
+
+void WindowInnerManager::CreatePlaceHolderWindow(WindowMode mode, DisplayId displayId)
+{
+    eventHandler_->PostTask([this, mode, displayId]() {
+        HandleCreatePlaceHolderWindow(mode, displayId);
+    });
+    return;
+}
+
+void TouchOutsideListener::OnTouchOutside()
+{
+    WindowInnerManager::GetInstance().DestroyPlaceHolderWindow();
+}
+
+void InputListener::OnKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
+{
+    WindowInnerManager::GetInstance().DestroyPlaceHolderWindow();
+}
+
+void InputListener::OnPointerInputEvent(std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
+    WindowInnerManager::GetInstance().DestroyPlaceHolderWindow();
+}
+
+void LifeCycle::AfterInactive()
+{
+    WindowInnerManager::GetInstance().DestroyPlaceHolderWindow();
+}
+
+void WindowInnerManager::HandleCreatePlaceHolderWindow(WindowMode mode, DisplayId displayId)
+{
+    if (placeHolderwindow_ != nullptr) {
+        return;
+    }
+    sptr<WindowOption> opt = new (std::nothrow) WindowOption();
+    if (opt == nullptr) {
+        WLOGFE("Window option is nullptr.");
+        return;
+    }
+    opt->SetWindowType(WindowType::WINDOW_TYPE_PLACE_HOLDER);
+    opt->SetFocusable(false);
+    opt->SetWindowMode(mode);
+    placeHolderwindow_ = Window::Create("place_holder" + std::to_string(displayId), opt);
+    if (placeHolderwindow_ == nullptr) {
+        WLOGFE("Window is nullptr.");
+        return;
+    }
+    sptr<ITouchOutsideListener> touchOutsideListener = new TouchOutsideListener();
+    // sptr<IInputEventListener> inputListener = new InputListener();
+    sptr<IWindowLifeCycle> lifeCycleListener = new LifeCycle();
+    placeHolderwindow_->RegisterTouchOutsideListener(touchOutsideListener);
+    // placeHolderwindow_->RegisterInputEventListener(inputListener);
+    placeHolderwindow_->RegisterLifeCycleListener(lifeCycleListener);
+    // placeHolderwindow_->Show();
+    if (!OHOS::Rosen::DrawSurface::DrawImage(placeHolderwindow_->GetSurfaceNode(),
+        IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_PLACE_HOLDER_PNG_PATH)) {
+            WLOGE("draw surface failed");
+            return;
+    }
+    // sptr<OHOS::Surface> layer = GetLayer();
+    // if (layer == nullptr) {
+    //     placeHolderwindow_->Destroy();
+    //     placeHolderwindow_ = nullptr;
+    //     return;
+    // }
+
+    // sptr<OHOS::SurfaceBuffer> buffer = GetSurfaceBuffer(layer);
+    // if (buffer == nullptr || buffer->GetVirAddr() == nullptr) {
+    //     placeHolderwindow_->Destroy();
+    //     placeHolderwindow_ = nullptr;
+    //     return;
+    // }
+
+    // auto addr = static_cast<uint8_t *>(buffer->GetVirAddr());
+    // DoDraw(addr, buffer->GetWidth(), buffer->GetHeight());
+    // OHOS::BufferFlushConfig flushConfig = {
+    //     .damage = {
+    //         .w = buffer->GetWidth(),
+    //         .h = buffer->GetHeight(),
+    //     },
+    // };
+    // OHOS::SurfaceError ret = layer->FlushBuffer(buffer, -1, flushConfig);
+    // WLOGFD("draw pointer FlushBuffer ret:%{public}s", SurfaceErrorStr(ret).c_str());
+    placeHolderwindow_->Show();
+    return;
+}
+
+sptr<OHOS::Surface> WindowInnerManager::GetLayer()
+{
+    std::shared_ptr<OHOS::Rosen::RSSurfaceNode> surfaceNode = placeHolderwindow_->GetSurfaceNode();
+    if (surfaceNode == nullptr) {
+        placeHolderwindow_->Destroy();
+        placeHolderwindow_ = nullptr;
+        return nullptr;
+    }
+    return surfaceNode->GetSurface();
+}
+
+sptr<OHOS::SurfaceBuffer> WindowInnerManager::GetSurfaceBuffer(sptr<OHOS::Surface> layer) const
+{
+    sptr<OHOS::SurfaceBuffer> buffer;
+    int32_t releaseFence = 0;
+    OHOS::BufferRequestConfig config = {
+        .width = IMAGE_WIDTH,
+        .height = IMAGE_HEIGHT,
+        .strideAlignment = 0x8,
+        .format = PIXEL_FMT_RGBA_8888,
+        .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
+    };
+
+    OHOS::SurfaceError ret = layer->RequestBuffer(buffer, releaseFence, config);
+    if (ret != OHOS::SURFACE_ERROR_OK) {
+        WLOGFE("request buffer ret:%{public}s", SurfaceErrorStr(ret).c_str());
+        return nullptr;
+    }
+    return buffer;
 }
 
 void WindowInnerManager::HandleDestroyWindow()

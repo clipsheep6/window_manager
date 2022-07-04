@@ -244,6 +244,7 @@ private:
     sptr<WindowNode> primary_;
     sptr<WindowNode> secondary_;
     sptr<WindowNode> divider_;
+    // sptr<WindowNode> placeholder_;
     WindowPairStatus status_ = {WindowPairStatus::STATUS_EMPTY};
     DisplayGroupWindowTree& displayGroupWindowTree_;
     Rect initalDividerRect_ {0, 0, 0, 0};

@@ -23,6 +23,11 @@
 #endif
 #include "refbase.h"
 #include "wm_common.h"
+#include "window.h"
+
+#include "draw/canvas.h"
+#include "nocopyable.h"
+#include "pixel_map.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -37,6 +42,19 @@ public:
     bool DecodeImageFile(const char* filename, SkBitmap& bitmap);
     void DrawSkImage(std::shared_ptr<RSSurfaceNode> surfaceNode, Rect winRect,
         sptr<Media::PixelMap> pixelMap, uint32_t bkgColor);
+
+    bool DrawWindow(std::shared_ptr<OHOS::Rosen::RSSurfaceNode> surfaceNode, int32_t bufferWidth, int32_t bufferHeight,
+        uint32_t color);
+    bool DrawWindow(std::shared_ptr<OHOS::Rosen::RSSurfaceNode> surfaceNode, int32_t bufferWidth, int32_t bufferHeight,
+        const std::string& imagePath);
+    bool DoDraw(uint8_t *addr, uint32_t width, uint32_t height, const std::string& imagePath);
+    bool DoDraw(uint8_t *addr, uint32_t width, uint32_t height, uint32_t color);
+    sptr<OHOS::Surface> GetLayer(std::shared_ptr<OHOS::Rosen::RSSurfaceNode> surfaceNode);
+    sptr<OHOS::SurfaceBuffer> GetSurfaceBuffer(sptr<OHOS::Surface> layer,
+        int32_t bufferWidth, int32_t bufferHeight) const;
+
+    void DrawPixelmap(OHOS::Rosen::Drawing::Canvas &canvas, const std::string& imagePath);
+    std::unique_ptr<OHOS::Media::PixelMap> DecodeImageToPixelMap(const std::string &imagePath);
 private:
 
     std::shared_ptr<RSSurface> PrepareDraw(std::shared_ptr<RSSurfaceNode> surfaceNode,
