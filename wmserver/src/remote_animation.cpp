@@ -308,11 +308,11 @@ sptr<RSWindowAnimationTarget> RemoteAnimation::CreateWindowAnimationTarget(sptr<
         return nullptr;
     }
 
-    auto stagingProperties = windowAnimationTarget->surfaceNode_->GetStagingProperties();
+    auto& stagingProperties = windowAnimationTarget->surfaceNode_->GetStagingProperties();
     auto rect = windowNode->GetWindowRect();
     // 0, 1, 2, 3: convert bounds to RectF
     auto boundsRect = RectF(rect.posX_, rect.posY_, rect.width_, rect.height_);
-    windowAnimationTarget->windowBounds_ = RRect(boundsRect, stagingProperties->GetCornerRadius());
+    windowAnimationTarget->windowBounds_ = RRect(boundsRect, stagingProperties.GetCornerRadius());
     return windowAnimationTarget;
 }
 } // Rosen
