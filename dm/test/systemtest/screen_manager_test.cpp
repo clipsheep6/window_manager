@@ -136,14 +136,15 @@ void ScreenManagerTest::TearDown()
 {
 }
 
-void RootNodeInit(std::shared_ptr<RSUIDirector> rsUiDirector, int width, int height)
+std::shared_ptr<RSNode> RootNodeInit(std::shared_ptr<RSUIDirector> rsUiDirector, int width, int height)
 {
     std::cout << "rs app demo Init Rosen Backend!" << std::endl;
-    auto rootNode = RSRootNode::Create();
+    std::shared_ptr<RSNode> rootNode = RSRootNode::Create();
     rootNode->SetBounds(0, 0, width, height);
     rootNode->SetFrame(0, 0, width, height);
     rootNode->SetBackgroundColor(SK_ColorRED);
     rsUiDirector->SetRoot(rootNode->GetId());
+    return rootNode;
 }
 
 sptr<Window> ScreenManagerTest::CreateWindowByDisplayId(DisplayId displayId)
@@ -460,7 +461,8 @@ HWTEST_F(ScreenManagerTest, ScreenManager09, Function | MediumTest | Level2)
     RSTransaction::FlushImplicitTransaction();
     sleep(TEST_SLEEP_S);
     rsUiDirector->SetRSSurfaceNode(surfaceNode);
-    RootNodeInit(rsUiDirector, 200, 400);
+    auto rootNode = RootNodeInit(rsUiDirector, 200, 400);
+    ASSERT_NE(nullptr, rootNode);
     rsUiDirector->SendMessages();
     sleep(TEST_SLEEP_S);
     ASSERT_EQ(DMError::DM_OK, ScreenManager::GetInstance().DestroyVirtualScreen(virtualScreenId));
