@@ -622,7 +622,8 @@ bool AbstractScreenController::SetOrientation(ScreenId screenId, Orientation new
         return true;
     }
     if ((newOrientation >= Orientation::VERTICAL && newOrientation <= Orientation::REVERSE_HORIZONTAL) ||
-        (newOrientation == Orientation::UNSPECIFIED && !ScreenRotationController::IsGravitySensorEnabled())) {
+        (newOrientation == Orientation::UNSPECIFIED && !ScreenRotationController::IsGravitySensorEnabled()) ||
+        (newOrientation == Orientation::UNSPECIFIED && !isFromWindow)) {
         Rotation rotationAfter = screen->CalcRotation(newOrientation);
         SetRotation(screenId, rotationAfter, false);
         screen->rotation_ = rotationAfter;
