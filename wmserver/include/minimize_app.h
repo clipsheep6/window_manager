@@ -49,12 +49,15 @@ public:
     static void ClearNodesWithReason(MinimizeReason reason);
     static bool IsNodeNeedMinimize(const sptr<WindowNode>& node);
     static std::vector<wptr<WindowNode>> GetNeedMinimizeAppNodes();
+    static void ClearAllNodes();
+    static void MinimizeTargetWindow(uint32_t windowId, bool isFromUser = true);
 private:
     static inline bool IsFromUser(MinimizeReason reason)
     {
         return (reason == MinimizeReason::MINIMIZE_ALL || reason == MinimizeReason::MINIMIZE_BUTTON ||
             reason == MinimizeReason::MAX_APP_COUNT || reason == MinimizeReason::LAYOUT_TILE ||
-            reason == MinimizeReason::SPLIT_REPLACE || reason == MinimizeReason::SPLIT_QUIT);
+            reason == MinimizeReason::SPLIT_REPLACE || reason == MinimizeReason::SPLIT_QUIT ||
+            reason == MinimizeReason::GESTURE_ANIMATION);
     }
 
     static std::map<MinimizeReason, std::vector<wptr<WindowNode>>> needMinimizeAppNodes_;
