@@ -16,6 +16,7 @@
 #include "js_window.h"
 #include <new>
 #include <ui/rs_surface_node.h>
+#include "js_transition_controller.h"
 #include "js_window_utils.h"
 #include "window.h"
 #include "window_helper.h"
@@ -47,12 +48,12 @@ JsWindow::JsWindow(const sptr<Window>& window)
         WLOGFI("[NAPI]Destroy window %{public}s in js window", windowName.c_str());
     };
     windowToken_->RegisterWindowDestroyedListener(func);
-    WLOGFI("[NAPI] JsWindow constructor Count: %{public}d", ++ctorCnt);
+    WLOGFI("[NAPI] JsWindow ctorCnt: %{public}d", ++ctorCnt);
 }
 
 JsWindow::~JsWindow()
 {
-    WLOGFI("[NAPI]~JsWindow deconstructor Count:%{public}d", ++dtorCnt);
+    WLOGFI("[NAPI]~JsWindow dtorCnt:%{public}d", ++dtorCnt);
     windowToken_ = nullptr;
 }
 
@@ -66,7 +67,7 @@ std::string JsWindow::GetWindowName()
 
 void JsWindow::Finalizer(NativeEngine* engine, void* data, void* hint)
 {
-    WLOGFI("[NAPI]Finalizer Count:%{public}d", ++finalizerCnt);
+    WLOGFI("[NAPI]finalizerCnt:%{public}d", ++finalizerCnt);
     auto jsWin = std::unique_ptr<JsWindow>(static_cast<JsWindow*>(data));
     if (jsWin == nullptr) {
         WLOGFE("[NAPI]jsWin is nullptr");
@@ -347,34 +348,57 @@ NativeValue* JsWindow::SetTranslateSync(NativeEngine* engine, NativeCallbackInfo
     return (me != nullptr) ? me->OnSetTranslateSync(*engine, *info) : nullptr;
 }
 
+NativeValue* JsWindow::GetTransitionControllerSync(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGFI("[NAPI]GetTransitionControllerSync");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
+    return (me != nullptr) ? me->OnGetTransitionControllerSync(*engine, *info) : nullptr;
+}
+
 NativeValue* JsWindow::OnShow(NativeEngine& engine, NativeCallbackInfo& info)
 {
     WMError errCode = WMError::WM_OK;
-    if (info.argc > 1) {
+    if (info.argc > 2) { // 2: maximum params num
         WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
+    bool isCustomAnimation = false;
+    NativeValue* lastParam = nullptr;
+    if (errCode == WMError::WM_OK && info.argc >= 1) {
+        if (info.argv[0]->TypeOf() == NATIVE_BOOLEAN) { // show(isCustomAnimation)
+            NativeBoolean* nativeVal = ConvertNativeValueTo<NativeBoolean>(info.argv[0]);
+            if (nativeVal == nullptr) {
+                WLOGFE("[NAPI]Failed to convert parameter to isCustomAnimation");
+                errCode = WMError::WM_ERROR_INVALID_PARAM;
+            } else if (WindowHelper::IsSystemWindow(windowToken_->GetType())) {
+                isCustomAnimation = static_cast<bool>(*nativeVal);
+            }
+        } else {
+            if (info.argc == 1) { // show(callback)
+                lastParam = (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
+            } else { // show(isCustomAnimation, callback)
+                lastParam = (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
+            }
+        }
+    }
     wptr<Window> weakToken(windowToken_);
     AsyncTask::CompleteCallback complete =
-        [weakToken, errCode](NativeEngine& engine, AsyncTask& task, int32_t status) {
+        [weakToken, errCode, isCustomAnimation](NativeEngine& engine, AsyncTask& task, int32_t status) {
             auto weakWindow = weakToken.promote();
             if (weakWindow == nullptr || errCode != WMError::WM_OK) {
                 task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode)));
                 WLOGFE("[NAPI]window is nullptr or get invalid param");
                 return;
             }
-            WMError ret = weakWindow->Show();
+            WMError ret = weakWindow->Show(0, isCustomAnimation);
             if (ret == WMError::WM_OK) {
                 task.Resolve(engine, engine.CreateUndefined());
             } else {
                 task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(ret), "Window show failed"));
             }
-            WLOGFI("[NAPI]Window [%{public}u, %{public}s] show end, ret = %{public}d",
-                weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), ret);
+            WLOGFI("[NAPI]Window [%{public}u, %{public}s] show end, isCustomAnimation:%{public}d ret = %{public}d",
+                weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), isCustomAnimation, ret);
         };
-
-    NativeValue* lastParam = (info.argc == 0) ? nullptr :
-        (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
     NativeValue* result = nullptr;
     AsyncTask::Schedule("JsWindow::OnShow",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
@@ -419,31 +443,48 @@ NativeValue* JsWindow::OnDestroy(NativeEngine& engine, NativeCallbackInfo& info)
 NativeValue* JsWindow::OnHide(NativeEngine& engine, NativeCallbackInfo& info)
 {
     WMError errCode = WMError::WM_OK;
-    if (info.argc > 1) {
+    if (info.argc > 2) { // 2: maximum params num
         WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
+    bool isCustomAnimation = false;
+    NativeValue* lastParam = nullptr;
+    if (errCode == WMError::WM_OK && info.argc >= 1) {
+        if (info.argv[0]->TypeOf() == NATIVE_BOOLEAN) {
+            NativeBoolean* nativeVal = ConvertNativeValueTo<NativeBoolean>(info.argv[0]);
+            if (nativeVal == nullptr) {
+                WLOGFE("[NAPI]Failed to convert parameter to isCustomAnimation");
+                errCode = WMError::WM_ERROR_INVALID_PARAM;
+            } else if (WindowHelper::IsSystemWindow(windowToken_->GetType())) {
+                isCustomAnimation = static_cast<bool>(*nativeVal);
+            }
+        } else {
+            if (info.argc == 1) {
+                lastParam = (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
+            } else {
+                lastParam = (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
+            }
+        }
+    }
     wptr<Window> weakToken(windowToken_);
     AsyncTask::CompleteCallback complete =
-        [weakToken, errCode](NativeEngine& engine, AsyncTask& task, int32_t status) {
+        [weakToken, errCode, isCustomAnimation](NativeEngine& engine, AsyncTask& task, int32_t status) {
             auto weakWindow = weakToken.promote();
             if (weakWindow == nullptr || errCode != WMError::WM_OK) {
                 task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode)));
                 WLOGFE("[NAPI]window is nullptr or get invalid param");
                 return;
             }
-            WMError ret = weakWindow->Hide();
+            WMError ret = weakWindow->Hide(0, isCustomAnimation);
             if (ret == WMError::WM_OK) {
                 task.Resolve(engine, engine.CreateUndefined());
             } else {
                 task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(ret), "Window hide failed"));
             }
-            WLOGFI("[NAPI]Window [%{public}u, %{public}s] hide end, ret = %{public}d",
-                weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), ret);
+            WLOGFI("[NAPI]Window [%{public}u, %{public}s] hide end, isCustomAnimation:%{public}d ret = %{public}d",
+                weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), isCustomAnimation, ret);
         };
 
-    NativeValue* lastParam = (info.argc == 0) ? nullptr :
-        (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
     NativeValue* result = nullptr;
     AsyncTask::Schedule("JsWindow::OnHide",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
@@ -1870,6 +1911,57 @@ NativeValue* JsWindow::OnSetTranslateSync(NativeEngine& engine, NativeCallbackIn
     return engine.CreateUndefined();
 }
 
+void JsWindow::CreateTransitionController(NativeEngine& engine)
+{
+    if (windowToken_ == nullptr) {
+        WLOGFE("[NAPI]windowToken_ is nullptr not match");
+        return;
+    }
+    if (!WindowHelper::IsSystemWindow(windowToken_->GetType())) {
+        WLOGFE("[NAPI]CreateTransitionController is not allowed since window is not system window");
+        return;
+    }
+    NativeValue* objValue = engine.CreateObject();
+    auto name = GetWindowName();
+    std::shared_ptr<NativeReference> jsWindowObj = FindJsWindowObject(name);
+    if (jsWindowObj == nullptr || jsWindowObj->Get() == nullptr) {
+        return;
+    }
+    sptr<JsTransitionController> nativeController = new JsTransitionController(
+        engine, jsWindowObj, windowToken_);
+    NativeObject* object = ConvertNativeValueTo<NativeObject>(objValue);
+    if (object == nullptr) {
+        WLOGFE("[NAPI]Failed to convert to TransitionController Object");
+        return;
+    }
+    object->SetNativePointer(new wptr<JsTransitionController>(nativeController),
+        [](NativeEngine*, void* data, void*) {
+            WLOGFE("Finalizer for wptr form native Transition Controller is called");
+            delete static_cast<wptr<JsTransitionController>*>(data);
+        }, nullptr);
+    windowToken_->RegisterCustomTransitionController(nativeController);
+    jsTransControllerObj_.reset(engine.CreateReference(objValue, 1));
+    nativeController->SetJsController(jsTransControllerObj_);
+    WLOGFI("[NAPI]Window [%{public}u, %{public}s] CreateTransitionController end",
+        windowToken_->GetWindowId(), windowToken_->GetWindowName().c_str());
+}
+
+NativeValue* JsWindow::OnGetTransitionControllerSync(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    if (windowToken_ == nullptr || info.argc > 0) {
+        WLOGFE("[NAPI]windowToken_ is nullptr or params %{public}zu not match", info.argc);
+        return engine.CreateUndefined();
+    }
+    if (!WindowHelper::IsSystemWindow(windowToken_->GetType())) {
+        WLOGFE("[NAPI]OnCreateTransitionControllerSync is not allowed since window is not system window");
+        return engine.CreateUndefined();
+    }
+    if (jsTransControllerObj_ == nullptr || jsTransControllerObj_->Get() == nullptr) {
+        CreateTransitionController(engine);
+    }
+    return jsTransControllerObj_->Get();
+}
+
 std::shared_ptr<NativeReference> FindJsWindowObject(std::string windowName)
 {
     WLOGFI("[NAPI]Try to find window %{public}s in g_jsWindowMap", windowName.c_str());
@@ -1947,6 +2039,7 @@ void BindFunctions(NativeEngine& engine, NativeObject* object)
     BindNativeFunction(engine, *object, "setScaleSync", JsWindow::SetScaleSync);
     BindNativeFunction(engine, *object, "setRotateSync", JsWindow::SetRotateSync);
     BindNativeFunction(engine, *object, "setTranslateSync", JsWindow::SetTranslateSync);
+    BindNativeFunction(engine, *object, "getTransitionControllerSync", JsWindow::GetTransitionControllerSync);
 }
 }  // namespace Rosen
 }  // namespace OHOS

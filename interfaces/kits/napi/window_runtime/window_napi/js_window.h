@@ -74,6 +74,7 @@ public:
     static NativeValue* SetScaleSync(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetRotateSync(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetTranslateSync(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* GetTransitionControllerSync(NativeEngine* engine, NativeCallbackInfo* info);
 private:
     std::string GetWindowName();
     bool ParseScaleOption(NativeEngine& engine, NativeObject* jsObject, Transform& trans);
@@ -121,8 +122,12 @@ private:
     NativeValue* OnSetScaleSync(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnSetRotateSync(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnSetTranslateSync(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnGetTransitionControllerSync(NativeEngine& engine, NativeCallbackInfo& info);
+    void CreateTransitionController(NativeEngine& engine);
+
     sptr<Window> windowToken_ = nullptr;
     std::unique_ptr<JsWindowRegisterManager> registerManager_ = nullptr;
+    std::shared_ptr<NativeReference> jsTransControllerObj_ = nullptr;
 };
 }  // namespace Rosen
 }  // namespace OHOS
