@@ -69,7 +69,7 @@ private:
         .userData_ = this,
         .callback_ = OnVsync,
     };
-    std::shared_ptr<OHOS::Rosen::VSyncReceiver> receiver_ = nullptr;
+    std::shared_ptr<OHOS::Rosen::IVSyncReceiver> receiver_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS
