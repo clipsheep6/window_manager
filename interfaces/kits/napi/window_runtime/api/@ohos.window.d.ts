@@ -618,16 +618,48 @@ declare namespace window {
     hide(): Promise<void>;
 
     /**
+      * hide window.
+      * @param withAnimation enable custom animation when transitionController func is set, or default animation
+      * @since 9
+      * @systemapi
+      */
+    hide(withAnimation: boolean, callback: AsyncCallback<void>): void;
+
+    /**
+      * hide window.
+      * @param withAnimation enable custom animation when transitionController func is set, or default animation
+      * @since 9
+      * @systemapi
+      */
+    hide(withAnimation: boolean): Promise<void>;
+
+    /**
       * show sub window.
       * @since 7
       */
     show(callback: AsyncCallback<void>): void;
 
     /**
-      * show sub window.
+      * show window.
       * @since 7
       */
     show(): Promise<void>;
+
+    /**
+      * show window.
+      * @param withAnimation enable custom animation when transitionController func is set, or default animation
+      * @since 9
+      * @systemapi
+      */
+    show(withAnimation: boolean, callback: AsyncCallback<void>): void;
+
+    /**
+      * show window.
+      * @param withAnimation enable custom animation when transitionController func is set, or default animation
+      * @since 9
+      * @systemapi
+      */
+    show(isCustomAnimation: boolean): Promise<void>;
 
     /**
      * Destroy the sub window.
@@ -1072,33 +1104,75 @@ declare namespace window {
      */
     setForbidSplitMove(isForbidSplitMove: boolean): Promise<void>;
     /**
-    * Sets opacity of window
-    * @param opacity Interval is 0.f-1.f.
-    * @systemapi
-    * @since 9
-    */
+     * Sets opacity  of window
+     * @param opacity  Interval is 0.f-1.f.
+     * @systemapi
+     * @since 9
+     */
     setOpacitySync(opacity: number): void;
     /**
-    * Sets scale options of window.
-    * @param scaleOptions scale param of window.
-    * @systemapi
-    * @since 9
-    */
+     * Sets scale options of window.
+     * @param scaleOptions scale param of window.
+     * @systemapi
+     * @since 9
+     */
     setScaleSync(scaleOptions: ScaleOptions): void;
     /**
-    * Sets rotate options of window.
-    * @param rotateOptions rotate param of window.
-    * @systemapi
-    * @since 9
-    */
+     * Sets rotate options of window.
+     * @param rotateOptions rotate param of window.
+     * @systemapi
+     * @since 9
+     */
     setRotateSync(rotateOptions: RotateOptions): void;
     /**
-    * Sets whether is transparent or not.
-    * @param translateOptions translate param of window.
-    * @systemapi
-    * @since 9
-    */
+     * Sets whether is transparent or not.
+     * @param translateOptions translate param of window.
+     * @systemapi
+     * @since 9
+     */
     setTranslateSync(translateOptions: TranslateOptions): void;
+    /**
+     * get Transition Controller.
+     * @systemapi
+     * @since 9
+     */
+    getTransitionControllerSync(): TransitionController;
+  }
+  /**
+   * TransitionContext
+   * @syscap SystemCapability.WindowManager.WindowManager.Core
+   * @systempi
+   * @since 9
+   */
+  interface TransitionContext {
+    /**
+     * the target window with animation
+     */
+    toWindow: Window
+    /**
+     * Sets whether animationSet is Complete.
+     * @param isComplete is Complete if true, or not if false.
+     */
+    completeTransition(isComplete: boolean): void;
+  }
+
+  /**
+   * TransitionController
+   * @syscap SystemCapability.WindowManager.WindowManager.Core
+   * @systempi
+   * @since 9
+   */
+  interface TransitionController {
+    /**
+     * Called back when show function executed.
+     * @param context transition Context.
+     */
+    animationForShown(context: TransitionContext): void;
+    /**
+     * Called back when hide function executed.
+     * @param context transition Context.
+     */
+    animationForHidden(context: TransitionContext): void;
   }
 
   enum WindowStageEventType {
