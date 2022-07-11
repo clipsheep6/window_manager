@@ -100,6 +100,7 @@ public:
     Rect windowRect_;
     bool focused_ { false };
     bool isDecorEnable_ { false };
+    std::string name_;
     DisplayId displayId_;
     WindowMode mode_;
     WindowType type_;
