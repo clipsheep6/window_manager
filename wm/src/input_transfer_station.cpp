@@ -30,7 +30,7 @@ void InputEventListener::OnInputEvent(std::shared_ptr<MMI::KeyEvent> keyEvent) c
         return;
     }
     uint32_t windowId = static_cast<uint32_t>(keyEvent->GetAgentWindowId());
-    WLOGFI("Receive keyEvent, windowId: %{public}u", windowId);
+    WLOGFI("liuqi 11 Receive keyEvent, windowId: %{public}u", windowId);
     auto channel = InputTransferStation::GetInstance().GetInputChannel(windowId);
     if (channel == nullptr) {
         WLOGFE("WindowInputChannel is nullptr");
@@ -45,7 +45,7 @@ void InputEventListener::OnInputEvent(std::shared_ptr<MMI::AxisEvent> axisEvent)
         WLOGFE("AxisEvent is nullptr");
         return;
     }
-    WLOGFI("Receive axisEvent, windowId: %{public}d", axisEvent->GetAgentWindowId());
+    WLOGFI("liuqi 11 Receive axisEvent, windowId: %{public}d", axisEvent->GetAgentWindowId());
     axisEvent->MarkProcessed();
 }
 
@@ -56,7 +56,7 @@ void InputEventListener::OnInputEvent(std::shared_ptr<MMI::PointerEvent> pointer
         return;
     }
     uint32_t windowId = static_cast<uint32_t>(pointerEvent->GetAgentWindowId());
-    WLOGFI("Receive pointerEvent, windowId: %{public}u", windowId);
+    WLOGFI("liuqi 11 Receive pointerEvent, windowId: %{public}u", windowId);
     auto channel = InputTransferStation::GetInstance().GetInputChannel(windowId);
     if (channel == nullptr) {
         WLOGFE("WindowInputChannel is nullptr");
@@ -74,8 +74,14 @@ void InputTransferStation::AddInputWindow(const sptr<Window>& window)
     windowInputChannels_.insert(std::make_pair(windowId, inputChannel));
     if (inputListener_ == nullptr) {
         WLOGFI("Init input listener");
+        auto mainEventRunner = AppExecFwk::EventRunner::GetMainEventRunner();
         std::shared_ptr<MMI::IInputEventConsumer> listener = std::make_shared<InputEventListener>(InputEventListener());
-        MMI::InputManager::GetInstance()->SetWindowInputEventConsumer(listener);
+        if (mainEventRunner != nullptr) {
+            mainHandler_ = std::make_shared<AppExecFwk::EventHandler>(mainEventRunner);
+            MMI::InputManager::GetInstance()->SetWindowInputEventConsumer(listener, mainHandler_);
+        } else {
+            MMI::InputManager::GetInstance()->SetWindowInputEventConsumer(listener);
+        }
         inputListener_ = listener;
     }
 }
@@ -120,6 +126,11 @@ sptr<WindowInputChannel> InputTransferStation::GetInputChannel(uint32_t windowId
         return nullptr;
     }
     return iter->second;
+}
+
+std::shared_ptr<AppExecFwk::EventHandler> InputTransferStation::GetMainHandler()
+{
+    return mainHandler_;
 }
 }
 }

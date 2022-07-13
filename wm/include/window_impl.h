@@ -377,6 +377,7 @@ private:
     uint32_t GetModeSupportInfo() const;
     WMError PreProcessShow(uint32_t reason, bool withAnimation);
     bool NeedToStopShowing();
+    void CalculateStartRectExceptHotZone(float virtualPixelRatio, const TransformHelper::Vector2& hotZoneScale);
 
     // colorspace, gamut
     using ColorSpaceConvertMap = struct {
@@ -417,16 +418,19 @@ private:
     const float SYSTEM_ALARM_WINDOW_WIDTH_RATIO = 0.8;
     const float SYSTEM_ALARM_WINDOW_HEIGHT_RATIO = 0.3;
 
-    int32_t startPointPosX_ = 0;
-    int32_t startPointPosY_ = 0;
-    int32_t startPointerId_ = 0;
-    bool startDragFlag_ = false;
-    bool startMoveFlag_ = false;
-    bool pointEventStarted_ = false;
-    Rect startPointRect_ = { 0, 0, 0, 0 };
+    sptr<DragProperty> dragProperty_;
+
+    // int32_t startPointPosX_ = 0;
+    // int32_t startPointPosY_ = 0;
+    // int32_t startPointerId_ = 0;
+    // bool startDragFlag_ = false;
+    // bool startMoveFlag_ = false;
+    // bool pointEventStarted_ = false;
+    // DragType dragType_ = DragType::DRAG_UNDEFINED;
+    // Rect startPointRect_ = { 0, 0, 0, 0 };
+
     Rect startRectExceptFrame_ = { 0, 0, 0, 0 };
     Rect startRectExceptCorner_ = { 0, 0, 0, 0 };
-    DragType dragType_ = DragType::DRAG_UNDEFINED;
     bool isAppDecorEnable_ = true;
     SystemConfig windowSystemConfig_ ;
     bool isOriginRectSet_ = false;

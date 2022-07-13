@@ -72,7 +72,7 @@ public:
     virtual WMError SetWindowBackgroundBlur(uint32_t windowId, WindowBlurLevel level) = 0;
     virtual AvoidArea GetAvoidAreaByType(uint32_t windowId, AvoidAreaType type) = 0;
     virtual WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId) = 0;
-    virtual void ProcessPointDown(uint32_t windowId, bool isStartDrag) = 0;
+    virtual void ProcessPointDown(uint32_t windowId, sptr<DragProperty>& dragProperty, bool isStartDrag) = 0;
     virtual void ProcessPointUp(uint32_t windowId) = 0;
     virtual void MinimizeAllAppWindows(DisplayId displayId) = 0;
     virtual WMError ToggleShownStateForAllAppWindows() = 0;

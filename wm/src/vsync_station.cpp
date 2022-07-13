@@ -14,6 +14,7 @@
  */
 
 #include "vsync_station.h"
+#include "input_transfer_station.h"
 #include "transaction/rs_interfaces.h"
 #include "window_manager_hilog.h"
 
@@ -38,14 +39,7 @@ void VsyncStation::RequestVsync(CallbackType type, const std::shared_ptr<VsyncCa
         iter->second.insert(vsyncCallback);
 
         if (vsyncHandler_ == nullptr) {
-            auto mainEventRunner = AppExecFwk::EventRunner::GetMainEventRunner();
-            if (mainEventRunner != nullptr && isMainHandlerAvailable_) {
-                vsyncHandler_ = std::make_shared<AppExecFwk::EventHandler>(mainEventRunner);
-            } else {
-                WLOGFE("MainEventRunner is not available, create a new EventRunner for vsyncHandler_.");
-                vsyncHandler_ = std::make_shared<AppExecFwk::EventHandler>(
-                    AppExecFwk::EventRunner::Create(VSYNC_THREAD_ID));
-            }
+            vsyncHandler_ = InputTransferStation::GetInstance().GetMainHandler();
             auto& rsClient = OHOS::Rosen::RSInterfaces::GetInstance();
             while (receiver_ == nullptr) {
                 receiver_ = rsClient.CreateVSyncReceiver("WM_" + std::to_string(::getpid()), vsyncHandler_);
@@ -68,7 +62,7 @@ void VsyncStation::RequestVsync(CallbackType type, const std::shared_ptr<VsyncCa
 
 void VsyncStation::RemoveCallback(CallbackType type, const std::shared_ptr<VsyncCallback>& vsyncCallback)
 {
-    WLOGFI("Remove callback, type: %{public}u", type);
+    WLOGFI("liuqi Remove callback, type: %{public}u", type);
     std::lock_guard<std::mutex> lock(mtx_);
     auto iter = vsyncCallbacks_.find(type);
     if (iter == vsyncCallbacks_.end()) {
@@ -90,7 +84,7 @@ void VsyncStation::VsyncCallbackInner(int64_t timestamp)
         }
         vsyncHandler_->RemoveTask(VSYNC_TIME_OUT_TASK);
         if (vsyncCount_ & 0x01) { // write log every 2 vsync
-            WLOGFI("On vsync callback.");
+            WLOGFI("liuqi On vsync callback.");
         }
     }
     for (auto& vsyncCallbacksSet: vsyncCallbacks) {
@@ -112,7 +106,7 @@ void VsyncStation::OnVsync(int64_t timestamp, void* client)
 
 void VsyncStation::OnVsyncTimeOut()
 {
-    WLOGFE("Vsync time out");
+    WLOGFI("liuqi Vsync time out");
     std::lock_guard<std::mutex> lock(mtx_);
     hasRequestedVsync_ = false;
 }
