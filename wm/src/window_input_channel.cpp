@@ -24,7 +24,6 @@ namespace {
 }
 WindowInputChannel::WindowInputChannel(const sptr<Window>& window): window_(window), isAvailable_(true)
 {
-    callback_->onCallback = std::bind(&WindowInputChannel::OnVsync, this, std::placeholders::_1);
 }
 
 WindowInputChannel::~WindowInputChannel()
@@ -79,48 +78,21 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
         inputListener_->OnInputEvent(pointerEvent);
         return;
     }
+
+    if (!isAvailable_) {
+        return;
+    }
     if (pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_MOVE) {
-        std::shared_ptr<MMI::PointerEvent> pointerEventTemp;
-        {
-            std::lock_guard<std::mutex> lock(mtx_);
-            pointerEventTemp = moveEvent_;
-            moveEvent_ = pointerEvent;
-            if (isAvailable_) {
-                VsyncStation::GetInstance().RequestVsync(VsyncStation::CallbackType::CALLBACK_INPUT, callback_);
-            } else {
-                WLOGFE("WindowInputChannel is not available");
-                pointerEvent->MarkProcessed();
-            }
-        }
         WLOGFI("Receive move event, windowId: %{public}u, action: %{public}d",
             window_->GetWindowId(), pointerEvent->GetPointerAction());
-        if (pointerEventTemp != nullptr) {
-            pointerEventTemp->MarkProcessed();
-        }
+        window_->ConsumePointerEvent(pointerEvent);
+        pointerEvent->MarkProcessed();
     } else {
         WLOGFI("Dispatch non-move event, windowId: %{public}u, action: %{public}d",
             window_->GetWindowId(), pointerEvent->GetPointerAction());
         window_->ConsumePointerEvent(pointerEvent);
         pointerEvent->MarkProcessed();
     }
-}
-
-void WindowInputChannel::OnVsync(int64_t timeStamp)
-{
-    std::shared_ptr<MMI::PointerEvent> pointerEvent;
-    {
-        std::lock_guard<std::mutex> lock(mtx_);
-        pointerEvent = moveEvent_;
-        moveEvent_ = nullptr;
-    }
-    if (pointerEvent == nullptr) {
-        WLOGFE("moveEvent_ is nullptr");
-        return;
-    }
-    WLOGFI("Dispatch move event, windowId: %{public}u, action: %{public}d",
-        window_->GetWindowId(), pointerEvent->GetPointerAction());
-    window_->ConsumePointerEvent(pointerEvent);
-    pointerEvent->MarkProcessed();
 }
 
 void WindowInputChannel::SetInputListener(const std::shared_ptr<MMI::IInputEventConsumer>& listener)
@@ -133,11 +105,7 @@ void WindowInputChannel::Destroy()
     std::lock_guard<std::mutex> lock(mtx_);
     WLOGFI("Destroy WindowInputChannel, windowId:%{public}u", window_->GetWindowId());
     isAvailable_ = false;
-    VsyncStation::GetInstance().RemoveCallback(VsyncStation::CallbackType::CALLBACK_INPUT, callback_);
-    if (moveEvent_ != nullptr) {
-        moveEvent_->MarkProcessed();
-        moveEvent_ = nullptr;
-    }
+    VsyncStation::GetInstance().RemoveCallback();
 }
 
 bool WindowInputChannel::IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const

@@ -32,14 +32,10 @@ public:
     void SetInputListener(const std::shared_ptr<MMI::IInputEventConsumer>& listener);
     void Destroy();
 private:
-    void OnVsync(int64_t timeStamp);
     bool IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const;
-    std::shared_ptr<MMI::PointerEvent> moveEvent_ = nullptr;
     std::mutex mtx_;
     sptr<Window> window_;
     bool isAvailable_;
-    std::shared_ptr<VsyncStation::VsyncCallback> callback_ =
-        std::make_shared<VsyncStation::VsyncCallback>(VsyncStation::VsyncCallback());
     static const int32_t MAX_INPUT_NUM = 100;
     std::shared_ptr<MMI::IInputEventConsumer> inputListener_;
 };

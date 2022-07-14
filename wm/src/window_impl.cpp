@@ -78,7 +78,6 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
         property_->SetSystemBarProperty(it.first, it.second);
     }
     name_ = option->GetWindowName();
-    callback_->onCallback = std::bind(&WindowImpl::OnVsync, this, std::placeholders::_1);
 
     struct RSSurfaceNodeConfig rsSurfaceNodeConfig;
     rsSurfaceNodeConfig.SurfaceNodeName = property_->GetWindowName();
@@ -943,9 +942,6 @@ WMError WindowImpl::Destroy(bool needNotifyServer)
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         state_ = WindowState::STATE_DESTROYED;
-        if (isWaitingFrame_) {
-            VsyncStation::GetInstance().RemoveCallback(VsyncStation::CallbackType::CALLBACK_FRAME, callback_);
-        }
     }
     return ret;
 }
@@ -2256,24 +2252,15 @@ void WindowImpl::ConsumePointerEvent(std::shared_ptr<MMI::PointerEvent>& pointer
     }
 }
 
-void WindowImpl::OnVsync(int64_t timeStamp)
-{
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        isWaitingFrame_ = false;
-    }
-    uiContent_->ProcessVsyncEvent(static_cast<uint64_t>(timeStamp));
-}
-
-void WindowImpl::RequestFrame()
+void WindowImpl::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (state_ == WindowState::STATE_DESTROYED) {
-        WLOGFE("RequestFrame failed, window is destroyed");
+        WLOGFE("[WMS] Receive Vsync Request failed, window is destroyed");
         return;
     }
-    VsyncStation::GetInstance().RequestVsync(VsyncStation::CallbackType::CALLBACK_FRAME, callback_);
-    isWaitingFrame_ = true;
+    WLOGFI("[WMS] Receive Vsync Request");
+    VsyncStation::GetInstance().RequestVsync(vsyncCallback);
 }
 
 void WindowImpl::UpdateFocusStatus(bool focused)

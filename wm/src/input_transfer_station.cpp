@@ -14,6 +14,8 @@
  */
 
 #include "input_transfer_station.h"
+
+#include <event_handler.h>
 #include <window_manager_hilog.h>
 
 namespace OHOS {
@@ -65,6 +67,11 @@ void InputEventListener::OnInputEvent(std::shared_ptr<MMI::PointerEvent> pointer
     channel->HandlePointerEvent(pointerEvent);
 }
 
+std::shared_ptr<AppExecFwk::EventHandler> InputTransferStation::GetMainHandler()
+{
+    return mainHandler_;
+}
+
 void InputTransferStation::AddInputWindow(const sptr<Window>& window)
 {
     uint32_t windowId = window->GetWindowId();
@@ -76,6 +83,7 @@ void InputTransferStation::AddInputWindow(const sptr<Window>& window)
         WLOGFI("Init input listener");
         auto mainEventRunner = AppExecFwk::EventRunner::GetMainEventRunner();
         std::shared_ptr<MMI::IInputEventConsumer> listener = std::make_shared<InputEventListener>(InputEventListener());
+        auto mainEventRunner = AppExecFwk::EventRunner::GetMainEventRunner();
         if (mainEventRunner != nullptr) {
             mainHandler_ = std::make_shared<AppExecFwk::EventHandler>(mainEventRunner);
             MMI::InputManager::GetInstance()->SetWindowInputEventConsumer(listener, mainHandler_);

@@ -41,7 +41,7 @@ private:
     std::mutex mtx_;
     std::unordered_map<uint32_t, sptr<WindowInputChannel>> windowInputChannels_;
     std::shared_ptr<MMI::IInputEventConsumer> inputListener_ = nullptr;
-    std::shared_ptr<AppExecFwk::EventHandler> mainHandler_ = nullptr;
+    std::shared_ptr<AppExecFwk::EventHandler> mainHandler_;
 };
 
 class InputEventListener : public MMI::IInputEventConsumer {

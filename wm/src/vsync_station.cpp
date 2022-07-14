@@ -27,19 +27,22 @@ namespace {
 }
 WM_IMPLEMENT_SINGLE_INSTANCE(VsyncStation)
 
-void VsyncStation::RequestVsync(CallbackType type, const std::shared_ptr<VsyncCallback>& vsyncCallback)
+void VsyncStation::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback)
 {
     {
         std::lock_guard<std::mutex> lock(mtx_);
-        auto iter = vsyncCallbacks_.find(type);
-        if (iter == vsyncCallbacks_.end()) {
-            WLOGFE("wrong callback type.");
-            return;
-        }
-        iter->second.insert(vsyncCallback);
+        WLOGFI("[WMS] Handle Vsync Request");
+        vsyncCallbacks_.insert(vsyncCallback);
 
         if (vsyncHandler_ == nullptr) {
-            vsyncHandler_ = InputTransferStation::GetInstance().GetMainHandler();
+            auto mainHandler = InputTransferStation::GetInstance().GetMainHandler();
+            if (mainHandler != nullptr) {
+                vsyncHandler_ = mainHandler;
+            } else {
+                WLOGFE("MainEventRunner is not available, create a new EventRunner for vsyncHandler_.");
+                vsyncHandler_ = std::make_shared<AppExecFwk::EventHandler>(
+                    AppExecFwk::EventRunner::Create(VSYNC_THREAD_ID));
+            }
             auto& rsClient = OHOS::Rosen::RSInterfaces::GetInstance();
             while (receiver_ == nullptr) {
                 receiver_ = rsClient.CreateVSyncReceiver("WM_" + std::to_string(::getpid()), vsyncHandler_);
@@ -60,37 +63,29 @@ void VsyncStation::RequestVsync(CallbackType type, const std::shared_ptr<VsyncCa
     receiver_->RequestNextVSync(frameCallback_);
 }
 
-void VsyncStation::RemoveCallback(CallbackType type, const std::shared_ptr<VsyncCallback>& vsyncCallback)
+void VsyncStation::RemoveCallback()
 {
-    WLOGFI("liuqi Remove callback, type: %{public}u", type);
+    WLOGFI("[WMS] Remove Vsync callback");
     std::lock_guard<std::mutex> lock(mtx_);
-    auto iter = vsyncCallbacks_.find(type);
-    if (iter == vsyncCallbacks_.end()) {
-        WLOGFE("wrong callback type.");
-        return;
-    }
-    iter->second.erase(vsyncCallback);
+    vsyncCallbacks_.clear();
 }
 
 void VsyncStation::VsyncCallbackInner(int64_t timestamp)
 {
-    std::map<CallbackType, std::unordered_set<std::shared_ptr<VsyncCallback>>> vsyncCallbacks;
+    std::unordered_set<std::shared_ptr<VsyncCallback>> vsyncCallbacks;
     {
         std::lock_guard<std::mutex> lock(mtx_);
         hasRequestedVsync_ = false;
         vsyncCallbacks = vsyncCallbacks_;
-        for (auto& vsyncCallbacksSet: vsyncCallbacks_) {
-            vsyncCallbacksSet.second.clear();
-        }
+        vsyncCallbacks_.clear();
         vsyncHandler_->RemoveTask(VSYNC_TIME_OUT_TASK);
         if (vsyncCount_ & 0x01) { // write log every 2 vsync
-            WLOGFI("liuqi On vsync callback.");
+            // WLOGFI("On vsync callback.");
         }
     }
-    for (auto& vsyncCallbacksSet: vsyncCallbacks) {
-        for (const auto& callback: vsyncCallbacksSet.second) {
-            callback->onCallback(timestamp);
-        }
+    for (const auto& callback: vsyncCallbacks) {
+        WLOGFI("[WMS] On vsync callback.");
+        callback->onCallback(timestamp);
     }
 }
 
@@ -106,7 +101,7 @@ void VsyncStation::OnVsync(int64_t timestamp, void* client)
 
 void VsyncStation::OnVsyncTimeOut()
 {
-    WLOGFI("liuqi Vsync time out");
+    WLOGFI("[WMS] Vsync time out");
     std::lock_guard<std::mutex> lock(mtx_);
     hasRequestedVsync_ = false;
 }
