@@ -21,7 +21,6 @@
 #include <vector>
 
 #include <refbase.h>
-#include "libxml/parser.h"
 #include "libxml/tree.h"
 
 namespace OHOS::Rosen {

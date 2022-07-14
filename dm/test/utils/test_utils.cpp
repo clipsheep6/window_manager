@@ -16,7 +16,7 @@
 #include "test_utils.h"
 
 #include <accesstoken_kit.h>
-#include <nativetoken_kit.h>
+#include "access_token.h"
 #include <token_setproc.h>
 
 namespace OHOS {

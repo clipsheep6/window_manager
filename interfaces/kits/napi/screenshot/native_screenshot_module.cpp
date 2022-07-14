@@ -17,7 +17,6 @@
 #include <memory>
 #include <string>
 #include "display_manager.h"
-#include "display_property.h"
 #include "pixel_map.h"
 #include "pixel_map_napi.h"
 #include "wm_napi_common.h"

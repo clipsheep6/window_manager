@@ -14,6 +14,9 @@
  */
 
 #include "display_manager_config.h"
+
+#include "libxml/parser.h"
+
 #include "config_policy_utils.h"
 #include "window_manager_hilog.h"
 
