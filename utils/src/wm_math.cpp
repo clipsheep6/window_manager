@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 #include "wm_math.h"
-#include <memory>
 
 namespace OHOS {
 namespace Rosen {
