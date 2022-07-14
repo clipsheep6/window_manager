@@ -107,8 +107,9 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
         }
         case WindowManagerMessage::TRANS_ID_PROCESS_POINT_DOWN: {
             uint32_t windowId = data.ReadUint32();
+            sptr<DragProperty> dragProperty = data.ReadParcelable<DragProperty>();
             bool isStartDrag = data.ReadBool();
-            ProcessPointDown(windowId, isStartDrag);
+            ProcessPointDown(windowId, dragProperty, isStartDrag);
             break;
         }
         case WindowManagerMessage::TRANS_ID_PROCESS_POINT_UP: {

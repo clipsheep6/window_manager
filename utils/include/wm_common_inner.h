@@ -86,7 +86,7 @@ struct ModeChangeHotZonesConfig {
     uint32_t secondaryRange_;
 };
 
-struct WindowSizeLimits {
+struct WindowSizeLimits{
     bool isSizeLimitsUpdated_;
     uint32_t maxWidth_;
     uint32_t maxHeight_;
@@ -94,6 +94,7 @@ struct WindowSizeLimits {
     uint32_t minHeight_;
     float maxRatio_;
     float minRatio_;
+
     WindowSizeLimits() : isSizeLimitsUpdated_(false), maxWidth_(UINT32_MAX), maxHeight_(UINT32_MAX),
         minWidth_(0),  minHeight_(0), maxRatio_(FLT_MAX), minRatio_(0.0f) {}
     WindowSizeLimits(bool isSizeLimitsUpdated, uint32_t maxWidth, uint32_t maxHeight,
@@ -127,6 +128,58 @@ enum class TraceTaskId : int32_t {
     STARTING_WINDOW = 0,
     REMOTE_ANIMATION,
     CONNECT_EXTENSION,
+};
+
+struct DragProperty : public Parcelable {
+    int32_t startPointPosX_;
+    int32_t startPointPosY_;
+    int32_t startPointerId_;
+    bool startDragFlag_;
+    bool startMoveFlag_;
+    bool pointEventStarted_;
+    DragType dragType_;
+    Rect startPointRect_;
+
+    DragProperty() : startPointPosX_(0), startPointPosY_(0), startPointerId_(0), startDragFlag_(false),
+        startMoveFlag_(false), pointEventStarted_(false), dragType_(DragType::DRAG_UNDEFINED),
+        startPointRect_({ 0, 0, 0, 0 }) {}
+    DragProperty(int32_t startPointPosX, int32_t startPointPosY, int32_t startPointerId, bool startDragFlag,
+        bool startMoveFlag, bool pointEventStarted, Rect startPointRect, DragType dragType)
+        : startPointPosX_(startPointPosX), startPointPosY_(startPointPosY), startPointerId_(startPointerId),
+        startDragFlag_(startDragFlag), startMoveFlag_(startMoveFlag), pointEventStarted_(pointEventStarted),
+        dragType_(dragType), startPointRect_(startPointRect) {}
+
+    virtual bool Marshalling(Parcel& parcel) const override
+    {
+        if (!parcel.WriteInt32(startPointPosX_) || !parcel.WriteInt32(startPointPosY_) ||
+            !parcel.WriteInt32(startPointerId_) || !parcel.WriteBool(startDragFlag_) ||
+            !parcel.WriteBool(startMoveFlag_)   || !parcel.WriteBool(pointEventStarted_) ||
+            !parcel.WriteUint32(static_cast<uint32_t>(dragType_))) {
+            return false;
+        }
+
+        if (!parcel.WriteInt32(startPointRect_.posX_) || !parcel.WriteInt32(startPointRect_.posY_) ||
+            !parcel.WriteUint32(startPointRect_.width_) || !parcel.WriteUint32(startPointRect_.height_)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    static DragProperty* Unmarshalling(Parcel& parcel)
+    {
+        DragProperty* info = new DragProperty();
+        info->startPointPosX_ = parcel.ReadInt32();
+        info->startPointPosY_ = parcel.ReadInt32();
+        info->startPointerId_ = parcel.ReadInt32();
+        info->startDragFlag_ = parcel.ReadBool();
+        info->startMoveFlag_ = parcel.ReadBool();
+        info->pointEventStarted_ = parcel.ReadBool();
+        info->dragType_ = static_cast<DragType>(parcel.ReadUint32());
+        Rect rect = { parcel.ReadInt32(), parcel.ReadInt32(), parcel.ReadUint32(), parcel.ReadUint32() };
+        info->startPointRect_ = rect;
+        return info;
+    }
 };
 
 namespace {

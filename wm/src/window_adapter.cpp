@@ -113,11 +113,11 @@ WMError WindowAdapter::SetWindowBackgroundBlur(uint32_t windowId, WindowBlurLeve
     return windowManagerServiceProxy_->SetWindowBackgroundBlur(windowId, level);
 }
 
-void WindowAdapter::ProcessPointDown(uint32_t windowId, bool isStartDrag)
+void WindowAdapter::ProcessPointDown(uint32_t windowId, sptr<DragProperty>& dragProperty, bool isStartDrag)
 {
     INIT_PROXY_CHECK_RETURN();
 
-    return windowManagerServiceProxy_->ProcessPointDown(windowId, isStartDrag);
+    return windowManagerServiceProxy_->ProcessPointDown(windowId, dragProperty, isStartDrag);
 }
 
 void WindowAdapter::ProcessPointUp(uint32_t windowId)

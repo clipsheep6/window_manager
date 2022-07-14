@@ -17,10 +17,14 @@
 #define OHOS_ROSEN_WINDOW_INNER_MANAGER_H
 
 #include <refbase.h>
+#include <unistd.h>
 #include "event_handler.h"
 #include "event_runner.h"
+#include "input_manager.h"
+#include "pointer_event.h"
 
 #include "inner_window.h"
+#include "window_controller.h"
 #include "wm_common.h"
 #include "wm_single_instance.h"
 
@@ -30,22 +34,34 @@ enum class InnerWMRunningState {
 };
 namespace OHOS {
 namespace Rosen {
+class WindowDragController : public RefBase {
+public:
+    explicit WindowDragController(const sptr<WindowController>& windowController) :
+        windowController_(windowController) {}
+    ~WindowDragController() = default;
+
+private:
+    sptr<WindowController> windowController_;
+    DragProperty dragProperty_;
+};
+
 class WindowInnerManager : public RefBase {
 WM_DECLARE_SINGLE_INSTANCE_BASE(WindowInnerManager);
 using EventRunner = OHOS::AppExecFwk::EventRunner;
 using EventHandler = OHOS::AppExecFwk::EventHandler;
 public:
-    void Start(bool enableRecentholder);
+    void Start(bool enableRecentholder, const sptr<WindowController>& windowController);
     void Stop();
     void CreateInnerWindow(std::string name, DisplayId displayId, Rect rect, WindowType type, WindowMode mode);
     void DestroyInnerWindow(DisplayId displayId, WindowType type);
+    pid_t pid_;
 
 protected:
     WindowInnerManager();
     ~WindowInnerManager();
 
 private:
-    bool Init();
+    bool Init(const sptr<WindowController>& windowController);
 
 private:
     bool isRecentHolderEnable_ = false;
@@ -53,6 +69,20 @@ private:
     std::shared_ptr<EventRunner> eventLoop_;
     InnerWMRunningState state_;
     const std::string INNER_WM_THREAD_NAME = "inner_window_manager";
+
+    const std::string INNER_WM_INPUT_THREAD_NAME = "inner_input_manager";
+    std::shared_ptr<EventHandler> inputEventHandler_;
+    std::shared_ptr<EventRunner> inputEventRunner_;
+    std::shared_ptr<MMI::IInputEventConsumer> inputListener_ = nullptr;
+    sptr<WindowDragController> dragController_;
+};
+
+class InputEventListener : public MMI::IInputEventConsumer {
+public:
+    InputEventListener() = default;
+    void OnInputEvent(std::shared_ptr<MMI::PointerEvent> pointerEvent) const override;
+    void OnInputEvent(std::shared_ptr<MMI::KeyEvent> keyEvent) const override;
+    void OnInputEvent(std::shared_ptr<MMI::AxisEvent> axisEvent) const override;
 };
 } // namespace Rosen
 } // namespace OHOS

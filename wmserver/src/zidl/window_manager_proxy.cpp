@@ -306,7 +306,7 @@ WMError WindowManagerProxy::SetWindowAnimationController(const sptr<RSIWindowAni
     return static_cast<WMError>(ret);
 }
 
-void WindowManagerProxy::ProcessPointDown(uint32_t windowId, bool isStartDrag)
+void WindowManagerProxy::ProcessPointDown(uint32_t windowId, sptr<DragProperty>& dragProperty, bool isStartDrag)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -317,6 +317,11 @@ void WindowManagerProxy::ProcessPointDown(uint32_t windowId, bool isStartDrag)
     }
     if (!data.WriteUint32(windowId)) {
         WLOGFE("Write windowId failed");
+        return;
+    }
+
+    if (!data.WriteParcelable(dragProperty)) {
+        WLOGFE("Failed to write dragProperty!");
         return;
     }
     if (!data.WriteBool(isStartDrag)) {

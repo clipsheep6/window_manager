@@ -34,12 +34,14 @@ public:
     void AddInputWindow(const sptr<Window>& window);
     void RemoveInputWindow(uint32_t windowId);
     void SetInputListener(uint32_t windowId, const std::shared_ptr<MMI::IInputEventConsumer>& listener);
+    std::shared_ptr<AppExecFwk::EventHandler> GetMainHandler();
 
 private:
     sptr<WindowInputChannel> GetInputChannel(uint32_t windowId);
     std::mutex mtx_;
     std::unordered_map<uint32_t, sptr<WindowInputChannel>> windowInputChannels_;
     std::shared_ptr<MMI::IInputEventConsumer> inputListener_ = nullptr;
+    std::shared_ptr<AppExecFwk::EventHandler> mainHandler_;
 };
 
 class InputEventListener : public MMI::IInputEventConsumer {

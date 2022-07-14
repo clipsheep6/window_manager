@@ -74,7 +74,8 @@ void WindowManagerService::OnStart()
     if (!Init()) {
         return;
     }
-    WindowInnerManager::GetInstance().Start(system::GetParameter("persist.window.holder.enable", "0") == "1");
+    WindowInnerManager::GetInstance().Start(system::GetParameter("persist.window.holder.enable", "0") == "1",
+        windowController_);
     sptr<IDisplayChangeListener> listener = new DisplayChangeListener();
     DisplayManagerServiceInner::GetInstance().RegisterDisplayChangeListener(listener);
     RegisterSnapshotHandler();
@@ -552,10 +553,11 @@ void DisplayChangeListener::OnScreenshot(DisplayId displayId)
     WindowManagerService::GetInstance().OnScreenshot(displayId);
 }
 
-void WindowManagerService::ProcessPointDown(uint32_t windowId, bool isStartDrag)
+void WindowManagerService::ProcessPointDown(uint32_t windowId, sptr<DragProperty>& dragProperty,
+    bool isStartDrag)
 {
-    return wmsTaskLooper_->PostTask([this, windowId, isStartDrag]() {
-        windowController_->ProcessPointDown(windowId, isStartDrag);
+    return wmsTaskLooper_->PostTask([this, windowId, dragProperty, isStartDrag]() mutable {
+        windowController_->ProcessPointDown(windowId, dragProperty, isStartDrag);
     });
 }
 

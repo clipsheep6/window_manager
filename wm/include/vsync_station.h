@@ -26,24 +26,17 @@
 #include <event_handler.h>
 #include <vsync_receiver.h>
 
+#include "wm_common.h"
 #include "wm_single_instance.h"
 
 namespace OHOS {
 namespace Rosen {
 class VsyncStation {
 WM_DECLARE_SINGLE_INSTANCE_BASE(VsyncStation);
-using OnCallback = std::function<void(int64_t)>;
 public:
-    enum class CallbackType {
-        CALLBACK_INPUT = 0,
-        CALLBACK_FRAME = 1,
-    };
-    struct VsyncCallback {
-        OnCallback onCallback;
-    };
     ~VsyncStation() = default;
-    void RequestVsync(CallbackType type, const std::shared_ptr<VsyncCallback>& vsyncCallback);
-    void RemoveCallback(CallbackType type, const std::shared_ptr<VsyncCallback>& vsyncCallback);
+    void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback);
+    void RemoveCallback();
     void SetIsMainHandlerAvailable(bool available)
     {
         isMainHandlerAvailable_ = available;
@@ -61,10 +54,8 @@ private:
     bool hasRequestedVsync_ = false;
     bool isMainHandlerAvailable_ = false;
     uint32_t vsyncCount_ = 0;
-    std::map<CallbackType, std::unordered_set<std::shared_ptr<VsyncCallback>>> vsyncCallbacks_ = {
-        {CallbackType::CALLBACK_INPUT, {}},
-        {CallbackType::CALLBACK_FRAME, {}},
-    };
+
+    std::unordered_set<std::shared_ptr<VsyncCallback>> vsyncCallbacks_;
     VSyncReceiver::FrameCallback frameCallback_ = {
         .userData_ = this,
         .callback_ = OnVsync,

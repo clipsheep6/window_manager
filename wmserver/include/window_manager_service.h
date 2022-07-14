@@ -83,7 +83,7 @@ public:
     WMError RequestFocus(uint32_t windowId) override;
     WMError SetWindowBackgroundBlur(uint32_t windowId, WindowBlurLevel level) override;
     AvoidArea GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType) override;
-    void ProcessPointDown(uint32_t windowId, bool isStartDrag) override;
+    void ProcessPointDown(uint32_t windowId, sptr<DragProperty>& dragProperty, bool isStartDrag) override;
     void ProcessPointUp(uint32_t windowId) override;
     WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId) override;
     void MinimizeAllAppWindows(DisplayId displayId) override;

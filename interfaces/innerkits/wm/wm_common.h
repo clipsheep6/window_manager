@@ -358,6 +358,11 @@ struct SystemConfig {
     bool isSystemDecorEnable_ = true;
     bool isStretchable_ = false;
 };
+
+using OnCallback = std::function<void(int64_t)>;
+struct VsyncCallback {
+    OnCallback onCallback;
+};
 }
 }
 #endif // OHOS_ROSEN_WM_COMMON_H

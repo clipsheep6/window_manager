@@ -227,7 +227,7 @@ public:
     virtual void AddInputEventListener(const std::shared_ptr<MMI::IInputEventConsumer>& inputEventListener) = 0;
     virtual void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent) = 0;
     virtual void ConsumePointerEvent(std::shared_ptr<MMI::PointerEvent>& inputEvent) = 0;
-    virtual void RequestFrame() = 0;
+    virtual void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback) = 0;
     virtual void UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration) = 0;
 
     virtual void RegisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener) = 0;

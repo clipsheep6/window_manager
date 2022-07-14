@@ -663,7 +663,7 @@ AvoidArea WindowController::GetAvoidAreaByType(uint32_t windowId, AvoidAreaType 
     return windowRoot_->GetAvoidAreaByType(windowId, avoidAreaType);
 }
 
-WMError WindowController::ProcessPointDown(uint32_t windowId, bool isStartDrag)
+WMError WindowController::ProcessPointDown(uint32_t windowId, sptr<DragProperty>& dragProperty, bool isStartDrag)
 {
     auto node = windowRoot_->GetWindowNode(windowId);
     if (node == nullptr) {

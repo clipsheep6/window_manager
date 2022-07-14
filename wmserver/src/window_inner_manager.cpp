@@ -36,7 +36,7 @@ WindowInnerManager::~WindowInnerManager()
     Stop();
 }
 
-bool WindowInnerManager::Init()
+bool WindowInnerManager::Init(const sptr<WindowController>& windowController)
 {
     eventLoop_ = AppExecFwk::EventRunner::Create(INNER_WM_THREAD_NAME);
     if (eventLoop_ == nullptr) {
@@ -46,17 +46,24 @@ bool WindowInnerManager::Init()
     if (eventHandler_ == nullptr) {
         return false;
     }
+    dragController_ = new WindowDragController(windowController);
+    inputEventRunner_ = AppExecFwk::EventRunner::Create(INNER_WM_INPUT_THREAD_NAME);
+    inputEventHandler_ = std::make_shared<AppExecFwk::EventHandler>(inputEventRunner_);
+    inputListener_ = std::make_shared<InputEventListener>(InputEventListener());
+    MMI::InputManager::GetInstance()->SetWindowInputEventConsumer(inputListener_, inputEventHandler_);
     WLOGFI("init window inner manager service success.");
+
+    pid_ = getpid();
     return true;
 }
 
-void WindowInnerManager::Start(bool enableRecentholder)
+void WindowInnerManager::Start(bool enableRecentholder, const sptr<WindowController>& windowController)
 {
     isRecentHolderEnable_ = enableRecentholder;
     if (state_ == InnerWMRunningState::STATE_RUNNING) {
         WLOGFI("window inner manager service has already started.");
     }
-    if (!Init()) {
+    if (!Init(windowController)) {
         WLOGFI("failed to init window inner manager service.");
         return;
     }
@@ -119,6 +126,38 @@ void WindowInnerManager::DestroyInnerWindow(DisplayId displayId, WindowType type
         }
     });
     return;
+}
+
+void InputEventListener::OnInputEvent(std::shared_ptr<MMI::KeyEvent> keyEvent) const
+{
+    if (keyEvent == nullptr) {
+        WLOGFE("KeyEvent is nullptr");
+        return;
+    }
+    uint32_t windowId = static_cast<uint32_t>(keyEvent->GetAgentWindowId());
+    WLOGFI("liuqi 222 Receive keyEvent, windowId: %{public}u", windowId);
+    keyEvent->MarkProcessed();
+}
+
+void InputEventListener::OnInputEvent(std::shared_ptr<MMI::AxisEvent> axisEvent) const
+{
+    if (axisEvent == nullptr) {
+        WLOGFE("AxisEvent is nullptr");
+        return;
+    }
+    WLOGFI("liuqi 222 Receive axisEvent, windowId: %{public}d", axisEvent->GetAgentWindowId());
+    axisEvent->MarkProcessed();
+}
+
+void InputEventListener::OnInputEvent(std::shared_ptr<MMI::PointerEvent> pointerEvent) const
+{
+    if (pointerEvent == nullptr) {
+        WLOGFE("PointerEvent is nullptr");
+        return;
+    }
+    uint32_t windowId = static_cast<uint32_t>(pointerEvent->GetAgentWindowId());
+    WLOGFI("liuqi 222 Receive pointerEvent, windowId: %{public}u", windowId);
+    pointerEvent->MarkProcessed();
 }
 } // Rosen
 } // OHOS
