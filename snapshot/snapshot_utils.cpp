@@ -33,7 +33,6 @@
 
 #include "display_manager.h"
 
-
 using namespace OHOS::Media;
 using namespace OHOS::Rosen;
 
