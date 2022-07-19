@@ -75,25 +75,6 @@ std::vector<ScreenId> AbstractScreenController::GetAllScreenIds() const
     return res;
 }
 
-std::vector<ScreenId> AbstractScreenController::GetShotScreenIds(std::vector<ScreenId> mirrorScreenIds) const
-{
-    WLOGI("GetShotScreenIds");
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    std::vector<ScreenId> screenIds;
-    for (ScreenId screenId : mirrorScreenIds) {
-        auto iter = std::find(screenIds.begin(), screenIds.end(), screenId);
-        if (iter != screenIds.end()) {
-            continue;
-        }
-        auto dmsScreenIter = dmsScreenMap_.find(screenId);
-        if (screenIdManager_.HasDmsScreenId(screenId) && dmsScreenIter == dmsScreenMap_.end()) {
-            screenIds.emplace_back(screenId);
-            WLOGI("GetShotScreenIds: screenId: %{public}" PRIu64"", screenId);
-        }
-    }
-    return screenIds;
-}
-
 std::vector<ScreenId> AbstractScreenController::GetAllExpandOrMirrorScreenIds(
     std::vector<ScreenId> mirrorScreenIds) const
 {
@@ -105,7 +86,7 @@ std::vector<ScreenId> AbstractScreenController::GetAllExpandOrMirrorScreenIds(
             continue;
         }
         auto iter = dmsScreenMap_.find(screenId);
-        if (iter != dmsScreenMap_.end()) {
+        if (iter != dmsScreenMap_.end() && iter->second->type_ != ScreenType::UNDEFINED) {
             screenIds.emplace_back(screenId);
         }
     }
@@ -904,34 +885,6 @@ bool AbstractScreenController::MakeExpand(std::vector<ScreenId> screenIds, std::
     ChangeScreenGroup(group, screenIds, startPoints, filterExpandScreen, ScreenCombination::SCREEN_EXPAND);
     WLOGFI("MakeExpand success");
     return true;
-}
-
-void AbstractScreenController::SetShotScreen(ScreenId mainScreenId, std::vector<ScreenId> shotScreenIds)
-{
-    WLOGFI("SetShotScreen. mainScreenId: %{public}" PRIu64"", mainScreenId);
-    if (shotScreenIds.empty()) {
-        WLOGFI("shotScreenIds is empty");
-        return;
-    }
-    std::shared_ptr<RSDisplayNode> displayNode = GetRSDisplayNodeByScreenId(mainScreenId);
-    if (displayNode == nullptr) {
-        WLOGFE("SetShotScreen error, cannot get DisplayNode");
-        return;
-    }
-    NodeId nodeId = displayNode->GetId();
-    WLOGI("SetShotScreen, mainScreen nodeId:%{public}" PRIu64"", nodeId);
-    for (ScreenId shotScreenId : shotScreenIds) {
-        shotScreenId = ConvertToRsScreenId(shotScreenId);
-        if (shotScreenId == SCREEN_ID_INVALID) {
-            continue;
-        }
-        struct RSDisplayNodeConfig config = {shotScreenId, true, nodeId};
-        displayNodeMap_[shotScreenId] = RSDisplayNode::Create(config);
-    }
-    auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->FlushImplicitTransaction();
-    }
 }
 
 void AbstractScreenController::RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens)
