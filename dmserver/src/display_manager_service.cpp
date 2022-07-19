@@ -215,6 +215,13 @@ DMError DisplayManagerService::SetVirtualScreenSurface(ScreenId screenId, sptr<S
 
 bool DisplayManagerService::SetOrientation(ScreenId screenId, Orientation orientation)
 {
+    auto orientationStart = static_cast<uint32_t>(Orientation::UNSPECIFIED);
+    auto orientationEnd = static_cast<uint32_t>(Orientation::REVERSE_HORIZONTAL);
+    auto inputOrientation = static_cast<uint32_t>(orientation);
+    if (inputOrientation < orientationStart || inputOrientation > orientationEnd) {
+        WLOGFE("SetOrientation::orientation: %{public}u", inputOrientation);
+        return false;
+    }
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SetOrientation(%" PRIu64")", screenId);
     return abstractScreenController_->SetOrientation(screenId, orientation, false);
 }
@@ -425,32 +432,27 @@ std::shared_ptr<RSDisplayNode> DisplayManagerService::GetRSDisplayNodeByDisplayI
 ScreenId DisplayManagerService::MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenIds)
 {
     WLOGFI("MakeMirror. mainScreenId :%{public}" PRIu64"", mainScreenId);
-    auto shotScreenIds = abstractScreenController_->GetShotScreenIds(mirrorScreenIds);
-    auto iter = std::find(shotScreenIds.begin(), shotScreenIds.end(), mainScreenId);
-    if (iter != shotScreenIds.end()) {
-        shotScreenIds.erase(iter);
-    }
     auto allMirrorScreenIds = abstractScreenController_->GetAllExpandOrMirrorScreenIds(mirrorScreenIds);
-    iter = std::find(allMirrorScreenIds.begin(), allMirrorScreenIds.end(), mainScreenId);
+    auto iter = std::find(allMirrorScreenIds.begin(), allMirrorScreenIds.end(), mainScreenId);
     if (iter != allMirrorScreenIds.end()) {
         allMirrorScreenIds.erase(iter);
     }
-    if (mainScreenId == SCREEN_ID_INVALID || (shotScreenIds.empty() && allMirrorScreenIds.empty())) {
-        WLOGFI("create mirror fail, screen is invalid. Screen :%{public}" PRIu64"", mainScreenId);
+    auto mainScreen = abstractScreenController_->GetAbstractScreen(mainScreenId);
+    if (mainScreen == nullptr || allMirrorScreenIds.empty()) {
+        WLOGFI("create mirror fail. main screen :%{public}" PRIu64", screens' size:%{public}u",
+            mainScreenId, static_cast<uint32_t>(allMirrorScreenIds.size()));
         return SCREEN_ID_INVALID;
     }
-    abstractScreenController_->SetShotScreen(mainScreenId, shotScreenIds);
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:MakeMirror");
-    if (!allMirrorScreenIds.empty() && !abstractScreenController_->MakeMirror(mainScreenId, allMirrorScreenIds)) {
+    if (!abstractScreenController_->MakeMirror(mainScreenId, allMirrorScreenIds)) {
         WLOGFE("make mirror failed.");
         return SCREEN_ID_INVALID;
     }
-    auto screen = abstractScreenController_->GetAbstractScreen(mainScreenId);
-    if (screen == nullptr || abstractScreenController_->GetAbstractScreenGroup(screen->groupDmsId_) == nullptr) {
+    if (abstractScreenController_->GetAbstractScreenGroup(mainScreen->groupDmsId_) == nullptr) {
         WLOGFE("get screen group failed.");
         return SCREEN_ID_INVALID;
     }
-    return screen->groupDmsId_;
+    return mainScreen->groupDmsId_;
 }
 
 void DisplayManagerService::RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens)
@@ -520,23 +522,25 @@ std::vector<sptr<ScreenInfo>> DisplayManagerService::GetAllScreenInfos()
 
 ScreenId DisplayManagerService::MakeExpand(std::vector<ScreenId> expandScreenIds, std::vector<Point> startPoints)
 {
-    WLOGI("MakeExpand");
+    WLOGFI("MakeExpand");
     if (expandScreenIds.empty() || startPoints.empty() || expandScreenIds.size() != startPoints.size()) {
         WLOGFI("create expand fail, input params is invalid. "
             "screenId vector size :%{public}ud, startPoint vector size :%{public}ud",
             static_cast<uint32_t>(expandScreenIds.size()), static_cast<uint32_t>(startPoints.size()));
         return SCREEN_ID_INVALID;
     }
-    ScreenId defaultScreenId = abstractScreenController_->GetDefaultAbstractScreenId();
-    WLOGI("MakeExpand, defaultScreenId:%{public}" PRIu64"", defaultScreenId);
-    auto shotScreenIds = abstractScreenController_->GetShotScreenIds(expandScreenIds);
-    auto iter = std::find(shotScreenIds.begin(), shotScreenIds.end(), defaultScreenId);
-    if (iter != shotScreenIds.end()) {
-        shotScreenIds.erase(iter);
+    std::map<ScreenId, Point> pointsMap;
+    uint32_t size = expandScreenIds.size();
+    for (uint32_t i = 0; i < size; i++) {
+        if (pointsMap.find(expandScreenIds[i]) != pointsMap.end()) {
+            continue;
+        }
+        pointsMap[expandScreenIds[i]] = startPoints[i];
     }
+    ScreenId defaultScreenId = abstractScreenController_->GetDefaultAbstractScreenId();
+    WLOGFI("MakeExpand, defaultScreenId:%{public}" PRIu64"", defaultScreenId);
     auto allExpandScreenIds = abstractScreenController_->GetAllExpandOrMirrorScreenIds(expandScreenIds);
-    iter = std::find(allExpandScreenIds.begin(), allExpandScreenIds.end(), defaultScreenId);
-    auto startPointIter = iter - allExpandScreenIds.begin() + startPoints.begin();
+    auto iter = std::find(allExpandScreenIds.begin(), allExpandScreenIds.end(), defaultScreenId);
     if (iter != allExpandScreenIds.end()) {
         allExpandScreenIds.erase(iter);
     }
@@ -545,18 +549,16 @@ ScreenId DisplayManagerService::MakeExpand(std::vector<ScreenId> expandScreenIds
         return SCREEN_ID_INVALID;
     }
     std::shared_ptr<RSDisplayNode> rsDisplayNode;
+    std::vector<Point> points;
     for (uint32_t i = 0; i < allExpandScreenIds.size(); i++) {
         rsDisplayNode = abstractScreenController_->GetRSDisplayNodeByScreenId(allExpandScreenIds[i]);
+        points.emplace_back(pointsMap[allExpandScreenIds[i]]);
         if (rsDisplayNode != nullptr) {
-            rsDisplayNode->SetDisplayOffset(startPoints[i].posX_, startPoints[i].posY_);
+            rsDisplayNode->SetDisplayOffset(pointsMap[allExpandScreenIds[i]].posX_, pointsMap[allExpandScreenIds[i]].posY_);
         }
     }
-    if (startPointIter != startPoints.end()) {
-        startPoints.erase(startPointIter);
-    }
-    abstractScreenController_->SetShotScreen(defaultScreenId, shotScreenIds);
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:MakeExpand");
-    if (!allExpandScreenIds.empty() && !abstractScreenController_->MakeExpand(allExpandScreenIds, startPoints)) {
+    if (!abstractScreenController_->MakeExpand(allExpandScreenIds, points)) {
         WLOGFE("make expand failed.");
         return SCREEN_ID_INVALID;
     }

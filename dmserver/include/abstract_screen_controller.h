@@ -50,7 +50,6 @@ public:
     void ScreenConnectionInDisplayInit(sptr<AbstractScreenCallback> abstractScreenCallback);
     std::vector<ScreenId> GetAllScreenIds() const;
     sptr<AbstractScreen> GetAbstractScreen(ScreenId dmsScreenId) const;
-    std::vector<ScreenId> GetShotScreenIds(std::vector<ScreenId>) const;
     std::vector<ScreenId> GetAllExpandOrMirrorScreenIds(std::vector<ScreenId>) const;
     sptr<AbstractScreenGroup> GetAbstractScreenGroup(ScreenId dmsScreenId);
     ScreenId GetDefaultAbstractScreenId();
@@ -68,7 +67,6 @@ public:
     void UpdateRSTree(ScreenId dmsScreenId, std::shared_ptr<RSSurfaceNode>& surfaceNode, bool isAdd);
     bool MakeMirror(ScreenId, std::vector<ScreenId> screens);
     bool MakeExpand(std::vector<ScreenId> screenIds, std::vector<Point> startPoints);
-    void SetShotScreen(ScreenId mainScreenId, std::vector<ScreenId> shotScreenIds);
     void RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens);
     bool SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason) const;
     ScreenPowerState GetScreenPower(ScreenId dmsScreenId) const;
