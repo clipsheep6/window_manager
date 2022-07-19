@@ -83,6 +83,14 @@ declare namespace screen {
   function setVirtualScreenSurface(screenId:number, surfaceId: string): Promise<void>;
 
   /**
+   * Set rotation for the virtual screen.
+   * @param screenId Indicates the screen id of the virtual screen.
+   * @param rotation Indicates the expected rotation.
+   */
+  function setVirtualScreenRotation(screenId:number, rotation: Rotation, callback: AsyncCallback<void>): void;
+  function setVirtualScreenRotation(screenId:number, rotation: Rotation): Promise<void>;
+
+  /**
    * Get screen rotation lock status.
    * @since 9
    */
@@ -96,6 +104,13 @@ declare namespace screen {
    */
   function setScreenRotationLocked(isLocked:boolean, callback: AsyncCallback<void>): void;
   function setScreenRotationLocked(isLocked:boolean): Promise<void>;
+
+  /**
+   * Set whether to enable layout for the area of the waterfall curved surface in landscape display mode.
+   * @param isEnabled Indicates whether to enable layout for waterfall display area.
+   * @since 9
+   */
+  function setWaterfallAreaLayoutEnable(isEnable: boolean);
  
   /**
    * the parameter of making expand screen
@@ -195,8 +210,23 @@ declare namespace screen {
     setScreenActiveMode(modeIndex: number, callback: AsyncCallback<void>): void;
     setScreenActiveMode(modeIndex: number): Promise<void>;
 
+    /**
+     * set density dpi of the screen.
+     */
     setDensityDpi(densityDpi: number, callback: AsyncCallback<void>): void;
     setDensityDpi(densityDpi: number): Promise<void>;
+
+    /**
+     * get hdr info of the screen.
+     */
+    getHdrInfo(callback: AsyncCallback<ScreenHdrInfo>): void;
+    getHdrInfo(): Promise<ScreenHdrInfo>;
+
+    /**
+     * get cutout info of the screen.
+     */
+    getScreenCutoutInfo(callback: AsyncCallback<void>): void;
+    getScreenCutoutInfo(): Promise<CutoutInfo>;
   }
 
   /**
@@ -238,6 +268,79 @@ declare namespace screen {
     SENSOR = 5,
     SENSOR_VERTICAL = 6,
     SENSOR_HORIZONTAL = 7,
+  }
+
+  enum Rotation {
+    ROTATION_0 = 0,
+    ROTATION_90,
+    ROTATION_180,
+    ROTATION_270,
+  }
+
+  /**
+   * Screen HDR info.
+   * @syscap SystemCapability.WindowManager.WindowManager.Core
+   * @since 9
+   */
+  interface ScreenHdrInfo {
+    readonly maxLum: number;
+    readonly minLum: number;
+    readonly maxAverageLum: number;
+    readonly supportedHdrFormats: Array<HdrFormat>;
+  }
+
+  /**
+   * Screen HDR formats.
+   * @syscap SystemCapability.WindowManager.WindowManager.Core
+   * @since 9
+   */
+  enum HdrFormat {
+    NOT_SUPPORT_HDR = 0,
+    DOLBY_VISION,
+    HDR10,
+    HDR10_PLUS,
+    HLG,
+    HDR_VIVID,
+  }
+
+  /**
+   * cutout information of the screen.
+   * @syscap SystemCapability.WindowManager.WindowManager.Core
+   * @since 9
+   */
+  interface CutoutInfo {
+    BoundingRects: BoundingRects;
+    BoundingInsetsSize: BoundingInsetsSize;
+    waterfallDisplayAreaRects: WaterfallDisplayAreaRects;
+    cutoutRect: Rect;
+  }
+
+  interface BoundingRects {
+    left: Rect;
+    right: Rect;
+    top: Rect;
+    bottom: Rect;
+  }
+
+  interface BoundingInsetsSize {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+  }
+
+  interface WaterfallDisplayAreaRects {
+    left: Rect;
+    right: Rect;
+    top: Rect;
+    bottom: Rect;
+  }
+
+  interface Rect {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
   }
 
   /**
