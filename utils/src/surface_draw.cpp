@@ -276,7 +276,7 @@ bool SurfaceDraw::DrawImageRect(std::shared_ptr<RSSurfaceNode> surfaceNode, Rect
         return false;
     }
     auto addr = static_cast<uint8_t *>(buffer->GetVirAddr());
-    if (!DoDrawImageRect(addr, winWidth, winHeight, pixelMap, color)) {
+    if (!DoDrawImageRect(addr, rect, pixelMap, color, buffer->GetStride())) {
         WLOGE("draw image rect failed.");
         return false;
     }
@@ -294,9 +294,11 @@ bool SurfaceDraw::DrawImageRect(std::shared_ptr<RSSurfaceNode> surfaceNode, Rect
     return true;
 }
 
-bool SurfaceDraw::DoDrawImageRect(uint8_t *addr, int32_t winWidth, int32_t winHeight,
-    sptr<Media::PixelMap> pixelMap, uint32_t color)
+bool SurfaceDraw::DoDrawImageRect(uint8_t *addr, const Rect rect, sptr<Media::PixelMap> pixelMap,
+    uint32_t color, int32_t bufferStride)
 {
+    int32_t winWidth = static_cast<int32_t>(rect.width_);
+    int32_t winHeight = static_cast<int32_t>(rect.height_);
     if (pixelMap == nullptr) {
         WLOGFE("drawing pixel map failed, because pixel map is nullptr.");
         return false;
@@ -323,12 +325,22 @@ bool SurfaceDraw::DoDrawImageRect(uint8_t *addr, int32_t winWidth, int32_t winHe
     canvas.Bind(bitmap);
     canvas.Clear(color);
     canvas.DrawBitmap(*pixelMap, left, top);
+    // bitmap size bitmapStride * winHeight and buffer size bufferStride * winHeight
+    // bitmapStride are rounded up to bufferStride to be divided by the physical memory size
+    // e.g bitmapStride is 1272 * image_stride(rgba) bufferStride will rounded up to 1280 * image_stride(rgba)
+    int32_t bitmapStride = winWidth * IMAGE_BYTES_STRIDE;
+    uint8_t* bitmapAddr = static_cast<uint8_t*>(bitmap.GetPixels());
 
-    uint32_t addrSize = winWidth * winHeight * IMAGE_BYTES_STRIDE;
-    errno_t ret = memcpy_s(addr, addrSize, bitmap.GetPixels(), addrSize);
-    if (ret != EOK) {
-        WLOGFE("draw failed");
-        return false;
+    for (int32_t i = 0; i < winHeight; i++) {
+        errno_t ret = memcpy_s(addr, bitmapStride, bitmapAddr, bitmapStride);
+        if (ret != EOK) {
+            WLOGFE("draw image rect failed, because copy bitmap to buffer failed.");
+            return false;
+        } else {
+            // skip some pixels to the next line to continue copying
+            addr += bufferStride;
+            bitmapAddr += bitmapStride;
+        }
     }
     return true;
 }
