@@ -29,6 +29,7 @@
 #include "display_manager_agent_controller.h"
 #include "dm_common.h"
 #include "screen.h"
+#include "window_event_handler.h"
 #include "zidl/display_manager_agent_interface.h"
 
 namespace OHOS::Rosen {
@@ -42,7 +43,7 @@ public:
         OnAbstractScreenChangeCb onChange_;
     };
 
-    explicit AbstractScreenController(std::recursive_mutex& mutex);
+    explicit AbstractScreenController(std::shared_ptr<WindowEventHandler> handler);
     ~AbstractScreenController();
     WM_DISALLOW_COPY_AND_MOVE(AbstractScreenController);
 
@@ -124,7 +125,6 @@ private:
         std::map<ScreenId, ScreenId> dms2RsScreenIdMap_;
     };
 
-    std::recursive_mutex& mutex_;
     OHOS::Rosen::RSInterfaces& rsInterface_;
     ScreenIdManager screenIdManager_;
     std::map<ScreenId, sptr<AbstractScreen>> dmsScreenMap_;
@@ -133,7 +133,7 @@ private:
     std::map<sptr<IRemoteObject>, std::vector<ScreenId>> screenAgentMap_;
     sptr<AgentDeathRecipient> deathRecipient_ { nullptr };
     sptr<AbstractScreenCallback> abstractScreenCallback_;
-    std::shared_ptr<AppExecFwk::EventHandler> controllerHandler_;
+    std::shared_ptr<WindowEventHandler> controllerHandler_;
     std::atomic<ScreenId> defaultRsScreenId_ {SCREEN_ID_INVALID };
 };
 } // namespace OHOS::Rosen

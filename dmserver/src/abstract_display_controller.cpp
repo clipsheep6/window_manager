@@ -31,8 +31,8 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "AbstractDisplayController"};
 }
 
-AbstractDisplayController::AbstractDisplayController(std::recursive_mutex& mutex, DisplayStateChangeListener listener)
-    : mutex_(mutex), rsInterface_(RSInterfaces::GetInstance()), displayStateChangeListener_(listener)
+AbstractDisplayController::AbstractDisplayController(DisplayStateChangeListener listener)
+    : rsInterface_(RSInterfaces::GetInstance()), displayStateChangeListener_(listener)
 {
 }
 
@@ -74,7 +74,6 @@ RSScreenModeInfo AbstractDisplayController::GetScreenActiveMode(ScreenId id)
 
 sptr<AbstractDisplay> AbstractDisplayController::GetAbstractDisplay(DisplayId displayId) const
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     auto iter = abstractDisplayMap_.find(displayId);
     if (iter == abstractDisplayMap_.end()) {
         WLOGFE("Failed to get AbstractDisplay %{public}" PRIu64", return nullptr!", displayId);
@@ -85,7 +84,6 @@ sptr<AbstractDisplay> AbstractDisplayController::GetAbstractDisplay(DisplayId di
 
 sptr<AbstractDisplay> AbstractDisplayController::GetAbstractDisplayByScreen(ScreenId screenId) const
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     for (auto iter : abstractDisplayMap_) {
         sptr<AbstractDisplay> display = iter.second;
         if (display->GetAbstractScreenId() == screenId) {
@@ -98,7 +96,6 @@ sptr<AbstractDisplay> AbstractDisplayController::GetAbstractDisplayByScreen(Scre
 
 std::vector<DisplayId> AbstractDisplayController::GetAllDisplayIds() const
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     std::vector<DisplayId> res;
     for (auto iter = abstractDisplayMap_.begin(); iter != abstractDisplayMap_.end(); ++iter) {
         res.push_back(iter->first);
@@ -116,7 +113,6 @@ std::shared_ptr<Media::PixelMap> AbstractDisplayController::GetScreenSnapshot(Di
     ScreenId dmsScreenId = abstractDisplay->GetAbstractScreenId();
     std::shared_ptr<RSDisplayNode> displayNode = abstractScreenController_->GetRSDisplayNodeByScreenId(dmsScreenId);
 
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     std::shared_ptr<SurfaceCaptureFuture> callback = std::make_shared<SurfaceCaptureFuture>();
     rsInterface_.TakeSurfaceCapture(displayNode, callback);
     std::shared_ptr<Media::PixelMap> screenshot = callback->GetResult(2000); // wait for <= 2000ms
@@ -133,7 +129,6 @@ void AbstractDisplayController::OnAbstractScreenConnect(sptr<AbstractScreen> abs
         return;
     }
     WLOGI("connect new screen. id:%{public}" PRIu64"", absScreen->dmsId_);
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     sptr<AbstractScreenGroup> group = absScreen->GetGroup();
     if (group == nullptr) {
         WLOGE("the group information of the screen is wrong");
@@ -162,7 +157,6 @@ void AbstractDisplayController::OnAbstractScreenDisconnect(sptr<AbstractScreen> 
     sptr<AbstractScreenGroup> screenGroup;
     DisplayId absDisplayId = DISPLAY_ID_INVALID;
     sptr<AbstractDisplay> abstractDisplay = nullptr;
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     screenGroup = absScreen->GetGroup();
     if (screenGroup == nullptr) {
         WLOGE("the group information of the screen is wrong");
@@ -283,7 +277,6 @@ void AbstractDisplayController::ProcessDisplayRotationChange(sptr<AbstractScreen
 sptr<AbstractDisplay> AbstractDisplayController::GetAbstractDisplayByAbsScreen(sptr<AbstractScreen> absScreen)
 {
     sptr<AbstractDisplay> abstractDisplay = nullptr;
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     auto iter = abstractDisplayMap_.begin();
     for (; iter != abstractDisplayMap_.end(); iter++) {
         if (iter->second->GetAbstractScreenId() == absScreen->dmsId_) {
@@ -316,36 +309,33 @@ sptr<AbstractDisplay> AbstractDisplayController::GetAbstractDisplayByAbsScreen(s
 void AbstractDisplayController::ProcessDisplayUpdateOrientation(sptr<AbstractScreen> absScreen)
 {
     sptr<AbstractDisplay> abstractDisplay = nullptr;
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        auto iter = abstractDisplayMap_.begin();
-        for (; iter != abstractDisplayMap_.end(); iter++) {
-            abstractDisplay = iter->second;
-            if (abstractDisplay->GetAbstractScreenId() == absScreen->dmsId_) {
-                WLOGFD("find abstract display of the screen. display %{public}" PRIu64", screen %{public}" PRIu64"",
-                    abstractDisplay->GetId(), absScreen->dmsId_);
-                break;
-            }
+    auto iter = abstractDisplayMap_.begin();
+    for (; iter != abstractDisplayMap_.end(); iter++) {
+        abstractDisplay = iter->second;
+        if (abstractDisplay->GetAbstractScreenId() == absScreen->dmsId_) {
+            WLOGFD("find abstract display of the screen. display %{public}" PRIu64", screen %{public}" PRIu64"",
+                abstractDisplay->GetId(), absScreen->dmsId_);
+            break;
         }
+    }
 
-        sptr<AbstractScreenGroup> group = absScreen->GetGroup();
-        if (group == nullptr) {
-            WLOGFE("cannot get screen group");
+    sptr<AbstractScreenGroup> group = absScreen->GetGroup();
+    if (group == nullptr) {
+        WLOGFE("cannot get screen group");
+        return;
+    }
+    if (iter == abstractDisplayMap_.end()) {
+        if (group->combination_ == ScreenCombination::SCREEN_ALONE
+            || group->combination_ == ScreenCombination::SCREEN_EXPAND) {
+            WLOGFE("cannot find abstract display of the screen %{public}" PRIu64"", absScreen->dmsId_);
             return;
-        }
-        if (iter == abstractDisplayMap_.end()) {
-            if (group->combination_ == ScreenCombination::SCREEN_ALONE
-                || group->combination_ == ScreenCombination::SCREEN_EXPAND) {
-                WLOGFE("cannot find abstract display of the screen %{public}" PRIu64"", absScreen->dmsId_);
-                return;
-            } else if (group->combination_ == ScreenCombination::SCREEN_MIRROR) {
-                // If the screen cannot be found in 'abstractDisplayMap_', it means that the screen is the secondary
-                WLOGFI("It's the secondary screen of the mirrored.");
-                return;
-            } else {
-                WLOGFE("Unknown combination");
-                return;
-            }
+        } else if (group->combination_ == ScreenCombination::SCREEN_MIRROR) {
+            // If the screen cannot be found in 'abstractDisplayMap_', it means that the screen is the secondary
+            WLOGFI("It's the secondary screen of the mirrored.");
+            return;
+        } else {
+            WLOGFE("Unknown combination");
+            return;
         }
     }
     abstractDisplay->SetOrientation(absScreen->orientation_);
@@ -368,16 +358,13 @@ void AbstractDisplayController::ProcessDisplaySizeChange(sptr<AbstractScreen> ab
     }
 
     std::map<DisplayId, sptr<AbstractDisplay>> matchedDisplays;
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        for (auto iter = abstractDisplayMap_.begin(); iter != abstractDisplayMap_.end(); ++iter) {
-            sptr<AbstractDisplay> absDisplay = iter->second;
-            if (absDisplay == nullptr || absDisplay->GetAbstractScreenId() != absScreen->dmsId_) {
-                continue;
-            }
-            if (UpdateDisplaySize(absDisplay, info)) {
-                matchedDisplays.insert(std::make_pair(iter->first, iter->second));
-            }
+    for (auto iter = abstractDisplayMap_.begin(); iter != abstractDisplayMap_.end(); ++iter) {
+        sptr<AbstractDisplay> absDisplay = iter->second;
+        if (absDisplay == nullptr || absDisplay->GetAbstractScreenId() != absScreen->dmsId_) {
+            continue;
+        }
+        if (UpdateDisplaySize(absDisplay, info)) {
+            matchedDisplays.insert(std::make_pair(iter->first, iter->second));
         }
     }
 
@@ -412,16 +399,13 @@ bool AbstractDisplayController::UpdateDisplaySize(sptr<AbstractDisplay> absDispl
 void AbstractDisplayController::ProcessVirtualPixelRatioChange(sptr<AbstractScreen> absScreen)
 {
     sptr<AbstractDisplay> abstractDisplay = nullptr;
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        auto iter = abstractDisplayMap_.begin();
-        for (; iter != abstractDisplayMap_.end(); iter++) {
-            abstractDisplay = iter->second;
-            if (abstractDisplay->GetAbstractScreenId() == absScreen->dmsId_) {
-                WLOGFD("find abstract display of the screen. display %{public}" PRIu64", screen %{public}" PRIu64"",
-                    abstractDisplay->GetId(), absScreen->dmsId_);
-                break;
-            }
+    auto iter = abstractDisplayMap_.begin();
+    for (; iter != abstractDisplayMap_.end(); iter++) {
+        abstractDisplay = iter->second;
+        if (abstractDisplay->GetAbstractScreenId() == absScreen->dmsId_) {
+            WLOGFD("find abstract display of the screen. display %{public}" PRIu64", screen %{public}" PRIu64"",
+                abstractDisplay->GetId(), absScreen->dmsId_);
+            break;
         }
     }
     if (abstractDisplay == nullptr) {
@@ -549,25 +533,22 @@ void AbstractDisplayController::SetFreeze(std::vector<DisplayId> displayIds, boo
     for (DisplayId displayId : displayIds) {
         sptr<AbstractDisplay> abstractDisplay;
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SetFreeze(%" PRIu64")", displayId);
-        {
-            WLOGI("setfreeze display %{public}" PRIu64"", displayId);
-            std::lock_guard<std::recursive_mutex> lock(mutex_);
-            auto iter = abstractDisplayMap_.find(displayId);
-            if (iter == abstractDisplayMap_.end()) {
-                WLOGE("setfreeze fail, cannot get display %{public}" PRIu64"", displayId);
-                continue;
-            }
-            abstractDisplay = iter->second;
-            FreezeFlag curFlag = abstractDisplay->GetFreezeFlag();
-            if ((toFreeze && (curFlag == FreezeFlag::FREEZING))
-                || (!toFreeze && (curFlag == FreezeFlag::UNFREEZING))) {
-                WLOGE("setfreeze fail, display %{public}" PRIu64" freezeflag is %{public}u",
-                    displayId, curFlag);
-                continue;
-            }
-            FreezeFlag flag = toFreeze ? FreezeFlag::FREEZING : FreezeFlag::UNFREEZING;
-            abstractDisplay->SetFreezeFlag(flag);
+        WLOGI("setfreeze display %{public}" PRIu64"", displayId);
+        auto iter = abstractDisplayMap_.find(displayId);
+        if (iter == abstractDisplayMap_.end()) {
+            WLOGE("setfreeze fail, cannot get display %{public}" PRIu64"", displayId);
+            continue;
         }
+        abstractDisplay = iter->second;
+        FreezeFlag curFlag = abstractDisplay->GetFreezeFlag();
+        if ((toFreeze && (curFlag == FreezeFlag::FREEZING))
+            || (!toFreeze && (curFlag == FreezeFlag::UNFREEZING))) {
+            WLOGE("setfreeze fail, display %{public}" PRIu64" freezeflag is %{public}u",
+                displayId, curFlag);
+            continue;
+        }
+        FreezeFlag flag = toFreeze ? FreezeFlag::FREEZING : FreezeFlag::UNFREEZING;
+        abstractDisplay->SetFreezeFlag(flag);
 
         // Notify freeze event to WMS
         SetDisplayStateChangeListener(abstractDisplay, type);
@@ -580,7 +561,6 @@ std::map<DisplayId, sptr<DisplayInfo>> AbstractDisplayController::GetAllDisplayI
 {
     ScreenId screenGroupId = info->GetScreenGroupId();
     std::map<DisplayId, sptr<DisplayInfo>> displayInfoMap;
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     for (auto& iter : abstractDisplayMap_) {
         sptr<AbstractDisplay> display = iter.second;
         if (display->GetAbstractScreenGroupId() == screenGroupId) {

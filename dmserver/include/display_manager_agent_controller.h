@@ -16,7 +16,6 @@
 #ifndef OHOS_ROSEN_DISPLAY_MANAGER_AGENT_CONTROLLER_H
 #define OHOS_ROSEN_DISPLAY_MANAGER_AGENT_CONTROLLER_H
 
-#include <mutex>
 #include "wm_single_instance.h"
 #include "client_agent_container.h"
 #include "zidl/display_manager_agent_interface.h"

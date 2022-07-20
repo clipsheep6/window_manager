@@ -23,7 +23,7 @@
 
 namespace OHOS::Rosen {
 enum class ScreenType : uint32_t {
-    UNDEFINE,
+    UNDEFINED,
     REAL,
     VIRTUAL
 };
@@ -45,7 +45,7 @@ public:
     DEFINE_VAR_DEFAULT_FUNC_GET(bool, IsScreenGroup, isScreenGroup, false);
     DEFINE_VAR_DEFAULT_FUNC_GET(Rotation, Rotation, rotation, Rotation::ROTATION_0);
     DEFINE_VAR_DEFAULT_FUNC_GET(Orientation, Orientation, orientation, Orientation::UNSPECIFIED);
-    DEFINE_VAR_DEFAULT_FUNC_GET(ScreenType, Type, type, ScreenType::UNDEFINE);
+    DEFINE_VAR_DEFAULT_FUNC_GET(ScreenType, Type, type, ScreenType::UNDEFINED);
     DEFINE_VAR_DEFAULT_FUNC_GET(uint32_t, ModeId, modeId, 0);
     DEFINE_VAR_FUNC_GET(std::vector<sptr<SupportedScreenModes>>, Modes, modes);
 protected:

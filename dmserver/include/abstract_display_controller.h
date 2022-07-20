@@ -33,7 +33,7 @@ class AbstractDisplayController : public RefBase {
 using DisplayStateChangeListener = std::function<void(DisplayId, sptr<DisplayInfo>,
     const std::map<DisplayId, sptr<DisplayInfo>>&, DisplayStateChangeType)>;
 public:
-    AbstractDisplayController(std::recursive_mutex& mutex, DisplayStateChangeListener);
+    AbstractDisplayController(DisplayStateChangeListener);
     ~AbstractDisplayController();
     WM_DISALLOW_COPY_AND_MOVE(AbstractDisplayController);
 
@@ -67,7 +67,6 @@ private:
     bool UpdateDisplaySize(sptr<AbstractDisplay> absDisplay, sptr<SupportedScreenModes> info);
     void SetDisplayStateChangeListener(sptr<AbstractDisplay> abstractDisplay, DisplayStateChangeType type);
 
-    std::recursive_mutex& mutex_;
     std::atomic<DisplayId> displayCount_ { 0 };
     sptr<AbstractDisplay> dummyDisplay_;
     std::map<DisplayId, sptr<AbstractDisplay>> abstractDisplayMap_;

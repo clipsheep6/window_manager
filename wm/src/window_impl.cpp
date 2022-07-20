@@ -1321,7 +1321,7 @@ std::string WindowImpl::TransferLifeCycleEventToString(LifeCycleEvent type) cons
             event = "DESTROY";
             break;
         default:
-            event = "UNDEFINE";
+            event = "UNDEFINED";
             break;
     }
     return event;

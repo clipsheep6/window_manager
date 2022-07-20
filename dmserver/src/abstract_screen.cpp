@@ -273,7 +273,7 @@ AbstractScreenGroup::AbstractScreenGroup(sptr<AbstractScreenController> screenCo
     std::string name, ScreenCombination combination) : AbstractScreen(screenController, name, dmsId, rsId),
     combination_(combination)
 {
-    type_ = ScreenType::UNDEFINE;
+    type_ = ScreenType::UNDEFINED;
     isScreenGroup_ = true;
 }
 

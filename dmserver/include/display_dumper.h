@@ -32,7 +32,7 @@ enum DumpType : uint32_t {
 class DisplayDumper : public RefBase {
 public:
     DisplayDumper(const sptr<AbstractDisplayController>& abstractDisplayController,
-        const sptr<AbstractScreenController>& abstractScreenController, std::recursive_mutex& mutex);
+        const sptr<AbstractScreenController>& abstractScreenController);
     DMError Dump(int fd, const std::vector<std::u16string>& args) const;
 
 private:
@@ -53,7 +53,6 @@ private:
 
     const sptr<AbstractDisplayController> abstractDisplayController_;
     const sptr<AbstractScreenController> abstractScreenController_;
-    std::recursive_mutex& mutex_;
 };
 }
 }

@@ -38,9 +38,8 @@ namespace {
 }
 
 DisplayDumper::DisplayDumper(const sptr<AbstractDisplayController>& abstractDisplayController,
-    const sptr<AbstractScreenController>& abstractScreenController, std::recursive_mutex& mutex)
-    : abstractDisplayController_(abstractDisplayController), abstractScreenController_(abstractScreenController),
-    mutex_(mutex)
+    const sptr<AbstractScreenController>& abstractScreenController)
+    : abstractDisplayController_(abstractDisplayController), abstractScreenController_(abstractScreenController)
 {
 }
 
@@ -161,7 +160,6 @@ DMError DisplayDumper::DumpAllScreenInfo(std::string& dumpInfo) const
     oss << "ScreenName           Type     IsGroup DmsId RsId                 ActiveIdx VPR Rotation Orientation "
         << "RequestOrientation NodeId               IsMirrored MirrorNodeId"
         << std::endl;
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     for (ScreenId screenId : screenIds) {
         auto screen = abstractScreenController_->GetAbstractScreen(screenId);
         if (screen == nullptr) {
@@ -250,7 +248,6 @@ DMError DisplayDumper::DumpAllDisplayInfo(std::string& dumpInfo) const
         << std::endl;
     oss << "DisplayId ScreenId RefreshRate VPR Rotation Orientation FreezeFlag [ x    y    w    h    ]"
         << std::endl;
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     for (DisplayId displayId : displayIds) {
         auto display = abstractDisplayController_->GetAbstractDisplay(displayId);
         if (display == nullptr) {
@@ -311,7 +308,7 @@ std::string DisplayDumper::TransferTypeToString(ScreenType type) const
             screenType = "VIRTUAL";
             break;
         default:
-            screenType = "UNDEFINE";
+            screenType = "UNDEFINED";
             break;
     }
     return screenType;
