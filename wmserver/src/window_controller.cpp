@@ -147,7 +147,7 @@ WMError WindowController::NotifyWindowTransition(sptr<WindowTransitionInfo>& src
         case TransitionEvent::BACK:
             return RemoteAnimation::NotifyAnimationClose(srcInfo, srcNode, TransitionEvent::BACK, windowRoot_);
         default:
-            return WMError::WM_ERROR_NO_REMOTE_ANIMATION;
+            return WMError::WM_ERROR_INVALID_OPERATION;
     }
     return WMError::WM_OK;
 }
@@ -252,6 +252,7 @@ WMError WindowController::AddWindowNode(sptr<WindowProperty>& property)
     }
     StopBootAnimationIfNeed(node->GetWindowType());
     MinimizeApp::ExecuteMinimizeAll();
+    node->stateMachine_.TransitionTo(WindowNodeState::SHOWN);
     return WMError::WM_OK;
 }
 
@@ -378,6 +379,7 @@ WMError WindowController::RemoveWindowNode(uint32_t windowId)
     if (windowNode->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
         RestoreCallingWindowSizeIfNeed();
     }
+    windowNode->stateMachine_.TransitionTo(WindowNodeState::HIDDEN);
     return res;
 }
 
@@ -395,6 +397,7 @@ WMError WindowController::DestroyWindow(uint32_t windowId, bool onlySelf)
     windowRoot_->FocusFaultDetection();
     FlushWindowInfoWithDisplayId(displayId);
     accessibilityConnection_->NotifyAccessibilityInfo(node, WindowUpdateType::WINDOW_UPDATE_REMOVED);
+    node->stateMachine_.TransitionTo(WindowNodeState::DESTROYED);
     return res;
 }
 

@@ -79,6 +79,7 @@ sptr<WindowNode> StartingWindow::CreateWindowNode(const sptr<WindowTransitionInf
     if (CreateLeashAndStartingSurfaceNode(node) != WMError::WM_OK) {
         return nullptr;
     }
+    node->stateMachine_.TransitionTo(WindowNodeState::STARTING_CREATED);
     return node;
 }
 

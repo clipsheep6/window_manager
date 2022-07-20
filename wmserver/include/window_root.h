@@ -46,7 +46,7 @@ public:
     void AddDeathRecipient(sptr<WindowNode> node);
     sptr<WindowNode> FindWindowNodeWithToken(const sptr<IRemoteObject>& token) const;
     WMError AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, bool fromStartingWin = false);
-    WMError RemoveWindowNode(uint32_t windowId);
+    WMError RemoveWindowNode(uint32_t windowId, bool fromAnimation = false);
     WMError DestroyWindow(uint32_t windowId, bool onlySelf);
     WMError UpdateWindowNode(uint32_t windowId, WindowUpdateReason reason);
     bool isVerticalDisplay(sptr<WindowNode>& node) const;
@@ -97,6 +97,7 @@ public:
     void MinimizeTargetWindows(std::vector<uint32_t>& windowIds);
     WMError UpdateRsTree(uint32_t windowId, bool isAdd);
     void RemoveSingleUserWindowNodes(int accountId);
+    WMError NeedToStopAddingNode(sptr<WindowNode>& node);
 private:
     void OnRemoteDied(const sptr<IRemoteObject>& remoteObject);
     WMError DestroyWindowInner(sptr<WindowNode>& node);

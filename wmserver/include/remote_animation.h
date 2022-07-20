@@ -18,12 +18,15 @@
 
 #include <refbase.h>
 #include <rs_iwindow_animation_controller.h>
+#include <rs_window_animation_finished_callback.h>
 #include <rs_window_animation_target.h>
 
+#include "event_handler.h"
 #include "wm_common.h"
 #include "window_node.h"
 #include "window_root.h"
 #include "window_transition_info.h"
+
 
 namespace OHOS {
 namespace Rosen {
@@ -56,10 +59,21 @@ public:
     static bool CheckAnimationController();
     static WMError NotifyAnimationByHome(sptr<WindowRoot>& windowRoot);
     static WMError NotifyAnimationScreenUnlock(std::function<void(void)> callback);
+    static void SetMainTaskHandler(std::shared_ptr<AppExecFwk::EventHandler> handler);
 private:
     static sptr<RSWindowAnimationTarget> CreateWindowAnimationTarget(sptr<WindowTransitionInfo> info,
         const sptr<WindowNode>& windowNode);
+    static sptr<RSWindowAnimationFinishedCallback> CreateShowAnimationFinishedCallback(
+        const sptr<WindowNode>& srcNode, const sptr<WindowNode>& dstNode);
+    static sptr<RSWindowAnimationFinishedCallback> CreateHideAnimationFinishedCallback(
+        const sptr<WindowNode>& srcNode);
+    static WMError NotifyAnimationStartApp(sptr<WindowTransitionInfo> srcInfo,
+        const sptr<WindowNode>& srcNode, const sptr<WindowNode>& dstNode,
+        sptr<RSWindowAnimationTarget>& dstTarget, sptr<RSWindowAnimationFinishedCallback>& finishedCallback);
+    static void ProcessNodeStateTask(const sptr<WindowNode>& node, WindowNodeState nextState);
+
     static sptr<RSIWindowAnimationController> windowAnimationController_;
+    static std::weak_ptr<AppExecFwk::EventHandler> wmsTaskHandler_;
 };
 } // Rosen
 } // OHOS

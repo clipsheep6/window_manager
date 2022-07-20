@@ -39,7 +39,7 @@ public:
     ~WindowNodeContainer();
     WMError ShowStartingWindow(sptr<WindowNode>& node);
     WMError AddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode);
-    WMError RemoveWindowNode(sptr<WindowNode>& node);
+    WMError RemoveWindowNode(sptr<WindowNode>& node, bool fromAnimation = false);
     WMError HandleRemoveWindow(sptr<WindowNode>& node);
     WMError UpdateWindowNode(sptr<WindowNode>& node, WindowUpdateReason reason);
     WMError DestroyWindowNode(sptr<WindowNode>& node, std::vector<uint32_t>& windowIds);
@@ -117,7 +117,7 @@ private:
     sptr<WindowNode> FindWindowNodeById(uint32_t id) const;
     void UpdateFocusStatus(uint32_t id, bool focused) const;
     void UpdateActiveStatus(uint32_t id, bool isActive) const;
-    void RemoveNodeFromRSTree(sptr<WindowNode>& node);
+    void RemoveNodeFromRSTree(sptr<WindowNode>& node, bool fromAnimation = false);
     void NotifyIfAvoidAreaChanged(const sptr<WindowNode>& node, const AvoidControlType avoidType) const;
     void NotifyIfSystemBarTintChanged(DisplayId displayId) const;
     void NotifyIfSystemBarRegionChanged(DisplayId displayId) const;
