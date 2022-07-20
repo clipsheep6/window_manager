@@ -981,28 +981,35 @@ static void SetBounds(const sptr<WindowNode>& node, const Rect& winRect, const R
         }
     }
     if (node->leashWinSurfaceNode_) {
+        WLOGFI("leashWinSurfaceNode_ name:%{public}s id:%{public}u preRect:[x:%{public}d, y:%{public}d, w:%{public}d, h:%{public}d]",
+            node->GetWindowName().c_str(), node->GetWindowId(), preRect.posX_, preRect.posY_, preRect.width_, preRect.height_);
+        WLOGFI("leashWinSurfaceNode_ name:%{public}s id:%{public}u winRect:[x:%{public}d, y:%{public}d, w:%{public}d, h:%{public}d]",
+            node->GetWindowName().c_str(), node->GetWindowId(), winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
         if (winRect != preRect) {
             // avoid animation change suddenly when client coming
+        WLOGFI("setbounds leashWinSurfaceNode_ name:%{public}s id:%{public}u winRect:[x:%{public}d, y:%{public}d, w:%{public}d, h:%{public}d]",
+            node->GetWindowName().c_str(), node->GetWindowId(), winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
             node->leashWinSurfaceNode_->SetBounds(winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
         }
         if (node->startingWinSurfaceNode_) {
+            WLOGFI("Before SetStartingWindow Bounds, nodeId: %{public}lu", node->startingWinSurfaceNode_->GetId());
             node->startingWinSurfaceNode_->SetBounds(0, 0, winRect.width_, winRect.height_);
         }
         if (node->surfaceNode_) {
+            WLOGFI("Before SetAppNode Bounds, nodeId: %{public}lu", node->surfaceNode_->GetId());
             node->surfaceNode_->SetBounds(0, 0, winRect.width_, winRect.height_);
         }
     } else if (node->surfaceNode_) {
+        WLOGFI("surfaceNode_ name:%{public}s id:%{public}u preRect:[x:%{public}d, y:%{public}d, w:%{public}d, h:%{public}d]",
+            node->GetWindowName().c_str(), node->GetWindowId(), preRect.posX_, preRect.posY_, preRect.width_, preRect.height_);
+        WLOGFI("surfaceNode_ name:%{public}s id:%{public}u winRect:[x:%{public}d, y:%{public}d, w:%{public}d, h:%{public}d]",
+            node->GetWindowName().c_str(), node->GetWindowId(), winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
         node->surfaceNode_->SetBounds(winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
     }
 }
 
 void WindowLayoutPolicy::UpdateSurfaceBounds(const sptr<WindowNode>& node, const Rect& winRect, const Rect& preRect)
 {
-    if (node->GetWindowType() == WindowType::WINDOW_TYPE_APP_COMPONENT ||
-        node->GetWindowProperty()->GetAnimationFlag() == static_cast<uint32_t>(WindowAnimation::CUSTOM)) {
-        WLOGFI("not need to update bounds");
-        return;
-    }
     wptr<WindowNode> weakNode = node;
     auto SetBoundsFunc = [weakNode, winRect, preRect]() {
         auto winNode = weakNode.promote();

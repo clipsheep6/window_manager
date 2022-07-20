@@ -16,17 +16,20 @@
 #ifndef OHOS_ROSEN_WINDOW_NODE_H
 #define OHOS_ROSEN_WINDOW_NODE_H
 
+#include <deque>
 #include <ipc_skeleton.h>
 #include <refbase.h>
 #include <running_lock.h>
 #include <ui/rs_surface_node.h>
 #include "zidl/window_interface.h"
 #include "window_manager_hilog.h"
-
+#include "window_node_state_machine.h"
 namespace OHOS {
 namespace Rosen {
+
 class WindowNode : public RefBase {
 public:
+
     WindowNode(const sptr<WindowProperty>& property, const sptr<IWindow>& window,
         std::shared_ptr<RSSurfaceNode> surfaceNode)
         : surfaceNode_(surfaceNode), property_(property), windowToken_(window)
@@ -128,9 +131,11 @@ public:
     bool isPlayAnimationShow_ { false };
     bool isPlayAnimationHide_ { false };
     bool startingWindowShown_ { false };
+    // delete when rs support check tree
+    bool isOnRsTree_ { false };
     bool isShowingOnMultiDisplays_ { false };
     std::vector<DisplayId> showingDisplays_;
-
+    WindowNodeStateMachine stateMachine_;
 private:
     sptr<WindowProperty> property_ = nullptr;
     sptr<IWindow> windowToken_ = nullptr;

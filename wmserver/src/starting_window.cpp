@@ -69,6 +69,8 @@ sptr<WindowNode> StartingWindow::CreateWindowNode(const sptr<WindowTransitionInf
     if (node == nullptr) {
         return nullptr;
     }
+    // chy test
+    node->stateMachine_.SetWindowId(winId);
     node->abilityToken_ = info->GetAbilityToken();
     node->SetWindowSizeLimits(info->GetWindowSizeLimits());
 
@@ -79,6 +81,7 @@ sptr<WindowNode> StartingWindow::CreateWindowNode(const sptr<WindowTransitionInf
     if (CreateLeashAndStartingSurfaceNode(node) != WMError::WM_OK) {
         return nullptr;
     }
+    node->stateMachine_.TransitionTo(WindowNodeState::STARTING_CREATED);
     return node;
 }
 
@@ -182,6 +185,10 @@ void StartingWindow::ReleaseStartWinSurfaceNode(sptr<WindowNode>& node)
 
 void StartingWindow::UpdateRSTree(sptr<WindowNode>& node, const AnimationConfig& animationConfig)
 {
+    if (node->isOnRsTree_) {
+        WLOGFE("window id:%{public}d is already on RsTree!", node->GetWindowId());
+        return;
+    }
     auto updateRSTreeFunc = [&]() {
         auto& dms = DisplayManagerServiceInner::GetInstance();
         DisplayId displayId = node->GetDisplayId();
@@ -192,6 +199,7 @@ void StartingWindow::UpdateRSTree(sptr<WindowNode>& node, const AnimationConfig&
             }
             dms.UpdateRSTree(displayId, node->leashWinSurfaceNode_, true);
             node->leashWinSurfaceNode_->AddChild(node->startingWinSurfaceNode_, -1);
+            node->isOnRsTree_ = true;
         } else { // hot start
             const auto& displayIdVec = node->GetShowingDisplays();
             for (auto& shownDisplayId : displayIdVec) {
@@ -203,8 +211,10 @@ void StartingWindow::UpdateRSTree(sptr<WindowNode>& node, const AnimationConfig&
                 for (auto& child : node->children_) {
                     if (child->currentVisibility_) {
                         dms.UpdateRSTree(shownDisplayId, child->surfaceNode_, true);
+                        child->isOnRsTree_ = true;
                     }
                 }
+                node->isOnRsTree_ = true;
             }
         }
     };

@@ -21,6 +21,7 @@
 
 #include "agent_death_recipient.h"
 #include "display_manager_service_inner.h"
+#include "parameters.h"
 #include "window_node_container.h"
 #include "zidl/window_manager_agent_interface.h"
 
@@ -34,7 +35,9 @@ class WindowRoot : public RefBase {
 using Callback = std::function<void (Event event, const sptr<IRemoteObject>& remoteObject)>;
 
 public:
-    explicit WindowRoot(Callback callback) : callback_(callback) {}
+    explicit WindowRoot(Callback callback) : callback_(callback) {
+        animationFirst_ = system::GetParameter("persist.window.af.enabled", "0") == "1";
+    }
     ~WindowRoot() = default;
 
     sptr<WindowNodeContainer> GetOrCreateWindowNodeContainer(DisplayId displayId);
@@ -47,7 +50,7 @@ public:
     void AddDeathRecipient(sptr<WindowNode> node);
     sptr<WindowNode> FindWindowNodeWithToken(const sptr<IRemoteObject>& token) const;
     WMError AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, bool fromStartingWin = false);
-    WMError RemoveWindowNode(uint32_t windowId);
+    WMError RemoveWindowNode(uint32_t windowId, bool fromAnimation = false);
     WMError DestroyWindow(uint32_t windowId, bool onlySelf);
     WMError UpdateWindowNode(uint32_t windowId, WindowUpdateReason reason);
     bool isVerticalDisplay(sptr<WindowNode>& node) const;
@@ -102,6 +105,7 @@ public:
     bool CheckMultiDialogWindows(WindowType type, sptr<IRemoteObject> token);
     bool HasPrivateWindow(DisplayId displayId);
 
+    WMError NeedToStopAddingNode(sptr<WindowNode>& node);
 private:
     void OnRemoteDied(const sptr<IRemoteObject>& remoteObject);
     WMError DestroyWindowInner(sptr<WindowNode>& node);
@@ -142,6 +146,7 @@ private:
     Callback callback_;
     uint32_t maxAppWindowNumber_ = 100;
     SplitRatioConfig splitRatioConfig_ = {0.1, 0.9, {}};
+    bool animationFirst_ = false;
 };
 }
 }

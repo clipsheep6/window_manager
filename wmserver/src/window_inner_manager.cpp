@@ -165,8 +165,12 @@ void WindowInnerManager::MinimizeAbility(const wptr<WindowNode> &node, bool isFr
 {
     // asynchronously calls the MinimizeAbility of AbilityManager
     auto weakNode = node.promote();
-    if (weakNode == nullptr || weakNode->startingWindowShown_) {
-        WLOGE("minimize ability failed, because node is nullptr or start window node.");
+    // if (weakNode == nullptr || weakNode->startingWindowShown_) {
+    //     WLOGE("minimize ability failed, because node is nullptr or start window node.");
+    //     return;
+    // }
+    if (weakNode == nullptr) {
+        WLOGE("minimize ability failed.");
         return;
     }
     wptr<IRemoteObject> weakToken(weakNode->abilityToken_);

@@ -68,7 +68,7 @@ WindowManagerService::WindowManagerService() : SystemAbility(WINDOW_MANAGER_SERV
     if (ret != 0) {
         WLOGFE("Add watchdog thread failed");
     }
-
+    RemoteAnimation::SetAnimationFirst(system::GetParameter("persist.window.af.enabled", "0") == "1");
     // init RSUIDirector, it will handle animation callback
     rsUiDirector_ = RSUIDirector::Create();
     rsUiDirector_->SetUITaskRunner([this](const std::function<void()>& task) { PostAsyncTask(task); });
@@ -246,6 +246,7 @@ void WindowManagerServiceHandler::StartingWindow(
 {
     sptr<WindowTransitionInfo> windowInfo = new WindowTransitionInfo(info);
     WLOGFI("hot start is called");
+    WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
     WindowManagerService::GetInstance().StartingWindow(windowInfo, pixelMap, false);
 }
 
@@ -254,6 +255,7 @@ void WindowManagerServiceHandler::StartingWindow(
 {
     sptr<WindowTransitionInfo> windowInfo = new WindowTransitionInfo(info);
     WLOGFI("cold start is called");
+    WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
     WindowManagerService::GetInstance().StartingWindow(windowInfo, pixelMap, true, bgColor);
 }
 
@@ -498,10 +500,12 @@ WMError WindowManagerService::GetFocusWindowInfo(sptr<IRemoteObject>& abilityTok
 void WindowManagerService::StartingWindow(sptr<WindowTransitionInfo> info, sptr<Media::PixelMap> pixelMap,
     bool isColdStart, uint32_t bkgColor)
 {
+    WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
     if (!startingOpen_) {
         WLOGFI("startingWindow not open!");
         return;
     }
+    WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
     PostAsyncTask([this, info, pixelMap, isColdStart, bkgColor]() {
         windowController_->StartingWindow(info, pixelMap, bkgColor, isColdStart);
     });
@@ -542,7 +546,16 @@ WMError WindowManagerService::CreateWindow(sptr<IWindow>& window, sptr<WindowPro
 
 WMError WindowManagerService::AddWindow(sptr<WindowProperty>& property)
 {
-    return PostSyncTask([this, &property]() {
+    auto node = windowRoot_->GetWindowNode(property->GetWindowId());
+    if (node == nullptr) {
+        WLOGFE("node is nullptr with id: %{public}u", property->GetWindowId());
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    WMError ret = windowRoot_->NeedToStopAddingNode(node);
+    if (ret != WMError::WM_OK) {
+        return ret;
+    }
+    auto func = [this, property]() mutable {
         if (property == nullptr) {
             WLOGFE("property is nullptr");
             return WMError::WM_ERROR_NULLPTR;
@@ -558,12 +571,25 @@ WMError WindowManagerService::AddWindow(sptr<WindowProperty>& property)
             dragController_->StartDrag(windowId);
         }
         return res;
-    });
+    };
+    WLOGFI("AddWindow windowId: %{public}u, name:%{public}s state: %{public}u",
+        node->GetWindowId(), node->GetWindowName().c_str(), static_cast<uint32_t>(node->stateMachine_.GetCurrentState()));
+    if (node->stateMachine_.IsRemoteAnimationPlaying()) {
+        WLOGFI("UpdateStateTaskQueue Show");
+        node->stateMachine_.UpdateStateTaskQueue("Show", func);
+        return WMError::WM_OK;
+    }
+    node->stateMachine_.PrintHistoryState();
+    return PostSyncTask(func);
 }
 
 WMError WindowManagerService::RemoveWindow(uint32_t windowId)
 {
-    return PostSyncTask([this, windowId]() {
+    auto node = windowRoot_->GetWindowNode(windowId);
+    if (node == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    auto func = [this, windowId]() {
         WLOGFI("[WMS] Remove: %{public}u", windowId);
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "wms:RemoveWindow(%u)", windowId);
         WindowInnerManager::GetInstance().NotifyWindowRemovedOrDestroyed(windowId);
@@ -572,7 +598,16 @@ WMError WindowManagerService::RemoveWindow(uint32_t windowId)
             return res;
         }
         return windowController_->RemoveWindowNode(windowId);
-    });
+    };
+    if (node->GetWindowType() != WindowType::WINDOW_TYPE_KEYGUARD && node->stateMachine_.IsRemoteAnimationPlaying()) {
+        WLOGFI("UpdateStateTaskQueue hide");
+        node->stateMachine_.UpdateStateTaskQueue("Hide", func);
+        return WMError::WM_OK;
+    }
+    WLOGFI("RemoveWindow windowId: %{public}u, name:%{public}s state: %{public}u",
+        node->GetWindowId(), node->GetWindowName().c_str(), static_cast<uint32_t>(node->stateMachine_.GetCurrentState()));
+    node->stateMachine_.PrintHistoryState();
+    return PostSyncTask(func);
 }
 
 WMError WindowManagerService::DestroyWindow(uint32_t windowId, bool onlySelf)
@@ -581,7 +616,11 @@ WMError WindowManagerService::DestroyWindow(uint32_t windowId, bool onlySelf)
         WLOGFI("Operation rejected");
         return WMError::WM_ERROR_INVALID_OPERATION;
     }
-    return PostSyncTask([this, windowId, onlySelf]() {
+    auto node = windowRoot_->GetWindowNode(windowId);
+    if (node == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    auto func = [this, windowId, onlySelf]() {
         WLOGFI("[WMS] Destroy: %{public}u", windowId);
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "wms:DestroyWindow(%u)", windowId);
         WindowInnerManager::GetInstance().NotifyWindowRemovedOrDestroyed(windowId);
@@ -590,7 +629,16 @@ WMError WindowManagerService::DestroyWindow(uint32_t windowId, bool onlySelf)
             dragController_->FinishDrag(windowId);
         }
         return windowController_->DestroyWindow(windowId, onlySelf);
-    });
+    };
+    if (node->stateMachine_.IsRemoteAnimationPlaying()) {
+        WLOGFI("UpdateStateTaskQueue Destroy");
+        node->stateMachine_.UpdateStateTaskQueue("Destroy", func);
+        return WMError::WM_OK;
+    }
+    WLOGFI("DestroyWindow windowId: %{public}u, name:%{public}s state: %{public}u",
+        node->GetWindowId(), node->GetWindowName().c_str(), static_cast<uint32_t>(node->stateMachine_.GetCurrentState()));
+    node->stateMachine_.PrintHistoryState();
+    return PostSyncTask(func);
 }
 
 WMError WindowManagerService::RequestFocus(uint32_t windowId)
@@ -652,6 +700,7 @@ WMError WindowManagerService::SetWindowAnimationController(const sptr<RSIWindowA
         }
     );
     controller->AsObject()->AddDeathRecipient(deathRecipient);
+    RemoteAnimation::SetMainTaskHandler(handler_);
     return PostSyncTask([this, &controller]() {
         return windowController_->SetWindowAnimationController(controller);
     });

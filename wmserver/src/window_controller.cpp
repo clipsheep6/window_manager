@@ -47,6 +47,7 @@ uint32_t WindowController::GenWindowId()
 void WindowController::StartingWindow(sptr<WindowTransitionInfo> info, sptr<Media::PixelMap> pixelMap,
     uint32_t bkgColor, bool isColdStart)
 {
+    WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
     if (!info || info->GetAbilityToken() == nullptr) {
         WLOGFE("info or AbilityToken is nullptr!");
         return;
@@ -54,8 +55,11 @@ void WindowController::StartingWindow(sptr<WindowTransitionInfo> info, sptr<Medi
     StartAsyncTraceArgs(HITRACE_TAG_WINDOW_MANAGER, static_cast<int32_t>(TraceTaskId::STARTING_WINDOW),
         "wms:async:ShowStartingWindow");
     auto node = windowRoot_->FindWindowNodeWithToken(info->GetAbilityToken());
+    WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
     if (node == nullptr) {
+        WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
         if (!isColdStart) {
+            WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
             WLOGFE("no windowNode exists but is hot start!");
             return;
         }
@@ -70,10 +74,11 @@ void WindowController::StartingWindow(sptr<WindowTransitionInfo> info, sptr<Medi
             UpdateWindowAnimation(node);
         }
     } else {
-        if (isColdStart) {
-            WLOGFE("windowNode exists but is cold start!");
-            return;
-        }
+        WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
+        // if (isColdStart) {
+        //     WLOGFE("windowNode exists but is cold start!");
+        //     return;
+        // }
         if (WindowHelper::IsValidWindowMode(info->GetWindowMode()) &&
             (node->GetWindowMode() != info->GetWindowMode())) {
             WLOGFW("set starting window mode. starting mode is: %{public}u, window mode is:%{public}u.",
@@ -81,15 +86,16 @@ void WindowController::StartingWindow(sptr<WindowTransitionInfo> info, sptr<Medi
             node->SetWindowMode(info->GetWindowMode());
         }
     }
-
+    WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
     if (StartingWindow::NeedToStopStartingWindow(node->GetWindowMode(), node->GetModeSupportInfo(), info)) {
         WLOGFE("need to cancel starting window");
         return;
     }
-
+    WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
     if (windowRoot_->AddWindowNode(0, node, true) != WMError::WM_OK) {
         return;
     }
+    WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
     StartingWindow::DrawStartingWindow(node, pixelMap, bkgColor, isColdStart);
     RSTransaction::FlushImplicitTransaction();
     node->startingWindowShown_ = true;
@@ -139,16 +145,16 @@ WMError WindowController::NotifyWindowTransition(sptr<WindowTransitionInfo>& src
             if (dstNode->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN) {
                 windowRoot_->MinimizeStructuredAppWindowsExceptSelf(dstNode); // avoid split/float mode minimize
             }
-            return RemoteAnimation::NotifyAnimationTransition(srcInfo, dstInfo, srcNode, dstNode, windowRoot_);
+            return RemoteAnimation::NotifyAnimationTransition(srcInfo, dstInfo, srcNode, dstNode);
         }
         case TransitionEvent::MINIMIZE:
-            return RemoteAnimation::NotifyAnimationMinimize(srcInfo, srcNode, windowRoot_);
+            return RemoteAnimation::NotifyAnimationMinimize(srcInfo, srcNode);
         case TransitionEvent::CLOSE:
-            return RemoteAnimation::NotifyAnimationClose(srcInfo, srcNode, TransitionEvent::CLOSE, windowRoot_);
+            return RemoteAnimation::NotifyAnimationClose(srcInfo, srcNode, TransitionEvent::CLOSE);
         case TransitionEvent::BACK:
-            return RemoteAnimation::NotifyAnimationClose(srcInfo, srcNode, TransitionEvent::BACK, windowRoot_);
+            return RemoteAnimation::NotifyAnimationClose(srcInfo, srcNode, TransitionEvent::BACK);
         default:
-            return WMError::WM_ERROR_NO_REMOTE_ANIMATION;
+            return WMError::WM_ERROR_INVALID_OPERATION;
     }
     return WMError::WM_OK;
 }
@@ -213,6 +219,8 @@ WMError WindowController::CreateWindow(sptr<IWindow>& window, sptr<WindowPropert
     UpdateWindowAnimation(node);
     WLOGFI("createWindow name:%{public}u, windowName:%{public}s",
         windowId, node->GetWindowName().c_str());
+    // chy test
+    node->stateMachine_.SetWindowId(windowId);
     return windowRoot_->SaveWindow(node);
 }
 
@@ -259,7 +267,10 @@ WMError WindowController::AddWindowNode(sptr<WindowProperty>& property)
         ResizeSoftInputCallingWindowIfNeed(node);
     }
     StopBootAnimationIfNeed(node->GetWindowType());
-    MinimizeApp::ExecuteMinimizeAll();
+    WLOGFE("chy ----%{public}s, %{public}d before execute minimize all", __FUNCTION__, __LINE__);
+    // MinimizeApp::ExecuteMinimizeAll();
+    WLOGFE("chy ----%{public}s, %{public}d after execute minimize all", __FUNCTION__, __LINE__);
+    node->stateMachine_.TransitionTo(WindowNodeState::SHOWN);
     return WMError::WM_OK;
 }
 
@@ -386,6 +397,8 @@ WMError WindowController::RemoveWindowNode(uint32_t windowId)
     if (windowNode->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
         RestoreCallingWindowSizeIfNeed();
     }
+    WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
+    windowNode->stateMachine_.TransitionTo(WindowNodeState::HIDDEN);
     return res;
 }
 
@@ -403,6 +416,7 @@ WMError WindowController::DestroyWindow(uint32_t windowId, bool onlySelf)
     windowRoot_->FocusFaultDetection();
     FlushWindowInfoWithDisplayId(displayId);
     accessibilityConnection_->NotifyAccessibilityInfo(node, WindowUpdateType::WINDOW_UPDATE_REMOVED);
+    node->stateMachine_.TransitionTo(WindowNodeState::DESTROYED);
     return res;
 }
 
@@ -655,7 +669,7 @@ void WindowController::NotifySystemBarTints()
 
 WMError WindowController::SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller)
 {
-    return RemoteAnimation::SetWindowAnimationController(controller);
+    return RemoteAnimation::SetWindowAnimationController(controller, windowRoot_);
 }
 
 AvoidArea WindowController::GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType) const
@@ -775,7 +789,7 @@ WMError WindowController::NotifyWindowClientPointUp(uint32_t windowId,
 void WindowController::MinimizeAllAppWindows(DisplayId displayId)
 {
     windowRoot_->MinimizeAllAppWindows(displayId);
-    if (RemoteAnimation::NotifyAnimationByHome(windowRoot_) != WMError::WM_OK) {
+    if (RemoteAnimation::NotifyAnimationByHome() != WMError::WM_OK) {
         MinimizeApp::ExecuteMinimizeAll();
     }
 }

@@ -99,6 +99,11 @@ WMError WindowNodeContainer::AddWindowNodeOnWindowTree(sptr<WindowNode>& node, c
         WLOGFE("root is nullptr!");
         return WMError::WM_ERROR_NULLPTR;
     }
+    auto iter = std::find(root->children_.begin(), root->children_.end(), node);
+    if (iter != root->children_.end()) {
+        WLOGFI("node %{public}u is already on window tree, no need to update!", node->GetWindowId());
+        return WMError::WM_OK;
+    }
     node->requestedVisibility_ = true;
     if (parentNode != nullptr) { // subwindow
         if (parentNode->parent_ != root &&
@@ -107,11 +112,13 @@ WMError WindowNodeContainer::AddWindowNodeOnWindowTree(sptr<WindowNode>& node, c
             WLOGFE("window type and parent window not match or try to add subwindow to subwindow, which is forbidden");
             return WMError::WM_ERROR_INVALID_PARAM;
         }
+        WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
         node->currentVisibility_ = parentNode->currentVisibility_;
         node->parent_ = parentNode;
     } else { // mainwindow
         node->parent_ = root;
         node->currentVisibility_ = true;
+        WLOGFE("chy ----%{public}s, %{public}d currentVisibility_ is true", __FUNCTION__, __LINE__);
         for (auto& child : node->children_) {
             child->currentVisibility_ = child->requestedVisibility_;
         }
@@ -172,9 +179,12 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
             UpdateRSTree(node, displayId, true, node->isPlayAnimationShow_);
         }
     } else {
+        WLOGFE("after startingWindowShown_ chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
         node->isPlayAnimationShow_ = false;
         node->startingWindowShown_ = false;
         ReZOrderShowWhenLockedWindowIfNeeded(node);
+        // avoid show two app at the same time, client show order not same as starting window show order
+        RaiseZOrderForAppWindow(node, parentNode);
     }
     auto windowPair = displayGroupController_->GetWindowPairByDisplayId(node->GetDisplayId());
     if (windowPair == nullptr) {
@@ -257,22 +267,22 @@ void WindowNodeContainer::RemoveWindowNodeFromWindowTree(sptr<WindowNode>& node)
     node->parent_ = nullptr;
 }
 
-void WindowNodeContainer::RemoveNodeFromRSTree(sptr<WindowNode>& node)
+void WindowNodeContainer::RemoveNodeFromRSTree(sptr<WindowNode>& node, bool fromAnimation)
 {
-    if (!node->isPlayAnimationHide_) { // update rs tree after animation
-        bool isAnimationPlayed = false;
-        if (RemoteAnimation::CheckAnimationController() && WindowHelper::IsMainWindow(node->GetWindowType())) {
-            isAnimationPlayed = true;
-        }
-        for (auto& displayId : node->GetShowingDisplays()) {
-            UpdateRSTree(node, displayId, false, isAnimationPlayed);
-        }
-    } else { // not update rs tree before animation
-        node->isPlayAnimationHide_ = false;
+    if (fromAnimation) {
+        WLOGFI("RemoveNodeFromRSTree before animation! id: %{public}u", node->GetWindowId());
+        return;
+    }
+    bool isAnimationPlayed = false;
+    if (RemoteAnimation::CheckAnimationController() && WindowHelper::IsMainWindow(node->GetWindowType())) {
+        isAnimationPlayed = true;
+    }
+    for (auto& displayId : node->GetShowingDisplays()) {
+        UpdateRSTree(node, displayId, false, isAnimationPlayed);
     }
 }
 
-WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
+WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node, bool fromAnimation)
 {
     if (node == nullptr) {
         WLOGFE("window node or surface node is nullptr, invalid");
@@ -286,9 +296,10 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
 
     node->requestedVisibility_ = false;
     node->currentVisibility_ = false;
+    // node->startingWindowShown_ = false;
     // Remove node from RSTree
     // When RemoteAnimation exists, Remove node from RSTree after animation
-    RemoveNodeFromRSTree(node);
+    RemoveNodeFromRSTree(node, fromAnimation);
 
     displayGroupController_->UpdateDisplayGroupWindowTree();
 
@@ -423,8 +434,9 @@ bool WindowNodeContainer::UpdateRSTree(sptr<WindowNode>& node, DisplayId display
         WLOGFI("UpdateRSTree windowId: %{public}d, displayId: %{public}" PRIu64", isAdd: %{public}d",
             node->GetWindowId(), displayId, isAdd);
         if (isAdd) {
-            if (!node->currentVisibility_) {
-                WLOGFI("window: %{public}d is invisible, do not need update RS tree", node->GetWindowId());
+            if (!node->currentVisibility_ || node->isOnRsTree_) {
+                WLOGFI("window: %{public}d is visible: %{public}d, or isOnRsTree:%{public}d",
+                    node->GetWindowId(), node->currentVisibility_, node->isOnRsTree_);
                 return;
             }
             auto& surfaceNode = node->leashWinSurfaceNode_ != nullptr ? node->leashWinSurfaceNode_ : node->surfaceNode_;
@@ -432,14 +444,19 @@ bool WindowNodeContainer::UpdateRSTree(sptr<WindowNode>& node, DisplayId display
             for (auto& child : node->children_) {
                 if (child->currentVisibility_) {
                     dms.UpdateRSTree(displayId, child->surfaceNode_, true);
+                    child->isOnRsTree_ = true;
                 }
             }
+            node->isOnRsTree_ = true;
         } else {
+            WLOGFE("chy remove from rs tree ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
             auto& surfaceNode = node->leashWinSurfaceNode_ != nullptr ? node->leashWinSurfaceNode_ : node->surfaceNode_;
             dms.UpdateRSTree(displayId, surfaceNode, false);
             for (auto& child : node->children_) {
                 dms.UpdateRSTree(displayId, child->surfaceNode_, false);
+                child->isOnRsTree_ = false;
             }
+            node->isOnRsTree_ = false;
         }
     };
     if (node->EnableDefaultAnimation(IsWindowAnimationEnabled, animationPlayed)) {
@@ -1010,6 +1027,10 @@ void WindowNodeContainer::RaiseOrderedWindowToTop(std::vector<sptr<WindowNode>>&
 
 void WindowNodeContainer::RaiseWindowToTop(uint32_t windowId, std::vector<sptr<WindowNode>>& windowNodes)
 {
+    if (windowNodes.empty()) {
+        WLOGFE("windowNodes is empty!");
+        return;
+    }
     auto iter = std::find_if(windowNodes.begin(), windowNodes.end(),
                              [windowId](sptr<WindowNode> node) {
                                  return node->GetWindowId() == windowId;
@@ -1204,7 +1225,7 @@ WMError WindowNodeContainer::RaiseZOrderForAppWindow(sptr<WindowNode>& node, spt
     if (node == nullptr) {
         return WMError::WM_ERROR_NULLPTR;
     }
-
+    WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
     if (IsTopWindow(node->GetWindowId(), appWindowNode_) || IsTopWindow(node->GetWindowId(), aboveAppWindowNode_)) {
         WLOGFI("it is already top app window, id: %{public}u", node->GetWindowId());
         return WMError::WM_ERROR_INVALID_TYPE;
@@ -1216,17 +1237,26 @@ WMError WindowNodeContainer::RaiseZOrderForAppWindow(sptr<WindowNode>& node, spt
             WLOGFE("window type is invalid");
             return WMError::WM_ERROR_NULLPTR;
         }
+        WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
         RaiseWindowToTop(node->GetWindowId(), parentNode->children_); // raise itself
         if (parentNode->IsSplitMode()) {
             RaiseSplitRelatedWindowToTop(parentNode);
+            WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
         } else {
             RaiseWindowToTop(parentNode->GetWindowId(), parentNode->parent_->children_); // raise parent window
         }
     } else if (WindowHelper::IsMainWindow(node->GetWindowType())) {
         if (node->IsSplitMode()) {
             RaiseSplitRelatedWindowToTop(node);
+            WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
         } else {
+            WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
+            if (node->parent_ == nullptr) {
+                WLOGFE("node->parent_ is nullptr");
+                return WMError::WM_ERROR_NULLPTR;
+            }
             RaiseWindowToTop(node->GetWindowId(), node->parent_->children_);
+            WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
         }
     } else {
         // do nothing
@@ -1489,6 +1519,7 @@ WMError WindowNodeContainer::MinimizeAppNodeExceptOptions(MinimizeReason reason,
     if (appWindowNode_->children_.empty()) {
         return WMError::WM_OK;
     }
+    WLOGFI("chy app windowNode children %{public}zu", appWindowNode_->children_.size());
     for (auto& appNode : appWindowNode_->children_) {
         // exclude exceptional window
         if (std::find(exceptionalIds.begin(), exceptionalIds.end(), appNode->GetWindowId()) != exceptionalIds.end() ||

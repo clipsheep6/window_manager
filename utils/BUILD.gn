@@ -41,6 +41,7 @@ ohos_shared_library("libwmutil") {
     "src/window_property.cpp",
     "src/window_transition_info.cpp",
     "src/wm_math.cpp",
+    "src/window_node_state_machine.cpp",
   ]
 
   configs = [
@@ -67,6 +68,11 @@ ohos_shared_library("libwmutil") {
     "safwk:system_ability_fwk",
   ]
 
+  if (is_standard_system) {
+    external_deps += [ "init:libbegetutil" ]
+  } else {
+    external_deps += [ "init_lite:libbegetutil" ]
+  }
   part_name = "window_manager"
   subsystem_name = "window"
 }

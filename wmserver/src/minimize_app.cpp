@@ -16,6 +16,7 @@
 #include "minimize_app.h"
 
 #include <ability_manager_client.h>
+#include "parameters.h"
 #include "window_manager_hilog.h"
 #include "window_inner_manager.h"
 
@@ -28,7 +29,6 @@ namespace {
 std::map<MinimizeReason, std::vector<wptr<WindowNode>>> MinimizeApp::needMinimizeAppNodes_;
 bool MinimizeApp::isMinimizedByOtherWindow_ = true;
 std::recursive_mutex MinimizeApp::mutex_;
-
 void MinimizeApp::AddNeedMinimizeApp(const sptr<WindowNode>& node, MinimizeReason reason)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -56,6 +56,9 @@ std::vector<wptr<WindowNode>> MinimizeApp::GetNeedMinimizeAppNodes()
 void MinimizeApp::ExecuteMinimizeAll()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
+    WLOGFI("chy [Minimize] ExecuteMinimizeAll with size: %{public}zu",
+            needMinimizeAppNodes_.size());
+    // bool animationFirst = system::GetParameter("persist.window.af.enabled", "0") == "1";
     for (auto& appNodes: needMinimizeAppNodes_) {
         bool isFromUser = IsFromUser(appNodes.first);
         WLOGFI("[Minimize] ExecuteMinimizeAll with size: %{public}zu, reason: %{public}u",
@@ -112,6 +115,7 @@ void MinimizeApp::ExecuteMinimizeTargetReason(MinimizeReason reason)
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (needMinimizeAppNodes_.find(reason) != needMinimizeAppNodes_.end()) {
         bool isFromUser = IsFromUser(reason);
+        // bool animationFirst = system::GetParameter("persist.window.af.enabled", "0") == "1";
         for (auto& node : needMinimizeAppNodes_.at(reason)) {
             WindowInnerManager::GetInstance().MinimizeAbility(node, isFromUser);
         }

@@ -482,6 +482,25 @@ bool WindowRoot::NeedToStopAddingNode(sptr<WindowNode>& node, const sptr<WindowN
     return false;
 }
 
+WMError WindowRoot::NeedToStopAddingNode(sptr<WindowNode>& node)
+{
+    if (node == nullptr) {
+        WLOGFE("NeedToStopAddingNode failed, node is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    auto container = GetOrCreateWindowNodeContainer(node->GetDisplayId());
+    if (container == nullptr) {
+        WLOGFE("NeedToStopAddingNode failed, window container could not be found");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    if (NeedToStopAddingNode(node, container)) { // true means stop adding
+        return WMError::WM_ERROR_INVALID_WINDOW_MODE_OR_SIZE;
+    }
+    return WMError::WM_OK;
+}
+
 WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, bool fromStartingWin)
 {
     if (node == nullptr) {
@@ -499,21 +518,21 @@ WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, boo
         return WMError::WM_ERROR_INVALID_WINDOW_MODE_OR_SIZE;
     }
 
-    if (node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
-        WindowHelper::IsAppWindow(node->GetWindowType()) && !node->isPlayAnimationShow_) {
-        container->NotifyDockWindowStateChanged(node, false);
-        WMError res = MinimizeStructuredAppWindowsExceptSelf(node);
-        if (res != WMError::WM_OK) {
-            WLOGFE("Minimize other structured window failed");
-            MinimizeApp::ClearNodesWithReason(MinimizeReason::OTHER_WINDOW);
-            return res;
-        }
-    }
     if (fromStartingWin) {
+        WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
+        // When start two apps at the same time, the pre startingWindow node may be added to minimize list
+        // When pre client show coming, the last startingWindow node maybe added to minimize list
+        if (node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
+            WindowHelper::IsAppWindow(node->GetWindowType()) && !node->isPlayAnimationShow_) {
+            WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
+            container->NotifyDockWindowStateChanged(node, false);
+            MinimizeStructuredAppWindowsExceptSelf(node);
+        }
         WMError res = container->ShowStartingWindow(node);
         if (res != WMError::WM_OK) {
             MinimizeApp::ClearNodesWithReason(MinimizeReason::OTHER_WINDOW);
         }
+        MinimizeApp::ExecuteMinimizeAll();
         return res;
     }
     // limit number of main window
@@ -530,9 +549,9 @@ WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, boo
     }
 
     WMError res = container->AddWindowNode(node, parentNode);
-    if (!WindowHelper::IsSystemWindow(node->GetWindowType())) {
-        DestroyLeakStartingWindow();
-    }
+    // if (!WindowHelper::IsSystemWindow(node->GetWindowType())) {
+    //     DestroyLeakStartingWindow();
+    // }
     if (res != WMError::WM_OK) {
         WLOGFE("AddWindowNode failed with ret: %{public}u", static_cast<uint32_t>(res));
         return res;
@@ -541,7 +560,7 @@ WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, boo
     return PostProcessAddWindowNode(node, parentNode, container);
 }
 
-WMError WindowRoot::RemoveWindowNode(uint32_t windowId)
+WMError WindowRoot::RemoveWindowNode(uint32_t windowId, bool fromAnimation)
 {
     auto node = GetWindowNode(windowId);
     if (node == nullptr) {
@@ -557,7 +576,7 @@ WMError WindowRoot::RemoveWindowNode(uint32_t windowId)
     UpdateFocusWindowWithWindowRemoved(node, container);
     auto nextOrientationWindow = UpdateActiveWindowWithWindowRemoved(node, container);
     UpdateBrightnessWithWindowRemoved(windowId, container);
-    WMError res = container->RemoveWindowNode(node);
+    WMError res = container->RemoveWindowNode(node, fromAnimation);
     if (res == WMError::WM_OK) {
         for (auto& child : node->children_) {
             if (child == nullptr) {
@@ -942,7 +961,8 @@ std::shared_ptr<RSSurfaceNode> WindowRoot::GetSurfaceNodeByAbilityToken(const sp
         if (iter.second->abilityToken_ != abilityToken) {
             continue;
         }
-        return iter.second->surfaceNode_;
+        auto& node = iter.second;
+        return (node->startingWinSurfaceNode_ != nullptr ? node->startingWinSurfaceNode_ : node->surfaceNode_);
     }
     WLOGFE("could not find required abilityToken!");
     return nullptr;
