@@ -207,4 +207,9 @@ sptr<ScreenInfo> Screen::GetScreenInfo() const
 {
     return pImpl_->GetScreenInfo();
 }
+
+sptr<ScreenHdrInfo> Screen::GetScreenHdrInfo() const
+{
+    return SingletonContainer::Get<ScreenManagerAdapter>().GetScreenHdrInfo(GetId());
+}
 } // namespace OHOS::Rosen

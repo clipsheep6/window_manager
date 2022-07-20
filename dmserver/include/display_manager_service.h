@@ -19,14 +19,17 @@
 #include <map>
 #include <mutex>
 
+#include <parcel.h>
 #include <system_ability.h>
 #include <surface.h>
+#include <transaction/rs_interfaces.h>
 #include <ui/rs_display_node.h>
 
 #include "atomic_map.h"
 #include "dm_common.h"
 #include "display_dumper.h"
 #include "screen.h"
+#include "screen_hdr_info.h"
 #include "abstract_display.h"
 #include "abstract_display_controller.h"
 #include "abstract_screen_controller.h"
@@ -50,6 +53,7 @@ public:
     DMError SetVirtualScreenSurface(ScreenId screenId, sptr<Surface> surface) override;
     bool IsScreenRotationLocked() override;
     void SetScreenRotationLocked(bool isLocked) override;
+    sptr<ScreenHdrInfo> GetScreenHdrInfo(ScreenId screenId) override;
 
     sptr<DisplayInfo> GetDefaultDisplayInfo() override;
     sptr<DisplayInfo> GetDisplayInfoById(DisplayId displayId) override;

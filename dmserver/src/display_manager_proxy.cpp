@@ -1054,4 +1054,31 @@ void DisplayManagerProxy::SetScreenRotationLocked(bool isLocked)
         return;
     }
 }
+
+sptr<ScreenHdrInfo> DisplayManagerProxy::GetScreenHdrInfo(ScreenId screenId)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("GetScreenHdrInfo: remote is null");
+        return nullptr;
+    }
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("GetScreenHdrInfo: GetScreenHdrInfo failed");
+        return nullptr;
+    }
+    if (!data.WriteUint64(screenId)) {
+        WLOGFE("GetScreenHdrInfo: write screenId failed");
+        return nullptr;
+    }
+    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_GET_SCREEN_HDR_INFO),
+        data, reply, option) != ERR_NONE) {
+        WLOGFW("GetScreenHdrInfo: GetScreenHdrInfo failed");
+        return nullptr;
+    }
+    sptr<ScreenHdrInfo> info = reply.ReadParcelable<ScreenHdrInfo>();
+    return info;
+}
 } // namespace OHOS::Rosen

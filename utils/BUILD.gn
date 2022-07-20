@@ -33,6 +33,7 @@ ohos_shared_library("libwmutil") {
     "src/permission.cpp",
     "src/screen_group_info.cpp",
     "src/screen_info.cpp",
+    "src/screen_hdr_info.cpp",
     "src/singleton_container.cpp",
     "src/surface_draw.cpp",
     "src/surface_reader.cpp",

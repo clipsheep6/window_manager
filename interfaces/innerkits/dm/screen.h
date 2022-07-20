@@ -27,6 +27,7 @@
 
 namespace OHOS::Rosen {
 class ScreenInfo;
+class ScreenHdrInfo;
 
 struct Point {
     int32_t posX_;
@@ -83,6 +84,7 @@ public:
     bool SetOrientation(Orientation orientation) const;
     bool SetDensityDpi(uint32_t dpi) const;
     sptr<ScreenInfo> GetScreenInfo() const;
+    sptr<ScreenHdrInfo> GetScreenHdrInfo() const;
 
     // colorspace, gamut
     DMError GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut>& colorGamuts) const;

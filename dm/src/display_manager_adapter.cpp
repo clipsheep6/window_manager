@@ -105,7 +105,7 @@ ScreenId ScreenManagerAdapter::CreateVirtualScreen(VirtualScreenOption option,
 {
     INIT_PROXY_CHECK_RETURN(SCREEN_ID_INVALID);
 
-    WLOGFI("DisplayManagerAdapter::CreateVirtualScreen");
+    WLOGFI("ScreenManagerAdapter::CreateVirtualScreen");
     return displayManagerServiceProxy_->CreateVirtualScreen(option, displayManagerAgent->AsObject());
 }
 
@@ -113,7 +113,7 @@ DMError ScreenManagerAdapter::DestroyVirtualScreen(ScreenId screenId)
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
 
-    WLOGFI("DisplayManagerAdapter::DestroyVirtualScreen");
+    WLOGFI("ScreenManagerAdapter::DestroyVirtualScreen");
     return displayManagerServiceProxy_->DestroyVirtualScreen(screenId);
 }
 
@@ -121,22 +121,29 @@ DMError ScreenManagerAdapter::SetVirtualScreenSurface(ScreenId screenId, sptr<Su
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
 
-    WLOGFI("DisplayManagerAdapter::SetVirtualScreenSurface");
+    WLOGFI("ScreenManagerAdapter::SetVirtualScreenSurface");
     return displayManagerServiceProxy_->SetVirtualScreenSurface(screenId, surface);
 }
 
 void ScreenManagerAdapter::SetScreenRotationLocked(bool isLocked)
 {
     INIT_PROXY_CHECK_RETURN();
-    WLOGFI("DisplayManagerAdapter::SetScreenRotationLocked");
+    WLOGFI("ScreenManagerAdapter::SetScreenRotationLocked");
     displayManagerServiceProxy_->SetScreenRotationLocked(isLocked);
 }
 
 bool ScreenManagerAdapter::IsScreenRotationLocked()
 {
     INIT_PROXY_CHECK_RETURN(false);
-    WLOGFI("DisplayManagerAdapter::IsScreenRotationLocked");
+    WLOGFI("ScreenManagerAdapter::IsScreenRotationLocked");
     return displayManagerServiceProxy_->IsScreenRotationLocked();
+}
+
+sptr<ScreenHdrInfo> ScreenManagerAdapter::GetScreenHdrInfo(ScreenId screenId)
+{
+    INIT_PROXY_CHECK_RETURN(nullptr);
+    WLOGFI("ScreenManagerAdapter::GetScreenHdrInfo");
+    return displayManagerServiceProxy_->GetScreenHdrInfo(screenId);
 }
 
 bool ScreenManagerAdapter::SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason)

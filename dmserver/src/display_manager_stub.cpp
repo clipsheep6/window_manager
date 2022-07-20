@@ -323,6 +323,12 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
             SetScreenRotationLocked(isLocked);
             break;
         }
+        case DisplayManagerMessage::TRANS_ID_GET_SCREEN_HDR_INFO: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            sptr<ScreenHdrInfo> screenHdrInfo = GetScreenHdrInfo(screenId);
+            reply.WriteParcelable(screenHdrInfo);
+            break;
+        }
         default:
             WLOGFW("unknown transaction code");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);

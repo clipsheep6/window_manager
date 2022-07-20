@@ -605,4 +605,21 @@ void DisplayManagerService::SetGravitySensorSubscriptionEnabled()
     }
     ScreenRotationController::SubscribeGravitySensor();
 }
+
+sptr<ScreenHdrInfo> DisplayManagerService::GetScreenHdrInfo(ScreenId screenId)
+{
+    RSScreenHDRCapability screenHDRCapability;
+    ScreenId rsScreenId = abstractScreenController_->ConvertToRsScreenId(screenId);
+    if (RSInterfaces::GetInstance().GetScreenHDRCapability(rsScreenId, screenHDRCapability) != 0) {
+        WLOGFE("Get Screen HDR capability from RS failed");
+        return nullptr;
+    }
+    Parcel parcel;
+    ScreenHdrInfo *screenHdrInfo = ScreenHdrInfo::Unmarshalling(parcel);
+    if (screenHdrInfo == nullptr) {
+        WLOGFE("Get Screen HDR info failed");
+        return nullptr;
+    }
+    return screenHdrInfo;
+}
 } // namespace OHOS::Rosen
