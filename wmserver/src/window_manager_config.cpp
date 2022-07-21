@@ -72,13 +72,22 @@ bool WindowManagerConfig::LoadConfigXml()
             ReadEnableConfigInfo(curNodePtr);
             continue;
         }
+
         if (!xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("maxAppWindowNumber")) ||
-            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("modeChangeHotZones"))) {
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("modeChangeHotZones")) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>(STR_MAX_FLOATING_HEIGHT.c_str())) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>(STR_MAX_FLOATING_WIDTH.c_str())) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>(STR_MIN_FLOATING_HEIGHT.c_str())) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>(STR_MIN_FLOATING_WIDTH.c_str())) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>(STR_FLOATING_BOTTOM_POS_Y.c_str())) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>(STR_DEFAULT_FLOATING_WINDOW.c_str())) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("floatingWindowLimitSize"))) {
             ReadIntNumbersConfigInfo(curNodePtr);
             continue;
         }
 
-        if (!xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("splitRatios")) ||
+        if (!xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("floatingWindowLimitRatio")) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("splitRatios")) ||
             !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("exitSplitRatios"))) {
             ReadFloatNumbersConfigInfo(curNodePtr);
             continue;
