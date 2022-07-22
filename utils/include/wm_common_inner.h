@@ -16,6 +16,7 @@
 #ifndef OHOS_ROSEN_WM_COMMON_INNER_H
 #define OHOS_ROSEN_WM_COMMON_INNER_H
 
+#include <vector>
 #include <cfloat>
 #include <cinttypes>
 #include "wm_common.h"
@@ -129,6 +130,15 @@ enum class TraceTaskId : int32_t {
     CONNECT_EXTENSION,
 };
 
+struct FloatingWindowLimit {
+    uint32_t maxWidth_;
+    uint32_t maxHeight_;
+    uint32_t minWidth_;
+    uint32_t minHeight_;
+    FloatingWindowLimit(uint32_t maxWidth, uint32_t maxHeight, uint32_t minWidth, uint32_t minHeight)
+        : maxWidth_(maxWidth), maxHeight_(maxHeight), minWidth_(minWidth), minHeight_(minHeight) {}
+};
+
 namespace {
     constexpr float DEFAULT_SPLIT_RATIO = 0.5;
     constexpr float DEFAULT_ASPECT_RATIO = 0.66;
@@ -146,6 +156,15 @@ namespace {
     constexpr unsigned int WMS_WATCHDOG_CHECK_INTERVAL = 6; // actual check interval is 3000ms(6 * 500)
     const Rect INVALID_EMPTY_RECT = {0, 0, 0, 0};
     const Rect DEFAULT_PLACE_HOLDER_RECT = {0, 0, 512, 512};
+    const std::string WINDOW_MANAGER_CONFIG_XML = "/system/etc/window/resources/window_manager_config.xml";
+    const std::string STR_MAX_FLOATING_WIDTH = "maxFloatingWidth";
+    const std::string STR_MAX_FLOATING_HEIGHT = "maxFloatingHeight";
+    const std::string STR_MIN_FLOATING_WIDTH = "minFloatingWidth";
+    const std::string STR_MIN_FLOATING_HEIGHT = "minFloatingHeight";
+    const std::string STR_FLOATING_BOTTOM_POS_Y = "floatingBottomPosY";
+    const std::string STR_DEFAULT_FLOATING_WINDOW = "defaultFloatingWindow";
+    const FloatingWindowLimit DEFAULT_FLOATING_WINDOW_LIMIT(MAX_FLOATING_SIZE, MAX_FLOATING_SIZE,
+                                                    MIN_VERTICAL_FLOATING_WIDTH, MIN_VERTICAL_FLOATING_HEIGHT);
 }
 }
 }
