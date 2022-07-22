@@ -89,7 +89,7 @@ ohos_shared_library("libwm") {
     # because appexecfwk_core depends on global_resmgr
     "resource_management:global_resmgr",
     "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
     "utils_base:utils",
   ]
 
