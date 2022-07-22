@@ -202,6 +202,11 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
         case WindowManagerMessage::TRANS_ID_GET_ANIMATION_CALLBACK: {
             std::vector<uint32_t> windowIds;
             uint32_t windowNum = data.ReadUint32();
+            const uint32_t maxWindowNum = 100;
+            if (windowNum > maxWindowNum) {
+                WLOGFE("windowNum cannot exceeds than 100");
+                return 0;
+            }
             for (uint32_t i = 0; i < windowNum; ++i) {
                 windowIds.push_back(data.ReadUint32());
             }
