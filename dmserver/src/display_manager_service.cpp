@@ -465,7 +465,7 @@ ScreenId DisplayManagerService::MakeMirror(ScreenId mainScreenId, std::vector<Sc
 {
     return mainHandler_->GetSyncTaskResult([this, mainScreenId, &mirrorScreenIds]() {
         WLOGFI("MakeMirror. mainScreenId :%{public}" PRIu64"", mainScreenId);
-        auto allMirrorScreenIds = abstractScreenController_->GetAllExpandOrMirrorScreenIds(mirrorScreenIds);
+        auto allMirrorScreenIds = abstractScreenController_->GetAllValidScreenIds(mirrorScreenIds);
         auto iter = std::find(allMirrorScreenIds.begin(), allMirrorScreenIds.end(), mainScreenId);
         if (iter != allMirrorScreenIds.end()) {
             allMirrorScreenIds.erase(iter);
@@ -593,7 +593,7 @@ ScreenId DisplayManagerService::MakeExpand(std::vector<ScreenId> expandScreenIds
         }
         ScreenId defaultScreenId = abstractScreenController_->GetDefaultAbstractScreenId();
         WLOGFI("MakeExpand, defaultScreenId:%{public}" PRIu64"", defaultScreenId);
-        auto allExpandScreenIds = abstractScreenController_->GetAllExpandOrMirrorScreenIds(expandScreenIds);
+        auto allExpandScreenIds = abstractScreenController_->GetAllValidScreenIds(expandScreenIds);
         auto iter = std::find(allExpandScreenIds.begin(), allExpandScreenIds.end(), defaultScreenId);
         if (iter != allExpandScreenIds.end()) {
             allExpandScreenIds.erase(iter);
