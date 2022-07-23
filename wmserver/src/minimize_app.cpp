@@ -61,7 +61,17 @@ void MinimizeApp::ExecuteMinimizeAll()
             appNodes.second.size(), appNodes.first);
         for (auto& node : appNodes.second) {
             auto weakNode = node.promote();
-            if (weakNode != nullptr && weakNode->abilityToken_ != nullptr && !weakNode->startingWindowShown_) {
+            // if (weakNode != nullptr && weakNode->abilityToken_ != nullptr && !weakNode->startingWindowShown_) {
+            //     WLOGFI("[Minimize] Minimize Window %{public}u, reason %{public}u",
+            //         weakNode->GetWindowId(), appNodes.first);
+            //     AAFwk::AbilityManagerClient::GetInstance()->MinimizeAbility(weakNode->abilityToken_, isFromUser);
+            // } else if (weakNode != nullptr) {
+            //     WLOGFI("window is not minimize since id:%{public}u, "
+            //         "startingWindowShown_:%{public}d, abilityToken:%{public}d, windowToken:%{public}d",
+            //         weakNode->GetWindowId(), weakNode->startingWindowShown_, weakNode->abilityToken_ != nullptr,
+            //         weakNode->GetWindowToken() != nullptr);
+            // }
+            if (weakNode != nullptr && weakNode->abilityToken_ != nullptr) {
                 WLOGFI("[Minimize] Minimize Window %{public}u, reason %{public}u",
                     weakNode->GetWindowId(), appNodes.first);
                 AAFwk::AbilityManagerClient::GetInstance()->MinimizeAbility(weakNode->abilityToken_, isFromUser);

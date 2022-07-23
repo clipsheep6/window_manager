@@ -105,11 +105,13 @@ WMError WindowNodeContainer::AddWindowNodeOnWindowTree(sptr<WindowNode>& node, c
             WLOGFE("window type and parent window not match or try to add subwindow to subwindow, which is forbidden");
             return WMError::WM_ERROR_INVALID_PARAM;
         }
+        WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
         node->currentVisibility_ = parentNode->currentVisibility_;
         node->parent_ = parentNode;
     } else { // mainwindow
         node->parent_ = root;
         node->currentVisibility_ = true;
+        WLOGFE("chy ----%{public}s, %{public}d currentVisibility_ is true", __FUNCTION__, __LINE__);
         for (auto& child : node->children_) {
             child->currentVisibility_ = child->requestedVisibility_;
         }
@@ -170,9 +172,12 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
             UpdateRSTree(node, displayId, true, node->isPlayAnimationShow_);
         }
     } else {
+        WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
         node->isPlayAnimationShow_ = false;
         node->startingWindowShown_ = false;
         ReZOrderShowWhenLockedWindowIfNeeded(node);
+        // avoid show two app at the same time, client show order not same as starting window show order
+        RaiseZOrderForAppWindow(node, parentNode);
     }
     auto windowPair = displayGroupController_->GetWindowPairByDisplayId(node->GetDisplayId());
     if (windowPair == nullptr) {
@@ -255,22 +260,22 @@ void WindowNodeContainer::RemoveWindowNodeFromWindowTree(sptr<WindowNode>& node)
     node->parent_ = nullptr;
 }
 
-void WindowNodeContainer::RemoveNodeFromRSTree(sptr<WindowNode>& node)
+void WindowNodeContainer::RemoveNodeFromRSTree(sptr<WindowNode>& node, bool fromAnimation)
 {
-    if (!node->isPlayAnimationHide_) { // update rs tree after animation
-        bool isAnimationPlayed = false;
-        if (RemoteAnimation::CheckAnimationController() && WindowHelper::IsMainWindow(node->GetWindowType())) {
-            isAnimationPlayed = true;
-        }
-        for (auto& displayId : node->GetShowingDisplays()) {
-            UpdateRSTree(node, displayId, false, isAnimationPlayed);
-        }
-    } else { // not update rs tree before animation
-        node->isPlayAnimationHide_ = false;
+    if (fromAnimation) {
+        WLOGFI("RemoveNodeFromRSTree before animation! id: %{public}u", node->GetWindowId());
+        return;
+    }
+    bool isAnimationPlayed = false;
+    if (RemoteAnimation::CheckAnimationController() && WindowHelper::IsMainWindow(node->GetWindowType())) {
+        isAnimationPlayed = true;
+    }
+    for (auto& displayId : node->GetShowingDisplays()) {
+        UpdateRSTree(node, displayId, false, isAnimationPlayed);
     }
 }
 
-WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
+WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node, bool fromAnimation)
 {
     if (node == nullptr) {
         WLOGFE("window node or surface node is nullptr, invalid");
@@ -286,7 +291,7 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node)
     node->currentVisibility_ = false;
     // Remove node from RSTree
     // When RemoteAnimation exists, Remove node from RSTree after animation
-    RemoveNodeFromRSTree(node);
+    RemoveNodeFromRSTree(node, fromAnimation);
 
     displayGroupController_->UpdateDisplayGroupWindowTree();
 
@@ -1007,6 +1012,10 @@ void WindowNodeContainer::RaiseOrderedWindowToTop(std::vector<sptr<WindowNode>>&
 
 void WindowNodeContainer::RaiseWindowToTop(uint32_t windowId, std::vector<sptr<WindowNode>>& windowNodes)
 {
+    if (windowNodes.empty()) {
+        WLOGFE("windowNodes is empty!");
+        return;
+    }
     auto iter = std::find_if(windowNodes.begin(), windowNodes.end(),
                              [windowId](sptr<WindowNode> node) {
                                  return node->GetWindowId() == windowId;
@@ -1215,14 +1224,18 @@ WMError WindowNodeContainer::RaiseZOrderForAppWindow(sptr<WindowNode>& node, spt
         RaiseWindowToTop(node->GetWindowId(), parentNode->children_); // raise itself
         if (parentNode->IsSplitMode()) {
             RaiseSplitRelatedWindowToTop(parentNode);
+            WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
         } else {
             RaiseWindowToTop(node->GetParentId(), parentNode->parent_->children_); // raise parent window
+            WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
         }
     } else if (WindowHelper::IsMainWindow(node->GetWindowType())) {
         if (node->IsSplitMode()) {
             RaiseSplitRelatedWindowToTop(node);
+            WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
         } else {
             RaiseWindowToTop(node->GetWindowId(), node->parent_->children_);
+            WLOGFE("chy ----%{public}s, %{public}d", __FUNCTION__, __LINE__);
         }
     } else {
         // do nothing
