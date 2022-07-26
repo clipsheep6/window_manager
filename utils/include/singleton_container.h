@@ -47,6 +47,15 @@ public:
     }
 
     template<class T>
+    static T* GetPointer()
+    {
+        std::string nameT = __PRETTY_FUNCTION__;
+        nameT = nameT.substr(nameT.find("T = "));
+        nameT = nameT.substr(sizeof("T ="), nameT.length() - sizeof("T = "));
+        return reinterpret_cast<T*>(SingletonContainer::GetInstance().GetSingleton(nameT));
+    }
+
+    template<class T>
     static void Set(T& instance)
     {
         std::string nameT = __PRETTY_FUNCTION__;

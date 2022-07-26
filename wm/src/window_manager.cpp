@@ -342,7 +342,11 @@ void WindowManager::RegisterFocusChangedListener(const sptr<IFocusChangedListene
     pImpl_->focusChangedListeners_.push_back(listener);
     if (pImpl_->focusChangedListenerAgent_ == nullptr) {
         pImpl_->focusChangedListenerAgent_ = new WindowManagerAgent();
-        SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return;
+        }
+        windowAdapter->RegisterWindowManagerAgent(
             WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS, pImpl_->focusChangedListenerAgent_);
     }
 }
@@ -362,7 +366,11 @@ void WindowManager::UnregisterFocusChangedListener(const sptr<IFocusChangedListe
     }
     pImpl_->focusChangedListeners_.erase(iter);
     if (pImpl_->focusChangedListeners_.empty() && pImpl_->focusChangedListenerAgent_ != nullptr) {
-        SingletonContainer::Get<WindowAdapter>().UnregisterWindowManagerAgent(
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return;
+        }
+        windowAdapter->UnregisterWindowManagerAgent(
             WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS, pImpl_->focusChangedListenerAgent_);
         pImpl_->focusChangedListenerAgent_ = nullptr;
     }
@@ -385,7 +393,11 @@ void WindowManager::RegisterSystemBarChangedListener(const sptr<ISystemBarChange
     pImpl_->systemBarChangedListeners_.push_back(listener);
     if (pImpl_->systemBarChangedListenerAgent_ == nullptr) {
         pImpl_->systemBarChangedListenerAgent_ = new WindowManagerAgent();
-        SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return;
+        }
+        windowAdapter->RegisterWindowManagerAgent(
             WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_SYSTEM_BAR, pImpl_->systemBarChangedListenerAgent_);
     }
 }
@@ -406,7 +418,11 @@ void WindowManager::UnregisterSystemBarChangedListener(const sptr<ISystemBarChan
     }
     pImpl_->systemBarChangedListeners_.erase(iter);
     if (pImpl_->systemBarChangedListeners_.empty() && pImpl_->systemBarChangedListenerAgent_ != nullptr) {
-        SingletonContainer::Get<WindowAdapter>().UnregisterWindowManagerAgent(
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return;
+        }
+        windowAdapter->UnregisterWindowManagerAgent(
             WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_SYSTEM_BAR, pImpl_->systemBarChangedListenerAgent_);
         pImpl_->systemBarChangedListenerAgent_ = nullptr;
     }
@@ -415,23 +431,25 @@ void WindowManager::UnregisterSystemBarChangedListener(const sptr<ISystemBarChan
 void WindowManager::MinimizeAllAppWindows(DisplayId displayId)
 {
     WLOGFI("displayId %{public}" PRIu64"", displayId);
-    SingletonContainer::Get<WindowAdapter>().MinimizeAllAppWindows(displayId);
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    if (windowAdapter == nullptr) {
+        return;
+    }
+    windowAdapter->MinimizeAllAppWindows(displayId);
 }
 
 WMError WindowManager::ToggleShownStateForAllAppWindows()
 {
     WLOGFI("ToggleShownStateForAllAppWindows");
-    return SingletonContainer::Get<WindowAdapter>().ToggleShownStateForAllAppWindows();
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    return windowAdapter == nullptr ? WMError::WM_ERROR_NULLPTR : windowAdapter->ToggleShownStateForAllAppWindows();
 }
 
 WMError WindowManager::SetWindowLayoutMode(WindowLayoutMode mode)
 {
     WLOGFI("set window layout mode: %{public}u", mode);
-    WMError ret  = SingletonContainer::Get<WindowAdapter>().SetWindowLayoutMode(mode);
-    if (ret != WMError::WM_OK) {
-        WLOGFE("set layout mode failed");
-    }
-    return ret;
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    return windowAdapter == nullptr ? WMError::WM_ERROR_NULLPTR : windowAdapter->SetWindowLayoutMode(mode);
 }
 
 void WindowManager::RegisterWindowUpdateListener(const sptr<IWindowUpdateListener> &listener)
@@ -449,7 +467,11 @@ void WindowManager::RegisterWindowUpdateListener(const sptr<IWindowUpdateListene
     pImpl_->windowUpdateListeners_.emplace_back(listener);
     if (pImpl_->windowUpdateListenerAgent_ == nullptr) {
         pImpl_->windowUpdateListenerAgent_ = new WindowManagerAgent();
-        SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return;
+        }
+        windowAdapter->RegisterWindowManagerAgent(
             WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_UPDATE, pImpl_->windowUpdateListenerAgent_);
     }
 }
@@ -468,7 +490,11 @@ void WindowManager::UnregisterWindowUpdateListener(const sptr<IWindowUpdateListe
     }
     pImpl_->windowUpdateListeners_.erase(iter);
     if (pImpl_->windowUpdateListeners_.empty() && pImpl_->windowUpdateListenerAgent_ != nullptr) {
-        SingletonContainer::Get<WindowAdapter>().UnregisterWindowManagerAgent(
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return;
+        }
+        windowAdapter->UnregisterWindowManagerAgent(
             WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_UPDATE, pImpl_->windowUpdateListenerAgent_);
         pImpl_->windowUpdateListenerAgent_ = nullptr;
     }
@@ -490,7 +516,11 @@ void WindowManager::RegisterVisibilityChangedListener(const sptr<IVisibilityChan
     pImpl_->windowVisibilityListeners_.emplace_back(listener);
     if (pImpl_->windowVisibilityListenerAgent_ == nullptr) {
         pImpl_->windowVisibilityListenerAgent_ = new WindowManagerAgent();
-        SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return;
+        }
+        windowAdapter->RegisterWindowManagerAgent(
             WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_VISIBILITY,
             pImpl_->windowVisibilityListenerAgent_);
     }
@@ -508,7 +538,11 @@ void WindowManager::UnregisterVisibilityChangedListener(const sptr<IVisibilityCh
         }), pImpl_->windowVisibilityListeners_.end());
 
     if (pImpl_->windowVisibilityListeners_.empty() && pImpl_->windowVisibilityListenerAgent_ != nullptr) {
-        SingletonContainer::Get<WindowAdapter>().UnregisterWindowManagerAgent(
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return;
+        }
+        windowAdapter->UnregisterWindowManagerAgent(
             WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_VISIBILITY,
             pImpl_->windowVisibilityListenerAgent_);
         pImpl_->windowVisibilityListenerAgent_ = nullptr;
@@ -532,7 +566,11 @@ void WindowManager::RegisterCameraFloatWindowChangedListener(const sptr<ICameraF
     pImpl_->cameraFloatWindowChangedListeners_.push_back(listener);
     if (pImpl_->cameraFloatWindowChangedListenerAgent_ == nullptr) {
         pImpl_->cameraFloatWindowChangedListenerAgent_ = new WindowManagerAgent();
-        SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return;
+        }
+        windowAdapter->RegisterWindowManagerAgent(
             WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_CAMERA_FLOAT,
             pImpl_->cameraFloatWindowChangedListenerAgent_);
     }
@@ -555,7 +593,11 @@ void WindowManager::UnregisterCameraFloatWindowChangedListener(const sptr<ICamer
     pImpl_->cameraFloatWindowChangedListeners_.erase(iter);
     if (pImpl_->cameraFloatWindowChangedListeners_.empty() &&
         pImpl_->cameraFloatWindowChangedListenerAgent_ != nullptr) {
-        SingletonContainer::Get<WindowAdapter>().UnregisterWindowManagerAgent(
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return;
+        }
+        windowAdapter->UnregisterWindowManagerAgent(
             WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_CAMERA_FLOAT,
             pImpl_->cameraFloatWindowChangedListenerAgent_);
         pImpl_->cameraFloatWindowChangedListenerAgent_ = nullptr;
@@ -600,7 +642,11 @@ void WindowManager::UpdateWindowVisibilityInfo(
 
 WMError WindowManager::GetAccessibilityWindowInfo(sptr<AccessibilityWindowInfo>& windowInfo) const
 {
-    WMError ret = SingletonContainer::Get<WindowAdapter>().GetAccessibilityWindowInfo(windowInfo);
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    if (windowAdapter == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    WMError ret = windowAdapter->GetAccessibilityWindowInfo(windowInfo);
     if (ret != WMError::WM_OK) {
         WLOGFE("get window info failed");
     }

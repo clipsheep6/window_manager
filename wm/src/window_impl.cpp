@@ -152,7 +152,12 @@ sptr<Window> WindowImpl::FindTopWindow(uint32_t topWinId)
 sptr<Window> WindowImpl::GetTopWindowWithId(uint32_t mainWinId)
 {
     uint32_t topWinId = INVALID_WINDOW_ID;
-    WMError ret = SingletonContainer::Get<WindowAdapter>().GetTopWindowId(mainWinId, topWinId);
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    if (windowAdapter == nullptr) {
+        WLOGFE("GetTopWindowId failed");
+        return nullptr;
+    }
+    WMError ret = windowAdapter->GetTopWindowId(mainWinId, topWinId);
     if (ret != WMError::WM_OK) {
         WLOGFE("GetTopWindowId failed with errCode:%{public}d", static_cast<int32_t>(ret));
         return nullptr;
@@ -181,7 +186,12 @@ sptr<Window> WindowImpl::GetTopWindowWithContext(const std::shared_ptr<AbilityRu
         return nullptr;
     }
     uint32_t topWinId = INVALID_WINDOW_ID;
-    WMError ret = SingletonContainer::Get<WindowAdapter>().GetTopWindowId(mainWinId, topWinId);
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    if (windowAdapter == nullptr) {
+        WLOGFE("GetTopWindowId failed");
+        return nullptr;
+    }
+    WMError ret = windowAdapter->GetTopWindowId(mainWinId, topWinId);
     if (ret != WMError::WM_OK) {
         WLOGFE("GetTopWindowId failed with errCode:%{public}d", static_cast<int32_t>(ret));
         return nullptr;
@@ -307,7 +317,11 @@ WMError WindowImpl::GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea)
 {
     WLOGFI("GetAvoidAreaByType  Search Type: %{public}u", static_cast<uint32_t>(type));
     uint32_t windowId = property_->GetWindowId();
-    WMError ret = SingletonContainer::Get<WindowAdapter>().GetAvoidAreaByType(windowId, type, avoidArea);
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    if (windowAdapter == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    WMError ret = windowAdapter->GetAvoidAreaByType(windowId, type, avoidArea);
     if (ret != WMError::WM_OK) {
         WLOGFE("GetAvoidAreaByType errCode:%{public}d winId:%{public}u Type is :%{public}u.",
             static_cast<int32_t>(ret), property_->GetWindowId(), static_cast<uint32_t>(type));
@@ -377,7 +391,9 @@ WMError WindowImpl::SetWindowBackgroundBlur(WindowBlurLevel level)
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     property_->SetWindowBackgroundBlur(level);
-    return SingletonContainer::Get<WindowAdapter>().SetWindowBackgroundBlur(property_->GetWindowId(), level);
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    return windowAdapter == nullptr ? WMError::WM_ERROR_NULLPTR :
+        windowAdapter->SetWindowBackgroundBlur(property_->GetWindowId(), level);
 }
 
 void WindowImpl::SetAlpha(float alpha)
@@ -711,7 +727,8 @@ void WindowImpl::MapDialogWindowToAppIfNeeded()
 
 WMError WindowImpl::UpdateProperty(PropertyChangeAction action)
 {
-    return SingletonContainer::Get<WindowAdapter>().UpdateProperty(property_, action);
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    return windowAdapter == nullptr ? WMError::WM_ERROR_NULLPTR : windowAdapter->UpdateProperty(property_, action);
 }
 
 void WindowImpl::GetConfigurationFromAbilityInfo()
@@ -816,7 +833,11 @@ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<
         }
     }
     if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
-        if (SingletonContainer::Get<WindowAdapter>().GetSystemConfig(windowSystemConfig_) == WMError::WM_OK) {
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return WMError::WM_ERROR_INVALID_PARAM;
+        }
+        if (windowAdapter->GetSystemConfig(windowSystemConfig_) == WMError::WM_OK) {
             WLOGFE("get system decor enable:%{public}d", windowSystemConfig_.isSystemDecorEnable_);
             if (windowSystemConfig_.isSystemDecorEnable_) {
                 property_->SetDecorEnable(true);
@@ -826,7 +847,11 @@ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<
         }
         GetConfigurationFromAbilityInfo();
     }
-    WMError ret = SingletonContainer::Get<WindowAdapter>().CreateWindow(windowAgent, property_, surfaceNode_,
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    if (windowAdapter == nullptr) {
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    WMError ret = windowAdapter->CreateWindow(windowAgent, property_, surfaceNode_,
         windowId, token);
     RecordLifeCycleExceptionEvent(LifeCycleEvent::CREATE_EVENT, ret);
     if (ret != WMError::WM_OK) {
@@ -987,7 +1012,11 @@ WMError WindowImpl::Destroy(bool needNotifyServer)
                 NotifyBeforeSubWindowDestroy(subWindow);
             }
         }
-        ret = SingletonContainer::Get<WindowAdapter>().DestroyWindow(property_->GetWindowId());
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return WMError::WM_ERROR_INVALID_PARAM;
+        }
+        ret = windowAdapter->DestroyWindow(property_->GetWindowId());
         RecordLifeCycleExceptionEvent(LifeCycleEvent::DESTROY_EVENT, ret);
         if (ret != WMError::WM_OK) {
             WLOGFE("destroy window failed with errCode:%{public}d", static_cast<int32_t>(ret));
@@ -1048,7 +1077,11 @@ WMError WindowImpl::UpdateSurfaceNodeAfterCustomAnimation(bool isAdd)
         WLOGFE("UpdateProperty failed with errCode:%{public}d", static_cast<int32_t>(ret));
         return ret;
     }
-    ret = SingletonContainer::Get<WindowAdapter>().UpdateRsTree(property_->GetWindowId(), isAdd);
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    if (windowAdapter == nullptr) {
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    ret = windowAdapter->UpdateRsTree(property_->GetWindowId(), isAdd);
     if (ret != WMError::WM_OK) {
         WLOGFE("UpdateRsTree failed with errCode:%{public}d", static_cast<int32_t>(ret));
         return ret;
@@ -1090,12 +1123,16 @@ WMError WindowImpl::Show(uint32_t reason, bool withAnimation)
         return WMError::WM_OK;
     }
     if (state_ == WindowState::STATE_SHOWN) {
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return WMError::WM_ERROR_INVALID_PARAM;
+        }
         if (property_->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
             WLOGFI("desktop window [id:%{public}u] is shown, minimize all app windows", property_->GetWindowId());
-            SingletonContainer::Get<WindowAdapter>().MinimizeAllAppWindows(property_->GetDisplayId());
+            windowAdapter->MinimizeAllAppWindows(property_->GetDisplayId());
         } else {
             WLOGFI("window is already shown id: %{public}u, raise to top", property_->GetWindowId());
-            SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId());
+            windowAdapter->ProcessPointDown(property_->GetWindowId());
         }
         NotifyAfterUnfocused(false);
         return WMError::WM_OK;
@@ -1105,7 +1142,11 @@ WMError WindowImpl::Show(uint32_t reason, bool withAnimation)
         return ret;
     }
 
-    ret = SingletonContainer::Get<WindowAdapter>().AddWindow(property_);
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    if (windowAdapter == nullptr) {
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    ret = windowAdapter->AddWindow(property_);
     RecordLifeCycleExceptionEvent(LifeCycleEvent::SHOW_EVENT, ret);
     if (ret == WMError::WM_OK || ret == WMError::WM_ERROR_DEATH_RECIPIENT) {
         state_ = WindowState::STATE_SHOWN;
@@ -1148,7 +1189,11 @@ WMError WindowImpl::Hide(uint32_t reason, bool withAnimation)
             return ret;
         }
     }
-    ret = SingletonContainer::Get<WindowAdapter>().RemoveWindow(property_->GetWindowId());
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    if (windowAdapter == nullptr) {
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    ret = windowAdapter->RemoveWindow(property_->GetWindowId());
     RecordLifeCycleExceptionEvent(LifeCycleEvent::HIDE_EVENT, ret);
     if (ret != WMError::WM_OK) {
         WLOGFE("hide errCode:%{public}d for winId:%{public}u", static_cast<int32_t>(ret), property_->GetWindowId());
@@ -1467,7 +1512,9 @@ WMError WindowImpl::NotifyWindowTransition(TransitionReason reason)
     fromInfo->SetWindowType(property_->GetWindowType());
     fromInfo->SetDisplayId(property_->GetDisplayId());
     fromInfo->SetTransitionReason(reason);
-    return SingletonContainer::Get<WindowAdapter>().NotifyWindowTransition(fromInfo, toInfo);
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    return windowAdapter == nullptr ? WMError::WM_ERROR_INVALID_PARAM :
+        windowAdapter->NotifyWindowTransition(fromInfo, toInfo);
 }
 
 WMError WindowImpl::Minimize()
@@ -1540,7 +1587,8 @@ WMError WindowImpl::RequestFocus() const
     if (!IsWindowValid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    return SingletonContainer::Get<WindowAdapter>().RequestFocus(property_->GetWindowId());
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    return windowAdapter == nullptr ? WMError::WM_ERROR_NULLPTR : windowAdapter->RequestFocus(property_->GetWindowId());
 }
 
 void WindowImpl::SetInputEventConsumer(const std::shared_ptr<IInputEventConsumer>& inputEventConsumer)
@@ -1610,7 +1658,11 @@ void WindowImpl::RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>
         avoidAreaChangeListeners_.push_back(listener);
     }
     if (avoidAreaChangeListeners_.size() == 1) {
-        SingletonContainer::Get<WindowAdapter>().UpdateAvoidAreaListener(property_->GetWindowId(), true);
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return;
+        }
+        windowAdapter->UpdateAvoidAreaListener(property_->GetWindowId(), true);
     }
 }
 
@@ -2043,7 +2095,11 @@ void WindowImpl::HandleModeChangeHotZones(int32_t posX, int32_t posY)
     }
 
     ModeChangeHotZones hotZones;
-    auto res = SingletonContainer::Get<WindowAdapter>().GetModeChangeHotZones(property_->GetDisplayId(), hotZones);
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    if (windowAdapter == nullptr) {
+        return;
+    }
+    auto res = windowAdapter->GetModeChangeHotZones(property_->GetDisplayId(), hotZones);
     WLOGFI("[HotZone] Window %{public}u, Pointer[%{public}d, %{public}d]", GetWindowId(), posX, posY);
     if (res == WMError::WM_OK) {
         WLOGFI("[HotZone] Fullscreen [%{public}d, %{public}d, %{public}u, %{public}u]", hotZones.fullscreen_.posX_,
@@ -2106,18 +2162,22 @@ void WindowImpl::UpdatePointerEventForStretchableWindow(std::shared_ptr<MMI::Poi
 
 void WindowImpl::EndMoveOrDragWindow(int32_t posX, int32_t posY, int32_t pointId)
 {
+    auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+    if (windowAdapter == nullptr) {
+        return;
+    }
     if (pointId != startPointerId_) {
         return;
     }
 
     if (startDragFlag_) {
-        SingletonContainer::Get<WindowAdapter>().ProcessPointUp(GetWindowId());
+        windowAdapter->ProcessPointUp(GetWindowId());
         startDragFlag_ = false;
     }
 
     if (startMoveFlag_) {
         if (GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
-            SingletonContainer::Get<WindowAdapter>().ProcessPointUp(GetWindowId());
+            windowAdapter->ProcessPointUp(GetWindowId());
         }
         startMoveFlag_ = false;
         HandleModeChangeHotZones(posX, posY);
@@ -2190,12 +2250,20 @@ void WindowImpl::ReadyToMoveOrDragWindow(int32_t globalX, int32_t globalY, int32
 
     if (GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
         startMoveFlag_ = true;
-        SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(), true);
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return;
+        }
+        windowAdapter->ProcessPointDown(property_->GetWindowId(), true);
     } else if (!WindowHelper::IsPointInTargetRect(startPointPosX_, startPointPosY_, startRectExceptFrame_) ||
         (WindowHelper::IsPointInTargetRect(startPointPosX_, startPointPosY_, startRectExceptFrame_) &&
         (!WindowHelper::IsPointInWindowExceptCorner(startPointPosX_, startPointPosY_, startRectExceptCorner_)))) {
         startDragFlag_ = true;
-        SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(), true);
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return;
+        }
+        windowAdapter->ProcessPointDown(property_->GetWindowId(), true);
     }
 
     UpdateDragType();
@@ -2295,7 +2363,11 @@ void WindowImpl::ConsumePointerEvent(std::shared_ptr<MMI::PointerEvent>& pointer
                 return;
             }
         }
-        SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId());
+        auto windowAdapter = SingletonContainer::GetPointer<WindowAdapter>();
+        if (windowAdapter == nullptr) {
+            return;
+        }
+        windowAdapter->ProcessPointDown(property_->GetWindowId());
     }
 
     // If point event type is up, should reset start move flag
