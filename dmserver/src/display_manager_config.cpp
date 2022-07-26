@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "display_manager_config.h"
 
 #include <climits>
@@ -26,7 +27,6 @@
 
 #include "config_policy_utils.h"
 #include "window_manager_hilog.h"
-
 
 namespace OHOS::Rosen {
 namespace {
