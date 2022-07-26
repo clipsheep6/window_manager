@@ -35,22 +35,14 @@ bool DisplayPowerController::SuspendBegin(PowerStateChangeReason reason)
 bool DisplayPowerController::SetDisplayState(DisplayState state)
 {
     WLOGFI("state:%{public}u", state);
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        if (displayState_ == state) {
-            WLOGFE("state is already set");
-            return false;
-        }
+    if (displayState_ == state) {
+        WLOGFE("state is already set");
+        return false;
     }
     switch (state) {
         case DisplayState::ON: {
-            bool isKeyguardDrawn;
-            {
-                std::lock_guard<std::recursive_mutex> lock(mutex_);
-                displayState_ = state;
-                isKeyguardDrawn = isKeyguardDrawn_;
-            }
-            if (!isKeyguardDrawn) {
+            displayState_ = state;
+            if (!isKeyguardDrawn_) {
                 std::map<DisplayId, sptr<DisplayInfo>> emptyMap;
                 displayStateChangeListener_(DISPLAY_ID_INVALID, nullptr,
                     emptyMap, DisplayStateChangeType::BEFORE_UNLOCK);
@@ -60,10 +52,7 @@ bool DisplayPowerController::SetDisplayState(DisplayState state)
             break;
         }
         case DisplayState::OFF: {
-            {
-                std::lock_guard<std::recursive_mutex> lock(mutex_);
-                displayState_ = state;
-            }
+            displayState_ = state;
             DisplayManagerAgentController::GetInstance().NotifyDisplayPowerEvent(DisplayPowerEvent::DISPLAY_OFF,
                 EventStatus::BEGIN);
             break;
@@ -90,12 +79,10 @@ void DisplayPowerController::NotifyDisplayEvent(DisplayEvent event)
         displayStateChangeListener_(DISPLAY_ID_INVALID, nullptr, emptyMap, DisplayStateChangeType::BEFORE_UNLOCK);
         DisplayManagerAgentController::GetInstance().NotifyDisplayPowerEvent(DisplayPowerEvent::DESKTOP_READY,
             EventStatus::BEGIN);
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
         isKeyguardDrawn_ = false;
         return;
     }
     if (event == DisplayEvent::KEYGUARD_DRAWN) {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
         isKeyguardDrawn_ = true;
     }
 }

@@ -17,7 +17,6 @@
 #define OHOS_ROSEN_DISPLAY_POWER_CONTROLLER_H
 
 #include <map>
-#include <mutex>
 #include <refbase.h>
 #include "display.h"
 #include "display_change_listener.h"
@@ -29,8 +28,7 @@ class DisplayPowerController : public RefBase {
 using DisplayStateChangeListener = std::function<void(DisplayId, sptr<DisplayInfo>,
     const std::map<DisplayId, sptr<DisplayInfo>>&, DisplayStateChangeType)>;
 public:
-    DisplayPowerController(std::recursive_mutex& mutex, DisplayStateChangeListener listener)
-        : mutex_(mutex), displayStateChangeListener_(listener)
+    DisplayPowerController(DisplayStateChangeListener listener) : displayStateChangeListener_(listener)
     {
     }
     virtual ~DisplayPowerController() = default;
@@ -43,7 +41,6 @@ public:
 private:
     DisplayState displayState_ { DisplayState::UNKNOWN };
     bool isKeyguardDrawn_ { false };
-    std::recursive_mutex& mutex_;
     DisplayStateChangeListener displayStateChangeListener_;
 };
 }

@@ -36,7 +36,6 @@ namespace {
 }
 WM_IMPLEMENT_SINGLE_INSTANCE(DisplayManagerService)
 const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(&SingletonContainer::Get<DisplayManagerService>());
-float DisplayManagerService::customVirtualPixelRatio_ = -1.0f;
 
 #define CHECK_SCREEN_AND_RETURN(ret) \
     do { \
@@ -47,13 +46,13 @@ float DisplayManagerService::customVirtualPixelRatio_ = -1.0f;
     } while (false)
 
 DisplayManagerService::DisplayManagerService() : SystemAbility(DISPLAY_MANAGER_SERVICE_SA_ID, true),
-    abstractDisplayController_(new AbstractDisplayController(mutex_,
+    abstractDisplayController_(new AbstractDisplayController(
         std::bind(&DisplayManagerService::NotifyDisplayStateChange, this,
             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4))),
-    abstractScreenController_(new AbstractScreenController(mutex_)),
-    displayPowerController_(new DisplayPowerController(mutex_,
-        std::bind(&DisplayManagerService::NotifyDisplayStateChange, this,
-            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4))),
+    mainHandler_(std::make_shared<WindowEventHandler>(AppExecFwk::EventRunner::Create("DisplayManagerService"))),
+    abstractScreenController_(new AbstractScreenController(mainHandler_)),
+    displayPowerController_(new DisplayPowerController(std::bind(&DisplayManagerService::NotifyDisplayStateChange, this,
+        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4))),
     isAutoRotationOpen_(OHOS::system::GetParameter(
         "persist.display.ar.enabled", "1") == "1") // autoRotation default enabled
 {
@@ -62,9 +61,11 @@ DisplayManagerService::DisplayManagerService() : SystemAbility(DISPLAY_MANAGER_S
 int DisplayManagerService::Dump(int fd, const std::vector<std::u16string>& args)
 {
     if (displayDumper_ == nullptr) {
-        displayDumper_ = new DisplayDumper(abstractDisplayController_, abstractScreenController_, mutex_);
+        displayDumper_ = new DisplayDumper(abstractDisplayController_, abstractScreenController_);
     }
-    return static_cast<int>(displayDumper_->Dump(fd, args));
+    return mainHandler_->GetSyncTaskResult([this, fd, &args]() {
+        return static_cast<int>(displayDumper_->Dump(fd, args));
+    });
 }
 
 void DisplayManagerService::OnStart()
@@ -97,20 +98,6 @@ bool DisplayManagerService::Init()
 void DisplayManagerService::ConfigureDisplayManagerService()
 {
     auto numbersConfig = DisplayManagerConfig::GetIntNumbersConfig();
-    if (numbersConfig.count("dpi") != 0) {
-        uint32_t densityDpi = static_cast<uint32_t>(numbersConfig["dpi"][0]);
-        if (densityDpi == 0) {
-            WLOGI("No custom virtual pixel ratio value is configured, use default value instead");
-            return;
-        }
-        if (densityDpi < DOT_PER_INCH_MINIMUM_VALUE || densityDpi > DOT_PER_INCH_MAXIMUM_VALUE) {
-            WLOGE("Invalid input dpi value, the valid input range for DPI values is %{public}u ~ %{public}u",
-                DOT_PER_INCH_MINIMUM_VALUE, DOT_PER_INCH_MAXIMUM_VALUE);
-            return;
-        }
-        float virtualPixelRatio = static_cast<float>(densityDpi) / BASELINE_DENSITY;
-        DisplayManagerService::customVirtualPixelRatio_ = virtualPixelRatio;
-    }
     if (numbersConfig.count("defaultDeviceRotationOffset") != 0) {
         uint32_t defaultDeviceRotationOffset = static_cast<uint32_t>(numbersConfig["defaultDeviceRotationOffset"][0]);
         ScreenRotationController::SetDefaultDeviceRotationOffset(defaultDeviceRotationOffset);
@@ -119,7 +106,9 @@ void DisplayManagerService::ConfigureDisplayManagerService()
 
 void DisplayManagerService::RegisterDisplayChangeListener(sptr<IDisplayChangeListener> listener)
 {
-    displayChangeListener_ = listener;
+    mainHandler_->PostImmediateTask([this, listener]() {
+        displayChangeListener_ = listener;
+    });
     WLOGFI("IDisplayChangeListener registered");
 }
 
@@ -135,9 +124,11 @@ void DisplayManagerService::NotifyDisplayStateChange(DisplayId defaultDisplayId,
 
 void DisplayManagerService::GetWindowPreferredOrientation(DisplayId displayId, Orientation &orientation)
 {
-    if (displayChangeListener_ != nullptr) {
-        displayChangeListener_->OnGetWindowPreferredOrientation(displayId, orientation);
-    }
+    mainHandler_->PostImmediateSyncTask([this, displayId, &orientation]() {
+        if (displayChangeListener_ != nullptr) {
+            displayChangeListener_->OnGetWindowPreferredOrientation(displayId, orientation);
+        }
+    });
 }
 
 void DisplayManagerService::NotifyScreenshot(DisplayId displayId)
@@ -149,34 +140,40 @@ void DisplayManagerService::NotifyScreenshot(DisplayId displayId)
 
 sptr<DisplayInfo> DisplayManagerService::GetDefaultDisplayInfo()
 {
-    ScreenId dmsScreenId = abstractScreenController_->GetDefaultAbstractScreenId();
-    WLOGFI("GetDefaultDisplayInfo %{public}" PRIu64"", dmsScreenId);
-    sptr<AbstractDisplay> display = abstractDisplayController_->GetAbstractDisplayByScreen(dmsScreenId);
-    if (display == nullptr) {
-        WLOGFE("fail to get displayInfo by id: invalid display");
-        return nullptr;
-    }
-    return display->ConvertToDisplayInfo();
+    return mainHandler_->GetSyncTaskResult([this]() {
+        ScreenId dmsScreenId = abstractScreenController_->GetDefaultAbstractScreenId();
+        WLOGFI("GetDefaultDisplayInfo %{public}" PRIu64"", dmsScreenId);
+        sptr<AbstractDisplay> display = abstractDisplayController_->GetAbstractDisplayByScreen(dmsScreenId);
+        if (display == nullptr) {
+            WLOGFE("fail to get displayInfo by id: invalid display");
+            return sptr<DisplayInfo>(nullptr);
+        }
+        return display->ConvertToDisplayInfo();
+    });
 }
 
 sptr<DisplayInfo> DisplayManagerService::GetDisplayInfoById(DisplayId displayId)
 {
-    sptr<AbstractDisplay> display = abstractDisplayController_->GetAbstractDisplay(displayId);
-    if (display == nullptr) {
-        WLOGFE("fail to get displayInfo by id: invalid display");
-        return nullptr;
-    }
-    return display->ConvertToDisplayInfo();
+    return mainHandler_->GetSyncTaskResult([this, displayId]() {
+        sptr<AbstractDisplay> display = abstractDisplayController_->GetAbstractDisplay(displayId);
+        if (display == nullptr) {
+            WLOGFE("fail to get displayInfo by id: invalid display");
+            return sptr<DisplayInfo>(nullptr);
+        }
+        return display->ConvertToDisplayInfo();
+    });
 }
 
 sptr<DisplayInfo> DisplayManagerService::GetDisplayInfoByScreen(ScreenId screenId)
 {
-    sptr<AbstractDisplay> display = abstractDisplayController_->GetAbstractDisplayByScreen(screenId);
-    if (display == nullptr) {
-        WLOGFE("fail to get displayInfo by screenId: invalid display");
-        return nullptr;
-    }
-    return display->ConvertToDisplayInfo();
+    return mainHandler_->GetSyncTaskResult([this, screenId]() {
+        sptr<AbstractDisplay> display = abstractDisplayController_->GetAbstractDisplayByScreen(screenId);
+        if (display == nullptr) {
+            WLOGFE("fail to get displayInfo by screenId: invalid display");
+            return sptr<DisplayInfo>(nullptr);
+        }
+        return display->ConvertToDisplayInfo();
+    });
 }
 
 ScreenId DisplayManagerService::CreateVirtualScreen(VirtualScreenOption option,
@@ -186,11 +183,13 @@ ScreenId DisplayManagerService::CreateVirtualScreen(VirtualScreenOption option,
         WLOGFE("displayManagerAgent invalid");
         return SCREEN_ID_INVALID;
     }
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:CreateVirtualScreen(%s)", option.name_.c_str());
-    ScreenId screenId = abstractScreenController_->CreateVirtualScreen(option, displayManagerAgent);
-    CHECK_SCREEN_AND_RETURN(SCREEN_ID_INVALID);
-    accessTokenIdMaps_.insert(std::pair(screenId, IPCSkeleton::GetCallingTokenID()));
-    return screenId;
+    return mainHandler_->GetSyncTaskResult([this, &option, &displayManagerAgent]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:CreateVirtualScreen(%s)", option.name_.c_str());
+        ScreenId screenId = abstractScreenController_->CreateVirtualScreen(option, displayManagerAgent);
+        CHECK_SCREEN_AND_RETURN(SCREEN_ID_INVALID);
+        accessTokenIdMaps_.insert(std::pair(screenId, IPCSkeleton::GetCallingTokenID()));
+        return screenId;
+    });
 }
 
 DMError DisplayManagerService::DestroyVirtualScreen(ScreenId screenId)
@@ -202,33 +201,50 @@ DMError DisplayManagerService::DestroyVirtualScreen(ScreenId screenId)
     WLOGFI("DestroyVirtualScreen::ScreenId: %{public}" PRIu64 "", screenId);
     CHECK_SCREEN_AND_RETURN(DMError::DM_ERROR_INVALID_PARAM);
 
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:DestroyVirtualScreen(%" PRIu64")", screenId);
-    return abstractScreenController_->DestroyVirtualScreen(screenId);
+    return mainHandler_->GetSyncTaskResult([this, screenId]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:DestroyVirtualScreen(%" PRIu64")", screenId);
+        return abstractScreenController_->DestroyVirtualScreen(screenId);
+    });
 }
 
 DMError DisplayManagerService::SetVirtualScreenSurface(ScreenId screenId, sptr<Surface> surface)
 {
     WLOGFI("SetVirtualScreenSurface::ScreenId: %{public}" PRIu64 "", screenId);
     CHECK_SCREEN_AND_RETURN(DMError::DM_ERROR_INVALID_PARAM);
-    return abstractScreenController_->SetVirtualScreenSurface(screenId, surface);
+    return mainHandler_->GetSyncTaskResult([this, screenId, surface]() {
+        return abstractScreenController_->SetVirtualScreenSurface(screenId, surface);
+    });
 }
 
 bool DisplayManagerService::SetOrientation(ScreenId screenId, Orientation orientation)
 {
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SetOrientation(%" PRIu64")", screenId);
-    return abstractScreenController_->SetOrientation(screenId, orientation, false);
+    auto orientationStart = static_cast<uint32_t>(Orientation::UNSPECIFIED);
+    auto orientationEnd = static_cast<uint32_t>(Orientation::REVERSE_HORIZONTAL);
+    auto inputOrientation = static_cast<uint32_t>(orientation);
+    if (inputOrientation < orientationStart || inputOrientation > orientationEnd) {
+        WLOGFE("SetOrientation::orientation: %{public}u", inputOrientation);
+        return false;
+    }
+    return mainHandler_->GetSyncTaskResult([this, screenId, orientation]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SetOrientation(%" PRIu64")", screenId);
+        return abstractScreenController_->SetOrientation(screenId, orientation, false);
+    });
 }
 
 bool DisplayManagerService::SetOrientationFromWindow(ScreenId screenId, Orientation orientation)
 {
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SetOrientationFromWindow(%" PRIu64")", screenId);
-    return abstractScreenController_->SetOrientation(screenId, orientation, true);
+    return mainHandler_->GetSyncTaskResult([this, screenId, orientation]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SetOrientationFromWindow(%" PRIu64")", screenId);
+        return abstractScreenController_->SetOrientation(screenId, orientation, true);
+    });
 }
 
 bool DisplayManagerService::SetRotationFromWindow(ScreenId screenId, Rotation targetRotation)
 {
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SetRotationFromWindow(%" PRIu64")", screenId);
-    return abstractScreenController_->SetRotation(screenId, targetRotation, true);
+    return mainHandler_->GetSyncTaskResult([this, screenId, targetRotation]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SetRotationFromWindow(%" PRIu64")", screenId);
+        return abstractScreenController_->SetRotation(screenId, targetRotation, true);
+    });
 }
 
 std::shared_ptr<Media::PixelMap> DisplayManagerService::GetDisplaySnapshot(DisplayId displayId)
@@ -236,19 +252,15 @@ std::shared_ptr<Media::PixelMap> DisplayManagerService::GetDisplaySnapshot(Displ
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:GetDisplaySnapshot(%" PRIu64")", displayId);
     if (Permission::CheckCallingPermission("ohos.permission.CAPTURE_SCREEN") ||
         Permission::IsStartByHdcd()) {
-        auto res = abstractDisplayController_->GetScreenSnapshot(displayId);
-        if (res != nullptr) {
-            NotifyScreenshot(displayId);
-        }
-        return res;
+        return mainHandler_->GetSyncTaskResult([this, displayId]() {
+            auto res = abstractDisplayController_->GetScreenSnapshot(displayId);
+            if (res != nullptr) {
+                NotifyScreenshot(displayId);
+            }
+            return res;
+        });
     }
     return nullptr;
-}
-
-ScreenId DisplayManagerService::GetRSScreenId(DisplayId displayId) const
-{
-    ScreenId dmsScreenId = GetScreenIdByDisplayId(displayId);
-    return abstractScreenController_->ConvertToRsScreenId(dmsScreenId);
 }
 
 DMError DisplayManagerService::GetScreenSupportedColorGamuts(ScreenId screenId,
@@ -256,28 +268,36 @@ DMError DisplayManagerService::GetScreenSupportedColorGamuts(ScreenId screenId,
 {
     WLOGFI("GetScreenSupportedColorGamuts::ScreenId: %{public}" PRIu64 "", screenId);
     CHECK_SCREEN_AND_RETURN(DMError::DM_ERROR_INVALID_PARAM);
-    return abstractScreenController_->GetScreenSupportedColorGamuts(screenId, colorGamuts);
+    return mainHandler_->GetSyncTaskResult([this, screenId, &colorGamuts]() {
+        return abstractScreenController_->GetScreenSupportedColorGamuts(screenId, colorGamuts);
+    });
 }
 
 DMError DisplayManagerService::GetScreenColorGamut(ScreenId screenId, ScreenColorGamut& colorGamut)
 {
     WLOGFI("GetScreenColorGamut::ScreenId: %{public}" PRIu64 "", screenId);
     CHECK_SCREEN_AND_RETURN(DMError::DM_ERROR_INVALID_PARAM);
-    return abstractScreenController_->GetScreenColorGamut(screenId, colorGamut);
+    return mainHandler_->GetSyncTaskResult([this, screenId, &colorGamut]() {
+        return abstractScreenController_->GetScreenColorGamut(screenId, colorGamut);
+    });
 }
 
 DMError DisplayManagerService::SetScreenColorGamut(ScreenId screenId, int32_t colorGamutIdx)
 {
     WLOGFI("SetScreenColorGamut::ScreenId: %{public}" PRIu64 ", colorGamutIdx %{public}d", screenId, colorGamutIdx);
     CHECK_SCREEN_AND_RETURN(DMError::DM_ERROR_INVALID_PARAM);
-    return abstractScreenController_->SetScreenColorGamut(screenId, colorGamutIdx);
+    return mainHandler_->GetSyncTaskResult([this, screenId, colorGamutIdx]() {
+        return abstractScreenController_->SetScreenColorGamut(screenId, colorGamutIdx);
+    });
 }
 
 DMError DisplayManagerService::GetScreenGamutMap(ScreenId screenId, ScreenGamutMap& gamutMap)
 {
     WLOGFI("GetScreenGamutMap::ScreenId: %{public}" PRIu64 "", screenId);
     CHECK_SCREEN_AND_RETURN(DMError::DM_ERROR_INVALID_PARAM);
-    return abstractScreenController_->GetScreenGamutMap(screenId, gamutMap);
+    return mainHandler_->GetSyncTaskResult([this, screenId, &gamutMap]() {
+        return abstractScreenController_->GetScreenGamutMap(screenId, gamutMap);
+    });
 }
 
 DMError DisplayManagerService::SetScreenGamutMap(ScreenId screenId, ScreenGamutMap gamutMap)
@@ -285,14 +305,18 @@ DMError DisplayManagerService::SetScreenGamutMap(ScreenId screenId, ScreenGamutM
     WLOGFI("SetScreenGamutMap::ScreenId: %{public}" PRIu64 ", ScreenGamutMap %{public}u",
         screenId, static_cast<uint32_t>(gamutMap));
     CHECK_SCREEN_AND_RETURN(DMError::DM_ERROR_INVALID_PARAM);
-    return abstractScreenController_->SetScreenGamutMap(screenId, gamutMap);
+    return mainHandler_->GetSyncTaskResult([this, screenId, gamutMap]() {
+        return abstractScreenController_->SetScreenGamutMap(screenId, gamutMap);
+    });
 }
 
 DMError DisplayManagerService::SetScreenColorTransform(ScreenId screenId)
 {
     WLOGFI("SetScreenColorTransform::ScreenId: %{public}" PRIu64 "", screenId);
     CHECK_SCREEN_AND_RETURN(DMError::DM_ERROR_INVALID_PARAM);
-    return abstractScreenController_->SetScreenColorTransform(screenId);
+    return mainHandler_->GetSyncTaskResult([this, screenId]() {
+        return abstractScreenController_->SetScreenColorTransform(screenId);
+    });
 }
 
 void DisplayManagerService::OnStop()
@@ -307,7 +331,9 @@ bool DisplayManagerService::RegisterDisplayManagerAgent(const sptr<IDisplayManag
         WLOGFE("displayManagerAgent invalid");
         return false;
     }
-    return DisplayManagerAgentController::GetInstance().RegisterDisplayManagerAgent(displayManagerAgent, type);
+    return mainHandler_->GetSyncTaskResult([&displayManagerAgent, type]() {
+        return DisplayManagerAgentController::GetInstance().RegisterDisplayManagerAgent(displayManagerAgent, type);
+    });
 }
 
 bool DisplayManagerService::UnregisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
@@ -317,7 +343,9 @@ bool DisplayManagerService::UnregisterDisplayManagerAgent(const sptr<IDisplayMan
         WLOGFE("displayManagerAgent invalid");
         return false;
     }
-    return DisplayManagerAgentController::GetInstance().UnregisterDisplayManagerAgent(displayManagerAgent, type);
+    return mainHandler_->GetSyncTaskResult([&displayManagerAgent, type]() {
+        return DisplayManagerAgentController::GetInstance().UnregisterDisplayManagerAgent(displayManagerAgent, type);
+    });
 }
 
 bool DisplayManagerService::WakeUpBegin(PowerStateChangeReason reason)
@@ -327,8 +355,10 @@ bool DisplayManagerService::WakeUpBegin(PowerStateChangeReason reason)
         WLOGFI("permission denied!");
         return false;
     }
-    return DisplayManagerAgentController::GetInstance().NotifyDisplayPowerEvent(DisplayPowerEvent::WAKE_UP,
-        EventStatus::BEGIN);
+    return mainHandler_->GetSyncTaskResult([reason]() {
+        return DisplayManagerAgentController::GetInstance().NotifyDisplayPowerEvent(DisplayPowerEvent::WAKE_UP,
+            EventStatus::BEGIN);
+    });
 }
 
 bool DisplayManagerService::WakeUpEnd()
@@ -337,8 +367,10 @@ bool DisplayManagerService::WakeUpEnd()
         WLOGFI("permission denied!");
         return false;
     }
-    return DisplayManagerAgentController::GetInstance().NotifyDisplayPowerEvent(DisplayPowerEvent::WAKE_UP,
-        EventStatus::END);
+    return mainHandler_->GetSyncTaskResult([]() {
+        return DisplayManagerAgentController::GetInstance().NotifyDisplayPowerEvent(DisplayPowerEvent::WAKE_UP,
+            EventStatus::END);
+    });
 }
 
 bool DisplayManagerService::SuspendBegin(PowerStateChangeReason reason)
@@ -348,9 +380,11 @@ bool DisplayManagerService::SuspendBegin(PowerStateChangeReason reason)
         WLOGFI("permission denied!");
         return false;
     }
-    displayPowerController_->SuspendBegin(reason);
-    return DisplayManagerAgentController::GetInstance().NotifyDisplayPowerEvent(DisplayPowerEvent::SLEEP,
-        EventStatus::BEGIN);
+    return mainHandler_->GetSyncTaskResult([this, reason]() {
+        displayPowerController_->SuspendBegin(reason);
+        return DisplayManagerAgentController::GetInstance().NotifyDisplayPowerEvent(DisplayPowerEvent::SLEEP,
+            EventStatus::BEGIN);
+    });
 }
 
 bool DisplayManagerService::SuspendEnd()
@@ -359,8 +393,10 @@ bool DisplayManagerService::SuspendEnd()
         WLOGFI("permission denied!");
         return false;
     }
-    return DisplayManagerAgentController::GetInstance().NotifyDisplayPowerEvent(DisplayPowerEvent::SLEEP,
-        EventStatus::END);
+    return mainHandler_->GetSyncTaskResult([]() {
+        return DisplayManagerAgentController::GetInstance().NotifyDisplayPowerEvent(DisplayPowerEvent::SLEEP,
+            EventStatus::END);
+    });
 }
 
 bool DisplayManagerService::SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason)
@@ -370,12 +406,16 @@ bool DisplayManagerService::SetScreenPowerForAll(ScreenPowerState state, PowerSt
         WLOGFI("permission denied!");
         return false;
     }
-    return abstractScreenController_->SetScreenPowerForAll(state, reason);
+    return mainHandler_->GetSyncTaskResult([this, state, reason]() {
+        return abstractScreenController_->SetScreenPowerForAll(state, reason);
+    });
 }
 
 ScreenPowerState DisplayManagerService::GetScreenPower(ScreenId dmsScreenId)
 {
-    return abstractScreenController_->GetScreenPower(dmsScreenId);
+    return mainHandler_->GetSyncTaskResult([this, dmsScreenId]() {
+        return abstractScreenController_->GetScreenPower(dmsScreenId);
+    });
 }
 
 bool DisplayManagerService::SetDisplayState(DisplayState state)
@@ -384,7 +424,9 @@ bool DisplayManagerService::SetDisplayState(DisplayState state)
         WLOGFI("permission denied!");
         return false;
     }
-    return displayPowerController_->SetDisplayState(state);
+    return mainHandler_->GetSyncTaskResult([this, state]() {
+        return displayPowerController_->SetDisplayState(state);
+    });
 }
 
 ScreenId DisplayManagerService::GetScreenIdByDisplayId(DisplayId displayId) const
@@ -399,210 +441,231 @@ ScreenId DisplayManagerService::GetScreenIdByDisplayId(DisplayId displayId) cons
 
 DisplayState DisplayManagerService::GetDisplayState(DisplayId displayId)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    return displayPowerController_->GetDisplayState(displayId);
+    return mainHandler_->GetSyncTaskResult([this, displayId]() {
+        return displayPowerController_->GetDisplayState(displayId);
+    });
 }
 
 void DisplayManagerService::NotifyDisplayEvent(DisplayEvent event)
 {
-    displayPowerController_->NotifyDisplayEvent(event);
+    mainHandler_->PostImmediateTask([this, event]() {
+        displayPowerController_->NotifyDisplayEvent(event);
+    });
 }
 
 bool DisplayManagerService::SetFreeze(std::vector<DisplayId> displayIds, bool isFreeze)
 {
-    abstractDisplayController_->SetFreeze(displayIds, isFreeze);
-    return true;
-}
-
-std::shared_ptr<RSDisplayNode> DisplayManagerService::GetRSDisplayNodeByDisplayId(DisplayId displayId) const
-{
-    ScreenId screenId = GetScreenIdByDisplayId(displayId);
-    CHECK_SCREEN_AND_RETURN(nullptr);
-
-    return abstractScreenController_->GetRSDisplayNodeByScreenId(screenId);
+    return mainHandler_->GetSyncTaskResult([this, displayIds, isFreeze]() {
+        abstractDisplayController_->SetFreeze(displayIds, isFreeze);
+        return true;
+    });
 }
 
 ScreenId DisplayManagerService::MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenIds)
 {
-    WLOGFI("MakeMirror. mainScreenId :%{public}" PRIu64"", mainScreenId);
-    auto shotScreenIds = abstractScreenController_->GetShotScreenIds(mirrorScreenIds);
-    auto iter = std::find(shotScreenIds.begin(), shotScreenIds.end(), mainScreenId);
-    if (iter != shotScreenIds.end()) {
-        shotScreenIds.erase(iter);
-    }
-    auto allMirrorScreenIds = abstractScreenController_->GetAllExpandOrMirrorScreenIds(mirrorScreenIds);
-    iter = std::find(allMirrorScreenIds.begin(), allMirrorScreenIds.end(), mainScreenId);
-    if (iter != allMirrorScreenIds.end()) {
-        allMirrorScreenIds.erase(iter);
-    }
-    if (mainScreenId == SCREEN_ID_INVALID || (shotScreenIds.empty() && allMirrorScreenIds.empty())) {
-        WLOGFI("create mirror fail, screen is invalid. Screen :%{public}" PRIu64"", mainScreenId);
-        return SCREEN_ID_INVALID;
-    }
-    abstractScreenController_->SetShotScreen(mainScreenId, shotScreenIds);
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:MakeMirror");
-    if (!allMirrorScreenIds.empty() && !abstractScreenController_->MakeMirror(mainScreenId, allMirrorScreenIds)) {
-        WLOGFE("make mirror failed.");
-        return SCREEN_ID_INVALID;
-    }
-    auto screen = abstractScreenController_->GetAbstractScreen(mainScreenId);
-    if (screen == nullptr || abstractScreenController_->GetAbstractScreenGroup(screen->groupDmsId_) == nullptr) {
-        WLOGFE("get screen group failed.");
-        return SCREEN_ID_INVALID;
-    }
-    return screen->groupDmsId_;
+    return mainHandler_->GetSyncTaskResult([this, mainScreenId, &mirrorScreenIds]() {
+        WLOGFI("MakeMirror. mainScreenId :%{public}" PRIu64"", mainScreenId);
+        auto allMirrorScreenIds = abstractScreenController_->GetAllValidScreenIds(mirrorScreenIds);
+        auto iter = std::find(allMirrorScreenIds.begin(), allMirrorScreenIds.end(), mainScreenId);
+        if (iter != allMirrorScreenIds.end()) {
+            allMirrorScreenIds.erase(iter);
+        }
+        auto mainScreen = abstractScreenController_->GetAbstractScreen(mainScreenId);
+        if (mainScreen == nullptr || allMirrorScreenIds.empty()) {
+            WLOGFI("create mirror fail. main screen :%{public}" PRIu64", screens' size:%{public}u",
+                   mainScreenId, static_cast<uint32_t>(allMirrorScreenIds.size()));
+            return SCREEN_ID_INVALID;
+        }
+        uint32_t len = static_cast<uint32_t>(allMirrorScreenIds.size());
+        WLOGFI("MakeMirror. allMirrorScreenIds size :%{public}u", len);
+        for (uint32_t i = 0; i < len; i++) {
+            WLOGFI("MakeMirror. screen[%{public}u] id :%{public}" PRIu64"", i, allMirrorScreenIds[i]);
+        }
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:MakeMirror");
+        if (!abstractScreenController_->MakeMirror(mainScreenId, allMirrorScreenIds)) {
+            WLOGFE("make mirror failed.");
+            return SCREEN_ID_INVALID;
+        }
+        if (abstractScreenController_->GetAbstractScreenGroup(mainScreen->groupDmsId_) == nullptr) {
+            WLOGFE("get screen group failed.");
+            return SCREEN_ID_INVALID;
+        }
+        return mainScreen->groupDmsId_;
+    });
 }
 
 void DisplayManagerService::RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens)
 {
-    abstractScreenController_->RemoveVirtualScreenFromGroup(screens);
+    mainHandler_->PostImmediateTask([this, screens]() {
+        abstractScreenController_->RemoveVirtualScreenFromGroup(screens);
+    });
 }
 
 void DisplayManagerService::UpdateRSTree(DisplayId displayId, std::shared_ptr<RSSurfaceNode>& surfaceNode,
     bool isAdd)
 {
-    WLOGI("UpdateRSTree");
-    ScreenId screenId = GetScreenIdByDisplayId(displayId);
-    CHECK_SCREEN_AND_RETURN();
+    mainHandler_->PostImmediateSyncTask([this, displayId, &surfaceNode, isAdd]() {
+        WLOGI("UpdateRSTree");
+        ScreenId screenId = GetScreenIdByDisplayId(displayId);
+        CHECK_SCREEN_AND_RETURN();
 
-    abstractScreenController_->UpdateRSTree(screenId, surfaceNode, isAdd);
+        abstractScreenController_->UpdateRSTree(screenId, surfaceNode, isAdd);
+    });
 }
 
 sptr<ScreenInfo> DisplayManagerService::GetScreenInfoById(ScreenId screenId)
 {
-    auto screen = abstractScreenController_->GetAbstractScreen(screenId);
-    if (screen == nullptr) {
-        WLOGE("cannot find screenInfo: %{public}" PRIu64"", screenId);
-        return nullptr;
-    }
-    return screen->ConvertToScreenInfo();
+    return mainHandler_->GetSyncTaskResult([this, screenId]() {
+        auto screen = abstractScreenController_->GetAbstractScreen(screenId);
+        if (screen == nullptr) {
+            WLOGE("cannot find screenInfo: %{public}" PRIu64"", screenId);
+            return sptr<ScreenInfo>(nullptr);
+        }
+        return screen->ConvertToScreenInfo();
+    });
 }
 
 sptr<ScreenGroupInfo> DisplayManagerService::GetScreenGroupInfoById(ScreenId screenId)
 {
-    auto screenGroup = abstractScreenController_->GetAbstractScreenGroup(screenId);
-    if (screenGroup == nullptr) {
-        WLOGE("cannot find screenGroupInfo: %{public}" PRIu64"", screenId);
-        return nullptr;
-    }
-    return screenGroup->ConvertToScreenGroupInfo();
+    return mainHandler_->GetSyncTaskResult([this, screenId]() {
+        auto screenGroup = abstractScreenController_->GetAbstractScreenGroup(screenId);
+        if (screenGroup == nullptr) {
+            WLOGE("cannot find screenGroupInfo: %{public}" PRIu64"", screenId);
+            return sptr<ScreenGroupInfo>(nullptr);
+        }
+        return screenGroup->ConvertToScreenGroupInfo();
+    });
 }
 
 ScreenId DisplayManagerService::GetScreenGroupIdByScreenId(ScreenId screenId)
 {
-    auto screen = abstractScreenController_->GetAbstractScreen(screenId);
-    if (screen == nullptr) {
-        WLOGE("cannot find screenInfo: %{public}" PRIu64"", screenId);
-        return SCREEN_ID_INVALID;
-    }
-    return screen->GetScreenGroupId();
+    return mainHandler_->GetSyncTaskResult([this, screenId]() {
+        auto screen = abstractScreenController_->GetAbstractScreen(screenId);
+        if (screen == nullptr) {
+            WLOGE("cannot find screenInfo: %{public}" PRIu64"", screenId);
+            return SCREEN_ID_INVALID;
+        }
+        return screen->GetScreenGroupId();
+    });
 }
 
 std::vector<DisplayId> DisplayManagerService::GetAllDisplayIds()
 {
-    return abstractDisplayController_->GetAllDisplayIds();
+    return mainHandler_->GetSyncTaskResult([this]() {
+        return abstractDisplayController_->GetAllDisplayIds();
+    });
 }
 
 std::vector<sptr<ScreenInfo>> DisplayManagerService::GetAllScreenInfos()
 {
-    std::vector<ScreenId> screenIds = abstractScreenController_->GetAllScreenIds();
-    std::vector<sptr<ScreenInfo>> screenInfos;
-    for (auto screenId: screenIds) {
-        auto screenInfo = GetScreenInfoById(screenId);
-        if (screenInfo == nullptr) {
-            WLOGE("cannot find screenInfo: %{public}" PRIu64"", screenId);
-            continue;
+    return mainHandler_->GetSyncTaskResult([this]() {
+        std::vector<ScreenId> screenIds = abstractScreenController_->GetAllScreenIds();
+        std::vector<sptr<ScreenInfo>> screenInfos;
+        for (auto screenId: screenIds) {
+            auto screenInfo = GetScreenInfoById(screenId);
+            if (screenInfo == nullptr) {
+                WLOGE("cannot find screenInfo: %{public}" PRIu64"", screenId);
+                continue;
+            }
+            screenInfos.emplace_back(screenInfo);
         }
-        screenInfos.emplace_back(screenInfo);
-    }
-    return screenInfos;
+        return screenInfos;
+    });
 }
 
 ScreenId DisplayManagerService::MakeExpand(std::vector<ScreenId> expandScreenIds, std::vector<Point> startPoints)
 {
-    WLOGI("MakeExpand");
-    if (expandScreenIds.empty() || startPoints.empty() || expandScreenIds.size() != startPoints.size()) {
-        WLOGFI("create expand fail, input params is invalid. "
-            "screenId vector size :%{public}ud, startPoint vector size :%{public}ud",
-            static_cast<uint32_t>(expandScreenIds.size()), static_cast<uint32_t>(startPoints.size()));
-        return SCREEN_ID_INVALID;
-    }
-    ScreenId defaultScreenId = abstractScreenController_->GetDefaultAbstractScreenId();
-    WLOGI("MakeExpand, defaultScreenId:%{public}" PRIu64"", defaultScreenId);
-    auto shotScreenIds = abstractScreenController_->GetShotScreenIds(expandScreenIds);
-    auto iter = std::find(shotScreenIds.begin(), shotScreenIds.end(), defaultScreenId);
-    if (iter != shotScreenIds.end()) {
-        shotScreenIds.erase(iter);
-    }
-    auto allExpandScreenIds = abstractScreenController_->GetAllExpandOrMirrorScreenIds(expandScreenIds);
-    iter = std::find(allExpandScreenIds.begin(), allExpandScreenIds.end(), defaultScreenId);
-    auto startPointIter = iter - allExpandScreenIds.begin() + startPoints.begin();
-    if (iter != allExpandScreenIds.end()) {
-        allExpandScreenIds.erase(iter);
-    }
-    if (allExpandScreenIds.empty()) {
-        WLOGFE("allExpandScreenIds is empty. make expand failed.");
-        return SCREEN_ID_INVALID;
-    }
-    std::shared_ptr<RSDisplayNode> rsDisplayNode;
-    for (uint32_t i = 0; i < allExpandScreenIds.size(); i++) {
-        rsDisplayNode = abstractScreenController_->GetRSDisplayNodeByScreenId(allExpandScreenIds[i]);
-        if (rsDisplayNode != nullptr) {
-            rsDisplayNode->SetDisplayOffset(startPoints[i].posX_, startPoints[i].posY_);
+    return mainHandler_->GetSyncTaskResult([this, &expandScreenIds, &startPoints]() {
+        WLOGFI("MakeExpand");
+        if (expandScreenIds.empty() || startPoints.empty() || expandScreenIds.size() != startPoints.size()) {
+            WLOGFI("create expand fail, input params is invalid. "
+                   "screenId vector size :%{public}ud, startPoint vector size :%{public}ud",
+                   static_cast<uint32_t>(expandScreenIds.size()), static_cast<uint32_t>(startPoints.size()));
+            return SCREEN_ID_INVALID;
         }
-    }
-    if (startPointIter != startPoints.end()) {
-        startPoints.erase(startPointIter);
-    }
-    abstractScreenController_->SetShotScreen(defaultScreenId, shotScreenIds);
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:MakeExpand");
-    if (!allExpandScreenIds.empty() && !abstractScreenController_->MakeExpand(allExpandScreenIds, startPoints)) {
-        WLOGFE("make expand failed.");
-        return SCREEN_ID_INVALID;
-    }
-    auto screen = abstractScreenController_->GetAbstractScreen(allExpandScreenIds[0]);
-    if (screen == nullptr || abstractScreenController_->GetAbstractScreenGroup(screen->groupDmsId_) == nullptr) {
-        WLOGFE("get screen group failed.");
-        return SCREEN_ID_INVALID;
-    }
-    return screen->groupDmsId_;
+        std::map<ScreenId, Point> pointsMap;
+        uint32_t size = expandScreenIds.size();
+        for (uint32_t i = 0; i < size; i++) {
+            if (pointsMap.find(expandScreenIds[i]) != pointsMap.end()) {
+                continue;
+            }
+            pointsMap[expandScreenIds[i]] = startPoints[i];
+        }
+        ScreenId defaultScreenId = abstractScreenController_->GetDefaultAbstractScreenId();
+        WLOGFI("MakeExpand, defaultScreenId:%{public}" PRIu64"", defaultScreenId);
+        auto allExpandScreenIds = abstractScreenController_->GetAllValidScreenIds(expandScreenIds);
+        auto iter = std::find(allExpandScreenIds.begin(), allExpandScreenIds.end(), defaultScreenId);
+        if (iter != allExpandScreenIds.end()) {
+            allExpandScreenIds.erase(iter);
+        }
+        if (allExpandScreenIds.empty()) {
+            WLOGFE("allExpandScreenIds is empty. make expand failed.");
+            return SCREEN_ID_INVALID;
+        }
+        std::shared_ptr<RSDisplayNode> rsDisplayNode;
+        std::vector<Point> points;
+        for (uint32_t i = 0; i < allExpandScreenIds.size(); i++) {
+            rsDisplayNode = abstractScreenController_->GetRSDisplayNodeByScreenId(allExpandScreenIds[i]);
+            points.emplace_back(pointsMap[allExpandScreenIds[i]]);
+            if (rsDisplayNode != nullptr) {
+                rsDisplayNode->SetDisplayOffset(pointsMap[allExpandScreenIds[i]].posX_,
+                                                pointsMap[allExpandScreenIds[i]].posY_);
+            }
+        }
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:MakeExpand");
+        if (!abstractScreenController_->MakeExpand(allExpandScreenIds, points)) {
+            WLOGFE("make expand failed.");
+            return SCREEN_ID_INVALID;
+        }
+        auto screen = abstractScreenController_->GetAbstractScreen(allExpandScreenIds[0]);
+        if (screen == nullptr || abstractScreenController_->GetAbstractScreenGroup(screen->groupDmsId_) == nullptr) {
+            WLOGFE("get screen group failed.");
+            return SCREEN_ID_INVALID;
+        }
+        return screen->groupDmsId_;
+    });
 }
 
 bool DisplayManagerService::SetScreenActiveMode(ScreenId screenId, uint32_t modeId)
 {
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SetScreenActiveMode(%" PRIu64", %u)", screenId, modeId);
-    return abstractScreenController_->SetScreenActiveMode(screenId, modeId);
+    return mainHandler_->GetSyncTaskResult([this, screenId, modeId]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SetScreenActiveMode(%" PRIu64", %u)", screenId, modeId);
+        return abstractScreenController_->SetScreenActiveMode(screenId, modeId);
+    });
 }
 
 bool DisplayManagerService::SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio)
 {
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SetVirtualPixelRatio(%" PRIu64", %f)", screenId,
-        virtualPixelRatio);
-    return abstractScreenController_->SetVirtualPixelRatio(screenId, virtualPixelRatio);
-}
-
-float DisplayManagerService::GetCustomVirtualPixelRatio()
-{
-    return DisplayManagerService::customVirtualPixelRatio_;
+    return mainHandler_->GetSyncTaskResult([this, screenId, virtualPixelRatio]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SetVirtualPixelRatio(%" PRIu64", %f)", screenId,
+                          virtualPixelRatio);
+        return abstractScreenController_->SetVirtualPixelRatio(screenId, virtualPixelRatio);
+    });
 }
 
 bool DisplayManagerService::IsScreenRotationLocked()
 {
-    return ScreenRotationController::IsScreenRotationLocked();
+    return mainHandler_->GetSyncTaskResult([]() {
+        return ScreenRotationController::IsScreenRotationLocked();
+    });
 }
 
 void DisplayManagerService::SetScreenRotationLocked(bool isLocked)
 {
-    ScreenRotationController::SetScreenRotationLocked(isLocked);
+    mainHandler_->PostImmediateTask([isLocked]() {
+        ScreenRotationController::SetScreenRotationLocked(isLocked);
+    });
 }
 
 void DisplayManagerService::SetGravitySensorSubscriptionEnabled()
 {
-    if (!isAutoRotationOpen_) {
-        WLOGFE("autoRotation is not open");
-        ScreenRotationController::Init();
-        return;
-    }
-    ScreenRotationController::SubscribeGravitySensor();
+    mainHandler_->PostImmediateTask([this]() {
+        if (!isAutoRotationOpen_) {
+            WLOGFE("autoRotation is not open");
+            ScreenRotationController::Init();
+            return;
+        }
+        ScreenRotationController::SubscribeGravitySensor();
+    });
 }
 } // namespace OHOS::Rosen

@@ -77,11 +77,6 @@ void DisplayManagerServiceInner::UpdateRSTree(DisplayId displayId, std::shared_p
     DisplayManagerService::GetInstance().UpdateRSTree(displayId, surfaceNode, isAdd);
 }
 
-ScreenId DisplayManagerServiceInner::GetRSScreenId(DisplayId displayId) const
-{
-    return DisplayManagerService::GetInstance().GetRSScreenId(displayId);
-}
-
 sptr<ScreenInfo> DisplayManagerServiceInner::GetScreenInfoByDisplayId(DisplayId displayId) const
 {
     auto displayInfo = DisplayManagerService::GetInstance().GetDisplayInfoById(displayId);

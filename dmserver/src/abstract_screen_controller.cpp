@@ -36,11 +36,9 @@ namespace {
     const std::string CONTROLLER_THREAD_ID = "abstract_screen_controller_thread";
 }
 
-AbstractScreenController::AbstractScreenController(std::recursive_mutex& mutex)
-    : mutex_(mutex), rsInterface_(RSInterfaces::GetInstance())
+AbstractScreenController::AbstractScreenController(std::shared_ptr<WindowEventHandler> handler)
+    : rsInterface_(RSInterfaces::GetInstance()), controllerHandler_(handler)
 {
-    auto runner = AppExecFwk::EventRunner::Create(CONTROLLER_THREAD_ID);
-    controllerHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
 }
 
 AbstractScreenController::~AbstractScreenController() = default;
@@ -67,7 +65,6 @@ void AbstractScreenController::RegisterRsScreenConnectionChangeListener()
 
 std::vector<ScreenId> AbstractScreenController::GetAllScreenIds() const
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     std::vector<ScreenId> res;
     for (const auto& iter : dmsScreenMap_) {
         res.emplace_back(iter.first);
@@ -75,29 +72,8 @@ std::vector<ScreenId> AbstractScreenController::GetAllScreenIds() const
     return res;
 }
 
-std::vector<ScreenId> AbstractScreenController::GetShotScreenIds(std::vector<ScreenId> mirrorScreenIds) const
+std::vector<ScreenId> AbstractScreenController::GetAllValidScreenIds(std::vector<ScreenId> mirrorScreenIds) const
 {
-    WLOGI("GetShotScreenIds");
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    std::vector<ScreenId> screenIds;
-    for (ScreenId screenId : mirrorScreenIds) {
-        auto iter = std::find(screenIds.begin(), screenIds.end(), screenId);
-        if (iter != screenIds.end()) {
-            continue;
-        }
-        auto dmsScreenIter = dmsScreenMap_.find(screenId);
-        if (screenIdManager_.HasDmsScreenId(screenId) && dmsScreenIter == dmsScreenMap_.end()) {
-            screenIds.emplace_back(screenId);
-            WLOGI("GetShotScreenIds: screenId: %{public}" PRIu64"", screenId);
-        }
-    }
-    return screenIds;
-}
-
-std::vector<ScreenId> AbstractScreenController::GetAllExpandOrMirrorScreenIds(
-    std::vector<ScreenId> mirrorScreenIds) const
-{
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     std::vector<ScreenId> screenIds;
     for (ScreenId screenId : mirrorScreenIds) {
         auto screenIdIter = std::find(screenIds.begin(), screenIds.end(), screenId);
@@ -105,22 +81,8 @@ std::vector<ScreenId> AbstractScreenController::GetAllExpandOrMirrorScreenIds(
             continue;
         }
         auto iter = dmsScreenMap_.find(screenId);
-        if (iter != dmsScreenMap_.end()) {
+        if (iter != dmsScreenMap_.end() && iter->second->type_ != ScreenType::UNDEFINED) {
             screenIds.emplace_back(screenId);
-        }
-    }
-    if (screenIds.empty()) {
-        WLOGI("GetAllExpandOrMirrorScreenIds, screenIds is empty");
-        return screenIds;
-    }
-    for (auto iter = dmsScreenMap_.begin(); iter != dmsScreenMap_.end(); iter++) {
-        if (iter->second->type_ != ScreenType::REAL) {
-            continue;
-        }
-        auto screenIdIter = std::find(screenIds.begin(), screenIds.end(), iter->first);
-        if (screenIdIter == screenIds.end()) {
-            screenIds.emplace_back(iter->first);
-            WLOGI("GetAllExpandOrMirrorScreenIds: screenId: %{public}" PRIu64"", iter->first);
         }
     }
     return screenIds;
@@ -155,7 +117,6 @@ void AbstractScreenController::UpdateRSTree(ScreenId dmsScreenId, std::shared_pt
 sptr<AbstractScreen> AbstractScreenController::GetAbstractScreen(ScreenId dmsScreenId) const
 {
     WLOGI("GetAbstractScreen: screenId: %{public}" PRIu64"", dmsScreenId);
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     auto iter = dmsScreenMap_.find(dmsScreenId);
     if (iter == dmsScreenMap_.end()) {
         WLOGE("did not find screen:%{public}" PRIu64"", dmsScreenId);
@@ -166,7 +127,6 @@ sptr<AbstractScreen> AbstractScreenController::GetAbstractScreen(ScreenId dmsScr
 
 sptr<AbstractScreenGroup> AbstractScreenController::GetAbstractScreenGroup(ScreenId dmsScreenId)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     auto iter = dmsScreenGroupMap_.find(dmsScreenId);
     if (iter == dmsScreenGroupMap_.end()) {
         WLOGE("did not find screen:%{public}" PRIu64"", dmsScreenId);
@@ -184,7 +144,6 @@ ScreenId AbstractScreenController::GetDefaultAbstractScreenId()
         WLOGFW("GetDefaultAbstractScreenId, rsDefaultId is invalid.");
         return SCREEN_ID_INVALID;
     }
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     ScreenId defaultDmsScreenId;
     if (screenIdManager_.ConvertToDmsScreenId(defaultRsScreenId_, defaultDmsScreenId)) {
         WLOGI("GetDefaultAbstractScreenId, screen:%{public}" PRIu64"", defaultDmsScreenId);
@@ -197,20 +156,23 @@ ScreenId AbstractScreenController::GetDefaultAbstractScreenId()
 
 ScreenId AbstractScreenController::ConvertToRsScreenId(ScreenId dmsScreenId) const
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return screenIdManager_.ConvertToRsScreenId(dmsScreenId);
 }
 
 ScreenId AbstractScreenController::ConvertToDmsScreenId(ScreenId rsScreenId) const
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return screenIdManager_.ConvertToDmsScreenId(rsScreenId);
 }
 
 void AbstractScreenController::RegisterAbstractScreenCallback(sptr<AbstractScreenCallback> cb)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     abstractScreenCallback_ = cb;
+    for (auto& iter : dmsScreenMap_) {
+        if (iter.second != nullptr && abstractScreenCallback_ != nullptr) {
+            WLOGFI("dmsScreenId :%{public}" PRIu64"", iter.first);
+            abstractScreenCallback_->onConnect_(iter.second);
+        }
+    }
 }
 
 void AbstractScreenController::OnRsScreenConnectionChange(ScreenId rsScreenId, ScreenEvent screenEvent)
@@ -234,28 +196,8 @@ void AbstractScreenController::OnRsScreenConnectionChange(ScreenId rsScreenId, S
     }
 }
 
-void AbstractScreenController::ScreenConnectionInDisplayInit(sptr<AbstractScreenCallback> abstractScreenCallback)
-{
-    std::map<ScreenId, sptr<AbstractScreen>> dmsScreenMap;
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        dmsScreenMap = dmsScreenMap_;
-        if (dmsScreenMap_.empty()) {
-            return;
-        }
-    }
-
-    for (auto& iter : dmsScreenMap) {
-        if (iter.second != nullptr && abstractScreenCallback != nullptr) {
-            WLOGFI("dmsScreenId :%{public}" PRIu64"", iter.first);
-            abstractScreenCallback->onConnect_(iter.second);
-        }
-    }
-}
-
 void AbstractScreenController::ProcessScreenConnected(ScreenId rsScreenId)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (!screenIdManager_.HasRsScreenId(rsScreenId)) {
         WLOGFD("connect new screen");
         auto absScreen = InitAndGetScreen(rsScreenId);
@@ -266,10 +208,10 @@ void AbstractScreenController::ProcessScreenConnected(ScreenId rsScreenId)
         if (screenGroup == nullptr) {
             return;
         }
-        NotifyScreenGroupChanged(absScreen->ConvertToScreenInfo(), ScreenGroupChangeEvent::ADD_TO_GROUP);
         if (abstractScreenCallback_ != nullptr) {
             abstractScreenCallback_->onConnect_(absScreen);
         }
+        NotifyScreenGroupChanged(absScreen->ConvertToScreenInfo(), ScreenGroupChangeEvent::ADD_TO_GROUP);
     } else {
         WLOGE("reconnect screen, screenId=%{public}" PRIu64"", rsScreenId);
     }
@@ -288,7 +230,7 @@ sptr<AbstractScreen> AbstractScreenController::InitAndGetScreen(ScreenId rsScree
         screenIdManager_.DeleteScreenId(dmsScreenId);
         return nullptr;
     }
-    if (!FillAbstractScreen(absScreen, rsScreenId)) {
+    if (!InitAbstractScreenModesInfo(absScreen)) {
         screenIdManager_.DeleteScreenId(dmsScreenId);
         WLOGFE("InitAndGetScreen failed.");
         return nullptr;
@@ -302,7 +244,6 @@ void AbstractScreenController::ProcessScreenDisconnected(ScreenId rsScreenId)
 {
     WLOGFI("disconnect screen, screenId=%{public}" PRIu64"", rsScreenId);
     ScreenId dmsScreenId;
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (!screenIdManager_.ConvertToDmsScreenId(rsScreenId, dmsScreenId)) {
         WLOGFE("disconnect screen, screenId=%{public}" PRIu64" is not in rs2DmsScreenIdMap_", rsScreenId);
         return;
@@ -320,6 +261,7 @@ void AbstractScreenController::ProcessScreenDisconnected(ScreenId rsScreenId)
         }
         dmsScreenMap_.erase(dmsScreenMapIter);
         NotifyScreenDisconnected(dmsScreenId);
+        // Todo 1. Expand 时需要移动其他screen的位置；2. Mirror时需要主屏幕需要操作
         if (screenGroup != nullptr && screenGroup->combination_ == ScreenCombination::SCREEN_MIRROR &&
             screen->dmsId_ == screenGroup->mirrorScreenId_ && screenGroup->GetChildCount() != 0) {
             auto defaultScreenId = GetDefaultAbstractScreenId();
@@ -335,11 +277,11 @@ void AbstractScreenController::ProcessScreenDisconnected(ScreenId rsScreenId)
     screenIdManager_.DeleteScreenId(dmsScreenId);
 }
 
-bool AbstractScreenController::FillAbstractScreen(sptr<AbstractScreen>& absScreen, ScreenId rsScreenId)
+bool AbstractScreenController::InitAbstractScreenModesInfo(sptr<AbstractScreen>& absScreen)
 {
-    std::vector<RSScreenModeInfo> allModes = rsInterface_.GetScreenSupportedModes(rsScreenId);
+    std::vector<RSScreenModeInfo> allModes = rsInterface_.GetScreenSupportedModes(absScreen->rsId_);
     if (allModes.size() == 0) {
-        WLOGE("supported screen mode is 0, screenId=%{public}" PRIu64"", rsScreenId);
+        WLOGE("supported screen mode is 0, screenId=%{public}" PRIu64"", absScreen->rsId_);
         return false;
     }
     for (const RSScreenModeInfo& rsScreenModeInfo : allModes) {
@@ -355,11 +297,11 @@ bool AbstractScreenController::FillAbstractScreen(sptr<AbstractScreen>& absScree
         WLOGD("fill screen idx:%{public}d w/h:%{public}d/%{public}d",
             rsScreenModeInfo.GetScreenModeId(), info->width_, info->height_);
     }
-    int32_t activeModeId = rsInterface_.GetScreenActiveMode(rsScreenId).GetScreenModeId();
+    int32_t activeModeId = rsInterface_.GetScreenActiveMode(absScreen->rsId_).GetScreenModeId();
     WLOGD("fill screen activeModeId:%{public}d", activeModeId);
     if (static_cast<std::size_t>(activeModeId) >= allModes.size()) {
         WLOGE("activeModeId exceed, screenId=%{public}" PRIu64", activeModeId:%{public}d/%{public}ud",
-            rsScreenId, activeModeId, static_cast<uint32_t>(allModes.size()));
+            absScreen->rsId_, activeModeId, static_cast<uint32_t>(allModes.size()));
         return false;
     }
     absScreen->activeIdx_ = activeModeId;
@@ -489,27 +431,14 @@ ScreenId AbstractScreenController::CreateVirtualScreen(VirtualScreenOption optio
     if (rsId == SCREEN_ID_INVALID) {
         return SCREEN_ID_INVALID;
     }
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     ScreenId dmsScreenId = SCREEN_ID_INVALID;
     if (!screenIdManager_.ConvertToDmsScreenId(rsId, dmsScreenId)) {
         dmsScreenId = screenIdManager_.CreateAndGetNewScreenId(rsId);
-        sptr<AbstractScreen> absScreen = new(std::nothrow) AbstractScreen(this, option.name_, dmsScreenId, rsId);
-        sptr<SupportedScreenModes> info = new(std::nothrow) SupportedScreenModes();
-        if (absScreen == nullptr || info == nullptr) {
-            WLOGFI("new AbstractScreen or SupportedScreenModes failed");
+        auto absScreen = InitVirtualScreen(dmsScreenId, rsId, option);
+        if (absScreen == nullptr) {
             screenIdManager_.DeleteScreenId(dmsScreenId);
-            rsInterface_.RemoveVirtualScreen(rsId);
             return SCREEN_ID_INVALID;
         }
-        info->width_ = option.width_;
-        info->height_ = option.height_;
-        auto defaultScreen = GetAbstractScreen(GetDefaultAbstractScreenId());
-        if (defaultScreen != nullptr && defaultScreen->GetActiveScreenMode() != nullptr) {
-            info->refreshRate_ = defaultScreen->GetActiveScreenMode()->refreshRate_;
-        }
-        absScreen->modes_.emplace_back(info);
-        absScreen->activeIdx_ = 0;
-        absScreen->type_ = ScreenType::VIRTUAL;
         dmsScreenMap_.insert(std::make_pair(dmsScreenId, absScreen));
         NotifyScreenConnected(absScreen->ConvertToScreenInfo());
         if (deathRecipient_ == nullptr) {
@@ -527,10 +456,33 @@ ScreenId AbstractScreenController::CreateVirtualScreen(VirtualScreenOption optio
     return dmsScreenId;
 }
 
+sptr<AbstractScreen> AbstractScreenController::InitVirtualScreen(ScreenId dmsScreenId, ScreenId rsId,
+    VirtualScreenOption option)
+{
+    sptr<AbstractScreen> absScreen = new(std::nothrow) AbstractScreen(this, option.name_, dmsScreenId, rsId);
+    sptr<SupportedScreenModes> info = new(std::nothrow) SupportedScreenModes();
+    if (absScreen == nullptr || info == nullptr) {
+        WLOGFI("new AbstractScreen or SupportedScreenModes failed");
+        screenIdManager_.DeleteScreenId(dmsScreenId);
+        rsInterface_.RemoveVirtualScreen(rsId);
+        return nullptr;
+    }
+    info->width_ = option.width_;
+    info->height_ = option.height_;
+    auto defaultScreen = GetAbstractScreen(GetDefaultAbstractScreenId());
+    if (defaultScreen != nullptr && defaultScreen->GetActiveScreenMode() != nullptr) {
+        info->refreshRate_ = defaultScreen->GetActiveScreenMode()->refreshRate_;
+    }
+    absScreen->modes_.emplace_back(info);
+    absScreen->activeIdx_ = 0;
+    absScreen->type_ = ScreenType::VIRTUAL;
+    absScreen->virtualPixelRatio_ = option.density_;
+    return absScreen;
+}
+
 DMError AbstractScreenController::DestroyVirtualScreen(ScreenId screenId)
 {
     WLOGFI("AbstractScreenController::DestroyVirtualScreen");
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     ScreenId rsScreenId = SCREEN_ID_INVALID;
     screenIdManager_.ConvertToRsScreenId(screenId, rsScreenId);
 
@@ -550,19 +502,6 @@ DMError AbstractScreenController::DestroyVirtualScreen(ScreenId screenId)
                 screenAgentMap_.erase(agentIter.first);
             }
             break;
-        }
-    }
-
-    auto iter = displayNodeMap_.find(rsScreenId);
-    if (iter == displayNodeMap_.end()) {
-        WLOGFI("displayNode is nullptr");
-    } else {
-        displayNodeMap_[rsScreenId]->RemoveFromTree();
-        WLOGFI("displayNode remove from tree rsScreenId: %{public}" PRIu64"", rsScreenId);
-        displayNodeMap_.erase(rsScreenId);
-        auto transactionProxy = RSTransactionProxy::GetInstance();
-        if (transactionProxy != nullptr) {
-            transactionProxy->FlushImplicitTransaction();
         }
     }
 
@@ -729,23 +668,19 @@ bool AbstractScreenController::SetScreenActiveMode(ScreenId screenId, uint32_t m
         WLOGFE("SetScreenActiveMode: invalid screenId");
         return false;
     }
-    uint32_t usedModeId = 0;
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        auto screen = GetAbstractScreen(screenId);
-        if (screen == nullptr) {
-            WLOGFE("SetScreenActiveMode: Get AbstractScreen failed");
-            return false;
-        }
-        ScreenId rsScreenId = SCREEN_ID_INVALID;
-        if (!screenIdManager_.ConvertToRsScreenId(screenId, rsScreenId)) {
-            WLOGFE("SetScreenActiveMode: No corresponding rsId");
-            return false;
-        }
-        rsInterface_.SetScreenActiveMode(rsScreenId, modeId);
-        usedModeId = static_cast<uint32_t>(screen->activeIdx_);
-        screen->activeIdx_ = static_cast<int32_t>(modeId);
+    auto screen = GetAbstractScreen(screenId);
+    if (screen == nullptr) {
+        WLOGFE("SetScreenActiveMode: Get AbstractScreen failed");
+        return false;
     }
+    ScreenId rsScreenId = SCREEN_ID_INVALID;
+    if (!screenIdManager_.ConvertToRsScreenId(screenId, rsScreenId)) {
+        WLOGFE("SetScreenActiveMode: No corresponding rsId");
+        return false;
+    }
+    rsInterface_.SetScreenActiveMode(rsScreenId, modeId);
+    uint32_t usedModeId = static_cast<uint32_t>(screen->activeIdx_);
+    screen->activeIdx_ = static_cast<int32_t>(modeId);
     // add thread to process mode change sync event
     if (usedModeId != modeId) {
         WLOGI("SetScreenActiveMode: modeId: %{public}u ->  %{public}u", usedModeId, modeId);
@@ -761,25 +696,19 @@ bool AbstractScreenController::SetScreenActiveMode(ScreenId screenId, uint32_t m
 void AbstractScreenController::ProcessScreenModeChanged(ScreenId dmsScreenId)
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:ProcessScreenModeChanged(%" PRIu64")", dmsScreenId);
-    sptr<AbstractScreen> absScreen = nullptr;
-    sptr<AbstractScreenCallback> absScreenCallback = nullptr;
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        auto dmsScreenMapIter = dmsScreenMap_.find(dmsScreenId);
-        if (dmsScreenMapIter == dmsScreenMap_.end()) {
-            WLOGFE("dmsScreenId=%{public}" PRIu64" is not in dmsScreenMap", dmsScreenId);
-            return;
-        }
-        absScreen = GetAbstractScreen(dmsScreenId);
-        if (absScreen == nullptr) {
-            WLOGFE("screen is nullptr. dmsScreenId=%{public}" PRIu64"", dmsScreenId);
-            return;
-        }
-        absScreenCallback = abstractScreenCallback_;
+    auto dmsScreenMapIter = dmsScreenMap_.find(dmsScreenId);
+    if (dmsScreenMapIter == dmsScreenMap_.end()) {
+        WLOGFE("dmsScreenId=%{public}" PRIu64" is not in dmsScreenMap", dmsScreenId);
+        return;
+    }
+    auto absScreen = GetAbstractScreen(dmsScreenId);
+    if (absScreen == nullptr) {
+        WLOGFE("screen is nullptr. dmsScreenId=%{public}" PRIu64"", dmsScreenId);
+        return;
     }
 
-    if (absScreenCallback != nullptr) {
-        absScreenCallback->onChange_(absScreen, DisplayChangeEvent::DISPLAY_SIZE_CHANGED);
+    if (abstractScreenCallback_ != nullptr) {
+        abstractScreenCallback_->onChange_(absScreen, DisplayChangeEvent::DISPLAY_SIZE_CHANGED);
     }
     NotifyScreenChanged(absScreen->ConvertToScreenInfo(), ScreenChangeEvent::CHANGE_MODE);
 }
@@ -795,7 +724,6 @@ bool AbstractScreenController::MakeMirror(ScreenId screenId, std::vector<ScreenI
     WLOGFI("GetAbstractScreenGroup start");
     auto group = GetAbstractScreenGroup(screen->groupDmsId_);
     if (group == nullptr) {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
         sptr<AbstractScreenGroup> group = AddToGroupLocked(screen);
         if (group == nullptr) {
             WLOGFE("group is nullptr");
@@ -824,7 +752,6 @@ void AbstractScreenController::ChangeScreenGroup(sptr<AbstractScreenGroup> group
     std::map<ScreenId, bool> removeChildResMap;
     std::vector<ScreenId> addScreens;
     std::vector<Point> addChildPos;
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     for (uint64_t i = 0; i != screens.size(); i++) {
         ScreenId screenId = screens[i];
         WLOGFI("ChangeScreenGroup: screenId: %{public}" PRIu64"", screenId);
@@ -906,34 +833,6 @@ bool AbstractScreenController::MakeExpand(std::vector<ScreenId> screenIds, std::
     return true;
 }
 
-void AbstractScreenController::SetShotScreen(ScreenId mainScreenId, std::vector<ScreenId> shotScreenIds)
-{
-    WLOGFI("SetShotScreen. mainScreenId: %{public}" PRIu64"", mainScreenId);
-    if (shotScreenIds.empty()) {
-        WLOGFI("shotScreenIds is empty");
-        return;
-    }
-    std::shared_ptr<RSDisplayNode> displayNode = GetRSDisplayNodeByScreenId(mainScreenId);
-    if (displayNode == nullptr) {
-        WLOGFE("SetShotScreen error, cannot get DisplayNode");
-        return;
-    }
-    NodeId nodeId = displayNode->GetId();
-    WLOGI("SetShotScreen, mainScreen nodeId:%{public}" PRIu64"", nodeId);
-    for (ScreenId shotScreenId : shotScreenIds) {
-        shotScreenId = ConvertToRsScreenId(shotScreenId);
-        if (shotScreenId == SCREEN_ID_INVALID) {
-            continue;
-        }
-        struct RSDisplayNodeConfig config = {shotScreenId, true, nodeId};
-        displayNodeMap_[shotScreenId] = RSDisplayNode::Create(config);
-    }
-    auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->FlushImplicitTransaction();
-    }
-}
-
 void AbstractScreenController::RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens)
 {
     if (screens.empty()) {
@@ -966,7 +865,6 @@ bool AbstractScreenController::OnRemoteDied(const sptr<IRemoteObject>& agent)
     if (agent == nullptr) {
         return false;
     }
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     auto agentIter = screenAgentMap_.find(agent);
     if (agentIter != screenAgentMap_.end()) {
         while (screenAgentMap_[agent].size() > 0) {
