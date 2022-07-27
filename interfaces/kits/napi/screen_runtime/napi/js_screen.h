@@ -25,7 +25,6 @@ namespace Rosen {
 NativeValue* CreateJsScreenObject(NativeEngine& engine, sptr<Screen>& screen);
 NativeValue* CreateJsScreenModeArrayObject(NativeEngine& engine, std::vector<sptr<SupportedScreenModes>> screenModes);
 NativeValue* CreateJsScreenModeObject(NativeEngine &engine, sptr<SupportedScreenModes>& mode);
-NativeValue* CreateJsScreenHdrInfoObject(NativeEngine& engine, sptr<ScreenHdrInfo> screenHdrInfo);
 class JsScreen final {
 public:
     explicit JsScreen(const sptr<Screen>& screen);
@@ -34,14 +33,12 @@ public:
     static NativeValue* SetScreenActiveMode(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetOrientation(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetDensityDpi(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* GetHdrInfo(NativeEngine* engine, NativeCallbackInfo* info);
 
 private:
     sptr<Screen> screen_ = nullptr;
     NativeValue* OnSetOrientation(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnSetScreenActiveMode(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnSetDensityDpi(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnGetHdrInfo(NativeEngine& engine, NativeCallbackInfo& info);
 };
 }  // namespace Rosen
 }  // namespace OHOS

@@ -67,6 +67,7 @@ public:
     virtual void NotifyDisplayEvent(DisplayEvent event);
     virtual bool SetFreeze(std::vector<DisplayId> displayIds, bool isFreeze);
     virtual sptr<DisplayInfo> GetDisplayInfo(DisplayId displayId);
+    virtual sptr<HdrInfo> GetHdrInfo(DisplayId displayId);
 private:
     static inline SingletonDelegator<DisplayManagerAdapter> delegator;
 };
@@ -91,7 +92,6 @@ public:
     virtual bool SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio);
     virtual void SetScreenRotationLocked(bool isLocked);
     virtual bool IsScreenRotationLocked();
-    virtual sptr<ScreenHdrInfo> GetScreenHdrInfo(ScreenId screenId);
 
     // colorspace, gamut
     virtual DMError GetScreenSupportedColorGamuts(ScreenId screenId, std::vector<ScreenColorGamut>& colorGamuts);

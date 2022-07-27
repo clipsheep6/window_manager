@@ -1055,30 +1055,30 @@ void DisplayManagerProxy::SetScreenRotationLocked(bool isLocked)
     }
 }
 
-sptr<ScreenHdrInfo> DisplayManagerProxy::GetScreenHdrInfo(ScreenId screenId)
+sptr<HdrInfo> DisplayManagerProxy::GetHdrInfo(DisplayId displayId)
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        WLOGFW("GetScreenHdrInfo: remote is null");
+        WLOGFW("GetHdrInfo: remote is null");
         return nullptr;
     }
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("GetScreenHdrInfo: GetScreenHdrInfo failed");
+        WLOGFE("GetHdrInfo: GetHdrInfo failed");
         return nullptr;
     }
-    if (!data.WriteUint64(screenId)) {
-        WLOGFE("GetScreenHdrInfo: write screenId failed");
+    if (!data.WriteUint64(displayId)) {
+        WLOGFE("GetHdrInfo: write displayId failed");
         return nullptr;
     }
-    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_GET_SCREEN_HDR_INFO),
+    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_GET_HDR_INFO),
         data, reply, option) != ERR_NONE) {
-        WLOGFW("GetScreenHdrInfo: GetScreenHdrInfo failed");
+        WLOGFW("GetHdrInfo: GetHdrInfo failed");
         return nullptr;
     }
-    sptr<ScreenHdrInfo> info = reply.ReadParcelable<ScreenHdrInfo>();
+    sptr<HdrInfo> info = reply.ReadParcelable<HdrInfo>();
     return info;
 }
 } // namespace OHOS::Rosen

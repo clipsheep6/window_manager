@@ -13,25 +13,27 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_DMSERVER_SCREEN_HDR_INFO_H
-#define FOUNDATION_DMSERVER_SCREEN_HDR_INFO_H
+#ifndef FOUNDATION_DMSERVER_HDR_INFO_H
+#define FOUNDATION_DMSERVER_HDR_INFO_H
 
 #include <parcel.h>
 
+#include <transaction/rs_interfaces.h>
+
 #include "class_var_definition.h"
-#include "screen.h"
+#include "display.h"
 #include "dm_common.h"
 
 namespace OHOS::Rosen {
-class ScreenHdrInfo : public Parcelable {
+class HdrInfo : public Parcelable {
 public:
-    ScreenHdrInfo() = default;
-    ScreenHdrInfo(float maxLum, float minLum, float maxAverageLum, const std::vector<ScreenHDRFormat>& formats);
-    ~ScreenHdrInfo() = default;
-    WM_DISALLOW_COPY_AND_MOVE(ScreenHdrInfo);
+    HdrInfo() = default;
+    HdrInfo(float maxLum, float minLum, float maxAverageLum, const std::vector<ScreenHDRFormat>& formats);
+    ~HdrInfo() = default;
+    WM_DISALLOW_COPY_AND_MOVE(HdrInfo);
 
     virtual bool Marshalling(Parcel& parcel) const override;
-    static ScreenHdrInfo *Unmarshalling(Parcel& parcel);
+    static HdrInfo *Unmarshalling(Parcel& parcel);
 
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(float, MaxLum, maxLum, 0.f);
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(float, MinLum, minLum, 0.f);
@@ -42,4 +44,4 @@ private:
     static bool ReadVector(std::vector<ScreenHDRFormat>& unmarFormats, Parcel &parcel);
 };
 } // namespace OHOS::Rosen
-#endif // FOUNDATION_DMSERVER_SCREEN_HDR_INFO_H
+#endif // FOUNDATION_DMSERVER_HDR_INFO_H

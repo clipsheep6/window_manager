@@ -26,16 +26,17 @@
 #include <ui/rs_display_node.h>
 
 #include "atomic_map.h"
-#include "dm_common.h"
-#include "display_dumper.h"
-#include "screen.h"
-#include "screen_hdr_info.h"
+
 #include "abstract_display.h"
 #include "abstract_display_controller.h"
 #include "abstract_screen_controller.h"
 #include "display_change_listener.h"
+#include "display_dumper.h"
 #include "display_manager_stub.h"
 #include "display_power_controller.h"
+#include "dm_common.h"
+#include "hdr_info.h"
+#include "screen.h"
 #include "singleton_delegator.h"
 
 namespace OHOS::Rosen {
@@ -53,7 +54,7 @@ public:
     DMError SetVirtualScreenSurface(ScreenId screenId, sptr<Surface> surface) override;
     bool IsScreenRotationLocked() override;
     void SetScreenRotationLocked(bool isLocked) override;
-    sptr<ScreenHdrInfo> GetScreenHdrInfo(ScreenId screenId) override;
+    sptr<HdrInfo> GetHdrInfo(DisplayId displayId) override;
 
     sptr<DisplayInfo> GetDefaultDisplayInfo() override;
     sptr<DisplayInfo> GetDisplayInfoById(DisplayId displayId) override;

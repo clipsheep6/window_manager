@@ -139,13 +139,6 @@ bool ScreenManagerAdapter::IsScreenRotationLocked()
     return displayManagerServiceProxy_->IsScreenRotationLocked();
 }
 
-sptr<ScreenHdrInfo> ScreenManagerAdapter::GetScreenHdrInfo(ScreenId screenId)
-{
-    INIT_PROXY_CHECK_RETURN(nullptr);
-    WLOGFI("ScreenManagerAdapter::GetScreenHdrInfo");
-    return displayManagerServiceProxy_->GetScreenHdrInfo(screenId);
-}
-
 bool ScreenManagerAdapter::SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason)
 {
     INIT_PROXY_CHECK_RETURN(false);
@@ -338,6 +331,13 @@ sptr<DisplayInfo> DisplayManagerAdapter::GetDisplayInfo(DisplayId displayId)
     INIT_PROXY_CHECK_RETURN(nullptr);
 
     return displayManagerServiceProxy_->GetDisplayInfoById(displayId);
+}
+
+sptr<HdrInfo> DisplayManagerAdapter::GetHdrInfo(DisplayId displayId)
+{
+    INIT_PROXY_CHECK_RETURN(nullptr);
+    WLOGFI("DisplayManagerAdapter::GetHdrInfo");
+    return displayManagerServiceProxy_->GetHdrInfo(displayId);
 }
 
 sptr<ScreenGroupInfo> ScreenManagerAdapter::GetScreenGroupInfoById(ScreenId screenId)

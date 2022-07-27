@@ -24,14 +24,17 @@ namespace OHOS {
 namespace Rosen {
 std::shared_ptr<NativeReference> FindJsDisplayObject(DisplayId displayId);
 NativeValue* CreateJsDisplayObject(NativeEngine& engine, sptr<Display>& Display);
+NativeValue* CreateJsHdrInfoObject(NativeEngine& engine, sptr<HdrInfo> hdrInfo);
 class JsDisplay final {
 public:
     explicit JsDisplay(const sptr<Display>& Display);
     ~JsDisplay();
     static void Finalizer(NativeEngine* engine, void* data, void* hint);
+    static NativeValue* GetHdrInfo(NativeEngine* engine, NativeCallbackInfo* info);
 
 private:
     sptr<Display> display_ = nullptr;
+    NativeValue* OnGetHdrInfo(NativeEngine& engine, NativeCallbackInfo& info);
 };
 enum class DisplayStateMode : uint32_t {
     STATE_UNKNOWN = 0,

@@ -13,44 +13,41 @@
  * limitations under the License.
  */
 
-#include "screen_hdr_info.h"
+#include "hdr_info.h"
 
 namespace OHOS::Rosen {
-ScreenHdrInfo::ScreenHdrInfo(float maxLum, float minLum, float maxAverageLum,
+HdrInfo::HdrInfo(float maxLum, float minLum, float maxAverageLum,
     const std::vector<ScreenHDRFormat>& formats) : maxLum_(maxLum), minLum_(minLum),
     maxAverageLum_(maxAverageLum), hdrFormats_(formats)
 {
 }
 
-bool ScreenHdrInfo::Marshalling(Parcel &parcel) const
+bool HdrInfo::Marshalling(Parcel &parcel) const
 {
     return parcel.WriteFloat(maxLum_) && parcel.WriteFloat(minLum_) &&
         parcel.WriteFloat(maxAverageLum_) && WriteVector(hdrFormats_, parcel);
 }
 
-ScreenHdrInfo *ScreenHdrInfo::Unmarshalling(Parcel &parcel)
+HdrInfo *HdrInfo::Unmarshalling(Parcel &parcel)
 {
     float maxLum;
     float minLum;
     float maxAverageLum = false;
     std::vector<ScreenHDRFormat> formats;
     if (!parcel.ReadFloat(maxLum)) {
-        return nullptr;
+        maxLum = 0;
     }
     if (!parcel.ReadFloat(minLum)) {
-        return nullptr;
+        minLum = 0;
     }
     if (!parcel.ReadFloat(maxAverageLum)) {
-        return nullptr;
+        maxAverageLum = 0;
     }
-    if (!ReadVector(formats, parcel)) {
-        return nullptr;
-    }
-    ScreenHdrInfo* screenHdrInfo = new ScreenHdrInfo(maxLum, minLum, maxAverageLum, formats);
-    return screenHdrInfo;
+    HdrInfo* hdrInfo = new HdrInfo(maxLum, minLum, maxAverageLum, formats);
+    return hdrInfo;
 }
 
-bool ScreenHdrInfo::WriteVector(const std::vector<ScreenHDRFormat>& formats, Parcel &parcel) const
+bool HdrInfo::WriteVector(const std::vector<ScreenHDRFormat>& formats, Parcel &parcel) const
 {
     if (!parcel.WriteUint32(static_cast<uint32_t>(formats.size()))) {
         return false;
@@ -63,7 +60,7 @@ bool ScreenHdrInfo::WriteVector(const std::vector<ScreenHDRFormat>& formats, Par
     return true;
 }
 
-bool ScreenHdrInfo::ReadVector(std::vector<ScreenHDRFormat>& unmarFormats, Parcel &parcel)
+bool HdrInfo::ReadVector(std::vector<ScreenHDRFormat>& unmarFormats, Parcel &parcel)
 {
     uint32_t size;
     if (!parcel.ReadUint32(size)) {

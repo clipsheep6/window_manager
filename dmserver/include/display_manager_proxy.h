@@ -43,7 +43,7 @@ public:
     std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId) override;
     bool IsScreenRotationLocked() override;
     void SetScreenRotationLocked(bool isLocked) override;
-    sptr<ScreenHdrInfo> GetScreenHdrInfo(ScreenId screenId) override;
+    sptr<HdrInfo> GetHdrInfo(DisplayId displayId) override;
 
     // colorspace, gamut
     DMError GetScreenSupportedColorGamuts(ScreenId screenId, std::vector<ScreenColorGamut>& colorGamuts) override;

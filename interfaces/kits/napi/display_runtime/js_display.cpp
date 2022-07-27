@@ -19,11 +19,13 @@
 #include <map>
 #include "display.h"
 #include "display_info.h"
+#include "hdr_info.h"
 #include "window_manager_hilog.h"
 
 namespace OHOS {
 namespace Rosen {
 using namespace AbilityRuntime;
+constexpr size_t ARGC_ONE = 1;
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "JsDisplay"};
 }
@@ -60,6 +62,37 @@ void JsDisplay::Finalizer(NativeEngine* engine, void* data, void* hint)
         WLOGFI("JsDisplay::Finalizer Display is destroyed: %{public}" PRIu64"", displayId);
         g_JsDisplayMap.erase(displayId);
     }
+}
+
+NativeValue* JsDisplay::GetHdrInfo(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGFI("GetHdrInfo is called");
+    JsDisplay* me = CheckParamsAndGetThis<JsDisplay>(engine, info);
+    return (me != nullptr) ? me->OnGetHdrInfo(*engine, *info) : nullptr;
+}
+
+NativeValue* JsDisplay::OnGetHdrInfo(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    WLOGFI("OnGetHdrInfo is called");
+    AsyncTask::CompleteCallback complete =
+        [this](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            sptr<HdrInfo> hdrInfo = display_->GetHdrInfo();
+            if (hdrInfo != nullptr) {
+                task.Resolve(engine, CreateJsHdrInfoObject(engine, hdrInfo));
+                WLOGFI("JsDisplay::OnGetHdrInfo success");
+            } else {
+                task.Reject(engine, CreateJsError(engine,
+                    static_cast<int32_t>(DMError::DM_ERROR_NULLPTR), "JsDisplay::OnGetHdrInfo failed."));
+            }
+        };
+    NativeValue* lastParam = nullptr;
+    if (info.argc == ARGC_ONE && info.argv[ARGC_ONE - 1]->TypeOf() == NATIVE_FUNCTION) {
+        lastParam = info.argv[ARGC_ONE - 1];
+    }
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule("JsDisplay::OnGetHdrInfo",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
 }
 
 std::shared_ptr<NativeReference> FindJsDisplayObject(DisplayId displayId)
@@ -110,6 +143,7 @@ NativeValue* CreateJsDisplayObject(NativeEngine& engine, sptr<Display>& display)
     object->SetProperty("scaledDensity", engine.CreateUndefined());
     object->SetProperty("xDPI", engine.CreateUndefined());
     object->SetProperty("yDPI", engine.CreateUndefined());
+    BindNativeFunction(engine, *object, "getHdrInfo", JsDisplay::GetHdrInfo);
     if (jsDisplayObj == nullptr || jsDisplayObj->Get() == nullptr) {
         std::shared_ptr<NativeReference> jsDisplayRef;
         jsDisplayRef.reset(engine.CreateReference(objValue, 1));
@@ -117,6 +151,34 @@ NativeValue* CreateJsDisplayObject(NativeEngine& engine, sptr<Display>& display)
         std::lock_guard<std::recursive_mutex> lock(g_mutex);
         g_JsDisplayMap[displayId] = jsDisplayRef;
     }
+    return objValue;
+}
+
+NativeValue* CreateJsHdrInfoObject(NativeEngine& engine, sptr<HdrInfo> hdrInfo)
+{
+    WLOGFI("JsDisplay::CreateJsScreen is called");
+    NativeValue* objValue = engine.CreateObject();
+    NativeObject* optionObject = ConvertNativeValueTo<NativeObject>(objValue);
+    if (optionObject == nullptr) {
+        WLOGFE("Failed to convert prop to jsObject");
+        return engine.CreateUndefined();
+    }
+    float maxLum = hdrInfo->GetMaxLum();
+    float minLum = hdrInfo->GetMinLum();
+    float maxAverageLum = hdrInfo->GetMaxAverageLum();
+    std::vector<ScreenHDRFormat> screenHdrFormats = hdrInfo->GetHdrFormats();
+
+    NativeValue* arrayValue = engine.CreateArray(screenHdrFormats.size());
+    NativeArray* array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    uint32_t index = 0;
+    for (auto& hdrFormat : screenHdrFormats) {
+        array->SetElement(index++, CreateJsValue(engine, static_cast<uint32_t>(hdrFormat)));
+    }
+
+    optionObject->SetProperty("maxLum", CreateJsValue(engine, maxLum));
+    optionObject->SetProperty("minLum", CreateJsValue(engine, minLum));
+    optionObject->SetProperty("maxAverageLum", CreateJsValue(engine, maxAverageLum));
+    optionObject->SetProperty("supportedHdrFormats", arrayValue);
     return objValue;
 }
 }  // namespace Rosen

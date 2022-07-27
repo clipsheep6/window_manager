@@ -17,7 +17,7 @@
 
 #include <cinttypes>
 #include "screen.h"
-#include "screen_hdr_info.h"
+#include "hdr_info.h"
 #include "screen_info.h"
 #include "window_manager_hilog.h"
 
@@ -120,7 +120,6 @@ NativeValue* JsScreen::OnSetOrientation(NativeEngine& engine, NativeCallbackInfo
     return result;
 }
 
-
 NativeValue* JsScreen::SetScreenActiveMode(NativeEngine* engine, NativeCallbackInfo* info)
 {
     WLOGFI("SetScreenActiveMode is called");
@@ -221,37 +220,6 @@ NativeValue* JsScreen::OnSetDensityDpi(NativeEngine& engine, NativeCallbackInfo&
     return result;
 }
 
-NativeValue* JsScreen::GetHdrInfo(NativeEngine* engine, NativeCallbackInfo* info)
-{
-    WLOGFI("GetHdrInfo is called");
-    JsScreen* me = CheckParamsAndGetThis<JsScreen>(engine, info);
-    return (me != nullptr) ? me->OnGetHdrInfo(*engine, *info) : nullptr;
-}
-
-NativeValue* JsScreen::OnGetHdrInfo(NativeEngine& engine, NativeCallbackInfo& info)
-{
-    WLOGFI("OnGetHdrInfo is called");
-    AsyncTask::CompleteCallback complete =
-        [this](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            sptr<ScreenHdrInfo> screenHdrInfo = screen_->GetScreenHdrInfo();
-            if (screenHdrInfo != nullptr) {
-                task.Resolve(engine, CreateJsScreenHdrInfoObject(engine, screenHdrInfo));
-                WLOGFI("JsScreenManager::OnGetHdrInfo success");
-            } else {
-                task.Reject(engine, CreateJsError(engine,
-                    static_cast<int32_t>(DMError::DM_ERROR_NULLPTR), "JsScreenManager::OnGetHdrInfo failed."));
-            }
-        };
-    NativeValue* lastParam = nullptr;
-    if (info.argc == ARGC_ONE && info.argv[ARGC_ONE - 1]->TypeOf() == NATIVE_FUNCTION) {
-        lastParam = info.argv[ARGC_ONE - 1];
-    }
-    NativeValue* result = nullptr;
-    AsyncTask::Schedule("JsScreenManager::OnGetHdrInfo",
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
-    return result;
-}
-
 std::shared_ptr<NativeReference> FindJsDisplayObject(ScreenId screenId)
 {
     WLOGFI("[NAPI]Try to find screen %{public}" PRIu64" in g_JsScreenMap", screenId);
@@ -336,34 +304,6 @@ NativeValue* CreateJsScreenModeObject(NativeEngine& engine, sptr<SupportedScreen
     optionObject->SetProperty("width", CreateJsValue(engine, width));
     optionObject->SetProperty("height", CreateJsValue(engine, height));
     optionObject->SetProperty("refreshRate", CreateJsValue(engine, refreshRate));
-    return objValue;
-}
-
-NativeValue* CreateJsScreenHdrInfoObject(NativeEngine& engine, sptr<ScreenHdrInfo> screenHdrInfo)
-{
-    WLOGFI("JsScreen::CreateJsScreen is called");
-    NativeValue* objValue = engine.CreateObject();
-    NativeObject* optionObject = ConvertNativeValueTo<NativeObject>(objValue);
-    if (optionObject == nullptr) {
-        WLOGFE("Failed to convert prop to jsObject");
-        return engine.CreateUndefined();
-    }
-    float maxLum = screenHdrInfo->GetMaxLum();
-    float minLum = screenHdrInfo->GetMinLum();
-    float maxAverageLum = screenHdrInfo->GetMaxAverageLum();
-    std::vector<ScreenHDRFormat> screenHdrFormats = screenHdrInfo->GetHdrFormats();
-
-    NativeValue* arrayValue = engine.CreateArray(screenHdrFormats.size());
-    NativeArray* array = ConvertNativeValueTo<NativeArray>(arrayValue);
-    uint32_t index = 0;
-    for (auto& hdrFormat : screenHdrFormats) {
-        array->SetElement(index++, CreateJsValue(engine, static_cast<uint32_t>(hdrFormat)));
-    }
-
-    optionObject->SetProperty("maxLum", CreateJsValue(engine, maxLum));
-    optionObject->SetProperty("minLum", CreateJsValue(engine, minLum));
-    optionObject->SetProperty("maxAverageLum", CreateJsValue(engine, maxAverageLum));
-    optionObject->SetProperty("supportedHdrFormats", arrayValue);
     return objValue;
 }
 }  // namespace Rosen

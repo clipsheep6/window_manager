@@ -323,10 +323,18 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
             SetScreenRotationLocked(isLocked);
             break;
         }
-        case DisplayManagerMessage::TRANS_ID_GET_SCREEN_HDR_INFO: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            sptr<ScreenHdrInfo> screenHdrInfo = GetScreenHdrInfo(screenId);
-            reply.WriteParcelable(screenHdrInfo);
+        case DisplayManagerMessage::TRANS_ID_HAS_PRIVATE_WINDOW: {
+            DisplayId id = static_cast<DisplayId>(data.ReadUint64());
+            bool hasPrivateWindow = false;
+            DMError ret = HasPrivateWindow(id, hasPrivateWindow);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            reply.WriteBool(hasPrivateWindow);
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_GET_HDR_INFO: {
+            DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
+            sptr<HdrInfo> hdrInfo = GetHdrInfo(displayId);
+            reply.WriteParcelable(hdrInfo);
             break;
         }
         default:

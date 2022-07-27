@@ -215,18 +215,6 @@ declare namespace screen {
      */
     setDensityDpi(densityDpi: number, callback: AsyncCallback<void>): void;
     setDensityDpi(densityDpi: number): Promise<void>;
-
-    /**
-     * get hdr info of the screen.
-     */
-    getHdrInfo(callback: AsyncCallback<ScreenHdrInfo>): void;
-    getHdrInfo(): Promise<ScreenHdrInfo>;
-
-    /**
-     * get cutout info of the screen.
-     */
-    getScreenCutoutInfo(callback: AsyncCallback<void>): void;
-    getScreenCutoutInfo(): Promise<CutoutInfo>;
   }
 
   /**
@@ -275,72 +263,6 @@ declare namespace screen {
     ROTATION_90,
     ROTATION_180,
     ROTATION_270,
-  }
-
-  /**
-   * Screen HDR info.
-   * @syscap SystemCapability.WindowManager.WindowManager.Core
-   * @since 9
-   */
-  interface ScreenHdrInfo {
-    readonly maxLum: number;
-    readonly minLum: number;
-    readonly maxAverageLum: number;
-    readonly supportedHdrFormats: Array<HdrFormat>;
-  }
-
-  /**
-   * Screen HDR formats.
-   * @syscap SystemCapability.WindowManager.WindowManager.Core
-   * @since 9
-   */
-  enum HdrFormat {
-    NOT_SUPPORT_HDR = 0,
-    DOLBY_VISION,
-    HDR10,
-    HDR10_PLUS,
-    HLG,
-    HDR_VIVID,
-  }
-
-  /**
-   * cutout information of the screen.
-   * @syscap SystemCapability.WindowManager.WindowManager.Core
-   * @since 9
-   */
-  interface CutoutInfo {
-    BoundingRects: BoundingRects;
-    BoundingInsetsSize: BoundingInsetsSize;
-    waterfallDisplayAreaRects: WaterfallDisplayAreaRects;
-    cutoutRect: Rect;
-  }
-
-  interface BoundingRects {
-    left: Rect;
-    right: Rect;
-    top: Rect;
-    bottom: Rect;
-  }
-
-  interface BoundingInsetsSize {
-    left: number;
-    right: number;
-    top: number;
-    bottom: number;
-  }
-
-  interface WaterfallDisplayAreaRects {
-    left: Rect;
-    right: Rect;
-    top: Rect;
-    bottom: Rect;
-  }
-
-  interface Rect {
-    left: number;
-    top: number;
-    width: number;
-    height: number;
   }
 
   /**

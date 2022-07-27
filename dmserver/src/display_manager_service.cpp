@@ -606,8 +606,9 @@ void DisplayManagerService::SetGravitySensorSubscriptionEnabled()
     ScreenRotationController::SubscribeGravitySensor();
 }
 
-sptr<ScreenHdrInfo> DisplayManagerService::GetScreenHdrInfo(ScreenId screenId)
+sptr<HdrInfo> DisplayManagerService::GetHdrInfo(DisplayId displayId)
 {
+    ScreenId screenId = GetScreenIdByDisplayId(displayId);
     RSScreenHDRCapability screenHDRCapability;
     ScreenId rsScreenId = abstractScreenController_->ConvertToRsScreenId(screenId);
     if (RSInterfaces::GetInstance().GetScreenHDRCapability(rsScreenId, screenHDRCapability) != 0) {
@@ -615,11 +616,12 @@ sptr<ScreenHdrInfo> DisplayManagerService::GetScreenHdrInfo(ScreenId screenId)
         return nullptr;
     }
     Parcel parcel;
-    ScreenHdrInfo *screenHdrInfo = ScreenHdrInfo::Unmarshalling(parcel);
-    if (screenHdrInfo == nullptr) {
-        WLOGFE("Get Screen HDR info failed");
+    screenHDRCapability.Marshalling(parcel);
+    HdrInfo *hdrInfo = HdrInfo::Unmarshalling(parcel);
+    if (hdrInfo == nullptr) {
+        WLOGFE("Get HDR info failed");
         return nullptr;
     }
-    return screenHdrInfo;
+    return hdrInfo;
 }
 } // namespace OHOS::Rosen
