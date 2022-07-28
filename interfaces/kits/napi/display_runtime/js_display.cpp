@@ -163,6 +163,10 @@ NativeValue* CreateJsHdrInfoObject(NativeEngine& engine, sptr<HdrInfo> hdrInfo)
         WLOGFE("Failed to convert prop to jsObject");
         return engine.CreateUndefined();
     }
+    if (hdrInfo == nullptr) {
+        WLOGFE("Get null HDR info");
+        return engine.CreateUndefined();
+    }
     float maxLum = hdrInfo->GetMaxLum();
     float minLum = hdrInfo->GetMinLum();
     float maxAverageLum = hdrInfo->GetMaxAverageLum();
