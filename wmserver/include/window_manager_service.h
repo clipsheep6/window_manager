@@ -18,6 +18,7 @@
 
 #include <vector>
 #include <map>
+#include "event_handler.h"
 
 #include <input_window_monitor.h>
 #include <nocopyable.h>
@@ -34,8 +35,8 @@
 #include "window_controller.h"
 #include "zidl/window_manager_stub.h"
 #include "window_dumper.h"
+#include "window_manager_config.h"
 #include "window_root.h"
-#include "window_task_looper.h"
 #include "snapshot_controller.h"
 
 namespace OHOS {
@@ -46,6 +47,11 @@ public:
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type) override;
     virtual void OnGetWindowPreferredOrientation(DisplayId displayId, Orientation &orientation) override;
     virtual void OnScreenshot(DisplayId displayId) override;
+};
+
+class WindowInfoQueriedListener : public IWindowInfoQueriedListener {
+public:
+    virtual void HasPrivateWindow(DisplayId id, bool& hasPrivateWindow) override;
 };
 
 class WindowManagerServiceHandler : public AAFwk::WindowManagerServiceHandlerStub {
@@ -67,6 +73,7 @@ DECLARE_SYSTEM_ABILITY(WindowManagerService);
 WM_DECLARE_SINGLE_INSTANCE_BASE(WindowManagerService);
 
 public:
+    using Task = std::function<void()>;
     void OnStart() override;
     void OnStop() override;
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
@@ -81,7 +88,6 @@ public:
         bool isFromClient = false) override;
     WMError DestroyWindow(uint32_t windowId, bool onlySelf = false) override;
     WMError RequestFocus(uint32_t windowId) override;
-    WMError SetWindowBackgroundBlur(uint32_t windowId, WindowBlurLevel level) override;
     AvoidArea GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType) override;
     void ProcessPointDown(uint32_t windowId, bool isStartDrag) override;
     void ProcessPointUp(uint32_t windowId) override;
@@ -91,7 +97,6 @@ public:
     WMError SetWindowLayoutMode(WindowLayoutMode mode) override;
     WMError UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action) override;
     WMError GetAccessibilityWindowInfo(sptr<AccessibilityWindowInfo>& windowInfo) override;
-    WMError HandleAddWindow(sptr<WindowProperty>& property);
 
     void RegisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
@@ -108,9 +113,11 @@ public:
     void MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
         sptr<RSIWindowAnimationFinishedCallback>& finishCallback) override;
     void GetWindowPreferredOrientation(DisplayId displayId, Orientation &orientation);
-    void OnAccountSwitched() const;
     WMError UpdateRsTree(uint32_t windowId, bool isAdd) override;
     void OnScreenshot(DisplayId displayId);
+    void OnAccountSwitched(int accountId);
+    WMError BindDialogTarget(uint32_t& windowId, sptr<IRemoteObject> targetToken) override;
+    void HasPrivateWindow(DisplayId displayId, bool& hasPrivateWindow);
 protected:
     WindowManagerService();
     virtual ~WindowManagerService() = default;
@@ -126,6 +133,21 @@ private:
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type);
     WMError GetFocusWindowInfo(sptr<IRemoteObject>& abilityToken);
     void ConfigureWindowManagerService();
+    void PostAsyncTask(Task task);
+    void PostVoidSyncTask(Task task);
+    template<typename SyncTask, typename Return = std::invoke_result_t<SyncTask>>
+    Return PostSyncTask(SyncTask&& task)
+    {
+        Return ret;
+        std::function<void()> syncTask([&ret, &task]() {ret = task();});
+        if (handler_) {
+            handler_->PostSyncTask(syncTask, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+        }
+        return ret;
+    }
+    void ConfigWindowAnimation(const std::map<std::string, WindowManagerConfig::ConfigItem>& animeMap);
+    void ConfigKeyboardAnimation(const std::map<std::string, WindowManagerConfig::ConfigItem>& animeMap);
+    RSAnimationTimingCurve CreateCurve(const std::map<std::string, WindowManagerConfig::ConfigItem>& timingMap);
 
     static inline SingletonDelegator<WindowManagerService> delegator;
     AtomicMap<uint32_t, uint32_t> accessTokenIdMaps_;
@@ -139,8 +161,9 @@ private:
     sptr<WindowDumper> windowDumper_;
     SystemConfig systemConfig_;
     ModeChangeHotZonesConfig hotZonesConfig_ { false, 0, 0, 0 };
-    std::unique_ptr<WindowTaskLooper> wmsTaskLooper_;
     std::shared_ptr<WindowCommonEvent> windowCommonEvent_;
+    std::shared_ptr<AppExecFwk::EventRunner> runner_ = nullptr;
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     RSInterfaces& rsInterface_;
     bool startingOpen_ = true;
     std::shared_ptr<RSUIDirector> rsUiDirector_;

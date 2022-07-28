@@ -42,7 +42,6 @@ public:
     virtual WMError DestroyWindow(uint32_t windowId);
     virtual WMError RequestFocus(uint32_t windowId);
     virtual WMError GetAvoidAreaByType(uint32_t windowId, AvoidAreaType type, AvoidArea& avoidRect);
-    virtual WMError SetWindowBackgroundBlur(uint32_t windowId, WindowBlurLevel level);
     virtual WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId);
     virtual void ProcessPointDown(uint32_t windowId, bool isStartDrag = false);
     virtual void ProcessPointUp(uint32_t windowId);
@@ -53,6 +52,7 @@ public:
     virtual WMError GetSystemConfig(SystemConfig& systemConfig);
     virtual WMError GetModeChangeHotZones(DisplayId displayId, ModeChangeHotZones& hotZones);
     virtual WMError UpdateRsTree(uint32_t windowId, bool isAdd);
+    virtual WMError BindDialogTarget(uint32_t& windowId, sptr<IRemoteObject> targetToken);
     virtual void RegisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent);
     virtual void UnregisterWindowManagerAgent(WindowManagerAgentType type,

@@ -34,22 +34,30 @@ void PlaceholderWindowListener::OnTouchOutside() const
     PlaceHolderWindow::GetInstance().Destroy();
 }
 
-void PlaceholderWindowListener::OnKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
-{
-    WLOGFD("place holder get key event");
-    PlaceHolderWindow::GetInstance().Destroy();
-}
-
-void PlaceholderWindowListener::OnPointerInputEvent(std::shared_ptr<MMI::PointerEvent>& pointerEvent)
-{
-    WLOGFD("place holder get point event");
-    PlaceHolderWindow::GetInstance().Destroy();
-}
-
 void PlaceholderWindowListener::AfterUnfocused()
 {
     WLOGFD("place holder after unfocused");
     PlaceHolderWindow::GetInstance().Destroy();
+}
+
+bool PlaceholderInputEventConsumer::OnInputEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const
+{
+    WLOGFD("place holder get key event");
+    PlaceHolderWindow::GetInstance().Destroy();
+    return true;
+}
+
+bool PlaceholderInputEventConsumer::OnInputEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) const
+{
+    WLOGFD("place holder get point event");
+    PlaceHolderWindow::GetInstance().Destroy();
+    return true;
+}
+
+bool PlaceholderInputEventConsumer::OnInputEvent(const std::shared_ptr<MMI::AxisEvent>& axisEvent) const
+{
+    // do nothing
+    return false;
 }
 
 void PlaceHolderWindow::Create(std::string name, DisplayId displyId, Rect rect, WindowMode mode)
@@ -74,7 +82,8 @@ void PlaceHolderWindow::Create(std::string name, DisplayId displyId, Rect rect, 
         return;
     }
     window_->AddWindowFlag(WindowFlag::WINDOW_FLAG_FORBID_SPLIT_MOVE);
-    RegitsterWindowListener();
+    RegisterWindowListener();
+    SetInputEventConsumer();
     if (!OHOS::Rosen::SurfaceDraw::DrawImage(window_->GetSurfaceNode(), rect.width_, rect.height_,
         IMAGE_PLACE_HOLDER_PNG_PATH)) {
         WLOGE("draw surface failed");
@@ -84,29 +93,39 @@ void PlaceHolderWindow::Create(std::string name, DisplayId displyId, Rect rect, 
     WLOGFD("create palce holder Window end");
 }
 
-void PlaceHolderWindow::RegitsterWindowListener()
+void PlaceHolderWindow::RegisterWindowListener()
 {
     if (window_ == nullptr) {
-        WLOGFE("Window is nullptr, regitster window listener failed.");
+        WLOGFE("Window is nullptr, register window listener failed.");
         return;
     }
-    if (listener_ == nullptr) {
-        listener_ = new (std::nothrow) PlaceholderWindowListener();
+    if (windowListener_ == nullptr) {
+        windowListener_ = new (std::nothrow) PlaceholderWindowListener();
     }
-    window_->RegisterTouchOutsideListener(listener_);
-    window_->RegisterInputEventListener(listener_);
-    window_->RegisterLifeCycleListener(listener_);
+    window_->RegisterTouchOutsideListener(windowListener_);
+    window_->RegisterLifeCycleListener(windowListener_);
 }
 
-void PlaceHolderWindow::UnRegitsterWindowListener()
+void PlaceHolderWindow::UnRegisterWindowListener()
 {
-    if (window_ == nullptr || listener_ == nullptr) {
-        WLOGFE("Window or listener is nullptr, unregitster window listener failed.");
+    if (window_ == nullptr || windowListener_ == nullptr) {
+        WLOGFE("Window or listener is nullptr, unregister window listener failed.");
         return;
     }
-    window_->UnregisterTouchOutsideListener(listener_);
-    window_->UnregisterInputEventListener(listener_);
-    window_->UnregisterLifeCycleListener(listener_);
+    window_->UnregisterTouchOutsideListener(windowListener_);
+    window_->UnregisterLifeCycleListener(windowListener_);
+}
+
+void PlaceHolderWindow::SetInputEventConsumer()
+{
+    if (window_ == nullptr) {
+        WLOGFE("Window is nullptr, set window input event consumer failed.");
+        return;
+    }
+    if (inputEventConsumer_ == nullptr) {
+        inputEventConsumer_ = std::make_shared<PlaceholderInputEventConsumer>();
+    }
+    window_->SetInputEventConsumer(inputEventConsumer_);
 }
 
 void PlaceHolderWindow::Destroy()
@@ -114,7 +133,8 @@ void PlaceHolderWindow::Destroy()
     WLOGFI("destroy place holder window begin.");
     if (window_ != nullptr) {
         WLOGFI("destroy place holder window not nullptr.");
-        UnRegitsterWindowListener();
+        UnRegisterWindowListener();
+        window_->SetInputEventConsumer(nullptr);
         window_->Destroy();
     }
     window_ = nullptr;
@@ -129,13 +149,13 @@ DividerWindow::~DividerWindow()
 void DividerWindow::Create(std::string name, DisplayId displayId, const Rect rect, WindowMode mode)
 {
     displayId_ = displayId;
-    WLOGFD("create inner display id: %{public}" PRIu64"", displayId_);
+    WLOGFD("create divider dialog display id: %{public}" PRIu64"", displayId_);
     auto dialogCallback = [this](int32_t id, const std::string& event, const std::string& params) {
         WLOGFD("divider dialog window get param: %{public}s", params.c_str());
     };
     Ace::UIServiceMgrClient::GetInstance()->ShowDialog(name, params_, WindowType::WINDOW_TYPE_DOCK_SLICE,
         rect.posX_, rect.posY_, rect.width_, rect.height_, dialogCallback, &dialogId_);
-    WLOGFD("create inner window id: %{public}d success", dialogId_);
+    WLOGFD("create divider dialog window id: %{public}d success", dialogId_);
 }
 
 void DividerWindow::Destroy()
@@ -143,9 +163,23 @@ void DividerWindow::Destroy()
     if (dialogId_ == IVALID_DIALOG_WINDOW_ID) {
         return;
     }
-    WLOGFD("destroy inner window id:: %{public}d.", dialogId_);
+    WLOGFD("destroy divider dialog window id:: %{public}d.", dialogId_);
     Ace::UIServiceMgrClient::GetInstance()->CancelDialog(dialogId_);
     dialogId_ = IVALID_DIALOG_WINDOW_ID;
+}
+
+void DividerWindow::Update(uint32_t width, uint32_t height)
+{
+    if (dialogId_ == IVALID_DIALOG_WINDOW_ID) {
+        return;
+    }
+    WLOGFD("update divider dialog window dialog id:%{public}d width:%{public}u height:%{public}u.",
+        dialogId_, width, height);
+    std::stringstream sstream;
+    sstream << "{\"width\":" << std::to_string(width) << "," << "\"height\":" << std::to_string(height) << "}";
+    // data is json file format
+    std::string data = sstream.str();
+    Ace::UIServiceMgrClient::GetInstance()->UpdateDialog(dialogId_, data);
 }
 } // Rosen
 } // OHOS

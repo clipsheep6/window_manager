@@ -24,6 +24,7 @@
 #include "window_option.h"
 #include "pixel_map.h"
 #include "pixel_map_napi.h"
+#include "napi_remote_object.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -169,6 +170,13 @@ NativeValue* JsWindow::UnregisterWindowCallback(NativeEngine* engine, NativeCall
     return (me != nullptr) ? me->OnUnregisterWindowCallback(*engine, *info) : nullptr;
 }
 
+NativeValue* JsWindow::BindDialogTarget(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGFI("[NAPI]BindDialogTarget");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
+    return (me != nullptr) ? me->OnBindDialogTarget(*engine, *info) : nullptr;
+}
+
 NativeValue* JsWindow::LoadContent(NativeEngine* engine, NativeCallbackInfo* info)
 {
     WLOGFI("[NAPI]LoadContent");
@@ -302,6 +310,13 @@ NativeValue* JsWindow::SetPreferredOrientation(NativeEngine* engine, NativeCallb
     return (me != nullptr) ? me->OnSetPreferredOrientation(*engine, *info) : nullptr;
 }
 
+NativeValue* JsWindow::SetSnapshotSkip(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGFI("NAPI");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
+    return (me != nullptr) ? me->OnSetSnapshotSkip(*engine, *info) : nullptr;
+}
+
 NativeValue* JsWindow::DisableWindowDecor(NativeEngine* engine, NativeCallbackInfo* info)
 {
     WLOGFI("[NAPI]DisableWindowDecor");
@@ -370,6 +385,41 @@ NativeValue* JsWindow::GetTransitionControllerSync(NativeEngine* engine, NativeC
     WLOGFI("[NAPI]GetTransitionControllerSync");
     JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
     return (me != nullptr) ? me->OnGetTransitionControllerSync(*engine, *info) : nullptr;
+}
+
+NativeValue* JsWindow::SetCornerRadius(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGFI("[NAPI]SetCornerRadius");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
+    return (me != nullptr) ? me->OnSetCornerRadius(*engine, *info) : nullptr;
+}
+
+NativeValue* JsWindow::SetShadow(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGFI("[NAPI]SetShadow");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
+    return (me != nullptr) ? me->OnSetShadow(*engine, *info) : nullptr;
+}
+
+NativeValue* JsWindow::SetBlur(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGFI("[NAPI]SetBlur");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
+    return (me != nullptr) ? me->OnSetBlur(*engine, *info) : nullptr;
+}
+
+NativeValue* JsWindow::SetBackdropBlur(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGFI("[NAPI]SetBackdropBlur");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
+    return (me != nullptr) ? me->OnSetBackdropBlur(*engine, *info) : nullptr;
+}
+
+NativeValue* JsWindow::SetBackdropBlurStyle(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGFI("[NAPI]SetBackdropBlurStyle");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
+    return (me != nullptr) ? me->OnSetBackdropBlurStyle(*engine, *info) : nullptr;
 }
 
 NativeValue* JsWindow::OnShow(NativeEngine& engine, NativeCallbackInfo& info)
@@ -603,15 +653,18 @@ NativeValue* JsWindow::OnResize(NativeEngine& engine, NativeCallbackInfo& info)
         WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
-    uint32_t width = 0;
+    int32_t width = 0;
     if (errCode == WMError::WM_OK && !ConvertFromJsValue(engine, info.argv[0], width)) {
         WLOGFE("[NAPI]Failed to convert parameter to width");
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
-
-    uint32_t height = 0;
+    int32_t height = 0;
     if (errCode == WMError::WM_OK && !ConvertFromJsValue(engine, info.argv[1], height)) {
         WLOGFE("[NAPI]Failed to convert parameter to height");
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+    }
+    if (width <= 0 || height <= 0) {
+        WLOGFE("[NAPI]width or height should greater than 0!");
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
     wptr<Window> weakToken(windowToken_);
@@ -623,7 +676,7 @@ NativeValue* JsWindow::OnResize(NativeEngine& engine, NativeCallbackInfo& info)
                 WLOGFE("[NAPI]window is nullptr or get invalid param");
                 return;
             }
-            WMError ret = weakWindow->Resize(width, height);
+            WMError ret = weakWindow->Resize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
             if (ret == WMError::WM_OK) {
                 task.Resolve(engine, engine.CreateUndefined());
             } else {
@@ -836,6 +889,64 @@ NativeValue* JsWindow::OnUnregisterWindowCallback(NativeEngine& engine, NativeCa
     WLOGFI("[NAPI]Unregister end, window [%{public}u, %{public}s], type = %{public}s, callback = %{public}p",
         windowToken_->GetWindowId(), windowToken_->GetWindowName().c_str(), cbType.c_str(), value);
     return engine.CreateUndefined();
+}
+
+NativeValue* JsWindow::OnBindDialogTarget(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    WMError errCode = WMError::WM_OK;
+    if (windowToken_ == nullptr || info.argc < 2 || info.argc > 3) { // 2 3: invalid params nums
+        WLOGFE("[NAPI]Window is nullptr or argc is invalid: %{public}zu", info.argc);
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+    }
+
+    NativeValue* value = nullptr;
+    sptr<IRemoteObject> token = nullptr;
+    if ((info.argc == 2) || (info.argc == 3)) { // 2 3: params nums
+        token = NAPI_ohos_rpc_getNativeRemoteObject(
+            reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[0]));
+        if (token == nullptr) {
+            WLOGFE("[NAPI]Callback(info->argv[0]) transfer to remoteObject fail");
+            errCode = WMError::WM_ERROR_INVALID_PARAM;
+        }
+
+        value = info.argv[1];
+        if (!value->IsCallable()) {
+            WLOGFE("[NAPI]Callback(info->argv[1]) is not callable");
+            errCode = WMError::WM_ERROR_INVALID_PARAM;
+        }
+    }
+
+    if (errCode == WMError::WM_OK) {
+        registerManager_->RegisterListener(windowToken_, "dialogDeathRecipient", CaseType::CASE_WINDOW, engine, value);
+    }
+
+    wptr<Window> weakToken(windowToken_);
+    AsyncTask::CompleteCallback complete =
+        [weakToken, errCode, token](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            auto weakWindow = weakToken.promote();
+            if (weakWindow == nullptr || errCode != WMError::WM_OK) {
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode)));
+                WLOGFE("[NAPI]window is nullptr or get invalid param");
+                return;
+            }
+
+            WMError ret = weakWindow->BindDialogTarget(token);
+            if (ret == WMError::WM_OK) {
+                task.Resolve(engine, engine.CreateUndefined());
+            } else {
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(ret), "Bind Dialog Target failed"));
+            }
+
+            WLOGFI("[NAPI]BindDialogTarget end, window [%{public}u, %{public}s]",
+                weakToken->GetWindowId(), weakToken->GetWindowName().c_str());
+        };
+
+    NativeValue* result = nullptr;
+    NativeValue* lastParam = (info.argc == 2) ? nullptr :
+        (info.argv[2]->TypeOf() == NATIVE_FUNCTION ? info.argv[2] : nullptr);
+    AsyncTask::Schedule("JsWindow::OnBindDialogTarget",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
 }
 
 static void LoadContentTask(std::weak_ptr<NativeReference> contentStorage, std::string contextUrl,
@@ -1827,6 +1938,51 @@ NativeValue* JsWindow::OnSnapshot(NativeEngine& engine, NativeCallbackInfo& info
     return result;
 }
 
+NativeValue* JsWindow::OnSetSnapshotSkip(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    WMError errCode = WMError::WM_OK;
+    if (info.argc < 1 || info.argc > 2) { // 2 is maximum params num
+        WLOGFE("[NAPI] inbalid param");
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+    }
+    bool isSkip = false;
+    if (errCode == WMError::WM_OK) {
+        NativeBoolean* nativeVal = ConvertNativeValueTo<NativeBoolean>(info.argv[0]);
+        if (nativeVal == nullptr) {
+            errCode = WMError::WM_ERROR_INVALID_PARAM;
+        } else {
+            isSkip = static_cast<bool>(*nativeVal);
+        }
+    }
+
+    wptr<Window> weakToken(windowToken_);
+    AsyncTask::CompleteCallback complete =
+        [weakToken, isSkip, errCode](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            if (errCode != WMError::WM_OK) {
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode), "Invalidate params"));
+                return;
+            }
+            auto weakWindow = weakToken.promote();
+            if (weakWindow == nullptr) {
+                task.Reject(engine, CreateJsError(engine,
+                    static_cast<int32_t>(WMError::WM_ERROR_NULLPTR), "Invalidate params"));
+                return;
+            }
+
+            weakWindow->SetSnapshotSkip(isSkip);
+            task.Resolve(engine, engine.CreateUndefined());
+            WLOGFI("NAPI [%{public}u, %{public}s] set snapshotSkip end",
+                weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str());
+        };
+
+    NativeValue* lastParam = (info.argc <= 1) ? nullptr :
+        (info.argv[1]->TypeOf() == NATIVE_FUNCTION ? info.argv[1] : nullptr);
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule("JsWindow::OnSetSnapshotSkip",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
 NativeValue* JsWindow::OnSetOpacitySync(NativeEngine& engine, NativeCallbackInfo& info)
 {
     if (info.argc != 1 || windowToken_ == nullptr) {
@@ -2071,6 +2227,162 @@ NativeValue* JsWindow::OnGetTransitionControllerSync(NativeEngine& engine, Nativ
     return jsTransControllerObj_->Get();
 }
 
+NativeValue* JsWindow::OnSetCornerRadius(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    if (info.argc != 1 || windowToken_ == nullptr) {
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu or windowToken_ is nullptr", info.argc);
+        return engine.CreateUndefined();
+    }
+    if (!WindowHelper::IsSystemWindow(windowToken_->GetType())) {
+        WLOGFE("[NAPI]SetCornerRadius is not allowed since window is not system window");
+        return engine.CreateUndefined();
+    }
+    NativeNumber* nativeVal = ConvertNativeValueTo<NativeNumber>(info.argv[0]);
+    if (nativeVal == nullptr || WindowHelper::LessNotEqual(static_cast<double>(*nativeVal), 0.0)) {
+        WLOGFE("[NAPI]SetCornerRadius invalid radius");
+        return engine.CreateUndefined();
+    }
+    float radius = static_cast<double>(*nativeVal);
+    if (windowToken_->SetCornerRadius(radius) != WMError::WM_OK) {
+        WLOGFE("[NAPI]Window SetCornerRadius failed");
+    }
+    WLOGFI("[NAPI]Window [%{public}u, %{public}s] SetCornerRadius end, radius = %{public}f",
+        windowToken_->GetWindowId(), windowToken_->GetWindowName().c_str(), radius);
+    return engine.CreateUndefined();
+}
+
+NativeValue* JsWindow::OnSetShadow(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    if ((info.argc < 1 || info.argc > 4) || windowToken_ == nullptr) { // 1: min param num, 4: max param num
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu or windowToken_ is nullptr", info.argc);
+        return engine.CreateUndefined();
+    }
+    if (!WindowHelper::IsSystemWindow(windowToken_->GetType())) {
+        WLOGFE("[NAPI]SetShadow is not allowed since window is not system window");
+        return engine.CreateUndefined();
+    }
+
+    { // parse the 1st param: radius
+        NativeNumber* nativeVal = ConvertNativeValueTo<NativeNumber>(info.argv[0]);
+        if (nativeVal == nullptr || WindowHelper::LessNotEqual(static_cast<double>(*nativeVal), 0.0)) {
+            WLOGFE("[NAPI]SetShadow invalid radius");
+            return engine.CreateUndefined();
+        }
+        if (windowToken_->SetShadowRadius(static_cast<double>(*nativeVal)) != WMError::WM_OK) {
+            WLOGFE("[NAPI]Window SetShadowRadius failed");
+            return engine.CreateUndefined();
+        }
+    }
+
+    if (info.argc >= 2) { // parse the 2nd param: color
+        std::string color;
+        if (!ConvertFromJsValue(engine, info.argv[1], color)) {
+            WLOGFE("[NAPI]SetShadow invalid color");
+            return engine.CreateUndefined();
+        }
+        if (windowToken_->SetShadowColor(color) != WMError::WM_OK) {
+            WLOGFE("[NAPI]Window SetShadowColor failed");
+            return engine.CreateUndefined();
+        }
+    }
+
+    if (info.argc >= 3) { // parse the 3rd param: offsetX
+        NativeNumber* nativeVal = ConvertNativeValueTo<NativeNumber>(info.argv[2]); // 2: the 3rd param
+        if (nativeVal == nullptr) {
+            WLOGFE("[NAPI]SetShadow invalid offsetX");
+            return engine.CreateUndefined();
+        }
+        windowToken_->SetShadowOffsetX(static_cast<double>(*nativeVal));
+    }
+
+    if (info.argc == 4) { // parse the 4th param: offsetY
+        NativeNumber* nativeVal = ConvertNativeValueTo<NativeNumber>(info.argv[3]); // 3: the 4th param
+        if (nativeVal == nullptr) {
+            WLOGFE("[NAPI]SetShadow invalid offsetY");
+            return engine.CreateUndefined();
+        }
+        windowToken_->SetShadowOffsetY(static_cast<double>(*nativeVal));
+    }
+    WLOGFI("[NAPI]Window [%{public}u, %{public}s] OnSetShadow end",
+        windowToken_->GetWindowId(), windowToken_->GetWindowName().c_str());
+    return engine.CreateUndefined();
+}
+
+NativeValue* JsWindow::OnSetBlur(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    if (info.argc != 1 || windowToken_ == nullptr) {
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu or windowToken_ is nullptr", info.argc);
+        return engine.CreateUndefined();
+    }
+    if (!WindowHelper::IsSystemWindow(windowToken_->GetType())) {
+        WLOGFE("[NAPI]SetBlur is not allowed since window is not system window");
+        return engine.CreateUndefined();
+    }
+    NativeNumber* nativeVal = ConvertNativeValueTo<NativeNumber>(info.argv[0]);
+    if (nativeVal == nullptr || WindowHelper::LessNotEqual(static_cast<double>(*nativeVal), 0.0)) {
+        WLOGFE("[NAPI]SetBlur invalid radius");
+        return engine.CreateUndefined();
+    }
+    float radius = static_cast<double>(*nativeVal);
+    if (windowToken_->SetBlur(radius) != WMError::WM_OK) {
+        WLOGFE("[NAPI]Window SetBlur failed");
+    }
+    WLOGFI("[NAPI]Window [%{public}u, %{public}s] SetBlur end, radius = %{public}f",
+        windowToken_->GetWindowId(), windowToken_->GetWindowName().c_str(), radius);
+    return engine.CreateUndefined();
+}
+
+NativeValue* JsWindow::OnSetBackdropBlur(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    if (info.argc != 1 || windowToken_ == nullptr) {
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu or windowToken_ is nullptr", info.argc);
+        return engine.CreateUndefined();
+    }
+    if (!WindowHelper::IsSystemWindow(windowToken_->GetType())) {
+        WLOGFE("[NAPI]SetBackdropBlur is not allowed since window is not system window");
+        return engine.CreateUndefined();
+    }
+    NativeNumber* nativeVal = ConvertNativeValueTo<NativeNumber>(info.argv[0]);
+    if (nativeVal == nullptr || WindowHelper::LessNotEqual(static_cast<double>(*nativeVal), 0.0)) {
+        WLOGFE("[NAPI]SetBackdropBlur invalid radius");
+        return engine.CreateUndefined();
+    }
+    float radius = static_cast<double>(*nativeVal);
+    if (windowToken_->SetBackdropBlur(radius) != WMError::WM_OK) {
+        WLOGFE("[NAPI]Window SetBackdropBlur failed");
+    }
+    WLOGFI("[NAPI]Window [%{public}u, %{public}s] SetBackdropBlur end, radius = %{public}f",
+        windowToken_->GetWindowId(), windowToken_->GetWindowName().c_str(), radius);
+    return engine.CreateUndefined();
+}
+
+NativeValue* JsWindow::OnSetBackdropBlurStyle(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    if (info.argc != 1 || windowToken_ == nullptr) {
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu or windowToken_ is nullptr", info.argc);
+        return engine.CreateUndefined();
+    }
+    if (!WindowHelper::IsSystemWindow(windowToken_->GetType())) {
+        WLOGFE("[NAPI]SetBackdropBlurStyle is not allowed since window is not system window");
+        return engine.CreateUndefined();
+    }
+
+    NativeNumber* nativeMode = ConvertNativeValueTo<NativeNumber>(info.argv[0]);
+    if (nativeMode == nullptr ||
+        static_cast<uint32_t>(*nativeMode) > static_cast<uint32_t>(WindowBlurStyle::WINDOW_BLUR_THICK)) {
+        WLOGFE("[NAPI]SetBackdropBlurStyle Invalid window blur style");
+        return engine.CreateUndefined();
+    }
+    WindowBlurStyle style = static_cast<WindowBlurStyle>(static_cast<uint32_t>(*nativeMode));
+    if (windowToken_->SetBackdropBlurStyle(style) != WMError::WM_OK) {
+        WLOGFE("[NAPI]Window SetBackdropBlurStyle failed");
+    }
+
+    WLOGFI("[NAPI]Window [%{public}u, %{public}s] SetBackdropBlurStyle end, style = %{public}u",
+        windowToken_->GetWindowId(), windowToken_->GetWindowName().c_str(), style);
+    return engine.CreateUndefined();
+}
+
 std::shared_ptr<NativeReference> FindJsWindowObject(std::string windowName)
 {
     WLOGFI("[NAPI]Try to find window %{public}s in g_jsWindowMap", windowName.c_str());
@@ -2122,6 +2434,7 @@ void BindFunctions(NativeEngine& engine, NativeObject* object)
     BindNativeFunction(engine, *object, "getProperties", JsWindow::GetProperties);
     BindNativeFunction(engine, *object, "on", JsWindow::RegisterWindowCallback);
     BindNativeFunction(engine, *object, "off", JsWindow::UnregisterWindowCallback);
+    BindNativeFunction(engine, *object, "bindDialogTarget", JsWindow::BindDialogTarget);
     BindNativeFunction(engine, *object, "loadContent", JsWindow::LoadContent);
     BindNativeFunction(engine, *object, "setFullScreen", JsWindow::SetFullScreen);
     BindNativeFunction(engine, *object, "setLayoutFullScreen", JsWindow::SetLayoutFullScreen);
@@ -2142,6 +2455,7 @@ void BindFunctions(NativeEngine& engine, NativeObject* object)
     BindNativeFunction(engine, *object, "setTouchable", JsWindow::SetTouchable);
     BindNativeFunction(engine, *object, "setTransparent", JsWindow::SetTransparent);
     BindNativeFunction(engine, *object, "setCallingWindow", JsWindow::SetCallingWindow);
+    BindNativeFunction(engine, *object, "setSnapshotSkip", JsWindow::SetSnapshotSkip);
     BindNativeFunction(engine, *object, "disableWindowDecor", JsWindow::DisableWindowDecor);
     BindNativeFunction(engine, *object, "dump", JsWindow::Dump);
     BindNativeFunction(engine, *object, "setForbidSplitMove", JsWindow::SetForbidSplitMove);
@@ -2152,6 +2466,11 @@ void BindFunctions(NativeEngine& engine, NativeObject* object)
     BindNativeFunction(engine, *object, "setTranslateSync", JsWindow::SetTranslateSync);
     BindNativeFunction(engine, *object, "getTransitionControllerSync", JsWindow::GetTransitionControllerSync);
     BindNativeFunction(engine, *object, "snapshot", JsWindow::Snapshot);
+    BindNativeFunction(engine, *object, "setCornerRadius", JsWindow::SetCornerRadius);
+    BindNativeFunction(engine, *object, "setShadow", JsWindow::SetShadow);
+    BindNativeFunction(engine, *object, "setBlur", JsWindow::SetBlur);
+    BindNativeFunction(engine, *object, "setBackdropBlur", JsWindow::SetBackdropBlur);
+    BindNativeFunction(engine, *object, "setBackdropBlurStyle", JsWindow::SetBackdropBlurStyle);
 }
 }  // namespace Rosen
 }  // namespace OHOS

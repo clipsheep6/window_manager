@@ -41,6 +41,13 @@ void WindowInputChannel::HandleKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent
     }
     WLOGFI("Receive key event, windowId: %{public}u, keyCode: %{public}d",
         window_->GetWindowId(), keyEvent->GetKeyCode());
+    if (window_->GetType() == WindowType::WINDOW_TYPE_DIALOG) {
+        if (keyEvent->GetAgentWindowId() != keyEvent->GetTargetWindowId()) {
+            window_->NotifyTouchDialogTarget();
+            keyEvent->MarkProcessed();
+            return;
+        }
+    }
     bool isKeyboardEvent = IsKeyboardEvent(keyEvent);
     bool inputMethodHasProcessed = false;
     if (isKeyboardEvent) {
@@ -49,13 +56,8 @@ void WindowInputChannel::HandleKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent
     }
     if (!inputMethodHasProcessed) {
         WLOGFI("dispatch keyEvent to ACE");
-        if (inputListener_ != nullptr) {
-            inputListener_->OnInputEvent(keyEvent);
-            return;
-        }
         window_->ConsumeKeyEvent(keyEvent);
     }
-    keyEvent->MarkProcessed();
 }
 
 void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& pointerEvent)
@@ -64,19 +66,13 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
         WLOGFE("pointerEvent is nullptr");
         return;
     }
-    if (inputListener_ != nullptr) {
-        // divider window consumes pointer events directly
-        if (window_->GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
-            window_->ConsumePointerEvent(pointerEvent);
-            inputListener_->OnInputEvent(pointerEvent);
-            return;
+    if ((window_->GetType() == WindowType::WINDOW_TYPE_DIALOG) &&
+        (pointerEvent->GetAgentWindowId() != pointerEvent->GetTargetWindowId())) {
+        if (pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_UP ||
+            pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP) {
+            window_->NotifyTouchDialogTarget();
         }
-        int32_t action = pointerEvent->GetPointerAction();
-        if (action == MMI::PointerEvent::POINTER_ACTION_DOWN ||
-            action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
-            window_->ConsumePointerEvent(pointerEvent);
-        }
-        inputListener_->OnInputEvent(pointerEvent);
+        pointerEvent->MarkProcessed();
         return;
     }
     if (pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_MOVE) {
@@ -90,6 +86,7 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
             } else {
                 WLOGFE("WindowInputChannel is not available");
                 pointerEvent->MarkProcessed();
+                moveEvent_ = nullptr;
             }
         }
         WLOGFI("Receive move event, windowId: %{public}u, action: %{public}d",
@@ -101,7 +98,6 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
         WLOGFI("Dispatch non-move event, windowId: %{public}u, action: %{public}d",
             window_->GetWindowId(), pointerEvent->GetPointerAction());
         window_->ConsumePointerEvent(pointerEvent);
-        pointerEvent->MarkProcessed();
     }
 }
 
@@ -120,12 +116,6 @@ void WindowInputChannel::OnVsync(int64_t timeStamp)
     WLOGFI("Dispatch move event, windowId: %{public}u, action: %{public}d",
         window_->GetWindowId(), pointerEvent->GetPointerAction());
     window_->ConsumePointerEvent(pointerEvent);
-    pointerEvent->MarkProcessed();
-}
-
-void WindowInputChannel::SetInputListener(const std::shared_ptr<MMI::IInputEventConsumer>& listener)
-{
-    inputListener_ = listener;
 }
 
 void WindowInputChannel::Destroy()

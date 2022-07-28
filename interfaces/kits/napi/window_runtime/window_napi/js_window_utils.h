@@ -45,7 +45,8 @@ enum class ApiWindowType : uint32_t {
     TYPE_VOICE_INTERACTION,
     TYPE_POINTER,
     TYPE_FLOAT_CAMERA,
-    TYPE_END = TYPE_FLOAT_CAMERA,
+    TYPE_DIALOG,
+    TYPE_END = TYPE_DIALOG,
 };
 
 enum class LifeCycleEventType : uint32_t {
@@ -57,6 +58,7 @@ enum class LifeCycleEventType : uint32_t {
 
 const std::map<WindowType, ApiWindowType> NATIVE_JS_TO_WINDOW_TYPE_MAP {
     { WindowType::WINDOW_TYPE_APP_SUB_WINDOW,      ApiWindowType::TYPE_APP               },
+    { WindowType::WINDOW_TYPE_DIALOG,              ApiWindowType::TYPE_DIALOG            },
     { WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW, ApiWindowType::TYPE_SYSTEM_ALERT      },
     { WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT,  ApiWindowType::TYPE_INPUT_METHOD      },
     { WindowType::WINDOW_TYPE_STATUS_BAR,          ApiWindowType::TYPE_STATUS_BAR        },
@@ -76,6 +78,7 @@ const std::map<WindowType, ApiWindowType> NATIVE_JS_TO_WINDOW_TYPE_MAP {
 };
 const std::map<ApiWindowType, WindowType> JS_TO_NATIVE_WINDOW_TYPE_MAP {
     { ApiWindowType::TYPE_APP,                 WindowType::WINDOW_TYPE_APP_SUB_WINDOW      },
+    { ApiWindowType::TYPE_DIALOG,              WindowType::WINDOW_TYPE_DIALOG              },
     { ApiWindowType::TYPE_SYSTEM_ALERT,        WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW },
     { ApiWindowType::TYPE_INPUT_METHOD,        WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT  },
     { ApiWindowType::TYPE_STATUS_BAR,          WindowType::WINDOW_TYPE_STATUS_BAR          },
@@ -165,6 +168,7 @@ const std::map<ApiOrientation, Orientation> JS_TO_NATIVE_ORIENTATION_MAP {
     NativeValue* OrientationInit(NativeEngine* engine);
     NativeValue* WindowStageEventTypeInit(NativeEngine* engine);
     NativeValue* WindowLayoutModeInit(NativeEngine* engine);
+    NativeValue* BlurStyleInit(NativeEngine* engine);
     bool GetAPI7Ability(NativeEngine& engine, AppExecFwk::Ability* &ability);
     bool ParseJsDoubleValue(NativeObject* jsObject, NativeEngine& engine, const std::string& name, double& data);
     template<class T>

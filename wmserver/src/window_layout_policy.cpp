@@ -98,7 +98,7 @@ void WindowLayoutPolicy::UpdateDisplayGroupRect()
         displayGroupRect_.posX_, displayGroupRect_.posY_, displayGroupRect_.width_, displayGroupRect_.height_);
 }
 
-void WindowLayoutPolicy::UpdateDisplayGroupLimitRect_()
+void WindowLayoutPolicy::UpdateDisplayGroupLimitRect()
 {
     auto firstDisplayLimitRect = limitRectMap_.begin()->second;
     Rect newDisplayGroupLimitRect = { firstDisplayLimitRect.posX_, firstDisplayLimitRect.posY_, 0, 0 };
@@ -324,7 +324,7 @@ void WindowLayoutPolicy::LayoutWindowNode(const sptr<WindowNode>& node)
         UpdateLayoutRect(node);
         if (avoidTypes_.find(node->GetWindowType()) != avoidTypes_.end()) {
             UpdateLimitRect(node, limitRectMap_[node->GetDisplayId()]);
-            UpdateDisplayGroupLimitRect_();
+            UpdateDisplayGroupLimitRect();
         }
     }
     for (auto& childNode : node->children_) {
@@ -346,8 +346,7 @@ void WindowLayoutPolicy::UpdateClientRectAndResetReason(const sptr<WindowNode>& 
             "%{public}u", node->GetWindowId(), winRect.posX_, winRect.posY_, winRect.width_, winRect.height_, reason);
         node->GetWindowToken()->UpdateWindowRect(winRect, node->GetDecoStatus(), reason);
     }
-    if ((reason == WindowSizeChangeReason::DRAG || reason == WindowSizeChangeReason::DRAG_END) &&
-        (node->GetWindowType() != WindowType::WINDOW_TYPE_DOCK_SLICE)) {
+    if ((reason != WindowSizeChangeReason::MOVE) && (node->GetWindowType() != WindowType::WINDOW_TYPE_DOCK_SLICE)) {
         node->ResetWindowSizeChangeReason();
     }
 }
@@ -951,6 +950,17 @@ void WindowLayoutPolicy::UpdateSurfaceBounds(const sptr<WindowNode>& node, const
         WLOGFI("not need to update bounds");
         return;
     }
+    // if start dragging, set resize gravity for surface node
+    if (node->GetWindowSizeChangeReason() == WindowSizeChangeReason::DRAG_START ||
+        node->GetWindowSizeChangeReason() == WindowSizeChangeReason::DRAG) {
+        if (node->surfaceNode_) {
+            node->surfaceNode_->SetFrameGravity(Gravity::RESIZE);
+        }
+    } else {
+        if (node->surfaceNode_) {
+            node->surfaceNode_->SetFrameGravity(Gravity::TOP_LEFT);
+        }
+    }
     if (node->leashWinSurfaceNode_) {
         if (winRect != preRect) {
             // avoid animation change suddenly when client coming
@@ -977,7 +987,7 @@ void WindowLayoutPolicy::SetSplitRatioConfig(const SplitRatioConfig& splitRatioC
     splitRatioConfig_ = splitRatioConfig;
 }
 
-Rect WindowLayoutPolicy::GetInitalDividerRect(DisplayId displayId) const
+Rect WindowLayoutPolicy::GetDividerRect(DisplayId displayId) const
 {
     return INVALID_EMPTY_RECT;
 }

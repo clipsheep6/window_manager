@@ -21,10 +21,15 @@
 #include "event_handler.h"
 #include "event_runner.h"
 #include "marshalling_helper.h"
+#include "xcollie/watchdog.h"
+
 #include "window_adapter.h"
 #include "window_manager_agent.h"
 #include "window_manager_hilog.h"
 #include "wm_common.h"
+#ifdef EFFICIENCY_MANAGER_ENABLE
+#include "suspend_manager_client.h"
+#endif // EFFICIENCY_MANAGER_ENABLE
 
 namespace OHOS {
 namespace Rosen {
@@ -199,6 +204,10 @@ void WindowManager::Impl::InitListenerHandler()
         return;
     }
     isHandlerRunning_ = true;
+    int ret = HiviewDFX::Watchdog::GetInstance().AddThread(WINDOW_MANAGER_CALLBACK_THREAD_NAME, listenerHandler_);
+    if (ret != 0) {
+        WLOGFE("Add watchdog thread failed");
+    }
     WLOGFD("init window manager callback runner success.");
 }
 
@@ -264,15 +273,15 @@ void WindowManager::Impl::NotifyAccessibilityWindowInfo(const sptr<Accessibility
         WLOGFE("windowInfo is nullptr");
         return;
     }
-    WLOGFI("NotifyAccessibilityWindowInfo: wid[%{public}d], width[%{public}d]," \
+    WLOGFI("NotifyAccessibilityWindowInfo: wid[%{public}u], width[%{public}d]," \
         "height[%{public}d], positionX[%{public}d], positionY[%{public}d]," \
         "isFocused[%{public}d], isDecorEnable[%{public}d], displayId[%{public}" PRIu64"]," \
-        "mode[%{public}d], type[%{public}d]",
+        "mode[%{public}u], type[%{public}u, updateType[%{public}d]",
         windowInfo->currentWindowInfo_->wid_, windowInfo->currentWindowInfo_->windowRect_.width_,
         windowInfo->currentWindowInfo_->windowRect_.height_, windowInfo->currentWindowInfo_->windowRect_.posX_,
         windowInfo->currentWindowInfo_->windowRect_.posY_, windowInfo->currentWindowInfo_->focused_,
         windowInfo->currentWindowInfo_->isDecorEnable_, windowInfo->currentWindowInfo_->displayId_,
-        windowInfo->currentWindowInfo_->mode_, windowInfo->currentWindowInfo_->type_);
+        windowInfo->currentWindowInfo_->mode_, windowInfo->currentWindowInfo_->type_, type);
     std::vector<sptr<IWindowUpdateListener>> windowUpdateListeners;
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -561,6 +570,10 @@ void WindowManager::UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChan
     }
     WLOGFI("window focus change: %{public}d, id: %{public}u", focused, focusChangeInfo->windowId_);
     if (focused) {
+#ifdef EFFICIENCY_MANAGER_ENABLE
+        SuspendManager::SuspendManagerClient::GetInstance().ThawOneApplication(focusChangeInfo->uid_,
+            "", "THAW_BY_FOCUS_CHANGED");
+#endif // EFFICIENCY_MANAGER_ENABLE
         pImpl_->NotifyFocused(focusChangeInfo);
     } else {
         pImpl_->NotifyUnfocused(focusChangeInfo);

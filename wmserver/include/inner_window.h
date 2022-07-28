@@ -25,16 +25,14 @@ namespace Rosen {
 class IInnerWindow : virtual public RefBase {
 public:
     virtual void Create(std::string name, DisplayId displyId, Rect rect, WindowMode mode) = 0;
+    virtual void Update(uint32_t width, uint32_t height) = 0;
     virtual void Destroy() = 0;
 };
 
-class PlaceholderWindowListener : public IWindowLifeCycle, public ITouchOutsideListener, public IInputEventListener {
+class PlaceholderWindowListener : public IWindowLifeCycle, public ITouchOutsideListener {
 public:
     // touch outside listener
     virtual void OnTouchOutside() const;
-    // input event listener
-    virtual void OnKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent);
-    virtual void OnPointerInputEvent(std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     // lifecycle listener
     virtual void AfterUnfocused();
     // lifecycle do nothing
@@ -44,19 +42,30 @@ public:
     virtual void AfterInactive() {};
 };
 
+class PlaceholderInputEventConsumer : public IInputEventConsumer {
+public:
+    ~PlaceholderInputEventConsumer() override = default;
+    virtual bool OnInputEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const override;
+    virtual bool OnInputEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) const override;
+    virtual bool OnInputEvent(const std::shared_ptr<MMI::AxisEvent>& axisEvent) const override;
+};
+
 class PlaceHolderWindow : public IInnerWindow {
 WM_DECLARE_SINGLE_INSTANCE(PlaceHolderWindow);
 public:
     virtual void Create(std::string name, DisplayId displyId, Rect rect, WindowMode mode);
+    virtual void Update(uint32_t width, uint32_t height) {};
     virtual void Destroy();
 
 private:
-    void RegitsterWindowListener();
-    void UnRegitsterWindowListener();
+    void RegisterWindowListener();
+    void UnRegisterWindowListener();
+    void SetInputEventConsumer();
 
 private:
     sptr<OHOS::Rosen::Window> window_;
-    sptr<PlaceholderWindowListener> listener_;
+    sptr<PlaceholderWindowListener> windowListener_;
+    std::shared_ptr<IInputEventConsumer> inputEventConsumer_;
 };
 
 class DividerWindow : public IInnerWindow {
@@ -64,6 +73,7 @@ WM_DECLARE_SINGLE_INSTANCE_BASE(DividerWindow);
 public:
     virtual void Create(std::string name, DisplayId displayId, const Rect rect, WindowMode mode);
     virtual void Destroy();
+    virtual void Update(uint32_t width, uint32_t height);
 
 protected:
     DividerWindow() = default;

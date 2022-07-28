@@ -18,6 +18,8 @@
 
 #include <refbase.h>
 #include <rs_iwindow_animation_controller.h>
+
+#include "accessibility_connection.h"
 #include "input_window_monitor.h"
 #include "zidl/window_manager_agent_interface.h"
 #include "window_root.h"
@@ -29,7 +31,7 @@ namespace Rosen {
 class WindowController : public RefBase {
 public:
     WindowController(sptr<WindowRoot>& root, sptr<InputWindowMonitor> inputWindowMonitor) : windowRoot_(root),
-        inputWindowMonitor_(inputWindowMonitor) {}
+        inputWindowMonitor_(inputWindowMonitor), accessibilityConnection_(new AccessibilityConnection(windowRoot_)) {}
     ~WindowController() = default;
 
     WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
@@ -41,7 +43,6 @@ public:
     WMError GetFocusWindowInfo(sptr<IRemoteObject>& abilityToken);
     WMError DestroyWindow(uint32_t windowId, bool onlySelf);
     WMError RequestFocus(uint32_t windowId);
-    WMError SetWindowBackgroundBlur(uint32_t windowId, WindowBlurLevel level);
     WMError SetAlpha(uint32_t windowId, float alpha);
     AvoidArea GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType) const;
     WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId);
@@ -64,6 +65,9 @@ public:
         sptr<RSIWindowAnimationFinishedCallback>& finishCallback);
     Orientation GetWindowPreferredOrientation(DisplayId displayId);
     void OnScreenshot(DisplayId displayId);
+    WMError GetAccessibilityWindowInfo(sptr<AccessibilityWindowInfo>& windowInfo) const;
+    WMError BindDialogTarget(uint32_t& windowId, sptr<IRemoteObject> targetToken);
+
 private:
     uint32_t GenWindowId();
     void FlushWindowInfo(uint32_t windowId);
@@ -92,6 +96,7 @@ private:
 
     sptr<WindowRoot> windowRoot_;
     sptr<InputWindowMonitor> inputWindowMonitor_;
+    sptr<AccessibilityConnection> accessibilityConnection_;
     std::atomic<uint32_t> windowId_ { INVALID_WINDOW_ID };
     // Remove 'sysBarWinId_' after SystemUI resize 'systembar', systemBar only exist on default display currently
     std::unordered_map<WindowType, uint32_t> sysBarWinId_ {

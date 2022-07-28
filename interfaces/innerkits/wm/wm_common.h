@@ -63,6 +63,7 @@ enum class WindowType : uint32_t {
     WINDOW_TYPE_VOICE_INTERACTION,
     WINDOW_TYPE_FLOAT_CAMERA,
     WINDOW_TYPE_PLACEHOLDER,
+    WINDOW_TYPE_DIALOG,
     ABOVE_APP_SYSTEM_WINDOW_END,
     SYSTEM_WINDOW_END = ABOVE_APP_SYSTEM_WINDOW_END,
 };
@@ -89,11 +90,11 @@ enum WindowModeSupport : uint32_t {
                               WINDOW_MODE_SUPPORT_PIP
 };
 
-enum class WindowBlurLevel : uint32_t {
+enum class WindowBlurStyle : uint32_t {
     WINDOW_BLUR_OFF = 0,
-    WINDOW_BLUR_LOW,
-    WINDOW_BLUR_MEDIUM,
-    WINDOW_BLUR_HIGH
+    WINDOW_BLUR_THIN,
+    WINDOW_BLUR_REGULAR,
+    WINDOW_BLUR_THICK
 };
 
 enum class WindowState : uint32_t {
@@ -285,6 +286,7 @@ enum class ColorSpace : uint32_t {
 enum class WindowAnimation : uint32_t {
     NONE,
     DEFAULT,
+    INPUTE,
     CUSTOM,
 };
 

@@ -74,6 +74,7 @@ void AbstractScreen::UpdateRSTree(std::shared_ptr<RSSurfaceNode>& surfaceNode, b
         surfaceNode->GetName().c_str(), surfaceNode->GetId());
 
     if (isAdd) {
+        surfaceNode->SetVisible(true);
         rsDisplayNode_->AddChild(surfaceNode, -1);
     } else {
         rsDisplayNode_->RemoveChild(surfaceNode);
@@ -269,7 +270,8 @@ Rotation AbstractScreen::CalcRotation(Orientation orientation) const
 }
 
 AbstractScreenGroup::AbstractScreenGroup(sptr<AbstractScreenController> screenController, ScreenId dmsId, ScreenId rsId,
-    ScreenCombination combination) : AbstractScreen(screenController, "", dmsId, rsId), combination_(combination)
+    std::string name, ScreenCombination combination) : AbstractScreen(screenController, name, dmsId, rsId),
+    combination_(combination)
 {
     type_ = ScreenType::UNDEFINE;
     isScreenGroup_ = true;

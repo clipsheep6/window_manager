@@ -16,7 +16,7 @@
 #ifndef OHOS_ROSEN_WINDOW_NODE_CONTAINER_H
 #define OHOS_ROSEN_WINDOW_NODE_CONTAINER_H
 
-#include <ui/rs_display_node.h>
+#include "animation_config.h"
 #include "avoid_area_controller.h"
 #include "display_info.h"
 #include "minimize_app.h"
@@ -62,7 +62,6 @@ public:
     uint64_t GetScreenId(DisplayId displayId) const;
     Rect GetDisplayRect(DisplayId displayId) const;
     std::unordered_map<WindowType, SystemBarProperty> GetExpectImmersiveProperty() const;
-    void NotifyAccessibilityWindowInfo(const sptr<WindowNode>& windowId, WindowUpdateType type) const;
     uint32_t GetWindowCountByType(WindowType windowType);
     bool IsForbidDockSliceMove(DisplayId displayId) const;
     bool IsDockSliceInExitSplitModeArea(DisplayId displayId) const;
@@ -90,7 +89,6 @@ public:
     Rect GetDisplayGroupRect() const;
     void TraverseWindowTree(const WindowNodeOperationFunc& func, bool isFromTopToBottom = true) const;
     void UpdateSizeChangeReason(sptr<WindowNode>& node, WindowSizeChangeReason reason);
-    void GetWindowList(std::vector<sptr<WindowInfo>>& windowList) const;
     void DropShowWhenLockedWindowIfNeeded(const sptr<WindowNode>& node);
 
     void SetMinimizedByOther(bool isMinimizedByOther);
@@ -110,16 +108,17 @@ public:
     void BeforeProcessWindowAvoidAreaChangeWhenDisplayChange() const;
     void ProcessWindowAvoidAreaChangeWhenDisplayChange() const;
     WindowLayoutMode GetCurrentLayoutMode() const;
-    void RemoveSingleUserWindowNodes();
+    void RemoveSingleUserWindowNodes(int accountId);
     WMError IsTileRectSatisfiedWithSizeLimits(sptr<WindowNode>& node);
-
+    bool HasPrivateWindow();
+    static AnimationConfig& GetAnimationConfigRef();
 private:
     void TraverseWindowNode(sptr<WindowNode>& root, std::vector<sptr<WindowNode>>& windowNodes) const;
     sptr<WindowNode> FindRoot(WindowType type) const;
     sptr<WindowNode> FindWindowNodeById(uint32_t id) const;
     void UpdateFocusStatus(uint32_t id, bool focused) const;
     void UpdateActiveStatus(uint32_t id, bool isActive) const;
-
+    void RemoveNodeFromRSTree(sptr<WindowNode>& node);
     void NotifyIfAvoidAreaChanged(const sptr<WindowNode>& node, const AvoidControlType avoidType) const;
     void NotifyIfSystemBarTintChanged(DisplayId displayId) const;
     void NotifyIfSystemBarRegionChanged(DisplayId displayId) const;
@@ -151,7 +150,6 @@ private:
     void UpdateRSTreeWhenShowingDisplaysChange(sptr<WindowNode>& node,
                                                const std::vector<DisplayId>& lastShowingDisplays,
                                                const std::vector<DisplayId>& curShowingDisplays);
-    void FillWindowInfo(sptr<WindowInfo>& windowInfo, const sptr<WindowNode>& node) const;
     bool CheckWindowNodeWhetherInWindowTree(const sptr<WindowNode>& node) const;
     void UpdateModeSupportInfoWhenKeyguardChange(const sptr<WindowNode>& node, bool up);
 
@@ -171,6 +169,7 @@ private:
     WindowLayoutMode layoutMode_ = WindowLayoutMode::CASCADE;
     std::vector<Rect> currentCoveredArea_;
     std::vector<uint32_t> removedIds_;
+    static AnimationConfig animationConfig_;
 
     sptr<WindowNode> belowAppWindowNode_ = new WindowNode();
     sptr<WindowNode> appWindowNode_ = new WindowNode();

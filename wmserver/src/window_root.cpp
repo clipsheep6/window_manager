@@ -383,7 +383,6 @@ WMError WindowRoot::ToggleShownStateForAllAppWindows()
             if (!windowNode->GetWindowToken()) {
                 return false;
             }
-            windowNode->GetWindowToken()->UpdateWindowState(WindowState::STATE_SHOWN);
             auto property = windowNode->GetWindowToken()->GetWindowProperty();
             if (property == nullptr) {
                 return false;
@@ -392,7 +391,8 @@ WMError WindowRoot::ToggleShownStateForAllAppWindows()
                 mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
                 property->SetWindowMode(mode);
             }
-            WindowManagerService::GetInstance().HandleAddWindow(property);
+            windowNode->GetWindowToken()->UpdateWindowState(WindowState::STATE_SHOWN);
+            WindowManagerService::GetInstance().AddWindow(property);
             return true;
         };
         WMError tmpRes = tmpRes = container->ToggleShownStateForAllAppWindows(restoreFunc, isAllAppWindowsEmpty);
@@ -419,6 +419,10 @@ void WindowRoot::DestroyLeakStartingWindow()
 WMError WindowRoot::PostProcessAddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode,
     sptr<WindowNodeContainer>& container)
 {
+    if (!node->currentVisibility_) {
+        WLOGFI("window is invisible, do not need process");
+        return WMError::WM_DO_NOTHING;
+    }
     if (WindowHelper::IsSubWindow(node->GetWindowType())) {
         if (parentNode == nullptr) {
             WLOGFE("window type is invalid");
@@ -443,8 +447,7 @@ WMError WindowRoot::PostProcessAddWindowNode(sptr<WindowNode>& node, sptr<Window
     WLOGFI("windowId:%{public}u, name:%{public}s, orientation:%{public}u, type:%{public}u, isMainWindow:%{public}d",
         node->GetWindowId(), node->GetWindowName().c_str(), static_cast<uint32_t>(node->GetRequestedOrientation()),
         node->GetWindowType(), WindowHelper::IsMainWindow(node->GetWindowType()));
-    if (WindowHelper::IsMainWindow(node->GetWindowType()) &&
-        node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN) {
+    if (WindowHelper::IsRotatableWindow(node->GetWindowType(), node->GetWindowMode())) {
         DisplayManagerServiceInner::GetInstance().
             SetOrientationFromWindow(node->GetDisplayId(), node->GetRequestedOrientation());
     }
@@ -510,6 +513,12 @@ WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, boo
     }
 
     auto parentNode = GetWindowNode(parentId);
+
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
+        sptr<WindowNode> callerNode = FindDialogCallerNode(node->GetWindowType(), node->dialogTargetToken_);
+        parentNode = (callerNode != nullptr) ? callerNode : nullptr;
+    }
+
     WMError res = container->AddWindowNode(node, parentNode);
     if (!WindowHelper::IsSystemWindow(node->GetWindowType())) {
         DestroyLeakStartingWindow();
@@ -536,7 +545,7 @@ WMError WindowRoot::RemoveWindowNode(uint32_t windowId)
     }
     container->DropShowWhenLockedWindowIfNeeded(node);
     UpdateFocusWindowWithWindowRemoved(node, container);
-    UpdateActiveWindowWithWindowRemoved(node, container);
+    auto nextOrientationWindow = UpdateActiveWindowWithWindowRemoved(node, container);
     UpdateBrightnessWithWindowRemoved(windowId, container);
     WMError res = container->RemoveWindowNode(node);
     if (res == WMError::WM_OK) {
@@ -547,6 +556,14 @@ WMError WindowRoot::RemoveWindowNode(uint32_t windowId)
             HandleKeepScreenOn(child->GetWindowId(), false);
         }
         HandleKeepScreenOn(windowId, false);
+    }
+    while (nextOrientationWindow != nullptr && !WindowHelper::IsMainWindow(nextOrientationWindow->GetWindowType())) {
+        nextOrientationWindow = nextOrientationWindow->parent_;
+    }
+    if (nextOrientationWindow != nullptr && WindowHelper::IsRotatableWindow(
+        nextOrientationWindow->GetWindowType(), nextOrientationWindow->GetWindowMode())) {
+        DisplayManagerServiceInner::GetInstance().SetOrientationFromWindow(nextOrientationWindow->GetDisplayId(),
+            nextOrientationWindow->GetRequestedOrientation());
     }
     return res;
 }
@@ -654,7 +671,12 @@ WMError WindowRoot::SetWindowMode(sptr<WindowNode>& node, WindowMode dstMode)
         WLOGFE("set window mode failed, window container could not be found");
         return WMError::WM_ERROR_NULLPTR;
     }
-    return container->SetWindowMode(node, dstMode);
+    auto res = container->SetWindowMode(node, dstMode);
+    if (WindowHelper::IsRotatableWindow(node->GetWindowType(), node->GetWindowMode())) {
+        DisplayManagerServiceInner::GetInstance().
+            SetOrientationFromWindow(node->GetDisplayId(), node->GetRequestedOrientation());
+    }
+    return res;
 }
 
 WMError WindowRoot::DestroyWindow(uint32_t windowId, bool onlySelf)
@@ -665,6 +687,7 @@ WMError WindowRoot::DestroyWindow(uint32_t windowId, bool onlySelf)
         return WMError::WM_OK;
     }
     WMError res;
+    auto token = node->abilityToken_;
     auto container = GetOrCreateWindowNodeContainer(node->GetDisplayId());
     if (container != nullptr) {
         UpdateFocusWindowWithWindowRemoved(node, container);
@@ -688,6 +711,11 @@ WMError WindowRoot::DestroyWindow(uint32_t windowId, bool onlySelf)
                 if (node != nullptr) {
                     HandleKeepScreenOn(id, false);
                     DestroyWindowInner(node);
+                }
+                if ((node != nullptr) && (node->GetWindowToken() != nullptr) &&
+                    (node->abilityToken_ != token) &&
+                    (node->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG)) {
+                    node->GetWindowToken()->NotifyDestroy();
                 }
             }
             return res;
@@ -786,12 +814,12 @@ void WindowRoot::UpdateFocusWindowWithWindowRemoved(const sptr<WindowNode>& node
     }
 }
 
-void WindowRoot::UpdateActiveWindowWithWindowRemoved(const sptr<WindowNode>& node,
+sptr<WindowNode> WindowRoot::UpdateActiveWindowWithWindowRemoved(const sptr<WindowNode>& node,
     const sptr<WindowNodeContainer>& container) const
 {
     if (node == nullptr || container == nullptr) {
         WLOGFE("window is invalid");
-        return;
+        return nullptr;
     }
     uint32_t windowId = node->GetWindowId();
     uint32_t activeWindowId = container->GetActiveWindow();
@@ -803,7 +831,7 @@ void WindowRoot::UpdateActiveWindowWithWindowRemoved(const sptr<WindowNode>& nod
                                          return node->GetWindowId() == activeWindowId;
                                      });
             if (iter == node->children_.end()) {
-                return;
+                return nullptr;
             }
         }
         if (!node->children_.empty()) {
@@ -814,7 +842,7 @@ void WindowRoot::UpdateActiveWindowWithWindowRemoved(const sptr<WindowNode>& nod
         }
     } else {
         if (windowId != activeWindowId) {
-            return;
+            return nullptr;
         }
     }
     auto nextActiveWindow = container->GetNextActiveWindow(windowId);
@@ -822,6 +850,7 @@ void WindowRoot::UpdateActiveWindowWithWindowRemoved(const sptr<WindowNode>& nod
         WLOGFI("adjust active window, next active window id: %{public}u", nextActiveWindow->GetWindowId());
         container->SetActiveWindow(nextActiveWindow->GetWindowId(), true);
     }
+    return nextActiveWindow;
 }
 
 void WindowRoot::UpdateBrightnessWithWindowRemoved(uint32_t windowId, const sptr<WindowNodeContainer>& container) const
@@ -880,12 +909,12 @@ WMError WindowRoot::RequestActiveWindow(uint32_t windowId)
         WLOGFE("window container could not be found");
         return WMError::WM_ERROR_NULLPTR;
     }
-    auto res =  container->SetActiveWindow(windowId, false);
+    auto res = container->SetActiveWindow(windowId, false);
     WLOGFI("windowId:%{public}u, name:%{public}s, orientation:%{public}u, type:%{public}u, isMainWindow:%{public}d",
         windowId, node->GetWindowName().c_str(), static_cast<uint32_t>(node->GetRequestedOrientation()),
         node->GetWindowType(), WindowHelper::IsMainWindow(node->GetWindowType()));
-    if (res == WMError::WM_OK && WindowHelper::IsMainWindow(node->GetWindowType()) &&
-        node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN) {
+    if (res == WMError::WM_OK &&
+        WindowHelper::IsRotatableWindow(node->GetWindowType(), node->GetWindowMode())) {
         DisplayManagerServiceInner::GetInstance().
             SetOrientationFromWindow(node->GetDisplayId(), node->GetRequestedOrientation());
     }
@@ -1273,17 +1302,10 @@ Rect WindowRoot::GetDisplayGroupRect(DisplayId displayId) const
     return container->GetDisplayGroupRect();
 }
 
-WMError WindowRoot::GetAccessibilityWindowInfo(sptr<AccessibilityWindowInfo>& windowInfo)
+bool WindowRoot::HasPrivateWindow(DisplayId displayId)
 {
-    for (auto& iter : windowNodeContainerMap_) {
-        auto container = iter.second;
-        std::vector<sptr<WindowInfo>> windowList;
-        container->GetWindowList(windowList);
-        for (auto window : windowList) {
-            windowInfo->windowList_.emplace_back(window);
-        }
-    }
-    return WMError::WM_OK;
+    auto container = GetWindowNodeContainer(displayId);
+    return container != nullptr ? container->HasPrivateWindow() : false;
 }
 
 void WindowRoot::SetMaxAppWindowNumber(int windowNum)
@@ -1333,7 +1355,7 @@ WMError WindowRoot::GetModeChangeHotZones(DisplayId displayId,
     return WMError::WM_OK;
 }
 
-void WindowRoot::RemoveSingleUserWindowNodes()
+void WindowRoot::RemoveSingleUserWindowNodes(int accountId)
 {
     std::vector<DisplayId> displayIds = GetAllDisplayIds();
     for (auto id : displayIds) {
@@ -1342,7 +1364,7 @@ void WindowRoot::RemoveSingleUserWindowNodes()
             WLOGFI("get container failed %{public}" PRIu64"", id);
             continue;
         }
-        container->RemoveSingleUserWindowNodes();
+        container->RemoveSingleUserWindowNodes(accountId);
     }
 }
 
@@ -1363,6 +1385,51 @@ WMError WindowRoot::UpdateRsTree(uint32_t windowId, bool isAdd)
     }
     RSTransaction::FlushImplicitTransaction();
     return WMError::WM_OK;
+}
+
+sptr<WindowNode> WindowRoot::FindDialogCallerNode(WindowType type, sptr<IRemoteObject> token)
+{
+    if (type != WindowType::WINDOW_TYPE_DIALOG) {
+        return nullptr;
+    }
+
+    auto iter = std::find_if(windowNodeMap_.begin(), windowNodeMap_.end(),
+        [token](const std::map<uint32_t, sptr<WindowNode>>::value_type& pair) {
+            if (WindowHelper::IsMainWindow(pair.second->GetWindowType())) {
+                return pair.second->abilityToken_ == token;
+            }
+            return false;
+        });
+    if (iter == windowNodeMap_.end()) {
+        WLOGFI("cannot find windowNode");
+        return nullptr;
+    }
+    return iter->second;
+}
+
+bool WindowRoot::CheckMultiDialogWindows(WindowType type, sptr<IRemoteObject> token)
+{
+    if (type != WindowType::WINDOW_TYPE_DIALOG) {
+        return false;
+    }
+
+    sptr<WindowNode> newCaller, oriCaller;
+
+    newCaller = FindDialogCallerNode(type, token);
+    if (newCaller == nullptr) {
+        return false;
+    }
+
+    for (auto& iter : windowNodeMap_) {
+        if (iter.second->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
+            oriCaller = FindDialogCallerNode(iter.second->GetWindowType(), iter.second->dialogTargetToken_);
+            if (oriCaller == newCaller) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 } // namespace Rosen
 } // namespace OHOS

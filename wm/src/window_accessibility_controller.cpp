@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,26 +13,23 @@
  * limitations under the License.
  */
 
-#include "inative_test.h"
+#include "window_accessibility_controller.h"
 
 namespace OHOS::Rosen {
-void INativeTest::VisitTests(VisitTestFunc func)
+WM_IMPLEMENT_SINGLE_INSTANCE(WindowAccessibilityController)
+WindowAccessibilityController::WindowAccessibilityController()
 {
-    auto sortFunc = [](const auto &it, const auto &jt) {
-        if (it->GetDomain() == jt->GetDomain()) {
-            return it->GetID() < jt->GetID();
-        }
-        return it->GetDomain() < jt->GetDomain();
-    };
-    std::sort(nativeTest_.begin(), nativeTest_.end(), sortFunc);
-
-    for (auto &test : nativeTest_) {
-        func(test);
-    }
 }
 
-INativeTest::INativeTest()
+void WindowAccessibilityController::SetAnchorAndScale(int32_t x, int32_t y, float scale)
 {
-    nativeTest_.push_back(this);
+}
+
+void WindowAccessibilityController::SetAnchorOffset(int32_t deltaX, int32_t deltaY)
+{
+}
+
+void WindowAccessibilityController::OffWindowZoom()
+{
 }
 } // namespace OHOS::Rosen

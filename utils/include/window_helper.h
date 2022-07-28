@@ -71,11 +71,6 @@ public:
         return ((IsMainWindow(type)) && (mode == WindowMode::WINDOW_MODE_FULLSCREEN));
     }
 
-    static inline bool IsMainNotFloatingWindow(WindowType type, WindowMode mode)
-    {
-        return ((IsMainWindow(type)) && (mode != WindowMode::WINDOW_MODE_FLOATING));
-    }
-
     static inline bool IsFloatingWindow(WindowMode mode)
     {
         return mode == WindowMode::WINDOW_MODE_FLOATING;
@@ -91,6 +86,12 @@ public:
         return (type == WindowType::WINDOW_TYPE_STATUS_BAR
             || type == WindowType::WINDOW_TYPE_NAVIGATION_BAR
             || type == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
+    }
+
+    static inline bool IsRotatableWindow(WindowType type, WindowMode mode)
+    {
+        return WindowHelper::IsMainFullScreenWindow(type, mode) || type == WindowType::WINDOW_TYPE_KEYGUARD ||
+            type == WindowType::WINDOW_TYPE_DESKTOP;
     }
 
     static inline bool IsFullScreenWindow(WindowMode mode)
@@ -110,23 +111,14 @@ public:
             mode == WindowMode::WINDOW_MODE_PIP;
     }
 
-    static inline bool IsValidWindowBlurLevel(WindowBlurLevel level)
-    {
-        return (level >= WindowBlurLevel::WINDOW_BLUR_OFF && level <= WindowBlurLevel::WINDOW_BLUR_HIGH);
-    }
-
     static inline bool IsEmptyRect(const Rect& r)
     {
         return (r.posX_ == 0 && r.posY_ == 0 && r.width_ == 0 && r.height_ == 0);
     }
 
-    static inline bool HasOverlap(const Rect& r1, const Rect& r2)
+    static inline bool IsLandscapeRect(const Rect& r)
     {
-        int32_t r1XEnd = r1.posX_ + r1.width_;
-        int32_t r1YEnd = r1.posY_ + r1.height_;
-        int32_t r2XEnd = r2.posX_ + r2.width_;
-        int32_t r2YEnd = r2.posY_ + r2.height_;
-        return !(r1XEnd < r2.posX_ || r1.posX_ > r2XEnd || r1YEnd < r2.posY_ || r1.posY_ > r2YEnd);
+        return r.width_ > r.height_;
     }
 
     static Rect GetOverlap(const Rect& rect1, const Rect& rect2, const int offsetX, const int offsetY)
@@ -477,6 +469,12 @@ public:
             return true;
         }
         return false;
+    }
+
+    static inline bool LessNotEqual(double left, double right)
+    {
+        static constexpr double eps = -0.001f;
+        return (left - right) < eps;
     }
 
 private:

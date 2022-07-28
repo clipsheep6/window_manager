@@ -102,7 +102,7 @@ void WindowLayoutPolicyCascade::LayoutWindowNode(const sptr<WindowNode>& node)
             UpdateSplitLimitRect(limitRectMap_[displayId], primaryLimitRect);
             UpdateSplitLimitRect(limitRectMap_[displayId], secondaryLimitRect);
             UpdateSplitRatioPoints(displayId);
-            UpdateDisplayGroupLimitRect_();
+            UpdateDisplayGroupLimitRect();
             WLOGFI("priLimitRect: %{public}d %{public}d %{public}u %{public}u, " \
                 "secLimitRect: %{public}d %{public}d %{public}u %{public}u", primaryLimitRect.posX_,
                 primaryLimitRect.posY_, primaryLimitRect.width_, primaryLimitRect.height_, secondaryLimitRect.posX_,
@@ -204,26 +204,22 @@ void WindowLayoutPolicyCascade::SetSplitDividerWindowRects(std::map<DisplayId, R
     restoringDividerWindowRects_ = dividerWindowRects;
 }
 
-void WindowLayoutPolicyCascade::LimitMoveBounds(Rect& rect, DisplayId displayId) const
+void WindowLayoutPolicyCascade::LimitDividerMoveBounds(Rect& rect, DisplayId displayId) const
 {
-    float virtualPixelRatio = GetVirtualPixelRatio(displayId);
-    uint32_t minHorizontalSplitW = static_cast<uint32_t>(MIN_HORIZONTAL_SPLIT_WIDTH * virtualPixelRatio);
-    uint32_t minVerticalSplitH = static_cast<uint32_t>(MIN_VERTICAL_SPLIT_HEIGHT * virtualPixelRatio);
-
     const Rect& limitRect = limitRectMap_[displayId];
     if (rect.width_ < rect.height_) {
-        if (rect.posX_ < (limitRect.posX_ + static_cast<int32_t>(minHorizontalSplitW))) {
-            rect.posX_ = limitRect.posX_ + static_cast<int32_t>(minHorizontalSplitW);
-        } else if (rect.posX_ >
-            (limitRect.posX_ + static_cast<int32_t>(limitRect.width_ - minHorizontalSplitW))) {
-            rect.posX_ = limitRect.posX_ + static_cast<int32_t>(limitRect.width_ - minHorizontalSplitW);
+        if (rect.posX_ < limitRect.posX_) {
+            rect.posX_ = limitRect.posX_;
+        } else if (rect.posX_ + static_cast<int32_t>(rect.width_) >
+            limitRect.posX_ + static_cast<int32_t>(limitRect.width_)) {
+            rect.posX_ = limitRect.posX_ + static_cast<int32_t>(limitRect.width_ - rect.width_);
         }
     } else {
-        if (rect.posY_ < (limitRect.posY_ + static_cast<int32_t>(minVerticalSplitH))) {
-            rect.posY_ = limitRect.posY_ + static_cast<int32_t>(minVerticalSplitH);
-        } else if (rect.posY_ >
-            (limitRect.posY_ + static_cast<int32_t>(limitRect.height_ - minVerticalSplitH))) {
-            rect.posY_ = limitRect.posY_ + static_cast<int32_t>(limitRect.height_ - minVerticalSplitH);
+        if (rect.posY_ < limitRect.posY_) {
+            rect.posY_ = limitRect.posY_;
+        } else if (rect.posY_ + static_cast<int32_t>(rect.height_) >
+            limitRect.posY_ + static_cast<int32_t>(limitRect.height_)) {
+            rect.posY_ = limitRect.posY_ + static_cast<int32_t>(limitRect.height_ - rect.height_);
         }
     }
     WLOGFI("limit divider move bounds:[%{public}d, %{public}d, %{public}u, %{public}u]",
@@ -260,18 +256,32 @@ void WindowLayoutPolicyCascade::ApplyWindowRectConstraints(const sptr<WindowNode
     WLOGFI("Before apply constraints winRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
         winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
     auto reason = node->GetWindowSizeChangeReason();
-    if (node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE &&
-        reason == WindowSizeChangeReason::DRAG_END) {
-        DisplayId displayId = node->GetDisplayId();
-        if (!IsVerticalDisplay(displayId)) {
-            UpdateDockSlicePosition(displayId, winRect.posX_);
-        } else {
-            UpdateDockSlicePosition(displayId, winRect.posY_);
+    DisplayId displayId = node->GetDisplayId();
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+        // make sure the divider is entirely within display
+        LimitDividerMoveBounds(winRect, displayId);
+        if (reason == WindowSizeChangeReason::DRAG_END) {
+            if (!IsVerticalDisplay(displayId)) {
+                UpdateDockSlicePosition(displayId, winRect.posX_);
+            } else {
+                UpdateDockSlicePosition(displayId, winRect.posY_);
+            }
+        }
+        /*
+         * use the layout orientation of the window and the layout orientation of the screen
+         * to determine whether the screen is rotating
+         */
+        if ((!WindowHelper::IsLandscapeRect(winRect) && IsVerticalDisplay(displayId)) ||
+            (WindowHelper::IsLandscapeRect(winRect) && !IsVerticalDisplay(displayId))) {
+            // resets the rect of the divider window when the screen is rotating
+            WLOGFD("Reset divider when display rotate rect:[%{public}d, %{public}d, %{public}u, %{public}u]",
+                winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
+            winRect = cascadeRectsMap_[displayId].dividerRect_;
+            node->SetRequestRect(winRect);
         }
     }
     LimitFloatingWindowSize(node, displayGroupInfo_->GetDisplayRect(node->GetDisplayId()), winRect);
     LimitMainFloatingWindowPosition(node, winRect);
-
     WLOGFI("After apply constraints winRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
         winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
 }
@@ -315,12 +325,9 @@ void WindowLayoutPolicyCascade::UpdateLayoutRect(const sptr<WindowNode>& node)
     ApplyWindowRectConstraints(node, winRect);
     node->SetWindowRect(winRect);
     CalcAndSetNodeHotZone(winRect, node);
-
-    UpdateClientRectAndResetReason(node, lastWinRect, winRect);
-
-    // update node bounds
-
+    // update node bounds before reset reason
     UpdateSurfaceBounds(node, winRect, lastWinRect);
+    UpdateClientRectAndResetReason(node, lastWinRect, winRect);
 }
 
 void WindowLayoutPolicyCascade::UpdateSurfaceBounds(
@@ -601,7 +608,7 @@ void WindowLayoutPolicyCascade::SetCascadeRect(const sptr<WindowNode>& node)
     node->SetRequestRect(rect);
     node->SetDecoStatus(true);
 }
-Rect WindowLayoutPolicyCascade::GetInitalDividerRect(DisplayId displayId) const
+Rect WindowLayoutPolicyCascade::GetDividerRect(DisplayId displayId) const
 {
     Rect dividerRect = {0, 0, 0, 0};
     if (cascadeRectsMap_.find(displayId) != std::end(cascadeRectsMap_)) {

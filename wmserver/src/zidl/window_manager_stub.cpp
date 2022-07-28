@@ -74,13 +74,6 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             reply.WriteInt32(static_cast<int32_t>(errCode));
             break;
         }
-        case WindowManagerMessage::TRANS_ID_SET_BACKGROUND_BLUR: {
-            uint32_t windowId = data.ReadUint32();
-            auto level = static_cast<WindowBlurLevel>(data.ReadUint32());
-            WMError errCode = SetWindowBackgroundBlur(windowId, level);
-            reply.WriteInt32(static_cast<int32_t>(errCode));
-            break;
-        }
         case WindowManagerMessage::TRANS_ID_GET_AVOID_AREA: {
             uint32_t windowId = data.ReadUint32();
             auto avoidAreaType = static_cast<AvoidAreaType>(data.ReadUint32());
@@ -201,10 +194,7 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
         }
         case WindowManagerMessage::TRANS_ID_GET_ANIMATION_CALLBACK: {
             std::vector<uint32_t> windowIds;
-            uint32_t windowNum = data.ReadUint32();
-            for (uint32_t i = 0; i < windowNum; ++i) {
-                windowIds.push_back(data.ReadUint32());
-            }
+            data.ReadUInt32Vector(&windowIds);
             bool isAnimated = data.ReadBool();
             sptr<RSIWindowAnimationFinishedCallback> finishedCallback = nullptr;
             MinimizeWindowsByLauncher(windowIds, isAnimated, finishedCallback);
@@ -232,6 +222,13 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             uint32_t windowId = data.ReadUint32();
             bool isAdd = data.ReadBool();
             WMError errCode = UpdateRsTree(windowId, isAdd);
+            reply.WriteInt32(static_cast<int32_t>(errCode));
+            break;
+        }
+        case WindowManagerMessage::TRANS_ID_BIND_DIALOG_TARGET: {
+            uint32_t windowId = data.ReadUint32();
+            sptr<IRemoteObject> targetToken = data.ReadRemoteObject();
+            WMError errCode = BindDialogTarget(windowId, targetToken);
             reply.WriteInt32(static_cast<int32_t>(errCode));
             break;
         }

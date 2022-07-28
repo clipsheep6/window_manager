@@ -14,7 +14,14 @@
  */
 
 #include <cstdio>
+#include <image_type.h>
+#include <iosfwd>
+#include <iostream>
+#include <memory>
+#include <ostream>
+#include <refbase.h>
 
+#include "display_manager.h"
 #include "snapshot_utils.h"
 
 using namespace OHOS;
@@ -52,7 +59,7 @@ int main(int argc, char *argv[])
             cmdArgments.height = display->GetHeight();
             std::cout << "process: reset to display's height " << cmdArgments.height << std::endl;
         }
-        if (!SnapShotUtils::CheckWidthAndHeightValid(cmdArgments)) {
+        if (!SnapShotUtils::CheckWidthAndHeightValid(cmdArgments.width, cmdArgments.height)) {
             std::cout << "error: width " << cmdArgments.width << " height " <<
             cmdArgments.height << " invalid!" << std::endl;
             return -1;

@@ -36,7 +36,6 @@ public:
         bool isFromClient = false) override;
     WMError DestroyWindow(uint32_t windowId, bool onlySelf = false) override;
     WMError RequestFocus(uint32_t windowId) override;
-    WMError SetWindowBackgroundBlur(uint32_t windowId, WindowBlurLevel level) override;
     AvoidArea GetAvoidAreaByType(uint32_t windowId, AvoidAreaType type) override;
     WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId) override;
     void ProcessPointDown(uint32_t windowId, bool isStartDrag) override;
@@ -59,6 +58,7 @@ public:
         sptr<RSIWindowAnimationFinishedCallback>& finishCallback) override;
     WMError UpdateAvoidAreaListener(uint32_t windowId, bool haveListener) override;
     WMError UpdateRsTree(uint32_t windowId, bool isAdd) override;
+    WMError BindDialogTarget(uint32_t& windowId, sptr<IRemoteObject> targetToken) override;
 private:
     static inline BrokerDelegator<WindowManagerProxy> delegator_;
 };

@@ -1,0 +1,98 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/window/window_manager/windowmanager_aafwk.gni")
+module_out_path = "window_manager/wmserver"
+
+group("unittest") {
+  testonly = true
+
+  deps = [ ":wmsever_avoid_area_controller_test" ]
+}
+
+ohos_unittest("wmsever_avoid_area_controller_test") {
+  module_out_path = module_out_path
+
+  sources = [ "avoid_area_controller_test.cpp" ]
+
+  deps = [ ":wmserver_unittest_common" ]
+}
+
+## Build wmserver_unittest_common.a {{{
+config("wmserver_unittest_common_public_config") {
+  include_dirs = [
+    "//foundation/window/window_manager/wm/include",
+    "//foundation/window/window_manager/wmserver/include",
+    "//foundation/window/window_manager/wmserver/include/window_snapshot",
+    "//foundation/window/window_manager/interfaces/innerkits/wm",
+    "//foundation/window/window_manager/utils/include",
+    "//utils/native/base/include",
+    "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits/include",
+    "//third_party/googletest/googlemock/include",
+
+    # for abilityContext
+    "${ability_runtime_path}/interfaces/kits/native/ability/ability_runtime",
+    "${ability_runtime_path}/interfaces/kits/native/appkit/ability_runtime/context",
+    "//base/global/resource_management/interfaces/inner_api/include",
+    "//third_party/node/deps/icu-small/source/common",
+    "${ability_runtime_inner_api_path}/ability_manager/include",
+
+    # abilityContext end
+  ]
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-g3",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+}
+
+ohos_static_library("wmserver_unittest_common") {
+  visibility = [ ":*" ]
+  testonly = true
+
+  public_configs = [ ":wmserver_unittest_common_public_config" ]
+
+  public_deps = [
+    "//base/powermgr/power_manager/interfaces/innerkits:powermgr_client",
+
+    # need delete it for abilitycontext
+    "${ability_runtime_inner_api_path}/ability_manager:ability_manager",
+    "//foundation/arkui/ace_engine/interfaces/inner_api/ace:ace_uicontent",
+    "//foundation/arkui/napi:ace_napi",
+    "//foundation/distributedschedule/safwk/interfaces/innerkits/safwk:system_ability_fwk",
+    "//foundation/graphic/graphic_2d/rosen/modules/animation/window_animation:window_animation",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/multimodalinput/input/frameworks/proxy:libmmi-client",
+    "//foundation/window/window_manager/dm:libdm",
+    "//foundation/window/window_manager/dmserver:libdms",
+    "//foundation/window/window_manager/utils:libwmutil",
+    "//foundation/window/window_manager/wm:libwm",
+    "//foundation/window/window_manager/wmserver:libwms",
+    "//third_party/googletest:gmock",
+    "//third_party/googletest:gtest_main",
+    "//utils/native/base:utils",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_context_native",
+    "bundle_framework:appexecfwk_base",
+    "ipc:ipc_core",
+  ]
+}
+## Build wmserver_unittest_common.a }}}

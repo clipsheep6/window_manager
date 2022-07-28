@@ -1,0 +1,83 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+
+module_out_path = "window_manager/dmserver"
+
+group("unittest") {
+  testonly = true
+
+  deps = [
+    # ":dmserver_display_manager_config_test",
+  ]
+}
+
+ohos_unittest("dmserver_display_manager_config_test") {
+  module_out_path = module_out_path
+
+  sources = [ "display_manager_config_test.cpp" ]
+
+  deps = [ ":dmserver_unittest_common" ]
+}
+
+## Build dmserver_unittest_common.a {{{
+config("dmserver_unittest_common_public_config") {
+  include_dirs = [
+    "//foundation/window/window_manager/dm/include",
+    "//foundation/window/window_manager/dmserver/include",
+    "//foundation/window/window_manager/snapshot",
+    "//foundation/window/window_manager/interfaces/innerkits/dm",
+    "//foundation/window/window_manager/dm/test/utils/",
+    "//foundation/window/window_manager/utils/include",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client",  # RSSurface
+  ]
+}
+
+ohos_static_library("dmserver_unittest_common") {
+  visibility = [ ":*" ]
+  testonly = true
+
+  public_configs = [ ":dmserver_unittest_common_public_config" ]
+
+  sources = [
+    "../utils/test_utils.cpp",
+    "screen_manager_utils.cpp",
+  ]
+
+  public_deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",  # PixelMap
+    "//foundation/multimodalinput/input/frameworks/proxy:libmmi-client",
+    "//foundation/window/window_manager/dm:libdm",
+    "//foundation/window/window_manager/dmserver:libdms",
+    "//foundation/window/window_manager/snapshot:snapshot_display",
+    "//foundation/window/window_manager/utils:libwmutil",
+    "//foundation/window/window_manager/wm:libwm",
+    "//third_party/googletest:gmock",
+    "//third_party/googletest:gtest_main",
+    "//third_party/libpng:libpng",  # png
+    "//utils/native/base:utils",
+  ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
+    "hilog_native:libhilog",
+    "ipc:ipc_core",
+  ]
+  subsystem_name = "window"
+  part_name = "window_manager"
+}
+## Build dmserver_unittest_common.a }}}

@@ -16,11 +16,10 @@
 #ifndef FOUNDATION_DM_SCREEN_H
 #define FOUNDATION_DM_SCREEN_H
 
-#include <string>
-#include <vector>
-
-#include <surface.h>
 #include <screen_manager/screen_types.h>
+#include <string>
+#include <surface.h>
+#include <vector>
 
 #include "dm_common.h"
 #include "noncopyable.h"
@@ -66,7 +65,7 @@ public:
     Screen& operator=(const Screen&) = delete;
     Screen& operator=(Screen&&) = delete;
     bool IsGroup() const;
-    const std::string GetName() const;
+    std::string GetName() const;
     ScreenId GetId() const;
     uint32_t GetWidth() const;
     uint32_t GetHeight() const;

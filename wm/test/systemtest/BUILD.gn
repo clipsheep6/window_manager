@@ -21,6 +21,7 @@ group("systemtest") {
 
   deps = [
     ":wm_window_app_floating_window_test",
+    ":wm_window_dialogwindow_test",
     ":wm_window_drag_test",
     ":wm_window_effect_test",
     ":wm_window_focus_test",
@@ -34,6 +35,8 @@ group("systemtest") {
     ":wm_window_multi_ability_test",
     ":wm_window_occupied_area_change_test",
     ":wm_window_rotation_test",
+    ":wm_window_split_immersive_test",
+    ":wm_window_split_test",
     ":wm_window_subwindow_test",
     ":wm_window_touch_outside_test",
     ":wm_window_visibility_info_test",
@@ -85,6 +88,19 @@ ohos_systemtest("wm_window_subwindow_test") {
 }
 
 ## SystemTest wm_window_subwindow_test }}}
+
+## SystemTest wm_window_dialogwindow_test {{{
+ohos_systemtest("wm_window_dialogwindow_test") {
+  module_out_path = module_out_path
+
+  sources = [ "window_dialogwindow_test.cpp" ]
+
+  deps = [ ":wm_systemtest_common" ]
+
+  external_deps = [ "bundle_framework:appexecfwk_base" ]
+}
+
+## SystemTest wm_window_dialogwindow_test }}}
 
 ## SystemTest wm_window_immersive_test {{{
 ohos_systemtest("wm_window_immersive_test") {
@@ -271,8 +287,6 @@ config("wm_systemtest_common_public_config") {
     "//base/global/resource_management/interfaces/inner_api/include",
     "//third_party/node/deps/icu-small/source/common",
     "${ability_runtime_inner_api_path}/ability_manager/include",
-    "//third_party/jsoncpp/include",
-    "//third_party/json/include",
 
     # abilityContext end
   ]

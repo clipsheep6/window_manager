@@ -77,6 +77,7 @@ enum class PropertyChangeAction : uint32_t {
     ACTION_UPDATE_TOUCH_HOT_AREA = 1 << 12,
     ACTION_UPDATE_TRANSFORM_PROPERTY = 1 << 13,
     ACTION_UPDATE_ANIMATION_FLAG = 1 << 14,
+    ACTION_UPDATE_PRIVACY_MODE = 1 << 15,
 };
 
 struct ModeChangeHotZonesConfig {
@@ -143,6 +144,7 @@ namespace {
     constexpr uint32_t MIN_VERTICAL_SPLIT_HEIGHT = 240;
     constexpr uint32_t MIN_HORIZONTAL_SPLIT_WIDTH = 320;
     constexpr uint32_t MAX_FLOATING_SIZE = 2560;
+    constexpr unsigned int WMS_WATCHDOG_CHECK_INTERVAL = 6; // actual check interval is 3000ms(6 * 500)
     const Rect INVALID_EMPTY_RECT = {0, 0, 0, 0};
     const Rect DEFAULT_PLACE_HOLDER_RECT = {0, 0, 512, 512};
 }

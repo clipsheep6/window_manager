@@ -161,32 +161,6 @@ WMError WindowManagerProxy::RequestFocus(uint32_t windowId)
     return static_cast<WMError>(ret);
 }
 
-WMError WindowManagerProxy::SetWindowBackgroundBlur(uint32_t windowId, WindowBlurLevel level)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteUint32(windowId)) {
-        WLOGFE("Write windowId failed");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteUint32(static_cast<uint32_t>(level))) {
-        WLOGFE("Write blur level failed");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-    if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerMessage::TRANS_ID_SET_BACKGROUND_BLUR),
-        data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WMError>(ret);
-}
-
 AvoidArea WindowManagerProxy::GetAvoidAreaByType(uint32_t windowId, AvoidAreaType type)
 {
     MessageParcel data;
@@ -590,22 +564,12 @@ void WindowManagerProxy::MinimizeWindowsByLauncher(std::vector<uint32_t> windowI
         WLOGFE("WriteInterfaceToken failed");
         return;
     }
-    auto size = static_cast<uint32_t>(windowIds.size());
-    const uint32_t maxWindowNum = 100;
-    if (size > maxWindowNum) {
-        WLOGFE("windowNum cannot exceeds than 100");
+
+    if (!data.WriteUInt32Vector(windowIds)) {
+        WLOGFE("Write windowIds failed");
         return;
     }
-    if (!data.WriteUint32(size)) {
-        WLOGFE("Write windowNum failed");
-        return;
-    }
-    for (auto id : windowIds) {
-        if (!data.WriteUint32(id)) {
-            WLOGFE("Write windowId failed");
-            return;
-        }
-    }
+
     if (!data.WriteBool(isAnimated)) {
         WLOGFE("Write isAnimated failed");
         return;
@@ -673,6 +637,34 @@ WMError WindowManagerProxy::UpdateRsTree(uint32_t windowId, bool isAdd)
         return WMError::WM_ERROR_IPC_FAILED;
     }
     return static_cast<WMError>(reply.ReadInt32());
+}
+
+WMError WindowManagerProxy::BindDialogTarget(uint32_t& windowId, sptr<IRemoteObject> targetToken)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteUint32(windowId)) {
+        WLOGFE("Write windowId failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (targetToken != nullptr) {
+        if (!data.WriteRemoteObject(targetToken)) {
+            WLOGFE("Write targetToken failed");
+            return WMError::WM_ERROR_IPC_FAILED;
+        }
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerMessage::TRANS_ID_BIND_DIALOG_TARGET),
+        data, reply, option) != ERR_NONE) {
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WMError>(ret);
 }
 } // namespace Rosen
 } // namespace OHOS

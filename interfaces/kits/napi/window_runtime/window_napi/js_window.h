@@ -45,6 +45,7 @@ public:
     static NativeValue* GetProperties(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RegisterWindowCallback(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* UnregisterWindowCallback(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* BindDialogTarget(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* LoadContent(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetFullScreen(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetLayoutFullScreen(NativeEngine* engine, NativeCallbackInfo* info);
@@ -64,6 +65,7 @@ public:
     static NativeValue* SetCallingWindow(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetPreferredOrientation(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* DisableWindowDecor(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* SetSnapshotSkip(NativeEngine* engine, NativeCallbackInfo* info);
     // colorspace, gamut
     static NativeValue* IsSupportWideGamut(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetColorSpace(NativeEngine* engine, NativeCallbackInfo* info);
@@ -78,6 +80,13 @@ public:
     static NativeValue* SetRotateSync(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetTranslateSync(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* GetTransitionControllerSync(NativeEngine* engine, NativeCallbackInfo* info);
+
+    // window effect
+    static NativeValue* SetCornerRadius(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* SetShadow(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* SetBlur(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* SetBackdropBlur(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* SetBackdropBlurStyle(NativeEngine* engine, NativeCallbackInfo* info);
 private:
     std::string GetWindowName();
     bool ParseScaleOption(NativeEngine& engine, NativeObject* jsObject, Transform& trans);
@@ -95,6 +104,7 @@ private:
     NativeValue* OnGetProperties(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRegisterWindowCallback(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnUnregisterWindowCallback(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnBindDialogTarget(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnSetFullScreen(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnSetLayoutFullScreen(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnSetSystemBarEnable(NativeEngine& engine, NativeCallbackInfo& info);
@@ -122,6 +132,7 @@ private:
     NativeValue* OnDump(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnSetForbidSplitMove(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnSnapshot(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnSetSnapshotSkip(NativeEngine& engine, NativeCallbackInfo& info);
 
     // animation Config
     NativeValue* OnSetOpacitySync(NativeEngine& engine, NativeCallbackInfo& info);
@@ -130,6 +141,13 @@ private:
     NativeValue* OnSetTranslateSync(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnGetTransitionControllerSync(NativeEngine& engine, NativeCallbackInfo& info);
     void CreateTransitionController(NativeEngine& engine);
+
+    // window effect
+    NativeValue* OnSetCornerRadius(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnSetShadow(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnSetBlur(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnSetBackdropBlur(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnSetBackdropBlurStyle(NativeEngine& engine, NativeCallbackInfo& info);
 
     sptr<Window> windowToken_ = nullptr;
     std::unique_ptr<JsWindowRegisterManager> registerManager_ = nullptr;

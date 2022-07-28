@@ -84,7 +84,6 @@ public:
     void SetBrightness(uint32_t windowId, float brightness);
     void HandleKeepScreenOn(uint32_t windowId, bool requireLock);
     void UpdateFocusableProperty(uint32_t windowId);
-    WMError GetAccessibilityWindowInfo(sptr<AccessibilityWindowInfo>& windowInfo);
     void SetMaxAppWindowNumber(int windowNum);
     WMError GetModeChangeHotZones(DisplayId displayId,
         ModeChangeHotZones& hotZones, const ModeChangeHotZonesConfig& config);
@@ -96,14 +95,17 @@ public:
     void SetSplitRatios(const std::vector<float>& splitRatioNumbers);
     void SetExitSplitRatios(const std::vector<float>& exitSplitRatios);
     void MinimizeTargetWindows(std::vector<uint32_t>& windowIds);
-    void RemoveSingleUserWindowNodes();
     WMError UpdateRsTree(uint32_t windowId, bool isAdd);
+    void RemoveSingleUserWindowNodes(int accountId);
+    sptr<WindowNode> FindDialogCallerNode(WindowType type, sptr<IRemoteObject> token);
+    bool CheckMultiDialogWindows(WindowType type, sptr<IRemoteObject> token);
+    bool HasPrivateWindow(DisplayId displayId);
 private:
     void OnRemoteDied(const sptr<IRemoteObject>& remoteObject);
     WMError DestroyWindowInner(sptr<WindowNode>& node);
     void UpdateFocusWindowWithWindowRemoved(const sptr<WindowNode>& node,
         const sptr<WindowNodeContainer>& container) const;
-    void UpdateActiveWindowWithWindowRemoved(const sptr<WindowNode>& node,
+    sptr<WindowNode> UpdateActiveWindowWithWindowRemoved(const sptr<WindowNode>& node,
         const sptr<WindowNodeContainer>& container) const;
     void UpdateBrightnessWithWindowRemoved(uint32_t windowId, const sptr<WindowNodeContainer>& container) const;
     std::string GenAllWindowsLogInfo() const;
