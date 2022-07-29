@@ -106,7 +106,11 @@ void Display::UpdateDisplayInfo(sptr<DisplayInfo> displayInfo) const
 
 void Display::UpdateDisplayInfo() const
 {
-    auto displayInfo = SingletonContainer::Get<DisplayManagerAdapter>().GetDisplayInfo(GetId());
+    auto singleton = SingletonContainer::Get<DisplayManagerAdapter>();
+    if (singleton == nullptr) {
+        return;
+    }
+    auto displayInfo = singleton->GetDisplayInfo(GetId());
     UpdateDisplayInfo(displayInfo);
 }
 

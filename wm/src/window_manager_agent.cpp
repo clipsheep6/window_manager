@@ -22,28 +22,48 @@ namespace OHOS {
 namespace Rosen {
 void WindowManagerAgent::UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused)
 {
-    SingletonContainer::Get<WindowManager>().UpdateFocusChangeInfo(focusChangeInfo, focused);
+    auto singleton = SingletonContainer::Get<WindowManager>();
+    if (singleton == nullptr) {
+        return;
+    }
+    singleton->UpdateFocusChangeInfo(focusChangeInfo, focused);
 }
 
 void WindowManagerAgent::UpdateSystemBarRegionTints(DisplayId displayId, const SystemBarRegionTints& tints)
 {
-    SingletonContainer::Get<WindowManager>().UpdateSystemBarRegionTints(displayId, tints);
+    auto singleton = SingletonContainer::Get<WindowManager>();
+    if (singleton == nullptr) {
+        return;
+    }
+    singleton->UpdateSystemBarRegionTints(displayId, tints);
 }
 
 void WindowManagerAgent::NotifyAccessibilityWindowInfo(const sptr<AccessibilityWindowInfo>& windowInfo,
     WindowUpdateType type)
 {
-    SingletonContainer::Get<WindowManager>().NotifyAccessibilityWindowInfo(windowInfo, type);
+    auto singleton = SingletonContainer::Get<WindowManager>();
+    if (singleton == nullptr) {
+        return;
+    }
+    singleton->NotifyAccessibilityWindowInfo(windowInfo, type);
 }
 
 void WindowManagerAgent::UpdateWindowVisibilityInfo(const std::vector<sptr<WindowVisibilityInfo>>& visibilityInfos)
 {
-    SingletonContainer::Get<WindowManager>().UpdateWindowVisibilityInfo(visibilityInfos);
+    auto singleton = SingletonContainer::Get<WindowManager>();
+    if (singleton == nullptr) {
+        return;
+    }
+    singleton->UpdateWindowVisibilityInfo(visibilityInfos);
 }
 
 void WindowManagerAgent::UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing)
 {
-    SingletonContainer::Get<WindowManager>().UpdateCameraFloatWindowStatus(accessTokenId, isShowing);
+    auto singleton = SingletonContainer::Get<WindowManager>();
+    if (singleton == nullptr) {
+        return;
+    }
+    singleton->UpdateCameraFloatWindowStatus(accessTokenId, isShowing);
 }
 } // namespace Rosen
 } // namespace OHOS

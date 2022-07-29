@@ -103,7 +103,13 @@ NativeValue* OnGetDefaultDisplay(NativeEngine& engine, NativeCallbackInfo& info)
                 task.Reject(engine, CreateJsError(engine,
                     static_cast<int32_t>(errCode), "JsDisplayManager::OnGetDefaultDisplay failed."));
             }
-            sptr<Display> display = SingletonContainer::Get<DisplayManager>().GetDefaultDisplay();
+            auto singleton = SingletonContainer::Get<DisplayManager>();
+            if (singleton == nullptr) {
+                task.Reject(engine, CreateJsError(engine,
+                    static_cast<int32_t>(DMError::DM_ERROR_NULLPTR), "JsDisplayManager::OnGetDefaultDisplay failed."));
+                return;
+            }
+            sptr<Display> display = singleton->GetDefaultDisplay();
             if (display != nullptr) {
                 task.Resolve(engine, CreateJsDisplayObject(engine, display));
                 WLOGFI("JsDisplayManager::OnGetDefaultDisplay success");
@@ -129,7 +135,11 @@ NativeValue* OnGetDefaultDisplaySync(NativeEngine& engine, NativeCallbackInfo& i
         WLOGFE("JsDisplayManager::OnGetDefaultDisplaySync params not match");
         return engine.CreateUndefined();
     }
-    sptr<Display> display = SingletonContainer::Get<DisplayManager>().GetDefaultDisplay();
+    auto singleton = SingletonContainer::Get<DisplayManager>();
+    if (singleton == nullptr) {
+        return engine.CreateUndefined();
+    }
+    sptr<Display> display = singleton->GetDefaultDisplay();
     if (display == nullptr) {
         WLOGFE("JsDisplayManager::OnGetDefaultDisplaySync, display is nullptr.");
         return engine.CreateUndefined();
@@ -152,7 +162,13 @@ NativeValue* OnGetAllDisplay(NativeEngine& engine, NativeCallbackInfo& info)
                 task.Reject(engine, CreateJsError(engine,
                     static_cast<int32_t>(errCode), "JsDisplayManager::OnGetAllDisplay failed."));
             }
-            std::vector<sptr<Display>> displays = SingletonContainer::Get<DisplayManager>().GetAllDisplays();
+            auto singleton = SingletonContainer::Get<DisplayManager>();
+            if (singleton == nullptr) {
+                task.Reject(engine, CreateJsError(engine,
+                    static_cast<int32_t>(DMError::DM_ERROR_NULLPTR), "JsDisplayManager::OnGetAllDisplay failed."));
+                return;
+            }
+            std::vector<sptr<Display>> displays = singleton->GetAllDisplays();
             if (!displays.empty()) {
                 task.Resolve(engine, CreateJsDisplayArrayObject(engine, displays));
                 WLOGFI("JsDisplayManager::GetAllDisplays success");
@@ -185,8 +201,9 @@ void RegisterDisplayListenerWithType(NativeEngine& engine, const std::string& ty
         WLOGFE("displayListener is nullptr");
         return;
     }
-    if (type == EVENT_ADD || type == EVENT_REMOVE || type == EVENT_CHANGE) {
-        SingletonContainer::Get<DisplayManager>().RegisterDisplayListener(displayListener);
+    auto singleton = SingletonContainer::Get<DisplayManager>();
+    if ((type == EVENT_ADD || type == EVENT_REMOVE || type == EVENT_CHANGE) && (singleton != nullptr)) {
+        singleton->RegisterDisplayListener(displayListener);
         WLOGFI("JsDisplayManager::RegisterDisplayListenerWithType success");
     } else {
         WLOGFE("JsDisplayManager::RegisterDisplayListenerWithType failed method: %{public}s not support!",
@@ -220,16 +237,20 @@ void UnregisterAllDisplayListenerWithType(const std::string& type)
                type.c_str());
         return;
     }
+    auto singleton = SingletonContainer::Get<DisplayManager>();
+    if (singleton == nullptr) {
+        jsCbMap_.erase(type);
+        return;
+    }
     for (auto it = jsCbMap_[type].begin(); it != jsCbMap_[type].end();) {
         it->second->RemoveAllCallback();
         if (type == EVENT_ADD || type == EVENT_REMOVE || type == EVENT_CHANGE) {
             sptr<DisplayManager::IDisplayListener> thisListener(it->second);
-            SingletonContainer::Get<DisplayManager>().UnregisterDisplayListener(thisListener);
+            singleton->UnregisterDisplayListener(thisListener);
             WLOGFI("JsDisplayManager::UnregisterAllDisplayListenerWithType success");
         }
         jsCbMap_[type].erase(it++);
     }
-    jsCbMap_.erase(type);
 }
 
 void UnRegisterDisplayListenerWithType(const std::string& type, NativeValue* value)
@@ -239,12 +260,13 @@ void UnRegisterDisplayListenerWithType(const std::string& type, NativeValue* val
                type.c_str());
         return;
     }
+    auto singleton = SingletonContainer::Get<DisplayManager>();
     for (auto it = jsCbMap_[type].begin(); it != jsCbMap_[type].end();) {
         if (value->StrictEquals(it->first->Get())) {
             it->second->RemoveCallback(type, value);
-            if (type == EVENT_ADD || type == EVENT_REMOVE || type == EVENT_CHANGE) {
+            if ((type == EVENT_ADD || type == EVENT_REMOVE || type == EVENT_CHANGE) && (singleton != nullptr)) {
                 sptr<DisplayManager::IDisplayListener> thisListener(it->second);
-                SingletonContainer::Get<DisplayManager>().UnregisterDisplayListener(thisListener);
+                singleton->UnregisterDisplayListener(thisListener);
                 WLOGFI("JsDisplayManager::UnRegisterDisplayListenerWithType success");
             }
             jsCbMap_[type].erase(it++);
@@ -328,7 +350,11 @@ NativeValue* OnHasPrivateWindow(NativeEngine& engine, NativeCallbackInfo& info)
     if (displayId < 0) {
         return engine.CreateUndefined();
     }
-    DMError errCode = SingletonContainer::Get<DisplayManager>().HasPrivateWindow(displayId, hasPrivateWindow);
+    auto singleton = SingletonContainer::Get<DisplayManager>();
+    if (singleton == nullptr) {
+        return engine.CreateUndefined();
+    }
+    DMError errCode = singleton->HasPrivateWindow(displayId, hasPrivateWindow);
     WLOGFI("[NAPI]Display id = %{public}" PRIu64", hasPrivateWindow = %{public}u err = %{public}d",
         static_cast<uint64_t>(displayId), hasPrivateWindow, errCode);
     if (errCode != DMError::DM_OK) {

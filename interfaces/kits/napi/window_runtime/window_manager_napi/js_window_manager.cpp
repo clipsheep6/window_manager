@@ -333,19 +333,21 @@ NativeValue* JsWindowManager::OnMinimizeAll(NativeEngine& engine, NativeCallback
         WLOGFE("[NAPI]Failed to convert parameter to displayId");
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
-    if (displayId < 0 ||
-        SingletonContainer::Get<DisplayManager>().GetDisplayById(static_cast<uint64_t>(displayId)) == nullptr) {
+    auto singleton = SingletonContainer::Get<DisplayManager>();
+    if (displayId < 0 || (singleton == nullptr) ||
+        (singleton->GetDisplayById(static_cast<uint64_t>(displayId)) == nullptr)) {
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
 
     WLOGFI("[NAPI]Display id = %{public}" PRIu64", err = %{public}d", static_cast<uint64_t>(displayId), errCode);
     AsyncTask::CompleteCallback complete =
         [=](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            if (errCode != WMError::WM_OK) {
+            auto singleton = SingletonContainer::Get<WindowManager>();
+            if ((errCode != WMError::WM_OK) || (singleton == nullptr)) {
                 task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode), "Invalidate params"));
                 return;
             }
-            SingletonContainer::Get<WindowManager>().MinimizeAllAppWindows(static_cast<uint64_t>(displayId));
+            singleton->MinimizeAllAppWindows(static_cast<uint64_t>(displayId));
             task.Resolve(engine, engine.CreateUndefined());
             WLOGFI("[NAPI]OnMinimizeAll success");
         };
@@ -367,11 +369,12 @@ NativeValue* JsWindowManager::OnToggleShownStateForAllAppWindows(NativeEngine& e
     }
     AsyncTask::CompleteCallback complete =
         [=](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            if (errCode != WMError::WM_OK) {
+            auto singleton = SingletonContainer::Get<WindowManager>();
+            if ((errCode != WMError::WM_OK) || (singleton == nullptr)) {
                 task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode), "Invalidate params"));
                 return;
             }
-            WMError ret = SingletonContainer::Get<WindowManager>().ToggleShownStateForAllAppWindows();
+            WMError ret = singleton->ToggleShownStateForAllAppWindows();
             if (ret == WMError::WM_OK) {
                 task.Resolve(engine, engine.CreateUndefined());
                 WLOGFI("[NAPI]OnToggleShownStateForAllAppWindows success");
@@ -542,11 +545,12 @@ NativeValue* JsWindowManager::OnSetWindowLayoutMode(NativeEngine& engine, Native
     WLOGFI("[NAPI]LayoutMode = %{public}u, err = %{public}d", winLayoutMode, errCode);
     AsyncTask::CompleteCallback complete =
         [=](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            if (errCode != WMError::WM_OK) {
+            auto singleton = SingletonContainer::Get<WindowManager>();
+            if ((errCode != WMError::WM_OK) || (singleton == nullptr)) {
                 task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode), "Invalidate params"));
                 return;
             }
-            WMError ret = SingletonContainer::Get<WindowManager>().SetWindowLayoutMode(winLayoutMode);
+            WMError ret = singleton->SetWindowLayoutMode(winLayoutMode);
             if (ret == WMError::WM_OK) {
                 task.Resolve(engine, engine.CreateUndefined());
                 WLOGFI("[NAPI]SetWindowLayoutMode success");

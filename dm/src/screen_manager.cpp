@@ -161,9 +161,9 @@ ScreenManager::Impl::~Impl()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     bool res = true;
-    if (screenManagerListener_ != nullptr) {
-        res = SingletonContainer::Get<ScreenManagerAdapter>().UnregisterDisplayManagerAgent(
-            screenManagerListener_,
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton != nullptr && screenManagerListener_ != nullptr) {
+        res = singleton->UnregisterDisplayManagerAgent(screenManagerListener_,
             DisplayManagerAgentType::SCREEN_EVENT_LISTENER);
     }
     screenManagerListener_ = nullptr;
@@ -174,7 +174,11 @@ ScreenManager::Impl::~Impl()
 
 sptr<Screen> ScreenManager::Impl::GetScreen(ScreenId screenId)
 {
-    auto screenInfo = SingletonContainer::Get<ScreenManagerAdapter>().GetScreenInfo(screenId);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return nullptr;
+    }
+    auto screenInfo = singleton->GetScreenInfo(screenId);
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (!UpdateScreenInfoLocked(screenInfo)) {
         screenMap_.erase(screenId);
@@ -190,7 +194,11 @@ sptr<Screen> ScreenManager::GetScreenById(ScreenId screenId)
 
 sptr<ScreenGroup> ScreenManager::Impl::GetScreenGroup(ScreenId screenId)
 {
-    auto screenGroupInfo = SingletonContainer::Get<ScreenManagerAdapter>().GetScreenGroupInfoById(screenId);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return nullptr;
+    }
+    auto screenGroupInfo = singleton->GetScreenGroupInfoById(screenId);
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (screenGroupInfo == nullptr) {
         WLOGFE("screenGroupInfo is null");
@@ -215,8 +223,12 @@ sptr<ScreenGroup> ScreenManager::GetScreenGroup(ScreenId screenId)
 
 std::vector<sptr<Screen>> ScreenManager::Impl::GetAllScreens()
 {
-    auto screenInfos = SingletonContainer::Get<ScreenManagerAdapter>().GetAllScreenInfos();
     std::vector<sptr<Screen>> screens;
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return screens;
+    }
+    auto screenInfos = singleton->GetAllScreenInfos();
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     for (auto info: screenInfos) {
         if (UpdateScreenInfoLocked(info)) {
@@ -240,9 +252,12 @@ bool ScreenManager::Impl::RegisterScreenListener(sptr<IScreenListener> listener)
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     bool ret = true;
     if (screenManagerListener_ == nullptr) {
+        auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+        if (singleton == nullptr) {
+            return false;
+        }
         screenManagerListener_ = new ScreenManagerListener(this);
-        ret = SingletonContainer::Get<ScreenManagerAdapter>().RegisterDisplayManagerAgent(
-            screenManagerListener_,
+        ret = singleton->RegisterDisplayManagerAgent(screenManagerListener_,
             DisplayManagerAgentType::SCREEN_EVENT_LISTENER);
     }
     if (!ret) {
@@ -273,8 +288,13 @@ bool ScreenManager::Impl::UnregisterScreenListener(sptr<IScreenListener> listene
     }
     bool ret = true;
     screenListeners_.erase(iter);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        screenManagerListener_ = nullptr;
+        return false;
+    }
     if (screenListeners_.empty() && screenGroupListeners_.empty() && screenManagerListener_ != nullptr) {
-        ret = SingletonContainer::Get<ScreenManagerAdapter>().UnregisterDisplayManagerAgent(
+        ret = singleton->UnregisterDisplayManagerAgent(
             screenManagerListener_,
             DisplayManagerAgentType::SCREEN_EVENT_LISTENER);
         screenManagerListener_ = nullptr;
@@ -294,11 +314,15 @@ bool ScreenManager::UnregisterScreenListener(sptr<IScreenListener> listener)
 bool ScreenManager::Impl::RegisterScreenGroupListener(sptr<IScreenGroupListener> listener)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        screenManagerListener_ = nullptr;
+        return false;
+    }
     bool ret = true;
     if (screenManagerListener_ == nullptr) {
         screenManagerListener_ = new ScreenManagerListener(this);
-        ret = SingletonContainer::Get<ScreenManagerAdapter>().RegisterDisplayManagerAgent(
-            screenManagerListener_,
+        ret = singleton->RegisterDisplayManagerAgent(screenManagerListener_,
             DisplayManagerAgentType::SCREEN_EVENT_LISTENER);
     }
     if (!ret) {
@@ -329,9 +353,13 @@ bool ScreenManager::Impl::UnregisterScreenGroupListener(sptr<IScreenGroupListene
     }
     bool ret = true;
     screenGroupListeners_.erase(iter);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        screenManagerListener_ = nullptr;
+        return false;
+    }
     if (screenGroupListeners_.empty() && screenGroupListeners_.empty() && screenManagerListener_ != nullptr) {
-        ret = SingletonContainer::Get<ScreenManagerAdapter>().UnregisterDisplayManagerAgent(
-            screenManagerListener_,
+        ret = singleton->UnregisterDisplayManagerAgent(screenManagerListener_,
             DisplayManagerAgentType::SCREEN_EVENT_LISTENER);
         screenManagerListener_ = nullptr;
     }
@@ -357,6 +385,10 @@ ScreenId ScreenManager::MakeExpand(const std::vector<ExpandOption>& options)
         WLOGFW("Make expand failed. The options size is bigger than %{public}u.", MAX_SCREEN_SIZE);
         return SCREEN_ID_INVALID;
     }
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return SCREEN_ID_INVALID;
+    }
     std::vector<ScreenId> screenIds;
     std::vector<Point> startPoints;
     for (auto& option: options) {
@@ -366,7 +398,7 @@ ScreenId ScreenManager::MakeExpand(const std::vector<ExpandOption>& options)
         screenIds.emplace_back(option.screenId_);
         startPoints.emplace_back(Point(option.startX_, option.startY_));
     }
-    ScreenId group = SingletonContainer::Get<ScreenManagerAdapter>().MakeExpand(screenIds, startPoints);
+    ScreenId group = singleton->MakeExpand(screenIds, startPoints);
     if (group == SCREEN_ID_INVALID) {
         WLOGFI("Make expand failed");
     }
@@ -380,7 +412,11 @@ ScreenId ScreenManager::MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> 
         WLOGFW("Make Mirror failed. The mirrorScreenId size is bigger than %{public}u.", MAX_SCREEN_SIZE);
         return SCREEN_ID_INVALID;
     }
-    ScreenId group = SingletonContainer::Get<ScreenManagerAdapter>().MakeMirror(mainScreenId, mirrorScreenId);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return SCREEN_ID_INVALID;
+    }
+    ScreenId group = singleton->MakeMirror(mainScreenId, mirrorScreenId);
     if (group == SCREEN_ID_INVALID) {
         WLOGFI("create mirror failed");
     }
@@ -397,7 +433,10 @@ void ScreenManager::RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens)
         WLOGFW("RemoveVirtualScreenFromGroup failed. The screens size is bigger than %{public}u.", MAX_SCREEN_SIZE);
         return;
     }
-    SingletonContainer::Get<ScreenManagerAdapter>().RemoveVirtualScreenFromGroup(screens);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton != nullptr) {
+        singleton->RemoveVirtualScreenFromGroup(screens);
+    }
 }
 
 ScreenId ScreenManager::CreateVirtualScreen(VirtualScreenOption option)
@@ -411,38 +450,65 @@ ScreenId ScreenManager::Impl::CreateVirtualScreen(VirtualScreenOption option)
     if (virtualScreenAgent_ == nullptr) {
         virtualScreenAgent_ = new DisplayManagerAgentDefault();
     }
-    return SingletonContainer::Get<ScreenManagerAdapter>().CreateVirtualScreen(option, virtualScreenAgent_);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return DISPLAY_ID_INVALID;
+    }
+    return singleton->CreateVirtualScreen(option, virtualScreenAgent_);
 }
 
 DMError ScreenManager::DestroyVirtualScreen(ScreenId screenId)
 {
-    return SingletonContainer::Get<ScreenManagerAdapter>().DestroyVirtualScreen(screenId);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    return singleton->DestroyVirtualScreen(screenId);
 }
 
 DMError ScreenManager::SetVirtualScreenSurface(ScreenId screenId, sptr<Surface> surface)
 {
-    return SingletonContainer::Get<ScreenManagerAdapter>().SetVirtualScreenSurface(screenId, surface);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    return singleton->SetVirtualScreenSurface(screenId, surface);
 }
 
 bool ScreenManager::SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason)
 {
     WLOGFI("state:%{public}u, reason:%{public}u", state, reason);
-    return SingletonContainer::Get<ScreenManagerAdapter>().SetScreenPowerForAll(state, reason);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return false;
+    }
+    return singleton->SetScreenPowerForAll(state, reason);
 }
 
 ScreenPowerState ScreenManager::GetScreenPower(ScreenId dmsScreenId)
 {
-    return SingletonContainer::Get<ScreenManagerAdapter>().GetScreenPower(dmsScreenId);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return ScreenPowerState::INVALID_STATE;
+    }
+    return singleton->GetScreenPower(dmsScreenId);
 }
 
 void ScreenManager::SetScreenRotationLocked(bool isLocked)
 {
-    SingletonContainer::Get<ScreenManagerAdapter>().SetScreenRotationLocked(isLocked);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton != nullptr) {
+        singleton->SetScreenRotationLocked(isLocked);
+    }
 }
 
 bool ScreenManager::IsScreenRotationLocked()
 {
-    return SingletonContainer::Get<ScreenManagerAdapter>().IsScreenRotationLocked();
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton != nullptr) {
+        return singleton->IsScreenRotationLocked();
+    }
+    return false;
 }
 
 void ScreenManager::Impl::NotifyScreenConnect(sptr<ScreenInfo> info)

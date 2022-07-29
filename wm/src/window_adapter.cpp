@@ -206,7 +206,10 @@ void WMSDeathRecipient::OnRemoteDied(const wptr<IRemoteObject>& wptrDeath)
         WLOGFE("object is null");
         return;
     }
-    SingletonContainer::Get<WindowAdapter>().ClearWindowAdapter();
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton != nullptr) {
+        singleton->ClearWindowAdapter();
+    }
 }
 
 WMError WindowAdapter::GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId)

@@ -294,12 +294,13 @@ NativeValue* JsScreenRecorder::OnGetVirtualScreenRecorder(NativeEngine& engine, 
     }
     AsyncTask::CompleteCallback complete =
         [errCode, screenId](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            if (errCode != DMError::DM_OK) {
+            auto singleton = SingletonContainer::Get<ScreenManager>();
+            if ((errCode != DMError::DM_OK) || (singleton == nullptr)) {
                 task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode),
                     "JsScreenRecorder::OnGetVirtualScreenRecorder, Invalidate params."));
                 WLOGFE("JsScreenRecorder::OnGetVirtualScreenRecorder failed, Invalidate params.");
             } else {
-                auto screen = SingletonContainer::Get<ScreenManager>().GetScreenById(static_cast<ScreenId>(screenId));
+                auto screen = singleton->GetScreenById(static_cast<ScreenId>(screenId));
                 if (screen == nullptr) {
                     task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(DMError::DM_ERROR_NULLPTR),
                         "JsScreenRecorder::OnGetVirtualScreenRecorder, screen is null."));

@@ -56,7 +56,11 @@ void ScreenGroup::UpdateScreenGroupInfo(sptr<ScreenGroupInfo> info) const
 
 void ScreenGroup::UpdateScreenGroupInfo() const
 {
-    auto screenInfo = SingletonContainer::Get<ScreenManagerAdapter>().GetScreenGroupInfoById(GetId());
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return;
+    }
+    auto screenInfo = singleton->GetScreenGroupInfoById(GetId());
     UpdateScreenGroupInfo(screenInfo);
 }
 

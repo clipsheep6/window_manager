@@ -52,8 +52,11 @@ WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRunt
     option->SetDisplayId(displayId);
     option->SetWindowTag(WindowTag::MAIN_WINDOW);
 
-    mainWindow_ = SingletonContainer::Get<StaticCall>().CreateWindow(
-        GenerateMainWindowName(context), option, context);
+    auto singleton = SingletonContainer::Get<StaticCall>();
+    if (singleton == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    mainWindow_ = singleton->CreateWindow(GenerateMainWindowName(context), option, context);
     if (mainWindow_ == nullptr) {
         return WMError::WM_ERROR_NULLPTR;
     }
@@ -81,7 +84,11 @@ sptr<Window> WindowScene::CreateWindow(const std::string& windowName, sptr<Windo
     }
     option->SetParentName(mainWindow_->GetWindowName());
     option->SetWindowTag(WindowTag::SUB_WINDOW);
-    return SingletonContainer::Get<StaticCall>().CreateWindow(windowName, option, mainWindow_->GetContext());
+    auto singleton = SingletonContainer::Get<StaticCall>();
+    if (singleton == nullptr) {
+        return nullptr;
+    }
+    return singleton->CreateWindow(windowName, option, mainWindow_->GetContext());
 }
 
 const sptr<Window>& WindowScene::GetMainWindow() const
@@ -96,7 +103,11 @@ std::vector<sptr<Window>> WindowScene::GetSubWindow()
         return std::vector<sptr<Window>>();
     }
     uint32_t parentId = mainWindow_->GetWindowId();
-    return SingletonContainer::Get<StaticCall>().GetSubWindow(parentId);
+    auto singleton = SingletonContainer::Get<StaticCall>();
+    if (singleton == nullptr) {
+        return {};
+    }
+    return singleton->GetSubWindow(parentId);
 }
 
 WMError WindowScene::GoForeground(uint32_t reason)
