@@ -24,6 +24,7 @@
 #include <power_mgr_client.h>
 #include "transaction/rs_transaction.h"
 
+#include "accessibility_config_listener.h"
 #include "common_event_manager.h"
 #include "dm_common.h"
 #include "remote_animation.h"
@@ -160,6 +161,10 @@ AnimationConfig& WindowNodeContainer::GetAnimationConfigRef()
 
 WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode)
 {
+    // subscribe accessibility config observer if necessary
+    if (WindowHelper::IsMainWindow(node->GetWindowType())) {
+        AccessibilityConfigListener::GetSharedInstance()->SubscribeObserver();
+    }
     if (!node->startingWindowShown_) {
         WMError res = AddWindowNodeOnWindowTree(node, parentNode);
         if (res != WMError::WM_OK) {
