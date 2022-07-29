@@ -122,8 +122,10 @@ HWTEST_F(WindowTouchOutsideTest, onTouchInside, Function | MediumTest | Level3)
     firstWindow->Create("");
     firstWindow->RegisterTouchOutsideListener(windowlistener1_);
     firstWindow->Show();
-    SingletonContainer::Get<WindowAdapter>().ProcessPointDown(firstWindow->GetWindowId(),
-        firstWindow->property_, firstWindow->moveDragProperty_);
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton != nullptr) {
+        singleton->ProcessPointDown(firstWindow->GetWindowId(), firstWindow->property_, firstWindow->moveDragProperty_);
+    }
     usleep(WAIT_CALLBACK_US);
     ASSERT_TRUE(!windowlistener1_->isTouchOutside_);
     firstWindow->Destroy();
@@ -148,8 +150,11 @@ HWTEST_F(WindowTouchOutsideTest, onTouchOutside, Function | MediumTest | Level3)
     secondWindow->Create("");
     firstWindow->Show();
     secondWindow->Show();
-    SingletonContainer::Get<WindowAdapter>().ProcessPointDown(secondWindow->GetWindowId(),
-        secondWindow->property_, secondWindow->moveDragProperty_);
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton != nullptr) {
+        singleton->ProcessPointDown(secondWindow->GetWindowId(), secondWindow->property_,
+            secondWindow->moveDragProperty_);
+    }
     usleep(WAIT_CALLBACK_US);
     ASSERT_TRUE(windowlistener1_->isTouchOutside_);
     firstWindow->Destroy();
@@ -174,8 +179,11 @@ HWTEST_F(WindowTouchOutsideTest, onTouchOutsideNotShow, Function | MediumTest | 
     auto secondWindow = new WindowImpl(secondOption);
     secondWindow->Create("");
     secondWindow->Show();
-    SingletonContainer::Get<WindowAdapter>().ProcessPointDown(secondWindow->GetWindowId(),
-        secondWindow->property_, secondWindow->moveDragProperty_);
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton != nullptr) {
+        singleton->ProcessPointDown(secondWindow->GetWindowId(), secondWindow->property_,
+            secondWindow->moveDragProperty_);
+    }
     usleep(WAIT_CALLBACK_US);
     ASSERT_TRUE(!windowlistener1_->isTouchOutside_);
     firstWindow->Destroy();
@@ -205,8 +213,10 @@ HWTEST_F(WindowTouchOutsideTest, onTouchOutsideForAllWindow, Function | MediumTe
     auto thirdWindow = new WindowImpl(thirdOption);
     thirdWindow->Create("");
     thirdWindow->Show();
-    SingletonContainer::Get<WindowAdapter>().ProcessPointDown(thirdWindow->GetWindowId(),
-        thirdWindow->property_, thirdWindow->moveDragProperty_);
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton != nullptr) {
+        singleton->ProcessPointDown(thirdWindow->GetWindowId(), thirdWindow->property_, thirdWindow->moveDragProperty_);
+    }
     usleep(WAIT_CALLBACK_US);
     ASSERT_TRUE(windowlistener1_->isTouchOutside_);
     ASSERT_TRUE(windowlistener2_->isTouchOutside_);

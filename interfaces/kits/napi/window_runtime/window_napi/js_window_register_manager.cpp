@@ -139,10 +139,14 @@ bool JsWindowRegisterManager::ProcessSystemBarChangeRegister(sptr<JsWindowListen
     sptr<Window> window, bool isRegister)
 {
     sptr<ISystemBarChangedListener> thisListener(listener);
+    auto singleton = SingletonContainer::Get<WindowManager>();
+    if (singleton == nullptr) {
+        return false;
+    }
     if (isRegister) {
-        SingletonContainer::Get<WindowManager>().RegisterSystemBarChangedListener(thisListener);
+        singleton->RegisterSystemBarChangedListener(thisListener);
     } else {
-        SingletonContainer::Get<WindowManager>().UnregisterSystemBarChangedListener(thisListener);
+        singleton->UnregisterSystemBarChangedListener(thisListener);
     }
     return true;
 }

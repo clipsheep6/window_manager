@@ -123,37 +123,65 @@ bool Screen::IsReal() const
 bool Screen::SetOrientation(Orientation orientation) const
 {
     WLOGFD("set orientation %{public}u", orientation);
-    return SingletonContainer::Get<ScreenManagerAdapter>().SetOrientation(GetId(), orientation);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return false;
+    }
+    return singleton->SetOrientation(GetId(), orientation);
 }
 
 DMError Screen::GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut>& colorGamuts) const
 {
-    return SingletonContainer::Get<ScreenManagerAdapter>().GetScreenSupportedColorGamuts(GetId(), colorGamuts);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    return singleton->GetScreenSupportedColorGamuts(GetId(), colorGamuts);
 }
 
 DMError Screen::GetScreenColorGamut(ScreenColorGamut& colorGamut) const
 {
-    return SingletonContainer::Get<ScreenManagerAdapter>().GetScreenColorGamut(GetId(), colorGamut);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    return singleton->GetScreenColorGamut(GetId(), colorGamut);
 }
 
 DMError Screen::SetScreenColorGamut(int32_t colorGamutIdx)
 {
-    return SingletonContainer::Get<ScreenManagerAdapter>().SetScreenColorGamut(GetId(), colorGamutIdx);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    return singleton->SetScreenColorGamut(GetId(), colorGamutIdx);
 }
 
 DMError Screen::GetScreenGamutMap(ScreenGamutMap& gamutMap) const
 {
-    return SingletonContainer::Get<ScreenManagerAdapter>().GetScreenGamutMap(GetId(), gamutMap);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    return singleton->GetScreenGamutMap(GetId(), gamutMap);
 }
 
 DMError Screen::SetScreenGamutMap(ScreenGamutMap gamutMap)
 {
-    return SingletonContainer::Get<ScreenManagerAdapter>().SetScreenGamutMap(GetId(), gamutMap);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    return singleton->SetScreenGamutMap(GetId(), gamutMap);
 }
 
 DMError Screen::SetScreenColorTransform()
 {
-    return SingletonContainer::Get<ScreenManagerAdapter>().SetScreenColorTransform(GetId());
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    return singleton->SetScreenColorTransform(GetId());
 }
 
 ScreenId Screen::GetParentId() const
@@ -179,7 +207,11 @@ bool Screen::SetScreenActiveMode(uint32_t modeId)
     if (modeId >= GetSupportedModes().size()) {
         return false;
     }
-    return SingletonContainer::Get<ScreenManagerAdapter>().SetScreenActiveMode(screenId, modeId);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return false;
+    }
+    return singleton->SetScreenActiveMode(screenId, modeId);
 }
 
 void Screen::UpdateScreenInfo(sptr<ScreenInfo> info) const
@@ -193,7 +225,11 @@ void Screen::UpdateScreenInfo(sptr<ScreenInfo> info) const
 
 void Screen::UpdateScreenInfo() const
 {
-    auto screenInfo = SingletonContainer::Get<ScreenManagerAdapter>().GetScreenInfo(GetId());
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return;
+    }
+    auto screenInfo = singleton->GetScreenInfo(GetId());
     UpdateScreenInfo(screenInfo);
 }
 
@@ -206,7 +242,11 @@ bool Screen::SetDensityDpi(uint32_t dpi) const
     }
     // Calculate display density, Density = Dpi / 160.
     float density = static_cast<float>(dpi) / 160; // 160 is the coefficient between density and dpi.
-    return SingletonContainer::Get<ScreenManagerAdapter>().SetVirtualPixelRatio(GetId(), density);
+    auto singleton = SingletonContainer::Get<ScreenManagerAdapter>();
+    if (singleton == nullptr) {
+        return false;
+    }
+    return singleton->SetVirtualPixelRatio(GetId(), density);
 }
 
 sptr<ScreenInfo> Screen::GetScreenInfo() const

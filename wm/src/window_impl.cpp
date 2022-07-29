@@ -152,7 +152,11 @@ sptr<Window> WindowImpl::FindTopWindow(uint32_t topWinId)
 sptr<Window> WindowImpl::GetTopWindowWithId(uint32_t mainWinId)
 {
     uint32_t topWinId = INVALID_WINDOW_ID;
-    WMError ret = SingletonContainer::Get<WindowAdapter>().GetTopWindowId(mainWinId, topWinId);
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton == nullptr) {
+        return nullptr;
+    }
+    WMError ret = singleton->GetTopWindowId(mainWinId, topWinId);
     if (ret != WMError::WM_OK) {
         WLOGFE("GetTopWindowId failed with errCode:%{public}d", static_cast<int32_t>(ret));
         return nullptr;
@@ -181,7 +185,11 @@ sptr<Window> WindowImpl::GetTopWindowWithContext(const std::shared_ptr<AbilityRu
         return nullptr;
     }
     uint32_t topWinId = INVALID_WINDOW_ID;
-    WMError ret = SingletonContainer::Get<WindowAdapter>().GetTopWindowId(mainWinId, topWinId);
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton == nullptr) {
+        return nullptr;
+    }
+    WMError ret = singleton->GetTopWindowId(mainWinId, topWinId);
     if (ret != WMError::WM_OK) {
         WLOGFE("GetTopWindowId failed with errCode:%{public}d", static_cast<int32_t>(ret));
         return nullptr;
@@ -302,7 +310,11 @@ WMError WindowImpl::GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea)
 {
     WLOGFI("GetAvoidAreaByType  Search Type: %{public}u", static_cast<uint32_t>(type));
     uint32_t windowId = property_->GetWindowId();
-    WMError ret = SingletonContainer::Get<WindowAdapter>().GetAvoidAreaByType(windowId, type, avoidArea);
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    WMError ret = singleton->GetAvoidAreaByType(windowId, type, avoidArea);
     if (ret != WMError::WM_OK) {
         WLOGFE("GetAvoidAreaByType errCode:%{public}d winId:%{public}u Type is :%{public}u.",
             static_cast<int32_t>(ret), property_->GetWindowId(), static_cast<uint32_t>(type));
@@ -696,7 +708,11 @@ void WindowImpl::MapDialogWindowToAppIfNeeded()
 
 WMError WindowImpl::UpdateProperty(PropertyChangeAction action)
 {
-    return SingletonContainer::Get<WindowAdapter>().UpdateProperty(property_, action);
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    return singleton->UpdateProperty(property_, action);
 }
 
 void WindowImpl::GetConfigurationFromAbilityInfo()
@@ -800,8 +816,12 @@ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<
             property_->SetTokenState(true);
         }
     }
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
     if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
-        if (SingletonContainer::Get<WindowAdapter>().GetSystemConfig(windowSystemConfig_) == WMError::WM_OK) {
+        if (singleton->GetSystemConfig(windowSystemConfig_) == WMError::WM_OK) {
             WLOGFE("get system decor enable:%{public}d", windowSystemConfig_.isSystemDecorEnable_);
             if (windowSystemConfig_.isSystemDecorEnable_) {
                 property_->SetDecorEnable(true);
@@ -811,7 +831,7 @@ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<
         }
         GetConfigurationFromAbilityInfo();
     }
-    WMError ret = SingletonContainer::Get<WindowAdapter>().CreateWindow(windowAgent, property_, surfaceNode_,
+    WMError ret = singleton->CreateWindow(windowAgent, property_, surfaceNode_,
         windowId, token);
     RecordLifeCycleExceptionEvent(LifeCycleEvent::CREATE_EVENT, ret);
     if (ret != WMError::WM_OK) {
@@ -837,7 +857,11 @@ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<
 WMError WindowImpl::BindDialogTarget(sptr<IRemoteObject> targetToken)
 {
     uint32_t windowId = property_->GetWindowId();
-    WMError ret = SingletonContainer::Get<WindowAdapter>().BindDialogTarget(windowId, targetToken);
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    WMError ret = singleton->BindDialogTarget(windowId, targetToken);
     if (ret != WMError::WM_OK) {
         WLOGFE("bind window failed with errCode:%{public}d", static_cast<int32_t>(ret));
     }
@@ -972,7 +996,11 @@ WMError WindowImpl::Destroy(bool needNotifyServer)
                 NotifyBeforeSubWindowDestroy(subWindow);
             }
         }
-        ret = SingletonContainer::Get<WindowAdapter>().DestroyWindow(property_->GetWindowId());
+        auto singleton = SingletonContainer::Get<WindowAdapter>();
+        if (singleton == nullptr) {
+            return WMError::WM_ERROR_NULLPTR;
+        }
+        ret = singleton->DestroyWindow(property_->GetWindowId());
         RecordLifeCycleExceptionEvent(LifeCycleEvent::DESTROY_EVENT, ret);
         if (ret != WMError::WM_OK) {
             WLOGFE("destroy window failed with errCode:%{public}d", static_cast<int32_t>(ret));
@@ -1030,7 +1058,11 @@ WMError WindowImpl::UpdateSurfaceNodeAfterCustomAnimation(bool isAdd)
         WLOGFE("UpdateProperty failed with errCode:%{public}d", static_cast<int32_t>(ret));
         return ret;
     }
-    ret = SingletonContainer::Get<WindowAdapter>().UpdateRsTree(property_->GetWindowId(), isAdd);
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    ret = singleton->UpdateRsTree(property_->GetWindowId(), isAdd);
     if (ret != WMError::WM_OK) {
         WLOGFE("UpdateRsTree failed with errCode:%{public}d", static_cast<int32_t>(ret));
         return ret;
@@ -1071,14 +1103,17 @@ WMError WindowImpl::Show(uint32_t reason, bool withAnimation)
         NotifyAfterForeground();
         return WMError::WM_OK;
     }
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
     if (state_ == WindowState::STATE_SHOWN) {
         if (property_->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
             WLOGFI("desktop window [id:%{public}u] is shown, minimize all app windows", property_->GetWindowId());
-            SingletonContainer::Get<WindowAdapter>().MinimizeAllAppWindows(property_->GetDisplayId());
+            singleton->MinimizeAllAppWindows(property_->GetDisplayId());
         } else {
             WLOGFI("window is already shown id: %{public}u, raise to top", property_->GetWindowId());
-            SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(),
-                property_, moveDragProperty_);
+            singleton->ProcessPointDown(property_->GetWindowId(), property_, moveDragProperty_);
         }
         NotifyAfterUnfocused(false);
         return WMError::WM_OK;
@@ -1088,7 +1123,7 @@ WMError WindowImpl::Show(uint32_t reason, bool withAnimation)
         return ret;
     }
 
-    ret = SingletonContainer::Get<WindowAdapter>().AddWindow(property_);
+    ret = singleton->AddWindow(property_);
     RecordLifeCycleExceptionEvent(LifeCycleEvent::SHOW_EVENT, ret);
     if (ret == WMError::WM_OK || ret == WMError::WM_ERROR_DEATH_RECIPIENT) {
         state_ = WindowState::STATE_SHOWN;
@@ -1131,7 +1166,11 @@ WMError WindowImpl::Hide(uint32_t reason, bool withAnimation)
             return ret;
         }
     }
-    ret = SingletonContainer::Get<WindowAdapter>().RemoveWindow(property_->GetWindowId());
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    ret = singleton->RemoveWindow(property_->GetWindowId());
     RecordLifeCycleExceptionEvent(LifeCycleEvent::HIDE_EVENT, ret);
     if (ret != WMError::WM_OK) {
         WLOGFE("hide errCode:%{public}d for winId:%{public}u", static_cast<int32_t>(ret), property_->GetWindowId());
@@ -1460,7 +1499,11 @@ WMError WindowImpl::NotifyWindowTransition(TransitionReason reason)
     fromInfo->SetWindowType(property_->GetWindowType());
     fromInfo->SetDisplayId(property_->GetDisplayId());
     fromInfo->SetTransitionReason(reason);
-    return SingletonContainer::Get<WindowAdapter>().NotifyWindowTransition(fromInfo, toInfo);
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    return singleton->NotifyWindowTransition(fromInfo, toInfo);
 }
 
 WMError WindowImpl::Minimize()
@@ -1521,11 +1564,16 @@ WMError WindowImpl::Close()
 void WindowImpl::StartMove()
 {
     if (!WindowHelper::IsMainFloatingWindow(GetType(), GetMode())) {
-        WLOGFI("[StartMove] current window can not be moved, windowId %{public}u", GetWindowId());
+        WLOGFW("[StartMove] current window can not be moved, windowId %{public}u", GetWindowId());
         return;
     }
     moveDragProperty_->startMoveFlag_ = true;
-    SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(), property_, moveDragProperty_);
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton == nullptr) {
+        WLOGFE("[StartMove] failed, because window adapter is null, windowId: %{public}u", GetWindowId());
+        return;
+    }
+    singleton->ProcessPointDown(property_->GetWindowId(), property_, moveDragProperty_);
     WLOGFI("[StartMove] windowId %{public}u", GetWindowId());
 }
 
@@ -1534,7 +1582,11 @@ WMError WindowImpl::RequestFocus() const
     if (!IsWindowValid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    return SingletonContainer::Get<WindowAdapter>().RequestFocus(property_->GetWindowId());
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    return singleton->RequestFocus(property_->GetWindowId());
 }
 
 void WindowImpl::SetInputEventConsumer(const std::shared_ptr<IInputEventConsumer>& inputEventConsumer)
@@ -1604,7 +1656,11 @@ void WindowImpl::RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>
         avoidAreaChangeListeners_.push_back(listener);
     }
     if (avoidAreaChangeListeners_.size() == 1) {
-        SingletonContainer::Get<WindowAdapter>().UpdateAvoidAreaListener(property_->GetWindowId(), true);
+        auto singleton = SingletonContainer::Get<WindowAdapter>();
+        if (singleton == nullptr) {
+            return;
+        }
+        singleton->UpdateAvoidAreaListener(property_->GetWindowId(), true);
     }
 }
 
@@ -1619,7 +1675,11 @@ void WindowImpl::UnregisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListene
             }), avoidAreaChangeListeners_.end());
     }
     if (avoidAreaChangeListeners_.empty()) {
-        SingletonContainer::Get<WindowAdapter>().UpdateAvoidAreaListener(property_->GetWindowId(), false);
+        auto singleton = SingletonContainer::Get<WindowAdapter>();
+        if (singleton == nullptr) {
+            return;
+        }
+        singleton->UpdateAvoidAreaListener(property_->GetWindowId(), false);
     }
 }
 
@@ -2042,7 +2102,11 @@ void WindowImpl::HandleModeChangeHotZones(int32_t posX, int32_t posY)
     }
 
     ModeChangeHotZones hotZones;
-    auto res = SingletonContainer::Get<WindowAdapter>().GetModeChangeHotZones(property_->GetDisplayId(), hotZones);
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton == nullptr) {
+        return;
+    }
+    auto res = singleton->GetModeChangeHotZones(property_->GetDisplayId(), hotZones);
     WLOGFI("[HotZone] Window %{public}u, Pointer[%{public}d, %{public}d]", GetWindowId(), posX, posY);
     if (res == WMError::WM_OK) {
         WLOGFI("[HotZone] Fullscreen [%{public}d, %{public}d, %{public}u, %{public}u]", hotZones.fullscreen_.posX_,
@@ -2109,13 +2173,19 @@ void WindowImpl::EndMoveOrDragWindow(int32_t posX, int32_t posY, int32_t pointId
         return;
     }
 
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton == nullptr) {
+        WLOGE("Move or drag end failed, because window adapter is null.");
+        return;
+    }
+
     if (moveDragProperty_->startDragFlag_) {
-        SingletonContainer::Get<WindowAdapter>().ProcessPointUp(GetWindowId());
+        singleton->ProcessPointUp(GetWindowId());
         moveDragProperty_->startDragFlag_ = false;
     }
 
     if (moveDragProperty_->startMoveFlag_) {
-        SingletonContainer::Get<WindowAdapter>().ProcessPointUp(GetWindowId());
+        singleton->ProcessPointUp(GetWindowId());
         moveDragProperty_->startMoveFlag_ = false;
         HandleModeChangeHotZones(posX, posY);
     }
@@ -2150,8 +2220,21 @@ void WindowImpl::UpdateDragType()
     }
 }
 
-void WindowImpl::CalculateStartRectExceptHotZone(float vpr, const TransformHelper::Vector2& hotZoneScale)
+void WindowImpl::CalculateStartRectExceptHotZone()
 {
+    TransformHelper::Vector2 hotZoneScale(1, 1);
+    if (property_->GetTransform() != Transform::Identity()) {
+        property_->ComputeTransform();
+        hotZoneScale = WindowHelper::CalculateHotZoneScale(property_->GetTransformMat(),
+            property_->GetPlane());
+    }
+    auto display = DisplayManager::GetInstance().GetDisplayById(property_->GetDisplayId());
+    if (display == nullptr) {
+        WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u", property_->GetDisplayId(),
+            property_->GetWindowId());
+        return;
+    }
+    float vpr = display->GetVirtualPixelRatio();
     const auto& startPointRect = moveDragProperty_->startPointRect_;
     auto& startRectExceptFrame = moveDragProperty_->startRectExceptFrame_;
     startRectExceptFrame.posX_ = startPointRect.posX_ +
@@ -2179,12 +2262,6 @@ void WindowImpl::ReadyToMoveOrDragWindow(int32_t globalX, int32_t globalY, int32
     if (moveDragProperty_->pointEventStarted_) {
         return;
     }
-    TransformHelper::Vector2 hotZoneScale(1, 1);
-    if (property_->GetTransform() != Transform::Identity()) {
-        property_->ComputeTransform();
-        hotZoneScale = WindowHelper::CalculateHotZoneScale(property_->GetTransformMat(),
-            property_->GetPlane());
-    }
     moveDragProperty_->startPointRect_ = rect;
     moveDragProperty_->startPointPosX_ = globalX;
     moveDragProperty_->startPointPosY_ = globalY;
@@ -2192,20 +2269,14 @@ void WindowImpl::ReadyToMoveOrDragWindow(int32_t globalX, int32_t globalY, int32
     moveDragProperty_->pointEventStarted_ = true;
 
     // calculate window inner rect except frame
-    auto display = DisplayManager::GetInstance().GetDisplayById(property_->GetDisplayId());
-    if (display == nullptr) {
-        WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u", property_->GetDisplayId(),
-            property_->GetWindowId());
+    CalculateStartRectExceptHotZone();
+    auto singleton = SingletonContainer::Get<WindowAdapter>();
+    if (singleton == nullptr) {
         return;
     }
-    float vpr = display->GetVirtualPixelRatio();
-
-    CalculateStartRectExceptHotZone(vpr, hotZoneScale);
-
     if (GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
         moveDragProperty_->startMoveFlag_ = true;
-        SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(),
-            property_, moveDragProperty_);
+        singleton->ProcessPointDown(property_->GetWindowId(), property_, moveDragProperty_);
     } else if (!WindowHelper::IsPointInTargetRect(moveDragProperty_->startPointPosX_,
         moveDragProperty_->startPointPosY_, moveDragProperty_->startRectExceptFrame_) ||
         (WindowHelper::IsPointInTargetRect(moveDragProperty_->startPointPosX_, moveDragProperty_->startPointPosY_,
@@ -2214,10 +2285,8 @@ void WindowImpl::ReadyToMoveOrDragWindow(int32_t globalX, int32_t globalY, int32
         moveDragProperty_->startPointPosY_, moveDragProperty_->startRectExceptCorner_)))) {
         moveDragProperty_->startDragFlag_ = true;
         UpdateDragType();
-        SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(),
-            property_, moveDragProperty_);
+        singleton->ProcessPointDown(property_->GetWindowId(), property_, moveDragProperty_);
     }
-
     return;
 }
 
@@ -2309,8 +2378,12 @@ void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& p
                 return;
             }
         }
-        SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(),
-            property_, moveDragProperty_);
+        auto singleton = SingletonContainer::Get<WindowAdapter>();
+        if (singleton == nullptr) {
+            pointerEvent->MarkProcessed();
+            return;
+        }
+        singleton->ProcessPointDown(property_->GetWindowId(), property_, moveDragProperty_);
     }
 
     // If point event type is up, should reset start move flag
@@ -2319,7 +2392,6 @@ void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& p
         action == MMI::PointerEvent::POINTER_ACTION_CANCEL)) {
         ConsumeMoveOrDragEvent(pointerEvent);
     }
-
     if (IsPointerEventConsumed()) {
         pointerEvent->MarkProcessed();
         return;
@@ -2327,6 +2399,11 @@ void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& p
     if (windowSystemConfig_.isStretchable_ && GetMode() == WindowMode::WINDOW_MODE_FLOATING) {
         UpdatePointerEventForStretchableWindow(pointerEvent);
     }
+    NotifyInputEventConsumer(pointerEvent);
+}
+
+void WindowImpl::NotifyInputEventConsumer(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
     std::shared_ptr<IInputEventConsumer> inputEventConsumer;
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);

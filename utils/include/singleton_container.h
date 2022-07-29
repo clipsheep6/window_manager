@@ -38,12 +38,12 @@ public:
     void* DependOn(const std::string& instance, const std::string& name);
 
     template<class T>
-    static T& Get()
+    static T* Get()
     {
         std::string nameT = __PRETTY_FUNCTION__;
         nameT = nameT.substr(nameT.find("T = "));
         nameT = nameT.substr(sizeof("T ="), nameT.length() - sizeof("T = "));
-        return *(reinterpret_cast<T*>(SingletonContainer::GetInstance().GetSingleton(nameT)));
+        return reinterpret_cast<T*>(SingletonContainer::GetInstance().GetSingleton(nameT));
     }
 
     template<class T>

@@ -47,7 +47,7 @@ namespace {
 }
 WM_IMPLEMENT_SINGLE_INSTANCE(WindowManagerService)
 
-const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(&SingletonContainer::Get<WindowManagerService>());
+const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(SingletonContainer::Get<WindowManagerService>());
 
 WindowManagerService::WindowManagerService() : SystemAbility(WINDOW_MANAGER_SERVICE_ID, true),
     rsInterface_(RSInterfaces::GetInstance())

@@ -351,6 +351,7 @@ private:
     void NotifyOccupiedAreaChange(const sptr<OccupiedAreaChangeInfo>& info);
     void NotifyModeChange(WindowMode mode);
     void NotifyDragEvent(const PointInfo& point, DragEvent event);
+    void NotifyInputEventConsumer(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     void DestroyDialogWindow();
     void DestroyFloatingWindow();
     void DestroySubWindow();
@@ -389,7 +390,7 @@ private:
     uint32_t GetModeSupportInfo() const;
     WMError PreProcessShow(uint32_t reason, bool withAnimation);
     bool NeedToStopShowing();
-    void CalculateStartRectExceptHotZone(float virtualPixelRatio, const TransformHelper::Vector2& hotZoneScale);
+    void CalculateStartRectExceptHotZone();
 
     // colorspace, gamut
     using ColorSpaceConvertMap = struct {
