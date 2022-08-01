@@ -331,6 +331,12 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
             reply.WriteBool(hasPrivateWindow);
             break;
         }
+        case DisplayManagerMessage::TRANS_ID_GET_HDR_INFO: {
+            DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
+            sptr<HdrInfo> hdrInfo = GetHdrInfo(displayId);
+            reply.WriteParcelable(hdrInfo);
+            break;
+        }
         default:
             WLOGFW("unknown transaction code");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);

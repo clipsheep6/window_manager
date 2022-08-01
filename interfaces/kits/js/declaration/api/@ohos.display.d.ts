@@ -173,6 +173,80 @@ declare namespace display {
      * DPI on the y-axis.
      */
     yDPI: number;
+
+    /**
+     * Obtain the HDR info;
+     * @devices tv, phone, tablet, wearable
+     */
+    getHdrInfo(callback: AsyncCallback<HdrInfo>): void;
+
+    /**
+     * Obtain the HDR info.
+     * @devices tv, phone, tablet, wearable
+     */
+    getHdrInfo(): Promise<HdrInfo>;
+ 
+    /**
+     * Obtain the cutout info of the display.
+     * @devices tv, phone, tablet, wearable
+     */
+    getCutoutInfo(callback: AsyncCallback<void>): void;
+
+    /**
+     * Obtain the cutout info of the display.
+     * @devices tv, phone, tablet, wearable
+     */
+    getCutoutInfo(): Promise<CutoutInfo>;
+  }
+
+  /**
+   * Screen HDR info.
+   * @syscap SystemCapability.WindowManager.WindowManager.Core
+   * @since 9
+   */
+  interface HdrInfo {
+    readonly maxLum: number;
+    readonly minLum: number;
+    readonly maxAverageLum: number;
+    readonly supportedHdrFormats: Array<HdrFormat>;
+  }
+
+  /**
+   * Screen HDR formats.
+   * @syscap SystemCapability.WindowManager.WindowManager.Core
+   * @since 9
+   */
+  enum HdrFormat {
+    NOT_SUPPORT_HDR = 0,
+    DOLBY_VISION,
+    HDR10,
+    HDR10_PLUS,
+    HLG,
+    HDR_VIVID,
+  }
+
+  /**
+   * cutout information of the screen.
+   * @syscap SystemCapability.WindowManager.WindowManager.Core
+   * @since 9
+   */
+  interface CutoutInfo {
+    BoundingRects: Array<Rect>;
+    waterfallDisplayAreaRects: WaterfallDisplayAreaRects;
+  }
+
+  interface WaterfallDisplayAreaRects {
+    left: Rect;
+    right: Rect;
+    top: Rect;
+    bottom: Rect;
+  }
+
+  interface Rect {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
   }
 }
 

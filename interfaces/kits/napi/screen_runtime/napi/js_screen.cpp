@@ -17,6 +17,7 @@
 
 #include <cinttypes>
 #include "screen.h"
+#include "hdr_info.h"
 #include "screen_info.h"
 #include "window_manager_hilog.h"
 
@@ -118,7 +119,6 @@ NativeValue* JsScreen::OnSetOrientation(NativeEngine& engine, NativeCallbackInfo
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
-
 
 NativeValue* JsScreen::SetScreenActiveMode(NativeEngine* engine, NativeCallbackInfo* info)
 {

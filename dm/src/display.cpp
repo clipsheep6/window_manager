@@ -95,6 +95,11 @@ Orientation Display::GetOrientation() const
     return pImpl_->GetDisplayInfo()->GetOrientation();
 }
 
+sptr<HdrInfo> Display::GetHdrInfo() const
+{
+    return SingletonContainer::Get<DisplayManagerAdapter>().GetHdrInfo(GetId());
+}
+
 void Display::UpdateDisplayInfo(sptr<DisplayInfo> displayInfo) const
 {
     if (displayInfo == nullptr) {

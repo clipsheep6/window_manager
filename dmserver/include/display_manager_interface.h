@@ -23,6 +23,7 @@
 #include "dm_common.h"
 #include "screen.h"
 #include "display_info.h"
+#include "hdr_info.h"
 #include "screen_info.h"
 #include "screen_group_info.h"
 #include "zidl/display_manager_agent_interface.h"
@@ -74,6 +75,7 @@ public:
         TRANS_ID_IS_SCREEN_ROTATION_LOCKED,
         TRANS_ID_SET_SCREEN_ROTATION_LOCKED,
         TRANS_ID_HAS_PRIVATE_WINDOW,
+        TRANS_ID_GET_HDR_INFO,
     };
 
     virtual sptr<DisplayInfo> GetDefaultDisplayInfo() = 0;
@@ -89,6 +91,7 @@ public:
     virtual std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId) = 0;
     virtual void SetScreenRotationLocked(bool isLocked) = 0;
     virtual bool IsScreenRotationLocked() = 0;
+    virtual sptr<HdrInfo> GetHdrInfo(DisplayId displayId) = 0;
 
     // colorspace, gamut
     virtual DMError GetScreenSupportedColorGamuts(ScreenId screenId, std::vector<ScreenColorGamut>& colorGamuts) = 0;
