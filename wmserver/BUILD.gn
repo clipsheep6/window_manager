@@ -32,6 +32,7 @@ ohos_shared_library("libwms") {
   sources = [
     "../wm/src/zidl/window_manager_agent_proxy.cpp",
     "../wm/src/zidl/window_proxy.cpp",
+    "src/accessibility_config_listener.cpp",
     "src/accessibility_connection.cpp",
     "src/avoid_area_controller.cpp",
     "src/display_group_controller.cpp",
@@ -82,6 +83,7 @@ ohos_shared_library("libwms") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_manager",
+    "accessibility:accessibilityconfig",
     "common_event_service:cesfwk_innerkits",
     "config_policy:configpolicy_util",
     "display_manager:displaymgr",
