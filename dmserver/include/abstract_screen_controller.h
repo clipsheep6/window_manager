@@ -47,11 +47,9 @@ public:
     WM_DISALLOW_COPY_AND_MOVE(AbstractScreenController);
 
     void Init();
-    void ScreenConnectionInDisplayInit(sptr<AbstractScreenCallback> abstractScreenCallback);
     std::vector<ScreenId> GetAllScreenIds() const;
     sptr<AbstractScreen> GetAbstractScreen(ScreenId dmsScreenId) const;
-    std::vector<ScreenId> GetShotScreenIds(std::vector<ScreenId>) const;
-    std::vector<ScreenId> GetAllExpandOrMirrorScreenIds(std::vector<ScreenId>) const;
+    std::vector<ScreenId> GetAllValidScreenIds(std::vector<ScreenId> mirrorScreenIds) const;
     sptr<AbstractScreenGroup> GetAbstractScreenGroup(ScreenId dmsScreenId);
     ScreenId GetDefaultAbstractScreenId();
     ScreenId ConvertToRsScreenId(ScreenId dmsScreenId) const;
@@ -68,7 +66,6 @@ public:
     void UpdateRSTree(ScreenId dmsScreenId, std::shared_ptr<RSSurfaceNode>& surfaceNode, bool isAdd);
     bool MakeMirror(ScreenId, std::vector<ScreenId> screens);
     bool MakeExpand(std::vector<ScreenId> screenIds, std::vector<Point> startPoints);
-    void SetShotScreen(ScreenId mainScreenId, std::vector<ScreenId> shotScreenIds);
     void RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens);
     bool SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason) const;
     ScreenPowerState GetScreenPower(ScreenId dmsScreenId) const;
@@ -94,7 +91,8 @@ private:
     void ProcessScreenConnected(ScreenId rsScreenId);
     sptr<AbstractScreen> InitAndGetScreen(ScreenId rsScreenId);
     void ProcessScreenDisconnected(ScreenId rsScreenId);
-    bool FillAbstractScreen(sptr<AbstractScreen>& absScreen, ScreenId rsScreenId);
+    bool InitAbstractScreenModesInfo(sptr<AbstractScreen>& absScreen);
+    sptr<AbstractScreen> InitVirtualScreen(ScreenId dmsScreenId, ScreenId rsId, VirtualScreenOption option);
     sptr<AbstractScreenGroup> AddToGroupLocked(sptr<AbstractScreen> newScreen);
     sptr<AbstractScreenGroup> RemoveFromGroupLocked(sptr<AbstractScreen> newScreen);
     bool RemoveChildFromGroup(sptr<AbstractScreen>, sptr<AbstractScreenGroup>);
@@ -136,7 +134,6 @@ private:
     ScreenIdManager screenIdManager_;
     std::map<ScreenId, sptr<AbstractScreen>> dmsScreenMap_;
     std::map<ScreenId, sptr<AbstractScreenGroup>> dmsScreenGroupMap_;
-    std::map<ScreenId, std::shared_ptr<RSDisplayNode>> displayNodeMap_;
     std::map<sptr<IRemoteObject>, std::vector<ScreenId>> screenAgentMap_;
     sptr<AgentDeathRecipient> deathRecipient_ { nullptr };
     sptr<AbstractScreenCallback> abstractScreenCallback_;
