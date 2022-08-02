@@ -20,6 +20,7 @@
 #include "static_call.h"
 #include "window_impl.h"
 #include "window_manager_hilog.h"
+#include "window_config.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -51,6 +52,12 @@ WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRunt
     }
     option->SetDisplayId(displayId);
     option->SetWindowTag(WindowTag::MAIN_WINDOW);
+    if (option->GetWindowMode() == WindowMode::WINDOW_MODE_UNDEFINED) {
+        uint32_t mode = WindowConfig::getDefaultWindowMode();
+        if (mode != WINDOW_CONFIG_INVALID_VALUE) {
+            option->SetWindowMode(WindowMode(mode));
+        }
+    }
 
     mainWindow_ = SingletonContainer::Get<StaticCall>().CreateWindow(
         GenerateMainWindowName(context), option, context);

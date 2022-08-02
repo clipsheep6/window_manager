@@ -50,7 +50,14 @@ void WindowManagerConfig::ReadConfig(const xmlNodePtr& rootPtr, std::map<std::st
             !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("modeChangeHotZones")) ||
             !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("duration")) ||
             !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("durationIn")) ||
-            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("durationOut"))) {
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("durationOut")) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("maxFloatingWidth")) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("maxFloatingHeight")) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("minFloatingWidth")) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("minFloatingHeight")) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("floatingBottomPosY")) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("defaultFloatingWindow")) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("defaultWindowMode"))) {
             std::vector<int> v;
             ReadIntNumbersConfigInfo(curNodePtr, v);
             mapValue[reinterpret_cast<const char*>(curNodePtr->name)].SetValue(v);
