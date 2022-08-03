@@ -37,6 +37,8 @@ config("libwm_public_config") {
 ohos_shared_library("libwm") {
   sources = [
     "../wmserver/src/zidl/window_manager_proxy.cpp",
+    "../wmserver/src/window_config.cpp",
+    "../wmserver/src/window_manager_config.cpp",
     "src/color_parser.cpp",
     "src/input_transfer_station.cpp",
     "src/static_call.cpp",
@@ -89,6 +91,7 @@ ohos_shared_library("libwm") {
     "multimedia_image_standard:image",
     "multimedia_image_standard:image_native",
     "napi:ace_napi",
+    "config_policy:configpolicy_util",
 
     # because appexecfwk_core depends on global_resmgr
     "c_utils:utils",
@@ -96,6 +99,12 @@ ohos_shared_library("libwm") {
     "safwk:system_ability_fwk",
     "samgr_standard:samgr_proxy",
   ]
+
+  if (is_standard_system) {
+    external_deps += [ "startup_l2:syspara" ]
+  } else {
+    external_deps += [ "startup:syspara" ]
+  }
 
   defines = []
   if (efficiency_manager_enable) {

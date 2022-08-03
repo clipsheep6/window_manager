@@ -21,6 +21,7 @@
 #include "window_helper.h"
 #include "window_inner_manager.h"
 #include "window_manager_hilog.h"
+#include "window_config.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -225,6 +226,15 @@ void WindowLayoutPolicyCascade::LimitDividerMoveBounds(Rect& rect, DisplayId dis
 
 void WindowLayoutPolicyCascade::InitCascadeRect(DisplayId displayId)
 {
+    if (InitCascadeRectCfg(displayId)) {
+        return;
+    }
+
+    InitCascadeRectDefault(displayId);
+}
+
+void WindowLayoutPolicyCascade::InitCascadeRectDefault(DisplayId displayId)
+{
     constexpr uint32_t half = 2;
     constexpr float ratio = DEFAULT_ASPECT_RATIO;
 
@@ -243,9 +253,28 @@ void WindowLayoutPolicyCascade::InitCascadeRect(DisplayId displayId)
         int32_t centerPosY = limitRect.posY_ + static_cast<int32_t>(limitRect.height_ / half);
         resRect.posY_ = centerPosY - static_cast<int32_t>(defaultH / half);
     }
-    WLOGFI("init CascadeRect :[%{public}d, %{public}d, %{public}d, %{public}d]",
-        resRect.posX_, resRect.posY_, resRect.width_, resRect.height_);
+    WLOGFI("init CascadeRect default:[%{public}d, %{public}d, %{public}d, %{public}d]",
+    resRect.posX_, resRect.posY_, resRect.width_, resRect.height_);
     cascadeRectsMap_[displayId].firstCascadeRect_ = resRect;
+}
+
+bool WindowLayoutPolicyCascade::InitCascadeRectCfg(DisplayId displayId)
+{
+    Rect resRect = WindowConfig::getDefaultFloatingWindow();
+    float virtualPixelRatio = GetVirtualPixelRatio(displayId);
+    resRect.width_ = static_cast<uint32_t>(virtualPixelRatio * resRect.width_);
+    resRect.height_ = static_cast<uint32_t>(virtualPixelRatio * resRect.height_);
+    resRect.posX_ = static_cast<int32_t>(virtualPixelRatio * resRect.posX_);
+    resRect.posY_ = static_cast<int32_t>(virtualPixelRatio * resRect.posY_);
+
+    if (resRect.width_ != 0 && resRect.height_ != 0) {
+        WLOGFI("init CascadeRect cfg:[%{public}d, %{public}d, %{public}d, %{public}d]",
+                resRect.posX_, resRect.posY_, resRect.width_, resRect.height_);
+        cascadeRectsMap_[displayId].firstCascadeRect_ = resRect;
+        return true;
+    }
+
+    return false;
 }
 
 void WindowLayoutPolicyCascade::ApplyWindowRectConstraints(const sptr<WindowNode>& node, Rect& winRect) const
@@ -556,8 +585,12 @@ Rect WindowLayoutPolicyCascade::StepCascadeRect(Rect rect, DisplayId displayId) 
                         (rect.posY_ + static_cast<int32_t>(rect.height_ + cascadeHeight) <=
                         (limitRect.posY_ + static_cast<int32_t>(limitRect.height_))) ?
                         (rect.posY_ + static_cast<int32_t>(cascadeHeight)) : limitRect.posY_;
-    WLOGFI("step cascadeRect :[%{public}d, %{public}d, %{public}u, %{public}u]",
-        cascadeRect.posX_, cascadeRect.posY_, cascadeRect.width_, cascadeRect.height_);
+    static int bottomPosY = WindowConfig::getFloatingBottomPosY() * virtualPixelRatio;
+    if ((bottomPosY != INT_MAX) && (cascadeRect.posY_ + static_cast<int32_t>(cascadeRect.height_) >= bottomPosY)) {
+        cascadeRect.posY_ = limitRect.posY_;
+    }
+    WLOGFI("step cascadeRect :[%{public}d, %{public}d, %{public}u, %{public}u], bottomPosY:%{public}d",
+        cascadeRect.posX_, cascadeRect.posY_, cascadeRect.width_, cascadeRect.height_, bottomPosY);
     return cascadeRect;
 }
 
