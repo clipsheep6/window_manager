@@ -97,6 +97,12 @@ ohos_shared_library("libwm") {
     "samgr:samgr_proxy",
   ]
 
+  if (is_standard_system) {
+    external_deps += [ "startup_l2:syspara" ]
+  } else {
+    external_deps += [ "startup:syspara" ]
+  }
+
   defines = []
   if (efficiency_manager_enable) {
     external_deps += [ "efficiency_manager:suspend_manager_client" ]

@@ -325,6 +325,15 @@ struct MoveDragProperty : public Parcelable {
     }
 };
 
+struct FloatingWindowLimit {
+    uint32_t maxWidth_;
+    uint32_t maxHeight_;
+    uint32_t minWidth_;
+    uint32_t minHeight_;
+    FloatingWindowLimit(uint32_t maxWidth, uint32_t maxHeight, uint32_t minWidth, uint32_t minHeight)
+        : maxWidth_(maxWidth), maxHeight_(maxHeight), minWidth_(minWidth), minHeight_(minHeight) {}
+};
+
 namespace {
     constexpr float DEFAULT_SPLIT_RATIO = 0.5;
     constexpr float DEFAULT_ASPECT_RATIO = 0.66;
@@ -342,6 +351,8 @@ namespace {
     constexpr unsigned int WMS_WATCHDOG_CHECK_INTERVAL = 6; // actual check interval is 3000ms(6 * 500)
     const Rect INVALID_EMPTY_RECT = {0, 0, 0, 0};
     const Rect DEFAULT_PLACE_HOLDER_RECT = {0, 0, 512, 512};
+    const FloatingWindowLimit DEFAULT_FLOATING_WINDOW_LIMIT(MAX_FLOATING_SIZE, MAX_FLOATING_SIZE,
+                                            MIN_VERTICAL_FLOATING_WIDTH, MIN_VERTICAL_FLOATING_HEIGHT);
 }
 }
 }

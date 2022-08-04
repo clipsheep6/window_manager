@@ -21,6 +21,7 @@
 #include "remote_animation.h"
 #include "window_helper.h"
 #include "window_manager_hilog.h"
+#include "window_config.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -56,6 +57,11 @@ sptr<WindowNode> StartingWindow::CreateWindowNode(const sptr<WindowTransitionInf
     property->SetRequestRect(info->GetWindowRect());
     if (WindowHelper::IsValidWindowMode(info->GetWindowMode())) {
         property->SetWindowMode(info->GetWindowMode());
+    } else {
+        uint32_t mode = WindowConfig::getDefaultWindowMode();
+        if (mode != WINDOW_CONFIG_INVALID_VALUE) {
+            property->SetWindowMode(static_cast<WindowMode>(mode));
+        }
     }
 
     property->SetDisplayId(info->GetDisplayId());
