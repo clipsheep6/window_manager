@@ -328,7 +328,7 @@ NativeValue* CreateJsWindowPropertiesObject(NativeEngine& engine, sptr<Window>& 
     object->SetProperty("isTransparent", CreateJsValue(engine, window->IsTransparent()));
     object->SetProperty("isRoundCorner", CreateJsValue(engine, false)); // empty method
     object->SetProperty("dimBehindValue", CreateJsValue(engine, 0));
-    object->SetProperty("windowsId", CreateJsValue(engine, window->GetWindowId()));
+    object->SetProperty("windowId", CreateJsValue(engine, window->GetWindowId()));
     return objValue;
 }
 static std::string GetHexColor(uint32_t color)
