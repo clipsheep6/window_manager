@@ -130,7 +130,7 @@ public:
     bool startingWindowShown_ { false };
     bool isShowingOnMultiDisplays_ { false };
     std::vector<DisplayId> showingDisplays_;
-
+    AbilityInfo abilityInfo_;
 private:
     sptr<WindowProperty> property_ = nullptr;
     sptr<IWindow> windowToken_ = nullptr;
