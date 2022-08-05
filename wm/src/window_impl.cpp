@@ -794,14 +794,24 @@ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<
     }
     if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
         if (SingletonContainer::Get<WindowAdapter>().GetSystemConfig(windowSystemConfig_) == WMError::WM_OK) {
-            WLOGFE("get system decor enable:%{public}d", windowSystemConfig_.isSystemDecorEnable_);
+            WLOGFI("get system decor enable:%{public}d", windowSystemConfig_.isSystemDecorEnable_);
             if (windowSystemConfig_.isSystemDecorEnable_) {
                 property_->SetDecorEnable(true);
             }
             WLOGFI("get stretchable enable:%{public}d", windowSystemConfig_.isStretchable_);
             property_->SetStretchable(windowSystemConfig_.isStretchable_);
+            // if window mode is undefined, set it from configuration
+            if (property_->GetWindowMode() == WindowMode::WINDOW_MODE_UNDEFINED) {
+                WindowMode mode = windowSystemConfig_.defaultWindowMode_;
+                WLOGFI("get default window mode:%{public}u", mode);
+                property_->SetWindowMode(mode);
+            }
         }
         GetConfigurationFromAbilityInfo();
+    } else {
+        if (property_->GetWindowMode() == WindowMode::WINDOW_MODE_UNDEFINED) {
+            property_->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+        }
     }
     WMError ret = SingletonContainer::Get<WindowAdapter>().CreateWindow(windowAgent, property_, surfaceNode_,
         windowId, token);
