@@ -279,6 +279,15 @@ void WindowManagerService::ConfigureWindowManagerService()
         systemConfig_.isStretchable_ = enableConfig.at("stretchable");
     }
 
+    if (intNumbersConfig.count("defaultWindowMode") != 0) {
+        auto numbers = intNumbersConfig.at("defaultWindowMode");
+        if (numbers.size() == 1) {
+            if (numbers[0] > 0) {
+                systemConfig_.defaultWindowMode_ = static_cast<WindowMode>(static_cast<uint32_t>(numbers[0]));
+            }
+        }
+    }
+
     if (intNumbersConfig.count("maxAppWindowNumber") != 0) {
         auto numbers = intNumbersConfig.at("maxAppWindowNumber");
         if (numbers.size() == 1) {
@@ -641,8 +650,7 @@ WMError WindowManagerService::GetAccessibilityWindowInfo(sptr<AccessibilityWindo
 
 WMError WindowManagerService::GetSystemConfig(SystemConfig& systemConfig)
 {
-    systemConfig.isSystemDecorEnable_ = systemConfig_.isSystemDecorEnable_;
-    systemConfig.isStretchable_ = systemConfig_.isStretchable_;
+    systemConfig = systemConfig_;
     return WMError::WM_OK;
 }
 
