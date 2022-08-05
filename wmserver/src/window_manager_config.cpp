@@ -50,7 +50,6 @@ bool WindowManagerConfig::LoadConfigXml()
         WLOGFE("[WmConfig] load xml error!");
         return false;
     }
-
     xmlNodePtr rootPtr = xmlDocGetRootElement(docPtr);
     if (rootPtr == nullptr || rootPtr->name == nullptr ||
         xmlStrcmp(rootPtr->name, reinterpret_cast<const xmlChar*>("Configs"))) {
@@ -58,13 +57,11 @@ bool WindowManagerConfig::LoadConfigXml()
         xmlFreeDoc(docPtr);
         return false;
     }
-
     for (xmlNodePtr curNodePtr = rootPtr->xmlChildrenNode; curNodePtr != nullptr; curNodePtr = curNodePtr->next) {
         if (!IsValidNode(*curNodePtr)) {
             WLOGFE("[WmConfig]: invalid node!");
             continue;
         }
-
         auto nodeName = curNodePtr->name;
         if (!xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("decor")) ||
             !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("minimizeByOther")) ||
@@ -74,11 +71,16 @@ bool WindowManagerConfig::LoadConfigXml()
         }
         if (!xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("maxAppWindowNumber")) ||
             !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("modeChangeHotZones")) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("maxFloatingWidth")) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("maxFloatingHeight")) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("minFloatingWidth")) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("minFloatingHeight")) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("floatingBottomPosY")) ||
+            !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("defaultFloatingWindow")) ||
             !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("defaultWindowMode"))) {
             ReadIntNumbersConfigInfo(curNodePtr);
             continue;
         }
-
         if (!xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("splitRatios")) ||
             !xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("exitSplitRatios"))) {
             ReadFloatNumbersConfigInfo(curNodePtr);
