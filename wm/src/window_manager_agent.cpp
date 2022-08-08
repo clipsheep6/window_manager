@@ -20,30 +20,35 @@
 
 namespace OHOS {
 namespace Rosen {
-void WindowManagerAgent::UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused)
+WMError WindowManagerAgent::UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused)
 {
     SingletonContainer::Get<WindowManager>().UpdateFocusChangeInfo(focusChangeInfo, focused);
+    return WMError::WM_OK;
 }
 
-void WindowManagerAgent::UpdateSystemBarRegionTints(DisplayId displayId, const SystemBarRegionTints& tints)
+WMError WindowManagerAgent::UpdateSystemBarRegionTints(DisplayId displayId, const SystemBarRegionTints& tints)
 {
     SingletonContainer::Get<WindowManager>().UpdateSystemBarRegionTints(displayId, tints);
+    return WMError::WM_OK;
 }
 
-void WindowManagerAgent::NotifyAccessibilityWindowInfo(const sptr<AccessibilityWindowInfo>& windowInfo,
+WMError WindowManagerAgent::NotifyAccessibilityWindowInfo(const sptr<AccessibilityWindowInfo>& windowInfo,
     WindowUpdateType type)
 {
     SingletonContainer::Get<WindowManager>().NotifyAccessibilityWindowInfo(windowInfo, type);
+    return WMError::WM_OK;
 }
 
-void WindowManagerAgent::UpdateWindowVisibilityInfo(const std::vector<sptr<WindowVisibilityInfo>>& visibilityInfos)
+WMError WindowManagerAgent::UpdateWindowVisibilityInfo(const std::vector<sptr<WindowVisibilityInfo>>& visibilityInfos)
 {
     SingletonContainer::Get<WindowManager>().UpdateWindowVisibilityInfo(visibilityInfos);
+    return WMError::WM_OK;
 }
 
-void WindowManagerAgent::UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing)
+WMError WindowManagerAgent::UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing)
 {
     SingletonContainer::Get<WindowManager>().UpdateCameraFloatWindowStatus(accessTokenId, isShowing);
+    return WMError::WM_OK;
 }
 } // namespace Rosen
 } // namespace OHOS

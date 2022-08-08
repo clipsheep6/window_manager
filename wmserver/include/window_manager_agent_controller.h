@@ -31,11 +31,11 @@ public:
     void UnregisterWindowManagerAgent(const sptr<IWindowManagerAgent>& windowManagerAgent,
         WindowManagerAgentType type);
 
-    void UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused);
-    void UpdateSystemBarRegionTints(DisplayId displayId, const SystemBarRegionTints& tints);
-    void NotifyAccessibilityWindowInfo(const sptr<AccessibilityWindowInfo>& windowInfo, WindowUpdateType type);
-    void UpdateWindowVisibilityInfo(const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos);
-    void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing);
+    WMError UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused);
+    WMError UpdateSystemBarRegionTints(DisplayId displayId, const SystemBarRegionTints& tints);
+    WMError NotifyAccessibilityWindowInfo(const sptr<AccessibilityWindowInfo>& windowInfo, WindowUpdateType type);
+    WMError UpdateWindowVisibilityInfo(const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos);
+    WMError UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing);
 
 private:
     WindowManagerAgentController() {}

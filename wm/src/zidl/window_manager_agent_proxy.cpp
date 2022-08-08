@@ -25,24 +25,24 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowManagerAgentProxy"};
 }
 
-void WindowManagerAgentProxy::UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused)
+WMError WindowManagerAgentProxy::UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
     if (focusChangeInfo == nullptr) {
         WLOGFE("Invalid focus change info");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
 
     if (!data.WriteParcelable(focusChangeInfo)) {
         WLOGFE("Write displayId failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
 
     if (!data.WriteRemoteObject(focusChangeInfo->abilityToken_)) {
@@ -51,28 +51,30 @@ void WindowManagerAgentProxy::UpdateFocusChangeInfo(const sptr<FocusChangeInfo>&
 
     if (!data.WriteBool(focused)) {
         WLOGFE("Write Focus failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerAgentMsg::TRANS_ID_UPDATE_FOCUS),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
     }
+    return WMError::WM_OK;
 }
 
-void WindowManagerAgentProxy::UpdateSystemBarRegionTints(DisplayId displayId, const SystemBarRegionTints& tints)
+WMError WindowManagerAgentProxy::UpdateSystemBarRegionTints(DisplayId displayId, const SystemBarRegionTints& tints)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
 
     if (!data.WriteUint64(displayId)) {
         WLOGFE("Write displayId failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
     bool res = MarshallingHelper::MarshallingVectorObj<SystemBarRegionTint>(data, tints,
         [](Parcel& parcel, const SystemBarRegionTint& tint) {
@@ -84,15 +86,17 @@ void WindowManagerAgentProxy::UpdateSystemBarRegionTints(DisplayId displayId, co
     );
     if (!res) {
         WLOGFE("Write SystemBarRegionTint failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerAgentMsg::TRANS_ID_UPDATE_SYSTEM_BAR_PROPS),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
     }
+    return WMError::WM_OK;
 }
 
-void WindowManagerAgentProxy::NotifyAccessibilityWindowInfo(const sptr<AccessibilityWindowInfo>& windowInfo,
+WMError WindowManagerAgentProxy::NotifyAccessibilityWindowInfo(const sptr<AccessibilityWindowInfo>& windowInfo,
     WindowUpdateType type)
 {
     MessageParcel data;
@@ -100,25 +104,27 @@ void WindowManagerAgentProxy::NotifyAccessibilityWindowInfo(const sptr<Accessibi
     MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
 
     if (!data.WriteParcelable(windowInfo)) {
         WLOGFE("Write displayId failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
 
     if (!data.WriteUint32(static_cast<uint32_t>(type))) {
         WLOGFE("Write windowUpdateType failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerAgentMsg::TRANS_ID_UPDATE_WINDOW_STATUS),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
     }
+    return WMError::WM_OK;
 }
 
-void WindowManagerAgentProxy::UpdateWindowVisibilityInfo(
+WMError WindowManagerAgentProxy::UpdateWindowVisibilityInfo(
     const std::vector<sptr<WindowVisibilityInfo>>& visibilityInfos)
 {
     MessageParcel data;
@@ -126,49 +132,53 @@ void WindowManagerAgentProxy::UpdateWindowVisibilityInfo(
     MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
     if (!data.WriteUint32(static_cast<uint32_t>(visibilityInfos.size()))) {
         WLOGFE("write windowVisibilityInfos size failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
     for (auto& info : visibilityInfos) {
         if (!data.WriteParcelable(info)) {
             WLOGFE("Write windowVisibilityInfo failed");
-            return;
+            return WMError::WM_ERROR_IPC_FAILED;
         }
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerAgentMsg::TRANS_ID_UPDATE_WINDOW_VISIBILITY),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
     }
+    return WMError::WM_OK;
 }
 
-void WindowManagerAgentProxy::UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing)
+WMError WindowManagerAgentProxy::UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
 
     if (!data.WriteUint32(accessTokenId)) {
         WLOGFE("Write accessTokenId failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
 
     if (!data.WriteBool(isShowing)) {
         WLOGFE("Write is showing status failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerAgentMsg::TRANS_ID_UPDATE_CAMERA_FLOAT),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
     }
+    return WMError::WM_OK;
 }
 } // namespace Rosen
 } // namespace OHOS

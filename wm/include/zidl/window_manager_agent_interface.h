@@ -42,12 +42,12 @@ public:
         TRANS_ID_UPDATE_CAMERA_FLOAT,
     };
 
-    virtual void UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused) = 0;
-    virtual void UpdateSystemBarRegionTints(DisplayId displayId, const SystemBarRegionTints& tints) = 0;
-    virtual void NotifyAccessibilityWindowInfo(const sptr<AccessibilityWindowInfo>& windowInfo,
+    virtual WMError UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused) = 0;
+    virtual WMError UpdateSystemBarRegionTints(DisplayId displayId, const SystemBarRegionTints& tints) = 0;
+    virtual WMError NotifyAccessibilityWindowInfo(const sptr<AccessibilityWindowInfo>& windowInfo,
         WindowUpdateType type) = 0;
-    virtual void UpdateWindowVisibilityInfo(const std::vector<sptr<WindowVisibilityInfo>>& visibilityInfos) = 0;
-    virtual void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing) = 0;
+    virtual WMError UpdateWindowVisibilityInfo(const std::vector<sptr<WindowVisibilityInfo>>& visibilityInfos) = 0;
+    virtual WMError UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing) = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -91,7 +91,6 @@ public:
     void UpdateSizeChangeReason(sptr<WindowNode>& node, WindowSizeChangeReason reason);
     void DropShowWhenLockedWindowIfNeeded(const sptr<WindowNode>& node);
 
-    void SetMinimizedByOther(bool isMinimizedByOther);
     void GetModeChangeHotZones(DisplayId displayId,
         ModeChangeHotZones& hotZones, const ModeChangeHotZonesConfig& config);
     sptr<DisplayInfo> GetDisplayInfo(DisplayId displayId);
@@ -102,7 +101,7 @@ public:
     sptr<AvoidAreaController> GetAvoidController() const;
     sptr<DisplayGroupController> GetMultiDisplayController() const;
     sptr<WindowNode> GetRootNode(WindowRootNodeType type) const;
-    void NotifyDockWindowStateChanged(sptr<WindowNode>& node, bool isEnable);
+    WMError NotifyDockWindowStateChanged(sptr<WindowNode>& node, bool isEnable);
     void UpdateCameraFloatWindowStatus(const sptr<WindowNode>& node, bool isShowing);
     void UpdateAvoidAreaListener(sptr<WindowNode>& windowNode, bool haveAvoidAreaListener);
     void BeforeProcessWindowAvoidAreaChangeWhenDisplayChange() const;
