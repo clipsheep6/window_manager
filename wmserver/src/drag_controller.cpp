@@ -183,7 +183,7 @@ bool MoveDragController::Init()
         return false;
     }
     inputListener_ = std::make_shared<InputEventListener>(InputEventListener());
-    MMI::InputManager::GetInstance()->SetWindowInputEventConsumer(inputListener_, inputEventHandler_);
+    SetInputEventConsumer();
     VsyncStation::GetInstance().SetIsMainHandlerAvailable(false);
     VsyncStation::GetInstance().SetVsyncEventHandler(inputEventHandler_);
     return true;
@@ -194,6 +194,11 @@ void MoveDragController::Stop()
     if (inputEventHandler_ != nullptr) {
         inputEventHandler_.reset();
     }
+}
+
+void MoveDragController::SetInputEventConsumer()
+{
+    MMI::InputManager::GetInstance()->SetWindowInputEventConsumer(inputListener_, inputEventHandler_);
 }
 
 void MoveDragController::HandleReadyToMoveOrDrag(uint32_t windowId, sptr<WindowProperty>& windowProperty,

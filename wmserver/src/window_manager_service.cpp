@@ -130,6 +130,7 @@ void WindowManagerService::OnAddSystemAbility(int32_t systemAbilityId, const std
 void WindowManagerService::OnAccountSwitched(int accountId)
 {
     PostAsyncTask([this, accountId]() {
+        WindowInnerManager::GetInstance().SetInputEventConsumer();
         windowRoot_->RemoveSingleUserWindowNodes(accountId);
     });
     WLOGFI("called");

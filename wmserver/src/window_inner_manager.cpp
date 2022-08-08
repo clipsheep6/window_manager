@@ -203,9 +203,20 @@ pid_t WindowInnerManager::GetPid()
     return pid_;
 }
 
+void WindowInnerManager::SetInputEventConsumer()
+{
+    if (moveDragController_ == nullptr) {
+        return;
+    }
+    moveDragController_->SetInputEventConsumer();
+}
+
 bool WindowInnerManager::NotifyServerReadyToMoveOrDrag(uint32_t windowId, sptr<WindowProperty>& windowProperty,
     sptr<MoveDragProperty>& moveDragProperty)
 {
+    if (moveDragController_ == nullptr) {
+        return false;
+    }
     if (moveDragController_->GetActiveWindowId() != INVALID_WINDOW_ID) {
         WLOGFW("Is already in dragging or moving state, invalid operation");
         return false;
@@ -217,6 +228,9 @@ bool WindowInnerManager::NotifyServerReadyToMoveOrDrag(uint32_t windowId, sptr<W
 
 void WindowInnerManager::NotifyWindowEndUpMovingOrDragging(uint32_t windowId)
 {
+    if (moveDragController_ == nullptr) {
+        return;
+    }
     if (moveDragController_->GetActiveWindowId() != windowId) {
         return;
     }
@@ -226,6 +240,9 @@ void WindowInnerManager::NotifyWindowEndUpMovingOrDragging(uint32_t windowId)
 
 void WindowInnerManager::NotifyWindowRemovedOrDestroyed(uint32_t windowId)
 {
+    if (moveDragController_ == nullptr) {
+        return;
+    }
     if (moveDragController_->GetActiveWindowId() != windowId) {
         return;
     }
@@ -235,6 +252,9 @@ void WindowInnerManager::NotifyWindowRemovedOrDestroyed(uint32_t windowId)
 
 void WindowInnerManager::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
+    if (moveDragController_ == nullptr) {
+        return;
+    }
     uint32_t windowId = static_cast<uint32_t>(pointerEvent->GetAgentWindowId());
     if (moveDragController_->GetActiveWindowId() != windowId ||
         moveDragController_->GetActiveWindowId() == INVALID_WINDOW_ID) {

@@ -50,6 +50,7 @@ public:
     // asynchronously calls the functions of AbilityManager
     void MinimizeAbility(const wptr<WindowNode> &node, bool isFromUser);
 
+    void SetInputEventConsumer();
     void ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     bool NotifyServerReadyToMoveOrDrag(uint32_t windowId, sptr<WindowProperty>& windowProperty,
         sptr<MoveDragProperty>& moveDragProperty);
