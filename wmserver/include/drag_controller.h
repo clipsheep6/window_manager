@@ -67,6 +67,7 @@ public:
 
     bool Init();
     void Stop();
+    void SetInputEventConsumer();
     void HandleReadyToMoveOrDrag(uint32_t windowId, sptr<WindowProperty>& windowProperty,
         sptr<MoveDragProperty>& moveDragProperty);
     void HandleEndUpMovingOrDragging(uint32_t windowId);
