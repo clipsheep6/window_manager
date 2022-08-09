@@ -29,6 +29,8 @@ public:
     
     void SetRotation(float degree);
     void SetRotation(const Quaternion& quaternion);
+    void SetRotationX(float degree);
+    void SetRotationY(float degree);
 
     void SetTranslateX(float translate);
     void SetTranslateY(float translate);

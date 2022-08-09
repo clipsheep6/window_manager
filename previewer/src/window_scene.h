@@ -25,7 +25,6 @@ namespace OHOS::AppExecFwk {
 }
 namespace OHOS {
 namespace Rosen {
-
 #ifdef CreateWindow
 #undef CreateWindow
 #endif

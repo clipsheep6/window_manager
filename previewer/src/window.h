@@ -99,7 +99,7 @@ public:
     OccupiedAreaChangeInfo(OccupiedAreaType type, Rect rect) : type_(type), rect_(rect) {};
     ~OccupiedAreaChangeInfo() = default;
 
-    virtual bool Marshalling(Parcel& parcel) const override;
+    bool Marshalling(Parcel& parcel) const override;
     static OccupiedAreaChangeInfo* Unmarshalling(Parcel& parcel);
 
     OccupiedAreaType type_ = OccupiedAreaType::TYPE_INPUT;

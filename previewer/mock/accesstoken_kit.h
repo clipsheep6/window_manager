@@ -17,8 +17,6 @@
 #define INTERFACES_INNER_KITS_ACCESSTOKEN_KIT_H
 
 #include <string>
-#include <vector>
-
 #include "access_token.h"
 
 namespace OHOS {

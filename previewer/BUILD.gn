@@ -16,41 +16,43 @@ import("//build/ohos.gni")
 ohos_shared_library("previewer_shared") {
   libs = []
 
-  sources = [ 
+  sources = [
     # js_window.cpp
-    "src/window.cpp",
-    "src/parcel.cpp",
     "../../../../commonlibrary/c_utils/base/src/refbase.cpp",
-    "../interfaces/kits/napi/window_runtime/window_napi/js_window.cpp",
     "../../../ability/ability_runtime/frameworks/native/runtime/js_runtime_utils.cpp",
+    "../interfaces/kits/napi/window_runtime/window_napi/js_window.cpp",
     "../interfaces/kits/napi/window_runtime/window_napi/js_window_utils.cpp",
-    "../wm/src/window_option.cpp",
 
     # js_window_stage.cpp
     "../interfaces/kits/napi/window_runtime/window_stage_napi/js_window_stage.cpp",
-    "src/window_scene.cpp",
-    
-    "mock/ui/rs_node.cpp",
-    "mock/ui/rs_surface_node.cpp",
-    "mock/napi_remote_object.cpp",
-    "mock/js_window_register_manager.cpp",
-    "mock/pixel_map_napi.cpp",
-    "mock/window_manager.cpp",
+    "../utils/src/wm_math.cpp",
+    "../wm/src/window_option.cpp",
     "mock/accesstoken_kit.cpp",
     "mock/ipc_skeleton.cpp",
     "mock/js_transition_controller.cpp",
+    "mock/js_window_register_manager.cpp",
+    "mock/napi_remote_object.cpp",
+    "mock/pixel_map_napi.cpp",
+    "mock/ui/rs_node.cpp",
+    "mock/ui/rs_surface_node.cpp",
+    "mock/window_manager.cpp",
+    "src/parcel.cpp",
+    "src/window.cpp",
+    "src/window_scene.cpp",
   ]
   include_dirs = [
-    "./", #避免冲突的mock目录
-    "mock/", #mock目录
-    "src/", #window.h parcel.h window_scene.h
-    "mock/ui/", #rs_node.h rs_vector4.h
-    "../../../../commonlibrary/c_utils/base/include/", #refbase.h
-    "../../../ability/ability_runtime/interfaces/inner_api/runtime/include/", # js_runtime_utils.h
-    "../interfaces/kits/napi/window_runtime/window_napi/", #js_window_utils.h
-    "../interfaces/innerkits/wm/", #wm_common.h window_option.h
-    "../interfaces/innerkits/dm/", #dm_common.h
-    "../interfaces/kits/napi/window_runtime/window_stage_napi/", #js_window_stage.h
+    "./",  #避免冲突的mock目录
+    "mock/",  #mock目录
+    "src/",  #window.h parcel.h window_scene.h
+    "mock/ui/",  #rs_node.h rs_vector4.h
+    "../../../../commonlibrary/c_utils/base/include/",  #refbase.h
+    "../../../ability/ability_runtime/interfaces/inner_api/runtime/include/",  # js_runtime_utils.h
+    "../interfaces/kits/napi/window_runtime/window_napi/",  #js_window_utils.h
+    "../interfaces/innerkits/wm/",  #wm_common.h window_option.h
+    "../interfaces/innerkits/dm/",  #dm_common.h
+    "../interfaces/kits/napi/window_runtime/window_stage_napi/",  #js_window_stage.h
+    "../utils/include",  #wm_math.h
+    "../../../../base/security/access_token/interfaces/innerkits/accesstoken/include/",  #access_token.h
   ]
 
   deps = [

@@ -18,6 +18,26 @@
 
 namespace OHOS {
 namespace Rosen {
+template<typename T>
+class Vector4 {
+    public:
+    union {
+        struct {
+            T x_;
+            T y_;
+            T z_;
+            T w_;
+        };
+        T data_[4];
+    };
+    Vector4();
+    Vector4(T value);
+    Vector4(T x, T y, T z, T w);
+    explicit Vector4(const T* array);
+    ~Vector4();
+};
+typedef Vector4<float> Vector4f;
+typedef Vector4<double> Vector4d;
 class Quaternion {
 public:
     Quaternion(float x, float y, float z, float w) : myx(x), myy(y), myz(z), myw(w) {}

@@ -19,11 +19,8 @@
 #include <string>
 #include <vector>
 #include "refbase.h"
-
 namespace OHOS {
-
 class Parcel;
-
 class Parcelable : public virtual RefBase {
 public:
     virtual ~Parcelable() = default;
