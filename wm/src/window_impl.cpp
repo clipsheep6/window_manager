@@ -34,6 +34,7 @@
 #include "window_manager_hilog.h"
 #include "wm_common.h"
 #include "wm_common_inner.h"
+#include "wm_math.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -70,6 +71,7 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
     property_->SetHitOffset(option->GetHitOffset());
     property_->SetRequestedOrientation(option->GetRequestedOrientation());
     windowTag_ = option->GetWindowTag();
+    isMainHandlerAvailable_ = option->GetMainHandlerAvailable();
     property_->SetTurnScreenOn(option->IsTurnScreenOn());
     property_->SetKeepScreenOn(option->IsKeepScreenOn());
     property_->SetBrightness(option->GetBrightness());
@@ -300,6 +302,11 @@ uint32_t WindowImpl::GetModeSupportInfo() const
     return property_->GetModeSupportInfo();
 }
 
+bool WindowImpl::IsMainHandlerAvailable() const
+{
+    return isMainHandlerAvailable_;
+}
+
 SystemBarProperty WindowImpl::GetSystemBarPropertyByType(WindowType type) const
 {
     auto curProperties = property_->GetSystemBarProperty();
@@ -393,7 +400,7 @@ void WindowImpl::SetTransform(const Transform& trans)
     UpdateProperty(PropertyChangeAction::ACTION_UPDATE_TRANSFORM_PROPERTY);
 }
 
-Transform WindowImpl::GetTransform() const
+const Transform& WindowImpl::GetTransform() const
 {
     return property_->GetTransform();
 }
@@ -772,6 +779,112 @@ void WindowImpl::UpdateTitleButtonVisibility()
     uiContent_->HideWindowTitleButton(hideSplitButton, hideMaximizeButton, false);
 }
 
+bool WindowImpl::IsAppMainOrSubOrFloatingWindow()
+{
+    // App main window need decor config, stretchable config and effect config
+    // App sub window and float window need effect config
+    if (WindowHelper::IsAppWindow(GetType())) {
+        return true;
+    }
+
+    if (WindowHelper::IsAppFloatingWindow(GetType())) {
+        for (auto& winPair : windowMap_) {
+            auto win = winPair.second.second;
+            if (win != nullptr && win->GetType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW &&
+                context_.get() == win->GetContext().get()) {
+                isAppFloatingWindow_ = true;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void WindowImpl::SetWindowCornerRadiusAccordingToSystemConfig()
+{
+    auto display = DisplayManager::GetInstance().GetDisplayById(property_->GetDisplayId());
+    if (display == nullptr) {
+        WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u", property_->GetDisplayId(),
+            property_->GetWindowId());
+        return;
+    }
+    auto vpr = display->GetVirtualPixelRatio();
+    auto fullscreenRadius = windowSystemConfig_.effectConfig_.fullScreenCornerRadius_ * vpr;
+    auto splitRadius = windowSystemConfig_.effectConfig_.splitCornerRadius_ * vpr;
+    auto floatRadius = windowSystemConfig_.effectConfig_.floatCornerRadius_ * vpr;
+
+    WLOGFI("[WEffect] [name:%{public}s] mode: %{public}u, vpr: %{public}f, [%{public}f, %{public}f, %{public}f]",
+        name_.c_str(), GetMode(), vpr, fullscreenRadius, splitRadius, floatRadius);
+
+    if (WindowHelper::IsFullScreenWindow(GetMode()) && MathHelper::GreatNotEqual(fullscreenRadius, 0.0)) {
+        SetCornerRadius(fullscreenRadius);
+    } else if (WindowHelper::IsSplitWindowMode(GetMode()) && MathHelper::GreatNotEqual(splitRadius, 0.0)) {
+        SetCornerRadius(splitRadius);
+    } else if (WindowHelper::IsFloatingWindow(GetMode()) && MathHelper::GreatNotEqual(floatRadius, 0.0)) {
+        SetCornerRadius(floatRadius);
+    }
+}
+
+void WindowImpl::UpdateWindowShadowAccordingToSystemConfig()
+{
+    if (!WindowHelper::IsAppWindow(GetType()) && !isAppFloatingWindow_) {
+        return;
+    }
+
+    auto& shadow = isFocused_ ? windowSystemConfig_.effectConfig_.focusedShadow_ :
+        windowSystemConfig_.effectConfig_.unfocusedShadow_;
+
+    if (MathHelper::NearZero(shadow.elevation_)) {
+        return;
+    }
+
+    if (!WindowHelper::IsFloatingWindow(GetMode())) {
+        surfaceNode_->SetShadowElevation(0.f);
+        WLOGFI("[WEffect][%{public}s]close shadow", name_.c_str());
+        return;
+    }
+
+    auto display = DisplayManager::GetInstance().GetDisplayById(property_->GetDisplayId());
+    if (display == nullptr) {
+        WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u", property_->GetDisplayId(),
+            property_->GetWindowId());
+        return;
+    }
+    auto vpr = display->GetVirtualPixelRatio();
+
+    uint32_t colorValue;
+    if (!ColorParser::Parse(shadow.color_, colorValue)) {
+        WLOGFE("[WEffect]invalid color string: %{public}s", shadow.color_.c_str());
+        return;
+    }
+
+    WLOGFI("[WEffect][%{public}s]focused: %{public}u, [%{public}f, %{public}s, %{public}f, %{public}f, %{public}f]",
+        name_.c_str(), isFocused_, shadow.elevation_, shadow.color_.c_str(),
+        shadow.offsetX_, shadow.offsetY_, shadow.alpha_);
+
+    surfaceNode_->SetShadowElevation(shadow.elevation_ * vpr);
+    surfaceNode_->SetShadowColor(colorValue);
+    surfaceNode_->SetShadowOffsetX(shadow.offsetX_);
+    surfaceNode_->SetShadowOffsetY(shadow.offsetY_);
+    surfaceNode_->SetShadowAlpha(shadow.alpha_);
+}
+
+void WindowImpl::SetSystemConfig()
+{
+    if (IsAppMainOrSubOrFloatingWindow()) {
+        if (SingletonContainer::Get<WindowAdapter>().GetSystemConfig(windowSystemConfig_) == WMError::WM_OK) {
+            if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
+                WLOGFI("get system decor enable:%{public}d", windowSystemConfig_.isSystemDecorEnable_);
+                property_->SetDecorEnable(windowSystemConfig_.isSystemDecorEnable_);
+                WLOGFI("get stretchable enable:%{public}d", windowSystemConfig_.isStretchable_);
+                property_->SetStretchable(windowSystemConfig_.isStretchable_);
+            }
+            SetWindowCornerRadiusAccordingToSystemConfig();
+        }
+        UpdateWindowShadowAccordingToSystemConfig();
+    }
+}
+
 WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<AbilityRuntime::Context>& context)
 {
     WLOGFI("[Client] Window [name:%{public}s] Create", name_.c_str());
@@ -808,15 +921,10 @@ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<
             property_->SetTokenState(true);
         }
     }
+
+    SetSystemConfig();
+
     if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
-        if (SingletonContainer::Get<WindowAdapter>().GetSystemConfig(windowSystemConfig_) == WMError::WM_OK) {
-            WLOGFE("get system decor enable:%{public}d", windowSystemConfig_.isSystemDecorEnable_);
-            if (windowSystemConfig_.isSystemDecorEnable_) {
-                property_->SetDecorEnable(true);
-            }
-            WLOGFI("get stretchable enable:%{public}d", windowSystemConfig_.isStretchable_);
-            property_->SetStretchable(windowSystemConfig_.isStretchable_);
-        }
         GetConfigurationFromAbilityInfo();
     }
     WMError ret = SingletonContainer::Get<WindowAdapter>().CreateWindow(windowAgent, property_, surfaceNode_,
@@ -1085,8 +1193,7 @@ WMError WindowImpl::Show(uint32_t reason, bool withAnimation)
             SingletonContainer::Get<WindowAdapter>().MinimizeAllAppWindows(property_->GetDisplayId());
         } else {
             WLOGFI("window is already shown id: %{public}u, raise to top", property_->GetWindowId());
-            SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(),
-                property_, moveDragProperty_);
+            SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId());
         }
         NotifyAfterForeground(false);
         return WMError::WM_OK;
@@ -1533,7 +1640,8 @@ void WindowImpl::StartMove()
         return;
     }
     moveDragProperty_->startMoveFlag_ = true;
-    SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(), property_, moveDragProperty_);
+    SingletonContainer::Get<WindowAdapter>().NotifyServerReadyToMoveOrDrag(property_->GetWindowId(),
+        property_, moveDragProperty_);
     WLOGFI("[StartMove] windowId %{public}u", GetWindowId());
 }
 
@@ -1902,6 +2010,10 @@ void WindowImpl::UpdateMode(WindowMode mode)
         uiContent_->UpdateWindowMode(mode);
         WLOGFI("notify uiContent window mode change end");
     }
+    // different modes have different corner radius settings
+    SetWindowCornerRadiusAccordingToSystemConfig();
+    // fullscreen and split have no shadow, float has shadow
+    UpdateWindowShadowAccordingToSystemConfig();
 }
 
 void WindowImpl::UpdateModeSupportInfo(uint32_t modeSupportInfo)
@@ -2145,7 +2257,7 @@ void WindowImpl::ReadyToMoveOrDragWindow(int32_t globalX, int32_t globalY, int32
 
     if (GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
         moveDragProperty_->startMoveFlag_ = true;
-        SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(),
+        SingletonContainer::Get<WindowAdapter>().NotifyServerReadyToMoveOrDrag(property_->GetWindowId(),
             property_, moveDragProperty_);
     } else if (!WindowHelper::IsPointInTargetRect(moveDragProperty_->startPointPosX_,
         moveDragProperty_->startPointPosY_, moveDragProperty_->startRectExceptFrame_) ||
@@ -2155,7 +2267,7 @@ void WindowImpl::ReadyToMoveOrDragWindow(int32_t globalX, int32_t globalY, int32
         moveDragProperty_->startPointPosY_, moveDragProperty_->startRectExceptCorner_)))) {
         moveDragProperty_->startDragFlag_ = true;
         UpdateDragType();
-        SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(),
+        SingletonContainer::Get<WindowAdapter>().NotifyServerReadyToMoveOrDrag(property_->GetWindowId(),
             property_, moveDragProperty_);
     }
 
@@ -2250,8 +2362,7 @@ void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& p
                 return;
             }
         }
-        SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(),
-            property_, moveDragProperty_);
+        SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId());
     }
 
     // If point event type is up, should reset start move flag
@@ -2280,9 +2391,19 @@ void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& p
         WLOGFI("Transfer pointer event to uiContent");
         (void)uiContent_->ProcessPointerEvent(pointerEvent);
     } else {
-        WLOGW("pointerEvent is not consumed, windowId: %{public}u", GetWindowId());
+        WLOGE("pointerEvent is not consumed, windowId: %{public}u", GetWindowId());
         pointerEvent->MarkProcessed();
     }
+}
+
+void WindowImpl::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (state_ == WindowState::STATE_DESTROYED) {
+        WLOGFE("[WM] Receive Vsync Request failed, window is destroyed");
+        return;
+    }
+    VsyncStation::GetInstance().RequestVsync(vsyncCallback);
 }
 
 void WindowImpl::UpdateFocusStatus(bool focused)
@@ -2293,6 +2414,8 @@ void WindowImpl::UpdateFocusStatus(bool focused)
     } else {
         NotifyAfterUnfocused();
     }
+    isFocused_ = focused;
+    UpdateWindowShadowAccordingToSystemConfig();
 }
 
 void WindowImpl::UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
@@ -2452,7 +2575,7 @@ void WindowImpl::NotifyTouchOutside()
 void WindowImpl::NotifyTouchDialogTarget()
 {
     std::vector<sptr<IDialogTargetTouchListener>> dialogTargetTouchListeners;
-    SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(), property_, moveDragProperty_);
+    SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId());
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         dialogTargetTouchListeners = dialogTargetTouchListeners_;
@@ -2722,7 +2845,7 @@ bool WindowImpl::CheckCameraFloatingWindowMultiCreated(WindowType type)
 WMError WindowImpl::SetCornerRadius(float cornerRadius)
 {
     WLOGFI("[Client] Window %{public}s set corner radius %{public}f", name_.c_str(), cornerRadius);
-    if (WindowHelper::LessNotEqual(cornerRadius, 0.0)) {
+    if (MathHelper::LessNotEqual(cornerRadius, 0.0)) {
         return WMError::WM_ERROR_INVALID_PARAM;
     }
     surfaceNode_->SetCornerRadius(cornerRadius);
@@ -2732,7 +2855,7 @@ WMError WindowImpl::SetCornerRadius(float cornerRadius)
 WMError WindowImpl::SetShadowRadius(float radius)
 {
     WLOGFI("[Client] Window %{public}s set shadow radius %{public}f", name_.c_str(), radius);
-    if (WindowHelper::LessNotEqual(radius, 0.0)) {
+    if (MathHelper::LessNotEqual(radius, 0.0)) {
         return WMError::WM_ERROR_INVALID_PARAM;
     }
     surfaceNode_->SetShadowRadius(radius);
@@ -2765,7 +2888,7 @@ void WindowImpl::SetShadowOffsetY(float offsetY)
 WMError WindowImpl::SetBlur(float radius)
 {
     WLOGFI("[Client] Window %{public}s set blur radius %{public}f", name_.c_str(), radius);
-    if (WindowHelper::LessNotEqual(radius, 0.0)) {
+    if (MathHelper::LessNotEqual(radius, 0.0)) {
         return WMError::WM_ERROR_INVALID_PARAM;
     }
     surfaceNode_->SetFilter(RSFilter::CreateBlurFilter(radius, radius));
@@ -2775,7 +2898,7 @@ WMError WindowImpl::SetBlur(float radius)
 WMError WindowImpl::SetBackdropBlur(float radius)
 {
     WLOGFI("[Client] Window %{public}s set backdrop blur radius %{public}f", name_.c_str(), radius);
-    if (WindowHelper::LessNotEqual(radius, 0.0)) {
+    if (MathHelper::LessNotEqual(radius, 0.0)) {
         return WMError::WM_ERROR_INVALID_PARAM;
     }
     surfaceNode_->SetBackgroundFilter(RSFilter::CreateBlurFilter(radius, radius));
@@ -2790,7 +2913,7 @@ WMError WindowImpl::SetBackdropBlurStyle(WindowBlurStyle blurStyle)
     }
 
     if (blurStyle == WindowBlurStyle::WINDOW_BLUR_OFF) {
-        surfaceNode_->SetBackgroundFilter(RSFilter::CreateBlurFilter(0.0, 0.0));
+        surfaceNode_->SetBackgroundFilter(nullptr);
     } else {
         auto display = DisplayManager::GetInstance().GetDisplayById(property_->GetDisplayId());
         if (display == nullptr) {
@@ -2806,6 +2929,7 @@ WMError WindowImpl::SetBackdropBlurStyle(WindowBlurStyle blurStyle)
 
 WMError WindowImpl::NotifyMemoryLevel(int32_t level) const
 {
+    WLOGFI("[Client] Window id: %{public}u, notify memory level: %{public}d", property_->GetWindowId(), level);
     if (uiContent_ == nullptr) {
         WLOGFE("[Client] Window %{public}s notify memory level failed, because uicontent is null.", name_.c_str());
         return WMError::WM_ERROR_NULLPTR;

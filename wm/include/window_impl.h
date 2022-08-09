@@ -117,6 +117,7 @@ public:
     virtual uint32_t GetWindowId() const override;
     virtual uint32_t GetWindowFlags() const override;
     uint32_t GetRequestModeSupportInfo() const override;
+    bool IsMainHandlerAvailable() const override;
     inline NotifyNativeWinDestroyFunc GetNativeDestroyCallback()
     {
         return notifyNativefunc_;
@@ -134,7 +135,7 @@ public:
     virtual WMError SetSystemBarProperty(WindowType type, const SystemBarProperty& property) override;
     virtual WMError SetLayoutFullScreen(bool status) override;
     virtual WMError SetFullScreen(bool status) override;
-    virtual Transform GetTransform() const override;
+    virtual const Transform& GetTransform() const override;
     virtual WMError UpdateSurfaceNodeAfterCustomAnimation(bool isAdd) override;
     inline void SetWindowState(WindowState state)
     {
@@ -214,6 +215,7 @@ public:
     void UpdateModeSupportInfo(uint32_t modeSupportInfo);
     virtual void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent) override;
     virtual void ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& inputEvent) override;
+    virtual void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback) override;
     void UpdateFocusStatus(bool focused);
     virtual void UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration) override;
     void UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type);
@@ -390,6 +392,11 @@ private:
     WMError PreProcessShow(uint32_t reason, bool withAnimation);
     bool NeedToStopShowing();
     void CalculateStartRectExceptHotZone(float virtualPixelRatio, const TransformHelper::Vector2& hotZoneScale);
+    void SetSystemConfig();
+    bool IsAppMainOrSunOrFloatingWindow();
+    void SetWindowCornerRadiusAccordingToSystemConfig();
+    bool IsAppMainOrSubOrFloatingWindow();
+    void UpdateWindowShadowAccordingToSystemConfig();
 
     // colorspace, gamut
     using ColorSpaceConvertMap = struct {
@@ -436,6 +443,9 @@ private:
     bool isOriginRectSet_ = false;
     bool needRemoveWindowInputChannel_ = false;
     bool isListenerHandlerRunning_ = false;
+    bool isMainHandlerAvailable_ = true;
+    bool isAppFloatingWindow_ = false;
+    bool isFocused_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

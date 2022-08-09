@@ -121,6 +121,8 @@ enum class WMError : int32_t {
     WM_ERROR_INVALID_PERMISSION,
     WM_ERROR_NO_REMOTE_ANIMATION,
 
+    WM_ERROR_DEVICE_NOT_SUPPORT = 801, // the value do not change.It is defined on all system
+
     WM_ERROR_NEED_REPORT_BASE = 1000, // error code > 1000 means need report
     WM_ERROR_NULLPTR,
     WM_ERROR_INVALID_TYPE,
@@ -355,16 +357,6 @@ enum class WindowUpdateType : int32_t {
     WINDOW_UPDATE_BOUNDS,
     WINDOW_UPDATE_ACTIVE,
     WINDOW_UPDATE_PROPERTY,
-};
-
-struct SystemConfig {
-    bool isSystemDecorEnable_ = true;
-    bool isStretchable_ = false;
-};
-
-enum class CallbackType {
-    CALLBACK_INPUT = 0,
-    CALLBACK_FRAME = 1,
 };
 
 using OnCallback = std::function<void(int64_t)>;

@@ -48,13 +48,15 @@ public:
     void SetCurvedScreenBoundary(std::vector<int> curvedScreenBoundary);
 private:
     Rect CalcCutoutBoundingRect(std::string svgPath);
+    void CheckBoudingRectBoundary(DisplayId displayId, Rect& boundingRect);
     void CalcBuiltInDisplayWaterfallRects();
     void CalcBuiltInDisplayWaterfallRectsByRotation(Rotation rotation, uint32_t displayHeight, uint32_t displayWidth);
     void TransferBoundingRectsByRotation(DisplayId displayId, std::vector<Rect>& boudingRects);
+    Rect CreateWaterfallRect(uint32_t left, uint32_t top, uint32_t width, uint32_t height);
 
     // Raw data
     std::map<DisplayId, std::vector<std::string>> svgPaths_;
-    bool isWaterfallDisplay_ = true;
+    bool isWaterfallDisplay_ = false;
     std::vector<int> curvedScreenBoundary_; // Order: left top right bottom
     bool isWaterfallAreaLayoutEnable_ = true;
 
