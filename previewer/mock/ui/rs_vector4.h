@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef RENDER_SERVICE_CLIENT_CORE_COMMON_RS_VECTOR4_H
 #define RENDER_SERVICE_CLIENT_CORE_COMMON_RS_VECTOR4_H
 
@@ -20,7 +19,7 @@ namespace OHOS {
 namespace Rosen {
 template<typename T>
 class Vector4 {
-    public:
+public:
     union {
         struct {
             T x_;
