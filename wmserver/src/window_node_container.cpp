@@ -512,7 +512,7 @@ sptr<WindowNode> WindowNodeContainer::FindRoot(WindowType type) const
     if (WindowHelper::IsBelowSystemWindow(type)) {
         return belowAppWindowNode_;
     }
-    if (WindowHelper::IsAboveSystemWindow(type)) {
+    if (WindowHelper::IsAboveSystemWindow(type) || WindowHelper::IsSystemSubWindow(type)) {
         return aboveAppWindowNode_;
     }
     return nullptr;
