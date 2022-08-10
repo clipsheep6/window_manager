@@ -19,6 +19,7 @@
 #include <common/rs_rect.h>
 #include <hitrace_meter.h>
 #include <rs_window_animation_finished_callback.h>
+#include <transaction/rs_transaction.h>
 #include "minimize_app.h"
 #include "window_helper.h"
 #include "window_inner_manager.h"
@@ -32,6 +33,7 @@ namespace {
 bool RemoteAnimation::isRemoteAnimationEnable_ = true;
 
 sptr<RSIWindowAnimationController> RemoteAnimation::windowAnimationController_ = nullptr;
+static const RSAnimationTimingProtocol timingProtocol(200); // animation time
 std::map<TransitionReason, TransitionEvent> eventMap_ = {
     {TransitionReason::CLOSE, TransitionEvent::CLOSE},
     {TransitionReason::MINIMIZE, TransitionEvent::MINIMIZE},
@@ -114,6 +116,31 @@ TransitionEvent RemoteAnimation::GetTransitionEvent(sptr<WindowTransitionInfo> s
     return TransitionEvent::UNKNOWN;
 }
 
+static sptr<RSWindowAnimationFinishedCallback> GetTransitionFinishedCallback(const sptr<WindowNode>& dstNode)
+{
+    wptr<WindowNode> weak = dstNode;
+    sptr<RSWindowAnimationFinishedCallback> finishedCallback = new(std::nothrow) RSWindowAnimationFinishedCallback(
+        [weak]() {
+            WLOGFI("RSWindowAnimation: on finish transition with minimizeAll!");
+            MinimizeApp::ExecuteMinimizeAll();
+            auto weakNode = weak.promote();
+            if (weakNode != nullptr) {
+                FinishAsyncTraceArgs(HITRACE_TAG_WINDOW_MANAGER, static_cast<int32_t>(TraceTaskId::REMOTE_ANIMATION),
+                    "wms:async:ShowRemoteAnimation");
+                RSNode::Animate(timingProtocol, RSAnimationTimingCurve::EASE_OUT, [weakNode]() {
+                    auto winRect = weakNode->GetWindowRect();
+                    if (weakNode->leashWinSurfaceNode_) {
+                        weakNode->leashWinSurfaceNode_->SetBounds(
+                            winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
+                        RSTransaction::FlushImplicitTransaction();
+                    }
+                });
+            }
+        }
+    );
+    return finishedCallback;
+}
+
 WMError RemoteAnimation::NotifyAnimationTransition(sptr<WindowTransitionInfo> srcInfo,
     sptr<WindowTransitionInfo> dstInfo, const sptr<WindowNode>& srcNode,
     const sptr<WindowNode>& dstNode, sptr<WindowRoot>& windowRoot)
@@ -123,14 +150,7 @@ WMError RemoteAnimation::NotifyAnimationTransition(sptr<WindowTransitionInfo> sr
         return WMError::WM_ERROR_NO_REMOTE_ANIMATION;
     }
     WLOGFI("RSWindowAnimation: notify animation transition with dst currId:%{public}u!", dstNode->GetWindowId());
-    sptr<RSWindowAnimationFinishedCallback> finishedCallback = new(std::nothrow) RSWindowAnimationFinishedCallback(
-        []() {
-            WLOGFI("RSWindowAnimation: on finish transition with minimizeAll!");
-            MinimizeApp::ExecuteMinimizeAll();
-            FinishAsyncTraceArgs(HITRACE_TAG_WINDOW_MANAGER, static_cast<int32_t>(TraceTaskId::REMOTE_ANIMATION),
-                "wms:async:ShowRemoteAnimation");
-        }
-    );
+    auto finishedCallback = GetTransitionFinishedCallback(dstNode);
     if (finishedCallback == nullptr) {
         WLOGFE("New RSIWindowAnimationFinishedCallback failed");
         return WMError::WM_ERROR_NO_MEM;
