@@ -18,7 +18,6 @@
 #include <ability_manager_client.h>
 #include <common/rs_rect.h>
 #include <hitrace_meter.h>
-#include <rs_window_animation_finished_callback.h>
 #include "minimize_app.h"
 #include "window_helper.h"
 #include "window_inner_manager.h"
@@ -32,13 +31,17 @@ namespace {
 bool RemoteAnimation::isRemoteAnimationEnable_ = true;
 
 sptr<RSIWindowAnimationController> RemoteAnimation::windowAnimationController_ = nullptr;
+std::weak_ptr<AppExecFwk::EventHandler> RemoteAnimation::wmsTaskHandler_;
+wptr<WindowRoot> RemoteAnimation::windowRoot_;
+
 std::map<TransitionReason, TransitionEvent> eventMap_ = {
     {TransitionReason::CLOSE, TransitionEvent::CLOSE},
     {TransitionReason::MINIMIZE, TransitionEvent::MINIMIZE},
     {TransitionReason::BACK, TransitionEvent::BACK}
 };
 
-WMError RemoteAnimation::SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller)
+WMError RemoteAnimation::SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller,
+    const sptr<WindowRoot>& windowRoot)
 {
     WLOGFI("RSWindowAnimation: set window animation controller!");
     if (!isRemoteAnimationEnable_) {
@@ -55,13 +58,19 @@ WMError RemoteAnimation::SetWindowAnimationController(const sptr<RSIWindowAnimat
     }
 
     windowAnimationController_ = controller;
+    windowRoot_ = windowRoot;
     return WMError::WM_OK;
+}
+
+void RemoteAnimation::SetMainTaskHandler(std::shared_ptr<AppExecFwk::EventHandler> handler)
+{
+    wmsTaskHandler_ = handler;
 }
 
 bool RemoteAnimation::CheckAnimationController()
 {
     if (windowAnimationController_ == nullptr) {
-        WLOGFI("RSWindowAnimation: windowAnimationController_ null!");
+        WLOGFD("RSWindowAnimation: windowAnimationController_ null!");
         return false;
     }
     return true;
@@ -114,9 +123,31 @@ TransitionEvent RemoteAnimation::GetTransitionEvent(sptr<WindowTransitionInfo> s
     return TransitionEvent::UNKNOWN;
 }
 
+WMError RemoteAnimation::NotifyAnimationStartApp(sptr<WindowTransitionInfo> srcInfo,
+    const sptr<WindowNode>& srcNode, const sptr<WindowNode>& dstNode,
+    sptr<RSWindowAnimationTarget>& dstTarget, sptr<RSWindowAnimationFinishedCallback>& finishedCallback)
+{
+    // start app from launcher
+    if (srcNode != nullptr && srcNode->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
+        WLOGFI("RSWindowAnimation: start app id:%{public}u from launcher!", dstNode->GetWindowId());
+        windowAnimationController_->OnStartApp(StartingAppType::FROM_LAUNCHER, dstTarget, finishedCallback);
+        return WMError::WM_OK;
+    }
+    // start app from recent
+    if (srcInfo != nullptr && srcInfo->GetIsRecent()) {
+        WLOGFI("RSWindowAnimation: start app id:%{public}u from recent!", dstNode->GetWindowId());
+        windowAnimationController_->OnStartApp(StartingAppType::FROM_RECENT, dstTarget, finishedCallback);
+        return WMError::WM_OK;
+    }
+    // start app from other
+    WLOGFI("RSWindowAnimation: start app id:%{public}u from other!", dstNode->GetWindowId());
+    windowAnimationController_->OnStartApp(StartingAppType::FROM_OTHER, dstTarget, finishedCallback);
+    return WMError::WM_OK;
+}
+
 WMError RemoteAnimation::NotifyAnimationTransition(sptr<WindowTransitionInfo> srcInfo,
     sptr<WindowTransitionInfo> dstInfo, const sptr<WindowNode>& srcNode,
-    const sptr<WindowNode>& dstNode, sptr<WindowRoot>& windowRoot)
+    const sptr<WindowNode>& dstNode)
 {
     if (!dstNode || !dstNode->startingWindowShown_) {
         WLOGFE("RSWindowAnimation: no startingWindow for dst window id:%{public}u!", dstNode->GetWindowId());
@@ -125,7 +156,7 @@ WMError RemoteAnimation::NotifyAnimationTransition(sptr<WindowTransitionInfo> sr
     WLOGFI("RSWindowAnimation: notify animation transition with dst currId:%{public}u!", dstNode->GetWindowId());
     sptr<RSWindowAnimationFinishedCallback> finishedCallback = new(std::nothrow) RSWindowAnimationFinishedCallback(
         []() {
-            WLOGFI("RSWindowAnimation: on finish transition with minimizeAll!");
+            WLOGFI("RSWindowAnimation: on finish transition with minimize pre fullscreen!");
             MinimizeApp::ExecuteMinimizeAll();
             FinishAsyncTraceArgs(HITRACE_TAG_WINDOW_MANAGER, static_cast<int32_t>(TraceTaskId::REMOTE_ANIMATION),
                 "wms:async:ShowRemoteAnimation");
@@ -151,34 +182,19 @@ WMError RemoteAnimation::NotifyAnimationTransition(sptr<WindowTransitionInfo> sr
         srcNode->isPlayAnimationHide_ = true;
         // update snapshot before animation
         AAFwk::AbilityManagerClient::GetInstance()->UpdateMissionSnapShot(srcNode->abilityToken_);
-        windowRoot->RemoveWindowNode(srcNode->GetWindowId());
+        auto winRoot = windowRoot_.promote();
+        if (winRoot != nullptr) {
+            winRoot->RemoveWindowNode(srcNode->GetWindowId());
+        }
         WLOGFI("RSWindowAnimation: app transition from id:%{public}u to id:%{public}u!",
             srcNode->GetWindowId(), dstNode->GetWindowId());
         windowAnimationController_->OnAppTransition(srcTarget, dstTarget, finishedCallback);
         return WMError::WM_OK;
     }
-    // start app from launcher
-    if (srcNode != nullptr && srcNode->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
-        WLOGFI("RSWindowAnimation: start app id:%{public}u from launcher!", dstNode->GetWindowId());
-        windowAnimationController_->OnStartApp(StartingAppType::FROM_LAUNCHER, dstTarget, finishedCallback);
-        return WMError::WM_OK;
-    }
-
-    // start app from recent
-    if (srcInfo != nullptr && srcInfo->GetIsRecent()) {
-        WLOGFI("RSWindowAnimation: start app id:%{public}u from recent!", dstNode->GetWindowId());
-        windowAnimationController_->OnStartApp(StartingAppType::FROM_RECENT, dstTarget, finishedCallback);
-        return WMError::WM_OK;
-    }
-
-    // start app from other
-    WLOGFI("RSWindowAnimation: start app id:%{public}u from other!", dstNode->GetWindowId());
-    windowAnimationController_->OnStartApp(StartingAppType::FROM_OTHER, dstTarget, finishedCallback);
-    return WMError::WM_OK;
+    return NotifyAnimationStartApp(srcInfo, srcNode, dstNode, dstTarget, finishedCallback);
 }
 
-WMError RemoteAnimation::NotifyAnimationMinimize(sptr<WindowTransitionInfo> srcInfo, const sptr<WindowNode>& srcNode,
-    sptr<WindowRoot>& windowRoot)
+WMError RemoteAnimation::NotifyAnimationMinimize(sptr<WindowTransitionInfo> srcInfo, const sptr<WindowNode>& srcNode)
 {
     sptr<RSWindowAnimationTarget> srcTarget = CreateWindowAnimationTarget(srcInfo, srcNode);
     if (srcTarget == nullptr) {
@@ -188,7 +204,10 @@ WMError RemoteAnimation::NotifyAnimationMinimize(sptr<WindowTransitionInfo> srcI
     srcNode->isPlayAnimationHide_ = true;
     // update snapshot before animation
     AAFwk::AbilityManagerClient::GetInstance()->UpdateMissionSnapShot(srcNode->abilityToken_);
-    windowRoot->RemoveWindowNode(srcNode->GetWindowId());
+    auto winRoot = windowRoot_.promote();
+    if (winRoot != nullptr) {
+        winRoot->RemoveWindowNode(srcNode->GetWindowId());
+    }
     wptr<WindowNode> weak = srcNode;
     auto minimizeFunc = [weak]() {
         FinishAsyncTraceArgs(HITRACE_TAG_WINDOW_MANAGER, static_cast<int32_t>(TraceTaskId::REMOTE_ANIMATION),
@@ -206,7 +225,7 @@ WMError RemoteAnimation::NotifyAnimationMinimize(sptr<WindowTransitionInfo> srcI
 }
 
 WMError RemoteAnimation::NotifyAnimationClose(sptr<WindowTransitionInfo> srcInfo, const sptr<WindowNode>& srcNode,
-    TransitionEvent event, sptr<WindowRoot>& windowRoot)
+    TransitionEvent event)
 {
     sptr<RSWindowAnimationTarget> srcTarget = CreateWindowAnimationTarget(srcInfo, srcNode);
     if (srcTarget == nullptr) {
@@ -216,7 +235,10 @@ WMError RemoteAnimation::NotifyAnimationClose(sptr<WindowTransitionInfo> srcInfo
     srcNode->isPlayAnimationHide_ = true;
     // update snapshot before animation
     AAFwk::AbilityManagerClient::GetInstance()->UpdateMissionSnapShot(srcNode->abilityToken_);
-    windowRoot->RemoveWindowNode(srcNode->GetWindowId());
+    auto winRoot = windowRoot_.promote();
+    if (winRoot != nullptr) {
+        winRoot->RemoveWindowNode(srcNode->GetWindowId());
+    }
     wptr<WindowNode> weak = srcNode;
     auto closeFunc = [weak, event]() {
         auto weakNode = weak.promote();
@@ -245,7 +267,7 @@ WMError RemoteAnimation::NotifyAnimationClose(sptr<WindowTransitionInfo> srcInfo
     return WMError::WM_OK;
 }
 
-WMError RemoteAnimation::NotifyAnimationByHome(sptr<WindowRoot>& windowRoot)
+WMError RemoteAnimation::NotifyAnimationByHome()
 {
     if (!CheckAnimationController()) {
         return WMError::WM_ERROR_NO_REMOTE_ANIMATION;
@@ -263,7 +285,10 @@ WMError RemoteAnimation::NotifyAnimationByHome(sptr<WindowRoot>& windowRoot)
         srcNode->isPlayAnimationHide_ = true;
         // update snapshot before animation
         AAFwk::AbilityManagerClient::GetInstance()->UpdateMissionSnapShot(srcNode->abilityToken_);
-        windowRoot->RemoveWindowNode(srcNode->GetWindowId());
+        auto winRoot = windowRoot_.promote();
+        if (winRoot != nullptr) {
+            winRoot->RemoveWindowNode(srcNode->GetWindowId());
+        }
         animationTargets.emplace_back(srcTarget);
     }
     auto func = []() {
@@ -283,6 +308,44 @@ WMError RemoteAnimation::NotifyAnimationByHome(sptr<WindowRoot>& windowRoot)
     return WMError::WM_OK;
 }
 
+void RemoteAnimation::NotifyAnimationTargetsUpdate(uint32_t fullScreenWinId, std::vector<uint32_t>& floatWinIds)
+{
+    if (!CheckAnimationController()) {
+        return;
+    }
+
+    auto handler = wmsTaskHandler_.lock();
+    if (handler == nullptr) {
+        WLOGFE("wmsTaskHandler_ is nullptr");
+        return;
+    }
+    // need post task when visit windowRoot node map
+    auto task = [fullScreenWinId, floatWinIds]() {
+        auto winRoot = windowRoot_.promote();
+        if (winRoot == nullptr) {
+            WLOGFE("window root is nullptr");
+            return;
+        }
+        // if no fullScreen, use nullptr, and target be nullptr
+        auto fullScreenNode = winRoot->GetWindowNode(fullScreenWinId);
+        sptr<RSWindowAnimationTarget> fullTarget = CreateWindowAnimationTarget(nullptr, fullScreenNode);
+        std::vector<sptr<RSWindowAnimationTarget>> floatingAnimationTargets;
+        for (auto& id : floatWinIds) {
+            auto floatNode = winRoot->GetWindowNode(id);
+            sptr<RSWindowAnimationTarget> floatTarget = CreateWindowAnimationTarget(nullptr, floatNode);
+            if (floatTarget != nullptr) {
+                floatingAnimationTargets.emplace_back(floatTarget);
+            }
+        }
+        windowAnimationController_->OnWindowAnimationTargetsUpdate(fullTarget, floatingAnimationTargets);
+    };
+    bool ret = handler->PostTask(task, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+    if (!ret) {
+        WLOGFE("EventHandler PostTask Failed");
+        task();
+    }
+}
+
 WMError RemoteAnimation::NotifyAnimationScreenUnlock(std::function<void(void)> callback)
 {
     if (!CheckAnimationController()) {
@@ -300,10 +363,10 @@ WMError RemoteAnimation::NotifyAnimationScreenUnlock(std::function<void(void)> c
 }
 
 sptr<RSWindowAnimationTarget> RemoteAnimation::CreateWindowAnimationTarget(sptr<WindowTransitionInfo> info,
-    const sptr<WindowNode>& windowNode)
+    const sptr<WindowNode>& windowNode, bool isUpdate)
 {
-    if (info == nullptr || windowNode == nullptr) {
-        WLOGFW("Failed to create window animation target, info or window node is null!");
+    if (windowNode == nullptr) {
+        WLOGFW("Failed to create window animation target, window node is null!");
         return nullptr;
     }
 
@@ -312,8 +375,16 @@ sptr<RSWindowAnimationTarget> RemoteAnimation::CreateWindowAnimationTarget(sptr<
         WLOGFE("New RSWindowAnimationTarget failed");
         return nullptr;
     }
-    windowAnimationTarget->bundleName_ = info->GetBundleName();
-    windowAnimationTarget->abilityName_ = info->GetAbilityName();
+
+    if (isUpdate) {
+        windowAnimationTarget->bundleName_ = windowNode->abilityInfo_.bundleName_;
+        windowAnimationTarget->abilityName_ = windowNode->abilityInfo_.abilityName_;
+    } else if (info) { // use for back, minimize, close
+        windowAnimationTarget->bundleName_ = info->GetBundleName();
+        windowAnimationTarget->abilityName_ = info->GetAbilityName();
+    }
+
+    windowAnimationTarget->missionId_ = windowNode->abilityInfo_.missionId_;
     windowAnimationTarget->windowId_ = windowNode->GetWindowId();
     windowAnimationTarget->displayId_ = windowNode->GetDisplayId();
     if (WindowHelper::IsAppWindow(windowNode->GetWindowType())) {
@@ -321,7 +392,6 @@ sptr<RSWindowAnimationTarget> RemoteAnimation::CreateWindowAnimationTarget(sptr<
     } else {
         windowAnimationTarget->surfaceNode_ = windowNode->surfaceNode_;
     }
-
     if (windowAnimationTarget->surfaceNode_ == nullptr) {
         WLOGFE("Window surface node is null!");
         return nullptr;
