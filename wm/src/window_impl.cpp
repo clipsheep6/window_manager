@@ -113,12 +113,8 @@ void WindowImpl::InitListenerHandler()
 
 WindowImpl::~WindowImpl()
 {
-    if (eventHandler_ != nullptr) {
-        eventHandler_.reset();
-    }
     WLOGFI("windowName: %{public}s, windowId: %{public}d, deConstructorCnt: %{public}d, surfaceNode:%{public}d",
         GetWindowName().c_str(), GetWindowId(), ++deConstructorCnt, static_cast<uint32_t>(surfaceNode_.use_count()));
-    Destroy();
 }
 
 sptr<Window> WindowImpl::Find(const std::string& name)
@@ -1653,7 +1649,7 @@ WMError WindowImpl::RequestFocus() const
     return SingletonContainer::Get<WindowAdapter>().RequestFocus(property_->GetWindowId());
 }
 
-void WindowImpl::SetInputEventConsumer(const std::shared_ptr<IInputEventConsumer>& inputEventConsumer)
+void WindowImpl::SetInputEventConsumer(const sptr<IInputEventConsumer>& inputEventConsumer)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     inputEventConsumer_ = inputEventConsumer;
@@ -2025,7 +2021,7 @@ void WindowImpl::UpdateModeSupportInfo(uint32_t modeSupportInfo)
 
 void WindowImpl::HandleBackKeyPressedEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
-    std::shared_ptr<IInputEventConsumer> inputEventConsumer;
+    sptr<IInputEventConsumer> inputEventConsumer;
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         inputEventConsumer = inputEventConsumer_;
@@ -2071,7 +2067,7 @@ void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
     if (keyCode == MMI::KeyEvent::KEYCODE_BACK && keyAction == MMI::KeyEvent::KEY_ACTION_UP) {
         HandleBackKeyPressedEvent(keyEvent);
     } else {
-        std::shared_ptr<IInputEventConsumer> inputEventConsumer;
+        sptr<IInputEventConsumer> inputEventConsumer;
         {
             std::lock_guard<std::recursive_mutex> lock(mutex_);
             inputEventConsumer = inputEventConsumer_;
@@ -2379,7 +2375,7 @@ void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& p
     if (windowSystemConfig_.isStretchable_ && GetMode() == WindowMode::WINDOW_MODE_FLOATING) {
         UpdatePointerEventForStretchableWindow(pointerEvent);
     }
-    std::shared_ptr<IInputEventConsumer> inputEventConsumer;
+    sptr<IInputEventConsumer> inputEventConsumer;
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         inputEventConsumer = inputEventConsumer_;

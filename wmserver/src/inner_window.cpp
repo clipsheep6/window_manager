@@ -123,7 +123,7 @@ void PlaceHolderWindow::SetInputEventConsumer()
         return;
     }
     if (inputEventConsumer_ == nullptr) {
-        inputEventConsumer_ = std::make_shared<PlaceholderInputEventConsumer>();
+        inputEventConsumer_ = new PlaceholderInputEventConsumer();
     }
     window_->SetInputEventConsumer(inputEventConsumer_);
 }
