@@ -18,6 +18,7 @@
 
 #include <cfloat>
 #include <cinttypes>
+#include <unordered_set>
 #include "wm_common.h"
 
 namespace OHOS {
@@ -353,6 +354,11 @@ namespace {
     const Rect DEFAULT_PLACE_HOLDER_RECT = {0, 0, 512, 512};
     const FloatingWindowLimit DEFAULT_FLOATING_WINDOW_LIMIT(MAX_FLOATING_SIZE, MAX_FLOATING_SIZE,
                                             MIN_VERTICAL_FLOATING_WIDTH, MIN_VERTICAL_FLOATING_HEIGHT);
+    const std::unordered_set<WindowType> INPUT_WINDOW_TYPE_SKIPPED {
+        WindowType::WINDOW_TYPE_POINTER,
+        WindowType::WINDOW_TYPE_DRAGGING_EFFECT,
+        WindowType::WINDOW_TYPE_FREEZE_DISPLAY
+    };
 }
 }
 }
