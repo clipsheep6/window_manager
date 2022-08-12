@@ -26,9 +26,9 @@ namespace Rosen {
 const int WINDOW_CONFIG_INVALID_VALUE = INT_MAX;
 const int WINDOW_LOCATION_NUM = 4;
 enum ArrIndex : uint32_t {
-    first, 
-    second, 
-    third, 
+    first,
+    second,
+    third,
     fourth,
 };
 

@@ -84,20 +84,21 @@ void WindowConfig::checkInitConfig()
     defaultWindowMode_ = static_cast<uint32_t>(getValue("defaultWindowMode"));
     floatingBottomPosY_ = getValue("floatingBottomPosY");
     WLOGFI("[WmConfig] checkInitConfig %{public}u, %{public}u, %{public}u, %{public}u, %{public}u, %{public}d",
-        maxFloatingWidth_, maxFloatingHeight_, minFloatingWidth_, minFloatingHeight_, 
+        maxFloatingWidth_, maxFloatingHeight_, minFloatingWidth_, minFloatingHeight_,
         defaultWindowMode_, floatingBottomPosY_);
 }
 
 int WindowConfig::getValue(std::string name)
 {
     const auto& config = WindowManagerConfig::GetConfig();
-    if (config.count(name) != 0 && config.at(name).IsInts()) {
-        auto numbers = *config.at(name).intsValue_;
-        if (numbers.size() == 1) {
+    item = config[name];
+    if (item.IsInts()) {
+        auto numbers = *item.intsValue_;
+        if (numbers.size() == 1 && numbers[0] > 0) {
             return static_cast<uint32_t>(numbers[0]);
         }
     }
-    WLOGFE("[WmConfig] WindowConfig::getValue %{public}s size wrong.", name.c_str());
+    WLOGFE("[WmConfig] WindowConfig::getValue %{public}s size wrong.", name);
     return WINDOW_CONFIG_INVALID_VALUE;
 }
 
@@ -109,8 +110,9 @@ void WindowConfig::initDefaultFloatingWindow()
     defaultFloatingWindow_.height_ = 0;
     const auto& config = WindowManagerConfig::GetConfig();
 
-    if (config.count("defaultFloatingWindow") != 0 && config.at("defaultFloatingWindow").IsInts()) {
-        std::vector<int>& numbers = *config.at("defaultFloatingWindow").intsValue_;
+    item = config["defaultFloatingWindow"];
+    if (item.IsInts()) {
+        std::vector<int>& numbers = *item.intsValue_;
         if (numbers.size() != WINDOW_LOCATION_NUM) {
             WLOGFE("[WmConfig] WindowConfig::initDefaultFloatingWindowsize wrong.");
             return;
