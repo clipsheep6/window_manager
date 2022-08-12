@@ -91,14 +91,14 @@ void WindowConfig::checkInitConfig()
 int WindowConfig::getValue(std::string name)
 {
     const auto& config = WindowManagerConfig::GetConfig();
-    item = config[name];
+    WindowManagerConfig::ConfigItem item = config[name];
     if (item.IsInts()) {
         auto numbers = *item.intsValue_;
         if (numbers.size() == 1 && numbers[0] > 0) {
             return static_cast<uint32_t>(numbers[0]);
         }
     }
-    WLOGFE("[WmConfig] WindowConfig::getValue %{public}s size wrong.", name);
+    WLOGFE("[WmConfig] WindowConfig::getValue %{public}s size wrong.", name.c_str());
     return WINDOW_CONFIG_INVALID_VALUE;
 }
 
@@ -110,7 +110,7 @@ void WindowConfig::initDefaultFloatingWindow()
     defaultFloatingWindow_.height_ = 0;
     const auto& config = WindowManagerConfig::GetConfig();
 
-    item = config["defaultFloatingWindow"];
+    WindowManagerConfig::ConfigItem item = config["defaultFloatingWindow"];
     if (item.IsInts()) {
         std::vector<int>& numbers = *item.intsValue_;
         if (numbers.size() != WINDOW_LOCATION_NUM) {
