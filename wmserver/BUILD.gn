@@ -44,6 +44,7 @@ ohos_shared_library("libwms") {
     "src/remote_animation.cpp",
     "src/starting_window.cpp",
     "src/window_common_event.cpp",
+    "src/window_config.cpp",
     "src/window_controller.cpp",
     "src/window_dumper.cpp",
     "src/window_inner_manager.cpp",
@@ -100,9 +101,15 @@ ohos_shared_library("libwms") {
   ]
 
   if (is_standard_system) {
-    external_deps += [ "init:libbegetutil" ]
+    external_deps += [
+      "init:libbegetutil",
+      "startup_l2:syspara",
+    ]
   } else {
-    external_deps += [ "init_lite:libbegetutil" ]
+    external_deps += [
+      "init_lite:libbegetutil",
+      "startup:syspara",
+    ]
   }
 
   part_name = "window_manager"
