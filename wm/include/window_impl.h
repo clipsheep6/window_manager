@@ -377,6 +377,7 @@ private:
     uint32_t GetModeSupportInfo() const;
     WMError PreProcessShow(uint32_t reason, bool withAnimation);
     bool NeedToStopShowing();
+    bool WindowCreateCheck(const std::string& parentName);
 
     // colorspace, gamut
     using ColorSpaceConvertMap = struct {
