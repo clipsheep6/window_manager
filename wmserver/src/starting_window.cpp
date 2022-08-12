@@ -21,7 +21,6 @@
 #include "remote_animation.h"
 #include "window_helper.h"
 #include "window_manager_hilog.h"
-#include "window_config.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -31,6 +30,7 @@ namespace {
 }
 
 std::recursive_mutex StartingWindow::mutex_;
+WindowMode StartingWindow::defaultMode_ = WindowMode::WINDOW_MODE_FULLSCREEN;
 
 bool StartingWindow::NeedToStopStartingWindow(WindowMode winMode, uint32_t modeSupportInfo,
     const sptr<WindowTransitionInfo>& info)
@@ -58,10 +58,7 @@ sptr<WindowNode> StartingWindow::CreateWindowNode(const sptr<WindowTransitionInf
     if (WindowHelper::IsValidWindowMode(info->GetWindowMode())) {
         property->SetWindowMode(info->GetWindowMode());
     } else {
-        uint32_t mode = WindowConfig::getDefaultWindowMode();
-        if (mode != WINDOW_CONFIG_INVALID_VALUE) {
-            property->SetWindowMode(static_cast<WindowMode>(mode));
-        }
+        property->SetWindowMode(defaultMode_);
     }
 
     property->SetDisplayId(info->GetDisplayId());
@@ -225,6 +222,10 @@ void StartingWindow::UpdateRSTree(sptr<WindowNode>& node)
         // add or remove window without animation
         updateRSTreeFunc();
     }
+}
+void StartingWindow::SetDefaultWindowMode(WindowMode defaultMode)
+{
+    defaultMode_ = defaultMode;
 }
 } // Rosen
 } // OHOS
