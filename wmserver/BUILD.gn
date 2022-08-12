@@ -62,7 +62,6 @@ ohos_shared_library("libwms") {
     "src/window_task_looper.cpp",
     "src/window_zorder_policy.cpp",
     "src/zidl/window_manager_stub.cpp",
-    "src/window_config.cpp",
   ]
 
   configs = [ ":libwms_config" ]
