@@ -39,6 +39,7 @@
 #include "window_manager_config.h"
 #include "window_root.h"
 #include "snapshot_controller.h"
+#include "window_qos_proxy.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -53,6 +54,13 @@ public:
 class WindowInfoQueriedListener : public IWindowInfoQueriedListener {
 public:
     virtual void HasPrivateWindow(DisplayId id, bool& hasPrivateWindow) override;
+};
+
+class QosVisibilityChangeLisenerImpl : public IVisibilityChangerListener {
+public:
+    QosVisibilityChangeLisenerImpl() {}
+    ~QosVisibilityChangeLisenerImpl() {}
+    void QosOnWindowVisibilityChanged(const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfo) override;
 };
 
 class WindowManagerServiceHandler : public AAFwk::WindowManagerServiceHandlerStub {
@@ -123,6 +131,8 @@ public:
     WMError BindDialogTarget(uint32_t& windowId, sptr<IRemoteObject> targetToken) override;
     void HasPrivateWindow(DisplayId displayId, bool& hasPrivateWindow);
     void NotifyWindowClientPointUp(uint32_t windowId, const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
+    void QosOnProcessPointDown(uint32_t windowId);
+    void QosOnWindowVisibilityChanged(const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfo);
 
 protected:
     WindowManagerService();
@@ -131,6 +141,7 @@ protected:
 private:
     std::string name_ = "WindowManagerService";
     bool Init();
+    void WindowQosServiceStart();
     void RegisterSnapshotHandler();
     void RegisterWindowManagerServiceHandler();
     void RegisterWindowVisibilityChangeCallback();
@@ -153,6 +164,7 @@ private:
         return ret;
     }
     void ConfigHotZones(const std::vector<int>& hotZones);
+    void ConfigQos(cosnt std::vector<int>& qosBoundary);
     void ConfigWindowAnimation(const WindowManagerConfig::ConfigItem& animeConfig);
     void ConfigKeyboardAnimation(const WindowManagerConfig::ConfigItem& animeConfig);
     RSAnimationTimingCurve CreateCurve(const WindowManagerConfig::ConfigItem& curveConfig);
@@ -160,6 +172,14 @@ private:
     void ConfigWindowEffect(const WindowManagerConfig::ConfigItem& effectConfig);
     bool ConfigAppWindowCornerRadius(const WindowManagerConfig::ConfigItem& item, float& out);
     bool ConfigAppWindowShadow(const WindowManagerConfig::ConfigItem& shadowConfig, WindowShadowParameters& outShadow);
+
+    static void QosRequestVsyncCount(uint64_t* time, void* appVsyncCountVec);
+    static void QosSetRate(uint32_t pid, int rate);
+    static bool InitWindowQosProxy();
+    static sptr<WindowQosProxy> windowQosProxy_;
+    void* qosServiceHandle_;
+    QosRateConfig qosRateConfig_ {false, 0, 0, 0};
+    QosVisibilityChangeLisenerImpl vbChangedListener_;
 
     static inline SingletonDelegator<WindowManagerService> delegator;
     AtomicMap<uint32_t, uint32_t> accessTokenIdMaps_;
