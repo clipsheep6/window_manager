@@ -270,10 +270,10 @@ WMError WindowController::AddWindowNode(sptr<WindowProperty>& property)
         ResizeSoftInputCallingWindowIfNeed(node);
     }
     StopBootAnimationIfNeed(node);
-    if (node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
-        WindowHelper::IsMainWindow(node->GetWindowType())) {
-            MinimizeApp::ExecuteMinimizeTargetReason(MinimizeReason::OTHER_WINDOW);
-    }
+    // if (node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
+    //     WindowHelper::IsMainWindow(node->GetWindowType())) {
+    //         MinimizeApp::ExecuteMinimizeTargetReason(MinimizeReason::OTHER_WINDOW);
+    // }
     return WMError::WM_OK;
 }
 
@@ -481,7 +481,7 @@ WMError WindowController::SetWindowMode(uint32_t windowId, WindowMode dstMode)
     }
     FlushWindowInfo(windowId);
     accessibilityConnection_->NotifyAccessibilityWindowInfo(node, WindowUpdateType::WINDOW_UPDATE_PROPERTY);
-    MinimizeApp::ExecuteMinimizeAll();
+    // MinimizeApp::ExecuteMinimizeAll();
     return WMError::WM_OK;
 }
 
