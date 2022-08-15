@@ -24,6 +24,7 @@
 #include <hitrace_meter.h>
 #include <ipc_skeleton.h>
 #include <parameters.h>
+#include <platform/common/rs_system_properties.h>
 #include <rs_iwindow_animation_controller.h>
 #include <system_ability_definition.h>
 #include <sstream>
@@ -249,7 +250,7 @@ int32_t WindowManagerServiceHandler::GetFocusWindow(sptr<IRemoteObject>& ability
 }
 
 void WindowManagerServiceHandler::StartingWindow(
-    sptr<AAFwk::AbilityTransitionInfo> info, sptr<Media::PixelMap> pixelMap)
+    sptr<AAFwk::AbilityTransitionInfo> info, std::shared_ptr<Media::PixelMap> pixelMap)
 {
     sptr<WindowTransitionInfo> windowInfo = new WindowTransitionInfo(info);
     WLOGFI("hot start is called");
@@ -257,7 +258,7 @@ void WindowManagerServiceHandler::StartingWindow(
 }
 
 void WindowManagerServiceHandler::StartingWindow(
-    sptr<AAFwk::AbilityTransitionInfo> info, sptr<Media::PixelMap> pixelMap, uint32_t bgColor)
+    sptr<AAFwk::AbilityTransitionInfo> info, std::shared_ptr<Media::PixelMap> pixelMap, uint32_t bgColor)
 {
     sptr<WindowTransitionInfo> windowInfo = new WindowTransitionInfo(info);
     WLOGFI("cold start is called");
@@ -610,7 +611,7 @@ WMError WindowManagerService::GetFocusWindowInfo(sptr<IRemoteObject>& abilityTok
     });
 }
 
-void WindowManagerService::StartingWindow(sptr<WindowTransitionInfo> info, sptr<Media::PixelMap> pixelMap,
+void WindowManagerService::StartingWindow(sptr<WindowTransitionInfo> info, std::shared_ptr<Media::PixelMap> pixelMap,
     bool isColdStart, uint32_t bkgColor)
 {
     if (!startingOpen_) {
