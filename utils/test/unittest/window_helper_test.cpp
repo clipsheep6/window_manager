@@ -212,6 +212,19 @@ HWTEST_F(WindowHelperTest, CalculateHotZoneScale, Function | SmallTest | Level1)
     ASSERT_LT(std::abs(TransformHelper::Vector2(xv.x_, xv.y_).Length() - hotZoneScale.x_), errorRange);
     ASSERT_LT(std::abs(TransformHelper::Vector2(yv.x_, yv.y_).Length() - hotZoneScale.y_), errorRange);
 }
+
+/**
+ * @tc.name: WindowType
+ * @tc.desc: Window Type test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowHelperTest, WindowType, Function | SmallTest | Level1)
+{
+    ASSERT_EQ(true, WindowHelper::IsSystemWindow(WindowType::WINDOW_TYPE_SYSTEM_SUB_WINDOW));
+    ASSERT_EQ(true, WindowHelper::IsSystemSubWindow(WindowType::WINDOW_TYPE_SYSTEM_SUB_WINDOW));
+    ASSERT_EQ(false, WindowHelper::IsSystemSubWindow(WindowType::WINDOW_TYPE_APP_SUB_WINDOW));
+    ASSERT_EQ(false, WindowHelper::IsSystemSubWindow(WindowType::WINDOW_TYPE_FLOAT));
+}
 }
 } // namespace Rosen
 } // namespace OHOS

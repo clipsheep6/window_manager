@@ -95,12 +95,26 @@ uint32_t WindowNodeContainer::GetWindowCountByType(WindowType windowType)
 WMError WindowNodeContainer::AddWindowNodeOnWindowTree(sptr<WindowNode>& node, const sptr<WindowNode>& parentNode)
 {
     sptr<WindowNode> root = FindRoot(node->GetWindowType());
-    if (root == nullptr) {
+    if (root == nullptr && !WindowHelper::IsSystemSubWindow(node->GetWindowType())) {
         WLOGFE("root is nullptr!");
         return WMError::WM_ERROR_NULLPTR;
     }
     node->requestedVisibility_ = true;
     if (parentNode != nullptr) { // subwindow
+        if (root == nullptr && WindowHelper::IsSystemSubWindow(node->GetWindowType())) {
+            if (!WindowHelper::IsSubWindow(parentNode->GetWindowType()) &&
+                !WindowHelper::IsSystemSubWindow(parentNode->GetWindowType()) &&
+                parentNode->GetWindowType() != WindowType::WINDOW_TYPE_DIALOG) {
+                //some times, dialog is a child window, so exclude
+                node->currentVisibility_ = parentNode->currentVisibility_;
+                node->parent_ = parentNode;
+                return WMError::WM_OK;
+            } else {
+                WLOGFE("the parent of system sub window cannot be any sub window");
+                return WMError::WM_ERROR_INVALID_PARAM;
+            }
+        } 
+
         if (parentNode->parent_ != root &&
             !((parentNode->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED)) &&
             (parentNode->parent_ == aboveAppWindowNode_))) {
@@ -512,7 +526,7 @@ sptr<WindowNode> WindowNodeContainer::FindRoot(WindowType type) const
     if (WindowHelper::IsBelowSystemWindow(type)) {
         return belowAppWindowNode_;
     }
-    if (WindowHelper::IsAboveSystemWindow(type) || WindowHelper::IsSystemSubWindow(type)) {
+    if (WindowHelper::IsAboveSystemWindow(type)) {
         return aboveAppWindowNode_;
     }
     return nullptr;
