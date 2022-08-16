@@ -77,6 +77,8 @@ void WindowManagerService::OnStart()
     WindowInnerManager::GetInstance().Start(system::GetParameter("persist.window.holder.enable", "0") == "1");
     sptr<IDisplayChangeListener> listener = new DisplayChangeListener();
     DisplayManagerServiceInner::GetInstance().RegisterDisplayChangeListener(listener);
+    sptr<IWindowInfoQueriedListener> windowInfoQueriedListener = new WindowInfoQueriedListener();
+    DisplayManagerServiceInner::GetInstance().RegisterWindowInfoQueriedListener(windowInfoQueriedListener);
     RegisterSnapshotHandler();
     RegisterWindowManagerServiceHandler();
     RegisterWindowVisibilityChangeCallback();
@@ -700,6 +702,20 @@ void WindowManagerService::OnScreenshot(DisplayId displayId)
     wmsTaskLooper_->PostTask([this, displayId]() {
         windowController_->OnScreenshot(displayId);
     });
+}
+
+void WindowManagerService::HasPrivateWindow(DisplayId displayId, bool& hasPrivateWindow)
+{
+    PostVoidSyncTask([this, displayId, &hasPrivateWindow]() mutable {
+        hasPrivateWindow = windowRoot_->HasPrivateWindow(displayId);
+    }).get();
+    WLOGFI("called %{public}u", hasPrivateWindow);
+}
+
+void WindowInfoQueriedListener::HasPrivateWindow(DisplayId displayId, bool& hasPrivateWindow)
+{
+    WLOGFI("called");
+    WindowManagerService::GetInstance().HasPrivateWindow(displayId, hasPrivateWindow);
 }
 } // namespace Rosen
 } // namespace OHOS
