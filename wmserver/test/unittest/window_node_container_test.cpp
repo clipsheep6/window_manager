@@ -53,7 +53,7 @@ void WindowNodeContainerTest::SetUpTestCase()
     WLOGFI("GetDefaultDisplay: id %{public}" PRIu64", w %{public}d, h %{public}d, fps %{public}u",
         display->GetId(), display->GetWidth(), display->GetHeight(), display->GetRefreshRate());
 
-    container = new WindowNodeContainer(display->GetDisplayInfo(),display->GetScreenId());
+    container = new WindowNodeContainer(display->GetDisplayInfo(), display->GetScreenId());
     windowRect = {0, 0, 100, 200};
 }
 

@@ -74,7 +74,7 @@ static sptr<Window> CreateAppSubWindow(sptr<Window> parentWindow, WindowType typ
 
     static int cnt = 0;
     std::string subWinName = (name == "") ? "AppSubWindow" + std::to_string(cnt++) : name;
-    sptr<Window> window = Window::Create(subWinName,subOp);
+    sptr<Window> window = Window::Create(subWinName, subOp);
     return window;
 }
 
@@ -101,12 +101,12 @@ static sptr<Window> CreateSystemSubWindow(sptr<Window> parentWindow, struct Rect
  */
 HWTEST_F(WindowSystemSubWindowTest, SystemSubWindow01, Function | MediumTest | Level2)
 {
-    std::vector<WindowType> windowTypes = { 
-        WindowType::WINDOW_TYPE_WALLPAPER, 
+    std::vector<WindowType> windowTypes = {
+        WindowType::WINDOW_TYPE_WALLPAPER,
         WindowType::WINDOW_TYPE_DESKTOP,
         WindowType::WINDOW_TYPE_APP_COMPONENT,
     };
-    for(auto itor = windowTypes.begin(); itor != windowTypes.end(); itor++){
+    for (auto itor = windowTypes.begin(); itor != windowTypes.end(); itor++) {
         struct Rect baseRect = {0, 0, 100, 200};
         uint32_t baseFlags = 0;
         sptr<Window> baseWindow = CreateBaseWindow(static_cast<WindowType>(*itor), baseRect, baseFlags);
@@ -135,7 +135,7 @@ HWTEST_F(WindowSystemSubWindowTest, SystemSubWindow01, Function | MediumTest | L
  */
 HWTEST_F(WindowSystemSubWindowTest, SystemSubWindow02, Function | MediumTest | Level2)
 {
-    std::vector<WindowType> windowTypes = { 
+    std::vector<WindowType> windowTypes = {
         WindowType::WINDOW_TYPE_APP_LAUNCHING,
         WindowType::WINDOW_TYPE_DOCK_SLICE,
         WindowType::WINDOW_TYPE_INCOMING_CALL,
@@ -161,7 +161,7 @@ HWTEST_F(WindowSystemSubWindowTest, SystemSubWindow02, Function | MediumTest | L
         WindowType::WINDOW_TYPE_DIALOG,
         WindowType::WINDOW_TYPE_SCREENSHOT,
     };
-    for(auto itor = windowTypes.begin(); itor != windowTypes.end(); itor++){
+    for (auto itor = windowTypes.begin(); itor != windowTypes.end(); itor++) {
         struct Rect baseRect = {0, 0, 100, 200};
         uint32_t baseFlags = 0;
         sptr<Window> baseWindow = CreateBaseWindow(static_cast<WindowType>(*itor), baseRect, baseFlags);
@@ -173,7 +173,7 @@ HWTEST_F(WindowSystemSubWindowTest, SystemSubWindow02, Function | MediumTest | L
         ASSERT_NE(nullptr, subWindow);
 
         ASSERT_EQ(WMError::WM_OK, baseWindow->Show());
-        if((*itor) == WindowType::WINDOW_TYPE_DIALOG){
+        if ((*itor) == WindowType::WINDOW_TYPE_DIALOG) {
             ASSERT_EQ(WMError::WM_ERROR_INVALID_PARAM, subWindow->Show());
         } else {
             ASSERT_EQ(WMError::WM_OK, subWindow->Show());
@@ -194,10 +194,8 @@ HWTEST_F(WindowSystemSubWindowTest, SystemSubWindow02, Function | MediumTest | L
  */
 HWTEST_F(WindowSystemSubWindowTest, SystemSubWindow03, Function | MediumTest | Level2)
 {
-    std::vector<WindowType> windowTypes = { 
-        WindowType::WINDOW_TYPE_APP_MAIN_WINDOW, 
-    };
-    for(auto itor = windowTypes.begin(); itor != windowTypes.end(); itor++){
+    std::vector<WindowType> windowTypes = { WindowType::WINDOW_TYPE_APP_MAIN_WINDOW };
+    for (auto itor = windowTypes.begin(); itor != windowTypes.end(); itor++) {
         struct Rect baseRect = {0, 0, 100, 200};
         uint32_t baseFlags = 0;
         sptr<Window> baseWindow = CreateBaseWindow(static_cast<WindowType>(*itor), baseRect, baseFlags);
@@ -226,11 +224,11 @@ HWTEST_F(WindowSystemSubWindowTest, SystemSubWindow03, Function | MediumTest | L
  */
 HWTEST_F(WindowSystemSubWindowTest, SystemSubWindow04, Function | MediumTest | Level2)
 {
-    std::vector<WindowType> windowTypes = { 
+    std::vector<WindowType> windowTypes = {
         WindowType::WINDOW_TYPE_MEDIA,
         WindowType::WINDOW_TYPE_APP_SUB_WINDOW,
     };
-    for(auto itor = windowTypes.begin(); itor != windowTypes.end(); itor++){
+    for (auto itor = windowTypes.begin(); itor != windowTypes.end(); itor++) {
         struct Rect baseRect = {0, 0, 100, 200};
         uint32_t baseFlags = 0;
         sptr<Window> baseWindow = CreateBaseWindow(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW, baseRect, baseFlags);
@@ -313,8 +311,8 @@ HWTEST_F(WindowSystemSubWindowTest, SystemSubWindow06, Function | MediumTest | L
 
     bool isFocus = subWindow->GetFocusable();
     ASSERT_EQ(WMError::WM_OK, subWindow->SetFocusable(!isFocus));
-    ASSERT_EQ(WMError::WM_OK, subWindow->MoveTo(0,0));
-    ASSERT_EQ(WMError::WM_OK, subWindow->Resize(200,400));
+    ASSERT_EQ(WMError::WM_OK, subWindow->MoveTo(0, 0));
+    ASSERT_EQ(WMError::WM_OK, subWindow->Resize(200, 400));
     ASSERT_EQ(WMError::WM_OK, subWindow->SetTurnScreenOn(true));
 
     ASSERT_EQ(WMError::WM_ERROR_INVALID_TYPE, subWindow->SetBrightness(0.5f));
