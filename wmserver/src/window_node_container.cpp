@@ -94,17 +94,29 @@ uint32_t WindowNodeContainer::GetWindowCountByType(WindowType windowType)
 WMError WindowNodeContainer::AddWindowNodeOnWindowTree(sptr<WindowNode>& node, const sptr<WindowNode>& parentNode)
 {
     sptr<WindowNode> root = FindRoot(node->GetWindowType());
-    if (root == nullptr) {
+    if (root == nullptr && !(WindowHelper::IsSystemSubWindow(node->GetWindowType()) &&
+        parentNode != nullptr)) {
         WLOGFE("root is nullptr!");
         return WMError::WM_ERROR_NULLPTR;
     }
     node->requestedVisibility_ = true;
     if (parentNode != nullptr) { // subwindow
-        if (parentNode->parent_ != root &&
-            !((parentNode->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED)) &&
-            (parentNode->parent_ == aboveAppWindowNode_))) {
-            WLOGFE("window type and parent window not match or try to add subwindow to subwindow, which is forbidden");
-            return WMError::WM_ERROR_INVALID_PARAM;
+        if (WindowHelper::IsSystemSubWindow(node->GetWindowType())) {
+            if (WindowHelper::IsSubWindow(parentNode->GetWindowType()) ||
+                WindowHelper::IsSystemSubWindow(parentNode->GetWindowType()) ||
+                parentNode->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
+                // some times, dialog is a child window, so exclude
+                WLOGFE("the parent of system sub window cannot be any sub window");
+                return WMError::WM_ERROR_INVALID_PARAM;
+            }
+        } else {
+            if (parentNode->parent_ != root &&
+                !((parentNode->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED)) &&
+                (parentNode->parent_ == aboveAppWindowNode_))) {
+                WLOGFE("window type and parent window not match or
+                        try to add subwindow to subwindow, which is forbidden");
+                return WMError::WM_ERROR_INVALID_PARAM;
+            }
         }
         node->currentVisibility_ = parentNode->currentVisibility_;
         node->parent_ = parentNode;
