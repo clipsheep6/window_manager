@@ -105,6 +105,13 @@ struct ModeChangeHotZonesConfig {
     uint32_t secondaryRange_;
 };
 
+struct QosRateConfig {
+    bool isQosRateConfigured_;
+    int minRate_;
+    int maxRate_;
+    int heavyLevel_;
+}
+
 struct WindowShadowParameters {
     float elevation_;
     std::string color_;
@@ -132,6 +139,7 @@ struct AppWindowEffectConfig {
 struct SystemConfig : public Parcelable {
     bool isSystemDecorEnable_ = true;
     bool isStretchable_ = false;
+    bool isQosEnable_ = false;
     WindowMode defaultWindowMode_ = WindowMode::WINDOW_MODE_FULLSCREEN;
     AppWindowEffectConfig effectConfig_;
 

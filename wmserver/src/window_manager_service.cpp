@@ -45,6 +45,7 @@
 #include "window_manager_hilog.h"
 #include "wm_common.h"
 #include "wm_math.h"
+#include "platform/common/rs_innovation.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -82,6 +83,94 @@ WindowManagerService::WindowManagerService() : SystemAbility(WINDOW_MANAGER_SERV
     rsUiDirector_->Init(false);
 }
 
+sptr<WindowQosProxy> WindowManagerService::windowQosProxy_ = nullptr;
+
+void WindowManagerService::QosOnWindowVisibilityChanged(const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfo)
+{
+    if (RSInnovation::GetQosVsyncSoEnabled() || qosServiceHandle_ == nullptr) {
+        return;
+    }
+
+    using QosOnWindowVisibilityChangeCBFunc = void (*)(void*, void*);
+    auto OnWindowVisibilityChangeCB = (QosOnWindowVisibilityChangeCBFunc)RSInnovation::_s_qosOnWindowVisibilityChangeCB;
+    if (OnWindowVisibilityChangeCB == nullptr) {
+        return;
+    }
+
+    std::vector<std::pair<uint32_t, int>> infos;
+    for (auto info : windowVisibilityInfo) {
+        infos.push_back(std::make_pair(info->pid_, info->isVisible_));
+    }
+
+    OnWindowVisibilityChangeCB(qosServiceHandle_, (void*)&infos);
+}
+
+void WindowManagerService::QosRequestVsyncCount(uint64_t* time, void* appVsyncCountVec)
+{
+    if (!InitWindowQosProxy()) {
+        return;
+    }
+    windowQosProxy_->RequestVsyncCount(*((std::vector<ConnectionInfo>*)appVsyncCountVec));
+    *time = windowQosProxy_->GetRequestTime();
+}
+void WindowManagerService::QosSetRate(uint32_t pid, int rate)
+{
+    if (!InitWindowQosProxy()) {
+        return;
+    }
+    windowQosProxy_->SetVSyncRate(pid, rate);
+}
+
+bool WindowManagerService::InitWindowQosProxy()
+{
+    if (windowQosProxy_ == nullptr) {
+        auto systemAbilityManager =
+            SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (systemAbilityManager == nullptr) {
+            return false;
+        }
+
+        auto remoteObj = systemAbilityManager->GetSystemAbility(RENDER_SERVICE_QOS);
+        if (remoteObj == nullptr) {
+            return false;
+        }
+
+        windowQosProxy_ = iface_cast<WindowQosProxy>(remoteObj);
+        if (windowQosProxy_ == nullptr) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void WindowManagerService:WindowQosServiceStart()
+{
+    using CreateWinQosServiceFunc = void* (*)();
+    using QosTreadStartFunc = void* (*)(void*);
+    using QosSetBoundaryRateFunc = void* (*)(void*, int, int, int);
+    using QosSetWhiteListFunc = void* (*)(void*, std::string);
+    using QosSetRegisteProxyFunc = void* (*)(void*
+        std::function<void(uint32_t, int)>,
+        std::function<void(uint64_t*, void*)>);
+
+    auto CreateWinQosService = (CreateWinQosServiceFunc)RSInnovation::_s_createWinQosService;
+    auto QosTreadStart = (QosTreadStartFunc)RSInnovation::_s_qosTreadStart;
+    auto QosSetBoundaryRate = (QosSetBoundaryRateFunc)RSInnovation::_s_qosSetBoundaryRate;
+    auto QosSetWhiteList = (QosSetWhiteListFunc)RSInnovation::_s_qosSetWhiteList;
+    auto QosSetRegisteProxy = (QosSetRegisteProxyFunc)RSInnovation::_s_qosRegisteProxy;
+
+    qosServiceHandle_ = CreateWinQosService();
+    QosSetBoundaryRate(qosServiceHandle_,
+        qosRateConfig_.minRate_, qosRateConfig_.maxRate_, qosRateConfig_.heavyLevel_);
+    QosSetWhiteList(qosServiceHandle_, "com.ohos.launcher");
+    QosRegisteProxy(qosServiceHandle_, QosSetRate, QosRequestVsyncCount);
+
+    WindowManagerService::GetInstance().RegisterVisibilityChangedListener(&vbChangedListener_);
+
+    WLOGFI("WindowQosService start");
+    QosTreadStart(qosServiceHandle_);
+}
+
 void WindowManagerService::OnStart()
 {
     WLOGFI("WindowManagerService::OnStart start");
@@ -97,6 +186,10 @@ void WindowManagerService::OnStart()
     RegisterWindowManagerServiceHandler();
     RegisterWindowVisibilityChangeCallback();
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
+
+    if (RSInnovation::GetQosVsyncSoEnabled() && systemConfig_.isQosEnable_) {
+        WindowQosServiceStart();
+    }
 }
 
 void WindowManagerService::PostAsyncTask(Task task)
@@ -284,6 +377,7 @@ bool WindowManagerService::Init()
         }
         ConfigureWindowManagerService();
     }
+    RSInnovation::OpenInnovationSo();
     WLOGFI("WindowManagerService::Init success");
     return true;
 }
@@ -310,6 +404,10 @@ void WindowManagerService::ConfigureWindowManagerService()
     if (item.IsBool()) {
         MinimizeApp::SetMinimizedByOtherConfig(item.boolValue_);
     }
+    item = config["qos"].GetProp("enable");
+    if (item.IsBool()) {
+        systemConfig_.isQosEnable_ = item.boolValue_;
+    }
     item = config["stretchable"].GetProp("enable");
     if (item.IsBool()) {
         systemConfig_.isStretchable_ = item.boolValue_;
@@ -335,6 +433,10 @@ void WindowManagerService::ConfigureWindowManagerService()
             windowRoot_->SetMaxAppWindowNumber(static_cast<uint32_t>(numbers[0]));
         }
     }
+    item = config["rateSetVsyncSignal"];
+    if (item.IsInts()) {
+        ConfigQos(*item.intsValue_);
+    }
     item = config["modeChangeHotZones"];
     if (item.IsInts()) {
         ConfigHotZones(*item.intsValue_);
@@ -358,6 +460,16 @@ void WindowManagerService::ConfigureWindowManagerService()
     item = config["windowEffect"];
     if (item.IsMap()) {
         ConfigWindowEffect(item);
+    }
+}
+
+void WindowManagerService::ConfigQos(const std::vector<int>& qosBoundary)
+{
+    if (qosBoundary.size() == 3) { // 3 qos boundary param
+        qosRateConfig_.minRate_ = static_cast<uint32_t>(qosBoundary[0]);    // minRate e.t. 60 (60 / 60 = 1fps)
+        qosRateConfig_.maxRate_ = static_cast<uint32_t>(qosBoundary[1]);    // maxRate e.t. 1 (60 / 1 = 60fps)
+        qosRateConfig_.heavyLevel_ = static_cast<uint32_t>(qosBoundary[2]); // heavyLevel e.t. 30 (max num of pids for qos quick switch enable)
+        qosRateConfig_.isQosRateConfigured_ = true;
     }
 }
 
@@ -582,6 +694,7 @@ RSAnimationTimingCurve WindowManagerService::CreateCurve(const WindowManagerConf
 void WindowManagerService::OnStop()
 {
     windowCommonEvent_->UnSubscriberEvent();
+    WindowManager::GetInstance().UnregisterVisibilityChangedListener(&vbChangedListener_);
     WindowInnerManager::GetInstance().Stop();
     WLOGFI("ready to stop service.");
 }
@@ -847,11 +960,26 @@ void WindowManagerService::NotifyServerReadyToMoveOrDrag(uint32_t windowId, sptr
     });
 }
 
+void WindowManagerService::QosOnProcessPointDown(uint32_t windowId)
+{
+    if (RSInnovation::GetQosVsyncSoEnabled() && systemConfig_.isQosEnable_ && qosServiceHandle_ != nullptr) {
+        auto node = windowRoot_->GetWindowNode(windowId);
+        uint32_t tmpPid = node->GetCallingPid();
+        std::vector<std::pair(uint32_t, bool)> infos;
+        infos.push_back(std::make_pair(tmpPid, true));
+        using QosOnWindowVisibilityChangeCBFunc = void (*)(void*, void*);
+        auto OnWindowVisibilityChangeCB = ()RSInnovation::_s_qosOnWindowVisibilityChangeCB;
+        OnWindowVisibilityChangeCB(qosServiceHandle_, (void*)&infos);
+    }
+}
+
 void WindowManagerService::ProcessPointDown(uint32_t windowId)
 {
     PostAsyncTask([this, windowId]() {
         windowController_->ProcessPointDown(windowId);
     });
+
+    QosOnProcessPointDown(windowId);
 }
 
 void WindowManagerService::ProcessPointUp(uint32_t windowId)
@@ -1071,6 +1199,11 @@ void WindowManagerService::RecordShowTimeEvent(int64_t costTime)
             showWindowTimeConfig_.above50msTimes_ = 0;
         }
     }
+}
+
+void QosVisibilityChangeLisenerImpl::QosOnWindowVisibilityChanged(const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfo)
+{
+    WindowManagerService::GetInstance().OnWindowVisibilityChanged(windowVisibilityInfo);
 }
 } // namespace Rosen
 } // namespace OHOS
