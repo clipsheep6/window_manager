@@ -98,6 +98,7 @@ public:
     void MinimizeTargetWindows(std::vector<uint32_t>& windowIds);
     void RemoveSingleUserWindowNodes();
     WMError UpdateRsTree(uint32_t windowId, bool isAdd);
+    bool HasPrivateWindow(DisplayId displayId);
 private:
     void OnRemoteDied(const sptr<IRemoteObject>& remoteObject);
     WMError DestroyWindowInner(sptr<WindowNode>& node);

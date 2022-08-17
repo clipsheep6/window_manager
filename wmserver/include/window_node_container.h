@@ -112,7 +112,7 @@ public:
     WindowLayoutMode GetCurrentLayoutMode() const;
     void RemoveSingleUserWindowNodes();
     WMError IsTileRectSatisfiedWithSizeLimits(sptr<WindowNode>& node);
-
+    bool HasPrivateWindow();
 private:
     void TraverseWindowNode(sptr<WindowNode>& root, std::vector<sptr<WindowNode>>& windowNodes) const;
     sptr<WindowNode> FindRoot(WindowType type) const;

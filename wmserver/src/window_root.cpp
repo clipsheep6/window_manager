@@ -1286,6 +1286,12 @@ WMError WindowRoot::GetAccessibilityWindowInfo(sptr<AccessibilityWindowInfo>& wi
     return WMError::WM_OK;
 }
 
+bool WindowRoot::HasPrivateWindow(DisplayId displayId)
+{
+    auto container = GetWindowNodeContainer(displayId);
+    return container != nullptr ? container->HasPrivateWindow() : false;
+}
+
 void WindowRoot::SetMaxAppWindowNumber(int windowNum)
 {
     maxAppWindowNumber_ = windowNum;
