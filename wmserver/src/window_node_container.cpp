@@ -936,7 +936,7 @@ void WindowNodeContainer::NotifySystemBarTints(std::vector<DisplayId> displayIdV
     }
 }
 
-void WindowNodeContainer::NotifyDockWindowStateChanged(sptr<WindowNode>& node, bool isEnable)
+WMError WindowNodeContainer::NotifyDockWindowStateChanged(sptr<WindowNode>& node, bool isEnable)
 {
     HITRACE_METER(HITRACE_TAG_WINDOW_MANAGER);
     WLOGFI("[Immersive] begin isEnable: %{public}d", isEnable);
@@ -946,7 +946,7 @@ void WindowNodeContainer::NotifyDockWindowStateChanged(sptr<WindowNode>& node, b
                 continue;
             }
             if (!WindowHelper::IsFloatingWindow(windowNode->GetWindowMode())) {
-                return;
+                return WMError::WM_DO_NOTHING;
             }
         }
     }
@@ -957,7 +957,7 @@ void WindowNodeContainer::NotifyDockWindowStateChanged(sptr<WindowNode>& node, b
     tint.prop_ = prop;
     SystemBarRegionTints tints;
     tints.push_back(tint);
-    WindowManagerAgentController::GetInstance().UpdateSystemBarRegionTints(node->GetDisplayId(), tints);
+    return WindowManagerAgentController::GetInstance().UpdateSystemBarRegionTints(node->GetDisplayId(), tints);
 }
 
 void WindowNodeContainer::UpdateAvoidAreaListener(sptr<WindowNode>& windowNode, bool haveAvoidAreaListener)

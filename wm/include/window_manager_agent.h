@@ -26,11 +26,12 @@ public:
     WindowManagerAgent() = default;
     ~WindowManagerAgent() = default;
 
-    void UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused) override;
-    void UpdateSystemBarRegionTints(DisplayId displayId, const SystemBarRegionTints& props) override;
-    void NotifyAccessibilityWindowInfo(const sptr<AccessibilityWindowInfo>& windowInfo, WindowUpdateType type) override;
-    void UpdateWindowVisibilityInfo(const std::vector<sptr<WindowVisibilityInfo>>& visibilityInfos) override;
-    void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing) override;
+    WMError UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused) override;
+    WMError UpdateSystemBarRegionTints(DisplayId displayId, const SystemBarRegionTints& props) override;
+    WMError NotifyAccessibilityWindowInfo(const sptr<AccessibilityWindowInfo>& windowInfo,
+        WindowUpdateType type) override;
+    WMError UpdateWindowVisibilityInfo(const std::vector<sptr<WindowVisibilityInfo>>& visibilityInfos) override;
+    WMError UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing) override;
 };
 } // namespace Rosen
 } // namespace OHOS

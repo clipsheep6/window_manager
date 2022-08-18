@@ -36,51 +36,71 @@ void WindowManagerAgentController::UnregisterWindowManagerAgent(const sptr<IWind
     wmAgentContainer_.UnregisterAgent(windowManagerAgent, type);
 }
 
-void WindowManagerAgentController::UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused)
+WMError WindowManagerAgentController::UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused)
 {
     for (auto& agent : wmAgentContainer_.GetAgentsByType(WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS)) {
-        agent->UpdateFocusChangeInfo(focusChangeInfo, focused);
+        WMError result = agent->UpdateFocusChangeInfo(focusChangeInfo, focused);
+        if (result != WMError::WM_OK) {
+            return result;
+        }
     }
+    return WMError::WM_OK;
 }
 
-void WindowManagerAgentController::UpdateSystemBarRegionTints(DisplayId displayId, const SystemBarRegionTints& tints)
+WMError WindowManagerAgentController::UpdateSystemBarRegionTints(DisplayId displayId, const SystemBarRegionTints& tints)
 {
     WLOGFI("UpdateSystemBarRegionTints, tints size: %{public}u", static_cast<uint32_t>(tints.size()));
     if (tints.empty()) {
-        return;
+        return WMError::WM_DO_NOTHING;
     }
     for (auto& agent : wmAgentContainer_.GetAgentsByType(
         WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_SYSTEM_BAR)) {
-        agent->UpdateSystemBarRegionTints(displayId, tints);
+        WMError result = agent->UpdateSystemBarRegionTints(displayId, tints);
+        if (result != WMError::WM_OK) {
+            return result;
+        }
     }
+    return WMError::WM_OK;
 }
 
-void WindowManagerAgentController::NotifyAccessibilityWindowInfo(const sptr<AccessibilityWindowInfo>& windowInfo,
+WMError WindowManagerAgentController::NotifyAccessibilityWindowInfo(const sptr<AccessibilityWindowInfo>& windowInfo,
     WindowUpdateType type)
 {
     WLOGFI("NotifyAccessibilityWindowInfo");
     for (auto& agent : wmAgentContainer_.GetAgentsByType(
         WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_UPDATE)) {
-        agent->NotifyAccessibilityWindowInfo(windowInfo, type);
+        WMError result = agent->NotifyAccessibilityWindowInfo(windowInfo, type);
+        if (result != WMError::WM_OK) {
+            return result;
+        }
     }
+    return WMError::WM_OK;
 }
 
-void WindowManagerAgentController::UpdateWindowVisibilityInfo(
+WMError WindowManagerAgentController::UpdateWindowVisibilityInfo(
     const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos)
 {
     WLOGFD("UpdateWindowVisibilityInfo size:%{public}zu", windowVisibilityInfos.size());
     for (auto& agent : wmAgentContainer_.GetAgentsByType(
         WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_VISIBILITY)) {
-        agent->UpdateWindowVisibilityInfo(windowVisibilityInfos);
+        WMError result = agent->UpdateWindowVisibilityInfo(windowVisibilityInfos);
+        if (result != WMError::WM_OK) {
+            return result;
+        }
     }
+    return WMError::WM_OK;
 }
 
-void WindowManagerAgentController::UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing)
+WMError WindowManagerAgentController::UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing)
 {
     for (auto& agent : wmAgentContainer_.GetAgentsByType(
         WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_CAMERA_FLOAT)) {
-        agent->UpdateCameraFloatWindowStatus(accessTokenId, isShowing);
+        WMError result = agent->UpdateCameraFloatWindowStatus(accessTokenId, isShowing);
+        if (result != WMError::WM_OK) {
+            return result;
+        }
     }
+    return WMError::WM_OK;
 }
 } // namespace Rosen
 } // namespace OHOS
