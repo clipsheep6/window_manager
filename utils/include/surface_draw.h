@@ -38,10 +38,9 @@ public:
     static bool DrawImage(std::shared_ptr<RSSurfaceNode> surfaceNode, int32_t bufferWidth,
         int32_t bufferHeight, std::shared_ptr<Media::PixelMap> pixelMap);
     static bool DrawImageRect(std::shared_ptr<RSSurfaceNode> surfaceNode, Rect winRect, sptr<Media::PixelMap> pixelMap,
-        uint32_t bkgColor);
+        uint32_t bkgColor, bool notFillWindow = true);
     static bool GetSurfaceSnapshot(const std::shared_ptr<RSSurfaceNode> surfaceNode,
         std::shared_ptr<Media::PixelMap>& pixelMap, int32_t timeoutMs, float scaleW = 0.5, float scaleH = 0.5);
-
 private:
     static bool DoDraw(uint8_t *addr, uint32_t width, uint32_t height, const std::string& imagePath);
     static bool DoDraw(uint8_t *addr, uint32_t width, uint32_t height, uint32_t color);
@@ -51,8 +50,8 @@ private:
         int32_t bufferHeight);
     static void DrawPixelmap(Drawing::Canvas &canvas, const std::string& imagePath);
     static std::unique_ptr<OHOS::Media::PixelMap> DecodeImageToPixelMap(const std::string &imagePath);
-    static bool DoDrawImageRect(uint8_t *addr, const Rect rect, sptr<Media::PixelMap> pixelMap,
-        uint32_t color, int32_t bufferStride);
+    static bool DoDrawImageRect(sptr<OHOS::SurfaceBuffer> buffer, const Rect rect, sptr<Media::PixelMap> pixelMap,
+        uint32_t color, bool notFillWindow = true);
 };
 } // Rosen
 } // OHOS
