@@ -249,6 +249,7 @@ private:
 
     static bool IsValidNode(const xmlNode& currNode);
     static void ReadProperty(const xmlNodePtr& currNode, std::map<std::string, ConfigItem>& property);
+    static std::vector<std::string> ReadNumberStrings(const xmlNodePtr& node);
     static void ReadIntNumbersConfigInfo(const xmlNodePtr& currNode, std::vector<int>& intsValue);
     static void ReadFloatNumbersConfigInfo(const xmlNodePtr& currNode, std::vector<float>& floatsValue, bool allowNeg);
     static void ReadStringConfigInfo(const xmlNodePtr& currNode, std::string& stringValue);
