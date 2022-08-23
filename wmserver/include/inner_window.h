@@ -65,7 +65,7 @@ private:
 private:
     sptr<OHOS::Rosen::Window> window_;
     sptr<PlaceholderWindowListener> windowListener_;
-    std::shared_ptr<IInputEventConsumer> inputEventConsumer_;
+    sptr<IInputEventConsumer> inputEventConsumer_;
 };
 
 class DividerWindow : public IInnerWindow {

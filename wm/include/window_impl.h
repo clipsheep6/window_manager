@@ -185,7 +185,7 @@ public:
     virtual void StartMove() override;
 
     virtual WMError RequestFocus() const override;
-    virtual void SetInputEventConsumer(const std::shared_ptr<IInputEventConsumer>& inputEventConsumer) override;
+    virtual void SetInputEventConsumer(const sptr<IInputEventConsumer>& inputEventConsumer) override;
 
     virtual void RegisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener) override;
     virtual void RegisterWindowChangeListener(const sptr<IWindowChangeListener>& listener) override;
@@ -428,7 +428,7 @@ private:
     std::vector<sptr<IDisplayMoveListener>> displayMoveListeners_;
     std::vector<sptr<IOccupiedAreaChangeListener>> occupiedAreaChangeListeners_;
     sptr<IDialogDeathRecipientListener> dialogDeathRecipientListener_;
-    std::shared_ptr<IInputEventConsumer> inputEventConsumer_;
+    sptr<IInputEventConsumer> inputEventConsumer_;
     sptr<IAnimationTransitionController> animationTranistionController_;
     NotifyNativeWinDestroyFunc notifyNativefunc_;
     std::shared_ptr<RSSurfaceNode> surfaceNode_;

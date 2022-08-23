@@ -117,7 +117,7 @@ public:
     virtual uint32_t GetBackgroundColor() = 0;
 };
 
-class IInputEventConsumer {
+class IInputEventConsumer : virtual public RefBase {
 public:
     IInputEventConsumer() = default;
     virtual ~IInputEventConsumer() = default;
@@ -347,7 +347,7 @@ public:
 
     virtual WMError RequestFocus() const = 0;
     virtual WMError UpdateSurfaceNodeAfterCustomAnimation(bool isAdd) = 0;
-    virtual void SetInputEventConsumer(const std::shared_ptr<IInputEventConsumer>& inputEventConsumer) = 0;
+    virtual void SetInputEventConsumer(const sptr<IInputEventConsumer>& inputEventConsumer) = 0;
     virtual void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent) = 0;
     virtual void ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& inputEvent) = 0;
     virtual void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback) = 0;
