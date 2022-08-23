@@ -94,17 +94,29 @@ uint32_t WindowNodeContainer::GetWindowCountByType(WindowType windowType)
 WMError WindowNodeContainer::AddWindowNodeOnWindowTree(sptr<WindowNode>& node, const sptr<WindowNode>& parentNode)
 {
     sptr<WindowNode> root = FindRoot(node->GetWindowType());
-    if (root == nullptr) {
+    if (root == nullptr && !(WindowHelper::IsSystemSubWindow(node->GetWindowType()) &&
+        parentNode != nullptr)) {
         WLOGFE("root is nullptr!");
         return WMError::WM_ERROR_NULLPTR;
     }
     node->requestedVisibility_ = true;
     if (parentNode != nullptr) { // subwindow
-        if (parentNode->parent_ != root &&
-            !((parentNode->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED)) &&
-            (parentNode->parent_ == aboveAppWindowNode_))) {
-            WLOGFE("window type and parent window not match or try to add subwindow to subwindow, which is forbidden");
-            return WMError::WM_ERROR_INVALID_PARAM;
+        if (WindowHelper::IsSystemSubWindow(node->GetWindowType())) {
+            if (WindowHelper::IsSubWindow(parentNode->GetWindowType()) ||
+                WindowHelper::IsSystemSubWindow(parentNode->GetWindowType()) ||
+                parentNode->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
+                // some times, dialog is a child window, so exclude
+                WLOGFE("the parent of system sub window cannot be any sub window");
+                return WMError::WM_ERROR_INVALID_PARAM;
+            }
+        } else {
+            if (parentNode->parent_ != root &&
+                !((parentNode->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED)) &&
+                (parentNode->parent_ == aboveAppWindowNode_))) {
+                WLOGFE("window type and parent window not match \
+                    or try to add subwindow to subwindow, which is forbidden");
+                return WMError::WM_ERROR_INVALID_PARAM;
+            }
         }
         node->currentVisibility_ = parentNode->currentVisibility_;
         node->parent_ = parentNode;
@@ -365,15 +377,14 @@ void WindowNodeContainer::UpdateSizeChangeReason(sptr<WindowNode>& node, WindowS
     if (node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
         for (auto& childNode : appWindowNode_->children_) {
             if (childNode->IsSplitMode()) {
-                childNode->GetWindowToken()->UpdateWindowRect(childNode->GetWindowRect(),
-                    childNode->GetDecoStatus(), reason);
+                layoutPolicy_->UpdateClientRect(childNode->GetWindowRect(), childNode, reason);
                 childNode->ResetWindowSizeChangeReason();
                 WLOGFI("Notify split window that the drag action is start or end, windowId: %{public}d, "
                     "reason: %{public}u", childNode->GetWindowId(), reason);
             }
         }
     } else {
-        node->GetWindowToken()->UpdateWindowRect(node->GetWindowRect(), node->GetDecoStatus(), reason);
+        layoutPolicy_->UpdateClientRect(node->GetWindowRect(), node, reason);
         node->ResetWindowSizeChangeReason();
         WLOGFI("Notify window that the drag action is start or end, windowId: %{public}d, "
             "reason: %{public}u", node->GetWindowId(), reason);
@@ -1147,7 +1158,7 @@ void WindowNodeContainer::UpdateWindowState(sptr<WindowNode> node, int32_t topPr
             }
             HandleKeepScreenOn(node, state);
             auto surfaceNode = node->surfaceNode_;
-            if (surfaceNode) {
+            if (surfaceNode && node->GetWindowType() != WindowType::WINDOW_TYPE_APP_COMPONENT) {
                 surfaceNode->SetVisible(state == WindowState::STATE_FROZEN ? false : true);
             }
         }
@@ -1888,6 +1899,22 @@ void WindowNodeContainer::RemoveSingleUserWindowNodes(int accountId)
         windowNode->GetWindowProperty()->SetAnimationFlag(static_cast<uint32_t>(WindowAnimation::NONE));
         RemoveWindowNode(windowNode);
     }
+}
+
+bool WindowNodeContainer::TakeWindowPairSnapshot(DisplayId displayId)
+{
+    auto windowPair = displayGroupController_->GetWindowPairByDisplayId(displayId);
+    return windowPair == nullptr ? false : windowPair->TakePairSnapshot();
+}
+
+void WindowNodeContainer::ClearWindowPairSnapshot(DisplayId displayId)
+{
+    auto windowPair = displayGroupController_->GetWindowPairByDisplayId(displayId);
+    if (windowPair == nullptr) {
+        WLOGFE("Window pair is nullptr");
+        return;
+    }
+    windowPair->ClearPairSnapshot();
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -66,7 +66,12 @@ enum class WindowType : uint32_t {
     WINDOW_TYPE_DIALOG,
     WINDOW_TYPE_SCREENSHOT,
     ABOVE_APP_SYSTEM_WINDOW_END,
-    SYSTEM_WINDOW_END = ABOVE_APP_SYSTEM_WINDOW_END,
+
+    SYSTEM_SUB_WINDOW_BASE = 2500,
+    WINDOW_TYPE_SYSTEM_SUB_WINDOW = SYSTEM_SUB_WINDOW_BASE,
+    SYSTEM_SUB_WINDOW_END,
+
+    SYSTEM_WINDOW_END = SYSTEM_SUB_WINDOW_END,
 };
 
 enum class WindowMode : uint32_t {
@@ -198,17 +203,24 @@ public:
     {}
     ~Transform() {}
 
-    bool operator!=(const Transform& right) const
-    {
-        return (pivotX_ - right.pivotX_) || (pivotY_ - right.pivotY_) || (scaleX_ - right.scaleX_) ||
-            (scaleY_ - right.scaleY_) ||(scaleZ_ - right.scaleZ_) || (rotationX_ - right.rotationX_) ||
-            (rotationY_ - right.rotationY_) || (rotationZ_ - right.rotationZ_) || (translateX_ - right.translateX_) ||
-            (translateY_ - right.translateY_) || (translateZ_ - right.translateZ_);
-    }
-
     bool operator==(const Transform& right) const
     {
-        return !(*this != right);
+        return NearZero(pivotX_ - right.pivotX_) &&
+            NearZero(pivotY_ - right.pivotY_) &&
+            NearZero(scaleX_ - right.scaleX_) &&
+            NearZero(scaleY_ - right.scaleY_) &&
+            NearZero(scaleZ_ - right.scaleZ_) &&
+            NearZero(rotationX_ - right.rotationX_) &&
+            NearZero(rotationY_ - right.rotationY_) &&
+            NearZero(rotationZ_ - right.rotationZ_) &&
+            NearZero(translateX_ - right.translateX_) &&
+            NearZero(translateY_ - right.translateY_) &&
+            NearZero(translateZ_ - right.translateZ_);
+    }
+
+    bool operator!=(const Transform& right) const
+    {
+        return !(*this == right);
     }
 
     float pivotX_;
@@ -227,6 +239,11 @@ public:
     {
         static Transform I;
         return I;
+    }
+private:
+    static inline bool NearZero(float val)
+    {
+        return std::abs(val) < 0.001f;
     }
 };
 
