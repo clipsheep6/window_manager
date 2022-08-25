@@ -994,7 +994,7 @@ static void SetBounds(const sptr<WindowNode>& node, const Rect& winRect, const R
         }
     } else {
         if (node->surfaceNode_) {
-            node->surfaceNode_->SetFrameGravity(Gravity::TOP_LEFT);
+            node->surfaceNode_->SetFrameGravity(Gravity::RESIZE);
         }
     }
     WLOGFD("name:%{public}s id:%{public}u preRect:[x:%{public}d, y:%{public}d, w:%{public}d, h:%{public}d]",

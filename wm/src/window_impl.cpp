@@ -399,6 +399,7 @@ void WindowImpl::SetTransform(const Transform& trans)
             static_cast<int32_t>(ret), property_->GetWindowId());
         property_->SetTransform(oriTrans); // reset to ori transform when update failed
     }
+    WLOGFI("chy SetTransform pivotX_:%{public}f pivotY_:%{public}f", property_->GetTransform().pivotX_, property_->GetTransform().pivotY_);
 }
 
 const Transform& WindowImpl::GetTransform() const
