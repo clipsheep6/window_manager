@@ -68,7 +68,7 @@ ohos_shared_library("window_native_kit") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "ipc_js:rpc",
-    "multimedia_image_standard:image",
+    "multimedia_image_framework:image",
     "napi:ace_napi",
   ]
 
