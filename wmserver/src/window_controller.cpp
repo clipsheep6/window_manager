@@ -44,7 +44,7 @@ uint32_t WindowController::GenWindowId()
     return ++windowId_;
 }
 
-void WindowController::StartingWindow(sptr<WindowTransitionInfo> info, sptr<Media::PixelMap> pixelMap,
+void WindowController::StartingWindow(sptr<WindowTransitionInfo> info, std::shared_ptr<Media::PixelMap> pixelMap,
     uint32_t bkgColor, bool isColdStart)
 {
     if (!info || info->GetAbilityToken() == nullptr) {
