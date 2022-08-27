@@ -445,8 +445,18 @@ bool WindowNodeContainer::UpdateRSTree(sptr<WindowNode>& node, DisplayId display
                 }
             }
         } else {
-            auto& surfaceNode = node->leashWinSurfaceNode_ != nullptr ? node->leashWinSurfaceNode_ : node->surfaceNode_;
-            dms.UpdateRSTree(displayId, surfaceNode, false);
+            if (node->leashWinSurfaceNode_) {
+                dms.UpdateRSTree(displayId, node->leashWinSurfaceNode_, false);
+                if (node->surfaceNode_) {
+                    WLOGFD("window: %{public}d before set buffer available", node->GetWindowId());
+                    node->surfaceNode_->SetIsNotifyUIBufferAvailable(false);
+                    node->leashWinSurfaceNode_->RemoveChild(node->surfaceNode_);
+                }
+                node->leashWinSurfaceNode_->AddChild(node->startingWinSurfaceNode_, -1);
+            } else {
+                dms.UpdateRSTree(displayId, node->surfaceNode_, false);
+            }
+
             for (auto& child : node->children_) {
                 dms.UpdateRSTree(displayId, child->surfaceNode_, false);
             }

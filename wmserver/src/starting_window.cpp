@@ -117,9 +117,6 @@ void StartingWindow::DrawStartingWindow(sptr<WindowNode>& node,
         node->leashWinSurfaceNode_->SetBounds(rect.posX_, rect.posY_, -1, -1);
         node->leashWinSurfaceNode_->ResetContextAlpha();
     }
-    if (!isColdStart) {
-        return;
-    }
     if (node->startingWinSurfaceNode_ == nullptr) {
         WLOGFE("no starting Window SurfaceNode!");
         return;
@@ -128,7 +125,7 @@ void StartingWindow::DrawStartingWindow(sptr<WindowNode>& node,
         SurfaceDraw::DrawColor(node->startingWinSurfaceNode_, rect.width_, rect.height_, bkgColor);
         return;
     }
-    SurfaceDraw::DrawImageRect(node->startingWinSurfaceNode_, rect, pixelMap, bkgColor);
+    SurfaceDraw::DrawImageRect(node->startingWinSurfaceNode_, rect, pixelMap, bkgColor, isColdStart);
 }
 
 void StartingWindow::HandleClientWindowCreate(sptr<WindowNode>& node, sptr<IWindow>& window,
@@ -158,7 +155,6 @@ void StartingWindow::HandleClientWindowCreate(sptr<WindowNode>& node, sptr<IWind
         WLOGFI("StartingWindow::Replace surfaceNode, id: %{public}u", weakNode->GetWindowId());
         weakNode->leashWinSurfaceNode_->RemoveChild(weakNode->startingWinSurfaceNode_);
         weakNode->leashWinSurfaceNode_->AddChild(weakNode->surfaceNode_, -1);
-        weakNode->startingWinSurfaceNode_ = nullptr;
         AAFwk::AbilityManagerClient::GetInstance()->CompleteFirstFrameDrawing(weakNode->abilityToken_);
         RSTransaction::FlushImplicitTransaction();
     };
