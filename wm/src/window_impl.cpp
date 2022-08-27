@@ -92,6 +92,7 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
 
 void WindowImpl::InitListenerHandler()
 {
+    // test
     auto runner = AppExecFwk::EventRunner::Create(WM_CALLBACK_THREAD_NAME);
     if (runner == nullptr) {
         WLOGFE("init window callback runner failed.");
