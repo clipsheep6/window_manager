@@ -2193,10 +2193,9 @@ void WindowImpl::UpdatePointerEventForStretchableWindow(const std::shared_ptr<MM
     pointerEvent->UpdatePointerItem(pointerEvent->GetPointerId(), pointerItem);
 }
 
-
-void WindowImpl::EndMoveOrDragWindow(int32_t posX, int32_t posY, int32_t pointId)
+void WindowImpl::EndMoveOrDragWindow(int32_t posX, int32_t posY, int32_t pointId, int32_t sourceType)
 {
-    if (pointId != moveDragProperty_->startPointerId_) {
+    if (pointId != moveDragProperty_->startPointerId_ || sourceType != moveDragProperty_->sourceType_) {
         return;
     }
 
@@ -2265,8 +2264,9 @@ void WindowImpl::CalculateStartRectExceptHotZone(float vpr, const TransformHelpe
         static_cast<uint32_t>((WINDOW_FRAME_CORNER_WIDTH + WINDOW_FRAME_CORNER_WIDTH) * vpr / hotZoneScale.y_);
 }
 
-void WindowImpl::ReadyToMoveOrDragWindow(int32_t globalX, int32_t globalY, int32_t pointId, const Rect& rect)
+void WindowImpl::ReadyToMoveOrDragWindow(int32_t globalX, int32_t globalY, int32_t pointId, int32_t sourceType)
 {
+    const Rect& rect = GetRect();
     if (moveDragProperty_->pointEventStarted_) {
         return;
     }
@@ -2279,6 +2279,7 @@ void WindowImpl::ReadyToMoveOrDragWindow(int32_t globalX, int32_t globalY, int32
     moveDragProperty_->startPointPosX_ = globalX;
     moveDragProperty_->startPointPosY_ = globalY;
     moveDragProperty_->startPointerId_ = pointId;
+    moveDragProperty_->sourceType_ = sourceType;
     moveDragProperty_->pointEventStarted_ = true;
 
     // calculate window inner rect except frame
@@ -2315,8 +2316,12 @@ void WindowImpl::ConsumeMoveOrDragEvent(const std::shared_ptr<MMI::PointerEvent>
 {
     MMI::PointerEvent::PointerItem pointerItem;
     int32_t pointId = pointerEvent->GetPointerId();
-    if (!pointerEvent->GetPointerItem(pointId, pointerItem)) {
-        WLOGFW("Point item is invalid");
+    int32_t sourceType = pointerEvent->GetSourceType();
+    int32_t buttonType = pointerEvent->GetButtonId();
+    if (!pointerEvent->GetPointerItem(pointId, pointerItem) ||
+        (sourceType == MMI::PointerEvent::SOURCE_TYPE_MOUSE &&
+        buttonType != MMI::PointerEvent::MOUSE_BUTTON_LEFT)) {
+        WLOGFW("invalid pointerEvent");
         return;
     }
     int32_t pointGlobalX = pointerItem.GetDisplayX();
@@ -2327,23 +2332,23 @@ void WindowImpl::ConsumeMoveOrDragEvent(const std::shared_ptr<MMI::PointerEvent>
         case MMI::PointerEvent::POINTER_ACTION_DOWN:
         case MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN: {
             Rect rect = GetRect();
-            ReadyToMoveOrDragWindow(pointGlobalX, pointGlobalY, pointId, rect);
-            WLOGFI("[Client Point Down]: windowId: %{public}u, action: %{public}d, hasPointStarted: %{public}d, "
-                   "startMove: %{public}d, startDrag: %{public}d, pointPos: [%{public}d, %{public}d], "
-                   "winRect: [%{public}d, %{public}d, %{public}u, %{public}u]",
-                   GetWindowId(), action, moveDragProperty_->pointEventStarted_, moveDragProperty_->startMoveFlag_,
-                   moveDragProperty_->startDragFlag_, pointGlobalX, pointGlobalY, rect.posX_, rect.posY_,
-                   rect.width_, rect.height_);
+            ReadyToMoveOrDragWindow(pointGlobalX, pointGlobalY, pointId, sourceType);
+            WLOGFI("[Client Point Down]: windowId: %{public}u, action: %{public}d, sourceType: %{public}d"
+                   "hasPointStarted: %{public}d, startMove: %{public}d, startDrag: %{public}d, "
+                   "pointPos: [%{public}d, %{public}d], winRect: [%{public}d, %{public}d, %{public}u, %{public}u]",
+                   GetWindowId(), action, sourceType, moveDragProperty_->pointEventStarted_,
+                   moveDragProperty_->startMoveFlag_, moveDragProperty_->startDragFlag_, pointGlobalX,
+                   pointGlobalY, rect.posX_, rect.posY_, rect.width_, rect.height_);
             break;
         }
         // End move or drag
         case MMI::PointerEvent::POINTER_ACTION_UP:
         case MMI::PointerEvent::POINTER_ACTION_BUTTON_UP:
         case MMI::PointerEvent::POINTER_ACTION_CANCEL: {
-            EndMoveOrDragWindow(pointGlobalX, pointGlobalY, pointId);
-            WLOGFI("[Client Point Up/Cancel]: windowId: %{public}u, action: %{public}d, startMove: %{public}d, "
-                   "startDrag: %{public}d", GetWindowId(), action, moveDragProperty_->startMoveFlag_,
-                   moveDragProperty_->startDragFlag_);
+            EndMoveOrDragWindow(pointGlobalX, pointGlobalY, pointId, sourceType);
+            WLOGFI("[Client Point Up/Cancel]: windowId: %{public}u, action: %{public}d, sourceType: %{public}d, "
+                "startMove: %{public}d, startDrag: %{public}d", GetWindowId(), action, sourceType,
+                moveDragProperty_->startMoveFlag_, moveDragProperty_->startDragFlag_);
             break;
         }
         default:

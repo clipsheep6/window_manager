@@ -365,8 +365,8 @@ private:
     static sptr<Window> FindTopWindow(uint32_t topWinId);
     WMError Drag(const Rect& rect);
     void ConsumeMoveOrDragEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
-    void ReadyToMoveOrDragWindow(int32_t globalX, int32_t globalY, int32_t pointId, const Rect& rect);
-    void EndMoveOrDragWindow(int32_t posX, int32_t posY, int32_t pointId);
+    void ReadyToMoveOrDragWindow(int32_t globalX, int32_t globalY, int32_t pointId, int32_t sourceType);
+    void EndMoveOrDragWindow(int32_t posX, int32_t posY, int32_t pointId, int32_t sourceType);
     void ResetMoveOrDragState();
     bool IsPointerEventConsumed();
     void AdjustWindowAnimationFlag(bool withAnimation = false);

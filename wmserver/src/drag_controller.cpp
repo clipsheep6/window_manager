@@ -270,12 +270,14 @@ Rect MoveDragController::GetHotZoneRect()
     return hotZoneRect;
 }
 
-void MoveDragController::HandleDragEvent(int32_t posX, int32_t posY, int32_t pointId)
+void MoveDragController::HandleDragEvent(int32_t posX, int32_t posY, int32_t pointId, int32_t sourceType)
 {
     if (moveDragProperty_ == nullptr) {
         return;
     }
-    if (!moveDragProperty_->startDragFlag_ || (pointId != moveDragProperty_->startPointerId_)) {
+    if (!moveDragProperty_->startDragFlag_ ||
+        (pointId != moveDragProperty_->startPointerId_) ||
+        (sourceType != moveDragProperty_->sourceType_)) {
         return;
     }
     const auto& startPointPosX = moveDragProperty_->startPointPosX_;
@@ -318,12 +320,14 @@ void MoveDragController::HandleDragEvent(int32_t posX, int32_t posY, int32_t poi
     WindowManagerService::GetInstance().UpdateProperty(windowProperty_, PropertyChangeAction::ACTION_UPDATE_RECT, true);
 }
 
-void MoveDragController::HandleMoveEvent(int32_t posX, int32_t posY, int32_t pointId)
+void MoveDragController::HandleMoveEvent(int32_t posX, int32_t posY, int32_t pointId, int32_t sourceType)
 {
     if (moveDragProperty_ == nullptr) {
         return;
     }
-    if (!moveDragProperty_->startMoveFlag_ || (pointId != moveDragProperty_->startPointerId_)) {
+    if (!moveDragProperty_->startMoveFlag_ ||
+        (pointId != moveDragProperty_->startPointerId_) ||
+        (sourceType != moveDragProperty_->sourceType_)) {
         return;
     }
     int32_t targetX = moveDragProperty_->startPointRect_.posX_ + (posX - moveDragProperty_->startPointPosX_);
@@ -342,8 +346,12 @@ void MoveDragController::HandlePointerEvent(const std::shared_ptr<MMI::PointerEv
 {
     MMI::PointerEvent::PointerItem pointerItem;
     int32_t pointId = pointerEvent->GetPointerId();
-    if (!pointerEvent->GetPointerItem(pointId, pointerItem)) {
-        WLOGFE("Point item is invalid");
+    int32_t sourceType = pointerEvent->GetSourceType();
+    int32_t buttonType = pointerEvent->GetButtonId();
+    if (!pointerEvent->GetPointerItem(pointId, pointerItem) ||
+        (sourceType == MMI::PointerEvent::SOURCE_TYPE_MOUSE &&
+        buttonType != MMI::PointerEvent::MOUSE_BUTTON_LEFT)) {
+        WLOGFW("invalid pointerEvent");
         return;
     }
 
@@ -359,8 +367,8 @@ void MoveDragController::HandlePointerEvent(const std::shared_ptr<MMI::PointerEv
         }
         // ready to move or drag
         case MMI::PointerEvent::POINTER_ACTION_MOVE: {
-            HandleMoveEvent(pointPosX, pointPosY, pointId);
-            HandleDragEvent(pointPosX, pointPosY, pointId);
+            HandleMoveEvent(pointPosX, pointPosY, pointId, sourceType);
+            HandleDragEvent(pointPosX, pointPosY, pointId, sourceType);
             break;
         }
         // End move or drag
