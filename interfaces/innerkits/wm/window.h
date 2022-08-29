@@ -404,7 +404,7 @@ public:
     virtual void GetRequestedTouchHotAreas(std::vector<Rect>& rects) const = 0;
     virtual bool IsMainHandlerAvailable() const = 0;
     virtual WMError SetAPPWindowLable(const std::string& label)=0;
-    virtual WMError SetAPPWindowIcon(shared_ptr<Media::PixelMap>& icon)=0;
+    virtual WMError SetAPPWindowIcon(const shared_ptr<Media::PixelMap>& icon)=0;
 
     /**
      * @brief disable main window decoration. It must be callled before loadContent.

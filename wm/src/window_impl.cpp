@@ -2877,7 +2877,7 @@ WMError WindowImpl::SetAPPWindowLable(const std::string& label)
     }
     WLOGFI("SetAPPWindowLable");
 }
-WMError WindowImpl::SetAPPWindowIcon(shared_ptr<Media::PixelMap>& icon)
+WMError WindowImpl::SetAPPWindowIcon(const shared_ptr<Media::PixelMap>& icon)
 {
     if(icon==nullptr){
         WLOGFI("window icon is empty");
