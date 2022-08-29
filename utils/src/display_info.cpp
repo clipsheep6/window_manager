@@ -28,7 +28,8 @@ bool DisplayInfo::Marshalling(Parcel &parcel) const
         parcel.WriteFloat(virtualPixelRatio_) && parcel.WriteFloat(xDpi_) && parcel.WriteFloat(yDpi_) &&
         parcel.WriteUint32(static_cast<uint32_t>(rotation_)) &&
         parcel.WriteUint32(static_cast<uint32_t>(orientation_)) &&
-        parcel.WriteInt32(offsetX_) && parcel.WriteInt32(offsetY_);
+        parcel.WriteInt32(offsetX_) && parcel.WriteInt32(offsetY_) &&
+        parcel.WriteInt32(dpi_);
 }
 
 DisplayInfo *DisplayInfo::Unmarshalling(Parcel &parcel)
@@ -47,7 +48,8 @@ DisplayInfo *DisplayInfo::Unmarshalling(Parcel &parcel)
         parcel.ReadFloat(displayInfo->virtualPixelRatio_) &&
         parcel.ReadFloat(displayInfo->xDpi_) && parcel.ReadFloat(displayInfo->yDpi_) &&
         parcel.ReadUint32(rotation) && parcel.ReadUint32(orientation) &&
-        parcel.ReadInt32(displayInfo->offsetX_) && parcel.ReadInt32(displayInfo->offsetY_);
+        parcel.ReadInt32(displayInfo->offsetX_) && parcel.ReadInt32(displayInfo->offsetY_) &&
+        parcel.ReadInt32(displayInfo->dpi_);
     if (!res) {
         delete displayInfo;
         return nullptr;

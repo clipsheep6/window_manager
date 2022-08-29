@@ -220,6 +220,7 @@ sptr<DisplayInfo> AbstractDisplay::ConvertToDisplayInfo() const
     displayInfo->SetVirtualPixelRatio(virtualPixelRatio_);
     displayInfo->SetRotation(rotation_);
     displayInfo->SetOrientation(orientation_);
+    displayInfo->SetDpi(virtualPixelRatio_ * DOT_PER_INCH);
     return displayInfo;
 }
 } // namespace OHOS::Rosen
