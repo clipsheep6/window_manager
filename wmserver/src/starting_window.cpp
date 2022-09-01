@@ -114,8 +114,8 @@ void StartingWindow::DrawStartingWindow(sptr<WindowNode>& node,
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "wms:DrawStartingWindow(%u)", node->GetWindowId());
     Rect rect = node->GetWindowRect();
     if (RemoteAnimation::CheckAnimationController() && node->leashWinSurfaceNode_) {
-        node->leashWinSurfaceNode_->SetBounds(rect.posX_, rect.posY_, -1, -1);
-        node->leashWinSurfaceNode_->ResetContextAlpha();
+        // Hide this node until RenderThread sends valid contextAlpha/Matrix
+        node->leashWinSurfaceNode_->ResetContextAlpha(false);
     }
     if (!isColdStart) {
         return;
