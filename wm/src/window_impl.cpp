@@ -794,11 +794,11 @@ WMError WindowImpl::Create(const std::string& parentName, const std::shared_ptr<
     }
     if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
         if (SingletonContainer::Get<WindowAdapter>().GetSystemConfig(windowSystemConfig_) == WMError::WM_OK) {
-            WLOGFE("get system decor enable:%{public}d", windowSystemConfig_.isSystemDecorEnable_);
+            WLOGFD("get system decor enable:%{public}d", windowSystemConfig_.isSystemDecorEnable_);
             if (windowSystemConfig_.isSystemDecorEnable_) {
                 property_->SetDecorEnable(true);
             }
-            WLOGFI("get stretchable enable:%{public}d", windowSystemConfig_.isStretchable_);
+            WLOGFD("get stretchable enable:%{public}d", windowSystemConfig_.isStretchable_);
             property_->SetStretchable(windowSystemConfig_.isStretchable_);
         }
         GetConfigurationFromAbilityInfo();
