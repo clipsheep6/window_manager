@@ -43,6 +43,8 @@ public:
     void RemoveWindowNode(const sptr<WindowNode>& node) override;
     Rect GetDividerRect(DisplayId displayId) const override;
     std::vector<int32_t> GetExitSplitPoints(DisplayId displayId) const override;
+    void SetFloatingBottomPosY(uint32_t floatingBottomPosY);
+    void SetDefaultFloatingWindow(const std::vector<int>& numbers);
 
 private:
     void InitAllRects();
@@ -59,6 +61,8 @@ private:
     void InitCascadeRect(DisplayId displayId);
     void SetCascadeRect(const sptr<WindowNode>& node);
     void ApplyWindowRectConstraints(const sptr<WindowNode>& node, Rect& winRect) const;
+    void InitCascadeRectDefault(DisplayId displayId);
+    bool InitCascadeRectCfg(DisplayId displayId);
 
     Rect GetRectByWindowMode(const WindowMode& mode) const;
     Rect GetLimitRect(const WindowMode mode, DisplayId displayId) const;
@@ -76,6 +80,8 @@ private:
     };
     mutable std::map<DisplayId, LayoutRects> cascadeRectsMap_;
     std::map<DisplayId, Rect> restoringDividerWindowRects_;
+    uint32_t floatingBottomPosY_;
+    Rect defaultFloatingWindow_;
 };
 }
 }
