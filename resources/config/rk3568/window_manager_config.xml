@@ -33,9 +33,9 @@
     <!--default window mode config-->
     <defaultWindowMode>1</defaultWindowMode>
     <!--floating window max bottom posY-->
-    <floatingBottomPosY>970</floatingBottomPosY>
+    <floatingBottomPosY>0</floatingBottomPosY>
     <!--floating window default rect-->
-    <defaultFloatingWindow>82 121 1068 706</defaultFloatingWindow>
+    <defaultFloatingWindow>0 0 0 0</defaultFloatingWindow>
     <!--window animation config-->
     <windowAnimation>
         <timing>
