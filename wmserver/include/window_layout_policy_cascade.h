@@ -63,6 +63,7 @@ private:
     void ApplyWindowRectConstraints(const sptr<WindowNode>& node, Rect& winRect) const;
     void InitCascadeRectDefault(DisplayId displayId);
     bool InitCascadeRectCfg(DisplayId displayId);
+    void UpdateWindowNodeRectOffset(const sptr<WindowNode>& node) const;
 
     Rect GetRectByWindowMode(const WindowMode& mode) const;
     Rect GetLimitRect(const WindowMode mode, DisplayId displayId) const;
