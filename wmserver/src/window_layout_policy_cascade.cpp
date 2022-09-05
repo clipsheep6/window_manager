@@ -28,7 +28,7 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowLayoutPolicyCascade"};
 }
 
-uint32_t WindowLayoutPolicyCascade::floatingBottomPosY_ = UINT_MAX;
+uint32_t WindowLayoutPolicyCascade::floatingBottomPosY_ = 0;
 Rect WindowLayoutPolicyCascade::defaultFloatingWindow_ = {0, 0, 0, 0};
 
 WindowLayoutPolicyCascade::WindowLayoutPolicyCascade(const sptr<DisplayGroupInfo>& displayGroupInfo,
@@ -585,8 +585,7 @@ Rect WindowLayoutPolicyCascade::StepCascadeRect(Rect rect, DisplayId displayId) 
                         (limitRect.posY_ + static_cast<int32_t>(limitRect.height_))) ?
                         (rect.posY_ + static_cast<int32_t>(cascadeHeight)) : limitRect.posY_;
     uint32_t bottomPosY = static_cast<uint32_t>(floatingBottomPosY_ * virtualPixelRatio);
-    if ((floatingBottomPosY_ != UINT_MAX) &&
-        (cascadeRect.posY_ + static_cast<int32_t>(cascadeRect.height_) >= bottomPosY)) {
+    if ((floatingBottomPosY_ != 0) && (cascadeRect.posY_ + static_cast<int32_t>(cascadeRect.height_) >= bottomPosY)) {
         cascadeRect.posY_ = limitRect.posY_;
     }
     WLOGFI("step cascadeRect :[%{public}d, %{public}d, %{public}u, %{public}u], bottomPosY:%{public}u",
@@ -637,10 +636,10 @@ void WindowLayoutPolicyCascade::SetFloatingBottomPosY(uint32_t floatingBottomPos
 
 void WindowLayoutPolicyCascade::SetDefaultFloatingWindow(const std::vector<int>& numbers)
 {
-    defaultFloatingWindow_.posX_ = static_cast<uint32_t>(numbers[first]);
-    defaultFloatingWindow_.posY_ = static_cast<uint32_t>(numbers[second]);
-    defaultFloatingWindow_.width_ = static_cast<uint32_t>(numbers[third]);
-    defaultFloatingWindow_.height_ = static_cast<uint32_t>(numbers[fourth]);
+    defaultFloatingWindow_.posX_ = static_cast<uint32_t>(numbers[0]);
+    defaultFloatingWindow_.posY_ = static_cast<uint32_t>(numbers[1]);
+    defaultFloatingWindow_.width_ = static_cast<uint32_t>(numbers[2]);
+    defaultFloatingWindow_.height_ = static_cast<uint32_t>(numbers[3]);
 }
 } // Rosen
 } // OHOS

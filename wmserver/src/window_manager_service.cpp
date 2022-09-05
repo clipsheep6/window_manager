@@ -41,7 +41,7 @@
 #include "ui/rs_ui_director.h"
 #include "window_helper.h"
 #include "window_inner_manager.h"
-#include "window_layout_policy.h"
+#include "window_layout_policy_cascade.h"
 #include "window_manager_agent_controller.h"
 #include "window_manager_hilog.h"
 #include "wm_common.h"
@@ -387,8 +387,11 @@ void WindowManagerService::ConfigureWindowManagerService()
         }
     }
     item = config["defaultFloatingWindow"];
-    if (item.IsInts() && *item.intsValue_.size() == 4) {
-        WindowLayoutPolicyCascade::SetDefaultFloatingWindow(*item.intsValue_);
+    if (item.IsInts()) {
+        auto numbers = *item.intsValue_;
+        if (numbers.size() == 4) {
+            WindowLayoutPolicyCascade::SetDefaultFloatingWindow(numbers);
+        }
     }
 }
 

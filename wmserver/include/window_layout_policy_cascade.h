@@ -80,8 +80,8 @@ private:
     };
     mutable std::map<DisplayId, LayoutRects> cascadeRectsMap_;
     std::map<DisplayId, Rect> restoringDividerWindowRects_;
-    uint32_t floatingBottomPosY_;
-    Rect defaultFloatingWindow_;
+    static uint32_t floatingBottomPosY_;
+    static Rect defaultFloatingWindow_;
 };
 }
 }
