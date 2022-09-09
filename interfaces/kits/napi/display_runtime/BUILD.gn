@@ -52,7 +52,7 @@ ohos_shared_library("display_napi") {
     "ability_runtime:ability_manager",
     "ability_runtime:runtime",
     "hiviewdfx_hilog_native:libhilog",
-    "multimedia_image_standard:image_native",
+    "multimedia_image_framework:image_native",
     "napi:ace_napi",
   ]
 
