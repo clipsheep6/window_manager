@@ -18,8 +18,7 @@
 
 #include <vector>
 #include <mutex>
-#include <pixel_map.h>
-
+#include "pixel_map.h"
 #include "display.h"
 #include "dm_common.h"
 #include "wm_single_instance.h"
