@@ -21,12 +21,13 @@ config("wm_interface_config") {
 ohos_shared_library("wm_interface") {
   public_configs = [ ":wm_interface_config" ]
 
-  include_dirs = [ "//foundation/window/window_manager/interfaces/innerkits" ]
+  include_dirs = [ "//foundation/window/window_manager/interfaces/innerkits",
+                   "foundation/multimedia/image_framework/interfaces/innerkits/include", ]
 
   public_deps = [
     "//commonlibrary/c_utils/base:utils",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
+    "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
     "//foundation/multimodalinput/input/frameworks/proxy:libmmi-client",
     "//foundation/systemabilitymgr/samgr/interfaces/innerkits/samgr_proxy:samgr_proxy",
   ]
