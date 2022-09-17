@@ -554,22 +554,23 @@ WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, boo
         return WMError::WM_ERROR_INVALID_WINDOW_MODE_OR_SIZE;
     }
 
-    if (node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
-        WindowHelper::IsAppWindow(node->GetWindowType()) && !node->isPlayAnimationShow_) {
-        container->NotifyDockWindowStateChanged(node, false);
-        WMError res = MinimizeStructuredAppWindowsExceptSelf(node);
-        if (res != WMError::WM_OK) {
-            WLOGFE("Minimize other structured window failed");
-            MinimizeApp::ClearNodesWithReason(MinimizeReason::OTHER_WINDOW);
-            return res;
-        }
-    }
     if (fromStartingWin) {
+        if (node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
+            WindowHelper::IsAppWindow(node->GetWindowType()) && !node->isPlayAnimationShow_) {
+            container->NotifyDockWindowStateChanged(node, false);
+            WMError res = MinimizeStructuredAppWindowsExceptSelf(node);
+            if (res != WMError::WM_OK) {
+                WLOGFE("Minimize other structured window failed");
+                MinimizeApp::ClearNodesWithReason(MinimizeReason::OTHER_WINDOW);
+                return res;
+            }
+        }
         WMError res = container->ShowStartingWindow(node);
         if (res != WMError::WM_OK) {
             MinimizeApp::ClearNodesWithReason(MinimizeReason::OTHER_WINDOW);
         }
         SwitchRenderModeIfNeeded();
+        MinimizeApp::ExecuteMinimizeTargetReason(MinimizeReason::OTHER_WINDOW);
         return res;
     }
     // limit number of main window
@@ -586,9 +587,9 @@ WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, boo
     }
 
     WMError res = container->AddWindowNode(node, parentNode);
-    if (!WindowHelper::IsSystemWindow(node->GetWindowType())) {
-        DestroyLeakStartingWindow();
-    }
+    // if (!WindowHelper::IsSystemWindow(node->GetWindowType())) {
+    //     DestroyLeakStartingWindow();
+    // }
     if (res != WMError::WM_OK) {
         WLOGFE("AddWindowNode failed with ret: %{public}u", static_cast<uint32_t>(res));
         return res;
