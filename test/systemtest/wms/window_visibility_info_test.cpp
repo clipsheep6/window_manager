@@ -27,7 +27,6 @@
 #include "window_manager.h"
 #include "window_test_utils.h"
 #include "surface_draw.h"
-#include "window_manager.h"
 
 using namespace testing;
 using namespace testing::ext;
