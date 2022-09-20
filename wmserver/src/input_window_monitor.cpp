@@ -148,7 +148,7 @@ void InputWindowMonitor::TransformWindowRects(const sptr<WindowNode>& windowNode
         for (Rect& rect : pointerHotAreas) {
             rect = WindowHelper::TransformRect(windowNode->GetWindowProperty()->GetTransformMat(), rect);
         }
-        WLOGFI("area rect befoe tranform: [%{public}d, %{public}d, %{public}u, %{public}u]",
+        WLOGFI("area rect before tranform: [%{public}d, %{public}d, %{public}u, %{public}u]",
             areaRect.posX_, areaRect.posY_, areaRect.width_, areaRect.height_);
         areaRect = WindowHelper::TransformRect(windowNode->GetWindowProperty()->GetTransformMat(), areaRect);
         WLOGFI("area rect after tranform: [%{public}d, %{public}d, %{public}u, %{public}u]",
