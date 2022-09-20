@@ -47,12 +47,15 @@ void WindowInputChannel::HandleKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent
             return;
         }
     }
-    bool isKeyboardEvent = IsKeyboardEvent(keyEvent);
+
     bool inputMethodHasProcessed = false;
+#ifdef IMF_ENABLE
+    bool isKeyboardEvent = IsKeyboardEvent(keyEvent);
     if (isKeyboardEvent) {
         WLOGFI("dispatch keyEvent to input method");
         inputMethodHasProcessed = MiscServices::InputMethodController::GetInstance()->dispatchKeyEvent(keyEvent);
     }
+#endif // IMF_ENABLE
     if (!inputMethodHasProcessed) {
         WLOGFI("dispatch keyEvent to ACE");
         window_->ConsumeKeyEvent(keyEvent);
