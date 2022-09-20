@@ -104,6 +104,18 @@ ohos_shared_library("libwm") {
     defines += [ "EFFICIENCY_MANAGER_ENABLE" ]
   }
 
+  if (!defined(global_parts_info) ||
+      defined(global_parts_info.inputmethod_client)) {
+    imf_enable = true
+  } else {
+    imf_enable = false
+  }
+
+  if (imf_enable == true) {
+    external_deps += [ "imf:inputmethod_client" ]
+    defines += [ "IMF_ENABLE" ]
+  }
+
   part_name = "window_manager"
   subsystem_name = "window"
 }
