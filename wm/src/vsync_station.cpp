@@ -15,6 +15,7 @@
 
 #include "vsync_station.h"
 
+#include <hitrace_meter.h>
 #include "transaction/rs_interfaces.h"
 #include "window_manager_hilog.h"
 
@@ -59,6 +60,8 @@ void VsyncStation::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallb
         vsyncHandler_->RemoveTask(VSYNC_TIME_OUT_TASK);
         vsyncHandler_->PostTask(vsyncTimeoutCallback_, VSYNC_TIME_OUT_TASK, VSYNC_TIME_OUT_MILLISECONDS);
     }
+    
+    HITRACE_METER(HITRACE_TAG_WINDOW_MANAGER);
     receiver_->RequestNextVSync(frameCallback_);
 }
 
@@ -79,6 +82,8 @@ void VsyncStation::VsyncCallbackInner(int64_t timestamp)
         vsyncCallbacks_.clear();
         vsyncHandler_->RemoveTask(VSYNC_TIME_OUT_TASK);
     }
+
+    HITRACE_METER(HITRACE_TAG_WINDOW_MANAGER);
     for (const auto& callback: vsyncCallbacks) {
         callback->onCallback(timestamp);
     }
