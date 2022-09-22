@@ -67,7 +67,7 @@ public:
     bool IsDockSliceInExitSplitModeArea(DisplayId displayId) const;
     void ExitSplitMode(DisplayId displayId);
 
-    bool isVerticalDisplay(DisplayId displayId) const;
+    bool IsVerticalDisplay(DisplayId displayId) const;
     WMError RaiseZOrderForAppWindow(sptr<WindowNode>& node, sptr<WindowNode>& parentNode);
     sptr<WindowNode> GetNextFocusableWindow(uint32_t windowId) const;
     sptr<WindowNode> GetNextActiveWindow(uint32_t windowId) const;
@@ -122,6 +122,7 @@ public:
     static AnimationConfig& GetAnimationConfigRef();
     bool TakeWindowPairSnapshot(DisplayId displayId);
     void ClearWindowPairSnapshot(DisplayId displayId);
+    bool IsScreenLocked();
 
 private:
     void TraverseWindowNode(sptr<WindowNode>& root, std::vector<sptr<WindowNode>>& windowNodes) const;

@@ -24,6 +24,42 @@ import rpc from './@ohos.rpc'
 */
 declare namespace window {
   /**
+   * Describes the window manager error code
+   * @since 7
+   * @deprecated since 9
+   */
+   enum WMError {
+    WM_DO_NOTHING,
+    WM_ERROR_NO_MEM,
+    WM_ERROR_DESTROYED_OBJECT,
+    WM_ERROR_INVALID_WINDOW,
+    WM_ERROR_INVALID_WINDOW_MODE_OR_SIZE,
+    WM_ERROR_INVALID_OPERATION,
+    WM_ERROR_INVALID_PERMISSION,
+    WM_ERROR_NO_REMOTE_ANIMATION,
+    WM_ERROR_DEVICE_NOT_SUPPORT,
+    WM_ERROR_NULLPTR,
+    WM_ERROR_INVALID_TYPE,
+    WM_ERROR_INVALID_PARAM,
+    WM_ERROR_SAMGR,
+    WM_ERROR_IPC_FAILED,
+  }
+
+  /**
+   * Describes the window manager error code
+   * @since 9
+   */
+  enum WmErrorCode {
+    WM_ERROR_NO_PERMISSION,
+    WM_ERROR_INVALID_PARAM,
+    WM_ERROR_DEVICE_NOT_SUPPORT,
+    WM_ERROR_REPEAT_OPERATION,
+    WM_ERROR_STATE_ABNORMALLY,
+    WM_ERROR_SYSTEM_ABNORMALLY,
+    WM_ERROR_INVALID_CALLING,
+  }
+
+  /**
    * The type of a window.
    * @syscap SystemCapability.WindowManager.WindowManager.Core
    */
@@ -896,20 +932,20 @@ declare namespace window {
     off(type: 'avoidAreaChange', callback?: Callback<{ type: AvoidAreaType, area: AvoidArea }>): void;
 
     /**
-     * register the callback of screenshot, only the focused window called back
-     * @param type: 'screenshot'
+     * register the callback of screenshotEvent, only the focused window called back
+     * @param type: 'screenshotEvent'
      * @syscap SystemCapability.WindowManager.WindowManager.Core
      * @since 9
      */
-    on(type: 'screenshot', callback: Callback<void>): void;
+    on(type: 'screenshotEvent', callback: Callback<void>): void;
 
     /**
-     * unregister the callback of screenshot
-     * @param type: 'screenshot'
+     * unregister the callback of screenshotEvent
+     * @param type: 'screenshotEvent'
      * @syscap SystemCapability.WindowManager.WindowManager.Core
      * @since 9
      */
-    off(type: 'screenshot', callback?: Callback<void>): void;
+    off(type: 'screenshotEvent', callback?: Callback<void>): void;
 
     /**
      * register the callback of dialogTargetTouch
@@ -943,7 +979,7 @@ declare namespace window {
      * @systemapi
      * @since 9
      */
-    bindDialogTarget(token: rpc.RemoteObject, deathCallback: Callback<void>, callback: AsyncCallback<void>): void;
+    bindDialogTarget(token: rpc.RemoteObject, deathCallback: Callback<void>, callback: AsyncCallback<void>);
 
     /**
      * Whether the window supports thr wide gamut setting.
