@@ -1170,7 +1170,7 @@ Rect WindowNodeContainer::GetDisplayRect(DisplayId displayId) const
     return displayGroupInfo_->GetDisplayRect(displayId);
 }
 
-bool WindowNodeContainer::isVerticalDisplay(DisplayId displayId) const
+bool WindowNodeContainer::IsVerticalDisplay(DisplayId displayId) const
 {
     return displayGroupInfo_->GetDisplayRect(displayId).width_ < displayGroupInfo_->GetDisplayRect(displayId).height_;
 }
@@ -1288,6 +1288,11 @@ WMError WindowNodeContainer::RaiseZOrderForAppWindow(sptr<WindowNode>& node, spt
         if (node->IsSplitMode()) {
             RaiseSplitRelatedWindowToTop(node);
         } else {
+            // remote animation continuous start and exit allow parent is nullptr
+            if (node->parent_ == nullptr) {
+                WLOGFW("node parent is nullptr");
+                return WMError::WM_OK;
+            }
             RaiseWindowToTop(node->GetWindowId(), node->parent_->children_);
         }
     } else {
@@ -1976,6 +1981,11 @@ void WindowNodeContainer::ClearWindowPairSnapshot(DisplayId displayId)
         return;
     }
     windowPair->ClearPairSnapshot();
+}
+
+bool WindowNodeContainer::IsScreenLocked()
+{
+    return isScreenLocked_;
 }
 } // namespace Rosen
 } // namespace OHOS
