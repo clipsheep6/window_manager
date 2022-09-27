@@ -74,7 +74,7 @@ void InputWindowMonitor::UpdateInputWindowByDisplayId(DisplayId displayId)
     std::vector<sptr<WindowNode>> windowNodes;
     container->TraverseContainer(windowNodes);
     TraverseWindowNodes(windowNodes, displayGroupInfo_.windowsInfo);
-    WLOGFI("update display info to IMS, displayId: %{public}" PRIu64"", displayId);
+    WLOGFI("liuqi update display info to IMS, displayId: %{public}" PRIu64"", displayId);
     MMI::InputManager::GetInstance()->UpdateDisplayInfo(displayGroupInfo_);
 }
 

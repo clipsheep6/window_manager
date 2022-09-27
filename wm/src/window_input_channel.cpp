@@ -64,6 +64,8 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
         WLOGFE("pointerEvent is nullptr");
         return;
     }
+    WLOGFI("liuqi Receive move event, windowId: %{public}u, action: %{public}d",
+            window_->GetWindowId(), pointerEvent->GetPointerAction());
     if (inputListener_ != nullptr) {
         // divider window consumes pointer events directly
         if (window_->GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {

@@ -617,6 +617,7 @@ WMError WindowManagerService::UpdateProperty(sptr<WindowProperty>& windowPropert
         });
         return WMError::WM_OK;
     }
+    WLOGFI("liuqi UpdateProperty windowProperty->GetWindowId(): %{public}d", windowProperty->GetWindowId());
     return wmsTaskLooper_->ScheduleTask([this, &windowProperty, action]() {
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "wms:UpdateProperty");
         WMError res = windowController_->UpdateProperty(windowProperty, action);
