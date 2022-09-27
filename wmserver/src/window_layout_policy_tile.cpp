@@ -67,17 +67,6 @@ void WindowLayoutPolicyTile::InitAllRects()
     }
 }
 
-uint32_t WindowLayoutPolicyTile::GetMaxTileWinNum(DisplayId displayId) const
-{
-    float virtualPixelRatio = GetVirtualPixelRatio(displayId);
-    constexpr uint32_t half = 2;
-    uint32_t edgeIntervalVp = static_cast<uint32_t>(EDGE_INTERVAL * half * virtualPixelRatio);
-    uint32_t midIntervalVp = static_cast<uint32_t>(MID_INTERVAL * virtualPixelRatio);
-    uint32_t minFloatingW = static_cast<uint32_t>(MIN_FLOATING_WIDTH * virtualPixelRatio);
-    uint32_t drawableW = limitRectMap_[displayId].width_ - edgeIntervalVp + midIntervalVp;
-    return static_cast<uint32_t>(drawableW / (minFloatingW + midIntervalVp));
-}
-
 void WindowLayoutPolicyTile::InitTileWindowRects(DisplayId displayId)
 {
     float virtualPixelRatio = GetVirtualPixelRatio(displayId);
@@ -90,8 +79,8 @@ void WindowLayoutPolicyTile::InitTileWindowRects(DisplayId displayId)
     constexpr int half = 2;
     maxTileWinNumMap_[displayId]  = GetMaxTileWinNum(displayId);
     WLOGFI("set max tile window num %{public}u", maxTileWinNumMap_[displayId]);
-    auto& presetRects = presetRectsMap_[displayId];
-    presetRects.clear();
+    auto& presetRectsForAllLevel = presetRectsMap_[displayId];
+    presetRectsForAllLevel.clear();
     uint32_t w = displayRect.width_ * ratio;
     uint32_t h = displayRect.height_ * ratio;
     w = w > limitRect.width_ ? limitRect.width_ : w;
@@ -100,113 +89,30 @@ void WindowLayoutPolicyTile::InitTileWindowRects(DisplayId displayId)
     int y = limitRect.posY_ + ((limitRect.height_ - h) / half);
 
     std::vector<Rect> single = {{ x, y, w, h }};
-    presetRects.emplace_back(single);
+    presetRectsForAllLevel.emplace_back(single);
     for (uint32_t num = 2; num <= maxTileWinNumMap_[displayId]; num++) { // start calc preset with 2 windows
         w = (limitRect.width_ - edgeIntervalVp * half - midIntervalVp * (num - 1)) / num;
         std::vector<Rect> curLevel;
         for (uint32_t i = 0; i < num; i++) {
             int curX = limitRect.posX_ + edgeIntervalVp + i * (w + midIntervalVp);
             Rect curRect = { curX, y, w, h };
-            WLOGFI("presetRects: level %{public}u, id %{public}u, [%{public}d %{public}d %{public}u %{public}u]",
-                num, i, curX, y, w, h);
+            WLOGFI("presetRectsForAllLevel: level %{public}u, id %{public}u, tileRect: [%{public}d %{public}d "
+                "%{public}u %{public}u]", num, i, curX, y, w, h);
             curLevel.emplace_back(curRect);
         }
-        presetRects.emplace_back(curLevel);
+        presetRectsForAllLevel.emplace_back(curLevel);
     }
 }
 
-bool WindowLayoutPolicyTile::IsTileRectSatisfiedWithSizeLimits(const sptr<WindowNode>& node)
+uint32_t WindowLayoutPolicyTile::GetMaxTileWinNum(DisplayId displayId) const
 {
-    if (!WindowHelper::IsMainWindow(node->GetWindowType())) {
-        return true;
-    }
-    const auto& displayId = node->GetDisplayId();
-    auto& foregroundNodes = foregroundNodesMap_[displayId];
-    auto num = foregroundNodes.size();
-    if (num > maxTileWinNumMap_[displayId]) {
-        return false;
-    }
-
-    UpdateWindowSizeLimits(node);
-
-    // find if node already exits in foreground nodes map
-    auto iter = std::find_if(foregroundNodes.begin(), foregroundNodes.end(),
-                             [node](sptr<WindowNode> foregroundNode) {
-                                 return foregroundNode->GetWindowId() == node->GetWindowId();
-                             });
-    if (iter != foregroundNodes.end()) {
-        return true;
-    }
-
-    const auto& presetRects = presetRectsMap_[displayId];
-    Rect tileRect;
-    // if size of foreground nodes is equal to or more than max tile window number
-    if (num == maxTileWinNumMap_[displayId]) {
-        tileRect = *(presetRects[num - 1].begin());
-    } else {  // if size of foreground nodes is less than max tile window number
-        tileRect = *(presetRects[num].begin());
-    }
-    WLOGFI("id %{public}u, tileRect: [%{public}d %{public}d %{public}u %{public}u]",
-        node->GetWindowId(), tileRect.posX_, tileRect.posY_, tileRect.width_, tileRect.height_);
-    return WindowHelper::IsRectSatisfiedWithSizeLimits(tileRect, node->GetWindowUpdatedSizeLimits());
-}
-
-void WindowLayoutPolicyTile::AddWindowNode(const sptr<WindowNode>& node)
-{
-    HITRACE_METER(HITRACE_TAG_WINDOW_MANAGER);
-
-    if (WindowHelper::IsMainWindow(node->GetWindowType())) {
-        DisplayId displayId = node->GetDisplayId();
-        ForegroundNodeQueuePushBack(node, displayId);
-        AssignNodePropertyForTileWindows(displayId);
-        LayoutForegroundNodeQueue(displayId);
-    } else {
-        UpdateWindowNode(node); // currently, update and add do the same process
-    }
-}
-
-void WindowLayoutPolicyTile::UpdateWindowNode(const sptr<WindowNode>& node, bool isAddWindow)
-{
-    HITRACE_METER(HITRACE_TAG_WINDOW_MANAGER);
-    WindowLayoutPolicy::UpdateWindowNode(node);
-    if (avoidTypes_.find(node->GetWindowType()) != avoidTypes_.end()) {
-        DisplayId displayId = node->GetDisplayId();
-        InitTileWindowRects(displayId);
-        AssignNodePropertyForTileWindows(displayId);
-        LayoutForegroundNodeQueue(displayId);
-    }
-}
-
-void WindowLayoutPolicyTile::RemoveWindowNode(const sptr<WindowNode>& node)
-{
-    HITRACE_METER(HITRACE_TAG_WINDOW_MANAGER);
-    WLOGFI("RemoveWindowNode %{public}u in tile", node->GetWindowId());
-    auto type = node->GetWindowType();
-    auto displayId = node->GetDisplayId();
-    // affect other windows, trigger off global layout
-    if (avoidTypes_.find(type) != avoidTypes_.end()) {
-        LayoutWindowTree(displayId);
-    } else {
-        ForegroundNodeQueueRemove(node);
-        AssignNodePropertyForTileWindows(displayId);
-        LayoutForegroundNodeQueue(displayId);
-    }
-    UpdateClientRect(node->GetRequestRect(), node, WindowSizeChangeReason::HIDE);
-}
-
-void WindowLayoutPolicyTile::LayoutForegroundNodeQueue(DisplayId displayId)
-{
-    for (auto& node : foregroundNodesMap_[displayId]) {
-        Rect winRect = node->GetRequestRect();
-        Rect lastRect = node->GetWindowRect();
-        node->SetWindowRect(winRect);
-        CalcAndSetNodeHotZone(winRect, node);
-        UpdateClientRect(winRect, node, node->GetWindowSizeChangeReason());
-        UpdateSurfaceBounds(node, winRect, lastRect);
-        for (auto& childNode : node->children_) {
-            LayoutWindowNode(childNode);
-        }
-    }
+    float virtualPixelRatio = GetVirtualPixelRatio(displayId);
+    constexpr uint32_t half = 2;
+    uint32_t edgeIntervalVp = static_cast<uint32_t>(EDGE_INTERVAL * half * virtualPixelRatio);
+    uint32_t midIntervalVp = static_cast<uint32_t>(MID_INTERVAL * virtualPixelRatio);
+    uint32_t minFloatingW = static_cast<uint32_t>(MIN_FLOATING_WIDTH * virtualPixelRatio);
+    uint32_t drawableW = limitRectMap_[displayId].width_ - edgeIntervalVp + midIntervalVp;
+    return static_cast<uint32_t>(drawableW / (minFloatingW + midIntervalVp));
 }
 
 void WindowLayoutPolicyTile::InitForegroundNodeQueue()
@@ -223,33 +129,109 @@ void WindowLayoutPolicyTile::InitForegroundNodeQueue()
     }
 }
 
-void WindowLayoutPolicyTile::ForegroundNodeQueuePushBack(const sptr<WindowNode>& node, DisplayId displayId)
+bool WindowLayoutPolicyTile::IsTileRectSatisfiedWithSizeLimits(const sptr<WindowNode>& node)
 {
-    if (node == nullptr) {
-        return;
+    if (!WindowHelper::IsMainWindow(node->GetWindowType())) {
+        return true;
     }
+    const auto& displayId = node->GetDisplayId();
     auto& foregroundNodes = foregroundNodesMap_[displayId];
+    auto num = foregroundNodes.size();
+    if (num > maxTileWinNumMap_[displayId]) {
+        return false;
+    }
+
+    // find if node already exits in foreground nodes map
+    if (IsWindowAlreadyInTileQueue(node)) {
+        return true;
+    }
+
+    UpdateWindowSizeLimits(node);
+    const auto& presetRectsForAllLevel = presetRectsMap_[displayId];
+    Rect tileRect;
+    // if size of foreground nodes is equal to or more than max tile window number
+    if (num == maxTileWinNumMap_[displayId]) {
+        tileRect = *(presetRectsForAllLevel[num - 1].begin());
+    } else {  // if size of foreground nodes is less than max tile window number
+        tileRect = *(presetRectsForAllLevel[num].begin());
+    }
+    WLOGFI("id %{public}u, tileRect: [%{public}d %{public}d %{public}u %{public}u]",
+        node->GetWindowId(), tileRect.posX_, tileRect.posY_, tileRect.width_, tileRect.height_);
+    return WindowHelper::IsRectSatisfiedWithSizeLimits(tileRect, node->GetWindowUpdatedSizeLimits());
+}
+
+void WindowLayoutPolicyTile::AddWindowNode(const sptr<WindowNode>& node)
+{
+    HITRACE_METER(HITRACE_TAG_WINDOW_MANAGER);
+    if (WindowHelper::IsMainWindow(node->GetWindowType())) {
+        DisplayId displayId = node->GetDisplayId();
+        ForegroundNodeQueuePushBack(node, displayId);
+        AssignNodePropertyForTileWindows(displayId);
+        LayoutForegroundNodeQueue(displayId);
+    } else {
+        LayoutWindowNode(node);
+    }
+}
+
+void WindowLayoutPolicyTile::RemoveWindowNode(const sptr<WindowNode>& node)
+{
+    HITRACE_METER(HITRACE_TAG_WINDOW_MANAGER);
+    WLOGFI("RemoveWindowNode %{public}u in tile", node->GetWindowId());
+
+    if (WindowHelper::IsMainWindow(node->GetWindowType())) {
+        ForegroundNodeQueueRemove(node);
+        AssignNodePropertyForTileWindows(node->GetDisplayId());
+        LayoutForegroundNodeQueue(node->GetDisplayId());
+    }
+    // update client rect when hide window
+    UpdateClientRect(node->GetRequestRect(), node, WindowSizeChangeReason::HIDE);
+}
+
+void WindowLayoutPolicyTile::LayoutForegroundNodeQueue(DisplayId displayId)
+{
+    for (auto& node : foregroundNodesMap_[displayId]) {
+        LayoutWindowNode(node);
+    }
+}
+
+bool WindowLayoutPolicyTile::IsWindowAlreadyInTileQueue(const sptr<WindowNode>& node)
+{
+    auto& foregroundNodes = foregroundNodesMap_[node->GetDisplayId()];
     auto iter = std::find_if(foregroundNodes.begin(), foregroundNodes.end(),
                              [node](sptr<WindowNode> foregroundNode) {
                                  return foregroundNode->GetWindowId() == node->GetWindowId();
                              });
     if (iter != foregroundNodes.end()) {
+        WLOGFD("Window is already in tile queue, windowId: %{public}d", node->GetWindowId());
+        return true;
+    }
+    return false;
+}
+
+void WindowLayoutPolicyTile::ForegroundNodeQueuePushBack(const sptr<WindowNode>& node, DisplayId displayId)
+{
+    if (node == nullptr) {
+        return;
+    }
+    if (IsWindowAlreadyInTileQueue(node)) {
         return;
     }
 
     if (!WindowHelper::IsWindowModeSupported(node->GetModeSupportInfo(), WindowMode::WINDOW_MODE_FLOATING)) {
-        WLOGFD("window don't support tile mode, winId: %{public}d", node->GetWindowId());
+        WLOGFD("Window don't support tile mode that should be minimized, winId: %{public}d", node->GetWindowId());
         MinimizeApp::AddNeedMinimizeApp(node, MinimizeReason::LAYOUT_TILE);
         return;
     }
-    WLOGFI("add win in tile, displayId: %{public}" PRIu64", winId: %{public}d", displayId, node->GetWindowId());
+    auto& foregroundNodes = foregroundNodesMap_[displayId];
     while (foregroundNodes.size() >= maxTileWinNumMap_[displayId]) {
         auto removeNode = foregroundNodes.front();
         foregroundNodes.pop_front();
-        WLOGFI("pop win in queue head for add new win, windowId: %{public}d", removeNode->GetWindowId());
+        WLOGFI("Minimize win in queue head for add new win, windowId: %{public}d", removeNode->GetWindowId());
         MinimizeApp::AddNeedMinimizeApp(removeNode, MinimizeReason::LAYOUT_TILE);
     }
     foregroundNodes.push_back(node);
+    WLOGFI("Pusk back win in tile queue, displayId: %{public}" PRIu64", winId: %{public}d",
+        displayId, node->GetWindowId());
 }
 
 void WindowLayoutPolicyTile::ForegroundNodeQueueRemove(const sptr<WindowNode>& node)
@@ -261,27 +243,38 @@ void WindowLayoutPolicyTile::ForegroundNodeQueueRemove(const sptr<WindowNode>& n
     auto& foregroundNodes = foregroundNodesMap_[displayId];
     auto iter = std::find(foregroundNodes.begin(), foregroundNodes.end(), node);
     if (iter != foregroundNodes.end()) {
-        WLOGFI("remove win in tile for win id: %{public}d", node->GetWindowId());
+        WLOGFI("Remove win in tile for win id: %{public}d", node->GetWindowId());
         foregroundNodes.erase(iter);
     }
 }
 
-void WindowLayoutPolicyTile::AssignNodePropertyForTileWindows(DisplayId displayId)
+bool WindowLayoutPolicyTile::IsValidTileQueueAndPresetRects(DisplayId displayId)
 {
-    // set rect for foreground windows
     auto& foregroundNodes = foregroundNodesMap_[displayId];
     uint32_t num = foregroundNodes.size();
-    auto& presetRects = presetRectsMap_[displayId];
-    if (num > maxTileWinNumMap_[displayId] || num > presetRects.size() || num == 0) {
-        WLOGE("invalid tile queue");
-        return;
+    auto& presetRectsForAllLevel = presetRectsMap_[displayId];
+    if (num > maxTileWinNumMap_[displayId] || num > presetRectsForAllLevel.size() || num == 0) {
+        WLOGE("Invalid tile queue, foreground tileNum: %{public}u, maxTileNum: %{public}u, presetRectsForAllLevel: "
+            "%{public}u", num, maxTileWinNumMap_[displayId], presetRectsForAllLevel.size());
+        return false;
     }
-    std::vector<Rect>& presetRect = presetRects[num - 1];
+    auto& presetRect = presetRectsForAllLevel[num - 1];
     if (presetRect.size() != num) {
-        WLOGE("invalid preset rects");
+        WLOGE("Invalid preset rects, foreground tileNum: %{public}u, presetRect.size(): %{public}u", num, presetRect.size());
+        return false;
+    }
+    return true;
+}
+
+void WindowLayoutPolicyTile::AssignNodePropertyForTileWindows(DisplayId displayId)
+{
+    if (!(IsValidTileQueueAndPresetRects(displayId))) {
         return;
     }
-    auto rectIt = presetRect.begin();
+
+    auto& foregroundNodes = foregroundNodesMap_[displayId];
+    uint32_t num = foregroundNodes.size();
+    auto rectIt = presetRectsMap_[displayId][num - 1].begin();
     std::vector<sptr<WindowNode>> needMinimizeNodes;
     std::vector<sptr<WindowNode>> needRecoverNodes;
     for (auto node : foregroundNodes) {
@@ -294,10 +287,11 @@ void WindowLayoutPolicyTile::AssignNodePropertyForTileWindows(DisplayId displayI
             }
             node->SetRequestRect(rect);
             node->SetDecoStatus(true);
+            rectIt++;
             WLOGFI("set rect for qwin id: %{public}d [%{public}d %{public}d %{public}d %{public}d]",
                 node->GetWindowId(), rect.posX_, rect.posY_, rect.width_, rect.height_);
-            rectIt++;
         } else {
+            WLOGFW("Window doesn't support floating mode or expect tileRect, winId: %{public}u", node->GetWindowId());
             // if foreground nodes is equal to max tileWinNum, means need recover one node before minimize cur node
             if (num == maxTileWinNumMap_[displayId]) {
                 auto recoverNode = MinimizeApp::GetRecoverdNodeFromMinimizeList();
@@ -325,48 +319,21 @@ void WindowLayoutPolicyTile::AssignNodePropertyForTileWindows(DisplayId displayI
 
 void WindowLayoutPolicyTile::UpdateLayoutRect(const sptr<WindowNode>& node)
 {
-    auto type = node->GetWindowType();
-    auto mode = node->GetWindowMode();
-    auto flags = node->GetWindowFlags();
-    auto property = node->GetWindowProperty();
-    if (property == nullptr) {
-        WLOGFE("window property is nullptr.");
-        return;
-    }
-    UpdateWindowSizeLimits(node);
-    auto decorEnable = property->GetDecorEnable();
-    bool needAvoid = (flags & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID));
-    bool parentLimit = (flags & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_PARENT_LIMIT));
-    bool subWindow = WindowHelper::IsSubWindow(type) || WindowHelper::IsSystemSubWindow(type);
-    bool floatingWindow = (mode == WindowMode::WINDOW_MODE_FLOATING);
-    const Rect lastRect = node->GetWindowRect();
-    Rect limitRect = displayGroupInfo_->GetDisplayRect(node->GetDisplayId());
-    ComputeDecoratedRequestRect(node);
+    bool floatingWindow = (node->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING);
+    bool needAvoid = (node->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID));
+    Rect lastRect = node->GetWindowRect();
     Rect winRect = node->GetRequestRect();
+    WLOGFI("Id:%{public}u, mode: %{public}d type: %{public}d, needAvoid: %{public}d, requestRect: [%{public}d, "
+        "%{public}d, %{public}u, %{public}u]", node->GetWindowId(), node->GetWindowMode(), node->GetWindowType(),
+        needAvoid, winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
 
-    WLOGFI("Id:%{public}u, avoid:%{public}d parLimit:%{public}d floating:%{public}d, sub:%{public}d, " \
-        "deco:%{public}d, type:%{public}u, requestRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
-        node->GetWindowId(), needAvoid, parentLimit, floatingWindow, subWindow, decorEnable,
-        static_cast<uint32_t>(type), winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
-    if (needAvoid) {
-        limitRect = limitRectMap_[node->GetDisplayId()];
+     if (!floatingWindow) { // fullscreen window
+        const auto& displayRect = displayGroupInfo_->GetDisplayRect(node->GetDisplayId());
+        const auto& limitDisplayRect = limitRectMap_[node->GetDisplayId()];
+        winRect = needAvoid ? limitDisplayRect : displayRect;
     }
-
-    if (!floatingWindow) { // fullscreen window
-        winRect = limitRect;
-    } else { // floating window
-        if (subWindow && parentLimit && node->parent_) { // subwindow and limited by parent
-            limitRect = node->parent_->GetWindowRect();
-            UpdateFloatingLayoutRect(limitRect, winRect);
-        }
-    }
-
-    LimitFloatingWindowSize(node, displayGroupInfo_->GetDisplayRect(node->GetDisplayId()), winRect);
-    LimitMainFloatingWindowPosition(node, winRect);
-
     node->SetWindowRect(winRect);
     CalcAndSetNodeHotZone(winRect, node);
-    // update Node Bounds before reset Reason
     UpdateSurfaceBounds(node, winRect, lastRect);
     UpdateClientRectAndResetReason(node, winRect);
 }

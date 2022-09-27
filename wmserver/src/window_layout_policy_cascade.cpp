@@ -248,11 +248,9 @@ void WindowLayoutPolicyCascade::InitCascadeRect(DisplayId displayId)
     Rect resRect = {0, 0, defaultW, defaultH};
     const Rect& limitRect = limitRectMap_[displayId];
     if (defaultW <= limitRect.width_ && defaultH <= limitRect.height_) {
-        int32_t centerPosX = limitRect.posX_ + static_cast<int32_t>(limitRect.width_ / half);
-        resRect.posX_ = centerPosX - static_cast<int32_t>(defaultW / half);
+        resRect.posX_ = limitRect.posX_ + static_cast<int32_t>((limitRect.width_ - defaultW) / half);
 
-        int32_t centerPosY = limitRect.posY_ + static_cast<int32_t>(limitRect.height_ / half);
-        resRect.posY_ = centerPosY - static_cast<int32_t>(defaultH / half);
+        resRect.posY_ = limitRect.posY_ + static_cast<int32_t>((limitRect.height_ - defaultH) / half);
     }
     WLOGFI("init CascadeRect :[%{public}d, %{public}d, %{public}d, %{public}d]",
         resRect.posX_, resRect.posY_, resRect.width_, resRect.height_);
