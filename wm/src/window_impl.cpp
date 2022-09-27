@@ -1104,7 +1104,7 @@ WMError WindowImpl::Hide(uint32_t reason, bool withAnimation)
 
 WMError WindowImpl::MoveTo(int32_t x, int32_t y)
 {
-    WLOGFD("[Client] Window [name:%{public}s, id:%{public}d] MoveTo %{public}d %{public}d",
+    WLOGFD("[Client] liuqi start Window [name:%{public}s, id:%{public}d] MoveTo %{public}d %{public}d",
         name_.c_str(), property_->GetWindowId(), x, y);
     if (!IsWindowValid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
@@ -1118,7 +1118,10 @@ WMError WindowImpl::MoveTo(int32_t x, int32_t y)
         return WMError::WM_OK;
     }
     property_->SetWindowSizeChangeReason(WindowSizeChangeReason::MOVE);
-    return UpdateProperty(PropertyChangeAction::ACTION_UPDATE_RECT);
+    auto ret = UpdateProperty(PropertyChangeAction::ACTION_UPDATE_RECT);
+    WLOGFD("[Client] liuqi end Window [name:%{public}s, id:%{public}d] MoveTo %{public}d %{public}d",
+        name_.c_str(), property_->GetWindowId(), x, y);
+    return ret;
 }
 
 WMError WindowImpl::Resize(uint32_t width, uint32_t height)
