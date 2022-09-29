@@ -29,7 +29,13 @@ WindowInputChannel::WindowInputChannel(const sptr<Window>& window): window_(wind
 
 WindowInputChannel::~WindowInputChannel()
 {
-    WLOGFI("windowName: %{public}s, windowId: %{public}d", window_->GetWindowName().c_str(), window_->GetWindowId());
+    if (window_->GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+        WLOGFI("liuqi windowName: %{public}s, windowId: %{public}d", window_->GetWindowName().c_str(), window_->GetWindowId());
+    }
+    if (moveEvent_ != nullptr) {
+        moveEvent_->MarkProcessed();
+        moveEvent_ = nullptr;
+    }
     window_->SetNeedRemoveWindowInputChannel(false);
 }
 
@@ -65,6 +71,9 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
         return;
     }
     if (inputListener_ != nullptr) {
+        if (window_->GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+            WLOGFI("liuqi windowId: %{public}d", window_->GetWindowId());
+        }
         // divider window consumes pointer events directly
         if (window_->GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
             window_->ConsumePointerEvent(pointerEvent);
@@ -92,14 +101,14 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
                 pointerEvent->MarkProcessed();
             }
         }
-        WLOGFI("Receive move event, windowId: %{public}u, action: %{public}d",
-            window_->GetWindowId(), pointerEvent->GetPointerAction());
         if (pointerEventTemp != nullptr) {
             pointerEventTemp->MarkProcessed();
         }
     } else {
-        WLOGFI("Dispatch non-move event, windowId: %{public}u, action: %{public}d",
-            window_->GetWindowId(), pointerEvent->GetPointerAction());
+        if (window_->GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+            WLOGFI("liuqi Dispatch non-move event, windowId: %{public}u, action: %{public}d",
+                window_->GetWindowId(), pointerEvent->GetPointerAction());
+        }
         window_->ConsumePointerEvent(pointerEvent);
         pointerEvent->MarkProcessed();
     }
@@ -117,8 +126,10 @@ void WindowInputChannel::OnVsync(int64_t timeStamp)
         WLOGFE("moveEvent_ is nullptr");
         return;
     }
-    WLOGFI("Dispatch move event, windowId: %{public}u, action: %{public}d",
-        window_->GetWindowId(), pointerEvent->GetPointerAction());
+    if (window_->GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+        WLOGFI("liuqi Dispatch move event, windowId: %{public}u, action: %{public}d",
+            window_->GetWindowId(), pointerEvent->GetPointerAction());
+    }
     window_->ConsumePointerEvent(pointerEvent);
     pointerEvent->MarkProcessed();
 }
@@ -131,7 +142,7 @@ void WindowInputChannel::SetInputListener(const std::shared_ptr<MMI::IInputEvent
 void WindowInputChannel::Destroy()
 {
     std::lock_guard<std::mutex> lock(mtx_);
-    WLOGFI("Destroy WindowInputChannel, windowId:%{public}u", window_->GetWindowId());
+    WLOGFI("liuqi Destroy WindowInputChannel, windowId:%{public}u", window_->GetWindowId());
     isAvailable_ = false;
     VsyncStation::GetInstance().RemoveCallback(VsyncStation::CallbackType::CALLBACK_INPUT, callback_);
     if (moveEvent_ != nullptr) {

@@ -34,6 +34,7 @@ void InputEventListener::OnInputEvent(std::shared_ptr<MMI::KeyEvent> keyEvent) c
     auto channel = InputTransferStation::GetInstance().GetInputChannel(windowId);
     if (channel == nullptr) {
         WLOGFE("WindowInputChannel is nullptr");
+        keyEvent->MarkProcessed();
         return;
     }
     channel->HandleKeyEvent(keyEvent);
@@ -56,10 +57,11 @@ void InputEventListener::OnInputEvent(std::shared_ptr<MMI::PointerEvent> pointer
         return;
     }
     uint32_t windowId = static_cast<uint32_t>(pointerEvent->GetAgentWindowId());
-    WLOGFD("Receive pointerEvent, windowId: %{public}u", windowId);
+    WLOGFI("liuqi OnInputEvent Receive pointerEvent, windowId: %{public}u", windowId);
     auto channel = InputTransferStation::GetInstance().GetInputChannel(windowId);
     if (channel == nullptr) {
-        WLOGFE("WindowInputChannel is nullptr");
+        WLOGFI("liuqi OnInputEvent WindowInputChannel is nullptr");
+        pointerEvent->MarkProcessed();
         return;
     }
     channel->HandlePointerEvent(pointerEvent);
