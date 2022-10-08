@@ -163,7 +163,8 @@ public:
     virtual void SetPrivacyMode(bool isPrivacyMode) override;
     virtual bool IsPrivacyMode() const override;
     virtual void DisableAppWindowDecor() override;
-
+    virtual void SetSnapshotSkip(bool isSkip) override;
+    
     virtual bool IsDecorEnable() const override;
     virtual WMError Maximize() override;
     virtual WMError Minimize() override;
