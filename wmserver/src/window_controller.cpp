@@ -258,6 +258,12 @@ WMError WindowController::AddWindowNode(sptr<WindowProperty>& property)
             nodes.emplace_back(child);
         }
     }
+    for (auto& iter : nodes) {
+        if ((iter->GetWindowType() == WindowType::WINDOW_TYPE_STATUS_BAR) &&
+            (node->abilityToken_ != iter->abilityToken_)) {
+            iter->GetWindowToken()->NotifyForeground();
+        }
+    }
     accessibilityConnection_->NotifyAccessibilityWindowInfo(node->GetDisplayId(), nodes,
         WindowUpdateType::WINDOW_UPDATE_ADDED);
     HandleTurnScreenOn(node);
@@ -365,6 +371,12 @@ WMError WindowController::RemoveWindowNode(uint32_t windowId)
         nodes.emplace_back(windowNode);
         for (auto& child : windowNode->children_) {
             nodes.emplace_back(child);
+        }
+        for (auto& iter : nodes) {
+            if ((iter->GetWindowType() == WindowType::WINDOW_TYPE_STATUS_BAR) &&
+                (windowNode->abilityToken_ != iter->abilityToken_)) {
+                iter->GetWindowToken()->NotifyForeground();
+            }
         }
         displayZoomController_->ClearZoomTransform(nodes);
         accessibilityConnection_->NotifyAccessibilityWindowInfo(windowNode->GetDisplayId(), nodes,
