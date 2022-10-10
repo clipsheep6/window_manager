@@ -81,6 +81,7 @@ public:
     WMError ChangeMouseStyle(uint32_t windowId, sptr<MoveDragProperty>& moveDragProperty);
     void RecoverDefaultMouseStyle(uint32_t windowId);
 
+    void LayoutWhenAddWindowNode(sptr<WindowNode>& node, bool afterAnimation = false);
 private:
     uint32_t GenWindowId();
     void FlushWindowInfo(uint32_t windowId);
