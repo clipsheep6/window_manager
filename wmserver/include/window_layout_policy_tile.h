@@ -35,7 +35,6 @@ public:
     ~WindowLayoutPolicyTile() = default;
     void Launch() override;
     void AddWindowNode(const sptr<WindowNode>& node) override;
-    void UpdateWindowNode(const sptr<WindowNode>& node, bool isAddWindow = false) override;
     void RemoveWindowNode(const sptr<WindowNode>& node) override;
     void UpdateLayoutRect(const sptr<WindowNode>& node) override;
     bool IsTileRectSatisfiedWithSizeLimits(const sptr<WindowNode>& node) override;
@@ -52,6 +51,8 @@ private:
     void InitForegroundNodeQueue();
     void ForegroundNodeQueuePushBack(const sptr<WindowNode>& node, DisplayId displayId);
     void ForegroundNodeQueueRemove(const sptr<WindowNode>& node);
+    bool IsWindowAlreadyInTileQueue(const sptr<WindowNode>& node);
+    bool IsValidTileQueueAndPresetRects(DisplayId displayId);
 };
 }
 }
