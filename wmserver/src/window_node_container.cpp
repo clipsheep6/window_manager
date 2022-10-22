@@ -142,6 +142,7 @@ WMError WindowNodeContainer::AddWindowNodeOnWindowTree(sptr<WindowNode>& node, c
 
 WMError WindowNodeContainer::ShowStartingWindow(sptr<WindowNode>& node)
 {
+    WLOGFI("[Add Starting Window] windowId: %{public}u", node->GetWindowId());
     if (node->currentVisibility_) {
         WLOGFE("current window is visible, windowId: %{public}u", node->GetWindowId());
         return WMError::WM_ERROR_INVALID_OPERATION;
@@ -152,11 +153,11 @@ WMError WindowNodeContainer::ShowStartingWindow(sptr<WindowNode>& node)
         return res;
     }
     UpdateWindowTree(node);
-    displayGroupController_->PreProcessWindowNode(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
+    displayGroupController_->PreProcessWindowNode(node, WindowUpdateType::WINDOW_UPDATE_ADDED, true);
     StartingWindow::AddNodeOnRSTree(node, animationConfig_, layoutPolicy_->IsMultiDisplay());
     AssignZOrder();
     layoutPolicy_->PerformWindowLayout(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
-    WLOGFI("ShowStartingWindow windowId: %{public}u end", node->GetWindowId());
+    WLOGFI("[Show Starting Window] windowId: %{public}u end", node->GetWindowId());
     return WMError::WM_OK;
 }
 
@@ -178,13 +179,13 @@ AnimationConfig& WindowNodeContainer::GetAnimationConfigRef()
 
 void WindowNodeContainer::LayoutWhenAddWindowNode(sptr<WindowNode>& node, bool afterAnimation)
 {
+    WLOGFD("[layout For Add] windowId: %{public}u, name: %{public}s currState: %{public}u, "
+        "afterAnimation: %{public}u", node->GetWindowId(), node->GetWindowName().c_str(),
+        static_cast<uint32_t>(node->stateMachine_.GetCurrentState()), afterAnimation);
     if (afterAnimation) {
         layoutPolicy_->PerformWindowLayout(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
         return;
     }
-    WLOGFI("AddWindowNode windowId:%{public}u, name:%{public}s currState:%{public}u",
-        node->GetWindowId(), node->GetWindowName().c_str(),
-        static_cast<uint32_t>(node->stateMachine_.GetCurrentState()));
     if (WindowHelper::IsMainWindow(node->GetWindowType()) &&
         RemoteAnimation::IsRemoteAnimationEnabledAndFirst(node->GetDisplayId()) &&
         node->stateMachine_.IsShowAnimationPlaying()) {
@@ -208,6 +209,11 @@ void WindowNodeContainer::LayoutWhenAddWindowNode(sptr<WindowNode>& node, bool a
 WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode, bool afterAnimation)
 {
     if (!node->startingWindowShown_) {
+        /*
+         *  Window except main window don't have starting window
+         */
+        WLOGFI("[Add Window From Client] add window which don't have starting window, "
+            "windowId: %{public}u", node->GetWindowId());
         WMError res = AddWindowNodeOnWindowTree(node, parentNode);
         if (res != WMError::WM_OK) {
             return res;
@@ -220,6 +226,8 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
                 node->isPlayAnimationShow_);
         }
     } else {
+        WLOGFI("[Add Window From Client] add window which have shown starting window, "
+            "windowId: %{public}u", node->GetWindowId());
         node->isPlayAnimationShow_ = false;
         node->startingWindowShown_ = false;
         ReZOrderShowWhenLockedWindowIfNeeded(node);
@@ -267,14 +275,14 @@ void WindowNodeContainer::UpdateRSTreeWhenShowingDisplaysChange(sptr<WindowNode>
         if (std::find(curShowingDisplays.begin(), curShowingDisplays.end(), displayId) == curShowingDisplays.end()) {
             RemoveNodeFromRSTree(node, displayId, *(curShowingDisplays.begin()),
                 WindowUpdateType::WINDOW_UPDATE_ACTIVE);
-            WLOGFI("remove from RSTree : %{public}" PRIu64"", displayId);
+            WLOGFI("[Remove from RSTree : %{public}" PRIu64"", displayId);
         }
     }
 
     for (auto& displayId : curShowingDisplays) {
         if (std::find(lastShowingDisplays.begin(), lastShowingDisplays.end(), displayId) == lastShowingDisplays.end()) {
             AddNodeOnRSTree(node, displayId, displayId, WindowUpdateType::WINDOW_UPDATE_ACTIVE);
-            WLOGFI("add on RSTree : %{public}" PRIu64"", displayId);
+            WLOGFI("Add on RSTree : %{public}" PRIu64"", displayId);
         }
     }
 }
@@ -330,6 +338,7 @@ void WindowNodeContainer::RemoveFromRsTreeWhenRemoveWindowNode(sptr<WindowNode>&
 
 WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node, bool fromAnimation)
 {
+    WLOGFI("[Remove Window] windowId: %{public}u, fromAnimation: %{public}d", node->GetWindowId(), fromAnimation);
     if (node == nullptr) {
         WLOGFE("window node or surface node is nullptr, invalid");
         return WMError::WM_ERROR_DESTROYED_OBJECT;
@@ -344,6 +353,8 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node, bool fromA
     node->currentVisibility_ = false;
     RemoveFromRsTreeWhenRemoveWindowNode(node, fromAnimation);
     displayGroupController_->UpdateDisplayGroupWindowTree();
+    // PreProcess window node and layout node
+    displayGroupController_->PreProcessWindowNode(node, WindowUpdateType::WINDOW_UPDATE_REMOVED);
     layoutPolicy_->PerformWindowLayout(node, WindowUpdateType::WINDOW_UPDATE_REMOVED);
     WindowMode lastMode = node->GetWindowMode();
     if (HandleRemoveWindow(node) != WMError::WM_OK) {
@@ -385,6 +396,7 @@ WMError WindowNodeContainer::HandleRemoveWindow(sptr<WindowNode>& node)
 
 WMError WindowNodeContainer::DestroyWindowNode(sptr<WindowNode>& node, std::vector<uint32_t>& windowIds)
 {
+    WLOGFI("[Destroy Window] windowId: %{public}u", node->GetWindowId());
     WMError ret = RemoveWindowNode(node);
     if (ret != WMError::WM_OK) {
         WLOGFE("RemoveWindowNode failed");

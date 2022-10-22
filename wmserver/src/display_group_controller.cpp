@@ -223,15 +223,33 @@ void DisplayGroupController::ChangeToRectInDisplayGroup(const sptr<WindowNode>& 
 {
     Rect requestRect = node->GetRequestRect();
     const Rect& displayRect = displayGroupInfo_->GetDisplayRect(displayId);
-    requestRect.posX_ += displayRect.posX_;
-    requestRect.posY_ += displayRect.posY_;
+    // Default cascade rect will be applied to window which rect is empty, there is no need to change
+    if (!WindowHelper::IsEmptyRect(requestRect)) {
+        requestRect.posX_ += displayRect.posX_;
+        requestRect.posY_ += displayRect.posY_;
+    }
     node->SetRequestRect(requestRect);
 
-    std::vector<DisplayId> curShowingDisplays = { node->GetDisplayId() };
-    node->SetShowingDisplays(curShowingDisplays);
+    WLOGFD("[ChangeToRectInDisplayGroup] windowId: %{public}u, requestRect: "
+        "[%{public}d, %{public}d, %{public}u, %{public}u]", node->GetWindowId(),
+        requestRect.posX_, requestRect.posY_, requestRect.width_, requestRect.height_);
 }
 
-void DisplayGroupController::PreProcessWindowNode(const sptr<WindowNode>& node, WindowUpdateType type)
+void DisplayGroupController::ResetToRectInSingleDisplay(const sptr<WindowNode>& node, DisplayId displayId)
+{
+    Rect requestRect = node->GetRequestRect();
+    const Rect& displayRect = displayGroupInfo_->GetDisplayRect(displayId);
+    requestRect.posX_ -= displayRect.posX_;
+    requestRect.posY_ -= displayRect.posY_;
+    node->SetRequestRect(requestRect);
+
+    WLOGFD("[ResetToRectInSingleDisplay] windowId: %{public}u, requestRect: "
+        "[%{public}d, %{public}d, %{public}u, %{public}u]", node->GetWindowId(),
+        requestRect.posX_, requestRect.posY_, requestRect.width_, requestRect.height_);
+}
+
+void DisplayGroupController::PreProcessWindowNode(const sptr<WindowNode>& node,
+    WindowUpdateType type, bool isStartingWindow)
 {
     if (!windowNodeContainer_->GetLayoutPolicy()->IsMultiDisplay()) {
         if (type == WindowUpdateType::WINDOW_UPDATE_ADDED) {
@@ -247,19 +265,30 @@ void DisplayGroupController::PreProcessWindowNode(const sptr<WindowNode>& node, 
 
     switch (type) {
         case WindowUpdateType::WINDOW_UPDATE_ADDED: {
-            if (!node->isShowingOnMultiDisplays_) {
-                // change rect to rect in display group
+            /*
+             * 1. Only starting window should change its rect to rect in display group, client has
+             *    already been setted in wm client.
+             * 2. Set showingDisplays if which is empty, the showingDisplays won't be empty
+             *    if the node has shown before
+             */
+            if (isStartingWindow) {
                 ChangeToRectInDisplayGroup(node, node->GetDisplayId());
             }
-            WLOGFD("preprocess node when add window");
+            if (node->GetShowingDisplays().empty()) {
+                std::vector<DisplayId> curShowingDisplays = { node->GetDisplayId() };
+                node->SetShowingDisplays(curShowingDisplays);
+            }
+            WLOGFD("preprocess node when add window, winId: %{public}u, isStartingWindow: %{public}d",
+                node->GetWindowId(), isStartingWindow);
             break;
         }
-        case WindowUpdateType::WINDOW_UPDATE_ACTIVE: {
-            // MoveTo can be called by user, calculate rect in display group if the reason is move
-            if (node->GetWindowSizeChangeReason() == WindowSizeChangeReason::MOVE) {
-                ChangeToRectInDisplayGroup(node, defaultDisplayId_);
-            }
-            WLOGFD("preprocess node when update window");
+        case WindowUpdateType::WINDOW_UPDATE_REMOVED: {
+            /*
+             * Reset rect to rect in single display, which is for making sure that
+             * the rect won't be change to rect in display group repeatedly
+             */
+            ResetToRectInSingleDisplay(node, node->GetDisplayId());
+            WLOGFD("preprocess node when remove window, winId: %{public}u", node->GetWindowId());
             break;
         }
         default:
@@ -473,11 +502,16 @@ void DisplayGroupController::ProcessDisplayChange(DisplayId defaultDisplayId, sp
     DisplayId displayId = displayInfo->GetDisplayId();
     WLOGFI("display change, displayId: %{public}" PRIu64", type: %{public}d", displayId, type);
     switch (type) {
+        case DisplayStateChangeType::DISPLAY_COMPRESS: {
+            ProcessDisplaySizeChangeOrRotation(defaultDisplayId, displayId, displayRectMap, type);
+            displayGroupInfo_->UpdateDisplayInfo(displayInfo);
+            break;
+        }
         case DisplayStateChangeType::UPDATE_ROTATION: {
             displayGroupInfo_->SetDisplayRotation(displayId, displayInfo->GetRotation());
-            [[fallthrough]];
+            ProcessDisplaySizeChangeOrRotation(defaultDisplayId, displayId, displayRectMap, type);
+            break;
         }
-        case DisplayStateChangeType::DISPLAY_COMPRESS:
         case DisplayStateChangeType::SIZE_CHANGE: {
             ProcessDisplaySizeChangeOrRotation(defaultDisplayId, displayId, displayRectMap, type);
             break;

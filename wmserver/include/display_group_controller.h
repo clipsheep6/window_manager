@@ -43,7 +43,7 @@ public:
 
     void InitNewDisplay(DisplayId displayId);
     void UpdateDisplayGroupWindowTree();
-    void PreProcessWindowNode(const sptr<WindowNode>& node, WindowUpdateType type);
+    void PreProcessWindowNode(const sptr<WindowNode>& node, WindowUpdateType type, bool isStartingWindow = false);
     void PostProcessWindowNode(const sptr<WindowNode>& node);
     void ProcessDisplayCreate(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
                               const std::map<DisplayId, Rect>& displayRectMap);
@@ -74,6 +74,7 @@ private:
     void UpdateWindowDisplayId(const sptr<WindowNode>& node, DisplayId newDisplayId);
     void ClearMapOfDestroyedDisplay(DisplayId displayId);
     void ChangeToRectInDisplayGroup(const sptr<WindowNode>& node, DisplayId displayId);
+    void ResetToRectInSingleDisplay(const sptr<WindowNode>& node, DisplayId displayId);
     void UpdateNodeSizeChangeReasonWithRotation(DisplayId displayId, const std::map<DisplayId, Rect>& displayRectMap);
     void ProcessWindowPairWhenDisplayChange(bool rotateDisplay = false);
     void UpdateSplitRatioPoints(DisplayId displayId);
