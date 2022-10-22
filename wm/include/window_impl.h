@@ -394,6 +394,7 @@ private:
     uint32_t CalculatePointerDirection(int32_t pointerX, int32_t pointerY);
     void HandlePointerStyle(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     RSSurfaceNode::SharedPtr CreateSurfaceNode(std::string name, WindowType type);
+    void ChangeToRectInDisplayGroup(const Rect& rect);
 
     // colorspace, gamut
     using ColorSpaceConvertMap = struct {

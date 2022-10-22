@@ -84,7 +84,7 @@ protected:
     void UpdateDisplayGroupRect();
     void UpdateDisplayGroupLimitRect();
     void PostProcessWhenDisplayChange();
-    void LimitWindowToBottomRightCorner(const sptr<WindowNode>& node);
+    void LimitWindowToBottomRightCorner(const sptr<WindowNode>& node, const Rect& newDisplayRect);
     void UpdateRectInDisplayGroupForAllNodes(DisplayId displayId, const Rect& oriDisplayRect,
         const Rect& newDisplayRect);
     void UpdateRectInDisplayGroup(const sptr<WindowNode>& node, const Rect& oriDisplayRect,
