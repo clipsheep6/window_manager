@@ -119,7 +119,7 @@ sptr<WindowNodeContainer> WindowRoot::CreateWindowNodeContainer(sptr<DisplayInfo
         WLOGFE("create container failed, displayId :%{public}" PRIu64 "", displayId);
         return nullptr;
     }
-    container->GetDisplayGroupController()->SetSplitRatioConfig(splitRatioConfig_);
+    container->GetLayoutPolicy()->SetSplitRatioConfig(splitRatioConfig_);
     return container;
 }
 
@@ -139,6 +139,8 @@ bool WindowRoot::CheckDisplayInfo(const sptr<DisplayInfo>& display)
 sptr<WindowNode> WindowRoot::GetWindowNode(uint32_t windowId) const
 {
     auto iter = windowNodeMap_.find(windowId);
+    sizeof(iter);
+    sizeof(windowNodeMap_);
     if (iter == windowNodeMap_.end()) {
         return nullptr;
     }
@@ -257,7 +259,7 @@ std::vector<sptr<WindowNode>> WindowRoot::GetSplitScreenWindowNodes(DisplayId di
     if (container == nullptr) {
         return {};
     }
-    auto displayGroupController = container->GetDisplayGroupController();
+    auto displayGroupController = container->GetMultiDisplayController();
     if (displayGroupController == nullptr) {
         return {};
     }
@@ -1280,8 +1282,7 @@ void WindowRoot::ProcessExpandDisplayCreate(DisplayId defaultDisplayId, sptr<Dis
     }
 
     WLOGFI("[Display Create] before add new display, displayId: %{public}" PRIu64"", displayId);
-    container->GetDisplayGroupController()->ProcessDisplayCreate(defaultDisplayId, displayInfo, displayRectMap);
-    container->GetDisplayGroupController()->SetSplitRatioConfig(splitRatioConfig_);
+    container->GetMultiDisplayController()->ProcessDisplayCreate(defaultDisplayId, displayInfo, displayRectMap);
     WLOGFI("[Display Create] Container exist, add new display, displayId: %{public}" PRIu64"", displayId);
 }
 
@@ -1401,7 +1402,7 @@ void WindowRoot::ProcessDisplayDestroy(DisplayId defaultDisplayId, sptr<DisplayI
         return;
     }
     displayRectMap.erase(displayRectIter);
-    container->GetDisplayGroupController()->ProcessDisplayDestroy(
+    container->GetMultiDisplayController()->ProcessDisplayDestroy(
         defaultDisplayId, displayInfo, displayRectMap, needDestroyWindows);
     for (auto id : needDestroyWindows) {
         auto node = GetWindowNode(id);
@@ -1438,7 +1439,7 @@ void WindowRoot::ProcessDisplayChange(DisplayId defaultDisplayId, sptr<DisplayIn
     }
 
     auto displayRectMap = GetAllDisplayRectsByDisplayInfo(displayInfoMap);
-    container->GetDisplayGroupController()->ProcessDisplayChange(defaultDisplayId, displayInfo, displayRectMap, type);
+    container->GetMultiDisplayController()->ProcessDisplayChange(defaultDisplayId, displayInfo, displayRectMap, type);
 }
 
 float WindowRoot::GetVirtualPixelRatio(DisplayId displayId) const
