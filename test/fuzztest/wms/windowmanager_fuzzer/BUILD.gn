@@ -29,6 +29,7 @@ ohos_fuzztest("WindowManagerFuzzTest") {
   configs = [
     "//foundation/window/window_manager/test/fuzztest:configs_cc_ld",
     "//foundation/window/window_manager/resources/config/build:coverage_flags",
+    "//foundation/window/window_manager/resources/config/build:testcase_flags",
   ]
 
   sources = [ "windowmanager_fuzzer.cpp" ]

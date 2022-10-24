@@ -18,6 +18,7 @@
 #include <securec.h>
 #include "display_manager.h"
 
+#include <iostream>
 namespace OHOS ::Rosen {
 class DisplayListener : public DisplayManager::IDisplayListener {
 public:
@@ -56,6 +57,7 @@ bool DisplayFuzzTest(const uint8_t* data, size_t size)
     if (data == nullptr || size < sizeof(displayId) + sizeof(screenId)) {
         return false;
     }
+    std::cout << "DisplayFuzzTest" << std::endl;
     size_t startPos = 0;
     DisplayManager& displayManager = DisplayManager::GetInstance();
     sptr<DisplayListener> displayListener = new DisplayListener();
@@ -82,6 +84,7 @@ bool GetScreenshotFuzzTest(const uint8_t* data, size_t size)
     if (data == nullptr || size < sizeof(displayId) + sizeof(rect) + sizeof(size) + sizeof(rotation)) {
         return false;
     }
+    std::cout << "GetScreenshotFuzzTest" << std::endl;
     size_t startPos = 0;
     DisplayManager& displayManager = DisplayManager::GetInstance();
     startPos += GetObject<DisplayId>(displayId, data + startPos, size - startPos);
@@ -101,6 +104,7 @@ bool DisplayPowerFuzzTest(const uint8_t* data, size_t size)
     if (data == nullptr || size < sizeof(reason) + sizeof(displayId) + sizeof(state)) {
         return false;
     }
+    std::cout << "DisplayPowerFuzzTest" << std::endl;
     size_t startPos = 0;
     DisplayManager& displayManager = DisplayManager::GetInstance();
     sptr<IDisplayPowerEventListener> listener = new DisplayPowerEventListener();
@@ -130,6 +134,7 @@ bool ScreenBrightnessFuzzTest(const uint8_t* data, size_t size)
     if (data == nullptr || size < sizeof(screenId) + sizeof(level)) {
         return false;
     }
+    std::cout << "ScreenBrightnessFuzzTest" << std::endl;
     size_t startPos = 0;
     DisplayManager& displayManager = DisplayManager::GetInstance();
 
@@ -146,6 +151,7 @@ bool FreezeFuzzTest(const uint8_t* data, size_t size)
     if (data == nullptr || size < sizeof(DisplayId) * 10) {
         return false;
     }
+    std::cout << "FreezeFuzzTest" << std::endl;
     size_t startPos = 0;
     DisplayManager& displayManager = DisplayManager::GetInstance();
     // 10 displays
@@ -164,6 +170,7 @@ bool NotifyDisplayEventFuzzTest(const uint8_t* data, size_t size)
     if (data == nullptr || size < sizeof(DisplayEvent)) {
         return false;
     }
+    std::cout << "NotifyDisplayEventFuzzTest" << std::endl;
     size_t startPos = 0;
     DisplayManager& displayManager = DisplayManager::GetInstance();
     uint32_t event;
