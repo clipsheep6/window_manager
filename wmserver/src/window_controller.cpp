@@ -94,8 +94,8 @@ void WindowController::StartingWindow(sptr<WindowTransitionInfo> info, std::shar
     if (windowRoot_->AddWindowNode(0, node, true) != WMError::WM_OK) {
         return;
     }
-    StartingWindow::DrawStartingWindow(node, pixelMap, bkgColor, isColdStart, windowRoot_->IsUniRender());
-    RSTransaction::FlushImplicitTransaction();
+    StartingWindow::DrawStartingWindow(node, pixelMap, bkgColor, isColdStart);
+    FlushWindowInfo(node->GetWindowId());
     node->startingWindowShown_ = true;
     WLOGFI("StartingWindow show success with id:%{public}u!", node->GetWindowId());
 }
@@ -116,7 +116,7 @@ void WindowController::CancelStartingWindow(sptr<IRemoteObject> abilityToken)
         "wms:async:ShowStartingWindow");
     WLOGFI("CancelStartingWindow with id:%{public}u!", node->GetWindowId());
     node->isAppCrash_ = true;
-    WMError res = windowRoot_->DestroyWindow(node->GetWindowId(), false);
+    WMError res = DestroyWindow(node->GetWindowId(), false);
     if (res != WMError::WM_OK) {
         WLOGFE("DestroyWindow failed!");
     }
@@ -294,6 +294,8 @@ WMError WindowController::AddWindowNode(sptr<WindowProperty>& property)
             WLOGFI("id:%{public}u execute minimize all", node->GetWindowId());
         }
         node->stateMachine_.TransitionTo(WindowNodeState::SHOWN); // for normal show which not use remote animation
+    } else if (WindowHelper::IsMainWindow(node->GetWindowType())) {
+        MinimizeApp::ExecuteMinimizeTargetReasons(~MinimizeReason::OTHER_WINDOW);
     }
     return WMError::WM_OK;
 }
@@ -455,6 +457,15 @@ WMError WindowController::ResizeRect(uint32_t windowId, const Rect& rect, Window
         WLOGFE("fullscreen window could not resize");
         return WMError::WM_ERROR_INVALID_OPERATION;
     }
+    /*
+     *  if requestRect of systemBar equals to winRect, not need to resize. This may happen when rotate display
+     */
+    if (WindowHelper::IsSystemBarWindow(node->GetWindowType())) {
+        if ((reason== WindowSizeChangeReason::MOVE || reason == WindowSizeChangeReason::RESIZE) &&
+            rect == node->GetWindowRect()) {
+            return WMError::WM_OK;
+        }
+    }
     auto property = node->GetWindowProperty();
     node->SetWindowSizeChangeReason(reason);
     Rect lastRect = property->GetWindowRect();
@@ -473,7 +484,7 @@ WMError WindowController::ResizeRect(uint32_t windowId, const Rect& rect, Window
         }
     } else if (reason == WindowSizeChangeReason::RESIZE) {
         newRect = { lastRect.posX_, lastRect.posY_, rect.width_, rect.height_ };
-    } else if (reason == WindowSizeChangeReason::DRAG || reason == WindowSizeChangeReason::ROTATION) {
+    } else if (reason == WindowSizeChangeReason::DRAG) {
         newRect = rect;
     }
     property->SetRequestRect(newRect);
@@ -587,25 +598,6 @@ void WindowController::SetDefaultDisplayInfo(DisplayId defaultDisplayId, sptr<Di
     defaultDisplayRect_ = { 0, 0, displayWidth, displayHeight };
 }
 
-void WindowController::ProcessSystemBarChange(const sptr<DisplayInfo>& displayInfo)
-{
-    DisplayId displayId = displayInfo->GetDisplayId();
-    auto width = static_cast<uint32_t>(displayInfo->GetWidth());
-    auto height = static_cast<uint32_t>(displayInfo->GetHeight());
-    const auto& statusBarNode = windowRoot_->GetWindowNode(sysBarWinId_[WindowType::WINDOW_TYPE_STATUS_BAR]);
-    if (statusBarNode != nullptr && statusBarNode->GetDisplayId() == displayId) {
-        auto statusBarHeight = statusBarNode->GetWindowRect().height_;
-        Rect newRect = { 0, 0, width, statusBarHeight };
-        ResizeRect(sysBarWinId_[WindowType::WINDOW_TYPE_STATUS_BAR], newRect, WindowSizeChangeReason::ROTATION);
-    }
-    const auto& naviBarNode = windowRoot_->GetWindowNode(sysBarWinId_[WindowType::WINDOW_TYPE_NAVIGATION_BAR]);
-    if (naviBarNode != nullptr && naviBarNode->GetDisplayId() == displayId) {
-        auto naviBarHeight = naviBarNode->GetWindowRect().height_;
-        Rect newRect = { 0, static_cast<int32_t>(height - naviBarHeight), width, naviBarHeight };
-        ResizeRect(sysBarWinId_[WindowType::WINDOW_TYPE_NAVIGATION_BAR], newRect, WindowSizeChangeReason::ROTATION);
-    }
-}
-
 void WindowController::ProcessDisplayChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
     const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type)
 {
@@ -624,9 +616,6 @@ void WindowController::ProcessDisplayChange(DisplayId defaultDisplayId, sptr<Dis
             [[fallthrough]];
         case DisplayStateChangeType::SIZE_CHANGE:
         case DisplayStateChangeType::UPDATE_ROTATION:
-            windowRoot_->ProcessDisplayChange(defaultDisplayId, displayInfo, displayInfoMap, type);
-            ProcessSystemBarChange(displayInfo);
-            break;
         case DisplayStateChangeType::VIRTUAL_PIXEL_RATIO_CHANGE: {
             windowRoot_->ProcessDisplayChange(defaultDisplayId, displayInfo, displayInfoMap, type);
             break;
@@ -826,7 +815,7 @@ void WindowController::NotifySystemBarTints()
 
 WMError WindowController::SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller)
 {
-    return RemoteAnimation::SetWindowAnimationController(controller, windowRoot_);
+    return RemoteAnimation::SetWindowAnimationController(controller);
 }
 
 AvoidArea WindowController::GetAvoidAreaByType(uint32_t windowId, AvoidAreaType avoidAreaType) const
@@ -957,6 +946,7 @@ WMError WindowController::RecoverInputEventToClient(uint32_t windowId)
         WLOGFD("There is no need to recover input event to client");
         return WMError::WM_OK;
     }
+
     node->SetInputEventCallingPid(node->GetCallingPid());
     RecoverDefaultMouseStyle(windowId);
     AsyncFlushInputInfo(windowId);
@@ -1332,7 +1322,7 @@ void WindowController::MinimizeWindowsByLauncher(std::vector<uint32_t>& windowId
 {
     windowRoot_->MinimizeTargetWindows(windowIds);
     auto func = []() {
-        MinimizeApp::ExecuteMinimizeTargetReason(MinimizeReason::GESTURE_ANIMATION);
+        MinimizeApp::ExecuteMinimizeTargetReasons(MinimizeReason::GESTURE_ANIMATION);
     };
     if (!isAnimated) {
         func();

@@ -176,7 +176,7 @@ void WindowPair::ExitSplitMode()
         recoveryNode->SetSnapshot(nullptr);
     }
     MinimizeApp::AddNeedMinimizeApp(hideNode, MinimizeReason::SPLIT_QUIT);
-    MinimizeApp::ExecuteMinimizeTargetReason(MinimizeReason::SPLIT_QUIT);
+    MinimizeApp::ExecuteMinimizeTargetReasons(MinimizeReason::SPLIT_QUIT);
     WLOGFI("Exit Split Mode, Minimize Window %{public}u", hideNode->GetWindowId());
 }
 
@@ -190,8 +190,12 @@ void WindowPair::Clear()
         primary_->GetWindowToken() != nullptr) {
         if (primary_->GetModeSupportInfo() == splitModeInfo) {
             MinimizeApp::AddNeedMinimizeApp(primary_, MinimizeReason::SPLIT_QUIT);
-            MinimizeApp::ExecuteMinimizeTargetReason(MinimizeReason::SPLIT_QUIT);
+            MinimizeApp::ExecuteMinimizeTargetReasons(MinimizeReason::SPLIT_QUIT);
         } else {
+            if (WindowHelper::IsFullScreenWindow(primary_->GetWindowProperty()->GetLastWindowMode()) &&
+                WindowHelper::IsSplitWindowMode(primary_->GetWindowProperty()->GetWindowMode())) {
+                primary_->SetWindowSizeChangeReason(WindowSizeChangeReason::SPLIT_TO_FULL);
+            }
             primary_->GetWindowProperty()->ResumeLastWindowMode();
             primary_->GetWindowToken()->UpdateWindowMode(primary_->GetWindowMode());
         }
@@ -200,8 +204,12 @@ void WindowPair::Clear()
         secondary_->GetWindowToken() != nullptr) {
         if (secondary_->GetModeSupportInfo() == splitModeInfo) {
             MinimizeApp::AddNeedMinimizeApp(secondary_, MinimizeReason::SPLIT_QUIT);
-            MinimizeApp::ExecuteMinimizeTargetReason(MinimizeReason::SPLIT_QUIT);
+            MinimizeApp::ExecuteMinimizeTargetReasons(MinimizeReason::SPLIT_QUIT);
         } else {
+            if (WindowHelper::IsFullScreenWindow(secondary_->GetWindowProperty()->GetLastWindowMode()) &&
+                WindowHelper::IsSplitWindowMode(secondary_->GetWindowProperty()->GetWindowMode())) {
+                secondary_->SetWindowSizeChangeReason(WindowSizeChangeReason::SPLIT_TO_FULL);
+            }
             secondary_->GetWindowProperty()->ResumeLastWindowMode();
             secondary_->GetWindowToken()->UpdateWindowMode(secondary_->GetWindowMode());
         }
@@ -487,6 +495,43 @@ void WindowPair::ClearPairSnapshot()
     if (secondary_ != nullptr) {
         secondary_->SetSnapshot(nullptr);
     }
+}
+
+int32_t WindowPair::GetSplitRatioPoint(float ratio, const Rect& displayRect)
+{
+    if (displayRect.width_ > displayRect.height_) {
+        return displayRect.posX_ +
+            static_cast<uint32_t>((displayRect.width_ - dividerRect_.width_) * ratio);
+    } else {
+        return displayRect.posY_ +
+            static_cast<uint32_t>((displayRect.height_ - dividerRect_.height_) * ratio);
+    }
+}
+
+void WindowPair::CalculateSplitRatioPoints(const Rect& displayRect)
+{
+    exitSplitPoints_.clear();
+    splitRatioPoints_.clear();
+    exitSplitPoints_.push_back(GetSplitRatioPoint(splitRatioConfig_.exitSplitStartRatio, displayRect));
+    exitSplitPoints_.push_back(GetSplitRatioPoint(splitRatioConfig_.exitSplitEndRatio, displayRect));
+    for (const auto& ratio : splitRatioConfig_.splitRatios) {
+        splitRatioPoints_.push_back(GetSplitRatioPoint(ratio, displayRect));
+    }
+}
+
+void WindowPair::SetSplitRatioConfig(const SplitRatioConfig& splitRatioConfig)
+{
+    splitRatioConfig_ = splitRatioConfig;
+}
+
+std::vector<int32_t> WindowPair::GetExitSplitPoints()
+{
+    return exitSplitPoints_;
+}
+
+std::vector<int32_t> WindowPair::GetSplitRatioPoints()
+{
+    return splitRatioPoints_;
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -345,8 +345,10 @@ public:
         ret.y += rActial.posY_ - pos.y;
         ret.x += rOrigin.posX_ - rActial.posX_;
         ret.y += rOrigin.posY_ - rActial.posY_;
-        ret.x += (pos.x - rActial.posX_) * rOrigin.width_ / rActial.width_;
-        ret.y += (pos.y - rActial.posY_) * rOrigin.height_ / rActial.height_;
+        if (rActial.width_ && rActial.height_) {
+            ret.x += (pos.x - rActial.posX_) * rOrigin.width_ / rActial.width_;
+            ret.y += (pos.y - rActial.posY_) * rOrigin.height_ / rActial.height_;
+        }
         return ret;
     }
 
@@ -502,13 +504,6 @@ public:
         return false;
     }
 
-    static inline bool ReadIsWindowAnimationEnabledProperty()
-    {
-        if (access(DISABLE_WINDOW_ANIMATION_PATH, F_OK) == 0) {
-            return false;
-        }
-        return true;
-    }
 private:
     WindowHelper() = default;
     ~WindowHelper() = default;
