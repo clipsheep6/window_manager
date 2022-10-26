@@ -50,6 +50,7 @@ namespace OHOS {
 namespace Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowManagerService"};
+    const std::string SYSTEM_FLOAT_WINDOW_PERMISSION = "ohos.permission.SYSTEM_FLOAT_WINDOW";
 }
 WM_IMPLEMENT_SINGLE_INSTANCE(WindowManagerService)
 
@@ -660,10 +661,16 @@ void WindowManagerService::CancelStartingWindow(sptr<IRemoteObject> abilityToken
 WMError WindowManagerService::CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
     const std::shared_ptr<RSSurfaceNode>& surfaceNode, uint32_t& windowId, sptr<IRemoteObject> token)
 {
-    bool isSystemWindowExceptAlarmWindow = property->GetWindowType() != WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW &&
+    bool isAppFloatingWindow = WindowHelper::IsAppFloatingWindow(property->GetWindowType());
+    bool isSystemWindowExceptSpecialWindow = !isAppFloatingWindow&&
+        property->GetWindowType() != WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW &&
         WindowHelper::IsSystemWindow(property->GetWindowType());
-    if (isSystemWindowExceptAlarmWindow && !Permission::IsSystemCalling()) {
+    if (isSystemWindowExceptSpecialWindow && !Permission::IsSystemCalling()) {
         WLOGFE("create system window permission denied!");
+        return WMError::WM_ERROR_INVALID_PERMISSION;
+    }
+    if (isAppFloatingWindow && !Permission::CheckCallingPermission(SYSTEM_FLOAT_WINDOW_PERMISSION)) {
+        WLOGFE("create system float window permission denied!");
         return WMError::WM_ERROR_INVALID_PERMISSION;
     }
     if (!window || property == nullptr || surfaceNode == nullptr || !window->AsObject()) {
@@ -682,12 +689,18 @@ WMError WindowManagerService::CreateWindow(sptr<IWindow>& window, sptr<WindowPro
 
 WMError WindowManagerService::AddWindow(sptr<WindowProperty>& property)
 {
-    bool isSystemWindowExceptAlarmWindow = property->GetWindowType() != WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW &&
+    bool isAppFloatingWindow = WindowHelper::IsAppFloatingWindow(property->GetWindowType());
+    bool isSystemWindowExceptSpecialWindow = !isAppFloatingWindow &&
+        property->GetWindowType() != WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW &&
         WindowHelper::IsSystemWindow(property->GetWindowType());
-    if ((isSystemWindowExceptAlarmWindow ||
+    if ((isSystemWindowExceptSpecialWindow ||
         property->GetAnimationFlag() == static_cast<uint32_t>(WindowAnimation::CUSTOM)) &&
         !Permission::IsSystemCalling()) {
         WLOGFE("add window with animation permission denied!");
+        return WMError::WM_ERROR_INVALID_PERMISSION;
+    }
+    if (isAppFloatingWindow && !Permission::CheckCallingPermission(SYSTEM_FLOAT_WINDOW_PERMISSION)) {
+        WLOGFE("add system float window permission denied!");
         return WMError::WM_ERROR_INVALID_PERMISSION;
     }
     return PostSyncTask([this, &property]() {

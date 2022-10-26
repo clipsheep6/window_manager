@@ -39,6 +39,7 @@ using namespace AbilityRuntime;
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsWindow"};
     constexpr Rect g_emptyRect = {0, 0, 0, 0};
+    const std::string PRIVACY_MODE_PERMISSION = "ohos.permission.PRIVACY_WINDOW";
 }
 
 static thread_local std::map<std::string, std::shared_ptr<NativeReference>> g_jsWindowMap;
@@ -2532,6 +2533,11 @@ NativeValue* JsWindow::OnSetPrivacyMode(NativeEngine& engine, NativeCallbackInfo
 
 NativeValue* JsWindow::OnSetWindowPrivacyMode(NativeEngine& engine, NativeCallbackInfo& info)
 {
+    if (!Permission::CheckCallingPermission(PRIVACY_MODE_PERMISSION)) {
+        WLOGFE("set window privacy mode permission denied!");
+        engine.Throw(CreateJsError(engine, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_CALLING)));
+        return engine.CreateUndefined();
+    }
     WmErrorCode errCode = WmErrorCode::WM_OK;
     if (info.argc < 1) { // 1: params num
         WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
