@@ -576,34 +576,40 @@ NativeValue* JsWindow::SetBackdropBlurStyle(NativeEngine* engine, NativeCallback
 
 NativeValue* JsWindow::OnShow(NativeEngine& engine, NativeCallbackInfo& info)
 {
-    WMError errCode = WMError::WM_OK;
+    auto errCode = std::make_shared<int32_t>(static_cast<int32_t>(WMError::WM_OK));
     if (info.argc > 1) {
         WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
-        errCode = WMError::WM_ERROR_INVALID_PARAM;
+        *errCode = static_cast<int32_t>(WMError::WM_ERROR_INVALID_PARAM);
     }
     wptr<Window> weakToken(windowToken_);
-    AsyncTask::CompleteCallback complete =
-        [weakToken, errCode](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            auto weakWindow = weakToken.promote();
-            if (weakWindow == nullptr || errCode != WMError::WM_OK) {
-                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode)));
+    AsyncTask::ExecuteCallback execute = nullptr;
+    if (*errCode == static_cast<int32_t>(static_cast<int32_t>(WMError::WM_OK))) {
+        execute = [weakWindow = weakToken.promote(), value = errCode]() {
+            if (weakWindow == nullptr) {
+                *value = static_cast<int32_t>(static_cast<int32_t>(WMError::WM_ERROR_NULLPTR));
                 WLOGFE("[NAPI]window is nullptr or get invalid param");
                 return;
             }
-            WMError ret = weakWindow->Show(0, false);
-            if (ret == WMError::WM_OK) {
-                task.Resolve(engine, engine.CreateUndefined());
-            } else {
-                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(ret), "Window show failed"));
-            }
+            *value = static_cast<int32_t>(weakWindow->Show(0, false));
             WLOGFI("[NAPI]Window [%{public}u, %{public}s] show end, ret = %{public}d",
-                weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), ret);
+                weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), *value);
+        };
+    }
+
+    AsyncTask::CompleteCallback complete =
+        [value = errCode](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            if (*value != static_cast<int32_t>(static_cast<int32_t>(WMError::WM_OK))) {
+                task.Reject(engine, CreateJsError(engine, *value, "Window show failed"));
+                return;
+            } else {
+                task.Resolve(engine, engine.CreateUndefined());
+            }
         };
     NativeValue* result = nullptr;
     NativeValue* lastParam = (info.argc == 0) ? nullptr :
         (info.argv[0]->TypeOf() == NATIVE_FUNCTION ? info.argv[0] : nullptr);
     AsyncTask::Schedule("JsWindow::OnShow",
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
     return result;
 }
 
