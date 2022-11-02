@@ -605,11 +605,23 @@ void WindowImpl::DumpInfo(const std::vector<std::string>& params, std::vector<st
 
 WMError WindowImpl::SetSystemBarProperty(WindowType type, const SystemBarProperty& property)
 {
-    WLOGFI("[Client] Window %{public}u SetSystemBarProperty type %{public}u " \
+    WMError ret = PutSystemBarProperty(type, property);
+    if (ret != WMError::WM_OK) {
+        return ret;
+    }
+    ret = UpdateSystemBarProperty(type, property);
+    return ret;
+}
+
+WMError WindowImpl::PutSystemBarProperty(WindowType type, const SystemBarProperty& property)
+{
+    WLOGFI("[Client] Window %{public}u PutSystemBarProperty type %{public}u " \
         "enable:%{public}u, backgroundColor:%{public}x, contentColor:%{public}x ",
         property_->GetWindowId(), static_cast<uint32_t>(type), property.enable_,
         property.backgroundColor_, property.contentColor_);
     if (!IsWindowValid()) {
+        WLOGFE("PutSystemBarProperty errCode:%{public}d winId:%{public}u",
+            static_cast<int32_t>(WMError::WM_ERROR_INVALID_WINDOW), property_->GetWindowId());
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (GetSystemBarPropertyByType(type) == property) {
@@ -619,9 +631,20 @@ WMError WindowImpl::SetSystemBarProperty(WindowType type, const SystemBarPropert
     if (state_ == WindowState::STATE_CREATED || state_ == WindowState::STATE_HIDDEN) {
         return WMError::WM_OK;
     }
+    return WMError::WM_OK;
+}
+
+WMError WindowImpl::UpdateSystemBarProperty(WindowType type, const SystemBarProperty& property)
+{
+    if (GetSystemBarPropertyByType(type) == property) {
+        return WMError::WM_OK;
+    }
+    if (state_ == WindowState::STATE_CREATED || state_ == WindowState::STATE_HIDDEN) {
+        return WMError::WM_OK;
+    }
     WMError ret = UpdateProperty(PropertyChangeAction::ACTION_UPDATE_OTHER_PROPS);
     if (ret != WMError::WM_OK) {
-        WLOGFE("SetSystemBarProperty errCode:%{public}d winId:%{public}u",
+        WLOGFE("UpdateSystemBarProperty errCode:%{public}d winId:%{public}u",
             static_cast<int32_t>(ret), property_->GetWindowId());
     }
     return ret;
@@ -678,15 +701,23 @@ WMError WindowImpl::SetFullScreen(bool status)
         statusProperty.enable_ = true;
         naviProperty.enable_ = true;
     }
-    WMError ret = SetSystemBarProperty(WindowType::WINDOW_TYPE_STATUS_BAR, statusProperty);
-    if (ret != WMError::WM_OK) {
-        WLOGFE("SetSystemBarProperty errCode:%{public}d winId:%{public}u",
-            static_cast<int32_t>(ret), property_->GetWindowId());
+    WMError ret_status = PutSystemBarProperty(WindowType::WINDOW_TYPE_STATUS_BAR, statusProperty);
+    if (ret_status != WMError::WM_OK) {
+        WLOGFE("PutSystemBarProperty errCode:%{public}d winId:%{public}u",
+            static_cast<int32_t>(ret_status), property_->GetWindowId());
     }
-    ret = SetSystemBarProperty(WindowType::WINDOW_TYPE_NAVIGATION_BAR, naviProperty);
-    if (ret != WMError::WM_OK) {
-        WLOGFE("SetSystemBarProperty errCode:%{public}d winId:%{public}u",
-            static_cast<int32_t>(ret), property_->GetWindowId());
+    WMError ret_navigation = PutSystemBarProperty(WindowType::WINDOW_TYPE_NAVIGATION_BAR, naviProperty);
+    if (ret_navigation != WMError::WM_OK) {
+        WLOGFE("PutSystemBarProperty errCode:%{public}d winId:%{public}u",
+            static_cast<int32_t>(ret_navigation), property_->GetWindowId());
+    }
+    WMError ret;
+    if (ret_status == WMError::WM_OK || ret_navigation == WMError::WM_OK) {
+        ret = UpdateProperty(PropertyChangeAction::ACTION_UPDATE_OTHER_PROPS);
+        if (ret != WMError::WM_OK) {
+            WLOGFE("UpdateProperty errCode:%{public}d winId:%{public}u",
+                static_cast<int32_t>(ret), property_->GetWindowId());
+        }
     }
     ret = SetLayoutFullScreen(status);
     if (ret != WMError::WM_OK) {
@@ -1938,6 +1969,7 @@ void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSize
             property_->GetWindowId());
         return;
     }
+    Rect lastOriRect = property_->GetOriginRect();
 
     property_->SetDecoStatus(decoStatus);
     if (reason == WindowSizeChangeReason::HIDE) {
@@ -1965,7 +1997,9 @@ void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSize
         }
     }
     ResSchedReport::GetInstance().RequestPerfIfNeed(reason, GetType(), GetMode());
-    NotifySizeChange(rectToAce, reason);
+    if (rectToAce != lastOriRect) {
+        NotifySizeChange(rectToAce, reason);
+    }
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         if (uiContent_ == nullptr) {
