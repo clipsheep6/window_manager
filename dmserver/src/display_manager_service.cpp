@@ -617,31 +617,25 @@ ScreenId DisplayManagerService::MakeExpand(std::vector<ScreenId> expandScreenIds
     }
     ScreenId defaultScreenId = abstractScreenController_->GetDefaultAbstractScreenId();
     WLOGFI("MakeExpand, defaultScreenId:%{public}" PRIu64"", defaultScreenId);
-    auto allExpandScreenIds = abstractScreenController_->GetAllValidScreenIds(expandScreenIds);
-    auto iter = std::find(allExpandScreenIds.begin(), allExpandScreenIds.end(), defaultScreenId);
-    if (iter != allExpandScreenIds.end()) {
-        allExpandScreenIds.erase(iter);
-    }
-    if (allExpandScreenIds.empty()) {
-        WLOGFE("allExpandScreenIds is empty. make expand failed.");
+
+    auto allValidScreenIds = abstractScreenController_->GetAllValidScreenIds(expandScreenIds);
+    if (allValidScreenIds.empty()) {
+        WLOGFE("allValidScreenIds is empty. make expand failed.");
         return SCREEN_ID_INVALID;
     }
+
     std::shared_ptr<RSDisplayNode> rsDisplayNode;
     std::vector<Point> points;
-    for (uint32_t i = 0; i < allExpandScreenIds.size(); i++) {
-        rsDisplayNode = abstractScreenController_->GetRSDisplayNodeByScreenId(allExpandScreenIds[i]);
-        points.emplace_back(pointsMap[allExpandScreenIds[i]]);
-        if (rsDisplayNode != nullptr) {
-            rsDisplayNode->SetDisplayOffset(pointsMap[allExpandScreenIds[i]].posX_,
-                pointsMap[allExpandScreenIds[i]].posY_);
-        }
+    for (auto screenId : allValidScreenIds) {
+        auto newPoint = pointsMap[screenId];
+        points.emplace_back(newPoint);
     }
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:MakeExpand");
-    if (!abstractScreenController_->MakeExpand(allExpandScreenIds, points)) {
+    if (!abstractScreenController_->MakeExpand(allValidScreenIds, points)) {
         WLOGFE("make expand failed.");
         return SCREEN_ID_INVALID;
     }
-    auto screen = abstractScreenController_->GetAbstractScreen(allExpandScreenIds[0]);
+    auto screen = abstractScreenController_->GetAbstractScreen(allValidScreenIds[0]);
     if (screen == nullptr || abstractScreenController_->GetAbstractScreenGroup(screen->groupDmsId_) == nullptr) {
         WLOGFE("get screen group failed.");
         return SCREEN_ID_INVALID;

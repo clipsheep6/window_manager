@@ -86,6 +86,11 @@ void WindowController::StartingWindow(sptr<WindowTransitionInfo> info, std::shar
         }
     }
 
+    auto rect = node->GetRequestRect();
+    WLOGFI("[Starting Window, IsColdStart: %{public}u] %{public}5u %{public}4u %{public}4u [%{public}4d %{public}4d "
+        "%{public}4u %{public}4u]", isColdStart, node->GetWindowId(), node->GetWindowType(), node->GetWindowMode(),
+        rect.posX_, rect.posY_, rect.width_, rect.height_);
+
     if (!WindowHelper::CheckSupportWindowMode(node->GetWindowMode(), node->GetModeSupportInfo(), info)) {
         WLOGFE("need to cancel starting window");
         return;
@@ -97,7 +102,7 @@ void WindowController::StartingWindow(sptr<WindowTransitionInfo> info, std::shar
     StartingWindow::DrawStartingWindow(node, pixelMap, bkgColor, isColdStart);
     FlushWindowInfo(node->GetWindowId());
     node->startingWindowShown_ = true;
-    WLOGFI("StartingWindow show success with id:%{public}u!", node->GetWindowId());
+    WLOGFD("StartingWindow show success with id:%{public}u!", node->GetWindowId());
 }
 
 void WindowController::CancelStartingWindow(sptr<IRemoteObject> abilityToken)
@@ -612,7 +617,6 @@ void WindowController::ProcessDisplayChange(DisplayId defaultDisplayId, sptr<Dis
     auto windowNodeContainer = windowRoot_->GetOrCreateWindowNodeContainer(displayInfo->GetDisplayId());
     if (windowNodeContainer != nullptr) {
         windowNodeContainer->BeforeProcessWindowAvoidAreaChangeWhenDisplayChange();
-        windowNodeContainer->UpdateDisplayInfo(displayInfo);
     }
     switch (type) {
         case DisplayStateChangeType::DISPLAY_COMPRESS:

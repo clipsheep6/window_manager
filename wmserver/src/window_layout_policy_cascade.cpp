@@ -146,7 +146,7 @@ void WindowLayoutPolicyCascade::PerformWindowLayout(const sptr<WindowNode>& node
     HITRACE_METER(HITRACE_TAG_WINDOW_MANAGER);
     const auto& windowType = node->GetWindowType();
     const auto& requestRect = node->GetRequestRect();
-    WLOGFI("[PerformWindowLayout] windowId: %{public}u, windowType: %{public}u, updateType: %{public}u, requestRect: "
+    WLOGFI("[PerformWindowLayout] windowId: %{public}u, windowType: %{public}u, updateType: %{public}u, "
         "requestRect: [%{public}d, %{public}d, %{public}u, %{public}u]", node->GetWindowId(), windowType, updateType,
         requestRect.posX_, requestRect.posY_, requestRect.width_, requestRect.height_);
     SetDefaultCascadeRect(node);
@@ -377,6 +377,7 @@ void WindowLayoutPolicyCascade::InitSplitRects(DisplayId displayId)
         dividerRect = { 0, static_cast<uint32_t>((displayRect.height_ - dividerWidth) * DEFAULT_SPLIT_RATIO),
                displayRect.width_, dividerWidth };
     }
+    dividerRect.posX_ += displayRect.posX_;
     SetSplitRectByDivider(dividerRect, displayId);
 }
 

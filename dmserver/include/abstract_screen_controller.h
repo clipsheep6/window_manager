@@ -114,6 +114,7 @@ private:
     void NotifyScreenChanged(sptr<ScreenInfo> screenInfo, ScreenChangeEvent event) const;
     void NotifyScreenGroupChanged(const sptr<ScreenInfo>& screenInfo, ScreenGroupChangeEvent event) const;
     void NotifyScreenGroupChanged(const std::vector<sptr<ScreenInfo>>& screenInfo, ScreenGroupChangeEvent event) const;
+    void NotifyScreenStartPointChange(sptr<AbstractScreen> absScreen, Point newPoint);
 
     class ScreenIdManager {
     public:
