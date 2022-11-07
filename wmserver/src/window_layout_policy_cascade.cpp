@@ -424,6 +424,7 @@ void WindowLayoutPolicyCascade::InitSplitRects(DisplayId displayId)
         dividerRect = { 0, static_cast<uint32_t>((displayRect.height_ - dividerWidth) * DEFAULT_SPLIT_RATIO),
                displayRect.width_, dividerWidth };
     }
+    dividerRect.posX_ += displayRect.posX_;
     WLOGFI("init dividerRect :[%{public}d, %{public}d, %{public}u, %{public}u]",
         dividerRect.posX_, dividerRect.posY_, dividerRect.width_, dividerRect.height_);
     SetSplitRect(dividerRect, displayId);

@@ -80,7 +80,7 @@ protected:
         const Rect& oriDisplayRect, const Rect& newDisplayRect);
     void UpdateRectInDisplayGroup(const sptr<WindowNode>& node,
         const Rect& oriDisplayRect, const Rect& newDisplayRect);
-    void LimitWindowToBottomRightCorner(const sptr<WindowNode>& node);
+    void LimitWindowToBottomRightCorner(const sptr<WindowNode>& node, const Rect& newDisplayRect);
     void UpdateDisplayGroupRect();
     void UpdateDisplayGroupLimitRect();
     void UpdateMultiDisplayFlag();

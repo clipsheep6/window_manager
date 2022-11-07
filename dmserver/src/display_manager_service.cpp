@@ -591,13 +591,13 @@ std::vector<sptr<ScreenInfo>> DisplayManagerService::GetAllScreenInfos()
 
 ScreenId DisplayManagerService::MakeExpand(std::vector<ScreenId> expandScreenIds, std::vector<Point> startPoints)
 {
-    WLOGI("MakeExpand");
     if (expandScreenIds.empty() || startPoints.empty() || expandScreenIds.size() != startPoints.size()) {
         WLOGFI("create expand fail, input params is invalid. "
             "screenId vector size :%{public}ud, startPoint vector size :%{public}ud",
             static_cast<uint32_t>(expandScreenIds.size()), static_cast<uint32_t>(startPoints.size()));
         return SCREEN_ID_INVALID;
     }
+
     ScreenId defaultScreenId = abstractScreenController_->GetDefaultAbstractScreenId();
     WLOGI("MakeExpand, defaultScreenId:%{public}" PRIu64"", defaultScreenId);
     auto shotScreenIds = abstractScreenController_->GetShotScreenIds(expandScreenIds);
@@ -605,9 +605,9 @@ ScreenId DisplayManagerService::MakeExpand(std::vector<ScreenId> expandScreenIds
     if (iter != shotScreenIds.end()) {
         shotScreenIds.erase(iter);
     }
+
     auto allExpandScreenIds = abstractScreenController_->GetAllExpandOrMirrorScreenIds(expandScreenIds);
     iter = std::find(allExpandScreenIds.begin(), allExpandScreenIds.end(), defaultScreenId);
-    auto startPointIter = iter - allExpandScreenIds.begin() + startPoints.begin();
     if (iter != allExpandScreenIds.end()) {
         allExpandScreenIds.erase(iter);
     }
@@ -615,20 +615,27 @@ ScreenId DisplayManagerService::MakeExpand(std::vector<ScreenId> expandScreenIds
         WLOGFE("allExpandScreenIds is empty. make expand failed.");
         return SCREEN_ID_INVALID;
     }
-    if (startPointIter != startPoints.end()) {
-        startPoints.erase(startPointIter);
-    }
 
-    std::shared_ptr<RSDisplayNode> rsDisplayNode;
-    for (uint32_t i = 0; i < allExpandScreenIds.size(); i++) {
-        rsDisplayNode = abstractScreenController_->GetRSDisplayNodeByScreenId(allExpandScreenIds[i]);
-        if (rsDisplayNode != nullptr) {
-            rsDisplayNode->SetDisplayOffset(startPoints[i].posX_, startPoints[i].posY_);
+    // get all valid screenIds and startPoints
+    auto allValidScreenIds = abstractScreenController_->GetAllValidScreenIds(expandScreenIds);
+    if (allValidScreenIds.empty()) {
+        WLOGFE("allValidScreenIds is empty. make expand failed.");
+        return SCREEN_ID_INVALID;
+    }
+    std::map<ScreenId, Point> pointsMap;
+    for (uint32_t i = 0; i < expandScreenIds.size(); i++) {
+        if (pointsMap.find(expandScreenIds[i]) == pointsMap.end()) {
+            pointsMap[expandScreenIds[i]] = startPoints[i];
         }
     }
+    std::vector<Point> points;
+    for (auto screenId : allValidScreenIds) {
+        points.emplace_back(pointsMap[screenId]);
+    }
+
     abstractScreenController_->SetShotScreen(defaultScreenId, shotScreenIds);
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:MakeExpand");
-    if (!allExpandScreenIds.empty() && !abstractScreenController_->MakeExpand(allExpandScreenIds, startPoints)) {
+    if (!abstractScreenController_->MakeExpand(allValidScreenIds, points)) {
         WLOGFE("make expand failed.");
         return SCREEN_ID_INVALID;
     }

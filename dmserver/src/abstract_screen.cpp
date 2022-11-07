@@ -108,7 +108,7 @@ void AbstractScreen::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& start
     }
     rsDisplayNode_ = rsDisplayNode;
     rSDisplayNodeConfig_ = config;
-    WLOGFI("SetDisplayOffset: posX:%{public}d, posY:%{public}d", startPoint.posX_, startPoint.posY_);
+    WLOGFI("[SetDisplayOffset]: posX:%{public}d, posY:%{public}d", startPoint.posX_, startPoint.posY_);
     rsDisplayNode_->SetDisplayOffset(startPoint.posX_, startPoint.posY_);
     uint32_t width = 0;
     uint32_t height = 0;
@@ -298,6 +298,16 @@ Rotation AbstractScreen::CalcRotation(Orientation orientation) const
     }
 }
 
+void AbstractScreen::SetStartPoint(Point point)
+{
+    startPoint_ = point;
+}
+
+Point AbstractScreen::GetStartPoint() const
+{
+    return startPoint_;
+}
+
 AbstractScreenGroup::AbstractScreenGroup(sptr<AbstractScreenController> screenController, ScreenId dmsId, ScreenId rsId,
     std::string name, ScreenCombination combination) : AbstractScreen(screenController, name, dmsId, rsId),
     combination_(combination)
@@ -384,6 +394,7 @@ bool AbstractScreenGroup::AddChild(sptr<AbstractScreen>& dmsScreen, Point& start
     if (!GetRSDisplayNodeConfig(dmsScreen, config)) {
         return false;
     }
+    dmsScreen->SetStartPoint(startPoint);
     dmsScreen->InitRSDisplayNode(config, startPoint);
     dmsScreen->lastGroupDmsId_ = dmsScreen->groupDmsId_;
     dmsScreen->groupDmsId_ = dmsId_;
@@ -412,6 +423,8 @@ bool AbstractScreenGroup::RemoveChild(sptr<AbstractScreen>& dmsScreen)
         return false;
     }
     ScreenId screenId = dmsScreen->dmsId_;
+    Point point = {0, 0};
+    dmsScreen->SetStartPoint(point);
     dmsScreen->lastGroupDmsId_ = dmsScreen->groupDmsId_;
     dmsScreen->groupDmsId_ = SCREEN_ID_INVALID;
     if (dmsScreen->rsDisplayNode_ != nullptr) {

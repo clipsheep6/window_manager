@@ -262,7 +262,7 @@ void WindowManagerServiceHandler::StartingWindow(
     sptr<AAFwk::AbilityTransitionInfo> info, std::shared_ptr<Media::PixelMap> pixelMap)
 {
     sptr<WindowTransitionInfo> windowInfo = new WindowTransitionInfo(info);
-    WLOGFI("hot start is called");
+    WLOGFI("[WMS] hot start is called");
     WindowManagerService::GetInstance().StartingWindow(windowInfo, pixelMap, false);
 }
 
@@ -270,7 +270,7 @@ void WindowManagerServiceHandler::StartingWindow(
     sptr<AAFwk::AbilityTransitionInfo> info, std::shared_ptr<Media::PixelMap> pixelMap, uint32_t bgColor)
 {
     sptr<WindowTransitionInfo> windowInfo = new WindowTransitionInfo(info);
-    WLOGFI("cold start is called");
+    WLOGFI("[WMS] cold start is called");
     WindowManagerService::GetInstance().StartingWindow(windowInfo, pixelMap, true, bgColor);
 }
 
