@@ -637,9 +637,9 @@ void WindowController::SetDefaultDisplayInfo(DisplayId defaultDisplayId, sptr<Di
     if (displayInfo->GetDisplayId() != defaultDisplayId) {
         return;
     }
-    WLOGFI("get default display info");
     auto displayWidth = static_cast<uint32_t>(displayInfo->GetWidth());
     auto displayHeight = static_cast<uint32_t>(displayInfo->GetHeight());
+    WLOGFI("get default display info, width: %{public}d, height: %{public}d", displayWidth, displayHeight);
     defaultDisplayRect_ = { 0, 0, displayWidth, displayHeight };
 }
 
@@ -736,8 +736,8 @@ void WindowController::StopBootAnimationIfNeed(const sptr<WindowNode>& node)
     if (isBootAnimationStopped_) {
         return;
     }
-    if (node == nullptr) {
-        WLOGFE("could not find window");
+    if (node == nullptr || node->GetWindowType() == WindowType::WINDOW_TYPE_BOOT_ANIMATION) {
+        WLOGFE("node is invalid or node is boot animation type");
         return;
     }
     if (node->GetDisplayId() != DisplayManagerServiceInner::GetInstance().GetDefaultDisplayId()) {
@@ -747,6 +747,10 @@ void WindowController::StopBootAnimationIfNeed(const sptr<WindowNode>& node)
     if (windowNodeContainer == nullptr) {
         WLOGFE("window node container is null");
         return;
+    }
+    if (defaultDisplayRect_.width_ == 0 || defaultDisplayRect_.height_ == 0) {
+        SetDefaultDisplayInfo(DisplayManagerServiceInner::GetInstance().GetDefaultDisplayId(),
+            DisplayManagerServiceInner::GetInstance().GetDefaultDisplay());
     }
     std::vector<sptr<WindowNode>> windowNodes;
     windowNodeContainer->TraverseContainer(windowNodes);
