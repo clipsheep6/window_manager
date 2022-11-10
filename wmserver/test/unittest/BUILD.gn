@@ -24,6 +24,9 @@ group("unittest") {
     ":wmserver_minimize_app_test",
     ":wmserver_starting_window_test",
     ":wmserver_window_dumper_test",
+    ":wmserver_window_display_zoom_controller_test",
+    ":wmserver_window_freeze_controller_test",
+    ":wmserver_window_inner_window_test",
     ":wmserver_window_layout_policy_test",
     ":wmserver_window_manager_config_test",
     ":wmserver_window_manager_proxy_test",
@@ -190,6 +193,30 @@ ohos_unittest("wmserver_display_group_controller_test") {
   module_out_path = module_out_path
 
   sources = [ "display_group_controller_test.cpp" ]
+
+  deps = [ ":wmserver_unittest_common" ]
+}
+
+ohos_unittest("wmserver_window_display_zoom_controller_test") {
+  module_out_path = module_out_path
+
+  sources = [ "window_display_zoom_controller_test.cpp" ]
+
+  deps = [ ":wmserver_unittest_common" ]
+}
+
+ohos_unittest("wmserver_window_freeze_controller_test") {
+  module_out_path = module_out_path
+
+  sources = [ "window_freeze_controller_test.cpp" ]
+
+  deps = [ ":wmserver_unittest_common" ]
+}
+
+ohos_unittest("wmserver_window_inner_window_test") {
+  module_out_path = module_out_path
+
+  sources = [ "window_inner_window_test.cpp" ]
 
   deps = [ ":wmserver_unittest_common" ]
 }
