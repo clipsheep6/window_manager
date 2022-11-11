@@ -64,6 +64,7 @@ ohos_shared_library("libwms") {
     "src/window_snapshot/snapshot_stub.cpp",
     "src/window_zorder_policy.cpp",
     "src/zidl/window_manager_stub.cpp",
+    "src/zidl/ressched_report.cpp",
   ]
 
   configs = [
