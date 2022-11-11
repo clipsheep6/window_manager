@@ -28,7 +28,7 @@ using ReportDataFunc = void (*)(uint32_t resType, int64_t value,
 
 ReportDataFunc __attribute__((visibility("default"))) LoadReportDataFunc();
 
-class ResSchedReport final {
+class __attribute__((visibility("default"))) ResSchedReport final {
 public:
     static ResSchedReport& GetInstance();
     void ResSchedDataReport(uint32_t resType, int32_t value = 0,
