@@ -41,5 +41,4 @@ private:
     ReportDataFunc reportDataFunc_ = nullptr;
 };
 } // namespace OHOS::Rosen
-
 #endif // OHOS_WINDOW_MANAGER_RESSCHED_REPORT_H
