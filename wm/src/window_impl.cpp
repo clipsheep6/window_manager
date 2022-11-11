@@ -1990,7 +1990,11 @@ void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSize
         }
     }
     ResSchedReport::GetInstance().RequestPerfIfNeed(reason, GetType(), GetMode());
-    if (rectToAce != lastOriRect) {
+    if ((reason == WindowSizeChangeReason::RESIZE) || (reason == WindowSizeChangeReason::ROTATION)) {
+        if (rectToAce != lastOriRect) {
+            NotifySizeChange(rectToAce, reason);
+        }
+    } else {
         NotifySizeChange(rectToAce, reason);
     }
     {
