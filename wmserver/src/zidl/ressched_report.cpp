@@ -55,4 +55,4 @@ void ResSchedReport::ResSchedDataReport(uint32_t resType, int32_t value,
         reportDataFunc_(resType, value, payload);
     }
 }
-} // namespace OHOS::Ace
+} // namespace OHOS::Rosen
