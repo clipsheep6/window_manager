@@ -813,7 +813,8 @@ sptr<RSWindowAnimationFinishedCallback> RemoteAnimation::CreateShowAnimationFini
             if (srcNodeWptr != nullptr) {
                 payload["srcPid"] = std::to_string(srcNodeWptr->GetCallingPid());
             }
-            ResSchedReport::GetInstance().ResSchedDataReport(Rosen::RES_TYPE_SHOW_REMOTE_ANIMATION, 1, payload);
+            ResSchedReport::GetInstance().ResSchedDataReport(
+                Rosen::RES_TYPE_SHOW_REMOTE_ANIMATION, Rosen::REMOTE_ANIMATION_END, payload);
         };
     }
     sptr<RSWindowAnimationFinishedCallback> finishedCallback = new(std::nothrow) RSWindowAnimationFinishedCallback(

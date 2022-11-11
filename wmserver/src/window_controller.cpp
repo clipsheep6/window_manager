@@ -145,7 +145,8 @@ WMError WindowController::NotifyWindowTransition(sptr<WindowTransitionInfo>& src
     if (srcNode) {
         payload["srcPid"] = std::to_string(srcNode->GetCallingPid());
     }
-    ResSchedReport::GetInstance().ResSchedDataReport(Rosen::RES_TYPE_SHOW_REMOTE_ANIMATION, 0, payload);
+    ResSchedReport::GetInstance().ResSchedDataReport(
+        Rosen::RES_TYPE_SHOW_REMOTE_ANIMATION, Rosen::REMOTE_ANIMATION_BEGIN, payload);
     auto transitionEvent = RemoteAnimation::GetTransitionEvent(srcInfo, dstInfo, srcNode, dstNode);
     switch (transitionEvent) {
         case TransitionEvent::APP_TRANSITION: {

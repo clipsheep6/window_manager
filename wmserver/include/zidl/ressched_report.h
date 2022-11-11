@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_WINDOW_MANAGER_RESSCHED_RESSCHED_REPORT_H
-#define OHOS_WINDOW_MANAGER_RESSCHED_RESSCHED_REPORT_H
+#ifndef OHOS_WINDOW_MANAGER_RESSCHED_REPORT_H
+#define OHOS_WINDOW_MANAGER_RESSCHED_REPORT_H
 
 #include <cstdint>
 #include <string>
@@ -22,6 +22,8 @@
 
 namespace OHOS::Rosen {
 constexpr uint32_t RES_TYPE_SHOW_REMOTE_ANIMATION = 33;
+constexpr int32_t REMOTE_ANIMATION_BEGIN = 0;
+constexpr int32_t REMOTE_ANIMATION_END = 1;
 
 using ReportDataFunc = void (*)(uint32_t resType, int64_t value,
     const std::unordered_map<std::string, std::string>& payload);
@@ -40,4 +42,4 @@ private:
 };
 } // namespace OHOS::Rosen
 
-#endif // OHOS_WINDOW_MANAGER_RESSCHED_RESSCHED_REPORT_H
+#endif // OHOS_WINDOW_MANAGER_RESSCHED_REPORT_H
