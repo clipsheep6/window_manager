@@ -33,7 +33,6 @@
 #include "window_manager_hilog.h"
 #include "window_helper.h"
 #include "wm_common.h"
-#include "zidl/ressched_report.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -140,13 +139,6 @@ WMError WindowController::NotifyWindowTransition(sptr<WindowTransitionInfo>& src
     }
     StartAsyncTraceArgs(HITRACE_TAG_WINDOW_MANAGER, static_cast<int32_t>(TraceTaskId::REMOTE_ANIMATION),
         "wms:async:ShowRemoteAnimation");
-
-    std::unordered_map<std::string, std::string> payload;
-    if (srcNode) {
-        payload["srcPid"] = std::to_string(srcNode->GetCallingPid());
-    }
-    ResSchedReport::GetInstance().ResSchedDataReport(
-        Rosen::RES_TYPE_SHOW_REMOTE_ANIMATION, Rosen::REMOTE_ANIMATION_BEGIN, payload);
     auto transitionEvent = RemoteAnimation::GetTransitionEvent(srcInfo, dstInfo, srcNode, dstNode);
     switch (transitionEvent) {
         case TransitionEvent::APP_TRANSITION: {

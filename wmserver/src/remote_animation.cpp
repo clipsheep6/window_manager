@@ -334,6 +334,13 @@ WMError RemoteAnimation::NotifyAnimationTransition(sptr<WindowTransitionInfo> sr
         finishedCallback->OnAnimationFinished();
         return WMError::WM_ERROR_NO_MEM;
     }
+
+    std::unordered_map<std::string, std::string> payload;
+    if (srcNode) {
+        payload["srcPid"] = std::to_string(srcNode->GetCallingPid());
+    }
+    ResSchedReport::GetInstance().ResSchedDataReport(
+            Rosen::RES_TYPE_SHOW_REMOTE_ANIMATION, Rosen::REMOTE_ANIMATION_BEGIN, payload);
     // when exit immersive, startingWindow (0,0,w,h), but app need avoid
     GetExpectRect(dstNode, dstTarget);
     dstNode->isPlayAnimationShow_ = true;
