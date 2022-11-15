@@ -248,15 +248,19 @@ DisplayId AbstractDisplayController::ProcessExpandScreenDisconnected(
     DisplayId displayId = DISPLAY_ID_INVALID;
     for (auto iter = abstractDisplayMap_.begin(); iter != abstractDisplayMap_.end(); iter++) {
         sptr<AbstractDisplay> abstractDisplay = iter->second;
-        if (abstractDisplay->GetAbstractScreenId() == absScreen->dmsId_) {
+        auto curScreenId = abstractDisplay->GetAbstractScreenId();
+        if (curScreenId == absScreen->dmsId_) {
             WLOGI("expand screen disconnect, displayId: %{public}" PRIu64", screenId: %{public}" PRIu64"",
-                displayId, abstractDisplay->GetAbstractScreenId());
+                displayId, curScreenId);
             absDisplay = abstractDisplay;
             displayId = iter->first;
         } else {
-            abstractDisplay->SetOffset(0, 0);
-            auto screenId = abstractDisplay->GetAbstractScreenId();
-            abstractScreenController_->GetRSDisplayNodeByScreenId(screenId)->SetDisplayOffset(0, 0);
+            auto absScreen = abstractScreenController_->GetAbstractScreen(curScreenId);
+            Point point = {0, 0};
+            if (absScreen->GetStartPoint().posX_ != point.posX_ || absScreen->GetStartPoint().posY_ != point.posY_) {
+                absScreen->SetStartPoint(point);
+                ProcessDisplayOffsetChange(absScreen);
+            }
         }
     }
     return displayId;
@@ -273,6 +277,8 @@ void AbstractDisplayController::OnAbstractScreenChange(sptr<AbstractScreen> absS
         ProcessDisplayUpdateOrientation(absScreen);
     } else if (event == DisplayChangeEvent::DISPLAY_SIZE_CHANGED) {
         ProcessDisplaySizeChange(absScreen);
+    } else if (event == DisplayChangeEvent::DISPLAY_OFFSET_CHANGED) {
+        ProcessDisplayOffsetChange(absScreen);
     } else if (event == DisplayChangeEvent::DISPLAY_VIRTUAL_PIXEL_RATIO_CHANGED) {
         ProcessVirtualPixelRatioChange(absScreen);
     } else if (event == DisplayChangeEvent::UPDATE_ROTATION) {
@@ -280,6 +286,26 @@ void AbstractDisplayController::OnAbstractScreenChange(sptr<AbstractScreen> absS
     } else {
         WLOGE("unknown screen change event. id:%{public}" PRIu64" event %{public}u", absScreen->dmsId_, event);
     }
+}
+
+void AbstractDisplayController::ProcessDisplayOffsetChange(sptr<AbstractScreen> absScreen)
+{
+    if (!absScreen) {
+        WLOGE("absScreen is nullptr");
+        return;
+    }
+    auto startPoint = absScreen->GetStartPoint();
+    auto rsDisplayNode = abstractScreenController_->GetRSDisplayNodeByScreenId(absScreen->dmsId_);
+    sptr<AbstractDisplay> abstractDisplay = GetAbstractDisplayByAbsScreen(absScreen);
+    if (!rsDisplayNode || !abstractDisplay) {
+        WLOGE("RsDisplayNode or abstractDisplay is nullptr, %{public}" PRIu64"", absScreen->dmsId_);
+        return;
+    }
+    rsDisplayNode->SetDisplayOffset(startPoint.posX_, startPoint.posY_);
+    abstractDisplay->SetOffset(startPoint.posX_, startPoint.posY_);
+    SetDisplayStateChangeListener(abstractDisplay, DisplayStateChangeType::SIZE_CHANGE);
+    WLOGI("[ProcessDisplayOffsetChange], displayId: %{public}" PRIu64", startPoint: [%{public}d, %{public}d]",
+        absScreen->dmsId_, startPoint.posX_, startPoint.posY_);
 }
 
 void AbstractDisplayController::ProcessDisplayRotationChange(sptr<AbstractScreen> absScreen)

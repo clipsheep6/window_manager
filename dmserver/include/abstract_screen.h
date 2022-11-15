@@ -60,6 +60,8 @@ public:
     DMError GetScreenGamutMap(ScreenGamutMap& gamutMap);
     DMError SetScreenGamutMap(ScreenGamutMap gamutMap);
     DMError SetScreenColorTransform();
+    void SetStartPoint(Point point);
+    Point GetStartPoint() const;
 
     const std::string name_;
     const ScreenId dmsId_;
@@ -76,6 +78,7 @@ public:
     Orientation orientation_ { Orientation::UNSPECIFIED };
     Rotation rotation_ { Rotation::ROTATION_0 };
     Orientation screenRequestedOrientation_ { Orientation::UNSPECIFIED };
+    Point startPoint_;
 protected:
     void FillScreenInfo(sptr<ScreenInfo>) const;
     const sptr<AbstractScreenController> screenController_;

@@ -500,6 +500,7 @@ private:
     void UpdateWindowShadowAccordingToSystemConfig();
     bool WindowCreateCheck(uint32_t parentId);
     RSSurfaceNode::SharedPtr CreateSurfaceNode(std::string name, WindowType type);
+    void ChangeToRectInDisplayGroup(const Rect& rect);
 
     // colorspace, gamut
     using ColorSpaceConvertMap = struct {

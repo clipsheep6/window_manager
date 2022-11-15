@@ -134,6 +134,23 @@ std::vector<ScreenId> AbstractScreenController::GetAllExpandOrMirrorScreenIds(
     return screenIds;
 }
 
+std::vector<ScreenId> AbstractScreenController::GetAllValidScreenIds(const std::vector<ScreenId>& screenIds) const
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    std::vector<ScreenId> validScreenIds;
+    for (ScreenId screenId : screenIds) {
+        auto screenIdIter = std::find(validScreenIds.begin(), validScreenIds.end(), screenId);
+        if (screenIdIter != validScreenIds.end()) {
+            continue;
+        }
+        auto iter = dmsScreenMap_.find(screenId);
+        if (iter != dmsScreenMap_.end() && iter->second->type_ != ScreenType::UNDEFINE) {
+            validScreenIds.emplace_back(screenId);
+        }
+    }
+    return validScreenIds;
+}
+
 const std::shared_ptr<RSDisplayNode>& AbstractScreenController::GetRSDisplayNodeByScreenId(ScreenId dmsScreenId) const
 {
     static std::shared_ptr<RSDisplayNode> notFound = nullptr;
@@ -544,6 +561,7 @@ sptr<AbstractScreenGroup> AbstractScreenController::AddAsSuccedentScreenLocked(s
     Point point;
     if (screenGroup->combination_ == ScreenCombination::SCREEN_EXPAND) {
         point = {screen->GetActiveScreenMode()->width_, 0};
+        newScreen->SetStartPoint(point);
     }
     screenGroup->AddChild(newScreen, point);
     return screenGroup;
@@ -952,16 +970,24 @@ void AbstractScreenController::ChangeScreenGroup(sptr<AbstractScreenGroup> group
     std::vector<ScreenId> addScreens;
     std::vector<Point> addChildPos;
     std::lock_guard<std::recursive_mutex> lock(mutex_);
+    ScreenId defaultScreenId = GetDefaultAbstractScreenId();
     for (uint64_t i = 0; i != screens.size(); i++) {
         ScreenId screenId = screens[i];
-        WLOGFI("ChangeScreenGroup: screenId: %{public}" PRIu64"", screenId);
         auto screen = GetAbstractScreen(screenId);
         if (screen == nullptr) {
             WLOGFE("screen:%{public}" PRIu64" is nullptr", screenId);
             continue;
         }
-        WLOGFI("ChangeScreenGroup: screen->groupDmsId_: %{public}" PRIu64"", screen->groupDmsId_);
-        if (filterScreen && screen->groupDmsId_ == group->dmsId_ && group->HasChild(screen->dmsId_)) {
+        WLOGFD("ChangeScreenGroup: screenId: %{public}" PRIu64", groupId: %{public}" PRIu64"",
+            screenId, screen->groupDmsId_);
+
+        /*
+         * If screen is already exited in target screen group, no need to change its group.
+         */
+        if ((filterScreen && (screen->groupDmsId_ == group->dmsId_) && group->HasChild(screen->dmsId_)) ||
+            (screen->dmsId_ == defaultScreenId)) {
+            NotifyScreenStartPointChange(screen, startPoints[i]);
+            WLOGFD("Screen is existed in expand group or is defaultScreen, screenId: %{public}" PRIu64"", screenId);
             continue;
         }
         if (abstractScreenCallback_ != nullptr && CheckScreenInScreenGroup(screen)) {
@@ -1016,6 +1042,29 @@ void AbstractScreenController::AddScreenToGroup(sptr<AbstractScreenGroup> group,
     NotifyScreenGroupChanged(removeFromGroup, ScreenGroupChangeEvent::REMOVE_FROM_GROUP);
     NotifyScreenGroupChanged(changeGroup, ScreenGroupChangeEvent::CHANGE_GROUP);
     NotifyScreenGroupChanged(addToGroup, ScreenGroupChangeEvent::ADD_TO_GROUP);
+}
+
+void AbstractScreenController::NotifyScreenStartPointChange(sptr<AbstractScreen> absScreen, Point newPoint)
+{
+    auto oriPoint = absScreen->GetStartPoint();
+    if (newPoint.posX_ == oriPoint.posX_ && newPoint.posY_ == oriPoint.posY_) {
+        WLOGFD("[NotifyScreenStartPointChange]point isn't change, screenId: %{public}" PRIu64"", absScreen->dmsId_);
+        return;
+    }
+
+    WLOGFI("[NotifyScreenStartPointChange], screenId: %{public}" PRIu64", oriStartPoint: "
+        "[%{public}d, %{public}d], newStartPoint: [%{public}d, %{public}d]",
+        absScreen->dmsId_, oriPoint.posX_, oriPoint.posY_, newPoint.posX_, newPoint.posY_);
+
+    sptr<AbstractScreenCallback> absScreenCallback = nullptr;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        absScreenCallback = abstractScreenCallback_;
+    }
+    if (absScreenCallback != nullptr) {
+        absScreen->SetStartPoint(newPoint);
+        absScreenCallback->onChange_(absScreen, DisplayChangeEvent::DISPLAY_OFFSET_CHANGED);
+    }
 }
 
 bool AbstractScreenController::MakeExpand(std::vector<ScreenId> screenIds, std::vector<Point> startPoints)

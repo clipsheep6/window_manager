@@ -54,6 +54,7 @@ public:
     sptr<AbstractScreen> GetAbstractScreen(ScreenId dmsScreenId) const;
     std::vector<ScreenId> GetShotScreenIds(std::vector<ScreenId>) const;
     std::vector<ScreenId> GetAllExpandOrMirrorScreenIds(std::vector<ScreenId>) const;
+    std::vector<ScreenId> GetAllValidScreenIds(const std::vector<ScreenId>& screenIds) const;
     sptr<AbstractScreenGroup> GetAbstractScreenGroup(ScreenId dmsScreenId);
     ScreenId GetDefaultAbstractScreenId();
     ScreenId ConvertToRsScreenId(ScreenId dmsScreenId) const;
@@ -116,6 +117,7 @@ private:
     void NotifyScreenChanged(sptr<ScreenInfo> screenInfo, ScreenChangeEvent event) const;
     void NotifyScreenGroupChanged(const sptr<ScreenInfo>& screenInfo, ScreenGroupChangeEvent event) const;
     void NotifyScreenGroupChanged(const std::vector<sptr<ScreenInfo>>& screenInfo, ScreenGroupChangeEvent event) const;
+    void NotifyScreenStartPointChange(sptr<AbstractScreen> absScreen, Point newPoint);
 
     class ScreenIdManager {
     public:

@@ -1281,6 +1281,30 @@ WMError WindowImpl::PreProcessShow(uint32_t reason, bool withAnimation)
     return WMError::WM_OK;
 }
 
+void WindowImpl::ChangeToRectInDisplayGroup(const Rect& rect)
+{
+    Rect newRect = rect;
+    auto allDisplayIds = DisplayManager::GetInstance().GetAllDisplayIds();
+    if (allDisplayIds.empty() || allDisplayIds.size() == 1) {
+        return;
+    }
+    // PosX/PosY shoule be converted to pos in displayGroup
+    if (GetType() != WindowType::WINDOW_TYPE_POINTER) {
+        auto display = DisplayManager::GetInstance().GetDisplayById(property_->GetDisplayId());
+        if (display == nullptr || display->GetDisplayInfo() == nullptr) {
+            WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u",
+                property_->GetDisplayId(), property_->GetWindowId());
+            return;
+        }
+        newRect.posX_ += display->GetDisplayInfo()->GetOffsetX();
+        newRect.posY_ += display->GetDisplayInfo()->GetOffsetY();
+        property_->SetRequestRect(newRect);
+    }
+    WLOGFI("[ChangeToRectInDisplayGroup] Window [name:%{public}s, id:%{public}d] rect: "
+        "[%{public}d %{public}d %{public}d %{public}d]", name_.c_str(), property_->GetWindowId(),
+        newRect.posX_, newRect.posY_, newRect.width_, newRect.height_);
+}
+
 WMError WindowImpl::Show(uint32_t reason, bool withAnimation)
 {
     WLOGFD("[Client] Window Show [name:%{public}s, id:%{public}u, mode: %{public}u], reason:%{public}u, "
@@ -1311,6 +1335,10 @@ WMError WindowImpl::Show(uint32_t reason, bool withAnimation)
         return ret;
     }
 
+    /*
+     * Request rect should be changed to rect in displayGroup except
+     */
+    ChangeToRectInDisplayGroup(property_->GetRequestRect());
     ret = SingletonContainer::Get<WindowAdapter>().AddWindow(property_);
     RecordLifeCycleExceptionEvent(LifeCycleEvent::SHOW_EVENT, ret);
     if (ret == WMError::WM_OK) {
@@ -1380,13 +1408,20 @@ WMError WindowImpl::MoveTo(int32_t x, int32_t y)
 
     Rect rect = (WindowHelper::IsMainFloatingWindow(GetType(), GetMode())) ?
         GetRect() : property_->GetRequestRect();
-    Rect moveRect = { x, y, rect.width_, rect.height_ }; // must keep w/h, which may maintain stashed resize info
+
+    // must keep w/h, which may maintain stashed resize info
+    Rect moveRect = { x, y, rect.width_, rect.height_ };
     property_->SetRequestRect(moveRect);
     if (state_ == WindowState::STATE_HIDDEN || state_ == WindowState::STATE_CREATED) {
         WLOGFI("window is hidden or created! id: %{public}u, oriPos: [%{public}d, %{public}d, "
                "movePos: [%{public}d, %{public}d]", property_->GetWindowId(), rect.posX_, rect.posY_, x, y);
         return WMError::WM_OK;
     }
+
+    /*
+     * Window should be changed to rect in displayGroup except window isn't showing
+     */
+    ChangeToRectInDisplayGroup(moveRect);
     property_->SetWindowSizeChangeReason(WindowSizeChangeReason::MOVE);
     return UpdateProperty(PropertyChangeAction::ACTION_UPDATE_RECT);
 }
@@ -2231,8 +2266,8 @@ void WindowImpl::ReadyToMoveOrDragWindow(const std::shared_ptr<MMI::PointerEvent
     // calculate window inner rect except frame
     auto display = DisplayManager::GetInstance().GetDisplayById(moveDragProperty_->targetDisplayId_);
     if (display == nullptr || display->GetDisplayInfo() == nullptr) {
-        WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u", property_->GetDisplayId(),
-            property_->GetWindowId());
+        WLOGFE("get display failed displayId:%{public}d, window id:%{public}u",
+            moveDragProperty_->targetDisplayId_, property_->GetWindowId());
         return;
     }
     float vpr = display->GetVirtualPixelRatio();

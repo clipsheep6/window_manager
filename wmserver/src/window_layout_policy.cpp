@@ -52,24 +52,23 @@ std::vector<int32_t> WindowLayoutPolicy::GetExitSplitPoints(DisplayId displayId)
     return {};
 }
 
-void WindowLayoutPolicy::LimitWindowToBottomRightCorner(const sptr<WindowNode>& node)
+void WindowLayoutPolicy::LimitWindowToBottomRightCorner(const sptr<WindowNode>& node, const Rect& newDisplayRect)
 {
     Rect windowRect = node->GetRequestRect();
-    Rect displayRect = displayGroupInfo_->GetDisplayRect(node->GetDisplayId());
-    windowRect.posX_ = std::max(windowRect.posX_, displayRect.posX_);
-    windowRect.posY_ = std::max(windowRect.posY_, displayRect.posY_);
-    windowRect.width_ = std::min(windowRect.width_, displayRect.width_);
-    windowRect.height_ = std::min(windowRect.height_, displayRect.height_);
+    windowRect.posX_ = std::max(windowRect.posX_, newDisplayRect.posX_);
+    windowRect.posY_ = std::max(windowRect.posY_, newDisplayRect.posY_);
+    windowRect.width_ = std::min(windowRect.width_, newDisplayRect.width_);
+    windowRect.height_ = std::min(windowRect.height_, newDisplayRect.height_);
 
     if (windowRect.posX_ + static_cast<int32_t>(windowRect.width_) >
-        displayRect.posX_ + static_cast<int32_t>(displayRect.width_)) {
-        windowRect.posX_ = displayRect.posX_ + static_cast<int32_t>(displayRect.width_) -
+        newDisplayRect.posX_ + static_cast<int32_t>(newDisplayRect.width_)) {
+        windowRect.posX_ = newDisplayRect.posX_ + static_cast<int32_t>(newDisplayRect.width_) -
             static_cast<int32_t>(windowRect.width_);
     }
 
     if (windowRect.posY_ + static_cast<int32_t>(windowRect.height_) >
-        displayRect.posY_ + static_cast<int32_t>(displayRect.height_)) {
-        windowRect.posY_ = displayRect.posY_ + static_cast<int32_t>(displayRect.height_) -
+        newDisplayRect.posY_ + static_cast<int32_t>(newDisplayRect.height_)) {
+        windowRect.posY_ = newDisplayRect.posY_ + static_cast<int32_t>(newDisplayRect.height_) -
             static_cast<int32_t>(windowRect.height_);
     }
     node->SetRequestRect(windowRect);
@@ -78,7 +77,7 @@ void WindowLayoutPolicy::LimitWindowToBottomRightCorner(const sptr<WindowNode>& 
         node->GetWindowId(), windowRect.posX_, windowRect.posY_, windowRect.width_, windowRect.height_);
 
     for (auto& childNode : node->children_) {
-        LimitWindowToBottomRightCorner(childNode);
+        LimitWindowToBottomRightCorner(childNode, newDisplayRect);
     }
 }
 
@@ -104,9 +103,6 @@ void WindowLayoutPolicy::UpdateDisplayGroupLimitRect()
     auto firstDisplayLimitRect = limitRectMap_.begin()->second;
     Rect newDisplayGroupLimitRect = { firstDisplayLimitRect.posX_, firstDisplayLimitRect.posY_, 0, 0 };
     for (auto& elem : limitRectMap_) {
-        newDisplayGroupLimitRect.posX_ = std::min(newDisplayGroupLimitRect.posX_, elem.second.posX_);
-        newDisplayGroupLimitRect.posY_ = std::min(newDisplayGroupLimitRect.posY_, elem.second.posY_);
-
         int32_t maxWidth = std::max(newDisplayGroupLimitRect.posX_ +
                                     static_cast<int32_t>(newDisplayGroupLimitRect.width_),
                                     elem.second.posX_+ static_cast<int32_t>(elem.second.width_));
@@ -114,8 +110,10 @@ void WindowLayoutPolicy::UpdateDisplayGroupLimitRect()
         int32_t maxHeight = std::max(newDisplayGroupLimitRect.posY_ +
                                      static_cast<int32_t>(newDisplayGroupLimitRect.height_),
                                      elem.second.posY_+ static_cast<int32_t>(elem.second.height_));
-        newDisplayGroupLimitRect.width_  = maxWidth - newDisplayGroupLimitRect.posX_;
-        newDisplayGroupLimitRect.height_ = maxHeight - newDisplayGroupLimitRect.posY_;
+        newDisplayGroupLimitRect.posX_ = std::min(newDisplayGroupLimitRect.posX_, elem.second.posX_);
+        newDisplayGroupLimitRect.posY_ = std::min(newDisplayGroupLimitRect.posY_, elem.second.posY_);
+        newDisplayGroupLimitRect.width_  =  static_cast<uint32_t>(maxWidth - newDisplayGroupLimitRect.posX_);
+        newDisplayGroupLimitRect.height_ =  static_cast<uint32_t>(maxHeight - newDisplayGroupLimitRect.posY_);
     }
     displayGroupLimitRect_ = newDisplayGroupLimitRect;
     WLOGFI("displayGroupLimitRect_: [ %{public}d, %{public}d, %{public}d, %{public}d]",
@@ -175,7 +173,7 @@ void WindowLayoutPolicy::UpdateRectInDisplayGroupForAllNodes(DisplayId displayId
                 UpdateRectInDisplayGroup(node, oriDisplayRect, newDisplayRect);
             }
             if (WindowHelper::IsMainFloatingWindow(node->GetWindowType(), node->GetWindowMode())) {
-                LimitWindowToBottomRightCorner(node);
+                LimitWindowToBottomRightCorner(node, newDisplayRect);
             }
         }
         WLOGFI("Recalculate window rect in display group, displayId: %{public}" PRIu64", rootType: %{public}d",
@@ -185,10 +183,12 @@ void WindowLayoutPolicy::UpdateRectInDisplayGroupForAllNodes(DisplayId displayId
 
 void WindowLayoutPolicy::UpdateDisplayRectAndDisplayGroupInfo(const std::map<DisplayId, Rect>& displayRectMap)
 {
+    limitRectMap_.clear();
     for (auto& elem : displayRectMap) {
         auto& displayId = elem.first;
         auto& displayRect = elem.second;
         displayGroupInfo_->SetDisplayRect(displayId, displayRect);
+        limitRectMap_.insert(std::make_pair(displayId, displayRect));
     }
 }
 

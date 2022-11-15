@@ -123,7 +123,7 @@ public:
 
     static inline bool IsEmptyRect(const Rect& r)
     {
-        return (r.posX_ == 0 && r.posY_ == 0 && r.width_ == 0 && r.height_ == 0);
+        return (r.width_ == 0 && r.height_ == 0);
     }
 
     static inline bool IsLandscapeRect(const Rect& r)
