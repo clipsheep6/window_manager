@@ -408,8 +408,9 @@ void WindowController::HandleTurnScreenOn(const sptr<WindowNode>& node)
     WLOGFD("handle turn screen on: [%{public}s, %{public}d]", node->GetWindowName().c_str(), node->IsTurnScreenOn());
     // reset ipc identity
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    if (node->IsTurnScreenOn() && !PowerMgr::PowerMgrClient::GetInstance().IsScreenOn()) {
-        WLOGI("turn screen on");
+    auto screenOn = PowerMgr::PowerMgrClient::GetInstance().IsScreenOn();
+    if (node->IsTurnScreenOn() && screenOn.IsOk() && !screenOn.GetData()) {
+        WLOGFI("turn screen on");
         PowerMgr::PowerMgrClient::GetInstance().WakeupDevice();
     }
     // set ipc identity to raw
