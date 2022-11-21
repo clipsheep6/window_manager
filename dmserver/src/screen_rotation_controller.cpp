@@ -248,6 +248,7 @@ void ScreenRotationController::SetScreenRotation(Rotation targetRotation)
     if (targetRotation == GetCurrentDisplayRotation()) {
         return;
     }
+    lastSensorDecidedRotation_ = targetRotation;
     DisplayManagerServiceInner::GetInstance().GetDefaultDisplay()->SetRotation(targetRotation);
     DisplayManagerServiceInner::GetInstance().SetRotationFromWindow(defaultDisplayId_, targetRotation);
     WLOGFI("dms: Set screen rotation: %{public}u", targetRotation);
@@ -300,9 +301,6 @@ bool ScreenRotationController::IsSensorRelatedOrientation(Orientation orientatio
 void ScreenRotationController::ProcessSwitchToSensorRelatedOrientation(
     Orientation orientation, DeviceRotation sensorRotationConverted)
 {
-    if (lastOrientationType_ == orientation) {
-        return;
-    }
     lastOrientationType_ = orientation;
     switch (orientation) {
         case Orientation::AUTO_ROTATION_RESTRICTED: {
