@@ -277,34 +277,37 @@ bool WindowInnerManager::NotifyServerReadyToMoveOrDrag(uint32_t windowId, sptr<W
     return true;
 }
 
-void WindowInnerManager::NotifyWindowEndUpMovingOrDragging(uint32_t windowId)
+bool WindowInnerManager::NotifyWindowEndUpMovingOrDragging(uint32_t windowId)
 {
     if (moveDragController_->GetActiveWindowId() != windowId) {
-        return;
+        return false;
     }
     moveDragController_->HandleEndUpMovingOrDragging(windowId);
     WLOGFI("NotifyWindowEndUpMovingOrDragging, windowId: %{public}u", windowId);
+    return true;
 }
 
-void WindowInnerManager::NotifyWindowRemovedOrDestroyed(uint32_t windowId)
+bool WindowInnerManager::NotifyWindowRemovedOrDestroyed(uint32_t windowId)
 {
     if (moveDragController_->GetActiveWindowId() != windowId) {
-        return;
+        return false;
     }
     moveDragController_->HandleWindowRemovedOrDestroyed(windowId);
     WLOGFI("NotifyWindowRemovedOrDestroyed, windowId: %{public}u", windowId);
+    return true;
 }
 
-void WindowInnerManager::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+bool WindowInnerManager::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
     uint32_t windowId = static_cast<uint32_t>(pointerEvent->GetAgentWindowId());
     if (moveDragController_->GetActiveWindowId() != windowId ||
         moveDragController_->GetActiveWindowId() == INVALID_WINDOW_ID) {
         WLOGFE("active winId or inputEvent winId is invalid, windowId: %{public}u, activeWinId: %{public}u",
             windowId, moveDragController_->GetActiveWindowId());
-        return;
+        return false;
     }
     moveDragController_->ConsumePointerEvent(pointerEvent);
+    return true;
 }
 } // Rosen
 } // OHOS
