@@ -53,12 +53,12 @@ public:
     void CloseAbility(const wptr<WindowNode> &node);
     void CompleteFirstFrameDrawing(const wptr<WindowNode> &node);
 
-    void ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
+    bool ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     void NotifyDisplayChange(const std::map<DisplayId, Rect>& displayRectMap);
     bool NotifyServerReadyToMoveOrDrag(uint32_t windowId, sptr<WindowProperty>& windowProperty,
         sptr<MoveDragProperty>& moveDragProperty);
-    void NotifyWindowEndUpMovingOrDragging(uint32_t windowId);
-    void NotifyWindowRemovedOrDestroyed(uint32_t windowId);
+    bool NotifyWindowEndUpMovingOrDragging(uint32_t windowId);
+    bool NotifyWindowRemovedOrDestroyed(uint32_t windowId);
     pid_t GetPid();
 
 protected:
