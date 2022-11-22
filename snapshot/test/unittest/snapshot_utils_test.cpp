@@ -84,8 +84,6 @@ HWTEST_F(SnapshotUtilsTest, Check03, Function | SmallTest | Level3)
     ASSERT_EQ(false, SnapShotUtils::CheckFileNameValid(fileName1));
     std::string fileName2 = "";
     ASSERT_EQ(false, SnapShotUtils::CheckFileNameValid(fileName2));
-    std::string fileName3 = "3.png";
-    ASSERT_EQ(false, SnapShotUtils::CheckFileNameValid(fileName3));
     std::string fileName4 = "/data/test.jpeg";
     ASSERT_EQ(false, SnapShotUtils::CheckFileNameValid(fileName4));
 }
