@@ -1646,7 +1646,11 @@ void WindowRoot::OnRenderModeChanged(bool isUniRender)
 void WindowRoot::SwitchRenderModeIfNeeded()
 {
     uint32_t rsScreenNum = DisplayManagerServiceInner::GetInstance().GetRSScreenNum();
+    uint32_t displayNum = DisplayManagerServiceInner::GetInstance().GetAllDisplays().size();
     if (rsScreenNum > 1) {
+        if (displayNum == 1) {
+            return;
+        }
         // switch to sperate render mode
         ChangeRSRenderModeIfNeeded(false);
         return;
