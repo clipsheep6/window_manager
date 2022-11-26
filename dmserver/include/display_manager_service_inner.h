@@ -40,6 +40,7 @@ public:
     sptr<DisplayInfo> GetDisplayById(DisplayId displayId) const;
     std::vector<DisplayId> GetAllDisplayIds() const;
     uint32_t GetRSScreenNum() const;
+    bool IfChangeRenderMode() const;
     sptr<ScreenInfo> GetScreenInfoByDisplayId(DisplayId displayId) const;
     ScreenId GetScreenGroupIdByDisplayId(DisplayId displayId) const;
     sptr<SupportedScreenModes> GetScreenModesByDisplayId(DisplayId displayId) const;

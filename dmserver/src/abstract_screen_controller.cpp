@@ -83,6 +83,20 @@ uint32_t AbstractScreenController::GetRSScreenNum() const
     return screenIdManager_.GetRSScreenNum();
 }
 
+bool AbstractScreenController::IfChangeRenderMode() const
+{
+    int physicalScreenNum = 0;
+    for (auto iter = dmsScreenMap_.begin(); iter != dmsScreenMap_.end(); iter++) {
+        if (iter->second && iter->second->type_ == ScreenType::REAL) {
+            physicalScreenNum++;
+        }
+    }
+    if (physicalScreenNum > 1) {
+        return true;
+    }
+    return false;
+}
+
 std::vector<ScreenId> AbstractScreenController::GetAllValidScreenIds(const std::vector<ScreenId>& screenIds) const
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);

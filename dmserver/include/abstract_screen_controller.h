@@ -50,6 +50,7 @@ public:
     void Init();
     std::vector<ScreenId> GetAllScreenIds() const;
     uint32_t GetRSScreenNum() const;
+    bool IfChangeRenderMode() const;
     sptr<AbstractScreen> GetAbstractScreen(ScreenId dmsScreenId) const;
     std::vector<ScreenId> GetAllValidScreenIds(const std::vector<ScreenId>& screenIds) const;
     sptr<AbstractScreenGroup> GetAbstractScreenGroup(ScreenId dmsScreenId);
