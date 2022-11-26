@@ -309,6 +309,11 @@ uint32_t DisplayManagerService::GetRSScreenNum() const
     return abstractScreenController_->GetRSScreenNum();
 }
 
+bool DisplayManagerService::IfChangeRenderMode() const
+{
+    return abstractScreenController_->IfChangeRenderMode();
+}
+
 DMError DisplayManagerService::GetScreenSupportedColorGamuts(ScreenId screenId,
     std::vector<ScreenColorGamut>& colorGamuts)
 {

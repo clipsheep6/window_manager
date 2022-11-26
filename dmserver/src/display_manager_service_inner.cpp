@@ -87,6 +87,11 @@ uint32_t DisplayManagerServiceInner::GetRSScreenNum() const
     return DisplayManagerService::GetInstance().GetRSScreenNum();
 }
 
+bool DisplayManagerServiceInner::IfChangeRenderMode() const
+{
+    return DisplayManagerService::GetInstance().IfChangeRenderMode();
+}
+
 sptr<ScreenInfo> DisplayManagerServiceInner::GetScreenInfoByDisplayId(DisplayId displayId) const
 {
     auto displayInfo = DisplayManagerService::GetInstance().GetDisplayInfoById(displayId);

@@ -64,6 +64,7 @@ public:
     void SetGravitySensorSubscriptionEnabled();
     std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId) override;
     uint32_t GetRSScreenNum() const;
+    bool IfChangeRenderMode() const;
     DMError HasPrivateWindow(DisplayId id, bool& hasPrivateWindow) override;
     // colorspace, gamut
     DMError GetScreenSupportedColorGamuts(ScreenId screenId, std::vector<ScreenColorGamut>& colorGamuts) override;
