@@ -42,7 +42,7 @@ class JsWindowListener : public IWindowChangeListener,
                          public IOccupiedAreaChangeListener {
 public:
     JsWindowListener(NativeEngine* engine, std::shared_ptr<NativeReference> callback)
-        : engine_(engine), jsCallBack_(callback) {}
+        : engine_(engine), jsCallBack_(callback), weakRef_(wptr<JsWindowListener>(this)) {}
     virtual ~JsWindowListener() = default;
     void OnSystemBarPropertyChange(DisplayId displayId, const SystemBarRegionTints& tints) override;
     void OnSizeChange(Rect rect, WindowSizeChangeReason reason) override;
@@ -58,6 +58,7 @@ private:
     void LifeCycleCallBack(LifeCycleEventType eventType);
     NativeEngine* engine_ = nullptr;
     std::shared_ptr<NativeReference> jsCallBack_ = nullptr;
+    wptr<JsWindowListener> weakRef_  = nullptr;
 };
 }  // namespace Rosen
 }  // namespace OHOS

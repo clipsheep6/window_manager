@@ -44,17 +44,22 @@ void JsWindowListener::OnSizeChange(Rect rect, WindowSizeChangeReason reason)
     WLOGFI("JsWindowListener::OnSizeChange is called");
     // js callback should run in js thread
     std::unique_ptr<AsyncTask::CompleteCallback> complete = std::make_unique<AsyncTask::CompleteCallback> (
-        [this, rect] (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            NativeValue* sizeValue = engine_->CreateObject();
+        [self = weakRef_, rect, eng = engine_] (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            auto thisListener = self.promote();
+            if (thisListener == nullptr || eng == nullptr) {
+                WLOGFE("[NAPI]this listener or engine is nullptr");
+                return;
+            }
+            NativeValue* sizeValue = eng->CreateObject();
             NativeObject* object = ConvertNativeValueTo<NativeObject>(sizeValue);
             if (object == nullptr) {
                 WLOGFE("Failed to convert rect to jsObject");
                 return;
             }
-            object->SetProperty("width", CreateJsValue(*engine_, rect.width_));
-            object->SetProperty("height", CreateJsValue(*engine_, rect.height_));
+            object->SetProperty("width", CreateJsValue(*eng, rect.width_));
+            object->SetProperty("height", CreateJsValue(*eng, rect.height_));
             NativeValue* argv[] = {sizeValue};
-            CallJsMethod(WINDOW_SIZE_CHANGE_CB.c_str(), argv, ArraySize(argv));
+            thisListener->CallJsMethod(WINDOW_SIZE_CHANGE_CB.c_str(), argv, ArraySize(argv));
         }
     );
 
@@ -73,17 +78,22 @@ void JsWindowListener::OnSystemBarPropertyChange(DisplayId displayId, const Syst
     WLOGFI("JsWindowListener::OnSystemBarPropertyChange is called");
     // js callback should run in js thread
     std::unique_ptr<AsyncTask::CompleteCallback> complete = std::make_unique<AsyncTask::CompleteCallback> (
-        [this, displayId, tints] (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            NativeValue* propertyValue = engine_->CreateObject();
+        [self = weakRef_, displayId, tints, eng = engine_] (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            auto thisListener = self.promote();
+            if (thisListener == nullptr || eng ==nullptr) {
+                WLOGFE("[NAPI]this listener or engine is nullptr");
+                return;
+            }
+            NativeValue* propertyValue = eng->CreateObject();
             NativeObject* object = ConvertNativeValueTo<NativeObject>(propertyValue);
             if (object == nullptr) {
                 WLOGFE("Failed to convert prop to jsObject");
                 return;
             }
-            object->SetProperty("displayId", CreateJsValue(*engine_, static_cast<uint32_t>(displayId)));
-            object->SetProperty("regionTint", CreateJsSystemBarRegionTintArrayObject(*engine_, tints));
+            object->SetProperty("displayId", CreateJsValue(*eng, static_cast<uint32_t>(displayId)));
+            object->SetProperty("regionTint", CreateJsSystemBarRegionTintArrayObject(*eng, tints));
             NativeValue* argv[] = {propertyValue};
-            CallJsMethod(SYSTEM_BAR_TINT_CHANGE_CB.c_str(), argv, ArraySize(argv));
+            thisListener->CallJsMethod(SYSTEM_BAR_TINT_CHANGE_CB.c_str(), argv, ArraySize(argv));
         }
     );
 
@@ -97,8 +107,13 @@ void JsWindowListener::OnAvoidAreaChanged(const std::vector<Rect> avoidAreas)
     WLOGFI("JsWindowListener::OnAvoidAreaChanged is called");
     // js callback should run in js thread
     std::unique_ptr<AsyncTask::CompleteCallback> complete = std::make_unique<AsyncTask::CompleteCallback> (
-        [this, avoidAreas] (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            NativeValue* avoidAreaValue = engine_->CreateObject();
+        [self = weakRef_,  avoidAreas, eng = engine_] (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            auto thisListener = self.promote();
+            if (thisListener == nullptr || eng == nullptr) {
+                WLOGFE("[NAPI]this listener or engine is nullptr");
+                return;
+            }
+            NativeValue* avoidAreaValue = eng->CreateObject();
             NativeObject* object = ConvertNativeValueTo<NativeObject>(avoidAreaValue);
             if (object == nullptr) {
                 WLOGFE("JsWindowListener::OnAvoidAreaChanged Failed to convert rect to jsObject");
@@ -111,12 +126,12 @@ void JsWindowListener::OnAvoidAreaChanged(const std::vector<Rect> avoidAreas)
                 return;
             }
 
-            object->SetProperty("leftRect", GetRectAndConvertToJsValue(*engine_, avoidAreas[0]));   // idx 0 : left
-            object->SetProperty("topRect", GetRectAndConvertToJsValue(*engine_, avoidAreas[1]));    // idx 1 : top
-            object->SetProperty("rightRect", GetRectAndConvertToJsValue(*engine_, avoidAreas[2]));  // idx 2 : right
-            object->SetProperty("bottomRect", GetRectAndConvertToJsValue(*engine_, avoidAreas[3])); // idx 3 : bottom
+            object->SetProperty("leftRect", GetRectAndConvertToJsValue(*eng, avoidAreas[0]));   // idx 0 : left
+            object->SetProperty("topRect", GetRectAndConvertToJsValue(*eng, avoidAreas[1]));    // idx 1 : top
+            object->SetProperty("rightRect", GetRectAndConvertToJsValue(*eng, avoidAreas[2]));  // idx 2 : right
+            object->SetProperty("bottomRect", GetRectAndConvertToJsValue(*eng, avoidAreas[3])); // idx 3 : bottom
             NativeValue* argv[] = {avoidAreaValue};
-            CallJsMethod(SYSTEM_AVOID_AREA_CHANGE_CB.c_str(), argv, ArraySize(argv));
+            thisListener->CallJsMethod(SYSTEM_AVOID_AREA_CHANGE_CB.c_str(), argv, ArraySize(argv));
         }
     );
 
@@ -129,9 +144,14 @@ void JsWindowListener::LifeCycleCallBack(LifeCycleEventType eventType)
 {
     WLOGFI("JsWindowListener::LifeCycleCallBack is called, type: %{public}d", eventType);
     std::unique_ptr<AsyncTask::CompleteCallback> complete = std::make_unique<AsyncTask::CompleteCallback>(
-        [=] (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            NativeValue* argv[] = {CreateJsValue(*engine_, static_cast<uint32_t>(eventType))};
-            CallJsMethod(LIFECYCLE_EVENT_CB.c_str(), argv, ArraySize(argv));
+        [self = weakRef_,eventType, eng = engine_] (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            auto thisListener = self.promote();
+            if (thisListener == nullptr || eng == nullptr) {
+                WLOGFE("[NAPI]this listener or engine is nullptr");
+                return;
+            }
+            NativeValue* argv[] = {CreateJsValue(*eng, static_cast<uint32_t>(eventType))};
+            thisListener->CallJsMethod(LIFECYCLE_EVENT_CB.c_str(), argv, ArraySize(argv));
         }
     );
     NativeReference* callback = nullptr;
