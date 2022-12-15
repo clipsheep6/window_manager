@@ -168,6 +168,7 @@ void WindowManager::Impl::NotifyUnfocused(const sptr<FocusChangeInfo>& focusChan
 
 void WindowManager::Impl::NotifySystemBarChanged(DisplayId displayId, const SystemBarRegionTints& tints)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     for (auto tint : tints) {
         WLOGFD("type:%{public}d, enable:%{public}d," \
             "backgroundColor:%{public}x, contentColor:%{public}x " \
@@ -176,10 +177,7 @@ void WindowManager::Impl::NotifySystemBarChanged(DisplayId displayId, const Syst
             tint.region_.posX_, tint.region_.posY_, tint.region_.width_, tint.region_.height_);
     }
     std::vector<sptr<ISystemBarChangedListener>> systemBarChangeListeners;
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        systemBarChangeListeners = systemBarChangedListeners_;
-    }
+    systemBarChangeListeners = systemBarChangedListeners_;
     for (auto& listener : systemBarChangeListeners) {
         listener->OnSystemBarPropertyChange(displayId, tints);
     }
