@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <unistd.h>
 #include "js_window_listener.h"
 #include "js_runtime_utils.h"
 #include "window_manager_hilog.h"
@@ -101,6 +102,7 @@ void JsWindowListener::OnSystemBarPropertyChange(DisplayId displayId, const Syst
             object->SetProperty("regionTint", CreateJsSystemBarRegionTintArrayObject(*eng, tints));
             NativeValue* argv[] = {propertyValue};
             thisListener->CallJsMethod(SYSTEM_BAR_TINT_CHANGE_CB.c_str(), argv, ArraySize(argv));
+            usleep(100 * 1000);
         }
     );
 
@@ -108,6 +110,7 @@ void JsWindowListener::OnSystemBarPropertyChange(DisplayId displayId, const Syst
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
     AsyncTask::Schedule("JsWindowListener::OnSystemBarPropertyChange",
         *engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+    usleep(100 * 1000);
 }
 
 void JsWindowListener::OnAvoidAreaChanged(const AvoidArea avoidArea, AvoidAreaType type)
