@@ -581,12 +581,12 @@ bool WindowNodeContainer::RemoveNodeFromRSTree(sptr<WindowNode>& node, DisplayId
         WLOGFI("remove window with animation");
         StartTraceArgs(HITRACE_TAG_WINDOW_MANAGER, "Animate(%u)", node->GetWindowId());
         if (node->surfaceNode_) {
-            node->surfaceNode_->SetAppFreeze(true);
+            node->surfaceNode_->SetFreeze(true);
         }
         RSNode::Animate(animationConfig_.windowAnimationConfig_.animationTiming_.timingProtocol_,
             animationConfig_.windowAnimationConfig_.animationTiming_.timingCurve_, updateRSTreeFunc, [node]() {
             if (node->surfaceNode_) {
-                node->surfaceNode_->SetAppFreeze(false);
+                node->surfaceNode_->SetFreeze(false);
             }
         });
         FinishTrace(HITRACE_TAG_WINDOW_MANAGER);
