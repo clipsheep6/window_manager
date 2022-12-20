@@ -2693,12 +2693,12 @@ void WindowImpl::NotifyScreenshot()
     }
 }
 
-void WindowImpl::NotifyTouchOutside()
+void WindowImpl::NotifyTouchOutside(bool isDown)
 {
     auto touchOutsideListeners = GetListeners<ITouchOutsideListener>();
     for (auto& touchOutsideListener : touchOutsideListeners) {
         if (touchOutsideListener.GetRefPtr() != nullptr) {
-            touchOutsideListener.GetRefPtr()->OnTouchOutside();
+            touchOutsideListener.GetRefPtr()->OnTouchOutside(isDown);
         }
     }
 }

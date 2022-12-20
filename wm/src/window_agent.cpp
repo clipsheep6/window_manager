@@ -147,14 +147,14 @@ WMError WindowAgent::RestoreSplitWindowMode(uint32_t mode)
     return WMError::WM_OK;
 }
 
-WMError WindowAgent::NotifyTouchOutside()
+WMError WindowAgent::NotifyTouchOutside(bool isDown)
 {
     if (window_ == nullptr) {
         WLOGFI("window is null");
         return WMError::WM_ERROR_NULLPTR;
     }
     WLOGFD("called");
-    window_->NotifyTouchOutside();
+    window_->NotifyTouchOutside(isDown);
     return WMError::WM_OK;
 }
 

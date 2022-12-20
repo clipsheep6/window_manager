@@ -227,7 +227,7 @@ public:
     void UpdateDisplayId(DisplayId from, DisplayId to);
     void UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info);
     void UpdateActiveStatus(bool isActive);
-    void NotifyTouchOutside();
+    void NotifyTouchOutside(bool isDown);
     void NotifyScreenshot();
     void NotifyTouchDialogTarget() override;
     void NotifyDestroy();

@@ -114,7 +114,7 @@ void CheckWindowAgentFunctionsPart2(sptr<WindowAgent> agent, const uint8_t* data
     startPos += GetObject<bool>(boolVal, data + startPos, size - startPos);
     agent->UpdateActiveStatus(boolVal);
     agent->GetWindowProperty();
-    agent->NotifyTouchOutside();
+    agent->NotifyTouchOutside(boolVal);
     agent->NotifyScreenshot();
 
     Transform trans;

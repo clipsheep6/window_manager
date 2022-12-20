@@ -928,7 +928,7 @@ WMError WindowController::ProcessPointDown(uint32_t windowId, bool isPointDown)
      * If not point down, no need to notify touch outside
      */
     if (isPointDown) {
-        NotifyTouchOutside(node);
+        NotifyTouchOutside(node, true);
         if (node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
             windowRoot_->TakeWindowPairSnapshot(node->GetDisplayId());
         }
@@ -956,6 +956,9 @@ WMError WindowController::ProcessPointUp(uint32_t windowId)
         WLOGFW("could not find window");
         return WMError::WM_ERROR_NULLPTR;
     }
+
+    NotifyTouchOutside(node, false);
+
     if (node->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
         DisplayId displayId = node->GetDisplayId();
         if (windowRoot_->IsDockSliceInExitSplitModeArea(displayId)) {
@@ -1323,7 +1326,7 @@ WMError WindowController::UpdateTransform(uint32_t windowId)
     return WMError::WM_OK;
 }
 
-void WindowController::NotifyTouchOutside(const sptr<WindowNode>& node)
+void WindowController::NotifyTouchOutside(const sptr<WindowNode>& node, bool isDown)
 {
     auto windowNodeContainer = windowRoot_->GetOrCreateWindowNodeContainer(node->GetDisplayId());
     if (windowNodeContainer == nullptr) {
@@ -1342,7 +1345,7 @@ void WindowController::NotifyTouchOutside(const sptr<WindowNode>& node)
             continue;
         }
         WLOGFD("notify %{public}s id %{public}d", windowNode->GetWindowName().c_str(), windowNode->GetWindowId());
-        windowNode->GetWindowToken()->NotifyTouchOutside();
+        windowNode->GetWindowToken()->NotifyTouchOutside(isDown);
     }
 }
 

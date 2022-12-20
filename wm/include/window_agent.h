@@ -38,7 +38,7 @@ public:
     WMError UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info) override;
     WMError UpdateActiveStatus(bool isActive) override;
     sptr<WindowProperty> GetWindowProperty() override;
-    WMError NotifyTouchOutside() override;
+    WMError NotifyTouchOutside(bool isDown) override;
     WMError NotifyScreenshot() override;
     WMError DumpInfo(const std::vector<std::string>& params, std::vector<std::string>& info) override;
     WMError NotifyDestroy(void) override;

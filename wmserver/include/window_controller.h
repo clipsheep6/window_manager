@@ -101,7 +101,7 @@ private:
     void HandleTurnScreenOn(const sptr<WindowNode>& node);
     WMError UpdateTouchHotAreas(const sptr<WindowNode>& node, const std::vector<Rect>& rects);
     WMError UpdateTransform(uint32_t windowId);
-    void NotifyTouchOutside(const sptr<WindowNode>& node);
+    void NotifyTouchOutside(const sptr<WindowNode>& node, bool isDown);
     uint32_t GetEmbedNodeId(const std::vector<sptr<WindowNode>>& windowNodes, const sptr<WindowNode>& node);
     void NotifyWindowPropertyChanged(const sptr<WindowNode>& node);
     WMError GetFocusWindowNode(DisplayId displayId, sptr<WindowNode>& windowNode);
