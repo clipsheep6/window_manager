@@ -38,7 +38,7 @@ public:
     MOCK_METHOD1(UpdateOccupiedAreaChangeInfo, WMError(const sptr<OccupiedAreaChangeInfo>& info));
     MOCK_METHOD1(UpdateActiveStatus, WMError(bool isActive));
     MOCK_METHOD0(GetWindowProperty, sptr<WindowProperty>());
-    MOCK_METHOD0(NotifyTouchOutside, WMError());
+    MOCK_METHOD0(NotifyTouchOutside, WMError(bool isDown));
     MOCK_METHOD0(NotifyScreenshot, WMError());
     MOCK_METHOD2(DumpInfo, WMError(const std::vector<std::string>& params, std::vector<std::string>& info));
     MOCK_METHOD0(NotifyDestroy, WMError(void));

@@ -216,9 +216,13 @@ void JsWindowListener::OnSizeChange(const sptr<OccupiedAreaChangeInfo>& info)
         *engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
 }
 
-void JsWindowListener::OnTouchOutside() const
+void JsWindowListener::OnTouchOutside(bool isDown) const
 {
     WLOGFI("CALLED");
+    if (!isDown) {
+        WLOGFI("touch outside up");
+        return;
+    }
     std::unique_ptr<AsyncTask::CompleteCallback> complete = std::make_unique<AsyncTask::CompleteCallback> (
         [self = weakRef_] (NativeEngine &engine, AsyncTask &task, int32_t status) {
             auto thisListener = self.promote();

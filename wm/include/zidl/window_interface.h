@@ -62,7 +62,7 @@ public:
     virtual WMError UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info) = 0;
     virtual WMError UpdateActiveStatus(bool isActive) = 0;
     virtual sptr<WindowProperty> GetWindowProperty() = 0;
-    virtual WMError NotifyTouchOutside() = 0;
+    virtual WMError NotifyTouchOutside(bool isDown) = 0;
     virtual WMError NotifyScreenshot() = 0;
     virtual WMError DumpInfo(const std::vector<std::string>& params, std::vector<std::string>& info) = 0;
     virtual WMError NotifyDestroy(void) = 0;

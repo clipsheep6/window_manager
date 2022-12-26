@@ -128,7 +128,7 @@ public:
 
 class ITouchOutsideListener : virtual public RefBase {
 public:
-    virtual void OnTouchOutside() const {}
+    virtual void OnTouchOutside(bool isDown) const {}
 };
 
 class IAnimationTransitionController : virtual public RefBase {

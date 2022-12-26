@@ -87,7 +87,7 @@ HWTEST_F(WindowInnerWindowTest, CreatePlaceHolderWindow01, Function | SmallTest 
  */
 HWTEST_F(WindowInnerWindowTest, PlaceholderWindowListener01, Function | SmallTest | Level2)
 {
-    windowListener_->OnTouchOutside();
+    windowListener_->OnTouchOutside(true);
     windowListener_->AfterUnfocused();
 
     ASSERT_EQ(true, true);

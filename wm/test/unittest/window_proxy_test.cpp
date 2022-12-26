@@ -186,7 +186,7 @@ HWTEST_F(WindowProxyTest, GetWindowProperty01, Function | SmallTest | Level2)
  */
 HWTEST_F(WindowProxyTest, NotifyTouchOutside01, Function | SmallTest | Level2)
 {
-    WMError err = windowProxy_->NotifyTouchOutside();
+    WMError err = windowProxy_->NotifyTouchOutside(true);
     ASSERT_EQ(err, WMError::WM_OK);
 }
 

@@ -26,10 +26,12 @@ namespace {
 }
 WM_IMPLEMENT_SINGLE_INSTANCE(PlaceHolderWindow)
 
-void PlaceholderWindowListener::OnTouchOutside() const
+void PlaceholderWindowListener::OnTouchOutside(bool isDown) const
 {
     WLOGFD("place holder touch outside");
-    PlaceHolderWindow::GetInstance().Destroy();
+    if (isDown) {
+        PlaceHolderWindow::GetInstance().Destroy();
+    }
 }
 
 void PlaceholderWindowListener::AfterUnfocused()

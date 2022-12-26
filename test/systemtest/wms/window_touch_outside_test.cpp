@@ -31,7 +31,7 @@ const int WAIT_CALLBACK_US = 10000;  // 10000 us
 
 class WindowTouchOutsideTestListener : public ITouchOutsideListener {
 public:
-    void OnTouchOutside() const override
+    void OnTouchOutside(bool isDown) const override
     {
         isTouchOutside_ = true;
     }

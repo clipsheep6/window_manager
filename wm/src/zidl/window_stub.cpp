@@ -100,7 +100,8 @@ int WindowStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParce
             break;
         }
         case WindowMessage::TRANS_ID_NOTIFY_OUTSIDE_PRESSED: {
-            NotifyTouchOutside();
+            bool isDown = data.ReadBool();
+            NotifyTouchOutside(isDown);
             break;
         }
         case WindowMessage::TRANS_ID_NOTIFY_SCREEN_SHOT: {

@@ -64,7 +64,7 @@ public:
     void AfterFocused() override;
     void AfterUnfocused() override;
     void OnSizeChange(const sptr<OccupiedAreaChangeInfo>& info) override;
-    void OnTouchOutside() const override;
+    void OnTouchOutside(bool isDown) const override;
     void OnScreenshot() override;
     void OnDialogTargetTouch() const override;
     void OnDialogDeathRecipient() const override;

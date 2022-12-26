@@ -95,7 +95,7 @@ public:
     {
         return nullptr;
     };
-    virtual WMError NotifyTouchOutside() override
+    virtual WMError NotifyTouchOutside(bool isDown) override
     {
         return WMError::WM_OK;
     };

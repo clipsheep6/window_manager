@@ -277,13 +277,18 @@ sptr<WindowProperty> WindowProxy::GetWindowProperty()
     return reply.ReadParcelable<WindowProperty>();
 }
 
-WMError WindowProxy::NotifyTouchOutside()
+WMError WindowProxy::NotifyTouchOutside(bool isDown)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    if (!data.WriteBool(isDown)) {
+        WLOGFE("Write data failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
 

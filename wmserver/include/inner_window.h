@@ -32,7 +32,7 @@ public:
 class PlaceholderWindowListener : public IWindowLifeCycle, public ITouchOutsideListener {
 public:
     // touch outside listener
-    virtual void OnTouchOutside() const;
+    virtual void OnTouchOutside(bool isDown) const;
     // lifecycle listener
     virtual void AfterUnfocused();
     // lifecycle do nothing
