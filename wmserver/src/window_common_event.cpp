@@ -59,7 +59,6 @@ void WindowCommonEvent::SubscriberEventInner(int retry)
         return;
     }
     retry--;
-    WLOGFI("called action = %{public}d", retry);
     if (EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_)) {
         return;
     }
