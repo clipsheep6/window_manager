@@ -344,6 +344,8 @@ NativeValue* WindowErrorCodeInit(NativeEngine* engine)
     }
     object->SetProperty("WM_ERROR_NO_PERMISSION", CreateJsValue(*engine,
         static_cast<int32_t>(WmErrorCode::WM_ERROR_NO_PERMISSION)));
+    object->SetProperty("WM_ERROR_NOT_SYSTEM_APP", CreateJsValue(*engine,
+        static_cast<int32_t>(WmErrorCode::WM_ERROR_NOT_SYSTEM_APP)));
     object->SetProperty("WM_ERROR_INVALID_PARAM", CreateJsValue(*engine,
         static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
     object->SetProperty("WM_ERROR_DEVICE_NOT_SUPPORT", CreateJsValue(*engine,

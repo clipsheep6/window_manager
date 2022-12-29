@@ -86,7 +86,7 @@ NativeValue* JsWindowManager::ToggleShownStateForAllAppWindows(NativeEngine* eng
 NativeValue* JsWindowManager::RegisterWindowManagerCallback(NativeEngine* engine, NativeCallbackInfo* info)
 {
     JsWindowManager* me = CheckParamsAndGetThis<JsWindowManager>(engine, info);
-    return (me != nullptr) ? me->OnRegisterWindowMangerCallback(*engine, *info) : nullptr;
+    return (me != nullptr) ? me->OnRegisterWindowManagerCallback(*engine, *info) : nullptr;
 }
 
 NativeValue* JsWindowManager::UnregisterWindowMangerCallback(NativeEngine* engine, NativeCallbackInfo* info)
@@ -222,13 +222,13 @@ static void CreateNewSystemWindowTask(void* contextPtr, sptr<WindowOption> windo
             }
         }
     }
-
-    sptr<Window> window = Window::Create(windowOption->GetWindowName(), windowOption, context->lock());
-    if (window != nullptr) {
+    WMError errCode = WMError::WM_OK;
+    sptr<Window> window = Window::Create(windowOption->GetWindowName(), windowOption, context->lock(), errCode);
+    if (window != nullptr && errCode == WMError::WM_OK) {
         task.Resolve(engine, CreateJsWindowObject(engine, window));
     } else {
         WLOGFE("[NAPI]Create window failed");
-        int32_t err = static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
+        int32_t err = static_cast<int32_t>(errCode);
         task.Reject(engine, CreateJsError(engine, err, "Create window failed"));
     }
 }
@@ -588,9 +588,14 @@ NativeValue* JsWindowManager::OnMinimizeAll(NativeEngine& engine, NativeCallback
     WLOGFI("[NAPI]Display id = %{public}" PRIu64", err = %{public}d", static_cast<uint64_t>(displayId), errCode);
     AsyncTask::CompleteCallback complete =
         [=](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            SingletonContainer::Get<WindowManager>().MinimizeAllAppWindows(static_cast<uint64_t>(displayId));
-            task.Resolve(engine, engine.CreateUndefined());
-            WLOGFI("[NAPI]OnMinimizeAll success");
+            WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(
+                SingletonContainer::Get<WindowManager>().MinimizeAllAppWindows(static_cast<uint64_t>(displayId)));
+            if (ret == WmErrorCode::WM_OK) {
+                task.Resolve(engine, engine.CreateUndefined());
+                WLOGFI("[NAPI]OnMinimizeAll success");
+            } else {
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(ret), "OnMinimizeAll failed"));
+            }
         };
     NativeValue* lastParam = (info.argc <= 1) ? nullptr :
         ((info.argv[1] != nullptr && info.argv[1]->TypeOf() == NATIVE_FUNCTION) ?
@@ -624,9 +629,9 @@ NativeValue* JsWindowManager::OnToggleShownStateForAllAppWindows(NativeEngine& e
     return result;
 }
 
-NativeValue* JsWindowManager::OnRegisterWindowMangerCallback(NativeEngine& engine, NativeCallbackInfo& info)
+NativeValue* JsWindowManager::OnRegisterWindowManagerCallback(NativeEngine& engine, NativeCallbackInfo& info)
 {
-    WLOGFD("[NAPI]OnRegisterWindowMangerCallback");
+    WLOGFD("[NAPI]OnRegisterWindowManagerCallback");
     if (info.argc < 2) { // 2: params num
         WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
         engine.Throw(CreateJsError(engine, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
@@ -645,7 +650,11 @@ NativeValue* JsWindowManager::OnRegisterWindowMangerCallback(NativeEngine& engin
         return engine.CreateUndefined();
     }
 
-    registerManager_->RegisterListener(nullptr, cbType, CaseType::CASE_WINDOW_MANAGER, engine, value);
+    WmErrorCode ret = registerManager_->RegisterListener(nullptr, cbType, CaseType::CASE_WINDOW_MANAGER, engine, value);
+    if (ret != WmErrorCode::WM_OK) {
+        engine.Throw(CreateJsError(engine, static_cast<int32_t>(ret)));
+        return engine.CreateUndefined();
+    }
     WLOGFI("[NAPI]Register end, type = %{public}s, callback = %{public}p", cbType.c_str(), value);
     return engine.CreateUndefined();
 }
@@ -666,15 +675,20 @@ NativeValue* JsWindowManager::OnUnregisterWindowManagerCallback(NativeEngine& en
     }
 
     NativeValue* value = nullptr;
+    WmErrorCode ret = WmErrorCode::WM_OK;
     if (info.argc == 1) {
-        registerManager_->UnregisterListener(nullptr, cbType, CaseType::CASE_WINDOW_MANAGER, value);
+        ret = registerManager_->UnregisterListener(nullptr, cbType, CaseType::CASE_WINDOW_MANAGER, value);
     } else {
         value = info.argv[1];
         if ((value == nullptr) || (!value->IsCallable())) {
-            registerManager_->UnregisterListener(nullptr, cbType, CaseType::CASE_WINDOW_MANAGER, nullptr);
+            ret = registerManager_->UnregisterListener(nullptr, cbType, CaseType::CASE_WINDOW_MANAGER, nullptr);
         } else {
-            registerManager_->UnregisterListener(nullptr, cbType, CaseType::CASE_WINDOW_MANAGER, value);
+            ret = registerManager_->UnregisterListener(nullptr, cbType, CaseType::CASE_WINDOW_MANAGER, value);
         }
+    }
+    if (ret != WmErrorCode::WM_OK) {
+        engine.Throw(CreateJsError(engine, static_cast<int32_t>(ret)));
+        return engine.CreateUndefined();
     }
     WLOGFI("[NAPI]Unregister end, type = %{public}s, callback = %{public}p", cbType.c_str(), value);
     return engine.CreateUndefined();

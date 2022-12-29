@@ -98,7 +98,7 @@ public:
     void ProcessPointDown(uint32_t windowId, bool isPointDown) override;
     void ProcessPointUp(uint32_t windowId) override;
     WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId) override;
-    void MinimizeAllAppWindows(DisplayId displayId) override;
+    WMError MinimizeAllAppWindows(DisplayId displayId) override;
     WMError ToggleShownStateForAllAppWindows() override;
     WMError SetWindowLayoutMode(WindowLayoutMode mode) override;
     WMError UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action,
@@ -106,9 +106,9 @@ public:
     WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) override;
     WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) override;
 
-    bool RegisterWindowManagerAgent(WindowManagerAgentType type,
+    WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
-    bool UnregisterWindowManagerAgent(WindowManagerAgentType type,
+    WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
 
     WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller) override;

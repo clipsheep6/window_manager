@@ -124,6 +124,7 @@ enum class WMError : int32_t {
     WM_ERROR_INVALID_WINDOW_MODE_OR_SIZE,
     WM_ERROR_INVALID_OPERATION,
     WM_ERROR_INVALID_PERMISSION,
+    WM_ERROR_NOT_SYSTEM_APP,
     WM_ERROR_NO_REMOTE_ANIMATION,
 
     WM_ERROR_DEVICE_NOT_SUPPORT = 801, // the value do not change.It is defined on all system
@@ -141,6 +142,7 @@ enum class WMError : int32_t {
 enum class WmErrorCode : int32_t {
     WM_OK = 0,
     WM_ERROR_NO_PERMISSION = 201,
+    WM_ERROR_NOT_SYSTEM_APP = 202,
     WM_ERROR_INVALID_PARAM = 401,
     WM_ERROR_DEVICE_NOT_SUPPORT = 801,
     WM_ERROR_REPEAT_OPERATION = 1300001,
@@ -160,6 +162,7 @@ const std::map<WMError, WmErrorCode> WM_JS_TO_ERROR_CODE_MAP {
     {WMError::WM_ERROR_INVALID_OPERATION,              WmErrorCode::WM_ERROR_STATE_ABNORMALLY     },
     {WMError::WM_ERROR_INVALID_PARAM,                  WmErrorCode::WM_ERROR_INVALID_PARAM        },
     {WMError::WM_ERROR_INVALID_PERMISSION,             WmErrorCode::WM_ERROR_NO_PERMISSION        },
+    {WMError::WM_ERROR_NOT_SYSTEM_APP,                 WmErrorCode::WM_ERROR_NOT_SYSTEM_APP       },
     {WMError::WM_ERROR_INVALID_TYPE,                   WmErrorCode::WM_ERROR_STATE_ABNORMALLY     },
     {WMError::WM_ERROR_INVALID_WINDOW,                 WmErrorCode::WM_ERROR_STATE_ABNORMALLY     },
     {WMError::WM_ERROR_INVALID_WINDOW_MODE_OR_SIZE,    WmErrorCode::WM_ERROR_STATE_ABNORMALLY     },

@@ -332,7 +332,7 @@ WMError WindowImpl::SetWindowType(WindowType type)
     WLOGFD("window id: %{public}u, type:%{public}u.", property_->GetWindowId(), static_cast<uint32_t>(type));
     if (type != WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW && !Permission::IsSystemCalling()) {
         WLOGFE("set window type permission denied!");
-        return WMError::WM_ERROR_INVALID_PERMISSION;
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     if (!IsWindowValid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
@@ -386,26 +386,27 @@ WMError WindowImpl::SetWindowMode(WindowMode mode)
     return WMError::WM_OK;
 }
 
-void WindowImpl::SetAlpha(float alpha)
+WMError WindowImpl::SetAlpha(float alpha)
 {
     WLOGFI("[Client] Window %{public}u alpha %{public}f", property_->GetWindowId(), alpha);
     if (!Permission::IsSystemCalling()) {
         WLOGFE("set alpha permission denied!");
-        return;
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     if (!IsWindowValid()) {
-        return;
+        return WMError::WM_ERROR_INVALID_WINDOW;
     }
     property_->SetAlpha(alpha);
     surfaceNode_->SetAlpha(alpha);
     RSTransaction::FlushImplicitTransaction();
+    return WMError::WM_OK;
 }
 
-void WindowImpl::SetTransform(const Transform& trans)
+WMError WindowImpl::SetTransform(const Transform& trans)
 {
     WLOGFI("[Client] Window %{public}u SetTransform", property_->GetWindowId());
     if (!IsWindowValid()) {
-        return;
+        return WMError::WM_ERROR_INVALID_WINDOW;
     }
     Transform oriTrans = property_->GetTransform();
     property_->SetTransform(trans);
@@ -414,12 +415,14 @@ void WindowImpl::SetTransform(const Transform& trans)
         WLOGFE("SetTransform errCode:%{public}d winId:%{public}u",
             static_cast<int32_t>(ret), property_->GetWindowId());
         property_->SetTransform(oriTrans); // reset to ori transform when update failed
+        return ret;
     }
     if (property_->IsDisplayZoomOn()) {
         TransformSurfaceNode(property_->GetZoomTransform());
     } else {
         TransformSurfaceNode(trans);
     }
+    return WMError::WM_OK;
 }
 
 const Transform& WindowImpl::GetTransform() const
@@ -457,6 +460,11 @@ WMError WindowImpl::RemoveWindowFlag(WindowFlag flag)
 WMError WindowImpl::SetWindowFlags(uint32_t flags)
 {
     WLOGFI("[Client] Window %{public}u flags %{public}u", property_->GetWindowId(), flags);
+    if (((flags & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_FORBID_SPLIT_MOVE)) == static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_FORBID_SPLIT_MOVE)) &&
+        !Permission::IsSystemCalling()) {
+        WLOGFE("set snapshot skip permission denied!");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
     if (!IsWindowValid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
@@ -1641,11 +1649,11 @@ std::string WindowImpl::TransferLifeCycleEventToString(LifeCycleEvent type) cons
     return event;
 }
 
-void WindowImpl::SetPrivacyMode(bool isPrivacyMode)
+WMError WindowImpl::SetPrivacyMode(bool isPrivacyMode)
 {
     property_->SetPrivacyMode(isPrivacyMode);
     surfaceNode_->SetSecurityLayer(isPrivacyMode || property_->GetSystemPrivacyMode());
-    UpdateProperty(PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE);
+    return UpdateProperty(PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE);
 }
 
 bool WindowImpl::IsPrivacyMode() const
@@ -1659,27 +1667,29 @@ void WindowImpl::SetSystemPrivacyMode(bool isSystemPrivacyMode)
     surfaceNode_->SetSecurityLayer(isSystemPrivacyMode || property_->GetPrivacyMode());
 }
 
-void WindowImpl::SetSnapshotSkip(bool isSkip)
+WMError WindowImpl::SetSnapshotSkip(bool isSkip)
 {
     if (!Permission::IsSystemCalling()) {
         WLOGFE("set snapshot skip permission denied!");
-        return;
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     surfaceNode_->SetSecurityLayer(isSkip || property_->GetSystemPrivacyMode());
+    return WMError::WM_OK;
 }
 
-void WindowImpl::DisableAppWindowDecor()
+WMError WindowImpl::DisableAppWindowDecor()
 {
     if (!Permission::IsSystemCalling()) {
         WLOGFE("disable app window decor permission denied!");
-        return;
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     if (!WindowHelper::IsMainWindow(property_->GetWindowType())) {
         WLOGFE("window decoration is invalid on sub window");
-        return;
+        return WMError::WM_ERROR_INVALID_OPERATION;
     }
     WLOGFI("disable app window decoration.");
     isAppDecorEnable_ = false;
+    return WMError::WM_OK;
 }
 
 bool WindowImpl::IsDecorEnable() const
@@ -1799,60 +1809,60 @@ void WindowImpl::SetInputEventConsumer(const std::shared_ptr<IInputEventConsumer
     inputEventConsumer_ = inputEventConsumer;
 }
 
-bool WindowImpl::RegisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener)
+WMError WindowImpl::RegisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener)
 {
     return RegisterListenerLocked(lifecycleListeners_, listener);
 }
 
-bool WindowImpl::UnregisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener)
+WMError WindowImpl::UnregisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener)
 {
     return UnregisterListenerLocked(lifecycleListeners_, listener);
 }
 
-bool WindowImpl::RegisterWindowChangeListener(const sptr<IWindowChangeListener>& listener)
+WMError WindowImpl::RegisterWindowChangeListener(const sptr<IWindowChangeListener>& listener)
 {
     return RegisterListenerLocked(windowChangeListeners_, listener);
 }
 
-bool WindowImpl::UnregisterWindowChangeListener(const sptr<IWindowChangeListener>& listener)
+WMError WindowImpl::UnregisterWindowChangeListener(const sptr<IWindowChangeListener>& listener)
 {
     return UnregisterListenerLocked(windowChangeListeners_, listener);
 }
 
-bool WindowImpl::RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener)
+WMError WindowImpl::RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener)
 {
-    bool ret = RegisterListenerLocked(avoidAreaChangeListeners_, listener);
+    WMError ret = RegisterListenerLocked(avoidAreaChangeListeners_, listener);
     if (avoidAreaChangeListeners_.size() == 1) {
         SingletonContainer::Get<WindowAdapter>().UpdateAvoidAreaListener(property_->GetWindowId(), true);
     }
     return ret;
 }
 
-bool WindowImpl::UnregisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener)
+WMError WindowImpl::UnregisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener)
 {
-    bool ret = UnregisterListenerLocked(avoidAreaChangeListeners_, listener);
+    WMError ret = UnregisterListenerLocked(avoidAreaChangeListeners_, listener);
     if (avoidAreaChangeListeners_.empty()) {
         SingletonContainer::Get<WindowAdapter>().UpdateAvoidAreaListener(property_->GetWindowId(), false);
     }
     return ret;
 }
 
-bool WindowImpl::RegisterDragListener(const sptr<IWindowDragListener>& listener)
+WMError WindowImpl::RegisterDragListener(const sptr<IWindowDragListener>& listener)
 {
     return RegisterListenerLocked(windowDragListeners_, listener);
 }
 
-bool WindowImpl::UnregisterDragListener(const sptr<IWindowDragListener>& listener)
+WMError WindowImpl::UnregisterDragListener(const sptr<IWindowDragListener>& listener)
 {
     return UnregisterListenerLocked(windowDragListeners_, listener);
 }
 
-bool WindowImpl::RegisterDisplayMoveListener(sptr<IDisplayMoveListener>& listener)
+WMError WindowImpl::RegisterDisplayMoveListener(sptr<IDisplayMoveListener>& listener)
 {
     return RegisterListenerLocked(displayMoveListeners_, listener);
 }
 
-bool WindowImpl::UnregisterDisplayMoveListener(sptr<IDisplayMoveListener>& listener)
+WMError WindowImpl::UnregisterDisplayMoveListener(sptr<IDisplayMoveListener>& listener)
 {
     return UnregisterListenerLocked(displayMoveListeners_, listener);
 }
@@ -1863,31 +1873,39 @@ void WindowImpl::RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFun
     notifyNativefunc_ = std::move(func);
 }
 
-bool WindowImpl::RegisterOccupiedAreaChangeListener(const sptr<IOccupiedAreaChangeListener>& listener)
+WMError WindowImpl::RegisterOccupiedAreaChangeListener(const sptr<IOccupiedAreaChangeListener>& listener)
 {
     return RegisterListenerLocked(occupiedAreaChangeListeners_, listener);
 }
 
-bool WindowImpl::UnregisterOccupiedAreaChangeListener(const sptr<IOccupiedAreaChangeListener>& listener)
+WMError WindowImpl::UnregisterOccupiedAreaChangeListener(const sptr<IOccupiedAreaChangeListener>& listener)
 {
     return UnregisterListenerLocked(occupiedAreaChangeListeners_, listener);
 }
 
-bool WindowImpl::RegisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener)
+WMError WindowImpl::RegisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener)
 {
+    if (!Permission::IsSystemCalling()) {
+        WLOGFE("register touch outside listener permission denied!");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
     return RegisterListenerLocked(touchOutsideListeners_, listener);
 }
 
-bool WindowImpl::UnregisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener)
+WMError WindowImpl::UnregisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener)
 {
     return UnregisterListenerLocked(touchOutsideListeners_, listener);
 }
 
-bool WindowImpl::RegisterAnimationTransitionController(const sptr<IAnimationTransitionController>& listener)
+WMError WindowImpl::RegisterAnimationTransitionController(const sptr<IAnimationTransitionController>& listener)
 {
+    if (!Permission::IsSystemCalling()) {
+        WLOGFE("register animation transition controller permission denied!");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
     if (listener == nullptr) {
         WLOGFE("listener is nullptr");
-        return false;
+        return WMError::WM_ERROR_NULLPTR;
     }
     animationTransitionController_ = listener;
     wptr<WindowProperty> propertyToken(property_);
@@ -1906,25 +1924,25 @@ bool WindowImpl::RegisterAnimationTransitionController(const sptr<IAnimationTran
             }
         });
     }
-    return true;
+    return WMError::WM_OK;
 }
 
-bool WindowImpl::RegisterScreenshotListener(const sptr<IScreenshotListener>& listener)
+WMError WindowImpl::RegisterScreenshotListener(const sptr<IScreenshotListener>& listener)
 {
     return RegisterListenerLocked(screenshotListeners_, listener);
 }
 
-bool WindowImpl::UnregisterScreenshotListener(const sptr<IScreenshotListener>& listener)
+WMError WindowImpl::UnregisterScreenshotListener(const sptr<IScreenshotListener>& listener)
 {
     return UnregisterListenerLocked(screenshotListeners_, listener);
 }
 
-bool WindowImpl::RegisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener)
+WMError WindowImpl::RegisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener)
 {
     return RegisterListenerLocked(dialogTargetTouchListeners_, listener);
 }
 
-bool WindowImpl::UnregisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener)
+WMError WindowImpl::UnregisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener)
 {
     return UnregisterListenerLocked(dialogTargetTouchListeners_, listener);
 }
@@ -1946,34 +1964,34 @@ void WindowImpl::UnregisterDialogDeathRecipientListener(const sptr<IDialogDeathR
 }
 
 template<typename T>
-bool WindowImpl::RegisterListenerLocked(std::vector<sptr<T>>& holder, const sptr<T>& listener)
+WMError WindowImpl::RegisterListenerLocked(std::vector<sptr<T>>& holder, const sptr<T>& listener)
 {
     if (listener == nullptr) {
         WLOGFE("listener is nullptr");
-        return false;
+        return WMError::WM_ERROR_NULLPTR;
     }
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (std::find(holder.begin(), holder.end(), listener) != holder.end()) {
         WLOGFE("Listener already registered");
-        return true;
+        return WMError::WM_OK;
     }
     holder.emplace_back(listener);
-    return true;
+    return WMError::WM_OK;
 }
 
 template<typename T>
-bool WindowImpl::UnregisterListenerLocked(std::vector<sptr<T>>& holder, const sptr<T>& listener)
+WMError WindowImpl::UnregisterListenerLocked(std::vector<sptr<T>>& holder, const sptr<T>& listener)
 {
     if (listener == nullptr) {
         WLOGFE("listener could not be null");
-        return false;
+        return WMError::WM_ERROR_NULLPTR;
     }
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     holder.erase(std::remove_if(holder.begin(), holder.end(),
         [listener](sptr<T> registeredListener) {
             return registeredListener == listener;
         }), holder.end());
-    return true;
+    return WMError::WM_OK;
 }
 
 void WindowImpl::SetAceAbilityHandler(const sptr<IAceAbilityHandler>& handler)
@@ -2992,7 +3010,7 @@ WMError WindowImpl::SetCornerRadius(float cornerRadius)
 {
     if (!Permission::IsSystemCalling()) {
         WLOGFE("set corner radius permission denied!");
-        return WMError::WM_ERROR_INVALID_PERMISSION;
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     WLOGFI("[Client] Window %{public}s set corner radius %{public}f", name_.c_str(), cornerRadius);
     if (MathHelper::LessNotEqual(cornerRadius, 0.0)) {
@@ -3007,7 +3025,7 @@ WMError WindowImpl::SetShadowRadius(float radius)
 {
     if (!Permission::IsSystemCalling()) {
         WLOGFE("set shadow radius permission denied!");
-        return WMError::WM_ERROR_INVALID_PERMISSION;
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     WLOGFI("[Client] Window %{public}s set shadow radius %{public}f", name_.c_str(), radius);
     if (MathHelper::LessNotEqual(radius, 0.0)) {
@@ -3022,7 +3040,7 @@ WMError WindowImpl::SetShadowColor(std::string color)
 {
     if (!Permission::IsSystemCalling()) {
         WLOGFE("set shadow color permission denied!");
-        return WMError::WM_ERROR_INVALID_PERMISSION;
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     WLOGFI("[Client] Window %{public}s set shadow color %{public}s", name_.c_str(), color.c_str());
     uint32_t colorValue;
@@ -3034,33 +3052,35 @@ WMError WindowImpl::SetShadowColor(std::string color)
     return WMError::WM_OK;
 }
 
-void WindowImpl::SetShadowOffsetX(float offsetX)
+WMError WindowImpl::SetShadowOffsetX(float offsetX)
 {
     if (!Permission::IsSystemCalling()) {
         WLOGFE("set shadow offset x permission denied!");
-        return;
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     WLOGFI("[Client] Window %{public}s set shadow offsetX %{public}f", name_.c_str(), offsetX);
     surfaceNode_->SetShadowOffsetX(offsetX);
     RSTransaction::FlushImplicitTransaction();
+    return WMError::WM_OK;
 }
 
-void WindowImpl::SetShadowOffsetY(float offsetY)
+WMError WindowImpl::SetShadowOffsetY(float offsetY)
 {
     if (!Permission::IsSystemCalling()) {
         WLOGFE("set shadow offset y permission denied!");
-        return;
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     WLOGFI("[Client] Window %{public}s set shadow offsetY %{public}f", name_.c_str(), offsetY);
     surfaceNode_->SetShadowOffsetY(offsetY);
     RSTransaction::FlushImplicitTransaction();
+    return WMError::WM_OK;
 }
 
 WMError WindowImpl::SetBlur(float radius)
 {
     if (!Permission::IsSystemCalling()) {
         WLOGFE("set blur permission denied!");
-        return WMError::WM_ERROR_INVALID_PERMISSION;
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     WLOGFI("[Client] Window %{public}s set blur radius %{public}f", name_.c_str(), radius);
     if (MathHelper::LessNotEqual(radius, 0.0)) {
@@ -3075,7 +3095,7 @@ WMError WindowImpl::SetBackdropBlur(float radius)
 {
     if (!Permission::IsSystemCalling()) {
         WLOGFE("set backdrop blur permission denied!");
-        return WMError::WM_ERROR_INVALID_PERMISSION;
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     WLOGFI("[Client] Window %{public}s set backdrop blur radius %{public}f", name_.c_str(), radius);
     if (MathHelper::LessNotEqual(radius, 0.0)) {
@@ -3090,7 +3110,7 @@ WMError WindowImpl::SetBackdropBlurStyle(WindowBlurStyle blurStyle)
 {
     if (!Permission::IsSystemCalling()) {
         WLOGFE("set backdrop blur style permission denied!");
-        return WMError::WM_ERROR_INVALID_PERMISSION;
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     WLOGFI("[Client] Window %{public}s set backdrop blur style %{public}u", name_.c_str(), blurStyle);
     if (blurStyle < WindowBlurStyle::WINDOW_BLUR_OFF || blurStyle > WindowBlurStyle::WINDOW_BLUR_THICK) {

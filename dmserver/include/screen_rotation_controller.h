@@ -50,7 +50,7 @@ public:
     static void UnsubscribeGravitySensor();
     static void Init();
     static bool IsScreenRotationLocked();
-    static void SetScreenRotationLocked(bool isLocked);
+    static DMError SetScreenRotationLocked(bool isLocked);
     static void SetDefaultDeviceRotationOffset(uint32_t defaultDeviceRotationOffset);
     static bool IsGravitySensorEnabled();
     static void ProcessOrientationSwitch(Orientation orientation);
@@ -76,7 +76,7 @@ private:
     static bool IsCurrentDisplayVertical();
     static bool IsCurrentDisplayHorizontal();
     static bool IsSensorRelatedOrientation(Orientation orientation);
-    
+
     static void ProcessRotationMapping();
     static void ProcessSwitchToAutoRotationPortrait(DeviceRotation rotation);
     static void ProcessSwitchToAutoRotationLandscape(DeviceRotation rotation);
