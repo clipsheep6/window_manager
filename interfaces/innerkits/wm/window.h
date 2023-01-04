@@ -142,6 +142,12 @@ public:
     virtual void OnScreenshot() {}
 };
 
+class IFocusChangeListener : virtual public RefBase {
+public:
+    virtual void Onfocused() = 0;
+    virtual void OnUnfocused() = 0;
+};
+
 class IDialogTargetTouchListener : virtual public RefBase {
 public:
     virtual void OnDialogTargetTouch() const {}
@@ -376,6 +382,8 @@ public:
     virtual bool RegisterAnimationTransitionController(const sptr<IAnimationTransitionController>& listener) = 0;
     virtual bool RegisterScreenshotListener(const sptr<IScreenshotListener>& listener) = 0;
     virtual bool UnregisterScreenshotListener(const sptr<IScreenshotListener>& listener) = 0;
+    virtual bool RegisterFocusChangedListener(const sptr<IFocusChangeListener>& listener) = 0;
+    virtual bool UnregisterFocusChangedListener(const sptr<IFocusChangeListener>& listener) = 0;
     virtual bool RegisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener) = 0;
     virtual bool UnregisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener) = 0;
     virtual void RegisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener) = 0;

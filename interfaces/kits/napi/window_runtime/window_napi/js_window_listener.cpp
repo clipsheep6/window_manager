@@ -110,6 +110,48 @@ void JsWindowListener::OnSystemBarPropertyChange(DisplayId displayId, const Syst
         *engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
 }
 
+void JsWindowListener::Onfocused()
+{
+    WLOGI("OnFocused");
+    // js callback should run in js thread
+    std::unique_ptr<AsyncTask::CompleteCallback> complete = std::make_unique<AsyncTask::CompleteCallback> (
+        [self = weakRef_] (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            auto thisListener = self.promote();
+            if (thisListener == nullptr) {
+                WLOGFE("[NAPI]this listener or engine is nullptr");
+                return;
+            }
+            thisListener->CallJsMethod(FOCUS_EVENT_CB.c_str(), nullptr, 0);
+        }
+    );
+
+    NativeReference* callback = nullptr;
+    std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
+    AsyncTask::Schedule("JsWindowListener::Onfocused",
+        *engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+}
+
+void JsWindowListener::OnUnfocused()
+{
+    WLOGI("OnUnFocused");
+    // js callback should run in js thread
+    std::unique_ptr<AsyncTask::CompleteCallback> complete = std::make_unique<AsyncTask::CompleteCallback> (
+        [self = weakRef_] (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            auto thisListener = self.promote();
+            if (thisListener == nullptr) {
+                WLOGFE("[NAPI]this listener or engine is nullptr");
+                return;
+            }
+            thisListener->CallJsMethod(UNFOCUS_EVENT_CB.c_str(), nullptr, 0);
+        }
+    );
+
+    NativeReference* callback = nullptr;
+    std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
+    AsyncTask::Schedule("JsWindowListener::OnUnfocused",
+        *engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+}
+
 void JsWindowListener::OnAvoidAreaChanged(const AvoidArea avoidArea, AvoidAreaType type)
 {
     WLOGFD("[NAPI]OnAvoidAreaChanged");

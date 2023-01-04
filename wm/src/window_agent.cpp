@@ -169,6 +169,17 @@ WMError WindowAgent::NotifyScreenshot()
     return WMError::WM_OK;
 }
 
+WMError WindowAgent::NotifyFocused(bool isFocused)
+{
+    if (window_ == nullptr) {
+        WLOGFE("notify Focused window failed: window is null.");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    WLOGFD("called");
+    window_->NotifyFocused(isFocused);
+    return WMError::WM_OK;
+}
+
 WMError WindowAgent::DumpInfo(const std::vector<std::string>& params, std::vector<std::string>& info)
 {
     if (window_ == nullptr) {

@@ -32,6 +32,8 @@ namespace OHOS {
 namespace Rosen {
 const std::string WINDOW_SIZE_CHANGE_CB = "windowSizeChange";
 const std::string SYSTEM_BAR_TINT_CHANGE_CB = "systemBarTintChange";
+const std::string FOCUS_EVENT_CB = "focusEvent";
+const std::string UNFOCUS_EVENT_CB = "unfocusEvent";
 const std::string SYSTEM_AVOID_AREA_CHANGE_CB = "systemAvoidAreaChange";
 const std::string AVOID_AREA_CHANGE_CB = "avoidAreaChange";
 const std::string LIFECYCLE_EVENT_CB = "lifeCycleEvent";
@@ -44,6 +46,7 @@ const std::string DIALOG_DEATH_RECIPIENT_CB = "dialogDeathRecipient";
 
 class JsWindowListener : public IWindowChangeListener,
                          public ISystemBarChangedListener,
+                         public IFocusChangeListener,
                          public IAvoidAreaChangedListener,
                          public IWindowLifeCycle,
                          public IOccupiedAreaChangeListener,
@@ -56,6 +59,8 @@ public:
         : engine_(engine), jsCallBack_(callback), weakRef_(wptr<JsWindowListener> (this)) {}
     ~JsWindowListener();
     void OnSystemBarPropertyChange(DisplayId displayId, const SystemBarRegionTints& tints) override;
+    void Onfocused() override;
+    void OnUnfocused() override;
     void OnSizeChange(Rect rect, WindowSizeChangeReason reason) override;
     void OnModeChange(WindowMode mode) override;
     void OnAvoidAreaChanged(const AvoidArea avoidArea, AvoidAreaType type) override;

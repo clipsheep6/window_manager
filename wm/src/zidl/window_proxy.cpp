@@ -313,6 +313,28 @@ WMError WindowProxy::NotifyScreenshot()
     return WMError::WM_OK;
 }
 
+WMError WindowProxy::NotifyFocused(bool isFocused)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteBool(isFocused)) {
+        WLOGFE("Write Focus failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(WindowMessage::TRANS_ID_NOTIFY_FOCUSED),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    return WMError::WM_OK;
+}
+
 WMError WindowProxy::DumpInfo(const std::vector<std::string>& params, std::vector<std::string>& info)
 {
     MessageParcel data;

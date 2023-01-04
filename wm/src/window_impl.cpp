@@ -58,6 +58,7 @@ std::map<uint32_t, std::vector<sptr<WindowImpl>>> WindowImpl::appFloatingWindowM
 std::map<uint32_t, std::vector<sptr<WindowImpl>>> WindowImpl::appDialogWindowMap_;
 std::vector<uint32_t> WindowImpl::deadWindows_;
 std::map<uint32_t, std::vector<sptr<IScreenshotListener>>> WindowImpl::screenshotListeners_;
+std::map<uint32_t, std::vector<sptr<IFocusChangeListener>>> WindowImpl::focusChangedListeners_;
 std::map<uint32_t, std::vector<sptr<ITouchOutsideListener>>> WindowImpl::touchOutsideListeners_;
 std::map<uint32_t, std::vector<sptr<IDialogTargetTouchListener>>> WindowImpl::dialogTargetTouchListeners_;
 std::map<uint32_t, std::vector<sptr<IWindowLifeCycle>>> WindowImpl::lifecycleListeners_;
@@ -1945,6 +1946,18 @@ bool WindowImpl::UnregisterScreenshotListener(const sptr<IScreenshotListener>& l
     return UnregisterListenerLocked(screenshotListeners_[GetWindowId()], listener);
 }
 
+bool WindowImpl::RegisterFocusChangedListener(const sptr<IFocusChangeListener>& listener)
+{
+    WLOGFD("Start register");
+    return RegisterListenerLocked(focusChangedListeners_[GetWindowId()], listener);
+}
+
+bool WindowImpl::UnregisterFocusChangedListener(const sptr<IFocusChangeListener>& listener)
+{
+    WLOGFD("Start unregister");
+    return UnregisterListenerLocked(focusChangedListeners_[GetWindowId()], listener);
+}
+
 bool WindowImpl::RegisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener)
 {
     WLOGFD("Start register");
@@ -2742,6 +2755,21 @@ void WindowImpl::NotifyScreenshot()
     }
 }
 
+void WindowImpl::NotifyFocused(bool isFocused)
+{
+    WLOGFD("id %{public}u focus status %{public}u", property_->GetWindowId(), isFocused);
+    auto focusChangedListeners = GetListeners<IFocusChangeListener>();
+    for (auto& focusChangedListener : focusChangedListeners) {
+        if (focusChangedListener.GetRefPtr() != nullptr) {
+            if (isFocused) {
+                focusChangedListener.GetRefPtr()->Onfocused();
+            } else {
+                focusChangedListener.GetRefPtr()->OnUnfocused();
+            }
+        }
+    }
+}
+
 void WindowImpl::NotifyTouchOutside()
 {
     auto touchOutsideListeners = GetListeners<ITouchOutsideListener>();
@@ -2814,6 +2842,7 @@ void WindowImpl::DealWithDeadWindows()
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (!deadWindows_.empty()) {
         ClearUselessListeners(screenshotListeners_);
+        ClearUselessListeners(focusChangedListeners_);
         ClearUselessListeners(touchOutsideListeners_);
         ClearUselessListeners(dialogTargetTouchListeners_);
         ClearUselessListeners(lifecycleListeners_);

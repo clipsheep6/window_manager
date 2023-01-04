@@ -153,6 +153,8 @@ public:
     virtual bool RegisterAnimationTransitionController(const sptr<IAnimationTransitionController>& listener) override;
     virtual bool RegisterScreenshotListener(const sptr<IScreenshotListener>& listener) override;
     virtual bool UnregisterScreenshotListener(const sptr<IScreenshotListener>& listener) override;
+    virtual bool RegisterFocusChangedListener(const sptr<IFocusChangeListener>& listener) override;
+    virtual bool UnregisterFocusChangedListener(const sptr<IFocusChangeListener>& listener) override;
     virtual bool RegisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener) override;
     virtual bool UnregisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener) override;
     virtual void RegisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener) override;
