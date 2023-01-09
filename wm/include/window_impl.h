@@ -266,7 +266,13 @@ private:
     template<typename T> void ClearUselessListeners(std::map<uint32_t, T>& listeners)
     {
         for (auto winId : deadWindows_) {
-            listeners.erase(winId);
+            for (auto iter = listeners.begin(); iter != listeners.end();) {
+                if (iter->first == winId) {
+                    listeners.erase(iter);
+                } else {
+                    ++iter;
+                }
+            }
         }
     }
     template<typename T> bool UnregisterListenerLocked(std::vector<sptr<T>>& holder, const sptr<T>& listener);

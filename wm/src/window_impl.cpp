@@ -1813,30 +1813,35 @@ void WindowImpl::SetInputEventConsumer(const std::shared_ptr<IInputEventConsumer
 bool WindowImpl::RegisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener)
 {
     WLOGFD("Start register");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return RegisterListenerLocked(lifecycleListeners_[GetWindowId()], listener);
 }
 
 bool WindowImpl::UnregisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener)
 {
     WLOGFD("Start unregister");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return UnregisterListenerLocked(lifecycleListeners_[GetWindowId()], listener);
 }
 
 bool WindowImpl::RegisterWindowChangeListener(const sptr<IWindowChangeListener>& listener)
 {
     WLOGFD("Start register");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return RegisterListenerLocked(windowChangeListeners_[GetWindowId()], listener);
 }
 
 bool WindowImpl::UnregisterWindowChangeListener(const sptr<IWindowChangeListener>& listener)
 {
     WLOGFD("Start register");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return UnregisterListenerLocked(windowChangeListeners_[GetWindowId()], listener);
 }
 
 bool WindowImpl::RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener)
 {
     WLOGFD("Start register");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     bool ret = RegisterListenerLocked(avoidAreaChangeListeners_[GetWindowId()], listener);
     if (avoidAreaChangeListeners_[GetWindowId()].size() == 1) {
         SingletonContainer::Get<WindowAdapter>().UpdateAvoidAreaListener(property_->GetWindowId(), true);
@@ -1847,6 +1852,7 @@ bool WindowImpl::RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>
 bool WindowImpl::UnregisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener)
 {
     WLOGFD("Start unregister");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     bool ret = UnregisterListenerLocked(avoidAreaChangeListeners_[GetWindowId()], listener);
     if (avoidAreaChangeListeners_[GetWindowId()].empty()) {
         SingletonContainer::Get<WindowAdapter>().UpdateAvoidAreaListener(property_->GetWindowId(), false);
@@ -1857,54 +1863,63 @@ bool WindowImpl::UnregisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListene
 bool WindowImpl::RegisterDragListener(const sptr<IWindowDragListener>& listener)
 {
     WLOGFD("Start register");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return RegisterListenerLocked(windowDragListeners_, listener);
 }
 
 bool WindowImpl::UnregisterDragListener(const sptr<IWindowDragListener>& listener)
 {
     WLOGFD("Start unregister");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return UnregisterListenerLocked(windowDragListeners_, listener);
 }
 
 bool WindowImpl::RegisterDisplayMoveListener(sptr<IDisplayMoveListener>& listener)
 {
     WLOGFD("Start register");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return RegisterListenerLocked(displayMoveListeners_, listener);
 }
 
 bool WindowImpl::UnregisterDisplayMoveListener(sptr<IDisplayMoveListener>& listener)
 {
     WLOGFD("Start unregister");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return UnregisterListenerLocked(displayMoveListeners_, listener);
 }
 
 void WindowImpl::RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func)
 {
     WLOGFD("Start register");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     notifyNativefunc_ = std::move(func);
 }
 
 bool WindowImpl::RegisterOccupiedAreaChangeListener(const sptr<IOccupiedAreaChangeListener>& listener)
 {
     WLOGFD("Start register");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return RegisterListenerLocked(occupiedAreaChangeListeners_[GetWindowId()], listener);
 }
 
 bool WindowImpl::UnregisterOccupiedAreaChangeListener(const sptr<IOccupiedAreaChangeListener>& listener)
 {
     WLOGFD("Start unregister");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return UnregisterListenerLocked(occupiedAreaChangeListeners_[GetWindowId()], listener);
 }
 
 bool WindowImpl::RegisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener)
 {
     WLOGFD("Start register");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return RegisterListenerLocked(touchOutsideListeners_[GetWindowId()], listener);
 }
 
 bool WindowImpl::UnregisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener)
 {
     WLOGFD("Start unregister");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return UnregisterListenerLocked(touchOutsideListeners_[GetWindowId()], listener);
 }
 
@@ -1937,24 +1952,28 @@ bool WindowImpl::RegisterAnimationTransitionController(const sptr<IAnimationTran
 bool WindowImpl::RegisterScreenshotListener(const sptr<IScreenshotListener>& listener)
 {
     WLOGFD("Start register");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return RegisterListenerLocked(screenshotListeners_[GetWindowId()], listener);
 }
 
 bool WindowImpl::UnregisterScreenshotListener(const sptr<IScreenshotListener>& listener)
 {
     WLOGFD("Start unregister");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return UnregisterListenerLocked(screenshotListeners_[GetWindowId()], listener);
 }
 
 bool WindowImpl::RegisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener)
 {
     WLOGFD("Start register");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return RegisterListenerLocked(dialogTargetTouchListeners_[GetWindowId()], listener);
 }
 
 bool WindowImpl::UnregisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener)
 {
     WLOGFD("Start unregister");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return UnregisterListenerLocked(dialogTargetTouchListeners_[GetWindowId()], listener);
 }
 
@@ -1971,7 +1990,7 @@ void WindowImpl::RegisterDialogDeathRecipientListener(const sptr<IDialogDeathRec
 
 void WindowImpl::UnregisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener)
 {
-    WLOGFD("start unregister");
+    WLOGFD("Start unregister");
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     dialogDeathRecipientListener_[GetWindowId()] = nullptr;
 }
