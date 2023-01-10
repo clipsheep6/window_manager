@@ -513,6 +513,32 @@ HWTEST_F(WindowControllerTest, BindDialogTarget, Function | SmallTest | Level3)
     ASSERT_EQ(WMError::WM_OK, windowController_->BindDialogTarget(id, abilityTokenMocker));
     windowRoot_->windowNodeMap_.clear();
 }
+
+/**
+ * @tc.name: RaiseToAppTop
+ * @tc.desc: check app subwindow raise to top
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowControllerTest, RaiseToAppTop, Function | SmallTest | Level3)
+{
+    windowRoot_->windowNodeMap_.clear();
+
+    sptr<WindowNode> windowNode = new (std::nothrow)WindowNode();
+    windowNode->property_->windowId_ = 100;
+
+    uint32_t windowId = node_->GetWindowId();
+    ASSERT_EQ(WmErrorCode::WM_ERROR_STATE_ABNORMALLY, windowController_->RaiseToAppTop(windowId));
+
+    windowRoot_->windowNodeMap_.insert(std::make_pair(node_->GetWindowId(), node_));
+    ASSERT_EQ(WmErrorCode::WM_ERROR_INVALID_PARENT, windowController_->RaiseToAppTop(windowId));
+
+    sptr<WindowNode> parentWindow = new (std::nothrow)WindowNode();
+    parentWindow->property_->windowId_ = 90;
+    windowNode->parent_ = parentWindow;
+    ASSERT_EQ(WmErrorCode::WM_OK, windowController_->RaiseToAppTop(windowId));
+
+    windowRoot_->windowNodeMap_.clear();
+}
 }
 }
 }
