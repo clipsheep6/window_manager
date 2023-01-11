@@ -45,6 +45,7 @@ private:
     bool ProcessLifeCycleEventRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
     bool ProcessOccupiedAreaChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
     bool ProcessSystemBarChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
+    bool ProcessFocusChangedRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
     bool ProcessTouchOutsideRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
     bool ProcessScreenshotRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
     bool ProcessDialogTargetTouchRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);

@@ -587,6 +587,15 @@ bool WindowImpl::UnregisterScreenshotListener(const sptr<IScreenshotListener>& l
     return true;
 }
 
+bool WindowImpl::RegisterFocusChangedListener(const sptr<IFocusChangeListener>& listener)
+{
+    return true;
+}
+bool WindowImpl::UnregisterFocusChangedListener(const sptr<IFocusChangeListener>& listener)
+{
+    return true;
+}
+
 bool WindowImpl::RegisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener)
 {
     return true;

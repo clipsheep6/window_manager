@@ -740,6 +740,7 @@ void WindowNodeContainer::UpdateFocusStatus(uint32_t id, bool focused)
     }
     if (node->GetWindowToken()) {
         node->GetWindowToken()->UpdateFocusStatus(focused);
+        node->GetWindowToken()->NotifyFocused(focused);
     }
     if (node->abilityToken_ == nullptr) {
         WLOGI("abilityToken is null, window : %{public}d", id);

@@ -107,6 +107,11 @@ int WindowStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParce
             NotifyScreenshot();
             break;
         }
+        case WindowMessage::TRANS_ID_NOTIFY_FOCUSED: {
+            bool isFocused = data.ReadBool();
+            NotifyFocused(isFocused);
+            break;
+        }
         case WindowMessage::TRANS_ID_NOTIFY_DESTROY: {
             NotifyDestroy();
             break;

@@ -57,8 +57,9 @@ public:
 class IFocusChangedListener : virtual public RefBase {
 public:
     virtual void OnFocused(const sptr<FocusChangeInfo>& focusChangeInfo) = 0;
-
+    //virtual void OnFocusedWithoutInfo() = 0;
     virtual void OnUnfocused(const sptr<FocusChangeInfo>& focusChangeInfo) = 0;
+    //virtual void OnUnFocusedWithoutInfo() = 0;
 };
 
 class ISystemBarChangedListener : virtual public RefBase {

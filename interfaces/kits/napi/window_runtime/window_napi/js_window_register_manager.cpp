@@ -26,7 +26,7 @@ JsWindowRegisterManager::JsWindowRegisterManager()
 {
     // white register list for window manager
     listenerProcess_[CaseType::CASE_WINDOW_MANAGER] = {
-        {SYSTEM_BAR_TINT_CHANGE_CB,     &JsWindowRegisterManager::ProcessSystemBarChangeRegister   }
+        {SYSTEM_BAR_TINT_CHANGE_CB,     &JsWindowRegisterManager::ProcessSystemBarChangeRegister   },
     };
     // white register list for window
     listenerProcess_[CaseType::CASE_WINDOW] = {
@@ -39,6 +39,7 @@ JsWindowRegisterManager::JsWindowRegisterManager()
         { SCREENSHOT_EVENT_CB,         &JsWindowRegisterManager::ProcessScreenshotRegister            },
         { DIALOG_TARGET_TOUCH_CB,      &JsWindowRegisterManager::ProcessDialogTargetTouchRegister     },
         { DIALOG_DEATH_RECIPIENT_CB,   &JsWindowRegisterManager::ProcessDialogDeathRecipientRegister  },
+        { FOCUS_EVENT_CB,              &JsWindowRegisterManager::ProcessFocusChangedRegister}
     };
     // white register list for window stage
     listenerProcess_[CaseType::CASE_STAGE] = {
@@ -143,6 +144,21 @@ bool JsWindowRegisterManager::ProcessSystemBarChangeRegister(sptr<JsWindowListen
         SingletonContainer::Get<WindowManager>().RegisterSystemBarChangedListener(thisListener);
     } else {
         SingletonContainer::Get<WindowManager>().UnregisterSystemBarChangedListener(thisListener);
+    }
+    return true;
+}
+
+bool JsWindowRegisterManager::ProcessFocusChangedRegister(sptr<JsWindowListener> listener,
+    sptr<Window> window, bool isRegister)
+{
+    sptr<IFocusChangeListener> thisListener(listener);
+    if (window == nullptr) {
+        return false;
+    }
+    if (isRegister) {
+        window->RegisterFocusChangedListener(thisListener);
+    } else {
+        window->UnregisterFocusChangedListener(thisListener);
     }
     return true;
 }

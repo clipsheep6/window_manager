@@ -205,6 +205,8 @@ public:
     virtual bool RegisterAnimationTransitionController(const sptr<IAnimationTransitionController>& listener) override;
     virtual bool RegisterScreenshotListener(const sptr<IScreenshotListener>& listener) override;
     virtual bool UnregisterScreenshotListener(const sptr<IScreenshotListener>& listener) override;
+    virtual bool RegisterFocusChangedListener(const sptr<IFocusChangeListener>& listener) override;
+    virtual bool UnregisterFocusChangedListener(const sptr<IFocusChangeListener>& listener) override;
     virtual bool RegisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener) override;
     virtual bool UnregisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener) override;
     virtual void RegisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener) override;
@@ -229,6 +231,7 @@ public:
     void UpdateActiveStatus(bool isActive);
     void NotifyTouchOutside();
     void NotifyScreenshot();
+    void NotifyFocused(bool isFocused);
     void NotifyTouchDialogTarget() override;
     void NotifyDestroy();
     void NotifyForeground();
@@ -329,6 +332,18 @@ private:
             }
         }
         return screenshotListeners;
+    }
+    template<typename T>
+    inline EnableIfSame<T, IFocusChangeListener, std::vector<wptr<IFocusChangeListener>>> GetListeners()
+    {
+        std::vector<wptr<IFocusChangeListener>> focusChangedListeners;
+        {
+            std::lock_guard<std::recursive_mutex> lock(mutex_);
+            for (auto& listener : focusChangedListeners_[GetWindowId()]) {
+                focusChangedListeners.push_back(listener);
+            }
+        }
+        return focusChangedListeners;
     }
     template<typename T>
     inline EnableIfSame<T, ITouchOutsideListener, std::vector<wptr<ITouchOutsideListener>>> GetListeners()
@@ -539,6 +554,7 @@ private:
     WindowTag windowTag_;
     sptr<IAceAbilityHandler> aceAbilityHandler_;
     static std::map<uint32_t, std::vector<sptr<IScreenshotListener>>> screenshotListeners_;
+    static std::map<uint32_t, std::vector<sptr<IFocusChangeListener>>> focusChangedListeners_;
     static std::map<uint32_t, std::vector<sptr<ITouchOutsideListener>>> touchOutsideListeners_;
     static std::map<uint32_t, std::vector<sptr<IDialogTargetTouchListener>>> dialogTargetTouchListeners_;
     static std::map<uint32_t, std::vector<sptr<IWindowLifeCycle>>> lifecycleListeners_;
