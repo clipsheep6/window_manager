@@ -51,12 +51,13 @@ bool ScreenRotationController::IsScreenRotationLocked()
     return isScreenRotationLocked_;
 }
 
-void ScreenRotationController::SetScreenRotationLocked(bool isLocked)
+DMError ScreenRotationController::SetScreenRotationLocked(bool isLocked)
 {
     if (isLocked) {
         rotationLockedRotation_ = GetCurrentDisplayRotation();
     }
     isScreenRotationLocked_ = isLocked;
+    return DMError::DM_OK;
 }
 
 void ScreenRotationController::SetDefaultDeviceRotationOffset(uint32_t defaultDeviceRotationOffset)
