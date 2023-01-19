@@ -1080,7 +1080,8 @@ WMError WindowRoot::RequestActiveWindow(uint32_t windowId)
         WLOGFE("could not find window");
         return WMError::WM_ERROR_NULLPTR;
     }
-    if (WindowHelper::IsSystemBarWindow(node->GetWindowType())) {
+    auto windowType = node->GetWindowType();
+    if (WindowHelper::IsSystemBarWindow(windowType)) {
         WLOGFE("window could not be active window");
         return WMError::WM_ERROR_INVALID_TYPE;
     }
@@ -1092,9 +1093,11 @@ WMError WindowRoot::RequestActiveWindow(uint32_t windowId)
     auto res = container->SetActiveWindow(windowId, false);
     WLOGI("windowId:%{public}u, name:%{public}s, orientation:%{public}u, type:%{public}u, isMainWindow:%{public}d",
         windowId, node->GetWindowName().c_str(), static_cast<uint32_t>(node->GetRequestedOrientation()),
-        node->GetWindowType(), WindowHelper::IsMainWindow(node->GetWindowType()));
+        windowType, WindowHelper::IsMainWindow(windowType));
     if (res == WMError::WM_OK &&
-        WindowHelper::IsRotatableWindow(node->GetWindowType(), node->GetWindowMode())) {
+        WindowHelper::IsRotatableWindow(windowType, node->GetWindowMode()) &&
+        ((windowType == WindowType::WINDOW_TYPE_DESKTOP && container->IsAppWindowsEmpty()) ||
+        windowType != WindowType::WINDOW_TYPE_DESKTOP)) {
         DisplayManagerServiceInner::GetInstance().
             SetOrientationFromWindow(node->GetDisplayId(), node->GetRequestedOrientation());
     }
