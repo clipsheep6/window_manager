@@ -69,6 +69,7 @@ public:
     bool IsVerticalDisplay(DisplayId displayId) const;
     WMError RaiseZOrderForAppWindow(sptr<WindowNode>& node, sptr<WindowNode>& parentNode);
     sptr<WindowNode> GetNextFocusableWindow(uint32_t windowId) const;
+    sptr<WindowNode> GetNextRotatableWindow(uint32_t windowId) const;
     sptr<WindowNode> GetNextActiveWindow(uint32_t windowId) const;
     void MinimizeAllAppWindows(DisplayId displayId);
     void MinimizeOldestAppWindow();
@@ -144,7 +145,6 @@ private:
     bool IsSplitImmersiveNode(sptr<WindowNode> node) const;
     bool TraverseFromTopToBottom(sptr<WindowNode> node, const WindowNodeOperationFunc& func) const;
     bool TraverseFromBottomToTop(sptr<WindowNode> node, const WindowNodeOperationFunc& func) const;
-    void RecoverScreenDefaultOrientationIfNeed(DisplayId displayId);
     void RaiseOrderedWindowToTop(std::vector<sptr<WindowNode>>& orderedNodes,
         std::vector<sptr<WindowNode>>& windowNodes);
     void DumpScreenWindowTree();
@@ -163,6 +163,7 @@ private:
     void RemoveFromRsTreeWhenRemoveWindowNode(sptr<WindowNode>& node, bool fromAnimation);
     void UpdateSizeChangeReason(sptr<WindowNode>& node, WindowMode srcMode, WindowMode dstMode);
     void ProcessInputMethodWindowAddAnimation(sptr<WindowNode>& node, std::function<void()> updateRSTreeFunc);
+    uint32_t GetAppWindowNum();
 
     float displayBrightness_ = UNDEFINED_BRIGHTNESS;
     uint32_t brightnessWindow_ = INVALID_WINDOW_ID;

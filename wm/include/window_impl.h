@@ -58,20 +58,22 @@ union ColorParam {
     uint32_t value;
 };
 
-const std::map<DisplayOrientation, Orientation> ABILITY_TO_WMS_ORIENTATION_MAP {
-    {DisplayOrientation::UNSPECIFIED,                           Orientation::UNSPECIFIED                        },
-    {DisplayOrientation::LANDSCAPE,                             Orientation::HORIZONTAL                         },
-    {DisplayOrientation::PORTRAIT,                              Orientation::VERTICAL                           },
-    {DisplayOrientation::FOLLOWRECENT,                          Orientation::UNSPECIFIED                        },
-    {DisplayOrientation::LANDSCAPE_INVERTED,                    Orientation::REVERSE_HORIZONTAL                 },
-    {DisplayOrientation::PORTRAIT_INVERTED,                     Orientation::REVERSE_VERTICAL                   },
-    {DisplayOrientation::AUTO_ROTATION,                         Orientation::SENSOR                             },
-    {DisplayOrientation::AUTO_ROTATION_LANDSCAPE,               Orientation::SENSOR_HORIZONTAL                  },
-    {DisplayOrientation::AUTO_ROTATION_PORTRAIT,                Orientation::SENSOR_VERTICAL                    },
-    {DisplayOrientation::AUTO_ROTATION_RESTRICTED,              Orientation::AUTO_ROTATION_RESTRICTED           },
-    {DisplayOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED,    Orientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED },
-    {DisplayOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED,     Orientation::AUTO_ROTATION_PORTRAIT_RESTRICTED  },
-    {DisplayOrientation::LOCKED,                                Orientation::LOCKED                             },
+const std::map<OHOS::AppExecFwk::DisplayOrientation, Orientation> ABILITY_TO_WMS_ORIENTATION_MAP {
+    {OHOS::AppExecFwk::DisplayOrientation::UNSPECIFIED, Orientation::UNSPECIFIED},
+    {OHOS::AppExecFwk::DisplayOrientation::LANDSCAPE, Orientation::HORIZONTAL},
+    {OHOS::AppExecFwk::DisplayOrientation::PORTRAIT, Orientation::VERTICAL},
+    {OHOS::AppExecFwk::DisplayOrientation::FOLLOWRECENT, Orientation::LOCKED},
+    {OHOS::AppExecFwk::DisplayOrientation::LANDSCAPE_INVERTED, Orientation::REVERSE_HORIZONTAL},
+    {OHOS::AppExecFwk::DisplayOrientation::PORTRAIT_INVERTED, Orientation::REVERSE_VERTICAL},
+    {OHOS::AppExecFwk::DisplayOrientation::AUTO_ROTATION, Orientation::SENSOR},
+    {OHOS::AppExecFwk::DisplayOrientation::AUTO_ROTATION_LANDSCAPE, Orientation::SENSOR_HORIZONTAL},
+    {OHOS::AppExecFwk::DisplayOrientation::AUTO_ROTATION_PORTRAIT, Orientation::SENSOR_VERTICAL},
+    {OHOS::AppExecFwk::DisplayOrientation::AUTO_ROTATION_RESTRICTED, Orientation::AUTO_ROTATION_RESTRICTED},
+    {OHOS::AppExecFwk::DisplayOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED,
+        Orientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED},
+    {OHOS::AppExecFwk::DisplayOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED,
+        Orientation::AUTO_ROTATION_PORTRAIT_RESTRICTED},
+    {OHOS::AppExecFwk::DisplayOrientation::LOCKED, Orientation::LOCKED},
 };
 
 class WindowImpl : public Window {
@@ -166,6 +168,7 @@ public:
     virtual WMError DisableAppWindowDecor() override;
     virtual WMError BindDialogTarget(sptr<IRemoteObject> targetToken) override;
     virtual WMError SetSnapshotSkip(bool isSkip) override;
+    WmErrorCode RaiseToAppTop() override;
 
     // window effect
     virtual WMError SetCornerRadius(float cornerRadius) override;
@@ -222,6 +225,9 @@ public:
     virtual void UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration) override;
     void UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type);
     void UpdateWindowState(WindowState state);
+    WmErrorCode UpdateSubWindowStateAndNotify(uint32_t parentId);
+    WmErrorCode UpdateWindowStateWhenShow();
+    WmErrorCode UpdateWindowStateWhenHide();
     sptr<WindowProperty> GetWindowProperty();
     void UpdateDragEvent(const PointInfo& point, DragEvent event);
     void UpdateDisplayId(DisplayId from, DisplayId to);
@@ -382,19 +388,25 @@ private:
         std::lock_guard<std::recursive_mutex> lock(globalMutex_);
         return dialogDeathRecipientListener_[GetWindowId()];
     }
-    inline void NotifyAfterForeground(bool needNotifyUiContent = true)
+    inline void NotifyAfterForeground(bool needNotifyListeners = true, bool needNotifyUiContent = true)
     {
-        auto lifecycleListeners = GetListeners<IWindowLifeCycle>();
-        CALL_LIFECYCLE_LISTENER(AfterForeground, lifecycleListeners);
+        if (needNotifyListeners) {
+            auto lifecycleListeners = GetListeners<IWindowLifeCycle>();
+            CALL_LIFECYCLE_LISTENER(AfterForeground, lifecycleListeners);
+        }
         if (needNotifyUiContent) {
             CALL_UI_CONTENT(Foreground);
         }
     }
-    inline void NotifyAfterBackground()
+    inline void NotifyAfterBackground(bool needNotifyListeners = true, bool needNotifyUiContent = true)
     {
-        auto lifecycleListeners = GetListeners<IWindowLifeCycle>();
-        CALL_LIFECYCLE_LISTENER(AfterBackground, lifecycleListeners);
-        CALL_UI_CONTENT(Background);
+        if (needNotifyListeners) {
+            auto lifecycleListeners = GetListeners<IWindowLifeCycle>();
+            CALL_LIFECYCLE_LISTENER(AfterBackground, lifecycleListeners);
+        }
+        if (needNotifyUiContent) {
+            CALL_UI_CONTENT(Background);
+        }
     }
     inline void NotifyAfterFocused()
     {
@@ -471,7 +483,7 @@ private:
     void DestroySubWindow();
     void SetDefaultOption(); // for api7
     bool IsWindowValid() const;
-    static sptr<Window> FindTopWindow(uint32_t topWinId);
+    static sptr<Window> FindWindowById(uint32_t WinId);
     void TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     void ConsumeMoveOrDragEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     void ReadyToMoveOrDragWindow(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
@@ -533,6 +545,7 @@ private:
     static std::map<uint32_t, std::vector<sptr<WindowImpl>>> appDialogWindowMap_;
     sptr<WindowProperty> property_;
     WindowState state_ { WindowState::STATE_INITIAL };
+    WindowState subWindowState_ {WindowState::STATE_INITIAL};
     WindowTag windowTag_;
     sptr<IAceAbilityHandler> aceAbilityHandler_;
     static std::map<uint32_t, std::vector<sptr<IScreenshotListener>>> screenshotListeners_;
@@ -553,6 +566,7 @@ private:
     std::unique_ptr<Ace::UIContent> uiContent_;
     std::shared_ptr<AbilityRuntime::Context> context_;
     std::recursive_mutex mutex_;
+    std::recursive_mutex windowStateMutex_;
     static std::recursive_mutex globalMutex_;
     const float SYSTEM_ALARM_WINDOW_WIDTH_RATIO = 0.8;
     const float SYSTEM_ALARM_WINDOW_HEIGHT_RATIO = 0.3;

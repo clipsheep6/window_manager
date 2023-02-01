@@ -273,6 +273,7 @@ bool WindowManagerService::Init()
         }
         ConfigureWindowManagerService();
     }
+    StartingWindow::SetWindowRoot(windowRoot_);
     WLOGI("Init success");
     return true;
 }
@@ -365,6 +366,10 @@ void WindowManagerService::ConfigureWindowManagerService()
     item = config["defaultFloatingWindow"];
     if (item.IsInts()) {
         WindowLayoutPolicyCascade::SetCascadeRectCfg(*item.intsValue_);
+    }
+    item = config["startWindowTransitionAnimation"].GetProp("enable");
+    if (item.IsBool()) {
+        StartingWindow::transAnimateEnable_ = item.boolValue_;
     }
 }
 
@@ -551,6 +556,7 @@ void WindowManagerService::ConfigWindowEffect(const WindowManagerConfig::ConfigI
             systemConfig_.effectConfig_.unfocusedShadow_ = config.unfocusedShadow_;
         }
     }
+    StartingWindow::SetWindowSystemEffectConfig(systemConfig_.effectConfig_);
 }
 
 RSAnimationTimingCurve WindowManagerService::CreateCurve(const WindowManagerConfig::ConfigItem& curveConfig)
@@ -874,6 +880,7 @@ void WindowManagerService::OnWindowEvent(Event event, const sptr<IRemoteObject>&
                 WLOGFD("window node is nullptr, REMOTE_DIED no need to destroy");
                 return;
             }
+            WLOGI("window %{public}u received REMOTE_DIED", windowId);
             node->stateMachine_.SetDestroyTaskParam(true);
             auto func = [this, windowId]() {
                 auto node = windowRoot_->GetWindowNode(windowId);
@@ -1090,6 +1097,17 @@ WMError WindowManagerService::GetVisibilityWindowInfo(std::vector<sptr<WindowVis
 {
     return PostSyncTask([this, &infos]() {
         return windowController_->GetVisibilityWindowInfo(infos);
+    });
+}
+
+WmErrorCode WindowManagerService::RaiseToAppTop(uint32_t windowId)
+{
+    if (!Permission::IsSystemCalling()) {
+        WLOGFE("window raise to app top permission denied!");
+        return WmErrorCode::WM_ERROR_NO_PERMISSION;
+    }
+    return PostSyncTask([this, windowId]() {
+        return windowController_->RaiseToAppTop(windowId);
     });
 }
 

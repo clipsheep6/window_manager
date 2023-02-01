@@ -32,6 +32,7 @@
 #include "pixel_map_napi.h"
 #include "napi_remote_object.h"
 #include "permission.h"
+#include "request_info.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -453,6 +454,13 @@ NativeValue* JsWindow::SetSnapshotSkip(NativeEngine* engine, NativeCallbackInfo*
     WLOGI("SetSnapshotSkip");
     JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
     return (me != nullptr) ? me->OnSetSnapshotSkip(*engine, *info) : nullptr;
+}
+
+NativeValue* JsWindow::RaiseToAppTop(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGI("RaiseToAppTop");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(engine, info);
+    return (me != nullptr) ? me->OnRaiseToAppTop(*engine, *info) : nullptr;
 }
 
 NativeValue* JsWindow::DisableWindowDecor(NativeEngine* engine, NativeCallbackInfo* info)
@@ -1277,6 +1285,12 @@ NativeValue* JsWindow::OnBindDialogTarget(NativeEngine& engine, NativeCallbackIn
     sptr<IRemoteObject> token = nullptr;
     token = NAPI_ohos_rpc_getNativeRemoteObject(
         reinterpret_cast<napi_env>(&engine), reinterpret_cast<napi_value>(info.argv[0]));
+    if (token == nullptr) {
+        std::shared_ptr<AbilityRuntime::RequestInfo> requestInfo = AbilityRuntime::RequestInfo::UnwrapRequestInfo(engine, info.argv[0]);
+        if (requestInfo != nullptr) {
+            token = requestInfo->GetToken();
+        }
+    }
     if (token == nullptr) {
         errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
     }
@@ -3101,6 +3115,38 @@ NativeValue* JsWindow::OnSetSnapshotSkip(NativeEngine& engine, NativeCallbackInf
     return engine.CreateUndefined();
 }
 
+NativeValue* JsWindow::OnRaiseToAppTop(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    AsyncTask::CompleteCallback complete =
+        [this](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            wptr<Window> weakToken(windowToken_);
+            auto window = weakToken.promote();
+            if (window == nullptr) {
+                WLOGFE("window is nullptr");
+                task.Reject(engine, CreateJsError(engine,
+                    static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
+                return;
+            }
+            
+            WmErrorCode errCode = window->RaiseToAppTop();
+            if (errCode != WmErrorCode::WM_OK) {
+                WLOGFE("raise window zorder failed");
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode)));
+                return;
+            }
+            task.Resolve(engine, engine.CreateUndefined());
+            WLOGI("Window [%{public}u, %{public}s] zorder raise success",
+                window->GetWindowId(), window->GetWindowName().c_str());
+        };
+    NativeValue* lastParam = (info.argc == 0) ? nullptr :
+        ((info.argv[0] != nullptr && info.argv[0]->TypeOf() == NATIVE_FUNCTION) ?
+        info.argv[0] : nullptr);
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule("JsWindow::OnRaiseToAppTop",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
 NativeValue* JsWindow::OnOpacity(NativeEngine& engine, NativeCallbackInfo& info)
 {
     if (info.argc < 1) {
@@ -3715,6 +3761,7 @@ void BindFunctions(NativeEngine& engine, NativeObject* object, const char *modul
     BindNativeFunction(engine, *object, "setTransparent", moduleName, JsWindow::SetTransparent);
     BindNativeFunction(engine, *object, "setCallingWindow", moduleName, JsWindow::SetCallingWindow);
     BindNativeFunction(engine, *object, "setSnapshotSkip", moduleName, JsWindow::SetSnapshotSkip);
+    BindNativeFunction(engine, *object, "raiseToAppTop", moduleName, JsWindow::RaiseToAppTop);
     BindNativeFunction(engine, *object, "disableWindowDecor", moduleName, JsWindow::DisableWindowDecor);
     BindNativeFunction(engine, *object, "dump", moduleName, JsWindow::Dump);
     BindNativeFunction(engine, *object, "setForbidSplitMove", moduleName, JsWindow::SetForbidSplitMove);

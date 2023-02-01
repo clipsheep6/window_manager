@@ -185,6 +185,10 @@ void WindowNodeContainer::LayoutWhenAddWindowNode(sptr<WindowNode>& node, bool a
 {
     if (afterAnimation) {
         layoutPolicy_->PerformWindowLayout(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
+        // tile layout will change window mode from fullscreen to float
+        // notify systembar window to change color
+        NotifyIfAvoidAreaChanged(node, AvoidControlType::AVOID_NODE_ADD);
+        DumpScreenWindowTreeByWinId(node->GetWindowId());
         return;
     }
     WLOGI("AddWindowNode Id:%{public}u, currState:%{public}u",
@@ -206,6 +210,10 @@ void WindowNodeContainer::LayoutWhenAddWindowNode(sptr<WindowNode>& node, bool a
                 node->SetWindowSizeChangeReason(WindowSizeChangeReason::CUSTOM_ANIMATION_SHOW);
         }
         layoutPolicy_->PerformWindowLayout(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
+        // tile layout will change window mode from fullscreen to float
+        // notify systembar window to change color
+        NotifyIfAvoidAreaChanged(node, AvoidControlType::AVOID_NODE_ADD);
+        DumpScreenWindowTreeByWinId(node->GetWindowId());
     }
 }
 
@@ -242,8 +250,6 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
     }
     AssignZOrder();
     LayoutWhenAddWindowNode(node, afterAnimation);
-    NotifyIfAvoidAreaChanged(node, AvoidControlType::AVOID_NODE_ADD);
-    DumpScreenWindowTreeByWinId(node->GetWindowId());
     UpdateCameraFloatWindowStatus(node, true);
     if (WindowHelper::IsAppWindow(node->GetWindowType())) {
         backupWindowIds_.clear();
@@ -256,6 +262,7 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
         RemoteAnimation::NotifyAnimationUpdateWallpaper(node);
     }
     WLOGI("AddWindowNode Id: %{public}u end", node->GetWindowId());
+    RSInterfaces::GetInstance().SetAppWindowNum(GetAppWindowNum());
     return WMError::WM_OK;
 }
 
@@ -359,7 +366,6 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node, bool fromA
     }
     NotifyIfAvoidAreaChanged(node, AvoidControlType::AVOID_NODE_REMOVE);
     DumpScreenWindowTreeByWinId(node->GetWindowId());
-    RecoverScreenDefaultOrientationIfNeed(node->GetDisplayId());
     UpdateCameraFloatWindowStatus(node, false);
     if (node->GetWindowType() == WindowType::WINDOW_TYPE_KEYGUARD) {
         isScreenLocked_ = false;
@@ -368,7 +374,19 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node, bool fromA
         DisplayManagerServiceInner::GetInstance().SetGravitySensorSubscriptionEnabled();
     }
     WLOGI("Remove Id: %{public}u end", node->GetWindowId());
+    RSInterfaces::GetInstance().SetAppWindowNum(GetAppWindowNum());
     return WMError::WM_OK;
+}
+
+uint32_t WindowNodeContainer::GetAppWindowNum()
+{
+    uint32_t num = 0;
+    for (auto& child : appWindowNode_->children_) {
+        if (WindowHelper::IsAppWindow(child->GetWindowType())) {
+            num++;
+        }
+    }
+    return num;
 }
 
 WMError WindowNodeContainer::HandleRemoveWindow(sptr<WindowNode>& node)
@@ -479,7 +497,7 @@ bool WindowNodeContainer::AddAppSurfaceNodeOnRSTree(sptr<WindowNode>& node)
      * Starting Window has already update leashWindowSurfaceNode and starting window surfaceNode on RSTree
      * Just need add appSurface Node as child of leashWindowSurfaceNode
      */
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "AddAppSurfaceNodeOnRSTree");
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "AddAppSurfaceNodeOnRSTree(%u)", node->GetWindowId());
     if (!WindowHelper::IsMainWindow(node->GetWindowType())) {
         WLOGFE("id:%{public}u not main app window but has start window", node->GetWindowId());
         return false;
@@ -635,31 +653,6 @@ bool WindowNodeContainer::RemoveNodeFromRSTree(sptr<WindowNode>& node, DisplayId
         updateRSTreeFunc();
     }
     return true;
-}
-
-void WindowNodeContainer::RecoverScreenDefaultOrientationIfNeed(DisplayId displayId)
-{
-    if (displayGroupController_->displayGroupWindowTree_[displayId][WindowRootNodeType::APP_WINDOW_NODE]->empty()) {
-        WLOGI("appWindowNode_ child empty in display %{public}" PRIu64"", displayId);
-        auto aboveWindows =
-            *displayGroupController_->displayGroupWindowTree_[displayId][WindowRootNodeType::ABOVE_WINDOW_NODE];
-        for (auto iter = aboveWindows.begin(); iter != aboveWindows.end(); iter++) {
-            auto windowMode = (*iter)->GetWindowMode();
-            if (WindowHelper::IsFullScreenWindow(windowMode) || WindowHelper::IsSplitWindowMode(windowMode)) {
-                return;
-            }
-        }
-        auto belowWindows =
-            *displayGroupController_->displayGroupWindowTree_[displayId][WindowRootNodeType::BELOW_WINDOW_NODE];
-        Orientation targetOrientation = Orientation::UNSPECIFIED;
-        for (auto iter = belowWindows.begin(); iter != belowWindows.end(); iter++) {
-            if ((*iter)->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
-                targetOrientation = (*iter)->GetRequestedOrientation();
-                break;
-            }
-        }
-        DisplayManagerServiceInner::GetInstance().SetOrientationFromWindow(displayId, targetOrientation);
-    }
 }
 
 const std::vector<uint32_t>& WindowNodeContainer::Destroy()
@@ -1494,6 +1487,22 @@ sptr<WindowNode> WindowNodeContainer::GetNextFocusableWindow(uint32_t windowId) 
     };
     TraverseWindowTree(func, true);
     return nextFocusableWindow;
+}
+
+sptr<WindowNode> WindowNodeContainer::GetNextRotatableWindow(uint32_t windowId) const
+{
+    sptr<WindowNode> nextRotatableWindow;
+    WindowNodeOperationFunc func = [windowId, &nextRotatableWindow](
+        sptr<WindowNode> node) {
+        if (windowId != node->GetWindowId() &&
+            WindowHelper::IsRotatableWindow(node->GetWindowType(), node->GetWindowMode())) {
+            nextRotatableWindow = node;
+            return true;
+        }
+        return false;
+    };
+    TraverseWindowTree(func, true);
+    return nextRotatableWindow;
 }
 
 sptr<WindowNode> WindowNodeContainer::GetNextActiveWindow(uint32_t windowId) const
