@@ -18,6 +18,12 @@
 #include "transaction/rs_interfaces.h"
 #include "window_manager_hilog.h"
 
+#ifdef __aarch64__
+#define FRAME_TRACE_SO_PATH "/system/lib64/libframe_trace_intf.z.so"
+#else
+#define FRAME_TRACE_SO_PATH "/system/lib/libframe_trace_intf.z.so"
+#endif
+
 using namespace FRAME_TRACE;
 static const std::string UI_INTERVAL_NAME = "ui";
 static struct TraceHandle* g_handleUI = nullptr;
@@ -82,12 +88,14 @@ void VsyncStation::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallb
             vsyncHandler_->PostTask(vsyncTimeoutCallback_, VSYNC_TIME_OUT_TASK, VSYNC_TIME_OUT_MILLISECONDS);
         }
     }
-    if (FrameAwareTraceEnable(UI_INTERVAL_NAME)) {
-        if (g_handleUI == nullptr) {
-            g_handleUI = CreateTraceTag(UI_INTERVAL_NAME);
-        }
-        if (g_handleUI != nullptr) {
-            StopFrameTrace(g_handleUI);
+    if (access(FRAME_TRACE_SO_PATH, 0)) {
+        if (FrameAwareTraceEnable(UI_INTERVAL_NAME)) {
+            if (g_handleUI == nullptr) {
+                g_handleUI = CreateTraceTag(UI_INTERVAL_NAME);
+            }
+            if (g_handleUI != nullptr) {
+                StopFrameTrace(g_handleUI);
+            }
         }
     }
     receiver_->RequestNextVSync(frameCallback_);
