@@ -1,0 +1,53 @@
+{
+    global:
+        extern "C++" {
+            OHOS::Rosen::CutoutInfo::*;
+            OHOS::Rosen::Permission::*;
+            OHOS::Rosen::ScreenInfo::*;
+            OHOS::Rosen::StringUtil::*;
+            OHOS::Rosen::SysCapUtil::*;
+            OHOS::Rosen::DisplayInfo::*;
+            OHOS::Rosen::SurfaceDraw::*;
+            OHOS::Rosen::WmOcclusion::*;
+            OHOS::Rosen::SurfaceReader::*;
+            OHOS::Rosen::XmlConfigBase::*;
+            OHOS::Rosen::PerformReporter::*;
+            OHOS::Rosen::WindowProperty::*;
+            OHOS::Rosen::ScreenGroupInfo::*;
+            OHOS::Rosen::TransformHelper::*;
+            OHOS::Rosen::PersistentStorage::*;
+            OHOS::Rosen::SingletonContainer::*;
+            OHOS::Rosen::AgentDeathRecipient::*;
+            OHOS::Rosen::WindowTransitionInfo::*;
+            OHOS::Rosen::SurfaceReaderHandlerImpl::*;
+            OHOS::Rosen::ScreenshotInfo::*;
+            
+            VTT?for?OHOS::Rosen::CutoutInfo;
+            VTT?for?OHOS::Rosen::ScreenInfo;
+            VTT?for?OHOS::Rosen::DisplayInfo;
+            VTT?for?OHOS::Rosen::ScreenshotInfo;
+            VTT?for?OHOS::Rosen::WindowProperty;
+            VTT?for?OHOS::Rosen::ScreenGroupInfo;
+            VTT?for?OHOS::Rosen::WindowTransitionInfo;
+            vtable?for?OHOS::BrokerDelegatorBase;
+            vtable?for?OHOS::Rosen::CutoutInfo;
+            vtable?for?OHOS::Rosen::ScreenInfo;
+            vtable?for?OHOS::Rosen::DisplayInfo;
+            vtable?for?OHOS::Rosen::SurfaceReader::BufferListener;
+            vtable?for?OHOS::Rosen::SurfaceReader;
+            vtable?for?OHOS::Rosen::ScreenshotInfo;
+            vtable?for?OHOS::Rosen::WindowProperty;
+            vtable?for?OHOS::Rosen::ScreenGroupInfo;
+            vtable?for?OHOS::Rosen::SingletonContainer;
+            vtable?for?OHOS::Rosen::AgentDeathRecipient;
+            vtable?for?OHOS::Rosen::SupportedScreenModes;
+            vtable?for?OHOS::Rosen::SurfaceCaptureFuture;
+            vtable?for?OHOS::Rosen::WindowTransitionInfo;
+            vtable?for?OHOS::Rosen::SurfaceReaderHandlerImpl;
+            vtable?for?OHOS::Rosen::Drawing::CoreCanvas;
+            vtable?for?OHOS::Rosen::Drawing::Image;
+            vtable?for?OHOS::Rosen::Drawing::Canvas;
+        };
+    local:
+    *;
+};
