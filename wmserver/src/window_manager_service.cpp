@@ -369,6 +369,17 @@ void WindowManagerService::ConfigureWindowManagerService()
     if (item.IsBool()) {
         StartingWindow::transAnimateEnable_ = item.boolValue_;
     }
+    item = config["supportFloatWindowAboveFullScreen"].GetProp("enable");
+    if (item.IsBool()) {
+        WindowNodeContainer::SetIsFloatWindowAboveFullWindow(item.boolValue_);
+    }
+    item = config["maxFloatAppMainWindowNumber"];
+    if (item.IsInts()) {
+        auto numbers = *item.intsValue_;
+        if (numbers.size() == 1 && numbers[0] > 0) {
+            WindowNodeContainer::SetMaxFloatAppMainWindowNumber(static_cast<uint32_t>(numbers[0]));
+        }
+    }
 }
 
 void WindowManagerService::ConfigHotZones(const std::vector<int>& numbers)

@@ -65,6 +65,8 @@ const std::map<std::string, WindowManagerConfig::ValueType> WindowManagerConfig:
     { "stretchable",                             WindowManagerConfig::ValueType::UNDIFINED },
     { "remoteAnimation",                         WindowManagerConfig::ValueType::UNDIFINED },
     { "startWindowTransitionAnimation",          WindowManagerConfig::ValueType::UNDIFINED },
+    { "supportFloatWindowAboveFullScreen",       WindowManagerConfig::ValueType::UNDIFINED },
+    { "maxFloatAppMainWindowNumber",             WindowManagerConfig::ValueType::INTS },
 };
 
 std::vector<std::string> WindowManagerConfig::SplitNodeContent(const xmlNodePtr& node, const std::string& pattern)
