@@ -374,22 +374,22 @@ HWTEST_F(DragControllerTest, HandleMoveEvent, Function | SmallTest | Level2)
     moveDragController_->HandleMoveEvent(0, posX, posY, pointId, sourceType);
 
     moveDragController_->moveDragProperty_ = new MoveDragProperty();
-    moveDragController_->HandleMoveEvent(0, posX, posY, pointId, sourceType);
+    moveDragController_->HandleMoveEvent(posX, posY, pointId, sourceType);
 
         moveDragController_->moveDragProperty_->startMoveFlag_ = true;
-    moveDragController_->HandleMoveEvent(0, posX, posY, pointId, sourceType);
+    moveDragController_->HandleMoveEvent(posX, posY, pointId, sourceType);
 
     pointId = 1;
-    moveDragController_->HandleMoveEvent(0, posX, posY, pointId, sourceType);
+    moveDragController_->HandleMoveEvent(posX, posY, pointId, sourceType);
 
     pointId = 0;
-    moveDragController_->HandleMoveEvent(0, posX, posY, pointId, sourceType);
+    moveDragController_->HandleMoveEvent(posX, posY, pointId, sourceType);
 
     sourceType = 1;
-    moveDragController_->HandleMoveEvent(0, posX, posY, pointId, sourceType);
+    moveDragController_->HandleMoveEvent(posX, posY, pointId, sourceType);
 
     sourceType = 0;
-    moveDragController_->HandleMoveEvent(0, posX, posY, pointId, sourceType);
+    moveDragController_->HandleMoveEvent(posX, posY, pointId, sourceType);
 
     moveDragController_->moveDragProperty_ = nullptr;
 }
