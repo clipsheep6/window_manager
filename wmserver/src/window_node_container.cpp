@@ -53,7 +53,9 @@ namespace {
     constexpr int UID_MIN = 100;
 }
 AnimationConfig WindowNodeContainer::animationConfig_;
-
+bool WindowNodeContainer::isFloatWindowAboveFullWindow_ = false;
+uint32_t WindowNodeContainer::maxFloatAppMainWindowNumber_ = 0;
+ 
 WindowNodeContainer::WindowNodeContainer(const sptr<DisplayInfo>& displayInfo, ScreenId displayGroupId)
 {
     DisplayId displayId = displayInfo->GetDisplayId();
@@ -98,6 +100,22 @@ uint32_t WindowNodeContainer::GetWindowCountByType(WindowType windowType)
         }
     };
     std::for_each(belowAppWindowNode_->children_.begin(), belowAppWindowNode_->children_.end(), counter);
+    std::for_each(appWindowNode_->children_.begin(), appWindowNode_->children_.end(), counter);
+    std::for_each(aboveAppWindowNode_->children_.begin(), aboveAppWindowNode_->children_.end(), counter);
+    return windowNumber;
+}
+
+uint32_t WindowNodeContainer::GetMainFloatingWindowCount()
+{
+    uint32_t windowNumber = 0;
+    auto counter = [&windowNumber](sptr<WindowNode>& windowNode) {
+        WindowType windowType = windowNode->GetWindowType();
+        WindowMode windowMode = windowNode->GetWindowMode();
+        if (WindowHelper::IsMainFloatingWindow(windowType, windowMode) &&
+            !windowNode->startingWindowShown_) {
+            ++windowNumber;
+        }
+    };
     std::for_each(appWindowNode_->children_.begin(), appWindowNode_->children_.end(), counter);
     std::for_each(aboveAppWindowNode_->children_.begin(), aboveAppWindowNode_->children_.end(), counter);
     return windowNumber;
@@ -219,6 +237,17 @@ void WindowNodeContainer::LayoutWhenAddWindowNode(sptr<WindowNode>& node, bool a
     }
 }
 
+void WindowNodeContainer::UpdateFloatModeWindowZorder(sptr<WindowNode>& node)
+{
+    if (node == nullptr || !isFloatWindowAboveFullWindow_) {
+        return;
+    }
+
+    // TODO : To reset float window zorder;
+    SortFloatingMainWindowInRootNode(appWindowNode_);
+    SortFloatingMainWindowInRootNode(aboveAppWindowNode_);
+}
+
 WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode, bool afterAnimation)
 {
     if (!node->startingWindowShown_) { // window except main Window
@@ -250,6 +279,8 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
         // raise the z-order of window pair
         RaiseSplitRelatedWindowToTop(node);
     }
+    UpdateFloatModeWindowZorder(node);
+    MinimizeOldestMainFloatingWindow(node);
     AssignZOrder();
     LayoutWhenAddWindowNode(node, afterAnimation);
     UpdateCameraFloatWindowStatus(node, true);
@@ -389,6 +420,45 @@ uint32_t WindowNodeContainer::GetAppWindowNum()
         }
     }
     return num;
+}
+
+void WindowNodeContainer::SetIsFloatWindowAboveFullWindow(bool isAbove)
+{
+    isFloatWindowAboveFullWindow_ = isAbove;
+}
+
+void WindowNodeContainer::SetMaxFloatAppMainWindowNumber(uint32_t maxNumber)
+{
+    maxFloatAppMainWindowNumber_ = maxNumber;
+}
+
+void WindowNodeContainer::SortFloatingMainWindowInRootNode(sptr<WindowNode>& rootNode)
+{
+    WLOGFD("SortFloatingMainWindowInRootNode start");
+    std::vector<sptr<WindowNode>> floatWindows;
+    auto& allWindows = rootNode->children_;
+    auto itor = allWindows.begin();
+    while (itor != allWindows.end()) {
+        auto window = *itor;
+        if (!WindowHelper::IsMainWindow(window->GetWindowType())) {
+            itor++;
+            continue;
+        }
+        bool fullScreenSubWindow = false;
+        for (auto& subWindow : window->children_) {
+            if (subWindow->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN) {
+                fullScreenSubWindow = true;
+                break;
+            }
+        }
+        if (window->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING && !fullScreenSubWindow) {
+            floatWindows.emplace_back(window);
+            allWindows.erase(itor);
+        } else {
+            itor++;
+        }
+    }
+    allWindows.insert(allWindows.end(), floatWindows.begin(), floatWindows.end());
 }
 
 WMError WindowNodeContainer::HandleRemoveWindow(sptr<WindowNode>& node)
@@ -1466,6 +1536,8 @@ WMError WindowNodeContainer::RaiseZOrderForAppWindow(sptr<WindowNode>& node, spt
     } else {
         // do nothing
     }
+    UpdateFloatModeWindowZorder(node);
+
     AssignZOrder();
     WLOGI("RaiseZOrderForAppWindow finished");
     DumpScreenWindowTreeByWinId(node->GetWindowId());
@@ -1636,6 +1708,37 @@ void WindowNodeContainer::MinimizeOldestAppWindow()
     }
     for (auto& appNode : aboveAppWindowNode_->children_) {
         if (appNode->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+            MinimizeApp::AddNeedMinimizeApp(appNode, MinimizeReason::MAX_APP_COUNT);
+            return;
+        }
+    }
+    WLOGI("no window needs to minimize");
+}
+
+void WindowNodeContainer::MinimizeOldestMainFloatingWindow(sptr<WindowNode>& windowNode)
+{
+    if (maxFloatAppMainWindowNumber_ == 0) {
+        return;
+    }
+
+    auto windowNumber = GetMainFloatingWindowCount();
+    if (windowNumber <= maxFloatAppMainWindowNumber_) {
+        return;
+    }
+
+    for (auto& appNode : appWindowNode_->children_) {
+        WindowType windowType = appNode->GetWindowType();
+        WindowMode windowMode = appNode->GetWindowMode();
+        if (windowNode != appNode && WindowHelper::IsMainFloatingWindow(windowType, windowMode)) {
+            MinimizeApp::AddNeedMinimizeApp(appNode, MinimizeReason::MAX_APP_COUNT);
+            return;
+        }
+    }
+
+    for (auto& appNode : aboveAppWindowNode_->children_) {
+        WindowType windowType = appNode->GetWindowType();
+        WindowMode windowMode = appNode->GetWindowMode();
+        if (windowNode != appNode && WindowHelper::IsMainFloatingWindow(windowType, windowMode)) {
             MinimizeApp::AddNeedMinimizeApp(appNode, MinimizeReason::MAX_APP_COUNT);
             return;
         }
@@ -2068,6 +2171,7 @@ WMError WindowNodeContainer::SetWindowMode(sptr<WindowNode>& node, WindowMode ds
     UpdateSizeChangeReason(node, srcMode, dstMode);
     node->SetWindowMode(dstMode);
     windowPair->UpdateIfSplitRelated(node);
+    
 
     if (WindowHelper::IsMainWindow(node->GetWindowType())) {
         if (WindowHelper::IsFloatingWindow(node->GetWindowMode())) {

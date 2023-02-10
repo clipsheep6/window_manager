@@ -848,6 +848,13 @@ WMError WindowRoot::SetWindowMode(sptr<WindowNode>& node, WindowMode dstMode)
         DisplayManagerServiceInner::GetInstance().SetOrientationFromWindow(nextRotatableWindow->GetDisplayId(),
             nextRotatableWindow->GetRequestedOrientation());
     }
+
+    if (res == WMError::WM_OK) {
+        // TODO : how to reset float window zorder with full screen window
+        container->UpdateFloatModeWindowZorder(node);
+        container->MinimizeOldestMainFloatingWindow(node);
+        container->AssignZOrder();
+    }
     return res;
 }
 
