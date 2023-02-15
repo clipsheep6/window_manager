@@ -70,8 +70,8 @@ void SurfaceReader::OnVsync()
     sptr<SurfaceBuffer> cbuffer = nullptr;
     int32_t fence = -1;
     int64_t timestamp = 0;
-    Rect damage;
-    auto sret = csurface_->AcquireBuffer(cbuffer, fence, timestamp, damage);
+    std::vector<Rect> damages;
+    auto sret = csurface_->AcquireBuffer(cbuffer, fence, timestamp, damages);
     sptr<SyncFence> acquireFence = new SyncFence(fence);
     acquireFence->Wait(3000); // 3000ms
     if (cbuffer == nullptr || sret != OHOS::SURFACE_ERROR_OK) {

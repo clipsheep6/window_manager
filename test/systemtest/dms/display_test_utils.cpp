@@ -94,12 +94,12 @@ void DisplayTestUtils::OnVsync()
     sptr<SurfaceBuffer> cbuffer = nullptr;
     int32_t fence = -1;
     int64_t timestamp = 0;
-    OHOS::Rect damage;
+    std::vector<OHOS::Rect> damages;
     if (csurface_ == nullptr) {
         WLOGFE("csurface_ is null");
         return;
     }
-    auto sret = csurface_->AcquireBuffer(cbuffer, fence, timestamp, damage);
+    auto sret = csurface_->AcquireBuffer(cbuffer, fence, timestamp, damages);
     UniqueFd fenceFd(fence);
     if (cbuffer == nullptr || sret != OHOS::SURFACE_ERROR_OK) {
         WLOGFE("acquire buffer failed");
