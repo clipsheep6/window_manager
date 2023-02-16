@@ -2142,7 +2142,7 @@ void WindowImpl::SetModeSupportInfo(uint32_t modeSupportInfo)
     property_->SetModeSupportInfo(modeSupportInfo);
 }
 
-void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason)
+void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason, const uint64_t syncId)
 {
     if (state_ == WindowState::STATE_DESTROYED) {
         WLOGFW("invalid window state");
@@ -2185,7 +2185,7 @@ void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSize
         NotifySizeChange(rectToAce, reason);
         lastSizeChangeReason_ = reason;
     }
-    UpdateViewportConfig(rectToAce, display, reason);
+    UpdateViewportConfig(rectToAce, display, reason, syncId);
 }
 
 void WindowImpl::UpdateMode(WindowMode mode)
@@ -2710,7 +2710,8 @@ void WindowImpl::UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType
     NotifyAvoidAreaChange(avoidArea, type);
 }
 
-void WindowImpl::UpdateViewportConfig(const Rect& rect, const sptr<Display>& display, WindowSizeChangeReason reason)
+void WindowImpl::UpdateViewportConfig(const Rect& rect, const sptr<Display>& display, WindowSizeChangeReason reason,
+    const uint64_t syncId)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (uiContent_ == nullptr) {
@@ -2722,9 +2723,22 @@ void WindowImpl::UpdateViewportConfig(const Rect& rect, const sptr<Display>& dis
     if (display) {
         config.SetDensity(display->GetVirtualPixelRatio());
     }
-    uiContent_->UpdateViewportConfig(config, reason);
+    auto callback = [this]() {
+        if (transactionSyncController_ != nullptr) {
+            transactionSyncController_->CreateTransactionFinished();
+        }
+    };
+    uiContent_->UpdateViewportConfig(config, reason, callback, syncId);
     WLOGFD("UpdateViewportConfig Id:%{public}u, windowRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
         property_->GetWindowId(), rect.posX_, rect.posY_, rect.width_, rect.height_);
+}
+
+void WindowImpl::NotifyReleaseProcess()
+{
+    if (uiContent_ == nullptr) {
+        return;
+    }
+    uiContent_->NotifyReleaseProcess();
 }
 
 void WindowImpl::UpdateDecorEnable(bool needNotify)
@@ -3038,6 +3052,11 @@ void WindowImpl::UpdateZoomTransform(const Transform& trans, bool isDisplayZoomO
     property_->SetDisplayZoomState(isDisplayZoomOn);
 }
 
+void WindowImpl::SetRSTransactionSyncController(const sptr<RSISyncTransactionController>& controller)
+{
+    transactionSyncController_ = controller;
+}
+
 void WindowImpl::ClearListenersById(uint32_t winId)
 {
     std::lock_guard<std::recursive_mutex> lock(globalMutex_);
@@ -3056,7 +3075,12 @@ void WindowImpl::NotifySizeChange(Rect rect, WindowSizeChangeReason reason)
     auto windowChangeListeners = GetListeners<IWindowChangeListener>();
     for (auto& listener : windowChangeListeners) {
         if (listener.GetRefPtr() != nullptr) {
-            listener.GetRefPtr()->OnSizeChange(rect, reason);
+            auto callback = [this] () {
+                if (transactionSyncController_ != nullptr) {
+                    transactionSyncController_->CreateTransactionFinished();
+                }
+            };
+            listener.GetRefPtr()->OnSizeChange(rect, reason, callback);
         }
     }
 }

@@ -49,7 +49,8 @@ const bool REGISTER_RESULT = SystemAbility::MakeAndRegisterAbility(&SingletonCon
 DisplayManagerService::DisplayManagerService() : SystemAbility(DISPLAY_MANAGER_SERVICE_SA_ID, true),
     abstractDisplayController_(new AbstractDisplayController(mutex_,
         std::bind(&DisplayManagerService::NotifyDisplayStateChange, this,
-            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4))),
+            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
+        std::bind(&DisplayManagerService::NotifyRSTransactionSync, this))),
     abstractScreenController_(new AbstractScreenController(mutex_)),
     displayPowerController_(new DisplayPowerController(mutex_,
         std::bind(&DisplayManagerService::NotifyDisplayStateChange, this,
@@ -143,6 +144,11 @@ void DisplayManagerService::RegisterDisplayChangeListener(sptr<IDisplayChangeLis
     WLOGFI("IDisplayChangeListener registered");
 }
 
+void DisplayManagerService::RegisterTransactionSyncListener(sptr<ITransactionSyncListener> listener)
+{
+    transactionSyncListener_ = listener;
+}
+
 void DisplayManagerService::RegisterWindowInfoQueriedListener(const sptr<IWindowInfoQueriedListener>& listener)
 {
     windowInfoQueriedListener_ = listener;
@@ -174,6 +180,13 @@ void DisplayManagerService::NotifyDisplayStateChange(DisplayId defaultDisplayId,
     WLOGFI("DisplayId %{public}" PRIu64"", id);
     if (displayChangeListener_ != nullptr) {
         displayChangeListener_->OnDisplayStateChange(defaultDisplayId, displayInfo, displayInfoMap, type);
+    }
+}
+
+void DisplayManagerService::NotifyRSTransactionSync()
+{
+    if (transactionSyncListener_ != nullptr) {
+        transactionSyncListener_->OnTransactionSync();
     }
 }
 

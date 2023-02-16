@@ -36,7 +36,7 @@ WindowLayoutPolicyTile::WindowLayoutPolicyTile(const sptr<DisplayGroupInfo>& dis
 {
 }
 
-void WindowLayoutPolicyTile::Launch()
+void WindowLayoutPolicyTile::Launch(const sptr<RSSyncTransactionController>& controller)
 {
     for (auto& iter : displayGroupInfo_->GetAllDisplayRects()) {
         const auto& displayId = iter.first;
@@ -341,7 +341,8 @@ void WindowLayoutPolicyTile::ApplyPresetRectForTileWindows(DisplayId displayId)
     RefreshTileQueue(displayId, needMinimizeNodes, needRecoverNodes);
 }
 
-void WindowLayoutPolicyTile::UpdateLayoutRect(const sptr<WindowNode>& node)
+void WindowLayoutPolicyTile::UpdateLayoutRect(const sptr<WindowNode>& node,
+    const sptr<RSSyncTransactionController>& controller)
 {
     UpdateWindowSizeLimits(node);
     bool floatingWindow = (node->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING);

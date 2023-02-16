@@ -663,6 +663,13 @@ void WindowController::NotifyDisplayStateChange(DisplayId defaultDisplayId, sptr
     WLOGFD("NotifyDisplayStateChange end, type: %{public}u", type);
 }
 
+void WindowController::NotifyRSTransactionSync()
+{
+    if (transactionSyncController_ != nullptr) {
+        transactionSyncController_->OpenSyncTransaction();
+    }
+}
+
 void WindowController::SetDefaultDisplayInfo(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo)
 {
     if (displayInfo == nullptr) {
@@ -697,7 +704,8 @@ void WindowController::ProcessDisplayChange(DisplayId defaultDisplayId, sptr<Dis
         case DisplayStateChangeType::SIZE_CHANGE:
         case DisplayStateChangeType::UPDATE_ROTATION:
         case DisplayStateChangeType::VIRTUAL_PIXEL_RATIO_CHANGE: {
-            windowRoot_->ProcessDisplayChange(defaultDisplayId, displayInfo, displayInfoMap, type);
+            windowRoot_->ProcessDisplayChange(defaultDisplayId, displayInfo, displayInfoMap, type,
+                transactionSyncController_);
             break;
         }
         default: {

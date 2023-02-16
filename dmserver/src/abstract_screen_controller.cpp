@@ -742,6 +742,10 @@ bool AbstractScreenController::SetRotation(ScreenId screenId, Rotation rotationA
             WLOGE("Convert to RsScreenId fail. screenId: %{public}" PRIu64"", screenId);
             return false;
         }
+        if (abstractScreenCallback_ != nullptr) {
+            abstractScreenCallback_->onTransactionSync_();
+        }
+        usleep(1000);
         SetScreenRotateAnimation(screen, screenId, rotationAfter);
         screen->rotation_ = rotationAfter;
     } else {

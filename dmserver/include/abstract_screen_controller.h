@@ -36,11 +36,13 @@ namespace OHOS::Rosen {
 class AbstractScreenController : public RefBase {
 using OnAbstractScreenConnectCb = std::function<void(sptr<AbstractScreen>)>;
 using OnAbstractScreenChangeCb = std::function<void(sptr<AbstractScreen>, DisplayChangeEvent event)>;
+using OnRSTransactionSyncCb = std::function<void()>;
 public:
     struct AbstractScreenCallback : public RefBase {
         OnAbstractScreenConnectCb onConnect_;
         OnAbstractScreenConnectCb onDisconnect_;
         OnAbstractScreenChangeCb onChange_;
+        OnRSTransactionSyncCb onTransactionSync_;
     };
 
     explicit AbstractScreenController(std::recursive_mutex& mutex);

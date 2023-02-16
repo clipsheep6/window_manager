@@ -46,9 +46,9 @@ WindowLayoutPolicyCascade::WindowLayoutPolicyCascade(const sptr<DisplayGroupInfo
     }
 }
 
-void WindowLayoutPolicyCascade::Launch()
+void WindowLayoutPolicyCascade::Launch(const sptr<RSSyncTransactionController>& controller)
 {
-    InitAllRects();
+    InitAllRects(controller);
     WLOGI("WindowLayoutPolicyCascade::Launch");
 }
 
@@ -93,13 +93,13 @@ void WindowLayoutPolicyCascade::Reorder()
     WLOGI("Cascade Reorder end");
 }
 
-void WindowLayoutPolicyCascade::InitAllRects()
+void WindowLayoutPolicyCascade::InitAllRects(const sptr<RSSyncTransactionController>& controller)
 {
     UpdateDisplayGroupRect();
     for (auto& iter : displayGroupInfo_->GetAllDisplayRects()) {
         auto displayId = iter.first;
         InitSplitRects(displayId);
-        LayoutWindowTree(displayId);
+        LayoutWindowTree(displayId, controller);
         InitCascadeRect(displayId);
     }
 }
@@ -425,7 +425,8 @@ void WindowLayoutPolicyCascade::ApplyWindowRectConstraints(const sptr<WindowNode
         node->GetWindowId(), winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
 }
 
-void WindowLayoutPolicyCascade::UpdateLayoutRect(const sptr<WindowNode>& node)
+void WindowLayoutPolicyCascade::UpdateLayoutRect(const sptr<WindowNode>& node,
+    const sptr<RSSyncTransactionController>& controller)
 {
     auto property = node->GetWindowProperty();
     if (property == nullptr) {
@@ -472,7 +473,7 @@ void WindowLayoutPolicyCascade::UpdateLayoutRect(const sptr<WindowNode>& node)
     // postProcess after update winRect
     CalcAndSetNodeHotZone(winRect, node);
     UpdateSurfaceBounds(node, winRect, lastWinRect);
-    NotifyClientAndAnimation(node, winRect, node->GetWindowSizeChangeReason());
+    NotifyClientAndAnimation(node, winRect, node->GetWindowSizeChangeReason(), controller);
 }
 
 void WindowLayoutPolicyCascade::LimitDividerPositionBySplitRatio(DisplayId displayId, Rect& winRect) const

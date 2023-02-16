@@ -28,7 +28,8 @@ public:
 
     ~WindowProxy() {};
 
-    WMError UpdateWindowRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason) override;
+    WMError UpdateWindowRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
+        const uint64_t syncId = 0) override;
     WMError UpdateWindowMode(WindowMode mode) override;
     WMError UpdateWindowModeSupportInfo(uint32_t modeSupportInfo) override;
     WMError UpdateFocusStatus(bool focused) override;
@@ -48,6 +49,8 @@ public:
     WMError NotifyWindowClientPointUp(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
     WMError UpdateZoomTransform(const Transform& trans, bool isDisplayZoomOn) override;
     WMError RestoreSplitWindowMode(uint32_t mode) override;
+    WMError SetRSTransactionSyncController(const sptr<RSISyncTransactionController>& controller) override;
+    WMError NotifyReleaseProcess() override;
 private:
     static inline BrokerDelegator<WindowProxy> delegator_;
 };

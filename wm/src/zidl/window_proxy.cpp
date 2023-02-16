@@ -26,7 +26,8 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowProxy"};
 }
 
-WMError WindowProxy::UpdateWindowRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason)
+WMError WindowProxy::UpdateWindowRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
+    const uint64_t syncId)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -46,6 +47,10 @@ WMError WindowProxy::UpdateWindowRect(const struct Rect& rect, bool decoStatus, 
     }
     if (!data.WriteUint32(static_cast<uint32_t>(reason))) {
         WLOGFE("Write WindowSizeChangeReason failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteUint64(syncId)) {
+        WLOGFE("Write transaction sync Id failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
 
@@ -457,6 +462,57 @@ WMError WindowProxy::RestoreSplitWindowMode(uint32_t mode)
     }
     uint32_t requestCode = static_cast<uint32_t>(WindowMessage::TRANS_ID_RESTORE_SPLIT_WINDOW_MODE);
     if (Remote()->SendRequest(requestCode, data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    return WMError::WM_OK;
+}
+
+WMError WindowProxy::SetRSTransactionSyncController(const sptr<RSISyncTransactionController>& controller)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    // MessageOption option(MessageOption::TF_ASYNC);
+
+    if (controller == nullptr) {
+        WLOGFE("WindowProxy Failed to set transaction sync controller, controller is null!");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WindowProxy Failed to WriteInterfaceToken!");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    if (!data.WriteRemoteObject(controller->AsObject())) {
+        WLOGFE("WindowProxy Failed to write controller!");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    auto error = Remote()->SendRequest(
+        static_cast<uint32_t>(WindowMessage::TRANS_ID_SET_RS_TRANSACTION_SYNC_CONTROLLER), data, reply, option);
+    if (error != ERR_NONE) {
+        WLOGFE("WindowProxy Send request error: %{public}d", error);
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WMError>(ret);
+}
+
+WMError WindowProxy::NotifyReleaseProcess()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(WindowMessage::TRANS_ID_NOTIFY_RELEASE_PROCESS),
+        data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }

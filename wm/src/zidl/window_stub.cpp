@@ -18,6 +18,7 @@
 #include "ipc_skeleton.h"
 #include "pointer_event.h"
 #include "window_manager_hilog.h"
+#include <rs_sync_transaction_controller_proxy.h>
 
 namespace OHOS {
 namespace Rosen {
@@ -41,7 +42,8 @@ int WindowStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParce
             struct Rect rect { data.ReadInt32(), data.ReadInt32(), data.ReadUint32(), data.ReadUint32() };
             bool decoStatus = data.ReadBool();
             WindowSizeChangeReason reason = static_cast<WindowSizeChangeReason>(data.ReadUint32());
-            UpdateWindowRect(rect, decoStatus, reason);
+            uint64_t syncId = data.ReadUint64();
+            UpdateWindowRect(rect, decoStatus, reason, syncId);
             break;
         }
         case WindowMessage::TRANS_ID_UPDATE_WINDOW_MODE: {
@@ -151,6 +153,17 @@ int WindowStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParce
         }
         case WindowMessage::TRANS_ID_RESTORE_SPLIT_WINDOW_MODE: {
             RestoreSplitWindowMode(data.ReadUint32());
+            break;
+        }
+        case WindowMessage::TRANS_ID_SET_RS_TRANSACTION_SYNC_CONTROLLER: {
+            sptr<IRemoteObject> controllerObject = data.ReadRemoteObject();
+            sptr<RSISyncTransactionController> controller = iface_cast<RSISyncTransactionController>(controllerObject);
+            WMError errCode = SetRSTransactionSyncController(controller);
+            reply.WriteInt32(static_cast<int32_t>(errCode));
+            break;
+        }
+        case WindowMessage::TRANS_ID_NOTIFY_RELEASE_PROCESS: {
+            NotifyReleaseProcess();
             break;
         }
         default:

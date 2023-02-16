@@ -33,7 +33,7 @@ public:
     WindowLayoutPolicyTile(const sptr<DisplayGroupInfo>& displayGroupInfo,
         DisplayGroupWindowTree& displayGroupWindowTree);
     ~WindowLayoutPolicyTile() = default;
-    void Launch() override;
+    void Launch(const sptr<RSSyncTransactionController>& controller = nullptr) override;
     bool IsTileRectSatisfiedWithSizeLimits(const sptr<WindowNode>& node) override;
     void PerformWindowLayout(const sptr<WindowNode>& node, WindowUpdateType type) override;
 
@@ -58,7 +58,8 @@ private:
      * methods for calculate tile window rect
      */
     void ApplyPresetRectForTileWindows(DisplayId displayId);
-    void UpdateLayoutRect(const sptr<WindowNode>& node) override;
+    void UpdateLayoutRect(const sptr<WindowNode>& node,
+        const sptr<RSSyncTransactionController>& controller = nullptr) override;
     bool IsWindowAlreadyInTileQueue(const sptr<WindowNode>& node);
     bool IsValidTileQueueAndPresetRects(DisplayId displayId);
 

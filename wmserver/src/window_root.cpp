@@ -1482,7 +1482,8 @@ void WindowRoot::ProcessDisplayDestroy(DisplayId defaultDisplayId, sptr<DisplayI
 }
 
 void WindowRoot::ProcessDisplayChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
-    const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type)
+    const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type,
+    const sptr<RSSyncTransactionController>& controller)
 {
     if (displayInfo == nullptr) {
         WLOGFE("get display failed");
@@ -1505,7 +1506,8 @@ void WindowRoot::ProcessDisplayChange(DisplayId defaultDisplayId, sptr<DisplayIn
     }
 
     auto displayRectMap = GetAllDisplayRectsByDisplayInfo(displayInfoMap);
-    container->GetDisplayGroupController()->ProcessDisplayChange(defaultDisplayId, displayInfo, displayRectMap, type);
+    container->GetDisplayGroupController()->ProcessDisplayChange(defaultDisplayId, displayInfo, displayRectMap,
+        type, controller);
 }
 
 float WindowRoot::GetVirtualPixelRatio(DisplayId displayId) const

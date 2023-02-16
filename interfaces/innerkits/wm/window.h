@@ -67,7 +67,8 @@ public:
 
 class IWindowChangeListener : virtual public RefBase {
 public:
-    virtual void OnSizeChange(Rect rect, WindowSizeChangeReason reason) {}
+    virtual void OnSizeChange(Rect rect, WindowSizeChangeReason reason,
+        const std::function<void()>& callback = nullptr) {}
     virtual void OnModeChange(WindowMode mode, bool hasDeco = true) {}
 };
 

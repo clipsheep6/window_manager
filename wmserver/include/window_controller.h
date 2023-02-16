@@ -18,6 +18,7 @@
 
 #include <refbase.h>
 #include <rs_iwindow_animation_controller.h>
+#include <rs_sync_transaction_controller.h>
 
 #include "accessibility_connection.h"
 #include "display_zoom_controller.h"
@@ -35,7 +36,8 @@ class WindowController : public RefBase {
 public:
     WindowController(sptr<WindowRoot>& root, sptr<InputWindowMonitor> inputWindowMonitor) : windowRoot_(root),
         inputWindowMonitor_(inputWindowMonitor), accessibilityConnection_(new AccessibilityConnection(windowRoot_)),
-        displayZoomController_(new DisplayZoomController(root)) {}
+        displayZoomController_(new DisplayZoomController(root)),
+        transactionSyncController_(new RSSyncTransactionController()) {}
     ~WindowController() = default;
 
     WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
@@ -52,6 +54,7 @@ public:
     WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId);
     void NotifyDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type);
+    void NotifyRSTransactionSync();
     WMError NotifyServerReadyToMoveOrDrag(uint32_t windowId, sptr<MoveDragProperty>& moveDragProperty);
     WMError ProcessPointDown(uint32_t windowId, bool isPointDown);
     WMError ProcessPointUp(uint32_t windowId);
@@ -131,6 +134,7 @@ private:
     Rect defaultDisplayRect_ = { 0, 0, 0, 0 };
     bool isBootAnimationStopped_ = false;
     std::shared_ptr<RSSurfaceNode> maskingSurfaceNode_ = nullptr;
+    sptr<RSSyncTransactionController> transactionSyncController_;
     const std::map<DragType, uint32_t> STYLEID_MAP = {
         {DragType::DRAG_UNDEFINED, MMI::MOUSE_ICON::DEFAULT},
         {DragType::DRAG_BOTTOM_OR_TOP, MMI::MOUSE_ICON::NORTH_SOUTH},

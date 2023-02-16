@@ -477,7 +477,8 @@ void DisplayGroupController::UpdateNodeSizeChangeReasonWithRotation(DisplayId di
 
 void DisplayGroupController::ProcessDisplayChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
                                                   const std::map<DisplayId, Rect>& displayRectMap,
-                                                  DisplayStateChangeType type)
+                                                  DisplayStateChangeType type,
+                                                  const sptr<RSSyncTransactionController>& controller)
 {
     DisplayId displayId = displayInfo->GetDisplayId();
     WLOGI("display change, displayId: %{public}" PRIu64", type: %{public}d", displayId, type);
@@ -488,7 +489,7 @@ void DisplayGroupController::ProcessDisplayChange(DisplayId defaultDisplayId, sp
         }
         case DisplayStateChangeType::DISPLAY_COMPRESS:
         case DisplayStateChangeType::SIZE_CHANGE: {
-            ProcessDisplaySizeChangeOrRotation(defaultDisplayId, displayId, displayRectMap, type);
+            ProcessDisplaySizeChangeOrRotation(defaultDisplayId, displayId, displayRectMap, type, controller);
             break;
         }
         case DisplayStateChangeType::VIRTUAL_PIXEL_RATIO_CHANGE: {
@@ -503,7 +504,8 @@ void DisplayGroupController::ProcessDisplayChange(DisplayId defaultDisplayId, sp
 }
 
 void DisplayGroupController::ProcessDisplaySizeChangeOrRotation(DisplayId defaultDisplayId, DisplayId displayId,
-    const std::map<DisplayId, Rect>& displayRectMap, DisplayStateChangeType type)
+    const std::map<DisplayId, Rect>& displayRectMap, DisplayStateChangeType type,
+    const sptr<RSSyncTransactionController>& controller)
 {
     // modify RSTree and window tree of displayGroup for cross-display nodes
     ProcessCrossNodes(defaultDisplayId, type);
@@ -514,7 +516,7 @@ void DisplayGroupController::ProcessDisplaySizeChangeOrRotation(DisplayId defaul
     if (layoutPolicy == nullptr) {
         return;
     }
-    layoutPolicy->ProcessDisplaySizeChangeOrRotation(displayId, displayRectMap);
+    layoutPolicy->ProcessDisplaySizeChangeOrRotation(displayId, displayRectMap, controller);
     ProcessWindowPairWhenDisplayChange(true);
 }
 

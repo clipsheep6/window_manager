@@ -31,6 +31,7 @@
 #include "freeze_controller.h"
 #include "rsscreen_change_listener.h"
 #include "singleton_delegator.h"
+#include "transaction_sync_listener.h"
 #include "wm_common_inner.h"
 #include "wm_single_instance.h"
 #include "window_common_event.h"
@@ -57,6 +58,11 @@ public:
     virtual void HasPrivateWindow(DisplayId id, bool& hasPrivateWindow) override;
 };
 
+class RSTransactionSyncListener : public ITransactionSyncListener {
+public:
+    virtual void OnTransactionSync() override;
+};
+
 class WindowManagerServiceHandler : public AAFwk::WindowManagerServiceHandlerStub {
 public:
     virtual void NotifyWindowTransition(
@@ -73,6 +79,7 @@ class RSUIDirector;
 class WindowManagerService : public SystemAbility, public WindowManagerStub {
 friend class DisplayChangeListener;
 friend class WindowManagerServiceHandler;
+friend class RSTransactionSyncListener;
 DECLARE_SYSTEM_ABILITY(WindowManagerService);
 WM_DECLARE_SINGLE_INSTANCE_BASE(WindowManagerService);
 
@@ -144,6 +151,7 @@ private:
     void OnWindowEvent(Event event, const sptr<IRemoteObject>& remoteObject);
     void NotifyDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type);
+    void NotifyRSTransactionSync();
     WMError GetFocusWindowInfo(sptr<IRemoteObject>& abilityToken);
     WMError CheckSystemWindowPermission(const sptr<WindowProperty>& property) const;
     WMError CheckAnimationPermission(const sptr<WindowProperty>& property) const;

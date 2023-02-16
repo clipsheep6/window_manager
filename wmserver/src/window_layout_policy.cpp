@@ -39,7 +39,7 @@ WindowLayoutPolicy::WindowLayoutPolicy(const sptr<DisplayGroupInfo>& displayGrou
     }
 }
 
-void WindowLayoutPolicy::Launch()
+void WindowLayoutPolicy::Launch(const sptr<RSSyncTransactionController>& controller)
 {
     WLOGI("WindowLayoutPolicy::Launch");
 }
@@ -189,11 +189,11 @@ void WindowLayoutPolicy::UpdateDisplayRectAndDisplayGroupInfo(const std::map<Dis
     }
 }
 
-void WindowLayoutPolicy::PostProcessWhenDisplayChange()
+void WindowLayoutPolicy::PostProcessWhenDisplayChange(const sptr<RSSyncTransactionController>& controller)
 {
     displayGroupInfo_->UpdateLeftAndRightDisplayId();
     UpdateMultiDisplayFlag();
-    Launch();
+    Launch(controller);
 }
 
 void WindowLayoutPolicy::ProcessDisplayCreate(DisplayId displayId, const std::map<DisplayId, Rect>& displayRectMap)
@@ -254,7 +254,8 @@ void WindowLayoutPolicy::ProcessDisplayDestroy(DisplayId displayId, const std::m
 }
 
 void WindowLayoutPolicy::ProcessDisplaySizeChangeOrRotation(DisplayId displayId,
-                                                            const std::map<DisplayId, Rect>& displayRectMap)
+                                                            const std::map<DisplayId, Rect>& displayRectMap,
+                                                            const sptr<RSSyncTransactionController>& controller)
 {
     const auto& oriDisplayRectMap = displayGroupInfo_->GetAllDisplayRects();
     // check displayId and displayRectMap size
@@ -273,7 +274,7 @@ void WindowLayoutPolicy::ProcessDisplaySizeChangeOrRotation(DisplayId displayId,
     }
 
     UpdateDisplayRectAndDisplayGroupInfo(displayRectMap);
-    PostProcessWhenDisplayChange();
+    PostProcessWhenDisplayChange(controller);
     WLOGI("Process display change, displayId: %{public}" PRIu64"", displayId);
 }
 
@@ -282,14 +283,15 @@ void WindowLayoutPolicy::ProcessDisplayVprChange(DisplayId displayId)
     Launch();
 }
 
-void WindowLayoutPolicy::LayoutWindowNodesByRootType(const std::vector<sptr<WindowNode>>& nodeVec)
+void WindowLayoutPolicy::LayoutWindowNodesByRootType(const std::vector<sptr<WindowNode>>& nodeVec,
+    const sptr<RSSyncTransactionController>& controller)
 {
     if (nodeVec.empty()) {
         WLOGW("The node vector is empty!");
         return;
     }
     for (auto& node : nodeVec) {
-        LayoutWindowNode(node);
+        LayoutWindowNode(node, controller);
     }
 }
 
@@ -321,7 +323,7 @@ void WindowLayoutPolicy::NotifyAnimationSizeChangeIfNeeded()
     RemoteAnimation::NotifyAnimationTargetsUpdate(fullScreenWinIds, floatMainIds);
 }
 
-void WindowLayoutPolicy::LayoutWindowTree(DisplayId displayId)
+void WindowLayoutPolicy::LayoutWindowTree(DisplayId displayId, const sptr<RSSyncTransactionController>& controller)
 {
     // reset limit rect
     limitRectMap_[displayId] = displayGroupInfo_->GetDisplayRect(displayId);
@@ -329,16 +331,17 @@ void WindowLayoutPolicy::LayoutWindowTree(DisplayId displayId)
 
     // ensure that the avoid area windows are traversed first
     auto& displayWindowTree = displayGroupWindowTree_[displayId];
-    LayoutWindowNodesByRootType(*(displayWindowTree[WindowRootNodeType::ABOVE_WINDOW_NODE]));
+    LayoutWindowNodesByRootType(*(displayWindowTree[WindowRootNodeType::ABOVE_WINDOW_NODE]), controller);
     if (IsFullScreenRecentWindowExist(*(displayWindowTree[WindowRootNodeType::ABOVE_WINDOW_NODE]))) {
         WLOGFD("recent window on top, early exit layout tree");
         return;
     }
-    LayoutWindowNodesByRootType(*(displayWindowTree[WindowRootNodeType::APP_WINDOW_NODE]));
-    LayoutWindowNodesByRootType(*(displayWindowTree[WindowRootNodeType::BELOW_WINDOW_NODE]));
+    LayoutWindowNodesByRootType(*(displayWindowTree[WindowRootNodeType::APP_WINDOW_NODE]), controller);
+    LayoutWindowNodesByRootType(*(displayWindowTree[WindowRootNodeType::BELOW_WINDOW_NODE]), controller);
 }
 
-void WindowLayoutPolicy::LayoutWindowNode(const sptr<WindowNode>& node)
+void WindowLayoutPolicy::LayoutWindowNode(const sptr<WindowNode>& node,
+    const sptr<RSSyncTransactionController>& controller)
 {
     if (node == nullptr || node->parent_ == nullptr) {
         WLOGFE("Node or it's parent is nullptr");
@@ -353,7 +356,7 @@ void WindowLayoutPolicy::LayoutWindowNode(const sptr<WindowNode>& node)
      * 1. update window rect
      * 2. update diplayLimitRect and displayGroupRect if this is avoidNode
      */
-    UpdateLayoutRect(node);
+    UpdateLayoutRect(node, controller);
     if (WindowHelper::IsSystemBarWindow(node->GetWindowType())) {
         UpdateDisplayLimitRect(node, limitRectMap_[node->GetDisplayId()]);
         UpdateDisplayGroupLimitRect();
@@ -370,10 +373,27 @@ bool WindowLayoutPolicy::IsVerticalDisplay(DisplayId displayId) const
 }
 
 void WindowLayoutPolicy::NotifyClientAndAnimation(const sptr<WindowNode>& node,
-    const Rect& winRect, WindowSizeChangeReason reason)
+    const Rect& winRect, WindowSizeChangeReason reason, const sptr<RSSyncTransactionController>& controller)
 {
     if (node->GetWindowToken()) {
-        node->GetWindowToken()->UpdateWindowRect(winRect, node->GetDecoStatus(), reason);
+        if (controller != nullptr && reason == WindowSizeChangeReason::ROTATION) {
+            sptr<RSProcessTransactionController> processController = new RSProcessTransactionController();
+            controller->AddProcessTransactionController(processController);
+            WMError res = node->GetWindowToken()->SetRSTransactionSyncController(processController);
+            if (res != WMError::WM_ERROR_NULLPTR) {
+                controller->StartTransactionSyncForProcess();
+            }
+            auto releaseCallback = [node]() {
+                auto proxy = node->GetWindowToken();
+                if (proxy) {
+                    proxy->NotifyReleaseProcess();
+                }
+            };
+            controller->AddReleaseCallback(releaseCallback);
+            node->GetWindowToken()->UpdateWindowRect(winRect, node->GetDecoStatus(), reason, controller->GetSyncId());
+        } else {
+            node->GetWindowToken()->UpdateWindowRect(winRect, node->GetDecoStatus(), reason);
+        }
         WLOGFD("notify client id: %{public}d, winRect:[%{public}d, %{public}d, %{public}u, %{public}u], reason: "
             "%{public}u", node->GetWindowId(), winRect.posX_, winRect.posY_, winRect.width_, winRect.height_, reason);
     }

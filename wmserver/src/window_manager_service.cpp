@@ -99,6 +99,9 @@ void WindowManagerService::OnStart()
     sptr<IWindowInfoQueriedListener> windowInfoQueriedListener = new WindowInfoQueriedListener();
     DisplayManagerServiceInner::GetInstance().RegisterWindowInfoQueriedListener(windowInfoQueriedListener);
 
+    sptr<ITransactionSyncListener> transactionSyncListener = new RSTransactionSyncListener();
+    DisplayManagerServiceInner::GetInstance().RegisterTransactionSyncListener(transactionSyncListener);
+
     PostAsyncTask([this]() {
         sptr<IRSScreenChangeListener> rSScreenChangeListener = new IRSScreenChangeListener();
         rSScreenChangeListener->onConnected_
@@ -1002,6 +1005,18 @@ void DisplayChangeListener::OnDisplayStateChange(DisplayId defaultDisplayId, spt
 void DisplayChangeListener::OnScreenshot(DisplayId displayId)
 {
     WindowManagerService::GetInstance().OnScreenshot(displayId);
+}
+
+void RSTransactionSyncListener::OnTransactionSync()
+{
+    WindowManagerService::GetInstance().NotifyRSTransactionSync();
+}
+
+void WindowManagerService::NotifyRSTransactionSync()
+{
+    PostAsyncTask([this]() mutable {
+        windowController_->NotifyRSTransactionSync();
+    });
 }
 
 void WindowManagerService::NotifyServerReadyToMoveOrDrag(uint32_t windowId, sptr<WindowProperty>& windowProperty,

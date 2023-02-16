@@ -33,6 +33,7 @@ namespace Rosen {
 using SysBarNodeMap = std::unordered_map<WindowType, sptr<WindowNode>>;
 using SysBarTintMap = std::unordered_map<WindowType, SystemBarRegionTint>;
 class WindowNodeContainer;
+class RSSyncTransactionController;
 
 class DisplayGroupController : public RefBase {
 public:
@@ -52,7 +53,8 @@ public:
                                std::vector<uint32_t>& windowIds);
     void ProcessDisplayChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
                               const std::map<DisplayId, Rect>& displayRectMap,
-                              DisplayStateChangeType type);
+                              DisplayStateChangeType type,
+                              const sptr<RSSyncTransactionController>& controller = nullptr);
     sptr<WindowPair> GetWindowPairByDisplayId(DisplayId displayId);
     void SetSplitRatioConfig(const SplitRatioConfig& splitRatioConfig);
 
@@ -65,7 +67,8 @@ private:
     void AddWindowNodeOnWindowTree(sptr<WindowNode>& node, WindowRootNodeType rootType);
     void ProcessNotCrossNodesOnDestroyedDisplay(DisplayId displayId, std::vector<uint32_t>& windowIds);
     void ProcessDisplaySizeChangeOrRotation(DisplayId defaultDisplayId, DisplayId displayId,
-        const std::map<DisplayId, Rect>& displayRectMap, DisplayStateChangeType type);
+        const std::map<DisplayId, Rect>& displayRectMap, DisplayStateChangeType type,
+        const sptr<RSSyncTransactionController>& controller = nullptr);
     void ProcessCrossNodes(DisplayId defaultDisplayId, DisplayStateChangeType type);
     void MoveCrossNodeToTargetDisplay(const sptr<WindowNode>& node, DisplayId targetDisplayId);
     void MoveNotCrossNodeToDefaultDisplay(const sptr<WindowNode>& node, DisplayId displayId);
