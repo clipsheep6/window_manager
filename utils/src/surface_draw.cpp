@@ -52,12 +52,9 @@ bool SurfaceDraw::DrawImage(std::shared_ptr<RSSurfaceNode> surfaceNode, int32_t 
         WLOGE("draw window pixel failed");
         return false;
     }
-    OHOS::BufferFlushConfig flushConfig = {
-        .damage = {
-            .w = buffer->GetWidth(),
-            .h = buffer->GetHeight(),
-        },
-    };
+    OHOS::BufferFlushConfig flushConfig;
+    OHOS::Rect rect = { .w = buffer->GetWidth(), .h = buffer->GetHeight(), };
+    flushConfig.damages.push_back(rect);
     OHOS::SurfaceError ret = layer->FlushBuffer(buffer, -1, flushConfig);
     if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
         WLOGFE("draw pointer FlushBuffer ret:%{public}s", SurfaceErrorStr(ret).c_str());
@@ -83,12 +80,9 @@ bool SurfaceDraw::DrawImage(std::shared_ptr<RSSurfaceNode> surfaceNode, int32_t 
         WLOGE("draw window pixel failed");
         return false;
     }
-    OHOS::BufferFlushConfig flushConfig = {
-        .damage = {
-            .w = buffer->GetWidth(),
-            .h = buffer->GetHeight(),
-        },
-    };
+    OHOS::BufferFlushConfig flushConfig;
+    OHOS::Rect rect = { .w = buffer->GetWidth(), .h = buffer->GetHeight(), };
+    flushConfig.damages.push_back(rect);
     OHOS::SurfaceError ret = layer->FlushBuffer(buffer, -1, flushConfig);
     if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
         WLOGFE("draw pointer FlushBuffer ret:%{public}s", SurfaceErrorStr(ret).c_str());
@@ -114,12 +108,9 @@ bool SurfaceDraw::DrawColor(std::shared_ptr<RSSurfaceNode> surfaceNode, int32_t 
         WLOGE("draw window color failed");
         return false;
     }
-    OHOS::BufferFlushConfig flushConfig = {
-        .damage = {
-            .w = buffer->GetWidth(),
-            .h = buffer->GetHeight(),
-        },
-    };
+    OHOS::BufferFlushConfig flushConfig;
+    OHOS::Rect rect = { .w = buffer->GetWidth(), .h = buffer->GetHeight(), };
+    flushConfig.damages.push_back(rect);
     OHOS::SurfaceError ret = layer->FlushBuffer(buffer, -1, flushConfig);
     if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
         WLOGFE("draw pointer FlushBuffer ret:%{public}s", SurfaceErrorStr(ret).c_str());
@@ -281,12 +272,9 @@ bool SurfaceDraw::DrawImageRect(std::shared_ptr<RSSurfaceNode> surfaceNode, Rect
         WLOGE("draw image rect failed.");
         return false;
     }
-    OHOS::BufferFlushConfig flushConfig = {
-        .damage = {
-            .w = buffer->GetWidth(),
-            .h = buffer->GetHeight(),
-        },
-    };
+    OHOS::BufferFlushConfig flushConfig;
+    OHOS::Rect flushConfigRect = { .w = buffer->GetWidth(), .h = buffer->GetHeight(), };
+    flushConfig.damages.push_back(flushConfigRect);
     OHOS::SurfaceError surfaceRet = layer->FlushBuffer(buffer, -1, flushConfig);
     if (surfaceRet != OHOS::SurfaceError::SURFACE_ERROR_OK) {
         WLOGFE("draw pointer FlushBuffer ret:%{public}s", SurfaceErrorStr(surfaceRet).c_str());
@@ -405,12 +393,9 @@ bool SurfaceDraw::DrawMasking(std::shared_ptr<RSSurfaceNode> surfaceNode, Rect s
         WLOGFE("draw failed");
         return false;
     }
-    OHOS::BufferFlushConfig flushConfig = {
-        .damage = {
-            .w = buffer->GetWidth(),
-            .h = buffer->GetHeight(),
-        },
-    };
+    OHOS::BufferFlushConfig flushConfig;
+    OHOS::Rect rect = { .w = buffer->GetWidth(), .h = buffer->GetHeight(), };
+    flushConfig.damages.push_back(rect);
     OHOS::SurfaceError surfaceRet = layer->FlushBuffer(buffer, -1, flushConfig);
     if (surfaceRet != OHOS::SurfaceError::SURFACE_ERROR_OK) {
         WLOGFE("draw masking FlushBuffer ret:%{public}s", SurfaceErrorStr(surfaceRet).c_str());
