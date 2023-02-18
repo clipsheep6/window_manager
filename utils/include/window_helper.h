@@ -20,6 +20,7 @@
 #include <vector>
 #include "ability_info.h"
 #include "window_transition_info.h"
+#include "dm_common.h"
 #include "wm_common.h"
 #include "wm_common_inner.h"
 #include "wm_math.h"
@@ -27,7 +28,12 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
-    const char DISABLE_WINDOW_ANIMATION_PATH[] = "/etc/disable_window_animation";
+    const std::map<Orientation, DisplayOrientation> WINDOW_TO_DISPLAY_ORIENTATION_MAP {
+        {Orientation::VERTICAL,            DisplayOrientation::PORTRAIT   },
+        {Orientation::HORIZONTAL,          DisplayOrientation::LANDSCAPE   },
+        {Orientation::REVERSE_VERTICAL,    DisplayOrientation::PORTRAIT_INVERTED   },
+        {Orientation::REVERSE_HORIZONTAL,  DisplayOrientation::LANDSCAPE_INVERTED   },
+    };
 }
 class WindowHelper {
 public:
@@ -526,6 +532,51 @@ public:
             return false;
         }
         return true;
+    }
+
+    static bool IsFixedOrientation(Orientation orientation, WindowMode mode)
+    {
+        if (mode != WindowMode::WINDOW_MODE_FULLSCREEN) {
+            return false;
+        }
+        if (orientation > Orientation::REVERSE_HORIZONTAL) {
+            return false;
+        }
+        if (orientation < Orientation::VERTICAL) {
+            return false;
+        }
+        return true;
+    }
+
+    static bool IsExpectedRotateLandscapeWindow(Orientation requestOrientation,
+        DisplayOrientation currentOrientation)
+    {
+        if (requestOrientation != Orientation::HORIZONTAL && requestOrientation != Orientation::REVERSE_HORIZONTAL) {
+            return false;
+        }
+        return IsExpectedRotatableWindow(requestOrientation, currentOrientation);
+    }
+
+    static bool IsExpectedRotatableWindow(Orientation requestOrientation,
+        DisplayOrientation currentOrientation, WindowMode mode)
+    {
+        if (mode != WindowMode::WINDOW_MODE_FULLSCREEN) {
+            return false;
+        }
+        return IsExpectedRotatableWindow(requestOrientation, currentOrientation);
+    }
+
+    static bool IsExpectedRotatableWindow(Orientation requestOrientation,
+        DisplayOrientation currentOrientation)
+    {
+        if (WINDOW_TO_DISPLAY_ORIENTATION_MAP.count(requestOrientation) == 0) {
+            return false;
+        }
+        DisplayOrientation disOrientation = WINDOW_TO_DISPLAY_ORIENTATION_MAP.at(requestOrientation);
+        if (disOrientation != currentOrientation) {
+            return true;
+        }
+        return false;
     }
 
     static bool IsAspectRatioSatisfiedWithSizeLimits(const WindowSizeLimits& sizeLimits, float ratio, float vpr)
