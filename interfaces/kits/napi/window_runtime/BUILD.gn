@@ -34,6 +34,7 @@ config("window_native_kit_config") {
   include_dirs = [
     "//foundation/window/window_manager/interfaces/kits/napi/window_runtime/window_napi",
     "//foundation/window/window_manager/interfaces/innerkits/wm",
+    "//foundation/window/window_manager/interfaces/innerkits/dm",
     "//foundation/window/window_manager/wm/include",
     "//foundation/window/window_manager/utils/include",
     "//foundation/window/window_manager/wmserver/include",

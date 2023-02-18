@@ -330,10 +330,6 @@ void WindowLayoutPolicy::LayoutWindowTree(DisplayId displayId)
     // ensure that the avoid area windows are traversed first
     auto& displayWindowTree = displayGroupWindowTree_[displayId];
     LayoutWindowNodesByRootType(*(displayWindowTree[WindowRootNodeType::ABOVE_WINDOW_NODE]));
-    if (IsFullScreenRecentWindowExist(*(displayWindowTree[WindowRootNodeType::ABOVE_WINDOW_NODE]))) {
-        WLOGFD("recent window on top, early exit layout tree");
-        return;
-    }
     LayoutWindowNodesByRootType(*(displayWindowTree[WindowRootNodeType::APP_WINDOW_NODE]));
     LayoutWindowNodesByRootType(*(displayWindowTree[WindowRootNodeType::BELOW_WINDOW_NODE]));
 }
@@ -940,6 +936,32 @@ bool WindowLayoutPolicy::IsFullScreenRecentWindowExist(const std::vector<sptr<Wi
     return false;
 }
 
+static void AdjustFixedOrientationRSSurfaceNode(const sptr<WindowNode>& node, const Rect& winRect,
+    std::shared_ptr<RSSurfaceNode> surfaceNode)
+{
+    auto requestedOri = node->GetRequestedOrientation();
+    if (!WindowHelper::IsFixedOrientation(requestedOri, node->GetWindowMode())) {
+        return;
+    }
+
+    auto displayInfo = DisplayManagerServiceInner::GetInstance().GetDisplayById(node->GetDisplayId());
+    if (!displayInfo) {
+        WLOGFE("display invaild");
+        return;
+    }
+    auto displayOri = displayInfo->GetDisplayOrientation();
+    auto displayW = displayInfo->GetWidth();
+    auto displayH = displayInfo->GetHeight();
+    float rotation = -90 * (static_cast<int32_t>(requestedOri) - static_cast<int32_t>(displayOri) - 1);
+    WLOGFD("[FixOrientation] adjust param display [%{public}u, %{public}d, %{public}d], rotation: %{public}f",
+        displayOri, displayW, displayH, rotation);
+    surfaceNode->SetTranslateX((displayW - static_cast<int32_t>(winRect.width_)) / 2);
+    surfaceNode->SetTranslateY((displayH - static_cast<int32_t>(winRect.height_)) / 2);
+    surfaceNode->SetPivotX(0.5);
+    surfaceNode->SetPivotY(0.5);
+    surfaceNode->SetRotation(rotation);
+}
+
 static void SetBounds(const sptr<WindowNode>& node, const Rect& winRect, const Rect& preRect)
 {
     if (node->GetWindowType() == WindowType::WINDOW_TYPE_APP_COMPONENT ||
@@ -960,9 +982,9 @@ static void SetBounds(const sptr<WindowNode>& node, const Rect& winRect, const R
         }
     }
     WLOGFD("[Set Bounds] name:%{public}s id:%{public}u preRect: [%{public}d, %{public}d, %{public}d, %{public}d], "
-        "winRect: [%{public}d, %{public}d, %{public}d, %{public}d]", node->GetWindowName().c_str(),
+        "winRect: [%{public}d, %{public}d, %{public}d, %{public}d], %{public}u", node->GetWindowName().c_str(),
         node->GetWindowId(), preRect.posX_, preRect.posY_, preRect.width_, preRect.height_,
-        winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
+        winRect.posX_, winRect.posY_, winRect.width_, winRect.height_, node->GetWindowSizeChangeReason());
     if (node->leashWinSurfaceNode_) {
         if (winRect != preRect) {
             // avoid animation interpreted when client coming
@@ -970,12 +992,15 @@ static void SetBounds(const sptr<WindowNode>& node, const Rect& winRect, const R
         }
         if (node->startingWinSurfaceNode_) {
             node->startingWinSurfaceNode_->SetBounds(0, 0, winRect.width_, winRect.height_);
+            AdjustFixedOrientationRSSurfaceNode(node, winRect, node->startingWinSurfaceNode_);
         }
         if (node->surfaceNode_) {
             node->surfaceNode_->SetBounds(0, 0, winRect.width_, winRect.height_);
+            AdjustFixedOrientationRSSurfaceNode(node, winRect, node->surfaceNode_);
         }
     } else if (node->surfaceNode_) {
         node->surfaceNode_->SetBounds(winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
+        AdjustFixedOrientationRSSurfaceNode(node, winRect, node->surfaceNode_);
     }
 }
 
@@ -1000,6 +1025,11 @@ void WindowLayoutPolicy::UpdateSurfaceBounds(const sptr<WindowNode>& node, const
             break;
         }
         case WindowSizeChangeReason::ROTATION: {
+            if (WindowHelper::IsFixedOrientation(node->GetRequestedOrientation(), node->GetWindowMode())) {
+                WLOGI("[FixOrientation] winNode %{public}u orientation, skip animation", node->GetWindowId());
+                SetBoundsFunc();
+                return;
+            }
             const RSAnimationTimingProtocol timingProtocol(600); // animation time
             const RSAnimationTimingCurve curve_ = RSAnimationTimingCurve::CreateCubicCurve(
                 0.2, 0.0, 0.2, 1.0); // animation curve: cubic [0.2, 0.0, 0.2, 1.0]
