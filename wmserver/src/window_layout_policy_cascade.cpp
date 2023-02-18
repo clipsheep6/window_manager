@@ -463,9 +463,14 @@ void WindowLayoutPolicyCascade::UpdateLayoutRect(const sptr<WindowNode>& node)
             WLOGFW("Layout invalid mode, winId: %{public}u, mode: %{public}u", node->GetWindowId(), mode);
     }
     WLOGFD("[After CascadeLayout] windowId: %{public}u, isDecor: %{public}u, winRect: [%{public}d, %{public}d, "
-        "%{public}u, %{public}u]", node->GetWindowId(), node->GetDecoStatus(), winRect.posX_, winRect.posY_,
-        winRect.width_, winRect.height_);
-
+        "%{public}u, %{public}u], reason: %{public}u", node->GetWindowId(), node->GetDecoStatus(), winRect.posX_,
+        winRect.posY_, winRect.width_, winRect.height_, node->GetWindowSizeChangeReason());
+    auto displayInfo = DisplayManagerServiceInner::GetInstance().GetDisplayById(displayId);
+    if (displayInfo && WindowHelper::IsExpectedRotatableWindow(node->GetRequestedOrientation(),
+        displayInfo->GetDisplayOrientation(), node->GetWindowMode())) {
+        WLOGFD("[FixOrientation] the window is expected rotatable, pre-calculated");
+        winRect = {winRect.posX_, winRect.posY_, winRect.height_, winRect.width_};
+    }
     const Rect& lastWinRect = node->GetWindowRect();
     node->SetWindowRect(winRect);
 
