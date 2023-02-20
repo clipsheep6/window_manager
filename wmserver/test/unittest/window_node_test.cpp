@@ -51,7 +51,8 @@ void WindowNodeTest::TearDown()
 }
 class WindowListener : public IWindow {
 public:
-    virtual WMError UpdateWindowRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason) override
+    virtual WMError UpdateWindowRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
+        const uint64_t syncId = 0) override
     {
         return WMError::WM_OK;
     };
@@ -135,6 +136,16 @@ public:
     virtual sptr<IRemoteObject> AsObject() override
     {
         return nullptr;
+    };
+
+    WMError SetRSTransactionSyncController(const sptr<RSISyncTransactionController>& controller) override
+    {
+        return WMError::WM_OK;
+    };
+
+    WMError NotifyReleaseProcess() override
+    {
+        return WMError::WM_OK;
     };
 };
 

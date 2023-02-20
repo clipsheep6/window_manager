@@ -43,7 +43,8 @@ void JsWindowListener::CallJsMethod(const char* methodName, NativeValue* const* 
     engine_->CallFunction(engine_->CreateUndefined(), method, argv, argc);
 }
 
-void JsWindowListener::OnSizeChange(Rect rect, WindowSizeChangeReason reason, const std::function<void()>& finishCallback)
+void JsWindowListener::OnSizeChange(Rect rect, WindowSizeChangeReason reason,
+    const std::function<void()>& finishCallback, const uint64_t syncId)
 {
     WLOGI("[NAPI]OnSizeChange, wh[%{public}u, %{public}u], reason = %{public}u", rect.width_, rect.height_, reason);
     // js callback should run in js thread

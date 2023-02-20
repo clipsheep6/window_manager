@@ -2182,7 +2182,7 @@ void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSize
     }
     ResSchedReport::GetInstance().RequestPerfIfNeed(reason, GetType(), GetMode());
     if ((rectToAce != lastOriRect) || (reason != lastSizeChangeReason_)) {
-        NotifySizeChange(rectToAce, reason);
+        NotifySizeChange(rectToAce, reason, syncId);
         lastSizeChangeReason_ = reason;
     }
     UpdateViewportConfig(rectToAce, display, reason, syncId);
@@ -3070,7 +3070,7 @@ void WindowImpl::ClearListenersById(uint32_t winId)
     ClearUselessListeners(dialogDeathRecipientListener_, winId);
 }
 
-void WindowImpl::NotifySizeChange(Rect rect, WindowSizeChangeReason reason)
+void WindowImpl::NotifySizeChange(Rect rect, WindowSizeChangeReason reason, const uint64_t syncId)
 {
     auto windowChangeListeners = GetListeners<IWindowChangeListener>();
     for (auto& listener : windowChangeListeners) {
@@ -3080,7 +3080,7 @@ void WindowImpl::NotifySizeChange(Rect rect, WindowSizeChangeReason reason)
                     transactionSyncController_->CreateTransactionFinished();
                 }
             };
-            listener.GetRefPtr()->OnSizeChange(rect, reason, callback);
+            listener.GetRefPtr()->OnSizeChange(rect, reason, callback, syncId);
         }
     }
 }

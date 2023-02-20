@@ -57,7 +57,7 @@ void AbstractDisplayControllerTest::TearDownTestCase()
 void AbstractDisplayControllerTest::SetUp()
 {
     absDisplayController_ = new AbstractDisplayController(mutex_, [](DisplayId, sptr<DisplayInfo>,
-        const std::map<DisplayId, sptr<DisplayInfo>>&, DisplayStateChangeType) {});
+        const std::map<DisplayId, sptr<DisplayInfo>>&, DisplayStateChangeType) {}, []() {});
     ASSERT_NE(nullptr, absDisplayController_);
     absScreenController_ = new AbstractScreenController(mutex_);
     ASSERT_NE(nullptr, absScreenController_);
@@ -494,7 +494,7 @@ HWTEST_F(AbstractDisplayControllerTest, GetAllDisplayInfoOfGroup01, Function | S
 HWTEST_F(AbstractDisplayControllerTest, GetDefaultDisplayId01, Function | SmallTest | Level3)
 {
     auto absDisplayController = new AbstractDisplayController(mutex_, [](DisplayId, sptr<DisplayInfo>,
-        const std::map<DisplayId, sptr<DisplayInfo>>&, DisplayStateChangeType) {});
+        const std::map<DisplayId, sptr<DisplayInfo>>&, DisplayStateChangeType) {}, []() {});
     EXPECT_NE(nullptr, absDisplayController);
     absDisplayController->abstractScreenController_ = new AbstractScreenController(mutex_);
     EXPECT_NE(nullptr, absDisplayController->abstractScreenController_);

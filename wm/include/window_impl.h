@@ -483,7 +483,7 @@ private:
             reason == WindowSizeChangeReason::MOVE || reason == WindowSizeChangeReason::UNDEFINED;
     }
     void ClearListenersById(uint32_t winId);
-    void NotifySizeChange(Rect rect, WindowSizeChangeReason reason);
+    void NotifySizeChange(Rect rect, WindowSizeChangeReason reason, const uint64_t syncId = 0);
     void NotifyAvoidAreaChange(const sptr<AvoidArea>& avoidArea, AvoidAreaType type);
     void NotifyDisplayMoveChange(DisplayId from, DisplayId to);
     void NotifyOccupiedAreaChange(const sptr<OccupiedAreaChangeInfo>& info);
