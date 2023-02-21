@@ -38,13 +38,12 @@ struct Second {
         router.back()
       })
 
-      TextInput() {
-      }.type(InputType.Number)
-      .margin({
-        top: 20
-      })
-      .backgroundColor('#0D9FFC')
-
+      TextInput()
+        .type(InputType.Number)
+        .margin({
+          top: 20
+        })
+        .backgroundColor('#0D9FFC')
     }
     .width('100%')
     .height('100%')

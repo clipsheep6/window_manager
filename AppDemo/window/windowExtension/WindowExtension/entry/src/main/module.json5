@@ -21,7 +21,7 @@
     "description": "$string:entry_desc",
     "mainElement": "MainAbility",
     "deviceTypes": [
-      "phone",
+      "default",
       "tablet"
     ],
     "deliveryWithInstall": true,
@@ -30,6 +30,8 @@
     "uiSyntax": "ets",
     "abilities": [
       {
+        "startWindowBackground": "$color:white",
+        "startWindowIcon": "$media:icon",
         "name": "MainAbility",
         "srcEntrance": "./ets/MainAbility/MainAbility.ts",
         "description": "$string:MainAbility_desc",
