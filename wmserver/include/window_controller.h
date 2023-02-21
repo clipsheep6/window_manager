@@ -83,6 +83,7 @@ public:
     WmErrorCode RaiseToAppTop(uint32_t windowId);
     WMError SetAspectRatio(uint32_t windowId, float ratio);
 
+    void LayoutWhenAddWindowNode(sptr<WindowNode>& node, bool afterAnimation = false);
 private:
     uint32_t GenWindowId();
     void FlushWindowInfo(uint32_t windowId);

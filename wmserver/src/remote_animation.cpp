@@ -698,8 +698,13 @@ void RemoteAnimation::ExecuteFinalStateTask(sptr<WindowNode>& node)
         WLOGFI("execute task removing from rs tree id:%{public}u!", node->GetWindowId());
         winRoot->UpdateRsTree(node->GetWindowId(), false);
     } else if (node->stateMachine_.IsWindowNodeShownOrShowing()) {
+        auto winController = windowController_.promote();
+        if (winController == nullptr) {
+            WLOGFE("winController is nullptr");
+            return;
+        }
         WLOGFI("execute task layout after show animation id:%{public}u!", node->GetWindowId());
-        winRoot->LayoutWhenAddWindowNode(node, true);
+        winController->LayoutWhenAddWindowNode(node, true);
     } else {
         WLOGFD("current State:%{public}u invalid", static_cast<uint32_t>(node->stateMachine_.GetCurrentState()));
     }

@@ -1165,6 +1165,17 @@ void WindowController::FlushWindowInfoWithDisplayId(DisplayId displayId)
     inputWindowMonitor_->UpdateInputWindowByDisplayId(displayId);
 }
 
+void WindowController::LayoutWhenAddWindowNode(sptr<WindowNode>& node, bool afterAnimation)
+{
+    if (node == nullptr) {
+        WLOGFE("LayoutWhenAddWindowNode failed, node is nullptr");
+        return;
+    }
+    windowRoot_->LayoutWhenAddWindowNode(node, afterAnimation);
+    FlushWindowInfo(node->GetWindowId());
+    return;
+}
+
 void WindowController::UpdateWindowAnimation(const sptr<WindowNode>& node)
 {
     if (node == nullptr || (node->leashWinSurfaceNode_ == nullptr && node->surfaceNode_ == nullptr)) {
