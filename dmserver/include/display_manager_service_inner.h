@@ -26,7 +26,6 @@
 #include "display_change_listener.h"
 #include "rsscreen_change_listener.h"
 #include "singleton_delegator.h"
-#include "transaction_sync_listener.h"
 #include "wm_single_instance.h"
 #include "window_info_queried_listener.h"
 
@@ -49,7 +48,6 @@ public:
         bool isAdd, bool isMultiDisplay);
     void RegisterDisplayChangeListener(sptr<IDisplayChangeListener> listener);
     DMError SetOrientationFromWindow(DisplayId displayId, Orientation orientation);
-    void RegisterTransactionSyncListener(sptr<ITransactionSyncListener> listener);
     bool SetRotationFromWindow(DisplayId displayId, Rotation targetRotation);
     void SetGravitySensorSubscriptionEnabled();
     void RegisterWindowInfoQueriedListener(const sptr<IWindowInfoQueriedListener>& listener);

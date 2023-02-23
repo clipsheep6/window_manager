@@ -36,7 +36,6 @@
 #include "display_power_controller.h"
 #include "rsscreen_change_listener.h"
 #include "singleton_delegator.h"
-#include "transaction_sync_listener.h"
 #include "window_info_queried_listener.h"
 
 namespace OHOS::Rosen {
@@ -105,7 +104,6 @@ public:
     DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) override;
     DMError SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio) override;
     void RegisterDisplayChangeListener(sptr<IDisplayChangeListener> listener);
-    void RegisterTransactionSyncListener(sptr<ITransactionSyncListener> listener);
     void RegisterWindowInfoQueriedListener(const sptr<IWindowInfoQueriedListener>& listener);
     void RegisterRSScreenChangeListener(const sptr<IRSScreenChangeListener>& listener);
 private:
@@ -114,7 +112,6 @@ private:
     bool Init();
     void NotifyDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type);
-    void NotifyRSTransactionSync();
     void NotifyScreenshot(DisplayId displayId);
     ScreenId GetScreenIdByDisplayId(DisplayId displayId) const;
     void ConfigureDisplayManagerService();
@@ -127,7 +124,6 @@ private:
     sptr<DisplayPowerController> displayPowerController_;
     sptr<DisplayCutoutController> displayCutoutController_;
     sptr<IDisplayChangeListener> displayChangeListener_;
-    sptr<ITransactionSyncListener> transactionSyncListener_;
     sptr<IWindowInfoQueriedListener> windowInfoQueriedListener_;
     sptr<DisplayDumper> displayDumper_;
     AtomicMap<ScreenId, uint32_t> accessTokenIdMaps_;

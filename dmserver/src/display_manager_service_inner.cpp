@@ -133,11 +133,6 @@ void DisplayManagerServiceInner::RegisterDisplayChangeListener(sptr<IDisplayChan
     DisplayManagerService::GetInstance().RegisterDisplayChangeListener(listener);
 }
 
-void DisplayManagerServiceInner::RegisterTransactionSyncListener(sptr<ITransactionSyncListener> listener)
-{
-    DisplayManagerService::GetInstance().RegisterTransactionSyncListener(listener);
-}
-
 DMError DisplayManagerServiceInner::SetOrientationFromWindow(DisplayId displayId, Orientation orientation)
 {
     auto displayInfo = GetDisplayById(displayId);

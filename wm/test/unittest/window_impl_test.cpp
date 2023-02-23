@@ -55,8 +55,8 @@ public:
 
 class MockWindowChangeListener : public IWindowChangeListener {
 public:
-    MOCK_METHOD4(OnSizeChange, void(Rect rect, WindowSizeChangeReason reason,
-        const std::function<void()>& callback, const uint64_t syncId));
+    MOCK_METHOD3(OnSizeChange, void(Rect rect, WindowSizeChangeReason reason,
+        const std::shared_ptr<RSTransaction> rsTransaction));
     MOCK_METHOD2(OnModeChange, void(WindowMode mode, bool hasDeco));
 };
 

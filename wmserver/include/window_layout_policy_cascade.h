@@ -32,7 +32,7 @@ public:
     WindowLayoutPolicyCascade(const sptr<DisplayGroupInfo>& displayGroupInfo,
         DisplayGroupWindowTree& displayGroupWindowTree);
     ~WindowLayoutPolicyCascade() = default;
-    void Launch(const sptr<RSSyncTransactionController>& controller = nullptr) override;
+    void Launch() override;
     void Reorder() override;
     Rect GetDividerRect(DisplayId displayId) const override;
     void SetSplitDividerWindowRects(std::map<DisplayId, Rect> dividerWindowRects) override;
@@ -44,7 +44,7 @@ private:
     /*
      * methods for calculate cascadeRect and splitRect
      */
-    void InitAllRects(const sptr<RSSyncTransactionController>& controller = nullptr);
+    void InitAllRects();
     void InitSplitRects(DisplayId displayId);
     void SetSplitRectByDivider(const Rect& divRect, DisplayId displayId);
     void SetInitialDividerRect(const sptr<WindowNode>& node, DisplayId displayId);
@@ -65,8 +65,7 @@ private:
      */
     void LayoutDivider(const sptr<WindowNode>& node, WindowUpdateType type);
     void LayoutSplitNodes(DisplayId displayId, WindowUpdateType type, bool layoutByDivider = false);
-    void UpdateLayoutRect(const sptr<WindowNode>& node,
-        const sptr<RSSyncTransactionController>& controller = nullptr) override;
+    void UpdateLayoutRect(const sptr<WindowNode>& node) override;
     void ComputeDecoratedRequestRect(const sptr<WindowNode>& node) const;
     void ApplyWindowRectConstraints(const sptr<WindowNode>& node, Rect& winRect) const;
     void ComputeRectByAspectRatio(const sptr<WindowNode>& node) const;

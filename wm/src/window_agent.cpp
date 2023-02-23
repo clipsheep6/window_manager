@@ -28,13 +28,14 @@ WindowAgent::WindowAgent(sptr<WindowImpl>& windowImpl)
     window_ = windowImpl;
 }
 
-WMError WindowAgent::UpdateWindowRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason, const uint64_t syncId)
+WMError WindowAgent::UpdateWindowRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
+    const std::shared_ptr<RSTransaction> rsTransaction)
 {
     if (window_ == nullptr) {
         WLOGFE("window_ is nullptr");
         return WMError::WM_ERROR_NULLPTR;
     }
-    window_->UpdateRect(rect, decoStatus, reason, syncId);
+    window_->UpdateRect(rect, decoStatus, reason, rsTransaction);
     return WMError::WM_OK;
 }
 
@@ -226,33 +227,6 @@ WMError WindowAgent::NotifyWindowClientPointUp(const std::shared_ptr<MMI::Pointe
         return WMError::WM_ERROR_NULLPTR;
     }
     window_->ConsumePointerEvent(pointerEvent);
-    return WMError::WM_OK;
-}
-
-WMError WindowAgent::SetRSTransactionSyncController(const sptr<RSISyncTransactionController>& controller)
-{
-    if (window_ == nullptr) {
-        WLOGFE("WindowAgent: Failed to set transaction sync controller, window_ is nullptr");
-        return WMError::WM_ERROR_NULLPTR;
-    }
-
-    if (controller == nullptr) {
-        WLOGFE("WindowAgent: Failed to set transaction sync controller, controller is nullptr!");
-        return WMError::WM_ERROR_NULLPTR;
-    }
-
-    window_->SetRSTransactionSyncController(controller);
-    return WMError::WM_OK;
-}
-
-WMError WindowAgent::NotifyReleaseProcess()
-{
-    if (window_ == nullptr) {
-        WLOGFE("WindowAgent: Failed to notify release Process, window_ is nullptr");
-        return WMError::WM_ERROR_NULLPTR;
-    }
-
-    window_->NotifyReleaseProcess();
     return WMError::WM_OK;
 }
 } // namespace Rosen

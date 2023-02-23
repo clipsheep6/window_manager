@@ -19,8 +19,6 @@
 #include <map>
 #include <refbase.h>
 #include <set>
-#include <rs_sync_transaction_controller.h>
-#include <rs_process_transaction_controller.h>
 
 #include "display_group_info.h"
 #include "display_info.h"
@@ -44,13 +42,12 @@ public:
     WindowLayoutPolicy() = delete;
     WindowLayoutPolicy(const sptr<DisplayGroupInfo>& displayGroupInfo, DisplayGroupWindowTree& displayGroupWindowTree);
     ~WindowLayoutPolicy() = default;
-    virtual void Launch(const sptr<RSSyncTransactionController>& controller = nullptr);
+    virtual void Launch();
     virtual void Reorder();
     virtual void PerformWindowLayout(const sptr<WindowNode>& node, WindowUpdateType type) = 0;
     void ProcessDisplayCreate(DisplayId displayId, const std::map<DisplayId, Rect>& displayRectMap);
     void ProcessDisplayDestroy(DisplayId displayId, const std::map<DisplayId, Rect>& displayRectMap);
-    void ProcessDisplaySizeChangeOrRotation(DisplayId displayId, const std::map<DisplayId, Rect>& displayRectMap,
-        const sptr<RSSyncTransactionController>& controller = nullptr);
+    void ProcessDisplaySizeChangeOrRotation(DisplayId displayId, const std::map<DisplayId, Rect>& displayRectMap);
     void ProcessDisplayVprChange(DisplayId displayId);
 
     virtual void SetSplitDividerWindowRects(std::map<DisplayId, Rect> dividerWindowRects) {};
@@ -59,8 +56,7 @@ public:
     bool IsMultiDisplay();
     Rect GetDisplayGroupRect() const;
     void SetSplitRatioPoints(DisplayId displayId, const std::vector<int32_t>& splitRatioPoints);
-    void NotifyClientAndAnimation(const sptr<WindowNode>& node, const Rect& winRect, WindowSizeChangeReason reason,
-        const sptr<RSSyncTransactionController>& controller = nullptr);
+    void NotifyClientAndAnimation(const sptr<WindowNode>& node, const Rect& winRect, WindowSizeChangeReason reason);
     // methods for setting bottom posY limit for cascade rect on pc
     static void SetCascadeRectBottomPosYLimit(uint32_t floatingBottomPosY);
 
@@ -68,12 +64,10 @@ protected:
     /*
      * methods for calculate window rect
      */
-    virtual void UpdateLayoutRect(const sptr<WindowNode>& node,
-        const sptr<RSSyncTransactionController>& controller = nullptr) = 0;
-    void LayoutWindowTree(DisplayId displayId, const sptr<RSSyncTransactionController>& controller = nullptr);
-    void LayoutWindowNode(const sptr<WindowNode>& node, const sptr<RSSyncTransactionController>& controller = nullptr);
-    void LayoutWindowNodesByRootType(const std::vector<sptr<WindowNode>>& nodeVec,
-        const sptr<RSSyncTransactionController>& controller = nullptr);
+    virtual void UpdateLayoutRect(const sptr<WindowNode>& node) = 0;
+    void LayoutWindowTree(DisplayId displayId);
+    void LayoutWindowNode(const sptr<WindowNode>& node);
+    void LayoutWindowNodesByRootType(const std::vector<sptr<WindowNode>>& nodeVec);
     void FixWindowRectWithinDisplay(const sptr<WindowNode>& node) const;
 
     /*
@@ -92,7 +86,7 @@ protected:
     void UpdateMultiDisplayFlag();
     void UpdateDisplayGroupRect();
     void UpdateDisplayGroupLimitRect();
-    void PostProcessWhenDisplayChange(const sptr<RSSyncTransactionController>& controller = nullptr);
+    void PostProcessWhenDisplayChange();
     void LimitWindowToBottomRightCorner(const sptr<WindowNode>& node);
     void UpdateRectInDisplayGroupForAllNodes(DisplayId displayId, const Rect& oriDisplayRect,
         const Rect& newDisplayRect);

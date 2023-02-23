@@ -32,10 +32,8 @@ namespace OHOS::Rosen {
 class AbstractDisplayController : public RefBase {
 using DisplayStateChangeListener = std::function<void(DisplayId, sptr<DisplayInfo>,
     const std::map<DisplayId, sptr<DisplayInfo>>&, DisplayStateChangeType)>;
-using RSTransactionSyncListener = std::function<void()>;
 public:
-    AbstractDisplayController(std::recursive_mutex& mutex, DisplayStateChangeListener displatStateChangeListener,
-        RSTransactionSyncListener rsTransactionSyncListener);
+    AbstractDisplayController(std::recursive_mutex& mutex, DisplayStateChangeListener);
     ~AbstractDisplayController();
     WM_DISALLOW_COPY_AND_MOVE(AbstractDisplayController);
 
@@ -53,7 +51,6 @@ private:
     void OnAbstractScreenConnect(sptr<AbstractScreen> absScreen);
     void OnAbstractScreenDisconnect(sptr<AbstractScreen> absScreen);
     void OnAbstractScreenChange(sptr<AbstractScreen> absScreen, DisplayChangeEvent event);
-    void OnRSTransactionSync();
     void ProcessDisplayUpdateOrientation(sptr<AbstractScreen> absScreen);
     void ProcessDisplaySizeChange(sptr<AbstractScreen> absScreen);
     void ProcessVirtualPixelRatioChange(sptr<AbstractScreen> absScreen);
@@ -80,7 +77,6 @@ private:
     sptr<AbstractScreenController::AbstractScreenCallback> abstractScreenCallback_;
     OHOS::Rosen::RSInterfaces& rsInterface_;
     DisplayStateChangeListener displayStateChangeListener_;
-    RSTransactionSyncListener rsTransactionSyncListener_;
 };
 } // namespace OHOS::Rosen
 #endif // FOUNDATION_DMSERVER_ABSTRACT_DISPLAY_CONTROLLER_H

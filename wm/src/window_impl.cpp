@@ -546,7 +546,8 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
         }
         float virtualPixelRatio = display->GetVirtualPixelRatio();
         config.SetDensity(virtualPixelRatio);
-        uiContent_->UpdateViewportConfig(config, WindowSizeChangeReason::UNDEFINED);
+        std::shared_ptr<RSTransaction> rsTransaction;
+        uiContent_->UpdateViewportConfig(config, WindowSizeChangeReason::UNDEFINED, rsTransaction);
         WLOGFD("notify uiContent window size change end");
     }
     return WMError::WM_OK;
@@ -2142,7 +2143,8 @@ void WindowImpl::SetModeSupportInfo(uint32_t modeSupportInfo)
     property_->SetModeSupportInfo(modeSupportInfo);
 }
 
-void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason, const uint64_t syncId)
+void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
+    const std::shared_ptr<RSTransaction> rsTransaction)
 {
     if (state_ == WindowState::STATE_DESTROYED) {
         WLOGFW("invalid window state");
@@ -2182,10 +2184,10 @@ void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSize
     }
     ResSchedReport::GetInstance().RequestPerfIfNeed(reason, GetType(), GetMode());
     if ((rectToAce != lastOriRect) || (reason != lastSizeChangeReason_)) {
-        NotifySizeChange(rectToAce, reason, syncId);
+        NotifySizeChange(rectToAce, reason, rsTransaction);
         lastSizeChangeReason_ = reason;
     }
-    UpdateViewportConfig(rectToAce, display, reason, syncId);
+    UpdateViewportConfig(rectToAce, display, reason, rsTransaction);
 }
 
 void WindowImpl::UpdateMode(WindowMode mode)
@@ -2711,7 +2713,7 @@ void WindowImpl::UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType
 }
 
 void WindowImpl::UpdateViewportConfig(const Rect& rect, const sptr<Display>& display, WindowSizeChangeReason reason,
-    const uint64_t syncId)
+    const std::shared_ptr<RSTransaction> rsTransaction)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (uiContent_ == nullptr) {
@@ -2723,22 +2725,9 @@ void WindowImpl::UpdateViewportConfig(const Rect& rect, const sptr<Display>& dis
     if (display) {
         config.SetDensity(display->GetVirtualPixelRatio());
     }
-    auto callback = [this]() {
-        if (transactionSyncController_ != nullptr) {
-            transactionSyncController_->CreateTransactionFinished();
-        }
-    };
-    uiContent_->UpdateViewportConfig(config, reason, callback, syncId);
-    WLOGFD("UpdateViewportConfig Id:%{public}u, windowRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
+    uiContent_->UpdateViewportConfig(config, reason, rsTransaction);
+    WLOGFD("Id:%{public}u, windowRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
         property_->GetWindowId(), rect.posX_, rect.posY_, rect.width_, rect.height_);
-}
-
-void WindowImpl::NotifyReleaseProcess()
-{
-    if (uiContent_ == nullptr) {
-        return;
-    }
-    uiContent_->NotifyReleaseProcess();
 }
 
 void WindowImpl::UpdateDecorEnable(bool needNotify)
@@ -3052,11 +3041,6 @@ void WindowImpl::UpdateZoomTransform(const Transform& trans, bool isDisplayZoomO
     property_->SetDisplayZoomState(isDisplayZoomOn);
 }
 
-void WindowImpl::SetRSTransactionSyncController(const sptr<RSISyncTransactionController>& controller)
-{
-    transactionSyncController_ = controller;
-}
-
 void WindowImpl::ClearListenersById(uint32_t winId)
 {
     std::lock_guard<std::recursive_mutex> lock(globalMutex_);
@@ -3070,17 +3054,13 @@ void WindowImpl::ClearListenersById(uint32_t winId)
     ClearUselessListeners(dialogDeathRecipientListener_, winId);
 }
 
-void WindowImpl::NotifySizeChange(Rect rect, WindowSizeChangeReason reason, const uint64_t syncId)
+void WindowImpl::NotifySizeChange(Rect rect, WindowSizeChangeReason reason,
+    const std::shared_ptr<RSTransaction> rsTransaction)
 {
     auto windowChangeListeners = GetListeners<IWindowChangeListener>();
     for (auto& listener : windowChangeListeners) {
         if (listener.GetRefPtr() != nullptr) {
-            auto callback = [this] () {
-                if (transactionSyncController_ != nullptr) {
-                    transactionSyncController_->CreateTransactionFinished();
-                }
-            };
-            listener.GetRefPtr()->OnSizeChange(rect, reason, callback, syncId);
+            listener.GetRefPtr()->OnSizeChange(rect, reason, rsTransaction);
         }
     }
 }

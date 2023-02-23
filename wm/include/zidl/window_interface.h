@@ -21,7 +21,7 @@
 #include "window_property.h"
 #include "wm_common.h"
 #include "wm_common_inner.h"
-#include <rs_isync_transaction_controller.h>
+#include <transaction/rs_transaction.h>
 
 namespace OHOS {
 namespace Rosen {
@@ -50,12 +50,10 @@ public:
         TRANS_ID_NOTIFY_CLIENT_POINT_UP,
         TRANS_ID_UPDATE_ZOOM_TRANSFORM,
         TRANS_ID_RESTORE_SPLIT_WINDOW_MODE,
-        TRANS_ID_SET_RS_TRANSACTION_SYNC_CONTROLLER,
-        TRANS_ID_NOTIFY_RELEASE_PROCESS,
     };
 
     virtual WMError UpdateWindowRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
-        const uint64_t syncId = 0) = 0;
+        const std::shared_ptr<RSTransaction> rsTransaction = nullptr) = 0;
     virtual WMError UpdateWindowMode(WindowMode mode) = 0;
     virtual WMError UpdateWindowModeSupportInfo(uint32_t modeSupportInfo) = 0;
     virtual WMError UpdateFocusStatus(bool focused) = 0;
@@ -75,8 +73,6 @@ public:
     virtual WMError NotifyWindowClientPointUp(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) = 0;
     virtual WMError UpdateZoomTransform(const Transform& trans, bool isDisplayZoomOn) = 0;
     virtual WMError RestoreSplitWindowMode(uint32_t mode) = 0;
-    virtual WMError SetRSTransactionSyncController(const sptr<RSISyncTransactionController>& controller) = 0;
-    virtual WMError NotifyReleaseProcess() = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

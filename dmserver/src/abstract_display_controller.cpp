@@ -34,10 +34,8 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "AbstractDisplayController"};
 }
 
-AbstractDisplayController::AbstractDisplayController(std::recursive_mutex& mutex,
-    DisplayStateChangeListener displatStateChangeListener, RSTransactionSyncListener rsTransactionSyncListener)
-    : mutex_(mutex), rsInterface_(RSInterfaces::GetInstance()),
-    displayStateChangeListener_(displatStateChangeListener), rsTransactionSyncListener_(rsTransactionSyncListener)
+AbstractDisplayController::AbstractDisplayController(std::recursive_mutex& mutex, DisplayStateChangeListener listener)
+    : mutex_(mutex), rsInterface_(RSInterfaces::GetInstance()), displayStateChangeListener_(listener)
 {
 }
 
@@ -63,7 +61,6 @@ void AbstractDisplayController::Init(sptr<AbstractScreenController> abstractScre
     abstractScreenCallback_->onChange_
         = std::bind(&AbstractDisplayController::OnAbstractScreenChange, this, std::placeholders::_1,
         std::placeholders::_2);
-    abstractScreenCallback_->onTransactionSync_ = std::bind(&AbstractDisplayController::OnRSTransactionSync, this);
     abstractScreenController->RegisterAbstractScreenCallback(abstractScreenCallback_);
 }
 
@@ -282,11 +279,6 @@ void AbstractDisplayController::OnAbstractScreenChange(sptr<AbstractScreen> absS
     } else {
         WLOGE("unknown screen change event. id:%{public}" PRIu64" event %{public}u", absScreen->dmsId_, event);
     }
-}
-
-void AbstractDisplayController::OnRSTransactionSync()
-{
-    rsTransactionSyncListener_();
 }
 
 void AbstractDisplayController::ProcessDisplayRotationChange(sptr<AbstractScreen> absScreen)

@@ -76,8 +76,6 @@ const std::map<OHOS::AppExecFwk::DisplayOrientation, Orientation> ABILITY_TO_WMS
     {OHOS::AppExecFwk::DisplayOrientation::LOCKED, Orientation::LOCKED},
 };
 
-class RSISyncTransactionController;
-
 class WindowImpl : public Window {
 #define CALL_LIFECYCLE_LISTENER(windowLifecycleCb, listeners) \
     do {                                                      \
@@ -228,8 +226,7 @@ public:
     virtual void SetAceAbilityHandler(const sptr<IAceAbilityHandler>& handler) override;
     virtual void SetRequestModeSupportInfo(uint32_t modeSupportInfo) override;
     void UpdateRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
-        const uint64_t syncId = 0);
-    void NotifyReleaseProcess();
+        const std::shared_ptr<RSTransaction> rsTransaction = nullptr);
     void UpdateMode(WindowMode mode);
     void UpdateModeSupportInfo(uint32_t modeSupportInfo);
     virtual void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent) override;
@@ -255,7 +252,6 @@ public:
     void NotifyForeground();
     void NotifyBackground();
     void UpdateZoomTransform(const Transform& trans, bool isDisplayZoomOn);
-    void SetRSTransactionSyncController(const sptr<RSISyncTransactionController>& controller);
 
     virtual WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
         NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability) override;
@@ -483,7 +479,8 @@ private:
             reason == WindowSizeChangeReason::MOVE || reason == WindowSizeChangeReason::UNDEFINED;
     }
     void ClearListenersById(uint32_t winId);
-    void NotifySizeChange(Rect rect, WindowSizeChangeReason reason, const uint64_t syncId = 0);
+    void NotifySizeChange(Rect rect, WindowSizeChangeReason reason,
+        const std::shared_ptr<RSTransaction> rsTransaction = nullptr);
     void NotifyAvoidAreaChange(const sptr<AvoidArea>& avoidArea, AvoidAreaType type);
     void NotifyDisplayMoveChange(DisplayId from, DisplayId to);
     void NotifyOccupiedAreaChange(const sptr<OccupiedAreaChangeInfo>& info);
@@ -540,7 +537,7 @@ private:
     RSSurfaceNode::SharedPtr CreateSurfaceNode(std::string name, WindowType type);
     void UpdateWindowStateUnfrozen();
     void UpdateViewportConfig(const Rect& rect, const sptr<class Display>& display, WindowSizeChangeReason reason,
-        const uint64_t syncId = 0);
+        const std::shared_ptr<RSTransaction> rsTransaction = nullptr);
     void UpdateDecorEnable(bool needNotify = false);
     // colorspace, gamut
     using ColorSpaceConvertMap = struct {
@@ -572,7 +569,6 @@ private:
     static std::map<uint32_t, sptr<IDialogDeathRecipientListener>> dialogDeathRecipientListener_;
     std::shared_ptr<IInputEventConsumer> inputEventConsumer_;
     sptr<IAnimationTransitionController> animationTransitionController_;
-    sptr<RSISyncTransactionController> transactionSyncController_;
     NotifyNativeWinDestroyFunc notifyNativefunc_;
     std::shared_ptr<RSSurfaceNode> surfaceNode_;
     std::string name_;

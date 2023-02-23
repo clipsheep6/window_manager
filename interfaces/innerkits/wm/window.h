@@ -53,6 +53,7 @@ namespace OHOS {
 namespace Rosen {
 using NotifyNativeWinDestroyFunc = std::function<void(std::string windowName)>;
 class RSSurfaceNode;
+class RSTransaction;
 
 class IWindowLifeCycle : virtual public RefBase {
 public:
@@ -68,7 +69,7 @@ public:
 class IWindowChangeListener : virtual public RefBase {
 public:
     virtual void OnSizeChange(Rect rect, WindowSizeChangeReason reason,
-        const std::function<void()>& callback = nullptr, const uint64_t syncId = 0) {}
+        const std::shared_ptr<RSTransaction> rsTransaction = nullptr) {}
     virtual void OnModeChange(WindowMode mode, bool hasDeco = true) {}
 };
 

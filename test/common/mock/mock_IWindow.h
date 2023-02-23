@@ -28,7 +28,7 @@ public:
     IWindowMocker() {};
     ~IWindowMocker() {};
     MOCK_METHOD4(UpdateWindowRect, WMError(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
-        const uint64_t syncId));
+        const std::shared_ptr<RSTransaction> rsTransaction));
     MOCK_METHOD1(UpdateWindowMode, WMError(WindowMode mode));
     MOCK_METHOD1(UpdateWindowModeSupportInfo, WMError(uint32_t modeSupportInfo));
     MOCK_METHOD1(UpdateFocusStatus, WMError(bool focused));
@@ -48,8 +48,6 @@ public:
     MOCK_METHOD1(NotifyWindowClientPointUp, WMError(const std::shared_ptr<MMI::PointerEvent>& pointerEvent));
     MOCK_METHOD2(UpdateZoomTransform, WMError(const Transform& trans, bool isDisplayZoomOn));
     MOCK_METHOD1(RestoreSplitWindowMode, WMError(uint32_t mode));
-    MOCK_METHOD1(SetRSTransactionSyncController, WMError(const sptr<RSISyncTransactionController>& controller));
-    MOCK_METHOD0(NotifyReleaseProcess, WMError());
     sptr<IRemoteObject> AsObject() override
     {
         return nullptr;

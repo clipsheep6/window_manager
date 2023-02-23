@@ -58,7 +58,7 @@ Rect AvoidAreaControllerTest::screenRect;
 class WindowListener : public IWindow {
 public:
     WMError UpdateWindowRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
-        const uint64_t syncId = 0) override
+        const std::shared_ptr<RSTransaction> rsTransaction = nullptr) override
     {
         return WMError::WM_OK;
     }
@@ -151,16 +151,6 @@ public:
     {
         return nullptr;
     }
-
-    WMError SetRSTransactionSyncController(const sptr<RSISyncTransactionController>& controller) override
-    {
-        return WMError::WM_OK;
-    };
-
-    WMError NotifyReleaseProcess() override
-    {
-        return WMError::WM_OK;
-    };
 };
 
 void AvoidAreaControllerTest::SetUpTestCase()
