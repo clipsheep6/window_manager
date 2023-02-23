@@ -113,6 +113,7 @@ ohos_shared_library("libwm") {
     defines += [ "IMF_ENABLE" ]
   }
 
+  version_script = "libwm.map"
   part_name = "window_manager"
   subsystem_name = "window"
 }

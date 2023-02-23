@@ -81,6 +81,7 @@ ohos_shared_library("libwmutil") {
     "preferences:native_preferences",
     "samgr:samgr_proxy",
   ]
+  version_script = "libwmutils.map"
   part_name = "window_manager"
   subsystem_name = "window"
 }

@@ -1,0 +1,47 @@
+{
+    global:
+        extern "C++" {
+            OHOS::Rosen::BaseAdapter::*;
+            OHOS::Rosen::ScreenGroup::*;
+            OHOS::Rosen::ScreenManager::*;
+            OHOS::Rosen::DisplayManager::*;
+            OHOS::Rosen::DMSDeathRecipient::*;
+            OHOS::Rosen::DisplayManagerProxy::*;
+            OHOS::Rosen::ScreenManagerAdapter::*;
+            OHOS::Rosen::DisplayManagerAdapter::*;
+            OHOS::Rosen::DisplayManagerAgentStub::*;
+            OHOS::Rosen::Screen::*;
+            OHOS::Rosen::Display::*;
+            OHOS::Rosen::ScreenGroup::*;
+            VTT?for?OHOS::Rosen::ScreenManager::Impl::ScreenManagerListener;
+            VTT?for?OHOS::Rosen::DisplayManager::Impl::DisplayManagerAgent;
+            VTT?for?OHOS::Rosen::DisplayManager::Impl::DisplayManagerListener;
+            VTT?for?OHOS::Rosen::DisplayManager::Impl::DisplayManagerScreenshotAgent;
+            VTT?for?OHOS::Rosen::DisplayManagerProxy;
+            VTT?for?OHOS::Rosen::DisplayManagerAgentStub;
+            VTT?for?OHOS::Rosen::DisplayManagerAgentDefault;
+            vtable?for?OHOS::BrokerDelegatorBase;
+            vtable?for?OHOS::Rosen::BaseAdapter;
+            vtable?for?OHOS::Rosen::ScreenGroup::Impl;
+            vtable?for?OHOS::Rosen::ScreenGroup;
+            vtable?for?OHOS::Rosen::ScreenManager::Impl::ScreenManagerListener;
+            vtable?for?OHOS::Rosen::ScreenManager::Impl;
+            vtable?for?OHOS::Rosen::ScreenManager;
+            vtable?for?OHOS::Rosen::DisplayManager::Impl::DisplayManagerAgent;
+            vtable?for?OHOS::Rosen::DisplayManager::Impl::DisplayManagerListener;
+            vtable?for?OHOS::Rosen::DisplayManager::Impl::DisplayManagerScreenshotAgent;
+            vtable?for?OHOS::Rosen::DisplayManager::Impl;
+            vtable?for?OHOS::Rosen::DMSDeathRecipient;
+            vtable?for?OHOS::Rosen::DisplayManagerProxy;
+            vtable?for?OHOS::Rosen::ScreenManagerAdapter;
+            vtable?for?OHOS::Rosen::DisplayManagerAdapter;
+            vtable?for?OHOS::Rosen::DisplayManagerAgentStub;
+            vtable?for?OHOS::Rosen::DisplayManagerAgentDefault;
+            vtable?for?OHOS::Rosen::Screen::Impl;
+            vtable?for?OHOS::Rosen::Screen;
+            vtable?for?OHOS::Rosen::Display::Impl;
+            vtable?for?OHOS::Rosen::Display;
+        };
+    local:
+    *;
+};
