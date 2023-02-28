@@ -438,7 +438,8 @@ void WindowLayoutPolicyCascade::UpdateLayoutRect(const sptr<WindowNode>& node)
             bool needAvoid = (node->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID));
             winRect = needAvoid ? limitRectMap_[displayId] : DisplayGroupInfo::GetInstance().GetDisplayRect(displayId);
             auto displayInfo = DisplayGroupInfo::GetInstance().GetDisplayInfo(displayId);
-            if (displayInfo && WmsUtils::IsExpectedRotatableWindow(node->GetRequestedOrientation(),
+            if (displayInfo && displayInfo->GetDisplayStateChangeType() !=  DisplayStateChangeType::UPDATE_ROTATION
+                && WmsUtils::IsExpectedRotatableWindow(node->GetRequestedOrientation(),
                 displayInfo->GetDisplayOrientation(), node->GetWindowFlags())) {
                 WLOGFD("[FixOrientation] the window is expected rotatable, pre-calculated");
                 winRect = {winRect.posX_, winRect.posY_, winRect.height_, winRect.width_};
