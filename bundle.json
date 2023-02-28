@@ -123,6 +123,24 @@
               ],
               "header_base": "//foundation/window/window_manager/interfaces/innerkits/extension"
             }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/window/window_manager/window_session/session:ui_session",
+            "header": {
+              "header_files": [
+              ],
+              "header_base": "//foundation/window/window_manager/window_session/session"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/window/window_manager/window_session/session_manager:session_manager",
+            "header": {
+              "header_files": [
+              ],
+              "header_base": "//foundation/window/window_manager/window_scene/session_manager/include"
+            }
           }
         ],
         "test": [
