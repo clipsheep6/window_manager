@@ -121,6 +121,7 @@ public:
     void NotifyAccessibilityWindowInfo(const std::vector<sptr<AccessibilityWindowInfo>>& infos, WindowUpdateType type);
     void NotifyWindowVisibilityInfoChanged(const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos);
     void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing);
+    void NotifyWaterMarkFlagChangedResult(bool showWaterMark);
     static inline SingletonDelegator<WindowManager> delegator_;
 
     std::recursive_mutex mutex_;
@@ -134,6 +135,8 @@ public:
     sptr<WindowManagerAgent> windowVisibilityListenerAgent_;
     std::vector<sptr<ICameraFloatWindowChangedListener>> cameraFloatWindowChangedListeners_;
     sptr<WindowManagerAgent> cameraFloatWindowChangedListenerAgent_;
+    std::vector<sptr<IWaterMarkFlagChangedListener>> waterMarkFlagChangeListeners_;
+    sptr<WindowManagerAgent> waterMarkFlagChangeAgent_;
 };
 
 void WindowManager::Impl::NotifyFocused(const sptr<FocusChangeInfo>& focusChangeInfo)
@@ -234,6 +237,19 @@ void WindowManager::Impl::UpdateCameraFloatWindowStatus(uint32_t accessTokenId, 
     }
     for (auto& listener : cameraFloatWindowChangeListeners) {
         listener->OnCameraFloatWindowChange(accessTokenId, isShowing);
+    }
+}
+
+void WindowManager::Impl::NotifyWaterMarkFlagChangedResult(bool showWaterMark)
+{
+    WLOGFI("Notify water mark flag changed result, showWaterMark = %{public}d", showWaterMark);
+    std::vector<sptr<IWaterMarkFlagChangedListener>> waterMarkFlagChangeListeners;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        waterMarkFlagChangeListeners = waterMarkFlagChangeListeners_;
+    }
+    for (auto& listener : waterMarkFlagChangeListeners) {
+        listener->OnWaterMarkFlagUpdate(showWaterMark);
     }
 }
 
@@ -522,6 +538,64 @@ WMError WindowManager::UnregisterCameraFloatWindowChangedListener(
     return ret;
 }
 
+WMError WindowManager::RegisterWaterMarkFlagChangedListener(const sptr<IWaterMarkFlagChangedListener>& listener)
+{
+    if (listener == nullptr) {
+        WLOGFE("listener could not be null");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    std::lock_guard<std::recursive_mutex> lock(pImpl_->mutex_);
+    WMError ret = WMError::WM_OK;
+    if (pImpl_->waterMarkFlagChangeAgent_ == nullptr) {
+        pImpl_->waterMarkFlagChangeAgent_ = new WindowManagerAgent();
+        ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WATER_MARK_FLAG,
+            pImpl_->waterMarkFlagChangeAgent_);
+    }
+    if (ret != WMError::WM_OK) {
+        WLOGFW("RegisterWindowManagerAgent failed !");
+        pImpl_->waterMarkFlagChangeAgent_ = nullptr;
+    } else {
+        auto iter = std::find(pImpl_->waterMarkFlagChangeListeners_.begin(),
+            pImpl_->waterMarkFlagChangeListeners_.end(), listener);
+        if (iter != pImpl_->waterMarkFlagChangeListeners_.end()) {
+            WLOGFW("Listener is already registered.");
+            return WMError::WM_OK;
+        }
+        pImpl_->waterMarkFlagChangeListeners_.push_back(listener);
+    }
+    WLOGFD("Try to registerWaterMarkFlagChangedListener && result : %{public}u", static_cast<uint32_t>(ret));
+    return ret;
+}
+
+WMError WindowManager::UnregisterWaterMarkFlagChangedListener(const sptr<IWaterMarkFlagChangedListener>& listener)
+{
+    if (listener == nullptr) {
+        WLOGFE("listener could not be null");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    std::lock_guard<std::recursive_mutex> lock(pImpl_->mutex_);
+    auto iter = std::find(pImpl_->waterMarkFlagChangeListeners_.begin(),
+        pImpl_->waterMarkFlagChangeListeners_.end(), listener);
+    if (iter == pImpl_->waterMarkFlagChangeListeners_.end()) {
+        WLOGFE("could not find this listener");
+        return WMError::WM_OK;
+    }
+    pImpl_->waterMarkFlagChangeListeners_.erase(iter);
+    WMError ret = WMError::WM_OK;
+    if (pImpl_->waterMarkFlagChangeListeners_.empty() &&
+        pImpl_->waterMarkFlagChangeAgent_ != nullptr) {
+        ret = SingletonContainer::Get<WindowAdapter>().UnregisterWindowManagerAgent(
+            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WATER_MARK_FLAG,
+            pImpl_->waterMarkFlagChangeAgent_);
+        pImpl_->waterMarkFlagChangeAgent_ = nullptr;
+    }
+    WLOGFD("Try to unregisterWaterMarkFlagChangedListener && result : %{public}u", static_cast<uint32_t>(ret));
+    return ret;
+}
+
 void WindowManager::UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused) const
 {
     if (focusChangeInfo == nullptr) {
@@ -579,6 +653,11 @@ WMError WindowManager::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibility
 void WindowManager::UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing) const
 {
     pImpl_->UpdateCameraFloatWindowStatus(accessTokenId, isShowing);
+}
+
+void WindowManager::NotifyWaterMarkFlagChangedResult(bool showWaterMark) const
+{
+    pImpl_->NotifyWaterMarkFlagChangedResult(showWaterMark);
 }
 
 void WindowManager::OnRemoteDied() const
