@@ -25,7 +25,6 @@ config("session_manager_public_config") {
 ohos_shared_library("scene_session_manager") {
   sources = [
     "src/extension_session_manager.cpp",
-    "src/scene_session_manager.cpp",
   ]
 
   cflags_cc = [ "-std=c++17" ]
@@ -45,31 +44,6 @@ ohos_shared_library("scene_session_manager") {
     "hilog_native:libhilog",
     "ace_engine:ace_uicontent",
     "eventhandler:libeventhandler"
-  ]
-
-  part_name = "window_manager"
-  subsystem_name = "window"
-}
-
-ohos_shared_library("screen_session_manager") {
-  sources = [
-    "src/screen_session_manager.cpp",
-  ]
-
-  cflags_cc = [ "-std=c++17" ]
-
-  public_configs = [ ":session_manager_public_config" ]
-
-  deps = [
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/window/window_manager/window_scene/session:screen_session",
-    "//foundation/window/window_manager/window_scene/common:libwscommon",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "eventhandler:libeventhandler",
-    "hilog_native:libhilog",
   ]
 
   part_name = "window_manager"
