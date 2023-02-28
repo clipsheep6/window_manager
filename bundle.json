@@ -74,7 +74,8 @@
             "//foundation/window/window_manager/extension/window_extension:libwindow_extension",
             "//foundation/window/window_manager/extension/window_extension:window_extension_module",
             "//foundation/window/window_manager/wm:libwm",
-            "//foundation/window/window_manager/utils:libwmutil"
+            "//foundation/window/window_manager/utils:libwmutil",
+            "//foundation/window/window_manager/window_scene/common:libwscommon"
           ],
           "service_group": [
             "//foundation/window/window_manager/sa_profile:wms_sa_profile",
@@ -122,6 +123,24 @@
                 "window_extension_connection.h"
               ],
               "header_base": "//foundation/window/window_manager/interfaces/innerkits/extension"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/window/window_manager/window_scene/session:scene_session",
+            "header": {
+              "header_files": [
+              ],
+              "header_base": "//foundation/window/window_manager/window_scene"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/window/window_manager/window_scene/session_manager:scene_session_manager",
+            "header": {
+              "header_files": [
+              ],
+              "header_base": "//foundation/window/window_manager/window_scene"
             }
           }
         ],
