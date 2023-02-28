@@ -22,6 +22,7 @@ group("demo") {
     ":demo_screenshot_listener",
     ":demo_snapshot_virtual_screen",
     ":demo_system_sub_window",
+    ":demo_water_mark_listener",
   ]
 }
 
@@ -113,6 +114,25 @@ ohos_executable("demo_freeze_display") {
   ]
   deps = [ "//foundation/window/window_manager/dm:libdm" ]
   external_deps = [ "multimedia_image_framework:image_native" ]
+  part_name = "window_manager"
+  subsystem_name = "window"
+}
+
+ohos_executable("demo_water_mark_listener") {
+  sources = [ "demo_water_mark_listener.cpp" ]
+
+  include_dirs = [
+    "//foundation/window/window_manager/interfaces/innerkits/wm",
+    "//foundation/window/window_manager/test/common/utils/include",
+  ]
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
+    "//foundation/window/window_manager/wm:libwm",
+  ]
+
+  external_deps = [ "c_utils:utils" ]
+
   part_name = "window_manager"
   subsystem_name = "window"
 }
