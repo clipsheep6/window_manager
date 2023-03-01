@@ -618,6 +618,9 @@ static void AdjustFixedOrientationRSSurfaceNode(const sptr<WindowNode>& node, co
         WLOGFE("display invaild");
         return;
     }
+    if (displayInfo->GetDisplayStateChangeType() ==  DisplayStateChangeType::UPDATE_ROTATION) {
+        return;
+    }
     auto requestOrientation = node->GetRequestedOrientation();
     if (!WmsUtils::IsFixedOrientation(requestOrientation, node->GetWindowMode(), node->GetWindowFlags())) {
         return;

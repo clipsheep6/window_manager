@@ -691,7 +691,11 @@ DMError AbstractScreenController::SetOrientation(ScreenId screenId, Orientation 
     NotifyScreenChanged(screen->ConvertToScreenInfo(), ScreenChangeEvent::UPDATE_ORIENTATION);
     // Notify rotation event to AbstractDisplayController
     if (abstractScreenCallback_ != nullptr) {
-        abstractScreenCallback_->onChange_(screen, DisplayChangeEvent::UPDATE_ORIENTATION);
+        if (isFromWindow) {
+            abstractScreenCallback_->onChange_(screen, DisplayChangeEvent::UPDATE_ORIENTATION_FROM_WINDOW);
+        } else {
+            abstractScreenCallback_->onChange_(screen, DisplayChangeEvent::UPDATE_ORIENTATION);
+        }
     }
     return DMError::DM_OK;
 }
@@ -791,7 +795,13 @@ bool AbstractScreenController::SetRotation(ScreenId screenId, Rotation rotationA
     NotifyScreenChanged(screen->ConvertToScreenInfo(), ScreenChangeEvent::UPDATE_ROTATION);
     // Notify rotation event to AbstractDisplayController
     if (abstractScreenCallback_ != nullptr) {
-        abstractScreenCallback_->onChange_(screen, DisplayChangeEvent::UPDATE_ROTATION);
+        if (isFromWindow) {
+            abstractScreenCallback_->onChange_(screen, DisplayChangeEvent::UPDATE_ROTATION_FROM_WINDOW);
+        } else {
+            abstractScreenCallback_->onChange_(screen, DisplayChangeEvent::UPDATE_ROTATION);
+        }
+        
+        
     }
     return true;
 }
