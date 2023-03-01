@@ -41,7 +41,7 @@ public:
 
 private:
     NativeValue* OnRegisterCallback(NativeEngine& engine, NativeCallbackInfo& info);
-    bool IsCallbackRegistered(std::string type, NativeValue* jsListenerObject);
+    bool IsCallbackRegistered(const std::string& type, NativeValue* jsListenerObject);
 
     NativeEngine& engine_;
     sptr<SceneSession> session_;

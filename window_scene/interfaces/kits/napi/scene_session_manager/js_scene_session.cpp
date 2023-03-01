@@ -92,11 +92,11 @@ NativeValue* JsSceneSession::OnRegisterCallback(NativeEngine& engine, NativeCall
         return engine.CreateUndefined();
     }
 
-    std::weak_ptr<JsSceneSession> sessionWptr(shared_from_this());
+    auto sessionWptr = weak_from_this();
     NotifyPendingSessionActivationFunc func = [sessionWptr](const SessionInfo& info) {
         auto jsSceneSession = sessionWptr.lock();
         if (jsSceneSession == nullptr) {
-            WLOGFE("[NAPI]this scene session");
+            WLOGFE("[NAPI]this scene session is null");
             return;
         }
         jsSceneSession->PendingSessionActivation(info);
@@ -117,7 +117,7 @@ void JsSceneSession::PendingSessionActivation(const SessionInfo& info)
     if (iter == jsCbMap_.end()) {
         return;
     }
-    std::weak_ptr<JsSceneSession> sessionWptr(shared_from_this());
+    auto sessionWptr = weak_from_this();
     auto jsCallBack = iter->second;
     auto complete = std::make_unique<AsyncTask::CompleteCallback>(
         [sessionWptr, info, jsCallBack](NativeEngine& engine, AsyncTask& task, int32_t status) {
@@ -140,7 +140,7 @@ void JsSceneSession::PendingSessionActivation(const SessionInfo& info)
         std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
 }
 
-bool JsSceneSession::IsCallbackRegistered(std::string type, NativeValue* jsListenerObject)
+bool JsSceneSession::IsCallbackRegistered(const std::string& type, NativeValue* jsListenerObject)
 {
     if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
         WLOGFI("[NAPI]Method %{public}s has not been registered", type.c_str());
