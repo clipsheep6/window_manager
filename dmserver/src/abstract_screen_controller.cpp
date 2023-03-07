@@ -778,7 +778,7 @@ bool AbstractScreenController::SetRotation(ScreenId screenId, Rotation rotationA
             return false;
         }
         auto syncTransactionController = RSSyncTransactionController::GetInstance();
-        if (syncTransactionController) {
+        if (syncTransactionController && isRotationAnimationSyncOpen_) {
             syncTransactionController->OpenSyncTransaction();
         }
         SetScreenRotateAnimation(screen, screenId, rotationAfter, withAnimation);
@@ -1314,5 +1314,10 @@ DMError AbstractScreenController::SetVirtualPixelRatio(ScreenId screenId, float 
     }
     NotifyScreenChanged(screen->ConvertToScreenInfo(), ScreenChangeEvent::VIRTUAL_PIXEL_RATIO_CHANGED);
     return DMError::DM_OK;
+}
+
+void AbstractScreenController::SetRotationAnimationSyncEnabled(bool isEnabled)
+{
+    isRotationAnimationSyncOpen_ = isEnabled;
 }
 } // namespace OHOS::Rosen

@@ -78,6 +78,7 @@ public:
     bool SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason) const;
     ScreenPowerState GetScreenPower(ScreenId dmsScreenId) const;
     DMError SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio);
+    void SetRotationAnimationSyncEnabled(bool isEnabled);
 
     // colorspace, gamut
     DMError GetScreenSupportedColorGamuts(ScreenId screenId, std::vector<ScreenColorGamut>& colorGamuts);
@@ -152,6 +153,7 @@ private:
     std::atomic<ScreenId> defaultRsScreenId_ {SCREEN_ID_INVALID };
     Orientation buildInDefaultOrientation_ { Orientation::UNSPECIFIED };
     bool isExpandCombination_ = false;
+    bool isRotationAnimationSyncOpen_ = true;
 };
 } // namespace OHOS::Rosen
 #endif // FOUNDATION_DMSERVER_ABSTRACT_SCREEN_CONTROLLER_H

@@ -132,6 +132,7 @@ private:
     sptr<DisplayDumper> displayDumper_;
     AtomicMap<ScreenId, uint32_t> accessTokenIdMaps_;
     bool isAutoRotationOpen_;
+    bool isRotationAnimationSyncOpen_;
 };
 } // namespace OHOS::Rosen
 
