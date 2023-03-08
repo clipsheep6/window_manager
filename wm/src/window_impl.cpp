@@ -1009,7 +1009,8 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
         property_->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
     }
 
-    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_VOLUME_OVERLAY) {
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_VOLUME_OVERLAY ||
+        property_->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
         surfaceNode_->SetFrameGravity(Gravity::TOP_LEFT);
     }
 
