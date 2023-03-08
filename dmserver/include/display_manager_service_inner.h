@@ -54,6 +54,7 @@ public:
     void RegisterRSScreenChangeListener(const sptr<IRSScreenChangeListener>& listener);
     sptr<CutoutInfo> GetCutoutInfo(DisplayId displayId) const;
     void NotifyPrivateWindowStateChanged(bool hasPrivate);
+    Rotation GetTargetDisplayRotation(Orientation orientation);
 };
 } // namespace OHOS::Rosen
 

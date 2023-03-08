@@ -173,4 +173,9 @@ void DisplayManagerServiceInner::NotifyPrivateWindowStateChanged(bool hasPrivate
 {
     return DisplayManagerService::GetInstance().NotifyPrivateWindowStateChanged(hasPrivate);
 }
+
+Rotation DisplayManagerServiceInner::GetTargetDisplayRotation(Orientation orientation)
+{
+    return DisplayManagerService::GetInstance().GetTargetDisplayRotation(orientation);
+}
 } // namespace OHOS::Rosen

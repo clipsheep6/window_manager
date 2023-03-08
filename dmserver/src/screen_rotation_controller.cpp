@@ -98,6 +98,33 @@ void ScreenRotationController::HandleSensorEventInput(DeviceRotation deviceRotat
     SetScreenRotation(targetDisplayRotation);
 }
 
+Rotation ScreenRotationController::GetTargetDisplayRotation(Orientation orientation)
+{
+    if (!IsSensorRelatedOrientation(orientation)) {
+        switch (orientation) {
+            case Orientation::UNSPECIFIED:
+                return Rotation::ROTATION_0;
+            case Orientation::VERTICAL:
+                return ConvertDeviceToDisplayRotation(DeviceRotation::ROTATION_PORTRAIT);
+            case Orientation::HORIZONTAL:
+                return ConvertDeviceToDisplayRotation(DeviceRotation::ROTATION_LANDSCAPE);
+            case Orientation::REVERSE_VERTICAL:
+                return ConvertDeviceToDisplayRotation(DeviceRotation::ROTATION_PORTRAIT_INVERTED);
+            case Orientation::REVERSE_HORIZONTAL:
+                return ConvertDeviceToDisplayRotation(DeviceRotation::ROTATION_LANDSCAPE_INVERTED);
+            case Orientation::LOCKED:
+                return currentDisplayRotation_;
+            default:
+                return Rotation::ROTATION_0;
+        }
+    }
+
+    if (currentDisplayRotation_ == ConvertDeviceToDisplayRotation(lastSensorRotationConverted_)) {
+        return currentDisplayRotation_;
+    }
+    return CalcTargetDisplayRotation(orientation, lastSensorRotationConverted_);
+}
+
 Rotation ScreenRotationController::GetCurrentDisplayRotation()
 {
     sptr<DisplayInfo> defaultDisplayInfo = DisplayManagerServiceInner::GetInstance().GetDefaultDisplay();

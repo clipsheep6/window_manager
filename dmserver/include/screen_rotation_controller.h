@@ -52,6 +52,7 @@ public:
     static DMError SetScreenRotationLocked(bool isLocked);
     static void SetDefaultDeviceRotationOffset(uint32_t defaultDeviceRotationOffset);
     static void ProcessOrientationSwitch(Orientation orientation, bool withAnimation);
+    static Rotation GetTargetDisplayRotation(Orientation orientation);
 
     static bool IsDefaultDisplayRotationPortrait();
     static bool IsDisplayRotationVertical(Rotation rotation);

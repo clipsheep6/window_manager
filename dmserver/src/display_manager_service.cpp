@@ -719,6 +719,11 @@ DMError DisplayManagerService::SetScreenRotationLocked(bool isLocked)
     return ScreenRotationController::SetScreenRotationLocked(isLocked);
 }
 
+Rotation DisplayManagerService::GetTargetDisplayRotation(Orientation orientation)
+{
+    return ScreenRotationController::GetTargetDisplayRotation(orientation);
+}
+
 void DisplayManagerService::SetGravitySensorSubscriptionEnabled()
 {
     if (!isAutoRotationOpen_) {
