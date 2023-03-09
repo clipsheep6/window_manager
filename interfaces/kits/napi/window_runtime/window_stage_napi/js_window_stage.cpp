@@ -31,8 +31,9 @@ constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsWindo
 } // namespace
 
 std::unique_ptr<JsWindowRegisterManager> g_listenerManager = std::make_unique<JsWindowRegisterManager>();
-JsWindowStage::JsWindowStage(const std::shared_ptr<Rosen::WindowScene>& windowScene)
-    : windowScene_(windowScene)
+JsWindowStage::JsWindowStage(const std::shared_ptr<Rosen::WindowScene>& windowScene,
+    const std::shared_ptr<Ace::NG::UIWindow>& uiWindow)
+    : windowScene_(windowScene), uiWindow_(uiWindow)
 {
 }
 
@@ -336,8 +337,15 @@ NativeValue* JsWindowStage::OnLoadContent(NativeEngine& engine, NativeCallbackIn
     std::shared_ptr<NativeReference> contentStorage = (storage == nullptr) ? nullptr :
         std::shared_ptr<NativeReference>(engine.CreateReference(storage, 1));
     AsyncTask::CompleteCallback complete =
-        [weak = windowScene_, contentStorage, contextUrl, errCode](
+        [weak = windowScene_, contentStorage, contextUrl, weakUIWindow = uiWindow_](
             NativeEngine& engine, AsyncTask& task, int32_t status) {
+            auto uiWindow = weakUIWindow.lock();
+            if (uiWindow) {
+                NativeValue* nativeStorage = contentStorage ? contentStorage->Get() : nullptr;
+                uiWindow->LoadContent(contextUrl, &engine, nativeStorage);
+                uiWindow->Connect();
+                return;
+            }
             auto weakScene = weak.lock();
             if (weakScene == nullptr) {
                 WLOGFE("[NAPI]Window scene is null");
@@ -545,13 +553,13 @@ NativeValue* JsWindowStage::OnDisableWindowDecor(NativeEngine& engine, NativeCal
 }
 
 NativeValue* CreateJsWindowStage(NativeEngine& engine,
-    std::shared_ptr<Rosen::WindowScene> windowScene)
+    std::shared_ptr<Rosen::WindowScene> windowScene, std::shared_ptr<Ace::NG::UIWindow> uiWindow)
 {
     WLOGFD("[NAPI]CreateJsWindowStage");
     NativeValue* objValue = engine.CreateObject();
     NativeObject* object = ConvertNativeValueTo<NativeObject>(objValue);
 
-    std::unique_ptr<JsWindowStage> jsWindowStage = std::make_unique<JsWindowStage>(windowScene);
+    std::unique_ptr<JsWindowStage> jsWindowStage = std::make_unique<JsWindowStage>(windowScene, uiWindow);
     object->SetNativePointer(jsWindowStage.release(), JsWindowStage::Finalizer, nullptr);
 
     const char *moduleName = "JsWindowStage";

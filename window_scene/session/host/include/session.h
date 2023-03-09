@@ -62,9 +62,15 @@ public:
     WSError Recover() override;
     WSError Maximize() override;
 
+    virtual void NotifyForeground();
+    virtual void NotifyBackground();
+
     // for window event
     WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent);
+
+    bool RegisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
+    bool UnregisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
 
     const SessionInfo& GetSessionInfo() const;
     void SetPendingSessionActivationEventListener(const NotifyPendingSessionActivationFunc& func);
@@ -80,12 +86,34 @@ protected:
     NotifyPendingSessionActivationFunc pendingSessionActivationFunc_;
 
 private:
+    template<typename T>
+    bool RegisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener);
+    template<typename T>
+    bool UnregisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener);
+
+    template<typename T1, typename T2, typename Ret>
+    using EnableIfSame = typename std::enable_if<std::is_same_v<T1, T2>, Ret>::type;
+    template<typename T>
+    inline EnableIfSame<T, ILifecycleListener, std::vector<std::weak_ptr<ILifecycleListener>>> GetListeners()
+    {
+        std::vector<std::weak_ptr<ILifecycleListener>> lifecycleListeners;
+        {
+            std::lock_guard<std::recursive_mutex> lock(mutex_);
+            for (auto& listener : lifecycleListeners_) {
+                lifecycleListeners.push_back(listener);
+            }
+        }
+        return lifecycleListeners;
+    }
+
     std::shared_ptr<RSSurfaceNode> CreateSurfaceNode(std::string name);
 
     uint64_t persistentId_ = INVALID_SESSION_ID;
     std::shared_ptr<RSSurfaceNode> surfaceNode_ = nullptr;
     SessionState state_ = SessionState::STATE_DISCONNECT;
 
+    std::recursive_mutex mutex_;
+    std::vector<std::shared_ptr<ILifecycleListener>> lifecycleListeners_;
     sptr<IWindowEventChannel> windowEventChannel_ = nullptr;
 };
 } // namespace OHOS::Rosen

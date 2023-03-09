@@ -13,24 +13,27 @@
  * limitations under the License.
  */
 
-#ifndef FRAMEWORKS_WM_TEST_UT_MOCK_RS_DISPLAY_NODE_H
-#define FRAMEWORKS_WM_TEST_UT_MOCK_RS_DISPLAY_NODE_H
-#include <gmock/gmock.h>
-#include <ui/rs_display_node.h>
+#ifndef OHOS_ROSEN_WINDOW_SCENE_SCREEN_PROPERTY_H
+#define OHOS_ROSEN_WINDOW_SCENE_SCREEN_PROPERTY_H
 
-namespace OHOS {
-namespace Rosen {
-class MockRSDisplayNode : public RSDisplayNode {
+#include "common/rs_rect.h"
+
+namespace OHOS::Rosen {
+class ScreenProperty {
 public:
-    MockRSDisplayNode(const RSDisplayNodeConfig& config) : RSDisplayNode(config) {}
-    using RSDisplayNode::AddChild;
-    MOCK_METHOD2(AddChild, void(SharedPtr child, int index));
-    using RSDisplayNode::RemoveChild;
-    MOCK_METHOD1(RemoveChild, void(SharedPtr child));
+    ScreenProperty() = default;
+    ~ScreenProperty() = default;
+
+    void SetRotation(float rotation);
+    float GetRotation() const;
+
+    void SetBounds(const RRect& bounds);
+    RRect GetBounds() const;
+
+private:
+    float rotation_ { 0.0f };
+    RRect bounds_;
 };
+} // namespace OHOS::Rosen
 
-} // namespace Rosen
-} // namespace OHOS
-
-#endif // FRAMEWORKS_WM_TEST_UT_MOCK_RS_DISPLAY_NODE_H
-
+#endif // OHOS_ROSEN_WINDOW_SCENE_SCREEN_PROPERTY_H
