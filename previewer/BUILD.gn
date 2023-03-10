@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/window/window_manager/windowmanager_aafwk.gni")
 
 config("previewer_window_config") {
   visibility = [ ":*" ]
@@ -75,7 +76,6 @@ ohos_shared_library("previewer_window_napi") {
   libs = []
 
   sources = [
-    "../../../ability/ability_runtime/frameworks/native/runtime/js_runtime_utils.cpp",
     "../interfaces/kits/napi/window_runtime/window_napi/js_window.cpp",
     "../interfaces/kits/napi/window_runtime/window_napi/js_window_utils.cpp",
     "../interfaces/kits/napi/window_runtime/window_stage_napi/js_window_stage.cpp",
@@ -105,6 +105,7 @@ ohos_shared_library("previewer_window_napi") {
 
   deps = [
     ":previewer_window",
+    "${ability_runtime_path}/frameworks/simulator/ability_simulator:ability_simulator",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/arkui/napi:ace_napi_ark",
   ]
