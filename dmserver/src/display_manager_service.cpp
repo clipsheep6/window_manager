@@ -56,7 +56,9 @@ DisplayManagerService::DisplayManagerService() : SystemAbility(DISPLAY_MANAGER_S
             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4))),
     displayCutoutController_(new DisplayCutoutController()),
     isAutoRotationOpen_(OHOS::system::GetParameter(
-        "persist.display.ar.enabled", "1") == "1") // autoRotation default enabled
+        "persist.display.ar.enabled", "1") == "1"), // autoRotation default enabled
+    isRotationAnimationSyncOpen_(OHOS::system::GetParameter(
+        "persist.display.animationsync.enabled", "1") == "1") // animation sync default enabled
 {
 }
 
