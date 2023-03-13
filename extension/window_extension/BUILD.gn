@@ -58,6 +58,7 @@ ohos_shared_library("libwindow_extension") {
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
+    "ability_runtime:extension_base",
     "ability_runtime:runtime",
     "c_utils:utils",
     "hilog_native:libhilog",
