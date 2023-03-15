@@ -47,6 +47,8 @@ ohos_shared_library("scene_session") {
 
   deps = [ "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client" ]
 
+  public_deps = [ "${window_base_path}/window_scene/common:window_scene_common" ]
+
   external_deps = [
     "c_utils:utils",
     "hilog_native:libhilog",
