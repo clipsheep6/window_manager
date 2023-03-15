@@ -14,6 +14,7 @@
 import("//build/ohos.gni")
 
 config("screen_session_manager_napi_public_config") {
+  visibility = [ ":*" ]
   include_dirs = [
     "//foundation/window/window_manager/window_scene/interfaces/kits/napi",
   ]
@@ -43,6 +44,7 @@ ohos_shared_library("screensessionmanager_napi") {
     "napi:ace_napi",
   ]
 
+  version_script = "libscreensessionmanager_napi.map"
   relative_install_dir = "module"
   part_name = "window_manager"
   subsystem_name = "window"
