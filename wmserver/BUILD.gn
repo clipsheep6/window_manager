@@ -115,6 +115,12 @@ ohos_shared_library("libwms") {
     external_deps += [ "init_lite:libbegetutil" ]
   }
 
+  # ../../foundation/window/window_manager/wmserver/src/window_manager_service.cpp:914:26: error: lambda capture 'this' is not used [-Werror,-Wunused-lambda-capture]
+  #     return PostSyncTask([this, &windowManagerAgent, type]() {
+  #                          ^~~~~
+  # 1 error generated.
+  cflags = [ "-Wno-error=unused-lambda-capture" ]
+
   part_name = "window_manager"
   subsystem_name = "window"
 }
