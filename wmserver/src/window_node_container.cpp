@@ -1091,8 +1091,14 @@ void WindowNodeContainer::HandleKeepScreenOn(const sptr<WindowNode>& node, bool 
     if (requireLock && node->keepScreenLock_ == nullptr) {
         // reset ipc identity
         std::string identity = IPCSkeleton::ResetCallingIdentity();
-        node->keepScreenLock_ = PowerMgr::PowerMgrClient::GetInstance().CreateRunningLock(node->GetWindowName(),
+        auto runningLock = PowerMgr::PowerMgrClient::GetInstance().CreateRunningLock(node->GetWindowName(),
             PowerMgr::RunningLockType::RUNNINGLOCK_SCREEN);
+        if (runningLock.IsOk()) {
+            node->keepScreenLock_ = runningLock.GetData();
+        } else {
+            node->keepScreenLock_ = nullptr;
+            WLOGFW("Create runninglock failed: %{public}s", runningLock.GetMessage().c_str());
+        }
         // set ipc identity to raw
         IPCSkeleton::SetCallingIdentity(identity);
     }
@@ -1102,7 +1108,7 @@ void WindowNodeContainer::HandleKeepScreenOn(const sptr<WindowNode>& node, bool 
     WLOGI("keep screen on: [%{public}s, %{public}d]", node->GetWindowName().c_str(), requireLock);
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "container:HandleKeepScreenOn(%s, %d)",
         node->GetWindowName().c_str(), requireLock);
-    ErrCode res;
+    PowerMgr::Error<void> res;
     // reset ipc identity
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     if (requireLock) {
@@ -1112,8 +1118,9 @@ void WindowNodeContainer::HandleKeepScreenOn(const sptr<WindowNode>& node, bool 
     }
     // set ipc identity to raw
     IPCSkeleton::SetCallingIdentity(identity);
-    if (res != ERR_OK) {
-        WLOGFE("handle keep screen running lock failed: [operation: %{public}d, err: %{public}d]", requireLock, res);
+    if (!res.IsOk()) {
+        WLOGFE("handle keep screen running lock failed: [operation: %{public}d, err: %{public}d]",
+            requireLock, res.GetCode());
     }
 }
 
