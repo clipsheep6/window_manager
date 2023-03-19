@@ -52,12 +52,11 @@ void WindowFrameTraceImpl::VsyncStartFrameTrace()
             handleUI_ = CreateTraceTag(intervalName_);
         }
         if (handleUI_ != nullptr) {
-            EnableTraceForThread(handleUI_);
             StartFrameTrace(handleUI_);
         }
     }
 }
-           
+
 void WindowFrameTraceImpl::VsyncStopFrameTrace()
 {
     if (!AccessFrameTrace()) {
