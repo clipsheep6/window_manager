@@ -16,6 +16,7 @@ import("//build/ohos.gni")
 config("wm_interface_config") {
   visibility = [ ":*" ]
   include_dirs = [ "//foundation/window/window_manager/interfaces/innerkits" ]
+  external_deps = [ "multimedia_image_framework:image_native" ]
 }
 
 ohos_shared_library("wm_interface") {
