@@ -130,11 +130,6 @@ NativeValue* JsWindowStage::OnSetUIContent(NativeEngine& engine, NativeCallbackI
         WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
         return engine.CreateUndefined();
     }
-    auto weakScene = windowScene_.lock();
-    if (weakScene == nullptr || weakScene->GetMainWindow() == nullptr) {
-        WLOGFE("[NAPI]WindowScene is null or window is null");
-        return engine.CreateUndefined();
-    }
 
     // Parse info->argv[0] as abilitycontext
     auto objContext = ConvertNativeValueTo<NativeObject>(info.argv[0]);
@@ -147,6 +142,19 @@ NativeValue* JsWindowStage::OnSetUIContent(NativeEngine& engine, NativeCallbackI
     std::string contextUrl;
     if (!ConvertFromJsValue(engine, info.argv[1], contextUrl)) {
         WLOGFE("[NAPI]Failed to convert parameter to url");
+        return engine.CreateUndefined();
+    }
+
+    auto uiWindow = uiWindow_.lock();
+    if (uiWindow) {
+        uiWindow->LoadContent(contextUrl, &engine, nullptr);
+        uiWindow->Connect();
+        return engine.CreateUndefined();
+    }
+
+    auto weakScene = windowScene_.lock();
+    if (weakScene == nullptr || weakScene->GetMainWindow() == nullptr) {
+        WLOGFE("[NAPI]WindowScene is null or window is null");
         return engine.CreateUndefined();
     }
     weakScene->GetMainWindow()->SetUIContent(contextUrl, &engine, info.argv[CONTENT_STORAGE_ARG]);
