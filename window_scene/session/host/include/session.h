@@ -37,9 +37,10 @@ using NotifyPendingSessionActivationFunc = std::function<void(const SessionInfo&
 
 class ILifecycleListener {
 public:
-    virtual void OnForeground() {};
-    virtual void OnBackground() {};
+    virtual void OnForeground() = 0;
+    virtual void OnBackground() = 0;
 };
+
 class Session : public SessionStub, public virtual RefBase {
 public:
     Session(const SessionInfo& info);
@@ -47,13 +48,14 @@ public:
 
     void SetPersistentId(uint64_t persistentId);
     uint64_t GetPersistentId() const;
+
     std::shared_ptr<RSSurfaceNode> GetSurfaceNode() const;
+    SessionState GetSessionState() const;
 
     virtual WSError SetActive(bool active);
     virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason);
 
-    WSError Connect(
-        const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel) override;
+    WSError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel) override;
     WSError Foreground() override;
     WSError Background() override;
     WSError Disconnect() override;
@@ -65,7 +67,6 @@ public:
     virtual void NotifyForeground();
     virtual void NotifyBackground();
 
-    // for window event
     WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent);
 
@@ -76,7 +77,6 @@ public:
     void SetPendingSessionActivationEventListener(const NotifyPendingSessionActivationFunc& func);
 
 protected:
-    SessionState GetSessionState() const;
     void UpdateSessionState(SessionState state);
     bool IsSessionValid() const;
     bool isActive_ = false;

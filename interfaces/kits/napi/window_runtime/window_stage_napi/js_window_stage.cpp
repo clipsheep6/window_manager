@@ -347,11 +347,10 @@ NativeValue* JsWindowStage::OnLoadContent(NativeEngine& engine, NativeCallbackIn
     AsyncTask::CompleteCallback complete =
         [weak = windowScene_, contentStorage, contextUrl, weakUIWindow = uiWindow_](
             NativeEngine& engine, AsyncTask& task, int32_t status) {
-            auto uiWindow = weakUIWindow.lock();
-            if (uiWindow) {
+            if (auto uiWindow = weakUIWindow.lock()) {
                 NativeValue* nativeStorage = contentStorage ? contentStorage->Get() : nullptr;
                 uiWindow->LoadContent(contextUrl, &engine, nativeStorage);
-                uiWindow->Connect();
+                task.Resolve(engine, engine.CreateUndefined());
                 return;
             }
             auto weakScene = weak.lock();

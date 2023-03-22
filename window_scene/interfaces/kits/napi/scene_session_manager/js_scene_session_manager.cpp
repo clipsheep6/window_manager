@@ -199,8 +199,6 @@ NativeValue* JsSceneSessionManager::OnRequestSceneSessionActivation(NativeEngine
         return engine.CreateUndefined();
     }
 
-    sceneSession->NotifyForeground();
-
     WLOGFI("[NAPI]RequestSceneSessionActivation: SceneInfo [%{public}s, %{public}s]",
         sceneSession->GetSessionInfo().bundleName_.c_str(), sceneSession->GetSessionInfo().abilityName_.c_str());
     AsyncTask::CompleteCallback complete = [sceneSession](NativeEngine& engine, AsyncTask& task, int32_t status) {
@@ -262,8 +260,6 @@ NativeValue* JsSceneSessionManager::OnRequestSceneSessionBackground(NativeEngine
             "Input parameter is missing or invalid"));
         return engine.CreateUndefined();
     }
-
-    sceneSession->NotifyBackground();
 
     WLOGFI("[NAPI]RequestSceneSessionBackground: SceneInfo [%{public}s, %{public}s]",
         sceneSession->GetSessionInfo().bundleName_.c_str(), sceneSession->GetSessionInfo().abilityName_.c_str());

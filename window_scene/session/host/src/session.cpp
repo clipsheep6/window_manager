@@ -60,7 +60,7 @@ bool Session::RegisterLifecycleListener(const std::shared_ptr<ILifecycleListener
 
 bool Session::UnregisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener)
 {
-    return RegisterListenerLocked(lifecycleListeners_, listener);
+    return UnregisterListenerLocked(lifecycleListeners_, listener);
 }
 
 template<typename T>
@@ -158,7 +158,6 @@ WSError Session::UpdateRect(const WSRect& rect, SizeChangeReason reason)
         return WSError::WS_ERROR_INVALID_SESSION;
     }
     sessionStage_->UpdateRect(rect, reason);
-    winRect_ = rect;
     return WSError::WS_OK;
 }
 
@@ -193,12 +192,11 @@ WSError Session::Foreground()
         return WSError::WS_ERROR_INVALID_SESSION;
     }
 
+    UpdateSessionState(SessionState::STATE_FOREGROUND);
     if (!isActive_) {
         SetActive(true);
-        UpdateSessionState(SessionState::STATE_ACTIVE);
-    } else {
-        UpdateSessionState(SessionState::STATE_FOREGROUND);
     }
+    NotifyForeground();
     return WSError::WS_OK;
 }
 
@@ -212,6 +210,7 @@ WSError Session::Background()
         return WSError::WS_ERROR_INVALID_SESSION;
     }
     UpdateSessionState(SessionState::STATE_BACKGROUND);
+    NotifyBackground();
     return WSError::WS_OK;
 }
 
@@ -274,7 +273,6 @@ WSError Session::Maximize()
     return WSError::WS_OK;
 }
 
-// for window event
 WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
     WLOGFD("Session TransferPointEvent");
@@ -282,18 +280,16 @@ WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& 
         WLOGFE("windowEventChannel_ is null");
         return WSError::WS_ERROR_NULLPTR;
     }
-    windowEventChannel_->TransferPointerEvent(pointerEvent);
-    return WSError::WS_OK;
+    return windowEventChannel_->TransferPointerEvent(pointerEvent);
 }
 
 WSError Session::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
-    WLOGFD("Session TransferPointEvent");
+    WLOGFD("Session TransferKeyEvent");
     if (!windowEventChannel_) {
         WLOGFE("windowEventChannel_ is null");
         return WSError::WS_ERROR_NULLPTR;
     }
-    windowEventChannel_->TransferKeyEvent(keyEvent);
-    return WSError::WS_OK;
+    return windowEventChannel_->TransferKeyEvent(keyEvent);
 }
 } // namespace OHOS::Rosen

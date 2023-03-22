@@ -128,6 +128,7 @@ WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSessi
         }
         auto persistentId = scnSession->GetPersistentId();
         WLOGFI("background session persistentId: %{public}" PRIu64 "", persistentId);
+        scnSession->SetActive(false);
         scnSession->Background();
         if (abilitySceneMap_.count(persistentId) == 0) {
             WLOGFE("session is invalid with %{public}" PRIu64 "", persistentId);
