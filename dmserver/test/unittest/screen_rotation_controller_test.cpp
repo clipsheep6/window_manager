@@ -398,6 +398,7 @@ HWTEST_F(ScreenRotationControllerTest, ProcessSwitchToAutoRotation, Function | S
     ScreenRotationController::ProcessSwitchToAutoRotation(deviceRotation);
     deviceRotation = DeviceRotation::ROTATION_PORTRAIT;
     ScreenRotationController::ProcessSwitchToAutoRotation(deviceRotation);
+    // TODO: find default display -> check rotation value
 
     deviceRotation = DeviceRotation::INVALID;
     ScreenRotationController::ProcessSwitchToAutoRotationPortrait(deviceRotation);
