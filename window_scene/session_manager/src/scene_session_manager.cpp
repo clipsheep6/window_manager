@@ -101,7 +101,7 @@ WSError SceneSessionManager::RequestSceneSessionActivation(const sptr<SceneSessi
         sptr<AAFwk::SessionInfo> abilitySessionInfo = new (std::nothrow) AAFwk::SessionInfo();
         abilitySessionInfo->sessionToken = scnSession;
         abilitySessionInfo->persistentId = scnSession->GetPersistentId();
-        AAFwk::AbilityManagerClient::GetInstance()->StartAbilityByLauncher(want, startOptions, nullptr, abilitySessionInfo);
+        AAFwk::AbilityManagerClient::GetInstance()->StartAbilityByLauncher(want, startOptions, abilitySessionInfo);
         auto newAbilityToken = AAFwk::AbilityManagerClient::GetInstance()->GetTokenBySceneSession(
             abilitySessionInfo->persistentId);
         if (newAbilityToken) {
