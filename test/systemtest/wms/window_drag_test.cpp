@@ -113,17 +113,18 @@ namespace {
  */
 HWTEST_F(WindowDragTest, DragIn, Function | MediumTest | Level3) {
     const sptr<Window> &firstWindow = Utils::CreateTestWindow(firstWindowInfo_);
+    ASSERT_NE(firstWindow, nullptr);
+    activeWindows_.push_back(firstWindow);
     firstWindow->RegisterDragListener(firstWindowDragListener_);
     firstWindow->SetTurnScreenOn(true);
     firstWindow->Show();
 
     const sptr<Window> &dragWindow = Utils::CreateTestWindow(dragWindowInfo_);
+    ASSERT_NE(dragWindow, nullptr);
+    activeWindows_.push_back(dragWindow);
     dragWindow->Show();
     dragWindow->MoveTo(300, 300);
     sleep(WAIT_CALLBACK_US);
-
-    activeWindows_.push_back(firstWindow);
-    activeWindows_.push_back(dragWindow);
 
     ASSERT_EQ(300, firstWindowDragListener_->point_.x);
     ASSERT_EQ(300, firstWindowDragListener_->point_.y);
@@ -139,16 +140,17 @@ HWTEST_F(WindowDragTest, DragIn, Function | MediumTest | Level3) {
  */
 HWTEST_F(WindowDragTest, DragMove, Function | MediumTest | Level3) {
     const sptr<Window> &firstWindow = Utils::CreateTestWindow(firstWindowInfo_);
+    ASSERT_NE(firstWindow, nullptr);
+    activeWindows_.push_back(firstWindow);
     firstWindow->RegisterDragListener(firstWindowDragListener_);
     firstWindow->SetTurnScreenOn(true);
     firstWindow->Show();
 
     const sptr<Window> &dragWindow = Utils::CreateTestWindow(dragWindowInfo_);
+    ASSERT_NE(dragWindow, nullptr);
+    activeWindows_.push_back(dragWindow);
     dragWindow->Show();
     dragWindow->MoveTo(300, 300);
-
-    activeWindows_.push_back(firstWindow);
-    activeWindows_.push_back(dragWindow);
 
     sleep(WAIT_CALLBACK_US);
     ASSERT_EQ(300, firstWindowDragListener_->point_.x);
@@ -171,23 +173,25 @@ HWTEST_F(WindowDragTest, DragMove, Function | MediumTest | Level3) {
  */
 HWTEST_F(WindowDragTest, DragOut, Function | MediumTest | Level3) {
     const sptr<Window> &firstWindow = Utils::CreateTestWindow(firstWindowInfo_);
+    ASSERT_NE(firstWindow, nullptr);
+    activeWindows_.push_back(firstWindow);
     firstWindow->RegisterDragListener(firstWindowDragListener_);
     firstWindow->SetTurnScreenOn(true);
     firstWindow->Show();
 
     secondWindowInfo_.rect = {500, 500, 500, 500};
     const sptr<Window> &secondWindow = Utils::CreateTestWindow(secondWindowInfo_);
+    ASSERT_NE(secondWindow, nullptr);
+    activeWindows_.push_back(secondWindow);
     secondWindow->RegisterDragListener(secondWindowDragListener_);
     secondWindow->Show();
 
     const sptr<Window> &dragWindow = Utils::CreateTestWindow(dragWindowInfo_);
+    ASSERT_NE(secondWindow, nullptr);
+    activeWindows_.push_back(dragWindow);
     dragWindow->Show();
     dragWindow->MoveTo(300, 300);
 
-    activeWindows_.push_back(firstWindow);
-    activeWindows_.push_back(secondWindow);
-    activeWindows_.push_back(dragWindow);
-    
     sleep(WAIT_CALLBACK_US);
     ASSERT_EQ(300, firstWindowDragListener_->point_.x);
     ASSERT_EQ(300, firstWindowDragListener_->point_.y);
@@ -226,7 +230,6 @@ HWTEST_F(WindowDragTest, DragEnd, Function | MediumTest | Level3) {
     ASSERT_NE(nullptr, dragWindow);
     dragWindow->Show();
     dragWindow->MoveTo(199, 199);
-
 
     sleep(WAIT_CALLBACK_US);
     dragWindow->Destroy();
