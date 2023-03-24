@@ -31,6 +31,10 @@ class KeyEvent;
 class AxisEvent;
 } // namespace OHOS::MMI
 
+namespace OHOS::Media {
+class PixelMap;
+}
+
 namespace OHOS::Rosen {
 class RSSurfaceNode;
 using NotifyPendingSessionActivationFunc = std::function<void(const SessionInfo& info)>;
@@ -50,6 +54,7 @@ public:
     uint64_t GetPersistentId() const;
 
     std::shared_ptr<RSSurfaceNode> GetSurfaceNode() const;
+    std::shared_ptr<Media::PixelMap> GetSnapshot() const;
     SessionState GetSessionState() const;
 
     virtual WSError SetActive(bool active);
@@ -107,6 +112,7 @@ private:
     }
 
     std::shared_ptr<RSSurfaceNode> CreateSurfaceNode(std::string name);
+    std::shared_ptr<Media::PixelMap> Snapshot();
 
     uint64_t persistentId_ = INVALID_SESSION_ID;
     std::shared_ptr<RSSurfaceNode> surfaceNode_ = nullptr;
@@ -115,6 +121,8 @@ private:
     std::recursive_mutex mutex_;
     std::vector<std::shared_ptr<ILifecycleListener>> lifecycleListeners_;
     sptr<IWindowEventChannel> windowEventChannel_ = nullptr;
+
+    std::shared_ptr<Media::PixelMap> snapshot_;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_H

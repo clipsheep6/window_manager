@@ -15,8 +15,9 @@
 
 #include "session/host/include/session.h"
 
+#include "surface_capture_future.h"
+#include <transaction/rs_interfaces.h>
 #include <ui/rs_surface_node.h>
-
 #include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
@@ -210,6 +211,8 @@ WSError Session::Background()
         return WSError::WS_ERROR_INVALID_SESSION;
     }
     UpdateSessionState(SessionState::STATE_BACKGROUND);
+
+    snapshot_ = Snapshot();
     NotifyBackground();
     return WSError::WS_OK;
 }
@@ -291,5 +294,23 @@ WSError Session::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent
         return WSError::WS_ERROR_NULLPTR;
     }
     return windowEventChannel_->TransferKeyEvent(keyEvent);
+}
+
+std::shared_ptr<Media::PixelMap> Session::GetSnapshot() const
+{
+    return snapshot_;
+}
+
+std::shared_ptr<Media::PixelMap> Session::Snapshot()
+{
+    auto callback = std::make_shared<SurfaceCaptureFuture>();
+    RSInterfaces::GetInstance().TakeSurfaceCapture(surfaceNode_, callback);
+    auto pixelMap = callback->GetResult(2000); // wait for <= 2000ms
+    if (pixelMap != nullptr) {
+        WLOGFD("Save pixelMap WxH = %{public}dx%{public}d", pixelMap->GetWidth(), pixelMap->GetHeight());
+    } else {
+        WLOGFE("Failed to get pixelMap, return nullptr");
+    }
+    return pixelMap;
 }
 } // namespace OHOS::Rosen

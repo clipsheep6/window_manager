@@ -54,6 +54,7 @@ ohos_shared_library("scene_session") {
     "hilog_native:libhilog",
     "input:libmmi-client",
     "ipc:ipc_core",
+    "multimedia_image_framework:image_native",
   ]
 
   part_name = "window_manager"
