@@ -63,9 +63,9 @@ private:
     bool isMainHandlerAvailable_ = true;
     bool destroyed_ = false;
     const std::string VSYNC_THREAD_ID = "VsyncThread";
-    std::shared_ptr<OHOS::Rosen::VSyncReceiver> receiver_ = nullptr;
+    std::shared_ptr<OHOS::Rosen::IVSyncReceiver> receiver_ = nullptr;
     std::unordered_set<std::shared_ptr<VsyncCallback>> vsyncCallbacks_;
-    VSyncReceiver::FrameCallback frameCallback_ = {
+    FrameCallback frameCallback_ = {
         .userData_ = this,
         .callback_ = OnVsync,
     };
