@@ -19,6 +19,7 @@
 #include <start_options.h>
 #include <want.h>
 
+#include "service_router_mgr_helper.h"
 #include "session/host/include/extension_session.h"
 #include "session_info.h"
 #include "window_manager_hilog.h"
@@ -113,9 +114,8 @@ WSError ExtensionSessionManager::RequestExtensionSessionActivation(const sptr<Ex
         if (!extSessionInfo) {
             return WSError::WS_ERROR_NULLPTR;
         }
-        AAFwk::AbilityManagerClient::GetInstance()->StartUIExtensionAbility(want, extSessionInfo,
-            AAFwk::DEFAULT_INVAL_VALUE,
-            AppExecFwk::ExtensionAbilityType::UI);
+        AppExecFwk::ServiceRouterMgrHelper::GetInstance().GetServiceRouterMgr()->StartUIExtensionAbility(want,
+            extSessionInfo, AAFwk::DEFAULT_INVAL_VALUE, AppExecFwk::ExtensionAbilityType::UI);
         return WSError::WS_OK;
     };
     WS_CHECK_NULL_SCHE_RETURN(mmsScheduler_, task);
