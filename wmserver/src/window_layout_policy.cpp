@@ -20,6 +20,7 @@
 #include "window_helper.h"
 #include "window_inner_manager.h"
 #include "window_manager_hilog.h"
+#include "window_manager_service.h"
 #include "window_manager_service_utils.h"
 #include "wm_common_inner.h"
 #include "wm_math.h"
@@ -652,8 +653,12 @@ static void SetBounds(const sptr<WindowNode>& node, const Rect& winRect, const R
     if (node->GetWindowSizeChangeReason() == WindowSizeChangeReason::DRAG_START ||
         node->GetWindowSizeChangeReason() == WindowSizeChangeReason::DRAG ||
         node->GetWindowSizeChangeReason() == WindowSizeChangeReason::ROTATION) {
+        SystemConfig systemConfig;
+        WindowManagerService::GetInstance().GetSystemConfig(systemConfig);
+        Gravity presetGravity = systemConfig.dragFrameGravity_ != -1
+            ? static_cast<Gravity>(systemConfig.dragFrameGravity_) : Gravity_::RESIZE;
         if (node->surfaceNode_) {
-            node->surfaceNode_->SetFrameGravity(Gravity::RESIZE);
+            node->surfaceNode_->SetFrameGravity(presetGravity);
         }
     } else {
         if (node->surfaceNode_) {
