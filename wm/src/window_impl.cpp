@@ -2522,7 +2522,7 @@ void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& p
         HandlePointerStyle(pointerEvent);
     }
     if (action == MMI::PointerEvent::POINTER_ACTION_DOWN || action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
-        WLOGI("WMS process point down, window: [name:%{public}s, id:%{public}u], action: %{public}d",
+        WLOGFD("WMS process point down, window: [name:%{public}s, id:%{public}u], action: %{public}d",
             name_.c_str(), GetWindowId(), action);
         if (GetType() == WindowType::WINDOW_TYPE_LAUNCHER_RECENT) {
             MMI::PointerEvent::PointerItem pointerItem;
