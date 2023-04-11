@@ -535,6 +535,7 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
     // make uiContent available after Initialize/Restore
     uiContent_ = std::move(uiContent);
     if (isIgnoreSafeAreaNeedNotify_) {
+        WLOGFE("temptesttest SetUIContent SetIgnoreViewSafeArea");
         uiContent->SetIgnoreViewSafeArea(isIgnoreSafeArea_);
     }
     UpdateDecorEnable(true);
@@ -722,11 +723,14 @@ WMError WindowImpl::SetLayoutFullScreen(bool status)
     if ((context_ != nullptr) && (context_->GetApplicationInfo() != nullptr)) {
         version = context_->GetApplicationInfo()->apiCompatibleVersion;
     }
+    WLOGFE("temptesttest version %{public}u", version);
     // 10 ArkUI新框架适用版本API10
     if (version >= 10) {
         if (uiContent_ != nullptr) {
+            WLOGFE("temptesttest SetIgnoreViewSafeArea");
             uiContent_->SetIgnoreViewSafeArea(status);
         } else {
+            WLOGFE("temptesttest isIgnoreSafeAreaNeedNotify_ isIgnoreSafeArea_");
             isIgnoreSafeAreaNeedNotify_ = true;
             isIgnoreSafeArea_ = status;
         }
