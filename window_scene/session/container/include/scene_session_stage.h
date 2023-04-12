@@ -25,7 +25,6 @@ public:
     SceneSessionStage(const sptr<ISession>& sceneSession);
     ~SceneSessionStage() = default;
 
-    virtual WSError Connect() override;
     virtual WSError Recover() override;
     virtual WSError Maximize() override;
 };
