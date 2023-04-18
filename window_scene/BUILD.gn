@@ -21,5 +21,7 @@ group("window_scene") {
     "session:screen_session",
     "session_manager:scene_session_manager",
     "session_manager:screen_session_manager",
+    "session_manager_service:session_manager_service",
+    "session_manager:session_manager"
   ]
 }
