@@ -13,22 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_ROSEN_WINDOW_SCENE_WINDOW_SCENE_JUDGEMENT_H
-#define OHOS_ROSEN_WINDOW_SCENE_WINDOW_SCENE_JUDGEMENT_H
+#ifndef OHOS_ROSEN_WINDOW_SCENE_SCENE_BOARD_JUDGEMENT_H
+#define OHOS_ROSEN_WINDOW_SCENE_SCENE_BOARD_JUDGEMENT_H
 
 #include <fstream>
 
 namespace OHOS::Rosen {
-class WindowSceneJudgement final {
+class SceneBoardJudgement final {
 public:
-    // judge whether window scene is enabled
-    static bool IsWindowSceneEnabled();
+    // Judge whether SceneBoard is enabled.
+    static bool IsSceneBoardEnabled();
 
 private:
-    // dealing with Windows type end of line "\r\n"
+    // Dealing with Windows type end of line "\r\n".
     static std::ifstream& SafeGetLine(std::ifstream& configFile, std::string& line);
-    static void InitWindowSceneWithConfigFile(bool& isWindowSceneEnabled);
+    static void InitWithConfigFile(bool& isSceneBoardEnabled);
 };
 } // namespace OHOS::Rosen
 
-#endif // OHOS_ROSEN_WINDOW_SCENE_WINDOW_SCENE_JUDGEMENT_H
+#endif // OHOS_ROSEN_WINDOW_SCENE_SCENE_BOARD_JUDGEMENT_H

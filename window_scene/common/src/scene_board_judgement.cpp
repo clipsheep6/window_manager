@@ -13,21 +13,21 @@
  * limitations under the License.
  */
 
-#include "common/include/window_scene_judgement.h"
+#include "common/include/scene_board_judgement.h"
 
 namespace OHOS::Rosen {
-bool WindowSceneJudgement::IsWindowSceneEnabled()
+bool SceneBoardJudgement::IsSceneBoardEnabled()
 {
-    static bool isWindowSceneEnabled = false;
+    static bool isSceneBoardEnabled = false;
     static bool initialized = false;
     if (!initialized) {
-        InitWindowSceneWithConfigFile(isWindowSceneEnabled);
+        InitWithConfigFile(isSceneBoardEnabled);
         initialized = true;
     }
-    return isWindowSceneEnabled;
+    return isSceneBoardEnabled;
 }
 
-std::ifstream& WindowSceneJudgement::SafeGetLine(std::ifstream& configFile, std::string& line)
+std::ifstream& SceneBoardJudgement::SafeGetLine(std::ifstream& configFile, std::string& line)
 {
     std::getline(configFile, line);
     if (line.size() && line[line.size() - 1] == '\r') {
@@ -36,12 +36,12 @@ std::ifstream& WindowSceneJudgement::SafeGetLine(std::ifstream& configFile, std:
     return configFile;
 }
 
-void WindowSceneJudgement::InitWindowSceneWithConfigFile(bool& isWindowSceneEnabled)
+void SceneBoardJudgement::InitWithConfigFile(bool& isSceneBoardEnabled)
 {
     std::ifstream configFile("/etc/windowscene.config");
     std::string line;
     if (configFile.is_open() && SafeGetLine(configFile, line) && line == "ENABLED") {
-        isWindowSceneEnabled = true;
+        isSceneBoardEnabled = true;
     }
     configFile.close();
 }

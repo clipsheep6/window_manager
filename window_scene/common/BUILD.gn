@@ -27,7 +27,7 @@ config("window_scene_common_public_config") {
 ohos_shared_library("window_scene_common") {
   sources = [
     "src/message_scheduler.cpp",
-    "src/window_scene_judgement.cpp",
+    "src/scene_board_judgement.cpp",
   ]
 
   public_configs = [ ":window_scene_common_public_config" ]

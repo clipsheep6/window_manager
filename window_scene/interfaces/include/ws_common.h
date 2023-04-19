@@ -22,7 +22,7 @@
 
 #include "iremote_broker.h"
 
-#include "common/include/window_scene_judgement.h"
+#include "common/include/scene_board_judgement.h"
 
 namespace OHOS::Rosen {
 namespace {

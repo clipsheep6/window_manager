@@ -16,7 +16,7 @@
 #include "display_manager_service.h"
 
 #include <cinttypes>
-#include "common/include/window_scene_judgement.h"
+#include "common/include/scene_board_judgement.h"
 #include <hitrace_meter.h>
 #include <ipc_skeleton.h>
 #include <iservice_registry.h>
@@ -37,7 +37,7 @@ namespace {
     const std::string SCREEN_CAPTURE_PERMISSION = "ohos.permission.CAPTURE_SCREEN";
 }
 WM_IMPLEMENT_SINGLE_INSTANCE(DisplayManagerService)
-const bool REGISTER_RESULT = WindowSceneJudgement::IsWindowSceneEnabled() ? false :
+const bool REGISTER_RESULT = SceneBoardJudgement::IsSceneBoardEnabled() ? false :
     SystemAbility::MakeAndRegisterAbility(&SingletonContainer::Get<DisplayManagerService>());
 
 #define CHECK_SCREEN_AND_RETURN(screenId, ret) \
