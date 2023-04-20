@@ -230,6 +230,8 @@ HWTEST_F(DisplayPowerUnitTest, set_screen_brightness_001, Function | MediumTest 
 {
     bool ret = DisplayManager::GetInstance().SetScreenBrightness(defaultId_, brightnessLevel_);
     ASSERT_EQ(true, ret);
+    auto value = DisplayManager::GetInstance().GetScreenBrightness(defaultId_);
+    ASSERT_EQ(brightnessLevel_, value);
 }
 
 /**

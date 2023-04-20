@@ -36,6 +36,7 @@
 #include "display_power_controller.h"
 #include "singleton_delegator.h"
 #include "window_info_queried_listener.h"
+#include "message_parcel.h"
 
 namespace OHOS::Rosen {
 class DisplayManagerService : public SystemAbility, public DisplayManagerStub {
@@ -84,9 +85,8 @@ public:
     bool SetDisplayState(DisplayState state) override;
     void UpdateRSTree(DisplayId displayId, DisplayId parentDisplayId, std::shared_ptr<RSSurfaceNode>& surfaceNode,
         bool isAdd, bool isMultiDisplay);
-    DMError AddSurfaceNodeToDisplay(DisplayId displayId,
-        std::shared_ptr<RSSurfaceNode>& surfaceNode, bool onTop = true) override;
-    DMError RemoveSurfaceNodeFromDisplay(DisplayId displayId, std::shared_ptr<RSSurfaceNode>& surfaceNode) override;
+    DMError AddSurfaceNodeToDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo, bool onTop = true) override;
+    DMError RemoveSurfaceNodeFromDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo) override;
     DisplayState GetDisplayState(DisplayId displayId) override;
     void NotifyDisplayEvent(DisplayEvent event) override;
     bool SetFreeze(std::vector<DisplayId> displayIds, bool isFreeze) override;
@@ -106,7 +106,8 @@ public:
     void RegisterDisplayChangeListener(sptr<IDisplayChangeListener> listener);
     void RegisterWindowInfoQueriedListener(const sptr<IWindowInfoQueriedListener>& listener);
     void NotifyPrivateWindowStateChanged(bool hasPrivate);
-
+    bool SetScreenBrightness(uint64_t screenId, uint32_t level) override;
+    uint32_t GetScreenBrightness(uint64_t screenId) override;
 private:
     DisplayManagerService();
     ~DisplayManagerService() = default;

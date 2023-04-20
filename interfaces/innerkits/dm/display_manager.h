@@ -19,13 +19,43 @@
 #include <vector>
 #include <mutex>
 #include <pixel_map.h>
+#include <string>
 
 #include "display.h"
 #include "dm_common.h"
 #include "wm_single_instance.h"
 #include "screenshot_info.h"
 
+
 namespace OHOS::Rosen {
+
+class SurfaceNodeInfo : public Parcelable {
+public:
+    SurfaceNodeInfo() = default;
+    ~SurfaceNodeInfo() = default;
+    bool Marshalling(Parcel &parcel) const override
+    {
+        parcel.WriteUint64(nodeId_);
+        parcel.WriteString(nodeName_);
+        parcel.WriteBool(isRenderNode_);
+
+        return true;
+    }
+
+    static SurfaceNodeInfo* Unmarshalling(Parcel& parcel)
+    {
+        auto surfaceNodeInfo = new (std::nothrow) SurfaceNodeInfo();
+        parcel.ReadUint64(surfaceNodeInfo->nodeId_);
+        parcel.ReadString(surfaceNodeInfo->nodeName_);
+        
+        parcel.ReadBool(surfaceNodeInfo->isRenderNode_);
+        return surfaceNodeInfo;
+    }
+
+    std::string nodeName_ = "";
+    uint64_t nodeId_ = 0;
+    bool isRenderNode_ = false;
+};
 class DisplayManager {
 WM_DECLARE_SINGLE_INSTANCE_BASE(DisplayManager);
 friend class DMSDeathRecipient;
@@ -307,7 +337,7 @@ public:
      * @param surfaceNode SurfaceNode object.
      * @return DM_OK means add success, others means add failed.
      */
-    DMError AddSurfaceNodeToDisplay(DisplayId displayId, std::shared_ptr<class RSSurfaceNode>& surfaceNode);
+    DMError AddSurfaceNodeToDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo);
     
     /**
      * @brief Remove a surface node from the target display.
@@ -316,7 +346,7 @@ public:
      * @param surfaceNode SurfaceNode object.
      * @return DM_OK means remove success, others means remove failed.
      */
-    DMError RemoveSurfaceNodeFromDisplay(DisplayId displayId, std::shared_ptr<class RSSurfaceNode>& surfaceNode);
+    DMError RemoveSurfaceNodeFromDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo);
 
     constexpr static int32_t MAX_RESOLUTION_SIZE_SCREENSHOT = 3840; // max resolution, 4K
 

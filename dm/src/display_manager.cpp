@@ -17,8 +17,6 @@
 
 #include <chrono>
 #include <cinttypes>
-#include <transaction/rs_interfaces.h>
-#include <ui/rs_surface_node.h>
 
 #include "display_manager_adapter.h"
 #include "display_manager_agent_default.h"
@@ -896,13 +894,13 @@ DisplayState DisplayManager::GetDisplayState(DisplayId displayId)
 bool DisplayManager::SetScreenBrightness(uint64_t screenId, uint32_t level)
 {
     WLOGFD("screenId:%{public}" PRIu64", level:%{public}u,", screenId, level);
-    RSInterfaces::GetInstance().SetScreenBacklight(screenId, level);
+    SingletonContainer::Get<DisplayManagerAdapter>().SetScreenBrightness(screenId, level);
     return true;
 }
 
 uint32_t DisplayManager::GetScreenBrightness(uint64_t screenId) const
 {
-    uint32_t level = static_cast<uint32_t>(RSInterfaces::GetInstance().GetScreenBacklight(screenId));
+    uint32_t level = SingletonContainer::Get<DisplayManagerAdapter>().GetScreenBrightness(screenId);
     WLOGFD("screenId:%{public}" PRIu64", level:%{public}u,", screenId, level);
     return level;
 }
@@ -942,16 +940,16 @@ bool DisplayManager::Unfreeze(std::vector<DisplayId> displayIds)
     return SingletonContainer::Get<DisplayManagerAdapter>().SetFreeze(displayIds, false);
 }
 
-DMError DisplayManager::AddSurfaceNodeToDisplay(DisplayId displayId,
-    std::shared_ptr<class RSSurfaceNode>& surfaceNode)
+DMError DisplayManager::AddSurfaceNodeToDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo)
 {
-    return SingletonContainer::Get<DisplayManagerAdapter>().AddSurfaceNodeToDisplay(displayId, surfaceNode);
+    WLOGI("caller prepare to add surface node to display");
+    return SingletonContainer::Get<DisplayManagerAdapter>().AddSurfaceNodeToDisplay(displayId, surfaceNodeInfo);
 }
 
-DMError DisplayManager::RemoveSurfaceNodeFromDisplay(DisplayId displayId,
-    std::shared_ptr<class RSSurfaceNode>& surfaceNode)
+DMError DisplayManager::RemoveSurfaceNodeFromDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo)
 {
-    return SingletonContainer::Get<DisplayManagerAdapter>().RemoveSurfaceNodeFromDisplay(displayId, surfaceNode);
+    WLOGI("caller prepare to remove surface node to display");
+    return SingletonContainer::Get<DisplayManagerAdapter>().RemoveSurfaceNodeFromDisplay(displayId, surfaceNodeInfo);
 }
 
 void DisplayManager::Impl::OnRemoteDied()

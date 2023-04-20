@@ -352,16 +352,29 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
         }
         case DisplayManagerMessage::TRANS_ID_ADD_SURFACE_NODE: {
             DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
-            std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
-            auto ret = AddSurfaceNodeToDisplay(displayId, surfaceNode, true);
+            sptr<SurfaceNodeInfo> surfaceNodeInfo = SurfaceNodeInfo::Unmarshalling(data);
+            auto ret = AddSurfaceNodeToDisplay(displayId, surfaceNodeInfo);
             reply.WriteUint32(static_cast<uint32_t>(ret));
             break;
         }
         case DisplayManagerMessage::TRANS_ID_REMOVE_SURFACE_NODE: {
             DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
-            std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
-            auto ret = RemoveSurfaceNodeFromDisplay(displayId, surfaceNode);
+            sptr<SurfaceNodeInfo> surfaceNodeInfo = SurfaceNodeInfo::Unmarshalling(data);
+            auto ret = RemoveSurfaceNodeFromDisplay(displayId, surfaceNodeInfo);
             reply.WriteUint32(static_cast<uint32_t>(ret));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SET_SCREEN_BRIGHTNESS: {
+            uint64_t screenId = data.ReadUint64();
+            uint32_t level = data.ReadUint32();
+            auto ret = SetScreenBrightness(screenId, level);
+            reply.WriteBool(ret);
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_GET_SCREEN_BRIGHTNESS: {
+            uint64_t screenId = data.ReadUint64();
+            auto ret = GetScreenBrightness(screenId);
+            reply.WriteUint32(ret);
             break;
         }
         default:

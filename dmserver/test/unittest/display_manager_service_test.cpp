@@ -411,9 +411,9 @@ HWTEST_F(DisplayManagerServiceTest, ScreenRotationLock, Function | SmallTest | L
 HWTEST_F(DisplayManagerServiceTest, AddAndRemoveSurfaceNode, Function | SmallTest | Level3)
 {
     sptr<DisplayManagerService> dms = new DisplayManagerService();
-    std::shared_ptr<RSSurfaceNode> surfaceNode = nullptr;
+    sptr<SurfaceNodeInfo> surfaceNode = nullptr;
     ASSERT_EQ(DMError::DM_ERROR_NULLPTR, dms->AddSurfaceNodeToDisplay(DEFAULT_DISPLAY, surfaceNode, true));
-    surfaceNode = std::make_shared<RSSurfaceNode>(RSSurfaceNodeConfig{}, true);
+    surfaceNode = new SurfaceNodeInfo();
     ASSERT_EQ(DMError::DM_ERROR_NULLPTR, dms->AddSurfaceNodeToDisplay(DEFAULT_DISPLAY, surfaceNode, true));
     std::shared_ptr<RSDisplayNode> displayNode = std::make_shared<MockRSDisplayNode>(RSDisplayNodeConfig{});
     sptr<SupportedScreenModes> info = new SupportedScreenModes;

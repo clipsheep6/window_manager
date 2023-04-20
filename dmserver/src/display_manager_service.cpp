@@ -545,10 +545,16 @@ void DisplayManagerService::UpdateRSTree(DisplayId displayId, DisplayId parentDi
     abstractScreenController_->UpdateRSTree(screenId, parentScreenId, surfaceNode, isAdd, isMultiDisplay);
 }
 
-DMError DisplayManagerService::AddSurfaceNodeToDisplay(DisplayId displayId,
-    std::shared_ptr<RSSurfaceNode>& surfaceNode, bool onTop)
+DMError DisplayManagerService::AddSurfaceNodeToDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo, bool onTop)
 {
-    WLOGFI("DisplayId: %{public}" PRIu64", onTop: %{public}d", displayId, onTop);
+    if (!surfaceNodeInfo) {
+        WLOGFE("surface node info is null");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    Parcel data;
+    surfaceNodeInfo->Marshalling(data);
+    std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
+    WLOGI("DisplayId: %{public}" PRIu64", onTop: %{public}d", displayId, onTop);
     if (surfaceNode == nullptr) {
         WLOGFW("Surface is null");
         return DMError::DM_ERROR_NULLPTR;
@@ -557,9 +563,15 @@ DMError DisplayManagerService::AddSurfaceNodeToDisplay(DisplayId displayId,
     return abstractScreenController_->AddSurfaceNodeToScreen(screenId, surfaceNode, true);
 }
 
-DMError DisplayManagerService::RemoveSurfaceNodeFromDisplay(DisplayId displayId,
-    std::shared_ptr<RSSurfaceNode>& surfaceNode)
+DMError DisplayManagerService::RemoveSurfaceNodeFromDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo)
 {
+    if (!surfaceNodeInfo) {
+        WLOGFE("surface node info is null");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    Parcel data;
+    surfaceNodeInfo->Marshalling(data);
+    std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
     WLOGFI("DisplayId: %{public}" PRIu64"", displayId);
     if (surfaceNode == nullptr) {
         WLOGFW("Surface is null");
@@ -736,5 +748,19 @@ sptr<CutoutInfo> DisplayManagerService::GetCutoutInfo(DisplayId displayId)
 void DisplayManagerService::NotifyPrivateWindowStateChanged(bool hasPrivate)
 {
     DisplayManagerAgentController::GetInstance().NotifyPrivateWindowStateChanged(hasPrivate);
+}
+
+bool DisplayManagerService::SetScreenBrightness(uint64_t screenId, uint32_t level)
+{
+    RSInterfaces::GetInstance().SetScreenBacklight(screenId, level);
+    WLOGI("set screenId:%{public}" PRIu64", level:%{public}u,", screenId, level);
+    return true;
+}
+
+uint32_t DisplayManagerService::GetScreenBrightness(uint64_t screenId)
+{
+    uint32_t level = static_cast<uint32_t>(RSInterfaces::GetInstance().GetScreenBacklight(screenId));
+    WLOGFI("get brightness screenId:%{public}" PRIu64", level:%{public}u,", screenId, level);
+    return level;
 }
 } // namespace OHOS::Rosen

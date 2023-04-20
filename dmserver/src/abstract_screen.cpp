@@ -91,10 +91,11 @@ void AbstractScreen::UpdateRSTree(std::shared_ptr<RSSurfaceNode>& surfaceNode, b
 DMError AbstractScreen::AddSurfaceNode(std::shared_ptr<RSSurfaceNode>& surfaceNode, bool onTop)
 {
     if (rsDisplayNode_ == nullptr || surfaceNode == nullptr) {
-        WLOGFE("node is nullptr");
+        WLOGFE("yangfei node is nullptr");
         return DMError::DM_ERROR_NULLPTR;
     }
     surfaceNode->SetVisible(true);
+    WLOGFE("yangfei add surfacenode");
     if (onTop) {
         rsDisplayNode_->AddChild(surfaceNode, -1);
         surfaceNode->SetPositionZ(MAX_ZORDER);

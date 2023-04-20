@@ -18,6 +18,7 @@
 
 #include <map>
 #include <mutex>
+#include <string>
 #include <surface.h>
 
 #include "display.h"
@@ -69,9 +70,10 @@ public:
     virtual bool SetFreeze(std::vector<DisplayId> displayIds, bool isFreeze);
     virtual sptr<DisplayInfo> GetDisplayInfo(DisplayId displayId);
     virtual sptr<CutoutInfo> GetCutoutInfo(DisplayId displayId);
-    virtual DMError AddSurfaceNodeToDisplay(DisplayId displayId, std::shared_ptr<class RSSurfaceNode>& surfaceNode);
-    virtual DMError RemoveSurfaceNodeFromDisplay(DisplayId displayId,
-        std::shared_ptr<class RSSurfaceNode>& surfaceNode);
+    virtual DMError AddSurfaceNodeToDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo);
+    virtual DMError RemoveSurfaceNodeFromDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo);
+    virtual bool SetScreenBrightness(uint64_t screenId, uint32_t level);
+    virtual uint32_t GetScreenBrightness(uint64_t screenId);
 private:
     static inline SingletonDelegator<DisplayManagerAdapter> delegator;
 };

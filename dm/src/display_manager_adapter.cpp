@@ -361,26 +361,38 @@ sptr<CutoutInfo> DisplayManagerAdapter::GetCutoutInfo(DisplayId displayId)
     return displayManagerServiceProxy_->GetCutoutInfo(displayId);
 }
 
-DMError DisplayManagerAdapter::AddSurfaceNodeToDisplay(DisplayId displayId,
-    std::shared_ptr<class RSSurfaceNode>& surfaceNode)
+DMError DisplayManagerAdapter::AddSurfaceNodeToDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo)
 {
     if (displayId == DISPLAY_ID_INVALID) {
         WLOGFE("screen id is invalid");
         return DMError::DM_ERROR_INVALID_PARAM;
     }
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
-    return displayManagerServiceProxy_->AddSurfaceNodeToDisplay(displayId, surfaceNode);
+    return displayManagerServiceProxy_->AddSurfaceNodeToDisplay(displayId, surfaceNodeInfo);
 }
 
-DMError DisplayManagerAdapter::RemoveSurfaceNodeFromDisplay(DisplayId displayId,
-    std::shared_ptr<class RSSurfaceNode>& surfaceNode)
+DMError DisplayManagerAdapter::RemoveSurfaceNodeFromDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo)
 {
     if (displayId == DISPLAY_ID_INVALID) {
         WLOGFE("screen id is invalid");
         return DMError::DM_ERROR_INVALID_PARAM;
     }
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
-    return displayManagerServiceProxy_->RemoveSurfaceNodeFromDisplay(displayId, surfaceNode);
+    return displayManagerServiceProxy_->RemoveSurfaceNodeFromDisplay(displayId, surfaceNodeInfo);
+}
+
+bool DisplayManagerAdapter::SetScreenBrightness(uint64_t screenId, uint32_t level)
+{
+    INIT_PROXY_CHECK_RETURN(false);
+
+    return displayManagerServiceProxy_->SetScreenBrightness(screenId, level);
+}
+
+uint32_t DisplayManagerAdapter::GetScreenBrightness(uint64_t screenId)
+{
+    INIT_PROXY_CHECK_RETURN(2);
+
+    return displayManagerServiceProxy_->GetScreenBrightness(screenId);
 }
 
 sptr<ScreenGroupInfo> ScreenManagerAdapter::GetScreenGroupInfoById(ScreenId screenId)
