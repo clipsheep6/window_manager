@@ -13,11 +13,21 @@
  * limitations under the License.
  */
 
-#include "session/container/include/extension_session_stage.h"
+#ifndef OHOS_ROSEN_WINDOW_SCENE_SCENE_SESSION_STAGE_H
+#define OHOS_ROSEN_WINDOW_SCENE_SCENE_SESSION_STAGE_H
+
+#include "interfaces/include/ws_common.h"
+#include "session/container/include/session_stage.h"
 
 namespace OHOS::Rosen {
-ExtensionSessionStage::ExtensionSessionStage(const sptr<ISession>& extensionSession)
-    : SessionStage(extensionSession)
-{
-}
+class SceneSessionStage : public SessionStage {
+public:
+    SceneSessionStage(const sptr<ISession>& sceneSession);
+    ~SceneSessionStage() = default;
+
+    virtual WSError Recover() override;
+    virtual WSError Maximize() override;
+};
 } // namespace OHOS::Rosen
+
+#endif // OHOS_ROSEN_WINDOW_SCENE_SCENE_SESSION_STAGE_H

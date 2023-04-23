@@ -13,11 +13,24 @@
  * limitations under the License.
  */
 
-#include "session/container/include/extension_session_stage.h"
+#include "session/host/include/root_scene_session.h"
 
 namespace OHOS::Rosen {
-ExtensionSessionStage::ExtensionSessionStage(const sptr<ISession>& extensionSession)
-    : SessionStage(extensionSession)
+void RootSceneSession::SetPendingSessionActivationEventListener(const NotifyPendingSessionActivationFunc& func)
 {
+    pendingSessionActivationFunc_ = func;
+}
+
+void RootSceneSession::SetLoadContentFunc(const LoadContentFunc& loadContentFunc)
+{
+    loadContentFunc_ = loadContentFunc;
+}
+
+void RootSceneSession::LoadContent(
+    const std::string& contentUrl, NativeEngine* engine, NativeValue* storage, AbilityRuntime::Context* context)
+{
+    if (loadContentFunc_) {
+        loadContentFunc_(contentUrl, engine, storage, context);
+    }
 }
 } // namespace OHOS::Rosen

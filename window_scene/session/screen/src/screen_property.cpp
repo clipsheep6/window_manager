@@ -13,11 +13,26 @@
  * limitations under the License.
  */
 
-#include "session/container/include/extension_session_stage.h"
+#include "session/screen/include/screen_property.h"
 
 namespace OHOS::Rosen {
-ExtensionSessionStage::ExtensionSessionStage(const sptr<ISession>& extensionSession)
-    : SessionStage(extensionSession)
+void ScreenProperty::SetRotation(float rotation)
 {
+    rotation_ = rotation;
+}
+
+float ScreenProperty::GetRotation() const
+{
+    return rotation_;
+}
+
+void ScreenProperty::SetBounds(const RRect& bounds)
+{
+    bounds_ = bounds;
+}
+
+RRect ScreenProperty::GetBounds() const
+{
+    return bounds_;
 }
 } // namespace OHOS::Rosen
