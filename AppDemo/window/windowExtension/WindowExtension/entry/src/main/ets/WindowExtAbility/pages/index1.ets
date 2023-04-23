@@ -35,13 +35,12 @@ struct Index {
         console.log("WindowExtensionAbility, button1:");
       })
 
-      TextInput() {
-
-      }.type(InputType.Number)
-      .margin({
-        top: 20
-      })
-      .backgroundColor('#0D9FFC')
+      TextInput()
+        .type(InputType.Number)
+        .margin({
+          top: 20
+        })
+        .backgroundColor('#0D9FFC')
 
 
       Button() {
