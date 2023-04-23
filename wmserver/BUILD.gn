@@ -12,6 +12,8 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/window/window_manager/windowmanager_aafwk.gni")
+
 config("libwms_config") {
   visibility = [ ":*" ]
 
@@ -82,6 +84,7 @@ ohos_shared_library("libwms") {
   ]
 
   deps = [
+    "${window_base_path}/window_scene/common:window_scene_common",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/window/window_manager/dmserver:libdms",
     "//foundation/window/window_manager/etc:wms_etc",
