@@ -97,18 +97,18 @@ WSError SceneSessionManager::RequestSceneSessionActivation(const sptr<SceneSessi
         AAFwk::Want want;
         auto sessionInfo = scnSession->GetSessionInfo();
         want.SetElementName(sessionInfo.bundleName_, sessionInfo.abilityName_);
-        AAFwk::StartOptions startOptions;
+        // AAFwk::StartOptions startOptions;
         sptr<AAFwk::SessionInfo> abilitySessionInfo = new (std::nothrow) AAFwk::SessionInfo();
         abilitySessionInfo->sessionToken = scnSession;
         abilitySessionInfo->persistentId = scnSession->GetPersistentId();
-        AAFwk::AbilityManagerClient::GetInstance()->StartAbilityByLauncher(want, startOptions, abilitySessionInfo);
-        auto newAbilityToken = AAFwk::AbilityManagerClient::GetInstance()->GetTokenBySceneSession(
-            abilitySessionInfo->persistentId);
-        if (newAbilityToken) {
-            WLOGFW("newAbilityToken is not null");
-        }
-        // replace with real token after start ability
-        abilitySceneMap_[persistentId].second = newAbilityToken;
+        // AAFwk::AbilityManagerClient::GetInstance()->StartAbilityByLauncher(want, startOptions, abilitySessionInfo);
+        // auto newAbilityToken = AAFwk::AbilityManagerClient::GetInstance()->GetTokenBySceneSession(
+        //     abilitySessionInfo->persistentId);
+        // if (newAbilityToken) {
+        //     WLOGFW("newAbilityToken is not null");
+        // }
+        // // replace with real token after start ability
+        // abilitySceneMap_[persistentId].second = newAbilityToken;
         return WSError::WS_OK;
     };
     WS_CHECK_NULL_SCHE_RETURN(mmsScheduler_, task);

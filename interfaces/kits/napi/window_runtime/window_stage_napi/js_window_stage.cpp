@@ -31,9 +31,8 @@ constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsWindo
 } // namespace
 
 std::unique_ptr<JsWindowRegisterManager> g_listenerManager = std::make_unique<JsWindowRegisterManager>();
-JsWindowStage::JsWindowStage(const std::shared_ptr<Rosen::WindowScene>& windowScene,
-    const std::shared_ptr<Ace::NG::UIWindow>& uiWindow)
-    : windowScene_(windowScene), uiWindow_(uiWindow)
+JsWindowStage::JsWindowStage(const std::shared_ptr<Rosen::WindowScene>& windowScene)
+    : windowScene_(windowScene)
 {
 }
 
@@ -130,6 +129,11 @@ NativeValue* JsWindowStage::OnSetUIContent(NativeEngine& engine, NativeCallbackI
         WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
         return engine.CreateUndefined();
     }
+    auto weakScene = windowScene_.lock();
+    if (weakScene == nullptr || weakScene->GetMainWindow() == nullptr) {
+        WLOGFE("[NAPI]WindowScene is null or window is null");
+        return engine.CreateUndefined();
+    }
 
     // Parse info->argv[0] as abilitycontext
     auto objContext = ConvertNativeValueTo<NativeObject>(info.argv[0]);
@@ -142,19 +146,6 @@ NativeValue* JsWindowStage::OnSetUIContent(NativeEngine& engine, NativeCallbackI
     std::string contextUrl;
     if (!ConvertFromJsValue(engine, info.argv[1], contextUrl)) {
         WLOGFE("[NAPI]Failed to convert parameter to url");
-        return engine.CreateUndefined();
-    }
-
-    auto uiWindow = uiWindow_.lock();
-    if (uiWindow) {
-        uiWindow->LoadContent(contextUrl, &engine, nullptr);
-        uiWindow->Connect();
-        return engine.CreateUndefined();
-    }
-
-    auto weakScene = windowScene_.lock();
-    if (weakScene == nullptr || weakScene->GetMainWindow() == nullptr) {
-        WLOGFE("[NAPI]WindowScene is null or window is null");
         return engine.CreateUndefined();
     }
     weakScene->GetMainWindow()->SetUIContent(contextUrl, &engine, info.argv[CONTENT_STORAGE_ARG]);
@@ -345,14 +336,8 @@ NativeValue* JsWindowStage::OnLoadContent(NativeEngine& engine, NativeCallbackIn
     std::shared_ptr<NativeReference> contentStorage = (storage == nullptr) ? nullptr :
         std::shared_ptr<NativeReference>(engine.CreateReference(storage, 1));
     AsyncTask::CompleteCallback complete =
-        [weak = windowScene_, contentStorage, contextUrl, weakUIWindow = uiWindow_](
+        [weak = windowScene_, contentStorage, contextUrl, errCode](
             NativeEngine& engine, AsyncTask& task, int32_t status) {
-            if (auto uiWindow = weakUIWindow.lock()) {
-                NativeValue* nativeStorage = contentStorage ? contentStorage->Get() : nullptr;
-                uiWindow->LoadContent(contextUrl, &engine, nativeStorage);
-                task.Resolve(engine, engine.CreateUndefined());
-                return;
-            }
             auto weakScene = weak.lock();
             if (weakScene == nullptr) {
                 WLOGFE("[NAPI]Window scene is null");
@@ -560,13 +545,13 @@ NativeValue* JsWindowStage::OnDisableWindowDecor(NativeEngine& engine, NativeCal
 }
 
 NativeValue* CreateJsWindowStage(NativeEngine& engine,
-    std::shared_ptr<Rosen::WindowScene> windowScene, std::shared_ptr<Ace::NG::UIWindow> uiWindow)
+    std::shared_ptr<Rosen::WindowScene> windowScene)
 {
     WLOGFD("[NAPI]CreateJsWindowStage");
     NativeValue* objValue = engine.CreateObject();
     NativeObject* object = ConvertNativeValueTo<NativeObject>(objValue);
 
-    std::unique_ptr<JsWindowStage> jsWindowStage = std::make_unique<JsWindowStage>(windowScene, uiWindow);
+    std::unique_ptr<JsWindowStage> jsWindowStage = std::make_unique<JsWindowStage>(windowScene);
     object->SetNativePointer(jsWindowStage.release(), JsWindowStage::Finalizer, nullptr);
 
     const char *moduleName = "JsWindowStage";

@@ -139,25 +139,6 @@ bool Session::IsSessionValid() const
     return res;
 }
 
-<<<<<<< HEAD
-RSSurfaceNode::SharedPtr Session::CreateSurfaceNode(std::string name)
-{
-    // expect one session with one surfaceNode
-    if (name.empty()) {
-        WLOGFI("name is empty");
-        name = UNDEFINED + std::to_string(persistentId_);
-    } else {
-        std::string surfaceNodeName = name + std::to_string(persistentId_);
-        std::size_t pos = surfaceNodeName.find_last_of('.');
-        name = (pos == std::string::npos) ? surfaceNodeName : surfaceNodeName.substr(pos + 1); // skip '.'
-    }
-    struct RSSurfaceNodeConfig rsSurfaceNodeConfig;
-    rsSurfaceNodeConfig.SurfaceNodeName = name;
-    return RSSurfaceNode::Create(rsSurfaceNodeConfig, RSSurfaceNodeType::EXTENSION_ABILITY_NODE);
-}
-
-=======
->>>>>>> animation_local
 WSError Session::UpdateRect(const WSRect& rect, SizeChangeReason reason)
 {
     WLOGFI("session update rect: id: %{public}" PRIu64 ", rect[%{public}d, %{public}d, %{public}u, %{public}u], "\
