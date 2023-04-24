@@ -38,6 +38,8 @@
 #include "wm_common_inner.h"
 #include "wm_math.h"
 
+#include "window_prepare_terminate.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -2204,7 +2206,22 @@ void WindowImpl::HandleBackKeyPressedEvent(const std::shared_ptr<MMI::KeyEvent>&
     // TerminateAbility will invoke last ability, CloseAbility will not.
     bool shouldTerminateAbility = WindowHelper::IsFullScreenWindow(property_->GetWindowMode());
     if (shouldTerminateAbility) {
-        abilityContext->TerminateSelf();
+        sptr<AAFwk::IPrepareTerminateCallback> callback = new WindowPrepareTerminateHandler();
+        if (callback == nullptr) {
+            WLOGI("luc000,callback==nullptr");
+        } else {
+            WLOGI("luc000,callback!=nullptr");
+        }
+        if (AAFwk::AbilityManagerClient::GetInstance()->PrepareTerminateAbility(abilityContext->GetToken(), callback) != ERR_OK) {
+            WLOGFE("luc000,RegisterWindowManagerServiceHandler failed");
+        }
+        if (callback == nullptr) {
+            WLOGI("luc000,prepare over,callback==nullptr");
+            abilityContext->TerminateSelf();
+        } else {
+            WLOGI("luc000,prepare over,callback!=nullptr");
+        }
+        // abilityContext->TerminateSelf();
     } else {
         abilityContext->CloseAbility();
     }

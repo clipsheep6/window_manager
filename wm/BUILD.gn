@@ -147,6 +147,7 @@ ohos_shared_library("libwm") {
     "src/window_manager.cpp",
     "src/window_manager_agent.cpp",
     "src/window_option.cpp",
+    "src/window_prepare_terminate.cpp",
     "src/window_scene.cpp",
     "src/zidl/window_manager_agent_stub.cpp",
     "src/zidl/window_stub.cpp",
