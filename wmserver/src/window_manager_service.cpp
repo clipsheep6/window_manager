@@ -47,6 +47,8 @@
 #include "window_manager_hilog.h"
 #include "wm_common.h"
 #include "wm_math.h"
+#include "marshalling_helper.h"
+#include "wm_common_inner.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -783,7 +785,21 @@ bool WindowManagerService::CheckSystemWindowPermission(const sptr<WindowProperty
     return false;
 }
 
-WMError WindowManagerService::CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
+WMError WindowManagerService::CreateWindow(sptr<IRemoteObject>& window, sptr<WindowProperty>& property,
+    const SurfaceNodeInfo& surfaceNodeInfo, uint32_t& windowId, sptr<IRemoteObject> token)
+{
+    sptr<IWindow> windowProxy = iface_cast<IWindow>(window);
+    // Parcel parcel;
+    // MarshallingHelper::MarshallingSurfaceNodeInfo(parcel, surfaceNodeInfo);
+    // std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(parcel);
+    // Create surface node
+    RSSurfaceNodeConfig config;
+    config.SurfaceNodeName = surfaceNodeInfo.nodeName_;
+    std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Create(config);
+    return CreateWindow0(windowProxy, property, surfaceNode, windowId, token);
+}
+
+WMError WindowManagerService::CreateWindow0(sptr<IWindow>& window, sptr<WindowProperty>& property,
     const std::shared_ptr<RSSurfaceNode>& surfaceNode, uint32_t& windowId, sptr<IRemoteObject> token)
 {
     if (!window || property == nullptr || surfaceNode == nullptr || !window->AsObject()) {
@@ -942,13 +958,14 @@ WMError WindowManagerService::UnregisterWindowManagerAgent(WindowManagerAgentTyp
     });
 }
 
-WMError WindowManagerService::SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller)
+WMError WindowManagerService::SetWindowAnimationController(const sptr<IRemoteObject>& controller)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
         WLOGFE("set window animation controller permission denied!");
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
-    if (controller == nullptr) {
+    sptr<RSIWindowAnimationController> animationController = iface_cast<RSIWindowAnimationController>(controller);
+    if (animationController == nullptr) {
         WLOGFE("RSWindowAnimation: Failed to set window animation controller, controller is null!");
         return WMError::WM_ERROR_NULLPTR;
     }
@@ -960,11 +977,11 @@ WMError WindowManagerService::SetWindowAnimationController(const sptr<RSIWindowA
             });
         }
     );
-    controller->AsObject()->AddDeathRecipient(deathRecipient);
+    animationController->AsObject()->AddDeathRecipient(deathRecipient);
     RemoteAnimation::SetWindowControllerAndRoot(windowController_, windowRoot_);
     RemoteAnimation::SetMainTaskHandler(handler_);
-    return PostSyncTask([this, &controller]() {
-        WMError ret = windowController_->SetWindowAnimationController(controller);
+    return PostSyncTask([this, &animationController]() {
+        WMError ret = windowController_->SetWindowAnimationController(animationController);
         RemoteAnimation::SetAnimationFirst(system::GetParameter("persist.window.af.enabled", "1") == "1");
         return ret;
     });
@@ -1235,14 +1252,26 @@ void WindowManagerService::NotifyDumpInfoResult(const std::vector<std::string>& 
 }
 
 WMError WindowManagerService::GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
-    std::vector<sptr<RSWindowAnimationTarget>>& targets)
+    std::vector<sptr<WindowAnimationTargetInfo>>& targets)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
         WLOGFE("get window animation targets permission denied!");
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     return PostSyncTask([this, missionIds, &targets]() {
-        return RemoteAnimation::GetWindowAnimationTargets(missionIds, targets);
+        std::vector<sptr<RSWindowAnimationTarget>> RSAnimationTargets;
+        auto res = RemoteAnimation::GetWindowAnimationTargets(missionIds, RSAnimationTargets, targets);
+        if (res != WMError::WM_OK) {
+            WLOGFE("yangfei get RSWindowAnimationTargets failed");
+            return res;
+        }
+        // for(auto RSInfo : RSAnimationTargets) {
+        //     sptr<WindowAnimationTargetInfo> windowInfo;
+        //     ConvertRSAnimTargetsToWindowTargets(RSInfo, windowInfo);
+        //     targets.push_back(windowInfo);
+        // }
+        
+        return res;
     });
 }
 
@@ -1262,14 +1291,15 @@ WMError WindowManagerService::GetModeChangeHotZones(DisplayId displayId, ModeCha
 }
 
 void WindowManagerService::MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
-    sptr<RSIWindowAnimationFinishedCallback>& finishCallback)
+    sptr<IRemoteObject>& finishCallback)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
         WLOGFE("minimize windows by launcher permission denied!");
         return;
     }
-    PostVoidSyncTask([this, windowIds, isAnimated, &finishCallback]() mutable {
-        windowController_->MinimizeWindowsByLauncher(windowIds, isAnimated, finishCallback);
+    sptr<RSIWindowAnimationFinishedCallback> callBack = iface_cast<RSIWindowAnimationFinishedCallback>(finishCallback);
+    PostVoidSyncTask([this, windowIds, isAnimated, &callBack]() mutable {
+        windowController_->MinimizeWindowsByLauncher(windowIds, isAnimated, callBack);
     });
 }
 

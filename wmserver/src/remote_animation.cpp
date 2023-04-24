@@ -677,7 +677,7 @@ WMError RemoteAnimation::NotifyAnimationScreenUnlock(std::function<void(void)> c
 }
 
 WMError RemoteAnimation::GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
-    std::vector<sptr<RSWindowAnimationTarget>>& targets)
+    std::vector<sptr<RSWindowAnimationTarget>>& targets, std::vector<sptr<WindowAnimationTargetInfo>>& winTargets)
 {
     auto winRoot = windowRoot_.promote();
     if (winRoot == nullptr) {
@@ -689,9 +689,70 @@ WMError RemoteAnimation::GetWindowAnimationTargets(std::vector<uint32_t> mission
         if (windowNode == nullptr) {
             continue;
         }
-        targets.push_back(CreateWindowAnimationTarget(nullptr, windowNode));
+        sptr<RSWindowAnimationTarget> RSTarget = CreateWindowAnimationTarget(nullptr, windowNode);
+        sptr<WindowAnimationTargetInfo> WinTarget = CreateAnimationTarget(nullptr, windowNode);
+        targets.push_back(RSTarget);
+        winTargets.push_back(WinTarget);
     }
     return WMError::WM_OK;
+}
+
+sptr<WindowAnimationTargetInfo> RemoteAnimation::CreateAnimationTarget(sptr<WindowTransitionInfo> info,
+    const sptr<WindowNode>& windowNode)
+{
+    if (windowNode == nullptr) {
+        WLOGFW("Failed to create window animation target, window node is null!");
+        return nullptr;
+    }
+
+    sptr<WindowAnimationTargetInfo> windowAnimationTarget = new(std::nothrow) WindowAnimationTargetInfo();
+    if (windowAnimationTarget == nullptr) {
+        WLOGFE("New WindowAnimationTargetInfo failed");
+        return nullptr;
+    }
+
+    if (WindowHelper::IsMainWindow(windowNode->GetWindowType())) { // only starting window has abilityInfo
+        windowAnimationTarget->bundleName_ = windowNode->abilityInfo_.bundleName_;
+        windowAnimationTarget->abilityName_ = windowNode->abilityInfo_.abilityName_;
+    } else if (info) { // use for back, minimize, close
+        windowAnimationTarget->bundleName_ = info->GetBundleName();
+        windowAnimationTarget->abilityName_ = info->GetAbilityName();
+    }
+
+    windowAnimationTarget->missionId_ = windowNode->abilityInfo_.missionId_;
+    windowAnimationTarget->windowId_ = windowNode->GetWindowId();
+    windowAnimationTarget->displayId_ = windowNode->GetDisplayId();
+    if (WindowHelper::IsAppWindow(windowNode->GetWindowType())) {
+        windowAnimationTarget->nodeId_= windowNode->leashWinSurfaceNode_->GetId();
+        windowAnimationTarget->nodeName_= windowNode->leashWinSurfaceNode_->GetName();
+        auto& stagingProperties = windowNode->leashWinSurfaceNode_->GetStagingProperties();
+        auto cornerRadius = stagingProperties.GetCornerRadius();
+        windowAnimationTarget->radius_ = cornerRadius.x_;
+    } else {
+        windowAnimationTarget->nodeId_= windowNode->surfaceNode_->GetId();
+        windowAnimationTarget->nodeName_= windowNode->surfaceNode_->GetName();
+        auto& stagingProperties = windowNode->surfaceNode_->GetStagingProperties();
+        auto cornerRadius = stagingProperties.GetCornerRadius();
+        windowAnimationTarget->radius_ = cornerRadius.x_;
+    }
+
+    windowAnimationTarget->rect_ = windowNode->GetWindowRect();
+    return windowAnimationTarget;
+}
+
+bool RemoteAnimation::ConvertRSAnimTargetsToWindowTargets(sptr<RSWindowAnimationTarget>& RSAnimInfo, sptr<WindowAnimationTargetInfo>& windowAnimInfo)
+{
+    //windowAnimInfo->nodeName_ = RSAnimInfo->surfaceNode_->GetName();
+    windowAnimInfo->nodeId_ = RSAnimInfo->surfaceNode_->GetId();
+
+    windowAnimInfo->bundleName_ = RSAnimInfo->bundleName_;
+    windowAnimInfo->abilityName_ = RSAnimInfo->abilityName_;
+    windowAnimInfo->missionId_ = RSAnimInfo->missionId_;
+
+    windowAnimInfo->windowId_ = RSAnimInfo->windowId_;
+    windowAnimInfo->displayId_ = RSAnimInfo->displayId_;
+
+    return true;
 }
 
 sptr<RSWindowAnimationTarget> RemoteAnimation::CreateWindowAnimationTarget(sptr<WindowTransitionInfo> info,

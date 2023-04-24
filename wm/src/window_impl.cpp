@@ -1027,6 +1027,7 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
     context_ = context;
     sptr<WindowImpl> window(this);
     sptr<IWindow> windowAgent(new WindowAgent(window));
+    sptr<IRemoteObject> windowObject = windowAgent->AsObject();
     static std::atomic<uint32_t> tempWindowId = 0;
     uint32_t windowId = tempWindowId++; // for test
     sptr<IRemoteObject> token = context_ ? context_->GetToken() : nullptr;
@@ -1046,7 +1047,10 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
         surfaceNode_->SetFrameGravity(Gravity::TOP_LEFT);
     }
 
-    ret = SingletonContainer::Get<WindowAdapter>().CreateWindow(windowAgent, property_, surfaceNode_,
+    SurfaceNodeInfo surfaceNodeInfo;
+    surfaceNodeInfo.nodeId_ = surfaceNode_->GetId();
+    surfaceNodeInfo.nodeName_ = surfaceNode_->GetName();
+    ret = SingletonContainer::Get<WindowAdapter>().CreateWindow(windowObject, property_, surfaceNodeInfo,
         windowId, token);
     RecordLifeCycleExceptionEvent(LifeCycleEvent::CREATE_EVENT, ret);
     if (ret != WMError::WM_OK) {

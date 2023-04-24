@@ -26,6 +26,7 @@
 #include "window_node.h"
 #include "window_root.h"
 #include "window_transition_info.h"
+#include "wm_common_inner.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -75,13 +76,16 @@ public:
     static sptr<RSWindowAnimationFinishedCallback> CreateAnimationFinishedCallback(
         const std::function<void(void)>& callback, sptr<WindowNode> windowNode);
     static WMError GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
-        std::vector<sptr<RSWindowAnimationTarget>>& targets);
+        std::vector<sptr<RSWindowAnimationTarget>>& targets, std::vector<sptr<WindowAnimationTargetInfo>>& winTargets);
     static inline bool IsAnimationFirst()
     {
         return animationFirst_;
     }
     static bool isRemoteAnimationEnable_;
 private:
+    static sptr<WindowAnimationTargetInfo> CreateAnimationTarget(sptr<WindowTransitionInfo> info,
+        const sptr<WindowNode>& windowNode);
+    bool ConvertRSAnimTargetsToWindowTargets(sptr<RSWindowAnimationTarget>& RSAnimInfo, sptr<WindowAnimationTargetInfo>& windowAnimInfo);
     static sptr<RSWindowAnimationTarget> CreateWindowAnimationTarget(sptr<WindowTransitionInfo> info,
         const sptr<WindowNode>& windowNode);
     static WMError NotifyAnimationStartApp(sptr<WindowTransitionInfo> srcInfo,

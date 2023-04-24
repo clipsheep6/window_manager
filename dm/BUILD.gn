@@ -24,6 +24,7 @@ config("libdm_private_config") {
 config("libdm_public_config") {
   include_dirs = [
     "../interfaces/innerkits/dm",
+    "../interfaces/innerkits/wm",
     "../utils/include",
   ]
 }

@@ -19,7 +19,9 @@
 #include <cfloat>
 #include <cinttypes>
 #include <unordered_set>
+
 #include "wm_common.h"
+#include "wm_math.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -288,6 +290,132 @@ struct AbilityInfo {
     std::string abilityName_ = "";
     int32_t missionId_ = -1;
 };
+
+struct SurfaceNodeInfo {
+    // bool Marshalling(Parcel &parcel) const override
+    // {
+    //     parcel.WriteString(nodeName_);
+    //     parcel.WriteUint64(nodeId_);
+    //     parcel.WriteBool(isRenderNode_);
+    //     return true;
+    // }
+    std::string nodeName_ = "";
+    uint64_t nodeId_ = 0;
+    bool isRenderNode_ = true;
+};
+
+// struct WindowInfo {
+//     bool Marshalling(Parcel &parcel) const override
+//     {
+//         parcel.WriteUint32(windowId_);
+//         parcel.WriteUint64(displayId_);
+//         parcel.WriteFloat(radius_);
+//         return true;
+//     }
+//     uint32_t windowId_ = 0;
+//     uint64_t displayId_ = 0;
+//     Rect rect_ = {0, 0, 0, 0};
+//     float radius_ = 0.0;
+// };
+
+struct WindowAnimationTargetInfo : Parcelable {
+    static WindowAnimationTargetInfo* Unmarshalling(Parcel& parcel)
+    {
+        auto windowAnimationTarget = new (std::nothrow) WindowAnimationTargetInfo();
+        if (!windowAnimationTarget) {
+            // WLOGFE("yangfei new windowAnimationTarget object failed");
+            delete windowAnimationTarget;
+            windowAnimationTarget = nullptr;
+        }
+
+        parcel.ReadString(windowAnimationTarget->bundleName_);
+        parcel.ReadString(windowAnimationTarget->abilityName_);
+        parcel.ReadInt32(windowAnimationTarget->missionId_);
+
+        parcel.ReadUint32(windowAnimationTarget->windowId_);
+        parcel.ReadUint64(windowAnimationTarget->displayId_);
+
+        parcel.ReadInt32(windowAnimationTarget->rect_.posX_);
+        parcel.ReadInt32(windowAnimationTarget->rect_.posY_);
+        parcel.ReadUint32(windowAnimationTarget->rect_.width_);
+        parcel.ReadUint32(windowAnimationTarget->rect_.height_);
+        parcel.ReadFloat(windowAnimationTarget->radius_);
+
+        //parcel.ReadBool(true);
+        parcel.ReadString(windowAnimationTarget->nodeName_);
+        parcel.ReadUint64(windowAnimationTarget->nodeId_);
+
+        return windowAnimationTarget;
+    };
+
+    bool Marshalling(Parcel& parcel) const override
+    {
+        parcel.WriteString(bundleName_);
+        parcel.WriteString(abilityName_);
+        parcel.WriteInt32(missionId_);
+
+        parcel.WriteUint32(windowId_);
+        parcel.WriteUint64(displayId_);
+
+        parcel.WriteInt32(rect_.posX_);
+        parcel.WriteInt32(rect_.posY_);
+        parcel.WriteUint32(rect_.width_);
+        parcel.WriteUint32(rect_.height_);
+        parcel.WriteFloat(radius_);
+
+        //parcel.WriteBool(true);
+        parcel.WriteString(nodeName_);
+        parcel.WriteUint64(nodeId_);
+
+        return true;
+    };
+
+    // sptr<AbilityInfo> abilityInfo_;
+    // sptr<SurfaceNodeInfo> surfaceNodeInfo_;
+    // sptr<WindowInfo> windowInfo_;
+    std::string nodeName_ = "";
+    uint64_t nodeId_ = 0;
+    //bool isRenderNode_ = true;
+
+    std::string bundleName_ = "";
+    std::string abilityName_ = "";
+    int32_t missionId_ = -1;
+
+    uint32_t windowId_ = 0;
+    uint64_t displayId_ = 0;
+    Rect rect_ = {0, 0, 0, 0};
+    float radius_ = 0.0;
+};
+
+// static WindowAnimationTargetInfo::WindowAnimationTargetInfo* Unmarshalling(Parcel& parcel)
+//     {
+//         auto windowAnimationTarget = new (std::nothrow) WindowAnimationTargetInfo();
+//         if (!windowAnimationTarget) {
+//             // WLOGFE("yangfei new windowAnimationTarget object failed");
+//             delete windowAnimationTarget;
+//             windowAnimationTarget = nullptr;
+//         }
+
+//         parcel.ReadString(windowAnimationTarget->bundleName_);
+//         parcel.ReadString(abilityName_);
+//         parcel.ReadInt32(missionId_);
+
+//         parcel.ReadUint32(windowId_);
+//         parcel.ReadUint64(displayId_);
+
+//         parcel.ReadFloat(rect_.posX_);
+//         parcel.ReadFloat(rect_.posY_);
+//         parcel.ReadFloat(rect_.width_);
+//         parcel.ReadFloat(rect_.height_);
+//         parcel.ReadFloat(radius_);
+
+//         //parcel.ReadBool(true);
+//         parcel.ReadString(nodeName_);
+//         parcel.ReadUint64(nodeId_);
+
+//         return windowAnimationTarget;
+//     };
+
 
 namespace {
     constexpr float DEFAULT_SPLIT_RATIO = 0.5;

@@ -38,11 +38,11 @@ WM_IMPLEMENT_SINGLE_INSTANCE(WindowAdapter)
         } \
     } while (false)
 
-WMError WindowAdapter::CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& windowProperty,
-    std::shared_ptr<RSSurfaceNode> surfaceNode, uint32_t& windowId, const sptr<IRemoteObject>& token)
+WMError WindowAdapter::CreateWindow(sptr<IRemoteObject>& window, sptr<WindowProperty>& windowProperty,
+    const SurfaceNodeInfo& surfaceNodeInfo, uint32_t& windowId, const sptr<IRemoteObject>& token)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
-    return windowManagerServiceProxy_->CreateWindow(window, windowProperty, surfaceNode, windowId, token);
+    return windowManagerServiceProxy_->CreateWindow(window, windowProperty, surfaceNodeInfo, windowId, token);
 }
 
 WMError WindowAdapter::AddWindow(sptr<WindowProperty>& windowProperty)
@@ -95,7 +95,7 @@ WMError WindowAdapter::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibility
     return windowManagerServiceProxy_->GetVisibilityWindowInfo(infos);
 }
 
-WMError WindowAdapter::SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller)
+WMError WindowAdapter::SetWindowAnimationController(const sptr<IRemoteObject>& controller)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
     return windowManagerServiceProxy_->SetWindowAnimationController(controller);
@@ -245,7 +245,7 @@ WMError WindowAdapter::NotifyWindowTransition(sptr<WindowTransitionInfo> from, s
 }
 
 void WindowAdapter::MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
-    sptr<RSIWindowAnimationFinishedCallback>& finishCallback)
+    sptr<IRemoteObject>& finishCallback)
 {
     INIT_PROXY_CHECK_RETURN();
     windowManagerServiceProxy_->MinimizeWindowsByLauncher(windowIds, isAnimated, finishCallback);
@@ -318,7 +318,7 @@ void WindowAdapter::NotifyDumpInfoResult(const std::vector<std::string>& info)
 }
 
 WMError WindowAdapter::GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
-    std::vector<sptr<RSWindowAnimationTarget>>& targets)
+    std::vector<sptr<WindowAnimationTargetInfo>>& targets)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
     return windowManagerServiceProxy_->GetWindowAnimationTargets(missionIds, targets);

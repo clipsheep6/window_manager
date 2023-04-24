@@ -27,9 +27,8 @@ public:
 
     ~WindowManagerProxy() {};
 
-    WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
-        const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-        uint32_t& windowId, sptr<IRemoteObject> token) override;
+    WMError CreateWindow(sptr<IRemoteObject>& window, sptr<WindowProperty>& property,
+        const SurfaceNodeInfo& surfaceNodeInfo, uint32_t& windowId, sptr<IRemoteObject> token) override;
     WMError AddWindow(sptr<WindowProperty>& property) override;
     WMError RemoveWindow(uint32_t windowId, bool isFromInnerkits) override;
     WMError NotifyWindowTransition(sptr<WindowTransitionInfo>& from, sptr<WindowTransitionInfo>& to,
@@ -52,14 +51,14 @@ public:
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
-    WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller) override;
+    WMError SetWindowAnimationController(const sptr<IRemoteObject>& controller) override;
 
     WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) override;
     WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) override;
     WMError GetSystemConfig(SystemConfig& systemConfig) override;
     WMError GetModeChangeHotZones(DisplayId displayId, ModeChangeHotZones& hotZones) override;
     void MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
-        sptr<RSIWindowAnimationFinishedCallback>& finishCallback) override;
+        sptr<IRemoteObject>& finishCallback) override;
     WMError UpdateAvoidAreaListener(uint32_t windowId, bool haveListener) override;
     WMError UpdateRsTree(uint32_t windowId, bool isAdd) override;
     WMError BindDialogTarget(uint32_t& windowId, sptr<IRemoteObject> targetToken) override;
@@ -72,7 +71,7 @@ public:
     void DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event) override;
     void NotifyDumpInfoResult(const std::vector<std::string>& info) override;
     WMError GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
-        std::vector<sptr<RSWindowAnimationTarget>>& targets) override;
+        std::vector<sptr<WindowAnimationTargetInfo>>& targets) override;
 private:
     static inline BrokerDelegator<WindowManagerProxy> delegator_;
 };

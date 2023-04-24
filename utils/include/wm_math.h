@@ -184,6 +184,99 @@ struct Vector3 {
     }
 };
 
+// struct Vector4 {
+//     float x_, y_, z_, w_;
+//     Vector4() : x_(0.0f), y_(0.0f), z_(0.0f), w_(0.0) {}
+//     Vector3(float inX, float inY, float inZ, float inW)
+//         : x_(inX), y_(inY), z_(inZ), w_(inW) {}
+//     friend Vector4 operator=(const Vector4& v)
+//     {
+//         x_ = v.x_;
+//         y_ = v.y_;
+//         z_ = v.z_;
+//         w_ = v.w_;
+//         return *this;
+//     }
+//     friend Vector4 operator[](int index)
+//     {
+//         switch index{
+//             case 0:
+//             return x_;
+//             case 1:
+//             return y_;
+//             case 2:
+//             return z_;
+//             case 3:
+//             return w_;
+//         }
+//     }
+//     // friend Vector4 operator-(const Vector4& v)
+//     // {
+//     //     return Vector4 { -v.x_, -v.y_, -v.z_ };
+//     // }
+//     // friend Vector3 operator+(const Vector3& a, const Vector3& b)
+//     // {
+//     //     return Vector3 { a.x_ + b.x_, a.y_ + b.y_, a.z_ + b.z_ };
+//     // }
+//     // friend Vector3 operator-(const Vector3& a, const Vector3& b)
+//     // {
+//     //     return Vector3 { a.x_ - b.x_, a.y_ - b.y_, a.z_ - b.z_ };
+//     // }
+//     // // Scalar multiplication
+//     // friend Vector3 operator*(const Vector3& vec, float scalar)
+//     // {
+//     //     return Vector3(vec.x_ * scalar, vec.y_ * scalar, vec.z_ * scalar);
+//     // }
+//     // // Scalar multiplication
+//     // friend Vector3 operator*(float scalar, const Vector3& vec)
+//     // {
+//     //     return Vector3(vec.x_ * scalar, vec.y_ * scalar, vec.z_ * scalar);
+//     // }
+//     // // Scalar *=
+//     // Vector3& operator*=(float scalar)
+//     // {
+//     //     x_ *= scalar;
+//     //     y_ *= scalar;
+//     //     z_ *= scalar;
+//     //     return *this;
+//     // }
+//     // float LengthSq() const
+//     // {
+//     //     return (x_ * x_ + y_ * y_ + z_ * z_);
+//     // }
+//     // float Length() const
+//     // {
+//     //     return (std::sqrt(LengthSq()));
+//     // }
+//     // void Normalize()
+//     // {
+//     //     float length = Length();
+//     //     if (length > MathHelper::POS_ZERO) {
+//     //         x_ /= length;
+//     //         y_ /= length;
+//     //         z_ /= length;
+//     //     }
+//     // }
+//     // static Vector3 Normalize(const Vector3& vec)
+//     // {
+//     //     Vector3 temp = vec;
+//     //     temp.Normalize();
+//     //     return temp;
+//     // }
+//     // static float Dot(const Vector3& a, const Vector3& b)
+//     // {
+//     //     return (a.x_ * b.x_ + a.y_ * b.y_ + a.z_ * b.z_);
+//     // }
+//     // static Vector3 Cross(const Vector3& a, const Vector3& b)
+//     // {
+//     //     Vector3 temp;
+//     //     temp.x_ = a.y_ * b.z_ - a.z_ * b.y_;
+//     //     temp.y_ = a.z_ * b.x_ - a.x_ * b.z_;
+//     //     temp.z_ = a.x_ * b.y_ - a.y_ * b.x_;
+//     //     return temp;
+//     // }
+// };
+
 struct Matrix3 {
     float mat_[3][3];
 
