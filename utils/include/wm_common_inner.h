@@ -97,6 +97,7 @@ struct SystemConfig : public Parcelable {
     uint32_t decorModeSupportInfo_ = WindowModeSupport::WINDOW_MODE_SUPPORT_ALL;
     bool isStretchable_ = false;
     WindowMode defaultWindowMode_ = WindowMode::WINDOW_MODE_FULLSCREEN;
+    int32_t dragFrameGravity_ = -1;
     KeyboardAnimationConfig keyboardAnimationConfig_;
 
     virtual bool Marshalling(Parcel& parcel) const override
