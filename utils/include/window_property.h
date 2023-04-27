@@ -41,6 +41,7 @@ public:
     void SetAbilityInfo(const AbilityInfo& info);
     void SetRequestRect(const struct Rect& rect);
     void SetWindowRect(const struct Rect& rect);
+    void SetWindowLastRect(const struct Rect& rect);
     void SetDecoStatus(bool decoStatus);
     void SetWindowHotZoneRect(const struct Rect& rect);
     void SetWindowType(WindowType type);
@@ -94,6 +95,7 @@ public:
     const AbilityInfo& GetAbilityInfo() const;
     Rect GetRequestRect() const;
     Rect GetWindowRect() const;
+    Rect GetWindowLastRect() const;
     bool GetDecoStatus() const;
     Rect GetWindowHotZoneRect() const;
     WindowType GetWindowType() const;
@@ -157,6 +159,7 @@ private:
     AbilityInfo abilityInfo_;
     Rect requestRect_ { 0, 0, 0, 0 }; // window rect requested by the client (without decoration size)
     Rect windowRect_ { 0, 0, 0, 0 }; // actual window rect
+    Rect windowLastRect_ { 0, 0, 0, 0 }; // last window rect
     bool decoStatus_ { false }; // window has been decorated or not
     WindowType type_ { WindowType::WINDOW_TYPE_APP_MAIN_WINDOW };
     WindowMode mode_ { WindowMode::WINDOW_MODE_UNDEFINED };

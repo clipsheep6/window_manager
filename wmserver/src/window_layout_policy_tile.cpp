@@ -52,7 +52,9 @@ void WindowLayoutPolicyTile::Launch()
          */
         auto& displayWindowTree = displayGroupWindowTree_[displayId];
         LayoutWindowNodesByRootType(*(displayWindowTree[WindowRootNodeType::ABOVE_WINDOW_NODE]));
+        LayoutWindowBoundsByRootType(*(displayWindowTree[WindowRootNodeType::ABOVE_WINDOW_NODE]));
         LayoutWindowNodesByRootType(*(displayWindowTree[WindowRootNodeType::BELOW_WINDOW_NODE]));
+        LayoutWindowBoundsByRootType(*(displayWindowTree[WindowRootNodeType::BELOW_WINDOW_NODE]));
         WLOGFD("[Launch TileLayout], displayId: %{public}" PRIu64"", displayId);
     }
     WLOGI("[Launch TileLayout Finished]");
@@ -185,6 +187,21 @@ void WindowLayoutPolicyTile::PerformWindowLayout(const sptr<WindowNode>& node, W
             WLOGFD("Update type is not add or remove");
     }
     LayoutWindowNode(node);
+}
+
+void WindowLayoutPolicyTile::PerformWindowBoundsLayout(const sptr<WindowNode>& node, WindowUpdateType updateType)
+{
+    const auto& windowType = node->GetWindowType();
+    if (updateType == WindowUpdateType::WINDOW_UPDATE_ADDED ||
+        updateType == WindowUpdateType::WINDOW_UPDATE_REMOVED) {
+        if (WindowHelper::IsMainWindow(windowType)) {
+            for (auto& item : foregroundNodesMap_[node->GetDisplayId()]) {
+                LayoutWindowBounds(item);
+            }
+            return;
+        }
+    }
+    LayoutWindowBounds(node);
 }
 
 void WindowLayoutPolicyTile::LayoutTileQueue(DisplayId displayId)
@@ -348,7 +365,6 @@ void WindowLayoutPolicyTile::UpdateLayoutRect(const sptr<WindowNode>& node)
     UpdateWindowSizeLimits(node);
     bool floatingWindow = (node->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING);
     bool needAvoid = (node->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID));
-    Rect lastRect = node->GetWindowRect();
     Rect winRect = node->GetRequestRect();
     WLOGI("[Before TileLayout] windowId: %{public}u, mode: %{public}u, type: %{public}u requestRect: [%{public}d, "
         "%{public}d, %{public}u, %{public}u]", node->GetWindowId(), node->GetWindowMode(), node->GetWindowType(),
@@ -363,12 +379,12 @@ void WindowLayoutPolicyTile::UpdateLayoutRect(const sptr<WindowNode>& node)
     WLOGI("[After TileLayout] windowId: %{public}u, isDecor: %{public}u, winRect: [%{public}d, %{public}d, "
         "%{public}u, %{public}u]", node->GetWindowId(), node->GetDecoStatus(), winRect.posX_, winRect.posY_,
         winRect.width_, winRect.height_);
-    node->SetWindowRect(winRect);
 
+    Rect lastRect = node->GetWindowRect();
+    node->SetWindowLastRect(lastRect);
+    node->SetWindowRect(winRect);
     // postProcess after update winRect
     CalcAndSetNodeHotZone(winRect, node);
-    UpdateSurfaceBounds(node, winRect, lastRect);
-    NotifyClientAndAnimation(node, winRect, node->GetWindowSizeChangeReason());
 }
 } // Rosen
 } // OHOS

@@ -90,6 +90,7 @@ void WindowLayoutPolicyCascade::Reorder()
                 node->GetWindowId(), rect.posX_, rect.posY_, rect.width_, rect.height_);
         }
         LayoutWindowTree(displayId);
+        LayoutWindowTreeBounds(displayId);
     }
     WLOGI("Cascade Reorder end");
 }
@@ -101,6 +102,7 @@ void WindowLayoutPolicyCascade::InitAllRects()
         auto displayId = iter.first;
         InitSplitRects(displayId);
         LayoutWindowTree(displayId);
+        LayoutWindowTreeBounds(displayId);
         InitCascadeRect(displayId);
     }
 }
@@ -129,6 +131,32 @@ void WindowLayoutPolicyCascade::LayoutSplitNodes(DisplayId displayId, WindowUpda
                     childNode->SetWindowSizeChangeReason(WindowSizeChangeReason::DRAG);
                 }
                 LayoutWindowNode(childNode);
+            }
+        }
+    }
+}
+
+void WindowLayoutPolicyCascade::LayoutSplitBounds(DisplayId displayId, WindowUpdateType type)
+{
+    std::vector<WindowRootNodeType> rootNodeType = {
+        WindowRootNodeType::ABOVE_WINDOW_NODE,
+        WindowRootNodeType::APP_WINDOW_NODE,
+        WindowRootNodeType::BELOW_WINDOW_NODE
+    };
+    for (const auto& rootType : rootNodeType) {
+        if (displayGroupWindowTree_[displayId].find(rootType) == displayGroupWindowTree_[displayId].end()) {
+            continue;
+        }
+        auto appWindowNodeVec = *(displayGroupWindowTree_[displayId][rootType]);
+        for (const auto& childNode : appWindowNodeVec) {
+            if (childNode->GetWindowType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
+                if (type == WindowUpdateType::WINDOW_UPDATE_ADDED || type == WindowUpdateType::WINDOW_UPDATE_ACTIVE) {
+                    LayoutWindowBounds(childNode);
+                }
+            } else if (type == WindowUpdateType::WINDOW_UPDATE_REMOVED) {
+                LayoutWindowBounds(childNode);
+            } else if (childNode->IsSplitMode()) {
+                LayoutWindowBounds(childNode);
             }
         }
     }
@@ -190,6 +218,26 @@ void WindowLayoutPolicyCascade::PerformWindowLayout(const sptr<WindowNode>& node
                 LayoutSplitNodes(node->GetDisplayId(), updateType);
             } else {
                 LayoutWindowNode(node);
+            }
+    }
+}
+
+void WindowLayoutPolicyCascade::PerformWindowBoundsLayout(const sptr<WindowNode>& node, WindowUpdateType updateType)
+{
+    const auto& windowType = node->GetWindowType();
+    switch (windowType) {
+        case WindowType::WINDOW_TYPE_DOCK_SLICE:
+            LayoutSplitBounds(node->GetDisplayId(), updateType);
+            break;
+        case WindowType::WINDOW_TYPE_STATUS_BAR:
+        case WindowType::WINDOW_TYPE_NAVIGATION_BAR:
+            LayoutWindowTreeBounds(node->GetDisplayId());
+            break;
+        default:
+            if (node->IsSplitMode()) {
+                LayoutSplitBounds(node->GetDisplayId(), updateType);
+            } else {
+                LayoutWindowBounds(node);
             }
     }
     if (updateType == WindowUpdateType::WINDOW_UPDATE_REMOVED) {
@@ -463,13 +511,11 @@ void WindowLayoutPolicyCascade::UpdateLayoutRect(const sptr<WindowNode>& node)
         "%{public}u, %{public}u], reason: %{public}u", node->GetWindowId(), node->GetDecoStatus(), winRect.posX_,
         winRect.posY_, winRect.width_, winRect.height_, node->GetWindowSizeChangeReason());
 
-    const Rect& lastWinRect = node->GetWindowRect();
+    Rect lastRect = node->GetWindowRect();
+    node->SetWindowLastRect(lastRect);
     node->SetWindowRect(winRect);
-
     // postProcess after update winRect
     CalcAndSetNodeHotZone(winRect, node);
-    UpdateSurfaceBounds(node, winRect, lastWinRect);
-    NotifyClientAndAnimation(node, winRect, node->GetWindowSizeChangeReason());
 }
 
 void WindowLayoutPolicyCascade::LimitDividerPositionBySplitRatio(DisplayId displayId, Rect& winRect) const

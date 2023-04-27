@@ -186,6 +186,7 @@ WMError WindowNodeContainer::ShowStartingWindow(sptr<WindowNode>& node)
     StartingWindow::AddNodeOnRSTree(node, layoutPolicy_->IsMultiDisplay());
     AssignZOrder();
     layoutPolicy_->PerformWindowLayout(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
+    layoutPolicy_->PerformWindowBoundsLayout(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
     WLOGI("ShowStartingWindow windowId: %{public}u end", node->GetWindowId());
     return WMError::WM_OK;
 }
@@ -209,11 +210,7 @@ AnimationConfig& WindowNodeContainer::GetAnimationConfigRef()
 void WindowNodeContainer::LayoutWhenAddWindowNode(sptr<WindowNode>& node, bool afterAnimation)
 {
     if (afterAnimation) {
-        layoutPolicy_->PerformWindowLayout(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
-        // tile layout will change window mode from fullscreen to float
-        // notify systembar window to change color
-        NotifyIfAvoidAreaChanged(node, AvoidControlType::AVOID_NODE_ADD);
-        DumpScreenWindowTreeByWinId(node->GetWindowId());
+        layoutPolicy_->PerformWindowBoundsLayout(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
         return;
     }
     WLOGFD("AddWindowNode Id:%{public}u, currState:%{public}u",
@@ -221,6 +218,7 @@ void WindowNodeContainer::LayoutWhenAddWindowNode(sptr<WindowNode>& node, bool a
     if (WindowHelper::IsMainWindow(node->GetWindowType()) &&
         RemoteAnimation::IsRemoteAnimationEnabledAndFirst(node->GetDisplayId()) &&
         node->stateMachine_.IsShowAnimationPlaying()) {
+        layoutPolicy_->PerformWindowLayout(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
         // for first frame callback
         auto winRect = node->GetWindowRect();
         if (node->surfaceNode_) {
@@ -235,10 +233,7 @@ void WindowNodeContainer::LayoutWhenAddWindowNode(sptr<WindowNode>& node, bool a
                 node->SetWindowSizeChangeReason(WindowSizeChangeReason::CUSTOM_ANIMATION_SHOW);
         }
         layoutPolicy_->PerformWindowLayout(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
-        // tile layout will change window mode from fullscreen to float
-        // notify systembar window to change color
-        NotifyIfAvoidAreaChanged(node, AvoidControlType::AVOID_NODE_ADD);
-        DumpScreenWindowTreeByWinId(node->GetWindowId());
+        layoutPolicy_->PerformWindowBoundsLayout(node, WindowUpdateType::WINDOW_UPDATE_ADDED);
     }
 }
 
@@ -279,6 +274,8 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
     MinimizeOldestMainFloatingWindow(node->GetWindowId());
     AssignZOrder();
     LayoutWhenAddWindowNode(node, afterAnimation);
+    NotifyIfAvoidAreaChanged(node, AvoidControlType::AVOID_NODE_ADD);
+    DumpScreenWindowTreeByWinId(node->GetWindowId());
     UpdateCameraFloatWindowStatus(node, true);
     if (WindowHelper::IsMainWindow(node->GetWindowType())) {
         backupWindowIds_.clear();
@@ -336,6 +333,7 @@ WMError WindowNodeContainer::UpdateWindowNode(sptr<WindowNode>& node, WindowUpda
         SwitchLayoutPolicy(WindowLayoutMode::CASCADE, node->GetDisplayId());
     }
     layoutPolicy_->PerformWindowLayout(node, WindowUpdateType::WINDOW_UPDATE_ACTIVE);
+    layoutPolicy_->PerformWindowBoundsLayout(node, WindowUpdateType::WINDOW_UPDATE_ACTIVE);
     displayGroupController_->PostProcessWindowNode(node);
     // Get current displayId and showing displays, update RSTree and displayGroupWindowTree
     UpdateRSTreeWhenShowingDisplaysChange(node, lastShowingDisplays);
@@ -419,6 +417,7 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node, bool fromA
     node->isPlayAnimationHide_ = false;
     displayGroupController_->UpdateDisplayGroupWindowTree();
     layoutPolicy_->PerformWindowLayout(node, WindowUpdateType::WINDOW_UPDATE_REMOVED);
+    layoutPolicy_->PerformWindowBoundsLayout(node, WindowUpdateType::WINDOW_UPDATE_REMOVED);
     WindowMode lastMode = node->GetWindowMode();
     if (HandleRemoveWindow(node) != WMError::WM_OK) {
         return WMError::WM_ERROR_NULLPTR;

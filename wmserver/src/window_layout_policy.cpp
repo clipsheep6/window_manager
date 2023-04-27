@@ -294,6 +294,17 @@ void WindowLayoutPolicy::LayoutWindowNodesByRootType(const std::vector<sptr<Wind
     }
 }
 
+void WindowLayoutPolicy::LayoutWindowBoundsByRootType(const std::vector<sptr<WindowNode>>& nodeVec)
+{
+    if (nodeVec.empty()) {
+        WLOGW("The node vector is empty!");
+        return;
+    }
+    for (auto& node : nodeVec) {
+        LayoutWindowBounds(node);
+    }
+}
+
 void WindowLayoutPolicy::NotifyAnimationSizeChangeIfNeeded()
 {
     if (!RemoteAnimation::CheckAnimationController()) {
@@ -335,6 +346,14 @@ void WindowLayoutPolicy::LayoutWindowTree(DisplayId displayId)
     LayoutWindowNodesByRootType(*(displayWindowTree[WindowRootNodeType::BELOW_WINDOW_NODE]));
 }
 
+void WindowLayoutPolicy::LayoutWindowTreeBounds(DisplayId displayId)
+{
+    auto& displayWindowTree = displayGroupWindowTree_[displayId];
+    LayoutWindowBoundsByRootType(*(displayWindowTree[WindowRootNodeType::ABOVE_WINDOW_NODE]));
+    LayoutWindowBoundsByRootType(*(displayWindowTree[WindowRootNodeType::APP_WINDOW_NODE]));
+    LayoutWindowBoundsByRootType(*(displayWindowTree[WindowRootNodeType::BELOW_WINDOW_NODE]));
+}
+
 void WindowLayoutPolicy::LayoutWindowNode(const sptr<WindowNode>& node)
 {
     if (node == nullptr || node->parent_ == nullptr) {
@@ -358,6 +377,26 @@ void WindowLayoutPolicy::LayoutWindowNode(const sptr<WindowNode>& node)
     }
     for (auto& childNode : node->children_) {
         LayoutWindowNode(childNode);
+    }
+}
+
+void WindowLayoutPolicy::LayoutWindowBounds(const sptr<WindowNode>& node)
+{
+    if (node == nullptr || node->parent_ == nullptr) {
+        WLOGFE("Node or it's parent is nullptr");
+        return;
+    }
+    if (!node->currentVisibility_) {
+        WLOGFD("window[%{public}u] currently not visible, no need to layout", node->GetWindowId());
+        return;
+    }
+
+    Rect lastRect = node->GetWindowLastRect();
+    Rect winRect = node->GetWindowRect();
+    UpdateSurfaceBounds(node, winRect, lastRect);
+    NotifyClientAndAnimation(node, winRect, node->GetWindowSizeChangeReason());
+    for (auto& childNode : node->children_) {
+        LayoutWindowBounds(childNode);
     }
 }
 

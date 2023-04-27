@@ -35,6 +35,7 @@ public:
     void Launch() override;
     bool IsTileRectSatisfiedWithSizeLimits(const sptr<WindowNode>& node) override;
     void PerformWindowLayout(const sptr<WindowNode>& node, WindowUpdateType type) override;
+    void PerformWindowBoundsLayout(const sptr<WindowNode>& node, WindowUpdateType type) override;
 
 private:
     /*
