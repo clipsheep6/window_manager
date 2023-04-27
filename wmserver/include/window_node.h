@@ -57,6 +57,7 @@ public:
     void SetEntireWindowTouchHotArea(const Rect& rect);
     void SetEntireWindowPointerHotArea(const Rect& rect);
     void SetWindowRect(const Rect& rect);
+    void SetWindowLastRect(const Rect& rect);
     void SetDecorEnable(bool decorEnable);
     void SetDecoStatus(bool decoStatus);
     void SetRequestRect(const Rect& rect);
@@ -101,6 +102,7 @@ public:
     Rect GetEntireWindowTouchHotArea() const;
     Rect GetEntireWindowPointerHotArea() const;
     Rect GetWindowRect() const;
+    Rect GetWindowLastRect() const;
     bool GetDecoStatus() const;
     Rect GetRequestRect() const;
     WindowType GetWindowType() const;

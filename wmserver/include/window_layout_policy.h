@@ -45,6 +45,7 @@ public:
     virtual void Launch();
     virtual void Reorder();
     virtual void PerformWindowLayout(const sptr<WindowNode>& node, WindowUpdateType type) = 0;
+    virtual void PerformWindowBoundsLayout(const sptr<WindowNode>& node, WindowUpdateType type) = 0;
     void ProcessDisplayCreate(DisplayId displayId, const std::map<DisplayId, Rect>& displayRectMap);
     void ProcessDisplayDestroy(DisplayId displayId, const std::map<DisplayId, Rect>& displayRectMap);
     void ProcessDisplaySizeChangeOrRotation(DisplayId displayId, const std::map<DisplayId, Rect>& displayRectMap);
@@ -68,8 +69,11 @@ protected:
      */
     virtual void UpdateLayoutRect(const sptr<WindowNode>& node) = 0;
     void LayoutWindowTree(DisplayId displayId);
+    void LayoutWindowTreeBounds(DisplayId displayId);
     void LayoutWindowNode(const sptr<WindowNode>& node);
+    void LayoutWindowBounds(const sptr<WindowNode>& node);
     void LayoutWindowNodesByRootType(const std::vector<sptr<WindowNode>>& nodeVec);
+    void LayoutWindowBoundsByRootType(const std::vector<sptr<WindowNode>>& nodeVec);
     void FixWindowRectWithinDisplay(const sptr<WindowNode>& node) const;
 
     /*

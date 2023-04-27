@@ -48,6 +48,11 @@ void WindowNode::SetWindowRect(const Rect& rect)
     property_->SetWindowRect(rect);
 }
 
+void WindowNode::SetWindowLastRect(const Rect& rect)
+{
+    property_->SetWindowLastRect(rect);
+}
+
 void WindowNode::SetDecorEnable(bool decorEnable)
 {
     property_->SetDecorEnable(decorEnable);
@@ -277,6 +282,11 @@ Rect WindowNode::GetEntireWindowPointerHotArea() const
 Rect WindowNode::GetWindowRect() const
 {
     return property_->GetWindowRect();
+}
+
+Rect WindowNode::GetWindowLastRect() const
+{
+    return property_->GetWindowLastRect();
 }
 
 bool WindowNode::GetDecoStatus() const

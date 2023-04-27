@@ -36,6 +36,7 @@ public:
     Rect GetDividerRect(DisplayId displayId) const override;
     void SetSplitDividerWindowRects(std::map<DisplayId, Rect> dividerWindowRects) override;
     void PerformWindowLayout(const sptr<WindowNode>& node, WindowUpdateType updateType) override;
+    void PerformWindowBoundsLayout(const sptr<WindowNode>& node, WindowUpdateType type) override;
 
 private:
     /*
@@ -60,6 +61,7 @@ private:
      */
     void LayoutDivider(const sptr<WindowNode>& node, WindowUpdateType type);
     void LayoutSplitNodes(DisplayId displayId, WindowUpdateType type, bool layoutByDivider = false);
+    void LayoutSplitBounds(DisplayId displayId, WindowUpdateType type);
     void UpdateLayoutRect(const sptr<WindowNode>& node) override;
     void ComputeDecoratedRequestRect(const sptr<WindowNode>& node) const;
     void ApplyWindowRectConstraints(const sptr<WindowNode>& node, Rect& winRect) const;

@@ -44,6 +44,11 @@ void WindowProperty::SetWindowRect(const struct Rect& rect)
     windowRect_ = rect;
 }
 
+void WindowProperty::SetWindowLastRect(const struct Rect& rect)
+{
+    windowLastRect_ = rect;
+}
+
 void WindowProperty::SetDecoStatus(bool decoStatus)
 {
     decoStatus_ = decoStatus;
@@ -349,6 +354,11 @@ const AbilityInfo& WindowProperty::GetAbilityInfo() const
 Rect WindowProperty::GetWindowRect() const
 {
     return windowRect_;
+}
+
+Rect WindowProperty::GetWindowLastRect() const
+{
+    return windowLastRect_;
 }
 
 bool WindowProperty::GetDecoStatus() const
