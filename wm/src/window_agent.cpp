@@ -29,7 +29,7 @@ WindowAgent::WindowAgent(sptr<WindowImpl>& windowImpl)
 }
 
 WMError WindowAgent::UpdateWindowRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
-    const std::shared_ptr<RSTransaction> rsTransaction)
+    const std::shared_ptr<RSTransaction>& rsTransaction)
 {
     if (window_ == nullptr) {
         WLOGFE("window_ is nullptr");
@@ -109,13 +109,29 @@ WMError WindowAgent::UpdateDisplayId(DisplayId from, DisplayId to)
     return WMError::WM_OK;
 }
 
-WMError WindowAgent::UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info)
+WMError WindowAgent::UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info,
+    const std::shared_ptr<RSTransaction>& rsTransaction)
 {
     if (window_ == nullptr) {
         WLOGFE("window is null");
         return WMError::WM_ERROR_NULLPTR;
     }
-    window_->UpdateOccupiedAreaChangeInfo(info);
+    window_->UpdateOccupiedAreaChangeInfo(info, rsTransaction);
+    return WMError::WM_OK;
+}
+
+WMError WindowAgent::UpdateOccupiedAreaAndRect(const sptr<OccupiedAreaChangeInfo>& info, const Rect& rect,
+    const std::shared_ptr<RSTransaction>& rsTransaction)
+{
+    if (window_ == nullptr) {
+        WLOGFE("window is null");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    auto property = window_->GetWindowProperty();
+    if (property) {
+        window_->UpdateRect(rect, property->GetDecoStatus(), WindowSizeChangeReason::UNDEFINED);
+    }
+    window_->UpdateOccupiedAreaChangeInfo(info, rsTransaction);
     return WMError::WM_OK;
 }
 
@@ -170,12 +186,13 @@ WMError WindowAgent::NotifyScreenshot()
     return WMError::WM_OK;
 }
 
-WMError WindowAgent::DumpInfo(const std::vector<std::string>& params, std::vector<std::string>& info)
+WMError WindowAgent::DumpInfo(const std::vector<std::string>& params)
 {
     if (window_ == nullptr) {
         WLOGFE("window_ is nullptr");
         return WMError::WM_ERROR_NULLPTR;
     }
+    std::vector<std::string> info;
     window_->DumpInfo(params, info);
     return WMError::WM_OK;
 }
@@ -228,6 +245,15 @@ WMError WindowAgent::NotifyWindowClientPointUp(const std::shared_ptr<MMI::Pointe
     }
     window_->ConsumePointerEvent(pointerEvent);
     return WMError::WM_OK;
+}
+
+void WindowAgent::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent> event)
+{
+    if (window_ == nullptr) {
+        WLOGFE("window_ is nullptr");
+        return;
+    }
+    window_->ConsumeKeyEvent(event);
 }
 } // namespace Rosen
 } // namespace OHOS

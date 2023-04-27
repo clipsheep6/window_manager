@@ -16,32 +16,33 @@
 #ifndef OHOS_WINDOW_MANAGER_SERVICE_H
 #define OHOS_WINDOW_MANAGER_SERVICE_H
 
-#include <vector>
-#include <map>
-#include "event_handler.h"
-
 #include <input_window_monitor.h>
+#include <map>
 #include <nocopyable.h>
 #include <system_ability.h>
-#include <window_manager_service_handler_stub.h>
 #include <transaction/rs_interfaces.h>
+#include <vector>
+#include <window_manager_service_handler_stub.h>
+
 #include "atomic_map.h"
 #include "display_change_listener.h"
 #include "drag_controller.h"
+#include "event_handler.h"
 #include "freeze_controller.h"
+#include "perform_reporter.h"
 #include "singleton_delegator.h"
-#include "wm_common_inner.h"
-#include "wm_single_instance.h"
+#include "snapshot_controller.h"
+#include "struct_multimodal.h"
 #include "window_common_event.h"
 #include "window_controller.h"
-#include "zidl/window_manager_stub.h"
 #include "window_dumper.h"
+#include "window_group_mgr.h"
 #include "window_manager_config.h"
 #include "window_root.h"
 #include "window_system_effect.h"
-#include "snapshot_controller.h"
-#include "perform_reporter.h"
-#include "struct_multimodal.h"
+#include "wm_common_inner.h"
+#include "wm_single_instance.h"
+#include "zidl/window_manager_stub.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -68,6 +69,9 @@ public:
         sptr<AAFwk::AbilityTransitionInfo> info, std::shared_ptr<Media::PixelMap> pixelMap) override;
     virtual void CancelStartingWindow(sptr<IRemoteObject> abilityToken) override;
     virtual void NotifyAnimationAbilityDied(sptr<AAFwk::AbilityTransitionInfo> info) override;
+    virtual int32_t MoveMissionsToForeground(const std::vector<int32_t>& missionIds, int32_t topMissionId) override;
+    virtual int32_t MoveMissionsToBackground(
+        const std::vector<int32_t>& missionIds, std::vector<int32_t>& result) override;
 };
 
 class RSUIDirector;
@@ -105,10 +109,16 @@ public:
     WMError SetWindowLayoutMode(WindowLayoutMode mode) override;
     WMError UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action,
         bool isAsyncTask = false) override;
+    WMError SetWindowGravity(uint32_t windowId, WindowGravity gravity, uint32_t percent) override;
     WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) override;
     WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) override;
     WmErrorCode RaiseToAppTop(uint32_t windowId) override;
     std::shared_ptr<Media::PixelMap> GetSnapshot(int32_t windowId) override;
+    WMError SetGestureNavigaionEnabled(bool enable) override;
+    void DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event) override;
+    void NotifyDumpInfoResult(const std::vector<std::string>& info) override;
+    WMError GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
+        std::vector<sptr<RSWindowAnimationTarget>>& targets) override;
     WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
@@ -121,6 +131,9 @@ public:
     void StartingWindow(sptr<WindowTransitionInfo> info, std::shared_ptr<Media::PixelMap> pixelMap,
         bool isColdStart, uint32_t bkgColor = 0xffffffff);
     void CancelStartingWindow(sptr<IRemoteObject> abilityToken);
+    WMError MoveMissionsToForeground(const std::vector<int32_t>& missionIds, int32_t topMissionId);
+    WMError MoveMissionsToBackground(const std::vector<int32_t>& missionIds,
+        std::vector<int32_t>& result);
     void MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
         sptr<RSIWindowAnimationFinishedCallback>& finishCallback) override;
     WMError UpdateRsTree(uint32_t windowId, bool isAdd) override;
@@ -166,7 +179,7 @@ private:
     void ConfigWindowAnimation(const WindowManagerConfig::ConfigItem& animeConfig);
     void ConfigKeyboardAnimation(const WindowManagerConfig::ConfigItem& animeConfig);
     void ConfigStartingWindowAnimation(const WindowManagerConfig::ConfigItem& animeConfig);
-    RSAnimationTimingCurve CreateCurve(const WindowManagerConfig::ConfigItem& curveConfig);
+    RSAnimationTimingCurve CreateCurve(const WindowManagerConfig::ConfigItem& curveConfig, bool isForKeyboard = false);
     void RecordShowTimeEvent(int64_t costTime);
     void ConfigWindowEffect(const WindowManagerConfig::ConfigItem& effectConfig);
     bool ConfigAppWindowCornerRadius(const WindowManagerConfig::ConfigItem& item, float& out);
@@ -183,6 +196,7 @@ private:
     sptr<DragController> dragController_;
     sptr<FreezeController> freezeDisplayController_;
     sptr<WindowDumper> windowDumper_;
+    sptr<WindowGroupMgr> windowGroupMgr_;
     SystemConfig systemConfig_;
     ModeChangeHotZonesConfig hotZonesConfig_ { false, 0, 0, 0 };
     std::shared_ptr<WindowCommonEvent> windowCommonEvent_;

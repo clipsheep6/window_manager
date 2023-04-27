@@ -15,8 +15,11 @@
 
 #include "window_adapter.h"
 #include <iservice_registry.h>
+#include <key_event.h>
 #include <system_ability_definition.h>
+#include <rs_window_animation_target.h>
 #include "window_manager.h"
+#include "window_manager_proxy.h"
 #include "window_manager_hilog.h"
 #include "wm_common.h"
 
@@ -229,6 +232,12 @@ WMError WindowAdapter::UpdateProperty(sptr<WindowProperty>& windowProperty, Prop
     return windowManagerServiceProxy_->UpdateProperty(windowProperty, action);
 }
 
+WMError WindowAdapter::SetWindowGravity(uint32_t windowId, WindowGravity gravity, uint32_t percent)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    return windowManagerServiceProxy_->SetWindowGravity(windowId, gravity, percent);
+}
+
 WMError WindowAdapter::NotifyWindowTransition(sptr<WindowTransitionInfo> from, sptr<WindowTransitionInfo> to)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
@@ -290,5 +299,29 @@ std::shared_ptr<Media::PixelMap> WindowAdapter::GetSnapshot(int32_t windowId)
     return windowManagerServiceProxy_->GetSnapshot(windowId);
 }
 
+WMError WindowAdapter::SetGestureNavigaionEnabled(bool enable)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    return windowManagerServiceProxy_->SetGestureNavigaionEnabled(enable);
+}
+
+void WindowAdapter::DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event)
+{
+    INIT_PROXY_CHECK_RETURN();
+    windowManagerServiceProxy_->DispatchKeyEvent(windowId, event);
+}
+
+void WindowAdapter::NotifyDumpInfoResult(const std::vector<std::string>& info)
+{
+    INIT_PROXY_CHECK_RETURN();
+    windowManagerServiceProxy_->NotifyDumpInfoResult(info);
+}
+
+WMError WindowAdapter::GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
+    std::vector<sptr<RSWindowAnimationTarget>>& targets)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    return windowManagerServiceProxy_->GetWindowAnimationTargets(missionIds, targets);
+}
 } // namespace Rosen
 } // namespace OHOS

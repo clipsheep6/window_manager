@@ -16,6 +16,7 @@
 #include "zidl/window_stub.h"
 #include <vector>
 #include "ipc_skeleton.h"
+#include <key_event.h>
 #include "pointer_event.h"
 #include "window_manager_hilog.h"
 #include <transaction/rs_transaction.h>
@@ -99,7 +100,39 @@ int WindowStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParce
         }
         case WindowMessage::TRANS_ID_UPDATE_OCCUPIED_AREA: {
             sptr<OccupiedAreaChangeInfo> info = data.ReadParcelable<OccupiedAreaChangeInfo>();
-            UpdateOccupiedAreaChangeInfo(info);
+            bool hasRSTransaction = data.ReadBool();
+            if (hasRSTransaction) {
+                auto rsTransaction = data.ReadParcelable<RSTransaction>();
+                if (!rsTransaction) {
+                    WLOGFE("RSTransaction unMarsh failed");
+                    return -1;
+                }
+                std::shared_ptr<RSTransaction> transaction(rsTransaction);
+                rsTransaction->UnmarshallTransactionSyncController(data);
+                UpdateOccupiedAreaChangeInfo(info, transaction);
+            } else {
+                UpdateOccupiedAreaChangeInfo(info);
+            }
+
+            break;
+        }
+        case WindowMessage::TRANS_ID_UPDATE_OCCUPIED_AREA_AND_RECT: {
+            sptr<OccupiedAreaChangeInfo> info = data.ReadParcelable<OccupiedAreaChangeInfo>();
+            struct Rect rect { data.ReadInt32(), data.ReadInt32(), data.ReadUint32(), data.ReadUint32() };
+            bool hasRSTransaction = data.ReadBool();
+            if (hasRSTransaction) {
+                auto rsTransaction = data.ReadParcelable<RSTransaction>();
+                if (!rsTransaction) {
+                    WLOGFE("RSTransaction unMarsh failed");
+                    return -1;
+                }
+                std::shared_ptr<RSTransaction> transaction(rsTransaction);
+                rsTransaction->UnmarshallTransactionSyncController(data);
+                UpdateOccupiedAreaAndRect(info, rect, transaction);
+            } else {
+                UpdateOccupiedAreaAndRect(info, rect);
+            }
+
             break;
         }
         case WindowMessage::TRANS_ID_UPDATE_ACTIVE_STATUS: {
@@ -138,12 +171,7 @@ int WindowStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParce
                 WLOGFE("Fail to read params");
                 return -1;
             }
-            std::vector<std::string> info;
-            DumpInfo(params, info);
-            if (!reply.WriteStringVector(info)) {
-                WLOGFE("Fail to write info");
-                return -1;
-            }
+            DumpInfo(params);
             break;
         }
         case WindowMessage::TRANS_ID_NOTIFY_CLIENT_POINT_UP: {
@@ -166,8 +194,18 @@ int WindowStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParce
             RestoreSplitWindowMode(data.ReadUint32());
             break;
         }
-        default:
+        case WindowMessage::TRANS_ID_CONSUME_KEY_EVENT: {
+            auto event = MMI::KeyEvent::Create();
+            if (!event->ReadFromParcel(data)) {
+                WLOGFE("Read Pointer Event failed");
+                return -1;
+            }
+            ConsumeKeyEvent(event);
             break;
+        }
+        default:
+            WLOGFW("unknown transaction code %{public}d", code);
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     return 0;
 }

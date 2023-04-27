@@ -56,7 +56,7 @@ void ScreenRotationControllerTest::SetUpTestCase()
     absScreen->activeIdx_ = 0;
     absScreen->modes_.clear();
     absScreen->modes_ = { { info } };
-    sptr<AbstractDisplay> absDisplay = new AbstractDisplay(0, name, info, absScreen);
+    sptr<AbstractDisplay> absDisplay = new AbstractDisplay(0, info, absScreen);
     DisplayManagerService::GetInstance().abstractDisplayController_->abstractDisplayMap_ = {
         {0, absDisplay}
     };
@@ -533,6 +533,12 @@ HWTEST_F(ScreenRotationControllerTest, SubscribeMotionSensor, Function | SmallTe
  */
 HWTEST_F(ScreenRotationControllerTest, OnMotionChanged, Function | SmallTest | Level3)
 {
+    bool needUnsubscribe = false;
+    if (MotionSubscriber::motionEventCallback_ == nullptr) {
+        needUnsubscribe = true;
+        MotionSubscriber::SubscribeMotionSensor();
+    }
+    ASSERT_NE(MotionSubscriber::motionEventCallback_, nullptr);
     DeviceRotation currentRotation = ScreenRotationController::lastSensorRotationConverted_;
     DeviceRotation motionRotation = DeviceRotation::INVALID;
 
@@ -566,6 +572,10 @@ HWTEST_F(ScreenRotationControllerTest, OnMotionChanged, Function | SmallTest | L
     ASSERT_EQ(motionRotation, ScreenRotationController::lastSensorRotationConverted_);
 
     ScreenRotationController::HandleSensorEventInput(currentRotation);
+
+    if (needUnsubscribe) {
+        MotionSubscriber::UnsubscribeMotionSensor();
+    }
 }
 #endif
 }

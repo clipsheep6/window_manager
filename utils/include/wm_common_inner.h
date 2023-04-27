@@ -23,6 +23,8 @@
 
 namespace OHOS {
 namespace Rosen {
+class KeyboardAnimationConfig;
+
 enum class LifeCycleEvent : uint32_t {
     CREATE_EVENT,
     SHOW_EVENT,
@@ -96,6 +98,7 @@ struct SystemConfig : public Parcelable {
     bool isStretchable_ = false;
     WindowMode defaultWindowMode_ = WindowMode::WINDOW_MODE_FULLSCREEN;
     int32_t dragFrameGravity_ = -1;
+    KeyboardAnimationConfig keyboardAnimationConfig_;
 
     virtual bool Marshalling(Parcel& parcel) const override
     {
@@ -104,7 +107,8 @@ struct SystemConfig : public Parcelable {
             return false;
         }
 
-        if (!parcel.WriteUint32(static_cast<uint32_t>(defaultWindowMode_))) {
+        if (!parcel.WriteUint32(static_cast<uint32_t>(defaultWindowMode_)) ||
+            !parcel.WriteParcelable(&keyboardAnimationConfig_)) {
             return false;
         }
 
@@ -118,6 +122,8 @@ struct SystemConfig : public Parcelable {
         config->isStretchable_ = parcel.ReadBool();
         config->decorModeSupportInfo_ = parcel.ReadUint32();
         config->defaultWindowMode_ = static_cast<WindowMode>(parcel.ReadUint32());
+        KeyboardAnimationConfig* keyboardConfig = parcel.ReadParcelable<KeyboardAnimationConfig>();
+        config->keyboardAnimationConfig_ = *keyboardConfig;
         return config;
     }
 };
@@ -301,7 +307,6 @@ namespace {
     constexpr uint32_t MIN_FLOATING_HEIGHT = 240;
     constexpr uint32_t MIN_VERTICAL_SPLIT_HEIGHT = 240;
     constexpr uint32_t MIN_HORIZONTAL_SPLIT_WIDTH = 320;
-    constexpr uint32_t MAX_FLOATING_SIZE = 1920;
     constexpr unsigned int WMS_WATCHDOG_CHECK_INTERVAL = 6; // actual check interval is 3000ms(6 * 500)
     const Rect INVALID_EMPTY_RECT = {0, 0, 0, 0};
     const Rect DEFAULT_PLACE_HOLDER_RECT = {0, 0, 512, 512};

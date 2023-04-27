@@ -23,6 +23,7 @@
 #include <power_mgr_client.h>
 #include <rs_window_animation_finished_callback.h>
 #include <transaction/rs_transaction.h>
+#include <transaction/rs_sync_transaction_controller.h>
 #include <sstream>
 
 #include "display_group_info.h"
@@ -169,7 +170,7 @@ WMError WindowController::GetFocusWindowNode(DisplayId displayId, sptr<WindowNod
         return WMError::WM_ERROR_NULLPTR;
     }
     uint32_t focusWindowId = windowNodeContainer->GetFocusWindow();
-    WLOGI("FocusId: %{public}u", focusWindowId);
+    WLOGFD("Now focusId: %{public}u", focusWindowId);
     auto thisWindowNode = windowRoot_->GetWindowNode(focusWindowId);
     if (thisWindowNode == nullptr || !thisWindowNode->currentVisibility_) {
         WLOGFE("Node is null or invisible, id: %{public}u", focusWindowId);
@@ -298,13 +299,14 @@ WMError WindowController::AddWindowNode(sptr<WindowProperty>& property)
     node->GetWindowProperty()->CopyFrom(property);
     UpdateWindowAnimation(node);
 
+    RelayoutKeyboard(node);
     WMError res = windowRoot_->AddWindowNode(property->GetParentId(), node);
     if (res != WMError::WM_OK) {
         MinimizeApp::ClearNodesWithReason(MinimizeReason::OTHER_WINDOW);
         return res;
     }
     windowRoot_->FocusFaultDetection();
-    RelayoutKeyboard(node);
+
     FlushWindowInfo(property->GetWindowId());
     NotifyAfterAddWindow(node);
     HandleTurnScreenOn(node);
@@ -331,23 +333,14 @@ WMError WindowController::AddWindowNode(sptr<WindowProperty>& property)
     return WMError::WM_OK;
 }
 
-void WindowController::RelayoutKeyboard(const sptr<WindowNode>& node)
+bool WindowController::GetNavigationBarHeight(DisplayId displayId, uint32_t& navigationBarHeight)
 {
-    if (node == nullptr) {
-        WLOGFE("Node is nullptr");
-        return;
-    }
-    if (node->GetWindowType() != WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
-        return;
-    }
-
-    auto container = windowRoot_->GetOrCreateWindowNodeContainer(node->GetDisplayId());
+    auto container = windowRoot_->GetOrCreateWindowNodeContainer(displayId);
     if (container == nullptr) {
         WLOGFE("Node container is null");
-        return;
+        return false;
     }
 
-    uint32_t navigationBarHeight = 0;
     bool hasFullScreenKeyGuardWindow = false;
     WindowNodeOperationFunc func = [&navigationBarHeight, &hasFullScreenKeyGuardWindow](sptr<WindowNode> windowNode) {
         if (windowNode->GetWindowType() == WindowType::WINDOW_TYPE_KEYGUARD &&
@@ -366,18 +359,109 @@ void WindowController::RelayoutKeyboard(const sptr<WindowNode>& node)
     };
     container->TraverseWindowTree(func, true); // FromTopToBottom
 
+    return true;
+}
+
+void WindowController::RelayoutKeyboard(const sptr<WindowNode>& node)
+{
+    if (node == nullptr) {
+        WLOGFE("Node is nullptr");
+        return;
+    }
+    WindowGravity gravity;
+    uint32_t percent = 0;
+    node->GetWindowGravity(gravity, percent);
+    if (node->GetWindowType() != WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT ||
+        gravity == WindowGravity::WINDOW_GRAVITY_FLOAT) {
+        return;
+    }
+
+    auto container = windowRoot_->GetOrCreateWindowNodeContainer(node->GetDisplayId());
+    if (container == nullptr) {
+        WLOGFE("Node container is null");
+        return;
+    }
+
+    uint32_t navigationBarHeight = 0;
+    bool res = GetNavigationBarHeight(node->GetDisplayId(), navigationBarHeight);
+    if (res == false) {
+        return;
+    }
+
     sptr<DisplayInfo> defaultDisplayInfo = DisplayGroupInfo::GetInstance().GetDefaultDisplayInfo();
     if (defaultDisplayInfo == nullptr) {
         WLOGFE("defaultDisplayInfo is null");
         return;
     }
 
-    auto previousRect = node->GetWindowRect();
-    WLOGFD("NavigationBarHeight: %{public}u", navigationBarHeight);
-    Rect requestedRect = { previousRect.posX_,
-        static_cast<int32_t>(defaultDisplayInfo->GetHeight() - previousRect.height_ - navigationBarHeight),
-        previousRect.width_, previousRect.height_ };
-    ResizeRect(node->GetWindowId(), requestedRect, WindowSizeChangeReason::MOVE);
+    auto requestRect = node->GetRequestRect();
+    if (gravity == WindowGravity::WINDOW_GRAVITY_BOTTOM) {
+        if (percent != 0) {
+            requestRect.width_ = defaultDisplayInfo->GetWidth();
+            requestRect.height_ = defaultDisplayInfo->GetHeight() * percent / 100; // 100: for calc percent.
+            requestRect.posX_ = 0;
+        }
+    }
+    requestRect.posY_ = static_cast<int32_t>(defaultDisplayInfo->GetHeight() -
+        requestRect.height_ - navigationBarHeight);
+    node->SetRequestRect(requestRect);
+}
+
+void WindowController::NotifyInputCallingWindowRectAndOccupiedAreaChange(const sptr<WindowNode>& callingWindow,
+    const Rect& rect, const Rect& occupiedArea)
+{
+    // update calling window rect
+    callingWindow->SetWindowRect(rect);
+    WindowLayoutPolicy::CalcAndSetNodeHotZone(rect, callingWindow);
+
+    // set bounds and do animation for calling window
+    wptr<WindowNode> weakNode = callingWindow;
+    auto setBoundsFun = [weakNode, rect]() {
+        auto winNode = weakNode.promote();
+        if (winNode == nullptr) {
+            WLOGFW("Window node is nullptr");
+            return;
+        }
+        if (winNode->leashWinSurfaceNode_) {
+            winNode->leashWinSurfaceNode_->SetBounds(rect.posX_, rect.posY_, rect.width_, rect.height_);
+            if (winNode->startingWinSurfaceNode_) {
+                winNode->startingWinSurfaceNode_->SetBounds(0, 0, rect.width_, rect.height_);
+            }
+            if (winNode->surfaceNode_) {
+                winNode->surfaceNode_->SetBounds(0, 0, rect.width_, rect.height_);
+            }
+        } else {
+            if (winNode->surfaceNode_) {
+                winNode->surfaceNode_->SetBounds(rect.posX_, rect.posY_, rect.width_, rect.height_);
+            }
+        }
+    };
+    const auto& keyboardAnimationConfig = WindowNodeContainer::GetAnimationConfigRef().keyboardAnimationConfig_;
+    auto timingProtocol = WindowHelper::IsEmptyRect(occupiedArea) ? keyboardAnimationConfig.durationOut_ :
+        keyboardAnimationConfig.durationIn_;
+    RSNode::Animate(timingProtocol, keyboardAnimationConfig.curve_, setBoundsFun);
+
+    // if keyboard will occupy calling, notify calling window the occupied area and safe height
+    const Rect& safeRect = WindowHelper::GetOverlap(occupiedArea, rect, 0, 0);
+    sptr<OccupiedAreaChangeInfo> info = new OccupiedAreaChangeInfo(OccupiedAreaType::TYPE_INPUT,
+        occupiedArea, safeRect.height_);
+
+    if (WindowNodeContainer::GetAnimateTransactionEnabled()) {
+        auto syncTransactionController = RSSyncTransactionController::GetInstance();
+        if (syncTransactionController) {
+            callingWindow->GetWindowToken()->UpdateOccupiedAreaAndRect(info, rect,
+                syncTransactionController->GetRSTransaction());
+        }
+    } else {
+        callingWindow->GetWindowToken()->UpdateOccupiedAreaAndRect(info, rect);
+    }
+
+    FlushWindowInfo(callingWindow->GetWindowId());
+    accessibilityConnection_->NotifyAccessibilityWindowInfo(callingWindow, WindowUpdateType::WINDOW_UPDATE_PROPERTY);
+    WLOGFD("Calling windowId: %{public}u, calling winRect: [%{public}d, %{public}d, %{public}u, %{public}u], "
+        "occupiedArea: [%{public}d, %{public}d, %{public}u, %{public}u], safeHeight: %{public}u",
+        callingWindow->GetWindowId(), rect.posX_, rect.posY_, rect.width_, rect.height_,
+        occupiedArea.posX_, occupiedArea.posY_, occupiedArea.width_, occupiedArea.height_, safeRect.height_);
 }
 
 void WindowController::ResizeSoftInputCallingWindowIfNeed(const sptr<WindowNode>& node)
@@ -398,28 +482,36 @@ void WindowController::ResizeSoftInputCallingWindowIfNeed(const sptr<WindowNode>
         WLOGFE("callingWindow is null or invisible or not float window, callingWindowId:%{public}u", callingWindowId);
         return;
     }
-    Rect softInputWindowRect = node->GetWindowRect();
-    Rect callingWindowRect = callingWindow->GetWindowRect();
-    Rect rect = WindowHelper::GetOverlap(softInputWindowRect, callingWindowRect, 0, 0);
-    if (WindowHelper::IsEmptyRect(rect)) {
-        WLOGFE("there is no overlap");
+    WindowGravity gravity;
+    uint32_t percent = 0;
+    node->GetWindowGravity(gravity, percent);
+    if (gravity != WindowGravity::WINDOW_GRAVITY_BOTTOM) {
+        WLOGFI("input method window gravity is not bottom, no need to raise calling window");
         return;
     }
-    Rect requestedRect = callingWindowRect;
-    requestedRect.posY_ = softInputWindowRect.posY_ - static_cast<int32_t>(requestedRect.height_);
+
+    const Rect& softInputWindowRect = node->GetWindowRect();
+    const Rect& callingWindowRect = callingWindow->GetWindowRect();
+    if (WindowHelper::IsEmptyRect(WindowHelper::GetOverlap(softInputWindowRect, callingWindowRect, 0, 0))) {
+        WLOGFD("There is no overlap area");
+        return;
+    }
+
+    // calculate new rect of calling window
+    Rect newRect = callingWindowRect;
+    newRect.posY_ = softInputWindowRect.posY_ - static_cast<int32_t>(newRect.height_);
     Rect statusBarWindowRect = { 0, 0, 0, 0 };
     auto statusbarWindow = windowRoot_->GetWindowNode(sysBarWinId_[WindowType::WINDOW_TYPE_STATUS_BAR]);
     if (statusbarWindow != nullptr && statusbarWindow->parent_ != nullptr) {
         statusBarWindowRect = statusbarWindow->GetWindowRect();
     }
-    int32_t posY = std::max(requestedRect.posY_, static_cast<int32_t>(statusBarWindowRect.height_));
-    if (posY != requestedRect.posY_) {
-        requestedRect.height_ = static_cast<uint32_t>(softInputWindowRect.posY_ - posY);
-        requestedRect.posY_ = posY;
-    }
+    newRect.posY_ = std::max(newRect.posY_,
+        statusBarWindowRect.posY_ + static_cast<int32_t>(statusBarWindowRect.height_));
+
     callingWindowRestoringRect_ = callingWindowRect;
     callingWindowId_ = callingWindow->GetWindowId();
-    ResizeRectAndFlush(callingWindowId_, requestedRect, WindowSizeChangeReason::DRAG);
+
+    NotifyInputCallingWindowRectAndOccupiedAreaChange(callingWindow, newRect, softInputWindowRect);
 }
 
 void WindowController::RestoreCallingWindowSizeIfNeed()
@@ -427,7 +519,8 @@ void WindowController::RestoreCallingWindowSizeIfNeed()
     auto callingWindow = windowRoot_->GetWindowNode(callingWindowId_);
     if (!WindowHelper::IsEmptyRect(callingWindowRestoringRect_) && callingWindow != nullptr &&
         callingWindow->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING) {
-        ResizeRectAndFlush(callingWindowId_, callingWindowRestoringRect_, WindowSizeChangeReason::DRAG);
+        Rect overlapRect = { 0, 0, 0, 0 };
+        NotifyInputCallingWindowRectAndOccupiedAreaChange(callingWindow, callingWindowRestoringRect_, overlapRect);
     }
     callingWindowRestoringRect_ = { 0, 0, 0, 0 };
     callingWindowId_ = 0u;
@@ -486,7 +579,7 @@ WMError WindowController::RemoveWindowNode(uint32_t windowId, bool fromAnimation
         // if has main full screen window, no need to do remote unlock animation
         if (windowRoot_->NotifyDesktopUnfrozen() == WMError::WM_OK &&
             !windowRoot_->HasMainFullScreenWindowShown(windowNode->GetDisplayId())) {
-            res = RemoteAnimation::NotifyAnimationScreenUnlock(removeFunc);
+            res = RemoteAnimation::NotifyAnimationScreenUnlock(removeFunc, windowNode);
             WLOGI("NotifyAnimationScreenUnlock with remote animation");
         }
     }
@@ -580,6 +673,11 @@ WMError WindowController::ResizeRect(uint32_t windowId, const Rect& rect, Window
     WMError res = windowRoot_->UpdateWindowNode(windowId, WindowUpdateReason::UPDATE_RECT);
     if (res != WMError::WM_OK) {
         return res;
+    }
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT &&
+        reason == WindowSizeChangeReason::RESIZE) {
+        RelayoutKeyboard(node);
+        ResizeSoftInputCallingWindowIfNeed(node);
     }
     accessibilityConnection_->NotifyAccessibilityWindowInfo(node, WindowUpdateType::WINDOW_UPDATE_PROPERTY);
     return WMError::WM_OK;
@@ -1106,6 +1204,20 @@ WmErrorCode WindowController::RaiseToAppTop(uint32_t windowId)
     return WmErrorCode::WM_OK;
 }
 
+void WindowController::DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event)
+{
+    auto node = windowRoot_->GetWindowNode(windowId);
+    if (node == nullptr) {
+        WLOGFW("Could not find window");
+        return;
+    }
+    if (node->GetWindowType() != WindowType::WINDOW_TYPE_APP_COMPONENT) {
+        WLOGFI("Window type is not WINDOW_TYPE_APP_COMPONENT");
+        return;
+    }
+    windowRoot_->DispatchKeyEvent(node, event);
+}
+
 void WindowController::UpdateFocusIfNeededWhenRaiseWindow(const sptr<WindowNode>& node)
 {
     auto property = node->GetWindowProperty();
@@ -1203,7 +1315,7 @@ void WindowController::UpdateWindowAnimation(const sptr<WindowNode>& node)
         if (!node->GetWindowRect().height_) {
             translateY = static_cast<float>(node->GetRequestRect().height_);
         }
-        effect = RSTransitionEffect::Create()->Translate(Vector3f(0, translateY, 0))->Opacity(0.0f);
+        effect = RSTransitionEffect::Create()->Translate(Vector3f(0, translateY, 0))->Opacity(1.0f);
     };
     if (node->leashWinSurfaceNode_) {
         node->leashWinSurfaceNode_->SetTransitionEffect(effect);
@@ -1358,6 +1470,30 @@ WMError WindowController::UpdateProperty(sptr<WindowProperty>& property, Propert
             break;
     }
     return ret;
+}
+
+WMError WindowController::SetWindowGravity(uint32_t windowId, WindowGravity gravity, uint32_t percent)
+{
+    sptr<WindowNode> node = windowRoot_->GetWindowNode(windowId);
+    if (node == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    if (node->GetWindowType() != WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
+        return WMError::WM_ERROR_INVALID_TYPE;
+    }
+    node->SetWindowGravity(gravity, percent);
+    RelayoutKeyboard(node);
+    if (gravity == WindowGravity::WINDOW_GRAVITY_FLOAT) {
+        RestoreCallingWindowSizeIfNeed();
+    } else {
+        ResizeSoftInputCallingWindowIfNeed(node);
+    }
+    WMError res = windowRoot_->UpdateWindowNode(windowId, WindowUpdateReason::UPDATE_RECT);
+    if (res != WMError::WM_OK) {
+        return res;
+    }
+    FlushWindowInfo(windowId);
+    return WMError::WM_OK;
 }
 
 void WindowController::UpdatePrivateStateAndNotify(const sptr<WindowNode>& node)
@@ -1550,7 +1686,7 @@ void WindowController::MinimizeWindowsByLauncher(std::vector<uint32_t>& windowId
                 node->isPlayAnimationHide_ = true;
             }
         }
-        finishCallback = RemoteAnimation::CreateAnimationFinishedCallback(func);
+        finishCallback = RemoteAnimation::CreateAnimationFinishedCallback(func, nullptr);
         if (finishCallback == nullptr) {
             return;
         }

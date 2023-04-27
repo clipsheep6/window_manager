@@ -47,6 +47,7 @@ public:
     WMError SetWindowLayoutMode(WindowLayoutMode mode) override;
     WMError UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action,
         bool isAsyncTask = false) override;
+    WMError SetWindowGravity(uint32_t windowId, WindowGravity gravity, uint32_t percent) override;
     WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
@@ -67,6 +68,11 @@ public:
     void OffWindowZoom() override;
     WmErrorCode RaiseToAppTop(uint32_t windowId) override;
     std::shared_ptr<Media::PixelMap> GetSnapshot(int32_t windowId) override;
+    WMError SetGestureNavigaionEnabled(bool enable) override;
+    void DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event) override;
+    void NotifyDumpInfoResult(const std::vector<std::string>& info) override;
+    WMError GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
+        std::vector<sptr<RSWindowAnimationTarget>>& targets) override;
 private:
     static inline BrokerDelegator<WindowManagerProxy> delegator_;
 };

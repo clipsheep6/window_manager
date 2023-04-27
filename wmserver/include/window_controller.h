@@ -59,6 +59,7 @@ public:
     WMError ToggleShownStateForAllAppWindows();
     WMError SetWindowLayoutMode(WindowLayoutMode mode);
     WMError UpdateProperty(sptr<WindowProperty>& property, PropertyChangeAction action);
+    WMError SetWindowGravity(uint32_t windowId, WindowGravity gravity, uint32_t percent);
     void NotifySystemBarTints();
     WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller);
     WMError GetModeChangeHotZones(DisplayId displayId,
@@ -81,6 +82,7 @@ public:
     WMError ChangeMouseStyle(uint32_t windowId, sptr<MoveDragProperty>& moveDragProperty);
     void RecoverDefaultMouseStyle(uint32_t windowId);
     WmErrorCode RaiseToAppTop(uint32_t windowId);
+    void DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event);
     WMError SetAspectRatio(uint32_t windowId, float ratio);
     void FlushWindowInfo(uint32_t windowId);
 
@@ -110,10 +112,13 @@ private:
     void SetDefaultDisplayInfo(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo);
     void ProcessDisplayCompression(DisplayId defaultDisplayId, const sptr<DisplayInfo>& displayInfo);
     void NotifyAfterAddWindow(sptr<WindowNode>& node);
+    bool GetNavigationBarHeight(DisplayId displayId, uint32_t& navigationBarHeight);
     void RelayoutKeyboard(const sptr<WindowNode>& node);
     bool CheckParentWindowValid(const sptr<WindowProperty>& property);
     void UpdatePrivateStateAndNotify(const sptr<WindowNode>& node);
     void UpdateFocusIfNeededWhenRaiseWindow(const sptr<WindowNode>& node);
+    void NotifyInputCallingWindowRectAndOccupiedAreaChange(const sptr<WindowNode>& callingWindow, const Rect& rect,
+        const Rect& occupiedArea);
 
     sptr<WindowRoot> windowRoot_;
     sptr<InputWindowMonitor> inputWindowMonitor_;

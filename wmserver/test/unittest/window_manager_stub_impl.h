@@ -74,6 +74,10 @@ WMError UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeActio
 {
     return WMError::WM_OK;
 };
+WMError SetWindowGravity(uint32_t windowId, WindowGravity gravity, uint32_t percent)
+{
+    return WMError::WM_OK;
+};
 WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
     const sptr<IWindowManagerAgent>& windowManagerAgent)
 {
@@ -133,6 +137,16 @@ WmErrorCode RaiseToAppTop(uint32_t windowId)
 std::shared_ptr<Media::PixelMap> GetSnapshot(int32_t windowId) override
 {
     return nullptr;
+}
+WMError SetGestureNavigaionEnabled(bool enable) override
+{
+    return WMError::WM_OK;
+}
+void DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event) override {}
+WMError GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
+    std::vector<sptr<RSWindowAnimationTarget>>& targets) override
+{
+    return WMError::WM_OK;
 }
 };
 }

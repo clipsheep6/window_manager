@@ -15,6 +15,7 @@ import("//build/ohos.gni")
 
 config("libwindow_extension_client_private_config") {
   visibility = [ ":*" ]
+  visibility += [ "//foundation/arkui/ace_engine/frameworks/core/components_ng/test/pattern/ability_component/*" ]
 
   include_dirs = [
     "include",
@@ -53,7 +54,7 @@ ohos_shared_library("libwindow_extension_client") {
     "ability_runtime:ability_manager",
     "hitrace_native:hitrace_meter",
     "input:libmmi-client",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
   ]
 
   part_name = "window_manager"

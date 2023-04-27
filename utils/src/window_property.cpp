@@ -19,6 +19,10 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr uint32_t SYSTEM_BAR_PROPERTY_MAX_NUM = 2;
+    constexpr uint32_t TOUCH_HOT_AREA_MAX_NUM = 10;
+}
 WindowProperty::WindowProperty(const sptr<WindowProperty>& property)
 {
     CopyFrom(property);
@@ -572,6 +576,18 @@ uint32_t WindowProperty::GetAccessTokenId() const
     return accessTokenId_;
 }
 
+void WindowProperty::SetWindowGravity(WindowGravity gravity, uint32_t percent)
+{
+    windowGravity_ = gravity;
+    windowGravitySizePercent_ = percent;
+}
+
+void WindowProperty::GetWindowGravity(WindowGravity& gravity, uint32_t& percent) const
+{
+    gravity = windowGravity_;
+    percent = windowGravitySizePercent_;
+}
+
 bool WindowProperty::MapMarshalling(Parcel& parcel) const
 {
     auto size = sysBarPropMap_.size();
@@ -595,6 +611,9 @@ bool WindowProperty::MapMarshalling(Parcel& parcel) const
 void WindowProperty::MapUnmarshalling(Parcel& parcel, WindowProperty* property)
 {
     uint32_t size = parcel.ReadUint32();
+    if (size > SYSTEM_BAR_PROPERTY_MAX_NUM) {
+        return;
+    }
     for (uint32_t i = 0; i < size; i++) {
         WindowType type = static_cast<WindowType>(parcel.ReadUint32());
         SystemBarProperty prop = { parcel.ReadBool(), parcel.ReadUint32(), parcel.ReadUint32() };
@@ -619,7 +638,10 @@ bool WindowProperty::MarshallingTouchHotAreas(Parcel& parcel) const
 
 void WindowProperty::UnmarshallingTouchHotAreas(Parcel& parcel, WindowProperty* property)
 {
-    auto size = parcel.ReadUint32();
+    uint32_t size = parcel.ReadUint32();
+    if (size > TOUCH_HOT_AREA_MAX_NUM) {
+        return;
+    }
     for (uint32_t i = 0; i < size; i++) {
         property->touchHotAreas_.emplace_back(
             Rect{ parcel.ReadInt32(), parcel.ReadInt32(), parcel.ReadUint32(), parcel.ReadUint32() });
@@ -808,7 +830,7 @@ bool WindowProperty::Write(Parcel& parcel, PropertyChangeAction action)
             ret = ret && parcel.WriteUint32(animationFlag_);
             break;
         case PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE:
-            ret = ret && parcel.WriteBool(isPrivacyMode_);
+            ret = ret && parcel.WriteBool(isPrivacyMode_) && parcel.WriteBool(isSystemPrivacyMode_);
             break;
         case PropertyChangeAction::ACTION_UPDATE_ASPECT_RATIO:
             ret = ret && parcel.WriteFloat(aspectRatio_);
@@ -876,6 +898,7 @@ void WindowProperty::Read(Parcel& parcel, PropertyChangeAction action)
         }
         case PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE:
             SetPrivacyMode(parcel.ReadBool());
+            SetSystemPrivacyMode(parcel.ReadBool());
             break;
         case PropertyChangeAction::ACTION_UPDATE_ASPECT_RATIO:
             SetAspectRatio(parcel.ReadFloat());

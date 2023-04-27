@@ -59,6 +59,8 @@ public:
     void NotifyClientAndAnimation(const sptr<WindowNode>& node, const Rect& winRect, WindowSizeChangeReason reason);
     // methods for setting bottom posY limit for cascade rect on pc
     static void SetCascadeRectBottomPosYLimit(uint32_t floatingBottomPosY);
+    static void SetMaxFloatingWindowSize(uint32_t maxSize);
+    static void CalcAndSetNodeHotZone(const Rect& winRect, const sptr<WindowNode>& node);
 
 protected:
     /*
@@ -101,9 +103,8 @@ protected:
      * 3. update surface bounds
      */
     void NotifyAnimationSizeChangeIfNeeded();
-    void CalcAndSetNodeHotZone(const Rect& winRect, const sptr<WindowNode>& node) const;
-    Rect CalcEntireWindowHotZone(const sptr<WindowNode>& node, const Rect& winRect, uint32_t hotZone,
-        float vpr, TransformHelper::Vector2 hotZoneScale) const;
+    static Rect CalcEntireWindowHotZone(const sptr<WindowNode>& node, const Rect& winRect, uint32_t hotZone,
+        float vpr, TransformHelper::Vector2 hotZoneScale);
     void UpdateSurfaceBounds(const sptr<WindowNode>& node, const Rect& winRect, const Rect& preRect);
 
     void GetStoragedAspectRatio(const sptr<WindowNode>& node);
@@ -118,6 +119,8 @@ protected:
     mutable std::map<DisplayId, std::vector<int32_t>> splitRatioPointsMap_;
     // bottom posY limit for cascade rect on pc
     static uint32_t floatingBottomPosY_;
+    // max size of floating window in config
+    static uint32_t maxFloatingWindowSize_;
 };
 }
 }

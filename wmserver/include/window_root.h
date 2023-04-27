@@ -42,6 +42,7 @@ public:
     sptr<WindowNodeContainer> GetWindowNodeContainer(DisplayId displayId);
     sptr<WindowNodeContainer> CreateWindowNodeContainer(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo);
     sptr<WindowNode> GetWindowNode(uint32_t windowId) const;
+    sptr<WindowNode> GetWindowNodeByMissionId(uint32_t missionId) const;
     void GetBackgroundNodesByScreenId(ScreenId screenGroupId, std::vector<sptr<WindowNode>>& windowNodes);
 
     sptr<WindowNode> FindWallpaperWindow();
@@ -79,6 +80,7 @@ public:
 
     void NotifySystemBarTints();
     WMError RaiseZOrderForAppWindow(sptr<WindowNode>& node);
+    void DispatchKeyEvent(sptr<WindowNode> node, std::shared_ptr<MMI::KeyEvent> event);
     void FocusFaultDetection() const;
     Rect GetDisplayGroupRect(DisplayId displayId) const;
     WMError UpdateSizeChangeReason(uint32_t windowId, WindowSizeChangeReason reason);
@@ -112,6 +114,7 @@ public:
     WMError NotifyDesktopUnfrozen();
     void UpdateDisplayOrientationWhenHideWindow(sptr<WindowNode>& node);
     bool HasMainFullScreenWindowShown(DisplayId displayId);
+    WMError SetGestureNavigaionEnabled(bool enable);
 private:
     void OnRemoteDied(const sptr<IRemoteObject>& remoteObject);
     WMError DestroyWindowInner(sptr<WindowNode>& node);
@@ -147,6 +150,7 @@ private:
     std::map<ScreenId, std::vector<DisplayId>> displayIdMap_;
     bool lastWaterMarkShowStates_ { false };
     bool needCheckFocusWindow = false;
+    bool lastGestureNativeEnabled_ { true };
 
     std::map<WindowManagerAgentType, std::vector<sptr<IWindowManagerAgent>>> windowManagerAgents_;
 

@@ -15,6 +15,7 @@
 
 #include <gtest/gtest.h>
 #include "ability_context_impl.h"
+#include "display_manager_proxy.h"
 #include "mock_window_adapter.h"
 #include "singleton_mocker.h"
 #include "window_impl.h"
@@ -56,7 +57,7 @@ public:
 class MockWindowChangeListener : public IWindowChangeListener {
 public:
     MOCK_METHOD3(OnSizeChange, void(Rect rect, WindowSizeChangeReason reason,
-        const std::shared_ptr<RSTransaction> rsTransaction));
+        const std::shared_ptr<RSTransaction>& rsTransaction));
     MOCK_METHOD2(OnModeChange, void(WindowMode mode, bool hasDeco));
 };
 
@@ -121,6 +122,10 @@ void WindowImplTest::CreateStretchableWindow(sptr<WindowImpl>& window, const Rec
     option->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
     option->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
     option->SetWindowRect({ 1, 1, 1, 1 });
+    if (option == nullptr) {
+        window = nullptr;
+        return;
+    }
     window = new WindowImpl(option);
     EXPECT_CALL(m->Mock(), GetSystemConfig(_)).WillOnce(Return(WMError::WM_OK));
     EXPECT_CALL(m->Mock(), CreateWindow(_, _, _, _, _)).Times(1).WillOnce(Return(WMError::WM_OK));
@@ -1694,6 +1699,7 @@ HWTEST_F(WindowImplTest, StretchableUpdateRectDragStartTest, Function | SmallTes
     Rect rect1 { 10, 10, 10, 10 };
     sptr<WindowImpl> window;
     CreateStretchableWindow(window, rect1);
+    ASSERT_NE(window, nullptr);
     Rect rect2 { 100, 100, 100, 100 };
     window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
     Ace::UIContentMocker* content = reinterpret_cast<Ace::UIContentMocker*>(window->uiContent_.get());
@@ -1715,6 +1721,7 @@ HWTEST_F(WindowImplTest, StretchableUpdateRectDragTest, Function | SmallTest | L
     Rect rect1 { 10, 10, 10, 10 };
     sptr<WindowImpl> window;
     CreateStretchableWindow(window, rect1);
+    ASSERT_NE(window, nullptr);
     Rect rect2 { 100, 100, 100, 100 };
     window->UpdateRect(rect2, true, WindowSizeChangeReason::DRAG);
     ASSERT_EQ(window->GetWindowProperty()->GetOriginRect(), rect1);
@@ -1732,6 +1739,7 @@ HWTEST_F(WindowImplTest, StretchableUpdateRectDragEndTest, Function | SmallTest 
     Rect rect1 { 10, 10, 10, 10 };
     sptr<WindowImpl> window;
     CreateStretchableWindow(window, rect1);
+    ASSERT_NE(window, nullptr);
     Rect rect2 { 100, 100, 100, 100 };
     window->UpdateRect(rect2, true, WindowSizeChangeReason::DRAG_END);
     ASSERT_EQ(window->GetWindowProperty()->GetOriginRect(), rect1);
@@ -1749,6 +1757,7 @@ HWTEST_F(WindowImplTest, StretchableUpdateRectRecoverTest, Function | SmallTest 
     Rect rect1 { 10, 10, 10, 10 };
     sptr<WindowImpl> window;
     CreateStretchableWindow(window, rect1);
+    ASSERT_NE(window, nullptr);
     Rect rect2 { 100, 100, 100, 100 };
     window->UpdateRect(rect2, true, WindowSizeChangeReason::RECOVER);
     ASSERT_EQ(window->GetWindowProperty()->GetOriginRect(), rect1);
@@ -1766,6 +1775,7 @@ HWTEST_F(WindowImplTest, StretchableUpdateRectMoveTest, Function | SmallTest | L
     Rect rect1 { 10, 10, 10, 10 };
     sptr<WindowImpl> window;
     CreateStretchableWindow(window, rect1);
+    ASSERT_NE(window, nullptr);
     Rect rect2 { 100, 100, 100, 100 };
     window->UpdateRect(rect2, true, WindowSizeChangeReason::MOVE);
     ASSERT_EQ(window->GetWindowProperty()->GetOriginRect(), rect1);
@@ -1783,6 +1793,7 @@ HWTEST_F(WindowImplTest, StretchableUpdateRectResizeTest, Function | SmallTest |
     Rect rect1 { 110, 110, 10, 10 };
     sptr<WindowImpl> window;
     CreateStretchableWindow(window, rect1);
+    ASSERT_NE(window, nullptr);
     Rect rect2 { 100, 100, 100, 100 };
     ASSERT_EQ(true, rect1.IsInsideOf(rect2));
     ASSERT_EQ(true, rect1 != rect2);
@@ -2758,9 +2769,12 @@ HWTEST_F(WindowImplTest, HandleBackKeyPressedEvent, Function | SmallTest | Level
 HWTEST_F(WindowImplTest, ConsumeKeyEvent, Function | SmallTest | Level3)
 {
     sptr<WindowOption> option = new WindowOption();
-    option->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
+    option->SetWindowType(WindowType::WINDOW_TYPE_APP_COMPONENT);
     sptr<WindowImpl> window = new WindowImpl(option);
     std::shared_ptr<MMI::KeyEvent> keyEvent = std::make_shared<MockKeyEvent>();
+    EXPECT_CALL(m->Mock(), DispatchKeyEvent(_, _));
+    window->ConsumeKeyEvent(keyEvent);
+    window->property_->type_ = WindowType::WINDOW_TYPE_APP_MAIN_WINDOW;
     window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
     Ace::UIContentMocker* content = reinterpret_cast<Ace::UIContentMocker*>(window->uiContent_.get());
     EXPECT_CALL(*content, ProcessKeyEvent(_));

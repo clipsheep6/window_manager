@@ -38,6 +38,14 @@ sptr<Window> Window::Create(const std::string& windowName, sptr<WindowOption>& o
             return nullptr;
         }
     }
+    uint32_t version = 0;
+    if ((context != nullptr) && (context->GetApplicationInfo() != nullptr)) {
+        version = context->GetApplicationInfo()->apiCompatibleVersion;
+    }
+    // 10 ArkUI new framework support after API10
+    if (version >= 10) {
+        option->RemoveWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
+    }
     WindowType type = option->GetWindowType();
     if (!(WindowHelper::IsAppWindow(type) || WindowHelper::IsSystemWindow(type))) {
         WLOGFE("window type is invalid %{public}d", type);
@@ -86,7 +94,8 @@ bool OccupiedAreaChangeInfo::Marshalling(Parcel& parcel) const
 {
     return parcel.WriteInt32(rect_.posX_) && parcel.WriteInt32(rect_.posY_) &&
         parcel.WriteUint32(rect_.width_) && parcel.WriteUint32(rect_.height_) &&
-        parcel.WriteUint32(static_cast<uint32_t>(type_));
+        parcel.WriteUint32(static_cast<uint32_t>(type_)) &&
+        parcel.WriteUint32(safeHeight_);
 }
 
 OccupiedAreaChangeInfo* OccupiedAreaChangeInfo::Unmarshalling(Parcel& parcel)
@@ -101,6 +110,7 @@ OccupiedAreaChangeInfo* OccupiedAreaChangeInfo::Unmarshalling(Parcel& parcel)
         return nullptr;
     }
     occupiedAreaChangeInfo->type_ = static_cast<OccupiedAreaType>(parcel.ReadUint32());
+    occupiedAreaChangeInfo->safeHeight_ = parcel.ReadUint32();
     return occupiedAreaChangeInfo;
 }
 } // namespace Rosen

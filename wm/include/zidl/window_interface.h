@@ -39,6 +39,7 @@ public:
         TRANS_ID_UPDATE_DRAG_EVENT,
         TRANS_ID_UPDATE_DISPLAY_ID,
         TRANS_ID_UPDATE_OCCUPIED_AREA,
+        TRANS_ID_UPDATE_OCCUPIED_AREA_AND_RECT,
         TRANS_ID_UPDATE_ACTIVE_STATUS,
         TRANS_ID_GET_WINDOW_PROPERTY,
         TRANS_ID_NOTIFY_OUTSIDE_PRESSED,
@@ -50,10 +51,11 @@ public:
         TRANS_ID_NOTIFY_CLIENT_POINT_UP,
         TRANS_ID_UPDATE_ZOOM_TRANSFORM,
         TRANS_ID_RESTORE_SPLIT_WINDOW_MODE,
+        TRANS_ID_CONSUME_KEY_EVENT,
     };
 
     virtual WMError UpdateWindowRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
-        const std::shared_ptr<RSTransaction> rsTransaction = nullptr) = 0;
+        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) = 0;
     virtual WMError UpdateWindowMode(WindowMode mode) = 0;
     virtual WMError UpdateWindowModeSupportInfo(uint32_t modeSupportInfo) = 0;
     virtual WMError UpdateFocusStatus(bool focused) = 0;
@@ -61,18 +63,22 @@ public:
     virtual WMError UpdateWindowState(WindowState state) = 0;
     virtual WMError UpdateWindowDragInfo(const PointInfo& point, DragEvent event) = 0;
     virtual WMError UpdateDisplayId(DisplayId from, DisplayId to) = 0;
-    virtual WMError UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info) = 0;
+    virtual WMError UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info,
+        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) = 0;
     virtual WMError UpdateActiveStatus(bool isActive) = 0;
     virtual sptr<WindowProperty> GetWindowProperty() = 0;
     virtual WMError NotifyTouchOutside() = 0;
     virtual WMError NotifyScreenshot() = 0;
-    virtual WMError DumpInfo(const std::vector<std::string>& params, std::vector<std::string>& info) = 0;
+    virtual WMError DumpInfo(const std::vector<std::string>& params) = 0;
     virtual WMError NotifyDestroy(void) = 0;
     virtual WMError NotifyForeground(void) = 0;
     virtual WMError NotifyBackground(void) = 0;
     virtual WMError NotifyWindowClientPointUp(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) = 0;
     virtual WMError UpdateZoomTransform(const Transform& trans, bool isDisplayZoomOn) = 0;
     virtual WMError RestoreSplitWindowMode(uint32_t mode) = 0;
+    virtual void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent> event) = 0;
+    virtual WMError UpdateOccupiedAreaAndRect(const sptr<OccupiedAreaChangeInfo>& info, const Rect& rect,
+        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -15,7 +15,9 @@
 
 #include "zidl/window_manager_proxy.h"
 #include <ipc_types.h>
+#include <key_event.h>
 #include <rs_iwindow_animation_controller.h>
+#include <rs_window_animation_target.h>
 
 #include "marshalling_helper.h"
 #include "window_manager_hilog.h"
@@ -465,6 +467,37 @@ WMError WindowManagerProxy::UpdateProperty(sptr<WindowProperty>& windowProperty,
     return static_cast<WMError>(ret);
 }
 
+WMError WindowManagerProxy::SetWindowGravity(uint32_t windowId, WindowGravity gravity, uint32_t percent)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteUint32(windowId)) {
+        WLOGFE("Write mainWinId failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteUint32(static_cast<uint32_t>(gravity))) {
+        WLOGFE("Write mainWinId failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteUint32(percent)) {
+        WLOGFE("Write mainWinId failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerMessage::TRANS_ID_SET_WINDOW_GRAVITY),
+        data, reply, option) != ERR_NONE) {
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WMError>(ret);
+}
+
 WMError WindowManagerProxy::GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId)
 {
     MessageParcel data;
@@ -854,5 +887,97 @@ std::shared_ptr<Media::PixelMap> WindowManagerProxy::GetSnapshot(int32_t windowI
     return map;
 }
 
+WMError WindowManagerProxy::SetGestureNavigaionEnabled(bool enable)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    if (!data.WriteBool(enable)) {
+        WLOGFE("Write anchor delatX failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerMessage::TRANS_ID_GESTURE_NAVIGATION_ENABLED),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WMError>(ret);
+}
+
+void WindowManagerProxy::DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+    if (!data.WriteUint32(windowId)) {
+        WLOGFE("Write anchor delatX failed");
+        return;
+    }
+    if (!event->WriteToParcel(data)) {
+        WLOGFE("Write event faild");
+        return;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerMessage::TRANS_ID_DISPATCH_KEY_EVENT),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return;
+    }
+}
+
+void WindowManagerProxy::NotifyDumpInfoResult(const std::vector<std::string>& info)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+    if (!data.WriteStringVector(info)) {
+        WLOGFE("Write info failed");
+        return;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerMessage::TRANS_ID_NOTIFY_DUMP_INFO_RESULT),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return;
+    }
+}
+
+WMError WindowManagerProxy::GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
+    std::vector<sptr<RSWindowAnimationTarget>>& targets)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("write interfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteUInt32Vector(missionIds)) {
+        WLOGFE("Write missionIds failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerMessage::TRANS_ID_GET_WINDOW_ANIMATION_TARGETS),
+        data, reply, option) != ERR_NONE) {
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (!MarshallingHelper::UnmarshallingVectorParcelableObj<RSWindowAnimationTarget>(reply, targets)) {
+        WLOGFE("read window animation targets failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    return static_cast<WMError>(reply.ReadInt32());
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -44,7 +44,7 @@ void JsWindowListener::CallJsMethod(const char* methodName, NativeValue* const* 
 }
 
 void JsWindowListener::OnSizeChange(Rect rect, WindowSizeChangeReason reason,
-    const std::shared_ptr<RSTransaction> rsTransaction)
+    const std::shared_ptr<RSTransaction>& rsTransaction)
 {
     WLOGI("[NAPI]OnSizeChange, wh[%{public}u, %{public}u], reason = %{public}u", rect.width_, rect.height_, reason);
     // js callback should run in js thread
@@ -202,7 +202,8 @@ void JsWindowListener::AfterUnfocused()
     LifeCycleCallBack(LifeCycleEventType::INACTIVE);
 }
 
-void JsWindowListener::OnSizeChange(const sptr<OccupiedAreaChangeInfo>& info)
+void JsWindowListener::OnSizeChange(const sptr<OccupiedAreaChangeInfo>& info,
+    const std::shared_ptr<RSTransaction>& rsTransaction)
 {
     WLOGI("[NAPI]OccupiedAreaChangeInfo, type: %{public}u, " \
         "input rect: [%{public}d, %{public}d, %{public}u, %{public}u]", static_cast<uint32_t>(info->type_),
@@ -302,6 +303,26 @@ void JsWindowListener::OnDialogDeathRecipient() const
     NativeReference* callback = nullptr;
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
     AsyncTask::Schedule("JsWindowListener::OnDialogDeathRecipient",
+        *engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+}
+
+void JsWindowListener::OnGestureNavigationEnabledUpdate(bool enable)
+{
+    std::unique_ptr<AsyncTask::CompleteCallback> complete = std::make_unique<AsyncTask::CompleteCallback> (
+        [self = weakRef_, enable, eng = engine_] (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            auto thisListener = self.promote();
+            if (thisListener == nullptr || eng == nullptr) {
+                WLOGFE("[NAPI]this listener or engine is nullptr");
+                return;
+            }
+            NativeValue* argv[] = {CreateJsValue(*eng, enable)};
+            thisListener->CallJsMethod(GESTURE_NAVIGATION_ENABLED_CHANGE_CB.c_str(), argv, ArraySize(argv));
+        }
+    );
+
+    NativeReference* callback = nullptr;
+    std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
+    AsyncTask::Schedule("JsWindowListener::OnGestureNavigationEnabledUpdate",
         *engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
 }
 } // namespace Rosen

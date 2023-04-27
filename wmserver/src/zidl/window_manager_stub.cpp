@@ -15,7 +15,9 @@
 
 #include "zidl/window_manager_stub.h"
 #include <ipc_skeleton.h>
+#include <key_event.h>
 #include <rs_iwindow_animation_controller.h>
+#include <rs_window_animation_target.h>
 
 #include "marshalling_helper.h"
 #include "memory_guard.h"
@@ -286,6 +288,45 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             uint32_t windowId = data.ReadUint32();
             std::shared_ptr<Media::PixelMap> pixelMap = GetSnapshot(windowId);
             reply.WriteParcelable(pixelMap.get());
+            break;
+        }
+        case WindowManagerMessage::TRANS_ID_GESTURE_NAVIGATION_ENABLED: {
+            bool enable = data.ReadBool();
+            WMError errCode = SetGestureNavigaionEnabled(enable);
+            reply.WriteInt32(static_cast<int32_t>(errCode));
+            break;
+        }
+        case WindowManagerMessage::TRANS_ID_SET_WINDOW_GRAVITY: {
+            uint32_t windowId = data.ReadUint32();
+            WindowGravity gravity = static_cast<WindowGravity>(data.ReadUint32());
+            uint32_t percent = data.ReadUint32();
+            WMError errCode = SetWindowGravity(windowId, gravity, percent);
+            reply.WriteInt32(static_cast<int32_t>(errCode));
+            break;
+        }
+        case WindowManagerMessage::TRANS_ID_DISPATCH_KEY_EVENT: {
+            uint32_t windowId = data.ReadUint32();
+            std::shared_ptr<MMI::KeyEvent> event = MMI::KeyEvent::Create();
+            event->ReadFromParcel(data);
+            DispatchKeyEvent(windowId, event);
+            break;
+        }
+        case WindowManagerMessage::TRANS_ID_NOTIFY_DUMP_INFO_RESULT: {
+            std::vector<std::string> info;
+            data.ReadStringVector(&info);
+            NotifyDumpInfoResult(info);
+            break;
+        }
+        case WindowManagerMessage::TRANS_ID_GET_WINDOW_ANIMATION_TARGETS: {
+            std::vector<uint32_t> missionIds;
+            data.ReadUInt32Vector(&missionIds);
+            std::vector<sptr<RSWindowAnimationTarget>> targets;
+            WMError errCode = GetWindowAnimationTargets(missionIds, targets);
+            if (!MarshallingHelper::MarshallingVectorParcelableObj<RSWindowAnimationTarget>(reply, targets)) {
+                WLOGFE("Write window animation targets failed");
+                return -1;
+            }
+            reply.WriteInt32(static_cast<int32_t>(errCode));
             break;
         }
         default:

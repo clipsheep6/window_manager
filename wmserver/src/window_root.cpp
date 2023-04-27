@@ -150,6 +150,16 @@ sptr<WindowNode> WindowRoot::GetWindowNode(uint32_t windowId) const
     return iter->second;
 }
 
+sptr<WindowNode> WindowRoot::GetWindowNodeByMissionId(uint32_t missionId) const
+{
+    for (const auto& it : windowNodeMap_) {
+        if (it.second && it.second->abilityInfo_.missionId_ == missionId) {
+            return it.second;
+        }
+    }
+    return nullptr;
+}
+
 void WindowRoot::GetBackgroundNodesByScreenId(ScreenId screenGroupId, std::vector<sptr<WindowNode>>& windowNodes)
 {
     for (const auto& it : windowNodeMap_) {
@@ -395,6 +405,7 @@ void WindowRoot::NotifyWindowVisibilityChange(std::shared_ptr<RSOcclusionData> o
     }
     CheckAndNotifyWaterMarkChangedResult();
     if (windowVisibilityInfos.size() != 0) {
+        WLOGI("Notify windowvisibilityinfo changed start");
         WindowManagerAgentController::GetInstance().UpdateWindowVisibilityInfo(windowVisibilityInfos);
     }
 }
@@ -458,6 +469,7 @@ WMError WindowRoot::ToggleShownStateForAllAppWindows()
                 mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
                 property->SetWindowMode(mode);
                 // when change mode, need to reset shadow and radius
+                windowNode->SetWindowMode(mode);
                 WindowSystemEffect::SetWindowEffect(windowNode);
                 windowNode->GetWindowToken()->RestoreSplitWindowMode(static_cast<uint32_t>(mode));
             }
@@ -504,7 +516,7 @@ WMError WindowRoot::PostProcessAddWindowNode(sptr<WindowNode>& node, sptr<Window
     if (node->GetWindowProperty()->GetFocusable()) {
         // when launcher reboot, the focus window should not change with showing a full screen window.
         sptr<WindowNode> focusWin = GetWindowNode(container->GetFocusWindow());
-        if (focusWin != nullptr &&
+        if (focusWin == nullptr ||
             !(WindowHelper::IsFullScreenWindow(focusWin->GetWindowMode()) && focusWin->zOrder_ > node->zOrder_)) {
             container->SetFocusWindow(node->GetWindowId());
             needCheckFocusWindow = true;
@@ -674,9 +686,8 @@ WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, boo
     }
 
     if (fromStartingWin) {
-        if (node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
+        if (WindowHelper::IsFullScreenWindow(node->GetWindowMode()) &&
             WindowHelper::IsAppWindow(node->GetWindowType()) && !node->isPlayAnimationShow_) {
-            container->NotifyDockWindowStateChanged(node, false);
             WMError res = MinimizeStructuredAppWindowsExceptSelf(node);
             if (res != WMError::WM_OK) {
                 WLOGFE("Minimize other structured window failed");
@@ -684,15 +695,14 @@ WMError WindowRoot::AddWindowNode(uint32_t parentId, sptr<WindowNode>& node, boo
                 return res;
             }
         }
-        if (WindowHelper::IsSplitWindowMode(node->GetWindowMode()) &&
-            WindowHelper::IsAppWindow(node->GetWindowType())) {
-            container->NotifyDockWindowStateChanged(node, false);
-        }
         WMError res = container->ShowStartingWindow(node);
         if (res != WMError::WM_OK) {
             MinimizeApp::ClearNodesWithReason(MinimizeReason::OTHER_WINDOW);
         }
         return res;
+    }
+    if (WindowHelper::IsAppFullOrSplitWindow(node->GetWindowType(), node->GetWindowMode())) {
+        container->NotifyDockWindowStateChanged(node, false);
     }
     // limit number of main window
     uint32_t mainWindowNumber = container->GetWindowCountByType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
@@ -761,6 +771,18 @@ void WindowRoot::UpdateDisplayOrientationWhenHideWindow(sptr<WindowNode>& node)
         WLOGFD("[FixOrientation] next rotatable window: %{public}u", nextRotatableWindow->GetWindowId());
         container->SetDisplayOrientationFromWindow(nextRotatableWindow, false);
     }
+}
+
+WMError WindowRoot::SetGestureNavigaionEnabled(bool enable)
+{
+    if (lastGestureNativeEnabled_ == enable) {
+        WLOGFW("Do not set gesture navigation too much times as same value and the value is %{public}d", enable);
+        return WMError::WM_DO_NOTHING;
+    }
+    WindowManagerAgentController::GetInstance().NotifyGestureNavigationEnabledResult(enable);
+    lastGestureNativeEnabled_ = enable;
+    WLOGFD("Set gesture navigation enabled succeeded and notify result of %{public}d", enable);
+    return WMError::WM_OK;
 }
 
 WMError WindowRoot::UpdateWindowNode(uint32_t windowId, WindowUpdateReason reason)
@@ -1012,27 +1034,22 @@ void WindowRoot::UpdateFocusWindowWithWindowRemoved(const sptr<WindowNode>& node
     uint32_t windowId = node->GetWindowId();
     uint32_t focusedWindowId = container->GetFocusWindow();
     WLOGFD("current window: %{public}u, focus window: %{public}u", windowId, focusedWindowId);
-    if (WindowHelper::IsMainWindow(node->GetWindowType())) {
-        if (windowId != focusedWindowId) {
-            auto iter = std::find_if(node->children_.begin(), node->children_.end(),
-                                     [focusedWindowId](sptr<WindowNode> node) {
-                                         return node->GetWindowId() == focusedWindowId;
-                                     });
-            if (iter == node->children_.end()) {
-                return;
-            }
-        }
-        if (!node->children_.empty()) {
-            auto firstChild = node->children_.front();
-            if (firstChild->priority_ < 0) {
-                windowId = firstChild->GetWindowId();
-            }
-        }
-    } else {
-        if (windowId != focusedWindowId) {
+    if (windowId != focusedWindowId) {
+        auto iter = std::find_if(node->children_.begin(), node->children_.end(),
+            [focusedWindowId](sptr<WindowNode> node) {
+                return node->GetWindowId() == focusedWindowId;
+            });
+        if (iter == node->children_.end()) {
             return;
         }
     }
+    if (!node->children_.empty()) {
+        auto firstChild = node->children_.front();
+        if (firstChild->priority_ < 0) {
+            windowId = firstChild->GetWindowId();
+        }
+    }
+
     auto nextFocusableWindow = container->GetNextFocusableWindow(windowId);
     if (nextFocusableWindow != nullptr) {
         WLOGFD("adjust focus window, next focus window id: %{public}u", nextFocusableWindow->GetWindowId());
@@ -1050,27 +1067,22 @@ void WindowRoot::UpdateActiveWindowWithWindowRemoved(const sptr<WindowNode>& nod
     uint32_t windowId = node->GetWindowId();
     uint32_t activeWindowId = container->GetActiveWindow();
     WLOGFD("current window: %{public}u, active window: %{public}u", windowId, activeWindowId);
-    if (WindowHelper::IsMainWindow(node->GetWindowType())) {
-        if (windowId != activeWindowId) {
-            auto iter = std::find_if(node->children_.begin(), node->children_.end(),
-                                     [activeWindowId](sptr<WindowNode> node) {
-                                         return node->GetWindowId() == activeWindowId;
-                                     });
-            if (iter == node->children_.end()) {
-                return;
-            }
-        }
-        if (!node->children_.empty()) {
-            auto firstChild = node->children_.front();
-            if (firstChild->priority_ < 0) {
-                windowId = firstChild->GetWindowId();
-            }
-        }
-    } else {
-        if (windowId != activeWindowId) {
+    if (windowId != activeWindowId) {
+        auto iter = std::find_if(node->children_.begin(), node->children_.end(),
+            [activeWindowId](sptr<WindowNode> node) {
+                return node->GetWindowId() == activeWindowId;
+            });
+        if (iter == node->children_.end()) {
             return;
         }
     }
+    if (!node->children_.empty()) {
+        auto firstChild = node->children_.front();
+        if (firstChild->priority_ < 0) {
+            windowId = firstChild->GetWindowId();
+        }
+    }
+
     auto nextActiveWindow = container->GetNextActiveWindow(windowId);
     if (nextActiveWindow != nullptr) {
         WLOGI("Next active window id: %{public}u", nextActiveWindow->GetWindowId());
@@ -1235,6 +1247,41 @@ WMError WindowRoot::RaiseZOrderForAppWindow(sptr<WindowNode>& node)
 
     auto parentNode = GetWindowNode(node->GetParentId());
     return container->RaiseZOrderForAppWindow(node, parentNode);
+}
+
+void WindowRoot::DispatchKeyEvent(sptr<WindowNode> node, std::shared_ptr<MMI::KeyEvent> event)
+{
+    sptr<WindowNodeContainer> container = GetOrCreateWindowNodeContainer(node->GetDisplayId());
+    if (container == nullptr) {
+        WLOGFW("window container could not be found");
+        return;
+    }
+    std::vector<sptr<WindowNode>> windowNodes;
+    container->TraverseContainer(windowNodes);
+    auto iter = std::find(windowNodes.begin(), windowNodes.end(), node);
+    if (iter == windowNodes.end()) {
+        WLOGFE("Cannot find node");
+        return;
+    }
+    for (++iter; iter != windowNodes.end(); ++iter) {
+        if (*iter == nullptr) {
+            WLOGFE("Node is null");
+            continue;
+        }
+        if ((*iter)->GetWindowType() == WindowType::WINDOW_TYPE_APP_COMPONENT) {
+            WLOGFI("Skip component window: %{public}u", (*iter)->GetWindowId());
+            continue;
+        }
+        if (WindowHelper::IsAppWindow((*iter)->GetWindowType())) {
+            WLOGFI("App window: %{public}u", (*iter)->GetWindowId());
+            if ((*iter)->GetWindowToken()) {
+                (*iter)->GetWindowToken()->ConsumeKeyEvent(event);
+            }
+            break;
+        }
+        WLOGFI("Unexpected window: %{public}u", (*iter)->GetWindowId());
+        break;
+    }
 }
 
 uint32_t WindowRoot::GetWindowIdByObject(const sptr<IRemoteObject>& remoteObject)

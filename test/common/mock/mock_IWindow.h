@@ -16,6 +16,7 @@
 
 #include "iremote_broker.h"
 #include "window.h"
+#include "zidl/window_interface.h"
 #include "window_property.h"
 #include "wm_common.h"
 #include "wm_common_inner.h"
@@ -28,7 +29,7 @@ public:
     IWindowMocker() {};
     ~IWindowMocker() {};
     MOCK_METHOD4(UpdateWindowRect, WMError(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
-        const std::shared_ptr<RSTransaction> rsTransaction));
+        const std::shared_ptr<RSTransaction>& rsTransaction));
     MOCK_METHOD1(UpdateWindowMode, WMError(WindowMode mode));
     MOCK_METHOD1(UpdateWindowModeSupportInfo, WMError(uint32_t modeSupportInfo));
     MOCK_METHOD1(UpdateFocusStatus, WMError(bool focused));
@@ -36,18 +37,22 @@ public:
     MOCK_METHOD1(UpdateWindowState, WMError(WindowState state));
     MOCK_METHOD2(UpdateWindowDragInfo, WMError(const PointInfo& point, DragEvent event));
     MOCK_METHOD2(UpdateDisplayId, WMError(DisplayId from, DisplayId to));
-    MOCK_METHOD1(UpdateOccupiedAreaChangeInfo, WMError(const sptr<OccupiedAreaChangeInfo>& info));
+    MOCK_METHOD2(UpdateOccupiedAreaChangeInfo, WMError(const sptr<OccupiedAreaChangeInfo>& info,
+        const std::shared_ptr<RSTransaction>& rsTransaction));
+    MOCK_METHOD3(UpdateOccupiedAreaAndRect, WMError(const sptr<OccupiedAreaChangeInfo>& info,
+        const Rect& rect, const std::shared_ptr<RSTransaction>& rsTransaction));
     MOCK_METHOD1(UpdateActiveStatus, WMError(bool isActive));
     MOCK_METHOD0(GetWindowProperty, sptr<WindowProperty>());
     MOCK_METHOD0(NotifyTouchOutside, WMError());
     MOCK_METHOD0(NotifyScreenshot, WMError());
-    MOCK_METHOD2(DumpInfo, WMError(const std::vector<std::string>& params, std::vector<std::string>& info));
+    MOCK_METHOD1(DumpInfo, WMError(const std::vector<std::string>& params));
     MOCK_METHOD0(NotifyDestroy, WMError(void));
     MOCK_METHOD0(NotifyForeground, WMError(void));
     MOCK_METHOD0(NotifyBackground, WMError(void));
     MOCK_METHOD1(NotifyWindowClientPointUp, WMError(const std::shared_ptr<MMI::PointerEvent>& pointerEvent));
     MOCK_METHOD2(UpdateZoomTransform, WMError(const Transform& trans, bool isDisplayZoomOn));
     MOCK_METHOD1(RestoreSplitWindowMode, WMError(uint32_t mode));
+    MOCK_METHOD1(ConsumeKeyEvent, void(std::shared_ptr<MMI::KeyEvent> event));
     sptr<IRemoteObject> AsObject() override
     {
         return nullptr;

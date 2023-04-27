@@ -28,7 +28,7 @@ public:
     explicit WindowAgent(sptr<WindowImpl>& window);
     ~WindowAgent() = default;
     WMError UpdateWindowRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
-        const std::shared_ptr<RSTransaction> rsTransaction = nullptr) override;
+        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override;
     WMError UpdateWindowMode(WindowMode mode) override;
     WMError UpdateWindowModeSupportInfo(uint32_t modeSupportInfo) override;
     WMError UpdateFocusStatus(bool focused) override;
@@ -36,18 +36,22 @@ public:
     WMError UpdateWindowState(WindowState state) override;
     WMError UpdateWindowDragInfo(const PointInfo& point, DragEvent event) override;
     WMError UpdateDisplayId(DisplayId from, DisplayId to) override;
-    WMError UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info) override;
+    WMError UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info,
+        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override;
+    WMError UpdateOccupiedAreaAndRect(const sptr<OccupiedAreaChangeInfo>& info, const Rect& rect,
+        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override;
     WMError UpdateActiveStatus(bool isActive) override;
     sptr<WindowProperty> GetWindowProperty() override;
     WMError NotifyTouchOutside() override;
     WMError NotifyScreenshot() override;
-    WMError DumpInfo(const std::vector<std::string>& params, std::vector<std::string>& info) override;
+    WMError DumpInfo(const std::vector<std::string>& params) override;
     WMError NotifyDestroy(void) override;
     WMError NotifyForeground(void) override;
     WMError NotifyBackground(void) override;
     WMError NotifyWindowClientPointUp(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
     WMError UpdateZoomTransform(const Transform& trans, bool isDisplayZoomOn) override;
     WMError RestoreSplitWindowMode(uint32_t mode) override;
+    void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent> event) override;
 private:
     sptr<WindowImpl> window_;
 };

@@ -15,6 +15,7 @@
 
 #include "zidl/window_proxy.h"
 #include <ipc_types.h>
+#include <key_event.h>
 #include "pointer_event.h"
 #include "message_option.h"
 #include "window_manager_hilog.h"
@@ -27,7 +28,7 @@ namespace {
 }
 
 WMError WindowProxy::UpdateWindowRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
-    const std::shared_ptr<RSTransaction> rsTransaction)
+    const std::shared_ptr<RSTransaction>& rsTransaction)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -231,7 +232,8 @@ WMError WindowProxy::UpdateDisplayId(DisplayId from, DisplayId to)
     return WMError::WM_OK;
 }
 
-WMError WindowProxy::UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info)
+WMError WindowProxy::UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info,
+    const std::shared_ptr<RSTransaction>& rsTransaction)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -244,7 +246,63 @@ WMError WindowProxy::UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeI
         WLOGFE("Write OccupiedAreaChangeInfo failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
+
+    bool hasRSTransaction = rsTransaction != nullptr;
+    if (!data.WriteBool(hasRSTransaction)) {
+        WLOGFE("Write transaction sync Id failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (hasRSTransaction) {
+        if (!data.WriteParcelable(rsTransaction.get())) {
+            WLOGFE("Write transaction sync Id failed");
+            return WMError::WM_ERROR_IPC_FAILED;
+        }
+        rsTransaction->MarshallTransactionSyncController(data);
+    }
+
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowMessage::TRANS_ID_UPDATE_OCCUPIED_AREA),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    return WMError::WM_OK;
+}
+
+WMError WindowProxy::UpdateOccupiedAreaAndRect(const sptr<OccupiedAreaChangeInfo>& info, const Rect& rect,
+    const std::shared_ptr<RSTransaction>& rsTransaction)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteParcelable(info)) {
+        WLOGFE("Write OccupiedAreaChangeInfo failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    if (!(data.WriteInt32(rect.posX_) && data.WriteInt32(rect.posY_) &&
+        data.WriteUint32(rect.width_) && data.WriteUint32(rect.height_))) {
+        WLOGFE("Write WindowRect failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    bool hasRSTransaction = rsTransaction != nullptr;
+    if (!data.WriteBool(hasRSTransaction)) {
+        WLOGFE("Write transaction sync Id failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (hasRSTransaction) {
+        if (!data.WriteParcelable(rsTransaction.get())) {
+            WLOGFE("Write transaction sync Id failed");
+            return WMError::WM_ERROR_IPC_FAILED;
+        }
+        rsTransaction->MarshallTransactionSyncController(data);
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(WindowMessage::TRANS_ID_UPDATE_OCCUPIED_AREA_AND_RECT),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
         return WMError::WM_ERROR_IPC_FAILED;
@@ -327,11 +385,11 @@ WMError WindowProxy::NotifyScreenshot()
     return WMError::WM_OK;
 }
 
-WMError WindowProxy::DumpInfo(const std::vector<std::string>& params, std::vector<std::string>& info)
+WMError WindowProxy::DumpInfo(const std::vector<std::string>& params)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
@@ -343,10 +401,6 @@ WMError WindowProxy::DumpInfo(const std::vector<std::string>& params, std::vecto
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowMessage::TRANS_ID_DUMP_INFO),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-    if (!reply.ReadStringVector(&info)) {
-        WLOGFE("Read info failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
     return WMError::WM_OK;
@@ -475,6 +529,26 @@ WMError WindowProxy::RestoreSplitWindowMode(uint32_t mode)
         return WMError::WM_ERROR_IPC_FAILED;
     }
     return WMError::WM_OK;
+}
+
+void WindowProxy::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent> event)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+    if (!event->WriteToParcel(data)) {
+        WLOGFE("Write point event failed");
+        return;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(WindowMessage::TRANS_ID_CONSUME_KEY_EVENT),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return;
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

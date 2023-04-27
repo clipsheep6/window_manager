@@ -109,6 +109,7 @@ public:
     sptr<DisplayGroupController> GetDisplayGroupController() const;
     sptr<WindowNode> GetRootNode(WindowRootNodeType type) const;
     void NotifyDockWindowStateChanged(sptr<WindowNode>& node, bool isEnable);
+    void NotifyDockWindowStateChanged(DisplayId displayId);
     void UpdateCameraFloatWindowStatus(const sptr<WindowNode>& node, bool isShowing);
     void UpdateAvoidAreaListener(sptr<WindowNode>& windowNode, bool haveAvoidAreaListener);
     void BeforeProcessWindowAvoidAreaChangeWhenDisplayChange() const;
@@ -128,6 +129,8 @@ public:
     static void SetMaxMainFloatingWindowNumber(uint32_t maxNumber);
     void SetDisplayOrientationFromWindow(sptr<WindowNode>& node, bool withAnimation);
     bool HasMainFullScreenWindowShown();
+    static bool GetAnimateTransactionEnabled();
+
 private:
     void TraverseWindowNode(sptr<WindowNode>& root, std::vector<sptr<WindowNode>>& windowNodes) const;
     sptr<WindowNode> FindRoot(WindowType type) const;
@@ -173,6 +176,7 @@ private:
         const WindowMode& dstMode, const WindowMode& srcMode);
     void ResetAllMainFloatingWindowZOrder(sptr<WindowNode>& rootNode);
     void HandleRemoveWindowDisplayOrientation(sptr<WindowNode>& node, bool fromAnimation);
+    void OpenInputMethodSyncTransaction();
 
     float displayBrightness_ = UNDEFINED_BRIGHTNESS;
     uint32_t brightnessWindow_ = INVALID_WINDOW_ID;
@@ -206,6 +210,7 @@ private:
     // if isFloatWindowHigher_ is true, FloatWindow should be above the full screen window.
     static bool isFloatWindowAboveFullWindow_;
     static uint32_t maxMainFloatingWindowNumber_;
+    static bool isAnimateTransactionEnabled_;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -51,6 +51,7 @@ public:
     virtual WMError ToggleShownStateForAllAppWindows();
     virtual WMError SetWindowLayoutMode(WindowLayoutMode mode);
     virtual WMError UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action);
+    virtual WMError SetWindowGravity(uint32_t windowId, WindowGravity gravity, uint32_t percent);
     virtual WMError GetSystemConfig(SystemConfig& systemConfig);
     virtual WMError GetModeChangeHotZones(DisplayId displayId, ModeChangeHotZones& hotZones);
     virtual WMError UpdateRsTree(uint32_t windowId, bool isAdd);
@@ -74,6 +75,11 @@ public:
     virtual void OffWindowZoom();
     virtual WmErrorCode RaiseToAppTop(uint32_t windowId);
     virtual std::shared_ptr<Media::PixelMap> GetSnapshot(int32_t windowId);
+    virtual WMError SetGestureNavigaionEnabled(bool enable);
+    virtual void DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event);
+    virtual void NotifyDumpInfoResult(const std::vector<std::string>& info);
+    virtual WMError GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
+        std::vector<sptr<RSWindowAnimationTarget>>& targets);
 private:
     static inline SingletonDelegator<WindowAdapter> delegator;
     bool InitWMSProxy();

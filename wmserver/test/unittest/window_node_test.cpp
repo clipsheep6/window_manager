@@ -52,7 +52,7 @@ void WindowNodeTest::TearDown()
 class WindowListener : public IWindow {
 public:
     virtual WMError UpdateWindowRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
-        const std::shared_ptr<RSTransaction> rsTransaction = nullptr) override
+        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override
     {
         return WMError::WM_OK;
     };
@@ -84,7 +84,13 @@ public:
     {
         return WMError::WM_OK;
     };
-    virtual WMError UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info) override
+    virtual WMError UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info,
+        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override
+    {
+        return WMError::WM_OK;
+    };
+    virtual WMError UpdateOccupiedAreaAndRect(const sptr<OccupiedAreaChangeInfo>& info, const Rect& rect,
+        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override
     {
         return WMError::WM_OK;
     };
@@ -104,7 +110,7 @@ public:
     {
         return WMError::WM_OK;
     };
-    virtual WMError DumpInfo(const std::vector<std::string>& params, std::vector<std::string>& info) override
+    virtual WMError DumpInfo(const std::vector<std::string>& params) override
     {
         return WMError::WM_OK;
     };
@@ -137,6 +143,7 @@ public:
     {
         return nullptr;
     };
+    void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent> event) override {}
 };
 
 sptr<WindowProperty> CreateWindowProperty(uint32_t windowId, const std::string& windowName)

@@ -70,6 +70,11 @@ public:
         TRANS_ID_OFF_WINDOW_ZOOM,
         TRANS_ID_RAISE_WINDOW_Z_ORDER,
         TRANS_ID_GET_SNAPSHOT,
+        TRANS_ID_GESTURE_NAVIGATION_ENABLED,
+        TRANS_ID_SET_WINDOW_GRAVITY,
+        TRANS_ID_DISPATCH_KEY_EVENT,
+        TRANS_ID_NOTIFY_DUMP_INFO_RESULT,
+        TRANS_ID_GET_WINDOW_ANIMATION_TARGETS,
     };
     virtual WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode,
@@ -89,6 +94,7 @@ public:
     virtual WMError SetWindowLayoutMode(WindowLayoutMode mode) = 0;
     virtual WMError UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action,
         bool isAsyncTask = false) = 0;
+    virtual WMError SetWindowGravity(uint32_t windowId, WindowGravity gravity, uint32_t percent) = 0;
     virtual WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) = 0;
     virtual WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
@@ -110,6 +116,11 @@ public:
     virtual void OffWindowZoom() = 0;
     virtual WmErrorCode RaiseToAppTop(uint32_t windowId) = 0;
     virtual std::shared_ptr<Media::PixelMap> GetSnapshot(int32_t windowId) = 0;
+    virtual WMError SetGestureNavigaionEnabled(bool enable) = 0;
+    virtual void DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event) = 0;
+    virtual void NotifyDumpInfoResult(const std::vector<std::string>& info) {};
+    virtual WMError GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
+        std::vector<sptr<RSWindowAnimationTarget>>& targets) = 0;
 };
 }
 }

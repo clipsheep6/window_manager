@@ -15,6 +15,7 @@
 
 // gtest
 #include <gtest/gtest.h>
+#include "display_manager_proxy.h"
 #include "wm_common.h"
 #include "window_test_utils.h"
 using namespace testing;
@@ -33,7 +34,8 @@ class TestOccupiedAreaChangeListener : public IOccupiedAreaChangeListener {
 public:
     OccupiedAreaType type_ = OccupiedAreaType::TYPE_INPUT;
     Rect rect_ = { 0, 0, 0, 0 };
-    void OnSizeChange(const sptr<OccupiedAreaChangeInfo>& info) override;
+    void OnSizeChange(const sptr<OccupiedAreaChangeInfo>& info,
+        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override;
 };
 
 class WindowOccupiedAreaChangeTest : public testing::Test {
@@ -50,7 +52,8 @@ public:
 sptr<TestOccupiedAreaChangeListener> WindowOccupiedAreaChangeTest::testOccupiedAreaChangeListener_ =
     new TestOccupiedAreaChangeListener();
 
-void TestOccupiedAreaChangeListener::OnSizeChange(const sptr<OccupiedAreaChangeInfo>& info)
+void TestOccupiedAreaChangeListener::OnSizeChange(const sptr<OccupiedAreaChangeInfo>& info,
+    const std::shared_ptr<RSTransaction>& rsTransaction)
 {
     WLOGI("OccupiedAreaChangeInfo: [%{public}u, {%{public}u, %{public}u}]",
         info->type_, info->rect_.width_, info->rect_.height_);

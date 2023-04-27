@@ -31,6 +31,7 @@ group("unittest") {
     ":wmserver_window_display_zoom_controller_test",
     ":wmserver_window_dumper_test",
     ":wmserver_window_freeze_controller_test",
+    ":wmserver_window_group_mgr_test",
     ":wmserver_window_inner_manager_test",
     ":wmserver_window_inner_window_test",
     ":wmserver_window_layout_policy_test",
@@ -66,7 +67,7 @@ test_external_deps = [
   "hisysevent_native:libhisysevent",
   "hitrace_native:hitrace_meter",
   "input:libmmi-client",
-  "ipc:ipc_core",
+  "ipc:ipc_single",
   "napi:ace_napi",
   "power_manager:powermgr_client",
   "safwk:system_ability_fwk",
@@ -78,12 +79,12 @@ test_public_deps = [
 ]
 
 test_inner_deps = [
+  "${window_base_path}/dm:libdm_static",
+  "${window_base_path}/utils:libwmutil_static",
+  "${window_base_path}/wm:libwm_static",
   "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-  "//foundation/window/window_manager/dm:libdm",
   "//foundation/window/window_manager/dmserver:libdms",
   "//foundation/window/window_manager/test/common/utils:libtestutil",
-  "//foundation/window/window_manager/utils:libwmutil",
-  "//foundation/window/window_manager/wm:libwm",
   "//foundation/window/window_manager/wmserver:libwms",
 ]
 
@@ -396,4 +397,14 @@ ohos_unittest("wmserver_window_manager_service_utils_test") {
   } else {
     external_deps += [ "init_lite:libbegetutil" ]
   }
+}
+
+ohos_unittest("wmserver_window_group_mgr_test") {
+  module_out_path = module_out_path
+  configs = test_public_config
+  sources = [ "window_group_mgr_test.cpp" ]
+
+  deps = test_inner_deps
+  public_deps = test_public_deps
+  external_deps = test_external_deps
 }

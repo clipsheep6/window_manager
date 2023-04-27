@@ -77,7 +77,11 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
     property_->SetWindowName(option->GetWindowName());
     property_->SetRequestRect(option->GetWindowRect());
     property_->SetWindowType(option->GetWindowType());
-    property_->SetWindowMode(option->GetWindowMode());
+    if (WindowHelper::IsAppFloatingWindow(option->GetWindowType())) {
+        property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+    } else {
+        property_->SetWindowMode(option->GetWindowMode());
+    }
     property_->SetFullScreen(option->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN);
     property_->SetFocusable(option->GetFocusable());
     property_->SetTouchable(option->GetTouchable());
@@ -383,6 +387,7 @@ WMError WindowImpl::SetWindowMode(WindowMode mode)
     } else if (state_ == WindowState::STATE_SHOWN) {
         WindowMode lastMode = property_->GetWindowMode();
         property_->SetWindowMode(mode);
+        UpdateDecorEnable();
         WMError ret = UpdateProperty(PropertyChangeAction::ACTION_UPDATE_MODE);
         if (ret != WMError::WM_OK) {
             property_->SetWindowMode(lastMode);
@@ -529,6 +534,9 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
     }
     // make uiContent available after Initialize/Restore
     uiContent_ = std::move(uiContent);
+    if (isIgnoreSafeAreaNeedNotify_) {
+        uiContent_->SetIgnoreViewSafeArea(isIgnoreSafeArea_);
+    }
     UpdateDecorEnable(true);
 
     if (state_ == WindowState::STATE_SHOWN) {
@@ -635,6 +643,7 @@ void WindowImpl::DumpInfo(const std::vector<std::string>& params, std::vector<st
     if (uiContent_ != nullptr) {
         uiContent_->DumpInfo(params, info);
     }
+    SingletonContainer::Get<WindowAdapter>().NotifyDumpInfoResult(info);
 }
 
 WMError WindowImpl::SetSystemBarProperty(WindowType type, const SystemBarProperty& property)
@@ -708,25 +717,40 @@ WMError WindowImpl::SetLayoutFullScreen(bool status)
         WLOGFE("invalid window or fullscreen mode is not be supported, winId:%{public}u", property_->GetWindowId());
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    WMError ret = SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    WMError ret = WMError::WM_OK;
+    uint32_t version = 0;
+    if ((context_ != nullptr) && (context_->GetApplicationInfo() != nullptr)) {
+        version = context_->GetApplicationInfo()->apiCompatibleVersion;
+    }
+    ret = SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
     if (ret != WMError::WM_OK) {
         WLOGFE("SetWindowMode errCode:%{public}d winId:%{public}u",
             static_cast<int32_t>(ret), property_->GetWindowId());
         return ret;
     }
-    if (status) {
-        ret = RemoveWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
-        if (ret != WMError::WM_OK) {
-            WLOGFE("RemoveWindowFlag errCode:%{public}d winId:%{public}u",
-                static_cast<int32_t>(ret), property_->GetWindowId());
-            return ret;
+    // 10 ArkUI new framework support after API10
+    if (version >= 10) {
+        if (uiContent_ != nullptr) {
+            uiContent_->SetIgnoreViewSafeArea(status);
+        } else {
+            isIgnoreSafeAreaNeedNotify_ = true;
+            isIgnoreSafeArea_ = status;
         }
     } else {
-        ret = AddWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
-        if (ret != WMError::WM_OK) {
-            WLOGFE("AddWindowFlag errCode:%{public}d winId:%{public}u",
-                static_cast<int32_t>(ret), property_->GetWindowId());
-            return ret;
+        if (status) {
+            ret = RemoveWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
+            if (ret != WMError::WM_OK) {
+                WLOGFE("RemoveWindowFlag errCode:%{public}d winId:%{public}u",
+                    static_cast<int32_t>(ret), property_->GetWindowId());
+                return ret;
+            }
+        } else {
+            ret = AddWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
+            if (ret != WMError::WM_OK) {
+                WLOGFE("AddWindowFlag errCode:%{public}d winId:%{public}u",
+                    static_cast<int32_t>(ret), property_->GetWindowId());
+                return ret;
+            }
         }
     }
     return ret;
@@ -938,6 +962,11 @@ void WindowImpl::SetSystemConfig()
             }
         }
     }
+}
+
+KeyboardAnimationConfig WindowImpl::GetKeyboardAnimationConfig()
+{
+    return windowSystemConfig_.keyboardAnimationConfig_;
 }
 
 WMError WindowImpl::WindowCreateCheck(uint32_t parentId)
@@ -1270,7 +1299,7 @@ void WindowImpl::AdjustWindowAnimationFlag(bool withAnimation)
     if (withAnimation && !isAppWindow && animationTransitionController_) {
         // use custom animation
         property_->SetAnimationFlag(static_cast<uint32_t>(WindowAnimation::CUSTOM));
-    } else if (isAppWindow || (withAnimation && !animationTransitionController_)) {
+    } else if ((isAppWindow && needDefaultAnimation_) || (withAnimation && !animationTransitionController_)) {
         // use default animation
         property_->SetAnimationFlag(static_cast<uint32_t>(WindowAnimation::DEFAULT));
     } else if (winType == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
@@ -1461,6 +1490,14 @@ WMError WindowImpl::Resize(uint32_t width, uint32_t height)
     return UpdateProperty(PropertyChangeAction::ACTION_UPDATE_RECT);
 }
 
+WMError WindowImpl::SetWindowGravity(WindowGravity gravity, uint32_t percent)
+{
+    WLOGFD("id:%{public}d SetWindowGravity %{public}u %{public}u",
+            property_->GetWindowId(), gravity, percent);
+
+    return SingletonContainer::Get<WindowAdapter>().SetWindowGravity(property_->GetWindowId(), gravity, percent);
+}
+
 WMError WindowImpl::SetKeepScreenOn(bool keepScreenOn)
 {
     if (!IsWindowValid()) {
@@ -1648,7 +1685,7 @@ std::string WindowImpl::TransferLifeCycleEventToString(LifeCycleEvent type) cons
 
 WMError WindowImpl::SetPrivacyMode(bool isPrivacyMode)
 {
-    WLOGFD("id : %{public}u, SetPrivacyMode", GetWindowId());
+    WLOGFD("id : %{public}u, SetPrivacyMode, %{public}u", GetWindowId(), isPrivacyMode);
     property_->SetPrivacyMode(isPrivacyMode);
     return UpdateProperty(PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE);
 }
@@ -1660,7 +1697,7 @@ bool WindowImpl::IsPrivacyMode() const
 
 void WindowImpl::SetSystemPrivacyMode(bool isSystemPrivacyMode)
 {
-    WLOGFD("id : %{public}u, SetSystemPrivacyMode", GetWindowId());
+    WLOGFD("id : %{public}u, SetSystemPrivacyMode, %{public}u", GetWindowId(), isSystemPrivacyMode);
     property_->SetSystemPrivacyMode(isSystemPrivacyMode);
     UpdateProperty(PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE);
 }
@@ -2076,7 +2113,7 @@ void WindowImpl::SetModeSupportInfo(uint32_t modeSupportInfo)
 }
 
 void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
-    const std::shared_ptr<RSTransaction> rsTransaction)
+    const std::shared_ptr<RSTransaction>& rsTransaction)
 {
     if (state_ == WindowState::STATE_DESTROYED) {
         WLOGFW("invalid window state");
@@ -2196,6 +2233,12 @@ void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
         } else {
             WLOGFE("There is no key event consumer");
         }
+    }
+    if (GetType() == WindowType::WINDOW_TYPE_APP_COMPONENT) {
+        WLOGFI("DispatchKeyEvent: %{public}u", GetWindowId());
+        SingletonContainer::Get<WindowAdapter>().DispatchKeyEvent(GetWindowId(), keyEvent);
+        keyEvent->MarkProcessed();
+        return;
     }
 }
 
@@ -2642,7 +2685,7 @@ void WindowImpl::UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType
 }
 
 void WindowImpl::UpdateViewportConfig(const Rect& rect, const sptr<Display>& display, WindowSizeChangeReason reason,
-    const std::shared_ptr<RSTransaction> rsTransaction)
+    const std::shared_ptr<RSTransaction>& rsTransaction)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (uiContent_ == nullptr) {
@@ -2801,7 +2844,6 @@ WmErrorCode WindowImpl::UpdateWindowStateWhenHide()
 
 WmErrorCode WindowImpl::UpdateSubWindowStateAndNotify(uint32_t parentId)
 {
-    sptr<WindowProperty> property = GetWindowProperty();
     if (subWindowMap_.find(parentId) == subWindowMap_.end()) {
         WLOGFD("main window: %{public}u has no child node", parentId);
         return WmErrorCode::WM_OK;
@@ -2837,9 +2879,6 @@ WmErrorCode WindowImpl::UpdateSubWindowStateAndNotify(uint32_t parentId)
 
 sptr<WindowProperty> WindowImpl::GetWindowProperty()
 {
-    if (!IsWindowValid()) {
-        return nullptr;
-    }
     return property_;
 }
 
@@ -2877,10 +2916,11 @@ void WindowImpl::UpdateDisplayId(DisplayId from, DisplayId to)
     property_->SetDisplayId(to);
 }
 
-void WindowImpl::UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info)
+void WindowImpl::UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeInfo>& info,
+    const std::shared_ptr<RSTransaction>& rsTransaction)
 {
     WLOGFD("Update OccupiedArea, id: %{public}u", property_->GetWindowId());
-    NotifyOccupiedAreaChange(info);
+    NotifyOccupiedAreaChange(info, rsTransaction);
 }
 
 void WindowImpl::UpdateActiveStatus(bool isActive)
@@ -2984,7 +3024,7 @@ void WindowImpl::ClearListenersById(uint32_t winId)
 }
 
 void WindowImpl::NotifySizeChange(Rect rect, WindowSizeChangeReason reason,
-    const std::shared_ptr<RSTransaction> rsTransaction)
+    const std::shared_ptr<RSTransaction>& rsTransaction)
 {
     auto windowChangeListeners = GetListeners<IWindowChangeListener>();
     for (auto& listener : windowChangeListeners) {
@@ -3024,12 +3064,13 @@ void WindowImpl::NotifyModeChange(WindowMode mode, bool hasDeco)
     }
 }
 
-void WindowImpl::NotifyOccupiedAreaChange(const sptr<OccupiedAreaChangeInfo>& info)
+void WindowImpl::NotifyOccupiedAreaChange(const sptr<OccupiedAreaChangeInfo>& info,
+    const std::shared_ptr<RSTransaction>& rsTransaction)
 {
     auto occupiedAreaChangeListeners = GetListeners<IOccupiedAreaChangeListener>();
     for (auto& listener : occupiedAreaChangeListeners) {
         if (listener.GetRefPtr() != nullptr) {
-            listener.GetRefPtr()->OnSizeChange(info);
+            listener.GetRefPtr()->OnSizeChange(info, rsTransaction);
         }
     }
 }
@@ -3364,6 +3405,11 @@ bool WindowImpl::IsAllowHaveSystemSubWindow()
         return false;
     }
     return true;
+}
+
+void WindowImpl::SetNeedDefaultAnimation(bool needDefaultAnimation)
+{
+    needDefaultAnimation_= needDefaultAnimation;
 }
 } // namespace Rosen
 } // namespace OHOS

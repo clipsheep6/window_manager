@@ -97,6 +97,7 @@ public:
     virtual WMError Hide(uint32_t reason = 0, bool withAnimation = false, bool isFromInnerkits = true) override;
     virtual WMError MoveTo(int32_t x, int32_t y) override;
     virtual WMError Resize(uint32_t width, uint32_t height) override;
+    virtual WMError SetWindowGravity(WindowGravity gravity, uint32_t percent) override;
     virtual WMError SetKeepScreenOn(bool keepScreenOn) override;
     virtual bool IsKeepScreenOn() const override;
     virtual WMError SetTurnScreenOn(bool turnScreenOn) override;
@@ -192,7 +193,9 @@ public:
     WmErrorCode RaiseToAppTop() override;
     virtual WMError SetAspectRatio(float ratio) override;
     virtual WMError ResetAspectRatio() override;
+    virtual KeyboardAnimationConfig GetKeyboardAnimationConfig() override;
 
+    virtual void SetNeedDefaultAnimation(bool needDefaultAnimation) override;
 private:
     static std::map<std::string, std::pair<uint32_t, sptr<Window>>> windowMap_;
     static std::map<uint32_t, std::vector<sptr<WindowImpl>>> subWindowMap_;
@@ -200,6 +203,7 @@ private:
     WindowState state_ { WindowState::STATE_INITIAL };
     std::string name_;
     std::unique_ptr<Ace::UIContent> uiContent_;
+    KeyboardAnimationConfig keyboardAnimationConfig_;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -99,8 +99,14 @@ int WindowManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
             NotifyWaterMarkFlagChangedResult(showWaterMark);
             break;
         }
-        default:
+        case WindowManagerAgentMsg::TRANS_ID_UPDATE_GESTURE_NAVIGATION_ENABLED: {
+            bool enbale = data.ReadBool();
+            NotifyGestureNavigationEnabledResult(enbale);
             break;
+        }
+        default:
+            WLOGFW("unknown transaction code %{public}d", code);
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     return 0;
 }

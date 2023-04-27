@@ -55,11 +55,13 @@ ohos_static_library("ws_unittest_common") {
     "//third_party/googletest:gtest_main",
   ]
 
+  public_deps = [ "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client" ]
+
   external_deps = [
     "ability_base:configuration",
     "ability_base:want",
     "c_utils:utils",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
   ]
 
   part_name = "window_manager"

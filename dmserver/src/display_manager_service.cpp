@@ -291,7 +291,7 @@ bool DisplayManagerService::SetRotationFromWindow(ScreenId screenId, Rotation ta
     return abstractScreenController_->SetRotation(screenId, targetRotation, true, withAnimation);
 }
 
-std::shared_ptr<Media::PixelMap> DisplayManagerService::GetDisplaySnapshot(DisplayId displayId)
+std::shared_ptr<Media::PixelMap> DisplayManagerService::GetDisplaySnapshot(DisplayId displayId, DmErrorCode* errorCode)
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:GetDisplaySnapshot(%" PRIu64")", displayId);
     if (Permission::CheckCallingPermission(SCREEN_CAPTURE_PERMISSION) ||
@@ -301,6 +301,8 @@ std::shared_ptr<Media::PixelMap> DisplayManagerService::GetDisplaySnapshot(Displ
             NotifyScreenshot(displayId);
         }
         return res;
+    } else if (errorCode) {
+        *errorCode = DmErrorCode::DM_ERROR_NO_PERMISSION;
     }
     return nullptr;
 }
@@ -397,6 +399,7 @@ bool DisplayManagerService::WakeUpBegin(PowerStateChangeReason reason)
 
 bool DisplayManagerService::WakeUpEnd()
 {
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:WakeUpEnd");
     if (!Permission::IsSystemServiceCalling()) {
         WLOGFE("wake up end permission denied!");
         return false;
@@ -419,6 +422,7 @@ bool DisplayManagerService::SuspendBegin(PowerStateChangeReason reason)
 
 bool DisplayManagerService::SuspendEnd()
 {
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SuspendEnd");
     if (!Permission::IsSystemServiceCalling()) {
         WLOGFE("suspend end permission denied!");
         return false;

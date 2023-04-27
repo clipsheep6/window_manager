@@ -26,6 +26,7 @@
 #include <power_mgr_client.h>
 #include <transaction/rs_interfaces.h>
 #include <transaction/rs_transaction.h>
+#include <transaction/rs_sync_transaction_controller.h>
 
 #include "common_event_manager.h"
 #include "dm_common.h"
@@ -57,6 +58,7 @@ namespace {
 AnimationConfig WindowNodeContainer::animationConfig_;
 bool WindowNodeContainer::isFloatWindowAboveFullWindow_ = false;
 uint32_t WindowNodeContainer::maxMainFloatingWindowNumber_ = 100;
+bool WindowNodeContainer::isAnimateTransactionEnabled_ = false;
 
 WindowNodeContainer::WindowNodeContainer(const sptr<DisplayInfo>& displayInfo, ScreenId displayGroupId)
 {
@@ -86,6 +88,7 @@ WindowNodeContainer::WindowNodeContainer(const sptr<DisplayInfo>& displayInfo, S
     avoidController_ = new AvoidAreaController(focusedWindow_);
     WindowInnerManager::GetInstance().NotifyDisplayLimitRectChange(
         DisplayGroupInfo::GetInstance().GetAllDisplayRects());
+    isAnimateTransactionEnabled_ = system::GetParameter("persist.window.animateTransaction.enabled", "0")  == "1";
 }
 
 WindowNodeContainer::~WindowNodeContainer()
@@ -721,6 +724,25 @@ bool WindowNodeContainer::AddAppSurfaceNodeOnRSTree(sptr<WindowNode>& node)
     return true;
 }
 
+void WindowNodeContainer::OpenInputMethodSyncTransaction()
+{
+    if (!isAnimateTransactionEnabled_) {
+        WLOGD("InputMethodSyncTransaction is not enabled");
+        return;
+    }
+    // Before open transaction, it must flush first.
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (!transactionProxy) {
+        return;
+    }
+    transactionProxy->FlushImplicitTransaction();
+    auto syncTransactionController = RSSyncTransactionController::GetInstance();
+    if (syncTransactionController) {
+        syncTransactionController->OpenSyncTransaction();
+    }
+    WLOGD("OpenInputMethodSyncTransaction");
+}
+
 bool WindowNodeContainer::AddNodeOnRSTree(sptr<WindowNode>& node, DisplayId displayId, DisplayId parentDisplayId,
     WindowUpdateType type, bool animationPlayed)
 {
@@ -754,6 +776,9 @@ bool WindowNodeContainer::AddNodeOnRSTree(sptr<WindowNode>& node, DisplayId disp
         return true;
     }
 
+    WindowGravity windowGravity;
+    uint32_t percent;
+    node->GetWindowGravity(windowGravity, percent);
     if (node->EnableDefaultAnimation(animationPlayed)) {
         WLOGFD("Add node with animation");
         StartTraceArgs(HITRACE_TAG_WINDOW_MANAGER, "Animate(%u)", node->GetWindowId());
@@ -761,8 +786,10 @@ bool WindowNodeContainer::AddNodeOnRSTree(sptr<WindowNode>& node, DisplayId disp
             animationConfig_.windowAnimationConfig_.animationTiming_.timingCurve_, updateRSTreeFunc);
         FinishTrace(HITRACE_TAG_WINDOW_MANAGER);
     } else if (node->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT &&
+        windowGravity != WindowGravity::WINDOW_GRAVITY_FLOAT &&
         !animationPlayed) { // add keyboard with animation
         auto timingProtocol = animationConfig_.keyboardAnimationConfig_.durationIn_;
+        OpenInputMethodSyncTransaction();
         RSNode::Animate(timingProtocol, animationConfig_.keyboardAnimationConfig_.curve_, updateRSTreeFunc);
     } else {
         WLOGFD("add node without animation");
@@ -800,6 +827,9 @@ bool WindowNodeContainer::RemoveNodeFromRSTree(sptr<WindowNode>& node, DisplayId
         return true;
     }
 
+    WindowGravity windowGravity;
+    uint32_t percent;
+    node->GetWindowGravity(windowGravity, percent);
     if (node->EnableDefaultAnimation(animationPlayed)) {
         WLOGFD("remove with animation");
         StartTraceArgs(HITRACE_TAG_WINDOW_MANAGER, "Animate(%u)", node->GetWindowId());
@@ -816,11 +846,12 @@ bool WindowNodeContainer::RemoveNodeFromRSTree(sptr<WindowNode>& node, DisplayId
         });
         FinishTrace(HITRACE_TAG_WINDOW_MANAGER);
     } else if (node->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT &&
-        !animationPlayed) { // remove keyboard with animation
+        windowGravity != WindowGravity::WINDOW_GRAVITY_FLOAT && !animationPlayed) {
+        // remove keyboard with animation
+        OpenInputMethodSyncTransaction();
         auto timingProtocol = animationConfig_.keyboardAnimationConfig_.durationOut_;
         RSNode::Animate(timingProtocol, animationConfig_.keyboardAnimationConfig_.curve_, updateRSTreeFunc);
     } else {
-        WLOGFD("remove without animation");
         updateRSTreeFunc();
     }
     return true;
@@ -1289,12 +1320,21 @@ void WindowNodeContainer::NotifyIfKeyboardRegionChanged(const sptr<WindowNode>& 
             overlapRect = WindowHelper::GetOverlap(keyRect, callingRect, callingRect.posX_, callingRect.posY_);
         }
 
-        WLOGD("keyboard size change callingWindow: [%{public}s, %{public}u], " \
-        "overlap rect: [%{public}d, %{public}d, %{public}u, %{public}u]",
+        sptr<OccupiedAreaChangeInfo> info = new OccupiedAreaChangeInfo(OccupiedAreaType::TYPE_INPUT, overlapRect);
+        if (isAnimateTransactionEnabled_) {
+            auto syncTransactionController = RSSyncTransactionController::GetInstance();
+            if (syncTransactionController) {
+                callingWindow->GetWindowToken()->UpdateOccupiedAreaChangeInfo(info,
+                    syncTransactionController->GetRSTransaction());
+            }
+        } else {
+            callingWindow->GetWindowToken()->UpdateOccupiedAreaChangeInfo(info);
+        }
+
+        WLOGD("keyboard size change callingWindow: [%{public}s, %{public}u], "
+            "overlap rect: [%{public}d, %{public}d, %{public}u, %{public}u]",
             callingWindow->GetWindowName().c_str(), callingWindow->GetWindowId(),
             overlapRect.posX_, overlapRect.posY_, overlapRect.width_, overlapRect.height_);
-        sptr<OccupiedAreaChangeInfo> info = new OccupiedAreaChangeInfo(OccupiedAreaType::TYPE_INPUT, overlapRect);
-        callingWindow->GetWindowToken()->UpdateOccupiedAreaChangeInfo(info);
         return;
     }
     WLOGFE("does not have correct callingWindowMode for input method window");
@@ -1346,6 +1386,28 @@ void WindowNodeContainer::NotifyDockWindowStateChanged(sptr<WindowNode>& node, b
     SystemBarRegionTints tints;
     tints.push_back(tint);
     WindowManagerAgentController::GetInstance().UpdateSystemBarRegionTints(node->GetDisplayId(), tints);
+}
+
+void WindowNodeContainer::NotifyDockWindowStateChanged(DisplayId displayId)
+{
+    HITRACE_METER(HITRACE_TAG_WINDOW_MANAGER);
+    bool isEnable = true;
+    for (auto& windowNode : appWindowNode_->children_) {
+        if (WindowHelper::IsSplitWindowMode(windowNode->GetWindowMode()) ||
+            WindowHelper::IsFullScreenWindow(windowNode->GetWindowMode())) {
+            isEnable = false;
+            break;
+        }
+    }
+    WLOGFD("[Immersive] display %{public}" PRIu64" begin isEnable: %{public}d", displayId, isEnable);
+    SystemBarProperty prop;
+    prop.enable_ = isEnable;
+    SystemBarRegionTint tint;
+    tint.type_ = WindowType::WINDOW_TYPE_LAUNCHER_DOCK;
+    tint.prop_ = prop;
+    SystemBarRegionTints tints;
+    tints.push_back(tint);
+    WindowManagerAgentController::GetInstance().UpdateSystemBarRegionTints(displayId, tints);
 }
 
 void WindowNodeContainer::UpdateAvoidAreaListener(sptr<WindowNode>& windowNode, bool haveAvoidAreaListener)
@@ -2029,6 +2091,7 @@ WMError WindowNodeContainer::SwitchLayoutPolicy(WindowLayoutMode dstMode, Displa
         DumpScreenWindowTree();
     }
     NotifyIfSystemBarTintChanged(displayId);
+    NotifyDockWindowStateChanged(displayId);
     return WMError::WM_OK;
 }
 
@@ -2053,13 +2116,35 @@ void WindowNodeContainer::UpdateModeSupportInfoWhenKeyguardChange(const sptr<Win
 
 void WindowNodeContainer::RaiseInputMethodWindowPriorityIfNeeded(const sptr<WindowNode>& node) const
 {
-    if (node->GetWindowType() != WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT || !isScreenLocked_) {
+    if (node->GetWindowType() != WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
         return;
     }
 
-    node->priority_ = zorderPolicy_->GetWindowPriority(
-        WindowType::WINDOW_TYPE_KEYGUARD) + 2; // 2: higher than keyguard and show when locked window
-    WLOGD("raise input method float window priority.");
+    if (isScreenLocked_) {
+        node->priority_ = zorderPolicy_->GetWindowPriority(
+            WindowType::WINDOW_TYPE_KEYGUARD) + 2; // 2: higher than keyguard and show when locked window
+        WLOGD("Raise input method float window priority when screen locked.");
+        return;
+    }
+
+    auto callingWindowId = node->GetCallingWindow();
+    auto callingWindow = FindWindowNodeById(callingWindowId);
+    if (callingWindowId == focusedWindow_ && callingWindow != nullptr) {
+        auto callingWindowType = callingWindow->GetWindowType();
+        auto callingWindowPriority = zorderPolicy_->GetWindowPriority(callingWindowType);
+        auto inputMethodPriority = zorderPolicy_->GetWindowPriority(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
+
+        node->priority_ = (inputMethodPriority < callingWindowPriority) ?
+            (callingWindowPriority + 1) : inputMethodPriority;
+        WLOGFD("Reset input method float window priority to %{public}d.", node->priority_);
+        return;
+    }
+
+    auto focusWindow = FindWindowNodeById(focusedWindow_);
+    if (focusWindow != nullptr && focusWindow->GetWindowType() == WindowType::WINDOW_TYPE_PANEL) {
+        node->priority_ = zorderPolicy_->GetWindowPriority(WindowType::WINDOW_TYPE_PANEL) + 1;
+        WLOGFD("The input method float window should be higher than panel");
+    }
 }
 
 void WindowNodeContainer::ReZOrderShowWhenLockedWindows(bool up)
@@ -2430,6 +2515,11 @@ void WindowNodeContainer::ClearWindowPairSnapshot(DisplayId displayId)
 bool WindowNodeContainer::IsScreenLocked()
 {
     return isScreenLocked_;
+}
+
+bool WindowNodeContainer::GetAnimateTransactionEnabled()
+{
+    return isAnimateTransactionEnabled_;
 }
 } // namespace Rosen
 } // namespace OHOS

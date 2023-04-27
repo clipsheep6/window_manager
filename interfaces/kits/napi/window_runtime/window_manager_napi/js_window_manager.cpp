@@ -114,6 +114,12 @@ NativeValue* JsWindowManager::SetWindowLayoutMode(NativeEngine* engine, NativeCa
     return (me != nullptr) ? me->OnSetWindowLayoutMode(*engine, *info) : nullptr;
 }
 
+NativeValue* JsWindowManager::SetGestureNavigationEnabled(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    JsWindowManager* me = CheckParamsAndGetThis<JsWindowManager>(engine, info);
+    return (me != nullptr) ? me->OnSetGestureNavigationEnabled(*engine, *info) : nullptr;
+}
+
 static void GetNativeContext(NativeEngine& engine, NativeValue* nativeContext, void*& contextPtr, WMError& errCode)
 {
     AppExecFwk::Ability* ability = nullptr;
@@ -701,16 +707,18 @@ NativeValue* JsWindowManager::OnUnregisterWindowManagerCallback(NativeEngine& en
     return engine.CreateUndefined();
 }
 
-static void GetTopWindowTask(void* contextPtr, NativeEngine& engine, AsyncTask& task)
+static void GetTopWindowTask(void* contextPtr, NativeEngine& engine, AsyncTask& task, bool newApi)
 {
     std::string windowName;
     sptr<Window> window = nullptr;
     AppExecFwk::Ability* ability = nullptr;
     bool isOldApi = GetAPI7Ability(engine, ability);
+    int32_t error = static_cast<int32_t>(WMError::WM_OK);
     if (isOldApi) {
         if (ability->GetWindow() == nullptr) {
-            task.Reject(engine, CreateJsError(engine,
-                static_cast<int32_t>(WMError::WM_ERROR_NULLPTR), "FA mode can not get ability window"));
+            error = newApi ? static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY) :
+                static_cast<int32_t>(WMError::WM_ERROR_NULLPTR);
+            task.Reject(engine, CreateJsError(engine, error, "FA mode can not get ability window"));
             WLOGE("FA mode can not get ability window");
             return;
         }
@@ -718,16 +726,18 @@ static void GetTopWindowTask(void* contextPtr, NativeEngine& engine, AsyncTask& 
     } else {
         auto context = static_cast<std::weak_ptr<AbilityRuntime::Context>*>(contextPtr);
         if (contextPtr == nullptr || context == nullptr) {
-            task.Reject(engine, CreateJsError(engine,
-                static_cast<int32_t>(WMError::WM_ERROR_NULLPTR), "Stage mode without context"));
+            error = newApi ? static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY) :
+                static_cast<int32_t>(WMError::WM_ERROR_NULLPTR);
+            task.Reject(engine, CreateJsError(engine, error, "Stage mode without context"));
             WLOGFE("Stage mode without context");
             return;
         }
         window = Window::GetTopWindowWithContext(context->lock());
     }
     if (window == nullptr) {
-        task.Reject(engine, CreateJsError(engine,
-            static_cast<int32_t>(WMError::WM_ERROR_NULLPTR), "Get top window failed"));
+            error = newApi ? static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY) :
+                static_cast<int32_t>(WMError::WM_ERROR_NULLPTR);
+        task.Reject(engine, CreateJsError(engine, error, "Get top window failed"));
         WLOGFE("Get top window failed");
         return;
     }
@@ -771,7 +781,7 @@ NativeValue* JsWindowManager::OnGetTopWindow(NativeEngine& engine, NativeCallbac
                 task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(errCode), "Invalidate params"));
                 return;
             }
-            return GetTopWindowTask(contextPtr, engine, task);
+            return GetTopWindowTask(contextPtr, engine, task, false);
         };
     NativeValue* result = nullptr;
     AsyncTask::Schedule("JsWindowManager::OnGetTopWindow",
@@ -802,30 +812,7 @@ NativeValue* JsWindowManager::OnGetLastWindow(NativeEngine& engine, NativeCallba
 
     AsyncTask::CompleteCallback complete =
         [=](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            std::string windowName;
-            sptr<Window> window = nullptr;
-            auto context = static_cast<std::weak_ptr<AbilityRuntime::Context>*>(contextPtr);
-            if (contextPtr == nullptr || context == nullptr) {
-                task.Reject(engine, CreateJsError(engine,
-                    static_cast<int32_t>(WmErrorCode::WM_ERROR_CONTEXT_ABNORMALLY),
-                    "Stage mode without context"));
-                return;
-            }
-            window = Window::GetTopWindowWithContext(context->lock());
-            if (window == nullptr) {
-                task.Reject(engine, CreateJsError(engine,
-                    static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY),
-                    "Get top window failed"));
-                return;
-            }
-            windowName = window->GetWindowName();
-            std::shared_ptr<NativeReference> jsWindowObj = FindJsWindowObject(windowName);
-            if (jsWindowObj != nullptr && jsWindowObj->Get() != nullptr) {
-                task.Resolve(engine, jsWindowObj->Get());
-            } else {
-                task.Resolve(engine, CreateJsWindowObject(engine, window));
-            }
-            WLOGI("Get top window %{public}s success", windowName.c_str());
+            return GetTopWindowTask(contextPtr, engine, task, true);
         };
     NativeValue* result = nullptr;
     AsyncTask::Schedule("JsWindowManager::OnGetTopWindow",
@@ -882,6 +869,46 @@ NativeValue* JsWindowManager::OnSetWindowLayoutMode(NativeEngine& engine, Native
     return result;
 }
 
+NativeValue* JsWindowManager::OnSetGestureNavigationEnabled(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    WLOGFD("OnSetGestureNavigationEnabled");
+    if (info.argc < 1) { // 1: minimum params num
+        WLOGFE("Argc is invalid: %{public}zu", info.argc);
+        engine.Throw(CreateJsError(engine, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
+        return engine.CreateUndefined();
+    }
+
+    NativeBoolean* nativeBool = ConvertNativeValueTo<NativeBoolean>(info.argv[0]);
+    if (nativeBool == nullptr) {
+        WLOGFE("Failed to convert parameter to bool");
+        engine.Throw(CreateJsError(engine, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
+        return engine.CreateUndefined();
+    }
+    bool gestureNavigationEnable = static_cast<bool>(*nativeBool);
+
+    WLOGI("Set gesture navigation enable as %{public}d", gestureNavigationEnable);
+    AsyncTask::CompleteCallback complete =
+        [gestureNavigationEnable](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(
+                SingletonContainer::Get<WindowManager>().SetGestureNavigaionEnabled(gestureNavigationEnable));
+            if (ret == WmErrorCode::WM_OK) {
+                task.Resolve(engine, engine.CreateUndefined());
+                WLOGD("SetGestureNavigationEnabled success");
+            } else {
+                task.Reject(engine, CreateJsError(engine,
+                    static_cast<int32_t>(ret), "SetGestureNavigationEnabled failed"));
+            }
+        };
+    // 1: maximum params num; 1: index of callback
+    NativeValue* lastParam = (info.argc <= 1) ? nullptr :
+        ((info.argv[1] != nullptr && info.argv[1]->TypeOf() == NATIVE_FUNCTION) ?
+        info.argv[1] : nullptr);
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule("JsWindowManager::OnSetGestureNavigationEnabled",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
 NativeValue* JsWindowManagerInit(NativeEngine* engine, NativeValue* exportObj)
 {
     WLOGFD("JsWindowManagerInit");
@@ -923,6 +950,8 @@ NativeValue* JsWindowManagerInit(NativeEngine* engine, NativeValue* exportObj)
     BindNativeFunction(*engine, *object, "toggleShownStateForAllAppWindows", moduleName,
         JsWindowManager::ToggleShownStateForAllAppWindows);
     BindNativeFunction(*engine, *object, "setWindowLayoutMode", moduleName, JsWindowManager::SetWindowLayoutMode);
+    BindNativeFunction(*engine, *object, "setGestureNavigationEnabled", moduleName,
+        JsWindowManager::SetGestureNavigationEnabled);
     return engine->CreateUndefined();
 }
 }  // namespace Rosen

@@ -73,6 +73,7 @@ WindowManagerService::WindowManagerService() : SystemAbility(WINDOW_MANAGER_SERV
     runner_ = AppExecFwk::EventRunner::Create(name_);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
     snapshotController_ = new SnapshotController(windowRoot_, handler_);
+    windowGroupMgr_ = new WindowGroupMgr(windowRoot_);
     int ret = HiviewDFX::Watchdog::GetInstance().AddThread(name_, handler_);
     if (ret != 0) {
         WLOGFE("Add watchdog thread failed");
@@ -161,7 +162,7 @@ void WindowManagerService::OnAccountSwitched(int accountId)
 
 void WindowManagerService::WindowVisibilityChangeCallback(std::shared_ptr<RSOcclusionData> occlusionData)
 {
-    WLOGFD("NotifyWindowVisibilityChange: enter");
+    WLOGI("NotifyWindowVisibilityChange: enter");
     std::weak_ptr<RSOcclusionData> weak(occlusionData);
     PostVoidSyncTask([this, weak]() {
         auto weakOcclusionData = weak.lock();
@@ -247,6 +248,20 @@ void WindowManagerServiceHandler::CancelStartingWindow(sptr<IRemoteObject> abili
 {
     WLOGI("WindowManagerServiceHandler CancelStartingWindow!");
     WindowManagerService::GetInstance().CancelStartingWindow(abilityToken);
+}
+
+int32_t WindowManagerServiceHandler::MoveMissionsToForeground(const std::vector<int32_t>& missionIds,
+    int32_t topMissionId)
+{
+    WLOGD("WindowManagerServiceHandler MoveMissionsToForeground!");
+    return static_cast<int32_t>(WindowManagerService::GetInstance().MoveMissionsToForeground(missionIds, topMissionId));
+}
+
+int32_t WindowManagerServiceHandler::MoveMissionsToBackground(const std::vector<int32_t>& missionIds,
+    std::vector<int32_t>& result)
+{
+    WLOGD("WindowManagerServiceHandler MoveMissionsToBackground!");
+    return static_cast<int32_t>(WindowManagerService::GetInstance().MoveMissionsToBackground(missionIds, result));
 }
 
 bool WindowManagerService::Init()
@@ -366,6 +381,13 @@ void WindowManagerService::ConfigureWindowManagerService()
             WindowNodeContainer::SetMaxMainFloatingWindowNumber(static_cast<uint32_t>(numbers[0]));
         }
     }
+    item = config["maxFloatingWindowSize"];
+    if (item.IsInts()) {
+        auto numbers = *item.intsValue_;
+        if (numbers.size() == 1 && numbers[0] > 0) {
+            WindowLayoutPolicy::SetMaxFloatingWindowSize(static_cast<uint32_t>(numbers[0]));
+        }
+    }
 }
 
 void WindowManagerService::ConfigHotZones(const std::vector<int>& numbers)
@@ -464,22 +486,22 @@ void WindowManagerService::ConfigKeyboardAnimation(const WindowManagerConfig::Co
     auto& animationConfig = WindowNodeContainer::GetAnimationConfigRef();
     WindowManagerConfig::ConfigItem item = animeConfig["timing"];
     if (item.IsMap() && item.mapValue_->count("curve")) {
-        animationConfig.keyboardAnimationConfig_.curve_ = CreateCurve(item["curve"]);
+        animationConfig.keyboardAnimationConfig_.curve_ = CreateCurve(item["curve"], true);
     }
     item = animeConfig["timing"]["durationIn"];
     if (item.IsInts()) {
         auto numbers = *item.intsValue_;
         if (numbers.size() == 1) { // duration
-            animationConfig.keyboardAnimationConfig_.durationIn_ =
-                RSAnimationTimingProtocol(numbers[0]);
+            animationConfig.keyboardAnimationConfig_.durationIn_ = RSAnimationTimingProtocol(numbers[0]);
+            systemConfig_.keyboardAnimationConfig_.durationIn_ = numbers[0];
         }
     }
     item = animeConfig["timing"]["durationOut"];
     if (item.IsInts()) {
         auto numbers = *item.intsValue_;
         if (numbers.size() == 1) { // duration
-            animationConfig.keyboardAnimationConfig_.durationOut_ =
-                RSAnimationTimingProtocol(numbers[0]);
+            animationConfig.keyboardAnimationConfig_.durationOut_ = RSAnimationTimingProtocol(numbers[0]);
+            systemConfig_.keyboardAnimationConfig_.durationOut_ = numbers[0];
         }
     }
 }
@@ -624,37 +646,50 @@ void WindowManagerService::ConfigWindowEffect(const WindowManagerConfig::ConfigI
     WindowSystemEffect::SetWindowSystemEffectConfig(systemEffectConfig);
 }
 
-RSAnimationTimingCurve WindowManagerService::CreateCurve(const WindowManagerConfig::ConfigItem& curveConfig)
+RSAnimationTimingCurve WindowManagerService::CreateCurve(const WindowManagerConfig::ConfigItem& curveConfig,
+    bool isForKeyboard)
 {
+    static std::map<std::string, RSAnimationTimingCurve> curveMap = {
+        { "easeOut",           RSAnimationTimingCurve::EASE_OUT },
+        { "ease",              RSAnimationTimingCurve::EASE },
+        { "easeIn",            RSAnimationTimingCurve::EASE_IN },
+        { "easeOut",           RSAnimationTimingCurve::EASE_IN_OUT },
+        { "default",           RSAnimationTimingCurve::DEFAULT },
+        { "linear",            RSAnimationTimingCurve::LINEAR },
+        { "spring",            RSAnimationTimingCurve::SPRING },
+        { "interactiveSpring", RSAnimationTimingCurve::INTERACTIVE_SPRING }
+    };
+
+    RSAnimationTimingCurve curve = RSAnimationTimingCurve::EASE_OUT;
+    std::string keyboardCurveName = "easeOut";
+    std::vector<float> keyboardCurveParams = {};
+
     const auto& nameItem = curveConfig.GetProp("name");
     if (nameItem.IsString()) {
         std::string name = nameItem.stringValue_;
-        if (name == "easeOut") {
-            return RSAnimationTimingCurve::EASE_OUT;
-        } else if (name == "ease") {
-            return RSAnimationTimingCurve::EASE;
-        } else if (name == "easeIn") {
-            return RSAnimationTimingCurve::EASE_IN;
-        } else if (name == "easeInOut") {
-            return RSAnimationTimingCurve::EASE_IN_OUT;
-        } else if (name == "default") {
-            return RSAnimationTimingCurve::DEFAULT;
-        } else if (name == "linear") {
-            return RSAnimationTimingCurve::LINEAR;
-        } else if (name == "spring") {
-            return RSAnimationTimingCurve::SPRING;
-        } else if (name == "interactiveSpring") {
-            return RSAnimationTimingCurve::INTERACTIVE_SPRING;
-        } else if (name == "cubic" && curveConfig.IsFloats() &&
+        if (name == "cubic" && curveConfig.IsFloats() &&
             curveConfig.floatsValue_->size() == 4) { // 4 curve parameter
             const auto& numbers = *curveConfig.floatsValue_;
-            return RSAnimationTimingCurve::CreateCubicCurve(numbers[0], // 0 ctrlX1
-                numbers[1], // 1 ctrlY1
-                numbers[2], // 2 ctrlX2
+            keyboardCurveName = name;
+            keyboardCurveParams.assign(numbers.begin(), numbers.end());
+            curve = RSAnimationTimingCurve::CreateCubicCurve(numbers[0], // 0 ctrlX1
+                numbers[1],  // 1 ctrlY1
+                numbers[2],  // 2 ctrlX2
                 numbers[3]); // 3 ctrlY2
+        } else {
+            auto iter = curveMap.find(name);
+            if (iter != curveMap.end()) {
+                keyboardCurveName = name;
+                curve = iter->second;
+            }
         }
     }
-    return RSAnimationTimingCurve::EASE_OUT;
+    if (isForKeyboard) {
+        systemConfig_.keyboardAnimationConfig_.curveType_ = keyboardCurveName;
+        systemConfig_.keyboardAnimationConfig_.curveParams_.assign(
+            keyboardCurveParams.begin(), keyboardCurveParams.end());
+    }
+    return curve;
 }
 
 void WindowManagerService::OnStop()
@@ -719,6 +754,38 @@ void WindowManagerService::CancelStartingWindow(sptr<IRemoteObject> abilityToken
     });
 }
 
+WMError WindowManagerService::MoveMissionsToForeground(const std::vector<int32_t>& missionIds, int32_t topMissionId)
+{
+    if (windowGroupMgr_) {
+        return PostSyncTask([this, &missionIds, topMissionId]() {
+            WMError res = windowGroupMgr_->MoveMissionsToForeground(missionIds, topMissionId);
+            // no need to return inner error to caller
+            if (res > WMError::WM_ERROR_NEED_REPORT_BASE) {
+                return res;
+            }
+            return WMError::WM_OK;
+        });
+    }
+    return WMError::WM_ERROR_NULLPTR;
+}
+
+WMError WindowManagerService::MoveMissionsToBackground(const std::vector<int32_t>& missionIds,
+    std::vector<int32_t>& result)
+{
+    if (windowGroupMgr_) {
+        return PostSyncTask([this, &missionIds, &result]() {
+            WMError res = windowGroupMgr_->MoveMissionsToBackground(missionIds, result);
+            // no need to return wms inner error to caller
+            if (res > WMError::WM_ERROR_NEED_REPORT_BASE) {
+                return res;
+            }
+            return WMError::WM_OK;
+        });
+    }
+    return WMError::WM_ERROR_NULLPTR;
+}
+
+
 bool WindowManagerService::CheckAnimationPermission(const sptr<WindowProperty>& property) const
 {
     WindowType type = property->GetWindowType();
@@ -746,6 +813,11 @@ bool WindowManagerService::CheckSystemWindowPermission(const sptr<WindowProperty
     WindowType type = property->GetWindowType();
     if (!WindowHelper::IsSystemWindow(type)) {
         // type is not system
+        return true;
+    }
+    if (type == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT && Permission::IsStartByInputMethod()) {
+        // WINDOW_TYPE_INPUT_METHOD_FLOAT counld be created by input method app
+        WLOGFD("check create permission success, input method app create input method window.");
         return true;
     }
     if (type == WindowType::WINDOW_TYPE_DRAGGING_EFFECT || type == WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW ||
@@ -851,6 +923,7 @@ WMError WindowManagerService::DestroyWindow(uint32_t windowId, bool onlySelf)
             WLOGI("[WMS] Destroy: %{public}u", windowId);
             HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "wms:DestroyWindow(%u)", windowId);
             WindowInnerManager::GetInstance().NotifyWindowRemovedOrDestroyed(windowId);
+            windowGroupMgr_->OnWindowDestroyed(windowId);
             auto node = windowRoot_->GetWindowNode(windowId);
             if (node == nullptr) {
                 return WMError::WM_OK;
@@ -976,6 +1049,7 @@ void WindowManagerService::OnWindowEvent(Event event, const sptr<IRemoteObject>&
                     dragController_->FinishDrag(windowId);
                 }
                 WindowInnerManager::GetInstance().NotifyWindowRemovedOrDestroyed(windowId);
+                windowGroupMgr_->OnWindowDestroyed(windowId);
                 windowController_->DestroyWindow(windowId, node->stateMachine_.GetDestroyTaskParam());
             };
 
@@ -1011,6 +1085,7 @@ void WindowManagerService::NotifyDisplayStateChange(DisplayId defaultDisplayId, 
     } else {
         PostAsyncTask([this, defaultDisplayId, displayInfo, displayInfoMap, type]() mutable {
             windowController_->NotifyDisplayStateChange(defaultDisplayId, displayInfo, displayInfoMap, type);
+            windowGroupMgr_->OnDisplayStateChange(defaultDisplayId, displayInfo, displayInfoMap, type);
         });
     }
 }
@@ -1162,6 +1237,14 @@ WMError WindowManagerService::UpdateProperty(sptr<WindowProperty>& windowPropert
     });
 }
 
+WMError WindowManagerService::SetWindowGravity(uint32_t windowId, WindowGravity gravity, uint32_t percent)
+{
+    return PostSyncTask([this, windowId, gravity, percent]() {
+        WMError res = windowController_->SetWindowGravity(windowId, gravity, percent);
+        return res;
+    });
+}
+
 WMError WindowManagerService::GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos)
 {
     if (!Permission::IsSystemServiceCalling()) {
@@ -1194,6 +1277,32 @@ WmErrorCode WindowManagerService::RaiseToAppTop(uint32_t windowId)
 std::shared_ptr<Media::PixelMap> WindowManagerService::GetSnapshot(int32_t windowId)
 {
     return nullptr;
+}
+
+void WindowManagerService::DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event)
+{
+    PostVoidSyncTask([this, windowId, event]() {
+        windowController_->DispatchKeyEvent(windowId, event);
+    });
+}
+
+void WindowManagerService::NotifyDumpInfoResult(const std::vector<std::string>& info)
+{
+    if (windowDumper_) {
+        windowDumper_->dumpInfoFuture_.SetValue(info);
+    }
+}
+
+WMError WindowManagerService::GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
+    std::vector<sptr<RSWindowAnimationTarget>>& targets)
+{
+    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("get window animation targets permission denied!");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
+    return PostSyncTask([this, missionIds, &targets]() {
+        return RemoteAnimation::GetWindowAnimationTargets(missionIds, targets);
+    });
 }
 
 WMError WindowManagerService::GetSystemConfig(SystemConfig& systemConfig)
@@ -1293,6 +1402,13 @@ void WindowManagerService::HasPrivateWindow(DisplayId displayId, bool& hasPrivat
         hasPrivateWindow = windowRoot_->HasPrivateWindow(displayId);
     });
     WLOGI("called %{public}u", hasPrivateWindow);
+}
+
+WMError WindowManagerService::SetGestureNavigaionEnabled(bool enable)
+{
+    return PostSyncTask([this, enable]() {
+        return windowRoot_->SetGestureNavigaionEnabled(enable);
+    });
 }
 
 void WindowInfoQueriedListener::HasPrivateWindow(DisplayId displayId, bool& hasPrivateWindow)

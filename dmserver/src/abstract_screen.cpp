@@ -28,8 +28,11 @@ namespace {
 }
 
 AbstractScreen::AbstractScreen(sptr<AbstractScreenController> screenController, const std::string& name, ScreenId dmsId,
-    ScreenId rsId) : name_(name), dmsId_(dmsId), rsId_(rsId), screenController_(screenController)
+    ScreenId rsId) : dmsId_(dmsId), rsId_(rsId), screenController_(screenController)
 {
+    if (name != "") {
+        name_ = name;
+    }
 }
 
 AbstractScreen::~AbstractScreen()
@@ -98,6 +101,7 @@ DMError AbstractScreen::AddSurfaceNode(std::shared_ptr<RSSurfaceNode>& surfaceNo
     } else {
         rsDisplayNode_->AddChild(surfaceNode, -1);
     }
+    children_.push_back(surfaceNode);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         transactionProxy->FlushImplicitTransaction();
@@ -108,10 +112,18 @@ DMError AbstractScreen::AddSurfaceNode(std::shared_ptr<RSSurfaceNode>& surfaceNo
 DMError AbstractScreen::RemoveSurfaceNode(std::shared_ptr<RSSurfaceNode>& surfaceNode)
 {
     if (rsDisplayNode_ == nullptr || surfaceNode == nullptr) {
-        WLOGFE("node is nullptr");
+        WLOGFE("Node is nullptr");
         return DMError::DM_ERROR_NULLPTR;
+    };
+    auto iter = std::find_if(children_.begin(), children_.end(), [surfaceNode] (std::shared_ptr<RSSurfaceNode> node) {
+        return surfaceNode->GetId() == node->GetId();
+    });
+    if (iter == children_.end()) {
+        WLOGFW("Child not found");
+        return DMError::DM_ERROR_INVALID_PARAM;
     }
-    rsDisplayNode_->RemoveChild(surfaceNode);
+    rsDisplayNode_->RemoveChild(*iter);
+    children_.erase(iter);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         transactionProxy->FlushImplicitTransaction();
@@ -373,6 +385,31 @@ Rotation AbstractScreen::CalcRotation(Orientation orientation) const
             return Rotation::ROTATION_0;
         }
     }
+}
+
+const std::string& AbstractScreen::GetScreenName() const
+{
+    return name_;
+}
+
+void AbstractScreen::SetPhyWidth(uint32_t phyWidth)
+{
+    phyWidth_ = phyWidth;
+}
+
+void AbstractScreen::SetPhyHeight(uint32_t phyHeight)
+{
+    phyHeight_ = phyHeight;
+}
+
+uint32_t AbstractScreen::GetPhyWidth() const
+{
+    return phyWidth_;
+}
+
+uint32_t AbstractScreen::GetPhyHeight() const
+{
+    return phyHeight_;
 }
 
 AbstractScreenGroup::AbstractScreenGroup(sptr<AbstractScreenController> screenController, ScreenId dmsId, ScreenId rsId,

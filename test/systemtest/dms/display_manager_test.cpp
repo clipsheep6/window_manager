@@ -17,6 +17,7 @@
 #include <ui/rs_surface_node.h>
 #include "display_test_utils.h"
 #include "display.h"
+#include "display_manager_proxy.h"
 #include "screen.h"
 #include "surface_draw.h"
 #include "wm_common.h"
@@ -242,7 +243,7 @@ HWTEST_F(DisplayManagerTest, HasPrivateWindowCovered02, Function | SmallTest | L
 
     // 5:rect.posX_, 110:rect.posY_, 655:rect.width, 500:rect.height
     sptr<Window> window3 = CreateWindow("covered1", WindowMode::WINDOW_MODE_FLOATING,
-                                        Rect { 0, 0, displayWidth, displayHeight / 2 }, 0xff00ff00);
+                                        Rect { 0, 0, displayWidth, displayHeight / 2}, 0xff00ff00);
     ASSERT_NE(nullptr, window3);
     sleep(WAIT_FOR_SYNC_US);
     window3->MoveTo(45, 115);
@@ -250,7 +251,7 @@ HWTEST_F(DisplayManagerTest, HasPrivateWindowCovered02, Function | SmallTest | L
 
     // 5:rect.posX_, 300:rect.posY_, 655:rect.width, 500:rect.height
     sptr<Window> window4 = CreateWindow("covered2", WindowMode::WINDOW_MODE_FLOATING,
-                                        Rect { 0, 0, displayWidth, displayHeight / 2 }, 0xff00ff00);
+                                        Rect { 0, 0, displayWidth, displayHeight / 2 + 200 }, 0xff00ff00);
     ASSERT_NE(nullptr, window4);
     window4->MoveTo(45, displayHeight / 2 - 95);
 
