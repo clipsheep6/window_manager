@@ -28,7 +28,9 @@ public:
     using RSDisplayNode::RemoveChild;
     MOCK_METHOD1(RemoveChild, void(SharedPtr child));
 };
+
 } // namespace Rosen
 } // namespace OHOS
 
 #endif // FRAMEWORKS_WM_TEST_UT_MOCK_RS_DISPLAY_NODE_H
+

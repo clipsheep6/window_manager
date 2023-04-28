@@ -17,11 +17,12 @@
 #define OHOS_ROSEN_WINDOW_SCENE_WS_COMMON_H
 
 #include <inttypes.h>
-#include <fstream>
 #include <map>
 #include <string>
 
 #include "iremote_broker.h"
+
+#include "common/include/scene_board_judgement.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -96,6 +97,18 @@ struct WSRect {
     {
         return !this->operator==(a);
     }
+
+    bool IsUninitializedRect() const
+    {
+        return (posX_ == 0 && posY_ == 0 && width_ == 0 && height_ == 0);
+    }
+
+    bool IsInsideOf(const WSRect& a) const
+    {
+        return (posX_ >= a.posX_ && posY_ >= a.posY_ && posX_ + width_ <= a.posX_ + a.width_ &&
+                posY_ + height_ <= a.posY_ + a.height_);
+    }
 };
 } // namespace OHOS::Rosen
+
 #endif // OHOS_ROSEN_WINDOW_SCENE_WS_COMMON_H

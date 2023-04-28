@@ -35,6 +35,8 @@ public:
     };
 private:
     sptr<IRemoteObject> callerToken_;
+    float rotation_ { 0.0f };
+    RRect bounds_;
 };
 }  // namespace AbilityRuntime
 }  // namespace OHOS
