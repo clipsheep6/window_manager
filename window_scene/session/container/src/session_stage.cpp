@@ -20,9 +20,8 @@
 
 namespace OHOS::Rosen {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SessionStage" };
+    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "SessionStage"};
 }
-
 SessionStage::SessionStage(const sptr<ISession>& session) : session_(session) {}
 
 bool SessionStage::RegisterSessionStageStateListener(const std::shared_ptr<ISessionStageStateListener>& listener)
@@ -45,14 +44,24 @@ bool SessionStage::UnregisterSizeChangeListener(const std::shared_ptr<ISizeChang
     return UnregisterListenerLocked(sizeChangeListeners_, listener);
 }
 
-bool SessionStage::RegisterInputEventListener(const std::shared_ptr<IInputEventListener>& listener)
+bool SessionStage::RegisterPointerEventListener(const std::shared_ptr<IPointerEventListener>& listener)
 {
-    return RegisterListenerLocked(inputEventListeners_, listener);
+    return RegisterListenerLocked(pointerEventListeners_, listener);
 }
 
-bool SessionStage::UnregisterInputEventListener(const std::shared_ptr<IInputEventListener>& listener)
+bool SessionStage::UnregisterPointerEventListener(const std::shared_ptr<IPointerEventListener>& listener)
 {
-    return UnregisterListenerLocked(inputEventListeners_, listener);
+    return UnregisterListenerLocked(pointerEventListeners_, listener);
+}
+
+bool SessionStage::RegisterKeyEventListener(const std::shared_ptr<IKeyEventListener>& listener)
+{
+    return RegisterListenerLocked(keyEventListeners_, listener);
+}
+
+bool SessionStage::UnregisterKeyEventListener(const std::shared_ptr<IKeyEventListener>& listener)
+{
+    return UnregisterListenerLocked(keyEventListeners_, listener);
 }
 
 template<typename T>
@@ -65,7 +74,7 @@ bool SessionStage::RegisterListenerLocked(std::vector<std::shared_ptr<T>>& holde
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (std::find(holder.begin(), holder.end(), listener) != holder.end()) {
         WLOGFW("Listener already registered");
-        return false;
+        return true;
     }
     holder.emplace_back(listener);
     return true;
@@ -85,15 +94,39 @@ bool SessionStage::UnregisterListenerLocked(std::vector<std::shared_ptr<T>>& hol
     return true;
 }
 
-WSError SessionStage::Connect(const std::shared_ptr<RSSurfaceNode>& surfaceNode)
+void SessionStage::NotifySizeChange(const WSRect& rect, SizeChangeReason reason)
 {
-    if (session_ == nullptr) {
-        WLOGFE("session is invalid");
-        return WSError::WS_ERROR_NULLPTR;
+    auto sizeChangeListeners = GetListeners<ISizeChangeListener>();
+    for (auto& listener : sizeChangeListeners) {
+        if (!listener.expired()) {
+            listener.lock()->OnSizeChange(rect, reason);
+        }
     }
-    sptr<SessionStage> sessionStage(this);
-    sptr<IWindowEventChannel> eventChannel(new WindowEventChannel(sessionStage));
-    return session_->Connect(sessionStage, eventChannel, surfaceNode);
+}
+
+void SessionStage::NotifyPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
+    auto pointerEventListeners = GetListeners<IPointerEventListener>();
+    for (auto& listener : pointerEventListeners) {
+        if (!listener.expired()) {
+            listener.lock()->OnPointerEvent(pointerEvent);
+        }
+    }
+}
+
+void SessionStage::NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
+{
+    auto keyEventListeners = GetListeners<IKeyEventListener>();
+    for (auto& listener : keyEventListeners) {
+        if (!listener.expired()) {
+            listener.lock()->OnKeyEvent(keyEvent);
+        }
+    }
+}
+
+WSError SessionStage::Connect()
+{
+    return WSError::WS_OK;
 }
 
 WSError SessionStage::Foreground()

@@ -53,9 +53,6 @@ ohos_shared_library("scene_session") {
     "c_utils:utils",
     "hilog_native:libhilog",
     "input:libmmi-client",
-<<<<<<< HEAD
-    "ipc:ipc_single",
-=======
     "ipc:ipc_core",
     "multimedia_image_framework:image_native",
   ]
@@ -68,7 +65,6 @@ ohos_shared_library("screen_session") {
   sources = [
     "screen/src/screen_property.cpp",
     "screen/src/screen_session.cpp",
->>>>>>> animation_05
   ]
 
   cflags_cc = [ "-std=c++17" ]
