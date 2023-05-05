@@ -126,13 +126,7 @@ void SessionStage::NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent
 
 WSError SessionStage::Connect()
 {
-    if (session_ == nullptr) {
-        WLOGFE("session is invalid");
-        return WSError::WS_ERROR_NULLPTR;
-    }
-    sptr<SessionStage> sessionStage(this);
-    sptr<IWindowEventChannel> eventChannel(new WindowEventChannel(sessionStage));
-    return session_->Connect(sessionStage, eventChannel);
+    return WSError::WS_OK;
 }
 
 WSError SessionStage::Foreground()

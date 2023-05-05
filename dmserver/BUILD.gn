@@ -53,6 +53,7 @@ ohos_shared_library("libdms") {
   public_configs = [ ":libdms_public_config" ]
 
   deps = [
+    "${window_base_path}/window_scene/common:window_scene_common",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/window/window_manager/utils:libwmutil",
     "//third_party/libxml2:libxml2",

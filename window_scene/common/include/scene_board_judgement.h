@@ -13,11 +13,22 @@
  * limitations under the License.
  */
 
-#include "session/container/include/extension_session_stage.h"
+#ifndef OHOS_ROSEN_WINDOW_SCENE_SCENE_BOARD_JUDGEMENT_H
+#define OHOS_ROSEN_WINDOW_SCENE_SCENE_BOARD_JUDGEMENT_H
+
+#include <fstream>
 
 namespace OHOS::Rosen {
-ExtensionSessionStage::ExtensionSessionStage(const sptr<ISession>& extensionSession)
-    : SessionStage(extensionSession)
-{
-}
+class SceneBoardJudgement final {
+public:
+    // Judge whether SceneBoard is enabled.
+    static bool IsSceneBoardEnabled();
+
+private:
+    // Dealing with Windows type end of line "\r\n".
+    static std::ifstream& SafeGetLine(std::ifstream& configFile, std::string& line);
+    static void InitWithConfigFile(bool& isSceneBoardEnabled);
+};
 } // namespace OHOS::Rosen
+
+#endif // OHOS_ROSEN_WINDOW_SCENE_SCENE_BOARD_JUDGEMENT_H

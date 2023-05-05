@@ -13,11 +13,27 @@
  * limitations under the License.
  */
 
-#include "session/container/include/extension_session_stage.h"
+#ifndef OHOS_ROSEN_WINDOW_SCENE_SCREEN_PROPERTY_H
+#define OHOS_ROSEN_WINDOW_SCENE_SCREEN_PROPERTY_H
+
+#include "common/rs_rect.h"
 
 namespace OHOS::Rosen {
-ExtensionSessionStage::ExtensionSessionStage(const sptr<ISession>& extensionSession)
-    : SessionStage(extensionSession)
-{
-}
+class ScreenProperty {
+public:
+    ScreenProperty() = default;
+    ~ScreenProperty() = default;
+
+    void SetRotation(float rotation);
+    float GetRotation() const;
+
+    void SetBounds(const RRect& bounds);
+    RRect GetBounds() const;
+
+private:
+    float rotation_ { 0.0f };
+    RRect bounds_;
+};
 } // namespace OHOS::Rosen
+
+#endif // OHOS_ROSEN_WINDOW_SCENE_SCREEN_PROPERTY_H
