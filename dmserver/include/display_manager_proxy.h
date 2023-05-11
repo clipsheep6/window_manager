@@ -23,7 +23,7 @@
 #include "screen.h"
 
 #include <iremote_proxy.h>
-
+#include <string>
 namespace OHOS::Rosen {
 class DisplayManagerProxy : public IRemoteProxy<IDisplayManager> {
 public:
@@ -62,7 +62,7 @@ public:
     bool WakeUpEnd() override;
     bool SuspendBegin(PowerStateChangeReason reason) override;
     bool SuspendEnd() override;
-    bool SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason) override;
+bool SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason) override;
     ScreenPowerState GetScreenPower(ScreenId dmsScreenId) override;
     bool SetDisplayState(DisplayState state) override;
     std::vector<DisplayId> GetAllDisplayIds() override;
@@ -78,10 +78,10 @@ public:
     void RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens) override;
     DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) override;
     DMError SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio) override;
-    DMError AddSurfaceNodeToDisplay(DisplayId displayId,
-        std::shared_ptr<class RSSurfaceNode>& surfaceNode, bool onTop = true) override;
-    DMError RemoveSurfaceNodeFromDisplay(DisplayId displayId,
-        std::shared_ptr<class RSSurfaceNode>& surfaceNode) override;
+    DMError AddSurfaceNodeToDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo, bool onTop) override;
+    DMError RemoveSurfaceNodeFromDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo) override;
+    bool SetScreenBrightness(uint64_t screenId, uint32_t level) override;
+    uint32_t GetScreenBrightness(uint64_t screenId) override;
 
 private:
     static inline BrokerDelegator<DisplayManagerProxy> delegator_;

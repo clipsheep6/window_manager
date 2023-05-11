@@ -18,10 +18,11 @@
 
 #include <iremote_broker.h>
 #include <pixel_map.h>
-#include <surface.h>
+#include <string>
 
 #include "display_cutout_controller.h"
 #include "display_info.h"
+#include "display_manager.h"
 #include "dm_common.h"
 #include "screen.h"
 #include "screen_info.h"
@@ -78,6 +79,8 @@ public:
         TRANS_ID_GET_CUTOUT_INFO,
         TRANS_ID_ADD_SURFACE_NODE,
         TRANS_ID_REMOVE_SURFACE_NODE,
+        TRANS_ID_SET_SCREEN_BRIGHTNESS,
+        TRANS_ID_GET_SCREEN_BRIGHTNESS,
     };
 
     virtual sptr<DisplayInfo> GetDefaultDisplayInfo() = 0;
@@ -129,10 +132,10 @@ public:
     virtual void RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens) = 0;
     virtual DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) = 0;
     virtual DMError SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio) = 0;
-    virtual DMError AddSurfaceNodeToDisplay(DisplayId displayId,
-        std::shared_ptr<class RSSurfaceNode>& surfaceNode, bool onTop = true) = 0;
-    virtual DMError RemoveSurfaceNodeFromDisplay(DisplayId displayId,
-        std::shared_ptr<class RSSurfaceNode>& surfaceNode) = 0;
+    virtual DMError AddSurfaceNodeToDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo, bool onTop = true) = 0;
+    virtual DMError RemoveSurfaceNodeFromDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo) = 0;
+    virtual bool SetScreenBrightness(uint64_t screenId, uint32_t level) = 0;
+    virtual uint32_t GetScreenBrightness(uint64_t screenId) = 0;
 };
 } // namespace OHOS::Rosen
 

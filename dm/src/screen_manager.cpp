@@ -17,8 +17,6 @@
 #include <map>
 #include <vector>
 
-#include <transaction/rs_interfaces.h>
-
 #include "display_manager_adapter.h"
 #include "display_manager_agent_default.h"
 #include "permission.h"

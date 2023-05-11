@@ -18,7 +18,6 @@
 #include <cinttypes>
 #include <ipc_types.h>
 #include <parcel.h>
-#include <ui/rs_surface_node.h>
 
 #include "marshalling_helper.h"
 #include "window_manager_hilog.h"
@@ -753,8 +752,7 @@ sptr<CutoutInfo> DisplayManagerProxy::GetCutoutInfo(DisplayId displayId)
     return info;
 }
 
-DMError DisplayManagerProxy::AddSurfaceNodeToDisplay(DisplayId displayId,
-    std::shared_ptr<class RSSurfaceNode>& surfaceNode, bool onTop)
+DMError DisplayManagerProxy::AddSurfaceNodeToDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo, bool onTop)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -767,7 +765,7 @@ DMError DisplayManagerProxy::AddSurfaceNodeToDisplay(DisplayId displayId,
         WLOGFE("write displayId failed");
         return DMError::DM_ERROR_IPC_FAILED;
     }
-    if (surfaceNode == nullptr || !surfaceNode->Marshalling(data)) {
+    if (surfaceNodeInfo == nullptr || !surfaceNodeInfo->Marshalling(data)) {
         WLOGFE("Write windowProperty failed");
         return DMError::DM_ERROR_IPC_FAILED;
     }
@@ -780,8 +778,7 @@ DMError DisplayManagerProxy::AddSurfaceNodeToDisplay(DisplayId displayId,
     return ret;
 }
 
-DMError DisplayManagerProxy::RemoveSurfaceNodeFromDisplay(DisplayId displayId,
-    std::shared_ptr<class RSSurfaceNode>& surfaceNode)
+DMError DisplayManagerProxy::RemoveSurfaceNodeFromDisplay(DisplayId displayId, sptr<SurfaceNodeInfo>& surfaceNodeInfo)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -794,7 +791,7 @@ DMError DisplayManagerProxy::RemoveSurfaceNodeFromDisplay(DisplayId displayId,
         WLOGFE("write displayId failed");
         return DMError::DM_ERROR_IPC_FAILED;
     }
-    if (surfaceNode == nullptr || !surfaceNode->Marshalling(data)) {
+    if (surfaceNodeInfo == nullptr || !surfaceNodeInfo->Marshalling(data)) {
         WLOGFE("Write windowProperty failed");
         return DMError::DM_ERROR_IPC_FAILED;
     }
@@ -1168,5 +1165,63 @@ DMError DisplayManagerProxy::SetScreenRotationLocked(bool isLocked)
         return DMError::DM_ERROR_IPC_FAILED;
     }
     return static_cast<DMError>(reply.ReadInt32());
+}
+
+bool DisplayManagerProxy::SetScreenBrightness(uint64_t screenId, uint32_t level)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("remote is null");
+        return false;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return false;
+    }
+    if (!data.WriteUint64(screenId)) {
+        WLOGFE("write screenId failed");
+        return false;
+    }
+    if (!data.WriteUint32(level)) {
+        WLOGFE("write level failed");
+        return false;
+    }
+    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SET_SCREEN_BRIGHTNESS),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return false;
+    }
+    return reply.ReadBool();
+}
+
+uint32_t DisplayManagerProxy::GetScreenBrightness(uint64_t screenId)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("remote is null");
+        return static_cast<uint32_t>(DMError::DM_ERROR_NULLPTR);
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return static_cast<uint32_t>(DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED);
+    }
+    if (!data.WriteUint64(screenId)) {
+        WLOGFE("write screenId failed");
+        return static_cast<uint32_t>(DMError::DM_ERROR_IPC_FAILED);
+    }
+    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_GET_SCREEN_BRIGHTNESS),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return static_cast<uint32_t>(DMError::DM_ERROR_IPC_FAILED);
+    }
+    return reply.ReadUint32();
 }
 } // namespace OHOS::Rosen

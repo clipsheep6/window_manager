@@ -336,10 +336,15 @@ HWTEST_F(DisplayManagerTest, AddAndRemoveSurfaceNode, Function | SmallTest | Lev
     RSSurfaceNodeConfig config;
     config.SurfaceNodeName = "TestSurfaceNode";
     auto surfaceNode = RSSurfaceNode::Create(config);
+
     DisplayId id = DisplayManager::GetInstance().GetDefaultDisplayId();
-    ASSERT_EQ(DMError::DM_OK, DisplayManager::GetInstance().AddSurfaceNodeToDisplay(id, surfaceNode));
-    sleep(2);
-    ASSERT_EQ(DMError::DM_OK, DisplayManager::GetInstance().RemoveSurfaceNodeFromDisplay(id, surfaceNode));
+    sptr<SurfaceNodeInfo> surfaceNodeInfo = new SurfaceNodeInfo();
+    surfaceNodeInfo->nodeId_ = surfaceNode->GetId();
+    surfaceNodeInfo->nodeName_ = surfaceNode->GetName();
+    surfaceNodeInfo->isRenderNode_ = false;
+    ASSERT_EQ(DMError::DM_OK, DisplayManager::GetInstance().AddSurfaceNodeToDisplay(id, surfaceNodeInfo));
+    sleep(3);
+    ASSERT_EQ(DMError::DM_OK, DisplayManager::GetInstance().RemoveSurfaceNodeFromDisplay(id, surfaceNodeInfo));
 }
 
 }
