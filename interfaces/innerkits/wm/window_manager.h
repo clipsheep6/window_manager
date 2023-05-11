@@ -26,11 +26,10 @@
 namespace OHOS {
 namespace Rosen {
 struct SystemBarRegionTint {
-    WindowType type_;
+    WindowType type_ = WindowType::SYSTEM_WINDOW_END;
     SystemBarProperty prop_;
-    Rect region_;
-    SystemBarRegionTint()
-        : type_(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW), prop_(), region_{ 0, 0, 0, 0 } {}
+    Rect region_ { 0, 0, 0, 0 };
+    SystemBarRegionTint() : prop_(SystemBarProperty()) {}
     SystemBarRegionTint(WindowType type, SystemBarProperty prop, Rect region)
         : type_(type), prop_(prop), region_(region) {}
 };
