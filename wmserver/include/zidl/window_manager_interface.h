@@ -17,14 +17,22 @@
 #define OHOS_WINDOW_MANAGER_INTERFACE_H
 
 #include <iremote_broker.h>
+#include <parcel.h>
 #include <rs_iwindow_animation_finished_callback.h>
 #include <ui/rs_surface_node.h>
 
 #include "pixel_map.h"
 #include "window_property.h"
 #include "window_transition_info.h"
-#include "zidl/window_interface.h"
+
+// #include "zidl/window_interface.h"
 #include "zidl/window_manager_agent_interface.h"
+
+namespace OHOS::MMI {
+    class PointerEvent;
+    class KeyEvent;
+    class AxisEvent;
+}
 
 namespace OHOS {
 namespace Rosen {
@@ -76,9 +84,8 @@ public:
         TRANS_ID_NOTIFY_DUMP_INFO_RESULT,
         TRANS_ID_GET_WINDOW_ANIMATION_TARGETS,
     };
-    virtual WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
-        const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-        uint32_t& windowId, sptr<IRemoteObject> token) = 0;
+    virtual WMError CreateWindow(sptr<IRemoteObject>& window, sptr<WindowProperty>& property,
+        const SurfaceNodeInfo& surfaceNodeInfo, uint32_t& windowId, sptr<IRemoteObject> token) = 0;
     virtual WMError AddWindow(sptr<WindowProperty>& property) = 0;
     virtual WMError RemoveWindow(uint32_t windowId, bool isFromInnerkits) = 0;
     virtual WMError DestroyWindow(uint32_t windowId, bool onlySelf = false) = 0;
@@ -101,13 +108,13 @@ public:
         const sptr<IWindowManagerAgent>& windowManagerAgent) = 0;
     virtual WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) = 0;
     virtual WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) = 0;
-    virtual WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller) = 0;
+    virtual WMError SetWindowAnimationController(const sptr<IRemoteObject>& controller) = 0;
     virtual WMError GetSystemConfig(SystemConfig& systemConfig) = 0;
     virtual WMError NotifyWindowTransition(sptr<WindowTransitionInfo>& from, sptr<WindowTransitionInfo>& to,
         bool isFromClient = false) = 0;
     virtual WMError GetModeChangeHotZones(DisplayId displayId, ModeChangeHotZones& hotZones) = 0;
     virtual void MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
-        sptr<RSIWindowAnimationFinishedCallback>& finishCallback) = 0;
+        sptr<IRemoteObject>& finishCallback) = 0;
     virtual WMError UpdateAvoidAreaListener(uint32_t windowId, bool haveListener) = 0;
     virtual WMError UpdateRsTree(uint32_t windowId, bool isAdd) = 0;
     virtual WMError BindDialogTarget(uint32_t& windowId, sptr<IRemoteObject> targetToken) = 0;
@@ -120,7 +127,7 @@ public:
     virtual void DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event) = 0;
     virtual void NotifyDumpInfoResult(const std::vector<std::string>& info) {};
     virtual WMError GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
-        std::vector<sptr<RSWindowAnimationTarget>>& targets) = 0;
+        std::vector<sptr<WindowAnimationTargetInfo>>& targets) = 0;
 };
 }
 }

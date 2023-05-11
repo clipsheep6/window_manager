@@ -22,6 +22,7 @@
 #include "marshalling_helper.h"
 #include "memory_guard.h"
 #include "window_manager_hilog.h"
+#include "window.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -41,9 +42,11 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
     switch (msgId) {
         case WindowManagerMessage::TRANS_ID_CREATE_WINDOW: {
             sptr<IRemoteObject> windowObject = data.ReadRemoteObject();
-            sptr<IWindow> windowProxy = iface_cast<IWindow>(windowObject);
+            // sptr<IWindow> windowProxy = iface_cast<IWindow>(windowObject);
             sptr<WindowProperty> windowProperty = data.ReadStrongParcelable<WindowProperty>();
-            std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
+            SurfaceNodeInfo surfaceNodeInfo;
+            MarshallingHelper::UnmarshallingSurfaceNodeInfo(data, surfaceNodeInfo);
+            // std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
             uint32_t windowId;
             sptr<IRemoteObject> token = nullptr;
             if (windowProperty && windowProperty->GetTokenState()) {
@@ -51,7 +54,8 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             } else {
                 WLOGI("accept token is nullptr");
             }
-            WMError errCode = CreateWindow(windowProxy, windowProperty, surfaceNode, windowId, token);
+            WMError errCode = CreateWindow(windowObject, windowProperty, surfaceNodeInfo, windowId, token);
+            //WMError errCode = CreateWindow(windowProxy, windowProperty, surfaceNode, windowId, token);
             reply.WriteUint32(windowId);
             reply.WriteInt32(static_cast<int32_t>(errCode));
             break;
@@ -179,8 +183,8 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
         }
         case WindowManagerMessage::TRANS_ID_ANIMATION_SET_CONTROLLER: {
             sptr<IRemoteObject> controllerObject = data.ReadRemoteObject();
-            sptr<RSIWindowAnimationController> controller = iface_cast<RSIWindowAnimationController>(controllerObject);
-            WMError errCode = SetWindowAnimationController(controller);
+            // sptr<RSIWindowAnimationController> controller = iface_cast<RSIWindowAnimationController>(controllerObject);
+            WMError errCode = SetWindowAnimationController(controllerObject);
             reply.WriteInt32(static_cast<int32_t>(errCode));
             break;
         }
@@ -225,7 +229,8 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             std::vector<uint32_t> windowIds;
             data.ReadUInt32Vector(&windowIds);
             bool isAnimated = data.ReadBool();
-            sptr<RSIWindowAnimationFinishedCallback> finishedCallback = nullptr;
+            // sptr<RSIWindowAnimationFinishedCallback> finishedCallback = nullptr;
+            sptr<IRemoteObject> finishedCallback = nullptr;
             MinimizeWindowsByLauncher(windowIds, isAnimated, finishedCallback);
             if (finishedCallback == nullptr) {
                 if (!reply.WriteBool(false)) {
@@ -233,7 +238,7 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
                     return 0;
                 }
             } else {
-                if (!reply.WriteBool(true) || !reply.WriteRemoteObject(finishedCallback->AsObject())) {
+                if (!reply.WriteBool(true) || !reply.WriteRemoteObject(finishedCallback)) {
                     WLOGFE("finishedCallback is not nullptr and failed to write!");
                     return 0;
                 }
@@ -320,9 +325,9 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
         case WindowManagerMessage::TRANS_ID_GET_WINDOW_ANIMATION_TARGETS: {
             std::vector<uint32_t> missionIds;
             data.ReadUInt32Vector(&missionIds);
-            std::vector<sptr<RSWindowAnimationTarget>> targets;
+            std::vector<sptr<WindowAnimationTargetInfo>> targets;
             WMError errCode = GetWindowAnimationTargets(missionIds, targets);
-            if (!MarshallingHelper::MarshallingVectorParcelableObj<RSWindowAnimationTarget>(reply, targets)) {
+            if (!MarshallingHelper::MarshallingVectorParcelableObj(reply, targets)) {
                 WLOGFE("Write window animation targets failed");
                 return -1;
             }
@@ -334,6 +339,6 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     return 0;
-}
+}     
 } // namespace Rosen
 } // namespace OHOS

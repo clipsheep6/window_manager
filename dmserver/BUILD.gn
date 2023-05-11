@@ -19,6 +19,7 @@ config("libdms_private_config") {
   include_dirs = [
     "//foundation/window/window_manager/dm/include",
     "//foundation/window/window_manager/interfaces/innerkits/dm",
+    "//foundation/window/window_manager/interfaces/innerkits/wm",
   ]
 }
 

@@ -88,9 +88,10 @@ public:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
     int Dump(int fd, const std::vector<std::u16string>& args) override;
 
-    WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
-        const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-        uint32_t& windowId, sptr<IRemoteObject> token) override;
+    WMError CreateWindow(sptr<IRemoteObject>& window, sptr<WindowProperty>& property,
+        const SurfaceNodeInfo& surfaceNodeInfo, uint32_t& windowId, sptr<IRemoteObject> token) override;
+    WMError CreateWindow0(sptr<IWindow>& window, sptr<WindowProperty>& property,
+        const std::shared_ptr<RSSurfaceNode>& surfaceNode, uint32_t& windowId, sptr<IRemoteObject> token);
     WMError AddWindow(sptr<WindowProperty>& property) override;
     WMError RemoveWindow(uint32_t windowId, bool isFromInnerkits) override;
     WMError NotifyWindowTransition(sptr<WindowTransitionInfo>& from, sptr<WindowTransitionInfo>& to,
@@ -118,13 +119,13 @@ public:
     void DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event) override;
     void NotifyDumpInfoResult(const std::vector<std::string>& info) override;
     WMError GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
-        std::vector<sptr<RSWindowAnimationTarget>>& targets) override;
+        std::vector<sptr<WindowAnimationTargetInfo>>& targets) override;
     WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
 
-    WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller) override;
+    WMError SetWindowAnimationController(const sptr<IRemoteObject>& controller) override;
     WMError GetSystemConfig(SystemConfig& systemConfig) override;
     WMError GetModeChangeHotZones(DisplayId displayId, ModeChangeHotZones& hotZones) override;
     WMError UpdateAvoidAreaListener(uint32_t windowId, bool haveAvoidAreaListener) override;
@@ -135,7 +136,7 @@ public:
     WMError MoveMissionsToBackground(const std::vector<int32_t>& missionIds,
         std::vector<int32_t>& result);
     void MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
-        sptr<RSIWindowAnimationFinishedCallback>& finishCallback) override;
+        sptr<IRemoteObject>& finishCallback) override;
     WMError UpdateRsTree(uint32_t windowId, bool isAdd) override;
     void OnScreenshot(DisplayId displayId);
     void OnAccountSwitched(int accountId);
@@ -184,6 +185,8 @@ private:
     void ConfigWindowEffect(const WindowManagerConfig::ConfigItem& effectConfig);
     bool ConfigAppWindowCornerRadius(const WindowManagerConfig::ConfigItem& item, float& out);
     bool ConfigAppWindowShadow(const WindowManagerConfig::ConfigItem& shadowConfig, WindowShadowParameters& outShadow);
+    
+    
 
     static inline SingletonDelegator<WindowManagerService> delegator;
     std::string name_ = "WindowManagerService";

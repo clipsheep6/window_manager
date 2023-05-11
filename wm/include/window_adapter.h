@@ -35,8 +35,8 @@ public:
 class WindowAdapter {
 WM_DECLARE_SINGLE_INSTANCE(WindowAdapter);
 public:
-    virtual WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& windowProperty,
-        std::shared_ptr<RSSurfaceNode> surfaceNode, uint32_t& windowId, const sptr<IRemoteObject>& token);
+    virtual WMError CreateWindow(sptr<IRemoteObject>& window, sptr<WindowProperty>& windowProperty,
+        const SurfaceNodeInfo& surfaceNodeInfo, uint32_t& windowId, const sptr<IRemoteObject>& token);
     virtual WMError AddWindow(sptr<WindowProperty>& windowProperty);
     virtual WMError RemoveWindow(uint32_t windowId, bool isFromInnerkits);
     virtual WMError DestroyWindow(uint32_t windowId);
@@ -61,7 +61,7 @@ public:
     virtual WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent);
 
-    virtual WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller);
+    virtual WMError SetWindowAnimationController(const sptr<IRemoteObject>& controller);
     virtual WMError NotifyWindowTransition(sptr<WindowTransitionInfo> from, sptr<WindowTransitionInfo> to);
     virtual WMError UpdateAvoidAreaListener(uint32_t windowId, bool haveListener);
     virtual void ClearWindowAdapter();
@@ -69,7 +69,7 @@ public:
     virtual WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos);
     virtual WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos);
     virtual void MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
-        sptr<RSIWindowAnimationFinishedCallback>& finishCallback);
+        sptr<IRemoteObject>& finishCallback);
     virtual void SetAnchorAndScale(int32_t x, int32_t y, float scale);
     virtual void SetAnchorOffset(int32_t deltaX, int32_t deltaY);
     virtual void OffWindowZoom();
@@ -79,7 +79,7 @@ public:
     virtual void DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event);
     virtual void NotifyDumpInfoResult(const std::vector<std::string>& info);
     virtual WMError GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
-        std::vector<sptr<RSWindowAnimationTarget>>& targets);
+        std::vector<sptr<WindowAnimationTargetInfo>>& targets);
 private:
     static inline SingletonDelegator<WindowAdapter> delegator;
     bool InitWMSProxy();

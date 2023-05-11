@@ -29,8 +29,8 @@ namespace {
 }
 
 
-WMError WindowManagerProxy::CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
-    const std::shared_ptr<RSSurfaceNode>& surfaceNode, uint32_t& windowId, sptr<IRemoteObject> token)
+WMError WindowManagerProxy::CreateWindow(sptr<IRemoteObject>& window, sptr<WindowProperty>& property,
+    const SurfaceNodeInfo& surfaceNodeInfo , uint32_t& windowId, sptr<IRemoteObject> token)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -40,7 +40,7 @@ WMError WindowManagerProxy::CreateWindow(sptr<IWindow>& window, sptr<WindowPrope
         return WMError::WM_ERROR_IPC_FAILED;
     }
 
-    if (!data.WriteRemoteObject(window->AsObject())) {
+    if (!data.WriteRemoteObject(window)) {
         WLOGFE("Write IWindow failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
@@ -50,10 +50,15 @@ WMError WindowManagerProxy::CreateWindow(sptr<IWindow>& window, sptr<WindowPrope
         return WMError::WM_ERROR_IPC_FAILED;
     }
 
-    if (surfaceNode == nullptr || !surfaceNode->Marshalling(data)) {
-        WLOGFE("Write windowProperty failed");
+    if (!MarshallingHelper::MarshallingSurfaceNodeInfo(data, surfaceNodeInfo)) {
+        WLOGFE("Write surface node info failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
+    
+    // if (surfaceNode == nullptr || !surfaceNode->Marshalling(data)) {
+    //     WLOGFE("Write windowProperty failed");
+    //     return WMError::WM_ERROR_IPC_FAILED;
+    // }
     if (token != nullptr) {
         if (!data.WriteRemoteObject(token)) {
             WLOGFE("Write abilityToken failed");
@@ -263,7 +268,7 @@ WMError WindowManagerProxy::UnregisterWindowManagerAgent(WindowManagerAgentType 
     return static_cast<WMError>(reply.ReadInt32());
 }
 
-WMError WindowManagerProxy::SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller)
+WMError WindowManagerProxy::SetWindowAnimationController(const sptr<IRemoteObject>& controller)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -279,7 +284,7 @@ WMError WindowManagerProxy::SetWindowAnimationController(const sptr<RSIWindowAni
         return WMError::WM_ERROR_IPC_FAILED;
     }
 
-    if (!data.WriteRemoteObject(controller->AsObject())) {
+    if (!data.WriteRemoteObject(controller)) {
         WLOGFE("RSWindowAnimation Failed to write controller!");
         return WMError::WM_ERROR_IPC_FAILED;
     }
@@ -657,7 +662,7 @@ WMError WindowManagerProxy::GetModeChangeHotZones(DisplayId displayId, ModeChang
 }
 
 void WindowManagerProxy::MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
-    sptr<RSIWindowAnimationFinishedCallback>& finishCallback)
+    sptr<IRemoteObject>& finishCallback)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -681,10 +686,10 @@ void WindowManagerProxy::MinimizeWindowsByLauncher(std::vector<uint32_t> windowI
         WLOGFE("Send request error");
         return;
     }
-    ;
     if (reply.ReadBool()) {
         sptr<IRemoteObject> finishCallbackObject = reply.ReadRemoteObject();
-        finishCallback = iface_cast<RSIWindowAnimationFinishedCallback>(finishCallbackObject);
+        finishCallback = finishCallbackObject;
+        // finishCallback = iface_cast<RSIWindowAnimationFinishedCallback>(finishCallbackObject);
     } else {
         finishCallback = nullptr;
     }
@@ -956,7 +961,7 @@ void WindowManagerProxy::NotifyDumpInfoResult(const std::vector<std::string>& in
 }
 
 WMError WindowManagerProxy::GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
-    std::vector<sptr<RSWindowAnimationTarget>>& targets)
+    std::vector<sptr<WindowAnimationTargetInfo>>& targets)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -973,7 +978,7 @@ WMError WindowManagerProxy::GetWindowAnimationTargets(std::vector<uint32_t> miss
         data, reply, option) != ERR_NONE) {
         return WMError::WM_ERROR_IPC_FAILED;
     }
-    if (!MarshallingHelper::UnmarshallingVectorParcelableObj<RSWindowAnimationTarget>(reply, targets)) {
+    if (!MarshallingHelper::UnmarshallingVectorParcelableObj<WindowAnimationTargetInfo>(reply, targets)) {
         WLOGFE("read window animation targets failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }

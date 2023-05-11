@@ -18,10 +18,80 @@
 
 #include <parcel.h>
 
+#include "wm_common_inner.h"
+
 namespace OHOS::Rosen {
 class MarshallingHelper : public Parcelable {
 public:
     MarshallingHelper() = delete;
+    static bool MarshallingSurfaceNodeInfo(Parcel &parcel, const SurfaceNodeInfo& data)
+    {
+        if (!parcel.WriteUint64(data.nodeId_)) {
+            return false;
+        }
+        if (!parcel.WriteString(data.nodeName_)) {
+            return false;
+        }
+        if (!parcel.WriteBool(data.isRenderNode_)) {
+            return false;
+        }
+        return true;
+    }
+
+    static bool UnmarshallingSurfaceNodeInfo(Parcel &parcel, SurfaceNodeInfo& data)
+    {
+        data.nodeId_ = parcel.ReadUint64();
+        data.nodeName_ = parcel.ReadString();
+        data.isRenderNode_ = parcel.ReadBool();
+        return true;
+    }
+
+    // static bool MarshallingAnimInfo(Parcel &parcel, sptr<WindowAnimationTargetInfo>& data)
+    // {
+    //     if (!parcel.WriteUint64(data->nodeId_)) {
+    //         return false;
+    //     }
+    //     if (!parcel.WriteString(data->nodeName_)) {
+    //         return false;
+    //     }
+    //     // if (!parcel.WriteBool(data->isRenderNode_)) {
+    //     //     return false;
+    //     // }
+    //     if (!parcel.WriteString(data->bundleName_)) {
+    //         return false;
+    //     }
+    //     if (!parcel.WriteString(data->abilityName_)) {
+    //         return false;
+    //     }
+    //     if (!parcel.WriteInt32(data->missionId_)) {
+    //         return false;
+    //     }
+    //     if (!parcel.WriteUint32(data->windowId_)) {
+    //         return false;
+    //     }
+    //     if (!parcel.WriteUint64(data->displayId_)) {
+    //         return false;
+    //     }
+    //     if (!parcel.WriteFloat(data->radius_)) {
+    //         return false;
+    //     }
+    //     return true;
+    // }
+
+    // static bool UnmarshallingAnimInfo(Parcel &parcel, sptr<WindowAnimationTargetInfo>& data)
+    // {
+    //     data->nodeId_ = parcel.ReadUint64(data->nodeId_);
+    //     data->nodeName_ = parcel.ReadString(data->nodeName_);
+    //     // data->isRenderNode_ = parcel.ReadBool();
+    //     data->bundleName_ = parcel.ReadString(data->bundleName_);
+    //     data->abilityName_ = parcel.ReadString();
+    //     data->missionId_ = parcel.ReadInt32();
+    //     data->windowId_ = parcel.ReadUint32();
+    //     data->displayId_ = parcel.ReadUint64();
+    //     data->radius_ = parcel.ReadFloat();
+    //     return true;
+    // }
+
     template<class T>
     static bool MarshallingVectorParcelableObj(Parcel &parcel, const std::vector<sptr<T>>& data)
     {
