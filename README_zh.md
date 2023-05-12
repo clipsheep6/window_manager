@@ -95,6 +95,7 @@ foundation/window/window_manager/
 - 语言版本
     - C++11或以上
 
+
 ## 接口说明
 
 - [Window](https://gitee.com/openharmony/docs/blob/master/zh-cn/application-dev/reference/apis/js-apis-window.md)
