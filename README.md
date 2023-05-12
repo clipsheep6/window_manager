@@ -41,6 +41,7 @@ foundation/window/window_manager/
 ├── wmserver                # Stores Window Manager Server implementation code
 ```
 
+
 ## Constraints
 
 - Programming language version
