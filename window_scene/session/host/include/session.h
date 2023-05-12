@@ -24,6 +24,7 @@
 #include "interfaces/include/ws_common.h"
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/host/include/zidl/session_stub.h"
+#include "wm_common.h"
 
 namespace OHOS::MMI {
 class PointerEvent;
@@ -54,47 +55,47 @@ public:
 
     void SetPersistentId(uint64_t persistentId);
     uint64_t GetPersistentId() const;
-    void SetSessionRect(const WSRect& rect);
-    WSRect GetSessionRect() const;
+    void SetSessionRect(const Rect& rect);
+    Rect GetSessionRect() const;
 
     std::shared_ptr<RSSurfaceNode> GetSurfaceNode() const;
     std::shared_ptr<Media::PixelMap> GetSnapshot() const;
     SessionState GetSessionState() const;
     const SessionInfo& GetSessionInfo() const;
 
-    virtual WSError SetActive(bool active);
-    virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason);
+    virtual WMError SetActive(bool active);
+    virtual WMError UpdateRect(const Rect& rect, WindowSizeChangeReason reason);
 
-    WSError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
+    WMError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, uint64_t& persistentId,
         sptr<WindowSessionProperty> property = nullptr) override;
-    WSError Foreground() override;
-    WSError Background() override;
-    WSError Disconnect() override;
+    WMError Foreground() override;
+    WMError Background() override;
+    WMError Disconnect() override;
 
-    WSError Recover() override;
-    WSError Maximize() override;
+    WMError Recover() override;
+    WMError Maximize() override;
 
     void NotifyConnect();
     void NotifyForeground();
     void NotifyBackground();
 
-    WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
-    WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent);
+    WMError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
+    WMError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent);
 
     bool RegisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
     bool UnregisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
     void SetPendingSessionActivationEventListener(const NotifyPendingSessionActivationFunc& func);
-    WSError PendingSessionActivation(const SessionInfo& info) override;
+    WMError PendingSessionActivation(const SessionInfo& info) override;
     void SetSessionStateChangeListenser(const NotifySessionStateChangeFunc& func);
     void NotifySessionStateChange(const SessionState& state);
-    WSError UpdateActiveStatus(bool isActive) override; // update active status from session_stage
+    WMError UpdateActiveStatus(bool isActive) override; // update active status from session_stage
 
 protected:
     void UpdateSessionState(SessionState state);
     bool IsSessionValid() const;
     bool isActive_ = false;
-    WSRect winRect_ {0, 0, 0, 0};
+    Rect winRect_ {0, 0, 0, 0};
     sptr<ISessionStage> sessionStage_;
     SessionInfo sessionInfo_;
     NotifyPendingSessionActivationFunc pendingSessionActivationFunc_;

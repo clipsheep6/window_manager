@@ -29,51 +29,51 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowEventChannelProxy"};
 }
 
-WSError WindowEventChannelProxy::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
+WMError WindowEventChannelProxy::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
-        return WSError::WS_ERROR_IPC_FAILED;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
 
     if (!keyEvent->WriteToParcel(data)) {
         WLOGFE("Failed to write key event");
-        return WSError::WS_ERROR_IPC_FAILED;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowEventChannelMessage::TRANS_ID_TRANSFER_KEY_EVENT),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
-        return WSError::WS_ERROR_IPC_FAILED;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
     int32_t ret = reply.ReadUint32();
-    return static_cast<WSError>(ret);
+    return static_cast<WMError>(ret);
 }
 
-WSError WindowEventChannelProxy::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+WMError WindowEventChannelProxy::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
-        return WSError::WS_ERROR_IPC_FAILED;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
 
     if (!pointerEvent->WriteToParcel(data)) {
         WLOGFE("Failed to write pointer event");
-        return WSError::WS_ERROR_IPC_FAILED;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowEventChannelMessage::TRANS_ID_TRANSFER_POINTER_EVENT),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
-        return WSError::WS_ERROR_IPC_FAILED;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
     int32_t ret = reply.ReadUint32();
-    return static_cast<WSError>(ret);
+    return static_cast<WMError>(ret);
 }
 }

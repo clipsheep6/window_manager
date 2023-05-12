@@ -16,7 +16,6 @@
 #ifndef OHOS_ROSEN_WINDOW_SCENE_ROOT_SCENE_SESSION_H
 #define OHOS_ROSEN_WINDOW_SCENE_ROOT_SCENE_SESSION_H
 
-#include "interfaces/include/ws_common.h"
 #include "scene_session.h"
 
 namespace OHOS::AbilityRuntime {

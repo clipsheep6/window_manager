@@ -220,9 +220,9 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
             createSpecificSessionFunc_(sceneSession);
         }
         // connect specific session and sessionStage
-        WSError errCode = sceneSession->Connect(sessionStage, eventChannel, surfaceNode, persistentId, property);
+        WMError errCode = sceneSession->Connect(sessionStage, eventChannel, surfaceNode, persistentId, property);
         session = sceneSession;
-        return errCode;
+        return static_cast<WSError>(errCode);
     };
     WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);
     msgScheduler_->PostSyncTask(task);
@@ -250,7 +250,7 @@ WSError SceneSessionManager::DestroyAndDisconnectSpecificSession(const uint64_t&
         auto ret = sceneSession->UpdateActiveStatus(false);
         ret = sceneSession->Disconnect();
         abilitySceneMap_.erase(persistentId);
-        return ret;
+        return static_cast<WSError>(ret);
     };
 
     WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);

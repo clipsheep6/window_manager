@@ -63,8 +63,8 @@ public:
     void OnNewWant(const AAFwk::Want& want) override;
     void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback) override;
     // inherits from session stage
-    WSError SetActive(bool active) override;
-    WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) override;
+    WMError SetActive(bool active) override;
+    WMError UpdateRect(const Rect& rect, WindowSizeChangeReason reason) override;
     void NotifyPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
     void NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
     // callback

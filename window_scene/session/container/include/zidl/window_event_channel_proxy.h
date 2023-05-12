@@ -17,9 +17,10 @@
 #define OHOS_WINDOW_SCENE_WINDOW_EVENT_CHANNEL_RPOXY_H
 
 #include <iremote_proxy.h>
+#include <refbase.h>
 
-#include "interfaces/include/ws_common.h"
 #include "window_event_channel_interface.h"
+#include "wm_common.h"
 
 namespace OHOS::Rosen {
 class WindowEventChannelProxy : public IRemoteProxy<IWindowEventChannel> {
@@ -28,8 +29,8 @@ public:
 
     ~WindowEventChannelProxy() {};
 
-    WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
-    WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
+    WMError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
+    WMError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
 private:
     static inline BrokerDelegator<WindowEventChannelProxy> delegator_;
 };

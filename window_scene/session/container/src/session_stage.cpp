@@ -85,11 +85,11 @@ bool SessionStage::UnregisterListenerLocked(std::vector<std::shared_ptr<T>>& hol
     return true;
 }
 
-WSError SessionStage::Connect(const std::shared_ptr<RSSurfaceNode>& surfaceNode)
+WMError SessionStage::Connect(const std::shared_ptr<RSSurfaceNode>& surfaceNode)
 {
     if (session_ == nullptr) {
         WLOGFE("session is invalid");
-        return WSError::WS_ERROR_NULLPTR;
+        return WMError::WM_ERROR_NULLPTR;
     }
     sptr<SessionStage> sessionStage(this);
     sptr<IWindowEventChannel> eventChannel(new WindowEventChannel(sessionStage));
@@ -97,48 +97,48 @@ WSError SessionStage::Connect(const std::shared_ptr<RSSurfaceNode>& surfaceNode)
     return session_->Connect(sessionStage, eventChannel, surfaceNode, persistentId);
 }
 
-WSError SessionStage::Foreground()
+WMError SessionStage::Foreground()
 {
     if (session_ == nullptr) {
         WLOGFE("session is invalid");
-        return WSError::WS_ERROR_NULLPTR;
+        return WMError::WM_ERROR_NULLPTR;
     }
-    WSError res = session_->Foreground();
-    if (res == WSError::WS_OK) {
+    WMError res = session_->Foreground();
+    if (res == WMError::WM_OK) {
         NotifyAfterForeground();
     }
     return res;
 }
 
-WSError SessionStage::Background()
+WMError SessionStage::Background()
 {
     if (session_ == nullptr) {
         WLOGFE("session is invalid");
-        return WSError::WS_ERROR_NULLPTR;
+        return WMError::WM_ERROR_NULLPTR;
     }
     NotifyAfterBackground();
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
-WSError SessionStage::Disconnect()
+WMError SessionStage::Disconnect()
 {
     if (session_ == nullptr) {
         WLOGFE("session is invalid");
-        return WSError::WS_ERROR_NULLPTR;
+        return WMError::WM_ERROR_NULLPTR;
     }
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
-WSError SessionStage::PendingSessionActivation(const SessionInfo& info)
+WMError SessionStage::PendingSessionActivation(const SessionInfo& info)
 {
     if (session_ == nullptr) {
         WLOGFE("session is invalid");
-        return WSError::WS_ERROR_NULLPTR;
+        return WMError::WM_ERROR_NULLPTR;
     }
     return session_->PendingSessionActivation(info);
 }
 
-WSError SessionStage::SetActive(bool active)
+WMError SessionStage::SetActive(bool active)
 {
     WLOGFD("active status: %{public}d", active);
     if (active) {
@@ -146,24 +146,24 @@ WSError SessionStage::SetActive(bool active)
     } else {
         NotifyAfterInactive();
     }
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
-WSError SessionStage::UpdateRect(const WSRect& rect, SizeChangeReason reason)
+WMError SessionStage::UpdateRect(const Rect& rect, WindowSizeChangeReason reason)
 {
     WLOGFI("update rect [%{public}d, %{public}d, %{public}u, %{public}u], reason:%{public}u", rect.posX_, rect.posY_,
         rect.width_, rect.height_, reason);
     NotifySizeChange(rect, reason);
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
-WSError SessionStage::Recover()
+WMError SessionStage::Recover()
 {
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
-WSError SessionStage::Maximize()
+WMError SessionStage::Maximize()
 {
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 } // namespace OHOS::Rosen

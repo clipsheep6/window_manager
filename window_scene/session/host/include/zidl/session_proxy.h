@@ -17,8 +17,9 @@
 #define OHOS_ROSEN_WINDOW_SCENE_SESSION_RPOXY_H
 
 #include <iremote_proxy.h>
-#include "interfaces/include/ws_common.h"
+#include <refbase.h>
 #include "session/host/include/zidl/session_interface.h"
+#include "wm_common.h"
 
 namespace OHOS::Rosen {
 class SessionProxy : public IRemoteProxy<ISession> {
@@ -26,17 +27,17 @@ public:
     explicit SessionProxy(const sptr<IRemoteObject>& impl) : IRemoteProxy<ISession>(impl) {};
     ~SessionProxy() {};
 
-    WSError Foreground() override;
-    WSError Background() override;
-    WSError Disconnect() override;
-    WSError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
+    WMError Foreground() override;
+    WMError Background() override;
+    WMError Disconnect() override;
+    WMError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, uint64_t& persistentId,
         sptr<WindowSessionProperty> property = nullptr) override;
 
-    WSError UpdateActiveStatus(bool isActive) override;
-    WSError PendingSessionActivation(const SessionInfo& info) override;
-    WSError Recover() override;
-    WSError Maximize() override;
+    WMError UpdateActiveStatus(bool isActive) override;
+    WMError PendingSessionActivation(const SessionInfo& info) override;
+    WMError Recover() override;
+    WMError Maximize() override;
 private:
     static inline BrokerDelegator<SessionProxy> delegator_;
 };

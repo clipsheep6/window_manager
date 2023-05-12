@@ -23,23 +23,23 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneS
 
 SceneSession::SceneSession(const SessionInfo& info) : Session(info) {}
 
-WSError SceneSession::Recover()
+WMError SceneSession::Recover()
 {
     WLOGFI("Recover session, id: %{public}" PRIu64 ", state: %{public}u", GetPersistentId(),
         static_cast<uint32_t>(GetSessionState()));
     if (!IsSessionValid()) {
-        return WSError::WS_ERROR_INVALID_SESSION;
+        return WMError::WM_ERROR_INVALID_SESSION;
     }
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
-WSError SceneSession::Maximize()
+WMError SceneSession::Maximize()
 {
     WLOGFI("Maximize session id: %{public}" PRIu64 " state: %{public}u", GetPersistentId(),
         static_cast<uint32_t>(GetSessionState()));
     if (!IsSessionValid()) {
-        return WSError::WS_ERROR_INVALID_SESSION;
+        return WMError::WM_ERROR_INVALID_SESSION;
     }
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 } // namespace OHOS::Rosen

@@ -18,7 +18,7 @@
 
 #include <iremote_broker.h>
 
-#include "interfaces/include/ws_common.h"
+#include "wm_common.h"
 
 namespace OHOS::MMI {
     class PointerEvent;
@@ -36,8 +36,8 @@ public:
         TRANS_ID_TRANSFER_POINTER_EVENT,
     };
 
-    virtual WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) = 0;
-    virtual WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) = 0;
+    virtual WMError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) = 0;
+    virtual WMError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) = 0;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_SESSION_WINDOW_EVENT_CHANNEL_INTERFACE_H

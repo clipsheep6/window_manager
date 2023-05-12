@@ -18,7 +18,7 @@
 
 #include <iremote_broker.h>
 
-#include "interfaces/include/ws_common.h"
+#include "wm_common.h"
 
 namespace OHOS::MMI {
 class PointerEvent;
@@ -38,8 +38,8 @@ public:
     virtual void NotifyPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) {}
     virtual void NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) {}
 
-    virtual WSError SetActive(bool active) = 0;
-    virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) = 0;
+    virtual WMError SetActive(bool active) = 0;
+    virtual WMError UpdateRect(const Rect& rect, WindowSizeChangeReason reason) = 0;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_SESSION_STAGE_INTERFACE_H

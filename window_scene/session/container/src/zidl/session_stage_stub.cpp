@@ -52,7 +52,7 @@ int SessionStageStub::HandleSetActive(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("SetActive!");
     bool active = data.ReadBool();
-    WSError errCode = SetActive(active);
+    WMError errCode = SetActive(active);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -60,9 +60,9 @@ int SessionStageStub::HandleSetActive(MessageParcel& data, MessageParcel& reply)
 int SessionStageStub::HandleUpdateRect(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("UpdateRect!");
-    WSRect rect = { data.ReadInt32(), data.ReadInt32(), data.ReadUint32(), data.ReadUint32() };
-    SizeChangeReason reason = static_cast<SizeChangeReason>(data.ReadUint32());
-    WSError errCode = UpdateRect(rect, reason);
+    Rect rect = { data.ReadInt32(), data.ReadInt32(), data.ReadUint32(), data.ReadUint32() };
+    WindowSizeChangeReason reason = static_cast<WindowSizeChangeReason>(data.ReadUint32());
+    WMError errCode = UpdateRect(rect, reason);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }

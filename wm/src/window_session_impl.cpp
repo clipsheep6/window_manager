@@ -227,13 +227,11 @@ WMError WindowSessionImpl::Connect()
     }
     sptr<IWindowEventChannel> eventChannel(channel);
     uint64_t persistentId = INVALID_SESSION_ID;
-    WSError ret = hostSession_->Connect(iSessionStage, eventChannel, surfaceNode_, persistentId, property_);
+    WMError ret = hostSession_->Connect(iSessionStage, eventChannel, surfaceNode_, persistentId, property_);
     property_->SetPersistentId(persistentId);
-    // replace WSError with WMError
-    WMError res = static_cast<WMError>(ret);
     WLOGFI("Window Connect [name:%{public}s, id:%{public}" PRIu64 ", type: %{public}u], ret:%{public}u",
-        property_->GetWindowName().c_str(), property_->GetPersistentId(), property_->GetWindowType(), res);
-    return res;
+        property_->GetWindowName().c_str(), property_->GetPersistentId(), property_->GetWindowType(), ret);
+    return ret;
 }
 
 WMError WindowSessionImpl::Show(uint32_t reason, bool withAnimation)
@@ -250,16 +248,14 @@ WMError WindowSessionImpl::Show(uint32_t reason, bool withAnimation)
         return WMError::WM_OK;
     }
 
-    WSError ret = hostSession_->Foreground();
-    // delete after replace WSError with WMError
-    WMError res = static_cast<WMError>(ret);
-    if (res == WMError::WM_OK) {
+    WMError ret = hostSession_->Foreground();
+    if (ret == WMError::WM_OK) {
         NotifyAfterForeground();
         state_ = WindowState::STATE_SHOWN;
     } else {
-        NotifyForegroundFailed(res);
+        NotifyForegroundFailed(ret);
     }
-    return res;
+    return ret;
 }
 
 WMError WindowSessionImpl::Hide(uint32_t reason, bool withAnimation, bool isFromInnerkits)
@@ -275,24 +271,21 @@ WMError WindowSessionImpl::Hide(uint32_t reason, bool withAnimation, bool isFrom
             property_->GetWindowName().c_str(), property_->GetPersistentId(), property_->GetWindowType());
         return WMError::WM_OK;
     }
-    WSError ret = WSError::WS_OK;
+    WMError ret = WMError::WM_OK;
     if (!WindowHelper::IsMainWindow(GetType())) {
         // main window no need to notify host, since host knows hide first
         // need to SetActive(false) for host session before background
         ret = SetActive(false);
-        if (ret != WSError::WS_OK) {
-            return static_cast<WMError>(ret);
+        if (ret != WMError::WM_OK) {
+            return ret;
         }
         ret = hostSession_->Background();
     }
-
-    // delete after replace WSError with WMError
-    WMError res = static_cast<WMError>(ret);
-    if (res == WMError::WM_OK) {
+    if (ret == WMError::WM_OK) {
         NotifyAfterBackground();
         state_ = WindowState::STATE_HIDDEN;
     }
-    return res;
+    return ret;
 }
 
 WMError WindowSessionImpl::Destroy(bool needClearListener)
@@ -302,14 +295,12 @@ WMError WindowSessionImpl::Destroy(bool needClearListener)
         WLOGFE("session is invalid");
         return WMError::WM_OK;
     }
-    WSError ret = WSError::WS_OK;
+    WMError ret = WMError::WM_OK;
     if (!WindowHelper::IsMainWindow(GetType())) {
         // main window no need to notify host, since host knows hide first
         SessionManager::GetInstance().DestroyAndDisconnectSpecificSession(property_->GetPersistentId());
     }
-    // delete after replace WSError with WMError
-    WMError res = static_cast<WMError>(ret);
-    if (res == WMError::WM_OK) {
+    if (ret == WMError::WM_OK) {
         NotifyBeforeDestroy(GetWindowName());
         state_ = WindowState::STATE_DESTROYED;
     }
@@ -318,7 +309,7 @@ WMError WindowSessionImpl::Destroy(bool needClearListener)
     }
     hostSession_ = nullptr;
     windowSessionMap_.erase(property_->GetWindowName());
-    return res;
+    return ret;
 }
 
 WMError WindowSessionImpl::Destroy()
@@ -326,11 +317,11 @@ WMError WindowSessionImpl::Destroy()
     return Destroy(true);
 }
 
-WSError WindowSessionImpl::SetActive(bool active)
+WMError WindowSessionImpl::SetActive(bool active)
 {
     WLOGFD("active status: %{public}d", active);
-    WSError ret = hostSession_->UpdateActiveStatus(active);
-    if (ret != WSError::WS_OK) {
+    WMError ret = hostSession_->UpdateActiveStatus(active);
+    if (ret != WMError::WM_OK) {
         return ret;
     }
     if (active) {
@@ -338,21 +329,519 @@ WSError WindowSessionImpl::SetActive(bool active)
     } else {
         NotifyAfterInactive();
     }
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
-WSError WindowSessionImpl::UpdateRect(const WSRect& rect, SizeChangeReason reason)
+WMError WindowSessionImpl::UpdateRect(const Rect& rect, +
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+WindowSizeChangeReason reason)
 {
     WLOGFI("update rect [%{public}d, %{public}d, %{public}u, %{public}u], reason:%{public}u", rect.posX_, rect.posY_,
         rect.width_, rect.height_, reason);
-
-    // delete after replace ws_common.h with wm_common.h
-    auto wmReason = static_cast<WindowSizeChangeReason>(reason);
-    Rect wmRect = { rect.posX_, rect.posY_, rect.width_, rect.height_ };
-    property_->SetWindowRect(wmRect);
-    NotifySizeChange(wmRect, wmReason);
-    UpdateViewportConfig(wmRect, wmReason);
-    return WSError::WS_OK;
+    property_->SetWindowRect(rect);
+    NotifySizeChange(rect, reason);
+    UpdateViewportConfig(rect, reason);
+    return WMError::WM_OK;
 }
 
 void WindowSessionImpl::UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason)
@@ -364,6 +853,7 @@ void WindowSessionImpl::UpdateViewportConfig(const Rect& rect, WindowSizeChangeR
     Ace::ViewportConfig config;
     config.SetSize(rect.width_, rect.height_);
     config.SetPosition(rect.posX_, rect.posY_);
+    // need replace after dms enabled
     float density = rect.height_ > 2700 ? 3.5f : 1.5f; // 2700: phone height; 3.5f/1.5f: normal desity
     config.SetDensity(density);
     uiContent_->UpdateViewportConfig(config, reason);

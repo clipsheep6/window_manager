@@ -28,6 +28,7 @@ namespace {
 constexpr uint64_t INVALID_SESSION_ID = 0;
 }
 
+// coresponding to WMError
 enum class WSError : int32_t {
     WS_OK = 0,
     WS_DO_NOTHING,
@@ -92,41 +93,6 @@ struct SessionInfo {
     std::string bundleName_ = "";
     std::string abilityName_ = "";
     sptr<IRemoteObject> callerToken_ = nullptr;
-};
-
-enum class SizeChangeReason : uint32_t {
-    UNDEFINED = 0,
-    MAXIMIZE,
-    RECOVER,
-    ROTATION,
-    DRAG,
-    DRAG_START,
-    DRAG_END,
-    RESIZE,
-    MOVE,
-    HIDE,
-    TRANSFORM,
-    CUSTOM_ANIMATION_SHOW,
-    FULL_TO_SPLIT,
-    SPLIT_TO_FULL,
-    END,
-};
-
-struct WSRect {
-    int32_t posX_ = 0;
-    int32_t posY_ = 0;
-    uint32_t width_ = 0;
-    uint32_t height_ = 0;
-
-    bool operator==(const WSRect& a) const
-    {
-        return (posX_ == a.posX_ && posY_ == a.posY_ && width_ == a.width_ && height_ == a.height_);
-    }
-
-    bool operator!=(const WSRect& a) const
-    {
-        return !this->operator==(a);
-    }
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_WS_COMMON_H

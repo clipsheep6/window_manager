@@ -18,6 +18,7 @@
 
 #include "interfaces/include/ws_common.h"
 #include "session/host/include/session.h"
+#include "wm_common.h"
 
 namespace OHOS::Rosen {
 class SceneSession : public Session {
@@ -25,8 +26,8 @@ public:
     SceneSession(const SessionInfo& info);
     ~SceneSession() = default;
 
-    WSError Recover() override;
-    WSError Maximize() override;
+    WMError Recover() override;
+    WMError Maximize() override;
 };
 } // namespace OHOS::Rosen
 

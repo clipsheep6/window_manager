@@ -26,25 +26,25 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowEventChannel" };
 }
 
-WSError WindowEventChannel::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
+WMError WindowEventChannel::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
     WLOGFD("WindowEventChannel receive key event");
     if (!sessionStage_) {
         WLOGFE("session stage is null!");
-        return WSError::WS_ERROR_NULLPTR;
+        return WMError::WM_ERROR_NULLPTR;
     }
     sessionStage_->NotifyKeyEvent(keyEvent);
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
-WSError WindowEventChannel::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+WMError WindowEventChannel::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
     WLOGFD("WindowEventChannel receive pointer event");
     if (!sessionStage_) {
         WLOGFE("session stage is null!");
-        return WSError::WS_ERROR_NULLPTR;
+        return WMError::WM_ERROR_NULLPTR;
     }
     sessionStage_->NotifyPointerEvent(pointerEvent);
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 } // namespace OHOS::Rosen

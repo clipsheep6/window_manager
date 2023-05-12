@@ -24,6 +24,7 @@
 #include "session/container/include/zidl/session_stage_stub.h"
 #include "session/container/include/zidl/window_event_channel_interface.h"
 #include "session/host/include/zidl/session_interface.h"
+#include "wm_common.h"
 
 namespace OHOS::MMI {
 class PointerEvent;
@@ -42,7 +43,7 @@ public:
 
 class ISizeChangeListener {
 public:
-    virtual void OnSizeChange(const WSRect& rect, SizeChangeReason reason) = 0;
+    virtual void OnSizeChange(const Rect& rect, WindowSizeChangeReason reason) = 0;
 };
 
 class IInputEventListener {
@@ -75,17 +76,17 @@ public:
     explicit SessionStage(const sptr<ISession>& session);
     virtual ~SessionStage() = default;
 
-    virtual WSError Connect(const std::shared_ptr<RSSurfaceNode>& surfaceNode);
-    virtual WSError Foreground();
-    virtual WSError Background();
-    virtual WSError Disconnect();
-    virtual WSError PendingSessionActivation(const SessionInfo& info);
+    virtual WMError Connect(const std::shared_ptr<RSSurfaceNode>& surfaceNode);
+    virtual WMError Foreground();
+    virtual WMError Background();
+    virtual WMError Disconnect();
+    virtual WMError PendingSessionActivation(const SessionInfo& info);
     // for scene session stage
-    virtual WSError Recover();
-    virtual WSError Maximize();
+    virtual WMError Recover();
+    virtual WMError Maximize();
 
-    WSError SetActive(bool active) override;
-    WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) override;
+    WMError SetActive(bool active) override;
+    WMError UpdateRect(const Rect& rect, WindowSizeChangeReason reason) override;
 
     bool RegisterSessionStageStateListener(const std::shared_ptr<ISessionStageStateListener>& listener);
     bool UnregisterSessionStageStateListener(const std::shared_ptr<ISessionStageStateListener>& listener);
@@ -115,7 +116,7 @@ public:
     }
 
 protected:
-    void NotifySizeChange(const WSRect& rect, SizeChangeReason reason)
+    void NotifySizeChange(const Rect& rect, WindowSizeChangeReason reason)
     {
         auto sizeChangeListeners = GetListeners<ISizeChangeListener>();
         for (auto& listener : sizeChangeListeners) {
