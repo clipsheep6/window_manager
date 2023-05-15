@@ -102,7 +102,7 @@ ohos_shared_library("libwms") {
     "config_policy:configpolicy_util",
     "display_manager:displaymgr",
     "eventhandler:libeventhandler",
-    "graphic_standard:window_animation",
+    "graphic_2d:window_animation",
     "hicollie_native:libhicollie",
     "hilog_native:libhilog",
     "hisysevent_native:libhisysevent",
