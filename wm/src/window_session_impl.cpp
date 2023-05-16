@@ -183,6 +183,11 @@ WMError WindowSessionImpl::WindowSessionCreateCheck()
 WMError WindowSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Context>& context,
     const sptr<Rosen::ISession>& iSession)
 {
+    if (!Permission::IsSystemCalling() && !Permission::IsStartByInputMethod()) {
+        WLOGFE("yangfei check input method failed");
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    WLOGFE("yangfei check input method success");
     // allow iSession is nullptr when create from window manager
     if (!context) {
         WLOGFE("context is nullptr: %{public}u", context == nullptr);
