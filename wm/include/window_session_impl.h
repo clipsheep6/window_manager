@@ -26,6 +26,7 @@
 #include "session/host/include/zidl/session_interface.h"
 #include "window.h"
 #include "window_option.h"
+#include "permission.h"
 
 namespace OHOS {
 namespace Rosen {
