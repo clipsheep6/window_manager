@@ -16,8 +16,8 @@
 #ifndef OHOS_ROSEN_WINDOW_SCENE_SCENE_SESSION_STAGE_H
 #define OHOS_ROSEN_WINDOW_SCENE_SCENE_SESSION_STAGE_H
 
-#include "interfaces/include/ws_common.h"
 #include "session/container/include/session_stage.h"
+#include "wm_common.h"
 
 namespace OHOS::Rosen {
 class SceneSessionStage : public SessionStage {
@@ -25,8 +25,8 @@ public:
     SceneSessionStage(const sptr<ISession>& sceneSession);
     ~SceneSessionStage() = default;
 
-    WSError Recover() override;
-    WSError Maximize() override;
+    WMError Recover() override;
+    WMError Maximize() override;
 };
 } // namespace OHOS::Rosen
 

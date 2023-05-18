@@ -18,7 +18,7 @@
 
 #include <iremote_proxy.h>
 
-#include "interfaces/include/ws_common.h"
+#include "wm_common.h"
 #include "session/container/include/zidl/session_stage_interface.h"
 
 namespace OHOS::Rosen {
@@ -28,8 +28,8 @@ public:
 
     ~SessionStageProxy() {};
 
-    WSError SetActive(bool active) override;
-    WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) override;
+    WMError SetActive(bool active) override;
+    WMError UpdateRect(const Rect& rect, WindowSizeChangeReason reason) override;
 private:
     static inline BrokerDelegator<SessionStageProxy> delegator_;
 };

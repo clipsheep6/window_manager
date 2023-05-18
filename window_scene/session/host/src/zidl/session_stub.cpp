@@ -59,7 +59,7 @@ int SessionStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParc
 int SessionStub::HandleForeground(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("Foreground!");
-    WSError errCode = Foreground();
+    WMError errCode = Foreground();
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -67,7 +67,7 @@ int SessionStub::HandleForeground(MessageParcel& data, MessageParcel& reply)
 int SessionStub::HandleBackground(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("Background!");
-    WSError errCode = Background();
+    WMError errCode = Background();
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -75,7 +75,7 @@ int SessionStub::HandleBackground(MessageParcel& data, MessageParcel& reply)
 int SessionStub::HandleDisconnect(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("Disconnect!");
-    WSError errCode = Disconnect();
+    WMError errCode = Disconnect();
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -100,7 +100,7 @@ int SessionStub::HandleConnect(MessageParcel& data, MessageParcel& reply)
         WLOGFW("Property not exist!");
     }
     uint64_t persistentId = INVALID_SESSION_ID;
-    WSError errCode = Connect(sessionStage, eventChannel, surfaceNode, persistentId, property);
+    WMError errCode = Connect(sessionStage, eventChannel, surfaceNode, persistentId, property);
     reply.WriteUint64(persistentId);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
@@ -109,7 +109,7 @@ int SessionStub::HandleConnect(MessageParcel& data, MessageParcel& reply)
 int SessionStub::HandleRecover(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("Recover!");
-    WSError errCode = Recover();
+    WMError errCode = Recover();
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -117,7 +117,7 @@ int SessionStub::HandleRecover(MessageParcel& data, MessageParcel& reply)
 int SessionStub::HandleMaximize(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("Maximize!");
-    WSError errCode = Maximize();
+    WMError errCode = Maximize();
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -131,7 +131,7 @@ int SessionStub::HandlePendingSessionActivation(MessageParcel& data, MessageParc
     if (data.ReadBool()) {
         info.callerToken_ = data.ReadRemoteObject();
     }
-    WSError errCode = PendingSessionActivation(info);
+    WMError errCode = PendingSessionActivation(info);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -140,7 +140,7 @@ int SessionStub::HandleUpdateActivateStatus(MessageParcel& data, MessageParcel& 
 {
     WLOGFD("HandleUpdateActivateStatus!");
     bool isActive = data.ReadBool();
-    WSError errCode = UpdateActiveStatus(isActive);
+    WMError errCode = UpdateActiveStatus(isActive);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }

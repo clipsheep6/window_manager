@@ -19,6 +19,7 @@
 #include "interfaces/include/ws_common.h"
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/container/include/zidl/window_event_channel_stub.h"
+#include "wm_common.h"
 
 namespace OHOS::Rosen {
 class WindowEventChannel : public WindowEventChannelStub {
@@ -26,8 +27,8 @@ public:
     explicit WindowEventChannel(sptr<ISessionStage> iSessionStage) : sessionStage_(iSessionStage) {}
     ~WindowEventChannel() = default;
 
-    WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
-    WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
+    WMError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
+    WMError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
 
 private:
     sptr<ISessionStage> sessionStage_ = nullptr;

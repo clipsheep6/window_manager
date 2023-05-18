@@ -64,7 +64,7 @@ int WindowEventChannelStub::HandleTransferKeyEvent(MessageParcel& data, MessageP
         WLOGFE("Read Key Event failed");
         return ERR_INVALID_DATA;
     }
-    WSError errCode = TransferKeyEvent(keyEvent);
+    WMError errCode = TransferKeyEvent(keyEvent);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -81,7 +81,7 @@ int WindowEventChannelStub::HandleTransferPointerEvent(MessageParcel& data, Mess
         WLOGFE("Read Pointer Event failed");
         return ERR_INVALID_DATA;
     }
-    WSError errCode = TransferPointerEvent(pointerEvent);
+    WMError errCode = TransferPointerEvent(pointerEvent);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }

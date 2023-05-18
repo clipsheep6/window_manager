@@ -140,20 +140,20 @@ bool Session::IsSessionValid() const
     return res;
 }
 
-WSError Session::UpdateRect(const WSRect& rect, SizeChangeReason reason)
+WMError Session::UpdateRect(const Rect& rect, WindowSizeChangeReason reason)
 {
     WLOGFI("session update rect: id: %{public}" PRIu64 ", rect[%{public}d, %{public}d, %{public}u, %{public}u], "\
         "reason:%{public}u", GetPersistentId(), rect.posX_, rect.posY_, rect.width_, rect.height_, reason);
     if (!IsSessionValid()) {
         winRect_ = rect;
-        return WSError::WS_ERROR_INVALID_SESSION;
+        return WMError::WM_ERROR_INVALID_SESSION;
     }
     winRect_ = rect;
     sessionStage_->UpdateRect(rect, reason);
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
-WSError Session::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
+WMError Session::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
     const std::shared_ptr<RSSurfaceNode>& surfaceNode, uint64_t& persistentId, sptr<WindowSessionProperty> property)
 {
     persistentId = GetPersistentId();
@@ -161,11 +161,11 @@ WSError Session::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWi
         static_cast<uint32_t>(GetSessionState()));
     if (GetSessionState() != SessionState::STATE_DISCONNECT) {
         WLOGFE("state is not disconnect!");
-        return WSError::WS_ERROR_INVALID_SESSION;
+        return WMError::WM_ERROR_INVALID_SESSION;
     }
     if (sessionStage == nullptr || eventChannel == nullptr) {
         WLOGFE("session stage or eventChannel is nullptr");
-        return WSError::WS_ERROR_NULLPTR;
+        return WMError::WM_ERROR_NULLPTR;
     }
     sessionStage_ = sessionStage;
     windowEventChannel_ = eventChannel;
@@ -173,19 +173,19 @@ WSError Session::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWi
     property_ = property;
     UpdateSessionState(SessionState::STATE_CONNECT);
     // once update rect before connect, update again when connect
-    UpdateRect(winRect_, SizeChangeReason::UNDEFINED);
+    UpdateRect(winRect_, WindowSizeChangeReason::UNDEFINED);
     NotifyConnect();
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
-WSError Session::Foreground()
+WMError Session::Foreground()
 {
     SessionState state = GetSessionState();
     WLOGFI("Foreground session, id: %{public}" PRIu64 ", state: %{public}u", GetPersistentId(),
         static_cast<uint32_t>(state));
     if (state != SessionState::STATE_CONNECT && state != SessionState::STATE_BACKGROUND) {
         WLOGFE("state invalid!");
-        return WSError::WS_ERROR_INVALID_SESSION;
+        return WMError::WM_ERROR_INVALID_SESSION;
     }
 
     UpdateSessionState(SessionState::STATE_FOREGROUND);
@@ -193,26 +193,26 @@ WSError Session::Foreground()
         SetActive(true);
     }
     NotifyForeground();
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
-WSError Session::Background()
+WMError Session::Background()
 {
     SessionState state = GetSessionState();
     WLOGFI("Background session, id: %{public}" PRIu64 ", state: %{public}u", GetPersistentId(),
         static_cast<uint32_t>(state));
     if (state < SessionState::STATE_INACTIVE) { // only STATE_INACTIVE can transfer to background
         WLOGFE("state invalid!");
-        return WSError::WS_ERROR_INVALID_SESSION;
+        return WMError::WM_ERROR_INVALID_SESSION;
     }
     UpdateSessionState(SessionState::STATE_BACKGROUND);
 
     snapshot_ = Snapshot();
     NotifyBackground();
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
-WSError Session::Disconnect()
+WMError Session::Disconnect()
 {
     SessionState state = GetSessionState();
     WLOGFI("Disconnect session, id: %{public}" PRIu64 ", state: %{public}u", GetPersistentId(),
@@ -221,20 +221,20 @@ WSError Session::Disconnect()
     if (GetSessionState() == SessionState::STATE_BACKGROUND) {
         UpdateSessionState(SessionState::STATE_DISCONNECT);
     }
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
-WSError Session::SetActive(bool active)
+WMError Session::SetActive(bool active)
 {
     SessionState state = GetSessionState();
     WLOGFI("Session update active: %{public}d, id: %{public}" PRIu64 ", state: %{public}u", active, GetPersistentId(),
         static_cast<uint32_t>(state));
     if (!IsSessionValid()) {
-        return WSError::WS_ERROR_INVALID_SESSION;
+        return WMError::WM_ERROR_INVALID_SESSION;
     }
     if (active == isActive_) {
         WLOGFD("Session active do not change: [%{public}d]", active);
-        return WSError::WS_DO_NOTHING;
+        return WMError::WM_DO_NOTHING;
     }
     if (active && GetSessionState() == SessionState::STATE_FOREGROUND) {
         sessionStage_->SetActive(true);
@@ -246,15 +246,15 @@ WSError Session::SetActive(bool active)
         UpdateSessionState(SessionState::STATE_INACTIVE);
         isActive_ = active;
     }
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
-WSError Session::PendingSessionActivation(const SessionInfo& info)
+WMError Session::PendingSessionActivation(const SessionInfo& info)
 {
     if (pendingSessionActivationFunc_) {
         pendingSessionActivationFunc_(info);
     }
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
 void Session::SetPendingSessionActivationEventListener(const NotifyPendingSessionActivationFunc& func)
@@ -262,32 +262,32 @@ void Session::SetPendingSessionActivationEventListener(const NotifyPendingSessio
     pendingSessionActivationFunc_ = func;
 }
 
-WSError Session::Recover()
+WMError Session::Recover()
 {
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
-WSError Session::Maximize()
+WMError Session::Maximize()
 {
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 
-WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+WMError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
     WLOGFD("Session TransferPointEvent");
     if (!windowEventChannel_) {
         WLOGFE("windowEventChannel_ is null");
-        return WSError::WS_ERROR_NULLPTR;
+        return WMError::WM_ERROR_NULLPTR;
     }
     return windowEventChannel_->TransferPointerEvent(pointerEvent);
 }
 
-WSError Session::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
+WMError Session::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
     WLOGFD("Session TransferKeyEvent");
     if (!windowEventChannel_) {
         WLOGFE("windowEventChannel_ is null");
-        return WSError::WS_ERROR_NULLPTR;
+        return WMError::WM_ERROR_NULLPTR;
     }
     return windowEventChannel_->TransferKeyEvent(keyEvent);
 }
@@ -323,23 +323,24 @@ void Session::NotifySessionStateChange(const SessionState& state)
     }
 }
 
-void Session::SetSessionRect(const WSRect& rect)
+void Session::SetSessionRect(const Rect& rect)
 {
     winRect_ = rect;
 }
-WSRect Session::GetSessionRect() const
+
+Rect Session::GetSessionRect() const
 {
     return winRect_;
 }
 
-WSError Session::UpdateActiveStatus(bool isActive)
+WMError Session::UpdateActiveStatus(bool isActive)
 {
     if (!IsSessionValid()) {
-        return WSError::WS_ERROR_INVALID_SESSION;
+        return WMError::WM_ERROR_INVALID_SESSION;
     }
     if (isActive == isActive_) {
         WLOGFD("Session active do not change: [%{public}d]", isActive);
-        return WSError::WS_DO_NOTHING;
+        return WMError::WM_DO_NOTHING;
     }
     isActive_ = isActive;
     if (isActive && GetSessionState() == SessionState::STATE_FOREGROUND) {
@@ -349,6 +350,6 @@ WSError Session::UpdateActiveStatus(bool isActive)
         UpdateSessionState(SessionState::STATE_INACTIVE);
     }
     WLOGFD("UpdateActiveStatus, status: %{public}d", isActive);
-    return WSError::WS_OK;
+    return WMError::WM_OK;
 }
 } // namespace OHOS::Rosen

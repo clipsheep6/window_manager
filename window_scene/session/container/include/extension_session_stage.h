@@ -16,7 +16,6 @@
 #ifndef OHOS_ORSEN_WINDOW_SCENE_EXTENSION_SESSION_STAGE_H
 #define OHOS_ORSEN_WINDOW_SCENE_EXTENSION_SESSION_STAGE_H
 
-#include "interfaces/include/ws_common.h"
 #include "session/container/include/session_stage.h"
 #include "session/host/include/zidl/session_interface.h"
 
