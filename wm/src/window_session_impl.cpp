@@ -127,6 +127,11 @@ uint64_t WindowSessionImpl::GetPersistentId() const
 
 WMError WindowSessionImpl::CreateAndConnectSpecificSession()
 {
+    if (!Permission::IsSystemCalling() && !Permission::IsStartByInputMethod()) {
+        WLOGFE("yangfei check input method failed");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    WLOGFE("yangfei check success");
     sptr<ISessionStage> iSessionStage(this);
     sptr<WindowEventChannel> channel = new (std::nothrow) WindowEventChannel(iSessionStage);
     if (channel == nullptr) {
