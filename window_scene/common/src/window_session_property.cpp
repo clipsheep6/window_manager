@@ -108,6 +108,15 @@ uint64_t WindowSessionProperty::GetPersistentId() const
     return persistentId_;
 }
 
+uint64_t WindowSessionProperty::GetParentId() const
+{
+    return parentId_;
+}
+void WindowSessionProperty::SetParentId(uint64_t parentId)
+{
+    parentId_ = parentId;
+}
+
 bool WindowSessionProperty::Marshalling(Parcel& parcel) const
 {
     return parcel.WriteString(windowName_) && parcel.WriteInt32(windowRect_.posX_) &&

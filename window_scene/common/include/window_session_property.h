@@ -39,6 +39,7 @@ public:
     void SetDisplayId(uint64_t displayId);
     void SetWindowType(WindowType type);
     void SetPersistentId(uint64_t persistentId);
+    void SetParentId(uint64_t parentId);
 
     const std::string& GetWindowName() const;
     const SessionInfo& GetSessionInfo() const;
@@ -49,6 +50,7 @@ public:
     bool GetTouchable() const;
     uint64_t GetDisplayId() const;
     uint64_t GetPersistentId() const;
+    uint64_t GetParentId() const;
 
     bool Marshalling(Parcel& parcel) const override;
     static WindowSessionProperty* Unmarshalling(Parcel& parcel);
@@ -62,6 +64,7 @@ private:
     bool touchable_ { true };
     uint64_t displayId_ = 0;
     uint64_t persistentId_ = INVALID_SESSION_ID;
+    uint64_t parentId_ = INVALID_SESSION_ID;
 };
 } // namespace Rosen
 } // namespace OHOS
