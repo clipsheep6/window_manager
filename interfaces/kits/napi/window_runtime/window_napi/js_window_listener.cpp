@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "event_handler.h"
 #include "js_window_listener.h"
 #include "js_runtime_utils.h"
 #include "window_manager_hilog.h"
