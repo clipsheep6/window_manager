@@ -128,6 +128,7 @@ static void GetNativeContext(NativeEngine& engine, NativeValue* nativeContext, v
     if (isOldApi) {
         return;
     }
+    WLOGFI("[TEST_CONTEXT] nativeContext is nullptr :%{public}d", nativeContext == nullptr);
     if (nativeContext != nullptr) {
         auto objContext = AbilityRuntime::ConvertNativeValueTo<NativeObject>(nativeContext);
         if (objContext == nullptr) {
@@ -136,6 +137,7 @@ static void GetNativeContext(NativeEngine& engine, NativeValue* nativeContext, v
             return;
         }
         contextPtr = objContext->GetNativePointer();
+        WLOGFI("[TEST_CONTEXT] contextPtr is nullptr :%{public}d", contextPtr == nullptr);
     }
 }
 

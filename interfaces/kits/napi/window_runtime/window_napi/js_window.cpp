@@ -1359,6 +1359,7 @@ static void LoadContentTask(std::shared_ptr<NativeReference> contentStorage, std
     NativeValue* nativeStorage =  (contentStorage == nullptr) ? nullptr : contentStorage->Get();
     AppExecFwk::Ability* ability = nullptr;
     GetAPI7Ability(engine, ability);
+    WLOGI("LoadContentTask [TEST_CONTEXT] [%{public}d]", ability == nullptr);
     WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(
         weakWindow->SetUIContent(contextUrl, &engine, nativeStorage, false, ability));
     if (ret == WmErrorCode::WM_OK) {
