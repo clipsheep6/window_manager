@@ -520,8 +520,10 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
     }
     std::unique_ptr<Ace::UIContent> uiContent;
     if (ability != nullptr) {
+        WLOGFI("[TEST_CONTEXT] SetUIContent ability");
         uiContent = Ace::UIContent::Create(ability);
     } else {
+        WLOGFI("[TEST_CONTEXT] SetUIContent, %{public}d", context_.get() == nullptr);
         uiContent = Ace::UIContent::Create(context_.get(), engine);
     }
     if (uiContent == nullptr) {
@@ -1037,7 +1039,7 @@ void WindowImpl::ChangePropertyByApiVersion()
 
 WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRuntime::Context>& context)
 {
-    WLOGFD("Window[%{public}s] Create", name_.c_str());
+    WLOGFI("[TEST_CONTEXT] Window[%{public}s] Create, %{public}d", name_.c_str(), context == nullptr);
     WMError ret = WindowCreateCheck(parentId);
     if (ret != WMError::WM_OK) {
         return ret;
