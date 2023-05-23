@@ -24,6 +24,7 @@
 #include "interfaces/include/ws_common.h"
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/host/include/zidl/session_stub.h"
+#include "foundation/multimedia/image_framework/interfaces/innerkits/include/image_packer.h"
 
 namespace OHOS::MMI {
 class PointerEvent;
@@ -89,6 +90,7 @@ public:
     void SetSessionStateChangeListenser(const NotifySessionStateChangeFunc& func);
     void NotifySessionStateChange(const SessionState& state);
     WSError UpdateActiveStatus(bool isActive) override; // update active status from session_stage
+    void SetAppFilesDir(std::string strPath);
 
 protected:
     void UpdateSessionState(SessionState state);
@@ -133,6 +135,14 @@ private:
     sptr<IWindowEventChannel> windowEventChannel_ = nullptr;
 
     std::shared_ptr<Media::PixelMap> snapshot_;
+    std::string m_strFilesPath;
+    WSError SavePixelMap(
+        const std::shared_ptr<Media::PixelMap> &pixelMap,
+        const std::string &outFilePath
+    );
+    bool IsDirExist(std::string path);
+    bool MkDir(const std::string &path);
+    std::string GetPixelMapFileDir();
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_H
