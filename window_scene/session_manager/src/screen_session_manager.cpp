@@ -167,6 +167,131 @@ sptr<DisplayInfo> ScreenSessionManager::GetDefaultDisplayInfo()
     }
 }
 
+DMError ScreenSessionManager::SetScreenActiveMode(ScreenId screenId, uint32_t modeId)
+{
+    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("set screen active permission denied!");
+        return DMError::DM_ERROR_NOT_SYSTEM_APP;
+    }
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SetScreenActiveMode(%" PRIu64", %u)", screenId, modeId);
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (screenSession) {
+        return screenSession->SetScreenActiveMode(modeId);
+    } else {
+        WLOGFE("get screen session faile.");
+        return DMError::DM_ERROR_UNKNOWN;
+    }
+}
+
+sptr<SupportedScreenModes> ScreenSessionManager::GetActiveScreenMode() const
+{
+    if (activeIdx_ < 0 || activeIdx_ >= static_cast<int32_t>(modes_.size())) {
+        WLOGE("active mode index is wrong: %{public}d", activeIdx_);
+        return nullptr;
+    }
+    return modes_[activeIdx_];
+}
+
+ScreenSourceMode ScreenSessionManager::GetSourceMode() const
+{
+  return ScreenSourceMode::SCREEN_ALONE;
+}
+
+void ScreenSessionManager::FillScreenInfo(sptr<ScreenInfo> info) const
+{
+    if (info == nullptr) {
+        WLOGE("FillScreenInfo failed! info is nullptr");
+        return;
+    }
+    info->id_ = dmsId_;
+    info->name_ = name_;
+    uint32_t width = 0;
+    uint32_t height = 0;
+    sptr<SupportedScreenModes> ScreenSessionModes = GetActiveScreenMode();
+    if (ScreenSessionModes != nullptr) {
+        height = ScreenSessionModes->height_;
+        width = ScreenSessionModes->width_;
+    }
+    float virtualPixelRatio = virtualPixelRatio_;
+    // "< 1e-6" means virtualPixelRatio is 0.
+    if (fabsf(virtualPixelRatio) < 1e-6) {
+        virtualPixelRatio = 1.0f;
+    }
+    ScreenSourceMode sourceMode = GetSourceMode();
+    info->virtualPixelRatio_ = virtualPixelRatio;
+    info->virtualHeight_ = height / virtualPixelRatio;
+    info->virtualWidth_ = width / virtualPixelRatio;
+    // info->lastParent_ = lastGroupDmsId_;
+    // info->parent_ = groupDmsId_;
+    // info->isScreenGroup_ = isScreenGroup_;
+    // info->rotation_ = rotation_;
+    // info->orientation_ = orientation_;
+    info->sourceMode_ = sourceMode;
+    // info->type_ = type_;
+    // info->modeId_ = activeIdx_;
+    // info->modes_ = modes_;
+}
+
+sptr<ScreenInfo> ScreenSessionManager::ConvertToScreenInfo() const
+{
+    sptr<ScreenInfo> info = new(std::nothrow)   ();
+    if (info == nullptr) {
+        return nullptr;
+    }
+    FillScreenInfo(info);
+    return info;
+}
+
+void ScreenSessionManager::NotifyScreenChanged(sptr<ScreenInfo> screenInfo, ScreenChangeEvent event) const
+{
+    if (screenInfo == nullptr) {
+        WLOGFE("NotifyScreenChanged error, screenInfo is nullptr.");
+        return;
+    }
+    auto task = [=] {
+        WLOGFI("NotifyScreenChanged,  screenId:%{public}" PRIu64"", screenInfo->GetScreenId());
+        // from display_manager_agent_controller.cpp onscreenconnect
+        if (screenInfo == nullptr) 
+        {
+        return;
+        }
+        auto agents = dmAgentContainer_.GetAgentsByType(DisplayManagerAgentType::SCREEN_EVENT_LISTENER);
+        if (agents.empty()) {
+        return;
+        }
+        WLOGFI("OnScreenChange");
+        for (auto& agent : agents) {
+            agent->OnScreenChange(screenInfo, event);
+        }   
+    };
+    controllerHandler_->PostTask(task, AppExecFwk::EventQueue::Priority::HIGH);
+}
+
+DMError ScreenSessionManager::SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio)
+{
+
+    // from display_manager_service.cpp
+    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("set virtual pixel permission denied!");
+        return DMError::DM_ERROR_NOT_SYSTEM_APP;
+    }
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SetVirtualPixelRatio(%" PRIu64", %f)", screenId,
+        virtualPixelRatio);
+
+    // from abstract_screen_controller.cpp
+    WLOGD("set virtual pixel ratio. screen %{public}" PRIu64" virtualPixelRatio %{public}f",
+        screenId, virtualPixelRatio);
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (!session) {
+        WLOGFE("screen session is nullptr"); 
+        return session;
+    }
+    screenSession->SetVirtualPixelRatio(virtualPixelRatio);
+    NotifyScreenChanged(screenSession->ConvertToScreenInfo(), ScreenChangeEvent::VIRTUAL_PIXEL_RATIO_CHANGED);
+
+    return DMError::DM_OK;
+}
+
 sptr<ScreenSession> ScreenSessionManager::GetOrCreateScreenSession(ScreenId screenId)
 {
     auto sessionIt = screenSessionMap_.find(screenId);
@@ -176,9 +301,14 @@ sptr<ScreenSession> ScreenSessionManager::GetOrCreateScreenSession(ScreenId scre
 
     auto screenMode = rsInterface_.GetScreenActiveMode(screenId);
     auto screenBounds = RRect({ 0, 0, screenMode.GetScreenWidth(), screenMode.GetScreenHeight() }, 0.0f, 0.0f);
+    auto screenRefreshRate = screenMode.GetScreenRefreshRate();
+    RSScreenCapability screenCapability = rsInterface_.GetScreenCapability(rsScreenId);
     ScreenProperty property;
-    property.SetRotation(0.0f);
+  // property.SetRotation(0.0f);
     property.SetBounds(screenBounds);
+    property.SetRefreshRate(screenRefreshRate);
+    property.SetPhyWidth(screenCapability.GetPhyWidth());
+    property->SetPhyHeight(screenCapability.GetPhyHeight());
     sptr<ScreenSession> session = new(std::nothrow) ScreenSession(screenId, property);
     if (!session) {
         WLOGFE("screen session is nullptr");

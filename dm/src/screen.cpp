@@ -214,4 +214,4 @@ sptr<ScreenInfo> Screen::GetScreenInfo() const
     UpdateScreenInfo();
     return pImpl_->GetScreenInfo();
 }
-} // namespace OHOS::Rosen
+} // namespace OHOS::Rosen 

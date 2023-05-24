@@ -35,7 +35,14 @@ public:
 class RSInterfaces;
 
 class ScreenSessionManager : public ScreenSessionManagerStub {
+using OnAbstractScreenConnectCb = std::function<void(sptr<AbstractScreen>)>;
+using OnAbstractScreenChangeCb = std::function<void(sptr<AbstractScreen>, DisplayChangeEvent event)>;
 public:
+struct AbstractScreenCallback : public RefBase {
+        OnAbstractScreenConnectCb onConnect_;
+        OnAbstractScreenConnectCb onDisconnect_;
+        OnAbstractScreenChangeCb onChange_;
+    };
     static ScreenSessionManager& GetInstance();
     ScreenSessionManager(const ScreenSessionManager&) = delete;
     ScreenSessionManager(ScreenSessionManager&&) = delete;
@@ -45,6 +52,8 @@ public:
     sptr<ScreenSession> GetScreenSession(ScreenId screenId);
 
     sptr<DisplayInfo> GetDefaultDisplayInfo() override;
+    DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) override;
+    DMError SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio) override;
 
     void RegisterScreenConnectionListener(sptr<IScreenConnectionListener>& screenConnectionListener);
     void UnregisterScreenConnectionListener(sptr<IScreenConnectionListener>& screenConnectionListener);
@@ -75,6 +84,8 @@ private:
     ScreenId defaultScreenId_ = SCREEN_ID_INVALID;
 
     std::vector<sptr<IScreenConnectionListener>> screenConnectionListenerList_;
+
+    sptr<AbstractScreenCallback> abstractScreenCallback_;
 };
 } // namespace OHOS::Rosen
 
