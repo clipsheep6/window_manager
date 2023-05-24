@@ -29,6 +29,11 @@ Session::Session(const SessionInfo& info) : sessionInfo_(info)
 {
 }
 
+Session::~Session()
+{
+    WLOGD("~Session");
+}
+
 void Session::SetPersistentId(uint64_t persistentId)
 {
     persistentId_ = persistentId;
@@ -341,14 +346,20 @@ WSError Session::UpdateActiveStatus(bool isActive)
         WLOGFD("Session active do not change: [%{public}d]", isActive);
         return WSError::WS_DO_NOTHING;
     }
-    isActive_ = isActive;
+    WSError ret = WSError::WS_DO_NOTHING;
+
     if (isActive && GetSessionState() == SessionState::STATE_FOREGROUND) {
         UpdateSessionState(SessionState::STATE_ACTIVE);
+        isActive_ = isActive;
+        ret = WSError::WS_OK;
     }
     if (!isActive && GetSessionState() == SessionState::STATE_ACTIVE) {
         UpdateSessionState(SessionState::STATE_INACTIVE);
+        isActive_ = isActive;
+        ret = WSError::WS_OK;
     }
-    WLOGFD("UpdateActiveStatus, status: %{public}d", isActive);
-    return WSError::WS_OK;
+    WLOGFD("UpdateActiveStatus, isActive: %{public}d, state: %{public}u", isActive_,
+        static_cast<uint32_t>(state_));
+    return ret;
 }
 } // namespace OHOS::Rosen
