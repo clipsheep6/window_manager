@@ -63,7 +63,7 @@ sptr<AbstractScreenGroup> AbstractScreen::GetGroup() const
 
 sptr<ScreenInfo> AbstractScreen::ConvertToScreenInfo() const
 {
-    sptr<ScreenInfo> info = new(std::nothrow) ScreenInfo();
+    sptr<ScreenInfo> info = new(std::nothrow)   ();
     if (info == nullptr) {
         return nullptr;
     }
@@ -331,29 +331,7 @@ float AbstractScreen::GetVirtualPixelRatio() const
 
 ScreenSourceMode AbstractScreen::GetSourceMode() const
 {
-    sptr<AbstractScreenGroup> abstractScreenGroup = GetGroup();
-    if (abstractScreenGroup == nullptr || screenController_ == nullptr) {
-        return ScreenSourceMode::SCREEN_ALONE;
-    }
-    ScreenId defaultId = screenController_->GetDefaultAbstractScreenId();
-    if (dmsId_ == defaultId) {
-        return ScreenSourceMode::SCREEN_MAIN;
-    }
-    ScreenCombination combination = abstractScreenGroup->GetScreenCombination();
-    switch (combination) {
-        case ScreenCombination::SCREEN_MIRROR: {
-            return ScreenSourceMode::SCREEN_MIRROR;
-        }
-        case ScreenCombination::SCREEN_EXPAND: {
-            return ScreenSourceMode::SCREEN_EXTEND;
-        }
-        case ScreenCombination::SCREEN_ALONE: {
-            return ScreenSourceMode::SCREEN_ALONE;
-        }
-        default: {
-            return ScreenSourceMode::SCREEN_ALONE;
-        }
-    }
+     return ScreenSourceMode::SCREEN_ALONE;
 }
 
 Rotation AbstractScreen::CalcRotation(Orientation orientation) const

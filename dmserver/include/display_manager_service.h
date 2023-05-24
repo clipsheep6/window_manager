@@ -104,7 +104,7 @@ public:
 
     std::vector<DisplayId> GetAllDisplayIds() override;
     DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) override;
-    DMError SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio) override;
+    DMError SetVirtual PixelRatio(ScreenId screenId, float virtualPixelRatio) override;
     void RegisterDisplayChangeListener(sptr<IDisplayChangeListener> listener);
     void RegisterWindowInfoQueriedListener(const sptr<IWindowInfoQueriedListener>& listener);
     void NotifyPrivateWindowStateChanged(bool hasPrivate);

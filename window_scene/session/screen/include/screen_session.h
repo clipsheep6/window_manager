@@ -56,13 +56,22 @@ public:
     ScreenId GetScreenId();
     ScreenProperty GetScreenProperty() const;
     std::shared_ptr<RSDisplayNode> GetDisplayNode() const;
-
+    ScreenId GetId() const;
+    ScreenState GetScreenState() const;
+    ScreenId GetAbstractScreenGroupId() const;
+    void SetScreenActiveMode(uint32_t modeId);
+    void SetVirtualPixelRatio(float virtualPixelRatio);
     void Connect();
     void Disconnect();
+    const ScreenId dmsId_;
+    int32_t activeIdx_ { 0 };
 
 private:
     ScreenId screenId_;
-    ScreenProperty property_;
+    ScreenProperty& property_;
+    int32_t activeModeIdx_ { 0 };
+    std::vector<sptr<SupportedScreenModes>> modes_ = {};
+    ScreenId screenGroupId_ { SCREEN_ID_INVALID };
     std::shared_ptr<RSDisplayNode> displayNode_;
     ScreenState screenState_ { ScreenState::INIT };
     std::vector<IScreenChangeListener*> screenChangeListenerList_;

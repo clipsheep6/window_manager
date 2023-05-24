@@ -17,6 +17,8 @@
 #define OHOS_ROSEN_WINDOW_SCENE_SCREEN_PROPERTY_H
 
 #include "common/rs_rect.h"
+#include "dm_common.h"
+#include "class_var_definition.h"
 
 namespace OHOS::Rosen {
 class ScreenProperty {
@@ -24,17 +26,38 @@ public:
     ScreenProperty() = default;
     ~ScreenProperty() = default;
 
-    void SetRotation(float rotation);
-    float GetRotation() const;
-
-    void SetBounds(const RRect& bounds);
     RRect GetBounds() const;
+    int32_t GetPhyWidth() const;
+    int32_t GetPhyHeight() const;
+    uint32_t GetRefreshRate() const;
+    
+    float GetVirtualPixelRatio() const;
+    Orientation GetOrientation() const;
+    Rotation GetRotation() const;
     float GetDensity();
 
+    void SetBounds(const RRect& bounds);
+    void SetPhyWidth(uint32_t phyWidth);
+    void SetPhyHeight(uint32_t phyHeight);
+    void SetRefreshRate(uint32_t refreshRate);
+    void SetVirtualPixelRatio(float virtualPixelRatio);
+    void SetOrientation(Orientation orientation);
+    void SetRotation(Rotation rotation);
+
+    void UpdateXDpi();
+    void UpdateYDpi();
+
 private:
-    float rotation_ { 0.0f };
     RRect bounds_;
-    float density_ { 1.5f };
+    uint32_t phyWidth_ { UINT32_MAX };
+    uint32_t phyHeight_ { UINT32_MAX };
+    uint32_t refreshRate_ { 0 };
+    float virtualPixelRatio_ { 1.0f };
+    Orientation orientation_ { Orientation::UNSPECIFIED };
+    Rotation rotation_ { Rotation::ROTATION_0 };
+    float density_ { 0.0f }; 
+    float xDpi_ { 0.0f };
+    float yDpi_ { 0.0f };
 };
 } // namespace OHOS::Rosen
 
