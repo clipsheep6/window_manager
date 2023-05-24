@@ -3087,6 +3087,9 @@ void WindowImpl::NotifySizeChange(Rect rect, WindowSizeChangeReason reason,
     const std::shared_ptr<RSTransaction>& rsTransaction)
 {
     auto windowChangeListeners = GetListeners<IWindowChangeListener>();
+    if (reason == WindowSizeChangeReason::ROTATION && rsTransaction) {
+        rsTransaction->SetStartCount(windowChangeListeners.size());
+    }
     for (auto& listener : windowChangeListeners) {
         if (listener != nullptr) {
             listener->OnSizeChange(rect, reason, rsTransaction);

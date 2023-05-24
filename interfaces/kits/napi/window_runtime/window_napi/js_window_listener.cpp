@@ -16,6 +16,7 @@
 #include "js_window_listener.h"
 #include "js_runtime_utils.h"
 #include "window_manager_hilog.h"
+#include <transaction/rs_transaction.h>
 
 namespace OHOS {
 namespace Rosen {
@@ -50,7 +51,7 @@ void JsWindowListener::OnSizeChange(Rect rect, WindowSizeChangeReason reason,
     WLOGI("[NAPI]OnSizeChange, wh[%{public}u, %{public}u], reason = %{public}u", rect.width_, rect.height_, reason);
     // js callback should run in js thread
     std::unique_ptr<AsyncTask::CompleteCallback> complete = std::make_unique<AsyncTask::CompleteCallback> (
-        [self = weakRef_, rect, eng = engine_] (NativeEngine &engine,
+        [self = weakRef_, rect, eng = engine_, reason, rsTransaction] (NativeEngine &engine,
             AsyncTask &task, int32_t status) {
             auto thisListener = self.promote();
             if (thisListener == nullptr || eng == nullptr) {
@@ -66,7 +67,13 @@ void JsWindowListener::OnSizeChange(Rect rect, WindowSizeChangeReason reason,
             object->SetProperty("width", CreateJsValue(*eng, rect.width_));
             object->SetProperty("height", CreateJsValue(*eng, rect.height_));
             NativeValue* argv[] = {sizeValue};
+            if (reason == WindowSizeChangeReason::ROTATION && rsTransaction && !rsTransaction->IsOpen()) {
+                rsTransaction->Begin();
+            }
             thisListener->CallJsMethod(WINDOW_SIZE_CHANGE_CB.c_str(), argv, ArraySize(argv));
+            if (reason == WindowSizeChangeReason::ROTATION && rsTransaction && !rsTransaction->IsNeedCommit()) {
+                rsTransaction->Commit();
+            }
         }
     );
 

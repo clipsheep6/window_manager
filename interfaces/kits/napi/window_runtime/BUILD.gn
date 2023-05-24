@@ -60,6 +60,7 @@ ohos_shared_library("window_native_kit") {
   deps = [
     "../../../../utils:libwmutil",
     "../../../../wm:libwm",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
   ]
 
   external_deps = [
