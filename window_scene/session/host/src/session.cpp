@@ -39,6 +39,16 @@ uint64_t Session::GetPersistentId() const
     return persistentId_;
 }
 
+void Session::SetParentId(uint64_t parentId)
+{
+    parentId_ = parentId;
+}
+
+uint64_t Session::GetParentId() const
+{
+    return parentId_;
+}
+
 std::shared_ptr<RSSurfaceNode> Session::GetSurfaceNode() const
 {
     return surfaceNode_;
