@@ -19,11 +19,17 @@
 #include <transaction/rs_interfaces.h>
 #include <ui/rs_surface_node.h>
 #include "window_manager_hilog.h"
+#include <dirent.h>
+#include <sys/stat.h>
+#include "foundation/ability/ability_base/interfaces/kits/native/extractortool/include/constants.h"
 
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "Session" };
 } // namespace
+
+constexpr int32_t OPTION_QUALITY = 100;
+constexpr mode_t MODE = 0740;
 
 Session::Session(const SessionInfo& info) : sessionInfo_(info)
 {
@@ -309,6 +315,10 @@ std::shared_ptr<Media::PixelMap> Session::Snapshot()
     auto pixelMap = callback->GetResult(2000); // wait for <= 2000ms
     if (pixelMap != nullptr) {
         WLOGFD("Save pixelMap WxH = %{public}dx%{public}d", pixelMap->GetWidth(), pixelMap->GetHeight());
+        if (!GetPixelMapFileDir().empty()) {
+            const std::string strPath = GetPixelMapFileDir() + GetSessionInfo().bundleName_;
+            SavePixelMap(pixelMap, strPath);
+        }
     } else {
         WLOGFE("Failed to get pixelMap, return nullptr");
     }
@@ -361,5 +371,64 @@ WSError Session::UpdateActiveStatus(bool isActive)
     WLOGFD("UpdateActiveStatus, isActive: %{public}d, state: %{public}u", isActive_,
         static_cast<uint32_t>(state_));
     return ret;
+}
+
+WSError Session::SavePixelMap(
+    const std::shared_ptr<Media::PixelMap> &pixelMap,
+    const std::string &outFilePath)
+{
+    OHOS::Media::ImagePacker imagePacker;
+    OHOS::Media::PackOption option;
+    option.format = "image/jpeg";
+    option.quality = OPTION_QUALITY;
+    option.numberHint = 1;
+
+    std::set<std::string> formats;
+    auto ret = imagePacker.GetSupportedFormats(formats);
+    if (ret) {
+        WLOGFE("GetSupportedFormats() error : %{public}u",ret);
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    imagePacker.StartPacking(outFilePath, option);
+    imagePacker.AddImage(*pixelMap);
+    int64_t packedSize = 0;
+    imagePacker.FinalizePacking(packedSize);
+    WLOGFD("save pixelmap packedSize : %{public}lld, path : %{public}s", packedSize, outFilePath.c_str());
+    return WSError::WS_OK;
+}
+
+std::string Session::GetPixelMapFileDir()
+{
+    return m_strFilesPath;
+}
+
+bool Session::IsDirExist(std::string path)
+{
+    DIR *dp;
+    if ((dp = opendir(path.c_str())) == NULL) {
+        WLOGFE("%{public}s IsDirExist()  is not exist", path.c_str());
+        return false;
+    }
+    closedir(dp);
+    return true;
+}
+
+bool Session::MkDir(const std::string &path)
+{
+    if (!IsDirExist(path)) {
+        if (mkdir(path.c_str(), MODE) != 0) {
+            WLOGFE("MkDir() errInfo=%{public}s", strerror(errno));
+            return false;
+        }
+    }
+    return true;
+}
+
+void Session::SetAppFilesDir(std::string strPath)
+{
+    if (m_strFilesPath.empty()) {
+        MkDir(strPath);
+    }
+    m_strFilesPath = strPath + AbilityBase::Constants::FILE_SEPARATOR;
 }
 } // namespace OHOS::Rosen
