@@ -21,6 +21,8 @@
 #include "zidl/screen_session_manager_stub.h"
 #include "client_agent_container.h"
 #include "singleton_delegator.h"
+#include "agent_death_recipient.h"
+#include "screen.h"
 
 namespace OHOS::Rosen {
 class IScreenConnectionListener : public RefBase {
@@ -48,6 +50,7 @@ public:
 
     void RegisterScreenConnectionListener(sptr<IScreenConnectionListener>& screenConnectionListener);
     void UnregisterScreenConnectionListener(sptr<IScreenConnectionListener>& screenConnectionListener);
+    //void RegisterRSScreenChangeListener(const sptr<IRSScreenChangeListener>& listener);
 
     virtual DMError RegisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
         DisplayManagerAgentType type) override;
@@ -55,11 +58,74 @@ public:
     virtual DMError UnregisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
         DisplayManagerAgentType type) override;
 
+    virtual ScreenId CreateVirtualScreen(VirtualScreenOption option, const sptr<IRemoteObject>& displayManagerAgent) override;
+    virtual DMError SetVirtualScreenSurface(ScreenId screenId, sptr<IBufferProducer> surface) override;
+    virtual DMError DestroyVirtualScreen(ScreenId screenId) override;
+    virtual DMError MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenIds,
+        ScreenId& screenGroupId) override;
+    virtual sptr<ScreenGroupInfo> GetScreenGroupInfoById(ScreenId screenId) override;
+    virtual void RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens) override;
+    virtual std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId, DmErrorCode* errorCode) override;
+    virtual sptr<DisplayInfo> GetDisplayInfoById(DisplayId displayId) override;
+    virtual sptr<ScreenInfo> GetScreenInfoById(ScreenId screenId) override;
+    virtual DMError GetAllScreenInfos(std::vector<sptr<ScreenInfo>>& screenInfos) override;
+    virtual DMError GetScreenSupportedColorGamuts(ScreenId screenId,
+        std::vector<ScreenColorGamut>& colorGamuts) override;
+
+    std::vector<ScreenId> GetAllScreenIds() const;
+    const std::shared_ptr<RSDisplayNode>& GetRSDisplayNodeByScreenId(ScreenId smsScreenId) const;
+    std::shared_ptr<Media::PixelMap> GetScreenSnapshot(DisplayId displayId);
+
+    sptr<ScreenSession> GetAbstractScreen(ScreenId smsScreenId) const;
+    sptr<ScreenSession> InitVirtualScreen(ScreenId smsScreenId, ScreenId rsId, VirtualScreenOption option);
+    void ProcessScreenDisconnected(ScreenId rsScreenId);
+    ScreenId GetDefaultAbstractScreenId();
+    sptr<ScreenSession> InitAndGetScreen(ScreenId rsScreenId);
+    bool InitAbstractScreenModesInfo(sptr<ScreenSession>& absScreen);
+    void ProcessScreenConnected(ScreenId rsScreenId);
+    std::vector<ScreenId> GetAllValidScreenIds(const std::vector<ScreenId>& screenIds) const;
+
+    sptr<ScreenSessionGroup> AddToGroupLocked(sptr<ScreenSession> newScreen);
+    sptr<ScreenSessionGroup> AddAsFirstScreenLocked(sptr<ScreenSession> newScreen);
+    sptr<ScreenSessionGroup> AddAsSuccedentScreenLocked(sptr<ScreenSession> newScreen);
+    sptr<ScreenSessionGroup> RemoveFromGroupLocked(sptr<ScreenSession> screen);
+    sptr<ScreenSessionGroup> GetAbstractScreenGroup(ScreenId smsScreenId);
+
+    void ChangeScreenGroup(sptr<ScreenSessionGroup> group, const std::vector<ScreenId>& screens,
+        const std::vector<Point>& startPoints, bool filterScreen, ScreenCombination combination);
+
+    bool RemoveChildFromGroup(sptr<ScreenSession> screen, sptr<ScreenSessionGroup> screenGroup);
+
+    void AddScreenToGroup(sptr<ScreenSessionGroup> group,
+        const std::vector<ScreenId>& addScreens, const std::vector<Point>& addChildPos,
+        std::map<ScreenId, bool>& removeChildResMap);
+
+    DMError SetMirror(ScreenId screenId, std::vector<ScreenId> screens);
+
+
+    void NotifyScreenConnected(sptr<ScreenInfo> screenInfo);
+    void NotifyScreenDisconnected(ScreenId screenId);
+    void NotifyScreenGroupChanged(const sptr<ScreenInfo>& screenInfo, ScreenGroupChangeEvent event);
+    void NotifyScreenGroupChanged(const std::vector<sptr<ScreenInfo>>& screenInfo, ScreenGroupChangeEvent event);
+
+
+    void OnScreenConnect(const sptr<ScreenInfo> screenInfo);
+    void OnScreenDisconnect(ScreenId screenId);
+    void OnScreenGroupChange(const std::string& trigger,
+        const sptr<ScreenInfo>& screenInfo, ScreenGroupChangeEvent groupEvent);
+    void OnScreenGroupChange(const std::string& trigger,
+        const std::vector<sptr<ScreenInfo>>& screenInfos, ScreenGroupChangeEvent groupEvent);
+    void OnScreenshot(sptr<ScreenshotInfo> info);
+
 protected:
     ScreenSessionManager();
     virtual ~ScreenSessionManager() = default;
 
 private:
+    static inline bool IsVertical(Rotation rotation)
+    {
+        return (rotation == Rotation::ROTATION_0 || rotation == Rotation::ROTATION_180);
+    }
     void Init();
     void RegisterScreenChangeListener();
     void OnScreenChange(ScreenId screenId, ScreenEvent screenEvent);
@@ -67,12 +133,50 @@ private:
 
     ScreenId GetDefaultScreenId();
 
+    bool OnRemoteDied(const sptr<IRemoteObject>& agent);
+
+    class ScreenIdManager {
+    friend class ScreenSessionGroup;
+    public:
+        ScreenIdManager() = default;
+        ~ScreenIdManager() = default;
+        WM_DISALLOW_COPY_AND_MOVE(ScreenIdManager);
+        ScreenId CreateAndGetNewScreenId(ScreenId rsScreenId);
+        bool DeleteScreenId(ScreenId smsScreenId);
+        //bool HasDmsScreenId(ScreenId dmsScreenId) const;
+        bool HasRsScreenId(ScreenId smsScreenId) const;
+        bool ConvertToRsScreenId(ScreenId, ScreenId&) const;
+        ScreenId ConvertToRsScreenId(ScreenId) const;
+        bool ConvertToSmsScreenId(ScreenId, ScreenId&) const;
+        ScreenId ConvertToSmsScreenId(ScreenId) const;
+        //uint32_t GetRSScreenNum() const;
+    private:
+        std::atomic<ScreenId> smsScreenCount_ {1};
+        std::map<ScreenId, ScreenId> rs2SmsScreenIdMap_;
+        std::map<ScreenId, ScreenId> sms2RsScreenIdMap_;
+    };
+
+    //std::recursive_mutex& mutex_;
     RSInterfaces& rsInterface_;
     std::shared_ptr<MessageScheduler> msgScheduler_ = nullptr;
     std::map<ScreenId, sptr<ScreenSession>> screenSessionMap_;
     ClientAgentContainer<IDisplayManagerAgent, DisplayManagerAgentType> dmAgentContainer_;
 
     ScreenId defaultScreenId_ = SCREEN_ID_INVALID;
+
+    ScreenIdManager screenIdManager_;
+
+    std::atomic<ScreenId> defaultRsScreenId_ {SCREEN_ID_INVALID };
+    std::map<sptr<IRemoteObject>, std::vector<ScreenId>> screenAgentMap_;
+    std::map<ScreenId, sptr<ScreenSessionGroup>> smsScreenGroupMap_;
+
+    Orientation buildInDefaultOrientation_ { Orientation::UNSPECIFIED };
+
+    bool isExpandCombination_ = false;
+    sptr<AgentDeathRecipient> deathRecipient_ { nullptr };
+
+    //sptr<IRSScreenChangeListener> rSScreenChangeListener_;
+    std::shared_ptr<AppExecFwk::EventHandler> controllerHandler_;
 
     std::vector<sptr<IScreenConnectionListener>> screenConnectionListenerList_;
 };
