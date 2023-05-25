@@ -34,6 +34,7 @@
 #include "window_agent.h"
 #include "window_helper.h"
 #include "window_manager_hilog.h"
+#include "window_prepare_terminate.h"
 #include "wm_common.h"
 #include "wm_common_inner.h"
 #include "wm_math.h"
@@ -1935,17 +1936,38 @@ WMError WindowImpl::Close()
     }
     if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
         auto abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(context_);
-        if (abilityContext != nullptr) {
-            WMError ret = NotifyWindowTransition(TransitionReason::CLOSE_BUTTON);
-            if (ret != WMError::WM_OK) {
-                WLOGI("Close without animation ret:%{public}u", static_cast<uint32_t>(ret));
-                abilityContext->CloseAbility();
-            }
-        } else {
-            Destroy();
+        if (!abilityContext) {
+            return Destroy();
+        }
+        WindowPrepareTerminateHandler* handler = new(std::nothrow) WindowPrepareTerminateHandler();
+        if (handler == nullptr) {
+            WLOGFW("new WindowPrepareTerminateHandler failed, do close window");
+            PendingClose();
+            return WMError::WM_OK;
+        }
+        handler->SetWindowPtr(this);
+        sptr<AAFwk::IPrepareTerminateCallback> callback = handler;
+        if (AAFwk::AbilityManagerClient::GetInstance()->PrepareTerminateAbility(abilityContext->GetToken(),
+            callback) != ERR_OK) {
+            WLOGFW("RegisterWindowManagerServiceHandler failed, do close window");
+            PendingClose();
+            return WMError::WM_OK;
         }
     }
     return WMError::WM_OK;
+}
+
+void WindowImpl::PendingClose()
+{
+    WLOGFD("begin");
+    WMError ret = NotifyWindowTransition(TransitionReason::CLOSE_BUTTON);
+    if (ret != WMError::WM_OK) {
+        WLOGI("Close without animation ret:%{public}u", static_cast<uint32_t>(ret));
+        auto abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(context_);
+        if (abilityContext != nullptr) {
+            abilityContext->CloseAbility();
+        }
+    }
 }
 
 WMError WindowImpl::RequestFocus() const
