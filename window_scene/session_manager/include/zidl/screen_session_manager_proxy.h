@@ -37,6 +37,23 @@ public:
     virtual DMError UnregisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
         DisplayManagerAgentType type) override;
 
+    virtual ScreenId CreateVirtualScreen(VirtualScreenOption option,
+        const sptr<IRemoteObject>& displayManagerAgent) override;
+
+    virtual DMError DestroyVirtualScreen(ScreenId screenId) override;
+
+    virtual DMError SetVirtualScreenSurface(ScreenId screenId, sptr<IBufferProducer> surface) override;
+
+    virtual DMError MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenIds,
+        ScreenId& screenGroupId) override;
+
+    virtual sptr<ScreenGroupInfo> GetScreenGroupInfoById(ScreenId screenId) override;
+
+    virtual void RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens) override;
+
+    virtual std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId, DmErrorCode* errorCode) override;
+
+
 private:
     static inline BrokerDelegator<ScreenSessionManagerProxy> delegator_;
 };

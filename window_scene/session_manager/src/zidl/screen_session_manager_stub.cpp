@@ -51,6 +51,93 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             reply.WriteInt32(static_cast<int32_t>(ret));
             break;
         }
+        case DisplayManagerMessage::TRANS_ID_CREATE_VIRTUAL_SCREEN: {
+            WLOGFW("SCB: ScreenSessionManagerStub::OnRemoteRequest::CreateVirtualScreen");
+            std::string name = data.ReadString();
+            uint32_t width = data.ReadUint32();
+            uint32_t height = data.ReadUint32();
+            float density = data.ReadFloat();
+            int32_t flags = data.ReadInt32();
+            bool isForShot = data.ReadBool();
+            bool isSurfaceValid = data.ReadBool();
+            sptr<Surface> surface = nullptr;
+            if (isSurfaceValid) {
+                sptr<IRemoteObject> surfaceObject = data.ReadRemoteObject();
+                sptr<IBufferProducer> bp = iface_cast<IBufferProducer>(surfaceObject);
+                surface = Surface::CreateSurfaceAsProducer(bp);
+            }
+            sptr<IRemoteObject> virtualScreenAgent = data.ReadRemoteObject();
+            VirtualScreenOption virScrOption = {
+                .name_ = name,
+                .width_ = width,
+                .height_ = height,
+                .density_ = density,
+                .surface_ = surface,
+                .flags_ = flags,
+                .isForShot_ = isForShot
+            };
+            ScreenId screenId = CreateVirtualScreen(virScrOption, virtualScreenAgent);
+            reply.WriteUint64(static_cast<uint64_t>(screenId));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_SCREEN_SURFACE: {
+            WLOGFW("SCB: ScreenSessionManagerStub::OnRemoteRequest::SetVirtualScreenSurface");
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            bool isSurfaceValid = data.ReadBool();
+            sptr<IBufferProducer> bp = nullptr;
+            if (isSurfaceValid) {
+                sptr<IRemoteObject> surfaceObject = data.ReadRemoteObject();
+                bp = iface_cast<IBufferProducer>(surfaceObject);
+            }
+            DMError result = SetVirtualScreenSurface(screenId, bp);
+            reply.WriteInt32(static_cast<int32_t>(result));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_DESTROY_VIRTUAL_SCREEN: {
+            WLOGFW("SCB: ScreenSessionManagerStub::OnRemoteRequest::DestroyVirtualScreen");
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            DMError result = DestroyVirtualScreen(screenId);
+            reply.WriteInt32(static_cast<int32_t>(result));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SCREEN_MAKE_MIRROR: {
+            WLOGFW("SCB: ScreenSessionManagerStub::OnRemoteRequest::MakeMirror");
+            ScreenId mainScreenId = static_cast<ScreenId>(data.ReadUint64());
+            std::vector<ScreenId> mirrorScreenId;
+            if (!data.ReadUInt64Vector(&mirrorScreenId)) {
+                WLOGE("SCB: ScreenSessionManagerStub::MakeMirror: fail to receive mirror screen in stub. screen:%{public}" PRIu64"", mainScreenId);
+                break;
+            }
+            ScreenId screenGroupId = INVALID_SCREEN_ID;
+            DMError ret = MakeMirror(mainScreenId, mirrorScreenId, screenGroupId);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            reply.WriteUint64(static_cast<uint64_t>(screenGroupId));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_GET_SCREEN_GROUP_INFO_BY_ID: {
+            WLOGFW("SCB: ScreenSessionManagerStub::OnRemoteRequest::GetScreenGroupInfoById");
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            auto screenGroupInfo = GetScreenGroupInfoById(screenId);
+            reply.WriteStrongParcelable(screenGroupInfo);
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_REMOVE_VIRTUAL_SCREEN_FROM_SCREEN_GROUP: {
+            WLOGFW("SCB: ScreenSessionManagerStub::OnRemoteRequest::RemoveVirtualScreenFromGroup");
+            std::vector<ScreenId> screenId;
+            if (!data.ReadUInt64Vector(&screenId)) {
+                WLOGE("fail to receive screens in stub.");
+                break;
+            }
+            RemoveVirtualScreenFromGroup(screenId);
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_GET_DISPLAY_SNAPSHOT: {
+            WLOGFW("SCB: ScreenSessionManagerStub::OnRemoteRequest::GetDisplaySnapshot");
+            DisplayId displayId = data.ReadUint64();
+            std::shared_ptr<Media::PixelMap> displaySnapshot = GetDisplaySnapshot(displayId);
+            reply.WriteParcelable(displaySnapshot == nullptr ? nullptr : displaySnapshot.get());
+            break;
+        }
         default:
             WLOGFW("unknown transaction code");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
