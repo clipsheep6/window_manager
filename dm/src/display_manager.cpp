@@ -410,6 +410,7 @@ sptr<Display> DisplayManager::Impl::GetDisplayByScreenId(ScreenId screenId)
 
 std::shared_ptr<Media::PixelMap> DisplayManager::GetScreenshot(DisplayId displayId, DmErrorCode* errorCode)
 {
+    WLOGFE("SCB: DM: DisplayManager::GetScreenshot enter");
     if (displayId == DISPLAY_ID_INVALID) {
         WLOGFE("displayId invalid!");
         return nullptr;
