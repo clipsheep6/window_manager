@@ -378,7 +378,7 @@ WSError Session::ProcessBackEvent()
 
 WSError Session::RequestSessionBack()
 {
-    if(!backPressedFunc_) {
+    if (!backPressedFunc_) {
         WLOGFW("Session didn't register back event consumer!");
         return WSError::WS_DO_NOTHING;
     }
