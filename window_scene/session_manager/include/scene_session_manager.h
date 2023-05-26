@@ -47,7 +47,6 @@ public:
         sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session);
     WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId);
     void SetCreateSpecificSessionListener(const NotifyCreateSpecificSessionFunc& func);
-    WSError ProcessBackEvent();
 
 protected:
     SceneSessionManager();
@@ -60,7 +59,6 @@ private:
     sptr<RootSceneSession> rootSceneSession_;
     sptr<RootScene> rootScene_;
     NotifyCreateSpecificSessionFunc createSpecificSessionFunc_;
-    uint64_t activeSessionId_;
 };
 } // namespace OHOS::Rosen
 

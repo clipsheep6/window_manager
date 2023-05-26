@@ -362,27 +362,4 @@ WSError Session::UpdateActiveStatus(bool isActive)
         static_cast<uint32_t>(state_));
     return ret;
 }
-
-void Session::SetBackPressedListenser(const NotifyBackPressedFunc& func)
-{
-    backPressedFunc_ = func;
-}
-
-WSError Session::ProcessBackEvent()
-{
-    if (!IsSessionValid()) {
-        return WSError::WS_ERROR_INVALID_SESSION;
-    }
-    return sessionStage_->HandleBackEvent();
-}
-
-WSError Session::RequestSessionBack()
-{
-    if(!backPressedFunc_) {
-        WLOGFW("Session didn't register back event consumer!");
-        return WSError::WS_DO_NOTHING;
-    }
-    backPressedFunc_();
-    return WSError::WS_OK;
-}
 } // namespace OHOS::Rosen

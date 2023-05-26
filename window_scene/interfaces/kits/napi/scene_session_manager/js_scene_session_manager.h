@@ -39,7 +39,6 @@ public:
     static NativeValue* RequestSceneSessionBackground(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RequestSceneSessionDestruction(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RegisterCallback(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* ProcessBackEvent(NativeEngine* engine, NativeCallbackInfo* info);
 
 private:
     NativeValue* OnRegisterCallback(NativeEngine& engine, NativeCallbackInfo& info);
@@ -48,7 +47,6 @@ private:
     NativeValue* OnRequestSceneSessionActivation(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRequestSceneSessionBackground(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRequestSceneSessionDestruction(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnProcessBackEvent(NativeEngine& engine, NativeCallbackInfo& info);
 
     void OnCreateSpecificSession(const sptr<SceneSession>& sceneSession);
     void ProcessCreateSpecificSessionRegister();

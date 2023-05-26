@@ -44,11 +44,9 @@ private:
 
     void ProcessPendingSceneSessionActivationRegister();
     void ProcessSessionStateChangeRegister();
-    void ProcessBackPressedRegister();
 
     void PendingSessionActivation(const SessionInfo& info);
     void OnSessionStateChange(const SessionState& state);
-    void OnBackPressed();
 
     NativeEngine& engine_;
     sptr<SceneSession> session_;
