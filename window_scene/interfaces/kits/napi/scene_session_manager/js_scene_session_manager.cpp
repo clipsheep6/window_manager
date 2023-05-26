@@ -59,6 +59,7 @@ NativeValue* JsSceneSessionManager::Init(NativeEngine* engine, NativeValue* expo
     BindNativeFunction(*engine, *object, "requestSceneSessionDestruction", moduleName,
         JsSceneSessionManager::RequestSceneSessionDestruction);
     BindNativeFunction(*engine, *object, "on", moduleName, JsSceneSessionManager::RegisterCallback);
+    BindNativeFunction(*engine, *object, "processBackEvent", moduleName, JsSceneSessionManager::ProcessBackEvent);
     return engine->CreateUndefined();
 }
 
@@ -121,6 +122,13 @@ NativeValue* JsSceneSessionManager::RegisterCallback(NativeEngine* engine, Nativ
     WLOGFI("[NAPI]RegisterCallback");
     JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(engine, info);
     return (me != nullptr) ? me->OnRegisterCallback(*engine, *info) : nullptr;
+}
+
+NativeValue* JsSceneSessionManager::ProcessBackEvent(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGFI("[NAPI]ProcessBackEvent");
+    JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(engine, info);
+    return (me != nullptr) ? me->OnProcessBackEvent(*engine, *info) : nullptr;
 }
 
 void JsSceneSessionManager::Finalizer(NativeEngine* engine, void* data, void* hint)
@@ -210,6 +218,12 @@ NativeValue* JsSceneSessionManager::OnRegisterCallback(NativeEngine& engine, Nat
     callbackRef.reset(engine.CreateReference(value, 1));
     jsCbMap_[cbType] = callbackRef;
     WLOGFI("[NAPI]Register end, type = %{public}s", cbType.c_str());
+    return engine.CreateUndefined();
+}
+
+NativeValue* JsSceneSessionManager::OnProcessBackEvent(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    SceneSessionManager::GetInstance().ProcessBackEvent();
     return engine.CreateUndefined();
 }
 
