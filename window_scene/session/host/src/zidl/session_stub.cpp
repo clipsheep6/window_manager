@@ -36,7 +36,8 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_{
 
     // for scene only
     std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_RECOVER), &SessionStub::HandleRecover),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_MAXIMIZE), &SessionStub::HandleMaximize)
+    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_MAXIMIZE), &SessionStub::HandleMaximize),
+    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_BACKPRESSED), &SessionStub::HandleBackPressed)
 };
 
 int SessionStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -141,6 +142,14 @@ int SessionStub::HandleUpdateActivateStatus(MessageParcel& data, MessageParcel& 
     WLOGFD("HandleUpdateActivateStatus!");
     bool isActive = data.ReadBool();
     WSError errCode = UpdateActiveStatus(isActive);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleBackPressed(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("HandleBackPressed!");
+    WSError errCode = RequestSessionBack();
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
