@@ -195,6 +195,7 @@ WMError WindowSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Context>
     }
     hostSession_ = iSession;
     context_ = context;
+    property_->SetParentId(GetFloatingWindowParentId());
     if (hostSession_) {
         ret = Connect();
         state_ = WindowState::STATE_CREATED;
@@ -488,6 +489,22 @@ void WindowSessionImpl::OnNewWant(const AAFwk::Want& want)
         property_->GetWindowName().c_str(), property_->GetPersistentId());
     if (uiContent_ != nullptr) {
         uiContent_->OnNewWant(want);
+    }
+}
+
+uint64_t WindowSessionImpl::GetFloatingWindowParentId()
+{
+    if (!WindowHelper::IsAppFloatingWindow(GetType()) || context_.get() == nullptr) {
+        return INVALID_WINDOW_ID;
+    }
+
+    for (const auto& winPair : windowSessionMap_) {
+        auto win = winPair.second.second;
+        if (win->GetType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW &&
+            context_.get() == win->GetContext().get()) {
+            WLOGFD("This FloatingWindow has parentId as %{public}", win->GetWindowId());
+            return win->GetWindowId();
+        }
     }
 }
 

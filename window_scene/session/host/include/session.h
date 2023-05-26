@@ -54,6 +54,8 @@ public:
 
     void SetPersistentId(uint64_t persistentId);
     uint64_t GetPersistentId() const;
+    void SetParentId(uint64_t parentId);
+    uint64_t GetParentId() const;
     void SetSessionRect(const WSRect& rect);
     WSRect GetSessionRect() const;
 
@@ -125,6 +127,7 @@ private:
     std::shared_ptr<Media::PixelMap> Snapshot();
 
     uint64_t persistentId_ = INVALID_SESSION_ID;
+    uint64_t parentId_ = INVALID_SESSION_ID;
     std::shared_ptr<RSSurfaceNode> surfaceNode_ = nullptr;
     SessionState state_ = SessionState::STATE_DISCONNECT;
 
