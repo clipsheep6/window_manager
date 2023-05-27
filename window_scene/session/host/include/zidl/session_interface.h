@@ -36,6 +36,7 @@ public:
         TRANS_ID_DISCONNECT,
         TRANS_ID_ACTIVE_PENDING_SESSION,
         TRANS_ID_UPDATE_ACTIVE_STATUS,
+        // TRANS_ID_BIND_DIALOG_TO_PARENT,
 
         // Scene
         TRANS_ID_SESSION_EVENT = 100
@@ -48,6 +49,7 @@ public:
     virtual WSError Disconnect() = 0;
     virtual WSError PendingSessionActivation(const SessionInfo& info) = 0;
     virtual WSError UpdateActiveStatus(bool isActive) = 0;
+    // virtual WSError BindDialogToParent(const uint64_t& persistentId) = 0;
 
     // scene session
     virtual WSError OnSessionEvent(SessionEvent event) = 0;

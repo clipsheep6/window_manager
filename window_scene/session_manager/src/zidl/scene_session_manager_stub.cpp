@@ -72,6 +72,20 @@ int SceneSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
             reply.WriteUint32(static_cast<uint32_t>(ret));
             break;
         }
+        case SceneSessionManagerMessage::TRANS_ID_BIND_DIALOG_TARGET: {
+            uint64_t persistentId = data.ReadUint64();
+            sptr<IRemoteObject> targetObject = data.ReadRemoteObject();
+            const WSError& ret = BindDialogTarget(persistentId, targetObject);
+            reply.WriteUint32(static_cast<uint32_t>(ret));
+            break;
+        }
+        case SceneSessionManagerMessage::TRANS_ID_BIND_DIALOG_TO_PARENT: {
+            uint64_t persistentId = data.ReadUint64();
+            
+            const WSError& ret = BindDialogToParent(persistentId);
+            reply.WriteUint32(static_cast<uint32_t>(ret));
+            break;
+        }
         default:
             WLOGFE("Unknown session message!");
     }

@@ -34,6 +34,7 @@ constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowS
 
 std::map<uint64_t, std::vector<sptr<IWindowLifeCycle>>> WindowSessionImpl::lifecycleListeners_;
 std::map<uint64_t, std::vector<sptr<IWindowChangeListener>>> WindowSessionImpl::windowChangeListeners_;
+std::map<uint64_t, std::vector<sptr<IDialogDeathRecipientListener>>> WindowSessionImpl::dialogDeathRecipientListeners_;
 std::recursive_mutex WindowSessionImpl::globalMutex_;
 std::map<std::string, std::pair<uint64_t, sptr<WindowSessionImpl>>> WindowSessionImpl::windowSessionMap_;
 
@@ -211,7 +212,19 @@ WMError WindowSessionImpl::Show(uint32_t reason, bool withAnimation)
             property_->GetWindowName().c_str(), property_->GetPersistentId(), property_->GetWindowType());
         return WMError::WM_OK;
     }
-
+    // yangfei dialog window
+    uint64_t parentId;
+    for(auto item : windowSessionMap_) {
+        if (item.second.second && item.second.second->property_ &&
+            item.second.second->property_->GetWindowType() == WindowType::APP_MAIN_WINDOW_BASE) {
+            WLOGFE("yangfei find main window");
+            parentId = item.second.first;   
+        }
+    }
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
+        // hostSession_->BindDialogToParent(GetPersistentId(), parentId);
+        SessionManager::GetInstance().BindDialogToParent(GetPersistentId());
+    }
     WSError ret = hostSession_->Foreground();
     // delete after replace WSError with WMError
     WMError res = static_cast<WMError>(ret);
@@ -452,6 +465,12 @@ void WindowSessionImpl::OnNewWant(const AAFwk::Want& want)
     }
 }
 
+WMError WindowSessionImpl::BindDialogTarget(sptr<IRemoteObject> targetToken)
+{
+    auto dialogId = GetPersistentId();
+    WMError ret = SessionManager::GetInstance().BindDialogTarget(dialogId, targetToken);
+}
+
 WMError WindowSessionImpl::RegisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener)
 {
     WLOGFD("Start register");
@@ -480,6 +499,24 @@ WMError WindowSessionImpl::UnregisterWindowChangeListener(const sptr<IWindowChan
     return UnregisterListener(windowChangeListeners_[GetPersistentId()], listener);
 }
 
+void WindowSessionImpl::RegisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener)
+{
+    WLOGFD("Start register");
+    if (listener == nullptr) {
+        WLOGFE("listener is nullptr");
+        return;
+    }
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    RegisterListener(dialogDeathRecipientListeners_[GetPersistentId()], listener);
+}
+
+void WindowSessionImpl::UnregisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener)
+{
+    WLOGFD("Start unregister");
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    UnregisterListener(dialogDeathRecipientListeners_[GetPersistentId()], listener);
+}
+
 template<typename T>
 EnableIfSame<T, IWindowLifeCycle, std::vector<sptr<IWindowLifeCycle>>> WindowSessionImpl::GetListeners()
 {
@@ -504,6 +541,19 @@ EnableIfSame<T, IWindowChangeListener, std::vector<sptr<IWindowChangeListener>>>
         }
     }
     return windowChangeListeners;
+}
+
+template<typename T>
+EnableIfSame<T, IDialogDeathRecipientListener, std::vector<wptr<IDialogDeathRecipientListener>>> WindowSessionImpl::GetListeners()
+{
+    std::vector<wptr<IDialogDeathRecipientListener>> dialogDeathRecipientListener;
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        for (auto& listener : dialogDeathRecipientListeners_[GetPersistentId()]) {
+            dialogDeathRecipientListener.push_back(listener);
+        }
+    }
+    return dialogDeathRecipientListener;
 }
 
 template<typename T>
@@ -632,6 +682,18 @@ void WindowSessionImpl::NotifySizeChange(Rect rect, WindowSizeChangeReason reaso
         }
     }
 }
+
+WSError WindowSessionImpl::NotifyDestroy()
+{
+    auto dialogDeathRecipientListener = GetListeners<IDialogDeathRecipientListener>();
+    for (auto& listener : dialogDeathRecipientListener) {
+        if (listener.GetRefPtr() != nullptr) {
+            listener.GetRefPtr()->OnDialogDeathRecipient();
+        }
+    }
+    return WSError::WS_OK;
+}
+
 
 void WindowSessionImpl::NotifyPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {

@@ -46,6 +46,8 @@ public:
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
         sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session);
     WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId);
+    WSError BindDialogTarget(const uint64_t& persistentId, sptr<IRemoteObject> targetToken);
+    WSError BindDialogToParent(const uint64_t& persistentId);
     void SetCreateSpecificSessionListener(const NotifyCreateSpecificSessionFunc& func);
 
 protected:

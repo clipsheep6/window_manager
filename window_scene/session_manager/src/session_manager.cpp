@@ -206,4 +206,26 @@ void SessionManager::DestroyAndDisconnectSpecificSession(const uint64_t& persist
     sceneSessionManagerProxy_->DestroyAndDisconnectSpecificSession(persistentId);
 }
 
+
+WMError SessionManager::BindDialogTarget(const uint64_t& persistentId, sptr<IRemoteObject> targetToken)
+{
+    WLOGFD("yangfei bind target");
+    InitSceneSessionManagerProxy();
+    if (!sceneSessionManagerProxy_) {
+        WLOGFE("sceneSessionManagerProxy_ is nullptr");
+        return;
+    }
+    sceneSessionManagerProxy_->BindDialogTarget(persistentId, targetToken);
+}
+
+WMError SessionManager::BindDialogToParent(const uint64_t& persistentId)
+{
+    WLOGFD("yangfei bind target to parent");
+    InitSceneSessionManagerProxy();
+    if (!sceneSessionManagerProxy_) {
+        WLOGFE("sceneSessionManagerProxy_ is nullptr");
+        return;
+    }
+    sceneSessionManagerProxy_->BindDialogToParent(persistentId);
+}
 } // namespace OHOS::Rosen

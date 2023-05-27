@@ -100,4 +100,51 @@ WSError SceneSessionManagerProxy::DestroyAndDisconnectSpecificSession(const uint
     int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
 }
+
+WSError SceneSessionManagerProxy::BindDialogTarget(const uint64_t& persistentId, sptr<IRemoteObject> targetToken)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteUint64(persistentId)) {
+        WLOGFE("Write uint64_t failed");
+    }
+    if (!data.WriteRemoteObject(targetToken)) {
+        WLOGFE("Write remote object failed");
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+        SceneSessionManagerMessage::TRANS_ID_BIND_DIALOG_TARGET),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    int32_t ret = reply.ReadUint32();
+    return static_cast<WSError>(ret);
+}
+
+WSError SceneSessionManagerProxy::BindDialogToParent(const uint64_t& persistentId)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteUint64(persistentId)) {
+        WLOGFE("Write uint64_t failed");
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+        SceneSessionManagerMessage::TRANS_ID_BIND_DIALOG_TO_PARENT),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    int32_t ret = reply.ReadUint32();
+    return static_cast<WSError>(ret);
+}
 } // namespace OHOS::Rosen

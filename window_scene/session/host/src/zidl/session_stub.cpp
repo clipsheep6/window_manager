@@ -33,6 +33,8 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_{
         &SessionStub::HandlePendingSessionActivation),
     std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_UPDATE_ACTIVE_STATUS),
         &SessionStub::HandleUpdateActivateStatus),
+    // std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_BIND_DIALOG_TO_PARENT),
+    //     &SessionStub::HandleBindDialogToParent),
 
     // for scene only
     std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_SESSION_EVENT), &SessionStub::HandleSessionEvent),
@@ -136,4 +138,13 @@ int SessionStub::HandleUpdateActivateStatus(MessageParcel& data, MessageParcel& 
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
+
+// int SessionStub::HandleBindDialogToParent(MessageParcel& data, MessageParcel& reply)
+// {
+//     WLOGFD("HandleBindDialogToParent!");
+//     uint64_t persistentId = data.ReadUint64();
+//     WSError errCode = BindDialogToParent(persistentId);
+//     reply.WriteUint32(static_cast<uint32_t>(errCode));
+//     return ERR_NONE;
+// }
 } // namespace OHOS::Rosen
