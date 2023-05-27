@@ -166,4 +166,9 @@ WSError SessionStage::Maximize()
 {
     return WSError::WS_OK;
 }
+
+WSError SessionStage::HandleBackEvent()
+{
+    return WSError::WS_OK;
+}
 } // namespace OHOS::Rosen

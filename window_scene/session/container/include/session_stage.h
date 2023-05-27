@@ -86,6 +86,7 @@ public:
 
     WSError SetActive(bool active) override;
     WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) override;
+    WSError HandleBackEvent() override;
 
     bool RegisterSessionStageStateListener(const std::shared_ptr<ISessionStageStateListener>& listener);
     bool UnregisterSessionStageStateListener(const std::shared_ptr<ISessionStageStateListener>& listener);
