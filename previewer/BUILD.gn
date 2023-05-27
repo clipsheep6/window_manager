@@ -41,6 +41,7 @@ ohos_shared_library("previewer_window") {
     "src/window.cpp",
     "src/window_impl.cpp",
     "src/window_scene.cpp",
+    "src/window_model.cpp"
   ]
 
   include_dirs = [
@@ -51,6 +52,8 @@ ohos_shared_library("previewer_window") {
     "../wm/include",
     "../utils/include",
     "../../../../commonlibrary/c_utils/base/include",
+    "//foundation/arkui/ace_engine/frameworks",
+    "//foundation/arkui/ace_engine/frameworks/base/utils"
   ]
 
   deps = [
