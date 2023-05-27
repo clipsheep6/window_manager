@@ -17,8 +17,6 @@
 #define INTERFACES_INNERKITS_WINDOW_MODEL_H
 
 #include "window_impl.h"
-#include "device_type.h"
-#include "device_config.h"
 
 namespace OHOS {
 namespace Previewer {
