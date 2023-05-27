@@ -74,6 +74,7 @@ public:
     WMError UnregisterWindowChangeListener(const sptr<IWindowChangeListener>& listener) override;
     void RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func) override;
     uint64_t GetPersistentId() const;
+    WSError HandleBackEvent() override;
 
 protected:
     WMError Connect();
