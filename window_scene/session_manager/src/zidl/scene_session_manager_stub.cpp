@@ -53,6 +53,7 @@ int SceneSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
             } else {
                 WLOGFW("Property not exist!");
             }
+            WLOGFD("========= session Type: %{public}u", static_cast<uint32_t>(property->GetWindowType()));
             uint64_t persistentId = INVALID_SESSION_ID;
             sptr<ISession> sceneSession;
             CreateAndConnectSpecificSession(sessionStage, eventChannel, surfaceNode,

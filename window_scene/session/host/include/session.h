@@ -73,7 +73,15 @@ public:
     WSError Background() override;
     WSError Disconnect() override;
 
+<<<<<<< HEAD
     WSError OnSessionEvent(SessionEvent event) override;
+=======
+    WSError Recover() override;
+    WSError Maximize() override;
+
+    sptr<WindowSessionProperty> GetSessionProperty() const;
+
+>>>>>>> add session type
     void NotifyConnect();
     void NotifyForeground();
     void NotifyBackground();

@@ -220,11 +220,13 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
         if (sceneSession == nullptr) {
             return WSError::WS_ERROR_NULLPTR;
         }
+        // connect specific session and sessionStage
+        WSError errCode = sceneSession->Connect(sessionStage, eventChannel, surfaceNode, persistentId, property);
+        WLOGFD("========= session Type: %{public}u, type2: %{public}u",
+            static_cast<uint32_t>(property->GetWindowType()), sceneSession->GetSessionProperty()->GetWindowType());
         if (createSpecificSessionFunc_) {
             createSpecificSessionFunc_(sceneSession);
         }
-        // connect specific session and sessionStage
-        WSError errCode = sceneSession->Connect(sessionStage, eventChannel, surfaceNode, persistentId, property);
         session = sceneSession;
         return errCode;
     };

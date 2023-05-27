@@ -51,10 +51,11 @@ WSError SceneSessionManagerProxy::CreateAndConnectSpecificSession(const sptr<ISe
     }
 
     if (property) {
-        if (!data.WriteBool(true) || !property->Marshalling(data)) {
+        if (!data.WriteBool(true) || !data.WriteParcelable(property.GetRefPtr())) {
             WLOGFE("Write property failed");
             return WSError::WS_ERROR_IPC_FAILED;
         }
+        WLOGFD("========= session Type: %{public}u", static_cast<uint32_t>(property->GetWindowType()));
     } else {
         if (!data.WriteBool(false)) {
             WLOGFE("Write property failed");

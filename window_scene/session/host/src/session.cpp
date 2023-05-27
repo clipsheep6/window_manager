@@ -358,9 +358,15 @@ WSError Session::UpdateActiveStatus(bool isActive)
     return ret;
 }
 
+<<<<<<< HEAD
 WSError Session::OnSessionEvent(SessionEvent event)
 {
     WLOGFD("Session OnSessionEvent");
     return WSError::WS_OK;
+=======
+sptr<WindowSessionProperty> Session::GetSessionProperty() const
+{
+    return property_;
+>>>>>>> add session type
 }
 } // namespace OHOS::Rosen
