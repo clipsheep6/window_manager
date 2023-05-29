@@ -36,6 +36,9 @@ namespace OHOS::Global::Resource {
 class ResourceManager;
 } // namespace OHOS::Global::Resource
 
+namespace OHOS::AAFwk {
+class Want;
+}
 namespace OHOS::Rosen {
 class SceneSession;
 using NotifyCreateSpecificSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
@@ -43,7 +46,8 @@ using NotifySetFocusSessionFunc = std::function<void(const sptr<SceneSession>& s
 class SceneSessionManager : public SceneSessionManagerStub {
 WM_DECLARE_SINGLE_INSTANCE_BASE(SceneSessionManager)
 public:
-    sptr<SceneSession> RequestSceneSession(const SessionInfo& sessionInfo, sptr<WindowSessionProperty> property = nullptr);
+    sptr<SceneSession> RequestSceneSession(const SessionInfo& sessionInfo,
+        sptr<WindowSessionProperty> property = nullptr, sptr<AAFwk::Want> want = nullptr);
     WSError RequestSceneSessionActivation(const sptr<SceneSession>& sceneSession);
     WSError RequestSceneSessionBackground(const sptr<SceneSession>& sceneSession);
     WSError RequestSceneSessionDestruction(const sptr<SceneSession>& sceneSession);

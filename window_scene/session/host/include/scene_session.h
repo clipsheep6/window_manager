@@ -58,7 +58,8 @@ public:
         sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session) override;
     WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId) override;
     void RegisterSessionChangeCallback(const sptr<SceneSession::SessionChangeCallback>& sessionChangeCallback);
-
+    void SetWant(sptr<AAFwk::Want> want);
+    sptr<AAFwk::Want> GetWant();
 private:
     void UpdateCameraFloatWindowStatus(bool isShowing);
     sptr<SpecificSessionCallback> specificCallback_ = nullptr;

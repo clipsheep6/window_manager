@@ -47,6 +47,9 @@ ohos_shared_library("scenesessionmanager_napi") {
     "input:libmmi-client",
     "ipc:ipc_single",
     "napi:ace_napi",
+    "ability_base:want",
+    "ability_runtime:napi_common",
+    #"ability_runtime:abilitykit_native",
   ]
 
   relative_install_dir = "module"

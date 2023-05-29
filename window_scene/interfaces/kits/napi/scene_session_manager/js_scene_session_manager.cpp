@@ -18,8 +18,10 @@
 #include <context.h>
 #include <js_runtime_utils.h>
 #include "session/host/include/scene_persistence.h"
+#include "napi_common_want.h"
 #include "session/host/include/session.h"
 #include "session_manager/include/scene_session_manager.h"
+#include "want.h"
 #include "window_manager_hilog.h"
 
 #include "js_root_scene_session.h"
@@ -331,6 +333,7 @@ NativeValue* JsSceneSessionManager::OnRequestSceneSession(NativeEngine& engine, 
     }
 
     SessionInfo sessionInfo;
+    AAFwk::Want want;
     if (errCode == WSErrorCode::WS_OK) {
         NativeObject* nativeObj = ConvertNativeValueTo<NativeObject>(info.argv[0]);
         if (nativeObj == nullptr) {
@@ -339,6 +342,10 @@ NativeValue* JsSceneSessionManager::OnRequestSceneSession(NativeEngine& engine, 
         } else if (!ConvertSessionInfoFromJs(engine, nativeObj, sessionInfo)) {
             WLOGFE("[NAPI]Failed to get session info from js object");
             errCode = WSErrorCode::WS_ERROR_INVALID_PARAM;
+        }
+        if (info.argc > 1) {
+            OHOS::AppExecFwk::UnwrapWant(reinterpret_cast<napi_env>(&engine),
+                reinterpret_cast<napi_value>(info.argv[1]), want);
         }
     }
 
@@ -350,7 +357,9 @@ NativeValue* JsSceneSessionManager::OnRequestSceneSession(NativeEngine& engine, 
 
     WLOGFI("[NAPI]SessionInfo [%{public}s, %{public}s, %{public}s], errCode = %{public}d",
         sessionInfo.bundleName_.c_str(), sessionInfo.moduleName_.c_str(), sessionInfo.abilityName_.c_str(), errCode);
-    sptr<SceneSession> sceneSession = SceneSessionManager::GetInstance().RequestSceneSession(sessionInfo);
+    auto newWant = new(std::nothrow) AAFwk::Want(want);
+    sptr<SceneSession> sceneSession = SceneSessionManager::GetInstance().RequestSceneSession(sessionInfo,
+        nullptr, newWant);
     if (sceneSession == nullptr) {
         engine.Throw(
             CreateJsError(engine, static_cast<int32_t>(WSErrorCode::WS_ERROR_STATE_ABNORMALLY), "System is abnormal"));

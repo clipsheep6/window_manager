@@ -127,4 +127,14 @@ void SceneSession::UpdateCameraFloatWindowStatus(bool isShowing)
         specificCallback_->onCameraFloatSessionChange_(property_->GetAccessTokenId(), isShowing);
     }
 }
+
+void SceneSession::SetWant(sptr<AAFwk::Want> want)
+{
+    want_ = want;
+}
+
+sptr<AAFwk::Want> SceneSession::GetWant()
+{
+    return want_;
+}
 } // namespace OHOS::Rosen

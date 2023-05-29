@@ -323,7 +323,8 @@ sptr<SceneSession> SceneSessionManager::GetSceneSession(uint64_t persistentId)
     return iter->second;
 }
 
-WSError SceneSessionManager::UpdateParentSession(const sptr<SceneSession>& sceneSession, sptr<WindowSessionProperty> property)
+WSError SceneSessionManager::UpdateParentSession(const sptr<SceneSession>& sceneSession,
+    sptr<WindowSessionProperty> property)
 {
     if (property == nullptr) {
         WLOGFW("Property is null, no need to update parent info");
@@ -353,7 +354,8 @@ WSError SceneSessionManager::UpdateParentSession(const sptr<SceneSession>& scene
     return WSError::WS_OK;
 }
 
-sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& sessionInfo, sptr<WindowSessionProperty> property)
+sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& sessionInfo,
+    sptr<WindowSessionProperty> property, sptr<AAFwk::Want> want)
 {
     sptr<SceneSession::SpecificSessionCallback> specificCallback = new (std::nothrow)
         SceneSession::SpecificSessionCallback();
@@ -367,7 +369,7 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
         this, std::placeholders::_1);
     specificCallback->onCameraFloatSessionChange_ = std::bind(&SceneSessionManager::UpdateCameraFloatWindowStatus,
         this, std::placeholders::_1, std::placeholders::_2);
-    auto task = [this, sessionInfo, specificCallback, property]() {
+    auto task = [this, sessionInfo, specificCallback, property, want]() {
         WLOGFI("sessionInfo: bundleName: %{public}s, moduleName: %{public}s, abilityName: %{public}s",
             sessionInfo.bundleName_.c_str(), sessionInfo.moduleName_.c_str(), sessionInfo.abilityName_.c_str());
         WLOGFI("RequestSceneSession caller persistentId: %{public}" PRIu64 "", sessionInfo.callerPersistentId_);
@@ -376,6 +378,7 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
             WLOGFE("sceneSession is nullptr!");
             return sceneSession;
         }
+        sceneSession->SetWant(want);
         auto persistentId = sceneSession->GetPersistentId();
         sceneSession->SetSystemConfig(systemConfig_);
         UpdateParentSession(sceneSession, property);
@@ -401,7 +404,7 @@ sptr<AAFwk::SessionInfo> SceneSessionManager::SetAbilitySessionInfo(const sptr<S
     abilitySessionInfo->persistentId = scnSession->GetPersistentId();
     if (sessionInfo.want != nullptr) {
         abilitySessionInfo->want = *sessionInfo.want;
-    }    
+    }
     return abilitySessionInfo;
 }
 
@@ -420,9 +423,16 @@ WSError SceneSessionManager::RequestSceneSessionActivation(const sptr<SceneSessi
             WLOGFE("session is invalid with %{public}" PRIu64 "", persistentId);
             return WSError::WS_ERROR_INVALID_SESSION;
         }
-        AAFwk::Want want;
+        sptr<AAFwk::Want> newWant = scnSession->GetWant();
+        if (newWant == nullptr) {
+            newWant = new(std::nothrow) AAFwk::Want();
+            if (!newWant) {
+                WLOGFE("want malloc failed!");
+                return WSError::WS_ERROR_NULLPTR;
+            }
+        }
         auto sessionInfo = scnSession->GetSessionInfo();
-        want.SetElementName("", sessionInfo.bundleName_, sessionInfo.abilityName_, sessionInfo.moduleName_);
+        newWant->SetElementName("", sessionInfo.bundleName_, sessionInfo.abilityName_, sessionInfo.moduleName_);
         AAFwk::StartOptions startOptions;
         auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
         if (!scnSessionInfo) {
@@ -432,12 +442,13 @@ WSError SceneSessionManager::RequestSceneSessionActivation(const sptr<SceneSessi
         if (iter != abilitySceneMap_.end()) {
             const auto& callerSession = iter->second;
             if (callerSession != nullptr) {
+                // need to delete
                 auto callerSessionInfo = callerSession->GetSessionInfo();
-                want = *callerSessionInfo.want;
+                newWant = callerSessionInfo.want;
                 scnSessionInfo->want = *callerSessionInfo.want;
             }
         }
-        AAFwk::AbilityManagerClient::GetInstance()->StartUIAbilityBySCB(want, startOptions, scnSessionInfo);
+        AAFwk::AbilityManagerClient::GetInstance()->StartUIAbilityBySCB(*newWant, startOptions, scnSessionInfo);
         activeSessionId_ = persistentId;
         return WSError::WS_OK;
     };

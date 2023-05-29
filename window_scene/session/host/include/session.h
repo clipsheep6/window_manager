@@ -155,6 +155,7 @@ protected:
     sptr<WindowSessionProperty> property_ = nullptr;
     SystemSessionConfig systemConfig_;
     sptr<ScenePersistence> scenePersistence_ = nullptr;
+    sptr<AAFwk::Want> want_ = nullptr;
 
 private:
     bool CheckDialogOnForeground();
