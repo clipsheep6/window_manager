@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/ability/ability_runtime/ability_runtime.gni")
 import("../../windowmanager_aafwk.gni")
 
 config("session_manager_private_config") {
@@ -58,11 +59,15 @@ ohos_shared_library("scene_session_manager") {
     "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/session:scene_session",
     "//third_party/libxml2:libxml2",
+    "${ability_runtime_native_path}/appkit:app_context",
   ]
 
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    #"ability_runtime:runtime",
+    "ace_engine:ace_uicontent",
     "c_utils:utils",
     "config_policy:configpolicy_util",
     "eventhandler:libeventhandler",
