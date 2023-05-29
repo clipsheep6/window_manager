@@ -19,6 +19,7 @@
 #include <map>
 
 #include <ui_content.h>
+#include "ui/rs_surface_node.h"
 
 #include "window.h"
 #include "window_property.h"
@@ -201,12 +202,16 @@ private:
     bool IsPointerEventConsumed();
     void TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     void UpdatePointerEventForStretchableWindow(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
+    RSSurfaceNode::SharedPtr CreateSurfaceNode(std::string name, WindowType type);
+    WMError UpdateProperty(PropertyChangeAction action);
 
     static std::map<std::string, std::pair<uint32_t, sptr<Window>>> windowMap_;
     static std::map<uint32_t, std::vector<sptr<WindowImpl>>> subWindowMap_;
     sptr<WindowProperty> property_;
     sptr<MoveDragProperty> moveDragProperty_;
     WindowState state_ { WindowState::STATE_INITIAL };
+    std::shared_ptr<RSSurfaceNode> surfaceNode_;
+    std::shared_ptr<AbilityRuntime::Context> context_;
     std::string name_;
     std::shared_ptr<IInputEventConsumer> inputEventConsumer_;
     std::unique_ptr<Ace::UIContent> uiContent_;

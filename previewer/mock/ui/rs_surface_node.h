@@ -17,10 +17,49 @@
 
 #include "ui/rs_node.h"
 
+#include <string>
+#include <stdint.h>
+
 namespace OHOS {
 namespace Rosen {
-class RSSurfaceNode : public RSNode {
+
+using NodeId = uint64_t;
+
+struct RSSurfaceNodeConfig {
+    std::string SurfaceNodeName = "SurfaceNode";
+    void* additionalData = nullptr;
 };
+
+// types for RSSurfaceRenderNode
+enum class RSSurfaceNodeType : uint8_t {
+    DEFAULT,
+    APP_WINDOW_NODE,          // surfacenode created as app main window
+    ABILITY_COMPONENT_NODE,   // surfacenode created as ability component
+    SELF_DRAWING_NODE,        // surfacenode created by arkui component (except ability component)
+    STARTING_WINDOW_NODE,     // starting window, surfacenode created by wms
+    LEASH_WINDOW_NODE,        // leashwindow
+    SELF_DRAWING_WINDOW_NODE, // create by wms, such as pointer window and bootanimation
+    EXTENSION_ABILITY_NODE,   // create by arkui to manage extension views
+};
+
+class RSSurfaceNode : public RSNode {
+public:
+    using SharedPtr = std::shared_ptr<RSSurfaceNode>;
+
+    static SharedPtr Create(const RSSurfaceNodeConfig& surfaceNodeConfig, RSSurfaceNodeType type, bool isWindow = true);
+
+
+
+protected:
+    RSSurfaceNode(const RSSurfaceNodeConfig& config, bool isRenderServiceNode) {};
+    RSSurfaceNode(const RSSurfaceNodeConfig& config, bool isRenderServiceNode, NodeId id) {};
+    RSSurfaceNode(const RSSurfaceNode&) = delete;
+    RSSurfaceNode(const RSSurfaceNode&&) = delete;
+    RSSurfaceNode& operator=(const RSSurfaceNode&) = delete;
+    RSSurfaceNode& operator=(const RSSurfaceNode&&) = delete;
+
+};
+
 } // namespace Rosen
 } // namespace OHOS
 #endif // RENDER_SERVICE_CLIENT_CORE_UI_RS_SURFACE_NODE_H

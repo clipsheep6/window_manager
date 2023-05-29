@@ -23,7 +23,7 @@ class RSNode {
 public:
     void SetPivotX(float pivotX);
     void SetPivotY(float pivotY);
-    
+
     void SetScaleX(float scaleX);
     void SetScaleY(float scaleY);
 

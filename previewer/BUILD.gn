@@ -38,6 +38,7 @@ ohos_shared_library("previewer_window") {
     # "../wm/src/window_input_channel.cpp",
     "../wm/src/window_option.cpp",
     "mock/parcel.cpp",
+    "mock/ui/rs_surface_node.cpp",
     "src/window.cpp",
     "src/window_impl.cpp",
     "src/window_scene.cpp",
@@ -52,11 +53,13 @@ ohos_shared_library("previewer_window") {
     # "../wm/include",
     "../utils/include",
     "../../../../commonlibrary/c_utils/base/include",
+    # "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/core/ui",
   ]
 
   deps = [
     "//foundation/arkui/napi:ace_napi",
     "//foundation/arkui/napi:ace_napi_ark",
+    # "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
   ]
 
   cflags = [ "-std=c++11" ]

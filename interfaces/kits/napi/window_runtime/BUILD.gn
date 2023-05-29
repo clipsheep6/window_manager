@@ -25,7 +25,7 @@ config("window_manager_napi_config") {
     "window_manager_napi",
     "../../../innerkits/wm",
     "../../../innerkits/dm",
-    # "../../../../wm/include",
+    #"../../../../wm/include",
     "../../../../utils/include",
   ]
 
@@ -84,6 +84,15 @@ ohos_shared_library("window_native_kit") {
     "../../../../utils:libwmutil",
     # "../../../../wm:libwm",
   ]
+  if (is_preview) {
+    deps += [
+      "../../../../previewer:previewer_window_napi",
+    ]
+  } else {
+    deps += [
+      "../../../../wm:libwm",
+    ]
+  }
 
   if (is_preview) {
     deps += [
@@ -132,6 +141,15 @@ ohos_shared_library("window_napi") {
     "../../../../utils:libwmutil",
     # "../../../../wm:libwm",
   ]
+  if (is_preview) {
+    deps += [
+      "../../../../previewer:previewer_window_napi",
+    ]
+  } else {
+    deps += [
+      "../../../../wm:libwm",
+    ]
+  }
 
   if (is_preview) {
     deps += [
