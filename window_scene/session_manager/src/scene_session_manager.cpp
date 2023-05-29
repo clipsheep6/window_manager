@@ -27,6 +27,8 @@
 #include "window_manager_hilog.h"
 #include "common/include/permission.h"
 #include "wm_math.h"
+#include "ability_context.h"
+#include "session/host/include/scene_persistence.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -192,9 +194,12 @@ sptr<RootSceneSession> SceneSessionManager::GetRootSceneSession()
             WLOGFE("rootSceneSession or rootScene is nullptr");
             return sptr<RootSceneSession>(nullptr);
         }
-        rootSceneSession_->SetLoadContentFunc(
-            [rootScene = rootScene_](const std::string& contentUrl, NativeEngine* engine, NativeValue* storage,
-                AbilityRuntime::Context* context) { rootScene->LoadContent(contentUrl, engine, storage, context); });
+        rootSceneSession_->SetLoadContentFunc([rootScene = rootScene_](const std::string &contentUrl,
+            NativeEngine *engine, NativeValue *storage, AbilityRuntime::Context *context) {
+                rootScene->LoadContent(contentUrl, engine, storage, context);
+                ScenePersistence::strSCBPath = context->GetFilesDir();
+        });
+
         return rootSceneSession_;
     };
 
@@ -215,8 +220,8 @@ sptr<SceneSession> SceneSessionManager::GetSceneSession(uint64_t persistentId)
 sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& sessionInfo)
 {
     auto task = [this, sessionInfo]() {
-        WLOGFI("sessionInfo: bundleName: %{public}s, abilityName: %{public}s", sessionInfo.bundleName_.c_str(),
-            sessionInfo.abilityName_.c_str());
+        WLOGFI("sessionInfo: bundleName: %{public}s, abilityName: %{public}s prePID : %{public}u",
+            sessionInfo.bundleName_.c_str(), sessionInfo.abilityName_.c_str(), sessionInfo.prePersistentId_);
         sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(sessionInfo);
         if (sceneSession == nullptr) {
             WLOGFE("sceneSession is nullptr!");
@@ -224,8 +229,13 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
         }
         uint64_t persistentId = GeneratePersistentId();
         sceneSession->SetPersistentId(persistentId);
+        sceneSession->scenePersistence_->SetPrePersistId(sessionInfo.prePersistentId_);
         abilitySceneMap_.insert({ persistentId, sceneSession });
         WLOGFI("create session persistentId: %{public}" PRIu64 "", persistentId);
+        if (isStartup) {
+            isStartup = false;
+            sceneSession->scenePersistence_->CreateSnapshotDir();
+        }
         return sceneSession;
     };
     WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);
