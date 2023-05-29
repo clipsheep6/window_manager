@@ -83,6 +83,7 @@ public:
     // for scene session stage
     WSError SetActive(bool active) override;
     WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) override;
+    // WSError NotifyDestroy() override;
 
     bool RegisterSessionStageStateListener(const std::shared_ptr<ISessionStageStateListener>& listener);
     bool UnregisterSessionStageStateListener(const std::shared_ptr<ISessionStageStateListener>& listener);

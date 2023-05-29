@@ -30,6 +30,7 @@ public:
 
     WSError SetActive(bool active) override;
     WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) override;
+    WSError NotifyDestroy() override;
 private:
     static inline BrokerDelegator<SessionStageProxy> delegator_;
 };

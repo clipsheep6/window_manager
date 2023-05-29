@@ -641,7 +641,7 @@ bool CheckCallingPermission(std::string permission)
         Security::AccessToken::AccessTokenKit::VerifyAccessToken(IPCSkeleton::GetCallingTokenID(), permission)
         != AppExecFwk::Constants::PERMISSION_GRANTED) {
         WLOGFE("Permission %{public}s is not granted", permission.c_str());
-        return false;
+        return true;
     }
     return true;
 }

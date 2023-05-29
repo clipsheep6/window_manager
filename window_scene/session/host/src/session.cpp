@@ -363,4 +363,33 @@ WSError Session::OnSessionEvent(SessionEvent event)
     WLOGFD("Session OnSessionEvent");
     return WSError::WS_OK;
 }
+
+sptr<WindowSessionProperty> Session::GetSessionProperty() const
+{
+    return property_;
+}
+
+WSError Session::NotifyDestroy()
+{
+    if(!sessionStage_)
+    {
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    return sessionStage_->NotifyDestroy();
+}
+
+// WSError Session::BindDialogToParent(const uint64_t& persistentId)
+// {
+//     if (session->GetSessionProperty()->GetWindowType() != WindowType::WINDOW_TYPE_DIALOG) {
+//         return WSError::WM_OK;
+//     }
+//     // sptr<WindowNode> callerNode = FindMainWindowWithToken(node->dialogTargetToken_);
+    
+//     parentNode = (callerNode != nullptr) ? callerNode : nullptr;
+//     if (parentNode == nullptr) {
+//         node->GetWindowToken()->NotifyDestroy();
+//         return WMError::WM_ERROR_INVALID_PARAM;
+//     }
+//     return WMError::WM_OK;
+// }
 } // namespace OHOS::Rosen

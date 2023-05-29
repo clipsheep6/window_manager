@@ -43,6 +43,9 @@ public:
     void DestroyAndDisconnectSpecificSession(const uint64_t& persistentId);
     sptr<IScreenSessionManager> GetScreenSessionManagerProxy();
 
+    WMError BindDialogTarget(const uint64_t& persistentId, sptr<IRemoteObject> targetToken);
+    WMError BindDialogToParent(const uint64_t& persistentId);
+
 private:
     void ConnectToService();
     void InitSceneSessionManagerProxy();

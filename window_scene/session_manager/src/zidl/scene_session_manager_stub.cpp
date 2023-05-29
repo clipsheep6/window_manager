@@ -53,6 +53,7 @@ int SceneSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
             } else {
                 WLOGFW("Property not exist!");
             }
+            WLOGFD("========= session Type: %{public}u", static_cast<uint32_t>(property->GetWindowType()));
             uint64_t persistentId = INVALID_SESSION_ID;
             sptr<ISession> sceneSession;
             CreateAndConnectSpecificSession(sessionStage, eventChannel, surfaceNode,
@@ -68,6 +69,20 @@ int SceneSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
         case SceneSessionManagerMessage::TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION: {
             uint64_t persistentId = data.ReadUint64();
             const WSError& ret = DestroyAndDisconnectSpecificSession(persistentId);
+            reply.WriteUint32(static_cast<uint32_t>(ret));
+            break;
+        }
+        case SceneSessionManagerMessage::TRANS_ID_BIND_DIALOG_TARGET: {
+            uint64_t persistentId = data.ReadUint64();
+            sptr<IRemoteObject> targetObject = data.ReadRemoteObject();
+            const WSError& ret = BindDialogTarget(persistentId, targetObject);
+            reply.WriteUint32(static_cast<uint32_t>(ret));
+            break;
+        }
+        case SceneSessionManagerMessage::TRANS_ID_BIND_DIALOG_TO_PARENT: {
+            uint64_t persistentId = data.ReadUint64();
+            
+            const WSError& ret = BindDialogToParent(persistentId);
             reply.WriteUint32(static_cast<uint32_t>(ret));
             break;
         }

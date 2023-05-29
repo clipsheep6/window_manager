@@ -212,6 +212,7 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartedByInputMethod()) {
         WLOGFE("check input method permission failed");
+        return WSError::WS_ERROR_INVALID_PERMISSION;
     }
     auto task = [this, sessionStage, eventChannel, surfaceNode, property, &persistentId, &session]() {
         // create specific session
@@ -220,11 +221,13 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
         if (sceneSession == nullptr) {
             return WSError::WS_ERROR_NULLPTR;
         }
+        // connect specific session and sessionStage
+        WSError errCode = sceneSession->Connect(sessionStage, eventChannel, surfaceNode, persistentId, property);
+        WLOGFD("========= session Type: %{public}u, type2: %{public}u",
+            static_cast<uint32_t>(property->GetWindowType()), sceneSession->GetSessionProperty()->GetWindowType());
         if (createSpecificSessionFunc_) {
             createSpecificSessionFunc_(sceneSession);
         }
-        // connect specific session and sessionStage
-        WSError errCode = sceneSession->Connect(sessionStage, eventChannel, surfaceNode, persistentId, property);
         session = sceneSession;
         return errCode;
     };
@@ -253,8 +256,75 @@ WSError SceneSessionManager::DestroyAndDisconnectSpecificSession(const uint64_t&
         }
         auto ret = sceneSession->UpdateActiveStatus(false);
         ret = sceneSession->Disconnect();
+        if (ret == WSError::WS_OK)
+        {
+            // notify to destroy dialog window
+            sceneSession->NotifyDestroy();
+        }
         abilitySceneMap_.erase(persistentId);
         return ret;
+    };
+
+    WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);
+    msgScheduler_->PostSyncTask(task);
+    return WSError::WS_OK;
+}
+
+WSError SceneSessionManager::BindDialogTarget(const uint64_t& persistentId, sptr<IRemoteObject> targetObject)
+{
+    if (!Permission::IsSystemCalling()) {
+        WLOGFE("bind dialog target permission denied!");
+        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    }
+    auto task = [this, persistentId, targetObject]() {
+        WLOGFI("yangfei bind session persistentId: %{public}" PRIu64 "", persistentId);
+        auto iter = abilitySceneMap_.find(persistentId);
+        if (iter == abilitySceneMap_.end()) {
+            return WSError::WS_ERROR_INVALID_SESSION;
+        }
+        const auto& sceneSession = iter->second;
+        if (sceneSession == nullptr) {
+            return WSError::WS_ERROR_NULLPTR;
+        }
+        sceneSession->dialogTargetToken_ = targetObject;
+        return WSError::WS_OK;
+    };
+
+    WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);
+    msgScheduler_->PostSyncTask(task);
+    return WSError::WS_OK;
+}
+
+WSError SceneSessionManager::BindDialogToParent(const uint64_t& persistentId)
+{
+    if (!Permission::IsSystemCalling()) {
+        WLOGFE("bind dialog target permission denied!");
+        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    }
+    auto task = [this, persistentId]() {
+        auto iter = abilitySceneMap_.find(persistentId);
+        if (iter == abilitySceneMap_.end()) {
+            return WSError::WS_ERROR_INVALID_SESSION;
+        }
+        const auto& sceneSession = iter->second;
+        WLOGFI("yangfei bind session persistentId: %{public}" PRIu64 "", persistentId);
+        sptr<SceneSession> callerSession = nullptr;
+        for (auto item : abilitySceneMap_) {
+            if (item.second->GetSessionProperty()->GetWindowType()==WindowType::APP_MAIN_WINDOW_BASE &&
+                item.second->GetSessionInfo().callerToken_ == sceneSession->dialogTargetToken_) {
+                callerSession = item.second;
+            }
+        }
+        if (sceneSession == nullptr) {
+            WLOGFE("yangfei scene session not found!");
+            return WSError::WS_ERROR_NULLPTR;
+        }
+        if (!callerSession) {
+            sceneSession->NotifyDestroy();
+            WLOGFE("yangfei destroy dialog for mainwindow not found!");
+            return WSError::WS_ERROR_NULLPTR;
+        }
+        return WSError::WS_OK;
     };
 
     WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);

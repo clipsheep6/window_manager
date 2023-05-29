@@ -16,7 +16,9 @@ import("../../../../../windowmanager_aafwk.gni")
 
 config("scene_session_manager_napi_public_config") {
   visibility = [ ":*" ]
-  include_dirs = [ "${window_base_path}/window_scene/interfaces/kits/napi" ]
+  include_dirs = [
+    "${window_base_path}/window_scene/interfaces/kits/napi"
+  ]
 }
 
 ohos_shared_library("scenesessionmanager_napi") {
@@ -33,6 +35,7 @@ ohos_shared_library("scenesessionmanager_napi") {
   deps = [
     "${window_base_path}/window_scene/session:scene_session",
     "${window_base_path}/window_scene/session_manager:scene_session_manager",
+    "${window_base_path}/window_scene/common:window_scene_common",
   ]
 
   external_deps = [

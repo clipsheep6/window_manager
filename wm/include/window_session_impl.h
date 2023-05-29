@@ -62,16 +62,20 @@ public:
     Ace::UIContent* GetUIContent() const override;
     void OnNewWant(const AAFwk::Want& want) override;
     void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback) override;
+    WMError BindDialogTarget(sptr<IRemoteObject> targetToken) override;
     // inherits from session stage
     WSError SetActive(bool active) override;
     WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) override;
     void NotifyPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
     void NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
+    WSError NotifyDestroy() override;
     // callback
     WMError RegisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener) override;
     WMError UnregisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener) override;
     WMError RegisterWindowChangeListener(const sptr<IWindowChangeListener>& listener) override;
     WMError UnregisterWindowChangeListener(const sptr<IWindowChangeListener>& listener) override;
+    void RegisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener) override;
+    void UnregisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener) override;
     void RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func) override;
     uint64_t GetPersistentId() const;
 
@@ -103,6 +107,8 @@ private:
     template<typename T> EnableIfSame<T, IWindowLifeCycle, std::vector<sptr<IWindowLifeCycle>>> GetListeners();
     template<typename T>
     EnableIfSame<T, IWindowChangeListener, std::vector<sptr<IWindowChangeListener>>> GetListeners();
+    template<typename T>
+    EnableIfSame<T, IDialogDeathRecipientListener, std::vector<wptr<IDialogDeathRecipientListener>>> GetListeners();
     template<typename T> void ClearUselessListeners(std::map<uint64_t, T>& listeners, uint64_t persistentId);
 
     RSSurfaceNode::SharedPtr CreateSurfaceNode(std::string name, WindowType type);
@@ -120,6 +126,7 @@ private:
 
     static std::map<uint64_t, std::vector<sptr<IWindowLifeCycle>>> lifecycleListeners_;
     static std::map<uint64_t, std::vector<sptr<IWindowChangeListener>>> windowChangeListeners_;
+    static std::map<uint64_t, std::vector<sptr<IDialogDeathRecipientListener>>> dialogDeathRecipientListeners_;
     static std::recursive_mutex globalMutex_;
     NotifyNativeWinDestroyFunc notifyNativefunc_;
 };
