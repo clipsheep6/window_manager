@@ -1201,7 +1201,7 @@ WMError WindowController::RecoverInputEventToClient(uint32_t windowId)
     }
 
     node->SetInputEventCallingPid(node->GetCallingPid());
-    RecoverDefaultMouseStyle(windowId);
+    // RecoverDefaultMouseStyle(windowId);
     FlushWindowInfo(windowId);
     return WMError::WM_OK;
 }
