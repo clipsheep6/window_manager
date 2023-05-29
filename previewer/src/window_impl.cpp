@@ -46,6 +46,8 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
     }
     name_ = option->GetWindowName();
 
+    surfaceNode_ = CreateSurfaceNode(property_->GetWindowName(), option->GetWindowType());
+
     WLOGFI("WindowImpl constructorCnt: %{public}d name: %{public}s",
         ++constructorCnt, property_->GetWindowName().c_str());
 }
@@ -55,6 +57,26 @@ WindowImpl::~WindowImpl()
     WLOGFI("windowName: %{public}s, windowId: %{public}d, deConstructorCnt: %{public}d",
         GetWindowName().c_str(), GetWindowId(), ++deConstructorCnt);
     Destroy();
+}
+
+RSSurfaceNode::SharedPtr WindowImpl::CreateSurfaceNode(std::string name, WindowType type)
+{
+    struct RSSurfaceNodeConfig rsSurfaceNodeConfig;
+    rsSurfaceNodeConfig.SurfaceNodeName = name;
+    RSSurfaceNodeType rsSurfaceNodeType = RSSurfaceNodeType::DEFAULT;
+    switch (type) {
+        case WindowType::WINDOW_TYPE_BOOT_ANIMATION:
+        case WindowType::WINDOW_TYPE_POINTER:
+            rsSurfaceNodeType = RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE;
+            break;
+        case WindowType::WINDOW_TYPE_APP_MAIN_WINDOW:
+            rsSurfaceNodeType = RSSurfaceNodeType::APP_WINDOW_NODE;
+            break;
+        default:
+            rsSurfaceNodeType = RSSurfaceNodeType::DEFAULT;
+            break;
+    }
+    return RSSurfaceNode::Create(rsSurfaceNodeConfig, rsSurfaceNodeType);
 }
 
 sptr<Window> WindowImpl::Find(const std::string& name)
@@ -120,7 +142,7 @@ void WindowImpl::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Con
 
 std::shared_ptr<RSSurfaceNode> WindowImpl::GetSurfaceNode() const
 {
-    return nullptr;
+    return surfaceNode_;
 }
 
 Rect WindowImpl::GetRect() const
@@ -257,6 +279,52 @@ void WindowImpl::OnNewWant(const AAFwk::Want& want)
 WMError WindowImpl::SetUIContent(const std::string& contentInfo,
     NativeEngine* engine, NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability)
 {
+    WLOGFD("SetUIContent: %{public}s", contentInfo.c_str());
+    if (uiContent_) {
+        uiContent_->Destroy();
+    }
+    std::unique_ptr<Ace::UIContent> uiContent;
+    if (ability != nullptr) {
+        uiContent = Ace::UIContent::Create(ability);
+    } else {
+        uiContent = Ace::UIContent::Create(context_.get(), engine);
+    }
+    if (uiContent == nullptr) {
+        WLOGFE("fail to SetUIContent id: %{public}u", property_->GetWindowId());
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    if (isdistributed) {
+        uiContent->Restore(this, contentInfo, storage);
+    } else {
+        uiContent->Initialize(this, contentInfo, storage);
+    }
+    // make uiContent available after Initialize/Restore
+    uiContent_ = std::move(uiContent);
+    // if (isIgnoreSafeAreaNeedNotify_) {
+    //     uiContent_->SetIgnoreViewSafeArea(isIgnoreSafeArea_);
+    // }
+    // UpdateDecorEnable(true);
+
+    if (state_ == WindowState::STATE_SHOWN) {
+        // UIContent may be nullptr when show window, need to notify again when window is shown
+        uiContent_->Foreground();
+        // UpdateTitleButtonVisibility();
+        Ace::ViewportConfig config;
+        Rect rect = GetRect();
+        config.SetSize(rect.width_, rect.height_);
+        config.SetPosition(rect.posX_, rect.posY_);
+        auto display = SingletonContainer::IsDestroyed() ? nullptr :
+            SingletonContainer::Get<DisplayManager>().GetDisplayById(property_->GetDisplayId());
+        if (display == nullptr) {
+            WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u", property_->GetDisplayId(),
+                property_->GetWindowId());
+            return WMError::WM_ERROR_NULLPTR;
+        }
+        float virtualPixelRatio = display->GetVirtualPixelRatio();
+        config.SetDensity(virtualPixelRatio);
+        uiContent_->UpdateViewportConfig(config, WindowSizeChangeReason::UNDEFINED, nullptr);
+        WLOGFD("notify uiContent window size change end");
+    }
     return WMError::WM_OK;
 }
 
@@ -314,7 +382,7 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
 {
     WLOGFI("[Client] Window [name:%{public}s] Create", name_.c_str());
     // check window name, same window names are forbidden
-    if (windowMap_.find(name_) != windowMap_.end()) {
+    if (windowMap_.find(cf) != windowMap_.end()) {
         WLOGFE("WindowName(%{public}s) already exists.", name_.c_str());
         return WMError::WM_ERROR_INVALID_PARAM;
     }
@@ -335,6 +403,9 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
     static std::atomic<uint32_t> tempWindowId = 0;
     uint32_t windowId = tempWindowId++;
     property_->SetWindowId(windowId);
+    if (surfaceNode_) {
+        surfaceNode_->SetWindowId(windowId);
+    }
     windowMap_.insert(std::make_pair(name_, std::pair<uint32_t, sptr<Window>>(windowId, this)));
 
     state_ = WindowState::STATE_CREATED;
@@ -673,7 +744,13 @@ bool WindowImpl::IsFullScreen() const
 
 void WindowImpl::SetRequestedOrientation(Orientation orientation)
 {
-    return;
+    if (property_->GetRequestedOrientation() == orientation) {
+        return;
+    }
+    property_->SetRequestedOrientation(orientation);
+    if (state_ == WindowState::STATE_SHOWN) {
+        UpdateProperty(PropertyChangeAction::ACTION_UPDATE_ORIENTATION);
+    }
 }
 
 Orientation WindowImpl::GetRequestedOrientation()
