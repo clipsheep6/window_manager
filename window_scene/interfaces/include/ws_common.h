@@ -92,6 +92,7 @@ struct SessionInfo {
     std::string bundleName_ = "";
     std::string abilityName_ = "";
     sptr<IRemoteObject> callerToken_ = nullptr;
+    uint32_t prePersistentId_ = 0;
 };
 
 enum class SizeChangeReason : uint32_t {

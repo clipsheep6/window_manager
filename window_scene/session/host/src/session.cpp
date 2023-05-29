@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,10 +15,11 @@
 
 #include "session/host/include/session.h"
 
-#include "surface_capture_future.h"
 #include <transaction/rs_interfaces.h>
 #include <ui/rs_surface_node.h>
+
 #include "window_manager_hilog.h"
+#include "surface_capture_future.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -27,6 +28,7 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "Sessio
 
 Session::Session(const SessionInfo& info) : sessionInfo_(info)
 {
+    scenePersistence_ = new ScenePersistence(sessionInfo_);
 }
 
 Session::~Session()
@@ -37,6 +39,7 @@ Session::~Session()
 void Session::SetPersistentId(uint64_t persistentId)
 {
     persistentId_ = persistentId;
+    scenePersistence_->SetCurPersistId(persistentId_);
 }
 
 uint64_t Session::GetPersistentId() const
@@ -64,7 +67,7 @@ bool Session::UnregisterLifecycleListener(const std::shared_ptr<ILifecycleListen
     return UnregisterListenerLocked(lifecycleListeners_, listener);
 }
 
-template<typename T>
+template <typename T>
 bool Session::RegisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener)
 {
     if (listener == nullptr) {
@@ -80,7 +83,7 @@ bool Session::RegisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, co
     return true;
 }
 
-template<typename T>
+template <typename T>
 bool Session::UnregisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener)
 {
     if (listener == nullptr) {
@@ -213,6 +216,7 @@ WSError Session::Background()
     UpdateSessionState(SessionState::STATE_BACKGROUND);
 
     snapshot_ = Snapshot();
+    scenePersistence_->SaveSnapshot(snapshot_);
     NotifyBackground();
     return WSError::WS_OK;
 }
@@ -225,6 +229,8 @@ WSError Session::Disconnect()
     Background();
     if (GetSessionState() == SessionState::STATE_BACKGROUND) {
         UpdateSessionState(SessionState::STATE_DISCONNECT);
+    } else if (GetSessionState() == SessionState::STATE_DISCONNECT) {
+        scenePersistence_->RemovePixelMapFile(scenePersistence_->GetSnapshotFilePath());
     }
     return WSError::WS_OK;
 }
