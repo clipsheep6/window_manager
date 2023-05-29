@@ -15,6 +15,8 @@
 
 #include "window_impl.h"
 #include "window_manager_hilog.h"
+#include "window_helper.h"
+#include "window_option.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -84,6 +86,7 @@ sptr<Window> WindowImpl::GetTopWindowWithId(uint32_t mainWinId)
         }
     }
     WLOGFE("Cannot find topWindow!");
+    return nullptr;
 }
 
 sptr<Window> WindowImpl::GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context)
@@ -624,12 +627,32 @@ void WindowImpl::SetRequestModeSupportInfo(uint32_t modeSupportInfo)
 
 void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
-    return;
+    if (uiContent_ != nullptr) {
+        WLOGD("Transfer key event to uiContent");
+        (void)uiContent_->ProcessKeyEvent(keyEvent);
+    } else {
+        WLOGFE("There is no key event consumer");
+    }
+    if (GetType() == WindowType::WINDOW_TYPE_APP_COMPONENT) {
+        WLOGFI("DispatchKeyEvent: %{public}u", GetWindowId());
+        keyEvent->MarkProcessed();
+        return;
+    }
 }
 
 void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
-    return;
+    // If windowRect transformed, transform event back to its origin position
+    if (property_) {
+        property_->UpdatePointerEvent(pointerEvent);
+    }
+
+    if (IsPointerEventConsumed()) {
+        pointerEvent->MarkProcessed();
+        return;
+    }
+
+    TransferPointerEvent(pointerEvent);
 }
 
 void WindowImpl::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback)
@@ -658,7 +681,7 @@ void WindowImpl::NotifyTouchDialogTarget()
 
 void WindowImpl::SetNeedRemoveWindowInputChannel(bool needRemoveWindowInputChannel)
 {
-    return;
+    needRemoveWindowInputChannel_ = needRemoveWindowInputChannel;
 }
 
 bool WindowImpl::IsLayoutFullScreen() const
@@ -786,7 +809,50 @@ KeyboardAnimationConfig WindowImpl::GetKeyboardAnimationConfig()
 
 void WindowImpl::SetNeedDefaultAnimation(bool needDefaultAnimation)
 {
+
+    int a
+    asfdasfa
     return;
 }
+
+bool WindowImpl::IsPointerEventConsumed()
+{
+    return moveDragProperty_->startDragFlag_ || moveDragProperty_->startMoveFlag_;
+}
+
+void WindowImpl::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
+    if (windowSystemConfig_.isStretchable_ && GetMode() == WindowMode::WINDOW_MODE_FLOATING) {
+        UpdatePointerEventForStretchableWindow(pointerEvent);
+    }
+
+    if (uiContent_ != nullptr) {
+        WLOGFD("Transfer pointer event to uiContent");
+        (void)uiContent_->ProcessPointerEvent(pointerEvent);
+    } else {
+        WLOGFW("pointerEvent is not consumed, windowId: %{public}u", GetWindowId());
+        pointerEvent->MarkProcessed();
+    }
+}
+
+
+void WindowImpl::UpdatePointerEventForStretchableWindow(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
+    MMI::PointerEvent::PointerItem pointerItem;
+    if (!pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem)) {
+        WLOGFW("Point item is invalid");
+        return;
+    }
+    const Rect& originRect = property_->GetOriginRect();
+    PointInfo originPos =
+        WindowHelper::CalculateOriginPosition(originRect, GetRect(),
+        { pointerItem.GetDisplayX(), pointerItem.GetDisplayY() });
+    pointerItem.SetDisplayX(originPos.x);
+    pointerItem.SetDisplayY(originPos.y);
+    pointerItem.SetWindowX(originPos.x - originRect.posX_);
+    pointerItem.SetWindowY(originPos.y - originRect.posY_);
+    pointerEvent->UpdatePointerItem(pointerEvent->GetPointerId(), pointerItem);
+}
+
 } // namespace Rosen
 } // namespace OHOS

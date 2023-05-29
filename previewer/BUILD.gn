@@ -32,15 +32,16 @@ ohos_shared_library("previewer_window") {
     "../utils/src/window_property.cpp",
     "../utils/src/window_transition_info.cpp",
     "../utils/src/wm_math.cpp",
-    "../wm/src/input_transfer_station.cpp",
-    "../wm/src/vsync_station.cpp",
-    "../wm/src/window_frame_trace_impl.cpp",
-    "../wm/src/window_input_channel.cpp",
+    # "../wm/src/input_transfer_station.cpp",
+    # "../wm/src/vsync_station.cpp",
+    # "../wm/src/window_frame_trace_impl.cpp",
+    # "../wm/src/window_input_channel.cpp",
     "../wm/src/window_option.cpp",
     "mock/parcel.cpp",
     "src/window.cpp",
     "src/window_impl.cpp",
     "src/window_scene.cpp",
+    "src/window_input_channel.cpp",
   ]
 
   include_dirs = [
@@ -48,7 +49,7 @@ ohos_shared_library("previewer_window") {
     "mock",
     "../interfaces/innerkits/wm",
     "../interfaces/innerkits/dm",
-    "../wm/include",
+    # "../wm/include",
     "../utils/include",
     "../../../../commonlibrary/c_utils/base/include",
   ]
@@ -95,7 +96,7 @@ ohos_shared_library("previewer_window_napi") {
     "mock/ui",
     "mock/transaction",
     "mock/ability_runtime",
-    "../wm/include",
+    # "../wm/include",
     "../utils/include",
     "../interfaces/innerkits/wm",
     "../interfaces/innerkits/dm",
