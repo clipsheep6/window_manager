@@ -196,14 +196,23 @@ public:
     virtual KeyboardAnimationConfig GetKeyboardAnimationConfig() override;
 
     virtual void SetNeedDefaultAnimation(bool needDefaultAnimation) override;
+
 private:
+    bool IsPointerEventConsumed();
+    void TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
+    void UpdatePointerEventForStretchableWindow(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
+
     static std::map<std::string, std::pair<uint32_t, sptr<Window>>> windowMap_;
     static std::map<uint32_t, std::vector<sptr<WindowImpl>>> subWindowMap_;
     sptr<WindowProperty> property_;
+    sptr<MoveDragProperty> moveDragProperty_;
     WindowState state_ { WindowState::STATE_INITIAL };
     std::string name_;
+    std::shared_ptr<IInputEventConsumer> inputEventConsumer_;
     std::unique_ptr<Ace::UIContent> uiContent_;
     KeyboardAnimationConfig keyboardAnimationConfig_;
+    bool needRemoveWindowInputChannel_ = false;
+    SystemConfig windowSystemConfig_;
 };
 } // namespace Rosen
 } // namespace OHOS
