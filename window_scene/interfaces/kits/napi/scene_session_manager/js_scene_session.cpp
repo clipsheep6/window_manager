@@ -28,6 +28,7 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "JsScen
 const std::string PENDING_SCENE_CB = "pendingSceneSessionActivation";
 const std::string SESSION_STATE_CHANGE_CB = "sessionStateChange";
 const std::string SESSION_EVENT_CB = "sessionEvent";
+const std::string BACK_PRESSED_CB = "backPressed";
 } // namespace
 
 NativeValue* JsSceneSession::Create(NativeEngine& engine, const sptr<SceneSession>& session)
@@ -57,6 +58,7 @@ JsSceneSession::JsSceneSession(NativeEngine& engine, const sptr<SceneSession>& s
         { PENDING_SCENE_CB,               &JsSceneSession::ProcessPendingSceneSessionActivationRegister },
         { SESSION_STATE_CHANGE_CB,        &JsSceneSession::ProcessSessionStateChangeRegister },
         { SESSION_EVENT_CB,               &JsSceneSession::ProcessSessionEventRegister },
+        { BACK_PRESSED_CB,                &JsSceneSession::ProcessBackPressedRegister },
     };
 }
 
@@ -108,6 +110,14 @@ void JsSceneSession::OnSessionEvent(uint32_t eventId)
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
     AsyncTask::Schedule("JsSceneSession::OnSessionEvent", engine_,
         std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+}
+
+void JsSceneSession::ProcessBackPressedRegister()
+{
+    NotifyBackPressedFunc func = [this]() {
+        this->OnBackPressed();
+    };
+    session_->SetBackPressedListenser(func);
 }
 
 void JsSceneSession::Finalizer(NativeEngine* engine, void* data, void* hint)
@@ -227,6 +237,25 @@ void JsSceneSession::PendingSessionActivation(const SessionInfo& info)
     NativeReference* callback = nullptr;
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
     AsyncTask::Schedule("JsSceneSession::PendingSessionActivation", engine_,
+        std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+}
+
+void JsSceneSession::OnBackPressed()
+{
+    WLOGFI("[NAPI]OnBackPressed");
+    auto iter = jsCbMap_.find(BACK_PRESSED_CB);
+    if (iter == jsCbMap_.end()) {
+        return;
+    }
+    auto jsCallBack = iter->second;
+    auto complete = std::make_unique<AsyncTask::CompleteCallback>(
+        [jsCallBack, eng = &engine_](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            engine.CallFunction(engine.CreateUndefined(), jsCallBack->Get(), {}, 0);
+        });
+
+    NativeReference* callback = nullptr;
+    std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
+    AsyncTask::Schedule("JsSceneSession::OnBackPressed", engine_,
         std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
 }
 

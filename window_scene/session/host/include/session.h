@@ -40,6 +40,7 @@ class RSSurfaceNode;
 using NotifyPendingSessionActivationFunc = std::function<void(const SessionInfo& info)>;
 using NotifySessionStateChangeFunc = std::function<void(const SessionState& state)>;
 using NotifySessionEventFunc = std::function<void(int32_t eventId)>;
+using NotifyBackPressedFunc = std::function<void()>;
 
 class ILifecycleListener {
 public:
@@ -89,6 +90,9 @@ public:
     void NotifySessionStateChange(const SessionState& state);
     WSError UpdateActiveStatus(bool isActive) override; // update active status from session_stage
     void SetSessionEventListener(const NotifySessionEventFunc& func);
+    void SetBackPressedListenser(const NotifyBackPressedFunc& func);
+    WSError ProcessBackEvent(); // send back event to session_stage
+    WSError RequestSessionBack() override; // receive back request from session_stage
 
 protected:
     void UpdateSessionState(SessionState state);
@@ -100,6 +104,7 @@ protected:
     NotifyPendingSessionActivationFunc pendingSessionActivationFunc_;
     NotifySessionStateChangeFunc sessionStateChangeFunc_;
     NotifySessionEventFunc sessionEventFunc_;
+    NotifyBackPressedFunc backPressedFunc_;
     sptr<WindowSessionProperty> property_ = nullptr;
 private:
     template<typename T>

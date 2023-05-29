@@ -36,6 +36,7 @@ public:
     WSError UpdateActiveStatus(bool isActive) override;
     WSError PendingSessionActivation(const SessionInfo& info) override;
     WSError OnSessionEvent(SessionEvent event) override;
+    WSError RequestSessionBack() override;
 private:
     static inline BrokerDelegator<SessionProxy> delegator_;
 };

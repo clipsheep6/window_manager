@@ -156,4 +156,9 @@ WSError SessionStage::UpdateRect(const WSRect& rect, SizeChangeReason reason)
     NotifySizeChange(rect, reason);
     return WSError::WS_OK;
 }
+
+WSError SessionStage::HandleBackEvent()
+{
+    return WSError::WS_OK;
+}
 } // namespace OHOS::Rosen
