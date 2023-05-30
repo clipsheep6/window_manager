@@ -2245,12 +2245,21 @@ void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSize
             property_->SetOriginRect(rect);
         }
     }
-    ResSchedReport::GetInstance().RequestPerfIfNeed(reason, GetType(), GetMode());
-    if ((rectToAce != lastOriRect) || (reason != lastSizeChangeReason_)) {
-        NotifySizeChange(rectToAce, reason, rsTransaction);
-        lastSizeChangeReason_ = reason;
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    if (handler_ != nullptr) {
+        WLOGFE("temptesttest success to get eventRunner");
+        handler_->PostTask([=]() mutable {
+            WLOGFE("temptesttest success to PostTask eventRunner");
+            ResSchedReport::GetInstance().RequestPerfIfNeed(reason, GetType(), GetMode());
+            if ((rectToAce != lastOriRect) || (reason != lastSizeChangeReason_)) {
+                NotifySizeChange(rectToAce, reason, rsTransaction);
+                lastSizeChangeReason_ = reason;
+            }
+            UpdateViewportConfig(rectToAce, display, reason, rsTransaction);
+        });
+    } else {
+        WLOGFE("temptesttest fail to get eventRunner");
     }
-    UpdateViewportConfig(rectToAce, display, reason, rsTransaction);
 }
 
 void WindowImpl::UpdateMode(WindowMode mode)
