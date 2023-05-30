@@ -19,6 +19,7 @@
 #include <map>
 
 #include <ui_content.h>
+#include "ui/rs_surface_node.h"
 
 #include "window.h"
 #include "window_property.h"
@@ -197,10 +198,13 @@ public:
 
     virtual void SetNeedDefaultAnimation(bool needDefaultAnimation) override;
 private:
+    RSSurfaceNode::SharedPtr CreateSurfaceNode(std::string name, WindowType type);
+
     static std::map<std::string, std::pair<uint32_t, sptr<Window>>> windowMap_;
     static std::map<uint32_t, std::vector<sptr<WindowImpl>>> subWindowMap_;
     sptr<WindowProperty> property_;
     WindowState state_ { WindowState::STATE_INITIAL };
+    std::shared_ptr<RSSurfaceNode> surfaceNode_;
     std::string name_;
     std::unique_ptr<Ace::UIContent> uiContent_;
     KeyboardAnimationConfig keyboardAnimationConfig_;
