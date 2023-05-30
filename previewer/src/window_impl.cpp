@@ -14,6 +14,7 @@
  */
 
 #include "window_impl.h"
+
 #include "window_manager_hilog.h"
 #include "window_helper.h"
 #include "window_option.h"
@@ -698,12 +699,21 @@ void WindowImpl::SetRequestModeSupportInfo(uint32_t modeSupportInfo)
 
 void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
-    if (uiContent_ != nullptr) {
+    std::shared_ptr<InputEventListener> inputEventConsumer;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        inputEventConsumer = inputEventConsumer_;
+    }
+    if (inputEventConsumer != nullptr) {
+        WLOGD("Transfer key event to inputEventConsumer");
+        (void)inputEventConsumer->OnInputEvent(keyEvent);
+    } else if (uiContent_ != nullptr) {
         WLOGD("Transfer key event to uiContent");
-        (void)uiContent_->ProcessKeyEvent(keyEvent);
+        bool handled = static_cast<bool>(uiContent_->ProcessKeyEvent(keyEvent));
     } else {
         WLOGFE("There is no key event consumer");
     }
+
     if (GetType() == WindowType::WINDOW_TYPE_APP_COMPONENT) {
         WLOGFI("DispatchKeyEvent: %{public}u", GetWindowId());
         keyEvent->MarkProcessed();
@@ -905,7 +915,15 @@ void WindowImpl::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& 
         UpdatePointerEventForStretchableWindow(pointerEvent);
     }
 
-    if (uiContent_ != nullptr) {
+    std::shared_ptr<InputEventListener> inputEventConsumer;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        inputEventConsumer = inputEventConsumer_;
+    }
+    if (inputEventConsumer != nullptr) {
+        WLOGFD("Transfer pointer event to inputEventConsumer");
+        (void)inputEventConsumer->OnInputEvent(pointerEvent);
+    } else if (uiContent_ != nullptr) {
         WLOGFD("Transfer pointer event to uiContent");
         (void)uiContent_->ProcessPointerEvent(pointerEvent);
     } else {

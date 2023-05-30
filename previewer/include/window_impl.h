@@ -23,6 +23,7 @@
 
 #include "window.h"
 #include "window_property.h"
+#include "input_transfer_station.h"
 
 namespace OHOS::AbilityRuntime {
     class Context;
@@ -208,12 +209,13 @@ private:
     static std::map<std::string, std::pair<uint32_t, sptr<Window>>> windowMap_;
     static std::map<uint32_t, std::vector<sptr<WindowImpl>>> subWindowMap_;
     sptr<WindowProperty> property_;
+    std::recursive_mutex mutex_;
     sptr<MoveDragProperty> moveDragProperty_;
     WindowState state_ { WindowState::STATE_INITIAL };
     std::shared_ptr<RSSurfaceNode> surfaceNode_;
     std::shared_ptr<AbilityRuntime::Context> context_;
     std::string name_;
-    std::shared_ptr<IInputEventConsumer> inputEventConsumer_;
+    std::shared_ptr<InputEventListener> inputEventConsumer_;
     std::unique_ptr<Ace::UIContent> uiContent_;
     KeyboardAnimationConfig keyboardAnimationConfig_;
     bool needRemoveWindowInputChannel_ = false;
