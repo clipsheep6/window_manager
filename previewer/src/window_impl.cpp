@@ -15,6 +15,8 @@
 
 #include "window_impl.h"
 #include "window_manager_hilog.h"
+#include "window_helper.h"
+#include "window_option.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -106,6 +108,7 @@ sptr<Window> WindowImpl::GetTopWindowWithId(uint32_t mainWinId)
         }
     }
     WLOGFE("Cannot find topWindow!");
+    return nullptr;
 }
 
 sptr<Window> WindowImpl::GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context)
@@ -279,52 +282,52 @@ void WindowImpl::OnNewWant(const AAFwk::Want& want)
 WMError WindowImpl::SetUIContent(const std::string& contentInfo,
     NativeEngine* engine, NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability)
 {
-    WLOGFD("SetUIContent: %{public}s", contentInfo.c_str());
-    if (uiContent_) {
-        uiContent_->Destroy();
-    }
-    std::unique_ptr<Ace::UIContent> uiContent;
-    if (ability != nullptr) {
-        uiContent = Ace::UIContent::Create(ability);
-    } else {
-        uiContent = Ace::UIContent::Create(context_.get(), engine);
-    }
-    if (uiContent == nullptr) {
-        WLOGFE("fail to SetUIContent id: %{public}u", property_->GetWindowId());
-        return WMError::WM_ERROR_NULLPTR;
-    }
-    if (isdistributed) {
-        uiContent->Restore(this, contentInfo, storage);
-    } else {
-        uiContent->Initialize(this, contentInfo, storage);
-    }
-    // make uiContent available after Initialize/Restore
-    uiContent_ = std::move(uiContent);
-    // if (isIgnoreSafeAreaNeedNotify_) {
-    //     uiContent_->SetIgnoreViewSafeArea(isIgnoreSafeArea_);
+    // WLOGFD("SetUIContent: %{public}s", contentInfo.c_str());
+    // if (uiContent_) {
+    //     uiContent_->Destroy();
     // }
-    // UpdateDecorEnable(true);
+    // std::unique_ptr<Ace::UIContent> uiContent;
+    // if (ability != nullptr) {
+    //     uiContent = Ace::UIContent::Create(ability);
+    // } else {
+    //     uiContent = Ace::UIContent::Create(context_.get(), engine);
+    // }
+    // if (uiContent == nullptr) {
+    //     WLOGFE("fail to SetUIContent id: %{public}u", property_->GetWindowId());
+    //     return WMError::WM_ERROR_NULLPTR;
+    // }
+    // if (isdistributed) {
+    //     uiContent->Restore(this, contentInfo, storage);
+    // } else {
+    //     uiContent->Initialize(this, contentInfo, storage);
+    // }
+    // // make uiContent available after Initialize/Restore
+    // uiContent_ = std::move(uiContent);
+    // // if (isIgnoreSafeAreaNeedNotify_) {
+    // //     uiContent_->SetIgnoreViewSafeArea(isIgnoreSafeArea_);
+    // // }
+    // // UpdateDecorEnable(true);
 
-    if (state_ == WindowState::STATE_SHOWN) {
-        // UIContent may be nullptr when show window, need to notify again when window is shown
-        uiContent_->Foreground();
-        // UpdateTitleButtonVisibility();
-        Ace::ViewportConfig config;
-        Rect rect = GetRect();
-        config.SetSize(rect.width_, rect.height_);
-        config.SetPosition(rect.posX_, rect.posY_);
-        auto display = SingletonContainer::IsDestroyed() ? nullptr :
-            SingletonContainer::Get<DisplayManager>().GetDisplayById(property_->GetDisplayId());
-        if (display == nullptr) {
-            WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u", property_->GetDisplayId(),
-                property_->GetWindowId());
-            return WMError::WM_ERROR_NULLPTR;
-        }
-        float virtualPixelRatio = display->GetVirtualPixelRatio();
-        config.SetDensity(virtualPixelRatio);
-        uiContent_->UpdateViewportConfig(config, WindowSizeChangeReason::UNDEFINED, nullptr);
-        WLOGFD("notify uiContent window size change end");
-    }
+    // if (state_ == WindowState::STATE_SHOWN) {
+    //     // UIContent may be nullptr when show window, need to notify again when window is shown
+    //     uiContent_->Foreground();
+    //     // UpdateTitleButtonVisibility();
+    //     Ace::ViewportConfig config;
+    //     Rect rect = GetRect();
+    //     config.SetSize(rect.width_, rect.height_);
+    //     config.SetPosition(rect.posX_, rect.posY_);
+    //     auto display = SingletonContainer::IsDestroyed() ? nullptr :
+    //         SingletonContainer::Get<DisplayManager>().GetDisplayById(property_->GetDisplayId());
+    //     if (display == nullptr) {
+    //         WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u", property_->GetDisplayId(),
+    //             property_->GetWindowId());
+    //         return WMError::WM_ERROR_NULLPTR;
+    //     }
+    //     float virtualPixelRatio = display->GetVirtualPixelRatio();
+    //     config.SetDensity(virtualPixelRatio);
+    //     uiContent_->UpdateViewportConfig(config, WindowSizeChangeReason::UNDEFINED, nullptr);
+    //     WLOGFD("notify uiContent window size change end");
+    // }
     return WMError::WM_OK;
 }
 
@@ -382,7 +385,7 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
 {
     WLOGFI("[Client] Window [name:%{public}s] Create", name_.c_str());
     // check window name, same window names are forbidden
-    if (windowMap_.find(cf) != windowMap_.end()) {
+    if (windowMap_.find(name_) != windowMap_.end()) {
         WLOGFE("WindowName(%{public}s) already exists.", name_.c_str());
         return WMError::WM_ERROR_INVALID_PARAM;
     }
@@ -403,9 +406,9 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
     static std::atomic<uint32_t> tempWindowId = 0;
     uint32_t windowId = tempWindowId++;
     property_->SetWindowId(windowId);
-    if (surfaceNode_) {
-        surfaceNode_->SetWindowId(windowId);
-    }
+    // if (surfaceNode_) {
+    //     surfaceNode_->SetWindowId(windowId);
+    // }
     windowMap_.insert(std::make_pair(name_, std::pair<uint32_t, sptr<Window>>(windowId, this)));
 
     state_ = WindowState::STATE_CREATED;
@@ -695,12 +698,32 @@ void WindowImpl::SetRequestModeSupportInfo(uint32_t modeSupportInfo)
 
 void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
-    return;
+    if (uiContent_ != nullptr) {
+        WLOGD("Transfer key event to uiContent");
+        (void)uiContent_->ProcessKeyEvent(keyEvent);
+    } else {
+        WLOGFE("There is no key event consumer");
+    }
+    if (GetType() == WindowType::WINDOW_TYPE_APP_COMPONENT) {
+        WLOGFI("DispatchKeyEvent: %{public}u", GetWindowId());
+        keyEvent->MarkProcessed();
+        return;
+    }
 }
 
 void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
-    return;
+    // If windowRect transformed, transform event back to its origin position
+    if (property_) {
+        property_->UpdatePointerEvent(pointerEvent);
+    }
+
+    if (IsPointerEventConsumed()) {
+        pointerEvent->MarkProcessed();
+        return;
+    }
+
+    TransferPointerEvent(pointerEvent);
 }
 
 void WindowImpl::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback)
@@ -729,7 +752,7 @@ void WindowImpl::NotifyTouchDialogTarget()
 
 void WindowImpl::SetNeedRemoveWindowInputChannel(bool needRemoveWindowInputChannel)
 {
-    return;
+    needRemoveWindowInputChannel_ = needRemoveWindowInputChannel;
 }
 
 bool WindowImpl::IsLayoutFullScreen() const
@@ -751,6 +774,11 @@ void WindowImpl::SetRequestedOrientation(Orientation orientation)
     if (state_ == WindowState::STATE_SHOWN) {
         UpdateProperty(PropertyChangeAction::ACTION_UPDATE_ORIENTATION);
     }
+}
+
+WMError WindowImpl::UpdateProperty(PropertyChangeAction action)
+{
+    return WMError::WM_OK;
 }
 
 Orientation WindowImpl::GetRequestedOrientation()
@@ -865,5 +893,45 @@ void WindowImpl::SetNeedDefaultAnimation(bool needDefaultAnimation)
 {
     return;
 }
+
+bool WindowImpl::IsPointerEventConsumed()
+{
+    return moveDragProperty_->startDragFlag_ || moveDragProperty_->startMoveFlag_;
+}
+
+void WindowImpl::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
+    if (windowSystemConfig_.isStretchable_ && GetMode() == WindowMode::WINDOW_MODE_FLOATING) {
+        UpdatePointerEventForStretchableWindow(pointerEvent);
+    }
+
+    if (uiContent_ != nullptr) {
+        WLOGFD("Transfer pointer event to uiContent");
+        (void)uiContent_->ProcessPointerEvent(pointerEvent);
+    } else {
+        WLOGFW("pointerEvent is not consumed, windowId: %{public}u", GetWindowId());
+        pointerEvent->MarkProcessed();
+    }
+}
+
+
+void WindowImpl::UpdatePointerEventForStretchableWindow(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
+    MMI::PointerEvent::PointerItem pointerItem;
+    if (!pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem)) {
+        WLOGFW("Point item is invalid");
+        return;
+    }
+    const Rect& originRect = property_->GetOriginRect();
+    PointInfo originPos =
+        WindowHelper::CalculateOriginPosition(originRect, GetRect(),
+        { pointerItem.GetDisplayX(), pointerItem.GetDisplayY() });
+    pointerItem.SetDisplayX(originPos.x);
+    pointerItem.SetDisplayY(originPos.y);
+    pointerItem.SetWindowX(originPos.x - originRect.posX_);
+    pointerItem.SetWindowY(originPos.y - originRect.posY_);
+    pointerEvent->UpdatePointerItem(pointerEvent->GetPointerId(), pointerItem);
+}
+
 } // namespace Rosen
 } // namespace OHOS

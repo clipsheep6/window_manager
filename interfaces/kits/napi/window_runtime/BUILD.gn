@@ -35,7 +35,7 @@ config("window_manager_napi_config") {
     ]
   } else {
     include_dirs += [
-      "../../../../wm/include",
+    "../../../../wm/include",
     ]
   }
 }
@@ -46,9 +46,9 @@ config("window_native_kit_config") {
   include_dirs = [
     "window_napi",
     "../../../innerkits/wm",
-    #"../../../../wm/include",
+    # "../../../../wm/include",
     "../../../../utils/include",
-    #"../../../../wmserver/include",
+    # "../../../../wmserver/include",
 
     # because of pixle_map.h
     "//foundation/multimedia/image_framework/interfaces/innerkits/include",
@@ -56,12 +56,12 @@ config("window_native_kit_config") {
 
   if (is_preview) {
     include_dirs += [
-      "../../../../previewer/include",
+    "../../../../previewer/include",
     ]
   } else {
     include_dirs += [
-      "../../../../wm/include",
-      "../../../../wmserver/include",
+    "../../../../wm/include",
+    "../../../../wmserver/include",
     ]
   }
 }
@@ -82,8 +82,18 @@ ohos_shared_library("window_native_kit") {
 
   deps = [
     "../../../../utils:libwmutil",
-  #  "../../../../wm:libwm",
+    # "../../../../wm:libwm",
   ]
+  if (is_preview) {
+    deps += [
+      "../../../../previewer:previewer_window_napi",
+    ]
+  } else {
+    deps += [
+      "../../../../wm:libwm",
+    ]
+  }
+
   if (is_preview) {
     deps += [
       "../../../../previewer:previewer_window_napi",
@@ -129,8 +139,18 @@ ohos_shared_library("window_napi") {
   deps = [
     ":window_native_kit",
     "../../../../utils:libwmutil",
-  #  "../../../../wm:libwm",
+    # "../../../../wm:libwm",
   ]
+  if (is_preview) {
+    deps += [
+      "../../../../previewer:previewer_window_napi",
+    ]
+  } else {
+    deps += [
+      "../../../../wm:libwm",
+    ]
+  }
+
   if (is_preview) {
     deps += [
       "../../../../previewer:previewer_window_napi",
@@ -170,7 +190,7 @@ ohos_shared_library("windowstage_kit") {
   deps = [
     ":window_native_kit",
     "../../../../utils:libwmutil",
-  #  "../../../../wm:libwm",
+    # "../../../../wm:libwm",
   ]
   if (is_preview) {
     deps += [
