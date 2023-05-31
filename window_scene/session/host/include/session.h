@@ -24,6 +24,7 @@
 #include "interfaces/include/ws_common.h"
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/host/include/zidl/session_stub.h"
+#include "session/host/include/scene_persistence.h"
 
 namespace OHOS::MMI {
 class PointerEvent;
@@ -97,6 +98,8 @@ public:
         sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session) override;
     WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId) override;
 
+    sptr<ScenePersistence> GetScenePersistence() const;
+
 protected:
     void UpdateSessionState(SessionState state);
     bool IsSessionValid() const;
@@ -107,6 +110,7 @@ protected:
     NotifyPendingSessionActivationFunc pendingSessionActivationFunc_;
     NotifySessionStateChangeFunc sessionStateChangeFunc_;
     sptr<WindowSessionProperty> property_ = nullptr;
+
 private:
     template<typename T>
     bool RegisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener);
@@ -140,6 +144,8 @@ private:
     sptr<IWindowEventChannel> windowEventChannel_ = nullptr;
 
     std::shared_ptr<Media::PixelMap> snapshot_;
+
+    sptr<ScenePersistence> scenePersistence_ = nullptr;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_H
