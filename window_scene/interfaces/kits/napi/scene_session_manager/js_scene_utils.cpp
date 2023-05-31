@@ -30,6 +30,7 @@ bool GetAbilityInfoFromJs(NativeEngine& engine, NativeObject* jsObject, SessionI
 {
     NativeValue* jsBundleName = jsObject->GetProperty("bundleName");
     NativeValue* jsAbilityName = jsObject->GetProperty("abilityName");
+    NativeValue* jsPrePID = jsObject->GetProperty("prePersistentId");
     if (jsBundleName->TypeOf() != NATIVE_UNDEFINED) {
         std::string bundleName;
         if (!ConvertFromJsValue(engine, jsBundleName, bundleName)) {
@@ -45,6 +46,14 @@ bool GetAbilityInfoFromJs(NativeEngine& engine, NativeObject* jsObject, SessionI
             return false;
         }
         sessionInfo.abilityName_ = abilityName;
+    }
+    if (jsPrePID->TypeOf() != NATIVE_UNDEFINED) {
+        uint32_t prePersistentId;
+        if (!ConvertFromJsValue(engine, jsPrePID, prePersistentId)) {
+            WLOGFE("[NAPI]Failed to convert parameter to prePID");
+            return false;
+        }
+        sessionInfo.prePersistentId_ = prePersistentId;
     }
     return true;
 }
