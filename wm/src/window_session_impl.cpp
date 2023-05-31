@@ -174,6 +174,8 @@ WMError WindowSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Context>
         WLOGFE("context or hostSession is nullptr!");
         return WMError::WM_ERROR_INVALID_PARAM;
     }
+    property_->SetParentPersistentId(GetFloatingWindowParentId());
+    WLOGFI("WindowSessionImpl set SetParentPersistentId: %{public}d", property_->GetParentPersostentId());
     WMError ret = WindowSessionCreateCheck();
     if (ret != WMError::WM_OK) {
         return ret;
@@ -325,6 +327,23 @@ void WindowSessionImpl::UpdateViewportConfig(const Rect& rect, WindowSizeChangeR
     uiContent_->UpdateViewportConfig(config, reason);
     WLOGFD("Id:%{public}" PRIu64 ", windowRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
         property_->GetPersistentId(), rect.posX_, rect.posY_, rect.width_, rect.height_);
+}
+
+uint64_t WindowSessionImpl::GetFloatingWindowParentId()
+{
+    if (!WindowHelper::IsAppFloatingWindow(GetType()) || context_.get() == nullptr) {
+        return INVALID_WINDOW_ID;
+    }
+
+    for (const auto& winPair : windowSessionMap_) {
+        auto win = winPair.second.second;
+        if (WindowHelper::IsMainWindow(win->GetType()) && win-> GetProperty() &&
+            context_.get() == win->GetContext().get()) {
+            WLOGFD("Find parent, [parentName: %{public}s, selfPersistentId: %{public}" PRIu64"]",
+                win->GetProperty()->GetWindowName().c_str(), GetProperty()->GetPersistentId());
+            return win->GetProperty()->GetPersistentId();
+        }
+    }
 }
 
 Rect WindowSessionImpl::GetRect() const

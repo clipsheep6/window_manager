@@ -361,6 +361,7 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
         // create specific session
         SessionInfo info;
         sptr<SceneSession> sceneSession = RequestSceneSession(info);
+        sceneSession->SetParentPersistentId(property->GetParentPersistentId());
         if (sceneSession == nullptr) {
             return WSError::WS_ERROR_NULLPTR;
         }
