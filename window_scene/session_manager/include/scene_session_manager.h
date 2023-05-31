@@ -67,6 +67,8 @@ private:
     sptr<RootScene> rootScene_;
     NotifyCreateSpecificSessionFunc createSpecificSessionFunc_;
     AppWindowSceneConfig appWindowSceneConfig_;
+
+    bool isStartup = true;
 };
 } // namespace OHOS::Rosen
 
