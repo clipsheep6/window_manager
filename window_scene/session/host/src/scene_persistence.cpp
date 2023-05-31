@@ -86,8 +86,7 @@ bool ScenePersistence::IsDirExisted(const std::string &path)
 
 bool ScenePersistence::IsSnapshotExisted()
 {
-    std::string strPath;
-    strPreSnapshotFile_.empty() ? strPath = strCurSnapshotFile_ : strPath = strPreSnapshotFile_;
+    auto strPath = strPreSnapshotFile_.empty() ? strCurSnapshotFile_ : strPreSnapshotFile_;
     struct stat buf = {};
     if (stat(strPath.c_str(), &buf) != 0) {
         WLOGFD("snapshot : %{public}s is not exist!", strPath.c_str());
