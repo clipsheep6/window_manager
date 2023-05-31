@@ -15,10 +15,11 @@
 
 #include "session/host/include/session.h"
 
-#include "surface_capture_future.h"
 #include <transaction/rs_interfaces.h>
 #include <ui/rs_surface_node.h>
+
 #include "window_manager_hilog.h"
+#include "surface_capture_future.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -27,6 +28,7 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "Sessio
 
 Session::Session(const SessionInfo& info) : sessionInfo_(info)
 {
+    scenePersistence_ = new ScenePersistence(sessionInfo_);
 }
 
 Session::~Session()
@@ -37,6 +39,7 @@ Session::~Session()
 void Session::SetPersistentId(uint64_t persistentId)
 {
     persistentId_ = persistentId;
+    scenePersistence_->SetCurPersistId(persistentId_);
 }
 
 uint64_t Session::GetPersistentId() const
@@ -222,6 +225,7 @@ WSError Session::Background()
     UpdateSessionState(SessionState::STATE_BACKGROUND);
 
     snapshot_ = Snapshot();
+    scenePersistence_->SaveSnapshot(snapshot_);
     NotifyBackground();
     return WSError::WS_OK;
 }
@@ -234,6 +238,8 @@ WSError Session::Disconnect()
     Background();
     if (GetSessionState() == SessionState::STATE_BACKGROUND) {
         UpdateSessionState(SessionState::STATE_DISCONNECT);
+    } else if (GetSessionState() == SessionState::STATE_DISCONNECT) {
+        scenePersistence_->RemovePixelMapFile(scenePersistence_->GetSnapshotFilePath());
     }
     return WSError::WS_OK;
 }
@@ -403,5 +409,10 @@ WindowType Session::GetWindowType() const
         return property_->GetWindowType();
     }
     return WindowType::WINDOW_TYPE_APP_MAIN_WINDOW;
+}
+
+sptr<ScenePersistence> Session::GetScenePersistence() const
+{
+    return scenePersistence_;
 }
 } // namespace OHOS::Rosen
