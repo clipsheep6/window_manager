@@ -614,6 +614,17 @@ public:
      */
     virtual WMError SetSystemBarProperty(WindowType type, const SystemBarProperty& property) { return WMError::WM_OK; }
     /**
+     * @brief Set the Client System Bar(include status bar and nav bar) Property
+     *
+     * @param type WINDOW_TYPE_STATUS_BAR or WINDOW_TYPE_NAVIGATION_BAR
+     * @param property system bar prop,include content color, background color
+     * @return WMError
+     */
+    virtual WMError SetClientSystemBarProperty(WindowType type, const SystemBarProperty& property)
+    {
+        return WMError::WM_OK;
+    }
+    /**
      * @brief Get the Avoid Area By Type object
      *
      * @param type avoid area type.@see reference

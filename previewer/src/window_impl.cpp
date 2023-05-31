@@ -300,6 +300,11 @@ WMError WindowImpl::SetSystemBarProperty(WindowType type, const SystemBarPropert
     return WMError::WM_OK;
 }
 
+WMError WindowImpl::SetClientSystemBarProperty(WindowType type, const SystemBarProperty& property)
+{
+    return WMError::WM_OK;
+}
+
 WMError WindowImpl::SetLayoutFullScreen(bool status)
 {
     return WMError::WM_OK;
