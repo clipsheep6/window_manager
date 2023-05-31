@@ -125,6 +125,7 @@ public:
     virtual WMError SetWindowFlags(uint32_t flags) = 0;
     virtual WMError GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea) = 0;
     virtual WMError SetSystemBarProperty(WindowType type, const SystemBarProperty& property) = 0;
+    virtual WMError SetClientSystemBarProperty(WindowType type, const SystemBarProperty& property) = 0;
     virtual WMError SetFullScreen(bool status) = 0;
     virtual WMError SetLayoutFullScreen(bool status) = 0;
     virtual WMError Destroy() = 0;

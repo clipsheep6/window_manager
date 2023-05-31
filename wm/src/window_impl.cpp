@@ -657,10 +657,6 @@ WMError WindowImpl::SetSystemBarProperty(WindowType type, const SystemBarPropert
     if (!IsWindowValid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    if (GetSystemBarPropertyByType(type) == property) {
-        return WMError::WM_OK;
-    }
-    property_->SetSystemBarProperty(type, property);
     if (state_ == WindowState::STATE_CREATED || state_ == WindowState::STATE_HIDDEN) {
         return WMError::WM_OK;
     }
@@ -670,6 +666,15 @@ WMError WindowImpl::SetSystemBarProperty(WindowType type, const SystemBarPropert
             static_cast<int32_t>(ret), property_->GetWindowId());
     }
     return ret;
+}
+
+WMError WindowImpl::SetClientSystemBarProperty(WindowType type, const SystemBarProperty& property)
+{
+    if (!IsWindowValid()) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    property_->SetSystemBarProperty(type, property);
+    return WMError::WM_OK;
 }
 
 WMError WindowImpl::UpdateSystemBarProperty(bool status)
