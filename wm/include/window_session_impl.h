@@ -78,6 +78,7 @@ public:
     uint64_t GetPersistentId() const;
     sptr<WindowSessionProperty> GetProperty() const;
     sptr<ISession> GetHostSession() const;
+    uint64_t GetFloatingWindowParentId();
 
 protected:
     WMError Connect();
