@@ -54,6 +54,7 @@ public:
 
     void SetPersistentId(uint64_t persistentId);
     uint64_t GetPersistentId() const;
+    void SetParentPersistentId(uint64_t persistentId);
     uint64_t GetParentPersistentId() const;
     void SetSessionRect(const WSRect& rect);
 

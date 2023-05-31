@@ -44,6 +44,11 @@ uint64_t Session::GetPersistentId() const
     return persistentId_;
 }
 
+void Session::SetParentPersistentId(uint64_t persistentId)
+{
+    property_->SetParentPersistentId(persistentId);
+}
+
 uint64_t Session::GetParentPersistentId() const
 {
     if (property_ != nullptr) {

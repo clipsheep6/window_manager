@@ -111,6 +111,8 @@ WMError WindowSceneSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Con
         WLOGFE("context is nullptr!");
         return WMError::WM_ERROR_INVALID_PARAM;
     }
+    property_->SetParentPersistentId(GetFloatingWindowParentId());
+    WLOGFI("WindowSessionImpl set SetParentPersistentId: %{public}d", property_->GetParentPersostentId());
     WMError ret = WindowSessionCreateCheck();
     if (ret != WMError::WM_OK) {
         return ret;
