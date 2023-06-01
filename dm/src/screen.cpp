@@ -205,7 +205,7 @@ DMError Screen::SetDensityDpi(uint32_t dpi) const
         return DMError::DM_ERROR_INVALID_PARAM;
     }
     // Calculate display density, Density = Dpi / 160.
-    float density = static_cast<float>(dpi) / 160; // 160 is the coefficient between density and dpi.
+    float density = static_cast<float>(dpi) / 160; // 160 is the coefficient between density and dpi.  
     return SingletonContainer::Get<ScreenManagerAdapter>().SetVirtualPixelRatio(GetId(), density);
 }
 
@@ -214,4 +214,4 @@ sptr<ScreenInfo> Screen::GetScreenInfo() const
     UpdateScreenInfo();
     return pImpl_->GetScreenInfo();
 }
-} // namespace OHOS::Rosen
+} // namespace OHOS::Rosen 

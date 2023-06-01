@@ -433,7 +433,7 @@ void AbstractDisplayController::ProcessDisplayUpdateOrientation(sptr<AbstractScr
     }
 }
 
-void AbstractDisplayController::ProcessDisplaySizeChange(sptr<AbstractScreen> absScreen)
+void AbstractDisplayController::   (sptr<AbstractScreen> absScreen)
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:ProcessDisplaySizeChange(%" PRIu64")", absScreen->dmsId_);
     sptr<SupportedScreenModes> info = absScreen->GetActiveScreenMode();

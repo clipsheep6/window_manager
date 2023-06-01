@@ -40,7 +40,7 @@ public:
     struct AbstractScreenCallback : public RefBase {
         OnAbstractScreenConnectCb onConnect_;
         OnAbstractScreenConnectCb onDisconnect_;
-        OnAbstractScreenChangeCb onChange_;
+        OnAbstractS creenChangeCb onChange_;
     };
 
     explicit AbstractScreenController(std::recursive_mutex& mutex);

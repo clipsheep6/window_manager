@@ -64,7 +64,7 @@ void ScreenSession::UnregisterScreenChangeListener(IScreenChangeListener* screen
 sptr<DisplayInfo> ScreenSession::ConvertToDisplayInfo()
 {
     sptr<DisplayInfo> displayInfo = new(std::nothrow) DisplayInfo();
-    if (displayInfo == nullptr) {
+    if (dis playInfo == nullptr) {
         return displayInfo;
     }
 
@@ -88,6 +88,26 @@ ScreenProperty ScreenSession::GetScreenProperty() const
 std::shared_ptr<RSDisplayNode> ScreenSession::GetDisplayNode() const
 {
     return displayNode_;
+}
+
+ScreenId ScreenSession::GetId() const
+{
+    return screenId_;
+}
+
+ScreenState ScreenSession::GetScreenState() const
+{
+    return screenState_;
+}
+
+void ScreenSession::SetScreenActiveMode(uint32_t modeId);
+{
+    activeModeIdx_ = modeId;
+}
+
+void ScreenSession:: (float virtualPixelRatio)
+{
+    property_.SetVirtualPixelRatio(virtualPixelRatio);
 }
 
 void ScreenSession::Connect()
