@@ -334,12 +334,12 @@ uint64_t WindowSessionImpl::GetFloatingWindowParentId()
     }
 
     for (const auto& winPair : windowSessionMap_) {
-        auto win = winPair.second.second;
-        if (WindowHelper::IsMainWindow(win->GetType()) && win-> GetProperty() &&
-            context_.get() == win->GetContext().get()) {
+        if (winPair.second.second && WindowHelper::IsMainWindow(winPair.second.second->GetType()) &&
+            winPair.second.second->GetProperty() &&
+            context_.get() == winPair.second.second->GetContext().get()) {
             WLOGFD("Find parent, [parentName: %{public}s, selfPersistentId: %{public}" PRIu64"]",
-                win->GetProperty()->GetWindowName().c_str(), GetProperty()->GetPersistentId());
-            return win->GetProperty()->GetPersistentId();
+                winPair.second.second->GetProperty()->GetWindowName().c_str(), GetProperty()->GetPersistentId());
+            return winPair.second.second->GetProperty()->GetPersistentId();
         }
     }
 }
