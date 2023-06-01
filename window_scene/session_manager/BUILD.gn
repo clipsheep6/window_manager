@@ -1,0 +1,143 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("../../windowmanager_aafwk.gni")
+
+config("session_manager_private_config") {
+  include_dirs = [
+    "${window_base_path}/interfaces/innerkits/wm",
+    "${window_base_path}/wm/include",
+  ]
+}
+
+config("session_manager_public_config") {
+  include_dirs = [
+    "${window_base_path}/window_scene",
+    "${window_base_path}/window_scene/session_manager/include",
+    "${window_base_path}/window_scene/session_manager/include/zidl",
+    "${window_base_path}/window_scene/session_manager_service/include",
+
+    # for screen_session_manager
+    "${window_base_path}/utils/include",
+    "${window_base_path}/dm/include",
+    "${window_base_path}/interfaces/innerkits/dm",
+    "${window_base_path}/dmserver/include",
+
+    # for window_manager_hilog
+    "${window_base_path}/utils/include",
+  ]
+}
+
+ohos_shared_library("scene_session_manager") {
+  sources = [
+    "src/extension_session_manager.cpp",
+    "src/scene_session_manager.cpp",
+    "src/window_scene_config.cpp",
+    "src/zidl/scene_session_manager_proxy.cpp",
+    "src/zidl/scene_session_manager_stub.cpp",
+  ]
+
+  configs = [ ":session_manager_private_config" ]
+
+  public_configs = [ ":session_manager_public_config" ]
+
+  deps = [
+    "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/window_scene/common:window_scene_common",
+    "${window_base_path}/window_scene/session:scene_session",
+    "//third_party/libxml2:libxml2",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_manager",
+    "c_utils:utils",
+    "config_policy:configpolicy_util",
+    "eventhandler:libeventhandler",
+    "hilog_native:libhilog",
+    "ipc:ipc_single",
+    "window_manager:libwm",
+  ]
+
+  innerapi_tags = [ "platformsdk" ]
+  part_name = "window_manager"
+  subsystem_name = "window"
+}
+
+ohos_shared_library("screen_session_manager") {
+  sources = [
+    "../../dm/src/zidl/display_manager_agent_proxy.cpp",
+    "src/screen_session_manager.cpp",
+    "src/zidl/screen_session_manager_stub.cpp",
+  ]
+
+  cflags_cc = [ "-std=c++17" ]
+
+  public_configs = [ ":session_manager_public_config" ]
+
+  deps = [
+    "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/window_scene/common:window_scene_common",
+    "${window_base_path}/window_scene/session:screen_session",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "eventhandler:libeventhandler",
+    "hilog_native:libhilog",
+    "ipc:ipc_core",
+  ]
+
+  innerapi_tags = [ "platformsdk" ]
+  part_name = "window_manager"
+  subsystem_name = "window"
+}
+
+ohos_shared_library("session_manager") {
+  sources = [
+    "../session_manager_service/src/session_manager_service_proxy.cpp",
+    "src/session_manager.cpp",
+    "src/zidl/scene_session_manager_proxy.cpp",
+    "src/zidl/screen_session_manager_proxy.cpp",
+  ]
+
+  cflags_cc = [ "-std=c++17" ]
+
+  public_configs = [ ":session_manager_public_config" ]
+
+  deps = [
+    "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "${window_base_path}/dmserver:libdms",
+    "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/window_scene/common:window_scene_common",
+    "${window_base_path}/window_scene/session:scene_session",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:ability_context_native",
+    "ability_runtime:ability_manager",
+    "ace_engine:ace_uicontent",
+    "c_utils:utils",
+    "eventhandler:libeventhandler",
+    "hilog_native:libhilog",
+    "ipc:ipc_single",
+  ]
+
+  innerapi_tags = [ "platformsdk" ]
+  part_name = "window_manager"
+  subsystem_name = "window"
+}
