@@ -400,7 +400,7 @@ public:
      * @return sptr<Window> If create window success, return window instance; Otherwise, return nullptr
      */
     static sptr<Window> Create(sptr<WindowOption>& option, const std::shared_ptr<AbilityRuntime::Context>& context,
-        const sptr<Rosen::ISession>& iSession, WMError& errCode = DefaultCreateErrCode);
+        const sptr<IRemoteObject>& iSession, WMError& errCode = DefaultCreateErrCode);
 
     /**
      * @brief find window by windowName
