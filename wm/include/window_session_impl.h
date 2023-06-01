@@ -79,11 +79,15 @@ public:
     sptr<WindowSessionProperty> GetProperty() const;
     sptr<ISession> GetHostSession() const;
     uint64_t GetFloatingWindowParentId();
+    void NotifyAfterForeground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
+    void NotifyAfterBackground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
+    void NotifyForegroundFailed(WMError ret);
+
+    WindowState state_ { WindowState::STATE_INITIAL };
 
 protected:
     WMError Connect();
     bool IsWindowSessionInvalid() const;
-    void NotifyAfterBackground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
     void NotifyAfterActive();
     void NotifyAfterInactive();
     void NotifyBeforeDestroy(std::string windowName);
@@ -97,7 +101,6 @@ protected:
     std::shared_ptr<AbilityRuntime::Context> context_ = nullptr;
     std::shared_ptr<RSSurfaceNode> surfaceNode_ = nullptr;
     sptr<WindowSessionProperty> property_ = nullptr;
-    WindowState state_ { WindowState::STATE_INITIAL };
     // map of windowSession: <sessionName, <persistentId, windowSession>>
     static std::map<std::string, std::pair<uint64_t, sptr<WindowSessionImpl>>> windowSessionMap_;
     // map of subSession: <persistentId, std::vector<windowSession>>
@@ -114,11 +117,8 @@ private:
     EnableIfSame<T, IWindowChangeListener, std::vector<sptr<IWindowChangeListener>>> GetListeners();
     template<typename T> void ClearUselessListeners(std::map<uint64_t, T>& listeners, uint64_t persistentId);
     RSSurfaceNode::SharedPtr CreateSurfaceNode(std::string name, WindowType type);
-    void NotifyAfterForeground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
     void NotifyAfterFocused();
     void NotifyAfterUnfocused(bool needNotifyUiContent = true);
-
-    void NotifyForegroundFailed(WMError ret);
     void UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason);
     void NotifySizeChange(Rect rect, WindowSizeChangeReason reason);
 
