@@ -58,7 +58,7 @@ void ScenePersistence::SaveSnapshot(const std::shared_ptr<Media::PixelMap> &pixe
     imagePacker.AddImage(*pixelMap);
     int64_t packedSize = 0;
     imagePacker.FinalizePacking(packedSize);
-    WLOGFD("save snapshot packedSize : %{public}" PRIu64 "", packedSize);
+    WLOGFD("Save snapshot packedSize : %{public}" PRIu64 "", packedSize);
 }
 
 std::string ScenePersistence::GetSnapshotFilePath() const
