@@ -16,7 +16,6 @@
 #ifndef OHOS_WM_INCLUDE_WINDOW_MANAGER_HILOG_H
 #define OHOS_WM_INCLUDE_WINDOW_MANAGER_HILOG_H
 
-#include "window_input_channel.h"
 namespace OHOS {
 namespace Rosen {
 typedef enum {

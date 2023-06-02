@@ -32,11 +32,6 @@ ohos_shared_library("previewer_window") {
     "../utils/src/window_property.cpp",
     "../utils/src/window_transition_info.cpp",
     "../utils/src/wm_math.cpp",
-    # "../wm/src/input_transfer_station.cpp",
-    # "../wm/src/vsync_station.cpp",
-    # "../wm/src/window_frame_trace_impl.cpp",
-    # "../wm/src/window_input_channel.cpp",
-    # "../wm/src/window_option.cpp",
     "mock/parcel.cpp",
     "mock/ui/rs_surface_node.cpp",
     "src/window.cpp",
@@ -52,16 +47,13 @@ ohos_shared_library("previewer_window") {
     "mock",
     "../interfaces/innerkits/wm",
     "../interfaces/innerkits/dm",
-    # "../wm/include",
     "../utils/include",
     "../../../../commonlibrary/c_utils/base/include",
-    # "//foundation/graphic/graphic_2d/rosen/modules/render_service_client/core/ui",
   ]
 
   deps = [
     "//foundation/arkui/napi:ace_napi",
     "//foundation/arkui/napi:ace_napi_ark",
-    # "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
   ]
 
   cflags = [ "-std=c++11" ]
@@ -86,8 +78,6 @@ ohos_shared_library("previewer_window_napi") {
     "../interfaces/kits/napi/window_runtime/window_stage_napi/js_window_stage.cpp",
 
     # mock
-    # "mock/ability_runtime/js_runtime_utils.cpp",
-    "//foundation/ability/ability_runtime/frameworks/simulator/ability_simulator/src/js_runtime_utils.cpp",
     "mock/js_transition_controller.cpp",
     "mock/js_window_register_manager.cpp",
     "mock/permission.cpp",
@@ -101,9 +91,7 @@ ohos_shared_library("previewer_window_napi") {
     "mock",
     "mock/ui",
     "mock/transaction",
-    # "mock/ability_runtime",
     "//foundation/ability/ability_runtime/interfaces/inner_api/runtime/include",
-    # "../wm/include",
     "../utils/include",
     "../interfaces/innerkits/wm",
     "../interfaces/innerkits/dm",
