@@ -27,7 +27,7 @@ namespace Rosen {
 using namespace AbilityRuntime;
 namespace {
 const int CONTENT_STORAGE_ARG = 2;
-constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsWindowStage"};
+// constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsWindowStage"};
 } // namespace
 
 std::unique_ptr<JsWindowRegisterManager> g_listenerManager = std::make_unique<JsWindowRegisterManager>();
@@ -423,7 +423,7 @@ NativeValue* JsWindowStage::OnCreateSubWindow(NativeEngine& engine, NativeCallba
                 return;
             }
             task.Resolve(engine, CreateJsWindowObject(engine, window));
-            WLOGI("[NAPI]Create sub widdow %{public}s end", windowName.c_str());
+            WLOGI("[NAPI]Create sub window %{public}s end", windowName.c_str());
         };
     NativeValue* callback = (info.argv[1] != nullptr && info.argv[1]->TypeOf() == NATIVE_FUNCTION) ?
         info.argv[1] : nullptr;

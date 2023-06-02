@@ -22,9 +22,9 @@
 
 namespace OHOS {
 namespace Rosen {
-namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "InputTransferStation"};
-}
+// namespace {
+//     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "InputTransferStation"};
+// }
 WM_IMPLEMENT_SINGLE_INSTANCE(InputTransferStation)
 
 InputTransferStation::~InputTransferStation()

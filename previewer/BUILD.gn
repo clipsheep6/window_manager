@@ -56,6 +56,11 @@ ohos_shared_library("previewer_window") {
     "//foundation/arkui/napi:ace_napi_ark",
   ]
 
+  external_deps = [
+    # "ace_engine:ace_uicontent",
+    # "ability_runtime:runtime",
+  ]
+
   cflags = [ "-std=c++11" ]
   part_name = "window_manager"
   subsystem_name = "window"
@@ -92,6 +97,7 @@ ohos_shared_library("previewer_window_napi") {
     "mock/ui",
     "mock/transaction",
     "//foundation/ability/ability_runtime/interfaces/inner_api/runtime/include",
+    "../wm/include",
     "../utils/include",
     "../interfaces/innerkits/wm",
     "../interfaces/innerkits/dm",
@@ -105,6 +111,8 @@ ohos_shared_library("previewer_window_napi") {
     "//foundation/arkui/napi:ace_napi_ark",
     "//foundation/ability/ability_runtime/frameworks/simulator/ability_simulator:ability_simulator",
   ]
+
+
 
   cflags_cc = [ "-DWINDOW_PREVIEW" ]
   cflags = [ "-std=c++11" ]
