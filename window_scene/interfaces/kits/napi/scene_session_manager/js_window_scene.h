@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_WINDOW_SCENE_JS_SCENE_UTILS_H
-#define OHOS_WINDOW_SCENE_JS_SCENE_UTILS_H
+#ifndef OHOS_WINDOW_SCENE_SESSION_H
+#define OHOS_WINDOW_SCENE_SESSION_H
 
 #include <js_runtime_utils.h>
 #include <native_engine/native_engine.h>
@@ -23,11 +23,16 @@
 #include "interfaces/include/ws_common.h"
 
 namespace OHOS::Rosen {
-bool GetAbilityInfoFromJs(NativeEngine& engine, NativeObject* jsObject, SessionInfo& sessionInfo);
-NativeValue* CreateJsSessionInfo(NativeEngine& engine, const SessionInfo& sessionInfo);
-NativeValue* CreateJsSessionState(NativeEngine& engine, const SessionState& state);
-NativeValue* SessionStateInit(NativeEngine* engine);
-NativeValue* CreateJsSessionRect(NativeEngine& engine, const WSRect& rect);
+
+class JsWindowScene {
+public:
+    JsWindowScene();
+    ~JsWindowScene();
+    static NativeValue* CreateWindowSceneConfig(NativeEngine& engine, const AppWindowSceneConfig& config);
+
+private:
+    static NativeValue* CreateShadowValue(NativeEngine& engine, const AppWindowSceneConfig& config, bool focused);
+};
 } // namespace OHOS::Rosen
 
-#endif // OHOS_WINDOW_SCENE_JS_SCENE_UTILS_H
+#endif // OHOS_WINDOW_SCENE_SESSION_H

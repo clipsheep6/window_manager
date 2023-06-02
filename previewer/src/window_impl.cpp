@@ -18,13 +18,15 @@
 #include "window_manager_hilog.h"
 #include "window_helper.h"
 #include "window_option.h"
+#include "viewport_config.h"
+#include "singleton_container.h"
 
 namespace OHOS {
 namespace Rosen {
 std::map<std::string, std::pair<uint32_t, sptr<Window>>> WindowImpl::windowMap_;
 std::map<uint32_t, std::vector<sptr<WindowImpl>>> WindowImpl::subWindowMap_;
-static int constructorCnt = 0;
-static int deConstructorCnt = 0;
+// static int constructorCnt = 0;
+// static int deConstructorCnt = 0;
 WindowImpl::WindowImpl(const sptr<WindowOption>& option)
 {
     property_ = new (std::nothrow) WindowProperty();
@@ -709,7 +711,7 @@ void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
         (void)inputEventConsumer->OnInputEvent(keyEvent);
     } else if (uiContent_ != nullptr) {
         WLOGD("Transfer key event to uiContent");
-        bool handled = static_cast<bool>(uiContent_->ProcessKeyEvent(keyEvent));
+        uiContent_->ProcessKeyEvent(keyEvent);
     } else {
         WLOGFE("There is no key event consumer");
     }
@@ -949,6 +951,47 @@ void WindowImpl::UpdatePointerEventForStretchableWindow(const std::shared_ptr<MM
     pointerItem.SetWindowX(originPos.x - originRect.posX_);
     pointerItem.SetWindowY(originPos.y - originRect.posY_);
     pointerEvent->UpdatePointerItem(pointerEvent->GetPointerId(), pointerItem);
+}
+
+void WindowImpl::UpdateViewportConfig()
+{
+    Ace::ViewportConfig config;
+    config.SetSize(width_, height_);
+    config.SetPosition(0, 0);
+    config.SetDensity(density_);
+    config.SetOrientation(orientation_);
+    uiContent_->UpdateViewportConfig(config/*, WindowSizeChangeReason::UNDEFINED, nullptr*/);
+}
+
+void WindowImpl::SetOrientation(Orientation orientation)
+{
+    WLOGFD(LABEL, "SetOrientation : orientation=%{public}d", static_cast<int32_t>(orientation));
+    if (orientation_ == static_cast<int32_t>(orientation)) {
+        return;
+    }
+    orientation_ = static_cast<int32_t>(orientation);
+    UpdateViewportConfig();
+}
+
+void WindowImpl::SetSize(int32_t width, int32_t height)
+{
+    WLOGFD(LABEL, "SetSize : width=%{public}d, height=%{public}d", width, height);
+    if (width_ == width && height_ == height) {
+        return;
+    }
+    width_ = width;
+    height_ = height;
+    UpdateViewportConfig();
+}
+
+void WindowImpl::SetDensity(float density)
+{
+    WLOGFD(LABEL, "SetDensity : density=%{public}f", density);
+    if (abs(density_ - density) <= 0.000001) {
+        return;
+    }
+    density_ = density;
+    UpdateViewportConfig();
 }
 
 } // namespace Rosen

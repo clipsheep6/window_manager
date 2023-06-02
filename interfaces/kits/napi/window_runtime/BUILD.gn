@@ -94,15 +94,6 @@ ohos_shared_library("window_native_kit") {
     ]
   }
 
-  if (is_preview) {
-    deps += [
-      "../../../../previewer:previewer_window_napi",
-    ]
-  } else {
-    deps += [
-      "../../../../wm:libwm",
-    ]
-  }
 
   external_deps = [
     "ability_runtime:ability_manager",

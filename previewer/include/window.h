@@ -222,6 +222,10 @@ public:
     virtual WMError ResetAspectRatio() = 0;
     virtual KeyboardAnimationConfig GetKeyboardAnimationConfig() = 0;
     virtual void SetNeedDefaultAnimation(bool needDefaultAnimation) = 0;
+
+    virtual void SetOrientation(Orientation orientation) = 0;
+    virtual void SetSize(int32_t width, int32_t height) = 0;
+    virtual void SetDensity(float density) = 0;
 };
 }
 }
