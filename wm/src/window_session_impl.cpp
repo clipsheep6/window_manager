@@ -340,6 +340,7 @@ uint64_t WindowSessionImpl::GetFloatingWindowParentId()
             return winPair.second.second->GetProperty()->GetPersistentId();
         }
     }
+    return INVALID_WINDOW_ID;
 }
 
 Rect WindowSessionImpl::GetRect() const
