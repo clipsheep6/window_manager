@@ -62,6 +62,11 @@ ohos_shared_library("previewer_window") {
     # "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
   ]
 
+  external_deps = [
+    # "ace_engine:ace_uicontent",
+    # "ability_runtime:runtime",
+  ]
+
   cflags = [ "-std=c++11" ]
   part_name = "window_manager"
   subsystem_name = "window"
@@ -99,7 +104,7 @@ ohos_shared_library("previewer_window_napi") {
     "mock/ui",
     "mock/transaction",
     "mock/ability_runtime",
-    # "../wm/include",
+    "../wm/include",
     "../utils/include",
     "../interfaces/innerkits/wm",
     "../interfaces/innerkits/dm",
@@ -112,6 +117,8 @@ ohos_shared_library("previewer_window_napi") {
     "//foundation/arkui/napi:ace_napi",
     "//foundation/arkui/napi:ace_napi_ark",
   ]
+
+
 
   cflags_cc = [ "-DWINDOW_PREVIEW" ]
   cflags = [ "-std=c++11" ]

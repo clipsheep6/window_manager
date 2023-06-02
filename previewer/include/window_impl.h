@@ -198,6 +198,11 @@ public:
 
     virtual void SetNeedDefaultAnimation(bool needDefaultAnimation) override;
 
+    void UpdateViewportConfig();
+    virtual void SetOrientation(Orientation orientation) override;
+    virtual void SetSize(int32_t width, int32_t height) override;
+    virtual void SetDensity(float density) override;
+
 private:
     bool IsPointerEventConsumed();
     void TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
@@ -218,6 +223,11 @@ private:
     KeyboardAnimationConfig keyboardAnimationConfig_;
     bool needRemoveWindowInputChannel_ = false;
     SystemConfig windowSystemConfig_;
+
+    int32_t width_ = 0;
+    int32_t height_ = 0;
+    int32_t orientation_ = 0;
+    float density_ = 1.0f;
 };
 } // namespace Rosen
 } // namespace OHOS

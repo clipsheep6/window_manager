@@ -18,9 +18,9 @@
 #include "window_manager_hilog.h"
 namespace OHOS {
 namespace Rosen {
-namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsRegisterManager"};
-}
+// namespace {
+//     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsRegisterManager"};
+// }
 
 JsWindowRegisterManager::JsWindowRegisterManager()
 {
