@@ -283,7 +283,7 @@ public:
     virtual bool IsAllowHaveSystemSubWindow() override;
     virtual KeyboardAnimationConfig GetKeyboardAnimationConfig() override;
     void RestoreSplitWindowMode(uint32_t mode);
-
+    virtual void PendingClose() override;
     virtual void SetNeedDefaultAnimation(bool needDefaultAnimation) override;
 private:
     template<typename T1, typename T2, typename Ret>

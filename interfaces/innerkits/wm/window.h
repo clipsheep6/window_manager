@@ -1322,6 +1322,10 @@ public:
      * @param needDefaultAnimation True means need default animation, false means not need.
      */
     virtual void SetNeedDefaultAnimation(bool needDefaultAnimation) {}
+    /**
+     * @brief pending close by ability
+     */
+    virtual void PendingClose() {}
 };
 }
 }
