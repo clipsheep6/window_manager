@@ -24,6 +24,7 @@
 #include "interfaces/include/ws_common.h"
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/host/include/zidl/session_stub.h"
+#include "session/host/include/scene_persistence.h"
 
 namespace OHOS::MMI {
 class PointerEvent;
@@ -97,10 +98,16 @@ public:
         sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session) override;
     WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId) override;
     void SetSystemConfig(const SystemSessionConfig& systemConfig);
+    sptr<ScenePersistence> GetScenePersistence() const;
+
+    static std::atomic<uint32_t> sessionId_;
+    static std::set<uint32_t> persistIdSet_;
 
 protected:
+    void GeneratePersistentId(const bool isExtension, const SessionInfo& sessionInfo);
     void UpdateSessionState(SessionState state);
     bool IsSessionValid() const;
+
     bool isActive_ = false;
     WSRect winRect_ {0, 0, 0, 0};
     sptr<ISessionStage> sessionStage_;
@@ -109,6 +116,9 @@ protected:
     NotifySessionStateChangeFunc sessionStateChangeFunc_;
     sptr<WindowSessionProperty> property_ = nullptr;
     SystemSessionConfig systemConfig_;
+    const bool IS_EXTENSION = true;
+    sptr<ScenePersistence> scenePersistence_ = nullptr;
+
 private:
     template<typename T>
     bool RegisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener);
