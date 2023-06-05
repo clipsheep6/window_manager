@@ -477,6 +477,26 @@ WSError SceneSessionManager::DestroyAndDisconnectSpecificSession(const uint64_t&
     return WSError::WS_OK;
 }
 
+WMError SceneSessionManager::RegisterSceneSessionManagerAgent(WindowManagerAgentType type,
+    const sptr<IWindowManagerAgent>& windowManagerAgent)
+{
+    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("register sceneSessionManager agent permission denied!");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
+    if ((windowManagerAgent == nullptr) || (windowManagerAgent->AsObject() == nullptr)) {
+        WLOGFE("sceneSessionManagerAgent is null");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    return PostSyncTask([this, &windowManagerAgent, type]() {
+        WMError ret = WindowManagerAgentController::GetInstance().RegisterWindowManagerAgent(windowManagerAgent, type);
+        if (type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_SYSTEM_BAR) { // if system bar, notify once
+            windowController_->NotifySystemBarTints();
+        }
+        return ret;
+    });
+}
+
 const AppWindowSceneConfig& SceneSessionManager::GetWindowSceneConfig() const
 {
     return appWindowSceneConfig_;

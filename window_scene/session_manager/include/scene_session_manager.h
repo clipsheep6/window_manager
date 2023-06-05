@@ -69,6 +69,7 @@ private:
     NotifyCreateSpecificSessionFunc createSpecificSessionFunc_;
     AppWindowSceneConfig appWindowSceneConfig_;
     SystemSessionConfig systemConfig_;
+    sptr<WindowController> windowController_;
 };
 } // namespace OHOS::Rosen
 

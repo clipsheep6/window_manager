@@ -525,7 +525,7 @@ WMError WindowManager::RegisterCameraFloatWindowChangedListener(const sptr<ICame
     WMError ret = WMError::WM_OK;
     if (pImpl_->cameraFloatWindowChangedListenerAgent_ == nullptr) {
         pImpl_->cameraFloatWindowChangedListenerAgent_ = new WindowManagerAgent();
-        ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+        ret = SingletonContainer::Get<WindowAdapter>().RegisterSceneSessionManagerAgent(
             WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_CAMERA_FLOAT,
             pImpl_->cameraFloatWindowChangedListenerAgent_);
     }
