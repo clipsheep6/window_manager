@@ -20,6 +20,7 @@
 #include <rs_window_animation_target.h>
 #include "window_manager.h"
 #include "window_manager_proxy.h"
+#include "session_manager/include/session_manager.h"
 #include "window_manager_hilog.h"
 #include "wm_common.h"
 
@@ -74,6 +75,13 @@ WMError WindowAdapter::RegisterWindowManagerAgent(WindowManagerAgentType type,
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
     return windowManagerServiceProxy_->RegisterWindowManagerAgent(type, windowManagerAgent);
+}
+
+WMError WindowAdapter::RegisterSceneSessionManagerAgent(WindowManagerAgentType type,
+    const sptr<IWindowManagerAgent>& windowManagerAgent)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    return sceneSessionManagerProxy_->RegisterSceneSessionManagerAgent(type, windowManagerAgent);
 }
 
 WMError WindowAdapter::UnregisterWindowManagerAgent(WindowManagerAgentType type,

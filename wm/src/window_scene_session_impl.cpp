@@ -377,6 +377,29 @@ WMError WindowSceneSessionImpl::Resize(uint32_t width, uint32_t height)
     if (IsWindowSessionInvalid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
+
+    // Float camera window has a special limit:
+    // if display sw <= 600dp, portrait: min width = display sw * 30%, landscape: min width = sw * 50%
+    // if display sw > 600dp, portrait: min width = display sw * 12%, landscape: min width = sw * 30%
+    const auto& displayRect = DisplayGroupInfo::GetInstance().GetDisplayRect(property_->GetDisplayId());
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_FLOAT_CAMERA) {
+        uint32_t smallWidth = displayRect.height_ <= displayRect.width_ ? displayRect.height_ : displayRect.width_;
+        float hwRatio = static_cast<float>(displayRect.height_) / static_cast<float>(displayRect.width_);
+        if (smallWidth <= static_cast<uint32_t>(600 * vpr)) { // sw <= 600dp
+            if (displayRect.width_ <= displayRect.height_) {
+                width = static_cast<uint32_t>(smallWidth * 0.3) >= width ? static_cast<uint32_t>(smallWidth * 0.3) : width;
+            } else {
+                width = static_cast<uint32_t>(smallWidth * 0.5) >= width ? static_cast<uint32_t>(smallWidth * 0.5) : width;
+            }
+        } else {
+            if (displayRect.width_ <= displayRect.height_) {
+                width = static_cast<uint32_t>(smallWidth * 0.12) >= width ? static_cast<uint32_t>(smallWidth * 0.12) : width;
+            } else {
+                width = static_cast<uint32_t>(smallWidth * 0.3) >= width ? static_cast<uint32_t>(smallWidth * 0.3) : width;
+            }
+        }
+        height = static_cast<uint32_t>(width * hwRatio);
+    }
     const auto& rect = property_->GetWindowRect();
     Rect newRect = { rect.posX_, rect.posY_, width, height }; // must keep w/h
     property_->SetRequestRect(newRect);

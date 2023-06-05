@@ -25,6 +25,7 @@
 #include "window_property.h"
 #include "wm_single_instance.h"
 #include "zidl/window_manager_interface.h"
+#include "session_manager/include/session_manager.h"
 namespace OHOS {
 namespace Rosen {
 class WMSDeathRecipient : public IRemoteObject::DeathRecipient {
@@ -88,6 +89,7 @@ private:
 
     std::recursive_mutex mutex_;
     sptr<IWindowManager> windowManagerServiceProxy_ = nullptr;
+    sptr<ISceneSessionManager> sceneSessionManagerProxy_ = nullptr;
     sptr<WMSDeathRecipient> wmsDeath_ = nullptr;
     bool isProxyValid_ { false };
 };
