@@ -56,11 +56,6 @@ ohos_shared_library("previewer_window") {
     "//foundation/arkui/napi:ace_napi_ark",
   ]
 
-  external_deps = [
-    # "ace_engine:ace_uicontent",
-    # "ability_runtime:runtime",
-  ]
-
   cflags = [ "-std=c++11" ]
   part_name = "window_manager"
   subsystem_name = "window"
@@ -88,6 +83,7 @@ ohos_shared_library("previewer_window_napi") {
     "mock/permission.cpp",
     "mock/pixel_map_napi.cpp",
     "mock/ui/rs_node.cpp",
+    "//foundation/ability/ability_runtime/frameworks/simulator/ability_simulator/src/js_runtime_utils.cpp"
   ]
 
   include_dirs = [
@@ -109,7 +105,7 @@ ohos_shared_library("previewer_window_napi") {
     ":previewer_window",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/arkui/napi:ace_napi_ark",
-    "//foundation/ability/ability_runtime/frameworks/simulator/ability_simulator:ability_simulator",
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
   ]
 
 
@@ -127,12 +123,18 @@ ohos_copy("copy_previewer_library") {
     suffix = ".dll"
   }
   shared_library_path =
-      get_label_info(":previewer_window_napi", "root_out_dir") +
-      "/window/window_manager/libpreviewer_window_napi" + suffix
+      get_label_info(":previewer_window_napi", "root_out_dir")
+  sources = [ shared_library_path + "/window/window_manager/libpreviewer_window_napi" + suffix ]
   deps = [ ":previewer_window_napi" ]
-  sources = [ shared_library_path ]
+
+  shared_library_path =
+      get_label_info("::previewer_window", "root_out_dir")
+  sources +=
+    [ shared_library_path + "/window/window_manager/libpreviewer_window" + suffix ]
+  deps += [ ":previewer_window" ]
+
   outputs =
-      [ target_out_dir + "/previewer/common/bin/libpreviewer_window" + suffix ]
+      [ target_out_dir + "/previewer/common/bin/{{source_file_part}}" ]
   module_source_dir = target_out_dir + "/previewer/common/bin/"
   module_install_name = ""
 
