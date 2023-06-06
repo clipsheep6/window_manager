@@ -285,6 +285,9 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
     if (node->GetWindowType() == WindowType::WINDOW_TYPE_WALLPAPER) {
         RemoteAnimation::NotifyAnimationUpdateWallpaper(node);
     }
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_BOOT_ANIMATION) {
+        DisplayManagerServiceInner::GetInstance().SetGravitySensorSubscriptionEnabled();
+    }
     WLOGI("AddWindowNode Id: %{public}u end", node->GetWindowId());
     RSInterfaces::GetInstance().SetAppWindowNum(GetAppWindowNum());
     // update private window count and notify dms private status changed
@@ -430,9 +433,7 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node, bool fromA
         isScreenLocked_ = false;
         SetBelowScreenlockVisible(node, true);
     }
-    if (node->GetWindowType() == WindowType::WINDOW_TYPE_BOOT_ANIMATION) {
-        DisplayManagerServiceInner::GetInstance().SetGravitySensorSubscriptionEnabled();
-    }
+
     WLOGI("Remove Id: %{public}u end", node->GetWindowId());
     RSInterfaces::GetInstance().SetAppWindowNum(GetAppWindowNum());
 
