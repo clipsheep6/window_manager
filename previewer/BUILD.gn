@@ -113,7 +113,6 @@ ohos_shared_library("previewer_window_napi") {
     ":previewer_window",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/arkui/napi:ace_napi_ark",
-    # "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_" + hilog_platform,
   ]
 
@@ -127,7 +126,7 @@ ohos_copy("window_stage_copy_modules") {
   deps = []
   sources = []
 
-  napi_modules = [ "window_stage_modul:window_stage" ]
+  napi_modules = [ "window_stage_modul:windowstage" ]
 
   foreach(module, napi_modules) {
     deps += [ module ]
@@ -138,7 +137,7 @@ ohos_copy("window_stage_copy_modules") {
 
   target_path = get_label_info(":copy_previewer_library", "target_out_dir")
 
-  outputs = [ target_path + "/bin/module/application/{{source_file_part}}" ]
+  outputs = [ target_path + "/previewer/common/bin/module/application/{{source_file_part}}" ]
 }
 
 ohos_copy("copy_previewer_library") {
