@@ -13,6 +13,14 @@
 
 import("//build/ohos.gni")
 
+if (host_os == "mac") {
+  suffix = ".dylib"
+  hilog_platform = "mac"
+} else {
+  suffix = ".dll"
+  hilog_platform = "windows"
+}
+
 config("previewer_window_config") {
   visibility = [ ":*" ]
 
@@ -105,10 +113,9 @@ ohos_shared_library("previewer_window_napi") {
     ":previewer_window",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/arkui/napi:ace_napi_ark",
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
+    # "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_windows",
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_" + hilog_platform,
   ]
-
-
 
   cflags_cc = [ "-DWINDOW_PREVIEW" ]
   cflags = [ "-std=c++11" ]
@@ -116,22 +123,38 @@ ohos_shared_library("previewer_window_napi") {
   subsystem_name = "window"
 }
 
-ohos_copy("copy_previewer_library") {
-  if (host_os == "mac") {
-    suffix = ".dylib"
-  } else {
-    suffix = ".dll"
+ohos_copy("window_stage_copy_modules") {
+  deps = []
+  sources = []
+
+  napi_modules = [ "window_stage_modul:window_stage" ]
+
+  foreach(module, napi_modules) {
+    deps += [ module ]
+    out_path = get_label_info(module, "root_out_dir")
+    out_name = get_label_info(module, "name")
+    sources += [ out_path + "/window/window_manager/lib" + out_name + suffix ]
   }
-  shared_library_path =
-      get_label_info(":previewer_window_napi", "root_out_dir")
-  sources = [ shared_library_path + "/window/window_manager/libpreviewer_window_napi" + suffix ]
-  deps = [ ":previewer_window_napi" ]
+
+  target_path = get_label_info(":copy_previewer_library", "target_out_dir")
+
+  outputs = [ target_path + "/bin/module/application/{{source_file_part}}" ]
+}
+
+ohos_copy("copy_previewer_library") {
+  deps = [ ":window_stage_copy_modules" ]
+  sources =[]
 
   shared_library_path =
-      get_label_info("::previewer_window", "root_out_dir")
+      get_label_info(":previewer_window", "root_out_dir")
   sources +=
     [ shared_library_path + "/window/window_manager/libpreviewer_window" + suffix ]
   deps += [ ":previewer_window" ]
+
+  shared_library_path =
+      get_label_info(":previewer_window_napi", "root_out_dir")
+  sources += [ shared_library_path + "/window/window_manager/libpreviewer_window_napi" + suffix ]
+  deps += [ ":previewer_window_napi" ]
 
   outputs =
       [ target_out_dir + "/previewer/common/bin/{{source_file_part}}" ]
