@@ -88,7 +88,7 @@ sptr<IRemoteObject> SessionManager::GetRemoteObject()
         return remoteObject_;
     }
 
-    if(!abilityConnection_) {
+    if (!abilityConnection_) {
         Init();
     }
 
@@ -110,6 +110,7 @@ sptr<IScreenSessionManager> SessionManager::GetScreenSessionManagerProxy()
 
 void SessionManager::ConnectToService()
 {
+    uint8_t loopCounts = 10;
     if (!abilityConnection_) {
         abilityConnection_ = new(std::nothrow) AbilityConnection();
     }
@@ -118,14 +119,14 @@ void SessionManager::ConnectToService()
     want.SetElementName("com.ohos.sceneboard", "com.ohos.sceneboard.MainAbility");
     ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, abilityConnection_, nullptr);
 
-    for (uint8_t count = 0; count < 10; count++) {
-        if(ret == ERR_OK) {
+    for (uint8_t count = 0; count < loopCounts; count++) {
+        if (ret == ERR_OK) {
             break;
         } else {
             WLOGFE("Get session manager ConnectToService failed, errorcode: %{public}d", ret);
             ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, abilityConnection_, nullptr);
         }
-        usleep(10);
+        usleep(SLEEP_10_MS);
     }
     serviceConnected_ = (ret == ERR_OK);
 }
