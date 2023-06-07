@@ -669,6 +669,19 @@ WSError SceneSessionManager::DestroyDialogWithMainWindow(const sptr<SceneSession
     return WSError::WS_ERROR_INVALID_SESSION;
 }
 
+void SceneSessionManager::DestroySubSession(const sptr<SceneSession>& sceneSession)
+{
+    if (sceneSession == nullptr) {
+        return;
+    }
+    for (const auto& elem : sceneSession->GetSubSession()) {
+        if (elem != nullptr) {
+            const auto& persistentId = elem->GetPersistentId();
+            sceneSessionMap_.erase(persistentId);
+        }
+    }
+}
+
 WSError SceneSessionManager::RequestSceneSessionDestruction(const sptr<SceneSession>& sceneSession)
 {
     wptr<SceneSession> weakSceneSession(sceneSession);
@@ -687,6 +700,7 @@ WSError SceneSessionManager::RequestSceneSessionDestruction(const sptr<SceneSess
             WLOGFE("session is invalid with %{public}" PRIu64 "", persistentId);
             return WSError::WS_ERROR_INVALID_SESSION;
         }
+        DestroySubSession(scnSession);
         auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
         if (!scnSessionInfo) {
             return WSError::WS_ERROR_NULLPTR;
@@ -717,6 +731,9 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
         }
         // connect specific session and sessionStage
         WSError errCode = sceneSession->Connect(sessionStage, eventChannel, surfaceNode, systemConfig_, property);
+        if (errCode != WSError::WS_OK) {
+            return errCode;
+        }
         if (property) {
             persistentId = property->GetPersistentId();
         }
@@ -724,6 +741,13 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
             createSpecificSessionFunc_(sceneSession);
         }
         session = sceneSession;
+
+        // need to record parent-child relationship if this session has parent
+        auto parentPersistentId = sceneSession->GetParentPersistentId();
+        const auto& parentSession = GetSceneSession(parentPersistentId);
+        if (parentSession != nullptr) {
+            parentSession->AddSubSession(sceneSession);
+        }
         return errCode;
     };
 

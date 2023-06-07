@@ -109,6 +109,10 @@ public:
     bool IsDecorEnable();
 
     std::shared_ptr<PowerMgr::RunningLock> keepScreenLock_;
+    bool AddSubSession(const sptr<SceneSession>& subSession);
+    bool RemoveSubSession(uint64_t persistentId);
+    std::vector<sptr<SceneSession>> GetSubSession() const;
+
 private:
     void UpdateCameraFloatWindowStatus(bool isShowing);
     void NotifySessionRectChange(const WSRect& rect);
@@ -122,6 +126,7 @@ private:
     sptr<MoveDragController> moveDragController_ = nullptr;
     sptr<SetWindowScenePatternFunc> setWindowScenePatternFunc_ = nullptr;
     bool isFirstStart_ = true;
+    std::vector<sptr<SceneSession>> subSession_;
 };
 } // namespace OHOS::Rosen
 

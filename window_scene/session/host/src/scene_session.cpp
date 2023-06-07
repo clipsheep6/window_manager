@@ -15,6 +15,7 @@
 
 #include "session/host/include/scene_session.h"
 
+#include <algorithm>
 #include <iterator>
 #include <pointer_event.h>
 
@@ -234,6 +235,9 @@ WSError SceneSession::CreateAndConnectSpecificSession(const sptr<ISessionStage>&
     }
     // connect specific session and sessionStage
     WSError errCode = sceneSession->Connect(sessionStage, eventChannel, surfaceNode, systemConfig_, property);
+    if (errCode != WSError::WS_OK) {
+        return errCode;
+    }
     if (property) {
         persistentId = property->GetPersistentId();
     }
@@ -243,6 +247,10 @@ WSError SceneSession::CreateAndConnectSpecificSession(const sptr<ISessionStage>&
         }
     }
     session = sceneSession;
+    bool res = AddSubSession(sceneSession);
+    if (!res) {
+        errCode = WSError::WS_ERROR_INVALID_SESSION;
+    }
     return errCode;
 }
 
@@ -251,6 +259,13 @@ WSError SceneSession::DestroyAndDisconnectSpecificSession(const uint64_t& persis
     WSError ret = WSError::WS_OK;
     if (specificCallback_ != nullptr) {
         ret = specificCallback_->onDestroy_(persistentId);
+    }
+    if (ret != WSError::WS_OK) {
+        return ret;
+    }
+    bool res = RemoveSubSession(persistentId);
+    if (!res) {
+        ret = WSError::WS_ERROR_INVALID_SESSION;
     }
     return ret;
 }
@@ -497,5 +512,37 @@ WSError SceneSession::UpdateWindowSceneAfterCustomAnimation(bool isAdd)
         NotifyIsCustomAnimatiomPlaying(false);
     }
     return WSError::WS_OK;
+bool SceneSession::AddSubSession(const sptr<SceneSession>& subSession)
+{
+    const auto& persistentId = subSession->GetPersistentId();
+    auto iter = std::find_if(subSession_.begin(), subSession_.end(),
+        [persistentId](sptr<SceneSession> session) {
+            return session->GetPersistentId() == persistentId;
+        });
+    if (iter != subSession_.end()) {
+        WLOGFE("Sub ession is already exists, id: %{public}" PRIu64 "", GetPersistentId());
+        return false;
+    }
+    subSession_.push_back(subSession);
+    return true;
+}
+
+bool SceneSession::RemoveSubSession(uint64_t persistentId)
+{
+    auto iter = std::find_if(subSession_.begin(), subSession_.end(),
+        [persistentId](sptr<SceneSession> session) {
+            return session->GetPersistentId() == persistentId;
+        });
+    if (iter == subSession_.end()) {
+        WLOGFE("Could not find subsession, id: %{public}" PRIu64 "", persistentId);
+        return false;
+    }
+    subSession_.erase(iter);
+    return true;
+}
+
+std::vector<sptr<SceneSession>> SceneSession::GetSubSession() const
+{
+    return subSession_;
 }
 } // namespace OHOS::Rosen
