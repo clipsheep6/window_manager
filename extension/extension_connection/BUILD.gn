@@ -15,7 +15,7 @@ import("//build/ohos.gni")
 
 config("libwindow_extension_client_private_config") {
   visibility = [ ":*" ]
-  visibility += [ "//foundation/arkui/ace_engine/frameworks/core/components_ng/test/pattern/ability_component/*" ]
+  visibility += [ "../../../../arkui/ace_engine/frameworks/core/components_ng/test/pattern/ability_component/*" ]
 
   include_dirs = [
     "include",
@@ -44,14 +44,12 @@ ohos_shared_library("libwindow_extension_client") {
 
   public_configs = [ ":libextension_connection_public_config" ]
 
-  deps = [
-    "../../wm:libwm",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-  ]
+  deps = [ "../../wm:libwm" ]
 
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_manager",
+    "graphic_standard:librender_service_client",
     "hitrace_native:hitrace_meter",
     "input:libmmi-client",
     "ipc:ipc_single",
