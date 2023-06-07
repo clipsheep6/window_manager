@@ -23,10 +23,13 @@
 #include "vsync_station.h"
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowImpl"};
+}
 std::map<std::string, std::pair<uint32_t, sptr<Window>>> WindowImpl::windowMap_;
 std::map<uint32_t, std::vector<sptr<WindowImpl>>> WindowImpl::subWindowMap_;
-// static int constructorCnt = 0;
-// static int deConstructorCnt = 0;
+static int constructorCnt = 0;
+static int deConstructorCnt = 0;
 WindowImpl::WindowImpl(const sptr<WindowOption>& option)
 {
     // property_ = new (std::nothrow) WindowProperty();
@@ -933,7 +936,7 @@ void WindowImpl::UpdateViewportConfig()
 
 void WindowImpl::SetOrientation(Orientation orientation)
 {
-    WLOGFD(LABEL, "SetOrientation : orientation=%{public}d", static_cast<int32_t>(orientation));
+    WLOGFD("SetOrientation : orientation=%{public}d", static_cast<int32_t>(orientation));
     if (orientation_ == static_cast<int32_t>(orientation)) {
         return;
     }
@@ -943,7 +946,7 @@ void WindowImpl::SetOrientation(Orientation orientation)
 
 void WindowImpl::SetSize(int32_t width, int32_t height)
 {
-    WLOGFD(LABEL, "SetSize : width=%{public}d, height=%{public}d", width, height);
+    WLOGFD("SetSize : width=%{public}d, height=%{public}d", width, height);
     if (width_ == width && height_ == height) {
         return;
     }
@@ -954,7 +957,7 @@ void WindowImpl::SetSize(int32_t width, int32_t height)
 
 void WindowImpl::SetDensity(float density)
 {
-    WLOGFD(LABEL, "SetDensity : density=%{public}f", density);
+    WLOGFD("SetDensity : density=%{public}f", density);
     if (abs(density_ - density) <= 0.000001) {
         return;
     }

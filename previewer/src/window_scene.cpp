@@ -22,7 +22,9 @@
 namespace OHOS {
 namespace Rosen {
 const std::string WindowScene::MAIN_WINDOW_ID = "main window";
-
+namespace {
+    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowScene"};
+}
 WindowScene::~WindowScene()
 {
 }

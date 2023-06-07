@@ -22,9 +22,9 @@
 namespace OHOS {
 namespace Rosen {
 using namespace AbilityRuntime;
-// namespace {
-//     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsTransitionController"};
-// }
+namespace {
+    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsTransitionController"};
+}
 
 static int jsTransCxtCtorCnt = 0;
 static int jsTransCxtDtorCnt = 0;

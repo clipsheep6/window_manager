@@ -46,9 +46,7 @@ config("window_native_kit_config") {
   include_dirs = [
     "window_napi",
     "../../../innerkits/wm",
-    # "../../../../wm/include",
     "../../../../utils/include",
-    # "../../../../wmserver/include",
 
     # because of pixle_map.h
     "//foundation/multimedia/image_framework/interfaces/innerkits/include",
