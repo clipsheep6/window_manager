@@ -32,9 +32,16 @@ WM_IMPLEMENT_SINGLE_INSTANCE(WindowAdapter)
 
 #define INIT_PROXY_CHECK_RETURN(ret) \
     do { \
-        if (!InitWMSProxy()) { \
+        if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) { \
+            if (!InitSSMProxy()) { \
+                WLOGFE("InitSMSProxy failed!"); \
+                return ret; \
+            } \
+        } else { \
+            if (!InitWMSProxy()) { \
             WLOGFE("InitWMSProxy failed!"); \
             return ret; \
+            } \
         } \
     } while (false)
 
@@ -171,6 +178,36 @@ bool WindowAdapter::InitWMSProxy()
         windowManagerServiceProxy_ = iface_cast<IWindowManager>(remoteObject);
         if ((!windowManagerServiceProxy_) || (!windowManagerServiceProxy_->AsObject())) {
             WLOGFE("Failed to get system window manager services");
+            return false;
+        }
+
+        wmsDeath_ = new WMSDeathRecipient();
+        if (!wmsDeath_) {
+            WLOGFE("Failed to create death Recipient ptr WMSDeathRecipient");
+            return false;
+        }
+        if (remoteObject->IsProxyObject() && !remoteObject->AddDeathRecipient(wmsDeath_)) {
+            WLOGFE("Failed to add death recipient");
+            return false;
+        }
+        isProxyValid_ = true;
+    }
+    return true;
+}
+
+bool WindowAdapter::InitSSMProxy()
+{
+    if (!isProxyValid_) {
+        sptr<ISystemAbilityManager> systemAbilityManager =
+                SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (!systemAbilityManager) {
+            WLOGFE("Failed to get system ability mgr.");
+            return false;
+        }
+
+        windowManagerServiceProxy_ = sessionManager.GetSceneSessionManagerProxy();
+        if ((!windowManagerServiceProxy_) || (!windowManagerServiceProxy_->AsObject())) {
+            WLOGFE("Failed to get system scene session manager services");
             return false;
         }
 
