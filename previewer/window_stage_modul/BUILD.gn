@@ -58,7 +58,7 @@ gen_js_src_binary("window_stage") {
   js_source = "../../interfaces/kits/napi/window_runtime/window_stage_napi/window_stage.js"
 }
 
-ohos_shared_library("window_stage") {
+ohos_shared_library("windowstage") {
   if (is_mingw) {
     defines = [ "WINDOWS_PLATFORM" ]
   } else {

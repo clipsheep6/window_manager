@@ -545,11 +545,8 @@ NativeValue* CreateJsWindowStage(NativeEngine& engine, std::shared_ptr<Rosen::Wi
     NativeValue* objValue = engine.CreateObject();
     NativeObject* object = ConvertNativeValueTo<NativeObject>(objValue);
 
-    WLOGFD("[NAPI]CreateJsWindowStage mlx 548");
     std::unique_ptr<JsWindowStage> jsWindowStage = std::make_unique<JsWindowStage>(windowScene);
-    WLOGFD("[NAPI]CreateJsWindowStage mlx 549");
     object->SetNativePointer(jsWindowStage.release(), JsWindowStage::Finalizer, nullptr);
-    WLOGFD("[NAPI]CreateJsWindowStage mlx 550");
 
     const char *moduleName = "JsWindowStage";
     BindNativeFunction(engine,
