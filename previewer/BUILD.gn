@@ -44,6 +44,7 @@ ohos_shared_library("previewer_window") {
     "mock/ui/rs_surface_node.cpp",
     "src/window.cpp",
     "src/window_impl.cpp",
+    "src/vsync_station.cpp",
     "src/window_scene.cpp",
     "src/window_input_channel.cpp",
     "src/input_transfer_station.cpp",

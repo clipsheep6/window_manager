@@ -78,6 +78,7 @@ WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRunt
 
 std::string WindowScene::GenerateMainWindowName(const std::shared_ptr<AbilityRuntime::Context>& context) const
 {
+    return "";
     if (context == nullptr) {
         return MAIN_WINDOW_ID + std::to_string(count++);
     } else {
@@ -89,6 +90,7 @@ std::string WindowScene::GenerateMainWindowName(const std::shared_ptr<AbilityRun
 
 sptr<Window> WindowScene::CreateWindow(const std::string& windowName, sptr<WindowOption>& option) const
 {
+    return nullptr;
     if (windowName.empty() || mainWindow_ == nullptr || option == nullptr) {
         WLOGFE("WindowScene Name: %{public}s", windowName.c_str());
         return nullptr;

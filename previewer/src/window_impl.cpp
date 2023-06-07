@@ -20,7 +20,7 @@
 #include "window_option.h"
 #include "viewport_config.h"
 #include "singleton_container.h"
-
+#include "vsync_station.h"
 namespace OHOS {
 namespace Rosen {
 std::map<std::string, std::pair<uint32_t, sptr<Window>>> WindowImpl::windowMap_;
@@ -29,29 +29,29 @@ std::map<uint32_t, std::vector<sptr<WindowImpl>>> WindowImpl::subWindowMap_;
 // static int deConstructorCnt = 0;
 WindowImpl::WindowImpl(const sptr<WindowOption>& option)
 {
-    property_ = new (std::nothrow) WindowProperty();
-    property_->SetWindowName(option->GetWindowName());
-    property_->SetRequestRect(option->GetWindowRect());
-    property_->SetWindowType(option->GetWindowType());
-    property_->SetWindowMode(option->GetWindowMode());
-    property_->SetFullScreen(option->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN);
-    property_->SetFocusable(option->GetFocusable());
-    property_->SetTouchable(option->GetTouchable());
-    property_->SetDisplayId(option->GetDisplayId());
-    property_->SetCallingWindow(option->GetCallingWindow());
-    property_->SetWindowFlags(option->GetWindowFlags());
-    property_->SetHitOffset(option->GetHitOffset());
-    property_->SetRequestedOrientation(option->GetRequestedOrientation());
-    property_->SetTurnScreenOn(option->IsTurnScreenOn());
-    property_->SetKeepScreenOn(option->IsKeepScreenOn());
-    property_->SetBrightness(option->GetBrightness());
-    auto& sysBarPropMap = option->GetSystemBarProperty();
-    for (auto it : sysBarPropMap) {
-        property_->SetSystemBarProperty(it.first, it.second);
-    }
-    name_ = option->GetWindowName();
+    // property_ = new (std::nothrow) WindowProperty();
+    // property_->SetWindowName(option->GetWindowName());
+    // property_->SetRequestRect(option->GetWindowRect());
+    // property_->SetWindowType(option->GetWindowType());
+    // property_->SetWindowMode(option->GetWindowMode());
+    // property_->SetFullScreen(option->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN);
+    // property_->SetFocusable(option->GetFocusable());
+    // property_->SetTouchable(option->GetTouchable());
+    // property_->SetDisplayId(option->GetDisplayId());
+    // property_->SetCallingWindow(option->GetCallingWindow());
+    // property_->SetWindowFlags(option->GetWindowFlags());
+    // property_->SetHitOffset(option->GetHitOffset());
+    // property_->SetRequestedOrientation(option->GetRequestedOrientation());
+    // property_->SetTurnScreenOn(option->IsTurnScreenOn());
+    // property_->SetKeepScreenOn(option->IsKeepScreenOn());
+    // property_->SetBrightness(option->GetBrightness());
+    // auto& sysBarPropMap = option->GetSystemBarProperty();
+    // for (auto it : sysBarPropMap) {
+    //     property_->SetSystemBarProperty(it.first, it.second);
+    // }
+    // name_ = option->GetWindowName();
 
-    surfaceNode_ = CreateSurfaceNode(property_->GetWindowName(), option->GetWindowType());
+    surfaceNode_ = CreateSurfaceNode("preview_surface", option->GetWindowType());
 
     WLOGFI("WindowImpl constructorCnt: %{public}d name: %{public}s",
         ++constructorCnt, property_->GetWindowName().c_str());
@@ -86,11 +86,7 @@ RSSurfaceNode::SharedPtr WindowImpl::CreateSurfaceNode(std::string name, WindowT
 
 sptr<Window> WindowImpl::Find(const std::string& name)
 {
-    auto iter = windowMap_.find(name);
-    if (iter == windowMap_.end()) {
-        return nullptr;
-    }
-    return iter->second.second;
+    return nullptr;
 }
 
 const std::shared_ptr<AbilityRuntime::Context> WindowImpl::GetContext() const
@@ -100,42 +96,33 @@ const std::shared_ptr<AbilityRuntime::Context> WindowImpl::GetContext() const
 
 sptr<Window> WindowImpl::GetTopWindowWithId(uint32_t mainWinId)
 {
-    if (windowMap_.empty()) {
-        WLOGFE("Please create mainWindow First!");
-        return nullptr;
-    }
-    for (auto iter = windowMap_.begin(); iter != windowMap_.end(); iter++) {
-        if (mainWinId == iter->second.first) {
-            WLOGFI("FindTopWindow id: %{public}u", mainWinId);
-            return iter->second.second;
-        }
-    }
-    WLOGFE("Cannot find topWindow!");
     return nullptr;
 }
 
 sptr<Window> WindowImpl::GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context)
 {
-    if (windowMap_.empty()) {
-        WLOGFE("Please create mainWindow First!");
-        return nullptr;
-    }
-    uint32_t mainWinId = INVALID_WINDOW_ID;
-    WLOGFI("GetTopWindowfinal MainWinId:%{public}u!", mainWinId);
-    if (mainWinId == INVALID_WINDOW_ID) {
-        WLOGFE("Cannot find topWindow!");
-        return nullptr;
-    }
-    return GetTopWindowWithId(mainWinId);
+    return nullptr;
+    // if (windowMap_.empty()) {
+    //     WLOGFE("Please create mainWindow First!");
+    //     return nullptr;
+    // }
+    // uint32_t mainWinId = INVALID_WINDOW_ID;
+    // WLOGFI("GetTopWindowfinal MainWinId:%{public}u!", mainWinId);
+    // if (mainWinId == INVALID_WINDOW_ID) {
+    //     WLOGFE("Cannot find topWindow!");
+    //     return nullptr;
+    // }
+    // return GetTopWindowWithId(mainWinId);
 }
 
 std::vector<sptr<Window>> WindowImpl::GetSubWindow(uint32_t parentId)
 {
-    if (subWindowMap_.find(parentId) == subWindowMap_.end()) {
-        WLOGFE("Cannot parentWindow with id: %{public}u!", parentId);
-        return std::vector<sptr<Window>>();
-    }
-    return std::vector<sptr<Window>>(subWindowMap_[parentId].begin(), subWindowMap_[parentId].end());
+    return std::vector<sptr<Window>>();
+    // if (subWindowMap_.find(parentId) == subWindowMap_.end()) {
+    //     WLOGFE("Cannot parentWindow with id: %{public}u!", parentId);
+    //     return std::vector<sptr<Window>>();
+    // }
+    // return std::vector<sptr<Window>>(subWindowMap_[parentId].begin(), subWindowMap_[parentId].end());
 }
 
 void WindowImpl::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
@@ -388,34 +375,11 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
 {
     WLOGFI("[Client] Window [name:%{public}s] Create", name_.c_str());
     // check window name, same window names are forbidden
-    if (windowMap_.find(name_) != windowMap_.end()) {
-        WLOGFE("WindowName(%{public}s) already exists.", name_.c_str());
-        return WMError::WM_ERROR_INVALID_PARAM;
-    }
-    // check parent id, if create sub window and there is not exist parent Window, then return
-    if (parentId != INVALID_WINDOW_ID) {
-        for (const auto& winPair : windowMap_) {
-            if (winPair.second.first == parentId) {
-                property_->SetParentId(parentId);
-                break;
-            }
-        }
-        if (property_->GetParentId() != parentId) {
-            WLOGFE("ParentId is empty or valid. ParentId is %{public}u", parentId);
-            return WMError::WM_ERROR_INVALID_PARAM;
-        }
-    }
 
-    static std::atomic<uint32_t> tempWindowId = 0;
-    uint32_t windowId = tempWindowId++;
-    property_->SetWindowId(windowId);
     // if (surfaceNode_) {
     //     surfaceNode_->SetWindowId(windowId);
     // }
-    windowMap_.insert(std::make_pair(name_, std::pair<uint32_t, sptr<Window>>(windowId, this)));
-
-    state_ = WindowState::STATE_CREATED;
-
+    
     return WMError::WM_OK;
 }
 
@@ -426,6 +390,9 @@ WMError WindowImpl::BindDialogTarget(sptr<IRemoteObject> targetToken)
 
 WMError WindowImpl::Destroy()
 {
+    // if (uiContent_) {
+    //     uiContent_->Destroy();
+    // }
     return WMError::WM_OK;
 }
 
@@ -738,9 +705,10 @@ void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& p
     TransferPointerEvent(pointerEvent);
 }
 
+
 void WindowImpl::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback)
 {
-    return;
+   VsyncStation::GetInstance().RequestVsync(vsyncCallback);
 }
 
 void WindowImpl::UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
