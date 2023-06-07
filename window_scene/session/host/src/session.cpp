@@ -524,6 +524,14 @@ WSError Session::OnSessionEvent(SessionEvent event)
     return WSError::WS_OK;
 }
 
+WSError Session::NotifyDestroy()
+{
+    if (!sessionStage_) {
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    return sessionStage_->NotifyDestroy();
+}
+
 WSError Session::UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason)
 {
     WLOGFD("UpdateSessionRect");

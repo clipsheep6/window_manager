@@ -414,6 +414,7 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartedByInputMethod()) {
         WLOGFE("check input method permission failed");
+        return WSError::WS_ERROR_INVALID_PERMISSION;
     }
     auto task = [this, sessionStage, eventChannel, surfaceNode, property, &persistentId, &session]() {
         // create specific session
@@ -447,7 +448,7 @@ void SceneSessionManager::SetCreateSpecificSessionListener(const NotifyCreateSpe
 WSError SceneSessionManager::DestroyAndDisconnectSpecificSession(const uint64_t& persistentId)
 {
     auto task = [this, persistentId]() {
-        WLOGFI("Deatroy session persistentId: %{public}" PRIu64 "", persistentId);
+        WLOGFI("Destroy session persistentId: %{public}" PRIu64 "", persistentId);
         auto iter = abilitySceneMap_.find(persistentId);
         if (iter == abilitySceneMap_.end()) {
             return WSError::WS_ERROR_INVALID_SESSION;
@@ -458,6 +459,10 @@ WSError SceneSessionManager::DestroyAndDisconnectSpecificSession(const uint64_t&
         }
         auto ret = sceneSession->UpdateActiveStatus(false);
         ret = sceneSession->Disconnect();
+        if (ret == WSError::WS_OK) {
+            WLOGFD("notify to destroy dialog window");
+            sceneSession->NotifyDestroy();
+        }
         abilitySceneMap_.erase(persistentId);
         return ret;
     };

@@ -88,6 +88,7 @@ public:
     void NotifyConnect();
     void NotifyForeground();
     void NotifyBackground();
+    WSError NotifyDestroy();
 
     WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent);
