@@ -134,6 +134,11 @@ WSError SessionProxy::Connect(const sptr<ISessionStage>& sessionStage, const spt
 
 WSError SessionProxy::PendingSessionActivation(const SessionInfo& info)
 {
+    return WSError::WS_OK;
+}
+
+WSError SessionProxy::PendingSessionActivation(const AAFwk::SessionInfo& info)
+{
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
@@ -141,13 +146,15 @@ WSError SessionProxy::PendingSessionActivation(const SessionInfo& info)
         WLOGFE("WriteInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (!(data.WriteString(info.bundleName_) && data.WriteString(info.abilityName_))) {
-        WLOGFE("Write ability info failed");
+
+    if (!(data.WriteParcelable(&(info.want)) && data.WriteParcelable(&(info.want)))) {
+        WLOGFE("Write want info failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (info.callerToken_) {
-        if (!data.WriteBool(true) || !data.WriteRemoteObject(info.callerToken_)) {
-            WLOGFE("Write ability info failed");
+
+    if (info.callerToken) {
+        if (!data.WriteBool(true) || !data.WriteRemoteObject(info.callerToken)) {
+            WLOGFE("Write callerToken info failed");
             return WSError::WS_ERROR_IPC_FAILED;
         }
     } else {
@@ -165,6 +172,43 @@ WSError SessionProxy::PendingSessionActivation(const SessionInfo& info)
     return static_cast<WSError>(ret);
 }
 
+WSError SessionProxy::TerminateSession(const SessionInfo& info)
+{
+    return WSError::WS_OK;
+}
+
+WSError SessionProxy::TerminateSession(const AAFwk::SessionInfo& info)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!(data.WriteParcelable(&(info.want)) && data.WriteParcelable(&(info.want)))) {
+        WLOGFE("Write want info failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (info.callerToken) {
+        if (!data.WriteBool(true) || !data.WriteRemoteObject(info.callerToken)) {
+            WLOGFE("Write ability info failed");
+            return WSError::WS_ERROR_IPC_FAILED;
+        }
+    } else {
+        if (!data.WriteBool(false)) {
+            WLOGFE("Write ability info failed");
+            return WSError::WS_ERROR_IPC_FAILED;
+        }
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionMessage::TRANS_ID_TERMINATE),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WSError>(ret);
+}
 
 WSError SessionProxy::UpdateActiveStatus(bool isActive)
 {

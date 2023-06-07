@@ -15,6 +15,7 @@
 
 #include "session/host/include/session.h"
 
+#include "interfaces/include/ws_common.h"
 #include "surface_capture_future.h"
 #include <transaction/rs_interfaces.h>
 #include <ui/rs_surface_node.h>
@@ -275,6 +276,12 @@ WSError Session::PendingSessionActivation(const SessionInfo& info)
     return WSError::WS_OK;
 }
 
+// override call from ams
+WSError Session::PendingSessionActivation(const AAFwk::SessionInfo& info)
+{
+    return WSError::WS_OK;
+}
+
 void Session::SetPendingSessionActivationEventListener(const NotifyPendingSessionActivationFunc& func)
 {
     pendingSessionActivationFunc_ = func;
@@ -283,6 +290,25 @@ void Session::SetPendingSessionActivationEventListener(const NotifyPendingSessio
 void Session::SetBackPressedListenser(const NotifyBackPressedFunc& func)
 {
     backPressedFunc_ = func;
+}
+
+WSError Session::TerminateSession(const SessionInfo& info)
+{
+    if (terminateSessionFunc_) {
+        terminateSessionFunc_(info);
+    }
+    return WSError::WS_OK;
+}
+
+// override call from ams
+WSError Session::TerminateSession(const AAFwk::SessionInfo& info)
+{
+    return WSError::WS_OK;
+}
+
+void Session::SetTerminateSessionListener(const NotifyTerminateSessionFunc& func)
+{
+    terminateSessionFunc_ = func;
 }
 
 WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)

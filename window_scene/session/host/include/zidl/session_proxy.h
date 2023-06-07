@@ -35,6 +35,12 @@ public:
 
     WSError UpdateActiveStatus(bool isActive) override;
     WSError PendingSessionActivation(const SessionInfo& info) override;
+    WSError TerminateSession(const SessionInfo& info) override;
+
+    // call from ams
+    WSError PendingSessionActivation(const AAFwk::SessionInfo& info) override;
+    WSError TerminateSession(const AAFwk::SessionInfo& info) override;
+
     WSError OnSessionEvent(SessionEvent event) override;
     WSError RaiseToAppTop() override;
     WSError UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason) override;
