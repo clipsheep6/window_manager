@@ -65,11 +65,13 @@ ohos_shared_library("previewer_window") {
     "${graphic_base_path}/graphic_2d/rosen/modules/platform:utils",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/arkui/napi:ace_napi_ark",
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_" + hilog_platform,
     "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "${graphic_base_path}/graphic_2d/rosen/modules/platform:ipc_core",
     # "/foundation/arkui/ace_engine/interfaces/inner_api/ace:ace_uicontent",
     
   ]
+
 
   cflags = [ "-std=c++11" ]
   part_name = "window_manager"
@@ -104,12 +106,12 @@ ohos_shared_library("previewer_window_napi") {
   include_dirs = [
     ".",  # 避免冲突的mock目录
     "include",
+    "../utils/include",
     "mock",
     "mock/ui",
     "mock/transaction",
     "//foundation/ability/ability_runtime/interfaces/inner_api/runtime/include",
     "../wm/include",
-    "../utils/include",
     "../interfaces/innerkits/wm",
     "../interfaces/innerkits/dm",
     "../interfaces/kits/napi/window_runtime/window_stage_napi",
