@@ -12,12 +12,20 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("../windowmanager_aafwk.gni")
+
+if (host_os == "mac") {
+  suffix = ".dylib"
+  hilog_platform = "mac"
+} else {
+  suffix = ".dll"
+  hilog_platform = "windows"
+}
 
 config("previewer_window_config") {
   visibility = [ ":*" ]
 
   include_dirs = [
-    "../interfaces/innerkits/wm",
     "include",
   ]
 }
@@ -28,35 +36,39 @@ ohos_shared_library("previewer_window") {
   libs = []
 
   sources = [
-    "../../../../commonlibrary/c_utils/base/src/refbase.cpp",
+    # "../../../../commonlibrary/c_utils/base/src/refbase.cpp",
     "../utils/src/window_property.cpp",
     "../utils/src/window_transition_info.cpp",
     "../utils/src/wm_math.cpp",
-    "../wm/src/input_transfer_station.cpp",
-    "../wm/src/vsync_station.cpp",
-    "../wm/src/window_frame_trace_impl.cpp",
-    "../wm/src/window_input_channel.cpp",
-    "../wm/src/window_option.cpp",
-    "mock/parcel.cpp",
+    # "mock/parcel.cpp",
+    # "mock/ui/rs_surface_node.cpp",
     "src/window.cpp",
     "src/window_impl.cpp",
+    "src/vsync_station.cpp",
     "src/window_scene.cpp",
+    "src/window_input_channel.cpp",
+    "src/input_transfer_station.cpp",
+    "src/window_option.cpp",
   ]
 
   include_dirs = [
     "include",
     "mock",
-    "../interfaces/innerkits/wm",
-    "../interfaces/innerkits/dm",
-    "../wm/include",
     "../utils/include",
-    "../../../../commonlibrary/c_utils/base/include",
+    # "../../../../commonlibrary/c_utils/base/include",
   ]
 
   deps = [
+    "${graphic_base_path}/graphic_2d/rosen/modules/platform:utils",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/arkui/napi:ace_napi_ark",
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_" + hilog_platform,
+    "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "${graphic_base_path}/graphic_2d/rosen/modules/platform:ipc_core",
+    # "/foundation/arkui/ace_engine/interfaces/inner_api/ace:ace_uicontent",
+    
   ]
+
 
   cflags = [ "-std=c++11" ]
   part_name = "window_manager"
@@ -80,33 +92,33 @@ ohos_shared_library("previewer_window_napi") {
     "../interfaces/kits/napi/window_runtime/window_stage_napi/js_window_stage.cpp",
 
     # mock
-    "mock/ability_runtime/js_runtime_utils.cpp",
     "mock/js_transition_controller.cpp",
     "mock/js_window_register_manager.cpp",
     "mock/permission.cpp",
     "mock/pixel_map_napi.cpp",
-    "mock/ui/rs_node.cpp",
+    # "mock/ui/rs_node.cpp",
+    "//foundation/ability/ability_runtime/frameworks/simulator/ability_simulator/src/js_runtime_utils.cpp"
   ]
 
   include_dirs = [
     ".",  # 避免冲突的mock目录
     "include",
+    "../utils/include",
     "mock",
     "mock/ui",
     "mock/transaction",
-    "mock/ability_runtime",
-    "../wm/include",
-    "../utils/include",
-    "../interfaces/innerkits/wm",
-    "../interfaces/innerkits/dm",
+    "//foundation/ability/ability_runtime/interfaces/inner_api/runtime/include",
     "../interfaces/kits/napi/window_runtime/window_stage_napi",
-    "../../../../commonlibrary/c_utils/base/include",
+    # "../../../../commonlibrary/c_utils/base/include",
   ]
 
   deps = [
+    "${graphic_base_path}/graphic_2d/rosen/modules/platform:utils",
     ":previewer_window",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/arkui/napi:ace_napi_ark",
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_" + hilog_platform,
+    "${graphic_base_path}/graphic_2d/rosen/modules/platform:ipc_core",
   ]
 
   cflags_cc = [ "-DWINDOW_PREVIEW" ]
@@ -115,19 +127,41 @@ ohos_shared_library("previewer_window_napi") {
   subsystem_name = "window"
 }
 
-ohos_copy("copy_previewer_library") {
-  if (host_os == "mac") {
-    suffix = ".dylib"
-  } else {
-    suffix = ".dll"
+ohos_copy("window_stage_copy_modules") {
+  deps = []
+  sources = []
+
+  napi_modules = [ "window_stage_modul:windowstage" ]
+
+  foreach(module, napi_modules) {
+    deps += [ module ]
+    out_path = get_label_info(module, "root_out_dir")
+    out_name = get_label_info(module, "name")
+    sources += [ out_path + "/window/window_manager/lib" + out_name + suffix ]
   }
+
+  target_path = get_label_info(":copy_previewer_library", "target_out_dir")
+
+  outputs = [ target_path + "/previewer/common/bin/module/application/{{source_file_part}}" ]
+}
+
+ohos_copy("copy_previewer_library") {
+  deps = [ ":window_stage_copy_modules" ]
+  sources =[]
+
   shared_library_path =
-      get_label_info(":previewer_window_napi", "root_out_dir") +
-      "/window/window_manager/libpreviewer_window_napi" + suffix
-  deps = [ ":previewer_window_napi" ]
-  sources = [ shared_library_path ]
+      get_label_info(":previewer_window", "root_out_dir")
+  sources +=
+    [ shared_library_path + "/window/window_manager/libpreviewer_window" + suffix ]
+  deps += [ ":previewer_window" ]
+
+  shared_library_path =
+      get_label_info(":previewer_window_napi", "root_out_dir")
+  sources += [ shared_library_path + "/window/window_manager/libpreviewer_window_napi" + suffix ]
+  deps += [ ":previewer_window_napi" ]
+
   outputs =
-      [ target_out_dir + "/previewer/common/bin/libpreviewer_window" + suffix ]
+      [ target_out_dir + "/previewer/common/bin/{{source_file_part}}" ]
   module_source_dir = target_out_dir + "/previewer/common/bin/"
   module_install_name = ""
 

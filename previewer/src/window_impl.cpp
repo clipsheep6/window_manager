@@ -14,37 +14,47 @@
  */
 
 #include "window_impl.h"
-#include "window_manager_hilog.h"
 
+#include "window_manager_hilog.h"
+#include "window_helper.h"
+#include "window_option.h"
+#include "viewport_config.h"
+#include "singleton_container.h"
+#include "vsync_station.h"
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowImpl"};
+}
 std::map<std::string, std::pair<uint32_t, sptr<Window>>> WindowImpl::windowMap_;
 std::map<uint32_t, std::vector<sptr<WindowImpl>>> WindowImpl::subWindowMap_;
 static int constructorCnt = 0;
 static int deConstructorCnt = 0;
 WindowImpl::WindowImpl(const sptr<WindowOption>& option)
 {
-    property_ = new (std::nothrow) WindowProperty();
-    property_->SetWindowName(option->GetWindowName());
-    property_->SetRequestRect(option->GetWindowRect());
-    property_->SetWindowType(option->GetWindowType());
-    property_->SetWindowMode(option->GetWindowMode());
-    property_->SetFullScreen(option->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN);
-    property_->SetFocusable(option->GetFocusable());
-    property_->SetTouchable(option->GetTouchable());
-    property_->SetDisplayId(option->GetDisplayId());
-    property_->SetCallingWindow(option->GetCallingWindow());
-    property_->SetWindowFlags(option->GetWindowFlags());
-    property_->SetHitOffset(option->GetHitOffset());
-    property_->SetRequestedOrientation(option->GetRequestedOrientation());
-    property_->SetTurnScreenOn(option->IsTurnScreenOn());
-    property_->SetKeepScreenOn(option->IsKeepScreenOn());
-    property_->SetBrightness(option->GetBrightness());
-    auto& sysBarPropMap = option->GetSystemBarProperty();
-    for (auto it : sysBarPropMap) {
-        property_->SetSystemBarProperty(it.first, it.second);
-    }
-    name_ = option->GetWindowName();
+    // property_ = new (std::nothrow) WindowProperty();
+    // property_->SetWindowName(option->GetWindowName());
+    // property_->SetRequestRect(option->GetWindowRect());
+    // property_->SetWindowType(option->GetWindowType());
+    // property_->SetWindowMode(option->GetWindowMode());
+    // property_->SetFullScreen(option->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN);
+    // property_->SetFocusable(option->GetFocusable());
+    // property_->SetTouchable(option->GetTouchable());
+    // property_->SetDisplayId(option->GetDisplayId());
+    // property_->SetCallingWindow(option->GetCallingWindow());
+    // property_->SetWindowFlags(option->GetWindowFlags());
+    // property_->SetHitOffset(option->GetHitOffset());
+    // property_->SetRequestedOrientation(option->GetRequestedOrientation());
+    // property_->SetTurnScreenOn(option->IsTurnScreenOn());
+    // property_->SetKeepScreenOn(option->IsKeepScreenOn());
+    // property_->SetBrightness(option->GetBrightness());
+    // auto& sysBarPropMap = option->GetSystemBarProperty();
+    // for (auto it : sysBarPropMap) {
+    //     property_->SetSystemBarProperty(it.first, it.second);
+    // }
+    // name_ = option->GetWindowName();
+
+    surfaceNode_ = CreateSurfaceNode("preview_surface", option->GetWindowType());
 
     WLOGFI("WindowImpl constructorCnt: %{public}d name: %{public}s",
         ++constructorCnt, property_->GetWindowName().c_str());
@@ -57,13 +67,29 @@ WindowImpl::~WindowImpl()
     Destroy();
 }
 
+RSSurfaceNode::SharedPtr WindowImpl::CreateSurfaceNode(std::string name, WindowType type)
+{
+    struct RSSurfaceNodeConfig rsSurfaceNodeConfig;
+    rsSurfaceNodeConfig.SurfaceNodeName = name;
+    RSSurfaceNodeType rsSurfaceNodeType = RSSurfaceNodeType::DEFAULT;
+    switch (type) {
+        case WindowType::WINDOW_TYPE_BOOT_ANIMATION:
+        case WindowType::WINDOW_TYPE_POINTER:
+            rsSurfaceNodeType = RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE;
+            break;
+        case WindowType::WINDOW_TYPE_APP_MAIN_WINDOW:
+            rsSurfaceNodeType = RSSurfaceNodeType::APP_WINDOW_NODE;
+            break;
+        default:
+            rsSurfaceNodeType = RSSurfaceNodeType::DEFAULT;
+            break;
+    }
+    return RSSurfaceNode::Create(rsSurfaceNodeConfig, rsSurfaceNodeType);
+}
+
 sptr<Window> WindowImpl::Find(const std::string& name)
 {
-    auto iter = windowMap_.find(name);
-    if (iter == windowMap_.end()) {
-        return nullptr;
-    }
-    return iter->second.second;
+    return nullptr;
 }
 
 const std::shared_ptr<AbilityRuntime::Context> WindowImpl::GetContext() const
@@ -73,41 +99,33 @@ const std::shared_ptr<AbilityRuntime::Context> WindowImpl::GetContext() const
 
 sptr<Window> WindowImpl::GetTopWindowWithId(uint32_t mainWinId)
 {
-    if (windowMap_.empty()) {
-        WLOGFE("Please create mainWindow First!");
-        return nullptr;
-    }
-    for (auto iter = windowMap_.begin(); iter != windowMap_.end(); iter++) {
-        if (mainWinId == iter->second.first) {
-            WLOGFI("FindTopWindow id: %{public}u", mainWinId);
-            return iter->second.second;
-        }
-    }
-    WLOGFE("Cannot find topWindow!");
+    return nullptr;
 }
 
 sptr<Window> WindowImpl::GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context)
 {
-    if (windowMap_.empty()) {
-        WLOGFE("Please create mainWindow First!");
-        return nullptr;
-    }
-    uint32_t mainWinId = INVALID_WINDOW_ID;
-    WLOGFI("GetTopWindowfinal MainWinId:%{public}u!", mainWinId);
-    if (mainWinId == INVALID_WINDOW_ID) {
-        WLOGFE("Cannot find topWindow!");
-        return nullptr;
-    }
-    return GetTopWindowWithId(mainWinId);
+    return nullptr;
+    // if (windowMap_.empty()) {
+    //     WLOGFE("Please create mainWindow First!");
+    //     return nullptr;
+    // }
+    // uint32_t mainWinId = INVALID_WINDOW_ID;
+    // WLOGFI("GetTopWindowfinal MainWinId:%{public}u!", mainWinId);
+    // if (mainWinId == INVALID_WINDOW_ID) {
+    //     WLOGFE("Cannot find topWindow!");
+    //     return nullptr;
+    // }
+    // return GetTopWindowWithId(mainWinId);
 }
 
 std::vector<sptr<Window>> WindowImpl::GetSubWindow(uint32_t parentId)
 {
-    if (subWindowMap_.find(parentId) == subWindowMap_.end()) {
-        WLOGFE("Cannot parentWindow with id: %{public}u!", parentId);
-        return std::vector<sptr<Window>>();
-    }
-    return std::vector<sptr<Window>>(subWindowMap_[parentId].begin(), subWindowMap_[parentId].end());
+    return std::vector<sptr<Window>>();
+    // if (subWindowMap_.find(parentId) == subWindowMap_.end()) {
+    //     WLOGFE("Cannot parentWindow with id: %{public}u!", parentId);
+    //     return std::vector<sptr<Window>>();
+    // }
+    // return std::vector<sptr<Window>>(subWindowMap_[parentId].begin(), subWindowMap_[parentId].end());
 }
 
 void WindowImpl::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
@@ -120,7 +138,7 @@ void WindowImpl::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Con
 
 std::shared_ptr<RSSurfaceNode> WindowImpl::GetSurfaceNode() const
 {
-    return nullptr;
+    return surfaceNode_;
 }
 
 Rect WindowImpl::GetRect() const
@@ -257,6 +275,27 @@ void WindowImpl::OnNewWant(const AAFwk::Want& want)
 WMError WindowImpl::SetUIContent(const std::string& contentInfo,
     NativeEngine* engine, NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability)
 {
+    // WLOGFD("SetUIContent: %{public}s", contentInfo.c_str());
+    // if (uiContent_) {
+    //     uiContent_->Destroy();
+    // }
+    // std::unique_ptr<Ace::UIContent> uiContent;
+    // if (ability != nullptr) {
+    //     uiContent = Ace::UIContent::Create(ability);
+    // } else {
+    //     uiContent = Ace::UIContent::Create(context_.get(), engine);
+    // }
+    // if (uiContent == nullptr) {
+    //     WLOGFE("fail to SetUIContent id: %{public}u", property_->GetWindowId());
+    //     return WMError::WM_ERROR_NULLPTR;
+    // }
+    // if (isdistributed) {
+    //     uiContent->Restore(this, contentInfo, storage);
+    // } else {
+    //     uiContent->Initialize(this, contentInfo, storage);
+    // }
+    // uiContent_ = std::move(uiContent);
+    // UpdateViewportConfig();
     return WMError::WM_OK;
 }
 
@@ -314,31 +353,11 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
 {
     WLOGFI("[Client] Window [name:%{public}s] Create", name_.c_str());
     // check window name, same window names are forbidden
-    if (windowMap_.find(name_) != windowMap_.end()) {
-        WLOGFE("WindowName(%{public}s) already exists.", name_.c_str());
-        return WMError::WM_ERROR_INVALID_PARAM;
-    }
-    // check parent id, if create sub window and there is not exist parent Window, then return
-    if (parentId != INVALID_WINDOW_ID) {
-        for (const auto& winPair : windowMap_) {
-            if (winPair.second.first == parentId) {
-                property_->SetParentId(parentId);
-                break;
-            }
-        }
-        if (property_->GetParentId() != parentId) {
-            WLOGFE("ParentId is empty or valid. ParentId is %{public}u", parentId);
-            return WMError::WM_ERROR_INVALID_PARAM;
-        }
-    }
 
-    static std::atomic<uint32_t> tempWindowId = 0;
-    uint32_t windowId = tempWindowId++;
-    property_->SetWindowId(windowId);
-    windowMap_.insert(std::make_pair(name_, std::pair<uint32_t, sptr<Window>>(windowId, this)));
-
-    state_ = WindowState::STATE_CREATED;
-
+    // if (surfaceNode_) {
+    //     surfaceNode_->SetWindowId(windowId);
+    // }
+    
     return WMError::WM_OK;
 }
 
@@ -349,6 +368,9 @@ WMError WindowImpl::BindDialogTarget(sptr<IRemoteObject> targetToken)
 
 WMError WindowImpl::Destroy()
 {
+    // if (uiContent_) {
+    //     uiContent_->Destroy();
+    // }
     return WMError::WM_OK;
 }
 
@@ -624,17 +646,47 @@ void WindowImpl::SetRequestModeSupportInfo(uint32_t modeSupportInfo)
 
 void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
-    return;
+    std::shared_ptr<InputEventListener> inputEventConsumer;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        inputEventConsumer = inputEventConsumer_;
+    }
+    if (inputEventConsumer != nullptr) {
+        WLOGD("Transfer key event to inputEventConsumer");
+        (void)inputEventConsumer->OnInputEvent(keyEvent);
+    } else if (uiContent_ != nullptr) {
+        WLOGD("Transfer key event to uiContent");
+        uiContent_->ProcessKeyEvent(keyEvent);
+    } else {
+        WLOGFE("There is no key event consumer");
+    }
+
+    if (GetType() == WindowType::WINDOW_TYPE_APP_COMPONENT) {
+        WLOGFI("DispatchKeyEvent: %{public}u", GetWindowId());
+        keyEvent->MarkProcessed();
+        return;
+    }
 }
 
 void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
-    return;
+    // If windowRect transformed, transform event back to its origin position
+    if (property_) {
+        property_->UpdatePointerEvent(pointerEvent);
+    }
+
+    if (IsPointerEventConsumed()) {
+        pointerEvent->MarkProcessed();
+        return;
+    }
+
+    TransferPointerEvent(pointerEvent);
 }
+
 
 void WindowImpl::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback)
 {
-    return;
+   VsyncStation::GetInstance().RequestVsync(vsyncCallback);
 }
 
 void WindowImpl::UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
@@ -658,7 +710,7 @@ void WindowImpl::NotifyTouchDialogTarget()
 
 void WindowImpl::SetNeedRemoveWindowInputChannel(bool needRemoveWindowInputChannel)
 {
-    return;
+    needRemoveWindowInputChannel_ = needRemoveWindowInputChannel;
 }
 
 bool WindowImpl::IsLayoutFullScreen() const
@@ -673,7 +725,18 @@ bool WindowImpl::IsFullScreen() const
 
 void WindowImpl::SetRequestedOrientation(Orientation orientation)
 {
-    return;
+    if (property_->GetRequestedOrientation() == orientation) {
+        return;
+    }
+    property_->SetRequestedOrientation(orientation);
+    if (state_ == WindowState::STATE_SHOWN) {
+        UpdateProperty(PropertyChangeAction::ACTION_UPDATE_ORIENTATION);
+    }
+}
+
+WMError WindowImpl::UpdateProperty(PropertyChangeAction action)
+{
+    return WMError::WM_OK;
 }
 
 Orientation WindowImpl::GetRequestedOrientation()
@@ -788,5 +851,94 @@ void WindowImpl::SetNeedDefaultAnimation(bool needDefaultAnimation)
 {
     return;
 }
+
+bool WindowImpl::IsPointerEventConsumed()
+{
+    return moveDragProperty_->startDragFlag_ || moveDragProperty_->startMoveFlag_;
+}
+
+void WindowImpl::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
+    if (windowSystemConfig_.isStretchable_ && GetMode() == WindowMode::WINDOW_MODE_FLOATING) {
+        UpdatePointerEventForStretchableWindow(pointerEvent);
+    }
+
+    std::shared_ptr<InputEventListener> inputEventConsumer;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        inputEventConsumer = inputEventConsumer_;
+    }
+    if (inputEventConsumer != nullptr) {
+        WLOGFD("Transfer pointer event to inputEventConsumer");
+        (void)inputEventConsumer->OnInputEvent(pointerEvent);
+    } else if (uiContent_ != nullptr) {
+        WLOGFD("Transfer pointer event to uiContent");
+        (void)uiContent_->ProcessPointerEvent(pointerEvent);
+    } else {
+        WLOGFW("pointerEvent is not consumed, windowId: %{public}u", GetWindowId());
+        pointerEvent->MarkProcessed();
+    }
+}
+
+
+void WindowImpl::UpdatePointerEventForStretchableWindow(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
+    MMI::PointerEvent::PointerItem pointerItem;
+    if (!pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem)) {
+        WLOGFW("Point item is invalid");
+        return;
+    }
+    const Rect& originRect = property_->GetOriginRect();
+    PointInfo originPos =
+        WindowHelper::CalculateOriginPosition(originRect, GetRect(),
+        { pointerItem.GetDisplayX(), pointerItem.GetDisplayY() });
+    pointerItem.SetDisplayX(originPos.x);
+    pointerItem.SetDisplayY(originPos.y);
+    pointerItem.SetWindowX(originPos.x - originRect.posX_);
+    pointerItem.SetWindowY(originPos.y - originRect.posY_);
+    pointerEvent->UpdatePointerItem(pointerEvent->GetPointerId(), pointerItem);
+}
+
+void WindowImpl::UpdateViewportConfig()
+{
+    Ace::ViewportConfig config;
+    config.SetSize(width_, height_);
+    config.SetPosition(0, 0);
+    config.SetDensity(density_);
+    config.SetOrientation(orientation_);
+    uiContent_->UpdateViewportConfig(config/*, WindowSizeChangeReason::UNDEFINED, nullptr*/);
+}
+
+void WindowImpl::SetOrientation(Orientation orientation)
+{
+    WLOGFD("SetOrientation : orientation=%{public}d", static_cast<int32_t>(orientation));
+    if (orientation_ == static_cast<int32_t>(orientation)) {
+        return;
+    }
+    orientation_ = static_cast<int32_t>(orientation);
+    UpdateViewportConfig();
+}
+
+void WindowImpl::SetSize(int32_t width, int32_t height)
+{
+    WLOGFD("SetSize : width=%{public}d, height=%{public}d", width, height);
+    if (width_ == width && height_ == height) {
+        return;
+    }
+    width_ = width;
+    height_ = height;
+    UpdateViewportConfig();
+}
+
+void WindowImpl::SetDensity(float density)
+{
+    WLOGFD("SetDensity : density=%{public}f", density);
+    if (abs(density_ - density) <= 0.000001) {
+        return;
+    }
+    density_ = density;
+    UpdateViewportConfig();
+}
+
 } // namespace Rosen
 } // namespace OHOS

@@ -22,7 +22,9 @@
 namespace OHOS {
 namespace Rosen {
 const std::string WindowScene::MAIN_WINDOW_ID = "main window";
-
+namespace {
+    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowScene"};
+}
 WindowScene::~WindowScene()
 {
 }
@@ -30,28 +32,55 @@ WindowScene::~WindowScene()
 WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRuntime::Context>& context,
     sptr<IWindowLifeCycle>& listener, sptr<WindowOption> option)
 {
+    WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
     displayId_ = displayId;
+    WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
     if (option == nullptr) {
+        WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
         option = new(std::nothrow) WindowOption();
         if (option == nullptr) {
             WLOGFW("alloc WindowOption failed");
             return WMError::WM_ERROR_NULLPTR;
         }
     }
+    WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
     option->SetDisplayId(displayId);
     option->SetWindowTag(WindowTag::MAIN_WINDOW);
+    WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
 
     mainWindow_ = Window::Create(GenerateMainWindowName(context), option, context);
+    WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
     if (mainWindow_ == nullptr) {
         return WMError::WM_ERROR_NULLPTR;
     }
+    WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
     mainWindow_->RegisterLifeCycleListener(listener);
-
+    WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
     return WMError::WM_OK;
+
+    // displayId_ = displayId;
+    // if (option == nullptr) {
+    //     option = new(std::nothrow) WindowOption();
+    //     if (option == nullptr) {
+    //         WLOGFW("alloc WindowOption failed");
+    //         return WMError::WM_ERROR_NULLPTR;
+    //     }
+    // }
+    // option->SetDisplayId(displayId);
+    // option->SetWindowTag(WindowTag::MAIN_WINDOW);
+
+    // mainWindow_ = Window::Create(GenerateMainWindowName(context), option, context);
+    // if (mainWindow_ == nullptr) {
+    //     return WMError::WM_ERROR_NULLPTR;
+    // }
+    // mainWindow_->RegisterLifeCycleListener(listener);
+
+    // return WMError::WM_OK;
 }
 
 std::string WindowScene::GenerateMainWindowName(const std::shared_ptr<AbilityRuntime::Context>& context) const
 {
+    return "";
     if (context == nullptr) {
         return MAIN_WINDOW_ID + std::to_string(count++);
     } else {
@@ -63,6 +92,7 @@ std::string WindowScene::GenerateMainWindowName(const std::shared_ptr<AbilityRun
 
 sptr<Window> WindowScene::CreateWindow(const std::string& windowName, sptr<WindowOption>& option) const
 {
+    return nullptr;
     if (windowName.empty() || mainWindow_ == nullptr || option == nullptr) {
         WLOGFE("WindowScene Name: %{public}s", windowName.c_str());
         return nullptr;

@@ -18,6 +18,7 @@
 #include <mutex>
 #include <i_input_event_consumer.h>
 // #include "adapter/preview/external/multimodalinput/key_event.h"
+#include <key_event.h>
 #include "refbase.h"
 // #include "vsync_station.h"
 #include "window.h"

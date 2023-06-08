@@ -32,3 +32,5 @@ declare_args() {
 
 print(
     "window_manager_feature_subscribe_motion = ${window_manager_feature_subscribe_motion}")
+
+
