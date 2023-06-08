@@ -47,6 +47,7 @@ WindowImpl::~WindowImpl()
 
 RSSurfaceNode::SharedPtr WindowImpl::CreateSurfaceNode(std::string name, WindowType type)
 {
+    WLOGFI("CreateSurfaceNode mlx : %{public}d, name: %{public}s, type: %{public}d", __LINE__, name.c_str(), type);
     struct RSSurfaceNodeConfig rsSurfaceNodeConfig;
     rsSurfaceNodeConfig.SurfaceNodeName = name;
     RSSurfaceNodeType rsSurfaceNodeType = RSSurfaceNodeType::DEFAULT;

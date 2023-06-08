@@ -34,23 +34,19 @@ WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRunt
 {
     WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
     displayId_ = displayId;
-    WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
     if (option == nullptr) {
-        WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
         option = new(std::nothrow) WindowOption();
         if (option == nullptr) {
             WLOGFW("alloc WindowOption failed");
             return WMError::WM_ERROR_NULLPTR;
         }
     }
-    WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
     option->SetDisplayId(displayId);
     option->SetWindowTag(WindowTag::MAIN_WINDOW);
-    WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
 
     mainWindow_ = Window::Create(GenerateMainWindowName(context), option, context);
-    WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
     if (mainWindow_ == nullptr) {
+        WLOGFI("mainWindow_ is NULL");
         return WMError::WM_ERROR_NULLPTR;
     }
     WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
