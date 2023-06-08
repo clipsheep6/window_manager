@@ -128,6 +128,16 @@ uint64_t WindowSessionProperty::GetParentPersistentId() const
     return parentPersistentId_;
 }
 
+void WindowProperty::SetAccessTokenId(uint32_t accessTokenId)
+{
+    accessTokenId_ = accessTokenId;
+}
+
+uint32_t WindowSessionProperty::GetAccessTokenId() const
+{
+    return accessTokenId_;
+}
+
 bool WindowSessionProperty::Marshalling(Parcel& parcel) const
 {
     return parcel.WriteString(windowName_) && parcel.WriteInt32(windowRect_.posX_) &&
