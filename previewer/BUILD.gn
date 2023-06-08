@@ -26,7 +26,6 @@ config("previewer_window_config") {
   visibility = [ ":*" ]
 
   include_dirs = [
-    "../interfaces/innerkits/wm",
     "include",
   ]
 }
@@ -55,8 +54,6 @@ ohos_shared_library("previewer_window") {
   include_dirs = [
     "include",
     "mock",
-    "../interfaces/innerkits/wm",
-    "../interfaces/innerkits/dm",
     "../utils/include",
     # "../../../../commonlibrary/c_utils/base/include",
   ]
@@ -111,9 +108,6 @@ ohos_shared_library("previewer_window_napi") {
     "mock/ui",
     "mock/transaction",
     "//foundation/ability/ability_runtime/interfaces/inner_api/runtime/include",
-    "../wm/include",
-    "../interfaces/innerkits/wm",
-    "../interfaces/innerkits/dm",
     "../interfaces/kits/napi/window_runtime/window_stage_napi",
     # "../../../../commonlibrary/c_utils/base/include",
   ]
