@@ -29,6 +29,8 @@
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "SessionManager"};
+constexpr int CONNECT_COUNT = 10;
+constexpr int SLEEP_10MS = 10000;
 }
 
 WM_IMPLEMENT_SINGLE_INSTANCE(SessionManager)
@@ -42,7 +44,6 @@ public:
         if (remoteObject_ == nullptr) {
             WLOGFW("RemoteObject_ is nullptr");
         }
-        cv_.notify_all();
     }
 
     void OnAbilityDisconnectDone(const AppExecFwk::ElementName& element, int resultCode) override
@@ -52,19 +53,20 @@ public:
 
     sptr<IRemoteObject> GetRemoteObject()
     {
-        if (!remoteObject_) {
-            std::unique_lock<std::mutex> lock(mutex_);
-            if (cv_.wait_for(lock, std::chrono::seconds(1)) == std::cv_status::timeout) {
-                WLOGFW("Get remote object timeout.");
-            }
-        }
-
+        if (remoteObject_) {
         return remoteObject_;
+    }
+
+    int count = 0;
+    std::lock_guard<std::mutex> lock(mutex_);
+    while (remoteObject_ == nullptr && count < CONNECT_COUNT) {
+        usleep(SLEEP_10MS);
+    }
+    return remoteObject_;
     }
 private:
     sptr<IRemoteObject> remoteObject_;
     std::mutex mutex_;
-    std::condition_variable cv_;
 };
 
 SessionManager::SessionManager()
@@ -88,12 +90,11 @@ sptr<IRemoteObject> SessionManager::GetRemoteObject()
         return remoteObject_;
     }
 
-    if (abilityConnection_) {
-        remoteObject_ = abilityConnection_->GetRemoteObject();
-    } else {
+    if (!abilityConnection_) {
         Init();
     }
 
+    remoteObject_ = abilityConnection_->GetRemoteObject();
     if (!remoteObject_) {
         WLOGFE("Get session manager service remote object nullptr");
     }
@@ -126,9 +127,17 @@ void SessionManager::ConnectToService()
     AAFwk::Want want;
     want.SetElementName("com.ohos.sceneboard", "com.ohos.sceneboard.MainAbility");
     ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, abilityConnection_, nullptr);
-    if (ret != ERR_OK) {
-        WLOGFE("ConnectToService failed, errorcode: %{public}d", ret);
+
+    for (uint8_t count = 0; count < CONNECT_COUNT; count++) {
+        if (ret == ERR_OK) {
+            break;
+        } else {
+            WLOGFE("ConnectToService failed, errorcode: %{public}d", ret);
+            ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectAbility(want, abilityConnection_, nullptr);
+        }
+        usleep(SLEEP_10MS);
     }
+
     serviceConnected_ = (ret == ERR_OK);
 }
 
