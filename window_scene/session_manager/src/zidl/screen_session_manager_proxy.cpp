@@ -42,6 +42,48 @@ sptr<DisplayInfo> OHOS::Rosen::ScreenSessionManagerProxy::GetDefaultDisplayInfo(
     return info;
 }
 
+DMError ScreenSessionManagerProxy::SetScreenActiveMode(ScreenId screenId, uint32_t modeId)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("SetScreenActiveMode: WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteUint64(screenId) || !data.WriteUint32(modeId)) {
+        WLOGFE("SetScreenActiveMode: write screenId/modeId failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SET_SCREEN_ACTIVE_MODE),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SetScreenActiveMode: SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    return static_cast<DMError>(reply.ReadInt32());
+}
+
+DMError ScreenSessionManagerProxy::SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteUint64(screenId) || !data.WriteFloat(virtualPixelRatio)) {
+        WLOGFE("write screenId/modeId failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_PIXEL_RATIO),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    return static_cast<DMError>(reply.ReadInt32());
+}
+
 DMError ScreenSessionManagerProxy::RegisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
     DisplayManagerAgentType type)
 {

@@ -14,16 +14,42 @@
  */
 
 #include "session/screen/include/screen_property.h"
+#include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
-void ScreenProperty::SetRotation(float rotation)
+namespace {
+    constexpr int32_t PHONE_SCREEN_WIDTH = 1344;
+    constexpr int32_t PHONE_SCREEN_HEIGHT = 2772;
+    constexpr float PHONE_SCREEN_DENSITY = 3.5f;
+    constexpr float ELSE_SCREEN_DENSITY = 1.5f;
+    constexpr float INCH_2_MM = 25.4f;
+}
+
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "Screen_property" };
+
+void ScreenProperty::SetRotation(Rotation rotation)
 {
     rotation_ = rotation;
 }
 
+float convert_Rotation_to_float(Rotation rotation)
+{
+    switch(rotation){
+        case Rotation::ROTATION_0:
+        return 0.0f;
+        case Rotation::ROTATION_90:
+        return 1.0f;
+        case Rotation::ROTATION_180:
+        return 2.0f;
+        case Rotation::ROTATION_270:
+        return 3.0f;
+    }
+}
+
 float ScreenProperty::GetRotation() const
 {
-    return rotation_;
+    //todo: convert to float 
+    return convert_Rotation_to_float(rotation_);
 }
 
 void ScreenProperty::SetBounds(const RRect& bounds)
@@ -41,11 +67,71 @@ float ScreenProperty::GetDensity()
     int32_t width = bounds_.rect_.width_;
     int32_t height = bounds_.rect_.height_;
 
-    if (width == 1344 && height == 2772) { // telephone
-        density_ = 3.5f;
+    if (width == PHONE_SCREEN_WIDTH && height == PHONE_SCREEN_HEIGHT) {
+        density_ = PHONE_SCREEN_DENSITY;
     } else {
-        density_ = 1.5f;
+        density_ = ELSE_SCREEN_DENSITY;
     }
     return density_;
 }
+
+void ScreenProperty::UpdateXDpi()
+{
+    if (phyWidth_ != UINT32_MAX) {
+        int32_t width = bounds_.rect_.width_;
+        xDpi_ = width * INCH_2_MM / phyWidth_;
+    }
+}
+
+void ScreenProperty::UpdateYDpi()
+{
+    if (phyHeight_ != UINT32_MAX) {
+        int32_t height = bounds_.rect_.height_;
+        yDpi_ = height * INCH_2_MM / phyHeight_;
+    }
+}
+
+uint32_t ScreenProperty::GetRefreshRate() const
+{
+    return refreshRate_;
+}
+
+float ScreenProperty::GetVirtualPixelRatio() const
+{
+    return virtualPixelRatio_;
+}
+
+void ScreenProperty::SetRefreshRate(uint32_t refreshRate)
+{
+    refreshRate_ = refreshRate;
+}
+
+void ScreenProperty::SetPhyWidth(uint32_t phyWidth)
+{
+    phyWidth_ = phyWidth;
+}
+
+void ScreenProperty::SetPhyHeight(uint32_t PhyHeight)
+{
+    phyHeight_ = PhyHeight;
+}
+
+void ScreenProperty::SetVirtualPixelRatio(float virtualPixelRatio)
+{
+    virtualPixelRatio_ = virtualPixelRatio;
+    WLOGE(" virtualPixelRatio_ value is  %{public}f",
+       virtualPixelRatio_);
+}
+
+void ScreenProperty::SetOrientation(Orientation orientation)
+{
+    orientation_ = orientation;
+}
+
+
+Orientation ScreenProperty::GetOrientation() const
+{
+    return orientation_;
+}
+
 } // namespace OHOS::Rosen

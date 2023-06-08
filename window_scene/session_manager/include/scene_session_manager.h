@@ -34,8 +34,10 @@ class SceneSession;
 using NotifyCreateSpecificSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 class SceneSessionManager : public SceneSessionManagerStub,
                             public SessionManagerBase {
+
 WM_DECLARE_SINGLE_INSTANCE_BASE(SceneSessionManager)
 public:
+    
     sptr<SceneSession> RequestSceneSession(const SessionInfo& sessionInfo);
     WSError RequestSceneSessionActivation(const sptr<SceneSession>& sceneSession);
     WSError RequestSceneSessionBackground(const sptr<SceneSession>& sceneSession);

@@ -37,6 +37,20 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             reply.WriteParcelable(info);
             break;
         }
+        case DisplayManagerMessage::TRANS_ID_SET_SCREEN_ACTIVE_MODE: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            uint32_t modeId = data.ReadUint32();
+            DMError ret = SetScreenActiveMode(screenId, modeId);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_PIXEL_RATIO: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            float virtualPixelRatio = data.ReadFloat();
+            DMError ret = SetVirtualPixelRatio(screenId, virtualPixelRatio);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
         case DisplayManagerMessage::TRANS_ID_REGISTER_DISPLAY_MANAGER_AGENT: {
             auto agent = iface_cast<IDisplayManagerAgent>(data.ReadRemoteObject());
             auto type = static_cast<DisplayManagerAgentType>(data.ReadUint32());

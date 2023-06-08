@@ -25,8 +25,14 @@
 #include "screen_property.h"
 #include "dm_common.h"
 #include "display_info.h"
+#include "event_handler.h"
+#include "screen.h"
+#include "screen_info.h"
+
+
 
 namespace OHOS::Rosen {
+
 class IScreenChangeListener : public RefBase {
 public:
     IScreenChangeListener() = default;
@@ -45,24 +51,39 @@ enum class ScreenState : int32_t {
 
 class ScreenSession : public RefBase {
 public:
-    explicit ScreenSession(ScreenId screenId, const ScreenProperty& property);
+    explicit ScreenSession(ScreenId screenId, ScreenProperty& property);
     ~ScreenSession() = default;
 
     void RegisterScreenChangeListener(IScreenChangeListener* screenChangeListener);
     void UnregisterScreenChangeListener(IScreenChangeListener* screenChangeListener);
+    void FillScreenInfo(sptr<ScreenInfo> info) const;
 
     sptr<DisplayInfo> ConvertToDisplayInfo();
+    sptr<SupportedScreenModes> GetActiveScreenMode() const;
+    ScreenSourceMode GetSourceMode() const;
+    sptr<ScreenInfo> ConvertToScreenInfo() const;
 
     ScreenId GetScreenId();
     ScreenProperty GetScreenProperty() const;
     std::shared_ptr<RSDisplayNode> GetDisplayNode() const;
-
+    ScreenId GetId() const;
+    ScreenState GetScreenState() const;
+    ScreenId GetAbstractScreenGroupId() const;
+    DMError SetScreenActiveMode(uint32_t modeId);
+    void SetVirtualPixelRatio(float virtualPixelRatio);
     void Connect();
     void Disconnect();
+    int32_t activeIdx_ { 0 };
+    std::vector<sptr<SupportedScreenModes>> modes_ = {};
+    ScreenId screenId_;
+    float virtualPixelRatio_ = { 1.0 };
+    
 
 private:
-    ScreenId screenId_;
-    ScreenProperty property_;
+    std::string name_ { "UNKNOW" };
+    ScreenProperty& property_;
+    int32_t activeModeIdx_ { 0 };
+    ScreenId screenGroupId_ { SCREEN_ID_INVALID };
     std::shared_ptr<RSDisplayNode> displayNode_;
     ScreenState screenState_ { ScreenState::INIT };
     std::vector<IScreenChangeListener*> screenChangeListenerList_;
