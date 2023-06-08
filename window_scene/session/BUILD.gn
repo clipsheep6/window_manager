@@ -25,6 +25,9 @@ config("session_public_config") {
 
     # for WMError Code
     "${window_base_path}/interfaces/innerkits/wm",
+
+    "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client/core",
+    "${window_base_path}/window_scene/session_manager/include",
   ]
 }
 
