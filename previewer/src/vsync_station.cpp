@@ -15,6 +15,8 @@
 
 #include "vsync_station.h"
 
+#include <unistd.h>
+
 #include "transaction/rs_interfaces.h"
 #include "window_manager_hilog.h"
 
@@ -52,7 +54,7 @@ void VsyncStation::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallb
             }
             auto& rsClient = OHOS::Rosen::RSInterfaces::GetInstance();
             while (receiver_ == nullptr) {
-                receiver_ = rsClient.CreateVSyncReceiver("WM_" + std::to_string(::getpid()), vsyncHandler_);
+                receiver_ = rsClient.CreateVSyncReceiver("WM_" + std::to_string(getpid()), vsyncHandler_);
             }
             receiver_->Init();
             hasInitVsyncReceiver_ = true;

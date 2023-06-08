@@ -17,8 +17,8 @@
 #define RENDER_SERVICE_CLIENT_CORE_TRANSACTION_RS_INTERFACES_H
 
 #include <memory>
-#include <windows.h>
-#include <process.h>
+// #include <windows.h>
+// #include <process.h>
 
 namespace OHOS {
 namespace Rosen {

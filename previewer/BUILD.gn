@@ -59,14 +59,17 @@ ohos_shared_library("previewer_window") {
   ]
 
   deps = [
-    "${graphic_base_path}/graphic_2d/rosen/modules/platform:utils",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/arkui/napi:ace_napi_ark",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_" + hilog_platform,
-    "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "${graphic_base_path}/graphic_2d/rosen/modules/platform:ipc_core",
+    # "${graphic_base_path}/graphic_2d/rosen/modules/platform:ipc_core",
     # "/foundation/arkui/ace_engine/interfaces/inner_api/ace:ace_uicontent",
-    
+  ]
+
+  public_deps = [
+    "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "${graphic_base_path}/graphic_2d/rosen/modules/platform:utils",
+    "${graphic_base_path}/graphic_2d/rosen/modules/platform:ipc_core",
   ]
 
 
@@ -113,11 +116,14 @@ ohos_shared_library("previewer_window_napi") {
   ]
 
   deps = [
-    "${graphic_base_path}/graphic_2d/rosen/modules/platform:utils",
     ":previewer_window",
     "//foundation/arkui/napi:ace_napi",
     "//foundation/arkui/napi:ace_napi_ark",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_" + hilog_platform,
+    # "${graphic_base_path}/graphic_2d/rosen/modules/platform:ipc_core",
+  ]
+  public_deps = [
+    "${graphic_base_path}/graphic_2d/rosen/modules/platform:utils",
     "${graphic_base_path}/graphic_2d/rosen/modules/platform:ipc_core",
   ]
 
