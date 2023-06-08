@@ -290,7 +290,7 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
     auto task = [this, sessionInfo, specificCallback]() {
         WLOGFI("sessionInfo: bundleName: %{public}s, moduleName: %{public}s, abilityName: %{public}s",
             sessionInfo.bundleName_.c_str(), sessionInfo.moduleName_.c_str(), sessionInfo.abilityName_.c_str());
-        sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(sessionInfo, specificCallback);
+        sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(sessionInfo, specificCallback, abilitySceneMap_);
         if (sceneSession == nullptr) {
             WLOGFE("sceneSession is nullptr!");
             return sceneSession;
@@ -399,6 +399,18 @@ WSError SceneSessionManager::RequestSceneSessionDestruction(const sptr<SceneSess
             return WSError::WS_ERROR_INVALID_SESSION;
         }
         abilitySceneMap_.erase(persistentId);
+        // erase dialog id
+        std::vector<uint64_t> vec = scnSession->GetDialogVector();
+        for (auto id : vec) {
+            if (abilitySceneMap_.count(id) == 0) {
+                WLOGFE("Dialog session is invalid with %{public}" PRIu64 "", persistentId);
+                continue;
+            }
+            auto dialogSession = FindSceneSessionByPersistentId(id);
+            dialogSession->NotifyDestroy();
+            dialogSession->Disconnect();
+            abilitySceneMap_.erase(id);
+        }
         auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
         if (!scnSessionInfo) {
             return WSError::WS_ERROR_NULLPTR;
@@ -434,12 +446,30 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
         if (createSpecificSessionFunc_) {
             createSpecificSessionFunc_(sceneSession);
         }
+        if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG &&
+            sceneSession->GetParentPersistentId() != INVALID_SESSION_ID) {
+            // save dialog session id to its vector
+            auto parentSession = FindSceneSessionByPersistentId(sceneSession->GetParentPersistentId());
+            if (parentSession) {
+                WLOGFD("Add dialog id to its parent vector");
+                parentSession->GetDialogVector().emplace_back(sceneSession->GetPersistentId());
+            }
+        }
         session = sceneSession;
         return errCode;
     };
     WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);
     msgScheduler_->PostSyncTask(task);
     return WSError::WS_OK;
+}
+
+sptr<SceneSession> SceneSessionManager::FindSceneSessionByPersistentId(uint64_t persistentId)
+{
+    if (abilitySceneMap_.find(persistentId) == abilitySceneMap_.end()) {
+        WLOGFE("Can not find scenesession, it is not in the abilitySceneMap");
+        return nullptr;
+    }
+    return abilitySceneMap_.at(persistentId);
 }
 
 void SceneSessionManager::SetCreateSpecificSessionListener(const NotifyCreateSpecificSessionFunc& func)
@@ -451,7 +481,7 @@ void SceneSessionManager::SetCreateSpecificSessionListener(const NotifyCreateSpe
 WSError SceneSessionManager::DestroyAndDisconnectSpecificSession(const uint64_t& persistentId)
 {
     auto task = [this, persistentId]() {
-        WLOGFI("Deatroy session persistentId: %{public}" PRIu64 "", persistentId);
+        WLOGFI("Destroy session persistentId: %{public}" PRIu64 "", persistentId);
         auto iter = abilitySceneMap_.find(persistentId);
         if (iter == abilitySceneMap_.end()) {
             return WSError::WS_ERROR_INVALID_SESSION;

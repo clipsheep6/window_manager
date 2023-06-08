@@ -14,18 +14,18 @@
  */
 
 #include "session/host/include/session.h"
+// #include "session_manager/include/scene_session_manager.h"
 
 #include "surface_capture_future.h"
 #include <transaction/rs_interfaces.h>
 #include <ui/rs_surface_node.h>
 #include "window_manager_hilog.h"
-
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "Session" };
 } // namespace
 
-Session::Session(const SessionInfo& info) : sessionInfo_(info)
+Session::Session(const SessionInfo& info, std::map<uint64_t, sptr<Session>>& sessionMap) : sessionInfo_(info), sessionMap_(sessionMap)
 {
 }
 
@@ -56,6 +56,11 @@ uint64_t Session::GetParentPersistentId() const
 std::shared_ptr<RSSurfaceNode> Session::GetSurfaceNode() const
 {
     return surfaceNode_;
+}
+
+std::vector<uint64_t>& Session::GetDialogVector()
+{
+    return dialogVec_;
 }
 
 const SessionInfo& Session::GetSessionInfo() const
@@ -285,12 +290,58 @@ void Session::SetBackPressedListenser(const NotifyBackPressedFunc& func)
     backPressedFunc_ = func;
 }
 
+WSError Session::NotifyDestroy()
+{
+    if (!sessionStage_) {
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    return sessionStage_->NotifyDestroy();
+}
+
+void Session::NotifyTouchDialogTarget()
+{
+    if (!sessionStage_) {
+        return;
+    }
+    sessionStage_->NotifyTouchDialogTarget();
+}
+
+bool Session::CheckDialogOnForeground()
+{
+    if (dialogVec_.empty()) {
+        return false;
+    }
+    for (auto id : dialogVec_) {
+        // auto dialogSession = SceneSessionManager::GetInstance().FindSceneSessionByPersistentId(id);
+        auto dialogSession = sessionMap_.at(id);
+        if (dialogSession && dialogSession->GetSessionState() == SessionState::STATE_FOREGROUND) {
+            dialogSession->NotifyTouchDialogTarget();
+            WLOGFD("Notify touch dialog window");
+            return true;
+        }
+    }
+    return false;
+}
+
 WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
     WLOGFD("Session TransferPointEvent, Id: %{public}" PRIu64 "", persistentId_);
     if (!windowEventChannel_) {
         WLOGFE("windowEventChannel_ is null");
         return WSError::WS_ERROR_NULLPTR;
+    }
+    if (GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        if (CheckDialogOnForeground()) {
+            WLOGFD("Has dialog on foreground, not transfer pointer event");
+            return WSError::WS_ERROR_INVALID_PERMISSION;
+        }
+    } else if (GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        // auto parentSession = SceneSessionManager::GetInstance().FindSceneSessionByPersistentId(GetParentPersistentId());
+        auto parentSession = sessionMap_.at(GetParentPersistentId());
+        if (parentSession && parentSession->CheckDialogOnForeground()) {
+            WLOGFD("Its main window has dialog on foreground, not transfer pointer event");
+            return WSError::WS_ERROR_INVALID_PERMISSION;
+        }
     }
     return windowEventChannel_->TransferPointerEvent(pointerEvent);
 }

@@ -43,7 +43,7 @@ public:
         NotifySessionEventFunc OnSessionEvent_;
     };
 
-    SceneSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback);
+    SceneSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback, std::map<uint64_t, sptr<Session>>& sessionMap);
     ~SceneSession() = default;
 
     WSError OnSessionEvent(SessionEvent event) override;

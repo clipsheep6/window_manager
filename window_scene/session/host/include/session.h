@@ -50,7 +50,7 @@ public:
 
 class Session : public SessionStub, public virtual RefBase {
 public:
-    explicit Session(const SessionInfo& info);
+    explicit Session(const SessionInfo& info, std::map<uint64_t, sptr<Session>>& sessionMap);
     ~Session();
 
     void SetPersistentId(uint64_t persistentId);
@@ -80,6 +80,7 @@ public:
     void NotifyConnect();
     void NotifyForeground();
     void NotifyBackground();
+    WSError NotifyDestroy();
 
     WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent);
@@ -101,6 +102,9 @@ public:
     void SetBackPressedListenser(const NotifyBackPressedFunc& func);
     WSError ProcessBackEvent(); // send back event to session_stage
     WSError RequestSessionBack() override; // receive back request from session_stage
+    std::vector<uint64_t>& GetDialogVector();
+    std::map<uint64_t,sptr<Session>> sessionMap_;
+};
 
 protected:
     void UpdateSessionState(SessionState state);
@@ -116,6 +120,9 @@ protected:
     SystemSessionConfig systemConfig_;
 
 private:
+    bool CheckDialogOnForeground();
+    void NotifyTouchDialogTarget();
+
     template<typename T>
     bool RegisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener);
     template<typename T>
@@ -148,6 +155,8 @@ private:
     sptr<IWindowEventChannel> windowEventChannel_ = nullptr;
 
     std::shared_ptr<Media::PixelMap> snapshot_;
-};
+    // mainwindow has its dialog persistentId vector
+    std::vector<uint64_t> dialogVec_;
+    
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_H

@@ -21,10 +21,11 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneSession" };
 }
 
-SceneSession::SceneSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback)
+SceneSession::SceneSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback, std::map<uint64_t, sptr<Session>>& sessionMap)
     : Session(info)
 {
     specificCallback_ = specificCallback;
+    sessionMap_ = sessionMap;
 }
 
 WSError SceneSession::OnSessionEvent(SessionEvent event)

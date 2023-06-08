@@ -31,6 +31,8 @@ const std::map<uint32_t, SessionStageStubFunc> SessionStageStub::stubFuncMap_{
         &SessionStageStub::HandleUpdateRect),
     std::make_pair(static_cast<uint32_t>(SessionStageMessage::TRANS_ID_HANDLE_BACK_EVENT),
         &SessionStageStub::HandleBackEventInner),
+        std::make_pair(static_cast<uint32_t>(SessionStageMessage::TRANS_ID_NOTIFY_DESTROY),
+    &SessionStageStub::HandleNotifyDestroy),
 };
 
 int SessionStageStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -74,6 +76,22 @@ int SessionStageStub::HandleBackEventInner(MessageParcel& data, MessageParcel& r
     WLOGFD("HandleBackEventInner!");
     WSError errCode = HandleBackEvent();
     reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleNotifyDestroy(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("Notify Destroy");
+    WSError errCode = NotifyDestroy();
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleNotifyTouchDialogTarget(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("Notify touch dialog target");
+    NotifyTouchDialogTarget();
+    // reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen
