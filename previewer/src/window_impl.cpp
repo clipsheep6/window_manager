@@ -291,33 +291,8 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
     // } else {
     //     uiContent->Initialize(this, contentInfo, storage);
     // }
-    // // make uiContent available after Initialize/Restore
     // uiContent_ = std::move(uiContent);
-    // // if (isIgnoreSafeAreaNeedNotify_) {
-    // //     uiContent_->SetIgnoreViewSafeArea(isIgnoreSafeArea_);
-    // // }
-    // // UpdateDecorEnable(true);
-
-    // if (state_ == WindowState::STATE_SHOWN) {
-    //     // UIContent may be nullptr when show window, need to notify again when window is shown
-    //     uiContent_->Foreground();
-    //     // UpdateTitleButtonVisibility();
-    //     Ace::ViewportConfig config;
-    //     Rect rect = GetRect();
-    //     config.SetSize(rect.width_, rect.height_);
-    //     config.SetPosition(rect.posX_, rect.posY_);
-    //     auto display = SingletonContainer::IsDestroyed() ? nullptr :
-    //         SingletonContainer::Get<DisplayManager>().GetDisplayById(property_->GetDisplayId());
-    //     if (display == nullptr) {
-    //         WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u", property_->GetDisplayId(),
-    //             property_->GetWindowId());
-    //         return WMError::WM_ERROR_NULLPTR;
-    //     }
-    //     float virtualPixelRatio = display->GetVirtualPixelRatio();
-    //     config.SetDensity(virtualPixelRatio);
-    //     uiContent_->UpdateViewportConfig(config, WindowSizeChangeReason::UNDEFINED, nullptr);
-    //     WLOGFD("notify uiContent window size change end");
-    // }
+    // UpdateViewportConfig();
     return WMError::WM_OK;
 }
 

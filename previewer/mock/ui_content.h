@@ -21,7 +21,7 @@
 #include <string>
 
 #include "viewport_config.h"
-#include "wm_common.h"
+// #include "wm_common.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
