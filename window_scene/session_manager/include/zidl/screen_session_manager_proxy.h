@@ -30,6 +30,8 @@ public:
     ~ScreenSessionManagerProxy() = default;
 
     virtual sptr<DisplayInfo> GetDefaultDisplayInfo() override;
+    virtual DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) override;
+    virtual DMError SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio) override;
 
     virtual DMError RegisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
         DisplayManagerAgentType type) override;

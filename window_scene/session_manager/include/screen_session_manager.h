@@ -25,6 +25,7 @@
 #include "session_display_power_controller.h"
 
 
+
 namespace OHOS::Rosen {
 class IScreenConnectionListener : public RefBase {
 public:
@@ -38,7 +39,14 @@ public:
 class RSInterfaces;
 
 class ScreenSessionManager : public ScreenSessionManagerStub {
+// using OnAbstractScreenConnectCb = std::function<void(sptr<AbstractScreen>)>;
+// using OnAbstractScreenChangeCb = std::function<void(sptr<AbstractScreen>, DisplayChangeEvent event)>;
 public:
+// struct AbstractScreenCallback : public RefBase {
+//         OnAbstractScreenConnectCb onConnect_;
+//         OnAbstractScreenConnectCb onDisconnect_;
+//         OnAbstractScreenChangeCb onChange_;
+//     };
     static ScreenSessionManager& GetInstance();
     ScreenSessionManager(const ScreenSessionManager&) = delete;
     ScreenSessionManager(ScreenSessionManager&&) = delete;
@@ -49,6 +57,9 @@ public:
     std::vector<ScreenId> GetAllScreenIds();
 
     sptr<DisplayInfo> GetDefaultDisplayInfo() override;
+    DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) override;
+    DMError SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio) override;
+    void NotifyScreenChanged(sptr<ScreenInfo> screenInfo, ScreenChangeEvent event) ;
 
     void RegisterScreenConnectionListener(sptr<IScreenConnectionListener>& screenConnectionListener);
     void UnregisterScreenConnectionListener(sptr<IScreenConnectionListener>& screenConnectionListener);
@@ -72,6 +83,8 @@ public:
     void RegisterDisplayChangeListener(sptr<IDisplayChangeListener> listener);
     bool NotifyDisplayPowerEvent(DisplayPowerEvent event, EventStatus status);
     bool NotifyDisplayStateChanged(DisplayId id, DisplayState state);
+    std::shared_ptr<AppExecFwk::EventHandler> controllerHandler_;
+    
 
 protected:
     ScreenSessionManager();
@@ -99,6 +112,7 @@ private:
 
     sptr<IDisplayChangeListener> displayChangeListener_;
     sptr<SessionDisplayPowerController> sessionDisplayPowerController_;
+    // sptr<AbstractScreenCallback> abstractScreenCallback_;
 };
 } // namespace OHOS::Rosen
 

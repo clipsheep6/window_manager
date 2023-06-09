@@ -22,7 +22,7 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "ScreenSession" };
 }
 
-ScreenSession::ScreenSession(ScreenId screenId, const ScreenProperty& property)
+ScreenSession::ScreenSession(ScreenId screenId, ScreenProperty& property)
     : screenId_(screenId), property_(property)
 {
     Rosen::RSDisplayNodeConfig config = { .screenId = screenId_ };
@@ -72,7 +72,21 @@ sptr<DisplayInfo> ScreenSession::ConvertToDisplayInfo()
     displayInfo->SetHeight(property_.GetBounds().rect_.GetHeight());
     displayInfo->SetScreenId(screenId_);
     displayInfo->SetDisplayId(screenId_);
-
+    displayInfo->SetRefreshRate(refreshRate_);
+    displayInfo->SetVirtualPixelRatio(virtualPixelRatio_);
+    displayInfo->SetXDpi(xDpi_);
+    displayInfo->SetYDpi(yDpi_);
+    displayInfo->SetDpi(density_);
+    displayInfo->SetRotation(rotation_);
+    displayInfo->Orientation(orientation_);
+    displayInfo->SetOffsetX(0.0f);
+    displayInfo->SetOffsetY(0.0f);
+    // displayInfo->SetDisplayState();
+    // displayInfo->SetWaterfallDisplayCompressionStatus();
+    // displayInfo->SetDisplayOrientation();
+    // displayInfo->SetDisplayStateChangeType();
+    // displayInfo->SetisDefaultVertical();
+    // displayInfo->SetAliveStatus();
     return displayInfo;
 }
 ScreenId ScreenSession::GetScreenId()
@@ -90,6 +104,28 @@ std::shared_ptr<RSDisplayNode> ScreenSession::GetDisplayNode() const
     return displayNode_;
 }
 
+ScreenId ScreenSession::GetId() const
+{
+    return screenId_;
+}
+
+ScreenState ScreenSession::GetScreenState() const
+{
+    return screenState_;
+}
+
+DMError ScreenSession::SetScreenActiveMode(uint32_t modeId)
+{
+    activeModeIdx_ = modeId;
+    return DMError::DM_OK;
+}
+
+void ScreenSession::SetVirtualPixelRatio(float virtualPixelRatio)
+{
+    property_.SetVirtualPixelRatio(virtualPixelRatio);
+}
+
+
 void ScreenSession::Connect()
 {
     screenState_ = ScreenState::CONNECTION;
@@ -105,4 +141,65 @@ void ScreenSession::Disconnect()
         listener->OnDisconnect();
     }
 }
+
+sptr<SupportedScreenModes> ScreenSession::GetActiveScreenMode() const
+{
+    if (activeIdx_ < 0 || activeIdx_ >= static_cast<int32_t>(modes_.size())) {
+        WLOGE("active mode index is wrong: %{public}d", activeIdx_);
+        return nullptr;
+    }
+    return modes_[activeIdx_];
+}
+
+ScreenSourceMode ScreenSession::GetSourceMode() const
+{
+  return ScreenSourceMode::SCREEN_ALONE;
+}
+
+void ScreenSession::FillScreenInfo(sptr<ScreenInfo> info) const
+{
+    if (info == nullptr) {
+        WLOGE("FillScreenInfo failed! info is nullptr");
+        return;
+    }
+    info->id_ = screenId_;
+    info->name_ = name_;
+    uint32_t width = 0;
+    uint32_t height = 0;
+    sptr<SupportedScreenModes> ScreenSessionModes = GetActiveScreenMode();
+    if (ScreenSessionModes != nullptr) {
+        height = ScreenSessionModes->height_;
+        width = ScreenSessionModes->width_;
+    }
+    float virtualPixelRatio = virtualPixelRatio_;
+    // "< 1e-6" means virtualPixelRatio is 0.
+    if (fabsf(virtualPixelRatio) < 1e-6) {
+        virtualPixelRatio = 1.0f;
+    }
+    ScreenSourceMode sourceMode = GetSourceMode();
+    info->virtualPixelRatio_ = virtualPixelRatio;
+    info->virtualHeight_ = height / virtualPixelRatio;
+    info->virtualWidth_ = width / virtualPixelRatio;
+    // info->lastParent_ = lastGroupDmsId_;
+    // info->parent_ = groupDmsId_;
+    // info->isScreenGroup_ = isScreenGroup_;
+    // info->rotation_ = rotation_;
+    // info->orientation_ = orientation_;
+    info->sourceMode_ = sourceMode;
+    // info->type_ = type_;
+    // info->modeId_ = activeIdx_;
+    // info->modes_ = modes_;
+}
+
+sptr<ScreenInfo> ScreenSession::ConvertToScreenInfo() const
+{
+    sptr<ScreenInfo> info = new(std::nothrow) ScreenInfo();
+    if (info == nullptr) {
+        return nullptr;
+    }
+    FillScreenInfo(info);
+    return info;
+}
+
+
 } // namespace OHOS::Rosen
