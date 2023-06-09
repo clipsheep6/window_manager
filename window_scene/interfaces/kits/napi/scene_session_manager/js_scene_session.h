@@ -51,6 +51,8 @@ private:
     void ProcessRaiseToTopRegister();
     void ProcessBackPressedRegister();
     void ProcessTerminateSessionRegister();
+    void ProcessSessionFocusableChangeRegister();
+    void ProcessClickRegister();
 
     void PendingSessionActivation(const SessionInfo& info);
     void OnSessionStateChange(const SessionState& state);
@@ -60,6 +62,10 @@ private:
     void OnRaiseToTop();
     void OnBackPressed();
     void TerminateSession(const SessionInfo& info);
+    void ProcessSessionFocusableChangeRegister();
+    void ProcessClickRegister();
+    void OnSessionFocusableChange(bool isFocusable);
+    void OnClick();
 
     NativeEngine& engine_;
     wptr<SceneSession> weakSession_ = nullptr;
