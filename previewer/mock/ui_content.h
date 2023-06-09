@@ -21,9 +21,6 @@
 #include <string>
 #include "viewport_config.h"
 
-#include "viewport_config.h"
-// #include "wm_common.h"
-
 namespace OHOS {
 namespace AbilityRuntime {
 class Context;
@@ -93,9 +90,6 @@ public:
     virtual void UpdateWindowMode(OHOS::Rosen::WindowMode mode) = 0;
     virtual void HideWindowTitleButton(bool hideSplit, bool hideMaximize, bool hideMinimize) = 0;
     virtual void UpdateViewportConfig(const ViewportConfig& config) = 0;
-
-    virtual void UpdateViewportConfig(const ViewportConfig& config/*, OHOS::Rosen::WindowSizeChangeReason reason,
-        const std::shared_ptr<OHOS::Rosen::RSTransaction>& rsTransaction = nullptr*/) = 0;
 
     // Window color
     virtual uint32_t GetBackgroundColor() = 0;
