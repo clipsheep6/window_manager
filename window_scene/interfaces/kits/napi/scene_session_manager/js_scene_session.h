@@ -50,6 +50,7 @@ private:
     void ProcessSessionRectChangeRegister();
     void ProcessRaiseToTopRegister();
     void ProcessBackPressedRegister();
+    void ProcessTerminateSessionRegister();
     void ProcessSessionFocusableChangeRegister();
     void ProcessClickRegister();
 
@@ -60,6 +61,9 @@ private:
     void OnSessionRectChange(const WSRect& rect);
     void OnRaiseToTop();
     void OnBackPressed();
+    void TerminateSession(const SessionInfo& info);
+    void ProcessSessionFocusableChangeRegister();
+    void ProcessClickRegister();
     void OnSessionFocusableChange(bool isFocusable);
     void OnClick();
 
