@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,12 +15,9 @@
 
 #include "vsync_station.h"
 
-#include <unistd.h>
-
 #include "transaction/rs_interfaces.h"
 #include "window_manager_hilog.h"
-
-// using namespace FRAME_TRACE;
+#include <unistd.h>
 
 namespace OHOS {
 namespace Rosen {
@@ -68,7 +65,6 @@ void VsyncStation::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallb
             vsyncHandler_->PostTask(vsyncTimeoutCallback_, VSYNC_TIME_OUT_TASK, VSYNC_TIME_OUT_MILLISECONDS);
         }
     }
-    // WindowFrameTraceImpl::GetInstance()->VsyncStartFrameTrace();
     receiver_->RequestNextVSync(frameCallback_);
 }
 
@@ -99,7 +95,6 @@ void VsyncStation::OnVsync(int64_t timestamp, void* client)
     auto vsyncClient = static_cast<VsyncStation*>(client);
     if (vsyncClient) {
         vsyncClient->VsyncCallbackInner(timestamp);
-        // WindowFrameTraceImpl::GetInstance()->VsyncStopFrameTrace();
     } else {
         WLOGFE("VsyncClient is null");
     }

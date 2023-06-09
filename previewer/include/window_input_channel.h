@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,10 +17,8 @@
 
 #include <mutex>
 #include <i_input_event_consumer.h>
-// #include "adapter/preview/external/multimodalinput/key_event.h"
 #include <key_event.h>
 #include "refbase.h"
-// #include "vsync_station.h"
 #include "window.h"
 
 namespace OHOS {

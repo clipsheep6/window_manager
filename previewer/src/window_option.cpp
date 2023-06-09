@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -83,32 +83,26 @@ void WindowOption::SetSystemBarProperty(WindowType type, const SystemBarProperty
         sysBarPropMap_[type] = property;
     }
 }
-// 2
 Rect WindowOption::GetWindowRect() const
 {
     return windowRect_;
 }
-// 3
 WindowType WindowOption::GetWindowType() const
 {
     return type_;
 }
-// 4
 WindowMode WindowOption::GetWindowMode() const
 {
     return mode_;
 }
-// 5
 bool WindowOption::GetFocusable() const
 {
     return focusable_;
 }
-// 6
 bool WindowOption::GetTouchable() const
 {
     return touchable_;
 }
-// 7
 DisplayId WindowOption::GetDisplayId() const
 {
     return displayId_;
@@ -119,12 +113,10 @@ uint32_t WindowOption::GetParentId() const
     return parentId_;
 }
 
-//1
 const std::string& WindowOption::GetWindowName() const
 {
     return windowName_;
 }
-//8
 uint32_t WindowOption::GetWindowFlags() const
 {
     return flags_;
@@ -165,12 +157,10 @@ bool WindowOption::GetMainHandlerAvailable() const
 {
     return isMainHandlerAvailable_;
 }
-//
 const PointInfo& WindowOption::GetHitOffset() const
 {
     return hitOffset_;
 }
-//
 const std::unordered_map<WindowType, SystemBarProperty>& WindowOption::GetSystemBarProperty() const
 {
     return sysBarPropMap_;
@@ -180,7 +170,6 @@ void WindowOption::SetKeepScreenOn(bool keepScreenOn)
 {
     keepScreenOn_ = keepScreenOn;
 }
-//
 bool WindowOption::IsKeepScreenOn() const
 {
     return keepScreenOn_;
@@ -190,7 +179,6 @@ void WindowOption::SetTurnScreenOn(bool turnScreenOn)
 {
     turnScreenOn_ = turnScreenOn;
 }
-//
 bool WindowOption::IsTurnScreenOn() const
 {
     return turnScreenOn_;
@@ -200,7 +188,6 @@ void WindowOption::SetBrightness(float brightness)
 {
     brightness_ = brightness;
 }
-//
 float WindowOption::GetBrightness() const
 {
     return brightness_;
@@ -210,12 +197,10 @@ void WindowOption::SetCallingWindow(uint32_t windowId)
 {
     callingWindow_ = windowId;
 }
-//8
 uint32_t WindowOption::GetCallingWindow() const
 {
     return callingWindow_;
 }
-//
 Orientation WindowOption::GetRequestedOrientation() const
 {
     return requestedOrientation_;

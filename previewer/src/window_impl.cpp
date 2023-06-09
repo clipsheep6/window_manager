@@ -32,28 +32,6 @@ static int constructorCnt = 0;
 static int deConstructorCnt = 0;
 WindowImpl::WindowImpl(const sptr<WindowOption>& option)
 {
-    // property_ = new (std::nothrow) WindowProperty();
-    // property_->SetWindowName(option->GetWindowName());
-    // property_->SetRequestRect(option->GetWindowRect());
-    // property_->SetWindowType(option->GetWindowType());
-    // property_->SetWindowMode(option->GetWindowMode());
-    // property_->SetFullScreen(option->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN);
-    // property_->SetFocusable(option->GetFocusable());
-    // property_->SetTouchable(option->GetTouchable());
-    // property_->SetDisplayId(option->GetDisplayId());
-    // property_->SetCallingWindow(option->GetCallingWindow());
-    // property_->SetWindowFlags(option->GetWindowFlags());
-    // property_->SetHitOffset(option->GetHitOffset());
-    // property_->SetRequestedOrientation(option->GetRequestedOrientation());
-    // property_->SetTurnScreenOn(option->IsTurnScreenOn());
-    // property_->SetKeepScreenOn(option->IsKeepScreenOn());
-    // property_->SetBrightness(option->GetBrightness());
-    // auto& sysBarPropMap = option->GetSystemBarProperty();
-    // for (auto it : sysBarPropMap) {
-    //     property_->SetSystemBarProperty(it.first, it.second);
-    // }
-    // name_ = option->GetWindowName();
-
     surfaceNode_ = CreateSurfaceNode("preview_surface", option->GetWindowType());
 
     WLOGFI("WindowImpl constructorCnt: %{public}d name: %{public}s",
@@ -106,27 +84,11 @@ sptr<Window> WindowImpl::GetTopWindowWithId(uint32_t mainWinId)
 sptr<Window> WindowImpl::GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context)
 {
     return nullptr;
-    // if (windowMap_.empty()) {
-    //     WLOGFE("Please create mainWindow First!");
-    //     return nullptr;
-    // }
-    // uint32_t mainWinId = INVALID_WINDOW_ID;
-    // WLOGFI("GetTopWindowfinal MainWinId:%{public}u!", mainWinId);
-    // if (mainWinId == INVALID_WINDOW_ID) {
-    //     WLOGFE("Cannot find topWindow!");
-    //     return nullptr;
-    // }
-    // return GetTopWindowWithId(mainWinId);
 }
 
 std::vector<sptr<Window>> WindowImpl::GetSubWindow(uint32_t parentId)
 {
     return std::vector<sptr<Window>>();
-    // if (subWindowMap_.find(parentId) == subWindowMap_.end()) {
-    //     WLOGFE("Cannot parentWindow with id: %{public}u!", parentId);
-    //     return std::vector<sptr<Window>>();
-    // }
-    // return std::vector<sptr<Window>>(subWindowMap_[parentId].begin(), subWindowMap_[parentId].end());
 }
 
 void WindowImpl::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
@@ -353,12 +315,6 @@ WMError WindowImpl::SetFullScreen(bool status)
 WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRuntime::Context>& context)
 {
     WLOGFI("[Client] Window [name:%{public}s] Create", name_.c_str());
-    // check window name, same window names are forbidden
-
-    // if (surfaceNode_) {
-    //     surfaceNode_->SetWindowId(windowId);
-    // }
-    
     return WMError::WM_OK;
 }
 
@@ -907,7 +863,7 @@ void WindowImpl::UpdateViewportConfig()
     config.SetPosition(0, 0);
     config.SetDensity(density_);
     config.SetOrientation(orientation_);
-    uiContent_->UpdateViewportConfig(config/*, WindowSizeChangeReason::UNDEFINED, nullptr*/);
+    uiContent_->UpdateViewportConfig(config);
 }
 
 void WindowImpl::SetOrientation(Orientation orientation)

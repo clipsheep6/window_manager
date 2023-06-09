@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 
 #include <thread>
 #include <event_handler.h>
+#include "vsync_station.h"
 #include "window_manager_hilog.h"
 #include "wm_common_inner.h"
 
@@ -72,7 +73,6 @@ void InputEventListener::OnInputEvent(std::shared_ptr<MMI::PointerEvent> pointer
 
 void InputEventListener::OnInputEvent(std::shared_ptr<MMI::AxisEvent> axisEvent) const
 {
-
 }
 
 void InputTransferStation::AddInputWindow(const sptr<Window>& window)
@@ -108,8 +108,8 @@ void InputTransferStation::AddInputWindow(const sptr<Window>& window)
                 eventHandler_ = std::make_shared<AppExecFwk::EventHandler>(
                     AppExecFwk::EventRunner::Create(INPUT_AND_VSYNC_THREAD));
             }
-            // VsyncStation::GetInstance().SetIsMainHandlerAvailable(false);
-            // VsyncStation::GetInstance().SetVsyncEventHandler(eventHandler_);
+            VsyncStation::GetInstance().SetIsMainHandlerAvailable(false);
+            VsyncStation::GetInstance().SetVsyncEventHandler(eventHandler_);
         }
         MMI::InputManager::GetInstance()->SetWindowInputEventConsumer(listener, eventHandler_);
         inputListener_ = listener;
