@@ -38,6 +38,7 @@ WMError SessionManagerAgentController::UnregisterWindowManagerAgent(const sptr<I
 
 void SessionManagerAgentController::UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing)
 {
+    WLOGFD("accessTokenId:%{public}u isShowing:%{public}d", accessTokenId, isShowing);
     for (auto& agent : smAgentContainer_.GetAgentsByType(
         WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_CAMERA_FLOAT)) {
         agent->UpdateCameraFloatWindowStatus(accessTokenId, isShowing);
