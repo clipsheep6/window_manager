@@ -23,6 +23,7 @@
 #include "window_helper.h"
 #include "window_manager_hilog.h"
 #include "wm_common.h"
+#include "session_manager_agent_controller.h"
 
 #include "window_session_impl.h"
 
@@ -96,7 +97,7 @@ WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
     } else { // system window
         if (WindowHelper::IsAppFloatingWindow(GetType())) {
             property_->SetParentPersistentId(GetFloatingWindowParentId());
-            WLOGFI("WindowSessionImpl set SetParentPersistentId: %{public}" PRIu64 "", property_->GetParentPersistentId());
+            WLOGFI("property_ set parentPersistentId: %{public}" PRIu64 "", property_->GetParentPersistentId());
         }
         SessionManager::GetInstance().CreateAndConnectSpecificSession(iSessionStage, eventChannel, surfaceNode_,
             property_, persistentId, session);
@@ -200,6 +201,9 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
     if (hostSession_ == nullptr) {
         return WMError::WM_ERROR_NULLPTR;
     }
+    if (WindowHelper::IsAppFloatingWindow(property_->GetWindowType())) {
+        SessionManagerAgentController::GetInstance().UpdateCameraFloatWindowStatus(property_->GetAccessTokenId(), true);
+    }
 
     WSError ret = hostSession_->Foreground();
     // delete after replace WSError with WMError
@@ -239,6 +243,9 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
             return static_cast<WMError>(ret);
         }
         ret = hostSession_->Background();
+        if (WindowHelper::IsAppFloatingWindow(property_->GetWindowType())) {
+            SessionManagerAgentController::GetInstance().UpdateCameraFloatWindowStatus(property_->GetAccessTokenId(), false);
+        }
     }
 
     // delete after replace WSError with WMError
@@ -380,6 +387,31 @@ WMError WindowSceneSessionImpl::Resize(uint32_t width, uint32_t height)
     WLOGFD("Id:%{public}" PRIu64 " Resize %{public}u %{public}u", property_->GetPersistentId(), width, height);
     if (IsWindowSessionInvalid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+
+    // Float camera window has a special limit:
+    // if display sw <= 600dp, portrait: min width = display sw * 30%, landscape: min width = sw * 50%
+    // if display sw > 600dp, portrait: min width = display sw * 12%, landscape: min width = sw * 30%
+    const auto& displayRect = DisplayGroupInfo::GetInstance().GetDisplayRect(property_->GetDisplayId());
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_FLOAT_CAMERA) {
+        uint32_t smallWidth = displayRect.height_ <= displayRect.width_ ? displayRect.height_ : displayRect.width_;
+        float hwRatio = static_cast<float>(displayRect.height_) / static_cast<float>(displayRect.width_);
+        uint32_t minWidth;
+        if (smallWidth <= static_cast<uint32_t>(600 * vpr)) { // sw <= 600dp
+            if (displayRect.width_ <= displayRect.height_) {
+                minWidth = static_cast<uint32_t>(smallWidth * 0.3);
+            } else {
+                minWidth = static_cast<uint32_t>(smallWidth * 0.5);
+            }
+        } else {
+            if (displayRect.width_ <= displayRect.height_) {
+                minWidth = static_cast<uint32_t>(smallWidth * 0.12);
+            } else {
+                minWidth = static_cast<uint32_t>(smallWidth * 0.3);
+            }
+        }
+        width = minWidth >= width ? minWidth : width;
+        height = static_cast<uint32_t>(width * hwRatio);
     }
     const auto& rect = property_->GetWindowRect();
     Rect newRect = { rect.posX_, rect.posY_, width, height }; // must keep w/h

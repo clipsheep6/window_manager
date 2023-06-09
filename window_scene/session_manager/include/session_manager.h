@@ -23,6 +23,8 @@
 #include "session_manager_service/include/session_manager_service_interface.h"
 #include "wm_single_instance.h"
 #include "zidl/scene_session_manager_interface.h"
+#include <rs_iwindow_animation_finished_callback.h>
+#include "zidl/window_manager_interface.h"
 #include "screenlock_manager_interface.h"
 
 namespace OHOS::Rosen {

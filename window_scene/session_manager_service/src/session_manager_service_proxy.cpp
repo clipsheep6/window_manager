@@ -15,6 +15,7 @@
 
 #include "session_manager_service_proxy.h"
 #include "window_manager_hilog.h"
+#include "zidl/window_manager_interface.h"
 
 namespace OHOS::Rosen {
 namespace {

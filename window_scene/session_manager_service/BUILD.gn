@@ -21,6 +21,9 @@ config("session_manager_service_public_config") {
     "${window_base_path}/interfaces/innerkits/wm",
 
     # for window_manager_hilog
+    "${window_base_path}/wmserver/include/zidl",
+    "${window_base_path}/interfaces/innerkits/include",
+    "${window_base_path}/wmserver/include",
     "${window_base_path}/utils/include",
     "${window_base_path}/window_scene/session_manager/include",
     "${window_base_path}/window_scene/session_manager_service/include",
@@ -57,6 +60,7 @@ ohos_shared_library("session_manager_service") {
     "eventhandler:libeventhandler",
     "hilog_native:libhilog",
     "ipc:ipc_core",
+    "graphic_standard:window_animation",
   ]
 
   innerapi_tags = [ "platformsdk" ]

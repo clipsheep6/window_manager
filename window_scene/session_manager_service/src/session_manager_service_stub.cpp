@@ -19,6 +19,7 @@
 
 #include "marshalling_helper.h"
 #include "window_manager_hilog.h"
+#include <rs_iwindow_animation_finished_callback.h>
 
 namespace OHOS::Rosen {
 namespace {

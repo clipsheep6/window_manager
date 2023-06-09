@@ -21,6 +21,8 @@ config("libwm_private_config") {
     "include",
     "../wmserver/include",
     "../wmserver/include/zidl",
+    "${window_base_path}/window_scene/interfaces/innerkits/include",
+    "${window_base_path}/window_scene/session_manager/src",
     "//foundation/arkui/napi",  # because of ability_context.h
   ]
 }
@@ -83,6 +85,7 @@ ohos_static_library("libwm_static") {
     "ability_runtime:ability_manager",
     "ace_engine:ace_uicontent",
     "c_utils:utils",
+    "display_manager:displaymgr",
     "eventhandler:libeventhandler",
     "graphic_standard:window_animation",
     "hilog_native:libhilog",

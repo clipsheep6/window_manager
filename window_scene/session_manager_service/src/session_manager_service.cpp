@@ -21,6 +21,7 @@
 #include "window_manager_hilog.h"
 
 #include "screen_session_manager.h"
+#include <rs_iwindow_animation_finished_callback.h>
 
 namespace OHOS::Rosen {
 namespace {
