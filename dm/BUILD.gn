@@ -22,9 +22,6 @@ config("libdm_private_config") {
     "${window_base_path}/window_scene/session_manager/include",
     "${window_base_path}/window_scene/session_manager_service/include",
     "${window_base_path}/window_scene/interfaces/innerkits/include",
-    "${window_base_path}/wmserver/include/zidl",
-    "${window_base_path}/interfaces/innerkits/include",
-    "${window_base_path}/wmserver/include",
   ]
 }
 
@@ -68,7 +65,6 @@ ohos_static_library("libdm_static") {
     "ipc:ipc_single",
     "multimedia_image_framework:image_native",
     "samgr:samgr_proxy",
-    "graphic_standard:window_animation",
   ]
 
   part_name = "window_manager"
@@ -108,7 +104,6 @@ ohos_shared_library("libdm") {
     "ipc:ipc_single",
     "multimedia_image_framework:image_native",
     "samgr:samgr_proxy",
-    "graphic_standard:window_animation",
   ]
 
   part_name = "window_manager"

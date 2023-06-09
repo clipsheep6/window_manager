@@ -20,7 +20,6 @@
 
 #include "singleton_delegator.h"
 #include "session_manager_service_stub.h"
-#include <rs_iwindow_animation_finished_callback.h>
 
 namespace OHOS::Rosen {
 class SessionManagerService : public SessionManagerServiceStub {

@@ -206,7 +206,6 @@ bool WindowAdapter::InitSSMProxy()
             WLOGFE("Failed to get system ability mgr.");
             return false;
         }
-
         
         SessionManager& sessionManager = SessionManager::GetInstance();
         windowManagerServiceProxy_ = sessionManager.GetSceneSessionManagerProxy();

@@ -21,7 +21,6 @@
 #include <iremote_stub.h>
 #include "interfaces/include/ws_common.h"
 #include "session/host/include/session.h"
-#include <rs_iwindow_animation_finished_callback.h>
 
 namespace OHOS::Rosen {
 class SessionManagerServiceStub : public IRemoteStub<ISessionManagerService> {

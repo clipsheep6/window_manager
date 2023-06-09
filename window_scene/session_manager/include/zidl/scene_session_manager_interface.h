@@ -23,6 +23,14 @@
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/container/include/zidl/window_event_channel_interface.h"
 #include "session/host/include/session.h"
+#include <rs_iwindow_animation_finished_callback.h>
+#include <ui/rs_surface_node.h>
+
+#include "pixel_map.h"
+#include "window_property.h"
+#include "window_transition_info.h"
+#include "zidl/window_interface.h"
+#include "zidl/window_manager_agent_interface.h"
 
 namespace OHOS::Rosen {
 class RSSurfaceNode;

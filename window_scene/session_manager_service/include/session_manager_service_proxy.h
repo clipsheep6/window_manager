@@ -21,7 +21,6 @@
 #include <iremote_proxy.h>
 
 #include "singleton_delegator.h"
-#include "zidl/window_manager_interface.h"
 
 namespace OHOS::Rosen {
 class SessionManagerServiceProxy : public IRemoteProxy<ISessionManagerService> {
