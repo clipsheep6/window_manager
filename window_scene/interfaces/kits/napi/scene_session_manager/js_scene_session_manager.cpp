@@ -142,7 +142,7 @@ void JsSceneSessionManager::Finalizer(NativeEngine* engine, void* data, void* hi
 
 NativeValue* JsSceneSessionManager::GetRootSceneSession(NativeEngine* engine, NativeCallbackInfo* info)
 {
-    WLOGI("[NAPI]GetRootSceneSession");
+    WLOGI("HYH_TEST [NAPI]GetRootSceneSession");
     JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(engine, info);
     return (me != nullptr) ? me->OnGetRootSceneSession(*engine, *info) : nullptr;
 }
@@ -239,7 +239,7 @@ NativeValue* JsSceneSessionManager::OnProcessBackEvent(NativeEngine& engine, Nat
 
 NativeValue* JsSceneSessionManager::OnGetRootSceneSession(NativeEngine& engine, NativeCallbackInfo& info)
 {
-    WLOGFI("[NAPI]OnGetRootSceneSession");
+    WLOGFI("HYH_TEST [NAPI]OnGetRootSceneSession");
     sptr<RootSceneSession> rootSceneSession = SceneSessionManager::GetInstance().GetRootSceneSession();
     if (rootSceneSession == nullptr) {
         engine.Throw(

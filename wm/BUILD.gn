@@ -30,12 +30,16 @@ config("libwm_public_config") {
     "../interfaces/innerkits/wm",
     "../utils/include",
     "../window_scene",
+    "../window_scene/intention_event/include",
   ]
 }
 
 ## Build libwm_static.a
 ohos_static_library("libwm_static") {
-  include_dirs = [ "../utils/include" ]
+  include_dirs = [
+    "../utils/include",
+    "//foundation/arkui/ace_engine/frameworks"
+  ]
 
   sources = [
     "../wmserver/src/zidl/window_manager_proxy.cpp",
@@ -138,7 +142,10 @@ ohos_static_library("libwm_static") {
 
 ## Build libwm.so
 ohos_shared_library("libwm") {
-  include_dirs = [ "../utils/include" ]
+  include_dirs = [
+    "../utils/include",
+    "//foundation/arkui/ace_engine/frameworks"
+  ]
 
   sources = [
     "../wmserver/src/zidl/window_manager_proxy.cpp",
@@ -170,12 +177,13 @@ ohos_shared_library("libwm") {
     "../resources/config/build:coverage_flags",
   ]
 
-  public_configs = [ ":libwm_public_config" ]
+  public_configs = [":libwm_public_config",]
 
   deps = [
     "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/session:scene_session",
     "${window_base_path}/window_scene/session_manager:session_manager",
+    "${window_base_path}/window_scene/intention_event:libintention_event",
     "../dm:libdm",
     "../utils:libwmutil",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",

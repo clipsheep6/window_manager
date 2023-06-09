@@ -61,6 +61,20 @@ void SceneSessionManager::LoadWindowSceneXml()
         WLOGFE("Load window scene xml failed");
     }
 }
+uint64_t SceneSessionManager::GetFocusedSessionId()
+{
+    return focusedSessionId_;
+}
+
+WSError SceneSessionManager::SetFocusedSessionId(uint64_t persistentId)
+{
+    if (focusedSessionId_ == persistentId) {
+        WLOGFW("Focuse scene not change, id:{public}d"PRlu64, persistentId);
+        return WSError::WS_DO_NOTHING;
+    }
+    focusedSessionId_ = persistentId;
+    return WSError::WS_OK;
+}
 
 void SceneSessionManager::ConfigWindowSceneXml()
 {
@@ -246,6 +260,7 @@ bool SceneSessionManager::ConfigAppWindowShadow(const WindowSceneConfig::ConfigI
 
 sptr<RootSceneSession> SceneSessionManager::GetRootSceneSession()
 {
+    WLOGI("HYH_TEST [NAPI]SceneSessionManager::GetRootSceneSession");
     auto task = [this]() {
         if (rootSceneSession_ != nullptr) {
             return rootSceneSession_;

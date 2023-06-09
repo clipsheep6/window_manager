@@ -40,6 +40,8 @@ public:
     WSError RequestSceneSessionActivation(const sptr<SceneSession>& sceneSession);
     WSError RequestSceneSessionBackground(const sptr<SceneSession>& sceneSession);
     WSError RequestSceneSessionDestruction(const sptr<SceneSession>& sceneSession);
+    uint64_t GetFocusedSessionId();
+    WSError SetFocusedSessionId(uint64_t persistentId);
 
     sptr<RootSceneSession> GetRootSceneSession();
     sptr<SceneSession> GetSceneSession(uint64_t persistentId);
@@ -71,6 +73,7 @@ private:
     AppWindowSceneConfig appWindowSceneConfig_;
     SystemSessionConfig systemConfig_;
     uint64_t activeSessionId_;
+    uint64_t focusedSessionId_ {INVALID_SESSION_ID};
 };
 } // namespace OHOS::Rosen
 

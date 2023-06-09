@@ -121,7 +121,7 @@ NativeValue* JsRootSceneSession::OnRegisterCallback(NativeEngine& engine, Native
 
 NativeValue* JsRootSceneSession::OnLoadContent(NativeEngine& engine, NativeCallbackInfo& info)
 {
-    WLOGD("[NAPI]OnLoadContent");
+    WLOGI("HYH_TEST [NAPI]OnLoadContent");
     if (info.argc < 2) { // 2: params num
         WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
         engine.Throw(CreateJsError(engine, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),

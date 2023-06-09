@@ -20,10 +20,6 @@
 
 #include "window.h"
 
-namespace OHOS::AppExecFwk {
-class EventHandler;
-} // namespace OHOS::AppExecFwk
-
 namespace OHOS::Ace {
 class UIContent;
 } // namespace OHOS::Ace
@@ -41,9 +37,6 @@ public:
 
     void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback) override;
 
-    void ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& inputEvent) override;
-    void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent) override;
-
     void SetDisplayDensity(float density)
     {
         density_ = density;
@@ -55,10 +48,8 @@ public:
     }
 
 private:
-    void RegisterInputEventListener();
 
     std::unique_ptr<Ace::UIContent> uiContent_;
-    std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
 
     std::recursive_mutex mutex_;
 
