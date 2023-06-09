@@ -59,6 +59,7 @@ public:
     void SetCreateSpecificSessionListener(const NotifyCreateSpecificSessionFunc& func);
     const AppWindowSceneConfig& GetWindowSceneConfig() const;
     WSError ProcessBackEvent();
+    sptr<SceneSession> FindSceneSessionByPersistentId(uint64_t id);
 
     void GetStartPage(const SessionInfo& sessionInfo, std::string& path, uint32_t& bgColor);
 
