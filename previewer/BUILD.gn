@@ -61,6 +61,8 @@ ohos_shared_library("previewer_window") {
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_" + hilog_platform,
     "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "${graphic_base_path}/graphic_2d/rosen/modules/platform:ipc_core",
+    "//foundation/arkui/ace_engine/interfaces/inner_api/ace:ace_uicontent",
+    # "//foundation/arkui/ace_engine/adapter/preview/entrance:preview_entrance_source",
   ]
 
   cflags = [ "-std=c++11" ]

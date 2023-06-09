@@ -238,8 +238,30 @@ void WindowImpl::OnNewWant(const AAFwk::Want& want)
 WMError WindowImpl::SetUIContent(const std::string& contentInfo,
     NativeEngine* engine, NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability)
 {
+    WLOGFD("SetUIContent: %{public}s", contentInfo.c_str());
+    if (uiContent_) {
+        uiContent_->Destroy();
+    }
+    std::unique_ptr<Ace::UIContent> uiContent;
+    if (ability != nullptr) {
+        uiContent = Ace::UIContent::Create(ability);
+    } else {
+        uiContent = Ace::UIContent::Create(context_.get(), engine);
+    }
+    if (uiContent == nullptr) {
+        WLOGFE("fail to SetUIContent id: %{public}u", property_->GetWindowId());
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    if (isdistributed) {
+        uiContent->Restore(this, contentInfo, storage);
+    } else {
+        uiContent->Initialize(this, contentInfo, storage);
+    }
+    uiContent_ = std::move(uiContent);
+    UpdateViewportConfig();
     return WMError::WM_OK;
 }
+
 
 Ace::UIContent* WindowImpl::GetUIContent() const
 {
@@ -304,6 +326,9 @@ WMError WindowImpl::BindDialogTarget(sptr<IRemoteObject> targetToken)
 
 WMError WindowImpl::Destroy()
 {
+    if (uiContent_) {
+        uiContent_->Destroy();
+    }
     return WMError::WM_OK;
 }
 
