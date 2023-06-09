@@ -16,8 +16,13 @@ import("../../windowmanager_aafwk.gni")
 
 config("session_manager_private_config") {
   include_dirs = [
+    "${window_base_path}/wmserver/include/zidl",
+    "${window_base_path}/interfaces/innerkits/include",
+    "${window_base_path}/wmserver/include",
     "${window_base_path}/interfaces/innerkits/wm",
     "${window_base_path}/wm/include",
+    "${window_base_path}/wm/interfaces/innerkits/wm",
+    "${window_base_path}/previewer/mock",
   ]
 }
 
@@ -36,6 +41,8 @@ config("session_manager_public_config") {
 
     # for window_manager_hilog
     "${window_base_path}/utils/include",
+    "${window_base_path}/wm/include",
+    "${window_base_path}/wm/include/zidl",
 
     # for screenlock_manager_interface
     "${screenlock_mgr_path}/services/include",
@@ -62,6 +69,7 @@ ohos_shared_library("scene_session_manager") {
     "${window_base_path}/utils:libwmutil",
     "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/session:scene_session",
+    "${window_base_path}/wmserver:libwms",
     "//third_party/libxml2:libxml2",
   ]
 
@@ -76,6 +84,7 @@ ohos_shared_library("scene_session_manager") {
     "c_utils:utils",
     "config_policy:configpolicy_util",
     "eventhandler:libeventhandler",
+    "graphic_standard:window_animation",
     "hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
@@ -107,6 +116,7 @@ ohos_shared_library("screen_session_manager") {
     "${window_base_path}/utils:libwmutil",
     "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/session:screen_session",
+    "${window_base_path}/wmserver:libwms",
   ]
 
   external_deps = [
@@ -131,6 +141,7 @@ ohos_shared_library("session_manager") {
   sources = [
     "../session_manager_service/src/session_manager_service_proxy.cpp",
     "src/session_manager.cpp",
+    "src/session_manager_agent_controller.cpp",
     "src/zidl/scene_session_manager_proxy.cpp",
     "src/zidl/screen_session_manager_proxy.cpp",
   ]
@@ -157,6 +168,8 @@ ohos_shared_library("session_manager") {
     "eventhandler:libeventhandler",
     "hilog_native:libhilog",
     "ipc:ipc_single",
+    "graphic_standard:window_animation",
+    "eventhandler:libeventhandler",
   ]
 
   innerapi_tags = [ "platformsdk_indirect" ]
