@@ -36,58 +36,58 @@ WindowInputChannel::~WindowInputChannel()
 
 void WindowInputChannel::HandleKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
-    if (keyEvent == nullptr) {
-        WLOGFE("keyEvent is nullptr");
-        return;
-    }
-    WLOGFD("Receive key event, Id: %{public}u, keyCode: %{public}d",
-        window_->GetWindowId(), keyEvent->GetKeyCode());
-    if (window_->GetType() == WindowType::WINDOW_TYPE_DIALOG) {
-        if (keyEvent->GetAgentWindowId() != keyEvent->GetTargetWindowId()) {
-            window_->NotifyTouchDialogTarget();
-            keyEvent->MarkProcessed();
-            return;
-        }
-        if (keyEvent->GetKeyCode() == MMI::KeyEvent::KEYCODE_BACK) {
-            keyEvent->MarkProcessed();
-            return;
-        }
-    }
+    // if (keyEvent == nullptr) {
+    //     WLOGFE("keyEvent is nullptr");
+    //     return;
+    // }
+    // // WLOGFD("Receive key event, Id: %{public}u, keyCode: %{public}d",
+    // //     window_->GetWindowId(), keyEvent->GetKeyCode());
+    // if (window_->GetType() == WindowType::WINDOW_TYPE_DIALOG) {
+    //     if (keyEvent->GetAgentWindowId() != keyEvent->GetTargetWindowId()) {
+    //         window_->NotifyTouchDialogTarget();
+    //         keyEvent->MarkProcessed();
+    //         return;
+    //     }
+    //     // if (keyEvent->GetKeyCode() == MMI::KeyEvent::KEYCODE_BACK) {
+    //     //     keyEvent->MarkProcessed();
+    //     //     return;
+    //     // }
+    // }
 
-    bool inputMethodHasProcessed = false;
-#ifdef IMF_ENABLE
-    bool isKeyboardEvent = IsKeyboardEvent(keyEvent);
-    if (isKeyboardEvent) {
-        WLOGD("dispatch keyEvent to input method");
-        inputMethodHasProcessed = MiscServices::InputMethodController::GetInstance()->DispatchKeyEvent(keyEvent);
-    }
-#endif // IMF_ENABLE
-    if (!inputMethodHasProcessed) {
-        WLOGD("dispatch keyEvent to ACE");
-        window_->ConsumeKeyEvent(keyEvent);
-    }
+//     bool inputMethodHasProcessed = false;
+// #ifdef IMF_ENABLE
+//     bool isKeyboardEvent = IsKeyboardEvent(keyEvent);
+//     if (isKeyboardEvent) {
+//         WLOGD("dispatch keyEvent to input method");
+//         inputMethodHasProcessed = MiscServices::InputMethodController::GetInstance()->DispatchKeyEvent(keyEvent);
+//     }
+// #endif // IMF_ENABLE
+//     if (!inputMethodHasProcessed) {
+//         WLOGD("dispatch keyEvent to ACE");
+//         window_->ConsumeKeyEvent(keyEvent);
+//     }
 }
 
 void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
-    if (pointerEvent == nullptr) {
-        WLOGFE("pointerEvent is nullptr");
-        return;
-    }
-    WLOGFD("Receive pointer event, Id: %{public}u, action: %{public}d",
-        window_->GetWindowId(), pointerEvent->GetPointerAction());
-    if ((window_->GetType() == WindowType::WINDOW_TYPE_DIALOG) &&
-        (pointerEvent->GetAgentWindowId() != pointerEvent->GetTargetWindowId())) {
-        if (pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_DOWN ||
-            pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
-            window_->NotifyTouchDialogTarget();
-        }
-        pointerEvent->MarkProcessed();
-        return;
-    }
-    WLOGFD("Dispatch move event, windowId: %{public}u, action: %{public}d",
-        window_->GetWindowId(), pointerEvent->GetPointerAction());
-    window_->ConsumePointerEvent(pointerEvent);
+    // if (pointerEvent == nullptr) {
+    //     WLOGFE("pointerEvent is nullptr");
+    //     return;
+    // }
+    // WLOGFD("Receive pointer event, Id: %{public}u, action: %{public}d",
+    //     window_->GetWindowId(), pointerEvent->GetPointerAction());
+    // if ((window_->GetType() == WindowType::WINDOW_TYPE_DIALOG) &&
+    //     (pointerEvent->GetAgentWindowId() != pointerEvent->GetTargetWindowId())) {
+    //     if (pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_DOWN ||
+    //         pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
+    //         window_->NotifyTouchDialogTarget();
+    //     }
+    //     pointerEvent->MarkProcessed();
+    //     return;
+    // }
+    // WLOGFD("Dispatch move event, windowId: %{public}u, action: %{public}d",
+    //     window_->GetWindowId(), pointerEvent->GetPointerAction());
+    // window_->ConsumePointerEvent(pointerEvent);
 }
 
 void WindowInputChannel::Destroy()
@@ -99,12 +99,13 @@ void WindowInputChannel::Destroy()
 
 bool WindowInputChannel::IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const
 {
-    int32_t keyCode = keyEvent->GetKeyCode();
-    bool isKeyFN = (keyCode == MMI::KeyEvent::KEYCODE_FN);
-    bool isKeyBack = (keyCode == MMI::KeyEvent::KEYCODE_BACK);
-    bool isKeyboard = (keyCode >= MMI::KeyEvent::KEYCODE_0 && keyCode <= MMI::KeyEvent::KEYCODE_NUMPAD_RIGHT_PAREN);
-    WLOGI("isKeyFN: %{public}d, isKeyboard: %{public}d", isKeyFN, isKeyboard);
-    return (isKeyFN || isKeyboard || isKeyBack);
+    return false;
+    // int32_t keyCode = keyEvent->GetKeyCode();
+    // bool isKeyFN = (keyCode == MMI::KeyEvent::KEYCODE_FN);
+    // bool isKeyBack = (keyCode == MMI::KeyEvent::KEYCODE_BACK);
+    // bool isKeyboard = (keyCode >= MMI::KeyEvent::KEYCODE_0 && keyCode <= MMI::KeyEvent::KEYCODE_NUMPAD_RIGHT_PAREN);
+    // WLOGI("isKeyFN: %{public}d, isKeyboard: %{public}d", isKeyFN, isKeyboard);
+    // return (isKeyFN || isKeyboard || isKeyBack);
 }
 }
 }

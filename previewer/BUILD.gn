@@ -36,7 +36,6 @@ ohos_shared_library("previewer_window") {
   libs = []
 
   sources = [
-    "../utils/src/window_property.cpp",
     "../utils/src/window_transition_info.cpp",
     "../utils/src/wm_math.cpp",
     "src/window.cpp",
@@ -50,6 +49,8 @@ ohos_shared_library("previewer_window") {
 
   include_dirs = [
     "include",
+    "${arkui_path}/ace_engine/adapter/preview/external/multimodalinput",
+    "${arkui_path}/ace_engine/",
     "mock",
     "../utils/include",
   ]

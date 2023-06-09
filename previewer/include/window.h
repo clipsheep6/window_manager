@@ -204,7 +204,6 @@ public:
     virtual WMError SetAPPWindowLabel(const std::string& label) = 0;
     virtual WMError SetAPPWindowIcon(const std::shared_ptr<Media::PixelMap>& icon) = 0;
     virtual WMError DisableAppWindowDecor() = 0;
-    virtual bool IsDecorEnable() const = 0;
     virtual WMError Minimize() = 0;
     virtual WMError Maximize() = 0;
     virtual WMError Recover() = 0;

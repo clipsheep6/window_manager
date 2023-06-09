@@ -32,10 +32,11 @@ static int constructorCnt = 0;
 static int deConstructorCnt = 0;
 WindowImpl::WindowImpl(const sptr<WindowOption>& option)
 {
+    name_ = "main_window";
     surfaceNode_ = CreateSurfaceNode("preview_surface", option->GetWindowType());
 
-    WLOGFI("WindowImpl constructorCnt: %{public}d name: %{public}s",
-        ++constructorCnt, property_->GetWindowName().c_str());
+    WLOGFI("WindowImpl constructorCnt: %{public}d",
+        ++constructorCnt);
 }
 
 WindowImpl::~WindowImpl()
@@ -106,27 +107,27 @@ std::shared_ptr<RSSurfaceNode> WindowImpl::GetSurfaceNode() const
 
 Rect WindowImpl::GetRect() const
 {
-    return property_->GetWindowRect();
+    return Rect{0,0,0,0};
 }
 
 Rect WindowImpl::GetRequestRect() const
 {
-    return property_->GetRequestRect();
+    return Rect{0,0,0,0};
 }
 
 WindowType WindowImpl::GetType() const
 {
-    return property_->GetWindowType();
+    return WindowType::WINDOW_TYPE_APP_MAIN_WINDOW;
 }
 
 WindowMode WindowImpl::GetMode() const
 {
-    return property_->GetWindowMode();
+    return WindowMode::WINDOW_MODE_UNDEFINED;
 }
 
 float WindowImpl::GetAlpha() const
 {
-    return property_->GetAlpha();
+    return 0.0;
 }
 
 WindowState WindowImpl::GetWindowState() const
@@ -141,7 +142,7 @@ WMError WindowImpl::SetFocusable(bool isFocusable)
 
 bool WindowImpl::GetFocusable() const
 {
-    return property_->GetFocusable();
+    return false;
 }
 
 WMError WindowImpl::SetTouchable(bool isTouchable)
@@ -151,7 +152,7 @@ WMError WindowImpl::SetTouchable(bool isTouchable)
 
 bool WindowImpl::GetTouchable() const
 {
-    return property_->GetTouchable();
+    return false;
 }
 
 const std::string& WindowImpl::GetWindowName() const
@@ -161,17 +162,17 @@ const std::string& WindowImpl::GetWindowName() const
 
 uint32_t WindowImpl::GetWindowId() const
 {
-    return property_->GetWindowId();
+    return 0;
 }
 
 uint32_t WindowImpl::GetWindowFlags() const
 {
-    return property_->GetWindowFlags();
+    return 0;
 }
 
 uint32_t WindowImpl::GetRequestModeSupportInfo() const
 {
-    return property_->GetRequestModeSupportInfo();
+    return 0;
 }
 
 bool WindowImpl::IsMainHandlerAvailable() const
@@ -181,8 +182,8 @@ bool WindowImpl::IsMainHandlerAvailable() const
 
 SystemBarProperty WindowImpl::GetSystemBarPropertyByType(WindowType type) const
 {
-    auto curProperties = property_->GetSystemBarProperty();
-    return curProperties[type];
+    
+    return SystemBarProperty();
 }
 
 WMError WindowImpl::GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea)
@@ -212,7 +213,7 @@ WMError WindowImpl::SetTransform(const Transform& trans)
 
 const Transform& WindowImpl::GetTransform() const
 {
-    return property_->GetTransform();
+    return transform_;
 }
 
 WMError WindowImpl::AddWindowFlag(WindowFlag flag)
@@ -249,7 +250,7 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
         uiContent = Ace::UIContent::Create(context_.get(), engine);
     }
     if (uiContent == nullptr) {
-        WLOGFE("fail to SetUIContent id: %{public}u", property_->GetWindowId());
+        WLOGFE("fail to SetUIContent");
         return WMError::WM_ERROR_NULLPTR;
     }
     if (isdistributed) {
@@ -369,7 +370,7 @@ WMError WindowImpl::SetKeepScreenOn(bool keepScreenOn)
 
 bool WindowImpl::IsKeepScreenOn() const
 {
-    return property_->IsKeepScreenOn();
+    return false;
 }
 
 WMError WindowImpl::SetTurnScreenOn(bool turnScreenOn)
@@ -379,7 +380,7 @@ WMError WindowImpl::SetTurnScreenOn(bool turnScreenOn)
 
 bool WindowImpl::IsTurnScreenOn() const
 {
-    return property_->IsTurnScreenOn();
+    return false;
 }
 
 WMError WindowImpl::SetBackgroundColor(const std::string& color)
@@ -404,7 +405,7 @@ WMError WindowImpl::SetBrightness(float brightness)
 
 float WindowImpl::GetBrightness() const
 {
-    return property_->GetBrightness();
+    return 0.0;
 }
 
 WMError WindowImpl::SetCallingWindow(uint32_t windowId)
@@ -419,12 +420,11 @@ WMError WindowImpl::SetPrivacyMode(bool isPrivacyMode)
 
 bool WindowImpl::IsPrivacyMode() const
 {
-    return property_->GetPrivacyMode();
+    return false;
 }
 
 void WindowImpl::SetSystemPrivacyMode(bool isSystemPrivacyMode)
 {
-    return;
 }
 
 WMError WindowImpl::SetSnapshotSkip(bool isSkip)
@@ -435,11 +435,6 @@ WMError WindowImpl::SetSnapshotSkip(bool isSkip)
 WMError WindowImpl::DisableAppWindowDecor()
 {
     return WMError::WM_OK;
-}
-
-bool WindowImpl::IsDecorEnable() const
-{
-    return property_->GetDecorEnable();
 }
 
 WMError WindowImpl::Maximize()
@@ -621,7 +616,7 @@ void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
 
     if (GetType() == WindowType::WINDOW_TYPE_APP_COMPONENT) {
         WLOGFI("DispatchKeyEvent: %{public}u", GetWindowId());
-        keyEvent->MarkProcessed();
+        // keyEvent->MarkProcessed();
         return;
     }
 }
@@ -629,12 +624,8 @@ void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
 void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
     // If windowRect transformed, transform event back to its origin position
-    if (property_) {
-        property_->UpdatePointerEvent(pointerEvent);
-    }
-
     if (IsPointerEventConsumed()) {
-        pointerEvent->MarkProcessed();
+        // pointerEvent->MarkProcessed();
         return;
     }
 
@@ -683,23 +674,11 @@ bool WindowImpl::IsFullScreen() const
 
 void WindowImpl::SetRequestedOrientation(Orientation orientation)
 {
-    if (property_->GetRequestedOrientation() == orientation) {
-        return;
-    }
-    property_->SetRequestedOrientation(orientation);
-    if (state_ == WindowState::STATE_SHOWN) {
-        UpdateProperty(PropertyChangeAction::ACTION_UPDATE_ORIENTATION);
-    }
-}
-
-WMError WindowImpl::UpdateProperty(PropertyChangeAction action)
-{
-    return WMError::WM_OK;
 }
 
 Orientation WindowImpl::GetRequestedOrientation()
 {
-    return property_->GetRequestedOrientation();
+    return Orientation::UNSPECIFIED;
 }
 
 WMError WindowImpl::SetTouchHotAreas(const std::vector<Rect>& rects)
@@ -708,7 +687,6 @@ WMError WindowImpl::SetTouchHotAreas(const std::vector<Rect>& rects)
 }
 void WindowImpl::GetRequestedTouchHotAreas(std::vector<Rect>& rects) const
 {
-    property_->GetTouchHotAreas(rects);
 }
 
 WMError WindowImpl::SetAPPWindowLabel(const std::string& label)
@@ -812,49 +790,35 @@ void WindowImpl::SetNeedDefaultAnimation(bool needDefaultAnimation)
 
 bool WindowImpl::IsPointerEventConsumed()
 {
-    return moveDragProperty_->startDragFlag_ || moveDragProperty_->startMoveFlag_;
+    return false;
 }
 
 void WindowImpl::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
-    if (windowSystemConfig_.isStretchable_ && GetMode() == WindowMode::WINDOW_MODE_FLOATING) {
-        UpdatePointerEventForStretchableWindow(pointerEvent);
-    }
+    // if (windowSystemConfig_.isStretchable_ && GetMode() == WindowMode::WINDOW_MODE_FLOATING) {
+    //     UpdatePointerEventForStretchableWindow(pointerEvent);
+    // }
 
-    std::shared_ptr<InputEventListener> inputEventConsumer;
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        inputEventConsumer = inputEventConsumer_;
-    }
-    if (inputEventConsumer != nullptr) {
-        WLOGFD("Transfer pointer event to inputEventConsumer");
-        (void)inputEventConsumer->OnInputEvent(pointerEvent);
-    } else if (uiContent_ != nullptr) {
-        WLOGFD("Transfer pointer event to uiContent");
-        (void)uiContent_->ProcessPointerEvent(pointerEvent);
-    } else {
-        WLOGFW("pointerEvent is not consumed, windowId: %{public}u", GetWindowId());
-        pointerEvent->MarkProcessed();
-    }
+    // std::shared_ptr<InputEventListener> inputEventConsumer;
+    // {
+    //     std::lock_guard<std::recursive_mutex> lock(mutex_);
+    //     inputEventConsumer = inputEventConsumer_;
+    // }
+    // if (inputEventConsumer != nullptr) {
+    //     WLOGFD("Transfer pointer event to inputEventConsumer");
+    //     (void)inputEventConsumer->OnInputEvent(pointerEvent);
+    // } else if (uiContent_ != nullptr) {
+    //     WLOGFD("Transfer pointer event to uiContent");
+    //     (void)uiContent_->ProcessPointerEvent(pointerEvent);
+    // } else {
+    //     WLOGFW("pointerEvent is not consumed, windowId: %{public}u", GetWindowId());
+    //     pointerEvent->MarkProcessed();
+    // }
 }
 
 
 void WindowImpl::UpdatePointerEventForStretchableWindow(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
-    MMI::PointerEvent::PointerItem pointerItem;
-    if (!pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem)) {
-        WLOGFW("Point item is invalid");
-        return;
-    }
-    const Rect& originRect = property_->GetOriginRect();
-    PointInfo originPos =
-        WindowHelper::CalculateOriginPosition(originRect, GetRect(),
-        { pointerItem.GetDisplayX(), pointerItem.GetDisplayY() });
-    pointerItem.SetDisplayX(originPos.x);
-    pointerItem.SetDisplayY(originPos.y);
-    pointerItem.SetWindowX(originPos.x - originRect.posX_);
-    pointerItem.SetWindowY(originPos.y - originRect.posY_);
-    pointerEvent->UpdatePointerItem(pointerEvent->GetPointerId(), pointerItem);
 }
 
 void WindowImpl::UpdateViewportConfig()
