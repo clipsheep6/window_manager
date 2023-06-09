@@ -32,12 +32,12 @@ WindowScene::~WindowScene()
 WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRuntime::Context>& context,
     sptr<IWindowLifeCycle>& listener, sptr<WindowOption> option)
 {
-    WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
+    WLOGFD("WindowScene with window session!");
     displayId_ = displayId;
     if (option == nullptr) {
         option = new(std::nothrow) WindowOption();
         if (option == nullptr) {
-            WLOGFW("alloc WindowOption failed");
+            WLOGFE("alloc WindowOption failed");
             return WMError::WM_ERROR_NULLPTR;
         }
     }
@@ -46,12 +46,10 @@ WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRunt
 
     mainWindow_ = Window::Create(GenerateMainWindowName(context), option, context);
     if (mainWindow_ == nullptr) {
-        WLOGFI("mainWindow_ is NULL");
+        WLOGFE("mainWindow_ is NULL");
         return WMError::WM_ERROR_NULLPTR;
     }
-    WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
     mainWindow_->RegisterLifeCycleListener(listener);
-    WLOGFI("WindowScene::Init mlx %{public}d", __LINE__);
     return WMError::WM_OK;
 }
 

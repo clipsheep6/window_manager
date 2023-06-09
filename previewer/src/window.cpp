@@ -28,18 +28,18 @@ sptr<Window> Window::Create(const std::string& windowName, sptr<WindowOption>& o
     if (option == nullptr) {
         option = new(std::nothrow) WindowOption();
         if (option == nullptr) {
-            WLOGFW("alloc WindowOption failed");
+            WLOGFE("alloc WindowOption failed");
             return nullptr;
         }
     }
     sptr<WindowImpl> windowImpl = new(std::nothrow) WindowImpl(option);
     if (windowImpl == nullptr) {
-        WLOGFW("alloc WindowImpl failed");
+        WLOGFE("alloc WindowImpl failed");
         return nullptr;
     }
     WMError error = windowImpl->Create(option->GetParentId(), context);
     if (error != WMError::WM_OK) {
-        WLOGFW("error unequal to WMError::WM_OK");
+        WLOGFE("error unequal to WMError::WM_OK");
         errCode = error;
         return nullptr;
     }

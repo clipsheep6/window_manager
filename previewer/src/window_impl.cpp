@@ -34,14 +34,14 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
 {
     surfaceNode_ = CreateSurfaceNode("preview_surface", option->GetWindowType());
 
-    WLOGFI("WindowImpl constructorCnt: %{public}d name: %{public}s",
-        ++constructorCnt, property_->GetWindowName().c_str());
+    // WLOGFI("WindowImpl constructorCnt: %{public}d name: %{public}s",
+    //     ++constructorCnt, property_->GetWindowName().c_str());
 }
 
 WindowImpl::~WindowImpl()
 {
-    WLOGFI("windowName: %{public}s, windowId: %{public}d, deConstructorCnt: %{public}d",
-        GetWindowName().c_str(), GetWindowId(), ++deConstructorCnt);
+    // WLOGFI("windowName: %{public}s, windowId: %{public}d, deConstructorCnt: %{public}d",
+    //     GetWindowName().c_str(), GetWindowId(), ++deConstructorCnt);
     Destroy();
 }
 

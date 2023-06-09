@@ -304,8 +304,8 @@ static void LoadContentTask(std::shared_ptr<NativeReference> contentStorage, std
     } else {
         task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(ret), "Window load content failed"));
     }
-    WLOGI("[NAPI]Window [%{public}u, %{public}s] load content end, ret = %{public}d",
-        weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), ret);
+    // WLOGI("[NAPI]Window [%{public}u, %{public}s] load content end, ret = %{public}d",
+    //     weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), ret);
     return;
 }
 
