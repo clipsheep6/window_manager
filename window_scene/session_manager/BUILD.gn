@@ -160,7 +160,6 @@ ohos_shared_library("session_manager") {
     "ipc:ipc_single",
     "graphic_standard:window_animation",
     "eventhandler:libeventhandler",
-    "hilog_native:libhilog",
   ]
 
   innerapi_tags = [ "platformsdk_indirect" ]
