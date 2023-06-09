@@ -61,7 +61,5 @@ public:
     virtual void Disconnect() = 0;
     virtual void OnNewWant(const AAFwk::Want& want) = 0;
 };
-
 } // namespace OHOS::Ace::NG
-
 #endif // FOUNDATION_ACE_INTERFACE_INNER_API_UI_WINDOW_H

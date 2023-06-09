@@ -79,5 +79,4 @@ static constexpr OHOS::HiviewDFX::HiLogLabel LOG_LABEL = {LOG_CORE, AMS_LOG_DOMA
 #define HILOG_INFO(...)
 #define HILOG_DEBUG(...)
 #endif  // CONFIG_HILOG
-
 #endif  // HILOG_WRAPPER_H

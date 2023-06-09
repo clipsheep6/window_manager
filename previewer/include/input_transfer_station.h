@@ -59,6 +59,4 @@ public:
 };
 } // namespace Rosen
 } // namespace OHOS
-
-
 #endif // OHOS_INPUT_TRANSFER_STATION_H

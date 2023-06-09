@@ -53,5 +53,4 @@ public:
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
-
 #endif  // #ifndef BASE_EVENTHANDLER_INTERFACES_INNER_API_EVENT_RUNNER_H
