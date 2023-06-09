@@ -16,15 +16,27 @@
 #include "session/screen/include/screen_session.h"
 
 #include "window_manager_hilog.h"
+#include <transaction/rs_interfaces.h>
 
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "ScreenSession" };
 }
 
+ScreenSession::ScreenSession()
+{}
+
 ScreenSession::ScreenSession(ScreenId screenId, const ScreenProperty& property)
     : screenId_(screenId), property_(property)
 {
+    Rosen::RSDisplayNodeConfig config = { .screenId = screenId_ };
+    displayNode_ = Rosen::RSDisplayNode::Create(config);
+}
+
+ScreenSession::ScreenSession(const std::string& name, ScreenId smsId, ScreenId rsId)
+    : name_(name), screenId_(smsId), rsId_(rsId)
+{
+    (void)rsId_;
     Rosen::RSDisplayNodeConfig config = { .screenId = screenId_ };
     displayNode_ = Rosen::RSDisplayNode::Create(config);
 }
@@ -72,9 +84,24 @@ sptr<DisplayInfo> ScreenSession::ConvertToDisplayInfo()
     displayInfo->SetHeight(property_.GetBounds().rect_.GetHeight());
     displayInfo->SetScreenId(screenId_);
     displayInfo->SetDisplayId(screenId_);
+    displayInfo->SetRefreshRate(60);     // use 60 temporarily, depended on property set
 
     return displayInfo;
 }
+
+DMError ScreenSession::GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut>& colorGamuts)
+{
+    auto ret = RSInterfaces::GetInstance().GetScreenSupportedColorGamuts(rsId_, colorGamuts);
+    if (ret != StatusCode::SUCCESS) {
+        WLOGE("SCB: ScreenSession::GetScreenSupportedColorGamuts fail! rsId %{public}" PRIu64"", rsId_);
+        return DMError::DM_ERROR_RENDER_SERVICE_FAILED;
+    }
+    WLOGI("SCB: ScreenSession::GetScreenSupportedColorGamuts ok! rsId %{public}" PRIu64", size %{public}u",
+        rsId_, static_cast<uint32_t>(colorGamuts.size()));
+
+    return DMError::DM_OK;
+}
+
 ScreenId ScreenSession::GetScreenId()
 {
     return screenId_;
@@ -105,4 +132,299 @@ void ScreenSession::Disconnect()
         listener->OnDisconnect();
     }
 }
+
+sptr<SupportedScreenModes> ScreenSession::GetActiveScreenMode() const
+{
+    if (activeIdx_ < 0 || activeIdx_ >= static_cast<int32_t>(modes_.size())) {
+        WLOGE("SCB: ScreenSession::GetActiveScreenMode active mode index is wrong: %{public}d", activeIdx_);
+        return nullptr;
+    }
+    return modes_[activeIdx_];
+}
+
+Rotation ScreenSession::CalcRotation(Orientation orientation) const
+{
+    sptr<SupportedScreenModes> info = GetActiveScreenMode();
+    if (info == nullptr) {
+        return Rotation::ROTATION_0;
+    }
+    // vertical: phone(Plugin screen); horizontal: pad & external screen
+    bool isVerticalScreen = info->width_ < info->height_;
+    switch (orientation) {
+        case Orientation::UNSPECIFIED: {
+            return Rotation::ROTATION_0;
+        }
+        case Orientation::VERTICAL: {
+            return isVerticalScreen ? Rotation::ROTATION_0 : Rotation::ROTATION_90;
+        }
+        case Orientation::HORIZONTAL: {
+            return isVerticalScreen ? Rotation::ROTATION_90 : Rotation::ROTATION_0;
+        }
+        case Orientation::REVERSE_VERTICAL: {
+            return isVerticalScreen ? Rotation::ROTATION_180 : Rotation::ROTATION_270;
+        }
+        case Orientation::REVERSE_HORIZONTAL: {
+            return isVerticalScreen ? Rotation::ROTATION_270 : Rotation::ROTATION_180;
+        }
+        default: {
+            WLOGE("unknown orientation %{public}u", orientation);
+            return Rotation::ROTATION_0;
+        }
+    }
+}
+
+sptr<ScreenInfo> ScreenSession::ConvertToScreenInfo() const
+{
+    sptr<ScreenInfo> info = new(std::nothrow) ScreenInfo();
+    if (info == nullptr) {
+        return nullptr;
+    }
+    FillScreenInfo(info);
+    return info;
+}
+
+void ScreenSession::FillScreenInfo(sptr<ScreenInfo> info) const
+{
+    if (info == nullptr) {
+        WLOGE("FillScreenInfo failed! info is nullptr");
+        return;
+    }
+    info->id_ = screenId_;
+    info->name_ = name_;
+    uint32_t width = 0;
+    uint32_t height = 0;
+    sptr<SupportedScreenModes> ScreenSessionModes = GetActiveScreenMode();
+    if (ScreenSessionModes != nullptr) {
+        height = ScreenSessionModes->height_;
+        width = ScreenSessionModes->width_;
+    }
+    float virtualPixelRatio = virtualPixelRatio_;
+    // "< 1e-set6" means virtualPixelRatio is 0.
+    if (fabsf(virtualPixelRatio) < 1e-6) {
+        virtualPixelRatio = 1.0f;
+    }
+    info->virtualPixelRatio_ = virtualPixelRatio;
+    info->virtualHeight_ = height / virtualPixelRatio;
+    info->virtualWidth_ = width / virtualPixelRatio;
+    info->lastParent_ = lastGroupSmsId_;
+    info->parent_ = groupSmsId_;
+    info->isScreenGroup_ = isScreenGroup_;
+    info->type_ = type_;
+    info->modeId_ = activeIdx_;
+    info->modes_ = modes_;
+}
+
+bool ScreenSession::SetOrientation(Orientation orientation)
+{
+    orientation_ = orientation;
+    return true;
+}
+
+void ScreenSession::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startPoint)
+{
+    if (displayNode_ != nullptr) {
+        displayNode_->SetDisplayNodeMirrorConfig(config);
+    } else {
+        std::shared_ptr<RSDisplayNode> rsDisplayNode = RSDisplayNode::Create(config);
+        if (rsDisplayNode == nullptr) {
+            WLOGE("fail to add child. create rsDisplayNode fail!");
+            return;
+        }
+        displayNode_ = rsDisplayNode;
+    }
+    WLOGFI("SetDisplayOffset: posX:%{public}d, posY:%{public}d", startPoint.posX_, startPoint.posY_);
+    displayNode_->SetDisplayOffset(startPoint.posX_, startPoint.posY_);
+    uint32_t width = 0;
+    uint32_t height = 0;
+    sptr<SupportedScreenModes> abstractScreenModes = GetActiveScreenMode();
+    if (abstractScreenModes != nullptr) {
+        height = abstractScreenModes->height_;
+        width = abstractScreenModes->width_;
+    }
+    RSScreenType screenType;
+    auto ret = RSInterfaces::GetInstance().GetScreenType(rsId_, screenType);
+    if (ret == StatusCode::SUCCESS && screenType == RSScreenType::VIRTUAL_TYPE_SCREEN) {
+        displayNode_->SetSecurityDisplay(true);
+        WLOGFI("virtualScreen SetSecurityDisplay success");
+    }
+    // If setDisplayOffset is not valid for SetFrame/SetBounds
+    displayNode_->SetFrame(0, 0, width, height);
+    displayNode_->SetBounds(0, 0, width, height);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->FlushImplicitTransaction();
+    }
+}
+
+ScreenSessionGroup::ScreenSessionGroup(ScreenId dmsId, ScreenId rsId,
+    std::string name, ScreenCombination combination) : combination_(combination)
+{
+    name_ = name;
+    screenId_ = dmsId;
+    rsId_ = rsId;
+    type_ = ScreenType::UNDEFINED;
+    isScreenGroup_ = true;
+}
+
+ScreenSessionGroup::~ScreenSessionGroup()
+{
+    displayNode_ = nullptr;
+    screenSessionMap_.clear();
+}
+
+bool ScreenSessionGroup::GetRSDisplayNodeConfig(sptr<ScreenSession>& dmsScreen, struct RSDisplayNodeConfig& config,
+                                                sptr<ScreenSession> defaultScreenSession)
+{
+    if (dmsScreen == nullptr) {
+        WLOGE("dmsScreen is nullptr.");
+        return false;
+    }
+    config = { dmsScreen->rsId_ };
+    switch (combination_) {
+        case ScreenCombination::SCREEN_ALONE:
+            [[fallthrough]];
+        case ScreenCombination::SCREEN_EXPAND:
+            break;
+        case ScreenCombination::SCREEN_MIRROR: {
+            if (GetChildCount() == 0 || mirrorScreenId_ == dmsScreen->screenId_) {
+                WLOGI("AddChild, SCREEN_MIRROR, config is not mirror");
+                break;
+            }
+            std::shared_ptr<RSDisplayNode> displayNode = defaultScreenSession->displayNode_;
+            if (displayNode == nullptr) {
+                WLOGFE("AddChild fail, displayNode is nullptr, cannot get DisplayNode");
+                break;
+            }
+            NodeId nodeId = displayNode->GetId();
+            WLOGI("AddChild, mirrorScreenId_:%{public}" PRIu64", rsId_:%{public}" PRIu64", nodeId:%{public}" PRIu64"",
+                mirrorScreenId_, dmsScreen->rsId_, nodeId);
+            config = {dmsScreen->rsId_, true, nodeId};
+            break;
+        }
+        default:
+            WLOGE("fail to add child. invalid group combination:%{public}u", combination_);
+            return false;
+    }
+    return true;
+}
+
+bool ScreenSessionGroup::AddChild(sptr<ScreenSession>& smsScreen, Point& startPoint,
+                                  sptr<ScreenSession> defaultScreenSession)
+{
+    if (smsScreen == nullptr) {
+        WLOGE("AddChild, smsScreen is nullptr.");
+        return false;
+    }
+    ScreenId screenId = smsScreen->screenId_;
+    auto iter = screenSessionMap_.find(screenId);
+    if (iter != screenSessionMap_.end()) {
+        WLOGE("AddChild, screenSessionMap_ has smsScreen:%{public}" PRIu64"", screenId);
+        return false;
+    }
+    struct RSDisplayNodeConfig config;
+    if (!GetRSDisplayNodeConfig(smsScreen, config, defaultScreenSession)) {
+        return false;
+    }
+    smsScreen->InitRSDisplayNode(config, startPoint);
+    smsScreen->lastGroupSmsId_ = smsScreen->groupSmsId_;
+    smsScreen->groupSmsId_ = screenId_;
+    screenSessionMap_.insert(std::make_pair(screenId, std::make_pair(smsScreen, startPoint)));
+    return true;
+}
+
+bool ScreenSessionGroup::AddChildren(std::vector<sptr<ScreenSession>>& smsScreens, std::vector<Point>& startPoints)
+{
+    size_t size = smsScreens.size();
+    if (size != startPoints.size()) {
+        WLOGE("AddChildren, unequal size.");
+        return false;
+    }
+    bool res = true;
+    for (size_t i = 0; i < size; i++) {
+        res = AddChild(smsScreens[i], startPoints[i], nullptr) && res;
+    }
+    return res;
+}
+
+bool ScreenSessionGroup::RemoveChild(sptr<ScreenSession>& smsScreen)
+{
+    if (smsScreen == nullptr) {
+        WLOGE("RemoveChild, smsScreen is nullptr.");
+        return false;
+    }
+    ScreenId screenId = smsScreen->screenId_;
+    smsScreen->lastGroupSmsId_ = smsScreen->groupSmsId_;
+    smsScreen->groupSmsId_ = SCREEN_ID_INVALID;
+    if (smsScreen->displayNode_ != nullptr) {
+        smsScreen->displayNode_->SetDisplayOffset(0, 0);
+        smsScreen->displayNode_->RemoveFromTree();
+        auto transactionProxy = RSTransactionProxy::GetInstance();
+        if (transactionProxy != nullptr) {
+            transactionProxy->FlushImplicitTransaction();
+        }
+        smsScreen->displayNode_ = nullptr;
+    }
+    return screenSessionMap_.erase(screenId);
+}
+
+bool ScreenSessionGroup::HasChild(ScreenId childScreen) const
+{
+    return screenSessionMap_.find(childScreen) != screenSessionMap_.end();
+}
+
+std::vector<sptr<ScreenSession>> ScreenSessionGroup::GetChildren() const
+{
+    std::vector<sptr<ScreenSession>> res;
+    for (auto iter = screenSessionMap_.begin(); iter != screenSessionMap_.end(); iter++) {
+        res.push_back(iter->second.first);
+    }
+    return res;
+}
+
+std::vector<Point> ScreenSessionGroup::GetChildrenPosition() const
+{
+    std::vector<Point> res;
+    for (auto iter = screenSessionMap_.begin(); iter != screenSessionMap_.end(); iter++) {
+        res.push_back(iter->second.second);
+    }
+    return res;
+}
+
+Point ScreenSessionGroup::GetChildPosition(ScreenId screenId) const
+{
+    Point point;
+    auto iter = screenSessionMap_.find(screenId);
+    if (iter != screenSessionMap_.end()) {
+        point = iter->second.second;
+    }
+    return point;
+}
+
+size_t ScreenSessionGroup::GetChildCount() const
+{
+    return screenSessionMap_.size();
+}
+
+ScreenCombination ScreenSessionGroup::GetScreenCombination() const
+{
+    return combination_;
+}
+
+sptr<ScreenGroupInfo> ScreenSessionGroup::ConvertToScreenGroupInfo() const
+{
+    sptr<ScreenGroupInfo> screenGroupInfo = new(std::nothrow) ScreenGroupInfo();
+    if (screenGroupInfo == nullptr) {
+        return nullptr;
+    }
+    FillScreenInfo(screenGroupInfo);
+    screenGroupInfo->combination_ = combination_;
+    for (auto iter = screenSessionMap_.begin(); iter != screenSessionMap_.end(); iter++) {
+        screenGroupInfo->children_.push_back(iter->first);
+    }
+    auto positions = GetChildrenPosition();
+    screenGroupInfo->position_.insert(screenGroupInfo->position_.end(), positions.begin(), positions.end());
+    return screenGroupInfo;
+}
+
+
 } // namespace OHOS::Rosen
