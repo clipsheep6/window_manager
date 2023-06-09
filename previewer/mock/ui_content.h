@@ -19,12 +19,13 @@
 #include <map>
 #include <memory>
 #include <string>
+#include "viewport_config.h"
 
 namespace OHOS {
 namespace AbilityRuntime {
 class Context;
 }
-    
+
 namespace AppExecFwk {
 class Configuration;
 class Ability;
@@ -88,6 +89,7 @@ public:
     virtual void UpdateConfiguration(const std::shared_ptr<OHOS::AppExecFwk::Configuration>& config) = 0;
     virtual void UpdateWindowMode(OHOS::Rosen::WindowMode mode) = 0;
     virtual void HideWindowTitleButton(bool hideSplit, bool hideMaximize, bool hideMinimize) = 0;
+    virtual void UpdateViewportConfig(const ViewportConfig& config) = 0;
 
     // Window color
     virtual uint32_t GetBackgroundColor() = 0;
