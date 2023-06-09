@@ -23,6 +23,7 @@
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/container/include/zidl/window_event_channel_interface.h"
 #include "session/host/include/session.h"
+#include "zidl/window_manager_interface.h"
 #include <rs_iwindow_animation_finished_callback.h>
 #include <ui/rs_surface_node.h>
 
