@@ -253,7 +253,7 @@ sptr<RootSceneSession> SceneSessionManager::GetRootSceneSession()
             return sptr<RootSceneSession>(nullptr);
         }
         sptr<ISession> iSession(rootSceneSession_);
-        AAFwk::AbilityManagerClient::GetInstance()->SetRootSceneSession(iSession);
+        AAFwk::AbilityManagerClient::GetInstance()->SetRootSceneSession(iSession->AsObject());
         return rootSceneSession_;
     };
 
