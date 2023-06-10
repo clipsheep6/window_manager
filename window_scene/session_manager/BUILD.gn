@@ -58,6 +58,7 @@ ohos_shared_library("scene_session_manager") {
     "src/window_scene_config.cpp",
     "src/zidl/scene_session_manager_proxy.cpp",
     "src/zidl/scene_session_manager_stub.cpp",
+    "src/session_manager_agent_controller.cpp",
   ]
 
   configs = [ ":session_manager_private_config" ]
@@ -82,13 +83,13 @@ ohos_shared_library("scene_session_manager") {
     "c_utils:utils",
     "config_policy:configpolicy_util",
     "eventhandler:libeventhandler",
-    "graphic_standard:window_animation",
     "hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
     "resource_management:global_resmgr",
     "samgr:samgr_proxy",
     "window_manager:libwm",
+    "graphic_standard:window_animation",
   ]
 
   innerapi_tags = [ "platformsdk" ]
@@ -132,7 +133,6 @@ ohos_shared_library("session_manager") {
   sources = [
     "../session_manager_service/src/session_manager_service_proxy.cpp",
     "src/session_manager.cpp",
-    "src/session_manager_agent_controller.cpp",
     "src/zidl/scene_session_manager_proxy.cpp",
     "src/zidl/screen_session_manager_proxy.cpp",
   ]
