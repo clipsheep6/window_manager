@@ -17,6 +17,8 @@
 
 #include <ipc_skeleton.h>
 
+#include "marshalling_helper.h"
+
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "ScreenSessionManagerStub"};
@@ -35,6 +37,83 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
         case DisplayManagerMessage::TRANS_ID_GET_DEFAULT_DISPLAY_INFO: {
             auto info = GetDefaultDisplayInfo();
             reply.WriteParcelable(info);
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_GET_SCREEN_INFO_BY_ID: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            auto screenInfo = GetScreenInfoById(screenId);
+            reply.WriteStrongParcelable(screenInfo);
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SET_SCREEN_ACTIVE_MODE: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            uint32_t modeId = data.ReadUint32();
+            DMError ret = SetScreenActiveMode(screenId, modeId);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_PIXEL_RATIO: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            float virtualPixelRatio = data.ReadFloat();
+            DMError ret = SetVirtualPixelRatio(screenId, virtualPixelRatio);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SCREEN_GET_SUPPORTED_COLOR_GAMUTS: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            std::vector<ScreenColorGamut> colorGamuts;
+            DMError ret = GetScreenSupportedColorGamuts(screenId, colorGamuts);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            if (ret != DMError::DM_OK) {
+                break;
+            }
+            MarshallingHelper::MarshallingVectorObj<ScreenColorGamut>(reply, colorGamuts,
+                [](Parcel& parcel, const ScreenColorGamut& color) {
+                    return parcel.WriteUint32(static_cast<uint32_t>(color));
+                }
+            );
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SCREEN_GET_COLOR_GAMUT: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            ScreenColorGamut colorGamut;
+            DMError ret = GetScreenColorGamut(screenId, colorGamut);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            if (ret != DMError::DM_OK) {
+                break;
+            }
+            reply.WriteUint32(static_cast<uint32_t>(colorGamut));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SCREEN_SET_COLOR_GAMUT: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            int32_t colorGamutIdx = data.ReadInt32();
+            DMError ret = SetScreenColorGamut(screenId, colorGamutIdx);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SCREEN_GET_GAMUT_MAP: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            ScreenGamutMap gamutMap;
+            DMError ret = GetScreenGamutMap(screenId, gamutMap);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            if (ret != DMError::DM_OK) {
+                break;
+            }
+            reply.WriteInt32(static_cast<uint32_t>(gamutMap));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SCREEN_SET_GAMUT_MAP: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            ScreenGamutMap gamutMap = static_cast<ScreenGamutMap>(data.ReadUint32());
+            DMError ret = SetScreenGamutMap(screenId, gamutMap);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SCREEN_SET_COLOR_TRANSFORM: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            DMError ret = SetScreenColorTransform(screenId);
+            reply.WriteInt32(static_cast<int32_t>(ret));
             break;
         }
         case DisplayManagerMessage::TRANS_ID_REGISTER_DISPLAY_MANAGER_AGENT: {

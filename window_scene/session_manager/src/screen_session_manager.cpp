@@ -22,8 +22,9 @@
 
 namespace OHOS::Rosen {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "ScreenSessionManager" };
-const std::string SCREEN_SESSION_MANAGER_THREAD = "ScreenSessionManager";
+    constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "ScreenSessionManager" };
+    const std::string SCREEN_SESSION_MANAGER_THREAD = "ScreenSessionManager";
+    const std::string CONTROLLER_THREAD_ID = "ScreenSessionManagerThread";
 } // namespace
 
 ScreenSessionManager& ScreenSessionManager::GetInstance()
@@ -38,6 +39,8 @@ ScreenSessionManager::ScreenSessionManager() : rsInterface_(RSInterfaces::GetIns
             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)))
 {
     Init();
+    auto runner = AppExecFwk::EventRunner::Create(CONTROLLER_THREAD_ID);
+    controllerHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
 }
 
 void ScreenSessionManager::RegisterScreenConnectionListener(sptr<IScreenConnectionListener>& screenConnectionListener)
@@ -170,6 +173,159 @@ sptr<DisplayInfo> ScreenSessionManager::GetDefaultDisplayInfo()
     }
 }
 
+sptr<ScreenInfo> ScreenSessionManager::GetScreenInfoById(ScreenId screenId)
+{
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (screenSession) {
+        return screenSession->ConvertToScreenInfo();
+    } else {
+         WLOGE("cannot find screenInfo: %{public}" PRIu64"", screenId);
+        return nullptr;
+    }
+}
+
+DMError ScreenSessionManager::SetScreenActiveMode(ScreenId screenId, uint32_t modeId)
+{
+    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("set screen active permission denied!");
+        return DMError::DM_ERROR_NOT_SYSTEM_APP;
+    }
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (screenSession) {
+        return screenSession->SetScreenActiveMode(modeId);
+    } else {
+        WLOGFE("Get screen session failed.");
+        return DMError::DM_ERROR_UNKNOWN;
+    }
+}
+
+void ScreenSessionManager::NotifyScreenChanged(sptr<ScreenInfo> screenInfo, ScreenChangeEvent event) 
+{
+    if (screenInfo == nullptr) {
+        WLOGFE("NotifyScreenChanged error, screenInfo is nullptr.");
+        return;
+    }
+    auto task = [=] {
+        WLOGFI("NotifyScreenChanged,  screenId:%{public}" PRIu64"", screenInfo->GetScreenId());
+        auto agents = dmAgentContainer_.GetAgentsByType(DisplayManagerAgentType::SCREEN_EVENT_LISTENER);
+        if (agents.empty()) {
+            return;
+        }
+        for (auto& agent : agents) {
+            agent->OnScreenChange(screenInfo, event);
+        }   
+    };
+    controllerHandler_->PostTask(task, AppExecFwk::EventQueue::Priority::HIGH);
+}
+
+DMError ScreenSessionManager::SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio)
+{
+    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("set virtual pixel permission denied!");
+        return DMError::DM_ERROR_NOT_SYSTEM_APP;
+    }
+
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (!screenSession) {
+        WLOGFE("screen session is nullptr"); 
+        return DMError::DM_ERROR_UNKNOWN;
+    }
+    if (fabs(screenSession->GetScreenProperty().GetVirtualPixelRatio() - virtualPixelRatio) < 1e-6) {
+        WLOGE("The density is equivalent to the original value, no update operation is required, aborted.");
+        return DMError::DM_OK;
+    }
+    screenSession->GetScreenProperty().SetVirtualPixelRatio(virtualPixelRatio);
+    NotifyScreenChanged(screenSession->ConvertToScreenInfo(), ScreenChangeEvent::VIRTUAL_PIXEL_RATIO_CHANGED);
+
+    return DMError::DM_OK;
+}
+
+DMError ScreenSessionManager::GetScreenSupportedColorGamuts(ScreenId screenId,
+    std::vector<ScreenColorGamut>& colorGamuts)
+{
+    WLOGFI("GetScreenSupportedColorGamuts::ScreenId: %{public}" PRIu64 "", screenId);
+    if (screenId == SCREEN_ID_INVALID) {
+        WLOGFE("screenId invalid");
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (screenSession == nullptr) {
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    return screenSession->GetScreenSupportedColorGamuts(colorGamuts);
+}
+
+DMError ScreenSessionManager::GetScreenColorGamut(ScreenId screenId, ScreenColorGamut& colorGamut)
+{
+    WLOGFI("GetScreenColorGamut::ScreenId: %{public}" PRIu64 "", screenId);
+    if (screenId == SCREEN_ID_INVALID) {
+        WLOGFE("screenId invalid");
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (screenSession == nullptr) {
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    return screenSession->GetScreenColorGamut(colorGamut);
+}
+
+DMError ScreenSessionManager::SetScreenColorGamut(ScreenId screenId, int32_t colorGamutIdx)
+{
+    WLOGFI("SetScreenColorGamut::ScreenId: %{public}" PRIu64 ", colorGamutIdx %{public}d", screenId, colorGamutIdx);
+    if (screenId == SCREEN_ID_INVALID) {
+        WLOGFE("screenId invalid");
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (screenSession == nullptr) {
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    return screenSession->SetScreenColorGamut(colorGamutIdx);
+}
+
+DMError ScreenSessionManager::GetScreenGamutMap(ScreenId screenId, ScreenGamutMap& gamutMap)
+{
+    WLOGFI("GetScreenGamutMap::ScreenId: %{public}" PRIu64 "", screenId);
+    if (screenId == SCREEN_ID_INVALID) {
+        WLOGFE("screenId invalid");
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (screenSession == nullptr) {
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    return screenSession->GetScreenGamutMap(gamutMap);
+}
+
+DMError ScreenSessionManager::SetScreenGamutMap(ScreenId screenId, ScreenGamutMap gamutMap)
+{
+    WLOGFI("SetScreenGamutMap::ScreenId: %{public}" PRIu64 ", ScreenGamutMap %{public}u",
+        screenId, static_cast<uint32_t>(gamutMap));
+    if (screenId == SCREEN_ID_INVALID) {
+        WLOGFE("screenId invalid");
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (screenSession == nullptr) {
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    return screenSession->SetScreenGamutMap(gamutMap);
+}
+
+DMError ScreenSessionManager::SetScreenColorTransform(ScreenId screenId)
+{
+    WLOGFI("SetScreenColorTransform::ScreenId: %{public}" PRIu64 "", screenId);
+    if (screenId == SCREEN_ID_INVALID) {
+        WLOGFE("screenId invalid");
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (screenSession == nullptr) {
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    return screenSession->SetScreenColorTransform();
+}
+
 sptr<ScreenSession> ScreenSessionManager::GetOrCreateScreenSession(ScreenId screenId)
 {
     auto sessionIt = screenSessionMap_.find(screenId);
@@ -179,9 +335,16 @@ sptr<ScreenSession> ScreenSessionManager::GetOrCreateScreenSession(ScreenId scre
 
     auto screenMode = rsInterface_.GetScreenActiveMode(screenId);
     auto screenBounds = RRect({ 0, 0, screenMode.GetScreenWidth(), screenMode.GetScreenHeight() }, 0.0f, 0.0f);
+    auto screenRefreshRate = screenMode.GetScreenRefreshRate();
+    auto screenCapability = rsInterface_.GetScreenCapability(screenId);
+    auto PhyWidth = screenCapability.GetPhyWidth();
+    auto PhyHeight = screenCapability.GetPhyHeight();
     ScreenProperty property;
     property.SetRotation(0.0f);
     property.SetBounds(screenBounds);
+    property.SetRefreshRate(screenRefreshRate);
+    property.SetPhyWidth(PhyWidth);
+    property.SetPhyHeight(PhyHeight);
     sptr<ScreenSession> session = new(std::nothrow) ScreenSession(screenId, property);
     if (!session) {
         WLOGFE("screen session is nullptr");

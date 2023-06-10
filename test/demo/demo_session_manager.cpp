@@ -18,6 +18,8 @@
 #include <unistd.h>
 #include <iostream>
 #include <memory>
+#include "display_manager.h"
+#include "screen_manager.h"
 
 using namespace OHOS;
 using namespace OHOS::Rosen;
@@ -41,6 +43,54 @@ int main(int argc, char *argv[])
         int ret = proxy->GetValueById(1);
         std::cout << "ret value: " << ret << std::endl;
     }
+
+    /*sptr<IScreenSessionManager> screenSessionManagerProxy = sessionManager.GetScreenSessionManagerProxy();
+
+    if (!screenSessionManagerProxy) {
+        std::cout << "Get screenSessionManagerProxy: nullptr" << std::endl;
+        return 0;
+    }
+
+    sptr<OHOS::Rosen::DisplayInfo> displayInfo = screenSessionManagerProxy->GetDefaultDisplayInfo();
+    if (!displayInfo) {
+        std::cout << "Get default display info failed." << std::endl;
+        return 0;
+    }
+    std::cout << "Name: " << displayInfo->GetName() << std::endl;
+    std::cout << "Id: " << displayInfo->GetDisplayId() << std::endl;
+    std::cout << "Width: " << displayInfo->GetWidth() << std::endl;
+    std::cout << "Height: " << displayInfo->GetHeight() << std::endl;
+
+    std::cout << "    ----------------------    " << std::endl;*/
+    std::cout << "    ------------display.cpp start ------------    " << std::endl;
+    auto& dm = OHOS::Rosen::DisplayManager::GetInstance();
+    auto displays = dm.GetDefaultDisplay();
+    std::cout << "ID:" << displays->GetId() << std::endl;
+    std::cout << "Width:" << displays->GetWidth() << std::endl;
+    std::cout << "Height:" << displays->GetHeight() << std::endl;
+    std::cout << "RefreshRate:" << displays->GetRefreshRate() << std::endl;
+    std::cout << "ScreenId:" << displays->GetScreenId() << std::endl;
+    std::cout << "Rotation:" <<  static_cast<int>(displays->GetRotation()) << std::endl;
+    std::cout << "Orientation:" <<  static_cast<int>(displays->GetOrientation()) << std::endl;
+    std::cout << "VirtualPixelRatio:" << displays->GetVirtualPixelRatio() << std::endl;
+    std::cout << "Dpi:" << displays->GetDpi() << std::endl;
+
+    std::cout << "    ------------display.cpp end ------------    " << std::endl;
+
+    std::cout << "    ------------screen.cpp start ------------    " << std::endl;
+
+    auto& sm = OHOS::Rosen::ScreenManager::GetInstance();
+    auto screens = sm.GetScreenById(0);
+    std::cout << "ID:" << screens->GetId() << std::endl;
+    std::cout << "Width:" << screens->GetWidth() << std::endl;
+    std::cout << "Height:" << screens->GetHeight() << std::endl;
+    std::cout << "VirtualWidth:" << screens->GetVirtualWidth() << std::endl;
+    std::cout << "VirtualHeight:" << screens->GetVirtualHeight() << std::endl;
+    std::cout << "VirtualPixelRatio:" << screens->GetVirtualPixelRatio() << std::endl;
+    std::cout << "Rotation:" <<  static_cast<int>(screens->GetRotation()) << std::endl;
+    std::cout << "Orientation:" <<  static_cast<int>(screens->GetOrientation()) << std::endl;
+    std::cout << "IsReal:" <<  static_cast<int>(screens->IsReal()) << std::endl;
+    std::cout << "    ------------screen.cpp end ------------    " << std::endl;
 
     return 0;
 }

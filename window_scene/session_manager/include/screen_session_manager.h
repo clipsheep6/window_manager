@@ -49,6 +49,17 @@ public:
     std::vector<ScreenId> GetAllScreenIds();
 
     sptr<DisplayInfo> GetDefaultDisplayInfo() override;
+    sptr<ScreenInfo> GetScreenInfoById(ScreenId screenId) override;
+    DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) override;
+    DMError SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio) override;
+    void NotifyScreenChanged(sptr<ScreenInfo> screenInfo, ScreenChangeEvent event) ;
+
+    DMError GetScreenSupportedColorGamuts(ScreenId screenId, std::vector<ScreenColorGamut>& colorGamuts) override;
+    DMError GetScreenColorGamut(ScreenId screenId, ScreenColorGamut& colorGamut) override;
+    DMError SetScreenColorGamut(ScreenId screenId, int32_t colorGamutIdx) override;
+    DMError GetScreenGamutMap(ScreenId screenId, ScreenGamutMap& gamutMap) override;
+    DMError SetScreenGamutMap(ScreenId screenId, ScreenGamutMap gamutMap) override;
+    DMError SetScreenColorTransform(ScreenId screenId) override;
 
     void RegisterScreenConnectionListener(sptr<IScreenConnectionListener>& screenConnectionListener);
     void UnregisterScreenConnectionListener(sptr<IScreenConnectionListener>& screenConnectionListener);
@@ -72,6 +83,7 @@ public:
     void RegisterDisplayChangeListener(sptr<IDisplayChangeListener> listener);
     bool NotifyDisplayPowerEvent(DisplayPowerEvent event, EventStatus status);
     bool NotifyDisplayStateChanged(DisplayId id, DisplayState state);
+    std::shared_ptr<AppExecFwk::EventHandler> controllerHandler_;
 
 protected:
     ScreenSessionManager();
@@ -87,6 +99,8 @@ private:
 
     void NotifyDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type);
+
+    //DMError SetVirtualPixelRatioController(ScreenId screenId, float virtualPixelRatio);
 
     RSInterfaces& rsInterface_;
     std::shared_ptr<MessageScheduler> msgScheduler_ = nullptr;

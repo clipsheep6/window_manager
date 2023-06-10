@@ -25,6 +25,9 @@
 #include "screen_property.h"
 #include "dm_common.h"
 #include "display_info.h"
+#include "event_handler.h"
+#include "screen.h"
+#include "screen_info.h"
 
 namespace OHOS::Rosen {
 class IScreenChangeListener : public RefBase {
@@ -51,18 +54,42 @@ public:
     void RegisterScreenChangeListener(IScreenChangeListener* screenChangeListener);
     void UnregisterScreenChangeListener(IScreenChangeListener* screenChangeListener);
 
+    void FillScreenInfo(sptr<ScreenInfo> info) const;
+
     sptr<DisplayInfo> ConvertToDisplayInfo();
+    sptr<ScreenInfo> ConvertToScreenInfo() const;
+    sptr<SupportedScreenModes> GetActiveScreenMode() const;
+    ScreenSourceMode GetSourceMode() const;
+    
 
     ScreenId GetScreenId();
     ScreenProperty GetScreenProperty() const;
     std::shared_ptr<RSDisplayNode> GetDisplayNode() const;
 
+    ScreenId GetId() const;
+    ScreenState GetScreenState() const;
+    DMError SetScreenActiveMode(uint32_t modeId);
+    std::vector<sptr<SupportedScreenModes>> GetScreenModes() const;
+
+    DMError GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut>& colorGamuts);
+    DMError GetScreenColorGamut(ScreenColorGamut& colorGamut);
+    DMError SetScreenColorGamut(int32_t colorGamutIdx);
+    DMError GetScreenGamutMap(ScreenGamutMap& gamutMap);
+    DMError SetScreenGamutMap(ScreenGamutMap gamutMap);
+    DMError SetScreenColorTransform();
+
     void Connect();
     void Disconnect();
+
+    int32_t activeIdx_ { 0 };
+    std::vector<sptr<SupportedScreenModes>> modes_ = {};
 
 private:
     ScreenId screenId_;
     ScreenProperty property_;
+    std::string name_ { "UNKNOW" };
+    int32_t activeModeIdx_ { 0 };
+    
     std::shared_ptr<RSDisplayNode> displayNode_;
     ScreenState screenState_ { ScreenState::INIT };
     std::vector<IScreenChangeListener*> screenChangeListenerList_;
