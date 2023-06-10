@@ -59,9 +59,19 @@ std::shared_ptr<RSSurfaceNode> Session::GetSurfaceNode() const
     return surfaceNode_;
 }
 
-std::vector<uint64_t>& Session::GetDialogVector()
+const std::vector<Session>& Session::GetDialogVector()
 {
     return dialogVec_;
+}
+
+void Session::AddDialogToParent(sptr<Session>& session)
+{
+    dialogVec_.emplace_back(session);
+}
+
+void Session::SetParentSession(sptr<Session> session) 
+{
+    parentSession_ = session;
 }
 
 const SessionInfo& Session::GetSessionInfo() const

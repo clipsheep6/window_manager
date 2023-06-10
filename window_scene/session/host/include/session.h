@@ -108,9 +108,27 @@ public:
     void SetBackPressedListenser(const NotifyBackPressedFunc& func);
     WSError ProcessBackEvent(); // send back event to session_stage
     WSError RequestSessionBack() override; // receive back request from session_stage
-    std::vector<uint64_t>& GetDialogVector();
-    std::map<uint64_t,sptr<Session>> sessionMap_;
-};
+    void AddDialogToParent(sptr<Session>& session);
+    // {
+    //     dialogVec_.emplace_back(session);
+    // };
+    void SetParentSession(sptr<Session> session) ;
+    // {
+    //     parentSession_ = session;
+    // };
+    const std::vector<Session>& GetDialogVector();
+    // void ClearDialogVec()
+    // {
+    //     if (dialogVec_.empty()) {
+    //         return;
+    //     }
+    //     for(auto dialog : dialogVec_) {
+    //         dialog->NotifyDestroy();
+    //         dialog->Disconnect();
+    //     }
+    //     dialogVec_.clear();
+    // };
+    // std::map<uint64_t,sptr<Session>> sessionMap_;
 
 protected:
     void UpdateSessionState(SessionState state);
@@ -163,7 +181,8 @@ private:
 
     std::shared_ptr<Media::PixelMap> snapshot_;
     // mainwindow has its dialog persistentId vector
-    std::vector<uint64_t> dialogVec_;
-    
+    std::vector<Session> dialogVec_;
+    sptr<Session> parentSession_ = nullptr;
+};   
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_H

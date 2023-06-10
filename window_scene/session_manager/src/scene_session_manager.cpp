@@ -290,7 +290,7 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
     auto task = [this, sessionInfo, specificCallback]() {
         WLOGFI("sessionInfo: bundleName: %{public}s, moduleName: %{public}s, abilityName: %{public}s",
             sessionInfo.bundleName_.c_str(), sessionInfo.moduleName_.c_str(), sessionInfo.abilityName_.c_str());
-        sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(sessionInfo, specificCallback, abilitySceneMap_);
+        sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(sessionInfo, specificCallback);
         if (sceneSession == nullptr) {
             WLOGFE("sceneSession is nullptr!");
             return sceneSession;
@@ -298,6 +298,16 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
         uint64_t persistentId = GeneratePersistentId();
         sceneSession->SetPersistentId(persistentId);
         sceneSession->SetSystemConfig(systemConfig_);
+        // yangfei set parent
+        if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_SUB_WINDOW) {
+            if (abilitySceneMap_.find(sceneSession->GetParentPersistentId()) != abilitySceneMap_.end()) {
+                sceneSession->SetParentSession(abilitySceneMap_.at(sceneSession->GetParentPersistentId()));
+            } else {
+                WLOGFD("parent is nullptr");
+            }
+            
+        }
+
         abilitySceneMap_.insert({ persistentId, sceneSession });
         WLOGFI("create session persistentId: %{public}" PRIu64 "", persistentId);
         return sceneSession;
@@ -400,16 +410,16 @@ WSError SceneSessionManager::RequestSceneSessionDestruction(const sptr<SceneSess
         }
         abilitySceneMap_.erase(persistentId);
         // erase dialog id
-        std::vector<uint64_t> vec = scnSession->GetDialogVector();
-        for (auto id : vec) {
-            if (abilitySceneMap_.count(id) == 0) {
+        std::vector<Session> vec = scnSession->GetDialogVector();
+        for (auto dialog : vec) {
+            if (abilitySceneMap_.count(dialog->GetPersistentId()) == 0) {
                 WLOGFE("Dialog session is invalid with %{public}" PRIu64 "", persistentId);
                 continue;
             }
-            auto dialogSession = FindSceneSessionByPersistentId(id);
-            dialogSession->NotifyDestroy();
-            dialogSession->Disconnect();
-            abilitySceneMap_.erase(id);
+            // auto dialogSession = FindSceneSessionByPersistentId(id);
+            dialog->NotifyDestroy();
+            dialog->Disconnect();
+            abilitySceneMap_.erase(dialog->GetPersistentId());
         }
         auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
         if (!scnSessionInfo) {
