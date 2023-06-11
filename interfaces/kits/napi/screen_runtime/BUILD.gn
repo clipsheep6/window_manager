@@ -40,6 +40,7 @@ ohos_shared_library("screen_napi") {
   ]
 
   external_deps = [
+    "ability_runtime:module_manager",
     "ability_runtime:runtime",
     "c_utils:utils",
     "graphic_standard:surface",  # use for SurfaceUtils

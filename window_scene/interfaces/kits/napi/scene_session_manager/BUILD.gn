@@ -34,6 +34,7 @@ ohos_shared_library("scenesessionmanager_napi") {
   external_deps = [
     "ability_base:configuration",
     "ability_runtime:ability_context_native",
+    "ability_runtime:module_manager",
     "ability_runtime:runtime",
     "c_utils:utils",
     "hilog_native:libhilog",
