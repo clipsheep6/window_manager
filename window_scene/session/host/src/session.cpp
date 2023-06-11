@@ -326,6 +326,10 @@ WSError Session::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ability
     info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
     info.moduleName_ = abilitySessionInfo->want.GetModuleName();
     info.callerToken_ = abilitySessionInfo->callerToken;
+    sptr<AAFwk::Want> want(&abilitySessionInfo->want);
+    info.persistentId_ = abilitySessionInfo->persistentId;
+    sessionInfo_.want = want;
+    sessionInfo_.requestCode = abilitySessionInfo->requestCode;
     if (pendingSessionActivationFunc_) {
         pendingSessionActivationFunc_(info);
     }
@@ -352,6 +356,10 @@ WSError Session::TerminateSession(const sptr<AAFwk::SessionInfo> abilitySessionI
     info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
     info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
     info.callerToken_ = abilitySessionInfo->callerToken;
+    sptr<AAFwk::Want> want(&abilitySessionInfo->want);
+    info.persistentId_ = abilitySessionInfo->persistentId;
+    sessionInfo_.want = want;    
+    sessionInfo_.resultCode = abilitySessionInfo->resultCode;    
     if (terminateSessionFunc_) {
         terminateSessionFunc_(info);
     }
@@ -375,6 +383,11 @@ WSError Session::NotifySessionException(const sptr<AAFwk::SessionInfo> abilitySe
     info.callerToken_ = abilitySessionInfo->callerToken;
     info.errorCode = abilitySessionInfo->errorCode;
     info.errorReason = abilitySessionInfo->errorReason;
+    sptr<AAFwk::Want> want(&abilitySessionInfo->want);
+    info.persistentId_ = abilitySessionInfo->persistentId;
+    sessionInfo_.want = want; 
+    sessionInfo_.errorCode = abilitySessionInfo->errorCode;   
+    sessionInfo_.errorReason = abilitySessionInfo->errorReason;   
     if (sessionExceptionFunc_) {
         sessionExceptionFunc_(info);
     }

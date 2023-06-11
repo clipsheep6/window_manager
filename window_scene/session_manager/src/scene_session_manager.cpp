@@ -313,6 +313,7 @@ sptr<AAFwk::SessionInfo> SceneSessionManager::SetAbilitySessionInfo(const sptr<S
     abilitySessionInfo->sessionToken = iSession->AsObject();
     abilitySessionInfo->callerToken = sessionInfo.callerToken_;
     abilitySessionInfo->persistentId = scnSession->GetPersistentId();
+    abilitySessionInfo->want = *sessionInfo.want;
     return abilitySessionInfo;
 }
 
