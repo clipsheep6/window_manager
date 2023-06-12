@@ -355,6 +355,46 @@ WMError WindowSceneSessionImpl::Destroy(bool needClearListener)
     return res;
 }
 
+void WindowSceneSessionImpl::LimitCameraFloatWindowMininumSize(uint32_t& width, uint32_t& height)
+{
+    // Float camera window has a special limit:
+    // if display sw <= 600dp, portrait: min width = display sw * 30%, landscape: min width = sw * 50%
+    // if display sw > 600dp, portrait: min width = display sw * 12%, landscape: min width = sw * 30%
+    if (property_->GetWindowType() != WindowType::WINDOW_TYPE_FLOAT_CAMERA) {
+        return;
+    }
+
+    auto display = SingletonContainer::Get<DisplayManager>().GetDisplayById(property_->GetDisplayId());
+    if (display == nullptr) {
+        WLOGFE("get display failed displayId:%{public}" PRIu64"", property_->GetDisplayId());
+        return;
+    }
+    uint32_t displayWidth = static_cast<uint32_t>(display->GetWidth());
+    uint32_t displayHeight = static_cast<uint32_t>(display->GetHeight());
+    float vpr = (displayWidth >= 2770) ? 3.5 : 1.5; // vpr: 3.5 / 1.5
+    if (displayWidth == 0 || displayHeight == 0 || MathHelper::NearZero(vpr)) {
+        return;
+    }
+    uint32_t smallWidth = displayHeight <= displayWidth ? displayHeight : displayWidth;
+    float hwRatio = static_cast<float>(displayHeight) / static_cast<float>(displayWidth);
+    uint32_t minWidth;
+    if (smallWidth <= static_cast<uint32_t>(600 * vpr)) { // sw <= 600dp
+        if (displayWidth <= displayHeight) {
+            minWidth = static_cast<uint32_t>(smallWidth * 0.3); // ratio : 0.3
+        } else {
+            minWidth = static_cast<uint32_t>(smallWidth * 0.5); // ratio : 0.5
+        }
+    } else {
+        if (displayWidth <= displayHeight) {
+            minWidth = static_cast<uint32_t>(smallWidth * 0.12); // ratio : 0.12
+        } else {
+            minWidth = static_cast<uint32_t>(smallWidth * 0.3); // ratio : 0.3
+        }
+    }
+    width = (width < minWidth) ? minWidth : width;
+    height = static_cast<uint32_t>(width * hwRatio);
+}
+
 WMError WindowSceneSessionImpl::MoveTo(int32_t x, int32_t y)
 {
     WLOGFD("Id:%{public}" PRIu64 " MoveTo %{public}d %{public}d", property_->GetPersistentId(), x, y);
@@ -381,6 +421,9 @@ WMError WindowSceneSessionImpl::Resize(uint32_t width, uint32_t height)
     if (IsWindowSessionInvalid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
+    // Float camera window has special limits
+    LimitCameraFloatWindowMininumSize(width, height);
+
     const auto& rect = property_->GetWindowRect();
     Rect newRect = { rect.posX_, rect.posY_, width, height }; // must keep w/h
     property_->SetRequestRect(newRect);
