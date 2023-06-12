@@ -40,5 +40,4 @@ private:
 };
 } // namespace Rosen
 } // namespace OHOS
-
 #endif // RENDER_SERVICE_CLIENT_CORE_TRANSACTION_RS_INTERFACES_H

@@ -49,5 +49,4 @@ public:
 };
 } // namespace Rosen
 } // namespace OHOS
-
 #endif

@@ -94,5 +94,4 @@ std::unique_ptr<AsyncTask> CreateAsyncTaskWithLastParam(NativeEngine& engine, Na
     nullptr_t, nullptr_t, NativeValue** result);
 }  // namespace AbilityRuntime
 }  // namespace OHOS
-
 #endif  // OHOS_ABILITY_RUNTIME_JS_RUNTIME_UTILS_H

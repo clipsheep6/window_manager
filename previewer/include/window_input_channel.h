@@ -39,6 +39,4 @@ private:
 };
 }
 }
-
-
 #endif // OHOS_WINDOW_INPUT_CHANNEL_H

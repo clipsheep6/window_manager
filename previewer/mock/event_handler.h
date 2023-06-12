@@ -51,5 +51,4 @@ public:
 };
 } // namespace AppExecFwk
 } // namespace OHOS
-
 #endif // OHOS_EVENTHANDLER_H
