@@ -34,6 +34,9 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
 {
     name_ = "main_window";
     surfaceNode_ = CreateSurfaceNode("preview_surface", option->GetWindowType());
+    if (surfaceNodeCreateCallback_ != nullptr) {
+        surfaceNodeCreateCallback_();
+    }
 
     WLOGFI("WindowImpl constructorCnt: %{public}d",
         ++constructorCnt);
@@ -862,5 +865,9 @@ void WindowImpl::SetDensity(float density)
     UpdateViewportConfig();
 }
 
+void WindowImpl::SetSufaceNodeCreateCallback(const NotifySurfaceNodeCreate& func)
+{
+    surfaceNodeCrateCallback_ = func;
+}
 } // namespace Rosen
 } // namespace OHOS

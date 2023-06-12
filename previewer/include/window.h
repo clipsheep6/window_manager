@@ -26,30 +26,38 @@
 
 class NativeValue;
 class NativeEngine;
+
 namespace OHOS::MMI {
 class PointerEvent;
 class KeyEvent;
 class AxisEvent;
 }
+
 namespace OHOS::AppExecFwk {
 class Configuration;
 class Ability;
 }
+
 namespace OHOS::AbilityRuntime {
 class AbilityContext;
 class Context;
 }
+
 namespace OHOS::Ace {
 class UIContent;
 }
+
 namespace OHOS::AAFwk {
 class Want;
 }
+
 namespace OHOS {
 namespace Rosen {
 class RSSurfaceNode;
 class RSTransaction;
 using NotifyNativeWinDestroyFunc = std::function<void(std::string windowName)>;
+using NotifySufaceNodeCreateFunc = std::function<void()>;
+
 class IWindowLifeCycle : virtual public RefBase {
 };
 class IWindowChangeListener : virtual public RefBase {
@@ -225,6 +233,8 @@ public:
     virtual void SetOrientation(Orientation orientation) = 0;
     virtual void SetSize(int32_t width, int32_t height) = 0;
     virtual void SetDensity(float density) = 0;
+
+    virtual void SetSufaceNodeCreateCallback(const NotifySurfaceNodeCreate& func) = 0;
 };
 }
 }
