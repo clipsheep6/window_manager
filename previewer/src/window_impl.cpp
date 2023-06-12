@@ -33,10 +33,7 @@ static int deConstructorCnt = 0;
 WindowImpl::WindowImpl(const sptr<WindowOption>& option)
 {
     name_ = "main_window";
-    surfaceNode_ = CreateSurfaceNode("preview_surface", option->GetWindowType());
-    if (surfaceNodeCreateCallback_ != nullptr) {
-        surfaceNodeCreateCallback_();
-    }
+    // surfaceNode_ = CreateSurfaceNode("preview_surface", option->GetWindowType());
 
     WLOGFI("WindowImpl constructorCnt: %{public}d",
         ++constructorCnt);
@@ -49,25 +46,13 @@ WindowImpl::~WindowImpl()
     Destroy();
 }
 
-RSSurfaceNode::SharedPtr WindowImpl::CreateSurfaceNode(std::string name, WindowType type)
+void WindowImpl::CreateSurfaceNode(const std::string name, const SendRenderDataCallback& callback)
 {
-    WLOGFI("CreateSurfaceNode mlx : %{public}d, name: %{public}s, type: %{public}d", __LINE__, name.c_str(), type);
+    WLOGFI("CreateSurfaceNode mlx : %{public}d, name: %{public}s", __LINE__, name.c_str());
     struct RSSurfaceNodeConfig rsSurfaceNodeConfig;
     rsSurfaceNodeConfig.SurfaceNodeName = name;
-    RSSurfaceNodeType rsSurfaceNodeType = RSSurfaceNodeType::DEFAULT;
-    switch (type) {
-        case WindowType::WINDOW_TYPE_BOOT_ANIMATION:
-        case WindowType::WINDOW_TYPE_POINTER:
-            rsSurfaceNodeType = RSSurfaceNodeType::SELF_DRAWING_WINDOW_NODE;
-            break;
-        case WindowType::WINDOW_TYPE_APP_MAIN_WINDOW:
-            rsSurfaceNodeType = RSSurfaceNodeType::APP_WINDOW_NODE;
-            break;
-        default:
-            rsSurfaceNodeType = RSSurfaceNodeType::DEFAULT;
-            break;
-    }
-    return RSSurfaceNode::Create(rsSurfaceNodeConfig, rsSurfaceNodeType);
+    rsSurfaceNodeConfig.additionalData = reinterpret_cast<void*>(callback);
+    surfaceNode_ = RSSurfaceNode::Create(rsSurfaceNodeConfig);
 }
 
 sptr<Window> WindowImpl::Find(const std::string& name)
@@ -320,6 +305,7 @@ WMError WindowImpl::SetFullScreen(bool status)
 WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRuntime::Context>& context)
 {
     WLOGFI("[Client] Window [name:%{public}s] Create", name_.c_str());
+    context_ = context;
     return WMError::WM_OK;
 }
 
@@ -863,11 +849,6 @@ void WindowImpl::SetDensity(float density)
     }
     density_ = density;
     UpdateViewportConfig();
-}
-
-void WindowImpl::SetSufaceNodeCreateCallback(const NotifySufaceNodeCreateFunc& func)
-{
-    surfaceNodeCreateCallback_ = func;
 }
 } // namespace Rosen
 } // namespace OHOS
