@@ -234,7 +234,7 @@ public:
     virtual void SetSize(int32_t width, int32_t height) = 0;
     virtual void SetDensity(float density) = 0;
 
-    virtual void CreateSurfaceNode(std::string name, SenderRenderDataCallback callback) = 0;
+    virtual void CreateSurfaceNode(const std::string name, const SendRenderDataCallback& callback) = 0;
 };
 }
 }

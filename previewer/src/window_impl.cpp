@@ -46,12 +46,12 @@ WindowImpl::~WindowImpl()
     Destroy();
 }
 
-RSSurfaceNode::SharedPtr WindowImpl::CreateSurfaceNode(std::string name, SendRenderDataCallback callback)
+void WindowImpl::CreateSurfaceNode(const std::string name, const SendRenderDataCallback& callback)
 {
-    WLOGFI("CreateSurfaceNode mlx : %{public}d, name: %{public}s, type: %{public}d", __LINE__, name.c_str(), type);
+    WLOGFI("CreateSurfaceNode mlx : %{public}d, name: %{public}s", __LINE__, name.c_str());
     struct RSSurfaceNodeConfig rsSurfaceNodeConfig;
     rsSurfaceNodeConfig.SurfaceNodeName = name;
-    rsSurfaceNodeConfig.additionalData = callback;
+    rsSurfaceNodeConfig.additionalData = reinterpret_cast<void*>(callback);
     surfaceNode_ = RSSurfaceNode::Create(rsSurfaceNodeConfig);
 }
 
@@ -305,6 +305,7 @@ WMError WindowImpl::SetFullScreen(bool status)
 WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRuntime::Context>& context)
 {
     WLOGFI("[Client] Window [name:%{public}s] Create", name_.c_str());
+    context_ = context;
     return WMError::WM_OK;
 }
 

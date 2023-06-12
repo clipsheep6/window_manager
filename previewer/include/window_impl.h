@@ -201,9 +201,7 @@ public:
     virtual void SetSize(int32_t width, int32_t height) override;
     virtual void SetDensity(float density) override;
 
-    virtual void SetSufaceNodeCreateCallback(const NotifySufaceNodeCreateFunc& func) override;
-
-    virtual void CreateSurfaceNode(std::string name, SenderRenderDataCallback callback) override;
+    virtual void CreateSurfaceNode(const std::string name, const SendRenderDataCallback& callback) override;
 
 private:
     bool IsPointerEventConsumed();
