@@ -234,7 +234,7 @@ public:
     virtual void SetSize(int32_t width, int32_t height) = 0;
     virtual void SetDensity(float density) = 0;
 
-    virtual void SetSufaceNodeCreateCallback(const NotifySurfaceNodeCreate& func) = 0;
+    virtual void SetSufaceNodeCreateCallback(const NotifySufaceNodeCreateFunc& func) = 0;
 };
 }
 }

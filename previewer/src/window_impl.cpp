@@ -865,9 +865,9 @@ void WindowImpl::SetDensity(float density)
     UpdateViewportConfig();
 }
 
-void WindowImpl::SetSufaceNodeCreateCallback(const NotifySurfaceNodeCreate& func)
+void WindowImpl::SetSufaceNodeCreateCallback(const NotifySufaceNodeCreateFunc& func)
 {
-    surfaceNodeCrateCallback_ = func;
+    surfaceNodeCreateCallback_ = func;
 }
 } // namespace Rosen
 } // namespace OHOS

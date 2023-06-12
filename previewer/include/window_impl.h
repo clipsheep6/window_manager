@@ -201,7 +201,7 @@ public:
     virtual void SetSize(int32_t width, int32_t height) override;
     virtual void SetDensity(float density) override;
 
-    virtual void SetSufaceNodeCreateCallback(const NotifySurfaceNodeCreate& func) override;
+    virtual void SetSufaceNodeCreateCallback(const NotifySufaceNodeCreateFunc& func) override;
 
 private:
     bool IsPointerEventConsumed();
@@ -226,7 +226,7 @@ private:
     int32_t orientation_ = 0;
     float density_ = 1.0f;
 
-    NotifySurfaceNodeCreate surfaceNodeCreateCallback_ = nullptr;
+    NotifySufaceNodeCreateFunc surfaceNodeCreateCallback_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS
