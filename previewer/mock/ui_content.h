@@ -125,5 +125,4 @@ public:
     virtual NativeValue* GetUIContext() = 0;
 };
 } // namespace OHOS::Ace
-
 #endif // FOUNDATION_ACE_INTERFACE_INNERKITS_ACE_UI_CONTENT_H

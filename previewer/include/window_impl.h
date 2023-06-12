@@ -20,9 +20,7 @@
 
 #include <ui_content.h>
 #include "ui/rs_surface_node.h"
-
 #include "window.h"
-#include "window_property.h"
 #include "input_transfer_station.h"
 
 namespace OHOS::AbilityRuntime {
@@ -127,7 +125,6 @@ public:
     virtual WMError SetBackdropBlur(float radius) override;
     virtual WMError SetBackdropBlurStyle(WindowBlurStyle blurStyle) override;
 
-    virtual bool IsDecorEnable() const override;
     virtual WMError Maximize() override;
     virtual WMError Minimize() override;
     virtual WMError Recover() override;
@@ -204,18 +201,17 @@ public:
     virtual void SetSize(int32_t width, int32_t height) override;
     virtual void SetDensity(float density) override;
 
+    virtual void SetSufaceNodeCreateCallback(const NotifySufaceNodeCreateFunc& func) override;
+
 private:
     bool IsPointerEventConsumed();
     void TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     void UpdatePointerEventForStretchableWindow(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     RSSurfaceNode::SharedPtr CreateSurfaceNode(std::string name, WindowType type);
-    WMError UpdateProperty(PropertyChangeAction action);
 
     static std::map<std::string, std::pair<uint32_t, sptr<Window>>> windowMap_;
     static std::map<uint32_t, std::vector<sptr<WindowImpl>>> subWindowMap_;
-    sptr<WindowProperty> property_;
     std::recursive_mutex mutex_;
-    sptr<MoveDragProperty> moveDragProperty_;
     WindowState state_ { WindowState::STATE_INITIAL };
     std::shared_ptr<RSSurfaceNode> surfaceNode_;
     std::shared_ptr<AbilityRuntime::Context> context_;
@@ -224,12 +220,13 @@ private:
     std::unique_ptr<Ace::UIContent> uiContent_;
     KeyboardAnimationConfig keyboardAnimationConfig_;
     bool needRemoveWindowInputChannel_ = false;
-    SystemConfig windowSystemConfig_;
-
+    Transform transform_;
     int32_t width_ = 0;
     int32_t height_ = 0;
     int32_t orientation_ = 0;
     float density_ = 1.0f;
+
+    NotifySufaceNodeCreateFunc surfaceNodeCreateCallback_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS
