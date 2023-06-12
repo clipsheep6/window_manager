@@ -27,7 +27,7 @@ ohos_shared_library("libintention_event") {
   ]
 
   deps = [
-    #"../session_manager:scene_session_manager",
+    "../session_manager:scene_session_manager",
     "../common:window_scene_common",
     "../session:scene_session",
   ]

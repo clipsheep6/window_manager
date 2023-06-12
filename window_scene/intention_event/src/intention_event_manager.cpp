@@ -19,7 +19,7 @@
 #include "frameworks/core/event/ace_events.h"
 #include "window_manager_hilog.h"
 // #include "vsync_station.h"
-// #include "session_manager/include/scene_session_manager.h"
+#include "session_manager/include/scene_session_manager.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -119,17 +119,17 @@ void IntentionEventManager::InputEventListener::OnInputEvent(
 void IntentionEventManager::InputEventListener::OnInputEvent(
     std::shared_ptr<MMI::KeyEvent> keyEvent) const
 {
-    // uint64_t focusedSessionId = SceneSessionManager::GetInstance()->GetFocusedSessionId();
-    // if (focusedSessionId == INVALID_SESSION_ID) {
-    //     WLOGFE("focusedSessionId is invalid");
-    //     return;
-    // }
-    // auto focusedSceneSession = SceneSessionManager::GetInstance()->GetSceneSession(focusedSessionId);
-    // if (focusedSceneSession == nullptr) {
-    //     WLOGFE("focusedSceneSession is null");
-    //     return;
-    // }
-    // focusedSceneSession->TransferKeyEvent(keyEvent);
+    uint64_t focusedSessionId = SceneSessionManager::GetInstance().GetFocusedSession();
+    if (focusedSessionId == INVALID_SESSION_ID) {
+        WLOGFE("focusedSessionId is invalid");
+        return;
+    }
+    auto focusedSceneSession = SceneSessionManager::GetInstance().GetSceneSession(focusedSessionId);
+    if (focusedSceneSession == nullptr) {
+        WLOGFE("focusedSceneSession is null");
+        return;
+    }
+    focusedSceneSession->TransferKeyEvent(keyEvent);
 }
 
 void IntentionEventManager::InputEventListener::OnInputEvent(
