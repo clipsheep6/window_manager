@@ -48,11 +48,11 @@ public:
 protected:
     void DestroySubWindow();
     WMError CreateAndConnectSpecificSession();
-    sptr<WindowSessionImpl> FindParentSessionByParentId(uint32_t parentId);
     void UpdateSubWindowStateAndNotify(uint64_t parentPersistentId, const WindowState& newState);
 
 private:
     bool IsValidSystemWindowType(const WindowType& type);
+    WMError MapDialogToMainWindow();
 };
 } // namespace Rosen
 } // namespace OHOS

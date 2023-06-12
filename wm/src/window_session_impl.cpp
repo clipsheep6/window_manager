@@ -42,9 +42,12 @@ constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowS
 
 std::map<uint64_t, std::vector<sptr<IWindowLifeCycle>>> WindowSessionImpl::lifecycleListeners_;
 std::map<uint64_t, std::vector<sptr<IWindowChangeListener>>> WindowSessionImpl::windowChangeListeners_;
+std::map<uint64_t, std::vector<sptr<IDialogDeathRecipientListener>>> WindowSessionImpl::dialogDeathRecipientListeners_;
+std::map<uint64_t, std::vector<sptr<IDialogTargetTouchListener>>> WindowSessionImpl::dialogTargetTouchListener_;
 std::recursive_mutex WindowSessionImpl::globalMutex_;
 std::map<std::string, std::pair<uint64_t, sptr<WindowSessionImpl>>> WindowSessionImpl::windowSessionMap_;
 std::map<uint64_t, std::vector<sptr<WindowSessionImpl>>> WindowSessionImpl::subWindowSessionMap_;
+std::map<uint64_t, std::vector<sptr<WindowSessionImpl>>> WindowSessionImpl::dialogWindowSessionMap_;
 
 #define CALL_LIFECYCLE_LISTENER(windowLifecycleCb, listeners) \
     do {                                                      \
@@ -174,6 +177,21 @@ WMError WindowSessionImpl::WindowSessionCreateCheck()
     return WMError::WM_OK;
 }
 
+sptr<WindowSessionImpl> WindowSessionImpl::FindParentSessionByParentId(uint32_t parentId)
+{
+    for (const auto& item : windowSessionMap_) {
+        if (item.second.second && item.second.second->GetProperty() &&
+            item.second.second->GetWindowId() == parentId &&
+            WindowHelper::IsMainWindow(item.second.second->GetType())) {
+            WLOGFD("Find parent, [parentName: %{public}s, parentId:%{public}u, selfPersistentId: %{public}" PRIu64"]",
+                item.second.second->GetProperty()->GetWindowName().c_str(), parentId, GetProperty()->GetPersistentId());
+            return item.second.second;
+        }
+    }
+    WLOGFD("Can not find parent window");
+    return nullptr;
+}
+
 WMError WindowSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Context>& context,
     const sptr<Rosen::ISession>& iSession)
 {
@@ -235,7 +253,6 @@ WMError WindowSessionImpl::Show(uint32_t reason, bool withAnimation)
             property_->GetWindowName().c_str(), property_->GetPersistentId(), property_->GetWindowType());
         return WMError::WM_OK;
     }
-
     WSError ret = hostSession_->Foreground();
     // delete after replace WSError with WMError
     WMError res = static_cast<WMError>(ret);
@@ -283,6 +300,34 @@ WMError WindowSessionImpl::Destroy(bool needClearListener)
     }
     hostSession_ = nullptr;
     windowSessionMap_.erase(property_->GetWindowName());
+    DestroyDialogWindow();
+    return WMError::WM_OK;
+}
+
+WMError WindowSessionImpl::DestroyDialogWindow()
+{
+    for (auto& dialogWindows : dialogWindowSessionMap_) {
+        for (auto iter = dialogWindows.second.begin(); iter != dialogWindows.second.end(); ++iter) {
+            if ((*iter) == nullptr) {
+                continue;
+            }
+            if ((*iter)->GetWindowId() == GetWindowId()) {
+                dialogWindows.second.erase(iter);
+                break;
+            }
+        }
+    }
+    if (dialogWindowSessionMap_.count(GetWindowId()) > 0) {
+        auto& dialogWindows = dialogWindowSessionMap_.at(GetWindowId());
+        for (auto iter = dialogWindows.begin(); iter != dialogWindows.end(); iter = dialogWindows.begin()) {
+            if ((*iter) != nullptr) {
+                dialogWindows.erase(iter);
+                continue;
+            }
+            (*iter)->Destroy(false);
+        }
+        dialogWindowSessionMap_.erase(GetWindowId());
+    }
     return WMError::WM_OK;
 }
 
@@ -540,6 +585,42 @@ WMError WindowSessionImpl::UnregisterWindowChangeListener(const sptr<IWindowChan
     return UnregisterListener(windowChangeListeners_[GetPersistentId()], listener);
 }
 
+void WindowSessionImpl::RegisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener)
+{
+    WLOGFD("Start register DialogDeathRecipientListener");
+    if (listener == nullptr) {
+        WLOGFE("listener is nullptr");
+        return;
+    }
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    RegisterListener(dialogDeathRecipientListeners_[GetPersistentId()], listener);
+}
+
+void WindowSessionImpl::UnregisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener)
+{
+    WLOGFD("Start unregister DialogDeathRecipientListener");
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    UnregisterListener(dialogDeathRecipientListeners_[GetPersistentId()], listener);
+}
+
+WMError WindowSessionImpl::RegisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener)
+{
+    WLOGFD("Start register DialogTargetTouchListener");
+    if (listener == nullptr) {
+        WLOGFE("listener is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    return RegisterListener(dialogTargetTouchListener_[GetPersistentId()], listener);
+}
+
+WMError WindowSessionImpl::UnregisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener)
+{
+    WLOGFD("Start unregister DialogTargetTouchListener");
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    return UnregisterListener(dialogTargetTouchListener_[GetPersistentId()], listener);
+}
+
 template<typename T>
 EnableIfSame<T, IWindowLifeCycle, std::vector<sptr<IWindowLifeCycle>>> WindowSessionImpl::GetListeners()
 {
@@ -564,6 +645,34 @@ EnableIfSame<T, IWindowChangeListener, std::vector<sptr<IWindowChangeListener>>>
         }
     }
     return windowChangeListeners;
+}
+
+template<typename T>
+EnableIfSame<T, IDialogDeathRecipientListener, std::vector<sptr<IDialogDeathRecipientListener>>> WindowSessionImpl::
+    GetListeners()
+{
+    std::vector<sptr<IDialogDeathRecipientListener>> dialogDeathRecipientListener;
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        for (auto& listener : dialogDeathRecipientListeners_[GetPersistentId()]) {
+            dialogDeathRecipientListener.push_back(listener);
+        }
+    }
+    return dialogDeathRecipientListener;
+}
+
+template<typename T>
+EnableIfSame<T, IDialogTargetTouchListener, std::vector<sptr<IDialogTargetTouchListener>>> WindowSessionImpl::
+    GetListeners()
+{
+    std::vector<sptr<IDialogTargetTouchListener>> dialogTargetTouchListener;
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        for (auto& listener : dialogTargetTouchListener_[GetPersistentId()]) {
+            dialogTargetTouchListener.push_back(listener);
+        }
+    }
+    return dialogTargetTouchListener;
 }
 
 template<typename T>
@@ -693,15 +802,96 @@ void WindowSessionImpl::NotifySizeChange(Rect rect, WindowSizeChangeReason reaso
     }
 }
 
+WSError WindowSessionImpl::NotifyDestroy()
+{
+    auto dialogDeathRecipientListener = GetListeners<IDialogDeathRecipientListener>();
+    for (auto& listener : dialogDeathRecipientListener) {
+        if (listener.GetRefPtr() != nullptr) {
+            listener.GetRefPtr()->OnDialogDeathRecipient();
+        }
+    }
+    return WSError::WS_OK;
+}
+
+bool WindowSessionImpl::IsDialogForegroundAndNotify()
+{
+    if (GetType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        if (dialogWindowSessionMap_.empty() ||
+            dialogWindowSessionMap_.find(GetPersistentId()) == dialogWindowSessionMap_.end()) {
+            return false;
+        } else {
+            sptr<WindowSessionImpl> selfImpl(this);
+            sptr<WindowSessionImpl> dialogWindow = FindDialogWithTargetWindow(selfImpl);
+            if (dialogWindow) {
+                WLOGFD("Main window find dialog and notify touch");
+                dialogWindow->NotifyTouchDialogTarget();
+                return true;
+            }
+            return false;
+        }
+    } else if (WindowHelper::IsSubWindow(GetType())) {
+        auto parentSession = FindParentSessionByParentId(GetParentId());
+        if (!parentSession) {
+            WLOGFE("Parent session is nullptr");
+            return true;
+        }
+        sptr<WindowSessionImpl> dialogWindow = FindDialogWithTargetWindow(parentSession);
+        if (dialogWindow) {
+            WLOGFD("Sub window find dialog and notify touch");
+            dialogWindow->NotifyTouchDialogTarget();
+            return true;
+        }
+        return false;
+    }
+    return false;
+}
+
+void WindowSessionImpl::NotifyTouchDialogTarget()
+{
+    auto dialogTargetTouchListener = GetListeners<IDialogTargetTouchListener>();
+    for (auto& listener : dialogTargetTouchListener) {
+        if (listener.GetRefPtr() != nullptr) {
+            listener.GetRefPtr()->OnDialogTargetTouch();
+        }
+    }
+}
+
+
 void WindowSessionImpl::NotifyPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
+    if (IsDialogForegroundAndNotify()) {
+        return;
+    }
     if (uiContent_) {
+        WLOGFD("Send pointer event to ace");
         uiContent_->ProcessPointerEvent(pointerEvent);
     }
 }
 
+sptr<WindowSessionImpl> WindowSessionImpl::FindDialogWithTargetWindow(sptr<WindowSessionImpl> window)
+{
+    if (dialogWindowSessionMap_.find(window->GetPersistentId()) == dialogWindowSessionMap_.end()) {
+        WLOGFE("Target window has no dialog window");
+        return nullptr;
+    }
+    std::vector<sptr<WindowSessionImpl>> dialogVec = dialogWindowSessionMap_.at(window->GetPersistentId());
+    if (dialogVec.empty()) {
+        WLOGFE("Dialog vector is empty");
+        return nullptr;
+    }
+    for (auto iter : dialogVec) {
+        if (iter->state_ == WindowState::STATE_SHOWN) {
+            return iter;
+        }
+    }
+    return nullptr;
+}
+
 void WindowSessionImpl::NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
+    if (IsDialogForegroundAndNotify()) {
+        return;
+    }
     if (uiContent_) {
         uiContent_->ProcessKeyEvent(keyEvent);
     }

@@ -56,21 +56,6 @@ bool WindowSceneSessionImpl::IsValidSystemWindowType(const WindowType& type)
     return true;
 }
 
-sptr<WindowSessionImpl> WindowSceneSessionImpl::FindParentSessionByParentId(uint32_t parentId)
-{
-    for (const auto& item : windowSessionMap_) {
-        if (item.second.second && item.second.second->GetProperty() &&
-            item.second.second->GetWindowId() == parentId &&
-            WindowHelper::IsMainWindow(item.second.second->GetType())) {
-            WLOGFD("Find parent, [parentName: %{public}s, parentId:%{public}u, selfPersistentId: %{public}" PRIu64"]",
-                item.second.second->GetProperty()->GetWindowName().c_str(), parentId, GetProperty()->GetPersistentId());
-            return item.second.second;
-        }
-    }
-    WLOGFD("Can not find parent window");
-    return nullptr;
-}
-
 WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
 {
     sptr<ISessionStage> iSessionStage(this);
@@ -112,6 +97,23 @@ WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
     return WMError::WM_OK;
 }
 
+WMError WindowSceneSessionImpl::MapDialogToMainWindow()
+{
+    if (GetType() != WindowType::WINDOW_TYPE_DIALOG) {
+        WLOGFE("Window is not dialog, not map to main window!");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    for (const auto& winPair : windowSessionMap_) {
+        auto win = winPair.second.second;
+        if (win->GetType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW && context_.get() == win->GetContext().get()) {
+            sptr<WindowSessionImpl> selfImpl(this);
+            dialogWindowSessionMap_[win->GetPersistentId()].emplace_back(selfImpl);
+            WLOGFD("Map dialog window %{public}u to main window %{public}u", GetWindowId(), win->GetWindowId());
+        }
+    }
+    return WMError::WM_OK;
+}
+
 WMError WindowSceneSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Context>& context,
     const sptr<Rosen::ISession>& iSession)
 {
@@ -145,6 +147,7 @@ WMError WindowSceneSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Con
         if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
             windowMode_ = windowSystemConfig_.defaultWindowMode_;
         }
+        MapDialogToMainWindow();
     }
     WLOGFD("Window Create [name:%{public}s, id:%{public}" PRIu64 "], state:%{pubic}u, windowmode:%{public}u",
         property_->GetWindowName().c_str(), property_->GetPersistentId(), state_, windowMode_);
