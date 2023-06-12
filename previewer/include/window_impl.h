@@ -203,11 +203,12 @@ public:
 
     virtual void SetSufaceNodeCreateCallback(const NotifySufaceNodeCreateFunc& func) override;
 
+    virtual void CreateSurfaceNode(std::string name, SenderRenderDataCallback callback) override;
+
 private:
     bool IsPointerEventConsumed();
     void TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
-    void UpdatePointerEventForStretchableWindow(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
-    RSSurfaceNode::SharedPtr CreateSurfaceNode(std::string name, WindowType type);
+    void UpdatePointerEventForStretchableWindow(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);    
 
     static std::map<std::string, std::pair<uint32_t, sptr<Window>>> windowMap_;
     static std::map<uint32_t, std::vector<sptr<WindowImpl>>> subWindowMap_;
@@ -225,8 +226,6 @@ private:
     int32_t height_ = 0;
     int32_t orientation_ = 0;
     float density_ = 1.0f;
-
-    NotifySufaceNodeCreateFunc surfaceNodeCreateCallback_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

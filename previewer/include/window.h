@@ -56,7 +56,7 @@ namespace Rosen {
 class RSSurfaceNode;
 class RSTransaction;
 using NotifyNativeWinDestroyFunc = std::function<void(std::string windowName)>;
-using NotifySufaceNodeCreateFunc = std::function<void()>;
+using SendRenderDataCallback = bool (*)(const void*, const size_t, const int32_t, const int32_t);
 
 class IWindowLifeCycle : virtual public RefBase {
 };
@@ -234,7 +234,7 @@ public:
     virtual void SetSize(int32_t width, int32_t height) = 0;
     virtual void SetDensity(float density) = 0;
 
-    virtual void SetSufaceNodeCreateCallback(const NotifySufaceNodeCreateFunc& func) = 0;
+    virtual void CreateSurfaceNode(std::string name, SenderRenderDataCallback callback) = 0;
 };
 }
 }
