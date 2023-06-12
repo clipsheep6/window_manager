@@ -120,12 +120,12 @@ WMError WindowSceneSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Con
     if (!context) {
         WLOGFW("context is nullptr!");
     }
+    hostSession_ = iSession;
+    context_ = context;
     WMError ret = WindowSessionCreateCheck();
     if (ret != WMError::WM_OK) {
         return ret;
     }
-    hostSession_ = iSession;
-    context_ = context;
     if (hostSession_) { // main window
         ret = Connect();
     } else { // system or sub window
