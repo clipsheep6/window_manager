@@ -34,6 +34,9 @@
 #include "session/host/include/scene_session.h"
 #include "window_manager_hilog.h"
 #include "wm_math.h"
+#include "zidl/window_manager_agent_interface.h"
+#include "permission.h"
+#include "session_manager_agent_controller.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -465,6 +468,23 @@ WSError SceneSessionManager::DestroyAndDisconnectSpecificSession(const uint64_t&
     WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);
     msgScheduler_->PostSyncTask(task);
     return WSError::WS_OK;
+}
+
+WMError SceneSessionManager::RegisterWindowManagerAgent(WindowManagerAgentType type,
+    const sptr<IWindowManagerAgent>& windowManagerAgent)
+{
+    if (!Permission::IsSystemCalling()) {
+        WLOGFE("register sceneSessionManager agent permission denied!");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
+    if ((windowManagerAgent == nullptr) || (windowManagerAgent->AsObject() == nullptr)) {
+        WLOGFE("sceneSessionManagerAgent is null");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    return PostSyncTask([this, &windowManagerAgent, type]() {
+        WMError ret = SessionManagerAgentController::GetInstance().RegisterWindowManagerAgent(windowManagerAgent, type);
+        return ret;
+    });
 }
 
 const AppWindowSceneConfig& SceneSessionManager::GetWindowSceneConfig() const

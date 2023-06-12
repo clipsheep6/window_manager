@@ -16,6 +16,7 @@
 #include "window_session_impl.h"
 
 #include <common/rs_common_def.h>
+#include <ipc_skeleton.h>
 #include <refbase.h>
 #include <transaction/rs_interfaces.h>
 #include <transaction/rs_transaction.h>
@@ -163,6 +164,9 @@ WMError WindowSessionImpl::WindowSessionCreateCheck()
 
     // check if camera floating window is already exists
     if (property_->GetWindowType() == WindowType::WINDOW_TYPE_FLOAT_CAMERA) {
+        if (GetFloatingWindowParentId() == INVALID_WINDOW_ID) {
+            return WMError::WM_ERROR_INVALID_PARENT;
+        }
         for (const auto& item : windowSessionMap_) {
             if (item.second.second && item.second.second->property_ &&
                 item.second.second->property_->GetWindowType() == WindowType::WINDOW_TYPE_FLOAT_CAMERA) {
@@ -170,7 +174,13 @@ WMError WindowSessionImpl::WindowSessionCreateCheck()
                 return WMError::WM_ERROR_REPEAT_OPERATION;
             }
         }
+        uint32_t accessTokenId = static_cast<uint32_t>(IPCSkeleton::GetCallingTokenID());
+        property_->SetAccessTokenId(accessTokenId);
+        WLOGI("Create camera float window, TokenId = %{public}u", accessTokenId);
     }
+    uint32_t accessTokenId = static_cast<uint32_t>(IPCSkeleton::GetCallingTokenID());
+    property_->SetAccessTokenId(accessTokenId);
+    WLOGI("Create camera float window, TokenId = %{public}u", accessTokenId);
     return WMError::WM_OK;
 }
 
