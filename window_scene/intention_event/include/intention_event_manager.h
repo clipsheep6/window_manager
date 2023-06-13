@@ -13,14 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_ROSEN_WINDOW_SCENE_INPUT_MANAGER_H
-#define OHOS_ROSEN_WINDOW_SCENE_INPUT_MANAGER_H
+#ifndef OHOS_ROSEN_WINDOW_SCENE_INTENTION_EVENT_MANAGER_H
+#define OHOS_ROSEN_WINDOW_SCENE_INTENTION_EVENT_MANAGER_H
 
 #include "singleton.h"
 
 #include <input_manager.h>
-#include "base/geometry/ng/point_t.h"
-#include "base/geometry/ng/rect_t.h"
 #include <ui_content.h>
 
 namespace OHOS::AppExecFwk {
@@ -31,15 +29,11 @@ namespace OHOS::Rosen {
 class IntentionEventManager {
     DECLARE_DELAYED_SINGLETON(IntentionEventManager);
 public:
-    int32_t EnableInputEventListener(Ace::UIContent* uiContent);
-    bool IsInWindowSceneRegin(const Ace::NG::RectF& windowSceneRect,
-        const Ace::NG::PointF& parentLocalPoint, int32_t souceType);
+    DISALLOW_COPY_AND_MOVE(IntentionEventManager);
+    bool EnableInputEventListener(Ace::UIContent* uiContent,
+        std::shared_ptr<AppExecFwk::EventHandler>);
 
 private:
-    bool GreatOrEqual(double left, double right);
-    bool LessOrEqual(double left, double right);
-    std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
-
 class InputEventListener : public MMI::IInputEventConsumer {
 public:
     explicit InputEventListener(Ace::UIContent* uiContent): uiContent_(uiContent) {}
@@ -51,9 +45,8 @@ public:
 private:
     Ace::UIContent* uiContent_ = nullptr;
 };
+};
 
 #define IntentionManager DelayedSingleton<IntentionEventManager>::GetInstance()
-}; // namespace
 } // namespace OHOS::Rosen
-
-#endif // OHOS_ROSEN_WINDOW_SCENE_INPUT_MANAGER_H
+#endif // OHOS_ROSEN_WINDOW_SCENE_INTENTION_EVENT_MANAGER_H

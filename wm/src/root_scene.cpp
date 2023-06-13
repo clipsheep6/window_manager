@@ -56,7 +56,24 @@ void RootScene::LoadContent(const std::string& contentUrl, NativeEngine* engine,
     uiContent_->Initialize(this, contentUrl, storage);
     uiContent_->Foreground();
 
-    IntentionManager->EnableInputEventListener(uiContent_.get());
+    auto mainEventRunner = AppExecFwk::EventRunner::GetMainEventRunner();
+    if (mainEventRunner) {
+        WLOGFD("MainEventRunner is available");
+        eventHandler_ = std::make_shared<AppExecFwk::EventHandler>(mainEventRunner);
+    } else {
+        WLOGFD("MainEventRunner is not available");
+        eventHandler_ = AppExecFwk::EventHandler::Current();
+        if (!eventHandler_) {
+            eventHandler_ =
+                std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create(INPUT_AND_VSYNC_THREAD));
+        }
+        VsyncStation::GetInstance().SetIsMainHandlerAvailable(false);
+        VsyncStation::GetInstance().SetVsyncEventHandler(eventHandler_);
+    }
+
+    if (!IntentionManager->EnableInputEventListener(uiContent_.get(), eventHandler_)) {
+        WLOGFE("EnableInputEventListener fail");
+    }
 }
 
 void RootScene::UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason)

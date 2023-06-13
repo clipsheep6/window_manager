@@ -20,6 +20,10 @@
 
 #include "window.h"
 
+namespace OHOS::AppExecFwk {
+class EventHandler;
+} // namespace OHOS::AppExecFwk
+
 namespace OHOS::Ace {
 class UIContent;
 } // namespace OHOS::Ace
@@ -52,7 +56,7 @@ private:
     std::unique_ptr<Ace::UIContent> uiContent_;
 
     std::recursive_mutex mutex_;
-
+    std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
     float density_ = 1.0f;
 };
 } // namespace Rosen

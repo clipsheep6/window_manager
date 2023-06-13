@@ -30,7 +30,6 @@ config("libwm_public_config") {
     "../interfaces/innerkits/wm",
     "../utils/include",
     "../window_scene",
-    "../window_scene/intention_event/include",
   ]
 }
 
@@ -38,7 +37,8 @@ config("libwm_public_config") {
 ohos_static_library("libwm_static") {
   include_dirs = [
     "../utils/include",
-    "//foundation/arkui/ace_engine/frameworks"
+    "//foundation/arkui/ace_engine/frameworks",
+    "${window_base_path}/window_scene/intention_event/include"
   ]
 
   sources = [
@@ -79,6 +79,7 @@ ohos_static_library("libwm_static") {
     "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/session:scene_session",
     "${window_base_path}/window_scene/session_manager:session_manager",
+    "${window_base_path}/window_scene/intention_event:libintention_event",
   ]
 
   external_deps = [
@@ -143,7 +144,8 @@ ohos_static_library("libwm_static") {
 ohos_shared_library("libwm") {
   include_dirs = [
     "../utils/include",
-    "//foundation/arkui/ace_engine/frameworks"
+    "//foundation/arkui/ace_engine/frameworks",
+    "${window_base_path}/window_scene/intention_event/include"
   ]
 
   sources = [

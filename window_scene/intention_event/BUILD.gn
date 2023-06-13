@@ -12,14 +12,12 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("../../windowmanager_aafwk.gni")
 
 ohos_shared_library("libintention_event") {
   include_dirs = [
     "./include",
-    "//foundation/arkui/ace_engine/frameworks",
-    "//foundation/arkui/ace_engine/",
     "../../wm/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client"
   ]
 
   sources = [
@@ -30,6 +28,7 @@ ohos_shared_library("libintention_event") {
     "../session_manager:scene_session_manager",
     "../common:window_scene_common",
     "../session:scene_session",
+    "${window_base_path}/utils:libwmutil",
   ]
 
   external_deps = [
@@ -40,6 +39,30 @@ ohos_shared_library("libintention_event") {
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "input:libmmi-client",
+  ]
+  part_name = "window_manager"
+  subsystem_name = "window"
+}
+
+ohos_shared_library("libwindow_event_process") {
+  include_dirs = [
+    "./include",
+    "//foundation/arkui/ace_engine/frameworks",
+    "//foundation/arkui/ace_engine/",
+    "${window_base_path}/utils/include"
+  ]
+
+  sources = [
+    "src/window_event_process.cpp",
+  ]
+
+  deps = [ "${window_base_path}/utils:libwmutil" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog_native:libhilog",
+    "hisysevent_native:libhisysevent",
+    "hitrace_native:hitrace_meter",
     "graphic_standard:window_animation",
   ]
   part_name = "window_manager"
