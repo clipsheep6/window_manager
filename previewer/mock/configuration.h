@@ -16,10 +16,6 @@
 #ifndef OHOS_ABILITY_BASE_CONFIGURATION_H
 #define OHOS_ABILITY_BASE_CONFIGURATION_H
 
-#include <string>
-#include <vector>
-#include <set>
-
 namespace OHOS {
 namespace AppExecFwk {
 class Configuration {
