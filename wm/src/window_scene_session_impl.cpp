@@ -26,7 +26,6 @@
 #include "window_manager_hilog.h"
 #include "wm_common.h"
 #include "wm_math.h"
-#include "session_manager_agent_controller.h"
 
 #include "window_session_impl.h"
 
