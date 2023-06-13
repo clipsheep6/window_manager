@@ -42,7 +42,7 @@ public:
     {
         return;
     }
-    
+
     inline bool PostTask(const Callback &callback, const std::string &name = std::string(), int64_t delayTime = 0,
         Priority priority = Priority::LOW)
     {

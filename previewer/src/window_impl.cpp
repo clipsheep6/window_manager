@@ -35,20 +35,19 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
     name_ = "main_window";
     // surfaceNode_ = CreateSurfaceNode("preview_surface", option->GetWindowType());
 
-    WLOGFI("WindowImpl constructorCnt: %{public}d",
-        ++constructorCnt);
+    WLOGFI("WindowImpl constructorCnt: %{public}d", ++constructorCnt);
 }
 
 WindowImpl::~WindowImpl()
 {
-    // WLOGFI("windowName: %{public}s, windowId: %{public}d, deConstructorCnt: %{public}d",
-    //     GetWindowName().c_str(), GetWindowId(), ++deConstructorCnt);
+    WLOGFI("windowName: %{public}s, windowId: %{public}d, deConstructorCnt: %{public}d",
+        GetWindowName().c_str(), GetWindowId(), ++deConstructorCnt);
     Destroy();
 }
 
 void WindowImpl::CreateSurfaceNode(const std::string name, const SendRenderDataCallback& callback)
 {
-    WLOGFI("CreateSurfaceNode mlx : %{public}d, name: %{public}s", __LINE__, name.c_str());
+    WLOGFI("CreateSurfaceNode");
     struct RSSurfaceNodeConfig rsSurfaceNodeConfig;
     rsSurfaceNodeConfig.SurfaceNodeName = name;
     rsSurfaceNodeConfig.additionalData = reinterpret_cast<void*>(callback);
@@ -247,6 +246,10 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
         uiContent->Initialize(this, contentInfo, storage);
     }
     uiContent_ = std::move(uiContent);
+    if (uiContent_ == nullptr) {
+        WLOGFE("uiContent_ is NULL");
+        return WMError::WM_ERROR_NULLPTR;
+    }
     UpdateViewportConfig();
     return WMError::WM_OK;
 }
@@ -588,24 +591,16 @@ void WindowImpl::SetRequestModeSupportInfo(uint32_t modeSupportInfo)
 
 void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
-    std::shared_ptr<InputEventListener> inputEventConsumer;
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        inputEventConsumer = inputEventConsumer_;
-    }
-    if (inputEventConsumer != nullptr) {
-        WLOGD("Transfer key event to inputEventConsumer");
-        (void)inputEventConsumer->OnInputEvent(keyEvent);
-    } else if (uiContent_ != nullptr) {
-        WLOGD("Transfer key event to uiContent");
+    WLOGFD("ConsumeKeyEvent");
+    if (uiContent_ != nullptr) {
+        WLOGFE("Transfer key event to uiContent");
         uiContent_->ProcessKeyEvent(keyEvent);
     } else {
         WLOGFE("There is no key event consumer");
     }
 
     if (GetType() == WindowType::WINDOW_TYPE_APP_COMPONENT) {
-        WLOGFI("DispatchKeyEvent: %{public}u", GetWindowId());
-        // keyEvent->MarkProcessed();
+        WLOGFE("DispatchKeyEvent: %{public}u", GetWindowId());
         return;
     }
 }
@@ -613,9 +608,16 @@ void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
 void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
     // If windowRect transformed, transform event back to its origin position
+    WLOGFD("ConsumePointerEvent");
     if (IsPointerEventConsumed()) {
-        // pointerEvent->MarkProcessed();
+        WLOGFE("Pointer event was consumed");
         return;
+    }
+    if (uiContent_ != nullptr) {
+        WLOGFE("Transfer pointer event to uiContent");
+        uiContent_->ProcessPointerEvent(pointerEvent);
+    } else {
+        WLOGFE("There is no pointer event consumer");
     }
 
     TransferPointerEvent(pointerEvent);
@@ -784,25 +786,6 @@ bool WindowImpl::IsPointerEventConsumed()
 
 void WindowImpl::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
-    // if (windowSystemConfig_.isStretchable_ && GetMode() == WindowMode::WINDOW_MODE_FLOATING) {
-    //     UpdatePointerEventForStretchableWindow(pointerEvent);
-    // }
-
-    // std::shared_ptr<InputEventListener> inputEventConsumer;
-    // {
-    //     std::lock_guard<std::recursive_mutex> lock(mutex_);
-    //     inputEventConsumer = inputEventConsumer_;
-    // }
-    // if (inputEventConsumer != nullptr) {
-    //     WLOGFD("Transfer pointer event to inputEventConsumer");
-    //     (void)inputEventConsumer->OnInputEvent(pointerEvent);
-    // } else if (uiContent_ != nullptr) {
-    //     WLOGFD("Transfer pointer event to uiContent");
-    //     (void)uiContent_->ProcessPointerEvent(pointerEvent);
-    // } else {
-    //     WLOGFW("pointerEvent is not consumed, windowId: %{public}u", GetWindowId());
-    //     pointerEvent->MarkProcessed();
-    // }
 }
 
 

@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include <configuration.h>
+#include "window_scene.h"
 
+#include <configuration.h>
 #include "window_impl.h"
 #include "window_manager_hilog.h" 
-#include "window_scene.h"
 
 namespace OHOS {
 namespace Rosen {

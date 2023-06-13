@@ -25,11 +25,15 @@ if (host_os == "mac") {
 config("previewer_window_config") {
   visibility = [ ":*" ]
 
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+    "${arkui_path}/ace_engine/adapter/preview/external/multimodalinput",
+    "${arkui_path}/ace_engine/",
+  ]
 }
 
 ohos_shared_library("previewer_window") {
-  configs = [ ":previewer_window_config" ]
+  public_configs = [ ":previewer_window_config" ]
 
   libs = []
 
@@ -39,16 +43,14 @@ ohos_shared_library("previewer_window") {
     "src/vsync_station.cpp",
     "src/window.cpp",
     "src/window_impl.cpp",
-    "src/window_input_channel.cpp",
+    # "src/window_input_channel.cpp",
     "src/window_option.cpp",
     "src/window_scene.cpp",
-    "src/input_transfer_station.cpp",
+    # "src/input_transfer_station.cpp",
   ]
 
   include_dirs = [
     "include",
-    "${arkui_path}/ace_engine/adapter/preview/external/multimodalinput",
-    "${arkui_path}/ace_engine/",
     "mock",
     "../utils/include",
   ]
@@ -96,7 +98,6 @@ ohos_shared_library("previewer_window_napi") {
     "include",
     "../utils/include",
     "mock",
-    "mock/ui",
     "mock/transaction",
     "${ability_runtime_path}/interfaces/inner_api/runtime/include",
     "../interfaces/kits/napi/window_runtime/window_stage_napi",

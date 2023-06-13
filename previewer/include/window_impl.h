@@ -18,10 +18,9 @@
 
 #include <map>
 
-#include <ui_content.h>
+#include "ui_content.h"
 #include "ui/rs_surface_node.h"
 #include "window.h"
-#include "input_transfer_station.h"
 
 namespace OHOS::AbilityRuntime {
     class Context;
@@ -215,7 +214,6 @@ private:
     std::shared_ptr<RSSurfaceNode> surfaceNode_;
     std::shared_ptr<AbilityRuntime::Context> context_;
     std::string name_;
-    std::shared_ptr<InputEventListener> inputEventConsumer_;
     std::unique_ptr<Ace::UIContent> uiContent_;
     KeyboardAnimationConfig keyboardAnimationConfig_;
     bool needRemoveWindowInputChannel_ = false;
