@@ -129,7 +129,6 @@ config("dm_unittest_common_public_config") {
     "../../../interfaces/innerkits/dm",
     "../../../test/common/utils/include",
     "../../../utils/include",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client",  # RSSurface
   ]
 }
 
@@ -150,10 +149,6 @@ ohos_static_library("dm_unittest_common") {
     "../../../dmserver:libdms",
     "../../../snapshot:snapshot_display",
     "../../../test/common/utils:libtestutil",
-    "//commonlibrary/c_utils/base:utils",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",  # PixelMap
-    "//foundation/multimodalinput/input/frameworks/proxy:libmmi-client",
     "//third_party/googletest:gmock",
     "//third_party/googletest:gtest_main",
     "//third_party/libjpeg-turbo:turbojpeg_static",
@@ -163,8 +158,12 @@ ohos_static_library("dm_unittest_common") {
     "access_token:libaccesstoken_sdk",
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
+    "c_utils:utils",
+    "graphic_standard:librender_service_client",
     "hilog_native:libhilog",
+    "input:libmmi-client",
     "ipc:ipc_single",
+    "multimedia_image_framework:image_native",
   ]
   subsystem_name = "window"
   part_name = "window_manager"

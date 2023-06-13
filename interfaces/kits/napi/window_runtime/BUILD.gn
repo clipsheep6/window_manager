@@ -37,9 +37,6 @@ config("window_native_kit_config") {
     "../../../../wm/include",
     "../../../../utils/include",
     "../../../../wmserver/include",
-
-    # because of pixle_map.h
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
   ]
 }
 
@@ -137,6 +134,7 @@ ohos_shared_library("windowstage_kit") {
     "ability_runtime:runtime",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
+    "multimedia_image_framework:image_native",
     "napi:ace_napi",
   ]
 

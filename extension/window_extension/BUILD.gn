@@ -50,7 +50,6 @@ ohos_shared_library("libwindow_extension") {
     "${ability_runtime_path}/frameworks/native/appkit:app_context",
     "../../interfaces/kits/napi/window_runtime:window_native_kit",
     "../../wm:libwm",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
   ]
 
   external_deps = [
@@ -62,6 +61,7 @@ ohos_shared_library("libwindow_extension") {
     "ability_runtime:runtime",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "graphic_standard:librender_service_client",
     "hilog_native:libhilog",
     "hitrace_native:hitrace_meter",
     "input:libmmi-client",

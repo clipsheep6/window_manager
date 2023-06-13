@@ -22,7 +22,6 @@ config("libwms_config") {
     "include/utils",
     "include/window_snapshot",
     "include/window_group",
-    "//utils/system/safwk/native/include",
     "../interfaces/innerkits/wm",
     "../interfaces/innerkits/dm",
     "../wm/include",
@@ -90,7 +89,6 @@ ohos_shared_library("libwms") {
     "../etc:wms_etc",
     "../utils:libwmutil",
     "../wm:libwm",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//third_party/libxml2:libxml2",
   ]
 
@@ -102,6 +100,7 @@ ohos_shared_library("libwms") {
     "config_policy:configpolicy_util",
     "display_manager:displaymgr",
     "eventhandler:libeventhandler",
+    "graphic_standard:librender_service_client",
     "graphic_standard:window_animation",
     "hicollie_native:libhicollie",
     "hilog_native:libhilog",

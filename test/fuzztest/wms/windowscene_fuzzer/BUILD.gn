@@ -25,8 +25,6 @@ ohos_fuzztest("WindowSceneFuzzTest") {
     "../../../../wmserver/include",
     "../../../../interfaces/innerkits/dm",
     "../../../../interfaces/innerkits/wm",
-    "//foundation/graphic/graphic_2d/interfaces/innerkits/surface",
-    "//commonlibrary/c_utils/base/include",
   ]
 
   configs = [
@@ -38,11 +36,12 @@ ohos_fuzztest("WindowSceneFuzzTest") {
   deps = [
     "${window_base_path}/dm:libdm",
     "${window_base_path}/wm:libwm",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "graphic_standard:librender_service_client",
+    "graphic_standard:surface",
     "ipc:ipc_single",
   ]
 }

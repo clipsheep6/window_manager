@@ -32,12 +32,12 @@ ohos_executable("demo_mirror_screen_listener") {
 
   include_dirs = [ "../common/utils/include" ]
 
-  deps = [
-    "${window_base_path}/dm:libdm",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
-  ]
+  deps = [ "${window_base_path}/dm:libdm" ]
 
-  external_deps = [ "c_utils:utils" ]
+  external_deps = [
+    "c_utils:utils",
+    "graphic_standard:librender_service_base",
+  ]
 
   part_name = "window_manager"
   subsystem_name = "window"
@@ -78,8 +78,9 @@ ohos_executable("demo_snapshot_virtual_screen") {
     "${window_base_path}/dm:libdm_static",
     "${window_base_path}/utils:libwmutil_static",
     "../../snapshot:libsnapshot_util",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
   ]
+
+  external_deps = [ "graphic_standard:librender_service_client" ]
 
   part_name = "window_manager"
   subsystem_name = "window"
@@ -93,12 +94,12 @@ ohos_executable("demo_system_sub_window") {
     "../common/utils/include",
   ]
 
-  deps = [
-    "${window_base_path}/wm:libwm",
-    "//foundation/graphic/graphic_2d/rosen/modules/render_service_base:librender_service_base",
-  ]
+  deps = [ "${window_base_path}/wm:libwm" ]
 
-  external_deps = [ "c_utils:utils" ]
+  external_deps = [
+    "c_utils:utils",
+    "graphic_standard:librender_service_base",
+  ]
 
   part_name = "window_manager"
   subsystem_name = "window"
@@ -127,12 +128,12 @@ ohos_executable("demo_water_mark_listener") {
     "${window_base_path}/test/common/utils/include",
   ]
 
-  deps = [
-    "${graphic_base_path}/graphic_2d/rosen/modules/render_service_base:librender_service_base",
-    "${window_base_path}/wm:libwm",
-  ]
+  deps = [ "${window_base_path}/wm:libwm" ]
 
-  external_deps = [ "c_utils:utils" ]
+  external_deps = [
+    "c_utils:utils",
+    "graphic_standard:librender_service_base",
+  ]
 
   part_name = "window_manager"
   subsystem_name = "window"
