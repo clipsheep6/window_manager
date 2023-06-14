@@ -18,10 +18,10 @@
 
 #include <map>
 
+#include "interfaces/include/ws_common.h"
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
-
-#include "interfaces/include/ws_common.h"
+#include "root_scene.h"
 #include "session/host/include/scene_session.h"
 
 namespace OHOS::Rosen {
@@ -38,6 +38,8 @@ public:
     static NativeValue* RequestSceneSessionActivation(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RequestSceneSessionBackground(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RequestSceneSessionDestruction(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* RequestSceneSessionByCall(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* StartAbilityBySpecified(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RegisterCallback(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* GetWindowSceneConfig(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* ProcessBackEvent(NativeEngine* engine, NativeCallbackInfo* info);
@@ -50,6 +52,8 @@ private:
     NativeValue* OnRequestSceneSessionActivation(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRequestSceneSessionBackground(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRequestSceneSessionDestruction(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnRequestSceneSessionByCall(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnStartAbilityBySpecified(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnGetWindowSceneConfig(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnProcessBackEvent(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnUpdateFocus(NativeEngine& engine, NativeCallbackInfo& info);
@@ -62,6 +66,8 @@ private:
     std::map<std::string, std::shared_ptr<NativeReference>> jsCbMap_;
     using Func = void(JsSceneSessionManager::*)();
     std::map<std::string, Func> listenerFunc_;
+
+    sptr<RootScene> rootScene_;
 };
 } // namespace OHOS::Rosen
 

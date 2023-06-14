@@ -38,7 +38,6 @@ class ResourceManager;
 } // namespace OHOS::Global::Resource
 
 namespace OHOS::Rosen {
-class RootScene;
 class SceneSession;
 using NotifyCreateSpecificSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 using NotifySetFocusSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
@@ -50,7 +49,8 @@ public:
     WSError RequestSceneSessionActivation(const sptr<SceneSession>& sceneSession);
     WSError RequestSceneSessionBackground(const sptr<SceneSession>& sceneSession);
     WSError RequestSceneSessionDestruction(const sptr<SceneSession>& sceneSession);
-
+    WSError RequestSceneSessionByCall(const sptr<SceneSession>& sceneSession);
+    void StartAbilityBySpecified(const SessionInfo& sessionInfo);
     sptr<RootSceneSession> GetRootSceneSession();
     sptr<SceneSession> GetSceneSession(uint64_t persistentId);
     WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
@@ -67,6 +67,8 @@ public:
     WSError SetFocusedSession(uint64_t persistentId);
     uint64_t GetFocusedSession() const;
     WSError UpdateFocus(uint64_t persistentId, bool isFocused);
+    void HandleTurnScreenOn(const sptr<SceneSession>& sceneSession);
+    void HandleKeepScreenOn(const sptr<SceneSession>& sceneSession, bool requireLock);
 protected:
     SceneSessionManager();
     virtual ~SceneSessionManager() = default;
@@ -80,6 +82,7 @@ private:
     bool ConfigAppWindowShadow(const WindowSceneConfig::ConfigItem& shadowConfig, WindowShadowConfig& outShadow);
     void ConfigDecor(const WindowSceneConfig::ConfigItem& decorConfig);
     sptr<AAFwk::SessionInfo> SetAbilitySessionInfo(const sptr<SceneSession>& scnSession);
+    WSError DestroyDialogWithMainWindow(const sptr<SceneSession>& scnSession);
 
     sptr<AppExecFwk::IBundleMgr> GetBundleManager();
     std::shared_ptr<Global::Resource::ResourceManager> CreateResourceManager(
@@ -88,7 +91,6 @@ private:
 
     std::map<uint64_t, sptr<SceneSession>> abilitySceneMap_;
     sptr<RootSceneSession> rootSceneSession_;
-    sptr<RootScene> rootScene_;
     NotifyCreateSpecificSessionFunc createSpecificSessionFunc_;
     AppWindowSceneConfig appWindowSceneConfig_;
     SystemSessionConfig systemConfig_;

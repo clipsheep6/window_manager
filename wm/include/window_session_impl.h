@@ -30,6 +30,25 @@
 
 namespace OHOS {
 namespace Rosen {
+union WSColorParam {
+#if BIG_ENDIANNESS
+    struct {
+        uint8_t alpha;
+        uint8_t red;
+        uint8_t green;
+        uint8_t blue;
+    } argb;
+#else
+    struct {
+        uint8_t blue;
+        uint8_t green;
+        uint8_t red;
+        uint8_t alpha;
+    } argb;
+#endif
+    uint32_t value;
+};
+
 namespace {
 template<typename T1, typename T2, typename Ret>
 using EnableIfSame = typename std::enable_if<std::is_same_v<T1, T2>, Ret>::type;
@@ -76,6 +95,10 @@ public:
     WMError UnregisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener) override;
     WMError RegisterWindowChangeListener(const sptr<IWindowChangeListener>& listener) override;
     WMError UnregisterWindowChangeListener(const sptr<IWindowChangeListener>& listener) override;
+    void RegisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener) override;
+    void UnregisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener) override;
+    WMError RegisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener) override;
+    WMError UnregisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener) override;
     void RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func) override;
     uint32_t GetParentId() const;
     uint64_t GetPersistentId() const;
@@ -85,6 +108,8 @@ public:
     void NotifyAfterForeground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
     void NotifyAfterBackground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
     void NotifyForegroundFailed(WMError ret);
+    WSError NotifyDestroy() override;
+    void NotifyTouchDialogTarget() override;
 
     WindowState state_ { WindowState::STATE_INITIAL };
 
@@ -97,6 +122,15 @@ public:
     virtual WMError SetBlur(float radius) override;
     virtual WMError SetBackdropBlur(float radius) override;
     virtual WMError SetBackdropBlurStyle(WindowBlurStyle blurStyle) override;
+    uint32_t GetBackgroundColor() const;
+    virtual WMError SetBackgroundColor(const std::string& color) override;
+    WMError SetBackgroundColor(uint32_t color);
+    virtual bool IsTransparent() const override;
+    virtual WMError SetTransparent(bool isTransparent) override;
+    virtual WMError SetTurnScreenOn(bool turnScreenOn) override;
+    virtual bool IsTurnScreenOn() const override;
+    virtual WMError SetKeepScreenOn(bool keepScreenOn) override;
+    virtual bool IsKeepScreenOn() const override;
 
 protected:
     WMError Connect();
@@ -128,6 +162,10 @@ private:
     template<typename T> EnableIfSame<T, IWindowLifeCycle, std::vector<sptr<IWindowLifeCycle>>> GetListeners();
     template<typename T>
     EnableIfSame<T, IWindowChangeListener, std::vector<sptr<IWindowChangeListener>>> GetListeners();
+    template<typename T>
+    EnableIfSame<T, IDialogDeathRecipientListener, std::vector<sptr<IDialogDeathRecipientListener>>> GetListeners();
+    template<typename T>
+    EnableIfSame<T, IDialogTargetTouchListener, std::vector<sptr<IDialogTargetTouchListener>>> GetListeners();
     template<typename T> void ClearUselessListeners(std::map<uint64_t, T>& listeners, uint64_t persistentId);
     RSSurfaceNode::SharedPtr CreateSurfaceNode(std::string name, WindowType type);
     void NotifyAfterFocused();
@@ -139,6 +177,8 @@ private:
     std::string windowName_;
     static std::map<uint64_t, std::vector<sptr<IWindowLifeCycle>>> lifecycleListeners_;
     static std::map<uint64_t, std::vector<sptr<IWindowChangeListener>>> windowChangeListeners_;
+    static std::map<uint64_t, std::vector<sptr<IDialogDeathRecipientListener>>> dialogDeathRecipientListeners_;
+    static std::map<uint64_t, std::vector<sptr<IDialogTargetTouchListener>>> dialogTargetTouchListener_;
     static std::recursive_mutex globalMutex_;
     NotifyNativeWinDestroyFunc notifyNativefunc_;
     WMError UpdateProperty(WSPropertyChangeAction action);

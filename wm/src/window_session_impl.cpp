@@ -42,6 +42,8 @@ constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowS
 
 std::map<uint64_t, std::vector<sptr<IWindowLifeCycle>>> WindowSessionImpl::lifecycleListeners_;
 std::map<uint64_t, std::vector<sptr<IWindowChangeListener>>> WindowSessionImpl::windowChangeListeners_;
+std::map<uint64_t, std::vector<sptr<IDialogDeathRecipientListener>>> WindowSessionImpl::dialogDeathRecipientListeners_;
+std::map<uint64_t, std::vector<sptr<IDialogTargetTouchListener>>> WindowSessionImpl::dialogTargetTouchListener_;
 std::recursive_mutex WindowSessionImpl::globalMutex_;
 std::map<std::string, std::pair<uint64_t, sptr<WindowSessionImpl>>> WindowSessionImpl::windowSessionMap_;
 std::map<uint64_t, std::vector<sptr<WindowSessionImpl>>> WindowSessionImpl::subWindowSessionMap_;
@@ -88,6 +90,8 @@ WindowSessionImpl::WindowSessionImpl(const sptr<WindowOption>& option)
     property_->SetTouchable(option->GetTouchable());
     property_->SetDisplayId(option->GetDisplayId());
     property_->SetParentId(option->GetParentId());
+    property_->SetTurnScreenOn(option->IsTurnScreenOn());
+    property_->SetKeepScreenOn(option->IsKeepScreenOn());
     surfaceNode_ = CreateSurfaceNode(windowName_, option->GetWindowType());
 }
 
@@ -606,6 +610,8 @@ void WindowSessionImpl::ClearListenersById(uint64_t persistentId)
     std::lock_guard<std::recursive_mutex> lock(globalMutex_);
     ClearUselessListeners(lifecycleListeners_, persistentId);
     ClearUselessListeners(windowChangeListeners_, persistentId);
+    ClearUselessListeners(dialogDeathRecipientListeners_, persistentId);
+    ClearUselessListeners(dialogTargetTouchListener_, persistentId);
 }
 
 void WindowSessionImpl::RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func)
@@ -681,6 +687,93 @@ void WindowSessionImpl::NotifyForegroundFailed(WMError ret)
 {
     auto lifecycleListeners = GetListeners<IWindowLifeCycle>();
     CALL_LIFECYCLE_LISTENER_WITH_PARAM(ForegroundFailed, lifecycleListeners, static_cast<int32_t>(ret));
+}
+
+void WindowSessionImpl::RegisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener)
+{
+    WLOGFD("Start register DialogDeathRecipientListener");
+    if (listener == nullptr) {
+        WLOGFE("listener is nullptr");
+        return;
+    }
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    RegisterListener(dialogDeathRecipientListeners_[GetPersistentId()], listener);
+}
+
+void WindowSessionImpl::UnregisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener)
+{
+    WLOGFD("Start unregister DialogDeathRecipientListener");
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    UnregisterListener(dialogDeathRecipientListeners_[GetPersistentId()], listener);
+}
+
+WMError WindowSessionImpl::RegisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener)
+{
+    WLOGFD("Start register DialogTargetTouchListener");
+    if (listener == nullptr) {
+        WLOGFE("listener is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    return RegisterListener(dialogTargetTouchListener_[GetPersistentId()], listener);
+}
+
+WMError WindowSessionImpl::UnregisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener)
+{
+    WLOGFD("Start unregister DialogTargetTouchListener");
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    return UnregisterListener(dialogTargetTouchListener_[GetPersistentId()], listener);
+}
+
+template<typename T>
+EnableIfSame<T, IDialogDeathRecipientListener, std::vector<sptr<IDialogDeathRecipientListener>>> WindowSessionImpl::
+    GetListeners()
+{
+    std::vector<sptr<IDialogDeathRecipientListener>> dialogDeathRecipientListener;
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        for (auto& listener : dialogDeathRecipientListeners_[GetPersistentId()]) {
+            dialogDeathRecipientListener.push_back(listener);
+        }
+    }
+    return dialogDeathRecipientListener;
+}
+
+template<typename T>
+EnableIfSame<T, IDialogTargetTouchListener, std::vector<sptr<IDialogTargetTouchListener>>> WindowSessionImpl::
+    GetListeners()
+{
+    std::vector<sptr<IDialogTargetTouchListener>> dialogTargetTouchListener;
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        for (auto& listener : dialogTargetTouchListener_[GetPersistentId()]) {
+            dialogTargetTouchListener.push_back(listener);
+        }
+    }
+    return dialogTargetTouchListener;
+}
+
+WSError WindowSessionImpl::NotifyDestroy()
+{
+    auto dialogDeathRecipientListener = GetListeners<IDialogDeathRecipientListener>();
+    for (auto& listener : dialogDeathRecipientListener) {
+        if (listener.GetRefPtr() != nullptr) {
+            listener.GetRefPtr()->OnDialogDeathRecipient();
+        }
+    }
+    // destroy dialog in client
+    Destroy();
+    return WSError::WS_OK;
+}
+
+void WindowSessionImpl::NotifyTouchDialogTarget()
+{
+    auto dialogTargetTouchListener = GetListeners<IDialogTargetTouchListener>();
+    for (auto& listener : dialogTargetTouchListener) {
+        if (listener.GetRefPtr() != nullptr) {
+            listener.GetRefPtr()->OnDialogTargetTouch();
+        }
+    }
 }
 
 void WindowSessionImpl::NotifySizeChange(Rect rect, WindowSizeChangeReason reason)
@@ -877,6 +970,107 @@ WMError WindowSessionImpl::SetBackdropBlurStyle(WindowBlurStyle blurStyle)
 
     RSTransaction::FlushImplicitTransaction();
     return WMError::WM_OK;
+}
+
+uint32_t WindowSessionImpl::GetBackgroundColor() const
+{
+    if (uiContent_ != nullptr) {
+        return uiContent_->GetBackgroundColor();
+    }
+    WLOGD("uiContent is nullptr, windowId: %{public}u, use FA mode", GetWindowId());
+    return 0xffffffff; // means no background color been set, default color is white
+}
+
+WMError WindowSessionImpl::SetBackgroundColor(const std::string& color)
+{
+    if (IsWindowSessionInvalid()) {
+        WLOGFE("session is invalid");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    uint32_t colorValue;
+    if (ColorParser::Parse(color, colorValue)) {
+        WLOGD("SetBackgroundColor: window: %{public}s, value: [%{public}s, %{public}u]",
+            windowName_.c_str(), color.c_str(), colorValue);
+        return SetBackgroundColor(colorValue);
+    }
+    WLOGFE("invalid color string: %{public}s", color.c_str());
+    return WMError::WM_ERROR_INVALID_PARAM;
+}
+
+WMError WindowSessionImpl::SetBackgroundColor(uint32_t color)
+{
+    // 0xff000000: ARGB style, means Opaque color.
+    // const bool isAlphaZero = !(color & 0xff000000);
+    // report ZeroOpacityInfo? 
+    if (uiContent_ != nullptr) {
+        uiContent_->SetBackgroundColor(color);
+        return WMError::WM_OK;
+    }
+    return WMError::WM_ERROR_INVALID_OPERATION;
+}
+
+bool WindowSessionImpl::IsTransparent() const
+{
+    WSColorParam backgroundColor;
+    backgroundColor.value = GetBackgroundColor();
+    WLOGFD("color: %{public}u, alpha: %{public}u", backgroundColor.value, backgroundColor.argb.alpha);
+    return backgroundColor.argb.alpha == 0x00; // 0x00: completely transparent
+}
+
+WMError WindowSessionImpl::SetTransparent(bool isTransparent)
+{
+    if (IsWindowSessionInvalid()) {
+        WLOGFE("session is invalid");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    WSColorParam backgroundColor;
+    backgroundColor.value = GetBackgroundColor();
+    if (isTransparent) {
+        backgroundColor.argb.alpha = 0x00; // 0x00: completely transparent
+        return SetBackgroundColor(backgroundColor.value);
+    } else {
+        backgroundColor.value = GetBackgroundColor();
+        if (backgroundColor.argb.alpha == 0x00) {
+            backgroundColor.argb.alpha = 0xff; // 0xff: completely opaque
+            return SetBackgroundColor(backgroundColor.value);
+        }
+    }
+    return WMError::WM_OK;
+}
+
+WMError WindowSessionImpl::SetTurnScreenOn(bool turnScreenOn)
+{
+    if (IsWindowSessionInvalid()) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    property_->SetTurnScreenOn(turnScreenOn);
+    if (state_ == WindowState::STATE_SHOWN) {
+        return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_TURN_SCREEN_ON);
+    }
+    return WMError::WM_OK;
+}
+
+bool WindowSessionImpl::IsTurnScreenOn() const
+{
+    return property_->IsTurnScreenOn();
+}
+
+WMError WindowSessionImpl::SetKeepScreenOn(bool keepScreenOn)
+{
+    if (IsWindowSessionInvalid()) {
+        WLOGFE("session is invalid");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    property_->SetKeepScreenOn(keepScreenOn);
+    if (state_ == WindowState::STATE_SHOWN) {
+        return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_KEEP_SCREEN_ON);
+    }
+    return WMError::WM_OK;
+}
+
+bool WindowSessionImpl::IsKeepScreenOn() const
+{
+    return property_->IsKeepScreenOn();
 }
 
 } // namespace Rosen

@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//foundation/ability/ability_base/ability_base.gni")
 import("../../windowmanager_aafwk.gni")
 
 config("session_public_config") {
@@ -26,11 +25,6 @@ config("session_public_config") {
 
     # for WMError Code
     "${window_base_path}/interfaces/innerkits/wm",
-    "${window_base_path}/window_scene/session_manager/include",
-
-    # for scene_persistence
-    "${ability_base_path}/interfaces/kits/native/extractortool/include",
-    "${multimedia_image_framework}/interfaces/innerkits/include",
   ]
 }
 
@@ -67,6 +61,7 @@ ohos_shared_library("scene_session") {
     "hilog_native:libhilog",
     "input:libmmi-client",
     "ipc:ipc_single",
+    "power_manager:powermgr_client",
     "multimedia_image_framework:image_native",
   ]
 
@@ -86,6 +81,12 @@ ohos_shared_library("screen_session") {
   deps = [
     "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/window_scene/session:scene_session",
+  ]
+
+  external_deps = [
+    "ipc:ipc_single",
+    "power_manager:powermgr_client",
   ]
 
   innerapi_tags = [ "platformsdk" ]
