@@ -70,6 +70,8 @@ public:
     sptr<WindowSessionProperty> GetSessionProperty() const;
     WSRect GetSessionRect() const;
     WindowType GetWindowType() const;
+    float GetAspectRatio() const;
+    WSError SetAspectRatio(float ratio) override;
 
     void SetWindowSessionProperty(const sptr<WindowSessionProperty>& property);
     const sptr<WindowSessionProperty>& GetWindowSessionProperty() const;
@@ -85,12 +87,13 @@ public:
     WSError Disconnect() override;
 
     WSError OnSessionEvent(SessionEvent event) override;
+    WSError UpdateWindowSessionProperty(sptr<WindowSessionProperty> property) override;
     void NotifyConnect();
     void NotifyForeground();
     void NotifyBackground();
 
-    WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
-    WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent);
+    virtual WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
+    virtual WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent);
 
     bool RegisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
     bool UnregisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
@@ -156,6 +159,7 @@ protected:
     SystemSessionConfig systemConfig_;
     const bool isExtension = true;
     sptr<ScenePersistence> scenePersistence_ = nullptr;
+    float aspectRatio_ = 0.0f;
 
 private:
     bool CheckDialogOnForeground();
