@@ -95,11 +95,17 @@ struct SessionInfo {
     std::string abilityName_ = "";
     sptr<IRemoteObject> callerToken_ = nullptr;
     bool isSystem_ = false;
-    uint32_t persistentId_ = 0;
 
     sptr<AAFwk::Want> want;
     int32_t resultCode;
     int32_t requestCode;
+    int32_t errorCode;
+    std::string errorReason;
+
+    uint64_t persistentId_ = 0;
+    uint64_t callerPersistentId_ = 0;
+    uint32_t callState_ = 0;
+    int64_t uiAbilityId_ = 0;
 };
 
 enum class SizeChangeReason : uint32_t {
@@ -127,6 +133,7 @@ enum class SessionEvent : uint32_t {
     EVENT_CLOSE,
     EVENT_START_MOVE,
     EVENT_TERMINATE,
+    EVENT_EXCEPTION,
 };
 
 struct WSRect {
