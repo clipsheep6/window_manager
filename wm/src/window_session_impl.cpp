@@ -1026,12 +1026,12 @@ WMError WindowSessionImpl::SetTransparent(bool isTransparent)
     WSColorParam backgroundColor;
     backgroundColor.value = GetBackgroundColor();
     if (isTransparent) {
-        backgroundColor.argb.alpha = 0x00; // 0x00: completely transparent
+        backgroundColor.argb.alpha = 0x00;
         return SetBackgroundColor(backgroundColor.value);
     } else {
         backgroundColor.value = GetBackgroundColor();
         if (backgroundColor.argb.alpha == 0x00) {
-            backgroundColor.argb.alpha = 0xff; // 0xff: completely opaque
+            backgroundColor.argb.alpha = 0xff;
             return SetBackgroundColor(backgroundColor.value);
         }
     }
