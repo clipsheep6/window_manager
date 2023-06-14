@@ -20,7 +20,6 @@
 #include <refbase.h>
 #include <string>
 #include <vector>
-// #include <running_lock.h>
 #include "interfaces/include/ws_common.h"
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/host/include/zidl/session_stub.h"

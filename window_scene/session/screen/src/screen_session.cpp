@@ -17,7 +17,6 @@
 
 #include "window_manager_hilog.h"
 #include <transaction/rs_interfaces.h>
-// #include <display_power_mgr_client.h>
 #include <power_mgr_client.h>
 #include <ipc_skeleton.h>
 #include "session/host/include/scene_session.h"
