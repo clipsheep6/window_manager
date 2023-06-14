@@ -375,7 +375,7 @@ HWTEST_F(WindowSessionTest, GetSessionRect, Function | SmallTest | Level2)
 
 /**
  * @tc.name: RaiseToAppTop01
- * @tc.desc: check func GetSessionRect
+ * @tc.desc: RaiseToAppTop
  * @tc.type: FUNC
  */
 HWTEST_F(WindowSessionTest, RaiseToAppTop01, Function | SmallTest | Level2)
@@ -384,19 +384,19 @@ HWTEST_F(WindowSessionTest, RaiseToAppTop01, Function | SmallTest | Level2)
     info.abilityName_ = "testSession1";
     info.bundleName_ = "testSession3";
     sptr<SceneSession> scensession = new SceneSession(info, nullptr);
-    auto result = scensession->RaiseToTop();
+    auto result = scensession->RaiseToAppTop();
     ASSERT_EQ(result, WSError::WS_OK);
 
     sptr<SceneSession::SessionChangeCallback> scensessionchangeCallBack =
         new (std::nothrow) SceneSession::SessionChangeCallback();
     scensessionchangeCallBack->onRaiseToTop_ = nullptr;
     scensession->RegisterSessionChangeCallback(scensessionchangeCallBack);
-    result = scensession->RaiseToTop();
+    result = scensession->RaiseToAppTop();
     ASSERT_EQ(result, WSError::WS_OK);
 
     NotifyRaiseToTopFunc onRaiseToTop_ = []() {};
     scensessionchangeCallBack->onRaiseToTop_ = onRaiseToTop_;
-    result = scensession->RaiseToTop();
+    result = scensession->RaiseToAppTop();
     ASSERT_EQ(result, WSError::WS_OK);
 }
 
@@ -444,14 +444,14 @@ HWTEST_F(WindowSessionTest, DestroyAndDisconnectSpecificSession01, Function | Sm
     auto result = scensession->DestroyAndDisconnectSpecificSession(persistentId);
     ASSERT_EQ(result, WSError::WS_OK);
 
-    sptr<SceneSession::SpecificSessionCallback> specificCalback_ =
+    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
         new (std::nothrow) SceneSession::SpecificSessionCallback();
     int resultValue = 0;
-    specificCalback_->onDestroy_ = [&resultValue](const uint64_t &persistentId) -> WSError {
+    specificCallback_->onDestroy_ = [&resultValue](const uint64_t &persistentId) -> WSError {
         resultValue = 1;
         return WSError::WS_OK;
     };
-    scensession = new SceneSession(info, specificCalback_);
+    scensession = new SceneSession(info, specificCallback_);
     result = scensession->DestroyAndDisconnectSpecificSession(persistentId);
     ASSERT_EQ(result, WSError::WS_OK);
 }
@@ -481,21 +481,21 @@ HWTEST_F(WindowSessionTest, CreateAndConnectSpecificSession01, Function | SmallT
     sptr<TestWindowEventChannel> testWindowEventChannel = new (std::nothrow) TestWindowEventChannel();
     EXPECT_NE(nullptr, testWindowEventChannel);
 
-    specificCalback_->onCreate_ = [&resultValue](const SessionInfo &info) -> sptr<SceneSession> {
+    specificCallback_->onCreate_ = [&resultValue](const SessionInfo &info) -> sptr<SceneSession> {
         resultValue = 1;
         return nullptr;
     };
-    scensession = new SceneSession(info, specificCalback_);
+    scensession = new SceneSession(info, specificCallback_);
     auto result = scensession->CreateAndConnectSpecificSession(mockSessionStage, testWindowEventChannel, surfaceNode_,
         property_, persistentId, session_);
     ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
 
 
-    specificCalback_->onCreate_ = [&resultValue](const SessionInfo &info) -> sptr<SceneSession> {
+    specificCallback_->onCreate_ = [&resultValue, specificCallback_](const SessionInfo &info) -> sptr<SceneSession> {
         resultValue = 1;
         return new SceneSession(info, specificCalback_);
     };
-    scensession = new SceneSession(info, specificCalback_);
+    scensession = new SceneSession(info, specificCallback_);
     result = scensession->CreateAndConnectSpecificSession(mockSessionStage, testWindowEventChannel, surfaceNode_,
         property_, persistentId, session_);
     ASSERT_EQ(result, WSError::WS_OK);
@@ -536,7 +536,7 @@ HWTEST_F(WindowSessionTest, OnSessionEvent01, Function | SmallTest | Level2)
 
     int resultValue = 0;
     NotifySessionEventFunc onSessionEvent_ = [&resultValue](int32_t eventId) { resultValue = 1; };
-    scensessionchangeCallBack->onSessionEvent_ = onSessionEvent_;
+    scensessionchangeCallBack->OnSessionEvent_ = onSessionEvent_;
     result = scensession->OnSessionEvent(SessionEvent::EVENT_MINIMIZE);
     ASSERT_EQ(result, WSError::WS_OK);
 }
