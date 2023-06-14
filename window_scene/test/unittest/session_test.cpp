@@ -21,6 +21,7 @@
 #include "mock/mock_session_stage.h"
 #include "mock/mock_window_event_channel.h"
 #include "session/host/include/session.h"
+#include "session/host/include/scene_session.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -411,7 +412,7 @@ HWTEST_F(WindowSessionTest, UpdateSessionRect01, Function | SmallTest | Level2)
     info.abilityName_ = "testSession1";
     info.bundleName_ = "testSession3";
     sptr<SceneSession> scensession = new SceneSession(info, nullptr);
-    WSRect rect = { 0, 0, 0, 1, 2 };
+     WSRect rect = { 0, 0, 320, 240 }; // width: 320, height: 240
     auto result = scensession->UpdateSessionRect(rect, SizeChangeReason::RESIZE);
     ASSERT_EQ(result, WSError::WS_OK);
 
@@ -474,7 +475,7 @@ HWTEST_F(WindowSessionTest, CreateAndConnectSpecificSession01, Function | SmallT
     sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
     EXPECT_NE(nullptr, mockSessionStage);
 
-    sptr<SceneSession::SpecificSessionCallback> specificCalback_ =
+    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
         new (std::nothrow) SceneSession::SpecificSessionCallback();
     int resultValue = 0;
     sptr<SceneSession> scensession;
@@ -493,7 +494,7 @@ HWTEST_F(WindowSessionTest, CreateAndConnectSpecificSession01, Function | SmallT
 
     specificCallback_->onCreate_ = [&resultValue, specificCallback_](const SessionInfo &info) -> sptr<SceneSession> {
         resultValue = 1;
-        return new SceneSession(info, specificCalback_);
+        return new SceneSession(info, specificCallback_);
     };
     scensession = new SceneSession(info, specificCallback_);
     result = scensession->CreateAndConnectSpecificSession(mockSessionStage, testWindowEventChannel, surfaceNode_,
