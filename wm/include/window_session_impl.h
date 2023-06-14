@@ -30,6 +30,25 @@
 
 namespace OHOS {
 namespace Rosen {
+union WSColorParam {
+#if BIG_ENDIANNESS
+    struct {
+        uint8_t alpha;
+        uint8_t red;
+        uint8_t green;
+        uint8_t blue;
+    } argb;
+#else
+    struct {
+        uint8_t blue;
+        uint8_t green;
+        uint8_t red;
+        uint8_t alpha;
+    } argb;
+#endif
+    uint32_t value;
+};
+
 namespace {
 template<typename T1, typename T2, typename Ret>
 using EnableIfSame = typename std::enable_if<std::is_same_v<T1, T2>, Ret>::type;
@@ -103,6 +122,15 @@ public:
     virtual WMError SetBlur(float radius) override;
     virtual WMError SetBackdropBlur(float radius) override;
     virtual WMError SetBackdropBlurStyle(WindowBlurStyle blurStyle) override;
+    uint32_t GetBackgroundColor() const;
+    virtual WMError SetBackgroundColor(const std::string& color) override;
+    WMError SetBackgroundColor(uint32_t color);
+    virtual bool IsTransparent() const override;
+    virtual WMError SetTransparent(bool isTransparent) override;
+    virtual WMError SetTurnScreenOn(bool turnScreenOn) override;
+    virtual bool IsTurnScreenOn() const override;
+    virtual WMError SetKeepScreenOn(bool keepScreenOn) override;
+    virtual bool IsKeepScreenOn() const override;
 
 protected:
     WMError Connect();

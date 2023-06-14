@@ -134,6 +134,11 @@ public:
     bool GetFocusable() const;
     WSError SetTouchable(bool touchable);
     bool GetTouchable() const;
+    // WSError SetTurnScreenOn(bool turnScreenOn);
+    // bool IsTurnScreenOn() const;
+    // WSError SetKeepScreenOn(bool keepScreenOn);
+    // bool IsKeepScreenOn() const;
+    // const std::string& GetWindowName() const;
 protected:
     void GeneratePersistentId(const bool isExtension, const SessionInfo& sessionInfo);
     void UpdateSessionState(SessionState state);
