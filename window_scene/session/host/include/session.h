@@ -20,7 +20,7 @@
 #include <refbase.h>
 #include <string>
 #include <vector>
-// #include <running_lock.h>
+
 #include "interfaces/include/ws_common.h"
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/host/include/zidl/session_stub.h"
@@ -44,6 +44,7 @@ using NotifyBackPressedFunc = std::function<void()>;
 using NotifySessionFocusableChangeFunc = std::function<void(const bool isFocusable)>;
 using NotifyClickFunc = std::function<void()>;
 using NotifyTerminateSessionFunc = std::function<void(const SessionInfo& info)>;
+using NotifySessionExceptionFunc = std::function<void(const SessionInfo& info)>;
 
 class ILifecycleListener {
 public:
@@ -99,7 +100,8 @@ public:
 
     void SetTerminateSessionListener(const NotifyTerminateSessionFunc& func);
     WSError TerminateSession(const sptr<AAFwk::SessionInfo> info) override;
-
+    void SetSessionExceptionListener(const NotifyTerminateSessionFunc& func);
+    WSError NotifySessionException(const sptr<AAFwk::SessionInfo> info) override;
     void SetSessionStateChangeListenser(const NotifySessionStateChangeFunc& func);
     void NotifySessionStateChange(const SessionState& state);
     WSError UpdateActiveStatus(bool isActive) override; // update active status from session_stage
@@ -114,7 +116,12 @@ public:
     WSError ProcessBackEvent(); // send back event to session_stage
     WSError RequestSessionBack() override; // receive back request from session_stage
     sptr<ScenePersistence> GetScenePersistence() const;
-
+    void SetParentSession(const sptr<Session>& session);
+    void BindDialogToParentSession(const sptr<Session>& session);
+    void RemoveDialogToParentSession(const sptr<Session>& session);
+    std::vector<sptr<Session>> GetDialogVector() const;
+    void NotifyTouchDialogTarget();
+    WSError NotifyDestroy();
     static std::atomic<uint32_t> sessionId_;
     static std::set<uint32_t> persistIdSet_;
 
@@ -149,12 +156,15 @@ protected:
     NotifySessionFocusableChangeFunc sessionFocusableChangeFunc_;
     NotifyClickFunc clickFunc_;
     NotifyTerminateSessionFunc terminateSessionFunc_;
+    NotifySessionExceptionFunc sessionExceptionFunc_;
     sptr<WindowSessionProperty> property_ = nullptr;
     SystemSessionConfig systemConfig_;
     const bool isExtension = true;
     sptr<ScenePersistence> scenePersistence_ = nullptr;
 
 private:
+    bool CheckDialogOnForeground();
+
     template<typename T>
     bool RegisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener);
     template<typename T>
@@ -187,6 +197,8 @@ private:
     sptr<IWindowEventChannel> windowEventChannel_ = nullptr;
 
     std::shared_ptr<Media::PixelMap> snapshot_;
+    std::vector<sptr<Session>> dialogVec_;
+    sptr<Session> parentSession_;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_H
