@@ -20,6 +20,7 @@
 #include <transaction/rs_interfaces.h>
 #include <pointer_event.h>
 #include <ui/rs_surface_node.h>
+#include <power_mgr_client.h>
 
 #include "window_manager_hilog.h"
 #include "surface_capture_future.h"
@@ -190,6 +191,33 @@ bool Session::GetTouchable() const
 {
     return property_->GetTouchable();
 }
+
+// const std::string& Session::GetWindowName() const
+// {
+//     return property_->GetWindowName();
+// }
+
+// WSError Session::SetTurnScreenOn(bool turnScreenOn)
+// {
+//     property_->SetTurnScreenOn(turnScreenOn);
+//     return WSError::WS_OK;
+// }
+
+// bool Session::IsTurnScreenOn() const
+// {
+//     return property_->IsTurnScreenOn();
+// }
+
+// WSError Session::SetKeepScreenOn(bool keepScreenOn)
+// {
+//     property_->SetKeepScreenOn(keepScreenOn);
+//     return WSError::WS_OK;
+// }
+
+// bool Session::IsKeepScreenOn() const
+// {
+//     return property_->IsKeepScreenOn();
+// }
 
 bool Session::IsSessionValid() const
 {

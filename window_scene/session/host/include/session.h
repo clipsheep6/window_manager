@@ -20,7 +20,7 @@
 #include <refbase.h>
 #include <string>
 #include <vector>
-
+// #include <running_lock.h>
 #include "interfaces/include/ws_common.h"
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/host/include/zidl/session_stub.h"
@@ -127,6 +127,11 @@ public:
     bool GetFocusable() const;
     WSError SetTouchable(bool touchable);
     bool GetTouchable() const;
+    // WSError SetTurnScreenOn(bool turnScreenOn);
+    // bool IsTurnScreenOn() const;
+    // WSError SetKeepScreenOn(bool keepScreenOn);
+    // bool IsKeepScreenOn() const;
+    // const std::string& GetWindowName() const;
 protected:
     void GeneratePersistentId(const bool isExtension, const SessionInfo& sessionInfo);
     void UpdateSessionState(SessionState state);

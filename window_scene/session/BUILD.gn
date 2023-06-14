@@ -67,6 +67,7 @@ ohos_shared_library("scene_session") {
     "hilog_native:libhilog",
     "input:libmmi-client",
     "ipc:ipc_single",
+    "power_manager:powermgr_client",
     "multimedia_image_framework:image_native",
   ]
 
@@ -86,6 +87,11 @@ ohos_shared_library("screen_session") {
   deps = [
     "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "${window_base_path}/utils:libwmutil",
+  ]
+
+  external_deps = [
+    "ipc:ipc_single",
+    "power_manager:powermgr_client",
   ]
 
   innerapi_tags = [ "platformsdk" ]
