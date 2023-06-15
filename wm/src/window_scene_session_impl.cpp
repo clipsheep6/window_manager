@@ -26,6 +26,7 @@
 #include "window_manager_hilog.h"
 #include "wm_common.h"
 #include "wm_math.h"
+#include "session_manager_agent_controller.h"
 
 #include "window_session_impl.h"
 
@@ -74,6 +75,23 @@ sptr<WindowSessionImpl> WindowSceneSessionImpl::FindParentSessionByParentId(uint
     return nullptr;
 }
 
+sptr<WindowSessionImpl> WindowSceneSessionImpl::FindMainWindowWithContext()
+{
+    if (GetType() != WindowType::WINDOW_TYPE_DIALOG) {
+        return nullptr;
+    }
+
+    for (const auto& winPair : windowSessionMap_) {
+        auto win = winPair.second.second;
+        if (win && win->GetType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW &&
+            context_.get() == win->GetContext().get()) {
+            return win;
+        }
+    }
+    WLOGFE("Can not find main window to bind dialog!");
+    return nullptr;
+}
+
 WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
 {
     sptr<ISessionStage> iSessionStage(this);
@@ -100,6 +118,11 @@ WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
         if (WindowHelper::IsAppFloatingWindow(GetType())) {
             property_->SetParentPersistentId(GetFloatingWindowParentId());
             WLOGFI("property_ set parentPersistentId: %{public}" PRIu64 "", property_->GetParentPersistentId());
+        }
+        if (GetType() == WindowType::WINDOW_TYPE_DIALOG) {
+            auto mainWindow = FindMainWindowWithContext();
+            property_->SetParentPersistentId(mainWindow->GetPersistentId());
+            WLOGFD("Bind dialog to main window");
         }
         SessionManager::GetInstance().CreateAndConnectSpecificSession(iSessionStage, eventChannel, surfaceNode_,
             property_, persistentId, session);
@@ -369,31 +392,6 @@ WMError WindowSceneSessionImpl::MoveTo(int32_t x, int32_t y)
     if (IsWindowSessionInvalid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-
-    // Float camera window has a special limit:
-    // if display sw <= 600dp, portrait: min width = display sw * 30%, landscape: min width = sw * 50%
-    // if display sw > 600dp, portrait: min width = display sw * 12%, landscape: min width = sw * 30%
-    const auto& displayRect = DisplayGroupInfo::GetInstance().GetDisplayRect(property_->GetDisplayId());
-    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_FLOAT_CAMERA) {
-        uint32_t smallWidth = displayRect.height_ <= displayRect.width_ ? displayRect.height_ : displayRect.width_;
-        float hwRatio = static_cast<float>(displayRect.height_) / static_cast<float>(displayRect.width_);
-        uint32_t minWidth;
-        if (smallWidth <= static_cast<uint32_t>(600 * vpr)) { // sw <= 600dp
-            if (displayRect.width_ <= displayRect.height_) {
-                minWidth = static_cast<uint32_t>(smallWidth * 0.3);
-            } else {
-                minWidth = static_cast<uint32_t>(smallWidth * 0.5);
-            }
-        } else {
-            if (displayRect.width_ <= displayRect.height_) {
-                minWidth = static_cast<uint32_t>(smallWidth * 0.12);
-            } else {
-                minWidth = static_cast<uint32_t>(smallWidth * 0.3);
-            }
-        }
-        width = minWidth >= width ? minWidth : width;
-        height = static_cast<uint32_t>(width * hwRatio);
-    }
     const auto& rect = property_->GetWindowRect();
     Rect newRect = { x, y, rect.width_, rect.height_ }; // must keep x/y
     property_->SetRequestRect(newRect);
@@ -424,24 +422,24 @@ void WindowSceneSessionImpl::LimitCameraFloatWindowMininumSize(uint32_t& width, 
     }
     uint32_t displayWidth = static_cast<uint32_t>(display->GetWidth());
     uint32_t displayHeight = static_cast<uint32_t>(display->GetHeight());
-    float vpr = display->GetVirtualPixelRatio();
-    if (displayWidth == 0 || displayHeight == 0 || MathHelper::NearZero(vpr)) {
+    if (displayWidth == 0 || displayHeight == 0) {
         return;
     }
+    float vpr = (displayWidth > 2700) ? 3.5 : 1.5; // display width: 2770; vpr: 3.5 / 1.5
     uint32_t smallWidth = displayHeight <= displayWidth ? displayHeight : displayWidth;
     float hwRatio = static_cast<float>(displayHeight) / static_cast<float>(displayWidth);
     uint32_t minWidth;
     if (smallWidth <= static_cast<uint32_t>(600 * vpr)) { // sw <= 600dp
         if (displayWidth <= displayHeight) {
-            minWidth = static_cast<uint32_t>(smallWidth * 0.3);
+            minWidth = static_cast<uint32_t>(smallWidth * 0.3); // ratio : 0.3
         } else {
-            minWidth = static_cast<uint32_t>(smallWidth * 0.5);
+            minWidth = static_cast<uint32_t>(smallWidth * 0.5); // ratio : 0.5
         }
     } else {
         if (displayWidth <= displayHeight) {
-            minWidth = static_cast<uint32_t>(smallWidth * 0.12);
+            minWidth = static_cast<uint32_t>(smallWidth * 0.12); // ratio : 0.12
         } else {
-            minWidth = static_cast<uint32_t>(smallWidth * 0.3);
+            minWidth = static_cast<uint32_t>(smallWidth * 0.3); // ratio : 0.3
         }
     }
     width = (width < minWidth) ? minWidth : width;
