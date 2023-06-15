@@ -203,13 +203,8 @@ public:
     virtual void CreateSurfaceNode(const std::string name, const SendRenderDataCallback& callback) override;
 
 private:
-    bool IsPointerEventConsumed();
-    void TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
-    void UpdatePointerEventForStretchableWindow(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);    
-
     static std::map<std::string, std::pair<uint32_t, sptr<Window>>> windowMap_;
     static std::map<uint32_t, std::vector<sptr<WindowImpl>>> subWindowMap_;
-    std::recursive_mutex mutex_;
     WindowState state_ { WindowState::STATE_INITIAL };
     std::shared_ptr<RSSurfaceNode> surfaceNode_;
     std::shared_ptr<AbilityRuntime::Context> context_;

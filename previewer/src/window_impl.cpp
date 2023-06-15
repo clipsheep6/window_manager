@@ -20,7 +20,7 @@
 #include "window_option.h"
 #include "viewport_config.h"
 #include "singleton_container.h"
-#include "vsync_station.h"
+
 namespace OHOS {
 namespace Rosen {
 namespace {
@@ -607,26 +607,19 @@ void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
 
 void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
-    // If windowRect transformed, transform event back to its origin position
     WLOGFD("ConsumePointerEvent");
-    if (IsPointerEventConsumed()) {
-        WLOGFE("Pointer event was consumed");
-        return;
-    }
     if (uiContent_ != nullptr) {
         WLOGFE("Transfer pointer event to uiContent");
         uiContent_->ProcessPointerEvent(pointerEvent);
     } else {
         WLOGFE("There is no pointer event consumer");
     }
-
-    TransferPointerEvent(pointerEvent);
 }
 
 
 void WindowImpl::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback)
 {
-   VsyncStation::GetInstance().RequestVsync(vsyncCallback);
+//    VsyncStation::GetInstance().RequestVsync(vsyncCallback);
 }
 
 void WindowImpl::UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
@@ -777,20 +770,6 @@ KeyboardAnimationConfig WindowImpl::GetKeyboardAnimationConfig()
 void WindowImpl::SetNeedDefaultAnimation(bool needDefaultAnimation)
 {
     return;
-}
-
-bool WindowImpl::IsPointerEventConsumed()
-{
-    return false;
-}
-
-void WindowImpl::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
-{
-}
-
-
-void WindowImpl::UpdatePointerEventForStretchableWindow(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
-{
 }
 
 void WindowImpl::UpdateViewportConfig()

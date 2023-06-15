@@ -41,13 +41,6 @@ public:
     virtual ~WindowOption() = default;
 
     /**
-     * @brief Set window rect.
-     *
-     * @param rect The rect of window to set window position and size.
-     */
-    void SetWindowRect(const struct Rect& rect);
-
-    /**
      * @brief Set window type.
      *
      * @param type The type of window.
