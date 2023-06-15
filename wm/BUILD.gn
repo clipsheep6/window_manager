@@ -21,6 +21,8 @@ config("libwm_private_config") {
     "include",
     "../wmserver/include",
     "../wmserver/include/zidl",
+    "${window_base_path}/window_scene/interfaces/innerkits/include",
+    "${window_base_path}/window_scene/session_manager/src",
     "//foundation/arkui/napi",  # because of ability_context.h
   ]
 }

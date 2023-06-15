@@ -23,6 +23,7 @@
 
 #include "session_manager_base.h"
 #include "session_manager/include/zidl/scene_session_manager_stub.h"
+#include "event_handler.h"
 
 namespace OHOS::AAFwk {
 class SessionInfo;
@@ -61,6 +62,8 @@ public:
     void SetCreateSpecificSessionListener(const NotifyCreateSpecificSessionFunc& func);
     const AppWindowSceneConfig& GetWindowSceneConfig() const;
     WSError ProcessBackEvent();
+    WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
+        const sptr<IWindowManagerAgent>& windowManagerAgent);
 
     void GetStartPage(const SessionInfo& sessionInfo, std::string& path, uint32_t& bgColor);
 
@@ -94,6 +97,18 @@ private:
     NotifyCreateSpecificSessionFunc createSpecificSessionFunc_;
     AppWindowSceneConfig appWindowSceneConfig_;
     SystemSessionConfig systemConfig_;
+    template<typename SyncTask, typename Return = std::invoke_result_t<SyncTask>>
+    Return PostSyncTask(SyncTask&& task)
+    {
+        Return ret;
+        std::function<void()> syncTask([&ret, &task]() {ret = task();});
+        if (handler_) {
+            handler_->PostSyncTask(syncTask, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+        }
+        return ret;
+    }
+
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     uint64_t activeSessionId_;
     sptr<AppExecFwk::IBundleMgr> bundleMgr_;
     uint64_t focusedSessionId_ { INVALID_SESSION_ID };
