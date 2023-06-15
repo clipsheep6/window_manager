@@ -20,15 +20,13 @@ ohos_shared_library("libintention_event") {
     "../../wm/include",
   ]
 
-  sources = [
-    "src/intention_event_manager.cpp",
-  ]
+  sources = [ "src/intention_event_manager.cpp" ]
 
   deps = [
-    "../session_manager:scene_session_manager",
+    "${window_base_path}/utils:libwmutil",
     "../common:window_scene_common",
     "../session:scene_session",
-    "${window_base_path}/utils:libwmutil",
+    "../session_manager:scene_session_manager",
   ]
 
   external_deps = [
@@ -49,21 +47,19 @@ ohos_shared_library("libwindow_event_process") {
     "./include",
     "//foundation/arkui/ace_engine/frameworks",
     "//foundation/arkui/ace_engine/",
-    "${window_base_path}/utils/include"
+    "${window_base_path}/utils/include",
   ]
 
-  sources = [
-    "src/window_event_process.cpp",
-  ]
+  sources = [ "src/window_event_process.cpp" ]
 
   deps = [ "${window_base_path}/utils:libwmutil" ]
 
   external_deps = [
     "c_utils:utils",
+    "graphic_standard:window_animation",
     "hilog_native:libhilog",
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
-    "graphic_standard:window_animation",
   ]
   part_name = "window_manager"
   subsystem_name = "window"
