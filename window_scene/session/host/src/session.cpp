@@ -15,6 +15,7 @@
 
 #include "session/host/include/session.h"
 
+#include "foundation/ability/ability_base/interfaces/kits/native/want/include/want.h"
 #include "interfaces/include/ws_common.h"
 #include "surface_capture_future.h"
 #include <transaction/rs_interfaces.h>
@@ -162,7 +163,7 @@ void Session::UpdateSessionFocusable(bool isFocusable)
     NotifySessionFocusableChange(isFocusable);
 }
 
-WSError Session::SetFocusable(bool isFocusable) 
+WSError Session::SetFocusable(bool isFocusable)
 {
     if (!IsSessionValid()) {
         return WSError::WS_ERROR_INVALID_SESSION;
@@ -180,7 +181,7 @@ bool Session::GetFocusable() const
     return property_->GetFocusable();
 }
 
-WSError Session::SetTouchable(bool touchable) 
+WSError Session::SetTouchable(bool touchable)
 {
     property_->SetTouchable(touchable);
     return WSError::WS_OK;
@@ -326,6 +327,19 @@ WSError Session::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ability
     info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
     info.moduleName_ = abilitySessionInfo->want.GetModuleName();
     info.callerToken_ = abilitySessionInfo->callerToken;
+    info.persistentId_ = abilitySessionInfo->persistentId;
+    info.callState_ = static_cast<uint32_t>(abilitySessionInfo->state);
+    info.callerPersistentId_ = GetPersistentId();
+    sessionInfo_.uiAbilityId_ = abilitySessionInfo->uiAbilityId;
+    sessionInfo_.callState_ = info.callState_;
+    sessionInfo_.want = new AAFwk::Want(abilitySessionInfo->want);
+    sessionInfo_.requestCode = abilitySessionInfo->requestCode;
+    WLOGFI("PendingSessionActivation:bundleName %{public}s, moduleName:%{public}s, abilityName:%{public}s",
+        info.bundleName_.c_str(), info.moduleName_.c_str(), info.abilityName_.c_str());
+    WLOGFI("PendingSessionActivation callState:%{public}d, want persistentId: %{public}" PRIu64 "",
+        info.callState_, info.persistentId_);
+    WLOGFI("PendingSessionActivation uiAbilityId_: %{public}" PRIu64 "", sessionInfo_.uiAbilityId_);
+    WLOGFI("PendingSessionActivation current persistentId: %{public}" PRIu64 "", info.callerPersistentId_);
     if (pendingSessionActivationFunc_) {
         pendingSessionActivationFunc_(info);
     }
@@ -352,6 +366,9 @@ WSError Session::TerminateSession(const sptr<AAFwk::SessionInfo> abilitySessionI
     info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
     info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
     info.callerToken_ = abilitySessionInfo->callerToken;
+    info.persistentId_ = abilitySessionInfo->persistentId;
+    sessionInfo_.want = new AAFwk::Want(abilitySessionInfo->want);
+    sessionInfo_.resultCode = abilitySessionInfo->resultCode;
     if (terminateSessionFunc_) {
         terminateSessionFunc_(info);
     }
@@ -375,6 +392,10 @@ WSError Session::NotifySessionException(const sptr<AAFwk::SessionInfo> abilitySe
     info.callerToken_ = abilitySessionInfo->callerToken;
     info.errorCode = abilitySessionInfo->errorCode;
     info.errorReason = abilitySessionInfo->errorReason;
+    info.persistentId_ = abilitySessionInfo->persistentId;
+    sessionInfo_.want = new AAFwk::Want(abilitySessionInfo->want);
+    sessionInfo_.errorCode = abilitySessionInfo->errorCode;
+    sessionInfo_.errorReason = abilitySessionInfo->errorReason;
     if (sessionExceptionFunc_) {
         sessionExceptionFunc_(info);
     }
@@ -386,8 +407,73 @@ void Session::SetSessionExceptionListener(const NotifySessionExceptionFunc& func
     sessionExceptionFunc_ = func;
 }
 
+void Session::NotifyTouchDialogTarget()
+{
+    if (!sessionStage_) {
+        return;
+    }
+    sessionStage_->NotifyTouchDialogTarget();
+}
+
+WSError Session::NotifyDestroy()
+{
+    if (!sessionStage_) {
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    return sessionStage_->NotifyDestroy();
+}
+
+void Session::SetParentSession(const sptr<Session>& session)
+{
+    parentSession_ = session;
+}
+
+void Session::BindDialogToParentSession(const sptr<Session>& session)
+{
+    dialogVec_.push_back(session);
+}
+
+void Session::RemoveDialogToParentSession(const sptr<Session>& session)
+{
+    auto iter = std::find(dialogVec_.begin(), dialogVec_.end(), session);
+    if (iter != dialogVec_.end()) {
+        dialogVec_.erase(iter);
+    }
+}
+
+std::vector<sptr<Session>> Session::GetDialogVector() const
+{
+    return dialogVec_;
+}
+
+bool Session::CheckDialogOnForeground()
+{
+    if (dialogVec_.empty()) {
+        return false;
+    }
+    for (auto dialogSession : dialogVec_) {
+        if (dialogSession && dialogSession->GetSessionState() == SessionState::STATE_ACTIVE) {
+            dialogSession->NotifyTouchDialogTarget();
+            WLOGFD("Notify touch dialog window");
+            return true;
+        }
+    }
+    return false;
+}
+
 WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
+    if (GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        if (CheckDialogOnForeground()) {
+            WLOGFD("Has dialog on foreground, not transfer pointer event");
+            return WSError::WS_ERROR_INVALID_PERMISSION;
+        }
+    } else if (GetWindowType() == WindowType::WINDOW_TYPE_APP_SUB_WINDOW) {
+        if (parentSession_ && parentSession_->CheckDialogOnForeground()) {
+            WLOGFD("Its main window has dialog on foreground, not transfer pointer event");
+            return WSError::WS_ERROR_INVALID_PERMISSION;
+        }
+    }
     WLOGFD("Session TransferPointEvent, Id: %{public}" PRIu64 "", persistentId_);
     if (!windowEventChannel_) {
         WLOGFE("windowEventChannel_ is null");
@@ -402,6 +488,17 @@ WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& 
 
 WSError Session::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
+    if (GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        if (CheckDialogOnForeground()) {
+            WLOGFD("Has dialog on foreground, not transfer pointer event");
+            return WSError::WS_ERROR_INVALID_PERMISSION;
+        }
+    } else if (GetWindowType() == WindowType::WINDOW_TYPE_APP_SUB_WINDOW) {
+        if (parentSession_ && parentSession_->CheckDialogOnForeground()) {
+            WLOGFD("Its main window has dialog on foreground, not transfer pointer event");
+            return WSError::WS_ERROR_INVALID_PERMISSION;
+        }
+    }
     WLOGFD("Session TransferKeyEvent");
     if (!windowEventChannel_) {
         WLOGFE("windowEventChannel_ is null");
@@ -435,6 +532,7 @@ std::shared_ptr<Media::PixelMap> Session::Snapshot()
 void Session::SetSessionStateChangeListenser(const NotifySessionStateChangeFunc& func)
 {
     sessionStateChangeFunc_ = func;
+    NotifySessionStateChange(state_);
 }
 
 void Session::NotifySessionStateChange(const SessionState& state)

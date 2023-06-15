@@ -42,15 +42,10 @@ WindowSceneSessionImpl::~WindowSceneSessionImpl()
 
 bool WindowSceneSessionImpl::IsValidSystemWindowType(const WindowType& type)
 {
-    // accept all system type temporarily
-    if (WindowHelper::IsSystemWindow(type)) {
-        return true;
-    }
-
     if (!(type == WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW || type == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT ||
         type == WindowType::WINDOW_TYPE_FLOAT_CAMERA || type == WindowType::WINDOW_TYPE_DIALOG ||
         type == WindowType::WINDOW_TYPE_FLOAT || type == WindowType::WINDOW_TYPE_SCREENSHOT ||
-        type == WindowType::WINDOW_TYPE_VOICE_INTERACTION)) {
+        type == WindowType::WINDOW_TYPE_VOICE_INTERACTION || type == WindowType::WINDOW_TYPE_POINTER)) {
         return false;
     }
     return true;
@@ -68,6 +63,23 @@ sptr<WindowSessionImpl> WindowSceneSessionImpl::FindParentSessionByParentId(uint
         }
     }
     WLOGFD("Can not find parent window");
+    return nullptr;
+}
+
+sptr<WindowSessionImpl> WindowSceneSessionImpl::FindMainWindowWithContext()
+{
+    if (GetType() != WindowType::WINDOW_TYPE_DIALOG) {
+        return nullptr;
+    }
+
+    for (const auto& winPair : windowSessionMap_) {
+        auto win = winPair.second.second;
+        if (win && win->GetType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW &&
+            context_.get() == win->GetContext().get()) {
+            return win;
+        }
+    }
+    WLOGFE("Can not find main window to bind dialog!");
     return nullptr;
 }
 
@@ -97,6 +109,11 @@ WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
         if (WindowHelper::IsAppFloatingWindow(GetType())) {
             property_->SetParentPersistentId(GetFloatingWindowParentId());
             WLOGFI("WindowSessionImpl set SetParentPersistentId: %{public}" PRIu64 "", property_->GetParentPersistentId());
+        }
+        if (GetType() == WindowType::WINDOW_TYPE_DIALOG) {
+            auto mainWindow = FindMainWindowWithContext();
+            property_->SetParentPersistentId(mainWindow->GetPersistentId());
+            WLOGFD("Bind dialog to main window");
         }
         SessionManager::GetInstance().CreateAndConnectSpecificSession(iSessionStage, eventChannel, surfaceNode_,
             property_, persistentId, session);

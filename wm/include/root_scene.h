@@ -51,6 +51,16 @@ public:
         return WindowState::STATE_SHOWN;
     }
 
+    WindowType GetType() const override
+    {
+        return type_;
+    }
+
+    const std::string& GetWindowName() const override
+    {
+        return name_;
+    }
+
 private:
 
     std::unique_ptr<Ace::UIContent> uiContent_;
@@ -58,6 +68,10 @@ private:
     std::recursive_mutex mutex_;
     std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
     float density_ = 1.0f;
+
+    WindowType type_ = WindowType::WINDOW_TYPE_DESKTOP;
+
+    std::string name_ = "EntryView";
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -52,7 +52,8 @@ NativeValue* JsSceneSession::Create(NativeEngine& engine, const sptr<SceneSessio
     object->SetNativePointer(jsSceneSession.release(), JsSceneSession::Finalizer, nullptr);
     object->SetProperty("persistentId", CreateJsValue(engine, static_cast<int64_t>(session->GetPersistentId())));
     object->SetProperty("parentId", CreateJsValue(engine, static_cast<int64_t>(session->GetParentPersistentId())));
-    object->SetProperty("type", CreateJsValue(engine, static_cast<uint32_t>(session->GetWindowType())));
+    object->SetProperty("type", CreateJsValue(engine, static_cast<uint32_t>(
+        WINDOW_TYPE_TO_API_TYPE_MAP.at(session->GetWindowType()))));
 
     const char* moduleName = "JsSceneSession";
     BindNativeFunction(engine, *object, "on", moduleName, JsSceneSession::RegisterCallback);
@@ -72,7 +73,7 @@ JsSceneSession::JsSceneSession(NativeEngine& engine, const sptr<SceneSession>& s
         { RAISE_TO_TOP_CB,                &JsSceneSession::ProcessRaiseToTopRegister },
         { BACK_PRESSED_CB,                &JsSceneSession::ProcessBackPressedRegister },
         { SESSION_FOCUSABLE_CHANGE_CB,    &JsSceneSession::ProcessSessionFocusableChangeRegister },
-        { CLICK_CB,                       &JsSceneSession::ProcessClickRegister }, 
+        { CLICK_CB,                       &JsSceneSession::ProcessClickRegister },
         { TERMINATE_SESSION_CB,        &JsSceneSession::ProcessTerminateSessionRegister },
         { SESSION_EXCEPTION_CB,        &JsSceneSession::ProcessSessionExceptionRegister },
     };
@@ -319,10 +320,10 @@ NativeValue* JsSceneSession::OnRegisterCallback(NativeEngine& engine, NativeCall
         return engine.CreateUndefined();
     }
 
-    (this->*listenerFunc_[cbType])();
     std::shared_ptr<NativeReference> callbackRef;
     callbackRef.reset(engine.CreateReference(value, 1));
     jsCbMap_[cbType] = callbackRef;
+    (this->*listenerFunc_[cbType])();
     WLOGFI("[NAPI]Register end, type = %{public}s", cbType.c_str());
     return engine.CreateUndefined();
 }
@@ -493,13 +494,11 @@ void JsSceneSession::PendingSessionActivation(const SessionInfo& info)
     if (iter == jsCbMap_.end()) {
         return;
     }
-    auto sessionWptr = weak_from_this();
     auto jsCallBack = iter->second;
     auto complete = std::make_unique<AsyncTask::CompleteCallback>(
-        [sessionWptr, info, jsCallBack](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            auto jsSessionWptr = sessionWptr.lock();
-            if (jsSessionWptr == nullptr || !jsCallBack) {
-                WLOGFE("[NAPI]root session or target session or engine is nullptr");
+        [info, jsCallBack](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            if (!jsCallBack) {
+                WLOGFE("[NAPI]jsCallBack is nullptr");
                 return;
             }
             NativeValue* jsSessionInfo = CreateJsSessionInfo(engine, info);
@@ -543,13 +542,11 @@ void JsSceneSession::TerminateSession(const SessionInfo& info)
     if (iter == jsCbMap_.end()) {
         return;
     }
-    auto sessionWptr = weak_from_this();
     auto jsCallBack = iter->second;
     auto complete = std::make_unique<AsyncTask::CompleteCallback>(
-        [sessionWptr, info, jsCallBack](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            auto jsSessionWptr = sessionWptr.lock();
-            if (jsSessionWptr == nullptr || !jsCallBack) {
-                WLOGFE("[NAPI]root session or target session or engine is nullptr");
+        [info, jsCallBack](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            if (!jsCallBack) {
+                WLOGFE("[NAPI]jsCallBack is nullptr");
                 return;
             }
             NativeValue* jsSessionInfo = CreateJsSessionInfo(engine, info);
@@ -574,13 +571,11 @@ void JsSceneSession::OnSessionException(const SessionInfo& info)
     if (iter == jsCbMap_.end()) {
         return;
     }
-    auto sessionWptr = weak_from_this();
     auto jsCallBack = iter->second;
     auto complete = std::make_unique<AsyncTask::CompleteCallback>(
-        [sessionWptr, info, jsCallBack](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            auto jsSessionWptr = sessionWptr.lock();
-            if (jsSessionWptr == nullptr || !jsCallBack) {
-                WLOGFE("[NAPI]root session or target session or engine is nullptr");
+        [info, jsCallBack](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            if (!jsCallBack) {
+                WLOGFE("[NAPI]jsCallBack is nullptr");
                 return;
             }
             NativeValue* jsSessionInfo = CreateJsSessionInfo(engine, info);

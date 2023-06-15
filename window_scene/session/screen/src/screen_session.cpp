@@ -84,8 +84,15 @@ sptr<DisplayInfo> ScreenSession::ConvertToDisplayInfo()
     displayInfo->SetHeight(property_.GetBounds().rect_.GetHeight());
     displayInfo->SetScreenId(screenId_);
     displayInfo->SetDisplayId(screenId_);
-    displayInfo->SetRefreshRate(60);     // use 60 temporarily, depended on property set
-
+    displayInfo->SetRefreshRate(property_.GetRefreshRate());
+    displayInfo->SetVirtualPixelRatio(property_.GetVirtualPixelRatio());
+    displayInfo->SetXDpi(property_.GetXDpi());
+    displayInfo->SetYDpi(property_.GetYDpi());
+    displayInfo->SetDpi(property_.GetDensity());
+    displayInfo->SetRotation(property_.GetScreenRotation());
+    displayInfo->SetOrientation(property_.GetOrientation());
+    displayInfo->SetOffsetX(property_.GetOffsetX());
+    displayInfo->SetOffsetY(property_.GetOffsetY());
     return displayInfo;
 }
 
@@ -115,6 +122,11 @@ ScreenProperty ScreenSession::GetScreenProperty() const
 std::shared_ptr<RSDisplayNode> ScreenSession::GetDisplayNode() const
 {
     return displayNode_;
+}
+
+void ScreenSession::ReleaseDisplayNode()
+{
+    displayNode_ = nullptr;
 }
 
 void ScreenSession::Connect()
@@ -173,6 +185,47 @@ Rotation ScreenSession::CalcRotation(Orientation orientation) const
     }
 }
 
+ScreenSourceMode ScreenSession::GetSourceMode() const
+{
+    return ScreenSourceMode::SCREEN_ALONE;
+}
+
+void ScreenSession::FillScreenInfo(sptr<ScreenInfo> info) const
+{
+    if (info == nullptr) {
+        WLOGE("FillScreenInfo failed! info is nullptr");
+        return;
+    }
+    info->SetScreenId(screenId_);
+    info->SetName(name_);
+    uint32_t width = 0;
+    uint32_t height = 0;
+    sptr<SupportedScreenModes> screenSessionModes = GetActiveScreenMode();
+    if (screenSessionModes != nullptr) {
+        height = screenSessionModes->height_;
+        width = screenSessionModes->width_;
+    }
+    float virtualPixelRatio = property_.GetVirtualPixelRatio();
+    // "< 1e-set6" means virtualPixelRatio is 0.
+    if (fabsf(virtualPixelRatio) < 1e-6) {
+        virtualPixelRatio = 1.0f;
+    }
+    ScreenSourceMode sourceMode = GetSourceMode();
+    info->SetVirtualPixelRatio(property_.GetVirtualPixelRatio());
+    info->SetVirtualHeight(height / virtualPixelRatio);
+    info->SetVirtualWidth(width / virtualPixelRatio);
+    info->SetRotation(property_.GetScreenRotation());
+    info->SetOrientation(property_.GetOrientation());
+    info->SetSourceMode(sourceMode);
+    info->SetType(property_.GetScreenType());
+    info->SetModeId(activeIdx_);
+
+    info->lastParent_ = lastGroupSmsId_;
+    info->parent_ = groupSmsId_;
+    info->isScreenGroup_ = isScreenGroup_;
+    info->modes_ = modes_;
+}
+
 sptr<ScreenInfo> ScreenSession::ConvertToScreenInfo() const
 {
     sptr<ScreenInfo> info = new(std::nothrow) ScreenInfo();
@@ -183,41 +236,72 @@ sptr<ScreenInfo> ScreenSession::ConvertToScreenInfo() const
     return info;
 }
 
-void ScreenSession::FillScreenInfo(sptr<ScreenInfo> info) const
+DMError ScreenSession::GetScreenColorGamut(ScreenColorGamut& colorGamut)
 {
-    if (info == nullptr) {
-        WLOGE("FillScreenInfo failed! info is nullptr");
-        return;
+    auto ret = RSInterfaces::GetInstance().GetScreenColorGamut(rsId_, colorGamut);
+    if (ret != StatusCode::SUCCESS) {
+        WLOGE("GetScreenColorGamut fail! rsId %{public}" PRIu64"", rsId_);
+        return DMError::DM_ERROR_RENDER_SERVICE_FAILED;
     }
-    info->id_ = screenId_;
-    info->name_ = name_;
-    uint32_t width = 0;
-    uint32_t height = 0;
-    sptr<SupportedScreenModes> ScreenSessionModes = GetActiveScreenMode();
-    if (ScreenSessionModes != nullptr) {
-        height = ScreenSessionModes->height_;
-        width = ScreenSessionModes->width_;
-    }
-    float virtualPixelRatio = virtualPixelRatio_;
-    // "< 1e-set6" means virtualPixelRatio is 0.
-    if (fabsf(virtualPixelRatio) < 1e-6) {
-        virtualPixelRatio = 1.0f;
-    }
-    info->virtualPixelRatio_ = virtualPixelRatio;
-    info->virtualHeight_ = height / virtualPixelRatio;
-    info->virtualWidth_ = width / virtualPixelRatio;
-    info->lastParent_ = lastGroupSmsId_;
-    info->parent_ = groupSmsId_;
-    info->isScreenGroup_ = isScreenGroup_;
-    info->type_ = type_;
-    info->modeId_ = activeIdx_;
-    info->modes_ = modes_;
+    WLOGI("GetScreenColorGamut ok! rsId %{public}" PRIu64", colorGamut %{public}u",
+        rsId_, static_cast<uint32_t>(colorGamut));
+    return DMError::DM_OK;
 }
 
-bool ScreenSession::SetOrientation(Orientation orientation)
+DMError ScreenSession::SetScreenColorGamut(int32_t colorGamutIdx)
 {
-    orientation_ = orientation;
-    return true;
+    std::vector<ScreenColorGamut> colorGamuts;
+    DMError res = GetScreenSupportedColorGamuts(colorGamuts);
+    if (res != DMError::DM_OK) {
+        WLOGE("SetScreenColorGamut fail! rsId %{public}" PRIu64"", rsId_);
+        return res;
+    }
+    if (colorGamutIdx < 0 || colorGamutIdx >= static_cast<int32_t>(colorGamuts.size())) {
+        WLOGE("SetScreenColorGamut fail! rsId %{public}" PRIu64" colorGamutIdx %{public}d invalid.",
+            rsId_, colorGamutIdx);
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    auto ret = RSInterfaces::GetInstance().SetScreenColorGamut(rsId_, colorGamutIdx);
+    if (ret != StatusCode::SUCCESS) {
+        WLOGE("SetScreenColorGamut fail! rsId %{public}" PRIu64"", rsId_);
+        return DMError::DM_ERROR_RENDER_SERVICE_FAILED;
+    }
+    WLOGI("SetScreenColorGamut ok! rsId %{public}" PRIu64", colorGamutIdx %{public}u",
+        rsId_, colorGamutIdx);
+    return DMError::DM_OK;
+}
+
+DMError ScreenSession::GetScreenGamutMap(ScreenGamutMap& gamutMap)
+{
+    auto ret = RSInterfaces::GetInstance().GetScreenGamutMap(rsId_, gamutMap);
+    if (ret != StatusCode::SUCCESS) {
+        WLOGE("GetScreenGamutMap fail! rsId %{public}" PRIu64"", rsId_);
+        return DMError::DM_ERROR_RENDER_SERVICE_FAILED;
+    }
+    WLOGI("GetScreenGamutMap ok! rsId %{public}" PRIu64", gamutMap %{public}u",
+        rsId_, static_cast<uint32_t>(gamutMap));
+    return DMError::DM_OK;
+}
+
+DMError ScreenSession::SetScreenGamutMap(ScreenGamutMap gamutMap)
+{
+    if (gamutMap > GAMUT_MAP_HDR_EXTENSION) {
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    auto ret = RSInterfaces::GetInstance().SetScreenGamutMap(rsId_, gamutMap);
+    if (ret != StatusCode::SUCCESS) {
+        WLOGE("SetScreenGamutMap fail! rsId %{public}" PRIu64"", rsId_);
+        return DMError::DM_ERROR_RENDER_SERVICE_FAILED;
+    }
+    WLOGI("SetScreenGamutMap ok! rsId %{public}" PRIu64", gamutMap %{public}u",
+        rsId_, static_cast<uint32_t>(gamutMap));
+    return DMError::DM_OK;
+}
+
+DMError ScreenSession::SetScreenColorTransform()
+{
+    WLOGI("SetScreenColorTransform ok! rsId %{public}" PRIu64"", rsId_);
+    return DMError::DM_OK;
 }
 
 void ScreenSession::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startPoint)
@@ -256,49 +340,49 @@ void ScreenSession::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startP
     }
 }
 
-ScreenSessionGroup::ScreenSessionGroup(ScreenId dmsId, ScreenId rsId,
+ScreenSessionGroup::ScreenSessionGroup(ScreenId screenId, ScreenId rsId,
     std::string name, ScreenCombination combination) : combination_(combination)
 {
     name_ = name;
-    screenId_ = dmsId;
+    screenId_ = screenId;
     rsId_ = rsId;
-    type_ = ScreenType::UNDEFINED;
+    GetScreenProperty().SetScreenType(ScreenType::UNDEFINED);
     isScreenGroup_ = true;
 }
 
 ScreenSessionGroup::~ScreenSessionGroup()
 {
-    displayNode_ = nullptr;
+    ReleaseDisplayNode();
     screenSessionMap_.clear();
 }
 
-bool ScreenSessionGroup::GetRSDisplayNodeConfig(sptr<ScreenSession>& dmsScreen, struct RSDisplayNodeConfig& config,
+bool ScreenSessionGroup::GetRSDisplayNodeConfig(sptr<ScreenSession>& screenSession, struct RSDisplayNodeConfig& config,
                                                 sptr<ScreenSession> defaultScreenSession)
 {
-    if (dmsScreen == nullptr) {
-        WLOGE("dmsScreen is nullptr.");
+    if (screenSession == nullptr) {
+        WLOGE("screenSession is nullptr.");
         return false;
     }
-    config = { dmsScreen->rsId_ };
+    config = { screenSession->rsId_ };
     switch (combination_) {
         case ScreenCombination::SCREEN_ALONE:
             [[fallthrough]];
         case ScreenCombination::SCREEN_EXPAND:
             break;
         case ScreenCombination::SCREEN_MIRROR: {
-            if (GetChildCount() == 0 || mirrorScreenId_ == dmsScreen->screenId_) {
+            if (GetChildCount() == 0 || mirrorScreenId_ == screenSession->screenId_) {
                 WLOGI("AddChild, SCREEN_MIRROR, config is not mirror");
                 break;
             }
-            std::shared_ptr<RSDisplayNode> displayNode = defaultScreenSession->displayNode_;
+            std::shared_ptr<RSDisplayNode> displayNode = defaultScreenSession->GetDisplayNode();
             if (displayNode == nullptr) {
                 WLOGFE("AddChild fail, displayNode is nullptr, cannot get DisplayNode");
                 break;
             }
             NodeId nodeId = displayNode->GetId();
             WLOGI("AddChild, mirrorScreenId_:%{public}" PRIu64", rsId_:%{public}" PRIu64", nodeId:%{public}" PRIu64"",
-                mirrorScreenId_, dmsScreen->rsId_, nodeId);
-            config = {dmsScreen->rsId_, true, nodeId};
+                mirrorScreenId_, screenSession->rsId_, nodeId);
+            config = {screenSession->rsId_, true, nodeId};
             break;
         }
         default:
@@ -355,14 +439,14 @@ bool ScreenSessionGroup::RemoveChild(sptr<ScreenSession>& smsScreen)
     ScreenId screenId = smsScreen->screenId_;
     smsScreen->lastGroupSmsId_ = smsScreen->groupSmsId_;
     smsScreen->groupSmsId_ = SCREEN_ID_INVALID;
-    if (smsScreen->displayNode_ != nullptr) {
-        smsScreen->displayNode_->SetDisplayOffset(0, 0);
-        smsScreen->displayNode_->RemoveFromTree();
+    if (smsScreen->GetDisplayNode() != nullptr) {
+        smsScreen->GetDisplayNode()->SetDisplayOffset(0, 0);
+        smsScreen->GetDisplayNode()->RemoveFromTree();
         auto transactionProxy = RSTransactionProxy::GetInstance();
         if (transactionProxy != nullptr) {
             transactionProxy->FlushImplicitTransaction();
         }
-        smsScreen->displayNode_ = nullptr;
+        smsScreen->ReleaseDisplayNode();
     }
     return screenSessionMap_.erase(screenId);
 }

@@ -29,6 +29,7 @@
 #include "screen_info.h"
 #include "screen_group.h"
 #include "screen_group_info.h"
+#include "event_handler.h"
 
 namespace OHOS::Rosen {
 class IScreenChangeListener : public RefBase {
@@ -58,42 +59,44 @@ public:
     void UnregisterScreenChangeListener(IScreenChangeListener* screenChangeListener);
 
     sptr<DisplayInfo> ConvertToDisplayInfo();
+    sptr<ScreenInfo> ConvertToScreenInfo() const;
+    sptr<SupportedScreenModes> GetActiveScreenMode() const;
+    ScreenSourceMode GetSourceMode() const;
 
     ScreenId GetScreenId();
     ScreenProperty GetScreenProperty() const;
     std::shared_ptr<RSDisplayNode> GetDisplayNode() const;
+    void ReleaseDisplayNode();
 
-    sptr<SupportedScreenModes> GetActiveScreenMode() const;
     Rotation CalcRotation(Orientation orientation) const;
-    sptr<ScreenInfo> ConvertToScreenInfo() const;
     void FillScreenInfo(sptr<ScreenInfo> info) const;
-    bool SetOrientation(Orientation orientation);
     void InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startPoint);
+
     DMError GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut>& colorGamuts);
+    DMError GetScreenColorGamut(ScreenColorGamut& colorGamut);
+    DMError SetScreenColorGamut(int32_t colorGamutIdx);
+    DMError GetScreenGamutMap(ScreenGamutMap& gamutMap);
+    DMError SetScreenGamutMap(ScreenGamutMap gamutMap);
+    DMError SetScreenColorTransform();
 
     std::string name_;
     ScreenId screenId_;
     ScreenId rsId_;
-    ScreenType type_ { ScreenType::REAL };
-    float virtualPixelRatio_ = { 1.0 };
-    Orientation orientation_ { Orientation::UNSPECIFIED };
 
     int32_t activeIdx_ { 0 };
     std::vector<sptr<SupportedScreenModes>> modes_ = {};
     Orientation screenRequestedOrientation_ { Orientation::UNSPECIFIED };
-    Rotation rotation_ { Rotation::ROTATION_0 };
 
     bool isScreenGroup_ { false };
     ScreenId groupSmsId_ { SCREEN_ID_INVALID };
     ScreenId lastGroupSmsId_ { SCREEN_ID_INVALID };
-    std::shared_ptr<RSDisplayNode> displayNode_;
 
     void Connect();
     void Disconnect();
 
 private:
     ScreenProperty property_;
-    
+    std::shared_ptr<RSDisplayNode> displayNode_;
     ScreenState screenState_ { ScreenState::INIT };
     std::vector<IScreenChangeListener*> screenChangeListenerList_;
 };
@@ -121,7 +124,7 @@ public:
     ScreenId mirrorScreenId_ { SCREEN_ID_INVALID };
 
 private:
-    bool GetRSDisplayNodeConfig(sptr<ScreenSession>& dmsScreen, struct RSDisplayNodeConfig& config,
+    bool GetRSDisplayNodeConfig(sptr<ScreenSession>& screenSession, struct RSDisplayNodeConfig& config,
         sptr<ScreenSession> defaultScreenSession);
 
     std::map<ScreenId, std::pair<sptr<ScreenSession>, Point>> screenSessionMap_;
