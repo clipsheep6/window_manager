@@ -39,25 +39,11 @@ bool WindowEventProcess::IsInWindowHotRect(const Ace::NG::RectF& windowSceneRect
     float y = windowSceneRect.GetY();
     float width = windowSceneRect.Width();
     float height = windowSceneRect.Height();
-    float hotX = 0;
-    float hotWidth = 0;
-    if (x > hotOffset || x == hotOffset) {
-        hotX = x - hotOffset;
-        hotWidth = width + hotOffset * 2;
-    } else {
-        hotX = x - hotOffset;
-        hotWidth = width + hotOffset + x;
-    }
+    float hotX = x - hotOffset;
+    float hotWidth = width + hotOffset * 2;
+    float hotY = y - hotOffset;
+    float hotHeight = height + hotOffset * 2;
 
-    float hotY = 0;
-    float hotHeight = 0;
-    if (y > hotOffset || y == hotOffset) {
-        hotY = y - hotOffset;
-        hotHeight = height + hotOffset * 2;
-    } else {
-        hotY = y - hotOffset;
-        hotHeight = width + hotOffset + y;
-    }
     return GreatOrEqual(parentLocalPoint.GetX(), hotX) &&
         LessOrEqual(parentLocalPoint.GetX(), hotX + hotWidth) &&
         GreatOrEqual(parentLocalPoint.GetY(), hotY) &&

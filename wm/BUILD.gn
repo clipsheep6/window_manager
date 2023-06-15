@@ -38,7 +38,7 @@ ohos_static_library("libwm_static") {
   include_dirs = [
     "../utils/include",
     "//foundation/arkui/ace_engine/frameworks",
-    "${window_base_path}/window_scene/intention_event/include"
+    "${window_base_path}/window_scene/intention_event/include",
   ]
 
   sources = [
@@ -77,9 +77,9 @@ ohos_static_library("libwm_static") {
     "${window_base_path}/dm:libdm",
     "${window_base_path}/utils:libwmutil",
     "${window_base_path}/window_scene/common:window_scene_common",
+    "${window_base_path}/window_scene/intention_event:libintention_event",
     "${window_base_path}/window_scene/session:scene_session",
     "${window_base_path}/window_scene/session_manager:session_manager",
-    "${window_base_path}/window_scene/intention_event:libintention_event",
   ]
 
   external_deps = [
@@ -145,7 +145,7 @@ ohos_shared_library("libwm") {
   include_dirs = [
     "../utils/include",
     "//foundation/arkui/ace_engine/frameworks",
-    "${window_base_path}/window_scene/intention_event/include"
+    "${window_base_path}/window_scene/intention_event/include",
   ]
 
   sources = [
@@ -177,13 +177,13 @@ ohos_shared_library("libwm") {
     "../resources/config/build:coverage_flags",
   ]
 
-  public_configs = [":libwm_public_config",]
+  public_configs = [ ":libwm_public_config" ]
 
   deps = [
     "${window_base_path}/window_scene/common:window_scene_common",
+    "${window_base_path}/window_scene/intention_event:libintention_event",
     "${window_base_path}/window_scene/session:scene_session",
     "${window_base_path}/window_scene/session_manager:session_manager",
-    "${window_base_path}/window_scene/intention_event:libintention_event",
     "../dm:libdm",
     "../utils:libwmutil",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
