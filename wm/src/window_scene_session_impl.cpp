@@ -166,6 +166,9 @@ void WindowSceneSessionImpl::UpdateSubWindowStateAndNotify(uint64_t parentPersis
         WLOGFD("main window: %{public}" PRIu64", its subWindowMap is empty", parentPersistentId);
         return;
     }
+    if (WindowHelper::IsAppFloatingWindow(property_->GetWindowType())) {
+        SessionManagerAgentController::GetInstance().UpdateCameraFloatWindowStatus(property_->GetAccessTokenId(), true);
+    }
 
     // when main window hide and subwindow whose state is shown should hide and notify user
     if (newState == WindowState::STATE_HIDDEN) {
@@ -241,6 +244,9 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
             return static_cast<WMError>(ret);
         }
         ret = hostSession_->Background();
+        if (WindowHelper::IsAppFloatingWindow(property_->GetWindowType())) {
+            SessionManagerAgentController::GetInstance().UpdateCameraFloatWindowStatus(property_->GetAccessTokenId(), false);
+        }
     }
 
     // delete after replace WSError with WMError
@@ -362,6 +368,31 @@ WMError WindowSceneSessionImpl::MoveTo(int32_t x, int32_t y)
     WLOGFD("Id:%{public}" PRIu64 " MoveTo %{public}d %{public}d", property_->GetPersistentId(), x, y);
     if (IsWindowSessionInvalid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+
+    // Float camera window has a special limit:
+    // if display sw <= 600dp, portrait: min width = display sw * 30%, landscape: min width = sw * 50%
+    // if display sw > 600dp, portrait: min width = display sw * 12%, landscape: min width = sw * 30%
+    const auto& displayRect = DisplayGroupInfo::GetInstance().GetDisplayRect(property_->GetDisplayId());
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_FLOAT_CAMERA) {
+        uint32_t smallWidth = displayRect.height_ <= displayRect.width_ ? displayRect.height_ : displayRect.width_;
+        float hwRatio = static_cast<float>(displayRect.height_) / static_cast<float>(displayRect.width_);
+        uint32_t minWidth;
+        if (smallWidth <= static_cast<uint32_t>(600 * vpr)) { // sw <= 600dp
+            if (displayRect.width_ <= displayRect.height_) {
+                minWidth = static_cast<uint32_t>(smallWidth * 0.3);
+            } else {
+                minWidth = static_cast<uint32_t>(smallWidth * 0.5);
+            }
+        } else {
+            if (displayRect.width_ <= displayRect.height_) {
+                minWidth = static_cast<uint32_t>(smallWidth * 0.12);
+            } else {
+                minWidth = static_cast<uint32_t>(smallWidth * 0.3);
+            }
+        }
+        width = minWidth >= width ? minWidth : width;
+        height = static_cast<uint32_t>(width * hwRatio);
     }
     const auto& rect = property_->GetWindowRect();
     Rect newRect = { x, y, rect.width_, rect.height_ }; // must keep x/y
