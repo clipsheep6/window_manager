@@ -539,6 +539,7 @@ HWTEST_F(WindowSessionTest, OnSessionEvent01, Function | SmallTest | Level2)
     scensessionchangeCallBack->OnSessionEvent_ = onSessionEvent_;
     result = scensession->OnSessionEvent(SessionEvent::EVENT_MINIMIZE);
     ASSERT_EQ(result, WSError::WS_OK);
+ }
     
  /**   
  * @tc.name: CheckDialogOnForeground
