@@ -46,6 +46,7 @@ ohos_shared_library("libwindow_event_process") {
   include_dirs = [
     "./include",
     "${arkui_base_path}/ace_engine/frameworks",
+    "${arkui_base_path}/ace_engine",
     "${window_base_path}/utils/include",
   ]
 
