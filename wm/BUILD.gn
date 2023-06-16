@@ -37,7 +37,7 @@ config("libwm_public_config") {
 ohos_static_library("libwm_static") {
   include_dirs = [
     "../utils/include",
-    "//foundation/arkui/ace_engine/frameworks",
+    "${arkui_base_path}/ace_engine/frameworks",
     "${window_base_path}/window_scene/intention_event/include",
   ]
 
@@ -144,7 +144,7 @@ ohos_static_library("libwm_static") {
 ohos_shared_library("libwm") {
   include_dirs = [
     "../utils/include",
-    "//foundation/arkui/ace_engine/frameworks",
+    "${arkui_base_path}/ace_engine/frameworks",
     "${window_base_path}/window_scene/intention_event/include",
   ]
 
