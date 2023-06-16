@@ -539,9 +539,9 @@ HWTEST_F(WindowSessionTest, OnSessionEvent01, Function | SmallTest | Level2)
     scensessionchangeCallBack->OnSessionEvent_ = onSessionEvent_;
     result = scensession->OnSessionEvent(SessionEvent::EVENT_MINIMIZE);
     ASSERT_EQ(result, WSError::WS_OK);
- }
-    
- /**   
+}
+
+/**
  * @tc.name: CheckDialogOnForeground
  * @tc.desc: check func CheckDialogOnForeground
  * @tc.type: FUNC
@@ -570,7 +570,7 @@ HWTEST_F(WindowSessionTest, CheckDialogOnForeground, Function | SmallTest | Leve
  */
 HWTEST_F(WindowSessionTest, NotifyDestroy, Function | SmallTest | Level2)
 {
-    sptr<SessionStageMocker> mockSessionStage = new(std::nothrow) SessionStageMocker();
+    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
     ASSERT_NE(mockSessionStage, nullptr);
     session_->sessionStage_ = mockSessionStage;
     EXPECT_CALL(*(mockSessionStage), NotifyDestroy()).Times(1).WillOnce(Return(WSError::WS_OK));
