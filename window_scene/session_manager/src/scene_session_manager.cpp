@@ -29,7 +29,6 @@
 #include <want.h>
 
 #include "color_parser.h"
-#include "common/include/message_scheduler.h"
 #include "common/include/permission.h"
 #include "session/host/include/scene_session.h"
 #include "window_manager_hilog.h"
@@ -53,7 +52,7 @@ SceneSessionManager::SceneSessionManager()
 void SceneSessionManager::Init()
 {
     WLOGFI("scene session manager init");
-    msgScheduler_ = std::make_shared<MessageScheduler>(SCENE_SESSION_MANAGER_THREAD);
+    taskScheduler_ = std::make_shared<TaskScheduler>(SCENE_SESSION_MANAGER_THREAD);
     bundleMgr_ = GetBundleManager();
     LoadWindowSceneXml();
 }
@@ -316,8 +315,8 @@ sptr<RootSceneSession> SceneSessionManager::GetRootSceneSession()
         return rootSceneSession_;
     };
 
-    WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);
-    return msgScheduler_->PostSyncTask(task);
+    WS_CHECK_NULL_RETURN(taskScheduler_, task);
+    return taskScheduler_->PostSyncTask(task);
 }
 
 sptr<SceneSession> SceneSessionManager::GetSceneSession(uint64_t persistentId)
@@ -390,8 +389,8 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
         WLOGFI("create session persistentId: %{public}" PRIu64 "", persistentId);
         return sceneSession;
     };
-    WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);
-    return msgScheduler_->PostSyncTask(task);
+    WS_CHECK_NULL_RETURN(taskScheduler_, task);
+    return taskScheduler_->PostSyncTask(task);
 }
 
 sptr<AAFwk::SessionInfo> SceneSessionManager::SetAbilitySessionInfo(const sptr<SceneSession>& scnSession)
@@ -449,8 +448,8 @@ WSError SceneSessionManager::RequestSceneSessionActivation(const sptr<SceneSessi
         activeSessionId_ = persistentId;
         return WSError::WS_OK;
     };
-    WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);
-    msgScheduler_->PostAsyncTask(task);
+    WS_CHECK_NULL_RETURN(taskScheduler_, task);
+    taskScheduler_->PostAsyncTask(task);
     return WSError::WS_OK;
 }
 
@@ -479,8 +478,8 @@ WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSessi
         return WSError::WS_OK;
     };
 
-    WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);
-    msgScheduler_->PostAsyncTask(task);
+    WS_CHECK_NULL_RETURN(taskScheduler_, task);
+    taskScheduler_->PostAsyncTask(task);
     return WSError::WS_OK;
 }
 
@@ -529,8 +528,8 @@ WSError SceneSessionManager::RequestSceneSessionDestruction(const sptr<SceneSess
         return WSError::WS_OK;
     };
 
-    WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);
-    msgScheduler_->PostAsyncTask(task);
+    WS_CHECK_NULL_RETURN(taskScheduler_, task);
+    taskScheduler_->PostAsyncTask(task);
     return WSError::WS_OK;
 }
 
@@ -559,8 +558,8 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
         session = sceneSession;
         return errCode;
     };
-    WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);
-    msgScheduler_->PostSyncTask(task);
+    WS_CHECK_NULL_RETURN(taskScheduler_, task);
+    taskScheduler_->PostSyncTask(task);
     return WSError::WS_OK;
 }
 
@@ -593,8 +592,8 @@ WSError SceneSessionManager::DestroyAndDisconnectSpecificSession(const uint64_t&
         return ret;
     };
 
-    WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);
-    msgScheduler_->PostSyncTask(task);
+    WS_CHECK_NULL_RETURN(taskScheduler_, task);
+    taskScheduler_->PostSyncTask(task);
     return WSError::WS_OK;
 }
 
@@ -615,8 +614,8 @@ WSError SceneSessionManager::ProcessBackEvent()
         return WSError::WS_OK;
     };
 
-    WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);
-    msgScheduler_->PostSyncTask(task);
+    WS_CHECK_NULL_RETURN(taskScheduler_, task);
+    taskScheduler_->PostSyncTask(task);
     return WSError::WS_OK;
 }
 
@@ -832,8 +831,8 @@ WSError SceneSessionManager::RequestSceneSessionByCall(const sptr<SceneSession>&
         AAFwk::AbilityManagerClient::GetInstance()->CallUIAbilityBySCB(abilitySessionInfo);
         return WSError::WS_OK;
     };
-    WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);
-    msgScheduler_->PostAsyncTask(task);
+    WS_CHECK_NULL_RETURN(taskScheduler_, task);
+    taskScheduler_->PostAsyncTask(task);
     return WSError::WS_OK;
 }
 

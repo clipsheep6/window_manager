@@ -21,6 +21,7 @@
 #include "session_manager_base.h"
 #include "session_manager/include/zidl/scene_session_manager_stub.h"
 #include "session/host/include/root_scene_session.h"
+#include "session_manager/include/zidl/scene_session_manager_stub.h"
 #include "wm_single_instance.h"
 #include "window_scene_config.h"
 
@@ -41,8 +42,7 @@ namespace OHOS::Rosen {
 class SceneSession;
 using NotifyCreateSpecificSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 using NotifySetFocusSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
-class SceneSessionManager : public SceneSessionManagerStub,
-                            public SessionManagerBase {
+class SceneSessionManager : public SceneSessionManagerStub {
 WM_DECLARE_SINGLE_INSTANCE_BASE(SceneSessionManager)
 public:
     sptr<SceneSession> RequestSceneSession(const SessionInfo& sessionInfo, sptr<WindowSessionProperty> property = nullptr);
@@ -70,6 +70,7 @@ public:
     WSError SetFocusedSession(uint64_t persistentId);
     uint64_t GetFocusedSession() const;
     WSError UpdateFocus(uint64_t persistentId, bool isFocused);
+
 protected:
     SceneSessionManager();
     virtual ~SceneSessionManager() = default;
@@ -94,6 +95,7 @@ private:
     void GetStartPageFromResource(const AppExecFwk::AbilityInfo& abilityInfo, std::string& path, uint32_t& bgColor);
     const std::string& CreateCurve(const WindowSceneConfig::ConfigItem& curveConfig);
 
+    std::shared_ptr<TaskScheduler> taskScheduler_;
     std::map<uint64_t, sptr<SceneSession>> abilitySceneMap_;
     sptr<RootSceneSession> rootSceneSession_;
     NotifyCreateSpecificSessionFunc createSpecificSessionFunc_;
