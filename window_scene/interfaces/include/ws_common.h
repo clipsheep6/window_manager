@@ -132,6 +132,7 @@ enum class SessionEvent : uint32_t {
     EVENT_MINIMIZE,
     EVENT_CLOSE,
     EVENT_START_MOVE,
+    EVENT_END_MOVE,
     EVENT_TERMINATE,
     EVENT_EXCEPTION,
 };

@@ -23,6 +23,7 @@
 #include <ui/rs_surface_node.h>
 
 #include "window_manager_hilog.h"
+#include "wm_common.h"
 #include "surface_capture_future.h"
 
 namespace OHOS::Rosen {
@@ -146,6 +147,17 @@ void Session::NotifyBackground()
     }
 }
 
+float Session::GetAspectRatio() const
+{
+    return aspectRatio_;
+}
+
+WSError Session::SetAspectRatio(float ratio)
+{
+    aspectRatio_ = ratio;
+    return WSError::WS_OK;
+}
+
 SessionState Session::GetSessionState() const
 {
     return state_;
@@ -241,6 +253,12 @@ WSError Session::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWi
     // once update rect before connect, update again when connect
     UpdateRect(winRect_, SizeChangeReason::UNDEFINED);
     NotifyConnect();
+    return WSError::WS_OK;
+}
+
+WSError Session::UpdateWindowSessionProperty(sptr<WindowSessionProperty> property)
+{
+    property_ = property;
     return WSError::WS_OK;
 }
 

@@ -18,6 +18,8 @@
 
 #include "interfaces/include/ws_common.h"
 #include "session/host/include/session.h"
+#include "session/host/include/move_drag_controller.h"
+#include "session/host/include/hot_area_controller.h"
 
 namespace OHOS::Rosen {
 class SceneSession;
@@ -55,10 +57,19 @@ public:
     WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId) override;
     void RegisterSessionChangeCallback(const sptr<SceneSession::SessionChangeCallback>& sessionChangeCallback);
     WSError Background() override;
+    WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
+    WSError SetAspectRatio(float ratio) override;
 
 private:
     sptr<SpecificSessionCallback> specificCallback_ = nullptr;
     sptr<SessionChangeCallback> sessionChangeCallback_ = nullptr;
+    sptr<HotAreaController> hotAreaController_ = nullptr;
+    sptr<MoveDragController> moveDragController_ = nullptr;
+
+    void NotifySessionRectChange(const WSRect& rect);
+    WSError ConsumeMoveOrDragEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
+    void ProcessVsyncHandleRegister();
+    void OnVsyncHandle();
 };
 } // namespace OHOS::Rosen
 
