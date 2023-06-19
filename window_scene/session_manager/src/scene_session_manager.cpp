@@ -34,6 +34,7 @@
 #include "session/host/include/scene_session.h"
 #include "window_manager_hilog.h"
 #include "wm_math.h"
+#include "screen_session_manager.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -594,6 +595,11 @@ WSError SceneSessionManager::UpdateProperty(sptr<WindowSessionProperty>& propert
         }
         case WSPropertyChangeAction::ACTION_UPDATE_FOCUSABLE: {
             sceneSession->SetFocusable(property->GetFocusable());
+            break;
+        }
+        case WSPropertyChangeAction::ACTION_UPDATE_ORIENTATION: {
+                ScreenSessionManager::GetInstance().
+                    SetOrientationFromWindow(property->GetDisplayId(), property->GetRequestedOrientation(), false);
             break;
         }
         case WSPropertyChangeAction::ACTION_UPDATE_TOUCHABLE: {

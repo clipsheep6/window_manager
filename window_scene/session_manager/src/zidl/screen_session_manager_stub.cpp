@@ -92,12 +92,12 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             break;
         }
         case DisplayManagerMessage::TRANS_ID_GET_SCREEN_POWER: {
-            ScreenId dmsScreenId;
-            if (!data.ReadUint64(dmsScreenId)) {
-                WLOGFE("fail to read dmsScreenId.");
+            ScreenId screenId;
+            if (!data.ReadUint64(screenId)) {
+                WLOGFE("fail to read screenId.");
                 break;
             }
-            reply.WriteUint32(static_cast<uint32_t>(GetScreenPower(dmsScreenId)));
+            reply.WriteUint32(static_cast<uint32_t>(GetScreenPower(screenId)));
         }
         case DisplayManagerMessage::TRANS_ID_GET_DISPLAY_BY_ID: {
             DisplayId displayId = data.ReadUint64();
@@ -280,6 +280,26 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
             DMError ret = SetScreenColorTransform(screenId);
             reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SET_ORIENTATION: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            Orientation orientation = static_cast<Orientation>(data.ReadUint32());
+            DMError ret = SetOrientation(screenId, orientation);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SET_SCREEN_ROTATION_LOCKED: {
+            bool isLocked = static_cast<bool>(data.ReadBool());
+            DMError ret = SetScreenRotationLocked(isLocked);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_IS_SCREEN_ROTATION_LOCKED: {
+            bool isLocked = false;
+            DMError ret = IsScreenRotationLocked(isLocked);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            reply.WriteBool(isLocked);
             break;
         }
         default:

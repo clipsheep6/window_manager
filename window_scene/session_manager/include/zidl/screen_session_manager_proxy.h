@@ -51,7 +51,7 @@ public:
     virtual bool SuspendBegin(PowerStateChangeReason reason) override;
     virtual bool SuspendEnd() override;
     virtual bool SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason) override;
-    virtual ScreenPowerState GetScreenPower(ScreenId dmsScreenId) override;
+    virtual ScreenPowerState GetScreenPower(ScreenId screenId) override;
     virtual bool SetDisplayState(DisplayState state) override;
     virtual DisplayState GetDisplayState(DisplayId displayId) override;
     virtual ScreenId CreateVirtualScreen(VirtualScreenOption option,
@@ -80,6 +80,10 @@ public:
 
     virtual DMError GetScreenSupportedColorGamuts(ScreenId screenId,
         std::vector<ScreenColorGamut>& colorGamuts) override;
+
+    DMError SetOrientation(ScreenId screenId, Orientation orientation) override;
+    DMError SetScreenRotationLocked(bool isLocked) override;
+    DMError IsScreenRotationLocked(bool& isLocked) override;
 
 private:
     static inline BrokerDelegator<ScreenSessionManagerProxy> delegator_;

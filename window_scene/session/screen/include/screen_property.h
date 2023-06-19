@@ -48,6 +48,7 @@ public:
     float GetVirtualPixelRatio() const;
 
     Rotation GetScreenRotation() const;
+    void SetScreenRotation(Rotation rotation);
 
     void SetOrientation(Orientation orientation);
     Orientation GetOrientation() const;
@@ -57,7 +58,7 @@ public:
 
     void SetOffsetX(int32_t offsetX);
     int32_t GetOffsetX() const;
-    
+
     void SetOffsetY(int32_t offsetY);
     int32_t GetOffsetY() const;
 
@@ -66,7 +67,16 @@ public:
     void SetScreenType(ScreenType type);
     ScreenType GetScreenType() const;
 
+    void SetScreenRequestedOrientation(Orientation orientation);
+    Orientation GetScreenRequestedOrientation() const;
+
+    void RequestRotation(Rotation rotation);
+
 private:
+    static inline bool IsVertical(Rotation rotation)
+    {
+        return (rotation == Rotation::ROTATION_0 || rotation == Rotation::ROTATION_180);
+    }
     float rotation_ { 0.0f };
     RRect bounds_;
     float density_ { 1.5f };
@@ -79,6 +89,8 @@ private:
 
     Orientation orientation_ { Orientation::UNSPECIFIED };
     Rotation screenRotation_ { Rotation::ROTATION_0 };
+
+    Orientation screenRequestedOrientation_ { Orientation::UNSPECIFIED };
 
     float xDpi_ { 0.0f };
     float yDpi_ { 0.0f };

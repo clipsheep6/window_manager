@@ -23,6 +23,12 @@
 #include <parameters.h>
 #include "sys_cap_util.h"
 #include "surface_capture_future.h"
+#include "screen_rotation_property.h"
+#include "screen_sensor_connector.h"
+
+#ifdef SOC_PERF_ENABLE
+#include "socperf_client.h"
+#endif
 
 namespace OHOS::Rosen {
 namespace {
@@ -284,15 +290,16 @@ sptr<ScreenInfo> ScreenSessionManager::GetScreenInfoById(ScreenId screenId)
 
 DMError ScreenSessionManager::SetScreenActiveMode(ScreenId screenId, uint32_t modeId)
 {
-    WLOGI("SetScreenActiveMode: ScreenId: %{public}" PRIu64", modeId: %{public}u", screenId, modeId);
-    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("set screen active permission denied!");
+    WLOGE("gaoguanghui SetScreenActiveMode: ScreenId: %{public}" PRIu64", modeId: %{public}u", screenId, modeId);
+    /*if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("gaoguanghui SetScreenActiveMode set screen active permission denied!");
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
-    }
+    }*/
     if (screenId == SCREEN_ID_INVALID) {
         WLOGFE("SetScreenActiveMode: invalid screenId");
         return DMError::DM_ERROR_NULLPTR;
     }
+    uint32_t usedModeId = 0;
     {
         sptr<ScreenSession> screenSession = GetScreenSession(screenId);
         if (screenSession == nullptr) {
@@ -305,9 +312,68 @@ DMError ScreenSessionManager::SetScreenActiveMode(ScreenId screenId, uint32_t mo
             return DMError::DM_ERROR_NULLPTR;
         }
         rsInterface_.SetScreenActiveMode(rsScreenId, modeId);
+        usedModeId = static_cast<uint32_t>(screenSession->activeIdx_);
         screenSession->activeIdx_ = static_cast<int32_t>(modeId);
     }
+    if (usedModeId != modeId) {
+        WLOGI("SetScreenActiveMode: modeId: %{public}u ->  %{public}u", usedModeId, modeId);
+        auto func = [=]() {
+            ProcessScreenModeChanged(screenId);
+            return;
+        };
+        controllerHandler_->PostTask(func, AppExecFwk::EventQueue::Priority::HIGH);
+    }
     return DMError::DM_OK;
+}
+
+void ScreenSessionManager::ProcessScreenModeChanged(ScreenId screenId)
+{
+
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (screenSession == nullptr) {
+        WLOGFE("screenSession is nullptr. screenId=%{public}" PRIu64"", screenId);
+        return;
+    }
+    sptr<SupportedScreenModes> activeScreenMode = screenSession->GetActiveScreenMode();
+    if (activeScreenMode == nullptr) {
+        WLOGFE("active screen mode is nullptr. screenId=%{public}" PRIu64"", screenId);
+        return;
+    }
+    NotifyScreenChanged(screenSession->ConvertToScreenInfo(), ScreenChangeEvent::CHANGE_MODE);
+}
+
+void ScreenSessionManager::ProcessDisplayUpdateOrientation(ScreenId screenId, Rotation rotation)
+{
+    sptr<ScreenSession> screenSession = nullptr;
+    auto iter = screenSessionMap_.begin();
+    for (; iter != screenSessionMap_.end(); iter++) {
+        screenSession = iter->second;
+        if (screenSession->screenId_ == screenId) {
+            break;
+        }
+    }
+
+    /*sptr<ScreenSessionGroup> group = GetAbstractScreenGroup(screenId);
+    if (group == nullptr) {
+        WLOGFE("cannot get screen group");
+        return;
+    }
+    if (iter == screenSessionMap_.end()) {
+        if (group->combination_ == ScreenCombination::SCREEN_ALONE
+            || group->combination_ == ScreenCombination::SCREEN_EXPAND) {
+            WLOGFE("cannot find abstract display of the screen %{public}" PRIu64"", screenId);
+            return;
+        } else if (group->combination_ == ScreenCombination::SCREEN_MIRROR) {
+            // If the screen cannot be found in 'abstractDisplayMap_', it means that the screen is the secondary
+            WLOGFI("It's the secondary screen of the mirrored.");
+            return;
+        } else {
+            WLOGFE("Unknown combination");
+            return;
+        }
+    }*/
+    WLOGFE("gaoguanghui RequestRotation(rotation)");
+    screenSession->GetScreenProperty().RequestRotation(rotation);
 }
 
 void ScreenSessionManager::NotifyScreenChanged(sptr<ScreenInfo> screenInfo, ScreenChangeEvent event)
@@ -429,7 +495,6 @@ DMError ScreenSessionManager::SetScreenColorTransform(ScreenId screenId)
 
 sptr<ScreenSession> ScreenSessionManager::GetOrCreateScreenSession(ScreenId screenId)
 {
-    WLOGFE("SCB: ScreenSessionManager::GetOrCreateScreenSession ENTER");
     auto sessionIt = screenSessionMap_.find(screenId);
     if (sessionIt != screenSessionMap_.end()) {
         return sessionIt->second;
@@ -441,8 +506,8 @@ sptr<ScreenSession> ScreenSessionManager::GetOrCreateScreenSession(ScreenId scre
 
     auto screenMode = rsInterface_.GetScreenActiveMode(screenId);
     auto screenBounds = RRect({ 0, 0, screenMode.GetScreenWidth(), screenMode.GetScreenHeight() }, 0.0f, 0.0f);
-    auto screenRefreshRate = screenMode.GetScreenRefreshRate();
-    auto screenCapability = rsInterface_.GetScreenCapability(screenId);
+    uint32_t screenRefreshRate = screenMode.GetScreenRefreshRate();
+    RSScreenCapability screenCapability = rsInterface_.GetScreenCapability(screenId);
     ScreenProperty property;
     property.SetRotation(0.0f);
     property.SetBounds(screenBounds);
@@ -454,6 +519,7 @@ sptr<ScreenSession> ScreenSessionManager::GetOrCreateScreenSession(ScreenId scre
         WLOGFE("screen session is nullptr");
         return session;
     }
+    InitAbstractScreenModesInfo(session);
     session->groupSmsId_ = 1;
     screenSessionMap_[screenId] = session;
     return session;
@@ -562,6 +628,260 @@ ScreenPowerState ScreenSessionManager::GetScreenPower(ScreenId screenId)
     auto state = static_cast<ScreenPowerState>(RSInterfaces::GetInstance().GetScreenPowerStatus(screenId));
     WLOGFI("GetScreenPower:%{public}u, rsscreen:%{public}" PRIu64".", state, screenId);
     return state;
+}
+
+const std::shared_ptr<RSDisplayNode>& ScreenSessionManager::GetRSDisplayNodeByScreenId(ScreenId screenId)
+{
+    static std::shared_ptr<RSDisplayNode> notFound = nullptr;
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (screenSession == nullptr) {
+        WLOGFE("screenSession is nullptr");
+        return notFound;
+    }
+    if (screenSession->GetDisplayNode() == nullptr) {
+        WLOGFE("screenSession->GetDisplayNode() == nullptr");
+        return notFound;
+    }
+    return screenSession->GetDisplayNode();
+}
+
+void ScreenSessionManager::SetScreenRotateAnimation(sptr<ScreenSession>& screenSession,
+    ScreenId screenId, Rotation rotationAfter, bool withAnimation)
+{
+    sptr<SupportedScreenModes> screenModes = screenSession->GetActiveScreenMode();
+    float w = 0;
+    float h = 0;
+    float x = 0;
+    float y = 0;
+    if (screenModes != nullptr) {
+        h = screenModes->height_;
+        w = screenModes->width_;
+        WLOGFE("gaoguanghui screenModes ScreenSessionManager SetScreenRotateAnimation w =: %{public}f" PRIu64, w);
+        WLOGFE("gaoguanghui screenModes ScreenSessionManager SetScreenRotateAnimation h =: %{public}f" PRIu64, h);
+    }
+    if (!IsVertical(rotationAfter)) {
+        std::swap(w, h);
+        x = (h - w) / 2; // 2: used to calculate offset to center display node
+        y = (w - h) / 2; // 2: used to calculate offset to center display node
+    }
+    auto displayNode = GetRSDisplayNodeByScreenId(screenId);
+    if (displayNode == nullptr) {
+        WLOGFE("displayNode is nullptr");
+        return;
+    }
+    if (rotationAfter == Rotation::ROTATION_0 && screenSession->GetScreenProperty().GetScreenRotation() == Rotation::ROTATION_270) {
+        WLOGFE("[FixOrientation] display rotate with animation");
+        // avoid animation 270, 240, 210 ... 30, 0, should play from 90->0
+        displayNode->SetRotation(90.f);
+    } else if (rotationAfter == Rotation::ROTATION_270 && screenSession->GetScreenProperty().GetScreenRotation() == Rotation::ROTATION_0) {
+        WLOGFE("[FixOrientation] display rotate with animation");
+        // avoid animation 0, 30, 60 ... 270, should play from 360->270
+        displayNode->SetRotation(-360.f);
+    }
+    if (withAnimation) {
+        WLOGFD("[FixOrientation] display rotate with animation %{public}u", rotationAfter);
+        std::weak_ptr<RSDisplayNode> weakNode = GetRSDisplayNodeByScreenId(screenId);
+        static const RSAnimationTimingProtocol timingProtocol(600); // animation time
+        static const RSAnimationTimingCurve curve =
+            RSAnimationTimingCurve::CreateCubicCurve(0.2, 0.0, 0.2, 1.0); // animation curve: cubic [0.2, 0.0, 0.2, 1.0]
+    #ifdef SOC_PERF_ENABLE
+        // Increase frequency to improve windowRotation perf
+        // 10027 means "gesture" level that setting duration: 800, lit_cpu_min_freq: 1421000, mid_cpu_min_feq: 1882000
+        OHOS::SOCPERF::SocPerfClient::GetInstance().PerfRequest(10027, "");
+    #endif
+        RSNode::Animate(timingProtocol, curve, [weakNode, x, y, w, h, rotationAfter]() {
+            auto displayNode = weakNode.lock();
+            if (displayNode == nullptr) {
+                WLOGFE("error, cannot get DisplayNode");
+                return;
+            }
+            displayNode->SetRotation(-90.f * static_cast<uint32_t>(rotationAfter)); // 90.f is base degree
+            displayNode->SetFrame(x, y, w, h);
+            displayNode->SetBounds(x, y, w, h);
+            WLOGFE("gaoguanghui SOC_PERF_ENABLE SetScreenRotateAnimation w =: %{public}f" PRIu64, w);
+            WLOGFE("gaoguanghui SOC_PERF_ENABLE SetScreenRotateAnimation x =: %{public}f" PRIu64, x);
+            WLOGFE("gaoguanghui SOC_PERF_ENABLE SetScreenRotateAnimation y =: %{public}f" PRIu64, y);
+            WLOGFE("gaoguanghui SOC_PERF_ENABLE SetScreenRotateAnimation h =: %{public}f" PRIu64, h);
+        }, []() {
+    #ifdef SOC_PERF_ENABLE
+            // ClosePerf in finishCallBack
+            OHOS::SOCPERF::SocPerfClient::GetInstance().PerfRequestEx(10027, false, "");
+    #endif
+        });
+    } else {
+        displayNode->SetRotation(-90.f * static_cast<uint32_t>(rotationAfter)); // 90.f is base degree
+        displayNode->SetFrame(x, y, w, h);
+        displayNode->SetBounds(x, y, w, h);
+        WLOGFE("gaoguanghui SetScreenRotateAnimation w =: %{public}f" PRIu64, w);
+        WLOGFE("gaoguanghui SetScreenRotateAnimation x =: %{public}f" PRIu64, x);
+        WLOGFE("gaoguanghui SetScreenRotateAnimation y =: %{public}f" PRIu64, y);
+        WLOGFE("gaoguanghui SetScreenRotateAnimation h =: %{public}f" PRIu64, h);
+    }
+}
+
+void ScreenSessionManager::OpenRotationSyncTransaction()
+{
+     // Before open transaction, it must flush first.
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (!transactionProxy) {
+        return;
+    }
+    transactionProxy->FlushImplicitTransaction();
+    auto syncTransactionController = RSSyncTransactionController::GetInstance();
+    if (syncTransactionController) {
+        syncTransactionController->OpenSyncTransaction();
+    }
+}
+
+bool ScreenSessionManager::SetRotation(ScreenId screenId, Rotation rotationAfter,
+    bool isFromWindow, bool withAnimation)
+{
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (screenSession == nullptr) {
+        WLOGFE("SetRotation error, cannot get screen with screenId: %{public}" PRIu64, screenId);
+        return false;
+    }
+    if (rotationAfter == screenSession->GetScreenProperty().GetScreenRotation()) {
+        WLOGFE("rotation not changed. screen %{public}" PRIu64" rotation %{public}u", screenId, rotationAfter);
+        return false;
+    }
+    WLOGFD("set orientation. rotation %{public}u", rotationAfter);
+    OpenRotationSyncTransaction();
+    SetScreenRotateAnimation(screenSession, screenId, rotationAfter, withAnimation);
+    // screenSession->GetScreenProperty().SetScreenRotation(rotationAfter);
+    NotifyScreenChanged(screenSession->ConvertToScreenInfo(), ScreenChangeEvent::UPDATE_ROTATION);
+    return true;
+}
+
+DMError ScreenSessionManager::SetOrientationController(ScreenId screenId, Orientation newOrientation,
+    bool isFromWindow, bool withAnimation)
+{
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (screenSession == nullptr) {
+        WLOGFE("fail to set orientation, cannot find screen %{public}" PRIu64"", screenId);
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    if (screenSession->isScreenGroup_) {
+        WLOGE("cannot set orientation to the combination. screen: %{public}" PRIu64"", screenId);
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    if (isFromWindow) {
+        if (newOrientation == Orientation::UNSPECIFIED) {
+            newOrientation = screenSession->GetScreenProperty().GetScreenRequestedOrientation();
+            withAnimation = true;
+        }
+    } else {
+        screenSession->GetScreenProperty().SetScreenRequestedOrientation(newOrientation);
+        screenSession->PropertyChange(screenSession->GetScreenProperty());
+    }
+    if (screenSession->GetScreenProperty().GetOrientation() == newOrientation) {
+        return DMError::DM_OK;
+    }
+    if (isFromWindow) {
+        ScreenRotationProperty::ProcessOrientationSwitch(newOrientation, withAnimation);
+    } else {
+        Rotation rotationAfter = screenSession->CalcRotation(newOrientation);
+        SetRotation(screenId, rotationAfter, false, false);
+        // screenSession->GetScreenProperty().SetScreenRotation(rotationAfter);
+        ProcessDisplayUpdateOrientation(screenId, rotationAfter);
+    }
+    screenSession->GetScreenProperty().SetOrientation(newOrientation);
+    // Notify rotation event to ScreenManager
+    NotifyScreenChanged(screenSession->ConvertToScreenInfo(), ScreenChangeEvent::UPDATE_ORIENTATION);
+    return DMError::DM_OK;
+}
+
+DMError ScreenSessionManager::SetOrientation(ScreenId screenId, Orientation orientation)
+{
+    /*if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("set orientation permission denied!");
+        return DMError::DM_ERROR_NOT_SYSTEM_APP;
+    }*/
+    if (orientation < Orientation::UNSPECIFIED || orientation > Orientation::REVERSE_HORIZONTAL) {
+        WLOGFE("SetOrientation::orientation: %{public}u", static_cast<uint32_t>(orientation));
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    return SetOrientationController(screenId, orientation, false, false);
+}
+
+DMError ScreenSessionManager::IsScreenRotationLocked(bool& isLocked)
+{
+    /*if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("is screen rotation locked permission denied!");
+        return DMError::DM_ERROR_NOT_SYSTEM_APP;
+    }*/
+    isLocked = ScreenRotationProperty::IsScreenRotationLocked();
+    return DMError::DM_OK;
+}
+
+DMError ScreenSessionManager::SetScreenRotationLocked(bool isLocked)
+{
+    /*if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("set screen rotation locked permission denied!");
+        return DMError::DM_ERROR_NOT_SYSTEM_APP;
+    }*/
+    return ScreenRotationProperty::SetScreenRotationLocked(isLocked);
+}
+
+void ScreenSessionManager::SetGravitySensorSubscriptionEnabled()
+{
+    isAutoRotationOpen_ = system::GetParameter("persist.display.ar.enabled", "1") == "1";
+    if (!isAutoRotationOpen_) {
+        WLOGFE("autoRotation is not open");
+        ScreenRotationProperty::Init();
+        return;
+    }
+    ScreenSensorConnector::SubscribeRotationSensor();
+}
+
+DMError ScreenSessionManager::SetOrientationFromWindow(DisplayId displayId, Orientation orientation,
+    bool withAnimation)
+{
+    sptr<DisplayInfo> displayInfo = GetDisplayInfoById(displayId);
+    if (displayInfo == nullptr) {
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    return SetOrientationController(displayInfo->GetScreenId(), orientation, true, withAnimation);
+}
+
+bool ScreenSessionManager::SetRotationFromWindow(DisplayId displayId, Rotation targetRotation, bool withAnimation)
+{
+    sptr<DisplayInfo> displayInfo = GetDisplayInfoById(displayId);
+    if (displayInfo == nullptr) {
+        return false;
+    }
+    return SetRotation(displayInfo->GetScreenId(), targetRotation, withAnimation, false);
+}
+
+sptr<SupportedScreenModes> ScreenSessionManager::GetScreenModesByDisplayId(DisplayId displayId)
+{
+    auto displayInfo = GetDisplayInfoById(displayId);
+    if (displayInfo == nullptr) {
+        WLOGFE("can not get display.");
+        return nullptr;
+    }
+    auto screenInfo = GetScreenInfoById(displayInfo->GetScreenId());
+    if (screenInfo == nullptr) {
+        WLOGFE("can not get screen.");
+        return nullptr;
+    }
+    auto modes = screenInfo->GetModes();
+    auto id = screenInfo->GetModeId();
+    if (id >= modes.size()) {
+        WLOGFE("can not get screenMode.");
+        return nullptr;
+    }
+    return modes[id];
+}
+
+sptr<ScreenInfo> ScreenSessionManager::GetScreenInfoByDisplayId(DisplayId displayId)
+{
+    auto displayInfo = GetDisplayInfoById(displayId);
+    if (displayInfo == nullptr) {
+        WLOGFE("can not get displayInfo.");
+        return nullptr;
+    }
+    return GetScreenInfoById(displayInfo->GetScreenId());
 }
 
 void ScreenSessionManager::RegisterDisplayChangeListener(sptr<IDisplayChangeListener> listener)
@@ -880,7 +1200,7 @@ sptr<ScreenSession> ScreenSessionManager::InitVirtualScreen(ScreenId smsScreenId
 
 bool ScreenSessionManager::InitAbstractScreenModesInfo(sptr<ScreenSession>& screenSession)
 {
-    std::vector<RSScreenModeInfo> allModes = rsInterface_.GetScreenSupportedModes(screenSession->rsId_);
+    std::vector<RSScreenModeInfo> allModes = rsInterface_.GetScreenSupportedModes(screenIdManager_.ConvertToRsScreenId(screenSession->screenId_));
     if (allModes.size() == 0) {
         WLOGE("SCB: allModes.size() == 0, screenId=%{public}" PRIu64"", screenSession->rsId_);
         return false;

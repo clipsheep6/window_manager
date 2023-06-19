@@ -41,6 +41,7 @@ NativeValue* JsScreenUtils::CreateJsScreenProperty(NativeEngine& engine, const S
 
     object->SetProperty("rotation", CreateJsValue(engine, screenProperty.GetRotation()));
     object->SetProperty("bounds", CreateJsRRect(engine, screenProperty.GetBounds()));
+    object->SetProperty("screenRotation", CreateJsValue(engine, screenProperty.GetScreenRotation()));
     return objValue;
 }
 

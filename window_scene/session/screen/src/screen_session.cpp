@@ -24,7 +24,8 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "Screen
 }
 
 ScreenSession::ScreenSession()
-{}
+{
+}
 
 ScreenSession::ScreenSession(ScreenId screenId, const ScreenProperty& property)
     : screenId_(screenId), property_(property)
@@ -116,7 +117,7 @@ ScreenId ScreenSession::GetScreenId()
     return screenId_;
 }
 
-ScreenProperty ScreenSession::GetScreenProperty() const
+ScreenProperty& ScreenSession::GetScreenProperty()
 {
     return property_;
 }
@@ -139,6 +140,13 @@ void ScreenSession::Disconnect()
     screenState_ = ScreenState::DISCONNECTION;
     for (auto& listener : screenChangeListenerList_) {
         listener->OnDisconnect();
+    }
+}
+
+void ScreenSession::PropertyChange(const ScreenProperty& newProperty)
+{
+    for (auto& listener : screenChangeListenerList_) {
+        listener->OnPropertyChange(newProperty);
     }
 }
 

@@ -14,9 +14,11 @@
  */
 
 #include "session/screen/include/screen_property.h"
+#include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
 namespace {
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "ScreenProperty" };
 constexpr int32_t PHONE_SCREEN_WIDTH = 1344;
 constexpr int32_t PHONE_SCREEN_HEIGHT = 2772;
 constexpr float PHONE_SCREEN_DENSITY = 3.5f;
@@ -104,6 +106,11 @@ Rotation ScreenProperty::GetScreenRotation() const
     return screenRotation_;
 }
 
+void ScreenProperty::SetScreenRotation(Rotation rotation)
+{
+    screenRotation_ = rotation;
+}
+
 void ScreenProperty::SetOrientation(Orientation orientation)
 {
     orientation_ = orientation;
@@ -188,6 +195,25 @@ void ScreenProperty::SetScreenType(ScreenType type)
 ScreenType ScreenProperty::GetScreenType() const
 {
     return type_;
+}
+
+void ScreenProperty::SetScreenRequestedOrientation(Orientation orientation)
+{
+    screenRequestedOrientation_ = orientation;
+}
+
+Orientation ScreenProperty::GetScreenRequestedOrientation() const
+{
+    return screenRequestedOrientation_;
+}
+
+void ScreenProperty::RequestRotation(Rotation rotation)
+{
+    if (IsVertical(rotation) != IsVertical(screenRotation_)) {
+        WLOGFE("gaoguanghui RequestRotation::rotation: %{public}u", static_cast<uint32_t>(rotation));
+        std::swap(bounds_.rect_.width_, bounds_.rect_.height_);
+    }
+    screenRotation_ = rotation;
 }
 
 } // namespace OHOS::Rosen

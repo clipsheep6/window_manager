@@ -16,6 +16,9 @@
 #ifndef OHOS_ROSEN_WINDOW_SCENE_SCREEN_SESSION_MANAGER_H
 #define OHOS_ROSEN_WINDOW_SCENE_SCREEN_SESSION_MANAGER_H
 
+#include <ui/rs_display_node.h>
+#include <transaction/rs_sync_transaction_controller.h>
+
 #include "common/include/message_scheduler.h"
 #include "session/screen/include/screen_session.h"
 #include "zidl/screen_session_manager_stub.h"
@@ -77,8 +80,25 @@ public:
     bool SetDisplayState(DisplayState state) override;
     DisplayState GetDisplayState(DisplayId displayId) override;
     bool SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason) override;
-    ScreenPowerState GetScreenPower(ScreenId dmsScreenId) override;
+    ScreenPowerState GetScreenPower(ScreenId screenId) override;
     void NotifyDisplayEvent(DisplayEvent event) override;
+
+    const std::shared_ptr<RSDisplayNode>& GetRSDisplayNodeByScreenId(ScreenId screenId);
+    void SetScreenRotateAnimation(sptr<ScreenSession>& screen, ScreenId screenId,
+        Rotation rotationAfter, bool withAnimation);
+    bool SetRotation(ScreenId screenId, Rotation rotationAfter, bool isFromWindow, bool withAnimation);
+    DMError SetOrientationController(ScreenId screenId, Orientation newOrientation,
+        bool isFromWindow, bool withAnimation);
+    DMError SetOrientation(ScreenId screenId, Orientation orientation) override;
+    DMError IsScreenRotationLocked(bool& isLocked) override;
+    DMError SetScreenRotationLocked(bool isLocked) override;
+    void SetGravitySensorSubscriptionEnabled();
+    DMError SetOrientationFromWindow(DisplayId displayId, Orientation orientation,
+        bool withAnimation);
+    bool SetRotationFromWindow(DisplayId displayId, Rotation targetRotation, bool withAnimation);
+    sptr<SupportedScreenModes> GetScreenModesByDisplayId(DisplayId displayId);
+    sptr<ScreenInfo> GetScreenInfoByDisplayId(DisplayId displayId);
+    void ProcessDisplayUpdateOrientation(ScreenId screenId, Rotation rotation);
 
     void RegisterDisplayChangeListener(sptr<IDisplayChangeListener> listener);
     bool NotifyDisplayPowerEvent(DisplayPowerEvent event, EventStatus status);
@@ -145,6 +165,11 @@ protected:
     virtual ~ScreenSessionManager() = default;
 
 private:
+    static inline bool IsVertical(Rotation rotation)
+    {
+        return (rotation == Rotation::ROTATION_0 || rotation == Rotation::ROTATION_180);
+    }
+    void OpenRotationSyncTransaction();
     void Init();
     void LoadScreenSceneXml();
     void ConfigureScreenScene();
@@ -154,6 +179,7 @@ private:
     sptr<ScreenSession> GetOrCreateScreenSession(ScreenId screenId);
 
     ScreenId GetDefaultScreenId();
+    void ProcessScreenModeChanged(ScreenId screenId);
 
     void NotifyDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type);
@@ -192,6 +218,7 @@ private:
     std::map<sptr<IRemoteObject>, std::vector<ScreenId>> screenAgentMap_;
     std::map<ScreenId, sptr<ScreenSessionGroup>> smsScreenGroupMap_;
 
+    bool isAutoRotationOpen_;
     bool isExpandCombination_ = false;
     sptr<AgentDeathRecipient> deathRecipient_ { nullptr };
 

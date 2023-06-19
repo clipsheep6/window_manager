@@ -64,7 +64,7 @@ public:
     ScreenSourceMode GetSourceMode() const;
 
     ScreenId GetScreenId();
-    ScreenProperty GetScreenProperty() const;
+    ScreenProperty& GetScreenProperty();
     std::shared_ptr<RSDisplayNode> GetDisplayNode() const;
 
     Rotation CalcRotation(Orientation orientation) const;
@@ -98,6 +98,7 @@ public:
 
     void Connect();
     void Disconnect();
+    void PropertyChange(const ScreenProperty& newProperty);
 
 private:
     ScreenProperty property_;
