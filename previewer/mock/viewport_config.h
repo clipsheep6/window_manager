@@ -98,5 +98,7 @@ private:
     int32_t orientation_ = 0;
     float density_ = 1.0f;
 };
+
 } // namespace OHOS::Ace
+
 #endif // FOUNDATION_ACE_INTERFACE_INNERKITS_ACE_VIEWPORT_CONFIG_H

@@ -28,24 +28,35 @@ PreviewerWindow& PreviewerWindow::GetInstance()
     return instance;
 }
 
+Rosen::Orientation PreviewerWindow::TransOrientation(Previewer::Orientation orientation)
+{
+    if (orientation == Previewer::Orientation::PORTRAIT) {
+        return Rosen::Orientation::VERTICAL;
+    } else if (orientation == Previewer::Orientation::LANDSCAPE) {
+        return Rosen::Orientation::HORIZONTAL;
+    }
+
+    return Rosen::Orientation::UNSPECIFIED;
+}
+
 void PreviewerWindow::SetWindowParams(const PreviewerWindowModel& windowModel)
 {
-  this->windowModel = windowModel;
+    windowModel_ = windowModel;
 }
 
 PreviewerWindowModel& PreviewerWindow::GetWindowParams()
 {
-  return this->windowModel;
-}
-    
-void PreviewerWindow::SetWindowObject(const Rosen::WindowImpl *window)
-{
-  this->window = const_cast<Rosen::WindowImpl*>(window);
+    return windowModel_;
 }
 
-Rosen::WindowImpl* PreviewerWindow::GetWindowObject()
+void PreviewerWindow::SetWindowObject(const Rosen::Window* window)
 {
-  return this->window;
+    window_ = const_cast<Rosen::Window*>(window);
+}
+
+Rosen::Window* PreviewerWindow::GetWindowObject()
+{
+    return window_;
 }
 
 } // namespace Previewer

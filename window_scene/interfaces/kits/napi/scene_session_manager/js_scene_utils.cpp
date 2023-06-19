@@ -32,6 +32,10 @@ bool ConvertSessionInfoFromJs(NativeEngine& engine, NativeObject* jsObject, Sess
     NativeValue* jsModuleName = jsObject->GetProperty("moduleName");
     NativeValue* jsAbilityName = jsObject->GetProperty("abilityName");
     NativeValue* jsIsSystem = jsObject->GetProperty("isSystem");
+    NativeValue* jsPersistentId = jsObject->GetProperty("persistentId");
+    NativeValue* jsCallerPersistentId = jsObject->GetProperty("callerPersistentId");
+    NativeValue* jsCallState = jsObject->GetProperty("callState");
+
     if (jsBundleName->TypeOf() != NATIVE_UNDEFINED) {
         std::string bundleName;
         if (!ConvertFromJsValue(engine, jsBundleName, bundleName)) {
@@ -64,6 +68,30 @@ bool ConvertSessionInfoFromJs(NativeEngine& engine, NativeObject* jsObject, Sess
         }
         sessionInfo.isSystem_ = isSystem;
     }
+    if (jsPersistentId->TypeOf() != NATIVE_UNDEFINED) {
+        int64_t persistentId;
+        if (!ConvertFromJsValue(engine, jsPersistentId, persistentId)) {
+            WLOGFE("[NAPI]Failed to convert parameter to persistentId");
+            return false;
+        }
+        sessionInfo.persistentId_ = persistentId;
+    }
+    if (jsCallerPersistentId->TypeOf() != NATIVE_UNDEFINED) {
+        int64_t callerPersistentId;
+        if (!ConvertFromJsValue(engine, jsCallerPersistentId, callerPersistentId)) {
+            WLOGFE("[NAPI]Failed to convert parameter to callerPersistentId");
+            return false;
+        }
+        sessionInfo.callerPersistentId_ = callerPersistentId;
+    }
+    if (jsCallState->TypeOf() != NATIVE_UNDEFINED) {
+        int32_t callState;
+        if (!ConvertFromJsValue(engine, jsCallState, callState)) {
+            WLOGFE("[NAPI]Failed to convert parameter to callState");
+            return false;
+        }
+        sessionInfo.callState_ = callState;
+    }
     return true;
 }
 
@@ -79,49 +107,35 @@ NativeValue* CreateJsSessionInfo(NativeEngine& engine, const SessionInfo& sessio
     object->SetProperty("moduleName", CreateJsValue(engine, sessionInfo.moduleName_));
     object->SetProperty("abilityName", CreateJsValue(engine, sessionInfo.abilityName_));
     object->SetProperty("isSystem", CreateJsValue(engine, sessionInfo.isSystem_));
+    object->SetProperty("persistentId", CreateJsValue(engine, static_cast<int64_t>(sessionInfo.persistentId_)));
+    object->SetProperty("callerPersistentId", CreateJsValue(engine,
+        static_cast<int64_t>(sessionInfo.callerPersistentId_)));
+    object->SetProperty("callState", CreateJsValue(engine, static_cast<int32_t>(sessionInfo.callState_)));
     return objValue;
 }
 
-NativeValue* CreateJsSessionState(NativeEngine& engine, const SessionState& state)
+NativeValue* CreateJsSessionState(NativeEngine& engine)
 {
-    WLOGFI("[NAPI]CreateJsSessionState");
-    NativeValue* objValue = engine.CreateObject();
-    NativeObject* object = ConvertNativeValueTo<NativeObject>(objValue);
-    if (object == nullptr) {
-        WLOGFE("[NAPI]Failed to convert sessionInfo to jsObject");
-        return nullptr;
-    }
-    object->SetProperty("sessionState", CreateJsValue(engine, state));
-    return objValue;
-}
-
-NativeValue* SessionStateInit(NativeEngine* engine)
-{
-    if (engine == nullptr) {
-        WLOGFE("Engine is nullptr");
-        return nullptr;
-    }
-
-    NativeValue *objValue = engine->CreateObject();
+    NativeValue *objValue = engine.CreateObject();
     NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
     if (object == nullptr) {
         WLOGFE("Failed to get object");
         return nullptr;
     }
 
-    object->SetProperty("STATE_DISCONNECT", CreateJsValue(*engine,
+    object->SetProperty("STATE_DISCONNECT", CreateJsValue(engine,
         static_cast<int32_t>(SessionState::STATE_DISCONNECT)));
-    object->SetProperty("STATE_CONNECT", CreateJsValue(*engine,
+    object->SetProperty("STATE_CONNECT", CreateJsValue(engine,
         static_cast<int32_t>(SessionState::STATE_CONNECT)));
-    object->SetProperty("STATE_FOREGROUND", CreateJsValue(*engine,
+    object->SetProperty("STATE_FOREGROUND", CreateJsValue(engine,
         static_cast<int32_t>(SessionState::STATE_FOREGROUND)));
-    object->SetProperty("STATE_ACTIVE", CreateJsValue(*engine,
+    object->SetProperty("STATE_ACTIVE", CreateJsValue(engine,
         static_cast<int32_t>(SessionState::STATE_ACTIVE)));
-    object->SetProperty("STATE_INACTIVE", CreateJsValue(*engine,
+    object->SetProperty("STATE_INACTIVE", CreateJsValue(engine,
         static_cast<int32_t>(SessionState::STATE_INACTIVE)));
-    object->SetProperty("STATE_BACKGROUND", CreateJsValue(*engine,
+    object->SetProperty("STATE_BACKGROUND", CreateJsValue(engine,
         static_cast<int32_t>(SessionState::STATE_BACKGROUND)));
-    object->SetProperty("STATE_END", CreateJsValue(*engine,
+    object->SetProperty("STATE_END", CreateJsValue(engine,
         static_cast<int32_t>(SessionState::STATE_END)));
 
     return objValue;

@@ -159,7 +159,7 @@ public:
     virtual void UnregisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener) override;
     virtual void SetAceAbilityHandler(const sptr<IAceAbilityHandler>& handler) override;
     virtual void SetRequestModeSupportInfo(uint32_t modeSupportInfo) override;
-    virtual void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent) override;
+    virtual void ConsumeKeyEvent(const std::shared_ptr<MMI::KeyEvent>& inputEvent) override;
     virtual void ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& inputEvent) override;
     virtual void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback) override;
     virtual void UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration) override;
@@ -195,7 +195,8 @@ public:
 
     virtual void SetNeedDefaultAnimation(bool needDefaultAnimation) override;
 
-    void UpdateViewportConfig();
+    virtual void SetViewportConfig(const Ace::ViewportConfig& config) override;
+    virtual void UpdateViewportConfig() override;
     virtual void SetOrientation(Orientation orientation) override;
     virtual void SetSize(int32_t width, int32_t height) override;
     virtual void SetDensity(float density) override;

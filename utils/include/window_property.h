@@ -144,6 +144,7 @@ public:
 
     bool Write(Parcel& parcel, PropertyChangeAction action);
     void Read(Parcel& parcel, PropertyChangeAction action);
+    bool isSystemCalling_ { false };
 private:
     bool MapMarshalling(Parcel& parcel) const;
     static void MapUnmarshalling(Parcel& parcel, WindowProperty* property);
@@ -212,6 +213,7 @@ private:
     uint32_t windowGravitySizePercent_ = 0;
 
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(Orientation, RequestedOrientation, requestedOrientation, Orientation::UNSPECIFIED);
+    DEFINE_VAR_DEFAULT_FUNC_GET_SET(uint32_t, ApiCompatibleVersion, apiCompatibleVersion, 0u);
     WindowSizeLimits sizeLimits_;
     WindowSizeLimits updatedSizeLimits_;
     MaximizeMode maximizeMode_ { MaximizeMode::MODE_RECOVER };

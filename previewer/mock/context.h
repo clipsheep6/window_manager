@@ -18,6 +18,17 @@
 #include <memory>
 
 namespace OHOS {
+namespace AppExecFwk {
+class ApplicationInfo {
+public:
+    uint32_t apiCompatibleVersion;
+};
+class Context {
+public:
+    Context() = default;
+    virtual ~Context() = default;
+};
+}  // namespace AppExecFwk
 namespace AbilityRuntime {
 class Context {
 public:

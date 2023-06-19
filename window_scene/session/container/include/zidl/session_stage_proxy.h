@@ -31,6 +31,9 @@ public:
     WSError SetActive(bool active) override;
     WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) override;
     WSError HandleBackEvent() override;
+    WSError UpdateFocus(bool isFocused) override;
+    WSError NotifyDestroy() override;
+    void NotifyTouchDialogTarget() override;
 private:
     static inline BrokerDelegator<SessionStageProxy> delegator_;
 };

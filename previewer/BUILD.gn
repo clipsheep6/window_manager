@@ -14,14 +14,18 @@
 import("//build/ohos.gni")
 import("../windowmanager_aafwk.gni")
 
-if (host_os == "mac") {
+if (current_os == "mac") {
   suffix = ".dylib"
   hilog_platform = "mac"
+} else if ( current_os == "linux") {
+  suffix = ".so"
+  hilog_platform = "linux"
 } else {
   suffix = ".dll"
   hilog_platform = "windows"
 }
 
+print("AAAAAAAAAcurrent_os %s",current_os)
 config("previewer_window_config") {
   visibility = [ ":*" ]
 
@@ -44,23 +48,30 @@ ohos_shared_library("previewer_window") {
     "src/window_impl.cpp",
     "src/window_option.cpp",
     "src/window_scene.cpp",
+    "src/window_model.cpp",
   ]
 
   include_dirs = [
+    "${graphic_base_path}/graphic_2d/rosen/modules/platform/utils",
+    "${graphic_base_path}/graphic_2d/rosen/modules/platform/ipc_core",
+    "${graphic_base_path}/graphic_2d/rosen/modules/platform/image_native",
     "include",
     "mock",
     "../utils/include",
+    "${ide_previewer_external_path}",
   ]
 
-  deps = [
+    public_deps = [
     "${graphic_base_path}/graphic_2d/rosen/modules/platform:utils",
+    "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+     "${graphic_base_path}/graphic_2d/rosen/modules/platform:ipc_core",
+  ]
+  deps = [
     "${hilog_path}/interfaces/native/innerkits:libhilog_" +
         hilog_platform,
-    "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "${graphic_base_path}/graphic_2d/rosen/modules/platform:ipc_core",
     "//foundation/arkui/ace_engine/interfaces/inner_api/ace:ace_uicontent",
+    "${ide_previewer_external_path}:ide_external",
   ]
-
 
   cflags = [ "-std=c++11" ]
   part_name = "window_manager"
@@ -70,7 +81,10 @@ ohos_shared_library("previewer_window") {
 config("previewer_window_napi_config") {
   visibility = [ ":*" ]
 
-  include_dirs = [ "../interfaces/kits/napi/window_runtime/window_napi" ]
+  include_dirs = [ 
+    "../interfaces/kits/napi/window_runtime/window_napi",
+    "../interfaces/kits/napi/window_runtime/window_stage_napi",
+   ]
 }
 
 ohos_shared_library("previewer_window_napi") {
@@ -83,7 +97,6 @@ ohos_shared_library("previewer_window_napi") {
     "../interfaces/kits/napi/window_runtime/window_napi/js_window.cpp",
     "../interfaces/kits/napi/window_runtime/window_napi/js_window_utils.cpp",
     "../interfaces/kits/napi/window_runtime/window_stage_napi/js_window_stage.cpp",
-    # mock
     "mock/js_transition_controller.cpp",
     "mock/js_window_register_manager.cpp",
     "mock/permission.cpp",
@@ -97,7 +110,6 @@ ohos_shared_library("previewer_window_napi") {
     "mock",
     "mock/transaction",
     "${ability_runtime_path}/interfaces/inner_api/runtime/include",
-    "../interfaces/kits/napi/window_runtime/window_stage_napi",
   ]
 
   deps = [
@@ -108,6 +120,7 @@ ohos_shared_library("previewer_window_napi") {
     "${hilog_path}/interfaces/native/innerkits:libhilog_" +
         hilog_platform,
     "${graphic_base_path}/graphic_2d/rosen/modules/platform:ipc_core",
+    "//foundation/arkui/ace_engine/interfaces/inner_api/ace:ace_uicontent",
   ]
 
   cflags_cc = [ "-DWINDOW_PREVIEW" ]

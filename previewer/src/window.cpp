@@ -71,14 +71,5 @@ void Window::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configu
     return WindowImpl::UpdateConfigurationForAll(configuration);
 }
 
-bool OccupiedAreaChangeInfo::Marshalling(Parcel& parcel) const
-{
-    return true;
-}
-
-OccupiedAreaChangeInfo* OccupiedAreaChangeInfo::Unmarshalling(Parcel& parcel)
-{
-    return nullptr;
-}
 } // namespace Rosen
 } // namespace OHOS

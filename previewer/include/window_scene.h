@@ -31,7 +31,7 @@ namespace Rosen {
 #ifdef CreateWindow
 #undef CreateWindow
 #endif
-class WindowScene : public RefBase {
+class WINDOW_EXPORT WindowScene : public RefBase {
 public:
     WindowScene() = default;
     ~WindowScene();

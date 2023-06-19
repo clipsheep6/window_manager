@@ -20,6 +20,7 @@
 #include <fstream>
 #include <map>
 #include <string>
+#include <want.h>
 
 #include "iremote_broker.h"
 
@@ -94,6 +95,17 @@ struct SessionInfo {
     std::string abilityName_ = "";
     sptr<IRemoteObject> callerToken_ = nullptr;
     bool isSystem_ = false;
+
+    sptr<AAFwk::Want> want;
+    int32_t resultCode;
+    int32_t requestCode;
+    int32_t errorCode;
+    std::string errorReason;
+
+    uint64_t persistentId_ = 0;
+    uint64_t callerPersistentId_ = 0;
+    uint32_t callState_ = 0;
+    int64_t uiAbilityId_ = 0;
 };
 
 enum class SizeChangeReason : uint32_t {
@@ -119,7 +131,9 @@ enum class SessionEvent : uint32_t {
     EVENT_RECOVER,
     EVENT_MINIMIZE,
     EVENT_CLOSE,
-    EVENT_START_MOVE
+    EVENT_START_MOVE,
+    EVENT_TERMINATE,
+    EVENT_EXCEPTION,
 };
 
 struct WSRect {
@@ -147,11 +161,22 @@ struct WindowShadowConfig {
     std::string color_ = "#000000";
 };
 
+struct KeyboardSceneAnimationConfig {
+    std::string curveType_ = "easeOut";
+    float ctrlX1_ = 0.2f;
+    float ctrlY1_ = 0.0f;
+    float ctrlX2_ = 0.2f;
+    float ctrlY2_ = 1.0f;
+    uint32_t durationIn_ = 150; // default durationIn time
+    uint32_t durationOut_ = 150; // default durationOut time
+};
+
 struct AppWindowSceneConfig {
     float floatCornerRadius_ = 0.0f;
 
     WindowShadowConfig focusedShadow_;
     WindowShadowConfig unfocusedShadow_;
+    KeyboardSceneAnimationConfig keyboardAnimation_;
 };
 
 } // namespace OHOS::Rosen

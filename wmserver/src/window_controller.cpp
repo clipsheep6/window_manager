@@ -247,6 +247,14 @@ WMError WindowController::CreateWindow(sptr<IWindow>& window, sptr<WindowPropert
         StartingWindow::HandleClientWindowCreate(node, window, windowId, surfaceNode, property, pid, uid);
         windowRoot_->AddDeathRecipient(node);
         windowRoot_->AddSurfaceNodeIdWindowNodePair(surfaceNode->GetId(), node);
+        WLOGFD("Flags: %{public}u, API version: %{public}u", property->GetWindowFlags(),
+            node->GetWindowProperty()->GetApiCompatibleVersion());
+        if (property->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED) &&
+            node->GetWindowProperty()->GetApiCompatibleVersion() >= 9 && !property->isSystemCalling_) { // 9: API ver.
+            property->SetWindowFlags(property->GetWindowFlags() &
+                ~static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED));
+        }
+        property->SetApiCompatibleVersion(node->GetWindowProperty()->GetApiCompatibleVersion());
         return WMError::WM_OK;
     }
 
@@ -973,7 +981,7 @@ WMError WindowController::SetWindowType(uint32_t windowId, WindowType type)
     return res;
 }
 
-WMError WindowController::SetWindowFlags(uint32_t windowId, uint32_t flags)
+WMError WindowController::SetWindowFlags(uint32_t windowId, uint32_t flags, bool isSystemCalling)
 {
     auto node = windowRoot_->GetWindowNode(windowId);
     if (node == nullptr) {
@@ -982,6 +990,11 @@ WMError WindowController::SetWindowFlags(uint32_t windowId, uint32_t flags)
     }
     auto property = node->GetWindowProperty();
     uint32_t oldFlags = property->GetWindowFlags();
+    if (property->GetApiCompatibleVersion() >= 9 && !isSystemCalling && // 9: api version.
+        (oldFlags ^ flags) == static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED)) {
+        WLOGFW("Only API 9- or system calling support showing when locked.");
+        return WMError::WM_ERROR_INVALID_PERMISSION;
+    }
     property->SetWindowFlags(flags);
     // only forbid_split_move flag change, just set property
     if ((oldFlags ^ flags) == static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_FORBID_SPLIT_MOVE)) {
@@ -1421,7 +1434,7 @@ WMError WindowController::UpdateProperty(sptr<WindowProperty>& property, Propert
             break;
         }
         case PropertyChangeAction::ACTION_UPDATE_FLAGS: {
-            ret = SetWindowFlags(windowId, property->GetWindowFlags());
+            ret = SetWindowFlags(windowId, property->GetWindowFlags(), property->isSystemCalling_);
             break;
         }
         case PropertyChangeAction::ACTION_UPDATE_OTHER_PROPS: {

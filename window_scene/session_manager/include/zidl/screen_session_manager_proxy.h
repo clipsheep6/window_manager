@@ -30,6 +30,14 @@ public:
     ~ScreenSessionManagerProxy() = default;
 
     virtual sptr<DisplayInfo> GetDefaultDisplayInfo() override;
+    virtual DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) override;
+    virtual DMError SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio) override;
+
+    virtual DMError GetScreenColorGamut(ScreenId screenId, ScreenColorGamut& colorGamut) override;
+    virtual DMError SetScreenColorGamut(ScreenId screenId, int32_t colorGamutIdx) override;
+    virtual DMError GetScreenGamutMap(ScreenId screenId, ScreenGamutMap& gamutMap) override;
+    virtual DMError SetScreenGamutMap(ScreenId screenId, ScreenGamutMap gamutMap) override;
+    virtual DMError SetScreenColorTransform(ScreenId screenId) override;
 
     virtual DMError RegisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
         DisplayManagerAgentType type) override;
@@ -46,6 +54,32 @@ public:
     virtual ScreenPowerState GetScreenPower(ScreenId dmsScreenId) override;
     virtual bool SetDisplayState(DisplayState state) override;
     virtual DisplayState GetDisplayState(DisplayId displayId) override;
+    virtual ScreenId CreateVirtualScreen(VirtualScreenOption option,
+        const sptr<IRemoteObject>& displayManagerAgent) override;
+
+    virtual DMError DestroyVirtualScreen(ScreenId screenId) override;
+
+    virtual DMError SetVirtualScreenSurface(ScreenId screenId, sptr<IBufferProducer> surface) override;
+
+    virtual DMError MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenIds,
+        ScreenId& screenGroupId) override;
+
+    virtual sptr<ScreenGroupInfo> GetScreenGroupInfoById(ScreenId screenId) override;
+
+    virtual void RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens) override;
+
+    virtual std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId, DmErrorCode* errorCode) override;
+
+    virtual sptr<DisplayInfo> GetDisplayInfoById(DisplayId displayId) override;
+    virtual sptr<DisplayInfo> GetDisplayInfoByScreen(ScreenId screenId) override;
+    virtual std::vector<DisplayId> GetAllDisplayIds() override;
+
+    virtual sptr<ScreenInfo> GetScreenInfoById(ScreenId screenId) override;
+
+    virtual DMError GetAllScreenInfos(std::vector<sptr<ScreenInfo>>& screenInfos) override;
+
+    virtual DMError GetScreenSupportedColorGamuts(ScreenId screenId,
+        std::vector<ScreenColorGamut>& colorGamuts) override;
 
 private:
     static inline BrokerDelegator<ScreenSessionManagerProxy> delegator_;

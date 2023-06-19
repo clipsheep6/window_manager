@@ -16,7 +16,7 @@
 #ifndef INTERFACES_INNERKITS_WINDOW_MODEL_H
 #define INTERFACES_INNERKITS_WINDOW_MODEL_H
 
-#include "window_impl.h"
+#include "window.h"
 
 namespace OHOS {
 namespace Previewer {
@@ -53,24 +53,24 @@ struct PreviewerWindowModel {
     ColorMode colorMode = ColorMode::LIGHT; // color mode
 };
 
-class PreviewerWindow {
+class WINDOW_EXPORT PreviewerWindow {
 public:
     PreviewerWindow(const PreviewerWindow&) = delete;
     PreviewerWindow& operator=(const PreviewerWindow&) = delete;
     ~PreviewerWindow() = default;
 
     static PreviewerWindow& GetInstance();
-
+    static Rosen::Orientation TransOrientation(Previewer::Orientation orientation);
     void SetWindowParams(const PreviewerWindowModel& windowModel);
     PreviewerWindowModel& GetWindowParams();
-    
-    void SetWindowObject(const Rosen::WindowImpl *window);
-    Rosen::WindowImpl* GetWindowObject();
+
+    void SetWindowObject(const Rosen::Window* window);
+    Rosen::Window* GetWindowObject();
 
 private:
     PreviewerWindow();
-    PreviewerWindowModel windowModel;
-    Rosen::WindowImpl *window;
+    PreviewerWindowModel windowModel_;
+    Rosen::Window* window_ = nullptr;
 };
 } // namespace Previewer
 } // namespace OHOS

@@ -24,6 +24,7 @@
 #include "interfaces/include/ws_common.h"
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/host/include/zidl/session_stub.h"
+#include "session/host/include/scene_persistence.h"
 
 namespace OHOS::MMI {
 class PointerEvent;
@@ -40,6 +41,10 @@ class RSSurfaceNode;
 using NotifyPendingSessionActivationFunc = std::function<void(const SessionInfo& info)>;
 using NotifySessionStateChangeFunc = std::function<void(const SessionState& state)>;
 using NotifyBackPressedFunc = std::function<void()>;
+using NotifySessionFocusableChangeFunc = std::function<void(const bool isFocusable)>;
+using NotifyClickFunc = std::function<void()>;
+using NotifyTerminateSessionFunc = std::function<void(const SessionInfo& info)>;
+using NotifySessionExceptionFunc = std::function<void(const SessionInfo& info)>;
 
 class ILifecycleListener {
 public:
@@ -66,6 +71,9 @@ public:
     WSRect GetSessionRect() const;
     WindowType GetWindowType() const;
 
+    void SetWindowSessionProperty(const sptr<WindowSessionProperty>& property);
+    const sptr<WindowSessionProperty>& GetWindowSessionProperty() const;
+
     virtual WSError SetActive(bool active);
     virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason);
 
@@ -87,7 +95,13 @@ public:
     bool RegisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
     bool UnregisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
     void SetPendingSessionActivationEventListener(const NotifyPendingSessionActivationFunc& func);
-    WSError PendingSessionActivation(const SessionInfo& info) override;
+
+    WSError PendingSessionActivation(const sptr<AAFwk::SessionInfo> info) override;
+
+    void SetTerminateSessionListener(const NotifyTerminateSessionFunc& func);
+    WSError TerminateSession(const sptr<AAFwk::SessionInfo> info) override;
+    void SetSessionExceptionListener(const NotifyTerminateSessionFunc& func);
+    WSError NotifySessionException(const sptr<AAFwk::SessionInfo> info) override;
     void SetSessionStateChangeListenser(const NotifySessionStateChangeFunc& func);
     void NotifySessionStateChange(const SessionState& state);
     WSError UpdateActiveStatus(bool isActive) override; // update active status from session_stage
@@ -101,21 +115,51 @@ public:
     void SetBackPressedListenser(const NotifyBackPressedFunc& func);
     WSError ProcessBackEvent(); // send back event to session_stage
     WSError RequestSessionBack() override; // receive back request from session_stage
+    sptr<ScenePersistence> GetScenePersistence() const;
+    void SetParentSession(const sptr<Session>& session);
+    void BindDialogToParentSession(const sptr<Session>& session);
+    void RemoveDialogToParentSession(const sptr<Session>& session);
+    std::vector<sptr<Session>> GetDialogVector() const;
+    void NotifyTouchDialogTarget();
+    WSError NotifyDestroy();
+    static std::atomic<uint32_t> sessionId_;
+    static std::set<uint32_t> persistIdSet_;
 
+    void SetSessionFocusableChangeListener(const NotifySessionFocusableChangeFunc& func);
+    void SetClickListener(const NotifyClickFunc& func);
+    void NotifySessionFocusableChange(bool isFocusable);
+    void NotifyClick();
+    WSError UpdateFocus(bool isFocused);
+    WSError SetFocusable(bool isFocusable);
+    bool GetFocusable() const;
+    WSError SetTouchable(bool touchable);
+    bool GetTouchable() const;
 protected:
+    void GeneratePersistentId(const bool isExtension, const SessionInfo& sessionInfo);
     void UpdateSessionState(SessionState state);
+    void UpdateSessionFocusable(bool isFocusable);
     bool IsSessionValid() const;
+
     bool isActive_ = false;
+    bool isFocused_ = false;
     WSRect winRect_ {0, 0, 0, 0};
     sptr<ISessionStage> sessionStage_;
     SessionInfo sessionInfo_;
     NotifyPendingSessionActivationFunc pendingSessionActivationFunc_;
     NotifySessionStateChangeFunc sessionStateChangeFunc_;
     NotifyBackPressedFunc backPressedFunc_;
+    NotifySessionFocusableChangeFunc sessionFocusableChangeFunc_;
+    NotifyClickFunc clickFunc_;
+    NotifyTerminateSessionFunc terminateSessionFunc_;
+    NotifySessionExceptionFunc sessionExceptionFunc_;
     sptr<WindowSessionProperty> property_ = nullptr;
     SystemSessionConfig systemConfig_;
+    const bool isExtension = true;
+    sptr<ScenePersistence> scenePersistence_ = nullptr;
 
 private:
+    bool CheckDialogOnForeground();
+
     template<typename T>
     bool RegisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener);
     template<typename T>
@@ -148,6 +192,8 @@ private:
     sptr<IWindowEventChannel> windowEventChannel_ = nullptr;
 
     std::shared_ptr<Media::PixelMap> snapshot_;
+    std::vector<sptr<Session>> dialogVec_;
+    sptr<Session> parentSession_;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_H

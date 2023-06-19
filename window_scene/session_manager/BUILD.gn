@@ -14,13 +14,6 @@
 import("//build/ohos.gni")
 import("../../windowmanager_aafwk.gni")
 
-config("session_manager_private_config") {
-  include_dirs = [
-    "${window_base_path}/interfaces/innerkits/wm",
-    "${window_base_path}/wm/include",
-  ]
-}
-
 config("session_manager_public_config") {
   include_dirs = [
     "${window_base_path}/window_scene",
@@ -36,6 +29,11 @@ config("session_manager_public_config") {
 
     # for window_manager_hilog
     "${window_base_path}/utils/include",
+
+    # for screenlock_manager_interface
+    "${screenlock_mgr_path}/services/include",
+    "${screenlock_mgr_path}/utils/include",
+    "${screenlock_mgr_path}/frameworks/native/include",
   ]
 }
 
@@ -47,8 +45,6 @@ ohos_shared_library("scene_session_manager") {
     "src/zidl/scene_session_manager_proxy.cpp",
     "src/zidl/scene_session_manager_stub.cpp",
   ]
-
-  configs = [ ":session_manager_private_config" ]
 
   public_configs = [ ":session_manager_public_config" ]
 
@@ -74,7 +70,6 @@ ohos_shared_library("scene_session_manager") {
     "ipc:ipc_single",
     "resource_management:global_resmgr",
     "samgr:samgr_proxy",
-    "window_manager:libwm",
   ]
 
   innerapi_tags = [ "platformsdk" ]
@@ -85,6 +80,7 @@ ohos_shared_library("scene_session_manager") {
 ohos_shared_library("screen_session_manager") {
   sources = [
     "../../dm/src/zidl/display_manager_agent_proxy.cpp",
+    "src/screen_scene_config.cpp",
     "src/screen_session_manager.cpp",
     "src/session_display_power_controller.cpp",
     "src/zidl/screen_session_manager_stub.cpp",
@@ -97,16 +93,25 @@ ohos_shared_library("screen_session_manager") {
   deps = [
     "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/utils:libwmutil",
     "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/session:screen_session",
+    "//third_party/libxml2:libxml2",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "config_policy:configpolicy_util",
     "eventhandler:libeventhandler",
     "hilog_native:libhilog",
     "ipc:ipc_core",
   ]
+
+  if (is_standard_system) {
+    external_deps += [ "init:libbegetutil" ]
+  } else {
+    external_deps += [ "init_lite:libbegetutil" ]
+  }
 
   innerapi_tags = [ "platformsdk" ]
   part_name = "window_manager"
@@ -131,6 +136,7 @@ ohos_shared_library("session_manager") {
     "${window_base_path}/utils:libwmutil",
     "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/session:scene_session",
+    "${window_base_path}/window_scene/session:screen_session",
   ]
 
   external_deps = [

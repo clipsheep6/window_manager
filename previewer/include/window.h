@@ -45,6 +45,7 @@ class Context;
 
 namespace OHOS::Ace {
 class UIContent;
+class ViewportConfig;
 }
 
 namespace OHOS::AAFwk {
@@ -95,7 +96,7 @@ class IDialogTargetTouchListener : virtual public RefBase {
 class IDialogDeathRecipientListener : virtual public RefBase {
 };
 static WMError DefaultCreateErrCode = WMError::WM_OK;
-class Window : public RefBase {
+class WINDOW_EXPORT Window : public RefBase {
 public:
     static sptr<Window> Create(const std::string& windowName,
     sptr<WindowOption>& option, const std::shared_ptr<AbilityRuntime::Context>& context = nullptr,
@@ -169,7 +170,7 @@ public:
     virtual bool IsFocused() const = 0;
     virtual WMError UpdateSurfaceNodeAfterCustomAnimation(bool isAdd) = 0;
     virtual void SetInputEventConsumer(const std::shared_ptr<IInputEventConsumer>& inputEventConsumer) = 0;
-    virtual void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent) = 0;
+    virtual void ConsumeKeyEvent(const std::shared_ptr<MMI::KeyEvent>& inputEvent) = 0;
     virtual void ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& inputEvent) = 0;
     virtual void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback) = 0;
     virtual void UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration) = 0;
@@ -230,6 +231,8 @@ public:
     virtual KeyboardAnimationConfig GetKeyboardAnimationConfig() = 0;
     virtual void SetNeedDefaultAnimation(bool needDefaultAnimation) = 0;
 
+    virtual void SetViewportConfig(const Ace::ViewportConfig& config) = 0;
+    virtual void UpdateViewportConfig() = 0;
     virtual void SetOrientation(Orientation orientation) = 0;
     virtual void SetSize(int32_t width, int32_t height) = 0;
     virtual void SetDensity(float density) = 0;

@@ -38,9 +38,9 @@ class ResourceManager;
 } // namespace OHOS::Global::Resource
 
 namespace OHOS::Rosen {
-class RootScene;
 class SceneSession;
 using NotifyCreateSpecificSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
+using NotifySetFocusSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 class SceneSessionManager : public SceneSessionManagerStub,
                             public SessionManagerBase {
 WM_DECLARE_SINGLE_INSTANCE_BASE(SceneSessionManager)
@@ -49,19 +49,24 @@ public:
     WSError RequestSceneSessionActivation(const sptr<SceneSession>& sceneSession);
     WSError RequestSceneSessionBackground(const sptr<SceneSession>& sceneSession);
     WSError RequestSceneSessionDestruction(const sptr<SceneSession>& sceneSession);
-
+    WSError RequestSceneSessionByCall(const sptr<SceneSession>& sceneSession);
+    void StartAbilityBySpecified(const SessionInfo& sessionInfo);
     sptr<RootSceneSession> GetRootSceneSession();
     sptr<SceneSession> GetSceneSession(uint64_t persistentId);
     WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
         sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session);
     WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId);
+    WSError UpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action);
     void SetCreateSpecificSessionListener(const NotifyCreateSpecificSessionFunc& func);
     const AppWindowSceneConfig& GetWindowSceneConfig() const;
     WSError ProcessBackEvent();
 
     void GetStartPage(const SessionInfo& sessionInfo, std::string& path, uint32_t& bgColor);
 
+    WSError SetFocusedSession(uint64_t persistentId);
+    uint64_t GetFocusedSession() const;
+    WSError UpdateFocus(uint64_t persistentId, bool isFocused);
 protected:
     SceneSessionManager();
     virtual ~SceneSessionManager() = default;
@@ -71,24 +76,29 @@ private:
     void LoadWindowSceneXml();
     void ConfigWindowSceneXml();
     void ConfigWindowEffect(const WindowSceneConfig::ConfigItem& effectConfig);
+    void ConfigKeyboardAnimation(const WindowSceneConfig::ConfigItem& animationConfig);
     bool ConfigAppWindowCornerRadius(const WindowSceneConfig::ConfigItem& item, float& out);
     bool ConfigAppWindowShadow(const WindowSceneConfig::ConfigItem& shadowConfig, WindowShadowConfig& outShadow);
     void ConfigDecor(const WindowSceneConfig::ConfigItem& decorConfig);
     sptr<AAFwk::SessionInfo> SetAbilitySessionInfo(const sptr<SceneSession>& scnSession);
+    WSError DestroyDialogWithMainWindow(const sptr<SceneSession>& scnSession);
 
     sptr<AppExecFwk::IBundleMgr> GetBundleManager();
     std::shared_ptr<Global::Resource::ResourceManager> CreateResourceManager(
         const AppExecFwk::AbilityInfo& abilityInfo);
     void GetStartPageFromResource(const AppExecFwk::AbilityInfo& abilityInfo, std::string& path, uint32_t& bgColor);
+    const std::string& CreateCurve(const WindowSceneConfig::ConfigItem& curveConfig);
 
     std::map<uint64_t, sptr<SceneSession>> abilitySceneMap_;
     sptr<RootSceneSession> rootSceneSession_;
-    sptr<RootScene> rootScene_;
     NotifyCreateSpecificSessionFunc createSpecificSessionFunc_;
     AppWindowSceneConfig appWindowSceneConfig_;
     SystemSessionConfig systemConfig_;
     uint64_t activeSessionId_;
     sptr<AppExecFwk::IBundleMgr> bundleMgr_;
+    uint64_t focusedSessionId_ { INVALID_SESSION_ID };
+
+    void UpdateFocusableProperty(uint64_t persistentId);
 };
 } // namespace OHOS::Rosen
 

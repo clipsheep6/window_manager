@@ -34,6 +34,7 @@ public:
     WMError DisableAppWindowDecor() override;
     bool IsDecorEnable() const override;
     WMError Minimize() override;
+    WMError MaximizeFloating() override;
     WMError Maximize() override;
     WMError Recover() override;
     void StartMove() override;
@@ -48,6 +49,7 @@ protected:
     void DestroySubWindow();
     WMError CreateAndConnectSpecificSession();
     sptr<WindowSessionImpl> FindParentSessionByParentId(uint32_t parentId);
+    sptr<WindowSessionImpl> FindMainWindowWithContext();
     void UpdateSubWindowStateAndNotify(uint64_t parentPersistentId, const WindowState& newState);
 
 private:

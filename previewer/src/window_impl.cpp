@@ -589,7 +589,7 @@ void WindowImpl::SetRequestModeSupportInfo(uint32_t modeSupportInfo)
     return;
 }
 
-void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
+void WindowImpl::ConsumeKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
     WLOGFD("ConsumeKeyEvent");
     if (uiContent_ != nullptr) {
@@ -772,6 +772,30 @@ void WindowImpl::SetNeedDefaultAnimation(bool needDefaultAnimation)
     return;
 }
 
+void WindowImpl::SetViewportConfig(const Ace::ViewportConfig& config)
+{
+    bool isUpdate = false;
+    if (width_ != config.Width()) {
+        width_ = config.Width();
+        isUpdate = true;
+    }
+    if (height_ != config.Height()) {
+        height_ = config.Height();
+        isUpdate = true;
+    }
+    if (abs(density_ - config.Density()) >= 0.000001) {
+        density_ = config.Density();
+        isUpdate = true;
+    }
+    if (orientation_ != config.Orientation()) {
+        orientation_ = config.Orientation();
+        isUpdate = true;
+    }
+    if (isUpdate) {
+        UpdateViewportConfig();
+    }    
+}
+
 void WindowImpl::UpdateViewportConfig()
 {
     Ace::ViewportConfig config;
@@ -779,7 +803,7 @@ void WindowImpl::UpdateViewportConfig()
     config.SetPosition(0, 0);
     config.SetDensity(density_);
     config.SetOrientation(orientation_);
-    uiContent_->UpdateViewportConfig(config);
+    uiContent_->UpdateViewportConfig(config, WindowSizeChangeReason::UNDEFINED);
 }
 
 void WindowImpl::SetOrientation(Orientation orientation)

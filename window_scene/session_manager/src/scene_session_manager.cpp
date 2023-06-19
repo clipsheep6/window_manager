@@ -30,10 +30,9 @@
 
 #include "color_parser.h"
 #include "common/include/message_scheduler.h"
-#include "root_scene.h"
+#include "common/include/permission.h"
 #include "session/host/include/scene_session.h"
 #include "window_manager_hilog.h"
-#include "common/include/permission.h"
 #include "wm_math.h"
 
 namespace OHOS::Rosen {
@@ -76,10 +75,12 @@ void SceneSessionManager::ConfigWindowSceneXml()
     if (item.IsMap()) {
         ConfigWindowEffect(item);
     }
+
     item = config["decor"];
     if (item.IsMap()) {
         ConfigDecor(item);
     }
+
     item = config["defaultWindowMode"];
     if (item.IsInts()) {
         auto numbers = *item.intsValue_;
@@ -88,6 +89,11 @@ void SceneSessionManager::ConfigWindowSceneXml()
              numbers[0] == static_cast<int32_t>(WindowMode::WINDOW_MODE_FLOATING))) {
             systemConfig_.defaultWindowMode_ = static_cast<WindowMode>(static_cast<uint32_t>(numbers[0]));
         }
+    }
+
+    item = config["keyboardAnimation"];
+    if (item.IsMap()) {
+        ConfigKeyboardAnimation(item);
     }
 }
 
@@ -240,6 +246,56 @@ bool SceneSessionManager::ConfigAppWindowShadow(const WindowSceneConfig::ConfigI
     return true;
 }
 
+void SceneSessionManager::ConfigKeyboardAnimation(const WindowSceneConfig::ConfigItem& animationConfig)
+{
+    WindowSceneConfig::ConfigItem item = animationConfig["timing"];
+    if (item.IsMap() && item.mapValue_->count("curve")) {
+        appWindowSceneConfig_.keyboardAnimation_.curveType_ = CreateCurve(item["curve"]);
+    }
+    item = animationConfig["timing"]["durationIn"];
+    if (item.IsInts()) {
+        auto numbers = *item.intsValue_;
+        if (numbers.size() == 1) { // durationIn
+            appWindowSceneConfig_.keyboardAnimation_.durationIn_ = static_cast<uint32_t>(numbers[0]);
+        }
+    }
+    item = animationConfig["timing"]["durationOut"];
+    if (item.IsInts()) {
+        auto numbers = *item.intsValue_;
+        if (numbers.size() == 1) { // durationOut
+            appWindowSceneConfig_.keyboardAnimation_.durationOut_ = static_cast<uint32_t>(numbers[0]);
+        }
+    }
+}
+
+const std::string& SceneSessionManager::CreateCurve(const WindowSceneConfig::ConfigItem& curveConfig)
+{
+    static std::unordered_set<std::string> curveSet = { "easeOut", "ease", "easeIn", "easeInOut", "default",
+        "linear", "spring", "interactiveSpring" };
+
+    std::string keyboardCurveName = "easeOut";
+    const auto& nameItem = curveConfig.GetProp("name");
+    if (nameItem.IsString()) {
+        std::string name = nameItem.stringValue_;
+        if (name == "cubic" && curveConfig.IsFloats() &&
+            curveConfig.floatsValue_->size() == 4) { // 4 curve parameter
+            const auto& numbers = *curveConfig.floatsValue_;
+            keyboardCurveName = name;
+            appWindowSceneConfig_.keyboardAnimation_.ctrlX1_ = numbers[0]; // 0 ctrlX1
+            appWindowSceneConfig_.keyboardAnimation_.ctrlY1_ = numbers[1]; // 1 ctrlY1
+            appWindowSceneConfig_.keyboardAnimation_.ctrlX2_ = numbers[2]; // 2 ctrlX2
+            appWindowSceneConfig_.keyboardAnimation_.ctrlY2_ = numbers[3]; // 3 ctrlY2
+        } else {
+            auto iter = curveSet.find(name);
+            if (iter != curveSet.end()) {
+                keyboardCurveName = name;
+            }
+        }
+    }
+
+    return keyboardCurveName;
+}
+
 sptr<RootSceneSession> SceneSessionManager::GetRootSceneSession()
 {
     auto task = [this]() {
@@ -249,15 +305,12 @@ sptr<RootSceneSession> SceneSessionManager::GetRootSceneSession()
         system::SetParameter("bootevent.boot.completed", "true");
         SessionInfo info;
         rootSceneSession_ = new (std::nothrow) RootSceneSession(info);
-        rootScene_ = new (std::nothrow) RootScene();
-        if (!rootSceneSession_ || !rootScene_) {
-            WLOGFE("rootSceneSession or rootScene is nullptr");
+        if (!rootSceneSession_) {
+            WLOGFE("rootSceneSession is nullptr");
             return sptr<RootSceneSession>(nullptr);
         }
-        rootSceneSession_->SetLoadContentFunc(
-            [rootScene = rootScene_](const std::string& contentUrl, NativeEngine* engine, NativeValue* storage,
-                AbilityRuntime::Context* context) { rootScene->LoadContent(contentUrl, engine, storage, context); });
-        AAFwk::AbilityManagerClient::GetInstance()->SetRootSceneSession(rootSceneSession_);
+        sptr<ISession> iSession(rootSceneSession_);
+        AAFwk::AbilityManagerClient::GetInstance()->SetRootSceneSession(iSession->AsObject());
         return rootSceneSession_;
     };
 
@@ -290,14 +343,23 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
     auto task = [this, sessionInfo, specificCallback]() {
         WLOGFI("sessionInfo: bundleName: %{public}s, moduleName: %{public}s, abilityName: %{public}s",
             sessionInfo.bundleName_.c_str(), sessionInfo.moduleName_.c_str(), sessionInfo.abilityName_.c_str());
+        WLOGFI("RequestSceneSession caller persistentId: %{public}" PRIu64 "", sessionInfo.callerPersistentId_);
         sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(sessionInfo, specificCallback);
         if (sceneSession == nullptr) {
             WLOGFE("sceneSession is nullptr!");
             return sceneSession;
         }
-        uint64_t persistentId = GeneratePersistentId();
-        sceneSession->SetPersistentId(persistentId);
+        auto persistentId = sceneSession->GetPersistentId();
         sceneSession->SetSystemConfig(systemConfig_);
+        // set parent session to sub session
+        if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_SUB_WINDOW) {
+            auto parentId = sceneSession->GetParentPersistentId();
+            if (!abilitySceneMap_.count(parentId)) {
+                WLOGFD("session is invalid");
+            } else {
+                sceneSession->SetParentSession(abilitySceneMap_.at(parentId));
+            }
+        }
         abilitySceneMap_.insert({ persistentId, sceneSession });
         WLOGFI("create session persistentId: %{public}" PRIu64 "", persistentId);
         return sceneSession;
@@ -314,9 +376,14 @@ sptr<AAFwk::SessionInfo> SceneSessionManager::SetAbilitySessionInfo(const sptr<S
         return nullptr;
     }
     auto sessionInfo = scnSession->GetSessionInfo();
-    abilitySessionInfo->sessionToken = scnSession->AsObject();
+    sptr<ISession> iSession(scnSession);
+    abilitySessionInfo->sessionToken = iSession->AsObject();
     abilitySessionInfo->callerToken = sessionInfo.callerToken_;
     abilitySessionInfo->persistentId = scnSession->GetPersistentId();
+    if (sessionInfo.want != nullptr) {
+        AAFwk::Want* ptrWant = const_cast<AAFwk::Want*>(sessionInfo.want.GetRefPtr());
+        abilitySessionInfo->want = *ptrWant;
+    }    
     return abilitySessionInfo;
 }
 
@@ -342,6 +409,15 @@ WSError SceneSessionManager::RequestSceneSessionActivation(const sptr<SceneSessi
         auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
         if (!scnSessionInfo) {
             return WSError::WS_ERROR_NULLPTR;
+        }
+        auto iter = abilitySceneMap_.find(sessionInfo.callerPersistentId_);
+        if (iter != abilitySceneMap_.end()) {
+            const auto& callerSession = iter->second;
+            if (callerSession != nullptr) {
+                auto callerSessionInfo = callerSession->GetSessionInfo();
+                want = *callerSessionInfo.want;
+                scnSessionInfo->want = *callerSessionInfo.want;
+            }
         }
         AAFwk::AbilityManagerClient::GetInstance()->StartUIAbilityBySCB(want, startOptions, scnSessionInfo);
         activeSessionId_ = persistentId;
@@ -382,6 +458,25 @@ WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSessi
     return WSError::WS_OK;
 }
 
+WSError SceneSessionManager::DestroyDialogWithMainWindow(const sptr<SceneSession>& scnSession)
+{
+    if (scnSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        WLOGFD("Begin to destroy its dialog");
+        auto dialogVec = scnSession->GetDialogVector();
+        for (auto dialog : dialogVec) {
+            if (abilitySceneMap_.count(dialog->GetPersistentId()) == 0) {
+                WLOGFE("session is invalid with %{public}" PRIu64 "", dialog->GetPersistentId());
+                return WSError::WS_ERROR_INVALID_SESSION;
+            }
+            dialog->NotifyDestroy();
+            dialog->Disconnect();
+            abilitySceneMap_.erase(dialog->GetPersistentId());
+        }
+        return WSError::WS_OK;
+    }
+    return WSError::WS_ERROR_INVALID_SESSION;
+}
+
 WSError SceneSessionManager::RequestSceneSessionDestruction(const sptr<SceneSession>& sceneSession)
 {
     wptr<SceneSession> weakSceneSession(sceneSession);
@@ -392,18 +487,19 @@ WSError SceneSessionManager::RequestSceneSessionDestruction(const sptr<SceneSess
             return WSError::WS_ERROR_NULLPTR;
         }
         auto persistentId = scnSession->GetPersistentId();
+        DestroyDialogWithMainWindow(scnSession);
         WLOGFI("destroy session persistentId: %{public}" PRIu64 "", persistentId);
         scnSession->Disconnect();
         if (abilitySceneMap_.count(persistentId) == 0) {
             WLOGFE("session is invalid with %{public}" PRIu64 "", persistentId);
             return WSError::WS_ERROR_INVALID_SESSION;
         }
-        abilitySceneMap_.erase(persistentId);
         auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
         if (!scnSessionInfo) {
             return WSError::WS_ERROR_NULLPTR;
         }
         AAFwk::AbilityManagerClient::GetInstance()->CloseUIAbilityBySCB(scnSessionInfo);
+        abilitySceneMap_.erase(persistentId);
         return WSError::WS_OK;
     };
 
@@ -434,6 +530,16 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
         if (createSpecificSessionFunc_) {
             createSpecificSessionFunc_(sceneSession);
         }
+        // when create dialog, bind to its host
+        if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG &&
+            sceneSession->GetParentPersistentId() != INVALID_SESSION_ID) {
+            auto parentSession = GetSceneSession(sceneSession->GetParentPersistentId());
+            if (parentSession) {
+                WLOGFD("Add dialog id to its parent vector");
+                parentSession->BindDialogToParentSession(sceneSession);
+                sceneSession->SetParentSession(parentSession);
+            }
+        }
         session = sceneSession;
         return errCode;
     };
@@ -451,7 +557,7 @@ void SceneSessionManager::SetCreateSpecificSessionListener(const NotifyCreateSpe
 WSError SceneSessionManager::DestroyAndDisconnectSpecificSession(const uint64_t& persistentId)
 {
     auto task = [this, persistentId]() {
-        WLOGFI("Deatroy session persistentId: %{public}" PRIu64 "", persistentId);
+        WLOGFI("Destroy session persistentId: %{public}" PRIu64 "", persistentId);
         auto iter = abilitySceneMap_.find(persistentId);
         if (iter == abilitySceneMap_.end()) {
             return WSError::WS_ERROR_INVALID_SESSION;
@@ -461,6 +567,11 @@ WSError SceneSessionManager::DestroyAndDisconnectSpecificSession(const uint64_t&
             return WSError::WS_ERROR_NULLPTR;
         }
         auto ret = sceneSession->UpdateActiveStatus(false);
+        if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
+            auto parentSession = GetSceneSession(sceneSession->GetParentPersistentId());
+            parentSession->RemoveDialogToParentSession(sceneSession);
+            sceneSession->NotifyDestroy();
+        }
         ret = sceneSession->Disconnect();
         abilitySceneMap_.erase(persistentId);
         return ret;
@@ -578,4 +689,145 @@ void SceneSessionManager::GetStartPage(const SessionInfo& sessionInfo, std::stri
 
     GetStartPageFromResource(abilityInfo, path, bgColor);
 }
+
+WSError SceneSessionManager::UpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action)
+{
+    if (property == nullptr) {
+        WLOGFE("property is invalid");
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    uint64_t persistentId = property->GetPersistentId();
+    auto sceneSession = GetSceneSession(persistentId);
+    if (sceneSession == nullptr) {
+        WLOGFE("session is invalid");
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    WLOGI("Id: %{public}" PRIu64", action: %{public}u", sceneSession->GetPersistentId(), static_cast<uint32_t>(action));
+    WSError ret = WSError::WS_OK;
+    switch (action) {
+        case WSPropertyChangeAction::ACTION_UPDATE_FLAGS: {
+            // @todo
+            break;
+        }
+        case WSPropertyChangeAction::ACTION_UPDATE_FOCUSABLE: {
+            sceneSession->SetFocusable(property->GetFocusable());
+            break;
+        }
+        case WSPropertyChangeAction::ACTION_UPDATE_TOUCHABLE: {
+            // @todo
+            break;
+        }
+        case WSPropertyChangeAction::ACTION_UPDATE_SET_BRIGHTNESS: {
+            // @todo
+            break;
+        }
+        case WSPropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE: {
+            // @todo
+            break;
+        }
+        default:
+            break;
+    }
+
+    return ret;
+}
+
+WSError SceneSessionManager::SetFocusedSession(uint64_t persistentId)
+{
+    if (focusedSessionId_ == persistentId) {
+        WLOGI("Focus scene not change, id: %{public}" PRIu64, focusedSessionId_);
+        return WSError::WS_DO_NOTHING;
+    }
+    focusedSessionId_ = persistentId;
+    return WSError::WS_OK;
+}
+
+uint64_t SceneSessionManager::GetFocusedSession() const
+{
+    return focusedSessionId_;
+}
+
+WSError SceneSessionManager::UpdateFocus(uint64_t persistentId, bool isFocused)
+{
+    // notify session and client
+    auto sceneSession = GetSceneSession(persistentId);
+    if (sceneSession == nullptr) {
+        WLOGFE("could not find window");
+        return WSError::WS_ERROR_INVALID_WINDOW;
+    }
+    WSError res = WSError::WS_OK;
+    res = sceneSession->UpdateFocus(isFocused);
+    if (res != WSError::WS_OK) {
+        return res;
+    }
+    // focusId change
+    if (isFocused) {
+        return SetFocusedSession(persistentId);
+    }
+    if (persistentId == GetFocusedSession()) {
+        focusedSessionId_ = INVALID_SESSION_ID;
+    }
+    return WSError::WS_OK;
+}
+
+WSError SceneSessionManager::RequestSceneSessionByCall(const sptr<SceneSession>& sceneSession)
+{
+    wptr<SceneSession> weakSceneSession(sceneSession);
+    auto task = [this, weakSceneSession]() {
+        auto scnSession = weakSceneSession.promote();
+        if (scnSession == nullptr) {
+            WLOGFE("session is nullptr");
+            return WSError::WS_ERROR_NULLPTR;
+        }
+        auto persistentId = scnSession->GetPersistentId();
+        WLOGFI("RequestSceneSessionByCall persistentId: %{public}" PRIu64 "", persistentId);
+        if (abilitySceneMap_.count(persistentId) == 0) {
+            WLOGFE("session is invalid with %{public}" PRIu64 "", persistentId);
+            return WSError::WS_ERROR_INVALID_SESSION;
+        }
+        auto sessionInfo = scnSession->GetSessionInfo();
+        WLOGFI("RequestSceneSessionByCall caller persistentId: %{public}" PRIu64 "", sessionInfo.callerPersistentId_);
+        auto abilitySessionInfo = SetAbilitySessionInfo(scnSession);
+        if (!abilitySessionInfo) {
+             return WSError::WS_ERROR_NULLPTR;
+        }
+
+        auto iter = abilitySceneMap_.find(sessionInfo.callerPersistentId_);
+        if (iter == abilitySceneMap_.end()) {
+            return WSError::WS_ERROR_INVALID_SESSION;
+        }
+        const auto& callerSession = iter->second;
+        if (callerSession == nullptr) {
+            return WSError::WS_ERROR_NULLPTR;
+        }
+        auto callSessionInfo = callerSession->GetSessionInfo();
+        WLOGFI("get callerSession state:%{public}d, uiAbilityId:%{public}" PRIu64 "", 
+            callSessionInfo.callState_, callSessionInfo.uiAbilityId_);
+        abilitySessionInfo->uiAbilityId = callSessionInfo.uiAbilityId_;
+
+        if (callSessionInfo.callState_ == static_cast<int32_t>(AAFwk::CallToState::BACKGROUND)) {
+            scnSession->SetActive(false);
+        } else if (callSessionInfo.callState_ == static_cast<int32_t>(AAFwk::CallToState::FOREGROUND)) {
+            scnSession->SetActive(true);
+        } else {
+            WLOGFE("wrong callState_");
+        }
+
+        AAFwk::AbilityManagerClient::GetInstance()->CallUIAbilityBySCB(abilitySessionInfo);
+        return WSError::WS_OK;
+    };
+    WS_CHECK_NULL_SCHE_RETURN(msgScheduler_, task);
+    msgScheduler_->PostAsyncTask(task);
+    return WSError::WS_OK;
+}
+
+void SceneSessionManager::StartAbilityBySpecified(const SessionInfo& sessionInfo)
+{
+    WLOGFI("StartAbilityBySpecified: bundleName: %{public}s, moduleName: %{public}s, abilityName: %{public}s",
+        sessionInfo.bundleName_.c_str(), sessionInfo.moduleName_.c_str(), sessionInfo.abilityName_.c_str());    
+    AAFwk::Want want;
+    want.SetElementName("", sessionInfo.bundleName_, sessionInfo.abilityName_, sessionInfo.moduleName_);
+    AAFwk::AbilityManagerClient::GetInstance()->StartSpecifiedAbilityBySCB(want);
+}
+
 } // namespace OHOS::Rosen

@@ -42,6 +42,8 @@ constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowS
 
 std::map<uint64_t, std::vector<sptr<IWindowLifeCycle>>> WindowSessionImpl::lifecycleListeners_;
 std::map<uint64_t, std::vector<sptr<IWindowChangeListener>>> WindowSessionImpl::windowChangeListeners_;
+std::map<uint64_t, std::vector<sptr<IDialogDeathRecipientListener>>> WindowSessionImpl::dialogDeathRecipientListeners_;
+std::map<uint64_t, std::vector<sptr<IDialogTargetTouchListener>>> WindowSessionImpl::dialogTargetTouchListener_;
 std::recursive_mutex WindowSessionImpl::globalMutex_;
 std::map<std::string, std::pair<uint64_t, sptr<WindowSessionImpl>>> WindowSessionImpl::windowSessionMap_;
 std::map<uint64_t, std::vector<sptr<WindowSessionImpl>>> WindowSessionImpl::subWindowSessionMap_;
@@ -317,6 +319,17 @@ WSError WindowSessionImpl::UpdateRect(const WSRect& rect, SizeChangeReason reaso
     return WSError::WS_OK;
 }
 
+WSError WindowSessionImpl::UpdateFocus(bool isFocused)
+{
+    WLOGFI("update focus: %{public}u", isFocused);
+    if (isFocused) {
+        NotifyAfterFocused();
+    } else {
+        NotifyAfterUnfocused();
+    }
+    return WSError::WS_OK;
+}
+
 void WindowSessionImpl::UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -444,7 +457,14 @@ WindowState WindowSessionImpl::GetWindowState() const
 
 WMError WindowSessionImpl::SetFocusable(bool isFocusable)
 {
+    WLOGFD("set focusable");
+    if (IsWindowSessionInvalid()) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
     property_->SetFocusable(isFocusable);
+    if (state_ == WindowState::STATE_SHOWN) {
+        return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_FOCUSABLE);
+    }
     return WMError::WM_OK;
 }
 
@@ -588,6 +608,8 @@ void WindowSessionImpl::ClearListenersById(uint64_t persistentId)
     std::lock_guard<std::recursive_mutex> lock(globalMutex_);
     ClearUselessListeners(lifecycleListeners_, persistentId);
     ClearUselessListeners(windowChangeListeners_, persistentId);
+    ClearUselessListeners(dialogDeathRecipientListeners_, persistentId);
+    ClearUselessListeners(dialogTargetTouchListener_, persistentId);
 }
 
 void WindowSessionImpl::RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func)
@@ -665,6 +687,93 @@ void WindowSessionImpl::NotifyForegroundFailed(WMError ret)
     CALL_LIFECYCLE_LISTENER_WITH_PARAM(ForegroundFailed, lifecycleListeners, static_cast<int32_t>(ret));
 }
 
+void WindowSessionImpl::RegisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener)
+{
+    WLOGFD("Start register DialogDeathRecipientListener");
+    if (listener == nullptr) {
+        WLOGFE("listener is nullptr");
+        return;
+    }
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    RegisterListener(dialogDeathRecipientListeners_[GetPersistentId()], listener);
+}
+
+void WindowSessionImpl::UnregisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener)
+{
+    WLOGFD("Start unregister DialogDeathRecipientListener");
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    UnregisterListener(dialogDeathRecipientListeners_[GetPersistentId()], listener);
+}
+
+WMError WindowSessionImpl::RegisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener)
+{
+    WLOGFD("Start register DialogTargetTouchListener");
+    if (listener == nullptr) {
+        WLOGFE("listener is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    return RegisterListener(dialogTargetTouchListener_[GetPersistentId()], listener);
+}
+
+WMError WindowSessionImpl::UnregisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener)
+{
+    WLOGFD("Start unregister DialogTargetTouchListener");
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    return UnregisterListener(dialogTargetTouchListener_[GetPersistentId()], listener);
+}
+
+template<typename T>
+EnableIfSame<T, IDialogDeathRecipientListener, std::vector<sptr<IDialogDeathRecipientListener>>> WindowSessionImpl::
+    GetListeners()
+{
+    std::vector<sptr<IDialogDeathRecipientListener>> dialogDeathRecipientListener;
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        for (auto& listener : dialogDeathRecipientListeners_[GetPersistentId()]) {
+            dialogDeathRecipientListener.push_back(listener);
+        }
+    }
+    return dialogDeathRecipientListener;
+}
+
+template<typename T>
+EnableIfSame<T, IDialogTargetTouchListener, std::vector<sptr<IDialogTargetTouchListener>>> WindowSessionImpl::
+    GetListeners()
+{
+    std::vector<sptr<IDialogTargetTouchListener>> dialogTargetTouchListener;
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        for (auto& listener : dialogTargetTouchListener_[GetPersistentId()]) {
+            dialogTargetTouchListener.push_back(listener);
+        }
+    }
+    return dialogTargetTouchListener;
+}
+
+WSError WindowSessionImpl::NotifyDestroy()
+{
+    auto dialogDeathRecipientListener = GetListeners<IDialogDeathRecipientListener>();
+    for (auto& listener : dialogDeathRecipientListener) {
+        if (listener.GetRefPtr() != nullptr) {
+            listener.GetRefPtr()->OnDialogDeathRecipient();
+        }
+    }
+    // destroy dialog in client
+    Destroy();
+    return WSError::WS_OK;
+}
+
+void WindowSessionImpl::NotifyTouchDialogTarget()
+{
+    auto dialogTargetTouchListener = GetListeners<IDialogTargetTouchListener>();
+    for (auto& listener : dialogTargetTouchListener) {
+        if (listener.GetRefPtr() != nullptr) {
+            listener.GetRefPtr()->OnDialogTargetTouch();
+        }
+    }
+}
+
 void WindowSessionImpl::NotifySizeChange(Rect rect, WindowSizeChangeReason reason)
 {
     auto windowChangeListeners = GetListeners<IWindowChangeListener>();
@@ -697,6 +806,12 @@ void WindowSessionImpl::RequestVsync(const std::shared_ptr<VsyncCallback>& vsync
         return;
     }
     VsyncStation::GetInstance().RequestVsync(vsyncCallback);
+}
+
+WMError WindowSessionImpl::UpdateProperty(WSPropertyChangeAction action)
+{
+    WLOGFD("UpdateProperty, action:%{public}u", action);
+    return SessionManager::GetInstance().UpdateProperty(property_, action);
 }
 
 static float ConvertRadiusToSigma(float radius)
