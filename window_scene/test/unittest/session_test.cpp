@@ -431,7 +431,6 @@ HWTEST_F(WindowSessionTest, RequestSessionBack, Function | SmallTest | Level2)
     ASSERT_EQ(WSError::WS_OK, session_->RequestSessionBack());
 }
 
-
 /**
  * @tc.name: RaiseToAppTop01
  * @tc.desc: RaiseToAppTop
