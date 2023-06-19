@@ -38,10 +38,12 @@ ohos_shared_library("scenesessionmanager_napi") {
     "c_utils:utils",
     "hilog_native:libhilog",
     "ipc:ipc_single",
+    "input:libmmi-client",
     "napi:ace_napi",
     "window_manager:libwm",
     "window_manager:scene_session",
     "window_manager:scene_session_manager",
+    "graphic_standard:window_animation",
   ]
 
   relative_install_dir = "module"
