@@ -542,7 +542,7 @@ HWTEST_F(WindowSessionTest, CreateAndConnectSpecificSession01, Function | SmallT
     int resultValue = 0;
     sptr<SceneSession> scensession;
     sptr<TestWindowEventChannel> testWindowEventChannel = new (std::nothrow) TestWindowEventChannel();
-    EXPECT_NE(testWindowEventChannel, testWindowEventChannel);
+    EXPECT_NE(testWindowEventChannel, nullptr);
 
     specificCallback_->onCreate_ = [&resultValue](const SessionInfo &info) -> sptr<SceneSession>
     {
