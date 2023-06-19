@@ -22,35 +22,13 @@
 
 #include "vsync_station.h"
 #include "window_manager_hilog.h"
+#include "intention_event_manager.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "RootScene" };
 const std::string INPUT_AND_VSYNC_THREAD = "InputAndVsyncThread";
-
-class InputEventListener : public MMI::IInputEventConsumer {
-public:
-    explicit InputEventListener(RootScene* rootScene): rootScene_(rootScene) {}
-    virtual ~InputEventListener() = default;
-
-    void OnInputEvent(std::shared_ptr<MMI::PointerEvent> pointerEvent) const override
-    {
-        rootScene_->ConsumePointerEvent(pointerEvent);
-    }
-
-    void OnInputEvent(std::shared_ptr<MMI::KeyEvent> keyEvent) const override
-    {
-        rootScene_->ConsumeKeyEvent(keyEvent);
-    }
-
-    void OnInputEvent(std::shared_ptr<MMI::AxisEvent> axisEvent) const override
-    {
-    }
-
-private:
-    RootScene* rootScene_;
-};
 } // namespace
 
 RootScene::RootScene()
@@ -64,6 +42,7 @@ RootScene::~RootScene()
 void RootScene::LoadContent(const std::string& contentUrl, NativeEngine* engine, NativeValue* storage,
     AbilityRuntime::Context* context)
 {
+    WLOGFI("HYH_TEST LoadContent IN");
     if (context == nullptr) {
         WLOGFE("context is nullptr!");
         return;
@@ -77,40 +56,6 @@ void RootScene::LoadContent(const std::string& contentUrl, NativeEngine* engine,
     uiContent_->Initialize(this, contentUrl, storage);
     uiContent_->Foreground();
 
-    RegisterInputEventListener();
-}
-
-void RootScene::UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason)
-{
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (uiContent_ == nullptr) {
-        WLOGFE("uiContent_ is nullptr!");
-        return;
-    }
-    Ace::ViewportConfig config;
-    config.SetSize(rect.width_, rect.height_);
-    config.SetPosition(rect.posX_, rect.posY_);
-    config.SetDensity(density_);
-    uiContent_->UpdateViewportConfig(config, reason);
-}
-
-void RootScene::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& inputEvent)
-{
-    if (uiContent_) {
-        uiContent_->ProcessPointerEvent(inputEvent);
-    }
-}
-
-void RootScene::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent)
-{
-    if (uiContent_) {
-        uiContent_->ProcessKeyEvent(inputEvent);
-    }
-}
-
-void RootScene::RegisterInputEventListener()
-{
-    auto listener = std::make_shared<InputEventListener>(this);
     auto mainEventRunner = AppExecFwk::EventRunner::GetMainEventRunner();
     if (mainEventRunner) {
         WLOGFD("MainEventRunner is available");
@@ -125,7 +70,24 @@ void RootScene::RegisterInputEventListener()
         VsyncStation::GetInstance().SetIsMainHandlerAvailable(false);
         VsyncStation::GetInstance().SetVsyncEventHandler(eventHandler_);
     }
-    MMI::InputManager::GetInstance()->SetWindowInputEventConsumer(listener, eventHandler_);
+
+    if (!IntentionManager->EnableInputEventListener(uiContent_.get(), eventHandler_)) {
+        WLOGFE("EnableInputEventListener fail");
+    }
+}
+
+void RootScene::UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (uiContent_ == nullptr) {
+        WLOGFE("uiContent_ is nullptr!");
+        return;
+    }
+    Ace::ViewportConfig config;
+    config.SetSize(rect.width_, rect.height_);
+    config.SetPosition(rect.posX_, rect.posY_);
+    config.SetDensity(density_);
+    uiContent_->UpdateViewportConfig(config, reason);
 }
 
 void RootScene::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback)

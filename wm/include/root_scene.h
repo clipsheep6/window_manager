@@ -41,9 +41,6 @@ public:
 
     void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback) override;
 
-    void ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& inputEvent) override;
-    void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent) override;
-
     void SetDisplayDensity(float density)
     {
         density_ = density;
@@ -65,13 +62,11 @@ public:
     }
 
 private:
-    void RegisterInputEventListener();
 
     std::unique_ptr<Ace::UIContent> uiContent_;
-    std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
 
     std::recursive_mutex mutex_;
-
+    std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
     float density_ = 1.0f;
 
     WindowType type_ = WindowType::WINDOW_TYPE_DESKTOP;
