@@ -20,6 +20,7 @@
 #include "session/host/include/extension_session.h"
 #include "mock/mock_session_stage.h"
 #include "mock/mock_window_event_channel.h"
+#include "session/host/include/scene_session.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -534,10 +535,10 @@ HWTEST_F(WindowSessionTest, CreateAndConnectSpecificSession01, Function | SmallT
     sptr<WindowSessionProperty> property_ = nullptr;
     uint64_t persistentId = 0;
     sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
-    EXPECT_NE(mockSessionStage, mockSessionStage);
+    EXPECT_NE(mockSessionStage, nullptr);
     sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
         new (std::nothrow) SceneSession::SpecificSessionCallback();
-    EXPECT_NE(specificCallback_, specificCallback_);
+    EXPECT_NE(specificCallback_, nullptr);
     int resultValue = 0;
     sptr<SceneSession> scensession;
     sptr<TestWindowEventChannel> testWindowEventChannel = new (std::nothrow) TestWindowEventChannel();
@@ -548,7 +549,7 @@ HWTEST_F(WindowSessionTest, CreateAndConnectSpecificSession01, Function | SmallT
         resultValue = 1;
         return nullptr;
     };
-    scensession = new SceneSession(info, specificCallback_);
+    scensession = new SceneSession(info, nullptr);
     EXPECT_NE(scensession, nullptr);
     auto result = scensession->CreateAndConnectSpecificSession(mockSessionStage, testWindowEventChannel, surfaceNode_,
                                                                property_, persistentId, session_);
@@ -556,8 +557,10 @@ HWTEST_F(WindowSessionTest, CreateAndConnectSpecificSession01, Function | SmallT
 
     specificCallback_->onCreate_ = [&resultValue, specificCallback_](const SessionInfo &info) -> sptr<SceneSession>
     {
+        sptr<SceneSession> scensessionreturn = new SceneSession(info, specificCallback_);
+        EXPECT_NE(scensessionreturn, nullptr);
         resultValue = 1;
-        return new SceneSession(info, specificCallback_);
+        return scensessionreturn;
     };
     scensession = new SceneSession(info, specificCallback_);
     EXPECT_NE(scensession, nullptr);
