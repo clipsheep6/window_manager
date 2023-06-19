@@ -442,13 +442,13 @@ HWTEST_F(WindowSessionTest, RaiseToAppTop01, Function | SmallTest | Level2)
     info.abilityName_ = "testSession1";
     info.bundleName_ = "testSession3";
     sptr<SceneSession> scensession = new SceneSession(info, nullptr);
-    EXPECT_NE(nullptr, scensession);
+    EXPECT_NE(scensession, nullptr);
     auto result = scensession->RaiseToAppTop();
     ASSERT_EQ(result, WSError::WS_OK);
 
     sptr<SceneSession::SessionChangeCallback> scensessionchangeCallBack =
         new (std::nothrow) SceneSession::SessionChangeCallback();
-    EXPECT_NE(scensessionchangeCallBack, scensession);
+    EXPECT_NE(scensessionchangeCallBack, nullptr);
     scensession->RegisterSessionChangeCallback(scensessionchangeCallBack);
     result = scensession->RaiseToAppTop();
     ASSERT_EQ(result, WSError::WS_OK);
@@ -470,14 +470,14 @@ HWTEST_F(WindowSessionTest, UpdateSessionRect01, Function | SmallTest | Level2)
     info.abilityName_ = "testSession1";
     info.bundleName_ = "testSession3";
     sptr<SceneSession> scensession = new SceneSession(info, nullptr);
-    EXPECT_NE(nullptr, scensession);
+    EXPECT_NE(scensession, nullptr);
     WSRect rect = { 0, 0, 320, 240 }; // width: 320, height: 240
     auto result = scensession->UpdateSessionRect(rect, SizeChangeReason::RESIZE);
     ASSERT_EQ(result, WSError::WS_OK);
     
     sptr<SceneSession::SessionChangeCallback> scensessionchangeCallBack =
         new (std::nothrow) SceneSession::SessionChangeCallback();
-    EXPECT_NE(nullptr, scensessionchangeCallBack);
+    EXPECT_NE(scensessionchangeCallBack, nullptr);
     scensession->RegisterSessionChangeCallback(scensessionchangeCallBack);
     result = scensession->UpdateSessionRect(rect, SizeChangeReason::RESIZE);
     ASSERT_EQ(result, WSError::WS_OK);
@@ -501,20 +501,20 @@ HWTEST_F(WindowSessionTest, DestroyAndDisconnectSpecificSession01, Function | Sm
     info.bundleName_ = "testSession3";
     uint64_t persistentId = 0;
     sptr<SceneSession> scensession = new SceneSession(info, nullptr);
-    EXPECT_NE(nullptr, scensession);
+    EXPECT_NE(scensession, nullptr);
     auto result = scensession->DestroyAndDisconnectSpecificSession(persistentId);
     ASSERT_EQ(result, WSError::WS_OK);
 
     sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
         new (std::nothrow) SceneSession::SpecificSessionCallback();
-    EXPECT_NE(nullptr, specificCallback_);
+    EXPECT_NE(specificCallback_, nullptr);
     int resultValue = 0;
     specificCallback_->onDestroy_ = [&resultValue](const uint64_t &persistentId) -> WSError {
         resultValue = 1;
         return WSError::WS_OK;
     };
     scensession = new SceneSession(info, specificCallback_);
-    EXPECT_NE(nullptr, scensession);
+    EXPECT_NE(scensession, nullptr);
     result = scensession->DestroyAndDisconnectSpecificSession(persistentId);
     ASSERT_EQ(result, WSError::WS_OK);
 }
@@ -534,14 +534,14 @@ HWTEST_F(WindowSessionTest, CreateAndConnectSpecificSession01, Function | SmallT
     sptr<WindowSessionProperty> property_ = nullptr;
     uint64_t persistentId = 0;
     sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
-    EXPECT_NE(nullptr, mockSessionStage);
+    EXPECT_NE(mockSessionStage, mockSessionStage);
     sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
         new (std::nothrow) SceneSession::SpecificSessionCallback();
-    EXPECT_NE(nullptr, specificCallback_);
+    EXPECT_NE(specificCallback_, specificCallback_);
     int resultValue = 0;
     sptr<SceneSession> scensession;
     sptr<TestWindowEventChannel> testWindowEventChannel = new (std::nothrow) TestWindowEventChannel();
-    EXPECT_NE(nullptr, testWindowEventChannel);
+    EXPECT_NE(testWindowEventChannel, testWindowEventChannel);
 
     specificCallback_->onCreate_ = [&resultValue](const SessionInfo &info) -> sptr<SceneSession>
     {
@@ -549,7 +549,7 @@ HWTEST_F(WindowSessionTest, CreateAndConnectSpecificSession01, Function | SmallT
         return nullptr;
     };
     scensession = new SceneSession(info, specificCallback_);
-    EXPECT_NE(nullptr, scensession);
+    EXPECT_NE(scensession, nullptr);
     auto result = scensession->CreateAndConnectSpecificSession(mockSessionStage, testWindowEventChannel, surfaceNode_,
                                                                property_, persistentId, session_);
     ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
@@ -560,14 +560,14 @@ HWTEST_F(WindowSessionTest, CreateAndConnectSpecificSession01, Function | SmallT
         return new SceneSession(info, specificCallback_);
     };
     scensession = new SceneSession(info, specificCallback_);
-    EXPECT_NE(nullptr, scensession);
+    EXPECT_NE(scensession, nullptr);
     result = scensession->CreateAndConnectSpecificSession(mockSessionStage, testWindowEventChannel, surfaceNode_,
                                                           property_, persistentId, session_);
     ASSERT_EQ(result, WSError::WS_OK);
 
     sptr<SceneSession::SessionChangeCallback> scensessionchangeCallBack =
         new (std::nothrow) SceneSession::SessionChangeCallback();
-    EXPECT_NE(nullptr, scensessionchangeCallBack);
+    EXPECT_NE(scensessionchangeCallBack, nullptr);
 
     NotifyCreateSpecificSessionFunc onCreateSpecificSession_ = [&resultValue](const sptr<SceneSession> &session)
     {
@@ -591,13 +591,13 @@ HWTEST_F(WindowSessionTest, OnSessionEvent01, Function | SmallTest | Level2)
     info.abilityName_ = "testSession1";
     info.bundleName_ = "testSession3";
     sptr<SceneSession> scensession = new SceneSession(info, nullptr);
-    EXPECT_NE(nullptr, scensession);
+    EXPECT_NE(scensession, nullptr);
     auto result = scensession->OnSessionEvent(SessionEvent::EVENT_MINIMIZE);
     ASSERT_EQ(result, WSError::WS_OK);
 
     sptr<SceneSession::SessionChangeCallback> scensessionchangeCallBack =
         new (std::nothrow) SceneSession::SessionChangeCallback();
-    EXPECT_NE(nullptr, scensessionchangeCallBack);
+    EXPECT_NE(scensessionchangeCallBack, nullptr);
     scensession->RegisterSessionChangeCallback(scensessionchangeCallBack);
     result = scensession->OnSessionEvent(SessionEvent::EVENT_MINIMIZE);
     ASSERT_EQ(result, WSError::WS_OK);
@@ -608,7 +608,6 @@ HWTEST_F(WindowSessionTest, OnSessionEvent01, Function | SmallTest | Level2)
     result = scensession->OnSessionEvent(SessionEvent::EVENT_MINIMIZE);
     ASSERT_EQ(result, WSError::WS_OK);
 }
-
 }
 } // namespace Rosen
 } // namespace OHOS
