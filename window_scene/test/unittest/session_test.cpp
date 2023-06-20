@@ -581,7 +581,8 @@ HWTEST_F(WindowSessionTest, CreateAndConnectSpecificSession01, Function | SmallT
     uint64_t persistentId = 0;
     sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
     EXPECT_NE(mockSessionStage, nullptr);
-    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =new (std::nothrow) SceneSession::SpecificSessionCallback();
+    sptr<SceneSession::SpecificSessionCallback> specificCallback_ = 
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
     EXPECT_NE(specificCallback_, nullptr);
     int resultValue = 0;
     sptr<SceneSession> scensession;
