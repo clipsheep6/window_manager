@@ -55,6 +55,8 @@ private:
     void ProcessClickRegister();
     void ProcessTerminateSessionRegister();
     void ProcessSessionExceptionRegister();
+    void ProcessSystemBarPropertyChangeRegister();
+    void ProcessLayoutFullScreenRegister();
 
     void PendingSessionActivation(const SessionInfo& info);
     void OnSessionStateChange(const SessionState& state);
@@ -68,6 +70,8 @@ private:
     void TerminateSession(const SessionInfo& info);
     void OnSessionException(const SessionInfo& info);
     static WindowTypeInAPI GetApiType(WindowType type);
+    void OnSystemBarPropertyChange(const SystemBarProperty& property);
+    void OnLayoutFullScreen(bool status);
 
     NativeEngine& engine_;
     wptr<SceneSession> weakSession_ = nullptr;

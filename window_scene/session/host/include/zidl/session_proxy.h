@@ -43,6 +43,8 @@ public:
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
         sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session) override;
     WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId) override;
+    WSError OnLayoutFullScreen(bool status) override;
+    AvoidArea GetAvoidAreaByType(AvoidAreaType type) override;
     WSError RequestSessionBack() override;
 private:
     static inline BrokerDelegator<SessionProxy> delegator_;

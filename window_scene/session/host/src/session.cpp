@@ -658,6 +658,11 @@ WSError Session::OnSessionEvent(SessionEvent event)
     return WSError::WS_OK;
 }
 
+WSError Session::OnLayoutFullScreen(bool status)
+{
+    return WSError::WS_OK;
+}
+
 WSError Session::UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason)
 {
     WLOGFD("UpdateSessionRect");
@@ -736,5 +741,11 @@ void Session::GeneratePersistentId(bool isExtension, const SessionInfo& sessionI
 sptr<ScenePersistence> Session::GetScenePersistence() const
 {
     return scenePersistence_;
+}
+
+AvoidArea Session::GetAvoidAreaByType(AvoidAreaType type)
+{
+    AvoidArea avoidArea;
+    return avoidArea;
 }
 } // namespace OHOS::Rosen

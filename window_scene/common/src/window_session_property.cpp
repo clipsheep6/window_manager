@@ -148,6 +148,18 @@ bool WindowSessionProperty::GetTokenState() const
     return tokenState_;
 }
 
+void WindowSessionProperty::SetSystemBarProperty(WindowType type, const SystemBarProperty& property)
+{
+    if (type == WindowType::WINDOW_TYPE_STATUS_BAR) {
+        sysBarPropMap_[type] = property;
+    }
+}
+
+const std::unordered_map<WindowType, SystemBarProperty>& WindowSessionProperty::GetSystemBarProperty() const
+{
+    return sysBarPropMap_;
+}
+
 bool WindowSessionProperty::Marshalling(Parcel& parcel) const
 {
     return parcel.WriteString(windowName_) && parcel.WriteInt32(windowRect_.posX_) &&

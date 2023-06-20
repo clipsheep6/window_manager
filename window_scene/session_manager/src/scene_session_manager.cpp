@@ -734,6 +734,12 @@ WSError SceneSessionManager::UpdateProperty(sptr<WindowSessionProperty>& propert
             // @todo
             break;
         }
+        case WSPropertyChangeAction::ACTION_UPDATE_OTHER_PROPS: {
+            auto& systemBarProperties = property->GetSystemBarProperty();
+            for (auto& iter : systemBarProperties) {
+                sceneSession->SetSystemBarProperty(iter.first, iter.second);
+            }
+        }
         default:
             break;
     }

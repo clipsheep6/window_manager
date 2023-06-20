@@ -45,7 +45,11 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_{
         &SessionStub::HandleDestroyAndDisconnectSpecificSession),
     std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_RAISE_TO_APP_TOP),
         &SessionStub::HandleRaiseToAppTop),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_BACKPRESSED), &SessionStub::HandleBackPressed)
+    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_BACKPRESSED), &SessionStub::HandleBackPressed),
+    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_LAYOUT_FULL_SCREEN),
+        &SessionStub::HandleLayoutFullScreen),
+    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_GET_AVOID_AREA),
+        &SessionStub::HandleGetAvoidAreaByType),
 };
 
 int SessionStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -260,6 +264,24 @@ int SessionStub::HandleBackPressed(MessageParcel& data, MessageParcel& reply)
     WLOGFD("HandleBackPressed!");
     WSError errCode = RequestSessionBack();
     reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleLayoutFullScreen(MessageParcel& data, MessageParcel& reply)
+{
+    bool status = static_cast<bool>(data.ReadUint32());
+    WLOGFD("HandleLayoutFullScreen status:%{public}d", static_cast<int32_t>(status));
+    WSError errCode = OnLayoutFullScreen(status);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleGetAvoidAreaByType(MessageParcel& data, MessageParcel& reply)
+{
+    AvoidAreaType type = static_cast<AvoidAreaType>(data.ReadUint32());
+    WLOGFD("HandleGetAvoidArea type:%{public}d", static_cast<int32_t>(type));
+    AvoidArea avoidArea = GetAvoidAreaByType(type);
+    reply.WriteParcelable(&avoidArea);
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen
