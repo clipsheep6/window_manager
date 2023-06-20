@@ -97,6 +97,13 @@ public:
     void SetWindowName(const std::string& windowName);
 
     /**
+     * @brief Set bundle name.
+     *
+     * @param bundleName The bundle name.
+     */
+    void SetBundleName(const std::string bundleName);
+
+    /**
      * @brief Add window flag.
      *
      * @param flag The flag value added.
@@ -259,6 +266,13 @@ public:
     const std::string& GetWindowName() const;
 
     /**
+     * @brief Get bundle name.
+     *
+     * @return Return the bundle name.
+     */
+    const std::string GetBundleName() const;
+
+    /**
      * @brief Get window flags.
      *
      * @return Return the window flags.
@@ -321,6 +335,7 @@ public:
      */
     bool GetMainHandlerAvailable() const;
 
+
 private:
     Rect windowRect_ { 0, 0, 0, 0 };
     WindowType type_ { WindowType::WINDOW_TYPE_APP_MAIN_WINDOW };
@@ -344,6 +359,7 @@ private:
         { WindowType::WINDOW_TYPE_NAVIGATION_BAR, SystemBarProperty() },
     };
     Orientation requestedOrientation_ { Orientation::UNSPECIFIED };
+    std::string bundleName_ { "" };
 };
 } // namespace Rosen
 } // namespace OHOS
