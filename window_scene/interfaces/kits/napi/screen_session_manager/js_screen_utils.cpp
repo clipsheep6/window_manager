@@ -84,4 +84,58 @@ NativeValue* JsScreenUtils::CreateJsScreenConnectChangeType(NativeEngine& engine
     object->SetProperty("DISCONNECT", CreateJsValue(engine, 1));
     return objValue;
 }
+
+NativeValue *JsScreenUtils::CreateJsCutoutInfoObject(NativeEngine &engine, sptr<CutoutInfo> cutoutInfo)
+{
+    WLOGI("CreateJsCutoutInfoObject is called");
+    NativeValue *objValue = engine.CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+    if (object == nullptr) {
+        WLOGFE("Failed to convert native value");
+        return engine.CreateUndefined();
+    }
+    if (cutoutInfo == nullptr) {
+        WLOGFE("Get null cutout info");
+        return engine.CreateUndefined();
+    }
+    std::vector<DMRect> boundingRects = cutoutInfo->GetBoundingRects();
+    WaterfallDisplayAreaRects waterfallDisplayAreaRects = cutoutInfo->GetWaterfallDisplayAreaRects();
+    object->SetProperty("boundingRects", CreateJsBoundaryRectsArrayObject(engine, boundingRects));
+    object->SetProperty("waterfallDisplayAreaRects", CreateJsWaterfallRectsObject(engine, waterfallDisplayAreaRects));
+    return objValue;
+}
+
+NativeValue *JsScreenUtils::CreateJsWaterfallRectsObject(NativeEngine &engine,
+    WaterfallDisplayAreaRects waterfallDisplayAreaRects)
+{
+    NativeValue *objValue = engine.CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+    object->SetProperty("left", CreateJsRectObject(engine, waterfallDisplayAreaRects.left));
+    object->SetProperty("top", CreateJsRectObject(engine, waterfallDisplayAreaRects.top));
+    object->SetProperty("right", CreateJsRectObject(engine, waterfallDisplayAreaRects.right));
+    object->SetProperty("bottom", CreateJsRectObject(engine, waterfallDisplayAreaRects.bottom));
+    return objValue;
+}
+
+NativeValue *JsScreenUtils::CreateJsBoundaryRectsArrayObject(NativeEngine &engine, std::vector<DMRect> boundaryRects)
+{
+    NativeValue *arrayValue = engine.CreateArray(boundaryRects.size());
+    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
+    size_t i = 0;
+    for (const auto &rect : boundaryRects) {
+        array->SetElement(i++, CreateJsRectObject(engine, rect));
+    }
+    return arrayValue;
+}
+
+NativeValue *JsScreenUtils::CreateJsRectObject(NativeEngine &engine, DMRect rect)
+{
+    NativeValue *objValue = engine.CreateObject();
+    NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
+    object->SetProperty("left", CreateJsValue(engine, rect.posX_));
+    object->SetProperty("top", CreateJsValue(engine, rect.posY_));
+    object->SetProperty("width", CreateJsValue(engine, rect.width_));
+    object->SetProperty("height", CreateJsValue(engine, rect.height_));
+    return objValue;
+}
 } // namespace OHOS::Rosen
