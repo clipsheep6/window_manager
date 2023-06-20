@@ -581,14 +581,12 @@ HWTEST_F(WindowSessionTest, CreateAndConnectSpecificSession01, Function | SmallT
     uint64_t persistentId = 0;
     sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
     EXPECT_NE(mockSessionStage, nullptr);
-    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
-        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =new (std::nothrow) SceneSession::SpecificSessionCallback();
     EXPECT_NE(specificCallback_, nullptr);
     int resultValue = 0;
     sptr<SceneSession> scensession;
     sptr<TestWindowEventChannel> testWindowEventChannel = new (std::nothrow) TestWindowEventChannel();
     EXPECT_NE(testWindowEventChannel, nullptr);
-
     specificCallback_->onCreate_ = [&resultValue](const SessionInfo &info) -> sptr<SceneSession>
     {
         resultValue = 1;
@@ -617,11 +615,10 @@ HWTEST_F(WindowSessionTest, CreateAndConnectSpecificSession01, Function | SmallT
         new (std::nothrow) SceneSession::SessionChangeCallback();
     EXPECT_NE(scensessionchangeCallBack, nullptr);
 
-    NotifyCreateSpecificSessionFunc onCreateSpecificSession_ = [&resultValue](const sptr<SceneSession> &session)
+    scensessionchangeCallBack->onCreateSpecificSession_ = [&resultValue](const sptr<SceneSession> &session)
     {
         resultValue = 1;
     };
-    scensessionchangeCallBack->onCreateSpecificSession_ = onCreateSpecificSession_;
     scensession->RegisterSessionChangeCallback(scensessionchangeCallBack);
     result = scensession->CreateAndConnectSpecificSession(mockSessionStage, testWindowEventChannel, surfaceNode_,
                                                           property_, persistentId, session_);
