@@ -84,7 +84,7 @@ HWTEST_F(WindowSceneSessionImplTest, Create01, Function | SmallTest | Level2)
 
     SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
      ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->Create(nullptr, nullptr));
-    sptr<SessionMocker> session = new(std::nothrow) SessionMocker(sessionInfo);`
+    sptr<SessionMocker> session = new(std::nothrow) SessionMocker(sessionInfo);
     ASSERT_NE(nullptr, session);
     ASSERT_EQ(WMError::WM_ERROR_INVALID_PARAM, window->Create(nullptr, session));
 
@@ -101,6 +101,77 @@ HWTEST_F(WindowSceneSessionImplTest, Create01, Function | SmallTest | Level2)
     // ASSERT_EQ(WMError::WM_ERROR_INVALID_PARAM, window->Create(abilityContext_, nullptr));
     // ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
 }
+
+/**
+ * @tc.name: Connect01
+ * @tc.desc: Connect session
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, Connect01, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("Connect01");
+    sptr<WindowSessionImpl> window = new(std::nothrow) WindowSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->property_->SetPersistentId(1);
+    // connect with null session
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->Connect());
+
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new(std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    EXPECT_CALL(*(session), Connect(_, _, _, _, _)).WillOnce(Return(WSError::WS_ERROR_NULLPTR));
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->Connect());
+    EXPECT_CALL(*(session), Connect(_, _, _, _, _)).WillOnce(Return(WSError::WS_OK));
+    ASSERT_EQ(WMError::WM_OK, window->Connect());
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: IsValidSystemWindowType01
+ * @tc.desc: IsValidSystemWindowType 
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, IsValidSystemWindowType01, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("Connect01");
+    sptr<WindowSceneSessionImpl> windowscenesession = new(std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, windowscenesession);
+    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW));
+    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT));
+    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_FLOAT_CAMERA));
+    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_DIALOG));
+    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_FLOAT));
+    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_SCREENSHOT));
+    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_VOICE_INTERACTION));
+    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_POINTER));
+    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_TOAST));
+
+    ASSERT_TRUE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_DOCK_SLICE));
+    ASSERT_TRUE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_APP_LAUNCHING));
+   
+}
+
+/**
+ * @tc.name: FindParentSessionByParentId01
+ * @tc.desc: FindParentSessionByParentId 
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, FindParentSessionByParentId01, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("Connect01");
+    sptr<WindowSceneSessionImpl> windowscenesession = new(std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, windowscenesession);
+    
+    ASSERT_FALSE(!windowscenesession.FindParentSessionByParentId(WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW));
+    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT));
+
+   
+}
+
 
 
 }

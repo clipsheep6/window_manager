@@ -161,7 +161,7 @@ ohos_unittest("wm_window_manager_stub_proxy_test") {
   deps = [ ":wm_unittest_common" ]
 }
 
-ohos_unittest("window_scene_session_impl_test") {
+ohos_unittest("wm_window_scene_session_impl_test") {
   module_out_path = module_out_path
 
   sources = [ "window_scene_session_impl_test.cpp" ]
