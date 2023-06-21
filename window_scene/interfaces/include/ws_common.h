@@ -17,14 +17,18 @@
 #define OHOS_ROSEN_WINDOW_SCENE_WS_COMMON_H
 
 #include <inttypes.h>
+#include <fstream>
 #include <map>
+#include <stdint.h>
 #include <string>
 #include <want.h>
 
 #include "iremote_broker.h"
 
 namespace OHOS::Rosen {
+namespace {
 constexpr uint64_t INVALID_SESSION_ID = 0;
+}
 
 enum class WSError : int32_t {
     WS_OK = 0,
@@ -77,7 +81,7 @@ const std::map<WSError, WSErrorCode> WS_JS_TO_ERROR_CODE_MAP {
 };
 
 enum class SessionState : uint32_t {
-    STATE_DISCONNECT = 0,
+    STATE_DISCONNECT = 0, // Invalid state
     STATE_CONNECT,
     STATE_FOREGROUND,
     STATE_ACTIVE,
@@ -92,17 +96,13 @@ struct SessionInfo {
     std::string abilityName_ = "";
     sptr<IRemoteObject> callerToken_ = nullptr;
     bool isSystem_ = false;
+    uint32_t persistentId_ = 0;
 
     sptr<AAFwk::Want> want;
     int32_t resultCode;
     int32_t requestCode;
     int32_t errorCode;
     std::string errorReason;
-
-    uint64_t persistentId_ = INVALID_SESSION_ID;
-    uint64_t callerPersistentId_ = INVALID_SESSION_ID;
-    uint32_t callState_ = 0;
-    int64_t uiAbilityId_ = 0;
 };
 
 enum class SizeChangeReason : uint32_t {
@@ -158,14 +158,18 @@ struct WindowShadowConfig {
     std::string color_ = "#000000";
 };
 
-struct KeyboardSceneAnimationConfig {
+struct WindowAnimationConfig {
+    int32_t duration_ = 0;
     std::string curveType_ = "easeOut";
-    float ctrlX1_ = 0.2f;
-    float ctrlY1_ = 0.0f;
-    float ctrlX2_ = 0.2f;
-    float ctrlY2_ = 1.0f;
-    uint32_t durationIn_ = 150; // default durationIn time
-    uint32_t durationOut_ = 150; // default durationOut time
+    float scaleX_ = 0.0f;
+    float scaleY_ = 0.0f;
+    float rotationX_ = 0.0f;
+    float rotationY_ = 0.0f;
+    float rotationZ_ = 0.0f;
+    int32_t angle_ = 0;
+    float translateX_ = 0.0f;
+    float translateY_ = 0.0f;
+    int32_t opacity_ = 0;
 };
 
 struct AppWindowSceneConfig {
@@ -173,7 +177,7 @@ struct AppWindowSceneConfig {
 
     WindowShadowConfig focusedShadow_;
     WindowShadowConfig unfocusedShadow_;
-    KeyboardSceneAnimationConfig keyboardAnimation_;
+    WindowAnimationConfig windowAnimation_;
 };
 
 } // namespace OHOS::Rosen

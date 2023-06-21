@@ -12,9 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "session/host/include/scene_session.h"
 
+#include "interfaces/include/ws_common.h"
 #include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
@@ -25,31 +25,16 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneS
 SceneSession::SceneSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback)
     : Session(info)
 {
-    GeneratePersistentId(false, info);
-    scenePersistence_ = new ScenePersistence(info, GetPersistentId());
+    GeneratePersistentId(!isExtension, info);
     specificCallback_ = specificCallback;
 }
 
-WSError SceneSession::Foreground()
+WSError SceneSession::UpdateWindowAnimationFlag(bool needDefaultAnimationFlag)
 {
-    WSError ret = Session::Foreground();
-    if (ret != WSError::WS_OK) {
-        return ret;
+    WLOGFD("UpdateWindowAnimationFlag");
+    if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->onWindowAnimationFlagChange_) {
+        sessionChangeCallback_ -> onWindowAnimationFlagChange_(needDefaultAnimationFlag);
     }
-    UpdateCameraFloatWindowStatus(true);
-    return WSError::WS_OK;
-}
-
-WSError SceneSession::Background()
-{
-    WSError ret = Session::Background();
-    if (ret != WSError::WS_OK) {
-        return ret;
-    }
-    if (scenePersistence_ != nullptr && GetSnapshot() != nullptr) {
-        scenePersistence_->SaveSnapshot(GetSnapshot());
-    }
-    UpdateCameraFloatWindowStatus(false);
     return WSError::WS_OK;
 }
 
@@ -95,7 +80,7 @@ WSError SceneSession::CreateAndConnectSpecificSession(const sptr<ISessionStage>&
     WLOGFI("CreateAndConnectSpecificSession id: %{public}" PRIu64 "", GetPersistentId());
     sptr<SceneSession> sceneSession;
     if (specificCallback_ != nullptr) {
-        sceneSession = specificCallback_->onCreate_(sessionInfo_, property);
+        sceneSession = specificCallback_->onCreate_(sessionInfo_);
     }
     if (sceneSession == nullptr) {
         return WSError::WS_ERROR_NULLPTR;
@@ -121,10 +106,12 @@ WSError SceneSession::DestroyAndDisconnectSpecificSession(const uint64_t& persis
     return ret;
 }
 
-void SceneSession::UpdateCameraFloatWindowStatus(bool isShowing)
+WSError SceneSession::Background()
 {
-    if (GetWindowType() == WindowType::WINDOW_TYPE_FLOAT_CAMERA && specificCallback_ != nullptr) {
-        specificCallback_->onCameraFloatSessionChange_(property_->GetAccessTokenId(), isShowing);
+    Session::Background();
+    if (scenePersistence_ != nullptr && GetSnapshot() != nullptr) {
+        scenePersistence_->SaveSnapshot(GetSnapshot());
     }
+    return WSError::WS_OK;
 }
 } // namespace OHOS::Rosen

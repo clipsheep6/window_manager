@@ -85,7 +85,7 @@ WSError SessionProxy::Disconnect()
 }
 
 WSError SessionProxy::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
-    const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig, sptr<WindowSessionProperty> property, sptr<IRemoteObject> token)
+    const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig, sptr<WindowSessionProperty> property)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -118,14 +118,6 @@ WSError SessionProxy::Connect(const sptr<ISessionStage>& sessionStage, const spt
             return WSError::WS_ERROR_IPC_FAILED;
         }
     }
-
-    if (token != nullptr) {
-        if (!data.WriteRemoteObject(token)) {
-            WLOGFE("Write abilityToken failed");
-            return WSError::WS_ERROR_IPC_FAILED;
-        }
-    }
-
     if (Remote()->SendRequest(static_cast<uint32_t>(SessionMessage::TRANS_ID_CONNECT),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
@@ -173,18 +165,6 @@ WSError SessionProxy::PendingSessionActivation(sptr<AAFwk::SessionInfo> abilityS
     }
     if (!data.WriteInt32(abilitySessionInfo->requestCode)) {
         WLOGFE("Write requestCode info failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!(data.WriteInt64(abilitySessionInfo->persistentId))) {
-        WLOGFE("Write persistentId failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!(data.WriteInt32(static_cast<uint32_t>(abilitySessionInfo->state)))) {
-        WLOGFE("Write callState failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!(data.WriteInt64(abilitySessionInfo->uiAbilityId))) {
-        WLOGFE("Write uiAbilityId failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(SessionMessage::TRANS_ID_ACTIVE_PENDING_SESSION),
@@ -468,5 +448,11 @@ WSError SessionProxy::RequestSessionBack()
     }
     int32_t ret = reply.ReadUint32();
     return static_cast<WSError>(ret);
+}
+
+WSError SessionProxy::UpdateWindowAnimationFlag(bool needDefaultAnimationFlag)
+{
+    WLOGFD("SessionProxy UpdateWindowAnimationFlag");
+    return WSError::WS_OK;
 }
 } // namespace OHOS::Rosen

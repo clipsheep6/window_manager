@@ -37,8 +37,30 @@ NativeValue* JsWindowSceneConfig::CreateWindowSceneConfig(NativeEngine& engine, 
 
     object->SetProperty("focusedShadow", CreateShadowValue(engine, config, true));
     object->SetProperty("unfocusedShadow", CreateShadowValue(engine, config, false));
-    object->SetProperty("keyboardAnimation", CreateKeyboardAnimationValue(engine, config));
+    object->SetProperty("windowAnimation", CreateWindowAnimationValue(engine, config));
 
+    return objValue;
+}
+
+NativeValue* JsWindowSceneConfig::CreateWindowAnimationValue(NativeEngine& engine, const AppWindowSceneConfig& config) {
+    WLOGI("[NAPI]CreateWindowAnimationValue");
+    NativeValue* objValue = engine.CreateObject();
+    NativeObject* object = ConvertNativeValueTo<NativeObject>(objValue);
+    if (object == nullptr) {
+        WLOGFE("[NAPI]Object is null!");
+        return engine.CreateUndefined();
+    }
+    object->SetProperty("duration", CreateJsValue(engine, config.windowAnimation_.duration_));
+    object->SetProperty("curveType", CreateJsValue(engine, config.windowAnimation_.curveType_));
+    object->SetProperty("scaleX", CreateJsValue(engine, config.windowAnimation_.scaleX_));
+    object->SetProperty("scaleY", CreateJsValue(engine, config.windowAnimation_.scaleY_));
+    object->SetProperty("rotationX", CreateJsValue(engine, config.windowAnimation_.rotationX_));
+    object->SetProperty("rotationY", CreateJsValue(engine, config.windowAnimation_.rotationY_));
+    object->SetProperty("rotationZ", CreateJsValue(engine, config.windowAnimation_.rotationZ_));
+    object->SetProperty("angle", CreateJsValue(engine, config.windowAnimation_.angle_));
+    object->SetProperty("translateX", CreateJsValue(engine, config.windowAnimation_.translateX_));
+    object->SetProperty("translateY", CreateJsValue(engine, config.windowAnimation_.translateY_));
+    object->SetProperty("opacity", CreateJsValue(engine, config.windowAnimation_.opacity_));
     return objValue;
 }
 
@@ -60,27 +82,6 @@ NativeValue* JsWindowSceneConfig::CreateShadowValue(NativeEngine& engine, const 
         focused ? config.focusedShadow_.radius_ : config.unfocusedShadow_.radius_));
     object->SetProperty("color", CreateJsValue(engine,
         focused ? config.focusedShadow_.color_ : config.unfocusedShadow_.color_));
-
-    return objValue;
-}
-
-NativeValue* JsWindowSceneConfig::CreateKeyboardAnimationValue(NativeEngine& engine,
-    const AppWindowSceneConfig& config)
-{
-    NativeValue* objValue = engine.CreateObject();
-    NativeObject* object = ConvertNativeValueTo<NativeObject>(objValue);
-    if (object == nullptr) {
-        WLOGFE("[NAPI]Object is null!");
-        return engine.CreateUndefined();
-    }
-
-    object->SetProperty("curveType", CreateJsValue(engine, config.keyboardAnimation_.curveType_));
-    object->SetProperty("ctrlX1", CreateJsValue(engine, config.keyboardAnimation_.ctrlX1_));
-    object->SetProperty("ctrlY1", CreateJsValue(engine, config.keyboardAnimation_.ctrlY1_));
-    object->SetProperty("ctrlX2", CreateJsValue(engine, config.keyboardAnimation_.ctrlX2_));
-    object->SetProperty("ctrlY2", CreateJsValue(engine, config.keyboardAnimation_.ctrlY2_));
-    object->SetProperty("durationIn", CreateJsValue(engine, config.keyboardAnimation_.durationIn_));
-    object->SetProperty("durationOut", CreateJsValue(engine, config.keyboardAnimation_.durationOut_));
 
     return objValue;
 }

@@ -31,11 +31,14 @@ public:
     WSError Disconnect() override;
     WSError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
-        sptr<WindowSessionProperty> property = nullptr, sptr<IRemoteObject> token = nullptr) override;
+        sptr<WindowSessionProperty> property = nullptr) override;
+
     WSError UpdateActiveStatus(bool isActive) override;
+
     WSError PendingSessionActivation(const sptr<AAFwk::SessionInfo> abilitySessionInfo) override;
     WSError TerminateSession(const sptr<AAFwk::SessionInfo> abilitySessionInfo) override;
     WSError NotifySessionException(const sptr<AAFwk::SessionInfo> abilitySessionInfo) override;
+
     WSError OnSessionEvent(SessionEvent event) override;
     WSError RaiseToAppTop() override;
     WSError UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason) override;
@@ -44,6 +47,7 @@ public:
         sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session) override;
     WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId) override;
     WSError RequestSessionBack() override;
+    WSError UpdateWindowAnimationFlag(bool needDefaultAnimationFlag) override;
 private:
     static inline BrokerDelegator<SessionProxy> delegator_;
 };
