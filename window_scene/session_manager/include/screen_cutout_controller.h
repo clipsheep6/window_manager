@@ -31,7 +31,7 @@ private:
     void CalcWaterfallRectsByRotation(Rotation rotation, uint32_t displayHeight, uint32_t displayWidth,
         std::vector<uint32_t> realNumVec);
     void CheckBoundaryRects(std::vector<DMRect>& boundaryRects, sptr<DisplayInfo> displayInfo);
-    void TransferBoundaryRectsByRotation(std::vector<DMRect>& boundaryRects);
+    void ConvertBoundaryRectsByRotation(std::vector<DMRect>& boundaryRects);
     DMRect CreateWaterfallRect(uint32_t left, uint32_t top, uint32_t width, uint32_t height);
 
     WaterfallDisplayAreaRects waterfallDisplayAreaRects_ = {};
