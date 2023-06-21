@@ -200,15 +200,16 @@ NativeValue* JsScreenSessionManager::OnGetCutoutInfo(NativeEngine& engine, Nativ
     AsyncTask::CompleteCallback complete = [this](NativeEngine& engine, AsyncTask& task, int32_t status) {
         sptr<CutoutInfo> cutoutInfo =
                 ScreenSessionManager::GetInstance().GetScreenCutoutController()->GetScreenCutoutInfo();
-            if (cutoutInfo != nullptr) {
-                task.Resolve(engine, JsScreenUtils::CreateJsCutoutInfoObject(engine, cutoutInfo));
-                WLOGI("OnGetCutoutInfo success");
-            } else {
-                WLOGI("OnGetCutoutInfo failed");
-                task.Reject(engine, CreateJsError(engine,static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_SCREEN),
-                    "JsScreenSessionManager::OnGetCutoutInfo failed."));
-            }
-        };
+        if (cutoutInfo != nullptr) {
+            task.Resolve(engine, JsScreenUtils::CreateJsCutoutInfoObject(engine, cutoutInfo));
+            WLOGI("OnGetCutoutInfo success");
+        } else {
+            WLOGI("OnGetCutoutInfo failed");
+            task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_SCREEN),
+                "JsScreenSessionManager::OnGetCutoutInfo failed."));
+        }
+    };
+    
     NativeValue* lastParam = nullptr;
     if (info.argc >= ARGC_ONE && info.argv[ARGC_ONE - 1] != nullptr &&
         info.argv[ARGC_ONE - 1]->TypeOf() == NATIVE_FUNCTION) {

@@ -36,7 +36,7 @@ sptr<CutoutInfo> ScreenCutoutController::GetScreenCutoutInfo()
     std::vector<DMRect> boundaryRects;
     WaterfallDisplayAreaRects waterfallDisplayAreaRects;
     if (!ScreenSceneConfig::GetCutoutBoundaryRect().empty()) {
-        TransferBoundaryRectsByRotation(boundaryRects);
+        ConvertBoundaryRectsByRotation(boundaryRects);
     }
 
     CalcWaterfallRects();
@@ -45,12 +45,12 @@ sptr<CutoutInfo> ScreenCutoutController::GetScreenCutoutInfo()
     return cutoutInfo;
 }
 
-void ScreenCutoutController::TransferBoundaryRectsByRotation(std::vector<DMRect>& boundaryRects)
+void ScreenCutoutController::ConvertBoundaryRectsByRotation(std::vector<DMRect>& boundaryRects)
 {
     std::vector<DMRect> finalVector;
     sptr<DisplayInfo> displayInfo = ScreenSessionManager::GetInstance().GetDefaultDisplayInfo();
     if (!displayInfo) {
-        WLOGFE("display invaild");
+        WLOGFE("displayInfo invaild");
         boundaryRects = finalVector;
         return;
     }
@@ -62,8 +62,9 @@ void ScreenCutoutController::TransferBoundaryRectsByRotation(std::vector<DMRect>
         boundaryRects = displayBoundaryRects;
         return;
     }
-    uint32_t displayHeight = displayInfo->GetWidth();
-    uint32_t displayWidth = displayInfo->GetHeight();
+
+    uint32_t displayWidth = displayInfo->GetWidth();
+    uint32_t displayHeight = displayInfo->GetHeight();
     switch (currentRotation) {
         case Rotation::ROTATION_90: {
             for (DMRect rect : displayBoundaryRects) {
@@ -98,12 +99,12 @@ void ScreenCutoutController::TransferBoundaryRectsByRotation(std::vector<DMRect>
 void ScreenCutoutController::CheckBoundaryRects(std::vector<DMRect>& boundaryRects, sptr<DisplayInfo> displayInfo)
 {
     if (!displayInfo) {
-        WLOGFE("display invaild");
+        WLOGFE("displayInfo invaild");
         return;
     }
 
-    uint32_t displayHeight = displayInfo->GetWidth();
-    uint32_t displayWidth = displayInfo->GetHeight();
+    uint32_t displayWidth = displayInfo->GetWidth();
+    uint32_t displayHeight = displayInfo->GetHeight();
     for (auto iter = boundaryRects.begin(); iter != boundaryRects.end();) {
         DMRect boundaryRect = *iter;
         if (boundaryRect.posX_ < 0 || boundaryRect.posY_ < 0 ||
@@ -123,7 +124,7 @@ void ScreenCutoutController::CalcWaterfallRects()
 {
     WaterfallDisplayAreaRects emptyRects = {};
     if (!ScreenSceneConfig::IsWaterfallDisplay()) {
-        WLOGFE("not waterfall display return");
+        WLOGFE("not waterfall display");
         waterfallDisplayAreaRects_ = emptyRects;
         return;
     }
@@ -147,8 +148,14 @@ void ScreenCutoutController::CalcWaterfallRects()
         return;
     }
 
-    uint32_t displayHeight = ScreenSessionManager::GetInstance().GetDefaultDisplayInfo()->GetWidth();
-    uint32_t displayWidth = ScreenSessionManager::GetInstance().GetDefaultDisplayInfo()->GetHeight();
+    sptr<DisplayInfo> displayInfo = ScreenSessionManager::GetInstance().GetDefaultDisplayInfo();
+    if (!displayInfo) {
+        WLOGFE("displayInfo invaild");
+        return;
+    }
+
+    uint32_t displayWidth = displayInfo->GetWidth();
+    uint32_t displayHeight = displayInfo->GetHeight();
     if ((realNumVec[LEFT] > displayWidth / HALF_SCREEN) || (realNumVec[RIGHT] > displayWidth / HALF_SCREEN) ||
         (realNumVec[TOP] > displayHeight / HALF_SCREEN) || (realNumVec[BOTTOM] > displayHeight / HALF_SCREEN)) {
         WLOGFE("curved screen boundary data is not correct");
@@ -157,17 +164,21 @@ void ScreenCutoutController::CalcWaterfallRects()
     }
 
     CalcWaterfallRectsByRotation(
-        ScreenSessionManager::GetInstance().GetDefaultDisplayInfo()->GetRotation(), displayHeight, displayWidth, realNumVec);
+        ScreenSessionManager::GetInstance().GetDefaultDisplayInfo()->GetRotation(), displayHeight,
+        displayWidth, realNumVec);
 }
 
-void ScreenCutoutController::CalcWaterfallRectsByRotation(Rotation rotation, uint32_t displayHeight, uint32_t displayWidth, std::vector<uint32_t> realNumVec)
+void ScreenCutoutController::CalcWaterfallRectsByRotation(Rotation rotation, uint32_t displayHeight,
+    uint32_t displayWidth, std::vector<uint32_t> realNumVec)
 {
     switch (rotation) {
         case Rotation::ROTATION_0: {
             DMRect leftRect = CreateWaterfallRect(0, 0, realNumVec[LEFT], displayHeight);
             DMRect topRect = CreateWaterfallRect(0, 0, displayWidth, realNumVec[TOP]);
-            DMRect rightRect = CreateWaterfallRect(displayWidth - realNumVec[RIGHT], 0, realNumVec[RIGHT], displayHeight);
-            DMRect bottomRect = CreateWaterfallRect(0, displayHeight - realNumVec[BOTTOM], displayWidth, realNumVec[BOTTOM]);
+            DMRect rightRect =
+                CreateWaterfallRect(displayWidth - realNumVec[RIGHT], 0, realNumVec[RIGHT], displayHeight);
+            DMRect bottomRect =
+                CreateWaterfallRect(0, displayHeight - realNumVec[BOTTOM], displayWidth, realNumVec[BOTTOM]);
             waterfallDisplayAreaRects_ = WaterfallDisplayAreaRects {leftRect, topRect, rightRect, bottomRect};
             return;
         }
@@ -175,7 +186,8 @@ void ScreenCutoutController::CalcWaterfallRectsByRotation(Rotation rotation, uin
             DMRect leftRect = CreateWaterfallRect(0, 0, realNumVec[BOTTOM], displayWidth);
             DMRect topRect = CreateWaterfallRect(0, 0, displayHeight, realNumVec[LEFT]);
             DMRect rightRect = CreateWaterfallRect(displayHeight - realNumVec[TOP], 0, realNumVec[TOP], displayWidth);
-            DMRect bottomRect = CreateWaterfallRect(0, displayWidth - realNumVec[RIGHT], displayHeight, realNumVec[RIGHT]);
+            DMRect bottomRect =
+                CreateWaterfallRect(0, displayWidth - realNumVec[RIGHT], displayHeight, realNumVec[RIGHT]);
             waterfallDisplayAreaRects_ = WaterfallDisplayAreaRects {leftRect, topRect, rightRect, bottomRect};
             return;
         }
@@ -190,8 +202,10 @@ void ScreenCutoutController::CalcWaterfallRectsByRotation(Rotation rotation, uin
         case Rotation::ROTATION_270: {
             DMRect leftRect = CreateWaterfallRect(0, 0, realNumVec[TOP], displayWidth);
             DMRect topRect = CreateWaterfallRect(0, 0, displayHeight, realNumVec[RIGHT]);
-            DMRect rightRect = CreateWaterfallRect(displayHeight - realNumVec[BOTTOM], 0, realNumVec[BOTTOM], displayWidth);
-            DMRect bottomRect = CreateWaterfallRect(0, displayWidth - realNumVec[LEFT], displayHeight, realNumVec[LEFT]);
+            DMRect rightRect =
+                CreateWaterfallRect(displayHeight - realNumVec[BOTTOM], 0, realNumVec[BOTTOM], displayWidth);
+            DMRect bottomRect =
+                CreateWaterfallRect(0, displayWidth - realNumVec[LEFT], displayHeight, realNumVec[LEFT]);
             waterfallDisplayAreaRects_ = WaterfallDisplayAreaRects {leftRect, topRect, rightRect, bottomRect};
             return;
         }
