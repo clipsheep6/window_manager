@@ -86,6 +86,7 @@ public:
     WSError Disconnect() override;
 
     WSError OnSessionEvent(SessionEvent event) override;
+    WSError OnLayoutFullScreen(bool status) override;
     void NotifyConnect();
     void NotifyForeground();
     void NotifyBackground();
@@ -135,6 +136,7 @@ public:
     bool GetFocusable() const;
     WSError SetTouchable(bool touchable);
     bool GetTouchable() const;
+    AvoidArea GetAvoidAreaByType(AvoidAreaType type) override;
 
     uint32_t GetWindowId() const;
     int32_t GetCallingPid() const;
