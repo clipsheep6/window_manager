@@ -51,7 +51,7 @@ private:
     static std::string GetConfigPath(const std::string& configFileName);
 
     static std::vector<std::string> Split(std::string str, std::string pattern);
-    static inline bool IsNumber(std::string str);
+    static bool IsNumber(std::string str);
     static DMRect CalcCutoutBoundaryRect(const std::string svgPath);
 };
 } // namespace OHOS::Rosen
