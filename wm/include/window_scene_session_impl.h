@@ -16,10 +16,12 @@
 #ifndef OHOS_ROSEN_WINDOW_SCENE_SESSION_IMPL_H
 #define OHOS_ROSEN_WINDOW_SCENE_SESSION_IMPL_H
 
+#include "interfaces/include/ws_common.h"
 #include "window_session_impl.h"
 
 namespace OHOS {
 namespace Rosen {
+
 class WindowSceneSessionImpl : public WindowSessionImpl {
 public:
     explicit WindowSceneSessionImpl(const sptr<WindowOption>& option);
@@ -43,23 +45,16 @@ public:
     WMError Resize(uint32_t width, uint32_t height) override;
     WmErrorCode RaiseToAppTop() override;
     WSError HandleBackEvent() override;
+    void SetNeedDefaultAnimation(bool needDefaultAnimation) override;
 
-    WMError SetBackgroundColor(const std::string& color) override;
-    WMError SetTransparent(bool isTransparent) override;
-    
-    bool IsTransparent() const override;
 protected:
     void DestroySubWindow();
     WMError CreateAndConnectSpecificSession();
     sptr<WindowSessionImpl> FindParentSessionByParentId(uint32_t parentId);
-    sptr<WindowSessionImpl> FindMainWindowWithContext();
     void UpdateSubWindowStateAndNotify(uint64_t parentPersistentId, const WindowState& newState);
-    void LimitCameraFloatWindowMininumSize(uint32_t& width, uint32_t& height);
 
 private:
     bool IsValidSystemWindowType(const WindowType& type);
-    WMError SetBackgroundColor(uint32_t color);
-    uint32_t GetBackgroundColor() const;
 };
 } // namespace Rosen
 } // namespace OHOS

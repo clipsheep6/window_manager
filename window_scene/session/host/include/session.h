@@ -17,11 +17,9 @@
 #define OHOS_ROSEN_WINDOW_SCENE_SESSION_H
 
 #include <mutex>
-#include <set>
+#include <refbase.h>
 #include <string>
 #include <vector>
-
-#include <refbase.h>
 
 #include "interfaces/include/ws_common.h"
 #include "session/container/include/zidl/session_stage_interface.h"
@@ -57,9 +55,10 @@ public:
 
 class Session : public SessionStub, public virtual RefBase {
 public:
-    explicit Session(const SessionInfo& info) : sessionInfo_(info) {}
-    virtual ~Session() = default;
+    explicit Session(const SessionInfo& info);
+    ~Session();
 
+    void SetPersistentId(uint64_t persistentId);
     uint64_t GetPersistentId() const;
     uint64_t GetParentPersistentId() const;
     void SetSessionRect(const WSRect& rect);
@@ -73,14 +72,14 @@ public:
     WindowType GetWindowType() const;
 
     void SetWindowSessionProperty(const sptr<WindowSessionProperty>& property);
-    sptr<WindowSessionProperty> GetWindowSessionProperty() const;
+    const sptr<WindowSessionProperty>& GetWindowSessionProperty() const;
 
     virtual WSError SetActive(bool active);
     virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason);
 
     WSError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
-        sptr<WindowSessionProperty> property = nullptr, sptr<IRemoteObject> token = nullptr) override;
+        sptr<WindowSessionProperty> property = nullptr) override;
     WSError Foreground() override;
     WSError Background() override;
     WSError Disconnect() override;
@@ -92,8 +91,6 @@ public:
 
     WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent);
-    WSError TransferKeyEventForConsumed(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed);
-    WSError TransferFocusActiveEvent(bool isFocusActive);
 
     bool RegisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
     bool UnregisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
@@ -119,12 +116,9 @@ public:
     WSError ProcessBackEvent(); // send back event to session_stage
     WSError RequestSessionBack() override; // receive back request from session_stage
     sptr<ScenePersistence> GetScenePersistence() const;
-    void SetParentSession(const sptr<Session>& session);
-    void BindDialogToParentSession(const sptr<Session>& session);
-    void RemoveDialogToParentSession(const sptr<Session>& session);
-    std::vector<sptr<Session>> GetDialogVector() const;
-    void NotifyTouchDialogTarget();
-    WSError NotifyDestroy();
+
+    static std::atomic<uint32_t> sessionId_;
+    static std::set<uint32_t> persistIdSet_;
 
     void SetSessionFocusableChangeListener(const NotifySessionFocusableChangeFunc& func);
     void SetClickListener(const NotifyClickFunc& func);
@@ -135,11 +129,7 @@ public:
     bool GetFocusable() const;
     WSError SetTouchable(bool touchable);
     bool GetTouchable() const;
-
-    uint32_t GetWindowId() const;
-    int32_t GetCallingPid() const;
-    int32_t GetCallingUid() const;
-    sptr<IRemoteObject> GetAbilityToken() const;
+    WSError UpdateWindowAnimationFlag(bool needDefaultAnimationFlag) override;
 protected:
     void GeneratePersistentId(const bool isExtension, const SessionInfo& sessionInfo);
     void UpdateSessionState(SessionState state);
@@ -148,7 +138,7 @@ protected:
 
     bool isActive_ = false;
     bool isFocused_ = false;
-    WSRect winRect_;
+    WSRect winRect_ {0, 0, 0, 0};
     sptr<ISessionStage> sessionStage_;
     SessionInfo sessionInfo_;
     NotifyPendingSessionActivationFunc pendingSessionActivationFunc_;
@@ -160,11 +150,10 @@ protected:
     NotifySessionExceptionFunc sessionExceptionFunc_;
     sptr<WindowSessionProperty> property_ = nullptr;
     SystemSessionConfig systemConfig_;
+    const bool isExtension = true;
     sptr<ScenePersistence> scenePersistence_ = nullptr;
 
 private:
-    bool CheckDialogOnForeground();
-
     template<typename T>
     bool RegisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener);
     template<typename T>
@@ -189,8 +178,6 @@ private:
     std::shared_ptr<Media::PixelMap> Snapshot();
 
     uint64_t persistentId_ = INVALID_SESSION_ID;
-    static std::atomic<uint32_t> sessionId_;
-    static std::set<uint32_t> persistIdSet_;
     std::shared_ptr<RSSurfaceNode> surfaceNode_ = nullptr;
     SessionState state_ = SessionState::STATE_DISCONNECT;
 
@@ -199,14 +186,6 @@ private:
     sptr<IWindowEventChannel> windowEventChannel_ = nullptr;
 
     std::shared_ptr<Media::PixelMap> snapshot_;
-
-    std::vector<sptr<Session>> dialogVec_;
-    sptr<Session> parentSession_;
-
-    int32_t callingPid_ = { 0 };
-    int32_t callingUid_ = { 0 };
-    sptr<IRemoteObject> abilityToken_ = nullptr;
 };
 } // namespace OHOS::Rosen
-
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_H

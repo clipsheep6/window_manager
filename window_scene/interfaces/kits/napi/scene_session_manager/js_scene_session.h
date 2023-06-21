@@ -25,7 +25,6 @@
 
 #include "interfaces/include/ws_common.h"
 #include "session/host/include/scene_session.h"
-#include "js_scene_utils.h"
 
 namespace OHOS::Rosen {
 class SceneSession;
@@ -55,6 +54,7 @@ private:
     void ProcessClickRegister();
     void ProcessTerminateSessionRegister();
     void ProcessSessionExceptionRegister();
+    void ProcessSessionDefaultAnimationFlagChangeRegister();
 
     void PendingSessionActivation(const SessionInfo& info);
     void OnSessionStateChange(const SessionState& state);
@@ -64,10 +64,10 @@ private:
     void OnRaiseToTop();
     void OnBackPressed();
     void OnSessionFocusableChange(bool isFocusable);
+    void OnDefaultAnimationFlagChange(bool isNeedDefaultAnimationFlag);
     void OnClick();
     void TerminateSession(const SessionInfo& info);
     void OnSessionException(const SessionInfo& info);
-    static WindowTypeInAPI GetApiType(WindowType type);
 
     NativeEngine& engine_;
     wptr<SceneSession> weakSession_ = nullptr;
