@@ -22,7 +22,7 @@
 #include "window_adapter.h"
 #include "window_manager_agent.h"
 #include "window_manager_hilog.h"
-#include "wm_common.h"
+#include "wm_common.h"  
 #ifdef EFFICIENCY_MANAGER_ENABLE
 #include "suspend_manager_client.h"
 #endif // EFFICIENCY_MANAGER_ENABLE
