@@ -43,23 +43,11 @@ public:
     WMError Resize(uint32_t width, uint32_t height) override;
     WmErrorCode RaiseToAppTop() override;
     WSError HandleBackEvent() override;
-    WMError SetGlobalMaximizeMode(MaximizeMode mode) override;
-    MaximizeMode GetGlobalMaximizeMode() const override;
-
     WMError SetBackgroundColor(const std::string& color) override;
     WMError SetTransparent(bool isTransparent) override;
     
     bool IsTransparent() const override;
-
-    // window effect
-    virtual WMError SetCornerRadius(float cornerRadius) override;
-    virtual WMError SetShadowRadius(float radius) override;
-    virtual WMError SetShadowColor(std::string color) override;
-    virtual WMError SetShadowOffsetX(float offsetX) override;
-    virtual WMError SetShadowOffsetY(float offsetY) override;
-    virtual WMError SetBlur(float radius) override;
-    virtual WMError SetBackdropBlur(float radius) override;
-    virtual WMError SetBackdropBlurStyle(WindowBlurStyle blurStyle) override;
+    WMError SetWindowMode(WindowMode mode) override;
 
 protected:
     void DestroySubWindow();
@@ -67,13 +55,16 @@ protected:
     sptr<WindowSessionImpl> FindParentSessionByParentId(uint32_t parentId);
     sptr<WindowSessionImpl> FindMainWindowWithContext();
     void UpdateSubWindowStateAndNotify(uint64_t parentPersistentId, const WindowState& newState);
+    void GetModeInfoFromAbilityInfo();
     void LimitCameraFloatWindowMininumSize(uint32_t& width, uint32_t& height);
+    void UpdateTitleButtonVisibility();
+    void UpdateMode(WindowMode mode);
+
 
 private:
     bool IsValidSystemWindowType(const WindowType& type);
     WMError SetBackgroundColor(uint32_t color);
     uint32_t GetBackgroundColor() const;
-    WMError CheckParmAndPermission();
 };
 } // namespace Rosen
 } // namespace OHOS

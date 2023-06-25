@@ -148,14 +148,30 @@ bool WindowSessionProperty::GetTokenState() const
     return tokenState_;
 }
 
-MaximizeMode WindowSessionProperty::GetMaximizeMode() const
+void WindowSessionProperty::SetModeSupportInfo(uint32_t modeSupportInfo)
 {
-    return maximizeMode_;
+    modeSupportInfo_ = modeSupportInfo;
 }
 
-void WindowSessionProperty::SetMaximizeMode(MaximizeMode mode)
+WindowMode WindowSessionProperty::GetWindowMode() const
 {
-    maximizeMode_ = mode;
+    return mode_;
+}
+
+uint32_t WindowSessionProperty::GetModeSupportInfo() const
+{
+    return modeSupportInfo_;
+}
+
+void WindowSessionProperty::SetWindowMode(WindowMode mode)
+{
+    // if (!WindowHelper::IsValidWindowMode(mode) || !WindowHelper::IsWindowModeSupported(modeSupportInfo_, mode)) {
+    //     return;
+    // }
+    // if (!WindowHelper::IsSplitWindowMode(mode_)) {
+    //     lastMode_ = mode_;
+    // }
+    mode_ = mode;
 }
 
 bool WindowSessionProperty::Marshalling(Parcel& parcel) const
@@ -171,7 +187,7 @@ bool WindowSessionProperty::Marshalling(Parcel& parcel) const
         parcel.WriteString(sessionInfo_.bundleName_) && parcel.WriteString(sessionInfo_.moduleName_) &&
         parcel.WriteString(sessionInfo_.abilityName_) &&
         parcel.WriteUint64(parentPersistentId_) &&
-        parcel.WriteUint32(accessTokenId_) && parcel.WriteUint32(static_cast<uint32_t>(maximizeMode_));
+        parcel.WriteUint32(accessTokenId_);
 }
 
 WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
@@ -195,7 +211,6 @@ WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
     property->SetSessionInfo(info);
     property->SetParentPersistentId(parcel.ReadUint64());
     property->SetAccessTokenId(parcel.ReadUint32());
-    property->SetMaximizeMode(static_cast<MaximizeMode>(parcel.ReadUint32()));
     return property;
 }
 } // namespace Rosen
