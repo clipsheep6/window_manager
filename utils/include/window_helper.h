@@ -18,6 +18,7 @@
 
 #include <unistd.h>
 #include <vector>
+#include <parameters.h>
 #include "ability_info.h"
 #include "window_transition_info.h"
 #include "wm_common.h"
@@ -544,6 +545,17 @@ public:
         return true;
     }
 
+    static bool IsWindowFollowParent(WindowType type)
+    {
+        auto isPhone = system::GetParameter("const.product.devicetype", "unknown") == "phone";
+        if (!isPhone) {
+            return false;
+        }
+        if (type == WindowType::WINDOW_TYPE_DIALOG || WindowHelper::IsSubWindow(type)) {
+            return true;
+        }
+        return false;
+    }
 private:
     WindowHelper() = default;
     ~WindowHelper() = default;

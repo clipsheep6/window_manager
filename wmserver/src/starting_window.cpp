@@ -321,6 +321,9 @@ void StartingWindow::AddNodeOnRSTree(sptr<WindowNode>& node, bool isMultiDisplay
                     dms.UpdateRSTree(shownDisplayId, shownDisplayId, node->surfaceNode_, true, isMultiDisplay);
                 }
                 for (auto& child : node->children_) {
+                    if (WindowHelper::IsWindowFollowParent(child->GetWindowType())) {
+                        continue;
+                    }
                     if (child->currentVisibility_) {
                         dms.UpdateRSTree(shownDisplayId, shownDisplayId, child->surfaceNode_, true, isMultiDisplay);
                     }
