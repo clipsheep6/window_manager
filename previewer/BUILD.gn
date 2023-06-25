@@ -109,6 +109,8 @@ ohos_shared_library("previewer_window_napi") {
     "//foundation/arkui/napi:ace_napi_ark",
   ]
 
+  external_deps = [ "ability_runtime:module_manager" ]
+
   cflags_cc = [ "-DWINDOW_PREVIEW" ]
   cflags = [ "-std=c++11" ]
   part_name = "window_manager"
