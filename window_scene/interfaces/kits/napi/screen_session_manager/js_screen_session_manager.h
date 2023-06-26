@@ -28,7 +28,6 @@ public:
 
     static NativeValue* Init(NativeEngine* engine, NativeValue* exportObj);
     static void Finalizer(NativeEngine* engine, void* data, void* hint);
-    static NativeValue* GetCutoutInfo(NativeEngine *engine, NativeCallbackInfo *info);
 
     void OnScreenConnect(sptr<ScreenSession>& screenSession) override;
     void OnScreenDisconnect(sptr<ScreenSession>& screenSession) override;
@@ -37,7 +36,6 @@ private:
     static NativeValue* RegisterCallback(NativeEngine* engine, NativeCallbackInfo* info);
 
     NativeValue* OnRegisterCallback(NativeEngine& engine, const NativeCallbackInfo& info);
-    NativeValue* OnGetCutoutInfo(NativeEngine &engine, NativeCallbackInfo &info);
 
     std::shared_ptr<NativeReference> screenConnectionCallback_;
     NativeEngine& engine_;

@@ -26,7 +26,6 @@
 
 #include "agent_death_recipient.h"
 #include "screen.h"
-#include "screen_cutout_controller.h"
 
 namespace OHOS::Rosen {
 class IScreenConnectionListener : public RefBase {
@@ -140,7 +139,6 @@ public:
     void OnScreenGroupChange(const std::string& trigger,
         const std::vector<sptr<ScreenInfo>>& screenInfos, ScreenGroupChangeEvent groupEvent);
     void OnScreenshot(sptr<ScreenshotInfo> info);
-    sptr<ScreenCutoutController> GetScreenCutoutController();
 
 protected:
     ScreenSessionManager();
@@ -198,7 +196,6 @@ private:
     std::vector<sptr<IScreenConnectionListener>> screenConnectionListenerList_;
     sptr<IDisplayChangeListener> displayChangeListener_;
     sptr<SessionDisplayPowerController> sessionDisplayPowerController_;
-    sptr<ScreenCutoutController> screenCutoutController_;
 };
 } // namespace OHOS::Rosen
 

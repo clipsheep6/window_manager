@@ -240,6 +240,7 @@ void ScreenSceneConfig::DumpConfig()
 
 void ScreenSceneConfig::SetCutoutSvgPath(const std::string& svgPath)
 {
+    cutoutBoundaryRect_.clear();
     cutoutBoundaryRect_.emplace_back(CalcCutoutBoundaryRect(svgPath));
 }
 

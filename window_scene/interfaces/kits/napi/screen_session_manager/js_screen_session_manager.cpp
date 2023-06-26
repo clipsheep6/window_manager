@@ -27,7 +27,6 @@
 namespace OHOS::Rosen {
 using namespace AbilityRuntime;
 namespace {
-constexpr size_t ARGC_ONE = 1;
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "JsScreenSessionManager" };
 const std::string ON_SCREEN_CONNECTION_CHANGE_CALLBACK = "screenConnectChange";
 } // namespace
@@ -56,7 +55,6 @@ NativeValue* JsScreenSessionManager::Init(NativeEngine* engine, NativeValue* exp
 
     const char* moduleName = "JsScreenSessionManager";
     BindNativeFunction(*engine, *object, "on", moduleName, JsScreenSessionManager::RegisterCallback);
-    BindNativeFunction(*engine, *object, "getCutoutInfo", moduleName, JsScreenSessionManager::GetCutoutInfo);
     return engine->CreateUndefined();
 }
 
@@ -181,43 +179,5 @@ NativeValue* JsScreenSessionManager::OnRegisterCallback(NativeEngine& engine, co
     sptr<IScreenConnectionListener> screenConnectionListener(this);
     ScreenSessionManager::GetInstance().RegisterScreenConnectionListener(screenConnectionListener);
     return engine.CreateUndefined();
-}
-
-NativeValue* JsScreenSessionManager::GetCutoutInfo(NativeEngine* engine, NativeCallbackInfo* info)
-{
-    WLOGI("get cutout Info is called");
-    JsScreenSessionManager* jsm = CheckParamsAndGetThis<JsScreenSessionManager>(engine, info);
-    return (jsm != nullptr) ? jsm->OnGetCutoutInfo(*engine, *info) : nullptr;
-}
-
-NativeValue* JsScreenSessionManager::OnGetCutoutInfo(NativeEngine& engine, NativeCallbackInfo& info)
-{
-    WLOGI("on get cutout info is called");
-    if (!ScreenSessionManager::GetInstance().GetScreenCutoutController()) {
-        return nullptr;
-    }
-
-    AsyncTask::CompleteCallback complete = [this](NativeEngine& engine, AsyncTask& task, int32_t status) {
-        sptr<CutoutInfo> cutoutInfo =
-                ScreenSessionManager::GetInstance().GetScreenCutoutController()->GetScreenCutoutInfo();
-        if (cutoutInfo != nullptr) {
-            task.Resolve(engine, JsScreenUtils::CreateJsCutoutInfoObject(engine, cutoutInfo));
-            WLOGI("OnGetCutoutInfo success");
-        } else {
-            WLOGI("OnGetCutoutInfo failed");
-            task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_SCREEN),
-                "JsScreenSessionManager::OnGetCutoutInfo failed."));
-        }
-    };
-    
-    NativeValue* lastParam = nullptr;
-    if (info.argc >= ARGC_ONE && info.argv[ARGC_ONE - 1] != nullptr &&
-        info.argv[ARGC_ONE - 1]->TypeOf() == NATIVE_FUNCTION) {
-        lastParam = info.argv[ARGC_ONE - 1];
-    }
-    NativeValue* result = nullptr;
-    AsyncTask::Schedule("JsScreenSessionManager::OnGetCutoutInfo", engine,
-        CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
-    return result;
 }
 } // namespace OHOS::Rosen

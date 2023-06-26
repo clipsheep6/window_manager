@@ -19,20 +19,14 @@
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
 
-#include "cutout_info.h"
 #include "session/screen/include/screen_property.h"
 
 namespace OHOS::Rosen {
 class JsScreenUtils {
 public:
-    static NativeValue *CreateJsScreenProperty(NativeEngine &engine, const ScreenProperty &screenProperty);
-    static NativeValue *CreateJsRRect(NativeEngine &engine, const RRect &rrect);
-    static NativeValue *CreateJsScreenConnectChangeType(NativeEngine &engine);
-    static NativeValue *CreateJsBoundaryRectsArrayObject(NativeEngine& engine, std::vector<DMRect> boundaryRects);
-    static NativeValue *CreateJsCutoutInfoObject(NativeEngine& engine, sptr<CutoutInfo> cutoutInfo);
-    static NativeValue *CreateJsRectObject(NativeEngine& engine, DMRect rect);
-    static NativeValue *CreateJsWaterfallRectsObject(NativeEngine& engine,
-        WaterfallDisplayAreaRects waterfallDisplayAreaRects);
+    static NativeValue* CreateJsScreenProperty(NativeEngine& engine, const ScreenProperty& screenProperty);
+    static NativeValue* CreateJsRRect(NativeEngine& engine, const RRect& rrect);
+    static NativeValue* CreateJsScreenConnectChangeType(NativeEngine& engine);
 };
 } // namespace OHOS::Rosen
 

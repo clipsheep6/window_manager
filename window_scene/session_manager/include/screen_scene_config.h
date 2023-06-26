@@ -18,6 +18,7 @@
 
 
 #include <refbase.h>
+
 #include "cutout_info.h"
 #include "xml_config_base.h"
 #include "libxml/parser.h"
