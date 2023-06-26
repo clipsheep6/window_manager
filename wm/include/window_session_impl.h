@@ -38,7 +38,8 @@ class WindowSessionImpl : public Window, public virtual SessionStageStub {
 public:
     explicit WindowSessionImpl(const sptr<WindowOption>& option);
     ~WindowSessionImpl();
-
+    static sptr<Window> Find(const std::string& name);
+    // inherits from window
     virtual WMError Create(const std::shared_ptr<AbilityRuntime::Context>& context,
         const sptr<Rosen::ISession>& iSession);
     WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
@@ -56,6 +57,7 @@ public:
     WMError SetFocusable(bool isFocusable) override;
     WMError SetTouchable(bool isTouchable) override;
     WMError SetWindowType(WindowType type) override;
+    WMError SetBrightness(float brightness) override;
     bool GetTouchable() const override;
     uint32_t GetWindowId() const override;
     Rect GetRect() const override;
@@ -71,12 +73,15 @@ public:
     WSError HandleBackEvent() override { return WSError::WS_OK; }
 
     void NotifyPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
-    void NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
+    void NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed) override;
+    void NotifyFocusActiveEvent(bool isFocusActive) override;
 
     WMError RegisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener) override;
     WMError UnregisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener) override;
     WMError RegisterWindowChangeListener(const sptr<IWindowChangeListener>& listener) override;
     WMError UnregisterWindowChangeListener(const sptr<IWindowChangeListener>& listener) override;
+    WMError RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener) override;
+    WMError UnregisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener) override;
     void RegisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener) override;
     void UnregisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener) override;
     WMError RegisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener) override;
@@ -92,19 +97,10 @@ public:
     void NotifyAfterBackground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
     void NotifyForegroundFailed(WMError ret);
     WSError NotifyDestroy() override;
+    void NotifyAvoidAreaChange(const sptr<AvoidArea>& avoidArea, AvoidAreaType type);
     void NotifyTouchDialogTarget() override;
 
     WindowState state_ { WindowState::STATE_INITIAL };
-
-    // window effect
-    virtual WMError SetCornerRadius(float cornerRadius) override;
-    virtual WMError SetShadowRadius(float radius) override;
-    virtual WMError SetShadowColor(std::string color) override;
-    virtual WMError SetShadowOffsetX(float offsetX) override;
-    virtual WMError SetShadowOffsetY(float offsetY) override;
-    virtual WMError SetBlur(float radius) override;
-    virtual WMError SetBackdropBlur(float radius) override;
-    virtual WMError SetBackdropBlurStyle(WindowBlurStyle blurStyle) override;
 
 protected:
     WMError Connect();
@@ -116,13 +112,13 @@ protected:
     WMError WindowSessionCreateCheck();
     void UpdateDecorEnable(bool needNotify = false);
     void NotifyModeChange(WindowMode mode, bool hasDeco = true);
+    WMError UpdateProperty(WSPropertyChangeAction action);
 
     sptr<ISession> hostSession_;
     std::unique_ptr<Ace::UIContent> uiContent_;
     std::shared_ptr<AbilityRuntime::Context> context_;
     std::shared_ptr<RSSurfaceNode> surfaceNode_;
 
-    std::string windowName_;
     sptr<WindowSessionProperty> property_;
     WindowMode windowMode_ = WindowMode::WINDOW_MODE_UNDEFINED;
     SystemSessionConfig windowSystemConfig_;
@@ -132,12 +128,17 @@ protected:
     static std::map<std::string, std::pair<uint64_t, sptr<WindowSessionImpl>>> windowSessionMap_;
     static std::map<uint64_t, std::vector<sptr<WindowSessionImpl>>> subWindowSessionMap_;
 
+    bool isIgnoreSafeAreaNeedNotify_ = false;
+    bool isIgnoreSafeArea_ = false;
+
 private:
     template<typename T> WMError RegisterListener(std::vector<sptr<T>>& holder, const sptr<T>& listener);
     template<typename T> WMError UnregisterListener(std::vector<sptr<T>>& holder, const sptr<T>& listener);
     template<typename T> EnableIfSame<T, IWindowLifeCycle, std::vector<sptr<IWindowLifeCycle>>> GetListeners();
     template<typename T>
     EnableIfSame<T, IWindowChangeListener, std::vector<sptr<IWindowChangeListener>>> GetListeners();
+    template<typename T>
+    EnableIfSame<T, IAvoidAreaChangedListener, std::vector<sptr<IAvoidAreaChangedListener>>> GetListeners();
     template<typename T>
     EnableIfSame<T, IDialogDeathRecipientListener, std::vector<sptr<IDialogDeathRecipientListener>>> GetListeners();
     template<typename T>
@@ -148,16 +149,14 @@ private:
     void NotifyAfterUnfocused(bool needNotifyUiContent = true);
     void UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason);
     void NotifySizeChange(Rect rect, WindowSizeChangeReason reason);
-    WMError CheckParmAndPermission();
-    WMError UpdateProperty(WSPropertyChangeAction action);
 
     static std::recursive_mutex globalMutex_;
     static std::map<uint64_t, std::vector<sptr<IWindowLifeCycle>>> lifecycleListeners_;
     static std::map<uint64_t, std::vector<sptr<IWindowChangeListener>>> windowChangeListeners_;
+    static std::map<uint64_t, std::vector<sptr<IAvoidAreaChangedListener>>> avoidAreaChangeListeners_;
     static std::map<uint64_t, std::vector<sptr<IDialogDeathRecipientListener>>> dialogDeathRecipientListeners_;
     static std::map<uint64_t, std::vector<sptr<IDialogTargetTouchListener>>> dialogTargetTouchListener_;
 };
 } // namespace Rosen
 } // namespace OHOS
-
 #endif // OHOS_ROSEN_WINDOW_SESSION_IMPL_H

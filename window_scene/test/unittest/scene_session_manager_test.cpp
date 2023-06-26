@@ -81,3 +81,20 @@ HWTEST_F(SceneSessionManagerTest, RegisterWindowManagerAgent, Function | SmallTe
 }
 } // namespace Rosen
 } // namespace OHOS
+ * @tc.name: SetBrightness
+ * @tc.desc: ScreenSesionManager set session brightness
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest, SetBrightness, Function | SmallTest | Level3)
+{
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    WSError result = SceneSessionManager::GetInstance().SetBrightness(sceneSession, 0.5);
+    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);
+}
+}
+} // namespace Rosen
+} // namespace OHOS
+

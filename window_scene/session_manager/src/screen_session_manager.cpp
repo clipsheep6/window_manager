@@ -29,7 +29,6 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "ScreenSessionManager" };
 const std::string SCREEN_SESSION_MANAGER_THREAD = "ScreenSessionManager";
 const std::string SCREEN_CAPTURE_PERMISSION = "ohos.permission.CAPTURE_SCREEN";
-const std::string CONTROLLER_THREAD_ID = "ScreenSessionManagerThread";
 } // namespace
 
 ScreenSessionManager& ScreenSessionManager::GetInstance()
@@ -43,9 +42,9 @@ ScreenSessionManager::ScreenSessionManager() : rsInterface_(RSInterfaces::GetIns
         std::bind(&ScreenSessionManager::NotifyDisplayStateChange, this,
             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)))
 {
-    Init();
-    auto runner = AppExecFwk::EventRunner::Create(CONTROLLER_THREAD_ID);
-    controllerHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
+    taskScheduler_ = std::make_shared<TaskScheduler>(SCREEN_SESSION_MANAGER_THREAD);
+    RegisterScreenChangeListener();
+    LoadScreenSceneXml();
 }
 
 void ScreenSessionManager::RegisterScreenConnectionListener(sptr<IScreenConnectionListener>& screenConnectionListener)
@@ -113,18 +112,8 @@ DMError ScreenSessionManager::UnregisterDisplayManagerAgent(
     return dmAgentContainer_.UnregisterAgent(displayManagerAgent, type) ? DMError::DM_OK :DMError::DM_ERROR_NULLPTR;
 }
 
-void ScreenSessionManager::Init()
-{
-    taskScheduler_ = std::make_shared<TaskScheduler>(SCREEN_SESSION_MANAGER_THREAD);
-    RegisterScreenChangeListener();
-    auto runner = AppExecFwk::EventRunner::Create(CONTROLLER_THREAD_ID);
-    controllerHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
-    LoadScreenSceneXml();
-}
-
 void ScreenSessionManager::LoadScreenSceneXml()
 {
-    WLOGFI("ScreenSession load screen scene xml");
     if (ScreenSceneConfig::LoadConfigXml()) {
         ScreenSceneConfig::DumpConfig();
         ConfigureScreenScene();
@@ -326,7 +315,7 @@ void ScreenSessionManager::NotifyScreenChanged(sptr<ScreenInfo> screenInfo, Scre
             agent->OnScreenChange(screenInfo, event);
         }
     };
-    controllerHandler_->PostTask(task, AppExecFwk::EventQueue::Priority::HIGH);
+    taskScheduler_->PostAsyncTask(task);
 }
 
 DMError ScreenSessionManager::SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio)
@@ -454,6 +443,7 @@ sptr<ScreenSession> ScreenSessionManager::GetOrCreateScreenSession(ScreenId scre
         WLOGFE("screen session is nullptr");
         return session;
     }
+    InitAbstractScreenModesInfo(session);
     session->groupSmsId_ = 1;
     screenSessionMap_[screenId] = session;
     return session;
@@ -562,6 +552,26 @@ ScreenPowerState ScreenSessionManager::GetScreenPower(ScreenId screenId)
     auto state = static_cast<ScreenPowerState>(RSInterfaces::GetInstance().GetScreenPowerStatus(screenId));
     WLOGFI("GetScreenPower:%{public}u, rsscreen:%{public}" PRIu64".", state, screenId);
     return state;
+}
+
+DMError ScreenSessionManager::IsScreenRotationLocked(bool& isLocked)
+{
+    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("SCB: ScreenSessionManager is screen rotation locked permission denied!");
+        return DMError::DM_ERROR_NOT_SYSTEM_APP;
+    }
+    WLOGFI("SCB: IsScreenRotationLocked:isLocked: %{public}u", isLocked);
+    return DMError::DM_OK;
+}
+
+DMError ScreenSessionManager::SetScreenRotationLocked(bool isLocked)
+{
+    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("SCB: ScreenSessionManager set screen rotation locked permission denied!");
+        return DMError::DM_ERROR_NOT_SYSTEM_APP;
+    }
+    WLOGFI("SCB: SetScreenRotationLocked: isLocked: %{public}u", isLocked);
+    return DMError::DM_OK;
 }
 
 void ScreenSessionManager::RegisterDisplayChangeListener(sptr<IDisplayChangeListener> listener)
@@ -862,7 +872,8 @@ sptr<ScreenSession> ScreenSessionManager::InitVirtualScreen(ScreenId smsScreenId
 
 bool ScreenSessionManager::InitAbstractScreenModesInfo(sptr<ScreenSession>& screenSession)
 {
-    std::vector<RSScreenModeInfo> allModes = rsInterface_.GetScreenSupportedModes(screenSession->rsId_);
+    std::vector<RSScreenModeInfo> allModes = rsInterface_.GetScreenSupportedModes(
+        screenIdManager_.ConvertToRsScreenId(screenSession->screenId_));
     if (allModes.size() == 0) {
         WLOGE("SCB: allModes.size() == 0, screenId=%{public}" PRIu64"", screenSession->rsId_);
         return false;
@@ -1279,7 +1290,7 @@ void ScreenSessionManager::NotifyScreenConnected(sptr<ScreenInfo> screenInfo)
         WLOGFI("SCB: NotifyScreenConnected,  screenId:%{public}" PRIu64"", screenInfo->GetScreenId());
         OnScreenConnect(screenInfo);
     };
-    controllerHandler_->PostTask(task, AppExecFwk::EventQueue::Priority::HIGH);
+    taskScheduler_->PostAsyncTask(task);
 }
 
 void ScreenSessionManager::NotifyScreenDisconnected(ScreenId screenId)
@@ -1288,7 +1299,7 @@ void ScreenSessionManager::NotifyScreenDisconnected(ScreenId screenId)
         WLOGFI("NotifyScreenDisconnected,  screenId:%{public}" PRIu64"", screenId);
         OnScreenDisconnect(screenId);
     };
-    controllerHandler_->PostTask(task, AppExecFwk::EventQueue::Priority::HIGH);
+    taskScheduler_->PostAsyncTask(task);
 }
 
 void ScreenSessionManager::NotifyScreenGroupChanged(
@@ -1303,7 +1314,7 @@ void ScreenSessionManager::NotifyScreenGroupChanged(
         WLOGFI("SCB: screenId:%{public}" PRIu64", trigger:[%{public}s]", screenInfo->GetScreenId(), trigger.c_str());
         OnScreenGroupChange(trigger, screenInfo, event);
     };
-    controllerHandler_->PostTask(task, AppExecFwk::EventQueue::Priority::HIGH);
+    taskScheduler_->PostAsyncTask(task);
 }
 
 void ScreenSessionManager::NotifyScreenGroupChanged(
@@ -1317,7 +1328,7 @@ void ScreenSessionManager::NotifyScreenGroupChanged(
         WLOGFI("SCB: trigger:[%{public}s]", trigger.c_str());
         OnScreenGroupChange(trigger, screenInfo, event);
     };
-    controllerHandler_->PostTask(task, AppExecFwk::EventQueue::Priority::HIGH);
+    taskScheduler_->PostAsyncTask(task);
 }
 
 void ScreenSessionManager::OnScreenGroupChange(const std::string& trigger,
@@ -1390,5 +1401,4 @@ void ScreenSessionManager::OnScreenshot(sptr<ScreenshotInfo> info)
         agent->OnScreenshot(info);
     }
 }
-
 } // namespace OHOS::Rosen
