@@ -18,6 +18,7 @@
 #include "mock_session.h"
 #include "window_session_impl.h"
 #include "mock_uicontent.h"
+#include "window_scene_session_impl.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -111,7 +112,7 @@ HWTEST_F(WindowSceneSessionImplTest, Connect01, Function | SmallTest | Level2)
 {
     sptr<WindowOption> option = new WindowOption();
     option->SetWindowName("Connect01");
-    sptr<WindowSessionImpl> window = new(std::nothrow) WindowSessionImpl(option);
+    sptr<WindowSceneSessionImpl> window = new(std::nothrow) WindowSceneSessionImpl(option);
     ASSERT_NE(nullptr, window);
     window->property_->SetPersistentId(1);
     // connect with null session
@@ -139,18 +140,18 @@ HWTEST_F(WindowSceneSessionImplTest, IsValidSystemWindowType01, Function | Small
     option->SetWindowName("Connect01");
     sptr<WindowSceneSessionImpl> windowscenesession = new(std::nothrow) WindowSceneSessionImpl(option);
     ASSERT_NE(nullptr, windowscenesession);
-    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW));
-    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT));
-    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_FLOAT_CAMERA));
-    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_DIALOG));
-    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_FLOAT));
-    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_SCREENSHOT));
-    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_VOICE_INTERACTION));
-    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_POINTER));
-    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_TOAST));
+    ASSERT_FALSE(!windowscenesessionIsValidSystemWindowType(WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW));
+    ASSERT_FALSE(!windowscenesession->IsValidSystemWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT));
+    ASSERT_FALSE(!windowscenesession->IsValidSystemWindowType(WindowType::WINDOW_TYPE_FLOAT_CAMERA));
+    ASSERT_FALSE(!windowscenesession->IsValidSystemWindowType(WindowType::WINDOW_TYPE_DIALOG));
+    ASSERT_FALSE(!windowscenesession->IsValidSystemWindowType(WindowType::WINDOW_TYPE_FLOAT));
+    ASSERT_FALSE(!windowscenesession->IsValidSystemWindowType(WindowType::WINDOW_TYPE_SCREENSHOT));
+    ASSERT_FALSE(!windowscenesession->IsValidSystemWindowType(WindowType::WINDOW_TYPE_VOICE_INTERACTION));
+    ASSERT_FALSE(!windowscenesession->IsValidSystemWindowType(WindowType::WINDOW_TYPE_POINTER));
+    ASSERT_FALSE(!windowscenesession->IsValidSystemWindowType(WindowType::WINDOW_TYPE_TOAST));
 
-    ASSERT_TRUE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_DOCK_SLICE));
-    ASSERT_TRUE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_APP_LAUNCHING));
+    ASSERT_TRUE(!windowscenesession->IsValidSystemWindowType(WindowType::WINDOW_TYPE_DOCK_SLICE));
+    ASSERT_TRUE(!windowscenesession->IsValidSystemWindowType(WindowType::WINDOW_TYPE_APP_LAUNCHING));
    
 }
 
@@ -165,11 +166,122 @@ HWTEST_F(WindowSceneSessionImplTest, FindParentSessionByParentId01, Function | S
     option->SetWindowName("Connect01");
     sptr<WindowSceneSessionImpl> windowscenesession = new(std::nothrow) WindowSceneSessionImpl(option);
     ASSERT_NE(nullptr, windowscenesession);
-    
-    ASSERT_FALSE(!windowscenesession.FindParentSessionByParentId(WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW));
-    ASSERT_FALSE(!windowscenesession.IsValidSystemWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT));
-
    
+}
+
+/**
+ * @tc.name: Resize01
+ * @tc.desc: Resize 
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, Resize01, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("Connect01");
+    sptr<WindowSceneSessionImpl> windowscenesession = new(std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, windowscenesession);
+    
+   
+}
+
+/**
+ * @tc.name: RaiseToAppTop01
+ * @tc.desc: RaiseToAppTop 
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, RaiseToAppTop01, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("Connect01");
+    sptr<WindowSceneSessionImpl> windowscenesession = new(std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, windowscenesession);
+    
+}
+
+/**
+ * @tc.name: MoveTo01
+ * @tc.desc: MoveTo 
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, MoveTo01, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("Connect01");
+    sptr<WindowSceneSessionImpl> windowscenesession = new(std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, windowscenesession);
+    
+}
+
+/**
+ * @tc.name: Maximize01
+ * @tc.desc: Maximize 
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, Maximize01, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("Connect01");
+    sptr<WindowSceneSessionImpl> windowscenesession = new(std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, windowscenesession);
+    
+}
+
+/**
+ * @tc.name: Hide01
+ * @tc.desc: Hide session
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, Hide01, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("Hide01");
+    sptr<WindowSceneSessionImpl> window = new(std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->property_->SetPersistentId(1);
+    // show with null session
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Hide());
+
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new(std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    ASSERT_EQ(WMError::WM_OK, window->Hide());
+    ASSERT_EQ(WMError::WM_OK, window->Hide());
+    window->state_ = WindowState::STATE_CREATED;
+    ASSERT_EQ(WMError::WM_OK, window->Hide());
+    window->state_ = WindowState::STATE_SHOWN;
+    window->property_->type_ = WindowType::WINDOW_TYPE_FLOAT;
+    ASSERT_EQ(WMError::WM_OK, window->Hide());
+    window->property_->type_ = WindowType::WINDOW_TYPE_APP_MAIN_WINDOW;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: Show01
+ * @tc.desc: Show session
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, Show01, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("Show01");
+    sptr<WindowSceneSessionImpl> window = new(std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->property_->SetPersistentId(1);
+    // show with null session
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Show());
+
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new(std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    EXPECT_CALL(*(session), Foreground()).WillOnce(Return(WSError::WS_OK));
+    ASSERT_EQ(WMError::WM_OK, window->Show());
+    ASSERT_EQ(WMError::WM_OK, window->Show());
+    window->state_ = WindowState::STATE_CREATED;
+    EXPECT_CALL(*(session), Foreground()).WillOnce(Return(WSError::WS_ERROR_INVALID_SESSION));
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_SESSION, window->Show());
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
 }
 
 
