@@ -77,7 +77,10 @@ ohos_shared_library("screen_session") {
 
   deps = [ "${window_base_path}/utils:libwmutil" ]
 
-  external_deps = [ "graphic_standard:librender_service_client" ]
+  external_deps = [
+    "graphic_standard:librender_service_client",
+    "hiviewdfx_hilog_native:libhilog",
+  ]
 
   innerapi_tags = [ "platformsdk" ]
   part_name = "window_manager"
