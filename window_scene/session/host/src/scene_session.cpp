@@ -65,6 +65,14 @@ WSError SceneSession::Background()
     return WSError::WS_OK;
 }
 
+WSError SceneSession::UpdateWindowAnimationFlag(bool needDefaultAnimationFlag)
+{
+    if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->onWindowAnimationFlagChange_) {
+        sessionChangeCallback_ -> onWindowAnimationFlagChange_(needDefaultAnimationFlag);
+    }
+    return WSError::WS_OK;
+}
+
 WSError SceneSession::OnSessionEvent(SessionEvent event)
 {
     WLOGFD("SceneSession OnSessionEvent event: %{public}d", static_cast<int32_t>(event));

@@ -58,6 +58,7 @@ public:
     void SetWindowRect(const struct Rect& rect);
     void SetFocusable(bool isFocusable);
     void SetTouchable(bool isTouchable);
+    void SetWindowAnimationFlag(bool needDefaultAnimation);
     void SetBrightness(float brightness);
     void SetDisplayId(uint64_t displayId);
     void SetWindowType(WindowType type);
@@ -79,6 +80,7 @@ public:
     bool GetFocusable() const;
     bool GetTouchable() const;
     float GetBrightness() const;
+    bool GetWindowAnimationFlag() const;
     uint32_t GetParentId() const;
     uint64_t GetDisplayId() const;
     uint64_t GetPersistentId() const;
@@ -103,6 +105,7 @@ private:
     bool focusable_ { true };
     bool touchable_ { true };
     bool tokenState_ { false };
+    bool needDefaultAnimation_ {true};
     float brightness_ = UNDEFINED_BRIGHTNESS;
     uint64_t displayId_ = 0;
     uint32_t parentId_ = INVALID_SESSION_ID; // parentId of sceneSession, which is low 32 bite of parentPersistentId_

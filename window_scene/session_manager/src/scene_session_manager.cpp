@@ -31,8 +31,10 @@
 
 #include "color_parser.h"
 #include "common/include/permission.h"
+#include "interfaces/include/ws_common.h"
 #include "session/host/include/scene_session.h"
 #include "window_manager_hilog.h"
+#include "window_scene_config.h"
 #include "wm_math.h"
 #include "zidl/window_manager_agent_interface.h"
 #include "session_manager_agent_controller.h"
@@ -102,6 +104,35 @@ void SceneSessionManager::ConfigWindowSceneXml()
     item = config["keyboardAnimation"];
     if (item.IsMap()) {
         ConfigKeyboardAnimation(item);
+    }
+}
+
+void SceneSessionManager::ConfigWindowAnimation(const WindowSceneConfig::ConfigItem& windowAnimationConfig) {
+    WindowSceneConfig::ConfigItem item = windowAnimationConfig["timing"];
+    item = windowAnimationConfig["timing"]["duration"];
+    if (item.IsInts() && item.intsValue_->size() == 1) {
+        appWindowSceneConfig_.windowAnimation_.duration_ = (*item.intsValue_)[0];
+    }
+    item = windowAnimationConfig["scale"];
+    if (item.IsInts() && item.intsValue_->size() == 2) {
+        appWindowSceneConfig_.windowAnimation_.scaleX_ = (*item.intsValue_)[0];
+        appWindowSceneConfig_.windowAnimation_.scaleY_ = (*item.intsValue_)[1];
+    }
+    item = windowAnimationConfig["rotation"];
+    if (item.IsInts() && item.intsValue_->size() == 4) {
+        appWindowSceneConfig_.windowAnimation_.rotationX_ = (*item.intsValue_)[0];
+        appWindowSceneConfig_.windowAnimation_.rotationY_ = (*item.intsValue_)[0];
+        appWindowSceneConfig_.windowAnimation_.rotationZ_ = (*item.intsValue_)[0];
+        appWindowSceneConfig_.windowAnimation_.angle_ = (*item.intsValue_)[0];
+    }
+    item = windowAnimationConfig["translate"];
+    if (item.IsInts() && item.intsValue_->size() == 2) {
+        appWindowSceneConfig_.windowAnimation_.translateX_ = (*item.intsValue_)[0];
+        appWindowSceneConfig_.windowAnimation_.translateY_ = (*item.intsValue_)[0];
+    }
+    item = windowAnimationConfig["opacity"];
+    if (item.IsInts() && item.intsValue_->size() == 1) {
+        appWindowSceneConfig_.windowAnimation_.opacity_ = (*item.intsValue_)[0];
     }
 }
 

@@ -1087,5 +1087,12 @@ WMError WindowSceneSessionImpl::SetBackdropBlurStyle(WindowBlurStyle blurStyle)
     return WMError::WM_OK;
 }
 
+void WindowSceneSessionImpl::SetNeedDefaultAnimation(bool needDefaultAnimation)
+{
+    property_->SetWindowAnimationFlag(needDefaultAnimation);
+    hostSession_->UpdateWindowAnimationFlag(needDefaultAnimation);
+    return;
+}
+
 } // namespace Rosen
 } // namespace OHOS

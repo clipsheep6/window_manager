@@ -691,6 +691,12 @@ WSError Session::UpdateActiveStatus(bool isActive)
     return ret;
 }
 
+WSError Session::UpdateWindowAnimationFlag(bool needDefaultAnimationFlag)
+{
+    WLOGFD("UpdateWindowAnimationFlag");
+    return WSError::WS_OK;
+}
+
 WSError Session::OnSessionEvent(SessionEvent event)
 {
     WLOGFD("Session OnSessionEvent");

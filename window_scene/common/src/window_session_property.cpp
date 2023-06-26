@@ -206,6 +206,16 @@ WindowMode WindowSessionProperty::GetWindowMode() const
     return windowMode_;
 }
 
+void WindowSessionProperty::SetWindowAnimationFlag(bool needDefaultAnimation)
+{
+    needDefaultAnimation_ = needDefaultAnimation;
+}
+
+bool WindowSessionProperty::GetWindowAnimationFlag() const
+{
+    return needDefaultAnimation_;
+}
+
 bool WindowSessionProperty::MarshallingWindowLimits(Parcel& parcel) const
 {
     if (parcel.WriteUint32(limits_.maxWidth_) &&

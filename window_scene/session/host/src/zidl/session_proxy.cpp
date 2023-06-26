@@ -538,6 +538,12 @@ WSError OHOS::Rosen::SessionProxy::SetGlobalMaximizeMode(MaximizeMode mode)
     return static_cast<WSError>(ret);
 }
 
+WSError SessionProxy::UpdateWindowAnimationFlag(bool needDefaultAnimationFlag)
+{
+    WLOGFD("SessionProxy UpdateWindowAnimationFlag");
+    return WSError::WS_OK;
+}
+
 WSError SessionProxy::GetGlobalMaximizeMode(MaximizeMode& mode)
 {
     MessageParcel data;

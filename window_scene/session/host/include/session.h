@@ -144,6 +144,7 @@ public:
     WSError SetGlobalMaximizeMode(MaximizeMode mode) override;
     WSError GetGlobalMaximizeMode(MaximizeMode& mode) override;
     AvoidArea GetAvoidAreaByType(AvoidAreaType type) override;
+    WSError UpdateWindowAnimationFlag(bool needDefaultAnimationFlag) override;
     WSError SetBrightness(float brightness);
     float GetBrightness() const;
 

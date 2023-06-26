@@ -57,6 +57,7 @@ private:
     void ProcessSessionExceptionRegister();
     void ProcessSystemBarPropertyChangeRegister();
     void ProcessNeedAvoidRegister();
+    void ProcessSessionDefaultAnimationFlagChangeRegister();
 
     void PendingSessionActivation(SessionInfo& info);
     void OnSessionStateChange(const SessionState& state);
@@ -66,6 +67,7 @@ private:
     void OnRaiseToTop();
     void OnBackPressed();
     void OnSessionFocusableChange(bool isFocusable);
+    void OnDefaultAnimationFlagChange(bool isNeedDefaultAnimationFlag);
     void OnClick();
     void TerminateSession(const SessionInfo& info);
     void OnSessionException(const SessionInfo& info);
