@@ -62,6 +62,26 @@ HWTEST_F(SceneSessionManagerTest, SetBrightness, Function | SmallTest | Level3)
     WSError result = SceneSessionManager::GetInstance().SetBrightness(sceneSession, 0.5);
     ASSERT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);
 }
+
+/**
+ * @tc.name: RegisterWindowManagerAgent
+ * @tc.desc: SceneSesionManager rigister display manager agent
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest, RegisterWindowManagerAgent, Function | SmallTest | Level3)
+{
+    sptr<IWindowManagerAgent> windowManagerAgent = new WindowManagerAgent();
+    WindowManagerAgentType type = WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS;
+
+    ASSERT_EQ(DMError::DM_ERROR_NULLPTR, ssm_->RegisterWindowManagerAgent(nullptr, type));
+    ASSERT_EQ(DMError::DM_ERROR_NULLPTR, ssm_->UnregisterWindowManagerAgent(nullptr, type));
+
+    ASSERT_EQ(DMError::DM_ERROR_NULLPTR, ssm_->UnregisterWindowManagerAgent(windowManagerAgent, type));
+
+    ASSERT_EQ(DMError::DM_OK, ssm_->RegisterWindowManagerAgent(windowManagerAgent, type));
+    ASSERT_EQ(DMError::DM_OK, ssm_->UnregisterWindowManagerAgent(windowManagerAgent, type));
+}
+
 }
 } // namespace Rosen
 } // namespace OHOS
