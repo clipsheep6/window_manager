@@ -16,6 +16,7 @@
 #ifndef OHOS_ROSEN_WINDOW_SCENE_SESSION_IMPL_H
 #define OHOS_ROSEN_WINDOW_SCENE_SESSION_IMPL_H
 
+#include "interfaces/include/ws_common.h"
 #include "window_session_impl.h"
 
 namespace OHOS {
@@ -43,6 +44,7 @@ public:
     WMError Resize(uint32_t width, uint32_t height) override;
     WmErrorCode RaiseToAppTop() override;
     WSError HandleBackEvent() override;
+    void SetNeedDefaultAnimation(bool needDefaultAnimation) override;
     WMError SetAspectRatio(float ratio) override;
     WMError ResetAspectRatio() override;
     WMError SetGlobalMaximizeMode(MaximizeMode mode) override;

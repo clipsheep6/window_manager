@@ -80,6 +80,7 @@ public:
     virtual WSError GetGlobalMaximizeMode(MaximizeMode& mode) = 0;
     virtual WSError UpdateWindowSessionProperty(sptr<WindowSessionProperty>) = 0;
     virtual WSError SetAspectRatio(float ratio) = 0;
+    virtual WSError UpdateWindowAnimationFlag(bool needDefaultAnimationFlag) = 0;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_INTERFACE_H

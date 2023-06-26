@@ -15,9 +15,13 @@
 
 #include "js_scene_session.h"
 
+#include "session/host/include/scene_session.h"
 #include "session/host/include/session.h"
 #include "session_manager/include/scene_session_manager.h"
 #include "window_manager_hilog.h"
+
+#include "js_scene_utils.h"
+#include <string>
 
 namespace OHOS::Rosen {
 using namespace AbilityRuntime;
@@ -35,6 +39,7 @@ const std::string CLICK_CB = "click";
 const std::string TERMINATE_SESSION_CB = "terminateSession";
 const std::string SESSION_EXCEPTION_CB = "sessionException";
 const std::string SYSTEMBAR_PROPERTY_CHANGE_CB = "systemBarPropertyChange";
+const std::string NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB = "needDefaultAnimationFlagChange";
 const std::string NEED_AVOID_CB = "needAvoid";
 } // namespace
 
@@ -87,6 +92,7 @@ JsSceneSession::JsSceneSession(NativeEngine& engine, const sptr<SceneSession>& s
         { SESSION_EXCEPTION_CB,           &JsSceneSession::ProcessSessionExceptionRegister },
         { SYSTEMBAR_PROPERTY_CHANGE_CB,   &JsSceneSession::ProcessSystemBarPropertyChangeRegister },
         { NEED_AVOID_CB,          &JsSceneSession::ProcessNeedAvoidRegister },
+        { NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB, &JsSceneSession::ProcessSessionDefaultAnimationFlagChangeRegister },
     };
 
     sptr<SceneSession::SessionChangeCallback> sessionchangeCallback = new (std::nothrow)
@@ -103,6 +109,17 @@ JsSceneSession::JsSceneSession(NativeEngine& engine, const sptr<SceneSession>& s
 JsSceneSession::~JsSceneSession()
 {
     WLOGD("~JsSceneSession");
+}
+
+void JsSceneSession::ProcessSessionDefaultAnimationFlagChangeRegister()
+{
+    auto sessionchangeCallback = sessionchangeCallback_.promote();
+    if (sessionchangeCallback == nullptr) {
+        WLOGFE("sessionchangeCallback is nullptr");
+        return;
+    }
+    sessionchangeCallback->onWindowAnimationFlagChange_ = std::bind(&JsSceneSession::OnDefaultAnimationFlagChange, this, std::placeholders::_1);
+    WLOGFD("ProcessSessionRectChangeRegister success");
 }
 
 void JsSceneSession::ProcessPendingSceneSessionActivationRegister()
@@ -694,6 +711,27 @@ void JsSceneSession::OnNeedAvoid(bool status)
     NativeReference* callback = nullptr;
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
     AsyncTask::Schedule("JsSceneSession::OnNeedAvoid", engine_,
+        std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+}
+
+void JsSceneSession::OnDefaultAnimationFlagChange(bool isNeedDefaultAnimationFlag)
+{
+    WLOGFI("[NAPI]OnDefaultAnimationFlagChange, flag: %{public}u", isNeedDefaultAnimationFlag);
+    auto iter = jsCbMap_.find(NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB);
+    if (iter == jsCbMap_.end()) {
+        return;
+    }
+    auto jsCallBack = iter->second;
+    auto complete = std::make_unique<AsyncTask::CompleteCallback>(
+        [isNeedDefaultAnimationFlag, jsCallBack, eng = &engine_](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            NativeValue* jsSessionDefaultAnimationFlagObj = CreateJsValue(engine, isNeedDefaultAnimationFlag);
+            NativeValue* argv[] = { jsSessionDefaultAnimationFlagObj };
+            engine.CallFunction(engine.CreateUndefined(), jsCallBack->Get(), argv, ArraySize(argv));
+        });
+
+    NativeReference* callback = nullptr;
+    std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
+    AsyncTask::Schedule("JsSceneSession::OnDefaultAnimationFlagChange", engine_,
         std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
 }
 
