@@ -50,9 +50,9 @@ enum class ScreenState : int32_t {
 
 class ScreenSession : public RefBase {
 public:
-    explicit ScreenSession(ScreenId screenId, const ScreenProperty& property);
+    explicit ScreenSession(ScreenId screenId, const ScreenProperty& property, ScreenId defaultScreenId);
     ScreenSession();
-    ScreenSession(const std::string& name, ScreenId smsId, ScreenId rsId);
+    ScreenSession(const std::string& name, ScreenId smsId, ScreenId rsId, ScreenId defaultScreenId);
     ~ScreenSession() = default;
 
     void RegisterScreenChangeListener(IScreenChangeListener* screenChangeListener);
@@ -79,9 +79,10 @@ public:
     DMError SetScreenGamutMap(ScreenGamutMap gamutMap);
     DMError SetScreenColorTransform();
 
-    std::string name_;
+    std::string name_ { "UNKNOW" };
     ScreenId screenId_;
     ScreenId rsId_;
+    ScreenId defaultScreenId_ = SCREEN_ID_INVALID;
 
     int32_t activeIdx_ { 0 };
     std::vector<sptr<SupportedScreenModes>> modes_ = {};

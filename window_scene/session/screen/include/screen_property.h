@@ -52,6 +52,9 @@ public:
     void SetOrientation(Orientation orientation);
     Orientation GetOrientation() const;
 
+    void SetDisplayOrientation(DisplayOrientation displayOrientation);
+    DisplayOrientation GetDisplayOrientation() const;
+
     float GetXDpi();
     float GetYDpi();
 
@@ -78,6 +81,7 @@ private:
     float virtualPixelRatio_ { 1.0f };
 
     Orientation orientation_ { Orientation::UNSPECIFIED };
+    DisplayOrientation displayOrientation_ { DisplayOrientation::UNKNOWN };
     Rotation screenRotation_ { Rotation::ROTATION_0 };
 
     float xDpi_ { 0.0f };
@@ -90,6 +94,8 @@ private:
 
     void UpdateXDpi();
     void UpdateYDpi();
+    void UpdateVirtualPixelRatio();
+    void UpdateDisplayOrientation();
     void CalculateXYDpi(uint32_t phyWidth, uint32_t phyHeight);
 };
 } // namespace OHOS::Rosen

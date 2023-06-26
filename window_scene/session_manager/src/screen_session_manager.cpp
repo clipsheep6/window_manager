@@ -438,7 +438,7 @@ sptr<ScreenSession> ScreenSessionManager::GetOrCreateScreenSession(ScreenId scre
     property.SetRefreshRate(screenRefreshRate);
     property.SetPhyWidth(screenCapability.GetPhyWidth());
     property.SetPhyHeight(screenCapability.GetPhyHeight());
-    sptr<ScreenSession> session = new(std::nothrow) ScreenSession(screenId, property);
+    sptr<ScreenSession> session = new(std::nothrow) ScreenSession(screenId, property, GetDefaultScreenId());
     if (!session) {
         WLOGFE("screen session is nullptr");
         return session;
@@ -828,7 +828,7 @@ sptr<ScreenSession> ScreenSessionManager::InitVirtualScreen(ScreenId smsScreenId
     VirtualScreenOption option)
 {
     WLOGFI("SCB: ScreenSessionManager::InitVirtualScreen: Enter");
-    sptr<ScreenSession> screenSession = new(std::nothrow) ScreenSession(option.name_, smsScreenId, rsId);
+    sptr<ScreenSession> screenSession = new(std::nothrow) ScreenSession(option.name_, smsScreenId, rsId, GetDefaultScreenId());
     sptr<SupportedScreenModes> info = new(std::nothrow) SupportedScreenModes();
     if (screenSession == nullptr || info == nullptr) {
         WLOGFI("SCB: ScreenSessionManager::InitVirtualScreen: new screenSession or info failed");
@@ -887,7 +887,7 @@ sptr<ScreenSession> ScreenSessionManager::InitAndGetScreen(ScreenId rsScreenId)
     WLOGFD("SCB: Screen name is %{public}s, phyWidth is %{public}u, phyHeight is %{public}u",
         screenCapability.GetName().c_str(), screenCapability.GetPhyWidth(), screenCapability.GetPhyHeight());
     sptr<ScreenSession> screenSession =
-        new(std::nothrow) ScreenSession(screenCapability.GetName(), smsScreenId, rsScreenId);
+        new(std::nothrow) ScreenSession(screenCapability.GetName(), smsScreenId, rsScreenId, GetDefaultScreenId());
     if (screenSession == nullptr) {
         WLOGFE("SCB: ScreenSessionManager::InitAndGetScreen: screenSession == nullptr.");
         screenIdManager_.DeleteScreenId(smsScreenId);
