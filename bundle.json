@@ -62,7 +62,8 @@
           "resourceschedule_frame_aware_sched_override",
           "imf",
           "frame_aware_sched",
-          "screenlock_mgr"
+          "screenlock_mgr",
+          "tools_previewer"
         ],
         "third_party": [
           "libjpeg-turbo",
@@ -198,6 +199,30 @@
               "header_files": [
               ],
               "header_base": "//foundation/window/window_manager/window_scene"
+            }
+          },
+          {
+            "name": "//foundation/window/window_manager/previewer:previewer_window",
+            "header": {
+              "header_files": [
+                "window.h",
+                "window_model.h",
+                "window_option.h",
+                "window_scene.h",
+                "wm_common.h",
+                "parcel.h",
+                "refbase.h",
+                "pixel_map.h",
+                "iremote_object.h"
+              ],
+              "header_base": "//foundation/window/window_manager/previewer/include"
+            }
+          },
+          {
+            "name": "//foundation/window/window_manager/previewer:previewer_window_napi",
+            "header": {
+              "header_files": [],
+              "header_base": "//foundation/window/window_manager/previewer/include"
             }
           }
         ],
