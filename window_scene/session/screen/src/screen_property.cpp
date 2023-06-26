@@ -41,6 +41,7 @@ void ScreenProperty::SetBounds(const RRect& bounds)
     UpdateXDpi();
     UpdateYDpi();
     UpdateVirtualPixelRatio();
+    UpdateDisplayOrientation();
 }
 
 RRect ScreenProperty::GetBounds() const
