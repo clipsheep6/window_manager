@@ -168,6 +168,32 @@ void WindowSessionProperty::SetMaximizeMode(MaximizeMode mode)
     maximizeMode_ = mode;
 }
 
+void WindowSessionProperty::SetWindowMode(WindowMode mode)
+{
+    // if (!WindowHelper::IsValidWindowMode(mode) || !WindowHelper::IsWindowModeSupported(modeSupportInfo_, mode)) {
+    //     return;
+    // }
+    // if (!WindowHelper::IsSplitWindowMode(mode_)) {
+    //     lastMode_ = mode_;
+    // }
+    mode_ = mode;
+}
+
+WindowMode WindowSessionProperty::GetWindowMode() const
+{
+    return mode_;
+}
+
+void WindowSessionProperty::SetModeSupportInfo(uint32_t modeSupportInfo)
+{
+    modeSupportInfo_ = modeSupportInfo;
+}
+
+uint32_t WindowSessionProperty::GetModeSupportInfo() const
+{
+    return modeSupportInfo_;
+}
+
 bool WindowSessionProperty::Marshalling(Parcel& parcel) const
 {
     return parcel.WriteString(windowName_) && parcel.WriteInt32(windowRect_.posX_) &&

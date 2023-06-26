@@ -109,6 +109,57 @@ sptr<WindowSessionImpl> WindowSceneSessionImpl::FindMainWindowWithContext()
     return nullptr;
 }
 
+void WindowSceneSessionImpl::GetConfigurationFromAbilityInfo()
+{
+    WLOGI("hujinzhu: GetConfigurationFromAbilityInfo");
+    auto abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(context_);
+    if (abilityContext == nullptr) {
+        WLOGFE("id:%{public}u is not ability Window", GetWindowId());
+        return;
+    }
+    auto abilityInfo = abilityContext->GetAbilityInfo();
+    if (abilityInfo == nullptr) {
+        WLOGFE("id:%{public}u Ability window get ability info failed", GetWindowId());
+        return;
+    }
+
+    // get support modes configuration
+    uint32_t modeSupportInfo = WindowHelper::ConvertSupportModesToSupportInfo(abilityInfo->windowModes);
+    if (modeSupportInfo == 0) {
+        WLOGFD("mode config param is 0, all modes is supported");
+        modeSupportInfo = WindowModeSupport::WINDOW_MODE_SUPPORT_ALL;
+    }
+    WLOGI("hujinzhu: winId: %{public}u, modeSupportInfo: %{public}u", GetWindowId(), modeSupportInfo);
+    property_->SetModeSupportInfo(modeSupportInfo);
+    //SetRequestModeSupportInfo(modeSupportInfo);
+
+    // get window size limits configuration
+    // WindowSizeLimits sizeLimits;
+    // sizeLimits.maxWidth_ = abilityInfo->maxWindowWidth;
+    // sizeLimits.maxHeight_ = abilityInfo->maxWindowHeight;
+    // sizeLimits.minWidth_ = abilityInfo->minWindowWidth;
+    // sizeLimits.minHeight_ = abilityInfo->minWindowHeight;
+    // sizeLimits.maxRatio_ = static_cast<float>(abilityInfo->maxWindowRatio);
+    // sizeLimits.minRatio_ = static_cast<float>(abilityInfo->minWindowRatio);
+    // property_->SetSizeLimits(sizeLimits);
+
+    // // get orientation configuration
+    // OHOS::AppExecFwk::DisplayOrientation displayOrientation =
+    //     static_cast<OHOS::AppExecFwk::DisplayOrientation>(
+    //         static_cast<uint32_t>(abilityInfo->orientation));
+    // if (ABILITY_TO_WMS_ORIENTATION_MAP.count(displayOrientation) == 0) {
+    //     WLOGFE("id:%{public}u Do not support this Orientation type", property_->GetWindowId());
+    //     return;
+    // }
+    // Orientation orientation = ABILITY_TO_WMS_ORIENTATION_MAP.at(displayOrientation);
+    // if (orientation < Orientation::BEGIN || orientation > Orientation::END) {
+    //     WLOGFE("Set orientation from ability failed");
+    //     return;
+    // }
+    // property_->SetRequestedOrientation(orientation);
+}
+
+
 WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
 {
     sptr<ISessionStage> iSessionStage(this);
@@ -119,6 +170,15 @@ WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
     sptr<IWindowEventChannel> eventChannel(channel);
     uint64_t persistentId = INVALID_SESSION_ID;
     sptr<Rosen::ISession> session;
+
+    // if (WindowHelper::IsMainWindow(GetType())) {
+    //     WLOGI("hujinzhu: CreateAndConnectSpecificSession IsMainWindow");
+    //     GetConfigurationFromAbilityInfo();
+    // } else if (property_->GetWindowMode() == WindowMode::WINDOW_MODE_UNDEFINED) {
+    //     property_->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    // }
+
+
     if (WindowHelper::IsSubWindow(GetType())) { // sub window
         auto parentSession = FindParentSessionByParentId(property_->GetParentId());
         if (parentSession == nullptr || parentSession->GetHostSession() == nullptr) {
@@ -170,6 +230,7 @@ WMError WindowSceneSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Con
     context_ = context;
     if (hostSession_) { // main window
         ret = Connect();
+        GetConfigurationFromAbilityInfo();
     } else { // system or sub window
         if (WindowHelper::IsSystemWindow(GetType())) {
             // Not valid system window type for session should return WMError::WM_OK;
@@ -226,6 +287,23 @@ void WindowSceneSessionImpl::UpdateSubWindowStateAndNotify(uint64_t parentPersis
     }
 }
 
+void WindowSceneSessionImpl::UpdateTitleButtonVisibility()
+{
+    WLOGI("hujinzhu: [Client] UpdateTitleButtonVisibility");
+    if (uiContent_ == nullptr || !IsDecorEnable()) {
+        return;
+    }
+    auto modeSupportInfo = property_->GetModeSupportInfo();
+    bool hideSplitButton = !(modeSupportInfo & WindowModeSupport::WINDOW_MODE_SUPPORT_SPLIT_PRIMARY);
+    // not support fullscreen in split and floating mode, or not support float in fullscreen mode
+    bool hideMaximizeButton = (!(modeSupportInfo & WindowModeSupport::WINDOW_MODE_SUPPORT_FULLSCREEN) &&
+        (GetMode() == WindowMode::WINDOW_MODE_FLOATING || WindowHelper::IsSplitWindowMode(GetMode()))) ||
+        (!(modeSupportInfo & WindowModeSupport::WINDOW_MODE_SUPPORT_FLOATING) &&
+        GetMode() == WindowMode::WINDOW_MODE_FULLSCREEN);
+    WLOGI("hujinzhu: [Client] [hideSplit, hideMaximize]: [%{public}d, %{public}d]", hideSplitButton, hideMaximizeButton);
+    uiContent_->HideWindowTitleButton(hideSplitButton, hideMaximizeButton, false);
+}
+
 WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
 {
     WLOGFI("Window Show [name:%{public}s, id:%{public}" PRIu64 ", type: %{public}u], reason:%{public}u state:%{pubic}u",
@@ -239,6 +317,9 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
             property_->GetWindowName().c_str(), property_->GetPersistentId(), GetType());
         return WMError::WM_OK;
     }
+
+    UpdateTitleButtonVisibility();
+
     if (hostSession_ == nullptr) {
         return WMError::WM_ERROR_NULLPTR;
     }

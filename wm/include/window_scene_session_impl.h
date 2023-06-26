@@ -68,6 +68,8 @@ protected:
     sptr<WindowSessionImpl> FindMainWindowWithContext();
     void UpdateSubWindowStateAndNotify(uint64_t parentPersistentId, const WindowState& newState);
     void LimitCameraFloatWindowMininumSize(uint32_t& width, uint32_t& height);
+    void GetConfigurationFromAbilityInfo();
+    void UpdateTitleButtonVisibility();
 
 private:
     bool IsValidSystemWindowType(const WindowType& type);
