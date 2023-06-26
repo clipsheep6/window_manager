@@ -14,9 +14,11 @@
  */
 
 #include <gtest/gtest.h>
+
 #include "session_manager/include/scene_session_manager.h"
-#include "session_info.h"
-#include "session/host/include/scene_session.h"
+#include "zidl/window_manager_agent_interface.h"
+#include "iconsumer_surface.h"
+#include <surface.h>
 
 using namespace testing;
 using namespace testing::ext;
@@ -29,14 +31,23 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
+
+    static sptr<SceneSessionManager> ssm_;
+
+    SceneId DEFAULT_Scene_ID {0};
+    SceneId VIRTUAL_Scene_ID {2};
 };
+
+sptr<SceneSessionManager> SceneSessionManagerTest::ssm_ = nullptr;
 
 void SceneSessionManagerTest::SetUpTestCase()
 {
+    ssm_ = new SceneSessionManager();
 }
 
 void SceneSessionManagerTest::TearDownTestCase()
 {
+    ssm_ = nullptr;
 }
 
 void SceneSessionManagerTest::SetUp()
@@ -49,6 +60,27 @@ void SceneSessionManagerTest::TearDown()
 
 namespace {
 /**
+ * @tc.name: RegisterWindowManagerAgent
+ * @tc.desc: SceneSesionManager rigister display manager agent
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest, RegisterWindowManagerAgent, Function | SmallTest | Level3)
+{
+    sptr<IWindowManagerAgent> windowManagerAgent = new WindowManagerAgent();
+    WindowManagerAgentType type = WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS;
+
+    ASSERT_EQ(DMError::DM_ERROR_NULLPTR, ssm_->RegisterWindowManagerAgent(nullptr, type));
+    ASSERT_EQ(DMError::DM_ERROR_NULLPTR, ssm_->UnregisterWindowManagerAgent(nullptr, type));
+
+    ASSERT_EQ(DMError::DM_ERROR_NULLPTR, ssm_->UnregisterWindowManagerAgent(windowManagerAgent, type));
+
+    ASSERT_EQ(DMError::DM_OK, ssm_->RegisterWindowManagerAgent(windowManagerAgent, type));
+    ASSERT_EQ(DMError::DM_OK, ssm_->UnregisterWindowManagerAgent(windowManagerAgent, type));
+}
+
+}
+} // namespace Rosen
+} // namespace OHOS
  * @tc.name: SetBrightness
  * @tc.desc: ScreenSesionManager set session brightness
  * @tc.type: FUNC
