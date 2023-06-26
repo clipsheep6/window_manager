@@ -561,6 +561,7 @@ enum class WindowUpdateType : int32_t {
 };
 
 using OnCallback = std::function<void(int64_t)>;
+using OnVsyncCallback = std::function<void(int64_t, int64_t)>;
 
 /**
  * @struct VsyncCallback
@@ -569,6 +570,15 @@ using OnCallback = std::function<void(int64_t)>;
  */
 struct VsyncCallback {
     OnCallback onCallback;
+};
+
+/**
+ * @struct Vsync90Callback
+ *
+ * @brief Vsync 90fps callback
+ */
+struct Vsync90Callback {
+    OnVsyncCallback onCallback;
 };
 
 /*

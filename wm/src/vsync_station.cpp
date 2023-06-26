@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -71,11 +71,53 @@ void VsyncStation::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallb
     receiver_->RequestNextVSync(frameCallback_);
 }
 
+void VsyncStation::RequestVsync90(const std::shared_ptr<Vsync90Callback>& vsyncCallback)
+{
+    {
+        std::lock_guard<std::mutex> lock(mtx_);
+        if (destroyed_) {
+            return;
+        }
+        vsync90Callbacks_.insert(vsyncCallback);
+
+        if (!hasInitVsyncReceiver_ || !vsyncHandler_) {
+            auto mainEventRunner = AppExecFwk::EventRunner::GetMainEventRunner();
+            if (mainEventRunner != nullptr && isMainHandlerAvailable_) {
+                WLOGI("MainEventRunner is available");
+                vsyncHandler_ = std::make_shared<AppExecFwk::EventHandler>(mainEventRunner);
+            } else {
+                WLOGI("MainEventRunner is not available");
+                if (!vsyncHandler_) {
+                    vsyncHandler_ = std::make_shared<AppExecFwk::EventHandler>(
+                        AppExecFwk::EventRunner::Create(VSYNC_THREAD_ID));
+                }
+            }
+            auto& rsClient = OHOS::Rosen::RSInterfaces::GetInstance();
+            while (receiver_ == nullptr) {
+                receiver_ = rsClient.CreateVSyncReceiver("WM_" + std::to_string(::getpid()), vsyncHandler_);
+            }
+            receiver_->Init();
+            hasInitVsyncReceiver_ = true;
+        }
+        if (hasRequestedVsync_) {
+            return;
+        }
+        hasRequestedVsync_ = true;
+        if (vsyncHandler_) {
+            vsyncHandler_->RemoveTask(VSYNC_TIME_OUT_TASK);
+            vsyncHandler_->PostTask(vsyncTimeoutCallback_, VSYNC_TIME_OUT_TASK, VSYNC_TIME_OUT_MILLISECONDS);
+        }
+    }
+    WindowFrameTraceImpl::GetInstance()->VsyncStartFrameTrace();
+    receiver_->RequestNextVSync(frameCallback_);
+}
+
 void VsyncStation::RemoveCallback()
 {
     WLOGI("Remove Vsync callback");
     std::lock_guard<std::mutex> lock(mtx_);
     vsyncCallbacks_.clear();
+    vsync90Callbacks_.clear();
 }
 
 void VsyncStation::VsyncCallbackInner(int64_t timestamp)
@@ -98,6 +140,32 @@ void VsyncStation::OnVsync(int64_t timestamp, void* client)
     auto vsyncClient = static_cast<VsyncStation*>(client);
     if (vsyncClient) {
         vsyncClient->VsyncCallbackInner(timestamp);
+        WindowFrameTraceImpl::GetInstance()->VsyncStopFrameTrace();
+    } else {
+        WLOGFE("VsyncClient is null");
+    }
+}
+
+void VsyncStation::Vsync90CallbackInner(int64_t timestamp, int64_t expectedEnd)
+{
+    std::unordered_set<std::shared_ptr<Vsync90Callback>> vsyncCallbacks;
+    {
+        std::lock_guard<std::mutex> lock(mtx_);
+        hasRequestedVsync_ = false;
+        vsyncCallbacks = vsync90Callbacks_;
+        vsync90Callbacks_.clear();
+        vsyncHandler_->RemoveTask(VSYNC_TIME_OUT_TASK);
+    }
+    for (const auto& callback: vsyncCallbacks) {
+        callback->onCallback(timestamp, expectedEnd);
+    }
+}
+
+void VsyncStation::OnVsyncCallback(VSyncCallBackListener::VSyncInfo vInfo, void* client)
+{
+    auto vsyncClient = static_cast<VsyncStation*>(client);
+    if (vsyncClient) {
+        vsyncClient->Vsync90CallbackInner(vInfo.timestamp, vInfo.expectedEnd);
         WindowFrameTraceImpl::GetInstance()->VsyncStopFrameTrace();
     } else {
         WLOGFE("VsyncClient is null");
