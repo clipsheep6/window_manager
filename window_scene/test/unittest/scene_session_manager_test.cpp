@@ -70,7 +70,7 @@ HWTEST_F(SceneSessionManagerTest, SetBrightness, Function | SmallTest | Level3)
  */
 HWTEST_F(SceneSessionManagerTest, RegisterWindowManagerAgent, Function | SmallTest | Level3)
 {
-    sptr<IWindowManagerAgent> windowManagerAgent = new WindowManagerAgent();
+    sptr<IWindowManagerAgent> windowManagerAgent = new IWindowManagerAgent();
     WindowManagerAgentType type = WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS;
 
     ASSERT_EQ(DMError::DM_ERROR_NULLPTR, ssm_->RegisterWindowManagerAgent(nullptr, type));

@@ -53,11 +53,11 @@ void sceneSessionManagerProxyTest::TearDown()
 
 namespace {
 /**
- * @tc.name: UpdatesceneSessionManagerRect01
+ * @tc.name: RegisterWindowManagerAgent01
  * @tc.desc: normal function
  * @tc.type: FUNC
  */
-HWTEST_F(sceneSessionManagerProxyTest, UpdatesceneSessionManagerRect01, Function | SmallTest | Level2)
+HWTEST_F(sceneSessionManagerProxyTest, RegisterWindowManagerAgent01, Function | SmallTest | Level2)
 {
     sptr<IWindowManagerAgent> windowManagerAgent = new WindowManagerAgent();
     WindowManagerAgentType type = WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS;
