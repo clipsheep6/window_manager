@@ -37,6 +37,7 @@
 #include "zidl/window_manager_agent_interface.h"
 #include "session_manager_agent_controller.h"
 #include "window_manager.h"
+#include "perform_reporter.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -52,6 +53,7 @@ SceneSessionManager::SceneSessionManager()
     taskScheduler_ = std::make_shared<TaskScheduler>(SCENE_SESSION_MANAGER_THREAD);
     bundleMgr_ = GetBundleManager();
     LoadWindowSceneXml();
+    StartWindowInfoReportLoop();
 }
 
 void SceneSessionManager::LoadWindowSceneXml()
@@ -396,6 +398,7 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
             return sceneSession;
         }
         auto persistentId = sceneSession->GetPersistentId();
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSession(%" PRIu64" )", persistentId);
         sceneSession->SetSystemConfig(systemConfig_);
         UpdateParentSession(sceneSession, property);
         sceneSessionMap_.insert({ persistentId, sceneSession });
@@ -440,6 +443,7 @@ WSError SceneSessionManager::RequestSceneSessionActivation(const sptr<SceneSessi
             return WSError::WS_ERROR_NULLPTR;
         }
         auto persistentId = scnSession->GetPersistentId();
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSessionActivation(%" PRIu64" )", persistentId);
         WLOGFI("active persistentId: %{public}" PRIu64 "", persistentId);
         if (sceneSessionMap_.count(persistentId) == 0) {
             WLOGFE("session is invalid with %{public}" PRIu64 "", persistentId);
@@ -460,6 +464,7 @@ WSError SceneSessionManager::RequestSceneSessionActivation(const sptr<SceneSessi
 
 WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSession>& sceneSession)
 {
+//    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSessionBackground");
     wptr<SceneSession> weakSceneSession(sceneSession);
     auto task = [this, weakSceneSession]() {
         auto scnSession = weakSceneSession.promote();
@@ -469,6 +474,7 @@ WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSessi
         }
         auto persistentId = scnSession->GetPersistentId();
         WLOGFI("background session persistentId: %{public}" PRIu64 "", persistentId);
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSessionBackground (%" PRIu64" )", persistentId);
         scnSession->SetActive(false);
         scnSession->Background();
         if (sceneSessionMap_.count(persistentId) == 0) {
@@ -493,6 +499,7 @@ WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSessi
 
 WSError SceneSessionManager::DestroyDialogWithMainWindow(const sptr<SceneSession>& scnSession)
 {
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:DestroyDialogWithMainWindow");
     if (scnSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
         WLOGFD("Begin to destroy its dialog");
         auto dialogVec = scnSession->GetDialogVector();
@@ -512,6 +519,7 @@ WSError SceneSessionManager::DestroyDialogWithMainWindow(const sptr<SceneSession
 
 WSError SceneSessionManager::RequestSceneSessionDestruction(const sptr<SceneSession>& sceneSession)
 {
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSessionDestruction", sceneSession->GetPersistentId());
     wptr<SceneSession> weakSceneSession(sceneSession);
     auto task = [this, weakSceneSession]() {
         auto scnSession = weakSceneSession.promote();
@@ -522,6 +530,7 @@ WSError SceneSessionManager::RequestSceneSessionDestruction(const sptr<SceneSess
         auto persistentId = scnSession->GetPersistentId();
         DestroyDialogWithMainWindow(scnSession);
         WLOGFI("destroy session persistentId: %{public}" PRIu64 "", persistentId);
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSessionDestruction (%" PRIu64" )", persistentId);
         scnSession->Disconnect();
         if (sceneSessionMap_.count(persistentId) == 0) {
             WLOGFE("session is invalid with %{public}" PRIu64 "", persistentId);
@@ -963,5 +972,24 @@ WMError SceneSessionManager::UnregisterWindowManagerAgent(WindowManagerAgentType
 void SceneSessionManager::UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing)
 {
     SessionManagerAgentController::GetInstance().UpdateCameraFloatWindowStatus(accessTokenId, isShowing);
+}
+
+void SceneSessionManager::StartWindowInfoReportLoop()
+{
+    if (isReportTaskStart_ || eventHandler_ == nullptr) {
+        return;
+    }
+    auto task = [this]() {
+        WindowInfoReporter::GetInstance().ReportRecordedInfos();
+        isReportTaskStart_ = false;
+        StartWindowInfoReportLoop();
+    };
+    int64_t delayTime = 1000 * 60 * 60; // an hour.
+    bool ret = eventHandler_->PostTask(task, "WindowInfoReport", delayTime);
+    if (!ret) {
+        WLOGFE("post listener callback task failed. the task name is WindowInfoReport");
+        return;
+    }
+    isReportTaskStart_ = true;
 }
 } // namespace OHOS::Rosen
