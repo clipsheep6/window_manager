@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,10 +27,16 @@ enum VsyncError {
 
 class VSyncCallBackListener {
 public:
+    struct VSyncInfo {
+        int64_t timestamp;
+        int64_t expectedEnd;
+    };
     using VSyncCallback = std::function<void(int64_t, void*)>;
+    using VSyncInfoCallback = std::function<void(VSyncInfo, void*)>;
     struct FrameCallback {
         void *userData_;
         VSyncCallback callback_;
+        VSyncInfoCallback vsyncCallback_;
     };
 };
 
