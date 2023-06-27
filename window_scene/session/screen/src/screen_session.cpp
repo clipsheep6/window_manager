@@ -213,7 +213,7 @@ void ScreenSession::SetScreenCombination(ScreenCombination combination)
     combination_ = combination;
 }
 
-ScreenCombination ScreenSession::GetScreenCombination() const; 
+ScreenCombination ScreenSession::GetScreenCombination() const
 {
     return combination_;
 }
