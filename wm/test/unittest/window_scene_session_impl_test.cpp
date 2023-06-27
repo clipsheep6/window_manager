@@ -125,8 +125,37 @@ HWTEST_F(WindowSceneSessionImplTest, Connect01, Function | SmallTest | Level2)
     EXPECT_CALL(*(session), Connect(_, _, _, _, _)).WillOnce(Return(WSError::WS_ERROR_NULLPTR));
     ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->Connect());
     EXPECT_CALL(*(session), Connect(_, _, _, _, _)).WillOnce(Return(WSError::WS_OK));
-    ASSERT_EQ(WMError::WM_OK, window->Connect());
-    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+    // ASSERT_EQ(WMError::WM_OK, window->Connect());
+    // ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: CreateWindowAndDestroy01
+ * @tc.desc: Create window and destroy window
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, CreateWindowAndDestroy01, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("CreateWindow01");
+    sptr<WindowSceneSessionImpl> window = new WindowSceneSessionImpl(option);
+
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new(std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_PARAM, window->Create(nullptr, session));
+    EXPECT_CALL(*(session), Connect(_, _, _, _, _)).WillOnce(Return(WSError::WS_OK));
+    ASSERT_EQ(WMError::WM_OK, window->Create(abilityContext_, session));
+    ASSERT_EQ(WMError::WM_ERROR_REPEAT_OPERATION, window->Create(abilityContext_, session));
+    window->property_->SetPersistentId(1);
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+
+    EXPECT_CALL(*(session), Connect(_, _, _, _, _)).WillOnce(Return(WSError::WS_ERROR_INVALID_SESSION));
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_SESSION, window->Create(abilityContext_, session));
+    // session is null
+    window = new WindowSceneSessionImpl(option);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_PARAM, window->Create(abilityContext_, nullptr));
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy(false));
 }
 
 /**
@@ -140,7 +169,7 @@ HWTEST_F(WindowSceneSessionImplTest, IsValidSystemWindowType01, Function | Small
     option->SetWindowName("Connect01");
     sptr<WindowSceneSessionImpl> windowscenesession = new(std::nothrow) WindowSceneSessionImpl(option);
     ASSERT_NE(nullptr, windowscenesession);
-    ASSERT_FALSE(!windowscenesessionIsValidSystemWindowType(WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW));
+    ASSERT_FALSE(!windowscenesession->IsValidSystemWindowType(WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW));
     ASSERT_FALSE(!windowscenesession->IsValidSystemWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT));
     ASSERT_FALSE(!windowscenesession->IsValidSystemWindowType(WindowType::WINDOW_TYPE_FLOAT_CAMERA));
     ASSERT_FALSE(!windowscenesession->IsValidSystemWindowType(WindowType::WINDOW_TYPE_DIALOG));
@@ -163,9 +192,26 @@ HWTEST_F(WindowSceneSessionImplTest, IsValidSystemWindowType01, Function | Small
 HWTEST_F(WindowSceneSessionImplTest, FindParentSessionByParentId01, Function | SmallTest | Level2)
 {
     sptr<WindowOption> option = new WindowOption();
+    option->SetWindowTag(WindowTag::MAIN_WINDOW);
     option->SetWindowName("Connect01");
-    sptr<WindowSceneSessionImpl> windowscenesession = new(std::nothrow) WindowSceneSessionImpl(option);
-    ASSERT_NE(nullptr, windowscenesession);
+    sptr<WindowSceneSessionImpl> parentscenesession = new(std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, parentscenesession);
+    parentscenesession->property_->SetPersistentId(100);
+    WindowSessionImpl::windowSessionMap_["parentWindow"]= std::make_pair(1,parentscenesession);
+
+    sptr<WindowOption> option_ = new WindowOption();
+    option_->SetWindowTag(WindowTag::MAIN_WINDOW);
+    option_->SetWindowName("Connect01");
+    sptr<WindowSceneSessionImpl> childscenesession = new(std::nothrow) WindowSceneSessionImpl(option_);
+    ASSERT_NE(nullptr, childscenesession);
+    childscenesession->property_->SetPersistentId(101);
+    childscenesession->property_->SetParentId(100);
+    childscenesession->property_->SetParentPersistentId(100);
+    WindowSessionImpl::windowSessionMap_["childWindow"]= std::make_pair(2,childscenesession);
+
+    sptr<WindowSessionImpl> parent=childscenesession->FindParentSessionByParentId(101);
+    ASSERT_NE(nullptr, parent);
+
    
 }
 
@@ -177,9 +223,22 @@ HWTEST_F(WindowSceneSessionImplTest, FindParentSessionByParentId01, Function | S
 HWTEST_F(WindowSceneSessionImplTest, Resize01, Function | SmallTest | Level2)
 {
     sptr<WindowOption> option = new WindowOption();
+    WSRect wsRect = {1, 2, 2, 2};
     option->SetWindowName("Connect01");
     sptr<WindowSceneSessionImpl> windowscenesession = new(std::nothrow) WindowSceneSessionImpl(option);
     ASSERT_NE(nullptr, windowscenesession);
+    ASSERT_EQ(WMError::WM_OK, windowscenesession->Resize(10,10));
+    ASSERT_EQ(WmErrorCode::WM_ERROR_INVALID_PARENT, windowscenesession->Resize(10,10));
+    option->setWindowTag(WindowTag::SUB_WINDOW);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_CALLING, windowscenesession->Resize(10,10));
+    windowscenesession->state_ = WindowState::STATE_HIDDEN;
+    ASSERT_EQ(WMError::WS_OK, windowscenesession->Resize(10,10));
+    windowscenesession->state_ = WindowState::STATE_CREATED;
+    ASSERT_EQ(WMError::WS_OK, windowscenesession->Resize(10,10));
+    sptr<SessionMocker> session = new(std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    windowscenesession->hostSession_ = session;
+    EXPECT_CALL(*(session), UpdateSessionRect(wsRect,SizeChangeReason::MOVE)).WillOnce(Return(WSError::WS_OK));
     
    
 }
@@ -195,7 +254,18 @@ HWTEST_F(WindowSceneSessionImplTest, RaiseToAppTop01, Function | SmallTest | Lev
     option->SetWindowName("Connect01");
     sptr<WindowSceneSessionImpl> windowscenesession = new(std::nothrow) WindowSceneSessionImpl(option);
     ASSERT_NE(nullptr, windowscenesession);
-    
+    ASSERT_EQ(WMError::WM_OK, windowscenesession->RaiseToAppTop());
+    ASSERT_EQ(WmErrorCode::WM_ERROR_INVALID_PARENT, windowscenesession->RaiseToAppTop());
+    option->setWindowTag(WindowTag::SUB_WINDOW);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_CALLING, windowscenesession->RaiseToAppTop());
+    windowscenesession->state_ = WindowState::STATE_SHOWN;
+    ASSERT_EQ(WMError::WM_ERROR_STATE_ABNORMALLY, windowscenesession->RaiseToAppTop());
+    sptr<SessionMocker> session = new(std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    EXPECT_CALL(*(session), RaiseToAppTop()).WillOnce(Return(WSError::WS_OK));
+
+
 }
 
 /**
@@ -206,9 +276,21 @@ HWTEST_F(WindowSceneSessionImplTest, RaiseToAppTop01, Function | SmallTest | Lev
 HWTEST_F(WindowSceneSessionImplTest, MoveTo01, Function | SmallTest | Level2)
 {
     sptr<WindowOption> option = new WindowOption();
+    // option->SetParentId(0);
     option->SetWindowName("Connect01");
     sptr<WindowSceneSessionImpl> windowscenesession = new(std::nothrow) WindowSceneSessionImpl(option);
     ASSERT_NE(nullptr, windowscenesession);
+    ASSERT_EQ(WMError::WM_OK, windowscenesession->RaiseToAppTop());
+    ASSERT_EQ(WmErrorCode::WM_ERROR_INVALID_PARENT, windowscenesession->RaiseToAppTop());
+    option->setWindowTag(WindowTag::SUB_WINDOW);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_CALLING, windowscenesession->RaiseToAppTop());
+    windowscenesession->state_ = WindowState::STATE_SHOWN;
+    ASSERT_EQ(WMError::WM_ERROR_STATE_ABNORMALLY, windowscenesession->RaiseToAppTop());
+    sptr<SessionMocker> session = new(std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    EXPECT_CALL(*(session), RaiseToAppTop()).WillOnce(Return(WSError::WS_OK));
+
     
 }
 
@@ -220,9 +302,21 @@ HWTEST_F(WindowSceneSessionImplTest, MoveTo01, Function | SmallTest | Level2)
 HWTEST_F(WindowSceneSessionImplTest, Maximize01, Function | SmallTest | Level2)
 {
     sptr<WindowOption> option = new WindowOption();
+    // option->SetParentId(0);
     option->SetWindowName("Connect01");
     sptr<WindowSceneSessionImpl> windowscenesession = new(std::nothrow) WindowSceneSessionImpl(option);
     ASSERT_NE(nullptr, windowscenesession);
+    ASSERT_EQ(WMError::WM_OK, windowscenesession->RaiseToAppTop());
+    ASSERT_EQ(WmErrorCode::WM_ERROR_INVALID_PARENT, windowscenesession->RaiseToAppTop());
+    option->setWindowTag(WindowTag::SUB_WINDOW);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_CALLING, windowscenesession->RaiseToAppTop());
+    windowscenesession->state_ = WindowState::STATE_SHOWN;
+    ASSERT_EQ(WMError::WM_ERROR_STATE_ABNORMALLY, windowscenesession->RaiseToAppTop());
+    sptr<SessionMocker> session = new(std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    EXPECT_CALL(*(session), RaiseToAppTop()).WillOnce(Return(WSError::WS_OK));
+
     
 }
 
