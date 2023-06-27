@@ -216,4 +216,17 @@ void SceneSessionManagerProxy::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
     sptr<FocusChangeInfo> info = reply.ReadParcelable<FocusChangeInfo>();
     focusInfo = *info;
 }
+
+WSError SceneSessionManagerProxy::SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label)
+{
+    WLOGFI("run SceneSessionManagerProxy::SetSessionLabel");
+    return WSError::WS_OK;
+}
+
+WSError SceneSessionManagerProxy::SetSessionIcon(const sptr<IRemoteObject> &token, const std::shared_ptr<Media::PixelMap> &icon)
+{
+    WLOGFI("run SceneSessionManagerProxy::SetSessionIcon");
+    return WSError::WS_OK;
+}
+
 } // namespace OHOS::Rosen

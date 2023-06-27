@@ -977,6 +977,50 @@ void SceneSessionManager::OnSessionStateChange(uint64_t persistentId)
     }
 }
 
+WSError SceneSessionManager::SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label)
+{
+    WLOGFI("run SetSessionLabel");
+    for (auto iter : sceneSessionMap_) {
+        auto& sceneSession = iter.second;
+        if (sceneSession->GetAbilityToken() == token) {
+            WLOGFI("try to update session label.");
+            sessionListener_->OnSessionLabelChange(iter.first, label);
+            return WSError::WS_OK;
+        }
+    }
+    return WSError::WS_ERROR_SET_SESSION_LABEL_FAILED;
+}
+
+WSError SceneSessionManager::SetSessionIcon(const sptr<IRemoteObject> &token, const std::shared_ptr<Media::PixelMap> &icon)
+{
+    WLOGFI("run SetSessionIcon");
+    for (auto iter : sceneSessionMap_) {
+        auto& sceneSession = iter.second;
+        if (sceneSession->GetAbilityToken() == token) {
+            WLOGFI("try to update session icon.");
+            sessionListener_->OnSessionIconChange(iter.first, icon);
+            return WSError::WS_OK;
+        }
+    }
+    return WSError::WS_ERROR_SET_SESSION_ICON_FAILED;
+}
+
+bool SceneSessionManager::RegisterSessionListener(const std::shared_ptr<ISessionListener> sessionListener)
+{
+    WLOGFI("run RegisterSessionListener");
+    if (sessionListener == nullptr) {
+        return false;
+    }
+    sessionListener_ = sessionListener;
+    return true;
+}
+
+void SceneSessionManager::UnregisterSessionListener()
+{
+    WLOGFI("run UnregisterSessionListener");
+    sessionListener_ = nullptr;
+}
+
 WSError SceneSessionManager::RequestSceneSessionByCall(const sptr<SceneSession>& sceneSession)
 {
     wptr<SceneSession> weakSceneSession(sceneSession);

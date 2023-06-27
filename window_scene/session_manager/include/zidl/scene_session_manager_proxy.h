@@ -38,6 +38,9 @@ public:
     WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     void GetFocusWindowInfo(FocusChangeInfo& focusInfo) override;
+    WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) override;
+    WSError SetSessionIcon(const sptr<IRemoteObject> &token, const std::shared_ptr<Media::PixelMap> &icon) override;
+    
 
 private:
     static inline BrokerDelegator<SceneSessionManagerProxy> delegator_;

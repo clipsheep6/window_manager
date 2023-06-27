@@ -47,6 +47,8 @@ public:
         sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session) = 0;
     virtual WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId) = 0;
     virtual WSError UpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action) = 0;
+    virtual WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) = 0;
+    virtual WSError SetSessionIcon(const sptr<IRemoteObject> &token, const std::shared_ptr<Media::PixelMap> &icon) = 0;
 
     // interfaces of IWindowManager
     WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
