@@ -81,7 +81,7 @@ ohos_static_library("libwmutil_static") {
     "hitrace_native:hitrace_meter",
     "input:libmmi-client",
     "ipc:ipc_single",
-    "multimedia_image_framework:image_native",
+    "image_framework:image_native",
     "preferences:native_preferences",
     "samgr:samgr_proxy",
   ]
@@ -139,7 +139,7 @@ ohos_shared_library("libwmutil") {
     "hitrace_native:hitrace_meter",
     "input:libmmi-client",
     "ipc:ipc_single",
-    "multimedia_image_framework:image_native",
+    "image_framework:image_native",
     "preferences:native_preferences",
     "samgr:samgr_proxy",
   ]
