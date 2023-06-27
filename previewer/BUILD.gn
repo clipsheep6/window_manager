@@ -26,7 +26,7 @@ if (current_os == "mac") {
 }
 
 config("previewer_window_config") {
-  visibility = [ ":*" ]
+  visibility = [ "*:*" ]
   visibility += [
     "${graphic_base_path}/graphic_2d/rosen/modules/platform/image_native",
     "${graphic_base_path}/graphic_2d/rosen/modules/platform/ipc_core",
