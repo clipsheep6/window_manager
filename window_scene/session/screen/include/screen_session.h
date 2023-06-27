@@ -62,7 +62,7 @@ public:
     sptr<ScreenInfo> ConvertToScreenInfo() const;
     sptr<SupportedScreenModes> GetActiveScreenMode() const;
     ScreenSourceMode GetSourceMode() const;
-    void SetScreenCombination();
+    void SetScreenCombination(ScreenCombination combination);
     ScreenCombination GetScreenCombination() const; 
 
     ScreenId GetScreenId();
