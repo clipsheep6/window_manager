@@ -158,6 +158,7 @@ ohos_shared_library("session_manager") {
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
     "ace_engine:ace_uicontent",
+    "bundle_framework:srms_fwk",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "graphic_standard:librender_service_client",
