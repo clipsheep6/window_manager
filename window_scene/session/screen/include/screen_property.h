@@ -72,7 +72,6 @@ public:
 private:
     float rotation_ { 0.0f };
     RRect bounds_;
-    float density_ { 1.5f };
 
     uint32_t phyWidth_ { UINT32_MAX };
     uint32_t phyHeight_ { UINT32_MAX };

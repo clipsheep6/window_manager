@@ -949,9 +949,11 @@ sptr<ScreenSessionGroup> ScreenSessionManager::AddAsFirstScreenLocked(sptr<Scree
     if (isExpandCombination_) {
         screenGroup = new(std::nothrow) ScreenSessionGroup(smsGroupScreenId,
             SCREEN_ID_INVALID, name, ScreenCombination::SCREEN_EXPAND);
+        newScreen->SetScreenCombination(ScreenCombination::SCREEN_EXPAND);
     } else {
         screenGroup = new(std::nothrow) ScreenSessionGroup(smsGroupScreenId,
             SCREEN_ID_INVALID, name, ScreenCombination::SCREEN_MIRROR);
+        newScreen->SetScreenCombination(ScreenCombination::SCREEN_MIRROR);
     }
     if (screenGroup == nullptr) {
         WLOGE("new ScreenSessionGroup failed");

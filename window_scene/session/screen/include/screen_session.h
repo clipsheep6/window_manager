@@ -62,6 +62,8 @@ public:
     sptr<ScreenInfo> ConvertToScreenInfo() const;
     sptr<SupportedScreenModes> GetActiveScreenMode() const;
     ScreenSourceMode GetSourceMode() const;
+    void SetScreenCombination();
+    ScreenCombination GetScreenCombination() const; 
 
     ScreenId GetScreenId();
     ScreenProperty GetScreenProperty() const;
@@ -100,6 +102,7 @@ private:
     std::shared_ptr<RSDisplayNode> displayNode_;
     ScreenState screenState_ { ScreenState::INIT };
     std::vector<IScreenChangeListener*> screenChangeListenerList_;
+    ScreenCombination combination_ { ScreenCombination::SCREEN_ALONE };
 };
 
 class ScreenSessionGroup : public ScreenSession {

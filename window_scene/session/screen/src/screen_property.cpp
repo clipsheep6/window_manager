@@ -22,7 +22,6 @@ constexpr int32_t PHONE_SCREEN_HEIGHT = 2772;
 constexpr float PHONE_SCREEN_DENSITY = 3.5f;
 constexpr float ELSE_SCREEN_DENSITY = 1.5f;
 constexpr float INCH_2_MM = 25.4f;
-constexpr int DOT_PER_INCH = 160;
 }
 
 void ScreenProperty::SetRotation(float rotation)

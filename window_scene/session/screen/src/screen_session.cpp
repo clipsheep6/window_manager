@@ -27,7 +27,7 @@ ScreenSession::ScreenSession()
 {}
 
 ScreenSession::ScreenSession(ScreenId screenId, const ScreenProperty& property, ScreenId defaultScreenId)
-    : screenId_(screenId), property_(property), defaultScreenId_(defaultScreenId)
+    : screenId_(screenId), defaultScreenId_(defaultScreenId), property_(property)
 {
     Rosen::RSDisplayNodeConfig config = { .screenId = screenId_ };
     displayNode_ = Rosen::RSDisplayNode::Create(config);
@@ -206,6 +206,16 @@ ScreenSourceMode ScreenSession::GetSourceMode() const
             return ScreenSourceMode::SCREEN_ALONE;
         }
     }
+}
+
+void ScreenSession::SetScreenCombination(ScreenCombination combination)
+{
+    combination_ = combination;
+}
+
+ScreenCombination ScreenSession::GetScreenCombination() const; 
+{
+    return combination_;
 }
 
 void ScreenSession::FillScreenInfo(sptr<ScreenInfo> info) const
