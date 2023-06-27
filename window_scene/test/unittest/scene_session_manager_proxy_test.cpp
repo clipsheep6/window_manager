@@ -29,7 +29,6 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
-    sptr<sceneSessionManagerAgent> mocksceneSessionManagerAgent_;
     sptr<sceneSessionManagerProxy> sceneSessionManagerProxy_;
 };
 
@@ -59,7 +58,7 @@ namespace {
  */
 HWTEST_F(sceneSessionManagerProxyTest, RegisterWindowManagerAgent01, Function | SmallTest | Level2)
 {
-    sptr<IWindowManagerAgent> windowManagerAgent = new WindowManagerAgent();
+    sptr<IWindowManagerAgent> windowManagerAgent = new IWindowManagerAgent();
     WindowManagerAgentType type = WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS;
     ASSERT_EQ(DMError::DM_ERROR_NULLPTR, sceneSessionManagerProxy_->RegisterWindowManagerAgent(nullptr, type));
     ASSERT_EQ(DMError::DM_ERROR_NULLPTR, sceneSessionManagerProxy_->UnregisterWindowManagerAgent(nullptr, type));

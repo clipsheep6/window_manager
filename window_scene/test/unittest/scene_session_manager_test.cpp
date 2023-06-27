@@ -29,14 +29,18 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
+    
+    static sptr<SceneSessionManager> ssm_;
 };
 
 void SceneSessionManagerTest::SetUpTestCase()
 {
+    ssm_ = new SceneSessionManager();
 }
 
 void SceneSessionManagerTest::TearDownTestCase()
 {
+    ssm_ = nullptr;
 }
 
 void SceneSessionManagerTest::SetUp()
