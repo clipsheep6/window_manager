@@ -18,6 +18,7 @@ ohos_shared_library("libintention_event") {
   include_dirs = [
     "./include",
     "../../wm/include",
+    "../../wmserver/include/zidl",
   ]
 
   sources = [ "src/intention_event_manager.cpp" ]
