@@ -94,20 +94,6 @@ void RootScene::UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason re
     uiContent_->UpdateViewportConfig(config, reason);
 }
 
-void RootScene::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& inputEvent)
-{
-    if (uiContent_) {
-        uiContent_->ProcessPointerEvent(inputEvent);
-    }
-}
-
-void RootScene::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent)
-{
-    if (uiContent_) {
-        uiContent_->ProcessKeyEvent(inputEvent);
-    }
-}
-
 void RootScene::RegisterInputEventListener()
 {
     auto listener = std::make_shared<InputEventListener>(this);
@@ -125,7 +111,9 @@ void RootScene::RegisterInputEventListener()
         VsyncStation::GetInstance().SetIsMainHandlerAvailable(false);
         VsyncStation::GetInstance().SetVsyncEventHandler(eventHandler_);
     }
-    MMI::InputManager::GetInstance()->SetWindowInputEventConsumer(listener, eventHandler_);
+    if (!IntentionManager->EnableInputEventListener(uiContent_.get(), eventHandler_)) {
+        WLOGFE("EnableInputEventListener fail");
+    }
 }
 
 void RootScene::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback)
