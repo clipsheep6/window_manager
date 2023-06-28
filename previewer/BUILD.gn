@@ -77,7 +77,7 @@ ohos_shared_library("previewer_window") {
     "ace_engine:ace_uicontent",
     "graphic_standard:librender_service_client",
     "hilog_native:libhilog_$hilog_platform",
-    "tools_previewer:ide_extension",
+    "previewer:ide_extension",
   ]
   cflags = [ "-std=c++11" ]
   part_name = "window_manager"

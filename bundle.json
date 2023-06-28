@@ -63,7 +63,7 @@
         "imf",
         "frame_aware_sched",
         "screenlock_mgr",
-        "tools_previewer"
+        "previewer"
       ],
       "third_party": [
         "libjpeg-turbo",
