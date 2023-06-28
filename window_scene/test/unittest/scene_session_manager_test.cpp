@@ -14,9 +14,12 @@
  */
 
 #include <gtest/gtest.h>
+#include "interfaces/include/ws_common.h"
 #include "session_manager/include/scene_session_manager.h"
 #include "session_info.h"
 #include "session/host/include/scene_session.h"
+#include "zidl/window_manager_agent.h"
+#include "zidl/window_manager_agent_interface.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -30,12 +33,12 @@ public:
     void SetUp() override;
     void TearDown() override;
     
-    static sptr<SceneSessionManager> ssm_;
+    static sptr<IWindowManager> ssm_;
 };
 
 void SceneSessionManagerTest::SetUpTestCase()
 {
-    ssm_ = new SceneSessionManager();
+    ssm_ = SessionManager::GetInstance().GetSceneSessionManagerProxy();
 }
 
 void SceneSessionManagerTest::TearDownTestCase()
@@ -69,21 +72,21 @@ HWTEST_F(SceneSessionManagerTest, SetBrightness, Function | SmallTest | Level3)
 
 /**
  * @tc.name: RegisterWindowManagerAgent
- * @tc.desc: SceneSesionManager rigister display manager agent
+ * @tc.desc: SceneSesionManager rigister window manager agent
  * @tc.type: FUNC
  */
 HWTEST_F(SceneSessionManagerTest, RegisterWindowManagerAgent, Function | SmallTest | Level3)
 {
-    sptr<IWindowManagerAgent> windowManagerAgent = new IWindowManagerAgent();
+    sptr<IWindowManagerAgent> windowManagerAgent = new WindowManagerAgent();
     WindowManagerAgentType type = WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS;
 
-    ASSERT_EQ(DMError::DM_ERROR_NULLPTR, ssm_->RegisterWindowManagerAgent(nullptr, type));
-    ASSERT_EQ(DMError::DM_ERROR_NULLPTR, ssm_->UnregisterWindowManagerAgent(nullptr, type));
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, ssm_->RegisterWindowManagerAgent(type, nullptr));
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, ssm_->UnregisterWindowManagerAgent(type, nullptr));
 
-    ASSERT_EQ(DMError::DM_ERROR_NULLPTR, ssm_->UnregisterWindowManagerAgent(windowManagerAgent, type));
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, ssm_->UnregisterWindowManagerAgent(type, windowManagerAgent));
 
-    ASSERT_EQ(DMError::DM_OK, ssm_->RegisterWindowManagerAgent(windowManagerAgent, type));
-    ASSERT_EQ(DMError::DM_OK, ssm_->UnregisterWindowManagerAgent(windowManagerAgent, type));
+    ASSERT_EQ(WMError::WM_OK, ssm_->RegisterWindowManagerAgent(type, windowManagerAgent));
+    ASSERT_EQ(WMError::WM_OK, ssm_->UnregisterWindowManagerAgent(type, windowManagerAgent));
 }
 
 }

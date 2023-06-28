@@ -14,10 +14,11 @@
  */
 
 #include <gtest/gtest.h>
-#include "session_manager/include/scene_session_manager.h"
-#include "zidl/window_manager_agent_interface.h"
 #include "iconsumer_surface.h"
+#include "session_manager/include/scene_session_manager.h"
 #include <surface.h>
+#include "zidl/window_manager_agent.h"
+#include "zidl/window_manager_agent_interface.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -29,7 +30,6 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
-    sptr<sceneSessionManagerProxy> sceneSessionManagerProxy_;
 };
 
 void sceneSessionManagerProxyTest::SetUpTestCase()
@@ -42,12 +42,10 @@ void sceneSessionManagerProxyTest::TearDownTestCase()
 
 void sceneSessionManagerProxyTest::SetUp()
 {
-    sceneSessionManagerProxy_ = SessionManager::GetInstance().GetSceneSessionManagerProxy();
 }
 
 void sceneSessionManagerProxyTest::TearDown()
 {
-    sceneSessionManagerProxy_ = nullptr;
 }
 
 namespace {
@@ -58,15 +56,17 @@ namespace {
  */
 HWTEST_F(sceneSessionManagerProxyTest, RegisterWindowManagerAgent01, Function | SmallTest | Level2)
 {
-    sptr<IWindowManagerAgent> windowManagerAgent = new IWindowManagerAgent();
+    sptr<ISceneSessionManager> sceneSessionManagerProxy_ = new SceneSessionManagerProxy();
+    sptr<IWindowManagerAgent> windowManagerAgent = new WindowManagerAgent();
     WindowManagerAgentType type = WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS;
-    ASSERT_EQ(DMError::DM_ERROR_NULLPTR, sceneSessionManagerProxy_->RegisterWindowManagerAgent(nullptr, type));
-    ASSERT_EQ(DMError::DM_ERROR_NULLPTR, sceneSessionManagerProxy_->UnregisterWindowManagerAgent(nullptr, type));
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, sceneSessionManagerProxy_->RegisterWindowManagerAgent(type, nullptr));
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, sceneSessionManagerProxy_->UnregisterWindowManagerAgent(type, nullptr));
 
-    ASSERT_EQ(DMError::DM_ERROR_NULLPTR, sceneSessionManagerProxy_->UnregisterWindowManagerAgent(windowManagerAgent, type));
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, sceneSessionManagerProxy_->UnregisterWindowManagerAgent(type, windowManagerAgent));
 
-    ASSERT_EQ(DMError::DM_OK, sceneSessionManagerProxy_->RegisterWindowManagerAgent(windowManagerAgent, type));
-    ASSERT_EQ(DMError::DM_OK, sceneSessionManagerProxy_->UnregisterWindowManagerAgent(windowManagerAgent, type));
+    ASSERT_EQ(WMError::WM_OK, sceneSessionManagerProxy_->RegisterWindowManagerAgent(type, windowManagerAgent));
+    ASSERT_EQ(WMError::WM_OK, sceneSessionManagerProxy_->UnregisterWindowManagerAgent(type, windowManagerAgent));
+    sceneSessionManagerProxy_ = nullptr;
 }
 
 }
