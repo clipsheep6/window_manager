@@ -43,6 +43,7 @@ using NotifyPendingSessionActivationFunc = std::function<void(SessionInfo& info)
 using NotifySessionStateChangeFunc = std::function<void(const SessionState& state)>;
 using NotifyBackPressedFunc = std::function<void()>;
 using NotifySessionFocusableChangeFunc = std::function<void(const bool isFocusable)>;
+using NotifySessionTouchableChangeFunc = std::function<void(const bool touchable)>;
 using NotifyClickFunc = std::function<void()>;
 using NotifyTerminateSessionFunc = std::function<void(const SessionInfo& info)>;
 using NotifySessionExceptionFunc = std::function<void(const SessionInfo& info)>;
@@ -134,8 +135,10 @@ public:
     WSError NotifyDestroy();
 
     void SetSessionFocusableChangeListener(const NotifySessionFocusableChangeFunc& func);
+    void SetSessionTouchableChangeListener(const NotifySessionTouchableChangeFunc& func);
     void SetClickListener(const NotifyClickFunc& func);
     void NotifySessionFocusableChange(bool isFocusable);
+    void NotifySessionTouchableChange(bool touchable);
     void NotifyClick();
     WSError UpdateFocus(bool isFocused);
     WSError SetFocusable(bool isFocusable);
@@ -158,6 +161,7 @@ protected:
     void GeneratePersistentId(const bool isExtension, const SessionInfo& sessionInfo);
     void UpdateSessionState(SessionState state);
     void UpdateSessionFocusable(bool isFocusable);
+    void UpdateSessionTouchable(bool touchable);
 
     bool isActive_ = false;
     bool isFocused_ = false;
@@ -169,6 +173,7 @@ protected:
     NotifySessionStateChangeFunc sessionStateChangeFunc_;
     NotifyBackPressedFunc backPressedFunc_;
     NotifySessionFocusableChangeFunc sessionFocusableChangeFunc_;
+    NotifySessionTouchableChangeFunc sessionTouchableChangeFunc_;
     NotifyClickFunc clickFunc_;
     NotifyTerminateSessionFunc terminateSessionFunc_;
     NotifySessionExceptionFunc sessionExceptionFunc_;
