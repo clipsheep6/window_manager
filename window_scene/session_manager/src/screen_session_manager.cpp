@@ -28,6 +28,7 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "ScreenSessionManager" };
 const std::string SCREEN_SESSION_MANAGER_THREAD = "ScreenSessionManager";
 const std::string SCREEN_CAPTURE_PERMISSION = "ohos.permission.CAPTURE_SCREEN";
+const float MAX_ZORDER = 10000.0f;
 } // namespace
 
 WM_IMPLEMENT_SINGLE_INSTANCE(ScreenSessionManager)
@@ -1460,4 +1461,71 @@ sptr<CutoutInfo> ScreenSessionManager::GetCutoutInfo(DisplayId displayId)
 {
     return screenCutoutController_ ? screenCutoutController_->GetScreenCutoutInfo() : nullptr;
 }
+
+DMError ScreenSessionManager::AddSurfaceNodeToDisplay(DisplayId displayId,
+    std::shared_ptr<class RSSurfaceNode>& surfaceNode, bool onTop)
+{
+    WLOGFI("DisplayId: %{public}" PRIu64"", displayId);
+    if (surfaceNode == nullptr) {
+        WLOGFW("Surface is null");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    auto it = screenSessionMap_.find(displayId);
+    if (it == screenSessionMap_.end()) {
+        WLOGFE("Display not in screenSessionMap, displayId: %{public}llu", displayId);
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    if (!it->second || !it->second->GetDisplayNode()) {
+         WLOGFE("screen session or display node is null.");
+         return DMError::DM_ERROR_NULLPTR;
+    }
+
+    auto displayNode = it->second->GetDisplayNode();
+
+    surfaceNode->SetVisible(true);
+    if (onTop) {
+        displayNode->AddChild(surfaceNode, -1);
+        surfaceNode->SetPositionZ(MAX_ZORDER);
+    } else {
+        displayNode->AddChild(surfaceNode, -1);
+    }
+
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->FlushImplicitTransaction();
+    }
+    return DMError::DM_OK;
+}
+
+DMError ScreenSessionManager::RemoveSurfaceNodeFromDisplay(DisplayId displayId,
+    std::shared_ptr<class RSSurfaceNode>& surfaceNode)
+{
+    WLOGFI("DisplayId: %{public}" PRIu64"", displayId);
+    if (surfaceNode == nullptr) {
+        WLOGFW("Surface is null");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    auto it = screenSessionMap_.find(displayId);
+    if (it == screenSessionMap_.end()) {
+        WLOGFE("Display not in screenSessionMap, displayId: %{public}llu", displayId);
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    if (!it->second || !it->second->GetDisplayNode()) {
+         WLOGFE("screen session or display node is null.");
+         return DMError::DM_ERROR_NULLPTR;
+    }
+
+    auto displayNode = it->second->GetDisplayNode();
+
+    displayNode->RemoveChild(surfaceNode);
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->FlushImplicitTransaction();
+    }
+    return DMError::DM_OK;
+}
+
 } // namespace OHOS::Rosen
