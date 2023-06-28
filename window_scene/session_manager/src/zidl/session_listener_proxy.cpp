@@ -12,12 +12,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#ifndef OHOS_ROSEN_WINDOW_SCENE_SESSION_LISTENER_PROXY_H
+#define OHOS_ROSEN_WINDOW_SCENE_SESSION_LISTENER_PROXY_H
+
+#include <ipc_types.h>
+#include <message_option.h>
+#include <message_parcel.h>
+#include "window_manager_hilog.h"
+
 namespace OHOS::Rosen {
 
-class ISessionListener {
-public:
-    virtual void OnSessionLabelChange(int persistentId, const std::string &label) = 0;
-    virtual void OnSessionIconChange(int persistentId, const std::shared_ptr<Media::PixelMap> &icon) = 0;
-};
+void SessionListenerProxy::OnSessionLabelChange(int persistentId, const std::string &label){}
+void SessionListenerProxy::OnSessionIconChange(int persistentId, const std::shared_ptr<Media::PixelMap> &icon){}
 
 } // namespace OHOS::Rosen
+#endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_LISTENER_PROXY_H

@@ -57,6 +57,8 @@ ohos_shared_library("scene_session_manager") {
     "src/window_scene_config.cpp",
     "src/zidl/scene_session_manager_proxy.cpp",
     "src/zidl/scene_session_manager_stub.cpp",
+    "src/zidl/session_listener_proxy.cpp",
+    "src/zidl/session_listener_stub.cpp",    
   ]
 
   public_configs = [ ":session_manager_public_config" ]

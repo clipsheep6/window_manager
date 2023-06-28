@@ -1005,14 +1005,14 @@ WSError SceneSessionManager::SetSessionIcon(const sptr<IRemoteObject> &token, co
     return WSError::WS_ERROR_SET_SESSION_ICON_FAILED;
 }
 
-bool SceneSessionManager::RegisterSessionListener(const std::shared_ptr<ISessionListener> sessionListener)
+WSError SceneSessionManager::RegisterSessionListener(const sptr<ISessionListener> sessionListener)
 {
     WLOGFI("run RegisterSessionListener");
     if (sessionListener == nullptr) {
-        return false;
+        return WSError::WS_ERROR_INVALID_SESSION_LISTENER;
     }
     sessionListener_ = sessionListener;
-    return true;
+    return WSError::WS_OK;
 }
 
 void SceneSessionManager::UnregisterSessionListener()

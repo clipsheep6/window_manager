@@ -108,6 +108,30 @@ int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
             reply.WriteParcelable(&focusInfo);
             break;
         }
+        case SceneSessionManagerMessage::TRANS_ID_SET_SESSION_LABEL: {
+            sptr<IRemoteObject> token = data.ReadRemoteObject();
+            std::string label = data.ReadString();
+            WSError errCode = SetSessionLabel(token, label);
+            reply.WriteInt32(static_cast<int32_t>(errCode));
+            break;
+        }
+        case SceneSessionManagerMessage::TRANS_ID_SET_SESSION_ICON: {
+            sptr<IRemoteObject> token = data.ReadRemoteObject();
+            std::shared_ptr<Media::PixelMap> icon(data.ReadParcelable<Media::PixelMap>());
+            WSError errCode = SetSessionIcon(token, icon);
+            reply.WriteInt32(static_cast<int32_t>(errCode));
+            break;
+        }
+        case SceneSessionManagerMessage::TRANS_ID_REGISTER_SESSION_LISTENER: {
+            sptr<ISessionListener> listener = iface_cast<ISessionListener>(data.ReadRemoteObject());
+            WSError errCode = RegisterSessionListener(listener);
+            reply.WriteInt32(static_cast<int32_t>(errCode));
+            break;
+        }
+        case SceneSessionManagerMessage::TRANS_ID_UNREGISTER_SESSION_LISTENER: {
+            UnregisterSessionListener();
+            break;
+        }        
         default:
             WLOGFE("Unknown session message!");
     }

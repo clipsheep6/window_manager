@@ -23,7 +23,7 @@
 #include "session_manager/include/zidl/scene_session_manager_stub.h"
 #include "wm_single_instance.h"
 #include "window_scene_config.h"
-#include "session_listener.h"
+#include "session_listener_interface.h"
 
 namespace OHOS::AAFwk {
 class SessionInfo;
@@ -76,7 +76,7 @@ public:
     void GetFocusWindowInfo(FocusChangeInfo& focusInfo);
     WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label);
     WSError SetSessionIcon(const sptr<IRemoteObject> &token, const std::shared_ptr<Media::PixelMap> &icon);
-    bool RegisterSessionListener(const std::shared_ptr<ISessionListener> sessionListener);
+    WSError RegisterSessionListener(const sptr<ISessionListener> sessionListener);
     void UnregisterSessionListener();
 
     void UpdatePrivateStateAndNotify(bool isAddingPrivateSession);
@@ -131,6 +131,7 @@ private:
     void RegisterSessionStateChangeNotifyManagerFunc(sptr<SceneSession>& sceneSession);
     void OnSessionStateChange(uint64_t persistentId);
     std::shared_ptr<ISessionListener> sessionListener_;
+    sptr<ISessionListener> sessionListener_;
 };
 } // namespace OHOS::Rosen
 
