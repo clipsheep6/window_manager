@@ -111,7 +111,7 @@ void RootScene::RegisterInputEventListener()
         VsyncStation::GetInstance().SetIsMainHandlerAvailable(false);
         VsyncStation::GetInstance().SetVsyncEventHandler(eventHandler_);
     }
-    if (!IntentionManager->EnableInputEventListener(uiContent_.get(), eventHandler_)) {
+    if (!DelayedSingleton<IntentionEventManager>->EnableInputEventListener(uiContent_.get(), eventHandler_)) {
         WLOGFE("EnableInputEventListener fail");
     }
 }

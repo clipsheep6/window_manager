@@ -46,7 +46,5 @@ private:
     Ace::UIContent* uiContent_ = nullptr;
 };
 };
-
-#define IntentionManager DelayedSingleton<IntentionEventManager>::GetInstance()
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_INTENTION_EVENT_MANAGER_H
