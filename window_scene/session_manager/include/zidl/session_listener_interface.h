@@ -16,6 +16,8 @@
 #ifndef OHOS_ROSEN_WINDOW_SCENE_SESSION_LISTENER_INTERFACE_H
 #define OHOS_ROSEN_WINDOW_SCENE_SESSION_LISTENER_INTERFACE_H
 
+#include <pixel_map.h>
+
 namespace OHOS::Media {
 class PixelMap;
 } // namespace OHOS::Media
