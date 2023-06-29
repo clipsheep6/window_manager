@@ -39,6 +39,8 @@
 #include "permission.h"
 #include "persistent_storage.h"
 #include "remote_animation.h"
+#include "session_manager/include/scene_session_manager.h"
+#include "session_manager_service/include/session_manager_service.h"
 #include "singleton_container.h"
 #include "starting_window.h"
 #include "ui/rs_ui_director.h"
@@ -1279,7 +1281,17 @@ WMError WindowManagerService::GetAccessibilityWindowInfo(std::vector<sptr<Access
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     return PostSyncTask([this, &infos]() {
-        return windowController_->GetAccessibilityWindowInfo(infos);
+        if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+            sptr<IRemoteObject> remoteObject = SessionManagerService::GetInstance().GetSceneSessionManager();
+            sptr<ISceneSessionManager> sceneSessionManagerProxy = iface_cast<ISceneSessionManager>(remoteObject);
+            if (!sceneSessionManagerProxy) {
+                WLOGFE("Get scene session manager failed.");
+                return WMError::WM_ERROR_IPC_FAILED;
+            }
+            return static_cast<WMError>(sceneSessionManagerProxy->GetWindowInfo(infos));
+        } else {
+            return windowController_->GetAccessibilityWindowInfo(infos);
+        }
     });
 }
 
