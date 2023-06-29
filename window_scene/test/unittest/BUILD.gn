@@ -122,6 +122,7 @@ config("ws_unittest_common_public_config") {
     "${window_base_path}/interfaces/innerkits/dm",
     "${window_base_path}/interfaces/innerkits/wm",
     "${window_base_path}/window_scene/session_manager/include",
+    "${window_base_path}/window_scene/session_manager_service/include",
     "${window_base_path}/window_scene",
     "${window_base_path}/window_scene/test",
     "//third_party/googletest/googlemock/include",
@@ -131,6 +132,17 @@ config("ws_unittest_common_public_config") {
     "${graphic_base_path}/graphic_2d/rosen/modules/animation/window_animation/include",
     "${multimodalinput_path}/input/interfaces/native/innerkits/event/include",
     "${ability_runtime_inner_api_path}/ability_manager/include",
+    "${window_base_path}/wm/include",
+    "${window_base_path}/wm/include/zidl",
+
+    # for session_manager
+    "${multimodalinput_path}/input/interfaces/native/innerkits/event/include",
+    "${ability_runtime_inner_api_path}/ability_manager/include",
+
+    # for screenlock_manager_interface
+    "${screenlock_mgr_path}/services/include",
+    "${screenlock_mgr_path}/utils/include",
+    "${screenlock_mgr_path}/frameworks/native/include",
     "${window_base_path}/wm/include",
     "${window_base_path}/wm/include/zidl",
 
@@ -153,6 +165,7 @@ ohos_static_library("ws_unittest_common") {
     "${window_base_path}/dm:libdm",
     "${window_base_path}/utils:libwmutil",
     "${window_base_path}/window_scene/session:scene_session",
+    "${window_base_path}/window_scene/session_manager:session_manager",
     "${window_base_path}/window_scene/session_manager:scene_session_manager",
     "${window_base_path}/window_scene/session_manager:screen_session_manager",
     "${window_base_path}/wm:libwm",
@@ -172,6 +185,11 @@ ohos_static_library("ws_unittest_common") {
     "c_utils:utils",
     "hilog_native:libhilog",
     "ipc:ipc_single",
+    "ability_runtime:ability_context_native",
+    "ability_runtime:ability_manager",
+    "ace_engine:ace_uicontent",
+    "eventhandler:libeventhandler",
+    "graphic_standard:librender_service_client",
   ]
 
   part_name = "window_manager"

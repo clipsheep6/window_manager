@@ -33,18 +33,14 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
-    
-    static sptr<IWindowManager> ssm_;
 };
 
 void SceneSessionManagerTest::SetUpTestCase()
 {
-    ssm_ = SessionManager::GetInstance().GetSceneSessionManagerProxy();
 }
 
 void SceneSessionManagerTest::TearDownTestCase()
 {
-    ssm_ = nullptr;
 }
 
 void SceneSessionManagerTest::SetUp()
@@ -80,6 +76,7 @@ HWTEST_F(SceneSessionManagerTest, RegisterWindowManagerAgent, Function | SmallTe
 {
     sptr<IWindowManagerAgent> windowManagerAgent = new WindowManagerAgent();
     WindowManagerAgentType type = WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS;
+    sptr<IWindowManager> ssm_ = SessionManager::GetInstance().GetSceneSessionManagerProxy();
 
     ASSERT_EQ(WMError::WM_ERROR_NULLPTR, ssm_->RegisterWindowManagerAgent(type, nullptr));
     ASSERT_EQ(WMError::WM_ERROR_NULLPTR, ssm_->UnregisterWindowManagerAgent(type, nullptr));
