@@ -38,6 +38,7 @@ public:
     WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     void GetFocusWindowInfo(FocusChangeInfo& focusInfo) override;
+    WSError GetWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) override;
 
 private:
     static inline BrokerDelegator<SceneSessionManagerProxy> delegator_;

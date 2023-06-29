@@ -37,6 +37,8 @@ public:
     sptr<IScreenSessionManager> GetScreenSessionManagerProxy();
     sptr<ScreenLock::ScreenLockManagerInterface> GetScreenLockManagerProxy();
 
+    void NotifyWindowInfoChange(const std::vector<sptr<AccessibilityWindowInfo>>& infos,
+        WindowUpdateType type);
 protected:
     SessionManager() = default;
     virtual ~SessionManager() = default;

@@ -72,6 +72,7 @@ public:
     void SetWindowMode(WindowMode mode);
     void SetWindowLimits(const WindowLimits& windowLimits);
     void SetSystemBarProperty(WindowType type, const SystemBarProperty& property);
+    void SetZOrder(uint32_t zOrder);
 
     const std::string& GetWindowName() const;
     const SessionInfo& GetSessionInfo() const;
@@ -93,6 +94,7 @@ public:
     WindowMode GetWindowMode() const;
     WindowLimits GetWindowLimits() const;
     const std::unordered_map<WindowType, SystemBarProperty>& GetSystemBarProperty() const;
+    uint32_t GetZOrder();
 
     bool MarshallingWindowLimits(Parcel& parcel) const;
     static void UnmarshallingWindowLimits(Parcel& parcel, WindowSessionProperty* property);
@@ -121,6 +123,7 @@ private:
     std::unordered_map<WindowType, SystemBarProperty> sysBarPropMap_ {
         { WindowType::WINDOW_TYPE_STATUS_BAR,     SystemBarProperty(true, 0x00FFFFFF, 0xFF000000) },
     };
+    uint32_t zOrder_ = 0;
 };
 
 struct SystemSessionConfig : public Parcelable {
