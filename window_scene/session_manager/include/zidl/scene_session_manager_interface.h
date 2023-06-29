@@ -41,7 +41,7 @@ public:
         TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT,
         TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT,
         TRANS_ID_GET_FOCUS_SESSION_INFO,
-        TRANS_ID_GET_WINDOW_INFO;
+        TRANS_ID_GET_WINDOW_INFO,
     };
 
     virtual WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,

@@ -50,7 +50,7 @@ int SessionManagerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &dat
         case SessionManagerServiceMessage::TRANS_ID_NOTIFY_WINDOW_INFO_CHANGE: {
             std::vector<sptr<AccessibilityWindowInfo>> infos;
             if (!MarshallingHelper::UnmarshallingVectorParcelableObj<AccessibilityWindowInfo>(data, infos)) {
-                WLOGFE("read accessibility window infos failed.");
+                WLOGFE("read window infos failed.");
                 return IPC_STUB_INVALID_DATA_ERR;
             }
             WindowUpdateType type = static_cast<WindowUpdateType>(data.ReadUint32());
