@@ -1077,4 +1077,15 @@ void SceneSessionManager::StartWindowInfoReportLoop()
     }
     isReportTaskStart_ = true;
 }
+
+std::string SceneSessionManager::GetSessionSnapshot(uint64_t persistentId)
+{
+    WLOGFI("GetSessionSnapshot persistentId %{public}" PRIu64 "", persistentId);
+    auto sceneSession = GetSceneSession(persistentId);
+    if (sceneSession == nullptr) {
+        WLOGFE("GetSessionSnapshot sceneSession nullptr!");
+        return "";
+    }
+    return sceneSession->GetSessionSnapshot();
+}
 } // namespace OHOS::Rosen
