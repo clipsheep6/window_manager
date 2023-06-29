@@ -19,8 +19,8 @@
 #include <message_parcel.h>
 #include "session_manager/include/scene_session_manager.h"
 #include <surface.h>
+#include "window_manager_agent.h"
 #include "zidl/scene_session_manager_stub.h"
-#include "zidl/window_manager_agent.h"
 #include "zidl/window_manager_agent_interface.h"
 
 using namespace testing;

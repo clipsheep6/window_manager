@@ -18,7 +18,8 @@
 #include "session_manager/include/scene_session_manager.h"
 #include "session_info.h"
 #include "session/host/include/scene_session.h"
-#include "zidl/window_manager_agent.h"
+#include "window_manager_agent.h"
+#include "session_manager.h"
 #include "zidl/window_manager_agent_interface.h"
 
 using namespace testing;
