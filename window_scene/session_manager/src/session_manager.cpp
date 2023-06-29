@@ -160,4 +160,16 @@ void SessionManager::InitScreenLockManagerProxy()
         WLOGFW("Get screenlock manager proxy failed, nullptr");
     }
 }
+
+void SessionManager::NotifyWindowInfoChange(uint64_t persistentId, WindowUpdateType type)
+{
+    WLOGFD("NotifyWindowInfoChange");
+    Init();
+    InitSessionManagerServiceProxy();
+    if (!sessionManagerServiceProxy_) {
+        WLOGFE("sessionManagerServiceProxy_ is null");
+        return;
+    }
+    sessionManagerServiceProxy_->NotifyWindowInfoChange(infos, type);
+}
 } // namespace OHOS::Rosen

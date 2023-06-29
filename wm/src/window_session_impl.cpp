@@ -19,6 +19,7 @@
 #include <ipc_skeleton.h>
 #include <transaction/rs_interfaces.h>
 
+#include "interfaces/include/ws_common.h"
 #include "key_event.h"
 #include "session/container/include/window_event_channel.h"
 #include "session_manager/include/session_manager.h"
@@ -414,6 +415,7 @@ void WindowSessionImpl::NotifyModeChange(WindowMode mode, bool hasDeco)
         property_->SetWindowMode(mode);
         hostSession_->UpdateWindowSessionProperty(property_);
     }
+    UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_MODE);
 }
 
 std::shared_ptr<RSSurfaceNode> WindowSessionImpl::GetSurfaceNode() const
@@ -474,6 +476,7 @@ WMError WindowSessionImpl::SetTouchable(bool isTouchable)
     if (state_ == WindowState::STATE_SHOWN) {
         return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_TOUCHABLE);
     }
+    UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_TOUCHABLE);
     return WMError::WM_OK;
 }
 
@@ -485,6 +488,7 @@ bool WindowSessionImpl::GetTouchable() const
 WMError WindowSessionImpl::SetWindowType(WindowType type)
 {
     property_->SetWindowType(type);
+    UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_OTHER_PROPS);
     return WMError::WM_OK;
 }
 
@@ -797,6 +801,7 @@ void WindowSessionImpl::NotifySizeChange(Rect rect, WindowSizeChangeReason reaso
             listener->OnSizeChange(rect, reason);
         }
     }
+    UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_RECT);
 }
 
 WMError WindowSessionImpl::RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener)
@@ -899,6 +904,16 @@ sptr<Window> WindowSessionImpl::Find(const std::string& name)
         return nullptr;
     }
     return iter->second.second;
+}
+
+bool WindowSessionImpl::IsWindowDecorEnable()
+{
+    return false;
+}
+
+WindowMode WindowSessionImpl::GetWindowMode()
+{
+    return WindowMode::WINDOW_MODE_UNDEFINED;
 }
 } // namespace Rosen
 } // namespace OHOS

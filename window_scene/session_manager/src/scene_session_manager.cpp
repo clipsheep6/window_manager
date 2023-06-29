@@ -33,8 +33,13 @@
 
 #include "color_parser.h"
 #include "common/include/permission.h"
+#include "interfaces/include/ws_common.h"
+#include "interfaces/include/ws_common_inner.h"
+#include "session_manager.h"
 #include "session/host/include/scene_session.h"
+#include "window_manager.h"
 #include "window_manager_hilog.h"
+#include "wm_common.h"
 #include "wm_math.h"
 #include "zidl/window_manager_agent_interface.h"
 #include "session_manager_agent_controller.h"
@@ -406,6 +411,7 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
         sceneSessionMap_.insert({ persistentId, sceneSession });
         RegisterSessionStateChangeNotifyManagerFunc(sceneSession);
         WLOGFI("create session persistentId: %{public}" PRIu64 "", persistentId);
+        NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_ADDED);
         return sceneSession;
     };
 
@@ -457,6 +463,7 @@ WSError SceneSessionManager::RequestSceneSessionActivation(const sptr<SceneSessi
         }
         AAFwk::AbilityManagerClient::GetInstance()->StartUIAbilityBySCB(scnSessionInfo);
         activeSessionId_ = persistentId;
+        NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_ACTIVE);
         return WSError::WS_OK;
     };
 
@@ -489,6 +496,7 @@ WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSessi
             return WSError::WS_ERROR_NULLPTR;
         }
         AAFwk::AbilityManagerClient::GetInstance()->MinimizeUIAbilityBySCB(scnSessionInfo);
+        NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_ACTIVE);
         return WSError::WS_OK;
     };
 
@@ -509,6 +517,7 @@ WSError SceneSessionManager::DestroyDialogWithMainWindow(const sptr<SceneSession
             dialog->NotifyDestroy();
             dialog->Disconnect();
             sceneSessionMap_.erase(dialog->GetPersistentId());
+            NotifyWindowInfoChange(dialog->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_REMOVED);
         }
         return WSError::WS_OK;
     }
@@ -538,6 +547,7 @@ WSError SceneSessionManager::RequestSceneSessionDestruction(const sptr<SceneSess
         }
         AAFwk::AbilityManagerClient::GetInstance()->CloseUIAbilityBySCB(scnSessionInfo);
         sceneSessionMap_.erase(persistentId);
+        NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_REMOVED);
         return WSError::WS_OK;
     };
 
@@ -595,6 +605,7 @@ WSError SceneSessionManager::DestroyAndDisconnectSpecificSession(const uint64_t&
         }
         ret = sceneSession->Disconnect();
         sceneSessionMap_.erase(persistentId);
+        NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_REMOVED);
         return ret;
     };
 
@@ -714,7 +725,8 @@ WSError SceneSessionManager::UpdateProperty(sptr<WindowSessionProperty>& propert
         if (property == nullptr) {
             return;
         }
-        auto sceneSession = GetSceneSession(property->GetPersistentId());
+        uint64_t persistentId = property->GetPersistentId();
+        auto sceneSession = GetSceneSession(persistentId);
         if (sceneSession == nullptr) {
             return;
         }
@@ -722,10 +734,12 @@ WSError SceneSessionManager::UpdateProperty(sptr<WindowSessionProperty>& propert
         switch (action) {
             case WSPropertyChangeAction::ACTION_UPDATE_FOCUSABLE: {
                 sceneSession->SetFocusable(property->GetFocusable());
+                NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_PROPERTY);
                 break;
             }
             case WSPropertyChangeAction::ACTION_UPDATE_TOUCHABLE: {
                 sceneSession->SetTouchable(property->GetTouchable());
+                NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_PROPERTY);
                 break;
             }
             case WSPropertyChangeAction::ACTION_UPDATE_SET_BRIGHTNESS: {
@@ -753,6 +767,7 @@ WSError SceneSessionManager::UpdateProperty(sptr<WindowSessionProperty>& propert
                 if (sceneSession->GetSessionProperty() != nullptr) {
                     sceneSession->GetSessionProperty()->SetMaximizeMode(property->GetMaximizeMode());
                 }
+                NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_PROPERTY);
                 break;
             }
             case WSPropertyChangeAction::ACTION_UPDATE_OTHER_PROPS: {
@@ -760,6 +775,15 @@ WSError SceneSessionManager::UpdateProperty(sptr<WindowSessionProperty>& propert
                 for (auto& iter : systemBarProperties) {
                     sceneSession->SetSystemBarProperty(iter.first, iter.second);
                 }
+                NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_PROPERTY);
+                break;
+            }
+            case WSPropertyChangeAction::ACTION_UPDATE_FLAGS:
+            // fall through
+            case WSPropertyChangeAction::ACTION_UPDATE_MODE:
+            // fall through
+            case WSPropertyChangeAction::ACTION_UPDATE_RECT: {
+                NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_PROPERTY);
                 break;
             }
             default:
@@ -838,6 +862,7 @@ WSError SceneSessionManager::SetFocusedSession(uint64_t persistentId)
         return WSError::WS_DO_NOTHING;
     }
     focusedSessionId_ = persistentId;
+    NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_FOCUSED);
     return WSError::WS_OK;
 }
 
@@ -1026,5 +1051,52 @@ WMError SceneSessionManager::UnregisterWindowManagerAgent(WindowManagerAgentType
 void SceneSessionManager::UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing)
 {
     SessionManagerAgentController::GetInstance().UpdateCameraFloatWindowStatus(accessTokenId, isShowing);
+}
+
+void SceneSessionManager::GetWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos)
+{
+    WLOGFI("GetWindowInfo Called.");
+    std::map<uint64_t, sptr<SceneSession>>::iterator iter;
+    for (iter = abilitySceneMap_.begin(); iter != abilitySceneMap_.end(); iter++) {
+        FillWindowInfo(infos, iter->second);
+    }
+    return WSError::WS_OK;
+}
+
+void SceneSessionManager::NotifyWindowInfoChange(uint64_t persistentId, WindowUpdateType type)
+{
+    std::vector<sptr<AccessibilityWindowInfo>>& infos;
+    auto iter = abilitySceneMap_.find(persistentId);
+    if (iter == abilitySceneMap_.end()) {
+        WLOGFW("Error find session for id = %{public}" PRIu64, persistentId);
+        return;
+    }
+
+    const auto& sceneSession = iter->second;
+    FillWindowInfo(infos, sceneSession);
+    SessionManager::GetInstance().NotifyWindowInfoChange(infos, type);
+}
+
+void SceneSessionManager::FillWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos,
+    const sptr<SceneSession> sceneSession)
+{
+    if (sceneSession == nullptr) {
+        WLOGFW("null scene session.");
+        return;
+    }
+    sptr<AccessibilityWindowInfo> info = new (std::nothrow) AccessibilityWindowInfo();
+    info->wid_ = static_cast<int32_t>(sceneSession->GetPersistentId());
+    WSRect wsrect = sceneSession->GetSessionRect();
+    info->windowRect_ = {wsrect.posX_, wsrect.posY_, wsrect.width_, wsrect.height_ };
+    info->focused_ = sceneSession->GetPersistentId() == focusedSessionId_;
+    info->type_ = sceneSession->GetWindowType();
+    info->mode_ = sceneSession->GetWindowMode();
+    info->isDecorEnable_ = sceneSession->IsDecorEnable();
+    auto property = sceneSession->GetSessionProperty();
+    if (property != nullptr) {
+        info->displayId_ = property->GetDisplayId();
+        info->layer_ = property->GetZOrder();
+    }
+    infos.emplace_back(info);
 }
 } // namespace OHOS::Rosen

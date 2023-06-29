@@ -39,6 +39,7 @@ class ResourceManager;
 
 namespace OHOS::Rosen {
 class SceneSession;
+class AccessibilityWindowInfo;
 using NotifyCreateSpecificSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 using NotifySetFocusSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 class SceneSessionManager : public SceneSessionManagerStub {
@@ -72,6 +73,7 @@ public:
     void GetFocusWindowInfo(FocusChangeInfo& focusInfo);
 
     void UpdatePrivateStateAndNotify(bool isAddingPrivateSession);
+    WSError GetWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos);
 protected:
     SceneSessionManager();
     virtual ~SceneSessionManager() = default;
@@ -101,6 +103,9 @@ private:
     WSError UpdateBrightness(uint64_t persistentId);
     void SetDisplayBrightness(float brightness);
     float GetDisplayBrightness() const;
+    void NotifyWindowInfoChange(uint64_t persistentId, WindowUpdateType type);
+    void FillWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos,
+        const sptr<SceneSession> sceneSession);
 
     sptr<RootSceneSession> rootSceneSession_;
     std::map<uint64_t, sptr<SceneSession>> sceneSessionMap_;

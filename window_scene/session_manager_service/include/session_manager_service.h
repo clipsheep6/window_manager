@@ -29,6 +29,8 @@ public:
     sptr<IRemoteObject> GetScreenSessionManagerService() override;
     sptr<IRemoteObject> GetScreenLockManagerService() override;
 
+    void NotifyWindowInfoChange(const std::vector<sptr<AccessibilityWindowInfo>>& infos,
+        WindowUpdateType type) override;
 protected:
     SessionManagerService() = default;
     virtual ~SessionManagerService() = default;
