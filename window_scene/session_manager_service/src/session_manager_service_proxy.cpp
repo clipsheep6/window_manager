@@ -15,6 +15,7 @@
 
 #include "session_manager_service_proxy.h"
 
+#include "marshalling_helper.h"
 #include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
@@ -86,5 +87,36 @@ sptr<IRemoteObject> SessionManagerServiceProxy::GetScreenLockManagerService()
     }
 
     return reply.ReadRemoteObject();
+}
+
+void SessionManagerServiceProxy::NotifyWindowInfoChange(const std::vector<sptr<AccessibilityWindowInfo>>& infos,
+    WindowUpdateType type)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+
+    if (!MarshallingHelper::MarshallingVectorParcelableObj<AccessibilityWindowInfo>(data, infos)) {
+        WLOGFE("Write window infos failed.");
+        return;
+    }
+
+    if (!data.WriteUint32(static_cast<uint32_t>(type))) {
+        WLOGFE("Write windowUpdateType failed.");
+        return;
+    }
+
+    auto ret = Remote()->SendRequest(
+        static_cast<uint32_t>(SessionManagerServiceMessage::TRANS_ID_NOTIFY_WINDOW_INFO_CHANGE),
+        data, reply, option);
+    if (ret != ERR_NONE) {
+        WLOGFE("SendRequest failed, errorCode %{public}d", ret);
+        return;
+    }
 }
 } // namespace OHOS::Rosen

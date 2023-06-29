@@ -18,6 +18,8 @@
 
 #include <iremote_broker.h>
 
+#include "window_manager.h"
+
 namespace OHOS::Rosen {
 class ISessionManagerService : public IRemoteBroker {
 public:
@@ -27,11 +29,14 @@ public:
         TRANS_ID_GET_SCENE_SESSION_MANAGER = 0,
         TRANS_ID_GET_SCREEN_SESSION_MANAGER_SERVICE,
         TRANS_ID_GET_SCREEN_LOCK_MANAGER_SERVICE,
+        TRANS_ID_NOTIFY_WINDOW_INFO_CHANGE,
     };
 
     virtual sptr<IRemoteObject> GetSceneSessionManager() = 0;
     virtual sptr<IRemoteObject> GetScreenSessionManagerService() = 0;
     virtual sptr<IRemoteObject> GetScreenLockManagerService() = 0;
+    virtual void NotifyWindowInfoChange(const std::vector<sptr<AccessibilityWindowInfo>>& infos,
+        WindowUpdateType type) = 0;
 };
 } // namespace OHOS::Rosen
 

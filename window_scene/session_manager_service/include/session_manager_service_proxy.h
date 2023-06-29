@@ -30,7 +30,8 @@ public:
     sptr<IRemoteObject> GetSceneSessionManager() override;
     sptr<IRemoteObject> GetScreenSessionManagerService() override;
     sptr<IRemoteObject> GetScreenLockManagerService() override;
-
+    void NotifyWindowInfoChange(const std::vector<sptr<AccessibilityWindowInfo>>& infos,
+        WindowUpdateType type) override;
 private:
     static inline BrokerDelegator<SessionManagerServiceProxy> delegator_;
 };
