@@ -702,6 +702,11 @@ bool WindowSceneSessionImpl::IsDecorEnable() const
     return enable;
 }
 
+bool WindowSceneSessionImpl::IsWindowDecorEnable()
+{
+    return IsDecorEnable();
+}
+
 WMError WindowSceneSessionImpl::Minimize()
 {
     WLOGFD("WindowSceneSessionImpl::Minimize called");
@@ -712,6 +717,7 @@ WMError WindowSceneSessionImpl::Minimize()
     if (WindowHelper::IsMainWindow(GetType())) {
         hostSession_->OnSessionEvent(SessionEvent::EVENT_MINIMIZE);
     }
+    UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE);
     return WMError::WM_OK;
 }
 
@@ -726,6 +732,7 @@ WMError WindowSceneSessionImpl::Maximize()
         SetFullScreen(true);
         UpdateDecorEnable(true);
     }
+    UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE);
     return WMError::WM_OK;
 }
 
@@ -865,6 +872,11 @@ MaximizeMode WindowSceneSessionImpl::GetGlobalMaximizeMode() const
 WindowMode WindowSceneSessionImpl::GetMode() const
 {
     return windowMode_;
+}
+
+WindowMode WindowSceneSessionImpl::GetWindowMode()
+{
+    return GetMode();
 }
 
 uint32_t WindowSceneSessionImpl::GetBackgroundColor() const

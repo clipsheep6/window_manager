@@ -26,6 +26,7 @@
 
 #include "focus_change_info.h"
 #include "window_manager_interface.h"
+#include "window_manager.h"
 
 namespace OHOS::Rosen {
 class RSSurfaceNode;
@@ -40,6 +41,7 @@ public:
         TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT,
         TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT,
         TRANS_ID_GET_FOCUS_SESSION_INFO,
+        TRANS_ID_GET_WINDOW_INFO;
     };
 
     virtual WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
@@ -47,6 +49,7 @@ public:
         sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session) = 0;
     virtual WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId) = 0;
     virtual WSError UpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action) = 0;
+    virtual WSError GetWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) = 0;
 
     // interfaces of IWindowManager
     WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,

@@ -37,6 +37,7 @@ public:
     sptr<IScreenSessionManager> GetScreenSessionManagerProxy();
     sptr<ScreenLock::ScreenLockManagerInterface> GetScreenLockManagerProxy();
 
+    void NotifyWindowInfoChange(uint64_t persistentId, WindowUpdateType type);
 protected:
     SessionManager() = default;
     virtual ~SessionManager() = default;
