@@ -28,6 +28,10 @@
 #include "window_manager_interface.h"
 #include "session_listener_interface.h"
 
+namespace OHOS::Media {
+class PixelMap;
+} // namespace OHOS::Media
+
 namespace OHOS::Rosen {
 class RSSurfaceNode;
 class ISceneSessionManager : public IWindowManager {
