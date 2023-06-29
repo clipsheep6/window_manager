@@ -13,17 +13,11 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_ROSEN_WINDOW_SCENE_SESSION_LISTENER_H
-#define OHOS_ROSEN_WINDOW_SCENE_SESSION_LISTENER_H
+#include "session_listener_proxy.h"
 
 namespace OHOS::Rosen {
-class ISessionListener : public IRemoteBroker {
-public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.ISessionListener");
 
-    virtual void OnSessionLabelChange(int persistentId, const std::string &label) = 0;
-    virtual void OnSessionIconChange(int persistentId, const std::shared_ptr<Media::PixelMap> &icon) = 0;
+void SessionListenerProxy::OnSessionLabelChange(int persistentId, const std::string &label){}
+void SessionListenerProxy::OnSessionIconChange(int persistentId, const std::shared_ptr<Media::PixelMap> &icon){}
 
-};
 } // namespace OHOS::Rosen
-#endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_LISTENER_H
