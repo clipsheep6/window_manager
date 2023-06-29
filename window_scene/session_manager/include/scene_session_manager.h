@@ -79,6 +79,7 @@ public:
     void UnregisterSessionListener();
 
     void UpdatePrivateStateAndNotify(bool isAddingPrivateSession);
+    std::string GetSessionSnapshot(uint64_t persistentId);
 protected:
     SceneSessionManager();
     virtual ~SceneSessionManager() = default;
