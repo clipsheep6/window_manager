@@ -23,7 +23,6 @@
 #include "session_manager/include/zidl/scene_session_manager_stub.h"
 #include "wm_single_instance.h"
 #include "window_scene_config.h"
-#include "session_listener_interface.h"
 
 namespace OHOS::AAFwk {
 class SessionInfo;
@@ -130,7 +129,6 @@ private:
     bool isReportTaskStart_ = false;
     void RegisterSessionStateChangeNotifyManagerFunc(sptr<SceneSession>& sceneSession);
     void OnSessionStateChange(uint64_t persistentId);
-    std::shared_ptr<ISessionListener> sessionListener_;
     sptr<ISessionListener> sessionListener_;
 };
 } // namespace OHOS::Rosen

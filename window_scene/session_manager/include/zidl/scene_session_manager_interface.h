@@ -26,7 +26,8 @@
 
 #include "focus_change_info.h"
 #include "window_manager_interface.h"
-#include "session_listener_interface.h"
+#include "session_listener.h"
+#include "pixel_map.h"
 
 namespace OHOS::Rosen {
 class RSSurfaceNode;
