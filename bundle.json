@@ -28,7 +28,7 @@
         "components": [
           "sensor",
           "ability_base",
-          "graphic_standard",
+          "graphic_2d",
           "hisysevent_native",
           "ability_runtime",
           "napi",
