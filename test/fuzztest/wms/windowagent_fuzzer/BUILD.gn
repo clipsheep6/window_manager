@@ -64,7 +64,7 @@ ohos_fuzztest("WindowAgentFuzzTest") {
     "hilog_native:libhilog",
     "input:libmmi-client",
     "ipc:ipc_single",
-    "multimedia_image_framework:image_native",
+    "image_framework:image_native",
   ]
 }
 

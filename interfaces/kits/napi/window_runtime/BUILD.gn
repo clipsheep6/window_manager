@@ -73,8 +73,8 @@ ohos_shared_library("window_native_kit") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_napi_common",
     "ipc:ipc_single",
-    "multimedia_image_framework:image",
-    "multimedia_image_framework:image_native",
+    "image_framework:image",
+    "image_framework:image_native",
     "napi:ace_napi",
   ]
 
