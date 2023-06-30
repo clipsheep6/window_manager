@@ -15,6 +15,8 @@
 
 #include "session_manager_service_stub.h"
 
+#include "ipc_types.h"
+#include "marshalling_helper.h"
 #include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
@@ -43,6 +45,16 @@ int SessionManagerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &dat
         }
         case SessionManagerServiceMessage::TRANS_ID_GET_SCREEN_LOCK_MANAGER_SERVICE: {
             reply.WriteRemoteObject(GetScreenLockManagerService());
+            break;
+        }
+        case SessionManagerServiceMessage::TRANS_ID_NOTIFY_WINDOW_INFO_CHANGE: {
+            std::vector<sptr<AccessibilityWindowInfo>> infos;
+            if (!MarshallingHelper::UnmarshallingVectorParcelableObj<AccessibilityWindowInfo>(data, infos)) {
+                WLOGFE("read window infos failed.");
+                return IPC_STUB_INVALID_DATA_ERR;
+            }
+            WindowUpdateType type = static_cast<WindowUpdateType>(data.ReadUint32());
+            NotifyWindowInfoChange(infos, type);
             break;
         }
         default: {

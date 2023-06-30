@@ -17,7 +17,9 @@
 
 #include <ipc_types.h>
 #include <ui/rs_surface_node.h>
+#include "marshalling_helper.h"
 #include "session/host/include/scene_session.h"
+#include "window_manager.h"
 #include "window_manager_agent_proxy.h"
 #include "window_manager_hilog.h"
 
@@ -106,6 +108,16 @@ int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
             FocusChangeInfo focusInfo;
             GetFocusWindowInfo(focusInfo);
             reply.WriteParcelable(&focusInfo);
+            break;
+        }
+        case SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_INFO: {
+            std::vector<sptr<AccessibilityWindowInfo>> infos;
+            WSError errCode = GetWindowInfo(infos);
+            if (!MarshallingHelper::MarshallingVectorParcelableObj<AccessibilityWindowInfo>(reply, infos)) {
+                WLOGFE("Write window infos failed.");
+                return ERR_TRANSACTION_FAILED;
+            }
+            reply.WriteInt32(static_cast<int32_t>(errCode));
             break;
         }
         default:

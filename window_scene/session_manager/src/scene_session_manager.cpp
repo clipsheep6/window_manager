@@ -35,8 +35,13 @@
 #include "ability_start_setting.h"
 #include "color_parser.h"
 #include "common/include/permission.h"
+#include "interfaces/include/ws_common.h"
+#include "interfaces/include/ws_common_inner.h"
+#include "session_manager.h"
 #include "session/host/include/scene_session.h"
+#include "window_manager.h"
 #include "window_manager_hilog.h"
+#include "wm_common.h"
 #include "wm_math.h"
 #include "xcollie/watchdog.h"
 #include "zidl/window_manager_agent_interface.h"
@@ -434,6 +439,7 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
         sceneSessionMap_.insert({ persistentId, sceneSession });
         RegisterSessionStateChangeNotifyManagerFunc(sceneSession);
         WLOGFI("create session persistentId: %{public}" PRIu64 "", persistentId);
+        NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_ADDED);
         return sceneSession;
     };
 
@@ -487,6 +493,7 @@ WSError SceneSessionManager::RequestSceneSessionActivation(const sptr<SceneSessi
         }
         AAFwk::AbilityManagerClient::GetInstance()->StartUIAbilityBySCB(scnSessionInfo);
         activeSessionId_ = persistentId;
+        NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_ACTIVE);
         return WSError::WS_OK;
     };
 
@@ -520,6 +527,7 @@ WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSessi
             return WSError::WS_ERROR_NULLPTR;
         }
         AAFwk::AbilityManagerClient::GetInstance()->MinimizeUIAbilityBySCB(scnSessionInfo);
+        NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_ACTIVE);
         return WSError::WS_OK;
     };
 
@@ -541,6 +549,7 @@ WSError SceneSessionManager::DestroyDialogWithMainWindow(const sptr<SceneSession
             dialog->NotifyDestroy();
             dialog->Disconnect();
             sceneSessionMap_.erase(dialog->GetPersistentId());
+            NotifyWindowInfoChange(dialog->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_REMOVED);
         }
         return WSError::WS_OK;
     }
@@ -571,6 +580,7 @@ WSError SceneSessionManager::RequestSceneSessionDestruction(const sptr<SceneSess
         }
         AAFwk::AbilityManagerClient::GetInstance()->CloseUIAbilityBySCB(scnSessionInfo);
         sceneSessionMap_.erase(persistentId);
+        NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_REMOVED);
         return WSError::WS_OK;
     };
 
@@ -628,6 +638,7 @@ WSError SceneSessionManager::DestroyAndDisconnectSpecificSession(const uint64_t&
         }
         ret = sceneSession->Disconnect();
         sceneSessionMap_.erase(persistentId);
+        NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_REMOVED);
         return ret;
     };
 
@@ -752,55 +763,85 @@ WSError SceneSessionManager::UpdateProperty(sptr<WindowSessionProperty>& propert
             return;
         }
         WLOGI("Id: %{public}" PRIu64 ", action: %{public}u", sceneSession->GetPersistentId(), action);
-        switch (action) {
-            case WSPropertyChangeAction::ACTION_UPDATE_FOCUSABLE: {
-                sceneSession->SetFocusable(property->GetFocusable());
-                break;
-            }
-            case WSPropertyChangeAction::ACTION_UPDATE_TOUCHABLE: {
-                sceneSession->SetTouchable(property->GetTouchable());
-                break;
-            }
-            case WSPropertyChangeAction::ACTION_UPDATE_SET_BRIGHTNESS: {
-                if (sceneSession->GetWindowType() != WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
-                    WLOGW("only app main window can set brightness");
-                    return;
-                }
-                // @todo if sceneSession is inactive, return
-                SetBrightness(sceneSession, property->GetBrightness());
-                break;
-            }
-            case WSPropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE: {
-                bool prePrivacyMode = sceneSession->GetWindowSessionProperty()->GetPrivacyMode() || sceneSession->GetWindowSessionProperty()->GetSystemPrivacyMode();
-                bool isPrivacyMode = property->GetPrivacyMode() || property->GetSystemPrivacyMode();
-                if (prePrivacyMode ^ isPrivacyMode) {
-                    sceneSession->GetWindowSessionProperty()->SetPrivacyMode(isPrivacyMode);
-                    sceneSession->GetWindowSessionProperty()->SetSystemPrivacyMode(isPrivacyMode);
-                    sceneSession->GetSurfaceNode()->SetSecurityLayer(isPrivacyMode);
-                    RSTransaction::FlushImplicitTransaction();
-                    UpdatePrivateStateAndNotify(isPrivacyMode);
-                }
-            break;
-            }
-            case WSPropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE: {
-                if (sceneSession->GetSessionProperty() != nullptr) {
-                    sceneSession->GetSessionProperty()->SetMaximizeMode(property->GetMaximizeMode());
-                }
-                break;
-            }
-            case WSPropertyChangeAction::ACTION_UPDATE_OTHER_PROPS: {
-                auto& systemBarProperties = property->GetSystemBarProperty();
-                for (auto& iter : systemBarProperties) {
-                    sceneSession->SetSystemBarProperty(iter.first, iter.second);
-                }
-                break;
-            }
-            default:
-                break;
-        }
+        HandleUpdateProperty(property, action, sceneSession);
     };
     taskScheduler_->PostAsyncTask(task);
     return WSError::WS_OK;
+}
+
+void SceneSessionManager::HandleUpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action,
+    sptr<SceneSession>& sceneSession)
+{
+    switch (action) {
+        case WSPropertyChangeAction::ACTION_UPDATE_FOCUSABLE: {
+            sceneSession->SetFocusable(property->GetFocusable());
+            NotifyWindowInfoChange(property->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
+            break;
+        }
+        case WSPropertyChangeAction::ACTION_UPDATE_TOUCHABLE: {
+            sceneSession->SetTouchable(property->GetTouchable());
+            NotifyWindowInfoChange(property->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
+            break;
+        }
+        case WSPropertyChangeAction::ACTION_UPDATE_SET_BRIGHTNESS: {
+            HandleUpdateSetBrightnessAction(property, sceneSession);
+            break;
+        }
+        case WSPropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE: {
+            HandleUpdatePrivacyModeAction(property, sceneSession);
+            break;
+        }
+        case WSPropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE: {
+            if (sceneSession->GetSessionProperty() != nullptr) {
+                sceneSession->GetSessionProperty()->SetMaximizeMode(property->GetMaximizeMode());
+            }
+            NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_PROPERTY);
+            break;
+        }
+        case WSPropertyChangeAction::ACTION_UPDATE_OTHER_PROPS: {
+            auto& systemBarProperties = property->GetSystemBarProperty();
+            for (auto& iter : systemBarProperties) {
+                sceneSession->SetSystemBarProperty(iter.first, iter.second);
+            }
+            NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_PROPERTY);
+            break;
+        }
+        case WSPropertyChangeAction::ACTION_UPDATE_FLAGS:
+        // fall through
+        case WSPropertyChangeAction::ACTION_UPDATE_MODE:
+        // fall through
+        case WSPropertyChangeAction::ACTION_UPDATE_RECT: {
+            NotifyWindowInfoChange(property->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+void SceneSessionManager::HandleUpdateSetBrightnessAction(sptr<WindowSessionProperty>& property,
+    sptr<SceneSession>& sceneSession)
+{
+    if (sceneSession->GetWindowType() != WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        WLOGW("only app main window can set brightness");
+        return;
+    }
+    // @todo if sceneSession is inactive, return
+    SetBrightness(sceneSession, property->GetBrightness());
+}
+
+void SceneSessionManager::HandleUpdatePrivacyModeAction(sptr<WindowSessionProperty>& property,
+    sptr<SceneSession>& sceneSession)
+{
+    bool prePrivacyMode = sceneSession->GetWindowSessionProperty()->GetPrivacyMode() || sceneSession->GetWindowSessionProperty()->GetSystemPrivacyMode();
+    bool isPrivacyMode = property->GetPrivacyMode() || property->GetSystemPrivacyMode();
+    if (prePrivacyMode ^ isPrivacyMode) {
+        sceneSession->GetWindowSessionProperty()->SetPrivacyMode(isPrivacyMode);
+        sceneSession->GetWindowSessionProperty()->SetSystemPrivacyMode(isPrivacyMode);
+        sceneSession->GetSurfaceNode()->SetSecurityLayer(isPrivacyMode);
+        RSTransaction::FlushImplicitTransaction();
+        UpdatePrivateStateAndNotify(isPrivacyMode);
+    }
 }
 
 WSError SceneSessionManager::SetBrightness(const sptr<SceneSession>& sceneSession, float brightness)
@@ -871,6 +912,7 @@ WSError SceneSessionManager::SetFocusedSession(uint64_t persistentId)
         return WSError::WS_DO_NOTHING;
     }
     focusedSessionId_ = persistentId;
+    NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_FOCUSED);
     return WSError::WS_OK;
 }
 
@@ -1059,6 +1101,53 @@ WMError SceneSessionManager::UnregisterWindowManagerAgent(WindowManagerAgentType
 void SceneSessionManager::UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing)
 {
     SessionManagerAgentController::GetInstance().UpdateCameraFloatWindowStatus(accessTokenId, isShowing);
+}
+
+void SceneSessionManager::GetWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos)
+{
+    WLOGFI("GetWindowInfo Called.");
+    std::map<uint64_t, sptr<SceneSession>>::iterator iter;
+    for (iter = abilitySceneMap_.begin(); iter != abilitySceneMap_.end(); iter++) {
+        FillWindowInfo(infos, iter->second);
+    }
+    return WSError::WS_OK;
+}
+
+void SceneSessionManager::NotifyWindowInfoChange(uint64_t persistentId, WindowUpdateType type)
+{
+    std::vector<sptr<AccessibilityWindowInfo>>& infos;
+    auto iter = abilitySceneMap_.find(persistentId);
+    if (iter == abilitySceneMap_.end()) {
+        WLOGFW("Error find session for id = %{public}" PRIu64, persistentId);
+        return;
+    }
+
+    const auto& sceneSession = iter->second;
+    FillWindowInfo(infos, sceneSession);
+    SessionManager::GetInstance().NotifyWindowInfoChange(infos, type);
+}
+
+void SceneSessionManager::FillWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos,
+    const sptr<SceneSession> sceneSession)
+{
+    if (sceneSession == nullptr) {
+        WLOGFW("null scene session.");
+        return;
+    }
+    sptr<AccessibilityWindowInfo> info = new (std::nothrow) AccessibilityWindowInfo();
+    info->wid_ = static_cast<int32_t>(sceneSession->GetPersistentId());
+    WSRect wsrect = sceneSession->GetSessionRect();
+    info->windowRect_ = {wsrect.posX_, wsrect.posY_, wsrect.width_, wsrect.height_ };
+    info->focused_ = sceneSession->GetPersistentId() == focusedSessionId_;
+    info->type_ = sceneSession->GetWindowType();
+    info->mode_ = sceneSession->GetWindowMode();
+    info->isDecorEnable_ = sceneSession->IsDecorEnable();
+    auto property = sceneSession->GetSessionProperty();
+    if (property != nullptr) {
+        info->displayId_ = property->GetDisplayId();
+        info->layer_ = property->GetZOrder();
+    }
+    infos.emplace_back(info);
 }
 
 void SceneSessionManager::StartWindowInfoReportLoop()

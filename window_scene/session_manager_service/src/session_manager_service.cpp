@@ -68,4 +68,10 @@ void SessionManagerService::Init()
 {
     AAFwk::AbilityManagerClient::GetInstance()->SetSessionManagerService(this->AsObject());
 }
+
+void SessionManagerService::NotifyWindowInfoChange(const std::vector<sptr<AccessibilityWindowInfo>>& infos,
+    WindowUpdateType type)
+{
+    WindowManagerAgentController::GetInstance().NotifyAccessibilityWindowInfo(infos, type);
+}
 } // namesapce OHOS::Rosen
