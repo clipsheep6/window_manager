@@ -17,6 +17,7 @@
 #define OHOS_ROSEN_WINDOW_SESSION_IMPL_H
 
 #include <ability_context.h>
+#include <i_input_event_consumer.h>
 #include <refbase.h>
 #include <ui_content.h>
 #include <ui/rs_surface_node.h>
@@ -87,6 +88,7 @@ public:
     WMError RegisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener) override;
     WMError UnregisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener) override;
     void RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func) override;
+    void SetInputEventConsumer(const std::shared_ptr<IInputEventConsumer>& inputEventConsumer) override;
 
     WMError SetBackgroundColor(const std::string& color) override;
 
@@ -160,6 +162,8 @@ private:
     static std::map<uint64_t, std::vector<sptr<IAvoidAreaChangedListener>>> avoidAreaChangeListeners_;
     static std::map<uint64_t, std::vector<sptr<IDialogDeathRecipientListener>>> dialogDeathRecipientListeners_;
     static std::map<uint64_t, std::vector<sptr<IDialogTargetTouchListener>>> dialogTargetTouchListener_;
+
+    std::shared_ptr<IInputEventConsumer> inputEventConsumer_;
 };
 } // namespace Rosen
 } // namespace OHOS
