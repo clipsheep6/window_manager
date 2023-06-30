@@ -761,7 +761,7 @@ WSError SceneSessionManager::UpdateProperty(sptr<WindowSessionProperty>& propert
             return;
         }
         WLOGI("Id: %{public}" PRIu64 ", action: %{public}u", sceneSession->GetPersistentId(), action);
-        HandleUpdateProperty(property, sceneSession);
+        HandleUpdateProperty(property, action, sceneSession);
     };
     taskScheduler_->PostAsyncTask(task);
     return WSError::WS_OK;
