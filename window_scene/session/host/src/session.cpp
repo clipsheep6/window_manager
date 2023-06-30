@@ -854,4 +854,10 @@ WSError Session::TransferExtensionData(const AAFwk::WantParams& wantParams)
 {
     return WSError::WS_OK;
 }
+
+WSError Session::UpdateSnapshot()
+{
+    snapshot_ = Snapshot();
+    return WSError::WS_OK;
+}
 } // namespace OHOS::Rosen
