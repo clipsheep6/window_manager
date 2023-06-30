@@ -1079,4 +1079,96 @@ void SceneSessionManager::StartWindowInfoReportLoop()
     }
     isReportTaskStart_ = true;
 }
+
+std::vector<std::pair<uint64_t, bool>> SceneSessionManager::GetWindowVisibilityChangeInfo(
+    std::shared_ptr<RSOcclusionData> occlusionData)
+{
+    std::vector<std::pair<uint64_t, bool>> visibilityChangeInfo;
+    VisibleData& currentVisibleWindow = occlusionData->GetVisibleData();
+    std::sort(currentVisibleWindow.begin(), currentVisibleWindow.end());
+    VisibleData& lastVisibleWindow = lastOcclusionData_->GetVisibleData();
+    uint32_t i, j;
+    i = j = 0;
+    for (; i < lastVisibleWindow.size() && j < currentVisibleWindow.size();) {
+        if (lastVisibleWindow[i] < currentVisibleWindow[j]) {
+            visibilityChangeInfo.emplace_back(lastVisibleWindow[i], false);
+            i++;
+        } else if (lastVisibleWindow[i] > currentVisibleWindow[j]) {
+            visibilityChangeInfo.emplace_back(currentVisibleWindow[j], true);
+            j++;
+        } else {
+            i++;
+            j++;
+        }
+    }
+    for (; i < lastVisibleWindow.size(); ++i) {
+        visibilityChangeInfo.emplace_back(lastVisibleWindow[i], false);
+    }
+    for (; j < currentVisibleWindow.size(); ++j) {
+        visibilityChangeInfo.emplace_back(currentVisibleWindow[j], true);
+    }
+    lastOcclusionData_ = occlusionData;
+    return visibilityChangeInfo;
+}
+
+void SceneSessionManager::WindowVisibilityChangeCallback(std::shared_ptr<RSOcclusionData> occlusiontionData)
+{
+    WLOGFI("WindowVisibilityChangeCallback: entry");
+    std::weak_ptr<RSOcclusionData> weak(occlusiontionData);
+
+    /*auto task = [this, weak]() {
+        return;
+    };
+
+    taskScheduler_->PostVoidSyncTask(task);
+    */
+
+        taskScheduler_->PostVoidSyncTask([this, weak]() {
+        auto weakOcclusionData = weak.lock();
+        if (weakOcclusionData == nullptr) {
+            WLOGFE("weak occlusionData is nullptr");
+            return;
+        }
+
+        std::vector<std::pair<uint64_t, bool>> visibilityChangeInfo = GetWindowVisibilityChangeInfo(weakOcclusionData);
+        std::vector<sptr<WindowVisibilityInfo>> windowVisibilityInfos;
+#ifdef MEMMGR_WINDOW_ENABLE
+        std::vector<sptr<Memory::MemMgrWindowInfo>> memMgrWindowInfos;
+#endif
+        for (const auto& elem : visibilityChangeInfo) {
+            uint64_t surfaceId = elem.first;
+            bool isVisible = elem.second;
+            auto iter = sceneSessionMap_.find(surfaceId);
+            if (iter == sceneSessionMap_.end()) {
+                continue;
+            }
+            sptr<SceneSession> session = iter->second;
+            if (session == nullptr) {
+                continue;
+            }
+            //session->isVisible_ = isVisible;
+            windowVisibilityInfos.emplace_back(new WindowVisibilityInfo(session->GetWindowId(), session->GetCallingPid(),
+                session->GetCallingUid(), isVisible, session->GetWindowType()));
+#ifdef MEMMGR_WINDOW_ENABLE
+            memMgrWindowInfos.emplace_back(new Memory::MemMgrWindowInfo(session->GetWindowId(), node->GetCallingPid(),
+                session->GetCallingUid(), isVisible));
+#endif
+            WLOGFD("NotifyWindowVisibilityChange: covered status changed window:%{public}u, isVisible:%{public}d",
+                session->GetWindowId(), isVisible);
+    }
+        //CheckAndNotifyWaterMarkChangedResult();
+        if (windowVisibilityInfos.size() != 0) {
+            WLOGI("Notify windowvisibilityinfo changed start");
+            SessionManagerAgentController::GetInstance().UpdateWindowVisibilityInfo(windowVisibilityInfos);
+        }
+#ifdef MEMMGR_WINDOW_ENABLE
+        if (memMgrWindowInfos.size() != 0) {
+            WLOGI("Notify memMgrWindowInfos changed start");
+            Memory::MemMgrClient::GetInstance().OnWindowVisibilityChanged(memMgrWindowInfos);
+        }
+#endif
+
+    });
+}
+
 } // namespace OHOS::Rosen
