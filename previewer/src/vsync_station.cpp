@@ -38,7 +38,24 @@ void VsyncStation::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallb
         }
         vsyncCallbacks_.insert(vsyncCallback);
 
-        Init();
+        if (!hasInitVsyncReceiver_ || !vsyncHandler_) {
+            auto mainEventRunner = AppExecFwk::EventRunner::GetMainEventRunner();
+            if (mainEventRunner != nullptr && isMainHandlerAvailable_) {
+                WLOGI("MainEventRunner is available");
+                vsyncHandler_ = std::make_shared<AppExecFwk::EventHandler>(mainEventRunner);
+            } else {
+                WLOGI("MainEventRunner is not available");
+                if (!vsyncHandler_) {
+                    vsyncHandler_ = AppExecFwk::EventHandler::Current();
+                }
+            }
+            auto& rsClient = OHOS::Rosen::RSInterfaces::GetInstance();
+            while (receiver_ == nullptr) {
+                receiver_ = rsClient.CreateVSyncReceiver("WM_" + std::to_string(getpid()), vsyncHandler_);
+            }
+            receiver_->Init();
+            hasInitVsyncReceiver_ = true;
+        }
         if (hasRequestedVsync_) {
             return;
         }
@@ -57,24 +74,6 @@ int64_t VsyncStation::GetVSyncPeriod()
 
 void VsyncStation::Init()
 {
-    if (!hasInitVsyncReceiver_ || !vsyncHandler_) {
-        auto mainEventRunner = AppExecFwk::EventRunner::GetMainEventRunner();
-        if (mainEventRunner != nullptr && isMainHandlerAvailable_) {
-            WLOGI("MainEventRunner is available");
-            vsyncHandler_ = std::make_shared<AppExecFwk::EventHandler>(mainEventRunner);
-        } else {
-            WLOGI("MainEventRunner is not available");
-            if (!vsyncHandler_) {
-                vsyncHandler_ = AppExecFwk::EventHandler::Current();
-            }
-        }
-        auto& rsClient = OHOS::Rosen::RSInterfaces::GetInstance();
-        while (receiver_ == nullptr) {
-            receiver_ = rsClient.CreateVSyncReceiver("WM_" + std::to_string(getpid()), vsyncHandler_);
-        }
-        receiver_->Init();
-        hasInitVsyncReceiver_ = true;
-    }
 }
 
 void VsyncStation::RemoveCallback()
