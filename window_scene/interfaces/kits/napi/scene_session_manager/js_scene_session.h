@@ -52,6 +52,7 @@ private:
     void ProcessRaiseToTopRegister();
     void ProcessBackPressedRegister();
     void ProcessSessionFocusableChangeRegister();
+    void ProcessSessionTouchableChangeRegister();
     void ProcessClickRegister();
     void ProcessTerminateSessionRegister();
     void ProcessSessionExceptionRegister();
@@ -66,11 +67,12 @@ private:
     void OnRaiseToTop();
     void OnBackPressed();
     void OnSessionFocusableChange(bool isFocusable);
+    void OnSessionTouchableChange(bool touchable);
     void OnClick();
     void TerminateSession(const SessionInfo& info);
     void OnSessionException(const SessionInfo& info);
-    static WindowTypeInAPI GetApiType(WindowType type);
-    void OnSystemBarPropertyChange(const SystemBarProperty& property);
+    static JsSessionType GetApiType(WindowType type);
+    void OnSystemBarPropertyChange(const std::unordered_map<WindowType, SystemBarProperty>& propertyMap);
     void OnNeedAvoid(bool status);
 
     NativeEngine& engine_;

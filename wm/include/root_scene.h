@@ -38,11 +38,10 @@ public:
     void LoadContent(const std::string& contentUrl,
         NativeEngine* engine, NativeValue* storage, AbilityRuntime::Context* context);
     void UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason);
+    static void UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration);
+    virtual void UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration) override;
 
     void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback) override;
-
-    void ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& inputEvent) override;
-    void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent) override;
 
     void SetDisplayDensity(float density)
     {
@@ -63,6 +62,8 @@ public:
     {
         return name_;
     }
+
+    static sptr<RootScene> staticRootScene_;
 
 private:
     void RegisterInputEventListener();

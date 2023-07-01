@@ -23,6 +23,7 @@
 #include <ipc_skeleton.h>
 #include <want.h>
 
+#include "ability_start_setting.h"
 #include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
@@ -174,6 +175,12 @@ void Session::UpdateSessionFocusable(bool isFocusable)
     NotifySessionFocusableChange(isFocusable);
 }
 
+void Session::UpdateSessionTouchable(bool touchable)
+{
+    property_->SetTouchable(touchable);
+    NotifySessionTouchableChange(touchable);
+}
+
 WSError Session::SetFocusable(bool isFocusable)
 {
     if (!IsSessionValid()) {
@@ -198,7 +205,10 @@ bool Session::GetFocusable() const
 
 WSError Session::SetTouchable(bool touchable)
 {
-    property_->SetTouchable(touchable);
+    if (!IsSessionValid()) {
+        return WSError::WS_ERROR_INVALID_SESSION;
+    }
+    UpdateSessionTouchable(touchable);
     return WSError::WS_OK;
 }
 
@@ -327,7 +337,6 @@ WSError Session::Background()
         return WSError::WS_ERROR_INVALID_SESSION;
     }
     UpdateSessionState(SessionState::STATE_BACKGROUND);
-
     snapshot_ = Snapshot();
     NotifyBackground();
     return WSError::WS_OK;
@@ -389,6 +398,7 @@ WSError Session::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ability
     info.want = new AAFwk::Want(abilitySessionInfo->want);
     info.requestCode = abilitySessionInfo->requestCode;
     info.callerToken_ = abilitySessionInfo->callerToken;
+    info.startSetting = abilitySessionInfo->startSetting;
     WLOGFI("PendingSessionActivation:bundleName %{public}s, moduleName:%{public}s, abilityName:%{public}s",
         info.bundleName_.c_str(), info.moduleName_.c_str(), info.abilityName_.c_str());
     WLOGFI("PendingSessionActivation callState:%{public}d, want persistentId: %{public}" PRIu64 ", \
@@ -578,6 +588,15 @@ WSError Session::TransferFocusActiveEvent(bool isFocusActive)
     return windowEventChannel_->TransferFocusActiveEvent(isFocusActive);
 }
 
+WSError Session::TransferFocusWindowIdEvent(uint32_t windowId)
+{
+    if (!windowEventChannel_) {
+        WLOGFE("windowEventChannel_ is null");
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    return windowEventChannel_->TransferFocusWindowId(windowId);
+}
+
 std::shared_ptr<Media::PixelMap> Session::GetSnapshot() const
 {
     return snapshot_;
@@ -606,17 +625,31 @@ void Session::SetSessionStateChangeListenser(const NotifySessionStateChangeFunc&
     NotifySessionStateChange(state_);
 }
 
+void Session::SetSessionStateChangeNotifyManagerListener(const NotifySessionStateChangeNotifyManagerFunc& func)
+{
+    sessionStateChangeNotifyManagerFunc_ = func;
+    NotifySessionStateChange(state_);
+}
+
 void Session::NotifySessionStateChange(const SessionState& state)
 {
     WLOGFI("state: %{public}u", static_cast<uint32_t>(state));
     if (sessionStateChangeFunc_) {
         sessionStateChangeFunc_(state);
     }
+    if (sessionStateChangeNotifyManagerFunc_) {
+        sessionStateChangeNotifyManagerFunc_(GetPersistentId());
+    }
 }
 
 void Session::SetSessionFocusableChangeListener(const NotifySessionFocusableChangeFunc& func)
 {
     sessionFocusableChangeFunc_ = func;
+}
+
+void Session::SetSessionTouchableChangeListener(const NotifySessionTouchableChangeFunc& func)
+{
+    sessionTouchableChangeFunc_ = func;
 }
 
 void Session::SetClickListener(const NotifyClickFunc& func)
@@ -629,6 +662,14 @@ void Session::NotifySessionFocusableChange(bool isFocusable)
     WLOGFI("Notify session focusable change: %{public}u", isFocusable);
     if (sessionFocusableChangeFunc_) {
         sessionFocusableChangeFunc_(isFocusable);
+    }
+}
+
+void Session::NotifySessionTouchableChange(bool touchable)
+{
+    WLOGFI("Notify session touchable change: %{public}u", touchable);
+    if (sessionTouchableChangeFunc_) {
+        sessionTouchableChangeFunc_(touchable);
     }
 }
 
@@ -805,8 +846,14 @@ WSError Session::TransferAbilityResult(uint32_t resultCode, const AAFwk::Want& w
 {
     return WSError::WS_OK;
 }
+
 WSError Session::TransferExtensionData(const AAFwk::WantParams& wantParams)
 {
     return WSError::WS_OK;
+}
+
+void Session::NotifyRemoteReady()
+{
+    return;
 }
 } // namespace OHOS::Rosen

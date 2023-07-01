@@ -85,7 +85,7 @@ sptr<DisplayInfo> ScreenSession::ConvertToDisplayInfo()
     displayInfo->SetScreenId(screenId_);
     displayInfo->SetDisplayId(screenId_);
     displayInfo->SetRefreshRate(property_.GetRefreshRate());
-    displayInfo->SetVirtualPixelRatio(property_.GetVirtualPixelRatio());
+    displayInfo->SetVirtualPixelRatio(property_.GetDensity());
     displayInfo->SetXDpi(property_.GetXDpi());
     displayInfo->SetYDpi(property_.GetYDpi());
     displayInfo->SetDpi(property_.GetDensity());
@@ -302,6 +302,22 @@ DMError ScreenSession::SetScreenColorTransform()
 {
     WLOGI("SetScreenColorTransform ok! rsId %{public}" PRIu64"", rsId_);
     return DMError::DM_OK;
+}
+
+int32_t ScreenSession::GetPrivateSessionCount() const
+{
+    return privateSessionCount_;
+}
+
+DMError ScreenSession::SetPrivateSessionCount(int32_t count)
+{
+    privateSessionCount_ = count;
+    return DMError::DM_OK;
+}
+
+bool ScreenSession::HasPrivateSession() const
+{
+    return privateSessionCount_ > 0;
 }
 
 void ScreenSession::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startPoint)

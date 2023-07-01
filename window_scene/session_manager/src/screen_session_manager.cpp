@@ -16,6 +16,7 @@
 #include "session_manager/include/screen_session_manager.h"
 
 #include <transaction/rs_interfaces.h>
+#include <hitrace_meter.h>
 #include "window_manager_hilog.h"
 #include "screen_scene_config.h"
 #include "permission.h"
@@ -293,6 +294,7 @@ DMError ScreenSessionManager::SetScreenActiveMode(ScreenId screenId, uint32_t mo
             WLOGFE("SetScreenActiveMode: No corresponding rsId");
             return DMError::DM_ERROR_NULLPTR;
         }
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:SetScreenActiveMode(%" PRIu64", %u)", screenId, modeId);
         rsInterface_.SetScreenActiveMode(rsScreenId, modeId);
         screenSession->activeIdx_ = static_cast<int32_t>(modeId);
     }
@@ -338,6 +340,8 @@ DMError ScreenSessionManager::SetVirtualPixelRatio(ScreenId screenId, float virt
         WLOGE("The density is equivalent to the original value, no update operation is required, aborted.");
         return DMError::DM_OK;
     }
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:SetVirtualPixelRatio(%" PRIu64", %f)", screenId,
+        virtualPixelRatio);
     screenSession->GetScreenProperty().SetVirtualPixelRatio(virtualPixelRatio);
     NotifyScreenChanged(screenSession->ConvertToScreenInfo(), ScreenChangeEvent::VIRTUAL_PIXEL_RATIO_CHANGED);
 
@@ -462,22 +466,26 @@ ScreenId ScreenSessionManager::GetDefaultScreenId()
 
 bool ScreenSessionManager::WakeUpBegin(PowerStateChangeReason reason)
 {
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:WakeUpBegin(%u)", reason);
     return NotifyDisplayPowerEvent(DisplayPowerEvent::WAKE_UP, EventStatus::BEGIN);
 }
 
 bool ScreenSessionManager::WakeUpEnd()
 {
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:WakeUpEnd");
     return NotifyDisplayPowerEvent(DisplayPowerEvent::WAKE_UP, EventStatus::END);
 }
 
 bool ScreenSessionManager::SuspendBegin(PowerStateChangeReason reason)
 {
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:SuspendBegin(%u)", reason);
     sessionDisplayPowerController_->SuspendBegin(reason);
     return NotifyDisplayPowerEvent(DisplayPowerEvent::SLEEP, EventStatus::BEGIN);
 }
 
 bool ScreenSessionManager::SuspendEnd()
 {
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:SuspendEnd");
     return NotifyDisplayPowerEvent(DisplayPowerEvent::SLEEP, EventStatus::END);
 }
 
@@ -655,6 +663,7 @@ ScreenId ScreenSessionManager::CreateVirtualScreen(VirtualScreenOption option,
         WLOGFI("SCB: ScreenSessionManager::CreateVirtualScreen rsid is invalid");
         return SCREEN_ID_INVALID;
     }
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:CreateVirtualScreen(%s)", option.name_.c_str());
     ScreenId smsScreenId = SCREEN_ID_INVALID;
     if (!screenIdManager_.ConvertToSmsScreenId(rsId, smsScreenId)) {
         WLOGFI("SCB: ScreenSessionManager::CreateVirtualScreen !ConvertToSmsScreenId(rsId, smsScreenId)");
@@ -724,7 +733,7 @@ DMError ScreenSessionManager::DestroyVirtualScreen(ScreenId screenId)
             break;
         }
     }
-
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:DestroyVirtualScreen(%" PRIu64")", screenId);
     if (rsScreenId != SCREEN_ID_INVALID && GetScreenSession(screenId) != nullptr) {
         std::lock_guard<std::recursive_mutex> lock(screenSessionMapMutex_);
         auto smsScreenMapIter = screenSessionMap_.find(screenId);
@@ -754,6 +763,7 @@ DMError ScreenSessionManager::MakeMirror(ScreenId mainScreenId, std::vector<Scre
     if (iter != allMirrorScreenIds.end()) {
         allMirrorScreenIds.erase(iter);
     }
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:MakeMirror");
     auto mainScreen = GetScreenSession(mainScreenId);
     if (mainScreen == nullptr || allMirrorScreenIds.empty()) {
         WLOGFE("SCB:ScreenSessionManager::MakeMirror fail. mainScreen :%{public}" PRIu64", screens size:%{public}u",
@@ -1240,6 +1250,7 @@ std::shared_ptr<Media::PixelMap> ScreenSessionManager::GetScreenSnapshot(Display
 std::shared_ptr<Media::PixelMap> ScreenSessionManager::GetDisplaySnapshot(DisplayId displayId, DmErrorCode* errorCode)
 {
     WLOGFI("SCB: ScreenSessionManager::GetDisplaySnapshot ENTER!");
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:GetDisplaySnapshot(%" PRIu64")", displayId);
     auto res = GetScreenSnapshot(displayId);
     return res;
 }
@@ -1341,6 +1352,48 @@ void ScreenSessionManager::NotifyScreenGroupChanged(
         OnScreenGroupChange(trigger, screenInfo, event);
     };
     taskScheduler_->PostAsyncTask(task);
+}
+
+void ScreenSessionManager::NotifyPrivateSessionStateChanged(bool hasPrivate)
+{
+    auto agents = dmAgentContainer_.GetAgentsByType(DisplayManagerAgentType::PRIVATE_WINDOW_LISTENER);
+    if (agents.empty()) {
+        return;
+    }
+    WLOGI("PrivateSession status : %{public}u", hasPrivate);
+    for (auto& agent : agents) {
+        agent->NotifyPrivateWindowStateChanged(hasPrivate);
+    }
+}
+
+void ScreenSessionManager::UpdatePrivateStateAndNotify(sptr<ScreenSession>& screenSession, bool isAddingPrivateSession)
+{
+    uint32_t prePrivateSessionCount = screenSession->GetPrivateSessionCount();
+    WLOGFD("before update : privateWindow count: %{public}u", prePrivateSessionCount);
+    screenSession->SetPrivateSessionCount(prePrivateSessionCount + (isAddingPrivateSession ? 1 : -1));
+    if (prePrivateSessionCount == 0 && isAddingPrivateSession) {
+        NotifyPrivateSessionStateChanged(true);
+    } else if (prePrivateSessionCount == 1 && !isAddingPrivateSession) {
+        NotifyPrivateSessionStateChanged(false);
+    }
+}
+
+DMError ScreenSessionManager::HasPrivateWindow(DisplayId id, bool& hasPrivateWindow)
+{
+    // delete permission
+    std::vector<ScreenId> screenIds = GetAllScreenIds();
+    auto iter = std::find(screenIds.begin(), screenIds.end(), id);
+    if (iter == screenIds.end()) {
+        WLOGFE("invalid displayId");
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    auto screenSession = GetScreenSession(id);
+    if (screenSession == nullptr) {
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    hasPrivateWindow = screenSession->HasPrivateSession();
+    WLOGFD("id: %{public}" PRIu64" has private window: %{public}u", id, static_cast<uint32_t>(hasPrivateWindow));
+    return DMError::DM_OK;
 }
 
 void ScreenSessionManager::OnScreenGroupChange(const std::string& trigger,

@@ -41,8 +41,10 @@ namespace OHOS::Rosen {
 class RSSurfaceNode;
 using NotifyPendingSessionActivationFunc = std::function<void(SessionInfo& info)>;
 using NotifySessionStateChangeFunc = std::function<void(const SessionState& state)>;
+using NotifySessionStateChangeNotifyManagerFunc = std::function<void(uint64_t persistentId)>;
 using NotifyBackPressedFunc = std::function<void()>;
 using NotifySessionFocusableChangeFunc = std::function<void(const bool isFocusable)>;
+using NotifySessionTouchableChangeFunc = std::function<void(const bool touchable)>;
 using NotifyClickFunc = std::function<void()>;
 using NotifyTerminateSessionFunc = std::function<void(const SessionInfo& info)>;
 using NotifySessionExceptionFunc = std::function<void(const SessionInfo& info)>;
@@ -92,6 +94,7 @@ public:
     WSError OnNeedAvoid(bool status) override;
     WSError TransferAbilityResult(uint32_t resultCode, const AAFwk::Want& want) override;
     WSError TransferExtensionData(const AAFwk::WantParams& wantParams) override;
+    void NotifyRemoteReady() override;
     void NotifyConnect();
     void NotifyForeground();
     void NotifyBackground();
@@ -101,6 +104,7 @@ public:
     virtual WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent);
     WSError TransferKeyEventForConsumed(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed);
     WSError TransferFocusActiveEvent(bool isFocusActive);
+    WSError TransferFocusWindowIdEvent(uint32_t windowId);
 
     bool RegisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
     bool UnregisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
@@ -113,6 +117,7 @@ public:
     void SetSessionExceptionListener(const NotifyTerminateSessionFunc& func);
     WSError NotifySessionException(const sptr<AAFwk::SessionInfo> info) override;
     void SetSessionStateChangeListenser(const NotifySessionStateChangeFunc& func);
+    void SetSessionStateChangeNotifyManagerListener(const NotifySessionStateChangeNotifyManagerFunc& func);
     void NotifySessionStateChange(const SessionState& state);
     WSError UpdateActiveStatus(bool isActive) override; // update active status from session_stage
     WSError RaiseToAppTop() override;
@@ -134,8 +139,10 @@ public:
     WSError NotifyDestroy();
 
     void SetSessionFocusableChangeListener(const NotifySessionFocusableChangeFunc& func);
+    void SetSessionTouchableChangeListener(const NotifySessionTouchableChangeFunc& func);
     void SetClickListener(const NotifyClickFunc& func);
     void NotifySessionFocusableChange(bool isFocusable);
+    void NotifySessionTouchableChange(bool touchable);
     void NotifyClick();
     WSError UpdateFocus(bool isFocused);
     WSError SetFocusable(bool isFocusable);
@@ -158,6 +165,7 @@ protected:
     void GeneratePersistentId(const bool isExtension, const SessionInfo& sessionInfo);
     void UpdateSessionState(SessionState state);
     void UpdateSessionFocusable(bool isFocusable);
+    void UpdateSessionTouchable(bool touchable);
 
     bool isActive_ = false;
     bool isFocused_ = false;
@@ -167,8 +175,10 @@ protected:
     SessionInfo sessionInfo_;
     NotifyPendingSessionActivationFunc pendingSessionActivationFunc_;
     NotifySessionStateChangeFunc sessionStateChangeFunc_;
+    NotifySessionStateChangeNotifyManagerFunc sessionStateChangeNotifyManagerFunc_;
     NotifyBackPressedFunc backPressedFunc_;
     NotifySessionFocusableChangeFunc sessionFocusableChangeFunc_;
+    NotifySessionTouchableChangeFunc sessionTouchableChangeFunc_;
     NotifyClickFunc clickFunc_;
     NotifyTerminateSessionFunc terminateSessionFunc_;
     NotifySessionExceptionFunc sessionExceptionFunc_;

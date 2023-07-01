@@ -20,6 +20,7 @@
 #include <ui_content.h>
 #include <viewport_config.h>
 
+#include "intention_event_manager.h"
 #include "vsync_station.h"
 #include "window_manager_hilog.h"
 
@@ -52,6 +53,8 @@ private:
     RootScene* rootScene_;
 };
 } // namespace
+
+sptr<RootScene> RootScene::staticRootScene_;
 
 RootScene::RootScene()
 {
@@ -94,17 +97,18 @@ void RootScene::UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason re
     uiContent_->UpdateViewportConfig(config, reason);
 }
 
-void RootScene::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& inputEvent)
+void RootScene::UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
     if (uiContent_) {
-        uiContent_->ProcessPointerEvent(inputEvent);
+        WLOGFD("notify root scene ace");
+        uiContent_->UpdateConfiguration(configuration);
     }
 }
-
-void RootScene::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent)
+void RootScene::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
-    if (uiContent_) {
-        uiContent_->ProcessKeyEvent(inputEvent);
+    WLOGD("notify root scene ace for all");
+    if (staticRootScene_) {
+        staticRootScene_->UpdateConfiguration(configuration);
     }
 }
 
@@ -125,7 +129,10 @@ void RootScene::RegisterInputEventListener()
         VsyncStation::GetInstance().SetIsMainHandlerAvailable(false);
         VsyncStation::GetInstance().SetVsyncEventHandler(eventHandler_);
     }
-    MMI::InputManager::GetInstance()->SetWindowInputEventConsumer(listener, eventHandler_);
+    if (!(DelayedSingleton<IntentionEventManager>::GetInstance()->EnableInputEventListener(
+            uiContent_.get(), eventHandler_))) {
+        WLOGFE("EnableInputEventListener fail");
+    }
 }
 
 void RootScene::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback)

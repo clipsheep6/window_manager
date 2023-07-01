@@ -58,7 +58,11 @@ public:
     void SetWindowRect(const struct Rect& rect);
     void SetFocusable(bool isFocusable);
     void SetTouchable(bool isTouchable);
+    void SetTurnScreenOn(bool turnScreenOn);
+    void SetKeepScreenOn(bool keepScreenOn);
     void SetBrightness(float brightness);
+    void SetPrivacyMode(bool isPrivate);
+    void SetSystemPrivacyMode(bool isSystemPrivate);
     void SetDisplayId(uint64_t displayId);
     void SetWindowType(WindowType type);
     void SetParentId(uint32_t parentId);
@@ -78,7 +82,11 @@ public:
     WindowType GetWindowType() const;
     bool GetFocusable() const;
     bool GetTouchable() const;
+    bool IsTurnScreenOn() const;
+    bool IsKeepScreenOn() const;
     float GetBrightness() const;
+    bool GetPrivacyMode() const;
+    bool GetSystemPrivacyMode() const;
     uint32_t GetParentId() const;
     uint64_t GetDisplayId() const;
     uint64_t GetPersistentId() const;
@@ -103,7 +111,11 @@ private:
     bool focusable_ { true };
     bool touchable_ { true };
     bool tokenState_ { false };
+    bool turnScreenOn_ = false;
+    bool keepScreenOn_ = false;
     float brightness_ = UNDEFINED_BRIGHTNESS;
+    bool isPrivacyMode_ { false };
+    bool isSystemPrivacyMode_ { false };
     uint64_t displayId_ = 0;
     uint32_t parentId_ = INVALID_SESSION_ID; // parentId of sceneSession, which is low 32 bite of parentPersistentId_
     uint64_t persistentId_ = INVALID_SESSION_ID;
@@ -123,6 +135,7 @@ struct SystemSessionConfig : public Parcelable {
     bool isStretchable_ = false;
     WindowMode defaultWindowMode_ = WindowMode::WINDOW_MODE_FULLSCREEN;
     KeyboardAnimationConfig keyboardAnimationConfig_;
+    int32_t maxFloatingWindowSize_ = INT32_MAX;
 
     virtual bool Marshalling(Parcel& parcel) const override
     {
@@ -132,7 +145,8 @@ struct SystemSessionConfig : public Parcelable {
         }
 
         if (!parcel.WriteUint32(static_cast<uint32_t>(defaultWindowMode_)) ||
-            !parcel.WriteParcelable(&keyboardAnimationConfig_)) {
+            !parcel.WriteParcelable(&keyboardAnimationConfig_) ||
+            !parcel.WriteInt32(maxFloatingWindowSize_)) {
             return false;
         }
 
@@ -151,6 +165,7 @@ struct SystemSessionConfig : public Parcelable {
         config->defaultWindowMode_ = static_cast<WindowMode>(parcel.ReadUint32());
         sptr<KeyboardAnimationConfig> keyboardConfig = parcel.ReadParcelable<KeyboardAnimationConfig>();
         config->keyboardAnimationConfig_ = *keyboardConfig;
+        config->maxFloatingWindowSize_ = parcel.ReadInt32();
         return config;
     }
 };

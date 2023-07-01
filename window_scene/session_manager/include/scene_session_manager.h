@@ -41,6 +41,8 @@ namespace OHOS::Rosen {
 class SceneSession;
 using NotifyCreateSpecificSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 using NotifySetFocusSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
+using EventHandler = OHOS::AppExecFwk::EventHandler;
+using EventRunner = OHOS::AppExecFwk::EventRunner;
 class SceneSessionManager : public SceneSessionManagerStub {
 WM_DECLARE_SINGLE_INSTANCE_BASE(SceneSessionManager)
 public:
@@ -69,13 +71,23 @@ public:
     WSError SetFocusedSession(uint64_t persistentId);
     uint64_t GetFocusedSession() const;
     WSError UpdateFocus(uint64_t persistentId, bool isFocused);
+    void StartWindowInfoReportLoop();
     void GetFocusWindowInfo(FocusChangeInfo& focusInfo);
+    WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label);
+    WSError SetSessionIcon(const sptr<IRemoteObject> &token, const std::shared_ptr<Media::PixelMap> &icon);
+    WSError RegisterSessionListener(const sptr<ISessionListener> sessionListener);
+    void UnregisterSessionListener();
+    void HandleTurnScreenOn(const sptr<SceneSession>& sceneSession);
+    void HandleKeepScreenOn(const sptr<SceneSession>& sceneSession, bool requireLock);
+    void UpdatePrivateStateAndNotify(bool isAddingPrivateSession);
+    void InitPersistentStorage();
 
 protected:
     SceneSessionManager();
     virtual ~SceneSessionManager() = default;
 
 private:
+    bool Init();
     void LoadWindowSceneXml();
     void ConfigWindowSceneXml();
     void ConfigWindowEffect(const WindowSceneConfig::ConfigItem& effectConfig);
@@ -114,6 +126,13 @@ private:
 
     std::shared_ptr<TaskScheduler> taskScheduler_;
     sptr<AppExecFwk::IBundleMgr> bundleMgr_;
+    
+    std::shared_ptr<EventRunner> eventLoop_;
+    std::shared_ptr<EventHandler> eventHandler_;
+    bool isReportTaskStart_ = false;
+    void RegisterSessionStateChangeNotifyManagerFunc(sptr<SceneSession>& sceneSession);
+    void OnSessionStateChange(uint64_t persistentId);
+    sptr<ISessionListener> sessionListener_;
 };
 } // namespace OHOS::Rosen
 
