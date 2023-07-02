@@ -39,6 +39,7 @@ class ResourceManager;
 
 namespace OHOS::Rosen {
 class SceneSession;
+class AccessibilityWindowInfo;
 using NotifyCreateSpecificSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 using ProcessGestureNavigationEnabledChangeFunc = std::function<void(bool enable)>;
 using NotifySetFocusSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
@@ -88,6 +89,7 @@ public:
     void InitPersistentStorage();
     std::string GetSessionSnapshot(uint64_t persistentId);
 
+    WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos);
 protected:
     SceneSessionManager();
     virtual ~SceneSessionManager() = default;
@@ -118,7 +120,11 @@ private:
     WSError UpdateBrightness(uint64_t persistentId);
     void SetDisplayBrightness(float brightness);
     float GetDisplayBrightness() const;
-
+    void HandleUpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action,
+        const sptr<SceneSession>& sceneSession);
+    void NotifyWindowInfoChange(uint64_t persistentId, WindowUpdateType type);
+    void FillWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos,
+        const sptr<SceneSession> sceneSession);
     sptr<RootSceneSession> rootSceneSession_;
     std::map<uint64_t, sptr<SceneSession>> sceneSessionMap_;
 
