@@ -33,6 +33,7 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
+    sptr<SceneSessionManagerStub> stub_;
 };
 
 void SceneSessionManagerStubTest::SetUpTestCase()
@@ -45,6 +46,7 @@ void SceneSessionManagerStubTest::TearDownTestCase()
 
 void SceneSessionManagerStubTest::SetUp()
 {
+    stub_ = new SceneSessionManager();
 }
 
 void SceneSessionManagerStubTest::TearDown()
