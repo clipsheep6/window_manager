@@ -15,7 +15,9 @@
 
 #include <gtest/gtest.h>
 #include "iconsumer_surface.h"
+#include "iremote_object_mocker.h"
 #include "session_manager/include/scene_session_manager.h"
+#include "session_manager/include/zidl/scene_session_manager_proxy.h"
 #include <surface.h>
 #include "window_manager_agent.h"
 #include "zidl/window_manager_agent_interface.h"
@@ -30,6 +32,8 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
+    sptr<IRemoteObject> iRemoteObjectMocker;
+    sptr<SceneSessionManagerProxy> sceneSessionManagerProxy_;
 };
 
 void sceneSessionManagerProxyTest::SetUpTestCase()
@@ -42,6 +46,8 @@ void sceneSessionManagerProxyTest::TearDownTestCase()
 
 void sceneSessionManagerProxyTest::SetUp()
 {
+    sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
+    sceneSessionManagerProxy_ = new SceneSessionManagerProxy(iRemoteObjectMocker);
 }
 
 void sceneSessionManagerProxyTest::TearDown()
@@ -56,7 +62,6 @@ namespace {
  */
 HWTEST_F(sceneSessionManagerProxyTest, RegisterWindowManagerAgent01, Function | SmallTest | Level2)
 {
-    sptr<ISceneSessionManager> sceneSessionManagerProxy_ = new SceneSessionManagerProxy();
     sptr<IWindowManagerAgent> windowManagerAgent = new WindowManagerAgent();
     WindowManagerAgentType type = WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS;
     ASSERT_EQ(WMError::WM_ERROR_NULLPTR, sceneSessionManagerProxy_->RegisterWindowManagerAgent(type, nullptr));

@@ -116,6 +116,7 @@ ohos_unittest("ws_scene_session_test") {
 ## Build ws_unittest_common.a {{{
 config("ws_unittest_common_public_config") {
   include_dirs = [
+    "${window_base_path}/test/common/mock"
     # for WMError Code
     "${window_base_path}/dm/include",
     "${window_base_path}/dmserver/include",

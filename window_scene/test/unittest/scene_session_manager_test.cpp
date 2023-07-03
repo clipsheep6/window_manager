@@ -85,6 +85,7 @@ HWTEST_F(SceneSessionManagerTest, RegisterWindowManagerAgent, Function | SmallTe
 
     ASSERT_EQ(WMError::WM_OK, ssm_->RegisterWindowManagerAgent(type, windowManagerAgent));
     ASSERT_EQ(WMError::WM_OK, ssm_->UnregisterWindowManagerAgent(type, windowManagerAgent));
+    ssm_ = nullptr;
 }
 
 }
