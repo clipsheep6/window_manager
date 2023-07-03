@@ -15,7 +15,6 @@
 
 #include <gtest/gtest.h>
 #include "iconsumer_surface.h"
-#include "session_manager/include/scene_session_manager.h"
 #include "session/host/include/scene_session.h"
 #include <surface.h>
 
@@ -29,6 +28,7 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
+    sptr<ISession> session_;
 };
 
 void SceneSessionTest::SetUpTestCase()
@@ -49,14 +49,17 @@ void SceneSessionTest::TearDown()
 
 namespace {
 /**
- * @tc.name: GetSceneSceneSessionProxy01
+ * @tc.name: ForegroundAndBackground01
  * @tc.desc: normal function
  * @tc.type: FUNC
  */
 HWTEST_F(SceneSessionTest, GetSceneSceneSessionProxy01, Function | SmallTest | Level2)
 {
-    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, SceneSession::GetInstance().Foreground());
-    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, SceneSession::GetInstance().Background());
+    MessageParcel reply;
+    sptr<IRemoteObject> sessionObject = reply.ReadRemoteObject();
+    session_ = iface_cast<ISession>(sessionObject);
+    ASSERT_EQ(WSError::WS_OK, session_->Foreground());
+    ASSERT_EQ(WSError::WS_OK, session_->Background());
 }
 
 }
