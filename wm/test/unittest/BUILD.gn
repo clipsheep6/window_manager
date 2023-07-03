@@ -33,6 +33,7 @@ group("unittest") {
     ":wm_window_session_impl_test",
     ":wm_window_stub_test",
     ":wm_window_test",
+    ":wm_window_adapter_test",
   ]
 }
 
