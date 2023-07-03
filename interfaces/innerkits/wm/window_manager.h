@@ -27,6 +27,7 @@
 
 namespace OHOS {
 namespace Rosen {
+class AccessibilityWindowInfo;
 struct SystemBarRegionTint {
     WindowType type_;
     SystemBarProperty prop_;
@@ -152,47 +153,6 @@ public:
      * @param windowVisibilityInfo Window visibility info.
      */
     virtual void OnWindowVisibilityChanged(const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfo) = 0;
-};
-
-/**
- * @class AccessibilityWindowInfo
- *
- * @brief Window info used for Accessibility.
- */
-class AccessibilityWindowInfo : public Parcelable {
-public:
-    /**
-     * @brief Default construct of AccessibilityWindowInfo.
-     */
-    AccessibilityWindowInfo() = default;
-    /**
-     * @brief Default deconstruct of AccessibilityWindowInfo.
-     */
-    ~AccessibilityWindowInfo() = default;
-
-    /**
-     * @brief Marshalling AccessibilityWindowInfo.
-     *
-     * @param parcel Package of AccessibilityWindowInfo.
-     * @return True means marshall success, false means marshall failed.
-     */
-    virtual bool Marshalling(Parcel& parcel) const override;
-    /**
-     * @brief Unmarshalling AccessibilityWindowInfo.
-     *
-     * @param parcel Package of AccessibilityWindowInfo.
-     * @return AccessibilityWindowInfo object.
-     */
-    static AccessibilityWindowInfo* Unmarshalling(Parcel& parcel);
-
-    int32_t wid_;
-    Rect windowRect_;
-    bool focused_ { false };
-    bool isDecorEnable_ { false };
-    DisplayId displayId_;
-    uint32_t layer_;
-    WindowMode mode_;
-    WindowType type_;
 };
 
 /**

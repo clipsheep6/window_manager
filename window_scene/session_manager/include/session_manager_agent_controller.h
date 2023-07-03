@@ -16,6 +16,7 @@
 #ifndef OHOS_ROSEN_SESSION_MANAGER_AGENT_CONTROLLER_H
 #define OHOS_ROSEN_SESSION_MANAGER_AGENT_CONTROLLER_H
 
+#include "accessibility_window_info.h"
 #include "client_agent_container.h"
 #include "wm_single_instance.h"
 #include "zidl/window_manager_agent_interface.h"
@@ -32,6 +33,8 @@ public:
 
     void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing);
     void UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused);
+    void NotifyAccessibilityWindowInfo(const std::vector<sptr<AccessibilityWindowInfo>>& infos,
+        WindowUpdateType type);
 private:
     SessionManagerAgentController() {}
     virtual ~SessionManagerAgentController() = default;

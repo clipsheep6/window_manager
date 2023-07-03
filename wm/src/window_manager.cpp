@@ -19,6 +19,9 @@
 #include <cinttypes>
 
 #include "marshalling_helper.h"
+#include "scene_board_judgement.h"
+#include "scene_session_manager.h"
+#include "session_manager.h"
 #include "window_adapter.h"
 #include "window_manager_agent.h"
 #include "window_manager_hilog.h"
@@ -55,36 +58,6 @@ WindowVisibilityInfo* WindowVisibilityInfo::Unmarshalling(Parcel &parcel)
     }
     windowVisibilityInfo->windowType_ = static_cast<WindowType>(parcel.ReadUint32());
     return windowVisibilityInfo;
-}
-
-bool AccessibilityWindowInfo::Marshalling(Parcel &parcel) const
-{
-    return parcel.WriteInt32(wid_) && parcel.WriteUint32(windowRect_.width_) &&
-        parcel.WriteUint32(windowRect_.height_) && parcel.WriteInt32(windowRect_.posX_) &&
-        parcel.WriteInt32(windowRect_.posY_) && parcel.WriteBool(focused_) && parcel.WriteBool(isDecorEnable_) &&
-        parcel.WriteUint64(displayId_)  && parcel.WriteUint32(layer_) &&
-        parcel.WriteUint32(static_cast<uint32_t>(mode_)) && parcel.WriteUint32(static_cast<uint32_t>(type_));
-}
-
-AccessibilityWindowInfo* AccessibilityWindowInfo::Unmarshalling(Parcel &parcel)
-{
-    auto info = new (std::nothrow) AccessibilityWindowInfo();
-    if (info == nullptr) {
-        WLOGFE("accessibility window info is nullptr.");
-        return nullptr;
-    }
-    bool res = parcel.ReadInt32(info->wid_) && parcel.ReadUint32(info->windowRect_.width_) &&
-        parcel.ReadUint32(info->windowRect_.height_) && parcel.ReadInt32(info->windowRect_.posX_) &&
-        parcel.ReadInt32(info->windowRect_.posY_) && parcel.ReadBool(info->focused_) &&
-        parcel.ReadBool(info->isDecorEnable_) && parcel.ReadUint64(info->displayId_) &&
-        parcel.ReadUint32(info->layer_);
-    if (!res) {
-        delete info;
-        return nullptr;
-    }
-    info->mode_ = static_cast<WindowMode>(parcel.ReadUint32());
-    info->type_ = static_cast<WindowType>(parcel.ReadUint32());
-    return info;
 }
 
 WM_IMPLEMENT_SINGLE_INSTANCE(WindowManager)
@@ -400,8 +373,13 @@ WMError WindowManager::RegisterWindowUpdateListener(const sptr<IWindowUpdateList
     WMError ret = WMError::WM_OK;
     if (pImpl_->windowUpdateListenerAgent_ == nullptr) {
         pImpl_->windowUpdateListenerAgent_ = new WindowManagerAgent();
-        ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
-            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_UPDATE, pImpl_->windowUpdateListenerAgent_);
+        if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+            ret = SingletonContainer::Get<SceneSessionManager>().RegisterWindowManagerAgent(
+                WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_UPDATE, pImpl_->windowUpdateListenerAgent_);
+        } else {
+            ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+                WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_UPDATE, pImpl_->windowUpdateListenerAgent_);
+        }
     }
     if (ret != WMError::WM_OK) {
         WLOGFW("RegisterWindowManagerAgent failed !");
@@ -432,8 +410,13 @@ WMError WindowManager::UnregisterWindowUpdateListener(const sptr<IWindowUpdateLi
     pImpl_->windowUpdateListeners_.erase(iter);
     WMError ret = WMError::WM_OK;
     if (pImpl_->windowUpdateListeners_.empty() && pImpl_->windowUpdateListenerAgent_ != nullptr) {
-        ret = SingletonContainer::Get<WindowAdapter>().UnregisterWindowManagerAgent(
-            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_UPDATE, pImpl_->windowUpdateListenerAgent_);
+        if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+            ret = SingletonContainer::Get<SceneSessionManager>().UnregisterWindowManagerAgent(
+                WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_UPDATE, pImpl_->windowUpdateListenerAgent_);
+        } else {
+            ret = SingletonContainer::Get<WindowAdapter>().UnregisterWindowManagerAgent(
+                WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_UPDATE, pImpl_->windowUpdateListenerAgent_);
+        }
         if (ret == WMError::WM_OK) {
             pImpl_->windowUpdateListenerAgent_ = nullptr;
         }
@@ -725,7 +708,12 @@ void WindowManager::UpdateWindowVisibilityInfo(
 
 WMError WindowManager::GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) const
 {
-    WMError ret = SingletonContainer::Get<WindowAdapter>().GetAccessibilityWindowInfo(infos);
+    WMError ret;
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ret = SingletonContainer::Get<SessionManager>().GetAccessibilityWindowInfo(infos);
+    } else {
+        ret = SingletonContainer::Get<WindowAdapter>().GetAccessibilityWindowInfo(infos);
+    }
     if (ret != WMError::WM_OK) {
         WLOGFE("get window info failed");
     }

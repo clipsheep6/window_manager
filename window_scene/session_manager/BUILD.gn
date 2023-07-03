@@ -16,6 +16,7 @@ import("../../windowmanager_aafwk.gni")
 
 config("session_manager_public_config") {
   include_dirs = [
+    "${window_base_path}/interfaces/innerkits/wm",
     "${window_base_path}/window_scene",
     "${window_base_path}/window_scene/session_manager/include",
     "${window_base_path}/window_scene/session_manager/include/zidl",
@@ -33,7 +34,7 @@ config("session_manager_public_config") {
 
     # for scene session manager
     "${window_base_path}/interfaces/innerkits/wm",
-    "${window_base_path}/wmserver/include/zidl",
+    "${window_base_path}/wmserver/include",
     "${graphic_base_path}/graphic_2d/rosen/modules/animation/window_animation/include",
 
     # for window_manager_hilog
@@ -68,6 +69,7 @@ ohos_shared_library("scene_session_manager") {
     "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/session:scene_session",
     "${window_base_path}/window_scene/session_manager:screen_session_manager",
+    "${window_base_path}/window_scene/session_manager:session_manager",
     "//third_party/libxml2:libxml2",
   ]
 
