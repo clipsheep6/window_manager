@@ -23,7 +23,7 @@
 #include <unordered_set>
 
 #include <refbase.h>
-#include <event_handler.h>
+#include <EventHandler.h>
 #include <vsync_receiver.h>
 
 #include "wm_common.h"
@@ -73,7 +73,7 @@ private:
         .callback_ = OnVsync,
     };
     std::shared_ptr<AppExecFwk::EventHandler> vsyncHandler_ = nullptr;
-    AppExecFwk::EventHandler::Callback vsyncTimeoutCallback_ = std::bind(&VsyncStation::OnVsyncTimeOut, this);
+    AppExecFwk::Callback vsyncTimeoutCallback_ = std::bind(&VsyncStation::OnVsyncTimeOut, this);
 };
 } // namespace Rosen
 } // namespace OHOS
