@@ -15,7 +15,7 @@
 
 #include <gtest/gtest.h>
 #include "iconsumer_surface.h"
-#include "session_manager/include/scene_session_manager.h"
+#include "session_manager/include/session_manager.h"
 #include <surface.h>
 #include "zidl/session_manager.h"
 
