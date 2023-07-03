@@ -14,16 +14,34 @@
 import("//build/ohos.gni")
 import("../windowmanager_aafwk.gni")
 
-if (current_os == "mac") {
+if (current_os == "ohos") {
+  ohos_shared_library("previewer_window") {
+    libs = []
+     sources = []
+     part_name = "window_manager"
+    subsystem_name = "window"
+  }
+
+   ohos_shared_library("previewer_window_napi") {
+    libs = []
+     sources = []
+     part_name = "window_manager"
+    subsystem_name = "window"
+  }
+
+
+} else {
+  if (current_os == "mac") {
   suffix = ".dylib"
-  hilog_platform = "mac"
+ 
 } else if (current_os == "linux") {
   suffix = ".so"
-  hilog_platform = "linux"
-} else {
+ 
+} else if (current_os == "mingw") {
   suffix = ".dll"
-  hilog_platform = "windows"
+ 
 }
+
 
 config("previewer_window_config") {
   visibility = [ "*:*" ]
@@ -42,14 +60,16 @@ config("previewer_window_config") {
 }
 
 ohos_shared_library("previewer_window") {
-  public_configs = [
-    ":previewer_window_config",
-    "${ability_runtime_path}/frameworks/simulator/common:ability_simulator_common_config",
-  ]
+  
 
   libs = []
 
-  sources = [
+ 
+    public_configs = [
+    ":previewer_window_config",
+    "${ability_runtime_path}/frameworks/simulator/common:ability_simulator_common_config",
+  ]
+    sources = [
     "../utils/src/window_transition_info.cpp",
     "../utils/src/wm_math.cpp",
     "src/vsync_station.cpp",
@@ -76,9 +96,10 @@ ohos_shared_library("previewer_window") {
   external_deps = [
     "ace_engine:ace_uicontent",
     "graphic_standard:librender_service_client",
-    "hilog_native:libhilog_$hilog_platform",
+    "hilog:libhilog",
     "previewer:ide_extension",
   ]
+  
   cflags = [ "-std=c++11" ]
   part_name = "window_manager"
   subsystem_name = "window"
@@ -98,6 +119,7 @@ ohos_shared_library("previewer_window_napi") {
 
   libs = []
 
+  
   sources = [
     "${ability_runtime_path}/frameworks/simulator/ability_simulator/src/js_runtime_utils.cpp",
     "../interfaces/kits/napi/window_runtime/window_napi/js_window.cpp",
@@ -126,43 +148,47 @@ ohos_shared_library("previewer_window_napi") {
 
   external_deps = [
     "ace_engine:ace_uicontent",
-    "hilog_native:libhilog_$hilog_platform",
+    "hilog:libhilog",
     "napi:ace_napi",
     "napi:ace_napi_ark",
   ]
 
   cflags_cc = [ "-DWINDOW_PREVIEW" ]
   cflags = [ "-std=c++11" ]
+ 
+   
+  
   part_name = "window_manager"
   subsystem_name = "window"
 }
 
-ohos_copy("window_stage_copy_modules") {
+  ohos_copy("window_stage_copy_modules") {
   deps = []
   sources = []
+    napi_modules = [ "window_stage_modules:windowstage" ]
 
-  napi_modules = [ "window_stage_modules:windowstage" ]
+    foreach(module, napi_modules) {
+      deps += [ module ]
+      out_path = get_label_info(module, "root_out_dir")
+      out_name = get_label_info(module, "name")
+      sources += [ out_path + "/window/window_manager/lib" + out_name + suffix ]
+    }
 
-  foreach(module, napi_modules) {
-    deps += [ module ]
-    out_path = get_label_info(module, "root_out_dir")
-    out_name = get_label_info(module, "name")
-    sources += [ out_path + "/window/window_manager/lib" + out_name + suffix ]
+    target_path = get_label_info(":copy_previewer_library", "target_out_dir")
+
+    outputs = [ target_path +
+                "/previewer/common/bin/module/application/{{source_file_part}}" ]
+ 
+ 
   }
-
-  target_path = get_label_info(":copy_previewer_library", "target_out_dir")
-
-  outputs = [ target_path +
-              "/previewer/common/bin/module/application/{{source_file_part}}" ]
-}
-
 ohos_copy("copy_previewer_library") {
-  shared_library_path = get_label_info(":previewer_window", "root_out_dir")
+ 
+    shared_library_path = get_label_info(":previewer_window", "root_out_dir")
   sources = [ shared_library_path +
               "/window/window_manager/libpreviewer_window" + suffix ]
   deps = [ ":previewer_window" ]
 
-  if (current_os != "linux") {
+  if (current_os == "mingw" || current_os == "mac") {
     deps += [ ":window_stage_copy_modules" ]
     shared_library_path =
         get_label_info(":previewer_window_napi", "root_out_dir")
@@ -175,6 +201,15 @@ ohos_copy("copy_previewer_library") {
   module_source_dir = target_out_dir + "/previewer/common/bin/"
   module_install_name = ""
 
+
   part_name = "window_manager"
   subsystem_name = "window"
+
+
 }
+
+
+}
+
+
+

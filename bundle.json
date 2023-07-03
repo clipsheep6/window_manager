@@ -206,15 +206,6 @@
           "name": "//foundation/window/window_manager/previewer:previewer_window",
           "header": {
             "header_files": [
-              "window.h",
-              "window_model.h",
-              "window_option.h",
-              "window_scene.h",
-              "wm_common.h",
-              "parcel.h",
-              "refbase.h",
-              "pixel_map.h",
-              "iremote_object.h"
             ],
             "header_base": "//foundation/window/window_manager/previewer/include"
           }
