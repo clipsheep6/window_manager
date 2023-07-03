@@ -32,18 +32,14 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
-    
-    static sptr<SessionManagerAgentController> smac_;
 };
 
 void SessionManagerAgentControllerTest::SetUpTestCase()
 {
-    smac_ = SessionManagerAgentController::GetInstance()
 }
 
 void SessionManagerAgentControllerTest::TearDownTestCase()
 {
-    smac_ = nullptr;
 }
 
 void SessionManagerAgentControllerTest::SetUp()
@@ -64,13 +60,13 @@ HWTEST_F(SessionManagerAgentControllerTest, RegisterWindowManagerAgent, Function
     sptr<IWindowManagerAgent> windowManagerAgent = new WindowManagerAgent();
     WindowManagerAgentType type = WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS;
 
-    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, smac_->RegisterWindowManagerAgent(nullptr, type));
-    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, smac_->UnregisterWindowManagerAgent(nullptr, type));
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, SessionManagerAgentController::GetInstance().RegisterWindowManagerAgent(nullptr, type));
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, SessionManagerAgentController::GetInstance().UnRegisterWindowManagerAgent(nullptr, type));
 
-    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, smac_->UnregisterWindowManagerAgent(windowManagerAgent, type));
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, SessionManagerAgentController::GetInstance().UnRegisterWindowManagerAgent(windowManagerAgent, type));
 
-    ASSERT_EQ(WMError::WM_OK, smac_->RegisterWindowManagerAgent(windowManagerAgent, type));
-    ASSERT_EQ(WMError::WM_OK, smac_->UnregisterWindowManagerAgent(windowManagerAgent, type));
+    ASSERT_EQ(WMError::WM_OK, SessionManagerAgentController::GetInstance().RegisterWindowManagerAgent(windowManagerAgent, type));
+    ASSERT_EQ(WMError::WM_OK, SessionManagerAgentController::GetInstance().UnRegisterWindowManagerAgent(windowManagerAgent, type));
 }
 
 } // namespace Rosen
