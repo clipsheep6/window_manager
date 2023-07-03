@@ -27,6 +27,7 @@
 
 namespace OHOS {
 namespace Rosen {
+class AccessibilityWindowInfo;
 struct SystemBarRegionTint {
     WindowType type_;
     SystemBarProperty prop_;
@@ -152,73 +153,6 @@ public:
      * @param windowVisibilityInfo Window visibility info.
      */
     virtual void OnWindowVisibilityChanged(const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfo) = 0;
-};
-
-/**
- * @class AccessibilityWindowInfo
- *
- * @brief Window info used for Accessibility.
- */
-class AccessibilityWindowInfo : public Parcelable {
-public:
-    /**
-     * @brief Default construct of AccessibilityWindowInfo.
-     */
-    AccessibilityWindowInfo() = default;
-    /**
-     * @brief Default deconstruct of AccessibilityWindowInfo.
-     */
-    ~AccessibilityWindowInfo() = default;
-
-    /**
-     * @brief Marshalling AccessibilityWindowInfo.
-     *
-     * @param parcel Package of AccessibilityWindowInfo.
-     * @return True means marshall success, false means marshall failed.
-     */
-    bool Marshalling(Parcel& parcel) const
-    {
-        return parcel.WriteInt32(wid_) && parcel.WriteUint32(windowRect_.width_) &&
-            parcel.WriteUint32(windowRect_.height_) && parcel.WriteInt32(windowRect_.posX_) &&
-            parcel.WriteInt32(windowRect_.posY_) && parcel.WriteBool(focused_) && parcel.WriteBool(isDecorEnable_) &&
-            parcel.WriteUint64(displayId_)  && parcel.WriteUint32(layer_) &&
-            parcel.WriteUint32(static_cast<uint32_t>(mode_)) && parcel.WriteUint32(static_cast<uint32_t>(type_));
-    }
-
-    /**
-     * @brief Unmarshalling AccessibilityWindowInfo.
-     *
-     * @param parcel Package of AccessibilityWindowInfo.
-     * @return AccessibilityWindowInfo object.
-     */
-    static AccessibilityWindowInfo* Unmarshalling(Parcel& parcel)
-    {
-        auto info = new (std::nothrow) AccessibilityWindowInfo();
-        if (info == nullptr) {
-            return nullptr;
-        }
-        bool res = parcel.ReadInt32(info->wid_) && parcel.ReadUint32(info->windowRect_.width_) &&
-            parcel.ReadUint32(info->windowRect_.height_) && parcel.ReadInt32(info->windowRect_.posX_) &&
-            parcel.ReadInt32(info->windowRect_.posY_) && parcel.ReadBool(info->focused_) &&
-            parcel.ReadBool(info->isDecorEnable_) && parcel.ReadUint64(info->displayId_) &&
-            parcel.ReadUint32(info->layer_);
-        if (!res) {
-            delete info;
-            return nullptr;
-        }
-        info->mode_ = static_cast<WindowMode>(parcel.ReadUint32());
-        info->type_ = static_cast<WindowType>(parcel.ReadUint32());
-        return info;
-    }
-
-    int32_t wid_;
-    Rect windowRect_;
-    bool focused_ { false };
-    bool isDecorEnable_ { false };
-    DisplayId displayId_;
-    uint32_t layer_;
-    WindowMode mode_;
-    WindowType type_;
 };
 
 /**
