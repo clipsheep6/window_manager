@@ -25,6 +25,9 @@ group("unittest") {
     ":ws_session_test",
     ":ws_window_scene_config_test",
     ":ws_scene_session_manager_proxy_test",
+    ":ws_scene_session_manager_stub_test",
+    ":ws_scene_session_test",
+    ":ws_session_manager_agent_controller_test",
   ]
 }
 
