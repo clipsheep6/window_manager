@@ -12,8 +12,8 @@
 # limitations under the License.
 
 import("//arkcompiler/ets_frontend/es2panda/es2abc_config.gni")
-import("//foundation/arkui/ace_engine/build/ace_gen_obj.gni")
 import("//build/ohos.gni")
+import("//foundation/arkui/ace_engine/build/ace_gen_obj.gni")
 
 template("gen_js_src_binary") {
   es2abc_gen_abc("gen_abc_" + target_name) {
@@ -64,9 +64,7 @@ ohos_shared_library("windowstage") {
     defines = [ "MAC_PLATFORM" ]
   }
 
-  sources = [
-    "../../interfaces/kits/napi/window_runtime/window_stage_napi/window_stage_module.cpp",
-  ]
+  sources = [ "../../interfaces/kits/napi/window_runtime/window_stage_napi/window_stage_module.cpp" ]
 
   deps = [
     ":gen_obj_src_window_stage_abc",
