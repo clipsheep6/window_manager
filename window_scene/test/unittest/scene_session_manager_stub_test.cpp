@@ -18,6 +18,7 @@
 #include <message_option.h>
 #include <message_parcel.h>
 #include "session_manager/include/scene_session_manager.h"
+#include "session_manager/include/zidl/scene_session_manager_interface.h"
 #include <surface.h>
 #include "window_manager_agent.h"
 #include "zidl/scene_session_manager_stub.h"
@@ -59,7 +60,7 @@ namespace {
  * @tc.desc: test TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT
  * @tc.type: FUNC
  */
-HWTEST_F(SceneSessionManagerStubTest, GetSceneSessionManagerProxy01, Function | SmallTest | Level2)
+HWTEST_F(SceneSessionManagerStubTest, OnRemoteRequest01, Function | SmallTest | Level2)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -71,7 +72,7 @@ HWTEST_F(SceneSessionManagerStubTest, GetSceneSessionManagerProxy01, Function | 
     sptr<IWindowManagerAgent> windowManagerAgent = new WindowManagerAgent();
     data.WriteRemoteObject(windowManagerAgent->AsObject());
 
-    uint32_t code = static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT);
+    uint32_t code = static_cast<uint32_t>(ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT);
 
     int res = stub_->OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(res, 0);
@@ -82,7 +83,7 @@ HWTEST_F(SceneSessionManagerStubTest, GetSceneSessionManagerProxy01, Function | 
  * @tc.desc: test TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT
  * @tc.type: FUNC
  */
-HWTEST_F(SceneSessionManagerStubTest, GetSceneSessionManagerProxy01, Function | SmallTest | Level2)
+HWTEST_F(SceneSessionManagerStubTest, OnRemoteRequest02, Function | SmallTest | Level2)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -94,7 +95,7 @@ HWTEST_F(SceneSessionManagerStubTest, GetSceneSessionManagerProxy01, Function | 
     sptr<IWindowManagerAgent> windowManagerAgent = new WindowManagerAgent();
     data.WriteRemoteObject(windowManagerAgent->AsObject());
 
-    uint32_t code = static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT);
+    uint32_t code = static_cast<uint32_t>(ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT);
 
     int res = stub_->OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(res, 0);
