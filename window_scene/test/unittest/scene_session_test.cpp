@@ -14,9 +14,8 @@
  */
 
 #include <gtest/gtest.h>
-#include "iconsumer_surface.h"
+#include <ui/rs_surface_node.h>
 #include "session/host/include/scene_session.h"
-#include <surface.h>
 
 using namespace testing;
 using namespace testing::ext;

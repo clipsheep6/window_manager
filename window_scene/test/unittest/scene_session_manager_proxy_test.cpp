@@ -14,11 +14,10 @@
  */
 
 #include <gtest/gtest.h>
-#include "iconsumer_surface.h"
+#include <ui/rs_surface_node.h>
 #include "iremote_object_mocker.h"
 #include "session_manager/include/scene_session_manager.h"
 #include "session_manager/include/zidl/scene_session_manager_proxy.h"
-#include <surface.h>
 #include "window_manager_agent.h"
 #include "zidl/window_manager_agent_interface.h"
 
