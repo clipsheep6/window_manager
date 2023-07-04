@@ -33,60 +33,6 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowManager"};
 }
 
-bool WindowVisibilityInfo::Marshalling(Parcel &parcel) const
-{
-    return parcel.WriteUint32(windowId_) && parcel.WriteInt32(pid_) &&
-           parcel.WriteInt32(uid_) && parcel.WriteBool(isVisible_) &&
-           parcel.WriteUint32(static_cast<uint32_t>(windowType_));
-}
-
-WindowVisibilityInfo* WindowVisibilityInfo::Unmarshalling(Parcel &parcel)
-{
-    auto windowVisibilityInfo = new (std::nothrow) WindowVisibilityInfo();
-    if (windowVisibilityInfo == nullptr) {
-        WLOGFE("window visibility info is nullptr.");
-        return nullptr;
-    }
-    bool res = parcel.ReadUint32(windowVisibilityInfo->windowId_) && parcel.ReadInt32(windowVisibilityInfo->pid_) &&
-        parcel.ReadInt32(windowVisibilityInfo->uid_) && parcel.ReadBool(windowVisibilityInfo->isVisible_);
-    if (!res) {
-        delete windowVisibilityInfo;
-        return nullptr;
-    }
-    windowVisibilityInfo->windowType_ = static_cast<WindowType>(parcel.ReadUint32());
-    return windowVisibilityInfo;
-}
-
-bool AccessibilityWindowInfo::Marshalling(Parcel &parcel) const
-{
-    return parcel.WriteInt32(wid_) && parcel.WriteUint32(windowRect_.width_) &&
-        parcel.WriteUint32(windowRect_.height_) && parcel.WriteInt32(windowRect_.posX_) &&
-        parcel.WriteInt32(windowRect_.posY_) && parcel.WriteBool(focused_) && parcel.WriteBool(isDecorEnable_) &&
-        parcel.WriteUint64(displayId_)  && parcel.WriteUint32(layer_) &&
-        parcel.WriteUint32(static_cast<uint32_t>(mode_)) && parcel.WriteUint32(static_cast<uint32_t>(type_));
-}
-
-AccessibilityWindowInfo* AccessibilityWindowInfo::Unmarshalling(Parcel &parcel)
-{
-    auto info = new (std::nothrow) AccessibilityWindowInfo();
-    if (info == nullptr) {
-        WLOGFE("accessibility window info is nullptr.");
-        return nullptr;
-    }
-    bool res = parcel.ReadInt32(info->wid_) && parcel.ReadUint32(info->windowRect_.width_) &&
-        parcel.ReadUint32(info->windowRect_.height_) && parcel.ReadInt32(info->windowRect_.posX_) &&
-        parcel.ReadInt32(info->windowRect_.posY_) && parcel.ReadBool(info->focused_) &&
-        parcel.ReadBool(info->isDecorEnable_) && parcel.ReadUint64(info->displayId_) &&
-        parcel.ReadUint32(info->layer_);
-    if (!res) {
-        delete info;
-        return nullptr;
-    }
-    info->mode_ = static_cast<WindowMode>(parcel.ReadUint32());
-    info->type_ = static_cast<WindowType>(parcel.ReadUint32());
-    return info;
-}
-
 WM_IMPLEMENT_SINGLE_INSTANCE(WindowManager)
 
 class WindowManager::Impl {

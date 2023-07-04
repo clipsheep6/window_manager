@@ -154,6 +154,21 @@ uint32_t WindowSessionProperty::GetParentId() const
     return parentId_;
 }
 
+void WindowSessionProperty::SetWindowFlags(uint32_t flags)
+{
+    flags_ = flags;
+}
+
+void WindowSessionProperty::AddWindowFlag(WindowFlag flag)
+{
+    flags_ |= static_cast<uint32_t>(flag);
+}
+
+uint32_t WindowSessionProperty::GetWindowFlags() const
+{
+    return flags_;
+}
+
 void WindowSessionProperty::SetPersistentId(uint64_t persistentId)
 {
     persistentId_ = persistentId;
@@ -256,6 +271,16 @@ WindowMode WindowSessionProperty::GetWindowMode() const
     return windowMode_;
 }
 
+void WindowSessionProperty::SetZOrder(uint32_t zOrder)
+{
+    zOrder_ = zOrder;
+}
+
+uint32_t WindowSessionProperty::GetZOrder()
+{
+    return zOrder_;
+}
+
 bool WindowSessionProperty::MarshallingWindowLimits(Parcel& parcel) const
 {
     if (parcel.WriteUint32(limits_.maxWidth_) &&
@@ -293,6 +318,7 @@ bool WindowSessionProperty::Marshalling(Parcel& parcel) const
         parcel.WriteFloat(brightness_) &&
         parcel.WriteUint32(static_cast<uint32_t>(requestedOrientation_)) &&
         parcel.WriteUint32(static_cast<uint32_t>(windowMode_)) &&
+        parcel.WriteUint32(zOrder_) &&
         MarshallingWindowLimits(parcel);
 }
 
@@ -325,6 +351,7 @@ WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
     property->SetBrightness(parcel.ReadFloat());
     property->SetRequestedOrientation(static_cast<Orientation>(parcel.ReadUint32()));
     property->SetWindowMode(static_cast<WindowMode>(parcel.ReadUint32()));
+    property->SetZOrder(parcel.ReadUint32());
     UnmarshallingWindowLimits(parcel, property);
     return property;
 }

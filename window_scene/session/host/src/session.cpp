@@ -489,6 +489,36 @@ void Session::SetSessionExceptionListener(const NotifySessionExceptionFunc& func
     sessionExceptionFunc_ = func;
 }
 
+void Session::SetPendingSessionToForegroundListener(const NotifyPendingSessionToForegroundFunc& func)
+{
+    pendingSessionToForegroundFunc_ = func;
+}
+
+WSError Session::PendingSessionToForeground()
+{
+    WLOGFI("run PendingSessionToForeground");
+    SessionInfo info = GetSessionInfo();
+    if (pendingSessionToForegroundFunc_) {
+        pendingSessionToForegroundFunc_(info);
+    }
+    return WSError::WS_OK;
+}
+
+void Session::SetPendingSessionToBackgroundForDelegatorListener(const NotifyPendingSessionToBackgroundForDelegatorFunc& func)
+{
+    pendingSessionToBackgroundForDelegatorFunc_ = func;
+}
+
+WSError Session::PendingSessionToBackgroundForDelegator()
+{
+    WLOGFI("run PendingSessionToBackgroundForDelegator");
+    SessionInfo info = GetSessionInfo();
+    if (pendingSessionToBackgroundForDelegatorFunc_) {
+        pendingSessionToBackgroundForDelegatorFunc_(info);
+    }
+    return WSError::WS_OK;
+}
+
 void Session::NotifyTouchDialogTarget()
 {
     if (!sessionStage_) {
@@ -905,6 +935,24 @@ WSError Session::TransferExtensionData(const AAFwk::WantParams& wantParams)
 void Session::NotifyRemoteReady()
 {
     return;
+}
+
+WindowMode Session::GetWindowMode()
+{
+    if (property_ == nullptr) {
+        WLOGFW("null property.");
+        return WindowMode::WINDOW_MODE_UNDEFINED;
+    }
+    return property_->GetWindowMode();
+}
+
+void Session::SetZOrder(uint32_t zOrder)
+{
+    if (property_ == nullptr) {
+        WLOGFW("null property.");
+        return;
+    }
+    property_->SetZOrder(zOrder);
 }
 
 WSError Session::UpdateSnapshot()

@@ -26,6 +26,7 @@
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/host/include/zidl/session_stub.h"
 #include "session/host/include/scene_persistence.h"
+#include "wm_common.h"
 
 namespace OHOS::MMI {
 class PointerEvent;
@@ -48,6 +49,8 @@ using NotifySessionTouchableChangeFunc = std::function<void(const bool touchable
 using NotifyClickFunc = std::function<void()>;
 using NotifyTerminateSessionFunc = std::function<void(const SessionInfo& info)>;
 using NotifySessionExceptionFunc = std::function<void(const SessionInfo& info)>;
+using NotifyPendingSessionToForegroundFunc = std::function<void(const SessionInfo& info)>;
+using NotifyPendingSessionToBackgroundForDelegatorFunc = std::function<void(const SessionInfo& info)>;
 
 class ILifecycleListener {
 public:
@@ -140,6 +143,11 @@ public:
     void NotifyTouchDialogTarget();
     WSError NotifyDestroy();
 
+    void SetPendingSessionToForegroundListener(const NotifyPendingSessionToForegroundFunc& func);
+    WSError PendingSessionToForeground();
+    void SetPendingSessionToBackgroundForDelegatorListener(const NotifyPendingSessionToBackgroundForDelegatorFunc& func);
+    WSError PendingSessionToBackgroundForDelegator();
+
     void SetSessionFocusableChangeListener(const NotifySessionFocusableChangeFunc& func);
     void SetSessionTouchableChangeListener(const NotifySessionTouchableChangeFunc& func);
     void SetClickListener(const NotifyClickFunc& func);
@@ -165,6 +173,8 @@ public:
     int32_t GetCallingPid() const;
     int32_t GetCallingUid() const;
     sptr<IRemoteObject> GetAbilityToken() const;
+    WindowMode GetWindowMode();
+    void SetZOrder(uint32_t zOrder);
     WSError UpdateSnapshot();
 protected:
     void GeneratePersistentId(const bool isExtension, const SessionInfo& sessionInfo);
@@ -187,6 +197,8 @@ protected:
     NotifyClickFunc clickFunc_;
     NotifyTerminateSessionFunc terminateSessionFunc_;
     NotifySessionExceptionFunc sessionExceptionFunc_;
+    NotifyPendingSessionToForegroundFunc pendingSessionToForegroundFunc_;
+    NotifyPendingSessionToBackgroundForDelegatorFunc pendingSessionToBackgroundForDelegatorFunc_;
     sptr<WindowSessionProperty> property_ = nullptr;
     SystemSessionConfig systemConfig_;
     sptr<ScenePersistence> scenePersistence_ = nullptr;

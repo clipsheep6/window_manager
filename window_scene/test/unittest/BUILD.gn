@@ -86,6 +86,7 @@ config("ws_unittest_common_public_config") {
     "//third_party/googletest/googlemock/include",
 
     # for window_manager_interface
+    "${window_base_path}/wmserver/include",
     "${window_base_path}/wmserver/include/zidl",
     "${graphic_base_path}/graphic_2d/rosen/modules/animation/window_animation/include",
     "${multimodalinput_path}/input/interfaces/native/innerkits/event/include",
@@ -112,6 +113,7 @@ ohos_static_library("ws_unittest_common") {
   deps = [
     "${window_base_path}/dm:libdm",
     "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/session:scene_session",
     "${window_base_path}/window_scene/session_manager:scene_session_manager",
     "${window_base_path}/window_scene/session_manager:screen_session_manager",
@@ -131,6 +133,7 @@ ohos_static_library("ws_unittest_common") {
     "ability_base:want",
     "c_utils:utils",
     "hilog_native:libhilog",
+    "input:libmmi-client",
     "ipc:ipc_single",
   ]
 

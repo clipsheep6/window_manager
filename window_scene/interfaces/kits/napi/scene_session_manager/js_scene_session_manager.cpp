@@ -77,6 +77,8 @@ NativeValue* JsSceneSessionManager::Init(NativeEngine* engine, NativeValue* expo
     BindNativeFunction(*engine, *object, "startAbilityBySpecified", moduleName,
         JsSceneSessionManager::StartAbilityBySpecified);
     BindNativeFunction(*engine, *object, "getSessionSnapshot", moduleName, JsSceneSessionManager::GetSessionSnapshot);
+    BindNativeFunction(*engine, *object, "InitWithRenderServiceAdded", moduleName,
+        JsSceneSessionManager::InitWithRenderServiceAdded);
     return engine->CreateUndefined();
 }
 
@@ -261,6 +263,13 @@ NativeValue* JsSceneSessionManager::GetSessionSnapshot(NativeEngine* engine, Nat
     WLOGI("[NAPI]GetSessionSnapshot");
     JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(engine, info);
     return (me != nullptr) ? me->OnGetSessionSnapshot(*engine, *info) : nullptr;
+}
+
+NativeValue* JsSceneSessionManager::InitWithRenderServiceAdded(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGI("[NAPI]InitWithRenderServiceAdded");
+    JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(engine, info);
+    return (me != nullptr) ? me->OnInitWithRenderServiceAdded(*engine, *info) : nullptr;
 }
 
 bool JsSceneSessionManager::IsCallbackRegistered(const std::string& type, NativeValue* jsListenerObject)
@@ -552,14 +561,19 @@ NativeValue* JsSceneSessionManager::OnRequestSceneSessionBackground(NativeEngine
         return engine.CreateUndefined();
     }
 
-    AsyncTask::CompleteCallback complete = [sceneSession](NativeEngine& engine, AsyncTask& task, int32_t status) {
+    bool isDelegator = false;
+    if (info.argc == 2 && info.argv[1]->TypeOf() != NATIVE_UNDEFINED) { // 2: params total num
+        isDelegator = ConvertFromJsValue(engine, info.argv[1], isDelegator);
+    }
+
+    AsyncTask::CompleteCallback complete = [sceneSession, isDelegator](NativeEngine& engine, AsyncTask& task, int32_t status) {
         if (sceneSession == nullptr) {
             task.Reject(engine,
                 CreateJsError(engine, static_cast<int32_t>(WSErrorCode::WS_ERROR_STATE_ABNORMALLY), "Invalid params."));
             return;
         }
         WSErrorCode ret =
-            WS_JS_TO_ERROR_CODE_MAP.at(SceneSessionManager::GetInstance().RequestSceneSessionBackground(sceneSession));
+            WS_JS_TO_ERROR_CODE_MAP.at(SceneSessionManager::GetInstance().RequestSceneSessionBackground(sceneSession, isDelegator));
         if (ret == WSErrorCode::WS_OK) {
             task.Resolve(engine, engine.CreateUndefined());
         } else {
@@ -760,4 +774,10 @@ NativeValue* JsSceneSessionManager::OnGetSessionSnapshot(NativeEngine& engine, N
     return result;
 }
 
+NativeValue* JsSceneSessionManager::OnInitWithRenderServiceAdded(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    WLOGI("[NAPI]OnInitWithRenderServiceAdded");
+    SceneSessionManager::GetInstance().InitWithRenderServiceAdded();
+    return engine.CreateUndefined();
+}
 } // namespace OHOS::Rosen

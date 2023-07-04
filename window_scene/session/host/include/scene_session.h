@@ -63,6 +63,7 @@ public:
 
     WSError OnSessionEvent(SessionEvent event) override;
     WSError RaiseToAppTop() override;
+    WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) override;
     WSError UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason) override;
     WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
@@ -84,6 +85,7 @@ public:
     WSError SetKeepScreenOn(bool keepScreenOn);
     bool IsKeepScreenOn() const;
     const std::string& GetWindowName() const;
+    bool IsDecorEnable();
 
     std::shared_ptr<PowerMgr::RunningLock> keepScreenLock_;
 private:
@@ -91,7 +93,6 @@ private:
     void NotifySessionRectChange(const WSRect& rect);
     void ProcessVsyncHandleRegister();
     void OnVsyncHandle();
-    bool IsDecorEnable();
     bool FixRectByAspectRatio(WSRect& rect);
     bool SaveAspectRatio(float ratio);
     sptr<SpecificSessionCallback> specificCallback_ = nullptr;

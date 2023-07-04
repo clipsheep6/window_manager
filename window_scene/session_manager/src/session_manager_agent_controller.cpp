@@ -57,5 +57,38 @@ void SessionManagerAgentController::UpdateFocusChangeInfo(const sptr<FocusChange
         }
     }
 }
+
+void SessionManagerAgentController::NotifyAccessibilityWindowInfo(
+    const std::vector<sptr<AccessibilityWindowInfo>>& infos, WindowUpdateType type)
+{
+    for (auto& agent : smAgentContainer_.GetAgentsByType(
+        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_UPDATE)) {
+        if (agent != nullptr) {
+            agent->NotifyAccessibilityWindowInfo(infos, type);
+        }
+    }
+}
+
+void SessionManagerAgentController::NotifyWaterMarkFlagChangedResult(bool hasWaterMark)
+{
+    WLOGFD("NotifyWaterMarkFlagChanged with result:%{public}u", static_cast<uint32_t>(hasWaterMark));
+    for (auto& agent : smAgentContainer_.GetAgentsByType(
+        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WATER_MARK_FLAG)) {
+        if (agent != nullptr) {
+            agent->NotifyWaterMarkFlagChangedResult(hasWaterMark);
+        }
+    }
+}
+
+void SessionManagerAgentController::UpdateWindowVisibilityInfo(
+    const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos)
+{
+    WLOGFD("Size:%{public}zu", windowVisibilityInfos.size());
+    for (auto& agent : smAgentContainer_.GetAgentsByType(
+        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_VISIBILITY)) {
+        agent->UpdateWindowVisibilityInfo(windowVisibilityInfos);
+    }
+}
+
 } // namespace Rosen
 } // namespace OHOS

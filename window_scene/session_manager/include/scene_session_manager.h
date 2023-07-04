@@ -16,6 +16,7 @@
 #ifndef OHOS_ROSEN_WINDOW_SCENE_SCENE_SESSION_MANAGER_H
 #define OHOS_ROSEN_WINDOW_SCENE_SCENE_SESSION_MANAGER_H
 
+#include <transaction/rs_interfaces.h>
 #include "common/include/task_scheduler.h"
 #include "interfaces/include/ws_common.h"
 #include "session_manager/include/zidl/scene_session_manager_stub.h"
@@ -39,6 +40,7 @@ class ResourceManager;
 
 namespace OHOS::Rosen {
 class SceneSession;
+class AccessibilityWindowInfo;
 using NotifyCreateSpecificSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 using ProcessGestureNavigationEnabledChangeFunc = std::function<void(bool enable)>;
 using NotifySetFocusSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
@@ -49,7 +51,7 @@ WM_DECLARE_SINGLE_INSTANCE_BASE(SceneSessionManager)
 public:
     sptr<SceneSession> RequestSceneSession(const SessionInfo& sessionInfo, sptr<WindowSessionProperty> property = nullptr);
     WSError RequestSceneSessionActivation(const sptr<SceneSession>& sceneSession);
-    WSError RequestSceneSessionBackground(const sptr<SceneSession>& sceneSession);
+    WSError RequestSceneSessionBackground(const sptr<SceneSession>& sceneSession, const bool isDelegator = false);
     WSError RequestSceneSessionDestruction(const sptr<SceneSession>& sceneSession);
     WSError RequestSceneSessionByCall(const sptr<SceneSession>& sceneSession);
     void StartAbilityBySpecified(const SessionInfo& sessionInfo);
@@ -84,10 +86,20 @@ public:
     void UnregisterSessionListener();
     void HandleTurnScreenOn(const sptr<SceneSession>& sceneSession);
     void HandleKeepScreenOn(const sptr<SceneSession>& sceneSession, bool requireLock);
+    void InitWithRenderServiceAdded();
+    WSError PendingSessionToForeground(const sptr<IRemoteObject> &token);
+    WSError PendingSessionToBackgroundForDelegator(const sptr<IRemoteObject> &token);
+    WSError GetFocusSessionToken(sptr<IRemoteObject> &token);
+
     void UpdatePrivateStateAndNotify(bool isAddingPrivateSession);
     void InitPersistentStorage();
     std::string GetSessionSnapshot(uint64_t persistentId);
 
+    WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos);
+    WSError SetWindowFlags(const sptr<SceneSession>& sceneSession, uint32_t flags);
+
+    void SetWaterMarkSessionCount(int32_t count);
+    int32_t GetWaterMarkSessionCount() const;
 protected:
     SceneSessionManager();
     virtual ~SceneSessionManager() = default;
@@ -118,6 +130,14 @@ private:
     WSError UpdateBrightness(uint64_t persistentId);
     void SetDisplayBrightness(float brightness);
     float GetDisplayBrightness() const;
+    void HandleUpdateProperty(const sptr<WindowSessionProperty>& property, WSPropertyChangeAction action,
+        const sptr<SceneSession>& sceneSession);
+    void NotifyWindowInfoChange(uint64_t persistentId, WindowUpdateType type);
+    void FillWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos,
+        const sptr<SceneSession> sceneSession);
+    std::vector<std::pair<uint64_t, bool>> GetWindowVisibilityChangeInfo(
+        std::shared_ptr<RSOcclusionData> occlusionData);
+    void WindowVisibilityChangeCallback(std::shared_ptr<RSOcclusionData> occlusiontionData);
 
     sptr<RootSceneSession> rootSceneSession_;
     std::map<uint64_t, sptr<SceneSession>> sceneSessionMap_;
@@ -138,9 +158,16 @@ private:
     std::shared_ptr<EventRunner> eventLoop_;
     std::shared_ptr<EventHandler> eventHandler_;
     bool isReportTaskStart_ = false;
+    std::shared_ptr<RSOcclusionData> lastOcclusionData_ = std::make_shared<RSOcclusionData>();
+    RSInterfaces& rsInterface_;
     void RegisterSessionStateChangeNotifyManagerFunc(sptr<SceneSession>& sceneSession);
     void OnSessionStateChange(uint64_t persistentId);
     sptr<ISessionListener> sessionListener_;
+    sptr<SceneSession> FindSessionByToken(const sptr<IRemoteObject> &token);
+
+    void CheckAndNotifyWaterMarkChangedResult(bool isAddingWaterMark);
+    WSError NotifyWaterMarkFlagChangedResult(bool hasWaterMark);
+    int32_t waterMarkSessionCount_ { 0 };
 };
 } // namespace OHOS::Rosen
 

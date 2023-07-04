@@ -22,6 +22,7 @@
 #include "anr_handler.h"
 #include "color_parser.h"
 #include "display_manager.h"
+#include "interfaces/include/ws_common.h"
 #include "permission.h"
 #include "key_event.h"
 #include "session/container/include/window_event_channel.h"
@@ -425,6 +426,7 @@ void WindowSessionImpl::NotifyModeChange(WindowMode mode, bool hasDeco)
         property_->SetWindowMode(mode);
         hostSession_->UpdateWindowSessionProperty(property_);
     }
+    UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_MODE);
 }
 
 std::shared_ptr<RSSurfaceNode> WindowSessionImpl::GetSurfaceNode() const
@@ -464,10 +466,7 @@ WMError WindowSessionImpl::SetFocusable(bool isFocusable)
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     property_->SetFocusable(isFocusable);
-    if (state_ == WindowState::STATE_SHOWN) {
-        return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_FOCUSABLE);
-    }
-    return WMError::WM_OK;
+    return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_FOCUSABLE);
 }
 
 bool WindowSessionImpl::GetFocusable() const
@@ -482,10 +481,7 @@ WMError WindowSessionImpl::SetTouchable(bool isTouchable)
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     property_->SetTouchable(isTouchable);
-    if (state_ == WindowState::STATE_SHOWN) {
-        return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_TOUCHABLE);
-    }
-    return WMError::WM_OK;
+    return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_TOUCHABLE);
 }
 
 bool WindowSessionImpl::GetTouchable() const
@@ -496,6 +492,7 @@ bool WindowSessionImpl::GetTouchable() const
 WMError WindowSessionImpl::SetWindowType(WindowType type)
 {
     property_->SetWindowType(type);
+    UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_OTHER_PROPS);
     return WMError::WM_OK;
 }
 
