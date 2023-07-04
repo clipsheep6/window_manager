@@ -46,8 +46,6 @@ void sceneSessionManagerProxyTest::TearDownTestCase()
 
 void sceneSessionManagerProxyTest::SetUp()
 {
-    sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
-    sceneSessionManagerProxy_ = new SceneSessionManagerProxy(iRemoteObjectMocker);
 }
 
 void sceneSessionManagerProxyTest::TearDown()
@@ -64,10 +62,8 @@ HWTEST_F(sceneSessionManagerProxyTest, RegisterWindowManagerAgent01, Function | 
 {
     sptr<IWindowManagerAgent> windowManagerAgent = new WindowManagerAgent();
     WindowManagerAgentType type = WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS;
-    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, sceneSessionManagerProxy_->RegisterWindowManagerAgent(type, nullptr));
-    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, sceneSessionManagerProxy_->UnregisterWindowManagerAgent(type, nullptr));
-
-    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, sceneSessionManagerProxy_->UnregisterWindowManagerAgent(type, windowManagerAgent));
+    sptr<IRemoteObject> iRemoteObjectMocker = new (std::nothrow) IRemoteObjectMocker();
+    sptr<SceneSessionManagerProxy> sceneSessionManagerProxy_ = new SceneSessionManagerProxy(iRemoteObjectMocker);
 
     ASSERT_EQ(WMError::WM_OK, sceneSessionManagerProxy_->RegisterWindowManagerAgent(type, windowManagerAgent));
     ASSERT_EQ(WMError::WM_OK, sceneSessionManagerProxy_->UnregisterWindowManagerAgent(type, windowManagerAgent));

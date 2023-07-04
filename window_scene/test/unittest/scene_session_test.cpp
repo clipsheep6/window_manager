@@ -53,13 +53,71 @@ namespace {
  * @tc.desc: normal function
  * @tc.type: FUNC
  */
-HWTEST_F(SceneSessionTest, GetSceneSceneSessionProxy01, Function | SmallTest | Level2)
+HWTEST_F(SceneSessionTest, Foreground01, Function | SmallTest | Level2)
 {
-    MessageParcel reply;
-    sptr<IRemoteObject> sessionObject = reply.ReadRemoteObject();
-    session_ = iface_cast<ISession>(sessionObject);
-    ASSERT_EQ(WSError::WS_OK, session_->Foreground());
-    ASSERT_EQ(WSError::WS_OK, session_->Background());
+    SessionInfo info;
+    info.abilityName_ = "Foreground01";
+    info.bundleName_ = "Foreground01";
+    sptr<Rosen::ISession> session_;
+    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(specificCallback_, nullptr);
+    int resultValue = 0;
+    sptr<SceneSession> scensession;
+
+    scensession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(scensession, nullptr);
+    auto result = scensession->Foreground();
+    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);
+    specificCallback_->onCreate_ = [&resultValue, specificCallback_](const SessionInfo &info,
+                                                            sptr<WindowSessionProperty> property) -> sptr<SceneSession>
+    {
+        sptr<SceneSession> scensessionreturn = new (std::nothrow) SceneSession(info, specificCallback_);
+        EXPECT_NE(scensessionreturn, nullptr);
+        resultValue = 1;
+        return scensessionreturn;
+    };
+    scensession = new (std::nothrow) SceneSession(info, specificCallback_);
+    EXPECT_NE(scensession, nullptr);
+    SceneSession->UpdateSessionState(SessionState::STATE_CONNECT);
+    result = scensession->Foreground();
+    ASSERT_EQ(result, WSError::WS_OK);
+}
+
+/**
+ * @tc.name: Background01
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, Background01, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "Background01";
+    info.bundleName_ = "Background01";
+    sptr<Rosen::ISession> session_;
+    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(specificCallback_, nullptr);
+    int resultValue = 0;
+    sptr<SceneSession> scensession;
+
+    scensession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(scensession, nullptr);
+    auto result = scensession->Background();
+    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);
+    specificCallback_->onCreate_ = [&resultValue, specificCallback_](const SessionInfo &info,
+                                                            sptr<WindowSessionProperty> property) -> sptr<SceneSession>
+    {
+        sptr<SceneSession> scensessionreturn = new (std::nothrow) SceneSession(info, specificCallback_);
+        EXPECT_NE(scensessionreturn, nullptr);
+        resultValue = 1;
+        return scensessionreturn;
+    };
+    scensession = new (std::nothrow) SceneSession(info, specificCallback_);
+    EXPECT_NE(scensession, nullptr);
+    SceneSession->UpdateSessionState(SessionState::STATE_CONNECT);
+    result = scensession->Background();
+    ASSERT_EQ(result, WSError::WS_OK);
 }
 
 }
