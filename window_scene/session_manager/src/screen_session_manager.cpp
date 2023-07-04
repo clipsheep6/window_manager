@@ -594,6 +594,83 @@ DMError ScreenSessionManager::SetScreenRotationLocked(bool isLocked)
     return DMError::DM_OK;
 }
 
+DMError ScreenSessionManager::SetOrientation(ScreenId screenId, Orientation orientation)
+{
+    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("SCB: ScreenSessionManager set orientation permission denied!");
+        return DMError::DM_ERROR_NOT_SYSTEM_APP;
+    }
+    if (orientation < Orientation::UNSPECIFIED || orientation > Orientation::REVERSE_HORIZONTAL) {
+        WLOGFE("SCB: ScreenSessionManager SetOrientation::orientation: %{public}u", static_cast<uint32_t>(orientation));
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    return SetOrientationController(screenId, orientation, false);
+}
+
+DMError ScreenSessionManager::SetOrientationFromWindow(DisplayId displayId, Orientation orientation)
+{
+    sptr<DisplayInfo> displayInfo = GetDisplayInfoById(displayId);
+    if (displayInfo == nullptr) {
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    return SetOrientationController(displayInfo->GetScreenId(), orientation, true);
+}
+
+DMError ScreenSessionManager::SetOrientationController(ScreenId screenId, Orientation newOrientation,
+    bool isFromWindow)
+{
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (screenSession == nullptr) {
+        WLOGFE("fail to set orientation, cannot find screen %{public}" PRIu64"", screenId);
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    if (isFromWindow) {
+        if (newOrientation == Orientation::UNSPECIFIED) {
+            newOrientation = screenSession->GetScreenPropertyRefer().GetScreenRequestedOrientation();
+        }
+    } else {
+        screenSession->GetScreenPropertyRefer().SetScreenRequestedOrientation(newOrientation);
+    }
+
+    if (screenSession->GetScreenPropertyRefer().GetOrientation() == newOrientation) {
+        return DMError::DM_OK;
+    }
+    if (isFromWindow) {
+        // I will debug it future
+        // ScreenRotationProperty::ProcessOrientationSwitch(newOrientation);
+    } else {
+        Rotation rotationAfter = screenSession->CalcRotation(newOrientation);
+        SetRotation(screenId, rotationAfter, false);
+    }
+    screenSession->GetScreenProperty().SetOrientation(newOrientation);
+    screenSession->PropertyChange(screenSession->GetScreenPropertyRefer());
+    // Notify rotation event to ScreenManager
+    NotifyScreenChanged(screenSession->ConvertToScreenInfo(), ScreenChangeEvent::UPDATE_ORIENTATION);
+    return DMError::DM_OK;
+}
+
+bool ScreenSessionManager::SetRotation(ScreenId screenId, Rotation rotationAfter,
+    bool isFromWindow)
+{
+    WLOGFI("Enter SetRotation, screenId: %{public}" PRIu64 ", rotation: %{public}u, isFromWindow: %{public}u,",
+        screenId, rotationAfter, isFromWindow);
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (screenSession == nullptr) {
+        WLOGFE("SetRotation error, cannot get screen with screenId: %{public}" PRIu64, screenId);
+        return false;
+    }
+    if (rotationAfter == screenSession->GetScreenPropertyRefer().GetScreenRotation()) {
+        WLOGFE("rotation not changed. screen %{public}" PRIu64" rotation %{public}u", screenId, rotationAfter);
+        return false;
+    }
+    WLOGFD("set orientation. rotation %{public}u", rotationAfter);
+    screenSession->GetScreenPropertyRefer().SetScreenRotation(rotationAfter);
+    screenSession->PropertyChange(screenSession->GetScreenPropertyRefer());
+    NotifyScreenChanged(screenSession->ConvertToScreenInfo(), ScreenChangeEvent::UPDATE_ROTATION);
+    return true;
+}
+
 void ScreenSessionManager::RegisterDisplayChangeListener(sptr<IDisplayChangeListener> listener)
 {
     displayChangeListener_ = listener;
