@@ -59,7 +59,7 @@ void ANRManager::AddTimer(int32_t id, int64_t currentTime, int32_t persistentId)
         } else {
             WLOGFE("anrObserver is nullptr, do nothing");
         }
-        std::vector<int32_t> timerIds = eventStage_.GetTimerIds(persistentId);
+        std::vector<int32_t> timerIds = eventStage_.GetExpiredTimerIds(persistentId, id);
         for (int32_t item : timerIds) {
             WLOGFD("timer %{public}d will be removed", item);
             if (item != -1) {
@@ -145,7 +145,7 @@ int32_t ANRManager::GetPidByPersistentId(int32_t persistentId)
 void ANRManager::RemoveTimers(int32_t persistentId)
 {
     CALL_DEBUG_ENTER;
-    std::vector<int32_t> timerIds = eventStage_.GetTimerIds(persistentId);
+    std::vector<int32_t> timerIds = eventStage_.GetTimerIdsOfWindow(persistentId);
     for (int32_t item : timerIds) {
         if (item != -1) {
             TimerMgr->RemoveTimer(item);

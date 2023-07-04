@@ -26,7 +26,8 @@ public:
     void SetAnrStatus(int32_t persistentId, bool status);
     bool CheckAnrStatus(int32_t persistentId);
     void SaveANREvent(int32_t persistentId, int32_t id, int64_t time, int32_t timerId);
-    std::vector<int32_t> GetTimerIds(int32_t persistentId);
+    std::vector<int32_t> GetExpiredTimerIds(int32_t persistentId, int32_t eventId);
+    std::vector<int32_t> GetTimerIdsOfWindow(int32_t persistentId);
     std::list<int32_t> DelEvents(int32_t persistentId, int32_t id);
 private:
     struct EventTime {
