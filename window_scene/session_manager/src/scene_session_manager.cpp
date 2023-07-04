@@ -866,6 +866,21 @@ void SceneSessionManager::HandleUpdateProperty(const sptr<WindowSessionProperty>
                 WLOGW("only app main window can set brightness");
                 return;
             }
+            case WSPropertyChangeAction::ACTION_UPDATE_ORIENTATION: {
+                ScreenSessionManager::GetInstance().
+                    SetOrientationFromWindow(property->GetDisplayId(), property->GetRequestedOrientation());
+                break;
+            }
+            case WSPropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE: {
+                bool prePrivacyMode = sceneSession->GetWindowSessionProperty()->GetPrivacyMode() || sceneSession->GetWindowSessionProperty()->GetSystemPrivacyMode();
+                bool isPrivacyMode = property->GetPrivacyMode() || property->GetSystemPrivacyMode();
+                if (prePrivacyMode ^ isPrivacyMode) {
+                    sceneSession->GetWindowSessionProperty()->SetPrivacyMode(isPrivacyMode);
+                    sceneSession->GetWindowSessionProperty()->SetSystemPrivacyMode(isPrivacyMode);
+                    sceneSession->GetSurfaceNode()->SetSecurityLayer(isPrivacyMode);
+                    RSTransaction::FlushImplicitTransaction();
+                    UpdatePrivateStateAndNotify(isPrivacyMode);
+                }
             // @todo if sceneSession is inactive, return
             SetBrightness(sceneSession, property->GetBrightness());
             break;

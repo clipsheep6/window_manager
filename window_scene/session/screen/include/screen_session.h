@@ -67,6 +67,7 @@ public:
 
     ScreenId GetScreenId();
     ScreenProperty GetScreenProperty() const;
+    ScreenProperty& GetScreenPropertyRefer();
     std::shared_ptr<RSDisplayNode> GetDisplayNode() const;
     void ReleaseDisplayNode();
 
@@ -100,6 +101,7 @@ public:
 
     void Connect();
     void Disconnect();
+    void PropertyChange(const ScreenProperty& newProperty);
 private:
     ScreenProperty property_;
     std::shared_ptr<RSDisplayNode> displayNode_;

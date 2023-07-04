@@ -92,6 +92,32 @@ float ScreenProperty::GetVirtualPixelRatio() const
     return virtualPixelRatio_;
 }
 
+void ScreenProperty::SetScreenRotation(Rotation rotation)
+{
+    if (IsVertical(rotation) != IsVertical(screenRotation_)) {
+        std::swap(bounds_.rect_.width_, bounds_.rect_.height_);
+        int32_t width = bounds_.rect_.width_;
+        int32_t height = bounds_.rect_.height_;
+        if (IsVertical(screenRotation_)) {
+            bounds_.rect_.left_ -= (width - height) / 2;
+            bounds_.rect_.top_ += (width - height) / 2;
+        } else {
+            bounds_.rect_.left_ += (height - width) / 2;
+            bounds_.rect_.top_ -= (height - width) / 2;
+        }
+    }
+    if (rotation == Rotation::ROTATION_0) {
+        rotation_ = 0.f;
+    } else if (rotation == Rotation::ROTATION_90) {
+        rotation_ = 90.f;
+    } else if (rotation == Rotation::ROTATION_180) {
+        rotation_ = 180.f;
+    } else {
+        rotation_ = 270.f;
+    }
+    screenRotation_ = rotation;
+}
+
 Rotation ScreenProperty::GetScreenRotation() const
 {
     return screenRotation_;
@@ -212,6 +238,16 @@ void ScreenProperty::SetScreenType(ScreenType type)
 ScreenType ScreenProperty::GetScreenType() const
 {
     return type_;
+}
+
+void ScreenProperty::SetScreenRequestedOrientation(Orientation orientation)
+{
+    screenRequestedOrientation_ = orientation;
+}
+
+Orientation ScreenProperty::GetScreenRequestedOrientation() const
+{
+    return screenRequestedOrientation_;
 }
 
 } // namespace OHOS::Rosen

@@ -120,6 +120,11 @@ ScreenProperty ScreenSession::GetScreenProperty() const
     return property_;
 }
 
+ScreenProperty& ScreenSession::GetScreenPropertyRefer()
+{
+    return property_;
+}
+
 std::shared_ptr<RSDisplayNode> ScreenSession::GetDisplayNode() const
 {
     return displayNode_;
@@ -143,6 +148,13 @@ void ScreenSession::Disconnect()
     screenState_ = ScreenState::DISCONNECTION;
     for (auto& listener : screenChangeListenerList_) {
         listener->OnDisconnect();
+    }
+}
+
+void ScreenSession::PropertyChange(const ScreenProperty& newProperty)
+{
+    for (auto& listener : screenChangeListenerList_) {
+        listener->OnPropertyChange(newProperty);
     }
 }
 
