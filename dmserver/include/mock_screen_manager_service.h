@@ -13,32 +13,24 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_MOCK_SESSION_MANAGER_SERVICE_H
-#define OHOS_MOCK_SESSION_MANAGER_SERVICE_H
+#ifndef OHOS_MOCK_SCREEN_MANAGER_SERVICE_H
+#define OHOS_MOCK_SCREEN_MANAGER_SERVICE_H
 
 #include <system_ability.h>
 #include <iremote_object.h>
 
 #include "singleton_delegator.h"
-#include "wm_single_instance.h"
-#include "zidl/mock_session_manager_service_stub.h"
 
 namespace OHOS {
 namespace Rosen {
-class MockSessionManagerService : public SystemAbility, public MockSessionManagerServiceStub {
-DECLARE_SYSTEM_ABILITY(MockSessionManagerService);
-WM_DECLARE_SINGLE_INSTANCE_BASE(MockSessionManagerService);
+class MockScreenManagerService : public SystemAbility {
+DECLARE_SYSTEM_ABILITY(MockScreenManagerService);
+WM_DECLARE_SINGLE_INSTANCE_BASE(MockScreenManagerService);
 public:
-    bool SetSessionManagerService(const sptr<IRemoteObject>& sessionManagerService);
-    sptr<IRemoteObject> GetSessionManagerService() override;
     void OnStart() override;
 protected:
-    MockSessionManagerService();
-    virtual ~MockSessionManagerService() = default;
-private:
-    bool RegisterMockSessionManagerService();
-
-    sptr<IRemoteObject> sessionManagerService_;
+    MockScreenManagerService();
+    virtual ~MockScreenManagerService() = default;
 };
 } // namespace Rosen
 } // namespace OHOS
