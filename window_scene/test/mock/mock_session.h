@@ -36,6 +36,7 @@ public:
     MOCK_METHOD1(PendingSessionActivation, WSError(const sptr<AAFwk::SessionInfo> info));
     MOCK_METHOD1(UpdateActiveStatus, WSError(bool isActive));
     MOCK_METHOD0(RequestSessionBack, WSError(void));
+    MOCK_METHOD2(UpdateSessionRect, WSError(const WSRect& rect, const SizeChangeReason& reason));
 };
 } // namespace Rosen
 } // namespace OHOS

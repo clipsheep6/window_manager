@@ -17,6 +17,7 @@
 #include "ability_context_impl.h"
 #include "mock_session.h"
 #include "window_session_impl.h"
+#include "window_scene_session_impl.h"
 #include "mock_uicontent.h"
 
 using namespace testing;
@@ -181,6 +182,74 @@ HWTEST_F(WindowSessionImplTest, Hide01, Function | SmallTest | Level2)
     window->property_->type_ = WindowType::WINDOW_TYPE_FLOAT;
     ASSERT_EQ(WMError::WM_OK, window->Hide());
     window->property_->type_ = WindowType::WINDOW_TYPE_APP_MAIN_WINDOW;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: MoveTo
+ * @tc.desc: MoveTo session
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTest, MoveTo, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("MoveTo");
+    sptr<WindowSessionImpl> window = new(std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->property_->SetPersistentId(1);
+
+    // show with null session
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Show());
+
+    SessionInfo sessionInfo = {"CreateTestBundle", "CreateTestAbility", nullptr};
+    sptr<SessionMocker> session = new(std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    EXPECT_CALL(*(session), Foreground()).WillOnce(Return(WSError::WS_OK));
+    ASSERT_EQ(WMError::WM_OK, window->Show());
+
+    Rect rect = { 0, 0, 320, 240 }; // width: 320, height: 240
+    window->property_->SetRequestRect(rect);
+    
+    Rect newRect = { 20, 20, 320, 240 }; // posX: 20, posY: 20, width: 320, height: 240
+    window->MoveTo(newRect.posX_, newRect.posY_);
+    EXPECT_CALL(*(session), UpdateSessionRect(_, _)).WillOnce(Return(WSError::WS_OK));
+    ASSERT_EQ(newRect, window->GetRequestRect());
+
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: Resize
+ * @tc.desc: Resize session
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTest, Resize, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("Resize");
+    sptr<WindowSessionImpl> window = new(std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->property_->SetPersistentId(1);
+
+    // show with null session
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Show());
+
+    SessionInfo sessionInfo = {"CreateTestBundle", "CreateTestAbility", nullptr};
+    sptr<SessionMocker> session = new(std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    EXPECT_CALL(*(session), Foreground()).WillOnce(Return(WSError::WS_OK));
+    ASSERT_EQ(WMError::WM_OK, window->Show());
+
+    Rect rect = { 0, 0, 320, 240 }; // width: 320, height: 240
+    window->property_->SetRequestRect(rect);
+
+    Rect newRect = { 0, 0, 480, 360 }; // posX: 20, posY: 20, width: 320, height: 240
+    window->Resize(newRect.width_, newRect.height_);
+    EXPECT_CALL(*(session), UpdateSessionRect(_, _)).WillOnce(Return(WSError::WS_OK));
+    ASSERT_EQ(newRect, window->GetRequestRect());
+
     ASSERT_EQ(WMError::WM_OK, window->Destroy());
 }
 }
