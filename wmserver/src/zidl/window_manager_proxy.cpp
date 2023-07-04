@@ -18,6 +18,8 @@
 #include <key_event.h>
 #include <rs_iwindow_animation_controller.h>
 #include <rs_window_animation_target.h>
+#include <transaction/rs_transaction.h>
+#include <ui/rs_surface_node.h>
 
 #include "marshalling_helper.h"
 #include "window_manager_hilog.h"

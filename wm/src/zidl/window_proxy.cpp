@@ -20,6 +20,7 @@
 #include "message_option.h"
 #include "window_manager_hilog.h"
 #include "wm_common.h"
+#include <transaction/rs_transaction.h>
 
 namespace OHOS {
 namespace Rosen {
