@@ -77,7 +77,7 @@ HWTEST_F(SceneSessionTest, Foreground01, Function | SmallTest | Level2)
     };
     scensession = new (std::nothrow) SceneSession(info, specificCallback_);
     EXPECT_NE(scensession, nullptr);
-    SceneSession->UpdateSessionState(SessionState::STATE_CONNECT);
+    scensession->UpdateSessionState(SessionState::STATE_CONNECT);
     result = scensession->Foreground();
     ASSERT_EQ(result, WSError::WS_OK);
 }
@@ -113,7 +113,7 @@ HWTEST_F(SceneSessionTest, Background01, Function | SmallTest | Level2)
     };
     scensession = new (std::nothrow) SceneSession(info, specificCallback_);
     EXPECT_NE(scensession, nullptr);
-    SceneSession->UpdateSessionState(SessionState::STATE_CONNECT);
+    scensession->UpdateSessionState(SessionState::STATE_CONNECT);
     result = scensession->Background();
     ASSERT_EQ(result, WSError::WS_OK);
 }
