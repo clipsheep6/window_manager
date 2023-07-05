@@ -78,7 +78,8 @@ HWTEST_F(SceneSessionManagerTest, RegisterWindowManagerAgent, Function | SmallTe
     WindowManagerAgentType type = WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS;
 
     ASSERT_EQ(WMError::WM_OK, SceneSessionManager::GetInstance().RegisterWindowManagerAgent(type, windowManagerAgent));
-    ASSERT_EQ(WMError::WM_OK, SceneSessionManager::GetInstance().UnregisterWindowManagerAgent(type, windowManagerAgent));
+    ASSERT_EQ(WMError::WM_OK, SceneSessionManager::GetInstance().UnregisterWindowManagerAgent(
+        type, windowManagerAgent));
 }
 
 }

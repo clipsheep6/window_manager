@@ -70,7 +70,8 @@ HWTEST_F(SceneSessionManagerStubTest, OnRemoteRequest01, Function | SmallTest | 
     sptr<IWindowManagerAgent> windowManagerAgent = new WindowManagerAgent();
     data.WriteRemoteObject(windowManagerAgent->AsObject());
 
-    uint32_t code = static_cast<uint32_t>(ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT);
+    uint32_t code = static_cast<uint32_t>(
+        ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT);
 
     int res = stub_->OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(res, 0);
@@ -93,7 +94,8 @@ HWTEST_F(SceneSessionManagerStubTest, OnRemoteRequest02, Function | SmallTest | 
     sptr<IWindowManagerAgent> windowManagerAgent = new WindowManagerAgent();
     data.WriteRemoteObject(windowManagerAgent->AsObject());
 
-    uint32_t code = static_cast<uint32_t>(ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT);
+    uint32_t code = static_cast<uint32_t>(
+        ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT);
 
     int res = stub_->OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(res, 0);
