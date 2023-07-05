@@ -64,6 +64,7 @@ HWTEST_F(SceneSessionTest, Foreground01, Function | SmallTest | Level2)
 
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     EXPECT_NE(scensession, nullptr);
+    scensession->isActive_ = true;
     auto result = scensession->Foreground();
     ASSERT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);
     specificCallback_->onCreate_ = [&resultValue, specificCallback_](const SessionInfo &info,
@@ -77,7 +78,6 @@ HWTEST_F(SceneSessionTest, Foreground01, Function | SmallTest | Level2)
     scensession = new (std::nothrow) SceneSession(info, specificCallback_);
     EXPECT_NE(scensession, nullptr);
     scensession->UpdateSessionState(SessionState::STATE_CONNECT);
-    scensession->isActive_ = true;
     result = scensession->Foreground();
     ASSERT_EQ(result, WSError::WS_OK);
 }
@@ -101,6 +101,7 @@ HWTEST_F(SceneSessionTest, Background01, Function | SmallTest | Level2)
 
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     EXPECT_NE(scensession, nullptr);
+    scensession->isActive_ = true;
     auto result = scensession->Background();
     ASSERT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);
     specificCallback_->onCreate_ = [&resultValue, specificCallback_](const SessionInfo &info,
@@ -114,7 +115,6 @@ HWTEST_F(SceneSessionTest, Background01, Function | SmallTest | Level2)
     scensession = new (std::nothrow) SceneSession(info, specificCallback_);
     EXPECT_NE(scensession, nullptr);
     scensession->UpdateSessionState(SessionState::STATE_CONNECT);
-    scensession->isActive_ = true;
     result = scensession->Background();
     ASSERT_EQ(result, WSError::WS_OK);
 }
