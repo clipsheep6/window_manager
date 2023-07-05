@@ -14,10 +14,15 @@
  */
 
 #include "common/include/window_session_property.h"
+#include "window_manager_hilog.h"
 #include "wm_common.h"
 
 namespace OHOS {
 namespace Rosen {
+
+namespace {
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowSessionProperty" };
+} // namespace
 
 WindowSessionProperty::WindowSessionProperty(const sptr<WindowSessionProperty>& property)
 {
@@ -281,6 +286,16 @@ bool WindowSessionProperty::IsDecorEnable()
     return isDecorEnable_;
 }
 
+void WindowSessionProperty::SetAnimationFlag(uint32_t animationFlag)
+{
+    animationFlag_ = animationFlag;
+}
+
+uint32_t WindowSessionProperty::GetAnimationFlag() const
+{
+    return animationFlag_;
+}
+
 bool WindowSessionProperty::MarshallingWindowLimits(Parcel& parcel) const
 {
     if (parcel.WriteUint32(limits_.maxWidth_) &&
@@ -348,7 +363,7 @@ bool WindowSessionProperty::Marshalling(Parcel& parcel) const
         parcel.WriteUint32(zOrder_) &&
         parcel.WriteBool(isDecorEnable_) &&
         MarshallingWindowLimits(parcel) &&
-        MarshallingSystemBarMap(parcel);
+        MarshallingSystemBarMap(parcel) && parcel.WriteUint32(animationFlag_);;
 }
 
 WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
@@ -383,6 +398,7 @@ WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
     property->SetDecorEnable(parcel.ReadBool());
     UnmarshallingWindowLimits(parcel, property);
     UnMarshallingSystemBarMap(parcel, property);
+    property->SetAnimationFlag(parcel.ReadUint32());
     return property;
 }
 
@@ -406,6 +422,116 @@ void WindowSessionProperty::CopyFrom(const sptr<WindowSessionProperty>& property
     sysBarPropMap_ = property->sysBarPropMap_;
     windowMode_ = property->windowMode_;
     limits_ = property->limits_;
+    animationFlag_ = property->animationFlag_;
+}
+
+bool WindowSessionProperty::Write(Parcel& parcel, WSPropertyChangeAction action)
+{
+    bool ret = true;
+    switch (action) {
+        case WSPropertyChangeAction::ACTION_UPDATE_TURN_SCREEN_ON:
+            ret = ret && parcel.WriteBool(turnScreenOn_);
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_KEEP_SCREEN_ON:
+            ret = ret && parcel.WriteBool(keepScreenOn_);
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_FOCUSABLE:
+            ret = ret && parcel.WriteBool(focusable_);
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_TOUCHABLE:
+            ret = ret && parcel.WriteBool(touchable_);
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_SET_BRIGHTNESS:
+            ret = ret && parcel.WriteFloat(brightness_);
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE:
+            ret = ret && parcel.WriteBool(isPrivacyMode_) && parcel.WriteBool(isSystemPrivacyMode_);
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE:
+            ret = ret && parcel.WriteUint32(static_cast<uint32_t>(maximizeMode_));
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_OTHER_PROPS:
+            ret = ret && MarshallingSystemBarMap(parcel);
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_FLAGS:
+            ret = ret && parcel.WriteUint32(flags_);
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_MODE:
+            ret = ret && parcel.WriteUint32(static_cast<uint32_t>(windowMode_)) && parcel.WriteBool(isDecorEnable_);
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_ANIMATION_FLAG:
+            ret = ret && parcel.WriteUint32(animationFlag_);
+            break;
+        default:
+            break;
+    }
+    return ret;
+}
+
+void WindowSessionProperty::Read(Parcel& parcel, WSPropertyChangeAction action)
+{
+    switch (action) {
+        case WSPropertyChangeAction::ACTION_UPDATE_TURN_SCREEN_ON:
+            SetTurnScreenOn(parcel.ReadBool());
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_KEEP_SCREEN_ON:
+            SetKeepScreenOn(parcel.ReadBool());
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_FOCUSABLE:
+            SetFocusable(parcel.ReadBool());
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_TOUCHABLE:
+            SetTouchable(parcel.ReadBool());
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_SET_BRIGHTNESS:
+            SetBrightness(parcel.ReadFloat());
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE:
+            SetPrivacyMode(parcel.ReadBool());
+            SetSystemPrivacyMode(parcel.ReadBool());
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE:
+            SetMaximizeMode(static_cast<MaximizeMode>(parcel.ReadUint32()));
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_OTHER_PROPS:
+            UnMarshallingSystemBarMap(parcel, this);
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_FLAGS:
+            SetWindowFlags(parcel.ReadUint32());
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_MODE:
+            SetWindowMode(static_cast<WindowMode>(parcel.ReadUint32()));
+            SetDecorEnable(parcel.ReadBool());
+            break;
+        case WSPropertyChangeAction::ACTION_UPDATE_ANIMATION_FLAG: {
+            SetAnimationFlag(parcel.ReadUint32());
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+bool WindowSessionProperty::WritePropertyAsNeed(Parcel& parcel, uint32_t actions)
+{
+    while (actions > 0) {
+        WSPropertyChangeAction action = static_cast<WSPropertyChangeAction>(actions & (~actions + 1));
+        if(!Write(parcel, action)) {
+            WLOGFE("write property %{public}u failed!", static_cast<uint32_t>(action));
+            return false;
+        }
+        actions -= static_cast<uint32_t>(action);
+    }
+    return true;
+}
+
+void WindowSessionProperty::ReadPropertyAsNeed(Parcel& parcel, uint32_t actions)
+{
+    while (actions > 0) {
+        WSPropertyChangeAction action = static_cast<WSPropertyChangeAction>(actions & (~actions + 1));
+        Read(parcel, action);
+        actions -= static_cast<uint32_t>(action);
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

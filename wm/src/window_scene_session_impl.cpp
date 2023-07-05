@@ -58,6 +58,7 @@ constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowS
 
 WindowSceneSessionImpl::WindowSceneSessionImpl(const sptr<WindowOption>& option) : WindowSessionImpl(option)
 {
+    AdjustWindowAnimationFlag();
 }
 
 WindowSceneSessionImpl::~WindowSceneSessionImpl()
@@ -242,10 +243,13 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
     if (hostSession_ == nullptr) {
         return WMError::WM_ERROR_NULLPTR;
     }
-    WSError ret = hostSession_->Foreground();
-    // delete after replace WSError with WMError
-    WMError res = static_cast<WMError>(ret);
-    if (res == WMError::WM_OK) {
+    WMError ret = UpdateAnimationFlagProperty(withAnimation);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("UpdateProperty failed with errCode:%{public}d", static_cast<int32_t>(ret));
+        return ret;
+    }
+    ret = static_cast<WMError>(hostSession_->Foreground());
+    if (ret == WMError::WM_OK) {
         // update sub window state if this is main window
         if (WindowHelper::IsMainWindow(GetType())) {
             UpdateSubWindowStateAndNotify(GetPersistentId(), WindowState::STATE_SHOWN);
@@ -253,9 +257,9 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
         NotifyAfterForeground();
         state_ = WindowState::STATE_SHOWN;
     } else {
-        NotifyForegroundFailed(res);
+        NotifyForegroundFailed(ret);
     }
-    return res;
+    return ret;
 }
 
 WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool isFromInnerkits)
@@ -271,7 +275,20 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
             property_->GetWindowName().c_str(), property_->GetPersistentId(), GetType());
         return WMError::WM_OK;
     }
-    WSError ret = WSError::WS_OK;
+
+    WMError res = UpdateAnimationFlagProperty(withAnimation);
+    if (res != WMError::WM_OK) {
+        WLOGFE("UpdateProperty failed with errCode:%{public}d", static_cast<int32_t>(res));
+        return res;
+    }
+
+    uint32_t animationFlag = property_->GetAnimationFlag();
+    if (animationFlag == static_cast<uint32_t>(WindowAnimation::CUSTOM)) {
+        animationTransitionController_->AnimationForHidden();
+    }
+
+    // delete after replace WSError with WMError
+    WMError res = static_cast<WMError>(ret);
     if (!WindowHelper::IsMainWindow(GetType())) {
         // main window no need to notify host, since host knows hide first
         // need to SetActive(false) for host session before background
@@ -282,8 +299,6 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
         ret = hostSession_->Background();
     }
 
-    // delete after replace WSError with WMError
-    WMError res = static_cast<WMError>(ret);
     if (res == WMError::WM_OK) {
         // update sub window state if this is main window
         if (WindowHelper::IsMainWindow(GetType())) {
@@ -957,7 +972,7 @@ void WindowSceneSessionImpl::UpdateConfiguration(const std::shared_ptr<AppExecFw
     for (auto& subWindowSession : subWindowSessionMap_.at(GetPersistentId())) {
         subWindowSession->UpdateConfiguration(configuration);
     }
-    
+
 }
 void WindowSceneSessionImpl::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
@@ -1179,6 +1194,142 @@ WMError WindowSceneSessionImpl::SetKeepScreenOn(bool keepScreenOn)
 bool WindowSceneSessionImpl::IsKeepScreenOn() const
 {
     return property_->IsKeepScreenOn();
+}
+
+WMError WindowSceneSessionImpl::SetTransform(const Transform& trans)
+{
+    WLOGFI("property_ persistentId: %{public}" PRIu64 "", property_->GetPersistentId());
+    if (!IsWindowValid()) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    Transform oriTrans = property_->GetTransform();
+    property_->SetTransform(trans);
+    WMError ret = UpdateProperty(PropertyChangeAction::ACTION_UPDATE_TRANSFORM_PROPERTY);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("SetTransform errCode:%{public}d persistentId: %{public}" PRIu64 "",
+            static_cast<int32_t>(ret), property_->GetPersistentId());
+        property_->SetTransform(oriTrans); // reset to ori transform when update failed
+    }
+    TransformSurfaceNode(trans);
+    return ret;
+}
+
+const Transform& WindowSceneSessionImpl::GetTransform() const
+{
+    return property_->GetTransform();
+}
+
+void WindowSceneSessionImpl::TransformSurfaceNode(const Transform& trans)
+{
+    if (surfaceNode_ == nullptr) {
+        return;
+    }
+    surfaceNode_->SetPivotX(trans.pivotX_);
+    surfaceNode_->SetPivotY(trans.pivotY_);
+    surfaceNode_->SetScaleX(trans.scaleX_);
+    surfaceNode_->SetScaleY(trans.scaleY_);
+    surfaceNode_->SetTranslateX(trans.translateX_);
+    surfaceNode_->SetTranslateY(trans.translateY_);
+    surfaceNode_->SetTranslateZ(trans.translateZ_);
+    surfaceNode_->SetRotationX(trans.rotationX_);
+    surfaceNode_->SetRotationY(trans.rotationY_);
+    surfaceNode_->SetRotation(trans.rotationZ_);
+    uint32_t animationFlag = property->GetAnimationFlag();
+    if (animationFlag != static_cast<uint32_t>(WindowAnimation::CUSTOM)) {
+        RSTransaction::FlushImplicitTransaction();
+    }
+}
+
+WMError WindowSceneSessionImpl::RegisterAnimationTransitionController(
+    const sptr<IAnimationTransitionController>& listener)
+{
+    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("register animation transition controller permission denied!");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
+    if (listener == nullptr) {
+        WLOGFE("listener is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    animationTransitionController_ = listener;
+    wptr<WindowSessionProperty> propertyToken(property_);
+    wptr<IAnimationTransitionController> animationTransitionControllerToken(animationTransitionController_);
+    if (uiContent_) {
+        uiContent_->SetNextFrameLayoutCallback([propertyToken, animationTransitionControllerToken]() {
+            auto property = propertyToken.promote();
+            auto animationTransitionController = animationTransitionControllerToken.promote();
+            if (!property || !animationTransitionController) {
+                return;
+            }
+            uint32_t animationFlag = property->GetAnimationFlag();
+            if (animationFlag == static_cast<uint32_t>(WindowAnimation::CUSTOM)) {
+                // CustomAnimation is enabled when animationTransitionController_ exists
+                animationTransitionController->AnimationForShown();
+            }
+        });
+    }
+    return WMError::WM_OK;
+}
+
+// WMError WindowSceneSessionImpl::UpdateSurfaceNodeAfterCustomAnimation(bool isAdd)
+// {
+//     WLOGI("id: %{public}u UpdateRsTree, isAdd:%{public}u",
+//           property_->GetWindowId(), isAdd);
+//     if (!IsWindowValid()) {
+//         return WMError::WM_ERROR_INVALID_WINDOW;
+//     }
+//     if (!WindowHelper::IsSystemWindow(property_->GetWindowType())) {
+//         WLOGFE("only system window can set");
+//         return WMError::WM_ERROR_INVALID_OPERATION;
+//     }
+//     AdjustWindowAnimationFlag(false); // false means update rs tree with default option
+//     // need time out check
+//     WMError ret = UpdateProperty(PropertyChangeAction::ACTION_UPDATE_ANIMATION_FLAG);
+//     if (ret != WMError::WM_OK) {
+//         WLOGFE("UpdateProperty failed with errCode:%{public}d", static_cast<int32_t>(ret));
+//         return ret;
+//     }
+//     ret = SingletonContainer::Get<WindowAdapter>().UpdateRsTree(property_->GetWindowId(), isAdd);
+//     if (ret != WMError::WM_OK) {
+//         WLOGFE("UpdateRsTree failed with errCode:%{public}d", static_cast<int32_t>(ret));
+//         return ret;
+//     }
+//     return WMError::WM_OK;
+// }
+
+void WindowSceneSessionImpl::AdjustWindowAnimationFlag(bool withAnimation)
+{
+    // when show/hide with animation
+    // use custom animation when transitionController exists; else use default animation
+    WindowType winType = property_->GetWindowType();
+    bool isAppWindow = WindowHelper::IsAppWindow(winType);
+    if (withAnimation && !isAppWindow && animationTransitionController_) {
+        // use custom animation
+        property_->SetAnimationFlag(static_cast<uint32_t>(WindowAnimation::CUSTOM));
+    } else if ((isAppWindow && enableDefaultAnimation_) || (withAnimation && !animationTransitionController_)) {
+        // use default animation
+        property_->SetAnimationFlag(static_cast<uint32_t>(WindowAnimation::DEFAULT));
+    } else if (winType == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
+        property_->SetAnimationFlag(static_cast<uint32_t>(WindowAnimation::INPUTE));
+    } else {
+        // with no animation
+        property_->SetAnimationFlag(static_cast<uint32_t>(WindowAnimation::NONE));
+    }
+}
+
+WMError WindowSceneSessionImpl::UpdateAnimationFlagProperty(bool withAnimation)
+{
+    if (!WindowHelper::IsSystemWindow(GetType())) {
+        return WMError::WM_OK;
+    }
+    AdjustWindowAnimationFlag(withAnimation);
+    // when show(true) with default, hide() with None, to adjust animationFlag to disabled default animation
+    return UpdateProperty(PropertyChangeAction::ACTION_UPDATE_ANIMATION_FLAG);
+}
+
+void WindowSceneSessionImpl::SetNeedDefaultAnimation(bool needDefaultAnimation)
+{
+    enableDefaultAnimation_= needDefaultAnimation;
 }
 } // namespace Rosen
 } // namespace OHOS
