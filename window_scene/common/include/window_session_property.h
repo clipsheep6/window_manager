@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <parcel.h>
 #include "interfaces/include/ws_common.h"
+#include "interfaces/include/ws_common_inner.h"
 #include "wm_common.h"
 #include <cfloat>
 
@@ -78,6 +79,7 @@ public:
     void SetZOrder(uint32_t zOrder);
     void SetWindowFlags(uint32_t flags);
     void AddWindowFlag(WindowFlag flag);
+    void SetAnimationFlag(uint32_t animationFlag);
 
     const std::string& GetWindowName() const;
     const SessionInfo& GetSessionInfo() const;
@@ -104,6 +106,7 @@ public:
     const std::unordered_map<WindowType, SystemBarProperty>& GetSystemBarProperty() const;
     bool IsDecorEnable();
     uint32_t GetZOrder();
+    uint32_t GetAnimationFlag() const;
 
     bool MarshallingWindowLimits(Parcel& parcel) const;
     static void UnmarshallingWindowLimits(Parcel& parcel, WindowSessionProperty* property);
@@ -111,7 +114,11 @@ public:
     static void UnMarshallingSystemBarMap(Parcel& parcel, WindowSessionProperty* property);
     bool Marshalling(Parcel& parcel) const override;
     static WindowSessionProperty* Unmarshalling(Parcel& parcel);
+    bool WritePropertyAsNeed(Parcel& parcel, uint32_t actions);
+    void ReadPropertyAsNeed(Parcel& parcel, uint32_t actions);
 private:
+    bool Write(Parcel& parcel, WSPropertyChangeAction action);
+    void Read(Parcel& parcel, WSPropertyChangeAction action);
     std::string windowName_;
     SessionInfo sessionInfo_;
     Rect requestRect_ { 0, 0, 0, 0 }; // window rect requested by the client (without decoration size)
@@ -139,6 +146,9 @@ private:
     };
     uint32_t zOrder_ = 0;
     bool isDecorEnable_ = false;
+    uint32_t animationFlag_ { static_cast<uint32_t>(WindowAnimation::DEFAULT) };
+    // Transform info
+    Transform trans_;
 };
 
 struct SystemSessionConfig : public Parcelable {

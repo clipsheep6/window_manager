@@ -85,6 +85,12 @@ public:
     virtual bool IsPrivacyMode() const override;
     virtual bool IsLayoutFullScreen() const override;
     virtual bool IsFullScreen() const override;
+
+    void RegisterAnimationTransitionController(const sptr<IAnimationTransitionController>& listener) override;
+    void SetNeedDefaultAnimation(bool needDefaultAnimation) override;
+    WMError SetTransform(const Transform& trans) override;
+    const Transform& GetTransform() const override;
+
 protected:
     void DestroySubWindow();
     WMError CreateAndConnectSpecificSession();
@@ -99,6 +105,10 @@ protected:
 private:
     bool IsValidSystemWindowType(const WindowType& type);
     WMError CheckParmAndPermission();
+    void TransformSurfaceNode(const Transform& trans);
+
+    bool enableDefaultAnimation_ = true;
+    sptr<IAnimationTransitionController> animationTransitionController_;
 };
 } // namespace Rosen
 } // namespace OHOS
