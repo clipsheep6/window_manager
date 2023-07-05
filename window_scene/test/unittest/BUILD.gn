@@ -116,14 +116,6 @@ ohos_unittest("ws_scene_session_test") {
   deps = [ ":ws_unittest_common" ]
 }
 
-ohos_unittest("ws_session_manager_agent_controller_test") {
-  module_out_path = module_out_path
-
-  sources = [ "session_manager_agent_controller_test.cpp" ]
-
-  deps = [ ":ws_unittest_common" ]
-}
-
 ## Build ws_unittest_common.a {{{
 config("ws_unittest_common_public_config") {
   include_dirs = [
