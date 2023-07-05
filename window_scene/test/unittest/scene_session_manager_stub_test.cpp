@@ -14,7 +14,6 @@
  */
 
 #include <gtest/gtest.h>
-#include <ui/rs_surface_node.h>
 #include <message_option.h>
 #include <message_parcel.h>
 #include "session_manager/include/scene_session_manager.h"

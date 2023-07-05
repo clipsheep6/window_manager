@@ -14,7 +14,6 @@
  */
 
 #include <gtest/gtest.h>
-#include <ui/rs_surface_node.h>
 #include "session/host/include/scene_session.h"
 
 using namespace testing;
