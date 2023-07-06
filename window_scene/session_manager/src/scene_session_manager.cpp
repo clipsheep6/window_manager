@@ -1523,6 +1523,10 @@ void SceneSessionManager::WindowVisibilityChangeCallback(std::shared_ptr<RSOcclu
         bool isVisible = elem.second;
         auto iter = sceneSessionMap_.begin();
         for (; iter != sceneSessionMap_.end(); iter++) {
+            if( !iter->second || !iter->second->GetSurfaceNode()) {
+                WLOGI(" sceneSessionMap_->second is nullptr || sceneSessionMap_->second->GetSurfaceNode() is nullptr");
+                continue;
+            }
             if (surfaceId == iter->second->GetSurfaceNode()->GetId()) {
                 break;
             }
