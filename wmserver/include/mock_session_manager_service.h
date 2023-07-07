@@ -32,11 +32,18 @@ public:
     bool SetSessionManagerService(const sptr<IRemoteObject>& sessionManagerService);
     sptr<IRemoteObject> GetSessionManagerService() override;
     void OnStart() override;
+    int Dump(int fd, const std::vector<std::string>& args) override;
+
 protected:
     MockSessionManagerService();
     virtual ~MockSessionManagerService() = default;
 private:
+    WMError MockSessionManagerService::DumpWindowInfo(const std::vector<std::string>& args, std::string& dumpInfo);
+
+private:
     bool RegisterMockSessionManagerService();
+    void ShowHelpInfo(std::string& dumpInfo);
+    void ShowAceDumpHelp(std::string& dumpInfo);
 
     sptr<IRemoteObject> sessionManagerService_;
 };
