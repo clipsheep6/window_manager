@@ -70,5 +70,6 @@ sptr<IRemoteObject> MockSessionManagerService::GetSessionManagerService()
     }
     return sessionManagerService_;
 }
+
 } // namespace Rosen
 } // namespace OHOS

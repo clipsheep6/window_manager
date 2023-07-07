@@ -100,6 +100,9 @@ public:
 
     void SetWaterMarkSessionCount(int32_t count);
     int32_t GetWaterMarkSessionCount() const;
+    
+    std::map<uint64_t, sptr<SceneSession>> GetSceneSessionMap();
+    
 protected:
     SceneSessionManager();
     virtual ~SceneSessionManager() = default;

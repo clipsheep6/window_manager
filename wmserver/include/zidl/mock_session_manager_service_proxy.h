@@ -28,6 +28,12 @@ public:
     ~MockSessionManagerServiceProxy() {};
 
     sptr<IRemoteObject> GetSessionManagerService() override;
+    
+    WMError GetSessionDumpInfo(const std::vector<std::string>& params,
+        SessionDumpInfo& dumpInfo);
+    WMError GetSpecifiedSessionDumpInfo(const std::vector<std::string>& params,
+        SpecifiedSessionDumpInfo& info);
+
 private:
     static inline BrokerDelegator<MockSessionManagerServiceProxy> delegator_;
 };

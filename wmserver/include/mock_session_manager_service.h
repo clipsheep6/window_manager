@@ -31,6 +31,8 @@ WM_DECLARE_SINGLE_INSTANCE_BASE(MockSessionManagerService);
 public:
     bool SetSessionManagerService(const sptr<IRemoteObject>& sessionManagerService);
     sptr<IRemoteObject> GetSessionManagerService() override;
+
+
     void OnStart() override;
 protected:
     MockSessionManagerService();
@@ -39,6 +41,7 @@ private:
     bool RegisterMockSessionManagerService();
 
     sptr<IRemoteObject> sessionManagerService_;
+    sptr<IRemoteObject> sessionDumper_;
 };
 } // namespace Rosen
 } // namespace OHOS

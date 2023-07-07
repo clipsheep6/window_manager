@@ -128,6 +128,112 @@ struct SystemConfig : public Parcelable {
     }
 };
 
+
+struct SessionData {  // SessionInfo  Msg
+    std::string sessionName_ = ""; // GetWindowName
+    uint32_t screenId_ = 0;    // GetDisplayId
+    uint32_t callingPid_ = 0;  // GetCallingPid
+    uint64_t persistentId = 0;   // GetWindowId
+    uint32_t sessionType_ = 0;   // GetWindowType
+    uint32_t sessionMode_ = 0;   // GetWindowMode
+    uint32_t sessionFlags_ = 0;  // GetWindowFlags
+    int32_t zOrder_ = 0;         //
+    int32_t orientation_ = 0;    // GetRequestedOrientation
+    WSRect sessionRect_;
+}
+
+struct SpecifiedSessionDumpInfo : public Parcelable {
+    WSRect sessionRect_;
+    bool startingWindowShown_;
+    bool isVisible_;
+    bool focusable_;
+    bool decoStatus_;
+    bool systemPrivacyMode_;
+    bool privacyMode_;
+    std::string sessionName;
+    unit32_t screenId_;
+    uint32_t sessionId_;
+    int32_t callingPid_;
+    uint32_t sessionType_;
+    uint32_t sessionMode_;
+    uint32_t sessionFlags_;
+    uint32_t requestedOrientation_;
+    bool firstFrameAvailable_;
+    bool isVisible_;
+    bool focusable_;
+    bool decoStatus_;
+    bool isPrivacyMode_;
+    std::vector<Rect> touchHotAreas_;
+}
+
+struct SessionDumpInfo : public Parcelable {
+    // int32_t totalSession_ = 0;   
+    std::vector<SessionData> sessionDataList_ = {}; // GetTotalWindowNum
+    int32_t focusSession_ = 0;   // GetFocusWindow
+
+    // WriteInt32(int32_t value)
+    // WriteUint32(uint32_t value)
+    // WriteUint64(uint64_t value)
+    // WriteFloat(float value)
+    // WriteString(const std::string &value)
+    // WriteBool(bool value)
+
+    virtual bool Marshalling(Parcel& parcel) const override
+    {
+        int32_t totalSession = sessionDataList_.size();
+        
+        if (!parcel.WriteInt32(totalSession) || 
+            !parcel.WriteUint64(focusSession_) {
+            return false;
+        }
+        for (auto sData : sessionDataList_) {
+            if (!parcel.WriteString(sData.sessionName_) || 
+                !parcel.WriteUint32(sData.screenId_) ||
+                !parcel.WriteUint32(sData.callingPid_) ||
+                !parcel.WriteUint32(sData.persistId) ||
+                !parcel.WriteUint32(sData.sessionType) ||
+                !parcel.WriteUint32(sData.sessionMode) ||
+                !parcel.WriteUint32(sData.sessionFlags) ||
+                !parcel.WriteInt32(sData.zOrder_) ||
+                !parcel.WriteInt32(sData.orientation_) ||
+                !parcel.WriteInt32(sData.sessionRect.posX_) ||
+                !parcel.WriteInt32(sData.posY_) ||
+                !parcel.WriteInt32(sData.width_) ||
+                !parcel.WriteInt32(sData.height_) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    static SessionDumpInfo* Unmarshalling(Parcel& parcel)
+    {
+        SessionDumpInfo *info = new SessionDumpInfo();
+        info->totalSession = parcel.ReadInt32();
+        info->focusSession_ = parcel.ReadUint64();
+        for (int32_t i = 0; i < info->totalSession; i++) {
+            SessionData sData;
+            sData.sessionName_  =  parcel.ReadString();
+            sData.screenId_     =  parcel.ReadUint32();
+            sData.callingPid_   =  parcel.ReadUint32();
+            sData.persistId     =  parcel.ReadUint32();
+            sData.sessionType   =  parcel.ReadUint32();
+            sData.sessionMode   =  parcel.ReadUint32();
+            sData.sessionFlags  =  parcel.ReadUint32();
+            sData.zOrder_       =  parcel.ReadInt32();
+            sData.orientation_  =  parcel.ReadInt32();
+            sData.posX_         =  parcel.ReadInt32();
+            sData.posY_         =  parcel.ReadInt32();
+            sData.width_        =  parcel.ReadInt32();
+            sData.height_       =  parcel.ReadInt32();
+            sData.focusSession_ =  parcel.ReadInt32();
+            sData.totalSession_ =  parcel.ReadInt32();
+            info->sessionInfos_.push_back(sData);
+        }
+        return info;
+    }
+};
+
 struct WindowSizeLimits {
     uint32_t maxWidth_;
     uint32_t maxHeight_;

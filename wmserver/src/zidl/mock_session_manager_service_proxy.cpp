@@ -38,5 +38,52 @@ sptr<IRemoteObject> MockSessionManagerServiceProxy::GetSessionManagerService()
     sptr<IRemoteObject> remoteObject = reply.ReadRemoteObject();
     return remoteObject;
 }
+
+WMError MockSessionManagerServiceProxy::GetSessionDumpInfo(const std::vector<std::string>& params,
+    SessionDumpInfo& dumpInfo)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    if (!data.WriteInterfaceToken(params)) {
+        WLOGFE("WriteInterfaceToken params failed");
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+        MockSessionManagerServiceMessage::TRANS_ID_GET_SESSION_DUMP_INFO), data, reply, option) != ERR_NONE) {
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    sptr<SessionDumpInfo> pDumpInfo = reply.ReadParcelable<SessionDumpInfo>();
+    dumpInfo = *pDumpInfo;
+    return WMError::WM_ERROR_INVALID_PARAM;
+}
+
+WMError MockSessionManagerServiceProxy::GetSpecifiedSessionDumpInfo(const std::vector<std::string>& params,
+    SpecifiedSessionDumpInfo& info)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    if (!data.WriteInterfaceToken(params)) {
+        WLOGFE("WriteInterfaceToken params failed");
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+        MockSessionManagerServiceMessage::TRANS_ID_GET_SPECIFIED_SSESSION_DUMP_INFO), data, reply, option) != ERR_NONE) {
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    sptr<SpecifiedSessionDumpInfo> pDumpInfo = reply.ReadParcelable<SpecifiedSessionDumpInfo>();
+    info = *pDumpInfo;
+    return WMError::WM_ERROR_INVALID_PARAM;
+}
+
 } // namespace Rosen
 } // namespace OHOS

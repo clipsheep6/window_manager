@@ -1192,6 +1192,11 @@ int32_t SceneSessionManager::GetWaterMarkSessionCount() const
     return waterMarkSessionCount_;
 }
 
+std::map<uint64_t, sptr<SceneSession>> GetSceneSessionMap()
+{
+    return sceneSessionMap_;
+}
+
 WSError SceneSessionManager::SetWindowFlags(const sptr<SceneSession>& sceneSession, uint32_t flags)
 {
     if (sceneSession == nullptr) {
