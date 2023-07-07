@@ -177,8 +177,8 @@ ohos_shared_library("session_manager") {
     "ability_base:session_info",
     "graphic_standard:librender_service_client",
     "hilog:libhilog",
+    "image_framework:image_native",
     "ipc:ipc_single",
-    "multimedia_image_framework:image_native",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
