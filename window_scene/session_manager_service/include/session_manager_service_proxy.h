@@ -31,8 +31,6 @@ public:
     sptr<IRemoteObject> GetScreenSessionManagerService() override;
     sptr<IRemoteObject> GetScreenLockManagerService() override;
 
-
-
 private:
     static inline BrokerDelegator<SessionManagerServiceProxy> delegator_;
 };

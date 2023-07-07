@@ -1079,6 +1079,11 @@ void SceneSessionManager::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
     return;
 }
 
+WSError SceneSessionManager::GetSessionDumpInfo()
+{
+    WSError res = WSError::WS_OK;
+}
+
 WSError SceneSessionManager::UpdateFocus(uint64_t persistentId, bool isFocused)
 {
     auto task = [this, persistentId, isFocused]() {
@@ -1610,5 +1615,8 @@ WSError SceneSessionManager::GetFocusSessionToken(sptr<IRemoteObject> &token)
     }
     return WSError::WS_ERROR_INVALID_PARAM;
 }
+
+WSError GetSessionDumpInfo(std::string& info) = 0;
+
 
 } // namespace OHOS::Rosen

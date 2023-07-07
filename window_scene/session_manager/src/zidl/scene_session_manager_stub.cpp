@@ -58,7 +58,10 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_GESTURE_NAVIGATION_ENABLED),
         &SceneSessionManagerStub::HandleSetGestureNavigationEnabled),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_INFO),
-        &SceneSessionManagerStub::HandleGetAccessibilityWindowInfo)
+        &SceneSessionManagerStub::HandleGetAccessibilityWindowInfo),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_DUMP_INFO),
+        &SceneSessionManagerStub::HandleGetSessionDump)
+    )
 };
 
 int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
@@ -248,6 +251,17 @@ int SceneSessionManagerStub::HandleGetAccessibilityWindowInfo(MessageParcel &dat
         WLOGFE("Write window infos failed.");
         return ERR_TRANSACTION_FAILED;
     }
+    reply.WriteInt32(static_cast<int32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleGetSessionDump(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleGet session Dump!");
+    sptr<IRemoteObject> token = data.ReadRemoteObject();
+    std::string dumpInfo;
+    WSError errCode = GetSessionDumpInfo(dumpInfo);
+    reply.WriteString(dumpInfo);
     reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
 }

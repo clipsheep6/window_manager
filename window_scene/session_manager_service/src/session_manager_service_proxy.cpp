@@ -87,5 +87,4 @@ sptr<IRemoteObject> SessionManagerServiceProxy::GetScreenLockManagerService()
 
     return reply.ReadRemoteObject();
 }
-
 } // namespace OHOS::Rosen
