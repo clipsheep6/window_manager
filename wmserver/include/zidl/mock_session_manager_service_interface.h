@@ -28,7 +28,6 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.IMockSessionManager");
     enum class MockSessionManagerServiceMessage : uint32_t {
         TRANS_ID_GET_SESSION_MANAGER_SERVICE,
-        TRANS_ID_GET_SESSION_DUMP_INFO,
     };
 
     virtual sptr<IRemoteObject> GetSessionManagerService() = 0;

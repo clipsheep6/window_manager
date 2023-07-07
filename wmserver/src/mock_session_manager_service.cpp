@@ -98,7 +98,7 @@ bool MockSessionManagerService::SetSessionManagerService(const sptr<IRemoteObjec
 
 sptr<IRemoteObject> MockSessionManagerService::GetSessionManagerService()
 {
-    if (sessionManagerService_) {
+    if (!sessionManagerService_) {
         WLOGFE("sessionManagerService is nullptr");
         return nullptr;
     }
@@ -120,12 +120,20 @@ WMError MockSessionManagerService::DumpWindowInfo(const std::vector<std::string>
 
 WMError MockSessionManagerService::DumpAllWindowInfo(std::string& dumpInfo)
 {
-     auto proxy = std::make_unique<MockSessionManagerServiceProxy>(sessionManagerService_);
-     if (!proxy) {
-         std::cout << "proxy is nullptr." << std::endl;
-         return WMError::WM_ERROR_NULLPTR;
+     if (!sessionManagerService_) {
+         WLOGFE("sessionManagerService is nullptr");
+         return nullptr;
      }
-     int ret = proxy->GetSessionDumpInfo(params, dumpInfo);
+     sptr<IRemoteObject> remoteObject = sessionManagerS0ervice_->GetSceneSessionManager();
+     if (!remoteObject) {
+         WLOGFW("Get scene session manager proxy failed, scene session manager service is null");
+         return;
+     }
+     sptr<ISceneSessionManager> sceneSessionManagerProxy = iface_cast<ISceneSessionManager>(remoteObject);
+     if (!sceneSessionManagerProxy) {
+         WLOGFW("Get scene session manager proxy failed, nullptr");
+     }
+     WMError ret = sceneSessionManagerProxy->GetSessionDumpInfo(params, dumpInfo);
      if (ret != WMError::WM_OK) {
          WLOGFD("sessionManagerService set success!");
          return ret;

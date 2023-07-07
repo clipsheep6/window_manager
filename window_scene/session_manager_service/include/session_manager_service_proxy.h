@@ -31,7 +31,6 @@ public:
     sptr<IRemoteObject> GetScreenSessionManagerService() override;
     sptr<IRemoteObject> GetScreenLockManagerService() override;
 
-    WMError SessionManagerServiceProxy::GetSessionDumpInfo(std::string& info);
 
 
 private:

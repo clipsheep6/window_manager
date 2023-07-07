@@ -88,23 +88,4 @@ sptr<IRemoteObject> SessionManagerServiceProxy::GetScreenLockManagerService()
     return reply.ReadRemoteObject();
 }
 
-WMError SessionManagerServiceProxy::GetSessionDumpInfo(std::string& info)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return WMError::WM_ERROR_INVALID_PARAM;
-    }
-    if (Remote()->SendRequest(static_cast<uint32_t>(
-        MockSessionManagerServiceMessage::TRANS_ID_GET_SESSION_DUMP_INFO),
-        data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_INVALID_PARAM;
-    }
-    info = reply.ReadString();
-    return WMError::WM_OK;
-}
-
-
 } // namespace OHOS::Rosen

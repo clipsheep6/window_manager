@@ -47,6 +47,7 @@ public:
     WSError PendingSessionToForeground(const sptr<IRemoteObject> &token) override;
     WSError PendingSessionToBackgroundForDelegator(const sptr<IRemoteObject> &token) override;
     WSError GetFocusSessionToken(sptr<IRemoteObject> &token) override;
+    WSError GetSessionDumpInfo(const std::vector<std::string>& params, std::string& info);
 
 private:
     static inline BrokerDelegator<SceneSessionManagerProxy> delegator_;
