@@ -23,6 +23,8 @@
 #include <parameters.h>
 #include "sys_cap_util.h"
 #include "surface_capture_future.h"
+#include "screen_rotation_property.h"
+#include "screen_sensor_connector.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -580,6 +582,7 @@ DMError ScreenSessionManager::IsScreenRotationLocked(bool& isLocked)
         WLOGFE("SCB: ScreenSessionManager is screen rotation locked permission denied!");
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
+    isLocked = ScreenRotationProperty::IsScreenRotationLocked();
     WLOGFI("SCB: IsScreenRotationLocked:isLocked: %{public}u", isLocked);
     return DMError::DM_OK;
 }
@@ -591,7 +594,7 @@ DMError ScreenSessionManager::SetScreenRotationLocked(bool isLocked)
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     WLOGFI("SCB: SetScreenRotationLocked: isLocked: %{public}u", isLocked);
-    return DMError::DM_OK;
+    return ScreenRotationProperty::SetScreenRotationLocked(isLocked);
 }
 
 DMError ScreenSessionManager::SetOrientation(ScreenId screenId, Orientation orientation)
@@ -669,6 +672,57 @@ bool ScreenSessionManager::SetRotation(ScreenId screenId, Rotation rotationAfter
     screenSession->PropertyChange(screenSession->GetScreenProperty());
     NotifyScreenChanged(screenSession->ConvertToScreenInfo(), ScreenChangeEvent::UPDATE_ROTATION);
     return true;
+}
+
+void ScreenSessionManager::SetSensorSubscriptionEnabled()
+{
+    isAutoRotationOpen_ = system::GetParameter("persist.display.ar.enabled", "1") == "1";
+    if (!isAutoRotationOpen_) {
+        WLOGFE("autoRotation is not open");
+        ScreenRotationProperty::Init();
+        return;
+    }
+    ScreenSensorConnector::SubscribeRotationSensor();
+}
+
+bool ScreenSessionManager::SetRotationFromWindow(DisplayId displayId, Rotation targetRotation)
+{
+    sptr<DisplayInfo> displayInfo = GetDisplayInfoById(displayId);
+    if (displayInfo == nullptr) {
+        return false;
+    }
+    return SetRotation(displayInfo->GetScreenId(), targetRotation, true);
+}
+
+sptr<SupportedScreenModes> ScreenSessionManager::GetScreenModesByDisplayId(DisplayId displayId)
+{
+    auto displayInfo = GetDisplayInfoById(displayId);
+    if (displayInfo == nullptr) {
+        WLOGFE("can not get display.");
+        return nullptr;
+    }
+    auto screenInfo = GetScreenInfoById(displayInfo->GetScreenId());
+    if (screenInfo == nullptr) {
+        WLOGFE("can not get screen.");
+        return nullptr;
+    }
+    auto modes = screenInfo->GetModes();
+    auto id = screenInfo->GetModeId();
+    if (id >= modes.size()) {
+        WLOGFE("can not get screenMode.");
+        return nullptr;
+    }
+    return modes[id];
+}
+
+sptr<ScreenInfo> ScreenSessionManager::GetScreenInfoByDisplayId(DisplayId displayId)
+{
+    auto displayInfo = GetDisplayInfoById(displayId);
+    if (displayInfo == nullptr) {
+        WLOGFE("can not get displayInfo.");
+        return nullptr;
+    }
+    return GetScreenInfoById(displayInfo->GetScreenId());
 }
 
 void ScreenSessionManager::RegisterDisplayChangeListener(sptr<IDisplayChangeListener> listener)
