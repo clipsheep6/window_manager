@@ -257,10 +257,10 @@ int SceneSessionManagerStub::HandleGetAccessibilityWindowInfo(MessageParcel &dat
 
 int SceneSessionManagerStub::HandleGetSessionDump(MessageParcel &data, MessageParcel &reply)
 {
-    WLOGFI("run HandleGet session Dump!");
-    sptr<IRemoteObject> token = data.ReadRemoteObject();
+    WLOGFI("run HandleGet all session Dump!");
+    sptr<DumpParam> param = parcel.ReadParcelable<DumpParam>();
     std::string dumpInfo;
-    WSError errCode = GetSessionDumpInfo(dumpInfo);
+    WSError errCode = GetSessionDumpInfo(param->params_, dumpInfo);
     reply.WriteString(dumpInfo);
     reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;

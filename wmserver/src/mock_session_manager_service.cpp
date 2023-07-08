@@ -25,6 +25,11 @@ namespace OHOS {
 namespace Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "MOCK_SMS"};
+    constexpr int WINDOW_NAME_MAX_LENGTH = 20;
+    const std::string ARG_DUMP_HELP = "-h";
+    const std::string ARG_DUMP_ALL = "-a";
+    const std::string ARG_DUMP_WINDOW = "-w";
+
 }
 WM_IMPLEMENT_SINGLE_INSTANCE(MockSessionManagerService)
 
@@ -124,7 +129,7 @@ WMError MockSessionManagerService::DumpAllWindowInfo(std::string& dumpInfo)
          WLOGFE("sessionManagerService is nullptr");
          return nullptr;
      }
-     sptr<IRemoteObject> remoteObject = sessionManagerS0ervice_->GetSceneSessionManager();
+     sptr<IRemoteObject> remoteObject = sessionManagerService_->GetSceneSessionManager();
      if (!remoteObject) {
          WLOGFW("Get scene session manager proxy failed, scene session manager service is null");
          return;
@@ -133,6 +138,8 @@ WMError MockSessionManagerService::DumpAllWindowInfo(std::string& dumpInfo)
      if (!sceneSessionManagerProxy) {
          WLOGFW("Get scene session manager proxy failed, nullptr");
      }
+     std::vector<std::string> params;
+     params.push_back(ARG_DUMP_ALL);
      WMError ret = sceneSessionManagerProxy->GetSessionDumpInfo(params, dumpInfo);
      if (ret != WMError::WM_OK) {
          WLOGFD("sessionManagerService set success!");

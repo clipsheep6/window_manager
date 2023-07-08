@@ -70,7 +70,7 @@ public:
     virtual WSError PendingSessionToForeground(const sptr<IRemoteObject> &token) = 0;
     virtual WSError PendingSessionToBackgroundForDelegator(const sptr<IRemoteObject> &token) = 0;
     virtual WSError GetFocusSessionToken(sptr<IRemoteObject> &token) = 0;
-    virtual WSError GetSessionDumpInfo(std::string& info) = 0;
+    virtual WSError GetSessionDumpInfo(const std::vector<std::string>& params, std::string& info) = 0;
 
     // interfaces of IWindowManager
     WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
