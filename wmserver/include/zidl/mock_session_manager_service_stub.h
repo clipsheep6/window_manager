@@ -27,7 +27,6 @@ public:
     ~MockSessionManagerServiceStub() = default;
     virtual int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option) override;
-    virtual int Dump(int fd, const std::vector<std::string>& args);
 };
 }
 }

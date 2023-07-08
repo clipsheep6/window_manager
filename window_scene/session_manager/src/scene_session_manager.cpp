@@ -1079,8 +1079,9 @@ void SceneSessionManager::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
     return;
 }
 
-WSError SceneSessionManager::GetSessionDumpInfo()
+WSError SceneSessionManager::GetSessionDumpInfo(std::string& info)
 {
+    // info =
     WSError res = WSError::WS_OK;
 }
 

@@ -44,9 +44,5 @@ int32_t MockSessionManagerServiceStub::OnRemoteRequest(uint32_t code, MessagePar
     }  
     return 0;
 }
-int32_t MockSessionManagerServiceStub::Dump(int fd, const std::vector<std::string>& args)
-{
-    return 0;
-}
 } // namespace Rosen
 } // namespace OHOS

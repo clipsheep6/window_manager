@@ -101,7 +101,6 @@ public:
 
     void SetWaterMarkSessionCount(int32_t count);
     int32_t GetWaterMarkSessionCount() const;
-        virtual WSError GetSessionDumpInfo(std::string& info) = 0;
 protected:
     SceneSessionManager();
     virtual ~SceneSessionManager() = default;
