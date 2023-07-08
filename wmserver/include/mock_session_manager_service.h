@@ -30,6 +30,7 @@ public:
     bool SetSessionManagerService(const sptr<IRemoteObject>& sessionManagerService);
     sptr<IRemoteObject> GetSessionManagerService() override;
     void OnStart() override;
+    int Dump(int fd, const std::vector<std::string>& args) override;
 
 protected:
     MockSessionManagerService();
@@ -37,6 +38,9 @@ protected:
 
 private:
     bool RegisterMockSessionManagerService();
+    WMError DumpWindowInfo(const std::vector<std::string>& args, std::string& dumpInfo);
+    void ShowHelpInfo(std::string& dumpInfo);
+    void ShowAceDumpHelp(std::string& dumpInfo);
 
     class SMSDeathRecipient : public IRemoteObject::DeathRecipient {
     public:
