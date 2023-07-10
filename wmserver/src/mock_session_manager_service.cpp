@@ -26,16 +26,7 @@
 #include "unique_fd.h"
 #include "string_ex.h"
 #include "wm_common.h"
-
-//#include "display_manager_service_inner.h"
-//#include "string_ex.h"
-//#include "unique_fd.h"
-//#include "display_group_info.h"
-//#include "window_manager_hilog.h"
-//#include "window_manager_service.h"
-//#include "dm_common.h"
-
-
+#include "session_manager_s ervice_interface.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -117,7 +108,7 @@ int MockSessionManagerService::Dump(int fd, const std::vector<std::u16string> &a
     } else {
         int errCode = DumpWindowInfo(params, dumpInfo);
         if (errCode != 0) {
-            ShowIllegalArgsInfo(dumpInfo, errCode);
+            ShowIllegalArgsInfo(dumpInfo);
         }
     }
     int ret = dprintf(fd, "%s\n", dumpInfo.c_str());
