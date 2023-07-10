@@ -28,6 +28,7 @@ public:
     ~MockSessionManagerServiceProxy() {};
 
     sptr<IRemoteObject> GetSessionManagerService() override;
+
 private:
     static inline BrokerDelegator<MockSessionManagerServiceProxy> delegator_;
 };
