@@ -19,10 +19,10 @@
 #include <memory>
 #include <mutex>
 
-#include "event_handler.h"
 #include "nocopyable.h"
 #include "singleton.h"
 #include "session_stage_interface.h"
+
 namespace OHOS {
 namespace Rosen {
 class ANRHandler {
@@ -32,25 +32,11 @@ public:
     DISALLOW_COPY_AND_MOVE(ANRHandler);
 
     void SetSessionStage(const wptr<ISessionStage> &sessionStage);
-    void SetLastProcessedEventId(int32_t eventId, int64_t actionTime);
-
+    void MarkProcessed(int32_t eventId, int64_t actionTime);
 private:
-    void MarkProcessed();
-    void UpdateLastProcessedEventId(int32_t eventId);
-    void SetLastProcessedEventStatus(bool status);
-    int32_t GetLastProcessedEventId();
-    void SendEvent(int64_t delayTime);
-    std::shared_ptr<AppExecFwk::EventHandler> eventHandler_ { nullptr };
+    std::mutex mutex_;
     wptr<ISessionStage> sessionStage_ = nullptr;
-
-private:
-    std::mutex anrMtx_;
-    struct ANREvent {
-        bool sendStatus { false };
-        int32_t lastEventId { -1 };
-        int32_t lastReportId { -1 };
-    };
-    ANREvent event_;
+    int32_t lastProcessedEventId_ { -1 };
 };
 } // namespace Rosen
 } // namespace OHOS
