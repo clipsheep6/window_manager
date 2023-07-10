@@ -60,8 +60,7 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_INFO),
         &SceneSessionManagerStub::HandleGetAccessibilityWindowInfo),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_DUMP_INFO),
-        &SceneSessionManagerStub::HandleGetSessionDump)
-    )
+        &SceneSessionManagerStub::HandleGetSessionDump),
 };
 
 int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
@@ -269,7 +268,7 @@ int SceneSessionManagerStub::HandleSetSessionGravity(MessageParcel &data, Messag
 int SceneSessionManagerStub::HandleGetSessionDump(MessageParcel &data, MessageParcel &reply)
 {
     WLOGFI("run HandleGet all session Dump!");
-    sptr<DumpParam> param = parcel.ReadParcelable<DumpParam>();
+    sptr<DumpParam> param = data.ReadParcelable<DumpParam>();
     std::string dumpInfo;
     WSError errCode = GetSessionDumpInfo(param->params_, dumpInfo);
     reply.WriteString(dumpInfo);

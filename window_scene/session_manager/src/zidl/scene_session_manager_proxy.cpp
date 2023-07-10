@@ -467,7 +467,7 @@ WSError SceneSessionManagerProxy::GetFocusSessionToken(sptr<IRemoteObject> &toke
     return static_cast<WSError>(reply.ReadInt32());
 }
 
-WSError SessionManagerServiceProxy::GetSessionDumpInfo(const std::vector<std::string>& params, std::string& info)
+WSError SceneSessionManagerProxy::GetSessionDumpInfo(const std::vector<std::string>& params, std::string& info)
 {
     MessageParcel data;
     MessageParcel reply;

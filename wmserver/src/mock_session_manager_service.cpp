@@ -16,14 +16,34 @@
 #include "mock_session_manager_service.h"
 
 #include <system_ability_definition.h>
+#include <cinttypes>
+#include <csignal>
+#include <iomanip>
+#include <map>
+#include <sstream>
 
 #include "window_manager_hilog.h"
+#include "unique_fd.h"
+#include "string_ex.h"
+#include "wm_common.h"
+
+//#include "display_manager_service_inner.h"
+//#include "string_ex.h"
+//#include "unique_fd.h"
+//#include "display_group_info.h"
+//#include "window_manager_hilog.h"
+//#include "window_manager_service.h"
+//#include "dm_common.h"
+
+
 
 namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "MockSessionManagerService" };
 
+const std::u16string DEFAULT_USTRING = u"error";
+const char DEFAULT_STRING[] = "error";
 constexpr int WINDOW_NAME_MAX_LENGTH = 20;
 const std::string ARG_DUMP_HELP = "-h";
 const std::string ARG_DUMP_ALL = "-a";
@@ -65,11 +85,21 @@ void MockSessionManagerService::OnStart()
     WLOGFD("OnStart begin");
 }
 
-WMError MockSessionManagerService::Dump(int fd, const std::vector<std::string>& args)
+static std::string Str16ToStr8(const std::u16string& str)
+{
+    if (str == DEFAULT_USTRING) {
+        return DEFAULT_STRING;
+    }
+    std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert(DEFAULT_STRING);
+    std::string result = convert.to_bytes(str);
+    return result == DEFAULT_STRING ? "" : result;
+}
+
+int MockSessionManagerService::Dump(int fd, const std::vector<std::u16string> &args)
 {
     WLOGI("Dump begin fd: %{public}d", fd);
     if (fd < 0) {
-        return WMError::WM_ERROR_INVALID_PARAM;
+        return -1;
     }
     (void) signal(SIGPIPE, SIG_IGN); // ignore SIGPIPE crash
     UniqueFd ufd = UniqueFd(fd); // auto close
@@ -85,19 +115,20 @@ WMError MockSessionManagerService::Dump(int fd, const std::vector<std::string>& 
     } else if (params.size() == 1 && params[0] == ARG_DUMP_HELP) { // 1: params num
         ShowHelpInfo(dumpInfo);
     } else {
-        WMError errCode = DumpWindowInfo(params, dumpInfo);
-        if (errCode != WMError::WM_OK) {
+        int errCode = DumpWindowInfo(params, dumpInfo);
+        if (errCode != 0) {
             ShowIllegalArgsInfo(dumpInfo, errCode);
         }
     }
     int ret = dprintf(fd, "%s\n", dumpInfo.c_str());
     if (ret < 0) {
         WLOGFE("dprintf error");
-        return WMError::WM_ERROR_INVALID_OPERATION;
+        return -1; // WMError::WM_ERROR_INVALID_OPERATION;
     }
     WLOGI("Dump end");
-    return WMError::WM_OK;
+    return 0;
 }
+
 
 bool MockSessionManagerService::SetSessionManagerService(const sptr<IRemoteObject>& sessionManagerService)
 {
@@ -128,29 +159,36 @@ sptr<IRemoteObject> MockSessionManagerService::GetSessionManagerService()
     return sessionManagerService_;
 }
 
-WMError MockSessionManagerService::DumpWindowInfo(const std::vector<std::string>& args, std::string& dumpInfo)
+static bool IsValidDigitString(const std::string& windowIdStr)
 {
-    if (args.empty()) {
-        return WMError::WM_ERROR_INVALID_PARAM;
+    if (windowIdStr.empty()) {
+        return false;
     }
-    if (args.size() == 1 && args[0] == ARG_DUMP_ALL) { // 1: params num
-        return DumpAllWindowInfo(dumpInfo);
-    } else if (args.size() >= 2 && args[0] == ARG_DUMP_WINDOW && IsValidDigitString(args[1])) { // 2: params num
-        uint32_t windowId = std::stoul(args[1]);
+    for (char ch : windowIdStr) {
+        if ((ch >= '0' && ch <= '9')) {
+            continue;
+        }
+        WLOGFE("invalid window id");
+        return false;
     }
-    return WMError::WM_ERROR_INVALID_PARAM;
+    return true;
 }
 
-WMError MockSessionManagerService::DumpAllWindowInfo(std::string& dumpInfo)
+void MockSessionManagerService::ShowIllegalArgsInfo(std::string& dumpInfo)
+{
+    dumpInfo.append("The arguments are illegal and you can enter '-h' for help.");
+}
+
+int MockSessionManagerService::DumpAllWindowInfo(std::string& dumpInfo)
 {
      if (!sessionManagerService_) {
          WLOGFE("sessionManagerService is nullptr");
-         return nullptr;
+         return -1;
      }
      sptr<IRemoteObject> remoteObject = sessionManagerService_->GetSceneSessionManager();
      if (!remoteObject) {
          WLOGFW("Get scene session manager proxy failed, scene session manager service is null");
-         return;
+         return -1;
      }
      sptr<ISceneSessionManager> sceneSessionManagerProxy = iface_cast<ISceneSessionManager>(remoteObject);
      if (!sceneSessionManagerProxy) {
@@ -161,12 +199,24 @@ WMError MockSessionManagerService::DumpAllWindowInfo(std::string& dumpInfo)
      WMError ret = sceneSessionManagerProxy->GetSessionDumpInfo(params, dumpInfo);
      if (ret != WMError::WM_OK) {
          WLOGFD("sessionManagerService set success!");
-         return ret;
+         return -1;
      }
-    return WMError::WM_OK;
+    return 0; // WMError::WM_OK;
 }
 
-void WindowDumper::ShowHelpInfo(std::string& dumpInfo)
+int MockSessionManagerService::DumpWindowInfo(const std::vector<std::string>& args, std::string& dumpInfo)
+{
+    if (args.empty()) {
+        return -1;  // WMError::WM_ERROR_INVALID_PARAM;
+    }
+    if (args.size() == 1 && args[0] == ARG_DUMP_ALL) { // 1: params num
+        return DumpAllWindowInfo(dumpInfo);
+    }
+    return -1; // WMError::WM_ERROR_INVALID_PARAM;
+}
+
+
+void MockSessionManagerService::ShowHelpInfo(std::string& dumpInfo)
 {
     dumpInfo.append("Usage:\n")
         .append(" -h                             ")
@@ -179,7 +229,7 @@ void WindowDumper::ShowHelpInfo(std::string& dumpInfo)
     ShowAceDumpHelp(dumpInfo);
 }
 
-void WindowDumper::ShowAceDumpHelp(std::string& dumpInfo)
+void MockSessionManagerService::ShowAceDumpHelp(std::string& dumpInfo)
 {
 }
 
