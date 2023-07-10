@@ -537,7 +537,12 @@ WMError WindowSceneSessionImpl::MoveTo(int32_t x, int32_t y)
     if (IsWindowSessionInvalid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    const auto& rect = property_->GetWindowRect();
+    Rect rect;
+    if (state_ == WindowState::STATE_CREATED) {
+        rect = property_->GetRequestRect();
+    } else {
+        rect = property_->GetWindowRect();
+    }
     Rect newRect = { x, y, rect.width_, rect.height_ }; // must keep x/y
     property_->SetRequestRect(newRect);
     if (state_ == WindowState::STATE_HIDDEN || state_ < WindowState::STATE_CREATED) {
@@ -641,8 +646,12 @@ WMError WindowSceneSessionImpl::Resize(uint32_t width, uint32_t height)
     LimitCameraFloatWindowMininumSize(width, height);
 
     UpdateFloatingWindowSizeBySizeLimits(width, height);
-
-    const auto& rect = property_->GetWindowRect();
+    Rect rect;
+    if (state_ == WindowState::STATE_CREATED) {
+        rect = property_->GetRequestRect();
+    } else {
+        rect = property_->GetWindowRect();
+    }
     Rect newRect = { rect.posX_, rect.posY_, width, height }; // must keep w/h
     property_->SetRequestRect(newRect);
     if (state_ == WindowState::STATE_HIDDEN || state_ < WindowState::STATE_CREATED) {
