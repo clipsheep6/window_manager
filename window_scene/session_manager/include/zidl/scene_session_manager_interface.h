@@ -56,6 +56,7 @@ public:
         TRANS_ID_PENDING_SESSION_TO_FOREGROUND,
         TRANS_ID_PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR,
         TRANS_ID_GET_FOCUS_SESSION_TOKEN,
+        TRANS_ID_GET_SESSION_DUMP_INFO,
     };
 
     virtual WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
@@ -71,6 +72,7 @@ public:
     virtual WSError PendingSessionToForeground(const sptr<IRemoteObject> &token) = 0;
     virtual WSError PendingSessionToBackgroundForDelegator(const sptr<IRemoteObject> &token) = 0;
     virtual WSError GetFocusSessionToken(sptr<IRemoteObject> &token) = 0;
+    virtual WSError GetSessionDumpInfo(const std::vector<std::string>& params, std::string& info) = 0;
 
     // interfaces of IWindowManager
     WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
