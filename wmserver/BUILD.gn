@@ -39,6 +39,7 @@ config("libmockwms_config") {
     "include",
     "../utils/include",
     "../interfaces/innerkits/wm",
+    "${window_base_path}/window_scene/session_manager_service/include",
   ]
 }
 
@@ -50,7 +51,10 @@ ohos_shared_library("sms") {
 
   public_configs = [ ":libmockwms_config" ]
 
-  deps = [ "../utils:libwmutil" ]
+  deps = [
+    "../utils:libwmutil",
+    "${window_base_path}/window_scene/session_manager_service:session_manager_service",
+  ]
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",

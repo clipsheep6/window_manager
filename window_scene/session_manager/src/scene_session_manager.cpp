@@ -1909,6 +1909,4 @@ WSError SceneSessionManager::GetFocusSessionToken(sptr<IRemoteObject> &token)
     }
     return WSError::WS_ERROR_INVALID_PARAM;
 }
-
-
 } // namespace OHOS::Rosen

@@ -26,7 +26,7 @@
 #include "unique_fd.h"
 #include "string_ex.h"
 #include "wm_common.h"
-#include "session_manager_s ervice_interface.h"
+#include "session_manager_service_interface.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -176,7 +176,9 @@ int MockSessionManagerService::DumpAllWindowInfo(std::string& dumpInfo)
          WLOGFE("sessionManagerService is nullptr");
          return -1;
      }
-     sptr<IRemoteObject> remoteObject = sessionManagerService_->GetSceneSessionManager();
+
+     sptr<ISessionManagerService> sessionManagerServiceProxy = iface_cast<ISessionManagerService>(sessionManagerService_);
+     sptr<IRemoteObject> remoteObject = sessionManagerServiceProxy->GetSceneSessionManager();
      if (!remoteObject) {
          WLOGFW("Get scene session manager proxy failed, scene session manager service is null");
          return -1;
