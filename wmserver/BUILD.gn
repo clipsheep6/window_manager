@@ -52,8 +52,8 @@ ohos_shared_library("sms") {
   public_configs = [ ":libmockwms_config" ]
 
   deps = [
-    "../utils:libwmutil",
     "${window_base_path}/window_scene/session_manager_service:session_manager_service",
+    "../utils:libwmutil",
   ]
   external_deps = [
     "c_utils:utils",
