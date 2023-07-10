@@ -35,7 +35,7 @@ public:
     void MarkProcessed(int32_t eventId, int64_t actionTime);
 private:
     std::mutex mutex_;
-    wptr<ISessionStage> sessionStage_ = nullptr;
+    wptr<ISessionStage> sessionStage_ { nullptr };
     int32_t lastProcessedEventId_ { -1 };
 };
 } // namespace Rosen
