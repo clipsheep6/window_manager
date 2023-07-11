@@ -175,6 +175,8 @@ public:
     bool IsSessionValid() const;
 
     uint32_t GetWindowId() const;
+    WSError SetCallingPid(int32_t id);
+    WSError SetCallingUid(int32_t id);
     int32_t GetCallingPid() const;
     int32_t GetCallingUid() const;
     sptr<IRemoteObject> GetAbilityToken() const;
