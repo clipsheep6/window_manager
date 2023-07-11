@@ -15,6 +15,7 @@
 
 #include "zidl/screen_session_manager_proxy.h"
 #include "marshalling_helper.h"
+#include "ui/rs_surface_node.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -510,7 +511,7 @@ ScreenPowerState OHOS::Rosen::ScreenSessionManagerProxy::GetScreenPower(ScreenId
         WLOGFE("GetScreenPower remote is nullptr");
         return ScreenPowerState::INVALID_STATE;
     }
-    
+
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -1050,6 +1051,7 @@ sptr<CutoutInfo> ScreenSessionManagerProxy::GetCutoutInfo(DisplayId displayId)
         WLOGFW("get cutout info : remote is null");
         return nullptr;
     }
+
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -1069,6 +1071,7 @@ sptr<CutoutInfo> ScreenSessionManagerProxy::GetCutoutInfo(DisplayId displayId)
     sptr<CutoutInfo> info = reply.ReadParcelable<CutoutInfo>();
     return info;
 }
+
 DMError OHOS::Rosen::ScreenSessionManagerProxy::HasPrivateWindow(DisplayId displayId, bool& hasPrivateWindow)
 {
     sptr<IRemoteObject> remote = Remote();
@@ -1096,6 +1099,72 @@ DMError OHOS::Rosen::ScreenSessionManagerProxy::HasPrivateWindow(DisplayId displ
     }
     DMError ret = static_cast<DMError>(reply.ReadInt32());
     hasPrivateWindow = reply.ReadBool();
+    return ret;
+}
+
+DMError ScreenSessionManagerProxy::AddSurfaceNodeToDisplay(DisplayId displayId,
+    std::shared_ptr<class RSSurfaceNode>& surfaceNode, bool onTop)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("remote is null");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteUint64(displayId)) {
+        WLOGFE("write displayId failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (surfaceNode == nullptr || !surfaceNode->Marshalling(data)) {
+        WLOGFE("Write windowProperty failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_ADD_SURFACE_NODE),
+        data, reply, option) != ERR_NONE) {
+        WLOGFW("Send request failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    DMError ret = static_cast<DMError>(reply.ReadUint32());
+    return ret;
+}
+
+DMError ScreenSessionManagerProxy::RemoveSurfaceNodeFromDisplay(DisplayId displayId,
+    std::shared_ptr<class RSSurfaceNode>& surfaceNode)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("remote is null");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteUint64(displayId)) {
+        WLOGFE("write displayId failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (surfaceNode == nullptr || !surfaceNode->Marshalling(data)) {
+        WLOGFE("Write windowProperty failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_REMOVE_SURFACE_NODE),
+        data, reply, option) != ERR_NONE) {
+        WLOGFW("Send request failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    DMError ret = static_cast<DMError>(reply.ReadUint32());
     return ret;
 }
 } // namespace OHOS::Rosen

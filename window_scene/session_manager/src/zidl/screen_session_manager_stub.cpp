@@ -17,6 +17,7 @@
 
 #include <ipc_skeleton.h>
 #include "marshalling_helper.h"
+#include "ui/rs_surface_node.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -315,6 +316,20 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             DMError ret = HasPrivateWindow(id, hasPrivateWindow);
             reply.WriteInt32(static_cast<int32_t>(ret));
             reply.WriteBool(hasPrivateWindow);
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_ADD_SURFACE_NODE: {
+            DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
+            std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
+            auto ret = AddSurfaceNodeToDisplay(displayId, surfaceNode, true);
+            reply.WriteUint32(static_cast<uint32_t>(ret));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_REMOVE_SURFACE_NODE: {
+            DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
+            std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
+            auto ret = RemoveSurfaceNodeFromDisplay(displayId, surfaceNode);
+            reply.WriteUint32(static_cast<uint32_t>(ret));
             break;
         }
         default:

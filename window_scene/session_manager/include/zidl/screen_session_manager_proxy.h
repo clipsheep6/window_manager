@@ -85,6 +85,11 @@ public:
     virtual DMError SetScreenRotationLocked(bool isLocked) override;
     virtual DMError IsScreenRotationLocked(bool& isLocked) override;
     virtual sptr<CutoutInfo> GetCutoutInfo(DisplayId displayId) override;
+    virtual DMError AddSurfaceNodeToDisplay(DisplayId displayId,
+        std::shared_ptr<class RSSurfaceNode>& surfaceNode, bool onTop = true) override;
+
+    virtual DMError RemoveSurfaceNodeFromDisplay(DisplayId displayId,
+        std::shared_ptr<class RSSurfaceNode>& surfaceNode) override;
 
     virtual DMError HasPrivateWindow(DisplayId displayId, bool& hasPrivateWindow) override;
 private:

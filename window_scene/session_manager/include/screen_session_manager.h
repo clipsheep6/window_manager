@@ -105,6 +105,12 @@ public:
     sptr<SupportedScreenModes> GetScreenModesByDisplayId(DisplayId displayId);
     sptr<ScreenInfo> GetScreenInfoByDisplayId(DisplayId displayId);
 
+    virtual DMError AddSurfaceNodeToDisplay(DisplayId displayId,
+        std::shared_ptr<class RSSurfaceNode>& surfaceNode, bool onTop = true) override;
+
+    virtual DMError RemoveSurfaceNodeFromDisplay(DisplayId displayId,
+        std::shared_ptr<class RSSurfaceNode>& surfaceNode) override;
+
     std::vector<ScreenId> GetAllScreenIds() const;
     const std::shared_ptr<RSDisplayNode> GetRSDisplayNodeByScreenId(ScreenId smsScreenId) const;
     std::shared_ptr<Media::PixelMap> GetScreenSnapshot(DisplayId displayId);
