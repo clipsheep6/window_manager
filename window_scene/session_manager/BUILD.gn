@@ -190,7 +190,6 @@ ohos_shared_library("session_manager") {
 
   deps = [
     "${window_base_path}/utils:libwmutil",
-    "${window_base_path}/wmserver:sms",
   ]
 
   external_deps = [
