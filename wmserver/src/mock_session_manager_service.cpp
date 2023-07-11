@@ -26,7 +26,9 @@
 #include "unique_fd.h"
 #include "string_ex.h"
 #include "wm_common.h"
+#include "ws_common.h"
 #include "session_manager_service_interface.h"
+#include "scene_session_manager_interface.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -189,8 +191,8 @@ int MockSessionManagerService::DumpAllWindowInfo(std::string& dumpInfo)
      }
      std::vector<std::string> params;
      params.push_back(ARG_DUMP_ALL);
-     WMError ret = sceneSessionManagerProxy->GetSessionDumpInfo(params, dumpInfo);
-     if (ret != WMError::WM_OK) {
+     WSError ret = sceneSessionManagerProxy->GetSessionDumpInfo(params, dumpInfo);
+     if (ret != WSError::WS_OK) {
          WLOGFD("sessionManagerService set success!");
          return -1;
      }
