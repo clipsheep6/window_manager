@@ -49,7 +49,24 @@ void EventStage::SaveANREvent(int32_t persistentId, int32_t id, int64_t time, in
     events_[persistentId].push_back(eventTime);
 }
 
-std::vector<int32_t> EventStage::GetTimerIds(int32_t persistentId)
+std::vector<int32_t> EventStage::GetExpiredTimerIds(int32_t persistentId, int32_t eventId)
+{
+    CALL_DEBUG_ENTER;
+    if (events_.find(persistentId) == events_.end()) {
+        WLOGFD("Current events have no event for persistentId:%{public}d", persistentId);
+        return {};
+    }
+    std::vector<int32_t> timers;
+    for (auto &item : events_[persistentId]) {
+        if (item.id <= eventId) {
+            timers.push_back(item.timerId);
+            item.timerId = -1;
+        }
+    }
+    return timers;
+}
+
+std::vector<int32_t> EventStage::GetTimerIdsOfWindow(int32_t persistentId)
 {
     if (events_.find(persistentId) == events_.end()) {
         WLOGFD("Current events have no event for persistentId:%{public}d", persistentId);

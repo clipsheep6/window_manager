@@ -134,7 +134,7 @@ void ANRHandler::SendEvent(int64_t delayTime)
     }
     std::function<void()> eventFunc = std::bind(&ANRHandler::MarkProcessed, this);
     if (!eventHandler_->PostHighPriorityTask(eventFunc, delayTime)) {
-        WLOGFE("Send dispatch event failed");
+        WLOGFE("Send event receipt failed");
     }
 }
 } // namespace Rosen
