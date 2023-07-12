@@ -723,6 +723,10 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
         if (createSpecificSessionFunc_) {
             createSpecificSessionFunc_(sceneSession);
         }
+        if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
+            WLOGFI("Create input method and raise calling window");
+            ResizeSoftInputCallingSessionIfNeed(sceneSession);
+        }
         session = sceneSession;
         return errCode;
     };
@@ -1543,7 +1547,7 @@ void SceneSessionManager::ResizeSoftInputCallingSessionIfNeed(const sptr<SceneSe
 
     callingWindowRestoringRect_ = callingSessionRect;
     NotifyOccupiedAreaChangeInfo(callingSession, newRect, softInputSessionRect);
-    callingSession->UpdateSessionRect(callingWindowRestoringRect_, SizeChangeReason::UNDEFINED);
+    callingSession->UpdateSessionRect(newRect, SizeChangeReason::UNDEFINED);
 }
 
 void SceneSessionManager::NotifyOccupiedAreaChangeInfo(const sptr<SceneSession> callingSession,
