@@ -1206,20 +1206,18 @@ void SceneSessionManager::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
 
 WSError SceneSessionManager::GetAllSessionDumpInfo(std::string& dumpInfo)
 {
-//    auto sceneSessionMap = SceneSessionManager::GetInstance().GetSceneSessionMap();
-//    std::map<uint64_t, sptr<SceneSession>> sceneSessionMap_;
-
     int32_t screenGroupId = 0;
     std::ostringstream oss;
-    oss << "-------------------------------------ScreenGroup " << screenGroupId << "-------------------------------------" << std::endl;
-    oss << "WindowName           DisplayId Pid     WinId Type Mode Flag ZOrd Orientation [ x    y    w    h    ]" << std::endl;
+    oss << "-------------------------------------ScreenGroup " << screenGroupId
+        << "-------------------------------------" << std::endl;
+    oss << "WindowName           DisplayId Pid     WinId Type Mode Flag ZOrd Orientation [ x    y    w    h    ]"
+        << std::endl;
     for (auto& iter : sceneSessionMap_) {
         auto pSession = iter.second;
-        int32_t zOrder = 1;
-        if (zOrder < 0) {
-            zOrder = 0;
-        } else if (zOrder == 0) {
-            oss << "---------------------------------------------------------------------------------------" << std::endl;
+        uint32_t zOrder = 0;
+        auto property = pSession->GetSessionProperty();
+        if (property != nullptr) {
+            zOrder = property->GetZOrder();
         }
         WSRect rect = pSession->GetSessionRect();
         std::string sName = "SessionName";
