@@ -135,7 +135,7 @@ bool MockSessionManagerService::SetSessionManagerService(const sptr<IRemoteObjec
     if (sessionManagerService_->IsProxyObject() && !sessionManagerService_->AddDeathRecipient(smsDeathRecipient_)) {
         WLOGFE("Failed to add death recipient");
         return false;  
-    }  
+    }
 
     RegisterMockSessionManagerService();
     WLOGFI("sessionManagerService set success!");
@@ -159,41 +159,42 @@ void MockSessionManagerService::ShowIllegalArgsInfo(std::string& dumpInfo)
 
 sptr<IRemoteObject> MockSessionManagerService::GetSceneSessionManager()
 {
-     sptr<ISessionManagerService> sessionManagerServiceProxy = iface_cast<ISessionManagerService>(sessionManagerService_);
-     sptr<IRemoteObject> remoteObject = sessionManagerServiceProxy->GetSceneSessionManager();
-     if (!remoteObject) {
-         WLOGFW("Get scene session manager proxy failed, scene session manager service is null");
-         return nullptr;
-     }
-     sceneSessionManager_ = remoteObject;
-     return sceneSessionManager_;
+    sptr<ISessionManagerService> sessionManagerServiceProxy =
+        iface_cast<ISessionManagerService>(sessionManagerService_);
+    sptr<IRemoteObject> remoteObject = sessionManagerServiceProxy->GetSceneSessionManager();
+    if (!remoteObject) {
+        WLOGFW("Get scene session manager proxy failed, scene session manager service is null");
+        return nullptr;
+    }
+    sceneSessionManager_ = remoteObject;
+    return sceneSessionManager_;
 }
 
 int MockSessionManagerService::DumpAllWindowInfo(std::string& dumpInfo)
 {
-     if (!sessionManagerService_) {
-         WLOGFE("sessionManagerService is nullptr");
-         return -1;
-     }
+    if (!sessionManagerService_) {
+        WLOGFE("sessionManagerService is nullptr");
+        return -1;
+    }
 
-     if (!sceneSessionManager_) {
-         WLOGFW("Get scene session manager ...");
-         GetSceneSessionManager();
-     }
+    if (!sceneSessionManager_) {
+        WLOGFW("Get scene session manager ...");
+        GetSceneSessionManager();
+    }
 
-     if (!sceneSessionManager_) {
-         WLOGFW("Get scene session manager proxy failed, nullptr");
-         return -1;
-     }
+    if (!sceneSessionManager_) {
+        WLOGFW("Get scene session manager proxy failed, nullptr");
+        return -1;
+    }
 
-     sptr<ISceneSessionManager> sceneSessionManagerProxy = iface_cast<ISceneSessionManager>(sceneSessionManager_);
-     std::vector<std::string> params;
-     params.push_back(ARG_DUMP_ALL);
-     WSError ret = sceneSessionManagerProxy->GetSessionDumpInfo(params, dumpInfo);
-     if (ret != WSError::WS_OK) {
-         WLOGFD("sessionManagerService set success!");
-         return -1;
-     }
+    sptr<ISceneSessionManager> sceneSessionManagerProxy = iface_cast<ISceneSessionManager>(sceneSessionManager_);
+    std::vector<std::string> params;
+    params.push_back(ARG_DUMP_ALL);
+    WSError ret = sceneSessionManagerProxy->GetSessionDumpInfo(params, dumpInfo);
+    if (ret != WSError::WS_OK) {
+        WLOGFD("sessionManagerService set success!");
+        return -1;
+    }
     return 0; // WMError::WM_OK;
 }
 

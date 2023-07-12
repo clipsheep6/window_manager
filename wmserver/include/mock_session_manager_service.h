@@ -32,7 +32,7 @@ public:
     sptr<IRemoteObject> GetSessionManagerService() override;
     sptr<IRemoteObject> GetSceneSessionManager();
     void OnStart() override;
-    int Dump(int fd, const std::vector<std::u16string> &args) override;    
+    int Dump(int fd, const std::vector<std::u16string>& args) override;
 
 protected:
     MockSessionManagerService();

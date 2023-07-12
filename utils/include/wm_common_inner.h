@@ -100,7 +100,6 @@ public:
     virtual bool Marshalling(Parcel& parcel) const override
     {
         auto paramSize = params_.size();
-
         if (!parcel.WriteUint32(static_cast<uint32_t>(paramSize))) {
             return false;
         }
@@ -114,7 +113,7 @@ public:
 
     static DumpParam* Unmarshalling(Parcel& parcel)
     {
-        DumpParam * param = new DumpParam;
+        DumpParam* param = new DumpParam;
         auto paramSize = parcel.ReadUint32();
         if (paramSize == 4) { // 4: param size
             for (uint32_t i = 0; i < paramSize; i++) {
