@@ -153,6 +153,7 @@ private:
     void WindowVisibilityChangeCallback(std::shared_ptr<RSOcclusionData> occlusiontionData);
     void RegisterSessionRectChangeNotifyManagerFunc(sptr<SceneSession>& sceneSession);
     void OnSessionRectChange(uint64_t persistentId, const WSRect& rect);
+    void DestroySubSession(const sptr<SceneSession>& sceneSession);
 
     sptr<RootSceneSession> rootSceneSession_;
     std::map<uint64_t, sptr<SceneSession>> sceneSessionMap_;
@@ -171,7 +172,7 @@ private:
 
     std::shared_ptr<TaskScheduler> taskScheduler_;
     sptr<AppExecFwk::IBundleMgr> bundleMgr_;
-    
+
     std::shared_ptr<EventRunner> eventLoop_;
     std::shared_ptr<EventHandler> eventHandler_;
     bool isReportTaskStart_ = false;

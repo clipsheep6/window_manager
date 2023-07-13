@@ -24,6 +24,7 @@
 #include "session/container/include/window_event_channel.h"
 #include "session_manager/include/session_manager.h"
 #include "singleton_container.h"
+#include "window_adapter.h"
 #include "window_helper.h"
 #include "window_manager_hilog.h"
 #include "wm_common.h"
@@ -141,8 +142,8 @@ WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
             }
             WLOGFD("Bind dialog to main window");
         }
-        SessionManager::GetInstance().CreateAndConnectSpecificSession(iSessionStage, eventChannel, surfaceNode_,
-            property_, persistentId, session);
+        SingletonContainer::Get<WindowAdapter>().CreateAndConnectSpecificSession(iSessionStage, eventChannel,
+            surfaceNode_, property_, persistentId, session);
     }
     property_->SetPersistentId(persistentId);
     if (session != nullptr) {
@@ -507,7 +508,7 @@ WMError WindowSceneSessionImpl::Destroy(bool needClearListener)
     if (!WindowHelper::IsMainWindow(GetType())) {
         if (WindowHelper::IsSystemWindow(GetType())) {
             // main window no need to notify host, since host knows hide first
-            SessionManager::GetInstance().DestroyAndDisconnectSpecificSession(property_->GetPersistentId());
+            SingletonContainer::Get<WindowAdapter>().DestroyAndDisconnectSpecificSession(property_->GetPersistentId());
         } else if (WindowHelper::IsSubWindow(GetType())) {
             auto parentSession = FindParentSessionByParentId(GetParentId());
             if (parentSession == nullptr || parentSession->GetHostSession() == nullptr) {

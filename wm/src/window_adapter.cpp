@@ -375,5 +375,31 @@ void WindowAdapter::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
     INIT_PROXY_CHECK_RETURN();
     return windowManagerServiceProxy_->GetFocusWindowInfo(focusInfo);
 }
+
+void WindowAdapter::CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
+    const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
+    sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session)
+{
+    WLOGFD("CreateAndConnectSpecificSession");
+    auto sceneSessionManagerProxy = SessionManager::GetInstance().GetSceneSessionManagerProxy();
+    if (!sceneSessionManagerProxy) {
+        WLOGFE("sceneSessionManagerProxy is nullptr");
+        return;
+    }
+    sceneSessionManagerProxy->CreateAndConnectSpecificSession(sessionStage, eventChannel,
+        surfaceNode, property, persistentId, session);
+}
+
+void WindowAdapter::DestroyAndDisconnectSpecificSession(const uint64_t& persistentId)
+{
+    WLOGFD("DestroyAndDisconnectSpecificSession");
+    auto sceneSessionManagerProxy = SessionManager::GetInstance().GetSceneSessionManagerProxy();
+    if (!sceneSessionManagerProxy) {
+        WLOGFE("sceneSessionManagerProxy is nullptr");
+        return;
+    }
+    sceneSessionManagerProxy->DestroyAndDisconnectSpecificSession(persistentId);
+
+}
 } // namespace Rosen
 } // namespace OHOS

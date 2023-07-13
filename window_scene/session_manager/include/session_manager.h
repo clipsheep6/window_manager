@@ -28,10 +28,6 @@ namespace OHOS::Rosen {
 class SessionManager {
 WM_DECLARE_SINGLE_INSTANCE_BASE(SessionManager);
 public:
-    void CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
-        const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-        sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session);
-    void DestroyAndDisconnectSpecificSession(const uint64_t& persistentId);
     WMError UpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action);
     WMError SetSessionGravity(uint64_t persistentId, SessionGravity gravity, uint32_t percent);
 

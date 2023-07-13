@@ -114,31 +114,6 @@ void SessionManager::InitSceneSessionManagerProxy()
     }
 }
 
-void SessionManager::CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
-    const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-    sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session)
-{
-    WLOGFD("CreateAndConnectSpecificSession");
-    GetSceneSessionManagerProxy();
-    if (!sceneSessionManagerProxy_) {
-        WLOGFE("sceneSessionManagerProxy_ is nullptr");
-        return;
-    }
-    sceneSessionManagerProxy_->CreateAndConnectSpecificSession(sessionStage, eventChannel,
-        surfaceNode, property, persistentId, session);
-}
-
-void SessionManager::DestroyAndDisconnectSpecificSession(const uint64_t& persistentId)
-{
-    WLOGFD("DestroyAndDisconnectSpecificSession");
-    GetSceneSessionManagerProxy();
-    if (!sceneSessionManagerProxy_) {
-        WLOGFE("sceneSessionManagerProxy_ is nullptr");
-        return;
-    }
-    sceneSessionManagerProxy_->DestroyAndDisconnectSpecificSession(persistentId);
-}
-
 WMError SessionManager::UpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action)
 {
     WLOGFD("UpdateProperty");

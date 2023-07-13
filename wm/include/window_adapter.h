@@ -19,12 +19,14 @@
 #include <refbase.h>
 #include <zidl/window_manager_agent_interface.h>
 
+#include "interfaces/include/ws_common.h"
 #include "window.h"
 #include "zidl/window_interface.h"
 #include "singleton_delegator.h"
 #include "window_property.h"
 #include "wm_single_instance.h"
 #include "zidl/window_manager_interface.h"
+#include "session/host/include/zidl/session_interface.h"
 namespace OHOS {
 namespace Rosen {
 class WMSDeathRecipient : public IRemoteObject::DeathRecipient {
@@ -83,6 +85,11 @@ public:
     virtual void SetMaximizeMode(MaximizeMode maximizeMode);
     virtual MaximizeMode GetMaximizeMode();
     virtual void GetFocusWindowInfo(FocusChangeInfo& focusInfo);
+
+    virtual void CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
+        const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
+        sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session);
+    virtual void DestroyAndDisconnectSpecificSession(const uint64_t& persistentId);
 private:
     static inline SingletonDelegator<WindowAdapter> delegator;
     bool InitWMSProxy();
