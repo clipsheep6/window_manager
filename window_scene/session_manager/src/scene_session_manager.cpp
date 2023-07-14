@@ -1250,12 +1250,12 @@ WSError SceneSessionManager::GetAllSessionDumpInfo(std::string& dumpInfo)
     return WSError::WS_OK;
 }
 
-WSError SceneSessionManager::GetSessionDumpInfo(const std::vector<std::string>& params, std::string& info)
+WSError SceneSessionManager::GetSessionDumpInfo(const sptr<DumpParam>& param, std::string& info)
 {
-    if (params.empty()) {
+    if (param == nullptr) {
         return WSError::WS_ERROR_INVALID_PARAM;
     }
-    if (params.size() == 1 && params[0] == ARG_DUMP_ALL) { // 1: params num
+    if (param->params_.size() == 1 && param->params_[0] == ARG_DUMP_ALL) { // 1: param num
         WSError errCode = GetAllSessionDumpInfo(info);
         return errCode;
     }

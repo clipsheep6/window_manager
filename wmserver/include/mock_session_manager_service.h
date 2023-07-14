@@ -40,8 +40,8 @@ protected:
 
 private:
     bool RegisterMockSessionManagerService();
-    int DumpWindowInfo(const std::vector<std::string>& args, std::string& dumpInfo);
-    int DumpAllWindowInfo(std::string& dumpInfo);
+    int DumpSessionInfo(const std::vector<std::string>& args, std::string& dumpInfo);
+    int DumpAllSessionInfo(std::string& dumpInfo);
     void ShowHelpInfo(std::string& dumpInfo);
     void ShowAceDumpHelp(std::string& dumpInfo);
     void ShowIllegalArgsInfo(std::string& dumpInfo);

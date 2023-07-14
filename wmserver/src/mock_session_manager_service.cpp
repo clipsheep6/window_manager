@@ -108,7 +108,7 @@ int MockSessionManagerService::Dump(int fd, const std::vector<std::u16string> &a
     } else if (params.size() == 1 && params[0] == ARG_DUMP_HELP) { // 1: params num
         ShowHelpInfo(dumpInfo);
     } else {
-        int errCode = DumpWindowInfo(params, dumpInfo);
+        int errCode = DumpSessionInfo(params, dumpInfo);
         if (errCode != 0) {
             ShowIllegalArgsInfo(dumpInfo);
         }
@@ -170,7 +170,7 @@ sptr<IRemoteObject> MockSessionManagerService::GetSceneSessionManager()
     return sceneSessionManager_;
 }
 
-int MockSessionManagerService::DumpAllWindowInfo(std::string& dumpInfo)
+int MockSessionManagerService::DumpAllSessionInfo(std::string& dumpInfo)
 {
     if (!sessionManagerService_) {
         WLOGFE("sessionManagerService is nullptr");
@@ -188,9 +188,9 @@ int MockSessionManagerService::DumpAllWindowInfo(std::string& dumpInfo)
     }
 
     sptr<ISceneSessionManager> sceneSessionManagerProxy = iface_cast<ISceneSessionManager>(sceneSessionManager_);
-    std::vector<std::string> params;
-    params.push_back(ARG_DUMP_ALL);
-    WSError ret = sceneSessionManagerProxy->GetSessionDumpInfo(params, dumpInfo);
+    sptr<DumpParam> param = new DumpParam();
+    param->params_.push_back(ARG_DUMP_ALL);
+    WSError ret = sceneSessionManagerProxy->GetSessionDumpInfo(param, dumpInfo);
     if (ret != WSError::WS_OK) {
         WLOGFD("sessionManagerService set success!");
         return -1;
@@ -198,13 +198,13 @@ int MockSessionManagerService::DumpAllWindowInfo(std::string& dumpInfo)
     return 0; // WMError::WM_OK;
 }
 
-int MockSessionManagerService::DumpWindowInfo(const std::vector<std::string>& args, std::string& dumpInfo)
+int MockSessionManagerService::DumpSessionInfo(const std::vector<std::string>& args, std::string& dumpInfo)
 {
     if (args.empty()) {
         return -1;  // WMError::WM_ERROR_INVALID_PARAM;
     }
     if (args.size() == 1 && args[0] == ARG_DUMP_ALL) { // 1: params num
-        return DumpAllWindowInfo(dumpInfo);
+        return DumpAllSessionInfo(dumpInfo);
     }
     return -1; // WMError::WM_ERROR_INVALID_PARAM;
 }

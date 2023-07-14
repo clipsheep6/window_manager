@@ -290,12 +290,8 @@ int SceneSessionManagerStub::HandleGetSessionDump(MessageParcel &data, MessagePa
 {
     WLOGFI("run HandleGet all session Dump!");
     sptr<DumpParam> dumpParam = data.ReadParcelable<DumpParam>();
-    if (dumpParam == nullptr) {
-        WLOGFE("handle Get Session dumper error.");
-        return ERR_TRANSACTION_FAILED;
-    }
     std::string dumpInfo;
-    WSError errCode = GetSessionDumpInfo(dumpParam->params_, dumpInfo);
+    WSError errCode = GetSessionDumpInfo(dumpParam, dumpInfo);
     reply.WriteString(dumpInfo);
     reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
