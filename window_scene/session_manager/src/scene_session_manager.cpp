@@ -1214,13 +1214,16 @@ WSError SceneSessionManager::GetAllSessionDumpInfo(std::string& dumpInfo)
         << std::endl;
     for (auto& iter : sceneSessionMap_) {
         auto pSession = iter.second;
+        if (pSession == nullptr) {
+            continue;
+        }
         uint32_t zOrder = 0;
         auto property = pSession->GetSessionProperty();
         if (property != nullptr) {
             zOrder = property->GetZOrder();
         }
         WSRect rect = pSession->GetSessionRect();
-        std::string sName = "SessionName";
+        std::string sName = pSession->GetWindowName();
         const std::string& windowName = sName.size() <= WINDOW_NAME_MAX_LENGTH ?
             sName : sName.substr(0, WINDOW_NAME_MAX_LENGTH);
         // std::setw is used to set the output width and different width values are set to keep the format aligned.

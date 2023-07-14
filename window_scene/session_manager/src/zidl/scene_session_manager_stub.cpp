@@ -289,9 +289,13 @@ int SceneSessionManagerStub::HandleSetSessionGravity(MessageParcel &data, Messag
 int SceneSessionManagerStub::HandleGetSessionDump(MessageParcel &data, MessageParcel &reply)
 {
     WLOGFI("run HandleGet all session Dump!");
-    sptr<DumpParam> param = data.ReadParcelable<DumpParam>();
+    sptr<DumpParam> dumpParam = data.ReadParcelable<DumpParam>();
+    if (dumpParam == nullptr) {
+        WLOGFE("handle Get Session dumper error.");
+        return ERR_TRANSACTION_FAILED;
+    }
     std::string dumpInfo;
-    WSError errCode = GetSessionDumpInfo(param->params_, dumpInfo);
+    WSError errCode = GetSessionDumpInfo(dumpParam->params_, dumpInfo);
     reply.WriteString(dumpInfo);
     reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
