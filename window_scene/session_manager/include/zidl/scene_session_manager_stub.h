@@ -53,6 +53,7 @@ private:
     int HandleSetSessionGravity(MessageParcel &data, MessageParcel &reply);
     int HandleTerminateSessionNew(MessageParcel& data, MessageParcel& reply);
     int HandleGetSessionDump(MessageParcel &data, MessageParcel &reply);
+    int HandleUpdateSessionAvoidAreaListener(MessageParcel& data, MessageParcel& reply);
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_STUB_H

@@ -63,6 +63,8 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandleTerminateSessionNew),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_DUMP_INFO),
         &SceneSessionManagerStub::HandleGetSessionDump),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_AVOIDAREA_LISTENER),
+        &SceneSessionManagerStub::HandleUpdateSessionAvoidAreaListener),
 };
 
 int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
@@ -294,6 +296,12 @@ int SceneSessionManagerStub::HandleGetSessionDump(MessageParcel &data, MessagePa
     WSError errCode = GetSessionDumpInfo(dumpParam, dumpInfo);
     reply.WriteString(dumpInfo);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+int SceneSessionManagerStub::HandleUpdateSessionAvoidAreaListener(MessageParcel& data, MessageParcel& reply)
+{
+    uint64_t persistentId = data.ReadUint64();
+    bool haveAvoidAreaListener = data.ReadBool();
+    WSError errCode = UpdateSessionAvoidAreaListener(persistentId, haveAvoidAreaListener);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen
