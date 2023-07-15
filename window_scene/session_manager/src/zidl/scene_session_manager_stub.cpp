@@ -61,6 +61,8 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandleGetAccessibilityWindowInfo),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_TERMINATE_SESSION_NEW),
         &SceneSessionManagerStub::HandleTerminateSessionNew),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_DUMP_INFO),
+        &SceneSessionManagerStub::HandleGetSessionDump),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_AVOIDAREA_LISTENER),
         &SceneSessionManagerStub::HandleUpdateSessionAvoidAreaListener),
 };
@@ -286,6 +288,14 @@ int SceneSessionManagerStub::HandleSetSessionGravity(MessageParcel &data, Messag
     return ERR_NONE;
 }
 
+int SceneSessionManagerStub::HandleGetSessionDump(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleGet all session Dump!");
+    sptr<DumpParam> dumpParam = data.ReadParcelable<DumpParam>();
+    std::string dumpInfo;
+    WSError errCode = GetSessionDumpInfo(dumpParam, dumpInfo);
+    reply.WriteString(dumpInfo);
+    reply.WriteInt32(static_cast<int32_t>(errCode));
 int SceneSessionManagerStub::HandleUpdateSessionAvoidAreaListener(MessageParcel& data, MessageParcel& reply)
 {
     uint64_t persistentId = data.ReadUint64();
