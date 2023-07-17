@@ -97,6 +97,7 @@ constexpr int PARENT_ID_MAX_WIDTH = 6;
 constexpr int WINDOW_NAME_MAX_LENGTH = 20;
 const std::string ARG_DUMP_HELP = "-h";
 const std::string ARG_DUMP_ALL = "-a";
+const std::string ARG_DUMP_WINDOW = "-w";
 const std::string ARG_DUMP_SCREEN = "-s";
 const std::string ARG_DUMP_DISPLAY = "-d";
 }
@@ -1268,6 +1269,21 @@ void SceneSessionManager::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
     return;
 }
 
+static bool IsValidDigitString(const std::string& windowIdStr)
+{
+    if (windowIdStr.empty()) {
+        return false;
+    }
+    for (char ch : windowIdStr) {
+        if ((ch >= '0' && ch <= '9')) {
+            continue;
+        }
+        WLOGFE("invalid window id");
+        return false;
+    }
+    return true;
+}
+
 WSError SceneSessionManager::GetAllSessionDumpInfo(std::string& dumpInfo)
 {
     int32_t screenGroupId = 0;
@@ -1313,13 +1329,86 @@ WSError SceneSessionManager::GetAllSessionDumpInfo(std::string& dumpInfo)
     return WSError::WS_OK;
 }
 
-WSError SceneSessionManager::GetSessionDumpInfo(const sptr<DumpParam>& param, std::string& info)
+WSError SceneSessionManager::GetSpecifiedSessionDumpInfo(std::string& dumpInfo, const std::string& strId)
+{
+    uint64_t persistentId = std::stoull(strId);
+    auto session = GetSceneSession(persistentId);
+    if (session == nullptr) {
+        return WSError::WS_ERROR_INVALID_PARAM;
+    }
+
+//  WMError WindowDumper::DumpSpecifiedWindowInfo(uint32_t windowId, const std::vector<std::string>& params,    std::string& dumpInfo)
+    WSRect rect = session->GetSessionRect();
+    std::string isShown_ = "-"; // session->startingWindowShown_ ? "true" : "false";
+    std::string isVisible = "-"; // session->isVisible_ ? "true" : "false";
+    std::string Focusable = session->GetFocusable() ? "true" : "false";
+    std::string DecoStatus = session->GetSessionProperty()->IsDecorEnable() ? "true" : "false";
+    bool PrivacyMode = session->GetSessionProperty()->GetSystemPrivacyMode() ||
+        session->GetSessionProperty()->GetPrivacyMode();
+    std::string isPrivacyMode = PrivacyMode ? "true" : "false";
+    bool isFirstFrameAvailable = true; // session->firstFrameAvailable_
+    std::ostringstream oss;
+    oss << "WindowName: " << session->GetWindowName()  << std::endl;
+    oss << "DisplayId: " << 0 << std::endl;
+    oss << "WinId: " << session->GetPersistentId() << std::endl;
+    oss << "Pid: " << session->GetCallingPid() << std::endl;
+    oss << "Type: " << static_cast<uint32_t>(session->GetWindowType()) << std::endl;
+    oss << "Mode: " << static_cast<uint32_t>(session->GetWindowMode()) << std::endl;
+    oss << "Flag: " << session->GetSessionProperty()->GetWindowFlags() << std::endl;
+    oss << "Orientation: " << static_cast<uint32_t>(session->GetRequestedOrientation()) << std::endl;
+    oss << "IsStartingWindow: " << isShown_ << std::endl;
+    oss << "FirstFrameCallbackCalled: " << isFirstFrameAvailable << std::endl;
+    oss << "IsVisible: " << isVisible << std::endl;
+    oss << "Focusable: "  << Focusable << std::endl;
+    oss << "DecoStatus: "  << DecoStatus << std::endl;
+    oss << "isPrivacyMode: "  << isPrivacyMode << std::endl;
+    oss << "WindowRect: " << "[ "
+        << rect.posX_ << ", " << rect.posY_ << ", " << rect.width_ << ", " << rect.height_
+        << " ]" << std::endl;
+    oss << "TouchHotAreas: ";
+    std::vector<Rect> touchHotAreas;
+    // session -> GetTouchHotAreas(touchHotAreas)
+    // int index = 0;
+    // for (const auto& area : touchHotAreas) {
+    //     oss << "[ " << area.posX_ << ", " << area.posY_ << ", " << area.width_ << ", " << area.height_ << " ]";
+    //     index++;
+    //     if (index < static_cast<int32_t>(touchHotAreas.size())) {
+    //         oss <<", ";
+    //     }
+    // }
+    oss << std::endl;
+    dumpInfo.append(oss.str());
+
+    // if (session->GetWindowToken() != nullptr) {
+    //     std::vector<std::string> resetParams;
+    //     resetParams.assign(params.begin() + 2, params.end()); // 2: params num
+    //     if (resetParams.empty()) {
+    //         WLOGI("do not dump ui info");
+    //         return WMError::WM_OK;
+    //     }
+    //     dumpInfoFuture_.ResetLock({});
+    //     session->GetWindowToken()->DumpInfo(resetParams);
+    //     auto infos = dumpInfoFuture_.GetResult(2000); // 2000: wait for 2000ms
+    //     for (auto& info: infos) {
+    //         dumpInfo.append(info).append("\n");
+    //     }
+    // }
+    return WSError::WS_OK;
+}
+
+WSError SceneSessionManager::GetSessionDumpInfo(const sptr<DumpParam>& param, std::string& dumpInfo)
 {
     if (param == nullptr) {
         return WSError::WS_ERROR_INVALID_PARAM;
     }
-    // if  1  params_[0] == ARG_DUMP_ALL)
-    return GetAllSessionDumpInfo(info);
+    if (param->params_.size() == 1 && param->params_[0] == ARG_DUMP_ALL) { // 1: params= -a
+        return GetAllSessionDumpInfo(dumpInfo);
+    }
+    if (param->params_.size() >= 2 && param->params_[0] == ARG_DUMP_WINDOW &&
+        IsValidDigitString(param->params_[1])) {  // 2: -w 10
+        return GetSpecifiedSessionDumpInfo(dumpInfo, param->params_[1]);
+    }
+    return WSError::WS_ERROR_INVALID_OPERATION;
 }
 
 WSError SceneSessionManager::UpdateFocus(uint64_t persistentId, bool isFocused)
