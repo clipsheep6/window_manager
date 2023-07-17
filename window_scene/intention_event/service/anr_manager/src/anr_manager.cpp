@@ -147,6 +147,7 @@ void ANRManager::RemovePersistentId(uint64_t persistentId)
     WLOGFD("Remove persistentId:%{public}" PRIu64 " -> applicationPid:%{public}d",
         persistentId, applicationMap_[persistentId]);
     applicationMap_.erase(persistentId);
+    eventStage_.OnSessionLost(persistentId);
 }
 } // namespace Rosen
 } // namespace OHOS
