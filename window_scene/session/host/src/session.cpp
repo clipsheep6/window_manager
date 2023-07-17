@@ -227,6 +227,18 @@ uint32_t Session::GetWindowId() const
     return static_cast<uint32_t>(GetPersistentId()) & 0xffffffff;
 }
 
+WSError Session::SetCallingPid(int32_t id)
+{
+    callingPid_ = id;
+    return WSError::WS_OK;
+}
+
+WSError Session::SetCallingUid(int32_t id)
+{
+    callingUid_ = id;
+    return WSError::WS_OK;
+}
+
 int32_t Session::GetCallingPid() const
 {
     return callingPid_;

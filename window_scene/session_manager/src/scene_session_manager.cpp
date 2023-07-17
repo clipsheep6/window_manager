@@ -575,6 +575,10 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
             WLOGFE("sceneSession is nullptr!");
             return sceneSession;
         }
+        if (sessionInfo.isSystem_) {
+            sceneSession->SetCallingPid(IPCSkeleton::GetCallingPid());
+            sceneSession->SetCallingUid(IPCSkeleton::GetCallingUid());
+        }
         auto persistentId = sceneSession->GetPersistentId();
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSession(%" PRIu64" )", persistentId);
         sceneSession->SetSystemConfig(systemConfig_);
