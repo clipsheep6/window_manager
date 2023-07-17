@@ -171,7 +171,6 @@ ohos_static_library("dmserver_unittest_common") {
     "../../../test/common/utils:libtestutil",
     "//commonlibrary/c_utils/base:utils",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",  # PixelMap
     "//foundation/multimodalinput/input/frameworks/proxy:libmmi-client",
     "//third_party/googletest:gmock",
     "//third_party/googletest:gtest_main",
@@ -183,6 +182,7 @@ ohos_static_library("dmserver_unittest_common") {
     "access_token:libnativetoken",
     "access_token:libtoken_setproc",
     "hilog:libhilog",
+    "image_framework:image_native",
     "ipc:ipc_single",
     "sensor:sensor_interface_native",
   ]

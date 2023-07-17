@@ -111,7 +111,7 @@ ohos_executable("demo_freeze_display") {
     "../../interfaces/innerkits/dm",
 
     # pixel_map.h
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
+    "${multimedia_path}/interfaces/innerkits/include",
   ]
   deps = [ "${window_base_path}/dm:libdm" ]
   external_deps = [ "multimedia_image_framework:image_native" ]

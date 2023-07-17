@@ -38,7 +38,7 @@ config("window_native_kit_config") {
     "../../../../wmserver/include",
 
     # because of pixle_map.h
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
+    "${multimedia_path}/interfaces/innerkits/include",
   ]
 }
 
