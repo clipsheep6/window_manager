@@ -191,15 +191,10 @@ ohos_shared_library("libwms") {
     "input:libmmi-client",
     "ipc:ipc_single",
     "multimedia_image_framework:image_native",
+    "memmgr_plugin:memmgrclient",
     "power_manager:powermgr_client",
     "safwk:system_ability_fwk",
   ]
-
-  if (defined(global_parts_info) &&
-      defined(global_parts_info.resourceschedule_memmgr_plugin)) {
-    external_deps += [ "memmgr_plugin:memmgrclient" ]
-    defines += [ "MEMMGR_WINDOW_ENABLE" ]
-  }
 
   if (defined(global_parts_info) &&
       defined(global_parts_info.resourceschedule_resource_schedule_service)) {
