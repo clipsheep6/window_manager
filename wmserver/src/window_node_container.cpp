@@ -873,17 +873,9 @@ bool WindowNodeContainer::RemoveNodeFromRSTree(sptr<WindowNode>& node, DisplayId
     if (node->EnableDefaultAnimation(animationPlayed)) {
         WLOGFD("remove with animation");
         StartTraceArgs(HITRACE_TAG_WINDOW_MANAGER, "Animate(%u)", node->GetWindowId());
-        if (node->surfaceNode_) {
-            node->surfaceNode_->SetFreeze(true);
-        }
         wptr<WindowNode> weakNode(node);
         RSNode::Animate(animationConfig_.windowAnimationConfig_.animationTiming_.timingProtocol_,
-            animationConfig_.windowAnimationConfig_.animationTiming_.timingCurve_, updateRSTreeFunc, [weakNode]() {
-            auto weakWindow = weakNode.promote();
-            if (weakWindow && weakWindow->surfaceNode_) {
-                weakWindow->surfaceNode_->SetFreeze(false);
-            }
-        });
+            animationConfig_.windowAnimationConfig_.animationTiming_.timingCurve_, updateRSTreeFunc);
         FinishTrace(HITRACE_TAG_WINDOW_MANAGER);
     } else if (node->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT &&
         windowGravity != WindowGravity::WINDOW_GRAVITY_FLOAT && !animationPlayed) {
