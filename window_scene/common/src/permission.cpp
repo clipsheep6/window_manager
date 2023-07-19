@@ -47,7 +47,8 @@ bool Permission::IsSystemServiceCalling(bool needPrintLog)
 
 bool Permission::IsSystemCalling()
 {
-    if (IsSystemServiceCalling(false)) {
+    if (Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(IPCSkeleton::GetCallingTokenID()) ==
+        Security::AccessToken:ATokenTypeEnum::TOKEN_NATIVE) {
         return true;
     }
     uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
