@@ -1337,16 +1337,15 @@ WSError SceneSessionManager::GetSpecifiedSessionDumpInfo(std::string& dumpInfo, 
         return WSError::WS_ERROR_INVALID_PARAM;
     }
 
-//  WMError WindowDumper::DumpSpecifiedWindowInfo(uint32_t windowId, const std::vector<std::string>& params,    std::string& dumpInfo)
     WSRect rect = session->GetSessionRect();
-    std::string isShown_ = "-"; // session->startingWindowShown_ ? "true" : "false";
-    std::string isVisible = "-"; // session->isVisible_ ? "true" : "false";
+    std::string isShown_ = "-";
+    std::string isVisible = "-";
     std::string Focusable = session->GetFocusable() ? "true" : "false";
     std::string DecoStatus = session->GetSessionProperty()->IsDecorEnable() ? "true" : "false";
     bool PrivacyMode = session->GetSessionProperty()->GetSystemPrivacyMode() ||
         session->GetSessionProperty()->GetPrivacyMode();
     std::string isPrivacyMode = PrivacyMode ? "true" : "false";
-    bool isFirstFrameAvailable = true; // session->firstFrameAvailable_
+    bool isFirstFrameAvailable = true;
     std::ostringstream oss;
     oss << "WindowName: " << session->GetWindowName()  << std::endl;
     oss << "DisplayId: " << 0 << std::endl;
@@ -1367,32 +1366,8 @@ WSError SceneSessionManager::GetSpecifiedSessionDumpInfo(std::string& dumpInfo, 
         << " ]" << std::endl;
     oss << "TouchHotAreas: ";
     std::vector<Rect> touchHotAreas;
-    // session -> GetTouchHotAreas(touchHotAreas)
-    // int index = 0;
-    // for (const auto& area : touchHotAreas) {
-    //     oss << "[ " << area.posX_ << ", " << area.posY_ << ", " << area.width_ << ", " << area.height_ << " ]";
-    //     index++;
-    //     if (index < static_cast<int32_t>(touchHotAreas.size())) {
-    //         oss <<", ";
-    //     }
-    // }
     oss << std::endl;
     dumpInfo.append(oss.str());
-
-    // if (session->GetWindowToken() != nullptr) {
-    //     std::vector<std::string> resetParams;
-    //     resetParams.assign(params.begin() + 2, params.end()); // 2: params num
-    //     if (resetParams.empty()) {
-    //         WLOGI("do not dump ui info");
-    //         return WMError::WM_OK;
-    //     }
-    //     dumpInfoFuture_.ResetLock({});
-    //     session->GetWindowToken()->DumpInfo(resetParams);
-    //     auto infos = dumpInfoFuture_.GetResult(2000); // 2000: wait for 2000ms
-    //     for (auto& info: infos) {
-    //         dumpInfo.append(info).append("\n");
-    //     }
-    // }
     return WSError::WS_OK;
 }
 
