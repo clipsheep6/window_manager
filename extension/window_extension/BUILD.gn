@@ -57,6 +57,7 @@ ohos_shared_library("libwindow_extension") {
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
     "ability_runtime:app_context",
+    "ability_runtime:connection_callback",
     "ability_runtime:extensionkit_native",
     "ability_runtime:napi_common",
     "ability_runtime:runtime",
