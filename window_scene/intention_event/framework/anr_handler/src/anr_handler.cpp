@@ -108,19 +108,14 @@ int32_t ANRHandler::GetLastProcessedEventId()
 void ANRHandler::MarkProcessed()
 {
     int32_t eventId = GetLastProcessedEventId();
-    if (eventId == INVALID_OR_PROCESSED_ID) {
-        return;
-    }
     WLOGFD("Processed eventId:%{public}d", eventId);
-    if (sessionStageMap_.find(eventId) == sessionStageMap_.end()) {
+    if (eventId == INVALID_OR_PROCESSED_ID) {
+        WLOGFE("Current eventId is invalid");
+    } else if (sessionStageMap_.find(eventId) == sessionStageMap_.end()) {
         WLOGFE("sessionStage for eventId:%{public}d is not in sessionStageMap", eventId);
-        return;
-    }
-    if (sessionStageMap_[eventId] == nullptr) {
+    } else if (sessionStageMap_[eventId] == nullptr) {
         WLOGFE("sessionStage for eventId:%{public}d is nullptr", eventId);
-        return;
-    }
-    if (WSError ret = sessionStageMap_[eventId]->MarkProcessed(eventId); ret != WSError::WS_OK) {
+    } else if (WSError ret = sessionStageMap_[eventId]->MarkProcessed(eventId); ret != WSError::WS_OK) {
         WLOGFE("Send to sceneBoard failed, ret:%{public}d", ret);
     }
     ClearExpiredEvents(eventId);
