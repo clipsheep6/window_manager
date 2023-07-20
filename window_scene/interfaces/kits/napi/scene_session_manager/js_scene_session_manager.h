@@ -37,6 +37,8 @@ public:
     static NativeValue* RequestSceneSession(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RequestSceneSessionActivation(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RequestSceneSessionBackground(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* RequestSceneSessionAbilityActivation(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* RequestSceneSessionAbilityBackground(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RequestSceneSessionDestruction(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RequestSceneSessionByCall(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* StartAbilityBySpecified(NativeEngine* engine, NativeCallbackInfo* info);
@@ -55,6 +57,8 @@ private:
     NativeValue* OnRequestSceneSession(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRequestSceneSessionActivation(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRequestSceneSessionBackground(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnRequestSceneSessionAbilityActivation(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnRequestSceneSessionAbilityBackground(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRequestSceneSessionDestruction(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRequestSceneSessionByCall(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnStartAbilityBySpecified(NativeEngine& engine, NativeCallbackInfo& info);

@@ -758,6 +758,63 @@ WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSessi
     return WSError::WS_OK;
 }
 
+WSError SceneSessionManager::RequestSceneSessionAbilityActivation(const sptr<SceneSession>& sceneSession)
+{
+    wptr<SceneSession> weakSceneSession(sceneSession);
+    auto task = [this, weakSceneSession]() {
+        auto scnSession = weakSceneSession.promote();
+        if (scnSession == nullptr) {
+            WLOGFE("session is nullptr");
+            return WSError::WS_ERROR_NULLPTR;
+        }
+        auto persistentId = scnSession->GetPersistentId();
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSessionActivation(%" PRIu64" )", persistentId);
+        WLOGFI("active persistentId: %{public}" PRIu64 "", persistentId);
+        if (sceneSessionMap_.count(persistentId) == 0) {
+            WLOGFE("session is invalid with %{public}" PRIu64 "", persistentId);
+            return WSError::WS_ERROR_INVALID_SESSION;
+        }
+        auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
+        if (!scnSessionInfo) {
+            return WSError::WS_ERROR_NULLPTR;
+        }
+        scnSessionInfo->isNewWant = true;
+        AAFwk::AbilityManagerClient::GetInstance()->StartUIAbilityBySCB(scnSessionInfo);
+        return WSError::WS_OK;
+    };
+
+    taskScheduler_->PostAsyncTask(task);
+    return WSError::WS_OK;
+}
+
+WSError SceneSessionManager::RequestSceneSessionAbilityBackground(const sptr<SceneSession>& sceneSession)
+{
+    wptr<SceneSession> weakSceneSession(sceneSession);
+    auto task = [this, weakSceneSession]() {
+        auto scnSession = weakSceneSession.promote();
+        if (scnSession == nullptr) {
+            WLOGFE("session is nullptr");
+            return WSError::WS_ERROR_NULLPTR;
+        }
+        auto persistentId = scnSession->GetPersistentId();
+        WLOGFI("background session persistentId: %{public}" PRIu64 "", persistentId);
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSessionAbilityBackground (%" PRIu64" )", persistentId);
+        if (sceneSessionMap_.count(persistentId) == 0) {
+            WLOGFE("session is invalid with %{public}" PRIu64 "", persistentId);
+            return WSError::WS_ERROR_INVALID_SESSION;
+        }
+        auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
+        if (!scnSessionInfo) {
+            return WSError::WS_ERROR_NULLPTR;
+        }
+        AAFwk::AbilityManagerClient::GetInstance()->MinimizeUIAbilityBySCB(scnSessionInfo, false);
+        return WSError::WS_OK;
+    };
+
+    taskScheduler_->PostAsyncTask(task);
+    return WSError::WS_OK;
+}
+
 WSError SceneSessionManager::DestroyDialogWithMainWindow(const sptr<SceneSession>& scnSession)
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:DestroyDialogWithMainWindow");
