@@ -768,10 +768,10 @@ WSError SceneSessionManager::RequestSceneSessionAbilityActivation(const sptr<Sce
             return WSError::WS_ERROR_NULLPTR;
         }
         auto persistentId = scnSession->GetPersistentId();
-        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSessionActivation(%lu )", persistentId);
-        WLOGFI("active ability session persistentId: %{public}lu", persistentId);
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSessionActivation(%d )", persistentId);
+        WLOGFI("active ability session persistentId: %{public}d", persistentId);
         if (sceneSessionMap_.count(persistentId) == 0) {
-            WLOGFE("session is invalid with %{public}lu", persistentId);
+            WLOGFE("session is invalid with %{public}d", persistentId);
             return WSError::WS_ERROR_INVALID_SESSION;
         }
         auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
@@ -797,11 +797,11 @@ WSError SceneSessionManager::RequestSceneSessionAbilityBackground(const sptr<Sce
             return WSError::WS_ERROR_NULLPTR;
         }
         auto persistentId = scnSession->GetPersistentId();
-        WLOGFI("background ability session persistentId: %{public}lu", persistentId);
+        WLOGFI("background ability session persistentId: %{public}d", persistentId);
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER,
-                          "ssm:RequestSceneSessionAbilityBackground (%lu )", persistentId);
+                          "ssm:RequestSceneSessionAbilityBackground (%d )", persistentId);
         if (sceneSessionMap_.count(persistentId) == 0) {
-            WLOGFE("session is invalid with %{public}lu", persistentId);
+            WLOGFE("session is invalid with %{public}d", persistentId);
             return WSError::WS_ERROR_INVALID_SESSION;
         }
         auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
