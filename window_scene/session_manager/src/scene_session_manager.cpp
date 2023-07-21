@@ -769,7 +769,7 @@ WSError SceneSessionManager::RequestSceneSessionAbilityActivation(const sptr<Sce
         }
         auto persistentId = scnSession->GetPersistentId();
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSessionActivation(%" PRIu64" )", persistentId);
-        WLOGFI("active persistentId: %{public}" PRIu64 "", persistentId);
+        WLOGFI("active ability session persistentId: %{public}" PRIu64 "", persistentId);
         if (sceneSessionMap_.count(persistentId) == 0) {
             WLOGFE("session is invalid with %{public}" PRIu64 "", persistentId);
             return WSError::WS_ERROR_INVALID_SESSION;
@@ -797,8 +797,9 @@ WSError SceneSessionManager::RequestSceneSessionAbilityBackground(const sptr<Sce
             return WSError::WS_ERROR_NULLPTR;
         }
         auto persistentId = scnSession->GetPersistentId();
-        WLOGFI("background session persistentId: %{public}" PRIu64 "", persistentId);
-        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSessionAbilityBackground (%" PRIu64" )", persistentId);
+        WLOGFI("background ability session persistentId: %{public}" PRIu64 "", persistentId);
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER,
+                          "ssm:RequestSceneSessionAbilityBackground (%" PRIu64" )", persistentId);
         if (sceneSessionMap_.count(persistentId) == 0) {
             WLOGFE("session is invalid with %{public}" PRIu64 "", persistentId);
             return WSError::WS_ERROR_INVALID_SESSION;
@@ -1497,7 +1498,8 @@ WSError SceneSessionManager::GetSpecifiedSessionDumpInfo(std::string& dumpInfo, 
 WSError SceneSessionManager::UpdateFocus(uint64_t persistentId, bool isFocused)
 {
     auto task = [this, persistentId, isFocused]() {
-        WLOGFD("Update focus, id: %{public}" PRIu64", isFocused: %{public}u", persistentId, static_cast<uint32_t>(isFocused));
+        WLOGFD("Update focus, id: %{public}" PRIu64", isFocused: %{public}u",
+               persistentId, static_cast<uint32_t>(isFocused));
         // notify session and client
         auto sceneSession = GetSceneSession(persistentId);
         if (sceneSession == nullptr) {

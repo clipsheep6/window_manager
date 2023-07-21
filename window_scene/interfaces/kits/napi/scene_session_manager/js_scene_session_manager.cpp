@@ -625,7 +625,8 @@ NativeValue* JsSceneSessionManager::OnRequestSceneSessionBackground(NativeEngine
     return engine.CreateUndefined();
 }
 
-NativeValue* JsSceneSessionManager::OnRequestSceneSessionAbilityActivation(NativeEngine& engine, NativeCallbackInfo& info)
+NativeValue* JsSceneSessionManager::OnRequestSceneSessionAbilityActivation(NativeEngine& engine,
+                                                                           NativeCallbackInfo& info)
 {
     WLOGI("[NAPI]OnRequestSceneSessionAbilityActivation");
     if (info.argc < 1) { // 1: params num
@@ -657,7 +658,8 @@ NativeValue* JsSceneSessionManager::OnRequestSceneSessionAbilityActivation(Nativ
     return engine.CreateUndefined();
 }
 
-NativeValue* JsSceneSessionManager::OnRequestSceneSessionAbilityBackground(NativeEngine& engine, NativeCallbackInfo& info)
+NativeValue* JsSceneSessionManager::OnRequestSceneSessionAbilityBackground(NativeEngine& engine,
+                                                                           NativeCallbackInfo& info)
 {
     WLOGI("[NAPI]OnRequestSceneSessionAbilityBackground");
     WSErrorCode errCode = WSErrorCode::WS_OK;
@@ -844,7 +846,8 @@ NativeValue* JsSceneSessionManager::OnGetSessionSnapshotFilePath(NativeEngine& e
             "Input parameter is missing or invalid"));
         return engine.CreateUndefined();
     }
-    std::string path = SceneSessionManager::GetInstance().GetSessionSnapshotFilePath(static_cast<uint64_t>(persistentId));
+    std::string path =
+        SceneSessionManager::GetInstance().GetSessionSnapshotFilePath(static_cast<uint64_t>(persistentId));
     NativeValue* result = engine.CreateString(path.c_str(), path.length());
     return result;
 }
