@@ -20,14 +20,6 @@
 
 namespace OHOS {
 namespace Rosen {
-
-enum TokenType : int32_t {
-    TOKEN_INVALID = -1,
-    TOKEN_HAP = 0,
-    TOKEN_NATIVE,
-    TOKEN_SHELL,
-};
-
 enum ANRTimeOutTime : int64_t {
     INPUT_UI_TIMEOUT_TIME = 5 * 1000
 };
