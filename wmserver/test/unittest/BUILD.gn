@@ -47,6 +47,8 @@ group("unittest") {
     ":wmserver_window_snapshot_test",
     ":wmserver_window_system_effect_test",
     ":wmserver_window_zorder_policy_test",
+    ":mock_screen_manager_service_test",
+    ":mock_session_manager_service_test",
   ]
 }
 
@@ -82,6 +84,7 @@ test_inner_deps = [
   "${window_base_path}/dm:libdm",
   "${window_base_path}/utils:libwmutil",
   "${window_base_path}/wm:libwm",
+  "${window_base_path}/wmserver:sms",
   "../..:libwms",
   "../../../dmserver:libdms",
   "../../../test/common/utils:libtestutil",

@@ -78,8 +78,8 @@ namespace {
 HWTEST_F(MockScreenManagerServiceTest, OnStart1, Function | SmallTest | Level2)
 {
     WLOGI("OnStart01");
-    auto rs = WMError::WM_OK;
-    MockScreenManagerService::GetInstance()->OnStart();
+    auto res = WMError::WM_OK;
+    MockScreenManagerService::GetInstance().OnStart();
     ASSERT_EQ(WMError::WM_OK, res);
 }
 
@@ -93,7 +93,7 @@ HWTEST_F(MockScreenManagerServiceTest, GetScreenDumpInfo, Function | SmallTest |
     std::vector<std::string> params;
     std::string info;
     auto ret = WMError::WM_OK;
-    MockScreenManagerService::GetInstance()->GetScreenDumpInfo(params, info);
+    MockScreenManagerService::GetInstance().GetScreenDumpInfo(params, info);
     ASSERT_EQ(WMError::WM_OK, ret);
 }
 
@@ -106,7 +106,7 @@ HWTEST_F(MockScreenManagerServiceTest, Dump, Function | SmallTest | Level2)
 {
     std::vector<std::u16string> args;
     auto ret = 0;
-    ret = MockScreenManagerService::GetInstance()->Dump(0, args);
+    ret = MockScreenManagerService::GetInstance().Dump(0, args);
     ASSERT_EQ(0, ret);
 }
 
