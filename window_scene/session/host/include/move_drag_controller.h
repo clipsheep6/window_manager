@@ -56,12 +56,13 @@ public:
         }
     };
 
-    MoveDragController(uint64_t persistentId);
+    MoveDragController(int32_t persistentId);
     ~MoveDragController();
 
     void SetVsyncHandleListenser(const NotifyVsyncHandleFunc& func);
     void SetStartMoveFlag(bool flag);
     bool GetStartMoveFlag() const;
+    bool GetStartDragFlag() const;
     WSRect GetTargetRect() const;
     void InitMoveDragProperty();
     void SetAspectRatio(float ratio);
@@ -112,7 +113,7 @@ private:
     MoveDragProperty moveDragProperty_ = { -1, -1, -1, { 0, 0, 0, 0 }, { 0, 0, 0, 0 } };
     std::shared_ptr<VsyncCallback> vsyncCallback_ = std::make_shared<VsyncCallback>(VsyncCallback());
     NotifyVsyncHandleFunc vsyncHandleFunc_;
-    uint64_t persistentId_;
+    int32_t persistentId_;
 
     enum class DragType : uint32_t {
         DRAG_UNDEFINED,
@@ -128,8 +129,8 @@ private:
         {DragType::DRAG_LEFT_TOP_CORNER,  MMI::MOUSE_ICON::NORTH_WEST_SOUTH_EAST},
         {DragType::DRAG_RIGHT_TOP_CORNER, MMI::MOUSE_ICON::NORTH_EAST_SOUTH_WEST}
     };
-    Rect rectExceptFrame_;
-    Rect rectExceptCorner_;
+    Rect rectExceptFrame_ { 0, 0, 0, 0 };
+    Rect rectExceptCorner_ { 0, 0, 0, 0 };
     uint32_t mouseStyleID_ = 0;
     DragType dragType_ = DragType::DRAG_UNDEFINED;
 };

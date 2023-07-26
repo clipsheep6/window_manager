@@ -16,11 +16,12 @@
 #include "session_manager/include/screen_session_manager.h"
 
 #include <hitrace_meter.h>
+#include <iomanip>
 #include <parameters.h>
 #include <transaction/rs_interfaces.h>
 #include <xcollie/watchdog.h>
 
-#include "permission.h"
+#include "session_permission.h"
 #include "screen_scene_config.h"
 #include "surface_capture_future.h"
 #include "sys_cap_util.h"
@@ -33,16 +34,32 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "ScreenSessionManager" };
 const std::string SCREEN_SESSION_MANAGER_THREAD = "ScreenSessionManager";
 const std::string SCREEN_CAPTURE_PERMISSION = "ohos.permission.CAPTURE_SCREEN";
+std::recursive_mutex screenSessionManagerInstanceMutex_;
 } // namespace
 
-WM_IMPLEMENT_SINGLE_INSTANCE(ScreenSessionManager)
-
-ScreenSessionManager::ScreenSessionManager() : rsInterface_(RSInterfaces::GetInstance()),
-    sessionDisplayPowerController_(new SessionDisplayPowerController(
-        std::bind(&ScreenSessionManager::NotifyDisplayStateChange, this,
-            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)))
+ScreenSessionManager& ScreenSessionManager::GetInstance()
 {
+    std::lock_guard<std::recursive_mutex> lock(screenSessionManagerInstanceMutex_);
+    static ScreenSessionManager* instance = nullptr;
+    if (instance == nullptr) {
+        instance = new ScreenSessionManager();
+        instance->Init();
+    }
+    return *instance;
+}
+
+ScreenSessionManager::ScreenSessionManager() : rsInterface_(RSInterfaces::GetInstance())
+{
+    LoadScreenSceneXml();
     taskScheduler_ = std::make_shared<TaskScheduler>(SCREEN_SESSION_MANAGER_THREAD);
+    screenCutoutController_ = new (std::nothrow) ScreenCutoutController();
+    sessionDisplayPowerController_ = new SessionDisplayPowerController(
+        std::bind(&ScreenSessionManager::NotifyDisplayStateChange, this,
+            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+}
+
+void ScreenSessionManager::Init()
+{
     constexpr uint64_t interval = 5 * 1000; // 5 second
     if (HiviewDFX::Watchdog::GetInstance().AddThread(
         SCREEN_SESSION_MANAGER_THREAD, taskScheduler_->GetEventHandler(), interval)) {
@@ -50,8 +67,6 @@ ScreenSessionManager::ScreenSessionManager() : rsInterface_(RSInterfaces::GetIns
     }
 
     RegisterScreenChangeListener();
-    LoadScreenSceneXml();
-    screenCutoutController_ = new (std::nothrow) ScreenCutoutController();
 }
 
 void ScreenSessionManager::RegisterScreenConnectionListener(sptr<IScreenConnectionListener>& screenConnectionListener)
@@ -92,8 +107,8 @@ void ScreenSessionManager::UnregisterScreenConnectionListener(sptr<IScreenConnec
 DMError ScreenSessionManager::RegisterDisplayManagerAgent(
     const sptr<IDisplayManagerAgent>& displayManagerAgent, DisplayManagerAgentType type)
 {
-    if (type == DisplayManagerAgentType::SCREEN_EVENT_LISTENER && !Permission::IsSystemCalling()
-        && !Permission::IsStartByHdcd()) {
+    if (type == DisplayManagerAgentType::SCREEN_EVENT_LISTENER && !SessionPermission::IsSystemCalling()
+        && !SessionPermission::IsStartByHdcd()) {
         WLOGFE("register display manager agent permission denied!");
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
@@ -108,8 +123,8 @@ DMError ScreenSessionManager::RegisterDisplayManagerAgent(
 DMError ScreenSessionManager::UnregisterDisplayManagerAgent(
     const sptr<IDisplayManagerAgent>& displayManagerAgent, DisplayManagerAgentType type)
 {
-    if (type == DisplayManagerAgentType::SCREEN_EVENT_LISTENER && !Permission::IsSystemCalling()
-        && !Permission::IsStartByHdcd()) {
+    if (type == DisplayManagerAgentType::SCREEN_EVENT_LISTENER && !SessionPermission::IsSystemCalling()
+        && !SessionPermission::IsStartByHdcd()) {
         WLOGFE("unregister display manager agent permission denied!");
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
@@ -241,6 +256,9 @@ sptr<DisplayInfo> ScreenSessionManager::GetDisplayInfoById(DisplayId displayId)
     std::lock_guard<std::recursive_mutex> lock(screenSessionMapMutex_);
     for (auto sessionIt : screenSessionMap_) {
         auto screenSession = sessionIt.second;
+        if (screenSession == nullptr) {
+            continue;
+        }
         sptr<DisplayInfo> displayInfo = screenSession->ConvertToDisplayInfo();
         if (displayId == displayInfo->GetDisplayId()) {
             return displayInfo;
@@ -290,7 +308,7 @@ sptr<ScreenInfo> ScreenSessionManager::GetScreenInfoById(ScreenId screenId)
 DMError ScreenSessionManager::SetScreenActiveMode(ScreenId screenId, uint32_t modeId)
 {
     WLOGI("SetScreenActiveMode: ScreenId: %{public}" PRIu64", modeId: %{public}u", screenId, modeId);
-    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
         WLOGFE("set screen active permission denied!");
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
@@ -337,7 +355,7 @@ void ScreenSessionManager::NotifyScreenChanged(sptr<ScreenInfo> screenInfo, Scre
 
 DMError ScreenSessionManager::SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio)
 {
-    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
         WLOGFE("set virtual pixel permission denied!");
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
@@ -590,7 +608,7 @@ ScreenPowerState ScreenSessionManager::GetScreenPower(ScreenId screenId)
 
 DMError ScreenSessionManager::IsScreenRotationLocked(bool& isLocked)
 {
-    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
         WLOGFE("SCB: ScreenSessionManager is screen rotation locked permission denied!");
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
@@ -601,7 +619,7 @@ DMError ScreenSessionManager::IsScreenRotationLocked(bool& isLocked)
 
 DMError ScreenSessionManager::SetScreenRotationLocked(bool isLocked)
 {
-    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
         WLOGFE("SCB: ScreenSessionManager set screen rotation locked permission denied!");
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
@@ -611,7 +629,7 @@ DMError ScreenSessionManager::SetScreenRotationLocked(bool isLocked)
 
 DMError ScreenSessionManager::SetOrientation(ScreenId screenId, Orientation orientation)
 {
-    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
         WLOGFE("SCB: ScreenSessionManager set orientation permission denied!");
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
@@ -769,7 +787,7 @@ bool ScreenSessionManager::NotifyDisplayStateChanged(DisplayId id, DisplayState 
 }
 DMError ScreenSessionManager::GetAllScreenInfos(std::vector<sptr<ScreenInfo>>& screenInfos)
 {
-    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
         WLOGFE("SCB: ScreenSessionManager::GetAllScreenInfos get all screen infos permission denied!");
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
@@ -908,7 +926,7 @@ DMError ScreenSessionManager::MakeMirror(ScreenId mainScreenId, std::vector<Scre
                                          ScreenId& screenGroupId)
 {
     WLOGFI("SCB:ScreenSessionManager::MakeMirror enter!");
-    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
         WLOGFE("SCB:ScreenSessionManager::MakeMirror permission denied!");
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
@@ -1646,5 +1664,91 @@ void ScreenSessionManager::SetDisplayBoundary(const sptr<ScreenSession> screenSe
     } else {
         WLOGFW("screenSession or screenCutoutController_ is null");
     }
+}
+
+std::string ScreenSessionManager::TransferTypeToString(ScreenType type) const
+{
+    std::string screenType;
+    switch (type) {
+        case ScreenType::REAL:
+            screenType = "REAL";
+            break;
+        case ScreenType::VIRTUAL:
+            screenType = "VIRTUAL";
+            break;
+        default:
+            screenType = "UNDEFINED";
+            break;
+    }
+    return screenType;
+}
+
+void ScreenSessionManager::DumpAllScreensInfo(std::string& dumpInfo)
+{
+    std::ostringstream oss;
+    oss << "--------------------------------------Free Screen"
+        << "--------------------------------------"
+        << std::endl;
+    oss << "ScreenName           Type     IsGroup DmsId RsId                 ActiveIdx VPR Rotation Orientation "
+        << "RequestOrientation NodeId               "
+        << std::endl;
+    for (auto sessionIt : screenSessionMap_) {
+        auto screenSession = sessionIt.second;
+        if (screenSession == nullptr) {
+            continue;
+        }
+        sptr<ScreenInfo> screenInfo = GetScreenInfoById(sessionIt.first);
+        if (screenInfo == nullptr) {
+            continue;
+        }
+        std::string screenType = TransferTypeToString(screenInfo->GetType());
+        NodeId nodeId = (screenSession->GetDisplayNode() == nullptr) ?
+            SCREEN_ID_INVALID : screenSession->GetDisplayNode()->GetId();
+        oss << std::left << std::setw(21) << screenInfo->GetName()
+            << std::left << std::setw(9) << screenType
+            << std::left << std::setw(8) << (screenSession->isScreenGroup_ ? "true" : "false")
+            << std::left << std::setw(6) << screenSession->screenId_
+            << std::left << std::setw(21) << screenSession->rsId_
+            << std::left << std::setw(10) << screenSession->activeIdx_
+            << std::left << std::setw(4) << screenInfo->GetVirtualPixelRatio()
+            << std::left << std::setw(9) << static_cast<uint32_t>(screenInfo->GetRotation())
+            << std::left << std::setw(12) << static_cast<uint32_t>(screenInfo->GetOrientation())
+            << std::left << std::setw(19) << static_cast<uint32_t>(screenSession->GetScreenRequestedOrientation())
+            << std::left << std::setw(21) << nodeId
+            << std::endl;
+    }
+    oss << "total screen num: " << screenSessionMap_.size() << std::endl;
+    dumpInfo.append(oss.str());
+}
+
+void ScreenSessionManager::DumpSpecialScreenInfo(ScreenId id, std::string& dumpInfo)
+{
+    std::ostringstream oss;
+    sptr<ScreenSession> session = GetScreenSession(id);
+    if (!session) {
+        WLOGFE("Get screen session failed.");
+        oss << "This screen id is invalid.";
+        dumpInfo.append(oss.str());
+        return;
+    }
+    sptr<ScreenInfo> screenInfo = GetScreenInfoById(id);
+    if (screenInfo == nullptr) {
+        return;
+    }
+    std::string screenType = TransferTypeToString(screenInfo->GetType());
+    NodeId nodeId = (session->GetDisplayNode() == nullptr) ?
+        SCREEN_ID_INVALID : session->GetDisplayNode()->GetId();
+    oss << "ScreenName: " << screenInfo->GetName() << std::endl;
+    oss << "Type: " << screenType << std::endl;
+    oss << "IsGroup: " << (session->isScreenGroup_ ? "true" : "false") << std::endl;
+    oss << "DmsId: " << id << std::endl;
+    oss << "RsId: " << session->rsId_ << std::endl;
+    oss << "ActiveIdx: " << session->activeIdx_ << std::endl;
+    oss << "VPR: " << screenInfo->GetVirtualPixelRatio() << std::endl;
+    oss << "Rotation: " << static_cast<uint32_t>(screenInfo->GetRotation()) << std::endl;
+    oss << "Orientation: " << static_cast<uint32_t>(screenInfo->GetOrientation()) << std::endl;
+    oss << "RequestOrientation: " << static_cast<uint32_t>(session->GetScreenRequestedOrientation()) << std::endl;
+    oss << "NodeId: " << nodeId << std::endl;
+    dumpInfo.append(oss.str());
 }
 } // namespace OHOS::Rosen

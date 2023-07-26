@@ -49,7 +49,7 @@ WMError WindowExtensionSessionImpl::Create(const std::shared_ptr<AbilityRuntime:
 
 WMError WindowExtensionSessionImpl::MoveTo(int32_t x, int32_t y)
 {
-    WLOGFD("Id:%{public}" PRIu64 " MoveTo %{public}d %{public}d", property_->GetPersistentId(), x, y);
+    WLOGFD("Id:%{public}d MoveTo %{public}d %{public}d", property_->GetPersistentId(), x, y);
     if (IsWindowSessionInvalid()) {
         WLOGFE("Window session invalid.");
         return WMError::WM_ERROR_INVALID_WINDOW;
@@ -62,7 +62,7 @@ WMError WindowExtensionSessionImpl::MoveTo(int32_t x, int32_t y)
 
 WMError WindowExtensionSessionImpl::Resize(uint32_t width, uint32_t height)
 {
-    WLOGFD("Id:%{public}" PRIu64 " Resize %{public}u %{public}u", property_->GetPersistentId(), width, height);
+    WLOGFD("Id:%{public}d Resize %{public}u %{public}u", property_->GetPersistentId(), width, height);
     if (IsWindowSessionInvalid()) {
         WLOGFE("Window session invalid.");
         return WMError::WM_ERROR_INVALID_WINDOW;
@@ -76,7 +76,7 @@ WMError WindowExtensionSessionImpl::Resize(uint32_t width, uint32_t height)
 WMError WindowExtensionSessionImpl::TransferAbilityResult(uint32_t resultCode, const AAFwk::Want& want)
 {
     if (state_ < WindowState::STATE_CREATED) {
-        WLOGFE("Extension invalid [name:%{public}s, id:%{public}" PRIu64 "], state:%{public}u",
+        WLOGFE("Extension invalid [name:%{public}s, id:%{public}d], state:%{public}u",
             property_->GetWindowName().c_str(), property_->GetPersistentId(), state_);
         return WMError::WM_ERROR_REPEAT_OPERATION;
     }
@@ -86,7 +86,7 @@ WMError WindowExtensionSessionImpl::TransferAbilityResult(uint32_t resultCode, c
 WMError WindowExtensionSessionImpl::TransferExtensionData(const AAFwk::WantParams& wantParams)
 {
     if (state_ < WindowState::STATE_CREATED) {
-        WLOGFE("Extension invalid [name:%{public}s, id:%{public}" PRIu64 "], state:%{public}u",
+        WLOGFE("Extension invalid [name:%{public}s, id:%{public}d], state:%{public}u",
             property_->GetWindowName().c_str(), property_->GetPersistentId(), state_);
         return WMError::WM_ERROR_REPEAT_OPERATION;
     }
@@ -96,7 +96,7 @@ WMError WindowExtensionSessionImpl::TransferExtensionData(const AAFwk::WantParam
 void WindowExtensionSessionImpl::RegisterTransferComponentDataListener(const NotifyTransferComponentDataFunc& func)
 {
     if (state_ < WindowState::STATE_CREATED) {
-        WLOGFE("Extension invalid [name:%{public}s, id:%{public}" PRIu64 "], state:%{public}u",
+        WLOGFE("Extension invalid [name:%{public}s, id:%{public}d], state:%{public}u",
             property_->GetWindowName().c_str(), property_->GetPersistentId(), state_);
         return;
     }
@@ -121,6 +121,75 @@ WMError WindowExtensionSessionImpl::SetPrivacyMode(bool isPrivacyMode)
     }
     surfaceNode_->SetSecurityLayer(isPrivacyMode);
     RSTransaction::FlushImplicitTransaction();
+    return WMError::WM_OK;
+}
+
+void WindowExtensionSessionImpl::NotifyFocusWindowIdEvent(int32_t windowId)
+{
+    if (uiContent_) {
+        uiContent_->SetFocusWindowId(windowId);
+    }
+    focusWindowId_ = windowId;
+}
+
+void WindowExtensionSessionImpl::NotifyFocusStateEvent(bool focusState)
+{
+    if (uiContent_) {
+        focusState ? uiContent_->Focus() : uiContent_->UnFocus();
+    }
+    focusState_ = focusState;
+}
+
+void WindowExtensionSessionImpl::NotifyFocusActiveEvent(bool isFocusActive)
+{
+    if (uiContent_) {
+        uiContent_->SetIsFocusActive(isFocusActive);
+    }
+}
+
+WMError WindowExtensionSessionImpl::SetUIContent(const std::string& contentInfo,
+    NativeEngine* engine, NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability)
+{
+    WLOGFD("WindowExtensionSessionImpl SetUIContent: %{public}s state:%{public}u", contentInfo.c_str(), state_);
+    if (uiContent_) {
+        uiContent_->Destroy();
+    }
+    std::unique_ptr<Ace::UIContent> uiContent;
+    if (ability != nullptr) {
+        uiContent = Ace::UIContent::Create(ability);
+    } else {
+        uiContent = Ace::UIContent::Create(context_.get(), engine);
+    }
+    if (uiContent == nullptr) {
+        WLOGFE("fail to SetUIContent id: %{public}d", GetPersistentId());
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    uiContent->Initialize(this, contentInfo, storage, focusWindowId_);
+    // make uiContent available after Initialize/Restore
+    uiContent_ = std::move(uiContent);
+
+    if (focusState_ != std::nullopt) {
+        focusState_.value() ? uiContent_->Focus() : uiContent_->UnFocus();
+    }
+
+    uint32_t version = 0;
+    if ((context_ != nullptr) && (context_->GetApplicationInfo() != nullptr)) {
+        version = context_->GetApplicationInfo()->apiCompatibleVersion;
+    }
+    // 10 ArkUI new framework support after API10
+    if (version < 10 || isIgnoreSafeAreaNeedNotify_) {
+        SetLayoutFullScreenByApiVersion(isIgnoreSafeArea_);
+        isIgnoreSafeAreaNeedNotify_ = false;
+    }
+
+    UpdateDecorEnable(true);
+    if (state_ == WindowState::STATE_SHOWN) {
+        // UIContent may be nullptr when show window, need to notify again when window is shown
+        uiContent_->Foreground();
+        UpdateTitleButtonVisibility();
+    }
+    UpdateViewportConfig(GetRect(), WindowSizeChangeReason::UNDEFINED);
+    WLOGFD("notify uiContent window size change end");
     return WMError::WM_OK;
 }
 } // namespace Rosen

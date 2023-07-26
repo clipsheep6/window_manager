@@ -27,10 +27,10 @@ namespace OHOS::Rosen {
 class SceneSession;
 
 using SpecificSessionCreateCallback = std::function<sptr<SceneSession>(const SessionInfo& info, sptr<WindowSessionProperty> property)>;
-using SpecificSessionDestroyCallback = std::function<WSError(const uint64_t& persistentId)>;
+using SpecificSessionDestroyCallback = std::function<WSError(const int32_t& persistentId)>;
 using CameraFloatSessionChangeCallback = std::function<void(uint32_t accessTokenId, bool isShowing)>;
 using GetSceneSessionVectorByTypeCallback = std::function<std::vector<sptr<SceneSession>>(WindowType type)>;
-using UpdateAvoidAreaCallback = std::function<bool(const uint64_t& persistentId)>;
+using UpdateAvoidAreaCallback = std::function<bool(const int32_t& persistentId)>;
 
 using NotifyCreateSpecificSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 using NotifySessionRectChangeFunc = std::function<void(const WSRect& rect)>;
@@ -42,6 +42,7 @@ using NotifySystemBarPropertyChangeFunc = std::function<void(
     const std::unordered_map<WindowType, SystemBarProperty>& propertyMap)>;
 using NotifyNeedAvoidFunc = std::function<void(bool status)>;
 using NotifyWindowAnimationFlagChangeFunc = std::function<void(const bool flag)>;
+using NotifyShowWhenLockedFunc = std::function<void(bool showWhenLocked)>;
 class SceneSession : public Session {
 public:
     // callback for notify SceneSessionManager
@@ -63,6 +64,7 @@ public:
         NotifyNeedAvoidFunc OnNeedAvoid_;
         NotifyWindowAnimationFlagChangeFunc onWindowAnimationFlagChange_;
         NotifyIsCustomAnimationPlayingCallback onIsCustomAnimationPlaying_;
+        NotifyShowWhenLockedFunc OnShowWhenLocked_;
     };
 
     // func for change window scene pattern property
@@ -71,11 +73,7 @@ public:
     };
 
     SceneSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback);
-    ~SceneSession()
-    {
-        sessionChangeCallbackList_.clear();
-        sessionChangeCallbackList_.shrink_to_fit();
-    }
+    ~SceneSession() = default;
 
     WSError Foreground(sptr<WindowSessionProperty> property) override;
     WSError Background() override;
@@ -87,8 +85,8 @@ public:
     WSError UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason) override;
     WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-        sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session) override;
-    WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId) override;
+        sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session) override;
+    WSError DestroyAndDisconnectSpecificSession(const int32_t& persistentId) override;
     WSError SetSystemBarProperty(WindowType type, SystemBarProperty systemBarProperty);
     WSError OnNeedAvoid(bool status) override;
     void CalculateAvoidAreaRect(WSRect& rect, WSRect& avoidRect, AvoidArea& avoidArea);
@@ -97,12 +95,14 @@ public:
     void GetCutoutAvoidArea(WSRect& rect, AvoidArea& avoidArea);
     AvoidArea GetAvoidAreaByType(AvoidAreaType type) override;
     WSError UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type);
+    WSError OnShowWhenLocked(bool showWhenLocked);
+    bool IsShowWhenLocked() const;
     void RegisterSessionChangeCallback(const sptr<SceneSession::SessionChangeCallback>& sessionChangeCallback);
     WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
     WSError SetAspectRatio(float ratio) override;
     WSError SetGlobalMaximizeMode(MaximizeMode mode) override;
     WSError GetGlobalMaximizeMode(MaximizeMode& mode) override;
-    std::string GetSessionSnapshot();
+    std::string GetSessionSnapshotFilePath();
     void RegisterSetWindowPatternFunc(sptr<SetWindowScenePatternFunc> func)
     {
         setWindowScenePatternFunc_ = func;
@@ -117,6 +117,10 @@ public:
     bool IsKeepScreenOn() const;
     const std::string& GetWindowName() const;
     bool IsDecorEnable();
+    void UpdateNativeVisibility(bool visible);
+    bool IsVisible() const;
+    bool IsFloatingWindowAppType() const;
+    void DumpSessionElementInfo(const std::vector<std::string>& params);
 
     std::shared_ptr<PowerMgr::RunningLock> keepScreenLock_;
 private:
@@ -125,13 +129,14 @@ private:
     void ProcessVsyncHandleRegister();
     void OnVsyncHandle();
     bool FixRectByAspectRatio(WSRect& rect);
+    std::string GetRatioPreferenceKey();
     bool SaveAspectRatio(float ratio);
     void NotifyIsCustomAnimatiomPlaying(bool isPlaying);
     sptr<SpecificSessionCallback> specificCallback_ = nullptr;
-    std::vector<sptr<SessionChangeCallback>> sessionChangeCallbackList_;
+    sptr<SessionChangeCallback> sessionChangeCallback_ = nullptr;
     sptr<MoveDragController> moveDragController_ = nullptr;
     sptr<SetWindowScenePatternFunc> setWindowScenePatternFunc_ = nullptr;
-    bool isFirstStart_ = true;
+    bool isVisible_ = false;
 };
 } // namespace OHOS::Rosen
 

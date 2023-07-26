@@ -77,17 +77,13 @@ public:
     // inherits from session stage
     WSError SetActive(bool active) override;
     WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) override;
-    WSError UpdateViewConfig(const ViewPortConfig& config, SizeChangeReason reason) override;
     WSError UpdateFocus(bool focus) override;
     WSError HandleBackEvent() override { return WSError::WS_OK; }
     WMError SetWindowGravity(WindowGravity gravity, uint32_t percent) override;
 
     void NotifyPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
     void NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed) override;
-    void NotifyFocusActiveEvent(bool isFocusActive) override;
     void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info) override;
-    void NotifyFocusWindowIdEvent(uint32_t windowId) override;
-    void NotifyFocusStateEvent(bool focusState) override;
 
     WMError RegisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener) override;
     WMError UnregisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener) override;
@@ -108,11 +104,11 @@ public:
 
     WMError SetBackgroundColor(const std::string& color) override;
 
-    uint32_t GetParentId() const;
-    uint64_t GetPersistentId() const;
+    int32_t GetParentId() const;
+    int32_t GetPersistentId() const override;
     sptr<WindowSessionProperty> GetProperty() const;
     sptr<ISession> GetHostSession() const;
-    uint64_t GetFloatingWindowParentId();
+    int32_t GetFloatingWindowParentId();
     void NotifyAfterForeground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
     void NotifyAfterBackground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
     void NotifyForegroundFailed(WMError ret);
@@ -125,6 +121,7 @@ public:
     WSError UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type) override;
     void NotifyTouchDialogTarget() override;
     void NotifyScreenshot() override;
+    void DumpSessionElementInfo(const std::vector<std::string>& params) override;
 
     WindowState state_ { WindowState::STATE_INITIAL };
 
@@ -134,13 +131,15 @@ protected:
     void NotifyAfterActive();
     void NotifyAfterInactive();
     void NotifyBeforeDestroy(std::string windowName);
-    void ClearListenersById(uint64_t persistentId);
+    void ClearListenersById(int32_t persistentId);
     WMError WindowSessionCreateCheck();
     void UpdateDecorEnable(bool needNotify = false);
     void NotifyModeChange(WindowMode mode, bool hasDeco = true);
     WMError UpdateProperty(WSPropertyChangeAction action);
     WMError SetBackgroundColor(uint32_t color);
     uint32_t GetBackgroundColor() const;
+    virtual WMError SetLayoutFullScreenByApiVersion(bool status);
+    void UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason);
 
     sptr<ISession> hostSession_;
     std::unique_ptr<Ace::UIContent> uiContent_;
@@ -153,8 +152,8 @@ protected:
     NotifyNativeWinDestroyFunc notifyNativeFunc_;
 
     std::recursive_mutex mutex_;
-    static std::map<std::string, std::pair<uint64_t, sptr<WindowSessionImpl>>> windowSessionMap_;
-    static std::map<uint64_t, std::vector<sptr<WindowSessionImpl>>> subWindowSessionMap_;
+    static std::map<std::string, std::pair<int32_t, sptr<WindowSessionImpl>>> windowSessionMap_;
+    static std::map<int32_t, std::vector<sptr<WindowSessionImpl>>> subWindowSessionMap_;
     bool isIgnoreSafeAreaNeedNotify_ = false;
     bool isIgnoreSafeArea_ = false;
 
@@ -174,25 +173,21 @@ private:
     EnableIfSame<T, IOccupiedAreaChangeListener, std::vector<sptr<IOccupiedAreaChangeListener>>> GetListeners();
     template<typename T>
     EnableIfSame<T, IScreenshotListener, std::vector<sptr<IScreenshotListener>>> GetListeners();
-    template<typename T> void ClearUselessListeners(std::map<uint64_t, T>& listeners, uint64_t persistentId);
+    template<typename T> void ClearUselessListeners(std::map<int32_t, T>& listeners, int32_t persistentId);
     RSSurfaceNode::SharedPtr CreateSurfaceNode(std::string name, WindowType type);
     void NotifyAfterFocused();
     void NotifyAfterUnfocused(bool needNotifyUiContent = true);
-    void UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason);
+
     void NotifySizeChange(Rect rect, WindowSizeChangeReason reason);
 
     static std::recursive_mutex globalMutex_;
-    static std::map<uint64_t, std::vector<sptr<IWindowLifeCycle>>> lifecycleListeners_;
-    static std::map<uint64_t, std::vector<sptr<IWindowChangeListener>>> windowChangeListeners_;
-    static std::map<uint64_t, std::vector<sptr<IAvoidAreaChangedListener>>> avoidAreaChangeListeners_;
-    static std::map<uint64_t, std::vector<sptr<IDialogDeathRecipientListener>>> dialogDeathRecipientListeners_;
-    static std::map<uint64_t, std::vector<sptr<IDialogTargetTouchListener>>> dialogTargetTouchListener_;
-    static std::map<uint32_t, std::vector<sptr<IOccupiedAreaChangeListener>>> occupiedAreaChangeListeners_;
-    static std::map<uint64_t, std::vector<sptr<IScreenshotListener>>> screenshotListeners_;
-
-    std::optional<std::atomic<bool>> focusState_ = std::nullopt;
-
-    std::atomic<uint32_t> focusWindowId_ = INVALID_WINDOW_ID;
+    static std::map<int32_t, std::vector<sptr<IWindowLifeCycle>>> lifecycleListeners_;
+    static std::map<int32_t, std::vector<sptr<IWindowChangeListener>>> windowChangeListeners_;
+    static std::map<int32_t, std::vector<sptr<IAvoidAreaChangedListener>>> avoidAreaChangeListeners_;
+    static std::map<int32_t, std::vector<sptr<IDialogDeathRecipientListener>>> dialogDeathRecipientListeners_;
+    static std::map<int32_t, std::vector<sptr<IDialogTargetTouchListener>>> dialogTargetTouchListener_;
+    static std::map<int32_t, std::vector<sptr<IOccupiedAreaChangeListener>>> occupiedAreaChangeListeners_;
+    static std::map<int32_t, std::vector<sptr<IScreenshotListener>>> screenshotListeners_;
 
     // FA only
     sptr<IAceAbilityHandler> aceAbilityHandler_;

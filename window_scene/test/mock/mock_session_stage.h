@@ -27,7 +27,6 @@ public:
 
     MOCK_METHOD1(SetActive, WSError(bool active));
     MOCK_METHOD2(UpdateRect, WSError(const WSRect& rect, SizeChangeReason reason));
-    MOCK_METHOD2(UpdateViewConfig, WSError(const ViewPortConfig& config, SizeChangeReason reason));
     MOCK_METHOD0(HandleBackEvent, WSError(void));
     MOCK_METHOD1(UpdateFocus, WSError(bool isFocused));
     MOCK_METHOD0(NotifyDestroy, WSError(void));
@@ -36,6 +35,7 @@ public:
     MOCK_METHOD1(MarkProcessed, WSError(int32_t eventId));
     MOCK_METHOD1(NotifyOccupiedAreaChangeInfo, void(sptr<OccupiedAreaChangeInfo> info));
     MOCK_METHOD2(UpdateAvoidArea, WSError(const sptr<AvoidArea>& avoidArea, AvoidAreaType type));
+    MOCK_METHOD1(DumpSessionElementInfo, void(const std::vector<std::string>& params));
 };
 } // namespace Rosen
 } // namespace OHOS

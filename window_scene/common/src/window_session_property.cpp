@@ -85,6 +85,11 @@ void WindowSessionProperty::SetDisplayId(DisplayId displayId)
     displayId_ = displayId;
 }
 
+void WindowSessionProperty::SetFloatingWindowAppType(bool isAppType)
+{
+    isFloatingWindowAppType_ = isAppType;
+}
+
 const std::string& WindowSessionProperty::GetWindowName() const
 {
     return windowName_;
@@ -145,12 +150,12 @@ DisplayId WindowSessionProperty::GetDisplayId() const
     return displayId_;
 }
 
-void WindowSessionProperty::SetParentId(uint32_t parentId)
+void WindowSessionProperty::SetParentId(int32_t parentId)
 {
     parentId_ = parentId;
 }
 
-uint32_t WindowSessionProperty::GetParentId() const
+int32_t WindowSessionProperty::GetParentId() const
 {
     return parentId_;
 }
@@ -170,22 +175,22 @@ uint32_t WindowSessionProperty::GetWindowFlags() const
     return flags_;
 }
 
-void WindowSessionProperty::SetPersistentId(uint64_t persistentId)
+void WindowSessionProperty::SetPersistentId(int32_t persistentId)
 {
     persistentId_ = persistentId;
 }
 
-uint64_t WindowSessionProperty::GetPersistentId() const
+int32_t WindowSessionProperty::GetPersistentId() const
 {
     return persistentId_;
 }
 
-void WindowSessionProperty::SetParentPersistentId(uint64_t persistentId)
+void WindowSessionProperty::SetParentPersistentId(int32_t persistentId)
 {
     parentPersistentId_ = persistentId;
 }
 
-uint64_t WindowSessionProperty::GetParentPersistentId() const
+int32_t WindowSessionProperty::GetParentPersistentId() const
 {
     return parentPersistentId_;
 }
@@ -314,6 +319,11 @@ uint32_t WindowSessionProperty::GetAnimationFlag() const
     return animationFlag_;
 }
 
+bool WindowSessionProperty::IsFloatingWindowAppType() const
+{
+    return isFloatingWindowAppType_;
+}
+
 bool WindowSessionProperty::MarshallingWindowLimits(Parcel& parcel) const
 {
     if (parcel.WriteUint32(limits_.maxWidth_) &&
@@ -371,18 +381,19 @@ bool WindowSessionProperty::Marshalling(Parcel& parcel) const
         parcel.WriteBool(focusable_) && parcel.WriteBool(touchable_) && parcel.WriteBool(tokenState_) &&
         parcel.WriteBool(turnScreenOn_) && parcel.WriteBool(keepScreenOn_) &&
         parcel.WriteBool(isPrivacyMode_) && parcel.WriteBool(isSystemPrivacyMode_) &&
-        parcel.WriteUint64(displayId_) && parcel.WriteUint64(persistentId_) &&
+        parcel.WriteUint64(displayId_) && parcel.WriteInt32(persistentId_) &&
         parcel.WriteString(sessionInfo_.bundleName_) && parcel.WriteString(sessionInfo_.moduleName_) &&
         parcel.WriteString(sessionInfo_.abilityName_) &&
-        parcel.WriteUint64(parentPersistentId_) &&
-        parcel.WriteUint32(accessTokenId_) && parcel.WriteUint32(static_cast<uint32_t>(maximizeMode_)) &&
+        parcel.WriteInt32(parentPersistentId_) &&
+        parcel.WriteUint32(accessTokenId_) && parcel.WriteInt32(static_cast<uint32_t>(maximizeMode_)) &&
         parcel.WriteFloat(brightness_) &&
         parcel.WriteUint32(static_cast<uint32_t>(requestedOrientation_)) &&
         parcel.WriteUint32(static_cast<uint32_t>(windowMode_)) &&
         parcel.WriteUint32(flags_) &&
         parcel.WriteBool(isDecorEnable_) &&
         MarshallingWindowLimits(parcel) &&
-        MarshallingSystemBarMap(parcel) && parcel.WriteUint32(animationFlag_);
+        MarshallingSystemBarMap(parcel) && parcel.WriteUint32(animationFlag_) &&
+        parcel.WriteBool(isFloatingWindowAppType_);
 }
 
 WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
@@ -405,10 +416,10 @@ WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
     property->SetPrivacyMode(parcel.ReadBool());
     property->SetSystemPrivacyMode(parcel.ReadBool());
     property->SetDisplayId(parcel.ReadUint64());
-    property->SetPersistentId(parcel.ReadUint64());
+    property->SetPersistentId(parcel.ReadInt32());
     SessionInfo info = { parcel.ReadString(), parcel.ReadString(), parcel.ReadString() };
     property->SetSessionInfo(info);
-    property->SetParentPersistentId(parcel.ReadUint64());
+    property->SetParentPersistentId(parcel.ReadInt32());
     property->SetAccessTokenId(parcel.ReadUint32());
     property->SetMaximizeMode(static_cast<MaximizeMode>(parcel.ReadUint32()));
     property->SetBrightness(parcel.ReadFloat());
@@ -419,6 +430,7 @@ WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
     UnmarshallingWindowLimits(parcel, property);
     UnMarshallingSystemBarMap(parcel, property);
     property->SetAnimationFlag(parcel.ReadUint32());
+    property->SetFloatingWindowAppType(parcel.ReadBool());
     return property;
 }
 
@@ -450,6 +462,7 @@ void WindowSessionProperty::CopyFrom(const sptr<WindowSessionProperty>& property
     sysBarPropMap_ = property->sysBarPropMap_;
     isDecorEnable_ = property->isDecorEnable_;
     animationFlag_ = property->animationFlag_;
+    isFloatingWindowAppType_ = property->isFloatingWindowAppType_;
 }
 
 void WindowSessionProperty::SetTransform(const Transform& trans)

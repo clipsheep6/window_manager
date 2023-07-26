@@ -551,7 +551,10 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
         uiContent->Initialize(this, contentInfo, storage);
     }
     // make uiContent available after Initialize/Restore
-    uiContent_ = std::move(uiContent);
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        uiContent_ = std::move(uiContent);
+    }
     if (isIgnoreSafeAreaNeedNotify_) {
         uiContent_->SetIgnoreViewSafeArea(isIgnoreSafeArea_);
     }
@@ -1783,8 +1786,9 @@ WMError WindowImpl::SetSnapshotSkip(bool isSkip)
         WLOGFE("set snapshot skip permission denied!");
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
-    surfaceNode_->SetSecurityLayer(isSkip || property_->GetSystemPrivacyMode());
-    RSTransaction::FlushImplicitTransaction();
+    auto ret = SetPrivacyMode(isSkip || property_->GetSystemPrivacyMode()); 
+    WLOGFD("id : %{public}u, set snapshot skip end. isSkip:%{public}u, systemPrivacyMode:%{public}u, ret:%{public}u",
+        GetWindowId(), isSkip, property_->GetSystemPrivacyMode(), ret);
     return WMError::WM_OK;
 }
 

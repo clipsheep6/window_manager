@@ -71,7 +71,6 @@ ohos_shared_library("scene_session_manager") {
   public_configs = [ ":session_manager_public_config" ]
 
   deps = [
-    "${multimedia_path}/interfaces/innerkits:image_native",
     "${window_base_path}/utils:libwmutil",
     "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/session:scene_session",
@@ -96,6 +95,7 @@ ohos_shared_library("scene_session_manager") {
     "hicollie:libhicollie",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
+    "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_single",
     "power_manager:powermgr_client",
@@ -177,6 +177,7 @@ ohos_shared_library("screen_session_manager") {
 
 ohos_shared_library("session_manager") {
   sources = [
+    "../../wmserver/src/zidl/mock_screen_manager_service_proxy.cpp",
     "../../wmserver/src/zidl/mock_session_manager_service_proxy.cpp",
     "../session_manager_service/src/session_manager_service_proxy.cpp",
     "src/session_manager.cpp",
@@ -188,17 +189,14 @@ ohos_shared_library("session_manager") {
 
   public_configs = [ ":session_manager_public_config" ]
 
-  deps = [
-    "${window_base_path}/utils:libwmutil",
-    "${window_base_path}/wmserver:sms",
-  ]
+  deps = [ "${window_base_path}/utils:libwmutil" ]
 
   external_deps = [
     "ability_base:session_info",
     "graphic_2d:librender_service_client",
     "hilog:libhilog",
+    "image_framework:image_native",
     "ipc:ipc_single",
-    "multimedia_image_framework:image_native",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

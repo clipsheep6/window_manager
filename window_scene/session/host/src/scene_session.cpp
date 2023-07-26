@@ -45,8 +45,8 @@ SceneSession::SceneSession(const SessionInfo& info, const sptr<SpecificSessionCa
     specificCallback_ = specificCallback;
     moveDragController_ = new (std::nothrow) MoveDragController(GetPersistentId());
     ProcessVsyncHandleRegister();
-    if (!info.bundleName_.empty() && !info.abilityName_.empty()) {
-        std::string key = info.bundleName_ + "_" + info.abilityName_;
+    std::string key = GetRatioPreferenceKey();
+    if (!key.empty()) {
         if (ScenePersistentStorage::HasKey(key, ScenePersistentStorageType::ASPECT_RATIO)) {
             ScenePersistentStorage::Get(key, aspectRatio_, ScenePersistentStorageType::ASPECT_RATIO);
             WLOGD("SceneSession init aspectRatio , key %{public}s, value: %{public}f", key.c_str(), aspectRatio_);
@@ -92,9 +92,11 @@ WSError SceneSession::Background()
     if (ret != WSError::WS_OK) {
         return ret;
     }
-    if (scenePersistence_ != nullptr && GetSnapshot() != nullptr) {
-        scenePersistence_->SaveSnapshot(GetSnapshot());
+    auto snapshot = Snapshot();
+    if (scenePersistence_ && snapshot) {
+        scenePersistence_->SaveSnapshot(snapshot);
     }
+    NotifyBackground();
     UpdateCameraFloatWindowStatus(false);
     specificCallback_->onUpdateAvoidArea_(GetPersistentId());
     return WSError::WS_OK;
@@ -107,10 +109,8 @@ WSError SceneSession::OnSessionEvent(SessionEvent event)
         moveDragController_->InitMoveDragProperty();
         moveDragController_->SetStartMoveFlag(true);
     }
-    for (auto& sessionChangeCallback : sessionChangeCallbackList_) {
-        if (sessionChangeCallback != nullptr && sessionChangeCallback->OnSessionEvent_) {
-            sessionChangeCallback->OnSessionEvent_(static_cast<uint32_t>(event));
-        }
+    if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->OnSessionEvent_) {
+        sessionChangeCallback_->OnSessionEvent_(static_cast<uint32_t>(event));
     }
     return WSError::WS_OK;
 }
@@ -118,7 +118,7 @@ WSError SceneSession::OnSessionEvent(SessionEvent event)
 void SceneSession::RegisterSessionChangeCallback(const sptr<SceneSession::SessionChangeCallback>&
     sessionChangeCallback)
 {
-    sessionChangeCallbackList_.push_back(sessionChangeCallback);
+    sessionChangeCallback_ = sessionChangeCallback;
 }
 
 WSError SceneSession::SetGlobalMaximizeMode(MaximizeMode mode)
@@ -145,7 +145,7 @@ WSError SceneSession::SetAspectRatio(float ratio)
     }
     float vpr = 1.5f; // 1.5f: default virtual pixel ratio
     auto display = ScreenSessionManager::GetInstance().GetDefaultDisplayInfo();
-    if (!display) {
+    if (display) {
         vpr = display->GetVirtualPixelRatio();
         WLOGD("vpr = %{public}f", vpr);
     }
@@ -191,18 +191,11 @@ WSError SceneSession::UpdateRect(const WSRect& rect, SizeChangeReason reason)
 {
     WLOGFD("UpdateRect [%{public}d, %{public}d, %{public}u, %{public}u]", rect.posX_, rect.posY_,
         rect.width_, rect.height_);
-    if (isFirstStart_) {
-        WSRect newRect = rect;
-        if (FixRectByAspectRatio(newRect)) {
-            isFirstStart_ = false;
-            WLOGFD("FixedRect [%{public}d, %{public}d, %{public}u, %{public}u]", newRect.posX_, newRect.posY_,
-                newRect.width_, newRect.height_);
-            NotifySessionRectChange(newRect);
-            return Session::UpdateRect(newRect, reason);
-        }
+    WSError ret = Session::UpdateRect(rect, reason);
+    if (ret == WSError::WS_OK) {
+        specificCallback_->onUpdateAvoidArea_(GetPersistentId());
     }
-    specificCallback_->onUpdateAvoidArea_(GetPersistentId());
-    return Session::UpdateRect(rect, reason);
+    return ret;
 }
 
 WSError SceneSession::UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason)
@@ -217,19 +210,17 @@ WSError SceneSession::UpdateSessionRect(const WSRect& rect, const SizeChangeReas
 
 WSError SceneSession::RaiseToAppTop()
 {
-    for (auto& sessionChangeCallback : sessionChangeCallbackList_) {
-        if (sessionChangeCallback != nullptr && sessionChangeCallback->onRaiseToTop_) {
-            sessionChangeCallback->onRaiseToTop_();
-        }
+    if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->onRaiseToTop_) {
+        sessionChangeCallback_->onRaiseToTop_();
     }
     return WSError::WS_OK;
 }
 
 WSError SceneSession::CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
     const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-    sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session)
+    sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session)
 {
-    WLOGFI("CreateAndConnectSpecificSession id: %{public}" PRIu64 "", GetPersistentId());
+    WLOGFI("CreateAndConnectSpecificSession id: %{public}d", GetPersistentId());
     sptr<SceneSession> sceneSession;
     if (specificCallback_ != nullptr) {
         sceneSession = specificCallback_->onCreate_(sessionInfo_, property);
@@ -242,16 +233,14 @@ WSError SceneSession::CreateAndConnectSpecificSession(const sptr<ISessionStage>&
     if (property) {
         persistentId = property->GetPersistentId();
     }
-    for (auto& sessionChangeCallback : sessionChangeCallbackList_) {
-        if (sessionChangeCallback != nullptr && sessionChangeCallback->onCreateSpecificSession_) {
-            sessionChangeCallback->onCreateSpecificSession_(sceneSession);
-        }
+    if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->onCreateSpecificSession_) {
+        sessionChangeCallback_->onCreateSpecificSession_(sceneSession);
     }
     session = sceneSession;
     return errCode;
 }
 
-WSError SceneSession::DestroyAndDisconnectSpecificSession(const uint64_t& persistentId)
+WSError SceneSession::DestroyAndDisconnectSpecificSession(const int32_t& persistentId)
 {
     WSError ret = WSError::WS_OK;
     if (specificCallback_ != nullptr) {
@@ -271,10 +260,8 @@ WSError SceneSession::SetSystemBarProperty(WindowType type, SystemBarProperty sy
 {
     property_->SetSystemBarProperty(type, systemBarProperty);
     WLOGFD("SceneSession SetSystemBarProperty status:%{public}d", static_cast<int32_t>(type));
-    for (auto& sessionChangeCallback : sessionChangeCallbackList_) {
-        if (sessionChangeCallback != nullptr && sessionChangeCallback->OnSystemBarPropertyChange_) {
-            sessionChangeCallback->OnSystemBarPropertyChange_(property_->GetSystemBarProperty());
-        }
+    if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->OnSystemBarPropertyChange_) {
+        sessionChangeCallback_->OnSystemBarPropertyChange_(property_->GetSystemBarProperty());
     }
     return WSError::WS_OK;
 }
@@ -282,12 +269,24 @@ WSError SceneSession::SetSystemBarProperty(WindowType type, SystemBarProperty sy
 WSError SceneSession::OnNeedAvoid(bool status)
 {
     WLOGFD("SceneSession OnNeedAvoid status:%{public}d", static_cast<int32_t>(status));
-    for (auto& sessionChangeCallback : sessionChangeCallbackList_) {
-        if (sessionChangeCallback != nullptr && sessionChangeCallback->OnNeedAvoid_) {
-            sessionChangeCallback->OnNeedAvoid_(status);
-        }
+    if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->OnNeedAvoid_) {
+        sessionChangeCallback_->OnNeedAvoid_(status);
     }
     return WSError::WS_OK;
+}
+
+WSError SceneSession::OnShowWhenLocked(bool showWhenLocked)
+{
+    WLOGFD("SceneSession ShowWhenLocked status:%{public}d", static_cast<int32_t>(showWhenLocked));
+    if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->OnShowWhenLocked_) {
+        sessionChangeCallback_->OnShowWhenLocked_(showWhenLocked);
+    }
+    return WSError::WS_OK;
+}
+
+bool SceneSession::IsShowWhenLocked() const
+{
+    return property_->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED);
 }
 
 void SceneSession::CalculateAvoidAreaRect(WSRect& rect, WSRect& avoidRect, AvoidArea& avoidArea)
@@ -300,8 +299,8 @@ void SceneSession::CalculateAvoidAreaRect(WSRect& rect, WSRect& avoidRect, Avoid
         return;
     }
 
-    uint32_t avoidAreaCenterX = avoidAreaRect.posX_ + (avoidAreaRect.width_ >> 1);
-    uint32_t avoidAreaCenterY = avoidAreaRect.posY_ + (avoidAreaRect.height_ >> 1);
+    uint32_t avoidAreaCenterX = static_cast<uint32_t>(avoidAreaRect.posX_) + (avoidAreaRect.width_ >> 1);
+    uint32_t avoidAreaCenterY = static_cast<uint32_t>(avoidAreaRect.posY_) + (avoidAreaRect.height_ >> 1);
     float res1 = float(avoidAreaCenterY) - float(rect.height_) / float(rect.width_) *
         float(avoidAreaCenterX);
     float res2 = float(avoidAreaCenterY) + float(rect.height_) / float(rect.width_) *
@@ -329,6 +328,9 @@ void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
     std::vector<sptr<SceneSession>> statusBarVector =
         specificCallback_->onGetSceneSessionVectorByType_(WindowType::WINDOW_TYPE_STATUS_BAR);
     for (auto& statusBar : statusBarVector) {
+        if (!(statusBar->isVisible_)) {
+            continue;
+        }
         WSRect statusBarRect = statusBar->GetSessionRect();
         CalculateAvoidAreaRect(rect, statusBarRect, avoidArea);
     }
@@ -341,6 +343,9 @@ void SceneSession::GetKeyboardAvoidArea(WSRect& rect, AvoidArea& avoidArea)
     std::vector<sptr<SceneSession>> inputMethodVector =
         specificCallback_->onGetSceneSessionVectorByType_(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
     for (auto& inputMethod : inputMethodVector) {
+        if (!(inputMethod->GetSessionState() == SessionState::STATE_FOREGROUND)) {
+            continue;
+        }
         WSRect inputMethodRect = inputMethod->GetSessionRect();
         CalculateAvoidAreaRect(rect, inputMethodRect, avoidArea);
     }
@@ -430,10 +435,8 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
 
 void SceneSession::NotifySessionRectChange(const WSRect& rect)
 {
-    for (auto& sessionChangeCallback : sessionChangeCallbackList_) {
-        if (sessionChangeCallback != nullptr && sessionChangeCallback->onRectChange_) {
-            sessionChangeCallback->onRectChange_(rect);
-        }
+    if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->onRectChange_) {
+        sessionChangeCallback_->onRectChange_(rect);
     }
 }
 
@@ -443,10 +446,19 @@ bool SceneSession::IsDecorEnable()
         WindowHelper::IsWindowModeSupported(systemConfig_.decorModeSupportInfo_, property_->GetWindowMode());
 }
 
+std::string SceneSession::GetRatioPreferenceKey()
+{
+    std::string key = sessionInfo_.bundleName_ + sessionInfo_.moduleName_ + sessionInfo_.abilityName_;
+    if (key.length() > ScenePersistentStorage::MAX_KEY_LEN) {
+        return key.substr(key.length() - ScenePersistentStorage::MAX_KEY_LEN);
+    }
+    return key;
+}
+
 bool SceneSession::SaveAspectRatio(float ratio)
 {
-    if (!sessionInfo_.bundleName_.empty() && !sessionInfo_.abilityName_.empty()) {
-        std::string key = sessionInfo_.bundleName_ + "_" + sessionInfo_.abilityName_;
+    std::string key = GetRatioPreferenceKey();
+    if (!key.empty()) {
         ScenePersistentStorage::Insert(key, ratio, ScenePersistentStorageType::ASPECT_RATIO);
         WLOGD("SceneSession save aspectRatio , key %{public}s, value: %{public}f", key.c_str(), aspectRatio_);
         return true;
@@ -463,8 +475,7 @@ bool SceneSession::FixRectByAspectRatio(WSRect& rect)
         return false;
     }
 
-    if (MathHelper::NearZero(aspectRatio_) || aspectRatio_ == MathHelper::INF ||
-        aspectRatio_ == MathHelper::NAG_INF) {
+    if (MathHelper::NearZero(aspectRatio_)) {
         return false;
     }
     float vpr = 1.5f; // 1.5f: default virtual pixel ratio
@@ -519,6 +530,9 @@ void SceneSession::OnVsyncHandle()
     WSRect rect = moveDragController_->GetTargetRect();
     WLOGFD("rect: [%{public}d, %{public}d, %{public}u, %{public}u]", rect.posX_, rect.posY_, rect.width_, rect.height_);
     NotifySessionRectChange(rect);
+    if (!(moveDragController_->GetStartMoveFlag() || moveDragController_->GetStartDragFlag())) {
+        OnSessionEvent(SessionEvent::EVENT_END_MOVE);
+    }
 }
 
 const std::string& SceneSession::GetWindowName() const
@@ -548,55 +562,79 @@ bool SceneSession::IsKeepScreenOn() const
     return property_->IsKeepScreenOn();
 }
 
-std::string SceneSession::GetSessionSnapshot()
+std::string SceneSession::GetSessionSnapshotFilePath()
 {
-    WLOGFI("GetSessionSnapshot id %{public}" PRIu64 "", GetPersistentId());
+    WLOGFI("GetSessionSnapshotFilePath id %{public}d", GetPersistentId());
     if (Session::GetSessionState() < SessionState::STATE_BACKGROUND) {
-        Session::UpdateSnapshot();
+        WLOGFI("GetSessionSnapshotFilePath UpdateSnapshot");
+        auto snapshot = Snapshot();
+        scenePersistence_->SaveSnapshot(snapshot);
     }
-    if (scenePersistence_ != nullptr && GetSnapshot()) {
-        WLOGFI("GetSessionSnapshot SaveSnapshot");
-        scenePersistence_->SaveSnapshot(GetSnapshot());
+    if (scenePersistence_ != nullptr) {
         return scenePersistence_->GetSnapshotFilePath();
     }
     return "";
 }
 
+void SceneSession::UpdateNativeVisibility(bool visible)
+{
+    isVisible_ = visible;
+    specificCallback_->onUpdateAvoidArea_(GetPersistentId());
+}
+
+bool SceneSession::IsVisible() const
+{
+    return isVisible_;
+}
+
 WSError SceneSession::UpdateWindowAnimationFlag(bool needDefaultAnimationFlag)
 {
-    for (auto& sessionChangeCallback : sessionChangeCallbackList_) {
-        if (sessionChangeCallback != nullptr && sessionChangeCallback->onWindowAnimationFlagChange_) {
-            sessionChangeCallback -> onWindowAnimationFlagChange_(needDefaultAnimationFlag);
-        }
+    if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->onWindowAnimationFlagChange_) {
+        sessionChangeCallback_ -> onWindowAnimationFlagChange_(needDefaultAnimationFlag);
     }
     return WSError::WS_OK;
 }
 
 void SceneSession::NotifyIsCustomAnimatiomPlaying(bool isPlaying)
 {
-    WLOGFI("id %{public}" PRIu64 " %{public}u", GetPersistentId(), isPlaying);
-    for (auto& sessionChangeCallback : sessionChangeCallbackList_) {
-        if (sessionChangeCallback != nullptr && sessionChangeCallback->onIsCustomAnimationPlaying_) {
-            sessionChangeCallback->onIsCustomAnimationPlaying_(isPlaying);
-        }
+    WLOGFI("id %{public}d %{public}u", GetPersistentId(), isPlaying);
+    if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->onIsCustomAnimationPlaying_) {
+        sessionChangeCallback_->onIsCustomAnimationPlaying_(isPlaying);
     }
 }
 
 WSError SceneSession::UpdateWindowSceneAfterCustomAnimation(bool isAdd)
 {
-    WLOGFI("id %{public}" PRIu64 "", GetPersistentId());
+    WLOGFI("id %{public}d", GetPersistentId());
     if (isAdd) {
         if (!setWindowScenePatternFunc_ || !setWindowScenePatternFunc_->setOpacityFunc_) {
-            WLOGFE("SetOpacityFunc not register %{public}" PRIu64 "", GetPersistentId());
+            WLOGFE("SetOpacityFunc not register %{public}d", GetPersistentId());
             return WSError::WS_ERROR_INVALID_OPERATION;
         }
         setWindowScenePatternFunc_->setOpacityFunc_(1.0f);
     } else {
-        WLOGFI("background after custom animation id %{public}" PRIu64 "", GetPersistentId());
+        WLOGFI("background after custom animation id %{public}d", GetPersistentId());
         // since background will remove surfaceNode
         Background();
         NotifyIsCustomAnimatiomPlaying(false);
     }
     return WSError::WS_OK;
+}
+
+bool SceneSession::IsFloatingWindowAppType() const
+{
+    if (property_ == nullptr) {
+        return false;
+    }
+
+    return property_->IsFloatingWindowAppType();
+}
+
+void SceneSession::DumpSessionElementInfo(const std::vector<std::string>& params)
+{
+    if (!sessionStage_) {
+        return;
+    }
+    return sessionStage_->DumpSessionElementInfo(params);
 }
 } // namespace OHOS::Rosen

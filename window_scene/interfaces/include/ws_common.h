@@ -28,7 +28,7 @@ class AbilityStartSetting;
 }
 
 namespace OHOS::Rosen {
-constexpr uint64_t INVALID_SESSION_ID = 0;
+constexpr int32_t INVALID_SESSION_ID = 0;
 
 enum class WSError : int32_t {
     WS_OK = 0,
@@ -96,6 +96,13 @@ enum class SessionState : uint32_t {
     STATE_END,
 };
 
+enum ContinueState {
+    CONTINUESTATE_UNKNOWN = -1,
+    CONTINUESTATE_ACTIVE = 0,
+    CONTINUESTATE_INACTIVE = 1,
+    CONTINUESTATE_MAX
+};
+
 struct SessionInfo {
     std::string bundleName_ = "";
     std::string moduleName_ = "";
@@ -110,9 +117,19 @@ struct SessionInfo {
     int32_t requestCode;
     int32_t errorCode;
     std::string errorReason;
-    uint64_t persistentId_ = INVALID_SESSION_ID;
-    uint64_t callerPersistentId_ = INVALID_SESSION_ID;
+    int32_t persistentId_ = INVALID_SESSION_ID;
+    int32_t callerPersistentId_ = INVALID_SESSION_ID;
     uint32_t callState_ = 0;
+    int32_t startMethod;
+    // whether to display in the missions list
+    bool excludeFromMissions = false;
+    bool unclearable = false;
+    bool lockedState = false;
+    bool continuable = false;
+    std::string time;
+    std::string label;
+    std::string iconPath;
+    ContinueState continueState = ContinueState::CONTINUESTATE_ACTIVE;
     int64_t uiAbilityId_ = 0;
 };
 
@@ -153,6 +170,8 @@ enum class SessionEvent : uint32_t {
     EVENT_MAXIMIZE_FLOATING,
     EVENT_TERMINATE,
     EVENT_EXCEPTION,
+    EVENT_SPLIT_PRIMARY,
+    EVENT_SPLIT_SECONDARY,
 };
 
 struct WSRect {
@@ -167,25 +186,6 @@ struct WSRect {
     }
 
     bool operator!=(const WSRect& a) const
-    {
-        return !this->operator==(a);
-    }
-};
-
-struct ViewPortConfig {
-    int32_t posX_ = 0;
-    int32_t posY_ = 0;
-    uint32_t width_ = 0;
-    uint32_t height_ = 0;
-    float density_ = .0f;
-
-    bool operator==(const ViewPortConfig& a) const
-    {
-        return (posX_ == a.posX_ && posY_ == a.posY_ && width_ == a.width_
-                && height_ == a.height_ && density_ == a.density_);
-    }
-
-    bool operator!=(const ViewPortConfig& a) const
     {
         return !this->operator==(a);
     }
@@ -227,6 +227,14 @@ struct WindowAnimationConfig {
     float opacity_ = 0;
 };
 
+struct StartingWindowAnimationConfig {
+    bool enabled_ = true;
+    int duration_ = 200;
+    std::string curve_ = "linear";
+    float opacityStart_ = 1;
+    float opacityEnd_ = 0;
+};
+
 struct AppWindowSceneConfig {
     float floatCornerRadius_ = 0.0f;
 
@@ -234,6 +242,7 @@ struct AppWindowSceneConfig {
     WindowShadowConfig unfocusedShadow_;
     KeyboardSceneAnimationConfig keyboardAnimation_;
     WindowAnimationConfig windowAnimation_;
+    StartingWindowAnimationConfig startingWindowAnimationConfig_;
 };
 
 /**

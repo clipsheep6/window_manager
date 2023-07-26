@@ -13,20 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_ROSEN_PERMISSION_H
-#define OHOS_ROSEN_PERMISSION_H
+#ifndef TEST_FUZZTEST_WINDOW_IMPL_FUZZER_H
+#define TEST_FUZZTEST_WINDOW_IMPL_FUZZER_H
 
-#include <string>
+#define FUZZ_PROJECT_NAME "windowimpl_fuzzer"
 
-namespace OHOS {
-namespace Rosen {
-class Permission {
-public:
-    static bool IsSystemServiceCalling(bool needPrintLog = true);
-    static bool IsSystemCalling();
-    static bool IsStartByHdcd();
-    static bool IsStartedByInputMethod();
-};
-} // Rosen
-} // OHOS
-#endif // OHOS_ROSEN_PERMISSION_H
+#endif
