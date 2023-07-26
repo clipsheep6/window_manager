@@ -38,17 +38,7 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
-    // static sptr<WindowGroupMgr> windowGroupMgr_;
-    // static sptr<WindowRoot> windowRoot_;
-    // static DisplayId defalutDisplayId_;
-    // static int missionCount_;
 };
-
-
-// sptr<WindowGroupMgr> MockScreenManagerServiceTest::windowGroupMgr_ = nullptr;
-// sptr<WindowRoot> MockScreenManagerServiceTest::windowRoot_;
-// DisplayId MockScreenManagerServiceTest::defalutDisplayId_ = -1;
-// int MockScreenManagerServiceTest::missionCount_ = 3;
 
 void MockScreenManagerServiceTest::SetUpTestCase()
 {
@@ -56,9 +46,6 @@ void MockScreenManagerServiceTest::SetUpTestCase()
 
 void MockScreenManagerServiceTest::TearDownTestCase()
 {
-    // windowGroupMgr_ = nullptr;
-    // windowRoot_ = nullptr;
-    // defalutDisplayId_ = -1;
 }
 
 void MockScreenManagerServiceTest::SetUp()
@@ -109,7 +96,6 @@ HWTEST_F(MockScreenManagerServiceTest, Dump, Function | SmallTest | Level2)
     ret = MockScreenManagerService::GetInstance().Dump(0, args);
     ASSERT_EQ(0, ret);
 }
-
 }
 }
 }
