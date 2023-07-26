@@ -43,6 +43,8 @@ const std::map<uint32_t, SessionStageStubFunc> SessionStageStub::stubFuncMap_{
         &SessionStageStub::HandleNotifyOccupiedAreaChange),
     std::make_pair(static_cast<uint32_t>(SessionStageMessage::TRANS_ID_UPDATE_AVOID_AREA),
         &SessionStageStub::HandleUpdateAvoidArea),
+    std::make_pair(static_cast<uint32_t>(SessionStageMessage::TRANS_ID_NOTIFY_SCREEN_SHOT),
+        &SessionStageStub::HandleNotifyScreenshot),
     std::make_pair(static_cast<uint32_t>(SessionStageMessage::TRANS_ID_DUMP_SESSSION_ELEMENT_INFO),
         &SessionStageStub::HandleDumpSessionElementInfo)
 };
@@ -150,6 +152,12 @@ int SessionStageStub::HandleUpdateAvoidArea(MessageParcel& data, MessageParcel& 
     }
     UpdateAvoidArea(avoidArea, static_cast<AvoidAreaType>(type));
     return ERR_NONE;
+}
+
+int SessionStageStub::HandleNotifyScreenshot(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("Notify Screen shot!");
+    NotifyScreenshot();
 }
 
 int SessionStageStub::HandleDumpSessionElementInfo(MessageParcel& data, MessageParcel& reply)
