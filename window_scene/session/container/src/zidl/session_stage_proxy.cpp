@@ -264,4 +264,21 @@ WSError SessionStageProxy::UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, Avo
     }
     return WSError::WS_OK;
 }
+
+void SessionStageProxy::NotifyScreenshot()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionStageMessage::TRANS_ID_NOTIFY_SCREEN_SHOT),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return;
+    }
+}
 } // namespace OHOS::Rosen

@@ -39,6 +39,7 @@ public:
     WSError NotifyTransferComponentData(const AAFwk::WantParams& wantParams) override;
     void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info) override;
     WSError UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type) override;
+    void NotifyScreenshot() override;
 private:
     static inline BrokerDelegator<SessionStageProxy> delegator_;
 };

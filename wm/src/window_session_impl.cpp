@@ -47,6 +47,7 @@ std::map<uint64_t, std::vector<sptr<IAvoidAreaChangedListener>>> WindowSessionIm
 std::map<uint64_t, std::vector<sptr<IDialogDeathRecipientListener>>> WindowSessionImpl::dialogDeathRecipientListeners_;
 std::map<uint64_t, std::vector<sptr<IDialogTargetTouchListener>>> WindowSessionImpl::dialogTargetTouchListener_;
 std::map<uint32_t, std::vector<sptr<IOccupiedAreaChangeListener>>> WindowSessionImpl::occupiedAreaChangeListeners_;
+std::map<uint64_t, std::vector<sptr<IScreenshotListener>>> WindowSessionImpl::screenshotListeners_;
 std::recursive_mutex WindowSessionImpl::globalMutex_;
 std::map<std::string, std::pair<uint64_t, sptr<WindowSessionImpl>>> WindowSessionImpl::windowSessionMap_;
 std::map<uint64_t, std::vector<sptr<WindowSessionImpl>>> WindowSessionImpl::subWindowSessionMap_;
@@ -755,6 +756,7 @@ void WindowSessionImpl::ClearListenersById(uint64_t persistentId)
     ClearUselessListeners(avoidAreaChangeListeners_, persistentId);
     ClearUselessListeners(dialogDeathRecipientListeners_, persistentId);
     ClearUselessListeners(dialogTargetTouchListener_, persistentId);
+    ClearUselessListeners(screenshotListeners_, persistentId);
 }
 
 void WindowSessionImpl::RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func)
@@ -883,6 +885,20 @@ WMError WindowSessionImpl::UnregisterDialogTargetTouchListener(const sptr<IDialo
     return UnregisterListener(dialogTargetTouchListener_[GetPersistentId()], listener);
 }
 
+WMError WindowSessionImpl::RegisterScreenshotListener(const sptr<IScreenshotListener>& listener)
+{
+    WLOGFD("Start register ScreenshotListener");
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    return RegisterListener(screenshotListeners_[GetPersistentId()], listener);
+}
+
+WMError WindowSessionImpl::UnregisterWindowChangeListener(const sptr<IScreenshotListener>& listener)
+{
+    WLOGFD("Start unregister ScreenshotListener");
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    return UnregisterListener(screenshotListeners_[GetPersistentId()], listener);
+}
+
 template<typename T>
 EnableIfSame<T, IDialogDeathRecipientListener, std::vector<sptr<IDialogDeathRecipientListener>>> WindowSessionImpl::
     GetListeners()
@@ -911,6 +927,20 @@ EnableIfSame<T, IDialogTargetTouchListener,
     return dialogTargetTouchListener;
 }
 
+template<typename T>
+EnableIfSame<T, IScreenshotListener,
+    std::vector<sptr<IScreenshotListener>>> WindowSessionImpl::GetListeners()
+{
+    std::vector<sptr<IScreenshotListener>> screenshotListeners;
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        for (auto& listener : screenshotListeners_[GetPersistentId()]) {
+            screenshotListeners.push_back(listener);
+        }
+    }
+    return screenshotListeners;
+}
+
 WSError WindowSessionImpl::NotifyDestroy()
 {
     auto dialogDeathRecipientListener = GetListeners<IDialogDeathRecipientListener>();
@@ -930,6 +960,16 @@ void WindowSessionImpl::NotifyTouchDialogTarget()
     for (auto& listener : dialogTargetTouchListener) {
         if (listener != nullptr) {
             listener->OnDialogTargetTouch();
+        }
+    }
+}
+
+void WindowSessionImpl::NotifyScreenshot()
+{
+    auto screenshotListeners = GetListeners<IScreenshotListener>();
+    for (auto& listener : screenshotListeners) {
+        if (listener != nullptr) {
+            listener->OnScreenshot();
         }
     }
 }

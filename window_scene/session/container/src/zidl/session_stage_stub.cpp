@@ -45,6 +45,8 @@ const std::map<uint32_t, SessionStageStubFunc> SessionStageStub::stubFuncMap_{
         &SessionStageStub::HandleUpdateViewConfig),
     std::make_pair(static_cast<uint32_t>(SessionStageMessage::TRANS_ID_UPDATE_AVOID_AREA),
         &SessionStageStub::HandleUpdateAvoidArea),
+    std::make_pair(static_cast<uint32_t>(SessionStageMessage::TRANS_ID_NOTIFY_SCREEN_SHOT),
+        &SessionStageStub::HandleNotifyScreenshot),
 };
 
 int SessionStageStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -160,6 +162,13 @@ int SessionStageStub::HandleUpdateAvoidArea(MessageParcel& data, MessageParcel& 
         return ERR_INVALID_VALUE;
     }
     UpdateAvoidArea(avoidArea, static_cast<AvoidAreaType>(type));
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleNotifyScreenshot(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("Notify Screen shot!");
+    NotifyScreenshot();
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

@@ -118,6 +118,8 @@ SceneSessionManager::SceneSessionManager() : rsInterface_(RSInterfaces::GetInsta
     Init();
     StartWindowInfoReportLoop();
     ScreenSessionManager::GetInstance().SetSensorSubscriptionEnabled();
+    sptr<IDisplayChangeListener> listener = new DisplayChangeListener();
+    ScreenSessionManager::GetInstance().RegisterDisplayChangeListener(listener);
 }
 
 bool SceneSessionManager::Init()
@@ -2031,6 +2033,27 @@ bool SceneSessionManager::UpdateAvoidArea(const uint64_t& persistentId)
     }
 
     return needUpdate;
+}
+
+void DisplayChangeListener::OnDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
+    const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type)
+{
+    return;
+}
+
+void DisplayChangeListener::OnScreenshot(DisplayId displayId)
+{
+    SceneSessionManager::GetInstance().OnScreenshot(displayId);
+}
+void SceneSessionManager::OnScreenshot(DisplayId displayId)
+{
+    auto task = [this,displayId]() {
+        auto sceneSession = GetSceneSession(focusedSessionId_);
+        if (sceneSession) {
+            sceneSession->NotifyScreenshot();
+        }
+    };
+    taskScheduler_->PostAsyncTask(task);
 }
 } // namespace OHOS::Rosen
 
