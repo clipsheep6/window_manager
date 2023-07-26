@@ -406,7 +406,6 @@ HWTEST_F(WindowManagerTest, UnregisterSystemBarChangedListener01, Function | Sma
     windowManager.RegisterSystemBarChangedListener(listener2);
     ASSERT_EQ(2, windowManager.pImpl_->systemBarChangedListeners_.size());
 
-
     ASSERT_EQ(WMError::WM_OK, windowManager.UnregisterSystemBarChangedListener(listener1));
     std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
     EXPECT_CALL(m->Mock(), UnregisterWindowManagerAgent(_, _)).Times(1).WillOnce(Return(WMError::WM_OK));
@@ -560,6 +559,18 @@ HWTEST_F(WindowManagerTest, UnregisterGestureNavigationEnabledChangedListener, F
     ASSERT_EQ(0, windowManager.pImpl_->gestureNavigationEnabledListeners_.size());
 }
 
+/**
+ * @tc.name: GetFocusWindowInfo
+ * @tc.desc: window GetFocusWindowInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerTest, GetFocusWindowInfo, Function | SmallTest | Level2)
+{
+    FocusChangeInfo focusInfo;
+    auto ret = 0;
+    WindowManager::GetInstance().GetFocusWindowInfo(focusInfo);
+    ASSERT_EQ(0, ret);
+}
 }
 } // namespace Rosen
 } // namespace OHOS
