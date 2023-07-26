@@ -217,6 +217,27 @@ WMError WindowSessionImpl::Connect()
     return static_cast<WMError>(ret);
 }
 
+Rect WindowSessionImpl::GetSystemAlarmWindowDefaultSize(Rect defaultRect)
+{
+    auto display = SingletonContainer::IsDestroyed() ? nullptr :
+        SingletonContainer::Get<DisplayManager>().GetDisplayById(property_->GetDisplayId());
+    if (display == nullptr) {
+        WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u", property_->GetDisplayId(),
+            property_->GetWindowId());
+        return defaultRect;
+    }
+    uint32_t width = static_cast<uint32_t>(display->GetWidth());
+    uint32_t height = static_cast<uint32_t>(display->GetHeight());
+    WLOGFD("width:%{public}u, height:%{public}u, displayId:%{public}" PRIu64"",
+        width, height, property_->GetDisplayId());
+    uint32_t alarmWidth = static_cast<uint32_t>((static_cast<float>(width) * 0.8)); // 0.8 ALARM_WINDOW_WIDTH_RATIO
+    uint32_t alarmHeight = static_cast<uint32_t>((static_cast<float>(height) * 0.3)); // 0.3 ALARM_WINDOW_HEIGHT_RATIO
+
+    Rect rect = { static_cast<int32_t>((width - alarmWidth) / 2), static_cast<int32_t>((height - alarmHeight) / 2),
+        alarmWidth, alarmHeight }; // divided by 2 to middle the window
+    return rect;
+}
+
 WMError WindowSessionImpl::Show(uint32_t reason, bool withAnimation)
 {
     WLOGFI("Window Show [name:%{public}s, id:%{public}d, type:%{public}u], reason:%{public}u state:%{pubic}u",
@@ -230,7 +251,9 @@ WMError WindowSessionImpl::Show(uint32_t reason, bool withAnimation)
             property_->GetWindowName().c_str(), GetPersistentId(), property_->GetWindowType());
         return WMError::WM_OK;
     }
-
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW) {
+        property_->SetRequestRect(GetSystemAlarmWindowDefaultSize(property_->GetRequestRect()));
+    }
     WSError ret = hostSession_->Foreground(property_);
     // delete after replace WSError with WMError
     WMError res = static_cast<WMError>(ret);

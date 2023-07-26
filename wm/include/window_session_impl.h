@@ -137,6 +137,7 @@ protected:
     uint32_t GetBackgroundColor() const;
     virtual WMError SetLayoutFullScreenByApiVersion(bool status);
     void UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason);
+    Rect GetSystemAlarmWindowDefaultSize(Rect defaultRect);
 
     sptr<ISession> hostSession_;
     std::unique_ptr<Ace::UIContent> uiContent_;
