@@ -152,11 +152,13 @@ public:
 
     sptr<ScenePersistence> GetScenePersistence() const;
     void SetParentSession(const sptr<Session>& session);
+    sptr<Session> GetParentSession() const;
     void BindDialogToParentSession(const sptr<Session>& session);
     void RemoveDialogToParentSession(const sptr<Session>& session);
     std::vector<sptr<Session>> GetDialogVector() const;
     void NotifyTouchDialogTarget();
     WSError NotifyDestroy();
+    bool CheckDialogOnForeground();
 
     void SetPendingSessionToForegroundListener(const NotifyPendingSessionToForegroundFunc& func);
     WSError PendingSessionToForeground();
@@ -237,7 +239,6 @@ protected:
     sptr<ScenePersistence> scenePersistence_ = nullptr;
 
 private:
-    bool CheckDialogOnForeground();
 
     template<typename T>
     bool RegisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener);
@@ -275,7 +276,7 @@ private:
     sptr<IWindowEventChannel> windowEventChannel_ = nullptr;
 
     std::vector<sptr<Session>> dialogVec_;
-    sptr<Session> parentSession_;
+    sptr<Session> parentSession_ = nullptr;
 
     int32_t callingPid_ = { 0 };
     int32_t callingUid_ = { 0 };
