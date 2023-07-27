@@ -20,7 +20,9 @@
 
 #include "anr_handler.h"
 #include "color_parser.h"
+#include "singleton_container.h"
 #include "display_manager.h"
+#include "perform_reporter.h"
 #include "session_permission.h"
 #include "session/container/include/window_event_channel.h"
 #include "session_manager/include/session_manager.h"
@@ -29,6 +31,7 @@
 #include "window_manager_hilog.h"
 #include "wm_common.h"
 #include "wm_math.h"
+#include "window_helper.h"
 #include "session_manager_agent_controller.h"
 #include "window_impl.h"
 
@@ -1032,6 +1035,7 @@ WSError WindowSceneSessionImpl::HandleBackEvent()
         WLOGD("Back key event is consumed");
         return WSError::WS_OK;
     }
+    SingletonContainer::Get<WindowInfoReporter>().ReportBackButtonInfoImmediately();
     // notify back event to host session
     PerformBack();
     return WSError::WS_OK;

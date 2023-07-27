@@ -36,6 +36,9 @@
 #include "window_helper.h"
 #include "color_parser.h"
 #include "singleton_container.h"
+#include "scene_session.h"
+#include "perform_reporter.h"
+#include "scene_session_manager.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -394,7 +397,6 @@ void WindowSessionImpl::UpdateTitleButtonVisibility()
     WLOGFI("[hideSplit, hideMaximize]: [%{public}d, %{public}d]", hideSplitButton, hideMaximizeButton);
     uiContent_->HideWindowTitleButton(hideSplitButton, hideMaximizeButton, false);
 }
-
 
 WMError WindowSessionImpl::SetUIContent(const std::string& contentInfo,
     NativeEngine* engine, NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability)
@@ -1113,7 +1115,18 @@ WMError WindowSessionImpl::SetBackgroundColor(const std::string& color)
 WMError WindowSessionImpl::SetBackgroundColor(uint32_t color)
 {
     // 0xff000000: ARGB style, means Opaque color.
-    // const bool isAlphaZero = !(color & 0xff000000);
+    const bool isAlphaZero = !(color & 0xff000000);
+    sptr<SceneSession> session = SceneSessionManager::GetInstance().GetSceneSession(GetPersistentId());
+    if (session == nullptr) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    auto bundleName = session->GetSessionInfo().bundleName_;
+    auto abilityName = session->GetSessionInfo().abilityName_;
+    if (isAlphaZero && WindowHelper::IsMainWindow(session->GetWindowType())) {
+        auto& reportInstance = SingletonContainer::Get<WindowInfoReporter>();
+        reportInstance.ReportZeroOpacityInfoImmediately(bundleName, abilityName);
+    }
+
     if (uiContent_ != nullptr) {
         uiContent_->SetBackgroundColor(color);
         return WMError::WM_OK;
