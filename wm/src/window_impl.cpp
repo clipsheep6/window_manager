@@ -1092,6 +1092,20 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
     }
 
     context_ = context;
+
+    if (context_ && context_->GetApplicationInfo()) {
+        if (context_->GetApplicationInfo()->keepAlive)
+        {
+            auto IsKeepAlive = context_->GetApplicationInfo()->keepAlive;
+            surfaceNode_->SetKeepAlive(IsKeepAlive);
+            RSTransaction::FlushImplicitTransaction();
+        }
+    } else {
+        auto IsKeepAlive = false;
+        surfaceNode_->SetKeepAlive(IsKeepAlive);
+        RSTransaction::FlushImplicitTransaction();
+    }
+
     sptr<WindowImpl> window(this);
     sptr<IWindow> windowAgent(new WindowAgent(window));
     static std::atomic<uint32_t> tempWindowId = 0;
