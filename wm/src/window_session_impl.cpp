@@ -1109,7 +1109,7 @@ WMError WindowSessionImpl::SetBackgroundColor(const std::string& color)
 WMError WindowSessionImpl::SetBackgroundColor(uint32_t color)
 {
     if (context_.get() == nullptr) {
-        return INVALID_SESSION_ID;
+        return WMError::WM_ERROR_INVALID_OPERATION;
     }
 
     // 0xff000000: ARGB style, means Opaque color.
@@ -1117,11 +1117,11 @@ WMError WindowSessionImpl::SetBackgroundColor(uint32_t color)
     std::string bundleName;
     std::string abilityName;
     if ((context_ != nullptr) && (context_->GetApplicationInfo() != nullptr)) {
-        bundleName = context_->GetApplicationInfo()->bundleName;
+        bundleName = context_->GetBundleName();
         abilityName = context_->GetApplicationInfo()->name;
     }
 
-    if (isAlphaZero && WindowHelper::IsMainWindow(session->GetWindowType())) {
+    if (isAlphaZero && WindowHelper::IsMainWindow(GetType())) {
         auto& reportInstance = SingletonContainer::Get<WindowInfoReporter>();
         reportInstance.ReportZeroOpacityInfoImmediately(bundleName, abilityName);
     }
