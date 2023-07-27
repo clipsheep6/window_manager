@@ -36,9 +36,8 @@
 #include "window_helper.h"
 #include "color_parser.h"
 #include "singleton_container.h"
-#include "scene_session.h"
 #include "perform_reporter.h"
-#include "scene_session_manager.h"
+
 
 namespace OHOS {
 namespace Rosen {
@@ -1109,14 +1108,19 @@ WMError WindowSessionImpl::SetBackgroundColor(const std::string& color)
 
 WMError WindowSessionImpl::SetBackgroundColor(uint32_t color)
 {
+    if (context_.get() == nullptr) {
+        return INVALID_SESSION_ID;
+    }
+
     // 0xff000000: ARGB style, means Opaque color.
     const bool isAlphaZero = !(color & 0xff000000);
-    sptr<SceneSession> session = SceneSessionManager::GetInstance().GetSceneSession(GetPersistentId());
-    if (session == nullptr) {
-        return WMError::WM_ERROR_INVALID_WINDOW;
+    std::string bundleName;
+    std::string abilityName;
+    if ((context_ != nullptr) && (context_->GetApplicationInfo() != nullptr)) {
+        bundleName = context_->GetApplicationInfo()->bundleName;
+        abilityName = context_->GetApplicationInfo()->name;
     }
-    auto bundleName = session->GetSessionInfo().bundleName_;
-    auto abilityName = session->GetSessionInfo().abilityName_;
+
     if (isAlphaZero && WindowHelper::IsMainWindow(session->GetWindowType())) {
         auto& reportInstance = SingletonContainer::Get<WindowInfoReporter>();
         reportInstance.ReportZeroOpacityInfoImmediately(bundleName, abilityName);
