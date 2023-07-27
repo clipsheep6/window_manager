@@ -18,6 +18,7 @@
 #include <sstream>
 #include <unistd.h>
 
+#include <ability_context.h>
 #include <ability_info.h>
 #include <ability_manager_client.h>
 #include <bundle_mgr_interface.h>
@@ -495,6 +496,11 @@ std::string SceneSessionManager::CreateCurve(const WindowSceneConfig::ConfigItem
     return curveName;
 }
 
+void SceneSessionManager::SetRootSceneContext(AbilityRuntime::Context* context)
+{
+    rootSceneContext_ = std::shared_ptr<AbilityRuntime::Context>(context);
+}
+
 sptr<RootSceneSession> SceneSessionManager::GetRootSceneSession()
 {
     auto task = [this]() -> sptr<RootSceneSession> {
@@ -609,6 +615,9 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
         if (sessionInfo.isSystem_) {
             sceneSession->SetCallingPid(IPCSkeleton::GetCallingPid());
             sceneSession->SetCallingUid(IPCSkeleton::GetCallingUid());
+            if (rootSceneContext_ != nullptr) {
+                sceneSession->SetAbilityToken(rootSceneContext_->GetToken());
+            }
         }
         auto persistentId = sceneSession->GetPersistentId();
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSession(%d )", persistentId);
