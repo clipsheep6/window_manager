@@ -78,6 +78,8 @@ ohos_shared_library("scene_session") {
     "ipc:ipc_single",
     "power_manager:powermgr_client",
     "preferences:native_preferences",
+    "samgr:samgr_proxy",
+    "bundle_framework:appexecfwk_base",
   ]
 
   innerapi_tags = [ "platformsdk" ]

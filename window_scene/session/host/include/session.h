@@ -239,6 +239,7 @@ protected:
     sptr<ScenePersistence> scenePersistence_ = nullptr;
 
 private:
+    void FillSessionInfo(SessionInfo& sessionInfo);
     bool CheckDialogOnForeground();
 
     template<typename T>
