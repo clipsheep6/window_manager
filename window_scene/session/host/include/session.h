@@ -176,7 +176,6 @@ public:
     bool GetTouchable() const;
     WSError SetVisible(bool isVisible);
     bool GetVisible() const;
-    bool IsActive() const;
     WSError SetGlobalMaximizeMode(MaximizeMode mode) override;
     WSError GetGlobalMaximizeMode(MaximizeMode& mode) override;
     AvoidArea GetAvoidAreaByType(AvoidAreaType type) override;
@@ -240,6 +239,7 @@ protected:
     sptr<ScenePersistence> scenePersistence_ = nullptr;
 
 private:
+    void FillSessionInfo(SessionInfo& sessionInfo);
     bool CheckDialogOnForeground();
 
     template<typename T>

@@ -135,6 +135,7 @@ public:
 
     RunnableFuture<std::vector<std::string>> dumpInfoFuture_;
 
+
 protected:
     SceneSessionManager();
     virtual ~SceneSessionManager() = default;
