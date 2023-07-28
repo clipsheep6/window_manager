@@ -30,10 +30,20 @@
 
 #include "ability_start_setting.h"
 #include "window_manager_hilog.h"
+#include "session/host/include/session_utils.h"
 
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "Session" };
+constexpr uint64_t NANO_SECOND_PER_SEC = 1000000000; // ns
+std::string GetCurrentTime()
+{
+    struct timespec tn;
+    clock_gettime(CLOCK_REALTIME, &tn);
+    uint64_t uTime = static_cast<uint64_t>(tn.tv_sec) * NANO_SECOND_PER_SEC +
+        static_cast<uint64_t>(tn.tv_nsec);
+    return std::to_string(uTime);
+}
 } // namespace
 
 std::atomic<int32_t> Session::sessionId_(INVALID_SESSION_ID);
@@ -236,6 +246,11 @@ bool Session::GetVisible() const
     return isVisible_;
 }
 
+bool Session::IsActive() const
+{
+    return isActive_;
+}
+
 int32_t Session::GetWindowId() const
 {
     return GetPersistentId();
@@ -308,11 +323,6 @@ bool Session::IsSessionValid() const
     return res;
 }
 
-bool Session::IsActive() const
-{
-    return isActive_;
-}
-
 WSError Session::UpdateRect(const WSRect& rect, SizeChangeReason reason)
 {
     WLOGFI("session update rect: id: %{public}d, rect[%{public}d, %{public}d, %{public}u, %{public}u], "\
@@ -325,6 +335,7 @@ WSError Session::UpdateRect(const WSRect& rect, SizeChangeReason reason)
     sessionStage_->UpdateRect(rect, reason);
     return WSError::WS_OK;
 }
+
 
 WSError Session::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
     const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig, sptr<WindowSessionProperty> property, sptr<IRemoteObject> token)
@@ -357,12 +368,36 @@ WSError Session::ConnectImpl(const sptr<ISessionStage>& sessionStage, const sptr
     }
     property_ = property;
 
+    FillSessionInfo(GetSessionInfo());
     UpdateSessionState(SessionState::STATE_CONNECT);
     // once update rect before connect, update again when connect
     UpdateRect(winRect_, SizeChangeReason::UNDEFINED);
     NotifyConnect();
     DelayedSingleton<ANRManager>::GetInstance()->SetApplicationPid(persistentId_, callingPid_);
     return WSError::WS_OK;
+}
+
+void Session::FillSessionInfo(SessionInfo &sessionInfo) {
+    auto uid = GetCallingUid() / UID_TRANSFORM_DIVISOR;
+    auto abilityInfo = SessionUtils::QueryAbilityInfoFromBMS(uid, sessionInfo.bundleName_, sessionInfo.abilityName_,
+        sessionInfo.moduleName_);
+    if (abilityInfo == nullptr) {
+        return;
+    }
+    if (sessionInfo.startMethod != OHOS::Rosen::StartMethod::START_CALL) {
+        sessionInfo.startMethod = OHOS::Rosen::StartMethod::START_NORMAL;
+    }
+    sessionInfo.removeMissionAfterTerminate = abilityInfo->removeMissionAfterTerminate;
+    sessionInfo.excludeFromMissions = abilityInfo->excludeFromMissions;
+    sessionInfo.continuable = abilityInfo->continuable;
+    sessionInfo.unClearable = abilityInfo->unclearableMission;
+    sessionInfo.time = GetCurrentTime();
+    sessionInfo.label = abilityInfo->label;
+    sessionInfo.iconPath = abilityInfo->iconPath;
+    WLOGFI("FillSessionInfo end, removeMissionAfterTerminate: %{public}d excludeFromMissions: %{public}d "
+        "unclearable:%{public}d,continuable:%{public}d  label:%{public}s iconPath:%{public}s",
+        sessionInfo.removeMissionAfterTerminate, sessionInfo.excludeFromMissions, sessionInfo.unClearable, sessionInfo.continuable,
+        sessionInfo.label.c_str(), sessionInfo.iconPath.c_str());
 }
 
 WSError Session::UpdateWindowSessionProperty(sptr<WindowSessionProperty> property)
@@ -470,6 +505,8 @@ WSError Session::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ability
         WLOGFE("abilitySessionInfo is null");
         return WSError::WS_ERROR_INVALID_SESSION;
     }
+    sessionInfo_.startMethod = OHOS::Rosen::StartMethod::START_CALL;
+
     SessionInfo info;
     info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
     info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
