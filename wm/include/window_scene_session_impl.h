@@ -18,9 +18,11 @@
 
 #include "window_session_impl.h"
 
+#include "prepare_terminate_callback_stub.h"
+
 namespace OHOS {
 namespace Rosen {
-class WindowSceneSessionImpl : public WindowSessionImpl {
+class WindowSceneSessionImpl : public WindowSessionImpl, AAFwk::PrepareTerminateCallbackStub {
 public:
     explicit WindowSceneSessionImpl(const sptr<WindowOption>& option);
     ~WindowSceneSessionImpl();
@@ -100,6 +102,8 @@ public:
     WMError UpdateSurfaceNodeAfterCustomAnimation(bool isAdd) override;
     WMError SetAlpha(float alpha) override;
     void DumpSessionElementInfo(const std::vector<std::string>& params) override;
+
+    void PendingClose();
     
 protected:
     void DestroySubWindow();
