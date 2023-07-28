@@ -382,6 +382,12 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
         WLOGFE("UpdateProperty failed with errCode:%{public}d", static_cast<int32_t>(ret));
         return ret;
     }
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW) {
+        property_->SetRequestRect(GetSystemAlarmWindowDefaultSize(property_->GetRequestRect()));
+        WSRect wsRect = { property_->GetRequestRect().posX_, property_->GetRequestRect().posY_,
+            property_->GetRequestRect().width_, property_->GetRequestRect().height_ };
+        hostSession_->UpdateSessionRect(wsRect, SizeChangeReason::UNDEFINED);
+    }
     ret = static_cast<WMError>(hostSession_->Foreground(property_));
     if (ret == WMError::WM_OK) {
         // update sub window state if this is main window
