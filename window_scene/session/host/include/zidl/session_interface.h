@@ -57,6 +57,8 @@ public:
         TRANS_ID_GET_AVOID_AREA,
         TRANS_ID_UPDATE_WINDOW_SESSION_PROPERTY,
         TRANS_ID_SET_ASPECT_RATIO,
+        TRANS_ID_UPDATE_WINDOW_ANIMATION_FLAG,
+        TRANS_ID_UPDATE_CUSTOM_ANIMATION,
 
         // Extension
         TRANS_ID_TRANSFER_ABILITY_RESULT = 500,
@@ -66,7 +68,7 @@ public:
     virtual WSError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
         sptr<WindowSessionProperty> property = nullptr, sptr<IRemoteObject> token = nullptr) = 0;
-    virtual WSError Foreground() = 0;
+    virtual WSError Foreground(sptr<WindowSessionProperty> property) = 0;
     virtual WSError Background() = 0;
     virtual WSError Disconnect() = 0;
     virtual WSError PendingSessionActivation(const sptr<AAFwk::SessionInfo> abilitySessionInfo) = 0;
@@ -80,8 +82,8 @@ public:
     virtual WSError UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason) = 0;
     virtual WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-        sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session) = 0;
-    virtual WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId) = 0;
+        sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session) = 0;
+    virtual WSError DestroyAndDisconnectSpecificSession(const int32_t& persistentId) = 0;
     virtual WSError OnNeedAvoid(bool status) = 0;
     virtual AvoidArea GetAvoidAreaByType(AvoidAreaType type) = 0;
     virtual WSError RequestSessionBack() = 0;
@@ -90,6 +92,8 @@ public:
     virtual WSError GetGlobalMaximizeMode(MaximizeMode& mode) = 0;
     virtual WSError UpdateWindowSessionProperty(sptr<WindowSessionProperty>) = 0;
     virtual WSError SetAspectRatio(float ratio) = 0;
+    virtual WSError UpdateWindowAnimationFlag(bool needDefaultAnimationFlag) = 0;
+    virtual WSError UpdateWindowSceneAfterCustomAnimation(bool isAdd) = 0;
 
     // extension session
     virtual WSError TransferAbilityResult(uint32_t resultCode, const AAFwk::Want& want) = 0;

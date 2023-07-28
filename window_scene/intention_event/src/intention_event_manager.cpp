@@ -49,13 +49,27 @@ void IntentionEventManager::InputEventListener::OnInputEvent(
         WLOGFE("uiContent_ is null");
         return;
     }
+    if (pointerEvent != nullptr) {
+        int32_t action = pointerEvent->GetPointerAction();
+        if (action == MMI::PointerEvent::POINTER_ACTION_DOWN ||
+            action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
+            int32_t pointerId = pointerEvent->GetPointerId();
+            MMI::PointerEvent::PointerItem pointerItem;
+            if (!pointerEvent->GetPointerItem(pointerId, pointerItem)) {
+                WLOGFE("uiContent_ is null");
+            } else {
+                SceneSessionManager::GetInstance().OnOutsideDownEvent(
+                    pointerItem.GetDisplayX(), pointerItem.GetDisplayY());
+            }
+        }
+    }
     uiContent_->ProcessPointerEvent(pointerEvent);
 }
 
 void IntentionEventManager::InputEventListener::OnInputEvent(
     std::shared_ptr<MMI::KeyEvent> keyEvent) const
 {
-    uint64_t focusedSessionId = SceneSessionManager::GetInstance().GetFocusedSession();
+    auto focusedSessionId = SceneSessionManager::GetInstance().GetFocusedSession();
     if (focusedSessionId == INVALID_SESSION_ID) {
         WLOGFE("focusedSessionId is invalid");
         return;

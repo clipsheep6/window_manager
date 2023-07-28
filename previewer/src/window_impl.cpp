@@ -58,6 +58,11 @@ void WindowImpl::CreateSurfaceNode(const std::string name, const SendRenderDataC
     surfaceNode_ = RSSurfaceNode::Create(rsSurfaceNodeConfig);
 }
 
+void WindowImpl::SetContentInfoCallback(const ContentInfoCallback& callback)
+{
+    contentInfoCallback_ = callback;
+}
+
 sptr<Window> WindowImpl::Find(const std::string& name)
 {
     return nullptr;
@@ -98,12 +103,12 @@ std::shared_ptr<RSSurfaceNode> WindowImpl::GetSurfaceNode() const
 
 Rect WindowImpl::GetRect() const
 {
-    return Rect{0,0,0,0};
+    return Rect{0, 0, 0, 0};
 }
 
 Rect WindowImpl::GetRequestRect() const
 {
-    return Rect{0,0,0,0};
+    return Rect{0, 0, 0, 0};
 }
 
 WindowType WindowImpl::GetType() const
@@ -255,6 +260,9 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
         return WMError::WM_ERROR_NULLPTR;
     }
     UpdateViewportConfig();
+    if (contentInfoCallback_) {
+        contentInfoCallback_(contentInfo);
+    }
     return WMError::WM_OK;
 }
 
@@ -731,7 +739,7 @@ WMError WindowImpl::SetBackdropBlurStyle(WindowBlurStyle blurStyle)
     return WMError::WM_OK;
 }
 
-WMError WindowImpl::NotifyMemoryLevel(int32_t level) const
+WMError WindowImpl::NotifyMemoryLevel(int32_t level)
 {
     return WMError::WM_OK;
 }
@@ -827,7 +835,7 @@ void WindowImpl::SetSize(int32_t width, int32_t height)
 void WindowImpl::SetDensity(float density)
 {
     WLOGFD("SetDensity : density=%{public}f", density);
-    if (abs(density_ - density) <= 0.000001) {
+    if (abs(density_ - density) <= 0.000001) { // 0.000001: near zero.
         return;
     }
     density_ = density;

@@ -36,9 +36,13 @@ public:
     WSError NotifyDestroy() override;
     void NotifyTouchDialogTarget() override;
     WSError NotifyTransferComponentData(const AAFwk::WantParams& wantParams) override;
+    void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info) override;
+    WSError UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type) override;
+    void NotifyScreenshot() override;
+    void DumpSessionElementInfo(const std::vector<std::string>& params)  override;
+
 private:
     static inline BrokerDelegator<SessionStageProxy> delegator_;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_SESSION_STAGE_RPOXY_H
-

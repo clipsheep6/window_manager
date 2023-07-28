@@ -28,7 +28,7 @@
         "components": [
           "sensor",
           "ability_base",
-          "graphic_standard",
+          "graphic_2d",
           "hisysevent",
           "ability_runtime",
           "napi",
@@ -46,7 +46,7 @@
           "display_manager",
           "config_policy",
           "ace_engine",
-          "multimedia_image_framework",
+          "image_framework",
           "preferences",
           "hiview",
           "hicollie",
@@ -63,7 +63,8 @@
           "frame_aware_sched",
           "screenlock_mgr",
           "previewer",
-          "hilog"
+          "hilog",
+          "memmgr_plugin"
         ],
         "third_party": [
           "libjpeg-turbo",
@@ -106,7 +107,8 @@
                 "window_manager.h",
                 "window_option.h",
                 "window_scene.h",
-                "wm_common.h"
+                "wm_common.h",
+                "occupied_area_change_info.h"
               ],
               "header_base": "//foundation/window/window_manager/interfaces/innerkits/wm"
             }
@@ -206,7 +208,8 @@
             "name": "//foundation/window/window_manager/wmserver:sms",
             "header": {
               "header_files": [
-                "mock_session_manager_service.h"
+                "mock_session_manager_service.h",
+                "mock_screen_manager_service.h"
               ],
               "header_base": "//foundation/window/window_manager/wmserver/include"
             }

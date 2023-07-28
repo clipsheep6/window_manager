@@ -134,12 +134,20 @@ sptr<Window> Window::Find(const std::string& windowName)
 
 sptr<Window> Window::GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context)
 {
-    return WindowImpl::GetTopWindowWithContext(context);
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        return WindowSceneSessionImpl::GetTopWindowWithContext(context);
+    } else {
+        return WindowImpl::GetTopWindowWithContext(context);
+    }
 }
 
 sptr<Window> Window::GetTopWindowWithId(uint32_t mainWinId)
 {
-    return WindowImpl::GetTopWindowWithId(mainWinId);
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        return WindowSceneSessionImpl::GetTopWindowWithId(mainWinId);
+    } else {
+        return WindowImpl::GetTopWindowWithId(mainWinId);
+    }
 }
 
 std::vector<sptr<Window>> Window::GetSubWindow(uint32_t parentId)
@@ -155,30 +163,6 @@ void Window::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configu
     } else {
         WindowImpl::UpdateConfigurationForAll(configuration);
     }
-}
-
-bool OccupiedAreaChangeInfo::Marshalling(Parcel& parcel) const
-{
-    return parcel.WriteInt32(rect_.posX_) && parcel.WriteInt32(rect_.posY_) &&
-        parcel.WriteUint32(rect_.width_) && parcel.WriteUint32(rect_.height_) &&
-        parcel.WriteUint32(static_cast<uint32_t>(type_)) &&
-        parcel.WriteUint32(safeHeight_);
-}
-
-OccupiedAreaChangeInfo* OccupiedAreaChangeInfo::Unmarshalling(Parcel& parcel)
-{
-    OccupiedAreaChangeInfo* occupiedAreaChangeInfo = new OccupiedAreaChangeInfo();
-    bool res = parcel.ReadInt32(occupiedAreaChangeInfo->rect_.posX_) &&
-        parcel.ReadInt32(occupiedAreaChangeInfo->rect_.posY_) &&
-        parcel.ReadUint32(occupiedAreaChangeInfo->rect_.width_) &&
-        parcel.ReadUint32(occupiedAreaChangeInfo->rect_.height_);
-    if (!res) {
-        delete occupiedAreaChangeInfo;
-        return nullptr;
-    }
-    occupiedAreaChangeInfo->type_ = static_cast<OccupiedAreaType>(parcel.ReadUint32());
-    occupiedAreaChangeInfo->safeHeight_ = parcel.ReadUint32();
-    return occupiedAreaChangeInfo;
 }
 } // namespace Rosen
 } // namespace OHOS

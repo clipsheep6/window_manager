@@ -63,7 +63,11 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_{
         &SessionStub::HandleUpdateWindowSessionProperty),
     std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_SET_ASPECT_RATIO),
         &SessionStub::HandleSetAspectRatio),
+    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_UPDATE_WINDOW_ANIMATION_FLAG),
+        &SessionStub::HandleSetWindowAnimationFlag),
 
+    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_UPDATE_CUSTOM_ANIMATION),
+        &SessionStub::HandleUpdateWindowSceneAfterCustomAnimation),
     // for extension only
     std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_TRANSFER_ABILITY_RESULT),
         &SessionStub::HandleTransferAbilityResult),
@@ -90,10 +94,26 @@ int SessionStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParc
     return (this->*(func->second))(data, reply);
 }
 
+int SessionStub::HandleSetWindowAnimationFlag(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("HandleSetWindowAnimationFlag!");
+    bool isNeedWindowAnimationFlag = data.ReadBool();
+    const WSError& errCode = UpdateWindowAnimationFlag(isNeedWindowAnimationFlag);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
 int SessionStub::HandleForeground(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("Foreground!");
-    const WSError& errCode = Foreground();
+    sptr<WindowSessionProperty> property = nullptr;
+    if (data.ReadBool()) {
+        property = data.ReadStrongParcelable<WindowSessionProperty>();
+    } else {
+        WLOGFW("Property not exist!");
+        property = new WindowSessionProperty();
+    }
+    const WSError& errCode = Foreground(property);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -144,7 +164,7 @@ int SessionStub::HandleConnect(MessageParcel& data, MessageParcel& reply)
     WSError errCode = Connect(sessionStage, eventChannel, surfaceNode, systemConfig, property, token);
     reply.WriteParcelable(&systemConfig);
     if (property) {
-        reply.WriteUint64(property->GetPersistentId());
+        reply.WriteInt32(property->GetPersistentId());
     }
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
@@ -201,7 +221,7 @@ int SessionStub::HandlePendingSessionActivation(MessageParcel& data, MessageParc
         abilitySessionInfo->callerToken = data.ReadRemoteObject();
     }
     abilitySessionInfo->requestCode = data.ReadInt32();
-    abilitySessionInfo->persistentId = data.ReadInt64();
+    abilitySessionInfo->persistentId = data.ReadInt32();
     abilitySessionInfo->state = static_cast<AAFwk::CallToState>(data.ReadInt32());
     abilitySessionInfo->uiAbilityId = data.ReadInt64();
     if (data.ReadBool()) {
@@ -256,14 +276,14 @@ int SessionStub::HandleCreateAndConnectSpecificSession(MessageParcel& data, Mess
     } else {
         WLOGFW("Property not exist!");
     }
-    uint64_t persistentId = INVALID_SESSION_ID;
+    auto persistentId = INVALID_SESSION_ID;
     sptr<ISession> sceneSession;
     CreateAndConnectSpecificSession(sessionStage, eventChannel, surfaceNode,
         property, persistentId, sceneSession);
     if (sceneSession== nullptr) {
         return ERR_INVALID_STATE;
     }
-    reply.WriteUint64(persistentId);
+    reply.WriteInt32(persistentId);
     reply.WriteRemoteObject(sceneSession->AsObject());
     reply.WriteUint32(static_cast<uint32_t>(WSError::WS_OK));
     return ERR_NONE;
@@ -271,7 +291,7 @@ int SessionStub::HandleCreateAndConnectSpecificSession(MessageParcel& data, Mess
 
 int SessionStub::HandleDestroyAndDisconnectSpecificSession(MessageParcel& data, MessageParcel& reply)
 {
-    uint64_t persistentId = data.ReadUint64();
+    auto persistentId = data.ReadUint32();
     const WSError& ret = DestroyAndDisconnectSpecificSession(persistentId);
     reply.WriteUint32(static_cast<uint32_t>(ret));
     return ERR_NONE;
@@ -358,6 +378,15 @@ int SessionStub::HandleSetAspectRatio(MessageParcel& data, MessageParcel& reply)
     WLOGFD("HandleSetAspectRatio!");
     float ratio = data.ReadFloat();
     const WSError& errCode = SetAspectRatio(ratio);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleUpdateWindowSceneAfterCustomAnimation(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGD("HandleUpdateWindowSceneAfterCustomAnimation!");
+    bool isAdd = data.ReadBool();
+    const WSError& errCode = UpdateWindowSceneAfterCustomAnimation(isAdd);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }

@@ -39,6 +39,14 @@ const std::map<uint32_t, SessionStageStubFunc> SessionStageStub::stubFuncMap_{
         &SessionStageStub::HandleNotifyTouchDialogTarget),
     std::make_pair(static_cast<uint32_t>(SessionStageMessage::TRANS_ID_NOTIFY_TRANSFER_COMPONENT_DATA),
         &SessionStageStub::HandleNotifyTransferComponentData),
+    std::make_pair(static_cast<uint32_t>(SessionStageMessage::TRANS_ID_NOTIFY_OCCUPIED_AREA_CHANGE_INFO),
+        &SessionStageStub::HandleNotifyOccupiedAreaChange),
+    std::make_pair(static_cast<uint32_t>(SessionStageMessage::TRANS_ID_UPDATE_AVOID_AREA),
+        &SessionStageStub::HandleUpdateAvoidArea),
+    std::make_pair(static_cast<uint32_t>(SessionStageMessage::TRANS_ID_NOTIFY_SCREEN_SHOT),
+        &SessionStageStub::HandleNotifyScreenshot),
+    std::make_pair(static_cast<uint32_t>(SessionStageMessage::TRANS_ID_DUMP_SESSSION_ELEMENT_INFO),
+        &SessionStageStub::HandleDumpSessionElementInfo)
 };
 
 int SessionStageStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -119,6 +127,49 @@ int SessionStageStub::HandleNotifyTransferComponentData(MessageParcel& data, Mes
     }
     WSError errCode = NotifyTransferComponentData(*wantParams);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleNotifyOccupiedAreaChange(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("HandleNotifyOccupiedAreaChangeInfo!");
+    sptr<OccupiedAreaChangeInfo> info(data.ReadParcelable<OccupiedAreaChangeInfo>());
+    if (info == nullptr) {
+        WLOGFE("Occupied info is nullptr");
+        return ERR_INVALID_VALUE;
+    }
+    NotifyOccupiedAreaChangeInfo(info);
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleUpdateAvoidArea(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("HandleUpdateAvoidArea!");
+    sptr<AvoidArea> avoidArea = data.ReadStrongParcelable<AvoidArea>();
+    uint32_t type;
+    if (!data.ReadUint32(type)) {
+        return ERR_INVALID_VALUE;
+    }
+    UpdateAvoidArea(avoidArea, static_cast<AvoidAreaType>(type));
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleNotifyScreenshot(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("Notify Screen shot!");
+    NotifyScreenshot();
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleDumpSessionElementInfo(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("HandleDumpSessionElementInfo!");
+    std::vector<std::string> params;
+    if (!data.ReadStringVector(&params)) {
+        WLOGFE("Fail to read params");
+        return -1;
+    }
+    DumpSessionElementInfo(params);
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

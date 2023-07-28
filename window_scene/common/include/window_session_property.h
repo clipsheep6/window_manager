@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <parcel.h>
 #include "interfaces/include/ws_common.h"
+#include "interfaces/include/ws_common_inner.h"
 #include "wm_common.h"
 #include "dm_common.h"
 #include <cfloat>
@@ -67,19 +68,23 @@ public:
     void SetSystemPrivacyMode(bool isSystemPrivate);
     void SetDisplayId(uint64_t displayId);
     void SetWindowType(WindowType type);
-    void SetParentId(uint32_t parentId);
-    void SetPersistentId(uint64_t persistentId);
-    void SetParentPersistentId(uint64_t persistentId);
+    void SetParentId(int32_t parentId);
+    void SetPersistentId(int32_t persistentId);
+    void SetParentPersistentId(int32_t persistentId);
     void SetAccessTokenId(uint32_t accessTokenId);
     void SetTokenState(bool hasToken);
     void SetMaximizeMode(MaximizeMode mode);
     void SetWindowMode(WindowMode mode);
     void SetWindowLimits(const WindowLimits& windowLimits);
     void SetSystemBarProperty(WindowType type, const SystemBarProperty& property);
+    void SetSessionGravity(SessionGravity gravity_, uint32_t percent);
     void SetDecorEnable(bool isDecorEnable);
-    void SetZOrder(uint32_t zOrder);
+    void SetAnimationFlag(uint32_t animationFlag);
+    void SetTransform(const Transform& trans);
     void SetWindowFlags(uint32_t flags);
     void AddWindowFlag(WindowFlag flag);
+    void SetModeSupportInfo(uint32_t modeSupportInfo);
+    void SetFloatingWindowAppType(bool isAppType);
 
     const std::string& GetWindowName() const;
     const SessionInfo& GetSessionInfo() const;
@@ -94,19 +99,23 @@ public:
     Orientation GetRequestedOrientation() const;
     bool GetPrivacyMode() const;
     bool GetSystemPrivacyMode() const;
-    uint32_t GetParentId() const;
+    int32_t GetParentId() const;
     uint32_t GetWindowFlags() const;
     uint64_t GetDisplayId() const;
-    uint64_t GetPersistentId() const;
-    uint64_t GetParentPersistentId() const;
+    int32_t GetPersistentId() const;
+    int32_t GetParentPersistentId() const;
     uint32_t GetAccessTokenId() const;
     bool GetTokenState() const;
     MaximizeMode GetMaximizeMode() const;
     WindowMode GetWindowMode() const;
     WindowLimits GetWindowLimits() const;
+    uint32_t GetModeSupportInfo() const;
     const std::unordered_map<WindowType, SystemBarProperty>& GetSystemBarProperty() const;
+    void GetSessionGravity(SessionGravity& gravity, uint32_t& percent);
     bool IsDecorEnable();
-    uint32_t GetZOrder();
+    uint32_t GetAnimationFlag() const;
+    const Transform& GetTransform() const;
+    bool IsFloatingWindowAppType() const;
 
     bool MarshallingWindowLimits(Parcel& parcel) const;
     static void UnmarshallingWindowLimits(Parcel& parcel, WindowSessionProperty* property);
@@ -114,6 +123,7 @@ public:
     static void UnMarshallingSystemBarMap(Parcel& parcel, WindowSessionProperty* property);
     bool Marshalling(Parcel& parcel) const override;
     static WindowSessionProperty* Unmarshalling(Parcel& parcel);
+
 private:
     std::string windowName_;
     SessionInfo sessionInfo_;
@@ -130,19 +140,25 @@ private:
     bool isPrivacyMode_ { false };
     bool isSystemPrivacyMode_ { false };
     uint64_t displayId_ = 0;
-    uint32_t parentId_ = INVALID_SESSION_ID; // parentId of sceneSession, which is low 32 bite of parentPersistentId_
+    int32_t parentId_ = INVALID_SESSION_ID; // parentId of sceneSession, which is low 32 bite of parentPersistentId_
     uint32_t flags_ = 0;
-    uint64_t persistentId_ = INVALID_SESSION_ID;
-    uint64_t parentPersistentId_ = INVALID_SESSION_ID;
+    int32_t persistentId_ = INVALID_SESSION_ID;
+    int32_t parentPersistentId_ = INVALID_SESSION_ID;
     uint32_t accessTokenId_ = INVALID_SESSION_ID;
     MaximizeMode maximizeMode_ = MaximizeMode::MODE_RECOVER;
     WindowMode windowMode_ = WindowMode::WINDOW_MODE_FULLSCREEN;
     WindowLimits limits_;
+    SessionGravity sessionGravity_ = SessionGravity::SESSION_GRAVITY_BOTTOM;
+    uint32_t sessionGravitySizePercent_ = 0;
+    uint32_t modeSupportInfo_ {WindowModeSupport::WINDOW_MODE_SUPPORT_ALL};
     std::unordered_map<WindowType, SystemBarProperty> sysBarPropMap_ {
         { WindowType::WINDOW_TYPE_STATUS_BAR,     SystemBarProperty(true, 0x00FFFFFF, 0xFF000000) },
     };
-    uint32_t zOrder_ = 0;
     bool isDecorEnable_ = false;
+    uint32_t animationFlag_ { static_cast<uint32_t>(WindowAnimation::DEFAULT) };
+    // Transform info
+    Transform trans_;
+    bool isFloatingWindowAppType_ = false;
 };
 
 struct SystemSessionConfig : public Parcelable {

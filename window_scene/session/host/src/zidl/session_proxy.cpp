@@ -30,7 +30,7 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "SessionProxy"};
 }
 
-WSError SessionProxy::Foreground()
+WSError SessionProxy::Foreground(sptr<WindowSessionProperty> property)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -38,6 +38,18 @@ WSError SessionProxy::Foreground()
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (property) {
+        if (!data.WriteBool(true) || !data.WriteParcelable(property.GetRefPtr())) {
+            WLOGFE("Write property failed");
+            return WSError::WS_ERROR_IPC_FAILED;
+        }
+    } else {
+        if (!data.WriteBool(false)) {
+            WLOGFE("Write property failed");
+            return WSError::WS_ERROR_IPC_FAILED;
+        }
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(SessionMessage::TRANS_ID_FOREGROUND),
@@ -134,7 +146,7 @@ WSError SessionProxy::Connect(const sptr<ISessionStage>& sessionStage, const spt
     sptr<SystemSessionConfig> config = reply.ReadParcelable<SystemSessionConfig>();
     systemConfig = *config;
     if (property) {
-        property->SetPersistentId(reply.ReadUint64());
+        property->SetPersistentId(reply.ReadInt32());
     }
     int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
@@ -175,7 +187,7 @@ WSError SessionProxy::PendingSessionActivation(sptr<AAFwk::SessionInfo> abilityS
         WLOGFE("Write requestCode info failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (!(data.WriteInt64(abilitySessionInfo->persistentId))) {
+    if (!(data.WriteInt32(static_cast<int32_t>(abilitySessionInfo->persistentId)))) {
         WLOGFE("Write persistentId failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
@@ -245,6 +257,7 @@ WSError SessionProxy::TerminateSession(const sptr<AAFwk::SessionInfo> abilitySes
         return WSError::WS_ERROR_IPC_FAILED;
     }
     int32_t ret = reply.ReadInt32();
+    abilitySessionInfo->resultCode = ret;
     return static_cast<WSError>(ret);
 }
 
@@ -372,7 +385,7 @@ WSError SessionProxy::UpdateSessionRect(const WSRect& rect, const SizeChangeReas
 
 WSError SessionProxy::CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
     const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-    sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session)
+    sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -411,7 +424,7 @@ WSError SessionProxy::CreateAndConnectSpecificSession(const sptr<ISessionStage>&
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    persistentId = reply.ReadUint64();
+    persistentId = reply.ReadInt32();
     sptr<IRemoteObject> sessionObject = reply.ReadRemoteObject();
     if (sessionObject == nullptr) {
         WLOGFE("ReadRemoteObject failed");
@@ -422,7 +435,7 @@ WSError SessionProxy::CreateAndConnectSpecificSession(const sptr<ISessionStage>&
     return static_cast<WSError>(ret);
 }
 
-WSError SessionProxy::DestroyAndDisconnectSpecificSession(const uint64_t& persistentId)
+WSError SessionProxy::DestroyAndDisconnectSpecificSession(const int32_t& persistentId)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -431,8 +444,8 @@ WSError SessionProxy::DestroyAndDisconnectSpecificSession(const uint64_t& persis
         WLOGFE("WriteInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (!data.WriteUint64(persistentId)) {
-        WLOGFE("Write uint64_t failed");
+    if (!data.WriteInt32(persistentId)) {
+        WLOGFE("Write persistentId failed");
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(
         SessionMessage::TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION),
@@ -488,7 +501,7 @@ AvoidArea SessionProxy::GetAvoidAreaByType(AvoidAreaType type)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
+    MessageOption option(MessageOption::TF_SYNC);
     AvoidArea avoidArea;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
@@ -524,7 +537,7 @@ WSError SessionProxy::RequestSessionBack()
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    int32_t ret = reply.ReadUint32();
+    int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
 }
 
@@ -532,7 +545,7 @@ WSError SessionProxy::MarkProcessed(int32_t eventId)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
+    MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
@@ -567,7 +580,7 @@ WSError OHOS::Rosen::SessionProxy::SetGlobalMaximizeMode(MaximizeMode mode)
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    int32_t ret = reply.ReadUint32();
+    int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
 }
 
@@ -586,7 +599,7 @@ WSError SessionProxy::GetGlobalMaximizeMode(MaximizeMode& mode)
         return WSError::WS_ERROR_IPC_FAILED;
     }
     mode = static_cast<MaximizeMode>(reply.ReadUint32());
-    int32_t ret = reply.ReadUint32();
+    int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
 }
 
@@ -634,6 +647,28 @@ WSError SessionProxy::SetAspectRatio(float ratio)
     return static_cast<WSError>(ret);
 }
 
+WSError SessionProxy::UpdateWindowSceneAfterCustomAnimation(bool isAdd)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteBool(isAdd)) {
+        WLOGFE("Write isAdd failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionMessage::TRANS_ID_UPDATE_CUSTOM_ANIMATION),
+                              data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WSError>(ret);
+}
+
 WSError SessionProxy::TransferAbilityResult(uint32_t resultCode, const AAFwk::Want& want)
 {
     MessageParcel data;
@@ -656,7 +691,7 @@ WSError SessionProxy::TransferAbilityResult(uint32_t resultCode, const AAFwk::Wa
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    int32_t ret = reply.ReadUint32();
+    int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
 }
 
@@ -678,7 +713,7 @@ WSError SessionProxy::TransferExtensionData(const AAFwk::WantParams& wantParams)
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    int32_t ret = reply.ReadUint32();
+    int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
 }
 
@@ -696,5 +731,27 @@ void SessionProxy::NotifyRemoteReady()
         WLOGFE("SendRequest failed");
         return;
     }
+}
+
+WSError SessionProxy::UpdateWindowAnimationFlag(bool needDefaultAnimationFlag)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteBool(needDefaultAnimationFlag)) {
+        WLOGFE("wantParams write failed.");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionMessage::TRANS_ID_UPDATE_WINDOW_ANIMATION_FLAG),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WSError>(ret);
 }
 } // namespace OHOS::Rosen

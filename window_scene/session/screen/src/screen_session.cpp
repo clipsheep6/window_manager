@@ -17,6 +17,7 @@
 
 #include "window_manager_hilog.h"
 #include <transaction/rs_interfaces.h>
+#include <transaction/rs_transaction.h>
 
 namespace OHOS::Rosen {
 namespace {
@@ -31,6 +32,7 @@ ScreenSession::ScreenSession(ScreenId screenId, const ScreenProperty& property, 
 {
     Rosen::RSDisplayNodeConfig config = { .screenId = screenId_ };
     displayNode_ = Rosen::RSDisplayNode::Create(config);
+    RSTransaction::FlushImplicitTransaction();
 }
 
 ScreenSession::ScreenSession(const std::string& name, ScreenId smsId, ScreenId rsId, ScreenId defaultScreenId)
@@ -39,6 +41,7 @@ ScreenSession::ScreenSession(const std::string& name, ScreenId smsId, ScreenId r
     (void)rsId_;
     Rosen::RSDisplayNodeConfig config = { .screenId = screenId_ };
     displayNode_ = Rosen::RSDisplayNode::Create(config);
+    RSTransaction::FlushImplicitTransaction();
 }
 
 void ScreenSession::RegisterScreenChangeListener(IScreenChangeListener* screenChangeListener)
@@ -118,6 +121,16 @@ ScreenId ScreenSession::GetScreenId()
 ScreenProperty ScreenSession::GetScreenProperty() const
 {
     return property_;
+}
+
+void ScreenSession::UpdatePropertyByActiveMode() {
+    sptr<SupportedScreenModes> mode = GetActiveScreenMode();
+    if (mode != nullptr) {
+        auto screeBounds = property_.GetBounds();
+        screeBounds.rect_.width_ = mode->width_;
+        screeBounds.rect_.height_ = mode->height_;
+        property_.SetBounds(screeBounds);
+    }
 }
 
 std::shared_ptr<RSDisplayNode> ScreenSession::GetDisplayNode() const
@@ -601,5 +614,9 @@ sptr<ScreenGroupInfo> ScreenSessionGroup::ConvertToScreenGroupInfo() const
     return screenGroupInfo;
 }
 
-
+void ScreenSession::SetDisplayBoundary(const RectF& rect, const uint32_t& offsetY)
+{
+    property_.SetOffsetY(offsetY);
+    property_.SetBounds(RRect(rect, 0.0f, 0.0f));
+}
 } // namespace OHOS::Rosen

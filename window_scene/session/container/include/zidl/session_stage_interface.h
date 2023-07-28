@@ -19,6 +19,7 @@
 #include <iremote_broker.h>
 
 #include "interfaces/include/ws_common.h"
+#include "occupied_area_change_info.h"
 
 namespace OHOS::MMI {
 class PointerEvent;
@@ -39,12 +40,21 @@ public:
         TRANS_ID_NOTIFY_DESTROY,
         TRANS_ID_NOTIFY_TOUCH_DIALOG_TARGET,
         TRANS_ID_NOTIFY_TRANSFER_COMPONENT_DATA,
+        TRANS_ID_NOTIFY_OCCUPIED_AREA_CHANGE_INFO,
+        TRANS_ID_UPDATE_AVOID_AREA,
+        TRANS_ID_NOTIFY_SCREEN_SHOT,
+        TRANS_ID_DUMP_SESSSION_ELEMENT_INFO
     };
 
     virtual void NotifyPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) {}
     virtual void NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed) {}
     virtual void NotifyFocusActiveEvent(bool isFocusActive) {}
-    virtual void NotifyFocusWindowIdEvent(uint32_t windowId) {}
+    virtual void NotifyFocusWindowIdEvent(int32_t windowId) {}
+    virtual int32_t GetPersistentId() const
+    {
+        return -1;
+    }
+    virtual void NotifyFocusStateEvent(bool focusState) {}
     virtual WSError NotifyTransferComponentData(const AAFwk::WantParams& wantParams)
     {
         return WSError::WS_OK;
@@ -57,6 +67,10 @@ public:
     virtual WSError UpdateFocus(bool isFocused) = 0;
     virtual WSError NotifyDestroy() = 0;
     virtual void NotifyTouchDialogTarget() = 0;
+    virtual void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info) = 0;
+    virtual WSError UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type) = 0;
+    virtual void NotifyScreenshot() = 0;
+    virtual void DumpSessionElementInfo(const std::vector<std::string>& params) = 0;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_SESSION_STAGE_INTERFACE_H

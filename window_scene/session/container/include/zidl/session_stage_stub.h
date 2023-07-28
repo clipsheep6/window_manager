@@ -44,6 +44,10 @@ private:
     int HandleNotifyDestroy(MessageParcel& data, MessageParcel& reply);
     int HandleNotifyTouchDialogTarget(MessageParcel& data, MessageParcel& reply);
     int HandleNotifyTransferComponentData(MessageParcel& data, MessageParcel& reply);
+    int HandleNotifyOccupiedAreaChange(MessageParcel& data, MessageParcel& reply);
+    int HandleUpdateAvoidArea(MessageParcel& data, MessageParcel& reply);
+    int HandleNotifyScreenshot(MessageParcel& data, MessageParcel& reply);
+    int HandleDumpSessionElementInfo(MessageParcel& data, MessageParcel& reply);
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_SESSION_STAGE_STUB_H

@@ -29,9 +29,9 @@ public:
         SystemSessionConfig& systemConfig, sptr<WindowSessionProperty> property, sptr<IRemoteObject> token));
     MOCK_METHOD6(CreateAndConnectSpecificSession, WSError(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-        sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session));
+        sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session));
 
-    MOCK_METHOD0(Foreground, WSError(void));
+    MOCK_METHOD1(Foreground, WSError(sptr<WindowSessionProperty> property));
     MOCK_METHOD0(Background, WSError(void));
     MOCK_METHOD0(Disconnect, WSError(void));
 
@@ -47,6 +47,8 @@ public:
     MOCK_METHOD1(GetAvoidAreaByType, AvoidArea(AvoidAreaType type));
     MOCK_METHOD1(SetAspectRatio, WSError(float ratio));
     MOCK_METHOD1(ResetAspectRatio, WSError(float ratio));
+    MOCK_METHOD1(OnNeedAvoid, WSError(bool status));
+    MOCK_METHOD1(SetGlobalMaximizeMode, WSError(MaximizeMode mode));
 };
 } // namespace Rosen
 } // namespace OHOS

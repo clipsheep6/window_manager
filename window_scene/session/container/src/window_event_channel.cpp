@@ -46,11 +46,22 @@ WSError WindowEventChannel::TransferPointerEvent(const std::shared_ptr<MMI::Poin
         WLOGFE("session stage is null!");
         return WSError::WS_ERROR_NULLPTR;
     }
-    DelayedSingleton<ANRHandler>::GetInstance()->SetSessionStage(sessionStage_);
-    if (pointerEvent != nullptr) {
-        WLOGFD("SetProcessedCallback enter");
+    if (pointerEvent == nullptr) {
+        WLOGFE("PointerEvent null!");
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    auto pointerAction = pointerEvent->GetPointerAction();
+    if (pointerAction == MMI::PointerEvent::POINTER_ACTION_ENTER_WINDOW ||
+        pointerAction == MMI::PointerEvent::POINTER_ACTION_LEAVE_WINDOW ||
+        pointerAction == MMI::PointerEvent::POINTER_ACTION_PULL_IN_WINDOW ||
+        pointerAction == MMI::PointerEvent::POINTER_ACTION_PULL_OUT_WINDOW) {
+        WLOGFD("Dispatch by skipping receipt, action:%{public}s, eventId:%{public}d, persistentId:%{public}d",
+            pointerEvent->DumpPointerAction(), pointerEvent->GetId(), sessionStage_->GetPersistentId());
+    } else {
+        DelayedSingleton<ANRHandler>::GetInstance()->SetSessionStage(pointerEvent->GetId(), sessionStage_);
         pointerEvent->SetProcessedCallback(dispatchCallback_);
-        WLOGFD("SetProcessedCallback leave");
+        WLOGFD("Dispatch normally, action:%{public}s, eventId:%{public}d, persistentId:%{public}d",
+            pointerEvent->DumpPointerAction(), pointerEvent->GetId(), sessionStage_->GetPersistentId());
     }
     sessionStage_->NotifyPointerEvent(pointerEvent);
     return WSError::WS_OK;
@@ -64,7 +75,7 @@ WSError WindowEventChannel::TransferKeyEventForConsumed(
         WLOGFE("session stage is null!");
         return WSError::WS_ERROR_NULLPTR;
     }
-    DelayedSingleton<ANRHandler>::GetInstance()->SetSessionStage(sessionStage_);
+    DelayedSingleton<ANRHandler>::GetInstance()->SetSessionStage(keyEvent->GetId(), sessionStage_);
     if (keyEvent != nullptr) {
         WLOGFD("SetProcessedCallback enter");
         keyEvent->SetProcessedCallback(dispatchCallback_);
@@ -88,7 +99,7 @@ WSError WindowEventChannel::TransferFocusActiveEvent(bool isFocusActive)
 
 void WindowEventChannel::OnDispatchEventProcessed(int32_t eventId, int64_t actionTime)
 {
-    DelayedSingleton<ANRHandler>::GetInstance()->SetLastProcessedEventId(eventId, actionTime);
+    DelayedSingleton<ANRHandler>::GetInstance()->HandleEventConsumed(eventId, actionTime);
 }
 
 void WindowEventChannel::PrintKeyEvent(const std::shared_ptr<MMI::KeyEvent>& event)
@@ -140,14 +151,25 @@ void WindowEventChannel::PrintPointerEvent(const std::shared_ptr<MMI::PointerEve
     }
 }
 
-WSError WindowEventChannel::TransferFocusWindowId(uint32_t windowId)
+WSError WindowEventChannel::TransferFocusWindowId(int32_t windowId)
 {
-    WLOGFD("WindowEventChannel receive focus window Id event: %{public}u", windowId);
+    WLOGFD("WindowEventChannel receive focus window Id event: %{public}d", windowId);
     if (!sessionStage_) {
         WLOGFE("session stage is null!");
         return WSError::WS_ERROR_NULLPTR;
     }
     sessionStage_->NotifyFocusWindowIdEvent(windowId);
+    return WSError::WS_OK;
+}
+
+WSError WindowEventChannel::TransferFocusState(bool focusState)
+{
+    WLOGFD("WindowEventChannel receive focus state event: %{public}d", static_cast<int>(focusState));
+    if (!sessionStage_) {
+        WLOGFE("session stage is null!");
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    sessionStage_->NotifyFocusStateEvent(focusState);
     return WSError::WS_OK;
 }
 } // namespace OHOS::Rosen

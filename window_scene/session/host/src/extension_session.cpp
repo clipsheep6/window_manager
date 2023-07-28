@@ -15,6 +15,7 @@
 
 #include "session/host/include/extension_session.h"
 
+#include "ws_common.h"
 #include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
@@ -40,7 +41,6 @@ WSError ExtensionSession::TransferAbilityResult(uint32_t resultCode, const AAFwk
 
 WSError ExtensionSession::TransferExtensionData(const AAFwk::WantParams& wantParams)
 {
-    TransferComponentData(wantParams);
     if (extSessionEventCallback_ != nullptr &&
         extSessionEventCallback_->transferExtensionDataFunc_ != nullptr) {
         extSessionEventCallback_->transferExtensionDataFunc_(wantParams);

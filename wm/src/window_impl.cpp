@@ -108,7 +108,14 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
     }
     name_ = option->GetWindowName();
 
-    surfaceNode_ = CreateSurfaceNode(property_->GetWindowName(), option->GetWindowType());
+    std::string surfaceNodeName;
+    if (auto bundleName = option->GetBundleName(); bundleName != "") {
+        surfaceNodeName = bundleName + "#" + property_->GetWindowName();
+    } else {
+        surfaceNodeName = property_->GetWindowName();
+    }
+    WLOGFD("surfaceNodeName: %{public}s", surfaceNodeName.c_str());
+    surfaceNode_ = CreateSurfaceNode(surfaceNodeName, option->GetWindowType());
 
     moveDragProperty_ = new (std::nothrow) MoveDragProperty();
     if (moveDragProperty_ == nullptr) {
@@ -544,7 +551,10 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
         uiContent->Initialize(this, contentInfo, storage);
     }
     // make uiContent available after Initialize/Restore
-    uiContent_ = std::move(uiContent);
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        uiContent_ = std::move(uiContent);
+    }
     if (isIgnoreSafeAreaNeedNotify_) {
         uiContent_->SetIgnoreViewSafeArea(isIgnoreSafeArea_);
     }
@@ -1459,6 +1469,7 @@ WMError WindowImpl::Hide(uint32_t reason, bool withAnimation, bool isFromInnerki
     }
     if (state_ == WindowState::STATE_HIDDEN || state_ == WindowState::STATE_CREATED) {
         WLOGI("already hidden, id: %{public}u", property_->GetWindowId());
+        NotifyBackgroundFailed(WMError::WM_DO_NOTHING);
         return WMError::WM_OK;
     }
     WMError ret = WMError::WM_OK;
@@ -1551,7 +1562,7 @@ WMError WindowImpl::Resize(uint32_t width, uint32_t height)
 WMError WindowImpl::SetWindowGravity(WindowGravity gravity, uint32_t percent)
 {
     WLOGFD("id:%{public}d SetWindowGravity %{public}u %{public}u",
-            property_->GetWindowId(), gravity, percent);
+        property_->GetWindowId(), gravity, percent);
 
     return SingletonContainer::Get<WindowAdapter>().SetWindowGravity(property_->GetWindowId(), gravity, percent);
 }
@@ -1775,8 +1786,9 @@ WMError WindowImpl::SetSnapshotSkip(bool isSkip)
         WLOGFE("set snapshot skip permission denied!");
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
-    surfaceNode_->SetSecurityLayer(isSkip || property_->GetSystemPrivacyMode());
-    RSTransaction::FlushImplicitTransaction();
+    auto ret = SetPrivacyMode(isSkip || property_->GetSystemPrivacyMode()); 
+    WLOGFD("id : %{public}u, set snapshot skip end. isSkip:%{public}u, systemPrivacyMode:%{public}u, ret:%{public}u",
+        GetWindowId(), isSkip, property_->GetSystemPrivacyMode(), ret);
     return WMError::WM_OK;
 }
 
@@ -2347,8 +2359,17 @@ void WindowImpl::HandleBackKeyPressedEvent(const std::shared_ptr<MMI::KeyEvent>&
     } else {
         WLOGFE("There is no back key event consumer");
     }
-    if (isConsumed || !WindowHelper::IsMainWindow(property_->GetWindowType())) {
-        WLOGD("Back key event is consumed or it is not a main window");
+    if (isConsumed) {
+        WLOGD("Back key event is consumed");
+        return;
+    }
+    PerformBack();
+}
+
+void WindowImpl::PerformBack()
+{
+    if(!WindowHelper::IsMainWindow(property_->GetWindowType())){
+        WLOGD("it is not a main window");
         return;
     }
     auto abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(context_);
@@ -3599,9 +3620,10 @@ WMError WindowImpl::SetBackdropBlurStyle(WindowBlurStyle blurStyle)
     return WMError::WM_OK;
 }
 
-WMError WindowImpl::NotifyMemoryLevel(int32_t level) const
+WMError WindowImpl::NotifyMemoryLevel(int32_t level)
 {
     WLOGFD("id: %{public}u, notify memory level: %{public}d", property_->GetWindowId(), level);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (uiContent_ == nullptr) {
         WLOGFE("Window %{public}s notify memory level failed, ace is null.", name_.c_str());
         return WMError::WM_ERROR_NULLPTR;

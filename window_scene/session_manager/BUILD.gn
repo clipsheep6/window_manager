@@ -19,7 +19,9 @@ config("session_manager_public_config") {
 
   include_dirs = [
     "${window_base_path}/interfaces/innerkits/wm",
+    "${window_base_path}/interfaces/include",
     "${window_base_path}/window_scene",
+    "${window_base_path}/window_scene/interfaces/include",
     "${window_base_path}/window_scene/session_manager/include",
     "${window_base_path}/window_scene/session_manager/include/zidl",
     "${window_base_path}/window_scene/session_manager_service/include",
@@ -69,7 +71,6 @@ ohos_shared_library("scene_session_manager") {
   public_configs = [ ":session_manager_public_config" ]
 
   deps = [
-    "${multimedia_path}/interfaces/innerkits:image_native",
     "${window_base_path}/utils:libwmutil",
     "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/session:scene_session",
@@ -80,6 +81,7 @@ ohos_shared_library("scene_session_manager") {
   external_deps = [
     "ability_base:session_info",
     "ability_base:want",
+    "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
     "ability_runtime:ability_start_setting",
     "bundle_framework:appexecfwk_base",
@@ -89,13 +91,15 @@ ohos_shared_library("scene_session_manager") {
     "display_manager:displaymgr",
     "eventhandler:libeventhandler",
     "eventhandler:libeventhandler",
-    "graphic_standard:librender_service_client",
-    "graphic_standard:window_animation",
+    "graphic_2d:librender_service_client",
+    "graphic_2d:window_animation",
     "hicollie:libhicollie",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
+    "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "napi:ace_napi",
     "power_manager:powermgr_client",
     "resource_management:global_resmgr",
     "samgr:samgr_proxy",
@@ -108,6 +112,12 @@ ohos_shared_library("scene_session_manager") {
     defines += [ "MEMMGR_WINDOW_ENABLE" ]
   }
 
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.resourceschedule_soc_perf)) {
+    external_deps += [ "resource_schedule_service:ressched_client" ]
+    defines += [ "RES_SCHED_ENABLE" ]
+  }
+
   innerapi_tags = [ "platformsdk" ]
   part_name = "window_manager"
   subsystem_name = "window"
@@ -117,7 +127,9 @@ ohos_shared_library("screen_session_manager") {
   sources = [
     "../../dm/src/zidl/display_manager_agent_proxy.cpp",
     "src/screen_cutout_controller.cpp",
+    "src/screen_rotation_property.cpp",
     "src/screen_scene_config.cpp",
+    "src/screen_sensor_connector.cpp",
     "src/screen_session_manager.cpp",
     "src/session_display_power_controller.cpp",
     "src/zidl/screen_session_manager_stub.cpp",
@@ -138,11 +150,21 @@ ohos_shared_library("screen_session_manager") {
     "c_utils:utils",
     "config_policy:configpolicy_util",
     "eventhandler:libeventhandler",
-    "graphic_standard:librender_service_client",
+    "graphic_2d:librender_service_client",
+    "hicollie:libhicollie",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "sensor:sensor_interface_native",
   ]
+
+  defines = []
+  if (window_manager_feature_subscribe_motion) {
+    if (defined(global_parts_info) && defined(global_parts_info.msdp_motion)) {
+      external_deps += [ "motion:motion_interface_native" ]
+      defines += [ "WM_SUBSCRIBE_MOTION_ENABLE" ]
+    }
+  }
 
   if (is_standard_system) {
     external_deps += [ "init:libbegetutil" ]
@@ -157,6 +179,7 @@ ohos_shared_library("screen_session_manager") {
 
 ohos_shared_library("session_manager") {
   sources = [
+    "../../wmserver/src/zidl/mock_screen_manager_service_proxy.cpp",
     "../../wmserver/src/zidl/mock_session_manager_service_proxy.cpp",
     "../session_manager_service/src/session_manager_service_proxy.cpp",
     "src/session_manager.cpp",
@@ -168,17 +191,14 @@ ohos_shared_library("session_manager") {
 
   public_configs = [ ":session_manager_public_config" ]
 
-  deps = [
-    "${window_base_path}/utils:libwmutil",
-    "${window_base_path}/wmserver:sms",
-  ]
+  deps = [ "${window_base_path}/utils:libwmutil" ]
 
   external_deps = [
     "ability_base:session_info",
-    "graphic_standard:librender_service_client",
+    "graphic_2d:librender_service_client",
     "hilog:libhilog",
+    "image_framework:image_native",
     "ipc:ipc_single",
-    "multimedia_image_framework:image_native",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

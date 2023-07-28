@@ -23,11 +23,11 @@
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/container/include/zidl/window_event_channel_interface.h"
 #include "session/host/include/session.h"
-
 #include "focus_change_info.h"
 #include "session_listener_interface.h"
 #include "window_manager.h"
 #include "zidl/window_manager_interface.h"
+#include "session_info.h"
 
 namespace OHOS::Media {
 class PixelMap;
@@ -45,7 +45,9 @@ public:
         TRANS_ID_UPDATE_PROPERTY,
         TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT,
         TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT,
+        TRANS_ID_BIND_DIALOG_TARGET,
         TRANS_ID_GET_FOCUS_SESSION_INFO,
+        TRANS_ID_SET_SESSION_GRAVITY,
         TRANS_ID_SET_GESTURE_NAVIGATION_ENABLED,
         TRANS_ID_SET_SESSION_LABEL,
         TRANS_ID_SET_SESSION_ICON,
@@ -55,13 +57,20 @@ public:
         TRANS_ID_PENDING_SESSION_TO_FOREGROUND,
         TRANS_ID_PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR,
         TRANS_ID_GET_FOCUS_SESSION_TOKEN,
+        TRANS_ID_TERMINATE_SESSION_NEW,
+        TRANS_ID_GET_SESSION_DUMP_INFO,
+        TRANS_ID_UPDATE_AVOIDAREA_LISTENER,
+        TRANS_ID_GET_SESSION_SNAPSHOT,
+        TRANS_ID_NOTIFY_DUMP_INFO_RESULT,
     };
 
     virtual WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-        sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session) = 0;
-    virtual WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId) = 0;
+        sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session) = 0;
+    virtual WSError DestroyAndDisconnectSpecificSession(const int32_t& persistentId) = 0;
     virtual WSError UpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action) = 0;
+    virtual WSError BindDialogTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken) = 0;
+    virtual WSError SetSessionGravity(int32_t persistentId, SessionGravity gravity, uint32_t percent) = 0;
     virtual WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) = 0;
     virtual WSError SetSessionIcon(const sptr<IRemoteObject> &token, const std::shared_ptr<Media::PixelMap> &icon) = 0;
     virtual WSError RegisterSessionListener(const sptr<ISessionListener> sessionListener) = 0;
@@ -69,6 +78,9 @@ public:
     virtual WSError PendingSessionToForeground(const sptr<IRemoteObject> &token) = 0;
     virtual WSError PendingSessionToBackgroundForDelegator(const sptr<IRemoteObject> &token) = 0;
     virtual WSError GetFocusSessionToken(sptr<IRemoteObject> &token) = 0;
+    virtual WSError TerminateSessionNew(const sptr<AAFwk::SessionInfo> info, bool needStartCaller) = 0;
+    virtual WSError GetSessionDumpInfo(const std::vector<std::string>& params, std::string& info) = 0;
+    virtual WSError GetSessionSnapshot(int32_t persistentId, std::shared_ptr<Media::PixelMap> &snapshot) = 0;
 
     // interfaces of IWindowManager
     WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,

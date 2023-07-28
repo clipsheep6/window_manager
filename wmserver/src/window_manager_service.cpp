@@ -73,10 +73,13 @@ WindowManagerService::WindowManagerService() : SystemAbility(WINDOW_MANAGER_SERV
     freezeDisplayController_ = new FreezeController();
     windowCommonEvent_ = std::make_shared<WindowCommonEvent>();
     startingOpen_ = system::GetParameter("persist.window.sw.enabled", "1") == "1"; // startingWin default enabled
+    windowGroupMgr_ = new WindowGroupMgr(windowRoot_);
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        return;
+    }
     runner_ = AppExecFwk::EventRunner::Create(name_);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
     snapshotController_ = new SnapshotController(windowRoot_, handler_);
-    windowGroupMgr_ = new WindowGroupMgr(windowRoot_);
     int ret = HiviewDFX::Watchdog::GetInstance().AddThread(name_, handler_);
     if (ret != 0) {
         WLOGFE("Add watchdog thread failed");
@@ -106,7 +109,8 @@ void WindowManagerService::OnStart()
     AddSystemAbilityListener(RENDER_SERVICE);
     AddSystemAbilityListener(ABILITY_MGR_SERVICE_ID);
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
-
+    sptr<WindowManagerService> wms = this;
+    wms->IncStrongRef(nullptr);
     if (!Publish(this)) {
         WLOGFE("Publish failed");
     }

@@ -28,6 +28,15 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DISPLAY, "Sessi
 
 WM_IMPLEMENT_SINGLE_INSTANCE(SessionManager)
 
+void SessionManager::ClearSessionManagerProxy()
+{
+    mockSessionManagerServiceProxy_ = nullptr;
+    sessionManagerServiceProxy_ = nullptr;
+    sceneSessionManagerProxy_ = nullptr;
+    screenSessionManagerProxy_ = nullptr;
+    screenLockManagerProxy_ = nullptr;
+}
+
 sptr<ScreenLock::ScreenLockManagerInterface> SessionManager::GetScreenLockManagerProxy()
 {
     InitSessionManagerServiceProxy();
@@ -116,7 +125,7 @@ void SessionManager::InitSceneSessionManagerProxy()
 
 void SessionManager::CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
     const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-    sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session)
+    sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session)
 {
     WLOGFD("CreateAndConnectSpecificSession");
     GetSceneSessionManagerProxy();
@@ -128,7 +137,7 @@ void SessionManager::CreateAndConnectSpecificSession(const sptr<ISessionStage>& 
         surfaceNode, property, persistentId, session);
 }
 
-void SessionManager::DestroyAndDisconnectSpecificSession(const uint64_t& persistentId)
+void SessionManager::DestroyAndDisconnectSpecificSession(const int32_t& persistentId)
 {
     WLOGFD("DestroyAndDisconnectSpecificSession");
     GetSceneSessionManagerProxy();
@@ -148,6 +157,28 @@ WMError SessionManager::UpdateProperty(sptr<WindowSessionProperty>& property, WS
         return WMError::WM_DO_NOTHING;
     }
     return static_cast<WMError>(sceneSessionManagerProxy_->UpdateProperty(property, action));
+}
+
+WMError SessionManager::SetSessionGravity(int32_t persistentId, SessionGravity gravity, uint32_t percent)
+{
+    WLOGFD("SetWindowGravity");
+    InitSceneSessionManagerProxy();
+    if (!sceneSessionManagerProxy_) {
+        WLOGFE("sceneSessionManagerProxy_ is nullptr");
+        return WMError::WM_DO_NOTHING;
+    }
+    return static_cast<WMError>(sceneSessionManagerProxy_->SetSessionGravity(persistentId, gravity, percent));
+}
+
+WMError SessionManager::BindDialogTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken)
+{
+    WLOGFD("BindDialogTarget");
+    InitSceneSessionManagerProxy();
+    if (!sceneSessionManagerProxy_) {
+        WLOGFE("sceneSessionManagerProxy_ is nullptr");
+        return WMError::WM_DO_NOTHING;
+    }
+    return static_cast<WMError>(sceneSessionManagerProxy_->BindDialogTarget(persistentId, targetToken));
 }
 
 void SessionManager::InitScreenLockManagerProxy()

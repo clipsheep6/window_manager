@@ -58,7 +58,21 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_GESTURE_NAVIGATION_ENABLED),
         &SceneSessionManagerStub::HandleSetGestureNavigationEnabled),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_INFO),
-        &SceneSessionManagerStub::HandleGetAccessibilityWindowInfo)
+        &SceneSessionManagerStub::HandleGetAccessibilityWindowInfo),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_TERMINATE_SESSION_NEW),
+        &SceneSessionManagerStub::HandleTerminateSessionNew),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_AVOIDAREA_LISTENER),
+        &SceneSessionManagerStub::HandleUpdateSessionAvoidAreaListener),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_DUMP_INFO),
+        &SceneSessionManagerStub::HandleGetSessionDump),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_BIND_DIALOG_TARGET),
+        &SceneSessionManagerStub::HandleBindDialogTarget),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_SNAPSHOT),
+        &SceneSessionManagerStub::HandleGetSessionSnapshot),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_DUMP_INFO),
+        &SceneSessionManagerStub::HandleGetSessionDump),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_NOTIFY_DUMP_INFO_RESULT),
+        &SceneSessionManagerStub::HandleNotifyDumpInfoResult),
 };
 
 int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
@@ -98,14 +112,14 @@ int SceneSessionManagerStub::HandleCreateAndConnectSpecificSession(MessageParcel
     } else {
         WLOGFW("Property not exist!");
     }
-    uint64_t persistentId = INVALID_SESSION_ID;
+    auto persistentId = INVALID_SESSION_ID;
     sptr<ISession> sceneSession;
     CreateAndConnectSpecificSession(sessionStage, eventChannel, surfaceNode,
         property, persistentId, sceneSession);
     if (sceneSession== nullptr) {
         return ERR_INVALID_STATE;
     }
-    reply.WriteUint64(persistentId);
+    reply.WriteInt32(persistentId);
     reply.WriteRemoteObject(sceneSession->AsObject());
     reply.WriteUint32(static_cast<uint32_t>(WSError::WS_OK));
     return ERR_NONE;
@@ -114,7 +128,7 @@ int SceneSessionManagerStub::HandleCreateAndConnectSpecificSession(MessageParcel
 int SceneSessionManagerStub::HandleDestroyAndDisconnectSpcificSession(MessageParcel &data, MessageParcel &reply)
 {
     WLOGFI("run HandleDestroyAndDisconnectSpcificSession!");
-    uint64_t persistentId = data.ReadUint64();
+    auto persistentId = data.ReadInt32();
     const WSError& ret = DestroyAndDisconnectSpecificSession(persistentId);
     reply.WriteUint32(static_cast<uint32_t>(ret));
     return ERR_NONE;
@@ -222,11 +236,31 @@ int SceneSessionManagerStub::HandlePendingSessionToBackgroundForDelegator(Messag
     return ERR_NONE;
 }
 
+int SceneSessionManagerStub::HandleTerminateSessionNew(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("run HandleTerminateSessionNew");
+    sptr<AAFwk::SessionInfo> abilitySessionInfo(new AAFwk::SessionInfo());
+    std::unique_ptr<AAFwk::Want> want(data.ReadParcelable<AAFwk::Want>());
+    abilitySessionInfo->want = *want;
+    if (data.ReadBool()) {
+        abilitySessionInfo->callerToken = data.ReadRemoteObject();
+    }
+    if (data.ReadBool()) {
+        abilitySessionInfo->sessionToken = data.ReadRemoteObject();
+    }
+    bool needStartCaller = data.ReadBool();
+    abilitySessionInfo->resultCode = data.ReadInt32();
+    const WSError& errCode = TerminateSessionNew(abilitySessionInfo, needStartCaller);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
 int SceneSessionManagerStub::HandleGetFocusSessionToken(MessageParcel &data, MessageParcel &reply)
 {
     WLOGFI("run HandleGetFocusSessionToken!");
-    sptr<IRemoteObject> token = data.ReadRemoteObject();
+    sptr<IRemoteObject> token = nullptr;
     const WSError& errCode = GetFocusSessionToken(token);
+    reply.WriteRemoteObject(token);
     reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
 }
@@ -249,6 +283,71 @@ int SceneSessionManagerStub::HandleGetAccessibilityWindowInfo(MessageParcel &dat
         return ERR_TRANSACTION_FAILED;
     }
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleSetSessionGravity(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleSetSessionGravity!");
+    auto persistentId = data.ReadInt32();
+    SessionGravity gravity = static_cast<SessionGravity>(data.ReadUint32());
+    uint32_t percent = data.ReadUint32();
+    WSError ret = SetSessionGravity(persistentId, gravity, percent);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleGetSessionDump(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleGetSessionDump");
+    std::vector<std::string> params;
+    if (!data.ReadStringVector(&params)) {
+        WLOGFE("Fail to read params");
+        return -1;
+    }
+    std::string dumpInfo;
+    WSError errCode = GetSessionDumpInfo(params, dumpInfo);
+    reply.WriteString(dumpInfo);
+    reply.WriteInt32(static_cast<int32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleUpdateSessionAvoidAreaListener(MessageParcel& data, MessageParcel& reply)
+{
+    auto persistentId = data.ReadInt32();
+    bool haveAvoidAreaListener = data.ReadBool();
+    WSError errCode = UpdateSessionAvoidAreaListener(persistentId, haveAvoidAreaListener);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleBindDialogTarget(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleBindDialogTarget!");
+    auto persistentId = data.ReadUint64();
+    sptr<IRemoteObject> remoteObject = data.ReadRemoteObject();
+    const WSError& ret = BindDialogTarget(persistentId, remoteObject);
+    reply.WriteUint32(static_cast<uint32_t>(ret));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleGetSessionSnapshot(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleGetSessionSnapshot!");
+    int32_t persistentId = data.ReadInt32();
+    std::shared_ptr<Media::PixelMap> snapshot = std::make_shared<Media::PixelMap>();
+    const WSError& ret = GetSessionSnapshot(persistentId, snapshot);
+    reply.WriteParcelable(snapshot.get());
+    reply.WriteUint32(static_cast<uint32_t>(ret));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleNotifyDumpInfoResult(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("HandleNotifyDumpInfoResult");
+    std::vector<std::string> info;
+    data.ReadStringVector(&info);
+    NotifyDumpInfoResult(info);
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

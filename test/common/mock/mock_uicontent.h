@@ -26,6 +26,8 @@ namespace Ace {
 class UIContentMocker : public UIContent {
 public:
     MOCK_METHOD3(Initialize, void(OHOS::Rosen::Window* window, const std::string& url, NativeValue* storage));
+    MOCK_METHOD4(Initialize, void(OHOS::Rosen::Window* window, const std::string& url, NativeValue* storage,
+        uint32_t focusWindowID));
     MOCK_METHOD0(Foreground, void());
     MOCK_METHOD0(Background, void());
     MOCK_METHOD0(Focus, void());
@@ -64,6 +66,8 @@ public:
     MOCK_METHOD1(SetIgnoreViewSafeArea, void(bool ignoreViewSafeArea));
     MOCK_METHOD1(SetIsFocusActive, void(bool isFocusActive));
     MOCK_METHOD1(SetFocusWindowId, void(uint32_t focusWIndowId));
+    MOCK_METHOD2(CreateModalUIExtension, int32_t(const AAFwk::Want& want, const ModalUIExtensionCallbacks& callbacks));
+    MOCK_METHOD1(CloseModalUIExtension, void(int32_t sessionId));
 };
 } // namespace Ace
 } // namespace OHOS

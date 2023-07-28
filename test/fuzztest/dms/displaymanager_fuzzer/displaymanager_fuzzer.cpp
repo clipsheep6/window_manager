@@ -16,6 +16,7 @@
 #include "displaymanager_fuzzer.h"
 
 #include <securec.h>
+#include <ui/rs_surface_node.h>
 #include "display_manager.h"
 
 namespace OHOS ::Rosen {
@@ -28,6 +29,20 @@ public:
     {
     }
     virtual void OnChange(DisplayId) override
+    {
+    }
+};
+
+class ScreenshotListener : public DisplayManager::IScreenshotListener {
+public:
+    void OnScreenshot(const ScreenshotInfo info) override
+    {
+    }
+};
+
+class PrivateWindowListener : public DisplayManager::IPrivateWindowListener {
+public:
+    void OnPrivateWindow(bool hasPrivate) override
     {
     }
 };
@@ -68,8 +83,22 @@ bool DisplayFuzzTest(const uint8_t* data, size_t size)
     displayManager.GetDisplayById(displayId);
     startPos += GetObject<ScreenId>(screenId, data + startPos, size - startPos);
     displayManager.GetDisplayByScreen(screenId);
+    bool flag = true;
+    startPos += GetObject<bool>(flag, data + startPos, size - startPos);
+    displayManager.HasPrivateWindow(displayId, flag);
     displayManager.RegisterDisplayListener(displayListener);
     displayManager.UnregisterDisplayListener(displayListener);
+    sptr<ScreenshotListener> screenshotListener = new ScreenshotListener();
+    displayManager.RegisterScreenshotListener(screenshotListener);
+    displayManager.UnregisterScreenshotListener(screenshotListener);
+    sptr<PrivateWindowListener> privateWindowListener = new PrivateWindowListener();
+    displayManager.RegisterPrivateWindowListener(privateWindowListener);
+    displayManager.UnregisterPrivateWindowListener(privateWindowListener);
+    RSSurfaceNodeConfig config;
+    config.SurfaceNodeName = "AddSurfaceNodeToDisplay";
+    auto surfaceNode = RSSurfaceNode::Create(config, false);
+    displayManager.AddSurfaceNodeToDisplay(displayId, surfaceNode);
+    displayManager.RemoveSurfaceNodeFromDisplay(displayId, surfaceNode);
     return true;
 }
 

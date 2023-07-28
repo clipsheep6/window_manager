@@ -30,12 +30,11 @@ constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneSe
 }
 WSError SceneSessionManagerProxy::CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
     const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-    sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session)
+    sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session)
 {
     MessageOption option(MessageOption::TF_SYNC);
     MessageParcel data;
     MessageParcel reply;
-
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("Write InterfaceToken failed!");
         return WSError::WS_ERROR_IPC_FAILED;
@@ -71,7 +70,7 @@ WSError SceneSessionManagerProxy::CreateAndConnectSpecificSession(const sptr<ISe
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    persistentId = reply.ReadUint64();
+    persistentId = reply.ReadInt32();
     sptr<IRemoteObject> sessionObject = reply.ReadRemoteObject();
     if (sessionObject == nullptr) {
         WLOGFE("ReadRemoteObject failed");
@@ -82,7 +81,7 @@ WSError SceneSessionManagerProxy::CreateAndConnectSpecificSession(const sptr<ISe
     return static_cast<WSError>(ret);
 }
 
-WSError SceneSessionManagerProxy::DestroyAndDisconnectSpecificSession(const uint64_t& persistentId)
+WSError SceneSessionManagerProxy::DestroyAndDisconnectSpecificSession(const int32_t& persistentId)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -91,8 +90,8 @@ WSError SceneSessionManagerProxy::DestroyAndDisconnectSpecificSession(const uint
         WLOGFE("WriteInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (!data.WriteUint64(persistentId)) {
-        WLOGFE("Write uint64_t failed");
+    if (!data.WriteInt32(persistentId)) {
+        WLOGFE("Write persistentId failed");
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(
         SceneSessionManagerMessage::TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION),
@@ -135,9 +134,66 @@ WSError SceneSessionManagerProxy::UpdateProperty(sptr<WindowSessionProperty>& pr
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    int32_t ret = reply.ReadUint32();
+    int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
 }
+WSError SceneSessionManagerProxy::BindDialogTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteUint64(persistentId)) {
+        WLOGFE("Write PropertyChangeAction failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (targetToken != nullptr) {
+        if (!data.WriteRemoteObject(targetToken)) {
+            WLOGFE("Write targetToken failed");
+            return WSError::WS_ERROR_IPC_FAILED;
+        }
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+        SceneSessionManagerMessage::TRANS_ID_BIND_DIALOG_TARGET),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WSError>(ret);
+}
+
+WSError SceneSessionManagerProxy::UpdateSessionAvoidAreaListener(int32_t& persistentId, bool haveListener)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32(persistentId)) {
+        WLOGFE("Write persistentId failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteBool(haveListener)) {
+        WLOGFE("Write avoid area listener failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+        SceneSessionManagerMessage::TRANS_ID_UPDATE_AVOIDAREA_LISTENER),
+        data, reply, option) != ERR_NONE) {
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    uint32_t ret = reply.ReadInt32();
+    return static_cast<WSError>(ret);
+}
+
 WMError SceneSessionManagerProxy::RegisterWindowManagerAgent(WindowManagerAgentType type,
     const sptr<IWindowManagerAgent>& windowManagerAgent)
 {
@@ -216,7 +272,41 @@ void SceneSessionManagerProxy::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
         return;
     }
     sptr<FocusChangeInfo> info = reply.ReadParcelable<FocusChangeInfo>();
-    focusInfo = *info;
+    if (info) {
+        focusInfo = *info;
+    } else {
+        WLOGFE("info is null.");
+    }
+}
+
+WSError SceneSessionManagerProxy::SetSessionGravity(int32_t persistentId, SessionGravity gravity, uint32_t percent)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_SESSION_GRAVITY),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32(persistentId)) {
+        WLOGFE("Write PropertyChangeAction failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteUint32(static_cast<uint32_t>(gravity))) {
+        WLOGFE("Write PropertyChangeAction failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteUint32(percent)) {
+        WLOGFE("Write PropertyChangeAction failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    return static_cast<WSError>(reply.ReadInt32());
 }
 
 WMError SceneSessionManagerProxy::SetGestureNavigaionEnabled(bool enable)
@@ -239,7 +329,7 @@ WMError SceneSessionManagerProxy::SetGestureNavigaionEnabled(bool enable)
         WLOGFE("SendRequest failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
-    int32_t ret = reply.ReadUint32();
+    int32_t ret = reply.ReadInt32();
     return static_cast<WMError>(ret);
 }
 
@@ -417,6 +507,59 @@ WSError SceneSessionManagerProxy::PendingSessionToBackgroundForDelegator(const s
     return static_cast<WSError>(reply.ReadInt32());
 }
 
+WSError SceneSessionManagerProxy::TerminateSessionNew(const sptr<AAFwk::SessionInfo> abilitySessionInfo,
+    bool needStartCaller)
+{
+    if (abilitySessionInfo == nullptr) {
+        WLOGFE("abilitySessionInfo is null");
+        return WSError::WS_ERROR_INVALID_SESSION;
+    }
+    MessageParcel data, reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteParcelable(&(abilitySessionInfo->want))) {
+        WLOGFE("Write want info failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (abilitySessionInfo->callerToken) {
+        if (!data.WriteBool(true) || !data.WriteRemoteObject(abilitySessionInfo->callerToken)) {
+            WLOGFE("Write ability info failed");
+            return WSError::WS_ERROR_IPC_FAILED;
+        }
+    } else {
+        if (!data.WriteBool(false)) {
+            WLOGFE("Write ability info failed");
+            return WSError::WS_ERROR_IPC_FAILED;
+        }
+    }
+    if (abilitySessionInfo->sessionToken) {
+        if (!data.WriteBool(true) || !data.WriteRemoteObject(abilitySessionInfo->sessionToken)) {
+            WLOGFE("Write ability sessionToken failed");
+            return WSError::WS_ERROR_IPC_FAILED;
+        }
+    } else {
+        if (!data.WriteBool(false)) {
+            WLOGFE("Write ability sessionToken failed");
+            return WSError::WS_ERROR_IPC_FAILED;
+        }
+    }
+    if (!data.WriteBool(needStartCaller) || !data.WriteInt32(abilitySessionInfo->resultCode)) {
+        WLOGFE("Write needStartCaller or result code failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_TERMINATE_SESSION_NEW),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    int32_t ret = reply.ReadInt32();
+    abilitySessionInfo->resultCode = ret;
+    return static_cast<WSError>(ret);
+}
+
 WSError SceneSessionManagerProxy::GetFocusSessionToken(sptr<IRemoteObject> &token)
 {
     WLOGFI("run SceneSessionManagerProxy::GetFocusSessionToken");
@@ -433,8 +576,78 @@ WSError SceneSessionManagerProxy::GetFocusSessionToken(sptr<IRemoteObject> &toke
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
+
     token = reply.ReadRemoteObject();
+    if (token == nullptr) {
+        WLOGFE("get token nullptr.");
+    }
     return static_cast<WSError>(reply.ReadInt32());
 }
 
+WSError SceneSessionManagerProxy::GetSessionDumpInfo(const std::vector<std::string>& params, std::string& info)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WSError::WS_ERROR_INVALID_PARAM;
+    }
+    if (!data.WriteStringVector(params)) {
+        WLOGFE("Write params failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_DUMP_INFO),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    info = reply.ReadString();
+    return static_cast<WSError>(reply.ReadInt32());
+}
+
+WSError SceneSessionManagerProxy::GetSessionSnapshot(int32_t persistentId, std::shared_ptr<Media::PixelMap> &snapshot)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WSError::WS_ERROR_INVALID_PARAM;
+    }
+
+    if (!data.WriteInt32(persistentId)) {
+        WLOGFE("Write persistentId failed");
+        return WSError::WS_ERROR_INVALID_PARAM;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_SNAPSHOT),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    std::shared_ptr<Media::PixelMap> sessionSnapshot(reply.ReadParcelable<Media::PixelMap>());
+    snapshot = sessionSnapshot;
+    return static_cast<WSError>(reply.ReadInt32());
+}
+
+void SceneSessionManagerProxy::NotifyDumpInfoResult(const std::vector<std::string>& info)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken pfailed");
+        return;
+    }
+    if (!data.WriteStringVector(info)) {
+        WLOGFE("Write info failed");
+        return;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_NOTIFY_DUMP_INFO_RESULT),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return;
+    }
+}
 } // namespace OHOS::Rosen

@@ -110,7 +110,7 @@ NativeValue* JsRootSceneSession::OnRegisterCallback(NativeEngine& engine, Native
     std::shared_ptr<NativeReference> callbackRef;
     callbackRef.reset(engine.CreateReference(value, 1));
     jsCbMap_[cbType] = callbackRef;
-    WLOGFI("[NAPI]Register end, type = %{public}s, callback = %{public}p", cbType.c_str(), value);
+    WLOGFI("[NAPI]Register end, type = %{public}s", cbType.c_str());
     return engine.CreateUndefined();
 }
 
@@ -145,6 +145,7 @@ NativeValue* JsRootSceneSession::OnLoadContent(NativeEngine& engine, NativeCallb
         return engine.CreateUndefined();
     }
     auto contextWeakPtr = *contextNativePointer;
+    SceneSessionManager::GetInstance().SetRootSceneContext(contextWeakPtr.lock().get());
 
     std::shared_ptr<NativeReference> contentStorage =
         (storage == nullptr) ? nullptr : std::shared_ptr<NativeReference>(engine.CreateReference(storage, 1));
@@ -192,6 +193,7 @@ void JsRootSceneSession::PendingSessionActivation(SessionInfo& info)
             return;
         }
         info.persistentId_ = sceneSession->GetPersistentId();
+        sceneSession->GetSessionInfo().persistentId_ = sceneSession->GetPersistentId();
     } else {
         auto sceneSession = SceneSessionManager::GetInstance().GetSceneSession(info.persistentId_);
         if (sceneSession == nullptr) {

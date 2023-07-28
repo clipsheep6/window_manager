@@ -77,6 +77,7 @@ public:
 
     ScreenId GetScreenId();
     ScreenProperty GetScreenProperty() const;
+    void UpdatePropertyByActiveMode();
     std::shared_ptr<RSDisplayNode> GetDisplayNode() const;
     void ReleaseDisplayNode();
 
@@ -94,10 +95,11 @@ public:
     int32_t GetPrivateSessionCount() const;
     DMError SetPrivateSessionCount(int32_t count);
     bool HasPrivateSession() const;
+    void SetDisplayBoundary(const RectF& rect, const uint32_t& offsetY);
 
     std::string name_ { "UNKNOW" };
-    ScreenId screenId_;
-    ScreenId rsId_;
+    ScreenId screenId_ {};
+    ScreenId rsId_ {};
     ScreenId defaultScreenId_ = SCREEN_ID_INVALID;
 
     int32_t activeIdx_ { 0 };

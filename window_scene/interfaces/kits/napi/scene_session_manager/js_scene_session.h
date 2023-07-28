@@ -41,8 +41,15 @@ public:
 
 private:
     static NativeValue* RegisterCallback(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* UpdateNativeVisibility(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* SetShowRecent(NativeEngine* engine, NativeCallbackInfo* info);
+
     NativeValue* OnRegisterCallback(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnUpdateNativeVisibility(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnSetShowRecent(NativeEngine& engine, NativeCallbackInfo& info);
+
     bool IsCallbackRegistered(const std::string& type, NativeValue* jsListenerObject);
+    bool IsCallbackTypeSupported(const std::string& type);
 
     void ProcessPendingSceneSessionActivationRegister();
     void ProcessSessionStateChangeRegister();
@@ -55,11 +62,15 @@ private:
     void ProcessSessionTouchableChangeRegister();
     void ProcessClickRegister();
     void ProcessTerminateSessionRegister();
+    void ProcessTerminateSessionRegisterNew();
     void ProcessSessionExceptionRegister();
     void ProcessSystemBarPropertyChangeRegister();
     void ProcessNeedAvoidRegister();
     void ProcessPendingSessionToForegroundRegister();
     void ProcessPendingSessionToBackgroundForDelegatorRegister();
+    void ProcessSessionDefaultAnimationFlagChangeRegister();
+    void ProcessIsCustomAnimationPlaying();
+    void ProcessShowWhenLockedRegister();
 
     void PendingSessionActivation(SessionInfo& info);
     void OnSessionStateChange(const SessionState& state);
@@ -72,12 +83,16 @@ private:
     void OnSessionTouchableChange(bool touchable);
     void OnClick();
     void TerminateSession(const SessionInfo& info);
+    void TerminateSessionNew(const SessionInfo& info, bool needStartCaller);
     void OnSessionException(const SessionInfo& info);
     static JsSessionType GetApiType(WindowType type);
     void OnSystemBarPropertyChange(const std::unordered_map<WindowType, SystemBarProperty>& propertyMap);
     void OnNeedAvoid(bool status);
     void PendingSessionToForeground(const SessionInfo& info);
     void PendingSessionToBackgroundForDelegator(const SessionInfo& info);
+    void OnDefaultAnimationFlagChange(bool isNeedDefaultAnimationFlag);
+    void OnIsCustomAnimationPlaying(bool status);
+    void OnShowWhenLocked(bool showWhenLocked);
 
     NativeEngine& engine_;
     wptr<SceneSession> weakSession_ = nullptr;

@@ -15,12 +15,16 @@
 
 #include "windowscene_fuzzer.h"
 
+#include "ability_context_impl.h"
+#include <configuration.h>
 #include <securec.h>
+#include <new>
 
 #include "display_manager.h"
 #include "window.h"
 #include "window_manager.h"
 #include "window_scene.h"
+#include "window_option.h"
 
 using namespace OHOS::Rosen;
 
@@ -102,6 +106,11 @@ size_t InitWindowOption2(WindowOption &windowOption, const uint8_t *data, size_t
     uint32_t flags;
     startPos += GetObject<uint32_t>(flags, data + startPos, size - startPos);
     windowOption.SetWindowFlags(flags);
+    WindowFlag windowFlag;
+    startPos += GetObject<WindowFlag>(windowFlag, data + startPos, size - startPos);
+    windowOption.AddWindowFlag(windowFlag);
+    startPos += GetObject<WindowFlag>(windowFlag, data + startPos, size - startPos);
+    windowOption.RemoveWindowFlag(windowFlag);
     PointInfo hitOffset;
     startPos += GetObject<PointInfo>(hitOffset, data + startPos, size - startPos);
     windowOption.SetHitOffset(hitOffset.x, hitOffset.y);
@@ -178,6 +187,13 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         window->Destroy();
     }
     windowScene->GoDestroy();
+    uint32_t level;
+    startPos += GetObject<uint32_t>(level, data + startPos, size - startPos);
+    windowScene->NotifyMemoryLevel(level);
+    AAFwk::Want want;
+    windowScene->OnNewWant(want);
+    std::shared_ptr<AppExecFwk::Configuration> configuration = std::make_shared<AppExecFwk::Configuration>();
+    windowScene->UpdateConfiguration(configuration);
     return true;
 }
 } // namespace.OHOS

@@ -45,6 +45,13 @@ public:
     }
 };
 
+class VirtualScreenGroupListener : public ScreenManager::IVirtualScreenGroupListener {
+public:
+    void OnMirrorChange([[maybe_unused]]const ChangeInfo& info) override
+    {
+    }
+};
+
 template<class T>
 size_t GetObject(T &object, const uint8_t *data, size_t size)
 {
@@ -218,6 +225,34 @@ bool SetVirtualScreenSurfaceFuzzTest(const uint8_t *data, size_t size)
     return true;
 }
 
+bool SetScreenRotationLockedFuzzTest(const uint8_t *data, size_t size)
+{
+    ScreenId screenId;
+    if (data == nullptr || size < sizeof(screenId)) {
+        return false;
+    }
+    size_t startPos = 0;
+    ScreenManager &screenManager = ScreenManager::GetInstance();
+    bool flag = true;
+    startPos += GetObject<bool>(flag, data + startPos, size - startPos);
+    screenManager.SetScreenRotationLocked(flag);
+    return true;
+}
+
+bool IsScreenRotationLocked(const uint8_t *data, size_t size)
+{
+    ScreenId screenId;
+    if (data == nullptr || size < sizeof(screenId)) {
+        return false;
+    }
+    size_t startPos = 0;
+    ScreenManager &screenManager = ScreenManager::GetInstance();
+    bool flag = true;
+    startPos += GetObject<bool>(flag, data + startPos, size - startPos);
+    screenManager.IsScreenRotationLocked(flag);
+    return true;
+}
+
 bool RemoveVirtualScreenFromGroupFuzzTest(const uint8_t *data, size_t size)
 {
     ScreenId screenId;
@@ -270,6 +305,10 @@ bool MakeExpandFuzzTest(const uint8_t *data, size_t size)
     size_t startPos = 0;
     ScreenManager &screenManager = ScreenManager::GetInstance();
     sptr<ScreenManager::IScreenListener> screenListener = new ScreenListener();
+    startPos += GetObject<ScreenId>(screenId, data + startPos, size - startPos);
+    screenListener->OnConnect(screenId);
+    screenListener->OnDisconnect(screenId);
+    screenListener->OnChange(screenId);
     screenManager.RegisterScreenListener(screenListener);
     sptr<ScreenManager::IScreenGroupListener> screenGroupListener = new ScreenGroupListener();
     screenManager.RegisterScreenGroupListener(screenGroupListener);
@@ -284,6 +323,9 @@ bool MakeExpandFuzzTest(const uint8_t *data, size_t size)
     screenManager.MakeExpand(options, screenGroupId);
     screenManager.UnregisterScreenGroupListener(screenGroupListener);
     screenManager.UnregisterScreenListener(screenListener);
+    sptr<ScreenManager::IVirtualScreenGroupListener> virtualScreenGroupListener = new VirtualScreenGroupListener();
+    screenManager.RegisterVirtualScreenGroupListener(virtualScreenGroupListener);
+    screenManager.UnregisterVirtualScreenGroupListener(virtualScreenGroupListener);
     return true;
 }
 } // namespace.OHOS::Rosen

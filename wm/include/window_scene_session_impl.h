@@ -29,6 +29,8 @@ public:
     WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
     WMError Hide(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
     WMError Destroy(bool needClearListener) override;
+    void PreProcessCreate();
+    void SetDefaultProperty();
     WSError SetActive(bool active) override;
     WMError DisableAppWindowDecor() override;
     bool IsDecorEnable() const override;
@@ -43,6 +45,7 @@ public:
     WMError Resize(uint32_t width, uint32_t height) override;
     WmErrorCode RaiseToAppTop() override;
     WSError HandleBackEvent() override;
+    void PerformBack() override;
     WMError SetAspectRatio(float ratio) override;
     WMError ResetAspectRatio() override;
     WMError SetGlobalMaximizeMode(MaximizeMode mode) override;
@@ -52,10 +55,13 @@ public:
     WMError SetSystemBarProperty(WindowType type, const SystemBarProperty& property) override;
     WMError SetLayoutFullScreen(bool status) override;
     WMError SetFullScreen(bool status) override;
+    WMError BindDialogTarget(sptr<IRemoteObject> targetToken) override;
     static void UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration);
+    static sptr<Window> GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context = nullptr);
+    static sptr<Window> GetTopWindowWithId(uint32_t mainWinId);
     virtual void UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration) override;
 
-    WMError NotifyMemoryLevel(int32_t level) const override;
+    WMError NotifyMemoryLevel(int32_t level) override;
 
     virtual WMError AddWindowFlag(WindowFlag flag) override;
     virtual WMError RemoveWindowFlag(WindowFlag flag) override;
@@ -71,6 +77,7 @@ public:
     virtual WMError SetBlur(float radius) override;
     virtual WMError SetBackdropBlur(float radius) override;
     virtual WMError SetBackdropBlurStyle(WindowBlurStyle blurStyle) override;
+    virtual WMError SetWindowMode(WindowMode mode) override;
 
     virtual WMError SetTransparent(bool isTransparent) override;
     virtual WMError SetTurnScreenOn(bool turnScreenOn) override;
@@ -85,20 +92,40 @@ public:
     virtual bool IsPrivacyMode() const override;
     virtual bool IsLayoutFullScreen() const override;
     virtual bool IsFullScreen() const override;
+
+    WMError RegisterAnimationTransitionController(const sptr<IAnimationTransitionController>& listener) override;
+    void SetNeedDefaultAnimation(bool needDefaultAnimation) override;
+    WMError SetTransform(const Transform& trans) override;
+    const Transform& GetTransform() const override;
+    WMError UpdateSurfaceNodeAfterCustomAnimation(bool isAdd) override;
+    WMError SetAlpha(float alpha) override;
+    void DumpSessionElementInfo(const std::vector<std::string>& params) override;
+    
 protected:
     void DestroySubWindow();
     WMError CreateAndConnectSpecificSession();
     sptr<WindowSessionImpl> FindParentSessionByParentId(uint32_t parentId);
     sptr<WindowSessionImpl> FindMainWindowWithContext();
-    void UpdateSubWindowStateAndNotify(uint64_t parentPersistentId, const WindowState& newState);
+    void UpdateSubWindowStateAndNotify(int32_t parentPersistentId, const WindowState& newState);
     void LimitCameraFloatWindowMininumSize(uint32_t& width, uint32_t& height);
+    void UpdateFloatingWindowSizeBySizeLimits(uint32_t& width, uint32_t& height) const;
     WMError NotifyWindowSessionProperty();
     WMError NotifyWindowNeedAvoid(bool status = false);
-    WMError SetLayoutFullScreenByApiVersion(bool status);
+    WMError SetLayoutFullScreenByApiVersion(bool status) override;
+    void UpdateWindowSizeLimits();
+    WindowLimits GetSystemSizeLimits(uint32_t displayWidth, uint32_t displayHeight, float vpr);
+    void GetConfigurationFromAbilityInfo();
 
 private:
     bool IsValidSystemWindowType(const WindowType& type);
     WMError CheckParmAndPermission();
+    static uint32_t maxFloatingWindowSize_;
+    void TransformSurfaceNode(const Transform& trans);
+    void AdjustWindowAnimationFlag(bool withAnimation = false);
+    WMError UpdateAnimationFlagProperty(bool withAnimation);
+
+    bool enableDefaultAnimation_ = true;
+    sptr<IAnimationTransitionController> animationTransitionController_;
 };
 } // namespace Rosen
 } // namespace OHOS

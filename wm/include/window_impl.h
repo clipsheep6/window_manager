@@ -96,11 +96,12 @@ class WindowImpl : public Window, AAFwk::PrepareTerminateCallbackStub {
         }                                                                       \
     } while (0)
 
-#define CALL_UI_CONTENT(uiContentCb)                          \
-    do {                                                      \
-        if (uiContent_ != nullptr) {                          \
-            uiContent_->uiContentCb();                        \
-        }                                                     \
+#define CALL_UI_CONTENT(uiContentCb)                              \
+    do {                                                          \
+        std::lock_guard<std::recursive_mutex> lock(mutex_);       \
+        if (uiContent_ != nullptr) {                              \
+            uiContent_->uiContentCb();                            \
+        }                                                         \
     } while (0)
 
 public:
@@ -259,6 +260,7 @@ public:
     void NotifyForeground();
     void NotifyBackground();
     void UpdateZoomTransform(const Transform& trans, bool isDisplayZoomOn);
+    void PerformBack() override;
 
     virtual WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
         NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability) override;
@@ -281,7 +283,7 @@ public:
 
     virtual void DumpInfo(const std::vector<std::string>& params, std::vector<std::string>& info) override;
     virtual std::shared_ptr<Media::PixelMap> Snapshot() override;
-    virtual WMError NotifyMemoryLevel(int32_t level) const override;
+    virtual WMError NotifyMemoryLevel(int32_t level) override;
     virtual bool IsAllowHaveSystemSubWindow() override;
     virtual KeyboardAnimationConfig GetKeyboardAnimationConfig() override;
     void RestoreSplitWindowMode(uint32_t mode);
@@ -484,6 +486,11 @@ private:
     {
         auto lifecycleListeners = GetListeners<IWindowLifeCycle>();
         CALL_LIFECYCLE_LISTENER_WITH_PARAM(ForegroundFailed, lifecycleListeners, static_cast<int32_t>(ret));
+    }
+    inline void NotifyBackgroundFailed(WMError ret)
+    {
+        auto lifecycleListeners = GetListeners<IWindowLifeCycle>();
+        CALL_LIFECYCLE_LISTENER_WITH_PARAM(BackgroundFailed, lifecycleListeners, static_cast<int32_t>(ret));
     }
     inline bool IsStretchableReason(WindowSizeChangeReason reason)
     {

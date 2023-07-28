@@ -57,6 +57,9 @@ public:
     DMError SetScreenGamutMap(ScreenId screenId, ScreenGamutMap gamutMap) override;
     DMError SetScreenColorTransform(ScreenId screenId) override;
 
+    void DumpAllScreensInfo(std::string& dumpInfo) override;
+    void DumpSpecialScreenInfo(ScreenId id, std::string& dumpInfo) override;
+
     void RegisterScreenConnectionListener(sptr<IScreenConnectionListener>& screenConnectionListener);
     void UnregisterScreenConnectionListener(sptr<IScreenConnectionListener>& screenConnectionListener);
 
@@ -78,6 +81,7 @@ public:
     void RegisterDisplayChangeListener(sptr<IDisplayChangeListener> listener);
     bool NotifyDisplayPowerEvent(DisplayPowerEvent event, EventStatus status);
     bool NotifyDisplayStateChanged(DisplayId id, DisplayState state);
+    void NotifyScreenshot(DisplayId displayId);
     virtual ScreenId CreateVirtualScreen(VirtualScreenOption option,
                                          const sptr<IRemoteObject>& displayManagerAgent) override;
     virtual DMError SetVirtualScreenSurface(ScreenId screenId, sptr<IBufferProducer> surface) override;
@@ -100,6 +104,10 @@ public:
     DMError SetOrientationFromWindow(DisplayId displayId, Orientation orientation);
     DMError SetOrientationController(ScreenId screenId, Orientation newOrientation, bool isFromWindow);
     bool SetRotation(ScreenId screenId, Rotation rotationAfter, bool isFromWindow);
+    void SetSensorSubscriptionEnabled();
+    bool SetRotationFromWindow(DisplayId displayId, Rotation targetRotation);
+    sptr<SupportedScreenModes> GetScreenModesByDisplayId(DisplayId displayId);
+    sptr<ScreenInfo> GetScreenInfoByDisplayId(DisplayId displayId);
 
     std::vector<ScreenId> GetAllScreenIds() const;
     const std::shared_ptr<RSDisplayNode> GetRSDisplayNodeByScreenId(ScreenId smsScreenId) const;
@@ -145,12 +153,14 @@ public:
         const std::vector<sptr<ScreenInfo>>& screenInfos, ScreenGroupChangeEvent groupEvent);
     void OnScreenshot(sptr<ScreenshotInfo> info);
     sptr<CutoutInfo> GetCutoutInfo(DisplayId displayId) override;
+    void SetDisplayBoundary(const sptr<ScreenSession> screenSession);
 
 protected:
     ScreenSessionManager();
     virtual ~ScreenSessionManager() = default;
 
 private:
+    void Init();
     void LoadScreenSceneXml();
     void ConfigureScreenScene();
     void ConfigureWaterfallDisplayCompressionParams();
@@ -164,6 +174,8 @@ private:
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type);
 
     bool OnRemoteDied(const sptr<IRemoteObject>& agent);
+
+    std::string TransferTypeToString(ScreenType type) const;
 
     class ScreenIdManager {
     friend class ScreenSessionGroup;
@@ -198,6 +210,7 @@ private:
     std::map<sptr<IRemoteObject>, std::vector<ScreenId>> screenAgentMap_;
     std::map<ScreenId, sptr<ScreenSessionGroup>> smsScreenGroupMap_;
 
+    bool isAutoRotationOpen_ = false;
     bool isExpandCombination_ = false;
     sptr<AgentDeathRecipient> deathRecipient_ { nullptr };
 

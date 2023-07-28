@@ -56,7 +56,6 @@ ohos_shared_library("scene_session") {
   public_configs = [ ":session_public_config" ]
 
   deps = [
-    "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "${window_base_path}/utils:libwmutil",
     "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/intention_event/service:intention_event_anr_manager",
@@ -72,13 +71,15 @@ ohos_shared_library("scene_session") {
     "ability_runtime:ability_start_setting",
     "c_utils:utils",
     "eventhandler:libeventhandler",
-    "graphic_standard:librender_service_client",
+    "graphic_2d:librender_service_client",
     "hilog:libhilog",
+    "image_framework:image_native",
     "input:libmmi-client",
     "ipc:ipc_single",
-    "multimedia_image_framework:image_native",
     "power_manager:powermgr_client",
     "preferences:native_preferences",
+    "samgr:samgr_proxy",
+    "bundle_framework:appexecfwk_base",
   ]
 
   innerapi_tags = [ "platformsdk" ]
@@ -96,7 +97,10 @@ ohos_shared_library("screen_session") {
 
   deps = [ "${window_base_path}/utils:libwmutil" ]
 
-  external_deps = [ "graphic_standard:librender_service_client" ]
+  external_deps = [
+    "graphic_2d:librender_service_client",
+    "init:libbegetutil",
+  ]
 
   innerapi_tags = [ "platformsdk" ]
   part_name = "window_manager"

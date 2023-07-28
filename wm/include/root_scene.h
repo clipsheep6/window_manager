@@ -63,19 +63,30 @@ public:
         return name_;
     }
 
+    uint32_t GetWindowId() const override
+    {
+        return 1; // 1 for root
+    }
+
+    Ace::UIContent* GetUIContent() const override
+    {
+        return uiContent_.get();
+    }
+
     static sptr<RootScene> staticRootScene_;
 
 private:
     void RegisterInputEventListener();
 
     std::unique_ptr<Ace::UIContent> uiContent_;
+
     std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
 
     std::recursive_mutex mutex_;
 
     float density_ = 1.0f;
 
-    WindowType type_ = WindowType::WINDOW_TYPE_DESKTOP;
+    WindowType type_ = WindowType::WINDOW_TYPE_SCENE_BOARD;
 
     std::string name_ = "EntryView";
 };

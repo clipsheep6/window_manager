@@ -40,7 +40,8 @@ public:
     WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
     WSError TransferFocusActiveEvent(bool isFocusActive) override;
     WSError TransferKeyEventForConsumed(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed) override;
-    WSError TransferFocusWindowId(uint32_t windowId) override;
+    WSError TransferFocusWindowId(int32_t windowId) override;
+    WSError TransferFocusState(bool focusState) override;
 
     sptr<IRemoteObject> AsObject() override
     {
@@ -63,13 +64,18 @@ WSError TestWindowEventChannel::TransferFocusActiveEvent(bool isFocusActive)
     return WSError::WS_OK;
 }
 
-WSError TestWindowEventChannel::TransferFocusWindowId(uint32_t windowId)
+WSError TestWindowEventChannel::TransferFocusWindowId(int32_t windowId)
 {
     return WSError::WS_OK;
 }
 
 WSError TestWindowEventChannel::TransferKeyEventForConsumed(
     const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed)
+{
+    return WSError::WS_OK;
+}
+
+WSError TestWindowEventChannel::TransferFocusState(bool foucsState)
 {
     return WSError::WS_OK;
 }
@@ -223,12 +229,14 @@ HWTEST_F(WindowSessionTest, Connect01, Function | SmallTest | Level2)
 HWTEST_F(WindowSessionTest, Foreground01, Function | SmallTest | Level2)
 {
     session_->state_ = SessionState::STATE_DISCONNECT;
-    auto result = session_->Foreground();
+    sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
+    ASSERT_NE(nullptr, property);
+    auto result = session_->Foreground(property);
     ASSERT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);
 
     session_->state_ = SessionState::STATE_CONNECT;
     session_->isActive_ = true;
-    result = session_->Foreground();
+    result = session_->Foreground(property);
     ASSERT_EQ(result, WSError::WS_OK);
 
     session_->isActive_ = false;
@@ -295,27 +303,29 @@ HWTEST_F(WindowSessionTest, PendingSessionActivation01, Function | SmallTest | L
 }
 
 /**
- * @tc.name: TerminateSession01
- * @tc.desc: check func TerminateSession
+ * @tc.name: TerminateSessionNew01
+ * @tc.desc: check func TerminateSessionNew
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, TerminateSession01, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, TerminateSessionNew01, Function | SmallTest | Level2)
 {
     int resultValue = 0;
-    NotifyTerminateSessionFunc callback = [&resultValue](const SessionInfo& info) {
+    NotifyTerminateSessionFuncNew callback = [&resultValue](const SessionInfo& info, bool needStartCaller) {
         resultValue = 1;
     };
 
+    bool needStartCaller = false;
     sptr<AAFwk::SessionInfo> info = new (std::nothrow)AAFwk::SessionInfo();
-    session_->terminateSessionFunc_ = nullptr;
-    session_->TerminateSession(info);
+    session_->terminateSessionFuncNew_ = nullptr;
+    session_->TerminateSessionNew(info, needStartCaller);
     ASSERT_EQ(resultValue, 0);
 
-    session_->SetTerminateSessionListener(callback);
-    session_->TerminateSession(info);
+    needStartCaller = true;
+    session_->SetTerminateSessionListenerNew(callback);
+    session_->TerminateSessionNew(info, needStartCaller);
     ASSERT_EQ(resultValue, 1);
 
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->TerminateSession(nullptr));
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->TerminateSessionNew(nullptr, needStartCaller));
 }
 
 /**
@@ -535,7 +545,7 @@ HWTEST_F(WindowSessionTest, DestroyAndDisconnectSpecificSession01, Function | Sm
     SessionInfo info;
     info.abilityName_ = "testSession1";
     info.bundleName_ = "testSession3";
-    uint64_t persistentId = 0;
+    int32_t persistentId = 0;
     sptr<SceneSession> scensession = new (std::nothrow) SceneSession(info, nullptr);
     EXPECT_NE(scensession, nullptr);
     auto result = scensession->DestroyAndDisconnectSpecificSession(persistentId);
@@ -545,7 +555,7 @@ HWTEST_F(WindowSessionTest, DestroyAndDisconnectSpecificSession01, Function | Sm
         new (std::nothrow) SceneSession::SpecificSessionCallback();
     EXPECT_NE(specificCallback_, nullptr);
     int resultValue = 0;
-    specificCallback_->onDestroy_ = [&resultValue](const uint64_t &persistentId) -> WSError
+    specificCallback_->onDestroy_ = [&resultValue](const int32_t &persistentId) -> WSError
     {
         resultValue = 1;
         return WSError::WS_OK;
@@ -569,7 +579,7 @@ HWTEST_F(WindowSessionTest, CreateAndConnectSpecificSession01, Function | SmallT
     sptr<Rosen::ISession> session_;
     auto surfaceNode_ = CreateRSSurfaceNode();
     sptr<WindowSessionProperty> property_ = nullptr;
-    uint64_t persistentId = 0;
+    int32_t persistentId = 0;
     sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
     EXPECT_NE(mockSessionStage, nullptr);
     sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
@@ -620,7 +630,7 @@ HWTEST_F(WindowSessionTest, CreateAndConnectSpecificSession2, Function | SmallTe
     sptr<Rosen::ISession> session_;
     auto surfaceNode_ = CreateRSSurfaceNode();
     sptr<WindowSessionProperty> property_ = nullptr;
-    uint64_t persistentId = 0;
+    int32_t persistentId = 0;
     sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
     EXPECT_NE(mockSessionStage, nullptr);
     sptr<SceneSession::SpecificSessionCallback> specificCallback_ =

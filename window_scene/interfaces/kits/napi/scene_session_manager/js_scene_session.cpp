@@ -35,11 +35,15 @@ const std::string SESSION_FOCUSABLE_CHANGE_CB = "sessionFocusableChange";
 const std::string SESSION_TOUCHABLE_CHANGE_CB = "sessionTouchableChange";
 const std::string CLICK_CB = "click";
 const std::string TERMINATE_SESSION_CB = "terminateSession";
+const std::string TERMINATE_SESSION_CB_NEW = "terminateSessionNew";
 const std::string SESSION_EXCEPTION_CB = "sessionException";
 const std::string SYSTEMBAR_PROPERTY_CHANGE_CB = "systemBarPropertyChange";
 const std::string NEED_AVOID_CB = "needAvoid";
 const std::string PENDING_SESSION_TO_FOREGROUND_CB = "pendingSessionToForeground";
-const std::string PENDING_SESSION_TO_BACKROUND_FOR_DELEGATOR_CB = "pendingSessionToBackgroundForDelegator";
+const std::string PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR_CB = "pendingSessionToBackgroundForDelegator";
+const std::string NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB = "needDefaultAnimationFlagChange";
+const std::string CUSTOM_ANIMATION_PLAYING_CB = "isCustomAnimationPlaying";
+const std::string SHOW_WHEN_LOCKED_CB = "sessionShowWhenLockedChange";
 } // namespace
 
 NativeValue* JsSceneSession::Create(NativeEngine& engine, const sptr<SceneSession>& session)
@@ -54,11 +58,15 @@ NativeValue* JsSceneSession::Create(NativeEngine& engine, const sptr<SceneSessio
 
     std::unique_ptr<JsSceneSession> jsSceneSession = std::make_unique<JsSceneSession>(engine, session);
     object->SetNativePointer(jsSceneSession.release(), JsSceneSession::Finalizer, nullptr);
-    object->SetProperty("persistentId", CreateJsValue(engine, static_cast<int64_t>(session->GetPersistentId())));
-    object->SetProperty("parentId", CreateJsValue(engine, static_cast<int64_t>(session->GetParentPersistentId())));
+    object->SetProperty("persistentId", CreateJsValue(engine, static_cast<int32_t>(session->GetPersistentId())));
+    object->SetProperty("parentId", CreateJsValue(engine, static_cast<int32_t>(session->GetParentPersistentId())));
     object->SetProperty("type", CreateJsValue(engine, static_cast<uint32_t>(GetApiType(session->GetWindowType()))));
+    object->SetProperty("isAppType", CreateJsValue(engine, session->IsFloatingWindowAppType()));
+
     const char* moduleName = "JsSceneSession";
     BindNativeFunction(engine, *object, "on", moduleName, JsSceneSession::RegisterCallback);
+    BindNativeFunction(engine, *object, "updateNativeVisibility", moduleName, JsSceneSession::UpdateNativeVisibility);
+    BindNativeFunction(engine, *object, "setShowRecent", moduleName, JsSceneSession::SetShowRecent);
 
     return objValue;
 }
@@ -67,7 +75,7 @@ JsSessionType JsSceneSession::GetApiType(WindowType type)
 {
     auto iter = WINDOW_TO_JS_SESSION_TYPE_MAP.find(type);
     if (iter == WINDOW_TO_JS_SESSION_TYPE_MAP.end()) {
-        WLOGFE("[NAPI]window type cannot map to api type!");
+        WLOGFE("[NAPI]window type: %{public}u cannot map to api type!", type);
         return JsSessionType::TYPE_UNDEFINED;
     } else {
         return iter->second;
@@ -89,11 +97,16 @@ JsSceneSession::JsSceneSession(NativeEngine& engine, const sptr<SceneSession>& s
         { SESSION_TOUCHABLE_CHANGE_CB,    &JsSceneSession::ProcessSessionTouchableChangeRegister },
         { CLICK_CB,                       &JsSceneSession::ProcessClickRegister },
         { TERMINATE_SESSION_CB,           &JsSceneSession::ProcessTerminateSessionRegister },
+        { TERMINATE_SESSION_CB_NEW,       &JsSceneSession::ProcessTerminateSessionRegisterNew },
         { SESSION_EXCEPTION_CB,           &JsSceneSession::ProcessSessionExceptionRegister },
         { SYSTEMBAR_PROPERTY_CHANGE_CB,   &JsSceneSession::ProcessSystemBarPropertyChangeRegister },
         { NEED_AVOID_CB,          &JsSceneSession::ProcessNeedAvoidRegister },
         { PENDING_SESSION_TO_FOREGROUND_CB,           &JsSceneSession::ProcessPendingSessionToForegroundRegister },
-        { PENDING_SESSION_TO_BACKROUND_FOR_DELEGATOR_CB,           &JsSceneSession::ProcessPendingSessionToBackgroundForDelegatorRegister },
+        { PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR_CB,
+            &JsSceneSession::ProcessPendingSessionToBackgroundForDelegatorRegister },
+        { NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB, &JsSceneSession::ProcessSessionDefaultAnimationFlagChangeRegister },
+        { CUSTOM_ANIMATION_PLAYING_CB,                  &JsSceneSession::ProcessIsCustomAnimationPlaying },
+        { SHOW_WHEN_LOCKED_CB,            &JsSceneSession::ProcessShowWhenLockedRegister },
     };
 
     sptr<SceneSession::SessionChangeCallback> sessionchangeCallback = new (std::nothrow)
@@ -110,6 +123,40 @@ JsSceneSession::JsSceneSession(NativeEngine& engine, const sptr<SceneSession>& s
 JsSceneSession::~JsSceneSession()
 {
     WLOGD("~JsSceneSession");
+}
+
+void JsSceneSession::ProcessSessionDefaultAnimationFlagChangeRegister()
+{
+    auto sessionchangeCallback = sessionchangeCallback_.promote();
+    if (sessionchangeCallback == nullptr) {
+        WLOGFE("sessionchangeCallback is nullptr");
+        return;
+    }
+    sessionchangeCallback->onWindowAnimationFlagChange_ = std::bind(
+        &JsSceneSession::OnDefaultAnimationFlagChange, this, std::placeholders::_1);
+    WLOGFD("ProcessSessionDefaultAnimationFlagChangeRegister success");
+}
+
+void JsSceneSession::OnDefaultAnimationFlagChange(bool isNeedDefaultAnimationFlag)
+{
+    WLOGFI("[NAPI]OnDefaultAnimationFlagChange, flag: %{public}u", isNeedDefaultAnimationFlag);
+    auto iter = jsCbMap_.find(NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB);
+    if (iter == jsCbMap_.end()) {
+        return;
+    }
+    auto jsCallBack = iter->second;
+    auto complete = std::make_unique<AsyncTask::CompleteCallback>(
+        [isNeedDefaultAnimationFlag, jsCallBack, eng = &engine_](
+            NativeEngine& engine, AsyncTask& task, int32_t status) {
+            NativeValue* jsSessionDefaultAnimationFlagObj = CreateJsValue(engine, isNeedDefaultAnimationFlag);
+            NativeValue* argv[] = { jsSessionDefaultAnimationFlagObj };
+            engine.CallFunction(engine.CreateUndefined(), jsCallBack->Get(), argv, ArraySize(argv));
+        });
+
+    NativeReference* callback = nullptr;
+    std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
+    AsyncTask::Schedule("JsSceneSession::OnDefaultAnimationFlagChange", engine_,
+        std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
 }
 
 void JsSceneSession::ProcessPendingSceneSessionActivationRegister()
@@ -160,6 +207,11 @@ void JsSceneSession::ProcessSessionRectChangeRegister()
         return;
     }
     sessionchangeCallback->onRectChange_ = std::bind(&JsSceneSession::OnSessionRectChange, this, std::placeholders::_1);
+
+    auto session = weakSession_.promote();
+    if (session && session->GetWindowType() != WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        OnSessionRectChange(session->GetSessionRect());
+    }
     WLOGFD("ProcessSessionRectChangeRegister success");
 }
 
@@ -200,15 +252,26 @@ void JsSceneSession::ProcessTerminateSessionRegister()
     WLOGFD("ProcessTerminateSessionRegister success");
 }
 
+void JsSceneSession::ProcessTerminateSessionRegisterNew()
+{
+    WLOGFD("begin to run ProcessTerminateSessionRegisterNew");
+    NotifyTerminateSessionFuncNew func = [this](const SessionInfo& info, bool needStartCaller) {
+        this->TerminateSessionNew(info, needStartCaller);
+    };
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        WLOGFE("session is nullptr");
+        return;
+    }
+    session->SetTerminateSessionListenerNew(func);
+    WLOGFD("ProcessTerminateSessionRegisterNew success");
+}
+
 void JsSceneSession::ProcessPendingSessionToForegroundRegister()
 {
     WLOGFD("begin to run ProcessPendingSessionToForegroundRegister");
-    auto weak = weak_from_this();
-    NotifyPendingSessionToForegroundFunc func = [weak](const SessionInfo& info) {
-        auto self = weak.lock();
-        if (self) {
-            self->PendingSessionToForeground(info);
-        }
+    NotifyPendingSessionToForegroundFunc func = [this](const SessionInfo& info) {
+        this->PendingSessionToForeground(info);
     };
     auto session = weakSession_.promote();
     if (session == nullptr) {
@@ -223,11 +286,8 @@ void JsSceneSession::ProcessPendingSessionToBackgroundForDelegatorRegister()
 {
     WLOGFD("begin to run ProcessPendingSessionToBackgroundForDelegatorRegister");
     auto weak = weak_from_this();
-    NotifyPendingSessionToBackgroundForDelegatorFunc func = [weak](const SessionInfo& info) {
-        auto self = weak.lock();
-        if (self) {
-            self->PendingSessionToBackgroundForDelegator(info);
-        }
+    NotifyPendingSessionToBackgroundForDelegatorFunc func = [this](const SessionInfo& info) {
+        this->PendingSessionToBackgroundForDelegator(info);
     };
     auto session = weakSession_.promote();
     if (session == nullptr) {
@@ -353,6 +413,32 @@ void JsSceneSession::ProcessNeedAvoidRegister()
     WLOGFD("ProcessNeedAvoidRegister success");
 }
 
+void JsSceneSession::ProcessIsCustomAnimationPlaying()
+{
+    auto sessionchangeCallback = sessionchangeCallback_.promote();
+    if (sessionchangeCallback == nullptr) {
+        WLOGFE("sessionchangeCallback is nullptr");
+        return;
+    }
+    sessionchangeCallback->onIsCustomAnimationPlaying_ = std::bind(
+        &JsSceneSession::OnIsCustomAnimationPlaying, this, std::placeholders::_1);
+    WLOGFD("ProcessIsCustomAnimationPlaying success");
+}
+
+void JsSceneSession::ProcessShowWhenLockedRegister()
+{
+    auto sessionchangeCallback = sessionchangeCallback_.promote();
+    if (sessionchangeCallback == nullptr) {
+        WLOGFE("sessionchangeCallback is nullptr");
+        return;
+    }
+    sessionchangeCallback->OnShowWhenLocked_ = std::bind(
+        &JsSceneSession::OnShowWhenLocked, this, std::placeholders::_1);
+    auto session = weakSession_.promote();
+    sessionchangeCallback->OnShowWhenLocked_(session->IsShowWhenLocked());
+    WLOGFD("ProcessShowWhenLockedRegister success");
+}
+
 void JsSceneSession::Finalizer(NativeEngine* engine, void* data, void* hint)
 {
     WLOGI("[NAPI]Finalizer");
@@ -366,6 +452,20 @@ NativeValue* JsSceneSession::RegisterCallback(NativeEngine* engine, NativeCallba
     return (me != nullptr) ? me->OnRegisterCallback(*engine, *info) : nullptr;
 }
 
+NativeValue* JsSceneSession::UpdateNativeVisibility(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGI("[NAPI]UpdateNativeVisibility");
+    JsSceneSession* me = CheckParamsAndGetThis<JsSceneSession>(engine, info);
+    return (me != nullptr) ? me->OnUpdateNativeVisibility(*engine, *info) : nullptr;
+}
+
+NativeValue* JsSceneSession::SetShowRecent(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGI("[NAPI]SetShowRecent");
+    JsSceneSession* me = CheckParamsAndGetThis<JsSceneSession>(engine, info);
+    return (me != nullptr) ? me->OnSetShowRecent(*engine, *info) : nullptr;
+}
+
 bool JsSceneSession::IsCallbackRegistered(const std::string& type, NativeValue* jsListenerObject)
 {
     if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
@@ -377,6 +477,14 @@ bool JsSceneSession::IsCallbackRegistered(const std::string& type, NativeValue* 
             WLOGFE("[NAPI]Method %{public}s has already been registered", type.c_str());
             return true;
         }
+    }
+    return false;
+}
+
+bool JsSceneSession::IsCallbackTypeSupported(const std::string& type)
+{
+    if (listenerFunc_.find(type) != listenerFunc_.end()) {
+        return true;
     }
     return false;
 }
@@ -403,7 +511,12 @@ NativeValue* JsSceneSession::OnRegisterCallback(NativeEngine& engine, NativeCall
             "Input parameter is missing or invalid"));
         return engine.CreateUndefined();
     }
+    if (!IsCallbackTypeSupported(cbType)) {
+        WLOGFE("[NAPI]callback type is not supported, type = %{public}s", cbType.c_str());
+        return engine.CreateUndefined();
+    }
     if (IsCallbackRegistered(cbType, value)) {
+        WLOGFE("[NAPI]callback is registered, type = %{public}s", cbType.c_str());
         return engine.CreateUndefined();
     }
     auto session = weakSession_.promote();
@@ -419,6 +532,33 @@ NativeValue* JsSceneSession::OnRegisterCallback(NativeEngine& engine, NativeCall
     jsCbMap_[cbType] = callbackRef;
     (this->*listenerFunc_[cbType])();
     WLOGFI("[NAPI]Register end, type = %{public}s", cbType.c_str());
+    return engine.CreateUndefined();
+}
+
+NativeValue* JsSceneSession::OnUpdateNativeVisibility(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    if (info.argc < 1) { // 1: params num
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
+        engine.Throw(CreateJsError(engine, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return engine.CreateUndefined();
+    }
+    bool visible = false;
+    if (!ConvertFromJsValue(engine, info.argv[0], visible)) {
+        WLOGFE("[NAPI]Failed to convert parameter to bool");
+        engine.Throw(CreateJsError(engine, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return engine.CreateUndefined();
+    }
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        WLOGFE("[NAPI]session is nullptr");
+        engine.Throw(CreateJsError(engine, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return engine.CreateUndefined();
+    }
+    session->UpdateNativeVisibility(visible);
+    WLOGFI("[NAPI]OnUpdateNativeVisibility end");
     return engine.CreateUndefined();
 }
 
@@ -620,6 +760,7 @@ void JsSceneSession::PendingSessionActivation(SessionInfo& info)
             return;
         }
         info.persistentId_ = sceneSession->GetPersistentId();
+        sceneSession->GetSessionInfo().persistentId_ = sceneSession->GetPersistentId();
     } else {
         auto sceneSession = SceneSessionManager::GetInstance().GetSceneSession(info.persistentId_);
         if (sceneSession == nullptr) {
@@ -710,6 +851,36 @@ void JsSceneSession::TerminateSession(const SessionInfo& info)
         std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
 }
 
+void JsSceneSession::TerminateSessionNew(const SessionInfo& info, bool needStartCaller)
+{
+    WLOGFI("[NAPI]run TerminateSessionNew, bundleName = %{public}s, id = %{public}s",
+        info.bundleName_.c_str(), info.abilityName_.c_str());
+    auto iter = jsCbMap_.find(TERMINATE_SESSION_CB_NEW);
+    if (iter == jsCbMap_.end()) {
+        return;
+    }
+    auto jsCallBack = iter->second;
+    auto complete = std::make_unique<AsyncTask::CompleteCallback>(
+        [info, needStartCaller, jsCallBack](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            if (!jsCallBack) {
+                WLOGFE("[NAPI]jsCallBack is nullptr");
+                return;
+            }
+            NativeValue* jsNeedStartCaller = CreateJsValue(engine, needStartCaller);
+            if (jsNeedStartCaller == nullptr) {
+                WLOGFE("[NAPI]this target jsNeedStartCaller is nullptr");
+                return;
+            }
+            NativeValue* argv[] = { jsNeedStartCaller };
+            engine.CallFunction(engine.CreateUndefined(), jsCallBack->Get(), argv, ArraySize(argv));
+        });
+
+    NativeReference* callback = nullptr;
+    std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
+    AsyncTask::Schedule("JsSceneSession::TerminateSessionNew", engine_,
+        std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+}
+
 void JsSceneSession::OnSessionException(const SessionInfo& info)
 {
     WLOGFI("[NAPI]run OnSessionException, bundleName = %{public}s, id = %{public}s",
@@ -775,7 +946,7 @@ void JsSceneSession::PendingSessionToBackgroundForDelegator(const SessionInfo& i
 {
     WLOGFI("[NAPI]run PendingSessionToBackgroundForDelegator, bundleName = %{public}s, id = %{public}s",
         info.bundleName_.c_str(), info.abilityName_.c_str());
-    auto iter = jsCbMap_.find(PENDING_SESSION_TO_BACKROUND_FOR_DELEGATOR_CB);
+    auto iter = jsCbMap_.find(PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR_CB);
     if (iter == jsCbMap_.end()) {
         WLOGFE("[NAPI]fail to find pending session to background for delegator callback");
         return;
@@ -813,6 +984,10 @@ void JsSceneSession::OnSystemBarPropertyChange(const std::unordered_map<WindowTy
     auto complete = std::make_unique<AsyncTask::CompleteCallback>(
         [jsCallBack, propertyMap, eng = &engine_](NativeEngine& engine, AsyncTask& task, int32_t status) {
             NativeValue* jsSessionStateObj = CreateJsSystemBarPropertyArrayObject(engine, propertyMap);
+            if (jsSessionStateObj == nullptr) {
+                WLOGFE("[NAPI]jsSessionStateObj is nullptr");
+                return;
+            }
             NativeValue* argv[] = { jsSessionStateObj };
             engine.CallFunction(engine.CreateUndefined(), jsCallBack->Get(), argv, ArraySize(argv));
         });
@@ -842,6 +1017,61 @@ void JsSceneSession::OnNeedAvoid(bool status)
     std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
     AsyncTask::Schedule("JsSceneSession::OnNeedAvoid", engine_,
         std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+}
+
+void JsSceneSession::OnIsCustomAnimationPlaying(bool status)
+{
+    WLOGFI("[NAPI]OnIsCustomAnimationPlaying %{public}d", status);
+    auto iter = jsCbMap_.find(CUSTOM_ANIMATION_PLAYING_CB);
+    if (iter == jsCbMap_.end()) {
+        return;
+    }
+    auto jsCallBack = iter->second;
+    auto complete = std::make_unique<AsyncTask::CompleteCallback>(
+        [jsCallBack, isPlaying = status, eng = &engine_](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            NativeValue* jsSessionStateObj = CreateJsValue(engine, isPlaying);
+            NativeValue* argv[] = { jsSessionStateObj };
+            engine.CallFunction(engine.CreateUndefined(), jsCallBack->Get(), argv, ArraySize(argv));
+        });
+
+    NativeReference* callback = nullptr;
+    std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
+    AsyncTask::Schedule("JsSceneSession::OnIsCustomAnimationPlaying", engine_,
+        std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+}
+
+void JsSceneSession::OnShowWhenLocked(bool showWhenLocked)
+{
+    WLOGFI("[NAPI]OnShowWhenLocked %{public}d", showWhenLocked);
+    auto iter = jsCbMap_.find(SHOW_WHEN_LOCKED_CB);
+    if (iter == jsCbMap_.end()) {
+        return;
+    }
+    auto jsCallBack = iter->second;
+    auto complete = std::make_unique<AsyncTask::CompleteCallback>(
+        [jsCallBack, flag = showWhenLocked, eng = &engine_](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            NativeValue* jsSessionStateObj = CreateJsValue(engine, flag);
+            NativeValue* argv[] = { jsSessionStateObj };
+            engine.CallFunction(engine.CreateUndefined(), jsCallBack->Get(), argv, ArraySize(argv));
+        });
+
+    NativeReference* callback = nullptr;
+    std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
+    AsyncTask::Schedule("JsSceneSession::OnShowWhenLocked", engine_,
+        std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+}
+
+NativeValue* JsSceneSession::OnSetShowRecent(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        WLOGFE("[NAPI]session is null");
+        engine.Throw(CreateJsError(engine, static_cast<int32_t>(WSErrorCode::WS_ERROR_STATE_ABNORMALLY),
+            "session is null"));
+        return engine.CreateUndefined();
+    }
+    session->SetShowRecent(true);
+    return engine.CreateUndefined();
 }
 
 sptr<SceneSession> JsSceneSession::GetNativeSession() const

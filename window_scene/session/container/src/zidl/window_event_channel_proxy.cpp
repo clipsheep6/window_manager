@@ -50,7 +50,7 @@ WSError WindowEventChannelProxy::TransferKeyEvent(const std::shared_ptr<MMI::Key
         return WSError::WS_ERROR_IPC_FAILED;
     }
     reply.ReadBool();
-    int32_t ret = reply.ReadUint32();
+    int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
 }
 
@@ -74,7 +74,7 @@ WSError WindowEventChannelProxy::TransferPointerEvent(const std::shared_ptr<MMI:
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    int32_t ret = reply.ReadUint32();
+    int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
 }
 
@@ -100,7 +100,7 @@ WSError WindowEventChannelProxy::TransferKeyEventForConsumed(
         return WSError::WS_ERROR_IPC_FAILED;
     }
     isConsumed = reply.ReadBool();
-    int32_t ret = reply.ReadUint32();
+    int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
 }
 
@@ -122,11 +122,11 @@ WSError WindowEventChannelProxy::TransferFocusActiveEvent(bool isFocusActive)
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    int32_t ret = reply.ReadUint32();
+    int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
 }
 
-WSError WindowEventChannelProxy::TransferFocusWindowId(uint32_t windowId)
+WSError WindowEventChannelProxy::TransferFocusWindowId(int32_t windowId)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -135,7 +135,7 @@ WSError WindowEventChannelProxy::TransferFocusWindowId(uint32_t windowId)
         WLOGFE("WriteInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (!data.WriteUint32(windowId)) {
+    if (!data.WriteInt32(windowId)) {
         WLOGFE("Write windowId failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
@@ -144,7 +144,29 @@ WSError WindowEventChannelProxy::TransferFocusWindowId(uint32_t windowId)
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    int32_t ret = reply.ReadUint32();
+    int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
 }
+
+WSError WindowEventChannelProxy::TransferFocusState(bool focusState)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteBool(focusState)) {
+        WLOGFE("Write focusState failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(WindowEventChannelMessage::TRANS_ID_TRANSFER_FOCUS_STATE_EVENT),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WSError>(ret);
 }
+} // namespace OHOS::Rosen

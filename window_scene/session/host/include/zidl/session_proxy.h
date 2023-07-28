@@ -26,7 +26,7 @@ public:
     explicit SessionProxy(const sptr<IRemoteObject>& impl) : IRemoteProxy<ISession>(impl) {};
     ~SessionProxy() {};
 
-    WSError Foreground() override;
+    WSError Foreground(sptr<WindowSessionProperty> property) override;
     WSError Background() override;
     WSError Disconnect() override;
     WSError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
@@ -41,8 +41,8 @@ public:
     WSError UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason) override;
     WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-        sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session) override;
-    WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId) override;
+        sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session) override;
+    WSError DestroyAndDisconnectSpecificSession(const int32_t& persistentId) override;
     WSError OnNeedAvoid(bool status) override;
     AvoidArea GetAvoidAreaByType(AvoidAreaType type) override;
     WSError RequestSessionBack() override;
@@ -51,9 +51,12 @@ public:
     WSError GetGlobalMaximizeMode(MaximizeMode& mode) override;
     WSError UpdateWindowSessionProperty(sptr<WindowSessionProperty> property) override;
     WSError SetAspectRatio(float ratio) override;
+    WSError UpdateWindowSceneAfterCustomAnimation(bool isAdd) override;
+
     WSError TransferAbilityResult(uint32_t resultCode, const AAFwk::Want& want) override;
     WSError TransferExtensionData(const AAFwk::WantParams& wantParams) override;
     void NotifyRemoteReady() override;
+    WSError UpdateWindowAnimationFlag(bool needDefaultAnimationFlag) override;
 private:
     static inline BrokerDelegator<SessionProxy> delegator_;
 };

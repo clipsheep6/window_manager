@@ -69,12 +69,12 @@ bool ConvertSessionInfoFromJs(NativeEngine& engine, NativeObject* jsObject, Sess
         sessionInfo.isSystem_ = isSystem;
     }
     if (jsPersistentId->TypeOf() != NATIVE_UNDEFINED) {
-        int64_t persistentId;
+        int32_t persistentId;
         if (!ConvertFromJsValue(engine, jsPersistentId, persistentId)) {
             WLOGFE("[NAPI]Failed to convert parameter to persistentId");
             return false;
         }
-        sessionInfo.persistentId_ = persistentId;
+        sessionInfo.persistentId_ = static_cast<uint64_t>(persistentId);
     }
     if (jsCallState->TypeOf() != NATIVE_UNDEFINED) {
         int32_t callState;
@@ -82,7 +82,7 @@ bool ConvertSessionInfoFromJs(NativeEngine& engine, NativeObject* jsObject, Sess
             WLOGFE("[NAPI]Failed to convert parameter to callState");
             return false;
         }
-        sessionInfo.callState_ = callState;
+        sessionInfo.callState_ = static_cast<uint32_t>(callState);
     }
     if (jsSessionType->TypeOf() != NATIVE_UNDEFINED) {
         uint32_t windowType = 0;
@@ -110,9 +110,9 @@ NativeValue* CreateJsSessionInfo(NativeEngine& engine, const SessionInfo& sessio
     object->SetProperty("moduleName", CreateJsValue(engine, sessionInfo.moduleName_));
     object->SetProperty("abilityName", CreateJsValue(engine, sessionInfo.abilityName_));
     object->SetProperty("isSystem", CreateJsValue(engine, sessionInfo.isSystem_));
-    object->SetProperty("persistentId", CreateJsValue(engine, static_cast<int64_t>(sessionInfo.persistentId_)));
+    object->SetProperty("persistentId", CreateJsValue(engine, static_cast<int32_t>(sessionInfo.persistentId_)));
     object->SetProperty("callerPersistentId", CreateJsValue(engine,
-        static_cast<int64_t>(sessionInfo.callerPersistentId_)));
+        static_cast<int32_t>(sessionInfo.callerPersistentId_)));
     object->SetProperty("callState", CreateJsValue(engine, static_cast<int32_t>(sessionInfo.callState_)));
     return objValue;
 }
@@ -263,6 +263,7 @@ NativeValue* SessionTypeInit(NativeEngine* engine)
     SetTypeProperty(object, engine, "TYPE_POINTER", JsSessionType::TYPE_POINTER);
     SetTypeProperty(object, engine, "TYPE_LAUNCHER_RECENT", JsSessionType::TYPE_LAUNCHER_RECENT);
     SetTypeProperty(object, engine, "TYPE_SCENE_BOARD", JsSessionType::TYPE_SCENE_BOARD);
+    SetTypeProperty(object, engine, "TYPE_DRAGGING_EFFECT", JsSessionType::TYPE_DRAGGING_EFFECT);
     return objValue;
 }
 } // namespace OHOS::Rosen
