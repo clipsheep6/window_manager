@@ -1004,10 +1004,32 @@ WMError WindowSceneSessionImpl::Close()
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (WindowHelper::IsMainWindow(GetType())) {
-        hostSession_->OnSessionEvent(SessionEvent::EVENT_CLOSE);
+        auto abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(context_);
+        if (!abilityContext) {
+            return Destroy();
+        }
+        sptr<AAFwk::IPrepareTerminateCallback> callback = this;
+        if (AAFwk::AbilityManagerClient::GetInstance()->PrepareTerminateAbility(abilityContext->GetToken(),
+            callback) != ERR_OK) {
+            WLOGFW("RegisterWindowManagerServiceHandler failed, do close window");
+            PendingClose();
+            return WMError::WM_OK;
+        }
     }
 
     return WMError::WM_OK;
+}
+
+void WindowSceneSessionImpl::DoPrepareTerminate()
+{
+    WLOGFI("do pending close by ability");
+    PendingClose();
+}
+
+void WindowSceneSessionImpl::PendingClose()
+{
+    WLOGFD("begin");
+    hostSession_->OnSessionEvent(SessionEvent::EVENT_CLOSE);
 }
 
 WMError WindowSceneSessionImpl::DisableAppWindowDecor()
