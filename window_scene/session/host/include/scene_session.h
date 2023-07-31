@@ -147,7 +147,13 @@ public:
     void SetRequestedOrientation(Orientation orientation);
     Orientation GetRequestedOrientation() const;
     WSError BindDialogTarget(const sptr<SceneSession>& sceneSession);
+<<<<<<< HEAD
     void DumpMissionInfo(std::vector<std::string> &info) const;
+=======
+    bool AddSubSession(const sptr<SceneSession>& subSession);
+    bool RemoveSubSession(int32_t persistentId);
+    std::vector<sptr<SceneSession>> GetSubSession() const;
+>>>>>>> fix sub session
 
     std::shared_ptr<PowerMgr::RunningLock> keepScreenLock_;
 
@@ -180,6 +186,7 @@ private:
     static std::mutex enterSessionMutex_;
     int32_t collaboratorType_ = CollaboratorType::DEFAULT_TYPE;
     sptr<IRemoteObject> selfToken_ = nullptr;
+    std::vector<sptr<SceneSession>> subSession_;
 };
 } // namespace OHOS::Rosen
 

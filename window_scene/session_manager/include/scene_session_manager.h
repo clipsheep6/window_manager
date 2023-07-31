@@ -256,6 +256,8 @@ private:
     void CleanUserMap();
     void UpdatePropertyRaiseEnabled(const sptr<WindowSessionProperty>& property,
                                     const sptr<SceneSession>& sceneSession);
+    void DestroySubSession(const sptr<SceneSession>& sceneSession);
+
     sptr<RootSceneSession> rootSceneSession_;
     std::shared_ptr<AbilityRuntime::Context> rootSceneContext_;
     std::shared_mutex sceneSessionMapMutex_;
