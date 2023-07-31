@@ -1209,7 +1209,10 @@ void WindowSessionImpl::NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& key
         inputMethodHasProcessed = MiscServices::InputMethodController::GetInstance()->DispatchKeyEvent(keyEvent);
     }
 #endif // IMF_ENABLE
-    if (!inputMethodHasProcessed) {
+    if (inputMethodHasProcessed) {
+        WLOGFD("input method has processed key event");
+        return;
+    } else {
         std::shared_ptr<IInputEventConsumer> inputEventConsumer;
         {
             std::lock_guard<std::recursive_mutex> lock(mutex_);

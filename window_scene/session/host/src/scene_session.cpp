@@ -202,9 +202,7 @@ WSError SceneSession::UpdateSessionRect(const WSRect& rect, const SizeChangeReas
 {
     WLOGFI("UpdateSessionRect [%{public}d, %{public}d, %{public}u, %{public}u]", rect.posX_, rect.posY_,
         rect.width_, rect.height_);
-    SetSessionRect(rect);
     NotifySessionRectChange(rect);
-    UpdateRect(rect, reason);
     return WSError::WS_OK;
 }
 
