@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("../../../windowmanager_aafwk.gni")
 
 config("intention_event_public_config") {
   include_dirs = [
@@ -23,16 +24,15 @@ config("intention_event_public_config") {
     "../../interfaces/include",
     "../../../interfaces/innerkits/wm",
     "../../",
-    "../dfx/include",
     "../framework/anr_handler/include",
     "../utils/include",
   ]
 }
 
-ohos_shared_library("intention_event_anr_manager") {
+ohos_shared_library("intention_event_anr") {
   sources = [
-    "../dfx/src/dfx_hisysevent.cpp",
     "../framework/anr_handler/src/anr_handler.cpp",
+    "../utils/src/dfx_hisysevent.cpp",
     "../utils/src/util.cpp",
     "anr_manager/src/anr_manager.cpp",
     "event_stage/src/event_stage.cpp",
@@ -47,12 +47,40 @@ ohos_shared_library("intention_event_anr_manager") {
     "eventhandler:libeventhandler",
     "hicollie:libhicollie",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+  ]
+
+  part_name = "window_manager"
+  subsystem_name = "window"
+}
+
+ohos_shared_library("libintention_event") {
+  include_dirs = [
+    "intention_event_manager/include",
+    "${window_base_path}/wm/include",
+  ]
+
+  sources = [ "intention_event_mannager/src/intention_event_manager.cpp" ]
+
+  deps = [
+    "${window_base_path}/utils:libwmutil",
+    "../../common:window_scene_common",
+    "../../session:scene_session",
+    "../../session_manager:scene_session_manager",
+  ]
+
+  external_deps = [
+    "ace_engine:ace_uicontent",
+    "c_utils:utils",
+    "eventhandler:libeventhandler",
+    "graphic_2d:libcomposer",
+    "graphic_2d:window_animation",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
-    "ipc:ipc_single",
+    "input:libmmi-client",
   ]
-
   part_name = "window_manager"
   subsystem_name = "window"
 }
