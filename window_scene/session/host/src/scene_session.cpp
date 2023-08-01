@@ -420,6 +420,18 @@ WSError SceneSession::UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAre
 WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
     WLOGFD("SceneSession TransferPointEvent");
+    if (GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        if (CheckDialogOnForeground()) {
+            WLOGFD("Has dialog on foreground, not transfer pointer event");
+            return WSError::WS_ERROR_INVALID_PERMISSION;
+        }
+    } else if (GetWindowType() == WindowType::WINDOW_TYPE_APP_SUB_WINDOW) {
+        auto parentSession = GetParentSession();
+        if (parentSession && parentSession->CheckDialogOnForeground()) {
+            WLOGFD("Its main window has dialog on foreground, not transfer pointer event");
+            return WSError::WS_ERROR_INVALID_PERMISSION;
+        }
+    }
     if (property_ && property_->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
         WindowHelper::IsMainWindow(property_->GetWindowType()) &&
         property_->GetMaximizeMode() != MaximizeMode::MODE_AVOID_SYSTEM_BAR) {

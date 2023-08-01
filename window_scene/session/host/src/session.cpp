@@ -659,6 +659,11 @@ void Session::SetParentSession(const sptr<Session>& session)
     parentSession_ = session;
 }
 
+sptr<Session> Session::GetParentSession() const
+{
+    return parentSession_;
+}
+
 void Session::BindDialogToParentSession(const sptr<Session>& session)
 {
     dialogVec_.push_back(session);
@@ -694,17 +699,6 @@ bool Session::CheckDialogOnForeground()
 
 WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
-    if (GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
-        if (CheckDialogOnForeground()) {
-            WLOGFD("Has dialog on foreground, not transfer pointer event");
-            return WSError::WS_ERROR_INVALID_PERMISSION;
-        }
-    } else if (GetWindowType() == WindowType::WINDOW_TYPE_APP_SUB_WINDOW) {
-        if (parentSession_ && parentSession_->CheckDialogOnForeground()) {
-            WLOGFD("Its main window has dialog on foreground, not transfer pointer event");
-            return WSError::WS_ERROR_INVALID_PERMISSION;
-        }
-    }
     WLOGFD("Session TransferPointEvent, persistentId:%{public}d, eventId:%{public}d",
         persistentId_, pointerEvent->GetId());
     auto currentTime = GetSysClockTime();
