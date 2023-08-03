@@ -35,8 +35,6 @@ const std::string SESSION_FOCUSABLE_CHANGE_CB = "sessionFocusableChange";
 const std::string SESSION_TOUCHABLE_CHANGE_CB = "sessionTouchableChange";
 const std::string CLICK_CB = "click";
 const std::string TERMINATE_SESSION_CB = "terminateSession";
-const std::string TERMINATE_SESSION_CB_NEW = "terminateSessionNew";
-const std::string SESSION_EXCEPTION_CB = "sessionException";
 const std::string SYSTEMBAR_PROPERTY_CHANGE_CB = "systemBarPropertyChange";
 const std::string NEED_AVOID_CB = "needAvoid";
 const std::string PENDING_SESSION_TO_FOREGROUND_CB = "pendingSessionToForeground";
@@ -97,8 +95,6 @@ JsSceneSession::JsSceneSession(NativeEngine& engine, const sptr<SceneSession>& s
         { SESSION_TOUCHABLE_CHANGE_CB,    &JsSceneSession::ProcessSessionTouchableChangeRegister },
         { CLICK_CB,                       &JsSceneSession::ProcessClickRegister },
         { TERMINATE_SESSION_CB,           &JsSceneSession::ProcessTerminateSessionRegister },
-        { TERMINATE_SESSION_CB_NEW,       &JsSceneSession::ProcessTerminateSessionRegisterNew },
-        { SESSION_EXCEPTION_CB,           &JsSceneSession::ProcessSessionExceptionRegister },
         { SYSTEMBAR_PROPERTY_CHANGE_CB,   &JsSceneSession::ProcessSystemBarPropertyChangeRegister },
         { NEED_AVOID_CB,          &JsSceneSession::ProcessNeedAvoidRegister },
         { PENDING_SESSION_TO_FOREGROUND_CB,           &JsSceneSession::ProcessPendingSessionToForegroundRegister },
@@ -240,8 +236,8 @@ void JsSceneSession::ProcessSessionEventRegister()
 void JsSceneSession::ProcessTerminateSessionRegister()
 {
     WLOGFD("begin to run ProcessTerminateSessionRegister");
-    NotifyTerminateSessionFunc func = [this](const SessionInfo& info) {
-        this->TerminateSession(info);
+    NotifyTerminateSessionFunc func = [this](const SessionInfo& info, TerminateType terminateType) {
+        this->TerminateSession(info, terminateType);
     };
     auto session = weakSession_.promote();
     if (session == nullptr) {
@@ -250,21 +246,6 @@ void JsSceneSession::ProcessTerminateSessionRegister()
     }
     session->SetTerminateSessionListener(func);
     WLOGFD("ProcessTerminateSessionRegister success");
-}
-
-void JsSceneSession::ProcessTerminateSessionRegisterNew()
-{
-    WLOGFD("begin to run ProcessTerminateSessionRegisterNew");
-    NotifyTerminateSessionFuncNew func = [this](const SessionInfo& info, bool needStartCaller) {
-        this->TerminateSessionNew(info, needStartCaller);
-    };
-    auto session = weakSession_.promote();
-    if (session == nullptr) {
-        WLOGFE("session is nullptr");
-        return;
-    }
-    session->SetTerminateSessionListenerNew(func);
-    WLOGFD("ProcessTerminateSessionRegisterNew success");
 }
 
 void JsSceneSession::ProcessPendingSessionToForegroundRegister()
@@ -324,21 +305,6 @@ void JsSceneSession::ProcessSessionTouchableChangeRegister()
     }
     session->SetSessionTouchableChangeListener(func);
     WLOGFD("ProcessSessionTouchableChangeRegister success");
-}
-
-void JsSceneSession::ProcessSessionExceptionRegister()
-{
-    WLOGFD("begin to run ProcessSessionExceptionRegister");
-    NotifySessionExceptionFunc func = [this](const SessionInfo& info) {
-        this->OnSessionException(info);
-    };
-    auto session = weakSession_.promote();
-    if (session == nullptr) {
-        WLOGFE("session is nullptr");
-        return;
-    }
-    session->SetSessionExceptionListener(func);
-    WLOGFD("ProcessSessionExceptionRegister success");
 }
 
 void JsSceneSession::ProcessClickRegister()
@@ -826,87 +792,27 @@ void JsSceneSession::OnBackPressed()
         std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
 }
 
-void JsSceneSession::TerminateSession(const SessionInfo& info)
+void JsSceneSession::TerminateSession(const SessionInfo& info, TerminateType terminateType)
 {
-    WLOGFI("[NAPI]run TerminateSession, bundleName = %{public}s, abilityName = %{public}s, persistentId = %{public}d",
-        info.bundleName_.c_str(), info.abilityName_.c_str(), info.persistentId_);
+    WLOGFI("[NAPI]run TerminateSession, bundleName = %{public}s, abilityName = %{public}s, persistentId = %{public}d, terminateType = %{public}d",
+        info.bundleName_.c_str(), info.abilityName_.c_str(), info.persistentId_, static_cast<int32_t>(terminateType));
     auto iter = jsCbMap_.find(TERMINATE_SESSION_CB);
     if (iter == jsCbMap_.end()) {
         return;
     }
     auto jsCallBack = iter->second;
     auto complete = std::make_unique<AsyncTask::CompleteCallback>(
-        [info, jsCallBack](NativeEngine& engine, AsyncTask& task, int32_t status) {
+        [info, terminateType, jsCallBack](NativeEngine& engine, AsyncTask& task, int32_t status) {
             if (!jsCallBack) {
                 WLOGFE("[NAPI]jsCallBack is nullptr");
                 return;
             }
-            NativeValue* jsSessionInfo = CreateJsSessionInfo(engine, info);
-            if (jsSessionInfo == nullptr) {
-                WLOGFE("[NAPI]this target session info is nullptr");
+            NativeValue* jsTerminateType = CreateJsValue(engine, static_cast<int32_t>(terminateType));
+            if (jsTerminateType == nullptr) {
+                WLOGFE("[NAPI]this target jsTerminateType is nullptr");
                 return;
             }
-            NativeValue* argv[] = { jsSessionInfo };
-            engine.CallFunction(engine.CreateUndefined(), jsCallBack->Get(), argv, ArraySize(argv));
-        });
-
-    NativeReference* callback = nullptr;
-    std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
-    AsyncTask::Schedule("JsSceneSession::TerminateSession", engine_,
-        std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
-}
-
-void JsSceneSession::TerminateSessionNew(const SessionInfo& info, bool needStartCaller)
-{
-    WLOGFI("[NAPI]run TerminateSessionNew, bundleName = %{public}s, id = %{public}s",
-        info.bundleName_.c_str(), info.abilityName_.c_str());
-    auto iter = jsCbMap_.find(TERMINATE_SESSION_CB_NEW);
-    if (iter == jsCbMap_.end()) {
-        return;
-    }
-    auto jsCallBack = iter->second;
-    auto complete = std::make_unique<AsyncTask::CompleteCallback>(
-        [info, needStartCaller, jsCallBack](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            if (!jsCallBack) {
-                WLOGFE("[NAPI]jsCallBack is nullptr");
-                return;
-            }
-            NativeValue* jsNeedStartCaller = CreateJsValue(engine, needStartCaller);
-            if (jsNeedStartCaller == nullptr) {
-                WLOGFE("[NAPI]this target jsNeedStartCaller is nullptr");
-                return;
-            }
-            NativeValue* argv[] = { jsNeedStartCaller };
-            engine.CallFunction(engine.CreateUndefined(), jsCallBack->Get(), argv, ArraySize(argv));
-        });
-
-    NativeReference* callback = nullptr;
-    std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
-    AsyncTask::Schedule("JsSceneSession::TerminateSessionNew", engine_,
-        std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
-}
-
-void JsSceneSession::OnSessionException(const SessionInfo& info)
-{
-    WLOGFI("[NAPI]run OnSessionException, bundleName = %{public}s, id = %{public}s",
-        info.bundleName_.c_str(), info.abilityName_.c_str());
-    auto iter = jsCbMap_.find(SESSION_EXCEPTION_CB);
-    if (iter == jsCbMap_.end()) {
-        return;
-    }
-    auto jsCallBack = iter->second;
-    auto complete = std::make_unique<AsyncTask::CompleteCallback>(
-        [info, jsCallBack](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            if (!jsCallBack) {
-                WLOGFE("[NAPI]jsCallBack is nullptr");
-                return;
-            }
-            NativeValue* jsSessionInfo = CreateJsSessionInfo(engine, info);
-            if (jsSessionInfo == nullptr) {
-                WLOGFE("[NAPI]this target session info is nullptr");
-                return;
-            }
-            NativeValue* argv[] = { jsSessionInfo };
+            NativeValue* argv[] = { jsTerminateType };
             engine.CallFunction(engine.CreateUndefined(), jsCallBack->Get(), argv, ArraySize(argv));
         });
 
