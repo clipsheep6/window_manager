@@ -191,7 +191,7 @@ WSError SceneSessionManagerProxy::UpdateSessionAvoidAreaListener(int32_t& persis
         data, reply, option) != ERR_NONE) {
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    uint32_t ret = reply.ReadInt32();
+    uint32_t ret = static_cast<uint32_t>(reply.ReadInt32());
     return static_cast<WSError>(ret);
 }
 

@@ -123,7 +123,7 @@ WSError SessionStageProxy::UpdateFocus(bool focus)
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    int32_t ret = reply.ReadInt32();
+    int32_t ret = static_cast<int32_t>(reply.ReadInt32());
     return static_cast<WSError>(ret);
 }
 

@@ -1487,7 +1487,7 @@ void SceneSessionManager::DumpSessionInfo(const sptr<SceneSession>& session, std
     if (session == nullptr) {
         return;
     }
-    int zOrder = IsSessionVisible(session) ? session->GetZOrder() : -1;
+    int32_t zOrder = IsSessionVisible(session) ? static_cast<int32_t>(session->GetZOrder()) : -1;
     WSRect rect = session->GetSessionRect();
     std::string sName;
     if (session->GetSessionInfo().isSystem_) {
