@@ -66,8 +66,6 @@ private:
     void ProcessSessionTouchableChangeRegister();
     void ProcessClickRegister();
     void ProcessTerminateSessionRegister();
-    void ProcessTerminateSessionRegisterNew();
-    void ProcessSessionExceptionRegister();
     void ProcessSystemBarPropertyChangeRegister();
     void ProcessNeedAvoidRegister();
     void ProcessPendingSessionToForegroundRegister();
@@ -87,9 +85,7 @@ private:
     void OnSessionFocusableChange(bool isFocusable);
     void OnSessionTouchableChange(bool touchable);
     void OnClick();
-    void TerminateSession(const SessionInfo& info);
-    void TerminateSessionNew(const SessionInfo& info, bool needStartCaller);
-    void OnSessionException(const SessionInfo& info);
+    void TerminateSession(const SessionInfo& info, TerminateType terminateType);
     static JsSessionType GetApiType(WindowType type);
     void OnSystemBarPropertyChange(const std::unordered_map<WindowType, SystemBarProperty>& propertyMap);
     void OnNeedAvoid(bool status);

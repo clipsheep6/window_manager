@@ -594,6 +594,16 @@ void Session::SetBackPressedListenser(const NotifyBackPressedFunc& func)
 
 WSError Session::TerminateSession(const sptr<AAFwk::SessionInfo> abilitySessionInfo)
 {
+    return TerminateSession(abilitySessionInfo, TerminateType::CLOSE_AND_KEEP_MULTITASK);
+}
+
+void Session::SetTerminateSessionListener(const NotifyTerminateSessionFunc& func)
+{
+    terminateSessionFunc_ = func;
+}
+
+WSError Session::TerminateSession(const sptr<AAFwk::SessionInfo> abilitySessionInfo, TerminateType terminateType)
+{
     if (abilitySessionInfo == nullptr) {
         WLOGFE("abilitySessionInfo is null");
         return WSError::WS_ERROR_INVALID_SESSION;
@@ -606,38 +616,18 @@ WSError Session::TerminateSession(const sptr<AAFwk::SessionInfo> abilitySessionI
     sessionInfo_.want = new AAFwk::Want(abilitySessionInfo->want);
     sessionInfo_.resultCode = abilitySessionInfo->resultCode;
     if (terminateSessionFunc_) {
-        terminateSessionFunc_(info);
+        terminateSessionFunc_(info, terminateType);
     }
     return WSError::WS_OK;
 }
 
-void Session::SetTerminateSessionListener(const NotifyTerminateSessionFunc& func)
+WSError Session::Clear()
 {
-    terminateSessionFunc_ = func;
-}
-
-WSError Session::TerminateSessionNew(const sptr<AAFwk::SessionInfo> abilitySessionInfo, bool needStartCaller)
-{
-    if (abilitySessionInfo == nullptr) {
-        WLOGFE("abilitySessionInfo is null");
-        return WSError::WS_ERROR_INVALID_SESSION;
-    }
-    SessionInfo info;
-    info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
-    info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
-    info.callerToken_ = abilitySessionInfo->callerToken;
-    info.persistentId_ = static_cast<int32_t>(abilitySessionInfo->persistentId);
-    sessionInfo_.want = new AAFwk::Want(abilitySessionInfo->want);
-    sessionInfo_.resultCode = abilitySessionInfo->resultCode;
-    if (terminateSessionFuncNew_) {
-        terminateSessionFuncNew_(info, needStartCaller);
+    SessionInfo info = GetSessionInfo();
+    if (terminateSessionFunc_) {
+        terminateSessionFunc_(info, TerminateType::CLOSE_AND_CLEAR_MULTITASK);
     }
     return WSError::WS_OK;
-}
-
-void Session::SetTerminateSessionListenerNew(const NotifyTerminateSessionFuncNew& func)
-{
-    terminateSessionFuncNew_ = func;
 }
 
 WSError Session::NotifySessionException(const sptr<AAFwk::SessionInfo> abilitySessionInfo)
@@ -656,15 +646,10 @@ WSError Session::NotifySessionException(const sptr<AAFwk::SessionInfo> abilitySe
     sessionInfo_.want = new AAFwk::Want(abilitySessionInfo->want);
     sessionInfo_.errorCode = abilitySessionInfo->errorCode;
     sessionInfo_.errorReason = abilitySessionInfo->errorReason;
-    if (sessionExceptionFunc_) {
-        sessionExceptionFunc_(info);
+    if (terminateSessionFunc_) {
+        terminateSessionFunc_(info, TerminateType::CLOSE_WITH_EXCEPTION);
     }
     return WSError::WS_OK;
-}
-
-void Session::SetSessionExceptionListener(const NotifySessionExceptionFunc& func)
-{
-    sessionExceptionFunc_ = func;
 }
 
 void Session::SetPendingSessionToForegroundListener(const NotifyPendingSessionToForegroundFunc& func)
