@@ -147,10 +147,12 @@ WMError WindowExtensionSessionImpl::SetUIContent(const std::string& contentInfo,
         uiContent_->Destroy();
     }
     std::unique_ptr<Ace::UIContent> uiContent;
+    auto apiCompatibleVer = context_->GetApplicationInfo()->apiCompatibleVersion;
+    auto apiTargetVer = context_->GetApplicationInfo()->apiTargetVersion;
     if (ability != nullptr) {
-        uiContent = Ace::UIContent::Create(ability);
+        uiContent = Ace::UIContent::Create(ability, apiCompatibleVer, apiTargetVer);
     } else {
-        uiContent = Ace::UIContent::Create(context_.get(), engine);
+        uiContent = Ace::UIContent::Create(context_.get(), engine, apiCompatibleVer, apiTargetVer);
     }
     if (uiContent == nullptr) {
         WLOGFE("fail to SetUIContent id: %{public}d", GetPersistentId());

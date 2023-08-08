@@ -28,6 +28,7 @@
 #include "intention_event_manager.h"
 #include "vsync_station.h"
 #include "window_manager_hilog.h"
+#include "ability_context.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -76,7 +77,9 @@ void RootScene::LoadContent(const std::string& contentUrl, NativeEngine* engine,
         WLOGFE("context is nullptr!");
         return;
     }
-    uiContent_ = Ace::UIContent::Create(context, engine);
+    auto apiCompatibleVer = context->GetApplicationInfo()->apiCompatibleVersion;
+    auto apiTargetVer = context->GetApplicationInfo()->apiTargetVersion;
+    uiContent_ = Ace::UIContent::Create(context, engine, apiCompatibleVer, apiTargetVer);
     if (uiContent_ == nullptr) {
         WLOGFE("uiContent_ is nullptr!");
         return;
