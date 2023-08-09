@@ -38,8 +38,8 @@ AccessibilityWindowInfo* AccessibilityWindowInfo::Unmarshalling(Parcel& parcel)
     if (info == nullptr) {
         return nullptr;
     }
-    bool res = parcel.ReadInt32(info->wid_) && parcel.ReadInt32(info->innerWid_) && parcel.ReadInt32(info->uiNodeId_)
-        && parcel.ReadUint32(info->windowRect_.width_) &&
+    bool res = parcel.ReadInt32(info->wid_) && parcel.ReadInt32(info->innerWid_) && parcel.ReadInt32(info->uiNodeId_) &&
+        parcel.ReadUint32(info->windowRect_.width_) &&
         parcel.ReadUint32(info->windowRect_.height_) && parcel.ReadInt32(info->windowRect_.posX_) &&
         parcel.ReadInt32(info->windowRect_.posY_) && parcel.ReadBool(info->focused_) &&
         parcel.ReadBool(info->isDecorEnable_) && parcel.ReadUint64(info->displayId_) &&
