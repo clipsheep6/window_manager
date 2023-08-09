@@ -707,13 +707,7 @@ WMError WindowSceneSessionImpl::Resize(uint32_t width, uint32_t height)
 
     const auto& windowRect = GetRect();
     const auto& requestRect = GetRequestRect();
-    Rect rect;
-    if (state_ <= WindowState::STATE_CREATED) {
-        rect = requestRect;
-    } else {
-        rect = WindowHelper::IsMainFloatingWindow(GetType(), GetMode()) ? windowRect : requestRect;
-    }
-
+    Rect rect = requestRect;
     Rect newRect = { rect.posX_, rect.posY_, width, height }; // must keep w/h
     WLOGFD("Id:%{public}d, type: %{public}d, mode: %{public}d, requestRect: [%{public}d, %{public}d, %{public}d, "
         "%{public}d], windowRect: [%{public}d, %{public}d, %{public}d, %{public}d], "
