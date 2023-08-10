@@ -639,6 +639,19 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
             return session;
         }
     }
+
+    if (sessionInfo.abilityInfo == nullptr) {
+        QueryAbilityInfoFromBMS(currentUserId_, sessionInfo, *sessionInfo.abilityInfo);
+        if (sessionInfo.abilityInfo != nullptr) {
+            int32_t collaboratorType = std::stoi(sessionInfo.abilityInfo->applicationInfo.codePath);
+            // const_cast<SessionInfo*>(sessionInfo&)->collaboratorType = collaboratorType;
+            sessionInfo.collaboratorType = collaboratorType;
+        }
+    }
+    if (sessionInfo.collaboratorType != CollaboratorType::DEFAULT_TYPE) {
+        NotifyStartAbility(sessionInfo);
+    }
+
     sptr<SceneSession::SpecificSessionCallback> specificCb = CreateSpecificSessionCallback();
     auto task = [this, sessionInfo, specificCb, property]() {
         WLOGFI("sessionInfo: bundleName: %{public}s, moduleName: %{public}s, abilityName: %{public}s, type %{public}u",
@@ -666,6 +679,11 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
         RegisterInputMethodShownFunc(sceneSession);
         RegisterInputMethodHideFunc(sceneSession);
         WLOGFI("create session persistentId: %{public}d", persistentId);
+        if (sessionInfo.collaboratorType != CollaboratorType::DEFAULT_TYPE) {
+            NotifySessionCreate(sessionInfo);
+            NotifyLoadAbility(sessionInfo);
+            NotifyUpdateSessionInfo(sessionInfo);
+        }        
         return sceneSession;
     };
 
@@ -2630,6 +2648,7 @@ WSError SceneSessionManager::PendingSessionToForeground(const sptr<IRemoteObject
     WLOGFI("run PendingSessionToForeground");
     auto session = FindSessionByToken(token);
     if (session != nullptr) {
+        NotifyMoveSessionToForeground(session->GetSessionInfo());
         return session->PendingSessionToForeground();
     }
     WLOGFE("fail to find token");
@@ -2913,5 +2932,85 @@ bool SceneSessionManager::CheckCollaboratorType(int32_t type)
         return false;
     }
     return true;
+}
+
+void SceneSessionManager::QueryAbilityInfoFromBMS(const int32_t uId,
+    const SessionInfo& sessionInfo, AppExecFwk::AbilityInfo& abilityInfo)
+{
+    WLOGFI("run QueryAbilityInfoFromBMS");
+    if (bundleMgr_ == nullptr) {
+        WLOGFE("bundleMgr_ is nullptr!");
+        return;
+    }
+    auto abilityInfoFlag = (AppExecFwk::AbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION |
+        AppExecFwk::AbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION |
+        AppExecFwk::AbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA);
+    bool ret = bundleMgr_->QueryAbilityInfo(*sessionInfo.want, abilityInfoFlag, uId, abilityInfo);
+    if (!ret) {
+        WLOGFE("Get ability info from BMS failed!");
+    }
+}
+
+void SceneSessionManager::NotifyStartAbility(const SessionInfo& sessionInfo)
+{
+    WLOGFI("run NotifyStartAbility");
+    auto iter = collaboratorMap_.find(sessionInfo.collaboratorType);
+    if (iter == collaboratorMap_.end()) {
+        WLOGFE("Fail to found collaborator with type: %{public}d", sessionInfo.collaboratorType);
+        return;
+    }
+    auto collaborator = iter->second;
+    uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
+    collaborator->NotifyStartAbility(*(sessionInfo.abilityInfo), currentUserId_, *(sessionInfo.want), accessTokenIDEx);
+}
+
+void SceneSessionManager::NotifySessionCreate(const SessionInfo& sessionInfo)
+{
+    WLOGFI("run NotifySessionCreate");
+    auto iter = collaboratorMap_.find(sessionInfo.collaboratorType);
+    if (iter == collaboratorMap_.end()) {
+        WLOGFE("Fail to found collaborator with type: %{public}d", sessionInfo.collaboratorType);
+        return;
+    }
+    auto collaborator = iter->second;
+    collaborator->NotifyMissionCreated(sessionInfo.persistentId_, *(sessionInfo.want));
+}
+
+void SceneSessionManager::NotifyLoadAbility(const SessionInfo& sessionInfo)
+{
+    WLOGFI("run NotifyLoadAbility");
+    auto iter = collaboratorMap_.find(sessionInfo.collaboratorType);
+    if (iter == collaboratorMap_.end()) {
+        WLOGFE("Fail to found collaborator with type: %{public}d", sessionInfo.collaboratorType);
+        return;
+    }
+    auto collaborator = iter->second;
+    collaborator->NotifyLoadAbility(*(sessionInfo.abilityInfo), sessionInfo.persistentId_, *(sessionInfo.want));
+}
+
+
+void SceneSessionManager::NotifyUpdateSessionInfo(const SessionInfo& sessionInfo)
+{
+    WLOGFI("run NotifyUpdateSessionInfo");
+    auto iter = collaboratorMap_.find(sessionInfo.collaboratorType);
+    if (iter == collaboratorMap_.end()) {
+        WLOGFE("Fail to found collaborator with type: %{public}d", sessionInfo.collaboratorType);
+        return;
+    }
+    auto collaborator = iter->second;
+    uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
+    // collaborator->NotifyLoadAbility(*(sessionInfo.abilityInfo), sessionInfo.persistentId_, *(sessionInfo.want));
+}
+
+void SceneSessionManager::NotifyMoveSessionToForeground(const SessionInfo& sessionInfo)
+{
+    WLOGFI("run NotifyMoveSessionToForeground");
+    auto iter = collaboratorMap_.find(sessionInfo.collaboratorType);
+    if (iter == collaboratorMap_.end()) {
+        WLOGFE("Fail to found collaborator with type: %{public}d", sessionInfo.collaboratorType);
+        return;
+    }
+    auto collaborator = iter->second;
+    collaborator->NotifyMoveMissionToForeground(sessionInfo.persistentId_);
 }
 } // namespace OHOS::Rosen

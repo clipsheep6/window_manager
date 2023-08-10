@@ -271,6 +271,13 @@ private:
     std::unordered_map<int32_t, sptr<AAFwk::IAbilityManagerCollaborator>> collaboratorMap_;
 
     bool CheckCollaboratorType(int32_t type);
+    void QueryAbilityInfoFromBMS(const int32_t uId,
+        const SessionInfo& sessionInfo, AppExecFwk::AbilityInfo& abilityInfo);
+    void NotifyStartAbility(const SessionInfo& sessionInfo);
+    void NotifySessionCreate(const SessionInfo& sessionInfo);
+    void NotifyLoadAbility(const SessionInfo& sessionInfo);
+    void NotifyUpdateSessionInfo(const SessionInfo& sessionInfo);
+    void NotifyMoveSessionToForeground(const SessionInfo& sessionInfo);
 };
 } // namespace OHOS::Rosen
 
