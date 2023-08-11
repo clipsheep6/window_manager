@@ -640,18 +640,6 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
         }
     }
 
-    if (sessionInfo.abilityInfo == nullptr) {
-        QueryAbilityInfoFromBMS(currentUserId_, sessionInfo, *sessionInfo.abilityInfo);
-        if (sessionInfo.abilityInfo != nullptr) {
-            int32_t collaboratorType = std::stoi(sessionInfo.abilityInfo->applicationInfo.codePath);
-            // const_cast<SessionInfo*>(sessionInfo&)->collaboratorType = collaboratorType;
-            sessionInfo.collaboratorType = collaboratorType;
-        }
-    }
-    if (sessionInfo.collaboratorType != CollaboratorType::DEFAULT_TYPE) {
-        NotifyStartAbility(sessionInfo);
-    }
-
     sptr<SceneSession::SpecificSessionCallback> specificCb = CreateSpecificSessionCallback();
     auto task = [this, sessionInfo, specificCb, property]() {
         WLOGFI("sessionInfo: bundleName: %{public}s, moduleName: %{public}s, abilityName: %{public}s, type %{public}u",
@@ -678,12 +666,21 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
         RegisterSessionStateChangeNotifyManagerFunc(sceneSession);
         RegisterInputMethodShownFunc(sceneSession);
         RegisterInputMethodHideFunc(sceneSession);
-        WLOGFI("create session persistentId: %{public}d", persistentId);
+
+        if (sessionInfo.abilityInfo == nullptr) {
+            QueryAbilityInfoFromBMS(currentUserId_, sessionInfo, *sessionInfo.abilityInfo);
+            if (sessionInfo.abilityInfo != nullptr) {
+                int32_t collaboratorType = std::stoi(sessionInfo.abilityInfo->applicationInfo.codePath);
+                sessionInfo.collaboratorType = collaboratorType;
+            }
+        }
         if (sessionInfo.collaboratorType != CollaboratorType::DEFAULT_TYPE) {
+            WLOGFI("create session persistentId: %{public}d", persistentId);     
+            NotifyStartAbility(sessionInfo);
             NotifySessionCreate(sessionInfo);
-            NotifyLoadAbility(sessionInfo);
-            NotifyUpdateSessionInfo(sessionInfo);
-        }        
+        }
+
+        WLOGFI("create session persistentId: %{public}d", persistentId);     
         return sceneSession;
     };
 
@@ -783,15 +780,18 @@ std::future<int32_t> SceneSessionManager::RequestSceneSessionActivation(
             promise->set_value(static_cast<int32_t>(WSError::WS_ERROR_NULLPTR));
             return WSError::WS_ERROR_INVALID_WINDOW;
         }
-
         scnSessionInfo->isNewWant = isNewActive;
         auto errCode = AAFwk::AbilityManagerClient::GetInstance()->StartUIAbilityBySCB(scnSessionInfo);
-        NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_ADDED);
 
+        auto sessionInfo = scnSession->GetSessionInfo();
         if (WindowHelper::IsMainWindow(scnSession->GetWindowType())) {
-            auto sessionInfo = scnSession->GetSessionInfo();
             WindowInfoReporter::GetInstance().InsertShowReportInfo(sessionInfo.bundleName_);
         }
+        if (sessionInfo.collaboratorType != CollaboratorType::DEFAULT_TYPE) {
+            NotifyLoadAbility(sessionInfo);
+            NotifyUpdateSessionInfo(sessionInfo);
+        }  
+        NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_ADDED);
         promise->set_value(static_cast<int32_t>(errCode));
         return WSError::WS_OK;
     };
@@ -2999,7 +2999,6 @@ void SceneSessionManager::NotifyUpdateSessionInfo(const SessionInfo& sessionInfo
     }
     auto collaborator = iter->second;
     uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
-    // collaborator->NotifyLoadAbility(*(sessionInfo.abilityInfo), sessionInfo.persistentId_, *(sessionInfo.want));
 }
 
 void SceneSessionManager::NotifyMoveSessionToForeground(const SessionInfo& sessionInfo)

@@ -409,15 +409,19 @@ WSError Session::ConnectImpl(const sptr<ISessionStage>& sessionStage, const sptr
 void Session::FillSessionInfo(SessionInfo &sessionInfo)
 {
     auto uid = GetCallingUid() / UID_TRANSFORM_DIVISOR;
-    auto abilityInfo = QueryAbilityInfoFromBMS(uid, sessionInfo.bundleName_, sessionInfo.abilityName_,
-        sessionInfo.moduleName_);
-    if (abilityInfo == nullptr) {
-        return;
+
+    if (sessionInfo.abilityInfo == nullptr) {
+        auto abilityInfo = QueryAbilityInfoFromBMS(uid, sessionInfo.bundleName_, sessionInfo.abilityName_,
+            sessionInfo.moduleName_);
+        if (abilityInfo == nullptr) {
+            return;
+        }
+        sessionInfo.abilityInfo = abilityInfo;
     }
     if (sessionInfo.startMethod != OHOS::Rosen::StartMethod::START_CALL) {
         sessionInfo.startMethod = OHOS::Rosen::StartMethod::START_NORMAL;
     }
-    sessionInfo.abilityInfo = abilityInfo;
+    // sessionInfo.abilityInfo = abilityInfo;
     sessionInfo.time = GetCurrentTime();
     WLOGFI("FillSessionInfo end, removeMissionAfterTerminate: %{public}d excludeFromMissions: %{public}d "
         " label:%{public}s iconPath:%{public}s",
