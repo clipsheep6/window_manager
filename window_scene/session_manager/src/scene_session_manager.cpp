@@ -1323,7 +1323,10 @@ void SceneSessionManager::HandleUpdateProperty(const sptr<WindowSessionProperty>
         }
         case WSPropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE: {
             bool isPrivacyMode = property->GetPrivacyMode() || property->GetSystemPrivacyMode();
-            sceneSession->SetPrivacyMode(isPrivacyMode);
+            {
+                std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+                sceneSession->SetPrivacyMode(isPrivacyMode);
+            }
             break;
         }
         case WSPropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE: {
@@ -1376,6 +1379,7 @@ void SceneSessionManager::HandleUpdateProperty(const sptr<WindowSessionProperty>
             if (sceneSession->GetSessionProperty() != nullptr) {
                 sceneSession->GetSessionProperty()->SetWindowLimits(property->GetWindowLimits());
             }
+            break;
         }
         default:
             break;
@@ -1898,12 +1902,16 @@ void SceneSessionManager::RegisterWindowFocusChanged(const WindowFocusChangedFun
 
 void SceneSessionManager::UpdatePrivateStateAndNotify(bool isAddingPrivateSession)
 {
-    auto screenSession = ScreenSessionManager::GetInstance().GetScreenSession(0);
-    if (screenSession == nullptr) {
-        WLOGFE("screen session is null");
-        return;
-    }
-    ScreenSessionManager::GetInstance().UpdatePrivateStateAndNotify(screenSession, isAddingPrivateSession);
+    auto task = [isAddingPrivateSession]() {
+        auto screenSession = ScreenSessionManager::GetInstance().GetScreenSession(0);
+        if (screenSession == nullptr) {
+            WLOGFE("screen session is null");
+            return;
+        }
+        ScreenSessionManager::GetInstance().UpdatePrivateStateAndNotify(screenSession, isAddingPrivateSession);
+    };
+
+    taskScheduler_->PostAsyncTask(task);
 }
 
 void SceneSessionManager::RegisterSessionStateChangeNotifyManagerFunc(sptr<SceneSession>& sceneSession)
@@ -1922,6 +1930,7 @@ void SceneSessionManager::RegisterSessionStateChangeNotifyManagerFunc(sptr<Scene
 void SceneSessionManager::OnSessionStateChange(int32_t persistentId, const SessionState& state)
 {
     WLOGFD("Session state change, id: %{public}d", persistentId);
+    std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
     auto sceneSession = GetSceneSession(persistentId);
     if (sceneSession == nullptr) {
         WLOGFD("session is nullptr");

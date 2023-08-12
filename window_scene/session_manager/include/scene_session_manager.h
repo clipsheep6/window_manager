@@ -239,6 +239,7 @@ private:
     sptr<RootSceneSession> rootSceneSession_;
     std::shared_ptr<AbilityRuntime::Context> rootSceneContext_;
     std::shared_mutex sceneSessionMapMutex_;
+    std::shared_mutex setPropertyMutex_;
     std::map<int32_t, sptr<SceneSession>> sceneSessionMap_;
     sptr<ScbSessionHandler> scbSessionHandler_;
     std::shared_ptr<SessionListenerController> listenerController_;
