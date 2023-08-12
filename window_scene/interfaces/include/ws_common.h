@@ -115,6 +115,15 @@ enum class StartMethod : int32_t {
     START_CALL
 };
 
+/**
+ * @brief collaborator type.
+ */
+enum CollaboratorType : int32_t {
+    DEFAULT_TYPE = 0,
+    RESERVE_TYPE,
+    OTHERS_TYPE,
+};
+
 struct SessionInfo {
     std::string bundleName_ = "";
     std::string moduleName_ = "";
@@ -140,6 +149,7 @@ struct SessionInfo {
     std::string time;
     ContinueState continueState = ContinueState::CONTINUESTATE_ACTIVE;
     int64_t uiAbilityId_ = 0;
+    mutable int32_t collaboratorType = CollaboratorType::DEFAULT_TYPE;
 };
 
 enum class SessionFlag : uint32_t {
@@ -279,15 +289,5 @@ enum class TerminateType : uint32_t {
     CLOSE_AND_START_CALLER,
     CLOSE_BY_EXCEPTION,
 };
-
-/**
- * @brief collaborator type.
- */
-enum CollaboratorType {
-    DEFAULT_TYPE = 0,
-    RESERVE_TYPE,
-    OTHERS_TYPE,
-};
-
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_WS_COMMON_H
