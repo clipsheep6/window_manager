@@ -42,7 +42,10 @@ public:
 
     static bool gestureNavigationEnabled_;
     static ProcessGestureNavigationEnabledChangeFunc callbackFunc_;
+    static sptr<SceneSessionManager> ssm_;
 };
+
+sptr<SceneSessionManager> SceneSessionManagerTest::ssm_ = nullptr;
 
 bool SceneSessionManagerTest::gestureNavigationEnabled_ = true;
 ProcessGestureNavigationEnabledChangeFunc SceneSessionManagerTest::callbackFunc_ = [](bool enable) {
@@ -51,10 +54,12 @@ ProcessGestureNavigationEnabledChangeFunc SceneSessionManagerTest::callbackFunc_
 
 void SceneSessionManagerTest::SetUpTestCase()
 {
+    ssm_ = new SceneSessionManager();
 }
 
 void SceneSessionManagerTest::TearDownTestCase()
 {
+    ssm_ = nullptr;
 }
 
 void SceneSessionManagerTest::SetUp()
@@ -122,6 +127,58 @@ HWTEST_F(SceneSessionManagerTest, RegisterWindowManagerAgent, Function | SmallTe
     ASSERT_EQ(WMError::WM_OK, SceneSessionManager::GetInstance().RegisterWindowManagerAgent(type, windowManagerAgent));
     ASSERT_EQ(WMError::WM_OK, SceneSessionManager::GetInstance().UnregisterWindowManagerAgent(
         type, windowManagerAgent));
+}
+
+/**
+ * @tc.name: Init
+ * @tc.desc: SceneSesionManager init 
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest, Init, Function | SmallTest | Level3)
+{
+    int ret = 0;
+    ssm_->Init();
+    ASSERT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name: LoadWindowSceneXml
+ * @tc.desc: SceneSesionManager load window scene xml 
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest, LoadWindowSceneXml, Function | SmallTest | Level3)
+{
+    int ret = 0;
+    ssm_->LoadWindowSceneXml();
+    ASSERT_EQ(ret, 0);
+}
+
+// /**
+//  * @tc.name: ConfigWindowSceneXml
+//  * @tc.desc: SceneSesionManager config window scene xml run
+//  * @tc.type: FUNC
+//  */
+HWTEST_F(SceneSessionManagerTest, ConfigWindowSceneXml, Function | SmallTest | Level3)
+{
+    int ret = 0;
+    ssm_->ConfigWindowSceneXml(); 
+    ASSERT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name: SetSessionContinueState
+ * @tc.desc: SceneSesionManager set session continue state
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest, SetSessionContinueState, Function | SmallTest | Level3)
+{
+    MessageParcel *data = new MessageParcel();
+    sptr <IRemoteObject> token = data->ReadRemoteObject();
+    auto continueState = static_cast<ContinueState>(data->ReadInt32());
+    WSError result01 = ssm_->SetSessionContinueState(token, continueState);
+    WSError result02 = ssm_->SetSessionContinueState(nullptr, continueState);
+    ASSERT_EQ(result01, WSError::WS_OK);
+    ASSERT_EQ(result02, WSError::WS_ERROR_INVALID_PARAM);
 }
 
 }
