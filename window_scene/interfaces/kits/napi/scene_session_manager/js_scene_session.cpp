@@ -130,7 +130,7 @@ JsSceneSession::JsSceneSession(NativeEngine& engine, const sptr<SceneSession>& s
 
 JsSceneSession::~JsSceneSession()
 {
-    WLOGD("~JsSceneSession");
+    WLOGI("~JsSceneSession");
 }
 
 void JsSceneSession::ProcessSessionDefaultAnimationFlagChangeRegister()
@@ -183,8 +183,15 @@ void JsSceneSession::ProcessPendingSceneSessionActivationRegister()
 
 void JsSceneSession::ProcessSessionStateChangeRegister()
 {
-    NotifySessionStateChangeFunc func = [this](const SessionState& state) {
-        this->OnSessionStateChange(state);
+    auto weak = weak_from_this();
+    NotifySessionStateChangeFunc func = [weak](const SessionState& state) {
+        auto weakJsSession = weak.promote();
+        if (weakJsSession != nullptr) {
+            WLOGI("js scene session OnSessionStateChange");
+            weakJsSession->OnSessionStateChange(state);
+        } else {
+            WLOGW("js scene session is destroyed");
+        }
     };
     auto session = weakSession_.promote();
     if (session == nullptr) {
@@ -736,6 +743,9 @@ void JsSceneSession::OnBindDialogTarget(const sptr<SceneSession>& sceneSession)
 void JsSceneSession::OnSessionStateChange(const SessionState& state)
 {
     WLOGFI("[NAPI]OnSessionStateChange, state: %{public}u", static_cast<uint32_t>(state));
+    if (jsCbMap_.empty()) {
+        return;
+    }
     auto iter = jsCbMap_.find(SESSION_STATE_CHANGE_CB);
     if (iter == jsCbMap_.end()) {
         return;
