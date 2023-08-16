@@ -73,6 +73,7 @@ public:
 
     void SetScreenRequestedOrientation(Orientation orientation);
     Orientation GetScreenRequestedOrientation() const;
+    bool SetScreenRotationLocked(bool isLocked);
 
 private:
     static inline bool IsVertical(Rotation rotation)
