@@ -1105,6 +1105,11 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
     InitAbilityInfo();
     SetSystemConfig();
 
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW) {
+        property_->SetRequestRect(GetSystemAlarmWindowDefaultSize(property_->GetRequestRect()));
+        property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+    }
+
     if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
         GetConfigurationFromAbilityInfo();
     } else if (property_->GetWindowMode() == WindowMode::WINDOW_MODE_UNDEFINED) {
@@ -3354,11 +3359,6 @@ void WindowImpl::SetDefaultOption()
         case WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT: {
             property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
             property_->SetFocusable(false);
-            break;
-        }
-        case WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW: {
-            property_->SetRequestRect(GetSystemAlarmWindowDefaultSize(property_->GetRequestRect()));
-            property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
             break;
         }
         case WindowType::WINDOW_TYPE_KEYGUARD: {
