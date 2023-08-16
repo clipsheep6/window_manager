@@ -36,9 +36,9 @@ MoveDragController::MoveDragController(int32_t persistentId)
     persistentId_ = persistentId;
 }
 
-void MoveDragController::RegisterSessionRectChangeCallback(const SessionRectChangeCallBack& callBack)
+void MoveDragController::RegisterMoveDragCallback(const MoveDragCallback& callBack)
 {
-    sessionRectChangeCallBack_ = callBack;
+    moveDragCallback_ = callBack;
 }
 
 void MoveDragController::SetStartMoveFlag(bool flag)
@@ -80,22 +80,22 @@ void MoveDragController::SetAspectRatio(float ratio)
     aspectRatio_ = ratio;
 }
 
-WSError MoveDragController::ConsumeMoveEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
+bool MoveDragController::ConsumeMoveEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
     const WSRect& originalRect)
 {
     if (pointerEvent == nullptr) {
         WLOGE("ConsumeMoveEvent stop because of nullptr");
-        return WSError::WS_ERROR_NULLPTR;
+        return false;
     }
     if (GetStartDragFlag()) {
         WLOGFI("the window is being resized");
-        return WSError::WS_DO_NOTHING;
+        return false;
     }
     int32_t pointerId = pointerEvent->GetPointerId();
     int32_t startPointerId = moveDragProperty_.pointerId_;
     if (startPointerId != -1 && startPointerId != pointerId) {
         WLOGFI("block unnecessary pointer event inside the window");
-        return WSError::WS_DO_NOTHING;
+        return false;
     }
     MMI::PointerEvent::PointerItem pointerItem;
     int32_t sourceType = pointerEvent->GetSourceType();
@@ -103,25 +103,35 @@ WSError MoveDragController::ConsumeMoveEvent(const std::shared_ptr<MMI::PointerE
         (sourceType == MMI::PointerEvent::SOURCE_TYPE_MOUSE &&
         pointerEvent->GetButtonId() != MMI::PointerEvent::MOUSE_BUTTON_LEFT)) {
         WLOGFW("invalid pointerEvent");
-        return WSError::WS_ERROR_NULLPTR;
+        return false;
     }
 
+    UpdateMoveTempProperty(pointerEvent);
+
+    if (!GetStartMoveFlag()) {
+        return false;
+    }
     int32_t action = pointerEvent->GetPointerAction();
+    SizeChangeReason reason = SizeChangeReason::UNDEFINED;
     switch (action) {
         case MMI::PointerEvent::POINTER_ACTION_MOVE: {
+            reason = SizeChangeReason::MOVE;
             break;
         }
         case MMI::PointerEvent::POINTER_ACTION_UP:
         case MMI::PointerEvent::POINTER_ACTION_BUTTON_UP:
         case MMI::PointerEvent::POINTER_ACTION_CANCEL: {
+            reason = SizeChangeReason::DRAG_END;
             SetStartMoveFlag(false);
             break;
         }
         default:
             break;
     }
-    CalcMoveTargetRect(pointerEvent, originalRect);
-    return WSError::WS_OK;
+    if (CalcMoveTargetRect(pointerEvent, originalRect)) {
+        ProcessSessionRectChange(reason);
+    }
+    return true;
 }
 
 bool MoveDragController::ConsumeDragEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
@@ -151,20 +161,24 @@ bool MoveDragController::ConsumeDragEvent(const std::shared_ptr<MMI::PointerEven
         return false;
     }
 
+    SizeChangeReason reason = SizeChangeReason::UNDEFINED;
     switch (pointerEvent->GetPointerAction()) {
         case MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN:
         case MMI::PointerEvent::POINTER_ACTION_DOWN: {
             if (!EventDownInit(pointerEvent, originalRect, property, sysConfig)) {
                 return false;
             }
+            reason = SizeChangeReason::DRAG_START;
             break;
         }
         case MMI::PointerEvent::POINTER_ACTION_MOVE: {
+            reason = SizeChangeReason::DRAG;
             break;
         }
         case MMI::PointerEvent::POINTER_ACTION_UP:
         case MMI::PointerEvent::POINTER_ACTION_BUTTON_UP:
         case MMI::PointerEvent::POINTER_ACTION_CANCEL: {
+            reason = SizeChangeReason::DRAG_END;
             isStartDrag_ = false;
             break;
         }
@@ -180,11 +194,11 @@ bool MoveDragController::ConsumeDragEvent(const std::shared_ptr<MMI::PointerEven
     } else {
         moveDragProperty_.targetRect_ = CalcFreeformTargetRect(type_, tranX, tranY, moveDragProperty_.originalRect_);
     }
-    ProcessSessionRectChange();
+    ProcessSessionRectChange(reason);
     return true;
 }
 
-void MoveDragController::CalcMoveTargetRect(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
+bool MoveDragController::CalcMoveTargetRect(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
     const WSRect& originalRect)
 {
     MMI::PointerEvent::PointerItem pointerItem;
@@ -201,6 +215,7 @@ void MoveDragController::CalcMoveTargetRect(const std::shared_ptr<MMI::PointerEv
         moveDragProperty_.originalRect_ = originalRect;
         moveDragProperty_.originalRect_.posX_ = pointerDisplayX - pointerWindowX;
         moveDragProperty_.originalRect_.posY_ = pointerDisplayY - pointerWindowY;
+        return false;
     } else {
         int32_t offsetX = pointerDisplayX - moveDragProperty_.originalPointerPosX_;
         int32_t offsetY = pointerDisplayY - moveDragProperty_.originalPointerPosY_;
@@ -212,7 +227,7 @@ void MoveDragController::CalcMoveTargetRect(const std::shared_ptr<MMI::PointerEv
         WLOGFD("move rect: [%{public}d, %{public}d, %{public}u, %{public}u]",
             moveDragProperty_.targetRect_.posX_, moveDragProperty_.targetRect_.posY_,
             moveDragProperty_.targetRect_.width_, moveDragProperty_.targetRect_.height_);
-        ProcessSessionRectChange();
+        return true;
     }
 }
 
@@ -507,10 +522,10 @@ void MoveDragController::InitDecorValue(const sptr<WindowSessionProperty> proper
         WindowHelper::IsWindowModeSupported(sysConfig.decorModeSupportInfo_, property->GetWindowMode());
 }
 
-void MoveDragController::ProcessSessionRectChange()
+void MoveDragController::ProcessSessionRectChange(const SizeChangeReason& reason)
 {
-    if (sessionRectChangeCallBack_) {
-        sessionRectChangeCallBack_();
+    if (MoveDragCallback_) {
+        moveDragCallback_(reason);
     }
 }
 
@@ -639,5 +654,64 @@ void MoveDragController::HandleMouseStyle(const std::shared_ptr<MMI::PointerEven
         }
         mouseStyleID_ = newStyleID;
     }
+}
+
+
+WSError MoveDragController::UpdateMoveTempProperty(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
+    int32_t pointerDisplayX = pointerItem.GetDisplayX();
+    int32_t pointerDisplayY = pointerItem.GetDisplayY();
+    switch (pointerEvent->GetPointerAction()) {
+        case MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN:
+        case MMI::PointerEvent::POINTER_ACTION_DOWN:
+            moveTempProperty_.pointerId_ = pointerId;
+            moveTempProperty_.lastDownPointerPosX_ = pointerDisplayX;
+            moveTempProperty_.lastDownPointerPosY_ = pointerDisplayY;
+            moveTempProperty_.lastDownPointerWindowX_ = pointerItem.GetWindowX();
+            moveTempProperty_.lastDownPointerWindowY_ = pointerItem.GetWindowY();
+            break;
+        case MMI::PointerEvent::POINTER_ACTION_MOVE:
+            moveTempProperty_.lastMovePointerPosX_ = pointerDisplayX;
+            moveTempProperty_.lastMovePointerPosY_ = pointerDisplayY;
+            break;
+        case MMI::PointerEvent::POINTER_ACTION_UP:
+        case MMI::PointerEvent::POINTER_ACTION_BUTTON_UP:
+        case MMI::PointerEvent::POINTER_ACTION_CANCEL: {
+            moveTempProperty_ = { -1, -1, -1, -1, -1, -1, -1 };
+            break;
+        }
+        default:
+            break;
+    }
+    return WSError::WS_OK;
+}
+
+void MoveDragController::ClacFirstMoveTargetRect()
+{
+    if (!GetStartMoveFlag() || moveTempProperty_.isEmpty()) {
+        return;
+    }
+
+    WSRect originalRect = {
+        moveTempProperty_.lastDownPointerPosX_ - moveTempProperty_.lastDownPointerWindowX_,
+        moveTempProperty_.lastDownPointerPosY_ - moveTempProperty_.lastDownPointerWindowY_,
+        winRect_.width_,
+        winRect_.height_
+    };
+    SetOriginalValue(moveTempProperty_.pointerId_, moveTempProperty_.lastDownPointerPosX_,
+        moveTempProperty_.lastDownPointerPosY_, originalRect);
+
+    int32_t offsetX = moveTempProperty_.lastMovePointerPosX_ - moveTempProperty_.lastDownPointerPosX_;
+    int32_t offsetY = moveTempProperty_.lastMovePointerPosY_ - moveTempProperty_.lastDownPointerPosY_;
+    WSRect targetRect = {
+        originalRect.posX_ + offsetX,
+        originalRect.posY_ + offsetY,
+        originalRect.width_,
+        originalRect.height_
+    };
+    WLOGFD("first move rect: [%{public}d, %{public}d, %{public}u, %{public}u]", targetRect.posX_, targetRect.posY_,
+        targetRect.width_, targetRect.height_);
+    moveDragProperty_.targetRect_ = targetRect;
+    ProcessSessionRectChange(SizeChangeReason::MOVE);
 }
 } // namespace OHOS::Rosen

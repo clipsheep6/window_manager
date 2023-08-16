@@ -48,7 +48,7 @@ SceneSession::SceneSession(const SessionInfo& info, const sptr<SpecificSessionCa
     }
     specificCallback_ = specificCallback;
     moveDragController_ = new (std::nothrow) MoveDragController(GetPersistentId());
-    SetSessionRectChangeCallback();
+    SetMoveDragCallback();
     std::string key = GetRatioPreferenceKey();
     if (!key.empty()) {
         if (ScenePersistentStorage::HasKey(key, ScenePersistentStorageType::ASPECT_RATIO)) {
@@ -142,7 +142,7 @@ WSError SceneSession::OnSessionEvent(SessionEvent event)
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SceneSession::StartMove");
         moveDragController_->InitMoveDragProperty();
         moveDragController_->SetStartMoveFlag(true);
-        ClacFirstMoveTargetRect();
+        moveDragController_->ClacFirstMoveTargetRect();
     }
     if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->OnSessionEvent_) {
         sessionChangeCallback_->OnSessionEvent_(static_cast<uint32_t>(event));
@@ -227,11 +227,6 @@ WSError SceneSession::UpdateRect(const WSRect& rect, SizeChangeReason reason)
 {
     WLOGFD("Id: %{public}d, reason: %{public}d, rect: [%{public}d, %{public}d, %{public}u, %{public}u]",
         GetPersistentId(), reason, rect.posX_, rect.posY_, rect.width_, rect.height_);
-    if (moveDragController_->GetStartMoveFlag()) {
-        reason = SizeChangeReason::MOVE;
-    } else if (moveDragController_->GetStartDragFlag()) {
-        reason = SizeChangeReason::DRAG;
-    }
     WSError ret = Session::UpdateRect(rect, reason);
     if (ret == WSError::WS_OK) {
         specificCallback_->onUpdateAvoidArea_(GetPersistentId());
@@ -536,6 +531,9 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
         if (moveDragController_->GetStartMoveFlag()) {
             return moveDragController_->ConsumeMoveEvent(pointerEvent, winRect_);
         }
+        if (IsDecorEnable() && IsDemoveDragController_->ConsumeMoveEvent(pointerEvent, winRect_)) {
+            return WSError::WS_OK;
+        }
     }
     return Session::TransferPointerEvent(pointerEvent);
 }
@@ -635,23 +633,46 @@ bool SceneSession::FixRectByAspectRatio(WSRect& rect)
     return true;
 }
 
-void SceneSession::SetSessionRectChangeCallback()
+void SceneSession::SetMoveDragCallback()
 {
     if (moveDragController_) {
-        SessionRectChangeCallBack callBack = [this](void) {
-            this->OnSessionRectChange();
+        MoveDragCallback callBack = [this](const SizeChangeReason& reason) {
+            this->OnMoveDragCallback(reason);
         };
-        moveDragController_->RegisterSessionRectChangeCallback(callBack);
+        moveDragController_->RegisterMoveDragCallback(callBack);
     }
 }
 
-void SceneSession::OnSessionRectChange()
+void SceneSession::OnMoveDragCallback(const SizeChangeReason& reason)
 {
     WSRect rect = moveDragController_->GetTargetRect();
-    WLOGFD("rect: [%{public}d, %{public}d, %{public}u, %{public}u]", rect.posX_, rect.posY_, rect.width_, rect.height_);
-    NotifySessionRectChange(rect);
-    if (!(moveDragController_->GetStartMoveFlag() || moveDragController_->GetStartDragFlag())) {
+    WLOGFD("OnMoveDragCallback rect: [%{public}d, %{public}d, %{public}u, %{public}u], reason : %{public}d",
+        rect.posX_, rect.posY_, rect.width_, rect.height_, reason);
+    SetSurfaceBound(rect);
+    UpdateRect(rect, reason);
+    if (reason == SizeChangeReason::DRAG_END) {
+        NotifySessionRectChange(rect, reason);
         OnSessionEvent(SessionEvent::EVENT_END_MOVE);
+    }
+}
+
+void SceneSession::SetSurfaceBound(const WSRect& rect)
+{
+    auto rsTransaction = RSTransactionProxy::GetInstance();
+    if (rsTransaction) {
+        rsTransaction->Begin();
+    }
+    if (surfaceNode_ && surfaceNode_->GetParent() &&
+        surfaceNode_->GetParent()->GetType() == RSUINodeType::SURFACE_NODE) {
+        surfaceNode_->GetParent()->SetBounds(rect.posX_, rect.posY_, rect.width_, rect.height_);
+        surfaceNode_->SetBounds(0, 0, rect.width_, rect.height_);
+    } else if (surfaceNode_) {
+        surfaceNode_->SetBounds(rect.posX_, rect.posY_, rect.width_, rect.height_);
+    } else {
+        WLOGE("SetSurfaceBound surfaceNode is null!");
+    }
+    if (rsTransaction) {
+        rsTransaction->Commit();
     }
 }
 
@@ -908,77 +929,4 @@ int32_t SceneSession::GetBrokerPersistentId()
 {
     return brokerPersistentId_;
 }
-
-WSError SceneSession::UpdateMoveTempProperty(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
-{
-    int32_t pointerId = pointerEvent->GetPointerId();
-    int32_t startPointerId = moveTempProperty_.pointerId_;
-    if (startPointerId != -1 && startPointerId != pointerId) {
-        WLOGFI("block unnecessary pointer event inside the window");
-        return WSError::WS_DO_NOTHING;
-    }
-    MMI::PointerEvent::PointerItem pointerItem;
-    int32_t sourceType = pointerEvent->GetSourceType();
-    if (!pointerEvent->GetPointerItem(pointerId, pointerItem) ||
-        (sourceType == MMI::PointerEvent::SOURCE_TYPE_MOUSE &&
-        pointerEvent->GetButtonId() != MMI::PointerEvent::MOUSE_BUTTON_LEFT)) {
-        WLOGFW("invalid pointerEvent");
-        return WSError::WS_ERROR_NULLPTR;
-    }
-
-    int32_t pointerDisplayX = pointerItem.GetDisplayX();
-    int32_t pointerDisplayY = pointerItem.GetDisplayY();
-    switch (pointerEvent->GetPointerAction()) {
-        case MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN:
-        case MMI::PointerEvent::POINTER_ACTION_DOWN:
-            moveTempProperty_.pointerId_ = pointerId;
-            moveTempProperty_.lastDownPointerPosX_ = pointerDisplayX;
-            moveTempProperty_.lastDownPointerPosY_ = pointerDisplayY;
-            moveTempProperty_.lastDownPointerWindowX_ = pointerItem.GetWindowX();
-            moveTempProperty_.lastDownPointerWindowY_ = pointerItem.GetWindowY();
-            break;
-        case MMI::PointerEvent::POINTER_ACTION_MOVE:
-            moveTempProperty_.lastMovePointerPosX_ = pointerDisplayX;
-            moveTempProperty_.lastMovePointerPosY_ = pointerDisplayY;
-            break;
-        case MMI::PointerEvent::POINTER_ACTION_UP:
-        case MMI::PointerEvent::POINTER_ACTION_BUTTON_UP:
-        case MMI::PointerEvent::POINTER_ACTION_CANCEL: {
-            moveTempProperty_ = { -1, -1, -1, -1, -1, -1, -1 };
-            break;
-        }
-        default:
-            break;
-    }
-    return WSError::WS_OK;
-}
-
-void SceneSession::ClacFirstMoveTargetRect()
-{
-    if (!moveDragController_->GetStartMoveFlag() || moveTempProperty_.isEmpty()) {
-        return;
-    }
-
-    WSRect originalRect = {
-        moveTempProperty_.lastDownPointerPosX_ - moveTempProperty_.lastDownPointerWindowX_,
-        moveTempProperty_.lastDownPointerPosY_ - moveTempProperty_.lastDownPointerWindowY_,
-        winRect_.width_,
-        winRect_.height_
-    };
-    moveDragController_->SetOriginalValue(moveTempProperty_.pointerId_, moveTempProperty_.lastDownPointerPosX_,
-        moveTempProperty_.lastDownPointerPosY_, originalRect);
-
-    int32_t offsetX = moveTempProperty_.lastMovePointerPosX_ - moveTempProperty_.lastDownPointerPosX_;
-    int32_t offsetY = moveTempProperty_.lastMovePointerPosY_ - moveTempProperty_.lastDownPointerPosY_;
-    WSRect targetRect = {
-        originalRect.posX_ + offsetX,
-        originalRect.posY_ + offsetY,
-        originalRect.width_,
-        originalRect.height_
-    };
-    WLOGFD("first move rect: [%{public}d, %{public}d, %{public}u, %{public}u]", targetRect.posX_, targetRect.posY_,
-        targetRect.width_, targetRect.height_);
-    NotifySessionRectChange(targetRect);
-}
-
 } // namespace OHOS::Rosen
