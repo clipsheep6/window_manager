@@ -172,6 +172,42 @@ HWTEST_F(SceneSessionManagerTest, ConfigWindowSizeLimits01, Function | SmallTest
     ASSERT_EQ(sceneSessionManager->systemConfig_.miniWidthOfSubWindow_, 30);
     ASSERT_EQ(sceneSessionManager->systemConfig_.miniHeightOfSubWindow_, 40);
 }
+
+/**
+ * @tc.name: DumpSessionAll
+ * @tc.desc: ScreenSesionManager dump all session info
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest, DumpSessionAll, Function | SmallTest | Level3)
+{
+    SessionInfo sessionInfo;
+    sessionInfo.bundleName_ = "SceneSessionManagerTest";
+    sessionInfo.abilityName_ = "DumpSessionAll";
+    sptr<SceneSession> sceneSession = SceneSessionManager::GetInstance().RequestSceneSession(sessionInfo, nullptr);
+    ASSERT_NE(nullptr, sceneSession);
+    std::vector<std::string> infos;
+    WSError result = SceneSessionManager::GetInstance().DumpSessionAll(infos);
+    ASSERT_EQ(WSError::WS_OK, result);
+    ASSERT_FALSE(infos.empty);
+}
+
+/**
+ * @tc.name: DumpSessionWithId
+ * @tc.desc: ScreenSesionManager dump session with id
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest, DumpSessionWithId, Function | SmallTest | Level3)
+{
+    SessionInfo sessionInfo;
+    sessionInfo.bundleName_ = "SceneSessionManagerTest";
+    sessionInfo.abilityName_ = "DumpSessionWithId";
+    sptr<SceneSession> sceneSession = SceneSessionManager::GetInstance().RequestSceneSession(sessionInfo, nullptr);
+    ASSERT_NE(nullptr, sceneSession);
+    std::vector<std::string> infos;
+    WSError result = SceneSessionManager::GetInstance().DumpSessionWithId(sceneSession->GetPersistentId(), infos);
+    ASSERT_EQ(WSError::WS_OK, result);
+    ASSERT_FALSE(infos.empty);
+}
 }
 } // namespace Rosen
 } // namespace OHOS

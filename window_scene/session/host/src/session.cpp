@@ -32,9 +32,12 @@
 #include "ability_start_setting.h"
 #include "window_manager_hilog.h"
 #include "session_helper.h"
+#include "session/host/include/session_utils.h"
 
 namespace OHOS::Rosen {
 namespace {
+const std::string DLP_INDEX = "ohos.dlp.params.index";
+
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "Session" };
 std::atomic<int32_t> g_persistentId = INVALID_SESSION_ID;
 std::set<int32_t> g_persistentIdSet;
@@ -561,6 +564,9 @@ WSError Session::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ability
     info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
     info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
     info.moduleName_ = abilitySessionInfo->want.GetModuleName();
+    int32_t appIndex = abilitySessionInfo->want.GetIntParam(DLP_INDEX, 0);
+    info.sessionName_ = SessionUtils::ConvertSessionName(info.bundleName_, info.abilityName_,
+        info.moduleName_, appIndex);
     info.persistentId_ = abilitySessionInfo->persistentId;
     info.callerPersistentId_ = GetPersistentId();
     info.callState_ = static_cast<uint32_t>(abilitySessionInfo->state);
@@ -571,8 +577,8 @@ WSError Session::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ability
     info.startSetting = abilitySessionInfo->startSetting;
     info.callingTokenId_ = abilitySessionInfo->callingTokenId;
     info.reuse = abilitySessionInfo->reuse;
-    WLOGFI("PendingSessionActivation:bundleName %{public}s, moduleName:%{public}s, abilityName:%{public}s",
-        info.bundleName_.c_str(), info.moduleName_.c_str(), info.abilityName_.c_str());
+    WLOGFI("PendingSessionActivation:bundleName %{public}s, moduleName:%{public}s, abilityName:%{public}s, \
+        appIndex:%{public}d", info.bundleName_.c_str(), info.moduleName_.c_str(), info.abilityName_.c_str(), appIndex);
     WLOGFI("PendingSessionActivation callState:%{public}d, want persistentId: %{public}d, callingTokenId:%{public}d, \
         uiAbilityId: %{public}" PRIu64 "", info.callState_, info.persistentId_, info.callingTokenId_,
         info.uiAbilityId_);

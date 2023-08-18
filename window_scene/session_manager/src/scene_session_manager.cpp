@@ -2487,6 +2487,43 @@ std::string SceneSessionManager::AnonymizeDeviceId(const std::string& deviceId)
     return anonDeviceId;
 }
 
+WSError SceneSessionManager::DumpSessionAll(std::vector<std::string> &infos)
+{
+    WLOGFI("Dump all session.");
+    auto task = [this, &infos]() {
+        std::string dumpInfo = "User ID #" + std::to_string(currentUserId_);
+        infos.push_back(dumpInfo);
+        std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+        for (const auto &item : sceneSessionMap_) {
+            auto& session = item.second;
+            if (session) {
+                session->DumpMissionInfo(infos);
+            }
+        }
+        return WSError::WS_OK;
+    };
+
+    return taskScheduler_->PostSyncTask(task);
+}
+
+WSError SceneSessionManager::DumpSessionWithId(int32_t persistentId, std::vector<std::string> &infos)
+{
+    WLOGFI("Dump session with id %{public}d", persistentId);
+    auto task = [this, persistentId, &infos]() {
+        std::string dumpInfo = "User ID #" + std::to_string(currentUserId_);
+        infos.push_back(dumpInfo);
+        auto session = GetSceneSession(persistentId);
+        if (session) {
+            session->DumpMissionInfo(infos);
+        } else {
+            infos.push_back("error: invalid mission number, please see 'aa dump --mission-list'.");
+        }
+        return WSError::WS_OK;
+    };
+
+    return taskScheduler_->PostSyncTask(task);
+}
+
 WSError SceneSessionManager::GetAllAbilityInfos(const AAFwk::Want &want, int32_t userId,
     std::vector<AppExecFwk::AbilityInfo> &abilityInfos)
 {
