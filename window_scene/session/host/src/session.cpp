@@ -32,6 +32,7 @@
 #include "ability_start_setting.h"
 #include "window_manager_hilog.h"
 #include "session_helper.h"
+#include "session/host/include/session_utils.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -561,6 +562,8 @@ WSError Session::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ability
     info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
     info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
     info.moduleName_ = abilitySessionInfo->want.GetModuleName();
+    info.sessionName_ = SessionUtils::ConvertSessionName(info.bundleName_, info.abilityName_,
+        info.moduleName_, 0);
     info.persistentId_ = abilitySessionInfo->persistentId;
     info.callerPersistentId_ = GetPersistentId();
     info.callState_ = static_cast<uint32_t>(abilitySessionInfo->state);

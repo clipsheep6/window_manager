@@ -65,6 +65,19 @@ bool IsJsAbilityUndefind(NativeEngine& engine, NativeValue* jsAbilityName, Sessi
     return true;
 }
 
+bool IsJsSessionNameUndefind(NativeEngine& engine, NativeValue* jsSessionName, SessionInfo& sessionInfo)
+{
+    if (jsSessionName->TypeOf() != NATIVE_UNDEFINED) {
+        std::string sessionName;
+        if (!ConvertFromJsValue(engine, jsSessionName, sessionName)) {
+            WLOGFE("[NAPI]Failed to convert parameter to sessionName");
+            return false;
+        }
+        sessionInfo.sessionName_ = sessionName;
+    }
+    return true;
+}
+
 bool IsJsIsSystemUndefind(NativeEngine& engine, NativeValue* jsIsSystem, SessionInfo& sessionInfo)
 {
     if (jsIsSystem->TypeOf() != NATIVE_UNDEFINED) {
@@ -125,6 +138,7 @@ bool ConvertSessionInfoFromJs(NativeEngine& engine, NativeObject* jsObject, Sess
     NativeValue* jsBundleName = jsObject->GetProperty("bundleName");
     NativeValue* jsModuleName = jsObject->GetProperty("moduleName");
     NativeValue* jsAbilityName = jsObject->GetProperty("abilityName");
+    NativeValue* jsSessionName = jsObject->GetProperty("sessionName");
     NativeValue* jsIsSystem = jsObject->GetProperty("isSystem");
     NativeValue* jsPersistentId = jsObject->GetProperty("persistentId");
     NativeValue* jsCallState = jsObject->GetProperty("callState");
@@ -137,6 +151,9 @@ bool ConvertSessionInfoFromJs(NativeEngine& engine, NativeObject* jsObject, Sess
         return false;
     }
     if (!IsJsAbilityUndefind(engine, jsAbilityName, sessionInfo)) {
+        return false;
+    }
+    if (!IsJsSessionNameUndefind(engine, jsSessionName, sessionInfo)) {
         return false;
     }
     if (!IsJsIsSystemUndefind(engine, jsIsSystem, sessionInfo)) {
@@ -165,6 +182,7 @@ NativeValue* CreateJsSessionInfo(NativeEngine& engine, const SessionInfo& sessio
     object->SetProperty("bundleName", CreateJsValue(engine, sessionInfo.bundleName_));
     object->SetProperty("moduleName", CreateJsValue(engine, sessionInfo.moduleName_));
     object->SetProperty("abilityName", CreateJsValue(engine, sessionInfo.abilityName_));
+    object->SetProperty("sessionName", CreateJsValue(engine, sessionInfo.sessionName_));
     object->SetProperty("isSystem", CreateJsValue(engine, sessionInfo.isSystem_));
     object->SetProperty("persistentId", CreateJsValue(engine, static_cast<int32_t>(sessionInfo.persistentId_)));
     object->SetProperty("callerPersistentId", CreateJsValue(engine,
