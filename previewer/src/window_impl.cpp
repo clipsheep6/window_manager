@@ -239,10 +239,12 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
         uiContent_->Destroy();
     }
     std::unique_ptr<Ace::UIContent> uiContent;
+    auto apiCompatibleVer = ability->GetAbilityContext()->GetApplicationInfo()->apiCompatibleVersion;
+    auto apiTargetVer = ability->GetAbilityContext()->GetApplicationInfo()->apiTargetVersion;
     if (ability != nullptr) {
-        uiContent = Ace::UIContent::Create(ability);
+        uiContent = Ace::UIContent::Create(ability, apiCompatibleVer, apiTargetVer);
     } else {
-        uiContent = Ace::UIContent::Create(context_.get(), engine);
+        uiContent = Ace::UIContent::Create(context_.get(), engine, apiCompatibleVer, apiTargetVer);
     }
     if (uiContent == nullptr) {
         WLOGFE("fail to SetUIContent");
