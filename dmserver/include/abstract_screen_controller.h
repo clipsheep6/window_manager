@@ -44,7 +44,6 @@ public:
     WM_DISALLOW_COPY_AND_MOVE(AbstractScreenController);
 
     void Init();
-    void ScreenConnectionInDisplayInit(sptr<AbstractScreenCallback> abstractScreenCallback);
     std::vector<ScreenId> GetAllScreenIds() const;
     sptr<AbstractScreen> GetAbstractScreen(ScreenId dmsScreenId) const;
     std::vector<ScreenId> GetShotScreenIds(std::vector<ScreenId>) const;
