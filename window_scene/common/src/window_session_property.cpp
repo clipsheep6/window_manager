@@ -73,6 +73,11 @@ void WindowSessionProperty::SetRaiseEnabled(bool raiseEnabled)
     raiseEnabled_ = raiseEnabled;
 }
 
+void WindowSessionProperty::SetHideable(bool hideable)
+{
+    hideable_ = hideable;
+}
+
 void WindowSessionProperty::SetBrightness(float brightness)
 {
     brightness_ = brightness;
@@ -146,6 +151,11 @@ bool WindowSessionProperty::GetDragEnabled() const
 bool WindowSessionProperty::GetRaiseEnabled() const
 {
     return raiseEnabled_;
+}
+
+bool WindowSessionProperty::GetHideable() const
+{
+    return hideable_;
 }
 
 float WindowSessionProperty::GetBrightness() const
@@ -456,7 +466,8 @@ bool WindowSessionProperty::Marshalling(Parcel& parcel) const
         parcel.WriteBool(isDecorEnable_) && parcel.WriteBool(dragEnabled_) &&
         MarshallingWindowLimits(parcel) &&
         MarshallingSystemBarMap(parcel) && parcel.WriteUint32(animationFlag_) &&
-        parcel.WriteBool(isFloatingWindowAppType_) && MarshallingTouchHotAreas(parcel);
+        parcel.WriteBool(isFloatingWindowAppType_) && MarshallingTouchHotAreas(parcel) &&
+        parcel.WriteBool(hideable_);
 }
 
 WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
@@ -497,6 +508,7 @@ WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
     property->SetAnimationFlag(parcel.ReadUint32());
     property->SetFloatingWindowAppType(parcel.ReadBool());
     UnmarshallingTouchHotAreas(parcel, property);
+    property->SetHideable(parcel.ReadBool());
     return property;
 }
 
@@ -532,6 +544,7 @@ void WindowSessionProperty::CopyFrom(const sptr<WindowSessionProperty>& property
     animationFlag_ = property->animationFlag_;
     isFloatingWindowAppType_ = property->isFloatingWindowAppType_;
     touchHotAreas_ = property->touchHotAreas_;
+    hideable_ = property->hideable_;
 }
 
 void WindowSessionProperty::SetTransform(const Transform& trans)

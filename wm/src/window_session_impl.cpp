@@ -654,6 +654,17 @@ WMError WindowSessionImpl::SetRaiseByClickEnabled(bool raiseEnabled)
     return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_RAISEENABLED);
 }
 
+WMError WindowSessionImpl::HideNonSystemOverlayWindows(bool hideable)
+{
+    WLOGFD("hide non-system overlay windows");
+    if (IsWindowSessionInvalid()) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+
+    property_->SetHideable(hideable);
+    return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_HIDEABLE);
+}
+
 bool WindowSessionImpl::GetTouchable() const
 {
     return property_->GetTouchable();

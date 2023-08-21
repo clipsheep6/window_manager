@@ -1338,6 +1338,13 @@ public:
      * @return WM_OK means raise success, others means raise failed.
      */
     virtual WmErrorCode RaiseAboveTarget(int32_t subWindowId) { return WmErrorCode::WM_OK; }
+    /**
+     * @brief Hide non-system overlay windows.
+     *
+     * @param hideable true means the non-system windows should be hidden, otherwise means the opposite.
+     * @return Errorcode of window.
+     */
+    virtual WMError HideNonSystemOverlayWindows(bool hideable) { return WMError::WM_OK; }
 };
 }
 }
