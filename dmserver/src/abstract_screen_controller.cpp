@@ -206,6 +206,13 @@ void AbstractScreenController::RegisterAbstractScreenCallback(sptr<AbstractScree
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     abstractScreenCallback_ = cb;
+
+    for (auto& iter : dmsScreenMap_) {
+        if (iter.second != nullptr && abstractScreenCallback_ != nullptr) {
+            WLOGFI("dmsScreenId :%{public}" PRIu64"", iter.first);
+            abstractScreenCallback_->onConnect_(iter.second);
+        }
+    }
 }
 
 void AbstractScreenController::OnRsScreenConnectionChange(ScreenId rsScreenId, ScreenEvent screenEvent)
@@ -224,25 +231,6 @@ void AbstractScreenController::OnRsScreenConnectionChange(ScreenId rsScreenId, S
         controllerHandler_->PostTask(task, AppExecFwk::EventQueue::Priority::HIGH);
     } else {
         WLOGE("unknown message:%{public}ud", static_cast<uint8_t>(screenEvent));
-    }
-}
-
-void AbstractScreenController::ScreenConnectionInDisplayInit(sptr<AbstractScreenCallback> abstractScreenCallback)
-{
-    std::map<ScreenId, sptr<AbstractScreen>> dmsScreenMap;
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        dmsScreenMap = dmsScreenMap_;
-        if (dmsScreenMap_.empty()) {
-            return;
-        }
-    }
-
-    for (auto& iter : dmsScreenMap) {
-        if (iter.second != nullptr && abstractScreenCallback != nullptr) {
-            WLOGFI("dmsScreenId :%{public}" PRIu64"", iter.first);
-            abstractScreenCallback->onConnect_(iter.second);
-        }
     }
 }
 
