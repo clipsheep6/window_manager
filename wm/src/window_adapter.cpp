@@ -335,6 +335,12 @@ std::shared_ptr<Media::PixelMap> WindowAdapter::GetSnapshot(int32_t windowId)
     return windowManagerServiceProxy_->GetSnapshot(windowId);
 }
 
+WMError WindowAdapter::SetStatusBarEnabled(bool enable)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    return windowManagerServiceProxy_->SetStatusBarEnabled(enable);
+}
+
 WMError WindowAdapter::SetGestureNavigaionEnabled(bool enable)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);

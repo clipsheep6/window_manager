@@ -1750,6 +1750,20 @@ float SceneSessionManager::GetDisplayBrightness() const
     return displayBrightness_;
 }
 
+WMError SceneSessionManager::SetStatusBarEnabled(bool enable)
+{
+    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
+        WLOGFE("SetStatusBarEnabled permission denied!");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
+    WLOGFD("SetStatusBarEnabled, enable: %{public}d", enable);
+    auto task = [this, enable]() {
+        // do something
+        return WMError::WM_OK;
+    };
+    return taskScheduler_->PostSyncTask(task);
+}
+
 WMError SceneSessionManager::SetGestureNavigaionEnabled(bool enable)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {

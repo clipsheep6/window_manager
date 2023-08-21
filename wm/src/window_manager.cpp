@@ -688,6 +688,15 @@ WMError WindowManager::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibility
     return ret;
 }
 
+WMError WindowManager::SetStatusBarEnabled(bool enable) const
+{
+    WMError ret = SingletonContainer::Get<WindowAdapter>().SetStatusBarEnabled(enable);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("WindowManager: SetStatusBarEnabled failed");
+    }
+    return ret;
+}
+
 WMError WindowManager::SetGestureNavigaionEnabled(bool enable) const
 {
     WMError ret = SingletonContainer::Get<WindowAdapter>().SetGestureNavigaionEnabled(enable);

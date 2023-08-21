@@ -50,6 +50,7 @@ private:
     int HandlePendingSessionToForeground(MessageParcel &data, MessageParcel &reply);
     int HandlePendingSessionToBackgroundForDelegator(MessageParcel &data, MessageParcel &reply);
     int HandleGetFocusSessionToken(MessageParcel &data, MessageParcel &reply);
+    int HandleSetStatusBarEnabled(MessageParcel &data, MessageParcel &reply);
     int HandleSetGestureNavigationEnabled(MessageParcel &data, MessageParcel &reply);
     int HandleSetSessionGravity(MessageParcel &data, MessageParcel &reply);
 

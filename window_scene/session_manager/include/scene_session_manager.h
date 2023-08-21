@@ -101,6 +101,7 @@ public:
     WSError ProcessBackEvent();
     WSError BindDialogTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken);
     void GetStartPage(const SessionInfo& sessionInfo, std::string& path, uint32_t& bgColor);
+    WMError SetStatusBarEnabled(bool enable);
     WMError SetGestureNavigaionEnabled(bool enable);
     WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent);

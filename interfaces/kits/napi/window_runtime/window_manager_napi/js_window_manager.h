@@ -42,6 +42,7 @@ public:
     static NativeValue* GetLastWindow(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetWindowLayoutMode(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetGestureNavigationEnabled(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* SetStatusBarEnabled(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetWaterMarkImage(NativeEngine* engine, NativeCallbackInfo* info);
 private:
     static NativeValue* OnCreate(NativeEngine& engine, NativeCallbackInfo& info);
@@ -56,6 +57,7 @@ private:
     static NativeValue* OnGetLastWindow(NativeEngine& engine, NativeCallbackInfo& info);
     static NativeValue* OnSetWindowLayoutMode(NativeEngine& engine, NativeCallbackInfo& info);
     static NativeValue* OnSetGestureNavigationEnabled(NativeEngine& engine, NativeCallbackInfo& info);
+    static NativeValue* OnSetStatusBarEnabled(NativeEngine& engine, NativeCallbackInfo& info);
     static NativeValue* OnSetWaterMarkImage(NativeEngine& engine, NativeCallbackInfo& info);
     static bool ParseConfigOption(
         NativeEngine& engine, NativeObject* jsObject, WindowOption& option, void*& contextPtr);
