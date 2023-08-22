@@ -34,6 +34,7 @@ public:
     void UpdateWindowVisibilityInfo(const std::vector<sptr<WindowVisibilityInfo>>& visibilityInfos) override;
     void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing) override;
     void NotifyWaterMarkFlagChangedResult(bool showWaterMark) override;
+    void NotifyStatusBarEnabledResult(bool enable) override;
     void NotifyGestureNavigationEnabledResult(bool enable) override;
 
 private:

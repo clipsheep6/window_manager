@@ -49,6 +49,7 @@ public:
     void NotifyWindowVisibilityInfoChanged(const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos);
     void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing);
     void NotifyWaterMarkFlagChangedResult(bool showWaterMark);
+    void NotifyStatusBarEnabledResult(bool enable);
     void NotifyGestureNavigationEnabledResult(bool enable);
 
     static inline SingletonDelegator<WindowManager> delegator_;
@@ -66,6 +67,8 @@ public:
     sptr<WindowManagerAgent> cameraFloatWindowChangedListenerAgent_;
     std::vector<sptr<IWaterMarkFlagChangedListener>> waterMarkFlagChangeListeners_;
     sptr<WindowManagerAgent> waterMarkFlagChangeAgent_;
+    std::vector<sptr<IStatusBarEnabledChangedListener>> statusBarEnabledListeners_;
+    sptr<WindowManagerAgent> statusBarEnabledAgent_;
     std::vector<sptr<IGestureNavigationEnabledChangedListener>> gestureNavigationEnabledListeners_;
     sptr<WindowManagerAgent> gestureNavigationEnabledAgent_;
 };
@@ -183,6 +186,19 @@ void WindowManager::Impl::NotifyWaterMarkFlagChangedResult(bool showWaterMark)
     }
     for (auto& listener : waterMarkFlagChangeListeners) {
         listener->OnWaterMarkFlagUpdate(showWaterMark);
+    }
+}
+
+void WindowManager::Impl::NotifyStatusBarEnabledResult(bool enable)
+{
+    WLOGFI("Notify status bar enable result, enable = %{public}d", enable);
+    std::vector<sptr<IStatusBarEnabledChangedListener>> statusBarEnabledListeners;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        statusBarEnabledListeners = statusBarEnabledListeners_;
+    }
+    for (auto& listener : statusBarEnabledListeners) {
+        listener->OnStatusBarEnabledUpdate(enable);
     }
 }
 
@@ -560,6 +576,75 @@ WMError WindowManager::UnregisterWaterMarkFlagChangedListener(const sptr<IWaterM
     return ret;
 }
 
+WMError WindowManager::RegisterStatusBarEnabledChangedListener(
+    const sptr<IStatusBarEnabledChangedListener>& listener)
+{
+    if (listener == nullptr) {
+        WLOGFE("listener could not be null");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    std::lock_guard<std::recursive_mutex> lock(pImpl_->mutex_);
+    WMError ret = WMError::WM_OK;
+    if (pImpl_->statusBarEnabledAgent_ == nullptr) {
+        pImpl_->statusBarEnabledAgent_ = new (std::nothrow)WindowManagerAgent();
+        if (pImpl_->statusBarEnabledAgent_ != nullptr) {
+            ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+                WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_STATUS_BAR_ENABLED,
+                pImpl_->statusBarEnabledAgent_);
+        } else {
+            WLOGFE("Create windowManagerAgent object failed !");
+            ret = WMError::WM_ERROR_NULLPTR;
+        }
+    }
+    if (ret != WMError::WM_OK) {
+        WLOGFE("RegisterWindowManagerAgent failed!");
+        pImpl_->statusBarEnabledAgent_ = nullptr;
+    } else {
+        auto iter = std::find(pImpl_->statusBarEnabledListeners_.begin(),
+            pImpl_->statusBarEnabledListeners_.end(), listener);
+        if (iter != pImpl_->statusBarEnabledListeners_.end()) {
+            WLOGFW("Listener is already registered.");
+            return WMError::WM_OK;
+        }
+        pImpl_->statusBarEnabledListeners_.push_back(listener);
+    }
+    WLOGFD("Try to registerStatusBarEnabledChangedListener and result is %{public}u",
+        static_cast<uint32_t>(ret));
+    return ret;
+}
+
+WMError WindowManager::UnregisterStatusBarEnabledChangedListener(
+    const sptr<IStatusBarEnabledChangedListener>& listener)
+{
+    if (listener == nullptr) {
+        WLOGFE("listener could not be null");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    std::lock_guard<std::recursive_mutex> lock(pImpl_->mutex_);
+    auto iter = std::find(pImpl_->statusBarEnabledListeners_.begin(),
+        pImpl_->statusBarEnabledListeners_.end(), listener);
+    if (iter == pImpl_->statusBarEnabledListeners_.end()) {
+        WLOGFE("could not find this listener");
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    pImpl_->statusBarEnabledListeners_.erase(iter);
+    WMError ret = WMError::WM_OK;
+    if (pImpl_->statusBarEnabledListeners_.empty() &&
+        pImpl_->statusBarEnabledAgent_ != nullptr) {
+        ret = SingletonContainer::Get<WindowAdapter>().UnregisterWindowManagerAgent(
+            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_STATUS_BAR_ENABLED,
+            pImpl_->statusBarEnabledAgent_);
+        if (ret == WMError::WM_OK) {
+            pImpl_->statusBarEnabledAgent_ = nullptr;
+        }
+    }
+    WLOGFD("Try to unregisterStatusBarEnabledChangedListener and result is %{public}u",
+        static_cast<uint32_t>(ret));
+    return ret;
+}
+
 WMError WindowManager::RegisterGestureNavigationEnabledChangedListener(
     const sptr<IGestureNavigationEnabledChangedListener>& listener)
 {
@@ -717,6 +802,11 @@ void WindowManager::NotifyWaterMarkFlagChangedResult(bool showWaterMark) const
     pImpl_->NotifyWaterMarkFlagChangedResult(showWaterMark);
 }
 
+void WindowManager::NotifyStatusBarEnabledResult(bool enable) const
+{
+    pImpl_->NotifyStatusBarEnabledResult(enable);
+}
+
 void WindowManager::NotifyGestureNavigationEnabledResult(bool enable) const
 {
     pImpl_->NotifyGestureNavigationEnabledResult(enable);
@@ -736,6 +826,7 @@ void WindowManager::OnRemoteDied()
     pImpl_->windowUpdateListenerAgent_ = nullptr;
     pImpl_->windowVisibilityListenerAgent_ = nullptr;
     pImpl_->cameraFloatWindowChangedListenerAgent_ = nullptr;
+    pImpl_->statusBarEnabledAgent_ = nullptr;
 }
 } // namespace Rosen
 } // namespace OHOS

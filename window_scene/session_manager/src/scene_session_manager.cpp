@@ -1177,6 +1177,15 @@ void SceneSessionManager::SetCreateSpecificSessionListener(const NotifyCreateSpe
     createSpecificSessionFunc_ = func;
 }
 
+void SceneSessionManager::SetStatusBarEnabledChangeListener(const ProcessStatusBarEnabledChangeFunc& func)
+{
+    WLOGFD("SetStatusBarEnabledChangeListener");
+    if (!func) {
+        WLOGFD("set func is null");
+    }
+    statusBarEnabledChangeFunc_ = func;
+}
+
 void SceneSessionManager::SetGestureNavigationEnabledChangeListener(
     const ProcessGestureNavigationEnabledChangeFunc& func)
 {
@@ -1758,7 +1767,12 @@ WMError SceneSessionManager::SetStatusBarEnabled(bool enable)
     }
     WLOGFD("SetStatusBarEnabled, enable: %{public}d", enable);
     auto task = [this, enable]() {
-        // do something
+        if (!statusBarEnabledChangeFunc_) {
+            WLOGFE("callback func is null");
+            return WMError::WM_DO_NOTHING;
+        } else {
+            statusBarEnabledChangeFunc_(enable);
+        }
         return WMError::WM_OK;
     };
     return taskScheduler_->PostSyncTask(task);

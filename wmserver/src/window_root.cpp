@@ -804,9 +804,9 @@ WMError WindowRoot::SetStatusBarEnabled(bool enable)
         WLOGFW("Status bar state not changed!");
         return WMError::WM_DO_NOTHING;
     }
-    //WindowManagerAgentController::GetInstance().NotifyGestureNavigationEnabledResult(enable);
+    WindowManagerAgentController::GetInstance().NotifyStatusBarEnabledResult(enable);
     lastStatusBarNativeEnabled_ = enable;
-    WLOGFD("===liugan=== Set status bar enabled succeeded and notify result of %{public}d", enable);
+    WLOGFD("Set status bar enabled succeeded and notify result of %{public}d", enable);
     return WMError::WM_OK;
 }
 

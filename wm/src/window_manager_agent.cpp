@@ -51,6 +51,11 @@ void WindowManagerAgent::NotifyWaterMarkFlagChangedResult(bool showWaterMark)
     SingletonContainer::Get<WindowManager>().NotifyWaterMarkFlagChangedResult(showWaterMark);
 }
 
+void WindowManagerAgent::NotifyStatusBarEnabledResult(bool enable)
+{
+    SingletonContainer::Get<WindowManager>().NotifyStatusBarEnabledResult(enable);
+}
+
 void WindowManagerAgent::NotifyGestureNavigationEnabledResult(bool enable)
 {
     SingletonContainer::Get<WindowManager>().NotifyGestureNavigationEnabledResult(enable);
