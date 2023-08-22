@@ -26,100 +26,6 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "JsSceneUtils" };
 }
 
-bool IsJsBundleNameUndefind(NativeEngine& engine, NativeValue* jsBundleName, SessionInfo& sessionInfo)
-{
-    if (jsBundleName->TypeOf() != NATIVE_UNDEFINED) {
-        std::string bundleName;
-        if (!ConvertFromJsValue(engine, jsBundleName, bundleName)) {
-            WLOGFE("[NAPI]Failed to convert parameter to bundleName");
-            return false;
-        }
-        sessionInfo.bundleName_ = bundleName;
-    }
-    return true;
-}
-
-bool IsJsModuleNameUndefind(NativeEngine& engine, NativeValue* jsModuleName, SessionInfo& sessionInfo)
-{
-    if (jsModuleName->TypeOf() != NATIVE_UNDEFINED) {
-        std::string moduleName;
-        if (!ConvertFromJsValue(engine, jsModuleName, moduleName)) {
-            WLOGFE("[NAPI]Failed to convert parameter to moduleName");
-            return false;
-        }
-        sessionInfo.moduleName_ = moduleName;
-    }
-    return true;
-}
-
-bool IsJsAbilityUndefind(NativeEngine& engine, NativeValue* jsAbilityName, SessionInfo& sessionInfo)
-{
-    if (jsAbilityName->TypeOf() != NATIVE_UNDEFINED) {
-        std::string abilityName;
-        if (!ConvertFromJsValue(engine, jsAbilityName, abilityName)) {
-            WLOGFE("[NAPI]Failed to convert parameter to abilityName");
-            return false;
-        }
-        sessionInfo.abilityName_ = abilityName;
-    }
-    return true;
-}
-
-bool IsJsIsSystemUndefind(NativeEngine& engine, NativeValue* jsIsSystem, SessionInfo& sessionInfo)
-{
-    if (jsIsSystem->TypeOf() != NATIVE_UNDEFINED) {
-        bool isSystem;
-        if (!ConvertFromJsValue(engine, jsIsSystem, isSystem)) {
-            WLOGFE("[NAPI]Failed to convert parameter to isSystem");
-            return false;
-        }
-        sessionInfo.isSystem_ = isSystem;
-    }
-    return true;
-}
-
-bool IsJsPersistentIdUndefind(NativeEngine& engine, NativeValue* jsPersistentId, SessionInfo& sessionInfo)
-{
-    if (jsPersistentId->TypeOf() != NATIVE_UNDEFINED) {
-        int32_t persistentId;
-        if (!ConvertFromJsValue(engine, jsPersistentId, persistentId)) {
-            WLOGFE("[NAPI]Failed to convert parameter to persistentId");
-            return false;
-        }
-        sessionInfo.persistentId_ = persistentId;
-    }
-    return true;
-}
-
-bool IsJsCallStateUndefind(NativeEngine& engine, NativeValue* jsCallState, SessionInfo& sessionInfo)
-{
-    if (jsCallState->TypeOf() != NATIVE_UNDEFINED) {
-        int32_t callState;
-        if (!ConvertFromJsValue(engine, jsCallState, callState)) {
-            WLOGFE("[NAPI]Failed to convert parameter to callState");
-            return false;
-        }
-        sessionInfo.callState_ = static_cast<uint32_t>(callState);
-    }
-    return true;
-}
-
-bool IsJsSessionTypeUndefind(NativeEngine& engine, NativeValue* jsSessionType, SessionInfo& sessionInfo)
-{
-    if (jsSessionType->TypeOf() != NATIVE_UNDEFINED) {
-        uint32_t windowType = 0;
-        if (!ConvertFromJsValue(engine, jsSessionType, windowType)) {
-            WLOGFE("[NAPI]Failed to convert parameter to windowType");
-            return false;
-        }
-        if (JS_SESSION_TO_WINDOW_TYPE_MAP.count(static_cast<JsSessionType>(windowType)) != 0) {
-            sessionInfo.windowType_ = static_cast<uint32_t>(
-                JS_SESSION_TO_WINDOW_TYPE_MAP.at(static_cast<JsSessionType>(windowType)));
-        }
-    }
-    return true;
-}
-
 bool ConvertSessionInfoFromJs(NativeEngine& engine, NativeObject* jsObject, SessionInfo& sessionInfo)
 {
     NativeValue* jsBundleName = jsObject->GetProperty("bundleName");
@@ -130,26 +36,64 @@ bool ConvertSessionInfoFromJs(NativeEngine& engine, NativeObject* jsObject, Sess
     NativeValue* jsCallState = jsObject->GetProperty("callState");
     NativeValue* jsSessionType = jsObject->GetProperty("sessionType");
 
-    if (!IsJsBundleNameUndefind(engine, jsBundleName, sessionInfo)) {
-        return false;
+    if (jsBundleName->TypeOf() != NATIVE_UNDEFINED) {
+        std::string bundleName;
+        if (!ConvertFromJsValue(engine, jsBundleName, bundleName)) {
+            WLOGFE("[NAPI]Failed to convert parameter to bundleName");
+            return false;
+        }
+        sessionInfo.bundleName_ = bundleName;
     }
-    if (!IsJsModuleNameUndefind(engine, jsModuleName, sessionInfo)) {
-        return false;
+    if (jsModuleName->TypeOf() != NATIVE_UNDEFINED) {
+        std::string moduleName;
+        if (!ConvertFromJsValue(engine, jsModuleName, moduleName)) {
+            WLOGFE("[NAPI]Failed to convert parameter to moduleName");
+            return false;
+        }
+        sessionInfo.moduleName_ = moduleName;
     }
-    if (!IsJsAbilityUndefind(engine, jsAbilityName, sessionInfo)) {
-        return false;
+    if (jsAbilityName->TypeOf() != NATIVE_UNDEFINED) {
+        std::string abilityName;
+        if (!ConvertFromJsValue(engine, jsAbilityName, abilityName)) {
+            WLOGFE("[NAPI]Failed to convert parameter to abilityName");
+            return false;
+        }
+        sessionInfo.abilityName_ = abilityName;
     }
-    if (!IsJsIsSystemUndefind(engine, jsIsSystem, sessionInfo)) {
-        return false;
+    if (jsIsSystem->TypeOf() != NATIVE_UNDEFINED) {
+        bool isSystem;
+        if (!ConvertFromJsValue(engine, jsIsSystem, isSystem)) {
+            WLOGFE("[NAPI]Failed to convert parameter to isSystem");
+            return false;
+        }
+        sessionInfo.isSystem_ = isSystem;
     }
-    if (!IsJsPersistentIdUndefind(engine, jsPersistentId, sessionInfo)) {
-        return false;
+    if (jsPersistentId->TypeOf() != NATIVE_UNDEFINED) {
+        int32_t persistentId;
+        if (!ConvertFromJsValue(engine, jsPersistentId, persistentId)) {
+            WLOGFE("[NAPI]Failed to convert parameter to persistentId");
+            return false;
+        }
+        sessionInfo.persistentId_ = persistentId;
     }
-    if (!IsJsCallStateUndefind(engine, jsCallState, sessionInfo)) {
-        return false;
+    if (jsCallState->TypeOf() != NATIVE_UNDEFINED) {
+        int32_t callState;
+        if (!ConvertFromJsValue(engine, jsCallState, callState)) {
+            WLOGFE("[NAPI]Failed to convert parameter to callState");
+            return false;
+        }
+        sessionInfo.callState_ = static_cast<uint32_t>(callState);
     }
-    if (!IsJsSessionTypeUndefind(engine, jsSessionType, sessionInfo)) {
-        return false;
+    if (jsSessionType->TypeOf() != NATIVE_UNDEFINED) {
+        uint32_t windowType = 0;
+        if (!ConvertFromJsValue(engine, jsSessionType, windowType)) {
+            WLOGFE("[NAPI]Failed to convert parameter to windowType");
+            return false;
+        }
+        if (JS_SESSION_TO_WINDOW_TYPE_MAP.count(static_cast<JsSessionType>(windowType)) != 0) {
+            sessionInfo.windowType_ = static_cast<uint32_t>(
+                JS_SESSION_TO_WINDOW_TYPE_MAP.at(static_cast<JsSessionType>(windowType)));
+        }
     }
     return true;
 }
