@@ -230,6 +230,22 @@ ohos_unittest("ws_move_drag_controller_test") {
   ]
 }
 
+ohos_unittest("ws_session_permission_test") {
+  module_out_path = module_out_path
+
+  sources = [ "session_permission_test.cpp" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "ability_base:session_info",
+    "ability_base:want",
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+
 ## Build ws_unittest_common.a {{{
 config("ws_unittest_common_public_config") {
   include_dirs = [
