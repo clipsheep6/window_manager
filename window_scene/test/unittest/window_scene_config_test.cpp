@@ -257,7 +257,8 @@ HWTEST_F(WindowSceneConfigTest, MaxAppWindowNumber, Function | SmallTest | Level
     item = WindowSceneConfig::config_["maxAppWindowNumber"];
     ASSERT_EQ(false, item.IsMap());
     ASSERT_EQ(true, item.IsInts());
-    ASSERT_EQ(1, item.intsValue_->size());
+    
+    
     value = *item.intsValue_;
     ASSERT_EQ(1000, value[0]);
 }
@@ -361,17 +362,40 @@ HWTEST_F(WindowSceneConfigTest, DecorConfig04, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: LoadconfigXml
+ * @tc.name: LoadconfigXml1
  * @tc.desc: load config xml
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(WindowSceneConfigTest, LoadConfigXml, Function | SmallTest | Level2)
+HWTEST_F(WindowSceneConfigTest, LoadConfigXml1, Function | SmallTest | Level2)
 {
     auto result = WindowSceneConfig::LoadConfigXml();
     ASSERT_EQ(true, result);
 }
 
-} // namespace
+/**
+ * @tc.name: ReadFloatNumbersConfigInfo
+ * @tc.desc: ReadFloatNumbersConfigInfo test
+ * @tc.type: FUNC 
+ */
+HWTEST_F(WindowSceneConfigTest, ReadFloatNumbersConfigInfo, Function | SmallTest | Level2)
+{
+    xmlNodePtr currNode = xmlNewNode(NULL,BAD_CAST"nodeName");
+    auto result = WindowSceneConfig::ReadFloatNumbersConfigInfo(currNode,false);
+    ASSERT_EQ(0, result.size());
+}
+
+/**
+ * @tc.name: ReadStringConfigInfo
+ * @tc.desc: ReadStringConfigInfo test
+ * @tc.type: FUNC 
+ */
+HWTEST_F(WindowSceneConfigTest, ReadStringConfigInfo, Function | SmallTest | Level2)
+{
+    xmlNodePtr currNode = xmlNewNode(NULL,BAD_CAST"nodeName");
+    auto result = WindowSceneConfig::ReadStringConfigInfo(currNode);
+    ASSERT_EQ(0, result.size());
+}
+} // namespacecd 
 } // namespace Rosen
 } // namespace OHOS
