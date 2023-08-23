@@ -64,11 +64,12 @@ namespace {
     HWTEST_F(SessionDisplayPowerControllerTest, NotifyDisplayEvent_Unlock, Function | SmallTest | Level1)
     {
         DisplayEvent event = DisplayEvent::UNLOCK;
-        SessionDisplayPowerController controller([](DisplayId id,sptr<DisplayInfo> info, const std::map<DisplayId,sptr<DisplayInfo>>& infos,DisplayStateChangeType type){
-            EXPECT_EQ(id,DISPLAY_ID_INVALID);
+        SessionDisplayPowerController controller([](DisplayId id,sptr<DisplayInfo> info, const std::map<DisplayId,
+        sptr<DisplayInfo>>& infos, DisplayStateChangeType type){
+            EXPECT_EQ(id, DISPLAY_ID_INVALID);
             EXPECT_EQ(info, nullptr);
             EXPECT_TRUE(infos.empty());
-            EXPECT_EQ(type,DisplayStateChangeType::BEFORE_UNLOCK);
+            EXPECT_EQ(type, DisplayStateChangeType::BEFORE_UNLOCK);
         });
         controller.NotifyDisplayEvent(event);
     }
@@ -81,7 +82,8 @@ namespace {
     HWTEST_F(SessionDisplayPowerControllerTest, NotifyDisplayEvent_KeyguardDrawn, Function | SmallTest | Level1)
     {
         DisplayEvent event = DisplayEvent::KEYGUARD_DRAWN;
-        SessionDisplayPowerController controller([](DisplayId id,sptr<DisplayInfo> info, const std::map<DisplayId,sptr<DisplayInfo>>& infos,DisplayStateChangeType type){
+        SessionDisplayPowerController controller([](DisplayId id,sptr<DisplayInfo> info, const std::map<DisplayId,
+        sptr<DisplayInfo>>& infos, DisplayStateChangeType type){
             EXPECT_TRUE(true);
         });
         controller.NotifyDisplayEvent(event);
@@ -95,20 +97,18 @@ namespace {
     HWTEST_F(SessionDisplayPowerControllerTest, SetDisplayState, Function | SmallTest | Level1)
     {
         DisplayState state = DisplayState::UNKNOWN;
-        SessionDisplayPowerController controller([](DisplayId id,sptr<DisplayInfo> info, const std::map<DisplayId,sptr<DisplayInfo>>& infos,DisplayStateChangeType type){
+        SessionDisplayPowerController controller([](DisplayId id,sptr<DisplayInfo> info, const std::map<DisplayId,
+        sptr<DisplayInfo>>& infos, DisplayStateChangeType type){
             EXPECT_TRUE(true);
         });
         bool result = controller.SetDisplayState(state);
         EXPECT_FALSE(result);
         state = DisplayState::ON;
         result = controller.SetDisplayState(state);
-        EXPECT_TRUE(true);
+        EXPECT_TRUE(result);
         state = DisplayState::OFF;
         result = controller.SetDisplayState(state);
-        EXPECT_TRUE(true);
-        state = DisplayState::DOZE;
-        result = controller.SetDisplayState(state);
-        EXPECT_FALSE(false);
+        EXPECT_TRUE(result);
     }
 
     /**
@@ -119,7 +119,8 @@ namespace {
     HWTEST_F(SessionDisplayPowerControllerTest, SuspendBegin, Function | SmallTest | Level1)
     {
         PowerStateChangeReason reason = PowerStateChangeReason::POWER_BUTTON;
-        SessionDisplayPowerController controller([](DisplayId id,sptr<DisplayInfo> info, const std::map<DisplayId,sptr<DisplayInfo>>& infos,DisplayStateChangeType type){
+        SessionDisplayPowerController controller([](DisplayId id,sptr<DisplayInfo> info, const std::map<DisplayId,
+        sptr<DisplayInfo>>& infos, DisplayStateChangeType type){
             EXPECT_TRUE(true);
         });
         EXPECT_TRUE(controller.SuspendBegin(reason));
