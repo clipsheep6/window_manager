@@ -30,6 +30,7 @@ group("unittest") {
     ":ws_screen_session_manager_test",
     ":ws_session_manager_agent_controller_test",
     ":ws_session_test",
+    ":ws_session_display_power_controller_test",
     ":ws_window_event_channel_test",
     ":ws_window_scene_config_test",
     ":ws_window_session_property_test",
@@ -221,6 +222,19 @@ ohos_unittest("ws_move_drag_controller_test") {
   module_out_path = module_out_path
 
   sources = [ "move_drag_controller_test.cpp" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("ws_session_display_power_controller_test") {
+  module_out_path = module_out_path
+
+  sources = [ "session_display_power_controller_test.cpp" ]
 
   deps = [ ":ws_unittest_common" ]
 
