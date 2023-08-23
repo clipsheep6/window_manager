@@ -610,9 +610,9 @@ void SceneSessionManager::ConfigSubWindowSizeLimits(const WindowSceneConfig::Con
     }
 }
 
-void SceneSessionManager::SetRootSceneContext(AbilityRuntime::Context* context)
+void SceneSessionManager::SetRootSceneContext(const std::weak_ptr<AbilityRuntime::Context>& contextWeak)
 {
-    rootSceneContext_ = std::shared_ptr<AbilityRuntime::Context>(context);
+    rootSceneContextWeak_ = contextWeak;
 }
 
 sptr<RootSceneSession> SceneSessionManager::GetRootSceneSession()
@@ -761,7 +761,8 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
         if (sessionInfo.isSystem_) {
             sceneSession->SetCallingPid(IPCSkeleton::GetCallingPid());
             sceneSession->SetCallingUid(IPCSkeleton::GetCallingUid());
-            sceneSession->SetAbilityToken(rootSceneContext_ != nullptr ? rootSceneContext_->GetToken() : nullptr);
+            auto rootContext = rootSceneContextWeak_.lock();
+            sceneSession->SetAbilityToken(rootContext != nullptr ? rootContext->GetToken() : nullptr);
         }
         FillSessionInfo(sceneSession->GetSessionInfo());
         auto persistentId = sceneSession->GetPersistentId();
@@ -793,6 +794,10 @@ void SceneSessionManager::UpdateSceneSessionWant(const SessionInfo& sessionInfo)
             if (sessionInfo.want != nullptr) {
                 session->GetSessionInfo().want = sessionInfo.want;
                 WLOGFI("RequestSceneSession update want");
+            }
+            if (session->GetSessionInfo().abilityInfo == nullptr) {
+                FillSessionInfo(session->GetSessionInfo());
+                PreHandleCollaborator(session);
             }
         }
     }
@@ -917,6 +922,10 @@ std::future<int32_t> SceneSessionManager::RequestSceneSessionActivation(
             return WSError::WS_ERROR_INVALID_WINDOW;
         }
 
+        if (scnSession->GetSessionInfo().abilityInfo == nullptr) {
+            FillSessionInfo(scnSession->GetSessionInfo());
+            PreHandleCollaborator(scnSession);
+        }
         auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
         if (!scnSessionInfo) {
             promise->set_value(static_cast<int32_t>(WSError::WS_ERROR_NULLPTR));
@@ -2721,6 +2730,11 @@ sptr<SceneSession> SceneSessionManager::FindMainWindowWithToken(sptr<IRemoteObje
 
 WSError SceneSessionManager::BindDialogTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken)
 {
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("BindDialogTarget permission denied!");
+        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    }
+
     if (targetToken == nullptr) {
         WLOGFE("Target token is null");
         return WSError::WS_ERROR_NULLPTR;
@@ -2752,6 +2766,14 @@ WSError SceneSessionManager::BindDialogTarget(uint64_t persistentId, sptr<IRemot
 WMError SceneSessionManager::RegisterWindowManagerAgent(WindowManagerAgentType type,
     const sptr<IWindowManagerAgent>& windowManagerAgent)
 {
+    if (type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_SYSTEM_BAR ||
+        type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_GESTURE_NAVIGATION_ENABLED ||
+        type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WATER_MARK_FLAG) {
+        if (!SessionPermission::IsSystemCalling()) {
+            WLOGFE("RegisterWindowManagerAgent permission denied!");
+            return WMError::WM_ERROR_NOT_SYSTEM_APP;
+        }
+    }
     if ((windowManagerAgent == nullptr) || (windowManagerAgent->AsObject() == nullptr)) {
         WLOGFE("windowManagerAgent is null");
         return WMError::WM_ERROR_NULLPTR;
@@ -2765,6 +2787,14 @@ WMError SceneSessionManager::RegisterWindowManagerAgent(WindowManagerAgentType t
 WMError SceneSessionManager::UnregisterWindowManagerAgent(WindowManagerAgentType type,
     const sptr<IWindowManagerAgent>& windowManagerAgent)
 {
+    if (type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_SYSTEM_BAR ||
+        type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_GESTURE_NAVIGATION_ENABLED ||
+        type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WATER_MARK_FLAG) {
+        if (!SessionPermission::IsSystemCalling()) {
+            WLOGFE("UnregisterWindowManagerAgent permission denied!");
+            return WMError::WM_ERROR_NOT_SYSTEM_APP;
+        }
+    }
     if ((windowManagerAgent == nullptr) || (windowManagerAgent->AsObject() == nullptr)) {
         WLOGFE("windowManagerAgent is null");
         return WMError::WM_ERROR_NULLPTR;
@@ -3523,6 +3553,12 @@ void SceneSessionManager::NotifyStartAbility(int32_t collaboratorType, const Ses
     if (iter == collaboratorMap_.end()) {
         WLOGFE("Fail to found collaborator with type: %{public}d", collaboratorType);
         return;
+    }
+    if (sessionInfo.want == nullptr) {
+        WLOGFI("sessionInfo.want is nullptr, init");
+        sessionInfo.want = new AAFwk::Want();
+        sessionInfo.want->SetElementName("", sessionInfo.bundleName_, sessionInfo.abilityName_,
+            sessionInfo.moduleName_);
     }
     auto collaborator = iter->second;
     uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();

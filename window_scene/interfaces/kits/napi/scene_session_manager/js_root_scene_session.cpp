@@ -145,7 +145,7 @@ NativeValue* JsRootSceneSession::OnLoadContent(NativeEngine& engine, NativeCallb
         return engine.CreateUndefined();
     }
     auto contextWeakPtr = *contextNativePointer;
-    SceneSessionManager::GetInstance().SetRootSceneContext(contextWeakPtr.lock().get());
+    SceneSessionManager::GetInstance().SetRootSceneContext(contextWeakPtr);
 
     std::shared_ptr<NativeReference> contentStorage =
         (storage == nullptr) ? nullptr : std::shared_ptr<NativeReference>(engine.CreateReference(storage, 1));
@@ -253,6 +253,8 @@ sptr<SceneSession> JsRootSceneSession::GenSceneSession(SessionInfo& info)
             sceneSession->GetSessionInfo().callerToken_ = info.callerToken_;
             sceneSession->GetSessionInfo().requestCode = info.requestCode;
             sceneSession->GetSessionInfo().callerPersistentId_ = info.callerPersistentId_;
+            sceneSession->GetSessionInfo().uiAbilityId_ = info.uiAbilityId_;
+            sceneSession->GetSessionInfo().startSetting = info.startSetting;
         }
         info.persistentId_ = sceneSession->GetPersistentId();
         sceneSession->GetSessionInfo().persistentId_ = sceneSession->GetPersistentId();
@@ -266,6 +268,8 @@ sptr<SceneSession> JsRootSceneSession::GenSceneSession(SessionInfo& info)
         sceneSession->GetSessionInfo().callerToken_ = info.callerToken_;
         sceneSession->GetSessionInfo().requestCode = info.requestCode;
         sceneSession->GetSessionInfo().callerPersistentId_ = info.callerPersistentId_;
+        sceneSession->GetSessionInfo().uiAbilityId_ = info.uiAbilityId_;
+        sceneSession->GetSessionInfo().startSetting = info.startSetting;
     }
     return sceneSession;
 }
