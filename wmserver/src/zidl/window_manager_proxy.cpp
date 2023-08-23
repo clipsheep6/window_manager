@@ -895,7 +895,7 @@ WMError WindowManagerProxy::SetStatusBarEnabled(bool enable)
     MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
+        WLOGFE("Write status bar interface token failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
 
