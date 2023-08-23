@@ -52,8 +52,6 @@ void SessionDisplayPowerControllerTest::TearDown()
 {
 }
 
-
-
 namespace {
 
     /**
@@ -64,7 +62,7 @@ namespace {
     HWTEST_F(SessionDisplayPowerControllerTest, NotifyDisplayEvent_Unlock, Function | SmallTest | Level1)
     {
         DisplayEvent event = DisplayEvent::UNLOCK;
-        SessionDisplayPowerController controller([](DisplayId id,sptr<DisplayInfo> info, const std::map<DisplayId,
+        SessionDisplayPowerController controller([](DisplayId id, sptr<DisplayInfo> info, const std::map<DisplayId,
         sptr<DisplayInfo>>& infos, DisplayStateChangeType type){
             EXPECT_EQ(id, DISPLAY_ID_INVALID);
             EXPECT_EQ(info, nullptr);
@@ -82,7 +80,7 @@ namespace {
     HWTEST_F(SessionDisplayPowerControllerTest, NotifyDisplayEvent_KeyguardDrawn, Function | SmallTest | Level1)
     {
         DisplayEvent event = DisplayEvent::KEYGUARD_DRAWN;
-        SessionDisplayPowerController controller([](DisplayId id,sptr<DisplayInfo> info, const std::map<DisplayId,
+        SessionDisplayPowerController controller([](DisplayId id, sptr<DisplayInfo> info, const std::map<DisplayId,
         sptr<DisplayInfo>>& infos, DisplayStateChangeType type){
             EXPECT_TRUE(true);
         });
@@ -97,7 +95,7 @@ namespace {
     HWTEST_F(SessionDisplayPowerControllerTest, SetDisplayState, Function | SmallTest | Level1)
     {
         DisplayState state = DisplayState::UNKNOWN;
-        SessionDisplayPowerController controller([](DisplayId id,sptr<DisplayInfo> info, const std::map<DisplayId,
+        SessionDisplayPowerController controller([](DisplayId id, sptr<DisplayInfo> info, const std::map<DisplayId,
         sptr<DisplayInfo>>& infos, DisplayStateChangeType type){
             EXPECT_TRUE(true);
         });
@@ -119,7 +117,7 @@ namespace {
     HWTEST_F(SessionDisplayPowerControllerTest, SuspendBegin, Function | SmallTest | Level1)
     {
         PowerStateChangeReason reason = PowerStateChangeReason::POWER_BUTTON;
-        SessionDisplayPowerController controller([](DisplayId id,sptr<DisplayInfo> info, const std::map<DisplayId,
+        SessionDisplayPowerController controller([](DisplayId id, sptr<DisplayInfo> info, const std::map<DisplayId,
         sptr<DisplayInfo>>& infos, DisplayStateChangeType type){
             EXPECT_TRUE(true);
         });
