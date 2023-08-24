@@ -74,6 +74,14 @@ public:
     };
 };
 
+class TestStatusBarEnabledChangedListener : public IStatusBarEnabledChangedListener {
+public:
+    void OnStatusBarEnabledUpdate(bool enable) override
+    {
+        WLOGI("TestStatusBarEnabledChangedListener");
+    };
+};
+
 class WindowManagerTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -558,6 +566,75 @@ HWTEST_F(WindowManagerTest, UnregisterGestureNavigationEnabledChangedListener, F
     windowManager.pImpl_->gestureNavigationEnabledListeners_.push_back(listener1);
     ASSERT_EQ(WMError::WM_OK, windowManager.UnregisterGestureNavigationEnabledChangedListener(listener1));
     ASSERT_EQ(0, windowManager.pImpl_->gestureNavigationEnabledListeners_.size());
+}
+
+/**
+ * @tc.name: RegisterStatusBarEnabledChangedListener
+ * @tc.desc: check RegisterStatusBarEnabledChangedListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerTest, RegisterStatusBarEnabledChangedListener, Function | SmallTest | Level2)
+{
+    auto& windowManager = WindowManager::GetInstance();
+
+    windowManager.pImpl_->statusBarEnabledAgent_ = nullptr;
+    windowManager.pImpl_->statusBarEnabledListeners_.clear();
+
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, windowManager.RegisterStatusBarEnabledChangedListener(nullptr));
+
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    sptr<TestStatusBarEnabledChangedListener> listener = new TestStatusBarEnabledChangedListener();
+    EXPECT_CALL(m->Mock(), RegisterWindowManagerAgent(_, _)).Times(1).WillOnce(Return(WMError::WM_ERROR_NULLPTR));
+
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, windowManager.RegisterStatusBarEnabledChangedListener(listener));
+    ASSERT_EQ(0, windowManager.pImpl_->statusBarEnabledListeners_.size());
+    ASSERT_EQ(nullptr, windowManager.pImpl_->statusBarEnabledAgent_);
+
+    EXPECT_CALL(m->Mock(), RegisterWindowManagerAgent(_, _)).Times(1).WillOnce(Return(WMError::WM_OK));
+    ASSERT_EQ(WMError::WM_OK, windowManager.RegisterStatusBarEnabledChangedListener(listener));
+    ASSERT_EQ(1, windowManager.pImpl_->statusBarEnabledListeners_.size());
+    ASSERT_NE(nullptr, windowManager.pImpl_->statusBarEnabledAgent_);
+
+    // to check that the same listner can not be registered twice
+    ASSERT_EQ(WMError::WM_OK, windowManager.RegisterStatusBarEnabledChangedListener(listener));
+    ASSERT_EQ(1, windowManager.pImpl_->statusBarEnabledListeners_.size());
+}
+
+/**
+ * @tc.name: UnregisterStatusBarEnabledChangedListener
+ * @tc.desc: check UnregisterStatusBarEnabledChangedListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerTest, UnregisterStatusBarEnabledChangedListener, Function | SmallTest | Level2)
+{
+    auto& windowManager = WindowManager::GetInstance();
+    windowManager.pImpl_->statusBarEnabledAgent_ = nullptr;
+    windowManager.pImpl_->statusBarEnabledListeners_.clear();
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+
+    // check nullpter
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, windowManager.UnregisterStatusBarEnabledChangedListener(nullptr));
+
+    sptr<TestStatusBarEnabledChangedListener> listener1 = new TestStatusBarEnabledChangedListener();
+    sptr<TestStatusBarEnabledChangedListener> listener2 = new TestStatusBarEnabledChangedListener();
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_PARAM,
+        windowManager.UnregisterStatusBarEnabledChangedListener(listener1));
+
+    EXPECT_CALL(m->Mock(), RegisterWindowManagerAgent(_, _)).Times(1).WillOnce(Return(WMError::WM_OK));
+    windowManager.RegisterStatusBarEnabledChangedListener(listener1);
+    windowManager.RegisterStatusBarEnabledChangedListener(listener2);
+    ASSERT_EQ(2, windowManager.pImpl_->statusBarEnabledListeners_.size());
+
+    EXPECT_CALL(m->Mock(), UnregisterWindowManagerAgent(_, _)).Times(1).WillOnce(Return(WMError::WM_OK));
+    ASSERT_EQ(WMError::WM_OK, windowManager.UnregisterStatusBarEnabledChangedListener(listener1));
+    ASSERT_EQ(WMError::WM_OK, windowManager.UnregisterStatusBarEnabledChangedListener(listener2));
+    ASSERT_EQ(0, windowManager.pImpl_->statusBarEnabledListeners_.size());
+    ASSERT_EQ(nullptr, windowManager.pImpl_->statusBarEnabledAgent_);
+
+    // if agent == nullptr, it can not be crashed.
+    windowManager.pImpl_->statusBarEnabledListeners_.push_back(listener1);
+    ASSERT_EQ(WMError::WM_OK, windowManager.UnregisterStatusBarEnabledChangedListener(listener1));
+    ASSERT_EQ(0, windowManager.pImpl_->statusBarEnabledListeners_.size());
 }
 
 /**

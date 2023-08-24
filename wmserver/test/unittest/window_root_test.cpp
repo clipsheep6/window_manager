@@ -511,6 +511,23 @@ HWTEST_F(WindowRootTest, CheckAndNotifyWaterMarkChangedResult, Function | SmallT
 }
 
 /**
+ * @tc.name: SetStatusBarEnabled
+ * @tc.desc: test WindowRoot SetStatusBarEnabled
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowRootTest, SetStatusBarEnabled, Function | SmallTest | Level2)
+{
+    windowRoot_->lastStatusBarNativeEnabled_ = false;
+    auto ret = windowRoot_->SetStatusBarEnabled(false);
+    ASSERT_EQ(ret, WMError::WM_DO_NOTHING);
+
+    ret = windowRoot_->SetStatusBarEnabled(true);
+    ASSERT_EQ(ret, WMError::WM_OK);
+
+    windowRoot_->lastStatusBarNativeEnabled_ = false;
+}
+
+/**
  * @tc.name: SetGestureNavigaionEnabled
  * @tc.desc: test WindowRoot SetGestureNavigaionEnabled
  * @tc.type: FUNC

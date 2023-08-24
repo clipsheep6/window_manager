@@ -52,6 +52,8 @@ private:
     WmErrorCode ProcessDialogTargetTouchRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
     WmErrorCode ProcessDialogDeathRecipientRegister(sptr<JsWindowListener> listener, sptr<Window> window,
         bool isRegister);
+    WmErrorCode ProcessStatusBarEnabledChangeRegister(sptr<JsWindowListener> listener,
+        sptr<Window> window, bool isRegister);
     WmErrorCode ProcessGestureNavigationEnabledChangeRegister(sptr<JsWindowListener> listener,
         sptr<Window> window, bool isRegister);
     WmErrorCode ProcessWaterMarkFlagChangeRegister(sptr<JsWindowListener> listener,

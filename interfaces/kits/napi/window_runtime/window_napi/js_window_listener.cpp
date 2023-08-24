@@ -312,6 +312,26 @@ void JsWindowListener::OnDialogDeathRecipient() const
         *engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
 }
 
+void JsWindowListener::OnStatusBarEnabledUpdate(bool enable)
+{
+    std::unique_ptr<AsyncTask::CompleteCallback> complete = std::make_unique<AsyncTask::CompleteCallback> (
+        [self = weakRef_, enable, eng = engine_] (NativeEngine &engine, AsyncTask &task, int32_t status) {
+            auto thisListener = self.promote();
+            if (thisListener == nullptr || eng == nullptr) {
+                WLOGFE("[NAPI]this listener or engine is nullptr");
+                return;
+            }
+            NativeValue* argv[] = {CreateJsValue(*eng, enable)};
+            thisListener->CallJsMethod(STATUS_BAR_ENABLED_CHANGE_CB.c_str(), argv, ArraySize(argv));
+        }
+    );
+
+    NativeReference* callback = nullptr;
+    std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
+    AsyncTask::Schedule("JsWindowListener::OnStatusBarEnabledUpdate",
+        *engine_, std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+}
+
 void JsWindowListener::OnGestureNavigationEnabledUpdate(bool enable)
 {
     std::unique_ptr<AsyncTask::CompleteCallback> complete = std::make_unique<AsyncTask::CompleteCallback> (

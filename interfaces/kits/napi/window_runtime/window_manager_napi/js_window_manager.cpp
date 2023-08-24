@@ -123,6 +123,12 @@ NativeValue* JsWindowManager::SetGestureNavigationEnabled(NativeEngine* engine, 
     return (me != nullptr) ? me->OnSetGestureNavigationEnabled(*engine, *info) : nullptr;
 }
 
+NativeValue* JsWindowManager::SetStatusBarEnabled(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    JsWindowManager* me = CheckParamsAndGetThis<JsWindowManager>(engine, info);
+    return (me != nullptr) ? me->OnSetStatusBarEnabled(*engine, *info) : nullptr;
+}
+
 NativeValue* JsWindowManager::SetWaterMarkImage(NativeEngine* engine, NativeCallbackInfo* info)
 {
     JsWindowManager* me = CheckParamsAndGetThis<JsWindowManager>(engine, info);
@@ -894,6 +900,48 @@ NativeValue* JsWindowManager::OnSetWindowLayoutMode(NativeEngine& engine, Native
     return result;
 }
 
+NativeValue* JsWindowManager::OnSetStatusBarEnabled(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    WLOGFD("OnSetStatusBarEnabled");
+    if (info.argc < 1) { // 1: minimum params num
+        WLOGFE("Argc is invalid: %{public}zu", info.argc);
+        engine.Throw(CreateJsError(engine, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
+        return engine.CreateUndefined();
+    }
+
+    NativeBoolean* nativeBool = ConvertNativeValueTo<NativeBoolean>(info.argv[0]);
+    if (nativeBool == nullptr) {
+        WLOGFE("Failed to convert parameter to bool");
+        engine.Throw(CreateJsError(engine, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
+        return engine.CreateUndefined();
+    }
+
+    bool statusBarEnable = static_cast<bool>(*nativeBool);
+    WLOGI("SetStatusBarEnabled as %{public}d", statusBarEnable);
+    AsyncTask::CompleteCallback complete =
+        [statusBarEnable](NativeEngine& engine, AsyncTask& task, int32_t status) {
+            WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(
+                SingletonContainer::Get<WindowManager>().SetStatusBarEnabled(statusBarEnable));
+            if (ret == WmErrorCode::WM_OK) {
+                task.Resolve(engine, engine.CreateUndefined());
+                WLOGD("SetStatusBarEnabled success");
+            } else {
+                task.Reject(engine, CreateJsError(engine, static_cast<int32_t>(ret), "SetStatusBarEnabled failed"));
+            }
+        };
+
+    // 1: maximum params num; 1: index of callback
+    NativeValue* lastParam = nullptr;
+    if (info.argc > 1 && info.argv[1] != nullptr && info.argv[1]->TypeOf() == NATIVE_FUNCTION) {
+        lastParam = info.argv[1];
+    }
+
+    NativeValue* result = nullptr;
+    AsyncTask::Schedule("JsWindowManager::OnSetStatusBarEnabled",
+        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
 NativeValue* JsWindowManager::OnSetGestureNavigationEnabled(NativeEngine& engine, NativeCallbackInfo& info)
 {
     WLOGFD("OnSetGestureNavigationEnabled");
@@ -1030,6 +1078,7 @@ NativeValue* JsWindowManagerInit(NativeEngine* engine, NativeValue* exportObj)
     BindNativeFunction(*engine, *object, "toggleShownStateForAllAppWindows", moduleName,
         JsWindowManager::ToggleShownStateForAllAppWindows);
     BindNativeFunction(*engine, *object, "setWindowLayoutMode", moduleName, JsWindowManager::SetWindowLayoutMode);
+    BindNativeFunction(*engine, *object, "setStatusBarEnabled", moduleName, JsWindowManager::SetStatusBarEnabled);
     BindNativeFunction(*engine, *object, "setGestureNavigationEnabled", moduleName,
         JsWindowManager::SetGestureNavigationEnabled);
     BindNativeFunction(*engine, *object, "setWaterMarkImage", moduleName, JsWindowManager::SetWaterMarkImage);

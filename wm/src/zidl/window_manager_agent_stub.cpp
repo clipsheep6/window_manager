@@ -104,6 +104,11 @@ int WindowManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
             NotifyGestureNavigationEnabledResult(enbale);
             break;
         }
+        case WindowManagerAgentMsg::TRANS_ID_UPDATE_STATUS_BAR_ENABLED: {
+            bool enbale = data.ReadBool();
+            NotifyStatusBarEnabledResult(enbale);
+            break;
+        }
         default:
             WLOGFW("unknown transaction code %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);

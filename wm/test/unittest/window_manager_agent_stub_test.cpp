@@ -232,6 +232,25 @@ HWTEST_F(WindowManagerAgentStubTest, OnRemoteRequest10, Function | SmallTest | L
     int res = stub_->OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(res, 0);
 }
+
+/**
+ * @tc.name: OnRemoteRequest11
+ * @tc.desc: test TRANS_ID_UPDATE_STATUS_BAR_ENABLED success
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerAgentStubTest, OnRemoteRequest11, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(WindowManagerAgentStub::GetDescriptor());
+    data.WriteBool(true);
+    uint32_t code = static_cast<uint32_t>(
+        IWindowManagerAgent::WindowManagerAgentMsg::TRANS_ID_UPDATE_STATUS_BAR_ENABLED);
+    int res = stub_->OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, 0);
+}
 }
 }
 }

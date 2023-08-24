@@ -77,6 +77,22 @@ public:
 };
 
 /**
+ * @class IStatusBarEnabledChangedListener
+ *
+ * @brief Listener to observe StatusBarEnabled changed.
+ */
+class IStatusBarEnabledChangedListener : virtual public RefBase {
+public:
+    /**
+     * @brief Notify caller when StatusBarEnabled changed.
+     *
+     * @param enable True means set status bar on, false means set status bar off.
+     */
+    virtual void OnStatusBarEnabledUpdate(bool enable) = 0;
+};
+
+
+/**
  * @class IGestureNavigationEnabledChangedListener
  *
  * @brief Listener to observe GestureNavigationEnabled changed.
@@ -293,6 +309,22 @@ public:
      */
     WMError UnregisterWaterMarkFlagChangedListener(const sptr<IWaterMarkFlagChangedListener>& listener);
     /**
+     * @brief Register status bar enabled changed listener.
+     *
+     * @param listener IStatusBarEnabledChangedListener.
+     * @return WM_OK means register success, others means register failed.
+     */
+    WMError RegisterStatusBarEnabledChangedListener(
+        const sptr<IStatusBarEnabledChangedListener>& listener);
+    /**
+     * @brief Unregister status enabled changed listener.
+     *
+     * @param listener IStatusBarEnabledChangedListener.
+     * @return WM_OK means unregister success, others means unregister failed.
+     */
+    WMError UnregisterStatusBarEnabledChangedListener(
+        const sptr<IStatusBarEnabledChangedListener>& listener);
+    /**
      * @brief Register gesture navigation enabled changed listener.
      *
      * @param listener IGestureNavigationEnabledChangedListener.
@@ -343,6 +375,13 @@ public:
      */
     WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) const;
     /**
+     * @brief Set status bar enabled.
+     *
+     * @param enable Enable status bar if true, or disable if false.
+     * @return WM_OK means set success, others means set failed.
+     */
+    WMError SetStatusBarEnabled(bool enable) const;
+    /**
      * @brief Set gesture navigaion enabled.
      *
      * @param enable True means set gesture on, false means set gesture off.
@@ -376,6 +415,7 @@ private:
         const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos) const;
     void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing) const;
     void NotifyWaterMarkFlagChangedResult(bool showWaterMark) const;
+    void NotifyStatusBarEnabledResult(bool enable) const;
     void NotifyGestureNavigationEnabledResult(bool enable) const;
     void OnRemoteDied();
 };

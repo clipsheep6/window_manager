@@ -79,6 +79,7 @@ public:
         TRANS_ID_SET_MAXIMIZE_MODE,
         TRANS_ID_GET_MAXIMIZE_MODE,
         TRANS_ID_GET_FOCUS_WINDOW_INFO,
+        TRANS_ID_STATUS_BAR_ENABLED,
     };
     virtual WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode,
@@ -120,6 +121,7 @@ public:
     virtual void OffWindowZoom() = 0;
     virtual WmErrorCode RaiseToAppTop(uint32_t windowId) = 0;
     virtual std::shared_ptr<Media::PixelMap> GetSnapshot(int32_t windowId) = 0;
+    virtual WMError SetStatusBarEnabled(bool enable) = 0;
     virtual WMError SetGestureNavigaionEnabled(bool enable) = 0;
     virtual void DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event) = 0;
     virtual void NotifyDumpInfoResult(const std::vector<std::string>& info) {};

@@ -27,6 +27,7 @@ JsWindowRegisterManager::JsWindowRegisterManager()
     // white register list for window manager
     listenerProcess_[CaseType::CASE_WINDOW_MANAGER] = {
         {SYSTEM_BAR_TINT_CHANGE_CB,            &JsWindowRegisterManager::ProcessSystemBarChangeRegister               },
+        {STATUS_BAR_ENABLED_CHANGE_CB,         &JsWindowRegisterManager::ProcessStatusBarEnabledChangeRegister},
         {GESTURE_NAVIGATION_ENABLED_CHANGE_CB, &JsWindowRegisterManager::ProcessGestureNavigationEnabledChangeRegister},
         {WATER_MARK_FLAG_CHANGE_CB,            &JsWindowRegisterManager::ProcessWaterMarkFlagChangeRegister           },
     };
@@ -154,6 +155,21 @@ WmErrorCode JsWindowRegisterManager::ProcessSystemBarChangeRegister(sptr<JsWindo
     } else {
         ret = WM_JS_TO_ERROR_CODE_MAP.at(
             SingletonContainer::Get<WindowManager>().UnregisterSystemBarChangedListener(thisListener));
+    }
+    return ret;
+}
+
+WmErrorCode JsWindowRegisterManager::ProcessStatusBarEnabledChangeRegister(sptr<JsWindowListener> listener,
+    sptr<Window> window, bool isRegister)
+{
+    sptr<IStatusBarEnabledChangedListener> thisListener(listener);
+    WmErrorCode ret;
+    if (isRegister) {
+        ret = WM_JS_TO_ERROR_CODE_MAP.at(
+            SingletonContainer::Get<WindowManager>().RegisterStatusBarEnabledChangedListener(thisListener));
+    } else {
+        ret = WM_JS_TO_ERROR_CODE_MAP.at(
+            SingletonContainer::Get<WindowManager>().UnregisterStatusBarEnabledChangedListener(thisListener));
     }
     return ret;
 }

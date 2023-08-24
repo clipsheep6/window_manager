@@ -1212,6 +1212,15 @@ void SceneSessionManager::SetCreateSpecificSessionListener(const NotifyCreateSpe
     createSpecificSessionFunc_ = func;
 }
 
+void SceneSessionManager::SetStatusBarEnabledChangeListener(const ProcessStatusBarEnabledChangeFunc& func)
+{
+    WLOGFD("SetStatusBarEnabledChangeListener");
+    if (!func) {
+        WLOGFD("set func is null");
+    }
+    statusBarEnabledChangeFunc_ = func;
+}
+
 void SceneSessionManager::SetGestureNavigationEnabledChangeListener(
     const ProcessGestureNavigationEnabledChangeFunc& func)
 {
@@ -1783,6 +1792,25 @@ void SceneSessionManager::SetDisplayBrightness(float brightness)
 float SceneSessionManager::GetDisplayBrightness() const
 {
     return displayBrightness_;
+}
+
+WMError SceneSessionManager::SetStatusBarEnabled(bool enable)
+{
+    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
+        WLOGFE("SetStatusBarEnabled permission denied!");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
+    WLOGFD("SetStatusBarEnabled, enable: %{public}d", enable);
+    auto task = [this, enable]() {
+        if (!statusBarEnabledChangeFunc_) {
+            WLOGFE("callback func is null");
+            return WMError::WM_DO_NOTHING;
+        } else {
+            statusBarEnabledChangeFunc_(enable);
+        }
+        return WMError::WM_OK;
+    };
+    return taskScheduler_->PostSyncTask(task);
 }
 
 WMError SceneSessionManager::SetGestureNavigaionEnabled(bool enable)

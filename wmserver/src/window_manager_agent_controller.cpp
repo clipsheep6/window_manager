@@ -92,6 +92,15 @@ void WindowManagerAgentController::NotifyWaterMarkFlagChangedResult(bool showWat
     }
 }
 
+void WindowManagerAgentController::NotifyStatusBarEnabledResult(bool enable)
+{
+    WLOGFD("NotifyStatusBarEnabledResult with result:%{public}d", enable);
+    for (auto& agent : wmAgentContainer_.GetAgentsByType(
+        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_STATUS_BAR_ENABLED)) {
+        agent->NotifyStatusBarEnabledResult(enable);
+    }
+}
+
 void WindowManagerAgentController::NotifyGestureNavigationEnabledResult(bool enable)
 {
     WLOGFD("NotifyGestureNavigationEnabledResult with result:%{public}d", enable);

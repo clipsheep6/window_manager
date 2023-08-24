@@ -57,6 +57,8 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandlePendingSessionToBackgroundForDelegator),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_FOCUS_SESSION_TOKEN),
         &SceneSessionManagerStub::HandleGetFocusSessionToken),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_STATUS_BAR_ENABLED),
+        &SceneSessionManagerStub::HandleSetStatusBarEnabled),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_GESTURE_NAVIGATION_ENABLED),
         &SceneSessionManagerStub::HandleSetGestureNavigationEnabled),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_INFO),
@@ -391,6 +393,15 @@ int SceneSessionManagerStub::HandleGetFocusSessionToken(MessageParcel &data, Mes
     const WSError& errCode = GetFocusSessionToken(token);
     reply.WriteRemoteObject(token);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleSetStatusBarEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleSetGestureNavigationEnabled!");
+    bool enable = data.ReadBool();
+    const WMError &ret = SetStatusBarEnabled(enable);
+    reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }
 
