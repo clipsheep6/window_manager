@@ -1435,6 +1435,12 @@ void WindowManagerService::HasPrivateWindow(DisplayId displayId, bool& hasPrivat
     WLOGI("called %{public}u", hasPrivateWindow);
 }
 
+WMError WindowManagerService::SetStatusBarEnabled(bool enable)
+{
+    // This is an empty implementation. See SceneSessionManagerProxy and SceneSessionManager
+    return WMError::WM_OK;
+}
+
 WMError WindowManagerService::SetGestureNavigaionEnabled(bool enable)
 {
     return PostSyncTask([this, enable]() {

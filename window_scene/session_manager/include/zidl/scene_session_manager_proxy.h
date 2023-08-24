@@ -41,6 +41,7 @@ public:
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     void GetFocusWindowInfo(FocusChangeInfo& focusInfo) override;
     WSError SetSessionGravity(int32_t persistentId, SessionGravity gravity, uint32_t percent) override;
+    WMError SetStatusBarEnabled(bool enable) override;
     WMError SetGestureNavigaionEnabled(bool enable) override;
     WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) override;
     WSError SetSessionIcon(const sptr<IRemoteObject> &token, const std::shared_ptr<Media::PixelMap> &icon) override;
