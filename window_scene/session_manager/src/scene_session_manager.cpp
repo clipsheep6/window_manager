@@ -1653,6 +1653,12 @@ void SceneSessionManager::HandleUpdateProperty(const sptr<WindowSessionProperty>
             UpdatePropertyRaiseEnabled(property, sceneSession);
             break;
         }
+        case WSPropertyChangeAction::ACTION_UPDATE_HIDEABLE: {
+            if (sceneSession->GetSessionProperty() != nullptr) {
+                sceneSession->GetSessionProperty()->SetHideable(property->GetHideable());
+            }
+            break;
+        }
         default:
             break;
     }

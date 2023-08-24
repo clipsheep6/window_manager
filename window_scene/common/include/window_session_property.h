@@ -62,6 +62,7 @@ public:
     void SetTouchable(bool isTouchable);
     void SetDragEnabled(bool dragEnabled);
     void SetRaiseEnabled(bool raiseEnabled);
+    void SetHideable(bool hideable);
     void SetTurnScreenOn(bool turnScreenOn);
     void SetKeepScreenOn(bool keepScreenOn);
     void SetBrightness(float brightness);
@@ -98,6 +99,7 @@ public:
     bool GetTouchable() const;
     bool GetDragEnabled() const;
     bool GetRaiseEnabled() const;
+    bool GetHideable() const;
     bool IsTurnScreenOn() const;
     bool IsKeepScreenOn() const;
     float GetBrightness() const;
@@ -142,6 +144,7 @@ private:
     bool touchable_ { true };
     bool dragEnabled_ = { true };
     bool raiseEnabled_ = { true };
+    bool hideable_ = { false };
     bool tokenState_ { false };
     bool turnScreenOn_ = false;
     bool keepScreenOn_ = false;

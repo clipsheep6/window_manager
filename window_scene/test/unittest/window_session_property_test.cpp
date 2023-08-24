@@ -62,6 +62,19 @@ HWTEST_F(WindowSessionPropertyTest, SetRaiseEnabled001, Function | SmallTest | L
     property->SetRaiseEnabled(false);
     ASSERT_EQ(property->GetRaiseEnabled(), false);
 }
+
+/**
+ * @tc.name: SetHideable001
+ * @tc.desc: SetHideable and GetHideable to check the value
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionPropertyTest, SetHideable001, Function | SmallTest | Level2)
+{
+    WindowSessionProperty* property = new WindowSessionProperty();
+    ASSERT_EQ(property->GetRaiseEnabled(), false);
+    property->SetRaiseEnabled(true);
+    ASSERT_EQ(property->GetRaiseEnabled(), true);
+}
 } // namespace
 } // namespace Rosen
 } // namespace OHOS
