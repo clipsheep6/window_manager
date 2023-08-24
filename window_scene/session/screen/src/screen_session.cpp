@@ -191,6 +191,66 @@ void ScreenSession::PropertyChange(const ScreenProperty& newProperty, ScreenProp
     }
 }
 
+float ScreenSession::ConvertRotationToFloat(Rotation sensorRotation) {
+    float rotation = 0.f;
+    switch (sensorRotation) {
+        case Rotation::ROTATION_90:
+            rotation = 90.f;
+            break;
+        case Rotation::ROTATION_180:
+            rotation = 180.f;
+            break;
+        case Rotation::ROTATION_270:
+            rotation = 270.f;
+            break;
+        default:
+            rotation = 0.f;
+            break;
+    }
+    return rotation;
+}
+
+void ScreenSession::SensorRotationChange(Rotation sensorRotation)
+{
+    float rotation = ConvertRotationToFloat(sensorRotation);
+    for (auto& listener : screenChangeListenerList_) {
+        listener->OnSensorRotationChange(rotation);
+    }
+}
+
+void ScreenSession::ScreenOrientationChange(Orientation orientation)
+{
+    Rotation rotationAfter = CalcRotation(orientation);
+    float screenRotation = ConvertRotationToFloat(rotationAfter);
+    for (auto& listener : screenChangeListenerList_) {
+        listener->OnScreenOrientationChange(screenRotation);
+    }
+}
+
+void ScreenSession::UpdatePropertyAfterRotation(RRect bounds, int rotation)
+{
+    Rotation targetRotation = Rotation::ROTATION_0;
+    switch (rotation) {
+        case 90: // Rotation 90 degree
+            targetRotation = Rotation::ROTATION_90;
+            break;
+        case 180: // Rotation 180 degree
+            targetRotation = Rotation::ROTATION_180;
+            break;
+        case 270: // Rotation 270 degree
+            targetRotation = Rotation::ROTATION_270;
+            break;
+        default:
+            targetRotation = Rotation::ROTATION_0;
+            break;
+    }
+    property_.SetBounds(bounds);
+    property_.SetRotation(static_cast<float>(rotation));
+    WLOGFI("bounds:[%{public}f %{public}f %{public}f %{public}f], rotation: %{public}d",
+        property_.GetBounds().rect_.GetLeft(), property_.GetBounds().rect_.GetTop(),
+        property_.GetBounds().rect_.GetWidth(), property_.GetBounds().rect_.GetHeight(), rotation);
+}
+
 sptr<SupportedScreenModes> ScreenSession::GetActiveScreenMode() const
 {
     if (activeIdx_ < 0 || activeIdx_ >= static_cast<int32_t>(modes_.size())) {

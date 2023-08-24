@@ -107,11 +107,8 @@ public:
     DMError IsScreenRotationLocked(bool& isLocked) override;
     DMError SetScreenRotationLocked(bool isLocked) override;
     DMError SetOrientation(ScreenId screenId, Orientation orientation) override;
-    DMError SetOrientationFromWindow(DisplayId displayId, Orientation orientation);
-    DMError SetOrientationController(ScreenId screenId, Orientation newOrientation, bool isFromWindow);
-    bool SetRotation(ScreenId screenId, Rotation rotationAfter, bool isFromWindow);
+    DMError SetRequestedOrientation(DisplayId displayId, Orientation orientation);
     void SetSensorSubscriptionEnabled();
-    bool SetRotationFromWindow(Rotation targetRotation);
     sptr<SupportedScreenModes> GetScreenModesByDisplayId(DisplayId displayId);
     sptr<ScreenInfo> GetScreenInfoByDisplayId(DisplayId displayId);
     void UpdateScreenRotationProperty(ScreenId screenId, RRect bounds, int rotation);
