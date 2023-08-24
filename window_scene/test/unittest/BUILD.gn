@@ -164,6 +164,7 @@ ohos_unittest("ws_scene_session_manager_stub_test") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "sensor:sensor_interface_native",
   ]
 }
 
