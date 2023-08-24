@@ -63,11 +63,11 @@ namespace {
     {
         DisplayEvent event = DisplayEvent::UNLOCK;
         SessionDisplayPowerController controller([](DisplayId id, sptr<DisplayInfo> info, const std::map<DisplayId,
-            sptr<DisplayInfo>>& infos,DisplayStateChangeType type){
-            EXPECT_EQ(id,DISPLAY_ID_INVALID);
+            sptr<DisplayInfo>>& infos, DisplayStateChangeType type){
+            EXPECT_EQ(id, DISPLAY_ID_INVALID);
             EXPECT_EQ(info, nullptr);
             EXPECT_TRUE(infos.empty());
-            EXPECT_EQ(type,DisplayStateChangeType::BEFORE_UNLOCK);
+            EXPECT_EQ(type, DisplayStateChangeType::BEFORE_UNLOCK);
         });
         controller.NotifyDisplayEvent(event);
     }
@@ -81,7 +81,7 @@ namespace {
     {
         DisplayEvent event = DisplayEvent::KEYGUARD_DRAWN;
         SessionDisplayPowerController controller([](DisplayId id, sptr<DisplayInfo> info, const std::map<DisplayId,
-            sptr<DisplayInfo>>& infos,DisplayStateChangeType type){
+            sptr<DisplayInfo>>& infos, DisplayStateChangeType type){
             EXPECT_TRUE(true);
         });
         controller.NotifyDisplayEvent(event);
@@ -118,7 +118,7 @@ namespace {
     {
         PowerStateChangeReason reason = PowerStateChangeReason::POWER_BUTTON;
         SessionDisplayPowerController controller([](DisplayId id, sptr<DisplayInfo> info, const std::map<DisplayId,
-            sptr<DisplayInfo>>& infos,DisplayStateChangeType type){
+            sptr<DisplayInfo>>& infos, DisplayStateChangeType type){
             EXPECT_TRUE(true);
         });
         EXPECT_TRUE(controller.SuspendBegin(reason));
