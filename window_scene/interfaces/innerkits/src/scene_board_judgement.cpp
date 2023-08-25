@@ -19,7 +19,7 @@ namespace OHOS {
 namespace Rosen {
 bool SceneBoardJudgement::IsSceneBoardEnabled()
 {
-    static bool isSceneBoardEnabled = false;
+    static bool isSceneBoardEnabled = true;
     static bool initialized = false;
     if (!initialized) {
         InitWithConfigFile("/etc/sceneboard.config", isSceneBoardEnabled);

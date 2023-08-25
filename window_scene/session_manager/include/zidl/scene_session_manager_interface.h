@@ -79,6 +79,7 @@ public:
         TRANS_ID_CLEAR_ALL_SESSIONS,
         TRANS_ID_REGISTER_COLLABORATOR,
         TRANS_ID_UNREGISTER_COLLABORATOR,
+        TRANS_ID_STATUS_BAR_ENABLED,
     };
 
     virtual WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
@@ -169,6 +170,7 @@ public:
     void OffWindowZoom() override {}
     WmErrorCode RaiseToAppTop(uint32_t windowId) override { return WmErrorCode::WM_OK; }
     std::shared_ptr<Media::PixelMap> GetSnapshot(int32_t windowId) override { return nullptr; }
+    WMError SetStatusBarEnabled(bool enable) override { return WMError::WM_OK; }
     WMError SetGestureNavigaionEnabled(bool enable) override { return WMError::WM_OK; }
     void DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event) override {}
     void NotifyDumpInfoResult(const std::vector<std::string>& info) override {};

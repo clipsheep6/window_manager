@@ -335,6 +335,17 @@ std::shared_ptr<Media::PixelMap> WindowAdapter::GetSnapshot(int32_t windowId)
     return windowManagerServiceProxy_->GetSnapshot(windowId);
 }
 
+WMError WindowAdapter::SetStatusBarEnabled(bool enable)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    sptr<IWindowManager> proxy = SessionManager::GetInstance().GetSceneSessionManagerProxy();
+    if ((!proxy) || (!proxy->AsObject())) {
+        WLOGFE("SetStatusBarEnabled: Failed to get system scene session manager services");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    return proxy->SetStatusBarEnabled(enable);
+}
+
 WMError WindowAdapter::SetGestureNavigaionEnabled(bool enable)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);

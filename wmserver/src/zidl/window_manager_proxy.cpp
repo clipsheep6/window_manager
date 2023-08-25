@@ -889,6 +889,12 @@ std::shared_ptr<Media::PixelMap> WindowManagerProxy::GetSnapshot(int32_t windowI
     return map;
 }
 
+WMError WindowManagerProxy::SetStatusBarEnabled(bool enable)
+{
+    // This is an empty implementation. See SceneSessionManagerProxy and SceneSessionManager
+    return WMError::WM_OK;
+}
+
 WMError WindowManagerProxy::SetGestureNavigaionEnabled(bool enable)
 {
     MessageParcel data;

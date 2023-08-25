@@ -343,6 +343,13 @@ public:
      */
     WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) const;
     /**
+     * @brief Set status bar enabled.
+     *
+     * @param enable Enable status bar if true, or disable if false.
+     * @return WM_OK means set success, others means set failed.
+     */
+    WMError SetStatusBarEnabled(bool enable) const;
+    /**
      * @brief Set gesture navigaion enabled.
      *
      * @param enable True means set gesture on, false means set gesture off.

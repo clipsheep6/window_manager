@@ -311,6 +311,30 @@ WSError SceneSessionManagerProxy::SetSessionGravity(int32_t persistentId, Sessio
     return static_cast<WSError>(reply.ReadInt32());
 }
 
+WMError SceneSessionManagerProxy::SetStatusBarEnabled(bool enable)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("Write InterfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    if (!data.WriteBool(enable)) {
+        WLOGFE("Write enable failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+        SceneSessionManagerMessage::TRANS_ID_STATUS_BAR_ENABLED), data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WMError>(ret);
+}
+
 WMError SceneSessionManagerProxy::SetGestureNavigaionEnabled(bool enable)
 {
     MessageParcel data;
