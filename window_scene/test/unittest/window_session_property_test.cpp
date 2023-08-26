@@ -121,7 +121,6 @@ HWTEST_F(WindowSessionPropertyTest, SetSystemPrivacyMode, Function | SmallTest |
     bool isSystemPrivate = true;
     WindowSessionProperty windowSessionProperty;
     windowSessionProperty.SetSystemPrivacyMode(isSystemPrivate);
-
 }
 
 /**
@@ -270,7 +269,7 @@ HWTEST_F(WindowSessionPropertyTest, SetSystemBarProperty, Function | SmallTest |
     WindowType windowtype= WindowType();
     WindowSessionProperty windowSessionProperty;
     windowSessionProperty.SetSystemBarProperty(windowtype, *property);
-} 
+}
 
 /**
  * @tc.name: GetSystemBarProperty
@@ -282,7 +281,7 @@ HWTEST_F(WindowSessionPropertyTest, GetSystemBarProperty, Function | SmallTest |
     WindowSessionProperty windowSessionProperty;
     auto result = windowSessionProperty.GetSystemBarProperty();
     ASSERT_NE(0, result.size());
-} 
+}
 
 /**
  * @tc.name: SetSessionGravity
@@ -340,7 +339,6 @@ HWTEST_F(WindowSessionPropertyTest, SetModeSupportInfo, Function | SmallTest | L
 */
 HWTEST_F(WindowSessionPropertyTest, GetModeSupportInfo, Function | SmallTest | Level2)
 {
-    
     WindowSessionProperty windowSessionProperty;
     auto result = windowSessionProperty.GetModeSupportInfo();
     ASSERT_NE(0, result);
@@ -353,7 +351,6 @@ HWTEST_F(WindowSessionPropertyTest, GetModeSupportInfo, Function | SmallTest | L
 */
 HWTEST_F(WindowSessionPropertyTest, IsFloatingWindowAppType, Function | SmallTest | Level2)
 {
-    
     WindowSessionProperty windowSessionProperty;
     auto result = windowSessionProperty.IsFloatingWindowAppType();
     ASSERT_EQ(false, result);
