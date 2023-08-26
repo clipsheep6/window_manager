@@ -257,6 +257,8 @@ void ScreenSession::UpdatePropertyAfterRotation(RRect bounds, int rotation)
             targetRotation = Rotation::ROTATION_0;
             break;
     }
+    Orientation orientation = CalcOrientation(targetRotation);
+    property_.SetOrientation(orientation);
     property_.SetBounds(bounds);
     property_.SetRotation(static_cast<float>(rotation));
     property_.UpdateScreenRotation(targetRotation);
@@ -346,6 +348,34 @@ Rotation ScreenSession::CalcRotation(Orientation orientation) const
         default: {
             WLOGE("unknown orientation %{public}u", orientation);
             return Rotation::ROTATION_0;
+        }
+    }
+}
+
+Orientation ScreenSession::CalcOrientation(Rotation rotation) const
+{
+    sptr<SupportedScreenModes> info = GetActiveScreenMode();
+    if (info == nullptr) {
+        return Orientation::UNSPECIFIED;
+    }
+    // vertical: phone(Plugin screen); horizontal: pad & external screen
+    bool isVerticalScreen = info->width_ < info->height_;
+    switch (rotation) {
+        case Rotation::ROTATION_0: {
+            return isVerticalScreen ? Orientation::VERTICAL : Orientation::HORIZONTAL;
+        }
+        case Rotation::ROTATION_90: {
+            return isVerticalScreen ? Orientation::HORIZONTAL : Orientation::VERTICAL;
+        }
+        case Rotation::ROTATION_180: {
+            return isVerticalScreen ? Orientation::REVERSE_VERTICAL : Orientation::REVERSE_HORIZONTAL;
+        }
+        case Rotation::ROTATION_270: {
+            return isVerticalScreen ? Orientation::REVERSE_HORIZONTAL : Orientation::REVERSE_VERTICAL;
+        }
+        default: {
+            WLOGE("unknown rotation %{public}u", rotation);
+            return Orientation::UNSPECIFIED;
         }
     }
 }
