@@ -22,8 +22,6 @@
 #include "display_manager.h"
 #include "zidl/scene_session_manager_stub.h"
 #include "zidl/window_manager_agent_interface.h"
-#include <ipc_types.h>
-#include <ui/rs_surface_node.h>
 
 using namespace testing;
 using namespace testing::ext;
