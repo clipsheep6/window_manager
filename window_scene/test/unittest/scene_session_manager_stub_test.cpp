@@ -19,11 +19,8 @@
 #include "session_manager/include/scene_session_manager.h"
 #include "session_manager/include/zidl/scene_session_manager_interface.h"
 #include "window_manager_agent.h"
-#include "display_manager.h"
 #include "zidl/scene_session_manager_stub.h"
 #include "zidl/window_manager_agent_interface.h"
-#include "session_manager/include/screen_rotation_property.h"
-#include "wm_common.h"
 
 using namespace testing;
 using namespace testing::ext;
