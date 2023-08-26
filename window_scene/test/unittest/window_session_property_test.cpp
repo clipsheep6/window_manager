@@ -366,7 +366,6 @@ HWTEST_F(WindowSessionPropertyTest, SetTouchHotAreas, Function | SmallTest | Lev
     std::vector<Rect>* rects = new std::vector<Rect>;
     WindowSessionProperty windowSessionProperty;
     windowSessionProperty.SetTouchHotAreas(*rects);
-    
 }
 /**
  * @tc.name: GetTouchHotAreas
@@ -378,8 +377,6 @@ HWTEST_F(WindowSessionPropertyTest, GetTouchHotAreas, Function | SmallTest | Lev
     std::vector<Rect>* rects = new std::vector<Rect>;
     WindowSessionProperty windowSessionProperty;
     windowSessionProperty.GetTouchHotAreas(*rects);
-
-
 }
 
 /**
@@ -447,7 +444,6 @@ HWTEST_F(WindowSessionPropertyTest, CopyFrom, Function | SmallTest | Level2)
     WindowSessionProperty windowSessionProperty;
     windowSessionProperty.CopyFrom(*property);
 }
-
 } // namespace
 } // namespace Rosen
 } // namespace OHOS
