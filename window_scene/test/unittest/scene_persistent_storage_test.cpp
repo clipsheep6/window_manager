@@ -29,8 +29,8 @@ public:
     void TearDown() override;
 };
 
-std::map<ScenePersistentStorageType, std::string> ScenePersistentStorage::storagePath_ =
-    {{ScenePersistentStorageType::ASPECT_RATIO, "aspect_ratio"},
+std::map<ScenePersistentStorageType, std::string> ScenePersistentStorage::storagePath_ = {
+    {ScenePersistentStorageType::ASPECT_RATIO, "aspect_ratio"},
     {ScenePersistentStorageType::MAXIMIZE_STATE, "maximize_state"}};
 
 void ScenePersistentStorageTest::SetUpTestCase()
@@ -65,7 +65,6 @@ HWTEST_F(ScenePersistentStorageTest, HasKey, Function | SmallTest | Level1)
     storageType = ScenePersistentStorageType::ASPECT_RATIO;
     bool result02 = scenePersistentStorage_.HasKey(key, storageType);
     ASSERT_FALSE(result02);
-
 }
 
 /**
