@@ -49,6 +49,32 @@ HWTEST_F(WindowSessionPropertyTest, SetDragEnabled001, Function | SmallTest | Le
     property->SetDragEnabled(false);
     ASSERT_EQ(property->GetDragEnabled(), false);
 }
+
+/**
+ * @tc.name: SetRaiseEnabled001
+ * @tc.desc: SetRaiseEnabled and GetRaiseEnabled to check the value
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionPropertyTest, SetRaiseEnabled001, Function | SmallTest | Level2)
+{
+    WindowSessionProperty* property = new WindowSessionProperty();
+    ASSERT_EQ(property->GetRaiseEnabled(), true);
+    property->SetRaiseEnabled(false);
+    ASSERT_EQ(property->GetRaiseEnabled(), false);
+}
+
+/**
+ * @tc.name: SetHideNonSystemFloatingWindows001
+ * @tc.desc: SetHideNonSystemFloatingWindows and GetHideNonSystemFloatingWindows to check the value
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionPropertyTest, SetHideNonSystemFloatingWindows001, Function | SmallTest | Level2)
+{
+    WindowSessionProperty* property = new WindowSessionProperty();
+    ASSERT_EQ(property->GetHideNonSystemFloatingWindows(), false);
+    property->SetHideNonSystemFloatingWindows(true);
+    ASSERT_EQ(property->GetHideNonSystemFloatingWindows(), true);
+}
 } // namespace
 } // namespace Rosen
 } // namespace OHOS

@@ -274,8 +274,8 @@ WMError WindowSessionImpl::Connect()
 
 WMError WindowSessionImpl::Show(uint32_t reason, bool withAnimation)
 {
-    WLOGFI("Window Show [name:%{public}s, id:%{public}d, type:%{public}u], reason:%{public}u state:%{pubic}u",
-        property_->GetWindowName().c_str(), GetPersistentId(), property_->GetWindowType(), reason, state_);
+    WLOGFI("Window Show [name:%{public}s, id:%{public}d, type:%{public}u], reason:%{public}u state:%{public}u",
+        property_->GetWindowName().c_str(), property_->GetPersistentId(), GetType(), reason, state_);
     if (IsWindowSessionInvalid()) {
         WLOGFE("session is invalid");
         return WMError::WM_ERROR_INVALID_WINDOW;
@@ -283,6 +283,7 @@ WMError WindowSessionImpl::Show(uint32_t reason, bool withAnimation)
     if (state_ == WindowState::STATE_SHOWN) {
         WLOGFD("window session is alreay shown [name:%{public}s, id:%{public}d, type: %{public}u]",
             property_->GetWindowName().c_str(), GetPersistentId(), property_->GetWindowType());
+        NotifyAfterForeground(true, false);
         return WMError::WM_OK;
     }
 
@@ -290,9 +291,9 @@ WMError WindowSessionImpl::Show(uint32_t reason, bool withAnimation)
     // delete after replace WSError with WMError
     WMError res = static_cast<WMError>(ret);
     if (res == WMError::WM_OK) {
-        NotifyAfterForeground();
         state_ = WindowState::STATE_SHOWN;
         requestState_ = WindowState::STATE_SHOWN;
+        NotifyAfterForeground();
     } else {
         NotifyForegroundFailed(res);
     }
@@ -313,9 +314,9 @@ WMError WindowSessionImpl::Hide(uint32_t reason, bool withAnimation, bool isFrom
         NotifyBackgroundFailed(WMError::WM_DO_NOTHING);
         return WMError::WM_OK;
     }
-    NotifyAfterBackground();
     state_ = WindowState::STATE_HIDDEN;
     requestState_ = WindowState::STATE_HIDDEN;
+    NotifyAfterBackground();
     return WMError::WM_OK;
 }
 
@@ -371,7 +372,8 @@ WSError WindowSessionImpl::UpdateRect(const WSRect& rect, SizeChangeReason reaso
         int heightRange = 50;
         if (std::abs((int)(GetRect().width_) - (int)(wmRect.width_)) > widthRange ||
             std::abs((int)(GetRect().height_) - (int)(wmRect.height_)) > heightRange) {
-            wmReason = WindowSizeChangeReason::MAXIMIZE;
+            wmReason = wmReason == WindowSizeChangeReason::UNDEFINED ?
+                WindowSizeChangeReason::MAXIMIZE : wmReason;
         }
     }
     auto preRect = GetRect();
@@ -642,6 +644,32 @@ WMError WindowSessionImpl::SetResizeByDragEnabled(bool dragEnabled)
     return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_DRAGENABLED);
 }
 
+WMError WindowSessionImpl::SetRaiseByClickEnabled(bool raiseEnabled)
+{
+    WLOGFD("set raiseEnabled");
+    if (IsWindowSessionInvalid()) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+
+    property_->SetRaiseEnabled(raiseEnabled);
+    return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_RAISEENABLED);
+}
+
+WMError WindowSessionImpl::HideNonSystemFloatingWindows(bool shouldHide)
+{
+    WLOGFD("hide non-system floating windows");
+    if (IsWindowSessionInvalid()) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    property_->SetHideNonSystemFloatingWindows(shouldHide);
+    return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_HIDE_NON_SYSTEM_FLOATING_WINDOWS);
+}
+
+bool WindowSessionImpl::IsFloatingWindowAppType() const
+{
+    return property_ != nullptr && property_->IsFloatingWindowAppType();
+}
+
 bool WindowSessionImpl::GetTouchable() const
 {
     return property_->GetTouchable();
@@ -649,6 +677,13 @@ bool WindowSessionImpl::GetTouchable() const
 
 WMError WindowSessionImpl::SetWindowType(WindowType type)
 {
+    if (type != WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW && !SessionPermission::IsSystemCalling()) {
+        WLOGFE("set window type permission denied!");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
+    if (IsWindowSessionInvalid()) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
     property_->SetWindowType(type);
     UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_OTHER_PROPS);
     return WMError::WM_OK;
@@ -656,7 +691,9 @@ WMError WindowSessionImpl::SetWindowType(WindowType type)
 
 WMError WindowSessionImpl::SetBrightness(float brightness)
 {
-    if (brightness < MINIMUM_BRIGHTNESS || brightness > MAXIMUM_BRIGHTNESS) {
+    if ((brightness < MINIMUM_BRIGHTNESS &&
+        std::fabs(brightness - UNDEFINED_BRIGHTNESS) >= std::numeric_limits<float>::min()) ||
+        brightness > MAXIMUM_BRIGHTNESS) {
         WLOGFE("invalid brightness value: %{public}f", brightness);
         return WMError::WM_ERROR_INVALID_PARAM;
     }
@@ -681,6 +718,8 @@ float WindowSessionImpl::GetBrightness() const
 
 void WindowSessionImpl::SetRequestedOrientation(Orientation orientation)
 {
+    WLOGFI("lastReqOrientation: %{public}u target:%{public}u state_:%{public}u",
+        property_->GetRequestedOrientation(), orientation, state_);
     if (property_->GetRequestedOrientation() == orientation) {
         return;
     }
@@ -688,6 +727,15 @@ void WindowSessionImpl::SetRequestedOrientation(Orientation orientation)
     if (state_ == WindowState::STATE_SHOWN) {
         UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_ORIENTATION);
     }
+}
+
+Orientation WindowSessionImpl::GetRequestedOrientation()
+{
+    if (!property_) {
+        WLOGFE("property_ is nullptr id: %{public}d", GetPersistentId());
+        return Orientation::UNSPECIFIED;
+    }
+    return property_->GetRequestedOrientation();
 }
 
 std::string WindowSessionImpl::GetContentInfo()
@@ -1213,6 +1261,11 @@ WSError WindowSessionImpl::NotifyTouchOutside()
 
 void WindowSessionImpl::NotifyPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
+    if (!pointerEvent) {
+        WLOGFD("Pointer event is nullptr");
+        return;
+    }
+
     std::shared_ptr<IInputEventConsumer> inputEventConsumer;
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -1221,12 +1274,18 @@ void WindowSessionImpl::NotifyPointerEvent(const std::shared_ptr<MMI::PointerEve
     if (inputEventConsumer != nullptr) {
         WLOGFD("Transfer pointer event to inputEventConsumer");
         (void)inputEventConsumer->OnInputEvent(pointerEvent);
-    } else if (uiContent_ != nullptr) {
-        WLOGFD("Transfer pointer event to uiContent");
-        (void)uiContent_->ProcessPointerEvent(pointerEvent);
-    } else {
-        WLOGFW("pointerEvent is not consumed, windowId: %{public}u", GetWindowId());
-        pointerEvent->MarkProcessed();
+        return;
+    }
+
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        if (uiContent_ != nullptr) {
+            WLOGFD("Transfer pointer event to uiContent");
+            (void)uiContent_->ProcessPointerEvent(pointerEvent);
+        } else {
+            WLOGFW("pointerEvent is not consumed, windowId: %{public}u", GetWindowId());
+            pointerEvent->MarkProcessed();
+        }
     }
 }
 
@@ -1253,6 +1312,21 @@ void WindowSessionImpl::NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& key
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         inputEventConsumer = inputEventConsumer_;
+    }
+    int32_t keyCode = keyEvent->GetKeyCode();
+    int32_t keyAction = keyEvent->GetKeyAction();
+    if (keyCode == MMI::KeyEvent::KEYCODE_BACK && keyAction == MMI::KeyEvent::KEY_ACTION_UP) {
+        WLOGFI("input event is consumed by back, return");
+        if (inputEventConsumer != nullptr) {
+            WLOGFD("Transfer key event to inputEventConsumer");
+            if (inputEventConsumer->OnInputEvent(keyEvent)) {
+                return;
+            }
+            PerformBack();
+            return;
+        }
+        HandleBackEvent();
+        return;
     }
     if (inputEventConsumer != nullptr) {
         WLOGD("Transfer key event to inputEventConsumer");

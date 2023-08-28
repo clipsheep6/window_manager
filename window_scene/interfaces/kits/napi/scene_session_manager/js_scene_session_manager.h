@@ -36,6 +36,7 @@ public:
 
     static NativeValue* GetRootSceneSession(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RequestSceneSession(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* UpdateSceneSessionWant(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RequestSceneSessionActivation(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RequestSceneSessionBackground(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RequestSceneSessionDestruction(NativeEngine* engine, NativeCallbackInfo* info);
@@ -57,6 +58,7 @@ private:
     NativeValue* OnRegisterCallback(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnGetRootSceneSession(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRequestSceneSession(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnUpdateSceneSessionWant(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRequestSceneSessionActivation(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRequestSceneSessionBackground(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRequestSceneSessionDestruction(NativeEngine& engine, NativeCallbackInfo& info);
@@ -77,10 +79,12 @@ private:
     NativeValue* OnPerfRequestEx(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnUpdateWindowMode(NativeEngine& engine, NativeCallbackInfo& info);
 
+    void OnStatusBarEnabledUpdate(bool enable);
     void OnGestureNavigationEnabledUpdate(bool enable);
     void OnCreateSpecificSession(const sptr<SceneSession>& sceneSession);
     void OnOutsideDownEvent(int32_t x, int32_t y);
     void ProcessCreateSpecificSessionRegister();
+    void ProcessStatusBarEnabledChangeListener();
     void ProcessGestureNavigationEnabledChangeListener();
     void ProcessOutsideDownEvent();
     bool IsCallbackRegistered(const std::string& type, NativeValue* jsListenerObject);

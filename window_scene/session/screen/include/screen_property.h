@@ -28,6 +28,8 @@ enum class ScreenPropertyChangeReason : uint32_t {
     ROTATION,
     CHANGE_MODE,
     FOLD_SCREEN_EXPAND,
+    SCREEN_CONNECT,
+    SCREEN_DISCONNECT,
 };
 class ScreenProperty {
 public:
@@ -57,6 +59,7 @@ public:
 
     void SetScreenRotation(Rotation rotation);
     Rotation GetScreenRotation() const;
+    void UpdateScreenRotation(Rotation rotation);
 
     void SetOrientation(Orientation orientation);
     Orientation GetOrientation() const;

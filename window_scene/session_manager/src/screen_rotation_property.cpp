@@ -19,6 +19,7 @@
 #include <securec.h>
 
 #include "screen_session_manager.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -91,24 +92,26 @@ void ScreenRotationProperty::SetDefaultDeviceRotationOffset(uint32_t defaultDevi
 
 void ScreenRotationProperty::HandleSensorEventInput(DeviceRotation deviceRotation)
 {
+    auto isPhone = system::GetParameter("const.product.devicetype", "unknown") == "phone";
+    if (!isPhone) {
+        WLOGFW("device is not phone, return.");
+        return;
+    }
     if (deviceRotation == DeviceRotation::INVALID) {
         WLOGFW("deviceRotation is invalid, return.");
         return;
     }
-    Orientation orientation = GetPreferredOrientation();
-    currentDisplayRotation_ = GetCurrentDisplayRotation();
+    auto screenSession = ScreenSessionManager::GetInstance().GetDefaultScreenSession();
+    if (!screenSession) {
+        WLOGFW("screenSession is null.");
+        return;
+    }
+    if (lastSensorRotationConverted_ == deviceRotation) {
+        return;
+    }
     lastSensorRotationConverted_ = deviceRotation;
-    if (!IsSensorRelatedOrientation(orientation)) {
-        WLOGFD("If the current preferred orientation is locked or sensor-independent, return.");
-        return;
-    }
-
-    if (currentDisplayRotation_ == ConvertDeviceToDisplayRotation(deviceRotation)) {
-        WLOGFD("If the current display rotation is same to sensor rotation, return.");
-        return;
-    }
-    Rotation targetDisplayRotation = CalcTargetDisplayRotation(orientation, deviceRotation);
-    SetScreenRotation(targetDisplayRotation);
+    Rotation targetSensorRotation = ConvertDeviceToDisplayRotation(deviceRotation);
+    screenSession->SensorRotationChange(targetSensorRotation);
 }
 
 Rotation ScreenRotationProperty::GetCurrentDisplayRotation()

@@ -67,6 +67,9 @@ public:
     WMError SetFocusable(bool isFocusable) override;
     WMError SetTouchable(bool isTouchable) override;
     WMError SetResizeByDragEnabled(bool dragEnabled) override;
+    WMError SetRaiseByClickEnabled(bool raiseEnabled) override;
+    WMError HideNonSystemFloatingWindows(bool shouldHide) override;
+    bool IsFloatingWindowAppType() const override;
     WMError SetWindowType(WindowType type) override;
     WMError SetBrightness(float brightness) override;
     virtual float GetBrightness() const override;
@@ -116,6 +119,7 @@ public:
     void SetInputEventConsumer(const std::shared_ptr<IInputEventConsumer>& inputEventConsumer) override;
 
     WMError SetBackgroundColor(const std::string& color) override;
+    virtual Orientation GetRequestedOrientation() override;
 
     int32_t GetParentId() const;
     int32_t GetPersistentId() const override;

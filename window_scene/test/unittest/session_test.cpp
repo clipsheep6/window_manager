@@ -473,12 +473,12 @@ HWTEST_F(WindowSessionTest, RequestSessionBack, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
 
-    ASSERT_EQ(WSError::WS_DO_NOTHING, session_->RequestSessionBack());
+    ASSERT_EQ(WSError::WS_DO_NOTHING, session_->RequestSessionBack(false));
 
-    NotifyBackPressedFunc callback = []() {};
+    NotifyBackPressedFunc callback = [](bool needMoveToBackground) {};
 
     session_->SetBackPressedListenser(callback);
-    ASSERT_EQ(WSError::WS_OK, session_->RequestSessionBack());
+    ASSERT_EQ(WSError::WS_OK, session_->RequestSessionBack(false));
 }
 
 /**
@@ -660,20 +660,20 @@ HWTEST_F(WindowSessionTest, ConsumeMoveEvent01, Function | SmallTest | Level2)
 
     std::shared_ptr<MMI::PointerEvent> pointerEvent = nullptr;
     auto result = sceneSession->moveDragController_->ConsumeMoveEvent(pointerEvent, originalRect);
-    ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
+    ASSERT_FALSE(result);
 
     pointerEvent = MMI::PointerEvent::Create();
     ASSERT_TRUE(pointerEvent);
     pointerEvent->SetPointerId(1);
     sceneSession->moveDragController_->moveDragProperty_.pointerId_ = 0;
     result = sceneSession->moveDragController_->ConsumeMoveEvent(pointerEvent, originalRect);
-    ASSERT_EQ(result, WSError::WS_DO_NOTHING);
+    ASSERT_FALSE(result);
 
     pointerEvent->SetPointerId(0);
     pointerEvent->SetSourceType(MMI::PointerEvent::SOURCE_TYPE_MOUSE);
     pointerEvent->SetButtonId(MMI::PointerEvent::MOUSE_BUTTON_RIGHT);
     result = sceneSession->moveDragController_->ConsumeMoveEvent(pointerEvent, originalRect);
-    ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
+    ASSERT_FALSE(result);
 }
 
 /**
@@ -691,6 +691,7 @@ HWTEST_F(WindowSessionTest, ConsumeMoveEvent02, Function | SmallTest | Level2)
     ASSERT_TRUE(sceneSession->moveDragController_);
     sceneSession->moveDragController_->InitMoveDragProperty();
     WSRect originalRect = { 100, 100, 1000, 1000 };
+    sceneSession->moveDragController_->isStartMove_ = true;
     std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
     ASSERT_TRUE(pointerEvent);
     pointerEvent->SetAgentWindowId(1);
@@ -706,25 +707,25 @@ HWTEST_F(WindowSessionTest, ConsumeMoveEvent02, Function | SmallTest | Level2)
     pointerItem.SetWindowX(15);
     pointerItem.SetWindowY(400);
     auto result = sceneSession->moveDragController_->ConsumeMoveEvent(pointerEvent, originalRect);
-    ASSERT_EQ(result, WSError::WS_OK);
+    ASSERT_EQ(result, true);
 
     pointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_MOVE);
     pointerItem.SetDisplayX(145);
     pointerItem.SetDisplayY(550);
     result = sceneSession->moveDragController_->ConsumeMoveEvent(pointerEvent, originalRect);
-    ASSERT_EQ(result, WSError::WS_OK);
+    ASSERT_EQ(result, true);
 
     pointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_MOVE);
     pointerItem.SetDisplayX(175);
     pointerItem.SetDisplayY(600);
     result = sceneSession->moveDragController_->ConsumeMoveEvent(pointerEvent, originalRect);
-    ASSERT_EQ(result, WSError::WS_OK);
+    ASSERT_EQ(result, true);
 
     pointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_UP);
     pointerItem.SetDisplayX(205);
     pointerItem.SetDisplayY(650);
     result = sceneSession->moveDragController_->ConsumeMoveEvent(pointerEvent, originalRect);
-    ASSERT_EQ(result, WSError::WS_OK);
+    ASSERT_EQ(result, true);
 }
 
 /**

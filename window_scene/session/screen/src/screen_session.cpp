@@ -32,6 +32,14 @@ ScreenSession::ScreenSession(ScreenId screenId, const ScreenProperty& property, 
 {
     Rosen::RSDisplayNodeConfig config = { .screenId = screenId_ };
     displayNode_ = Rosen::RSDisplayNode::Create(config);
+    if (displayNode_) {
+        displayNode_->SetFrame(property_.GetBounds().rect_.left_, property_.GetBounds().rect_.top_,
+            property_.GetBounds().rect_.width_, property_.GetBounds().rect_.height_);
+        displayNode_->SetBounds(property_.GetBounds().rect_.left_, property_.GetBounds().rect_.top_,
+            property_.GetBounds().rect_.width_, property_.GetBounds().rect_.height_);
+    } else {
+        WLOGFE("Failed to create displayNode, displayNode is null!");
+    }
     RSTransaction::FlushImplicitTransaction();
 }
 
@@ -41,7 +49,23 @@ ScreenSession::ScreenSession(const std::string& name, ScreenId smsId, ScreenId r
     (void)rsId_;
     Rosen::RSDisplayNodeConfig config = { .screenId = screenId_ };
     displayNode_ = Rosen::RSDisplayNode::Create(config);
+    if (displayNode_) {
+        displayNode_->SetFrame(property_.GetBounds().rect_.left_, property_.GetBounds().rect_.top_,
+            property_.GetBounds().rect_.width_, property_.GetBounds().rect_.height_);
+        displayNode_->SetBounds(property_.GetBounds().rect_.left_, property_.GetBounds().rect_.top_,
+            property_.GetBounds().rect_.width_, property_.GetBounds().rect_.height_);
+    } else {
+        WLOGFE("Failed to create displayNode, displayNode is null!");
+    }
     RSTransaction::FlushImplicitTransaction();
+}
+
+void ScreenSession::SetDisplayNodeScreenId(ScreenId screenId)
+{
+    if (displayNode_ != nullptr) {
+        WLOGFI("SetDisplayNodeScreenId %{public}" PRIu64"", screenId);
+        displayNode_->SetScreenId(screenId);
+    }
 }
 
 void ScreenSession::RegisterScreenChangeListener(IScreenChangeListener* screenChangeListener)
@@ -156,6 +180,9 @@ void ScreenSession::Disconnect()
 {
     screenState_ = ScreenState::DISCONNECTION;
     for (auto& listener : screenChangeListenerList_) {
+        if (!listener) {
+            continue;
+        }
         listener->OnDisconnect();
     }
 }
@@ -163,8 +190,79 @@ void ScreenSession::Disconnect()
 void ScreenSession::PropertyChange(const ScreenProperty& newProperty, ScreenPropertyChangeReason reason)
 {
     for (auto& listener : screenChangeListenerList_) {
+        if (!listener) {
+            continue;
+        }
         listener->OnPropertyChange(newProperty, reason);
     }
+}
+
+float ScreenSession::ConvertRotationToFloat(Rotation sensorRotation)
+{
+    float rotation = 0.f;
+    switch (sensorRotation) {
+        case Rotation::ROTATION_90:
+            rotation = 90.f; // degree 90
+            break;
+        case Rotation::ROTATION_180:
+            rotation = 180.f; // degree 180
+            break;
+        case Rotation::ROTATION_270:
+            rotation = 270.f; // degree 270
+            break;
+        default:
+            rotation = 0.f;
+            break;
+    }
+    return rotation;
+}
+
+void ScreenSession::SensorRotationChange(Rotation sensorRotation)
+{
+    float rotation = ConvertRotationToFloat(sensorRotation);
+    for (auto& listener : screenChangeListenerList_) {
+        if (!listener) {
+            continue;
+        }
+        listener->OnSensorRotationChange(rotation);
+    }
+}
+
+void ScreenSession::ScreenOrientationChange(Orientation orientation)
+{
+    Rotation rotationAfter = CalcRotation(orientation);
+    float screenRotation = ConvertRotationToFloat(rotationAfter);
+    for (auto& listener : screenChangeListenerList_) {
+        if (!listener) {
+            continue;
+        }
+        listener->OnScreenOrientationChange(screenRotation);
+    }
+}
+
+void ScreenSession::UpdatePropertyAfterRotation(RRect bounds, int rotation)
+{
+    Rotation targetRotation = Rotation::ROTATION_0;
+    switch (rotation) {
+        case 90: // Rotation 90 degree
+            targetRotation = Rotation::ROTATION_90;
+            break;
+        case 180: // Rotation 180 degree
+            targetRotation = Rotation::ROTATION_180;
+            break;
+        case 270: // Rotation 270 degree
+            targetRotation = Rotation::ROTATION_270;
+            break;
+        default:
+            targetRotation = Rotation::ROTATION_0;
+            break;
+    }
+    property_.SetBounds(bounds);
+    property_.SetRotation(static_cast<float>(rotation));
+    property_.UpdateScreenRotation(targetRotation);
+    WLOGFI("bounds:[%{public}f %{public}f %{public}f %{public}f], rotation: %{public}u",
+        property_.GetBounds().rect_.GetLeft(), property_.GetBounds().rect_.GetTop(),
+        property_.GetBounds().rect_.GetWidth(), property_.GetBounds().rect_.GetHeight(), targetRotation);
 }
 
 sptr<SupportedScreenModes> ScreenSession::GetActiveScreenMode() const
@@ -199,6 +297,11 @@ void ScreenSession::SetRotation(Rotation rotation)
 void ScreenSession::SetScreenRequestedOrientation(Orientation orientation)
 {
     property_.SetScreenRequestedOrientation(orientation);
+}
+
+void ScreenSession::SetScreenRotationLocked(bool isLocked)
+{
+    isScreenLocked_ = isLocked;
 }
 
 Orientation ScreenSession::GetScreenRequestedOrientation() const

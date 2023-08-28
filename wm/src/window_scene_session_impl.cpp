@@ -82,7 +82,7 @@ bool WindowSceneSessionImpl::IsValidSystemWindowType(const WindowType& type)
         type == WindowType::WINDOW_TYPE_VOICE_INTERACTION || type == WindowType::WINDOW_TYPE_POINTER ||
         type == WindowType::WINDOW_TYPE_TOAST || type == WindowType::WINDOW_TYPE_DRAGGING_EFFECT ||
         type == WindowType::WINDOW_TYPE_SEARCHING_BAR || type == WindowType::WINDOW_TYPE_PANEL ||
-        type == WindowType::WINDOW_TYPE_VOLUME_OVERLAY)) {
+        type == WindowType::WINDOW_TYPE_VOLUME_OVERLAY || type == WindowType::WINDOW_TYPE_INPUT_METHOD_STATUS_BAR)) {
         WLOGFW("Invalid type: %{public}u", GetType());
         return false;
     }
@@ -185,20 +185,28 @@ WMError WindowSceneSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Con
     hostSession_ = iSession;
     context_ = context;
     AdjustWindowAnimationFlag();
+    if (context && context->GetApplicationInfo() &&
+        context->GetApplicationInfo()->apiCompatibleVersion >= 9 && // 9: api version
+        !SessionPermission::IsSystemCalling()) {
+        WLOGI("Remove window flag WINDOW_FLAG_SHOW_WHEN_LOCKED");
+        property_->SetWindowFlags(property_->GetWindowFlags() &
+            (~(static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED))));
+    }
     if (hostSession_) { // main window
         ret = Connect();
     } else { // system or sub window
+        WLOGFI("Create system or sub window");
         if (WindowHelper::IsSystemWindow(GetType())) {
+            if (GetType() == WindowType::WINDOW_TYPE_SYSTEM_SUB_WINDOW) {
+                WLOGFI("System sub window is not support");
+                return WMError::WM_ERROR_INVALID_TYPE;
+            }
             // Not valid system window type for session should return WMError::WM_OK;
             if (!IsValidSystemWindowType(GetType())) {
                 return WMError::WM_OK;
             }
         } else if (!WindowHelper::IsSubWindow(GetType())) {
             return WMError::WM_ERROR_INVALID_TYPE;
-        }
-        if (GetType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
-            WLOGFI("Create input method and sleep 3s");
-            sleep(3); // sleep 3s
         }
         ret = CreateAndConnectSpecificSession();
     }
@@ -375,8 +383,8 @@ void WindowSceneSessionImpl::UpdateSubWindowStateAndNotify(int32_t parentPersist
     if (newState == WindowState::STATE_HIDDEN) {
         for (auto subwindow : subWindows) {
             if (subwindow != nullptr && subwindow->GetWindowState() == WindowState::STATE_SHOWN) {
-                subwindow->NotifyAfterBackground();
                 subwindow->state_ = WindowState::STATE_HIDDEN;
+                subwindow->NotifyAfterBackground();
             }
         }
     // when main window show and subwindow whose state is shown should show and notify user
@@ -384,8 +392,8 @@ void WindowSceneSessionImpl::UpdateSubWindowStateAndNotify(int32_t parentPersist
         for (auto subwindow : subWindows) {
             if (subwindow != nullptr && subwindow->GetWindowState() == WindowState::STATE_HIDDEN &&
                 subwindow->GetRequestWindowState() == WindowState::STATE_SHOWN) {
-                subwindow->NotifyAfterForeground();
                 subwindow->state_ = WindowState::STATE_SHOWN;
+                subwindow->NotifyAfterForeground();
             }
         }
     }
@@ -393,7 +401,7 @@ void WindowSceneSessionImpl::UpdateSubWindowStateAndNotify(int32_t parentPersist
 
 WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
 {
-    WLOGFI("Window Show [name:%{public}s, id:%{public}d, type:%{public}u], reason:%{public}u state:%{pubic}u",
+    WLOGFI("Window Show [name:%{public}s, id:%{public}d, type:%{public}u], reason:%{public}u state:%{public}u",
         property_->GetWindowName().c_str(), property_->GetPersistentId(), GetType(), reason, state_);
     if (IsWindowSessionInvalid()) {
         WLOGFE("session is invalid");
@@ -403,6 +411,7 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
     if (state_ == WindowState::STATE_SHOWN) {
         WLOGFD("window session is alreay shown [name:%{public}s, id:%{public}d, type: %{public}u]",
             property_->GetWindowName().c_str(), property_->GetPersistentId(), GetType());
+        NotifyAfterForeground(true, false);
         return WMError::WM_OK;
     }
     if (hostSession_ == nullptr) {
@@ -420,9 +429,9 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
         if (WindowHelper::IsMainWindow(GetType())) {
             UpdateSubWindowStateAndNotify(GetPersistentId(), WindowState::STATE_SHOWN);
         }
-        NotifyAfterForeground();
         state_ = WindowState::STATE_SHOWN;
         requestState_ = WindowState::STATE_SHOWN;
+        NotifyAfterForeground();
     } else {
         NotifyForegroundFailed(ret);
     }
@@ -471,9 +480,9 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
         if (WindowHelper::IsMainWindow(GetType())) {
             UpdateSubWindowStateAndNotify(GetPersistentId(), WindowState::STATE_HIDDEN);
         }
-        NotifyAfterBackground();
         state_ = WindowState::STATE_HIDDEN;
         requestState_ = WindowState::STATE_HIDDEN;
+        NotifyAfterBackground();
     }
     return res;
 }
@@ -490,6 +499,10 @@ void WindowSceneSessionImpl::SetDefaultProperty()
             property_->SetFocusable(false);
             break;
         }
+        case WindowType::WINDOW_TYPE_INPUT_METHOD_STATUS_BAR:{
+            property_->SetFocusable(false);
+            break;
+        }
         default:
             break;
     }
@@ -499,6 +512,10 @@ WSError WindowSceneSessionImpl::SetActive(bool active)
 {
     WLOGFD("active status: %{public}d", active);
     if (!WindowHelper::IsMainWindow(GetType())) {
+        if (hostSession_ == nullptr) {
+            WLOGFD("hostSession_ nullptr");
+            return WSError::WS_ERROR_INVALID_WINDOW;
+        }
         WSError ret = hostSession_->UpdateActiveStatus(active);
         if (ret != WSError::WS_OK) {
             return ret;
@@ -778,6 +795,30 @@ WmErrorCode WindowSceneSessionImpl::RaiseToAppTop()
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
     const WSError& ret = hostSession_->RaiseToAppTop();
+    return static_cast<WmErrorCode>(ret);
+}
+
+WmErrorCode WindowSceneSessionImpl::RaiseAboveTarget(int32_t subWindowId)
+{
+    auto parentId = GetParentId();
+    if (parentId == INVALID_SESSION_ID) {
+        WLOGFE("Only the children of the main window can be raised!");
+        return WmErrorCode::WM_ERROR_INVALID_PARENT;
+    }
+
+    if (!WindowHelper::IsSubWindow(GetType())) {
+        WLOGFE("Must be app sub window window!");
+        return WmErrorCode::WM_ERROR_INVALID_CALLING;
+    }
+
+    if (state_ != WindowState::STATE_SHOWN) {
+        WLOGFE("The sub window must be shown!");
+        return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
+    }
+    if (!hostSession_) {
+        return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
+    }
+    const WSError& ret = hostSession_->RaiseAboveTarget(subWindowId);
     return static_cast<WmErrorCode>(ret);
 }
 
@@ -1133,16 +1174,41 @@ WSError WindowSceneSessionImpl::HandleBackEvent()
     }
     WLOGFD("report Back");
     SingletonContainer::Get<WindowInfoReporter>().ReportBackButtonInfoImmediately();
+    if (handler_ == nullptr) {
+        WLOGFE("HandleBackEvent handler_ is nullptr!");
+        return WSError::WS_ERROR_INVALID_PARAM;
+    }
     // notify back event to host session
-    PerformBack();
+    wptr<WindowSceneSessionImpl> weak = this;
+    auto task = [weak]() {
+        auto weakSession = weak.promote();
+        if (weakSession == nullptr) {
+            WLOGFE("HandleBackEvent session wptr is nullptr");
+            return;
+        }
+        weakSession->PerformBack();
+    };
+    if (!handler_->PostTask(task)) {
+        WLOGFE("Failed to post PerformBack");
+        return WSError::WS_ERROR_INVALID_OPERATION;
+    }
     return WSError::WS_OK;
 }
 
 void WindowSceneSessionImpl::PerformBack()
 {
+    if (!WindowHelper::IsMainWindow(GetType())) {
+        WLOGFI("PerformBack is not MainWindow, return");
+        return;
+    }
     if (hostSession_) {
-        WLOGFD("Transfer back event to host session");
-        hostSession_->RequestSessionBack();
+        bool needMoveToBackground = false;
+        auto abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(context_);
+        if (abilityContext != nullptr) {
+            abilityContext->OnBackPressedCallBack(needMoveToBackground);
+        }
+        WLOGFI("Transfer back event to host session needMoveToBackground %{public}d", needMoveToBackground);
+        hostSession_->RequestSessionBack(needMoveToBackground);
     }
 }
 
@@ -1230,6 +1296,12 @@ WMError WindowSceneSessionImpl::SetTransparent(bool isTransparent)
 
 WMError WindowSceneSessionImpl::AddWindowFlag(WindowFlag flag)
 {
+    if (flag == WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED && context_ && context_->GetApplicationInfo() &&
+        context_->GetApplicationInfo()->apiCompatibleVersion >= 9 && // 9: api version
+        !SessionPermission::IsSystemCalling()) {
+        WLOGI("Can not add window flag WINDOW_FLAG_SHOW_WHEN_LOCKED");
+        return WMError::WM_ERROR_INVALID_PERMISSION;
+    }
     uint32_t updateFlags = property_->GetWindowFlags() | (static_cast<uint32_t>(flag));
     return SetWindowFlags(updateFlags);
 }
@@ -1766,6 +1838,19 @@ void WindowSceneSessionImpl::DumpSessionElementInfo(const std::vector<std::strin
     WLOGFD("ArkUI:DumpInfo");
     if (uiContent_ != nullptr) {
         uiContent_->DumpInfo(params, info);
+    }
+
+    for (auto iter = info.begin(); iter != info.end();) {
+        if ((*iter).size() == 0) {
+            iter = info.erase(iter);
+            continue;
+        }
+        WLOGFD("ElementInfo size: %{public}u", static_cast<uint32_t>((*iter).size()));
+        iter++;
+    }
+    if (info.size() == 0) {
+        WLOGFD("ElementInfo is empty");
+        return;
     }
     SingletonContainer::Get<WindowAdapter>().NotifyDumpInfoResult(info);
 }

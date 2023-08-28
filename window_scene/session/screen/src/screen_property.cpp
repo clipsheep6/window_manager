@@ -96,7 +96,7 @@ float ScreenProperty::GetVirtualPixelRatio() const
 
 void ScreenProperty::SetScreenRotation(Rotation rotation)
 {
-    bool enableRotation = system::GetParameter("debug.window.rotation.enabled", "1") == "1";
+    bool enableRotation = system::GetParameter("persist.window.rotation.enabled", "1") == "1";
     if (!enableRotation) {
         return;
     }
@@ -128,6 +128,11 @@ void ScreenProperty::SetScreenRotation(Rotation rotation)
             rotation_ = 0.f;
             break;
     }
+    screenRotation_ = rotation;
+}
+
+void ScreenProperty::UpdateScreenRotation(Rotation rotation)
+{
     screenRotation_ = rotation;
 }
 
@@ -262,5 +267,4 @@ Orientation ScreenProperty::GetScreenRequestedOrientation() const
 {
     return screenRequestedOrientation_;
 }
-
 } // namespace OHOS::Rosen

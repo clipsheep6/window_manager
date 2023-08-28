@@ -26,6 +26,11 @@
 #include "wm_single_instance.h"
 
 namespace OHOS::Rosen {
+class SSMDeathRecipient : public IRemoteObject::DeathRecipient {
+public:
+    virtual void OnRemoteDied(const wptr<IRemoteObject>& wptrDeath) override;
+};
+
 class SessionManager {
 WM_DECLARE_SINGLE_INSTANCE_BASE(SessionManager);
 public:
@@ -38,6 +43,7 @@ public:
     WMError SetSessionGravity(int32_t persistentId, SessionGravity gravity, uint32_t percent);
     WMError BindDialogTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken);
     void ClearSessionManagerProxy();
+    void Clear();
 
     sptr<ISceneSessionManager> GetSceneSessionManagerProxy();
     sptr<IScreenSessionManager> GetScreenSessionManagerProxy();
@@ -58,7 +64,8 @@ private:
     sptr<ISceneSessionManager> sceneSessionManagerProxy_ = nullptr;
     sptr<IScreenSessionManager> screenSessionManagerProxy_ = nullptr;
     sptr<ScreenLock::ScreenLockManagerInterface> screenLockManagerProxy_ = nullptr;
-    std::shared_mutex proxyMutex_;
+    sptr<SSMDeathRecipient> ssmDeath_ = nullptr;
+    std::recursive_mutex mutex_;
 };
 } // namespace OHOS::Rosen
 

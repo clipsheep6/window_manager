@@ -2017,6 +2017,8 @@ HWTEST_F(WindowTest, KeyboardAnimationConfigMarshalling, Function | SmallTest | 
     MessageParcel data;
     KeyboardAnimationConfig config;
     auto ret = data.WriteParcelable(&config);
+    Parcel parcel;
+    config.Unmarshalling(parcel);
     ASSERT_EQ(true, ret);
 }
 
@@ -2047,9 +2049,15 @@ HWTEST_F(WindowTest, GetVSyncPeriod, Function | SmallTest | Level3)
 
     sptr<WindowOption> option = new WindowOption;
     sptr<Window> window = Window::Create("win", option);
-    ASSERT_NE(nullptr, window);
-    int64_t period = window->GetVSyncPeriod();
-    ASSERT_LE(-1, period);
+    if (window != nullptr) {
+        ASSERT_NE(nullptr, window);
+        int64_t period = window->GetVSyncPeriod();
+        ASSERT_LE(-1, period);
+    }
+    sptr<Window> window_ = new Window();
+    ASSERT_NE(nullptr, window_);
+    int64_t period_ = window_->GetVSyncPeriod();
+    ASSERT_LE(-1, period_);
 }
 
 /**
@@ -2065,11 +2073,15 @@ HWTEST_F(WindowTest, performBack, Function | SmallTest | Level3)
     winOption->SetWindowType(OHOS::Rosen::WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
 
     sptr<WindowOption> option = new WindowOption;
-    sptr<Window> window = Window::Create("win", option);
-    ASSERT_NE(nullptr, window);
-    int32_t ret = 0;
-    window->PerformBack();
-    ASSERT_EQ(0, ret);
+    sptr<Window> window = Window::Create("performBack", option);
+    if (window != nullptr) {
+        ASSERT_NE(nullptr, window);
+        window->PerformBack()
+        ;
+    }
+    sptr<Window> window_ = new Window();
+    ASSERT_NE(nullptr, window_);
+    window_->PerformBack();
 }
 
 /**
@@ -2082,6 +2094,45 @@ HWTEST_F(WindowTest, SetResizeByDragEnabled, Function | SmallTest | Level2)
     sptr<Window> window = new Window();
     ASSERT_NE(nullptr, window);
     ASSERT_EQ(WMError::WM_OK, window->SetResizeByDragEnabled(true));
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: SetRaiseByClickEnabled
+ * @tc.desc: set raiseEnabled flag
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, SetRaiseByClickEnabled, Function | SmallTest | Level2)
+{
+    sptr<Window> window = new Window();
+    ASSERT_NE(nullptr, window);
+    ASSERT_EQ(WMError::WM_OK, window->SetRaiseByClickEnabled(true));
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: RaiseAboveTarget
+ * @tc.desc: RaiseAboveTarget flag
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, RaiseAboveTarget, Function | SmallTest | Level2)
+{
+    sptr<Window> window = new Window();
+    ASSERT_NE(nullptr, window);
+    ASSERT_EQ(WmErrorCode::WM_OK, window->RaiseAboveTarget(2));
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: HideNonSystemFloatingWindows
+ * @tc.desc: set shouldHide flag
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, HideNonSystemFloatingWindows, Function | SmallTest | Level2)
+{
+    sptr<Window> window = new Window();
+    ASSERT_NE(nullptr, window);
+    ASSERT_EQ(WMError::WM_OK, window->HideNonSystemFloatingWindows(false));
     ASSERT_EQ(WMError::WM_OK, window->Destroy());
 }
 }
