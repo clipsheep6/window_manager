@@ -173,7 +173,7 @@ public:
     WSError RegisterIAbilityManagerCollaborator(int32_t type, const sptr<AAFwk::IAbilityManagerCollaborator> &impl);
     WSError UnregisterIAbilityManagerCollaborator(int32_t type);
 
-    int GetSceneSessionPrivacyModeCount(const std::map<int32_t, sptr<SceneSession>>& sessionMap);
+    int GetSceneSessionPrivacyModeCount();
 protected:
     SceneSessionManager();
     virtual ~SceneSessionManager() = default;
