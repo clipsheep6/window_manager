@@ -43,6 +43,7 @@ class SessionInfo;
 namespace OHOS::AppExecFwk {
 class IBundleMgr;
 struct AbilityInfo;
+struct BundleInfo;
 } // namespace OHOS::AppExecFwk
 
 namespace OHOS::Global::Resource {
@@ -64,7 +65,7 @@ using ProcessOutsideDownEventFunc = std::function<void(int32_t x, int32_t y)>;
 using NotifySetFocusSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 using DumpRootSceneElementInfoFunc = std::function<void(const std::vector<std::string>& params,
     std::vector<std::string>& infos)>;
-using WindowFocusChangedFunc = std::function<void(int32_t persistentId, bool isFocused)>;
+using WindowChangedFunc = std::function<void(int32_t persistentId, WindowUpdateType type)>;
 
 class DisplayChangeListener : public IDisplayChangeListener {
 public:
@@ -176,13 +177,13 @@ public:
     void SetDumpRootSceneElementInfoListener(const DumpRootSceneElementInfoFunc& func);
 
     RunnableFuture<std::vector<std::string>> dumpInfoFuture_;
-    void RegisterWindowFocusChanged(const WindowFocusChangedFunc& func);
+    void RegisterWindowChanged(const WindowChangedFunc& func);
 
     WSError RegisterIAbilityManagerCollaborator(int32_t type, const sptr<AAFwk::IAbilityManagerCollaborator> &impl);
     WSError UnregisterIAbilityManagerCollaborator(int32_t type);
 
     WMError CheckWindowId(int32_t windowId, int32_t &pid);
-    int GetSceneSessionPrivacyModeCount(const std::map<int32_t, sptr<SceneSession>>& sessionMap);
+    int GetSceneSessionPrivacyModeCount();
 protected:
     SceneSessionManager();
     virtual ~SceneSessionManager() = default;
@@ -267,6 +268,8 @@ private:
     void AddClientDeathRecipient(const sptr<ISessionStage>& sessionStage, const sptr<SceneSession>& sceneSession);
     void DestroySpecificSession(const sptr<IRemoteObject>& remoteObject);
     void CleanUserMap();
+    WSError GetAbilityInfosFromBundleInfo(std::vector<AppExecFwk::BundleInfo> &bundleInfos,
+        std::vector<AppExecFwk::AbilityInfo> &abilityInfos);
     void UpdatePropertyRaiseEnabled(const sptr<WindowSessionProperty>& property,
                                     const sptr<SceneSession>& sceneSession);
     sptr<RootSceneSession> rootSceneSession_;
@@ -313,7 +316,7 @@ private:
     void CheckAndNotifyWaterMarkChangedResult();
     WSError NotifyWaterMarkFlagChangedResult(bool hasWaterMark);
     bool lastWaterMarkShowState_ { false };
-    WindowFocusChangedFunc windowFocusChangedFunc_;
+    WindowChangedFunc WindowChangedFunc_;
     sptr<SceneSession> callingSession_ = nullptr;
     sptr<AgentDeathRecipient> windowDeath_ = new AgentDeathRecipient(
         std::bind(&SceneSessionManager::DestroySpecificSession, this, std::placeholders::_1));
@@ -329,8 +332,6 @@ private:
     std::unordered_map<int32_t, sptr<AAFwk::IAbilityManagerCollaborator>> collaboratorMap_;
 
     bool CheckCollaboratorType(int32_t type);
-    void QueryAbilityInfoFromBMS(const int32_t uId,
-        const SessionInfo& sessionInfo, AppExecFwk::AbilityInfo& abilityInfo);
     void NotifyStartAbility(int32_t collaboratorType, const SessionInfo& sessionInfo);
     void NotifySessionCreate(const sptr<SceneSession> sceneSession, SessionInfo& sessionInfo);
     void NotifyLoadAbility(int32_t collaboratorType, sptr<AAFwk::SessionInfo> abilitySessionInfo,
