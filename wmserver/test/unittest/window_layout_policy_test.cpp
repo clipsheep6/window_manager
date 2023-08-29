@@ -1300,7 +1300,7 @@ HWTEST_F(WindowLayoutPolicyTest, UpdateSurfaceBounds, Function | SmallTest | Lev
     layoutPolicy_->UpdateSurfaceBounds(node, winRect, preRect);
 
     node->SetWindowSizeChangeReason(WindowSizeChangeReason::UNDEFINED);
-    layoutPolicy_->UpdateSurfaceBounds(node, winRect, preRect);
+    layoutPolicy_->UpdateSurfaceBounds(node, winRect, preRect); 
 }
 }
 }
