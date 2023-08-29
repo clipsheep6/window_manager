@@ -85,6 +85,7 @@ public:
     void ReleaseDisplayNode();
 
     Rotation CalcRotation(Orientation orientation) const;
+    Orientation CalcOrientation(Rotation rotation) const;
     void FillScreenInfo(sptr<ScreenInfo> info) const;
     void InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startPoint);
 
