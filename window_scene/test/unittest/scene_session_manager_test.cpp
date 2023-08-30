@@ -1218,10 +1218,10 @@ HWTEST_F(SceneSessionManagerTest, UpdateBrightness, Function | SmallTest | Level
 */
 HWTEST_F(SceneSessionManagerTest, SetDisplayBrightness, Function | SmallTest | Level3)
 {
-    float brightness_ = 2.0f;
+    float brightness = 2.0f;
     float result01 = ssm_->GetDisplayBrightness();
     EXPECT_EQ(result01, UNDEFINED_BRIGHTNESS);
-    ssm_->SetDisplayBrightness(brightness_);
+    ssm_->SetDisplayBrightness(brightness);
     float result02 = ssm_->GetDisplayBrightness();
     ASSERT_EQ(result02, 2.0f);
 }
@@ -1233,16 +1233,16 @@ HWTEST_F(SceneSessionManagerTest, SetDisplayBrightness, Function | SmallTest | L
 */
 HWTEST_F(SceneSessionManagerTest, SetGestureNavigaionEnabled02, Function | SmallTest | Level3)
 {
-    bool enable_ = true;
-    WMError result01 = ssm_->SetGestureNavigaionEnabled(enable_);
+    bool enable = true;
+    WMError result01 = ssm_->SetGestureNavigaionEnabled(enable);
     EXPECT_EQ(result01, WMError::WM_DO_NOTHING);
     ProcessGestureNavigationEnabledChangeFunc funcGesture_ = SceneSessionManagerTest::callbackFunc_;
     ssm_->SetGestureNavigationEnabledChangeListener(funcGesture_);
-    WMError result02 = ssm_->SetGestureNavigaionEnabled(enable_);
+    WMError result02 = ssm_->SetGestureNavigaionEnabled(enable);
     EXPECT_EQ(result02, WMError::WM_OK);
     ProcessStatusBarEnabledChangeFunc funcStatus_ = ProcessStatusBarEnabledChangeFuncTest;
     ssm_->SetStatusBarEnabledChangeListener(funcStatus_);
-    WMError result03 = ssm_->SetGestureNavigaionEnabled(enable_);
+    WMError result03 = ssm_->SetGestureNavigaionEnabled(enable);
     ASSERT_EQ(result03, WMError::WM_OK);
 }
 
@@ -1330,7 +1330,7 @@ HWTEST_F(SceneSessionManagerTest, DumpSessionElementInfo, Function | SmallTest |
     std::string strId = "10086";
     sptr<SceneSession> scensession = nullptr;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
-    std::vector<std::string> params_; 
+    std::vector<std::string> params_;
     std::string dumpInfo_;
     ssm_->DumpSessionElementInfo(scensession, params_, dumpInfo_);
     scensession = nullptr;
