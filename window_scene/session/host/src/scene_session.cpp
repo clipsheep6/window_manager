@@ -1,3 +1,4 @@
+\
 /*
  * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -419,6 +420,7 @@ void SceneSession::NotifyPropertyWhenConnect()
         WLOGFD("id: %{public}d property is nullptr", persistentId_);
         return;
     }
+    
     NotifySessionFocusableChange(property_->GetFocusable());
     NotifySessionTouchableChange(property_->GetTouchable());
     OnShowWhenLocked(IsShowWhenLocked());
