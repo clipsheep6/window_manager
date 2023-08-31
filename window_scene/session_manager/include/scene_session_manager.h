@@ -211,7 +211,7 @@ private:
 
     void RelayoutKeyBoard(sptr<SceneSession> sceneSession);
     void RestoreCallingSessionSizeIfNeed();
-    void ResizeSoftInputCallingSessionIfNeed(const sptr<SceneSession>& sceneSession);
+    void ResizeSoftInputCallingSessionIfNeed(const sptr<SceneSession>& sceneSession, bool isInputUpdated = false);
 
     sptr<AAFwk::SessionInfo> SetAbilitySessionInfo(const sptr<SceneSession>& scnSession);
     WSError DestroyDialogWithMainWindow(const sptr<SceneSession>& scnSession);
@@ -221,7 +221,9 @@ private:
     void UpdateFocusableProperty(int32_t persistentId);
     std::vector<sptr<SceneSession>> GetSceneSessionVectorByType(WindowType type);
     bool UpdateSessionAvoidAreaIfNeed(const int32_t& persistentId,
-        const AvoidArea& avoidArea, AvoidAreaType avoidAreaType);
+        const sptr<SceneSession>& sceneSession, const AvoidArea& avoidArea, AvoidAreaType avoidAreaType);
+    void UpdateAvoidSessionAvoidArea(WindowType type, bool& needUpdate);
+    void UpdateNormalSessionAvoidArea(const int32_t& persistentId, sptr<SceneSession>& sceneSession, bool& needUpdate);
     bool UpdateAvoidArea(const int32_t& persistentId);
 
     sptr<AppExecFwk::IBundleMgr> GetBundleManager();
@@ -256,6 +258,8 @@ private:
     void WindowVisibilityChangeCallback(std::shared_ptr<RSOcclusionData> occlusiontionData);
     sptr<SceneSession> SelectSesssionFromMap(const uint64_t& surfaceId);
     void WindowDestroyNotifyVisibility(const sptr<SceneSession>& sceneSession);
+    void RegisterInputMethodUpdateFunc(const sptr<SceneSession>& sceneSession);
+    void OnInputMethodUpdate(const int32_t& persistentId);
     void RegisterInputMethodShownFunc(const sptr<SceneSession>& sceneSession);
     void OnInputMethodShown(const int32_t& persistentId);
     void RegisterInputMethodHideFunc(const sptr<SceneSession>& sceneSession);
@@ -281,7 +285,7 @@ private:
     sptr<ScbSessionHandler> scbSessionHandler_;
     std::shared_ptr<SessionListenerController> listenerController_;
     std::map<sptr<IRemoteObject>, int32_t> remoteObjectMap_;
-    std::set<sptr<SceneSession>> avoidAreaListenerSessionSet_;
+    std::set<int32_t> avoidAreaListenerSessionSet_;
     std::map<int32_t, std::map<AvoidAreaType, AvoidArea>> lastUpdatedAvoidArea_;
 
     NotifyCreateSpecificSessionFunc createSpecificSessionFunc_;
@@ -315,6 +319,7 @@ private:
 
     void CheckAndNotifyWaterMarkChangedResult();
     WSError NotifyWaterMarkFlagChangedResult(bool hasWaterMark);
+    void ProcessPreload(const AppExecFwk::AbilityInfo& abilityInfo) const;
     bool lastWaterMarkShowState_ { false };
     WindowChangedFunc WindowChangedFunc_;
     sptr<SceneSession> callingSession_ = nullptr;
@@ -326,7 +331,7 @@ private:
     int GetRemoteSessionSnapshotInfo(const std::string& deviceId, int32_t sessionId,
                                      AAFwk::MissionSnapshot& sessionSnapshot);
 
-    const int32_t BROKER_UID = 5528;
+    const int32_t BROKER_UID = 5557;
     const int32_t BROKER_RESERVE_UID = 5005;
     std::shared_mutex collaboratorMapLock_;
     std::unordered_map<int32_t, sptr<AAFwk::IAbilityManagerCollaborator>> collaboratorMap_;
