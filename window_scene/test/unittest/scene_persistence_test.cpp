@@ -16,6 +16,7 @@
 #include "scene_persistence.h"
 #include <gtest/gtest.h>
 #include "session_info.h"
+#include "ws_common.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -57,7 +58,7 @@ namespace {
  */
 HWTEST_F(ScenePersistenceTest, SaveSnapshot, Function | SmallTest | Level1)
 {
-    SessionInfo info;
+    Rosen::SessionInfo info;
     info.abilityName_ = "SetBrightness";
     info.bundleName_ = "SetBrightness1";
     int32_t persistendId_ = 10086;
@@ -73,7 +74,7 @@ HWTEST_F(ScenePersistenceTest, SaveSnapshot, Function | SmallTest | Level1)
  */
 HWTEST_F(ScenePersistenceTest, GetSnapshotFilePath, Function | SmallTest | Level1)
 {
-    SessionInfo info;
+    Rosen::SessionInfo info;
     info.abilityName_ = "SetBrightness";
     info.bundleName_ = "SetBrightness1";
     int32_t persistentId_ = 10086;
@@ -91,7 +92,7 @@ HWTEST_F(ScenePersistenceTest, GetSnapshotFilePath, Function | SmallTest | Level
  */
 HWTEST_F(ScenePersistenceTest, IsSnapshotExisted, Function | SmallTest | Level1)
 {
-    SessionInfo info;
+    Rosen::SessionInfo info;
     info.abilityName_ = "SetBrightness";
     info.bundleName_ = "SetBrightness1";
     int32_t persistentId_ = 10086;
