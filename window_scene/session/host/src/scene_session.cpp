@@ -87,12 +87,6 @@ SceneSession::SceneSession(const SessionInfo& info, const sptr<SpecificSessionCa
     }
 }
 
-void SceneSession::Destroy()
-{
-    WLOGFI("SceneSession Destroy id: %{public}d", GetPersistentId());
-    sessionChangeCallback_ = nullptr;
-}
-
 WSError SceneSession::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
     const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig, sptr<WindowSessionProperty> property, sptr<IRemoteObject> token)
 {
@@ -173,6 +167,7 @@ WSError SceneSession::OnSessionEvent(SessionEvent event)
 void SceneSession::RegisterSessionChangeCallback(const sptr<SceneSession::SessionChangeCallback>&
     sessionChangeCallback)
 {
+    std::lock_guard<std::mutex> guard(sessionChangeCbMutex_);
     sessionChangeCallback_ = sessionChangeCallback;
 }
 
@@ -591,7 +586,7 @@ void SceneSession::HandleStyleEvent(MMI::WindowArea area)
     }
     if (area != MMI::WindowArea::EXIT) {
         if (Session::SetPointerStyle(area) != WSError::WS_OK) {
-            WLOGFE("Failed to set the cursor style");
+            WLOGFE("Failed to set the cursor style, WSError:%{public}d", Session::SetPointerStyle(area));
         }
     }
     preWindowArea = { Session::GetWindowId(), area };
@@ -693,13 +688,14 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
     static bool isNew = true;
     if (isNew) {
         auto ret = HandlePointerStyle(pointerEvent);
-        if (ret != WSError::WS_OK && ret != WSError::WS_DO_NOTHING) {
-            WLOGFE("Failed to update the mouse cursor style");
+        if ((ret != WSError::WS_OK) && (ret != WSError::WS_DO_NOTHING)) {
+            WLOGFE("Failed to update the mouse cursor style, ret:%{public}d", ret);
         }
     }
     if (property_ && property_->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
         WindowHelper::IsMainWindow(property_->GetWindowType()) &&
         property_->GetMaximizeMode() != MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
+        PresentFoucusIfNeed(pointerEvent->GetPointerAction());
         if (!moveDragController_) {
             WLOGE("moveDragController_ is null");
             return Session::TransferPointerEvent(pointerEvent);
@@ -740,6 +736,7 @@ void SceneSession::ClearEnterWindow()
 
 void SceneSession::NotifySessionRectChange(const WSRect& rect, const SizeChangeReason& reason)
 {
+    std::lock_guard<std::mutex> guard(sessionChangeCbMutex_);
     if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->onRectChange_) {
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SceneSession::NotifySessionRectChange");
         sessionChangeCallback_->onRectChange_(rect, reason);
@@ -977,7 +974,7 @@ void SceneSession::UpdateNativeVisibility(bool visible)
     specificCallback_->onUpdateAvoidArea_(GetPersistentId());
     // update private state
     if (!property_) {
-        WLOGFE("property_ is null");
+        WLOGFE("UpdateNativeVisibility property_ is null");
         return;
     }
 }
@@ -990,7 +987,7 @@ bool SceneSession::IsVisible() const
 void SceneSession::SetPrivacyMode(bool isPrivacy)
 {
     if (!property_) {
-        WLOGFE("property_ is null");
+        WLOGFE("SetPrivacyMode property_ is null");
         return;
     }
     if (!surfaceNode_) {
@@ -999,7 +996,7 @@ void SceneSession::SetPrivacyMode(bool isPrivacy)
     }
     bool lastPrivacyMode = property_->GetPrivacyMode() || property_->GetSystemPrivacyMode();
     if (lastPrivacyMode == isPrivacy) {
-        WLOGFW("privacy mode is not change, do nothing");
+        WLOGFW("privacy mode is not change, do nothing, isPrivacy:%{public}d", isPrivacy);
         return;
     }
     property_->SetPrivacyMode(isPrivacy);

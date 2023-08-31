@@ -21,6 +21,7 @@
 #include "window_helper.h"
 #include "window_layout_policy.h"
 #include "window_layout_policy_cascade.h"
+#include "window_layout_policy_tile.h"
 #include "window_node_container.h"
 #include "window_layout_policy.h"
 #include "display_manager_service_inner.h"
@@ -64,12 +65,14 @@ public:
     static sptr<DisplayInfo> defaultDisplayInfo_;
     static sptr<DisplayGroupController> displayGroupController_;
     static sptr<WindowLayoutPolicyCascade> layoutPolicy_;
+    static sptr<WindowLayoutPolicyTile> layoutPolicyTile_;
 };
 
 sptr<WindowNodeContainer> WindowLayoutPolicyTest::container_ = nullptr;
 DisplayGroupInfo& WindowLayoutPolicyTest::displayGroupInfo_ = DisplayGroupInfo::GetInstance();
 sptr<DisplayGroupController> WindowLayoutPolicyTest::displayGroupController_ = nullptr;
 sptr<WindowLayoutPolicyCascade> WindowLayoutPolicyTest::layoutPolicy_ = nullptr;
+sptr<WindowLayoutPolicyTile> WindowLayoutPolicyTest::layoutPolicyTile_ = nullptr;
 sptr<DisplayInfo> WindowLayoutPolicyTest::defaultDisplayInfo_ = nullptr;
 WindowInfo WindowLayoutPolicyTest::windowInfo_ = {
     .winRect_ = { 0, 0, 0, 0 },
@@ -102,6 +105,7 @@ void WindowLayoutPolicyTest::SetUpTestCase()
     container_ = new WindowNodeContainer(defaultDisplayInfo_, display->GetScreenId());
     displayGroupController_ = container_->displayGroupController_;
     layoutPolicy_ = static_cast<WindowLayoutPolicyCascade*>(container_->GetLayoutPolicy().GetRefPtr());
+    layoutPolicyTile_ = static_cast<WindowLayoutPolicyTile*>(container_->GetLayoutPolicy().GetRefPtr());
 }
 
 void WindowLayoutPolicyTest::TearDownTestCase()
@@ -110,6 +114,7 @@ void WindowLayoutPolicyTest::TearDownTestCase()
     defaultDisplayInfo_ = nullptr;
     displayGroupController_ = nullptr;
     layoutPolicy_ = nullptr;
+    layoutPolicyTile_ = nullptr;
 }
 
 void WindowLayoutPolicyTest::SetUp()

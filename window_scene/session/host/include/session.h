@@ -57,6 +57,7 @@ using NofitySessionIconUpdatedFunc = std::function<void(const std::string &iconP
 using NotifySessionExceptionFunc = std::function<void(const SessionInfo& info)>;
 using NotifyPendingSessionToForegroundFunc = std::function<void(const SessionInfo& info)>;
 using NotifyPendingSessionToBackgroundForDelegatorFunc = std::function<void(const SessionInfo& info)>;
+using NotifyCallingSessionUpdateRectFunc = std::function<void(const int32_t& persistentId)>;
 using NotifyCallingSessionForegroundFunc = std::function<void(const int32_t& persistentId)>;
 using NotifyCallingSessionBackgroundFunc = std::function<void()>;
 
@@ -99,6 +100,7 @@ public:
 
     virtual WSError SetActive(bool active);
     virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason);
+    WSError UpdateDensity();
 
     void SetShowRecent(bool showRecent);
     bool GetShowRecent() const;
@@ -190,6 +192,7 @@ public:
     void NotifySessionFocusableChange(bool isFocusable);
     void NotifySessionTouchableChange(bool touchable);
     void NotifyClick();
+    void PresentFoucusIfNeed(int32_t pointerAcrion);
     WSError UpdateFocus(bool isFocused);
     WSError UpdateWindowMode(WindowMode mode);
     WSError SetFocusable(bool isFocusable);
@@ -229,6 +232,8 @@ public:
     WSError UpdateWindowAnimationFlag(bool needDefaultAnimationFlag) override;
     WSError UpdateWindowSceneAfterCustomAnimation(bool isAdd) override;
 
+    void SetNotifyCallingSessionUpdateRectFunc(const NotifyCallingSessionUpdateRectFunc& func);
+    void NotifyCallingSessionUpdateRect();
     void SetNotifyCallingSessionForegroundFunc(const NotifyCallingSessionForegroundFunc& func);
     void NotifyCallingSessionForeground();
     void SetNotifyCallingSessionBackgroundFunc(const NotifyCallingSessionBackgroundFunc& func);
@@ -300,6 +305,7 @@ protected:
     std::vector<std::shared_ptr<NotifySessionExceptionFunc>> sessionExceptionFuncs_;
     NotifyPendingSessionToForegroundFunc pendingSessionToForegroundFunc_;
     NotifyPendingSessionToBackgroundForDelegatorFunc pendingSessionToBackgroundForDelegatorFunc_;
+    NotifyCallingSessionUpdateRectFunc notifyCallingSessionUpdateRectFunc_;
     NotifyCallingSessionForegroundFunc notifyCallingSessionForegroundFunc_;
     NotifyCallingSessionBackgroundFunc notifyCallingSessionBackgroundFunc_;
     SystemSessionConfig systemConfig_;
@@ -344,6 +350,7 @@ private:
     bool bufferAvailable_ = false;
     bool isTerminating = false;
 
+    mutable std::mutex dialogVecMutex_;
     std::vector<sptr<Session>> dialogVec_;
     sptr<Session> parentSession_;
 

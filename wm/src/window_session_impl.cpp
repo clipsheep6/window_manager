@@ -427,6 +427,14 @@ WSError WindowSessionImpl::UpdateRect(const WSRect& rect, SizeChangeReason reaso
     return WSError::WS_OK;
 }
 
+void WindowSessionImpl::UpdateDensity()
+{
+    auto preRect = GetRect();
+    UpdateViewportConfig(preRect, WindowSizeChangeReason::UNDEFINED);
+    WLOGFI("WindowSessionImpl::UpdateDensity [%{public}d, %{public}d, %{public}u, %{public}u]",
+        preRect.posX_, preRect.posY_, preRect.width_, preRect.height_);
+}
+
 WSError WindowSessionImpl::UpdateFocus(bool isFocused)
 {
     WLOGFD("Report update focus: %{public}u", isFocused);
@@ -547,7 +555,6 @@ WMError WindowSessionImpl::SetUIContent(const std::string& contentInfo,
         }
     } else if (isIgnoreSafeAreaNeedNotify_) {
         SetLayoutFullScreenByApiVersion(isIgnoreSafeArea_);
-        isIgnoreSafeAreaNeedNotify_ = false;
     }
 
     UpdateDecorEnable(true);
@@ -1506,6 +1513,11 @@ void WindowSessionImpl::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo
             listener->OnSizeChange(info);
         }
     }
+}
+
+KeyboardAnimationConfig WindowSessionImpl::GetKeyboardAnimationConfig()
+{
+    return windowSystemConfig_.keyboardAnimationConfig_;
 }
 
 void WindowSessionImpl::DumpSessionElementInfo(const std::vector<std::string>& params)

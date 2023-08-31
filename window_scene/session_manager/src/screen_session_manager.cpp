@@ -424,8 +424,12 @@ DMError ScreenSessionManager::SetVirtualPixelRatio(ScreenId screenId, float virt
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:SetVirtualPixelRatio(%" PRIu64", %f)", screenId,
         virtualPixelRatio);
     screenSession->SetVirtualPixelRatio(virtualPixelRatio);
+    std::map<DisplayId, sptr<DisplayInfo>> emptyMap;
+    NotifyDisplayStateChange(GetDefaultScreenId(), screenSession->ConvertToDisplayInfo(),
+        emptyMap, DisplayStateChangeType::VIRTUAL_PIXEL_RATIO_CHANGE);
     NotifyScreenChanged(screenSession->ConvertToScreenInfo(), ScreenChangeEvent::VIRTUAL_PIXEL_RATIO_CHANGED);
-
+    NotifyDisplayChanged(screenSession->ConvertToDisplayInfo(),
+        DisplayChangeEvent::DISPLAY_VIRTUAL_PIXEL_RATIO_CHANGED);
     return DMError::DM_OK;
 }
 
@@ -2073,7 +2077,7 @@ void ScreenSessionManager::DumpSpecialScreenInfo(ScreenId id, std::string& dumpI
     dumpInfo.append(oss.str());
 }
 
-//Fold Screen
+// --- Fold Screen ---
 ScreenProperty ScreenSessionManager::GetPhyScreenProperty(ScreenId screenId)
 {
     std::lock_guard<std::recursive_mutex> lock_phy(phyScreenPropMapMutex_);
@@ -2086,7 +2090,7 @@ ScreenProperty ScreenSessionManager::GetPhyScreenProperty(ScreenId screenId)
     return iter->second;
 }
 
-void ScreenSessionManager::SetFoldDisplayMode(FoldDisplayMode displayMode)
+void ScreenSessionManager::SetFoldDisplayMode(const FoldDisplayMode displayMode)
 {
     if (foldScreenController_ == nullptr) {
         WLOGFW("SetFoldDisplayMode foldScreenController_ is null");
@@ -2102,5 +2106,32 @@ FoldDisplayMode ScreenSessionManager::GetFoldDisplayMode()
         return FoldDisplayMode::UNKNOWN;
     }
     return foldScreenController_->GetDisplayMode();
+}
+
+bool ScreenSessionManager::IsFoldable()
+{
+    if (foldScreenController_ == nullptr) {
+        WLOGFW("foldScreenController_ is null");
+        return false;
+    }
+    return foldScreenController_->IsFoldable();
+}
+
+FoldStatus ScreenSessionManager::GetFoldStatus()
+{
+    if (foldScreenController_ == nullptr) {
+        WLOGFW("foldScreenController_ is null");
+        return FoldStatus::UNKNOWN;
+    }
+    return foldScreenController_->GetFoldStatus();
+}
+
+sptr<FoldCreaseRegion> ScreenSessionManager::GetCurrentFoldCreaseRegion()
+{
+    if (foldScreenController_ == nullptr) {
+        WLOGFW("foldScreenController_ is null");
+        return nullptr;
+    }
+    return foldScreenController_->GetCurrentFoldCreaseRegion();
 }
 } // namespace OHOS::Rosen
