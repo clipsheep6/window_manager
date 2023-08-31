@@ -657,6 +657,10 @@ WMError WindowSessionImpl::SetTouchable(bool isTouchable)
 
 WMError WindowSessionImpl::SetResizeByDragEnabled(bool dragEnabled)
 {
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("set raise byDrag enabled permission denied!");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
     WLOGFD("set dragEnabled");
     if (IsWindowSessionInvalid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
@@ -668,6 +672,10 @@ WMError WindowSessionImpl::SetResizeByDragEnabled(bool dragEnabled)
 
 WMError WindowSessionImpl::SetRaiseByClickEnabled(bool raiseEnabled)
 {
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("set raise byClick enabled permission denied!");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
     WLOGFD("set raiseEnabled");
     if (IsWindowSessionInvalid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
