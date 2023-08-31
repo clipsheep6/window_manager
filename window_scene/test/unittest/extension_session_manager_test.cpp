@@ -33,7 +33,6 @@ public:
 
 void ExtensionSessionManagerTest::SetUpTestCase()
 {
-
 }
 
 void ExtensionSessionManagerTest::TearDownTestCase()
@@ -59,8 +58,7 @@ HWTEST_F(ExtensionSessionManagerTest, RequestExtensionSession, Function | Medium
     SessionInfo sessionInfo;
     sessionInfo.abilityName_ = "RequestExtensionSession";
     ExtensionSessionManager extensionSessionManager;
-    ASSERT_NE(nullptr, 
-                extensionSessionManager.RequestExtensionSession(sessionInfo));
+    ASSERT_NE(nullptr, extensionSessionManager.RequestExtensionSession(sessionInfo));
 }
 
 /**
@@ -73,8 +71,7 @@ HWTEST_F(ExtensionSessionManagerTest, RequestExtensionSessionActivation01, Funct
     SessionInfo info;
     sptr<ExtensionSession> extensionSession = new ExtensionSession(info);
     ExtensionSessionManager extensionSessionManager;
-    ASSERT_EQ(WSError::WS_OK, 
-                extensionSessionManager.RequestExtensionSessionActivation(extensionSession, 1));
+    ASSERT_EQ(WSError::WS_OK, extensionSessionManager.RequestExtensionSessionActivation(extensionSession, 1));
 }
 
 /**
@@ -87,8 +84,7 @@ HWTEST_F(ExtensionSessionManagerTest, RequestExtensionSessionBackground01, Funct
     SessionInfo info;
     sptr<ExtensionSession> extensionSession = new ExtensionSession(info);
     ExtensionSessionManager extensionSessionManager;
-    ASSERT_EQ(WSError::WS_OK, 
-                extensionSessionManager.RequestExtensionSessionBackground(extensionSession));
+    ASSERT_EQ(WSError::WS_OK, extensionSessionManager.RequestExtensionSessionBackground(extensionSession));
 }
 
 
@@ -102,8 +98,7 @@ HWTEST_F(ExtensionSessionManagerTest, RequestExtensionSessionDestruction01, Func
     SessionInfo info;
     sptr<ExtensionSession> extensionSession = new ExtensionSession(info);
     ExtensionSessionManager extensionSessionManager;
-    ASSERT_EQ(WSError::WS_OK, 
-                extensionSessionManager.RequestExtensionSessionDestruction(extensionSession));
+    ASSERT_EQ(WSError::WS_OK, extensionSessionManager.RequestExtensionSessionDestruction(extensionSession));
 }
 } // namespace
 } // namespace Rosen

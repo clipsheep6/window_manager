@@ -191,8 +191,7 @@ HWTEST_F(WindowExtensionSessionImplTest, SetUIContent01, Function | SmallTest | 
 {
     sptr<WindowOption> option = new WindowOption();
     WindowExtensionSessionImpl windowExtensionSessionImpl(option);
-    ASSERT_EQ(WMError::WM_OK, 
-        windowExtensionSessionImpl.SetUIContent("a", nullptr, nullptr, false, nullptr));
+    ASSERT_EQ(WMError::WM_OK, windowExtensionSessionImpl.SetUIContent("a", nullptr, nullptr, false, nullptr));
 }
 }
 } // namespace Rosen
