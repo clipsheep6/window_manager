@@ -24,7 +24,6 @@ group("unittest") {
     ":ws_extension_session_test",
     ":ws_move_drag_controller_test",
     ":ws_root_scene_session_test",
-    ":ws_scene_persistence_test",
     ":ws_scene_persistent_storage_test",
     ":ws_scene_session_converter_test",
     ":ws_scene_session_manager_proxy_test",
@@ -103,23 +102,6 @@ ohos_unittest("ws_root_scene_session_test") {
     "ipc:ipc_single",
     "power_manager:powermgr_client",
     "preferences:native_preferences",
-  ]
-}
-
-ohos_unittest("ws_scene_persistence_test") {
-  module_out_path = module_out_path
-
-  sources = [ "scene_persistence_test.cpp" ]
-
-  include_dirs = [ "${window_base_path}/window_scene/session/host/include" ]
-
-  deps = [ ":ws_unittest_common" ]
-
-  external_deps = [
-    "ability_base:session_info",
-    "ability_base:want",
-    "c_utils:utils",
-    "hilog:libhilog",
   ]
 }
 
