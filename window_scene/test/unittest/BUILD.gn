@@ -19,6 +19,7 @@ group("unittest") {
   testonly = true
 
   deps = [
+    ":ws_fold_screen_state_machine_test",
     ":ws_event_stage_test",
     ":ws_extension_session_manager_test",
     ":ws_extension_session_test",
@@ -462,6 +463,19 @@ ohos_unittest("ws_extension_session_manager_test") {
   module_out_path = module_out_path
 
   sources = [ "extension_session_manager_test.cpp" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("ws_fold_screen_state_machine_test") {
+  module_out_path = module_out_path
+
+  sources = [ "fold_screen_state_machine_test.cpp" ]
 
   deps = [ ":ws_unittest_common" ]
 
