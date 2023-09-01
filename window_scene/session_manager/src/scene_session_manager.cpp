@@ -1079,7 +1079,6 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
         scnSessionInfo->collaboratorType = scnSession->GetCollaboratorType();
     }
     auto errCode = AAFwk::AbilityManagerClient::GetInstance()->StartUIAbilityBySCB(scnSessionInfo);
-
     auto sessionInfo = scnSession->GetSessionInfo();
     if (WindowHelper::IsMainWindow(scnSession->GetWindowType())) {
         WindowInfoReporter::GetInstance().InsertShowReportInfo(sessionInfo.bundleName_);
