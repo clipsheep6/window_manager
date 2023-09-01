@@ -32,7 +32,6 @@
 #include <transaction/rs_sync_transaction_controller.h>
 #include "display.h"
 #include "persistent_storage.h"
-//#include "window_manager_service_utils.h"
 
 using namespace testing;
 using namespace testing::ext;
