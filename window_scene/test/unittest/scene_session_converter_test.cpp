@@ -20,6 +20,7 @@
 #include "session/host/include/scene_session.h"
 #include "window_manager_agent.h"
 #include "session_manager.h"
+#include "mission_info.h"
 #include "scene_session_converter.h"
 #include "zidl/window_manager_agent_interface.h"
 
@@ -59,14 +60,70 @@ namespace {
  * @tc.desc: ConvertToMissionInfos func
  * @tc.type: FUNC
  */
-HWTEST_F(SceneSessionConverterTest, ConvertToMissionInfos_EmptyInput, Function | SmallTest | Level1)
+HWTEST_F(SceneSessionConverterTest, ConvertToMissionInfos, Function | SmallTest | Level1)
 {
     std::vector<sptr<SceneSession>> sceneSessionInfos;
     std::vector<AAFwk::MissionInfo> missionInfos;
     auto result = SceneSessionConverter::ConvertToMissionInfos(sceneSessionInfos, missionInfos);
     ASSERT_EQ(WSError::WS_OK, result);
+    SessionInfo info;
+    info.abilityName_ = "Background01";
+    info.bundleName_ = "Background01";
+    sptr<SceneSession> scensession;
+    scensession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(scensession, nullptr);
+    sceneSessionInfos.push_back(scensession);
+    for (auto iter = sceneSessionInfos.begin(); iter != sceneSessionInfos.end(); iter++) {
+        AAFwk::MissionInfo missionInfo;
+        missionInfo.id = (*iter)->GetPersistentId();
+        missionInfo.runningState = (*iter)->IsActive();
+        missionInfo.lockedState = ((*iter)->GetSessionInfo()).lockedState;
+        (*iter)->GetSessionInfo().abilityInfo = scensession->GetAbilityInfo();
+    }
+    SceneSessionConverter::ConvertToMissionInfos(sceneSessionInfos, missionInfos);
+    for (auto iter = sceneSessionInfos.begin(); iter != sceneSessionInfos.end(); iter++) {
+        AAFwk::MissionInfo missionInfo;
+        missionInfo.id = (*iter)->GetPersistentId();
+        missionInfo.runningState = (*iter)->IsActive();
+        missionInfo.lockedState = ((*iter)->GetSessionInfo()).lockedState;
+        (*iter)->GetSessionInfo().abilityInfo = nullptr;
+        ((*iter)->GetSessionInfo()).want = info.want;
+    }
+    SceneSessionConverter::ConvertToMissionInfos(sceneSessionInfos, missionInfos);
+    for (auto iter = sceneSessionInfos.begin(); iter != sceneSessionInfos.end(); iter++) {
+        AAFwk::MissionInfo missionInfo;
+        missionInfo.id = (*iter)->GetPersistentId();
+        missionInfo.runningState = (*iter)->IsActive();
+        missionInfo.lockedState = ((*iter)->GetSessionInfo()).lockedState;
+        (*iter)->GetSessionInfo().abilityInfo = nullptr;
+        ((*iter)->GetSessionInfo()).want = nullptr;
+    }
+    result = SceneSessionConverter::ConvertToMissionInfos(sceneSessionInfos, missionInfos);
+    ASSERT_EQ(WSError::WS_OK, result);
+    delete scensession;
 }
 
+/**
+ * @tc.name: ConvertToMissionInfo
+ * @tc.desc: ConvertToMissionInfo func
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionConverterTest, ConvertToMissionInfo, Function | SmallTest | Level1)
+{
+    sptr<SceneSession> sceneSession;
+    AAFwk::MissionInfo missionInfo;
+    auto result = SceneSessionConverter::ConvertToMissionInfo(sceneSession, missionInfo);
+    ASSERT_EQ(WSError::WS_OK, result);
+    SessionInfo info;
+    info.abilityName_ = "Background01";
+    info.bundleName_ = "Background01";
+    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    sceneSession->GetSessionInfo().abilityInfo = sceneSession->GetAbilityInfo();
+    (sceneSession->GetSessionInfo()).want = info.want;
+    result = SceneSessionConverter::ConvertToMissionInfo(sceneSession, missionInfo);
+    ASSERT_EQ(WSError::WS_OK, result);
+    delete sceneSession;
+}
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -395,6 +395,7 @@ ohos_unittest("ws_scene_session_converter_test") {
   deps = [ ":ws_unittest_common" ]
 
   external_deps = [
+    "ability_runtime:mission_info",
     "c_utils:utils",
     "hilog:libhilog",
   ]
