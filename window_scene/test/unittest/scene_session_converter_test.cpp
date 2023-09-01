@@ -72,7 +72,7 @@ HWTEST_F(SceneSessionConverterTest, ConvertToMissionInfos, Function | SmallTest 
     sptr<SceneSession> scensession;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     EXPECT_NE(scensession, nullptr);
-    sceneSessionInfos.push_back(scensession); 
+    sceneSessionInfos.push_back(scensession);
     for (auto iter = sceneSessionInfos.begin(); iter != sceneSessionInfos.end(); iter++) {
         AAFwk::MissionInfo missionInfo;
         missionInfo.id = (*iter)->GetPersistentId();
@@ -104,8 +104,8 @@ HWTEST_F(SceneSessionConverterTest, ConvertToMissionInfos, Function | SmallTest 
 }
 
 /**
- * @tc.name: ConvertToMissionInfos
- * @tc.desc: ConvertToMissionInfos func
+ * @tc.name: ConvertToMissionInfo
+ * @tc.desc: ConvertToMissionInfo func
  * @tc.type: FUNC
  */
 HWTEST_F(SceneSessionConverterTest, ConvertToMissionInfo, Function | SmallTest | Level1)
