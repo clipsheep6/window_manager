@@ -18,7 +18,7 @@
 #include "wm_common.h"
 #include "mock/mock_session_stage.h"
 #include "input_event.h"
-#include <pointer_event.h>
+#include <pointer_event.h>       
 
 using namespace testing;
 using namespace testing::ext;
@@ -1055,7 +1055,7 @@ HWTEST_F(SceneSessionTest, NotifyPropertyWhenConnect, Function | SmallTest | Lev
     property->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
     scensession->property_ = property;
     scensession->NotifyPropertyWhenConnect();
-    ASSERT_EQ(ret, 1);
+    ASSERT_EQ(ret, 1);  
 }
 
 /**
@@ -1074,6 +1074,31 @@ HWTEST_F(SceneSessionTest, DumpSessionInfo, Function | SmallTest | Level2)
     std::vector<std::string> infos;
     scensession->DumpSessionInfo(infos);
     ASSERT_FALSE(infos.empty());
+}
+
+
+/**
+ * @tc.name: Connect
+ * @tc.desc: Connect
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, Connect, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.bundleName_ = "SceneSessionTest";
+    info.abilityName_ = "Connect";
+    info.windowType_ = 1;
+    sptr<SceneSession> scensession = new (std::nothrow) SceneSession(info, nullptr);
+    sptr<ISessionStage> sessionStage;
+    sptr<IWindowEventChannel> eventChannel;
+    std::shared_ptr<RSSurfaceNode> surfaceNode;
+    SystemSessionConfig systemConfig; 
+    sptr<WindowSessionProperty> property;
+    sptr<IRemoteObject> token;
+    auto result = scensession->Connect( sessionStage, eventChannel,surfaceNode,systemConfig,property,token);
+    ASSERT_EQ(result,WSError::WS_OK);
+    WSError ret = scensession->Connect(sessionStage, eventChannel, surfaceNode, systemConfig, property, token);
+    EXPECT_NE(ret,WSError::WS_OK);
 }
 
 }

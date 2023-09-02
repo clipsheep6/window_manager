@@ -485,7 +485,7 @@ enum class WindowAnimation : uint32_t {
  * @brief Enumerates window maximize mode.
  */
 enum class MaximizeMode : uint32_t {
-    MODE_AVOID_SYSTEM_BAR,
+    MODE_AVOID_SYSTEM_BAR, 
     MODE_FULL_FILL,
     MODE_RECOVER,
 };
