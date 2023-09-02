@@ -1060,7 +1060,7 @@ std::future<int32_t> SceneSessionManager::RequestSceneSessionActivation(
 }
 
 WSError SceneSessionManager::RequestSceneSessionActivationInner(
-    sptr<SceneSession>& scnSession, bool isNewActive, std::shared_ptr<std::promise<int32_t>>& promise)
+    sptr<SceneSession>& scnSession, bool isNewActive, const std::shared_ptr<std::promise<int32_t>>& promise)
 {
     auto persistentId = scnSession->GetPersistentId();
     if (scnSession->GetSessionInfo().ancoSceneState < AncoSceneState::NOTIFY_CREATE) {

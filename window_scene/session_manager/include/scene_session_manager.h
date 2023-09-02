@@ -247,7 +247,7 @@ private:
 
     void PerformRegisterInRequestSceneSession(sptr<SceneSession>& sceneSession);
     WSError RequestSceneSessionActivationInner(sptr<SceneSession>& scnSession,
-        bool isNewActive, std::shared_ptr<std::promise<int32_t>>& promise);
+        bool isNewActive, const std::shared_ptr<std::promise<int32_t>>& promise);
     WSError SetBrightness(const sptr<SceneSession>& sceneSession, float brightness);
     WSError UpdateBrightness(int32_t persistentId);
     void SetDisplayBrightness(float brightness);
