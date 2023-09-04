@@ -322,6 +322,7 @@ private:
     bool isReportTaskStart_ = false;
     std::shared_ptr<RSOcclusionData> lastOcclusionData_ = std::make_shared<RSOcclusionData>();
     RSInterfaces& rsInterface_;
+    bool lastGestureNavigationEnabled_ = true;
     void RegisterSessionStateChangeNotifyManagerFunc(sptr<SceneSession>& sceneSession);
     void OnSessionStateChange(int32_t persistentId, const SessionState& state);
     sptr<ISessionChangeListener> sessionListener_;
@@ -357,6 +358,7 @@ private:
     void PreHandleCollaborator(sptr<SceneSession>& sceneSession);
     void NotifyCollaboratorAfterStart(sptr<SceneSession>& scnSession, sptr<AAFwk::SessionInfo>& scnSessionInfo);
     void UpdateCollaboratorSessionWant(sptr<SceneSession>& session);
+    void NotifyStatusBarEnabledChange(bool enable);
 };
 } // namespace OHOS::Rosen
 
