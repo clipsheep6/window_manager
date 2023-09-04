@@ -1313,6 +1313,24 @@ void SceneSessionManager::SetStatusBarEnabledChangeListener(const ProcessStatusB
         WLOGFD("set func is null");
     }
     statusBarEnabledChangeFunc_ = func;
+    NotifyStatusBarEnabledChange(lastGestureNavigationEnabled_);
+}
+
+void SceneSessionManager::NotifyStatusBarEnabledChange(bool enable)
+{
+    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
+        WLOGFE("NotifyStatusBarEnabledChange permission denied!");
+    } else {
+        auto task = [this, enable]() {
+            if (!statusBarEnabledChangeFunc_) {
+                WLOGFE("NotifyStatusBarEnabledChange callback func is null");
+            } else {
+                statusBarEnabledChangeFunc_(enable);
+            }
+            return WMError::WM_OK;
+        };
+        taskScheduler_->PostSyncTask(task);
+    }
 }
 
 void SceneSessionManager::SetGestureNavigationEnabledChangeListener(
@@ -2003,6 +2021,7 @@ WMError SceneSessionManager::SetGestureNavigaionEnabled(bool enable)
         WLOGFE("SetGestureNavigationEnabled permission denied!");
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
+    lastGestureNavigationEnabled_ = enable;
     WLOGFD("SetGestureNavigationEnabled, enable: %{public}d", enable);
     auto task = [this, enable]() {
         if (!gestureNavigationEnabledChangeFunc_ && !statusBarEnabledChangeFunc_) {
