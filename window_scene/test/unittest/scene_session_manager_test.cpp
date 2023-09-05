@@ -1449,7 +1449,6 @@ HWTEST_F(SceneSessionManagerTest, NotifyWaterMarkFlagChangedResult, Function | S
     ssm_->NotifyCompleteFirstFrameDrawing(persistentId);
     bool hasWaterMark = true;
     AppExecFwk::AbilityInfo abilityInfo;
-    // ssm_->SetVisible(true);
     WSError result01 = ssm_->NotifyWaterMarkFlagChangedResult(hasWaterMark);
     EXPECT_EQ(result01, WSError::WS_OK);
     ssm_->CheckAndNotifyWaterMarkChangedResult();
