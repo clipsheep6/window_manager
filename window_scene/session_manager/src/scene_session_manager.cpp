@@ -1706,6 +1706,8 @@ void SceneSessionManager::HandleUpdateProperty(const sptr<WindowSessionProperty>
         }
         case WSPropertyChangeAction::ACTION_UPDATE_ORIENTATION: {
             sceneSession->SetRequestedOrientation(property->GetRequestedOrientation());
+            ScreenSessionManager::GetInstance().
+                SetRequestedOrientation(property->GetDisplayId(), property->GetRequestedOrientation());
             break;
         }
         case WSPropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE: {
