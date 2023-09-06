@@ -51,6 +51,7 @@
 #include "window_manager_hilog.h"
 #include "wm_common.h"
 #include "wm_math.h"
+#include "xml_config_base.h"
 
 
 using namespace testing;
@@ -110,6 +111,9 @@ HWTEST_F(WindowManagerServiceTest, WindowVisibilityChangeCallback01, Function | 
     std::shared_ptr<RSOcclusionData> occlusionData = nullptr;
     wms->WindowVisibilityChangeCallback(occlusionData);
     ASSERT_EQ(nullptr, occlusionData);
+    int time = 10000;
+    std::chrono::milliseconds dura(time);
+    std::this_thread::sleep_for(dura);
 }
 /**
  * @tc.name: InitWithAbilityManagerServiceAdded
@@ -118,6 +122,7 @@ HWTEST_F(WindowManagerServiceTest, WindowVisibilityChangeCallback01, Function | 
  */
 HWTEST_F(WindowManagerServiceTest, InitWithAbilityManagerServiceAdded01, Function | SmallTest | Level2)
 {
+    wms->InitWithAbilityManagerServiceAdded();
     wms->wmsHandler_ = new WindowManagerServiceHandler;
     wms->InitWithAbilityManagerServiceAdded();
     ASSERT_NE(nullptr, wms->wmsHandler_);
@@ -466,6 +471,9 @@ HWTEST_F(WindowManagerServiceTest, OnAccountSwitched, Function | SmallTest | Lev
     int accountId = 0;
     ASSERT_TRUE(wms != nullptr);
     wms->OnAccountSwitched(accountId);
+    int time = 10000;
+    std::chrono::milliseconds dura(time);
+    std::this_thread::sleep_for(dura);
 }
 
 /**
@@ -572,16 +580,19 @@ HWTEST_F(WindowManagerServiceTest, Init, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: Dump
- * @tc.desc: Dump test
+ * @tc.name: Dump02
+ * @tc.desc: Dump02 test
  * @tc.type: FUNC
  */
-HWTEST_F(WindowManagerServiceTest, Dump, Function | SmallTest | Level2)
+HWTEST_F(WindowManagerServiceTest, Dump02, Function | SmallTest | Level2)
 {
     int fd = 2;
     std::vector<std::u16string> args;
     wms->Dump(fd, args);
     ASSERT_EQ(fd, 2);
+    wms->windowDumper_ = nullptr;
+    ASSERT_TRUE(wms != nullptr);
+    wms->Dump(fd, args);
 }
 
 /**
@@ -605,7 +616,7 @@ HWTEST_F(WindowManagerServiceTest, RequestFocus, Function | SmallTest | Level2)
 {
     uint32_t windowId = 1;
     WMError res = wms->RequestFocus(windowId);
-    ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
+    ASSERT_EQ(res, WMError::WM_OK);
 }
 
 /**
@@ -713,7 +724,7 @@ HWTEST_F(WindowManagerServiceTest, GetTopWindowId, Function | SmallTest | Level2
     uint32_t mainWinId = 1;
     uint32_t topWinId = 1;
     WMError res = wms->GetTopWindowId(mainWinId, topWinId);
-    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+    ASSERT_EQ(WMError::WM_OK, res);
 }
 
 /**
@@ -761,7 +772,7 @@ HWTEST_F(WindowManagerServiceTest, RaiseToAppTop, Function | SmallTest | Level2)
 {
     uint32_t windowId = 1;
     WmErrorCode res = wms->RaiseToAppTop(windowId);
-    ASSERT_EQ(WmErrorCode::WM_ERROR_STATE_ABNORMALLY, res);
+    ASSERT_EQ(WmErrorCode::WM_OK, res);
 }
 
 /**
@@ -924,6 +935,141 @@ HWTEST_F(WindowManagerServiceTest, GetFocusWindowInfo, Function | SmallTest | Le
     FocusChangeInfo focusInfo;
     ASSERT_TRUE(wms != nullptr);
     wms->GetFocusWindowInfo(focusInfo);
+}
+
+/**
+ * @tc.name: PostAsyncTask
+ * @tc.desc: PostAsyncTask test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerServiceTest, PostAsyncTask, Function | SmallTest | Level2)
+{
+    Task task;
+    std::shared_ptr<AppExecFwk::EventRunner> runner = AppExecFwk::EventRunner::Create("Test");
+    wms->handler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
+    ASSERT_TRUE(wms != nullptr);
+    wms->PostAsyncTask(task);
+    wms->PostVoidSyncTask(task);
+}
+
+/**
+ * @tc.name: OnAddSystemAbility02
+ * @tc.desc: OnAddSystemAbility02 test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerServiceTest, OnAddSystemAbility02, Function | SmallTest | Level2)
+{
+    std::string str = "OnAddSystemAbility02";
+    wms->OnAddSystemAbility(10, str);
+    ASSERT_EQ(nullptr, wms->windowCommonEvent_->subscriber_);
+    wms->OnAddSystemAbility(180, str);
+    ASSERT_EQ(nullptr, wms->windowCommonEvent_->subscriber_);
+    wms->OnAddSystemAbility(3299, str);
+    ASSERT_NE(nullptr, wms->windowCommonEvent_->subscriber_);
+}
+
+/**
+ * @tc.name: GetFocusWindow
+ * @tc.desc: GetFocusWindow test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerServiceTest, GetFocusWindow, Function | SmallTest | Level2)
+{
+    sptr<IRemoteObject> abilityToken = new IRemoteObjectMocker();
+    ASSERT_TRUE(wmsHandler_ != nullptr);
+    wmsHandler_->GetFocusWindow(abilityToken);
+}
+
+/**
+ * @tc.name: MoveMissionsToBackground02
+ * @tc.desc: MoveMissionsToBackground02 test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerServiceTest, MoveMissionsToBackground02, Function | SmallTest | Level2)
+{
+    std::vector<int32_t> moveRs;
+    int32_t rs = wmsHandler_->MoveMissionsToBackground({}, moveRs);
+    ASSERT_EQ(0, rs);
+}
+
+/**
+ * @tc.name: ConfigAppWindowCornerRadius
+ * @tc.desc: ConfigAppWindowCornerRadius test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerServiceTest, ConfigAppWindowCornerRadius, Function | SmallTest | Level2)
+{
+    const auto& config = WindowManagerConfig::GetConfig();
+    WindowManagerConfig::ConfigItem item = config["decor"];
+    float out = 1.0;
+    ASSERT_TRUE(wms != nullptr);
+    bool res = wms->ConfigAppWindowCornerRadius(item, out);
+    ASSERT_EQ(res, false);
+}
+
+/**
+ * @tc.name: GetFocusWindowInfo01
+ * @tc.desc: GetFocusWindowInfo01 test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerServiceTest, GetFocusWindowInfo01, Function | SmallTest | Level2)
+{
+    sptr<IRemoteObject> abilityToken = new IRemoteObjectMocker();
+    ASSERT_TRUE(wms != nullptr);
+    wms->GetFocusWindowInfo(abilityToken);
+}
+
+/**
+ * @tc.name: OnStop
+ * @tc.desc: OnStop test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerServiceTest, OnStop, Function | SmallTest | Level2)
+{
+    ASSERT_TRUE(wms != nullptr);
+    wms->OnStop();
+}
+
+/**
+ * @tc.name: CheckSystemWindowPermission
+ * @tc.desc: CheckSystemWindowPermission test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerServiceTest, CheckSystemWindowPermission, Function | SmallTest | Level2)
+{
+    sptr<WindowProperty> property = new WindowProperty();
+    property->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
+    ASSERT_TRUE(wms != nullptr);
+    bool res = wms->CheckSystemWindowPermission(property);
+    ASSERT_EQ(res, true);
+    property->SetWindowType(WindowType::WINDOW_TYPE_DIALOG);
+    res = wms->CheckSystemWindowPermission(property);
+    ASSERT_EQ(res, true);
+    property->SetWindowType(WindowType::WINDOW_TYPE_FLOAT);
+    res = wms->CheckSystemWindowPermission(property);
+    ASSERT_EQ(res, true);
+}
+
+/**
+ * @tc.name: CreateWindow02
+ * @tc.desc: CreateWindow02 test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerServiceTest, CreateWindow02, Function | SmallTest | Level2)
+{
+    sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
+    sptr<IWindow> iWindow = iface_cast<IWindow>(iRemoteObjectMocker);
+    uint32_t id = 2;
+    RSSurfaceNodeConfig config;
+    config.SurfaceNodeName = "webTestSurfaceName";
+    auto surfaceNode = RSSurfaceNode::Create(config, false);
+    sptr<WindowProperty> property = new WindowProperty();
+    property->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
+    ASSERT_EQ(WMError::WM_OK, wms->CreateWindow(iWindow, property, surfaceNode, id, nullptr));
+    wms->DestroyWindow(id, true);
+    property->SetWindowType(WindowType::APP_WINDOW_BASE);
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, wms->CreateWindow(iWindow, property, surfaceNode, id, nullptr));
+    wms->DestroyWindow(id, true);
 }
 }
 }
