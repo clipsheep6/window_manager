@@ -714,7 +714,12 @@ DMError ScreenSessionManager::IsScreenRotationLocked(bool& isLocked)
         WLOGFE("SCB: ScreenSessionManager is screen rotation locked permission denied!");
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
-    isLocked = ScreenRotationProperty::IsScreenRotationLocked();
+    sptr<ScreenSession> screenSession = GetDefaultScreenSession();
+    if (screenSession == nullptr) {
+        WLOGFE("fail to cannot find default screen ");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    isLocked = screenSession->isScreenLocked_;
     WLOGFI("SCB: IsScreenRotationLocked:isLocked: %{public}u", isLocked);
     return DMError::DM_OK;
 }
@@ -726,7 +731,7 @@ DMError ScreenSessionManager::SetScreenRotationLocked(bool isLocked)
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     WLOGFI("SCB: SetScreenRotationLocked: isLocked: %{public}u", isLocked);
-    return ScreenRotationProperty::SetScreenRotationLocked(isLocked);
+    return DMError::DM_OK;
 }
 
 void ScreenSessionManager::UpdateScreenRotationProperty(ScreenId screenId, RRect bounds, int rotation)
@@ -787,69 +792,19 @@ DMError ScreenSessionManager::SetOrientation(ScreenId screenId, Orientation orie
     return DMError::DM_OK;
 }
 
-DMError ScreenSessionManager::SetOrientationFromWindow(DisplayId displayId, Orientation orientation)
+DMError ScreenSessionManager::SetRequestedOrientation(DisplayId displayId, Orientation orientation)
 {
     sptr<DisplayInfo> displayInfo = GetDisplayInfoById(displayId);
     if (displayInfo == nullptr) {
         return DMError::DM_ERROR_NULLPTR;
     }
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:SetOrientationFromWindow");
-    return SetOrientationController(displayInfo->GetScreenId(), orientation, true);
-}
-
-DMError ScreenSessionManager::SetOrientationController(ScreenId screenId, Orientation newOrientation,
-    bool isFromWindow)
-{
-    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    sptr<ScreenSession> screenSession = GetScreenSession(displayInfo->GetScreenId());
     if (screenSession == nullptr) {
-        WLOGFE("fail to set orientation, cannot find screen %{public}" PRIu64"", screenId);
+        WLOGFE("fail to set requested orientation, cannot find screen %{public}" PRIu64"", displayInfo->GetScreenId());
         return DMError::DM_ERROR_NULLPTR;
     }
-
-    if (isFromWindow) {
-        if (newOrientation == Orientation::UNSPECIFIED) {
-            newOrientation = screenSession->GetScreenRequestedOrientation();
-        }
-    } else {
-        screenSession->SetScreenRequestedOrientation(newOrientation);
-    }
-
-    if (screenSession->GetOrientation() == newOrientation) {
-        return DMError::DM_OK;
-    }
-    if (isFromWindow) {
-        ScreenRotationProperty::ProcessOrientationSwitch(newOrientation);
-    } else {
-        Rotation rotationAfter = screenSession->CalcRotation(newOrientation);
-        SetRotation(screenId, rotationAfter, false);
-    }
-    screenSession->SetOrientation(newOrientation);
-    screenSession->PropertyChange(screenSession->GetScreenProperty(), ScreenPropertyChangeReason::ROTATION);
-    // Notify rotation event to ScreenManager
-    NotifyScreenChanged(screenSession->ConvertToScreenInfo(), ScreenChangeEvent::UPDATE_ORIENTATION);
+    screenSession->SetScreenRequestedOrientation(orientation);
     return DMError::DM_OK;
-}
-
-bool ScreenSessionManager::SetRotation(ScreenId screenId, Rotation rotationAfter, bool isFromWindow)
-{
-    WLOGFI("Enter SetRotation, screenId: %{public}" PRIu64 ", rotation: %{public}u, isFromWindow: %{public}u,",
-        screenId, rotationAfter, isFromWindow);
-    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
-    if (screenSession == nullptr) {
-        WLOGFE("SetRotation error, cannot get screen with screenId: %{public}" PRIu64, screenId);
-        return false;
-    }
-    if (rotationAfter == screenSession->GetRotation()) {
-        WLOGFE("rotation not changed. screen %{public}" PRIu64" rotation %{public}u", screenId, rotationAfter);
-        return false;
-    }
-    WLOGFD("set orientation. rotation %{public}u", rotationAfter);
-    SetDisplayBoundary(screenSession);
-    screenSession->SetRotation(rotationAfter);
-    screenSession->PropertyChange(screenSession->GetScreenProperty(), ScreenPropertyChangeReason::ROTATION);
-    NotifyScreenChanged(screenSession->ConvertToScreenInfo(), ScreenChangeEvent::UPDATE_ROTATION);
-    NotifyDisplayChanged(screenSession->ConvertToDisplayInfo(), DisplayChangeEvent::UPDATE_ROTATION);
-    return true;
 }
 
 void ScreenSessionManager::SetSensorSubscriptionEnabled()
@@ -861,15 +816,6 @@ void ScreenSessionManager::SetSensorSubscriptionEnabled()
         return;
     }
     ScreenSensorConnector::SubscribeRotationSensor();
-}
-
-bool ScreenSessionManager::SetRotationFromWindow(Rotation targetRotation)
-{
-    sptr<DisplayInfo> displayInfo = GetDefaultDisplayInfo();
-    if (displayInfo == nullptr) {
-        return false;
-    }
-    return SetRotation(displayInfo->GetScreenId(), targetRotation, true);
 }
 
 sptr<SupportedScreenModes> ScreenSessionManager::GetScreenModesByDisplayId(DisplayId displayId)
