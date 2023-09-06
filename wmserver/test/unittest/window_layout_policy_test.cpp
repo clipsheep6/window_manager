@@ -1466,12 +1466,12 @@ HWTEST_F(WindowLayoutPolicyTest, IsNeedAnimationSync, Function | SmallTest | Lev
  */
 HWTEST_F(WindowLayoutPolicyTest, NotifyClientAndAnimation, Function | SmallTest | Level2)
 {
-     sptr<WindowNode> node= new WindowNode();
+    sptr<WindowNode> node = new WindowNode();
     Rect winRect;
     WindowSizeChangeReason reason=WindowSizeChangeReason::DRAG;
     WindowNode windowNode;
-    EXPECT_EQ(windowNode.GetWindowToken(),nullptr);
-    layoutPolicy_->NotifyClientAndAnimation( node,winRect,reason);
+    EXPECT_EQ(windowNode.GetWindowToken(), nullptr);
+    layoutPolicy_->NotifyClientAndAnimation(node, winRect,reason);
 }
 
 }
