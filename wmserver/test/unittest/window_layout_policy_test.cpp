@@ -21,8 +21,17 @@
 #include "window_helper.h"
 #include "window_layout_policy.h"
 #include "window_layout_policy_cascade.h"
-#include "window_layout_policy_tile.h"
 #include "window_node_container.h"
+#include "window_layout_policy.h"
+#include "display_manager_service_inner.h"
+#include "window_inner_manager.h"
+#include "window_manager_hilog.h"
+#include "wm_common_inner.h"
+#include "wm_math.h"
+#include "window_node.h"
+#include <transaction/rs_sync_transaction_controller.h>
+#include "display.h"
+#include "persistent_storage.h"
 
 using namespace testing;
 using namespace testing::ext;
