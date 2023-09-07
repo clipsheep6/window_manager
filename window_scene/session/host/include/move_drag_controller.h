@@ -58,7 +58,6 @@ public:
     bool ConsumeMoveEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent, const WSRect& originalRect);
     bool ConsumeDragEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent, const WSRect& originalRect,
         const sptr<WindowSessionProperty> property, const SystemSessionConfig& sysConfig);
-    void HandleMouseStyle(const std::shared_ptr<MMI::PointerEvent>& pointerEvent, const WSRect& winRect);
     void ClacFirstMoveTargetRect(const WSRect& windowRect);
 
 private:
@@ -134,25 +133,6 @@ private:
     MoveDragProperty moveDragProperty_;
     MoveDragCallback moveDragCallback_;
     int32_t persistentId_;
-
-    enum class DragType : uint32_t {
-        DRAG_UNDEFINED,
-        DRAG_LEFT_OR_RIGHT,
-        DRAG_BOTTOM_OR_TOP,
-        DRAG_LEFT_TOP_CORNER,
-        DRAG_RIGHT_TOP_CORNER,
-    };
-    const std::map<DragType, uint32_t> STYLEID_MAP = {
-        {DragType::DRAG_UNDEFINED,        MMI::MOUSE_ICON::DEFAULT},
-        {DragType::DRAG_BOTTOM_OR_TOP,    MMI::MOUSE_ICON::NORTH_SOUTH},
-        {DragType::DRAG_LEFT_OR_RIGHT,    MMI::MOUSE_ICON::WEST_EAST},
-        {DragType::DRAG_LEFT_TOP_CORNER,  MMI::MOUSE_ICON::NORTH_WEST_SOUTH_EAST},
-        {DragType::DRAG_RIGHT_TOP_CORNER, MMI::MOUSE_ICON::NORTH_EAST_SOUTH_WEST}
-    };
-    Rect rectExceptFrame_ { 0, 0, 0, 0 };
-    Rect rectExceptCorner_ { 0, 0, 0, 0 };
-    uint32_t mouseStyleID_ = 0;
-    DragType dragType_ = DragType::DRAG_UNDEFINED;
     MoveTempProperty moveTempProperty_;
 };
 } // namespace OHOS::Rosen
