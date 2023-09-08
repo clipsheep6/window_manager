@@ -1486,6 +1486,10 @@ sptr<IRemoteObject> SceneSession::GetSelfToken()
 
 WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> abilitySessionInfo)
 {
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("Pending session activation permission denied!");
+        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    }
     PostTask([weakThis = wptr(this), abilitySessionInfo]() {
         auto session = weakThis.promote();
         if (!session) {

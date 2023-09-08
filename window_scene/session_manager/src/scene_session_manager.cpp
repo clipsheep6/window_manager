@@ -4015,7 +4015,15 @@ WSError SceneSessionManager::ClearSession(int32_t persistentId)
 
 WSError SceneSessionManager::ClearSession(sptr<SceneSession> sceneSession)
 {
-    WLOGFI("run ClearSession");
+    WLOGFI("run ClearSession, persistentId: %{public}d", sceneSession->GetPersistentId());
+    if (!SessionPermission::JudgeCallerIsAllowedToUseSystemAPI()) {
+        WLOGFE("The caller is not system-app, can not use system-api");
+        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    }
+    if (!SessionPermission::VerifySessionPermission()) {
+        WLOGFE("The caller has not permission granted");
+        return WSError::WS_ERROR_INVALID_PERMISSION;
+    }
     if (sceneSession == nullptr) {
         WLOGFE("sceneSession is nullptr");
         return WSError::WS_ERROR_INVALID_SESSION;
