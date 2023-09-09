@@ -510,9 +510,9 @@ int SceneSessionManagerStub::HandleGetSessionSnapshot(MessageParcel &data, Messa
     std::string deviceId = Str16ToStr8(data.ReadString16());
     int32_t persistentId = data.ReadInt32();
     bool isLowResolution = data.ReadBool();
-    std::shared_ptr<Media::PixelMap> snapshot = std::make_shared<Media::PixelMap>();
+    MissionSnapshot snapshot;
     const WSError& ret = GetSessionSnapshot(deviceId, persistentId, snapshot, isLowResolution);
-    reply.WriteParcelable(snapshot.get());
+    reply.WriteParcelable(snapshot);
     reply.WriteUint32(static_cast<uint32_t>(ret));
     return ERR_NONE;
 }
