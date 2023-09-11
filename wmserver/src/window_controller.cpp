@@ -1529,9 +1529,19 @@ WMError WindowController::UpdateProperty(sptr<WindowProperty>& property, Propert
             node->GetWindowProperty()->SetPrivacyMode(isPrivacyMode);
             node->GetWindowProperty()->SetSystemPrivacyMode(isPrivacyMode);
             node->GetWindowProperty()->SetOnlySkipSnapshot(onlySkipSnapshot);
-            node->surfaceNode_->SetSecurityLayer(isPrivacyMode);
-            if (node->leashWinSurfaceNode_ != nullptr) {
-                node->leashWinSurfaceNode_->SetSecurityLayer(isPrivacyMode);
+
+            WLOGFD("setPrivacyMode windowId: %{public}u, onlySkipSnapshot : %{public}d,"
+                "isPrivacyMode: %{public}d", windowId, onlySkipSnapshot, isPrivacyMode);
+            if (onlySkipSnapshot) {
+                node->surfaceNode_->SetSkipLayer(isPrivacyMode);
+                if (node->leashWinSurfaceNode_ != nullptr) {
+                    node->leashWinSurfaceNode_->SetSkipLayer(isPrivacyMode);
+                }
+            } else {
+                node->surfaceNode_->SetSecurityLayer(isPrivacyMode);
+                if (node->leashWinSurfaceNode_ != nullptr) {
+                    node->leashWinSurfaceNode_->SetSecurityLayer(isPrivacyMode);
+                }
             }
             RSTransaction::FlushImplicitTransaction();
             if (!onlySkipSnapshot) {
