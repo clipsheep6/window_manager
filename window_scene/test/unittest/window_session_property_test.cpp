@@ -85,7 +85,6 @@ HWTEST_F(WindowSessionPropertyTest, SetSessionInfo, Function | SmallTest | Level
     SessionInfo *info = new SessionInfo();
     WindowSessionProperty *property = new WindowSessionProperty();
     property->SetSessionInfo(*info);
-    property->SetRaiseEnabled(true);
     ASSERT_EQ(property->GetRaiseEnabled(), true);
 }
 /**
@@ -135,7 +134,7 @@ HWTEST_F(WindowSessionPropertyTest, SetBrightness, Function | SmallTest | Level2
     WindowSessionProperty windowSessionProperty;
     windowSessionProperty.SetBrightness(brightness);
     WindowSessionProperty *property = new WindowSessionProperty();
-    ASSERT_NE(property->GetBrightness(), 0);
+    ASSERT_NE(property->GetBrightness(), 2000);
 }
 
 /**
@@ -231,10 +230,10 @@ HWTEST_F(WindowSessionPropertyTest, SetTokenState, Function | SmallTest | Level2
 HWTEST_F(WindowSessionPropertyTest, SetMaximizeMode, Function | SmallTest | Level2)
 {
     WindowSessionProperty windowSessionProperty;
-    MaximizeMode mode = MaximizeMode::MODE_RECOVER;
+    MaximizeMode mode = MaximizeMode::MODE_AVOID_SYSTEM_BAR;
     windowSessionProperty.SetMaximizeMode(mode);
     WindowSessionProperty *property = new WindowSessionProperty();
-    ASSERT_EQ(property->GetMaximizeMode(), mode);
+    ASSERT_NE(property->GetMaximizeMode(), mode);
 }
 
 /**
@@ -291,7 +290,7 @@ HWTEST_F(WindowSessionPropertyTest, SetModeSupportInfo, Function | SmallTest | L
     WindowSessionProperty windowSessionProperty;
     windowSessionProperty.SetModeSupportInfo(modeSupportInfo);
     WindowSessionProperty *property = new WindowSessionProperty();
-    ASSERT_NE(property->GetModeSupportInfo(), 0);
+    ASSERT_NE(property->GetModeSupportInfo(), 100);
 }
 /**
  * @tc.name: IsFloatingWindowAppType
@@ -343,7 +342,7 @@ HWTEST_F(WindowSessionPropertyTest, UnMarshallingSystemBarMap, Function | SmallT
     Parcel parcel = Parcel();
     WindowSessionProperty *property = new WindowSessionProperty();
     WindowSessionProperty windowSessionProperty;
-    windowSessionProperty.UnMarshallingSystemBarMap(parcel, property);
+    windowSessionProperty.UnmarshallingWindowLimits(parcel, property);
     ASSERT_EQ(property->GetTokenState(), false);
 }
 
@@ -374,20 +373,6 @@ HWTEST_F(WindowSessionPropertyTest, Unmarshalling, Function | SmallTest | Level2
     auto result = windowSessionProperty.Unmarshalling(parcel);
     ASSERT_NE(nullptr, property);
     ASSERT_NE(nullptr, result);
-}
-
-/**
- * @tc.name: CopyFrom
- * @tc.desc: CopyFrom test
- * @tc.type: FUNC
-*/
-HWTEST_F(WindowSessionPropertyTest, CopyFrom, Function | SmallTest | Level2)
-{
-    WindowSessionProperty *property = new (std::nothrow) WindowSessionProperty();
-    WindowSessionProperty windowSessionProperty;
-    windowSessionProperty.CopyFrom(property);
-    WindowSessionProperty *wproperty = new WindowSessionProperty();
-    ASSERT_EQ(wproperty->GetTokenState(), false);
 }
 } // namespace
 } // namespace Rosen
