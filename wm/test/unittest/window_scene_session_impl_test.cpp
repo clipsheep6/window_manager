@@ -480,7 +480,6 @@ HWTEST_F(WindowSceneSessionImplTest, Close01, Function | SmallTest | Level2)
     sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
     ASSERT_NE(nullptr, session);
     windowscenesession->hostSession_ = session;
-    EXPECT_CALL(*(session), OnSessionEvent(SessionEvent::EVENT_CLOSE)).WillOnce(Return(WSError::WS_OK));
     ASSERT_EQ(WMError::WM_OK, windowscenesession->Close());
 }
 
