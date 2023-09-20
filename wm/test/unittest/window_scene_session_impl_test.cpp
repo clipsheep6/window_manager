@@ -1654,6 +1654,626 @@ HWTEST_F(WindowSceneSessionImplTest, DumpSessionElementInfo3, Function | SmallTe
     delete option;
     ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
 }
+
+/**
+ * @tc.name: UpdateAnimationFlagProperty02
+ * @tc.desc: UpdateAnimationFlagProperty
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, UpdateAnimationFlagProperty02, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("DestroySubWindow");
+    option->SetWindowType(WindowType::BELOW_APP_SYSTEM_WINDOW_END);
+    
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    ASSERT_EQ(WMError::WM_OK,  window->UpdateAnimationFlagProperty(false));
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/**
+ * @tc.name: SetTransform01
+ * @tc.desc: set transform
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, SetTransform02, Function | SmallTest | Level3)
+{
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("SetTransform01");
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->property_->SetPersistentId(1);
+    Transform trans_;
+    WMError res = window->SetTransform(trans_);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/**
+ * @tc.name: Snapshot
+ * @tc.desc: Snapshot
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, Snapshot, Function | SmallTest | Level3)
+{
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("Snapshot");
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->property_->SetPersistentId(1);
+    ASSERT_EQ(nullptr, window->Snapshot());
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/**
+ * @tc.desc: UpdateSurfaceNodeAfterCustomAnimation02
+ * @tc.desc: UpdateSurfaceNodeAfterCustomAnimation
+ * @tc.type: FUNC
+ * @tc.require:issueI7IJVV
+ */
+HWTEST_F(WindowSceneSessionImplTest, UpdateSurfaceNodeAfterCustomAnimation02, Function | SmallTest | Level3)
+{
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("UpdateSurfaceNodeAfterCustomAnimation02");
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+
+    window->property_->SetPersistentId(1);
+
+    window->UpdateSurfaceNodeAfterCustomAnimation(false);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->UpdateSurfaceNodeAfterCustomAnimation(false));
+    window->property_->SetPersistentId(1);
+    SessionInfo sessionInfo = {"CreateTestBundle", "CreateTestModule", "CreateTestAbility"};
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    window->property_->SetWindowType(WindowType::BELOW_APP_SYSTEM_WINDOW_END);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_OPERATION, window->UpdateSurfaceNodeAfterCustomAnimation(false));
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/**
+ * @tc.name: SetWindowFlags
+ * @tc.desc: set transform
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, SetWindowFlags, Function | SmallTest | Level3)
+{
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("SetTransform01");
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->property_->SetPersistentId(1);
+    uint32_t flags = 1;
+    WMError res = window->SetWindowFlags(flags);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/**
+ * @tc.name: SetWindowFlags2
+ * @tc.desc: set transform
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, SetWindowFlags2, Function | SmallTest | Level3)
+{
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("SetTransform02");
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    uint32_t flags = 1;
+    window->property_->SetWindowFlags(flags);
+    WMError res = window->SetWindowFlags(flags);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/**
+ * @tc.name: SetWindowFlags3
+ * @tc.desc: set transform
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, SetWindowFlags3, Function | SmallTest | Level3)
+{
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("SetTransform03");
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    uint32_t flags = 1;
+    WMError res = window->SetWindowFlags(flags);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/*
+ * @tc.name: SetTransparent02
+ * @tc.desc: SetTransparent test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, SetTransparent02, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    window->property_->SetPersistentId(1);
+    option->SetWindowName("SetTransparent02");
+    window->property_->SetWindowType(WindowType::APP_SUB_WINDOW_BASE);
+
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+
+    WMError res = window->SetTransparent(false);
+    ASSERT_EQ(res, WMError::WM_OK);
+    delete option;
+}
+
+/*
+ * @tc.name: PerformBack
+ * @tc.desc: PerformBack test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, PerformBack, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    window->property_->SetPersistentId(1);
+    option->SetWindowName("PerformBack");
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_END);
+    window->PerformBack();
+
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+
+    window->PerformBack();
+    ASSERT_EQ(window->property_->GetWindowType(), WindowType::APP_MAIN_WINDOW_BASE);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/*
+ * @tc.name: Close
+ * @tc.desc: Close test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, Close02, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Close());
+    window->property_->SetPersistentId(1);
+    option->SetWindowName("Close02");
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+
+    WMError res = window->Close();
+    ASSERT_EQ(WMError::WM_OK, res);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/*
+ * @tc.name: StartMove02
+ * @tc.desc: StartMove test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, StartMove02, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    WMError res = WMError::WM_OK;
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    window->StartMove();
+    window->property_->SetPersistentId(1);
+    option->SetWindowName("StartMove02");
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+
+    window->StartMove();
+    ASSERT_EQ(WMError::WM_OK, res);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/*
+ * @tc.name: Recover
+ * @tc.desc: Recover test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, Recover02, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    WMError res = window->Recover();
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+    window->property_->SetPersistentId(1);
+    option->SetWindowName("Recover02");
+
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_END);
+    res = window->Recover();
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+    res = window->Recover();
+    ASSERT_EQ(WMError::WM_OK, res);
+
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
+    res = window->Recover();
+    ASSERT_EQ(WMError::WM_OK, res);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/*
+ * @tc.name: MaximizeFloating
+ * @tc.desc: MaximizeFloating test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, MaximizeFloating, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->MaximizeFloating());
+    window->property_->SetPersistentId(1);
+    option->SetWindowName("MaximizeFloating");
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_END);
+    WMError res = window->MaximizeFloating();
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+
+    res = window->MaximizeFloating();
+    ASSERT_EQ(WMError::WM_OK, res);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/*
+ * @tc.name: Maximize
+ * @tc.desc: Maximize test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, Maximize02, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    WMError res = window->Maximize();
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+    window->property_->SetPersistentId(1);
+    option->SetWindowName("Maximize02");
+
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_END);
+    res = window->Maximize();
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
+    res = window->Maximize();
+    ASSERT_EQ(WMError::WM_OK, res);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/*
+ * @tc.name: Minimize
+ * @tc.desc: Minimize test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, Minimize02, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    WMError res = window->Minimize();
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+    window->property_->SetPersistentId(1);
+    option->SetWindowName("Minimize02");
+
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_END);
+    res = window->Minimize();
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
+    res = window->Minimize();
+    ASSERT_EQ(WMError::WM_OK, res);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/*
+ * @tc.name: SetSystemBarProperty
+ * @tc.desc: SetSystemBarProperty test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, SetSystemBarProperty02, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    window->property_->SetPersistentId(1);
+    window->state_ = WindowState::STATE_CREATED;
+    option->SetWindowName("SetSystemBarProperty02");
+
+    WindowType type = WindowType::APP_MAIN_WINDOW_BASE;
+    SystemBarProperty property;
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
+    WMError res = window->SetSystemBarProperty(type, property);
+    ASSERT_EQ(WMError::WM_OK, res);
+
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+
+    window->state_ = WindowState::STATE_INITIAL;
+    res = window->SetSystemBarProperty(type, property);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/*
+ * @tc.name: NotifyWindowSessionProperty
+ * @tc.desc: NotifyWindowSessionProperty test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, NotifyWindowSessionProperty, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    WMError res = window->NotifyWindowSessionProperty();
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+    window->property_->SetPersistentId(1);
+    option->SetWindowName("NotifyWindowSessionProperty");
+    window->state_ = WindowState::STATE_HIDDEN;
+
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_END);
+    res = window->NotifyWindowSessionProperty();
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+
+    window->property_->SetModeSupportInfo(WindowModeSupport::WINDOW_MODE_SUPPORT_FLOATING);
+    res = window->NotifyWindowSessionProperty();
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+
+    window->property_->SetModeSupportInfo(WindowModeSupport::WINDOW_MODE_SUPPORT_FULLSCREEN);
+    res = window->NotifyWindowSessionProperty();
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+
+    window->state_ = WindowState::STATE_CREATED;
+    res = window->NotifyWindowSessionProperty();
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+
+    window->property_->SetModeSupportInfo(WindowModeSupport::WINDOW_MODE_SUPPORT_FLOATING);
+    res = window->NotifyWindowSessionProperty();
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/*
+ * @tc.name: GetSystemBarPropertyByType
+ * @tc.desc: GetSystemBarPropertyByType test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, GetSystemBarPropertyByType, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    window->property_->SetPersistentId(1);
+    window->state_ = WindowState::STATE_CREATED;
+    option->SetWindowName("GetSystemBarPropertyByType");
+
+    WindowType type = WindowType::APP_MAIN_WINDOW_BASE;
+    SystemBarProperty property;
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
+    WMError res = window->SetSystemBarProperty(type, property);
+    ASSERT_EQ(WMError::WM_OK, res);
+
+    SystemBarProperty p = window->GetSystemBarPropertyByType(type);
+    ASSERT_EQ(p, property);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/*
+ * @tc.name: SetLayoutFullScreen02
+ * @tc.desc: SetLayoutFullScreen test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, SetLayoutFullScreen02, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    window->property_->SetWindowName("SetLayoutFullScreen02");
+    window->property_->SetWindowType(WindowType::SYSTEM_SUB_WINDOW_BASE);
+    window->property_->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->SetLayoutFullScreen(false));
+
+    window->property_->SetPersistentId(1);
+    SessionInfo sessionInfo = {"CreateTestBundle", "CreateTestModule", "CreateTestAbility"};
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    window->property_->SetWindowMode(WindowMode::WINDOW_MODE_UNDEFINED);
+    ASSERT_EQ(WMError::WM_OK, window->SetLayoutFullScreen(false));
+    ASSERT_EQ(false, window->IsLayoutFullScreen());
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/**
+ * @tc.name: SetTouchHotAreas
+ * @tc.desc: SetTouchHotAreas
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, SetTouchHotAreas, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("SetTouchHotAreas");
+    option->SetWindowType(WindowType::SYSTEM_WINDOW_BASE);
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+
+    std::vector<Rect> rects;
+    rects.push_back({50, 50, 50, 50});
+    window->property_->SetWindowType(WindowType::SYSTEM_WINDOW_BASE);
+    ASSERT_NE(window->property_, nullptr);
+    WMError res = window->SetTouchHotAreas(rects);
+    ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
+
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    window->property_->SetPersistentId(1);
+    ASSERT_NE(window->property_, nullptr);
+    res = window->SetTouchHotAreas(rects);
+    ASSERT_EQ(res, WMError::WM_DO_NOTHING);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/**
+ * @tc.name: BindDialogTarget
+ * @tc.desc: BindDialogTarget
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, BindDialogTarget, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("BindDialogTarget");
+    option->SetWindowType(WindowType::SYSTEM_WINDOW_BASE);
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+
+    ASSERT_EQ(WMError::WM_OK, window->Create(abilityContext_, session));
+    window->hostSession_ = session;
+    window->property_->SetPersistentId(1);
+    sptr<IRemoteObject> targetToke;
+    WMError res = window->BindDialogTarget(targetToke);
+    ASSERT_EQ(res, WMError::WM_DO_NOTHING);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/**
+ * @tc.name: SetWindowMode1
+ * @tc.desc: set transform
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, SetWindowMode1, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    window->property_->SetPersistentId(1);
+    option->SetWindowName("SetWindowMode1");
+    window->property_->SetWindowType(WindowType::APP_SUB_WINDOW_BASE);
+
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+
+    WindowMode mode = WindowMode::WINDOW_MODE_SPLIT_PRIMARY;
+    WMError res = window->SetWindowMode(mode);
+    ASSERT_EQ(WMError::WM_OK, res);
+    delete option;
+}
+
+/**
+ * @tc.name: SetWindowMode2
+ * @tc.desc: set transform
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, SetWindowMode2, Function | SmallTest | Level3)
+{
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("SetWindowMode2");
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    WindowMode mode = WindowMode::WINDOW_MODE_FULLSCREEN;
+    WMError res = window->SetWindowMode(mode);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
+    delete option;
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/**
+ * @tc.name: SetWindowMode3
+ * @tc.desc: set transform
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, SetWindowMode3, Function | SmallTest | Level3)
+{
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("SetWindowMode3");
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->property_->SetPersistentId(1);
+    window->property_->SetWindowType(WindowType::APP_SUB_WINDOW_BASE);
+
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+    WindowMode mode = WindowMode::WINDOW_MODE_SPLIT_SECONDARY;
+    WMError res = window->SetWindowMode(mode);
+    ASSERT_EQ(WMError::WM_OK, res);
+    delete option;
+}
 }
 } // namespace Rosen
 } // namespace OHOS
