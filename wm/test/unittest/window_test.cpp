@@ -2065,7 +2065,7 @@ HWTEST_F(WindowTest, performBack, Function | SmallTest | Level3)
     winOption->SetWindowType(OHOS::Rosen::WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
 
     sptr<WindowOption> option = new WindowOption;
-    sptr<Window> window = Window::Create("win", option);
+    sptr<Window> window = new (std::nothrow) Window();
     ASSERT_NE(nullptr, window);
     int32_t ret = 0;
     window->PerformBack();
