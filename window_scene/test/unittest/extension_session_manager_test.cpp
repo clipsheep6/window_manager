@@ -33,7 +33,6 @@ public:
 
 void ExtensionSessionManagerTest::SetUpTestCase()
 {
-
 }
 
 void ExtensionSessionManagerTest::TearDownTestCase()
@@ -56,9 +55,12 @@ namespace {
  */
 HWTEST_F(ExtensionSessionManagerTest, RequestExtensionSession, Function | MediumTest | Level2)
 {
-    SessionInfo sessionInfo;
-    sessionInfo.abilityName_ = "RequestExtensionSession";
-    ASSERT_NE(nullptr, ExtensionSessionManager::GetInstance().RequestExtensionSession(sessionInfo));
+    AAFwk::Want want;
+    SessionInfo infoInput;
+    infoInput.want = std::make_shared<AAFwk::Want>(want);
+    sptr<ExtensionSession> extSession = nullptr;
+    ExtensionSessionManager *instance = &ExtensionSessionManager::GetInstance();
+    ASSERT_NE(nullptr, instance->RequestExtensionSession(infoInput));
 }
 
 /**
@@ -68,11 +70,13 @@ HWTEST_F(ExtensionSessionManagerTest, RequestExtensionSession, Function | Medium
  */
 HWTEST_F(ExtensionSessionManagerTest, RequestExtensionSessionActivation01, Function | MediumTest | Level2)
 {
-    SessionInfo info;
-    sptr<ExtensionSession> extensionSession = new ExtensionSession(info);
-    ASSERT_EQ(WSError::WS_OK,
-                ExtensionSessionManager::GetInstance().RequestExtensionSessionActivation(
-                    extensionSession, 1, nullptr));
+    AAFwk::Want want;
+    SessionInfo infoInput;
+    infoInput.want = std::make_shared<AAFwk::Want>(want);
+    sptr<ExtensionSession> extSession = nullptr;
+    ExtensionSessionManager *instance = &ExtensionSessionManager::GetInstance();
+    WSError result01 = instance->RequestExtensionSessionActivation(extSession, 1);
+    EXPECT_EQ(result01, WSError::WS_OK);
 }
 
 /**
@@ -82,24 +86,13 @@ HWTEST_F(ExtensionSessionManagerTest, RequestExtensionSessionActivation01, Funct
  */
 HWTEST_F(ExtensionSessionManagerTest, RequestExtensionSessionBackground01, Function | MediumTest | Level2)
 {
-    SessionInfo info;
-    sptr<ExtensionSession> extensionSession = new ExtensionSession(info);
-    ASSERT_EQ(WSError::WS_OK,
-                ExtensionSessionManager::GetInstance().RequestExtensionSessionBackground(extensionSession, nullptr));
-}
-
-
-/**
- * @tc.name: RequestExtensionSessionDestruction01
- * @tc.desc: RequestExtensionSessionDestruction Test
- * @tc.type: FUNC
- */
-HWTEST_F(ExtensionSessionManagerTest, RequestExtensionSessionDestruction01, Function | MediumTest | Level2)
-{
-    SessionInfo info;
-    sptr<ExtensionSession> extensionSession = new ExtensionSession(info);
-    ASSERT_EQ(WSError::WS_OK,
-                ExtensionSessionManager::GetInstance().RequestExtensionSessionDestruction(extensionSession, nullptr));
+    AAFwk::Want want;
+    SessionInfo infoInput;
+    infoInput.want = std::make_shared<AAFwk::Want>(want);
+    sptr<ExtensionSession> extSession = nullptr;
+    ExtensionSessionManager *instance = &ExtensionSessionManager::GetInstance();
+    WSError result01 = instance->RequestExtensionSessionBackground(extSession);
+    EXPECT_EQ(result01, WSError::WS_OK);
 }
 
 /**
@@ -147,7 +140,7 @@ HWTEST_F(ExtensionSessionManagerTest, RequestExtensionSessionDestruction02, Func
     infoInput.want = std::make_shared<AAFwk::Want>(want);
     sptr<ExtensionSession> extSession = nullptr;
     ExtensionSessionManager *instance = &ExtensionSessionManager::GetInstance();
-    WSError result01 = instance->RequestExtensionSessionDestruction(extSession, nullptr);
+    WSError result01 = instance->RequestExtensionSessionDestruction(extSession);
     EXPECT_EQ(result01, WSError::WS_OK);
 }
 } // namespace
