@@ -107,28 +107,28 @@ WSError SceneSessionManagerProxy::DestroyAndDisconnectSpecificSession(const int3
     return static_cast<WSError>(ret);
 }
 
-WSError SceneSessionManagerProxy::UpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action)
+WMError SceneSessionManagerProxy::UpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
-        return WSError::WS_ERROR_IPC_FAILED;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
     if (!data.WriteUint32(static_cast<uint32_t>(action))) {
         WLOGFE("Write PropertyChangeAction failed");
-        return WSError::WS_ERROR_IPC_FAILED;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
     if (property) {
         if (!data.WriteBool(true) || !data.WriteParcelable(property.GetRefPtr())) {
             WLOGFE("Write property failed");
-            return WSError::WS_ERROR_IPC_FAILED;
+            return WMError::WM_ERROR_IPC_FAILED;
         }
     } else {
         if (!data.WriteBool(false)) {
             WLOGFE("Write property failed");
-            return WSError::WS_ERROR_IPC_FAILED;
+            return WMError::WM_ERROR_IPC_FAILED;
         }
     }
 
@@ -136,10 +136,10 @@ WSError SceneSessionManagerProxy::UpdateProperty(sptr<WindowSessionProperty>& pr
         SceneSessionManagerMessage::TRANS_ID_UPDATE_PROPERTY),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
-        return WSError::WS_ERROR_IPC_FAILED;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
     int32_t ret = reply.ReadInt32();
-    return static_cast<WSError>(ret);
+    return static_cast<WMError>(ret);
 }
 WSError SceneSessionManagerProxy::BindDialogTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken)
 {
@@ -825,14 +825,19 @@ WSError SceneSessionManagerProxy::GetSessionDumpInfo(const std::vector<std::stri
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
+
     auto infoSize = reply.ReadUint32();
-    info = reinterpret_cast<const char*>(reply.ReadRawData(infoSize));
+    if (infoSize != 0) {
+        const char* infoPtr = nullptr;
+        infoPtr = reinterpret_cast<const char*>(reply.ReadRawData(infoSize));
+        info = (infoPtr) ? std::string(infoPtr, infoSize) : "";
+    }
     WLOGFD("GetSessionDumpInfo, infoSize: %{public}d", infoSize);
     return static_cast<WSError>(reply.ReadInt32());
 }
 
 WSError SceneSessionManagerProxy::GetSessionSnapshot(const std::string& deviceId, int32_t persistentId,
-    std::shared_ptr<Media::PixelMap> &snapshot, bool isLowResolution)
+                                                     SessionSnapshot& snapshot, bool isLowResolution)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -860,8 +865,12 @@ WSError SceneSessionManagerProxy::GetSessionSnapshot(const std::string& deviceId
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    std::shared_ptr<Media::PixelMap> sessionSnapshot(reply.ReadParcelable<Media::PixelMap>());
-    snapshot = sessionSnapshot;
+    std::unique_ptr<SessionSnapshot> info(reply.ReadParcelable<SessionSnapshot>());
+    if (info) {
+        snapshot = *info;
+    } else {
+        WLOGFW("Read SessionSnapshot is null.");
+    }
     return static_cast<WSError>(reply.ReadInt32());
 }
 
@@ -913,9 +922,11 @@ void SceneSessionManagerProxy::NotifyDumpInfoResult(const std::vector<std::strin
             WLOGFE("Write info size failed");
             return;
         }
-        if (!data.WriteRawData(curInfo, curSize)) {
-            WLOGFE("Write info failed");
-            return;
+        if (curSize != 0) {
+            if (!data.WriteRawData(curInfo, curSize)) {
+                WLOGFE("Write info failed");
+                return;
+            }
         }
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_NOTIFY_DUMP_INFO_RESULT),

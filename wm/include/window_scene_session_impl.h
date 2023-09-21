@@ -47,7 +47,7 @@ public:
         const sptr<Rosen::ISession>& iSession) override;
     WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
     WMError Hide(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
-    WMError Destroy(bool needClearListener) override;
+    WMError Destroy(bool needNotifyServer, bool needClearListener = true) override;
     void PreProcessCreate();
     void SetDefaultProperty();
     WSError SetActive(bool active) override;
@@ -148,6 +148,7 @@ private:
     WMError UpdateAnimationFlagProperty(bool withAnimation);
     WMError UpdateWindowModeImmediately(WindowMode mode);
     uint32_t UpdateConfigVal(uint32_t minVal, uint32_t maxVal, uint32_t configVal, uint32_t defaultVal, float vpr);
+    void UpdateWindowState();
 
     bool enableDefaultAnimation_ = true;
     sptr<IAnimationTransitionController> animationTransitionController_;

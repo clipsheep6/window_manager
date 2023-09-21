@@ -54,9 +54,11 @@ public:
     WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
     WMError Hide(uint32_t reason = 0, bool withAnimation = false, bool isFromInnerkits = true) override;
     WMError Destroy() override;
-    virtual WMError Destroy(bool needClearListener);
+    virtual WMError Destroy(bool needNotifyServer, bool needClearListener = true);
     WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
         NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability) override;
+    WMError SetUIContentByName(const std::string& contentInfo, NativeEngine* engine, NativeValue* storage,
+        AppExecFwk::Ability* ability) override;
     std::shared_ptr<RSSurfaceNode> GetSurfaceNode() const override;
     const std::shared_ptr<AbilityRuntime::Context> GetContext() const override;
     Rect GetRequestRect() const override;
@@ -126,6 +128,7 @@ public:
     int32_t GetParentId() const;
     int32_t GetPersistentId() const override;
     sptr<WindowSessionProperty> GetProperty() const;
+    SystemSessionConfig GetSystemSessionConfig() const;
     sptr<ISession> GetHostSession() const;
     int32_t GetFloatingWindowParentId();
     void NotifyAfterForeground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
@@ -165,6 +168,7 @@ protected:
     uint32_t GetBackgroundColor() const;
     virtual WMError SetLayoutFullScreenByApiVersion(bool status);
     void UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason);
+    void NotifySizeChange(Rect rect, WindowSizeChangeReason reason);
 
     sptr<ISession> hostSession_;
     std::unique_ptr<Ace::UIContent> uiContent_;
@@ -210,8 +214,11 @@ private:
     void NotifyAfterFocused();
     void NotifyAfterUnfocused(bool needNotifyUiContent = true);
 
-    void NotifySizeChange(Rect rect, WindowSizeChangeReason reason);
+    WMError SetUIContentInner(const std::string& contentInfo, NativeEngine* engine, NativeValue* storage,
+        bool isdistributed, bool isLoadedByName, AppExecFwk::Ability* ability);
+
     bool IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const;
+    void UpdateRectForRotation(const Rect& wmRect, const Rect& preRect, WindowSizeChangeReason wmReason);
 
     static std::recursive_mutex globalMutex_;
     static std::map<int32_t, std::vector<sptr<IWindowLifeCycle>>> lifecycleListeners_;

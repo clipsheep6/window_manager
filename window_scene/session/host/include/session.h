@@ -16,8 +16,8 @@
 #ifndef OHOS_ROSEN_WINDOW_SCENE_SESSION_H
 #define OHOS_ROSEN_WINDOW_SCENE_SESSION_H
 
-#include <shared_mutex>
 #include <mutex>
+#include <shared_mutex>
 #include <vector>
 
 #include <event_handler.h>
@@ -98,6 +98,7 @@ public:
 
     virtual WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     virtual WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent);
+    WSError TransferBackPressedEventForConsumed(bool& isConsumed);
     WSError TransferKeyEventForConsumed(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed);
     WSError TransferFocusActiveEvent(bool isFocusActive);
     WSError TransferFocusStateEvent(bool focusState);
@@ -108,7 +109,20 @@ public:
     std::shared_ptr<Media::PixelMap> GetSnapshot() const;
     std::shared_ptr<Media::PixelMap> Snapshot();
     SessionState GetSessionState() const;
-    SessionInfo& GetSessionInfo();
+    void SetSessionState(SessionState state);
+    void SetSessionInfoAncoSceneState(int32_t ancoSceneState);
+    void SetSessionInfoTime(const std::string& time);
+    void SetSessionInfoAbilityInfo(const std::shared_ptr<AppExecFwk::AbilityInfo>& abilityInfo);
+    void SetSessionInfoWant(const std::shared_ptr<AAFwk::Want>& want);
+    void SetSessionInfoPersistentId(int32_t persistentId);
+    void SetSessionInfoCallerPersistentId(int32_t callerPersistentId);
+    void SetSessionInfoContinueState(ContinueState state);
+    void SetSessionInfoLockedState(bool state);
+    void SetSessionInfoIsClearSession(bool isClearSession);
+    void SetSessionInfoAffinity(std::string affinity);
+    void GetCloseAbilityWantAndClean(AAFwk::Want& outWant);
+    void SetSessionInfo(const SessionInfo& info);
+    const SessionInfo& GetSessionInfo() const;
     WindowType GetWindowType() const;
     float GetAspectRatio() const;
     WSError SetAspectRatio(float ratio) override;
@@ -268,6 +282,7 @@ protected:
     int32_t persistentId_ = INVALID_SESSION_ID;
     SessionState state_ = SessionState::STATE_DISCONNECT;
     SessionInfo sessionInfo_;
+    std::recursive_mutex sessionInfoMutex_;
     std::shared_ptr<RSSurfaceNode> surfaceNode_;
     std::shared_ptr<RSSurfaceNode> leashWinSurfaceNode_;
     std::shared_ptr<Media::PixelMap> snapshot_;
@@ -320,7 +335,7 @@ private:
     {
         std::vector<std::weak_ptr<ILifecycleListener>> lifecycleListeners;
         {
-            std::lock_guard<std::recursive_mutex> lock(mutex_);
+            std::lock_guard<std::mutex> lock(lifecycleListenersMutex_);
             for (auto& listener : lifecycleListeners_) {
                 lifecycleListeners.push_back(listener);
             }
@@ -328,7 +343,7 @@ private:
         return lifecycleListeners;
     }
 
-    std::recursive_mutex mutex_;
+    std::mutex lifecycleListenersMutex_;
     std::vector<std::shared_ptr<ILifecycleListener>> lifecycleListeners_;
     sptr<IWindowEventChannel> windowEventChannel_;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;

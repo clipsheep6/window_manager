@@ -136,6 +136,15 @@ void WindowExtensionSessionImpl::NotifyFocusActiveEvent(bool isFocusActive)
     }
 }
 
+void WindowExtensionSessionImpl::NotifyBackpressedEvent(bool& isConsumed)
+{
+    if (uiContent_) {
+        WLOGFD("Transfer backpressed event to uiContent");
+        isConsumed = uiContent_->ProcessBackPressed();
+    }
+    WLOGFD("Backpressed event is not cosumed");
+}
+
 WMError WindowExtensionSessionImpl::SetUIContent(const std::string& contentInfo,
     NativeEngine* engine, NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability)
 {
@@ -184,6 +193,18 @@ WMError WindowExtensionSessionImpl::SetUIContent(const std::string& contentInfo,
     UpdateViewportConfig(GetRect(), WindowSizeChangeReason::UNDEFINED);
     WLOGFD("notify uiContent window size change end");
     return WMError::WM_OK;
+}
+
+WSError WindowExtensionSessionImpl::UpdateRect(const WSRect& rect, SizeChangeReason reason)
+{
+    WLOGFI("WindowExtensionSessionImpl Update rect [%{public}d, %{public}d, reason: %{public}d]", rect.width_,
+        rect.height_, static_cast<int>(reason));
+    auto wmReason = static_cast<WindowSizeChangeReason>(reason);
+    Rect wmRect = {rect.posX_, rect.posY_, rect.width_, rect.height_};
+    property_->SetWindowRect(wmRect);
+    NotifySizeChange(wmRect, wmReason);
+    UpdateViewportConfig(wmRect, wmReason);
+    return WSError::WS_OK;
 }
 } // namespace Rosen
 } // namespace OHOS

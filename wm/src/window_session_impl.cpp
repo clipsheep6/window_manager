@@ -134,7 +134,7 @@ RSSurfaceNode::SharedPtr WindowSessionImpl::CreateSurfaceNode(std::string name, 
 WindowSessionImpl::~WindowSessionImpl()
 {
     WLOGFD("~WindowSessionImpl, id: %{public}d", GetPersistentId());
-    Destroy(false);
+    Destroy(true, false);
 }
 
 uint32_t WindowSessionImpl::GetWindowId() const
@@ -170,6 +170,11 @@ int32_t WindowSessionImpl::GetPersistentId() const
 sptr<WindowSessionProperty> WindowSessionImpl::GetProperty() const
 {
     return property_;
+}
+
+SystemSessionConfig WindowSessionImpl::GetSystemSessionConfig() const
+{
+    return windowSystemConfig_;
 }
 
 sptr<ISession> WindowSessionImpl::GetHostSession() const
@@ -274,7 +279,7 @@ WMError WindowSessionImpl::Connect()
 
 WMError WindowSessionImpl::Show(uint32_t reason, bool withAnimation)
 {
-    WLOGFI("Window Show [name:%{public}s, id:%{public}d, type:%{public}u], reason:%{public}u state:%{public}u",
+    WLOGFD("Window Show [name:%{public}s, id:%{public}d, type:%{public}u], reason:%{public}u state:%{public}u",
         property_->GetWindowName().c_str(), property_->GetPersistentId(), GetType(), reason, state_);
     if (IsWindowSessionInvalid()) {
         WLOGFE("session is invalid");
@@ -302,7 +307,7 @@ WMError WindowSessionImpl::Show(uint32_t reason, bool withAnimation)
 
 WMError WindowSessionImpl::Hide(uint32_t reason, bool withAnimation, bool isFromInnerkits)
 {
-    WLOGFI("id:%{public}d Hide, reason:%{public}u, state:%{public}u",
+    WLOGFD("id:%{public}d Hide, reason:%{public}u, state:%{public}u",
         GetPersistentId(), reason, state_);
     if (IsWindowSessionInvalid()) {
         WLOGFE("session is invalid");
@@ -320,14 +325,17 @@ WMError WindowSessionImpl::Hide(uint32_t reason, bool withAnimation, bool isFrom
     return WMError::WM_OK;
 }
 
-WMError WindowSessionImpl::Destroy(bool needClearListener)
+WMError WindowSessionImpl::Destroy(bool needNotifyServer, bool needClearListener)
 {
-    WLOGFI("Id:%{public}d Destroy, state_:%{public}u", GetPersistentId(), state_);
+    WLOGFI("Id: %{public}d Destroy, state_:%{public}u, needNotifyServer: %{public}d, needClearListener: %{public}d",
+        GetPersistentId(), state_, needNotifyServer, needClearListener);
     if (IsWindowSessionInvalid()) {
         WLOGFE("session is invalid");
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    hostSession_->Disconnect();
+    if (hostSession_ != nullptr) {
+        hostSession_->Disconnect();
+    }
     NotifyBeforeDestroy(GetWindowName());
     if (needClearListener) {
         ClearListenersById(GetPersistentId());
@@ -341,7 +349,7 @@ WMError WindowSessionImpl::Destroy(bool needClearListener)
         hostSession_ = nullptr;
     }
     windowSessionMap_.erase(property_->GetWindowName());
-    DelayedSingleton<ANRHandler>::GetInstance()->ClearDestroyedPersistentId(GetPersistentId());
+    DelayedSingleton<ANRHandler>::GetInstance()->OnWindowDestroyed(GetPersistentId());
     return WMError::WM_OK;
 }
 
@@ -366,7 +374,7 @@ WSError WindowSessionImpl::UpdateRect(const WSRect& rect, SizeChangeReason reaso
     // delete after replace ws_common.h with wm_common.h
     auto wmReason = static_cast<WindowSizeChangeReason>(reason);
     Rect wmRect = { rect.posX_, rect.posY_, rect.width_, rect.height_ };
-    if (!GetRect().IsUninitializedRect()) {
+    if (GetRect().width_ != 0 && GetRect().height_ != 0 && WindowHelper::IsMainWindow(GetType())) {
         // 50 session动画阈值
         int widthRange = 50;
         int heightRange = 50;
@@ -377,43 +385,14 @@ WSError WindowSessionImpl::UpdateRect(const WSRect& rect, SizeChangeReason reaso
         }
     }
     auto preRect = GetRect();
-    if (preRect.width_ == wmRect.height_ && preRect.height_ == wmRect.width_) {
+    if (preRect.width_ == wmRect.height_ && preRect.height_ == wmRect.width_ &&
+            (preRect.width_ != wmRect.width_ || preRect.height_ != wmRect.height_)) {
         wmReason = WindowSizeChangeReason::ROTATION;
     }
     property_->SetWindowRect(wmRect);
-    auto task = [this, wmReason, wmRect, preRect]() mutable {
-        RSTransaction::FlushImplicitTransaction();
-        auto node = GetSurfaceNode();
-        if (!node) {
-            return;
-        }
-        if (rotationAnimationCount_ == 0) {
-            lastGravity_ = node->GetStagingProperties().GetFrameGravity();
-            node->SetFrameGravity(Gravity::RESIZE);
-        }
-        rotationAnimationCount_++;
-        RSAnimationTimingProtocol protocol;
-        protocol.SetDuration(600);
-        auto curve = RSAnimationTimingCurve::CreateCubicCurve(0.2, 0.0, 0.2, 1.0);
-        RSNode::OpenImplicitAnimation(protocol, curve, [this, weak = std::weak_ptr<RSSurfaceNode>(node)]() {
-            rotationAnimationCount_--;
-            auto node = weak.lock();
-            if (rotationAnimationCount_ == 0 && node) {
-                node->SetFrameGravity(lastGravity_);
-            }
-        });
-        if ((wmRect != preRect) || (wmReason != lastSizeChangeReason_)) {
-            NotifySizeChange(wmRect, wmReason);
-            lastSizeChangeReason_ = wmReason;
-        }
-        UpdateViewportConfig(wmRect, wmReason);
-        RSNode::CloseImplicitAnimation();
-        RSTransaction::FlushImplicitTransaction();
-        postTaskDone_ = true;
-    };
     if (handler_ != nullptr && wmReason == WindowSizeChangeReason::ROTATION) {
         postTaskDone_ = false;
-        handler_->PostTask(task);
+        UpdateRectForRotation(wmRect, preRect, wmReason);
     } else {
         if ((wmRect != preRect) || (wmReason != lastSizeChangeReason_) || !postTaskDone_) {
             NotifySizeChange(wmRect, wmReason);
@@ -425,6 +404,52 @@ WSError WindowSessionImpl::UpdateRect(const WSRect& rect, SizeChangeReason reaso
     WLOGFI("update rect [%{public}d, %{public}d, %{public}u, %{public}u], reason:%{public}u", rect.posX_, rect.posY_,
         rect.width_, rect.height_, wmReason);
     return WSError::WS_OK;
+}
+
+void WindowSessionImpl::UpdateRectForRotation(const Rect& wmRect, const Rect& preRect, WindowSizeChangeReason wmReason)
+{
+    handler_->PostTask([weak = wptr(this), wmReason, wmRect, preRect]() mutable {
+        RSTransaction::FlushImplicitTransaction();
+        auto window = weak.promote();
+        if (!window) {
+            return;
+        }
+        auto node = window->GetSurfaceNode();
+        if (!node) {
+            return;
+        }
+        if (window->rotationAnimationCount_ == 0) {
+            window->lastGravity_ = node->GetStagingProperties().GetFrameGravity();
+            node->SetFrameGravity(Gravity::RESIZE);
+        }
+        RSSystemProperties::SetDrawTextAsBitmap(true);
+        RSInterfaces::GetInstance().EnableCacheForRotation();
+        window->rotationAnimationCount_++;
+        RSAnimationTimingProtocol protocol;
+        protocol.SetDuration(300);
+        auto curve = RSAnimationTimingCurve::CreateCubicCurve(0.2, 0.0, 0.2, 1.0);
+        RSNode::OpenImplicitAnimation(protocol, curve, [weak]() {
+            auto window = weak.promote();
+            if (!window) {
+                return;
+            }
+            window->rotationAnimationCount_--;
+            auto node = window->GetSurfaceNode();
+            if (window->rotationAnimationCount_ == 0 && node) {
+                node->SetFrameGravity(window->lastGravity_);
+                RSSystemProperties::SetDrawTextAsBitmap(false);
+                RSInterfaces::GetInstance().DisableCacheForRotation();
+            }
+        });
+        if ((wmRect != preRect) || (wmReason != window->lastSizeChangeReason_)) {
+            window->NotifySizeChange(wmRect, wmReason);
+            window->lastSizeChangeReason_ = wmReason;
+        }
+        window->UpdateViewportConfig(wmRect, wmReason);
+        RSNode::CloseImplicitAnimation();
+        RSTransaction::FlushImplicitTransaction();
+        window->postTaskDone_ = true;
+    });
 }
 
 void WindowSessionImpl::UpdateDensity()
@@ -518,8 +543,20 @@ void WindowSessionImpl::UpdateTitleButtonVisibility()
     uiContent_->HideWindowTitleButton(hideSplitButton, hideMaximizeButton, false);
 }
 
-WMError WindowSessionImpl::SetUIContent(const std::string& contentInfo,
-    NativeEngine* engine, NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability)
+WMError WindowSessionImpl::SetUIContent(const std::string& contentInfo, NativeEngine* engine, NativeValue* storage,
+    bool isdistributed, AppExecFwk::Ability* ability)
+{
+    return SetUIContentInner(contentInfo, engine, storage, isdistributed, false, ability);
+}
+
+WMError WindowSessionImpl::SetUIContentByName(
+    const std::string& contentInfo, NativeEngine* engine, NativeValue* storage, AppExecFwk::Ability* ability)
+{
+    return SetUIContentInner(contentInfo, engine, storage, false, true, ability);
+}
+
+WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, NativeEngine* engine, NativeValue* storage,
+    bool isdistributed, bool isLoadedByName, AppExecFwk::Ability* ability)
 {
     WLOGFD("SetUIContent: %{public}s state:%{public}u", contentInfo.c_str(), state_);
     if (uiContent_) {
@@ -537,6 +574,8 @@ WMError WindowSessionImpl::SetUIContent(const std::string& contentInfo,
     }
     if (isdistributed) {
         uiContent->Restore(this, contentInfo, storage);
+    } else if (isLoadedByName) {
+        uiContent->InitializeByName(this, contentInfo, storage);
     } else {
         uiContent->Initialize(this, contentInfo, storage);
     }
@@ -1034,8 +1073,8 @@ void WindowSessionImpl::NotifyBackgroundFailed(WMError ret)
 
 WSError WindowSessionImpl::MarkProcessed(int32_t eventId)
 {
-    if (hostSession_ == nullptr) {
-        WLOGFE("hostSession is nullptr");
+    if (IsWindowSessionInvalid()) {
+        WLOGFE("HostSession is invalid");
         return WSError::WS_DO_NOTHING;
     }
     return hostSession_->MarkProcessed(eventId);

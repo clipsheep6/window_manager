@@ -850,7 +850,7 @@ bool WindowManagerService::CheckSystemWindowPermission(const sptr<WindowProperty
         return true;
     }
     if (type == WindowType::WINDOW_TYPE_DRAGGING_EFFECT || type == WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW ||
-        type == WindowType::WINDOW_TYPE_TOAST) {
+        type == WindowType::WINDOW_TYPE_TOAST || type == WindowType::WINDOW_TYPE_DIALOG) {
         // some system types counld be created by normal app
         return true;
     }
@@ -924,6 +924,10 @@ WMError WindowManagerService::RemoveWindow(uint32_t windowId, bool isFromInnerki
     if (!isFromInnerkits && !Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
         WLOGFE("remove window permission denied!");
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
+    if (!accessTokenIdMaps_.isExist(windowId, IPCSkeleton::GetCallingTokenID())) {
+        WLOGI("Operation rejected");
+        return WMError::WM_ERROR_INVALID_OPERATION;
     }
     return PostSyncTask([this, windowId]() {
         WLOGI("[WMS] Remove: %{public}u", windowId);

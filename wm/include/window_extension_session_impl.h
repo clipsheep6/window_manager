@@ -36,9 +36,11 @@ public:
     WMError SetPrivacyMode(bool isPrivacyMode) override;
     WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
         NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability) override;
+    WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) override;
 
     void NotifyFocusActiveEvent(bool isFocusActive) override;
     void NotifyFocusStateEvent(bool focusState) override;
+    void NotifyBackpressedEvent(bool& isConsumed) override;
 
 protected:
     NotifyTransferComponentDataFunc notifyTransferComponentDataFunc_;

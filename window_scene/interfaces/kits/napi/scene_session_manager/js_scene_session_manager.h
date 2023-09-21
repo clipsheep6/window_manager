@@ -53,6 +53,7 @@ public:
     static NativeValue* PrepareTerminate(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* PerfRequestEx(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* UpdateWindowMode(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* GetRootSceneUIContext(NativeEngine* engine, NativeCallbackInfo* info);
 
 private:
     NativeValue* OnRegisterCallback(NativeEngine& engine, NativeCallbackInfo& info);
@@ -78,6 +79,7 @@ private:
     NativeValue* OnPrepareTerminate(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnPerfRequestEx(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnUpdateWindowMode(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnGetRootSceneUIContext(NativeEngine& engine, NativeCallbackInfo& info);
 
     void OnStatusBarEnabledUpdate(bool enable);
     void OnGestureNavigationEnabledUpdate(bool enable);
@@ -90,6 +92,7 @@ private:
     bool IsCallbackRegistered(const std::string& type, NativeValue* jsListenerObject);
     void RegisterDumpRootSceneElementInfoListener();
     void RegisterVirtualPixelRatioChangeListener();
+    void SetIsClearSession(NativeEngine& engine, NativeObject* jsSceneSessionObj, sptr<SceneSession>& sceneSession);
 
     NativeEngine& engine_;
     std::map<std::string, std::shared_ptr<NativeReference>> jsCbMap_;

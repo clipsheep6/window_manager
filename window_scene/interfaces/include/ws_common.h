@@ -136,6 +136,14 @@ enum AncoSceneState: int32_t {
     NOTIFY_FOREGROUND,
 };
 
+/**
+ * @brief collaborator type.
+ */
+enum SessionOperationType : int32_t {
+    TYPE_DEFAULT = 0,
+    TYPE_CLEAR,
+};
+
 struct SessionInfo {
     std::string bundleName_ = "";
     std::string moduleName_ = "";
@@ -145,7 +153,8 @@ struct SessionInfo {
     uint32_t windowType_ = 1; // WINDOW_TYPE_APP_MAIN_WINDOW
     sptr<IRemoteObject> callerToken_ = nullptr;
 
-    mutable std::shared_ptr<AAFwk::Want> want;
+    mutable std::shared_ptr<AAFwk::Want> want; // want for ability start
+    std::shared_ptr<AAFwk::Want> closeAbilityWant;
     std::shared_ptr<AAFwk::AbilityStartSetting> startSetting = nullptr;
     mutable std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo = nullptr;
     int32_t resultCode;
@@ -164,6 +173,8 @@ struct SessionInfo {
     ContinueState continueState = ContinueState::CONTINUESTATE_ACTIVE;
     int64_t uiAbilityId_ = 0;
     int32_t ancoSceneState;
+    bool isClearSession = false;
+    std::string sessionAffinity;
 };
 
 enum class SessionFlag : uint32_t {

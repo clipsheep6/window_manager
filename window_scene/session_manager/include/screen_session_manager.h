@@ -124,7 +124,6 @@ public:
     std::shared_ptr<Media::PixelMap> GetScreenSnapshot(DisplayId displayId);
 
     sptr<ScreenSession> InitVirtualScreen(ScreenId smsScreenId, ScreenId rsId, VirtualScreenOption option);
-    ScreenId GetDefaultAbstractScreenId();
     sptr<ScreenSession> InitAndGetScreen(ScreenId rsScreenId);
     bool InitAbstractScreenModesInfo(sptr<ScreenSession>& absScreen);
     std::vector<ScreenId> GetAllValidScreenIds(const std::vector<ScreenId>& screenIds) const;
@@ -180,6 +179,9 @@ public:
     ScreenProperty GetPhyScreenProperty(ScreenId screenId);
     uint32_t GetCurvedCompressionArea() const;
 
+    void NotifyFoldStatusChanged(FoldStatus foldStatus);
+    void NotifyDisplayModeChanged(FoldDisplayMode displayMode);
+
 protected:
     ScreenSessionManager();
     virtual ~ScreenSessionManager() = default;
@@ -226,6 +228,7 @@ private:
 
     mutable std::recursive_mutex screenSessionMapMutex_;
     std::map<ScreenId, sptr<ScreenSession>> screenSessionMap_;
+    std::recursive_mutex mutex_;
 
     ScreenId defaultScreenId_ = SCREEN_ID_INVALID;
     ScreenIdManager screenIdManager_;
@@ -252,6 +255,9 @@ private:
     //Fold Screen
     std::map<ScreenId, ScreenProperty> phyScreenPropMap_;
     mutable std::recursive_mutex phyScreenPropMapMutex_;
+    static void BootFinishedCallback(const char *key, const char *value, void *context);
+    std::function<void()> foldScreenPowerInit_ = nullptr;
+    void SetFoldScreenPowerInit(std::function<void()> foldScreenPowerInit);
 };
 } // namespace OHOS::Rosen
 
