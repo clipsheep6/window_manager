@@ -40,6 +40,8 @@ public:
     DisplayState GetDisplayState(DisplayId displayId);
     void NotifyDisplayEvent(DisplayEvent event);
 
+    bool isKeyguardDrawn_ { false };
+
 private:
     DisplayState displayState_ { DisplayState::UNKNOWN };
     std::recursive_mutex& mutex_;

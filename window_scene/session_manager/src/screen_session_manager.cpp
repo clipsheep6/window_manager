@@ -21,6 +21,7 @@
 #include <parameters.h>
 #include <transaction/rs_interfaces.h>
 #include <xcollie/watchdog.h>
+#include <ctime>
 
 #include "session_permission.h"
 #include "screen_scene_config.h"
@@ -37,6 +38,7 @@ const std::string SCREEN_SESSION_MANAGER_THREAD = "ScreenSessionManager";
 const std::string SCREEN_CAPTURE_PERMISSION = "ohos.permission.CAPTURE_SCREEN";
 const std::string BOOTEVENT_BOOT_COMPLETED = "bootevent.boot.completed";
 std::recursive_mutex g_instanceMutex;
+const int SLEEP_US = 48 * 1000; // 48ms
 } // namespace
 
 ScreenSessionManager& ScreenSessionManager::GetInstance()
@@ -652,10 +654,23 @@ bool ScreenSessionManager::SetScreenPowerForAll(ScreenPowerState state, PowerSta
     ScreenPowerStatus status;
     switch (state) {
         case ScreenPowerState::POWER_ON: {
-            status = ScreenPowerStatus::POWER_STATUS_ON;
-            break;
+            if (notifyDrawnDone_) {
+                status = ScreenPowerStatus::POWER_STATUS_ON;
+                usleep(SLEEP_US);
+                break;
+            } else {
+                needScreenOn_ = true;
+                auto task = [this]() {
+                    usleep(SLEEP_US);
+                    SetScreenOn();
+                    return true;
+                };
+                taskScheduler_->PostTask(task, taskName_, 300); // Retry after 300 ms.
+            }
+            [[fallthrough]];
         }
         case ScreenPowerState::POWER_OFF: {
+            notifyDrawnDone_ = false;
             status = ScreenPowerStatus::POWER_STATUS_OFF;
             break;
         }
@@ -708,9 +723,40 @@ DisplayState ScreenSessionManager::GetDisplayState(DisplayId displayId)
     return sessionDisplayPowerController_->GetDisplayState(displayId);
 }
 
+void ScreenSessionManager::SetScreenOn()
+{
+    auto screenIds = GetAllScreenIds();
+    if (screenIds.empty()) {
+        WLOGFE("no screen info");
+        return;
+    }
+
+    if (foldScreenController_ != nullptr) {
+        rsInterface_.SetScreenPowerStatus(foldScreenController_->GetCurrentScreenId(),
+            ScreenPowerStatus::POWER_STATUS_ON);
+    } else {
+        for (auto screenId : screenIds) {
+            rsInterface_.SetScreenPowerStatus(screenId, ScreenPowerStatus::POWER_STATUS_ON);
+        }
+    }
+    NotifyDisplayPowerEvent(DisplayPowerEvent::DISPLAY_ON, EventStatus::END);
+    needScreenOn_ = false;
+}
+
 void ScreenSessionManager::NotifyDisplayEvent(DisplayEvent event)
 {
     sessionDisplayPowerController_->NotifyDisplayEvent(event);
+    bool isKeyguardDrawn = sessionDisplayPowerController_->isKeyguardDrawn_;
+    if (isKeyguardDrawn) {
+        if (!needScreenOn_) {
+            notifyDrawnDone_ = true;
+            return;
+        } else {
+            taskScheduler_->RemoveTask(taskName_);
+            usleep(SLEEP_US);
+            SetScreenOn();
+        }
+    }
 }
 
 ScreenPowerState ScreenSessionManager::GetScreenPower(ScreenId screenId)
