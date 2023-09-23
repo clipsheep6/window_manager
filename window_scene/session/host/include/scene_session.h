@@ -110,7 +110,8 @@ public:
     WSError OnSessionEvent(SessionEvent event) override;
     WSError RaiseToAppTop() override;
     WSError RaiseToAppTopForPointDown();
-    WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) override;
+    WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
+        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override;
     WSError UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason) override;
     WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
