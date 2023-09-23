@@ -46,6 +46,7 @@ group("unittest") {
     ":ws_session_listener_controller_test",
     ":ws_session_manager_agent_controller_test",
     ":ws_session_proxy_test",
+    ":ws_session_stub_test",
     ":ws_session_stage_proxy_test",
     ":ws_session_stage_stub_test",
     ":ws_session_test",
@@ -387,6 +388,7 @@ ohos_unittest("ws_scene_session_manager_stub_test") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "sensor:sensor_interface_native",
   ]
 }
 
@@ -470,6 +472,25 @@ ohos_unittest("ws_session_proxy_test") {
     "ability_base:session_info",
     "ability_base:want",
     "c_utils:utils",
+  ]
+}
+
+ohos_unittest("ws_session_stub_test") {
+  module_out_path = module_out_path
+
+  include_dirs =
+      [ "${window_base_path}/window_scene/session/host/include/zidl" ]
+  sources = [ "session_stub_test.cpp" ]
+
+  deps = [
+    ":ws_unittest_common",
+    "${window_base_path}/window_scene/session:screen_session",
+  ]
+
+  external_deps = [
+    "ability_base:session_info",
+    "ability_base:want",
+    "hilog:libhilog",
   ]
 }
 
