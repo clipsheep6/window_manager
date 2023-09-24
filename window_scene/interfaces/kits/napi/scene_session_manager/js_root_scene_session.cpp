@@ -14,11 +14,15 @@
  */
 
 #include "js_root_scene_session.h"
+#include "event_queue.h"
+#include "event_runner.h"
+#include "native_engine.h"
 #include "session_manager/include/scene_session_manager.h"
 
 #include "context.h"
 #include <js_runtime_utils.h>
 #include "window_manager_hilog.h"
+#include <event_handler.h>
 
 #include "js_scene_utils.h"
 
@@ -31,7 +35,10 @@ const std::string PENDING_SCENE_CB = "pendingSceneSessionActivation";
 
 JsRootSceneSession::JsRootSceneSession(NativeEngine& engine, const sptr<RootSceneSession>& rootSceneSession)
     : engine_(engine), rootSceneSession_(rootSceneSession)
-{}
+{
+    auto runner = AppExecFwk::EventRunner::GetMainEventRunner();
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
+}
 
 NativeValue* JsRootSceneSession::Create(NativeEngine& engine, const sptr<RootSceneSession>& rootSceneSession)
 {
@@ -216,21 +223,19 @@ void JsRootSceneSession::PendingSessionActivation(SessionInfo& info)
     }
 
     auto jsCallBack = iter->second;
-    auto complete = std::make_unique<AsyncTask::CompleteCallback>(
-        [info, jsCallBack](NativeEngine& engine, AsyncTask& task, int32_t status) {
-            NativeValue* jsSessionInfo = CreateJsSessionInfo(engine, info);
-            if (jsSessionInfo == nullptr) {
-                WLOGFE("[NAPI]this target session info is nullptr");
-                return;
-            }
-            NativeValue* argv[] = { jsSessionInfo };
-            engine.CallFunction(engine.CreateUndefined(), jsCallBack->Get(), argv, ArraySize(argv));
-        });
-
-    NativeReference* callback = nullptr;
-    std::unique_ptr<AsyncTask::ExecuteCallback> execute = nullptr;
-    AsyncTask::Schedule("JsSceneSession::PendingSessionActivation", engine_,
-        std::make_unique<AsyncTask>(callback, std::move(execute), std::move(complete)));
+    WLOGI("[NAPI]before post task");
+    auto task = [this, info, jsCallBack]() {
+        WLOGI("[NAPI]begin to run task");
+        NativeValue* jsSessionInfo = CreateJsSessionInfo(engine_, info);
+        if (jsSessionInfo == nullptr) {
+            WLOGFE("[NAPI]this target session info is nullptr");
+            return;
+        }
+        NativeValue* argv[] = { jsSessionInfo };
+        engine_.CallFunction(engine_.CreateUndefined(), jsCallBack->Get(), argv, ArraySize(argv));
+        WLOGI("[NAPI]run task finished");
+    };
+    PostAsyncTask(std::move(task));
 }
 
 sptr<SceneSession> JsRootSceneSession::GenSceneSession(SessionInfo& info)
@@ -262,5 +267,14 @@ sptr<SceneSession> JsRootSceneSession::GenSceneSession(SessionInfo& info)
         sceneSession->SetSessionInfo(info);
     }
     return sceneSession;
+}
+
+void JsRootSceneSession::PostAsyncTask(Task&& task, int64_t delayTime)
+{
+    if (!handler_ || handler_->GetEventRunner()->IsCurrentRunnerThread()) {
+        return task();
+    }
+    WLOGI("post async task");
+    handler_->PostTask(std::move(task), delayTime, AppExecFwk::EventQueue::IMMEDIATE);
 }
 } // namespace OHOS::Rosen
