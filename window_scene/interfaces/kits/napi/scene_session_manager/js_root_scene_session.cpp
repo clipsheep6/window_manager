@@ -275,6 +275,6 @@ void JsRootSceneSession::PostAsyncTask(Task&& task, int64_t delayTime)
         return task();
     }
     WLOGI("post async task");
-    handler_->PostTask(std::move(task), delayTime, AppExecFwk::EventQueue::IMMEDIATE);
+    handler_->PostTask(std::move(task), delayTime, AppExecFwk::EventQueue::Priority::IMMEDIATE);
 }
 } // namespace OHOS::Rosen
