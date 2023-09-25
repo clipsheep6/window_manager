@@ -145,6 +145,7 @@ ScreenId ScreenSession::GetScreenId()
 
 void ScreenSession::SetScreenProperty(ScreenProperty prop)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     property_ = prop;
 }
 
@@ -157,6 +158,7 @@ void ScreenSession::UpdatePropertyByActiveMode()
 {
     sptr<SupportedScreenModes> mode = GetActiveScreenMode();
     if (mode != nullptr) {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
         auto screeBounds = property_.GetBounds();
         screeBounds.rect_.width_ = mode->width_;
         screeBounds.rect_.height_ = mode->height_;
@@ -263,6 +265,7 @@ void ScreenSession::UpdatePropertyAfterRotation(RRect bounds, int rotation)
             targetRotation = Rotation::ROTATION_0;
             break;
     }
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     DisplayOrientation displayOrientation = CalcDisplayOrientation(targetRotation);
     property_.SetBounds(bounds);
     property_.SetRotation(static_cast<float>(rotation));
@@ -289,6 +292,7 @@ Orientation ScreenSession::GetOrientation() const
 
 void ScreenSession::SetOrientation(Orientation orientation)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     property_.SetOrientation(orientation);
 }
 
@@ -299,11 +303,13 @@ Rotation ScreenSession::GetRotation() const
 
 void ScreenSession::SetRotation(Rotation rotation)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     property_.SetScreenRotation(rotation);
 }
 
 void ScreenSession::SetScreenRequestedOrientation(Orientation orientation)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     property_.SetScreenRequestedOrientation(orientation);
 }
 
@@ -340,11 +346,13 @@ Orientation ScreenSession::GetScreenRequestedOrientation() const
 
 void ScreenSession::SetVirtualPixelRatio(float virtualPixelRatio)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     property_.SetVirtualPixelRatio(virtualPixelRatio);
 }
 
 void ScreenSession::SetScreenType(ScreenType type)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     property_.SetScreenType(type);
 }
 
@@ -775,6 +783,7 @@ sptr<ScreenGroupInfo> ScreenSessionGroup::ConvertToScreenGroupInfo() const
 
 void ScreenSession::SetDisplayBoundary(const RectF& rect, const uint32_t& offsetY)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     property_.SetOffsetY(offsetY);
     property_.SetBounds(RRect(rect, 0.0f, 0.0f));
 }
