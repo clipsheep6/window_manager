@@ -26,6 +26,14 @@ namespace Ace {
 class UIContentMocker : public UIContent {
 public:
     MOCK_METHOD3(Initialize, void(OHOS::Rosen::Window* window, const std::string& url, NativeValue* storage));
+    MOCK_METHOD4(Initialize, void(OHOS::Rosen::Window* window, const std::string& url, NativeValue* storage,
+        uint32_t focusWindowID));
+    MOCK_METHOD3(InitializeByName, void(OHOS::Rosen::Window* window, const std::string& name, NativeValue* storage));
+
+    MOCK_METHOD3(Initialize, void(OHOS::Rosen::Window* window, const std::string& url, napi_value storage));
+    MOCK_METHOD3(InitializeByName, void(OHOS::Rosen::Window* window, const std::string& name, napi_value storage));
+    MOCK_METHOD4(Initialize,
+        void(OHOS::Rosen::Window* window, const std::string& url, napi_value storage, uint32_t focusWindowID));
     MOCK_METHOD0(Foreground, void());
     MOCK_METHOD0(Background, void());
     MOCK_METHOD0(Focus, void());
@@ -33,6 +41,7 @@ public:
     MOCK_METHOD0(Destroy, void());
     MOCK_METHOD1(OnNewWant, void(const OHOS::AAFwk::Want& want));
     MOCK_METHOD3(Restore, void(OHOS::Rosen::Window* window, const std::string& contentInfo, NativeValue* storage));
+    MOCK_METHOD3(Restore, void(OHOS::Rosen::Window* window, const std::string& contentInfo, napi_value storage));
     MOCK_CONST_METHOD0(GetContentInfo, std::string());
     MOCK_METHOD0(DestroyUIDirector, void());
     MOCK_METHOD0(ProcessBackPressed, bool());
@@ -63,7 +72,9 @@ public:
         void(std::function<void(const std::string& code, const std::string& msg)>&& actionCallback));
     MOCK_METHOD1(SetIgnoreViewSafeArea, void(bool ignoreViewSafeArea));
     MOCK_METHOD1(SetIsFocusActive, void(bool isFocusActive));
-    MOCK_METHOD1(SetFocusWindowId, void(uint32_t focusWIndowId));
+    MOCK_METHOD3(CreateModalUIExtension, int32_t(const AAFwk::Want& want,
+        const ModalUIExtensionCallbacks& callbacks, const ModalUIExtensionConfig& config));
+    MOCK_METHOD1(CloseModalUIExtension, void(int32_t sessionId));
 };
 } // namespace Ace
 } // namespace OHOS

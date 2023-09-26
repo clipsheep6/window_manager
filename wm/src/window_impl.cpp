@@ -527,8 +527,20 @@ void WindowImpl::OnNewWant(const AAFwk::Want& want)
     }
 }
 
-WMError WindowImpl::SetUIContent(const std::string& contentInfo,
-    NativeEngine* engine, NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability)
+WMError WindowImpl::SetUIContent(const std::string& contentInfo, NativeEngine* engine, NativeValue* storage,
+    bool isdistributed, AppExecFwk::Ability* ability)
+{
+    return SetUIContentInner(contentInfo, engine, storage, isdistributed, false, ability);
+}
+
+WMError WindowImpl::SetUIContentByName(
+    const std::string& contentInfo, NativeEngine* engine, NativeValue* storage, AppExecFwk::Ability* ability)
+{
+    return SetUIContentInner(contentInfo, engine, storage, false, true, ability);
+}
+
+WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, NativeEngine* engine, NativeValue* storage,
+    bool isdistributed, bool isLoadedByName, AppExecFwk::Ability* ability)
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "loadContent");
     WLOGFD("SetUIContent: %{public}s", contentInfo.c_str());
@@ -547,11 +559,16 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
     }
     if (isdistributed) {
         uiContent->Restore(this, contentInfo, storage);
+    } else if (isLoadedByName) {
+        uiContent->InitializeByName(this, contentInfo, storage);
     } else {
         uiContent->Initialize(this, contentInfo, storage);
     }
     // make uiContent available after Initialize/Restore
-    uiContent_ = std::move(uiContent);
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        uiContent_ = std::move(uiContent);
+    }
     if (isIgnoreSafeAreaNeedNotify_) {
         uiContent_->SetIgnoreViewSafeArea(isIgnoreSafeArea_);
     }
@@ -574,6 +591,7 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
         }
         float virtualPixelRatio = display->GetVirtualPixelRatio();
         config.SetDensity(virtualPixelRatio);
+        config.SetOrientation(static_cast<int32_t>(display->GetOrientation()));
         uiContent_->UpdateViewportConfig(config, WindowSizeChangeReason::UNDEFINED, nullptr);
         WLOGFD("notify uiContent window size change end");
     }
@@ -747,14 +765,13 @@ WMError WindowImpl::SetLayoutFullScreen(bool status)
             static_cast<int32_t>(ret), property_->GetWindowId());
         return ret;
     }
+    isIgnoreSafeArea_ = status;
     // 10 ArkUI new framework support after API10
     if (version >= 10) {
         if (uiContent_ != nullptr) {
             uiContent_->SetIgnoreViewSafeArea(status);
-        } else {
-            isIgnoreSafeAreaNeedNotify_ = true;
-            isIgnoreSafeArea_ = status;
         }
+        isIgnoreSafeAreaNeedNotify_ = true;
     } else {
         if (status) {
             ret = RemoveWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
@@ -1451,7 +1468,7 @@ WMError WindowImpl::Show(uint32_t reason, bool withAnimation)
 
 WMError WindowImpl::Hide(uint32_t reason, bool withAnimation, bool isFromInnerkits)
 {
-    WLOGI("id:%{public}u Hide, reason:%{public}u, Animation:%{public}d",
+    WLOGD("id:%{public}u Hide, reason:%{public}u, Animation:%{public}d",
         property_->GetWindowId(), reason, withAnimation);
     if (!IsWindowValid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
@@ -1761,20 +1778,21 @@ std::string WindowImpl::TransferLifeCycleEventToString(LifeCycleEvent type) cons
 WMError WindowImpl::SetPrivacyMode(bool isPrivacyMode)
 {
     WLOGFD("id : %{public}u, SetPrivacyMode, %{public}u", GetWindowId(), isPrivacyMode);
+    property_->SetOnlySkipSnapshot(false);
     property_->SetPrivacyMode(isPrivacyMode);
     return UpdateProperty(PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE);
 }
 
 bool WindowImpl::IsPrivacyMode() const
 {
-    return property_->GetPrivacyMode();
+    return property_->GetPrivacyMode() && !property_->GetOnlySkipSnapshot();
 }
 
 void WindowImpl::SetSystemPrivacyMode(bool isSystemPrivacyMode)
 {
     WLOGFD("id : %{public}u, SetSystemPrivacyMode, %{public}u", GetWindowId(), isSystemPrivacyMode);
     property_->SetSystemPrivacyMode(isSystemPrivacyMode);
-    UpdateProperty(PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE);
+    UpdateProperty(PropertyChangeAction::ACTION_UPDATE_SYSTEM_PRIVACY_MODE);
 }
 
 WMError WindowImpl::SetSnapshotSkip(bool isSkip)
@@ -1783,8 +1801,11 @@ WMError WindowImpl::SetSnapshotSkip(bool isSkip)
         WLOGFE("set snapshot skip permission denied!");
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
-    surfaceNode_->SetSecurityLayer(isSkip || property_->GetSystemPrivacyMode());
-    RSTransaction::FlushImplicitTransaction();
+    property_->SetOnlySkipSnapshot(true);
+    property_->SetPrivacyMode(isSkip);
+    auto ret = UpdateProperty(PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE);
+    WLOGFD("id : %{public}u, set snapshot skip end. isSkip:%{public}u, systemPrivacyMode:%{public}u, ret:%{public}u",
+        GetWindowId(), isSkip, property_->GetSystemPrivacyMode(), ret);
     return WMError::WM_OK;
 }
 
@@ -2929,6 +2950,7 @@ void WindowImpl::UpdateViewportConfig(const Rect& rect, const sptr<Display>& dis
     config.SetPosition(rect.posX_, rect.posY_);
     if (display) {
         config.SetDensity(display->GetVirtualPixelRatio());
+        config.SetOrientation(static_cast<int32_t>(display->GetOrientation()));
     }
     uiContent_->UpdateViewportConfig(config, reason, rsTransaction);
     WLOGFD("Id:%{public}u, windowRect:[%{public}d, %{public}d, %{public}u, %{public}u]",
@@ -3342,7 +3364,8 @@ void WindowImpl::SetDefaultOption()
         case WindowType::WINDOW_TYPE_STATUS_BAR:
         case WindowType::WINDOW_TYPE_NAVIGATION_BAR:
         case WindowType::WINDOW_TYPE_VOLUME_OVERLAY:
-        case WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT: {
+        case WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT:
+        case WindowType::WINDOW_TYPE_INPUT_METHOD_STATUS_BAR: {
             property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
             property_->SetFocusable(false);
             break;
@@ -3403,10 +3426,8 @@ bool WindowImpl::IsWindowValid() const
 
 bool WindowImpl::IsLayoutFullScreen() const
 {
-    uint32_t flags = GetWindowFlags();
     auto mode = GetMode();
-    bool needAvoid = (flags & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID));
-    return (mode == WindowMode::WINDOW_MODE_FULLSCREEN && !needAvoid);
+    return (mode == WindowMode::WINDOW_MODE_FULLSCREEN && isIgnoreSafeArea_);
 }
 
 bool WindowImpl::IsFullScreen() const

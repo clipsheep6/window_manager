@@ -20,11 +20,14 @@
 #include <hisysevent.h>
 #include <hitrace_meter.h>
 #include <parameters.h>
-#include <power_mgr_client.h>
 #include <rs_window_animation_finished_callback.h>
 #include <transaction/rs_transaction.h>
 #include <transaction/rs_sync_transaction_controller.h>
 #include <sstream>
+
+#ifdef POWER_MANAGER_ENABLE
+#include <power_mgr_client.h>
+#endif
 
 #include "display_group_info.h"
 #include "display_manager_service_inner.h"
@@ -38,6 +41,7 @@
 #include "window_system_effect.h"
 #include "wm_common.h"
 #include "wm_math.h"
+#include "permission.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -199,7 +203,7 @@ WMError WindowController::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
     WMError res = GetFocusWindowNode(displayId, windowNode);
     if (res == WMError::WM_OK) {
         WLOGFD("Get focus window info success");
-        focusInfo.windowId_ = windowNode->GetWindowId();
+        focusInfo.windowId_ = static_cast<int32_t>(windowNode->GetWindowId());
         focusInfo.displayId_ = windowNode->GetDisplayId();
         focusInfo.pid_ = windowNode->GetCallingPid();
         focusInfo.uid_ = windowNode->GetCallingUid();
@@ -572,6 +576,7 @@ void WindowController::HandleTurnScreenOn(const sptr<WindowNode>& node)
         return;
     }
     WLOGFD("Win: %{public}s, is turn on%{public}d", node->GetWindowName().c_str(), node->IsTurnScreenOn());
+#ifdef POWER_MANAGER_ENABLE
     // reset ipc identity
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     if (node->IsTurnScreenOn() && !PowerMgr::PowerMgrClient::GetInstance().IsScreenOn()) {
@@ -580,6 +585,7 @@ void WindowController::HandleTurnScreenOn(const sptr<WindowNode>& node)
     }
     // set ipc identity to raw
     IPCSkeleton::SetCallingIdentity(identity);
+#endif
 }
 
 WMError WindowController::RemoveWindowNode(uint32_t windowId, bool fromAnimation)
@@ -958,6 +964,7 @@ void WindowController::StopBootAnimationIfNeed(const sptr<WindowNode>& node)
             system::SetParameter("bootevent.wms.fullscreen.ready", "true");
             isBootAnimationStopped_ = true;
             RecordBootAnimationEvent();
+            DisplayManagerServiceInner::GetInstance().SetGravitySensorSubscriptionEnabled();
         }
     }
 }
@@ -1406,6 +1413,12 @@ WMError WindowController::UpdateProperty(sptr<WindowProperty>& property, Propert
         WLOGFE("property is invalid");
         return WMError::WM_ERROR_NULLPTR;
     }
+    bool onlySkipSnapshot = property->GetOnlySkipSnapshot();
+    if (action == PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE) {
+        if (!onlySkipSnapshot && !Permission::CheckCallingPermission("ohos.permission.PRIVACY_WINDOW")) {
+            return WMError::WM_ERROR_INVALID_PERMISSION;
+        }
+    }
     uint32_t windowId = property->GetWindowId();
     auto node = windowRoot_->GetWindowNode(windowId);
     if (node == nullptr) {
@@ -1512,6 +1525,21 @@ WMError WindowController::UpdateProperty(sptr<WindowProperty>& property, Propert
             break;
         }
         case PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE: {
+            bool isPrivacyMode = property->GetPrivacyMode() || property->GetSystemPrivacyMode();
+            node->GetWindowProperty()->SetPrivacyMode(isPrivacyMode);
+            node->GetWindowProperty()->SetSystemPrivacyMode(isPrivacyMode);
+            node->GetWindowProperty()->SetOnlySkipSnapshot(onlySkipSnapshot);
+            node->surfaceNode_->SetSecurityLayer(isPrivacyMode);
+            if (node->leashWinSurfaceNode_ != nullptr) {
+                node->leashWinSurfaceNode_->SetSecurityLayer(isPrivacyMode);
+            }
+            RSTransaction::FlushImplicitTransaction();
+            if (!onlySkipSnapshot) {
+                UpdatePrivateStateAndNotify(node);
+            }
+            break;
+        }
+        case PropertyChangeAction::ACTION_UPDATE_SYSTEM_PRIVACY_MODE: {
             bool isPrivacyMode = property->GetPrivacyMode() || property->GetSystemPrivacyMode();
             node->GetWindowProperty()->SetPrivacyMode(isPrivacyMode);
             node->GetWindowProperty()->SetSystemPrivacyMode(isPrivacyMode);

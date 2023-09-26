@@ -29,58 +29,73 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "EventStage" };
 } // namespace
 
-void EventStage::SetAnrStatus(uint64_t persistentId, bool status)
+EventStage::EventStage() {}
+EventStage::~EventStage() {}
+
+void EventStage::SetAnrStatus(int32_t persistentId, bool status)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     isAnrProcess_[persistentId] = status;
 }
 
-bool EventStage::CheckAnrStatus(uint64_t persistentId)
+bool EventStage::CheckAnrStatus(int32_t persistentId)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (isAnrProcess_.find(persistentId) != isAnrProcess_.end()) {
         return isAnrProcess_[persistentId];
     }
-    WLOGFD("Current persistentId:%{public}" PRIu64 " is not in event stage", persistentId);
+    WLOGFD("Current persistentId:%{public}d is not in event stage", persistentId);
     return false;
 }
 
-void EventStage::SaveANREvent(uint64_t persistentId, int32_t id, int64_t time, int32_t timerId)
+void EventStage::SaveANREvent(int32_t persistentId, int32_t eventId, int32_t timerId)
 {
-    EventTime eventTime { id, time, timerId };
+    std::lock_guard<std::mutex> lock(mutex_);
+    EventTime eventTime { eventId, timerId };
     events_[persistentId].push_back(eventTime);
 }
 
-std::vector<int32_t> EventStage::GetTimerIds(uint64_t persistentId)
+std::vector<int32_t> EventStage::GetTimerIds(int32_t persistentId)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (events_.find(persistentId) == events_.end()) {
-        WLOGFD("Current events have no event for persistentId:%{public}" PRIu64 "", persistentId);
+        WLOGFD("Current events have no event for persistentId:%{public}d", persistentId);
         return {};
     }
     std::vector<int32_t> timers;
-    for (auto &item : events_[persistentId]) {
+    for (const auto &item : events_[persistentId]) {
         timers.push_back(item.timerId);
-        item.timerId = -1;
     }
     return timers;
 }
 
-std::list<int32_t> EventStage::DelEvents(uint64_t persistentId, int32_t id)
+std::vector<int32_t> EventStage::DelEvents(int32_t persistentId, int32_t eventId)
 {
-    WLOGFD("Delete events, persistentId:%{public}" PRIu64 ", id:%{public}d", persistentId, id);
+    std::lock_guard<std::mutex> lock(mutex_);
+    WLOGFD("Delete events, persistentId:%{public}d, eventId:%{public}d", persistentId, eventId);
     if (events_.find(persistentId) == events_.end()) {
-        WLOGFD("Current events have no event persistentId:%{public}" PRIu64 "", persistentId);
+        WLOGFD("Current events have no event persistentId:%{public}d", persistentId);
         return {};
     }
     auto &events = events_[persistentId];
-    auto fistMatchIter = find_if(events.begin(), events.end(), [id](const auto &item) {
-        return item.id > id;
+    auto fistMatchIter = find_if(events.begin(), events.end(), [eventId](const auto &item) {
+        return item.eventId > eventId;
     });
-    std::list<int32_t> timerIds;
+    std::vector<int32_t> timerIds;
     for (auto iter = events.begin(); iter != fistMatchIter; iter++) {
         timerIds.push_back(iter->timerId);
     }
     events.erase(events.begin(), fistMatchIter);
-    SetAnrStatus(persistentId, false);
+    isAnrProcess_[persistentId] = false;
     return timerIds;
 }
-} // namespace MMI
+
+void EventStage::OnSessionLost(int32_t persistentId)
+{
+    CALL_DEBUG_ENTER;
+    std::lock_guard<std::mutex> guard(mutex_);
+    events_.erase(persistentId);
+    isAnrProcess_.erase(persistentId);
+}
+} // namespace Rosen
 } // namespace OHOS

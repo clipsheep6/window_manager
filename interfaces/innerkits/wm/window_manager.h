@@ -139,6 +139,8 @@ public:
     static AccessibilityWindowInfo* Unmarshalling(Parcel& parcel);
 
     int32_t wid_;
+    int32_t innerWid_;
+    int32_t uiNodeId_;
     Rect windowRect_;
     bool focused_ { false };
     bool isDecorEnable_ { false };
@@ -204,6 +206,7 @@ class WindowManager {
 WM_DECLARE_SINGLE_INSTANCE_BASE(WindowManager);
 friend class WindowManagerAgent;
 friend class WMSDeathRecipient;
+friend class SSMDeathRecipient;
 public:
     /**
      * @brief Register focus changed listener.
@@ -354,6 +357,22 @@ public:
      * @return FocusChangeInfo object about focus window.
      */
     void GetFocusWindowInfo(FocusChangeInfo& focusInfo);
+
+    /**
+     * @brief Dump all session info
+     *
+     * @param infos session infos
+     * @return WM_OK means set success, others means set failed.
+     */
+    WMError DumpSessionAll(std::vector<std::string> &infos);
+
+    /**
+     * @brief Dump session info with id
+     *
+     * @param infos session infos
+     * @return WM_OK means set success, others means set failed.
+     */
+    WMError DumpSessionWithId(int32_t persistentId, std::vector<std::string> &infos);
 
 private:
     WindowManager();

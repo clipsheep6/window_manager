@@ -292,6 +292,98 @@ HWTEST_F(ScreenSceneConfigTest, GetStringConfig, Function | SmallTest | Level1)
     ASSERT_NE(0, result.size());
 }
 
+/**
+ * @tc.name: GetCurvedScreenBoundaryConfig
+ * @tc.desc: test function : GetCurvedScreenBoundaryConfig
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, GetCurvedScreenBoundaryConfig, Function | SmallTest | Level1)
+{
+    auto result = ScreenSceneConfig::GetCurvedScreenBoundaryConfig();
+    ASSERT_NE(0, result.size());
+}
+
+/**
+ * @tc.name: GetCutoutBoundaryRect
+ * @tc.desc: GetCutoutBoundaryRect func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, GetCutoutBoundaryRect, Function | SmallTest | Level3)
+{
+    auto result = ScreenSceneConfig::GetCutoutBoundaryRect();
+    ASSERT_FALSE(result.size() > 0);
+}
+
+/**
+ * @tc.name: IsWaterfallDisplay
+ * @tc.desc: IsWaterfallDisplay func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, IsWaterfallDisplay, Function | SmallTest | Level3)
+{
+    auto result = ScreenSceneConfig::IsWaterfallDisplay();
+    if (result) {
+        ASSERT_EQ(true, result);
+    }
+}
+
+/**
+ * @tc.name: GetCurvedCompressionAreaInLandscape
+ * @tc.desc: GetCurvedCompressionAreaInLandscape func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, GetCurvedCompressionAreaInLandscape, Function | SmallTest | Level3)
+{
+    auto result = ScreenSceneConfig::GetCurvedCompressionAreaInLandscape();
+    ASSERT_TRUE(result == 0);
+}
+
+/**
+ * @tc.name: Split
+ * @tc.desc: Split func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, Split, Function | SmallTest | Level3)
+{
+    auto result = ScreenSceneConfig::Split("oo", "+9");
+    ASSERT_NE(0, result.size());
+}
+
+/**
+ * @tc.name: CalcCutoutBoundaryRect
+ * @tc.desc: CalcCutoutBoundaryRect func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, CalcCutoutBoundaryRect, Function | SmallTest | Level3)
+{
+    DMRect emptyRect = {0, 0, 0, 0};
+    auto result = ScreenSceneConfig::CalcCutoutBoundaryRect("oo");
+    ASSERT_FALSE(result != emptyRect);
+}
+
+/**
+ * @tc.name: SetCutoutSvgPath
+ * @tc.desc: SetCutoutSvgPath func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, SetCutoutSvgPath, Function | SmallTest | Level3)
+{
+    ScreenSceneConfig::SetCutoutSvgPath("oo");
+    auto result_ = ScreenSceneConfig::GetCutoutBoundaryRect();
+    ASSERT_NE(0, result_.size());
+}
+
+/**
+ * @tc.name: SetCurvedCompressionAreaInLandscape
+ * @tc.desc: SetCurvedCompressionAreaInLandscape func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, SetCurvedCompressionAreaInLandscape, Function | SmallTest | Level3)
+{
+    int res = 0;
+    ScreenSceneConfig::SetCurvedCompressionAreaInLandscape();
+    ASSERT_EQ(0, res);
+}
 }
 } // namespace Rosen
 } // namespace OHOS

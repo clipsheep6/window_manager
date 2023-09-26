@@ -560,6 +560,109 @@ HWTEST_F(WindowManagerTest, UnregisterGestureNavigationEnabledChangedListener, F
     ASSERT_EQ(0, windowManager.pImpl_->gestureNavigationEnabledListeners_.size());
 }
 
+/**
+ * @tc.name: GetFocusWindowInfo
+ * @tc.desc: window GetFocusWindowInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerTest, GetFocusWindowInfo, Function | SmallTest | Level2)
+{
+    FocusChangeInfo focusInfo;
+    auto ret = 0;
+    WindowManager::GetInstance().GetFocusWindowInfo(focusInfo);
+    ASSERT_EQ(0, ret);
+}
+
+/**
+ * @tc.name: MinimizeAllAppWindows
+ * @tc.desc: window MinimizeAllAppWindows
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerTest, MinimizeAllAppWindows, Function | SmallTest | Level2)
+{
+    DisplayId displayId = 0;
+    WMError ret = WindowManager::GetInstance().MinimizeAllAppWindows(displayId);
+    ASSERT_EQ(ret, WMError::WM_OK);
+}
+
+/**
+ * @tc.name: SetWindowLayoutMode
+ * @tc.desc: window SetWindowLayoutMode
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerTest, SetWindowLayoutMode, Function | SmallTest | Level2)
+{
+    WindowLayoutMode mode = WindowLayoutMode::BASE;
+    WMError ret = WindowManager::GetInstance().SetWindowLayoutMode(mode);
+    ASSERT_EQ(ret, WMError::WM_OK);
+}
+
+/**
+ * @tc.name: UpdateCameraFloatWindowStatus
+ * @tc.desc: UpdateCameraFloatWindowStatus
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerTest, UpdateCameraFloatWindowStatus, Function | SmallTest | Level2)
+{
+    uint32_t accessTokenId = 0;
+    bool isShowing = true;
+    auto ret = 0;
+    WindowManager::GetInstance().UpdateCameraFloatWindowStatus(accessTokenId, isShowing);
+    ASSERT_EQ(0, ret);
+}
+
+/**
+ * @tc.name: NotifyWaterMarkFlagChangedResult
+ * @tc.desc: NotifyWaterMarkFlagChangedResult
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerTest, NotifyWaterMarkFlagChangedResult, Function | SmallTest | Level2)
+{
+    bool showwatermark = true;
+    auto ret = 0;
+    WindowManager::GetInstance().NotifyWaterMarkFlagChangedResult(showwatermark);
+    ASSERT_EQ(0, ret);
+}
+
+/**
+ * @tc.name: NotifyGestureNavigationEnabledResult
+ * @tc.desc: NotifyGestureNavigationEnabledResult
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerTest, NotifyGestureNavigationEnabledResult, Function | SmallTest | Level2)
+{
+    bool enable = true;
+    auto ret = 0;
+    WindowManager::GetInstance().NotifyGestureNavigationEnabledResult(enable);
+    ASSERT_EQ(0, ret);
+}
+
+/**
+ * @tc.name: DumpSessionAll
+ * @tc.desc: DumpSessionAll
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerTest, DumpSessionAll, Function | SmallTest | Level2)
+{
+    std::vector<std::string> infos;
+    infos.push_back("DumpSessionWithId");
+    WMError res = WindowManager::GetInstance().DumpSessionAll(infos);
+    ASSERT_EQ(WMError::WM_OK, res);
+}
+
+/**
+ * @tc.name: DumpSessionWithId
+ * @tc.desc: DumpSessionWithId
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerTest, DumpSessionWithId, Function | SmallTest | Level2)
+{
+    std::vector<std::string> infos;
+    infos.push_back("DumpSessionWithId");
+    int32_t persistentId = 0;
+    WMError res = WindowManager::GetInstance().DumpSessionWithId(persistentId, infos);
+    ASSERT_EQ(WMError::WM_OK, res);
+}
 }
 } // namespace Rosen
 } // namespace OHOS

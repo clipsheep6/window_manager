@@ -20,7 +20,11 @@ group("unittest") {
 
   deps = [
     ":wm_input_transfer_station_test",
+    ":wm_root_scene_test",
+    ":wm_window_agent_test",
     ":wm_window_effect_test",
+    ":wm_window_extension_session_impl_test",
+    ":wm_window_frame_trace_impl_test",
     ":wm_window_impl_listener_test",
     ":wm_window_impl_test",
     ":wm_window_input_channel_test",
@@ -45,8 +49,13 @@ ohos_unittest("wm_window_manager_test") {
 
   deps = [ ":wm_unittest_common" ]
 
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
   if (efficiency_manager_enable) {
-    external_deps = [ "efficiency_manager:suspend_manager_client" ]
+    external_deps += [ "efficiency_manager:suspend_manager_client" ]
     defines = [ "EFFICIENCY_MANAGER_ENABLE" ]
   }
 }
@@ -58,7 +67,11 @@ ohos_unittest("wm_window_impl_test") {
 
   deps = [ ":wm_unittest_common" ]
 
-  external_deps = [ "common_event_service:cesfwk_innerkits" ]
+  external_deps = [
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_unittest("wm_window_scene_effect_test") {
@@ -67,6 +80,11 @@ ohos_unittest("wm_window_scene_effect_test") {
   sources = [ "window_scene_effect_test.cpp" ]
 
   deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_unittest("wm_window_session_impl_test") {
@@ -75,6 +93,11 @@ ohos_unittest("wm_window_session_impl_test") {
   sources = [ "window_session_impl_test.cpp" ]
 
   deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_unittest("wm_window_effect_test") {
@@ -83,6 +106,11 @@ ohos_unittest("wm_window_effect_test") {
   sources = [ "window_effect_test.cpp" ]
 
   deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_unittest("wm_input_transfer_station_test") {
@@ -91,6 +119,11 @@ ohos_unittest("wm_input_transfer_station_test") {
   sources = [ "input_transfer_station_test.cpp" ]
 
   deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_unittest("wm_window_input_channel_test") {
@@ -99,6 +132,11 @@ ohos_unittest("wm_window_input_channel_test") {
   sources = [ "window_input_channel_test.cpp" ]
 
   deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_unittest("wm_window_option_test") {
@@ -107,6 +145,11 @@ ohos_unittest("wm_window_option_test") {
   sources = [ "window_option_test.cpp" ]
 
   deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_unittest("wm_window_scene_test") {
@@ -116,7 +159,11 @@ ohos_unittest("wm_window_scene_test") {
 
   deps = [ ":wm_unittest_common" ]
 
-  external_deps = [ "common_event_service:cesfwk_innerkits" ]
+  external_deps = [
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_unittest("wm_window_test") {
@@ -126,7 +173,11 @@ ohos_unittest("wm_window_test") {
 
   deps = [ ":wm_unittest_common" ]
 
-  external_deps = [ "common_event_service:cesfwk_innerkits" ]
+  external_deps = [
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_unittest("wm_window_impl_listener_test") {
@@ -135,6 +186,11 @@ ohos_unittest("wm_window_impl_listener_test") {
   sources = [ "window_impl_listener_test.cpp" ]
 
   deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_unittest("wm_window_proxy_test") {
@@ -143,6 +199,11 @@ ohos_unittest("wm_window_proxy_test") {
   sources = [ "window_proxy_test.cpp" ]
 
   deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_unittest("wm_window_stub_test") {
@@ -151,6 +212,11 @@ ohos_unittest("wm_window_stub_test") {
   sources = [ "window_stub_test.cpp" ]
 
   deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_unittest("wm_window_scene_session_impl_test") {
@@ -159,6 +225,11 @@ ohos_unittest("wm_window_scene_session_impl_test") {
   sources = [ "window_scene_session_impl_test.cpp" ]
 
   deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_unittest("wm_window_manager_stub_proxy_test") {
@@ -167,6 +238,63 @@ ohos_unittest("wm_window_manager_stub_proxy_test") {
   sources = [ "window_manager_agent_stub_test.cpp" ]
 
   deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("wm_window_frame_trace_impl_test") {
+  module_out_path = module_out_path
+  defines = [ "FRAME_TRACE_ENABLE" ]
+  sources = [ "window_frame_trace_impl_test.cpp" ]
+
+  deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("wm_window_agent_test") {
+  module_out_path = module_out_path
+  defines = [ "FRAME_TRACE_ENABLE" ]
+  sources = [ "window_agent_test.cpp" ]
+
+  deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("wm_window_extension_session_impl_test") {
+  module_out_path = module_out_path
+
+  sources = [ "window_extension_session_impl_test.cpp" ]
+
+  deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("wm_root_scene_test") {
+  module_out_path = module_out_path
+
+  sources = [ "root_scene_test.cpp" ]
+
+  deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 }
 
 ## Build wm_unittest_common.a {{{
@@ -236,8 +364,8 @@ ohos_static_library("wm_unittest_common") {
     "ability_base:want",
     "ability_runtime:ability_context_native",
     "bundle_framework:appexecfwk_base",
+    "image_framework:image_native",
     "ipc:ipc_single",
-    "multimedia_image_framework:image_native",
     "power_manager:powermgr_client",
   ]
 

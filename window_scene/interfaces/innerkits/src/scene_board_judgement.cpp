@@ -15,27 +15,17 @@
 
 #include "scene_board_judgement.h"
 
-namespace OHOS::Rosen {
+namespace OHOS {
+namespace Rosen {
 bool SceneBoardJudgement::IsSceneBoardEnabled()
 {
     static bool isSceneBoardEnabled = false;
     static bool initialized = false;
     if (!initialized) {
-        InitWithConfigFile("/etc/windowscene.config", isSceneBoardEnabled);
+        InitWithConfigFile("/etc/sceneboard.config", isSceneBoardEnabled);
         initialized = true;
     }
     return isSceneBoardEnabled;
-}
-
-bool SceneBoardJudgement::IsWindowSessionEnabled()
-{
-    static bool isWindowSessionEnabled = false;
-    static bool windowSessionInitialized = false;
-    if (!windowSessionInitialized) {
-        InitWithConfigFile("/etc/windowsession.config", isWindowSessionEnabled);
-        windowSessionInitialized = true;
-    }
-    return isWindowSessionEnabled;
 }
 
 std::ifstream& SceneBoardJudgement::SafeGetLine(std::ifstream& configFile, std::string& line)
@@ -56,4 +46,5 @@ void SceneBoardJudgement::InitWithConfigFile(const char* filePath, bool& enabled
     }
     configFile.close();
 }
-} // namespace OHOS::Rosen
+} // namespace Rosen
+} // namespace OHOS

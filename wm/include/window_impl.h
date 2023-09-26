@@ -96,11 +96,12 @@ class WindowImpl : public Window, AAFwk::PrepareTerminateCallbackStub {
         }                                                                       \
     } while (0)
 
-#define CALL_UI_CONTENT(uiContentCb)                          \
-    do {                                                      \
-        if (uiContent_ != nullptr) {                          \
-            uiContent_->uiContentCb();                        \
-        }                                                     \
+#define CALL_UI_CONTENT(uiContentCb)                              \
+    do {                                                          \
+        std::lock_guard<std::recursive_mutex> lock(mutex_);       \
+        if (uiContent_ != nullptr) {                              \
+            uiContent_->uiContentCb();                            \
+        }                                                         \
     } while (0)
 
 public:
@@ -263,6 +264,8 @@ public:
 
     virtual WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
         NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability) override;
+    virtual WMError SetUIContentByName(const std::string& contentInfo, NativeEngine* engine, NativeValue* storage,
+        AppExecFwk::Ability* ability) override;
     virtual std::string GetContentInfo() override;
     virtual const std::shared_ptr<AbilityRuntime::Context> GetContext() const override;
     virtual Ace::UIContent* GetUIContent() const override;
@@ -558,6 +561,9 @@ private:
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
     void UpdateDecorEnable(bool needNotify = false);
     WMError SetFloatingMaximize(bool isEnter);
+    WMError SetUIContentInner(const std::string& contentInfo, NativeEngine* engine, NativeValue* storage,
+        bool isdistributed, bool isLoadedByName, AppExecFwk::Ability* ability);
+
     // colorspace, gamut
     using ColorSpaceConvertMap = struct {
         ColorSpace colorSpace;

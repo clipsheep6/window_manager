@@ -84,4 +84,82 @@ NativeValue* JsScreenUtils::CreateJsScreenConnectChangeType(NativeEngine& engine
     object->SetProperty("DISCONNECT", CreateJsValue(engine, 1));
     return objValue;
 }
+
+NativeValue* JsScreenUtils::CreateJsScreenPropertyChangeReason(NativeEngine& engine)
+{
+    auto objValue = engine.CreateObject();
+    if (objValue == nullptr) {
+        WLOGFE("Failed to create object!");
+        return engine.CreateUndefined();
+    }
+    auto object = ConvertNativeValueTo<NativeObject>(objValue);
+    if (object == nullptr) {
+        WLOGFE("Failed to convert object!");
+        return engine.CreateUndefined();
+    }
+    object->SetProperty("UNDEFINED", CreateJsValue(engine,
+        static_cast<int32_t>(ScreenPropertyChangeReason::UNDEFINED)));
+    object->SetProperty("ROTATION", CreateJsValue(engine,
+        static_cast<int32_t>(ScreenPropertyChangeReason::ROTATION)));
+    object->SetProperty("CHANGE_MODE", CreateJsValue(engine,
+        static_cast<int32_t>(ScreenPropertyChangeReason::CHANGE_MODE)));
+    object->SetProperty("FOLD_SCREEN_EXPAND", CreateJsValue(engine,
+        static_cast<int32_t>(ScreenPropertyChangeReason::FOLD_SCREEN_EXPAND)));
+    object->SetProperty("SCREEN_CONNECT", CreateJsValue(engine,
+        static_cast<int32_t>(ScreenPropertyChangeReason::SCREEN_CONNECT)));
+    object->SetProperty("SCREEN_DISCONNECT", CreateJsValue(engine,
+        static_cast<int32_t>(ScreenPropertyChangeReason::SCREEN_DISCONNECT)));
+    return objValue;
+}
+
+bool ConvertRRectFromJs(NativeEngine& engine, NativeObject* jsObject, RRect& bound)
+{
+    NativeValue* jsLeft = jsObject->GetProperty("left");
+    NativeValue* jsTop = jsObject->GetProperty("top");
+    NativeValue* jsWidth = jsObject->GetProperty("width");
+    NativeValue* jsHeight = jsObject->GetProperty("height");
+    NativeValue* jsRadius = jsObject->GetProperty("radius");
+
+    if (jsLeft->TypeOf() != NATIVE_UNDEFINED) {
+        int32_t left;
+        if (!ConvertFromJsValue(engine, jsLeft, left)) {
+            WLOGFE("[NAPI]Failed to convert parameter to left");
+            return false;
+        }
+        bound.rect_.left_ = left;
+    }
+    if (jsTop->TypeOf() != NATIVE_UNDEFINED) {
+        int32_t top;
+        if (!ConvertFromJsValue(engine, jsTop, top)) {
+            WLOGFE("[NAPI]Failed to convert parameter to top");
+            return false;
+        }
+        bound.rect_.top_ = top;
+    }
+    if (jsWidth->TypeOf() != NATIVE_UNDEFINED) {
+        int32_t width;
+        if (!ConvertFromJsValue(engine, jsWidth, width)) {
+            WLOGFE("[NAPI]Failed to convert parameter to width");
+            return false;
+        }
+        bound.rect_.width_ = width;
+    }
+    if (jsHeight->TypeOf() != NATIVE_UNDEFINED) {
+        int32_t height;
+        if (!ConvertFromJsValue(engine, jsHeight, height)) {
+            WLOGFE("[NAPI]Failed to convert parameter to height");
+            return false;
+        }
+        bound.rect_.height_ = height;
+    }
+    if (jsRadius->TypeOf() != NATIVE_UNDEFINED) {
+        int radius;
+        if (!ConvertFromJsValue(engine, jsRadius, radius)) {
+            WLOGFE("[NAPI]Failed to convert parameter to radius");
+            return false;
+        }
+        bound.radius_[0].x_ = static_cast<float>(radius);
+    }
+    return true;
+}
 } // namespace OHOS::Rosen

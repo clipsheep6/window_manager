@@ -15,7 +15,7 @@ import("//build/config/features.gni")
 import("//build/test.gni")
 import("../../../../windowmanager_aafwk.gni")
 
-module_output_path = "window_manager/wms"
+module_output_path = "window_manager/window_manager"
 
 ##############################fuzztest##########################################
 ohos_fuzztest("WindowUtilMathFuzzTest") {
@@ -45,6 +45,7 @@ ohos_fuzztest("WindowUtilMathFuzzTest") {
 
   external_deps = [
     "c_utils:utils",
+    "hilog:libhilog",
     "ipc:ipc_single",
   ]
 }

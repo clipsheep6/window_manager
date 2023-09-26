@@ -13,20 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_ROSEN_PERMISSION_H
-#define OHOS_ROSEN_PERMISSION_H
+#ifndef OHOS_WINDOW_PREPARE_TERMINATE_H
+#define OHOS_WINDOW_PREPARE_TERMINATE_H
 
-#include <string>
+#include "prepare_terminate_callback_stub.h"
 
 namespace OHOS {
 namespace Rosen {
-class Permission {
+using PrepareTerminateFunc = std::function<void()>;
+class WindowPrepareTerminateHandler : public AAFwk::PrepareTerminateCallbackStub {
 public:
-    static bool IsSystemServiceCalling(bool needPrintLog = true);
-    static bool IsSystemCalling();
-    static bool IsStartByHdcd();
-    static bool IsStartedByInputMethod();
+    WindowPrepareTerminateHandler();
+    virtual ~WindowPrepareTerminateHandler() override;
+    virtual void DoPrepareTerminate() override;
+    void SetPrepareTerminateFun(const PrepareTerminateFunc& func);
+private:
+    PrepareTerminateFunc func_;
 };
-} // Rosen
-} // OHOS
-#endif // OHOS_ROSEN_PERMISSION_H
+} // namespace Rosen
+} // namespace OHOS
+#endif // OHOS_WINDOW_PREPARE_TERMINATE_H

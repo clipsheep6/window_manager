@@ -24,12 +24,14 @@ class SessionMocker : public Session {
 public:
     SessionMocker(const SessionInfo& info) : Session(info) {}
     ~SessionMocker() {}
-    MOCK_METHOD6(Connect, WSError(const sptr<ISessionStage>& sessionStage,
+    MOCK_METHOD8(Connect, WSError(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-        SystemSessionConfig& systemConfig, sptr<WindowSessionProperty> property, sptr<IRemoteObject> token));
-    MOCK_METHOD6(CreateAndConnectSpecificSession, WSError(const sptr<ISessionStage>& sessionStage,
+        SystemSessionConfig& systemConfig, sptr<WindowSessionProperty> property, sptr<IRemoteObject> token,
+        int32_t pid, int32_t uid));
+    MOCK_METHOD7(CreateAndConnectSpecificSession, WSError(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-        sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session));
+        sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session,
+        sptr<IRemoteObject> token));
 
     MOCK_METHOD1(Foreground, WSError(sptr<WindowSessionProperty> property));
     MOCK_METHOD0(Background, WSError(void));
@@ -42,7 +44,7 @@ public:
     MOCK_METHOD1(PendingSessionActivation, WSError(const sptr<AAFwk::SessionInfo> info));
     MOCK_METHOD1(UpdateActiveStatus, WSError(bool isActive));
     MOCK_METHOD1(OnSessionEvent, WSError(SessionEvent event));
-    MOCK_METHOD0(RequestSessionBack, WSError(void));
+    MOCK_METHOD1(RequestSessionBack, WSError(bool needMoveToBackground));
     MOCK_METHOD0(RaiseToAppTop, WSError(void));
     MOCK_METHOD1(GetAvoidAreaByType, AvoidArea(AvoidAreaType type));
     MOCK_METHOD1(SetAspectRatio, WSError(float ratio));

@@ -16,9 +16,14 @@
 #include "displaymanager_fuzzer.h"
 
 #include <securec.h>
+#include <ui/rs_surface_node.h>
 #include "display_manager.h"
 
 namespace OHOS ::Rosen {
+namespace {
+    constexpr size_t DATA_MIN_SIZE = 4;
+}
+
 class DisplayListener : public DisplayManager::IDisplayListener {
 public:
     virtual void OnCreate(DisplayId) override
@@ -93,6 +98,11 @@ bool DisplayFuzzTest(const uint8_t* data, size_t size)
     sptr<PrivateWindowListener> privateWindowListener = new PrivateWindowListener();
     displayManager.RegisterPrivateWindowListener(privateWindowListener);
     displayManager.UnregisterPrivateWindowListener(privateWindowListener);
+    RSSurfaceNodeConfig config;
+    config.SurfaceNodeName = "AddSurfaceNodeToDisplay";
+    auto surfaceNode = RSSurfaceNode::Create(config, false);
+    displayManager.AddSurfaceNodeToDisplay(displayId, surfaceNode);
+    displayManager.RemoveSurfaceNodeFromDisplay(displayId, surfaceNode);
     return true;
 }
 
@@ -102,7 +112,7 @@ bool GetScreenshotFuzzTest(const uint8_t* data, size_t size)
     Media::Rect rect;
     Media::Size mediaSize;
     int rotation;
-    if (data == nullptr || size < sizeof(displayId) + sizeof(rect) + sizeof(size) + sizeof(rotation)) {
+    if (data == nullptr || size < DATA_MIN_SIZE) {
         return false;
     }
     size_t startPos = 0;
@@ -165,14 +175,13 @@ bool ScreenBrightnessFuzzTest(const uint8_t* data, size_t size)
 
 bool FreezeFuzzTest(const uint8_t* data, size_t size)
 {
-    // 10 displays
-    if (data == nullptr || size < sizeof(DisplayId) * 10) {
+    if (data == nullptr || size < DATA_MIN_SIZE) {
         return false;
     }
     size_t startPos = 0;
     DisplayManager& displayManager = DisplayManager::GetInstance();
-    // 10 displays
-    std::vector<DisplayId> displays(10);
+    //2 displays
+    std::vector<DisplayId> displays(2);
     for (DisplayId& id : displays) {
         startPos += GetObject<DisplayId>(id, data + startPos, size - startPos);
     }

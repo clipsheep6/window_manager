@@ -29,30 +29,57 @@ public:
 
     WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-        sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session) override;
-    WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId) override;
-    WSError UpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action) override;
+        sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session,
+        sptr<IRemoteObject> token = nullptr) override;
+    WSError DestroyAndDisconnectSpecificSession(const int32_t& persistentId) override;
+    WMError UpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action) override;
+    WSError BindDialogTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken) override;
 
     WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     void GetFocusWindowInfo(FocusChangeInfo& focusInfo) override;
-    WSError SetSessionGravity(uint64_t persistentId, SessionGravity gravity, uint32_t percent) override;
+    WSError SetSessionGravity(int32_t persistentId, SessionGravity gravity, uint32_t percent) override;
     WMError SetGestureNavigaionEnabled(bool enable) override;
     WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) override;
     WSError SetSessionIcon(const sptr<IRemoteObject> &token, const std::shared_ptr<Media::PixelMap> &icon) override;
-    WSError RegisterSessionListener(const sptr<ISessionListener> sessionListener) override;
+    WSError IsValidSessionIds(const std::vector<int32_t> &sessionIds, std::vector<bool> &results) override;
+    WSError RegisterSessionListener(const sptr<ISessionChangeListener> sessionListener) override;
     void UnregisterSessionListener() override;
     WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) override;
     WSError PendingSessionToForeground(const sptr<IRemoteObject> &token) override;
     WSError PendingSessionToBackgroundForDelegator(const sptr<IRemoteObject> &token) override;
     WSError GetFocusSessionToken(sptr<IRemoteObject> &token) override;
+    WMError CheckWindowId(int32_t windowId, int32_t &pid) override;
+
+    WSError RegisterSessionListener(const sptr<ISessionListener>& listener) override;
+    WSError UnRegisterSessionListener(const sptr<ISessionListener>& listener) override;
+    WSError GetSessionInfos(const std::string& deviceId, int32_t numMax,
+                            std::vector<SessionInfoBean>& sessionInfos) override;
+    WSError GetSessionInfo(const std::string& deviceId, int32_t persistentId, SessionInfoBean& sessionInfo) override;
+
+    WSError DumpSessionAll(std::vector<std::string> &infos) override;
+    WSError DumpSessionWithId(int32_t persistentId, std::vector<std::string> &infos) override;
+    WSError SetSessionContinueState(const sptr<IRemoteObject> &token, const ContinueState& continueState) override;
     WSError TerminateSessionNew(const sptr<AAFwk::SessionInfo> info, bool needStartCaller) override;
-    WSError GetSessionDumpInfo(const sptr<DumpParam> &param, std::string& info) override;
-    WSError UpdateSessionAvoidAreaListener(uint64_t& persistentId, bool haveListener) override;
+    WSError GetSessionDumpInfo(const std::vector<std::string>& params, std::string& info) override;
+    void NotifyDumpInfoResult(const std::vector<std::string>& info) override;
+    WSError UpdateSessionAvoidAreaListener(int32_t& persistentId, bool haveListener) override;
+    WSError GetSessionSnapshot(const std::string& deviceId, int32_t persistentId,
+                               SessionSnapshot& snapshot, bool isLowResolution) override;
+    WSError LockSession(int32_t persistentId) override;
+    WSError UnlockSession(int32_t persistentId) override;
+    WSError MoveSessionsToForeground(const std::vector<int32_t>& sessionIds, int32_t topSessionId) override;
+    WSError MoveSessionsToBackground(const std::vector<int32_t>& sessionIds, std::vector<int32_t>& result) override;
+    WSError ClearSession(int32_t persistentId) override;
+    WSError ClearAllSessions() override;
+    WSError RegisterIAbilityManagerCollaborator(int32_t type, const sptr<AAFwk::IAbilityManagerCollaborator> &impl) override;
+    WSError UnregisterIAbilityManagerCollaborator(int32_t type) override;
 
 private:
+    template<typename T>
+    WSError GetParcelableInfos(MessageParcel& reply, std::vector<T>& parcelableInfos);
     static inline BrokerDelegator<SceneSessionManagerProxy> delegator_;
 };
 } // namespace OHOS::Rosen

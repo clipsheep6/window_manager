@@ -75,13 +75,13 @@ sptr<Window> Window::Create(const std::string& windowName, sptr<WindowOption>& o
             return nullptr;
         }
     }
-    uint32_t version = 0;
+    uint32_t version = 10;
     if ((context != nullptr) && (context->GetApplicationInfo() != nullptr)) {
         version = context->GetApplicationInfo()->apiCompatibleVersion;
     }
     // 10 ArkUI new framework support after API10
-    if (version >= 10) {
-        option->RemoveWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
+    if (version < 10) {
+        option->AddWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
     }
     WindowType type = option->GetWindowType();
     if (!(WindowHelper::IsAppWindow(type) || WindowHelper::IsSystemWindow(type))) {
@@ -118,6 +118,14 @@ sptr<Window> Window::Create(sptr<WindowOption>& option, const std::shared_ptr<OH
         WLOGFE("window name in option is empty");
         return nullptr;
     }
+    uint32_t version = 10;
+    if ((context != nullptr) && (context->GetApplicationInfo() != nullptr)) {
+        version = context->GetApplicationInfo()->apiCompatibleVersion;
+    }
+    // 10 ArkUI new framework support after API10
+    if (version < 10) {
+        option->AddWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
+    }
     WindowType type = option->GetWindowType();
     if (!(WindowHelper::IsAppWindow(type) || WindowHelper::IsUIExtensionWindow(type)
         || WindowHelper::IsAppComponentWindow(type))) {
@@ -129,22 +137,38 @@ sptr<Window> Window::Create(sptr<WindowOption>& option, const std::shared_ptr<OH
 
 sptr<Window> Window::Find(const std::string& windowName)
 {
-    return WindowImpl::Find(windowName);
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        return WindowSessionImpl::Find(windowName);
+    } else {
+        return WindowImpl::Find(windowName);
+    }
 }
 
 sptr<Window> Window::GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context)
 {
-    return WindowImpl::GetTopWindowWithContext(context);
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        return WindowSceneSessionImpl::GetTopWindowWithContext(context);
+    } else {
+        return WindowImpl::GetTopWindowWithContext(context);
+    }
 }
 
 sptr<Window> Window::GetTopWindowWithId(uint32_t mainWinId)
 {
-    return WindowImpl::GetTopWindowWithId(mainWinId);
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        return WindowSceneSessionImpl::GetTopWindowWithId(mainWinId);
+    } else {
+        return WindowImpl::GetTopWindowWithId(mainWinId);
+    }
 }
 
 std::vector<sptr<Window>> Window::GetSubWindow(uint32_t parentId)
 {
-    return WindowImpl::GetSubWindow(parentId);
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        return WindowSessionImpl::GetSubWindow(parentId);
+    } else {
+        return WindowImpl::GetSubWindow(parentId);
+    }
 }
 
 void Window::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration)

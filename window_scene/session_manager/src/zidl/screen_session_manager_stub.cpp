@@ -206,6 +206,45 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             reply.WriteUint64(static_cast<uint64_t>(screenGroupId));
             break;
         }
+        case DisplayManagerMessage::TRANS_ID_SCREEN_STOP_MIRROR: {
+            std::vector<ScreenId> mirrorScreenIds;
+            if (!data.ReadUInt64Vector(&mirrorScreenIds)) {
+                WLOGE("fail to receive mirror screens in stub.");
+                break;
+            }
+            DMError ret = StopMirror(mirrorScreenIds);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SCREEN_MAKE_EXPAND: {
+            std::vector<ScreenId> screenId;
+            if (!data.ReadUInt64Vector(&screenId)) {
+                WLOGE("fail to receive expand screen in stub.");
+                break;
+            }
+            std::vector<Point> startPoint;
+            if (!MarshallingHelper::UnmarshallingVectorObj<Point>(data, startPoint, [](Parcel& parcel, Point& point) {
+                    return parcel.ReadInt32(point.posX_) && parcel.ReadInt32(point.posY_);
+                })) {
+                WLOGE("fail to receive startPoint in stub.");
+                break;
+            }
+            ScreenId screenGroupId = INVALID_SCREEN_ID;
+            DMError ret = MakeExpand(screenId, startPoint, screenGroupId);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            reply.WriteUint64(static_cast<uint64_t>(screenGroupId));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SCREEN_STOP_EXPAND: {
+            std::vector<ScreenId> expandScreenIds;
+            if (!data.ReadUInt64Vector(&expandScreenIds)) {
+                WLOGE("fail to receive expand screens in stub.");
+                break;
+            }
+            DMError ret = StopExpand(expandScreenIds);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
         case DisplayManagerMessage::TRANS_ID_GET_SCREEN_GROUP_INFO_BY_ID: {
             ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
             auto screenGroupInfo = GetScreenGroupInfoById(screenId);
@@ -315,6 +354,42 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             DMError ret = HasPrivateWindow(id, hasPrivateWindow);
             reply.WriteInt32(static_cast<int32_t>(ret));
             reply.WriteBool(hasPrivateWindow);
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SCENE_BOARD_DUMP_ALL_SCREEN: {
+            std::string dumpInfo;
+            DumpAllScreensInfo(dumpInfo);
+            reply.WriteString(dumpInfo);
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SCENE_BOARD_DUMP_SPECIAL_SCREEN: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            std::string dumpInfo;
+            DumpSpecialScreenInfo(screenId, dumpInfo);
+            reply.WriteString(dumpInfo);
+            break;
+        }
+        //Fold Screen
+        case DisplayManagerMessage::TRANS_ID_SCENE_BOARD_SET_FOLD_DISPLAY_MODE: {
+            FoldDisplayMode displayMode = static_cast<FoldDisplayMode>(data.ReadUint32());
+            SetFoldDisplayMode(displayMode);
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SCENE_BOARD_GET_FOLD_DISPLAY_MODE: {
+            FoldDisplayMode displayMode = GetFoldDisplayMode();
+            reply.WriteUint32(static_cast<uint32_t>(displayMode));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SCENE_BOARD_IS_FOLDABLE: {
+            reply.WriteBool(IsFoldable());
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SCENE_BOARD_GET_FOLD_STATUS: {
+            reply.WriteUint32(static_cast<uint32_t>(GetFoldStatus()));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SCENE_BOARD_GET_CURRENT_FOLD_CREASE_REGION: {
+            reply.WriteStrongParcelable(GetCurrentFoldCreaseRegion());
             break;
         }
         default:

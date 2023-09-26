@@ -13,27 +13,29 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_ROSEN_WINDOW_SCENE_SESSION_RPOXY_H
-#define OHOS_ROSEN_WINDOW_SCENE_SESSION_RPOXY_H
+#ifndef OHOS_ROSEN_WINDOW_SCENE_SESSION_PROXY_H
+#define OHOS_ROSEN_WINDOW_SCENE_SESSION_PROXY_H
 
 #include <iremote_proxy.h>
-#include "interfaces/include/ws_common.h"
+
 #include "session/host/include/zidl/session_interface.h"
 
 namespace OHOS::Rosen {
 class SessionProxy : public IRemoteProxy<ISession> {
 public:
-    explicit SessionProxy(const sptr<IRemoteObject>& impl) : IRemoteProxy<ISession>(impl) {};
-    ~SessionProxy() {};
+    explicit SessionProxy(const sptr<IRemoteObject>& impl) : IRemoteProxy<ISession>(impl) {}
+    virtual ~SessionProxy() = default;
 
     WSError Foreground(sptr<WindowSessionProperty> property) override;
     WSError Background() override;
     WSError Disconnect() override;
     WSError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
-        sptr<WindowSessionProperty> property = nullptr, sptr<IRemoteObject> token = nullptr) override;
+        sptr<WindowSessionProperty> property = nullptr, sptr<IRemoteObject> token = nullptr,
+        int32_t pid = -1, int32_t uid = -1) override;
     WSError UpdateActiveStatus(bool isActive) override;
     WSError PendingSessionActivation(const sptr<AAFwk::SessionInfo> abilitySessionInfo) override;
+    bool WriteAbilitySessionInfoBasic(MessageParcel& data, const sptr<AAFwk::SessionInfo> abilitySessionInfo);
     WSError TerminateSession(const sptr<AAFwk::SessionInfo> abilitySessionInfo) override;
     WSError NotifySessionException(const sptr<AAFwk::SessionInfo> abilitySessionInfo) override;
     WSError OnSessionEvent(SessionEvent event) override;
@@ -41,24 +43,29 @@ public:
     WSError UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason) override;
     WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-        sptr<WindowSessionProperty> property, uint64_t& persistentId, sptr<ISession>& session) override;
-    WSError DestroyAndDisconnectSpecificSession(const uint64_t& persistentId) override;
+        sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session,
+        sptr<IRemoteObject> token = nullptr) override;
+    WSError DestroyAndDisconnectSpecificSession(const int32_t& persistentId) override;
     WSError OnNeedAvoid(bool status) override;
     AvoidArea GetAvoidAreaByType(AvoidAreaType type) override;
-    WSError RequestSessionBack() override;
+    WSError RequestSessionBack(bool needMoveToBackground) override;
     WSError MarkProcessed(int32_t eventId) override;
     WSError SetGlobalMaximizeMode(MaximizeMode mode) override;
     WSError GetGlobalMaximizeMode(MaximizeMode& mode) override;
-    WSError UpdateWindowSessionProperty(sptr<WindowSessionProperty> property) override;
+    WSError SetSessionProperty(const sptr<WindowSessionProperty>& property) override;
     WSError SetAspectRatio(float ratio) override;
+    WSError UpdateWindowAnimationFlag(bool needDefaultAnimationFlag) override;
     WSError UpdateWindowSceneAfterCustomAnimation(bool isAdd) override;
+    WSError RaiseAboveTarget(int32_t subWindowId) override;
 
     WSError TransferAbilityResult(uint32_t resultCode, const AAFwk::Want& want) override;
     WSError TransferExtensionData(const AAFwk::WantParams& wantParams) override;
     void NotifyRemoteReady() override;
-    WSError UpdateWindowAnimationFlag(bool needDefaultAnimationFlag) override;
+    void NotifyExtensionDied() override;
+
 private:
     static inline BrokerDelegator<SessionProxy> delegator_;
 };
 } // namespace OHOS::Rosen
-#endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_RPOXY_H
+
+#endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_PROXY_H

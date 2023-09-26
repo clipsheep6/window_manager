@@ -20,6 +20,8 @@
 #include <optional>
 
 #include <ability_context.h>
+#include <event_handler.h>
+#include <i_input_event_consumer.h>
 #include <refbase.h>
 #include <ui_content.h>
 #include <ui/rs_surface_node.h>
@@ -32,6 +34,7 @@
 #include "session/host/include/zidl/session_interface.h"
 #include "window.h"
 #include "window_option.h"
+#include "wm_common.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -44,25 +47,34 @@ public:
     explicit WindowSessionImpl(const sptr<WindowOption>& option);
     ~WindowSessionImpl();
     static sptr<Window> Find(const std::string& name);
+    static std::vector<sptr<Window>> GetSubWindow(int parentId);
     // inherits from window
     virtual WMError Create(const std::shared_ptr<AbilityRuntime::Context>& context,
         const sptr<Rosen::ISession>& iSession);
     WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
     WMError Hide(uint32_t reason = 0, bool withAnimation = false, bool isFromInnerkits = true) override;
     WMError Destroy() override;
-    virtual WMError Destroy(bool needClearListener);
+    virtual WMError Destroy(bool needNotifyServer, bool needClearListener = true);
     WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
         NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability) override;
+    WMError SetUIContentByName(const std::string& contentInfo, NativeEngine* engine, NativeValue* storage,
+        AppExecFwk::Ability* ability) override;
     std::shared_ptr<RSSurfaceNode> GetSurfaceNode() const override;
     const std::shared_ptr<AbilityRuntime::Context> GetContext() const override;
     Rect GetRequestRect() const override;
     WindowType GetType() const override;
     const std::string& GetWindowName() const override;
     WindowState GetWindowState() const override;
+    WindowState GetRequestWindowState() const;
     WMError SetFocusable(bool isFocusable) override;
     WMError SetTouchable(bool isTouchable) override;
+    WMError SetResizeByDragEnabled(bool dragEnabled) override;
+    WMError SetRaiseByClickEnabled(bool raiseEnabled) override;
+    WMError HideNonSystemFloatingWindows(bool shouldHide) override;
+    bool IsFloatingWindowAppType() const override;
     WMError SetWindowType(WindowType type) override;
     WMError SetBrightness(float brightness) override;
+    virtual float GetBrightness() const override;
     void SetRequestedOrientation(Orientation orientation) override;
     bool GetTouchable() const override;
     uint32_t GetWindowId() const override;
@@ -74,19 +86,21 @@ public:
     WMError SetAPPWindowLabel(const std::string& label) override;
     WMError SetAPPWindowIcon(const std::shared_ptr<Media::PixelMap>& icon) override;
     void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback) override;
+    int64_t GetVSyncPeriod() override;
     // inherits from session stage
     WSError SetActive(bool active) override;
     WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) override;
+    void UpdateDensity() override;
     WSError UpdateFocus(bool focus) override;
+    WSError UpdateWindowMode(WindowMode mode) override;
     WSError HandleBackEvent() override { return WSError::WS_OK; }
     WMError SetWindowGravity(WindowGravity gravity, uint32_t percent) override;
+    WMError SetSystemBarProperty(WindowType type, const SystemBarProperty& property) override;
+    KeyboardAnimationConfig GetKeyboardAnimationConfig() override;
 
     void NotifyPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
     void NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed) override;
-    void NotifyFocusActiveEvent(bool isFocusActive) override;
     void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info) override;
-    void NotifyFocusWindowIdEvent(uint32_t windowId) override;
-    void NotifyFocusStateEvent(bool focusState) override;
 
     WMError RegisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener) override;
     WMError UnregisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener) override;
@@ -100,16 +114,23 @@ public:
     WMError UnregisterDialogTargetTouchListener(const sptr<IDialogTargetTouchListener>& listener) override;
     WMError RegisterOccupiedAreaChangeListener(const sptr<IOccupiedAreaChangeListener>& listener) override;
     WMError UnregisterOccupiedAreaChangeListener(const sptr<IOccupiedAreaChangeListener>& listener) override;
+    WMError RegisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener) override;
+    WMError UnregisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener) override;
     void RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func) override;
+    WMError RegisterScreenshotListener(const sptr<IScreenshotListener>& listener) override;
+    WMError UnregisterScreenshotListener(const sptr<IScreenshotListener>& listener) override;
     void SetAceAbilityHandler(const sptr<IAceAbilityHandler>& handler) override;
+    void SetInputEventConsumer(const std::shared_ptr<IInputEventConsumer>& inputEventConsumer) override;
 
     WMError SetBackgroundColor(const std::string& color) override;
+    virtual Orientation GetRequestedOrientation() override;
 
-    uint32_t GetParentId() const;
-    uint64_t GetPersistentId() const;
+    int32_t GetParentId() const;
+    int32_t GetPersistentId() const override;
     sptr<WindowSessionProperty> GetProperty() const;
+    SystemSessionConfig GetSystemSessionConfig() const;
     sptr<ISession> GetHostSession() const;
-    uint64_t GetFloatingWindowParentId();
+    int32_t GetFloatingWindowParentId();
     void NotifyAfterForeground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
     void NotifyAfterBackground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
     void NotifyForegroundFailed(WMError ret);
@@ -121,8 +142,16 @@ public:
     void NotifyAvoidAreaChange(const sptr<AvoidArea>& avoidArea, AvoidAreaType type);
     WSError UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type) override;
     void NotifyTouchDialogTarget() override;
+    void NotifyScreenshot() override;
+    void DumpSessionElementInfo(const std::vector<std::string>& params) override;
+    // colorspace, gamut
+    virtual bool IsSupportWideGamut() override;
+    virtual void SetColorSpace(ColorSpace colorSpace) override;
+    virtual ColorSpace GetColorSpace() override;
+    WSError NotifyTouchOutside() override;
 
     WindowState state_ { WindowState::STATE_INITIAL };
+    WindowState requestState_ { WindowState::STATE_INITIAL };
 
 protected:
     WMError Connect();
@@ -130,13 +159,16 @@ protected:
     void NotifyAfterActive();
     void NotifyAfterInactive();
     void NotifyBeforeDestroy(std::string windowName);
-    void ClearListenersById(uint64_t persistentId);
+    void ClearListenersById(int32_t persistentId);
     WMError WindowSessionCreateCheck();
     void UpdateDecorEnable(bool needNotify = false);
     void NotifyModeChange(WindowMode mode, bool hasDeco = true);
     WMError UpdateProperty(WSPropertyChangeAction action);
     WMError SetBackgroundColor(uint32_t color);
     uint32_t GetBackgroundColor() const;
+    virtual WMError SetLayoutFullScreenByApiVersion(bool status);
+    void UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason);
+    void NotifySizeChange(Rect rect, WindowSizeChangeReason reason);
 
     sptr<ISession> hostSession_;
     std::unique_ptr<Ace::UIContent> uiContent_;
@@ -144,17 +176,22 @@ protected:
     std::shared_ptr<RSSurfaceNode> surfaceNode_;
 
     sptr<WindowSessionProperty> property_;
-    WindowMode windowMode_ = WindowMode::WINDOW_MODE_UNDEFINED;
     SystemSessionConfig windowSystemConfig_;
     NotifyNativeWinDestroyFunc notifyNativeFunc_;
 
     std::recursive_mutex mutex_;
-    static std::map<std::string, std::pair<uint64_t, sptr<WindowSessionImpl>>> windowSessionMap_;
-    static std::map<uint64_t, std::vector<sptr<WindowSessionImpl>>> subWindowSessionMap_;
+    static std::map<std::string, std::pair<int32_t, sptr<WindowSessionImpl>>> windowSessionMap_;
+    static std::map<int32_t, std::vector<sptr<WindowSessionImpl>>> subWindowSessionMap_;
+    bool isSystembarPropertiesSet_ = false;
     bool isIgnoreSafeAreaNeedNotify_ = false;
     bool isIgnoreSafeArea_ = false;
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
 
 private:
+    //Trans between colorGamut and colorSpace
+    static ColorSpace GetColorSpaceFromSurfaceGamut(GraphicColorGamut colorGamut);
+    static GraphicColorGamut GetSurfaceGamutFromColorSpace(ColorSpace colorSpace);
+
     template<typename T> WMError RegisterListener(std::vector<sptr<T>>& holder, const sptr<T>& listener);
     template<typename T> WMError UnregisterListener(std::vector<sptr<T>>& holder, const sptr<T>& listener);
     template<typename T> EnableIfSame<T, IWindowLifeCycle, std::vector<sptr<IWindowLifeCycle>>> GetListeners();
@@ -168,27 +205,39 @@ private:
     EnableIfSame<T, IDialogTargetTouchListener, std::vector<sptr<IDialogTargetTouchListener>>> GetListeners();
     template<typename T>
     EnableIfSame<T, IOccupiedAreaChangeListener, std::vector<sptr<IOccupiedAreaChangeListener>>> GetListeners();
-    template<typename T> void ClearUselessListeners(std::map<uint64_t, T>& listeners, uint64_t persistentId);
+    template<typename T>
+    EnableIfSame<T, IScreenshotListener, std::vector<sptr<IScreenshotListener>>> GetListeners();
+    template<typename T>
+    EnableIfSame<T, ITouchOutsideListener, std::vector<sptr<ITouchOutsideListener>>> GetListeners();
+    template<typename T> void ClearUselessListeners(std::map<int32_t, T>& listeners, int32_t persistentId);
     RSSurfaceNode::SharedPtr CreateSurfaceNode(std::string name, WindowType type);
     void NotifyAfterFocused();
     void NotifyAfterUnfocused(bool needNotifyUiContent = true);
-    void UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason);
-    void NotifySizeChange(Rect rect, WindowSizeChangeReason reason);
+
+    WMError SetUIContentInner(const std::string& contentInfo, NativeEngine* engine, NativeValue* storage,
+        bool isdistributed, bool isLoadedByName, AppExecFwk::Ability* ability);
+
+    bool IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const;
+    void UpdateRectForRotation(const Rect& wmRect, const Rect& preRect, WindowSizeChangeReason wmReason);
 
     static std::recursive_mutex globalMutex_;
-    static std::map<uint64_t, std::vector<sptr<IWindowLifeCycle>>> lifecycleListeners_;
-    static std::map<uint64_t, std::vector<sptr<IWindowChangeListener>>> windowChangeListeners_;
-    static std::map<uint64_t, std::vector<sptr<IAvoidAreaChangedListener>>> avoidAreaChangeListeners_;
-    static std::map<uint64_t, std::vector<sptr<IDialogDeathRecipientListener>>> dialogDeathRecipientListeners_;
-    static std::map<uint64_t, std::vector<sptr<IDialogTargetTouchListener>>> dialogTargetTouchListener_;
-    static std::map<uint32_t, std::vector<sptr<IOccupiedAreaChangeListener>>> occupiedAreaChangeListeners_;
-
-    std::optional<std::atomic<bool>> focusState_ = std::nullopt;
-
-    std::atomic<uint32_t> focusWindowId_ = INVALID_WINDOW_ID;
+    static std::map<int32_t, std::vector<sptr<IWindowLifeCycle>>> lifecycleListeners_;
+    static std::map<int32_t, std::vector<sptr<IWindowChangeListener>>> windowChangeListeners_;
+    static std::map<int32_t, std::vector<sptr<IAvoidAreaChangedListener>>> avoidAreaChangeListeners_;
+    static std::map<int32_t, std::vector<sptr<IDialogDeathRecipientListener>>> dialogDeathRecipientListeners_;
+    static std::map<int32_t, std::vector<sptr<IDialogTargetTouchListener>>> dialogTargetTouchListener_;
+    static std::map<int32_t, std::vector<sptr<IOccupiedAreaChangeListener>>> occupiedAreaChangeListeners_;
+    static std::map<int32_t, std::vector<sptr<IScreenshotListener>>> screenshotListeners_;
+    std::shared_ptr<IInputEventConsumer> inputEventConsumer_;
+    static std::map<int32_t, std::vector<sptr<ITouchOutsideListener>>> touchOutsideListeners_;
 
     // FA only
     sptr<IAceAbilityHandler> aceAbilityHandler_;
+
+    WindowSizeChangeReason lastSizeChangeReason_ = WindowSizeChangeReason::END;
+    bool postTaskDone_ = false;
+    int16_t rotationAnimationCount_ { 0 };
+    Gravity lastGravity_ = Gravity::RESIZE;
 };
 } // namespace Rosen
 } // namespace OHOS

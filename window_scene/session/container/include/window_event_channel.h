@@ -32,11 +32,11 @@ public:
     }
     ~WindowEventChannel() = default;
 
+    WSError TransferBackpressedEventForConsumed(bool& isConsumed) override;
     WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
     WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
     WSError TransferKeyEventForConsumed(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed) override;
     WSError TransferFocusActiveEvent(bool isFocusActive) override;
-    WSError TransferFocusWindowId(uint32_t windowId) override;
     WSError TransferFocusState(bool focusState) override;
 
 private:
@@ -45,6 +45,7 @@ private:
 private:
     void PrintKeyEvent(const std::shared_ptr<MMI::KeyEvent>& event);
     void PrintPointerEvent(const std::shared_ptr<MMI::PointerEvent>& event);
+    void PrintInfoPointerEvent(const std::shared_ptr<MMI::PointerEvent>& event);
 
     sptr<ISessionStage> sessionStage_ = nullptr;
     std::function<void(int32_t, int64_t)> dispatchCallback_ { nullptr };

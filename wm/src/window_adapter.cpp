@@ -93,6 +93,12 @@ WMError WindowAdapter::UnregisterWindowManagerAgent(WindowManagerAgentType type,
     return windowManagerServiceProxy_->UnregisterWindowManagerAgent(type, windowManagerAgent);
 }
 
+WMError WindowAdapter::CheckWindowId(int32_t windowId, int32_t &pid)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    return windowManagerServiceProxy_->CheckWindowId(windowId, pid);
+}
+
 WMError WindowAdapter::GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
@@ -247,6 +253,7 @@ void WMSDeathRecipient::OnRemoteDied(const wptr<IRemoteObject>& wptrDeath)
     WLOGI("wms OnRemoteDied");
     SingletonContainer::Get<WindowAdapter>().ClearWindowAdapter();
     SingletonContainer::Get<WindowManager>().OnRemoteDied();
+    SingletonContainer::Get<SessionManager>().ClearSessionManagerProxy();
 }
 
 WMError WindowAdapter::GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId)
@@ -352,6 +359,18 @@ void WindowAdapter::NotifyDumpInfoResult(const std::vector<std::string>& info)
     windowManagerServiceProxy_->NotifyDumpInfoResult(info);
 }
 
+WMError WindowAdapter::DumpSessionAll(std::vector<std::string> &infos)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    return static_cast<WMError>(windowManagerServiceProxy_->DumpSessionAll(infos));
+}
+
+WMError WindowAdapter::DumpSessionWithId(int32_t persistentId, std::vector<std::string> &infos)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    return static_cast<WMError>(windowManagerServiceProxy_->DumpSessionWithId(persistentId, infos));
+}
+
 WMError WindowAdapter::GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
     std::vector<sptr<RSWindowAnimationTarget>>& targets)
 {
@@ -376,7 +395,7 @@ void WindowAdapter::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
     return windowManagerServiceProxy_->GetFocusWindowInfo(focusInfo);
 }
 
-WMError WindowAdapter::UpdateSessionAvoidAreaListener(uint64_t& persistentId, bool haveListener)
+WMError WindowAdapter::UpdateSessionAvoidAreaListener(int32_t& persistentId, bool haveListener)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
     return static_cast<WMError>(windowManagerServiceProxy_->UpdateSessionAvoidAreaListener(persistentId, haveListener));

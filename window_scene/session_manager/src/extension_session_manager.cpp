@@ -15,7 +15,10 @@
 
 #include "session_manager/include/extension_session_manager.h"
 
+#include <mutex>
+
 #include <ability_manager_client.h>
+#include <hitrace_meter.h>
 #include <session_info.h>
 #include <start_options.h>
 
@@ -26,22 +29,23 @@ namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "ExtensionSessionManager" };
 const std::string EXTENSION_SESSION_MANAGER_THREAD = "ExtensionSessionManager";
-}
+std::recursive_mutex g_instanceMutex;
+} // namespace
 
-WM_IMPLEMENT_SINGLE_INSTANCE(ExtensionSessionManager)
-
-ExtensionSessionManager::ExtensionSessionManager()
+ExtensionSessionManager& ExtensionSessionManager::GetInstance()
 {
-}
-
-WSError ExtensionSessionManager::Init()
-{
-    if (taskScheduler_) {
-        return WSError::WS_DO_NOTHING;
+    std::lock_guard<std::recursive_mutex> lock(g_instanceMutex);
+    static ExtensionSessionManager* instance = nullptr;
+    if (instance == nullptr) {
+        instance = new ExtensionSessionManager();
+        instance->Init();
     }
-    WLOGFI("Initialize extension session manager.");
+    return *instance;
+}
+
+void ExtensionSessionManager::Init()
+{
     taskScheduler_ = std::make_shared<TaskScheduler>(EXTENSION_SESSION_MANAGER_THREAD);
-    return WSError::WS_OK;
 }
 
 sptr<AAFwk::SessionInfo> ExtensionSessionManager::SetAbilitySessionInfo(const sptr<ExtensionSession>& extSession)
@@ -65,14 +69,12 @@ sptr<AAFwk::SessionInfo> ExtensionSessionManager::SetAbilitySessionInfo(const sp
 sptr<ExtensionSession> ExtensionSessionManager::RequestExtensionSession(const SessionInfo& sessionInfo)
 {
     auto task = [this, sessionInfo]() {
-        sptr<ExtensionSession> extensionSession = new (std::nothrow) ExtensionSession(sessionInfo);
-        if (extensionSession == nullptr) {
-            WLOGFE("extensionSession is nullptr!");
-            return extensionSession;
-        }
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "RequestExtensionSession");
+        sptr<ExtensionSession> extensionSession = new ExtensionSession(sessionInfo);
         auto persistentId = extensionSession->GetPersistentId();
-        WLOGFI("create session persistentId: %{public}" PRIu64 ", bundleName: %{public}s, abilityName: %{public}s",
-            persistentId, sessionInfo.bundleName_.c_str(), sessionInfo.abilityName_.c_str());
+        WLOGFI("persistentId: %{public}d, bundleName: %{public}s, moduleName: %{public}s, abilityName: %{public}s",
+            persistentId, sessionInfo.bundleName_.c_str(), sessionInfo.moduleName_.c_str(),
+            sessionInfo.abilityName_.c_str());
         extensionSessionMap_.insert({ persistentId, extensionSession });
         return extensionSession;
     };
@@ -80,51 +82,58 @@ sptr<ExtensionSession> ExtensionSessionManager::RequestExtensionSession(const Se
     return taskScheduler_->PostSyncTask(task);
 }
 
-WSError ExtensionSessionManager::RequestExtensionSessionActivation(const sptr<ExtensionSession>& extensionSession)
+WSError ExtensionSessionManager::RequestExtensionSessionActivation(const sptr<ExtensionSession>& extensionSession,
+    uint32_t hostWindowId, const std::function<void(WSError)>&& resultCallback)
 {
     wptr<ExtensionSession> weakExtSession(extensionSession);
-    WSError ret = WSError::WS_OK;
-    auto task = [this, weakExtSession, &ret]() {
+    auto task = [this, weakExtSession, hostWindowId, callback = std::move(resultCallback)]() {
         auto extSession = weakExtSession.promote();
         if (extSession == nullptr) {
             WLOGFE("session is nullptr");
             return WSError::WS_ERROR_NULLPTR;
         }
         auto persistentId = extSession->GetPersistentId();
-        WLOGFI("Activate session with persistentId: %{public}" PRIu64, persistentId);
+        WLOGFI("Activate session with persistentId: %{public}d", persistentId);
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "esm:RequestExtensionSessionActivation");
         if (extensionSessionMap_.count(persistentId) == 0) {
-            WLOGFE("Session is invalid!");
+            WLOGFE("RequestExtensionSessionActivation Session is invalid! persistentId:%{public}d", persistentId);
             return WSError::WS_ERROR_INVALID_SESSION;
         }
         auto extSessionInfo = SetAbilitySessionInfo(extSession);
         if (extSessionInfo == nullptr) {
             return WSError::WS_ERROR_NULLPTR;
         }
+        extSessionInfo->hostWindowId = hostWindowId;
         auto errorCode = AAFwk::AbilityManagerClient::GetInstance()->StartUIExtensionAbility(extSessionInfo,
             AAFwk::DEFAULT_INVAL_VALUE);
-        ret = (errorCode == ERR_OK) ? WSError::WS_OK : WSError::WS_ERROR_START_UI_EXTENSION_ABILITY_FAILED;
-        return ret;
+        if (callback) {
+            auto ret = errorCode == ERR_OK ? WSError::WS_OK : WSError::WS_ERROR_START_UI_EXTENSION_ABILITY_FAILED;
+            callback(ret);
+            return ret;
+        }
+        return WSError::WS_OK;
     };
-    taskScheduler_->PostSyncTask(task);
-    return ret;
+    taskScheduler_->PostAsyncTask(task);
+    return WSError::WS_OK;
 }
 
-WSError ExtensionSessionManager::RequestExtensionSessionBackground(const sptr<ExtensionSession>& extensionSession)
+WSError ExtensionSessionManager::RequestExtensionSessionBackground(const sptr<ExtensionSession>& extensionSession,
+    const std::function<void(WSError)>&& resultCallback)
 {
     wptr<ExtensionSession> weakExtSession(extensionSession);
-    WSError ret = WSError::WS_OK;
-    auto task = [this, weakExtSession, &ret]() {
+    auto task = [this, weakExtSession, callback = std::move(resultCallback)]() {
         auto extSession = weakExtSession.promote();
         if (extSession == nullptr) {
             WLOGFE("session is nullptr");
             return WSError::WS_ERROR_NULLPTR;
         }
         auto persistentId = extSession->GetPersistentId();
-        WLOGFI("Background session with persistentId: %{public}" PRIu64, persistentId);
+        WLOGFI("Background session with persistentId: %{public}d", persistentId);
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "esm:RequestExtensionSessionBackground");
         extSession->SetActive(false);
         extSession->Background();
         if (extensionSessionMap_.count(persistentId) == 0) {
-            WLOGFE("Session is invalid!");
+            WLOGFE("RequestExtensionSessionBackground Session is invalid! persistentId:%{public}d", persistentId);
             return WSError::WS_ERROR_INVALID_SESSION;
         }
         auto extSessionInfo = SetAbilitySessionInfo(extSession);
@@ -132,28 +141,33 @@ WSError ExtensionSessionManager::RequestExtensionSessionBackground(const sptr<Ex
             return WSError::WS_ERROR_NULLPTR;
         }
         auto errorCode = AAFwk::AbilityManagerClient::GetInstance()->MinimizeUIExtensionAbility(extSessionInfo);
-        ret = (errorCode == ERR_OK) ? WSError::WS_OK : WSError::WS_ERROR_MIN_UI_EXTENSION_ABILITY_FAILED;
-        return ret;
+        if (callback) {
+            auto ret = errorCode == ERR_OK ? WSError::WS_OK : WSError::WS_ERROR_MIN_UI_EXTENSION_ABILITY_FAILED;
+            callback(ret);
+            return ret;
+        }
+        return WSError::WS_OK;
     };
-    taskScheduler_->PostSyncTask(task);
-    return ret;
+    taskScheduler_->PostAsyncTask(task);
+    return WSError::WS_OK;
 }
 
-WSError ExtensionSessionManager::RequestExtensionSessionDestruction(const sptr<ExtensionSession>& extensionSession)
+WSError ExtensionSessionManager::RequestExtensionSessionDestruction(const sptr<ExtensionSession>& extensionSession,
+    const std::function<void(WSError)>&& resultCallback)
 {
     wptr<ExtensionSession> weakExtSession(extensionSession);
-    WSError ret = WSError::WS_OK;
-    auto task = [this, weakExtSession, &ret]() {
+    auto task = [this, weakExtSession, callback = std::move(resultCallback)]() {
         auto extSession = weakExtSession.promote();
         if (extSession == nullptr) {
             WLOGFE("session is nullptr");
             return WSError::WS_ERROR_NULLPTR;
         }
         auto persistentId = extSession->GetPersistentId();
-        WLOGFI("Destroy session with persistentId: %{public}" PRIu64, persistentId);
+        WLOGFI("Destroy session with persistentId: %{public}d", persistentId);
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "esm:RequestExtensionSessionDestruction");
         extSession->Disconnect();
         if (extensionSessionMap_.count(persistentId) == 0) {
-            WLOGFE("Session is invalid!");
+            WLOGFE("RequestExtensionSessionDestruction Session is invalid! persistentId:%{public}d", persistentId);
             return WSError::WS_ERROR_INVALID_SESSION;
         }
         auto extSessionInfo = SetAbilitySessionInfo(extSession);
@@ -162,10 +176,14 @@ WSError ExtensionSessionManager::RequestExtensionSessionDestruction(const sptr<E
         }
         auto errorCode = AAFwk::AbilityManagerClient::GetInstance()->TerminateUIExtensionAbility(extSessionInfo);
         extensionSessionMap_.erase(persistentId);
-        ret = (errorCode == ERR_OK) ? WSError::WS_OK : WSError::WS_ERROR_TERMINATE_UI_EXTENSION_ABILITY_FAILED;
-        return ret;
+        if (callback) {
+            auto ret = errorCode == ERR_OK ? WSError::WS_OK : WSError::WS_ERROR_TERMINATE_UI_EXTENSION_ABILITY_FAILED;
+            callback(ret);
+            return ret;
+        }
+        return WSError::WS_OK;
     };
-    taskScheduler_->PostSyncTask(task);
-    return ret;
+    taskScheduler_->PostAsyncTask(task);
+    return WSError::WS_OK;
 }
 } // namespace OHOS::Rosen

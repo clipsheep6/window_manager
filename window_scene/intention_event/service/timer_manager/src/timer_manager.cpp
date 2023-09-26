@@ -30,6 +30,7 @@ constexpr int32_t MAX_INTERVAL_MS = 10000;
 constexpr int32_t MAX_TIMER_COUNT = 64;
 constexpr int32_t NONEXISTENT_ID = -1;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "TimerManager" };
+const std::string TIMER_MANAGER_THREAD_NAME { "ANR_TIMER_MANAGER_THREAD" };
 } // namespace
 
 TimerManager::TimerManager() {}
@@ -38,9 +39,10 @@ TimerManager::~TimerManager() {}
 void TimerManager::Init()
 {
     CALL_DEBUG_ENTER;
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (state_ != TimerMgrState::STATE_RUNNING) {
+        timerWorker_ = std::thread(std::bind(&TimerManager::OnThread, this), TIMER_MANAGER_THREAD_NAME);
         state_ = TimerMgrState::STATE_RUNNING;
-        timerWorker_ = std::thread(std::bind(&TimerManager::OnThread, this));
     } else {
         WLOGFD("TimerManager init already");
     }
@@ -48,27 +50,31 @@ void TimerManager::Init()
 
 void TimerManager::Stop()
 {
-    CALL_DEBUG_ENTER;
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     OnStop();
 }
 
 int32_t TimerManager::AddTimer(int32_t intervalMs, std::function<void()> callback)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return AddTimerInternal(intervalMs, callback);
 }
 
 int32_t TimerManager::RemoveTimer(int32_t timerId)
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return RemoveTimerInternal(timerId);
 }
 
 int32_t TimerManager::CalcNextDelay()
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     return CalcNextDelayInternal();
 }
 
 void TimerManager::ProcessTimers()
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     ProcessTimersInternal();
 }
 
@@ -127,7 +133,9 @@ int32_t TimerManager::AddTimerInternal(int32_t intervalMs, std::function<void()>
     timer->intervalMs = intervalMs;
     auto nowTime = GetMillisTime();
     if (!AddInt64(nowTime, timer->intervalMs, timer->nextCallTime)) {
-        WLOGFE("The addition of nextCallTime in TimerItem overflows");
+        WLOGFE("The addition of nextCallTime in TimerItem overflows, nowTime:%{public}" PRId64
+                ", timerId:%{public}d, intervalMs:%{public}d, nextCallTime:%{public}" PRId64,
+                nowTime, timer->id, timer->intervalMs, timer->nextCallTime);
         return NONEXISTENT_ID;
     }
     timer->callback = callback;

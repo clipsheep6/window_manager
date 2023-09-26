@@ -46,9 +46,11 @@
           "display_manager",
           "config_policy",
           "ace_engine",
-          "multimedia_image_framework",
+          "image_framework",
           "preferences",
           "hiview",
+          "ffrt",
+          "dsoftbus",
           "hicollie",
           "eventhandler",
           "c_utils",
@@ -58,12 +60,13 @@
           "resource_management",
           "resource_schedule_service",
           "efficiency_manager",
-          "resourceschedule_frame_aware_sched_override",
+          "frame_aware_sched_override",
           "imf",
           "frame_aware_sched",
           "screenlock_mgr",
           "previewer",
-          "hilog"
+          "hilog",
+          "memmgr_plugin"
         ],
         "third_party": [
           "libjpeg-turbo",

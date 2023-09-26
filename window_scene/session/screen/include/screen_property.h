@@ -22,6 +22,15 @@
 #include "screen_info.h"
 
 namespace OHOS::Rosen {
+
+enum class ScreenPropertyChangeReason : uint32_t {
+    UNDEFINED = 0,
+    ROTATION,
+    CHANGE_MODE,
+    FOLD_SCREEN_EXPAND,
+    SCREEN_CONNECT,
+    SCREEN_DISCONNECT,
+};
 class ScreenProperty {
 public:
     ScreenProperty() = default;
@@ -50,12 +59,14 @@ public:
 
     void SetScreenRotation(Rotation rotation);
     Rotation GetScreenRotation() const;
+    void UpdateScreenRotation(Rotation rotation);
 
     void SetOrientation(Orientation orientation);
     Orientation GetOrientation() const;
 
     void SetDisplayOrientation(DisplayOrientation displayOrientation);
     DisplayOrientation GetDisplayOrientation() const;
+    void CalcDefaultDisplayOrientation();
 
     float GetXDpi();
     float GetYDpi();
@@ -103,7 +114,6 @@ private:
 
     void UpdateXDpi();
     void UpdateYDpi();
-    void UpdateDisplayOrientation();
     void CalculateXYDpi(uint32_t phyWidth, uint32_t phyHeight);
 };
 } // namespace OHOS::Rosen

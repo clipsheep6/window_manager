@@ -84,37 +84,7 @@ enum class PropertyChangeAction : uint32_t {
     ACTION_UPDATE_PRIVACY_MODE = 1 << 15,
     ACTION_UPDATE_ASPECT_RATIO = 1 << 16,
     ACTION_UPDATE_MAXIMIZE_STATE = 1 << 17,
-};
-
-class DumpParam : public Parcelable {
-public:
-    std::vector<std::string> params_;
-
-    virtual bool Marshalling(Parcel& parcel) const override
-    {
-        auto paramSize = params_.size();
-        if (!parcel.WriteUint32(static_cast<uint32_t>(paramSize))) {
-            return false;
-        }
-        for (auto& param : params_) {
-            if (!parcel.WriteString(param)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    static DumpParam* Unmarshalling(Parcel& parcel)
-    {
-        DumpParam* param = new DumpParam;
-        auto paramSize = parcel.ReadUint32();
-        if (paramSize == 4) { // 4: param size
-            for (uint32_t i = 0; i < paramSize; i++) {
-                param->params_.push_back(parcel.ReadString());
-            }
-        }
-        return param;
-    }
+    ACTION_UPDATE_SYSTEM_PRIVACY_MODE = 1 << 18,
 };
 
 struct ModeChangeHotZonesConfig {

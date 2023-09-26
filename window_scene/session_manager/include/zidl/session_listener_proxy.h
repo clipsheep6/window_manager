@@ -20,14 +20,14 @@
 #include "session_listener_interface.h"
 
 namespace OHOS::Rosen {
-class SessionListenerProxy : public IRemoteProxy<ISessionListener> {
+class SessionListenerProxy : public IRemoteProxy<ISessionChangeListener> {
 public:
     explicit SessionListenerProxy(const sptr<IRemoteObject>& impl)
-        : IRemoteProxy<ISessionListener>(impl) {};
+        : IRemoteProxy<ISessionChangeListener>(impl) {};
     ~SessionListenerProxy() {};
 
-    virtual void OnSessionLabelChange(int persistentId, const std::string &label) override;
-    virtual void OnSessionIconChange(int persistentId, const std::shared_ptr<Media::PixelMap> &icon) override;
+    virtual void OnSessionLabelChange(int32_t persistentId, const std::string &label) override;
+    virtual void OnSessionIconChange(int32_t persistentId, const std::shared_ptr<Media::PixelMap> &icon) override;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_LISTENER_PROXY_H

@@ -15,13 +15,16 @@
 
 #include "root_scene.h"
 
+#include <bundlemgr/launcher_service.h>
 #include <event_handler.h>
 #include <input_manager.h>
+#include <iremote_stub.h>
 #include <ui_content.h>
 #include <viewport_config.h>
 
 #include "app_mgr_client.h"
 #include "singleton.h"
+#include "singleton_container.h"
 
 #include "anr_manager.h"
 #include "intention_event_manager.h"
@@ -36,7 +39,7 @@ const std::string INPUT_AND_VSYNC_THREAD = "InputAndVsyncThread";
 
 class InputEventListener : public MMI::IInputEventConsumer {
 public:
-    explicit InputEventListener(RootScene* rootScene): rootScene_(rootScene) {}
+    explicit InputEventListener(RootScene* rootScene) : rootScene_(rootScene) {}
     virtual ~InputEventListener() = default;
 
     void OnInputEvent(std::shared_ptr<MMI::PointerEvent> pointerEvent) const override
@@ -56,12 +59,40 @@ public:
 private:
     RootScene* rootScene_;
 };
+
+class BundleStatusCallback : public IRemoteStub<AppExecFwk::IBundleStatusCallback> {
+public:
+    explicit BundleStatusCallback(RootScene* rootScene) : rootScene_(rootScene) {}
+    virtual ~BundleStatusCallback() = default;
+
+    void OnBundleStateChanged(const uint8_t installType,
+        const int32_t resultCode, const std::string& resultMsg, const std::string& bundleName) override {}
+
+    void OnBundleAdded(const std::string& bundleName, const int userId) override
+    {
+        rootScene_->OnBundleUpdated(bundleName);
+    }
+
+    void OnBundleUpdated(const std::string& bundleName, const int userId) override
+    {
+        rootScene_->OnBundleUpdated(bundleName);
+    }
+
+    void OnBundleRemoved(const std::string& bundleName, const int userId) override {}
+
+private:
+    RootScene* rootScene_;
+};
 } // namespace
 
 sptr<RootScene> RootScene::staticRootScene_;
 
 RootScene::RootScene()
 {
+    launcherService_ = new AppExecFwk::LauncherService();
+    if (!launcherService_->RegisterCallback(new BundleStatusCallback(this))) {
+        WLOGFE("Failed to register bundle status callback.");
+    }
 }
 
 RootScene::~RootScene()
@@ -91,8 +122,8 @@ void RootScene::LoadContent(const std::string& contentUrl, NativeEngine* engine,
         AppExecFwk::AppFaultDataBySA faultData;
         faultData.faultType = AppExecFwk::FaultDataType::APP_FREEZE;
         faultData.pid = pid;
-        faultData.errorObject.name = "APPLICATION_BLOCK_INPUT";
-        faultData.errorObject.message = "";
+        faultData.errorObject.name = AppExecFwk::AppFreezeType::APP_INPUT_BLOCK;
+        faultData.errorObject.message = "User input does not respond normally, report by sceneBoard.";
         faultData.errorObject.stack = "";
         if (int32_t ret = DelayedSingleton<AppExecFwk::AppMgrClient>::GetInstance()->NotifyAppFaultBySA(faultData);
             ret != 0) {
@@ -100,11 +131,19 @@ void RootScene::LoadContent(const std::string& contentUrl, NativeEngine* engine,
         }
         WLOGFD("Receive anr notice leave");
     }));
+    DelayedSingleton<ANRManager>::GetInstance()->SetAppInfoGetter(
+        [](int32_t pid, std::string& bundleName, int32_t uid) {
+            int32_t ret = DelayedSingleton<AppExecFwk::AppMgrClient>::GetInstance()->GetBundleNameByPid(
+                pid, bundleName, uid);
+            if (ret != 0) {
+                WLOGFE("GetBundleNameByPid failed, pid:%{public}d, errcode:%{public}d", pid, ret);
+            }
+        });
 }
 
 void RootScene::UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     if (uiContent_ == nullptr) {
         WLOGFE("uiContent_ is nullptr!");
         return;
@@ -123,6 +162,7 @@ void RootScene::UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configurat
         uiContent_->UpdateConfiguration(configuration);
     }
 }
+
 void RootScene::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
     WLOGD("notify root scene ace for all");
@@ -156,8 +196,22 @@ void RootScene::RegisterInputEventListener()
 
 void RootScene::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     VsyncStation::GetInstance().RequestVsync(vsyncCallback);
+}
+
+int64_t RootScene::GetVSyncPeriod()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return VsyncStation::GetInstance().GetVSyncPeriod();
+}
+
+void RootScene::OnBundleUpdated(const std::string& bundleName)
+{
+    WLOGFD("bundle %{public}s updated", bundleName.c_str());
+    if (uiContent_) {
+        uiContent_->UpdateResource();
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

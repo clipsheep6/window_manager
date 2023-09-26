@@ -23,6 +23,7 @@
 #include <native_engine/native_value.h>
 #include "root_scene.h"
 #include "session/host/include/scene_session.h"
+#include "ability_info.h"
 
 namespace OHOS::Rosen {
 class JsSceneSessionManager final {
@@ -35,6 +36,7 @@ public:
 
     static NativeValue* GetRootSceneSession(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RequestSceneSession(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* UpdateSceneSessionWant(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RequestSceneSessionActivation(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RequestSceneSessionBackground(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* RequestSceneSessionDestruction(NativeEngine* engine, NativeCallbackInfo* info);
@@ -45,13 +47,20 @@ public:
     static NativeValue* ProcessBackEvent(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* UpdateFocus(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SwitchUser(NativeEngine* engin, NativeCallbackInfo* info);
-    static NativeValue* GetSessionSnapshot(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* GetSessionSnapshotFilePath(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* InitWithRenderServiceAdded(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* GetAllAbilityInfos(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* PrepareTerminate(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* PerfRequestEx(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* UpdateWindowMode(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* GetRootSceneUIContext(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* SendTouchEvent(NativeEngine* engine, NativeCallbackInfo* info);
 
 private:
     NativeValue* OnRegisterCallback(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnGetRootSceneSession(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRequestSceneSession(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnUpdateSceneSessionWant(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRequestSceneSessionActivation(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRequestSceneSessionBackground(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnRequestSceneSessionDestruction(NativeEngine& engine, NativeCallbackInfo& info);
@@ -61,16 +70,31 @@ private:
     NativeValue* OnProcessBackEvent(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnUpdateFocus(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnSwitchUser(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnGetSessionSnapshot(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnGetSessionSnapshotFilePath(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnInitWithRenderServiceAdded(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnGetAllAbilityInfos(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* CreateAbilityInfos(NativeEngine& engine, const std::vector<AppExecFwk::AbilityInfo>& abilityInfos);
+    NativeValue* CreateAbilityItemInfo(NativeEngine &engine, const AppExecFwk::AbilityInfo& abilityInfo);
+    NativeValue* CreateWindowModes(NativeEngine& engine, const std::vector<AppExecFwk::SupportWindowMode>& windowModes);
+    NativeValue* CreateWindowSize(NativeEngine& engine, const AppExecFwk::AbilityInfo& abilityInfo);
+    NativeValue* OnPrepareTerminate(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnPerfRequestEx(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnUpdateWindowMode(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnGetRootSceneUIContext(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnSendTouchEvent(NativeEngine& engine, NativeCallbackInfo& info);
 
+    void OnStatusBarEnabledUpdate(bool enable);
     void OnGestureNavigationEnabledUpdate(bool enable);
     void OnCreateSpecificSession(const sptr<SceneSession>& sceneSession);
     void OnOutsideDownEvent(int32_t x, int32_t y);
     void ProcessCreateSpecificSessionRegister();
+    void ProcessStatusBarEnabledChangeListener();
     void ProcessGestureNavigationEnabledChangeListener();
     void ProcessOutsideDownEvent();
     bool IsCallbackRegistered(const std::string& type, NativeValue* jsListenerObject);
+    void RegisterDumpRootSceneElementInfoListener();
+    void RegisterVirtualPixelRatioChangeListener();
+    void SetIsClearSession(NativeEngine& engine, NativeObject* jsSceneSessionObj, sptr<SceneSession>& sceneSession);
 
     NativeEngine& engine_;
     std::map<std::string, std::shared_ptr<NativeReference>> jsCbMap_;

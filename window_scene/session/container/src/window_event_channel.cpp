@@ -46,13 +46,35 @@ WSError WindowEventChannel::TransferPointerEvent(const std::shared_ptr<MMI::Poin
         WLOGFE("session stage is null!");
         return WSError::WS_ERROR_NULLPTR;
     }
-    DelayedSingleton<ANRHandler>::GetInstance()->SetSessionStage(pointerEvent->GetId(), sessionStage_);
-    if (pointerEvent != nullptr) {
-        WLOGFD("SetProcessedCallback enter");
+    if (pointerEvent == nullptr) {
+        WLOGFE("PointerEvent is null!");
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    auto pointerAction = pointerEvent->GetPointerAction();
+    if (pointerAction == MMI::PointerEvent::POINTER_ACTION_ENTER_WINDOW ||
+        pointerAction == MMI::PointerEvent::POINTER_ACTION_LEAVE_WINDOW ||
+        pointerAction == MMI::PointerEvent::POINTER_ACTION_PULL_IN_WINDOW ||
+        pointerAction == MMI::PointerEvent::POINTER_ACTION_PULL_OUT_WINDOW) {
+        WLOGFD("Dispatch by skipping receipt, action:%{public}s, eventId:%{public}d, persistentId:%{public}d",
+            pointerEvent->DumpPointerAction(), pointerEvent->GetId(), sessionStage_->GetPersistentId());
+    } else {
+        DelayedSingleton<ANRHandler>::GetInstance()->SetSessionStage(pointerEvent->GetId(), sessionStage_);
         pointerEvent->SetProcessedCallback(dispatchCallback_);
-        WLOGFD("SetProcessedCallback leave");
+        WLOGFD("Dispatch normally, action:%{public}s, eventId:%{public}d, persistentId:%{public}d",
+            pointerEvent->DumpPointerAction(), pointerEvent->GetId(), sessionStage_->GetPersistentId());
     }
     sessionStage_->NotifyPointerEvent(pointerEvent);
+    return WSError::WS_OK;
+}
+
+WSError WindowEventChannel::TransferBackpressedEventForConsumed(bool& isConsumed)
+{
+    WLOGFD("WindowEventChannel receive backpressed event");
+    if (!sessionStage_) {
+        WLOGFE("session stage is null!");
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    sessionStage_->NotifyBackpressedEvent(isConsumed);
     return WSError::WS_OK;
 }
 
@@ -64,8 +86,8 @@ WSError WindowEventChannel::TransferKeyEventForConsumed(
         WLOGFE("session stage is null!");
         return WSError::WS_ERROR_NULLPTR;
     }
-    DelayedSingleton<ANRHandler>::GetInstance()->SetSessionStage(keyEvent->GetId(), sessionStage_);
     if (keyEvent != nullptr) {
+        DelayedSingleton<ANRHandler>::GetInstance()->SetSessionStage(keyEvent->GetId(), sessionStage_);
         WLOGFD("SetProcessedCallback enter");
         keyEvent->SetProcessedCallback(dispatchCallback_);
         WLOGFD("SetProcessedCallback leave");
@@ -88,7 +110,7 @@ WSError WindowEventChannel::TransferFocusActiveEvent(bool isFocusActive)
 
 void WindowEventChannel::OnDispatchEventProcessed(int32_t eventId, int64_t actionTime)
 {
-    DelayedSingleton<ANRHandler>::GetInstance()->SetLastProcessedEventId(eventId, actionTime);
+    DelayedSingleton<ANRHandler>::GetInstance()->HandleEventConsumed(eventId, actionTime);
 }
 
 void WindowEventChannel::PrintKeyEvent(const std::shared_ptr<MMI::KeyEvent>& event)
@@ -118,7 +140,47 @@ void WindowEventChannel::PrintPointerEvent(const std::shared_ptr<MMI::PointerEve
     for (const auto &buff : buffer) {
         str += std::to_string(buff);
     }
-    WLOGFD("PointerAction:%{public}s,SourceType:%{public}s,ButtonId:%{public}d,"
+    auto pointerAction = event->GetPointerAction();
+    if (pointerAction == MMI::PointerEvent::POINTER_ACTION_MOVE ||
+        pointerAction == MMI::PointerEvent::POINTER_ACTION_PULL_MOVE) {
+        WLOGFD("PointerAction:%{public}s,SourceType:%{public}s,ButtonId:%{public}d,"
+            "VerticalAxisValue:%{public}.2f,HorizontalAxisValue:%{public}.2f,"
+            "PointerId:%{public}d,PointerCount:%{public}zu,EventNumber:%{public}d,"
+            "BufferCount:%{public}zu,Buffer:%{public}s",
+            event->DumpPointerAction(), event->DumpSourceType(), event->GetButtonId(),
+            event->GetAxisValue(MMI::PointerEvent::AXIS_TYPE_SCROLL_VERTICAL),
+            event->GetAxisValue(MMI::PointerEvent::AXIS_TYPE_SCROLL_HORIZONTAL),
+            event->GetPointerId(), pointerIds.size(), event->GetId(), buffer.size(), str.c_str());
+
+        for (const auto &pointerId : pointerIds) {
+            MMI::PointerEvent::PointerItem item;
+            if (!event->GetPointerItem(pointerId, item)) {
+                WLOGFE("Invalid pointer: %{public}d.", pointerId);
+                return;
+            }
+            WLOGFD("pointerId:%{public}d,DownTime:%{public}" PRId64 ",IsPressed:%{public}d,"
+                "DisplayX:%{public}d,DisplayY:%{public}d,WindowX:%{public}d,WindowY:%{public}d,",
+                pointerId, item.GetDownTime(), item.IsPressed(), item.GetDisplayX(), item.GetDisplayY(),
+                item.GetWindowX(), item.GetWindowY());
+        }
+    } else {
+        PrintInfoPointerEvent(event);
+    }
+}
+
+void WindowEventChannel::PrintInfoPointerEvent(const std::shared_ptr<MMI::PointerEvent>& event)
+{
+    if (event == nullptr) {
+        WLOGFE("event is nullptr");
+        return;
+    }
+    std::vector<int32_t> pointerIds = event->GetPointerIds();
+    std::string str;
+    std::vector<uint8_t> buffer = event->GetBuffer();
+    for (const auto &buff : buffer) {
+        str += std::to_string(buff);
+    }
+    WLOGFI("PointerAction:%{public}s,SourceType:%{public}s,ButtonId:%{public}d,"
         "VerticalAxisValue:%{public}.2f,HorizontalAxisValue:%{public}.2f,"
         "PointerId:%{public}d,PointerCount:%{public}zu,EventNumber:%{public}d,"
         "BufferCount:%{public}zu,Buffer:%{public}s",
@@ -133,22 +195,11 @@ void WindowEventChannel::PrintPointerEvent(const std::shared_ptr<MMI::PointerEve
             WLOGFE("Invalid pointer: %{public}d.", pointerId);
             return;
         }
-        WLOGFD("pointerId:%{public}d,DownTime:%{public}" PRId64 ",IsPressed:%{public}d,"
+        WLOGFI("pointerId:%{public}d,DownTime:%{public}" PRId64 ",IsPressed:%{public}d,"
             "DisplayX:%{public}d,DisplayY:%{public}d,WindowX:%{public}d,WindowY:%{public}d,",
             pointerId, item.GetDownTime(), item.IsPressed(), item.GetDisplayX(), item.GetDisplayY(),
             item.GetWindowX(), item.GetWindowY());
     }
-}
-
-WSError WindowEventChannel::TransferFocusWindowId(uint32_t windowId)
-{
-    WLOGFD("WindowEventChannel receive focus window Id event: %{public}u", windowId);
-    if (!sessionStage_) {
-        WLOGFE("session stage is null!");
-        return WSError::WS_ERROR_NULLPTR;
-    }
-    sessionStage_->NotifyFocusWindowIdEvent(windowId);
-    return WSError::WS_OK;
 }
 
 WSError WindowEventChannel::TransferFocusState(bool focusState)

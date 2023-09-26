@@ -331,15 +331,25 @@ void DMSDeathRecipient::OnRemoteDied(const wptr<IRemoteObject>& wptrDeath)
     adapter_.Clear();
     SingletonContainer::Get<DisplayManager>().OnRemoteDied();
     SingletonContainer::Get<ScreenManager>().OnRemoteDied();
+    SingletonContainer::Get<SessionManager>().ClearSessionManagerProxy();
     return;
+}
+
+
+BaseAdapter::~BaseAdapter()
+{
+    WLOGFI("BaseAdapter destory!");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    displayManagerServiceProxy_ = nullptr;
 }
 
 void BaseAdapter::Clear()
 {
+    WLOGFI("BaseAdapter Clear!");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     if ((displayManagerServiceProxy_ != nullptr) && (displayManagerServiceProxy_->AsObject() != nullptr)) {
         displayManagerServiceProxy_->AsObject()->RemoveDeathRecipient(dmsDeath_);
     }
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     isProxyValid_ = false;
 }
 
@@ -426,6 +436,41 @@ DMError DisplayManagerAdapter::RemoveSurfaceNodeFromDisplay(DisplayId displayId,
     }
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
     return displayManagerServiceProxy_->RemoveSurfaceNodeFromDisplay(displayId, surfaceNode);
+}
+
+bool DisplayManagerAdapter::IsFoldable()
+{
+    INIT_PROXY_CHECK_RETURN(false);
+
+    return displayManagerServiceProxy_->IsFoldable();
+}
+
+FoldStatus DisplayManagerAdapter::GetFoldStatus()
+{
+    INIT_PROXY_CHECK_RETURN(FoldStatus::UNKNOWN);
+
+    return displayManagerServiceProxy_->GetFoldStatus();
+}
+
+FoldDisplayMode DisplayManagerAdapter::GetFoldDisplayMode()
+{
+    INIT_PROXY_CHECK_RETURN(FoldDisplayMode::UNKNOWN);
+
+    return displayManagerServiceProxy_->GetFoldDisplayMode();
+}
+
+void DisplayManagerAdapter::SetFoldDisplayMode(const FoldDisplayMode mode)
+{
+    INIT_PROXY_CHECK_RETURN();
+
+    return displayManagerServiceProxy_->SetFoldDisplayMode(mode);
+}
+
+sptr<FoldCreaseRegion> DisplayManagerAdapter::GetCurrentFoldCreaseRegion()
+{
+    INIT_PROXY_CHECK_RETURN(nullptr);
+
+    return displayManagerServiceProxy_->GetCurrentFoldCreaseRegion();
 }
 
 sptr<ScreenGroupInfo> ScreenManagerAdapter::GetScreenGroupInfoById(ScreenId screenId)

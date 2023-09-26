@@ -105,16 +105,6 @@ bool DoSomethingForWindowManagerImpl(WindowManager& windowManager, const uint8_t
     startPos += GetObject<bool>(enable, data + startPos, size - startPos);
     windowManager.SetGestureNavigaionEnabled(enable);
 
-    Parcel windowVisibilityInfosParcel;
-    if (windowVisibilityInfosParcel.WriteBuffer(data, size)) {
-        std::vector<sptr<WindowVisibilityInfo>> infos;
-        if (MarshallingHelper::UnmarshallingVectorParcelableObj<WindowVisibilityInfo>(windowVisibilityInfosParcel,
-            infos)) {
-            windowManager.GetVisibilityWindowInfo(infos);
-            windowManager.UpdateWindowVisibilityInfo(infos);
-        }
-    }
-
     DisplayId displayId;
     SystemBarRegionTints tints;
     startPos += GetObject<DisplayId>(displayId, data + startPos, size - startPos);
@@ -128,15 +118,24 @@ void CheckAccessibilityWindowInfo(WindowManager& windowManager, const uint8_t* d
 {
     Parcel accessibilityWindowInfosParcel;
     if (accessibilityWindowInfosParcel.WriteBuffer(data, size)) {
-        std::vector<sptr<AccessibilityWindowInfo>> infos;
-        if (MarshallingHelper::UnmarshallingVectorParcelableObj<AccessibilityWindowInfo>(accessibilityWindowInfosParcel,
-            infos)) {
-            windowManager.GetAccessibilityWindowInfo(infos);
-            WindowUpdateType type;
-            GetObject<WindowUpdateType>(type, data, size);
-            windowManager.NotifyAccessibilityWindowInfo(infos, type);
-        }
+        std::vector<sptr<AccessibilityWindowInfo>> windowInfos;
+        MarshallingHelper::UnmarshallingVectorParcelableObj<AccessibilityWindowInfo>(accessibilityWindowInfosParcel,
+            windowInfos);
+        windowManager.GetAccessibilityWindowInfo(windowInfos);
+        WindowUpdateType type;
+        GetObject<WindowUpdateType>(type, data, size);
+        windowManager.NotifyAccessibilityWindowInfo(windowInfos, type);
     }
+    
+    Parcel windowVisibilityInfosParcel;
+    windowVisibilityInfosParcel.WriteBuffer(data, size);
+    std::vector<sptr<WindowVisibilityInfo>> visibilitynfos;
+    MarshallingHelper::UnmarshallingVectorParcelableObj<WindowVisibilityInfo>(windowVisibilityInfosParcel,
+            visibilitynfos);
+    windowManager.GetVisibilityWindowInfo(visibilitynfos);
+    windowManager.UpdateWindowVisibilityInfo(visibilitynfos);
+    bool enable = false;
+    windowManager.SetGestureNavigaionEnabled(enable);
 }
 
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
@@ -146,7 +145,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     }
     WindowManager& windowManager = WindowManager::GetInstance();
     CheckAccessibilityWindowInfo(windowManager, data, size);
-    
     Parcel focusChangeInfoParcel;
     if (focusChangeInfoParcel.WriteBuffer(data, size)) {
         FocusChangeInfo::Unmarshalling(focusChangeInfoParcel);
@@ -154,21 +152,18 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     Parcel parcel;
     sptr<FocusChangeInfo> focusChangeInfo = new FocusChangeInfo();
     focusChangeInfo->Marshalling(parcel);
-
     Parcel windowVisibilityInfoParcel;
     if (windowVisibilityInfoParcel.WriteBuffer(data, size)) {
         WindowVisibilityInfo::Unmarshalling(windowVisibilityInfoParcel);
     }
     sptr<WindowVisibilityInfo> windowVisibilityInfo = new WindowVisibilityInfo();
     windowVisibilityInfo->Marshalling(parcel);
-
     Parcel accessibilityWindowInfoParcel;
     if (accessibilityWindowInfoParcel.WriteBuffer(data, size)) {
         AccessibilityWindowInfo::Unmarshalling(accessibilityWindowInfoParcel);
     }
     sptr<AccessibilityWindowInfo> accessibilityWindowInfo = new AccessibilityWindowInfo();
     accessibilityWindowInfo->Marshalling(parcel);
-
     windowManager.MinimizeAllAppWindows(static_cast<DisplayId>(data[0]));
     sptr<IFocusChangedListener> focusChangedListener = new FocusChangedListener();
     windowManager.RegisterFocusChangedListener(focusChangedListener);

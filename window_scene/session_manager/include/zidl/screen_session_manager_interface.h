@@ -91,6 +91,18 @@ public:
         std::shared_ptr<class RSSurfaceNode>& surfaceNode, bool onTop = true) override { return DMError::DM_OK; }
     virtual DMError RemoveSurfaceNodeFromDisplay(DisplayId displayId,
         std::shared_ptr<class RSSurfaceNode>& surfaceNode) override { return DMError::DM_OK; }
+    virtual void DumpAllScreensInfo(std::string& dumpInfo) {}
+    virtual void DumpSpecialScreenInfo(ScreenId id, std::string& dumpInfo) {}
+    // Fold Screen
+    void SetFoldDisplayMode(const FoldDisplayMode displayMode) override {}
+
+    FoldDisplayMode GetFoldDisplayMode() override { return FoldDisplayMode::UNKNOWN; }
+
+    bool IsFoldable() override { return false; };
+
+    FoldStatus GetFoldStatus() override { return FoldStatus::UNKNOWN; };
+
+    sptr<FoldCreaseRegion> GetCurrentFoldCreaseRegion() override { return nullptr; };
 };
 
 } // namespace Rosen

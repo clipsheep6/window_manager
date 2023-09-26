@@ -38,25 +38,42 @@ public:
     static void Finalizer(NativeEngine* engine, void* data, void* hint);
 
     sptr<SceneSession> GetNativeSession() const;
+    void ClearCbMap(bool needRemove);
 
 private:
     static NativeValue* RegisterCallback(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* UpdateNativeVisibility(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* SetShowRecent(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* SetZOrder(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* SetPrivacyMode(NativeEngine* engine, NativeCallbackInfo* info);
+
     NativeValue* OnRegisterCallback(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnUpdateNativeVisibility(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnSetShowRecent(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnSetZOrder(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnSetPrivacyMode(NativeEngine& engine, NativeCallbackInfo& info);
+
     bool IsCallbackRegistered(const std::string& type, NativeValue* jsListenerObject);
+    bool IsCallbackTypeSupported(const std::string& type);
 
     void ProcessPendingSceneSessionActivationRegister();
     void ProcessSessionStateChangeRegister();
     void ProcessSessionEventRegister();
     void ProcessCreateSpecificSessionRegister();
+    void ProcessBindDialogTargetRegister();
     void ProcessSessionRectChangeRegister();
     void ProcessRaiseToTopRegister();
+    void ProcessRaiseToTopForPointDownRegister();
     void ProcessBackPressedRegister();
     void ProcessSessionFocusableChangeRegister();
     void ProcessSessionTouchableChangeRegister();
     void ProcessClickRegister();
     void ProcessTerminateSessionRegister();
     void ProcessTerminateSessionRegisterNew();
+    void ProcessTerminateSessionRegisterTotal();
     void ProcessSessionExceptionRegister();
+    void ProcessUpdateSessionLabelRegister();
+    void ProcessUpdateSessionIconRegister();
     void ProcessSystemBarPropertyChangeRegister();
     void ProcessNeedAvoidRegister();
     void ProcessPendingSessionToForegroundRegister();
@@ -64,19 +81,29 @@ private:
     void ProcessSessionDefaultAnimationFlagChangeRegister();
     void ProcessIsCustomAnimationPlaying();
     void ProcessShowWhenLockedRegister();
+    void ProcessRequestedOrientationChange();
+    void ProcessRaiseAboveTargetRegister();
+    void ProcessForceHideChangeRegister();
 
     void PendingSessionActivation(SessionInfo& info);
+    void PendingSessionActivationInner(SessionInfo& info);
     void OnSessionStateChange(const SessionState& state);
     void OnSessionEvent(uint32_t eventId);
     void OnCreateSpecificSession(const sptr<SceneSession>& sceneSession);
-    void OnSessionRectChange(const WSRect& rect);
+    void OnBindDialogTarget(const sptr<SceneSession>& sceneSession);
+    void OnSessionRectChange(const WSRect& rect, const SizeChangeReason& reason = SizeChangeReason::UNDEFINED);
     void OnRaiseToTop();
-    void OnBackPressed();
+    void OnRaiseToTopForPointDown();
+    void OnRaiseAboveTarget(int32_t subWindowId);
+    void OnBackPressed(bool needMoveToBackground);
     void OnSessionFocusableChange(bool isFocusable);
     void OnSessionTouchableChange(bool touchable);
     void OnClick();
     void TerminateSession(const SessionInfo& info);
     void TerminateSessionNew(const SessionInfo& info, bool needStartCaller);
+    void TerminateSessionTotal(const SessionInfo& info, TerminateType terminateType);
+    void UpdateSessionLabel(const std::string &label);
+    void UpdateSessionIcon(const std::string &iconPath);
     void OnSessionException(const SessionInfo& info);
     static JsSessionType GetApiType(WindowType type);
     void OnSystemBarPropertyChange(const std::unordered_map<WindowType, SystemBarProperty>& propertyMap);
@@ -86,6 +113,8 @@ private:
     void OnDefaultAnimationFlagChange(bool isNeedDefaultAnimationFlag);
     void OnIsCustomAnimationPlaying(bool status);
     void OnShowWhenLocked(bool showWhenLocked);
+    void OnReuqestedOrientationChange(uint32_t orientation);
+    void OnForceHideChange(bool hide);
 
     NativeEngine& engine_;
     wptr<SceneSession> weakSession_ = nullptr;

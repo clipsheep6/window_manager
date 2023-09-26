@@ -60,6 +60,11 @@ public:
     void SetWindowRect(const struct Rect& rect);
     void SetFocusable(bool isFocusable);
     void SetTouchable(bool isTouchable);
+    void SetDragEnabled(bool dragEnabled);
+    void SetHideNonSystemFloatingWindows(bool hide);
+    void SetForceHide(bool hide);
+    void SetRaiseEnabled(bool raiseEnabled);
+    void SetSystemCalling(bool isSystemCalling);
     void SetTurnScreenOn(bool turnScreenOn);
     void SetKeepScreenOn(bool keepScreenOn);
     void SetBrightness(float brightness);
@@ -68,9 +73,9 @@ public:
     void SetSystemPrivacyMode(bool isSystemPrivate);
     void SetDisplayId(uint64_t displayId);
     void SetWindowType(WindowType type);
-    void SetParentId(uint32_t parentId);
-    void SetPersistentId(uint64_t persistentId);
-    void SetParentPersistentId(uint64_t persistentId);
+    void SetParentId(int32_t parentId);
+    void SetPersistentId(int32_t persistentId);
+    void SetParentPersistentId(int32_t persistentId);
     void SetAccessTokenId(uint32_t accessTokenId);
     void SetTokenState(bool hasToken);
     void SetMaximizeMode(MaximizeMode mode);
@@ -84,6 +89,8 @@ public:
     void SetWindowFlags(uint32_t flags);
     void AddWindowFlag(WindowFlag flag);
     void SetModeSupportInfo(uint32_t modeSupportInfo);
+    void SetFloatingWindowAppType(bool isAppType);
+    void SetTouchHotAreas(const std::vector<Rect>& rects);
 
     const std::string& GetWindowName() const;
     const SessionInfo& GetSessionInfo() const;
@@ -92,28 +99,35 @@ public:
     WindowType GetWindowType() const;
     bool GetFocusable() const;
     bool GetTouchable() const;
+    bool GetDragEnabled() const;
+    bool GetHideNonSystemFloatingWindows() const;
+    bool GetForceHide() const;
+    bool GetRaiseEnabled() const;
+    bool GetSystemCalling() const;
     bool IsTurnScreenOn() const;
     bool IsKeepScreenOn() const;
     float GetBrightness() const;
     Orientation GetRequestedOrientation() const;
     bool GetPrivacyMode() const;
     bool GetSystemPrivacyMode() const;
-    uint32_t GetParentId() const;
+    int32_t GetParentId() const;
     uint32_t GetWindowFlags() const;
     uint64_t GetDisplayId() const;
-    uint64_t GetPersistentId() const;
-    uint64_t GetParentPersistentId() const;
+    int32_t GetPersistentId() const;
+    int32_t GetParentPersistentId() const;
     uint32_t GetAccessTokenId() const;
     bool GetTokenState() const;
     MaximizeMode GetMaximizeMode() const;
     WindowMode GetWindowMode() const;
     WindowLimits GetWindowLimits() const;
     uint32_t GetModeSupportInfo() const;
-    const std::unordered_map<WindowType, SystemBarProperty>& GetSystemBarProperty() const;
+    std::unordered_map<WindowType, SystemBarProperty> GetSystemBarProperty() const;
     void GetSessionGravity(SessionGravity& gravity, uint32_t& percent);
     bool IsDecorEnable();
     uint32_t GetAnimationFlag() const;
     const Transform& GetTransform() const;
+    bool IsFloatingWindowAppType() const;
+    void GetTouchHotAreas(std::vector<Rect>& rects) const;
 
     bool MarshallingWindowLimits(Parcel& parcel) const;
     static void UnmarshallingWindowLimits(Parcel& parcel, WindowSessionProperty* property);
@@ -123,6 +137,8 @@ public:
     static WindowSessionProperty* Unmarshalling(Parcel& parcel);
 
 private:
+    bool MarshallingTouchHotAreas(Parcel& parcel) const;
+    static void UnmarshallingTouchHotAreas(Parcel& parcel, WindowSessionProperty* property);
     std::string windowName_;
     SessionInfo sessionInfo_;
     Rect requestRect_ { 0, 0, 0, 0 }; // window rect requested by the client (without decoration size)
@@ -130,6 +146,9 @@ private:
     WindowType type_ { WindowType::WINDOW_TYPE_APP_MAIN_WINDOW }; // type main window
     bool focusable_ { true };
     bool touchable_ { true };
+    bool dragEnabled_ = { true };
+    bool raiseEnabled_ = { true };
+    bool isSystemCalling_ = { false };
     bool tokenState_ { false };
     bool turnScreenOn_ = false;
     bool keepScreenOn_ = false;
@@ -138,15 +157,15 @@ private:
     bool isPrivacyMode_ { false };
     bool isSystemPrivacyMode_ { false };
     uint64_t displayId_ = 0;
-    uint32_t parentId_ = INVALID_SESSION_ID; // parentId of sceneSession, which is low 32 bite of parentPersistentId_
+    int32_t parentId_ = INVALID_SESSION_ID; // parentId of sceneSession, which is low 32 bite of parentPersistentId_
     uint32_t flags_ = 0;
-    uint64_t persistentId_ = INVALID_SESSION_ID;
-    uint64_t parentPersistentId_ = INVALID_SESSION_ID;
+    int32_t persistentId_ = INVALID_SESSION_ID;
+    int32_t parentPersistentId_ = INVALID_SESSION_ID;
     uint32_t accessTokenId_ = INVALID_SESSION_ID;
     MaximizeMode maximizeMode_ = MaximizeMode::MODE_RECOVER;
     WindowMode windowMode_ = WindowMode::WINDOW_MODE_FULLSCREEN;
     WindowLimits limits_;
-    SessionGravity sessionGravity_ = SessionGravity::SESSION_GRAVITY_BOTTOM;
+    SessionGravity sessionGravity_ = SessionGravity::SESSION_GRAVITY_DEFAULT;
     uint32_t sessionGravitySizePercent_ = 0;
     uint32_t modeSupportInfo_ {WindowModeSupport::WINDOW_MODE_SUPPORT_ALL};
     std::unordered_map<WindowType, SystemBarProperty> sysBarPropMap_ {
@@ -156,6 +175,10 @@ private:
     uint32_t animationFlag_ { static_cast<uint32_t>(WindowAnimation::DEFAULT) };
     // Transform info
     Transform trans_;
+    bool isFloatingWindowAppType_ = false;
+    std::vector<Rect> touchHotAreas_;  // coordinates relative to window.
+    bool hideNonSystemFloatingWindows_ = false;
+    bool forceHide_ = false;
 };
 
 struct SystemSessionConfig : public Parcelable {
@@ -164,7 +187,11 @@ struct SystemSessionConfig : public Parcelable {
     bool isStretchable_ = false;
     WindowMode defaultWindowMode_ = WindowMode::WINDOW_MODE_FULLSCREEN;
     KeyboardAnimationConfig keyboardAnimationConfig_;
-    int32_t maxFloatingWindowSize_ = INT32_MAX;
+    uint32_t maxFloatingWindowSize_ = UINT32_MAX;
+    uint32_t miniWidthOfMainWindow_ = 0;
+    uint32_t miniHeightOfMainWindow_ = 0;
+    uint32_t miniWidthOfSubWindow_ = 0;
+    uint32_t miniHeightOfSubWindow_ = 0;
 
     virtual bool Marshalling(Parcel& parcel) const override
     {
@@ -175,7 +202,12 @@ struct SystemSessionConfig : public Parcelable {
 
         if (!parcel.WriteUint32(static_cast<uint32_t>(defaultWindowMode_)) ||
             !parcel.WriteParcelable(&keyboardAnimationConfig_) ||
-            !parcel.WriteInt32(maxFloatingWindowSize_)) {
+            !parcel.WriteUint32(maxFloatingWindowSize_)) {
+            return false;
+        }
+
+        if (!parcel.WriteUint32(miniWidthOfMainWindow_) || !parcel.WriteUint32(miniHeightOfMainWindow_) ||
+            !parcel.WriteUint32(miniWidthOfSubWindow_) || !parcel.WriteUint32(miniHeightOfSubWindow_)) {
             return false;
         }
 
@@ -194,7 +226,11 @@ struct SystemSessionConfig : public Parcelable {
         config->defaultWindowMode_ = static_cast<WindowMode>(parcel.ReadUint32());
         sptr<KeyboardAnimationConfig> keyboardConfig = parcel.ReadParcelable<KeyboardAnimationConfig>();
         config->keyboardAnimationConfig_ = *keyboardConfig;
-        config->maxFloatingWindowSize_ = parcel.ReadInt32();
+        config->maxFloatingWindowSize_ = parcel.ReadUint32();
+        config->miniWidthOfMainWindow_ = parcel.ReadUint32();
+        config->miniHeightOfMainWindow_ = parcel.ReadUint32();
+        config->miniWidthOfSubWindow_ = parcel.ReadUint32();
+        config->miniHeightOfSubWindow_ = parcel.ReadUint32();
         return config;
     }
 };

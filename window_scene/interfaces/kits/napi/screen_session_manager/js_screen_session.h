@@ -34,14 +34,17 @@ public:
 private:
     static NativeValue* RegisterCallback(NativeEngine* engine, NativeCallbackInfo* info);
     NativeValue* OnRegisterCallback(NativeEngine& engine, NativeCallbackInfo& info);
-
+    static NativeValue* SetScreenRotationLocked(NativeEngine* engine, NativeCallbackInfo* info);
+    NativeValue* OnSetScreenRotationLocked(NativeEngine& engine, NativeCallbackInfo& info);
     void CallJsCallback(const std::string& callbackType);
-
     void RegisterScreenChangeListener();
 
     void OnConnect() override;
     void OnDisconnect() override;
-    void OnPropertyChange(const ScreenProperty& newProperty) override;
+    void OnPropertyChange(const ScreenProperty& newProperty, ScreenPropertyChangeReason reason) override;
+    void OnSensorRotationChange(float sensorRotation) override;
+    void OnScreenOrientationChange(float screenOrientation) override;
+    void OnScreenRotationLockedChange(bool isLocked) override;
 
     NativeEngine& engine_;
     sptr<ScreenSession> screenSession_;

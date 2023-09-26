@@ -30,6 +30,7 @@ public:
 
     WSError SetActive(bool active) override;
     WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) override;
+    void UpdateDensity() override;
     WSError HandleBackEvent() override;
     WSError MarkProcessed(int32_t eventId) override;
     WSError UpdateFocus(bool isFocused) override;
@@ -38,6 +39,11 @@ public:
     WSError NotifyTransferComponentData(const AAFwk::WantParams& wantParams) override;
     void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info) override;
     WSError UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type) override;
+    void NotifyScreenshot() override;
+    void DumpSessionElementInfo(const std::vector<std::string>& params)  override;
+    WSError NotifyTouchOutside() override;
+    WSError UpdateWindowMode(WindowMode mode) override;
+
 private:
     static inline BrokerDelegator<SessionStageProxy> delegator_;
 };

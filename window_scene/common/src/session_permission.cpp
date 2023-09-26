@@ -22,16 +22,16 @@
 #include <system_ability_definition.h>
 #include <iservice_registry.h>
 #include <tokenid_kit.h>
-#include "common/include/permission.h"
+#include "common/include/session_permission.h"
 #include "window_manager_hilog.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "Permission"};
+    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "SessionPermission"};
 }
 
-bool Permission::IsSystemServiceCalling(bool needPrintLog)
+bool SessionPermission::IsSystemServiceCalling(bool needPrintLog)
 {
     Security::AccessToken::NativeTokenInfo tokenInfo;
     Security::AccessToken::AccessTokenKit::GetNativeTokenInfo(IPCSkeleton::GetCallingTokenID(), tokenInfo);
@@ -45,17 +45,82 @@ bool Permission::IsSystemServiceCalling(bool needPrintLog)
     return false;
 }
 
-bool Permission::IsSystemCalling()
+bool SessionPermission::IsSystemCalling()
 {
-    if (IsSystemServiceCalling(false)) {
+    const auto& tokenId = IPCSkeleton::GetCallingTokenID();
+    const auto& flag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (flag == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
+        flag == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
+        WLOGFD("tokenId: %{public}u, flag: %{public}u", tokenId, flag);
         return true;
     }
+    WLOGFD("tokenId: %{public}u, flag: %{public}u", tokenId, flag);
     uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
     bool isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
     return isSystemApp;
 }
 
-bool Permission::IsStartByHdcd()
+bool SessionPermission::IsSACalling()
+{
+    const auto& tokenId = IPCSkeleton::GetCallingTokenID();
+    const auto& flag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (flag == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        WLOGFW("SA Called, tokenId: %{public}u, flag: %{public}u", tokenId, flag);
+        return true;
+    }
+    WLOGFD("Not SA called");
+    return false;
+}
+
+bool SessionPermission::VerifyCallingPermission(const std::string &permissionName)
+{
+    WLOGFI("VerifyCallingPermission permission %{public}s", permissionName.c_str());
+    auto callerToken = IPCSkeleton::GetCallingTokenID();
+    int32_t ret = Security::AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
+    if (ret != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+        WLOGFE("permission %{public}s: PERMISSION_DENIED", permissionName.c_str());
+        return false;
+    }
+    WLOGFI("verify AccessToken success");
+    return true;
+}
+
+bool SessionPermission::VerifySessionPermission()
+{
+    if (IsSACalling()) {
+        WLOGFI("this is SA Calling, Permission verification succeeded.");
+        return true;
+    }
+    if (VerifyCallingPermission(PermissionConstants::PERMISSION_MANAGE_MISSION)) {
+        WLOGFI("Permission verification succeeded.");
+        return true;
+    }
+    WLOGFE("Permission verification failed");
+    return false;
+}
+
+bool SessionPermission::JudgeCallerIsAllowedToUseSystemAPI()
+{
+    if (IsSACalling() || IsShellCall()) {
+        return true;
+    }
+    auto callerToken = IPCSkeleton::GetCallingFullTokenID();
+    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(callerToken);
+}
+
+bool SessionPermission::IsShellCall()
+{
+    auto callerToken = IPCSkeleton::GetCallingTokenID();
+    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
+        WLOGFI("caller tokenType is shell, verify success");
+        return true;
+    }
+    WLOGFI("Not shell called.");
+    return false;
+}
+
+bool SessionPermission::IsStartByHdcd()
 {
     OHOS::Security::AccessToken::NativeTokenInfo info;
     if (Security::AccessToken::AccessTokenKit::GetNativeTokenInfo(IPCSkeleton::GetCallingTokenID(), info) != 0) {
@@ -67,7 +132,7 @@ bool Permission::IsStartByHdcd()
     return false;
 }
 
-bool Permission::IsStartedByInputMethod()
+bool SessionPermission::IsStartedByInputMethod()
 {
     sptr<ISystemAbilityManager> systemAbilityManager =
             SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -100,7 +165,8 @@ bool Permission::IsStartedByInputMethod()
     // set ipc identity to raw
     IPCSkeleton::SetCallingIdentity(identity);
     if (!result) {
-        WLOGFE("failed to query extension ability info");
+        WLOGFE("failed to query extension ability info, bundleName:%{public}s, userId:%{public}d",
+                bundleName.c_str(), userId);
         return false;
     }
 

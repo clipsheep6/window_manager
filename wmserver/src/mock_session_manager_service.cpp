@@ -15,6 +15,8 @@
 
 #include "mock_session_manager_service.h"
 
+#include <unistd.h>
+
 #include <system_ability_definition.h>
 #include <cinttypes>
 #include <csignal>
@@ -25,6 +27,7 @@
 #include "mock_screen_manager_service.h"
 #include "window_manager_hilog.h"
 #include "unique_fd.h"
+#include "root_scene.h"
 #include "string_ex.h"
 #include "wm_common.h"
 #include "ws_common.h"
@@ -41,7 +44,7 @@ const char DEFAULT_STRING[] = "error";
 const std::string ARG_DUMP_HELP = "-h";
 const std::string ARG_DUMP_ALL = "-a";
 const std::string ARG_DUMP_WINDOW = "-w";
-}
+} // namespace
 
 WM_IMPLEMENT_SINGLE_INSTANCE(MockSessionManagerService)
 
@@ -53,7 +56,7 @@ void MockSessionManagerService::SMSDeathRecipient::OnRemoteDied(const wptr<IRemo
         return;
     }
     WLOGFI("SessionManagerService died, restart foundation now!");
-    exit(0);
+    _exit(0);
 }
 
 MockSessionManagerService::MockSessionManagerService() : SystemAbility(WINDOW_MANAGER_SERVICE_ID, true)
@@ -138,6 +141,7 @@ bool MockSessionManagerService::SetSessionManagerService(const sptr<IRemoteObjec
     }
 
     RegisterMockSessionManagerService();
+    MockScreenManagerService::GetInstance().SetSessionManagerService(sessionManagerService);
     WLOGFI("sessionManagerService set success!");
     return true;
 }
@@ -161,41 +165,17 @@ sptr<IRemoteObject> MockSessionManagerService::GetSceneSessionManager()
 {
     sptr<ISessionManagerService> sessionManagerServiceProxy =
         iface_cast<ISessionManagerService>(sessionManagerService_);
+    if (!sessionManagerServiceProxy) {
+        WLOGFE("sessionManagerServiceProxy is nullptr");
+        return nullptr;
+    }
     sptr<IRemoteObject> remoteObject = sessionManagerServiceProxy->GetSceneSessionManager();
     if (!remoteObject) {
         WLOGFW("Get scene session manager proxy failed, scene session manager service is null");
-        return nullptr;
+        return sptr<IRemoteObject>(nullptr);
     }
     sceneSessionManager_ = remoteObject;
     return sceneSessionManager_;
-}
-
-int MockSessionManagerService::DumpAllSessionInfo(std::string& dumpInfo)
-{
-    if (!sessionManagerService_) {
-        WLOGFE("sessionManagerService is nullptr");
-        return -1;
-    }
-
-    if (!sceneSessionManager_) {
-        WLOGFW("Get scene session manager ...");
-        GetSceneSessionManager();
-    }
-
-    if (!sceneSessionManager_) {
-        WLOGFW("Get scene session manager proxy failed, nullptr");
-        return -1;
-    }
-
-    sptr<ISceneSessionManager> sceneSessionManagerProxy = iface_cast<ISceneSessionManager>(sceneSessionManager_);
-    sptr<DumpParam> param = new DumpParam();
-    param->params_.push_back(ARG_DUMP_ALL);
-    WSError ret = sceneSessionManagerProxy->GetSessionDumpInfo(param, dumpInfo);
-    if (ret != WSError::WS_OK) {
-        WLOGFD("sessionManagerService set success!");
-        return -1;
-    }
-    return 0; // WMError::WM_OK;
 }
 
 int MockSessionManagerService::DumpSessionInfo(const std::vector<std::string>& args, std::string& dumpInfo)
@@ -203,10 +183,25 @@ int MockSessionManagerService::DumpSessionInfo(const std::vector<std::string>& a
     if (args.empty()) {
         return -1;  // WMError::WM_ERROR_INVALID_PARAM;
     }
-    if (args.size() == 1 && args[0] == ARG_DUMP_ALL) { // 1: params num
-        return DumpAllSessionInfo(dumpInfo);
+    if (!sessionManagerService_) {
+        WLOGFE("sessionManagerService is nullptr");
+        return -1;
     }
-    return -1; // WMError::WM_ERROR_INVALID_PARAM;
+    if (!sceneSessionManager_) {
+        WLOGFW("Get scene session manager ...");
+        GetSceneSessionManager();
+        if (!sceneSessionManager_) {
+            WLOGFW("Get scene session manager proxy failed, nullptr");
+            return -1;
+        }
+    }
+    sptr<ISceneSessionManager> sceneSessionManagerProxy = iface_cast<ISceneSessionManager>(sceneSessionManager_);
+    WSError ret = sceneSessionManagerProxy->GetSessionDumpInfo(args, dumpInfo);
+    if (ret != WSError::WS_OK) {
+        WLOGFD("sessionManagerService set success!");
+        return -1;
+    }
+    return 0; // WMError::WM_OK;
 }
 
 
@@ -226,6 +221,5 @@ void MockSessionManagerService::ShowHelpInfo(std::string& dumpInfo)
 void MockSessionManagerService::ShowAceDumpHelp(std::string& dumpInfo)
 {
 }
-
 } // namespace Rosen
 } // namespace OHOS

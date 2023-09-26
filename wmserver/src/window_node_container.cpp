@@ -20,13 +20,19 @@
 #include <cinttypes>
 #include <cmath>
 #include <ctime>
-#include <display_power_mgr_client.h>
 #include <hitrace_meter.h>
 #include <limits>
-#include <power_mgr_client.h>
 #include <transaction/rs_interfaces.h>
 #include <transaction/rs_transaction.h>
 #include <transaction/rs_sync_transaction_controller.h>
+
+#ifdef POWERMGR_DISPLAY_MANAGER_ENABLE
+#include <display_power_mgr_client.h>
+#endif
+
+#ifdef POWER_MANAGER_ENABLE
+#include <power_mgr_client.h>
+#endif
 
 #include "common_event_manager.h"
 #include "dm_common.h"
@@ -288,7 +294,7 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
     WLOGI("AddWindowNode Id: %{public}u end", node->GetWindowId());
     RSInterfaces::GetInstance().SetAppWindowNum(GetAppWindowNum());
     // update private window count and notify dms private status changed
-    if (node->GetWindowProperty()->GetPrivacyMode()) {
+    if (node->GetWindowProperty()->GetPrivacyMode() && !node->GetWindowProperty()->GetOnlySkipSnapshot()) {
         UpdatePrivateStateAndNotify();
     }
     if (WindowHelper::IsMainWindow(node->GetWindowType())) {
@@ -437,7 +443,7 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node, bool fromA
     RSInterfaces::GetInstance().SetAppWindowNum(GetAppWindowNum());
 
     // update private window count and notify dms private status changed
-    if (node->GetWindowProperty()->GetPrivacyMode()) {
+    if (node->GetWindowProperty()->GetPrivacyMode() && !node->GetWindowProperty()->GetOnlySkipSnapshot()) {
         UpdatePrivateStateAndNotify();
     }
     if (WindowHelper::IsMainWindow(node->GetWindowType())) {
@@ -509,7 +515,7 @@ void WindowNodeContainer::UpdatePrivateWindowCount()
     TraverseContainer(windowNodes);
     uint32_t count = 0;
     for (const auto& node : windowNodes) {
-        if (node->GetWindowProperty()->GetPrivacyMode()) {
+        if (node->GetWindowProperty()->GetPrivacyMode() && !node->GetWindowProperty()->GetOnlySkipSnapshot()) {
             ++count;
         }
     }
@@ -602,6 +608,7 @@ void WindowNodeContainer::ResetAllMainFloatingWindowZOrder(sptr<WindowNode>& roo
 
 WMError WindowNodeContainer::HandleRemoveWindow(sptr<WindowNode>& node)
 {
+    WLOGFD("start");
     auto windowPair = displayGroupController_->GetWindowPairByDisplayId(node->GetDisplayId());
     if (windowPair == nullptr) {
         WLOGFE("Window pair is nullptr");
@@ -614,6 +621,7 @@ WMError WindowNodeContainer::HandleRemoveWindow(sptr<WindowNode>& node)
         dividerWindow != nullptr) {
         UpdateWindowNode(dividerWindow, WindowUpdateReason::UPDATE_RECT);
     }
+    WLOGFD("end");
     return WMError::WM_OK;
 }
 
@@ -1026,15 +1034,19 @@ void WindowNodeContainer::UpdateBrightness(uint32_t id, bool byRemoved)
     if (std::fabs(node->GetBrightness() - UNDEFINED_BRIGHTNESS) < std::numeric_limits<float>::min()) {
         if (GetDisplayBrightness() != node->GetBrightness()) {
             WLOGI("adjust brightness with default value");
+#ifdef POWERMGR_DISPLAY_MANAGER_ENABLE
             DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().RestoreBrightness();
+#endif
             SetDisplayBrightness(UNDEFINED_BRIGHTNESS); // UNDEFINED_BRIGHTNESS means system default brightness
         }
         SetBrightnessWindow(INVALID_WINDOW_ID);
     } else {
         if (GetDisplayBrightness() != node->GetBrightness()) {
             WLOGI("adjust brightness with value: %{public}u", ToOverrideBrightness(node->GetBrightness()));
+#ifdef POWERMGR_DISPLAY_MANAGER_ENABLE
             DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().OverrideBrightness(
                 ToOverrideBrightness(node->GetBrightness()));
+#endif
             SetDisplayBrightness(node->GetBrightness());
         }
         SetBrightnessWindow(node->GetWindowId());
@@ -1168,6 +1180,7 @@ sptr<WindowNode> WindowNodeContainer::GetRootNode(WindowRootNodeType type) const
 
 void WindowNodeContainer::HandleKeepScreenOn(const sptr<WindowNode>& node, bool requireLock)
 {
+#ifdef POWER_MANAGER_ENABLE
     if (requireLock && node->keepScreenLock_ == nullptr) {
         // reset ipc identity
         std::string identity = IPCSkeleton::ResetCallingIdentity();
@@ -1195,6 +1208,7 @@ void WindowNodeContainer::HandleKeepScreenOn(const sptr<WindowNode>& node, bool 
     if (res != ERR_OK) {
         WLOGFE("handle keep screen running lock failed: [operation: %{public}d, err: %{public}d]", requireLock, res);
     }
+#endif
 }
 
 bool WindowNodeContainer::IsAboveSystemBarNode(sptr<WindowNode> node) const
@@ -1934,7 +1948,8 @@ bool WindowNodeContainer::HasPrivateWindow()
     std::vector<sptr<WindowNode>> windowNodes;
     TraverseContainer(windowNodes);
     for (const auto& node : windowNodes) {
-        if (node->isVisible_ && node->GetWindowProperty()->GetPrivacyMode()) {
+        if (node->isVisible_ && node->GetWindowProperty()->GetPrivacyMode() &&
+        !node->GetWindowProperty()->GetOnlySkipSnapshot()) {
             WLOGI("window name %{public}s", node->GetWindowName().c_str());
             return true;
         }

@@ -16,14 +16,10 @@
 #ifndef OHOS_ROSEN_WINDOW_SCENE_SCENE_PERSISTENCE_H
 #define OHOS_ROSEN_WINDOW_SCENE_SCENE_PERSISTENCE_H
 
-#include <dirent.h>
-#include <mutex>
-#include <refbase.h>
 #include <string>
 #include <sys/stat.h>
-#include <vector>
 
-#include "interfaces/include/ws_common.h"
+#include <refbase.h>
 
 namespace OHOS::Media {
 class PixelMap;
@@ -32,29 +28,27 @@ class PixelMap;
 namespace OHOS::Rosen {
 class ScenePersistence : public RefBase {
 public:
-    ScenePersistence() = default;
-    ScenePersistence(const SessionInfo &info, const uint64_t persistentId);
+    ScenePersistence(const std::string& bundleName, const int32_t& persistentId);
     ~ScenePersistence() = default;
 
-    static inline bool CreateSnapshotDir(std::string strFilesDir)
-    {
-        strPersistPath_ = strFilesDir + "/SceneSnapShot/";
-        constexpr mode_t MKDIR_MODE = 0740;
-        if (mkdir(strPersistPath_.c_str(), MKDIR_MODE) != 0) {
-            return false;
-        }
-        return true;
-    }
+    static bool CreateSnapshotDir(const std::string& directory);
+    static bool CreateUpdatedIconDir(const std::string& directory);
 
     bool IsSnapshotExisted() const;
     std::string GetSnapshotFilePath() const;
-    void SetPersistentId(const uint64_t persistId);
-    void SaveSnapshot(const std::shared_ptr<Media::PixelMap> &pixelMap);
+    std::pair<uint32_t, uint32_t> GetSnapshotSize() const;
+    void SaveSnapshot(const std::shared_ptr<Media::PixelMap>& pixelMap);
+
+    void SaveUpdatedIcon(const std::shared_ptr<Media::PixelMap>& pixelMap);
+    std::string GetUpdatedIconPath() const;
 
 private:
-    static std::string strPersistPath_;
-    SessionInfo sessionInfo_;
-    std::string strSnapshotFile_;
+    static std::string snapshotDirectory_;
+    std::string snapshotPath_;
+    std::pair<uint32_t, uint32_t> snapshotSize_;
+
+    static std::string updatedIconDirectory_;
+    std::string updatedIconPath_;
 };
 } // namespace OHOS::Rosen
 

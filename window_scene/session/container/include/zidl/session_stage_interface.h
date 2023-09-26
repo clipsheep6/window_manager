@@ -32,22 +32,14 @@ class ISessionStage : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.ISessionStage");
 
-    enum class SessionStageMessage : uint32_t {
-        TRANS_ID_SET_ACTIVE,
-        TRANS_ID_NOTIFY_SIZE_CHANGE,
-        TRANS_ID_HANDLE_BACK_EVENT,
-        TRANS_ID_NOTIFY_FOCUS_CHANGE,
-        TRANS_ID_NOTIFY_DESTROY,
-        TRANS_ID_NOTIFY_TOUCH_DIALOG_TARGET,
-        TRANS_ID_NOTIFY_TRANSFER_COMPONENT_DATA,
-        TRANS_ID_NOTIFY_OCCUPIED_AREA_CHANGE_INFO,
-        TRANS_ID_UPDATE_AVOID_AREA
-    };
-
+    virtual void NotifyBackpressedEvent(bool& isConsumed) {}
     virtual void NotifyPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) {}
     virtual void NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed) {}
     virtual void NotifyFocusActiveEvent(bool isFocusActive) {}
-    virtual void NotifyFocusWindowIdEvent(uint32_t windowId) {}
+    virtual int32_t GetPersistentId() const
+    {
+        return -1;
+    }
     virtual void NotifyFocusStateEvent(bool focusState) {}
     virtual WSError NotifyTransferComponentData(const AAFwk::WantParams& wantParams)
     {
@@ -56,6 +48,7 @@ public:
 
     virtual WSError SetActive(bool active) = 0;
     virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) = 0;
+    virtual void UpdateDensity() = 0;
     virtual WSError HandleBackEvent() = 0;
     virtual WSError MarkProcessed(int32_t eventId) = 0;
     virtual WSError UpdateFocus(bool isFocused) = 0;
@@ -63,6 +56,10 @@ public:
     virtual void NotifyTouchDialogTarget() = 0;
     virtual void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info) = 0;
     virtual WSError UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type) = 0;
+    virtual void NotifyScreenshot() = 0;
+    virtual void DumpSessionElementInfo(const std::vector<std::string>& params) = 0;
+    virtual WSError NotifyTouchOutside() = 0;
+    virtual WSError UpdateWindowMode(WindowMode mode) = 0;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_SESSION_STAGE_INTERFACE_H

@@ -16,6 +16,7 @@
 #include "interfaces/include/ws_common.h"
 #include "session/container/include/zidl/session_stage_stub.h"
 #include "session/host/include/session.h"
+#include "wm_common.h"
 #include <gmock/gmock.h>
 
 namespace OHOS {
@@ -27,6 +28,7 @@ public:
 
     MOCK_METHOD1(SetActive, WSError(bool active));
     MOCK_METHOD2(UpdateRect, WSError(const WSRect& rect, SizeChangeReason reason));
+    MOCK_METHOD0(UpdateDensity, void(void));
     MOCK_METHOD0(HandleBackEvent, WSError(void));
     MOCK_METHOD1(UpdateFocus, WSError(bool isFocused));
     MOCK_METHOD0(NotifyDestroy, WSError(void));
@@ -35,6 +37,10 @@ public:
     MOCK_METHOD1(MarkProcessed, WSError(int32_t eventId));
     MOCK_METHOD1(NotifyOccupiedAreaChangeInfo, void(sptr<OccupiedAreaChangeInfo> info));
     MOCK_METHOD2(UpdateAvoidArea, WSError(const sptr<AvoidArea>& avoidArea, AvoidAreaType type));
+    MOCK_METHOD1(DumpSessionElementInfo, void(const std::vector<std::string>& params));
+    MOCK_METHOD0(NotifyScreenshot, void(void));
+    MOCK_METHOD0(NotifyTouchOutside, WSError(void));
+    MOCK_METHOD1(UpdateWindowMode, WSError(WindowMode mode));
 };
 } // namespace Rosen
 } // namespace OHOS

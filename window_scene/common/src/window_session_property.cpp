@@ -19,6 +19,9 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+constexpr uint32_t TOUCH_HOT_AREA_MAX_NUM = 10;
+}
 
 WindowSessionProperty::WindowSessionProperty(const sptr<WindowSessionProperty>& property)
 {
@@ -60,6 +63,26 @@ void WindowSessionProperty::SetTouchable(bool isTouchable)
     touchable_ = isTouchable;
 }
 
+void WindowSessionProperty::SetDragEnabled(bool dragEnabled)
+{
+    dragEnabled_ = dragEnabled;
+}
+
+void WindowSessionProperty::SetHideNonSystemFloatingWindows(bool hide)
+{
+    hideNonSystemFloatingWindows_ = hide;
+}
+
+void WindowSessionProperty::SetForceHide(bool hide)
+{
+    forceHide_ = hide;
+}
+
+void WindowSessionProperty::SetRaiseEnabled(bool raiseEnabled)
+{
+    raiseEnabled_ = raiseEnabled;
+}
+
 void WindowSessionProperty::SetBrightness(float brightness)
 {
     brightness_ = brightness;
@@ -80,9 +103,19 @@ void WindowSessionProperty::SetSystemPrivacyMode(bool isSystemPrivate)
     isSystemPrivacyMode_ = isSystemPrivate;
 }
 
+void WindowSessionProperty::SetSystemCalling(bool isSystemCalling)
+{
+    isSystemCalling_ = isSystemCalling;
+}
+
 void WindowSessionProperty::SetDisplayId(DisplayId displayId)
 {
     displayId_ = displayId;
+}
+
+void WindowSessionProperty::SetFloatingWindowAppType(bool isAppType)
+{
+    isFloatingWindowAppType_ = isAppType;
 }
 
 const std::string& WindowSessionProperty::GetWindowName() const
@@ -120,6 +153,26 @@ bool WindowSessionProperty::GetTouchable() const
     return touchable_;
 }
 
+bool WindowSessionProperty::GetDragEnabled() const
+{
+    return dragEnabled_;
+}
+
+bool WindowSessionProperty::GetHideNonSystemFloatingWindows() const
+{
+    return hideNonSystemFloatingWindows_;
+}
+
+bool WindowSessionProperty::GetForceHide() const
+{
+    return forceHide_;
+}
+
+bool WindowSessionProperty::GetRaiseEnabled() const
+{
+    return raiseEnabled_;
+}
+
 float WindowSessionProperty::GetBrightness() const
 {
     return brightness_;
@@ -140,17 +193,22 @@ bool WindowSessionProperty::GetSystemPrivacyMode() const
     return isSystemPrivacyMode_;
 }
 
+bool WindowSessionProperty::GetSystemCalling() const
+{
+    return isSystemCalling_;
+}
+
 DisplayId WindowSessionProperty::GetDisplayId() const
 {
     return displayId_;
 }
 
-void WindowSessionProperty::SetParentId(uint32_t parentId)
+void WindowSessionProperty::SetParentId(int32_t parentId)
 {
     parentId_ = parentId;
 }
 
-uint32_t WindowSessionProperty::GetParentId() const
+int32_t WindowSessionProperty::GetParentId() const
 {
     return parentId_;
 }
@@ -170,22 +228,22 @@ uint32_t WindowSessionProperty::GetWindowFlags() const
     return flags_;
 }
 
-void WindowSessionProperty::SetPersistentId(uint64_t persistentId)
+void WindowSessionProperty::SetPersistentId(int32_t persistentId)
 {
     persistentId_ = persistentId;
 }
 
-uint64_t WindowSessionProperty::GetPersistentId() const
+int32_t WindowSessionProperty::GetPersistentId() const
 {
     return persistentId_;
 }
 
-void WindowSessionProperty::SetParentPersistentId(uint64_t persistentId)
+void WindowSessionProperty::SetParentPersistentId(int32_t persistentId)
 {
     parentPersistentId_ = persistentId;
 }
 
-uint64_t WindowSessionProperty::GetParentPersistentId() const
+int32_t WindowSessionProperty::GetParentPersistentId() const
 {
     return parentPersistentId_;
 }
@@ -247,7 +305,7 @@ void WindowSessionProperty::SetSystemBarProperty(WindowType type, const SystemBa
     }
 }
 
-const std::unordered_map<WindowType, SystemBarProperty>& WindowSessionProperty::GetSystemBarProperty() const
+std::unordered_map<WindowType, SystemBarProperty> WindowSessionProperty::GetSystemBarProperty() const
 {
     return sysBarPropMap_;
 }
@@ -314,6 +372,21 @@ uint32_t WindowSessionProperty::GetAnimationFlag() const
     return animationFlag_;
 }
 
+bool WindowSessionProperty::IsFloatingWindowAppType() const
+{
+    return isFloatingWindowAppType_;
+}
+
+void WindowSessionProperty::SetTouchHotAreas(const std::vector<Rect>& rects)
+{
+    touchHotAreas_ = rects;
+}
+
+void WindowSessionProperty::GetTouchHotAreas(std::vector<Rect>& rects) const
+{
+    rects = touchHotAreas_;
+}
+
 bool WindowSessionProperty::MarshallingWindowLimits(Parcel& parcel) const
 {
     if (parcel.WriteUint32(limits_.maxWidth_) &&
@@ -360,6 +433,36 @@ void WindowSessionProperty::UnMarshallingSystemBarMap(Parcel& parcel, WindowSess
     }
 }
 
+bool WindowSessionProperty::MarshallingTouchHotAreas(Parcel& parcel) const
+{
+    auto size = touchHotAreas_.size();
+    if (size > TOUCH_HOT_AREA_MAX_NUM) {
+        return false;
+    }
+    if (!parcel.WriteUint32(static_cast<uint32_t>(size))) {
+        return false;
+    }
+    for (const auto& rect : touchHotAreas_) {
+        if (!(parcel.WriteInt32(rect.posX_) && parcel.WriteInt32(rect.posY_) &&
+            parcel.WriteUint32(rect.width_) && parcel.WriteUint32(rect.height_))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void WindowSessionProperty::UnmarshallingTouchHotAreas(Parcel& parcel, WindowSessionProperty* property)
+{
+    uint32_t size = parcel.ReadUint32();
+    if (size > TOUCH_HOT_AREA_MAX_NUM) {
+        return;
+    }
+    for (uint32_t i = 0; i < size; i++) {
+        property->touchHotAreas_.emplace_back(
+            Rect{ parcel.ReadInt32(), parcel.ReadInt32(), parcel.ReadUint32(), parcel.ReadUint32() });
+    }
+}
+
 bool WindowSessionProperty::Marshalling(Parcel& parcel) const
 {
     return parcel.WriteString(windowName_) && parcel.WriteInt32(windowRect_.posX_) &&
@@ -371,18 +474,21 @@ bool WindowSessionProperty::Marshalling(Parcel& parcel) const
         parcel.WriteBool(focusable_) && parcel.WriteBool(touchable_) && parcel.WriteBool(tokenState_) &&
         parcel.WriteBool(turnScreenOn_) && parcel.WriteBool(keepScreenOn_) &&
         parcel.WriteBool(isPrivacyMode_) && parcel.WriteBool(isSystemPrivacyMode_) &&
-        parcel.WriteUint64(displayId_) && parcel.WriteUint64(persistentId_) &&
+        parcel.WriteUint64(displayId_) && parcel.WriteInt32(persistentId_) &&
         parcel.WriteString(sessionInfo_.bundleName_) && parcel.WriteString(sessionInfo_.moduleName_) &&
         parcel.WriteString(sessionInfo_.abilityName_) &&
-        parcel.WriteUint64(parentPersistentId_) &&
-        parcel.WriteUint32(accessTokenId_) && parcel.WriteUint32(static_cast<uint32_t>(maximizeMode_)) &&
+        parcel.WriteInt32(parentPersistentId_) &&
+        parcel.WriteUint32(accessTokenId_) && parcel.WriteInt32(static_cast<uint32_t>(maximizeMode_)) &&
         parcel.WriteFloat(brightness_) &&
         parcel.WriteUint32(static_cast<uint32_t>(requestedOrientation_)) &&
         parcel.WriteUint32(static_cast<uint32_t>(windowMode_)) &&
-        parcel.WriteUint32(flags_) &&
-        parcel.WriteBool(isDecorEnable_) &&
+        parcel.WriteUint32(flags_) && parcel.WriteBool(raiseEnabled_) &&
+        parcel.WriteBool(isDecorEnable_) && parcel.WriteBool(dragEnabled_) &&
+        parcel.WriteBool(hideNonSystemFloatingWindows_) && parcel.WriteBool(forceHide_) &&
         MarshallingWindowLimits(parcel) &&
-        MarshallingSystemBarMap(parcel) && parcel.WriteUint32(animationFlag_);
+        MarshallingSystemBarMap(parcel) && parcel.WriteUint32(animationFlag_) &&
+        parcel.WriteBool(isFloatingWindowAppType_) && MarshallingTouchHotAreas(parcel) &&
+        parcel.WriteBool(isSystemCalling_);
 }
 
 WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
@@ -405,20 +511,27 @@ WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
     property->SetPrivacyMode(parcel.ReadBool());
     property->SetSystemPrivacyMode(parcel.ReadBool());
     property->SetDisplayId(parcel.ReadUint64());
-    property->SetPersistentId(parcel.ReadUint64());
+    property->SetPersistentId(parcel.ReadInt32());
     SessionInfo info = { parcel.ReadString(), parcel.ReadString(), parcel.ReadString() };
     property->SetSessionInfo(info);
-    property->SetParentPersistentId(parcel.ReadUint64());
+    property->SetParentPersistentId(parcel.ReadInt32());
     property->SetAccessTokenId(parcel.ReadUint32());
     property->SetMaximizeMode(static_cast<MaximizeMode>(parcel.ReadUint32()));
     property->SetBrightness(parcel.ReadFloat());
     property->SetRequestedOrientation(static_cast<Orientation>(parcel.ReadUint32()));
     property->SetWindowMode(static_cast<WindowMode>(parcel.ReadUint32()));
     property->SetWindowFlags(parcel.ReadUint32());
+    property->SetRaiseEnabled(parcel.ReadBool());
     property->SetDecorEnable(parcel.ReadBool());
+    property->SetDragEnabled(parcel.ReadBool());
+    property->SetHideNonSystemFloatingWindows(parcel.ReadBool());
+    property->SetForceHide(parcel.ReadBool());
     UnmarshallingWindowLimits(parcel, property);
     UnMarshallingSystemBarMap(parcel, property);
     property->SetAnimationFlag(parcel.ReadUint32());
+    property->SetFloatingWindowAppType(parcel.ReadBool());
+    UnmarshallingTouchHotAreas(parcel, property);
+    property->SetSystemCalling(parcel.ReadBool());
     return property;
 }
 
@@ -431,6 +544,10 @@ void WindowSessionProperty::CopyFrom(const sptr<WindowSessionProperty>& property
     type_ = property->type_;
     focusable_= property->focusable_;
     touchable_ = property->touchable_;
+    dragEnabled_ = property->dragEnabled_;
+    hideNonSystemFloatingWindows_ = property->hideNonSystemFloatingWindows_;
+    forceHide_ = property->forceHide_;
+    raiseEnabled_ = property->raiseEnabled_;
     tokenState_ = property->tokenState_;
     turnScreenOn_ = property->turnScreenOn_;
     keepScreenOn_ = property->keepScreenOn_;
@@ -450,6 +567,9 @@ void WindowSessionProperty::CopyFrom(const sptr<WindowSessionProperty>& property
     sysBarPropMap_ = property->sysBarPropMap_;
     isDecorEnable_ = property->isDecorEnable_;
     animationFlag_ = property->animationFlag_;
+    isFloatingWindowAppType_ = property->isFloatingWindowAppType_;
+    touchHotAreas_ = property->touchHotAreas_;
+    isSystemCalling_ = property->isSystemCalling_;
 }
 
 void WindowSessionProperty::SetTransform(const Transform& trans)

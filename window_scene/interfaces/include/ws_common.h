@@ -17,18 +17,23 @@
 #define OHOS_ROSEN_WINDOW_SCENE_WS_COMMON_H
 
 #include <inttypes.h>
+#include <iomanip>
 #include <map>
+#include <sstream>
 #include <string>
-#include <want.h>
 
-#include "iremote_broker.h"
+#include <iremote_broker.h>
+#include <want.h>
 
 namespace OHOS::AAFwk {
 class AbilityStartSetting;
 }
+namespace OHOS::AppExecFwk {
+struct AbilityInfo;
+}
 
 namespace OHOS::Rosen {
-constexpr uint64_t INVALID_SESSION_ID = 0;
+constexpr int32_t INVALID_SESSION_ID = 0;
 
 enum class WSError : int32_t {
     WS_OK = 0,
@@ -46,6 +51,9 @@ enum class WSError : int32_t {
     WS_ERROR_OPER_FULLSCREEN_FAILED,
     WS_ERROR_REPEAT_OPERATION,
     WS_ERROR_INVALID_SESSION,
+    WS_ERROR_UNCLEARABLE_SESSION,
+    WS_ERROR_FAIL_TO_GET_SNAPSHOT,
+    WS_ERROR_INTERNAL_ERROR,
 
     WS_ERROR_DEVICE_NOT_SUPPORT = 801, // the value do not change.It is defined on all system
 
@@ -70,6 +78,7 @@ enum class WSErrorCode : int32_t {
     WS_ERROR_NO_PERMISSION = 201,
     WS_ERROR_INVALID_PARAM = 401,
     WS_ERROR_DEVICE_NOT_SUPPORT = 801,
+    WS_ERROR_TIMEOUT = 901,
     WS_ERROR_REPEAT_OPERATION = 1300001,
     WS_ERROR_STATE_ABNORMALLY = 1300002,
     WS_ERROR_SYSTEM_ABNORMALLY = 1300003,
@@ -82,6 +91,7 @@ const std::map<WSError, WSErrorCode> WS_JS_TO_ERROR_CODE_MAP {
     { WSError::WS_OK,                    WSErrorCode::WS_OK },
     { WSError::WS_DO_NOTHING,            WSErrorCode::WS_ERROR_STATE_ABNORMALLY },
     { WSError::WS_ERROR_INVALID_SESSION, WSErrorCode::WS_ERROR_STATE_ABNORMALLY },
+    { WSError::WS_ERROR_INVALID_PARAM, WSErrorCode::WS_ERROR_STATE_ABNORMALLY },
     { WSError::WS_ERROR_IPC_FAILED,      WSErrorCode::WS_ERROR_SYSTEM_ABNORMALLY },
     { WSError::WS_ERROR_NULLPTR,         WSErrorCode::WS_ERROR_STATE_ABNORMALLY },
 };
@@ -96,24 +106,75 @@ enum class SessionState : uint32_t {
     STATE_END,
 };
 
+enum ContinueState {
+    CONTINUESTATE_UNKNOWN = -1,
+    CONTINUESTATE_ACTIVE = 0,
+    CONTINUESTATE_INACTIVE = 1,
+    CONTINUESTATE_MAX
+};
+
+enum class StartMethod : int32_t {
+    START_NORMAL,
+    START_CALL
+};
+
+/**
+ * @brief collaborator type.
+ */
+enum CollaboratorType : int32_t {
+    DEFAULT_TYPE = 0,
+    RESERVE_TYPE,
+    OTHERS_TYPE,
+};
+
+enum AncoSceneState: int32_t {
+    DEFAULT_STATE = 0,
+    NOTIFY_START,
+    NOTIFY_CREATE,
+    NOTIFY_LOAD,
+    NOTIFY_UPDATE,
+    NOTIFY_FOREGROUND,
+};
+
+/**
+ * @brief collaborator type.
+ */
+enum SessionOperationType : int32_t {
+    TYPE_DEFAULT = 0,
+    TYPE_CLEAR,
+};
+
 struct SessionInfo {
     std::string bundleName_ = "";
     std::string moduleName_ = "";
     std::string abilityName_ = "";
-    sptr<IRemoteObject> callerToken_ = nullptr;
+    int32_t appIndex_ = 0;
     bool isSystem_ = false;
-    uint32_t windowType_ = 0;
+    uint32_t windowType_ = 1; // WINDOW_TYPE_APP_MAIN_WINDOW
+    sptr<IRemoteObject> callerToken_ = nullptr;
 
-    sptr<AAFwk::Want> want;
+    mutable std::shared_ptr<AAFwk::Want> want; // want for ability start
+    std::shared_ptr<AAFwk::Want> closeAbilityWant;
     std::shared_ptr<AAFwk::AbilityStartSetting> startSetting = nullptr;
+    mutable std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo = nullptr;
     int32_t resultCode;
     int32_t requestCode;
     int32_t errorCode;
     std::string errorReason;
-    uint64_t persistentId_ = INVALID_SESSION_ID;
-    uint64_t callerPersistentId_ = INVALID_SESSION_ID;
+    int32_t persistentId_ = INVALID_SESSION_ID;
+    int32_t callerPersistentId_ = INVALID_SESSION_ID;
     uint32_t callState_ = 0;
+    uint32_t callingTokenId_ = 0;
+    bool reuse = false;
+    int32_t windowMode = 0;
+    StartMethod startMethod = StartMethod::START_NORMAL;
+    bool lockedState = false;
+    std::string time;
+    ContinueState continueState = ContinueState::CONTINUESTATE_ACTIVE;
     int64_t uiAbilityId_ = 0;
+    int32_t ancoSceneState;
+    bool isClearSession = false;
+    std::string sessionAffinity;
 };
 
 enum class SessionFlag : uint32_t {
@@ -153,24 +214,88 @@ enum class SessionEvent : uint32_t {
     EVENT_MAXIMIZE_FLOATING,
     EVENT_TERMINATE,
     EVENT_EXCEPTION,
+    EVENT_SPLIT_PRIMARY,
+    EVENT_SPLIT_SECONDARY,
 };
 
-struct WSRect {
-    int32_t posX_ = 0;
-    int32_t posY_ = 0;
-    uint32_t width_ = 0;
-    uint32_t height_ = 0;
+inline bool GreatOrEqual(double left, double right)
+{
+    constexpr double epsilon = -0.00001f;
+    return (left - right) > epsilon;
+}
 
-    bool operator==(const WSRect& a) const
+inline bool LessOrEqual(double left, double right)
+{
+    constexpr double epsilon = 0.00001f;
+    return (left - right) < epsilon;
+}
+
+inline bool NearEqual(const double left, const double right, const double epsilon)
+{
+    return (std::fabs(left - right) <= epsilon);
+}
+
+inline bool NearEqual(const float& left, const float& right)
+{
+    constexpr double epsilon = 0.001f;
+    return NearEqual(left, right, epsilon);
+}
+
+inline bool NearEqual(const int32_t& left, const int32_t& right)
+{
+    return left == right;
+}
+
+inline bool NearZero(const double left)
+{
+    constexpr double epsilon = 0.001f;
+    return NearEqual(left, 0.0, epsilon);
+}
+
+template<typename T>
+struct WSRectT {
+    T posX_ = 0;
+    T posY_ = 0;
+    T width_ = 0;
+    T height_ = 0;
+
+    bool operator==(const WSRectT<T>& a) const
     {
-        return (posX_ == a.posX_ && posY_ == a.posY_ && width_ == a.width_ && height_ == a.height_);
+        return (NearEqual(posX_, a.posX_) && NearEqual(posY_, a.posY_) &&
+                NearEqual(width_, a.width_) && NearEqual(height_, a.height_));
     }
 
-    bool operator!=(const WSRect& a) const
+    bool operator!=(const WSRectT<T>& a) const
     {
         return !this->operator==(a);
     }
+
+    bool IsEmpty() const
+    {
+        if (NearZero(posX_) && NearZero(posY_) && NearZero(width_) && NearZero(height_)) {
+            return true;
+        }
+        return false;
+    }
+
+    inline bool IsInRegion(int32_t pointX, int32_t pointY)
+    {
+        return GreatOrEqual(pointX, posX_) && LessOrEqual(pointX, posX_ + width_) &&
+               GreatOrEqual(pointY, posY_) && LessOrEqual(pointY, posY_ + height_);
+    }
+
+    inline std::string ToString() const
+    {
+        constexpr int precision = 2;
+        std::stringstream ss;
+        ss << "[" << std::fixed << std::setprecision(precision) << posX_ << " " << posY_ << " " <<
+            width_ << " " << height_ << "]";
+        return ss.str();
+    }
 };
+
+using WSRect = WSRectT<int32_t>;
+using WSRectF = WSRectT<float>;
 
 struct WindowShadowConfig {
     float offsetX_ = 0.0f;
@@ -208,6 +333,14 @@ struct WindowAnimationConfig {
     float opacity_ = 0;
 };
 
+struct StartingWindowAnimationConfig {
+    bool enabled_ = true;
+    int duration_ = 200;
+    std::string curve_ = "linear";
+    float opacityStart_ = 1;
+    float opacityEnd_ = 0;
+};
+
 struct AppWindowSceneConfig {
     float floatCornerRadius_ = 0.0f;
 
@@ -215,6 +348,7 @@ struct AppWindowSceneConfig {
     WindowShadowConfig unfocusedShadow_;
     KeyboardSceneAnimationConfig keyboardAnimation_;
     WindowAnimationConfig windowAnimation_;
+    StartingWindowAnimationConfig startingWindowAnimationConfig_;
 };
 
 /**
@@ -223,6 +357,17 @@ struct AppWindowSceneConfig {
 enum class SessionGravity : uint32_t {
     SESSION_GRAVITY_FLOAT = 0,
     SESSION_GRAVITY_BOTTOM,
+    SESSION_GRAVITY_DEFAULT,
+};
+
+/**
+ * @brief TerminateType session terminate type.
+ */
+enum class TerminateType : uint32_t {
+    CLOSE_AND_KEEP_MULTITASK = 0,
+    CLOSE_AND_CLEAR_MULTITASK,
+    CLOSE_AND_START_CALLER,
+    CLOSE_BY_EXCEPTION,
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_WS_COMMON_H

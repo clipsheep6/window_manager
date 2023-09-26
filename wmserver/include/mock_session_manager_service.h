@@ -40,10 +40,10 @@ protected:
 private:
     bool RegisterMockSessionManagerService();
     int DumpSessionInfo(const std::vector<std::string>& args, std::string& dumpInfo);
-    int DumpAllSessionInfo(std::string& dumpInfo);
     void ShowHelpInfo(std::string& dumpInfo);
     void ShowAceDumpHelp(std::string& dumpInfo);
     void ShowIllegalArgsInfo(std::string& dumpInfo);
+
     class SMSDeathRecipient : public IRemoteObject::DeathRecipient {
     public:
         void OnRemoteDied(const wptr<IRemoteObject>& object) override;

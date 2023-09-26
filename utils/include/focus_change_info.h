@@ -47,25 +47,36 @@ public:
      */
     virtual bool Marshalling(Parcel& parcel) const
     {
-        return parcel.WriteUint32(windowId_) && parcel.WriteUint64(displayId_) &&
-        parcel.WriteInt32(pid_) && parcel.WriteInt32(uid_) &&
-        parcel.WriteUint32(static_cast<uint32_t>(windowType_));
+        bool ret = parcel.WriteInt32(windowId_) && parcel.WriteUint64(displayId_) &&
+            parcel.WriteInt32(pid_) && parcel.WriteInt32(uid_) &&
+            parcel.WriteUint32(static_cast<uint32_t>(windowType_));
+        if (!ret) {
+            return false;
+        }
+        if (abilityToken_) {
+            return parcel.WriteBool(true) && (static_cast<MessageParcel*>(&parcel))->WriteRemoteObject(abilityToken_);
+        } else {
+            return parcel.WriteBool(false);
+        }
     }
 
     static FocusChangeInfo* Unmarshalling(Parcel &parcel)
     {
         auto focusChangeInfo = new FocusChangeInfo();
-        bool res = parcel.ReadUint32(focusChangeInfo->windowId_) && parcel.ReadUint64(focusChangeInfo->displayId_) &&
+        bool res = parcel.ReadInt32(focusChangeInfo->windowId_) && parcel.ReadUint64(focusChangeInfo->displayId_) &&
             parcel.ReadInt32(focusChangeInfo->pid_) && parcel.ReadInt32(focusChangeInfo->uid_);
         if (!res) {
             delete focusChangeInfo;
             return nullptr;
         }
         focusChangeInfo->windowType_ = static_cast<WindowType>(parcel.ReadUint32());
+        if (parcel.ReadBool()) {
+            focusChangeInfo->abilityToken_ = (static_cast<MessageParcel*>(&parcel))->ReadRemoteObject();
+        }
         return focusChangeInfo;
     }
 
-    uint32_t windowId_ = INVALID_WINDOW_ID;
+    int32_t windowId_ = INVALID_WINDOW_ID;
     DisplayId displayId_ = 0;
     int32_t pid_ = -1;
     int32_t uid_ = -1;

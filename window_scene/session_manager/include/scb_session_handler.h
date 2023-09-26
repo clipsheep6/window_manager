@@ -13,9 +13,20 @@
  * limitations under the License.
  */
 
-#ifndef TEST_FUZZTEST_WINDOW_IMPL_FUZZER_H
-#define TEST_FUZZTEST_WINDOW_IMPL_FUZZER_H
+#ifndef OHOS_ROSEN_WINDOW_SCENE_SCB_SESSION_HANDLER_H
+#define OHOS_ROSEN_WINDOW_SCENE_SCB_SESSION_HANDLER_H
 
-#define FUZZ_PROJECT_NAME "windowimpl_fuzzer"
+#include "session_handler_stub.h"
 
-#endif
+namespace OHOS {
+namespace Rosen {
+
+class ScbSessionHandler : public AAFwk::SessionHandlerStub {
+public:
+    ScbSessionHandler() = default;
+    ~ScbSessionHandler() = default;
+    void OnSessionMovedToFront(int32_t sessionId) override;
+};
+} // namespace Rosen
+} // namespace OHOS
+#endif //OHOS_ROSEN_WINDOW_SCENE_SCB_SESSION_HANDLER_H

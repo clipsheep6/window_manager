@@ -73,10 +73,13 @@ WindowManagerService::WindowManagerService() : SystemAbility(WINDOW_MANAGER_SERV
     freezeDisplayController_ = new FreezeController();
     windowCommonEvent_ = std::make_shared<WindowCommonEvent>();
     startingOpen_ = system::GetParameter("persist.window.sw.enabled", "1") == "1"; // startingWin default enabled
+    windowGroupMgr_ = new WindowGroupMgr(windowRoot_);
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        return;
+    }
     runner_ = AppExecFwk::EventRunner::Create(name_);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
     snapshotController_ = new SnapshotController(windowRoot_, handler_);
-    windowGroupMgr_ = new WindowGroupMgr(windowRoot_);
     int ret = HiviewDFX::Watchdog::GetInstance().AddThread(name_, handler_);
     if (ret != 0) {
         WLOGFE("Add watchdog thread failed");
@@ -108,7 +111,7 @@ void WindowManagerService::OnStart()
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
     sptr<WindowManagerService> wms = this;
     wms->IncStrongRef(nullptr);
-    if (!Publish(this)) {
+    if (!Publish(sptr<WindowManagerService>(this))) {
         WLOGFE("Publish failed");
     }
     WLOGI("end");
@@ -847,7 +850,7 @@ bool WindowManagerService::CheckSystemWindowPermission(const sptr<WindowProperty
         return true;
     }
     if (type == WindowType::WINDOW_TYPE_DRAGGING_EFFECT || type == WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW ||
-        type == WindowType::WINDOW_TYPE_TOAST) {
+        type == WindowType::WINDOW_TYPE_TOAST || type == WindowType::WINDOW_TYPE_DIALOG) {
         // some system types counld be created by normal app
         return true;
     }
@@ -921,6 +924,10 @@ WMError WindowManagerService::RemoveWindow(uint32_t windowId, bool isFromInnerki
     if (!isFromInnerkits && !Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
         WLOGFE("remove window permission denied!");
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
+    if (!accessTokenIdMaps_.isExist(windowId, IPCSkeleton::GetCallingTokenID())) {
+        WLOGI("Operation rejected");
+        return WMError::WM_ERROR_INVALID_OPERATION;
     }
     return PostSyncTask([this, windowId]() {
         WLOGI("[WMS] Remove: %{public}u", windowId);

@@ -1089,6 +1089,21 @@ public:
         return WMError::WM_OK;
     }
     /**
+     * @brief set window ui content
+     *
+     * @param contentInfo content info path
+     * @param engine
+     * @param storage
+     * @param isDistributed
+     * @param ability
+     * @return WMError
+     */
+    virtual WMError SetUIContentByName(const std::string& contentInfo, NativeEngine* engine, NativeValue* storage,
+        AppExecFwk::Ability* ability = nullptr)
+    {
+        return WMError::WM_OK;
+    }
+    /**
      * @brief Get ui content info.
      *
      * @return UI content info.
@@ -1192,7 +1207,7 @@ public:
      *
      * @return WMError
      */
-    virtual WMError Minimize() { return WMError::WM_OK; }
+    virtual WMError Minimize() { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
     /**
      * @brief recovery the main window. It is called by ACE when recovery button is clicked.
      *
@@ -1318,6 +1333,41 @@ public:
      *
      */
     virtual void PerformBack() {}
+    /**
+     * @brief Set the drag enabled flag of a window.
+     *
+     * @param dragEnabled true means the window can be resized by dragging, otherwise means the opposite.
+     * @return Errorcode of window.
+     */
+    virtual WMError SetResizeByDragEnabled(bool dragEnabled) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
+    /**
+     * @brief Set the raise enabled flag of a window.
+     *
+     * @param raiseEnabled true means the window can be raised by click, otherwise means the opposite.
+     * @return Errorcode of window.
+     */
+    virtual WMError SetRaiseByClickEnabled(bool raiseEnabled) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
+    /**
+     * @brief Raise one app sub window above another.
+     *
+     * @return WM_OK means raise success, others means raise failed.
+     */
+    virtual WmErrorCode RaiseAboveTarget(int32_t subWindowId) { return WmErrorCode::WM_ERROR_DEVICE_NOT_SUPPORT; }
+
+    /**
+     * @brief Hide non-system floating windows.
+     *
+     * @param shouldHide true means the non-system windows should be hidden, otherwise means the opposite.
+     * @return Errorcode of window.
+     */
+    virtual WMError HideNonSystemFloatingWindows(bool shouldHide) { return WMError::WM_OK; }
+
+    /**
+     * @brief Is floating window of app type or not.
+     *
+     * @return True means floating window of app type, false means the opposite.
+     */
+    virtual bool IsFloatingWindowAppType() const { return false; }
 };
 }
 }

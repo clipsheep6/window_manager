@@ -15,66 +15,78 @@
 
 #include "session/host/include/zidl/session_stub.h"
 
+#include "ability_start_setting.h"
 #include <ipc_types.h>
 #include <ui/rs_surface_node.h>
-
-#include "ability_start_setting.h"
 #include "want.h"
-#include "want_params.h"
+
+#include "session/host/include/zidl/session_ipc_interface_code.h"
 #include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
 namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "SessionStub"};
-}
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SessionStub" };
+} // namespace
 
-const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_{
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_FOREGROUND), &SessionStub::HandleForeground),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_BACKGROUND), &SessionStub::HandleBackground),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_DISCONNECT), &SessionStub::HandleDisconnect),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_CONNECT), &SessionStub::HandleConnect),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_ACTIVE_PENDING_SESSION),
-        &SessionStub::HandlePendingSessionActivation),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_UPDATE_ACTIVE_STATUS),
+const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_CONNECT),
+        &SessionStub::HandleConnect),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_FOREGROUND),
+        &SessionStub::HandleForeground),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_BACKGROUND),
+        &SessionStub::HandleBackground),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_DISCONNECT),
+        &SessionStub::HandleDisconnect),
+
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_ACTIVE_STATUS),
         &SessionStub::HandleUpdateActivateStatus),
-
-    // for scene only
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_SESSION_EVENT), &SessionStub::HandleSessionEvent),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_TERMINATE), &SessionStub::HandleTerminateSession),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_UPDATE_SESSION_RECT),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SESSION_EVENT),
+        &SessionStub::HandleSessionEvent),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_SESSION_RECT),
         &SessionStub::HandleUpdateSessionRect),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_CREATE_AND_CONNECT_SPECIFIC_SESSION),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_CREATE_AND_CONNECT_SPECIFIC_SESSION),
         &SessionStub::HandleCreateAndConnectSpecificSession),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION),
         &SessionStub::HandleDestroyAndDisconnectSpecificSession),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_RAISE_TO_APP_TOP),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_RAISE_TO_APP_TOP),
         &SessionStub::HandleRaiseToAppTop),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_BACKPRESSED), &SessionStub::HandleBackPressed),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_MARK_PROCESSED), &SessionStub::HandleMarkProcessed),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_SET_MAXIMIZE_MODE),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_BACKPRESSED),
+        &SessionStub::HandleBackPressed),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_MARK_PROCESSED),
+        &SessionStub::HandleMarkProcessed),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_MAXIMIZE_MODE),
         &SessionStub::HandleSetGlobalMaximizeMode),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_GET_MAXIMIZE_MODE),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_GET_MAXIMIZE_MODE),
         &SessionStub::HandleGetGlobalMaximizeMode),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_NEED_AVOID),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NEED_AVOID),
         &SessionStub::HandleNeedAvoid),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_GET_AVOID_AREA),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_GET_AVOID_AREA),
         &SessionStub::HandleGetAvoidAreaByType),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_UPDATE_WINDOW_SESSION_PROPERTY),
-        &SessionStub::HandleUpdateWindowSessionProperty),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_SET_ASPECT_RATIO),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_SESSION_PROPERTY),
+        &SessionStub::HandleSetSessionProperty),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_ASPECT_RATIO),
         &SessionStub::HandleSetAspectRatio),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_UPDATE_WINDOW_ANIMATION_FLAG),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_WINDOW_ANIMATION_FLAG),
         &SessionStub::HandleSetWindowAnimationFlag),
-
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_UPDATE_CUSTOM_ANIMATION),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_CUSTOM_ANIMATION),
         &SessionStub::HandleUpdateWindowSceneAfterCustomAnimation),
-    // for extension only
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_TRANSFER_ABILITY_RESULT),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_RAISE_ABOVE_TARGET),
+        &SessionStub::HandleRaiseAboveTarget),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_ACTIVE_PENDING_SESSION),
+        &SessionStub::HandlePendingSessionActivation),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TERMINATE),
+        &SessionStub::HandleTerminateSession),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_EXCEPTION),
+        &SessionStub::HandleSessionException),
+
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TRANSFER_ABILITY_RESULT),
         &SessionStub::HandleTransferAbilityResult),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_TRANSFER_EXTENSION_DATA),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TRANSFER_EXTENSION_DATA),
         &SessionStub::HandleTransferExtensionData),
-    std::make_pair(static_cast<uint32_t>(SessionMessage::TRANS_ID_NOTIFY_REMOTE_READY),
-        &SessionStub::HandleNotifyRemoteReady)
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_REMOTE_READY),
+        &SessionStub::HandleNotifyRemoteReady),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_EXTENSION_DIED),
+        &SessionStub::HandleNotifyExtensionDied)
 };
 
 int SessionStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -164,7 +176,7 @@ int SessionStub::HandleConnect(MessageParcel& data, MessageParcel& reply)
     WSError errCode = Connect(sessionStage, eventChannel, surfaceNode, systemConfig, property, token);
     reply.WriteParcelable(&systemConfig);
     if (property) {
-        reply.WriteUint64(property->GetPersistentId());
+        reply.WriteInt32(property->GetPersistentId());
     }
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
@@ -183,8 +195,7 @@ int SessionStub::HandleTerminateSession(MessageParcel& data, MessageParcel& repl
 {
     WLOGFD("run HandleTerminateSession");
     sptr<AAFwk::SessionInfo> abilitySessionInfo(new AAFwk::SessionInfo());
-    std::unique_ptr<AAFwk::Want> want(data.ReadParcelable<AAFwk::Want>());
-    abilitySessionInfo->want = *want;
+    abilitySessionInfo->want = *(data.ReadParcelable<AAFwk::Want>());
     if (data.ReadBool()) {
         abilitySessionInfo->callerToken = data.ReadRemoteObject();
     }
@@ -198,12 +209,12 @@ int SessionStub::HandleSessionException(MessageParcel& data, MessageParcel& repl
 {
     WLOGFD("run HandleSessionException");
     sptr<AAFwk::SessionInfo> abilitySessionInfo(new AAFwk::SessionInfo());
-    std::unique_ptr<AAFwk::Want> want(data.ReadParcelable<AAFwk::Want>());
-    abilitySessionInfo->want = *want;
+    abilitySessionInfo->want = *(data.ReadParcelable<AAFwk::Want>());
     if (data.ReadBool()) {
         abilitySessionInfo->callerToken = data.ReadRemoteObject();
     }
 
+    abilitySessionInfo->persistentId = data.ReadInt32();
     abilitySessionInfo->errorCode = data.ReadInt32();
     abilitySessionInfo->errorReason = data.ReadString();
     const WSError& errCode = NotifySessionException(abilitySessionInfo);
@@ -215,15 +226,16 @@ int SessionStub::HandlePendingSessionActivation(MessageParcel& data, MessageParc
 {
     WLOGFD("PendingSessionActivation!");
     sptr<AAFwk::SessionInfo> abilitySessionInfo(new AAFwk::SessionInfo());
-    std::unique_ptr<AAFwk::Want> want(data.ReadParcelable<AAFwk::Want>());
-    abilitySessionInfo->want = *want;
+    abilitySessionInfo->want = *(data.ReadParcelable<AAFwk::Want>());
+    abilitySessionInfo->requestCode = data.ReadInt32();
+    abilitySessionInfo->persistentId = data.ReadInt32();
+    abilitySessionInfo->state = static_cast<AAFwk::CallToState>(data.ReadInt32());
+    abilitySessionInfo->uiAbilityId = data.ReadInt64();
+    abilitySessionInfo->callingTokenId = data.ReadUint32();
+    abilitySessionInfo->reuse = data.ReadBool();
     if (data.ReadBool()) {
         abilitySessionInfo->callerToken = data.ReadRemoteObject();
     }
-    abilitySessionInfo->requestCode = data.ReadInt32();
-    abilitySessionInfo->persistentId = data.ReadInt64();
-    abilitySessionInfo->state = static_cast<AAFwk::CallToState>(data.ReadInt32());
-    abilitySessionInfo->uiAbilityId = data.ReadInt64();
     if (data.ReadBool()) {
         abilitySessionInfo->startSetting.reset(data.ReadParcelable<AAFwk::AbilityStartSetting>());
     }
@@ -276,14 +288,22 @@ int SessionStub::HandleCreateAndConnectSpecificSession(MessageParcel& data, Mess
     } else {
         WLOGFW("Property not exist!");
     }
-    uint64_t persistentId = INVALID_SESSION_ID;
+
+    sptr<IRemoteObject> token = nullptr;
+    if (property && property->GetTokenState()) {
+        token = data.ReadRemoteObject();
+    } else {
+        WLOGI("accept token is nullptr");
+    }
+
+    auto persistentId = INVALID_SESSION_ID;
     sptr<ISession> sceneSession;
     CreateAndConnectSpecificSession(sessionStage, eventChannel, surfaceNode,
-        property, persistentId, sceneSession);
+        property, persistentId, sceneSession, token);
     if (sceneSession== nullptr) {
         return ERR_INVALID_STATE;
     }
-    reply.WriteUint64(persistentId);
+    reply.WriteInt32(persistentId);
     reply.WriteRemoteObject(sceneSession->AsObject());
     reply.WriteUint32(static_cast<uint32_t>(WSError::WS_OK));
     return ERR_NONE;
@@ -291,7 +311,7 @@ int SessionStub::HandleCreateAndConnectSpecificSession(MessageParcel& data, Mess
 
 int SessionStub::HandleDestroyAndDisconnectSpecificSession(MessageParcel& data, MessageParcel& reply)
 {
-    uint64_t persistentId = data.ReadUint64();
+    auto persistentId = data.ReadUint32();
     const WSError& ret = DestroyAndDisconnectSpecificSession(persistentId);
     reply.WriteUint32(static_cast<uint32_t>(ret));
     return ERR_NONE;
@@ -305,10 +325,24 @@ int SessionStub::HandleRaiseToAppTop(MessageParcel& data, MessageParcel& reply)
     return ERR_NONE;
 }
 
+int SessionStub::HandleRaiseAboveTarget(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("RaiseAboveTarget!");
+    auto subWindowId = data.ReadInt32();
+    const WSError& errCode = RaiseAboveTarget(subWindowId);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
 int SessionStub::HandleBackPressed(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("HandleBackPressed!");
-    WSError errCode = RequestSessionBack();
+    bool needMoveToBackground = false;
+    if (!data.ReadBool(needMoveToBackground)) {
+        WLOGFE("Read needMoveToBackground from parcel failed!");
+        return ERR_INVALID_DATA;
+    }
+    WSError errCode = RequestSessionBack(needMoveToBackground);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -363,12 +397,11 @@ int SessionStub::HandleGetAvoidAreaByType(MessageParcel& data, MessageParcel& re
     return ERR_NONE;
 }
 
-int SessionStub::HandleUpdateWindowSessionProperty(MessageParcel& data, MessageParcel& reply)
+int SessionStub::HandleSetSessionProperty(MessageParcel& data, MessageParcel& reply)
 {
-    WLOGFD("UpdateWindowSessionProperty!");
-    sptr<WindowSessionProperty> property = nullptr;
-    property = data.ReadStrongParcelable<WindowSessionProperty>();
-    const WSError& errCode = UpdateWindowSessionProperty(property);
+    WLOGFD("HandleSetSessionProperty!");
+    auto property = data.ReadStrongParcelable<WindowSessionProperty>();
+    auto errCode = SetSessionProperty(property);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -422,6 +455,13 @@ int SessionStub::HandleNotifyRemoteReady(MessageParcel& data, MessageParcel& rep
 {
     WLOGFD("HandleNotifyRemoteReady!");
     NotifyRemoteReady();
+    return ERR_NONE;
+}
+
+int SessionStub::HandleNotifyExtensionDied(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("called");
+    NotifyExtensionDied();
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

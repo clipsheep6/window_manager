@@ -17,6 +17,7 @@
 
 #include "window_manager_hilog.h"
 #include <transaction/rs_interfaces.h>
+#include <transaction/rs_transaction.h>
 
 namespace OHOS::Rosen {
 namespace {
@@ -31,6 +32,15 @@ ScreenSession::ScreenSession(ScreenId screenId, const ScreenProperty& property, 
 {
     Rosen::RSDisplayNodeConfig config = { .screenId = screenId_ };
     displayNode_ = Rosen::RSDisplayNode::Create(config);
+    if (displayNode_) {
+        displayNode_->SetFrame(property_.GetBounds().rect_.left_, property_.GetBounds().rect_.top_,
+            property_.GetBounds().rect_.width_, property_.GetBounds().rect_.height_);
+        displayNode_->SetBounds(property_.GetBounds().rect_.left_, property_.GetBounds().rect_.top_,
+            property_.GetBounds().rect_.width_, property_.GetBounds().rect_.height_);
+    } else {
+        WLOGFE("Failed to create displayNode, displayNode is null!");
+    }
+    RSTransaction::FlushImplicitTransaction();
 }
 
 ScreenSession::ScreenSession(const std::string& name, ScreenId smsId, ScreenId rsId, ScreenId defaultScreenId)
@@ -39,6 +49,23 @@ ScreenSession::ScreenSession(const std::string& name, ScreenId smsId, ScreenId r
     (void)rsId_;
     Rosen::RSDisplayNodeConfig config = { .screenId = screenId_ };
     displayNode_ = Rosen::RSDisplayNode::Create(config);
+    if (displayNode_) {
+        displayNode_->SetFrame(property_.GetBounds().rect_.left_, property_.GetBounds().rect_.top_,
+            property_.GetBounds().rect_.width_, property_.GetBounds().rect_.height_);
+        displayNode_->SetBounds(property_.GetBounds().rect_.left_, property_.GetBounds().rect_.top_,
+            property_.GetBounds().rect_.width_, property_.GetBounds().rect_.height_);
+    } else {
+        WLOGFE("Failed to create displayNode, displayNode is null!");
+    }
+    RSTransaction::FlushImplicitTransaction();
+}
+
+void ScreenSession::SetDisplayNodeScreenId(ScreenId screenId)
+{
+    if (displayNode_ != nullptr) {
+        WLOGFI("SetDisplayNodeScreenId %{public}" PRIu64"", screenId);
+        displayNode_->SetScreenId(screenId);
+    }
 }
 
 void ScreenSession::RegisterScreenChangeListener(IScreenChangeListener* screenChangeListener)
@@ -101,7 +128,8 @@ DMError ScreenSession::GetScreenSupportedColorGamuts(std::vector<ScreenColorGamu
 {
     auto ret = RSInterfaces::GetInstance().GetScreenSupportedColorGamuts(rsId_, colorGamuts);
     if (ret != StatusCode::SUCCESS) {
-        WLOGE("SCB: ScreenSession::GetScreenSupportedColorGamuts fail! rsId %{public}" PRIu64"", rsId_);
+        WLOGE("SCB: ScreenSession::GetScreenSupportedColorGamuts fail! rsId %{public}" PRIu64", ret:%{public}d",
+            rsId_, ret);
         return DMError::DM_ERROR_RENDER_SERVICE_FAILED;
     }
     WLOGI("SCB: ScreenSession::GetScreenSupportedColorGamuts ok! rsId %{public}" PRIu64", size %{public}u",
@@ -115,9 +143,25 @@ ScreenId ScreenSession::GetScreenId()
     return screenId_;
 }
 
+void ScreenSession::SetScreenProperty(ScreenProperty prop)
+{
+    property_ = prop;
+}
+
 ScreenProperty ScreenSession::GetScreenProperty() const
 {
     return property_;
+}
+
+void ScreenSession::UpdatePropertyByActiveMode()
+{
+    sptr<SupportedScreenModes> mode = GetActiveScreenMode();
+    if (mode != nullptr) {
+        auto screeBounds = property_.GetBounds();
+        screeBounds.rect_.width_ = mode->width_;
+        screeBounds.rect_.height_ = mode->height_;
+        property_.SetBounds(screeBounds);
+    }
 }
 
 std::shared_ptr<RSDisplayNode> ScreenSession::GetDisplayNode() const
@@ -142,15 +186,91 @@ void ScreenSession::Disconnect()
 {
     screenState_ = ScreenState::DISCONNECTION;
     for (auto& listener : screenChangeListenerList_) {
+        if (!listener) {
+            continue;
+        }
         listener->OnDisconnect();
     }
 }
 
-void ScreenSession::PropertyChange(const ScreenProperty& newProperty)
+void ScreenSession::PropertyChange(const ScreenProperty& newProperty, ScreenPropertyChangeReason reason)
 {
     for (auto& listener : screenChangeListenerList_) {
-        listener->OnPropertyChange(newProperty);
+        if (!listener) {
+            continue;
+        }
+        listener->OnPropertyChange(newProperty, reason);
     }
+}
+
+float ScreenSession::ConvertRotationToFloat(Rotation sensorRotation)
+{
+    float rotation = 0.f;
+    switch (sensorRotation) {
+        case Rotation::ROTATION_90:
+            rotation = 90.f; // degree 90
+            break;
+        case Rotation::ROTATION_180:
+            rotation = 180.f; // degree 180
+            break;
+        case Rotation::ROTATION_270:
+            rotation = 270.f; // degree 270
+            break;
+        default:
+            rotation = 0.f;
+            break;
+    }
+    return rotation;
+}
+
+void ScreenSession::SensorRotationChange(Rotation sensorRotation)
+{
+    float rotation = ConvertRotationToFloat(sensorRotation);
+    for (auto& listener : screenChangeListenerList_) {
+        if (!listener) {
+            continue;
+        }
+        listener->OnSensorRotationChange(rotation);
+    }
+}
+
+void ScreenSession::ScreenOrientationChange(Orientation orientation)
+{
+    Rotation rotationAfter = CalcRotation(orientation);
+    float screenRotation = ConvertRotationToFloat(rotationAfter);
+    for (auto& listener : screenChangeListenerList_) {
+        if (!listener) {
+            continue;
+        }
+        listener->OnScreenOrientationChange(screenRotation);
+    }
+}
+
+void ScreenSession::UpdatePropertyAfterRotation(RRect bounds, int rotation)
+{
+    Rotation targetRotation = Rotation::ROTATION_0;
+    switch (rotation) {
+        case 90: // Rotation 90 degree
+            targetRotation = Rotation::ROTATION_90;
+            break;
+        case 180: // Rotation 180 degree
+            targetRotation = Rotation::ROTATION_180;
+            break;
+        case 270: // Rotation 270 degree
+            targetRotation = Rotation::ROTATION_270;
+            break;
+        default:
+            targetRotation = Rotation::ROTATION_0;
+            break;
+    }
+    DisplayOrientation displayOrientation = CalcDisplayOrientation(targetRotation);
+    property_.SetBounds(bounds);
+    property_.SetRotation(static_cast<float>(rotation));
+    property_.UpdateScreenRotation(targetRotation);
+    property_.SetDisplayOrientation(displayOrientation);
+    WLOGFI("bounds:[%{public}f %{public}f %{public}f %{public}f], rotation: %{public}u",
+        property_.GetBounds().rect_.GetLeft(), property_.GetBounds().rect_.GetTop(),
+        property_.GetBounds().rect_.GetWidth(), property_.GetBounds().rect_.GetHeight(), targetRotation);
 }
 
 sptr<SupportedScreenModes> ScreenSession::GetActiveScreenMode() const
@@ -185,6 +305,32 @@ void ScreenSession::SetRotation(Rotation rotation)
 void ScreenSession::SetScreenRequestedOrientation(Orientation orientation)
 {
     property_.SetScreenRequestedOrientation(orientation);
+}
+
+void ScreenSession::SetScreenRotationLocked(bool isLocked)
+{
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        isScreenLocked_ = isLocked;
+    }
+    for (auto& listener : screenChangeListenerList_) {
+        if (!listener) {
+            continue;
+        }
+        listener->OnScreenRotationLockedChange(isLocked);
+    }
+}
+
+void ScreenSession::SetScreenRotationLockedFromJs(bool isLocked)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    isScreenLocked_ = isLocked;
+}
+
+bool ScreenSession::IsScreenRotationLocked()
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    return isScreenLocked_;
 }
 
 Orientation ScreenSession::GetScreenRequestedOrientation() const
@@ -229,6 +375,34 @@ Rotation ScreenSession::CalcRotation(Orientation orientation) const
         default: {
             WLOGE("unknown orientation %{public}u", orientation);
             return Rotation::ROTATION_0;
+        }
+    }
+}
+
+DisplayOrientation ScreenSession::CalcDisplayOrientation(Rotation rotation) const
+{
+    sptr<SupportedScreenModes> info = GetActiveScreenMode();
+    if (info == nullptr) {
+        return DisplayOrientation::UNKNOWN;
+    }
+    // vertical: phone(Plugin screen); horizontal: pad & external screen
+    bool isVerticalScreen = info->width_ < info->height_;
+    switch (rotation) {
+        case Rotation::ROTATION_0: {
+            return isVerticalScreen ? DisplayOrientation::PORTRAIT : DisplayOrientation::LANDSCAPE;
+        }
+        case Rotation::ROTATION_90: {
+            return isVerticalScreen ? DisplayOrientation::LANDSCAPE : DisplayOrientation::PORTRAIT;
+        }
+        case Rotation::ROTATION_180: {
+            return isVerticalScreen ? DisplayOrientation::PORTRAIT_INVERTED : DisplayOrientation::LANDSCAPE_INVERTED;
+        }
+        case Rotation::ROTATION_270: {
+            return isVerticalScreen ? DisplayOrientation::LANDSCAPE_INVERTED : DisplayOrientation::PORTRAIT_INVERTED;
+        }
+        default: {
+            WLOGE("unknown rotation %{public}u", rotation);
+            return DisplayOrientation::UNKNOWN;
         }
     }
 }
@@ -379,20 +553,14 @@ DMError ScreenSession::SetScreenColorTransform()
     return DMError::DM_OK;
 }
 
-int32_t ScreenSession::GetPrivateSessionCount() const
+bool ScreenSession::HasPrivateSessionForeground() const
 {
-    return privateSessionCount_;
+    return hasPrivateWindowForeground_;
 }
 
-DMError ScreenSession::SetPrivateSessionCount(int32_t count)
+void ScreenSession::SetPrivateSessionForeground(bool hasPrivate)
 {
-    privateSessionCount_ = count;
-    return DMError::DM_OK;
-}
-
-bool ScreenSession::HasPrivateSession() const
-{
-    return privateSessionCount_ > 0;
+    hasPrivateWindowForeground_ = hasPrivate;
 }
 
 void ScreenSession::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startPoint)
@@ -463,6 +631,10 @@ bool ScreenSessionGroup::GetRSDisplayNodeConfig(sptr<ScreenSession>& screenSessi
         case ScreenCombination::SCREEN_MIRROR: {
             if (GetChildCount() == 0 || mirrorScreenId_ == screenSession->screenId_) {
                 WLOGI("AddChild, SCREEN_MIRROR, config is not mirror");
+                break;
+            }
+            if (defaultScreenSession == nullptr) {
+                WLOGFE("AddChild fail, defaultScreenSession is nullptr");
                 break;
             }
             std::shared_ptr<RSDisplayNode> displayNode = defaultScreenSession->GetDisplayNode();

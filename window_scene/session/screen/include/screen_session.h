@@ -16,6 +16,7 @@
 #ifndef OHOS_ROSEN_WINDOW_SCENE_SCREEN_SESSION_H
 #define OHOS_ROSEN_WINDOW_SCENE_SCREEN_SESSION_H
 
+#include <mutex>
 #include <vector>
 
 #include <refbase.h>
@@ -39,7 +40,10 @@ public:
 
     virtual void OnConnect() = 0;
     virtual void OnDisconnect() = 0;
-    virtual void OnPropertyChange(const ScreenProperty& newProperty) = 0;
+    virtual void OnPropertyChange(const ScreenProperty& newProperty, ScreenPropertyChangeReason reason) = 0;
+    virtual void OnSensorRotationChange(float sensorRotation) = 0;
+    virtual void OnScreenOrientationChange(float screenOrientation) = 0;
+    virtual void OnScreenRotationLockedChange(bool isLocked) = 0;
 };
 
 enum class ScreenState : int32_t {
@@ -55,6 +59,7 @@ public:
     ScreenSession(const std::string& name, ScreenId smsId, ScreenId rsId, ScreenId defaultScreenId);
     ~ScreenSession() = default;
 
+    void SetDisplayNodeScreenId(ScreenId screenId);
     void RegisterScreenChangeListener(IScreenChangeListener* screenChangeListener);
     void UnregisterScreenChangeListener(IScreenChangeListener* screenChangeListener);
 
@@ -63,7 +68,7 @@ public:
     sptr<SupportedScreenModes> GetActiveScreenMode() const;
     ScreenSourceMode GetSourceMode() const;
     void SetScreenCombination(ScreenCombination combination);
-    ScreenCombination GetScreenCombination() const; 
+    ScreenCombination GetScreenCombination() const;
 
     Orientation GetOrientation() const;
     void SetOrientation(Orientation orientation);
@@ -76,11 +81,14 @@ public:
     void SetScreenType(ScreenType type);
 
     ScreenId GetScreenId();
+    void SetScreenProperty(ScreenProperty prop);
     ScreenProperty GetScreenProperty() const;
+    void UpdatePropertyByActiveMode();
     std::shared_ptr<RSDisplayNode> GetDisplayNode() const;
     void ReleaseDisplayNode();
 
     Rotation CalcRotation(Orientation orientation) const;
+    DisplayOrientation CalcDisplayOrientation(Rotation rotation) const;
     void FillScreenInfo(sptr<ScreenInfo> info) const;
     void InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startPoint);
 
@@ -91,14 +99,17 @@ public:
     DMError SetScreenGamutMap(ScreenGamutMap gamutMap);
     DMError SetScreenColorTransform();
 
-    int32_t GetPrivateSessionCount() const;
-    DMError SetPrivateSessionCount(int32_t count);
-    bool HasPrivateSession() const;
+    bool HasPrivateSessionForeground() const;
+    void SetPrivateSessionForeground(bool hasPrivate);
     void SetDisplayBoundary(const RectF& rect, const uint32_t& offsetY);
+    void SetScreenRotationLocked(bool isLocked);
+    void SetScreenRotationLockedFromJs(bool isLocked);
+    bool IsScreenRotationLocked();
+    void UpdatePropertyAfterRotation(RRect bounds, int rotation);
 
     std::string name_ { "UNKNOW" };
-    ScreenId screenId_;
-    ScreenId rsId_;
+    ScreenId screenId_ {};
+    ScreenId rsId_ {};
     ScreenId defaultScreenId_ = SCREEN_ID_INVALID;
 
     int32_t activeIdx_ { 0 };
@@ -107,17 +118,23 @@ public:
     bool isScreenGroup_ { false };
     ScreenId groupSmsId_ { SCREEN_ID_INVALID };
     ScreenId lastGroupSmsId_ { SCREEN_ID_INVALID };
+    bool isScreenLocked_ = true;
 
     void Connect();
     void Disconnect();
-    void PropertyChange(const ScreenProperty& newProperty);
+    void PropertyChange(const ScreenProperty& newProperty, ScreenPropertyChangeReason reason);
+    // notify scb
+    void SensorRotationChange(Rotation sensorRotation);
+    void ScreenOrientationChange(Orientation orientation);
 private:
+    float ConvertRotationToFloat(Rotation sensorRotation);
     ScreenProperty property_;
     std::shared_ptr<RSDisplayNode> displayNode_;
     ScreenState screenState_ { ScreenState::INIT };
     std::vector<IScreenChangeListener*> screenChangeListenerList_;
     ScreenCombination combination_ { ScreenCombination::SCREEN_ALONE };
-    int32_t privateSessionCount_ { 0 };
+    bool hasPrivateWindowForeground_ = false;
+    std::recursive_mutex mutex_;
 };
 
 class ScreenSessionGroup : public ScreenSession {

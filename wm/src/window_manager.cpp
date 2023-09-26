@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <cinttypes>
 
+#include "input_manager.h"
+
 #include "marshalling_helper.h"
 #include "window_adapter.h"
 #include "window_manager_agent.h"
@@ -30,7 +32,13 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowManager"};
+constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowManager"};
+struct WindowChecker : public MMI::IWindowChecker {
+public:
+    WindowChecker() = default;
+    ~WindowChecker() = default;
+    int32_t CheckWindowId(int32_t windowId) const override;
+};
 }
 
 WM_IMPLEMENT_SINGLE_INSTANCE(WindowManager)
@@ -127,12 +135,13 @@ void WindowManager::Impl::NotifyAccessibilityWindowInfo(const std::vector<sptr<A
         return;
     }
     for (auto& info : infos) {
-        WLOGFD("NotifyAccessibilityWindowInfo: wid[%{public}u], rect[%{public}d %{public}d %{public}d %{public}d]," \
+        WLOGFD("NotifyAccessibilityWindowInfo: wid[%{public}u], innerWid_[%{public}u], uiNodeId_[%{public}u]," \
+            "rect[%{public}d %{public}d %{public}d %{public}d]," \
             "isFocused[%{public}d], isDecorEnable[%{public}d], displayId[%{public}" PRIu64"], layer[%{public}u]," \
             "mode[%{public}u], type[%{public}u, updateType[%{public}d]",
-            info->wid_, info->windowRect_.width_, info->windowRect_.height_, info->windowRect_.posX_,
-            info->windowRect_.posY_, info->focused_, info->isDecorEnable_, info->displayId_, info->layer_,
-            info->mode_, info->type_, type);
+            info->wid_, info->innerWid_, info->uiNodeId_, info->windowRect_.width_, info->windowRect_.height_,
+            info->windowRect_.posX_, info->windowRect_.posY_, info->focused_, info->isDecorEnable_, info->displayId_,
+            info->layer_, info->mode_, info->type_, type);
     }
 
     std::vector<sptr<IWindowUpdateListener>> windowUpdateListeners;
@@ -154,7 +163,7 @@ void WindowManager::Impl::NotifyWindowVisibilityInfoChanged(
         visibilityChangeListeners = windowVisibilityListeners_;
     }
     for (auto& listener : visibilityChangeListeners) {
-        WLOGI("Notify WindowVisibilityInfo to caller");
+        WLOGD("Notify WindowVisibilityInfo to caller");
         listener->OnWindowVisibilityChanged(windowVisibilityInfos);
     }
 }
@@ -198,7 +207,21 @@ void WindowManager::Impl::NotifyGestureNavigationEnabledResult(bool enable)
     }
 }
 
-WindowManager::WindowManager() : pImpl_(std::make_unique<Impl>(mutex_)) {}
+WindowManager::WindowManager() : pImpl_(std::make_unique<Impl>(mutex_))
+{
+    auto windowChecker = std::make_shared<WindowChecker>();
+    MMI::InputManager::GetInstance()->SetWindowCheckerHandler(windowChecker);
+}
+
+int32_t WindowChecker::CheckWindowId(int32_t windowId) const
+{
+    int32_t pid = INVALID_PID;
+    WMError ret = SingletonContainer::Get<WindowAdapter>().CheckWindowId(windowId, pid);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("Window(%{public}d) do not allow styles to be set", windowId);
+    }
+    return pid;
+}
 
 WindowManager::~WindowManager()
 {
@@ -683,6 +706,24 @@ WMError WindowManager::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibility
     WMError ret = SingletonContainer::Get<WindowAdapter>().GetVisibilityWindowInfo(infos);
     if (ret != WMError::WM_OK) {
         WLOGFE("get window visibility info failed");
+    }
+    return ret;
+}
+
+WMError WindowManager::DumpSessionAll(std::vector<std::string> &infos)
+{
+    WMError ret = SingletonContainer::Get<WindowAdapter>().DumpSessionAll(infos);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("dump session all failed");
+    }
+    return ret;
+}
+
+WMError WindowManager::DumpSessionWithId(int32_t persistentId, std::vector<std::string> &infos)
+{
+    WMError ret = SingletonContainer::Get<WindowAdapter>().DumpSessionWithId(persistentId, infos);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("dump session with id failed");
     }
     return ret;
 }

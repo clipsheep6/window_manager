@@ -15,6 +15,7 @@
 
 #include "anr_handler.h"
 
+#include <algorithm>
 #include <cinttypes>
 #include <functional>
 #include <string>
@@ -28,10 +29,11 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "ANRHandler" };
-constexpr int64_t MAX_MARK_PROCESS_DELAY_TIME = 3500000;
-constexpr int64_t MIN_MARK_PROCESS_DELAY_TIME = 50000;
-constexpr int32_t INVALID_OR_PROCESSED_ID = -1;
-constexpr int32_t TIME_TRANSITION = 1000;
+constexpr int64_t MAX_MARK_PROCESS_DELAY_TIME_US { 3000000 };
+constexpr int64_t MARK_PROCESS_DELAY_TIME_BIAS_US { 1500000 };
+constexpr int32_t INVALID_EVENT_ID { -1 };
+constexpr int32_t INVALID_PERSISTENT_ID { -1 };
+constexpr int32_t TIME_TRANSITION { 1000 };
 const std::string ANR_HANDLER_RUNNER { "ANR_HANDLER" };
 } // namespace
 
@@ -49,106 +51,175 @@ ANRHandler::~ANRHandler() {}
 
 void ANRHandler::SetSessionStage(int32_t eventId, const wptr<ISessionStage> &sessionStage)
 {
-    std::lock_guard<std::mutex> guard(anrMtx_);
-    sessionStageMap_[eventId] = sessionStage;
-}
-
-void ANRHandler::SetLastProcessedEventStatus(bool status)
-{
-    event_.sendStatus = status;
-}
-
-void ANRHandler::UpdateLastProcessedEventId(int32_t eventId)
-{
-    event_.lastEventId = eventId;
-}
-
-void ANRHandler::SetLastProcessedEventId(int32_t eventId, int64_t actionTime)
-{
-    std::lock_guard<std::mutex> guard(anrMtx_);
-    if (event_.lastEventId > eventId) {
-        WLOGFE("Event id %{public}d less then last processed lastEventId %{public}d", eventId, event_.lastEventId);
-        return;
-    }
-    UpdateLastProcessedEventId(eventId);
-    int64_t currentTime = GetSysClockTime();
-    int64_t timeoutTime = ANRTimeOutTime::INPUT_UI_TIMEOUT_TIME * TIME_TRANSITION - (currentTime - actionTime);
-    WLOGFD("Processed eventId:%{public}d, actionTime:%{public}" PRId64 ", "
-        "currentTime:%{public}" PRId64 ", timeoutTime:%{public}" PRId64,
-        eventId, actionTime, currentTime, timeoutTime);
-    if (event_.sendStatus) {
-        return;
-    }
-    if (timeoutTime < MIN_MARK_PROCESS_DELAY_TIME) {
-        SendEvent(0);
-    } else {
-        int64_t delayTime = 0;
-        if (timeoutTime >= MAX_MARK_PROCESS_DELAY_TIME) {
-            delayTime = MAX_MARK_PROCESS_DELAY_TIME / TIME_TRANSITION;
-        } else {
-            delayTime = timeoutTime / TIME_TRANSITION;
+    PostTask([this, eventId, sessionStage]() {
+        sptr<ISessionStage> session = sessionStage.promote();
+        if (session == nullptr) {
+            WLOGFE("SessionStage for eventId:%{public}d is nullptr", eventId);
+            sessionStageMap_[eventId] = { INVALID_PERSISTENT_ID, nullptr };
+            return;
         }
-        SendEvent(delayTime);
-    }
+        int32_t persistentId = session->GetPersistentId();
+        sessionStageMap_[eventId] = { persistentId, sessionStage };
+        WLOGFD("SetSessionStage for eventId:%{public}d, persistentId:%{public}d", eventId, persistentId);
+    });
 }
 
-int32_t ANRHandler::GetLastProcessedEventId()
+void ANRHandler::HandleEventConsumed(int32_t eventId, int64_t actionTime)
 {
-    if (event_.lastEventId == INVALID_OR_PROCESSED_ID
-        || event_.lastEventId < event_.lastReportId) {
-        WLOGFD("Invalid or processed, lastEventId:%{public}d, lastReportId:%{public}d",
-            event_.lastEventId, event_.lastReportId);
-        return INVALID_OR_PROCESSED_ID;
+    PostTask([this, eventId, actionTime]() {
+        int32_t currentPersistentId = GetPersistentIdOfEvent(eventId);
+        WLOGFD("Processed eventId:%{public}d, persistentId:%{public}d", eventId, currentPersistentId);
+        if (IsOnEventHandler(currentPersistentId)) {
+            UpdateLatestEventId(eventId);
+            return;
+        }
+        int64_t currentTime = GetSysClockTime();
+        int64_t timeoutTime = ANRTimeOutTime::INPUT_UI_TIMEOUT_TIME * TIME_TRANSITION - (currentTime - actionTime);
+        WLOGFD("Processed eventId:%{public}d, persistentId:%{public}d, actionTime:%{public}" PRId64 ", "
+            "currentTime:%{public}" PRId64 ", timeoutTime:%{public}" PRId64,
+            eventId, currentPersistentId, actionTime, currentTime, timeoutTime);
+        if (timeoutTime >= MAX_MARK_PROCESS_DELAY_TIME_US) {
+            int64_t delayTime = std::min(timeoutTime - MARK_PROCESS_DELAY_TIME_BIAS_US, MAX_MARK_PROCESS_DELAY_TIME_US);
+            SendEvent(eventId, delayTime / TIME_TRANSITION);
+        } else {
+            SendEvent(eventId, 0);
+        }
+    });
+}
+
+void ANRHandler::OnWindowDestroyed(int32_t persistentId)
+{
+    PostTask([this, persistentId]() {
+        anrHandlerState_.sendStatus.erase(persistentId);
+        anrHandlerState_.eventsIterMap.erase(persistentId);
+        for (auto iter = sessionStageMap_.begin(); iter != sessionStageMap_.end();) {
+            if (iter->second.persistentId == persistentId) {
+                iter = sessionStageMap_.erase(iter);
+            } else {
+                ++iter;
+            }
+        }
+        WLOGFD("PersistentId:%{public}d and its events erased in ANRHandler", persistentId);
+    });
+}
+
+bool ANRHandler::PostTask(Task&& task, int64_t delayTime)
+{
+    if (eventHandler_ == nullptr) {
+        WLOGFE("EventHandler is nullptr");
+        return false;
     }
-    event_.lastReportId = event_.lastEventId;
-    WLOGFD("Processed lastEventId:%{public}d, lastReportId:%{public}d", event_.lastEventId, event_.lastReportId);
-    return event_.lastEventId;
+    if (eventHandler_->GetEventRunner()->IsCurrentRunnerThread()) {
+        WLOGFE("Already running on eventHandler");
+        task();
+        return true;
+    }
+    if (!eventHandler_->PostTask(std::move(task), delayTime, AppExecFwk::EventQueue::Priority::IMMEDIATE)) {
+        WLOGFE("PostTask failed");
+        return false;
+    }
+    return true;
+}
+
+void ANRHandler::SetAnrHandleState(int32_t eventId, bool status)
+{
+    CALL_DEBUG_ENTER;
+    int32_t persistentId = GetPersistentIdOfEvent(eventId);
+    anrHandlerState_.sendStatus[persistentId] = status;
+    if (status) {
+        auto iter = anrHandlerState_.eventsToReceipt.insert(anrHandlerState_.eventsToReceipt.end(), eventId);
+        anrHandlerState_.eventsIterMap[persistentId] = iter;
+    } else {
+        anrHandlerState_.eventsToReceipt.pop_front();
+        anrHandlerState_.eventsIterMap[persistentId] = anrHandlerState_.eventsToReceipt.end();
+        ClearExpiredEvents(eventId);
+    }
 }
 
 void ANRHandler::MarkProcessed()
 {
-    int32_t eventId = GetLastProcessedEventId();
-    if (eventId == INVALID_OR_PROCESSED_ID) {
+    CALL_DEBUG_ENTER;
+    if (anrHandlerState_.eventsToReceipt.empty()) {
+        WLOGFE("Events to receipt is empty");
+        SetAnrHandleState(INVALID_EVENT_ID, false);
         return;
     }
-    WLOGFD("Processed eventId:%{public}d", eventId);
+    int32_t eventId = anrHandlerState_.eventsToReceipt.front();
+    WLOGFI("MarkProcessed eventId:%{public}d, persistentId:%{public}d", eventId, GetPersistentIdOfEvent(eventId));
     if (sessionStageMap_.find(eventId) == sessionStageMap_.end()) {
-        WLOGFE("sessionStage for eventId:%{public}d is not in sessionStageMap", eventId);
-        return;
+        WLOGFE("SessionStage for eventId:%{public}d is not in sessionStageMap", eventId);
+    } else {
+        sptr<ISessionStage> session = sessionStageMap_[eventId].sessionStage.promote();
+        if (session == nullptr) {
+            WLOGFE("SessionStage for eventId:%{public}d is nullptr", eventId);
+        } else if (WSError ret = session->MarkProcessed(eventId); ret != WSError::WS_OK) {
+            WLOGFE("Send to sceneBoard failed, ret:%{public}d", ret);
+        }
     }
-    if (sessionStageMap_[eventId] == nullptr) {
-        WLOGFE("sessionStage for eventId:%{public}d is nullptr", eventId);
-        return;
-    }
-    if (WSError ret = sessionStageMap_[eventId]->MarkProcessed(eventId); ret != WSError::WS_OK) {
-        WLOGFE("Send to sceneBoard failed, ret:%{public}d", ret);
-    }
-    ClearExpiredEvents(eventId);
-    SetLastProcessedEventStatus(false);
+    SetAnrHandleState(eventId, false);
 }
 
-void ANRHandler::SendEvent(int64_t delayTime)
+void ANRHandler::SendEvent(int32_t eventId, int64_t delayTime)
 {
-    SetLastProcessedEventStatus(true);
-    if (eventHandler_ == nullptr) {
-        WLOGFE("eventHandler is nullptr");
-        return;
-    }
-    std::function<void()> eventFunc = std::bind(&ANRHandler::MarkProcessed, this);
-    if (!eventHandler_->PostHighPriorityTask(eventFunc, delayTime)) {
-        WLOGFE("Send dispatch event failed");
+    CALL_DEBUG_ENTER;
+    SetAnrHandleState(eventId, true);
+    if (eventHandler_ != nullptr &&
+        eventHandler_->PostHighPriorityTask([this]() {
+            MarkProcessed();
+        }, delayTime)) {
+        WLOGFD("Post eventId:%{public}d, delayTime:%{%{public}" PRId64 " successfully", eventId, delayTime);
+    } else {
+        WLOGFE("Post eventId:%{public}d, delayTime:%{%{public}" PRId64 " failed", eventId, delayTime);
+        SetAnrHandleState(eventId, false);
     }
 }
 
 void ANRHandler::ClearExpiredEvents(int32_t eventId)
 {
+    CALL_DEBUG_ENTER;
+    int32_t persistentId = GetPersistentIdOfEvent(eventId);
     for (auto iter = sessionStageMap_.begin(); iter != sessionStageMap_.end();) {
-        if (iter->first < eventId) {
-            sessionStageMap_.erase(iter++);
+        auto currentPersistentId = GetPersistentIdOfEvent(iter->first);
+        if (iter->first < eventId &&
+            (currentPersistentId == persistentId || currentPersistentId == INVALID_PERSISTENT_ID)) {
+            iter = sessionStageMap_.erase(iter);
         } else {
-            iter++;
+            ++iter;
         }
     }
 }
+
+int32_t ANRHandler::GetPersistentIdOfEvent(int32_t eventId)
+{
+    if (sessionStageMap_.find(eventId) != sessionStageMap_.end()) {
+        return sessionStageMap_[eventId].persistentId;
+    }
+    WLOGFE("No sessionStage for eventId:%{public}d", eventId);
+    return INVALID_PERSISTENT_ID;
+}
+
+bool ANRHandler::IsOnEventHandler(int32_t persistentId)
+{
+    if (anrHandlerState_.sendStatus.find(persistentId) != anrHandlerState_.sendStatus.end() &&
+        anrHandlerState_.sendStatus[persistentId]) {
+        return true;
+    }
+    return false;
+}
+
+void ANRHandler::UpdateLatestEventId(int32_t eventId)
+{
+    auto currentPersistentId = GetPersistentIdOfEvent(eventId);
+    auto pendingEventIter = anrHandlerState_.eventsIterMap[currentPersistentId];
+    if (pendingEventIter == anrHandlerState_.eventsToReceipt.end()) {
+        WLOGFE("No pending event on eventsToReceipt");
+        return;
+    }
+    if (eventId > *pendingEventIter) {
+        WLOGFD("Replace eventId:%{public}d by newer eventId:%{public}d", *pendingEventIter, eventId);
+        *pendingEventIter = eventId;
+    }
+}
+
 } // namespace Rosen
 } // namespace OHOS
