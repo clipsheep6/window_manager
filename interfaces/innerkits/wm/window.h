@@ -24,8 +24,10 @@
 #include "window_option.h"
 #include "occupied_area_change_info.h"
 
-class NativeValue;
+typedef struct napi_env__* napi_env;
+typedef struct napi_value__* napi_value;
 class NativeEngine;
+class NativeValue;
 namespace OHOS::MMI {
     class PointerEvent;
     class KeyEvent;
@@ -1077,17 +1079,45 @@ public:
      * @brief set window ui content
      *
      * @param contentInfo content info path
-     * @param engine
+     * @param env
      * @param storage
      * @param isDistributed
      * @param ability
      * @return WMError
      */
-    virtual WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
-        NativeValue* storage, bool isDistributed = false, AppExecFwk::Ability* ability = nullptr)
+    /* origin code
+    virtual WMError SetUIContent(const std::string& contentInfo, napi_env env,
+        napi_value storage, bool isDistributed = false, AppExecFwk::Ability* ability = nullptr)
     {
         return WMError::WM_OK;
     }
+    */
+
+    // to do
+    virtual WMError SetUIContent(const std::string& contentInfo, napi_env env,
+        napi_value storage, bool isDistributed, AppExecFwk::Ability* ability)
+    {
+        return WMError::WM_OK;
+    }
+
+    virtual WMError SetUIContent(const std::string& contentInfo, napi_env env,
+        napi_value storage)
+    {
+        return WMError::WM_OK;
+    }
+
+    virtual WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
+        NativeValue* storage, bool isDistributed)
+    {
+        return WMError::WM_OK;
+    }
+
+    virtual WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine, 
+        NativeValue* storage)
+    {
+        return WMError::WM_OK;
+    }
+
     /**
      * @brief set window ui content
      *
@@ -1098,7 +1128,7 @@ public:
      * @param ability
      * @return WMError
      */
-    virtual WMError SetUIContentByName(const std::string& contentInfo, NativeEngine* engine, NativeValue* storage,
+    virtual WMError SetUIContentByName(const std::string& contentInfo, napi_env env, napi_value storage,
         AppExecFwk::Ability* ability = nullptr)
     {
         return WMError::WM_OK;

@@ -167,8 +167,8 @@ public:
     virtual void UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration) override;
     void NotifyTouchDialogTarget() override;
 
-    virtual WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
-        NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability) override;
+    virtual WMError SetUIContent(const std::string& contentInfo, napi_env env,
+        napi_value storage, bool isdistributed, AppExecFwk::Ability* ability) override;
     virtual std::string GetContentInfo() override;
     virtual const std::shared_ptr<AbilityRuntime::Context> GetContext() const override;
     virtual Ace::UIContent* GetUIContent() const override;

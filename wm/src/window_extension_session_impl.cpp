@@ -146,7 +146,7 @@ void WindowExtensionSessionImpl::NotifyBackpressedEvent(bool& isConsumed)
 }
 
 WMError WindowExtensionSessionImpl::SetUIContent(const std::string& contentInfo,
-    NativeEngine* engine, NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability)
+    napi_env env, napi_value storage, bool isdistributed, AppExecFwk::Ability* ability)
 {
     WLOGFD("WindowExtensionSessionImpl SetUIContent: %{public}s state:%{public}u", contentInfo.c_str(), state_);
     if (uiContent_) {
@@ -156,7 +156,7 @@ WMError WindowExtensionSessionImpl::SetUIContent(const std::string& contentInfo,
     if (ability != nullptr) {
         uiContent = Ace::UIContent::Create(ability);
     } else {
-        uiContent = Ace::UIContent::Create(context_.get(), engine);
+        uiContent = Ace::UIContent::Create(context_.get(), reinterpret_cast<NativeEngine*>(env));
     }
     if (uiContent == nullptr) {
         WLOGFE("fail to SetUIContent id: %{public}d", GetPersistentId());

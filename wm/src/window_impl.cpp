@@ -527,19 +527,19 @@ void WindowImpl::OnNewWant(const AAFwk::Want& want)
     }
 }
 
-WMError WindowImpl::SetUIContent(const std::string& contentInfo, NativeEngine* engine, NativeValue* storage,
+WMError WindowImpl::SetUIContent(const std::string& contentInfo, napi_env env, napi_value storage,
     bool isdistributed, AppExecFwk::Ability* ability)
 {
-    return SetUIContentInner(contentInfo, engine, storage, isdistributed, false, ability);
+    return SetUIContentInner(contentInfo, env, storage, isdistributed, false, ability);
 }
 
 WMError WindowImpl::SetUIContentByName(
-    const std::string& contentInfo, NativeEngine* engine, NativeValue* storage, AppExecFwk::Ability* ability)
+    const std::string& contentInfo, napi_env env, napi_value storage, AppExecFwk::Ability* ability)
 {
-    return SetUIContentInner(contentInfo, engine, storage, false, true, ability);
+    return SetUIContentInner(contentInfo, env, storage, false, true, ability);
 }
 
-WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, NativeEngine* engine, NativeValue* storage,
+WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
     bool isdistributed, bool isLoadedByName, AppExecFwk::Ability* ability)
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "loadContent");
@@ -551,7 +551,7 @@ WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, NativeEngi
     if (ability != nullptr) {
         uiContent = Ace::UIContent::Create(ability);
     } else {
-        uiContent = Ace::UIContent::Create(context_.get(), engine);
+        uiContent = Ace::UIContent::Create(context_.get(), reinterpret_cast<NativeEngine*>(env));
     }
     if (uiContent == nullptr) {
         WLOGFE("fail to SetUIContent id: %{public}u", property_->GetWindowId());

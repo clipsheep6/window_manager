@@ -16,14 +16,13 @@
 #include "native_engine/native_engine.h"
 #include "js_transaction_manager.h"
 
+static napi_module g_transactionModule = {
+    .nm_filename = "module/libtransactionmanager_napi.so/transactionManager.js",
+    .nm_register_func = OHOS::Rosen::JsTransactionManager::Init,
+    .nm_modname = "transactionManager",
+};
+
 extern "C" __attribute__((constructor)) void NAPI_transactionManager_AutoRegister()
 {
-    auto moduleManager = NativeModuleManager::GetInstance();
-    NativeModule newModuleInfo = {
-        .name = "transactionManager",
-        .fileName = "module/libtransactionmanager_napi.so/transactionManager.js",
-        .registerCallback = OHOS::Rosen::JsTransactionManager::Init,
-    };
-
-    moduleManager->Register(&newModuleInfo);
+    napi_module_register(&g_transactionModule);
 }
