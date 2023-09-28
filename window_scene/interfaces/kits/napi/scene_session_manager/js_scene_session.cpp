@@ -77,6 +77,7 @@ NativeValue* JsSceneSession::Create(NativeEngine& engine, const sptr<SceneSessio
     BindNativeFunction(engine, *object, "setShowRecent", moduleName, JsSceneSession::SetShowRecent);
     BindNativeFunction(engine, *object, "setZOrder", moduleName, JsSceneSession::SetZOrder);
     BindNativeFunction(engine, *object, "setPrivacyMode", moduleName, JsSceneSession::SetPrivacyMode);
+    BindNativeFunction(engine, *object, "setSystemSceneBGAlpha", moduleName, JsSceneSession::SetSystemSceneBGAlpha);
 
     return objValue;
 }
@@ -609,6 +610,13 @@ NativeValue* JsSceneSession::SetPrivacyMode(NativeEngine* engine, NativeCallback
     return (me != nullptr) ? me->OnSetPrivacyMode(*engine, *info) : nullptr;
 }
 
+NativeValue* JsSceneSession::SetSystemSceneBGAlpha(NativeEngine* engine, NativeCallbackInfo* info)
+{
+    WLOGI("[NAPI]SetSystemSceneBGAlpha");
+    JsSceneSession* me = CheckParamsAndGetThis<JsSceneSession>(engine, info);
+    return (me != nullptr) ? me->OnSetSystemSceneBGAlpha(*engine, *info) : nullptr;
+}
+
 NativeValue* JsSceneSession::SetShowRecent(NativeEngine* engine, NativeCallbackInfo* info)
 {
     WLOGI("[NAPI]SetShowRecent");
@@ -745,6 +753,33 @@ NativeValue* JsSceneSession::OnSetPrivacyMode(NativeEngine& engine, NativeCallba
     session->SetPrivacyMode(isPrivacy);
     SceneSessionManager::GetInstance().UpdatePrivateStateAndNotify(session->GetPersistentId());
     WLOGFI("[NAPI]OnSetPrivacyMode end");
+    return engine.CreateUndefined();
+}
+
+NativeValue* JsSceneSession::OnSetSystemSceneBGAlpha(NativeEngine& engine, NativeCallbackInfo& info)
+{
+    if (info.argc < 1) { // 1: params num
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
+        engine.Throw(CreateJsError(engine, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return engine.CreateUndefined();
+    }
+    double alpha = 0.f;
+    if (!ConvertFromJsValue(engine, info.argv[0], alpha)) {
+        WLOGFE("[NAPI]Failed to convert parameter to bool");
+        engine.Throw(CreateJsError(engine, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return engine.CreateUndefined();
+    }
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        WLOGFE("[NAPI]session is nullptr");
+        engine.Throw(CreateJsError(engine, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return engine.CreateUndefined();
+    }
+    session->SetSystemSceneBGAlpha(alpha);
+    WLOGFI("[NAPI]OnSetSystemSceneBGAlpha end");
     return engine.CreateUndefined();
 }
 
