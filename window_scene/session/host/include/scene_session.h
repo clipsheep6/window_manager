@@ -164,6 +164,7 @@ public:
     bool IsDecorEnable();
     void UpdateNativeVisibility(bool visible);
     void SetPrivacyMode(bool isPrivacy);
+	void SetSystemSceneBGAlpha(float alpha);
     bool IsVisible() const;
     bool IsFloatingWindowAppType() const;
     void DumpSessionElementInfo(const std::vector<std::string>& params);
