@@ -764,7 +764,7 @@ NativeValue* JsSceneSession::OnSetSystemSceneBGAlpha(NativeEngine& engine, Nativ
             "Input parameter is missing or invalid"));
         return engine.CreateUndefined();
     }
-    float alpha = 0.f;
+    double alpha = 0.f;
     if (!ConvertFromJsValue(engine, info.argv[0], alpha)) {
         WLOGFE("[NAPI]Failed to convert parameter to bool");
         engine.Throw(CreateJsError(engine, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),

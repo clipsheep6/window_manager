@@ -1325,7 +1325,7 @@ void SceneSession::SetPrivacyMode(bool isPrivacy)
     RSTransaction::FlushImplicitTransaction();
 }
 
-void SceneSession::SetSystemSceneBGAlpha(float alpha)
+void SceneSession::SetSystemSceneBGAlpha(double alpha)
 {
     if (alpha < 0 || alpha > 1.0) {
         WLOGFE("OnSetSystemSceneBGAlpha property is null");
