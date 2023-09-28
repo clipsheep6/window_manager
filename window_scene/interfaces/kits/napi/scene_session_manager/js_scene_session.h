@@ -46,12 +46,14 @@ private:
     static NativeValue* SetShowRecent(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetZOrder(NativeEngine* engine, NativeCallbackInfo* info);
     static NativeValue* SetPrivacyMode(NativeEngine* engine, NativeCallbackInfo* info);
+    static NativeValue* SetSystemSceneBGAlpha(NativeEngine* engine, NativeCallbackInfo* info);
 
     NativeValue* OnRegisterCallback(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnUpdateNativeVisibility(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnSetShowRecent(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnSetZOrder(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnSetPrivacyMode(NativeEngine& engine, NativeCallbackInfo& info);
+    NativeValue* OnSetSystemSceneBGAlpha(NativeEngine& engine, NativeCallbackInfo& info);
 
     bool IsCallbackRegistered(const std::string& type, NativeValue* jsListenerObject);
     bool IsCallbackTypeSupported(const std::string& type);
