@@ -1335,15 +1335,13 @@ void SceneSession::SetSystemSceneBGAlpha(float alpha)
         WLOGFE("surfaceNode_ is null");
         return;
     }
-	uint8_t alpha8bit = static_cast<uint8_t>(alpha * 255);
+    uint8_t alpha8bit = static_cast<uint8_t>(alpha * 255);
     surfaceNode_->OnSetSystemSceneBGAlpha(alpha8bit);
     if (leashWinSurfaceNode_ != nullptr) {
         leashWinSurfaceNode_->OnSetSystemSceneBGAlpha(alpha8bit);
     }
     RSTransaction::FlushImplicitTransaction();
 }
-
-
 
 WSError SceneSession::UpdateWindowAnimationFlag(bool needDefaultAnimationFlag)
 {
