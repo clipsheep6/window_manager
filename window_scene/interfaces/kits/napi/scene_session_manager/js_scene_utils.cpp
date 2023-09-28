@@ -516,4 +516,18 @@ NativeValue* SessionTypeInit(NativeEngine* engine)
     SetTypeProperty(object, engine, "TYPE_VOICE_INTERACTION", JsSessionType::TYPE_VOICE_INTERACTION);
     return objValue;
 }
+
+napi_value NapiGetUndefined(napi_env env)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+napi_valuetype GetNapiType(napi_env env, napi_value value)
+{
+    napi_valuetype type = napi_undefined;
+    napi_typeof(env, value, &type);
+    return type;
+}
 } // namespace OHOS::Rosen

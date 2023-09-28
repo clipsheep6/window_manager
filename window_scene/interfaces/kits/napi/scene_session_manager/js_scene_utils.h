@@ -154,6 +154,14 @@ NativeValue* CreateJsSessionRect(NativeEngine& engine, const WSRect& rect);
 NativeValue* CreateJsSystemBarPropertyArrayObject(
     NativeEngine& engine, const std::unordered_map<WindowType, SystemBarProperty>& propertyMap);
 NativeValue* SessionTypeInit(NativeEngine* engine);
+napi_value NapiGetUndefined(napi_env env);
+napi_valuetype GetNapiType(napi_env env, napi_value value);
+
+constexpr size_t ARGC_ZERO = 0;
+constexpr size_t ARGC_ONE = 1;
+constexpr size_t ARGC_TWO = 2;
+constexpr size_t ARGC_THREE = 3 ;
+constexpr size_t ARGC_FOUR = 4;
 } // namespace OHOS::Rosen
 
 #endif // OHOS_WINDOW_SCENE_JS_SCENE_UTILS_H
