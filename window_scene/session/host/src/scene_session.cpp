@@ -1336,9 +1336,9 @@ void SceneSession::SetSystemSceneBGAlpha(float alpha)
         return;
     }
     uint8_t alpha8bit = static_cast<uint8_t>(alpha * 255);
-    surfaceNode_->OnSetSystemSceneBGAlpha(alpha8bit);
+    surfaceNode_->SetAbilityBGAlpha(alpha8bit);
     if (leashWinSurfaceNode_ != nullptr) {
-        leashWinSurfaceNode_->OnSetSystemSceneBGAlpha(alpha8bit);
+        leashWinSurfaceNode_->SetAbilityBGAlpha(alpha8bit);
     }
     RSTransaction::FlushImplicitTransaction();
 }
