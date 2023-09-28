@@ -18,6 +18,7 @@
 
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
+#include "event_handler.h"
 #include "session/host/include/root_scene_session.h"
 
 namespace OHOS::Rosen {
@@ -33,15 +34,18 @@ public:
     static NativeValue* LoadContent(NativeEngine* engine, NativeCallbackInfo* info);
 
 private:
+    using Task = std::function<void()>;
     NativeValue* OnRegisterCallback(NativeEngine& engine, NativeCallbackInfo& info);
     NativeValue* OnLoadContent(NativeEngine& engine, NativeCallbackInfo& info);
     bool IsCallbackRegistered(std::string type, NativeValue* jsListenerObject);
     void PendingSessionActivation(SessionInfo& info);
     sptr<SceneSession> GenSceneSession(SessionInfo& info);
+    void PostAsyncTask(Task&& task, int64_t delayTime = 0);
 
     NativeEngine& engine_;
     std::map<std::string, std::shared_ptr<NativeReference>> jsCbMap_;
     sptr<RootSceneSession> rootSceneSession_;
+    std::shared_ptr<AppExecFwk::EventHandler> handler_;
 };
 } // namespace OHOS::Rosen
 
