@@ -80,7 +80,7 @@ napi_value JsSceneSession::Create(napi_env env, const sptr<SceneSession>& sessio
     BindNativeFunction(env, objValue, "setShowRecent", moduleName, JsSceneSession::SetShowRecent);
     BindNativeFunction(env, objValue, "setZOrder", moduleName, JsSceneSession::SetZOrder);
     BindNativeFunction(env, objValue, "setPrivacyMode", moduleName, JsSceneSession::SetPrivacyMode);
-    BindNativeFunction(engine, *object, "setSystemSceneOcclusionAlpha", moduleName, JsSceneSession::SetSystemSceneOcclusionAlpha);
+    BindNativeFunction(env, objValue, "setSystemSceneOcclusionAlpha", moduleName, JsSceneSession::SetSystemSceneOcclusionAlpha);
 
     return objValue;
 }
