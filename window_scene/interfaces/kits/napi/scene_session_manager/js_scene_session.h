@@ -52,6 +52,7 @@ private:
     napi_value OnSetShowRecent(napi_env env, napi_callback_info info);
     napi_value OnSetZOrder(napi_env env, napi_callback_info info);
     napi_value OnSetPrivacyMode(napi_env env, napi_callback_info info);
+    NativeValue* OnSetSystemSceneOcclusionAlpha(NativeEngine& engine, NativeCallbackInfo& info);
 
     bool IsCallbackRegistered(const std::string& type, napi_value jsListenerObject);
     bool IsCallbackTypeSupported(const std::string& type);
