@@ -82,7 +82,13 @@ void SessionDisplayPowerController::NotifyDisplayEvent(DisplayEvent event)
         displayStateChangeListener_(DISPLAY_ID_INVALID, nullptr, emptyMap, DisplayStateChangeType::BEFORE_UNLOCK);
         ScreenSessionManager::GetInstance().NotifyDisplayPowerEvent(DisplayPowerEvent::DESKTOP_READY,
             EventStatus::BEGIN);
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        isKeyguardDrawn_ = false;
         return;
+    }
+    if (event == DisplayEvent::KEYGUARD_DRAWN) {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        isKeyguardDrawn_ = true;
     }
 }
 }

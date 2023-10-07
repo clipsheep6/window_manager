@@ -203,6 +203,8 @@ private:
     bool OnRemoteDied(const sptr<IRemoteObject>& agent);
     std::string TransferTypeToString(ScreenType type) const;
 
+    void SetScreenOn();
+
     class ScreenIdManager {
     friend class ScreenSessionGroup;
     public:
@@ -251,6 +253,10 @@ private:
     float densityDpi_ { 1.0f };
 
     bool screenPrivacyStates = false;
+
+    bool notifyDrawnDone_ = false;
+    bool needScreenOn_ = false;
+    std::string taskName_ { "screenOn" };
 
     //Fold Screen
     std::map<ScreenId, ScreenProperty> phyScreenPropMap_;
