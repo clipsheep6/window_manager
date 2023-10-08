@@ -232,7 +232,7 @@ void WindowImpl::OnNewWant(const AAFwk::Want& want)
 }
 
 WMError WindowImpl::SetUIContent(const std::string& contentInfo,
-    NativeEngine* engine, NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability)
+    napi_env env, napi_value storage, bool isdistributed, AppExecFwk::Ability* ability)
 {
     WLOGFD("SetUIContent: %{public}s", contentInfo.c_str());
     if (uiContent_) {
@@ -242,7 +242,7 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
     if (ability != nullptr) {
         uiContent = Ace::UIContent::Create(ability);
     } else {
-        uiContent = Ace::UIContent::Create(context_.get(), engine);
+        uiContent = Ace::UIContent::Create(context_.get(), env);
     }
     if (uiContent == nullptr) {
         WLOGFE("fail to SetUIContent");
