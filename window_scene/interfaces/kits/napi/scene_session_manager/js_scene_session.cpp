@@ -772,7 +772,7 @@ napi_value JsSceneSession::OnSetPrivacyMode(napi_env env, napi_callback_info inf
     return NapiGetUndefined(env);
 }
 
-napi_value JsSceneSession::OnSetPrivacyMode(napi_env env, napi_callback_info info)
+napi_value JsSceneSession::OnSetSystemSceneOcclusionAlpha(napi_env env, napi_callback_info info)
 {
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
@@ -802,6 +802,8 @@ napi_value JsSceneSession::OnSetPrivacyMode(napi_env env, napi_callback_info inf
     SceneSessionManager::GetInstance().UpdatePrivateStateAndNotify(session->GetPersistentId());
     WLOGFI("[NAPI]OnSetSystemSceneOcclusionAlpha end");
     return NapiGetUndefined(env);
+
+
 }
 
 void JsSceneSession::OnCreateSpecificSession(const sptr<SceneSession>& sceneSession)
