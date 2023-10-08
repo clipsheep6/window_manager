@@ -613,11 +613,11 @@ napi_value JsSceneSession::SetPrivacyMode(napi_env env, napi_callback_info info)
     return (me != nullptr) ? me->OnSetPrivacyMode(env, info) : nullptr;
 }
 
-NativeValue* JsSceneSession::SetSystemSceneOcclusionAlpha(NativeEngine* engine, NativeCallbackInfo* info)
+napi_value JsSceneSession::SetSystemSceneOcclusionAlpha(napi_env env, napi_callback_info info)
 {
     WLOGI("[NAPI]SetSystemSceneOcclusionAlpha");
-    JsSceneSession* me = CheckParamsAndGetThis<JsSceneSession>(engine, info);
-    return (me != nullptr) ? me->OnSetSystemSceneOcclusionAlpha(*engine, *info) : nullptr;
+    JsSceneSession* me = CheckParamsAndGetThis<JsSceneSession>(env, info);
+    return (me != nullptr) ? me->OnSetSystemSceneOcclusionAlpha(env, info) : nullptr;
 }
 
 napi_value JsSceneSession::SetShowRecent(napi_env env, napi_callback_info info)
@@ -802,8 +802,6 @@ napi_value JsSceneSession::OnSetSystemSceneOcclusionAlpha(napi_env env, napi_cal
     SceneSessionManager::GetInstance().UpdatePrivateStateAndNotify(session->GetPersistentId());
     WLOGFI("[NAPI]OnSetSystemSceneOcclusionAlpha end");
     return NapiGetUndefined(env);
-
-
 }
 
 void JsSceneSession::OnCreateSpecificSession(const sptr<SceneSession>& sceneSession)
