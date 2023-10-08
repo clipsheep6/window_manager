@@ -740,6 +740,7 @@ WSError Session::Background()
     if (GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
         NotifyCallingSessionBackground();
     }
+    DelayedSingleton<ANRManager>::GetInstance()->OnBackground(persistentId_);
     return WSError::WS_OK;
 }
 
@@ -1293,7 +1294,9 @@ std::shared_ptr<Media::PixelMap> Session::Snapshot()
     auto pixelMap = callback->GetResult(2000); // wait for <= 2000ms
     if (pixelMap != nullptr) {
         WLOGFD("Save pixelMap WxH = %{public}dx%{public}d", pixelMap->GetWidth(), pixelMap->GetHeight());
-        notifySessionSnapshotFunc_(persistentId_);
+        if (notifySessionSnapshotFunc_) {
+            notifySessionSnapshotFunc_(persistentId_);
+        }
     } else {
         WLOGFE("Failed to get pixelMap, return nullptr");
     }
