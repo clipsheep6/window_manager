@@ -772,31 +772,36 @@ napi_value JsSceneSession::OnSetPrivacyMode(napi_env env, napi_callback_info inf
     return NapiGetUndefined(env);
 }
 
-NativeValue* JsSceneSession::OnSetSystemSceneOcclusionAlpha(NativeEngine& engine, NativeCallbackInfo& info)
+napi_value JsSceneSession::OnSetPrivacyMode(napi_env env, napi_callback_info info)
 {
-    if (info.argc < 1) { // 1: params num
-        WLOGFE("[NAPI]Argc is invalid: %{public}zu", info.argc);
-        engine.Throw(CreateJsError(engine, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc < 1) { // 1: params num
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu", argc);
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
             "Input parameter is missing or invalid"));
-        return engine.CreateUndefined();
+        return NapiGetUndefined(env);
     }
+
     double alpha = 0.f;
-    if (!ConvertFromJsValue(engine, info.argv[0], alpha)) {
+    if (!ConvertFromJsValue(env, argv[0], alpha)) {
         WLOGFE("[NAPI]Failed to convert parameter to bool");
-        engine.Throw(CreateJsError(engine, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
             "Input parameter is missing or invalid"));
-        return engine.CreateUndefined();
+        return NapiGetUndefined(env);
     }
     auto session = weakSession_.promote();
     if (session == nullptr) {
         WLOGFE("[NAPI]session is nullptr");
-        engine.Throw(CreateJsError(engine, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
             "Input parameter is missing or invalid"));
-        return engine.CreateUndefined();
+        return NapiGetUndefined(env);
     }
     session->SetSystemSceneOcclusionAlpha(alpha);
+    SceneSessionManager::GetInstance().UpdatePrivateStateAndNotify(session->GetPersistentId());
     WLOGFI("[NAPI]OnSetSystemSceneOcclusionAlpha end");
-    return engine.CreateUndefined();
+    return NapiGetUndefined(env);
 }
 
 void JsSceneSession::OnCreateSpecificSession(const sptr<SceneSession>& sceneSession)
