@@ -193,6 +193,7 @@ public:
     WMError CheckWindowId(int32_t windowId, int32_t &pid);
     int GetSceneSessionPrivacyModeCount();
     bool CheckIfReuseSession(SessionInfo& sessionInfo);
+    bool IsAbilityControllerStart(int32_t persistentId, const AAFwk::Want &want);
 
 public:
     std::shared_ptr<TaskScheduler> GetTaskScheduler() {return taskScheduler_;};
