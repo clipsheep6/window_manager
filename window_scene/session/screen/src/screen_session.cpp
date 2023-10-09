@@ -143,11 +143,6 @@ ScreenId ScreenSession::GetScreenId()
     return screenId_;
 }
 
-void ScreenSession::SetScreenProperty(ScreenProperty prop)
-{
-    property_ = prop;
-}
-
 ScreenProperty ScreenSession::GetScreenProperty() const
 {
     return property_;
@@ -162,6 +157,13 @@ void ScreenSession::UpdatePropertyByActiveMode()
         screeBounds.rect_.height_ = mode->height_;
         property_.SetBounds(screeBounds);
     }
+}
+
+void ScreenSession::UpdatePropertyByFoldControl(RRect bounds, uint32_t phyWidth, uint32_t phyHeight)
+{
+    property_.SetBounds(bounds);
+    property_.SetPhyWidth(phyWidth);
+    property_.SetPhyHeight(phyHeight);
 }
 
 std::shared_ptr<RSDisplayNode> ScreenSession::GetDisplayNode() const
