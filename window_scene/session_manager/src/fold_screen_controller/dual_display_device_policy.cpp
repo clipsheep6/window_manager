@@ -60,8 +60,10 @@ void DualDisplayDevicePolicy::ChangeScreenDisplayMode(FoldDisplayMode displayMod
 
                 screenSession->SetDisplayNodeScreenId(screenIdMain);
                 screenProperty_ = ScreenSessionManager::GetInstance().GetPhyScreenProperty(screenIdMain);
-                screenSession->SetScreenProperty(screenProperty_);
-                screenSession->PropertyChange(screenProperty_, ScreenPropertyChangeReason::FOLD_SCREEN_EXPAND);
+                screenSession->UpdatePropertyByFoldControl(screenProperty_.GetBounds(),
+                    screenProperty_.GetPhyWidth(), screenProperty_.GetPhyHeight());
+                screenSession->PropertyChange(screenSession->GetScreenProperty(),
+                    ScreenPropertyChangeReason::FOLD_SCREEN_EXPAND);
                 screenId_ = screenIdMain;
                 break;
             }
@@ -77,8 +79,10 @@ void DualDisplayDevicePolicy::ChangeScreenDisplayMode(FoldDisplayMode displayMod
 
                 screenSession->SetDisplayNodeScreenId(screenIdFull);
                 screenProperty_ = ScreenSessionManager::GetInstance().GetPhyScreenProperty(screenIdFull);
-                screenSession->SetScreenProperty(screenProperty_);
-                screenSession->PropertyChange(screenProperty_, ScreenPropertyChangeReason::FOLD_SCREEN_EXPAND);
+                screenSession->UpdatePropertyByFoldControl(screenProperty_.GetBounds(),
+                    screenProperty_.GetPhyWidth(), screenProperty_.GetPhyHeight());
+                screenSession->PropertyChange(screenSession->GetScreenProperty(),
+                    ScreenPropertyChangeReason::FOLD_SCREEN_EXPAND);
                 screenId_ = screenIdFull;
                 break;
             }

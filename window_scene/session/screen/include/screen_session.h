@@ -81,9 +81,9 @@ public:
     void SetScreenType(ScreenType type);
 
     ScreenId GetScreenId();
-    void SetScreenProperty(ScreenProperty prop);
     ScreenProperty GetScreenProperty() const;
     void UpdatePropertyByActiveMode();
+    void UpdatePropertyByFoldControl(RRect bounds, uint32_t phyWidth, uint32_t phyHeight);
     std::shared_ptr<RSDisplayNode> GetDisplayNode() const;
     void ReleaseDisplayNode();
 
