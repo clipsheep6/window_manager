@@ -4630,4 +4630,15 @@ void SceneSessionManager::PreHandleCollaborator(sptr<SceneSession>& sceneSession
     NotifySessionCreate(sceneSession, sceneSession->GetSessionInfo());
     sceneSession->SetSessionInfoAncoSceneState(AncoSceneState::NOTIFY_CREATE);
 }
+
+bool SceneSessionManager::IsAbilityControllerStart(int32_t persistentId, const AAFwk::Want &want) {
+    WLOGFI("IsAbilityControllerStart in.");
+    auto sceneSession = GetSceneSession(persistentId);
+    if (sceneSession == nullptr) {
+        WLOGFI("IsAbilityControllerStart used want");
+        return AAFwk::AbilityManagerClient::GetInstance()->IsAbilityControllerStart(want);
+    }
+    return AAFwk::AbilityManagerClient::GetInstance()->IsAbilityControllerStart(
+        *(sceneSession->GetSessionInfo().want));
+}
 } // namespace OHOS::Rosen

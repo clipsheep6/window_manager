@@ -84,6 +84,8 @@ napi_value JsSceneSessionManager::Init(napi_env env, napi_value exportObj)
         JsSceneSessionManager::RequestSceneSessionByCall);
     BindNativeFunction(env, exportObj, "startAbilityBySpecified", moduleName,
         JsSceneSessionManager::StartAbilityBySpecified);
+    BindNativeFunction(env, exportObj, "isAbilityControllerStart", moduleName,
+        JsSceneSessionManager::IsAbilityControllerStart);
     BindNativeFunction(env, exportObj, "getSessionSnapshot", moduleName,
         JsSceneSessionManager::GetSessionSnapshotFilePath);
     BindNativeFunction(env, exportObj, "InitWithRenderServiceAdded", moduleName,
@@ -407,6 +409,47 @@ napi_value JsSceneSessionManager::SendTouchEvent(napi_env env, napi_callback_inf
     JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(env, info);
     return (me != nullptr) ? me->OnSendTouchEvent(env, info) : nullptr;
 }
+
+napi_value JsSceneSessionManager::IsAbilityControllerStart(napi_env env, napi_callback_info info)
+{
+    WLOGI("[NAPI]IsAbilityControllerStart");
+    JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(env, info);
+    return (me != nullptr) ? me->OnIsAbilityControllerStart(env, info) : nullptr;
+}
+
+napi_value JsSceneSessionManager::OnIsAbilityControllerStart(napi_env env, napi_callback_info info)
+{
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    napi_value result = nullptr;
+    if (argc < ARGC_TWO) {
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu", argc);
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        napi_get_boolean(env, false, &result);
+        return result;
+    }
+    int32_t persistentId;
+    if (!ConvertFromJsValue(env, argv[0], persistentId)) {
+        WLOGFE("[NAPI]Failed to convert parameter to persistentId");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        napi_get_boolean(env, false, &result);
+        return result;
+    }
+    AAFwk::Want want;
+    bool ret = OHOS::AppExecFwk::UnwrapWant(env, argv[1], want);
+    if (!ret) {
+        WLOGFE("[NAPI]Failed to convert parameter to want");
+        napi_get_boolean(env, false, &result);
+        return result;
+    }
+    bool canDump = SceneSessionManager::GetInstance().IsAbilityControllerStart(persistentId, want);
+    napi_get_boolean(env, canDump, &result);
+    return result;
+}
+
 
 bool JsSceneSessionManager::IsCallbackRegistered(const std::string& type, napi_value jsListenerObject)
 {
