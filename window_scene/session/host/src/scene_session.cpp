@@ -925,12 +925,9 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
         specificCallback_->onSessionTouchOutside_(GetPersistentId());
     }
 
-    static bool isNew = true;
-    if (isNew) {
-        auto ret = HandlePointerStyle(pointerEvent);
-        if ((ret != WSError::WS_OK) && (ret != WSError::WS_DO_NOTHING)) {
-            WLOGFE("Failed to update the mouse cursor style, ret:%{public}d", ret);
-        }
+    auto ret = HandlePointerStyle(pointerEvent);
+    if ((ret != WSError::WS_OK) && (ret != WSError::WS_DO_NOTHING)) {
+        WLOGFE("Failed to update the mouse cursor style, ret:%{public}d", ret);
     }
     auto property = GetSessionProperty();
     if (property == nullptr) {
@@ -944,9 +941,6 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
             return Session::TransferPointerEvent(pointerEvent);
         }
         if (property->GetDragEnabled()) {
-            if (!isNew) {
-                moveDragController_->HandleMouseStyle(pointerEvent, winRect_);
-            }
             if (moveDragController_->ConsumeDragEvent(pointerEvent, winRect_, property, systemConfig_)) {
                 PresentFoucusIfNeed(pointerEvent->GetPointerAction());
                 return WSError::WS_OK;
