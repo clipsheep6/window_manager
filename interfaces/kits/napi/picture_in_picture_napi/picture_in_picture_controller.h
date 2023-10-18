@@ -15,16 +15,31 @@
 
 #ifndef OHOS_PICTURE_IN_PICTURE_CONTROLLER_H
 #define OHOS_PICTURE_IN_PICTURE_CONTROLLER_H
+
+#include <event_handler.h>
 #include <refbase.h>
+#include "window.h"
+#include "wm_common.h"
 
 namespace OHOS {
 namespace Rosen {
 class PictureInPictureController : virtual public RefBase {
 public:
+    PictureInPictureController();
+    ~PictureInPictureController();
     bool StartPictureInPicture();
     bool StopPictureInPicture();
-    void SetAutoStartEnabled(bool enable);
     void UpdateDisplaySize(uint32_t width, uint32_t height);
+private:
+    wptr<PictureInPictureController> weakRef_ = nullptr;
+
+    sptr<Window> window_;
+    int32_t mainWindowId_;
+    Rect windowRect_ = {};
+
+    const float winCorner_ = 40.0f;
+
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS
