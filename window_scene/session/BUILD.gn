@@ -68,6 +68,7 @@ ohos_shared_library("scene_session") {
     "ability_base:session_info",
     "ability_base:want",
     "ability_runtime:ability_start_setting",
+    "ability_runtime:insight_intent_execute_param",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "graphic_2d:librender_service_client",

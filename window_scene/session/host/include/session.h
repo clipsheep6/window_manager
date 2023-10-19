@@ -124,6 +124,8 @@ public:
     void SetSessionInfoIsClearSession(bool isClearSession);
     void SetSessionInfoAffinity(std::string affinity);
     void GetCloseAbilityWantAndClean(AAFwk::Want& outWant);
+    void SetSessionInfoInsightIntentExecuteParam(
+            const std::shared_ptr<AAFwk::InsightIntentExecuteParam>& insightIntentExecuteParam);
     void SetSessionInfo(const SessionInfo& info);
     const SessionInfo& GetSessionInfo() const;
     WindowType GetWindowType() const;

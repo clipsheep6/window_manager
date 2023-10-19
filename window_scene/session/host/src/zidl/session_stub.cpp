@@ -16,6 +16,7 @@
 #include "session/host/include/zidl/session_stub.h"
 
 #include "ability_start_setting.h"
+#include "insight_intent_execute_param.h"
 #include <ipc_types.h>
 #include <ui/rs_surface_node.h>
 #include "want.h"
@@ -238,6 +239,9 @@ int SessionStub::HandlePendingSessionActivation(MessageParcel& data, MessageParc
     }
     if (data.ReadBool()) {
         abilitySessionInfo->startSetting.reset(data.ReadParcelable<AAFwk::AbilityStartSetting>());
+    }
+    if (data.ReadBool()) {
+        abilitySessionInfo->insightIntentExecuteParam.reset(data.ReadParcelable<AAFwk::InsightIntentExecuteParam>());
     }
     const WSError& errCode = PendingSessionActivation(abilitySessionInfo);
     reply.WriteUint32(static_cast<uint32_t>(errCode));

@@ -16,6 +16,7 @@
 #include "session/host/include/zidl/session_proxy.h"
 
 #include "ability_start_setting.h"
+#include "insight_intent_execute_param.h"
 #include <ipc_types.h>
 #include <message_option.h>
 #include <ui/rs_surface_node.h>
@@ -187,6 +188,17 @@ WSError SessionProxy::PendingSessionActivation(sptr<AAFwk::SessionInfo> abilityS
     } else {
         if (!data.WriteBool(false)) {
             WLOGFE("Write has not startSetting failed");
+            return WSError::WS_ERROR_IPC_FAILED;
+        }
+    }
+    if (abilitySessionInfo->insightIntentExecuteParam) {
+        if (!data.WriteBool(true) || !data.WriteParcelable(abilitySessionInfo->insightIntentExecuteParam.get())) {
+            WLOGFE("Write insightIntentExecuteParam failed");
+            return WSError::WS_ERROR_IPC_FAILED;
+        }
+    } else {
+        if (!data.WriteBool(false)) {
+            WLOGFE("Write has not insightIntentExecuteParam failed");
             return WSError::WS_ERROR_IPC_FAILED;
         }
     }

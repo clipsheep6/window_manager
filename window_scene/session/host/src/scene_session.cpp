@@ -1563,6 +1563,7 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
         info.requestCode = abilitySessionInfo->requestCode;
         info.callerToken_ = abilitySessionInfo->callerToken;
         info.startSetting = abilitySessionInfo->startSetting;
+        info.insightIntentExecuteParam = abilitySessionInfo->insightIntentExecuteParam;
         info.callingTokenId_ = abilitySessionInfo->callingTokenId;
         info.reuse = abilitySessionInfo->reuse;
         info.collaboratorType_ = session->collaboratorType_;
