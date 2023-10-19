@@ -195,6 +195,7 @@ public:
     WSRect GetLastSafeRect();
     void SetLastSafeRect(WSRect rect);
     bool IsNeedDefaultAnimation();
+    bool IsAppSession() const;
 
     static std::map<int32_t, WSRect> windowDragHotAreaMap_;
     void SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFunc& func) override;
