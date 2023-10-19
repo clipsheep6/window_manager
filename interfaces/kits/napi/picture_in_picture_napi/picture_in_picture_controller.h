@@ -29,6 +29,7 @@ public:
     ~PictureInPictureController();
     bool StartPictureInPicture();
     void SetAutoStartEnabled(bool enable);
+    void IsAutoStartEnabled(bool& enable) const;
     bool StopPictureInPicture();
     void UpdateDisplaySize(uint32_t width, uint32_t height);
 private:
@@ -37,7 +38,7 @@ private:
     sptr<Window> window_;
     int32_t mainWindowId_;
     Rect windowRect_ = {};
-
+    bool isAutoStartEnabled_ = false;
     const float winCorner_ = 40.0f;
 
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
