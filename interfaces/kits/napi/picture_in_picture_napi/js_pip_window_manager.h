@@ -28,7 +28,7 @@ public:
     JsPipWindowManager();
     ~JsPipWindowManager();
     static void Finalizer(napi_env env, void* data, void* hint);
-    static napi_value IsSupportPictureInPicture(napi_env env, napi_callback_info info);
+    static napi_value IsPictureInPictureEnabled(napi_env env, napi_callback_info info);
     static napi_value CreatePictureInPictureController(napi_env env, napi_callback_info info);
 private:
     static napi_value OnIsSupportPictureInPicture(napi_env env, napi_callback_info info);
