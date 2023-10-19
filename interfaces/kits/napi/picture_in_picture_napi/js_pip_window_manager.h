@@ -31,7 +31,7 @@ public:
     static napi_value IsPictureInPictureEnabled(napi_env env, napi_callback_info info);
     static napi_value CreatePictureInPictureController(napi_env env, napi_callback_info info);
 private:
-    static napi_value OnIsSupportPictureInPicture(napi_env env, napi_callback_info info);
+    static napi_value OnIsPictureInPictureEnabled(napi_env env, napi_callback_info info);
     static napi_value OnCreatePictureInPictureController(napi_env env, napi_callback_info info);
 };
 }
