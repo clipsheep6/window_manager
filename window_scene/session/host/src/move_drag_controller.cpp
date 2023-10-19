@@ -20,6 +20,7 @@
 #include "input_manager.h"
 
 #include "session/host/include/scene_persistent_storage.h"
+#include "session/host/include/scene_session.h"
 #include "session/host/include/session_utils.h"
 #include "session_manager/include/screen_session_manager.h"
 #include "window_helper.h"
@@ -133,6 +134,11 @@ bool MoveDragController::ConsumeMoveEvent(const std::shared_ptr<MMI::PointerEven
     switch (action) {
         case MMI::PointerEvent::POINTER_ACTION_MOVE: {
             reason = SizeChangeReason::MOVE;
+            int32_t oldWindowDragHotAreaType = windowDragHotAreaType_;
+            UpdateHotAreaType(pointerEvent);
+            if (oldWindowDragHotAreaType != windowDragHotAreaType_ && windowDragHotAreaFunc_) {
+                windowDragHotAreaFunc_(windowDragHotAreaType_, reason);
+            }
             break;
         }
         case MMI::PointerEvent::POINTER_ACTION_UP:
@@ -141,6 +147,9 @@ bool MoveDragController::ConsumeMoveEvent(const std::shared_ptr<MMI::PointerEven
             reason = SizeChangeReason::DRAG_END;
             SetStartMoveFlag(false);
             hasPointDown_ = false;
+            if (windowDragHotAreaType_ != -1 && windowDragHotAreaFunc_) {
+                windowDragHotAreaFunc_(windowDragHotAreaType_, reason);
+            }
             break;
         }
         default:
@@ -665,7 +674,6 @@ void MoveDragController::HandleMouseStyle(const std::shared_ptr<MMI::PointerEven
     }
 }
 
-
 WSError MoveDragController::UpdateMoveTempProperty(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
     int32_t pointerId = pointerEvent->GetPointerId();
@@ -765,5 +773,32 @@ bool MoveDragController::CheckDragEventLegal(const std::shared_ptr<MMI::PointerE
         return false;
     }
     return true;
+}
+
+void MoveDragController::UpdateHotAreaType(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
+    int32_t pointerId = pointerEvent->GetPointerId();
+    MMI::PointerEvent::PointerItem pointerItem;
+    if (!pointerEvent->GetPointerItem(pointerId, pointerItem)) {
+        WLOGFW("invalid pointerEvent");
+        return;
+    }
+    int32_t pointerDisplayX = pointerItem.GetDisplayX();
+    int32_t pointerDisplayY = pointerItem.GetDisplayY();
+    std::map<int32_t, WSRect> areaMap = SceneSession::windowDragHotAreaMap_;
+    for (auto it = areaMap.begin(); it != areaMap.end(); ++it) {
+        int32_t key = it->first;
+        WSRect rect = it->second;
+        if (rect.IsInRegion(pointerDisplayX, pointerDisplayY)) {
+            WLOGFE("the pointerEvent is window drag hot area, windowDragHotAreaType_ is %{public}u", windowDragHotAreaType_);
+            windowDragHotAreaType_ = key;
+            return;
+        }
+    }
+    windowDragHotAreaType_ = -1;
+}
+
+void MoveDragController::SetWindowDragHotAreaFunc(const NotifyWindowDragHotAreaFunc& func) {
+    windowDragHotAreaFunc_ = func;
 }
 } // namespace OHOS::Rosen

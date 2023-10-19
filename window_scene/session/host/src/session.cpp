@@ -1654,5 +1654,10 @@ void Session::SetFloatingScale(float floatingScale)
 float Session::GetFloatingScale() const
 {
     return floatingScale_;
+
+}
+
+void Session::SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFunc& func) {
+    WLOGFW("SetWindowDragHotAreaListener do nothing!");
 }
 } // namespace OHOS::Rosen

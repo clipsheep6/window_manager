@@ -90,6 +90,7 @@ private:
     void ProcessRequestedOrientationChange();
     void ProcessRaiseAboveTargetRegister();
     void ProcessForceHideChangeRegister();
+    void ProcessWindowDragHotAreaRegister();
 
     void PendingSessionActivation(SessionInfo& info);
     void PendingSessionActivationInner(SessionInfo& info);
@@ -121,6 +122,7 @@ private:
     void OnShowWhenLocked(bool showWhenLocked);
     void OnReuqestedOrientationChange(uint32_t orientation);
     void OnForceHideChange(bool hide);
+    void onWindowDragHotArea(int32_t type, const SizeChangeReason& reason);
 
     napi_env env_;
     wptr<SceneSession> weakSession_ = nullptr;

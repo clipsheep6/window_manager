@@ -64,6 +64,7 @@ using NotifyCallingSessionUpdateRectFunc = std::function<void(const int32_t& per
 using NotifyCallingSessionForegroundFunc = std::function<void(const int32_t& persistentId)>;
 using NotifyCallingSessionBackgroundFunc = std::function<void()>;
 using NotifyRaiseToTopForPointDownFunc = std::function<void()>;
+using NotifyWindowDragHotAreaFunc = std::function<void(int32_t type, const SizeChangeReason& reason)>;
 using NotifyUILostFocusFunc = std::function<void()>;
 
 class ILifecycleListener {
@@ -274,6 +275,7 @@ public:
     WSError RaiseToAppTopForPointDown();
 
     void NotifyForegroundInteractiveStatus(bool interactive);
+    virtual void SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFunc& func);
 
 protected:
     void GeneratePersistentId(bool isExtension, int32_t persistentId);

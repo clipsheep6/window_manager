@@ -197,6 +197,10 @@ public:
     bool IsNeedDefaultAnimation();
     bool IsAppSession() const;
 
+    static std::map<int32_t, WSRect> windowDragHotAreaMap_;
+    void SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFunc& func) override;
+    WSRect GetSessionTargetRect();
+
 private:
     void HandleStyleEvent(MMI::WindowArea area) override;
     WSError HandleEnterWinwdowArea(int32_t windowX, int32_t windowY);
