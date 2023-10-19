@@ -156,7 +156,7 @@ void PictureInPictureController::IsAutoStartEnabled(bool& enable) const
     enable = isAutoStartEnabled_;
 }
 
-void PictureInPictureController::UpdateDisplaySize(uint32_t width, uint32_t height)
+void PictureInPictureController::UpdateContentSize(uint32_t width, uint32_t height)
 {
     WLOGI("UpdateDisplaySize is called");
     return;

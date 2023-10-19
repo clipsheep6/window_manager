@@ -29,14 +29,14 @@ public:
     static napi_value StartPictureInPicture(napi_env env, napi_callback_info info);
     static napi_value StopPictureInPicture(napi_env env, napi_callback_info info);
     static napi_value SetAutoStartEnabled(napi_env env, napi_callback_info info);
-    static napi_value UpdateDisplaySize(napi_env env, napi_callback_info info);
+    static napi_value UpdateContentSize(napi_env env, napi_callback_info info);
     static napi_value RegisterCallback(napi_env env, napi_callback_info info);
     static napi_value UnregisterCallback(napi_env env, napi_callback_info info);
 private:
     napi_value OnStartPictureInPicture(napi_env env, napi_callback_info info);
     napi_value OnStopPictureInPicture(napi_env env, napi_callback_info info);
     napi_value OnSetAutoStartEnabled(napi_env env, napi_callback_info info);
-    napi_value OnUpdateDisplaySize(napi_env env, napi_callback_info info);
+    napi_value OnUpdateContentSize(napi_env env, napi_callback_info info);
     napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
     napi_value OnUnregisterCallback(napi_env env, napi_callback_info info);
     sptr<PictureInPictureController> pipController_;

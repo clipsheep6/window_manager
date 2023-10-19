@@ -38,13 +38,13 @@ void JsPipWindowManager::Finalizer(napi_env env, void* data, void* hint)
     std::unique_ptr<JsPipWindowManager>(static_cast<JsPipWindowManager*>(data));
 }
 
-napi_value JsPipWindowManager::IsSupportPictureInPicture(napi_env env, napi_callback_info info)
+napi_value JsPipWindowManager::IsPictureInPictureEnabled(napi_env env, napi_callback_info info)
 {
     JsPipWindowManager* me = CheckParamsAndGetThis<JsPipWindowManager>(env, info);
-    return (me != nullptr) ? me->OnIsSupportPictureInPicture(env, info) : nullptr;
+    return (me != nullptr) ? me->OnIsPictureInPictureEnabled(env, info) : nullptr;
 }
 
-napi_value JsPipWindowManager::OnIsSupportPictureInPicture(napi_env env, napi_callback_info info)
+napi_value JsPipWindowManager::OnIsPictureInPictureEnabled(napi_env env, napi_callback_info info)
 {
     WLOGFD("OnIsSupportPictureInPicture");
     return NapiGetUndefined(env);
@@ -73,8 +73,8 @@ napi_value JsPipWindowManagerInit(napi_env env, napi_value exportObj)
     napi_wrap(env, exportObj, jsPipManager.release(), JsPipWindowManager::Finalizer, nullptr, nullptr);
     const char* moduleName = "JsPipWindowManager";
     BindNativeFunction(env, exportObj, "create", moduleName, JsPipWindowManager::CreatePictureInPictureController);
-    BindNativeFunction(env, exportObj, "isSupportPictureInPicture", moduleName,
-        JsPipWindowManager::IsSupportPictureInPicture);
+    BindNativeFunction(env, exportObj, "isPictureInPictureEnabled", moduleName,
+        JsPipWindowManager::IsPictureInPictureEnabled);
     return NapiGetUndefined(env);
 }
 }

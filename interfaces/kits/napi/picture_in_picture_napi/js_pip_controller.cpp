@@ -125,15 +125,15 @@ napi_value JsPipController::OnSetAutoStartEnabled(napi_env env, napi_callback_in
     return NapiGetUndefined(env);
 }
 
-napi_value JsPipController::UpdateDisplaySize(napi_env env, napi_callback_info info)
+napi_value JsPipController::UpdateContentSize(napi_env env, napi_callback_info info)
 {
     JsPipController* me = CheckParamsAndGetThis<JsPipController>(env, info);
-    return (me != nullptr) ? me->OnUpdateDisplaySize(env, info) : nullptr;
+    return (me != nullptr) ? me->OnUpdateContentSize(env, info) : nullptr;
 }
 
-napi_value JsPipController::OnUpdateDisplaySize(napi_env env, napi_callback_info info)
+napi_value JsPipController::OnUpdateContentSize(napi_env env, napi_callback_info info)
 {
-    WLOGI("OnUpdateDisplaySize is called");
+    WLOGI("OnUpdateContentSize is called");
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
@@ -151,7 +151,7 @@ napi_value JsPipController::OnUpdateDisplaySize(napi_env env, napi_callback_info
         WLOGFE("Failed to convert parameter to uint32_t or parameter is invalid");
         return NapiThrowInvalidParam(env);
     }
-    pipController_->UpdateDisplaySize(width, height);
+    pipController_->UpdateContentSize(width, height);
     return NapiGetUndefined(env);
 }
 
