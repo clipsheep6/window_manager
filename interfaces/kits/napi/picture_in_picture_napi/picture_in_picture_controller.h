@@ -28,6 +28,7 @@ public:
     PictureInPictureController();
     ~PictureInPictureController();
     bool StartPictureInPicture();
+    void SetAutoStartEnabled(bool enable);
     bool StopPictureInPicture();
     void UpdateDisplaySize(uint32_t width, uint32_t height);
 private:
