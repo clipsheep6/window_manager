@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace Rosen {
+napi_value CreateJsPipControllerObject(napi_env env, sptr<PictureInPictureController>& pipController);
 class JsPipController {
 public:
     explicit JsPipController(const sptr<PictureInPictureController>& pipController);

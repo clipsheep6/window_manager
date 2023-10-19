@@ -30,6 +30,27 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "jsPipController"};
 }
 
+void BindJsPipControllerFunctions(napi_env env, napi_value object, const char *moduleName)
+{
+    BindNativeFunction(env, object, "startPictureInPicture", moduleName, JsPipController::StartPictureInPicture);
+    BindNativeFunction(env, object, "stopPictureInPicture", moduleName, JsPipController::StopPictureInPicture);
+    BindNativeFunction(env, object, "updateDisplaySize", moduleName, JsPipController::UpdateDisplaySize);
+    BindNativeFunction(env, object, "on", moduleName, JsPipController::RegisterCallback);
+    BindNativeFunction(env, object, "off", moduleName, JsPipController::UnregisterCallback);
+}
+
+napi_value CreateJsPipControllerObject(napi_env env, sptr<PictureInPictureController>& pipController) {
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+
+    WLOGI("CreateJsPipController");
+    std::unique_ptr<JsPipController> jsPipController = std::make_unique<JsPipController>(pipController);
+    napi_wrap(env, objValue, jsPipController.release(), JsPipController::Finalizer, nullptr, nullptr);
+
+    BindJsPipControllerFunctions(env, objValue, "JsPipController");
+    return objValue;
+}
+
 JsPipController::JsPipController(const sptr<PictureInPictureController>& pipController) : pipController_(pipController)
 {
 }

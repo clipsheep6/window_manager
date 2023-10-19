@@ -18,6 +18,14 @@
 
 namespace OHOS {
 namespace Rosen {
+enum class PipWindowState : uint32_t {
+    STATE_UNDEFINED,
+    STATE_STARTING,
+    STATE_STARTED,
+    STATE_STOPPING,
+    STATE_STOPPED,
+}
+
 enum class PictureInPictureTemplateType : int32_t {
     VIDEO_PLAY = 0,
     VIDEO_CALL = 1,

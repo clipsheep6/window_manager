@@ -17,10 +17,12 @@
 
 #include <event_handler.h>
 #include <refbase.h>
+#include "picture_in_picture_option.h"
 #include "window_manager_hilog.h"
 #include "window_option.h"
 #include "window.h"
 #include "wm_common.h"
+#include "pip_info.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -28,7 +30,8 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "PictureInPictureController"};
 }
 
-PictureInPictureController::PictureInPictureController() : weakRef_(this)
+PictureInPictureController::PictureInPictureController(sptr<PictureInPictureOption> pipOption, int32_t windowId)
+    : weakRef_(this), pipOption_(pipOption), windowId_(windowId)
 {
     this->handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
 }
@@ -41,9 +44,22 @@ bool PictureInPictureController::CreatePictureInPictureWindow()
 {
     WLOGI("CreatePictureInPictureWindow is called");
     sptr<PictureInPictureController> thisController = this;
+
+    if (pipOption_ == nullptr || pipOption_->GetContext() == nullptr) {
+        WLOGFE("Get PictureInPictureOption failed");
+        return false;
+    }
+    auto context = static_cast<std::weak_ptr<AbilityRuntime::Context>*>(pipOption_->GetContext());
+    sptr<Window> callWindow = Window::GetTopWindowWithContext(context->lock());
+    if (callWindow == nullptr) {
+        WLOGFE("Get call Window failed");
+        return false;
+    }
+    windowId_ = callWindow->GetWindowId();
+
     sptr<WindowOption> windowOption = new(std::nothrow) WindowOption();
     if (windowOption == nullptr) {
-        WLOGFE("Get option failed");
+        WLOGFE("Get WindowOption failed");
         return false;
     }
     winRect_.width_ = 800;
@@ -55,7 +71,7 @@ bool PictureInPictureController::CreatePictureInPictureWindow()
     WMError errCode;
     sptr<Window> window = Window::Create(windowOption->GetWindowName(), windowOption, context->lock(), errCode);
     if (window == nullptr || WMError != WMError::WM_OK) {
-        WLOGFE("Window::Create failed, reason: %{public}d", errCode);
+        WLOGFE("Window create failed, reason: %{public}d", errCode);
         return false;
     }
     window_ = window;
@@ -90,7 +106,7 @@ bool PictureInPictureController::StartPictureInPicture()
             WLOGFE("Repeat start request");
             return false;
         }
-        if (PictureInPictureManager::IsCurrentWindow(mainWindowId_)) {
+        if (PictureInPictureManager::IsCurrentWindow(windowId_)) {
             PictureInPictureManager::RemoveCurrentController();
             PictureInPictureManager::SetCurrentController(thisController);
             return ShowPictureInPictureWindow();
@@ -132,7 +148,7 @@ bool PictureInPictureController::StopPictureInPicture(bool needRestore)
                 return;
             }
             PictureInPictureManager::RemoveCurrentController();
-            PictureInPictureManager::DestroyPipController(window_->GetWindowId());
+            PictureInPictureManager::RemovePipControllerInfo(window_->GetWindowId());
             window_ = nullptr;
             PictureInPictureManager::SetPipWindowState(PipWindowState::STATE_STOPPED);
         };
@@ -144,6 +160,19 @@ bool PictureInPictureController::StopPictureInPicture(bool needRestore)
         task();
     }
     return true;
+}
+
+sptr<Window> PictureInPictureController::GetWindow()
+{
+    WLOGFD("GetWindow is called");
+    return window_;
+
+}
+
+int32_t PictureInPictureController::GetWindowId()
+{
+    WLOGFD("GetWindowId is called");
+    return windowId_;
 }
 
 void PictureInPictureController::SetAutoStartEnabled(bool enable)

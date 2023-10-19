@@ -18,6 +18,7 @@
 
 #include <event_handler.h>
 #include <refbase.h>
+#include "picture_in_picture_option.h"
 #include "window.h"
 #include "wm_common.h"
 
@@ -25,18 +26,27 @@ namespace OHOS {
 namespace Rosen {
 class PictureInPictureController : virtual public RefBase {
 public:
-    PictureInPictureController();
+    PictureInPictureController(sptr<PictureInPictureOption> pipOption, int32_t mainWindowId);
     ~PictureInPictureController();
     bool StartPictureInPicture();
+    bool StopPictureInPicture(bool needRestore);
+
+    sptr<Window> GetWindow();
+    int32_t GetWindowId();
+
     void SetAutoStartEnabled(bool enable);
     void IsAutoStartEnabled(bool& enable) const;
-    bool StopPictureInPicture();
-    void UpdateContentSize(uint32_t width, uint32_t height);
+    void UpdateDisplaySize(uint32_t width, uint32_t height);
 private:
+    bool CreatePictureInPictureWindow();
+    bool ShowPictureInPictureWindow();
+
     wptr<PictureInPictureController> weakRef_ = nullptr;
 
+    sptr<PictureInPictureOption> pipOption_;
+
     sptr<Window> window_;
-    int32_t mainWindowId_;
+    int32_t windowId_;
     Rect windowRect_ = {};
     bool isAutoStartEnabled_ = false;
     const float winCorner_ = 40.0f;
