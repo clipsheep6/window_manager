@@ -196,6 +196,7 @@ public:
     bool CheckIfReuseSession(SessionInfo& sessionInfo);
     bool CheckCollaboratorType(int32_t type);
     sptr<SceneSession> FindSessionByAffinity(std::string affinity);
+    WSError AddWindowDragHotArea(int32_t type, WSRect& area);
 public:
     std::shared_ptr<TaskScheduler> GetTaskScheduler() {return taskScheduler_;};
 protected:

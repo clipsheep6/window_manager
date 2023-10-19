@@ -46,6 +46,7 @@ const std::string DLP_INDEX = "ohos.dlp.params.index";
 MaximizeMode SceneSession::maximizeMode_ = MaximizeMode::MODE_RECOVER;
 wptr<SceneSession> SceneSession::enterSession_ = nullptr;
 std::mutex SceneSession::enterSessionMutex_;
+std::map<int32_t, WSRect> SceneSession::windowDragHotAreaMap_;
 
 SceneSession::SceneSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback)
     : Session(info)
@@ -1754,5 +1755,19 @@ bool SceneSession::RemoveSubSession(int32_t persistentId)
 std::vector<sptr<SceneSession>> SceneSession::GetSubSession() const
 {
     return subSession_;
+}
+
+WSRect SceneSession::GetSessionTargetRect() {
+    WSRect rect;
+    if (moveDragController_) {
+        rect = moveDragController_->GetTargetRect();
+    }
+    return rect;
+}
+
+void SceneSession::SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFunc& func) {
+    if (moveDragController_) {
+        moveDragController_->SetWindowDragHotAreaFunc(func);
+    }
 }
 } // namespace OHOS::Rosen

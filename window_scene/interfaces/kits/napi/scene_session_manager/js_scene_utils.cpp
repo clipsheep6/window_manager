@@ -226,6 +226,84 @@ bool ConvertSessionInfoFromJs(napi_env env, napi_value jsObject, SessionInfo& se
     return true;
 }
 
+bool IsJsLeftNameUndefind(napi_env env, napi_value jsLeftName, WSRect& rect)
+{
+    if (GetType(env, jsLeftName) != napi_undefined) {
+        uint32_t leftName = 0;
+        if (!ConvertFromJsValue(env, jsLeftName, leftName)) {
+            WLOGFE("[NAPI]Failed to convert parameter to leftName");
+            return false;
+        }
+        rect.posX_ = leftName;
+    }
+    return true;
+}
+
+bool IsJsToptNameUndefind(napi_env env, napi_value jsTopName, WSRect& rect)
+{
+    if (GetType(env, jsTopName) != napi_undefined) {
+        uint32_t topName = 0;
+        if (!ConvertFromJsValue(env, jsTopName, topName)) {
+            WLOGFE("[NAPI]Failed to convert parameter to topName");
+            return false;
+        }
+        rect.posY_ = topName;
+    }
+    return true;
+}
+
+bool IsJsRightNameUndefind(napi_env env, napi_value jsRightName, WSRect& rect)
+{
+    if (GetType(env, jsRightName) != napi_undefined) {
+        uint32_t rightName = 0;
+        if (!ConvertFromJsValue(env, jsRightName, rightName)) {
+            WLOGFE("[NAPI]Failed to convert parameter to rightName");
+            return false;
+        }
+        rect.width_ = rightName - rect.posX_;
+    }
+    return true;
+}
+
+bool IsJsBottomNameUndefind(napi_env env, napi_value jsBottomName, WSRect& rect)
+{
+    if (GetType(env, jsBottomName) != napi_undefined) {
+        uint32_t bottomName = 0;
+        if (!ConvertFromJsValue(env, jsBottomName, bottomName)) {
+            WLOGFE("[NAPI]Failed to convert parameter to bottomName");
+            return false;
+        }
+        rect.height_ = bottomName - rect.posY_;
+    }
+    return true;
+}
+
+bool ConvertRectInfoFromJs(napi_env env, napi_value jsObject, WSRect& rect)
+{
+    napi_value jsLeftName = nullptr;
+    napi_get_named_property(env, jsObject, "left", &jsLeftName);
+    napi_value jsTopName = nullptr;
+    napi_get_named_property(env, jsObject, "top", &jsTopName);
+    napi_value jsRightName = nullptr;
+    napi_get_named_property(env, jsObject, "right", &jsRightName);
+    napi_value jsBottomName = nullptr;
+    napi_get_named_property(env, jsObject, "bottom", &jsBottomName);
+
+    if (!IsJsLeftNameUndefind(env, jsLeftName, rect)) {
+        return false;
+    }
+    if (!IsJsToptNameUndefind(env, jsTopName, rect)) {
+        return false;
+    }
+    if (!IsJsRightNameUndefind(env, jsRightName, rect)) {
+        return false;
+    }
+    if (!IsJsBottomNameUndefind(env, jsBottomName, rect)) {
+        return false;
+    }
+    return true;
+}
+
 bool ConvertPointerItemFromJs(napi_env env, napi_value touchObject, MMI::PointerEvent& pointerEvent)
 {
     auto displayInfo = ScreenSessionManager::GetInstance().GetDefaultDisplayInfo();
