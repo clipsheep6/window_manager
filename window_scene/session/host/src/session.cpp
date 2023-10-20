@@ -161,7 +161,7 @@ void Session::GetCloseAbilityWantAndClean(AAFwk::Want& outWant)
 }
 
 void Session::SetSessionInfoInsightIntentExecuteParam(
-        const std::shared_ptr<AAFwk::InsightIntentExecuteParam>& insightIntentExecuteParam)
+    const std::shared_ptr<AAFwk::InsightIntentExecuteParam>& insightIntentExecuteParam)
 {
     std::lock_guard<std::recursive_mutex> lock(sessionInfoMutex_);
     sessionInfo_.insightIntentExecuteParam = insightIntentExecuteParam;
