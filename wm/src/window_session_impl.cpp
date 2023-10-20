@@ -42,6 +42,7 @@
 #include "color_parser.h"
 #include "singleton_container.h"
 #include "perform_reporter.h"
+#include "picture_in_picture_manager.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -1211,6 +1212,13 @@ WSError WindowSessionImpl::NotifyDestroy()
             listener->OnDialogDeathRecipient();
         }
     }
+    return WSError::WS_OK;
+}
+
+WSError WindowSessionImpl::NotifyCloseExistPipWindow()
+{
+    WLOGFE("WindowSessionImpl::NotifyCloseExistPipWindow");
+    PictureInPictureMananger::Doclose();
     return WSError::WS_OK;
 }
 
