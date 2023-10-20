@@ -69,6 +69,7 @@ static int32_t GetPictureInPictureOptionFromJs(napi_env env, napi_value optionOb
     option.SetNavigationId(navigationId);
     option.SetPipTemplate(templateTyle);
     option.SetContentSize(width, height);
+    option.SetEnv(env);
     return 0;
 }
 
@@ -95,7 +96,8 @@ napi_value JsPipWindowManager::IsPictureInPictureEnabled(napi_env env, napi_call
 napi_value JsPipWindowManager::OnIsPictureInPictureEnabled(napi_env env, napi_callback_info info)
 {
     WLOGFD("OnIsSupportPictureInPicture");
-    return NapiGetUndefined(env);
+    bool state = true;
+    return CreateJsValue(env, state);
 }
 
 napi_value JsPipWindowManager::CreatePictureInPictureController(napi_env env, napi_callback_info info)
@@ -126,7 +128,8 @@ napi_value JsPipWindowManager::OnCreatePictureInPictureController(napi_env env, 
             sptr<PictureInPictureOption> pipOptionPtr = pipOption;
             auto context = static_cast<std::weak_ptr<AbilityRuntime::Context>*>(pipOption.GetContext());
             sptr<WindowSessionImpl> mainWindow = WindowSceneSessionImpl::GetMainWindowWithContext(context->lock());
-            sptr<PictureInPictureController> pipController = new PictureInPictureController(pipOptionPtr, mainWindow->GetPersistentId());
+            sptr<PictureInPictureController> pipController =
+                new PictureInPictureController(pipOptionPtr, mainWindow->GetPersistentId());
             task.Resolve(env, CreateJsPipControllerObject(env, pipController));
         };
     napi_value result = nullptr;
