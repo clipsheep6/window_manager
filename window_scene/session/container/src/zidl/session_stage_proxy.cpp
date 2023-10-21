@@ -154,7 +154,7 @@ WSError SessionStageProxy::NotifyDestroy()
     return static_cast<WSError>(ret);
 }
 
-WSError SessionStageProxy::NotifCloseExistPipWindow()
+WSError SessionStageProxy::NotifyCloseExistPipWindow()
 {
     MessageParcel data;
     MessageParcel reply;
