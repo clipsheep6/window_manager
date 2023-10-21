@@ -1465,8 +1465,8 @@ sptr<Window> WindowSceneSessionImpl::GetTopWindowWithId(uint32_t mainWinId)
     WLOGFE("Cannot find Window!");
     return nullptr;
 }
-
-sptr<Window> WindowSceneSessionImpl::GetMainWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context)
+sptr<WindowSessionImpl> WindowSceneSessionImpl::GetMainWindowWithContext(
+    const std::shared_ptr<AbilityRuntime::Context>& context)
 {
     if (windowSessionMap_.empty()) {
         WLOGFE("Please create mainWindow First!");

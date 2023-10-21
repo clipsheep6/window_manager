@@ -17,9 +17,6 @@
 #define OHOS_PIP_OPTION_H
 #include <refbase.h>
 #include <string>
-#include "native_engine/native_engine.h"
-#include "native_engine/native_reference.h"
-#include "native_engine/native_value.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -29,13 +26,11 @@ public:
     virtual ~PipOption() = default;
 
     void SetContext(void* contextPtr);
-    void SetEnv(napi_env env);
     void SetNavigationId(const std::string navigationId);
     void SetPipTemplate(uint32_t templateType);
     void SetContentSize(uint32_t width, uint32_t height);
 
     void* GetContext() const;
-    napi_env GetEnv() const;
     std::string GetNavigationId() const;
     uint32_t GetPipTemplate();
     void GetContentSize(uint32_t& width, uint32_t& height);
@@ -43,7 +38,6 @@ private:
     void* contextPtr_;
     uint32_t templateType_  = 0;
     std::string navigationId_ = "";
-    napi_env env_;
     uint32_t contentWidth_ = 0;
     uint32_t contentHeight_ = 0;
 };

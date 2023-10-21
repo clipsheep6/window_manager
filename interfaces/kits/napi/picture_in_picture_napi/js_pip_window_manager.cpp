@@ -71,7 +71,6 @@ static int32_t GetPictureInPictureOptionFromJs(napi_env env, napi_value optionOb
     option.SetNavigationId(navigationId);
     option.SetPipTemplate(templateTyle);
     option.SetContentSize(width, height);
-    option.SetEnv(env);
     return 0;
 }
 
