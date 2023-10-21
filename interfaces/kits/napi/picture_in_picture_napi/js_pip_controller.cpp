@@ -77,18 +77,19 @@ napi_value JsPipController::OnStartPictureInPicture(napi_env env, napi_callback_
     NapiAsyncTask::CompleteCallback complete =
         [this](napi_env env, NapiAsyncTask& task, int32_t status) {
             if (this->pipController_ == nullptr) {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY),
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_PIP_STATE_ABNORMALLY),
                     "JsPipController::OnStartPictureInPicture failed."));
                 return;
             }
-            bool isStartSuccess = this->pipController_->StartPictureInPicture();
-            if (isStartSuccess) {
-                task.Resolve(env, NapiGetUndefined(env));
-                WLOGI("JsPipController::OnStartPictureInPicture success");
-            } else {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY),
+            WMError errCode = this->pipController_->StartPictureInPicture();
+            if (errCode != WMError::WM_OK) {
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(
+                        WM_JS_TO_ERROR_CODE_MAP.at(errCode)),
                     "JsPipController::OnStartPictureInPicture failed."));
+                return;
             }
+            task.Resolve(env, NapiGetUndefined(env));
+            WLOGI("JsPipController::OnStartPictureInPicture success");
 		};
     napi_value result = nullptr;
     NapiAsyncTask::Schedule("JsPipController::OnStartPictureInPicture", env,
@@ -112,14 +113,15 @@ napi_value JsPipController::OnStopPictureInPicture(napi_env env, napi_callback_i
                     "JsPipController::OnStopPictureInPicture failed."));
                 return;
             }
-            bool isStopSuccess = this->pipController_->StopPictureInPicture(false);
-            if (isStopSuccess) {
-                task.Resolve(env, NapiGetUndefined(env));
-                WLOGI("JsPipController::OnStopPictureInPicture success");
-            } else {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY),
+            WMError errCode = this->pipController_->StopPictureInPicture(false);
+            if (errCode != WMError::WM_OK) {
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(
+                        WM_JS_TO_ERROR_CODE_MAP.at(errCode)),
                     "JsPipController::OnStopPictureInPicture failed."));
+                return;
             }
+            task.Resolve(env, NapiGetUndefined(env));
+            WLOGI("JsPipController::OnStopPictureInPicture success");
         };
     napi_value result = nullptr;
     NapiAsyncTask::Schedule("JsPipController::OnStopPictureInPicture", env,

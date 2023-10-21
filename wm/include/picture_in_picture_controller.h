@@ -28,8 +28,8 @@ class PictureInPictureController : virtual public RefBase {
 public:
     PictureInPictureController(sptr<PipOption> pipOption, int32_t mainWindowId);
     ~PictureInPictureController();
-    bool StartPictureInPicture();
-    bool StopPictureInPicture(bool needRestore);
+    WMError StartPictureInPicture();
+    WMError StopPictureInPicture(bool needRestore);
 
     sptr<Window> GetWindow();
     int32_t GetWindowId();
@@ -39,8 +39,8 @@ public:
     void IsAutoStartEnabled(bool& enable) const;
     void UpdateContentSize(uint32_t width, uint32_t height);
 private:
-    bool CreatePictureInPictureWindow();
-    bool ShowPictureInPictureWindow();
+    WMError CreatePictureInPictureWindow();
+    WMError ShowPictureInPictureWindow();
 
     wptr<PictureInPictureController> weakRef_ = nullptr;
 
