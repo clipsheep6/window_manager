@@ -1341,7 +1341,7 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
         if (property->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
             for (const auto& iter: sceneSessionMap_) {
                 auto& session = iter.second;
-                if (sesson->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
+                if (session->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
                     session->NotifyCloseExistPipWindow();
                     break;
                 }
