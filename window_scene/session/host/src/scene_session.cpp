@@ -1210,6 +1210,16 @@ void SceneSession::SetZOrder(uint32_t zOrder)
     }
 }
 
+void SceneSession::SetFloatingScale(float floatingScale)
+{
+    if (floatingScale_ != floatingScale) {
+        Session::SetFloatingScale(floatingScale);
+        if (specificCallback_ != nullptr) {
+            specificCallback_->onWindowInfoUpdate_(GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
+        }
+    }
+}
+
 void SceneSession::SetParentPersistentId(int32_t parentId)
 {
     auto property = GetSessionProperty();
@@ -1338,6 +1348,25 @@ void SceneSession::SetPrivacyMode(bool isPrivacy)
     RSTransaction::FlushImplicitTransaction();
 }
 
+void SceneSession::SetSystemSceneOcclusionAlpha(double alpha)
+{
+    if (alpha < 0 || alpha > 1.0) {
+        WLOGFE("OnSetSystemSceneOcclusionAlpha property is null");
+        return;
+    }
+    if (!surfaceNode_) {
+        WLOGFE("surfaceNode_ is null");
+        return;
+    }
+    uint8_t alpha8bit = static_cast<uint8_t>(alpha * 255);
+    WLOGFI("surfaceNode SetAbilityBGAlpha=%{public}u.", alpha8bit);
+    surfaceNode_->SetAbilityBGAlpha(alpha8bit);
+    if (leashWinSurfaceNode_ != nullptr) {
+        leashWinSurfaceNode_->SetAbilityBGAlpha(alpha8bit);
+    }
+    RSTransaction::FlushImplicitTransaction();
+}
+
 WSError SceneSession::UpdateWindowAnimationFlag(bool needDefaultAnimationFlag)
 {
     return PostSyncTask([weakThis = wptr(this), needDefaultAnimationFlag]() {
@@ -1366,6 +1395,17 @@ void SceneSession::SetWindowAnimationFlag(bool needDefaultAnimationFlag)
 bool SceneSession::IsNeedDefaultAnimation()
 {
     return needDefaultAnimationFlag_;
+}
+
+bool SceneSession::IsAppSession() const
+{
+    if (GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        return true;
+    }
+    if (GetParentSession() && GetParentSession()->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        return true;
+    }
+    return false;
 }
 
 void SceneSession::NotifyIsCustomAnimationPlaying(bool isPlaying)
@@ -1596,12 +1636,7 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
 
 WSError SceneSession::TerminateSession(const sptr<AAFwk::SessionInfo> abilitySessionInfo)
 {
-    auto handler = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
-    if (handler == nullptr) {
-        WLOGFE("TerminateSession handler null");
-        return WSError::WS_ERROR_NULLPTR;
-    }
-    auto task = [weakThis = wptr(this), abilitySessionInfo]() {
+    PostTask([weakThis = wptr(this), abilitySessionInfo]() {
         auto session = weakThis.promote();
         if (!session) {
             WLOGFE("session is null");
@@ -1630,12 +1665,7 @@ WSError SceneSession::TerminateSession(const sptr<AAFwk::SessionInfo> abilitySes
             session->terminateSessionFunc_(info);
         }
         return WSError::WS_OK;
-    };
-    if (!handler->PostTask(task)) {
-        WLOGFE("TerminateSession failed to post Perforback");
-        return WSError::WS_ERROR_INVALID_OPERATION;
-    }
-
+    });
     return WSError::WS_OK;
 }
 

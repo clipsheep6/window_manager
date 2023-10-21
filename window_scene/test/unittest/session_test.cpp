@@ -960,20 +960,6 @@ HWTEST_F(WindowSessionTest, SetAspectRatio, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: UpdateSessionFocusable
- * @tc.desc: UpdateSessionFocusable Test
- * @tc.type: FUNC
- */
-HWTEST_F(WindowSessionTest, UpdateSessionFocusable, Function | SmallTest | Level2)
-{
-    ASSERT_NE(session_, nullptr);
-    session_->state_ = SessionState::STATE_DISCONNECT;
-    session_->UpdateSessionFocusable(false);
-    
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
-}
-
-/**
  * @tc.name: UpdateSessionTouchable
  * @tc.desc: UpdateSessionTouchable Test
  * @tc.type: FUNC
@@ -2027,6 +2013,31 @@ HWTEST_F(WindowSessionTest, SetBufferAvailable, Function | SmallTest | Level2)
     session_->SetBufferAvailable(111);
     ASSERT_EQ(true, session_->GetBufferAvailable());
 }
+
+/**
+ * @tc.name: NotifyForegroundInteractiveStatus
+ * @tc.desc: NotifyForegroundInteractiveStatus Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, NotifyForegroundInteractiveStatus, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->sessionStage_ = nullptr;
+    bool interactive = true;
+    session_->NotifyForegroundInteractiveStatus(interactive);
+
+    sptr<SessionStageMocker> mockSessionStage = new(std::nothrow) SessionStageMocker();
+    ASSERT_NE(mockSessionStage, nullptr);
+    session_->sessionStage_ = mockSessionStage;
+    session_->state_ = SessionState::STATE_FOREGROUND;
+    interactive = false;
+    session_->NotifyForegroundInteractiveStatus(interactive);
+
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+}
+
 }
 } // namespace Rosen
 } // namespace OHOS
