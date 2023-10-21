@@ -17,8 +17,6 @@
 #define OHOS_JS_PIP_WINDOW_MANAGER_H
 
 #include "js_runtime_utils.h"
-#include "native_engine/native_engine.h"
-#include "native_engine/native_value.h"
 
 namespace OHOS {
 namespace Rosen {

@@ -17,7 +17,7 @@
 
 #include <string>
 #include "dm_common.h"
-#include "pip_info.h"
+#include "wm_common.h"
 
 namespace OHOS {
 namespace Rosen {

@@ -17,12 +17,12 @@
 
 #include <event_handler.h>
 #include <refbase.h>
+#include "picture_in_picture_manager.h"
 #include "picture_in_picture_option.h"
 #include "window_manager_hilog.h"
 #include "window_option.h"
 #include "window.h"
 #include "wm_common.h"
-#include "pip_info.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -30,7 +30,7 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "PictureInPictureController"};
 }
 
-PictureInPictureController::PictureInPictureController(sptr<PictureInPictureOption> pipOption, int32_t windowId)
+PictureInPictureController::PictureInPictureController(sptr<PipOption> pipOption, int32_t windowId)
     : weakRef_(this), pipOption_(pipOption), windowId_(windowId)
 {
     this->handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
@@ -62,15 +62,15 @@ bool PictureInPictureController::CreatePictureInPictureWindow()
         WLOGFE("Get WindowOption failed");
         return false;
     }
-    winRect_.width_ = 800;
-    winRect_.height_ = 600;
+    windowRect_.width_ = 800;
+    windowRect_.height_ = 600;
     windowOption->SetWindowName("pip_window");
     windowOption->SetWindowType(WindowType::WINDOW_TYPE_PIP);
     windowOption->SetWindowMode(WindowMode::WINDOW_MODE_PIP);
-    windowOption->SetWindowRect(winRect_);
+    windowOption->SetWindowRect(windowRect_);
     WMError errCode;
     sptr<Window> window = Window::Create(windowOption->GetWindowName(), windowOption, context->lock(), errCode);
-    if (window == nullptr || WMError != WMError::WM_OK) {
+    if (window == nullptr || errCode != WMError::WM_OK) {
         WLOGFE("Window create failed, reason: %{public}d", errCode);
         return false;
     }
@@ -87,6 +87,11 @@ bool PictureInPictureController::ShowPictureInPictureWindow()
         WLOGFD("window_ is nullptr");
         return false;
     }
+    WMError errCode = window_->Show(0, false);
+    if (errCode != WMError::OK) {
+        WLOGFD("window_ show failed");
+        return false;
+    }
     PictureInPictureManager::SetCurrentPipController(this);
     WLOGFD("ShowPictureInPictureWindow success");
     return true;
@@ -100,15 +105,15 @@ bool PictureInPictureController::StartPictureInPicture()
         WLOGFE("Pip window is starting");
         return false;
     }
-    if (PictureInPictureManager::IsControlledNow()) {
+    if (PictureInPictureManager::IsCurrentPipControllerExist()) {
         // pip window exists
-        if (PictureInPictureManager::IsCurrentController(weakRef_)) {
+        if (PictureInPictureManager::IsCurrentPipController(weakRef_)) {
             WLOGFE("Repeat start request");
             return false;
         }
         if (PictureInPictureManager::IsCurrentWindow(windowId_)) {
-            PictureInPictureManager::RemoveCurrentController();
-            PictureInPictureManager::SetCurrentController(thisController);
+            PictureInPictureManager::RemoveCurrentPipController();
+            PictureInPictureManager::SetCurrentPipController(thisController);
             return ShowPictureInPictureWindow();
         }
         PictureInPictureManager::DoClose();
@@ -147,12 +152,12 @@ bool PictureInPictureController::StopPictureInPicture(bool needRestore)
                 WLOGFE("Window destroy failed");
                 return;
             }
-            PictureInPictureManager::RemoveCurrentController();
+            PictureInPictureManager::RemoveCurrentPipController();
             PictureInPictureManager::RemovePipControllerInfo(window_->GetWindowId());
             window_ = nullptr;
             PictureInPictureManager::SetPipWindowState(PipWindowState::STATE_STOPPED);
         };
-    if (handler_ && !isFromRestore) {
+    if (handler_ && !needRestore) {
         WLOGFD("Window destroy async");
         handler_->PostTask(task, "pip_controller_stop_window", 400);
     } else {
@@ -173,6 +178,12 @@ int32_t PictureInPictureController::GetWindowId()
 {
     WLOGFD("GetWindowId is called");
     return windowId_;
+}
+
+void PictureInPictureController::SetWindow(sptr<Window> window)
+{
+    WLOGFD("SetWindow is called");
+    window_ = window;
 }
 
 void PictureInPictureController::SetAutoStartEnabled(bool enable)

@@ -2,7 +2,6 @@
 
 #include <refbase.h>
 #include "picture_in_picture_controller.h"
-#include "pip_info.h"
 #include "window.h"
 #include "window_manager_hilog.h"
 #include "wm_common.h"
@@ -28,38 +27,38 @@ PictureInPictureManager::~PictureInPictureManager()
 {
 }
 
-static void PictureInPictureManager::PutPipControllerInfo(int32_t windowId, wptr<PictureInPictureController> pipController)
+void PictureInPictureManager::PutPipControllerInfo(int32_t windowId, sptr<PictureInPictureController> pipController)
 {
     WLOGD("PutPipControllerInfo is called");
     PictureInPictureManager::windowToControllerMap_.insert(std::make_pair(windowId, pipController));
 }
 
-static void PictureInPictureManager::RemovePipControllerInfo(int32_t windowId)
+void PictureInPictureManager::RemovePipControllerInfo(int32_t windowId)
 {
     WLOGD("RemovePipControllerInfo is called");
     PictureInPictureManager::windowToControllerMap_.erase(windowId);
 }
 
-static void PictureInPictureManager::SetPipWindowState(PipWindowState pipWindowState)
+void PictureInPictureManager::SetPipWindowState(PipWindowState pipWindowState)
 {
     WLOGD("SetPipWindowState is called");
     std::lock_guard<std::mutex> lock(PictureInPictureManager::pipWindowStateMutex_);
     PictureInPictureManager::pipWindowState_ = pipWindowState;
 }
 
-static pipWindowState PictureInPictureManager::GetPipWindowState()
+PipWindowState PictureInPictureManager::GetPipWindowState()
 {
     WLOGD("GetPipWindowState is called");
     return PictureInPictureManager::pipWindowState_;
 }
 
-static bool PictureInPictureManager::IsCurrentPipControllerExist()
+bool PictureInPictureManager::IsCurrentPipControllerExist()
 {
     WLOGD("IsCurrentPipControllerExist is called");
     return PictureInPictureManager::curPipController_ != nullptr;
 }
 
-static bool PictureInPictureManager::IsCurrentPipController(wptr<PictureInPictureController> pipController)
+bool PictureInPictureManager::IsCurrentPipController(wptr<PictureInPictureController> pipController)
 {
     WLOGD("IsCurrentPipController is called");
     if (!PictureInPictureManager::IsCurrentPipControllerExist()) {
@@ -68,29 +67,29 @@ static bool PictureInPictureManager::IsCurrentPipController(wptr<PictureInPictur
     return pipController.GetRefPtr() == PictureInPictureManager::curPipController_.GetRefPtr();
 }
 
-static void PictureInPictureManager::SetCurrentPipController(sptr<PictureInPictureController> pipController)
+void PictureInPictureManager::SetCurrentPipController(sptr<PictureInPictureController> pipController)
 {
     WLOGD("SetCurrentPipController is called");
     PictureInPictureManager::curPipController_ = pipController;
 }
 
-static void PictureInPictureManager::RemoveCurrentPipController()
+void PictureInPictureManager::RemoveCurrentPipController()
 {
     WLOGD("RemoveCurrentPipController is called");
     PictureInPictureManager::curPipController_ = nullptr;
 }
 
-static void PictureInPictureManager::RemoveCurrentPipControllerSafety()
+void PictureInPictureManager::RemoveCurrentPipControllerSafety()
 {
     WLOGD("RemoveCurrentPipControllerSafety is called");
     if (!PictureInPictureManager::IsCurrentPipControllerExist()) {
         return;
     }
-    PictureInPictureManager::curPipController_->SetPipWindow(nullptr);
+    PictureInPictureManager::curPipController_->SetWindow(nullptr);
     PictureInPictureManager::RemoveCurrentPipController();
 }
 
-static bool PictureInPictureManager::IsCurrentWindow(int32_t windowId)
+bool PictureInPictureManager::IsCurrentWindow(int32_t windowId)
 {
     WLOGD("IsCurrentWindow is called");
     if (!PictureInPictureManager::IsCurrentPipControllerExist()) {
@@ -100,7 +99,7 @@ static bool PictureInPictureManager::IsCurrentWindow(int32_t windowId)
     return PictureInPictureManager::curPipController_->GetWindowId() == windowId;
 }
 
-static sptr<Window> PictureInPictureManager::GetCurrentWindow()
+sptr<Window> PictureInPictureManager::GetCurrentWindow()
 {
     WLOGD("GetCurrentWindow is called");
     if (!PictureInPictureManager::IsCurrentPipControllerExist()) {
@@ -110,34 +109,34 @@ static sptr<Window> PictureInPictureManager::GetCurrentWindow()
     return PictureInPictureManager::curPipController_->GetWindow();
 }
 
-static void PictureInPictureManager::DoRestore()
+void PictureInPictureManager::DoRestore()
 {
     WLOGD("DoRestore is called");
     // TODO: Add restore
 }
 
-static void PictureInPictureManager::DoClose()
+void PictureInPictureManager::DoClose()
 {
     WLOGD("DoClose is called");
     if (!PictureInPictureManager::IsCurrentPipControllerExist()) {
         return;
     }
-    PictureInPictureManager::curPipController_->StopPictureInPicture();
+    PictureInPictureManager::curPipController_->StopPictureInPicture(false);
 }
 
-static void PictureInPictureManager::DoStartMove()
+void PictureInPictureManager::DoStartMove()
 {
     WLOGD("DoStartMove is called");
     // TODO: Add startMove
 }
 
-static void PictureInPictureManager::DoScale()
+void PictureInPictureManager::DoScale()
 {
     WLOGD("DoScale is called");
     // TODO: Add scale
 }
 
-static void PictureInPictureManager::DoActionEvent()
+void PictureInPictureManager::DoActionEvent()
 {
     WLOGD("DoActionEvent is called");
     // TODO: Add action event

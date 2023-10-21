@@ -566,6 +566,38 @@ enum class WindowUpdateType : int32_t {
     WINDOW_UPDATE_PROPERTY,
 };
 
+/**
+ * @brief Enumerates picture in picture window state.
+ */
+enum class PipWindowState : uint32_t {
+    STATE_UNDEFINED = 0,
+    STATE_STARTING = 1,
+    STATE_STARTED = 2,
+    STATE_STOPPING = 3,
+    STATE_STOPPED = 4,
+};
+
+/**
+ * @brief Enumerates picture in picture template type.
+ */
+enum class PictureInPictureTemplateType : int32_t {
+    VIDEO_PLAY = 0,
+    VIDEO_CALL = 1,
+    VIDEO_MEETING = 2,
+};
+
+/**
+ * @brief Enumerates picture in picture state.
+ */
+enum class PictureInPictureState : int32_t {
+    WILL_START = 1,
+    STARTED = 2,
+    WILL_STOP = 3,
+    STOPPED = 4,
+    RESTORE = 5,
+    ERROR = 6,
+};
+
 using OnCallback = std::function<void(int64_t)>;
 
 /**

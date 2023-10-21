@@ -27,6 +27,7 @@ class JsPipController {
 public:
     explicit JsPipController(const sptr<PictureInPictureController>& pipController);
     ~JsPipController();
+    static void Finializer(napi_env env, void* data, void* hint);
     static napi_value StartPictureInPicture(napi_env env, napi_callback_info info);
     static napi_value StopPictureInPicture(napi_env env, napi_callback_info info);
     static napi_value SetAutoStartEnabled(napi_env env, napi_callback_info info);

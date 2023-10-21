@@ -26,13 +26,14 @@ namespace OHOS {
 namespace Rosen {
 class PictureInPictureController : virtual public RefBase {
 public:
-    PictureInPictureController(sptr<PictureInPictureOption> pipOption, int32_t mainWindowId);
+    PictureInPictureController(sptr<PipOption> pipOption, int32_t mainWindowId);
     ~PictureInPictureController();
     bool StartPictureInPicture();
     bool StopPictureInPicture(bool needRestore);
 
     sptr<Window> GetWindow();
     int32_t GetWindowId();
+    void SetWindow(sptr<Window> window);
 
     void SetAutoStartEnabled(bool enable);
     void IsAutoStartEnabled(bool& enable) const;
@@ -43,7 +44,7 @@ private:
 
     wptr<PictureInPictureController> weakRef_ = nullptr;
 
-    sptr<PictureInPictureOption> pipOption_;
+    sptr<PipOption> pipOption_;
 
     sptr<Window> window_;
     int32_t windowId_;

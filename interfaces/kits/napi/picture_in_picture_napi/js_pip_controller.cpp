@@ -16,11 +16,11 @@
 #include "js_pip_controller.h"
 
 #include <refbase.h>
-#include "js_runtime_utils.h"
 #include "js_pip_utils.h"
+#include "js_runtime_utils.h"
 #include "picture_in_picture_controller.h"
-#include "wm_common.h"
 #include "window_manager_hilog.h"
+#include "wm_common.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -34,7 +34,7 @@ void BindJsPipControllerFunctions(napi_env env, napi_value object, const char *m
 {
     BindNativeFunction(env, object, "startPictureInPicture", moduleName, JsPipController::StartPictureInPicture);
     BindNativeFunction(env, object, "stopPictureInPicture", moduleName, JsPipController::StopPictureInPicture);
-    BindNativeFunction(env, object, "updateDisplaySize", moduleName, JsPipController::UpdateDisplaySize);
+    BindNativeFunction(env, object, "updateContentSize", moduleName, JsPipController::UpdateContentSize);
     BindNativeFunction(env, object, "on", moduleName, JsPipController::RegisterCallback);
     BindNativeFunction(env, object, "off", moduleName, JsPipController::UnregisterCallback);
 }
@@ -57,6 +57,12 @@ JsPipController::JsPipController(const sptr<PictureInPictureController>& pipCont
 
 JsPipController::~JsPipController()
 {
+}
+
+void JsPipController::Finalizer(napi_env env, void* data, void* hint)
+{
+    WLOGFD("Finalizer is called");
+    std::unique_ptr<JsPipController>(static_cast<JsPipController*>(data));
 }
 
 napi_value JsPipController::StartPictureInPicture(napi_env env, napi_callback_info info)
@@ -106,7 +112,7 @@ napi_value JsPipController::OnStopPictureInPicture(napi_env env, napi_callback_i
                     "JsPipController::OnStopPictureInPicture failed."));
                 return;
             }
-            bool isStopSuccess = this->pipController_->StopPictureInPicture();
+            bool isStopSuccess = this->pipController_->StopPictureInPicture(false);
             if (isStopSuccess) {
                 task.Resolve(env, NapiGetUndefined(env));
                 WLOGI("JsPipController::OnStopPictureInPicture success");

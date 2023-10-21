@@ -16,8 +16,10 @@
 #include "js_pip_window_manager.h"
 
 #include "js_pip_controller.h"
-#include "window_manager_hilog.h"
 #include "js_pip_utils.h"
+#include "js_runtime_utils.h"
+#include "window_manager_hilog.h"
+#include "window_scene_session_impl.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -28,7 +30,7 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsPipWindowManager"};
 }
 
-static int32_t GetPictureInPictureOptionFromJs(napi_env env, napi_value optionObject, PictureInPictureOption& option)
+static int32_t GetPictureInPictureOptionFromJs(napi_env env, napi_value optionObject, PipOption& option)
 {
     napi_value contextPtrValue = nullptr;
     napi_value navigationIdValue = nullptr;
@@ -42,13 +44,13 @@ static int32_t GetPictureInPictureOptionFromJs(napi_env env, napi_value optionOb
     uint32_t width;
     uint32_t height;
 
-    napi_get_named_property(env, optionObject, "ctx", &contextValue);
+    napi_get_named_property(env, optionObject, "ctx", &contextPtrValue);
     napi_get_named_property(env, optionObject, "navigationId", &navigationIdValue);
     napi_get_named_property(env, optionObject, "templateType", &templateTypeValue);
     napi_get_named_property(env, optionObject, "width", &widthValue);
     napi_get_named_property(env, optionObject, "height", &heightValue);
 
-    napi_unwrap(env, contextValue, &contextPtr);
+    napi_unwrap(env, contextPtrValue, &contextPtr);
     if (!ConvertFromJsValue(env, navigationIdValue, navigationId)) {
         WLOGFE("Failed to convert navigationIdValue to stringType");
         return -1;
@@ -117,15 +119,15 @@ napi_value JsPipWindowManager::OnCreatePictureInPictureController(napi_env env, 
         return NapiThrowInvalidParam(env);
     }
     napi_value config = argv[0];
-    PictureInPictureOption pipOption;
-    int32_t result = GetPictureInPictureOptionFromJs(env, config, pipOption);
-    if (result == -1) {
+    PipOption pipOption;
+    int32_t errCode = GetPictureInPictureOptionFromJs(env, config, pipOption);
+    if (errCode == -1) {
         WLOGFE("Configuration is invalid: %{public}zu", argc);
         return NapiThrowInvalidParam(env);
     }
     NapiAsyncTask::CompleteCallback complete =
         [pipOption](napi_env env, NapiAsyncTask& task, int32_t status) {
-            sptr<PictureInPictureOption> pipOptionPtr = pipOption;
+            sptr<PipOption> pipOptionPtr = new PipOption(pipOption);
             auto context = static_cast<std::weak_ptr<AbilityRuntime::Context>*>(pipOption.GetContext());
             sptr<WindowSessionImpl> mainWindow = WindowSceneSessionImpl::GetMainWindowWithContext(context->lock());
             sptr<PictureInPictureController> pipController =
@@ -151,7 +153,7 @@ napi_value JsPipWindowManagerInit(napi_env env, napi_value exportObj)
     BindNativeFunction(env, exportObj, "create", moduleName, JsPipWindowManager::CreatePictureInPictureController);
     BindNativeFunction(env, exportObj, "isPictureInPictureEnabled", moduleName,
         JsPipWindowManager::IsPictureInPictureEnabled);
-    InitEnums(envm exportObj);
+    InitEnums(env, exportObj);
     return NapiGetUndefined(env);
 }
 }
