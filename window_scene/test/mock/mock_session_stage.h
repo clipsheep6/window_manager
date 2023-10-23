@@ -36,6 +36,7 @@ public:
     MOCK_METHOD1(UpdateFocus, WSError(bool isFocused));
     MOCK_METHOD1(NotifyTransferComponentData, WSError(const AAFwk::WantParams& wantParams));
     MOCK_METHOD1(MarkProcessed, WSError(int32_t eventId));
+    MOCK_METHOD2(NotifyCloseExistPipWindow, WSError(void));
     MOCK_METHOD1(NotifyOccupiedAreaChangeInfo, void(sptr<OccupiedAreaChangeInfo> info));
     MOCK_METHOD2(UpdateAvoidArea, WSError(const sptr<AvoidArea>& avoidArea, AvoidAreaType type));
     MOCK_METHOD1(DumpSessionElementInfo, void(const std::vector<std::string>& params));
