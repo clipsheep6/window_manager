@@ -26,11 +26,6 @@ void PipOption::SetContext(void* contextPtr)
     contextPtr_ = contextPtr;
 }
 
-void PipOption::SetEnv(napi_env env)
-{
-    env_ = env;
-}
-
 void PipOption::SetNavigationId(const std::string navigationId)
 {
     navigationId_ = navigationId;
@@ -50,11 +45,6 @@ void PipOption::SetContentSize(uint32_t width, uint32_t height)
 void* PipOption::GetContext() const
 {
     return contextPtr_;
-}
-
-napi_env PipOption::GetEnv() const
-{
-    return env_;
 }
 
 std::string PipOption::GetNavigationId() const
