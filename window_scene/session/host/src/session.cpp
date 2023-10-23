@@ -1036,7 +1036,7 @@ WSError Session::NotifyCloseExistPipWindow()
     if (!sessionStage_) {
         return WSError::WS_ERROR_NULLPTR;
     }
-    sessionStage_->NotifyCloseExistPipWindow();
+    return sessionStage_->NotifyCloseExistPipWindow();
 }
 
 WSError Session::NotifyDestroy()
