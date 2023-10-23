@@ -1034,7 +1034,7 @@ void Session::NotifyScreenshot()
 WSError Session::NotifyCloseExistPipWindow()
 {
     if (!sessionStage_) {
-        return WSError::WS_ERROR_NULLPOINTER;
+        return WSError::WS_ERROR_NULLPTR;
     }
     sessionStage_->NotifyCloseExistPipWindow();
 }
