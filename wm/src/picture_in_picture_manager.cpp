@@ -110,7 +110,6 @@ bool PictureInPictureManager::IsCurrentWindow(int32_t windowId)
     if (!PictureInPictureManager::IsCurrentPipControllerExist()) {
         return false;
     }
-    // TODO GetWindowId
     return PictureInPictureManager::curPipController_->GetWindowId() == windowId;
 }
 
@@ -120,14 +119,12 @@ sptr<Window> PictureInPictureManager::GetCurrentWindow()
     if (!PictureInPictureManager::IsCurrentPipControllerExist()) {
         return nullptr;
     }
-    // TODO GetWindow
     return PictureInPictureManager::curPipController_->GetWindow();
 }
 
 void PictureInPictureManager::DoRestore()
 {
     WLOGD("DoRestore is called");
-    // TODO: Add restore
 }
 
 void PictureInPictureManager::DoClose()

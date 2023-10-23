@@ -47,20 +47,20 @@ WMError PictureInPictureController::CreatePictureInPictureWindow()
 
     if (pipOption_ == nullptr || pipOption_->GetContext() == nullptr) {
         WLOGFE("Get PictureInPictureOption failed");
-        return WMError::WM_ERROR_PIP_CREATE_WINDOW_FAILED;
+        return WMError::WM_ERROR_PIP_CREATE_FAILED;
     }
     auto context = static_cast<std::weak_ptr<AbilityRuntime::Context>*>(pipOption_->GetContext());
     sptr<Window> callWindow = Window::GetTopWindowWithContext(context->lock());
     if (callWindow == nullptr) {
         WLOGFE("Get call Window failed");
-        return WMError::WM_ERROR_PIP_CREATE_WINDOW_FAILED;
+        return WMError::WM_ERROR_PIP_CREATE_FAILED;
     }
     windowId_ = callWindow->GetWindowId();
 
     sptr<WindowOption> windowOption = new(std::nothrow) WindowOption();
     if (windowOption == nullptr) {
         WLOGFE("Get WindowOption failed");
-        return WMError::WM_ERROR_PIP_CREATE_WINDOW_FAILED;
+        return WMError::WM_ERROR_PIP_CREATE_FAILED;
     }
     windowRect_.width_ = 800;
     windowRect_.height_ = 600;
@@ -72,7 +72,7 @@ WMError PictureInPictureController::CreatePictureInPictureWindow()
     sptr<Window> window = Window::Create(windowOption->GetWindowName(), windowOption, context->lock(), errCode);
     if (window == nullptr || errCode != WMError::WM_OK) {
         WLOGFE("Window create failed, reason: %{public}d", errCode);
-        return WMError::WM_ERROR_PIP_CREATE_WINDOW_FAILED;
+        return WMError::WM_ERROR_PIP_CREATE_FAILED;
     }
     window_ = window;
     window_->SetCornerRadius(winCorner_);
@@ -87,9 +87,8 @@ WMError PictureInPictureController::ShowPictureInPictureWindow()
         WLOGFD("window_ is nullptr");
         return WMError::WM_ERROR_PIP_STATE_ABNORMALLY;
     }
-    // TODO: Add SetUIContent
     WMError errCode = window_->Show(0, false);
-    if (errCode != WMError::OK) {
+    if (errCode != WMError::WM_OK) {
         WLOGFD("window_ show failed");
         return WMError::WM_ERROR_PIP_INTERNAL_ERROR;
     }
@@ -120,7 +119,7 @@ WMError PictureInPictureController::StartPictureInPicture()
         PictureInPictureManager::DoClose();
     }
     PictureInPictureManager::SetPipWindowState(PipWindowState::STATE_STARTING);
-    WMError errCode;
+    WMError errCode = WMError::WM_OK;
     errCode = CreatePictureInPictureWindow();
     if (errCode != WMError::WM_OK) {
         PictureInPictureManager::SetPipWindowState(PipWindowState::STATE_UNDEFINED);
@@ -175,7 +174,6 @@ sptr<Window> PictureInPictureController::GetWindow()
 {
     WLOGFD("GetWindow is called");
     return window_;
-
 }
 
 int32_t PictureInPictureController::GetWindowId()

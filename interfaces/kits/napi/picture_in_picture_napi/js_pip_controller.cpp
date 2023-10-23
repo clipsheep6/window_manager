@@ -39,7 +39,8 @@ void BindJsPipControllerFunctions(napi_env env, napi_value object, const char *m
     BindNativeFunction(env, object, "off", moduleName, JsPipController::UnregisterCallback);
 }
 
-napi_value CreateJsPipControllerObject(napi_env env, sptr<PictureInPictureController>& pipController) {
+napi_value CreateJsPipControllerObject(napi_env env, sptr<PictureInPictureController>& pipController)
+{
     napi_value objValue = nullptr;
     napi_create_object(env, &objValue);
 
@@ -90,7 +91,7 @@ napi_value JsPipController::OnStartPictureInPicture(napi_env env, napi_callback_
             }
             task.Resolve(env, NapiGetUndefined(env));
             WLOGI("JsPipController::OnStartPictureInPicture success");
-		};
+        };
     napi_value result = nullptr;
     NapiAsyncTask::Schedule("JsPipController::OnStartPictureInPicture", env,
         CreateAsyncTaskWithLastParam(env, nullptr, nullptr, std::move(complete), &result));
