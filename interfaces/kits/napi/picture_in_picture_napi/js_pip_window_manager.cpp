@@ -47,8 +47,8 @@ static int32_t GetPictureInPictureOptionFromJs(napi_env env, napi_value optionOb
     napi_get_named_property(env, optionObject, "ctx", &contextPtrValue);
     napi_get_named_property(env, optionObject, "navigationId", &navigationIdValue);
     napi_get_named_property(env, optionObject, "templateType", &templateTypeValue);
-    napi_get_named_property(env, optionObject, "width", &widthValue);
-    napi_get_named_property(env, optionObject, "height", &heightValue);
+    napi_get_named_property(env, optionObject, "contentWidth", &widthValue);
+    napi_get_named_property(env, optionObject, "contentHeight", &heightValue);
 
     napi_unwrap(env, contextPtrValue, &contextPtr);
     if (!ConvertFromJsValue(env, navigationIdValue, navigationId)) {
