@@ -29,7 +29,7 @@ public:
     PictureInPictureController(sptr<PipOption> pipOption, int32_t mainWindowId);
     ~PictureInPictureController();
     WMError StartPictureInPicture();
-    WMError StopPictureInPicture(bool needRestore);
+    WMError StopPictureInPicture(bool needAnim);
 
     sptr<Window> GetWindow();
     int32_t GetWindowId();

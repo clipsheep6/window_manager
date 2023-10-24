@@ -43,7 +43,7 @@ public:
     static sptr<Window> GetCurrentWindow();
 
     static void DoRestore();
-    static void DoClose();
+    static void DoClose(bool needAnim);
     static void DoStartMove();
     static void DoScale();
     static void DoActionEvent();

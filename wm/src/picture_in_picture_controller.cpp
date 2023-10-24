@@ -116,7 +116,7 @@ WMError PictureInPictureController::StartPictureInPicture()
             PictureInPictureManager::SetCurrentPipController(thisController);
             return ShowPictureInPictureWindow();
         }
-        PictureInPictureManager::DoClose();
+        PictureInPictureManager::DoClose(false);
     }
     PictureInPictureManager::SetPipWindowState(PipWindowState::STATE_STARTING);
     WMError errCode = WMError::WM_OK;
@@ -136,9 +136,9 @@ WMError PictureInPictureController::StartPictureInPicture()
     return WMError::WM_OK;
 }
 
-WMError PictureInPictureController::StopPictureInPicture(bool needRestore)
+WMError PictureInPictureController::StopPictureInPicture(bool needAnim)
 {
-    WLOGI("StopPictureInPicture is called, needRestore: %{public}u", needRestore);
+    WLOGI("StopPictureInPicture is called, needAnim: %{public}u", needAnim);
     if (window_ == nullptr) {
         WLOGFE("window_ is nullptr");
         return WMError::WM_ERROR_PIP_STATE_ABNORMALLY;
@@ -160,7 +160,7 @@ WMError PictureInPictureController::StopPictureInPicture(bool needRestore)
             window_ = nullptr;
             PictureInPictureManager::SetPipWindowState(PipWindowState::STATE_STOPPED);
         };
-    if (handler_ && !needRestore) {
+    if (handler_ && needAnim) {
         WLOGFD("Window destroy async");
         handler_->PostTask(task, "pip_controller_stop_window", 400);
     } else {

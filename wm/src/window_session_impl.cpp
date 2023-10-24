@@ -1218,7 +1218,7 @@ WSError WindowSessionImpl::NotifyDestroy()
 WSError WindowSessionImpl::NotifyCloseExistPipWindow()
 {
     WLOGFE("WindowSessionImpl::NotifyCloseExistPipWindow");
-    PictureInPictureManager::DoClose();
+    PictureInPictureManager::DoClose(false);
     return WSError::WS_OK;
 }
 

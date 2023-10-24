@@ -127,13 +127,13 @@ void PictureInPictureManager::DoRestore()
     WLOGD("DoRestore is called");
 }
 
-void PictureInPictureManager::DoClose()
+void PictureInPictureManager::DoClose(bool needAnim)
 {
     WLOGD("DoClose is called");
     if (!PictureInPictureManager::IsCurrentPipControllerExist()) {
         return;
     }
-    PictureInPictureManager::curPipController_->StopPictureInPicture(false);
+    PictureInPictureManager::curPipController_->StopPictureInPicture(needAnim);
 }
 
 void PictureInPictureManager::DoStartMove()
