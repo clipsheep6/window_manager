@@ -5318,7 +5318,7 @@ void SceneSessionManager::PreHandleCollaborator(sptr<SceneSession>& sceneSession
         if (notifyReturn != BrokerStates::BROKER_STARTED) {
             WLOGFI("PreHandleCollaborator cant notify");
             return;
-        } 
+        }
 
     }
     if (sceneSession->GetSessionInfo().want != nullptr) {
@@ -5408,5 +5408,20 @@ void SceneSessionManager::NotifySessionBackground(const sptr<SceneSession>& sess
     bool withAnimation, bool isFromInnerkits)
 {
     session->NotifySessionBackground(reason, withAnimation, isFromInnerkits);
+}
+
+void SceneSessionManager::NotifyUpdateRectAfterLayout()
+{
+    auto task = [this]() {
+        std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+        for (auto& iter: sceneSessionMap_) {
+            auto sceneSession = iter.second;
+            if (sceneSession && !sceneSession->GetSessionInfo().isSystem_ && sceneSession->IsDirtyWindow()) {
+                sceneSession->NotifyClientToUpdateRect();
+            }
+        }
+    };
+    // need sync task since animation transcation need
+    return taskScheduler_->PostVoidSyncTask(task);
 }
 } // namespace OHOS::Rosen

@@ -214,7 +214,7 @@ public:
     WSError NotifyAINavigationBarShowStatus(bool isVisible, WSRect barArea);
     WSRect GetAINavigationBarArea();
     bool UpdateImmersiveState();
-
+    void NotifyUpdateRectAfterLayout();
 public:
     std::shared_ptr<TaskScheduler> GetTaskScheduler() {return taskScheduler_;};
 protected:
