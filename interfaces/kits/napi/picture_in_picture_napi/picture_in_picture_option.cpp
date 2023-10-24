@@ -57,7 +57,7 @@ uint32_t PipOption::GetPipTemplate()
     return templateType_;
 }
 
-void PipOption::GetContentSize(uint32_t width, uint32_t height)
+void PipOption::GetContentSize(uint32_t& width, uint32_t& height)
 {
     width = contentWidth_;
     height = contentHeight_;
