@@ -87,6 +87,7 @@ public:
         TRANS_ID_REGISTER_COLLABORATOR,
         TRANS_ID_UNREGISTER_COLLABORATOR,
         TRANS_ID_UPDATE_TOUCHOUTSIDE_LISTENER,
+        TRANS_ID_IMMERSIVE_FULLSCREEN,
     };
 
     virtual WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
@@ -133,6 +134,7 @@ public:
     virtual WSError RegisterIAbilityManagerCollaborator(int32_t type,
         const sptr<AAFwk::IAbilityManagerCollaborator> &impl) = 0;
     virtual WSError UnregisterIAbilityManagerCollaborator(int32_t type) = 0;
+    virtual WSError IsImmersiveFullScreen() = 0;
     // interfaces of IWindowManager
     WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode,
