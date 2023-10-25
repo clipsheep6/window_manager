@@ -24,6 +24,7 @@
 #include "root_scene.h"
 #include "session/host/include/scene_session.h"
 #include "ability_info.h"
+#include "task_scheduler.h"
 
 namespace OHOS::Rosen {
 class JsSceneSessionManager final {
@@ -104,6 +105,7 @@ private:
     std::map<std::string, Func> listenerFunc_;
 
     sptr<RootScene> rootScene_;
+    std::shared_ptr<TaskScheduler> taskScheduler_;
 };
 } // namespace OHOS::Rosen
 
