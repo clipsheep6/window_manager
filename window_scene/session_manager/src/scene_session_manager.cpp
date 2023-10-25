@@ -988,6 +988,7 @@ sptr<AAFwk::SessionInfo> SceneSessionManager::SetAbilitySessionInfo(const sptr<S
     abilitySessionInfo->resultCode = sessionInfo.resultCode;
     abilitySessionInfo->uiAbilityId = sessionInfo.uiAbilityId_;
     abilitySessionInfo->startSetting = sessionInfo.startSetting;
+    abilitySessionInfo->insightIntentExecuteParam = sessionInfo.insightIntentExecuteParam;
     abilitySessionInfo->callingTokenId = sessionInfo.callingTokenId_;
     abilitySessionInfo->userId = currentUserId_;
     abilitySessionInfo->isClearSession = sessionInfo.isClearSession;
@@ -1077,6 +1078,7 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
         promise->set_value(static_cast<int32_t>(WSError::WS_ERROR_NULLPTR));
         return WSError::WS_ERROR_INVALID_WINDOW;
     }
+    scnSession->SetSessionInfoInsightIntentExecuteParam(nullptr); // reset intent
     scnSession->NotifyActivation();
     scnSessionInfo->isNewWant = isNewActive;
     bool isCollaboratorType = CheckCollaboratorType(scnSession->GetCollaboratorType());
