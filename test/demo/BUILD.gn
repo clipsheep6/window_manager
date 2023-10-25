@@ -28,6 +28,12 @@ group("demo") {
 }
 
 ohos_executable("demo_mirror_screen_listener") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
+
   sources = [ "demo_mirror_screen_listener.cpp" ]
 
   include_dirs = [ "../common/utils/include" ]
@@ -47,6 +53,12 @@ ohos_executable("demo_mirror_screen_listener") {
 }
 
 ohos_executable("demo_screenshot_listener") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
+
   sources = [ "demo_screenshot_listener.cpp" ]
 
   include_dirs = [ "../common/utils/include" ]
@@ -67,6 +79,12 @@ ohos_executable("demo_screenshot_listener") {
 }
 
 ohos_executable("demo_snapshot_virtual_screen") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
+
   sources = [ "demo_snapshot_virtual_screen.cpp" ]
 
   include_dirs = [
@@ -94,6 +112,12 @@ ohos_executable("demo_snapshot_virtual_screen") {
 }
 
 ohos_executable("demo_system_sub_window") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
+
   sources = [ "demo_system_sub_window.cpp" ]
 
   include_dirs = [
@@ -116,6 +140,12 @@ ohos_executable("demo_system_sub_window") {
 }
 
 ohos_executable("demo_freeze_display") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
+
   sources = [ "demo_freeze_display.cpp" ]
 
   include_dirs = [
@@ -135,6 +165,12 @@ ohos_executable("demo_freeze_display") {
 }
 
 ohos_executable("demo_water_mark_listener") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
+
   sources = [ "demo_water_mark_listener.cpp" ]
 
   include_dirs = [
@@ -157,6 +193,12 @@ ohos_executable("demo_water_mark_listener") {
 }
 
 ohos_executable("demo_session_manager") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
+
   sources = [ "demo_session_manager.cpp" ]
 
   include_dirs = [

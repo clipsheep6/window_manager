@@ -33,6 +33,12 @@ config("dm_napi_common_public_config") {
 }
 
 ohos_static_library("dm_napi_common") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
+
   sources = [ "dm_napi_common.cpp" ]
 
   configs = [

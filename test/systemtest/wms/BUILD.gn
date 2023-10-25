@@ -459,6 +459,12 @@ config("wms_systemtest_common_public_config") {
 }
 
 ohos_static_library("wms_systemtest_common") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
+
   visibility = [ ":*" ]
   testonly = true
 

@@ -22,6 +22,12 @@ config("session_manager_service_public_config") {
 }
 
 ohos_shared_library("session_manager_service") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
+
   sources = [
     "src/session_manager_service.cpp",
     "src/session_manager_service_stub.cpp",
