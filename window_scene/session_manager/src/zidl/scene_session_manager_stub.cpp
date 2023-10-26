@@ -534,14 +534,6 @@ int SceneSessionManagerStub::HandleIsImmersiveFullScreen(MessageParcel &data, Me
     return ERR_NONE;
 }
 
-int SceneSessionManagerStub::HandleIsImmersiveFullScreen(MessageParcel &data, MessageParcel &reply)
-{
-    WLOGFI("run HandleIsImmersiveFullScreen!");
-    const WSError& ret = IsImmersiveFullScreen();
-    reply.WriteUint32(static_cast<uint32_t>(ret));
-    return ERR_NONE;
-}
-
 int SceneSessionManagerStub::HandleNotifyDumpInfoResult(MessageParcel &data, MessageParcel &reply)
 {
     WLOGFI("HandleNotifyDumpInfoResult");

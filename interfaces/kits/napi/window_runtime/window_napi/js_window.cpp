@@ -3266,12 +3266,8 @@ napi_value JsWindow::OnIsImmersiveFullScreen(napi_env env, napi_callback_info in
                 return;
             }
 
-            WMError ret = weakWindow->IsImmersiveFullScreen();
-            if (ret == WMError::WM_OK) {
-                task.Resolve(env, NapiGetUndefined(env));
-            } else {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret), "Not in immersive scene."));
-            }
+            bool ret = weakWindow->IsImmersiveFullScreen();
+            task.Resolve(env, CreateJsValue(env, ret));
             WLOGI("Window [%{public}u, %{public}s]. Judge immersive scene end, ret = %{public}d",
                 weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), ret);
         };

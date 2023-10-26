@@ -1886,16 +1886,6 @@ WMError WindowSceneSessionImpl::IsImmersiveFullScreen()
     return ret;
 }
 
-bool WindowSceneSessionImpl::IsImmersiveFullScreen() const
-{
-    WMError ret = SessionManager::GetInstance().IsImmersiveFullScreen();
-    if (ret != WMError::WM_OK) {
-        WLOGFE("Non immersive scene exists. errCode:%{public}d", static_cast<int32_t>(ret));
-        return false;
-    }
-    return true;
-}
-
 WMError WindowSceneSessionImpl::SetTouchHotAreas(const std::vector<Rect>& rects)
 {
     if (property_ == nullptr) {
