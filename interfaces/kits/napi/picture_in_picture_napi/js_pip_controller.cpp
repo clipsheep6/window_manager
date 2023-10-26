@@ -35,6 +35,7 @@ void BindJsPipControllerFunctions(napi_env env, napi_value object, const char *m
     BindNativeFunction(env, object, "startPictureInPicture", moduleName, JsPipController::StartPictureInPicture);
     BindNativeFunction(env, object, "stopPictureInPicture", moduleName, JsPipController::StopPictureInPicture);
     BindNativeFunction(env, object, "updateContentSize", moduleName, JsPipController::UpdateContentSize);
+    BindNativeFunction(env, object, "setAutoStartEnabled", moduleName, JsPipController::SetAutoStartEnabled);
     BindNativeFunction(env, object, "on", moduleName, JsPipController::RegisterCallback);
     BindNativeFunction(env, object, "off", moduleName, JsPipController::UnregisterCallback);
 }
