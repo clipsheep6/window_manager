@@ -29,10 +29,10 @@ public:
     ~JsPipWindowManager();
     static void Finalizer(napi_env env, void* data, void* hint);
     static napi_value IsPictureInPictureEnabled(napi_env env, napi_callback_info info);
-    static napi_value CreatePictureInPictureController(napi_env env, napi_callback_info info);
+    static napi_value CreatePipController(napi_env env, napi_callback_info info);
 private:
     static napi_value OnIsPictureInPictureEnabled(napi_env env, napi_callback_info info);
-    static napi_value OnCreatePictureInPictureController(napi_env env, napi_callback_info info);
+    static napi_value OnCreatePipController(napi_env env, napi_callback_info info);
 };
 }
 }

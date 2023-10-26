@@ -48,36 +48,35 @@ static napi_status SetNamedProperty(napi_env env, napi_value& obj, const std::st
     return status;
 }
 
-static napi_value ExportPictureInPictureTemplateType(napi_env env)
+static napi_value ExportPipTemplateType(napi_env env)
 {
     napi_value result = nullptr;
     napi_create_object(env, &result);
-    (void)SetNamedProperty(env, result, "VIDEO_PLAY", static_cast<int32_t>(PictureInPictureTemplateType::VIDEO_PLAY));
-    (void)SetNamedProperty(env, result, "VIDEO_CALL", static_cast<int32_t>(PictureInPictureTemplateType::VIDEO_CALL));
-    (void)SetNamedProperty(
-        env, result, "VIDEO_MEETING", static_cast<int32_t>(PictureInPictureTemplateType::VIDEO_MEETING));
+    (void)SetNamedProperty(env, result, "VIDEO_PLAY", static_cast<int32_t>(PipTemplateType::VIDEO_PLAY));
+    (void)SetNamedProperty(env, result, "VIDEO_CALL", static_cast<int32_t>(PipTemplateType::VIDEO_CALL));
+    (void)SetNamedProperty(env, result, "VIDEO_MEETING", static_cast<int32_t>(PipTemplateType::VIDEO_MEETING));
     napi_object_freeze(env, result);
     return result;
 }
 
-static napi_value ExportPictureInPictureState(napi_env env)
+static napi_value ExportPipState(napi_env env)
 {
     napi_value result = nullptr;
     napi_create_object(env, &result);
-    (void)SetNamedProperty(env, result, "WILL_START", static_cast<int32_t>(PictureInPictureState::WILL_START));
-    (void)SetNamedProperty(env, result, "STARTED", static_cast<int32_t>(PictureInPictureState::STARTED));
-    (void)SetNamedProperty(env, result, "WILL_STOP", static_cast<int32_t>(PictureInPictureState::WILL_STOP));
-    (void)SetNamedProperty(env, result, "STOPPED", static_cast<int32_t>(PictureInPictureState::STOPPED));
-    (void)SetNamedProperty(env, result, "RESTORE", static_cast<int32_t>(PictureInPictureState::RESTORE));
-    (void)SetNamedProperty(env, result, "ERROR", static_cast<int32_t>(PictureInPictureState::ERROR));
+    (void)SetNamedProperty(env, result, "ABOUT_TO_START", static_cast<int32_t>(PipState::ABOUT_TO_START));
+    (void)SetNamedProperty(env, result, "STARTED", static_cast<int32_t>(PipState::STARTED));
+    (void)SetNamedProperty(env, result, "ABOUT_TO_STOP", static_cast<int32_t>(PipState::ABOUT_TO_STOP));
+    (void)SetNamedProperty(env, result, "STOPPED", static_cast<int32_t>(PipState::STOPPED));
+    (void)SetNamedProperty(env, result, "ABOUT_TO_RESTORE", static_cast<int32_t>(PipState::ABOUT_TO_RESTORE));
+    (void)SetNamedProperty(env, result, "ERROR", static_cast<int32_t>(PipState::ERROR));
     napi_object_freeze(env, result);
     return result;
 }
 napi_status InitEnums(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
-        DECLARE_NAPI_PROPERTY("PictureInPictureTemplateType", ExportPictureInPictureTemplateType(env)),
-        DECLARE_NAPI_PROPERTY("PictureInPictureState", ExportPictureInPictureState(env)),
+        DECLARE_NAPI_PROPERTY("PipTemplateType", ExportPipTemplateType(env)),
+        DECLARE_NAPI_PROPERTY("PipState", ExportPipState(env)),
     };
     size_t count = sizeof(properties) / sizeof(napi_property_descriptor);
     return napi_define_properties(env, exports, count, properties);

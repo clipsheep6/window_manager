@@ -30,7 +30,7 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "jsPipController"};
 }
 
-JsPipController::JsPipController(const sptr<PictureInPictureController>& pipController) : pipController_(pipController)
+JsPipController::JsPipController(const sptr<PipController>& pipController) : pipController_(pipController)
 {
 }
 

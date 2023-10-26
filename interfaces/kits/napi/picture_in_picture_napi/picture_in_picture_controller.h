@@ -19,7 +19,7 @@
 
 namespace OHOS {
 namespace Rosen {
-class PictureInPictureController : virtual public RefBase {
+class PipController : virtual public RefBase {
 public:
     bool StartPictureInPicture();
     bool StopPictureInPicture();
