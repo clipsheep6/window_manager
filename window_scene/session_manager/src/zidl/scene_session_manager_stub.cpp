@@ -113,6 +113,8 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandleUnregisterCollaborator),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_TOUCHOUTSIDE_LISTENER),
         &SceneSessionManagerStub::HandleUpdateSessionTouchOutsideListener),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_IMMERSIVE_FULLSCREEN),
+        &SceneSessionManagerStub::HandleIsImmersiveFullScreen),
 };
 
 int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
@@ -520,6 +522,14 @@ int SceneSessionManagerStub::HandleBindDialogTarget(MessageParcel &data, Message
     auto persistentId = data.ReadUint64();
     sptr<IRemoteObject> remoteObject = data.ReadRemoteObject();
     const WSError& ret = BindDialogTarget(persistentId, remoteObject);
+    reply.WriteUint32(static_cast<uint32_t>(ret));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleIsImmersiveFullScreen(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleIsImmersiveFullScreen!");
+    const WSError& ret = IsImmersiveFullScreen();
     reply.WriteUint32(static_cast<uint32_t>(ret));
     return ERR_NONE;
 }
