@@ -171,6 +171,26 @@ WSError SceneSessionManagerProxy::BindDialogTarget(uint64_t persistentId, sptr<I
     return static_cast<WSError>(ret);
 }
 
+WSError SceneSessionManagerProxy::IsImmersiveFullScreen(bool& flag)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("IsImmersiveFullScreen WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_IMMERSIVE_FULLSCREEN),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    flag = reply.ReadBool();
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WSError>(ret);
+}
+
 WSError SceneSessionManagerProxy::UpdateSessionAvoidAreaListener(int32_t& persistentId, bool haveListener)
 {
     MessageParcel data;
