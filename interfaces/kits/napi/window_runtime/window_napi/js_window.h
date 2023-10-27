@@ -176,6 +176,7 @@ private:
     napi_value OnResetAspectRatio(napi_env env, napi_callback_info info);
     napi_value OnMinimize(napi_env env, napi_callback_info info);
     napi_value OnRaiseAboveTarget(napi_env env, napi_callback_info info);
+    napi_value OnIsImmersiveFullScreen(napi_env env, napi_callback_info info);
 
     // colorspace, gamut
     napi_value OnIsSupportWideGamut(napi_env env, napi_callback_info info);
@@ -209,7 +210,6 @@ private:
     napi_value OnSetForbidSplitMove(napi_env env, napi_callback_info info);
     napi_value OnSnapshot(napi_env env, napi_callback_info info);
     napi_value OnSetSnapshotSkip(napi_env env, napi_callback_info info);
-    napi_value OnIsImmersiveFullScreen(napi_env env, napi_callback_info info);
 
     // animation Config
     napi_value OnOpacity(napi_env env, napi_callback_info info);
