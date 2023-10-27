@@ -1382,7 +1382,7 @@ public:
      *
      * @return Errorcode of window.
      */
-    virtual WMError IsImmersiveFullScreen() const { return WMError::WM_OK; }
+    virtual WMError IsImmersiveFullScreen(bool& flag) const { return WMError::WM_OK; }
 };
 }
 }
