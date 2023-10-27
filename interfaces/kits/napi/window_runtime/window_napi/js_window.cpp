@@ -3267,7 +3267,7 @@ napi_value JsWindow::OnIsImmersiveFullScreen(napi_env env, napi_callback_info in
             }
             bool flag = false;
             WMError ret = weakWindow->IsImmersiveFullScreen(flag);
-            if (ret == WmErrorCode::WM_OK) {
+            if (ret == WMError::WM_OK) {
                 task.Resolve(env, CreateJsValue(env, flag));
             } else {
                 task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret), "Judge if immersive failed"));
