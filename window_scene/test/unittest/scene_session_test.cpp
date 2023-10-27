@@ -272,7 +272,6 @@ HWTEST_F(SceneSessionTest, SetTurnScreenOn01, Function | SmallTest | Level2)
     sptr<SceneSession> scensession;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     EXPECT_NE(scensession, nullptr);
-    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, scensession->NotifyTouchOutside());
     sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
     ASSERT_NE(mockSessionStage, nullptr);
     ASSERT_EQ(WSError::WS_OK, scensession->SetTurnScreenOn(false));
@@ -298,7 +297,6 @@ HWTEST_F(SceneSessionTest, UpdateWindowAnimationFlag01, Function | SmallTest | L
     sptr<SceneSession> scensession;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     EXPECT_NE(scensession, nullptr);
-    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, scensession->NotifyTouchOutside());
     sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
     ASSERT_NE(mockSessionStage, nullptr);
     ASSERT_EQ(WSError::WS_OK, scensession->UpdateWindowAnimationFlag(false));
@@ -438,6 +436,48 @@ HWTEST_F(SceneSessionTest, IsKeepScreenOn, Function | SmallTest | Level2)
     EXPECT_NE(scensession, nullptr);
     ASSERT_EQ(WSError::WS_OK, scensession->SetKeepScreenOn(false));
     ASSERT_EQ(false, scensession->IsKeepScreenOn());
+}
+
+/**
+ * @tc.name: IsAppSession
+ * @tc.desc: IsAppSession true
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, IsAppSession01, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "Background01";
+    info.bundleName_ = "IsAppSession";
+    info.windowType_ = 1;
+    sptr<Rosen::ISession> session_;
+    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(specificCallback_, nullptr);
+    sptr<SceneSession> scensession;
+    scensession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(scensession, nullptr);
+    ASSERT_EQ(true, scensession->IsAppSession());
+}
+
+/**
+ * @tc.name: IsAppSession
+ * @tc.desc: IsAppSession false
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, IsAppSession02, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "Background01";
+    info.bundleName_ = "IsAppSession";
+    info.windowType_ = 2106;
+    sptr<Rosen::ISession> session_;
+    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(specificCallback_, nullptr);
+    sptr<SceneSession> scensession;
+    scensession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(scensession, nullptr);
+    ASSERT_EQ(false, scensession->IsAppSession());
 }
 
 /**

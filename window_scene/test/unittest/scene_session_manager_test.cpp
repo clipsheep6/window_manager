@@ -2402,6 +2402,25 @@ HWTEST_F(SceneSessionManagerTest, SetFocusedSession, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.name: RequestFocusStatus
+ * @tc.desc: SceneSesionManager request focus status
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, RequestFocusStatus, Function | SmallTest | Level3)
+{
+    int32_t focusedSession_ = ssm_->GetFocusedSession();
+    EXPECT_EQ(focusedSession_, INVALID_SESSION_ID);
+    int32_t persistentId_ = INVALID_SESSION_ID;
+    WSError result01 = ssm_->RequestFocusStatus(persistentId_, true);
+    EXPECT_EQ(result01, WSError::WS_ERROR_INVALID_SESSION);
+    persistentId_ = 10000;
+    WSError result02 = ssm_->RequestFocusStatus(persistentId_, true);
+    EXPECT_EQ(result02, WSError::WS_ERROR_INVALID_SESSION);
+    WSError result03 = ssm_->RequestFocusStatus(persistentId_, false);
+    EXPECT_EQ(result03, WSError::WS_DO_NOTHING);
+}
+
+/**
  * @tc.name: RegisterSessionExceptionFunc
  * @tc.desc: SceneSesionManager register session expection func
  * @tc.type: FUNC
@@ -2529,6 +2548,19 @@ HWTEST_F(SceneSessionManagerTest, UpdateWindowMode, Function | SmallTest | Level
     ASSERT_EQ(result, WSError::WS_ERROR_INVALID_WINDOW);
     std::function<void(int32_t persistentId, WindowUpdateType type)> func = WindowChangedFuncTest;
     ssm_->RegisterWindowChanged(func);
+}
+
+/**
+ * @tc.name: SetScreenLocked && IsScreenLocked
+ * @tc.desc: SceneSesionManager update screen locked state
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, IsScreenLocked, Function | SmallTest | Level3)
+{
+    ssm_->SetScreenLocked(true);
+    EXPECT_TRUE(ssm_->IsScreenLocked());
+    ssm_->SetScreenLocked(false);
+    EXPECT_FALSE(ssm_->IsScreenLocked());
 }
 
 /**

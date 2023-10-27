@@ -95,7 +95,9 @@ WindowSessionImpl::WindowSessionImpl(const sptr<WindowOption>& option)
         WLOGFE("Property is null");
         return;
     }
-
+    SessionInfo sessionInfo;
+    sessionInfo.bundleName_ = option->GetBundleName();
+    property_->SetSessionInfo(sessionInfo);
     property_->SetWindowName(option->GetWindowName());
     property_->SetRequestRect(option->GetWindowRect());
     property_->SetWindowType(option->GetWindowType());
@@ -466,7 +468,8 @@ WSError WindowSessionImpl::UpdateFocus(bool isFocused)
             "FOCUS_WINDOW",
             OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
             "PID", getpid(),
-            "UID", getuid());
+            "UID", getuid(),
+            "BUNDLE_NAME", property_->GetSessionInfo().bundleName_);
         NotifyAfterFocused();
     } else {
         NotifyAfterUnfocused();
@@ -1256,13 +1259,13 @@ WMError WindowSessionImpl::RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChange
 {
     bool isUpdate = false;
     WMError ret = WMError::WM_OK;
-    WLOGFD("Start register");
+    auto persistentId = GetPersistentId();
+    WLOGFD("Start register avoidAreaChange listener, id:%{public}d", persistentId);
     if (listener == nullptr) {
         WLOGFE("listener is nullptr");
         return WMError::WM_ERROR_NULLPTR;
     }
 
-    auto persistentId = GetPersistentId();
     {
         std::lock_guard<std::recursive_mutex> lock(globalMutex_);
         ret = RegisterListener(avoidAreaChangeListeners_[persistentId], listener);
@@ -1283,12 +1286,13 @@ WMError WindowSessionImpl::UnregisterAvoidAreaChangeListener(sptr<IAvoidAreaChan
 {
     bool isUpdate = false;
     WMError ret = WMError::WM_OK;
-    WLOGFD("Start unregister");
     auto persistentId = GetPersistentId();
+    WLOGFD("Start unregister avoidAreaChange listener, id:%{public}d", persistentId);
     if (listener == nullptr) {
         WLOGFE("listener is nullptr");
         return WMError::WM_ERROR_NULLPTR;
     }
+
     {
         std::lock_guard<std::recursive_mutex> lock(globalMutex_);
         ret = UnregisterListener(avoidAreaChangeListeners_[persistentId], listener);
@@ -1338,16 +1342,56 @@ WSError WindowSessionImpl::UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, Avo
 
 WMError WindowSessionImpl::RegisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener)
 {
-    WLOGFD("Start register");
-    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
-    return RegisterListener(touchOutsideListeners_[GetPersistentId()], listener);
+    bool isUpdate = false;
+    WMError ret = WMError::WM_OK;
+    auto persistentId = GetPersistentId();
+    WLOGFD("Start register touchOutside listener, id:%{public}d", persistentId);
+    if (listener == nullptr) {
+        WLOGFE("listener is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        ret = RegisterListener(touchOutsideListeners_[persistentId], listener);
+        if (ret != WMError::WM_OK) {
+            return ret;
+        }
+        if (touchOutsideListeners_[persistentId].size() == 1) {
+            isUpdate = true;
+        }
+    }
+    if (isUpdate) {
+        ret = SingletonContainer::Get<WindowAdapter>().UpdateSessionTouchOutsideListener(persistentId, true);
+    }
+    return ret;
 }
 
 WMError WindowSessionImpl::UnregisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener)
 {
-    WLOGFD("Start unregister");
-    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
-    return UnregisterListener(touchOutsideListeners_[GetPersistentId()], listener);
+    bool isUpdate = false;
+    WMError ret = WMError::WM_OK;
+    auto persistentId = GetPersistentId();
+    WLOGFD("Start unregister touchOutside listener, id:%{public}d", persistentId);
+    if (listener == nullptr) {
+        WLOGFE("listener is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        ret = UnregisterListener(touchOutsideListeners_[persistentId], listener);
+        if (ret != WMError::WM_OK) {
+            return ret;
+        }
+        if (avoidAreaChangeListeners_[persistentId].empty()) {
+            isUpdate = true;
+        }
+    }
+    if (isUpdate) {
+        ret = SingletonContainer::Get<WindowAdapter>().UpdateSessionTouchOutsideListener(persistentId, false);
+    }
+    return ret;
 }
 
 template<typename T>

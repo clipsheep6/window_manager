@@ -226,6 +226,54 @@ bool ConvertSessionInfoFromJs(napi_env env, napi_value jsObject, SessionInfo& se
     return true;
 }
 
+bool IsJsObjNameUndefind(napi_env env, napi_value jsObjName, int32_t& objName)
+{
+    if (GetType(env, jsObjName) != napi_undefined) {
+        if (!ConvertFromJsValue(env, jsObjName, objName)) {
+            WLOGFE("[NAPI]Failed to convert parameter to objName");
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ConvertRectInfoFromJs(napi_env env, napi_value jsObject, WSRect& rect)
+{
+    napi_value jsLeftName = nullptr;
+    napi_get_named_property(env, jsObject, "left", &jsLeftName);
+    napi_value jsTopName = nullptr;
+    napi_get_named_property(env, jsObject, "top", &jsTopName);
+    napi_value jsRightName = nullptr;
+    napi_get_named_property(env, jsObject, "right", &jsRightName);
+    napi_value jsBottomName = nullptr;
+    napi_get_named_property(env, jsObject, "bottom", &jsBottomName);
+
+    int32_t leftName = 0;
+    if (!IsJsObjNameUndefind(env, jsLeftName, leftName)) {
+        return false;
+    }
+    rect.posX_ = leftName;
+
+    int32_t topName = 0;
+    if (!IsJsObjNameUndefind(env, jsTopName, topName)) {
+        return false;
+    }
+    rect.posY_ = topName;
+
+    int32_t rightName = 0;
+    if (!IsJsObjNameUndefind(env, jsRightName, rightName)) {
+        return false;
+    }
+    rect.width_ = rightName - rect.posX_;
+
+    int32_t bottomName = 0;
+    if (!IsJsObjNameUndefind(env, jsBottomName, bottomName)) {
+        return false;
+    }
+    rect.height_ = bottomName - rect.posY_;
+    return true;
+}
+
 bool ConvertPointerItemFromJs(napi_env env, napi_value touchObject, MMI::PointerEvent& pointerEvent)
 {
     auto displayInfo = ScreenSessionManager::GetInstance().GetDefaultDisplayInfo();
@@ -543,6 +591,7 @@ napi_value SessionTypeInit(napi_env env)
     SetTypeProperty(objValue, env, "TYPE_NEGATIVE_SCREEN", JsSessionType::TYPE_NEGATIVE_SCREEN);
     SetTypeProperty(objValue, env, "TYPE_VOICE_INTERACTION", JsSessionType::TYPE_VOICE_INTERACTION);
     SetTypeProperty(objValue, env, "TYPE_SYSTEM_TOAST", JsSessionType::TYPE_SYSTEM_TOAST);
+    SetTypeProperty(objValue, env, "TYPE_SYSTEM_FLOAT", JsSessionType::TYPE_SYSTEM_FLOAT);
     SetTypeProperty(objValue, env, "TYPE_PIP", JsSessionType::TYPE_PIP);
     return objValue;
 }

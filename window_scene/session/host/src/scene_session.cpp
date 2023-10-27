@@ -46,6 +46,7 @@ const std::string DLP_INDEX = "ohos.dlp.params.index";
 MaximizeMode SceneSession::maximizeMode_ = MaximizeMode::MODE_RECOVER;
 wptr<SceneSession> SceneSession::enterSession_ = nullptr;
 std::mutex SceneSession::enterSessionMutex_;
+std::map<int32_t, WSRect> SceneSession::windowDragHotAreaMap_;
 
 SceneSession::SceneSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback)
     : Session(info)
@@ -84,6 +85,7 @@ SceneSession::SceneSession(const SessionInfo& info, const sptr<SpecificSessionCa
         config.SurfaceNodeName = name;
         surfaceNode_ = Rosen::RSSurfaceNode::Create(config, Rosen::RSSurfaceNodeType::APP_WINDOW_NODE);
     }
+    SetCollaboratorType(info.collaboratorType_);
 }
 
 WSError SceneSession::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
@@ -112,6 +114,15 @@ WSError SceneSession::Connect(const sptr<ISessionStage>& sessionStage, const spt
 
 WSError SceneSession::Foreground(sptr<WindowSessionProperty> property)
 {
+    // return when screen is locked and show without ShowWhenLocked flag
+    if (GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW &&
+        GetStateFromManager(ManagerState::MANAGER_STATE_SCREEN_LOCKED) &&
+        !IsShowWhenLocked()) {
+            WLOGFW("Foreground failed: Screen is locked, session %{public}d show without ShowWhenLocked flag",
+                GetPersistentId());
+            return WSError::WS_ERROR_INVALID_SHOW_WHEN_LOCKED;
+    }
+
     PostTask([weakThis = wptr(this), property]() {
         auto session = weakThis.promote();
         if (!session) {
@@ -950,6 +961,10 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
     if (property->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
         WindowHelper::IsMainWindow(property->GetWindowType()) &&
         property->GetMaximizeMode() != MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
+        if (CheckDialogOnForeground()) {
+            WLOGFI("There is at least one active dialog window in the main winodw.");
+            return WSError::WS_OK;
+        }
         if (!moveDragController_) {
             WLOGE("moveDragController_ is null");
             return Session::TransferPointerEvent(pointerEvent);
@@ -960,6 +975,7 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
             }
             auto isPhone = system::GetParameter("const.product.devicetype", "unknown") == "phone";
             if (!isPhone && moveDragController_->ConsumeDragEvent(pointerEvent, winRect_, property, systemConfig_)) {
+                moveDragController_->UpdateGravityWhenDrag(pointerEvent, surfaceNode_);
                 PresentFoucusIfNeed(pointerEvent->GetPointerAction());
                 return WSError::WS_OK;
             }
@@ -1023,6 +1039,11 @@ bool SceneSession::IsDecorEnable()
     auto property = GetSessionProperty();
     if (property == nullptr) {
         WLOGE("property is nullptr");
+        return false;
+    }
+    if (property->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING
+        && system::GetParameter("const.product.devicetype", "unknown") == "phone") {
+        /* FloatingWindow skip for Phone */
         return false;
     }
     return WindowHelper::IsMainWindow(property->GetWindowType()) && systemConfig_.isSystemDecorEnable_ &&
@@ -1300,6 +1321,11 @@ std::string SceneSession::GetUpdatedIconPath()
 void SceneSession::UpdateNativeVisibility(bool visible)
 {
     isVisible_ = visible;
+    // screenLocked state change
+    if (GetWindowType() == WindowType::WINDOW_TYPE_KEYGUARD) {
+        NotifyScreenLockedStateNotifyManager(isVisible_);
+    }
+
     if (specificCallback_ == nullptr) {
         WLOGFW("specific callback is null.");
         return;
@@ -1495,12 +1521,25 @@ Rect SceneSession::GetHotAreaRect(int32_t action)
     return hotAreaRect;
 }
 
-WSError SceneSession::NotifyTouchOutside()
+void SceneSession::NotifyTouchOutside()
 {
-    if (!sessionStage_) {
-        return WSError::WS_ERROR_NULLPTR;
+    WLOGFD("id: %{public}d NotifyTouchOutside", GetPersistentId());
+    if (sessionStage_) {
+        WLOGFD("Notify sessionStage TouchOutside");
+        sessionStage_->NotifyTouchOutside();
     }
-    return sessionStage_->NotifyTouchOutside();
+    if (sessionChangeCallback_ && sessionChangeCallback_->OnTouchOutside_) {
+        WLOGFD("Notify sessionChangeCallback TouchOutside");
+        sessionChangeCallback_->OnTouchOutside_();
+    }
+}
+
+bool SceneSession::CheckOutTouchOutsideRegister()
+{
+    if (sessionChangeCallback_ && sessionChangeCallback_->OnTouchOutside_) {
+        return true;
+    }
+    return false;
 }
 
 void SceneSession::SetRequestedOrientation(Orientation orientation)
@@ -1539,6 +1578,7 @@ int32_t SceneSession::GetCollaboratorType() const
 void SceneSession::SetCollaboratorType(int32_t collaboratorType)
 {
     collaboratorType_ = collaboratorType;
+    sessionInfo_.collaboratorType_ = collaboratorType;
 }
 
 void SceneSession::DumpSessionInfo(std::vector<std::string> &info) const
@@ -1765,5 +1805,23 @@ bool SceneSession::RemoveSubSession(int32_t persistentId)
 std::vector<sptr<SceneSession>> SceneSession::GetSubSession() const
 {
     return subSession_;
+}
+
+WSRect SceneSession::GetSessionTargetRect()
+{
+    WSRect rect;
+    if (moveDragController_) {
+        rect = moveDragController_->GetTargetRect();
+    } else {
+        WLOGFI("moveDragController_ is null");
+    }
+    return rect;
+}
+
+void SceneSession::SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFunc& func)
+{
+    if (moveDragController_) {
+        moveDragController_->SetWindowDragHotAreaFunc(func);
+    }
 }
 } // namespace OHOS::Rosen

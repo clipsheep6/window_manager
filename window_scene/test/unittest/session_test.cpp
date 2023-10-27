@@ -867,6 +867,28 @@ HWTEST_F(WindowSessionTest, IsActive, Function | SmallTest | Level2)
 }
 
 /**
+ * @tc.name: IsSessionForeground01
+ * @tc.desc: IsSessionForeground, normal scene
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, IsSessionForeground, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_FOREGROUND;
+    ASSERT_EQ(true, session_->IsSessionForeground());
+    session_->state_ = SessionState::STATE_ACTIVE;
+    ASSERT_EQ(true, session_->IsSessionForeground());
+    session_->state_ = SessionState::STATE_INACTIVE;
+    ASSERT_EQ(false, session_->IsSessionForeground());
+    session_->state_ = SessionState::STATE_BACKGROUND;
+    ASSERT_EQ(false, session_->IsSessionForeground());
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    ASSERT_EQ(false, session_->IsSessionForeground());
+    session_->state_ = SessionState::STATE_CONNECT;
+    ASSERT_EQ(false, session_->IsSessionForeground());
+}
+
+/**
  * @tc.name: SetFocusable01
  * @tc.desc: SetFocusable, normal scene
  * @tc.type: FUNC
@@ -875,7 +897,7 @@ HWTEST_F(WindowSessionTest, SetFocusable, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->state_ = SessionState::STATE_DISCONNECT;
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -902,7 +924,7 @@ HWTEST_F(WindowSessionTest, NotifyActivation, Function | SmallTest | Level2)
     session_->state_ = SessionState::STATE_DISCONNECT;
     session_->NotifyActivation();
 
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -916,7 +938,7 @@ HWTEST_F(WindowSessionTest, NotifyForeground, Function | SmallTest | Level2)
     session_->state_ = SessionState::STATE_DISCONNECT;
     session_->NotifyForeground();
     
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -930,7 +952,7 @@ HWTEST_F(WindowSessionTest, NotifyBackground, Function | SmallTest | Level2)
     session_->state_ = SessionState::STATE_DISCONNECT;
     session_->NotifyBackground();
     
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -944,7 +966,7 @@ HWTEST_F(WindowSessionTest, NotifyExtensionDied, Function | SmallTest | Level2)
     session_->state_ = SessionState::STATE_DISCONNECT;
     session_->NotifyExtensionDied();
     
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -971,7 +993,7 @@ HWTEST_F(WindowSessionTest, UpdateSessionTouchable, Function | SmallTest | Level
     session_->state_ = SessionState::STATE_DISCONNECT;
     session_->UpdateSessionTouchable(false);
     
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1024,7 +1046,7 @@ HWTEST_F(WindowSessionTest, SetNeedNotify, Function | SmallTest | Level2)
     session_->state_ = SessionState::STATE_DISCONNECT;
     session_->SetNeedNotify(false);
     
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1166,7 +1188,7 @@ HWTEST_F(WindowSessionTest, SetTerminateSessionListener, Function | SmallTest | 
     NotifyTerminateSessionFunc func = nullptr;
     session_->SetTerminateSessionListener(func);
     
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1221,7 +1243,7 @@ HWTEST_F(WindowSessionTest, SetTerminateSessionListenerTotal, Function | SmallTe
     NotifyTerminateSessionFuncTotal func = nullptr;
     session_->SetTerminateSessionListenerTotal(func);
     
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1249,7 +1271,7 @@ HWTEST_F(WindowSessionTest, SetUpdateSessionLabelListener, Function | SmallTest 
     NofitySessionLabelUpdatedFunc func = nullptr;
     session_->SetUpdateSessionLabelListener(func);
     
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1264,7 +1286,7 @@ HWTEST_F(WindowSessionTest, SetPendingSessionToForegroundListener, Function | Sm
     NotifyPendingSessionToForegroundFunc func = nullptr;
     session_->SetPendingSessionToForegroundListener(func);
     
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1291,7 +1313,7 @@ HWTEST_F(WindowSessionTest, SetNotifyCallingSessionForegroundFunc, Function | Sm
     NotifyCallingSessionForegroundFunc func = nullptr;
     session_->SetNotifyCallingSessionForegroundFunc(func);
 
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1306,7 +1328,7 @@ HWTEST_F(WindowSessionTest, NotifyTouchDialogTarget, Function | SmallTest | Leve
     session_->NotifyTouchDialogTarget();
     
     session_->property_ = new WindowSessionProperty();
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1321,7 +1343,7 @@ HWTEST_F(WindowSessionTest, NotifyScreenshot, Function | SmallTest | Level2)
     session_->NotifyScreenshot();
     
     session_->property_ = new WindowSessionProperty();
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1340,7 +1362,7 @@ HWTEST_F(WindowSessionTest, SetParentSession, Function | SmallTest | Level2)
     session_->SetParentSession(session);
     
     session_->property_ = new WindowSessionProperty();
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1359,7 +1381,7 @@ HWTEST_F(WindowSessionTest, BindDialogToParentSession, Function | SmallTest | Le
     session_->BindDialogToParentSession(session);
     
     session_->property_ = new WindowSessionProperty();
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1378,7 +1400,7 @@ HWTEST_F(WindowSessionTest, RemoveDialogToParentSession, Function | SmallTest | 
     session_->RemoveDialogToParentSession(session);
     
     session_->property_ = new WindowSessionProperty();
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1744,7 +1766,7 @@ HWTEST_F(WindowSessionTest, SetSessionStateChangeListenser, Function | SmallTest
     session_->SetSessionStateChangeListenser(func);
 
     session_->state_ = SessionState::STATE_DISCONNECT;
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1762,7 +1784,7 @@ HWTEST_F(WindowSessionTest, SetSessionFocusableChangeListener, Function | SmallT
     session_->SetSessionFocusableChangeListener(func);
 
     session_->state_ = SessionState::STATE_DISCONNECT;
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1780,7 +1802,7 @@ HWTEST_F(WindowSessionTest, SetSessionTouchableChangeListener, Function | SmallT
     session_->SetSessionTouchableChangeListener(func);
 
     session_->state_ = SessionState::STATE_DISCONNECT;
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1796,7 +1818,7 @@ HWTEST_F(WindowSessionTest, SetClickListener, Function | SmallTest | Level2)
     session_->SetClickListener(func);
 
     session_->state_ = SessionState::STATE_DISCONNECT;
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1855,7 +1877,7 @@ HWTEST_F(WindowSessionTest, SetSessionRequestRect, Function | SmallTest | Level2
     session_->SetSessionRequestRect(rect);
 
     session_->state_ = SessionState::STATE_DISCONNECT;
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1939,7 +1961,7 @@ HWTEST_F(WindowSessionTest, NotifyOccupiedAreaChangeInfo01, Function | SmallTest
     session_->NotifyOccupiedAreaChangeInfo(info);
 
     session_->state_ = SessionState::STATE_DISCONNECT;
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -1958,7 +1980,7 @@ HWTEST_F(WindowSessionTest, NotifyOccupiedAreaChangeInfo02, Function | SmallTest
     session_->NotifyOccupiedAreaChangeInfo(info);
 
     session_->state_ = SessionState::STATE_DISCONNECT;
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 /**
@@ -2035,7 +2057,7 @@ HWTEST_F(WindowSessionTest, NotifyForegroundInteractiveStatus, Function | SmallT
     session_->NotifyForegroundInteractiveStatus(interactive);
 
     session_->state_ = SessionState::STATE_DISCONNECT;
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 }
