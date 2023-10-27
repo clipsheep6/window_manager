@@ -1878,14 +1878,13 @@ WMError WindowSceneSessionImpl::BindDialogTarget(sptr<IRemoteObject> targetToken
     return ret;
 }
 
-bool WindowSceneSessionImpl::IsImmersiveFullScreen() const
+WMError WindowSceneSessionImpl::IsImmersiveFullScreen(bool& flag) const
 {
-    WMError ret = SessionManager::GetInstance().IsImmersiveFullScreen();
+    WMError ret = SessionManager::GetInstance().IsImmersiveFullScreen(flag);
     if (ret != WMError::WM_OK) {
         WLOGFE("Non immersive scene exists. errCode:%{public}d", static_cast<int32_t>(ret));
-        return false;
     }
-    return true;
+    return ret;
 }
 
 WMError WindowSceneSessionImpl::SetTouchHotAreas(const std::vector<Rect>& rects)

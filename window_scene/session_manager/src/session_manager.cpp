@@ -241,7 +241,7 @@ WMError SessionManager::BindDialogTarget(uint64_t persistentId, sptr<IRemoteObje
     return static_cast<WMError>(sceneSessionManagerProxy_->BindDialogTarget(persistentId, targetToken));
 }
 
-WMError SessionManager::IsImmersiveFullScreen()
+WMError SessionManager::IsImmersiveFullScreen(bool& flag)
 {
     WLOGFD("IsImmersiveFullScreen");
     std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -250,6 +250,6 @@ WMError SessionManager::IsImmersiveFullScreen()
         WLOGFE("sceneSessionManagerProxy_ is nullptr");
         return WMError::WM_DO_NOTHING;
     }
-    return static_cast<WMError>(sceneSessionManagerProxy_->IsImmersiveFullScreen());
+    return static_cast<WMError>(sceneSessionManagerProxy_->IsImmersiveFullScreen(flag));
 }
 } // namespace OHOS::Rosen

@@ -1380,9 +1380,9 @@ public:
     /**
      * @brief Is current window immersive or not.
      *
-     * @return True means current app window is immersive, false means the opposite.
+     * @return Errorcode of window.
      */
-    virtual bool IsImmersiveFullScreen() const { return false; }
+    virtual WMError IsImmersiveFullScreen() const { return WMError::WM_OK; }
 };
 }
 }

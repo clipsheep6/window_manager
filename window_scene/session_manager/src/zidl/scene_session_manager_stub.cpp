@@ -529,7 +529,9 @@ int SceneSessionManagerStub::HandleBindDialogTarget(MessageParcel &data, Message
 int SceneSessionManagerStub::HandleIsImmersiveFullScreen(MessageParcel &data, MessageParcel &reply)
 {
     WLOGFI("run HandleIsImmersiveFullScreen!");
-    const WSError& ret = IsImmersiveFullScreen();
+    bool flag = false;
+    const WSError& ret = IsImmersiveFullScreen(flag);
+    reply.WriteBool(flag);
     reply.WriteUint32(static_cast<uint32_t>(ret));
     return ERR_NONE;
 }

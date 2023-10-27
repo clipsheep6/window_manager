@@ -740,7 +740,7 @@ std::vector<sptr<SceneSession>> SceneSessionManager::GetSceneSessionVectorByType
     return sceneSessionVector;
 }
 
-WSError SceneSessionManager::IsImmersiveFullScreen() {
+WSError SceneSessionManager::IsImmersiveFullScreen(bool& flag) {
     std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
     for (auto item = sceneSessionMap_.begin(); item != sceneSessionMap_.end(); ++item) {
         auto sceneSession = item->second;
@@ -768,6 +768,7 @@ WSError SceneSessionManager::IsImmersiveFullScreen() {
         auto sysBarProperty = property->GetSystemBarProperty();
         if (sysBarProperty[WindowType::WINDOW_TYPE_STATUS_BAR].enable_ == false) {
             WLOGFD("Current scene is immersive");
+            flag = true;
             return WSError::WS_OK;
         } else {
             WLOGFD("Current scene is not immersive");

@@ -3265,11 +3265,13 @@ napi_value JsWindow::OnIsImmersiveFullScreen(napi_env env, napi_callback_info in
                 task.Reject(env, CreateJsError(env, static_cast<int32_t>(errCode)));
                 return;
             }
-
-            bool ret = weakWindow->IsImmersiveFullScreen();
-            task.Resolve(env, CreateJsValue(env, ret));
-            WLOGI("Window [%{public}u, %{public}s]. Judge immersive scene end, ret = %{public}d",
-                weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), ret);
+            bool flag = false;
+            WMError ret = weakWindow->IsImmersiveFullScreen(flag);
+            if (ret == WmErrorCode::WM_OK) {
+                task.Resolve(env, CreateJsValue(env, flag));
+            } else {
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret), "Judge if immersive failed"));
+            }
         };
 
     napi_value lastParam = (argc == 0) ? nullptr : (GetType(env, argv[0]) == napi_function ? argv[0] : nullptr);
@@ -4644,7 +4646,7 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "raiseAboveTarget", moduleName, JsWindow::RaiseAboveTarget);
     BindNativeFunction(env, object, "hideNonSystemFloatingWindows", moduleName,
         JsWindow::HideNonSystemFloatingWindows);
-    BindNativeFunction(env, object, "isImmersiveFullScreen", moduleName, JsWindow::IsImmersiveFullScreen);
+    BindNativeFunction(env, object, "isImmersiveFullScreenExisted", moduleName, JsWindow::IsImmersiveFullScreen);
 }
 }  // namespace Rosen
 }  // namespace OHOS
