@@ -25,7 +25,28 @@ namespace {
 
 WindowNode::~WindowNode()
 {
+    Clear();
     WLOGI("~WindowNode id:%{public}u", GetWindowId());
+}
+
+void WindowNode::Clear()
+{
+    surfaceNode_ = nullptr;
+    leashWinSurfaceNode_ = nullptr;
+    startingWinSurfaceNode_ = nullptr;
+    closeWinSurfaceNode_ = nullptr;
+    dialogTargetToken_ = nullptr;
+    abilityToken_ = nullptr;
+    keepScreenLock_ = nullptr;
+    property_ = nullptr;
+    windowToken_ = nullptr;
+    snapshot_ = nullptr;
+
+    children_.clear();
+    showingDisplays_.clear();
+    children_.clear();
+    touchHotAreas_.clear();
+    pointerHotAreas_.clear();
 }
 
 void WindowNode::SetDisplayId(DisplayId displayId)

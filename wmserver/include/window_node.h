@@ -135,6 +135,8 @@ public:
     void GetWindowGravity(WindowGravity& gravity, uint32_t& percent) const;
 
     bool EnableDefaultAnimation(bool animationPlayed);
+
+    void Clear();
     sptr<WindowNode> parent_;
     std::vector<sptr<WindowNode>> children_;
     std::shared_ptr<RSSurfaceNode> surfaceNode_;
