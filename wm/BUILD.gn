@@ -41,6 +41,7 @@ ohos_static_library("libwm_static") {
     "../window_scene/intention_event/service/anr_manager/include",
     "../window_scene/intention_event/framework/anr_handler/include",
     "${window_base_path}/window_scene/intention_event/include",
+    "//foundation/ability/ability_base/interfaces/kits/native/configuration/include/",
   ]
 
   sources = [
@@ -87,6 +88,7 @@ ohos_static_library("libwm_static") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:configuration",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
@@ -159,6 +161,7 @@ ohos_shared_library("libwm") {
     "../window_scene/intention_event/service/anr_manager/include",
     "../window_scene/intention_event/framework/anr_handler/include",
     "${window_base_path}/window_scene/intention_event/include",
+    "//foundation/ability/ability_base/interfaces/kits/native/configuration/include/",
   ]
 
   sources = [
@@ -205,6 +208,7 @@ ohos_shared_library("libwm") {
 
   external_deps = [
     "ability_base:want",
+    "ability_base:configuration",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",

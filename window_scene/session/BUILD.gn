@@ -21,6 +21,7 @@ config("session_public_config") {
     "${window_base_path}/window_scene/intention_event/framework/anr_handler/include",
     "${window_base_path}/window_scene/intention_event/utils/include",
     "${window_base_path}/interfaces/innerkits/dm",
+    "//foundation/ability/ability_base/interfaces/kits/native/configuration/include/",
 
     # for window_manager_hilog
     "${window_base_path}/utils/include",
@@ -67,6 +68,7 @@ ohos_shared_library("scene_session") {
   external_deps = [
     "ability_base:session_info",
     "ability_base:want",
+    "ability_base:configuration",
     "ability_runtime:ability_start_setting",
     "c_utils:utils",
     "eventhandler:libeventhandler",

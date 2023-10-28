@@ -213,4 +213,15 @@ WSError WindowEventChannel::TransferFocusState(bool focusState)
     sessionStage_->NotifyFocusStateEvent(focusState);
     return WSError::WS_OK;
 }
+
+WSError WindowEventChannel::TransferConfiguration(const AppExecFwk::Configuration& configuration)
+{
+    WLOGFD("WindowEventChannel receive configuration: %{public}s", configuration.GetName().c_str());
+    if (!sessionStage_) {
+        WLOGFE("session stage is null!");
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    sessionStage_->NotifyConfigurationUpdated(configuration);
+    return WSError::WS_OK;
+}
 } // namespace OHOS::Rosen

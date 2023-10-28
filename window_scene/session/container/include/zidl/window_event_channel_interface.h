@@ -19,12 +19,17 @@
 #include <iremote_broker.h>
 
 #include "interfaces/include/ws_common.h"
+#include "configuration.h"
 
 namespace OHOS::MMI {
     class PointerEvent;
     class KeyEvent;
     class AxisEvent;
 } // namespace OHOS::MMI
+
+namespace OHOS::AppExecFwk {
+    class Configuration;
+} // namespace OHOS::AppExecFwk
 
 namespace OHOS::Rosen {
 class IWindowEventChannel : public IRemoteBroker {
@@ -39,6 +44,8 @@ public:
     virtual WSError TransferKeyEventForConsumed(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed) = 0;
     virtual WSError TransferFocusActiveEvent(bool isFocusActive) = 0;
     virtual WSError TransferFocusState(bool focusState) = 0;
+    virtual WSError TransferConfiguration(const AppExecFwk::Configuration& configuration) = 0;
+
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_SESSION_WINDOW_EVENT_CHANNEL_INTERFACE_H

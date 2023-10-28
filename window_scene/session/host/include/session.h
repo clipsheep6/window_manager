@@ -40,6 +40,10 @@ namespace OHOS::Media {
 class PixelMap;
 } // namespace OHOS::Media
 
+namespace OHOS::AppExecFwk {
+class Configuration;
+} // namespace OHOS::AppExecFwk
+
 namespace OHOS::Rosen {
 class RSSurfaceNode;
 class RSTransaction;
@@ -109,6 +113,7 @@ public:
     WSError TransferKeyEventForConsumed(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed);
     WSError TransferFocusActiveEvent(bool isFocusActive);
     WSError TransferFocusStateEvent(bool focusState);
+    WSError TransferConfiguration(const AppExecFwk::Configuration& configuration);
 
     int32_t GetPersistentId() const;
     std::shared_ptr<RSSurfaceNode> GetSurfaceNode() const;
