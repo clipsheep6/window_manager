@@ -740,6 +740,42 @@ std::vector<sptr<SceneSession>> SceneSessionManager::GetSceneSessionVectorByType
     return sceneSessionVector;
 }
 
+WSError SceneSessionManager::IsImmersiveFullScreenExisted(bool& immersive) {
+    std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+    for (auto item = sceneSessionMap_.begin(); item != sceneSessionMap_.end(); ++item) {
+        auto sceneSession = item->second;
+        if (sceneSession == nullptr) {
+            WLOGFE("Session is nullptr");
+            continue;
+        }
+        auto windowType = sceneSession->GetWindowType();
+        if (!WindowHelper::IsMainWindow(windowType)) {
+            continue;
+        }
+        auto state = sceneSession->GetSessionState();
+        if (state != SessionState::STATE_FOREGROUND && state != SessionState::STATE_ACTIVE) {
+            continue;
+        }
+        auto windowMode = sceneSession->GetWindowMode();
+        if (windowMode != WindowMode::WINDOW_MODE_FULLSCREEN) {
+            continue;
+        }
+        auto property = sceneSession->GetSessionProperty();
+        if (property == nullptr) {
+            WLOGFE("Property is nullptr");
+            continue;
+        }
+        auto sysBarProperty = property->GetSystemBarProperty();
+        if (sysBarProperty[WindowType::WINDOW_TYPE_STATUS_BAR].enable_ == false) {
+            WLOGFD("Current scenario is immersive");
+            immersive = true;
+        } else {
+            WLOGFD("Current scenario is not immersive");
+        }
+    }
+    return WSError::WS_OK;
+}
+
 WSError SceneSessionManager::UpdateParentSessionForDialog(const sptr<SceneSession>& sceneSession,
     sptr<WindowSessionProperty> property)
 {
