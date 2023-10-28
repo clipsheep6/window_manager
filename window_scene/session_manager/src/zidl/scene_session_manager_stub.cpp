@@ -526,7 +526,7 @@ int SceneSessionManagerStub::HandleBindDialogTarget(MessageParcel &data, Message
     return ERR_NONE;
 }
 
-int SceneSessionManagerStub::HandleIsImmersiveFullScreenExisted(MessageParcel &data, MessageParcel &reply)
+int SceneSessionManagerStub::HandleIsImmersiveFullScreenExisted(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFI("run HandleIsImmersiveFullScreenExisted!");
     bool immersive = false;

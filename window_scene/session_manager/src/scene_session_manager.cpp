@@ -772,6 +772,7 @@ WSError SceneSessionManager::IsImmersiveFullScreenExisted(bool& immersive) {
         } else {
             WLOGFD("Current scenario is not immersive");
         }
+        return WSError::WS_OK;
     }
     return WSError::WS_OK;
 }
