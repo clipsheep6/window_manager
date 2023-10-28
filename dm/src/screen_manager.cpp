@@ -453,6 +453,21 @@ DMError ScreenManager::MakeExpand(const std::vector<ExpandOption>& options, Scre
     return ret;
 }
 
+DMError ScreenManager::MakeUniqueScreen(const std::vector<ScreenId>& screenIds)
+{
+    WLOGFI("start Make UniqueScreen");
+    if (screenIds.empty()) {
+        WLOGFI("screenIds is null");
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    if (screenIds.siez() > MAX_SCREEN_SIZE) {
+        WLOGFW("Make UniqueScreen failed. The screenIds size is bigger than %{public}u.", MAX_SCREEN_SIZE);
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    DMError ret = SingletonContainer::Get<ScreenManagerAdapter>().MakeUniqueScreen(screenIds);
+    return ret;
+}
+
 DMError ScreenManager::MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId, ScreenId& screenGroupId)
 {
     WLOGFI("Make mirror for screen: %{public}" PRIu64"", mainScreenId);

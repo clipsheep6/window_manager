@@ -392,6 +392,16 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             reply.WriteStrongParcelable(GetCurrentFoldCreaseRegion());
             break;
         }
+        case DisplayManagerMessage::TRANS_ID_SCENE_BOARD_MAKE_UNIQUE_SCREEN: {
+            std::vector<ScreenId> uniqueScreenIds;
+            if (!data.ReadUInt64Vector(&uniqueScreenIds)) {
+                WLOGFE("failed to receive unique screens in stub");
+                break
+            }
+            DMError ret = MakeUniqueScreen(uniqueScreenIds);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
         default:
             WLOGFW("unknown transaction code");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
