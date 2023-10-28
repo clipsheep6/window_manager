@@ -769,10 +769,10 @@ WSError SceneSessionManager::IsImmersiveFullScreenExisted(bool& immersive) {
         if (sysBarProperty[WindowType::WINDOW_TYPE_STATUS_BAR].enable_ == false) {
             WLOGFD("Current scenario is immersive");
             immersive = true;
+            return WSError::WS_OK;
         } else {
             WLOGFD("Current scenario is not immersive");
         }
-        return WSError::WS_OK;
     }
     return WSError::WS_OK;
 }
