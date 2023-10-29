@@ -456,6 +456,13 @@ napi_value JsWindow::HideNonSystemFloatingWindows(napi_env env, napi_callback_in
     return (me != nullptr) ? me->OnHideNonSystemFloatingWindows(env, info) : nullptr;
 }
 
+napi_value JsWindow::IsImmersiveFullScreenExisted(napi_env env, napi_callback_info info)
+{
+    WLOGI("IsImmersiveFullScreenExisted");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(env, info);
+    return (me != nullptr) ? me->OnIsImmersiveFullScreenExisted(env, info) : nullptr;
+}
+
 napi_value JsWindow::SetWindowTouchable(napi_env env, napi_callback_info info)
 {
     WLOGI("SetTouchable");
@@ -3234,6 +3241,46 @@ napi_value JsWindow::OnRaiseAboveTarget(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value JsWindow::OnIsImmersiveFullScreenExisted(napi_env env, napi_callback_info info)
+{
+    WmErrorCode errCode = WmErrorCode::WM_OK;
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc > 1) {
+        WLOGFE("Argc is invalid: %{public}zu", argc);
+        errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
+    }
+    wptr<Window> weakToken(windowToken_);
+    NapiAsyncTask::CompleteCallback complete =
+        [weakToken, errCode](napi_env env, NapiAsyncTask& task, int32_t status) {
+            auto weakWindow = weakToken.promote();
+            if (weakWindow == nullptr) {
+                WLOGFE("window is nullptr");
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
+                return;
+            }
+            if (errCode != WmErrorCode::WM_OK) {
+                WLOGFE("get invalid params");
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(errCode)));
+                return;
+            }
+            bool immersive = false;
+            WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(weakWindow->IsImmersiveFullScreenExisted(immersive));
+            if (ret == WmErrorCode::WM_OK) {
+                task.Resolve(env, CreateJsValue(env, immersive));
+            } else {
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret), "Judge if immersive failed"));
+            }
+        };
+
+    napi_value lastParam = (argc == 0) ? nullptr : (GetType(env, argv[0]) == napi_function ? argv[0] : nullptr);
+    napi_value result = nullptr;
+    NapiAsyncTask::Schedule("JsWindow::OnIsImmersiveFullScreenExisted",
+        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
 napi_value JsWindow::OnSetWindowTouchable(napi_env env, napi_callback_info info)
 {
     WmErrorCode errCode = WmErrorCode::WM_OK;
@@ -4599,6 +4646,7 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "raiseAboveTarget", moduleName, JsWindow::RaiseAboveTarget);
     BindNativeFunction(env, object, "hideNonSystemFloatingWindows", moduleName,
         JsWindow::HideNonSystemFloatingWindows);
+    BindNativeFunction(env, object, "isImmersiveFullScreenExisted", moduleName, JsWindow::IsImmersiveFullScreenExisted);
 }
 }  // namespace Rosen
 }  // namespace OHOS

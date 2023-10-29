@@ -1376,6 +1376,13 @@ public:
      * @return True means floating window of app type, false means the opposite.
      */
     virtual bool IsFloatingWindowAppType() const { return false; }
+
+    /**
+     * @brief If there is immersive scenario existed.
+     *
+     * @return Errorcode of window.
+     */
+    virtual WMError IsImmersiveFullScreenExisted(bool& immersive) const { return WMError::WM_OK; }
 };
 }
 }

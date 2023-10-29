@@ -46,6 +46,7 @@ public:
 
     sptr<ISceneSessionManager> GetSceneSessionManagerProxy();
     sptr<IScreenSessionManager> GetScreenSessionManagerProxy();
+    WMError IsImmersiveFullScreenExisted(bool& immersive);
 
 protected:
     SessionManager() = default;
