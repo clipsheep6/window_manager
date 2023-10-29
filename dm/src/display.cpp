@@ -143,4 +143,11 @@ sptr<CutoutInfo> Display::GetCutoutInfo() const
 {
     return SingletonContainer::Get<DisplayManagerAdapter>().GetCutoutInfo(GetId());
 }
+
+DMError Display::HasImmersiveWindow(bool& immersive)
+{
+    SingletonContainer::Get<DisplayManagerAdapter>().HasImmersiveWindow(immersive);
+    return DMError::DM_OK;
+}
+
 } // namespace OHOS::Rosen
