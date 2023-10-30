@@ -78,6 +78,7 @@ public:
         TRANS_ID_SET_SCREEN_ROTATION_LOCKED,
         TRANS_ID_HAS_PRIVATE_WINDOW,
         TRANS_ID_GET_CUTOUT_INFO,
+        TRANS_ID_HAS_IMMERSIVE_WINDOW,
         TRANS_ID_ADD_SURFACE_NODE,
         TRANS_ID_REMOVE_SURFACE_NODE,
         TRANS_ID_SCREEN_STOP_MIRROR,
@@ -161,6 +162,8 @@ public:
     virtual void SetFoldDisplayMode(const FoldDisplayMode) {}
 
     virtual sptr<FoldCreaseRegion> GetCurrentFoldCreaseRegion() { return nullptr; }
+
+    virtual DMError HasImmersiveWindow(bool& immersive) { return DMError::DM_OK; }
 
     // unique screen
     virtual DMError MakeUniqueScreen(const std::vector<ScreenId>& screenIds) { return DMError::DM_OK; }

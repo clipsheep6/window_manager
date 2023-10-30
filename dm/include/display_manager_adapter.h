@@ -63,6 +63,7 @@ public:
     virtual std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId, DmErrorCode* errorCode = nullptr);
     virtual DMError DisableDisplaySnapshot(bool disableOrNot);
     virtual DMError HasPrivateWindow(DisplayId displayId, bool& hasPrivateWindow);
+    virtual DMError HasImmersiveWindow(bool& immersive);
     virtual bool WakeUpBegin(PowerStateChangeReason reason);
     virtual bool WakeUpEnd();
     virtual bool SuspendBegin(PowerStateChangeReason reason);

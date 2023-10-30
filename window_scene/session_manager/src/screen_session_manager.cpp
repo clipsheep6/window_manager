@@ -2209,6 +2209,12 @@ sptr<CutoutInfo> ScreenSessionManager::GetCutoutInfo(DisplayId displayId)
     return screenCutoutController_ ? screenCutoutController_->GetScreenCutoutInfo(displayId) : nullptr;
 }
 
+DMError ScreenSessionManager::HasImmersiveWindow(bool& immersive)
+{
+    immersive = isImmersive_;
+    return DMError::DM_OK;
+}
+
 void ScreenSessionManager::SetDisplayBoundary(const sptr<ScreenSession> screenSession)
 {
     if (screenSession && screenCutoutController_) {
@@ -2399,4 +2405,10 @@ void ScreenSessionManager::NotifyDisplayModeChanged(FoldDisplayMode displayMode)
         agent->NotifyDisplayModeChanged(displayMode);
     }
 }
+
+void ScreenSessionManager::SetImmersiveState(bool immersive)
+{
+    isImmersive_ = immersive;
+}
+
 } // namespace OHOS::Rosen

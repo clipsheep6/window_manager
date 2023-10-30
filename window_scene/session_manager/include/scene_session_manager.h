@@ -316,6 +316,7 @@ private:
     void AddClientDeathRecipient(const sptr<ISessionStage>& sessionStage, const sptr<SceneSession>& sceneSession);
     void DestroySpecificSession(const sptr<IRemoteObject>& remoteObject);
     void CleanUserMap();
+    void UpdateImmersiveFullScreen();
     WSError GetAbilityInfosFromBundleInfo(std::vector<AppExecFwk::BundleInfo> &bundleInfos,
         std::vector<AppExecFwk::AbilityInfo> &abilityInfos);
 
