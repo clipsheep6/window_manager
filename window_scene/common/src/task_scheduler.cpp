@@ -22,6 +22,17 @@ TaskScheduler::TaskScheduler(const std::string& threadName)
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
 }
 
+TaskScheduler::TaskScheduler(const bool isMainThread)
+{
+    std::shared_ptr<AppExecFwk::EventRunner> runner;
+    if (isMainThread) {
+        runner = AppExecFwk::EventRunner::GetMainEventRunner();
+    } else {
+        auto runner = AppExecFwk::EventRunner::Create("NotMainThread");
+    }
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
+}
+
 std::shared_ptr<AppExecFwk::EventHandler> TaskScheduler::GetEventHandler()
 {
     return handler_;
