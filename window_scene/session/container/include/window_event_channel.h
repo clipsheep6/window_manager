@@ -38,6 +38,7 @@ public:
     WSError TransferKeyEventForConsumed(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed) override;
     WSError TransferFocusActiveEvent(bool isFocusActive) override;
     WSError TransferFocusState(bool focusState) override;
+    WSError TransferConfiguration(const AppExecFwk::Configuration& configuration) override;
 
 private:
     void PrintKeyEvent(const std::shared_ptr<MMI::KeyEvent>& event);

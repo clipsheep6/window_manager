@@ -27,6 +27,10 @@ class KeyEvent;
 class AxisEvent;
 } // namespace MMI
 
+namespace OHOS::AppExecFwk {
+    class Configuration;
+} // namespace OHOS::AppExecFwk
+
 namespace OHOS::Rosen {
 class RSTransaction;
 
@@ -43,6 +47,7 @@ public:
         return -1;
     }
     virtual void NotifyFocusStateEvent(bool focusState) {}
+    virtual void NotifyConfigurationUpdated(const AppExecFwk::Configuration& configuration) {}
     virtual WSError NotifyTransferComponentData(const AAFwk::WantParams& wantParams)
     {
         return WSError::WS_OK;

@@ -1305,6 +1305,15 @@ WSError Session::TransferFocusStateEvent(bool focusState)
     return windowEventChannel_->TransferFocusState(focusState);
 }
 
+WSError Session::TransferConfiguration(const AppExecFwk::Configuration& configuration)
+{
+    if (!windowEventChannel_) {
+        WLOGFE("windowEventChannel_ is null");
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    return windowEventChannel_->TransferConfiguration(configuration);
+}
+
 std::shared_ptr<Media::PixelMap> Session::Snapshot()
 {
     if (!surfaceNode_ || !surfaceNode_->IsBufferAvailable()) {

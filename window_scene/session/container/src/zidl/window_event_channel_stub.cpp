@@ -22,6 +22,7 @@
 #include <pointer_event.h>
 
 #include "window_manager_hilog.h"
+#include "configuration.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -39,6 +40,8 @@ const std::map<uint32_t, WindowEventChannelStubFunc> WindowEventChannelStub::stu
         &WindowEventChannelStub::HandleTransferFocusStateEvent),
     std::make_pair(static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_BACKPRESSED_EVENT),
         &WindowEventChannelStub::HandleTransferBackpressedEvent),
+    std::make_pair(static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_CONFIGURATION),
+        &WindowEventChannelStub::HandleTransferConfiguration),
 };
 
 int WindowEventChannelStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
@@ -119,6 +122,18 @@ int WindowEventChannelStub::HandleTransferFocusStateEvent(MessageParcel& data, M
 {
     bool focusState = data.ReadBool();
     WSError errCode = TransferFocusState(focusState);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int WindowEventChannelStub::HandleTransferConfiguration(MessageParcel& data, MessageParcel& reply)
+{
+    std::unique_ptr<AppExecFwk::Configuration> configuration(data.ReadParcelable<AppExecFwk::Configuration>());
+    if (!configuration) {
+        WLOGFE("Read Parcelable Configuration failed");
+        return ERR_INVALID_DATA;
+    }
+    WSError errCode = TransferConfiguration(*configuration);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }

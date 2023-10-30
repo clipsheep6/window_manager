@@ -145,6 +145,14 @@ void WindowExtensionSessionImpl::NotifyBackpressedEvent(bool& isConsumed)
     WLOGFD("Backpressed event is not cosumed");
 }
 
+void WindowExtensionSessionImpl::NotifyConfigurationUpdated(const AppExecFwk::Configuration& configuration)
+{
+    auto config = std::make_shared<AppExecFwk::Configuration>(configuration);
+    if (uiContent_) {
+        uiContent_->UpdateConfiguration(config);
+    }
+}
+
 WMError WindowExtensionSessionImpl::NapiSetUIContent(const std::string& contentInfo,
     napi_env env, napi_value storage, bool isdistributed, AppExecFwk::Ability* ability)
 {
