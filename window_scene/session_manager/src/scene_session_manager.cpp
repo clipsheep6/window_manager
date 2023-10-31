@@ -867,6 +867,7 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
             std::unique_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
             sceneSessionMap_.insert({ persistentId, sceneSession });
         }
+        UpdateImmersiveState();
         PerformRegisterInRequestSceneSession(sceneSession);
         WLOGFI("create session persistentId: %{public}d", persistentId);
         return sceneSession;
@@ -1159,6 +1160,7 @@ WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSessi
         return WSError::WS_OK;
     };
 
+    UpdateImmersiveState();
     taskScheduler_->PostAsyncTask(task);
     return WSError::WS_OK;
 }
@@ -1290,6 +1292,7 @@ WSError SceneSessionManager::RequestSceneSessionDestruction(
         if (listenerController_ != nullptr) {
             NotifySessionForCallback(scnSession, needRemoveSession);
         }
+        UpdateImmersiveState();
         return WSError::WS_OK;
     };
 
@@ -2942,6 +2945,7 @@ WSError SceneSessionManager::UpdateWindowMode(int32_t persistentId, int32_t wind
         return WSError::WS_ERROR_INVALID_WINDOW;
     }
     WindowMode mode = static_cast<WindowMode>(windowMode);
+    UpdateImmersiveState();
     return sceneSession->UpdateWindowMode(mode);
 }
 
@@ -3108,6 +3112,7 @@ void SceneSessionManager::OnSessionStateChange(int32_t persistentId, const Sessi
         default:
             break;
     }
+    UpdateImmersiveState();
 }
 
 void SceneSessionManager::ProcessSubSessionForeground(sptr<SceneSession>& sceneSession)
@@ -5151,5 +5156,41 @@ WSError SceneSessionManager::UpdateMaximizeMode(int32_t persistentId, bool isMax
     };
     taskScheduler_->PostAsyncTask(task);
     return WSError::WS_OK;
+}
+
+void SceneSessionManager::UpdateImmersiveState() {
+    std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+    for (auto item = sceneSessionMap_.begin(); item != sceneSessionMap_.end(); ++item) {
+        auto sceneSession = item->second;
+        if (sceneSession == nullptr) {
+            WLOGFE("Session is nullptr");
+            continue;
+        }
+        if (!WindowHelper::IsMainWindow(sceneSession->GetWindowType())) {
+            continue;
+        }
+        auto state = sceneSession->GetSessionState();
+        if (state != SessionState::STATE_FOREGROUND && state != SessionState::STATE_ACTIVE) {
+            continue;
+        }
+        if (sceneSession->GetWindowMode() != WindowMode::WINDOW_MODE_FULLSCREEN) {
+            continue;
+        }
+        auto property = sceneSession->GetSessionProperty();
+        if (property == nullptr) {
+            WLOGFE("Property is nullptr");
+            continue;
+        }
+        auto sysBarProperty = property->GetSystemBarProperty();
+        if (sysBarProperty[WindowType::WINDOW_TYPE_STATUS_BAR].enable_ == false) {
+            WLOGFD("Current window is immersive");
+            ScreenSessionManager::GetInstance().SetImmersiveState(true);
+            return;
+        } else {
+            WLOGFD("Current window is not immersive");
+            break;
+        }
+    }
+    ScreenSessionManager::GetInstance().SetImmersiveState(false);
 }
 } // namespace OHOS::Rosen
