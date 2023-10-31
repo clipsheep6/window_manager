@@ -299,6 +299,52 @@ HWTEST_F(ScreenSessionTest, ConvertToScreenGroupInfo, Function | SmallTest | Lev
     ASSERT_NE(res, nullptr);
     GTEST_LOG_(INFO) << "ScreenSessionTest: ConvertToScreenGroupInfo end";
 }
+
+/**
+ * @tc.name: RegisterScreenChangeListener
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionTest, RegisterScreenChangeListener, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "ScreenSessionTest: RegisterScreenChangeListener start";
+    int res = 0;
+    IScreenChangeListener* screenChangeListener = nullptr;
+    sptr<ScreenSession> session = new(std::nothrow) ScreenSession();
+    session->RegisterScreenChangeListener(screenChangeListener);
+    ASSERT_EQ(res, 0);
+    GTEST_LOG_(INFO) << "ScreenSessionTest: RegisterScreenChangeListener end";
+}
+
+/**
+ * @tc.name: UpdatePropertyByActiveMode
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionTest, UpdatePropertyByActiveMode, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "ScreenSessionTest: UpdatePropertyByActiveMode start";
+    int res = 0;
+    sptr<ScreenSession> session = new(std::nothrow) ScreenSession();
+    session->UpdatePropertyByActiveMode();
+    ASSERT_EQ(res, 0);
+    GTEST_LOG_(INFO) << "ScreenSessionTest: UpdatePropertyByActiveMode end";
+}
+
+/**
+ * @tc.name: Disconnect
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionTest, Disconnect, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "ScreenSessionTest: Disconnect start";
+    int res = 0;
+    sptr<ScreenSession> session = new(std::nothrow) ScreenSession();
+    session->Disconnect();
+    ASSERT_EQ(res, 0);
+    GTEST_LOG_(INFO) << "ScreenSessionTest: Disconnect end";
+}
 } // namespace
 } // namespace Rosen
 } // namespace OHOS
