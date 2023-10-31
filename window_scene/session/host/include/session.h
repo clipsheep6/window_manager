@@ -66,6 +66,7 @@ using NotifyCallingSessionForegroundFunc = std::function<void(const int32_t& per
 using NotifyCallingSessionBackgroundFunc = std::function<void()>;
 using NotifyRaiseToTopForPointDownFunc = std::function<void()>;
 using NotifyUILostFocusFunc = std::function<void()>;
+using GetStateFromManagerFunc = std::function<bool(const ManagerState key)>;
 
 class ILifecycleListener {
 public:
@@ -176,6 +177,7 @@ public:
     void SetSessionStateChangeNotifyManagerListener(const NotifySessionStateChangeNotifyManagerFunc& func);
     void SetRequestFocusStatusNotifyManagerListener(const NotifyRequestFocusStatusNotifyManagerFunc& func);
     void SetNotifyUILostFocusFunc(const NotifyUILostFocusFunc& func);
+    void SetGetStateFromManagerListener(const GetStateFromManagerFunc& func);
 
     void SetSystemConfig(const SystemSessionConfig& systemConfig);
     void SetSnapshotScale(const float snapshotScale);
@@ -207,6 +209,7 @@ public:
     void NotifyClick();
     void NotifyRequestFocusStatusNotifyManager(bool isFocused);
     void NotifyUILostFocus();
+    bool GetStateFromManager(const ManagerState key);
     void PresentFoucusIfNeed(int32_t pointerAcrion);
     WSError UpdateFocus(bool isFocused);
     WSError UpdateWindowMode(WindowMode mode);
@@ -254,6 +257,7 @@ public:
     void SetRaiseToAppTopForPointDownFunc(const NotifyRaiseToTopForPointDownFunc& func);
     void NotifyCallingSessionBackground();
     void NotifyScreenshot();
+    WSError UpdateMaximizeMode(bool isMaximize);
     virtual std::vector<Rect> GetTouchHotAreas() const
     {
         return std::vector<Rect>();
@@ -327,6 +331,7 @@ protected:
     NotifySessionStateChangeNotifyManagerFunc sessionStateChangeNotifyManagerFunc_;
     NotifyRequestFocusStatusNotifyManagerFunc requestFocusStatusNotifyManagerFunc_;
     NotifyUILostFocusFunc lostFocusFunc_;
+    GetStateFromManagerFunc getStateFromManagerFunc_;
     NotifyBackPressedFunc backPressedFunc_;
     NotifySessionFocusableChangeFunc sessionFocusableChangeFunc_;
     NotifySessionTouchableChangeFunc sessionTouchableChangeFunc_;
@@ -400,7 +405,7 @@ private:
     int32_t callingUid_ = -1;
     int32_t appIndex_ = { 0 };
     std::string callingBundleName_ { "unknow" };
-    bool isVisible_ {false};
+    bool isRSVisible_ {false};
     bool needNotify_ {true};
     sptr<IRemoteObject> abilityToken_ = nullptr;
     float vpr_ { 1.5f };

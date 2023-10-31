@@ -55,6 +55,8 @@ enum class WSError : int32_t {
     WS_ERROR_FAIL_TO_GET_SNAPSHOT,
     WS_ERROR_INTERNAL_ERROR,
     WS_ERROR_NO_UI_CONTENT_ERROR,
+    WS_ERROR_INVALID_SHOW_WHEN_LOCKED,
+
     WS_ERROR_DEVICE_NOT_SUPPORT = 801, // the value do not change.It is defined on all system
 
     WS_ERROR_NEED_REPORT_BASE = 1000, // error code > 1000 means need report
@@ -142,6 +144,10 @@ enum AncoSceneState: int32_t {
 enum SessionOperationType : int32_t {
     TYPE_DEFAULT = 0,
     TYPE_CLEAR,
+};
+
+enum class ManagerState : uint32_t {
+    MANAGER_STATE_SCREEN_LOCKED = 0,
 };
 
 struct SessionInfo {
@@ -312,8 +318,7 @@ struct KeyboardSceneAnimationConfig {
     float ctrlY1_ = 0.0f;
     float ctrlX2_ = 0.2f;
     float ctrlY2_ = 1.0f;
-    uint32_t durationIn_ = 150; // default durationIn time
-    uint32_t durationOut_ = 150; // default durationOut time
+    uint32_t duration_ = 150;
 };
 
 struct WindowAnimationConfig {
@@ -347,7 +352,8 @@ struct AppWindowSceneConfig {
 
     WindowShadowConfig focusedShadow_;
     WindowShadowConfig unfocusedShadow_;
-    KeyboardSceneAnimationConfig keyboardAnimation_;
+    KeyboardSceneAnimationConfig keyboardAnimationIn_;
+    KeyboardSceneAnimationConfig keyboardAnimationOut_;
     WindowAnimationConfig windowAnimation_;
     StartingWindowAnimationConfig startingWindowAnimationConfig_;
 };
