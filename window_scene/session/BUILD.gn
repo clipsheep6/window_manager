@@ -31,6 +31,9 @@ config("session_public_config") {
 
     # for mouse style
     "${multimodalinput_path}/input/util/common/include",
+    #for element
+    "${accessibility_path}/interfaces/innerkits/common/include",
+    "${window_base_path}/window_scene/session/container/include/parcel/",
   ]
 }
 
@@ -41,6 +44,7 @@ ohos_shared_library("scene_session") {
     "container/src/zidl/session_stage_stub.cpp",
     "container/src/zidl/window_event_channel_proxy.cpp",
     "container/src/zidl/window_event_channel_stub.cpp",
+    "container/src/parcel/accessibility_element_info_parcel.cpp",
     "host/src/extension_session.cpp",
     "host/src/move_drag_controller.cpp",
     "host/src/root_scene_session.cpp",
@@ -68,6 +72,7 @@ ohos_shared_library("scene_session") {
     "ability_base:session_info",
     "ability_base:want",
     "ability_runtime:ability_start_setting",
+    "accessibility:accessibility_common",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "graphic_2d:librender_service_client",
