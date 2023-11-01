@@ -70,6 +70,7 @@ ohos_shared_library("window_native_kit") {
     "ace_engine:ace_uicontent",
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "image_framework:image",
     "image_framework:image_native",
