@@ -80,6 +80,8 @@ public:
     void OnGestureNavigationEnabledUpdate(bool enable) override;
     void OnWaterMarkFlagUpdate(bool showWaterMark) override;
     void CallJsMethod(const char* methodName, napi_value const* argv = nullptr, size_t argc = 0);
+
+    void SetMainEventHandler();
 private:
     WindowState state_ {WindowState::STATE_INITIAL};
     void LifeCycleCallBack(LifeCycleEventType eventType);
