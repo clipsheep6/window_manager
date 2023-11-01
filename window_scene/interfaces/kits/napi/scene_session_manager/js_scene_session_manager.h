@@ -42,7 +42,7 @@ public:
     static napi_value RequestSceneSessionActivation(napi_env env, napi_callback_info info);
     static napi_value RequestSceneSessionBackground(napi_env env, napi_callback_info info);
     static napi_value RequestSceneSessionDestruction(napi_env env, napi_callback_info info);
-    static napi_value RequestAncoFront(napi_env env, napi_callback_info info);
+    static napi_value ReportSceneInfo(napi_env env, napi_callback_info info);
     static napi_value NotifyForegroundInteractiveStatus(napi_env env, napi_callback_info info);
     static napi_value RequestSceneSessionByCall(napi_env env, napi_callback_info info);
     static napi_value StartAbilityBySpecified(napi_env env, napi_callback_info info);
@@ -69,7 +69,7 @@ private:
     napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
     napi_value OnGetRootSceneSession(napi_env env, napi_callback_info info);
     napi_value OnRequestSceneSession(napi_env env, napi_callback_info info);
-    napi_value OnRequestAncoFront(napi_env engine, napi_callback_info info);
+    napi_value OnReportSceneInfo(napi_env engine, napi_callback_info info);
     napi_value OnUpdateSceneSessionWant(napi_env env, napi_callback_info info);
     napi_value OnRequestSceneSessionActivation(napi_env env, napi_callback_info info);
     napi_value OnRequestSceneSessionBackground(napi_env env, napi_callback_info info);
