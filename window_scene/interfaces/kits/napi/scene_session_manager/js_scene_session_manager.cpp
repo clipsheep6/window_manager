@@ -67,6 +67,7 @@ napi_value JsSceneSessionManager::Init(napi_env env, napi_value exportObj)
     const char* moduleName = "JsSceneSessionManager";
     BindNativeFunction(env, exportObj, "getRootSceneSession", moduleName, JsSceneSessionManager::GetRootSceneSession);
     BindNativeFunction(env, exportObj, "requestSceneSession", moduleName, JsSceneSessionManager::RequestSceneSession);
+    BindNativeFunction(env, exportObj, "requestAncoFront", moduleName, JsSceneSessionManager::RequestAncoFront);
     BindNativeFunction(env, exportObj, "updateSceneSessionWant",
         moduleName, JsSceneSessionManager::UpdateSceneSessionWant);
     BindNativeFunction(env, exportObj, "requestSceneSessionActivation", moduleName,
@@ -315,6 +316,13 @@ napi_value JsSceneSessionManager::RequestSceneSession(napi_env env, napi_callbac
     WLOGI("[NAPI]RequestSceneSession");
     JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(env, info);
     return (me != nullptr) ? me->OnRequestSceneSession(env, info) : nullptr;
+}
+
+napi_value JsSceneSessionManager::RequestAncoFront(napi_env env, napi_callback_info info)
+{
+    WLOGI("[NAPI]RequestAncoFront");
+    JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(env, info);
+    return (me != nullptr) ? me->OnRequestAncoFront(env, info) : nullptr;
 }
 
 napi_value JsSceneSessionManager::UpdateSceneSessionWant(napi_env env, napi_callback_info info)
@@ -1129,6 +1137,29 @@ napi_value JsSceneSessionManager::OnRequestSceneSessionByCall(napi_env env, napi
     }
 
     SceneSessionManager::GetInstance().RequestSceneSessionByCall(sceneSession);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsSceneSessionManager::OnRequestAncoFront(napi_env env, napi_callback_info info)
+{
+    WLOGI("[NAPI]OnPrepareTerminate");
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc < 1) {
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu", argc);
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    int32_t persistentId;
+    if (!ConvertFromJsValue(env, argv[0], persistentId)) {
+        WLOGFE("[NAPI]Failed to convert parameter to persistentId");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    SceneSessionManager::GetInstance().RequestAncoFront(persistentId);
     return NapiGetUndefined(env);
 }
 

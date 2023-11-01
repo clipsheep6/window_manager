@@ -816,6 +816,20 @@ WMError SceneSessionManager::CheckWindowId(int32_t windowId, int32_t &pid)
     return taskScheduler_->PostSyncTask(task);
 }
 
+WSError SceneSessionManager::RequestAncoFront(int32_t persistentId)
+{
+    auto parentSession = GetSceneSession(persistentId);
+    if (CheckCollaboratorType(parentSession->GetCollaboratorType())) {
+        WLOGFD("anco app is front from background taskbar");
+#ifdef RES_SCHED_ENABLE
+    std::unordered_map<std::string, std::string> payload;
+    uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_ANCO_APP_FRONT;
+    OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, 2, payload);
+#endif
+    }
+    return WSError::WS_OK;
+}
+
 sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& sessionInfo,
     sptr<WindowSessionProperty> property)
 {
@@ -861,6 +875,11 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
         UpdateParentSessionForDialog(sceneSession, property);
         if (CheckCollaboratorType(sceneSession->GetCollaboratorType())) {
             WLOGFD("ancoSceneState: %{public}d", sceneSession->GetSessionInfo().ancoSceneState);
+#ifdef RES_SCHED_ENABLE
+            std::unordered_map<std::string, std::string> payload;
+            uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_ANCO_APP_FRONT;
+            OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, 0, payload);
+#endif
             PreHandleCollaborator(sceneSession);
         }
         {
@@ -895,6 +914,12 @@ void SceneSessionManager::UpdateSceneSessionWant(const SessionInfo& sessionInfo)
                 session->SetSessionInfoWant(sessionInfo.want);
                 WLOGFI("RequestSceneSession update want, persistentId:%{public}d", sessionInfo.persistentId_);
             } else {
+                WLOGFI("anco app is front because click icon");
+#ifdef RES_SCHED_ENABLE
+                std::unordered_map<std::string, std::string> payload;
+                uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_ANCO_APP_FRONT;
+                OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, 1, payload);
+#endif
                 UpdateCollaboratorSessionWant(session);
             }
         }
