@@ -1140,7 +1140,7 @@ napi_value JsSceneSessionManager::OnRequestSceneSessionByCall(napi_env env, napi
     return NapiGetUndefined(env);
 }
 
-napi_value JsSceneSessionManager::OnReportSceneInfo(napi_env env, napi_callback_info info) //新增
+napi_value JsSceneSessionManager::OnReportSceneInfo(napi_env env, napi_callback_info info)
 {
     WLOGI("[NAPI]OnReportSceneInfo");
     size_t argc = 4;
