@@ -773,7 +773,7 @@ WSError SceneSessionManager::UpdateParentSessionForDialog(const sptr<SceneSessio
 
 WSError SceneSessionManager::ReportSceneInfo(int32_t cmdId, int32_t value, const std::string& msg)
 {
-    int32_t RES_TYPE_ANCO_APP_FRONT= 42;
+    int32_t RES_TYPE_ANCO_APP_FRONT = 48;
     if (cmdId == RES_TYPE_ANCO_APP_FRONT) {
         auto parentSession = GetSceneSession(value);
         if (CheckCollaboratorType(parentSession->GetCollaboratorType())) {
@@ -881,7 +881,7 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
             WLOGFD("ancoSceneState: %{public}d", sceneSession->GetSessionInfo().ancoSceneState);
 #ifdef RES_SCHED_ENABLE
             std::unordered_map<std::string, std::string> payload;
-            uint32_t RES_TYPE_ANCO_APP_FRONT = 42;
+            uint32_t RES_TYPE_ANCO_APP_FRONT = 48;
             uint32_t type = RES_TYPE_ANCO_APP_FRONT;
             int64_t value = 1;
             OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, payload);
@@ -922,7 +922,7 @@ void SceneSessionManager::UpdateSceneSessionWant(const SessionInfo& sessionInfo)
             } else {
                 WLOGFI("anco app is front because click icon");
 #ifdef RES_SCHED_ENABLE
-                uint32_t RES_TYPE_ANCO_APP_FRONT = 42;
+                uint32_t RES_TYPE_ANCO_APP_FRONT = 48;
                 int64_t value = 1;
                 std::unordered_map<std::string, std::string> payload;
                 uint32_t type = RES_TYPE_ANCO_APP_FRONT;
