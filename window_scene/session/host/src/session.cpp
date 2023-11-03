@@ -1335,10 +1335,23 @@ void Session::SetSessionStateChangeListenser(const NotifySessionStateChangeFunc&
     WLOGFD("SetSessionStateChangeListenser, id: %{public}d", GetPersistentId());
 }
 
-void Session::UnregisterSessionStateChangeListenser()
+void Session::UnregisterSessionChangeListeners()
 {
+    pendingSessionActivationFunc_ = nullptr;
     sessionStateChangeFunc_ = nullptr;
-    WLOGFD("UnregisterSessionStateChangeListenser, id: %{public}d", GetPersistentId());
+    backPressedFunc_ = nullptr;
+    sessionFocusableChangeFunc_ = nullptr;
+    sessionTouchableChangeFunc_ = nullptr;
+    clickFunc_ = nullptr;
+    terminateSessionFunc_ = nullptr;
+    terminateSessionFuncNew_ = nullptr;
+    terminateSessionFuncTotal_ = nullptr;
+    pendingSessionToForegroundFunc_ = nullptr;
+    pendingSessionToBackgroundForDelegatorFunc_ = nullptr;
+    raiseToTopForPointDownFunc_ = nullptr;
+    sessionExceptionFuncs_.clear();
+    sessionExceptionFuncs_.shrink_to_fit();
+    WLOGFD("UnregisterSessionChangeListenser, id: %{public}d", GetPersistentId());
 }
 
 void Session::SetSessionStateChangeNotifyManagerListener(const NotifySessionStateChangeNotifyManagerFunc& func)

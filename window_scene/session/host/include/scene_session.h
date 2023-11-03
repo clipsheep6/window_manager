@@ -202,6 +202,7 @@ public:
     static std::map<int32_t, WSRect> windowDragHotAreaMap_;
     void SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFunc& func);
     WSRect GetSessionTargetRect();
+    void UnregisterSessionChangeListeners() override;
 
 private:
     void HandleStyleEvent(MMI::WindowArea area) override;
