@@ -95,6 +95,21 @@ WMError WindowExtensionSessionImpl::TransferExtensionData(const AAFwk::WantParam
 
 void WindowExtensionSessionImpl::RegisterTransferComponentDataListener(const NotifyTransferComponentDataFunc& func)
 {
+    /* return RegisterTransferComponentDataForResultListener([](
+            const AAFwk::WantParams& wantParams) {
+            // test
+            if (wantParams.HasParam("data")) {
+                WLOGFI("%{public}s for test, input param data=%{public}s", __FUNCTION__, wantParams.GetStringParam("data").c_str());
+            }
+            
+            AAFwk::Want wantDataTest;
+            wantDataTest.SetParam("key2", std::string("val5"));
+            wantDataTest.SetParam("key3", false);
+            wantDataTest.SetParam("key4", 1005);
+            return wantDataTest.GetParams();
+            // test end
+        }); */
+
     if (IsWindowSessionInvalid()) {
         WLOGFE("Window session invalid.");
         return;
@@ -109,6 +124,27 @@ WSError WindowExtensionSessionImpl::NotifyTransferComponentData(const AAFwk::Wan
         notifyTransferComponentDataFunc_(wantParams);
     }
     return WSError::WS_OK;
+}
+
+WSErrorCode WindowExtensionSessionImpl::NotifyTransferComponentDataSync(const AAFwk::WantParams& wantParams, AAFwk::WantParams& reWantParams)
+{
+    WLOGFI("%{public}s for test", __FUNCTION__);
+    if (notifyTransferComponentDataForResultFunc_) {
+        reWantParams = notifyTransferComponentDataForResultFunc_(wantParams);
+        return WSErrorCode::WS_OK;
+    }
+    return WSErrorCode::WS_ERROR_NOT_REGISTER_SYNC_CALLBACK;
+}
+
+void WindowExtensionSessionImpl::RegisterTransferComponentDataForResultListener(const NotifyTransferComponentDataForResultFunc& func)
+{
+    WLOGFI("%{public}s for test", __FUNCTION__);
+    if (IsWindowSessionInvalid()) {
+        WLOGFE("Window session invalid.");
+        return;
+    }
+    notifyTransferComponentDataForResultFunc_ = std::move(func);
+    hostSession_->NotifyRemoteReadySync();
 }
 
 WMError WindowExtensionSessionImpl::SetPrivacyMode(bool isPrivacyMode)

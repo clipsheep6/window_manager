@@ -16,6 +16,7 @@
 #ifndef OHOS_ROSEN_WINDOW_SCENE_SESSION_H
 #define OHOS_ROSEN_WINDOW_SCENE_SESSION_H
 
+#include <cstdint>
 #include <mutex>
 #include <shared_mutex>
 #include <vector>
@@ -239,6 +240,8 @@ public:
     uint32_t GetUINodeId() const;
     virtual void SetFloatingScale(float floatingScale);
     float GetFloatingScale() const;
+    void SetReceiveRegisterType(const uint32_t type);
+    uint32_t GetReceiveRegisterType() const;
 
     void SetNotifyCallingSessionUpdateRectFunc(const NotifyCallingSessionUpdateRectFunc& func);
     void NotifyCallingSessionUpdateRect();
@@ -400,6 +403,7 @@ private:
     bool needNotify_ {true};
     sptr<IRemoteObject> abilityToken_ = nullptr;
     float vpr_ { 1.5f };
+    uint32_t receiveRegisterType_ = 0;
 };
 } // namespace OHOS::Rosen
 

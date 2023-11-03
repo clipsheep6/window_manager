@@ -23,7 +23,7 @@
 namespace OHOS::Rosen {
 using NotifyTransferAbilityResultFunc = std::function<void(uint32_t resultCode, const AAFwk::Want& want)>;
 using NotifyTransferExtensionDataFunc = std::function<void(const AAFwk::WantParams& wantParams)>;
-using NotifyRemoteReadyFunc = std::function<void()>;
+using NotifyRemoteReadyFunc = std::function<void(uint32_t)>;
 class ExtensionSession : public Session {
 public:
     struct ExtensionSessionEventCallback : public RefBase {
@@ -42,7 +42,9 @@ public:
     WSError TransferAbilityResult(uint32_t resultCode, const AAFwk::Want& want) override;
     WSError TransferExtensionData(const AAFwk::WantParams& wantParams) override;
     WSError TransferComponentData(const AAFwk::WantParams& wantParams);
+    WSErrorCode TransferComponentDataSync(const AAFwk::WantParams& wantParams, AAFwk::WantParams& reWantParams);
     void NotifyRemoteReady() override;
+    void NotifyRemoteReadySync() override;
     void RegisterExtensionSessionEventCallback(const sptr<ExtensionSessionEventCallback>& extSessionEventCallback);
     sptr<ExtensionSessionEventCallback> GetExtensionSessionEventCallback();
 

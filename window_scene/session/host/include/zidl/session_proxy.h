@@ -61,6 +61,7 @@ public:
     WSError TransferAbilityResult(uint32_t resultCode, const AAFwk::Want& want) override;
     WSError TransferExtensionData(const AAFwk::WantParams& wantParams) override;
     void NotifyRemoteReady() override;
+    void NotifyRemoteReadySync() override;
     void NotifyExtensionDied() override;
 
 private:

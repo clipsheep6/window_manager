@@ -31,7 +31,7 @@ public:
 
     WSError SetActive(bool active) override;
     WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
-        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override;
+    const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override;
     void UpdateDensity() override;
     WSError HandleBackEvent() override;
     WSError MarkProcessed(int32_t eventId) override;
@@ -39,6 +39,7 @@ public:
     WSError NotifyDestroy() override;
     void NotifyTouchDialogTarget() override;
     WSError NotifyTransferComponentData(const AAFwk::WantParams& wantParams) override;
+    WSErrorCode NotifyTransferComponentDataSync(const AAFwk::WantParams& wantParams, AAFwk::WantParams& reWantParams) override;
     void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info) override;
     WSError UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type) override;
     void NotifyScreenshot() override;
