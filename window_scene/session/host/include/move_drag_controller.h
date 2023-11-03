@@ -67,6 +67,7 @@ public:
     void HandleMouseStyle(const std::shared_ptr<MMI::PointerEvent>& pointerEvent, const WSRect& winRect);
     void ClacFirstMoveTargetRect(const WSRect& windowRect);
     void SetWindowDragHotAreaFunc(const NotifyWindowDragHotAreaFunc& func);
+    void ResetWindowDragHotAreaFunc();
     void UpdateGravityWhenDrag(const std::shared_ptr<MMI::PointerEvent>& pointerEvent, 
         const std::shared_ptr<RSSurfaceNode>& surfaceNode);
 

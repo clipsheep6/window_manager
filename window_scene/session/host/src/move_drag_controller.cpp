@@ -835,4 +835,9 @@ void MoveDragController::SetWindowDragHotAreaFunc(const NotifyWindowDragHotAreaF
 {
     windowDragHotAreaFunc_ = func;
 }
+
+void MoveDragController::ResetWindowDragHotAreaFunc()
+{
+    windowDragHotAreaFunc_ = nullptr;
+}
 } // namespace OHOS::Rosen

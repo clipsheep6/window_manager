@@ -1817,4 +1817,17 @@ void SceneSession::SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFun
         moveDragController_->SetWindowDragHotAreaFunc(func);
     }
 }
+
+void SceneSession::UnregisterSessionChangeListeners()
+{
+    {
+        std::lock_guard<std::mutex> guard(sessionChangeCbMutex_);
+        sessionChangeCallback_ = nullptr;
+    }
+    sessionRectChangeFunc_ = nullptr;
+    if (moveDragController_) {
+        moveDragController_->ResetWindowDragHotAreaFunc();
+    }
+    Session::UnregisterSessionChangeListeners();
+}
 } // namespace OHOS::Rosen
