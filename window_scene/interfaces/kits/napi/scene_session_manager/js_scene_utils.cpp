@@ -642,13 +642,21 @@ inline void MainThreadScheduler::GetMainEventHandler()
 
 void MainThreadScheduler::PostMainThreadTask(Task&& task, int64_t delayTime)
 {
-    std::unique_lock<std::recursive_mutex> lock(mutex_);
-    GetMainEventHandler();
-    if (handler_ && handler_->GetEventRunner()->IsCurrentRunnerThread()) {
-        return task();
-    } else if (handler_ && !handler_->GetEventRunner()->IsCurrentRunnerThread()) {
-        handler_->PostTask(std::move(task), OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE);
-    } else {
-        NapiAsyncWork(env_, task);
+    try {
+        GetMainEventHandler();
+        if (handler_ && handler_->GetEventRunner()->IsCurrentRunnerThread())
+        {
+            return task();
+        }
+        else if (handler_ && !handler_->GetEventRunner()->IsCurrentRunnerThread())
+        {
+            handler_->PostTask(std::move(task), OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE);
+        }
+        else
+        {
+            NapiAsyncWork(env_, task);
+        }
+    } catch (std::exception& e) {
+        WLOGFE("PostThreadTask with error %{public}s", e.what());
     }
 }
