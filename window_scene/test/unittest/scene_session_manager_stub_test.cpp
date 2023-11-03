@@ -369,6 +369,278 @@ HWTEST_F(SceneSessionManagerStubTest, HandleSetSessionGravity, Function | SmallT
     EXPECT_EQ(res, ERR_NONE);
 }
 
+/**
+ * @tc.name: HandleSetSessionIcon
+ * @tc.desc: test HandleSetSessionIcon
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleSetSessionIcon, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleSetSessionIcon(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleRegisterSessionChangeListener
+ * @tc.desc: test HandleRegisterSessionChangeListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleRegisterSessionChangeListener, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleRegisterSessionChangeListener(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleUnRegisterSessionChangeListener
+ * @tc.desc: test HandleUnRegisterSessionChangeListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleUnRegisterSessionChangeListener, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleUnRegisterSessionChangeListener(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleRegisterSessionListener
+ * @tc.desc: test HandleRegisterSessionListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleRegisterSessionListener, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleRegisterSessionListener(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleUnRegisterSessionListener
+ * @tc.desc: test HandleUnRegisterSessionListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleUnRegisterSessionListener, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleUnRegisterSessionListener(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleUpdateSessionAvoidAreaListener
+ * @tc.desc: test HandleUpdateSessionAvoidAreaListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleUpdateSessionAvoidAreaListener, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleUpdateSessionAvoidAreaListener(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleGetSessionSnapshot
+ * @tc.desc: test HandleGetSessionSnapshot
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleGetSessionSnapshot, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleGetSessionSnapshot(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleBindDialogTarget
+ * @tc.desc: test HandleBindDialogTarget
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleBindDialogTarget, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleBindDialogTarget(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleClearSession
+ * @tc.desc: test HandleClearSession
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleClearSession, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleClearSession(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleClearAllSessions
+ * @tc.desc: test HandleClearAllSessions
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleClearAllSessions, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleClearAllSessions(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleLockSession
+ * @tc.desc: test HandleLockSession
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleLockSession, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleLockSession(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleUnlockSession
+ * @tc.desc: test HandleUnlockSession
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleUnlockSession, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleUnlockSession(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleMoveSessionsToForeground
+ * @tc.desc: test HandleMoveSessionsToForeground
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleMoveSessionsToForeground, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleMoveSessionsToForeground(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleMoveSessionsToBackground
+ * @tc.desc: test HandleMoveSessionsToBackground
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleMoveSessionsToBackground, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleMoveSessionsToBackground(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleRegisterCollaborator
+ * @tc.desc: test HandleRegisterCollaborator
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleRegisterCollaborator, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleRegisterCollaborator(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleUnregisterCollaborator
+ * @tc.desc: test HandleUnregisterCollaborator
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleUnregisterCollaborator, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleUnregisterCollaborator(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleUpdateSessionTouchOutsideListener
+ * @tc.desc: test HandleUpdateSessionTouchOutsideListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleUpdateSessionTouchOutsideListener, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    data.WriteUint32(0);
+    data.WriteUint32(10);
+    int res = stub_->HandleUpdateSessionTouchOutsideListener(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
 }
 }
 }
