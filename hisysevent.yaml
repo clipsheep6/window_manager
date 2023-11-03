@@ -113,6 +113,7 @@ FOCUS_WINDOW:
   __BASE: {type: BEHAVIOR, level: MINOR, tag: PowerStats, desc: Window focus changed}
   PID: {type: INT32, desc: app pid}
   UID: {type: INT32, desc: app uid}
+  BUNDLE_NAME: {type: STRING, desc: bundle name}
 
 APPLICATION_BLOCK_INPUT:
   __BASE: {type: FAULT, level: CRITICAL, desc: The event is not consumed}
@@ -126,3 +127,20 @@ START_WINDOW:
   __BASE: {type: BEHAVIOR, level: CRITICAL, desc: The event is application startup request window}
   BUNDLE_NAME: {type: STRING, desc: bundle name}
   WINDOW_NAME: {type: STRING, desc: window name}
+
+NOTIFY_FOLD_STATE_CHANGE:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: notify fold status change}
+  CURRENT_FOLD_STATUS: {type: INT32, desc: current fold status}
+  NEXT_FOLD_STATUS: {type: INT32, desc: next fold status}
+  SENSOR_POSTURE: {type: FLOAT, desc: sensor posture status}
+
+FOLD_STATE_CHANGE_BEGIN:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: fold status change begin}
+  POWER_OFF_SCREEN: {type: INT32, desc: power off screen id}
+  POWER_ON_SCREEN: {type: INT32, desc: power on screen id}
+
+CONTAINER_START_BEGIN:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: The event is container startup begin}
+  MISSION_ID: {type: INT32, desc: mission id}
+  BUNDLE_NAME: {type: STRING, desc: bundle name}
+  TIMESTAMP: {type: INT64, desc: timestamp}

@@ -24,8 +24,8 @@
 #include "window_option.h"
 #include "occupied_area_change_info.h"
 
-class NativeValue;
-class NativeEngine;
+typedef struct napi_env__* napi_env;
+typedef struct napi_value__* napi_value;
 namespace OHOS::MMI {
     class PointerEvent;
     class KeyEvent;
@@ -105,6 +105,14 @@ public:
      * @brief Notify caller that window is inactive.
      */
     virtual void AfterInactive() {}
+    /**
+     * @brief Notify caller that window is resumed.
+     */
+    virtual void AfterResumed() {}
+    /**
+     * @brief Notify caller that window is paused.
+     */
+    virtual void AfterPaused() {}
 };
 
 /**
@@ -1077,14 +1085,29 @@ public:
      * @brief set window ui content
      *
      * @param contentInfo content info path
+     * @param env
+     * @param storage
+     * @param isDistributed
+     * @param ability
+     * @return WMError
+     */
+    virtual WMError NapiSetUIContent(const std::string& contentInfo, napi_env env,
+        napi_value storage, bool isDistributed = false, AppExecFwk::Ability* ability = nullptr)
+    {
+        return WMError::WM_OK;
+    }
+    /**
+     * @brief set window ui content
+     *
+     * @param contentInfo content info path
      * @param engine
      * @param storage
      * @param isDistributed
      * @param ability
      * @return WMError
      */
-    virtual WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
-        NativeValue* storage, bool isDistributed = false, AppExecFwk::Ability* ability = nullptr)
+    virtual WMError SetUIContentByName(const std::string& contentInfo, napi_env env, napi_value storage,
+        AppExecFwk::Ability* ability = nullptr)
     {
         return WMError::WM_OK;
     }
@@ -1192,7 +1215,7 @@ public:
      *
      * @return WMError
      */
-    virtual WMError Minimize() { return WMError::WM_OK; }
+    virtual WMError Minimize() { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
     /**
      * @brief recovery the main window. It is called by ACE when recovery button is clicked.
      *
@@ -1324,20 +1347,20 @@ public:
      * @param dragEnabled true means the window can be resized by dragging, otherwise means the opposite.
      * @return Errorcode of window.
      */
-    virtual WMError SetResizeByDragEnabled(bool dragEnabled) { return WMError::WM_OK; }
+    virtual WMError SetResizeByDragEnabled(bool dragEnabled) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
     /**
      * @brief Set the raise enabled flag of a window.
      *
      * @param raiseEnabled true means the window can be raised by click, otherwise means the opposite.
      * @return Errorcode of window.
      */
-    virtual WMError SetRaiseByClickEnabled(bool raiseEnabled) { return WMError::WM_OK; }
+    virtual WMError SetRaiseByClickEnabled(bool raiseEnabled) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
     /**
      * @brief Raise one app sub window above another.
      *
      * @return WM_OK means raise success, others means raise failed.
      */
-    virtual WmErrorCode RaiseAboveTarget(int32_t subWindowId) { return WmErrorCode::WM_OK; }
+    virtual WmErrorCode RaiseAboveTarget(int32_t subWindowId) { return WmErrorCode::WM_ERROR_DEVICE_NOT_SUPPORT; }
 
     /**
      * @brief Hide non-system floating windows.

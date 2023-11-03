@@ -37,8 +37,10 @@ ohos_shared_library("scenesessionmanager_napi") {
   configs = [ ":scene_session_manager_napi_config" ]
 
   deps = [
+    "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/session:scene_session",
     "${window_base_path}/window_scene/session_manager:scene_session_manager",
+    "${window_base_path}/window_scene/session_manager:screen_session_manager",
     "${window_base_path}/wm:libwm",
   ]
 
@@ -51,18 +53,25 @@ ohos_shared_library("scenesessionmanager_napi") {
     "ability_runtime:runtime",
     "ace_engine:ace_uicontent",
     "c_utils:utils",
+    "eventhandler:libeventhandler",
     "graphic_2d:window_animation",
     "hilog:libhilog",
     "input:libmmi-client",
     "ipc:ipc_single",
     "napi:ace_napi",
-    "power_manager:powermgr_client",
   ]
+
   defines = []
   if (defined(global_parts_info) &&
       defined(global_parts_info.resourceschedule_soc_perf)) {
     external_deps += [ "soc_perf:socperf_client" ]
     defines += [ "SOC_PERF_ENABLE" ]
+  }
+
+  if (defined(global_parts_info) &&
+      defined(global_parts_info.powermgr_power_manager)) {
+    external_deps += [ "power_manager:powermgr_client" ]
+    defines += [ "POWER_MANAGER_ENABLE" ]
   }
 
   relative_install_dir = "module"

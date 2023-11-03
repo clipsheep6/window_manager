@@ -14,7 +14,6 @@
  */
 
 #include "session_manager.h"
-
 #include <iservice_registry.h>
 #include <system_ability_definition.h>
 
@@ -29,38 +28,29 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DISPLAY, "Sessi
 
 WM_IMPLEMENT_SINGLE_INSTANCE(SessionManager)
 
+SessionManager::~SessionManager()
+{
+    WLOGFI("SessionManager destory!");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    destroyed_ = true;
+}
+
 void SessionManager::ClearSessionManagerProxy()
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     WLOGFI("ClearSessionManagerProxy enter!");
-    if ((sceneSessionManagerProxy_ != nullptr) && (sceneSessionManagerProxy_->AsObject() != nullptr)) {
-        sceneSessionManagerProxy_->AsObject()->RemoveDeathRecipient(ssmDeath_);
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (destroyed_) {
+        WLOGFE("Already destroyed");
+        return;
     }
-    if (mockSessionManagerServiceProxy_ != nullptr) {
-        mockSessionManagerServiceProxy_ = nullptr;
-    }
+    mockSessionManagerServiceProxy_ = nullptr;
     if (sessionManagerServiceProxy_ != nullptr) {
         int refCount = sessionManagerServiceProxy_->GetSptrRefCount();
         WLOGFI("sessionManagerServiceProxy_ GetSptrRefCount : %{public}d", refCount);
         sessionManagerServiceProxy_ = nullptr;
     }
-    if (sceneSessionManagerProxy_ != nullptr) {
-        sceneSessionManagerProxy_ = nullptr;
-    }
-    if (screenSessionManagerProxy_ != nullptr) {
-        screenSessionManagerProxy_ = nullptr;
-    }
-    if (screenLockManagerProxy_ != nullptr) {
-        screenLockManagerProxy_ = nullptr;
-    }
-}
-
-sptr<ScreenLock::ScreenLockManagerInterface> SessionManager::GetScreenLockManagerProxy()
-{
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    InitSessionManagerServiceProxy();
-    InitScreenLockManagerProxy();
-    return screenLockManagerProxy_;
+    sceneSessionManagerProxy_ = nullptr;
+    screenSessionManagerProxy_ = nullptr;
 }
 
 sptr<IScreenSessionManager> SessionManager::GetScreenSessionManagerProxy()
@@ -224,7 +214,7 @@ WMError SessionManager::UpdateProperty(sptr<WindowSessionProperty>& property, WS
         WLOGFE("sceneSessionManagerProxy_ is nullptr");
         return WMError::WM_DO_NOTHING;
     }
-    return static_cast<WMError>(sceneSessionManagerProxy_->UpdateProperty(property, action));
+    return sceneSessionManagerProxy_->UpdateProperty(property, action);
 }
 
 WMError SessionManager::SetSessionGravity(int32_t persistentId, SessionGravity gravity, uint32_t percent)
@@ -249,26 +239,5 @@ WMError SessionManager::BindDialogTarget(uint64_t persistentId, sptr<IRemoteObje
         return WMError::WM_DO_NOTHING;
     }
     return static_cast<WMError>(sceneSessionManagerProxy_->BindDialogTarget(persistentId, targetToken));
-}
-
-void SessionManager::InitScreenLockManagerProxy()
-{
-    if (screenLockManagerProxy_) {
-        return;
-    }
-    if (!sessionManagerServiceProxy_) {
-        WLOGFE("Get screen session manager proxy failed, sessionManagerServiceProxy_ is nullptr");
-        return;
-    }
-    sptr<IRemoteObject> remoteObject = sessionManagerServiceProxy_->GetScreenLockManagerService();
-    if (!remoteObject) {
-        WLOGFE("Get screenlock manager proxy failed, screenlock manager service is null");
-        return;
-    }
-
-    screenLockManagerProxy_ = iface_cast<ScreenLock::ScreenLockManagerInterface>(remoteObject);
-    if (!screenLockManagerProxy_) {
-        WLOGFW("Get screenlock manager proxy failed, nullptr");
-    }
 }
 } // namespace OHOS::Rosen

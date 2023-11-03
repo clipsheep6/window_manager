@@ -30,9 +30,13 @@ namespace OHOS::PowerMgr {
 }
 
 namespace OHOS::Rosen {
+namespace PARAM_KEY {
+    const std::string PARAM_MISSION_AFFINITY_KEY = "ohos.anco.param.missionAffinity";
+}
 class SceneSession;
 
-using SpecificSessionCreateCallback = std::function<sptr<SceneSession>(const SessionInfo& info, sptr<WindowSessionProperty> property)>;
+using SpecificSessionCreateCallback =
+    std::function<sptr<SceneSession>(const SessionInfo& info, sptr<WindowSessionProperty> property)>;
 using SpecificSessionDestroyCallback = std::function<WSError(const int32_t& persistentId)>;
 using CameraFloatSessionChangeCallback = std::function<void(uint32_t accessTokenId, bool isShowing)>;
 using GetSceneSessionVectorByTypeCallback = std::function<std::vector<sptr<SceneSession>>(WindowType type)>;
@@ -47,14 +51,15 @@ using NotifySessionEventFunc = std::function<void(int32_t eventId)>;
 using NotifyRaiseToTopFunc = std::function<void()>;
 using SetWindowPatternOpacityFunc = std::function<void(float opacity)>;
 using NotifyIsCustomAnimationPlayingCallback = std::function<void(bool isFinish)>;
+using NotifyWindowAnimationFlagChangeFunc = std::function<void(const bool flag)>;
 using NotifySystemBarPropertyChangeFunc = std::function<void(
     const std::unordered_map<WindowType, SystemBarProperty>& propertyMap)>;
 using NotifyNeedAvoidFunc = std::function<void(bool status)>;
-using NotifyWindowAnimationFlagChangeFunc = std::function<void(const bool flag)>;
 using NotifyShowWhenLockedFunc = std::function<void(bool showWhenLocked)>;
 using NotifyReqOrientationChangeFunc = std::function<void(uint32_t orientation)>;
 using NotifyRaiseAboveTargetFunc = std::function<void(int32_t subWindowId)>;
 using NotifyForceHideChangeFunc = std::function<void(bool hide)>;
+using NotifyTouchOutsideFunc = std::function<void()>;
 class SceneSession : public Session {
 public:
     // callback for notify SceneSessionManager
@@ -77,12 +82,13 @@ public:
         NotifySessionEventFunc OnSessionEvent_;
         NotifySystemBarPropertyChangeFunc OnSystemBarPropertyChange_;
         NotifyNeedAvoidFunc OnNeedAvoid_;
-        NotifyWindowAnimationFlagChangeFunc onWindowAnimationFlagChange_;
         NotifyIsCustomAnimationPlayingCallback onIsCustomAnimationPlaying_;
+        NotifyWindowAnimationFlagChangeFunc onWindowAnimationFlagChange_;
         NotifyShowWhenLockedFunc OnShowWhenLocked_;
         NotifyReqOrientationChangeFunc OnRequestedOrientationChange_;
         NotifyRaiseAboveTargetFunc onRaiseAboveTarget_;
         NotifyForceHideChangeFunc OnForceHideChange_;
+        NotifyTouchOutsideFunc OnTouchOutside_;
     };
 
     // func for change window scene pattern property
@@ -104,7 +110,8 @@ public:
     WSError UpdateActiveStatus(bool isActive) override;
     WSError OnSessionEvent(SessionEvent event) override;
     WSError RaiseToAppTop() override;
-    WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) override;
+    WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
+        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override;
     WSError UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason) override;
     WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
@@ -143,10 +150,13 @@ public:
     };
     WSError UpdateWindowSceneAfterCustomAnimation(bool isAdd) override;
     WSError UpdateWindowAnimationFlag(bool needDefaultAnimationFlag) override;
+    void SetWindowAnimationFlag(bool needDefaultAnimationFlag);
     void SetZOrder(uint32_t zOrder) override;
     std::vector<Rect> GetTouchHotAreas() const override;
     Rect GetHotAreaRect(int32_t action);
-    WSError NotifyTouchOutside();
+    void NotifyTouchOutside();
+    bool CheckOutTouchOutsideRegister();
+    void SetFloatingScale(float floatingScale) override;
 
     static MaximizeMode maximizeMode_;
 
@@ -157,21 +167,25 @@ public:
     WSError SetKeepScreenOn(bool keepScreenOn);
     bool IsKeepScreenOn() const;
     const std::string& GetWindowName() const;
-    bool IsDecorEnable();
     void UpdateNativeVisibility(bool visible);
     void SetPrivacyMode(bool isPrivacy);
+    void SetSystemSceneOcclusionAlpha(double alpha);
     bool IsVisible() const;
     bool IsFloatingWindowAppType() const;
     void DumpSessionElementInfo(const std::vector<std::string>& params);
+    void NotifyForceHideChange(bool hide);
     static const wptr<SceneSession> GetEnterWindow();
     static void ClearEnterWindow();
     void SetRequestedOrientation(Orientation orientation);
-    void NotifyForceHideChange(bool hide);
     Orientation GetRequestedOrientation() const;
     WSError BindDialogTarget(const sptr<SceneSession>& sceneSession);
     void DumpSessionInfo(std::vector<std::string> &info) const;
+    bool AddSubSession(const sptr<SceneSession>& subSession);
+    bool RemoveSubSession(int32_t persistentId);
+    std::vector<sptr<SceneSession>> GetSubSession() const;
 
     std::shared_ptr<PowerMgr::RunningLock> keepScreenLock_;
+    bool IsDecorEnable();
 
     int32_t GetCollaboratorType() const;
     void SetCollaboratorType(int32_t collaboratorType);
@@ -181,6 +195,14 @@ public:
     sptr<IRemoteObject> GetSelfToken();
     WSError RaiseAboveTarget(int32_t subWindowId) override;
     void SetSessionRectChangeCallback(const NotifySessionRectChangeFunc& func);
+    WSRect GetLastSafeRect();
+    void SetLastSafeRect(WSRect rect);
+    bool IsNeedDefaultAnimation();
+    bool IsAppSession() const;
+    static std::map<int32_t, WSRect> windowDragHotAreaMap_;
+    void SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFunc& func);
+    WSRect GetSessionTargetRect();
+
 private:
     void HandleStyleEvent(MMI::WindowArea area) override;
     WSError HandleEnterWinwdowArea(int32_t windowX, int32_t windowY);
@@ -190,6 +212,7 @@ private:
     void NotifySessionRectChange(const WSRect& rect, const SizeChangeReason& reason = SizeChangeReason::UNDEFINED);
     void SetMoveDragCallback();
     void OnMoveDragCallback(const SizeChangeReason& reason);
+    void FixRectByLimits(WindowLimits limits, WSRect& rect, float ratio, bool isDecor, float vpr);
     bool FixRectByAspectRatio(WSRect& rect);
     std::string GetRatioPreferenceKey();
     bool SaveAspectRatio(float ratio);
@@ -210,7 +233,9 @@ private:
     mutable std::mutex sessionChangeCbMutex_;
     int32_t collaboratorType_ = CollaboratorType::DEFAULT_TYPE;
     sptr<IRemoteObject> selfToken_ = nullptr;
+    WSRect lastSafeRect = { 0, 0, 0, 0 };
+    std::vector<sptr<SceneSession>> subSession_;
+    bool needDefaultAnimationFlag_ = true;
 };
 } // namespace OHOS::Rosen
-
 #endif // OHOS_ROSEN_WINDOW_SCENE_SCENE_SESSION_H

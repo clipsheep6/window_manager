@@ -54,6 +54,7 @@ private:
         { WindowType::WINDOW_TYPE_SEARCHING_BAR,        105 },
         { WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW,  106 },
         { WindowType::WINDOW_TYPE_FLOAT,                107 },
+        { WindowType::WINDOW_TYPE_SYSTEM_FLOAT,         107 },
         { WindowType::WINDOW_TYPE_FLOAT_CAMERA,         107 },
         { WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT,   108 },
         { WindowType::WINDOW_TYPE_TOAST,                109 },
@@ -66,9 +67,10 @@ private:
         { WindowType::WINDOW_TYPE_SCREENSHOT,           117 },
         { WindowType::WINDOW_TYPE_VOICE_INTERACTION,    117 },
         { WindowType::WINDOW_TYPE_DRAGGING_EFFECT,      118 },
-        { WindowType::WINDOW_TYPE_POINTER,              119 },
-        { WindowType::WINDOW_TYPE_BOOT_ANIMATION,       120 },
-        { WindowType::WINDOW_TYPE_FREEZE_DISPLAY,       121 },
+        { WindowType::WINDOW_TYPE_SYSTEM_TOAST,         119 },
+        { WindowType::WINDOW_TYPE_POINTER,              120 },
+        { WindowType::WINDOW_TYPE_BOOT_ANIMATION,       121 },
+        { WindowType::WINDOW_TYPE_FREEZE_DISPLAY,       122 },
     };
 };
 }

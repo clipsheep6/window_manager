@@ -19,9 +19,11 @@
 #include <mutex>
 
 #include "window.h"
-
+typedef struct napi_env__* napi_env;
+typedef struct napi_value__* napi_value;
 namespace OHOS::AppExecFwk {
 class EventHandler;
+class LauncherService;
 } // namespace OHOS::AppExecFwk
 
 namespace OHOS::Ace {
@@ -35,14 +37,16 @@ public:
     RootScene();
     virtual ~RootScene();
 
-    void LoadContent(const std::string& contentUrl,
-        NativeEngine* engine, NativeValue* storage, AbilityRuntime::Context* context);
+    void LoadContent(const std::string& contentUrl, napi_env env, napi_value storage,
+        AbilityRuntime::Context* context);
     void UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason);
     static void UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration);
-    virtual void UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration) override;
+    void UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration) override;
 
     void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback) override;
     int64_t GetVSyncPeriod() override;
+
+    void OnBundleUpdated(const std::string& bundleName);
 
     void SetDisplayDensity(float density)
     {
@@ -79,16 +83,12 @@ public:
 private:
     void RegisterInputEventListener();
 
+    std::mutex mutex_;
     std::unique_ptr<Ace::UIContent> uiContent_;
-
     std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
-
-    std::recursive_mutex mutex_;
-
+    sptr<AppExecFwk::LauncherService> launcherService_;
     float density_ = 1.0f;
-
     WindowType type_ = WindowType::WINDOW_TYPE_SCENE_BOARD;
-
     std::string name_ = "EntryView";
 };
 } // namespace Rosen

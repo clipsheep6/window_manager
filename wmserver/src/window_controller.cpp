@@ -41,6 +41,7 @@
 #include "window_system_effect.h"
 #include "wm_common.h"
 #include "wm_math.h"
+#include "permission.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -484,7 +485,7 @@ void WindowController::NotifyInputCallingWindowRectAndOccupiedAreaChange(const s
     // if keyboard will occupy calling, notify calling window the occupied area and safe height
     const Rect& safeRect = WindowHelper::GetOverlap(occupiedArea, rect, 0, 0);
     sptr<OccupiedAreaChangeInfo> info = new OccupiedAreaChangeInfo(OccupiedAreaType::TYPE_INPUT,
-        occupiedArea, safeRect.height_);
+        safeRect, safeRect.height_);
 
     if (WindowNodeContainer::GetAnimateTransactionEnabled()) {
         auto syncTransactionController = RSSyncTransactionController::GetInstance();
@@ -1412,6 +1413,7 @@ WMError WindowController::UpdateProperty(sptr<WindowProperty>& property, Propert
         WLOGFE("property is invalid");
         return WMError::WM_ERROR_NULLPTR;
     }
+
     uint32_t windowId = property->GetWindowId();
     auto node = windowRoot_->GetWindowNode(windowId);
     if (node == nullptr) {
@@ -1519,18 +1521,37 @@ WMError WindowController::UpdateProperty(sptr<WindowProperty>& property, Propert
         }
         case PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE: {
             bool isPrivacyMode = property->GetPrivacyMode() || property->GetSystemPrivacyMode();
-            bool onlySkipSnapshot = property->GetOnlySkipSnapshot();
             node->GetWindowProperty()->SetPrivacyMode(isPrivacyMode);
             node->GetWindowProperty()->SetSystemPrivacyMode(isPrivacyMode);
-            node->GetWindowProperty()->SetOnlySkipSnapshot(onlySkipSnapshot);
             node->surfaceNode_->SetSecurityLayer(isPrivacyMode);
             if (node->leashWinSurfaceNode_ != nullptr) {
                 node->leashWinSurfaceNode_->SetSecurityLayer(isPrivacyMode);
             }
             RSTransaction::FlushImplicitTransaction();
-            if (!onlySkipSnapshot) {
-                UpdatePrivateStateAndNotify(node);
+            UpdatePrivateStateAndNotify(node);
+            break;
+        }
+        case PropertyChangeAction::ACTION_UPDATE_SYSTEM_PRIVACY_MODE: {
+            bool isPrivacyMode = property->GetPrivacyMode() || property->GetSystemPrivacyMode();
+            node->GetWindowProperty()->SetPrivacyMode(isPrivacyMode);
+            node->GetWindowProperty()->SetSystemPrivacyMode(isPrivacyMode);
+            node->surfaceNode_->SetSecurityLayer(isPrivacyMode);
+            if (node->leashWinSurfaceNode_ != nullptr) {
+                node->leashWinSurfaceNode_->SetSecurityLayer(isPrivacyMode);
             }
+            RSTransaction::FlushImplicitTransaction();
+            UpdatePrivateStateAndNotify(node);
+            break;
+        }
+        case PropertyChangeAction::ACTION_UPDATE_SNAPSHOT_SKIP: {
+            bool isSnapshotSkip = property->GetSnapshotSkip() || property->GetSystemPrivacyMode();
+            node->GetWindowProperty()->SetSnapshotSkip(isSnapshotSkip);
+            node->GetWindowProperty()->SetSystemPrivacyMode(isSnapshotSkip);
+            node->surfaceNode_->SetSkipLayer(isSnapshotSkip);
+            if (node->leashWinSurfaceNode_ != nullptr) {
+                node->leashWinSurfaceNode_->SetSkipLayer(isSnapshotSkip);
+            }
+            RSTransaction::FlushImplicitTransaction();
             break;
         }
         case PropertyChangeAction::ACTION_UPDATE_ASPECT_RATIO: {

@@ -74,7 +74,9 @@ void IntentionEventManager::InputEventListener::ProcessEnterLeaveEventAsync()
 {
     auto task = [this]() {
         std::lock_guard<std::mutex> guard(mouseEventMutex_);
-        if (g_lastMouseEvent == nullptr) {
+        if ((g_lastMouseEvent == nullptr) ||
+            (g_lastMouseEvent->GetButtonId() != MMI::PointerEvent::BUTTON_NONE &&
+            g_lastMouseEvent->GetPointerAction() != MMI::PointerEvent::POINTER_ACTION_BUTTON_UP)) {
             return;
         }
         auto enterSession = SceneSession::GetEnterWindow().promote();
@@ -82,14 +84,14 @@ void IntentionEventManager::InputEventListener::ProcessEnterLeaveEventAsync()
             WLOGFE("Enter session is null, do not reissuing enter leave events");
             return;
         }
+        WLOGFD("Reissue enter leave, enter persistentId:%{public}d",
+            enterSession->GetPersistentId());
         auto leavePointerEvent = std::make_shared<MMI::PointerEvent>(*g_lastMouseEvent);
         leavePointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_LEAVE_WINDOW);
-        leavePointerEvent->SetButtonId(MMI::PointerEvent::BUTTON_NONE);
         enterSession->TransferPointerEvent(leavePointerEvent);
 
         auto enterPointerEvent = std::make_shared<MMI::PointerEvent>(*g_lastMouseEvent);
         enterPointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_ENTER_WINDOW);
-        enterPointerEvent->SetButtonId(MMI::PointerEvent::BUTTON_NONE);
         if (uiContent_ == nullptr) {
             WLOGFE("ProcessEnterLeaveEventAsync uiContent_ is null");
             return;
@@ -136,6 +138,9 @@ void IntentionEventManager::InputEventListener::OnInputEvent(
     }
 
     int32_t action = pointerEvent->GetPointerAction();
+    if (action != MMI::PointerEvent::POINTER_ACTION_MOVE) {
+        WLOGFI("InputTracking id:%{public}d, EventListener OnInputEvent", pointerEvent->GetId());
+    }
     if (action == MMI::PointerEvent::POINTER_ACTION_DOWN ||
         action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
         int32_t pointerId = pointerEvent->GetPointerId();
@@ -164,6 +169,8 @@ void IntentionEventManager::InputEventListener::OnInputEvent(
         WLOGFE("focusedSceneSession is null");
         return;
     }
+    WLOGFI("InputTracking id:%{public}d, EventListener OnInputEvent",
+        keyEvent->GetId());
     if (focusedSceneSession->GetSessionInfo().isSystem_) {
         bool inputMethodHasProcessed = false;
 #ifdef IMF_ENABLE

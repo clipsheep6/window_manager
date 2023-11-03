@@ -19,6 +19,7 @@
 #include <js_runtime_utils.h>
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
+#include <pointer_event.h>
 
 #include "dm_common.h"
 #include "interfaces/include/ws_common.h"
@@ -52,6 +53,9 @@ enum class JsSessionType : uint32_t {
     TYPE_GLOBAL_SEARCH,
     TYPE_NEGATIVE_SCREEN,
     TYPE_VOICE_INTERACTION,
+    TYPE_SYSTEM_TOAST,
+    TYPE_SYSTEM_FLOAT,
+    TYPE_PIP,
 };
 
 // should same with bundlemanager ability info
@@ -97,6 +101,9 @@ const std::map<WindowType, JsSessionType> WINDOW_TO_JS_SESSION_TYPE_MAP {
     { WindowType::WINDOW_TYPE_GLOBAL_SEARCH,            JsSessionType::TYPE_GLOBAL_SEARCH           },
     { WindowType::WINDOW_TYPE_NEGATIVE_SCREEN,          JsSessionType::TYPE_NEGATIVE_SCREEN         },
     { WindowType::WINDOW_TYPE_VOICE_INTERACTION,        JsSessionType::TYPE_VOICE_INTERACTION       },
+    { WindowType::WINDOW_TYPE_SYSTEM_TOAST,             JsSessionType::TYPE_SYSTEM_TOAST            },
+    { WindowType::WINDOW_TYPE_SYSTEM_FLOAT,             JsSessionType::TYPE_SYSTEM_FLOAT            },
+    { WindowType::WINDOW_TYPE_PIP,                      JsSessionType::TYPE_PIP                     },
 };
 
 const std::map<JsSessionType, WindowType> JS_SESSION_TO_WINDOW_TYPE_MAP {
@@ -125,6 +132,9 @@ const std::map<JsSessionType, WindowType> JS_SESSION_TO_WINDOW_TYPE_MAP {
     { JsSessionType::TYPE_GLOBAL_SEARCH,            WindowType::WINDOW_TYPE_GLOBAL_SEARCH           },
     { JsSessionType::TYPE_NEGATIVE_SCREEN,          WindowType::WINDOW_TYPE_NEGATIVE_SCREEN         },
     { JsSessionType::TYPE_VOICE_INTERACTION,        WindowType::WINDOW_TYPE_VOICE_INTERACTION       },
+    { JsSessionType::TYPE_SYSTEM_TOAST,             WindowType::WINDOW_TYPE_SYSTEM_TOAST,           },
+    { JsSessionType::TYPE_SYSTEM_FLOAT,             WindowType::WINDOW_TYPE_SYSTEM_FLOAT,           },
+    { JsSessionType::TYPE_PIP,                      WindowType::WINDOW_TYPE_PIP,                    },
 };
 
 const std::map<Orientation, JsSessionOrientation> WINDOW_ORIENTATION_TO_JS_SESSION_MAP {
@@ -143,14 +153,37 @@ const std::map<Orientation, JsSessionOrientation> WINDOW_ORIENTATION_TO_JS_SESSI
         JsSessionOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED},
     {Orientation::LOCKED,                             JsSessionOrientation::LOCKED                  },
 };
-bool ConvertSessionInfoFromJs(NativeEngine& engine, NativeObject* jsObject, SessionInfo& sessionInfo);
-NativeValue* CreateJsSessionInfo(NativeEngine& engine, const SessionInfo& sessionInfo);
-NativeValue* CreateJsSessionState(NativeEngine& engine);
-NativeValue* CreateJsSessionSizeChangeReason(NativeEngine& engine);
-NativeValue* CreateJsSessionRect(NativeEngine& engine, const WSRect& rect);
-NativeValue* CreateJsSystemBarPropertyArrayObject(
-    NativeEngine& engine, const std::unordered_map<WindowType, SystemBarProperty>& propertyMap);
-NativeValue* SessionTypeInit(NativeEngine* engine);
+
+bool ConvertSessionInfoFromJs(napi_env env, napi_value jsObject, SessionInfo& sessionInfo);
+bool ConvertPointerEventFromJs(napi_env env, napi_value jsObject, MMI::PointerEvent& pointerEvent);
+napi_value CreateJsSessionInfo(napi_env env, const SessionInfo& sessionInfo);
+napi_value CreateJsSessionState(napi_env env);
+napi_value CreateJsSessionSizeChangeReason(napi_env env);
+napi_value CreateJsSessionRect(napi_env env, const WSRect& rect);
+napi_value CreateJsSystemBarPropertyArrayObject(
+    napi_env env, const std::unordered_map<WindowType, SystemBarProperty>& propertyMap);
+napi_value SessionTypeInit(napi_env env);
+napi_value NapiGetUndefined(napi_env env);
+napi_valuetype GetType(napi_env env, napi_value value);
+bool NapiIsCallable(napi_env env, napi_value value);
+bool ConvertRectInfoFromJs(napi_env env, napi_value jsObject, WSRect& rect);
+constexpr size_t ARGC_ONE = 1;
+constexpr size_t ARGC_TWO = 2;
+constexpr size_t ARGC_THREE = 3;
+constexpr size_t ARGC_FOUR = 4;
 } // namespace OHOS::Rosen
+
+
+class MainThreadScheduler {
+public:
+    using Task = std::function<void()>;
+    explicit MainThreadScheduler(napi_env env);
+    void PostMainThreadTask(Task&& task, int64_t delayTime = 0);
+private:
+    void GetMainEventHandler();
+    napi_env env_;
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> handler_;
+    std::recursive_mutex mutex_;
+};
 
 #endif // OHOS_WINDOW_SCENE_JS_SCENE_UTILS_H

@@ -81,11 +81,24 @@ bool FoldScreenController::IsFoldable()
 
 FoldStatus FoldScreenController::GetFoldStatus()
 {
-    return FoldStatus::UNKNOWN;
+    if (foldScreenPolicy_ == nullptr) {
+        WLOGW("GetFoldStatus: foldScreenPolicy_ is null");
+        return FoldStatus::UNKNOWN;
+    }
+    return foldScreenPolicy_->GetFoldStatus();
 }
 
 sptr<FoldCreaseRegion> FoldScreenController::GetCurrentFoldCreaseRegion()
 {
     return nullptr;
+}
+
+ScreenId FoldScreenController::GetCurrentScreenId()
+{
+    if (foldScreenPolicy_ == nullptr) {
+        WLOGW("GetCurrentScreenId: foldScreenPolicy_ is null");
+        return 0;
+    }
+    return foldScreenPolicy_->GetCurrentScreenId();
 }
 } // namespace OHOS::Rosen

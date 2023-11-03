@@ -47,7 +47,7 @@ public:
         const sptr<Rosen::ISession>& iSession) override;
     WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
     WMError Hide(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
-    WMError Destroy(bool needClearListener) override;
+    WMError Destroy(bool needNotifyServer, bool needClearListener = true) override;
     void PreProcessCreate();
     void SetDefaultProperty();
     WSError SetActive(bool active) override;
@@ -80,7 +80,6 @@ public:
     static sptr<Window> GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context = nullptr);
     static sptr<Window> GetTopWindowWithId(uint32_t mainWinId);
     virtual void UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration) override;
-
     WMError NotifyMemoryLevel(int32_t level) override;
 
     virtual WMError AddWindowFlag(WindowFlag flag) override;
@@ -114,7 +113,6 @@ public:
     virtual bool IsPrivacyMode() const override;
     virtual bool IsLayoutFullScreen() const override;
     virtual bool IsFullScreen() const override;
-
     WMError RegisterAnimationTransitionController(const sptr<IAnimationTransitionController>& listener) override;
     void SetNeedDefaultAnimation(bool needDefaultAnimation) override;
     WMError SetTransform(const Transform& trans) override;
@@ -123,6 +121,7 @@ public:
     WMError SetAlpha(float alpha) override;
     void DumpSessionElementInfo(const std::vector<std::string>& params) override;
     WSError UpdateWindowMode(WindowMode mode) override;
+    WSError UpdateMaximizeMode(MaximizeMode mode) override;
 
 protected:
     void DestroySubWindow();
@@ -148,6 +147,7 @@ private:
     WMError UpdateAnimationFlagProperty(bool withAnimation);
     WMError UpdateWindowModeImmediately(WindowMode mode);
     uint32_t UpdateConfigVal(uint32_t minVal, uint32_t maxVal, uint32_t configVal, uint32_t defaultVal, float vpr);
+    void UpdateWindowState();
 
     bool enableDefaultAnimation_ = true;
     sptr<IAnimationTransitionController> animationTransitionController_;

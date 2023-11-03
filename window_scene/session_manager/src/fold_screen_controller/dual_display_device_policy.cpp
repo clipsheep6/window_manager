@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <hisysevent.h>
 #include <transaction/rs_interfaces.h>
 #include "fold_screen_controller/dual_display_device_policy.h"
 #include "session/screen/include/screen_session.h"
@@ -35,6 +36,11 @@ void DualDisplayDevicePolicy::ChangeScreenDisplayMode(FoldDisplayMode displayMod
     WLOGI("DualDisplayDevicePolicy ChangeScreenDisplayMode displayMode = %{public}d", displayMode);
     ScreenId screenIdFull = 0;
     ScreenId screenIdMain = 5;
+    #ifdef TP_FEATURE_ENABLE
+    int32_t tpType = 12;
+    std::string fullTpChange = "0";
+    std::string mainTpChange = "1";
+    #endif
     sptr<ScreenSession> screenSession = ScreenSessionManager::GetInstance().GetScreenSession(screenIdFull);
     if (screenSession == nullptr) {
         WLOGE("ChangeScreenDisplayMode default screenSession is null");
@@ -44,28 +50,38 @@ void DualDisplayDevicePolicy::ChangeScreenDisplayMode(FoldDisplayMode displayMod
         std::lock_guard<std::recursive_mutex> lock_mode(displayModeMutex_);
         switch (displayMode) {
             case FoldDisplayMode::MAIN: {
-                //off full screen
+                ReportFoldStatusChangeBegin((int32_t)screenIdFull, (int32_t)screenIdMain);
+                #ifdef TP_FEATURE_ENABLE
+                RSInterfaces::GetInstance().SetTpFeatureConfig(tpType, mainTpChange.c_str());
+                #endif
+                // off full screen
                 RSInterfaces::GetInstance().SetScreenPowerStatus(screenIdFull, ScreenPowerStatus::POWER_STATUS_OFF);
-                //on main screen
+                screenProperty_ = ScreenSessionManager::GetInstance().GetPhyScreenProperty(screenIdMain);
+                screenSession->UpdatePropertyByFoldControl(screenProperty_.GetBounds(), screenProperty_.GetPhyBounds());
+                screenSession->PropertyChange(screenSession->GetScreenProperty(),
+                    ScreenPropertyChangeReason::FOLD_SCREEN_FOLDING);
+                // on main screen
                 RSInterfaces::GetInstance().SetScreenPowerStatus(screenIdMain, ScreenPowerStatus::POWER_STATUS_ON);
                 WLOGFI("ChangeScreenDisplayMode screenIdFull OFF and screenIdMain ON");
-
                 screenSession->SetDisplayNodeScreenId(screenIdMain);
-                screenProperty_ = ScreenSessionManager::GetInstance().GetPhyScreenProperty(screenIdMain);
-                screenSession->PropertyChange(screenProperty_, ScreenPropertyChangeReason::FOLD_SCREEN_EXPAND);
                 screenId_ = screenIdMain;
                 break;
             }
             case FoldDisplayMode::FULL: {
-                //off main screen
+                ReportFoldStatusChangeBegin((int32_t)screenIdMain, (int32_t)screenIdFull);
+                #ifdef TP_FEATURE_ENABLE
+                RSInterfaces::GetInstance().SetTpFeatureConfig(tpType, fullTpChange.c_str());
+                #endif
+                // off main screen
                 RSInterfaces::GetInstance().SetScreenPowerStatus(screenIdMain, ScreenPowerStatus::POWER_STATUS_OFF);
-                //on full screen
+                screenProperty_ = ScreenSessionManager::GetInstance().GetPhyScreenProperty(screenIdFull);
+                screenSession->UpdatePropertyByFoldControl(screenProperty_.GetBounds(), screenProperty_.GetPhyBounds());
+                screenSession->PropertyChange(screenSession->GetScreenProperty(),
+                    ScreenPropertyChangeReason::FOLD_SCREEN_EXPAND);
+                // on full screen
                 RSInterfaces::GetInstance().SetScreenPowerStatus(screenIdFull, ScreenPowerStatus::POWER_STATUS_ON);
                 WLOGFI("ChangeScreenDisplayMode screenIdMain OFF and screenIdFull ON");
-
                 screenSession->SetDisplayNodeScreenId(screenIdFull);
-                screenProperty_ = ScreenSessionManager::GetInstance().GetPhyScreenProperty(screenIdFull);
-                screenSession->PropertyChange(screenProperty_, ScreenPropertyChangeReason::FOLD_SCREEN_EXPAND);
                 screenId_ = screenIdFull;
                 break;
             }
@@ -78,6 +94,10 @@ void DualDisplayDevicePolicy::ChangeScreenDisplayMode(FoldDisplayMode displayMod
                 break;
             }
         }
+        if (currentDisplayMode_ != displayMode) {
+            WLOGFI("DualDisplayDevicePolicy NotifyDisplayModeChanged displayMode %{pubilc}d", displayMode);
+            ScreenSessionManager::GetInstance().NotifyDisplayModeChanged(displayMode);
+        }
         currentDisplayMode_ = displayMode;
     }
 }
@@ -86,6 +106,11 @@ FoldDisplayMode DualDisplayDevicePolicy::GetScreenDisplayMode()
 {
     std::lock_guard<std::recursive_mutex> lock_mode(displayModeMutex_);
     return currentDisplayMode_;
+}
+
+FoldStatus DualDisplayDevicePolicy::GetFoldStatus()
+{
+    return currentFoldStatus_;
 }
 
 void DualDisplayDevicePolicy::SendSensorResult(FoldStatus foldStatus)
@@ -110,8 +135,25 @@ void DualDisplayDevicePolicy::SendSensorResult(FoldStatus foldStatus)
         }
     }
 
+    currentFoldStatus_ = foldStatus;
+
     if (tempDisplayMode != currentDisplayMode_) {
         ChangeScreenDisplayMode(tempDisplayMode);
+    }
+}
+
+void DualDisplayDevicePolicy::ReportFoldStatusChangeBegin(int32_t offScreen, int32_t onScreen)
+{
+    WLOGI("ReportFoldStatusChangeBegin offScreen: %{public}d, onScreen: %{public}d", offScreen, onScreen);
+    int32_t ret = HiSysEventWrite(
+        OHOS::HiviewDFX::HiSysEvent::Domain::WINDOW_MANAGER,
+        "FOLD_STATE_CHANGE_BEGIN",
+        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+        "POWER_OFF_SCREEN", offScreen,
+        "POWER_ON_SCREEN", onScreen);
+
+    if (ret != 0) {
+        WLOGE("ReportFoldStatusChangeBegin Write HiSysEvent error, ret: %{public}d", ret);
     }
 }
 } // namespace OHOS::Rosen

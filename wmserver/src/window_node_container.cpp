@@ -294,7 +294,7 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
     WLOGI("AddWindowNode Id: %{public}u end", node->GetWindowId());
     RSInterfaces::GetInstance().SetAppWindowNum(GetAppWindowNum());
     // update private window count and notify dms private status changed
-    if (node->GetWindowProperty()->GetPrivacyMode() && !node->GetWindowProperty()->GetOnlySkipSnapshot()) {
+    if (node->GetWindowProperty()->GetPrivacyMode()) {
         UpdatePrivateStateAndNotify();
     }
     if (WindowHelper::IsMainWindow(node->GetWindowType())) {
@@ -443,7 +443,7 @@ WMError WindowNodeContainer::RemoveWindowNode(sptr<WindowNode>& node, bool fromA
     RSInterfaces::GetInstance().SetAppWindowNum(GetAppWindowNum());
 
     // update private window count and notify dms private status changed
-    if (node->GetWindowProperty()->GetPrivacyMode() && !node->GetWindowProperty()->GetOnlySkipSnapshot()) {
+    if (node->GetWindowProperty()->GetPrivacyMode()) {
         UpdatePrivateStateAndNotify();
     }
     if (WindowHelper::IsMainWindow(node->GetWindowType())) {
@@ -515,7 +515,7 @@ void WindowNodeContainer::UpdatePrivateWindowCount()
     TraverseContainer(windowNodes);
     uint32_t count = 0;
     for (const auto& node : windowNodes) {
-        if (node->GetWindowProperty()->GetPrivacyMode() && !node->GetWindowProperty()->GetOnlySkipSnapshot()) {
+        if (node->GetWindowProperty()->GetPrivacyMode()) {
             ++count;
         }
     }
@@ -759,6 +759,19 @@ void WindowNodeContainer::OpenInputMethodSyncTransaction()
     WLOGD("OpenInputMethodSyncTransaction");
 }
 
+void WindowNodeContainer::CloseInputMethodSyncTransaction()
+{
+    if (!isAnimateTransactionEnabled_) {
+        WLOGD("InputMethodSyncTransaction is not enabled while close");
+        return;
+    }
+    auto syncTransactionController = RSSyncTransactionController::GetInstance();
+    if (syncTransactionController) {
+        syncTransactionController->CloseSyncTransaction();
+    }
+    WLOGD("CloseInputMethodSyncTransaction");
+}
+
 bool WindowNodeContainer::IsWindowFollowParent(WindowType type)
 {
     auto isPhone = system::GetParameter("const.product.devicetype", "unknown") == "phone";
@@ -829,6 +842,7 @@ bool WindowNodeContainer::AddNodeOnRSTree(sptr<WindowNode>& node, DisplayId disp
         auto timingProtocol = animationConfig_.keyboardAnimationConfig_.durationIn_;
         OpenInputMethodSyncTransaction();
         RSNode::Animate(timingProtocol, animationConfig_.keyboardAnimationConfig_.curve_, updateRSTreeFunc);
+        CloseInputMethodSyncTransaction();
     } else {
         WLOGFD("add node without animation");
         updateRSTreeFunc();
@@ -899,6 +913,7 @@ bool WindowNodeContainer::RemoveNodeFromRSTree(sptr<WindowNode>& node, DisplayId
         OpenInputMethodSyncTransaction();
         auto timingProtocol = animationConfig_.keyboardAnimationConfig_.durationOut_;
         RSNode::Animate(timingProtocol, animationConfig_.keyboardAnimationConfig_.curve_, updateRSTreeFunc);
+        CloseInputMethodSyncTransaction();
     } else {
         updateRSTreeFunc();
     }
@@ -1948,8 +1963,7 @@ bool WindowNodeContainer::HasPrivateWindow()
     std::vector<sptr<WindowNode>> windowNodes;
     TraverseContainer(windowNodes);
     for (const auto& node : windowNodes) {
-        if (node->isVisible_ && node->GetWindowProperty()->GetPrivacyMode() &&
-        !node->GetWindowProperty()->GetOnlySkipSnapshot()) {
+        if (node->isVisible_ && node->GetWindowProperty()->GetPrivacyMode()) {
             WLOGI("window name %{public}s", node->GetWindowName().c_str());
             return true;
         }

@@ -82,7 +82,9 @@ bool WindowSceneSessionImpl::IsValidSystemWindowType(const WindowType& type)
         type == WindowType::WINDOW_TYPE_VOICE_INTERACTION || type == WindowType::WINDOW_TYPE_POINTER ||
         type == WindowType::WINDOW_TYPE_TOAST || type == WindowType::WINDOW_TYPE_DRAGGING_EFFECT ||
         type == WindowType::WINDOW_TYPE_SEARCHING_BAR || type == WindowType::WINDOW_TYPE_PANEL ||
-        type == WindowType::WINDOW_TYPE_VOLUME_OVERLAY || type == WindowType::WINDOW_TYPE_INPUT_METHOD_STATUS_BAR)) {
+        type == WindowType::WINDOW_TYPE_VOLUME_OVERLAY || type == WindowType::WINDOW_TYPE_INPUT_METHOD_STATUS_BAR ||
+        type == WindowType::WINDOW_TYPE_SYSTEM_TOAST || type == WindowType::WINDOW_TYPE_SYSTEM_FLOAT ||
+        type == WindowType::WINDOW_TYPE_PIP)) {
         WLOGFW("Invalid type: %{public}u", GetType());
         return false;
     }
@@ -139,13 +141,14 @@ WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
         }
         // set parent persistentId
         property_->SetParentPersistentId(parentSession->GetPersistentId());
+        windowSystemConfig_ = parentSession->GetSystemSessionConfig();
         // creat sub session by parent session
         parentSession->GetHostSession()->CreateAndConnectSpecificSession(iSessionStage, eventChannel, surfaceNode_,
             property_, persistentId, session, token);
         // update subWindowSessionMap_
         subWindowSessionMap_[parentSession->GetPersistentId()].push_back(this);
     } else { // system window
-        if (WindowHelper::IsAppFloatingWindow(type)) {
+        if (WindowHelper::IsAppFloatingWindow(type) || WindowHelper::IsPipWindow(type)) {
             property_->SetParentPersistentId(GetFloatingWindowParentId());
             WLOGFI("property set parentPersistentId: %{public}d", property_->GetParentPersistentId());
             auto mainWindow = FindMainWindowWithContext();
@@ -169,6 +172,23 @@ WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
     WLOGFI("CreateAndConnectSpecificSession [name:%{public}s, id:%{public}d, type: %{public}u]",
         property_->GetWindowName().c_str(), property_->GetPersistentId(), GetType());
     return WMError::WM_OK;
+}
+
+void WindowSceneSessionImpl::UpdateWindowState()
+{
+    windowSessionMap_.insert(std::make_pair(property_->GetWindowName(),
+        std::pair<uint64_t, sptr<WindowSessionImpl>>(property_->GetPersistentId(), this)));
+    state_ = WindowState::STATE_CREATED;
+    requestState_ = WindowState::STATE_CREATED;
+    if (WindowHelper::IsMainWindow(GetType())) {
+        maxFloatingWindowSize_ = windowSystemConfig_.maxFloatingWindowSize_;
+        SetWindowMode(windowSystemConfig_.defaultWindowMode_);
+        NotifyWindowNeedAvoid(
+            (property_->GetWindowFlags()) & (static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID)));
+        GetConfigurationFromAbilityInfo();
+    } else {
+        UpdateWindowSizeLimits();
+    }
 }
 
 WMError WindowSceneSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Context>& context,
@@ -211,17 +231,7 @@ WMError WindowSceneSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Con
         ret = CreateAndConnectSpecificSession();
     }
     if (ret == WMError::WM_OK) {
-        windowSessionMap_.insert(std::make_pair(property_->GetWindowName(),
-            std::pair<uint64_t, sptr<WindowSessionImpl>>(property_->GetPersistentId(), this)));
-        state_ = WindowState::STATE_CREATED;
-        requestState_ = WindowState::STATE_CREATED;
-        if (WindowHelper::IsMainWindow(GetType())) {
-            maxFloatingWindowSize_ = windowSystemConfig_.maxFloatingWindowSize_;
-            SetWindowMode(windowSystemConfig_.defaultWindowMode_);
-            NotifyWindowNeedAvoid(
-                (property_->GetWindowFlags()) & (static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID)));
-            GetConfigurationFromAbilityInfo();
-        }
+        UpdateWindowState();
     }
     WLOGFD("Window Create [name:%{public}s, id:%{public}d], state:%{pubic}u, windowmode:%{public}u",
         property_->GetWindowName().c_str(), property_->GetPersistentId(), state_, GetMode());
@@ -274,7 +284,7 @@ void WindowSceneSessionImpl::GetConfigurationFromAbilityInfo()
 uint32_t WindowSceneSessionImpl::UpdateConfigVal(uint32_t minVal, uint32_t maxVal, uint32_t configVal,
                                                  uint32_t defaultVal, float vpr)
 {
-    bool validConfig = minVal < configVal && configVal < maxVal;
+    bool validConfig = minVal < (configVal * vpr) && (configVal * vpr) < maxVal;
     return validConfig ? static_cast<uint32_t>(configVal * vpr) : static_cast<uint32_t>(defaultVal * vpr);
 }
 
@@ -405,7 +415,7 @@ void WindowSceneSessionImpl::UpdateSubWindowStateAndNotify(int32_t parentPersist
 
 WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
 {
-    WLOGFI("Window Show [name:%{public}s, id:%{public}d, type:%{public}u], reason:%{public}u,"
+    WLOGFD("Window Show [name:%{public}s, id:%{public}d, type:%{public}u], reason:%{public}u,"
         " state:%{public}u, requestState:%{public}u", property_->GetWindowName().c_str(),
         property_->GetPersistentId(), GetType(), reason, state_, requestState_);
     if (IsWindowSessionInvalid()) {
@@ -445,7 +455,7 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
 
 WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool isFromInnerkits)
 {
-    WLOGFI("id:%{public}d Hide, reason:%{public}u, state:%{public}u, requestState:%{public}u",
+    WLOGFD("id:%{public}d Hide, reason:%{public}u, state:%{public}u, requestState:%{public}u",
         property_->GetPersistentId(), reason, state_, requestState_);
     if (IsWindowSessionInvalid()) {
         WLOGFE("session is invalid");
@@ -472,15 +482,14 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
     }
 
     // delete after replace WSError with WMError
-    if (!WindowHelper::IsMainWindow(GetType())) {
-        // main window no need to notify host, since host knows hide first
-        // need to SetActive(false) for host session before background
-        res = static_cast<WMError>(SetActive(false));
-        if (res != WMError::WM_OK) {
-            return res;
-        }
-        res = static_cast<WMError>(hostSession_->Background());
+    // main window no need to notify host, since host knows hide first
+    // main window notify host temporarily, since host background may failed
+    // need to SetActive(false) for host session before background
+    res = static_cast<WMError>(SetActive(false));
+    if (res != WMError::WM_OK) {
+        return res;
     }
+    res = static_cast<WMError>(hostSession_->Background());
 
     if (res == WMError::WM_OK) {
         // update sub window state if this is main window
@@ -511,6 +520,7 @@ void WindowSceneSessionImpl::SetDefaultProperty()
     switch (property_->GetWindowType()) {
         case WindowType::WINDOW_TYPE_TOAST:
         case WindowType::WINDOW_TYPE_FLOAT:
+        case WindowType::WINDOW_TYPE_SYSTEM_FLOAT:
         case WindowType::WINDOW_TYPE_FLOAT_CAMERA:
         case WindowType::WINDOW_TYPE_VOICE_INTERACTION:
         case WindowType::WINDOW_TYPE_SEARCHING_BAR:
@@ -524,6 +534,12 @@ void WindowSceneSessionImpl::SetDefaultProperty()
         case WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT:
         case WindowType::WINDOW_TYPE_INPUT_METHOD_STATUS_BAR: {
             property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+            property_->SetFocusable(false);
+            break;
+        }
+        case WindowType::WINDOW_TYPE_SYSTEM_TOAST: {
+            property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+            property_->SetTouchable(false);
             property_->SetFocusable(false);
             break;
         }
@@ -602,15 +618,16 @@ void WindowSceneSessionImpl::DestroySubWindow()
     }
 }
 
-WMError WindowSceneSessionImpl::Destroy(bool needClearListener)
+WMError WindowSceneSessionImpl::Destroy(bool needNotifyServer, bool needClearListener)
 {
-    WLOGFI("Id:%{public}d Destroy, state_:%{public}u", property_->GetPersistentId(), state_);
+    WLOGFI("Id: %{public}d Destroy, state_:%{public}u, needNotifyServer: %{public}d, needClearListener: %{public}d",
+        property_->GetPersistentId(), state_, needNotifyServer, needClearListener);
     if (IsWindowSessionInvalid()) {
         WLOGFE("session is invalid");
         return WMError::WM_OK;
     }
     WSError ret = WSError::WS_OK;
-    if (!WindowHelper::IsMainWindow(GetType())) {
+    if (!WindowHelper::IsMainWindow(GetType()) && needNotifyServer) {
         if (WindowHelper::IsSystemWindow(GetType())) {
             // main window no need to notify host, since host knows hide first
             SessionManager::GetInstance().DestroyAndDisconnectSpecificSession(property_->GetPersistentId());
@@ -636,7 +653,7 @@ WMError WindowSceneSessionImpl::Destroy(bool needClearListener)
 
     DestroySubWindow();
     windowSessionMap_.erase(property_->GetWindowName());
-    DelayedSingleton<ANRHandler>::GetInstance()->ClearDestroyedPersistentId(property_->GetPersistentId());
+    DelayedSingleton<ANRHandler>::GetInstance()->OnWindowDestroyed(property_->GetPersistentId());
     hostSession_ = nullptr;
     return res;
 }
@@ -660,6 +677,7 @@ WMError WindowSceneSessionImpl::MoveTo(int32_t x, int32_t y)
         newRect.width_, newRect.height_);
 
     property_->SetRequestRect(newRect);
+
     WSRect wsRect = { newRect.posX_, newRect.posY_, newRect.width_, newRect.height_ };
     auto ret = hostSession_->UpdateSessionRect(wsRect, SizeChangeReason::MOVE);
     return static_cast<WMError>(ret);
@@ -670,7 +688,7 @@ void WindowSceneSessionImpl::LimitCameraFloatWindowMininumSize(uint32_t& width, 
     // Float camera window has a special limit:
     // if display sw <= 600dp, portrait: min width = display sw * 30%, landscape: min width = sw * 50%
     // if display sw > 600dp, portrait: min width = display sw * 12%, landscape: min width = sw * 30%
-    if (property_->GetWindowType() != WindowType::WINDOW_TYPE_FLOAT_CAMERA) {
+    if (GetType() != WindowType::WINDOW_TYPE_FLOAT_CAMERA) {
         return;
     }
 
@@ -768,6 +786,7 @@ WMError WindowSceneSessionImpl::Resize(uint32_t width, uint32_t height)
         newRect.width_, newRect.height_);
 
     property_->SetRequestRect(newRect);
+
     WSRect wsRect = { newRect.posX_, newRect.posY_, newRect.width_, newRect.height_ };
     auto ret = hostSession_->UpdateSessionRect(wsRect, SizeChangeReason::RESIZE);
     return static_cast<WMError>(ret);
@@ -825,9 +844,19 @@ WmErrorCode WindowSceneSessionImpl::RaiseToAppTop()
 WmErrorCode WindowSceneSessionImpl::RaiseAboveTarget(int32_t subWindowId)
 {
     auto parentId = GetParentId();
+    auto currentWindowId = GetWindowId();
+
     if (parentId == INVALID_SESSION_ID) {
         WLOGFE("Only the children of the main window can be raised!");
         return WmErrorCode::WM_ERROR_INVALID_PARENT;
+    }
+
+    auto subWindows = Window::GetSubWindow(parentId);
+    auto targetWindow = find_if(subWindows.begin(), subWindows.end(), [subWindowId](sptr<Window>& window) {
+        return static_cast<uint32_t>(subWindowId) == window->GetWindowId();
+    });
+    if (targetWindow == subWindows.end()) {
+        return WmErrorCode::WM_ERROR_INVALID_PARAM;
     }
 
     if (!WindowHelper::IsSubWindow(GetType())) {
@@ -835,21 +864,25 @@ WmErrorCode WindowSceneSessionImpl::RaiseAboveTarget(int32_t subWindowId)
         return WmErrorCode::WM_ERROR_INVALID_CALLING;
     }
 
-    if (state_ != WindowState::STATE_SHOWN) {
+    if ((state_ != WindowState::STATE_SHOWN) ||
+        ((*targetWindow)->GetWindowState() != WindowState::STATE_SHOWN)) {
         WLOGFE("The sub window must be shown!");
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
     if (!hostSession_) {
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
-    const WSError& ret = hostSession_->RaiseAboveTarget(subWindowId);
-    return static_cast<WmErrorCode>(ret);
+    if (currentWindowId == static_cast<uint32_t>(subWindowId)) {
+        return WmErrorCode::WM_OK;
+    }
+    WSError ret = hostSession_->RaiseAboveTarget(subWindowId);
+    return WM_JS_TO_ERROR_CODE_MAP.at(static_cast<WMError>(ret));
 }
 
 WMError WindowSceneSessionImpl::GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea)
 {
     uint32_t windowId = GetWindowId();
-    WLOGFI("GetAvoidAreaByType windowId:%{public}u type:%{public}u", windowId, static_cast<uint32_t>(type));
+    WLOGFD("GetAvoidAreaByType windowId:%{public}u type:%{public}u", windowId, static_cast<uint32_t>(type));
     WindowMode mode = GetMode();
     if (type != AvoidAreaType::TYPE_KEYBOARD &&
         mode != WindowMode::WINDOW_MODE_FULLSCREEN &&
@@ -953,7 +986,7 @@ bool WindowSceneSessionImpl::IsLayoutFullScreen() const
 
 SystemBarProperty WindowSceneSessionImpl::GetSystemBarPropertyByType(WindowType type) const
 {
-    WLOGFI("GetSystemBarPropertyByType windowId:%{public}u type:%{public}u",
+    WLOGFD("GetSystemBarPropertyByType windowId:%{public}u type:%{public}u",
         GetWindowId(), static_cast<uint32_t>(type));
     if (property_ == nullptr) {
         return SystemBarProperty();
@@ -1038,6 +1071,11 @@ bool WindowSceneSessionImpl::IsFullScreen() const
 
 bool WindowSceneSessionImpl::IsDecorEnable() const
 {
+    if (GetMode() == WindowMode::WINDOW_MODE_FLOATING
+        && system::GetParameter("const.product.devicetype", "unknown") == "phone") {
+        /* FloatingWindow skip for Phone*/
+        return false;
+    }
     bool enable = WindowHelper::IsMainWindow(GetType()) &&
         windowSystemConfig_.isSystemDecorEnable_ &&
         WindowHelper::IsWindowModeSupported(windowSystemConfig_.decorModeSupportInfo_, GetMode());
@@ -1054,6 +1092,9 @@ WMError WindowSceneSessionImpl::Minimize()
     }
     if (WindowHelper::IsMainWindow(GetType()) && hostSession_) {
         hostSession_->OnSessionEvent(SessionEvent::EVENT_MINIMIZE);
+    } else {
+        WLOGFE("This window state is abnormal.");
+        return WMError::WM_DO_NOTHING;
     }
     return WMError::WM_OK;
 }
@@ -1185,7 +1226,18 @@ WMError WindowSceneSessionImpl::DisableAppWindowDecor()
 WSError WindowSceneSessionImpl::HandleBackEvent()
 {
     bool isConsumed = false;
-    if (uiContent_) {
+    std::shared_ptr<IInputEventConsumer> inputEventConsumer;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        inputEventConsumer = inputEventConsumer_;
+    }
+    if (inputEventConsumer != nullptr) {
+        WLOGFD("Transfer back event to inputEventConsumer");
+        std::shared_ptr<MMI::KeyEvent> backKeyEvent = MMI::KeyEvent::Create();
+        backKeyEvent->SetKeyCode(MMI::KeyEvent::KEYCODE_BACK);
+        backKeyEvent->SetKeyAction(MMI::KeyEvent::KEY_ACTION_UP);
+        isConsumed = inputEventConsumer->OnInputEvent(backKeyEvent);
+    } else if (uiContent_) {
         WLOGFD("Transfer back event to uiContent");
         isConsumed = uiContent_->ProcessBackPressed();
     } else {
@@ -1255,13 +1307,15 @@ MaximizeMode WindowSceneSessionImpl::GetGlobalMaximizeMode() const
 {
     WLOGFD("WindowSceneSessionImpl::GetGlobalMaximizeMode");
     MaximizeMode mode = MaximizeMode::MODE_RECOVER;
-    hostSession_->GetGlobalMaximizeMode(mode);
+    if (hostSession_) {
+        hostSession_->GetGlobalMaximizeMode(mode);
+    }
     return mode;
 }
 
 WMError WindowSceneSessionImpl::SetWindowMode(WindowMode mode)
 {
-    WLOGFI("SetWindowMode %{public}u mode %{public}u", GetWindowId(), static_cast<uint32_t>(mode));
+    WLOGFD("SetWindowMode %{public}u mode %{public}u", GetWindowId(), static_cast<uint32_t>(mode));
     if (IsWindowSessionInvalid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
@@ -1360,26 +1414,6 @@ uint32_t WindowSceneSessionImpl::GetWindowFlags() const
     return property_->GetWindowFlags();
 }
 
-static float ConvertRadiusToSigma(float radius)
-{
-    return radius > 0.0f ? 0.57735f * radius + SK_ScalarHalf : 0.0f; // 0.57735f is blur sigma scale
-}
-
-WMError WindowSceneSessionImpl::CheckParmAndPermission()
-{
-    if (surfaceNode_ == nullptr) {
-        WLOGFE("RSSurface node is null");
-        return WMError::WM_ERROR_NULLPTR;
-    }
-
-    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        WLOGFE("Check failed, permission denied");
-        return WMError::WM_ERROR_NOT_SYSTEM_APP;
-    }
-
-    return WMError::WM_OK;
-}
-
 void WindowSceneSessionImpl::UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
     if (uiContent_ != nullptr) {
@@ -1392,7 +1426,6 @@ void WindowSceneSessionImpl::UpdateConfiguration(const std::shared_ptr<AppExecFw
     for (auto& subWindowSession : subWindowSessionMap_.at(GetPersistentId())) {
         subWindowSession->UpdateConfiguration(configuration);
     }
-
 }
 
 void WindowSceneSessionImpl::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
@@ -1438,6 +1471,33 @@ sptr<Window> WindowSceneSessionImpl::GetTopWindowWithId(uint32_t mainWinId)
     }
     WLOGFE("Cannot find Window!");
     return nullptr;
+}
+
+void WindowSceneSessionImpl::SetNeedDefaultAnimation(bool needDefaultAnimation)
+{
+    enableDefaultAnimation_= needDefaultAnimation;
+    hostSession_->UpdateWindowAnimationFlag(needDefaultAnimation);
+    return;
+}
+
+static float ConvertRadiusToSigma(float radius)
+{
+    return radius > 0.0f ? 0.57735f * radius + SK_ScalarHalf : 0.0f; // 0.57735f is blur sigma scale
+}
+
+WMError WindowSceneSessionImpl::CheckParmAndPermission()
+{
+    if (surfaceNode_ == nullptr) {
+        WLOGFE("RSSurface node is null");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
+        WLOGFE("Check failed, permission denied");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
+
+    return WMError::WM_OK;
 }
 
 WMError WindowSceneSessionImpl::SetCornerRadius(float cornerRadius)
@@ -1581,7 +1641,6 @@ WMError WindowSceneSessionImpl::SetBackdropBlurStyle(WindowBlurStyle blurStyle)
     return WMError::WM_OK;
 }
 
-
 WMError WindowSceneSessionImpl::SetPrivacyMode(bool isPrivacyMode)
 {
     WLOGFD("id : %{public}u, SetPrivacyMode, %{public}u", GetWindowId(), isPrivacyMode);
@@ -1607,7 +1666,7 @@ WMError WindowSceneSessionImpl::SetSnapshotSkip(bool isSkip)
         WLOGFE("set snapshot skip permission denied!");
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
-    surfaceNode_->SetSecurityLayer(isSkip || property_->GetSystemPrivacyMode());
+    surfaceNode_->SetSkipLayer(isSkip || property_->GetSystemPrivacyMode());
     RSTransaction::FlushImplicitTransaction();
     return WMError::WM_OK;
 }
@@ -1643,6 +1702,7 @@ WMError WindowSceneSessionImpl::NotifyMemoryLevel(int32_t level)
     WLOGFD("WindowSceneSessionImpl::NotifyMemoryLevel End!");
     return WMError::WM_OK;
 }
+
 WMError WindowSceneSessionImpl::SetTurnScreenOn(bool turnScreenOn)
 {
     if (IsWindowSessionInvalid()) {
@@ -1670,13 +1730,6 @@ WMError WindowSceneSessionImpl::SetKeepScreenOn(bool keepScreenOn)
 bool WindowSceneSessionImpl::IsKeepScreenOn() const
 {
     return property_->IsKeepScreenOn();
-}
-
-void WindowSceneSessionImpl::SetNeedDefaultAnimation(bool needDefaultAnimation)
-{
-    enableDefaultAnimation_= needDefaultAnimation;
-    hostSession_->UpdateWindowAnimationFlag(needDefaultAnimation);
-    return;
 }
 
 WMError WindowSceneSessionImpl::SetTransform(const Transform& trans)
@@ -1773,7 +1826,7 @@ WMError WindowSceneSessionImpl::UpdateSurfaceNodeAfterCustomAnimation(bool isAdd
 void WindowSceneSessionImpl::AdjustWindowAnimationFlag(bool withAnimation)
 {
     if (IsWindowSessionInvalid()) {
-        WLOGE("AdjustWindowAnimationFlag failed since session ivalid!");
+        WLOGE("AdjustWindowAnimationFlag failed since session invalid!");
         return;
     }
     // when show/hide with animation
@@ -1890,6 +1943,17 @@ WSError WindowSceneSessionImpl::UpdateWindowMode(WindowMode mode)
         return WSError::WS_ERROR_INVALID_WINDOW_MODE_OR_SIZE;
     }
     WMError ret = UpdateWindowModeImmediately(mode);
+
+    if (mode == WindowMode::WINDOW_MODE_FULLSCREEN
+        && system::GetParameter("const.product.devicetype", "unknown") == "pc") {
+        SystemBarProperty statusProperty = GetSystemBarPropertyByType(WindowType::WINDOW_TYPE_STATUS_BAR);
+        statusProperty.enable_ = false;
+        ret = SetSystemBarProperty(WindowType::WINDOW_TYPE_STATUS_BAR, statusProperty);
+        if (ret != WMError::WM_OK) {
+            WLOGFE("SetSystemBarProperty errCode:%{public}d winId:%{public}u",
+                static_cast<int32_t>(ret), GetWindowId());
+        }
+    }
     return static_cast<WSError>(ret);
 }
 
@@ -1910,8 +1974,22 @@ WMError WindowSceneSessionImpl::UpdateWindowModeImmediately(WindowMode mode)
         property_->SetWindowMode(mode);
         UpdateTitleButtonVisibility();
         UpdateDecorEnable(true);
+        if (mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY || mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+            property_->SetMaximizeMode(MaximizeMode::MODE_RECOVER);
+        }
     }
     return WMError::WM_OK;
+}
+
+WSError WindowSceneSessionImpl::UpdateMaximizeMode(MaximizeMode mode)
+{
+    WLOGFI("UpdateMaximizeMode %{public}u mode %{public}u", GetWindowId(), static_cast<uint32_t>(mode));
+    if (uiContent_ == nullptr) {
+        WLOGFE("UpdateMaximizeMode uiContent_ is null");
+        return WSError::WS_ERROR_INVALID_PARAM;
+    }
+    uiContent_->UpdateMaximizeMode(mode);
+    return WSError::WS_OK;
 }
 } // namespace Rosen
 } // namespace OHOS

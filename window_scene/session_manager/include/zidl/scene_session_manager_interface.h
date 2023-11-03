@@ -30,6 +30,7 @@
 #include "session_info.h"
 #include "mission_listener_interface.h"
 #include "mission_info.h"
+#include "mission_snapshot.h"
 #include "iability_manager_collaborator.h"
 
 namespace OHOS::Media {
@@ -40,6 +41,7 @@ namespace OHOS::Rosen {
 class RSSurfaceNode;
 using ISessionListener = AAFwk::IMissionListener;
 using SessionInfoBean = AAFwk::MissionInfo;
+using SessionSnapshot = AAFwk::MissionSnapshot;
 class ISceneSessionManager : public IWindowManager {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.ISceneSessionManager");
@@ -53,12 +55,12 @@ public:
         TRANS_ID_BIND_DIALOG_TARGET,
         TRANS_ID_GET_FOCUS_SESSION_INFO,
         TRANS_ID_SET_SESSION_GRAVITY,
-        TRANS_ID_SET_GESTURE_NAVIGATION_ENABLED,
         TRANS_ID_SET_SESSION_LABEL,
         TRANS_ID_SET_SESSION_ICON,
         TRANS_ID_IS_VALID_SESSION_IDS,
         TRANS_ID_REGISTER_SESSION_CHANGE_LISTENER,
         TRANS_ID_UNREGISTER_SESSION_CHANGE_LISTENER,
+        TRANS_ID_SET_GESTURE_NAVIGATION_ENABLED,
         TRANS_ID_GET_WINDOW_INFO,
         TRANS_ID_PENDING_SESSION_TO_FOREGROUND,
         TRANS_ID_PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR,
@@ -84,6 +86,7 @@ public:
         TRANS_ID_MOVE_MISSIONS_TO_BACKGROUND,
         TRANS_ID_REGISTER_COLLABORATOR,
         TRANS_ID_UNREGISTER_COLLABORATOR,
+        TRANS_ID_UPDATE_TOUCHOUTSIDE_LISTENER,
     };
 
     virtual WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
@@ -91,7 +94,7 @@ public:
         sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session,
         sptr<IRemoteObject> token = nullptr) = 0;
     virtual WSError DestroyAndDisconnectSpecificSession(const int32_t& persistentId) = 0;
-    virtual WSError UpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action) = 0;
+    virtual WMError UpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action) = 0;
     virtual WSError BindDialogTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken) = 0;
     virtual WSError SetSessionGravity(int32_t persistentId, SessionGravity gravity, uint32_t percent) = 0;
     virtual WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) = 0;
@@ -118,7 +121,7 @@ public:
     virtual WSError TerminateSessionNew(const sptr<AAFwk::SessionInfo> info, bool needStartCaller) = 0;
     virtual WSError GetSessionDumpInfo(const std::vector<std::string>& params, std::string& info) = 0;
     virtual WSError GetSessionSnapshot(const std::string& deviceId, int32_t persistentId,
-                                       std::shared_ptr<Media::PixelMap> &snapshot, bool isLowResolution) = 0;
+                                       SessionSnapshot& snapshot, bool isLowResolution) = 0;
     virtual WSError ClearSession(int32_t persistentId) = 0;
     virtual WSError ClearAllSessions() = 0;
     virtual WSError LockSession(int32_t sessionId) = 0;
@@ -127,7 +130,8 @@ public:
     virtual WSError MoveSessionsToBackground(const std::vector<std::int32_t>& sessionIds,
         std::vector<std::int32_t>& result) = 0;
 
-    virtual WSError RegisterIAbilityManagerCollaborator(int32_t type, const sptr<AAFwk::IAbilityManagerCollaborator> &impl) = 0;
+    virtual WSError RegisterIAbilityManagerCollaborator(int32_t type,
+        const sptr<AAFwk::IAbilityManagerCollaborator> &impl) = 0;
     virtual WSError UnregisterIAbilityManagerCollaborator(int32_t type) = 0;
     // interfaces of IWindowManager
     WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,

@@ -64,12 +64,13 @@ public:
     void SetHideNonSystemFloatingWindows(bool hide);
     void SetForceHide(bool hide);
     void SetRaiseEnabled(bool raiseEnabled);
+    void SetSystemCalling(bool isSystemCalling);
     void SetTurnScreenOn(bool turnScreenOn);
     void SetKeepScreenOn(bool keepScreenOn);
-    void SetBrightness(float brightness);
     void SetRequestedOrientation(Orientation orientation);
     void SetPrivacyMode(bool isPrivate);
     void SetSystemPrivacyMode(bool isSystemPrivate);
+    void SetBrightness(float brightness);
     void SetDisplayId(uint64_t displayId);
     void SetWindowType(WindowType type);
     void SetParentId(int32_t parentId);
@@ -102,12 +103,13 @@ public:
     bool GetHideNonSystemFloatingWindows() const;
     bool GetForceHide() const;
     bool GetRaiseEnabled() const;
+    bool GetSystemCalling() const;
     bool IsTurnScreenOn() const;
     bool IsKeepScreenOn() const;
-    float GetBrightness() const;
     Orientation GetRequestedOrientation() const;
     bool GetPrivacyMode() const;
     bool GetSystemPrivacyMode() const;
+    float GetBrightness() const;
     int32_t GetParentId() const;
     uint32_t GetWindowFlags() const;
     uint64_t GetDisplayId() const;
@@ -146,13 +148,14 @@ private:
     bool touchable_ { true };
     bool dragEnabled_ = { true };
     bool raiseEnabled_ = { true };
+    bool isSystemCalling_ = { false };
     bool tokenState_ { false };
     bool turnScreenOn_ = false;
     bool keepScreenOn_ = false;
-    float brightness_ = UNDEFINED_BRIGHTNESS;
     Orientation requestedOrientation_ = Orientation::UNSPECIFIED;
     bool isPrivacyMode_ { false };
     bool isSystemPrivacyMode_ { false };
+    float brightness_ = UNDEFINED_BRIGHTNESS;
     uint64_t displayId_ = 0;
     int32_t parentId_ = INVALID_SESSION_ID; // parentId of sceneSession, which is low 32 bite of parentPersistentId_
     uint32_t flags_ = 0;

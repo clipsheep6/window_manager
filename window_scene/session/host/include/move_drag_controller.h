@@ -20,6 +20,8 @@
 #include <struct_multimodal.h>
 
 #include "common/include/window_session_property.h"
+#include "property/rs_properties_def.h"
+#include "window.h"
 
 namespace OHOS::MMI {
 class PointerEvent;
@@ -28,6 +30,10 @@ class PointerEvent;
 namespace OHOS::Rosen {
 
 using MoveDragCallback = std::function<void(const SizeChangeReason&)>;
+
+using NotifyWindowDragHotAreaFunc = std::function<void(int32_t type, const SizeChangeReason& reason)>;
+
+const int32_t WINDOW_HOT_AREA_TYPE_UNDEFINED = -1;
 
 enum class AreaType : uint32_t {
     UNDEFINED = 0,
@@ -60,6 +66,9 @@ public:
         const sptr<WindowSessionProperty> property, const SystemSessionConfig& sysConfig);
     void HandleMouseStyle(const std::shared_ptr<MMI::PointerEvent>& pointerEvent, const WSRect& winRect);
     void ClacFirstMoveTargetRect(const WSRect& windowRect);
+    void SetWindowDragHotAreaFunc(const NotifyWindowDragHotAreaFunc& func);
+    void UpdateGravityWhenDrag(const std::shared_ptr<MMI::PointerEvent>& pointerEvent, 
+        const std::shared_ptr<RSSurfaceNode>& surfaceNode);
 
 private:
     struct MoveDragProperty {
@@ -122,6 +131,7 @@ private:
     bool isStartMove_ = false;
     bool isStartDrag_ = false;
     bool isDecorEnable_ = true;
+    bool hasPointDown_ = false;
     float aspectRatio_ = 0.0f;
     float vpr_ = 1.0f;
     int32_t minTranX_ = INT32_MIN;
@@ -154,6 +164,22 @@ private:
     uint32_t mouseStyleID_ = 0;
     DragType dragType_ = DragType::DRAG_UNDEFINED;
     MoveTempProperty moveTempProperty_;
+
+    void UpdateHotAreaType(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
+    void ProcessWindowDragHotAreaFunc(bool flag, const SizeChangeReason& reason);
+    int32_t windowDragHotAreaType_ = WINDOW_HOT_AREA_TYPE_UNDEFINED;
+    NotifyWindowDragHotAreaFunc windowDragHotAreaFunc_;
+
+    const std::map<AreaType, Gravity> GRAVITY_MAP = {
+        {AreaType::LEFT,            Gravity::RIGHT},
+        {AreaType::TOP,             Gravity::BOTTOM},
+        {AreaType::RIGHT,           Gravity::LEFT},
+        {AreaType::BOTTOM,          Gravity::TOP},
+        {AreaType::LEFT_TOP,        Gravity::BOTTOM_RIGHT},
+        {AreaType::RIGHT_TOP,       Gravity::BOTTOM_LEFT},
+        {AreaType::RIGHT_BOTTOM,    Gravity::TOP_LEFT},
+        {AreaType::LEFT_BOTTOM,     Gravity::TOP_RIGHT}
+    };
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_MOVE_DRAG_CONTROLLER_H

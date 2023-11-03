@@ -195,6 +195,14 @@ public:
     void AfterInactive()  override
     {
     }
+
+    void AfterResumed() override
+    {
+    }
+
+    void AfterPaused()  override
+    {
+    }
 };
 
 template<class T>

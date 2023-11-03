@@ -16,6 +16,8 @@
 #include <gtest/gtest.h>
 #include "display_manager_adapter.h"
 #include "display_manager_proxy.h"
+#include "window_scene.h"
+#include "scene_board_judgement.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -147,7 +149,11 @@ HWTEST_F(DisplayManagerAdapterTest, SetFreeze, Function | SmallTest | Level2)
 {
     std::vector<DisplayId> displayIds;
     bool ret = SingletonContainer::Get<DisplayManagerAdapter>().SetFreeze(displayIds, false);
-    ASSERT_TRUE(ret);
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_TRUE(ret);
+    } else {
+        ASSERT_FALSE(ret);
+    }
 }
 
 /**
@@ -223,6 +229,37 @@ HWTEST_F(DisplayManagerAdapterTest, Clear01, Function | SmallTest | Level2)
     SingletonContainer::Get<ScreenManagerAdapter>().Clear();
     ASSERT_FALSE(SingletonContainer::Get<ScreenManagerAdapter>().isProxyValid_);
 }
+
+/**
+ * @tc.name: DisableDisplaySnapshot
+ * @tc.desc: DisableDisplaySnapshot test
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerAdapterTest, DisableDisplaySnapshot, Function | SmallTest | Level2)
+{
+    DMError ret = SingletonContainer::Get<DisplayManagerAdapter>().DisableDisplaySnapshot(false);
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(DMError::DM_OK, ret);
+    } else {
+        ASSERT_NE(DMError::DM_OK, ret);
+    }
+}
+
+/**
+ * @tc.name: DisableMirror
+ * @tc.desc: DisableMirror test
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerAdapterTest, DisableMirror, Function | SmallTest | Level2)
+{
+    DMError ret = SingletonContainer::Get<ScreenManagerAdapter>().DisableMirror(false);
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(DMError::DM_OK, ret);
+    } else {
+        ASSERT_NE(DMError::DM_OK, ret);
+    }
+}
+
 }
 }
 }

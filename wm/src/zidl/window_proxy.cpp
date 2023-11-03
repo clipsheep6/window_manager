@@ -61,7 +61,6 @@ WMError WindowProxy::UpdateWindowRect(const struct Rect& rect, bool decoStatus, 
             WLOGFE("Write transaction sync Id failed");
             return WMError::WM_ERROR_IPC_FAILED;
         }
-        rsTransaction->MarshallTransactionSyncController(data);
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowMessage::TRANS_ID_UPDATE_WINDOW_RECT),
@@ -257,7 +256,6 @@ WMError WindowProxy::UpdateOccupiedAreaChangeInfo(const sptr<OccupiedAreaChangeI
             WLOGFE("Write transaction sync Id failed");
             return WMError::WM_ERROR_IPC_FAILED;
         }
-        rsTransaction->MarshallTransactionSyncController(data);
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowMessage::TRANS_ID_UPDATE_OCCUPIED_AREA),
@@ -299,7 +297,6 @@ WMError WindowProxy::UpdateOccupiedAreaAndRect(const sptr<OccupiedAreaChangeInfo
             WLOGFE("Write transaction sync Id failed");
             return WMError::WM_ERROR_IPC_FAILED;
         }
-        rsTransaction->MarshallTransactionSyncController(data);
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowMessage::TRANS_ID_UPDATE_OCCUPIED_AREA_AND_RECT),
@@ -551,6 +548,27 @@ void WindowProxy::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent> event)
         return;
     }
 }
+
+void WindowProxy::NotifyForegroundInteractiveStatus(bool interactive)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+    if (!data.WriteBool(interactive)) {
+        WLOGFE("Write Focus failed");
+        return;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(WindowMessage::TRANS_ID_NOTIFY_FOREGROUND_INTERACTIVE_STATUS),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+    }
+}
+
 } // namespace Rosen
 } // namespace OHOS
 

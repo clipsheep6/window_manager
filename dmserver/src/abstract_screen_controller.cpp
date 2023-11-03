@@ -426,6 +426,7 @@ bool AbstractScreenController::InitAbstractScreenModesInfo(sptr<AbstractScreen>&
             WLOGFE("create SupportedScreenModes failed");
             return false;
         }
+        info->id_ = static_cast<uint32_t>(rsScreenModeInfo.GetScreenModeId());
         info->width_ = static_cast<uint32_t>(rsScreenModeInfo.GetScreenWidth());
         info->height_ = static_cast<uint32_t>(rsScreenModeInfo.GetScreenHeight());
         info->refreshRate_ = rsScreenModeInfo.GetScreenRefreshRate();
@@ -841,6 +842,14 @@ void AbstractScreenController::OpenRotationSyncTransaction()
     }
 }
 
+void AbstractScreenController::CloseRotationSyncTransaction()
+{
+    auto syncTransactionController = RSSyncTransactionController::GetInstance();
+    if (syncTransactionController) {
+        syncTransactionController->CloseSyncTransaction();
+    }
+}
+
 bool AbstractScreenController::SetRotation(ScreenId screenId, Rotation rotationAfter,
     bool isFromWindow, bool withAnimation)
 {
@@ -859,6 +868,7 @@ bool AbstractScreenController::SetRotation(ScreenId screenId, Rotation rotationA
     OpenRotationSyncTransaction();
     SetScreenRotateAnimation(screen, screenId, rotationAfter, withAnimation);
     screen->rotation_ = rotationAfter;
+    CloseRotationSyncTransaction();
 
     NotifyScreenChanged(screen->ConvertToScreenInfo(), ScreenChangeEvent::UPDATE_ROTATION);
     // Notify rotation event to AbstractDisplayController

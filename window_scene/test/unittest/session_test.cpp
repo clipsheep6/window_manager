@@ -24,6 +24,8 @@
 #include "session/host/include/scene_session.h"
 #include "session/host/include/session.h"
 #include "session_info.h"
+#include "key_event.h"
+#include "wm_common.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -136,7 +138,7 @@ HWTEST_F(WindowSessionTest, SetActive01, Function | SmallTest | Level2)
     sptr<SessionStageMocker> mockSessionStage = new(std::nothrow) SessionStageMocker();
     EXPECT_NE(nullptr, mockSessionStage);
     EXPECT_CALL(*(mockSessionStage), SetActive(_)).WillOnce(Return(WSError::WS_OK));
-    EXPECT_CALL(*(mockSessionStage), UpdateRect(_, _)).Times(1).WillOnce(Return(WSError::WS_OK));
+    EXPECT_CALL(*(mockSessionStage), UpdateRect(_, _, _)).Times(1).WillOnce(Return(WSError::WS_OK));
     session_->sessionStage_ = mockSessionStage;
     ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetActive(true));
 
@@ -165,7 +167,7 @@ HWTEST_F(WindowSessionTest, UpdateRect01, Function | SmallTest | Level2)
     sptr<SessionStageMocker> mockSessionStage = new(std::nothrow) SessionStageMocker();
     EXPECT_NE(nullptr, mockSessionStage);
     session_->sessionStage_ = mockSessionStage;
-    EXPECT_CALL(*(mockSessionStage), UpdateRect(_, _)).Times(1).WillOnce(Return(WSError::WS_OK));
+    EXPECT_CALL(*(mockSessionStage), UpdateRect(_, _, _)).Times(1).WillOnce(Return(WSError::WS_OK));
 
     WSRect rect = {0, 0, 0, 0};
     ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->UpdateRect(rect, SizeChangeReason::UNDEFINED));
@@ -175,7 +177,7 @@ HWTEST_F(WindowSessionTest, UpdateRect01, Function | SmallTest | Level2)
     ASSERT_EQ(WSError::WS_OK, session_->Connect(mockSessionStage, mockEventChannel, nullptr, sessionConfig));
 
     rect = {0, 0, 100, 100};
-    EXPECT_CALL(*(mockSessionStage), UpdateRect(_, _)).Times(1).WillOnce(Return(WSError::WS_OK));
+    EXPECT_CALL(*(mockSessionStage), UpdateRect(_, _, _)).Times(1).WillOnce(Return(WSError::WS_OK));
     ASSERT_EQ(WSError::WS_OK, session_->UpdateRect(rect, SizeChangeReason::UNDEFINED));
     ASSERT_EQ(rect, session_->winRect_);
 }
@@ -289,30 +291,6 @@ HWTEST_F(WindowSessionTest, Disconnect01, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: PendingSessionActivation01
- * @tc.desc: check func PendingSessionActivation
- * @tc.type: FUNC
- */
-HWTEST_F(WindowSessionTest, PendingSessionActivation01, Function | SmallTest | Level2)
-{
-    int resultValue = 0;
-    NotifyPendingSessionActivationFunc callback = [&resultValue](const SessionInfo& info) {
-        resultValue = 1;
-    };
-
-    sptr<AAFwk::SessionInfo> info = new (std::nothrow)AAFwk::SessionInfo();
-    session_->pendingSessionActivationFunc_ = nullptr;
-    session_->PendingSessionActivation(info);
-    ASSERT_EQ(resultValue, 0);
-
-    session_->SetPendingSessionActivationEventListener(callback);
-    session_->PendingSessionActivation(info);
-    ASSERT_EQ(resultValue, 1);
-
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->PendingSessionActivation(nullptr));
-}
-
-/**
  * @tc.name: TerminateSessionNew01
  * @tc.desc: check func TerminateSessionNew
  * @tc.type: FUNC
@@ -330,79 +308,26 @@ HWTEST_F(WindowSessionTest, TerminateSessionNew01, Function | SmallTest | Level2
     session_->TerminateSessionNew(info, needStartCaller);
     ASSERT_EQ(resultValue, 0);
 
-    needStartCaller = true;
-    session_->SetTerminateSessionListenerNew(callback);
-    session_->TerminateSessionNew(info, needStartCaller);
-    ASSERT_EQ(resultValue, 1);
-
     ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->TerminateSessionNew(nullptr, needStartCaller));
 }
 
 /**
- * @tc.name: NotifySessionException01
- * @tc.desc: check func NotifySessionException
+ * @tc.name: TerminateSessionNew02
+ * @tc.desc: terminateSessionFuncNew_ is not nullptr
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, NotifySessionException01, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, TerminateSessionNew02, Function | SmallTest | Level2)
 {
     int resultValue = 0;
-    NotifySessionExceptionFunc callback = [&resultValue](const SessionInfo& info) {
+    NotifyTerminateSessionFuncNew callback = [&resultValue](const SessionInfo& info, bool needStartCaller) {
         resultValue = 1;
     };
 
+    bool needStartCaller = true;
     sptr<AAFwk::SessionInfo> info = new (std::nothrow)AAFwk::SessionInfo();
-    session_->sessionExceptionFuncs_.clear();
-    session_->NotifySessionException(info);
-    ASSERT_EQ(resultValue, 0);
-
-    session_->SetSessionExceptionListener(callback);
-    session_->NotifySessionException(info);
+    session_->SetTerminateSessionListenerNew(callback);
+    session_->TerminateSessionNew(info, needStartCaller);
     ASSERT_EQ(resultValue, 1);
-
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->NotifySessionException(nullptr));
-}
-
-/**
- * @tc.name: UpdateActiveStatus01
- * @tc.desc: check func UpdateActiveStatus01
- * @tc.type: FUNC
- */
-HWTEST_F(WindowSessionTest, UpdateActiveStatus01, Function | SmallTest | Level2)
-{
-    ASSERT_NE(session_, nullptr);
-    session_->isActive_ = false;
-    session_->UpdateSessionState(SessionState::STATE_FOREGROUND);
-    auto result = session_->UpdateActiveStatus(false);
-    ASSERT_EQ(result, WSError::WS_DO_NOTHING);
-
-    result = session_->UpdateActiveStatus(true);
-    ASSERT_EQ(result, WSError::WS_OK);
-    ASSERT_EQ(SessionState::STATE_ACTIVE, session_->state_);
-}
-
-/**
- * @tc.name: UpdateActiveStatus02
- * @tc.desc: check func UpdateActiveStatus02
- * @tc.type: FUNC
- */
-HWTEST_F(WindowSessionTest, UpdateActiveStatus02, Function | SmallTest | Level2)
-{
-    ASSERT_NE(session_, nullptr);
-    session_->isActive_ = false;
-    session_->UpdateSessionState(SessionState::STATE_INACTIVE);
-    auto result = session_->UpdateActiveStatus(true);
-    ASSERT_EQ(result, WSError::WS_DO_NOTHING);
-    ASSERT_EQ(SessionState::STATE_INACTIVE, session_->state_);
-    ASSERT_EQ(false, session_->isActive_);
-
-    session_->UpdateSessionState(SessionState::STATE_FOREGROUND);
-    result = session_->UpdateActiveStatus(true);
-    ASSERT_EQ(result, WSError::WS_OK);
-    ASSERT_EQ(SessionState::STATE_ACTIVE, session_->state_);
-
-    result = session_->UpdateActiveStatus(false);
-    ASSERT_EQ(result, WSError::WS_OK);
-    ASSERT_EQ(SessionState::STATE_INACTIVE, session_->state_);
 }
 
 /**
@@ -470,23 +395,6 @@ HWTEST_F(WindowSessionTest, NotifyDestroy, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: RequestSessionBack
- * @tc.desc: request session back
- * @tc.type: FUNC
- */
-HWTEST_F(WindowSessionTest, RequestSessionBack, Function | SmallTest | Level2)
-{
-    ASSERT_NE(session_, nullptr);
-
-    ASSERT_EQ(WSError::WS_DO_NOTHING, session_->RequestSessionBack(false));
-
-    NotifyBackPressedFunc callback = [](bool needMoveToBackground) {};
-
-    session_->SetBackPressedListenser(callback);
-    ASSERT_EQ(WSError::WS_OK, session_->RequestSessionBack(false));
-}
-
-/**
  * @tc.name: RaiseToAppTop01
  * @tc.desc: RaiseToAppTop
  * @tc.type: FUNC
@@ -542,37 +450,6 @@ HWTEST_F(WindowSessionTest, UpdateSessionRect01, Function | SmallTest | Level2)
     { resultValue = 1; };
     scensessionchangeCallBack->onRectChange_ = onRectChange_;
     result = scensession->UpdateSessionRect(rect, SizeChangeReason::RESIZE);
-    ASSERT_EQ(result, WSError::WS_OK);
-}
-
-/**
- * @tc.name: DestroyAndDisconnectSpecificSession01
- * @tc.desc: DestroyAndDisconnectSpecificSession
- * @tc.type: FUNC
- */
-HWTEST_F(WindowSessionTest, DestroyAndDisconnectSpecificSession01, Function | SmallTest | Level2)
-{
-    SessionInfo info;
-    info.abilityName_ = "testSession1";
-    info.bundleName_ = "testSession3";
-    int32_t persistentId = 0;
-    sptr<SceneSession> scensession = new (std::nothrow) SceneSession(info, nullptr);
-    EXPECT_NE(scensession, nullptr);
-    auto result = scensession->DestroyAndDisconnectSpecificSession(persistentId);
-    ASSERT_EQ(result, WSError::WS_OK);
-
-    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
-        new (std::nothrow) SceneSession::SpecificSessionCallback();
-    EXPECT_NE(specificCallback_, nullptr);
-    int resultValue = 0;
-    specificCallback_->onDestroy_ = [&resultValue](const int32_t &persistentId) -> WSError
-    {
-        resultValue = 1;
-        return WSError::WS_OK;
-    };
-    scensession = new (std::nothrow) SceneSession(info, specificCallback_);
-    EXPECT_NE(scensession, nullptr);
-    result = scensession->DestroyAndDisconnectSpecificSession(persistentId);
     ASSERT_EQ(result, WSError::WS_OK);
 }
 
@@ -950,55 +827,6 @@ HWTEST_F(WindowSessionTest, ConsumeDragEvent04, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: SetAspectRatio01
- * @tc.desc: SetAspectRatio
- * @tc.type: FUNC
- */
-HWTEST_F(WindowSessionTest, SetAspectRatio01, Function | SmallTest | Level2)
-{
-    SessionInfo info;
-    info.abilityName_ = "testSession1";
-    info.bundleName_ = "testSession3";
-    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    EXPECT_NE(sceneSession, nullptr);
-    ASSERT_TRUE(sceneSession->moveDragController_);
-
-    SystemSessionConfig sessionConfig;
-    sessionConfig.isSystemDecorEnable_ = true;
-    sessionConfig.decorModeSupportInfo_ = WindowModeSupport::WINDOW_MODE_SUPPORT_ALL;
-    sceneSession->systemConfig_ = sessionConfig;
-    sptr<WindowSessionProperty> property = new WindowSessionProperty();
-    property->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
-    property->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
-    WindowLimits windowLimits = WindowLimits(1500, 1500, 500, 500, 3.0f, 0.3333f);
-    property->SetWindowLimits(windowLimits);
-    sceneSession->property_ = property;
-    float ratio = 4.0f;
-    auto result = sceneSession->SetAspectRatio(ratio);
-    if (result == WSError::WS_ERROR_INVALID_PARAM) {
-        ASSERT_EQ(result, WSError::WS_ERROR_INVALID_PARAM);
-    }
-    ratio = 0.2f;
-    result = sceneSession->SetAspectRatio(ratio);
-    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_PARAM);
-    ratio = 1.5f;
-    result = sceneSession->SetAspectRatio(ratio);
-    ASSERT_EQ(result, WSError::WS_OK);
-
-    sessionConfig.isSystemDecorEnable_ = false;
-    sceneSession->systemConfig_ = sessionConfig;
-    ratio = 4.0f;
-    result = sceneSession->SetAspectRatio(ratio);
-    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_PARAM);
-    ratio = 0.2f;
-    result = sceneSession->SetAspectRatio(ratio);
-    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_PARAM);
-    ratio = 1.5f;
-    result = sceneSession->SetAspectRatio(ratio);
-    ASSERT_EQ(result, WSError::WS_OK);
-}
-
-/**
  * @tc.name: GetWindowId01
  * @tc.desc: GetWindowId, normal scene
  * @tc.type: FUNC
@@ -1039,6 +867,28 @@ HWTEST_F(WindowSessionTest, IsActive, Function | SmallTest | Level2)
 }
 
 /**
+ * @tc.name: IsSessionForeground01
+ * @tc.desc: IsSessionForeground, normal scene
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, IsSessionForeground, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_FOREGROUND;
+    ASSERT_EQ(true, session_->IsSessionForeground());
+    session_->state_ = SessionState::STATE_ACTIVE;
+    ASSERT_EQ(true, session_->IsSessionForeground());
+    session_->state_ = SessionState::STATE_INACTIVE;
+    ASSERT_EQ(false, session_->IsSessionForeground());
+    session_->state_ = SessionState::STATE_BACKGROUND;
+    ASSERT_EQ(false, session_->IsSessionForeground());
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    ASSERT_EQ(false, session_->IsSessionForeground());
+    session_->state_ = SessionState::STATE_CONNECT;
+    ASSERT_EQ(false, session_->IsSessionForeground());
+}
+
+/**
  * @tc.name: SetFocusable01
  * @tc.desc: SetFocusable, normal scene
  * @tc.type: FUNC
@@ -1047,8 +897,1169 @@ HWTEST_F(WindowSessionTest, SetFocusable, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->state_ = SessionState::STATE_DISCONNECT;
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetFocusable(false));
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
+
+/**
+ * @tc.name: GetSnapshot
+ * @tc.desc: GetSnapshot Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetSnapshot, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    std::shared_ptr<Media::PixelMap> snapshot = session_->Snapshot();
+    ASSERT_EQ(snapshot, session_->GetSnapshot());
+}
+
+/**
+ * @tc.name: NotifyActivation
+ * @tc.desc: NotifyActivation Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, NotifyActivation, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    session_->NotifyActivation();
+
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: NotifyForeground
+ * @tc.desc: NotifyForeground Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, NotifyForeground, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    session_->NotifyForeground();
+    
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: NotifyBackground
+ * @tc.desc: NotifyBackground Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, NotifyBackground, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    session_->NotifyBackground();
+    
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: NotifyExtensionDied
+ * @tc.desc: NotifyExtensionDied Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, NotifyExtensionDied, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    session_->NotifyExtensionDied();
+    
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetAspectRatio
+ * @tc.desc: SetAspectRatio Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetAspectRatio, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    ASSERT_EQ(WSError::WS_OK, session_->SetAspectRatio(0.1f));
+}
+
+/**
+ * @tc.name: UpdateSessionTouchable
+ * @tc.desc: UpdateSessionTouchable Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, UpdateSessionTouchable, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    session_->UpdateSessionTouchable(false);
+    
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetFocusable02
+ * @tc.desc: others
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetFocusable02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->state_ = SessionState::STATE_FOREGROUND;
+    session_->sessionInfo_.isSystem_ = false;
+
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(true));
+}
+
+/**
+ * @tc.name: GetFocusable01
+ * @tc.desc: property_ is not nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetFocusable01, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->property_ = new WindowSessionProperty();
+    ASSERT_EQ(true, session_->GetFocusable());
+}
+
+/**
+ * @tc.name: GetFocusable02
+ * @tc.desc: property_ is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetFocusable02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->property_ = nullptr;
+    ASSERT_EQ(true, session_->GetFocusable());
+}
+
+/**
+ * @tc.name: SetNeedNotify
+ * @tc.desc: SetNeedNotify Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetNeedNotify, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    session_->SetNeedNotify(false);
+    
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: NeedNotify
+ * @tc.desc: NeedNotify Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, NeedNotify, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    session_->SetNeedNotify(true);
+    ASSERT_EQ(true, session_->NeedNotify());
+}
+
+/**
+ * @tc.name: SetTouchable01
+ * @tc.desc: IsSessionValid() return false
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetTouchable01, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    session_->sessionInfo_.isSystem_ = true;
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->SetTouchable(false));
+}
+
+/**
+ * @tc.name: SetTouchable02
+ * @tc.desc: IsSessionValid() return true
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetTouchable02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_FOREGROUND;
+    session_->sessionInfo_.isSystem_ = false;
+    ASSERT_EQ(WSError::WS_OK, session_->SetTouchable(false));
+}
+
+/**
+ * @tc.name: GetCallingPid
+ * @tc.desc: GetCallingPid Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetCallingPid, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->SetCallingPid(111);
+    ASSERT_EQ(111, session_->GetCallingPid());
+}
+
+/**
+ * @tc.name: GetCallingUid
+ * @tc.desc: GetCallingUid Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetCallingUid, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->SetCallingUid(111);
+    ASSERT_EQ(111, session_->GetCallingUid());
+}
+
+/**
+ * @tc.name: GetAbilityToken
+ * @tc.desc: GetAbilityToken Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetAbilityToken, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->SetAbilityToken(nullptr);
+    ASSERT_EQ(nullptr, session_->GetAbilityToken());
+}
+
+/**
+ * @tc.name: SetBrightness01
+ * @tc.desc: property_ is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetBrightness01, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    session_->property_ = nullptr;
+    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, session_->SetBrightness(0.1f));
+}
+
+/**
+ * @tc.name: SetBrightness02
+ * @tc.desc: property_ is not nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetBrightness02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    session_->property_ = new WindowSessionProperty();
+    ASSERT_EQ(WSError::WS_OK, session_->SetBrightness(0.1f));
+}
+
+/**
+ * @tc.name: UpdateHotRect
+ * @tc.desc: UpdateHotRect Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, UpdateHotRect, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    WSRect rect;
+    rect.posX_ = 0;
+    rect.posY_ = 0;
+    rect.width_ = 0;
+    rect.height_ = 0;
+
+    WSRectF newRect;
+    const float outsideBorder = 4.0f * 1.5f;
+    const size_t outsideBorderCount = 2;
+    newRect.posX_ = rect.posX_ - outsideBorder;
+    newRect.posY_ = rect.posY_ - outsideBorder;
+    newRect.width_ = rect.width_ + outsideBorder * outsideBorderCount;
+    newRect.height_ = rect.height_ + outsideBorder * outsideBorderCount;
+
+    ASSERT_EQ(newRect, session_->UpdateHotRect(rect));
+}
+
+/**
+ * @tc.name: SetTerminateSessionListener
+ * @tc.desc: SetTerminateSessionListener Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetTerminateSessionListener, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NotifyTerminateSessionFunc func = nullptr;
+    session_->SetTerminateSessionListener(func);
+    
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: TerminateSessionTotal01
+ * @tc.desc: abilitySessionInfo is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TerminateSessionTotal01, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION,
+            session_->TerminateSessionTotal(nullptr, TerminateType::CLOSE_AND_KEEP_MULTITASK));
+}
+
+/**
+ * @tc.name: TerminateSessionTotal02
+ * @tc.desc: abilitySessionInfo is not nullptr, isTerminating is true
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TerminateSessionTotal02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    sptr<AAFwk::SessionInfo> abilitySessionInfo = new AAFwk::SessionInfo();
+    session_->isTerminating = true;
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_OPERATION,
+            session_->TerminateSessionTotal(abilitySessionInfo, TerminateType::CLOSE_AND_KEEP_MULTITASK));
+}
+
+/**
+ * @tc.name: TerminateSessionTotal03
+ * @tc.desc: abilitySessionInfo is not nullptr, isTerminating is false
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TerminateSessionTotal03, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    sptr<AAFwk::SessionInfo> abilitySessionInfo = new AAFwk::SessionInfo();
+    session_->isTerminating = false;
+    ASSERT_EQ(WSError::WS_OK,
+            session_->TerminateSessionTotal(abilitySessionInfo, TerminateType::CLOSE_AND_KEEP_MULTITASK));
+}
+
+/**
+ * @tc.name: SetTerminateSessionListenerTotal
+ * @tc.desc: SetTerminateSessionListenerTotal Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetTerminateSessionListenerTotal, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NotifyTerminateSessionFuncTotal func = nullptr;
+    session_->SetTerminateSessionListenerTotal(func);
+    
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetSessionLabel
+ * @tc.desc: SetSessionLabel Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetSessionLabel, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    session_->updateSessionLabelFunc_ = nullptr;
+    ASSERT_EQ(WSError::WS_OK, session_->SetSessionLabel("SetSessionLabel Test"));
+}
+
+/**
+ * @tc.name: SetUpdateSessionLabelListener
+ * @tc.desc: SetUpdateSessionLabelListener Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetUpdateSessionLabelListener, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NofitySessionLabelUpdatedFunc func = nullptr;
+    session_->SetUpdateSessionLabelListener(func);
+    
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetPendingSessionToForegroundListener
+ * @tc.desc: SetPendingSessionToForegroundListener Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetPendingSessionToForegroundListener, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NotifyPendingSessionToForegroundFunc func = nullptr;
+    session_->SetPendingSessionToForegroundListener(func);
+    
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: PendingSessionToBackgroundForDelegator
+ * @tc.desc: PendingSessionToBackgroundForDelegator Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, PendingSessionToBackgroundForDelegator, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->SetPendingSessionToBackgroundForDelegatorListener(nullptr);
+    ASSERT_EQ(WSError::WS_OK, session_->PendingSessionToBackgroundForDelegator());
+}
+
+/**
+ * @tc.name: SetNotifyCallingSessionForegroundFunc
+ * @tc.desc: SetNotifyCallingSessionForegroundFunc Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetNotifyCallingSessionForegroundFunc, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NotifyCallingSessionForegroundFunc func = nullptr;
+    session_->SetNotifyCallingSessionForegroundFunc(func);
+
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: NotifyTouchDialogTarget
+ * @tc.desc: NotifyTouchDialogTarget Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, NotifyTouchDialogTarget, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->sessionStage_ = nullptr;
+    session_->NotifyTouchDialogTarget();
+    
+    session_->property_ = new WindowSessionProperty();
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: NotifyScreenshot
+ * @tc.desc: NotifyScreenshot Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, NotifyScreenshot, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->sessionStage_ = nullptr;
+    session_->NotifyScreenshot();
+    
+    session_->property_ = new WindowSessionProperty();
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetParentSession
+ * @tc.desc: SetParentSession Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetParentSession, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    SessionInfo info;
+    info.abilityName_ = "testSession1";
+    info.moduleName_ = "testSession2";
+    info.bundleName_ = "testSession3";
+    sptr<Session> session = new (std::nothrow) Session(info);
+    session_->SetParentSession(session);
+    
+    session_->property_ = new WindowSessionProperty();
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: BindDialogToParentSession
+ * @tc.desc: BindDialogToParentSession Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, BindDialogToParentSession, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    SessionInfo info;
+    info.abilityName_ = "testSession1";
+    info.moduleName_ = "testSession2";
+    info.bundleName_ = "testSession3";
+    sptr<Session> session = new (std::nothrow) Session(info);
+    session_->BindDialogToParentSession(session);
+    
+    session_->property_ = new WindowSessionProperty();
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: RemoveDialogToParentSession
+ * @tc.desc: RemoveDialogToParentSession Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, RemoveDialogToParentSession, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    SessionInfo info;
+    info.abilityName_ = "testSession1";
+    info.moduleName_ = "testSession2";
+    info.bundleName_ = "testSession3";
+    sptr<Session> session = new (std::nothrow) Session(info);
+    session_->RemoveDialogToParentSession(session);
+    
+    session_->property_ = new WindowSessionProperty();
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: TransferPointerEvent01
+ * @tc.desc: !IsSystemSession() && !IsSessionValid() is true
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferPointerEvent01, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->sessionInfo_.isSystem_ = false;
+    session_->state_ = SessionState::STATE_DISCONNECT;
+
+    std::shared_ptr<MMI::PointerEvent> pointerEvent = std::make_shared<MMI::PointerEvent>(1);
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->TransferPointerEvent(pointerEvent));
+}
+
+/**
+ * @tc.name: TransferPointerEvent02
+ * @tc.desc: pointerEvent is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferPointerEvent02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->sessionInfo_.isSystem_ = true;
+
+    std::shared_ptr<MMI::PointerEvent> pointerEvent = nullptr;
+    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, session_->TransferPointerEvent(pointerEvent));
+}
+
+/**
+ * @tc.name: TransferPointerEvent03
+ * @tc.desc: WindowType is WINDOW_TYPE_APP_MAIN_WINDOW, CheckDialogOnForeground() is true
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferPointerEvent03, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->sessionInfo_.isSystem_ = true;
+
+    std::shared_ptr<MMI::PointerEvent> pointerEvent = std::make_shared<MMI::PointerEvent>(1);
+    ASSERT_NE(pointerEvent, nullptr);
+
+    session_->property_ = new WindowSessionProperty();
+    session_->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
+
+    SessionInfo info;
+    info.abilityName_ = "dialogAbilityName";
+    info.moduleName_ = "dialogModuleName";
+    info.bundleName_ = "dialogBundleName";
+    sptr<Session> dialogSession = new (std::nothrow) Session(info);
+    ASSERT_NE(dialogSession, nullptr);
+    dialogSession->state_ = SessionState::STATE_ACTIVE;
+    session_->dialogVec_.push_back(dialogSession);
+
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_PERMISSION, session_->TransferPointerEvent(pointerEvent));
+}
+
+/**
+ * @tc.name: TransferPointerEvent04
+ * @tc.desc: parentSession_ && parentSession_->CheckDialogOnForeground() is true
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferPointerEvent04, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->sessionInfo_.isSystem_ = true;
+
+    std::shared_ptr<MMI::PointerEvent> pointerEvent = std::make_shared<MMI::PointerEvent>(1);
+    ASSERT_NE(pointerEvent, nullptr);
+
+    session_->property_ = new WindowSessionProperty();
+    session_->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
+
+    SessionInfo info;
+    info.abilityName_ = "dialogAbilityName";
+    info.moduleName_ = "dialogModuleName";
+    info.bundleName_ = "dialogBundleName";
+    sptr<Session> dialogSession = new (std::nothrow) Session(info);
+    ASSERT_NE(dialogSession, nullptr);
+    dialogSession->state_ = SessionState::STATE_ACTIVE;
+    session_->dialogVec_.push_back(dialogSession);
+    session_->parentSession_ = session_;
+
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_PERMISSION, session_->TransferPointerEvent(pointerEvent));
+}
+
+/**
+ * @tc.name: TransferPointerEvent05
+ * @tc.desc: windowEventChannel_ is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferPointerEvent05, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->sessionInfo_.isSystem_ = true;
+
+    std::shared_ptr<MMI::PointerEvent> pointerEvent = std::make_shared<MMI::PointerEvent>(1);
+
+    session_->property_ = new WindowSessionProperty();
+    session_->property_->SetWindowType(WindowType::WINDOW_TYPE_SCENE_BOARD);
+
+    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, session_->TransferPointerEvent(pointerEvent));
+}
+
+/**
+ * @tc.name: TransferKeyEvent02
+ * @tc.desc: keyEvent is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferKeyEvent02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->sessionInfo_.isSystem_ = true;
+
+    std::shared_ptr<MMI::KeyEvent> keyEvent = nullptr;
+    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, session_->TransferKeyEvent(keyEvent));
+}
+
+/**
+ * @tc.name: TransferKeyEvent03
+ * @tc.desc: WindowType is WINDOW_TYPE_APP_MAIN_WINDOW, CheckDialogOnForeground() is true
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferKeyEvent03, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->sessionInfo_.isSystem_ = true;
+
+    auto keyEvent = MMI::KeyEvent::Create();
+    ASSERT_NE(keyEvent, nullptr);
+
+    session_->property_ = new WindowSessionProperty();
+    session_->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
+
+    SessionInfo info;
+    info.abilityName_ = "dialogAbilityName";
+    info.moduleName_ = "dialogModuleName";
+    info.bundleName_ = "dialogBundleName";
+    sptr<Session> dialogSession = new (std::nothrow) Session(info);
+    ASSERT_NE(dialogSession, nullptr);
+    dialogSession->state_ = SessionState::STATE_ACTIVE;
+    session_->dialogVec_.push_back(dialogSession);
+    
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_PERMISSION, session_->TransferKeyEvent(keyEvent));
+}
+
+/**
+ * @tc.name: TransferKeyEvent04
+ * @tc.desc: parentSession_ && parentSession_->CheckDialogOnForeground() is true
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferKeyEvent04, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->sessionInfo_.isSystem_ = true;
+
+    auto keyEvent = MMI::KeyEvent::Create();
+    ASSERT_NE(keyEvent, nullptr);
+
+    session_->property_ = new WindowSessionProperty();
+    session_->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
+
+    SessionInfo info;
+    info.abilityName_ = "dialogAbilityName";
+    info.moduleName_ = "dialogModuleName";
+    info.bundleName_ = "dialogBundleName";
+    sptr<Session> dialogSession = new (std::nothrow) Session(info);
+    ASSERT_NE(dialogSession, nullptr);
+    dialogSession->state_ = SessionState::STATE_ACTIVE;
+    session_->dialogVec_.push_back(dialogSession);
+    session_->parentSession_ = session_;
+    
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_PERMISSION, session_->TransferKeyEvent(keyEvent));
+}
+
+/**
+ * @tc.name: TransferKeyEvent05
+ * @tc.desc: windowEventChannel_ is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferKeyEvent05, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->sessionInfo_.isSystem_ = true;
+
+    auto keyEvent = MMI::KeyEvent::Create();
+    ASSERT_NE(keyEvent, nullptr);
+
+    session_->property_ = new WindowSessionProperty();
+    session_->property_->SetWindowType(WindowType::WINDOW_TYPE_SCENE_BOARD);
+
+    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, session_->TransferKeyEvent(keyEvent));
+}
+
+/**
+ * @tc.name: TransferBackPressedEventForConsumed01
+ * @tc.desc: windowEventChannel_ is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferBackPressedEventForConsumed01, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->windowEventChannel_ = nullptr;
+
+    bool isConsumed = false;
+    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, session_->TransferBackPressedEventForConsumed(isConsumed));
+}
+
+/**
+ * @tc.name: TransferBackPressedEventForConsumed02
+ * @tc.desc: windowEventChannel_ is not nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferBackPressedEventForConsumed02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->windowEventChannel_ = new TestWindowEventChannel();
+
+    bool isConsumed = false;
+    ASSERT_EQ(WSError::WS_OK, session_->TransferBackPressedEventForConsumed(isConsumed));
+}
+
+/**
+ * @tc.name: TransferKeyEventForConsumed01
+ * @tc.desc: windowEventChannel_ is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferKeyEventForConsumed01, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->windowEventChannel_ = nullptr;
+
+    auto keyEvent = MMI::KeyEvent::Create();
+    bool isConsumed = false;
+    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, session_->TransferKeyEventForConsumed(keyEvent, isConsumed));
+}
+
+/**
+ * @tc.name: TransferKeyEventForConsumed02
+ * @tc.desc: windowEventChannel_ is not nullptr, keyEvent is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferKeyEventForConsumed02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->windowEventChannel_ = new TestWindowEventChannel();
+
+    std::shared_ptr<MMI::KeyEvent> keyEvent = nullptr;
+    bool isConsumed = false;
+    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, session_->TransferKeyEventForConsumed(keyEvent, isConsumed));
+}
+
+/**
+ * @tc.name: TransferKeyEventForConsumed03
+ * @tc.desc: windowEventChannel_ is not nullptr, keyEvent is not nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferKeyEventForConsumed03, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->windowEventChannel_ = new TestWindowEventChannel();
+
+    std::shared_ptr<MMI::KeyEvent> keyEvent = MMI::KeyEvent::Create();
+    bool isConsumed = false;
+    ASSERT_EQ(WSError::WS_OK, session_->TransferKeyEventForConsumed(keyEvent, isConsumed));
+}
+
+/**
+ * @tc.name: TransferFocusActiveEvent01
+ * @tc.desc: windowEventChannel_ is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferFocusActiveEvent01, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->windowEventChannel_ = nullptr;
+
+    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, session_->TransferFocusActiveEvent(false));
+}
+
+/**
+ * @tc.name: TransferFocusActiveEvent02
+ * @tc.desc: windowEventChannel_ is not nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferFocusActiveEvent02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->windowEventChannel_ = new TestWindowEventChannel();
+
+    ASSERT_EQ(WSError::WS_OK, session_->TransferFocusActiveEvent(false));
+}
+
+/**
+ * @tc.name: TransferFocusStateEvent01
+ * @tc.desc: windowEventChannel_ is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferFocusStateEvent01, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->windowEventChannel_ = nullptr;
+
+    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, session_->TransferFocusStateEvent(false));
+}
+
+/**
+ * @tc.name: TransferFocusStateEvent02
+ * @tc.desc: windowEventChannel_ is not nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferFocusStateEvent02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->windowEventChannel_ = new TestWindowEventChannel();
+
+    ASSERT_EQ(WSError::WS_OK, session_->TransferFocusStateEvent(false));
+}
+
+/**
+ * @tc.name: Snapshot01
+ * @tc.desc: ret is false
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, Snapshot01, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->surfaceNode_ = nullptr;
+
+    ASSERT_EQ(nullptr, session_->Snapshot());
+}
+
+/**
+ * @tc.name: SetSessionStateChangeListenser
+ * @tc.desc: SetSessionStateChangeListenser Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetSessionStateChangeListenser, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    NotifySessionStateChangeFunc func = nullptr;
+    session_->SetSessionStateChangeListenser(func);
+
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetSessionFocusableChangeListener
+ * @tc.desc: SetSessionFocusableChangeListener Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetSessionFocusableChangeListener, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    NotifySessionFocusableChangeFunc func = [](const bool isFocusable)
+    {
+    };
+    session_->SetSessionFocusableChangeListener(func);
+
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetSessionTouchableChangeListener
+ * @tc.desc: SetSessionTouchableChangeListener Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetSessionTouchableChangeListener, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    NotifySessionTouchableChangeFunc func = [](const bool touchable)
+    {
+    };
+    session_->SetSessionTouchableChangeListener(func);
+
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetClickListener
+ * @tc.desc: SetClickListener Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetClickListener, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    NotifyClickFunc func = nullptr;
+    session_->SetClickListener(func);
+
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: UpdateFocus01
+ * @tc.desc: isFocused_ equal isFocused
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, UpdateFocus01, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    bool isFocused = session_->isFocused_;
+    ASSERT_EQ(WSError::WS_DO_NOTHING, session_->UpdateFocus(isFocused));
+}
+
+/**
+ * @tc.name: UpdateFocus02
+ * @tc.desc: isFocused_ not equal isFocused, IsSessionValid() return false
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, UpdateFocus02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->sessionInfo_.isSystem_ = true;
+
+    bool isFocused = session_->isFocused_;
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->UpdateFocus(!isFocused));
+}
+
+/**
+ * @tc.name: UpdateWindowMode01
+ * @tc.desc: IsSessionValid() return false
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, UpdateWindowMode01, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->sessionInfo_.isSystem_ = true;
+
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->UpdateWindowMode(WindowMode::WINDOW_MODE_UNDEFINED));
+}
+
+/**
+ * @tc.name: SetSessionRequestRect
+ * @tc.desc: SetSessionRequestRect Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetSessionRequestRect, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->property_ = nullptr;
+    WSRect rect = {0, 0, 0, 0};
+    session_->SetSessionRequestRect(rect);
+
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: GetSessionRequestRect
+ * @tc.desc: GetSessionRequestRect Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetSessionRequestRect, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->property_ = nullptr;
+    WSRect rect;
+    ASSERT_EQ(rect, session_->GetSessionRequestRect());
+}
+
+/**
+ * @tc.name: ProcessBackEvent01
+ * @tc.desc: IsSessionValid() return false
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, ProcessBackEvent01, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    session_->sessionInfo_.isSystem_ = true;
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->ProcessBackEvent());
+}
+
+/**
+ * @tc.name: ProcessBackEvent02
+ * @tc.desc: IsSessionValid() return true
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, ProcessBackEvent02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->state_ = SessionState::STATE_FOREGROUND;
+    session_->sessionInfo_.isSystem_ = false;
+
+    session_->property_ = new WindowSessionProperty();
+    session_->property_->SetWindowType(WindowType::WINDOW_TYPE_DIALOG);
+
+    ASSERT_EQ(WSError::WS_OK, session_->ProcessBackEvent());
+}
+
+/**
+ * @tc.name: MarkProcessed
+ * @tc.desc: MarkProcessed Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, MarkProcessed, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    ASSERT_EQ(WSError::WS_OK, session_->MarkProcessed(1));
+}
+
+/**
+ * @tc.name: GetScenePersistence
+ * @tc.desc: GetScenePersistence Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetScenePersistence, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    ASSERT_EQ(session_->scenePersistence_, session_->GetScenePersistence());
+}
+
+/**
+ * @tc.name: NotifyOccupiedAreaChangeInfo01
+ * @tc.desc: sessionStage_ is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, NotifyOccupiedAreaChangeInfo01, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->sessionStage_ = nullptr;
+    sptr<OccupiedAreaChangeInfo> info = new OccupiedAreaChangeInfo();
+    session_->NotifyOccupiedAreaChangeInfo(info);
+
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: NotifyOccupiedAreaChangeInfo02
+ * @tc.desc: sessionStage_ is not nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, NotifyOccupiedAreaChangeInfo02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    sptr<SessionStageMocker> mockSessionStage = new(std::nothrow) SessionStageMocker();
+    ASSERT_NE(mockSessionStage, nullptr);
+    session_->sessionStage_ = mockSessionStage;
+    sptr<OccupiedAreaChangeInfo> info = new OccupiedAreaChangeInfo();
+    session_->NotifyOccupiedAreaChangeInfo(info);
+
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: GetWindowMode
+ * @tc.desc: GetWindowMode Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetWindowMode, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->property_ = new WindowSessionProperty();
+    session_->property_->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    ASSERT_EQ(WindowMode::WINDOW_MODE_FULLSCREEN, session_->GetWindowMode());
+}
+
+/**
+ * @tc.name: GetZOrder
+ * @tc.desc: GetZOrder Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetZOrder, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->SetZOrder(111);
+    ASSERT_EQ(111, session_->GetZOrder());
+}
+
+/**
+ * @tc.name: GetUINodeId
+ * @tc.desc: GetUINodeId Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetUINodeId, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->SetUINodeId(111);
+    ASSERT_EQ(111, session_->GetUINodeId());
+}
+
+/**
+ * @tc.name: SetBufferAvailable
+ * @tc.desc: SetBufferAvailable Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetBufferAvailable, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->SetBufferAvailable(111);
+    ASSERT_EQ(true, session_->GetBufferAvailable());
+}
+
+/**
+ * @tc.name: NotifyForegroundInteractiveStatus
+ * @tc.desc: NotifyForegroundInteractiveStatus Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, NotifyForegroundInteractiveStatus, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->sessionStage_ = nullptr;
+    bool interactive = true;
+    session_->NotifyForegroundInteractiveStatus(interactive);
+
+    sptr<SessionStageMocker> mockSessionStage = new(std::nothrow) SessionStageMocker();
+    ASSERT_NE(mockSessionStage, nullptr);
+    session_->sessionStage_ = mockSessionStage;
+    session_->state_ = SessionState::STATE_FOREGROUND;
+    interactive = false;
+    session_->NotifyForegroundInteractiveStatus(interactive);
+
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
 }
 } // namespace Rosen
 } // namespace OHOS

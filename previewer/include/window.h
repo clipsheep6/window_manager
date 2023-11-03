@@ -24,8 +24,8 @@
 #include "wm_common.h"
 #include "window_option.h"
 
-class NativeValue;
-class NativeEngine;
+typedef struct napi_env__* napi_env;
+typedef struct napi_value__* napi_value;
 
 namespace OHOS::MMI {
 class PointerEvent;
@@ -200,8 +200,13 @@ public:
     virtual void UnregisterDialogDeathRecipientListener(const sptr<IDialogDeathRecipientListener>& listener) = 0;
     virtual void NotifyTouchDialogTarget() = 0;
     virtual void SetAceAbilityHandler(const sptr<IAceAbilityHandler>& handler) = 0;
-    virtual WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
-    NativeValue* storage, bool isDistributed = false, AppExecFwk::Ability* ability = nullptr) = 0;
+    virtual WMError NapiSetUIContent(const std::string& contentInfo, napi_env env,
+        napi_value storage, bool isDistributed = false, AppExecFwk::Ability* ability = nullptr) = 0;
+    virtual WMError SetUIContentByName(const std::string& contentInfo, napi_env env, napi_value storage,
+        AppExecFwk::Ability* ability = nullptr)
+    {
+        return WMError::WM_OK;
+    }
     virtual std::string GetContentInfo() = 0;
     virtual Ace::UIContent* GetUIContent() const = 0;
     virtual void OnNewWant(const AAFwk::Want& want) = 0;

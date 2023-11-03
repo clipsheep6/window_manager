@@ -2204,8 +2204,6 @@ HWTEST_F(WindowImplTest, SetLayoutFullScreen, Function | SmallTest | Level3)
     EXPECT_CALL(m->Mock(), UpdateProperty(_, _)).Times(2)
         .WillOnce(Return(WMError::WM_OK))
         .WillOnce(Return(WMError::WM_OK));
-
-
     ASSERT_EQ(WMError::WM_OK, window->SetLayoutFullScreen(true));
 
     window->property_->SetWindowFlags(window->property_->GetWindowFlags() |
@@ -3745,6 +3743,26 @@ HWTEST_F(WindowImplTest, GetTopWindowWithId, Function | SmallTest | Level3)
 
     ASSERT_EQ(WMError::WM_OK, window->Destroy());
 }
+
+/**
+ * @tc.name: NotifyForegroundInteractiveStatus
+ * @tc.desc: NotifyForegroundInteractiveStatus Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, NotifyForegroundInteractiveStatus, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    ASSERT_NE(option, nullptr);
+    sptr<WindowImpl> window = new WindowImpl(option);
+    ASSERT_NE(window, nullptr);
+    bool interactive = false;
+    window->NotifyForegroundInteractiveStatus(interactive);
+    window->SetWindowState(WindowState::STATE_DESTROYED);
+    interactive = true;
+    window->NotifyForegroundInteractiveStatus(interactive);
+    ASSERT_EQ(WindowState::STATE_DESTROYED, window->GetWindowState());
+}
+
 }
 } // namespace Rosen
 } // namespace OHOS

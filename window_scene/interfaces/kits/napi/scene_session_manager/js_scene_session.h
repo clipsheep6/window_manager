@@ -26,33 +26,41 @@
 #include "interfaces/include/ws_common.h"
 #include "session/host/include/scene_session.h"
 #include "js_scene_utils.h"
+#include "task_scheduler.h"
 
 namespace OHOS::Rosen {
 class SceneSession;
 class JsSceneSession : public std::enable_shared_from_this<JsSceneSession> {
 public:
-    JsSceneSession(NativeEngine& engine, const sptr<SceneSession>& session);
+    JsSceneSession(napi_env env, const sptr<SceneSession>& session);
     ~JsSceneSession();
 
-    static NativeValue* Create(NativeEngine& engine, const sptr<SceneSession>& session);
-    static void Finalizer(NativeEngine* engine, void* data, void* hint);
+    static napi_value Create(napi_env env, const sptr<SceneSession>& session);
+    static void Finalizer(napi_env env, void* data, void* hint);
 
+    void ClearCbMap(bool needRemove);
     sptr<SceneSession> GetNativeSession() const;
 
 private:
-    static NativeValue* RegisterCallback(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* UpdateNativeVisibility(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* SetShowRecent(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* SetZOrder(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* SetPrivacyMode(NativeEngine* engine, NativeCallbackInfo* info);
+    static napi_value RegisterCallback(napi_env env, napi_callback_info info);
+    static napi_value UpdateNativeVisibility(napi_env env, napi_callback_info info);
+    static napi_value SetShowRecent(napi_env env, napi_callback_info info);
+    static napi_value SetZOrder(napi_env env, napi_callback_info info);
+    static napi_value SetPrivacyMode(napi_env env, napi_callback_info info);
+    static napi_value SetFloatingScale(napi_env env, napi_callback_info info);
+    static napi_value SetSystemSceneOcclusionAlpha(napi_env env, napi_callback_info info);
+    static napi_value SetFocusable(napi_env env, napi_callback_info info);
 
-    NativeValue* OnRegisterCallback(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnUpdateNativeVisibility(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnSetShowRecent(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnSetZOrder(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnSetPrivacyMode(NativeEngine& engine, NativeCallbackInfo& info);
+    napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
+    napi_value OnUpdateNativeVisibility(napi_env env, napi_callback_info info);
+    napi_value OnSetShowRecent(napi_env env, napi_callback_info info);
+    napi_value OnSetZOrder(napi_env env, napi_callback_info info);
+    napi_value OnSetPrivacyMode(napi_env env, napi_callback_info info);
+    napi_value OnSetFloatingScale(napi_env env, napi_callback_info info);
+    napi_value OnSetSystemSceneOcclusionAlpha(napi_env env, napi_callback_info info);
+    napi_value OnSetFocusable(napi_env env, napi_callback_info info);
 
-    bool IsCallbackRegistered(const std::string& type, NativeValue* jsListenerObject);
+    bool IsCallbackRegistered(napi_env env, const std::string& type, napi_value jsListenerObject);
     bool IsCallbackTypeSupported(const std::string& type);
 
     void ProcessPendingSceneSessionActivationRegister();
@@ -62,6 +70,7 @@ private:
     void ProcessBindDialogTargetRegister();
     void ProcessSessionRectChangeRegister();
     void ProcessRaiseToTopRegister();
+    void ProcessRaiseToTopForPointDownRegister();
     void ProcessBackPressedRegister();
     void ProcessSessionFocusableChangeRegister();
     void ProcessSessionTouchableChangeRegister();
@@ -82,6 +91,8 @@ private:
     void ProcessRequestedOrientationChange();
     void ProcessRaiseAboveTargetRegister();
     void ProcessForceHideChangeRegister();
+    void ProcessTouchOutsideRegister();
+    void ProcessWindowDragHotAreaRegister();
 
     void PendingSessionActivation(SessionInfo& info);
     void PendingSessionActivationInner(SessionInfo& info);
@@ -91,6 +102,7 @@ private:
     void OnBindDialogTarget(const sptr<SceneSession>& sceneSession);
     void OnSessionRectChange(const WSRect& rect, const SizeChangeReason& reason = SizeChangeReason::UNDEFINED);
     void OnRaiseToTop();
+    void OnRaiseToTopForPointDown();
     void OnRaiseAboveTarget(int32_t subWindowId);
     void OnBackPressed(bool needMoveToBackground);
     void OnSessionFocusableChange(bool isFocusable);
@@ -112,13 +124,16 @@ private:
     void OnShowWhenLocked(bool showWhenLocked);
     void OnReuqestedOrientationChange(uint32_t orientation);
     void OnForceHideChange(bool hide);
+    void OnTouchOutside();
+    void OnWindowDragHotArea(int32_t type, const SizeChangeReason& reason);
 
-    NativeEngine& engine_;
+    napi_env env_;
     wptr<SceneSession> weakSession_ = nullptr;
     wptr<SceneSession::SessionChangeCallback> sessionchangeCallback_ = nullptr;
     std::map<std::string, std::shared_ptr<NativeReference>> jsCbMap_;
     using Func = void(JsSceneSession::*)();
     std::map<std::string, Func> listenerFunc_;
+    std::shared_ptr<MainThreadScheduler> taskScheduler_;
 };
 } // namespace OHOS::Rosen
 

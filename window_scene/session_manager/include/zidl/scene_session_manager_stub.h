@@ -65,8 +65,8 @@ private:
     int HandleTerminateSessionNew(MessageParcel& data, MessageParcel& reply);
     int HandleGetSessionDump(MessageParcel &data, MessageParcel &reply);
     int HandleUpdateSessionAvoidAreaListener(MessageParcel& data, MessageParcel& reply);
-    int HandleBindDialogTarget(MessageParcel &data, MessageParcel &reply);
     int HandleGetSessionSnapshot(MessageParcel &data, MessageParcel &reply);
+    int HandleBindDialogTarget(MessageParcel &data, MessageParcel &reply);
     int HandleNotifyDumpInfoResult(MessageParcel &data, MessageParcel &reply);
     int HandleClearSession(MessageParcel &data, MessageParcel &reply);
     int HandleClearAllSessions(MessageParcel &data, MessageParcel &reply);
@@ -76,6 +76,7 @@ private:
     int HandleMoveSessionsToBackground(MessageParcel &data, MessageParcel &reply);
     int HandleRegisterCollaborator(MessageParcel &data, MessageParcel &reply);
     int HandleUnregisterCollaborator(MessageParcel &data, MessageParcel &reply);
+    int HandleUpdateSessionTouchOutsideListener(MessageParcel& data, MessageParcel& reply);
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_STUB_H

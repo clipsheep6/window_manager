@@ -527,11 +527,23 @@ void WindowImpl::OnNewWant(const AAFwk::Want& want)
     }
 }
 
-WMError WindowImpl::SetUIContent(const std::string& contentInfo,
-    NativeEngine* engine, NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability)
+WMError WindowImpl::NapiSetUIContent(const std::string& contentInfo, napi_env env, napi_value storage,
+    bool isdistributed, AppExecFwk::Ability* ability)
+{
+    return SetUIContentInner(contentInfo, env, storage, isdistributed, false, ability);
+}
+
+WMError WindowImpl::SetUIContentByName(
+    const std::string& contentInfo, napi_env env, napi_value storage, AppExecFwk::Ability* ability)
+{
+    return SetUIContentInner(contentInfo, env, storage, false, true, ability);
+}
+
+WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
+    bool isdistributed, bool isLoadedByName, AppExecFwk::Ability* ability)
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "loadContent");
-    WLOGFD("SetUIContent: %{public}s", contentInfo.c_str());
+    WLOGFD("NapiSetUIContent: %{public}s", contentInfo.c_str());
     if (uiContent_) {
         uiContent_->Destroy();
     }
@@ -539,14 +551,16 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
     if (ability != nullptr) {
         uiContent = Ace::UIContent::Create(ability);
     } else {
-        uiContent = Ace::UIContent::Create(context_.get(), engine);
+        uiContent = Ace::UIContent::Create(context_.get(), reinterpret_cast<NativeEngine*>(env));
     }
     if (uiContent == nullptr) {
-        WLOGFE("fail to SetUIContent id: %{public}u", property_->GetWindowId());
+        WLOGFE("fail to NapiSetUIContent id: %{public}u", property_->GetWindowId());
         return WMError::WM_ERROR_NULLPTR;
     }
     if (isdistributed) {
         uiContent->Restore(this, contentInfo, storage);
+    } else if (isLoadedByName) {
+        uiContent->InitializeByName(this, contentInfo, storage);
     } else {
         uiContent->Initialize(this, contentInfo, storage);
     }
@@ -1454,7 +1468,7 @@ WMError WindowImpl::Show(uint32_t reason, bool withAnimation)
 
 WMError WindowImpl::Hide(uint32_t reason, bool withAnimation, bool isFromInnerkits)
 {
-    WLOGI("id:%{public}u Hide, reason:%{public}u, Animation:%{public}d",
+    WLOGD("id:%{public}u Hide, reason:%{public}u, Animation:%{public}d",
         property_->GetWindowId(), reason, withAnimation);
     if (!IsWindowValid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
@@ -1764,21 +1778,20 @@ std::string WindowImpl::TransferLifeCycleEventToString(LifeCycleEvent type) cons
 WMError WindowImpl::SetPrivacyMode(bool isPrivacyMode)
 {
     WLOGFD("id : %{public}u, SetPrivacyMode, %{public}u", GetWindowId(), isPrivacyMode);
-    property_->SetOnlySkipSnapshot(false);
     property_->SetPrivacyMode(isPrivacyMode);
     return UpdateProperty(PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE);
 }
 
 bool WindowImpl::IsPrivacyMode() const
 {
-    return property_->GetPrivacyMode() && !property_->GetOnlySkipSnapshot();
+    return property_->GetPrivacyMode();
 }
 
 void WindowImpl::SetSystemPrivacyMode(bool isSystemPrivacyMode)
 {
     WLOGFD("id : %{public}u, SetSystemPrivacyMode, %{public}u", GetWindowId(), isSystemPrivacyMode);
     property_->SetSystemPrivacyMode(isSystemPrivacyMode);
-    UpdateProperty(PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE);
+    UpdateProperty(PropertyChangeAction::ACTION_UPDATE_SYSTEM_PRIVACY_MODE);
 }
 
 WMError WindowImpl::SetSnapshotSkip(bool isSkip)
@@ -1787,9 +1800,8 @@ WMError WindowImpl::SetSnapshotSkip(bool isSkip)
         WLOGFE("set snapshot skip permission denied!");
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
-    property_->SetOnlySkipSnapshot(true);
-    property_->SetPrivacyMode(isSkip);
-    auto ret = UpdateProperty(PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE);
+    property_->SetSnapshotSkip(isSkip);
+    auto ret = UpdateProperty(PropertyChangeAction::ACTION_UPDATE_SNAPSHOT_SKIP);
     WLOGFD("id : %{public}u, set snapshot skip end. isSkip:%{public}u, systemPrivacyMode:%{public}u, ret:%{public}u",
         GetWindowId(), isSkip, property_->GetSystemPrivacyMode(), ret);
     return WMError::WM_OK;
@@ -2371,7 +2383,7 @@ void WindowImpl::HandleBackKeyPressedEvent(const std::shared_ptr<MMI::KeyEvent>&
 
 void WindowImpl::PerformBack()
 {
-    if(!WindowHelper::IsMainWindow(property_->GetWindowType())){
+    if (!WindowHelper::IsMainWindow(property_->GetWindowType())) {
         WLOGD("it is not a main window");
         return;
     }
@@ -2891,7 +2903,8 @@ void WindowImpl::UpdateFocusStatus(bool focused)
             "FOCUS_WINDOW",
             OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
             "PID", getpid(),
-            "UID", getuid());
+            "UID", getuid(),
+            "BUNDLE_NAME", property_->GetAbilityInfo().bundleName_);
         NotifyAfterFocused();
     } else {
         NotifyAfterUnfocused();
@@ -3223,6 +3236,19 @@ void WindowImpl::NotifyBackground()
     NotifyAfterBackground();
 }
 
+void WindowImpl::NotifyForegroundInteractiveStatus(bool interactive)
+{
+    WLOGFI("NotifyForegroundInteractiveStatus %{public}d", interactive);
+    if (!IsWindowValid() || state_ != WindowState::STATE_SHOWN) {
+        return;
+    }
+    if (interactive) {
+        NotifyAfterResumed();
+    } else {
+        NotifyAfterPaused();
+    }
+}
+
 void WindowImpl::TransformSurfaceNode(const Transform& trans)
 {
     if (surfaceNode_ == nullptr) {
@@ -3377,6 +3403,7 @@ void WindowImpl::SetDefaultOption()
         }
         case WindowType::WINDOW_TYPE_TOAST:
         case WindowType::WINDOW_TYPE_FLOAT:
+        case WindowType::WINDOW_TYPE_SYSTEM_FLOAT:
         case WindowType::WINDOW_TYPE_FLOAT_CAMERA:
         case WindowType::WINDOW_TYPE_VOICE_INTERACTION:
         case WindowType::WINDOW_TYPE_LAUNCHER_DOCK:
@@ -3393,6 +3420,12 @@ void WindowImpl::SetDefaultOption()
         }
         case WindowType::WINDOW_TYPE_DOCK_SLICE: {
             property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+            property_->SetFocusable(false);
+            break;
+        }
+        case WindowType::WINDOW_TYPE_SYSTEM_TOAST: {
+            property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+            property_->SetTouchable(false);
             property_->SetFocusable(false);
             break;
         }

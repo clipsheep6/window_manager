@@ -27,6 +27,10 @@ public:
     void ChangeScreenDisplayMode(FoldDisplayMode displayMode) override;
     void SendSensorResult(FoldStatus foldStatus) override;
     FoldDisplayMode GetScreenDisplayMode() override;
+    FoldStatus GetFoldStatus() override;
+
+private:
+    void ReportFoldStatusChangeBegin(int32_t offScreen, int32_t onScreen);
 };
 } // namespace OHOS::Rosen
 #endif //OHOS_ROSEN_WINDOW_SCENE_DUAL_DISPLAY_DEVICE_POLICY_H

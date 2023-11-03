@@ -231,10 +231,10 @@ void WindowImpl::OnNewWant(const AAFwk::Want& want)
     return;
 }
 
-WMError WindowImpl::SetUIContent(const std::string& contentInfo,
-    NativeEngine* engine, NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability)
+WMError WindowImpl::NapiSetUIContent(const std::string& contentInfo,
+    napi_env env, napi_value storage, bool isdistributed, AppExecFwk::Ability* ability)
 {
-    WLOGFD("SetUIContent: %{public}s", contentInfo.c_str());
+    WLOGFD("NapiSetUIContent: %{public}s", contentInfo.c_str());
     if (uiContent_) {
         uiContent_->Destroy();
     }
@@ -242,10 +242,10 @@ WMError WindowImpl::SetUIContent(const std::string& contentInfo,
     if (ability != nullptr) {
         uiContent = Ace::UIContent::Create(ability);
     } else {
-        uiContent = Ace::UIContent::Create(context_.get(), engine);
+        uiContent = Ace::UIContent::Create(context_.get(), reinterpret_cast<NativeEngine*>(env));
     }
     if (uiContent == nullptr) {
-        WLOGFE("fail to SetUIContent");
+        WLOGFE("fail to NapiSetUIContent");
         return WMError::WM_ERROR_NULLPTR;
     }
     if (isdistributed) {

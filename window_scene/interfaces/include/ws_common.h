@@ -54,6 +54,7 @@ enum class WSError : int32_t {
     WS_ERROR_UNCLEARABLE_SESSION,
     WS_ERROR_FAIL_TO_GET_SNAPSHOT,
     WS_ERROR_INTERNAL_ERROR,
+    WS_ERROR_INVALID_SHOW_WHEN_LOCKED,
 
     WS_ERROR_DEVICE_NOT_SUPPORT = 801, // the value do not change.It is defined on all system
 
@@ -144,6 +145,10 @@ enum SessionOperationType : int32_t {
     TYPE_CLEAR,
 };
 
+enum class ManagerState : uint32_t {
+    MANAGER_STATE_SCREEN_LOCKED = 0,
+};
+
 struct SessionInfo {
     std::string bundleName_ = "";
     std::string moduleName_ = "";
@@ -153,7 +158,8 @@ struct SessionInfo {
     uint32_t windowType_ = 1; // WINDOW_TYPE_APP_MAIN_WINDOW
     sptr<IRemoteObject> callerToken_ = nullptr;
 
-    mutable std::shared_ptr<AAFwk::Want> want;
+    mutable std::shared_ptr<AAFwk::Want> want; // want for ability start
+    std::shared_ptr<AAFwk::Want> closeAbilityWant;
     std::shared_ptr<AAFwk::AbilityStartSetting> startSetting = nullptr;
     mutable std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo = nullptr;
     int32_t resultCode;
@@ -173,6 +179,8 @@ struct SessionInfo {
     int64_t uiAbilityId_ = 0;
     int32_t ancoSceneState;
     bool isClearSession = false;
+    std::string sessionAffinity;
+    int32_t collaboratorType_ = CollaboratorType::DEFAULT_TYPE;
 };
 
 enum class SessionFlag : uint32_t {
@@ -309,8 +317,7 @@ struct KeyboardSceneAnimationConfig {
     float ctrlY1_ = 0.0f;
     float ctrlX2_ = 0.2f;
     float ctrlY2_ = 1.0f;
-    uint32_t durationIn_ = 150; // default durationIn time
-    uint32_t durationOut_ = 150; // default durationOut time
+    uint32_t duration_ = 150;
 };
 
 struct WindowAnimationConfig {
@@ -344,7 +351,8 @@ struct AppWindowSceneConfig {
 
     WindowShadowConfig focusedShadow_;
     WindowShadowConfig unfocusedShadow_;
-    KeyboardSceneAnimationConfig keyboardAnimation_;
+    KeyboardSceneAnimationConfig keyboardAnimationIn_;
+    KeyboardSceneAnimationConfig keyboardAnimationOut_;
     WindowAnimationConfig windowAnimation_;
     StartingWindowAnimationConfig startingWindowAnimationConfig_;
 };

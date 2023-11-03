@@ -17,6 +17,8 @@
 
 #include <transaction/rs_transaction.h>
 #include "window_manager_hilog.h"
+#include "app_mgr_client.h"
+#include "app_mgr_constants.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -145,10 +147,25 @@ void WindowExtensionSessionImpl::NotifyBackpressedEvent(bool& isConsumed)
     WLOGFD("Backpressed event is not cosumed");
 }
 
-WMError WindowExtensionSessionImpl::SetUIContent(const std::string& contentInfo,
-    NativeEngine* engine, NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability)
+void WindowExtensionSessionImpl::NotifyConfigurationUpdated()
 {
-    WLOGFD("WindowExtensionSessionImpl SetUIContent: %{public}s state:%{public}u", contentInfo.c_str(), state_);
+    auto appMgrClient = std::make_shared<AppExecFwk::AppMgrClient>();
+    if (appMgrClient->ConnectAppMgrService() != AppExecFwk::AppMgrResultCode::RESULT_OK) {
+        WLOGFE("Failed to connnect AppManagerService");
+        return;
+    }
+    auto systemConfig = AppExecFwk::Configuration();
+    appMgrClient->GetConfiguration(systemConfig);
+    auto newConfig = std::make_shared<AppExecFwk::Configuration>(systemConfig);
+    if (uiContent_) {
+        uiContent_->UpdateConfiguration(newConfig);
+    }
+}
+
+WMError WindowExtensionSessionImpl::NapiSetUIContent(const std::string& contentInfo,
+    napi_env env, napi_value storage, bool isdistributed, AppExecFwk::Ability* ability)
+{
+    WLOGFD("WindowExtensionSessionImpl NapiSetUIContent: %{public}s state:%{public}u", contentInfo.c_str(), state_);
     if (uiContent_) {
         uiContent_->Destroy();
     }
@@ -156,10 +173,10 @@ WMError WindowExtensionSessionImpl::SetUIContent(const std::string& contentInfo,
     if (ability != nullptr) {
         uiContent = Ace::UIContent::Create(ability);
     } else {
-        uiContent = Ace::UIContent::Create(context_.get(), engine);
+        uiContent = Ace::UIContent::Create(context_.get(), reinterpret_cast<NativeEngine*>(env));
     }
     if (uiContent == nullptr) {
-        WLOGFE("fail to SetUIContent id: %{public}d", GetPersistentId());
+        WLOGFE("fail to NapiSetUIContent id: %{public}d", GetPersistentId());
         return WMError::WM_ERROR_NULLPTR;
     }
     uiContent->Initialize(this, contentInfo, storage, property_->GetParentId());
@@ -193,6 +210,19 @@ WMError WindowExtensionSessionImpl::SetUIContent(const std::string& contentInfo,
     UpdateViewportConfig(GetRect(), WindowSizeChangeReason::UNDEFINED);
     WLOGFD("notify uiContent window size change end");
     return WMError::WM_OK;
+}
+
+WSError WindowExtensionSessionImpl::UpdateRect(const WSRect& rect, SizeChangeReason reason,
+    const std::shared_ptr<RSTransaction>& rsTransaction)
+{
+    WLOGFI("WindowExtensionSessionImpl Update rect [%{public}d, %{public}d, reason: %{public}d]", rect.width_,
+        rect.height_, static_cast<int>(reason));
+    auto wmReason = static_cast<WindowSizeChangeReason>(reason);
+    Rect wmRect = {rect.posX_, rect.posY_, rect.width_, rect.height_};
+    property_->SetWindowRect(wmRect);
+    NotifySizeChange(wmRect, wmReason);
+    UpdateViewportConfig(wmRect, wmReason);
+    return WSError::WS_OK;
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -105,6 +105,7 @@ public:
     void SetScreenRotationLockedFromJs(bool isLocked);
     bool IsScreenRotationLocked();
     void UpdatePropertyAfterRotation(RRect bounds, int rotation);
+    void UpdatePropertyByFoldControl(RRect bounds, RRect phyBounds);
 
     std::string name_ { "UNKNOW" };
     ScreenId screenId_ {};

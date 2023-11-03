@@ -28,6 +28,8 @@ class AxisEvent;
 } // namespace MMI
 
 namespace OHOS::Rosen {
+class RSTransaction;
+
 class ISessionStage : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.ISessionStage");
@@ -41,13 +43,15 @@ public:
         return -1;
     }
     virtual void NotifyFocusStateEvent(bool focusState) {}
+    virtual void NotifyConfigurationUpdated() {}
     virtual WSError NotifyTransferComponentData(const AAFwk::WantParams& wantParams)
     {
         return WSError::WS_OK;
     }
 
     virtual WSError SetActive(bool active) = 0;
-    virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) = 0;
+    virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
+        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) = 0;
     virtual void UpdateDensity() = 0;
     virtual WSError HandleBackEvent() = 0;
     virtual WSError MarkProcessed(int32_t eventId) = 0;
@@ -60,6 +64,8 @@ public:
     virtual void DumpSessionElementInfo(const std::vector<std::string>& params) = 0;
     virtual WSError NotifyTouchOutside() = 0;
     virtual WSError UpdateWindowMode(WindowMode mode) = 0;
+    virtual void NotifyForegroundInteractiveStatus(bool interactive) = 0;
+    virtual WSError UpdateMaximizeMode(MaximizeMode mode) = 0;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_SESSION_STAGE_INTERFACE_H

@@ -26,6 +26,7 @@
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneSessionManagerStub"};
+constexpr uint32_t MAX_VECTOR_SIZE = 100;
 }
 
 const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::stubFuncMap_{
@@ -53,7 +54,8 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandleUnRegisterSessionChangeListener),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_PENDING_SESSION_TO_FOREGROUND),
         &SceneSessionManagerStub::HandlePendingSessionToForeground),
-    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR),
+    std::make_pair(static_cast<uint32_t>(
+        SceneSessionManagerMessage::TRANS_ID_PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR),
         &SceneSessionManagerStub::HandlePendingSessionToBackgroundForDelegator),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_FOCUS_SESSION_TOKEN),
         &SceneSessionManagerStub::HandleGetFocusSessionToken),
@@ -83,12 +85,10 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandleUpdateSessionAvoidAreaListener),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_DUMP_INFO),
         &SceneSessionManagerStub::HandleGetSessionDump),
-    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_BIND_DIALOG_TARGET),
-        &SceneSessionManagerStub::HandleBindDialogTarget),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_SNAPSHOT),
         &SceneSessionManagerStub::HandleGetSessionSnapshot),
-    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_DUMP_INFO),
-        &SceneSessionManagerStub::HandleGetSessionDump),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_BIND_DIALOG_TARGET),
+        &SceneSessionManagerStub::HandleBindDialogTarget),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_NOTIFY_DUMP_INFO_RESULT),
         &SceneSessionManagerStub::HandleNotifyDumpInfoResult),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_SESSION_CONTINUE_STATE),
@@ -111,6 +111,8 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandleRegisterCollaborator),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UNREGISTER_COLLABORATOR),
         &SceneSessionManagerStub::HandleUnregisterCollaborator),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_TOUCHOUTSIDE_LISTENER),
+        &SceneSessionManagerStub::HandleUpdateSessionTouchOutsideListener),
 };
 
 int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
@@ -190,7 +192,7 @@ int SceneSessionManagerStub::HandleUpdateProperty(MessageParcel &data, MessagePa
     } else {
         WLOGFW("Property not exist!");
     }
-    const WSError& ret = UpdateProperty(property, action);
+    const WMError& ret = UpdateProperty(property, action);
     reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }
@@ -480,7 +482,12 @@ int SceneSessionManagerStub::HandleGetSessionDump(MessageParcel &data, MessagePa
     uint32_t infoSize = static_cast<uint32_t>(strlen(info));
     WLOGFI("HandleGetSessionDump, infoSize: %{public}d", infoSize);
     reply.WriteUint32(infoSize);
-    reply.WriteRawData(info, infoSize);
+    if (infoSize != 0) {
+        if (!reply.WriteRawData(info, infoSize)) {
+            WLOGFE("Fail to write dumpInfo");
+            return -1;
+        }
+    }
     reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
 }
@@ -494,6 +501,19 @@ int SceneSessionManagerStub::HandleUpdateSessionAvoidAreaListener(MessageParcel&
     return ERR_NONE;
 }
 
+int SceneSessionManagerStub::HandleGetSessionSnapshot(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleGetSessionSnapshot!");
+    std::string deviceId = Str16ToStr8(data.ReadString16());
+    int32_t persistentId = data.ReadInt32();
+    bool isLowResolution = data.ReadBool();
+    std::shared_ptr<SessionSnapshot> snapshot = std::make_shared<SessionSnapshot>();
+    const WSError& ret = GetSessionSnapshot(deviceId, persistentId, *snapshot, isLowResolution);
+    reply.WriteParcelable(snapshot.get());
+    reply.WriteUint32(static_cast<uint32_t>(ret));
+    return ERR_NONE;
+}
+
 int SceneSessionManagerStub::HandleBindDialogTarget(MessageParcel &data, MessageParcel &reply)
 {
     WLOGFI("run HandleBindDialogTarget!");
@@ -504,27 +524,24 @@ int SceneSessionManagerStub::HandleBindDialogTarget(MessageParcel &data, Message
     return ERR_NONE;
 }
 
-int SceneSessionManagerStub::HandleGetSessionSnapshot(MessageParcel &data, MessageParcel &reply)
-{
-    WLOGFI("run HandleGetSessionSnapshot!");
-    std::string deviceId = Str16ToStr8(data.ReadString16());
-    int32_t persistentId = data.ReadInt32();
-    bool isLowResolution = data.ReadBool();
-    std::shared_ptr<Media::PixelMap> snapshot = std::make_shared<Media::PixelMap>();
-    const WSError& ret = GetSessionSnapshot(deviceId, persistentId, snapshot, isLowResolution);
-    reply.WriteParcelable(snapshot.get());
-    reply.WriteUint32(static_cast<uint32_t>(ret));
-    return ERR_NONE;
-}
-
 int SceneSessionManagerStub::HandleNotifyDumpInfoResult(MessageParcel &data, MessageParcel &reply)
 {
     WLOGFI("HandleNotifyDumpInfoResult");
     std::vector<std::string> info;
     uint32_t vectorSize = data.ReadUint32();
+    if (vectorSize > MAX_VECTOR_SIZE) {
+        WLOGFI("Vector is too big!");
+        return -1;
+    }
     for (uint32_t i = 0; i < vectorSize; i++) {
         uint32_t curSize = data.ReadUint32();
-        info.emplace_back(reinterpret_cast<const char*>(data.ReadRawData(curSize)));
+        std::string curInfo = "";
+        if (curSize != 0) {
+            const char* infoPtr = nullptr;
+            infoPtr = reinterpret_cast<const char*>(data.ReadRawData(curSize));
+            curInfo = (infoPtr) ? std::string(infoPtr, curSize) : "";
+        }
+        info.emplace_back(curInfo);
         WLOGFD("HandleNotifyDumpInfoResult count: %{public}u, infoSize: %{public}u", i, curSize);
     }
     NotifyDumpInfoResult(info);
@@ -591,7 +608,8 @@ int SceneSessionManagerStub::HandleRegisterCollaborator(MessageParcel &data, Mes
 {
     WLOGFI("run HandleRegisterCollaborator!");
     int32_t type = data.ReadInt32();
-    sptr<AAFwk::IAbilityManagerCollaborator> collaborator = iface_cast<AAFwk::IAbilityManagerCollaborator>(data.ReadRemoteObject());
+    sptr<AAFwk::IAbilityManagerCollaborator> collaborator =
+        iface_cast<AAFwk::IAbilityManagerCollaborator>(data.ReadRemoteObject());
     const WSError& ret = RegisterIAbilityManagerCollaborator(type, collaborator);
     reply.WriteUint32(static_cast<uint32_t>(ret));
     return ERR_NONE;
@@ -603,6 +621,15 @@ int SceneSessionManagerStub::HandleUnregisterCollaborator(MessageParcel &data, M
     int32_t type = data.ReadInt32();
     const WSError& ret = UnregisterIAbilityManagerCollaborator(type);
     reply.WriteUint32(static_cast<uint32_t>(ret));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleUpdateSessionTouchOutsideListener(MessageParcel& data, MessageParcel& reply)
+{
+    auto persistentId = data.ReadInt32();
+    bool haveAvoidAreaListener = data.ReadBool();
+    WSError errCode = UpdateSessionTouchOutsideListener(persistentId, haveAvoidAreaListener);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

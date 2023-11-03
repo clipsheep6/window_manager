@@ -21,83 +21,104 @@
 #include "interfaces/include/ws_common.h"
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
+#include "interfaces/kits/napi/scene_session_manager/js_scene_utils.h"
 #include "root_scene.h"
 #include "session/host/include/scene_session.h"
 #include "ability_info.h"
+#include "task_scheduler.h"
 
 namespace OHOS::Rosen {
 class JsSceneSessionManager final {
 public:
-    explicit JsSceneSessionManager(NativeEngine& engine);
+    explicit JsSceneSessionManager(napi_env env);
     ~JsSceneSessionManager() = default;
 
-    static NativeValue* Init(NativeEngine* engine, NativeValue* exportObj);
-    static void Finalizer(NativeEngine* engine, void* data, void* hint);
+    static napi_value Init(napi_env env, napi_value exportObj);
+    static void Finalizer(napi_env env, void* data, void* hint);
 
-    static NativeValue* GetRootSceneSession(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* RequestSceneSession(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* UpdateSceneSessionWant(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* RequestSceneSessionActivation(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* RequestSceneSessionBackground(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* RequestSceneSessionDestruction(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* RequestSceneSessionByCall(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* StartAbilityBySpecified(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* RegisterCallback(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* GetWindowSceneConfig(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* ProcessBackEvent(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* UpdateFocus(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* SwitchUser(NativeEngine* engin, NativeCallbackInfo* info);
-    static NativeValue* GetSessionSnapshotFilePath(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* InitWithRenderServiceAdded(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* GetAllAbilityInfos(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* PrepareTerminate(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* PerfRequestEx(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* UpdateWindowMode(NativeEngine* engine, NativeCallbackInfo* info);
+    static napi_value GetRootSceneSession(napi_env env, napi_callback_info info);
+    static napi_value RequestSceneSession(napi_env env, napi_callback_info info);
+    static napi_value UpdateSceneSessionWant(napi_env env, napi_callback_info info);
+    static napi_value RequestSceneSessionActivation(napi_env env, napi_callback_info info);
+    static napi_value RequestSceneSessionBackground(napi_env env, napi_callback_info info);
+    static napi_value RequestSceneSessionDestruction(napi_env env, napi_callback_info info);
+    static napi_value NotifyForegroundInteractiveStatus(napi_env env, napi_callback_info info);
+    static napi_value RequestSceneSessionByCall(napi_env env, napi_callback_info info);
+    static napi_value StartAbilityBySpecified(napi_env env, napi_callback_info info);
+    static napi_value RegisterCallback(napi_env env, napi_callback_info info);
+    static napi_value GetWindowSceneConfig(napi_env env, napi_callback_info info);
+    static napi_value ProcessBackEvent(napi_env env, napi_callback_info info);
+    static napi_value UpdateFocus(napi_env env, napi_callback_info info);
+    static napi_value SwitchUser(napi_env engin, napi_callback_info info);
+    static napi_value GetSessionSnapshotFilePath(napi_env env, napi_callback_info info);
+    static napi_value InitWithRenderServiceAdded(napi_env env, napi_callback_info info);
+    static napi_value GetAllAbilityInfos(napi_env env, napi_callback_info info);
+    static napi_value PrepareTerminate(napi_env env, napi_callback_info info);
+    static napi_value PerfRequestEx(napi_env env, napi_callback_info info);
+    static napi_value UpdateWindowMode(napi_env env, napi_callback_info info);
+    static napi_value GetRootSceneUIContext(napi_env env, napi_callback_info info);
+    static napi_value SendTouchEvent(napi_env env, napi_callback_info info);
+    static napi_value RequestFocusStatus(napi_env env, napi_callback_info info);
+    static napi_value SetScreenLocked(napi_env env, napi_callback_info info);
+    static napi_value PreloadInLakeApp(napi_env env, napi_callback_info info);
+    static napi_value AddWindowDragHotArea(napi_env env, napi_callback_info info);
+    static napi_value UpdateMaximizeMode(napi_env env, napi_callback_info info);
 
 private:
-    NativeValue* OnRegisterCallback(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnGetRootSceneSession(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnRequestSceneSession(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnUpdateSceneSessionWant(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnRequestSceneSessionActivation(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnRequestSceneSessionBackground(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnRequestSceneSessionDestruction(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnRequestSceneSessionByCall(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnStartAbilityBySpecified(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnGetWindowSceneConfig(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnProcessBackEvent(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnUpdateFocus(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnSwitchUser(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnGetSessionSnapshotFilePath(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnInitWithRenderServiceAdded(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnGetAllAbilityInfos(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* CreateAbilityInfos(NativeEngine& engine, const std::vector<AppExecFwk::AbilityInfo>& abilityInfos);
-    NativeValue* CreateAbilityItemInfo(NativeEngine &engine, const AppExecFwk::AbilityInfo& abilityInfo);
-    NativeValue* CreateWindowModes(NativeEngine& engine, const std::vector<AppExecFwk::SupportWindowMode>& windowModes);
-    NativeValue* CreateWindowSize(NativeEngine& engine, const AppExecFwk::AbilityInfo& abilityInfo);
-    NativeValue* OnPrepareTerminate(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnPerfRequestEx(NativeEngine& engine, NativeCallbackInfo& info);
-    NativeValue* OnUpdateWindowMode(NativeEngine& engine, NativeCallbackInfo& info);
+    napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
+    napi_value OnGetRootSceneSession(napi_env env, napi_callback_info info);
+    napi_value OnRequestSceneSession(napi_env env, napi_callback_info info);
+    napi_value OnUpdateSceneSessionWant(napi_env env, napi_callback_info info);
+    napi_value OnRequestSceneSessionActivation(napi_env env, napi_callback_info info);
+    napi_value OnRequestSceneSessionBackground(napi_env env, napi_callback_info info);
+    napi_value OnRequestSceneSessionDestruction(napi_env env, napi_callback_info info);
+    napi_value OnNotifyForegroundInteractiveStatus(napi_env env, napi_callback_info info);
+    napi_value OnRequestSceneSessionByCall(napi_env env, napi_callback_info info);
+    napi_value OnStartAbilityBySpecified(napi_env env, napi_callback_info info);
+    napi_value OnGetWindowSceneConfig(napi_env env, napi_callback_info info);
+    napi_value OnProcessBackEvent(napi_env env, napi_callback_info info);
+    napi_value OnUpdateFocus(napi_env env, napi_callback_info info);
+    napi_value OnSwitchUser(napi_env env, napi_callback_info info);
+    napi_value OnGetSessionSnapshotFilePath(napi_env env, napi_callback_info info);
+    napi_value OnInitWithRenderServiceAdded(napi_env env, napi_callback_info info);
+    napi_value OnGetAllAbilityInfos(napi_env env, napi_callback_info info);
+    napi_value CreateAbilityInfos(napi_env env, const std::vector<AppExecFwk::AbilityInfo>& abilityInfos);
+    napi_value CreateAbilityItemInfo(napi_env env, const AppExecFwk::AbilityInfo& abilityInfo);
+    napi_value CreateWindowModes(napi_env env, const std::vector<AppExecFwk::SupportWindowMode>& windowModes);
+    napi_value CreateWindowSize(napi_env env, const AppExecFwk::AbilityInfo& abilityInfo);
+    napi_value OnPrepareTerminate(napi_env env, napi_callback_info info);
+    napi_value OnPerfRequestEx(napi_env env, napi_callback_info info);
+    napi_value OnUpdateWindowMode(napi_env env, napi_callback_info info);
+    napi_value OnGetRootSceneUIContext(napi_env env, napi_callback_info info);
+    napi_value OnSendTouchEvent(napi_env env, napi_callback_info info);
+    napi_value OnRequestFocusStatus(napi_env env, napi_callback_info info);
+    napi_value OnSetScreenLocked(napi_env env, napi_callback_info info);
+    napi_value OnPreloadInLakeApp(napi_env env, napi_callback_info info);
+    napi_value OnAddWindowDragHotArea(napi_env env, napi_callback_info info);
+    napi_value OnUpdateMaximizeMode(napi_env env, napi_callback_info info);
 
     void OnStatusBarEnabledUpdate(bool enable);
     void OnGestureNavigationEnabledUpdate(bool enable);
     void OnCreateSpecificSession(const sptr<SceneSession>& sceneSession);
     void OnOutsideDownEvent(int32_t x, int32_t y);
+    void OnShiftFocus(int32_t persistentId);
     void ProcessCreateSpecificSessionRegister();
     void ProcessStatusBarEnabledChangeListener();
     void ProcessGestureNavigationEnabledChangeListener();
     void ProcessOutsideDownEvent();
-    bool IsCallbackRegistered(const std::string& type, NativeValue* jsListenerObject);
+    void ProcessShiftFocus();
+    bool IsCallbackRegistered(napi_env env, const std::string& type, napi_value jsListenerObject);
     void RegisterDumpRootSceneElementInfoListener();
     void RegisterVirtualPixelRatioChangeListener();
-    void SetIsClearSession(NativeEngine& engine, NativeObject* jsSceneSessionObj, sptr<SceneSession>& sceneSession);
+    void SetIsClearSession(napi_env env, napi_value jsSceneSessionObj, sptr<SceneSession>& sceneSession);
 
-    NativeEngine& engine_;
+    napi_env env_;
     std::map<std::string, std::shared_ptr<NativeReference>> jsCbMap_;
     using Func = void(JsSceneSessionManager::*)();
     std::map<std::string, Func> listenerFunc_;
 
     sptr<RootScene> rootScene_;
+    std::shared_ptr<MainThreadScheduler> taskScheduler_;
 };
 } // namespace OHOS::Rosen
 

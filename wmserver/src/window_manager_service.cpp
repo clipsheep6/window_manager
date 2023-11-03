@@ -925,6 +925,10 @@ WMError WindowManagerService::RemoveWindow(uint32_t windowId, bool isFromInnerki
         WLOGFE("remove window permission denied!");
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
+    if (!accessTokenIdMaps_.isExist(windowId, IPCSkeleton::GetCallingTokenID())) {
+        WLOGI("Operation rejected");
+        return WMError::WM_ERROR_INVALID_OPERATION;
+    }
     return PostSyncTask([this, windowId]() {
         WLOGI("[WMS] Remove: %{public}u", windowId);
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "wms:RemoveWindow(%u)", windowId);
@@ -1237,6 +1241,13 @@ WMError WindowManagerService::UpdateProperty(sptr<WindowProperty>& windowPropert
         WLOGFE("SetForbidSplitMove or SetShowWhenLocked or SetTranform or SetTurnScreenOn permission denied!");
         return WMError::WM_ERROR_INVALID_PERMISSION;
     }
+
+    if (action == PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE && 
+        !Permission::CheckCallingPermission("ohos.permission.PRIVACY_WINDOW")) {
+        WLOGFE("Set privacy mode permission denied!");
+        return WMError::WM_ERROR_INVALID_PERMISSION;
+    }
+
     windowProperty->isSystemCalling_ = Permission::IsSystemCalling();
     if (action == PropertyChangeAction::ACTION_UPDATE_TRANSFORM_PROPERTY) {
         return PostSyncTask([this, windowProperty, action]() mutable {

@@ -17,6 +17,7 @@
 #include "session/container/include/zidl/session_stage_ipc_interface_code.h"
 
 #include <ipc_types.h>
+#include <transaction/rs_transaction.h>
 
 #include "window_manager_hilog.h"
 
@@ -34,12 +35,12 @@ const std::map<uint32_t, SessionStageStubFunc> SessionStageStub::stubFuncMap_{
         &SessionStageStub::HandleUpdateDensity),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_HANDLE_BACK_EVENT),
         &SessionStageStub::HandleBackEventInner),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_FOCUS_CHANGE),
-        &SessionStageStub::HandleUpdateFocus),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DESTROY),
         &SessionStageStub::HandleNotifyDestroy),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TOUCH_DIALOG_TARGET),
         &SessionStageStub::HandleNotifyTouchDialogTarget),
+    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_FOCUS_CHANGE),
+        &SessionStageStub::HandleUpdateFocus),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TRANSFER_COMPONENT_DATA),
         &SessionStageStub::HandleNotifyTransferComponentData),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_OCCUPIED_AREA_CHANGE_INFO),
@@ -54,6 +55,12 @@ const std::map<uint32_t, SessionStageStubFunc> SessionStageStub::stubFuncMap_{
         &SessionStageStub::HandleNotifyTouchOutside),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_WINDOW_MODE_CHANGE),
         &SessionStageStub::HandleUpdateWindowMode),
+    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_FOREGROUND_INTERACTIVE_STATUS),
+        &SessionStageStub::HandleNotifyForegroundInteractiveStatus),
+    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_CONFIGURATION_UPDATED),
+        &SessionStageStub::HandleNotifyConfigurationUpdated),
+    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_MAXIMIZE_MODE_CHANGE),
+        &SessionStageStub::HandleUpdateMaximizeMode),
 };
 
 int SessionStageStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -87,8 +94,20 @@ int SessionStageStub::HandleUpdateRect(MessageParcel& data, MessageParcel& reply
     WLOGFD("UpdateRect!");
     WSRect rect = { data.ReadInt32(), data.ReadInt32(), data.ReadUint32(), data.ReadUint32() };
     SizeChangeReason reason = static_cast<SizeChangeReason>(data.ReadUint32());
-    WSError errCode = UpdateRect(rect, reason);
-    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    bool hasRSTransaction = data.ReadBool();
+    if (hasRSTransaction) {
+        auto rsTransaction = data.ReadParcelable<RSTransaction>();
+        if (!rsTransaction) {
+            WLOGFE("RSTransaction unMarsh failed");
+            return -1;
+        }
+        std::shared_ptr<RSTransaction> transaction(rsTransaction);
+        WSError errCode = UpdateRect(rect, reason, transaction);
+        reply.WriteUint32(static_cast<uint32_t>(errCode));
+    } else {
+        WSError errCode = UpdateRect(rect, reason);
+        reply.WriteUint32(static_cast<uint32_t>(errCode));
+    }
     return ERR_NONE;
 }
 
@@ -107,15 +126,6 @@ int SessionStageStub::HandleBackEventInner(MessageParcel& data, MessageParcel& r
     return ERR_NONE;
 }
 
-int SessionStageStub::HandleUpdateFocus(MessageParcel& data, MessageParcel& reply)
-{
-    WLOGFD("UpdateFocus!");
-    bool isFocused = data.ReadBool();
-    WSError errCode = UpdateFocus(isFocused);
-    reply.WriteUint32(static_cast<uint32_t>(errCode));
-    return ERR_NONE;
-}
-
 int SessionStageStub::HandleNotifyDestroy(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("Notify Destroy");
@@ -128,6 +138,15 @@ int SessionStageStub::HandleNotifyTouchDialogTarget(MessageParcel& data, Message
 {
     WLOGFD("Notify touch dialog target");
     NotifyTouchDialogTarget();
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleUpdateFocus(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("UpdateFocus!");
+    bool isFocused = data.ReadBool();
+    WSError errCode = UpdateFocus(isFocused);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
 
@@ -199,6 +218,30 @@ int SessionStageStub::HandleUpdateWindowMode(MessageParcel& data, MessageParcel&
     WLOGFD("HandleUpdateWindowMode!");
     WindowMode mode = static_cast<WindowMode>(data.ReadUint32());
     WSError errCode = UpdateWindowMode(mode);
+    reply.WriteInt32(static_cast<int32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleNotifyForegroundInteractiveStatus(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("NotifyForegroundInteractiveStatus!");
+    bool interactive = data.ReadBool();
+    NotifyForegroundInteractiveStatus(interactive);
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleNotifyConfigurationUpdated(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("HandleNotifyConfigurationUpdated!");
+    NotifyConfigurationUpdated();
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleUpdateMaximizeMode(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("HandleUpdateMaximizeMode!");
+    MaximizeMode mode = static_cast<MaximizeMode>(data.ReadUint32());
+    WSError errCode = UpdateMaximizeMode(mode);
     reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
 }

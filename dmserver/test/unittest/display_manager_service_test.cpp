@@ -20,6 +20,7 @@
 #include "display_manager_agent_default.h"
 #include "common_test_utils.h"
 #include "mock_rs_display_node.h"
+#include "scene_board_judgement.h"
 
 
 using namespace testing;
@@ -86,6 +87,18 @@ public:
 };
 
 namespace {
+/**
+ * @tc.name: OnStart
+ * @tc.desc: DMS OnStart
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerServiceTest, OnStart, Function | SmallTest | Level3)
+{
+    dms_->OnStart();
+    bool result = dms_->Init();
+    EXPECT_TRUE(result);
+}
+
 /**
  * @tc.name: Dump
  * @tc.desc: DMS dump
@@ -244,6 +257,22 @@ HWTEST_F(DisplayManagerServiceTest, VirtualScreen, Function | SmallTest | Level3
 
     std::vector<ScreenId> screens;
     dms_->RemoveVirtualScreenFromGroup(screens);
+
+    DMError result = dms_->DestroyVirtualScreen(10086);
+    EXPECT_EQ(result, DMError::DM_ERROR_INVALID_CALLING);
+}
+
+/**
+ * @tc.name: GetDisplaySnapshot
+ * @tc.desc: DMS get display snapshot
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerServiceTest, GetDisplaySnapshot, Function | SmallTest | Level3)
+{
+    DisplayId displayId = 10086;
+    DmErrorCode* errorCode = nullptr;
+    std::shared_ptr<Media::PixelMap> result = dms_->GetDisplaySnapshot(displayId, errorCode);
+    EXPECT_EQ(result, nullptr);
 }
 
 /**
@@ -331,6 +360,10 @@ HWTEST_F(DisplayManagerServiceTest, ScreenPower, Function | SmallTest | Level3)
 
     ASSERT_EQ(false, dms_->SetScreenPowerForAll(state, reason));
 
+    ScreenId dmsScreenId = 2;
+    ScreenPowerState result = dms_->GetScreenPower(dmsScreenId);
+    EXPECT_EQ(result, ScreenPowerState::INVALID_STATE);
+
     ASSERT_EQ(true, dms_->SetDisplayState(displayState));
     ASSERT_EQ(DisplayState::ON, dms_->GetDisplayState(0));
 }
@@ -414,6 +447,9 @@ HWTEST_F(DisplayManagerServiceTest, AddAndRemoveSurfaceNode, Function | SmallTes
 {
     sptr<DisplayManagerService> dms = new DisplayManagerService();
     std::shared_ptr<RSSurfaceNode> surfaceNode = nullptr;
+    DMError result = dms_->RemoveSurfaceNodeFromDisplay(DEFAULT_DISPLAY, surfaceNode);
+    EXPECT_EQ(result, DMError::DM_ERROR_NULLPTR);
+
     ASSERT_EQ(DMError::DM_ERROR_NULLPTR, dms->AddSurfaceNodeToDisplay(DEFAULT_DISPLAY, surfaceNode, true));
     surfaceNode = std::make_shared<RSSurfaceNode>(RSSurfaceNodeConfig{}, true);
     ASSERT_EQ(DMError::DM_ERROR_NULLPTR, dms->AddSurfaceNodeToDisplay(DEFAULT_DISPLAY, surfaceNode, true));
@@ -436,6 +472,18 @@ HWTEST_F(DisplayManagerServiceTest, AddAndRemoveSurfaceNode, Function | SmallTes
     ASSERT_EQ(DMError::DM_OK, dms->RemoveSurfaceNodeFromDisplay(DEFAULT_DISPLAY, surfaceNode));
 
     testing::Mock::AllowLeak(displayNode.get());
+}
+
+/**
+ * @tc.name: SetGravitySensorSubscriptionEnabled
+ * @tc.desc: DMS set gravity sensor subscription enabled
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerServiceTest, SetGravitySensorSubscriptionEnabled, Function | SmallTest | Level3)
+{
+    dms_->SetGravitySensorSubscriptionEnabled();
+    DMError result = dms_->DestroyVirtualScreen(10086);
+    EXPECT_EQ(result, DMError::DM_ERROR_INVALID_CALLING);
 }
 }
 } // namespace Rosen

@@ -58,6 +58,11 @@ ohos_unittest("dmserver_display_manager_agent_controller_test") {
     "c_utils:utils",
     "hilog:libhilog",
   ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
 }
 
 ohos_unittest("dmserver_abstract_display_test") {
@@ -97,6 +102,11 @@ ohos_unittest("dmserver_display_manager_proxy_test") {
     "c_utils:utils",
     "graphic_2d:surface",
     "hilog:libhilog",
+  ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
   ]
 }
 
@@ -157,6 +167,11 @@ ohos_unittest("dmserver_abstract_screen_test") {
     "c_utils:utils",
     "hilog:libhilog",
   ]
+
+  cflags = [
+    "-Dprivate = public",
+    "-Dprotected = public",
+  ]
 }
 
 ohos_unittest("dmserver_abstract_display_controller_test") {
@@ -202,10 +217,6 @@ config("dmserver_unittest_common_public_config") {
     "../../../utils/include",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client",  # RSSurface
   ]
-
-  if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {
-    include_dirs += [ "${sensor_path}/interfaces/native/include" ]
-  }
 }
 
 ohos_static_library("dmserver_unittest_common") {
@@ -221,6 +232,7 @@ ohos_static_library("dmserver_unittest_common") {
   public_deps = [
     "${window_base_path}/dm:libdm",
     "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",
     "${window_base_path}/wm:libwm",
     "../..:libdms",
     "../../../snapshot:snapshot_display",

@@ -55,8 +55,9 @@ WSError WindowEventChannel::TransferPointerEvent(const std::shared_ptr<MMI::Poin
         pointerAction == MMI::PointerEvent::POINTER_ACTION_LEAVE_WINDOW ||
         pointerAction == MMI::PointerEvent::POINTER_ACTION_PULL_IN_WINDOW ||
         pointerAction == MMI::PointerEvent::POINTER_ACTION_PULL_OUT_WINDOW) {
-        WLOGFD("Dispatch by skipping receipt, action:%{public}s, eventId:%{public}d, persistentId:%{public}d",
-            pointerEvent->DumpPointerAction(), pointerEvent->GetId(), sessionStage_->GetPersistentId());
+        WLOGFI("InputTracking id:%{public}d, Dispatch by skipping receipt, action:%{public}s,"
+            " persistentId:%{public}d", pointerEvent->GetId(),
+            pointerEvent->DumpPointerAction(), sessionStage_->GetPersistentId());
     } else {
         DelayedSingleton<ANRHandler>::GetInstance()->SetSessionStage(pointerEvent->GetId(), sessionStage_);
         pointerEvent->SetProcessedCallback(dispatchCallback_);
@@ -140,7 +141,47 @@ void WindowEventChannel::PrintPointerEvent(const std::shared_ptr<MMI::PointerEve
     for (const auto &buff : buffer) {
         str += std::to_string(buff);
     }
-    WLOGFD("PointerAction:%{public}s,SourceType:%{public}s,ButtonId:%{public}d,"
+    auto pointerAction = event->GetPointerAction();
+    if (pointerAction == MMI::PointerEvent::POINTER_ACTION_MOVE ||
+        pointerAction == MMI::PointerEvent::POINTER_ACTION_PULL_MOVE) {
+        WLOGFD("PointerAction:%{public}s,SourceType:%{public}s,ButtonId:%{public}d,"
+            "VerticalAxisValue:%{public}.2f,HorizontalAxisValue:%{public}.2f,"
+            "PointerId:%{public}d,PointerCount:%{public}zu,EventNumber:%{public}d,"
+            "BufferCount:%{public}zu,Buffer:%{public}s",
+            event->DumpPointerAction(), event->DumpSourceType(), event->GetButtonId(),
+            event->GetAxisValue(MMI::PointerEvent::AXIS_TYPE_SCROLL_VERTICAL),
+            event->GetAxisValue(MMI::PointerEvent::AXIS_TYPE_SCROLL_HORIZONTAL),
+            event->GetPointerId(), pointerIds.size(), event->GetId(), buffer.size(), str.c_str());
+
+        for (const auto &pointerId : pointerIds) {
+            MMI::PointerEvent::PointerItem item;
+            if (!event->GetPointerItem(pointerId, item)) {
+                WLOGFE("Invalid pointer: %{public}d.", pointerId);
+                return;
+            }
+            WLOGFD("pointerId:%{public}d,DownTime:%{public}" PRId64 ",IsPressed:%{public}d,"
+                "DisplayX:%{public}d,DisplayY:%{public}d,WindowX:%{public}d,WindowY:%{public}d,",
+                pointerId, item.GetDownTime(), item.IsPressed(), item.GetDisplayX(), item.GetDisplayY(),
+                item.GetWindowX(), item.GetWindowY());
+        }
+    } else {
+        PrintInfoPointerEvent(event);
+    }
+}
+
+void WindowEventChannel::PrintInfoPointerEvent(const std::shared_ptr<MMI::PointerEvent>& event)
+{
+    if (event == nullptr) {
+        WLOGFE("event is nullptr");
+        return;
+    }
+    std::vector<int32_t> pointerIds = event->GetPointerIds();
+    std::string str;
+    std::vector<uint8_t> buffer = event->GetBuffer();
+    for (const auto &buff : buffer) {
+        str += std::to_string(buff);
+    }
+    WLOGFI("PointerAction:%{public}s,SourceType:%{public}s,ButtonId:%{public}d,"
         "VerticalAxisValue:%{public}.2f,HorizontalAxisValue:%{public}.2f,"
         "PointerId:%{public}d,PointerCount:%{public}zu,EventNumber:%{public}d,"
         "BufferCount:%{public}zu,Buffer:%{public}s",
@@ -155,7 +196,7 @@ void WindowEventChannel::PrintPointerEvent(const std::shared_ptr<MMI::PointerEve
             WLOGFE("Invalid pointer: %{public}d.", pointerId);
             return;
         }
-        WLOGFD("pointerId:%{public}d,DownTime:%{public}" PRId64 ",IsPressed:%{public}d,"
+        WLOGFI("pointerId:%{public}d,DownTime:%{public}" PRId64 ",IsPressed:%{public}d,"
             "DisplayX:%{public}d,DisplayY:%{public}d,WindowX:%{public}d,WindowY:%{public}d,",
             pointerId, item.GetDownTime(), item.IsPressed(), item.GetDisplayX(), item.GetDisplayY(),
             item.GetWindowX(), item.GetWindowY());

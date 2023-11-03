@@ -21,6 +21,7 @@
 #include "remote_animation.h"
 #include "starting_window.h"
 #include "window_controller.h"
+#include "scene_board_judgement.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -833,7 +834,11 @@ HWTEST_F(WindowControllerTest, RequestFocus, Function | SmallTest | Level3)
 
     windowId = windowNode->GetWindowId();
     res = windowController_->RequestFocus(windowId);
-    ASSERT_EQ(WMError::WM_ERROR_INVALID_OPERATION, res);
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_NE(WMError::WM_ERROR_INVALID_OPERATION, res);
+    } else {
+        ASSERT_EQ(WMError::WM_ERROR_INVALID_OPERATION, res);
+    }
 }
 
 /**
@@ -973,8 +978,11 @@ HWTEST_F(WindowControllerTest, ChangeMouseStyle1, Function | SmallTest | Level3)
 
     sptr<MoveDragProperty> moveDragProperty;
     WMError res = windowController_->ChangeMouseStyle(windowId, moveDragProperty);
- 
-    ASSERT_EQ(WMError::WM_ERROR_INVALID_OPERATION, res);
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(WMError::WM_ERROR_INVALID_OPERATION, res);
+    } else {
+        ASSERT_NE(WMError::WM_ERROR_INVALID_OPERATION, res);
+    }
 }
 
 /**
@@ -1003,7 +1011,6 @@ HWTEST_F(WindowControllerTest, ChangeMouseStyle2, Function | SmallTest | Level3)
 
     sptr<MoveDragProperty> moveDragProperty;
     WMError res = windowController_->ChangeMouseStyle(windowId, moveDragProperty);
- 
     ASSERT_EQ(WMError::WM_ERROR_INVALID_OPERATION, res);
 }
 
@@ -1034,8 +1041,11 @@ HWTEST_F(WindowControllerTest, ChangeMouseStyle3, Function | SmallTest | Level3)
     sptr<MoveDragProperty> moveDragProperty = new MoveDragProperty();
     moveDragProperty->dragType_ = DragType::DRAG_UNDEFINED;
     WMError res = windowController_->ChangeMouseStyle(windowId, moveDragProperty);
-
-    ASSERT_EQ(WMError::WM_ERROR_INVALID_OPERATION, res);
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(WMError::WM_ERROR_INVALID_OPERATION, res);
+    } else {
+        ASSERT_EQ(WMError::WM_ERROR_INVALID_OPERATION, res);
+    }
 }
 
 /**
@@ -1069,7 +1079,7 @@ HWTEST_F(WindowControllerTest, NotifyServerReadyToMoveOrDrag1, Function | SmallT
     ASSERT_EQ(windowNode->currentVisibility_, false);
     res = windowController_->NotifyServerReadyToMoveOrDrag(windowId, moveDragProperty);
     ASSERT_EQ(WMError::WM_ERROR_INVALID_OPERATION, res);
-    
+
     windowNode->currentVisibility_ = true;
     res = windowController_->NotifyServerReadyToMoveOrDrag(windowId, moveDragProperty);
     ASSERT_EQ(WMError::WM_ERROR_INVALID_OPERATION, res);
@@ -1098,7 +1108,7 @@ HWTEST_F(WindowControllerTest, NotifyServerReadyToMoveOrDrag2, Function | SmallT
     surfaceNode = RSSurfaceNode::Create(surfaceNodeConfig, RSSurfaceNodeType::DEFAULT);
     ASSERT_EQ(WMError::WM_OK,
         windowController_->CreateWindow(window, property, surfaceNode, windowId, nullptr, 0, 0));
-    
+
     sptr<MoveDragProperty> moveDragProperty = new MoveDragProperty();
     moveDragProperty->startMoveFlag_ = false;
     moveDragProperty->startDragFlag_ = false;
@@ -1142,7 +1152,7 @@ HWTEST_F(WindowControllerTest, NotifyServerReadyToMoveOrDrag3, Function | SmallT
     surfaceNode = RSSurfaceNode::Create(surfaceNodeConfig, RSSurfaceNodeType::DEFAULT);
     ASSERT_EQ(WMError::WM_OK,
         windowController_->CreateWindow(window, property, surfaceNode, windowId, nullptr, 0, 0));
-    
+
     sptr<MoveDragProperty> moveDragProperty = new MoveDragProperty();
     moveDragProperty->startMoveFlag_ = false;
     moveDragProperty->startDragFlag_ = false;

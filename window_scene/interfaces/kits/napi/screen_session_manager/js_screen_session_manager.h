@@ -19,30 +19,40 @@
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
 #include "session_manager/include/screen_session_manager.h"
+#include "shutdown/takeover_shutdown_callback_stub.h"
 
 namespace OHOS::Rosen {
-class JsScreenSessionManager final : public IScreenConnectionListener {
+class JsScreenSessionManager final : public IScreenConnectionListener,
+    public PowerMgr::TakeOverShutdownCallbackStub {
 public:
-    explicit JsScreenSessionManager(NativeEngine& engine);
+    explicit JsScreenSessionManager(napi_env env);
     ~JsScreenSessionManager();
 
-    static NativeValue* Init(NativeEngine* engine, NativeValue* exportObj);
-    static void Finalizer(NativeEngine* engine, void* data, void* hint);
+    static napi_value Init(napi_env env, napi_value exportObj);
+    static void Finalizer(napi_env env, void* data, void* hint);
 
     void OnScreenConnect(sptr<ScreenSession>& screenSession) override;
     void OnScreenDisconnect(sptr<ScreenSession>& screenSession) override;
+    bool OnTakeOverShutdown(bool isReboot) override;
 
 private:
-    static NativeValue* RegisterCallback(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* UpdateScreenRotationProperty(NativeEngine* engine, NativeCallbackInfo* info);
-    static NativeValue* GetCurvedCompressionArea(NativeEngine* engine, NativeCallbackInfo* info);
+    static napi_value RegisterCallback(napi_env env, napi_callback_info info);
+    static napi_value UpdateScreenRotationProperty(napi_env env, napi_callback_info info);
+    static napi_value GetCurvedCompressionArea(napi_env env, napi_callback_info info);
+    static napi_value RegisterShutdownCallback(napi_env env, napi_callback_info info);
+    static napi_value UnRegisterShutdownCallback(napi_env env, napi_callback_info info);
+    static napi_value GetPhyScreenProperty(napi_env env, napi_callback_info info);
 
-    NativeValue* OnRegisterCallback(NativeEngine& engine, const NativeCallbackInfo& info);
-    NativeValue* OnUpdateScreenRotationProperty(NativeEngine& engine, const NativeCallbackInfo& info);
-    NativeValue* OnGetCurvedCompressionArea(NativeEngine& engine, const NativeCallbackInfo& info);
+    napi_value OnRegisterCallback(napi_env env, const napi_callback_info info);
+    napi_value OnUpdateScreenRotationProperty(napi_env env, const napi_callback_info info);
+    napi_value OnGetCurvedCompressionArea(napi_env env, const napi_callback_info info);
+    napi_value OnRegisterShutdownCallback(napi_env env, const napi_callback_info info);
+    napi_value OnUnRegisterShutdownCallback(napi_env env, const napi_callback_info info);
+    napi_value OnGetPhyScreenProperty(napi_env env, const napi_callback_info info);
 
     std::shared_ptr<NativeReference> screenConnectionCallback_;
-    NativeEngine& engine_;
+    std::shared_ptr<NativeReference> shutdownCallback_;
+    napi_env env_;
 };
 } // namespace OHOS::Rosen
 

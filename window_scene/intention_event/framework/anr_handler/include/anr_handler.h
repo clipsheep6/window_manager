@@ -35,8 +35,10 @@ public:
 
     void SetSessionStage(int32_t eventId, const wptr<ISessionStage> &sessionStage);
     void HandleEventConsumed(int32_t eventId, int64_t actionTime);
-    void ClearDestroyedPersistentId(int32_t persistentId);
+    void OnWindowDestroyed(int32_t persistentId);
 private:
+    using Task = std::function<void()>;
+    bool PostTask(Task&& task, int64_t delayTime = 0);
     void MarkProcessed();
     void SendEvent(int32_t eventId, int64_t delayTime);
     void SetAnrHandleState(int32_t eventId, bool status);
@@ -45,15 +47,19 @@ private:
     bool IsOnEventHandler(int32_t persistentId);
     void UpdateLatestEventId(int32_t eventId);
 private:
-    std::recursive_mutex mutex_;
     std::shared_ptr<AppExecFwk::EventHandler> eventHandler_ { nullptr };
     struct ANRHandlerState {
         std::unordered_map<int32_t, bool> sendStatus;
         int32_t currentEventIdToReceipt { -1 };
         std::list<int32_t> eventsToReceipt;
+        std::unordered_map<int32_t, std::list<int>::iterator> eventsIterMap;
     };
     ANRHandlerState anrHandlerState_;
-    std::unordered_map<int32_t, wptr<ISessionStage>> sessionStageMap_;
+    struct SessionInfo {
+        int32_t persistentId;
+        wptr<ISessionStage> sessionStage;
+    };
+    std::unordered_map<int32_t, SessionInfo> sessionStageMap_;
 };
 } // namespace Rosen
 } // namespace OHOS

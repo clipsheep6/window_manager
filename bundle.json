@@ -16,7 +16,8 @@
       "features": [
         "window_manager_feature_coverage = false",
         "window_manager_dayu210_resource_config",
-        "window_manager_feature_subscribe_motion"
+        "window_manager_feature_subscribe_motion",
+        "window_manager_feature_tp_enable"
       ],
       "adapted_system_type": [ "standard" ],
       "rom": "8000KB",
@@ -66,11 +67,13 @@
           "screenlock_mgr",
           "previewer",
           "hilog",
-          "memmgr_plugin"
+          "memmgr_plugin",
+          "data_share"
         ],
         "third_party": [
           "libjpeg-turbo",
-          "libxml2"
+          "libxml2",
+          "bounds_checking_function"
         ]
       },
       "build": {
@@ -113,6 +116,16 @@
                 "occupied_area_change_info.h"
               ],
               "header_base": "//foundation/window/window_manager/interfaces/innerkits/wm"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/window/window_manager/utils:libwmutil",
+            "header": {
+              "header_files": [
+                "singleton_container.h"
+              ],
+              "header_base": "//foundation/window/window_manager/utils/include"
             }
           },
           {

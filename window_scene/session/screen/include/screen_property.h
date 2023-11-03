@@ -30,6 +30,7 @@ enum class ScreenPropertyChangeReason : uint32_t {
     FOLD_SCREEN_EXPAND,
     SCREEN_CONNECT,
     SCREEN_DISCONNECT,
+    FOLD_SCREEN_FOLDING,
 };
 class ScreenProperty {
 public:
@@ -41,6 +42,9 @@ public:
 
     void SetBounds(const RRect& bounds);
     RRect GetBounds() const;
+
+    void SetPhyBounds(const RRect& phyBounds);
+    RRect GetPhyBounds() const;
 
     float GetDensity();
 
@@ -92,6 +96,7 @@ private:
     }
     float rotation_ { 0.0f };
     RRect bounds_;
+    RRect phyBounds_;
 
     uint32_t phyWidth_ { UINT32_MAX };
     uint32_t phyHeight_ { UINT32_MAX };

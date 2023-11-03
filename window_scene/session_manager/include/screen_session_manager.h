@@ -87,16 +87,20 @@ public:
     virtual ScreenId CreateVirtualScreen(VirtualScreenOption option,
                                          const sptr<IRemoteObject>& displayManagerAgent) override;
     virtual DMError SetVirtualScreenSurface(ScreenId screenId, sptr<IBufferProducer> surface) override;
+    virtual DMError SetVirtualMirrorScreenBufferRotation(ScreenId screenId, bool autoRotate) override;
     virtual DMError DestroyVirtualScreen(ScreenId screenId) override;
     virtual DMError MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenIds,
         ScreenId& screenGroupId) override;
     virtual DMError StopMirror(const std::vector<ScreenId>& mirrorScreenIds) override;
+    DMError DisableMirror(bool disableOrNot) override;
     virtual DMError MakeExpand(std::vector<ScreenId> screenId, std::vector<Point> startPoint,
                                ScreenId& screenGroupId) override;
     virtual DMError StopExpand(const std::vector<ScreenId>& expandScreenIds) override;
+    DMError MakeUniqueScreen(const std::vector<ScreenId>& screenIds) override;
     virtual sptr<ScreenGroupInfo> GetScreenGroupInfoById(ScreenId screenId) override;
     virtual void RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens) override;
     virtual std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId, DmErrorCode* errorCode) override;
+    DMError DisableDisplaySnapshot(bool disableOrNot) override;
     virtual sptr<DisplayInfo> GetDisplayInfoById(DisplayId displayId) override;
     sptr<DisplayInfo> GetDisplayInfoByScreen(ScreenId screenId) override;
     std::vector<DisplayId> GetAllDisplayIds() override;
@@ -163,7 +167,9 @@ public:
         const std::vector<sptr<ScreenInfo>>& screenInfos, ScreenGroupChangeEvent groupEvent);
     void OnScreenshot(sptr<ScreenshotInfo> info);
     sptr<CutoutInfo> GetCutoutInfo(DisplayId displayId) override;
+    DMError HasImmersiveWindow(bool& immersive) override;
     void SetDisplayBoundary(const sptr<ScreenSession> screenSession);
+    void SetImmersiveState(bool immersive);
 
     //Fold Screen
     void SetFoldDisplayMode(const FoldDisplayMode displayMode) override;
@@ -178,6 +184,10 @@ public:
 
     ScreenProperty GetPhyScreenProperty(ScreenId screenId);
     uint32_t GetCurvedCompressionArea() const;
+
+    void NotifyFoldStatusChanged(FoldStatus foldStatus);
+    void NotifyDisplayModeChanged(FoldDisplayMode displayMode);
+    void RegisterSettingDpiObserver();
 
 protected:
     ScreenSessionManager();
@@ -199,6 +209,10 @@ private:
     bool OnMakeExpand(std::vector<ScreenId> screenId, std::vector<Point> startPoint);
     bool OnRemoteDied(const sptr<IRemoteObject>& agent);
     std::string TransferTypeToString(ScreenType type) const;
+    bool SetScreenPower(ScreenPowerStatus status);
+
+    // notify scb virtual screen change
+    void OnVirtualScreenChange(ScreenId screenId, ScreenEvent screenEvent);
 
     class ScreenIdManager {
     friend class ScreenSessionGroup;
@@ -225,6 +239,7 @@ private:
 
     mutable std::recursive_mutex screenSessionMapMutex_;
     std::map<ScreenId, sptr<ScreenSession>> screenSessionMap_;
+    std::recursive_mutex mutex_;
 
     ScreenId defaultScreenId_ = SCREEN_ID_INVALID;
     ScreenIdManager screenIdManager_;
@@ -232,6 +247,9 @@ private:
     std::atomic<ScreenId> defaultRsScreenId_ { SCREEN_ID_INVALID };
     std::map<sptr<IRemoteObject>, std::vector<ScreenId>> screenAgentMap_;
     std::map<ScreenId, sptr<ScreenSessionGroup>> smsScreenGroupMap_;
+
+    std::atomic_bool disableDisplaySnapshotOrNot_ = false;
+    std::atomic_bool disableMirrorOrNot_ = false;
 
     bool isAutoRotationOpen_ = false;
     bool isExpandCombination_ = false;
@@ -245,8 +263,13 @@ private:
 
     bool isDensityDpiLoad_ = false;
     float densityDpi_ { 1.0f };
+    std::atomic<uint32_t> cachedSettingDpi_ {0};
+    uint32_t defaultDpi {0};
 
     bool screenPrivacyStates = false;
+    bool keyguardDrawnDone_ = true;
+    bool needScreenOnWhenKeyguardNotify_ = false;
+    bool isImmersive_ = false;
 
     //Fold Screen
     std::map<ScreenId, ScreenProperty> phyScreenPropMap_;
@@ -254,6 +277,7 @@ private:
     static void BootFinishedCallback(const char *key, const char *value, void *context);
     std::function<void()> foldScreenPowerInit_ = nullptr;
     void SetFoldScreenPowerInit(std::function<void()> foldScreenPowerInit);
+    void SetDpiFromSettingData();
 };
 } // namespace OHOS::Rosen
 

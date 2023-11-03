@@ -54,9 +54,11 @@ public:
     WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
     WMError Hide(uint32_t reason = 0, bool withAnimation = false, bool isFromInnerkits = true) override;
     WMError Destroy() override;
-    virtual WMError Destroy(bool needClearListener);
-    WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
-        NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability) override;
+    virtual WMError Destroy(bool needNotifyServer, bool needClearListener = true);
+    WMError NapiSetUIContent(const std::string& contentInfo, napi_env env,
+        napi_value storage, bool isdistributed, AppExecFwk::Ability* ability) override;
+    WMError SetUIContentByName(const std::string& contentInfo, napi_env env, napi_value storage,
+        AppExecFwk::Ability* ability) override;
     std::shared_ptr<RSSurfaceNode> GetSurfaceNode() const override;
     const std::shared_ptr<AbilityRuntime::Context> GetContext() const override;
     Rect GetRequestRect() const override;
@@ -87,7 +89,8 @@ public:
     int64_t GetVSyncPeriod() override;
     // inherits from session stage
     WSError SetActive(bool active) override;
-    WSError UpdateRect(const WSRect& rect, SizeChangeReason reason) override;
+    WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
+        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override;
     void UpdateDensity() override;
     WSError UpdateFocus(bool focus) override;
     WSError UpdateWindowMode(WindowMode mode) override;
@@ -99,6 +102,7 @@ public:
     void NotifyPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
     void NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed) override;
     void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info) override;
+    void NotifyForegroundInteractiveStatus(bool interactive) override;
 
     WMError RegisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener) override;
     WMError UnregisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener) override;
@@ -126,6 +130,7 @@ public:
     int32_t GetParentId() const;
     int32_t GetPersistentId() const override;
     sptr<WindowSessionProperty> GetProperty() const;
+    SystemSessionConfig GetSystemSessionConfig() const;
     sptr<ISession> GetHostSession() const;
     int32_t GetFloatingWindowParentId();
     void NotifyAfterForeground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
@@ -149,6 +154,7 @@ public:
 
     WindowState state_ { WindowState::STATE_INITIAL };
     WindowState requestState_ { WindowState::STATE_INITIAL };
+    WSError UpdateMaximizeMode(MaximizeMode mode) override;
 
 protected:
     WMError Connect();
@@ -164,7 +170,9 @@ protected:
     WMError SetBackgroundColor(uint32_t color);
     uint32_t GetBackgroundColor() const;
     virtual WMError SetLayoutFullScreenByApiVersion(bool status);
-    void UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason);
+    void UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason,
+        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
+    void NotifySizeChange(Rect rect, WindowSizeChangeReason reason);
 
     sptr<ISession> hostSession_;
     std::unique_ptr<Ace::UIContent> uiContent_;
@@ -182,6 +190,7 @@ protected:
     bool isIgnoreSafeAreaNeedNotify_ = false;
     bool isIgnoreSafeArea_ = false;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
+    std::shared_ptr<IInputEventConsumer> inputEventConsumer_;
 
 private:
     //Trans between colorGamut and colorSpace
@@ -209,9 +218,15 @@ private:
     RSSurfaceNode::SharedPtr CreateSurfaceNode(std::string name, WindowType type);
     void NotifyAfterFocused();
     void NotifyAfterUnfocused(bool needNotifyUiContent = true);
+    void NotifyAfterResumed();
+    void NotifyAfterPaused();
 
-    void NotifySizeChange(Rect rect, WindowSizeChangeReason reason);
+    WMError SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
+        bool isdistributed, bool isLoadedByName, AppExecFwk::Ability* ability);
+
     bool IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const;
+    void UpdateRectForRotation(const Rect& wmRect, const Rect& preRect, WindowSizeChangeReason wmReason,
+        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
 
     static std::recursive_mutex globalMutex_;
     static std::map<int32_t, std::vector<sptr<IWindowLifeCycle>>> lifecycleListeners_;
@@ -221,7 +236,6 @@ private:
     static std::map<int32_t, std::vector<sptr<IDialogTargetTouchListener>>> dialogTargetTouchListener_;
     static std::map<int32_t, std::vector<sptr<IOccupiedAreaChangeListener>>> occupiedAreaChangeListeners_;
     static std::map<int32_t, std::vector<sptr<IScreenshotListener>>> screenshotListeners_;
-    std::shared_ptr<IInputEventConsumer> inputEventConsumer_;
     static std::map<int32_t, std::vector<sptr<ITouchOutsideListener>>> touchOutsideListeners_;
 
     // FA only
@@ -230,8 +244,8 @@ private:
     WindowSizeChangeReason lastSizeChangeReason_ = WindowSizeChangeReason::END;
     bool postTaskDone_ = false;
     int16_t rotationAnimationCount_ { 0 };
-    Gravity lastGravity_ = Gravity::RESIZE;
 };
 } // namespace Rosen
 } // namespace OHOS
+
 #endif // OHOS_ROSEN_WINDOW_SESSION_IMPL_H

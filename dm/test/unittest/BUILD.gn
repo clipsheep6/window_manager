@@ -22,6 +22,7 @@ group("unittest") {
   deps = [
     ":dm_display_change_unit_test",
     ":dm_display_manager_adapter_test",
+    ":dm_display_manager_agent_proxy_test",
     ":dm_display_manager_agent_stub_test",
     ":dm_display_manager_test",
     ":dm_display_power_unit_test",
@@ -167,6 +168,19 @@ ohos_unittest("dm_display_manager_agent_stub_test") {
   ]
 }
 
+ohos_unittest("dm_display_manager_agent_proxy_test") {
+  module_out_path = module_out_path
+
+  sources = [ "display_manager_agent_proxy_test.cpp" ]
+
+  deps = [ ":dm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
 ## Build dm_unittest_common.a {{{
 config("dm_unittest_common_public_config") {
   include_dirs = [
@@ -196,6 +210,7 @@ ohos_static_library("dm_unittest_common") {
   public_deps = [
     "${window_base_path}/dm:libdm",
     "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",
     "${window_base_path}/wm:libwm",
     "../../../dmserver:libdms",
     "../../../snapshot:snapshot_display",

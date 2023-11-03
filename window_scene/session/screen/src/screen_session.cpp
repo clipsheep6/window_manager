@@ -109,6 +109,8 @@ sptr<DisplayInfo> ScreenSession::ConvertToDisplayInfo()
     displayInfo->name_ = name_;
     displayInfo->SetWidth(property_.GetBounds().rect_.GetWidth());
     displayInfo->SetHeight(property_.GetBounds().rect_.GetHeight());
+    displayInfo->SetPhysicalWidth(property_.GetPhyBounds().rect_.GetWidth());
+    displayInfo->SetPhysicalHeight(property_.GetPhyBounds().rect_.GetHeight());
     displayInfo->SetScreenId(screenId_);
     displayInfo->SetDisplayId(screenId_);
     displayInfo->SetRefreshRate(property_.GetRefreshRate());
@@ -157,6 +159,12 @@ void ScreenSession::UpdatePropertyByActiveMode()
         screeBounds.rect_.height_ = mode->height_;
         property_.SetBounds(screeBounds);
     }
+}
+
+void ScreenSession::UpdatePropertyByFoldControl(RRect bounds, RRect phyBounds)
+{
+    property_.SetBounds(bounds);
+    property_.SetPhyBounds(phyBounds);
 }
 
 std::shared_ptr<RSDisplayNode> ScreenSession::GetDisplayNode() const
@@ -263,6 +271,11 @@ void ScreenSession::UpdatePropertyAfterRotation(RRect bounds, int rotation)
     property_.SetRotation(static_cast<float>(rotation));
     property_.UpdateScreenRotation(targetRotation);
     property_.SetDisplayOrientation(displayOrientation);
+    displayNode_->SetScreenRotation(static_cast<uint32_t>(targetRotation));
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        transactionProxy->FlushImplicitTransaction();
+    }
     WLOGFI("bounds:[%{public}f %{public}f %{public}f %{public}f], rotation: %{public}u",
         property_.GetBounds().rect_.GetLeft(), property_.GetBounds().rect_.GetTop(),
         property_.GetBounds().rect_.GetWidth(), property_.GetBounds().rect_.GetHeight(), targetRotation);
@@ -622,6 +635,8 @@ bool ScreenSessionGroup::GetRSDisplayNodeConfig(sptr<ScreenSession>& screenSessi
         case ScreenCombination::SCREEN_ALONE:
             [[fallthrough]];
         case ScreenCombination::SCREEN_EXPAND:
+            break;
+        case ScreenCombination::SCREEN_UNIQUE:
             break;
         case ScreenCombination::SCREEN_MIRROR: {
             if (GetChildCount() == 0 || mirrorScreenId_ == screenSession->screenId_) {

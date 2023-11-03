@@ -68,6 +68,13 @@ std::shared_ptr<Media::PixelMap> DisplayManagerAdapter::GetDisplaySnapshot(Displ
     return displayManagerServiceProxy_->GetDisplaySnapshot(displayId, errorCode);
 }
 
+DMError DisplayManagerAdapter::DisableDisplaySnapshot(bool disableOrNot)
+{
+    INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
+
+    return displayManagerServiceProxy_->DisableDisplaySnapshot(disableOrNot);
+}
+
 DMError ScreenManagerAdapter::GetScreenSupportedColorGamuts(ScreenId screenId,
     std::vector<ScreenColorGamut>& colorGamuts)
 {
@@ -138,6 +145,13 @@ DMError ScreenManagerAdapter::SetVirtualScreenSurface(ScreenId screenId, sptr<Su
     }
     WLOGFI("DisplayManagerAdapter::SetVirtualScreenSurface");
     return displayManagerServiceProxy_->SetVirtualScreenSurface(screenId, surface->GetProducer());
+}
+
+DMError ScreenManagerAdapter::SetVirtualMirrorScreenBufferRotation(ScreenId screenId, bool bufferRotation)
+{
+    INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
+    WLOGFI("DisplayManagerAdapter::SetVirtualMirrorScreenBufferRotation");
+    return displayManagerServiceProxy_->SetVirtualMirrorScreenBufferRotation(screenId, bufferRotation);
 }
 
 DMError ScreenManagerAdapter::SetScreenRotationLocked(bool isLocked)
@@ -335,8 +349,17 @@ void DMSDeathRecipient::OnRemoteDied(const wptr<IRemoteObject>& wptrDeath)
     return;
 }
 
+
+BaseAdapter::~BaseAdapter()
+{
+    WLOGFI("BaseAdapter destory!");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    displayManagerServiceProxy_ = nullptr;
+}
+
 void BaseAdapter::Clear()
 {
+    WLOGFI("BaseAdapter Clear!");
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if ((displayManagerServiceProxy_ != nullptr) && (displayManagerServiceProxy_->AsObject() != nullptr)) {
         displayManagerServiceProxy_->AsObject()->RemoveDeathRecipient(dmsDeath_);
@@ -357,6 +380,13 @@ DMError ScreenManagerAdapter::StopMirror(const std::vector<ScreenId>& mirrorScre
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
 
     return displayManagerServiceProxy_->StopMirror(mirrorScreenIds);
+}
+
+DMError ScreenManagerAdapter::DisableMirror(bool disableOrNot)
+{
+    INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
+
+    return displayManagerServiceProxy_->DisableMirror(disableOrNot);
 }
 
 sptr<ScreenInfo> ScreenManagerAdapter::GetScreenInfo(ScreenId screenId)
@@ -383,6 +413,13 @@ DMError DisplayManagerAdapter::HasPrivateWindow(DisplayId displayId, bool& hasPr
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
 
     return displayManagerServiceProxy_->HasPrivateWindow(displayId, hasPrivateWindow);
+}
+
+DMError DisplayManagerAdapter::HasImmersiveWindow(bool& immersive)
+{
+    INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
+
+    return displayManagerServiceProxy_->HasImmersiveWindow(immersive);
 }
 
 sptr<DisplayInfo> DisplayManagerAdapter::GetDisplayInfo(DisplayId displayId)
@@ -517,5 +554,12 @@ DMError ScreenManagerAdapter::SetVirtualPixelRatio(ScreenId screenId, float virt
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
 
     return displayManagerServiceProxy_->SetVirtualPixelRatio(screenId, virtualPixelRatio);
+}
+
+DMError ScreenManagerAdapter::MakeUniqueScreen(const std::vector<ScreenId>& screenIds)
+{
+    INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
+
+    return displayManagerServiceProxy_->MakeUniqueScreen(screenIds);
 }
 } // namespace OHOS::Rosen

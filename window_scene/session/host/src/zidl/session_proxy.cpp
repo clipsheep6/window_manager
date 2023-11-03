@@ -33,7 +33,7 @@ WSError SessionProxy::Foreground(sptr<WindowSessionProperty> property)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
+    MessageOption option(MessageOption::TF_SYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
@@ -144,7 +144,9 @@ WSError SessionProxy::Connect(const sptr<ISessionStage>& sessionStage, const spt
         return WSError::WS_ERROR_IPC_FAILED;
     }
     sptr<SystemSessionConfig> config = reply.ReadParcelable<SystemSessionConfig>();
-    systemConfig = *config;
+    if (config) {
+        systemConfig = *config;
+    }
     if (property) {
         property->SetPersistentId(reply.ReadInt32());
     }

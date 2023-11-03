@@ -261,9 +261,12 @@ public:
     void NotifyBackground();
     void UpdateZoomTransform(const Transform& trans, bool isDisplayZoomOn);
     void PerformBack() override;
+    void NotifyForegroundInteractiveStatus(bool interactive);
 
-    virtual WMError SetUIContent(const std::string& contentInfo, NativeEngine* engine,
-        NativeValue* storage, bool isdistributed, AppExecFwk::Ability* ability) override;
+    virtual WMError NapiSetUIContent(const std::string& contentInfo, napi_env env,
+        napi_value storage, bool isdistributed, AppExecFwk::Ability* ability) override;
+    virtual WMError SetUIContentByName(const std::string& contentInfo, napi_env env, napi_value storage,
+        AppExecFwk::Ability* ability) override;
     virtual std::string GetContentInfo() override;
     virtual const std::shared_ptr<AbilityRuntime::Context> GetContext() const override;
     virtual Ace::UIContent* GetUIContent() const override;
@@ -450,6 +453,16 @@ private:
             CALL_UI_CONTENT(UnFocus);
         }
     }
+    inline void NotifyAfterResumed()
+    {
+        auto lifecycleListeners = GetListeners<IWindowLifeCycle>();
+        CALL_LIFECYCLE_LISTENER(AfterResumed, lifecycleListeners);
+    }
+    inline void NotifyAfterPaused()
+    {
+        auto lifecycleListeners = GetListeners<IWindowLifeCycle>();
+        CALL_LIFECYCLE_LISTENER(AfterPaused, lifecycleListeners);
+    }
     inline void NotifyBeforeDestroy(std::string windowName)
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -559,6 +572,9 @@ private:
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
     void UpdateDecorEnable(bool needNotify = false);
     WMError SetFloatingMaximize(bool isEnter);
+    WMError SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
+        bool isdistributed, bool isLoadedByName, AppExecFwk::Ability* ability);
+
     // colorspace, gamut
     using ColorSpaceConvertMap = struct {
         ColorSpace colorSpace;
