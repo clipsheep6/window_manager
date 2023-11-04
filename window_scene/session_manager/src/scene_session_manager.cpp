@@ -773,14 +773,13 @@ WSError SceneSessionManager::UpdateParentSessionForDialog(const sptr<SceneSessio
 
 WSError SceneSessionManager::ReportSceneInfo(int32_t cmdId, int32_t value, const std::string& msg)
 {
-    int32_t RES_TYPE_ANCO_APP_FRONT = 48;
-    if (cmdId == RES_TYPE_ANCO_APP_FRONT) {
+    int32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_ANCO_APP_FRONT;
+    if (cmdId == type) {
         auto parentSession = GetSceneSession(value);
         if (CheckCollaboratorType(parentSession->GetCollaboratorType())) {
             WLOGFD("anco app is front from background taskbar");
 #ifdef RES_SCHED_ENABLE
             std::unordered_map<std::string, std::string> payload;
-            uint32_t type = RES_TYPE_ANCO_APP_FRONT;
             int64_t value = 0;
             OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, payload);
 #endif
@@ -881,9 +880,8 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
             WLOGFD("ancoSceneState: %{public}d", sceneSession->GetSessionInfo().ancoSceneState);
 #ifdef RES_SCHED_ENABLE
             std::unordered_map<std::string, std::string> payload;
-            uint32_t RES_TYPE_ANCO_APP_FRONT = 48;
-            uint32_t type = RES_TYPE_ANCO_APP_FRONT;
-            int64_t value = 1;
+            uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_ANCO_APP_FRONT;
+            int64_t value = 0;
             OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, payload);
 #endif
             PreHandleCollaborator(sceneSession);
@@ -920,12 +918,11 @@ void SceneSessionManager::UpdateSceneSessionWant(const SessionInfo& sessionInfo)
                 session->SetSessionInfoWant(sessionInfo.want);
                 WLOGFI("RequestSceneSession update want, persistentId:%{public}d", sessionInfo.persistentId_);
             } else {
-                WLOGFI("anco app is front because click icon");
+                WLOGFD("anco app is front because click icon");
 #ifdef RES_SCHED_ENABLE
-                uint32_t RES_TYPE_ANCO_APP_FRONT = 48;
-                int64_t value = 1;
+                int64_t value = 0;
                 std::unordered_map<std::string, std::string> payload;
-                uint32_t type = RES_TYPE_ANCO_APP_FRONT;
+                uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_ANCO_APP_FRONT;
                 OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, payload);
 #endif
                 UpdateCollaboratorSessionWant(session);

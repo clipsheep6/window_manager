@@ -1171,7 +1171,7 @@ napi_value JsSceneSessionManager::OnReportSceneInfo(napi_env env, napi_callback_
         }
     }
     SceneSessionManager::GetInstance().ReportSceneInfo(cmdId, value, msg);
-    WLOGFD("[NAPI]PerfRequestEx success cmdId: %{public}d value: %{public}d msg:%{public}s",
+    WLOGFD("[NAPI]ReportSceneInfo success cmdId: %{public}d value: %{public}d msg:%{public}s",
         cmdId, value, msg.c_str());
     return NapiGetUndefined(env);
 }
