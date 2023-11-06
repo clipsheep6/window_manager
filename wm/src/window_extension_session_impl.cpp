@@ -252,9 +252,8 @@ WSError WindowExtensionSessionImpl::NotifySearchElementInfosByText(int32_t eleme
     }
 
     infos = uiContent_->SearchElementInfosByText(elementId, text, baseParent);
-    WLOGFD("NotifySearchElementInfosByText OK, elementId:%{public}d, text:%{public}s, "
-        + "size:%{public}d, baseParent:%{public}d",
-        elementId, text.c_str(), baseParent, infos.size());
+    WLOGFD("NotifySearchElementInfosByText OK, elementId:%{public}d, text:%{public}s, size:%{public}d",
+        elementId, text.c_str(), infos.size());
     return WSError::WS_OK;
 }
 
