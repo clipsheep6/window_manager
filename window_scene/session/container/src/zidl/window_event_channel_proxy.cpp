@@ -216,7 +216,7 @@ WSError WindowEventChannelProxy::TransferSearchElementInfo(int32_t elementId, in
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_SEARCH_ELEMENT_INFO),
-            data, reply, option) != ERR_NONE) {
+        data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
@@ -249,8 +249,8 @@ WSError WindowEventChannelProxy::TransferSearchElementInfosByText(int32_t elemen
     }
 
     if (Remote()->SendRequest(
-            static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_SEARCH_ELEMENT_INFO_BY_TEXT), data, reply,
-            option) != ERR_NONE) {
+        static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_SEARCH_ELEMENT_INFO_BY_TEXT), data, reply,
+        option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
@@ -294,8 +294,8 @@ WSError WindowEventChannelProxy::TransferFindFocusedElementInfo(int32_t elementI
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (Remote()->SendRequest(
-            static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_FIND_FOCUSED_ELEMENT_INFO), data, reply,
-            option) != ERR_NONE) {
+        static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_FIND_FOCUSED_ELEMENT_INFO), data, reply,
+        option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
@@ -328,7 +328,7 @@ WSError WindowEventChannelProxy::TransferFocusMoveSearch(int32_t elementId, int3
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_FOCUS_MOVE_SEARCH),
-            data, reply, option) != ERR_NONE) {
+        data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }

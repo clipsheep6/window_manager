@@ -217,12 +217,12 @@ WSError WindowEventChannel::TransferFocusState(bool focusState)
 WSError WindowEventChannel::TransferSearchElementInfo(int32_t elementId, int32_t mode, int32_t baseParent,
     std::list<Accessibility::AccessibilityElementInfo>& infos)
 {
-    WLOGFD("WindowEventChannel TransferSearchElementInfo begin elementId: %{public}d, mode:%{public}d", elementId, mode);
+    WLOGFD("WindowEventChannel TransferSearchElementInfo begin eleId: %{public}d, mode:%{public}d", elementId, mode);
     if (!sessionStage_) {
         WLOGFE("session stage is null!");
         return WSError::WS_ERROR_NULLPTR;
     }
-    WLOGFD("WindowEventChannel TransferSearchElementInfo end elementId: %{public}d, mode:%{public}d", elementId, mode);
+    WLOGFD("WindowEventChannel TransferSearchElementInfo end eleId: %{public}d, mode:%{public}d", elementId, mode);
     return sessionStage_->NotifySearchElementInfoByAccessibilityId(elementId, mode, baseParent, infos);
 }
 

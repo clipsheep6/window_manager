@@ -229,8 +229,8 @@ WSError WindowExtensionSessionImpl::UpdateRect(const WSRect& rect, SizeChangeRea
 WSError WindowExtensionSessionImpl::NotifySearchElementInfoByAccessibilityId(int32_t elementId, int32_t mode,
     int32_t baseParent, std::list<Accessibility::AccessibilityElementInfo>& infos)
 {
-    WLOGFD("NotifySearchElementInfoByAccessibilityId begin, elementId:%{public}d, mode:%{public}d, baseParent:%{public}d"
-        , elementId, mode, baseParent); 
+    WLOGFD("NotifySearchElementInfoByAccessibilityId begin, eleId:%{public}d, mode:%{public}d, baseParent:%{public}d",
+        elementId, mode, baseParent);
     if (uiContent_ == nullptr) {
         WLOGFE("NotifySearchElementInfoByAccessibilityId error, no uiContent_");
         return WSError::WS_ERROR_NO_UI_CONTENT_ERROR;
@@ -252,7 +252,8 @@ WSError WindowExtensionSessionImpl::NotifySearchElementInfosByText(int32_t eleme
     }
 
     infos = uiContent_->SearchElementInfosByText(elementId, text, baseParent);
-    WLOGFD("NotifySearchElementInfosByText OK, elementId:%{public}d, text:%{public}s, size:%{public}d, baseParent:%{public}d",
+    WLOGFD("NotifySearchElementInfosByText OK, elementId:%{public}d, text:%{public}s, "
+        + "size:%{public}d, baseParent:%{public}d",
         elementId, text.c_str(), baseParent, infos.size());
     return WSError::WS_OK;
 }
@@ -261,7 +262,7 @@ WSError WindowExtensionSessionImpl::NotifyFindFocusedElementInfo(int32_t element
     int32_t baseParent, Accessibility::AccessibilityElementInfo& info)
 {
     WLOGFD("NotifyFindFocusedElementInfo begin, elementId:%{public}d, focusType:%{public}d, baseParent:%{public}d",
-    elementId, focusType, baseParent);
+        elementId, focusType, baseParent);
     if (uiContent_ == nullptr) {
         WLOGFE("NotifyFindFocusedElementInfo error, no uiContent_");
         return WSError::WS_ERROR_NO_UI_CONTENT_ERROR;
