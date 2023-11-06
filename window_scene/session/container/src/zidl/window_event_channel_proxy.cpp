@@ -31,7 +31,6 @@
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowEventChannelProxy"};
-constexpr int32_t IPC_SUCCESS = static_cast<int32_t>(WSError::WS_OK);
 }
 
 WSError WindowEventChannelProxy::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
@@ -175,16 +174,6 @@ WSError WindowEventChannelProxy::TransferFocusState(bool focusState)
 
 WSError GetElementInfos(MessageParcel& reply, std::list<Accessibility::AccessibilityElementInfo>& infos)
 {
-    WLOGFD("GetElementInfos begin");
-    int32_t ret = IPC_SUCCESS;
-    if (!reply.ReadInt32(ret)) {
-        WLOGFE("Failed to ReadInt32 ret");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if(ret != IPC_SUCCESS) {
-        WLOGFE("GetElementInfos fail, errcode:%{public}d", ret);
-        return static_cast<WSError>(ret);
-    }
     int32_t count = 0;
     if (!reply.ReadInt32(count)) {
         WLOGFE("GetElementInfos failed to read count");
@@ -199,7 +188,7 @@ WSError GetElementInfos(MessageParcel& reply, std::list<Accessibility::Accessibi
         }
     }
     WLOGFD("GetElementInfos end");
-    return static_cast<WSError>(ret);
+    return WSError::WS_OK;
 }
 
 WSError WindowEventChannelProxy::TransferSearchElementInfo(int32_t elementId, int32_t mode, int32_t baseParent,
@@ -272,23 +261,13 @@ WSError WindowEventChannelProxy::TransferSearchElementInfosByText(int32_t elemen
 WSError GetElementInfo(MessageParcel& reply, Accessibility::AccessibilityElementInfo& info)
 {
     WLOGFD("GetElementInfo begin");
-    int32_t ret = IPC_SUCCESS;
-    if (!reply.ReadInt32(ret)) {
-        WLOGFE("Failed to ReadInt32 ret");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if(ret != IPC_SUCCESS) {
-        WLOGFE("Getelementinfo fail, errcode:%{public}d", ret);
-        return static_cast<WSError>(ret);
-    }
-
     sptr<AccessibilityElementInfoParcel> infoPtr = 
         reply.ReadStrongParcelable<AccessibilityElementInfoParcel>();
     if (infoPtr != nullptr) {
         info = *infoPtr;
     }
     WLOGFD("GetElementInfo end");
-    return static_cast<WSError>(ret);
+    return WSError::WS_OK;
 }
 
 WSError WindowEventChannelProxy::TransferFindFocusedElementInfo(int32_t elementId, int32_t focusType,
