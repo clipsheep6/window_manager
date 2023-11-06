@@ -2885,6 +2885,7 @@ void SceneSessionManager::UpdateFocusStatus(sptr<SceneSession>& sceneSession, bo
         } else {
             WLOGFD("NotifySessionUnfocused, id: %{public}d", sceneSession->GetPersistentId());
             listenerController_->NotifySessionUnfocused(sceneSession->GetPersistentId());
+            DelayedSingleton<ANRManager>::GetInstance()->OnSessionUnfocused(sceneSession->GetPersistentId());
         }
     }
     return;
