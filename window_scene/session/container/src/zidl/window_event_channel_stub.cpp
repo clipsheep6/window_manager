@@ -161,6 +161,7 @@ int WindowEventChannelStub::HandleTransferSearchElementInfo(MessageParcel& data,
         WLOGFE("Failed to write count!");
         return ERR_INVALID_DATA;
     }
+    WLOGFD("HandleTransferSearchElementInfo count:%{public}d, infos.size:%{public}d", count, infos.size());
     for (auto &info : infos) {
         AccessibilityElementInfoParcel infoParcel(info); 
         if (!reply.WriteParcelable(&infoParcel)) {
@@ -169,7 +170,7 @@ int WindowEventChannelStub::HandleTransferSearchElementInfo(MessageParcel& data,
         }
     }
     reply.WriteUint32(static_cast<uint32_t>(errCode));
-    WLOGFD("HandleTransferSearchElementInfo end");
+    WLOGFD("HandleTransferSearchElementInfo end, errorCode:%{public}d", static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
 
