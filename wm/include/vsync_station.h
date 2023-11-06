@@ -31,6 +31,7 @@
 
 namespace OHOS {
 namespace Rosen {
+class RSFrameRateLinker;
 class VsyncStation {
 WM_DECLARE_SINGLE_INSTANCE_BASE(VsyncStation);
 public:
@@ -41,6 +42,8 @@ public:
     }
     void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback);
     int64_t GetVSyncPeriod();
+    void FlushFrameRate(uint32_t rate);
+    void SetFrameRateLinkerEnable(bool enabled);
     void RemoveCallback();
     void SetIsMainHandlerAvailable(bool available)
     {
@@ -60,12 +63,14 @@ private:
     void Init();
 
     std::mutex mtx_;
+    // std::shared_ptr<uint32_t> rate_;
     bool hasRequestedVsync_ = false;
     bool hasInitVsyncReceiver_ = false;
     bool isMainHandlerAvailable_ = true;
     bool destroyed_ = false;
     const std::string VSYNC_THREAD_ID = "VsyncThread";
     std::shared_ptr<OHOS::Rosen::VSyncReceiver> receiver_ = nullptr;
+    std::shared_ptr<RSFrameRateLinker> frameRateLinker_;
     std::unordered_set<std::shared_ptr<VsyncCallback>> vsyncCallbacks_;
     VSyncReceiver::FrameCallback frameCallback_ = {
         .userData_ = this,
