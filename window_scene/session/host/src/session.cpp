@@ -1159,6 +1159,31 @@ bool Session::CheckKeyEventDispatch(const std::shared_ptr<MMI::KeyEvent>& keyEve
     return true;
 }
 
+bool Session::IsTopDialog()
+{
+    int32_t currentPersistentId = GetPersistentId();
+    auto parentSession = GetParentSession();
+    if (parentSession == nullptr) {
+        WLOGFI("Dialog's Parent is NULL. id: %{public}d", currentPersistentId);
+        return false;
+    }
+    std::unique_lock<std::mutex> lock(parentSession->dialogVecMutex_);
+    if (parentSession->dialogVec_.empty()) {
+        WLOGFD("Parent DialogVec is empty, id: %{public}d", currentPersistentId);
+        return false;
+    }
+    auto parentDialogVec = parentSession->dialogVec_;
+    for (auto iter = parentDialogVec.rbegin(); iter != parentDialogVec.rend(); iter++) {
+        auto dialogSession = *iter;
+        if (dialogSession && (dialogSession->GetSessionState() == SessionState::STATE_ACTIVE ||
+            dialogSession->GetSessionState() == SessionState::STATE_FOREGROUND)) {
+            WLOGFI("Dialog id: %{public}d, current dialog id: %{public}d", dialogSession->GetPersistentId(), currentPersistentId);
+            return dialogSession->GetPersistentId() == currentPersistentId;
+        }
+    }
+    return false;
+}
+
 const char* Session::DumpPointerWindowArea(MMI::WindowArea area) const
 {
     const std::map<MMI::WindowArea, const char*> areaMap = {

@@ -951,6 +951,12 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
     if (property == nullptr) {
         return Session::TransferPointerEvent(pointerEvent);
     }
+    if (WindowHelper::IsDialogWindow(roperty->GetWindowType())) {
+        if (!IsTopDialog()) {
+            WLOGFI("There is at least one active dialog window upon this dialog window. persistentId:%{public}d", GetPersistentId());
+            return WSError::WS_DO_NOTHING；
+        }
+    }
     if (property->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
         WindowHelper::IsMainWindow(property->GetWindowType()) &&
         property->GetMaximizeMode() != MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
