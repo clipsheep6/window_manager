@@ -776,7 +776,7 @@ WSError SceneSessionManager::ReportSceneInfo(int32_t cmdId, int32_t value, const
     int32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_ANCO_APP_FRONT;
     if (cmdId == type) {
         auto parentSession = GetSceneSession(value);
-        if (CheckCollaboratorType(parentSession->GetCollaboratorType())) {
+        if (parentSession && CheckCollaboratorType(parentSession->GetCollaboratorType())) {
             WLOGFD("anco app is front from background taskbar");
 #ifdef RES_SCHED_ENABLE
             std::unordered_map<std::string, std::string> payload;

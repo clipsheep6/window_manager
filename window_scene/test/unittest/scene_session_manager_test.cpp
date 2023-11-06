@@ -2845,6 +2845,20 @@ HWTEST_F(SceneSessionManagerTest, UnlockSession, Function | SmallTest | Level3)
     result = ssm_->LockSession(sessionId);
     EXPECT_EQ(result, WSError::WS_ERROR_INVALID_PERMISSION);
 }
+
+/**
+ * @tc.name: ReportSceneInfo
+ * @tc.desc: SceneSesionManager report sceneinfo
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, ReportSceneInfo, Function | SmallTest | Level3)
+{
+    int32_t cmdId = 49;
+    int32_t value = 0;
+    std::string msg = "";
+    WSError result = ssm_->ReportSceneInfo(cmdId, value, msg);
+    EXPECT_EQ(result, WSError::WS_OK);
+}
 }
 } // namespace Rosen
 } // namespace OHOS
