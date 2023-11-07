@@ -71,7 +71,6 @@ public:
     MOCK_METHOD1(CloseModalUIExtension, void(int32_t sessionId));
     MOCK_METHOD1(SetParentToken, void(sptr<IRemoteObject> token));
     MOCK_METHOD0(GetParentToken, sptr<IRemoteObject>());
-
 };
 } // namespace Ace
 } // namespace OHOS
