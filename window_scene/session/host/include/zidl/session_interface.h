@@ -69,6 +69,7 @@ public:
     virtual WSError TransferExtensionData(const AAFwk::WantParams& wantParams) { return WSError::WS_OK; }
     virtual void NotifyRemoteReady() {}
     virtual void NotifyExtensionDied() {}
+    virtual void NotifyRemoteReadySync() {}
 };
 } // namespace OHOS::Rosen
 

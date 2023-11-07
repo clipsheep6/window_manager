@@ -65,6 +65,7 @@ private:
     int HandleTransferAbilityResult(MessageParcel& data, MessageParcel& reply);
     int HandleTransferExtensionData(MessageParcel& data, MessageParcel& reply);
     int HandleNotifyRemoteReady(MessageParcel& data, MessageParcel& reply);
+    int HandleNotifyRemoteReadySync(MessageParcel& data, MessageParcel& reply);
     int HandleNotifyExtensionDied(MessageParcel& data, MessageParcel& reply);
 
     static const std::map<uint32_t, SessionStubFunc> stubFuncMap_;

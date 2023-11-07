@@ -1756,4 +1756,14 @@ float Session::GetFloatingScale() const
 {
     return floatingScale_;
 }
+
+void Session::SetReceiveRegisterType(const uint32_t type)
+{
+    receiveRegisterType_ = type;
+}
+
+uint32_t Session::GetReceiveRegisterType() const
+{
+    return receiveRegisterType_;
+}
 } // namespace OHOS::Rosen
