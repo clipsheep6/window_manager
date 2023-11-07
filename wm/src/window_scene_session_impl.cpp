@@ -725,6 +725,11 @@ void WindowSceneSessionImpl::LimitCameraFloatWindowMininumSize(uint32_t& width, 
 
 void WindowSceneSessionImpl::UpdateFloatingWindowSizeBySizeLimits(uint32_t& width, uint32_t& height) const
 {
+    if (!WindowHelper::IsFloatingWindow(GetMode())) {
+        WLOGD("This is not floating window.");
+        return;
+    }
+
     if (property_->GetWindowType() == WindowType::WINDOW_TYPE_FLOAT_CAMERA) {
         return;
     }
@@ -776,7 +781,10 @@ WMError WindowSceneSessionImpl::Resize(uint32_t width, uint32_t height)
 
     const auto& windowRect = GetRect();
     const auto& requestRect = GetRequestRect();
-    Rect newRect = { requestRect.posX_, requestRect.posY_, width, height }; // must keep w/h
+    bool isMainFloatingWindow = WindowHelper::IsMainFloatingWindow(GetType(), GetMode());
+    int32_t posX = isMainFloatingWindow ? windowRect.posX_ : requestRect.posX_;
+    int32_t posY = isMainFloatingWindow ? windowRect.posY_ : requestRect.posY_;
+    Rect newRect = { posX, posY, width, height }; // must keep w/h
     WLOGFD("Id:%{public}d, state: %{public}d, type: %{public}d, mode: %{public}d, requestRect: "
         "[%{public}d, %{public}d, %{public}d, %{public}d], windowRect: [%{public}d, %{public}d, "
         "%{public}d, %{public}d], newRect: [%{public}d, %{public}d, %{public}d, %{public}d]",
