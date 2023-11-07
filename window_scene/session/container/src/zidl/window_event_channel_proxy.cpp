@@ -261,7 +261,7 @@ WSError WindowEventChannelProxy::TransferSearchElementInfosByText(int32_t elemen
 WSError GetElementInfo(MessageParcel& reply, Accessibility::AccessibilityElementInfo& info)
 {
     WLOGFD("GetElementInfo begin");
-    sptr<AccessibilityElementInfoParcel> infoPtr = 
+    sptr<AccessibilityElementInfoParcel> infoPtr =
         reply.ReadStrongParcelable<AccessibilityElementInfoParcel>();
     if (infoPtr != nullptr) {
         info = *infoPtr;

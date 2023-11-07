@@ -18,7 +18,7 @@
 #include "window_manager_hilog.h"
 
 using namespace OHOS::Accessibility;
-namespace OHOS:: Rosen {
+namespace OHOS::Rosen {
 /* AccessibilityElementInfoParcel       Parcel struct                 */
 AccessibilityElementInfoParcel::AccessibilityElementInfoParcel(
     const Accessibility::AccessibilityElementInfo &elementInfo)

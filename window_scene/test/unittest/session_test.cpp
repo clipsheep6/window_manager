@@ -93,13 +93,13 @@ WSError TestWindowEventChannel::TransferBackpressedEventForConsumed(bool& isCons
 WSError TestWindowEventChannel::TransferSearchElementInfo(int32_t elementId, int32_t mode, int32_t baseParent,
     std::list<Accessibility::AccessibilityElementInfo>& infos)
 {
-    return WSError::WS_OK;  
+    return WSError::WS_OK;
 }
 
 WSError TestWindowEventChannel::TransferSearchElementInfosByText(int32_t elementId, const std::string& text,
     int32_t baseParent, std::list<Accessibility::AccessibilityElementInfo>& infos)
 {
-    return WSError::WS_OK;      
+    return WSError::WS_OK;
 }
 
 WSError TestWindowEventChannel::TransferFindFocusedElementInfo(int32_t elementId, int32_t focusType, int32_t baseParent,
@@ -111,7 +111,7 @@ WSError TestWindowEventChannel::TransferFindFocusedElementInfo(int32_t elementId
 WSError TestWindowEventChannel::TransferFocusMoveSearch(int32_t elementId, int32_t direction, int32_t baseParent,
     Accessibility::AccessibilityElementInfo& info)
 {
-    return WSError::WS_OK; 
+    return WSError::WS_OK;
 }
 
 class WindowSessionTest : public testing::Test {
