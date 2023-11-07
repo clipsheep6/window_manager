@@ -1031,8 +1031,6 @@ void WindowSessionImpl::NotifyAfterBackground(bool needNotifyListeners, bool nee
     if (needNotifyUiContent) {
         CALL_UI_CONTENT(Background);
     }
-    WLOGFE("NotifyAfterBackground [name:%{public}s, id:%{public}d, type: %{public}u]",
-            property_->GetWindowName().c_str(), GetPersistentId(), property_->GetWindowType());
     VsyncStation::GetInstance().SetFrameRateLinkerEnable(false);
 }
 

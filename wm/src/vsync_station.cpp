@@ -70,7 +70,7 @@ int64_t VsyncStation::GetVSyncPeriod()
 void VsyncStation::FlushFrameRate(uint32_t rate)
 {
     if (frameRateLinker_ && frameRateLinker_->IsEnable()) {
-        WLOGE("VsyncStation::FlushFrameRate %{public}d", rate);
+        WLOGI("VsyncStation::FlushFrameRate %{public}d", rate);
         FrameRateRange range = {0, RANGE_MAX_REFRESHRATE, rate};
         if (range.IsValid()) {
             frameRateLinker_->UpdateFrameRateRange(range);
@@ -83,7 +83,7 @@ void VsyncStation::SetFrameRateLinkerEnable(bool enabled)
     if (frameRateLinker_) {
         if (!enabled) {
             FrameRateRange range = {0, RANGE_MAX_REFRESHRATE, 0};
-            WLOGE("VsyncStation::SetFrameRateLinkerEnable false");
+            WLOGI("VsyncStation::SetFrameRateLinkerEnable false");
             frameRateLinker_->UpdateFrameRateRangeImme(range);
         }
         frameRateLinker_->SetEnable(enabled);
@@ -107,7 +107,8 @@ void VsyncStation::Init()
         auto& rsClient = OHOS::Rosen::RSInterfaces::GetInstance();
         frameRateLinker_ = OHOS::Rosen::RSFrameRateLinker::Create();
         while (receiver_ == nullptr) {
-            receiver_ = rsClient.CreateVSyncReceiver("WM_" + std::to_string(::getpid()), frameRateLinker_->GetId(), vsyncHandler_);
+            receiver_ = rsClient.CreateVSyncReceiver("WM_" + std::to_string(::getpid()), frameRateLinker_->GetId(),
+                vsyncHandler_);
         }
         receiver_->Init();
         hasInitVsyncReceiver_ = true;

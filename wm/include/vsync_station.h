@@ -63,7 +63,6 @@ private:
     void Init();
 
     std::mutex mtx_;
-    // std::shared_ptr<uint32_t> rate_;
     bool hasRequestedVsync_ = false;
     bool hasInitVsyncReceiver_ = false;
     bool isMainHandlerAvailable_ = true;
