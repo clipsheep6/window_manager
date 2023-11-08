@@ -696,8 +696,28 @@ bool ScreenSessionManager::SetScreenPowerForAll(ScreenPowerState state, PowerSta
             }
         }
         case ScreenPowerState::POWER_OFF: {
-            keyguardDrawnDone_ = false;
-            status = ScreenPowerStatus::POWER_STATUS_OFF;
+            if (screenLockSuspend_) {
+                auto screenLockSuspendTask = [this]() {
+                    screenLockSuspend_ = false;
+                    keyguardDrawnDone_ = false;
+                    WLOGFW("SetScreenPowerForAll set screen power status suspend");
+                    SetScreenPower(ScreenPowerStatus::POWER_STATUS_SUSPEND);
+                };
+                taskScheduler_->PostTask(screenLockSuspendTask, "screenLockSuspendTask", 1500); // Retry after 300 ms.
+                return true;
+            } else if (screenLockOff_) {
+                auto screenLockOffTask = [this]() {
+                    screenLockOff_ = false;
+                    keyguardDrawnDone_ = false;
+                    WLOGFW("SetScreenPowerForAll set screen power status off");
+                    SetScreenPower(ScreenPowerStatus::POWER_STATUS_OFF);
+                };
+                taskScheduler_->PostTask(screenLockOffTask, "screenLockOffTask", 1500); // Retry after 300 ms.
+                return true;
+            } else {
+                keyguardDrawnDone_ = false;
+                status = ScreenPowerStatus::POWER_STATUS_OFF;
+            }
             break;
         }
         default: {
@@ -799,6 +819,13 @@ void ScreenSessionManager::NotifyDisplayEvent(DisplayEvent event)
             SetScreenPower(ScreenPowerStatus::POWER_STATUS_ON);
             needScreenOnWhenKeyguardNotify_ = false;
         }
+    }
+    WLOGFI("NotifyDisplayEvent event: %{public}d", event);
+    if (event == DisplayEvent::SCREEN_LOCK_SUSPEND) {
+        screenLockSuspend_ = true;
+    }
+    if (event == DisplayEvent::SCREEN_LOCK_OFF) {
+        screenLockOff_ = true;
     }
 }
 
@@ -2362,6 +2389,19 @@ void ScreenSessionManager::SetFoldDisplayMode(const FoldDisplayMode displayMode)
         return;
     }
     foldScreenController_->SetDisplayMode(displayMode);
+}
+
+void ScreenSessionManager::LockFoldDisplayStatus(bool locked)
+{
+    if (foldScreenController_ == nullptr) {
+        WLOGFW("LockFoldDisplayStatus foldScreenController_ is null");
+        return;
+    }
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("LockFoldDisplayStatus permission denied!");
+        return;
+    }
+    foldScreenController_->LockDisplayStatus(locked);
 }
 
 FoldDisplayMode ScreenSessionManager::GetFoldDisplayMode()
