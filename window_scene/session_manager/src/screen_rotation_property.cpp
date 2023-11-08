@@ -93,7 +93,8 @@ void ScreenRotationProperty::SetDefaultDeviceRotationOffset(uint32_t defaultDevi
 void ScreenRotationProperty::HandleSensorEventInput(DeviceRotation deviceRotation)
 {
     auto isPhone = system::GetParameter("const.product.devicetype", "unknown") == "phone";
-    if (!isPhone) {
+    auto isPad = system::GetParameter("const.product.devicetype", "unknown") == "tablet";
+    if (!isPhone && !isPad) {
         WLOGFW("device is not phone, return.");
         return;
     }
