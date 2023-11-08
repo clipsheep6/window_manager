@@ -95,7 +95,7 @@ void ScreenRotationProperty::HandleSensorEventInput(DeviceRotation deviceRotatio
     auto isPhone = system::GetParameter("const.product.devicetype", "unknown") == "phone";
     auto isPad = system::GetParameter("const.product.devicetype", "unknown") == "tablet";
     if (!isPhone && !isPad) {
-        WLOGFW("device is not phone, return.");
+        WLOGFW("device is not phone or pad, return.");
         return;
     }
     if (deviceRotation == DeviceRotation::INVALID) {
