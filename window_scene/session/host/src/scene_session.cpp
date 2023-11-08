@@ -83,6 +83,7 @@ SceneSession::SceneSession(const SessionInfo& info, const sptr<SpecificSessionCa
         surfaceNode_ = Rosen::RSSurfaceNode::Create(config, Rosen::RSSurfaceNodeType::APP_WINDOW_NODE);
     }
     SetCollaboratorType(info.collaboratorType_);
+    WLOGFD("Create SceneSession");
 }
 
 WSError SceneSession::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
