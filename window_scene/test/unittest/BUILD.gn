@@ -99,6 +99,7 @@ ohos_unittest("ws_session_permission_test") {
     "hilog:libhilog",
   ]
 }
+
 ohos_unittest("ws_session_listener_controller_test") {
   module_out_path = module_out_path
 
