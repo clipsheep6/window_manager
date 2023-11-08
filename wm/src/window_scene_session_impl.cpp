@@ -490,7 +490,6 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
         return res;
     }
     res = static_cast<WMError>(hostSession_->Background());
-
     if (res == WMError::WM_OK) {
         // update sub window state if this is main window
         if (WindowHelper::IsMainWindow(GetType())) {
