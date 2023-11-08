@@ -232,7 +232,7 @@ WMError WindowSessionImpl::WindowSessionCreateCheck()
         return WMError::WM_ERROR_NULLPTR;
     }
     const auto& name = property_->GetWindowName();
-    std::unique_lock<std:;shared_mutex> lock(windowSessionMutex_);
+    std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
     // check window name, same window names are forbidden
     if (windowSessionMap_.find(name) != windowSessionMap_.end()) {
         WLOGFE("WindowName(%{public}s) already exists.", name.c_str());
@@ -350,7 +350,7 @@ WMError WindowSessionImpl::Destroy(bool needNotifyServer, bool needClearListener
         requestState_ = WindowState::STATE_DESTROYED;
     }
     hostSession_ = nullptr;
-    std::unique_lock<std:;shared_mutex> lock(windowSessionMutex_);
+    std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
     windowSessionMap_.erase(property_->GetWindowName());
     DelayedSingleton<ANRHandler>::GetInstance()->OnWindowDestroyed(GetPersistentId());
     return WMError::WM_OK;
@@ -530,7 +530,7 @@ int32_t WindowSessionImpl::GetFloatingWindowParentId()
     if (context_.get() == nullptr) {
         return INVALID_SESSION_ID;
     }
-    std::unique_lock<std:;shared_mutex> lock(windowSessionMutex_);
+    std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
     for (const auto& winPair : windowSessionMap_) {
         if (winPair.second.second && WindowHelper::IsMainWindow(winPair.second.second->GetType()) &&
             winPair.second.second->GetProperty() &&
@@ -1546,7 +1546,7 @@ WMError WindowSessionImpl::UpdateProperty(WSPropertyChangeAction action)
 
 sptr<Window> WindowSessionImpl::Find(const std::string& name)
 {
-    std::unique_lock<std:;shared_mutex> lock(windowSessionMutex_);
+    std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
     auto iter = windowSessionMap_.find(name);
     if (iter == windowSessionMap_.end()) {
         return nullptr;
