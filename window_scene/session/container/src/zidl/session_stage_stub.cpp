@@ -96,7 +96,7 @@ int SessionStageStub::HandleUpdateRect(MessageParcel& data, MessageParcel& reply
     SizeChangeReason reason = static_cast<SizeChangeReason>(data.ReadUint32());
     bool hasRSTransaction = data.ReadBool();
     if (hasRSTransaction) {
-        sptr<RSTransaction> transaction(data.ReadParcelable<RSTransaction>());
+        std::shared_ptr<RSTransaction> transaction(data.ReadParcelable<RSTransaction>());
         if (!transaction) {
             WLOGFE("transaction unMarsh failed");
             return -1;
