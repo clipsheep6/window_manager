@@ -815,7 +815,6 @@ void MoveDragController::UpdateHotAreaType(const std::shared_ptr<MMI::PointerEve
     }
     int32_t pointerDisplayX = pointerItem.GetDisplayX();
     int32_t pointerDisplayY = pointerItem.GetDisplayY();
-    std::unique_lock<std::shared_mutex> lock(SceneSession::windowDragHotAreaMutex_);
     std::map<int32_t, WSRect> areaMap = SceneSession::windowDragHotAreaMap_;
     for (auto it = areaMap.begin(); it != areaMap.end(); ++it) {
         int32_t key = it->first;
