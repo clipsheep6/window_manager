@@ -184,7 +184,9 @@ protected:
     NotifyNativeWinDestroyFunc notifyNativeFunc_;
 
     std::recursive_mutex mutex_;
-    static std::map_mt<std::string, std::pair<int32_t, sptr<WindowSessionImpl>>> windowSessionMap_;
+    static std::map<std::string, std::pair<int32_t, sptr<WindowSessionImpl>>> windowSessionMap_;
+	// protect windowSessionMap_
+	static std::shared_mutiex windowSessionMutex_;
     static std::map<int32_t, std::vector<sptr<WindowSessionImpl>>> subWindowSessionMap_;
     bool isSystembarPropertiesSet_ = false;
     bool isIgnoreSafeAreaNeedNotify_ = false;
