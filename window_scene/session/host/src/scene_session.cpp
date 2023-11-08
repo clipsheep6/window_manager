@@ -46,7 +46,7 @@ const std::string DLP_INDEX = "ohos.dlp.params.index";
 MaximizeMode SceneSession::maximizeMode_ = MaximizeMode::MODE_RECOVER;
 wptr<SceneSession> SceneSession::enterSession_ = nullptr;
 std::mutex SceneSession::enterSessionMutex_;
-std::map<int32_t, WSRect> SceneSession::windowDragHotAreaMap_;
+std::map_mt<int32_t, WSRect> SceneSession::windowDragHotAreaMap_;
 
 SceneSession::SceneSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback)
     : Session(info)
@@ -1079,16 +1079,16 @@ void SceneSession::FixRectByLimits(WindowLimits limits, WSRect& rect, float rati
         limits.maxHeight_ = SessionUtils::ToLayoutHeight(limits.maxHeight_, vpr);
     }
     if (static_cast<uint32_t>(rect.height_) > limits.maxHeight_) {
-        rect.height_ = limits.maxHeight_;
+        rect.height_ = static_cast<int32_t>(limits.maxHeight_);
         rect.width_ = floor(rect.height_ * ratio);
     } else if (static_cast<uint32_t>(rect.width_) > limits.maxWidth_) {
-        rect.width_ = limits.maxWidth_;
+        rect.width_ = static_cast<int32_t>(limits.maxWidth_);
         rect.height_ = floor(rect.width_ / ratio);
     } else if (static_cast<uint32_t>(rect.width_) < limits.minWidth_) {
-        rect.width_ = limits.minWidth_;
+        rect.width_ = static_cast<int32_t>(limits.minWidth_);
         rect.height_ = ceil(rect.width_ / ratio);
     } else if (static_cast<uint32_t>(rect.height_) < limits.minHeight_) {
-        rect.height_ = limits.minHeight_;
+        rect.height_ = static_cast<int32_t>(limits.minHeight_);
         rect.width_ = ceil(rect.height_ * ratio);
     }
     if (isDecor) {
