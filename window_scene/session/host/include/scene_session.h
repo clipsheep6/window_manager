@@ -200,6 +200,7 @@ public:
     bool IsNeedDefaultAnimation();
     bool IsAppSession() const;
     static std::map<int32_t, WSRect> windowDragHotAreaMap_;
+    static std::shared_mutex windowDragHotAreaMutex_;
     void SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFunc& func);
     WSRect GetSessionTargetRect();
 
