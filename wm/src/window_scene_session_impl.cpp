@@ -93,7 +93,7 @@ bool WindowSceneSessionImpl::IsValidSystemWindowType(const WindowType& type)
 
 sptr<WindowSessionImpl> WindowSceneSessionImpl::FindParentSessionByParentId(uint32_t parentId)
 {
-    std::unique_lock<std:;shared_mutex> lock(windowSessionMutex_);
+    std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
     for (const auto& item : windowSessionMap_) {
         if (item.second.second && item.second.second->GetProperty() &&
             item.second.second->GetWindowId() == parentId &&
@@ -109,7 +109,7 @@ sptr<WindowSessionImpl> WindowSceneSessionImpl::FindParentSessionByParentId(uint
 
 sptr<WindowSessionImpl> WindowSceneSessionImpl::FindMainWindowWithContext()
 {
-    std::unique_lock<std:;shared_mutex> lock(windowSessionMutex_);
+    std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
     for (const auto& winPair : windowSessionMap_) {
         auto win = winPair.second.second;
         if (win && win->GetType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW &&
@@ -178,7 +178,7 @@ WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
 
 void WindowSceneSessionImpl::UpdateWindowState()
 {
-    std::unique_lock<std:;shared_mutex> lock(windowSessionMutex_);
+    std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
     windowSessionMap_.insert(std::make_pair(property_->GetWindowName(),
         std::pair<uint64_t, sptr<WindowSessionImpl>>(property_->GetPersistentId(), this)));
     state_ = WindowState::STATE_CREATED;
@@ -654,7 +654,7 @@ WMError WindowSceneSessionImpl::Destroy(bool needNotifyServer, bool needClearLis
     }
 
     DestroySubWindow();
-    std::unique_lock<std:;shared_mutex> lock(windowSessionMutex_);
+    std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
     windowSessionMap_.erase(property_->GetWindowName());
     DelayedSingleton<ANRHandler>::GetInstance()->OnWindowDestroyed(property_->GetPersistentId());
     hostSession_ = nullptr;
@@ -1434,7 +1434,7 @@ void WindowSceneSessionImpl::UpdateConfiguration(const std::shared_ptr<AppExecFw
 void WindowSceneSessionImpl::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
     WLOGD("notify scene ace update config");
-    std::unique_lock<std:;shared_mutex> lock(windowSessionMutex_);
+    std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
     for (const auto& winPair : windowSessionMap_) {
         auto window = winPair.second.second;
         window->UpdateConfiguration(configuration);
@@ -1443,7 +1443,7 @@ void WindowSceneSessionImpl::UpdateConfigurationForAll(const std::shared_ptr<App
 
 sptr<Window> WindowSceneSessionImpl::GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context)
 {
-    std::unique_lock<std:;shared_mutex> lock(windowSessionMutex_);
+    std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
     if (windowSessionMap_.empty()) {
         WLOGFE("Please create mainWindow First!");
         return nullptr;
@@ -1463,7 +1463,7 @@ sptr<Window> WindowSceneSessionImpl::GetTopWindowWithContext(const std::shared_p
 
 sptr<Window> WindowSceneSessionImpl::GetTopWindowWithId(uint32_t mainWinId)
 {
-    std::unique_lock<std:;shared_mutex> lock(windowSessionMutex_);
+    std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
     if (windowSessionMap_.empty()) {
         WLOGFE("Please create mainWindow First!");
         return nullptr;
