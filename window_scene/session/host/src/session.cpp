@@ -1433,12 +1433,19 @@ void Session::SetGetStateFromManagerListener(const GetStateFromManagerFunc& func
 void Session::NotifySessionStateChange(const SessionState& state)
 {
     WLOGFD("state: %{public}u", static_cast<uint32_t>(state));
-    if (sessionStateChangeFunc_) {
-        sessionStateChangeFunc_(state);
-    }
-    if (sessionStateChangeNotifyManagerFunc_) {
-        sessionStateChangeNotifyManagerFunc_(GetPersistentId(), state);
-    }
+    PostTask([weakThis = wptr(this), state]() {
+        auto session = weakThis.promote();
+        if (session != nullptr) {
+            WLOGFE("session is null");
+            return;
+        }
+        if (session->sessionStateChangeFunc_) {
+            session->sessionStateChangeFunc_(state);
+        }
+        if (session->sessionStateChangeNotifyManagerFunc_) {
+            session->sessionStateChangeNotifyManagerFunc_(session->GetPersistentId(), state);
+        }
+    });
 }
 
 void Session::SetSessionFocusableChangeListener(const NotifySessionFocusableChangeFunc& func)
