@@ -56,6 +56,8 @@ group("unittest") {
     ":ws_window_event_channel_test",
     ":ws_window_scene_config_test",
     ":ws_window_session_property_test",
+    ":ws_task_scheduler_test",
+    ":ws_session_permission_test",
   ]
 }
 
@@ -63,6 +65,32 @@ ohos_unittest("ws_dual_display_device_policy_test") {
   module_out_path = module_out_path
 
   sources = [ "dual_display_device_policy_test.cpp" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("ws_task_scheduler_test") {
+  module_out_path = module_out_path
+
+  sources = [ "task_scheduler_test.cpp" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("ws_session_permission_test") {
+  module_out_path = module_out_path
+
+  sources = [ "session_permission_test.cpp" ]
 
   deps = [ ":ws_unittest_common" ]
 
