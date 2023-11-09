@@ -72,6 +72,18 @@ public:
     MOCK_METHOD1(SetParentToken, void(sptr<IRemoteObject> token));
     MOCK_METHOD0(GetParentToken, sptr<IRemoteObject>());
 
+    MOCK_METHOD3(
+        SearchElementInfoByAccessibilityId, std::list<Accessibility::AccessibilityElementInfo>(const int32_t elementId,
+        const int32_t mode, const int32_t baseParent));
+    MOCK_METHOD3(
+        SearchElementInfosByText, std::list<Accessibility::AccessibilityElementInfo>(const int32_t elementId,
+        const std::string& text, const int32_t baseParent));
+    MOCK_METHOD3(
+        FindFocusedElementInfo, Accessibility::AccessibilityElementInfo(const int32_t elementId,
+        const int32_t focusType, const int32_t baseParent));
+    MOCK_METHOD3(
+        FocusMoveSearch, Accessibility::AccessibilityElementInfo(const int32_t elementId,
+        const int32_t direction, const int32_t baseParent));
 };
 } // namespace Ace
 } // namespace OHOS
