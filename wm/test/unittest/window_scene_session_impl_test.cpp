@@ -1807,6 +1807,124 @@ HWTEST_F(WindowSceneSessionImplTest, BindDialogTarget01, Function | SmallTest | 
     ASSERT_EQ(ret, WMError::WM_DO_NOTHING);
 }
 
+/**
+ * @tc.name: SetTouchHotAreas01
+ * @tc.desc: SetTouchHotAreas
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, SetTouchHotAreas01, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("GetConfigurationFromAbilityInfo");
+    option->SetWindowType(WindowType::SYSTEM_WINDOW_BASE);
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    std::vector<Rect> rects;
+    WMError ret = window->SetTouchHotAreas(rects);
+    ASSERT_EQ(ret, WMError::WM_ERROR_INVALID_WINDOW);
+}
+
+/**
+ * @tc.name: SetTouchHotAreas02
+ * @tc.desc: SetTouchHotAreas
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, SetTouchHotAreas02, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("GetConfigurationFromAbilityInfo");
+    option->SetWindowType(WindowType::SYSTEM_WINDOW_BASE);
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    sptr<IRemoteObject> targetToken;
+    WMError ret = window->BindDialogTarget(targetToken);
+    ASSERT_EQ(ret, WMError::WM_DO_NOTHING);
+    std::vector<Rect> rects;
+    WMError result = window->SetTouchHotAreas(rects);
+    ASSERT_EQ(result, WMError::WM_ERROR_INVALID_WINDOW);
+}
+
+/**
+ * @tc.name: DumpSessionElementInfo04
+ * @tc.desc: DumpSessionElementInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, DumpSessionElementInfo04, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("DumpSessionElementInfo");
+    option->SetWindowType(WindowType::SYSTEM_WINDOW_BASE);
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    std::vector<std::string> params;
+    params.push_back("-h");
+    window->DumpSessionElementInfo(params);
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->NotifyMemoryLevel(2));
+}
+
+/**
+ * @tc.name: UpdateWindowModeImmediately02
+ * @tc.desc: UpdateWindowModeImmediately
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, UpdateWindowModeImmediately02, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("DestroySubWindow");
+    option->SetWindowType(WindowType::SYSTEM_WINDOW_BASE);
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    ASSERT_EQ(WMError::WM_OK, window->UpdateWindowModeImmediately(WindowMode::WINDOW_MODE_UNDEFINED));
+    window->state_ = WindowState::STATE_SHOWN;
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->UpdateWindowModeImmediately(WindowMode::WINDOW_MODE_UNDEFINED));
+}
+
+/**
+ * @tc.name: UpdateWindowMode02
+ * @tc.desc: UpdateWindowMode
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, UpdateWindowMode02, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("DestroySubWindow");
+    option->SetWindowType(WindowType::SYSTEM_WINDOW_BASE);
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->state_ = WindowState::STATE_CREATED;
+    auto ret = window->UpdateWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    ASSERT_EQ(ret, WSError::WS_ERROR_INVALID_WINDOW);
+}
+
+/**
+ * @tc.name: Show02
+ * @tc.desc: Show session
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, Show02, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("Show01");
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->Show(2, false);
+    ASSERT_EQ(window->state_, WindowState::STATE_INITIAL);
+}
+
+/**
+ * @tc.name: Hide02
+ * @tc.desc: Hide session
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, Hide02, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("Hide01");
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->state_ = WindowState::STATE_SHOWN;
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Hide(2, true, false));
+}
 }
 } // namespace Rosen
 } // namespace OHOS
