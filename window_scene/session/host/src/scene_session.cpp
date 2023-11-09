@@ -114,9 +114,9 @@ WSError SceneSession::Foreground(sptr<WindowSessionProperty> property)
     // return when screen is locked and show without ShowWhenLocked flag
     if (GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW &&
         GetStateFromManager(ManagerState::MANAGER_STATE_SCREEN_LOCKED) &&
-        !IsShowWhenLocked()) {
-            WLOGFW("Foreground failed: Screen is locked, session %{public}d show without ShowWhenLocked flag",
-                GetPersistentId());
+        !IsShowWhenLocked() && sessionInfo_.bundleName_.find("startupguide") == std::string::npos) {
+            WLOGFW("Foreground failed: Screen is locked, session %{public}s show without ShowWhenLocked flag",
+                sessionInfo_.bundleName_.c_str());
             return WSError::WS_ERROR_INVALID_SHOW_WHEN_LOCKED;
     }
 
