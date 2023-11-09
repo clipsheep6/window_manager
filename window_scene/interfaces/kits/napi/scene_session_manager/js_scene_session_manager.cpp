@@ -94,6 +94,7 @@ napi_value JsSceneSessionManager::Init(napi_env env, napi_value exportObj)
     BindNativeFunction(env, exportObj, "getAllAbilityInfo", moduleName, JsSceneSessionManager::GetAllAbilityInfos);
     BindNativeFunction(env, exportObj, "prepareTerminate", moduleName, JsSceneSessionManager::PrepareTerminate);
     BindNativeFunction(env, exportObj, "perfRequestEx", moduleName, JsSceneSessionManager::PerfRequestEx);
+    BindNativeFunction(env, exportObj, "reportSceneInfo", moduleName, JsSceneSessionManager::ReportSceneInfo);
     BindNativeFunction(env, exportObj, "updateWindowMode", moduleName, JsSceneSessionManager::UpdateWindowMode);
     BindNativeFunction(env, exportObj, "getRootSceneUIContext", moduleName,
         JsSceneSessionManager::GetRootSceneUIContext);
@@ -315,6 +316,13 @@ napi_value JsSceneSessionManager::RequestSceneSession(napi_env env, napi_callbac
     WLOGI("[NAPI]RequestSceneSession");
     JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(env, info);
     return (me != nullptr) ? me->OnRequestSceneSession(env, info) : nullptr;
+}
+
+napi_value JsSceneSessionManager::ReportSceneInfo(napi_env env, napi_callback_info info)
+{
+    WLOGI("[NAPI]ReportSceneInfo");
+    JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(env, info);
+    return (me != nullptr) ? me->OnReportSceneInfo(env, info) : nullptr;
 }
 
 napi_value JsSceneSessionManager::UpdateSceneSessionWant(napi_env env, napi_callback_info info)
@@ -1129,6 +1137,42 @@ napi_value JsSceneSessionManager::OnRequestSceneSessionByCall(napi_env env, napi
     }
 
     SceneSessionManager::GetInstance().RequestSceneSessionByCall(sceneSession);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsSceneSessionManager::OnReportSceneInfo(napi_env env, napi_callback_info info)
+{
+    WLOGI("[NAPI]OnReportSceneInfo");
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc < ARGC_TWO) {
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu", argc);
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    int32_t cmdId;
+    int32_t value;
+    if (!ConvertFromJsValue(env, argv[0], cmdId) || !ConvertFromJsValue(env, argv[1], value)) {
+        WLOGFE("[NAPI]Failed to convert parameter to cmdId or value");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+
+    std::string msg = "";
+    if (argc == ARGC_THREE) {
+        if (!ConvertFromJsValue(env, argv[ARGC_TWO], msg)) {
+            WLOGFE("[NAPI]Failed to convert parameter to msg");
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+                "Input parameter is missing or invalid"));
+            return NapiGetUndefined(env);
+        }
+    }
+    SceneSessionManager::GetInstance().ReportSceneInfo(cmdId, value, msg);
+    WLOGFD("[NAPI]ReportSceneInfo success cmdId: %{public}d value: %{public}d msg:%{public}s",
+        cmdId, value, msg.c_str());
     return NapiGetUndefined(env);
 }
 

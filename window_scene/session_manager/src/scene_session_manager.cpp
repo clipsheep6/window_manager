@@ -771,6 +771,23 @@ WSError SceneSessionManager::UpdateParentSessionForDialog(const sptr<SceneSessio
     return WSError::WS_OK;
 }
 
+WSError SceneSessionManager::ReportSceneInfo(int32_t cmdId, int32_t value, const std::string& msg)
+{
+    int32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_ANCO_APP_FRONT;
+    if (cmdId == type) {
+        auto parentSession = GetSceneSession(value);
+        if (parentSession && CheckCollaboratorType(parentSession->GetCollaboratorType())) {
+            WLOGFD("anco app is front from background taskbar");
+#ifdef RES_SCHED_ENABLE
+            std::unordered_map<std::string, std::string> payload;
+            int64_t value = 0;
+            OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, payload);
+#endif
+        }
+    }
+    return WSError::WS_OK;
+}
+
 sptr<SceneSession::SpecificSessionCallback> SceneSessionManager::CreateSpecificSessionCallback()
 {
     sptr<SceneSession::SpecificSessionCallback> specificCb = new (std::nothrow)SceneSession::SpecificSessionCallback();
@@ -862,6 +879,12 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
         UpdateParentSessionForDialog(sceneSession, property);
         if (CheckCollaboratorType(sceneSession->GetCollaboratorType())) {
             WLOGFD("ancoSceneState: %{public}d", sceneSession->GetSessionInfo().ancoSceneState);
+#ifdef RES_SCHED_ENABLE
+            std::unordered_map<std::string, std::string> payload;
+            uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_ANCO_APP_FRONT;
+            int64_t value = 0;
+            OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, payload);
+#endif
             PreHandleCollaborator(sceneSession);
         }
         {
@@ -896,6 +919,13 @@ void SceneSessionManager::UpdateSceneSessionWant(const SessionInfo& sessionInfo)
                 session->SetSessionInfoWant(sessionInfo.want);
                 WLOGFI("RequestSceneSession update want, persistentId:%{public}d", sessionInfo.persistentId_);
             } else {
+                WLOGFD("anco app is front because click icon");
+#ifdef RES_SCHED_ENABLE
+                int64_t value = 0;
+                std::unordered_map<std::string, std::string> payload;
+                uint32_t type = OHOS::ResourceSchedule::ResType::RES_TYPE_ANCO_APP_FRONT;
+                OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, payload);
+#endif
                 UpdateCollaboratorSessionWant(session);
             }
         }
