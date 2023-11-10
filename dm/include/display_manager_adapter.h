@@ -97,6 +97,7 @@ public:
         const sptr<IDisplayManagerAgent>& displayManagerAgent);
     virtual DMError DestroyVirtualScreen(ScreenId screenId);
     virtual DMError SetVirtualScreenSurface(ScreenId screenId, sptr<Surface> surface);
+    virtual bool SetSpecifiedScreenPower(ScreenId screenId, ScreenPowerState state, PowerStateChangeReason reason);
     virtual bool SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason);
     virtual ScreenPowerState GetScreenPower(ScreenId dmsScreenId);
     virtual DMError SetOrientation(ScreenId screenId, Orientation orientation);
