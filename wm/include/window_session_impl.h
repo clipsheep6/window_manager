@@ -53,6 +53,7 @@ public:
         const sptr<Rosen::ISession>& iSession);
     WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
     WMError Hide(uint32_t reason = 0, bool withAnimation = false, bool isFromInnerkits = true) override;
+    WMError SetTextFieldAvoidInfo(double textFieldPositionY, double textFieldHeight) override;
     WMError Destroy() override;
     virtual WMError Destroy(bool needNotifyServer, bool needClearListener = true);
     WMError NapiSetUIContent(const std::string& contentInfo, napi_env env,
@@ -87,6 +88,7 @@ public:
     WMError SetAPPWindowIcon(const std::shared_ptr<Media::PixelMap>& icon) override;
     void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback) override;
     int64_t GetVSyncPeriod() override;
+    void FlushFrameRate(uint32_t rate) override;
     // inherits from session stage
     WSError SetActive(bool active) override;
     WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
@@ -160,6 +162,9 @@ public:
     WSError UpdateMaximizeMode(MaximizeMode mode) override;
     void NotifySessionForeground(uint32_t reason, bool withAnimation) override;
     void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
+
+    double textFieldPositionY_ = 0;
+    double textFieldHeight_ = 0;
 
 protected:
     WMError Connect();
