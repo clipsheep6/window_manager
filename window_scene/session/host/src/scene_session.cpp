@@ -1841,6 +1841,8 @@ void SceneSession::NotifySessionBackground(uint32_t reason, bool withAnimation, 
         return;
     }
     return sessionStage_->NotifySessionBackground(reason, withAnimation, isFromInnerkits);
+}
+
 WSError SceneSession::SetTextFieldAvoidInfo(double textFieldPositionY, double textFieldHeight)
 {
     textFieldPositionY_ = textFieldPositionY;

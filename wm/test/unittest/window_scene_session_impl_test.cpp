@@ -1821,14 +1821,14 @@ HWTEST_F(WindowSceneSessionImplTest, NotifySessionForeground, Function | SmallTe
     ASSERT_NE(nullptr, windowscenesession);
 
     uint32_t reason = 1;
-    bool withAnimation = true; 
+    bool withAnimation = true;
     WMError ret = windowscenesession->Show(reason, withAnimation);
     ASSERT_EQ(ret, WMError::WM_OK);
 }
 
 /**
- * @tc.name: NotifySessionForeground
- * @tc.desc: NotifySessionForeground
+ * @tc.name: NotifySessionBackground
+ * @tc.desc: NotifySessionBackground
  * @tc.type: FUNC
 */
 HWTEST_F(WindowSceneSessionImplTest, NotifySessionBackground, Function | SmallTest | Level2)
@@ -1842,7 +1842,7 @@ HWTEST_F(WindowSceneSessionImplTest, NotifySessionBackground, Function | SmallTe
     uint32_t reason = 1;
     bool withAnimation = true;
     bool isFromInnerkits = true;
-    WMError ret = windowscenesession->Show(reason, withAnimation, isFromInnerkits);
+    WMError ret = windowscenesession->Hide(reason, withAnimation, isFromInnerkits);
     ASSERT_EQ(ret, WMError::WM_OK);
 }
 }

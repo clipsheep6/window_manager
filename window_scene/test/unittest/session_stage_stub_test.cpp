@@ -309,7 +309,7 @@ HWTEST_F(SessionStageProxyTest, NotifySessionForeground, Function | SmallTest | 
     data.WriteUint32(1);
     data.WriteBool(true);
     ASSERT_TRUE((sessionStageStub_ != nullptr));
-    ASSERT_EQ(0,sessionStageStub_->HandleNotifySessionForeground(data, reply));
+    ASSERT_EQ(0, sessionStageStub_->HandleNotifySessionForeground(data, reply));
 }
 
 /**
@@ -326,7 +326,7 @@ HWTEST_F(SessionStageProxyTest, NotifySessionBackground, Function | SmallTest | 
     data.WriteBool(true);
     data.WriteBool(true);
     ASSERT_TRUE((sessionStageStub_ != nullptr));
-    sessionStageStub_->NotifySessionForeground(reason, withAnimation, isFromInnerkits);
+    ASSERT_EQ(0, sessionStageStub_->HandleNotifySessionBackground(data, reply));
 }
 
 }

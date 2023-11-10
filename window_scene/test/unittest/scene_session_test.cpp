@@ -2253,7 +2253,7 @@ HWTEST_F(SceneSessionTest, NotifySessionForeground, Function | SmallTest | Level
     int ret = 1;
 
     scensession->sessionStage_ = mockSessionStage;
-    scensescensession->NotifySessionForeground(reason, withAnimation, isFromInnerkits);
+    scensescensession->NotifySessionForeground(reason, withAnimation);
     ASSERT_EQ(ret, 1);
 }
 

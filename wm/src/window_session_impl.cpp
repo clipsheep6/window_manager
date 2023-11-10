@@ -1706,7 +1706,7 @@ void WindowSessionImpl::NotifySessionForeground(uint32_t reason, bool withAnimat
     WLOGFD("NotifySessionForeground");
 }
 
-void WindowSessionImpl::NotifySessionBackground(uint32_t reason, bool withAnimation)
+void WindowSessionImpl::NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits)
 {
     WLOGFD("NotifySessionBackground");
 }

@@ -482,7 +482,7 @@ void  SessionStageProxy::NotifySessionForeground(uint32_t reason, bool withAnima
         return;
     }
     if (Remote()->SendRequest(
-        static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SESSION_FOREROUND),
+        static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SESSION_FOREGROUND),
         data, reply, option) != ERR_NONE) {
         WLOGFE("Send NotifySessionForeground Request failed");
     }

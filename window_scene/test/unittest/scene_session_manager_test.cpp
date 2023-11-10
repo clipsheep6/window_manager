@@ -2847,11 +2847,6 @@ HWTEST_F(SceneSessionManagerTest, UnlockSession, Function | SmallTest | Level3)
 }
 
 /**
- * @tc.name: NotifySessionForeground
- * @tc.desc: SceneSesionManager NotifySessionForeground
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest, NotifySessionForeground, Function | SmallTest | Level3)
  * @tc.name: UpdateImmersiveState
  * @tc.desc: test UpdateImmersiveState
  * @tc.type: FUNC
@@ -2861,6 +2856,37 @@ HWTEST_F(SceneSessionManagerTest, UpdateImmersiveState, Function | SmallTest | L
     int ret = 0;
     ssm_->UpdateImmersiveState();
     ASSERT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name: NotifySessionForeground
+ * @tc.desc: SceneSesionManager NotifySessionForeground
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, NotifySessionForeground, Function | SmallTest | Level3)
+{
+    sptr<SceneSession> scensession = nullptr;
+    scensession = new (std::nothrow) SceneSession(info, nullptr);
+    ASSERT_NE(nullptr, scenesession);
+    uint32_t reason = 1;
+    bool withAnimation = true;
+    scensession->NotifySessionForeground(reason, withAnimation);
+}
+
+/**
+ * @tc.name: NotifySessionForeground
+ * @tc.desc: SceneSesionManager NotifySessionForeground
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, NotifySessionBackground, Function | SmallTest | Level3)
+{
+    sptr<SceneSession> scensession = nullptr;
+    scensession = new (std::nothrow) SceneSession(info, nullptr);
+    ASSERT_NE(nullptr, scenesession);
+    uint32_t reason = 1;
+    bool withAnimation = true;
+    bool isFromInnerkits = true;
+    scensession->NotifySessionBackground(reason, withAnimation, isFromInnerkits);
 }
 }
 } // namespace Rosen

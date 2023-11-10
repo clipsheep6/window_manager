@@ -2003,7 +2003,7 @@ void WindowSceneSessionImpl::NotifySessionForeground(uint32_t reason, bool withA
 void WindowSceneSessionImpl::NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits)
 {
     WLOGFI("NotifySessionBackground");
-    Show(reason, withAnimation, isFromInnerkits);
+    Hide(reason, withAnimation, isFromInnerkits);
 }
 } // namespace Rosen
 } // namespace OHOS

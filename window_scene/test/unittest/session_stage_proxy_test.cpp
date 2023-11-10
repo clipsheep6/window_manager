@@ -275,7 +275,7 @@ HWTEST_F(SessionStageProxyTest, NotifySessionBackground, Function | SmallTest | 
     bool withAnimation = true;
     bool isFromInnerkits = true;
     ASSERT_TRUE((sessionStage_ != nullptr));
-    sessionStage_->NotifySessionForeground(reason, withAnimation, isFromInnerkits);
+    sessionStage_->NotifySessionBackground(reason, withAnimation, isFromInnerkits);
 }
 }
 }
