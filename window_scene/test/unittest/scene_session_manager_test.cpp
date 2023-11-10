@@ -2852,6 +2852,16 @@ HWTEST_F(SceneSessionManagerTest, UnlockSession, Function | SmallTest | Level3)
  * @tc.type: FUNC
 */
 HWTEST_F(SceneSessionManagerTest, NotifySessionForeground, Function | SmallTest | Level3)
+ * @tc.name: UpdateImmersiveState
+ * @tc.desc: test UpdateImmersiveState
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, UpdateImmersiveState, Function | SmallTest | Level3)
+{
+    int ret = 0;
+    ssm_->UpdateImmersiveState();
+    ASSERT_EQ(ret, 0);
+}
 }
 } // namespace Rosen
 } // namespace OHOS
