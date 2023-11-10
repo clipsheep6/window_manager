@@ -886,6 +886,12 @@ public:
      */
     virtual int64_t GetVSyncPeriod() { return 0; }
     /**
+     * @brief flush frame rate of linker.
+     *
+     * @param rate frame rate.
+     */
+    virtual void FlushFrameRate(uint32_t rate) {}
+    /**
      * @brief Update Configuration.
      *
      * @param configuration Window configuration.
@@ -1378,6 +1384,13 @@ public:
      * @return True means floating window of app type, false means the opposite.
      */
     virtual bool IsFloatingWindowAppType() const { return false; }
+
+    /**
+     * @brief Set Text Field Avoid Info.
+     *
+     * @return Errorcode of window.
+     */
+    virtual WMError SetTextFieldAvoidInfo(double textFieldPositionY, double textFieldHeight) { return WMError::WM_OK; }
 
     /**
      * @brief Register transfer component data callback.
