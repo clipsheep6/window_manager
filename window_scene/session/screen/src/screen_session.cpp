@@ -228,7 +228,6 @@ float ScreenSession::ConvertRotationToFloat(Rotation sensorRotation)
 
 void ScreenSession::SensorRotationChange(Rotation sensorRotation)
 {
-    WLOGFI("OnSensorRotationChange entry");
     float rotation = ConvertRotationToFloat(sensorRotation);
     for (auto& listener : screenChangeListenerList_) {
         if (!listener) {
