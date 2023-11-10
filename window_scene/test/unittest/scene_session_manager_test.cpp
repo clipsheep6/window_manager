@@ -2845,6 +2845,13 @@ HWTEST_F(SceneSessionManagerTest, UnlockSession, Function | SmallTest | Level3)
     result = ssm_->LockSession(sessionId);
     EXPECT_EQ(result, WSError::WS_ERROR_INVALID_PERMISSION);
 }
+
+/**
+ * @tc.name: NotifySessionForeground
+ * @tc.desc: SceneSesionManager NotifySessionForeground
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, NotifySessionForeground, Function | SmallTest | Level3)
 }
 } // namespace Rosen
 } // namespace OHOS

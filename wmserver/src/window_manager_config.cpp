@@ -72,6 +72,7 @@ const std::map<std::string, WindowManagerConfig::ValueType> WindowManagerConfig:
     { "stretchable",                                  WindowManagerConfig::ValueType::UNDIFINED },
     { "remoteAnimation",                              WindowManagerConfig::ValueType::UNDIFINED },
     { "configMainFloatingWindowAbove",                WindowManagerConfig::ValueType::UNDIFINED },
+    { "backgroundswitch",                             WindowManagerConfig::ValueType::UNDIFINED },
 };
 
 std::vector<std::string> WindowManagerConfig::SplitNodeContent(const xmlNodePtr& node, const std::string& pattern)

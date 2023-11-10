@@ -1685,5 +1685,15 @@ WSError WindowSessionImpl::UpdateMaximizeMode(MaximizeMode mode)
 {
     return WSError::WS_OK;
 }
+
+void WindowSessionImpl::NotifySessionForeground(uint32_t reason, bool withAnimation)
+{
+    WLOGFD("NotifySessionForeground");
+}
+
+void WindowSessionImpl::NotifySessionBackground(uint32_t reason, bool withAnimation)
+{
+    WLOGFD("NotifySessionBackground");
+}
 } // namespace Rosen
 } // namespace OHOS

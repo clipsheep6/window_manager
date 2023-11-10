@@ -1141,11 +1141,12 @@ WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSessi
             return WSError::WS_ERROR_NULLPTR;
         }
 
-        if (!isDelegator) {
-            AAFwk::AbilityManagerClient::GetInstance()->MinimizeUIAbilityBySCB(scnSessionInfo);
-        } else {
-            AAFwk::AbilityManagerClient::GetInstance()->MinimizeUIAbilityBySCB(scnSessionInfo, true);
-        }
+        // if (!isDelegator) {
+        //     AAFwk::AbilityManagerClient::GetInstance()->MinimizeUIAbilityBySCB(scnSessionInfo);
+        // } else {
+        //     AAFwk::AbilityManagerClient::GetInstance()->MinimizeUIAbilityBySCB(scnSessionInfo, true);
+        // }
+        scnSession->NotifySessionBackground(0, true, true);
         if (WindowHelper::IsMainWindow(scnSession->GetWindowType())) {
             auto sessionInfo = scnSession->GetSessionInfo();
             WindowInfoReporter::GetInstance().InsertHideReportInfo(sessionInfo.bundleName_);
@@ -5241,5 +5242,15 @@ void SceneSessionManager::UpdateImmersiveState() {
         }
     }
     ScreenSessionManager::GetInstance().SetImmersiveState(false);
+}
+
+void SceneSessionManager::NotifySessionForeground(const sptr<SceneSession>& session, uint32_t reason, bool withAnimation)
+{
+    session->NotifySessionForeground(reason, withAnimation);
+}
+
+void SceneSessionManager::NotifySessionBackground(const sptr<SceneSession>& session, uint32_t reason, bool withAnimation, bool isFromInnerkits)
+{
+    session->NotifySessionBackground(reason, withAnimation, isFromInnerkits);
 }
 } // namespace OHOS::Rosen

@@ -33,6 +33,8 @@
     <splitRatios>0.5 0.33 0.67</splitRatios>
     <!--default window mode config-->
     <defaultWindowMode>1</defaultWindowMode>
+    <!--enable/diable backgroundswitch-->
+    <backgroundswitch enable="false"></backgroundswitch>
     <!--window animation config-->
     <windowAnimation>
         <timing>
@@ -90,6 +92,8 @@
     </startWindowTransitionAnimation>
     <!--enable/disable remote animation-->
     <remoteAnimation enable="true"></remoteAnimation>
+    <!--enable/diable backgroundswith-->
+    <backgroundswith enable="false"></backgroundswith>
     <!--window effect config-->
     <windowEffect>
         <appWindows>

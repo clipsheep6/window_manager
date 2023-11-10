@@ -55,6 +55,8 @@ public:
     void NotifyFocusStateEvent(bool focusState) override;
     void NotifyBackpressedEvent(bool& isConsumed) override;
     void NotifyConfigurationUpdated() override;
+    void NotifySessionForeground(uint32_t reason, bool withAnimation) override;
+    void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
 
 protected:
     NotifyTransferComponentDataFunc notifyTransferComponentDataFunc_;

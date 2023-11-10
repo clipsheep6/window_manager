@@ -45,6 +45,8 @@ public:
     MOCK_METHOD1(NotifyForegroundInteractiveStatus, void(bool interactive));
     MOCK_METHOD1(UpdateMaximizeMode, WSError(MaximizeMode mode));
     MOCK_METHOD0(NotifyCloseExistPipWindow, WSError(void));
+    MOCK_METHOD0(NotifySessionForeground, void(void));
+    MOCK_METHOD0(NotifySessionBackground, void(void));
 };
 } // namespace Rosen
 } // namespace OHOS
