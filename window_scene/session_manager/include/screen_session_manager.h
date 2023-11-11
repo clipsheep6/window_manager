@@ -271,6 +271,9 @@ private:
     bool keyguardDrawnDone_ = true;
     bool needScreenOnWhenKeyguardNotify_ = false;
 
+    bool screenLockSuspend_ = false;
+    bool screenLockOff_ = false;
+
     //Fold Screen
     std::map<ScreenId, ScreenProperty> phyScreenPropMap_;
     mutable std::recursive_mutex phyScreenPropMapMutex_;
