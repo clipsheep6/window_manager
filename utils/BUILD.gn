@@ -31,6 +31,12 @@ config("libwmutil_public_config") {
 
 ## build libwmutil_static.a
 ohos_static_library("libwmutil_static") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
+
   sources = [
     "src/accessibility_window_info.cpp",
     "src/agent_death_recipient.cpp",
@@ -94,6 +100,12 @@ ohos_static_library("libwmutil_static") {
 
 ## Build libwmutil.so
 ohos_shared_library("libwmutil") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
+
   sources = [
     "src/accessibility_window_info.cpp",
     "src/agent_death_recipient.cpp",

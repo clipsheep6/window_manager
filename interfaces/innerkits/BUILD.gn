@@ -19,6 +19,12 @@ config("wm_interface_config") {
 }
 
 ohos_shared_library("wm_interface") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
+
   public_configs = [ ":wm_interface_config" ]
 
   include_dirs = [ "../../interfaces/innerkits" ]
