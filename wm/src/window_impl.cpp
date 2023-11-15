@@ -1949,7 +1949,7 @@ WMError WindowImpl::Minimize()
     return WMError::WM_OK;
 }
 
-WMError WindowImpl::Recover()
+WMError WindowImpl::Recover(bool needUpdateUIContent)
 {
     WLOGI("id: %{public}u Normalize", property_->GetWindowId());
     if (!IsWindowValid()) {

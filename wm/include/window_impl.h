@@ -197,7 +197,7 @@ public:
     virtual WMError Maximize() override;
     virtual WMError MaximizeFloating() override;
     virtual WMError Minimize() override;
-    virtual WMError Recover() override;
+    virtual WMError Recover( bool needUpdateUIContent = false ) override;
     virtual WMError Close() override;
     virtual void StartMove() override;
     virtual WMError SetGlobalMaximizeMode(MaximizeMode mode) override;
