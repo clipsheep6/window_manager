@@ -1227,9 +1227,11 @@ public:
     /**
      * @brief recovery the main window. It is called by ACE when recovery button is clicked.
      *
+     * @param needUpdateUIContentl True means update uiContent, false means not update.
+     *
      * @return WMError
      */
-    virtual WMError Recover() { return WMError::WM_OK; }
+    virtual WMError Recover( bool needUpdateUIContent = false ) { return WMError::WM_OK; }
     /**
      * @brief close the main window. It is called by ACE when close button is clicked.
      *
