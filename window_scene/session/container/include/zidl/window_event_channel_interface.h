@@ -18,6 +18,7 @@
 
 #include <iremote_broker.h>
 #include <list>
+#include <map>
 
 #include "interfaces/include/ws_common.h"
 

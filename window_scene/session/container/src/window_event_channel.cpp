@@ -253,5 +253,4 @@ WSError WindowEventChannel::TransferFocusMoveSearch(int32_t elementId, int32_t d
     }
     return sessionStage_->NotifyFocusMoveSearch(elementId, direction, baseParent, info);
 }
-
 } // namespace OHOS::Rosen

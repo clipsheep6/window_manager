@@ -18,6 +18,7 @@
 
 #include <iremote_broker.h>
 #include <list>
+#include <map>
 
 #include "interfaces/include/ws_common.h"
 #include "occupied_area_change_info.h"
@@ -29,6 +30,7 @@ class AxisEvent;
 } // namespace MMI
 namespace OHOS::Accessibility {
 class AccessibilityElementInfo;
+class AccessibilityEventInfo;
 }
 namespace OHOS::Rosen {
 class RSTransaction;
