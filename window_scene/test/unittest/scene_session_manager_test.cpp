@@ -2866,6 +2866,8 @@ HWTEST_F(SceneSessionManagerTest, UpdateImmersiveState, Function | SmallTest | L
 HWTEST_F(SceneSessionManagerTest, NotifySessionForeground, Function | SmallTest | Level3)
 {
     sptr<SceneSession> scensession = nullptr;
+    SessionInfo info;
+    info.bundleName_ = "bundleName";
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     ASSERT_NE(nullptr, scenesession);
     uint32_t reason = 1;
@@ -2881,6 +2883,8 @@ HWTEST_F(SceneSessionManagerTest, NotifySessionForeground, Function | SmallTest 
 HWTEST_F(SceneSessionManagerTest, NotifySessionBackground, Function | SmallTest | Level3)
 {
     sptr<SceneSession> scensession = nullptr;
+    SessionInfo info;
+    info.bundleName_ = "bundleName";
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     ASSERT_NE(nullptr, scenesession);
     uint32_t reason = 1;
