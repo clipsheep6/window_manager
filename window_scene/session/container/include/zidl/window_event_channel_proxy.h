@@ -18,6 +18,8 @@
 
 #include <iremote_proxy.h>
 #include <list>
+#include <map>
+
 #include "accessibility_element_info.h"
 #include "interfaces/include/ws_common.h"
 #include "window_event_channel_interface.h"

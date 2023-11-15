@@ -18,6 +18,7 @@
 
 #include <functional>
 #include <list>
+#include <map>
 
 #include "accessibility_element_info.h"
 
@@ -49,6 +50,7 @@ public:
         Accessibility::AccessibilityElementInfo& info) override;
     WSError TransferFocusMoveSearch(int32_t elementId, int32_t direction, int32_t baseParent,
         Accessibility::AccessibilityElementInfo& info) override;
+
 private:
     void PrintKeyEvent(const std::shared_ptr<MMI::KeyEvent>& event);
     void PrintPointerEvent(const std::shared_ptr<MMI::PointerEvent>& event);

@@ -329,5 +329,4 @@ WSError WindowEventChannelProxy::TransferFocusMoveSearch(int32_t elementId, int3
     }
     return GetElementInfo(reply, info);
 }
-
 } // namespace OHOS::Rosen
