@@ -1146,7 +1146,7 @@ WMError WindowSceneSessionImpl::MaximizeFloating()
     return WMError::WM_OK;
 }
 
-WMError WindowSceneSessionImpl::Recover()
+WMError WindowSceneSessionImpl::Recover(bool needUpdateUIContent)
 {
     WLOGFD("WindowSceneSessionImpl::Recover called");
     if (IsWindowSessionInvalid()) {
@@ -1154,11 +1154,19 @@ WMError WindowSceneSessionImpl::Recover()
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (WindowHelper::IsMainWindow(GetType()) && hostSession_) {
+        if (property_->GetMaximizeMode() == MaximizeMode::MODE_RECOVER &&
+            property_->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING) {
+            WLOGFW("Recover fail, already MODE_RECOVER");
+            return WMError::WM_ERROR_INVALID_WINDOW;
+        }
         hostSession_->OnSessionEvent(SessionEvent::EVENT_RECOVER);
         SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
         property_->SetMaximizeMode(MaximizeMode::MODE_RECOVER);
         UpdateDecorEnable(true);
         UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE);
+        if (needUpdateUIContent == true) {
+            UpdateMaximizeMode(MaximizeMode::MODE_RECOVER);
+        }
     }
     return WMError::WM_OK;
 }

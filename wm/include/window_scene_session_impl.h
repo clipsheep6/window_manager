@@ -56,7 +56,7 @@ public:
     WMError Minimize() override;
     WMError MaximizeFloating() override;
     WMError Maximize() override;
-    WMError Recover() override;
+    WMError Recover( bool needUpdateUIContent = false ) override;
     void StartMove() override;
     WMError Close() override;
     WindowMode GetMode() const override;
