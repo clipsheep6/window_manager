@@ -28,6 +28,7 @@ namespace Rosen {
 using namespace AbilityRuntime;
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsPipController"};
+    constexpr int32_t NUMBER_TWO = 2;
     const std::string STATE_CHANGE_CB = "stateChange";
     const std::string CONTROL_PANEL_ACTION_EVENT_CB = "controlPanelActionEvent";
 }
@@ -55,7 +56,8 @@ napi_value CreateJsPipControllerObject(napi_env env, sptr<PictureInPictureContro
     return objValue;
 }
 
-JsPipController::JsPipController(const sptr<PictureInPictureController>& pipController, napi_env env) : pipController_(pipController), env_(env)
+JsPipController::JsPipController(const sptr<PictureInPictureController>& pipController, napi_env env) :
+    pipController_(pipController), env_(env)
 {
     registerFunc_ = {
         { STATE_CHANGE_CB, &JsPipController::ProcessStateChangeRegister},
@@ -194,7 +196,7 @@ napi_value JsPipController::OnUpdateContentSize(napi_env env, napi_callback_info
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc != 2) {
+    if (argc != NUMBER_TWO) {
         WLOGFE("Argc count is invalid: %{public}zu", argc);
         return NapiThrowInvalidParam(env);
     }
@@ -228,7 +230,7 @@ napi_value JsPipController::OnRegisterCallback(napi_env env, napi_callback_info 
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc < 2) {
+    if (argc < NUMBER_TWO) {
         WLOGFE("JsPipController Params not match: %{public}zu", argc);
         return NapiThrowInvalidParam(env);
     }
@@ -307,7 +309,8 @@ void JsPipController::ProcessActionEventRegister()
         WLOGFE("controller is nullptr");
         return;
     }
-    sptr<IPiPActionObserver> actionObserver = new JsPipController::PiPActionObserverImpl(env_, jsCbMap_[CONTROL_PANEL_ACTION_EVENT_CB]);
+    sptr<IPiPActionObserver> actionObserver =
+        new JsPipController::PiPActionObserverImpl(env_, jsCbMap_[CONTROL_PANEL_ACTION_EVENT_CB]);
     pipController_->SetPictureInPictureActionObserver(actionObserver);
 }
 

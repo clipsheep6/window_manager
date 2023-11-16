@@ -28,6 +28,7 @@ namespace OHOS {
 namespace Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "PictureInPictureController"};
+    constexpr int32_t DELAY_ANIM = 500;
 }
 
 PictureInPictureController::PictureInPictureController(sptr<PipOption> pipOption, uint32_t windowId)
@@ -255,7 +256,7 @@ void PictureInPictureController::RestorePictureInPictureWindow()
         WLOGFE("handler is nullptr");
         return;
     }
-    handler_->PostTask(stopPipTask, 500);
+    handler_->PostTask(stopPipTask, DELAY_ANIM);
     WLOGFI("restore pip main window finished");
 }
 

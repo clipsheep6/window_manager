@@ -64,7 +64,8 @@ private:
 public:
     class PiPLifeCycleImpl : public IPiPLifeCycle {
     public:
-        PiPLifeCycleImpl(napi_env env, std::shared_ptr<NativeReference> callback): engine_(env), jsCallBack_(callback) {}
+        PiPLifeCycleImpl(napi_env env, std::shared_ptr<NativeReference> callback):
+            engine_(env), jsCallBack_(callback) {}
         ~PiPLifeCycleImpl() {}
         void OnPreparePictureInPictureStart() override;
         void OnPictureInPictureStart() override;
@@ -82,7 +83,8 @@ public:
 
     class PiPActionObserverImpl : public IPiPActionObserver {
     public:
-        PiPActionObserverImpl(napi_env env, std::shared_ptr<NativeReference> callback): engine_(env), jsCallBack_(callback) {}
+        PiPActionObserverImpl(napi_env env, std::shared_ptr<NativeReference> callback):
+            engine_(env), jsCallBack_(callback) {}
         ~PiPActionObserverImpl() {}
         void OnActionEvent(const std::string& actionEvent) override;
     private:
