@@ -205,6 +205,18 @@ void SessionManager::DestroyAndDisconnectSpecificSession(const int32_t& persiste
     sceneSessionManagerProxy_->DestroyAndDisconnectSpecificSession(persistentId);
 }
 
+void SessionManager::RecoveryPullPipMainWindow(const int32_t& persistentId)
+{
+    WLOGFD("RecoveryPullPipMainWindow");
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    GetSceneSessionManagerProxy();
+    if (!sceneSessionManagerProxy_) {
+        WLOGFE("sceneSessionManagerProxy_ is nullptr");
+        return;
+    }
+    sceneSessionManagerProxy_->RecoveryPullPipMainWindow(persistentId);
+}
+
 WMError SessionManager::UpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action)
 {
     WLOGFD("UpdateProperty");

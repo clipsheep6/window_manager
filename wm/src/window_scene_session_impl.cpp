@@ -1967,6 +1967,17 @@ WSError WindowSceneSessionImpl::UpdateWindowMode(WindowMode mode)
     return static_cast<WSError>(ret);
 }
 
+WMError WindowSceneSessionImpl::RecoveryPullPipMainWindow()
+{
+    WLOGFI("RecoveryPullPipMainWindow");
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
+        SessionManager::GetInstance().RecoveryPullPipMainWindow(GetPersistentId());
+        return WMError::WM_OK;
+    }
+    WLOGFW("not pip window, nothing to do");
+    return WMError::WM_DO_NOTHING;
+}
+
 WMError WindowSceneSessionImpl::UpdateWindowModeImmediately(WindowMode mode)
 {
     if (state_ == WindowState::STATE_CREATED || state_ == WindowState::STATE_HIDDEN) {

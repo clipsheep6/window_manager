@@ -84,12 +84,22 @@ WMError PictureInPictureController::ShowPictureInPictureWindow()
         WLOGFD("window_ is nullptr");
         return WMError::WM_ERROR_PIP_STATE_ABNORMALLY;
     }
+    if (pipLifeCycleListener_ != nullptr) {
+        pipLifeCycleListener_->OnPreparePictureInPictureStart();
+    }
     WMError errCode = window_->Show(0, false);
     if (errCode != WMError::WM_OK) {
         WLOGFD("window_ show failed");
+        int32_t err = static_cast<int32_t>(errCode);
+        if (pipLifeCycleListener_ != nullptr) {
+            pipLifeCycleListener_->OnPictureInPictureOperationError(err);
+        }
         return WMError::WM_ERROR_PIP_INTERNAL_ERROR;
     }
     PictureInPictureManager::SetCurrentPipController(this);
+    if (pipLifeCycleListener_ != nullptr) {
+        pipLifeCycleListener_->OnPictureInPictureStart();
+    }
     return WMError::WM_OK;
 }
 
@@ -135,6 +145,9 @@ WMError PictureInPictureController::StartPictureInPicture()
 WMError PictureInPictureController::StopPictureInPicture(bool needAnim)
 {
     WLOGI("StopPictureInPicture is called, needAnim: %{public}u", needAnim);
+    if (pipLifeCycleListener_ != nullptr) {
+        pipLifeCycleListener_->OnPreparePictureInPictureStop();
+    }
     if (window_ == nullptr) {
         WLOGFE("window_ is nullptr");
         return WMError::WM_ERROR_PIP_STATE_ABNORMALLY;
@@ -145,27 +158,31 @@ WMError PictureInPictureController::StopPictureInPicture(bool needAnim)
     }
     PictureInPictureManager::SetPipWindowState(PipWindowState::STATE_STOPPING);
     auto task = [this]() {
-            if (!window_) {
-                WLOGFE("StopPictureInPicture failed, window is null");
-                return WMError::WM_ERROR_PIP_STATE_ABNORMALLY;
-            }
-            if (window_->Destroy() != WMError::WM_OK) {
+            WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(window_->Destroy());
+            if (ret != WmErrorCode::WM_OK) {
                 PictureInPictureManager::SetPipWindowState(PipWindowState::STATE_UNDEFINED);
                 WLOGFE("Window destroy failed");
-                return WMError::WM_ERROR_PIP_DESTROY_FAILED;
+                int32_t err = static_cast<int32_t>(ret);
+                if (pipLifeCycleListener_ != nullptr) {
+                    pipLifeCycleListener_->OnPictureInPictureOperationError(err);
+                }
+                return;
+            }
+            if (pipLifeCycleListener_ != nullptr) {
+                pipLifeCycleListener_->OnPictureInPictureStop();
             }
             PictureInPictureManager::RemoveCurrentPipController();
             PictureInPictureManager::RemovePipControllerInfo(window_->GetWindowId());
             window_ = nullptr;
             PictureInPictureManager::SetPipWindowState(PipWindowState::STATE_STOPPED);
-            return WMError::WM_OK;
+
         };
     if (handler_ && needAnim) {
         WLOGFD("Window destroy async");
         handler_->PostTask(task, "StopPictureInPicture", DEFAULT_TIME_DELAY);
     } else {
         WLOGFD("Window destroy sync");
-        return task();
+        task();
     }
     return WMError::WM_OK;
 }
@@ -202,6 +219,55 @@ void PictureInPictureController::UpdateContentSize(uint32_t width, uint32_t heig
 {
     WLOGI("UpdateDisplaySize is called");
     return;
+}
+
+void PictureInPictureController::DoActionEvent(std::string& actionName)
+{
+    WLOGFD("actionName: %{public}s", actionName.c_str());
+    if (pipActionObserver_ == nullptr) {
+        WLOGFE("pipActionObserver is not registered");
+    }
+    pipActionObserver_->OnActionEvent(actionName);
+}
+
+void PictureInPictureController::RestorePictureInPictureWindow()
+{
+    if (window_ == nullptr) {
+        WLOGFE("window_ is nullptr");
+        return;
+    }
+    window_->RecoveryPullPipMainWindow();
+    auto stopPipTask = [this]() {
+        StopPictureInPicture(false);
+    };
+    if (handler_ == nullptr) {
+        WLOGFE("handler is nullptr");
+        return;
+    }
+    handler_->PostTask(stopPipTask, 500);
+    WLOGFI("restore pip main window finished");
+}
+
+void PictureInPictureController::SetPictureInPictureLifecycle(sptr<IPiPLifeCycle> listener)
+{
+    WLOGFD("SetPictureInPictureLifecycle is called");
+    pipLifeCycleListener_ = listener;
+}
+
+void PictureInPictureController::SetPictureInPictureActionObserver(sptr<IPiPActionObserver> listener)
+{
+    WLOGFD("SetPictureInPictureActionObserver is called");
+    pipActionObserver_ = listener;
+}
+
+sptr<IPiPLifeCycle> PictureInPictureController::GetPictureInPictureLifecycle() const
+{
+    return pipLifeCycleListener_;
+}
+
+sptr<IPiPActionObserver> PictureInPictureController::GetPictureInPictureActionObserver() const
+{
+    return pipActionObserver_;
 }
 } // namespace Rosen
 } // namespace OHOS

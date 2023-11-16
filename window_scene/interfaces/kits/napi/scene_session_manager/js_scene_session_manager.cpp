@@ -50,6 +50,7 @@ const std::string GESTURE_NAVIGATION_ENABLED_CHANGE_CB = "gestureNavigationEnabl
 const std::string OUTSIDE_DOWN_EVENT_CB = "outsideDownEvent";
 const std::string ARG_DUMP_HELP = "-h";
 const std::string SHIFT_FOCUS_CB = "shiftFocus";
+const std::string SHOW_PIP_MAIN_WINDOW_CB = "showPiPMainWindow";
 } // namespace
 
 napi_value JsSceneSessionManager::Init(napi_env env, napi_value exportObj)
@@ -120,6 +121,8 @@ JsSceneSessionManager::JsSceneSessionManager(napi_env env) : env_(env)
             &JsSceneSessionManager::ProcessGestureNavigationEnabledChangeListener },
         { OUTSIDE_DOWN_EVENT_CB, &JsSceneSessionManager::ProcessOutsideDownEvent },
         { SHIFT_FOCUS_CB, &JsSceneSessionManager::ProcessShiftFocus },
+        { SHOW_PIP_MAIN_WINDOW_CB, &JsSceneSessionManager::ProcessShowPiPMainWindow },
+
     };
     taskScheduler_ = std::make_shared<MainThreadScheduler>(env);
 }
@@ -230,6 +233,27 @@ void JsSceneSessionManager::OnShiftFocus(int32_t persistentId)
     taskScheduler_->PostMainThreadTask(task, "OnShiftFocus, PID:" + std::to_string(persistentId));
 }
 
+void JsSceneSessionManager::OnShowPiPMainWindow(int32_t persistentId)
+{
+    WLOGFI("[NAPI]OnShowPiPMainWindow");
+    auto iter = jsCbMap_.find(SHOW_PIP_MAIN_WINDOW_CB);
+    if (iter == jsCbMap_.end()) {
+        return;
+    }
+
+    auto jsCallBack = iter->second;
+    auto complete = std::make_unique<NapiAsyncTask::CompleteCallback>(
+        [this, persistentId, jsCallBack, eng = env_](napi_env env, NapiAsyncTask& task, int32_t status) {
+            napi_value argv[] = {CreateJsValue(eng, persistentId)};
+            napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
+        });
+
+    napi_ref callback = nullptr;
+    std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
+    NapiAsyncTask::Schedule("JsSceneSessionManager::OnShowPiPMainWindow", env_,
+        std::make_unique<NapiAsyncTask>(callback, std::move(execute), std::move(complete)));
+}
+
 void JsSceneSessionManager::ProcessCreateSpecificSessionRegister()
 {
     NotifyCreateSpecificSessionFunc func = [this](const sptr<SceneSession>& session) {
@@ -273,6 +297,15 @@ void JsSceneSessionManager::ProcessShiftFocus()
         this->OnShiftFocus(persistentId);
     };
     SceneSessionManager::GetInstance().SetShiftFocusListener(func);
+}
+
+void JsSceneSessionManager::ProcessShowPiPMainWindow()
+{
+    ProcessShowPiPMainWindowFunc func = [this](int32_t persistentId) {
+        WLOGFD("ProcessShowPiPMainWindow called");
+        this->OnShowPiPMainWindow(persistentId);
+    };
+    SceneSessionManager::GetInstance().SetShowPiPMainWindowListener(func);
 }
 
 napi_value JsSceneSessionManager::RegisterCallback(napi_env env, napi_callback_info info)

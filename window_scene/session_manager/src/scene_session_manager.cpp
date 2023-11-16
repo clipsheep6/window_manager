@@ -2889,6 +2889,12 @@ void SceneSessionManager::SetShiftFocusListener(const ProcessShiftFocusFunc& fun
     shiftFocusFunc_ = func;
 }
 
+void SceneSessionManager::SetShowPiPMainWindowListener(const ProcessShowPiPMainWindowFunc& func)
+{
+    WLOGFD("SetShowPiPMainWindowListener");
+    showPiPMainWindowFunc_ = func;
+}
+
 WSError SceneSessionManager::ShiftFocus(sptr<SceneSession>& nextSession)
 {
     // unfocus
@@ -5116,6 +5122,25 @@ WSError SceneSessionManager::UnregisterIAbilityManagerCollaborator(int32_t type)
         collaboratorMap_.erase(type);
     }
     return WSError::WS_OK;
+}
+
+WSError SceneSessionManager::RecoveryPullPipMainWindow(const int32_t& persistentId)
+{
+    auto scnSession = GetSceneSession(persistentId);
+    if (scnSession == nullptr) {
+        WLOGFE("scnSession is nullptr, persistentId: %{public}d", persistentId);
+        return WSError::WS_ERROR_NULLPTR;
+    } else if (scnSession->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
+        if (showPiPMainWindowFunc_) {
+            showPiPMainWindowFunc_(scnSession->GetParentPersistentId());
+            return WSError::WS_OK;
+        }
+        WLOGFE("showPiPMainWindowFunc_ init error");
+        return WSError::WS_DO_NOTHING;
+    } else {
+        WLOGFE("not Pip window");
+        return WSError::WS_DO_NOTHING;
+    }
 }
 
 bool SceneSessionManager::CheckCollaboratorType(int32_t type)
