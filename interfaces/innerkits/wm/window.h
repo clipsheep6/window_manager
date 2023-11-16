@@ -1404,7 +1404,7 @@ public:
     *
     * @return Errorcode of window.
      */
-    virtual WMError RecoveryPullPipMainWindow() { return WMError::WM_OK; }
+    virtual WMError RecoveryPullPiPMainWindow() { return WMError::WM_OK; }
 };
 }
 }

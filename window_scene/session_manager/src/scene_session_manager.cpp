@@ -5124,7 +5124,7 @@ WSError SceneSessionManager::UnregisterIAbilityManagerCollaborator(int32_t type)
     return WSError::WS_OK;
 }
 
-WSError SceneSessionManager::RecoveryPullPipMainWindow(const int32_t& persistentId)
+WSError SceneSessionManager::RecoveryPullPiPMainWindow(const int32_t& persistentId)
 {
     auto scnSession = GetSceneSession(persistentId);
     if (scnSession == nullptr) {

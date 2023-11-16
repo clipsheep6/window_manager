@@ -122,7 +122,6 @@ JsSceneSessionManager::JsSceneSessionManager(napi_env env) : env_(env)
         { OUTSIDE_DOWN_EVENT_CB, &JsSceneSessionManager::ProcessOutsideDownEvent },
         { SHIFT_FOCUS_CB, &JsSceneSessionManager::ProcessShiftFocus },
         { SHOW_PIP_MAIN_WINDOW_CB, &JsSceneSessionManager::ProcessShowPiPMainWindow },
-
     };
     taskScheduler_ = std::make_shared<MainThreadScheduler>(env);
 }

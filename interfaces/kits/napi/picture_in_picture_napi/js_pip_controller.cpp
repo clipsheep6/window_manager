@@ -245,7 +245,7 @@ napi_value JsPipController::OnRegisterCallback(napi_env env, napi_callback_info 
     std::lock_guard<std::mutex> lock(mtx_);
     WmErrorCode ret = RegisterListenerWithType(env, cbType, value);
     if (ret != WmErrorCode::WM_OK) {
-        WLOGE("JsPipController::OnRegisterCallback failed");
+        WLOGFE("OnRegisterCallback failed");
     }
     return NapiGetUndefined(env);
 }
@@ -253,7 +253,7 @@ napi_value JsPipController::OnRegisterCallback(napi_env env, napi_callback_info 
 WmErrorCode JsPipController::RegisterListenerWithType(napi_env env, const std::string& type, napi_value value)
 {
     if (IfCallbackRegistered(env, type, value)) {
-        WLOGE("JsPipController::RegisterListenerWithType callback already registered!");
+        WLOGFE("Callback already registered!");
         return WmErrorCode::WM_ERROR_INVALID_CALLING;
     }
     std::shared_ptr<NativeReference> callbackRef;
@@ -268,7 +268,7 @@ WmErrorCode JsPipController::RegisterListenerWithType(napi_env env, const std::s
 bool JsPipController::IfCallbackRegistered(napi_env env, const std::string& type, napi_value jsListenerObject)
 {
     if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
-        WLOGI("IfCallbackRegistered methodName %{public}s not registered!", type.c_str());
+        WLOGFI("methodName %{public}s not registered!", type.c_str());
         return false;
     }
 
@@ -276,7 +276,7 @@ bool JsPipController::IfCallbackRegistered(napi_env env, const std::string& type
         bool isEquals = false;
         napi_strict_equals(env, jsListenerObject, iter->second->GetNapiValue(), &isEquals);
         if (isEquals) {
-            WLOGFE("IfCallbackRegistered callback already registered!");
+            WLOGFE("Callback already registered!");
             return true;
         }
     }
@@ -286,11 +286,11 @@ bool JsPipController::IfCallbackRegistered(napi_env env, const std::string& type
 void JsPipController::ProcessStateChangeRegister()
 {
     if (jsCbMap_.empty() || jsCbMap_.find(STATE_CHANGE_CB) == jsCbMap_.end()) {
-        WLOGE("Register state change error");
+        WLOGFE("Register state change error");
         return;
     }
     if (pipController_ == nullptr) {
-        WLOGE("ProcessStateChangeRegister error, controller is nullptr");
+        WLOGFE("controller is nullptr");
         return;
     }
     sptr<IPiPLifeCycle> lifeCycle = new JsPipController::PiPLifeCycleImpl(env_, jsCbMap_[STATE_CHANGE_CB]);
@@ -300,11 +300,11 @@ void JsPipController::ProcessStateChangeRegister()
 void JsPipController::ProcessActionEventRegister()
 {
     if (jsCbMap_.empty() || jsCbMap_.find(CONTROL_PANEL_ACTION_EVENT_CB) == jsCbMap_.end()) {
-        WLOGE("Register action event error");
+        WLOGFE("Register action event error");
         return;
     }
     if (pipController_ == nullptr) {
-        WLOGE("ProcessActionEventRegister error, controller is nullptr");
+        WLOGFE("controller is nullptr");
         return;
     }
     sptr<IPiPActionObserver> actionObserver = new JsPipController::PiPActionObserverImpl(env_, jsCbMap_[CONTROL_PANEL_ACTION_EVENT_CB]);
@@ -314,7 +314,7 @@ void JsPipController::ProcessActionEventRegister()
 void JsPipController::ProcessStateChangeUnRegister()
 {
     if (pipController_ == nullptr) {
-        WLOGE("ProcessStateChangeUnRegister error, controller is nullptr");
+        WLOGFE("controller is nullptr");
         return;
     }
     pipController_->SetPictureInPictureLifecycle(nullptr);
@@ -323,7 +323,7 @@ void JsPipController::ProcessStateChangeUnRegister()
 void JsPipController::ProcessActionEventUnRegister()
 {
     if (pipController_ == nullptr) {
-        WLOGE("ProcessActionEventUnRegister error, controller is nullptr");
+        WLOGFE("controller is nullptr");
         return;
     }
     pipController_->SetPictureInPictureActionObserver(nullptr);
@@ -353,7 +353,7 @@ napi_value JsPipController::OnUnregisterCallback(napi_env env, napi_callback_inf
     std::lock_guard<std::mutex> lock(mtx_);
     WmErrorCode ret = UnRegisterListenerWithType(env, cbType);
     if (ret != WmErrorCode::WM_OK) {
-        WLOGE("JsPipController::OnUnregisterCallback failed");
+        WLOGFE("OnUnregisterCallback failed");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(ret)));
     }
     return NapiGetUndefined(env);
@@ -362,7 +362,7 @@ napi_value JsPipController::OnUnregisterCallback(napi_env env, napi_callback_inf
 WmErrorCode JsPipController::UnRegisterListenerWithType(napi_env env, const std::string& type)
 {
     if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
-        WLOGI("UnRegisterListenerWithType methodName %{public}s not registered!", type.c_str());
+        WLOGFI("methodName %{public}s not registered!", type.c_str());
         return WmErrorCode::WM_ERROR_INVALID_CALLING;
     }
     jsCbMap_.erase(type);
@@ -442,12 +442,11 @@ void JsPipController::PiPActionObserverImpl::OnActionEvent(const std::string& ac
 {
     std::lock_guard<std::mutex> lock(mtx_);
     WLOGI("OnActionEvent is called, actionEvent: %{public}s", actionEvent.c_str());
-    sptr<JsPipController::PiPActionObserverImpl> listener = this;
     auto jsCallback = jsCallBack_;
     std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback> (
-        [this, listener, jsCallback, actionEvent] (napi_env env, NapiAsyncTask &task, int32_t status) {
-            napi_value argv[] = {CreateJsValue(engine_, actionEvent)};
-            CallJsMethod(engine_, jsCallback->GetNapiValue(), argv, ArraySize(argv));
+        [jsCallback, actionEvent] (napi_env env, NapiAsyncTask &task, int32_t status) {
+            napi_value argv[] = {CreateJsValue(env, actionEvent)};
+            CallJsMethod(env, jsCallback->GetNapiValue(), argv, ArraySize(argv));
         }
     );
 

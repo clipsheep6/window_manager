@@ -1967,11 +1967,11 @@ WSError WindowSceneSessionImpl::UpdateWindowMode(WindowMode mode)
     return static_cast<WSError>(ret);
 }
 
-WMError WindowSceneSessionImpl::RecoveryPullPipMainWindow()
+WMError WindowSceneSessionImpl::RecoveryPullPiPMainWindow()
 {
-    WLOGFI("RecoveryPullPipMainWindow");
+    WLOGFI("RecoveryPullPiPMainWindow");
     if (property_->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
-        SessionManager::GetInstance().RecoveryPullPipMainWindow(GetPersistentId());
+        SessionManager::GetInstance().RecoveryPullPiPMainWindow(GetPersistentId());
         return WMError::WM_OK;
     }
     WLOGFW("not pip window, nothing to do");

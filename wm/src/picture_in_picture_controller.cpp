@@ -157,32 +157,37 @@ WMError PictureInPictureController::StopPictureInPicture(bool needAnim)
         return WMError::WM_ERROR_PIP_REPEAT_OPERATION;
     }
     PictureInPictureManager::SetPipWindowState(PipWindowState::STATE_STOPPING);
-    auto task = [this]() {
-            WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(window_->Destroy());
-            if (ret != WmErrorCode::WM_OK) {
-                PictureInPictureManager::SetPipWindowState(PipWindowState::STATE_UNDEFINED);
-                WLOGFE("Window destroy failed");
-                int32_t err = static_cast<int32_t>(ret);
-                if (pipLifeCycleListener_ != nullptr) {
-                    pipLifeCycleListener_->OnPictureInPictureOperationError(err);
-                }
-                return;
+    auto task = [weakThis = wptr(this)]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGFE("session is null");
+            return WMError::WM_ERROR_PIP_INTERNAL_ERROR;
+        }
+        WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(session->window_->Destroy());
+        if (ret != WmErrorCode::WM_OK) {
+            PictureInPictureManager::SetPipWindowState(PipWindowState::STATE_UNDEFINED);
+            WLOGFE("Window destroy failed");
+            int32_t err = static_cast<int32_t>(ret);
+            if (session->pipLifeCycleListener_ != nullptr) {
+                session->pipLifeCycleListener_->OnPictureInPictureOperationError(err);
             }
-            if (pipLifeCycleListener_ != nullptr) {
-                pipLifeCycleListener_->OnPictureInPictureStop();
-            }
-            PictureInPictureManager::RemoveCurrentPipController();
-            PictureInPictureManager::RemovePipControllerInfo(window_->GetWindowId());
-            window_ = nullptr;
-            PictureInPictureManager::SetPipWindowState(PipWindowState::STATE_STOPPED);
-
-        };
+            return WMError::WM_ERROR_PIP_DESTROY_FAILED;
+        }
+        if (session->pipLifeCycleListener_ != nullptr) {
+            session->pipLifeCycleListener_->OnPictureInPictureStop();
+        }
+        PictureInPictureManager::RemoveCurrentPipController();
+        PictureInPictureManager::RemovePipControllerInfo(session->window_->GetWindowId());
+        session->window_ = nullptr;
+        PictureInPictureManager::SetPipWindowState(PipWindowState::STATE_STOPPED);
+        return WMError::WM_OK;
+    };
     if (handler_ && needAnim) {
         WLOGFD("Window destroy async");
         handler_->PostTask(task, "StopPictureInPicture", DEFAULT_TIME_DELAY);
     } else {
         WLOGFD("Window destroy sync");
-        task();
+        return task();
     }
     return WMError::WM_OK;
 }
@@ -226,6 +231,7 @@ void PictureInPictureController::DoActionEvent(std::string& actionName)
     WLOGFD("actionName: %{public}s", actionName.c_str());
     if (pipActionObserver_ == nullptr) {
         WLOGFE("pipActionObserver is not registered");
+        return;
     }
     pipActionObserver_->OnActionEvent(actionName);
 }
@@ -236,9 +242,14 @@ void PictureInPictureController::RestorePictureInPictureWindow()
         WLOGFE("window_ is nullptr");
         return;
     }
-    window_->RecoveryPullPipMainWindow();
-    auto stopPipTask = [this]() {
-        StopPictureInPicture(false);
+    window_->RecoveryPullPiPMainWindow();
+    auto stopPipTask = [weakThis = wptr(this)]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGFE("session is null");
+            return;
+        }
+        session->StopPictureInPicture(false);
     };
     if (handler_ == nullptr) {
         WLOGFE("handler is nullptr");

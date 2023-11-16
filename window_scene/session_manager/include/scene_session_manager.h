@@ -204,7 +204,7 @@ public:
 
     WSError RegisterIAbilityManagerCollaborator(int32_t type, const sptr<AAFwk::IAbilityManagerCollaborator> &impl);
     WSError UnregisterIAbilityManagerCollaborator(int32_t type);
-    WSError RecoveryPullPipMainWindow(const int32_t& persistentId);
+    WSError RecoveryPullPiPMainWindow(const int32_t& persistentId);
 
     WMError CheckWindowId(int32_t windowId, int32_t &pid);
     int GetSceneSessionPrivacyModeCount();

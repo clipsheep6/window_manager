@@ -116,7 +116,7 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_TOUCHOUTSIDE_LISTENER),
         &SceneSessionManagerStub::HandleUpdateSessionTouchOutsideListener),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SHOW_PIP_MAIN_WINDOW),
-        &SceneSessionManagerStub::HandleRecoveryPullPipMainWindow),
+        &SceneSessionManagerStub::HandleRecoveryPullPiPMainWindow),
 };
 
 int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
@@ -647,11 +647,11 @@ int SceneSessionManagerStub::HandleUpdateSessionTouchOutsideListener(MessageParc
     return ERR_NONE;
 }
 
-int SceneSessionManagerStub::HandleRecoveryPullPipMainWindow(MessageParcel &data, MessageParcel &reply)
+int SceneSessionManagerStub::HandleRecoveryPullPiPMainWindow(MessageParcel &data, MessageParcel &reply)
 {
-    WLOGFI("run HandleRecoveryPullPipMainWindow!");
+    WLOGFI("run HandleRecoveryPullPiPMainWindow!");
     auto persistentId = data.ReadInt32();
-    const WSError& ret = RecoveryPullPipMainWindow(persistentId);
+    const WSError& ret = RecoveryPullPiPMainWindow(persistentId);
     reply.WriteUint32(static_cast<uint32_t>(ret));
     return ERR_NONE;
 }
