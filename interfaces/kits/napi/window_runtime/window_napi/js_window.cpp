@@ -146,6 +146,7 @@ napi_value JsWindow::Recover(napi_env env, napi_callback_info info)
     WLOGI("Recover");
     JsWindow* me = CheckParamsAndGetThis<JsWindow>(env, info);
     return (me != nullptr) ? me->OnRecover(env, info) : nullptr;
+}
 
 napi_value JsWindow::MoveTo(napi_env env, napi_callback_info info)
 {
