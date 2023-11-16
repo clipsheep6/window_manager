@@ -127,6 +127,10 @@ const std::string ARG_DUMP_WINDOW = "-w";
 const std::string ARG_DUMP_SCREEN = "-s";
 const std::string ARG_DUMP_DISPLAY = "-d";
 constexpr uint64_t NANO_SECOND_PER_SEC = 1000000000; // ns
+constexpr int32_t DEFAULT_POSX = 0;
+constexpr int32_t DEFAULT_POSY = 855;
+constexpr int32_t DEFAULT_WIDTH = 1344;
+constexpr int32_t DEFAULT_HEIGHT = 800;
 std::string GetCurrentTime()
 {
     struct timespec tn;
@@ -5133,6 +5137,8 @@ WSError SceneSessionManager::RecoveryPullPiPMainWindow(const int32_t& persistent
     } else if (scnSession->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
         if (showPiPMainWindowFunc_) {
             showPiPMainWindowFunc_(scnSession->GetParentPersistentId());
+            WSRect rect = {DEFAULT_POSX, DEFAULT_POSY, DEFAULT_WIDTH, DEFAULT_HEIGHT};
+            scnSession->UpdateSessionRect(rect, SizeChangeReason::RECOVER);
             return WSError::WS_OK;
         }
         WLOGFE("showPiPMainWindowFunc_ init error");
