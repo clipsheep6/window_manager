@@ -56,8 +56,8 @@ napi_value CreateJsPipControllerObject(napi_env env, sptr<PictureInPictureContro
     return objValue;
 }
 
-JsPipController::JsPipController(const sptr<PictureInPictureController>& pipController, napi_env env) :
-    pipController_(pipController), env_(env)
+JsPipController::JsPipController(const sptr<PictureInPictureController>& pipController, napi_env env)
+    : pipController_(pipController), env_(env)
 {
     registerFunc_ = {
         { STATE_CHANGE_CB, &JsPipController::ProcessStateChangeRegister},
