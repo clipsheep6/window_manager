@@ -1191,26 +1191,4 @@ WSError SceneSessionManagerProxy::UnregisterIAbilityManagerCollaborator(int32_t 
     }
     return static_cast<WSError>(reply.ReadInt32());
 }
-
-WSError SceneSessionManagerProxy::RecoveryPullPiPMainWindow(const int32_t& persistentId)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteInt32(persistentId)) {
-        WLOGFE("Write persistentId failed");
-        return WSError::WS_ERROR_INVALID_PARAM;
-    }
-    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SHOW_PIP_MAIN_WINDOW),
-        data, reply, option) != ERR_NONE) {
-        WLOGFE("SendRequest failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WSError>(ret);
-}
 } // namespace OHOS::Rosen

@@ -115,8 +115,6 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandleUnregisterCollaborator),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_TOUCHOUTSIDE_LISTENER),
         &SceneSessionManagerStub::HandleUpdateSessionTouchOutsideListener),
-    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SHOW_PIP_MAIN_WINDOW),
-        &SceneSessionManagerStub::HandleRecoveryPullPiPMainWindow),
 };
 
 int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
@@ -644,15 +642,6 @@ int SceneSessionManagerStub::HandleUpdateSessionTouchOutsideListener(MessageParc
     bool haveAvoidAreaListener = data.ReadBool();
     WSError errCode = UpdateSessionTouchOutsideListener(persistentId, haveAvoidAreaListener);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
-    return ERR_NONE;
-}
-
-int SceneSessionManagerStub::HandleRecoveryPullPiPMainWindow(MessageParcel &data, MessageParcel &reply)
-{
-    WLOGFI("run HandleRecoveryPullPiPMainWindow!");
-    auto persistentId = data.ReadInt32();
-    const WSError& ret = RecoveryPullPiPMainWindow(persistentId);
-    reply.WriteUint32(static_cast<uint32_t>(ret));
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

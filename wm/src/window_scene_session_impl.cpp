@@ -1974,7 +1974,7 @@ WMError WindowSceneSessionImpl::RecoveryPullPiPMainWindow()
 {
     WLOGFI("RecoveryPullPiPMainWindow");
     if (property_->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
-        SessionManager::GetInstance().RecoveryPullPiPMainWindow(GetPersistentId());
+        hostSession_->RecoveryPullPiPMainWindow(GetPersistentId());
         return WMError::WM_OK;
     }
     WLOGFW("not pip window, nothing to do");

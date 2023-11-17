@@ -37,7 +37,6 @@ public:
         sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session,
         sptr<IRemoteObject> token = nullptr);
     void DestroyAndDisconnectSpecificSession(const int32_t& persistentId);
-    void RecoveryPullPiPMainWindow(const int32_t& persistentId);
     WMError UpdateProperty(sptr<WindowSessionProperty>& property, WSPropertyChangeAction action);
     WMError SetSessionGravity(int32_t persistentId, SessionGravity gravity, uint32_t percent);
     WMError BindDialogTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken);
