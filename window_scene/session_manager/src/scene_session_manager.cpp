@@ -5134,19 +5134,21 @@ WSError SceneSessionManager::RecoveryPullPiPMainWindow(const int32_t& persistent
     if (scnSession == nullptr) {
         WLOGFE("scnSession is nullptr, persistentId: %{public}d", persistentId);
         return WSError::WS_ERROR_NULLPTR;
-    } else if (scnSession->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
-        if (showPiPMainWindowFunc_) {
-            showPiPMainWindowFunc_(scnSession->GetParentPersistentId());
-            WSRect rect = {DEFAULT_POSX, DEFAULT_POSY, DEFAULT_WIDTH, DEFAULT_HEIGHT};
-            scnSession->UpdateSessionRect(rect, SizeChangeReason::RECOVER);
-            return WSError::WS_OK;
-        }
-        WLOGFE("showPiPMainWindowFunc_ init error");
-        return WSError::WS_DO_NOTHING;
-    } else {
-        WLOGFE("not Pip window");
+    }
+    if (!WindowHelper::IsPipWindow(scnSession->GetWindowType())) {
+        WLOGFE("not pip window");
         return WSError::WS_DO_NOTHING;
     }
+    if (!showPiPMainWindowFunc_) {
+        WLOGFE("showPiPMainWindowFunc_ init error, persistentId: %{public}d", persistentId);
+        return WSError::WS_DO_NOTHING;
+    }
+    auto task = [this, scnSession]() {
+        showPiPMainWindowFunc_(scnSession->GetParentPersistentId());
+        return WSError::WS_OK;
+    };
+    taskScheduler_->PostAsyncTask(task);
+    return WSError::WS_OK;
 }
 
 bool SceneSessionManager::CheckCollaboratorType(int32_t type)

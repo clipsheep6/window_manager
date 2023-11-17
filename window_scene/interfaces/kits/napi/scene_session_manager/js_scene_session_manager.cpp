@@ -241,16 +241,11 @@ void JsSceneSessionManager::OnShowPiPMainWindow(int32_t persistentId)
     }
 
     auto jsCallBack = iter->second;
-    auto complete = std::make_unique<NapiAsyncTask::CompleteCallback>(
-        [this, persistentId, jsCallBack, eng = env_](napi_env env, NapiAsyncTask& task, int32_t status) {
-            napi_value argv[] = {CreateJsValue(eng, persistentId)};
-            napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
-        });
-
-    napi_ref callback = nullptr;
-    std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
-    NapiAsyncTask::Schedule("JsSceneSessionManager::OnShowPiPMainWindow", env_,
-        std::make_unique<NapiAsyncTask>(callback, std::move(execute), std::move(complete)));
+    auto task = [this, persistentId, jsCallBack, env = env_]() {
+        napi_value argv[] = {CreateJsValue(env, persistentId)};
+        napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
+    });
+    taskScheduler_->PostMainThreadTask(task, "OnShowPiPMainWindow, persistentId:" + std::to_string(persistentId));
 }
 
 void JsSceneSessionManager::ProcessCreateSpecificSessionRegister()
@@ -301,7 +296,7 @@ void JsSceneSessionManager::ProcessShiftFocus()
 void JsSceneSessionManager::ProcessShowPiPMainWindow()
 {
     ProcessShowPiPMainWindowFunc func = [this](int32_t persistentId) {
-        WLOGFD("ProcessShowPiPMainWindow called");
+        WLOGFD("ProcessShowPiPMainWindow called, persistentId: %{public}d", persistentId);
         this->OnShowPiPMainWindow(persistentId);
     };
     SceneSessionManager::GetInstance().SetShowPiPMainWindowListener(func);

@@ -248,6 +248,7 @@ napi_value JsPipController::OnRegisterCallback(napi_env env, napi_callback_info 
     WmErrorCode ret = RegisterListenerWithType(env, cbType, value);
     if (ret != WmErrorCode::WM_OK) {
         WLOGFE("OnRegisterCallback failed");
+        return NapiThrowInvalidParam(env);
     }
     return NapiGetUndefined(env);
 }
