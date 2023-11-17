@@ -21,6 +21,7 @@
 
 #include "anr_handler.h"
 #include "color_parser.h"
+#include "display_info.h"
 #include "singleton_container.h"
 #include "display_manager.h"
 #include "perform_reporter.h"
@@ -1170,7 +1171,7 @@ void WindowSceneSessionImpl::StartMove()
         WLOGFE("session is invalid");
         return;
     }
-    if (WindowHelper::IsMainWindow(GetType()) && hostSession_) {
+    if ((WindowHelper::IsMainWindow(GetType()) || WindowHelper::IsPipWindow(GetType())) && hostSession_) {
         hostSession_->OnSessionEvent(SessionEvent::EVENT_START_MOVE);
     }
     return;

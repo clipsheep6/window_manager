@@ -143,6 +143,10 @@ void PictureInPictureManager::DoClose(bool needAnim)
 void PictureInPictureManager::DoStartMove()
 {
     WLOGD("DoStartMove is called");
+    if (!PictureInPictureManager::IsCurrentPipControllerExist()) {
+        return;
+    }
+    PictureInPictureManager::curPipController_->StartMove();
 }
 
 void PictureInPictureManager::DoScale()

@@ -227,6 +227,15 @@ void PictureInPictureController::UpdateContentSize(uint32_t width, uint32_t heig
     return;
 }
 
+void PictureInPictureController::StartMove()
+{
+    if (window_ == nullptr) {
+        WLOGFE("window_ is nullptr");
+        return;
+    }
+    window_->StartMove();
+}
+
 void PictureInPictureController::DoActionEvent(std::string& actionName)
 {
     WLOGFD("actionName: %{public}s", actionName.c_str());

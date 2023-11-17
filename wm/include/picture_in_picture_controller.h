@@ -48,6 +48,7 @@ public:
     void SetPictureInPictureActionObserver(sptr<IPiPActionObserver> listener);
     sptr<IPiPLifeCycle> GetPictureInPictureLifecycle() const;
     sptr<IPiPActionObserver> GetPictureInPictureActionObserver() const;
+    void StartMove();
 private:
     WMError CreatePictureInPictureWindow();
     WMError ShowPictureInPictureWindow();
