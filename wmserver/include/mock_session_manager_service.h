@@ -32,6 +32,10 @@ public:
     sptr<IRemoteObject> GetSceneSessionManager();
     void OnStart() override;
     int Dump(int fd, const std::vector<std::u16string> &args) override;
+    void NotifyNotKillService()
+    {
+        needKillService_ = false;
+    }
 
 protected:
     MockSessionManagerService();
@@ -55,6 +59,7 @@ private:
     sptr<IRemoteObject> sessionManagerService_;
     sptr<IRemoteObject> sceneSessionManager_;
     sptr<SMSDeathRecipient> smsDeathRecipient_;
+    bool needKillService_ { true };
 };
 } // namespace Rosen
 } // namespace OHOS
