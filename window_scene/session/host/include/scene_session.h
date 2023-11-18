@@ -128,6 +128,7 @@ public:
     WSError PendingSessionActivation(const sptr<AAFwk::SessionInfo> info) override;
     WSError TerminateSession(const sptr<AAFwk::SessionInfo> info) override;
     WSError NotifySessionException(const sptr<AAFwk::SessionInfo> info) override;
+    WSError NotifyClientToUpdateRect() override;
 
     WSError SetSystemBarProperty(WindowType type, SystemBarProperty systemBarProperty);
     WSError OnNeedAvoid(bool status) override;
@@ -215,6 +216,8 @@ public:
     void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits);
     void NotifyPiPWindowPrepareClose() override;
     WSError UpdatePiPRect(uint32_t width, uint32_t height, PiPRectUpdateReason reason) override;
+    WSError UpdateSizeChangeReason(SizeChangeReason reason);
+    bool IsDirtyWindow();
 
 private:
     void HandleStyleEvent(MMI::WindowArea area) override;
@@ -256,6 +259,10 @@ private:
     void SavePiPRectInfo();
     void GetNewPiPRect(const uint32_t displayWidth, const uint32_t displayHeight, Rect& rect);
     void ProcessUpdatePiPRect(SizeChangeReason reason);
+    SizeChangeReason reason_ = SizeChangeReason::UNDEFINED;
+    std::recursive_mutex sizeChangeMutex_;
+    bool isDirty_ = false;
+
 public:
     double textFieldPositionY_ = 0.0;
     double textFieldHeight_ = 0.0;
