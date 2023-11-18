@@ -81,6 +81,7 @@ public:
     virtual void NotifyAsyncOn() {}
     virtual void NotifyTransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
         const std::vector<int32_t>& uiExtensionIdLevelVec) {}
+    virtual WSError RecoveryPullPiPMainWindow(int32_t persistentId) { return WSError::WS_OK; }
 };
 } // namespace OHOS::Rosen
 

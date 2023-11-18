@@ -66,6 +66,7 @@ public:
     void NotifySyncOn() override;
     void NotifyAsyncOn() override;
     void NotifyExtensionDied() override;
+    WSError RecoveryPullPiPMainWindow(int32_t persistentId) override;
 private:
     static inline BrokerDelegator<SessionProxy> delegator_;
 };

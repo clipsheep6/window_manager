@@ -1401,6 +1401,13 @@ public:
      * @param func Function to notify transfer component data.
      */
     virtual void RegisterTransferComponentDataForResultListener(const NotifyTransferComponentDataForResultFunc& func) {}
+
+    /**
+    * @brief Recovery pip main window.
+    *
+    * @return Errorcode of window.
+     */
+    virtual WMError RecoveryPullPiPMainWindow() { return WMError::WM_OK; }
     
     /**
      * @brief Transfer accessibility event data

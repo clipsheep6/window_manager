@@ -88,6 +88,7 @@ public:
         TRANS_ID_REGISTER_COLLABORATOR,
         TRANS_ID_UNREGISTER_COLLABORATOR,
         TRANS_ID_UPDATE_TOUCHOUTSIDE_LISTENER,
+        TRANS_ID_SHOW_PIP_MAIN_WINDOW,
     };
 
     virtual WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,

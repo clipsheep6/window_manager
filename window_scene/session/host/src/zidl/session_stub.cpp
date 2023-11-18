@@ -95,7 +95,9 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_EXTENSION_DIED),
         &SessionStub::HandleNotifyExtensionDied),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_REPORT_ACCESSIBILITY_EVENT),
-        &SessionStub::HandleTransferAccessibilityEvent)
+        &SessionStub::HandleTransferAccessibilityEvent),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_RECOVERY_PULL_PIP_MAIN_WINDOW),
+        &SessionStub::HandleRecoveryPullPiPMainWindow)
 };
 
 int SessionStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -498,6 +500,19 @@ int SessionStub::HandleTransferAccessibilityEvent(MessageParcel& data, MessagePa
     }
     NotifyTransferAccessibilityEvent(*infoPtr, uiExtensionIdLevelVec);
     WLOGFD("HandleTransferAccessibilityEvent end!");
+    return ERR_NONE;
+}
+
+int SessionStub::HandleRecoveryPullPiPMainWindow(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("HandleNotifyRecoveryPullPiPMainWindow");
+    int32_t persistentId = 0;
+    if (!data.ReadInt32(persistentId)) {
+        WLOGFE("Read eventId from parcel failed!");
+        return ERR_INVALID_DATA;
+    }
+    WSError errCode = RecoveryPullPiPMainWindow(persistentId);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen
