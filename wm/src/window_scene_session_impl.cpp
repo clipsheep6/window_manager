@@ -1973,7 +1973,7 @@ WSError WindowSceneSessionImpl::UpdateWindowMode(WindowMode mode)
 WMError WindowSceneSessionImpl::RecoveryPullPiPMainWindow()
 {
     WLOGFI("RecoveryPullPiPMainWindow");
-    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
+    if (hostSession_ && property_->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
         hostSession_->RecoveryPullPiPMainWindow(GetPersistentId());
         return WMError::WM_OK;
     }
