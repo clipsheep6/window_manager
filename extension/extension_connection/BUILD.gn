@@ -29,6 +29,11 @@ config("libextension_connection_public_config") {
 }
 
 ohos_shared_library("libwindow_extension_client") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   install_enable = true
   sources = [
     "../window_extension/src/zidl/window_extension_proxy.cpp",

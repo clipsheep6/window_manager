@@ -28,6 +28,11 @@ config("screen_session_manager_client_public_config") {
 }
 
 ohos_shared_library("screen_session_manager_client") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   sources = [
     "../session_manager/src/zidl/screen_session_manager_proxy.cpp",
     "src/screen_session_manager_client.cpp",

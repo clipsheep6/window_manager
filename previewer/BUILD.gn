@@ -50,6 +50,11 @@ if (!ispreview) {
   }
 
   ohos_shared_library("previewer_window") {
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = true
+    }
     libs = []
 
     public_configs = [
@@ -102,6 +107,11 @@ if (!ispreview) {
   }
 
   ohos_shared_library("previewer_window_napi") {
+    sanitize = {
+      cfi = true
+      cfi_cross_dso = true
+      debug = true
+    }
     public_configs = [ ":previewer_window_napi_config" ]
 
     libs = []

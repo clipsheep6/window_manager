@@ -85,6 +85,11 @@ config("libmockwms_config") {
 }
 
 ohos_shared_library("sms") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   sources = [
     "${window_base_path}/window_scene/session_manager/src/zidl/scene_session_manager_proxy.cpp",
     "src/mock_session_manager_service.cpp",
@@ -123,6 +128,11 @@ ohos_shared_library("sms") {
 }
 
 ohos_shared_library("libwms") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   defines = []
   if (use_musl) {
     if (use_jemalloc && use_jemalloc_dfx_intf) {

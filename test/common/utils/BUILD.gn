@@ -19,6 +19,11 @@ config("libtestutil_private_config") {
 
 ## Build libtestutil.a
 ohos_static_library("libtestutil") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   sources = [
     "src/common_test_utils.cpp",
     "src/screen_manager_utils.cpp",
