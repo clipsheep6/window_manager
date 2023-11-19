@@ -136,6 +136,21 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             }
             break;
         }
+        case DisplayManagerMessage::TRANS_ID_SCREEN_GET_SUPPORTED_COLOR_SPACE: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            std::vector<CM_ColorSpaceType> colorSpaces;
+            DMError ret = GetScreenSupportedColorSpaces(screenId, colorSpaces);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            if (ret != DMError::DM_OK) {
+                break;
+            }
+            MarshallingHelper::MarshallingVectorObj<CM_ColorSpaceType>(reply, colorSpaces,
+                [](Parcel& parcel, const CM_ColorSpaceType& colorSpace) {
+                    return parcel.WriteUint32(static_cast<uint32_t>(colorSpace));
+                }
+            );
+            break;
+        }
         case DisplayManagerMessage::TRANS_ID_SCREEN_GET_SUPPORTED_COLOR_GAMUTS: {
             ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
             std::vector<ScreenColorGamut> colorGamuts;

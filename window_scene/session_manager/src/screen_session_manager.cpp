@@ -1120,6 +1120,18 @@ DMError ScreenSessionManager::GetScreenSupportedColorGamuts(ScreenId screenId,
     return screen->GetScreenSupportedColorGamuts(colorGamuts);
 }
 
+DMError ScreenSessionManager::GetScreenSupportedColorSpaces(ScreenId screenId,
+    std::vector<CM_ColorSpaceType>& colorSpaces)
+{
+    WLOGFI("SCB: ScreenSessionManager::GetScreenSupportedColorSpaces ENTER");
+    sptr<ScreenSession> screen = GetScreenSession(screenId);
+    if (screen == nullptr) {
+        WLOGFE("SCB: ScreenSessionManager::GetScreenSupportedColorSpaces nullptr");
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    return screen->GetScreenSupportedColorSpaces(colorSpaces);
+}
+
 ScreenId ScreenSessionManager::CreateVirtualScreen(VirtualScreenOption option,
                                                    const sptr<IRemoteObject>& displayManagerAgent)
 {

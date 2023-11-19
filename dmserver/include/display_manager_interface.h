@@ -74,6 +74,7 @@ public:
         TRANS_ID_SCREEN_SET_COLOR_GAMUT,
         TRANS_ID_SCREEN_GET_GAMUT_MAP,
         TRANS_ID_SCREEN_SET_GAMUT_MAP,
+        TRANS_ID_SCREEN_GET_SUPPORTED_COLOR_SPACE,
         TRANS_ID_SCREEN_SET_COLOR_TRANSFORM,
         TRANS_ID_IS_SCREEN_ROTATION_LOCKED,
         TRANS_ID_SET_SCREEN_ROTATION_LOCKED,
@@ -123,6 +124,7 @@ public:
     virtual DMError IsScreenRotationLocked(bool& isLocked) = 0;
 
     // colorspace, gamut
+    virtual DMError GetScreenSupportedColorSpaces(ScreenId screenId, std::vector<CM_ColorSpaceType>& colorSpaces);
     virtual DMError GetScreenSupportedColorGamuts(ScreenId screenId, std::vector<ScreenColorGamut>& colorGamuts) = 0;
     virtual DMError GetScreenColorGamut(ScreenId screenId, ScreenColorGamut& colorGamut) = 0;
     virtual DMError SetScreenColorGamut(ScreenId screenId, int32_t colorGamutIdx) = 0;

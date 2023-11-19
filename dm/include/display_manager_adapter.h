@@ -117,6 +117,7 @@ public:
     virtual DMError IsScreenRotationLocked(bool& isLocked);
 
     // colorspace, gamut
+    virtual DMError GetScreenSupportedColorSpaces(ScreenId screenId, std::vector<CM_ColorSpaceType>& colorSpaces);
     virtual DMError GetScreenSupportedColorGamuts(ScreenId screenId, std::vector<ScreenColorGamut>& colorGamuts);
     virtual DMError GetScreenColorGamut(ScreenId screenId, ScreenColorGamut& colorGamut);
     virtual DMError SetScreenColorGamut(ScreenId screenId, int32_t colorGamutIdx);

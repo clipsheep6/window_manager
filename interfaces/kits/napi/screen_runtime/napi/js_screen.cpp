@@ -247,6 +247,43 @@ napi_value JsScreen::OnSetDensityDpi(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value JsScreen::GetScreenSupportedColorSpaces(napi_env env, napi_callback_info info)
+{
+    WLOGI("GetScreenSupportedColorSpaces is called");
+    JsScreen* me = CheckParamsAndGetThis<JsScreen>(env, info);
+    return (me != nullptr) ? me->OnGetSupportedColorSpace(env, info) : nullptr;
+}
+
+napi_value JsScreen::OnGetSupportedColorSpace(napi_env env, napi_callback_info info)
+{
+    WLOGI("OnGetScreenSupportedColorSpaces is called");
+    NapiAsyncTask::CompleteCallback complete =
+        [=](napi_env env, NapiAsyncTask& task, int32_t status) {
+            std::vector<CM_ColorSpaceType> colorSpace;
+            DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->GetScreenSupportedColorSpaces(colorSpace));
+            if (ret == DmErrorCode::DM_OK) {
+                task.Resolve(env, CreateJsColorSpaceArray(env, colorSpace));
+                WLOGI("OnGetScreenSupportedColorSpaces success");
+            } else {
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret),
+                                                "JsScreen::OnGetScreenSupportedColorSpaces failed."));
+                WLOGFE("OnGetScreenSupportedColorSpaces failed");
+            }
+        };
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    napi_value lastParam = nullptr;
+    if (argc >= ARGC_ONE && argv[ARGC_ONE - 1] != nullptr &&
+        GetType(env, argv[ARGC_ONE - 1]) == napi_function) {
+        lastParam = argv[ARGC_ONE - 1];
+    }
+    napi_value result = nullptr;
+    NapiAsyncTask::Schedule("JsScreen::OnGetScreenSupportedColorSpaces",
+        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
 std::shared_ptr<NativeReference> FindJsDisplayObject(ScreenId screenId)
 {
     WLOGI("[NAPI]Try to find screen %{public}" PRIu64" in g_JsScreenMap", screenId);
@@ -337,6 +374,24 @@ napi_value CreateJsScreenModeObject(napi_env env, const sptr<SupportedScreenMode
     napi_set_named_property(env, objValue, "height", CreateJsValue(env, height));
     napi_set_named_property(env, objValue, "refreshRate", CreateJsValue(env, refreshRate));
     return objValue;
+}
+
+napi_value CreateJsColorSpaceArray(napi_env env, const std::vector<CM_ColorSpaceType>& colorSpaces)
+{
+    napi_value arrayValue = nullptr;
+    napi_create_array_with_length(env, colorSpaces.size(), &arrayValue);
+    if (arrayValue == nullptr) {
+        WLOGFE("Failed to create color space array");
+        return NapiGetUndefined(env);
+    }
+    uint32_t index = 0;
+    for (const auto& color : colorSpaces) {
+        if (color == nullptr) {
+            continue;
+        }
+        napi_set_element(env, arrayValue, i++, CreateJsValue(env, static_cast<uint32_t>(color)));
+    }
+    return arrayValue;
 }
 }  // namespace Rosen
 }  // namespace OHOS

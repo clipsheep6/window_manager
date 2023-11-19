@@ -91,6 +91,7 @@ public:
     void FillScreenInfo(sptr<ScreenInfo> info) const;
     void InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startPoint);
 
+    DMError GetScreenSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces);
     DMError GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut>& colorGamuts);
     DMError GetScreenColorGamut(ScreenColorGamut& colorGamut);
     DMError SetScreenColorGamut(int32_t colorGamutIdx);

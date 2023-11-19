@@ -185,6 +185,15 @@ public:
 
     // colorspace, gamut
     /**
+     * @brief Get the supported color space of the screen.
+     *
+     * @param colorSpaces Supported color space of the screen.
+     * @return DM_OK means get success, others means get failed.
+     */
+    DMError GetScreenSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces) const;
+    
+
+    /**
      * @brief Get the supported color gamuts of the screen.
      *
      * @param colorGamuts Supported color gamuts of the screen.

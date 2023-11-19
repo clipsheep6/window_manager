@@ -66,6 +66,14 @@ DMError DisplayManagerAdapter::DisableDisplaySnapshot(bool disableOrNot)
     return displayManagerServiceProxy_->DisableDisplaySnapshot(disableOrNot);
 }
 
+DMError ScreenManagerAdapter::GetScreenSupportedColorSpaces(ScreenId screenId,
+    std::vector<CM_ColorSpaceType>& colorSpaces)
+{
+    INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
+
+    return displayManagerServiceProxy_->GetScreenSupportedColorSpaces(screenId, colorSpaces);
+}
+
 DMError ScreenManagerAdapter::GetScreenSupportedColorGamuts(ScreenId screenId,
     std::vector<ScreenColorGamut>& colorGamuts)
 {

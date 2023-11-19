@@ -126,6 +126,11 @@ DMError Screen::SetOrientation(Orientation orientation) const
     return SingletonContainer::Get<ScreenManagerAdapter>().SetOrientation(GetId(), orientation);
 }
 
+DMError Screen::GetScreenSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces) const
+{
+    return SingletonContainer::Get<ScreenManagerAdapter>().GetScreenSupportedColorSpaces(GetId(), colorSpaces);
+}
+
 DMError Screen::GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut>& colorGamuts) const
 {
     return SingletonContainer::Get<ScreenManagerAdapter>().GetScreenSupportedColorGamuts(GetId(), colorGamuts);

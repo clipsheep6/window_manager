@@ -128,6 +128,20 @@ sptr<DisplayInfo> ScreenSession::ConvertToDisplayInfo()
     return displayInfo;
 }
 
+DMError ScreenSession::GetScreenSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces)
+{
+    auto ret = RSInterfaces::GetInstance().GetScreenSupportedColorSpaces(rsId_, colorSpaces);
+    if (ret != StatusCode::SUCCESS) {
+        WLOGE("SCB: ScreenSession::GetScreenSupportedColorSpaces fail! rsId %{public}" PRIu64", ret:%{public}d",
+            rsId_, ret);
+        return DMError::DM_ERROR_RENDER_SERVICE_FAILED;
+    }
+    WLOGI("SCB: ScreenSession::GetScreenSupportedColorSpaces ok! rsId %{public}" PRIu64", size %{public}u",
+        rsId_, static_cast<uint32_t>(colorSpaces.size()));
+
+    return DMError::DM_OK;
+}
+
 DMError ScreenSession::GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut>& colorGamuts)
 {
     auto ret = RSInterfaces::GetInstance().GetScreenSupportedColorGamuts(rsId_, colorGamuts);
