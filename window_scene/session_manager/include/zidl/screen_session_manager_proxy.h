@@ -92,9 +92,6 @@ public:
     virtual DMError GetScreenSupportedColorGamuts(ScreenId screenId,
         std::vector<ScreenColorGamut>& colorGamuts) override;
 
-    virtual DMError GetScreenSupportedColorSpaces(ScreenId screenId,
-        std::vector<CM_ColorSpaceType>& colorSpaces) override;
-
     virtual DMError SetOrientation(ScreenId screenId, Orientation orientation) override;
     virtual DMError SetScreenRotationLocked(bool isLocked) override;
     virtual DMError IsScreenRotationLocked(bool& isLocked) override;

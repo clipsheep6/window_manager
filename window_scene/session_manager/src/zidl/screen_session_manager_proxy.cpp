@@ -1139,46 +1139,6 @@ DMError ScreenSessionManagerProxy::GetAllScreenInfos(std::vector<sptr<ScreenInfo
     return ret;
 }
 
-DMError ScreenSessionManagerProxy::GetScreenSupportedColorSpaces(ScreenId screenId,
-        std::vector<CM_ColorSpaceType>& colorSpaces)
-{
-    sptr<IRemoteObject> remote = Remote();
-    if (remote == nullptr) {
-        WLOGFW("DisplayManagerProxy::GetScreenSupportedColorSpaces: remote is nullptr");
-        return DMError::DM_ERROR_NULLPTR;
-    }
-
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFW("DisplayManagerProxy::GetScreenSupportedColorSpaces: WriteInterfaceToken failed");
-        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
-    }
-    if (!data.WriteUint64(static_cast<uint64_t>(screenId))) {
-        WLOGFW("DisplayManagerProxy::GetScreenSupportedColorSpaces: WriteUint64 screenId failed");
-        return DMError::DM_ERROR_IPC_FAILED;
-    }
-    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SCREEN_GET_SUPPORTED_COLOR_SPACE),
-        data, reply, option) != ERR_NONE) {
-        WLOGFW("DisplayManagerProxy::GetScreenSupportedColorSpaces: SendRequest failed");
-        return DMError::DM_ERROR_IPC_FAILED;
-    }
-    DMError ret = static_cast<DMError>(reply.ReadInt32());
-    if (ret != DMError::DM_OK) {
-        return ret;
-    }
-    MarshallingHelper::UnmarshallingVectorObj<CM_ColorSpaceType>(reply, colorSpaces,
-        [](Parcel& parcel, CM_ColorSpaceType& colorSpace) {
-            uint32_t value;
-            bool res = parcel.ReadUint32(value);
-            colorSpace = static_cast<CM_ColorSpaceType>(value);
-            return res;
-        }
-    );
-    return ret;
-}
-
 DMError ScreenSessionManagerProxy::GetScreenSupportedColorGamuts(ScreenId screenId,
     std::vector<ScreenColorGamut>& colorGamuts)
 {

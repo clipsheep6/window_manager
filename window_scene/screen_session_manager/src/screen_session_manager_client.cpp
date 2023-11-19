@@ -206,4 +206,12 @@ void ScreenSessionManagerClient::SetScreenPrivacyState(bool hasPrivate)
     }
     screenSessionManager_->SetScreenPrivacyState(hasPrivate);
 }
+
+DMError ScreenSessionManagerClient::GetScreenSupportedColorSpaces(ScreenId screenId, std::vector<CM_ColorSpaceType>& colorSpaces) {
+    if (!screenSessionManager_) {
+        WLOGFE("screenSessionManager_ is null");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    return screenSessionManager_->GetScreenSupportedColorSpaces(screenId, colorSpaces);
+}
 } // namespace OHOS::Rosen

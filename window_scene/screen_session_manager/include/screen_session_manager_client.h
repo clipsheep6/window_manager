@@ -53,6 +53,8 @@ public:
     void OnScreenshot(DisplayId displayId) override;
     void OnImmersiveStateChanged(bool& immersive) override;
 
+    DMError GetScreenSupportedColorSpaces(ScreenId screenId, std::vector<CM_ColorSpaceType>& colorSpaces);
+
 protected:
     ScreenSessionManagerClient() = default;
     virtual ~ScreenSessionManagerClient() = default;

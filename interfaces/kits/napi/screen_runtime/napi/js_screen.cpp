@@ -251,10 +251,10 @@ napi_value JsScreen::GetScreenSupportedColorSpaces(napi_env env, napi_callback_i
 {
     WLOGI("GetScreenSupportedColorSpaces is called");
     JsScreen* me = CheckParamsAndGetThis<JsScreen>(env, info);
-    return (me != nullptr) ? me->OnGetSupportedColorSpace(env, info) : nullptr;
+    return (me != nullptr) ? me->OnGetScreenSupportedColorSpaces(env, info) : nullptr;
 }
 
-napi_value JsScreen::OnGetSupportedColorSpace(napi_env env, napi_callback_info info)
+napi_value JsScreen::OnGetScreenSupportedColorSpaces(napi_env env, napi_callback_info info)
 {
     WLOGI("OnGetScreenSupportedColorSpaces is called");
     NapiAsyncTask::CompleteCallback complete =
@@ -384,12 +384,22 @@ napi_value CreateJsColorSpaceArray(napi_env env, const std::vector<CM_ColorSpace
         WLOGFE("Failed to create color space array");
         return NapiGetUndefined(env);
     }
-    uint32_t index = 0;
-    for (const auto& color : colorSpaces) {
-        if (color == nullptr) {
+    size_t jsColorSpace = -1;
+    uint32_t i = 0;
+    for (const auto& colorSpace : colorSpaces) {
+        if (colorSpace == nullptr) {
             continue;
         }
-        napi_set_element(env, arrayValue, i++, CreateJsValue(env, static_cast<uint32_t>(color)));
+        if (NATIVE_TO_JS_COLOR_SPACE_TYPE_MAP.count(colorSpace) == 0) {
+            WLOGFE("Get color space name %{public}u, but not in api type", colorSpace);
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(DMError::DM_ERROR_DEVICE_NOT_SUPPORT),));
+            return NapiGetUndefined(env);
+        }
+        if (jsColorSpace == static_cast<uint32_t>(NATIVE_TO_JS_COLOR_SPACE_TYPE_MAP.at(colorSpace))) {
+            continue;
+        }
+        jsColorSpace = static_cast<uint32_t>(NATIVE_TO_JS_COLOR_SPACE_TYPE_MAP.at(colorSpace));
+        napi_set_element(env, arrayValue, i++, CreateJsValue(env, jsColorSpace));
     }
     return arrayValue;
 }
