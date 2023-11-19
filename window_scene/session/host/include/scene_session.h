@@ -218,7 +218,9 @@ public:
     void NotifyPiPWindowPrepareClose() override;
     WSError UpdatePiPRect(uint32_t width, uint32_t height, PiPRectUpdateReason reason) override;
     WSError RecoveryPullPiPMainWindow(int32_t persistentId) override;
-
+    WSError GetAvailableRect(Rect &rect) override;
+    void SetTopless(bool topless);
+    
 private:
     void HandleStyleEvent(MMI::WindowArea area) override;
     WSError HandleEnterWinwdowArea(int32_t windowX, int32_t windowY);
@@ -259,6 +261,7 @@ private:
     void SavePiPRectInfo();
     void GetNewPiPRect(const uint32_t displayWidth, const uint32_t displayHeight, Rect& rect);
     void ProcessUpdatePiPRect(SizeChangeReason reason);
+    bool topless_ = false;
 public:
     double textFieldPositionY_ = 0.0;
     double textFieldHeight_ = 0.0;

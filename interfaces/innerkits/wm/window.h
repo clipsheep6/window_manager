@@ -1432,6 +1432,15 @@ public:
      * @return Errorcode of window.
      */
     virtual WMError RecoveryPullPiPMainWindow() { return WMError::WM_OK; }
+
+    /**
+     * @brief get window avaliable area (screen area without statusBar and dock)
+     *
+     * @param rect  the ref of rect
+     * @return Errorcode of window.
+     */
+    virtual void GetAvailableRect(Rect &rect) { return WMError::WM_OK; }
+
 };
 }
 }

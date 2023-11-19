@@ -84,6 +84,7 @@ SceneSession::SceneSession(const SessionInfo& info, const sptr<SpecificSessionCa
         surfaceNode_ = Rosen::RSSurfaceNode::Create(config, Rosen::RSSurfaceNodeType::APP_WINDOW_NODE);
     }
     SetCollaboratorType(info.collaboratorType_);
+    SetTopless(info.topless_);
     WLOGFD("Create SceneSession");
 }
 
@@ -2076,5 +2077,45 @@ WSError SceneSession::UpdatePiPRect(uint32_t width, uint32_t height, PiPRectUpda
         return WSError::WS_OK;
     });
     return WSError::WS_OK;
+}
+
+WSError SceneSession::GetAvailableRect(WSRect& rect) {
+    auto displayInfo = ScreenSessionManager::GetInstance().GetDisplayInfoById(GetSessionProperty()->GetDisplayId());
+    WSRect screenRect = {0,0,displayInfo->GetWidth(),displayInfo->GetHeight()};
+    return PostTask([weakThis = wptr(this), screenRect, &rect]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGE("SceneSession::UpdatePiPRect session is null");
+            return WSError::WS_ERROR_DESTROYED_OBJECT;
+        }
+
+        WSRect statusRect,dockRect;
+        std::vector<sptr<SceneSession>> statusBarVector =
+            specificCallback_->onGetSceneSessionVectorByType_(WindowType::WINDOW_TYPE_STATUS_BAR);
+        for(auto statusBar : statusBarVector) {
+            if(!statusBar->isVisibale_ || statusBar->topless_) {
+                continue;
+            }
+            statusRect = statusBar->GetSessionRect();
+        }
+        std::vector<sptr<SceneSession>> dockVector =
+            specificCallback_->onGetSceneSessionVectorByType_(WindowType::WINDOW_TYPE_STATUS_BAR);
+        for(auto dock : dockVector) {
+            if(!dock->isVisibale_ || dock->topless_) {
+                continue;
+            }
+            dockRect = dock->GetSessionRect();
+        }
+        rect = {
+            screenRect.posX_,
+            screenRect.posY_ + statusRect.Height_,
+            screenRect.width_,
+            screenRect.Height_ - statusRect.Height_ - dockRect.Height_,
+        }
+        return WSError::WS_OK;
+    }
+
+     
+
 }
 } // namespace OHOS::Rosen

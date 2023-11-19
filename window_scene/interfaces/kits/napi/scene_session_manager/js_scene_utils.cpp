@@ -196,6 +196,19 @@ bool IsJsScreenIdUndefind(napi_env env, napi_value JsScreenId, SessionInfo& sess
     return true;
 }
 
+bool IsJsToplessUndefind(napi_env env, napi_value jsTopless, SessionInfo& sessionInfo)
+{
+    if (GetType(env, jsTopless) != napi_undefined) {
+        bool topless;
+        if (!ConvertFromJsValue(env, jsTopless, topless)) {
+            WLOGFE("[NAPI]Failed to convert parameter to isSystem");
+            return false;
+        }
+        sessionInfo.topless_ = topless;
+    }
+    return true;
+}
+
 bool ConvertSessionInfoFromJs(napi_env env, napi_value jsObject, SessionInfo& sessionInfo)
 {
     napi_value jsBundleName = nullptr;
@@ -216,6 +229,8 @@ bool ConvertSessionInfoFromJs(napi_env env, napi_value jsObject, SessionInfo& se
     napi_get_named_property(env, jsObject, "sessionType", &jsSessionType);
     napi_value jsScreenId = nullptr;
     napi_get_named_property(env, jsObject, "screenId", &jsScreenId);
+    napi_value jsTopless = nullptr;
+    napi_get_named_property(env, jsObject, "topless", &jsTopless);
 
     if (!IsJsBundleNameUndefind(env, jsBundleName, sessionInfo)) {
         return false;
@@ -242,6 +257,9 @@ bool ConvertSessionInfoFromJs(napi_env env, napi_value jsObject, SessionInfo& se
         return false;
     }
     if (!IsJsScreenIdUndefind(env, jsSessionType, sessionInfo)) {
+        return false;
+    }
+    if (!IsJsToplessUndefind(env, jsTopless, sessionInfo)) {
         return false;
     }
     return true;
