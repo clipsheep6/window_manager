@@ -927,4 +927,26 @@ WSError SessionProxy::RecoveryPullPiPMainWindow(int32_t persistentId)
     }
     return WSError::WS_OK;
 }
+
+WSError SessionProxy::GetAvailableRect(WSRect& rect)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("writeInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_GET_AVAILABLE_RECT),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    rect.posX_ = reply.ReadUint32();
+    rect.posY_ = reply.ReadUint32();
+    rect.width_ = reply.ReadUint32();
+    rect.height_ = reply.ReadUint32();
+    int32_t ret = reply.ReadUint32();
+    return static_cast<WSError>(rect);
+}
 } // namespace OHOS::Rosen

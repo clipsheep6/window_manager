@@ -4466,6 +4466,54 @@ napi_value JsWindow::OnMinimize(napi_env env, napi_callback_info info)
     return result;
 }
 
+
+napi_value JsWindow::GetAvailableRect(napi_env env, napi_callback_info info)
+{
+    WLOGD("GetAvailableRect");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(env, info);
+    return (me != nullptr) ? me->OnGetAvailableRect(env, info) : nullptr;
+}
+
+napi_value JsWindow::OnGetAvailableRect(napi_env env, napi_callback_info info)
+{
+    WMError errCode = WMError::WM_OK;
+    wptr<Window> weakToken(windowToken_);
+    NapiAsyncTask::CompleteCallback complete =
+        [weakToken, errCode, avoidAreaType](napi_env env, NapiAsyncTask& task, int32_t status) {
+            auto weakWindow = weakToken.promote();
+            if (weakWindow == nullptr) {
+                WLOGFE("window is nullptr");
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(WMError::WM_ERROR_NULLPTR)));
+                return;
+            }
+            if (errCode != WMError::WM_OK) {
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(errCode)));
+                WLOGFE("window is nullptr or get invalid param");
+                return;
+            }
+            Rect rect;
+            WMError ret = weakWindow->GetAvailableRect(rect);
+            napi_value rectObj = GetRectAndConvertToJsValue(env, rect);
+            if (rectObj != nullptr) {
+                task.Resolve(env, rectObj);
+            } else {
+                task.Reject(env, CreateJsError(env,
+                    static_cast<int32_t>(WMError::WM_ERROR_NULLPTR), "JsWindow::OnGetAvailableRect failed"));
+            }
+            WLOGI("Window [%{public}u, %{public}s] get available area end, ret = %{public}d",
+                weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), ret);
+        };
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    napi_value lastParam = (argc <= 1) ? nullptr :
+        (GetType(env, argv[1]) == napi_function ? argv[1] : nullptr);
+    napi_value result = nullptr;
+    NapiAsyncTask::Schedule("JsWindow::OnGetAvailableRect",
+        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
 std::shared_ptr<NativeReference> FindJsWindowObject(std::string windowName)
 {
     WLOGFD("Try to find window %{public}s in g_jsWindowMap", windowName.c_str());
@@ -4587,6 +4635,7 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "setResizeByDragEnabled", moduleName, JsWindow::SetResizeByDragEnabled);
     BindNativeFunction(env, object, "setRaiseByClickEnabled", moduleName, JsWindow::SetRaiseByClickEnabled);
     BindNativeFunction(env, object, "raiseAboveTarget", moduleName, JsWindow::RaiseAboveTarget);
+    BindNativeFunction(env, object, "getAvailableRect", moduleName, JsWindow::GetAvailableRect);
     BindNativeFunction(env, object, "hideNonSystemFloatingWindows", moduleName,
         JsWindow::HideNonSystemFloatingWindows);
 }

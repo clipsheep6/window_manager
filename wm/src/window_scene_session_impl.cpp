@@ -2043,5 +2043,16 @@ WMError WindowSceneSessionImpl::NotifyPrepareClosePiPWindow()
     WLOGFD("NotifyPrepareClosePiPWindow end");
     return WMError::WM_OK;
 }
+
+WMError WindowSceneSessionImpl::GetAvailableRect(Rect& rect)
+{
+    if (hostSession_ == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    WSRect wsRect;
+    hostSession_->GetAvailableRect(wsRect);
+    rect = {wsRect.posX_, wsRect.posY_, wsRect.width_, wsRect.height_};
+    return WMError::WM_OK;
+}
 } // namespace Rosen
 } // namespace OHOS

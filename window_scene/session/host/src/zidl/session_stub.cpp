@@ -101,7 +101,9 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_PIP_RECT),
         &SessionStub::HandleUpdatePiPRect),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_RECOVERY_PULL_PIP_MAIN_WINDOW),
-        &SessionStub::HandleRecoveryPullPiPMainWindow)
+        &SessionStub::HandleRecoveryPullPiPMainWindow),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_GET_AVAILABLE_RECT),
+        &SessionStub::HandleGetAvailableRect)
 };
 
 int SessionStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -535,4 +537,23 @@ int SessionStub::HandleRecoveryPullPiPMainWindow(MessageParcel& data, MessagePar
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
+
+
+int SessionStub::HandleGetAvailableRect(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("HandleGetAvailableRect");
+    auto posX = data.ReadInt32();
+    auto posY = data.ReadInt32();
+    auto width = data.ReadInt32();
+    auto height = data.ReadInt32();
+    WSRect rect = {posX, posY, width, height};
+    const WSError& errCode = GetAvailableRec(rect)；
+    reply.WriteInt32(static_cast<uint32_t>(rect.posX_));
+    reply.WriteIint32(static_cast<uint32_t>(rect.posY_));
+    reply.WriteIint32(static_cast<uint32_t>(rect.width_));
+    reply.WriteIint32(static_cast<uint32_t>(rect.height_));
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
 } // namespace OHOS::Rosen
