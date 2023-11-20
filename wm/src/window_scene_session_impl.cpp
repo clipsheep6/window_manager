@@ -2005,5 +2005,11 @@ void WindowSceneSessionImpl::NotifySessionBackground(uint32_t reason, bool withA
     WLOGFI("NotifySessionBackground");
     Hide(reason, withAnimation, isFromInnerkits);
 }
+
+void WindowSceneSessionImpl::UpdateWindowDrawingContentInfo(std::vector<sptr<WindowDrawingContentInfo>> infos)
+{
+    WLOGFI("UpdateWindowDrawingContentInfo");
+    SingletonContainer::Get<WindowManager>().OnWindowDrawingContentChanged(infos);
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -53,6 +53,7 @@ public:
     WSError UpdateMaximizeMode(MaximizeMode mode) override;
     void NotifySessionForeground(uint32_t reason, bool withAnimation) override;
     void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
+    void UpdateWindowDrawingContentInfo(const std::vector<sptr<DrawingContentInfo>>& infos) override;
 
 private:
     static inline BrokerDelegator<SessionStageProxy> delegator_;

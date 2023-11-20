@@ -95,6 +95,7 @@ public:
     {
         return WSErrorCode::WS_OK;
     }
+    virtual void UpdateWindowDrawingContentInfo(const std::vector<sptr<DrawingContentInfo>>& infos) = 0;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_SESSION_STAGE_INTERFACE_H

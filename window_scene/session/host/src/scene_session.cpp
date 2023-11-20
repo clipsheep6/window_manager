@@ -1849,4 +1849,13 @@ WSError SceneSession::SetTextFieldAvoidInfo(double textFieldPositionY, double te
     textFieldHeight_ = textFieldHeight;
     return WSError::WS_OK;
 }
+
+void SceneSession::UpdateWindowDrawingContentInfo(
+    const std::vector<sptr<WindowDrawingContentInfo>>& infos)
+{
+     if (!sessionStage_) {
+        return;
+    }
+    return sessionStage_->UpdateWindowDrawingContentInfo(infos);
+}
 } // namespace OHOS::Rosen

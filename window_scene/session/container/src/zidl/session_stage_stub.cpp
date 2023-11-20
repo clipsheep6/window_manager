@@ -69,6 +69,8 @@ const std::map<uint32_t, SessionStageStubFunc> SessionStageStub::stubFuncMap_{
         &SessionStageStub::HandleNotifySessionForeground),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SESSION_BACKGROUND),
         &SessionStageStub::HandleNotifySessionBackground),
+    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_UPDATE_WINDOW_DRAWING_STATUS),
+        &SessionStageStub::HandleWindowDrawingContentInfoChange),
 };
 
 int SessionStageStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -298,5 +300,17 @@ int SessionStageStub::HandleNotifySessionBackground(MessageParcel& data, Message
     bool isFromInnerkits = data.ReadBool();
     NotifySessionBackground(reason, withAnimation, isFromInnerkits);
     return ERR_NONE;
+}
+
+int SessionStageStub::HandleWindowDrawingContentInfoChange(MessageParcel& data, MessageParcel& reply)
+{
+    std::vector<sptr<WindowDrawingContentInfo>> infos;
+    if (!MarshallingHelper::UnmarshallingVectorParcelableObj<WindowDrawingContentInfo>(data, infos)) {
+        WLOGFE("read window drawingcontent infos failed");
+        return -1;
+    }
+    UpdateWindowDrawingContentInfo(infos);
+    return ERR_NONE;
+
 }
 } // namespace OHOS::Rosen

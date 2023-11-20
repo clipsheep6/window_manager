@@ -371,6 +371,7 @@ private:
     std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
     bool isReportTaskStart_ = false;
     std::vector<std::pair<uint64_t, WindowVisibilityState> > lastVisibleData_;
+    std::vector<std::pair<uint64_t, bool> > lastDrawingContentData_;
     RSInterfaces& rsInterface_;
     void RegisterSessionStateChangeNotifyManagerFunc(sptr<SceneSession>& sceneSession);
     void OnSessionStateChange(int32_t persistentId, const SessionState& state);
@@ -417,6 +418,7 @@ private:
     void NotifySessionForeground(const sptr<SceneSession>& session, uint32_t reason, bool withAnimation);
     void NotifySessionBackground(const sptr<SceneSession>& session, uint32_t reason, bool withAnimation,
                                 bool isFromInnerkits);
+    void UpdateWindowDrawingContentInfo(const std::vector<sptr<WindowDrawingContentInfo>>& infos);
 };
 } // namespace OHOS::Rosen
 

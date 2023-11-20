@@ -193,6 +193,10 @@ public:
     void SetMaximizeMode(MaximizeMode maximizeMode) override {}
     MaximizeMode GetMaximizeMode() override { return MaximizeMode::MODE_AVOID_SYSTEM_BAR; }
     void GetFocusWindowInfo(FocusChangeInfo& focusInfo) override {}
+    WMError GetDrawingContentWindowInfo(std::vector<sptr<WindowDrawingContentInfo>>& infos) override
+    {
+        return WMError::WM_OK;
+    }
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_INTERFACE_H
