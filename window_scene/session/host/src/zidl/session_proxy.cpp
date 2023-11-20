@@ -19,12 +19,12 @@
 #include <ipc_types.h>
 #include <message_option.h>
 #include <ui/rs_surface_node.h>
-
-#include "accessibility_event_info_parcel.h"
 #include "want.h"
 
+#include "accessibility_event_info_parcel.h"
 #include "session/host/include/zidl/session_ipc_interface_code.h"
 #include "window_manager_hilog.h"
+
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SessionProxy" };
@@ -844,7 +844,7 @@ WSError SessionProxy::TransferAccessibilityEvent(const Accessibility::Accessibil
         WLOGFE("WriteInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    AccessibilityEventInfoParcel infoParcel(info);
+    Accessibility::AccessibilityEventInfoParcel infoParcel(info);
     if (!data.WriteParcelable(&infoParcel)) {
         WLOGFE("infoParcel write failed.");
         return WSError::WS_ERROR_IPC_FAILED;

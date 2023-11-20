@@ -20,9 +20,10 @@
 #include <ui/rs_surface_node.h>
 #include "want.h"
 
+#include "accessibility_event_info_parcel.h"
 #include "session/host/include/zidl/session_ipc_interface_code.h"
 #include "window_manager_hilog.h"
-#include "accessibility_event_info_parcel.h"
+
 namespace OHOS::Accessibility {
 class AccessibilityEventInfo;
 }
@@ -494,8 +495,8 @@ int SessionStub::HandleNotifyExtensionDied(MessageParcel& data, MessageParcel& r
 
 int SessionStub::HandleTransferAccessibilityEvent(MessageParcel& data, MessageParcel& reply)
 {
-    sptr<AccessibilityEventInfoParcel> infoPtr =
-        data.ReadStrongParcelable<AccessibilityEventInfoParcel>();
+    sptr<Accessibility::AccessibilityEventInfoParcel> infoPtr =
+        data.ReadStrongParcelable<Accessibility::AccessibilityEventInfoParcel>();
     std::vector<int32_t> uiExtensionIdLevelVec;
     if (!data.ReadInt32Vector(&uiExtensionIdLevelVec)) {
         WLOGFE("read idVect error");
