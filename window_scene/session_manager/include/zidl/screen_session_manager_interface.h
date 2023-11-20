@@ -52,10 +52,6 @@ public:
     virtual DMError IsScreenRotationLocked(bool& isLocked) override { return DMError::DM_OK; }
 
     // colorspace, gamut
-    DMError GetScreenSupportedColorSpaces(ScreenId screenId, std::vector<CM_ColorSpaceType>& colorSpaces)
-    {
-        return DMError::DM_OK;
-    }
     virtual DMError GetScreenSupportedColorGamuts(ScreenId screenId,
         std::vector<ScreenColorGamut>& colorGamuts) override
     {

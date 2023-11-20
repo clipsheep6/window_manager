@@ -22,7 +22,6 @@
 #include "class_var_definition.h"
 #include "display_manager_adapter.h"
 #include "screen_info.h"
-#include "screen_session_manager_client.h"
 #include "singleton_container.h"
 #include "window_manager_hilog.h"
 
@@ -127,9 +126,9 @@ DMError Screen::SetOrientation(Orientation orientation) const
     return SingletonContainer::Get<ScreenManagerAdapter>().SetOrientation(GetId(), orientation);
 }
 
-DMError Screen::GetScreenSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces) const
+DMError Screen::GetSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces) const
 {
-    return ScreenSessionManagerClient::GetInstance().GetScreenSupportedColorSpaces(GetId(), colorSpaces);
+    return SingletonContainer::Get<ScreenManagerAdapter>().GetSupportedColorSpaces(GetId(), colorSpaces);
 }
 
 DMError Screen::GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut>& colorGamuts) const

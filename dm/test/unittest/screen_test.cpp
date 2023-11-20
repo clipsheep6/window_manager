@@ -112,16 +112,16 @@ HWTEST_F(ScreenTest, SetScreenActiveMode02, Function | SmallTest | Level1)
 }
 
 /**
- * @tc.name: GetScreenSupportedColorSpaces01
- * @tc.desc: GetScreenSupportedColorSpaces
+ * @tc.name: GetSupportedColorSpaces01
+ * @tc.desc: GetSupportedColorSpaces
  * @tc.type: FUNC
  */
-HWTEST_F(ScreenTest, GetScreenSupportedColorSpaces1, Function | SmallTest | Level2)
+HWTEST_F(ScreenTest, GetSupportedColorSpaces1, Function | SmallTest | Level2)
 {
     std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
-    EXPECT_CALL(m->Mock(), GetScreenSupportedColorSpaces(_, _)).Times(1).WillOnce(Return(DMError::DM_OK));
+    EXPECT_CALL(m->Mock(), GetSupportedColorSpaces(_, _)).Times(1).WillOnce(Return(DMError::DM_OK));
     std::vector<CM_ColorSpaceType> colorSpaces;
-    auto res = screen_->GetScreenSupportedColorSpaces(colorSpaces);
+    auto res = screen_->GetSupportedColorSpaces(colorSpaces);
     ASSERT_EQ(DMError::DM_OK, res);
 
 }

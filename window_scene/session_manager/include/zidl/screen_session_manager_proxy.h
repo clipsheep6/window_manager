@@ -89,6 +89,8 @@ public:
 
     virtual DMError GetAllScreenInfos(std::vector<sptr<ScreenInfo>>& screenInfos) override;
 
+    DMError GetSupportedColorSpaces(ScreenId screenId, std::vector<CM_ColorSpaceType>& colorSpaces) override;
+
     virtual DMError GetScreenSupportedColorGamuts(ScreenId screenId,
         std::vector<ScreenColorGamut>& colorGamuts) override;
 

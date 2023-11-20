@@ -98,10 +98,8 @@ public:
     std::vector<DisplayId> GetAllDisplayIds() override;
     virtual sptr<ScreenInfo> GetScreenInfoById(ScreenId screenId) override;
     virtual DMError GetAllScreenInfos(std::vector<sptr<ScreenInfo>>& screenInfos) override;
-    virtual DMError GetScreenSupportedColorGamuts(ScreenId screenId,
-        std::vector<ScreenColorGamut>& colorGamuts) override;
-    virtual DMError GetScreenSupportedColorSpaces(ScreenId screenId,
-        std::vector<CM_ColorSpaceType>& colorSpaces) override;
+    DMError GetScreenSupportedColorGamuts(ScreenId screenId, std::vector<ScreenColorGamut>& colorGamuts) override;
+    DMError GetSupportedColorSpaces(ScreenId screenId, std::vector<CM_ColorSpaceType>& colorSpaces) override;
     DMError IsScreenRotationLocked(bool& isLocked) override;
     DMError SetScreenRotationLocked(bool isLocked) override;
     DMError SetOrientation(ScreenId screenId, Orientation orientation) override;

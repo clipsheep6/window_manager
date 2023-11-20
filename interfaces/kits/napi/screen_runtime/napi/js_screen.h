@@ -43,7 +43,7 @@ enum class ApiColorSpaceType : uint32_t {
     TYPE_END
 };
 
-const std::multimap<CM_ColorSpaceType, ApiColorSpaceType> NATIVE_TO_JS_COLOR_SPACE_TYPE_MAP {
+const std::map<CM_ColorSpaceType, ApiColorSpaceType> NATIVE_TO_JS_COLOR_SPACE_TYPE_MAP {
     { CM_ColorSpaceType::CM_COLORSPACE_NONE,        ApiColorSpaceType::UNKNOWN },
     { CM_ColorSpaceType::CM_ADOBERGB_FULL,          ApiColorSpaceType::ADOBE_RGB },
     { CM_ColorSpaceType::CM_ADOBERGB_LIMIT,         ApiColorSpaceType::ADOBE_RGB },
@@ -78,42 +78,7 @@ const std::multimap<CM_ColorSpaceType, ApiColorSpaceType> NATIVE_TO_JS_COLOR_SPA
     { CM_ColorSpaceType::CM_LINEAR_BT2020,          ApiColorSpaceType::LINEAR_BT2020 },
 };
 
-const std::map<ApiColorSpaceType, CM_ColorSpaceType> JS_TO_NATIVE_COLOR_SPACE_NAME_MAP {
-    { ApiColorSpaceType::UNKNOWN,                   CM_ColorSpaceType::CM_COLORSPACE_NONE },
-    { ApiColorSpaceType::ADOBE_RGB,                 CM_ColorSpaceType::CM_ADOBERGB_FULL },
-    { ApiColorSpaceType::ADOBE_RGB,                 CM_ColorSpaceType::CM_ADOBERGB_LIMIT },
-    { ApiColorSpaceType::BT2020_HLG,                CM_ColorSpaceType::CM_BT2020_HLG_FULL },
-    { ApiColorSpaceType::BT2020_HLG,                CM_ColorSpaceType::CM_BT2020_HLG_LIMIT },
-    { ApiColorSpaceType::BT2020_HLG,                CM_ColorSpaceType::CM_DISPLAY_BT2020_HLG },
-    { ApiColorSpaceType::BT2020_PQ,                 CM_ColorSpaceType::CM_BT2020_PQ_FULL },
-    { ApiColorSpaceType::BT2020_PQ,                 CM_ColorSpaceType::CM_BT2020_PQ_LIMIT },
-    { ApiColorSpaceType::BT2020_PQ,                 CM_ColorSpaceType::CM_DISPLAY_BT2020_PQ },
-    { ApiColorSpaceType::BT2020_SRGB,               CM_ColorSpaceType::CM_DISPLAY_BT2020_SRGB },
-    { ApiColorSpaceType::BT601_EBU,                 CM_ColorSpaceType::CM_BT601_EBU_FULL },
-    { ApiColorSpaceType::BT601_EBU,                 CM_ColorSpaceType::CM_BT601_EBU_LIMIT },
-    { ApiColorSpaceType::BT601_SMPTE_C,             CM_ColorSpaceType::CM_BT601_SMPLE_C_FULL },
-    { ApiColorSpaceType::BT601_SMPTE_C,             CM_ColorSpaceType::CM_BT601_SMPLE_C_LIMIT },
-    { ApiColorSpaceType::BT709,                     CM_ColorSpaceType::CM_BT709_FULL },
-    { ApiColorSpaceType::BT709,                     CM_ColorSpaceType::CM_BT709_LIMIT },
-    { ApiColorSpaceType::P3_HLG,                    CM_ColorSpaceType::CM_P3_HLG_FULL },
-    { ApiColorSpaceType::P3_HLG,                    CM_ColorSpaceType::CM_P3_HLG_LIMIT },
-    { ApiColorSpaceType::P3_HLG,                    CM_ColorSpaceType::CM_DISPLAY_P3_HLG },
-    { ApiColorSpaceType::P3_PQ,                     CM_ColorSpaceType::CM_P3_PQ_FULL },
-    { ApiColorSpaceType::P3_PQ,                     CM_ColorSpaceType::CM_P3_PQ_LIMIT },
-    { ApiColorSpaceType::P3_PQ,                     CM_ColorSpaceType::CM_DISPLAY_P3_PQ },
-    { ApiColorSpaceType::DISPLAY_P3,                CM_ColorSpaceType::CM_P3_FULL },
-    { ApiColorSpaceType::DISPLAY_P3,                CM_ColorSpaceType::CM_P3_LIMIT },
-    { ApiColorSpaceType::DISPLAY_P3,                CM_ColorSpaceType::CM_DISPLAY_P3_SRGB },
-    { ApiColorSpaceType::SRGB,                      CM_ColorSpaceType::CM_SRGB_FULL },
-    { ApiColorSpaceType::SRGB,                      CM_ColorSpaceType::CM_SRGB_LIMIT },
-    { ApiColorSpaceType::SRGB,                      CM_ColorSpaceType::CM_DISPLAY_SRGB },
-    { ApiColorSpaceType::LINEAR_SRGB,               CM_ColorSpaceType::CM_LINEAR_SRGB },
-    { ApiColorSpaceType::LINEAR_SRGB,               CM_ColorSpaceType::CM_LINEAR_BT709 },
-    { ApiColorSpaceType::LINEAR_P3,                 CM_ColorSpaceType::CM_LINEAR_P3 },
-    { ApiColorSpaceType::LINEAR_BT2020,             CM_ColorSpaceType::CM_LINEAR_BT2020 },
-};
-
-napi_value CreateJsColorSpaceArray(napi_env env, const std::vector<ApiColorSpaceType>& colorSpaces);
+napi_value CreateJsColorSpaceArray(napi_env env, const std::vector<CM_ColorSpaceType>& colorSpaces);
 napi_value CreateJsScreenObject(napi_env env, sptr<Screen>& screen);
 napi_value CreateJsScreenModeArrayObject(napi_env env, std::vector<sptr<SupportedScreenModes>> screenModes);
 napi_value CreateJsScreenModeObject(napi_env env, const sptr<SupportedScreenModes>& mode);
@@ -127,16 +92,14 @@ public:
     static napi_value SetScreenActiveMode(napi_env env, napi_callback_info info);
     static napi_value SetOrientation(napi_env env, napi_callback_info info);
     static napi_value SetDensityDpi(napi_env env, napi_callback_info info);
-
-    static napi_value GetScreenSupportedColorSpaces(napi_env env, napi_callback_info info);
+    static napi_value GetSupportedColorSpaces(napi_env env, napi_callback_info info);
 
 private:
     sptr<Screen> screen_ = nullptr;
     napi_value OnSetOrientation(napi_env env, napi_callback_info info);
     napi_value OnSetScreenActiveMode(napi_env env, napi_callback_info info);
     napi_value OnSetDensityDpi(napi_env env, napi_callback_info info);
-
-    napi_value OnGetScreenSupportedColorSpaces(napi_env env, napi_callback_info info);
+    napi_value OnGetSupportedColorSpaces(napi_env env, napi_callback_info info);
 };
 }  // namespace Rosen
 }  // namespace OHOS
