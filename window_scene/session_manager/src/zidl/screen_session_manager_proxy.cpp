@@ -234,6 +234,262 @@ DMError ScreenSessionManagerProxy::SetScreenColorTransform(ScreenId screenId)
     return static_cast<DMError>(reply.ReadInt32());
 }
 
+DMError ScreenSessionManagerProxy::GetPixelFormat(ScreenId screenId, GraphicPixelFormat& pixelFormat)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("DisplayManagerProxy::GetPixelFormat: remote is nullptr");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFW("DisplayManagerProxy::GetPixelFormat: WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteUint64(static_cast<uint64_t>(screenId))) {
+        WLOGFW("DisplayManagerProxy::GetPixelFormat: WriteUint64 uint64_t failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SCREEN_GET_PIXEL_FORMAT),
+        data, reply, option) != ERR_NONE) {
+        WLOGFW("DisplayManagerProxy::GetPixelFormat: SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    DMError ret = static_cast<DMError>(reply.ReadInt32());
+    if (ret != DMError::DM_OK) {
+        return ret;
+    }
+    pixelFormat = static_cast<GraphicPixelFormat>(reply.ReadUint32());
+    return ret;
+}
+
+DMError ScreenSessionManagerProxy::SetPixelFormat(ScreenId screenId, GraphicPixelFormat pixelFormat)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("DisplayManagerProxy::SetPixelFormat: remote is nullptr");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFW("DisplayManagerProxy::SetPixelFormat: WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteUint64(static_cast<uint64_t>(screenId)) || !data.WriteInt32(pixelFormat)) {
+        WLOGFW("DisplayManagerProxy::SetPixelFormat: WriteUint64 screenId failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SCREEN_SET_PIXEL_FORMAT),
+        data, reply, option) != ERR_NONE) {
+        WLOGFW("DisplayManagerProxy::SetPixelFormat: SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    return static_cast<DMError>(reply.ReadInt32());
+}
+
+DMError ScreenSessionManagerProxy::GetSupportedHDRFormats(ScreenId screenId, std::vector<ScreenHDRFormat>& hdrFormats)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("DisplayManagerProxy::GetSupportedHDRFormats: remote is nullptr");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFW("DisplayManagerProxy::GetSupportedHDRFormats: WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteUint64(static_cast<uint64_t>(screenId))) {
+        WLOGFW("DisplayManagerProxy::GetSupportedHDRFormats: WriteUint64 screenId failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SCREEN_GET_SUPPORTED_HDR_FORMAT),
+        data, reply, option) != ERR_NONE) {
+        WLOGFW("DisplayManagerProxy::GetSupportedHDRFormats: SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    DMError ret = static_cast<DMError>(reply.ReadInt32());
+    if (ret != DMError::DM_OK) {
+        return ret;
+    }
+    MarshallingHelper::UnmarshallingVectorObj<ScreenHDRFormat>(reply, hdrFormats,
+        [](Parcel& parcel, ScreenHDRFormat& hdrFormat) {
+            uint32_t value;
+            bool res = parcel.ReadUint32(value);
+            hdrFormat = static_cast<ScreenHDRFormat>(value);
+            return res;
+        }
+    );
+    return ret;
+}
+
+DMError ScreenSessionManagerProxy::GetScreenHDRFormat(ScreenId screenId, ScreenHDRFormat& hdrFormat)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("DisplayManagerProxy::GetScreenHDRFormat: remote is nullptr");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFW("DisplayManagerProxy::GetScreenHDRFormat: WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteUint64(static_cast<uint64_t>(screenId))) {
+        WLOGFW("DisplayManagerProxy::GetScreenHDRFormat: WriteUint64 uint64_t failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SCREEN_GET_HDR_FORMAT),
+        data, reply, option) != ERR_NONE) {
+        WLOGFW("DisplayManagerProxy::GetScreenHDRFormat: SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    DMError ret = static_cast<DMError>(reply.ReadInt32());
+    if (ret != DMError::DM_OK) {
+        return ret;
+    }
+    hdrFormat = static_cast<ScreenHDRFormat>(reply.ReadUint32());
+    return ret;
+}
+
+DMError ScreenSessionManagerProxy::SetScreenHDRFormat(ScreenId screenId, int32_t modeIdx)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("DisplayManagerProxy::SetScreenHDRFormat: remote is nullptr");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFW("DisplayManagerProxy::SetScreenHDRFormat: WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteUint64(static_cast<uint64_t>(screenId)) || !data.WriteInt32(modeIdx)) {
+        WLOGFW("DisplayManagerProxy::SetScreenHDRFormat: WriteUint64 screenId failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SCREEN_SET_HDR_FORMAT),
+        data, reply, option) != ERR_NONE) {
+        WLOGFW("DisplayManagerProxy::SetScreenHDRFormat: SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    return static_cast<DMError>(reply.ReadInt32());
+}
+
+DMError ScreenSessionManagerProxy::GetSupportedColorSpaces(ScreenId screenId,
+    std::vector<CM_ColorSpaceType>& colorSpaces)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("DisplayManagerProxy::GetSupportedColorSpaces: remote is nullptr");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFW("DisplayManagerProxy::GetSupportedColorSpaces: WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteUint64(static_cast<uint64_t>(screenId))) {
+        WLOGFW("DisplayManagerProxy::GetSupportedColorSpaces: WriteUint64 screenId failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SCREEN_GET_SUPPORTED_COLOR_SPACE),
+        data, reply, option) != ERR_NONE) {
+        WLOGFW("DisplayManagerProxy::GetSupportedColorSpaces: SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    DMError ret = static_cast<DMError>(reply.ReadInt32());
+    if (ret != DMError::DM_OK) {
+        return ret;
+    }
+    MarshallingHelper::UnmarshallingVectorObj<CM_ColorSpaceType>(reply, colorSpaces,
+        [](Parcel& parcel, CM_ColorSpaceType& color) {
+            uint32_t value;
+            bool res = parcel.ReadUint32(value);
+            color = static_cast<CM_ColorSpaceType>(value);
+            return res;
+        }
+    );
+    return ret;
+}
+
+DMError ScreenSessionManagerProxy::GetScreenColorSpace(ScreenId screenId, CM_ColorSpaceType& colorSpace)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("DisplayManagerProxy::GetScreenColorSpace: remote is nullptr");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFW("DisplayManagerProxy::GetScreenColorSpace: WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteUint64(static_cast<uint64_t>(screenId))) {
+        WLOGFW("DisplayManagerProxy::GetScreenColorSpace: WriteUint64 screenId failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SCREEN_GET_COLOR_SPACE),
+        data, reply, option) != ERR_NONE) {
+        WLOGFW("DisplayManagerProxy::GetScreenColorSpace: SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    DMError ret = static_cast<DMError>(reply.ReadInt32());
+    if (ret != DMError::DM_OK) {
+        return ret;
+    }
+    colorSpace = static_cast<CM_ColorSpaceType>(reply.ReadUint32());
+    return ret;
+}
+
+DMError ScreenSessionManagerProxy::SetScreenColorSpace(ScreenId screenId, CM_ColorSpaceType colorSpace)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("DisplayManagerProxy::SetScreenColorSpace: remote is nullptr");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFW("DisplayManagerProxy::SetScreenColorSpace: WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteUint64(static_cast<uint64_t>(screenId)) || !data.WriteInt32(colorSpace)) {
+        WLOGFW("DisplayManagerProxy::SetScreenColorSpace: Write failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SCREEN_SET_COLOR_SPACE),
+        data, reply, option) != ERR_NONE) {
+        WLOGFW("DisplayManagerProxy::SetScreenColorSpace: SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    return static_cast<DMError>(reply.ReadInt32());
+}
+
 DMError ScreenSessionManagerProxy::RegisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
     DisplayManagerAgentType type)
 {
@@ -1136,46 +1392,6 @@ DMError ScreenSessionManagerProxy::GetAllScreenInfos(std::vector<sptr<ScreenInfo
     }
     DMError ret = static_cast<DMError>(reply.ReadInt32());
     MarshallingHelper::UnmarshallingVectorParcelableObj<ScreenInfo>(reply, screenInfos);
-    return ret;
-}
-
-DMError ScreenSessionManagerProxy::GetSupportedColorSpaces(ScreenId screenId,
-    std::vector<CM_ColorSpaceType>& colorSpaces)
-{
-    sptr<IRemoteObject> remote = Remote();
-    if (remote == nullptr) {
-        WLOGFW("DisplayManagerProxy::GetSupportedColorSpaces: remote is nullptr");
-        return DMError::DM_ERROR_NULLPTR;
-    }
-
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFW("DisplayManagerProxy::GetSupportedColorSpaces: WriteInterfaceToken failed");
-        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
-    }
-    if (!data.WriteUint64(static_cast<uint64_t>(screenId))) {
-        WLOGFW("DisplayManagerProxy::GetSupportedColorSpaces: WriteUint64 screenId failed");
-        return DMError::DM_ERROR_IPC_FAILED;
-    }
-    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SCREEN_GET_SUPPORTED_COLOR_SPACE),
-        data, reply, option) != ERR_NONE) {
-        WLOGFW("DisplayManagerProxy::GetSupportedColorSpaces: SendRequest failed");
-        return DMError::DM_ERROR_IPC_FAILED;
-    }
-    DMError ret = static_cast<DMError>(reply.ReadInt32());
-    if (ret != DMError::DM_OK) {
-        return ret;
-    }
-    MarshallingHelper::UnmarshallingVectorObj<CM_ColorSpaceType>(reply, colorSpaces,
-        [](Parcel& parcel, CM_ColorSpaceType& color) {
-            uint32_t value;
-            bool res = parcel.ReadUint32(value);
-            color = static_cast<CM_ColorSpaceType>(value);
-            return res;
-        }
-    );
     return ret;
 }
 

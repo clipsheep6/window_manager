@@ -78,7 +78,23 @@ const std::map<CM_ColorSpaceType, ApiColorSpaceType> NATIVE_TO_JS_COLOR_SPACE_TY
     { CM_ColorSpaceType::CM_LINEAR_BT2020,          ApiColorSpaceType::LINEAR_BT2020 },
 };
 
+enum class ApiHDRFormat : uint32_t {
+    UNKNOWN = 0,
+    HDR10 = 1,
+    HLG = 2,
+    HDR_VIVID= 3,
+    TYPE_END
+};
+
+const std::map<ScreenHDRFormat, ApiHDRFormat> NATIVE_TO_JS_HDR_FORMAT_TYPE_MAP {
+    { ScreenHDRFormat::NOT_SUPPORT_HDR,     ApiHDRFormat::UNKNOWN },
+    { ScreenHDRFormat::HDR10,               ApiHDRFormat::HDR10 },
+    { ScreenHDRFormat::HLG,                 ApiHDRFormat::HLG },
+    { ScreenHDRFormat::HDR_VIVID,           ApiHDRFormat::HDR_VIVID },
+};
+
 napi_value CreateJsColorSpaceArray(napi_env env, const std::vector<CM_ColorSpaceType>& colorSpaces);
+napi_value CreateJsHDRFormatArray(napi_env env, const std::vector<ScreenHDRFormat>& hdrFormats);
 napi_value CreateJsScreenObject(napi_env env, sptr<Screen>& screen);
 napi_value CreateJsScreenModeArrayObject(napi_env env, std::vector<sptr<SupportedScreenModes>> screenModes);
 napi_value CreateJsScreenModeObject(napi_env env, const sptr<SupportedScreenModes>& mode);
@@ -93,6 +109,7 @@ public:
     static napi_value SetOrientation(napi_env env, napi_callback_info info);
     static napi_value SetDensityDpi(napi_env env, napi_callback_info info);
     static napi_value GetSupportedColorSpaces(napi_env env, napi_callback_info info);
+    static napi_value GetSupportedHDRFormat(napi_env env, napi_callback_info info);
 
 private:
     sptr<Screen> screen_ = nullptr;
@@ -100,6 +117,7 @@ private:
     napi_value OnSetScreenActiveMode(napi_env env, napi_callback_info info);
     napi_value OnSetDensityDpi(napi_env env, napi_callback_info info);
     napi_value OnGetSupportedColorSpaces(napi_env env, napi_callback_info info);
+    napi_value OnGetSupportedHDRFormat(napi_env env, napi_callback_info info);
 };
 }  // namespace Rosen
 }  // namespace OHOS

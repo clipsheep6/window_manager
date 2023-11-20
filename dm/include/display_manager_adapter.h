@@ -117,13 +117,21 @@ public:
     virtual DMError IsScreenRotationLocked(bool& isLocked);
 
     // colorspace, gamut
-    virtual DMError GetSupportedColorSpaces(ScreenId screenId, std::vector<CM_ColorSpaceType>& colorSpaces);
     virtual DMError GetScreenSupportedColorGamuts(ScreenId screenId, std::vector<ScreenColorGamut>& colorGamuts);
     virtual DMError GetScreenColorGamut(ScreenId screenId, ScreenColorGamut& colorGamut);
     virtual DMError SetScreenColorGamut(ScreenId screenId, int32_t colorGamutIdx);
     virtual DMError GetScreenGamutMap(ScreenId screenId, ScreenGamutMap& gamutMap);
     virtual DMError SetScreenGamutMap(ScreenId screenId, ScreenGamutMap gamutMap);
     virtual DMError SetScreenColorTransform(ScreenId screenId);
+
+    virtual DMError GetPixelFormat(ScreenId screenId, GraphicPixelFormat& pixelFormat);
+    virtual DMError SetPixelFormat(ScreenId screenId, GraphicPixelFormat pixelFormat);
+    virtual DMError GetSupportedHDRFormats(ScreenId screenId, std::vector<ScreenHDRFormat>& hdrFormats);
+    virtual DMError GetScreenHDRFormat(ScreenId screenId, ScreenHDRFormat& hdrFormat);
+    virtual DMError SetScreenHDRFormat(ScreenId screenId, int32_t modeIdx);
+    virtual DMError GetSupportedColorSpaces(ScreenId screenId, std::vector<CM_ColorSpaceType>& colorSpaces);
+    virtual DMError GetScreenColorSpace(ScreenId screenId, CM_ColorSpaceType& colorSpace);
+    virtual DMError SetScreenColorSpace(ScreenId screenId, CM_ColorSpaceType colorSpace);
 
     // unique screen
     virtual DMError MakeUniqueScreen(const std::vector<ScreenId>& screenIds);

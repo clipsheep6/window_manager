@@ -75,7 +75,14 @@ public:
         TRANS_ID_SCREEN_GET_GAMUT_MAP,
         TRANS_ID_SCREEN_SET_GAMUT_MAP,
         TRANS_ID_SCREEN_SET_COLOR_TRANSFORM,
+        TRANS_ID_SCREEN_GET_PIXEL_FORMAT,
+        TRANS_ID_SCREEN_SET_PIXEL_FORMAT,
+        TRANS_ID_SCREEN_GET_SUPPORTED_HDR_FORMAT,
+        TRANS_ID_SCREEN_GET_HDR_FORMAT,
+        TRANS_ID_SCREEN_SET_HDR_FORMAT,
         TRANS_ID_SCREEN_GET_SUPPORTED_COLOR_SPACE,
+        TRANS_ID_SCREEN_GET_COLOR_SPACE,
+        TRANS_ID_SCREEN_SET_COLOR_SPACE,
         TRANS_ID_IS_SCREEN_ROTATION_LOCKED,
         TRANS_ID_SET_SCREEN_ROTATION_LOCKED,
         TRANS_ID_HAS_PRIVATE_WINDOW,
@@ -124,16 +131,47 @@ public:
     virtual DMError IsScreenRotationLocked(bool& isLocked) = 0;
 
     // colorspace, gamut
-    virtual DMError GetSupportedColorSpaces(ScreenId screenId, std::vector<CM_ColorSpaceType>& colorSpaces)
-    {
-        return DMError::DM_OK;
-    }
     virtual DMError GetScreenSupportedColorGamuts(ScreenId screenId, std::vector<ScreenColorGamut>& colorGamuts) = 0;
     virtual DMError GetScreenColorGamut(ScreenId screenId, ScreenColorGamut& colorGamut) = 0;
     virtual DMError SetScreenColorGamut(ScreenId screenId, int32_t colorGamutIdx) = 0;
     virtual DMError GetScreenGamutMap(ScreenId screenId, ScreenGamutMap& gamutMap) = 0;
     virtual DMError SetScreenGamutMap(ScreenId screenId, ScreenGamutMap gamutMap) = 0;
     virtual DMError SetScreenColorTransform(ScreenId screenId) = 0;
+
+    virtual DMError GetPixelFormat(ScreenId screenId, GraphicPixelFormat& pixelFormat)
+    {
+        return DMError::DM_OK;
+    }
+    virtual DMError SetPixelFormat(ScreenId screenId, GraphicPixelFormat pixelFormat)
+    {
+        return DMError::DM_OK;
+    }
+    virtual DMError GetSupportedHDRFormats(ScreenId screenId,
+        std::vector<ScreenHDRFormat>& hdrFormats)
+    {
+        return DMError::DM_OK;
+    }
+    virtual DMError GetScreenHDRFormat(ScreenId screenId, ScreenHDRFormat& hdrFormat)
+    {
+        return DMError::DM_OK;
+    }
+    virtual DMError SetScreenHDRFormat(ScreenId screenId, int32_t modeIdx)
+    {
+        return DMError::DM_OK;
+    }
+    virtual DMError GetSupportedColorSpaces(ScreenId screenId,
+        std::vector<CM_ColorSpaceType>& colorSpaces)
+    {
+        return DMError::DM_OK;
+    }
+    virtual DMError GetScreenColorSpace(ScreenId screenId, CM_ColorSpaceType& colorSpace)
+    {
+        return DMError::DM_OK;
+    }
+    virtual DMError SetScreenColorSpace(ScreenId screenId, CM_ColorSpaceType colorSpace)
+    {
+        return DMError::DM_OK;
+    }
 
     virtual DMError RegisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
         DisplayManagerAgentType type) = 0;

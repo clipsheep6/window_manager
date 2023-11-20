@@ -284,6 +284,43 @@ napi_value JsScreen::OnGetSupportedColorSpaces(napi_env env, napi_callback_info 
     return result;
 }
 
+napi_value JsScreen::GetSupportedHDRFormat(napi_env env, napi_callback_info info)
+{
+    WLOGI("GetSupportedHDRFormat is called");
+    JsScreen* me = CheckParamsAndGetThis<JsScreen>(env, info);
+    return (me != nullptr) ? me->OnGetSupportedHDRFormat(env, info) : nullptr;
+}
+
+napi_value JsScreen::OnGetSupportedHDRFormat(napi_env env, napi_callback_info info)
+{
+    WLOGI("OnGetSupportedHDRFormat is called");
+    NapiAsyncTask::CompleteCallback complete =
+        [=](napi_env env, NapiAsyncTask& task, int32_t status) {
+            std::vector<ScreenHDRFormat> hdrFormats;
+            DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->GetSupportedHDRFormats(hdrFormats));
+            if (ret == DmErrorCode::DM_OK) {
+                task.Resolve(env, CreateJsHDRFormatArray(env, hdrFormats));
+                WLOGI("OnGetSupportedHDRFormat success");
+            } else {
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret),
+                                                "JsScreen::OnGetSupportedHDRFormat failed."));
+                WLOGFE("OnGetSupportedHDRFormat failed");
+            }
+        };
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    napi_value lastParam = nullptr;
+    if (argc >= ARGC_ONE && argv[ARGC_ONE - 1] != nullptr &&
+        GetType(env, argv[ARGC_ONE - 1]) == napi_function) {
+        lastParam = argv[ARGC_ONE - 1];
+    }
+    napi_value result = nullptr;
+    NapiAsyncTask::Schedule("JsScreen::OnGetSupportedHDRFormat",
+        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
 std::shared_ptr<NativeReference> FindJsDisplayObject(ScreenId screenId)
 {
     WLOGI("[NAPI]Try to find screen %{public}" PRIu64" in g_JsScreenMap", screenId);
@@ -398,6 +435,32 @@ napi_value CreateJsColorSpaceArray(napi_env env, const std::vector<CM_ColorSpace
         }
         jsColorSpace = static_cast<uint32_t>(NATIVE_TO_JS_COLOR_SPACE_TYPE_MAP.at(colorSpace));
         napi_set_element(env, arrayValue, i++, CreateJsValue(env, jsColorSpace));
+    }
+    return arrayValue;
+}
+
+napi_value CreateJsHDRFormatArray(napi_env env, const std::vector<ScreenHDRFormat>& hdrFormats)
+{
+    WLOGI("JsScreen::CreateJsHDRFormatArray is called");
+    napi_value arrayValue = nullptr;
+    napi_create_array_with_length(env, hdrFormats.size(), &arrayValue);
+    if (arrayValue == nullptr) {
+        WLOGFE("Failed to create HDR format array");
+        return NapiGetUndefined(env);
+    }
+    size_t jsHdrFormat = -1;
+    uint32_t i = 0;
+    for (const auto& hdrFormat : hdrFormats) {
+        if (NATIVE_TO_JS_HDR_FORMAT_TYPE_MAP.count(hdrFormat) == 0) {
+            WLOGFE("Get HDR format name %{public}u, but not in api type", hdrFormat);
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(DMError::DM_ERROR_DEVICE_NOT_SUPPORT)));
+            return NapiGetUndefined(env);
+        }
+        if (jsHdrFormat == static_cast<uint32_t>(NATIVE_TO_JS_HDR_FORMAT_TYPE_MAP.at(hdrFormat))) {
+            continue;
+        }
+        jsHdrFormat = static_cast<uint32_t>(NATIVE_TO_JS_HDR_FORMAT_TYPE_MAP.at(hdrFormat));
+        napi_set_element(env, arrayValue, i++, CreateJsValue(env, jsHdrFormat));
     }
     return arrayValue;
 }

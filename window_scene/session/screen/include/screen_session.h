@@ -91,13 +91,21 @@ public:
     void FillScreenInfo(sptr<ScreenInfo> info) const;
     void InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startPoint);
 
-    DMError GetSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces);
     DMError GetScreenSupportedColorGamuts(std::vector<ScreenColorGamut>& colorGamuts);
     DMError GetScreenColorGamut(ScreenColorGamut& colorGamut);
     DMError SetScreenColorGamut(int32_t colorGamutIdx);
     DMError GetScreenGamutMap(ScreenGamutMap& gamutMap);
     DMError SetScreenGamutMap(ScreenGamutMap gamutMap);
     DMError SetScreenColorTransform();
+
+    DMError GetPixelFormat(GraphicPixelFormat& pixelFormat);
+    DMError SetPixelFormat(GraphicPixelFormat pixelFormat);
+    DMError GetSupportedHDRFormats(std::vector<ScreenHDRFormat>& hdrFormats);
+    DMError GetScreenHDRFormat(ScreenHDRFormat& hdrFormat);
+    DMError SetScreenHDRFormat(int32_t modeIdx);
+    DMError GetSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces);
+    DMError GetScreenColorSpace(CM_ColorSpaceType& colorSpace);
+    DMError SetScreenColorSpace(CM_ColorSpaceType colorSpace);
 
     bool HasPrivateSessionForeground() const;
     void SetPrivateSessionForeground(bool hasPrivate);

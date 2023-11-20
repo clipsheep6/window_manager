@@ -185,15 +185,6 @@ public:
 
     // colorspace, gamut
     /**
-     * @brief Get the supported color space of the screen.
-     *
-     * @param colorSpaces Supported color space of the screen.
-     * @return DM_OK means get success, others means get failed.
-     */
-    DMError GetSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces) const;
-    
-
-    /**
      * @brief Get the supported color gamuts of the screen.
      *
      * @param colorGamuts Supported color gamuts of the screen.
@@ -239,6 +230,66 @@ public:
      * @return DM_OK means set success, others means set failed.
      */
     DMError SetScreenColorTransform();
+
+    /**
+     * @brief Get the pixel format of the screen.
+     *
+     * @return DM_OK means set success, others means set failed.
+     */
+    DMError GetPixelFormat(GraphicPixelFormat& pixelFormat) const;
+
+    /**
+     * @brief Set the color gamut of the screen.
+     *
+     * @return DM_OK means set success, others means set failed.
+     */
+    DMError SetPixelFormat(GraphicPixelFormat pixelFormat);
+
+    /**
+     * @brief Get the supported HDR format of the screen.
+     *
+     * @param colorSpaces Supported HDR format of the screen.
+     * @return DM_OK means get success, others means get failed.
+     */
+    DMError GetSupportedHDRFormats(std::vector<ScreenHDRFormat>& hdrFormats) const;
+
+    /**
+     * @brief Get the HDR format of the screen.
+     *
+     * @return DM_OK means set success, others means set failed.
+     */
+    DMError GetScreenHDRFormat(ScreenHDRFormat& hdrFormat) const;
+
+    /**
+     * @brief Set the HDR format of the screen.
+     *
+     * @return DM_OK means set success, others means set failed.
+     */
+    DMError SetScreenHDRFormat(int32_t modeIdx);
+
+    /**
+     * @brief Get the supported color space of the screen.
+     *
+     * @param colorSpaces Supported color space of the screen.
+     * @return DM_OK means get success, others means get failed.
+     */
+    DMError GetSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces) const;
+
+    /**
+     * @brief Get the color space of the screen.
+     *
+     * @param colorSpace Color space of the screen.
+     * @return DM_OK means get success, others means get failed.
+     */
+    DMError GetScreenColorSpace(CM_ColorSpaceType& colorSpace) const;
+
+    /**
+     * @brief Set the color space of the screen.
+     *
+     * @param colorSpace Color space of the screen.
+     * @return DM_OK means set success, others means set failed.
+     */
+    DMError SetScreenColorSpace(CM_ColorSpaceType colorSpace);
 protected:
     // No more methods or variables can be defined here.
     explicit Screen(sptr<ScreenInfo> info);
