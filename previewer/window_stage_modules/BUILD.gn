@@ -58,6 +58,11 @@ gen_js_src_binary("window_stage") {
 }
 
 ohos_shared_library("windowstage") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   if (is_mingw) {
     defines = [ "WINDOWS_PLATFORM" ]
   } else {

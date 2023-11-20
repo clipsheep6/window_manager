@@ -35,6 +35,11 @@ gen_js_obj("window_stage_abc") {
 }
 
 ohos_shared_library("windowstage") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   sources = [ "window_stage_module.cpp" ]
 
   configs = [ "../../../../../resources/config/build:coverage_flags" ]

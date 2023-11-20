@@ -84,6 +84,11 @@ config("window_extension_unittest_common_public_config") {
 }
 
 ohos_static_library("window_extension_unittest_common") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   visibility = [ ":*" ]
   testonly = true
 

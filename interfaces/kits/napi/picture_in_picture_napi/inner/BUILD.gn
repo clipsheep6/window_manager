@@ -20,6 +20,11 @@ config("pip_manager_config") {
 }
 
 ohos_shared_library("pip_napi") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = true
+  }
   sources = [
     "js_pip_manager.cpp",
     "js_pip_module.cpp",
