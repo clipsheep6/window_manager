@@ -167,6 +167,138 @@ HWTEST_F(ScreenSessionTest, SetScreenGamutMap, Function | SmallTest | Level2)
 }
 
 /**
+ * @tc.name: GetPixelFormat
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionTest, GetPixelFormat, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "ScreenSessionTest: GetPixelFormat start";
+    sptr<ScreenSession> session = new(std::nothrow) ScreenSession();
+    ASSERT_NE(session, nullptr);
+
+    GraphicPixelFormat pixelFormat;
+    DMError res = session->GetPixelFormat(pixelFormat);
+    ASSERT_EQ(res, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
+    GTEST_LOG_(INFO) << "ScreenSessionTest: GetPixelFormat end";
+}
+
+/**
+ * @tc.name: SetPixelFormat
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionTest, SetPixelFormat, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "ScreenSessionTest: SetPixelFormat start";
+    sptr<ScreenSession> session = new(std::nothrow) ScreenSession();
+    ASSERT_NE(session, nullptr);
+
+    GraphicPixelFormat pixelFormat = GraphicPixelFormat::GRAPHIC_PIXEL_FMT_RGBA_8888;
+    DMError res = session->SetPixelFormat(pixelFormat);
+    ASSERT_EQ(res, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
+    GTEST_LOG_(INFO) << "ScreenSessionTest: SetPixelFormat end";
+}
+
+/**
+ * @tc.name: GetSupportedHDRFormats
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionTest, GetSupportedHDRFormats, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "ScreenSessionTest: GetSupportedHDRFormats start";
+    std::vector<ScreenHDRFormat> hdrFormats;
+    sptr<ScreenSession> session = new(std::nothrow) ScreenSession();
+    DMError ret = session->GetSupportedHDRFormats(hdrFormats);
+    ASSERT_EQ(ret, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
+    GTEST_LOG_(INFO) << "ScreenSessionTest: GetSupportedHDRFormats end";
+}
+
+/**
+ * @tc.name: GetScreenHDRFormat
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionTest, GetScreenHDRFormat, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "ScreenSessionTest: GetScreenHDRFormat start";
+    sptr<ScreenSession> session = new(std::nothrow) ScreenSession();
+    ASSERT_NE(session, nullptr);
+
+    ScreenHDRFormat hdrFormat;
+    DMError res = session->GetScreenHDRFormat(hdrFormat);
+    ASSERT_EQ(res, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
+    GTEST_LOG_(INFO) << "ScreenSessionTest: GetScreenHDRFormat end";
+}
+
+/**
+ * @tc.name: SetScreenHDRFormat
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionTest, SetScreenHDRFormat, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "ScreenSessionTest: SetScreenHDRFormat start";
+    sptr<ScreenSession> session = new(std::nothrow) ScreenSession();
+    ASSERT_NE(session, nullptr);
+
+    ScreenHDRFormat hdrFormat = ScreenHDRFormat::HDR10;
+    DMError res = session->SetScreenHDRFormat(hdrFormat);
+    ASSERT_EQ(res, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
+    GTEST_LOG_(INFO) << "ScreenSessionTest: SetScreenHDRFormat end";
+}
+
+/**
+ * @tc.name: GetSupportedColorSpaces
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionTest, GetSupportedColorSpaces, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "ScreenSessionTest: GetSupportedColorSpaces start";
+    std::vector<GraphicCM_ColorSpaceType> colorSpaces;
+    sptr<ScreenSession> session = new(std::nothrow) ScreenSession();
+    DMError ret = session->GetSupportedColorSpaces(colorSpaces);
+    ASSERT_EQ(ret, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
+    GTEST_LOG_(INFO) << "ScreenSessionTest: GetSupportedColorSpaces end";
+}
+
+/**
+ * @tc.name: GetScreenColorSpace
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionTest, GetScreenColorSpace, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "ScreenSessionTest: GetScreenColorSpace start";
+    sptr<ScreenSession> session = new(std::nothrow) ScreenSession();
+    ASSERT_NE(session, nullptr);
+
+    GraphicCM_ColorSpaceType colorSpace;
+    DMError res = session->GetScreenColorSpace(colorSpace);
+    ASSERT_EQ(res, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
+    GTEST_LOG_(INFO) << "ScreenSessionTest: GetScreenColorSpace end";
+}
+
+/**
+ * @tc.name: SetScreenColorSpace
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionTest, SetScreenColorSpace, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "ScreenSessionTest: SetScreenColorSpace start";
+    sptr<ScreenSession> session = new(std::nothrow) ScreenSession();
+    ASSERT_NE(session, nullptr);
+
+    GraphicCM_ColorSpaceType colorSpace = GraphicCM_ColorSpaceType::GRAPHIC_CM_SRGB_FULL;
+    DMError res = session->SetScreenColorSpace(colorSpace);
+    ASSERT_EQ(res, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
+    GTEST_LOG_(INFO) << "ScreenSessionTest: SetScreenColorSpace end";
+}
+
+/**
  * @tc.name: InitRSDisplayNode
  * @tc.desc: normal function
  * @tc.type: FUNC
