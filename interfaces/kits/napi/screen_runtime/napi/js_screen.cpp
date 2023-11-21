@@ -284,9 +284,9 @@ napi_value JsScreen::OnGetSupportedColorSpaces(napi_env env, napi_callback_info 
     return result;
 }
 
-napi_value JsScreen::GetSupportedHDRFormat(napi_env env, napi_callback_info info)
+napi_value JsScreen::GetSupportedHDRFormats(napi_env env, napi_callback_info info)
 {
-    WLOGI("GetSupportedHDRFormat is called");
+    WLOGI("GetSupportedHDRFormats is called");
     JsScreen* me = CheckParamsAndGetThis<JsScreen>(env, info);
     return (me != nullptr) ? me->OnGetSupportedHDRFormat(env, info) : nullptr;
 }

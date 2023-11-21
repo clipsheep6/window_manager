@@ -79,14 +79,14 @@ const std::map<CM_ColorSpaceType, ApiColorSpaceType> NATIVE_TO_JS_COLOR_SPACE_TY
 };
 
 enum class ApiHDRFormat : uint32_t {
-    UNKNOWN = 0,
+    NONE = 0,
     HDR10 = 1,
     HLG = 2,
     HDR_VIVID= 3,
 };
 
 const std::map<ScreenHDRFormat, ApiHDRFormat> NATIVE_TO_JS_HDR_FORMAT_TYPE_MAP {
-    { ScreenHDRFormat::NOT_SUPPORT_HDR,     ApiHDRFormat::UNKNOWN },
+    { ScreenHDRFormat::NOT_SUPPORT_HDR,     ApiHDRFormat::NONE },
     { ScreenHDRFormat::HDR10,               ApiHDRFormat::HDR10 },
     { ScreenHDRFormat::HLG,                 ApiHDRFormat::HLG },
     { ScreenHDRFormat::HDR_VIVID,           ApiHDRFormat::HDR_VIVID },
@@ -108,7 +108,7 @@ public:
     static napi_value SetOrientation(napi_env env, napi_callback_info info);
     static napi_value SetDensityDpi(napi_env env, napi_callback_info info);
     static napi_value GetSupportedColorSpaces(napi_env env, napi_callback_info info);
-    static napi_value GetSupportedHDRFormat(napi_env env, napi_callback_info info);
+    static napi_value GetSupportedHDRFormats(napi_env env, napi_callback_info info);
 
 private:
     sptr<Screen> screen_ = nullptr;
