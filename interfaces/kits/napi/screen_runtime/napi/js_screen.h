@@ -83,7 +83,6 @@ enum class ApiHDRFormat : uint32_t {
     HDR10 = 1,
     HLG = 2,
     HDR_VIVID= 3,
-    TYPE_END
 };
 
 const std::map<ScreenHDRFormat, ApiHDRFormat> NATIVE_TO_JS_HDR_FORMAT_TYPE_MAP {
