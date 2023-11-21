@@ -141,6 +141,100 @@ HWTEST_F(DisplayManagerAdapterTest, SetScreenColorTransform, Function | SmallTes
 }
 
 /**
+ * @tc.name: GetPixelFormat
+ * @tc.desc: test success
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerAdapterTest, GetPixelFormat, Function | SmallTest | Level2)
+{
+    GraphicPixelFormat pixelFormat = GraphicPixelFormat::GRAPHIC_PIXEL_FMT_RGBA_8888;
+    DMError err = SingletonContainer::Get<ScreenManagerAdapter>().GetPixelFormat(0, pixelFormat);
+    ASSERT_EQ(err, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
+}
+
+/**
+ * @tc.name: SetPixelFormat
+ * @tc.desc: test success
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerAdapterTest, SetPixelFormat, Function | SmallTest | Level2)
+{
+    GraphicPixelFormat pixelFormat = GraphicPixelFormat::GRAPHIC_PIXEL_FMT_RGBA_8888;
+    DMError err = SingletonContainer::Get<ScreenManagerAdapter>().SetPixelFormat(0, pixelFormat);
+    ASSERT_EQ(err, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
+}
+
+/**
+ * @tc.name: GetSupportedHDRFormats
+ * @tc.desc: test success
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerAdapterTest, GetSupportedHDRFormats, Function | SmallTest | Level2)
+{
+    std::vector<ScreenHDRFormat> hdrFormats;
+    SingletonContainer::Get<ScreenManagerAdapter>().GetSupportedHDRFormats(0, hdrFormats);
+}
+
+/**
+ * @tc.name: GetScreenHDRFormat
+ * @tc.desc: test success
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerAdapterTest, GetScreenHDRFormat, Function | SmallTest | Level2)
+{
+    ScreenHDRFormat hdrFormat = ScreenHDRFormat::HDR10;
+    DMError err = SingletonContainer::Get<ScreenManagerAdapter>().GetScreenHDRFormat(0, hdrFormat);
+    ASSERT_EQ(err, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
+}
+
+/**
+ * @tc.name: SetScreenHDRFormat
+ * @tc.desc: test success
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerAdapterTest, SetScreenHDRFormat, Function | SmallTest | Level2)
+{
+    ScreenHDRFormat hdrFormat = ScreenHDRFormat::HDR10;
+    DMError err = SingletonContainer::Get<ScreenManagerAdapter>().SetScreenHDRFormat(0, hdrFormat);
+    ASSERT_EQ(err, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
+}
+
+/**
+ * @tc.name: GetSupportedColorSpaces
+ * @tc.desc: test success
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerAdapterTest, GetSupportedColorSpaces, Function | SmallTest | Level2)
+{
+    std::vector<GraphicCM_ColorSpaceType> colorSpaces;
+    SingletonContainer::Get<ScreenManagerAdapter>().GetSupportedColorSpaces(0, colorSpaces);
+}
+
+/**
+ * @tc.name: GetScreenColorSpace
+ * @tc.desc: test success
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerAdapterTest, GetScreenColorSpace, Function | SmallTest | Level2)
+{
+    GraphicCM_ColorSpaceType colorSpace = GraphicCM_ColorSpaceType::CM_SRGB_FULL;
+    DMError err = SingletonContainer::Get<ScreenManagerAdapter>().GetScreenColorSpace(0, colorSpace);
+    ASSERT_EQ(err, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
+}
+
+/**
+ * @tc.name: SetScreenColorSpace
+ * @tc.desc: test success
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerAdapterTest, SetScreenColorSpace, Function | SmallTest | Level2)
+{
+    GraphicCM_ColorSpaceType colorSpace = GraphicCM_ColorSpaceType::CM_SRGB_FULL;
+    DMError err = SingletonContainer::Get<ScreenManagerAdapter>().SetScreenColorSpace(0, colorSpace);
+    ASSERT_EQ(err, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
+}
+
+/**
  * @tc.name: SetFreeze
  * @tc.desc: test success
  * @tc.type: FUNC

@@ -53,6 +53,15 @@ public:
     DMError SetScreenGamutMap(ScreenId screenId, ScreenGamutMap gamutMap) override;
     DMError SetScreenColorTransform(ScreenId screenId) override;
 
+    DMError GetPixelFormat(ScreenId screenId, GraphicPixelFormat& pixelFormat) override;
+    DMError SetPixelFormat(ScreenId screenId, GraphicPixelFormat pixelFormat) override;
+    DMError GetSupportedHDRFormats(ScreenId screenId, std::vector<ScreenHDRFormat>& hdrFormats) override;
+    DMError GetScreenHDRFormat(ScreenId screenId, ScreenHDRFormat& hdrFormat) override;
+    DMError SetScreenHDRFormat(ScreenId screenId, int32_t modeIdx) override;
+    DMError GetSupportedColorSpaces(ScreenId screenId, std::vector<GraphicCM_ColorSpaceType>& colorSpaces) override;
+    DMError GetScreenColorSpace(ScreenId screenId, GraphicCM_ColorSpaceType& colorSpace) override;
+    DMError SetScreenColorSpace(ScreenId screenId, GraphicCM_ColorSpaceType colorSpace) override;
+
     void DumpAllScreensInfo(std::string& dumpInfo) override;
     void DumpSpecialScreenInfo(ScreenId id, std::string& dumpInfo) override;
 
@@ -98,8 +107,7 @@ public:
     std::vector<DisplayId> GetAllDisplayIds() override;
     virtual sptr<ScreenInfo> GetScreenInfoById(ScreenId screenId) override;
     virtual DMError GetAllScreenInfos(std::vector<sptr<ScreenInfo>>& screenInfos) override;
-    virtual DMError GetScreenSupportedColorGamuts(ScreenId screenId,
-        std::vector<ScreenColorGamut>& colorGamuts) override;
+    DMError GetScreenSupportedColorGamuts(ScreenId screenId, std::vector<ScreenColorGamut>& colorGamuts) override;
     DMError IsScreenRotationLocked(bool& isLocked) override;
     DMError SetScreenRotationLocked(bool isLocked) override;
     DMError SetOrientation(ScreenId screenId, Orientation orientation) override;
