@@ -41,7 +41,6 @@ enum class ApiColorSpaceType : uint32_t {
     LINEAR_SRGB = 12,
     LINEAR_P3 = 15,
     LINEAR_BT2020 = 14,
-    TYPE_END
 };
 
 const std::map<CM_ColorSpaceType, ApiColorSpaceType> NATIVE_TO_JS_COLOR_SPACE_TYPE_MAP {
