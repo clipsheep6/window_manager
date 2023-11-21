@@ -69,7 +69,7 @@ WMError PictureInPictureController::CreatePictureInPictureWindow()
         WLOGFE("mainWindowXComponentController or main window is nullptr");
         return WMError::WM_ERROR_PIP_CREATE_FAILED;
     }
-    GetXComponentPositionAndSize();
+    UpdateXComponentPositionAndSize();
     windowOption->SetWindowName(PIP_WINDOW_NAME);
     windowOption->SetWindowType(WindowType::WINDOW_TYPE_PIP);
     windowOption->SetWindowMode(WindowMode::WINDOW_MODE_PIP);
@@ -169,13 +169,7 @@ WMError PictureInPictureController::StopPictureInPicture(bool needAnim)
             WLOGFE("session is null");
             return WMError::WM_ERROR_PIP_INTERNAL_ERROR;
         }
-        if (session->mainWindowXComponentController_ != nullptr && session->pipXComponentController_ != nullptr) {
-            XComponentControllerErrorCode errorCode =
-                session->mainWindowXComponentController_->ResetExtController(session->pipXComponentController_);
-            if (errorCode != XComponentControllerErrorCode::XCOMPONENT_CONTROLLER_NO_ERROR) {
-                WLOGFE("swap xComponent failed, errorCode: %{public}u", erorrCode);
-            }
-        }
+        session->ResetExtController();
         WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(session->window_->Destroy());
         if (ret != WmErrorCode::WM_OK) {
             PictureInPictureManager::SetPipWindowState(PipWindowState::STATE_UNDEFINED);
@@ -315,7 +309,7 @@ void PictureInPictureController::RestorePictureInPictureWindow()
     WLOGFI("restore pip main window finished");
 }
 
-void PictureInPictureController::GetXComponentPositionAndSize()
+void PictureInPictureController::UpdateXComponentPositionAndSize()
 {
     float posX = 0;
     float posY = 0;
@@ -344,6 +338,17 @@ void PictureInPictureController::GetXComponentPositionAndSize()
         windowRect_.width_, windowRect_.height_, windowRect_.posX_, windowRect_.posY_);
 }
 
+void PictureInPictureController::ResetExtController()
+{
+    if (mainWindowXComponentController_ != nullptr && pipXComponentController_ != nullptr) {
+        XComponentControllerErrorCode errorCode =
+                mainWindowXComponentController_->ResetExtController(pipXComponentController_);
+        if (errorCode != XComponentControllerErrorCode::XCOMPONENT_CONTROLLER_NO_ERROR) {
+            WLOGFE("swap xComponent failed, errorCode: %{public}u", errorCode);
+        }
+    }
+}
+
 WMError PictureInPictureController::SetXComponentController(std::shared_ptr<XComponentController> xComponentController)
 {
     pipXComponentController_ = xComponentController;
@@ -358,7 +363,7 @@ WMError PictureInPictureController::SetXComponentController(std::shared_ptr<XCom
     XComponentControllerErrorCode errorCode =
         mainWindowXComponentController_->SetExtController(pipXComponentController_);
     if (errorCode != XComponentControllerErrorCode::XCOMPONENT_CONTROLLER_NO_ERROR) {
-        WLOGFE("swap xComponent failed, errorCode: %{public}u", erorrCode);
+        WLOGFE("swap xComponent failed, errorCode: %{public}u", errorCode);
         return WMError::WM_ERROR_PIP_INTERNAL_ERROR;
     }
     if (pipLifeCycleListener_ != nullptr) {

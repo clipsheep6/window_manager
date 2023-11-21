@@ -62,7 +62,8 @@ public:
 private:
     WMError CreatePictureInPictureWindow();
     WMError ShowPictureInPictureWindow();
-    void GetXComponentPositionAndSize();
+    void UpdateXComponentPositionAndSize();
+    void ResetExtController();
     wptr<PictureInPictureController> weakRef_ = nullptr;
     sptr<PipOption> pipOption_;
     sptr<IPiPLifeCycle> pipLifeCycleListener_;

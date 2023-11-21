@@ -221,13 +221,11 @@ void PictureInPictureManager::AutoStartPipWindow()
 sptr<PictureInPictureController> PictureInPictureManager::GetPipControllerInfo(int32_t windowId)
 {
     WLOGD("GetPipControllerInfo is called");
-    if (PictureInPictureManager::windowToControllerMap_.empty() ||
-        PictureInPictureManager::windowToControllerMap_.find(windowId) ==
-        PictureInPictureManager::windowToControllerMap_.end()) {
+    if (windowToControllerMap_.empty() || windowToControllerMap_.find(windowId) == windowToControllerMap_.end()) {
         WLOGE("GetPipControllerInfo error, %{public}d not registered!", windowId);
         return nullptr;
     }
-    return PictureInPictureManager::windowToControllerMap_[windowId];
+    return windowToControllerMap_[windowId];
 }
 }
 }

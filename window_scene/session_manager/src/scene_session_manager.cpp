@@ -5185,7 +5185,7 @@ WSError SceneSessionManager::RecoveryPullPiPMainWindow(const int32_t& persistent
     }
     auto task = [this, scnSession, rect]() {
         showPiPMainWindowFunc_(scnSession->GetParentPersistentId());
-        WSRect rectPos = {rect.posX_, rect.posY_, rect.width_, rect.height_};
+        WSRect rectPos = SessionHelper::TransferToWSRect(rect);
         scnSession->UpdateSessionRect(rectPos, SizeChangeReason::RECOVER);
         return WSError::WS_OK;
     };
