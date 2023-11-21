@@ -396,14 +396,14 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_GET_SUPPORTED_COLOR_SPACE: {
             ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            std::vector<CM_ColorSpaceType> colorSpaces;
+            std::vector<GraphicCM_ColorSpaceType> colorSpaces;
             DMError ret = GetSupportedColorSpaces(screenId, colorSpaces);
             reply.WriteInt32(static_cast<int32_t>(ret));
             if (ret != DMError::DM_OK) {
                 break;
             }
-            MarshallingHelper::MarshallingVectorObj<CM_ColorSpaceType>(reply, colorSpaces,
-                [](Parcel& parcel, const CM_ColorSpaceType& color) {
+            MarshallingHelper::MarshallingVectorObj<GraphicCM_ColorSpaceType>(reply, colorSpaces,
+                [](Parcel& parcel, const GraphicCM_ColorSpaceType& color) {
                     return parcel.WriteUint32(static_cast<uint32_t>(color));
                 }
             );
@@ -411,7 +411,7 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_GET_COLOR_SPACE: {
             ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            CM_ColorSpaceType colorSpace;
+            GraphicCM_ColorSpaceType colorSpace;
             DMError ret = GetScreenColorSpace(screenId, colorSpace);
             reply.WriteInt32(static_cast<int32_t>(ret));
             if (ret != DMError::DM_OK) {
@@ -422,7 +422,7 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_SET_COLOR_SPACE: {
             ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            CM_ColorSpaceType colorSpace = static_cast<CM_ColorSpaceType>(data.ReadUint32());
+            GraphicCM_ColorSpaceType colorSpace = static_cast<GraphicCM_ColorSpaceType>(data.ReadUint32());
             DMError ret = SetScreenColorSpace(screenId, colorSpace);
             reply.WriteInt32(static_cast<int32_t>(ret));
             break;

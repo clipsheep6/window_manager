@@ -273,7 +273,7 @@ HWTEST_F(ScreenTest, GetSupportedColorSpaces01, Function | SmallTest | Level2)
 {
     std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
     EXPECT_CALL(m->Mock(), GetSupportedColorSpaces(_, _)).Times(1).WillOnce(Return(DMError::DM_OK));
-    std::vector<CM_ColorSpaceType> colorSpaces;
+    std::vector<GraphicCM_ColorSpaceType> colorSpaces;
     auto res = screen_->GetSupportedColorSpaces(colorSpaces);
     ASSERT_EQ(DMError::DM_OK, res);
 }
@@ -287,7 +287,7 @@ HWTEST_F(ScreenTest, GetScreenColorSpace01, Function | SmallTest | Level2)
 {
     std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
     EXPECT_CALL(m->Mock(), GetScreenColorSpace(_, _)).Times(1).WillOnce(Return(DMError::DM_OK));
-    CM_ColorSpaceType colorSpace = CM_ColorSpaceType::CM_SRGB_FULL;
+    GraphicCM_ColorSpaceType colorSpace = GraphicCM_ColorSpaceType::CM_SRGB_FULL;
     auto res = screen_->GetScreenColorSpace(colorSpace);
     ASSERT_EQ(DMError::DM_OK, res);
 }
@@ -301,7 +301,7 @@ HWTEST_F(ScreenTest, SetScreenColorSpace01, Function | SmallTest | Level2)
 {
     std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
     EXPECT_CALL(m->Mock(), SetScreenColorSpace(_, _)).Times(1).WillOnce(Return(DMError::DM_OK));
-    CM_ColorSpaceType colorSpace = CM_ColorSpaceType::CM_SRGB_FULL;
+    GraphicCM_ColorSpaceType colorSpace = GraphicCM_ColorSpaceType::CM_SRGB_FULL;
     auto res = screen_->SetScreenColorSpace(colorSpace);
     ASSERT_EQ(DMError::DM_OK, res);
 }

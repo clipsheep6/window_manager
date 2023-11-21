@@ -160,15 +160,15 @@ public:
         return DMError::DM_OK;
     }
     virtual DMError GetSupportedColorSpaces(ScreenId screenId,
-        std::vector<CM_ColorSpaceType>& colorSpaces)
+        std::vector<GraphicCM_ColorSpaceType>& colorSpaces)
     {
         return DMError::DM_OK;
     }
-    virtual DMError GetScreenColorSpace(ScreenId screenId, CM_ColorSpaceType& colorSpace)
+    virtual DMError GetScreenColorSpace(ScreenId screenId, GraphicCM_ColorSpaceType& colorSpace)
     {
         return DMError::DM_OK;
     }
-    virtual DMError SetScreenColorSpace(ScreenId screenId, CM_ColorSpaceType colorSpace)
+    virtual DMError SetScreenColorSpace(ScreenId screenId, GraphicCM_ColorSpaceType colorSpace)
     {
         return DMError::DM_OK;
     }

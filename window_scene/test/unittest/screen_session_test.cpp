@@ -257,7 +257,7 @@ HWTEST_F(ScreenSessionTest, SetScreenHDRFormat, Function | SmallTest | Level2)
 HWTEST_F(ScreenSessionTest, GetSupportedColorSpaces, Function | SmallTest | Level2)
 {
     GTEST_LOG_(INFO) << "ScreenSessionTest: GetSupportedColorSpaces start";
-    std::vector<CM_ColorSpaceType> colorSpaces;
+    std::vector<GraphicCM_ColorSpaceType> colorSpaces;
     sptr<ScreenSession> session = new(std::nothrow) ScreenSession();
     DMError ret = session->GetSupportedColorSpaces(colorSpaces);
     ASSERT_EQ(ret, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
@@ -275,7 +275,7 @@ HWTEST_F(ScreenSessionTest, GetScreenColorSpace, Function | SmallTest | Level2)
     sptr<ScreenSession> session = new(std::nothrow) ScreenSession();
     ASSERT_NE(session, nullptr);
 
-    CM_ColorSpaceType colorSpace;
+    GraphicCM_ColorSpaceType colorSpace;
     DMError res = session->GetScreenColorSpace(colorSpace);
     ASSERT_EQ(res, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
     GTEST_LOG_(INFO) << "ScreenSessionTest: GetScreenColorSpace end";
@@ -292,7 +292,7 @@ HWTEST_F(ScreenSessionTest, SetScreenColorSpace, Function | SmallTest | Level2)
     sptr<ScreenSession> session = new(std::nothrow) ScreenSession();
     ASSERT_NE(session, nullptr);
 
-    CM_ColorSpaceType colorSpace = CM_ColorSpaceType::CM_SRGB_FULL;
+    GraphicCM_ColorSpaceType colorSpace = GraphicCM_ColorSpaceType::CM_SRGB_FULL;
     DMError res = session->SetScreenColorSpace(colorSpace);
     ASSERT_EQ(res, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
     GTEST_LOG_(INFO) << "ScreenSessionTest: SetScreenColorSpace end";

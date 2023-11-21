@@ -146,7 +146,7 @@ DMError ScreenManagerAdapter::SetScreenHDRFormat(ScreenId screenId, int32_t mode
 }
 
 DMError ScreenManagerAdapter::GetSupportedColorSpaces(ScreenId screenId,
-    std::vector<CM_ColorSpaceType>& colorSpaces)
+    std::vector<GraphicCM_ColorSpaceType>& colorSpaces)
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
 
@@ -154,7 +154,7 @@ DMError ScreenManagerAdapter::GetSupportedColorSpaces(ScreenId screenId,
 }
 
 DMError ScreenManagerAdapter::GetScreenColorSpace(ScreenId screenId,
-    CM_ColorSpaceType& colorSpace)
+    GraphicCM_ColorSpaceType& colorSpace)
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
 
@@ -162,7 +162,7 @@ DMError ScreenManagerAdapter::GetScreenColorSpace(ScreenId screenId,
 }
 
 DMError ScreenManagerAdapter::SetScreenColorSpace(ScreenId screenId,
-    CM_ColorSpaceType colorSpace)
+    GraphicCM_ColorSpaceType colorSpace)
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
 

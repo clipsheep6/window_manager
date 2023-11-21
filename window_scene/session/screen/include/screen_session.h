@@ -103,9 +103,9 @@ public:
     DMError GetSupportedHDRFormats(std::vector<ScreenHDRFormat>& hdrFormats);
     DMError GetScreenHDRFormat(ScreenHDRFormat& hdrFormat);
     DMError SetScreenHDRFormat(int32_t modeIdx);
-    DMError GetSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces);
-    DMError GetScreenColorSpace(CM_ColorSpaceType& colorSpace);
-    DMError SetScreenColorSpace(CM_ColorSpaceType colorSpace);
+    DMError GetSupportedColorSpaces(std::vector<GraphicCM_ColorSpaceType>& colorSpaces);
+    DMError GetScreenColorSpace(GraphicCM_ColorSpaceType& colorSpace);
+    DMError SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace);
 
     bool HasPrivateSessionForeground() const;
     void SetPrivateSessionForeground(bool hasPrivate);

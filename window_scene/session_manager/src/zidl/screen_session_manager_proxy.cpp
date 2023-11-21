@@ -392,7 +392,7 @@ DMError ScreenSessionManagerProxy::SetScreenHDRFormat(ScreenId screenId, int32_t
 }
 
 DMError ScreenSessionManagerProxy::GetSupportedColorSpaces(ScreenId screenId,
-    std::vector<CM_ColorSpaceType>& colorSpaces)
+    std::vector<GraphicCM_ColorSpaceType>& colorSpaces)
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -420,18 +420,18 @@ DMError ScreenSessionManagerProxy::GetSupportedColorSpaces(ScreenId screenId,
     if (ret != DMError::DM_OK) {
         return ret;
     }
-    MarshallingHelper::UnmarshallingVectorObj<CM_ColorSpaceType>(reply, colorSpaces,
-        [](Parcel& parcel, CM_ColorSpaceType& color) {
+    MarshallingHelper::UnmarshallingVectorObj<GraphicCM_ColorSpaceType>(reply, colorSpaces,
+        [](Parcel& parcel, GraphicCM_ColorSpaceType& color) {
             uint32_t value;
             bool res = parcel.ReadUint32(value);
-            color = static_cast<CM_ColorSpaceType>(value);
+            color = static_cast<GraphicCM_ColorSpaceType>(value);
             return res;
         }
     );
     return ret;
 }
 
-DMError ScreenSessionManagerProxy::GetScreenColorSpace(ScreenId screenId, CM_ColorSpaceType& colorSpace)
+DMError ScreenSessionManagerProxy::GetScreenColorSpace(ScreenId screenId, GraphicCM_ColorSpaceType& colorSpace)
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -459,11 +459,11 @@ DMError ScreenSessionManagerProxy::GetScreenColorSpace(ScreenId screenId, CM_Col
     if (ret != DMError::DM_OK) {
         return ret;
     }
-    colorSpace = static_cast<CM_ColorSpaceType>(reply.ReadUint32());
+    colorSpace = static_cast<GraphicCM_ColorSpaceType>(reply.ReadUint32());
     return ret;
 }
 
-DMError ScreenSessionManagerProxy::SetScreenColorSpace(ScreenId screenId, CM_ColorSpaceType colorSpace)
+DMError ScreenSessionManagerProxy::SetScreenColorSpace(ScreenId screenId, GraphicCM_ColorSpaceType colorSpace)
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {

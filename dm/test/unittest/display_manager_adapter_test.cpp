@@ -206,7 +206,7 @@ HWTEST_F(DisplayManagerAdapterTest, SetScreenHDRFormat, Function | SmallTest | L
  */
 HWTEST_F(DisplayManagerAdapterTest, GetSupportedColorSpaces, Function | SmallTest | Level2)
 {
-    std::vector<CM_ColorSpaceType> colorSpaces;
+    std::vector<GraphicCM_ColorSpaceType> colorSpaces;
     SingletonContainer::Get<ScreenManagerAdapter>().GetSupportedColorSpaces(0, colorSpaces);
 }
 
@@ -217,7 +217,7 @@ HWTEST_F(DisplayManagerAdapterTest, GetSupportedColorSpaces, Function | SmallTes
  */
 HWTEST_F(DisplayManagerAdapterTest, GetScreenColorSpace, Function | SmallTest | Level2)
 {
-    CM_ColorSpaceType colorSpace = CM_ColorSpaceType::CM_SRGB_FULL;
+    GraphicCM_ColorSpaceType colorSpace = GraphicCM_ColorSpaceType::CM_SRGB_FULL;
     DMError err = SingletonContainer::Get<ScreenManagerAdapter>().GetScreenColorSpace(0, colorSpace);
     ASSERT_EQ(err, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
 }
@@ -229,7 +229,7 @@ HWTEST_F(DisplayManagerAdapterTest, GetScreenColorSpace, Function | SmallTest | 
  */
 HWTEST_F(DisplayManagerAdapterTest, SetScreenColorSpace, Function | SmallTest | Level2)
 {
-    CM_ColorSpaceType colorSpace = CM_ColorSpaceType::CM_SRGB_FULL;
+    GraphicCM_ColorSpaceType colorSpace = GraphicCM_ColorSpaceType::CM_SRGB_FULL;
     DMError err = SingletonContainer::Get<ScreenManagerAdapter>().SetScreenColorSpace(0, colorSpace);
     ASSERT_EQ(err, DMError::DM_ERROR_RENDER_SERVICE_FAILED);
 }

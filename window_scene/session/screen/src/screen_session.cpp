@@ -653,7 +653,7 @@ DMError ScreenSession::SetScreenHDRFormat(int32_t modeIdx)
     return DMError::DM_OK;
 }
 
-DMError ScreenSession::GetSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces)
+DMError ScreenSession::GetSupportedColorSpaces(std::vector<GraphicCM_ColorSpaceType>& colorSpaces)
 {
     auto ret = RSInterfaces::GetInstance().GetScreenSupportedColorSpaces(rsId_, colorSpaces);
     if (ret != StatusCode::SUCCESS) {
@@ -666,7 +666,7 @@ DMError ScreenSession::GetSupportedColorSpaces(std::vector<CM_ColorSpaceType>& c
     return DMError::DM_OK;
 }
 
-DMError ScreenSession::GetScreenColorSpace(CM_ColorSpaceType& colorSpace)
+DMError ScreenSession::GetScreenColorSpace(GraphicCM_ColorSpaceType& colorSpace)
 {
     auto ret = RSInterfaces::GetInstance().GetScreenColorSpace(rsId_, colorSpace);
     if (ret != StatusCode::SUCCESS) {
@@ -678,9 +678,9 @@ DMError ScreenSession::GetScreenColorSpace(CM_ColorSpaceType& colorSpace)
     return DMError::DM_OK;
 }
 
-DMError ScreenSession::SetScreenColorSpace(CM_ColorSpaceType colorSpace)
+DMError ScreenSession::SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace)
 {
-    std::vector<CM_ColorSpaceType> colorSpaces;
+    std::vector<GraphicCM_ColorSpaceType> colorSpaces;
     DMError res = GetSupportedColorSpaces(colorSpaces);
     if (res != DMError::DM_OK) {
         WLOGE("SetScreenColorSpace fail! rsId %{public}" PRIu64"", rsId_);

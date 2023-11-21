@@ -181,17 +181,17 @@ DMError Screen::SetScreenHDRFormat(int32_t modeIdx)
     return SingletonContainer::Get<ScreenManagerAdapter>().SetScreenHDRFormat(GetId(), modeIdx);
 }
 
-DMError Screen::GetSupportedColorSpaces(std::vector<CM_ColorSpaceType>& colorSpaces) const
+DMError Screen::GetSupportedColorSpaces(std::vector<GraphicCM_ColorSpaceType>& colorSpaces) const
 {
     return SingletonContainer::Get<ScreenManagerAdapter>().GetSupportedColorSpaces(GetId(), colorSpaces);
 }
 
-DMError Screen::GetScreenColorSpace(CM_ColorSpaceType& colorSpace) const
+DMError Screen::GetScreenColorSpace(GraphicCM_ColorSpaceType& colorSpace) const
 {
     return SingletonContainer::Get<ScreenManagerAdapter>().GetScreenColorSpace(GetId(), colorSpace);
 }
 
-DMError Screen::SetScreenColorSpace(CM_ColorSpaceType colorSpace)
+DMError Screen::SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace)
 {
     return SingletonContainer::Get<ScreenManagerAdapter>().SetScreenColorSpace(GetId(), colorSpace);
 }

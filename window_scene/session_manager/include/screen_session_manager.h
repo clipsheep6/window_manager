@@ -58,9 +58,9 @@ public:
     DMError GetSupportedHDRFormats(ScreenId screenId, std::vector<ScreenHDRFormat>& hdrFormats) override;
     DMError GetScreenHDRFormat(ScreenId screenId, ScreenHDRFormat& hdrFormat) override;
     DMError SetScreenHDRFormat(ScreenId screenId, int32_t modeIdx) override;
-    DMError GetSupportedColorSpaces(ScreenId screenId, std::vector<CM_ColorSpaceType>& colorSpaces) override;
-    DMError GetScreenColorSpace(ScreenId screenId, CM_ColorSpaceType& colorSpace) override;
-    DMError SetScreenColorSpace(ScreenId screenId, CM_ColorSpaceType colorSpace) override;
+    DMError GetSupportedColorSpaces(ScreenId screenId, std::vector<GraphicCM_ColorSpaceType>& colorSpaces) override;
+    DMError GetScreenColorSpace(ScreenId screenId, GraphicCM_ColorSpaceType& colorSpace) override;
+    DMError SetScreenColorSpace(ScreenId screenId, GraphicCM_ColorSpaceType colorSpace) override;
 
     void DumpAllScreensInfo(std::string& dumpInfo) override;
     void DumpSpecialScreenInfo(ScreenId id, std::string& dumpInfo) override;

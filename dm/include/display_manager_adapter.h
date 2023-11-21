@@ -129,9 +129,9 @@ public:
     virtual DMError GetSupportedHDRFormats(ScreenId screenId, std::vector<ScreenHDRFormat>& hdrFormats);
     virtual DMError GetScreenHDRFormat(ScreenId screenId, ScreenHDRFormat& hdrFormat);
     virtual DMError SetScreenHDRFormat(ScreenId screenId, int32_t modeIdx);
-    virtual DMError GetSupportedColorSpaces(ScreenId screenId, std::vector<CM_ColorSpaceType>& colorSpaces);
-    virtual DMError GetScreenColorSpace(ScreenId screenId, CM_ColorSpaceType& colorSpace);
-    virtual DMError SetScreenColorSpace(ScreenId screenId, CM_ColorSpaceType colorSpace);
+    virtual DMError GetSupportedColorSpaces(ScreenId screenId, std::vector<GraphicCM_ColorSpaceType>& colorSpaces);
+    virtual DMError GetScreenColorSpace(ScreenId screenId, GraphicCM_ColorSpaceType& colorSpace);
+    virtual DMError SetScreenColorSpace(ScreenId screenId, GraphicCM_ColorSpaceType colorSpace);
 
     // unique screen
     virtual DMError MakeUniqueScreen(const std::vector<ScreenId>& screenIds);

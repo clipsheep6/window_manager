@@ -259,7 +259,7 @@ napi_value JsScreen::OnGetSupportedColorSpaces(napi_env env, napi_callback_info 
     WLOGI("OnGetSupportedColorSpaces is called");
     NapiAsyncTask::CompleteCallback complete =
         [=](napi_env env, NapiAsyncTask& task, int32_t status) {
-            std::vector<CM_ColorSpaceType> colorSpaces;
+            std::vector<GraphicCM_ColorSpaceType> colorSpaces;
             DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->GetSupportedColorSpaces(colorSpaces));
             if (ret == DmErrorCode::DM_OK) {
                 task.Resolve(env, CreateJsColorSpaceArray(env, colorSpaces));
@@ -413,7 +413,7 @@ napi_value CreateJsScreenModeObject(napi_env env, const sptr<SupportedScreenMode
     return objValue;
 }
 
-napi_value CreateJsColorSpaceArray(napi_env env, const std::vector<CM_ColorSpaceType>& colorSpaces)
+napi_value CreateJsColorSpaceArray(napi_env env, const std::vector<GraphicCM_ColorSpaceType>& colorSpaces)
 {
     WLOGI("JsScreen::CreateJsColorSpaceArray is called");
     std::set<uint32_t> nativeColorSpaces;

@@ -1189,7 +1189,7 @@ DMError ScreenSessionManager::SetScreenHDRFormat(ScreenId screenId, int32_t mode
 }
 
 DMError ScreenSessionManager::GetSupportedColorSpaces(ScreenId screenId,
-    std::vector<CM_ColorSpaceType>& colorSpaces)
+    std::vector<GraphicCM_ColorSpaceType>& colorSpaces)
 {
     WLOGFI("SCB: ScreenSessionManager::GetSupportedColorSpaces ENTER");
     sptr<ScreenSession> screenSession = GetScreenSession(screenId);
@@ -1200,7 +1200,7 @@ DMError ScreenSessionManager::GetSupportedColorSpaces(ScreenId screenId,
     return screenSession->GetSupportedColorSpaces(colorSpaces);
 }
 
-DMError ScreenSessionManager::GetScreenColorSpace(ScreenId screenId, CM_ColorSpaceType& colorSpace)
+DMError ScreenSessionManager::GetScreenColorSpace(ScreenId screenId, GraphicCM_ColorSpaceType& colorSpace)
 {
     WLOGFI("GetScreenColorSpace::ScreenId: %{public}" PRIu64 "", screenId);
     if (screenId == SCREEN_ID_INVALID) {
@@ -1214,7 +1214,7 @@ DMError ScreenSessionManager::GetScreenColorSpace(ScreenId screenId, CM_ColorSpa
     return screenSession->GetScreenColorSpace(colorSpace);
 }
 
-DMError ScreenSessionManager::SetScreenColorSpace(ScreenId screenId, CM_ColorSpaceType colorSpace)
+DMError ScreenSessionManager::SetScreenColorSpace(ScreenId screenId, GraphicCM_ColorSpaceType colorSpace)
 {
     WLOGFI("SetScreenColorSpace::ScreenId: %{public}" PRIu64 ", colorSpace %{public}d", screenId, colorSpace);
     if (screenId == SCREEN_ID_INVALID) {
