@@ -2175,11 +2175,12 @@ void SceneSessionManager::HandleKeepScreenOn(const sptr<SceneSession>& sceneSess
         if (scnSession->keepScreenLock_ == nullptr) {
             return;
         }
-        WLOGI("keep screen on: [%{public}s, %{public}d]", scnSession->GetWindowName().c_str(), requireLock);
+        bool shouldLock = requireLock && IsSessionVisible(scnSession);
+        WLOGI("keep screen on: [%{public}s, %{public}d]", scnSession->GetWindowName().c_str(), shouldLock);
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:HandleKeepScreenOn");
         ErrCode res;
         std::string identity = IPCSkeleton::ResetCallingIdentity();
-        if (requireLock) {
+        if (shouldLock) {
             res = scnSession->keepScreenLock_->Lock();
         } else {
             res = scnSession->keepScreenLock_->UnLock();
@@ -4638,17 +4639,20 @@ WSError SceneSessionManager::PendingSessionToBackgroundForDelegator(const sptr<I
 
 WSError SceneSessionManager::GetFocusSessionToken(sptr<IRemoteObject> &token)
 {
-    WLOGFD("run GetFocusSessionToken with focusedSessionId: %{public}d", focusedSessionId_);
-    auto sceneSession = GetSceneSession(focusedSessionId_);
-    if (sceneSession) {
-        token = sceneSession->GetAbilityToken();
-        if (token == nullptr) {
-            WLOGFE("token is nullptr");
-            return WSError::WS_ERROR_INVALID_PARAM;
+    auto task = [this, &token]() {
+        WLOGFD("run GetFocusSessionToken with focusedSessionId: %{public}d", focusedSessionId_);
+        auto sceneSession = GetSceneSession(focusedSessionId_);
+        if (sceneSession) {
+            token = sceneSession->GetAbilityToken();
+            if (token == nullptr) {
+                WLOGFE("token is nullptr");
+                return WSError::WS_ERROR_INVALID_PARAM;
+            }
+            return WSError::WS_OK;
         }
-        return WSError::WS_OK;
-    }
-    return WSError::WS_ERROR_INVALID_PARAM;
+        return WSError::WS_ERROR_INVALID_PARAM;
+    };
+    return taskScheduler_->PostSyncTask(task);
 }
 
 WSError SceneSessionManager::UpdateSessionAvoidAreaListener(int32_t& persistentId, bool haveListener)
@@ -5479,5 +5483,15 @@ void SceneSessionManager::NotifySessionBackground(const sptr<SceneSession>& sess
     bool withAnimation, bool isFromInnerkits)
 {
     session->NotifySessionBackground(reason, withAnimation, isFromInnerkits);
+}
+
+WSError SceneSessionManager::UpdateTitleInTargetPos(int32_t persistentId, bool isShow, int32_t height)
+{
+    auto sceneSession = GetSceneSession(persistentId);
+    if (sceneSession == nullptr) {
+        WLOGFE("could not find window, persistentId:%{public}d", persistentId);
+        return WSError::WS_ERROR_INVALID_WINDOW;
+    }
+    return sceneSession->UpdateTitleInTargetPos(isShow, height);
 }
 } // namespace OHOS::Rosen

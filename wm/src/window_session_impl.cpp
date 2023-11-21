@@ -1091,7 +1091,7 @@ void WindowSessionImpl::NotifyBeforeDestroy(std::string windowName)
         }
     };
     if (handler_) {
-        handler_->PostTask(task);
+        handler_->PostSyncTask(task);
     } else {
         task();
     }
@@ -1737,6 +1737,11 @@ void WindowSessionImpl::NotifySessionForeground(uint32_t reason, bool withAnimat
 void WindowSessionImpl::NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits)
 {
     WLOGFD("NotifySessionBackground");
+}
+
+WSError WindowSessionImpl::UpdateTitleInTargetPos(bool isShow, int32_t height)
+{
+    return WSError::WS_OK;
 }
 
 void WindowSessionImpl::UpdatePiPRect(const uint32_t width, const uint32_t height, PiPRectUpdateReason reason)
