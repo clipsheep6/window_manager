@@ -416,25 +416,24 @@ napi_value CreateJsScreenModeObject(napi_env env, const sptr<SupportedScreenMode
 napi_value CreateJsColorSpaceArray(napi_env env, const std::vector<CM_ColorSpaceType>& colorSpaces)
 {
     WLOGI("JsScreen::CreateJsColorSpaceArray is called");
-    napi_value arrayValue = nullptr;
-    napi_create_array_with_length(env, colorSpaces.size(), &arrayValue);
-    if (arrayValue == nullptr) {
-        WLOGFE("Failed to create color space array");
-        return NapiGetUndefined(env);
-    }
-    size_t jsColorSpace = -1;
-    uint32_t i = 0;
+    std::set<uint32_t> nativeColorSpaces;
     for (const auto& colorSpace : colorSpaces) {
         if (NATIVE_TO_JS_COLOR_SPACE_TYPE_MAP.count(colorSpace) == 0) {
             WLOGFE("Get color space name %{public}u, but not in api type", colorSpace);
             napi_throw(env, CreateJsError(env, static_cast<int32_t>(DMError::DM_ERROR_DEVICE_NOT_SUPPORT)));
             return NapiGetUndefined(env);
         }
-        if (jsColorSpace == static_cast<uint32_t>(NATIVE_TO_JS_COLOR_SPACE_TYPE_MAP.at(colorSpace))) {
-            continue;
-        }
-        jsColorSpace = static_cast<uint32_t>(NATIVE_TO_JS_COLOR_SPACE_TYPE_MAP.at(colorSpace));
-        napi_set_element(env, arrayValue, i++, CreateJsValue(env, jsColorSpace));
+        nativeColorSpaces.insert(static_cast<uint32_t>(NATIVE_TO_JS_COLOR_SPACE_TYPE_MAP.at(colorSpace)));
+    }
+    napi_value arrayValue = nullptr;
+    napi_create_array_with_length(env, nativeColorSpaces.size(), &arrayValue);
+    if (arrayValue == nullptr) {
+        WLOGFE("Failed to create color space array");
+        return NapiGetUndefined(env);
+    }
+    uint32_t index = 0;
+    for (const auto& nativeColorSpace : nativeColorSpaces) {
+        napi_set_element(env, arrayValue, index++, CreateJsValue(env, nativeColorSpace));
     }
     return arrayValue;
 }
@@ -442,25 +441,24 @@ napi_value CreateJsColorSpaceArray(napi_env env, const std::vector<CM_ColorSpace
 napi_value CreateJsHDRFormatArray(napi_env env, const std::vector<ScreenHDRFormat>& hdrFormats)
 {
     WLOGI("JsScreen::CreateJsHDRFormatArray is called");
-    napi_value arrayValue = nullptr;
-    napi_create_array_with_length(env, hdrFormats.size(), &arrayValue);
-    if (arrayValue == nullptr) {
-        WLOGFE("Failed to create HDR format array");
-        return NapiGetUndefined(env);
-    }
-    size_t jsHdrFormat = -1;
-    uint32_t i = 0;
+    std::set<uint32_t> nativeHDRFormats;
     for (const auto& hdrFormat : hdrFormats) {
         if (NATIVE_TO_JS_HDR_FORMAT_TYPE_MAP.count(hdrFormat) == 0) {
             WLOGFE("Get HDR format name %{public}u, but not in api type", hdrFormat);
             napi_throw(env, CreateJsError(env, static_cast<int32_t>(DMError::DM_ERROR_DEVICE_NOT_SUPPORT)));
             return NapiGetUndefined(env);
         }
-        if (jsHdrFormat == static_cast<uint32_t>(NATIVE_TO_JS_HDR_FORMAT_TYPE_MAP.at(hdrFormat))) {
-            continue;
-        }
-        jsHdrFormat = static_cast<uint32_t>(NATIVE_TO_JS_HDR_FORMAT_TYPE_MAP.at(hdrFormat));
-        napi_set_element(env, arrayValue, i++, CreateJsValue(env, jsHdrFormat));
+        nativeHDRFormats.insert(static_cast<uint32_t>(NATIVE_TO_JS_HDR_FORMAT_TYPE_MAP.at(hdrFormat)));
+    }
+    napi_value arrayValue = nullptr;
+    napi_create_array_with_length(env, hdrFormats.size(), &arrayValue);
+    if (arrayValue == nullptr) {
+        WLOGFE("Failed to create HDR format array");
+        return NapiGetUndefined(env);
+    }
+    uint32_t index = 0;
+    for (const auto& nativeHDRFormat : nativeHDRFormats) {
+        napi_set_element(env, arrayValue, index++, CreateJsValue(env, nativeHDRFormat));
     }
     return arrayValue;
 }
