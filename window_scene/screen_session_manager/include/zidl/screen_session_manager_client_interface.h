@@ -30,6 +30,7 @@ public:
     enum class ScreenSessionManagerClientMessage : uint32_t {
         TRANS_ID_ON_SCREEN_CONNECTION_CHANGED,
         TRANS_ID_ON_PROPERTY_CHANGED,
+        TRANS_ID_ON_POWER_STATUS_CHANGED,
         TRANS_ID_ON_SENSOR_ROTATION_CHANGED,
         TRANS_ID_ON_SCREEN_ORIENTATION_CHANGED,
         TRANS_ID_ON_SCREEN_ROTATION_LOCKED_CHANGED,
@@ -38,9 +39,12 @@ public:
         TRANS_ID_ON_IMMERSIVE_STATE_CHANGED,
     };
 
-    virtual void OnScreenConnectionChanged(ScreenId screenId, ScreenEvent screenEvent) = 0;
+    virtual void OnScreenConnectionChanged(ScreenId screenId, ScreenEvent screenEvent,
+        ScreenId rsId, const std::string& name) = 0;
     virtual void OnPropertyChanged(ScreenId screenId,
         const ScreenProperty& property, ScreenPropertyChangeReason reason) = 0;
+    virtual void OnPowerStatusChanged(DisplayPowerEvent event, EventStatus status,
+        PowerStateChangeReason reason) = 0;
     virtual void OnSensorRotationChanged(ScreenId screenId, float sensorRotation) = 0;
     virtual void OnScreenOrientationChanged(ScreenId screenId, float screenOrientation) = 0;
     virtual void OnScreenRotationLockedChanged(ScreenId screenId, bool isLocked) = 0;

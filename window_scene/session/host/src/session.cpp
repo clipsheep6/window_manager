@@ -797,6 +797,18 @@ WSError Session::Disconnect()
     return WSError::WS_OK;
 }
 
+WSError Session::Show(sptr<WindowSessionProperty> property)
+{
+    WLOGFD("Show session, id: %{public}d", GetPersistentId());
+    return WSError::WS_OK;
+}
+
+WSError Session::Hide()
+{
+    WLOGFD("Hide session, id: %{public}d", GetPersistentId());
+    return WSError::WS_OK;
+}
+
 WSError Session::SetActive(bool active)
 {
     SessionState state = GetSessionState();
@@ -1206,7 +1218,6 @@ bool Session::IsTopDialog() const
         auto dialogSession = *iter;
         if (dialogSession && (dialogSession->GetSessionState() == SessionState::STATE_ACTIVE ||
             dialogSession->GetSessionState() == SessionState::STATE_FOREGROUND)) {
-            WLOGFI("Dialog id: %{public}d, current dialog id: %{public}d", dialogSession->GetPersistentId(), currentPersistentId);
             return dialogSession->GetPersistentId() == currentPersistentId;
         }
     }
@@ -1354,11 +1365,9 @@ WSError Session::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent
         if (keyEvent->GetKeyCode() == MMI::KeyEvent::KEYCODE_BACK) {
             return WSError::WS_ERROR_INVALID_PERMISSION;
         }
-        if (parentSession_ && parentSession_->CheckDialogOnForeground()) {
-            if (!IsTopDialog()) {
-                WLOGFI("There is at least one active dialog upon this dialog");
-                return WSError::WS_ERROR_INVALID_PERMISSION;
-            }
+        if (parentSession_ && parentSession_->CheckDialogOnForeground() &&
+            !IsTopDialog()) {
+            return WSError::WS_ERROR_INVALID_PERMISSION;
         }
     }
 
@@ -1438,7 +1447,7 @@ WSError Session::UpdateConfiguration()
     return WSError::WS_OK;
 }
 
-std::shared_ptr<Media::PixelMap> Session::Snapshot()
+std::shared_ptr<Media::PixelMap> Session::Snapshot() const
 {
     if (!surfaceNode_ || !surfaceNode_->IsBufferAvailable()) {
         return nullptr;
@@ -1493,6 +1502,11 @@ void Session::SetSessionStateChangeNotifyManagerListener(const NotifySessionStat
 void Session::SetRequestFocusStatusNotifyManagerListener(const NotifyRequestFocusStatusNotifyManagerFunc& func)
 {
     requestFocusStatusNotifyManagerFunc_ = func;
+}
+
+void Session::SetNotifyUIRequestFocusFunc(const NotifyUIRequestFocusFunc& func)
+{
+    requestFocusFunc_ = func;
 }
 
 void Session::SetNotifyUILostFocusFunc(const NotifyUILostFocusFunc& func)
@@ -1589,6 +1603,14 @@ bool Session::GetStateFromManager(const ManagerState key)
     }
 }
 
+void Session::NotifyUIRequestFocus()
+{
+    WLOGFD("NotifyUIRequestFocus id: %{public}d", GetPersistentId());
+    if (requestFocusFunc_) {
+        requestFocusFunc_();
+    }
+}
+
 void Session::NotifyUILostFocus()
 {
     WLOGFD("NotifyUILostFocus id: %{public}d", GetPersistentId());
@@ -1619,9 +1641,19 @@ WSError Session::UpdateFocus(bool isFocused)
         return WSError::WS_DO_NOTHING;
     }
     isFocused_ = isFocused;
-    if (!isFocused_) {
-        NotifyUILostFocus();
+    // notify scb arkui focus
+    if (isFocused) {
+        if (sessionInfo_.isSystem_) {
+            NotifyUIRequestFocus();
+        }
+    } else {
+         NotifyUILostFocus();
     }
+    return WSError::WS_OK;
+}
+
+WSError Session::NotifyFocusStatus(bool isFocused)
+{
     if (!IsSessionValid()) {
         return WSError::WS_ERROR_INVALID_SESSION;
     }

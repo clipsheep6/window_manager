@@ -22,7 +22,8 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DISPLAY, "ScreenSessionManagerClientProxy" };
 } // namespace
 
-void ScreenSessionManagerClientProxy::OnScreenConnectionChanged(ScreenId screenId, ScreenEvent screenEvent)
+void ScreenSessionManagerClientProxy::OnScreenConnectionChanged(ScreenId screenId, ScreenEvent screenEvent,
+    ScreenId rsId, const std::string& name)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -37,6 +38,14 @@ void ScreenSessionManagerClientProxy::OnScreenConnectionChanged(ScreenId screenI
     }
     if (!data.WriteUint8(static_cast<uint8_t>(screenEvent))) {
         WLOGFE("Write screenEvent failed");
+        return;
+    }
+    if (!data.WriteUint64(rsId)) {
+        WLOGFE("Write rsId failed");
+        return;
+    }
+    if (!data.WriteString(name)) {
+        WLOGFE("Write name failed");
         return;
     }
     if (Remote()->SendRequest(
@@ -71,6 +80,36 @@ void ScreenSessionManagerClientProxy::OnPropertyChanged(ScreenId screenId,
     }
     if (Remote()->SendRequest(
         static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_ON_PROPERTY_CHANGED),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return;
+    }
+}
+
+void ScreenSessionManagerClientProxy::OnPowerStatusChanged(DisplayPowerEvent event, EventStatus status,
+    PowerStateChangeReason reason)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+    if (!data.WriteUint32(static_cast<uint32_t>(event))) {
+        WLOGFE("Write event failed");
+        return;
+    }
+    if (!data.WriteUint32(static_cast<uint32_t>(status))) {
+        WLOGFE("Write status failed");
+        return;
+    }
+    if (!data.WriteUint32(static_cast<uint32_t>(reason))) {
+        WLOGFE("Write reason failed");
+        return;
+    }
+    if (Remote()->SendRequest(
+        static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_ON_POWER_STATUS_CHANGED),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
         return;
