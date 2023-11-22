@@ -80,16 +80,24 @@ const std::map<GraphicCM_ColorSpaceType, ApiColorSpaceType> NATIVE_TO_JS_COLOR_S
 
 enum class ApiHDRFormat : uint32_t {
     NONE = 0,
-    HDR10 = 1,
-    HLG = 2,
-    HDR_VIVID= 3,
+    VIDEO_HLG = 1,
+    VIDEO_HDR10 = 2,
+    VIDEO_HDR_VIVID = 3,
+    IMAGE_HDR_VIVID_DUAL = 4,
+    IMAGE_HDR_VIVID_SINGLE = 5,
+    IMAGE_HDR_ISO_DUAL = 6,
+    IMAGE_HDR_ISO_SINGLE = 7,
 };
 
 const std::map<ScreenHDRFormat, ApiHDRFormat> NATIVE_TO_JS_HDR_FORMAT_TYPE_MAP {
-    { ScreenHDRFormat::NOT_SUPPORT_HDR,     ApiHDRFormat::NONE },
-    { ScreenHDRFormat::HDR10,               ApiHDRFormat::HDR10 },
-    { ScreenHDRFormat::HLG,                 ApiHDRFormat::HLG },
-    { ScreenHDRFormat::HDR_VIVID,           ApiHDRFormat::HDR_VIVID },
+    { ScreenHDRFormat::NOT_SUPPORT_HDR,             ApiHDRFormat::NONE },
+    { ScreenHDRFormat::VIDEO_HLG,                   ApiHDRFormat::VIDEO_HLG },
+    { ScreenHDRFormat::VIDEO_HDR10,                 ApiHDRFormat::VIDEO_HDR10 },
+    { ScreenHDRFormat::VIDEO_HDR_VIVID,             ApiHDRFormat::VIDEO_HDR_VIVID },
+    { ScreenHDRFormat::IMAGE_HDR_VIVID_DUAL,        ApiHDRFormat::IMAGE_HDR_VIVID_DUAL },
+    { ScreenHDRFormat::IMAGE_HDR_VIVID_SINGLE,      ApiHDRFormat::IMAGE_HDR_VIVID_SINGLE },
+    { ScreenHDRFormat::IMAGE_HDR_ISO_DUAL,          ApiHDRFormat::IMAGE_HDR_ISO_DUAL },
+    { ScreenHDRFormat::IMAGE_HDR_ISO_SINGLE,        ApiHDRFormat::IMAGE_HDR_ISO_SINGLE },
 };
 
 napi_value CreateJsColorSpaceArray(napi_env env, const std::vector<GraphicCM_ColorSpaceType>& colorSpaces);
