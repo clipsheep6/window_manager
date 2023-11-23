@@ -13,11 +13,14 @@
  * limitations under the License.
  */
 
-#include <iomanip>
-#include <js_runtime_utils.h>
 #include "js_scene_utils.h"
-#include "interfaces/include/ws_common.h"
-#include "session_manager/include/screen_session_manager.h"
+
+#include <iomanip>
+
+#include <event_handler.h>
+#include <js_runtime_utils.h>
+
+#include "display_manager.h"
 #include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
@@ -180,6 +183,19 @@ bool IsJsSessionTypeUndefind(napi_env env, napi_value jsSessionType, SessionInfo
     return true;
 }
 
+bool IsJsScreenIdUndefind(napi_env env, napi_value JsScreenId, SessionInfo& sessionInfo)
+{
+    if (GetType(env, JsScreenId) != napi_undefined) {
+        int32_t screenId = 0;
+        if (!ConvertFromJsValue(env, JsScreenId, screenId)) {
+            WLOGFE("[NAPI]Failed to convert parameter to screenId");
+            return false;
+        }
+        sessionInfo.screenId_ = static_cast<uint64_t>(screenId);
+    }
+    return true;
+}
+
 bool ConvertSessionInfoFromJs(napi_env env, napi_value jsObject, SessionInfo& sessionInfo)
 {
     napi_value jsBundleName = nullptr;
@@ -198,6 +214,8 @@ bool ConvertSessionInfoFromJs(napi_env env, napi_value jsObject, SessionInfo& se
     napi_get_named_property(env, jsObject, "callState", &jsCallState);
     napi_value jsSessionType = nullptr;
     napi_get_named_property(env, jsObject, "sessionType", &jsSessionType);
+    napi_value jsScreenId = nullptr;
+    napi_get_named_property(env, jsObject, "screenId", &jsScreenId);
 
     if (!IsJsBundleNameUndefind(env, jsBundleName, sessionInfo)) {
         return false;
@@ -221,6 +239,9 @@ bool ConvertSessionInfoFromJs(napi_env env, napi_value jsObject, SessionInfo& se
         return false;
     }
     if (!IsJsSessionTypeUndefind(env, jsSessionType, sessionInfo)) {
+        return false;
+    }
+    if (!IsJsScreenIdUndefind(env, jsSessionType, sessionInfo)) {
         return false;
     }
     return true;
@@ -276,12 +297,12 @@ bool ConvertRectInfoFromJs(napi_env env, napi_value jsObject, WSRect& rect)
 
 bool ConvertPointerItemFromJs(napi_env env, napi_value touchObject, MMI::PointerEvent& pointerEvent)
 {
-    auto displayInfo = ScreenSessionManager::GetInstance().GetDefaultDisplayInfo();
-    if (!displayInfo) {
-        WLOGFE("[NAPI]Default display info is null");
+    auto display = DisplayManager::GetInstance().GetDefaultDisplay();
+    if (!display) {
+        WLOGFE("[NAPI]Default display is null");
         return false;
     }
-    auto vpr = displayInfo->GetVirtualPixelRatio();
+    auto vpr = display->GetVirtualPixelRatio();
     MMI::PointerEvent::PointerItem pointerItem;
     napi_value jsId = nullptr;
     napi_get_named_property(env, touchObject, "id", &jsId);
@@ -394,6 +415,8 @@ napi_value CreateJsSessionInfo(napi_env env, const SessionInfo& sessionInfo)
         CreateJsValue(env, static_cast<int32_t>(sessionInfo.callState_)));
     napi_set_named_property(env, objValue, "windowMode",
         CreateJsValue(env, static_cast<int32_t>(sessionInfo.windowMode)));
+    napi_set_named_property(env, objValue, "screenId",
+        CreateJsValue(env, static_cast<int32_t>(sessionInfo.screenId_)));
     return objValue;
 }
 
@@ -641,10 +664,11 @@ inline void MainThreadScheduler::GetMainEventHandler()
     handler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
 }
 
-void MainThreadScheduler::PostMainThreadTask(Task&& localTask, int64_t delayTime)
+void MainThreadScheduler::PostMainThreadTask(Task&& localTask, std::string traceInfo, int64_t delayTime)
 {
     GetMainEventHandler();
-    auto task = [env = env_, localTask] () {
+    auto task = [env = env_, localTask, traceInfo] () {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SCBCb:%s", traceInfo.c_str());
         napi_handle_scope scope = nullptr;
         napi_open_handle_scope(env, &scope);
         localTask();

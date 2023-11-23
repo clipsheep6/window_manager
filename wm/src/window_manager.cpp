@@ -667,10 +667,6 @@ void WindowManager::UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChan
     }
     WLOGFD("window focus change: %{public}d, id: %{public}u", focused, focusChangeInfo->windowId_);
     if (focused) {
-#ifdef EFFICIENCY_MANAGER_ENABLE
-        SuspendManager::SuspendManagerClient::GetInstance().ThawOneApplication(focusChangeInfo->uid_,
-            "", "THAW_BY_FOCUS_CHANGED");
-#endif // EFFICIENCY_MANAGER_ENABLE
         pImpl_->NotifyFocused(focusChangeInfo);
     } else {
         pImpl_->NotifyUnfocused(focusChangeInfo);
@@ -770,6 +766,15 @@ void WindowManager::OnRemoteDied()
     pImpl_->windowUpdateListenerAgent_ = nullptr;
     pImpl_->windowVisibilityListenerAgent_ = nullptr;
     pImpl_->cameraFloatWindowChangedListenerAgent_ = nullptr;
+}
+
+WMError WindowManager::RaiseWindowToTop(int32_t persistentId)
+{
+    WMError ret = SingletonContainer::Get<WindowAdapter>().RaiseWindowToTop(persistentId);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("raise window to top failed");
+    }
+    return ret;
 }
 
 void WindowManager::Impl::NotifyDrawingContentChange(const std::vector<sptr<DrawingContenInfo>>& infos,

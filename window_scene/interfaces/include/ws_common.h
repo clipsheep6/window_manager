@@ -161,6 +161,7 @@ struct SessionInfo {
     uint32_t windowType_ = 1; // WINDOW_TYPE_APP_MAIN_WINDOW
     sptr<IRemoteObject> callerToken_ = nullptr;
     sptr<IRemoteObject> rootToken_ = nullptr;
+    uint64_t screenId_ = 0;
 
     mutable std::shared_ptr<AAFwk::Want> want; // want for ability start
     std::shared_ptr<AAFwk::Want> closeAbilityWant;
@@ -226,6 +227,12 @@ enum class SessionEvent : uint32_t {
     EVENT_EXCEPTION,
     EVENT_SPLIT_PRIMARY,
     EVENT_SPLIT_SECONDARY,
+};
+
+enum class BrokerStates: uint32_t {
+    BROKER_UNKOWN = 1,
+    BROKER_STARTED = 0,
+    BROKER_NOT_START = -1,
 };
 
 inline bool GreatOrEqual(double left, double right)

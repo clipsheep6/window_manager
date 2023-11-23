@@ -13,18 +13,16 @@
  * limitations under the License.
  */
 
-#include "zidl/mock_screen_manager_service_proxy.h"
-#include "window_manager_hilog.h"
+#ifndef OHOS_ROSEN_WINDOW_SCENE_SCB_SYSTEM_SESSION_H
+#define OHOS_ROSEN_WINDOW_SCENE_SCB_SYSTEM_SESSION_H
 
-namespace OHOS {
-namespace Rosen {
-namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "MockScreenManagerServiceProxy"};
-}
+#include "session/host/include/scene_session.h"
 
-void MockScreenManagerServiceProxy::GetScreenDumpInfo(const std::vector<std::string>& params, std::string& info)
-{
-    WLOGFD("GetScreenDumpInfo begin");
-}
-} // namespace Rosen
-} // namespace OHOS
+namespace OHOS::Rosen {
+class SCBSystemSession : public SceneSession {
+public:
+    SCBSystemSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback);
+    ~SCBSystemSession();
+};
+} // namespace OHOS::Rosen
+#endif // OHOS_ROSEN_WINDOW_SCENE_SCB_SYSTEM_SESSION_H
