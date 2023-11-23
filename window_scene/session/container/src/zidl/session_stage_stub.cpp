@@ -310,4 +310,15 @@ int SessionStageStub::HandleUpdateTitleInTargetPos(MessageParcel& data, MessageP
     reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
 }
+
+int SessionStageStub::HandleWindowDrawingContentInfoChange(MessageParcel& data, MessageParcel& reply)
+{
+    std::vector<sptr<WindowDrawingContentInfo>> infos;
+    if (!MarshallingHelper::UnmarshallingVectorParcelableObj<WindowDrawingContentInfo>(data, infos)) {
+        WLOGFE("read window drawingcontent infos failed");
+        return -1;
+    }
+    UpdateWindowDrawingContentInfo(infos);
+    return ERR_NONE;
+}
 } // namespace OHOS::Rosen

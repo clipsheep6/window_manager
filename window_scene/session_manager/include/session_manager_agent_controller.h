@@ -38,8 +38,7 @@ public:
         WindowUpdateType type);
     void NotifyWaterMarkFlagChangedResult(bool hasWaterMark);
     void UpdateWindowVisibilityInfo(const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos);
-    void NotifyDrawingContentChange(const std::vector<sptr<DrawingContentInfo>>& infos,
-        );
+    //void NotifyDrawingContentChange(const std::vector<sptr<DrawingContentInfo>>& infos);
 private:
     SessionManagerAgentController() {}
     virtual ~SessionManagerAgentController() = default;

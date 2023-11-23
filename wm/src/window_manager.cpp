@@ -803,19 +803,27 @@ void WindowManager::Impl::NotifyDrawingContentChange(const std::vector<sptr<Draw
         listener->OnWindowUpdate(infos, type);
     }
 }
-
-void WindowManager::Impl::NotifyWindowDrawingContentInfoChanged(
-    const std::vector<sptr<WindowDrawingContentInfo>>& windowDrawingContentInfos)
+WMError WindowManager::RaiseWindowToTop(int32_t persistentId)
 {
-    std::vector<sptr<IDrawingContentChangedListener>> windowDrawingContentChangeListeners;
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        windowDrawingContentChangeListeners = windowDrawingContentListeners_;
+    WMError ret = SingletonContainer::Get<WindowAdapter>().RaiseWindowToTop(persistentId);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("raise window to top failed");
     }
-    for (auto& listener : windowDrawingContentChangeListeners) {
-        WLOGD("Notify windowDrawingContentInfo to caller");
-        listener->OnWindowDrawingContentChanged(windowDrawingContentInfos);
-    }
+    return ret;
 }
+
+// void WindowManager::Impl::NotifyWindowDrawingContentInfoChanged(
+//     const std::vector<sptr<WindowDrawingContentInfo>>& windowDrawingContentInfos)
+// {
+//     std::vector<sptr<IDrawingContentChangedListener>> windowDrawingContentChangeListeners;
+//     {
+//         std::lock_guard<std::recursive_mutex> lock(mutex_);
+//         windowDrawingContentChangeListeners = windowDrawingContentListeners_;
+//     }
+//     for (auto& listener : windowDrawingContentChangeListeners) {
+//         WLOGD("Notify windowDrawingContentInfo to caller");
+//         listener->OnWindowDrawingContentChanged(windowDrawingContentInfos);
+//     }
+// }
 } // namespace Rosen
 } // namespace OHOS
