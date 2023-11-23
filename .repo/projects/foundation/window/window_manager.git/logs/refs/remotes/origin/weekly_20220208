@@ -1,0 +1,1 @@
+0000000000000000000000000000000000000000 7aae4fc97b044170a9b06ec92133dc51a604a333 wangyanhao <wangyanhao@huawei.com> 1700732150 +0800	fetch --quiet --progress origin --tags +refs/heads/*:refs/remotes/origin/* +refs/heads/master:refs/remotes/origin/master +refs/tags/*:refs/tags/*: storing head

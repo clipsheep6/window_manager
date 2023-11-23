@@ -1,0 +1,14 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+[filter "lfs"]
+	smudge = git-lfs smudge --skip -- %f
+	process = git-lfs filter-process --skip
+[remote "origin"]
+	url = git@gitee.com:openharmony/window_window_manager
+	review = https://openharmony.gitee.com/openharmony/
+	projectname = window_window_manager
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "1123t"]
+	remote = origin
+	merge = refs/heads/master
