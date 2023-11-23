@@ -2869,7 +2869,7 @@ HWTEST_F(SceneSessionManagerTest, NotifySessionForeground, Function | SmallTest 
     SessionInfo info;
     info.bundleName_ = "bundleName";
     scensession = new (std::nothrow) SceneSession(info, nullptr);
-    ASSERT_NE(nullptr, scenesession);
+    ASSERT_NE(nullptr, scensession);
     uint32_t reason = 1;
     bool withAnimation = true;
     scensession->NotifySessionForeground(reason, withAnimation);
@@ -2886,7 +2886,7 @@ HWTEST_F(SceneSessionManagerTest, NotifySessionBackground, Function | SmallTest 
     SessionInfo info;
     info.bundleName_ = "bundleName";
     scensession = new (std::nothrow) SceneSession(info, nullptr);
-    ASSERT_NE(nullptr, scenesession);
+    ASSERT_NE(nullptr, scensession);
     uint32_t reason = 1;
     bool withAnimation = true;
     bool isFromInnerkits = true;

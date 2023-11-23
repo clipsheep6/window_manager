@@ -221,6 +221,10 @@ struct SystemSessionConfig : public Parcelable {
             return false;
         }
 
+        if (!parcel.WriteBool(backgroundswitch)) {
+            return false;
+        }
+        
         return true;
     }
 
@@ -242,6 +246,7 @@ struct SystemSessionConfig : public Parcelable {
         config->miniHeightOfMainWindow_ = parcel.ReadUint32();
         config->miniWidthOfSubWindow_ = parcel.ReadUint32();
         config->miniHeightOfSubWindow_ = parcel.ReadUint32();
+        config->backgroundswitch = parcel.ReadBool();
         return config;
     }
 };
