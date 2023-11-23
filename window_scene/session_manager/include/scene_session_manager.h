@@ -74,7 +74,6 @@ using TraverseFunc = std::function<bool(const sptr<SceneSession>& session)>;
 using CmpFunc = std::function<bool(std::pair<int32_t, sptr<SceneSession>>& lhs,
     std::pair<int32_t, sptr<SceneSession>>& rhs)>;
 using ProcessShowPiPMainWindowFunc = std::function<void(int32_t persistentId)>;
-using NotifySCBAfterUpdateFocusFunc = std::function<void()>;
 
 class DisplayChangeListener : public IDisplayChangeListener {
 public:
@@ -116,8 +115,6 @@ public:
     void SetDumpRootSceneElementInfoListener(const DumpRootSceneElementInfoFunc& func);
     void SetOutsideDownEventListener(const ProcessOutsideDownEventFunc& func);
     void SetShiftFocusListener(const ProcessShiftFocusFunc& func);
-    void SetSCBFocusedListener(const NotifySCBAfterUpdateFocusFunc& func);
-    void SetSCBUnfocusedListener(const NotifySCBAfterUpdateFocusFunc& func);
     void SetShowPiPMainWindowListener(const ProcessShowPiPMainWindowFunc& func);
     const AppWindowSceneConfig& GetWindowSceneConfig() const;
     WSError ProcessBackEvent();
@@ -211,7 +208,7 @@ public:
     WSError RegisterIAbilityManagerCollaborator(int32_t type,
         const sptr<AAFwk::IAbilityManagerCollaborator> &impl) override;
     WSError UnregisterIAbilityManagerCollaborator(int32_t type) override;
-    WSError RecoveryPullPiPMainWindow(const int32_t& persistentId);
+    WSError RecoveryPullPiPMainWindow(const int32_t& persistentId, const Rect& rect);
 
     WMError CheckWindowId(int32_t windowId, int32_t &pid) override;
     int GetSceneSessionPrivacyModeCount();
@@ -377,8 +374,6 @@ private:
     DumpRootSceneElementInfoFunc dumpRootSceneFunc_;
     ProcessVirtualPixelRatioChangeFunc processVirtualPixelRatioChangeFunc_ = nullptr;
     ProcessShiftFocusFunc shiftFocusFunc_;
-    NotifySCBAfterUpdateFocusFunc notifySCBAfterFocusedFunc_;
-    NotifySCBAfterUpdateFocusFunc notifySCBAfterUnfocusedFunc_;
     ProcessShowPiPMainWindowFunc showPiPMainWindowFunc_;
     AppWindowSceneConfig appWindowSceneConfig_;
     SystemSessionConfig systemConfig_;
