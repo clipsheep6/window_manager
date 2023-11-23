@@ -730,6 +730,7 @@ bool ScreenSessionManager::SetScreenPowerForAll(ScreenPowerState state, PowerSta
         WLOGFI("ScreenSessionManager::SetScreenPowerForAll block screen power change");
         return true;
     }
+    WLOGFI("ScreenSessionManager::SuspendEnd enter");
     switch (state) {
         case ScreenPowerState::POWER_ON: {
             if (keyguardDrawnDone_) {
