@@ -1382,6 +1382,7 @@ void SceneSession::SetSystemSceneOcclusionAlpha(double alpha)
 
 WSError SceneSession::UpdateWindowAnimationFlag(bool needDefaultAnimationFlag)
 {
+    WLOGFD("UpdateWindowAnimationFlag %{public}u", needDefaultAnimationFlag);
     return PostSyncTask([weakThis = wptr(this), needDefaultAnimationFlag]() {
         auto session = weakThis.promote();
         if (!session) {
@@ -1398,11 +1399,11 @@ WSError SceneSession::UpdateWindowAnimationFlag(bool needDefaultAnimationFlag)
 
 void SceneSession::SetWindowAnimationFlag(bool needDefaultAnimationFlag)
 {
+    WLOGFD("SetWindowAnimationFlag %{public}u", needDefaultAnimationFlag);
     needDefaultAnimationFlag_ = needDefaultAnimationFlag;
     if (sessionChangeCallback_ && sessionChangeCallback_->onWindowAnimationFlagChange_) {
         sessionChangeCallback_->onWindowAnimationFlagChange_(needDefaultAnimationFlag);
     }
-    return;
 }
 
 bool SceneSession::IsNeedDefaultAnimation() const
