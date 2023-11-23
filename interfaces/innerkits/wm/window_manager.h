@@ -390,6 +390,13 @@ public:
     WMError DumpSessionWithId(int32_t persistentId, std::vector<std::string> &infos);
 
     /**
+     * @brief raise window to top by windowId
+     *
+     * @param persistentId this window to raise
+     * @return WM_OK if raise success
+     */
+    WMError RaiseWindowToTop(int32_t persistentId);
+    /**
      * @brief Register drawingcontent changed listener.
      *
      * @param listener IDrawingContentChangedListener.

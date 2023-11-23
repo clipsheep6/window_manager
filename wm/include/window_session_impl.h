@@ -18,7 +18,7 @@
 
 #include <atomic>
 #include <optional>
-
+#include <shared_mutex>
 #include <ability_context.h>
 #include <event_handler.h>
 #include <i_input_event_consumer.h>
@@ -156,16 +156,18 @@ public:
     virtual void SetColorSpace(ColorSpace colorSpace) override;
     virtual ColorSpace GetColorSpace() override;
     WSError NotifyTouchOutside() override;
-
+    WMError TransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
+        const std::vector<int32_t>& uiExtensionIdLevelVec) override;
     WindowState state_ { WindowState::STATE_INITIAL };
     WindowState requestState_ { WindowState::STATE_INITIAL };
     WSError UpdateMaximizeMode(MaximizeMode mode) override;
     void NotifySessionForeground(uint32_t reason, bool withAnimation) override;
     void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
+    WSError UpdateTitleInTargetPos(bool isShow, int32_t height) override;
     void UpdateWindowDrawingContentInfo(std::vector<sptr<WindowDrawingContentInfo>> infos) override;
-
     double textFieldPositionY_ = 0;
     double textFieldHeight_ = 0;
+    void UpdatePiPRect(const uint32_t width, const uint32_t height, PiPRectUpdateReason reason) override;
 
 protected:
     WMError Connect();
@@ -193,7 +195,8 @@ protected:
     sptr<WindowSessionProperty> property_;
     SystemSessionConfig windowSystemConfig_;
     NotifyNativeWinDestroyFunc notifyNativeFunc_;
-
+    // protect windowSessionMap_
+    static std::shared_mutex windowSessionMutex_;
     std::recursive_mutex mutex_;
     static std::map<std::string, std::pair<int32_t, sptr<WindowSessionImpl>>> windowSessionMap_;
     static std::map<int32_t, std::vector<sptr<WindowSessionImpl>>> subWindowSessionMap_;

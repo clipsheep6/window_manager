@@ -18,8 +18,8 @@
 
 #include <iremote_broker.h>
 #include <list>
+#include <map>
 
-#include "accessibility_element_info.h"
 #include "interfaces/include/ws_common.h"
 #include "occupied_area_change_info.h"
 
@@ -28,7 +28,9 @@ class PointerEvent;
 class KeyEvent;
 class AxisEvent;
 } // namespace MMI
-
+namespace OHOS::Accessibility {
+class AccessibilityElementInfo;
+}
 namespace OHOS::Rosen {
 class RSTransaction;
 
@@ -70,6 +72,11 @@ public:
     {
         return WSError::WS_OK;
     }
+    virtual WSError NotifyExecuteAction(int32_t elementId, const std::map<std::string, std::string>& actionArguments,
+        int32_t action, int32_t baseParent)
+    {
+        return WSError::WS_OK;
+    }
     virtual WSError SetActive(bool active) = 0;
     virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) = 0;
@@ -90,6 +97,7 @@ public:
     virtual WSError UpdateMaximizeMode(MaximizeMode mode) = 0;
     virtual void NotifySessionForeground(uint32_t reason, bool withAnimation) = 0;
     virtual void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits) = 0;
+    virtual WSError UpdateTitleInTargetPos(bool isShow, int32_t height) = 0;
     virtual WSErrorCode NotifyTransferComponentDataSync(const AAFwk::WantParams& wantParams,
                                                         AAFwk::WantParams& reWantParams)
     {

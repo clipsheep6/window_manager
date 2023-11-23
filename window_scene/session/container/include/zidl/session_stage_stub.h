@@ -58,7 +58,8 @@ private:
     int HandleNotifyCloseExistPipWindow(MessageParcel& data, MessageParcel& reply);
     int HandleNotifySessionForeground(MessageParcel& data, MessageParcel& reply);
     int HandleNotifySessionBackground(MessageParcel& data, MessageParcel& reply);
-    int HandleUpdateWindowDrawingContentInfo(MessageParcel& data, MessageParcel& reply) = 0;
+    int HandleUpdateTitleInTargetPos(MessageParcel& data, MessageParcel& reply);
+    int HandleUpdateWindowDrawingContentInfo(MessageParcel& data, MessageParcel& reply);
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_SESSION_STAGE_STUB_H

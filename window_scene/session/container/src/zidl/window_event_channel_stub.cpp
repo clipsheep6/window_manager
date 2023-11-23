@@ -28,6 +28,7 @@
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowEventChannelStub"};
+constexpr int32_t MAX_ARGUMENTS_KEY_SIZE = 1000;
 }
 
 const std::map<uint32_t, WindowEventChannelStubFunc> WindowEventChannelStub::stubFuncMap_{
@@ -49,6 +50,8 @@ const std::map<uint32_t, WindowEventChannelStubFunc> WindowEventChannelStub::stu
         &WindowEventChannelStub::HandleTransferFindFocusedElementInfo),
     std::make_pair(static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_FOCUS_MOVE_SEARCH),
         &WindowEventChannelStub::HandleTransferFocusMoveSearch),
+    std::make_pair(static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_EXECUTE_ACTION),
+        &WindowEventChannelStub::HandleTransferExecuteAction),
 };
 
 int WindowEventChannelStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
@@ -135,7 +138,6 @@ int WindowEventChannelStub::HandleTransferFocusStateEvent(MessageParcel& data, M
 
 int WindowEventChannelStub::HandleTransferSearchElementInfo(MessageParcel& data, MessageParcel& reply)
 {
-    WLOGFD("HandleTransferSearchElementInfo begin");
     int32_t elementId = 0;
     if (!data.ReadInt32(elementId)) {
         WLOGFE("Parameter elementId is invalid!");
@@ -162,7 +164,6 @@ int WindowEventChannelStub::HandleTransferSearchElementInfo(MessageParcel& data,
         WLOGFE("Failed to write count!");
         return ERR_INVALID_DATA;
     }
-    WLOGFD("HandleTransferSearchElementInfo count:%{public}d, infos.size:%{public}d", count, infos.size());
     for (auto &info : infos) {
         AccessibilityElementInfoParcel infoParcel(info);
         if (!reply.WriteParcelable(&infoParcel)) {
@@ -170,13 +171,11 @@ int WindowEventChannelStub::HandleTransferSearchElementInfo(MessageParcel& data,
             return ERR_INVALID_DATA;
         }
     }
-    WLOGFD("HandleTransferSearchElementInfo end, errorCode:%{public}d", static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
 
 int WindowEventChannelStub::HandleTransferSearchElementInfosByText(MessageParcel& data, MessageParcel& reply)
 {
-    WLOGFD("HandleTransferSearchElementInfosByText begin");
     int32_t elementId = 0;
     if (!data.ReadInt32(elementId)) {
         WLOGFE("Parameter elementId is invalid!");
@@ -210,13 +209,11 @@ int WindowEventChannelStub::HandleTransferSearchElementInfosByText(MessageParcel
             return ERR_INVALID_DATA;
         }
     }
-    WLOGFD("HandleTransferSearchElementInfosByText end");
     return ERR_NONE;
 }
 
 int WindowEventChannelStub::HandleTransferFindFocusedElementInfo(MessageParcel& data, MessageParcel& reply)
 {
-    WLOGFD("HandleTransferFindFocusedElementInfo begin");
     int32_t elementId = 0;
     if (!data.ReadInt32(elementId)) {
         WLOGFE("Parameter elementId is invalid!");
@@ -243,13 +240,11 @@ int WindowEventChannelStub::HandleTransferFindFocusedElementInfo(MessageParcel& 
         WLOGFE("Failed to WriteParcelable info");
         return ERR_INVALID_DATA;
     }
-    WLOGFD("HandleTransferFindFocusedElementInfo end");
     return ERR_NONE;
 }
 
 int WindowEventChannelStub::HandleTransferFocusMoveSearch(MessageParcel& data, MessageParcel& reply)
 {
-    WLOGFD("HandleTransferFocusMoveSearch begin");
     int32_t elementId = 0;
     if (!data.ReadInt32(elementId)) {
         WLOGFE("Parameter elementId is invalid!");
@@ -276,7 +271,51 @@ int WindowEventChannelStub::HandleTransferFocusMoveSearch(MessageParcel& data, M
         WLOGFE("Failed to WriteParcelable info");
         return ERR_INVALID_DATA;
     }
-    WLOGFD("HandleTransferFocusMoveSearch end");
+    return ERR_NONE;
+}
+
+int WindowEventChannelStub::HandleTransferExecuteAction(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t elementId = 0;
+    if (!data.ReadInt32(elementId)) {
+        WLOGFE("Parameter elementId is invalid!");
+        return ERR_INVALID_DATA;
+    }
+    int32_t action = 0;
+    if (!data.ReadInt32(action)) {
+        WLOGFE("Parameter action is invalid!");
+        return ERR_INVALID_DATA;
+    }
+
+    std::vector<std::string> actionArgumentsKey;
+    std::vector<std::string> actionArgumentsValue;
+    std::map<std::string, std::string> actionArguments;
+    if (!data.ReadStringVector(&actionArgumentsKey)) {
+        WLOGFE("ReadStringVector actionArgumentsKey failed");
+        return ERR_INVALID_VALUE;
+    }
+    if (!data.ReadStringVector(&actionArgumentsValue)) {
+        WLOGFE("ReadStringVector actionArgumentsValue failed");
+        return ERR_INVALID_VALUE;
+    }
+    if (actionArgumentsKey.size() != actionArgumentsValue.size()) {
+        WLOGFE("Read actionArguments failed.");
+        return ERR_INVALID_VALUE;
+    }
+    if (actionArgumentsKey.size() > MAX_ARGUMENTS_KEY_SIZE) {
+        WLOGFE("ActionArguments over max size");
+        return ERR_INVALID_VALUE;
+    }
+    for (size_t i = 0; i < actionArgumentsKey.size(); i++) {
+        actionArguments.insert(make_pair(actionArgumentsKey[i], actionArgumentsValue[i]));
+    }
+    int32_t baseParent = 0;
+    if (!data.ReadInt32(baseParent)) {
+        WLOGFE("Parameter baseParent is invalid!");
+        return ERR_INVALID_DATA;
+    }
+    WSError errCode = TransferExecuteAction(elementId, actionArguments, action, baseParent);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
 }
