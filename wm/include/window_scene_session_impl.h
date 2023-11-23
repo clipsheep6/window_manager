@@ -124,6 +124,7 @@ public:
     WSError UpdateMaximizeMode(MaximizeMode mode) override;
     void NotifySessionForeground(uint32_t reason, bool withAnimation) override;
     void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
+    void UpdateWindowDrawingContentInfo(std::vector<sptr<WindowDrawingContentInfo>> infos) override;
 
 protected:
     void DestroySubWindow();

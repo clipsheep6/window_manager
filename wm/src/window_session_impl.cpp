@@ -1710,5 +1710,10 @@ void WindowSessionImpl::NotifySessionBackground(uint32_t reason, bool withAnimat
 {
     WLOGFD("NotifySessionBackground");
 }
+
+void WindowSessionImpl::UpdateWindowDrawingContentInfo(std::vector<sptr<WindowDrawingContentInfo>> infos)
+{
+    WLOGFD("UpdateWindowDrawingContentInfo");
+}
 } // namespace Rosen
 } // namespace OHOS
