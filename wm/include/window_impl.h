@@ -295,6 +295,8 @@ public:
 
     virtual void DoPrepareTerminate() override;
     void PendingClose();
+
+    WMError SetTextFieldAvoidInfo(double textFieldPositionY, double textFieldHeight) override;
 private:
     template<typename T1, typename T2, typename Ret>
     using EnableIfSame = typename std::enable_if<std::is_same_v<T1, T2>, Ret>::type;
@@ -644,6 +646,7 @@ private:
         return radius > 0.0f ? BlurSigmaScale * radius + SK_ScalarHalf : 0.0f;
     }
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
+    bool needNotifyFocusLater_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

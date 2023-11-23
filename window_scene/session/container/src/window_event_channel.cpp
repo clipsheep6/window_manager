@@ -87,12 +87,14 @@ WSError WindowEventChannel::TransferKeyEventForConsumed(
         WLOGFE("session stage is null!");
         return WSError::WS_ERROR_NULLPTR;
     }
-    if (keyEvent != nullptr) {
-        DelayedSingleton<ANRHandler>::GetInstance()->SetSessionStage(keyEvent->GetId(), sessionStage_);
-        WLOGFD("SetProcessedCallback enter");
-        keyEvent->SetProcessedCallback(dispatchCallback_);
-        WLOGFD("SetProcessedCallback leave");
+    if (keyEvent == nullptr) {
+        WLOGFE("keyEvent is nullptr");
+        return WSError::WS_ERROR_NULLPTR;
     }
+    DelayedSingleton<ANRHandler>::GetInstance()->SetSessionStage(keyEvent->GetId(), sessionStage_);
+    WLOGFD("SetProcessedCallback enter");
+    keyEvent->SetProcessedCallback(dispatchCallback_);
+    WLOGFD("SetProcessedCallback leave");
     sessionStage_->NotifyKeyEvent(keyEvent, isConsumed);
     keyEvent->MarkProcessed();
     return WSError::WS_OK;
@@ -254,4 +256,14 @@ WSError WindowEventChannel::TransferFocusMoveSearch(int32_t elementId, int32_t d
     return sessionStage_->NotifyFocusMoveSearch(elementId, direction, baseParent, info);
 }
 
+WSError WindowEventChannel::TransferExecuteAction(int32_t elementId,
+    const std::map<std::string, std::string>& actionArguments, int32_t action,
+    int32_t baseParent)
+{
+    if (!sessionStage_) {
+        WLOGFE("session stage is null!");
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    return sessionStage_->NotifyExecuteAction(elementId, actionArguments, action, baseParent);
+}
 } // namespace OHOS::Rosen

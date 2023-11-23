@@ -18,8 +18,8 @@
 
 #include <iremote_broker.h>
 #include <list>
+#include <map>
 
-#include "accessibility_element_info.h"
 #include "interfaces/include/ws_common.h"
 
 namespace OHOS::MMI {
@@ -27,7 +27,9 @@ namespace OHOS::MMI {
     class KeyEvent;
     class AxisEvent;
 } // namespace OHOS::MMI
-
+namespace OHOS::Accessibility {
+    class AccessibilityElementInfo;
+}
 namespace OHOS::Rosen {
 class IWindowEventChannel : public IRemoteBroker {
 public:
@@ -49,6 +51,8 @@ public:
         Accessibility::AccessibilityElementInfo& info) = 0;
     virtual WSError TransferFocusMoveSearch(int32_t elementId, int32_t direction, int32_t baseParent,
         Accessibility::AccessibilityElementInfo& info) = 0;
+    virtual WSError TransferExecuteAction(int32_t elementId, const std::map<std::string, std::string>& actionArguments,
+        int32_t action, int32_t baseParent) = 0;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_SESSION_WINDOW_EVENT_CHANNEL_INTERFACE_H

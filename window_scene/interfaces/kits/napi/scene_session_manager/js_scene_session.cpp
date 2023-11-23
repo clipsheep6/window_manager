@@ -28,7 +28,7 @@ const std::string PENDING_SCENE_CB = "pendingSceneSessionActivation";
 const std::string SESSION_STATE_CHANGE_CB = "sessionStateChange";
 const std::string SESSION_EVENT_CB = "sessionEvent";
 const std::string SESSION_RECT_CHANGE_CB = "sessionRectChange";
-const std::string CREATE_SPECIFIC_SCENE_CB = "createSpecificSession";
+const std::string CREATE_SUB_SESSION_CB = "createSpecificSession";
 const std::string BIND_DIALOG_TARGET_CB = "bindDialogTarget";
 const std::string RAISE_TO_TOP_CB = "raiseToTop";
 const std::string RAISE_TO_TOP_POINT_DOWN_CB = "raiseToTopForPointDown";
@@ -54,6 +54,7 @@ const std::string RAISE_ABOVE_TARGET_CB = "raiseAboveTarget";
 const std::string FORCE_HIDE_CHANGE_CB = "sessionForceHideChange";
 const std::string TOUCH_OUTSIDE_CB = "touchOutside";
 const std::string WINDOW_DRAG_HOT_AREA_CB = "windowDragHotArea";
+const std::string PREPARE_CLOSE_PIP_SESSION = "prepareClosePiPSession";
 } // namespace
 
 std::map<int32_t, napi_ref> JsSceneSession::jsSceneSessionMap_;
@@ -94,6 +95,7 @@ napi_value JsSceneSession::Create(napi_env env, const sptr<SceneSession>& sessio
         WLOGFE("do not get ref ");
     }
     jsSceneSessionMap_[session->GetPersistentId()] = jsRef;
+    BindNativeFunction(env, objValue, "updateSizeChangeReason", moduleName, JsSceneSession::UpdateSizeChangeReason);
     return objValue;
 }
 
@@ -116,7 +118,7 @@ JsSceneSession::JsSceneSession(napi_env env, const sptr<SceneSession>& session)
         { SESSION_STATE_CHANGE_CB,               &JsSceneSession::ProcessSessionStateChangeRegister },
         { SESSION_EVENT_CB,                      &JsSceneSession::ProcessSessionEventRegister },
         { SESSION_RECT_CHANGE_CB,                &JsSceneSession::ProcessSessionRectChangeRegister },
-        { CREATE_SPECIFIC_SCENE_CB,              &JsSceneSession::ProcessCreateSpecificSessionRegister },
+        { CREATE_SUB_SESSION_CB,                 &JsSceneSession::ProcessCreateSubSessionRegister },
         { BIND_DIALOG_TARGET_CB,                 &JsSceneSession::ProcessBindDialogTargetRegister },
         { RAISE_TO_TOP_CB,                       &JsSceneSession::ProcessRaiseToTopRegister },
         { RAISE_TO_TOP_POINT_DOWN_CB,            &JsSceneSession::ProcessRaiseToTopForPointDownRegister },
@@ -142,7 +144,8 @@ JsSceneSession::JsSceneSession(napi_env env, const sptr<SceneSession>& session)
         { RAISE_ABOVE_TARGET_CB,                 &JsSceneSession::ProcessRaiseAboveTargetRegister },
         { FORCE_HIDE_CHANGE_CB,                  &JsSceneSession::ProcessForceHideChangeRegister },
         { TOUCH_OUTSIDE_CB,                      &JsSceneSession::ProcessTouchOutsideRegister },
-        { WINDOW_DRAG_HOT_AREA_CB,               &JsSceneSession::ProcessWindowDragHotAreaRegister }
+        { WINDOW_DRAG_HOT_AREA_CB,               &JsSceneSession::ProcessWindowDragHotAreaRegister },
+        { PREPARE_CLOSE_PIP_SESSION,             &JsSceneSession::ProcessPrepareClosePiPSessionRegister},
     };
 
     sptr<SceneSession::SessionChangeCallback> sessionchangeCallback = new (std::nothrow)
@@ -168,6 +171,7 @@ JsSceneSession::~JsSceneSession()
         return;
     }
     session->UnregisterSessionChangeListeners();
+    SceneSessionManager::GetInstance().UnregisterCreateSubSessionListener(session->GetPersistentId());
 }
 
 void JsSceneSession::ProcessWindowDragHotAreaRegister()
@@ -221,7 +225,7 @@ void JsSceneSession::OnWindowDragHotArea(int32_t type, const SizeChangeReason& r
         napi_value argv[] = {[0] = jsHotAreaType, [1] = jsHotAreaReason, [2] = jsHotAreaRect};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnWindowDragHotArea");
 }
 
 
@@ -239,7 +243,7 @@ void JsSceneSession::ClearCbMap(bool needRemove, int32_t persistentId)
             jsSceneSessionMap_.erase(iter);
         }
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "ClearCbMap PID:" + std::to_string(persistentId));
 }
 
 void JsSceneSession::ProcessSessionDefaultAnimationFlagChangeRegister()
@@ -273,7 +277,7 @@ void JsSceneSession::OnDefaultAnimationFlagChange(bool isNeedDefaultAnimationFla
         napi_value argv[] = {jsSessionDefaultAnimationFlagObj};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnDefaultAnimationFlagChange, flag:" + std::to_string(isNeedDefaultAnimationFlag));
 }
 
 void JsSceneSession::ProcessPendingSceneSessionActivationRegister()
@@ -304,16 +308,18 @@ void JsSceneSession::ProcessSessionStateChangeRegister()
     WLOGFD("ProcessSessionStateChangeRegister success");
 }
 
-void JsSceneSession::ProcessCreateSpecificSessionRegister()
+void JsSceneSession::ProcessCreateSubSessionRegister()
 {
-    auto sessionchangeCallback = sessionchangeCallback_.promote();
-    if (sessionchangeCallback == nullptr) {
-        WLOGFE("sessionchangeCallback is nullptr");
+    NotifyCreateSubSessionFunc func = [this](const sptr<SceneSession>& sceneSession) {
+        this->OnCreateSubSession(sceneSession);
+    };
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        WLOGFE("session is nullptr");
         return;
     }
-    sessionchangeCallback->onCreateSpecificSession_ = std::bind(&JsSceneSession::OnCreateSpecificSession,
-        this, std::placeholders::_1);
-    WLOGFD("ProcessCreateSpecificSessionRegister success");
+    SceneSessionManager::GetInstance().RegisterCreateSubSessionListener(session->GetPersistentId(), func);
+    WLOGFD("ProcessCreateSubSessionRegister success, id: %{public}d", session->GetPersistentId());
 }
 
 void JsSceneSession::ProcessBindDialogTargetRegister()
@@ -537,7 +543,7 @@ void JsSceneSession::OnSessionEvent(uint32_t eventId)
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
     std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnSessionEvent, EventId:" + std::to_string(eventId));
 }
 
 void JsSceneSession::ProcessBackPressedRegister()
@@ -648,7 +654,7 @@ void JsSceneSession::OnForceHideChange(bool hide)
         napi_value argv[] = {jsSessionForceHideObj};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnForceHideChange, hide:" + std::to_string(hide));
 }
 
 void JsSceneSession::ProcessTouchOutsideRegister()
@@ -720,6 +726,13 @@ napi_value JsSceneSession::SetFocusable(napi_env env, napi_callback_info info)
     WLOGI("[NAPI]SetFocusable");
     JsSceneSession* me = CheckParamsAndGetThis<JsSceneSession>(env, info);
     return (me != nullptr) ? me->OnSetFocusable(env, info) : nullptr;
+}
+
+napi_value JsSceneSession::UpdateSizeChangeReason(napi_env env, napi_callback_info info)
+{
+    WLOGD("[NAPI]UpdateSizeChangeReason");
+    JsSceneSession* me = CheckParamsAndGetThis<JsSceneSession>(env, info);
+    return (me != nullptr) ? me->OnUpdateSizeChangeReason(env, info) : nullptr;
 }
 
 napi_value JsSceneSession::SetShowRecent(napi_env env, napi_callback_info info)
@@ -942,20 +955,50 @@ napi_value JsSceneSession::OnSetFocusable(napi_env env, napi_callback_info info)
     return NapiGetUndefined(env);
 }
 
-void JsSceneSession::OnCreateSpecificSession(const sptr<SceneSession>& sceneSession)
+napi_value JsSceneSession::OnUpdateSizeChangeReason(napi_env env, napi_callback_info info)
 {
-    WLOGFD("OnCreateSpecificSession");
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc < 1) { // 1: params num
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu", argc);
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    SizeChangeReason reason = SizeChangeReason::UNDEFINED;
+    if (!ConvertFromJsValue(env, argv[0], reason)) {
+        WLOGFE("[NAPI]Failed to convert parameter to bool");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        WLOGFE("[NAPI]session is nullptr");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    session->UpdateSizeChangeReason(reason);
+    WLOGI("[NAPI]UpdateSizeChangeReason reason: %{public}u end", reason);
+    return NapiGetUndefined(env);
+}
+
+void JsSceneSession::OnCreateSubSession(const sptr<SceneSession>& sceneSession)
+{
     if (sceneSession == nullptr) {
-        WLOGFI("[NAPI]sceneSession is nullptr");
+        WLOGFE("[NAPI]sceneSession is nullptr");
         return;
     }
 
-    WLOGFD("[NAPI]OnCreateSpecificSession");
-    auto iter = jsCbMap_.find(CREATE_SPECIFIC_SCENE_CB);
+    auto iter = jsCbMap_.find(CREATE_SUB_SESSION_CB);
     if (iter == jsCbMap_.end()) {
+        WLOGFE("[NAPI]Can't find callback, id: %{public}d", sceneSession->GetPersistentId());
         return;
     }
 
+    WLOGFD("[NAPI]OnCreateSubSession, id: %{public}d", sceneSession->GetPersistentId());
     auto jsCallBack = iter->second;
     wptr<SceneSession> weakSession(sceneSession);
     auto task = [this, weakSession, jsCallBack, env = env_]() {
@@ -969,11 +1012,11 @@ void JsSceneSession::OnCreateSpecificSession(const sptr<SceneSession>& sceneSess
             WLOGFE("[NAPI]jsSceneSessionObj or jsCallBack is nullptr");
             return;
         }
-        WLOGFI("CreateJsSceneSessionObject success");
+        WLOGFI("CreateJsSceneSessionObject success, id: %{public}d", specificSession->GetPersistentId());
         napi_value argv[] = {jsSceneSessionObj};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnCreateSpecificSession PID:" + std::to_string(sceneSession->GetPersistentId()));
 }
 
 void JsSceneSession::OnBindDialogTarget(const sptr<SceneSession>& sceneSession)
@@ -1007,7 +1050,8 @@ void JsSceneSession::OnBindDialogTarget(const sptr<SceneSession>& sceneSession)
         napi_value argv[] = {jsSceneSessionObj};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnBindDialogTarget, PID:" +
+        std::to_string(sceneSession->GetPersistentId()));
 }
 
 void JsSceneSession::OnSessionStateChange(const SessionState& state)
@@ -1027,7 +1071,7 @@ void JsSceneSession::OnSessionStateChange(const SessionState& state)
         napi_value argv[] = {jsSessionStateObj};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnSessionStateChange, state:" + std::to_string(static_cast<int>(state)));
 }
 
 void JsSceneSession::OnSessionRectChange(const WSRect& rect, const SizeChangeReason& reason)
@@ -1052,7 +1096,9 @@ void JsSceneSession::OnSessionRectChange(const WSRect& rect, const SizeChangeRea
         napi_value argv[] = {jsSessionStateObj, sizeChangeReason};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    std::string rectInfo = "OnSessionRectChange [" + std::to_string(rect.posX_) + "," + std::to_string(rect.posY_)
+        + "], [" + std::to_string(rect.width_) + ", " + std::to_string(rect.height_);
+    taskScheduler_->PostMainThreadTask(task, rectInfo);
 }
 
 void JsSceneSession::OnRaiseToTop()
@@ -1071,7 +1117,7 @@ void JsSceneSession::OnRaiseToTop()
         napi_value argv[] = {};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), 0, argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnRaiseToTop");
 }
 
 void JsSceneSession::OnRaiseToTopForPointDown()
@@ -1090,7 +1136,7 @@ void JsSceneSession::OnRaiseToTopForPointDown()
         napi_value argv[] = {};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), 0, argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnRaiseToTopForPointDown");
 }
 
 void JsSceneSession::OnRaiseAboveTarget(int32_t subWindowId)
@@ -1114,7 +1160,7 @@ void JsSceneSession::OnRaiseAboveTarget(int32_t subWindowId)
         napi_value argv[] = {[0] = CreateJsError(env, 0), [1] = jsSceneSessionObj};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnRaiseAboveTarget: " + std::to_string(subWindowId));
 }
 
 
@@ -1135,7 +1181,7 @@ void JsSceneSession::OnSessionFocusableChange(bool isFocusable)
         napi_value argv[] = {jsSessionFocusableObj};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnSessionFocusableChange, state:" + std::to_string(isFocusable));
 }
 
 void JsSceneSession::OnSessionTouchableChange(bool touchable)
@@ -1155,7 +1201,7 @@ void JsSceneSession::OnSessionTouchableChange(bool touchable)
         napi_value argv[] = {jsSessionTouchableObj};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnSessionTouchableChange: state " + std::to_string(touchable));
 }
 
 void JsSceneSession::OnClick()
@@ -1174,7 +1220,7 @@ void JsSceneSession::OnClick()
         napi_value argv[] = {};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), 0, argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnClick");
 }
 
 void JsSceneSession::PendingSessionActivation(SessionInfo& info)
@@ -1183,7 +1229,11 @@ void JsSceneSession::PendingSessionActivation(SessionInfo& info)
         appIndex %{public}d, reuse %{public}d", info.bundleName_.c_str(), info.moduleName_.c_str(),
         info.abilityName_.c_str(), info.appIndex_, info.reuse);
     if (info.persistentId_ == 0) {
-        SceneSessionManager::GetInstance().CheckIfReuseSession(info);
+        auto result = SceneSessionManager::GetInstance().CheckIfReuseSession(info);
+        if (result == BrokerStates::BROKER_NOT_START) {
+            WLOGE("[NAPI] The BrokerStates is not opened");
+            return;
+        }
         sptr<SceneSession> sceneSession = nullptr;
         if (info.reuse) {
             WLOGFI("session need to be reusesd.");
@@ -1242,9 +1292,10 @@ void JsSceneSession::PendingSessionActivationInner(SessionInfo& info)
             WLOGFE("[NAPI]this target session info is nullptr");
         }
         napi_value argv[] = {jsSessionInfo};
-        napi_call_function(env_ref, NapiGetUndefined(env_ref), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
+        napi_call_function(env_ref, NapiGetUndefined(env_ref),
+            jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "PendingSessionActivationInner");
 }
 
 void JsSceneSession::OnBackPressed(bool needMoveToBackground)
@@ -1264,7 +1315,7 @@ void JsSceneSession::OnBackPressed(bool needMoveToBackground)
         napi_value argv[] = {jsNeedMoveToBackgroundObj};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnBackPressed:" + std::to_string(needMoveToBackground));
 }
 
 void JsSceneSession::TerminateSession(const SessionInfo& info)
@@ -1294,7 +1345,7 @@ void JsSceneSession::TerminateSession(const SessionInfo& info)
         napi_value argv[] = {jsSessionInfo};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "TerminateSession name:" + info.abilityName_);
 }
 
 void JsSceneSession::TerminateSessionNew(const SessionInfo& info, bool needStartCaller)
@@ -1319,7 +1370,7 @@ void JsSceneSession::TerminateSessionNew(const SessionInfo& info, bool needStart
         napi_value argv[] = {jsNeedStartCaller};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "TerminateSessionNew, name:" + info.abilityName_);
 }
 
 void JsSceneSession::TerminateSessionTotal(const SessionInfo& info, TerminateType terminateType)
@@ -1344,7 +1395,7 @@ void JsSceneSession::TerminateSessionTotal(const SessionInfo& info, TerminateTyp
         napi_value argv[] = {jsTerminateType};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "TerminateSessionTotal:name:" + info.abilityName_);
 }
 
 void JsSceneSession::UpdateSessionLabel(const std::string &label)
@@ -1368,7 +1419,7 @@ void JsSceneSession::UpdateSessionLabel(const std::string &label)
         napi_value argv[] = {jsLabel};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "UpdateSessionLabel");
 }
 
 void JsSceneSession::ProcessUpdateSessionLabelRegister()
@@ -1422,7 +1473,7 @@ void JsSceneSession::UpdateSessionIcon(const std::string &iconPath)
         napi_value argv[] = {jsIconPath};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "UpdateSessionIcon");
 }
 
 void JsSceneSession::OnSessionException(const SessionInfo& info)
@@ -1452,7 +1503,7 @@ void JsSceneSession::OnSessionException(const SessionInfo& info)
         napi_value argv[] = {jsSessionInfo};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnSessionException, name" + info.bundleName_);
 }
 
 void JsSceneSession::PendingSessionToForeground(const SessionInfo& info)
@@ -1483,7 +1534,7 @@ void JsSceneSession::PendingSessionToForeground(const SessionInfo& info)
         napi_value argv[] = {jsSessionInfo};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "PendingSessionToForeground:" + info.bundleName_);
 }
 
 void JsSceneSession::PendingSessionToBackgroundForDelegator(const SessionInfo& info)
@@ -1514,7 +1565,7 @@ void JsSceneSession::PendingSessionToBackgroundForDelegator(const SessionInfo& i
         napi_value argv[] = {jsSessionInfo};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "PendingSessionToBackgroundForDelegator, name:" + info.bundleName_);
 }
 
 void JsSceneSession::OnSystemBarPropertyChange(const std::unordered_map<WindowType, SystemBarProperty>& propertyMap)
@@ -1534,7 +1585,7 @@ void JsSceneSession::OnSystemBarPropertyChange(const std::unordered_map<WindowTy
         napi_value argv[] = {jsSessionStateObj};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnSystemBarPropertyChange");
 }
 
 void JsSceneSession::OnNeedAvoid(bool status)
@@ -1550,7 +1601,7 @@ void JsSceneSession::OnNeedAvoid(bool status)
         napi_value argv[] = {jsSessionStateObj};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnNeedAvoid:" + std::to_string(status));
 }
 
 void JsSceneSession::OnIsCustomAnimationPlaying(bool status)
@@ -1566,7 +1617,7 @@ void JsSceneSession::OnIsCustomAnimationPlaying(bool status)
         napi_value argv[] = {jsSessionStateObj};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnIsCustomAnimationPlaying:" + std::to_string(status));
 }
 
 void JsSceneSession::OnShowWhenLocked(bool showWhenLocked)
@@ -1582,7 +1633,7 @@ void JsSceneSession::OnShowWhenLocked(bool showWhenLocked)
         napi_value argv[] = {jsSessionStateObj};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnShowWhenLocked:" +std::to_string(showWhenLocked));
 }
 
 void JsSceneSession::OnReuqestedOrientationChange(uint32_t orientation)
@@ -1605,7 +1656,7 @@ void JsSceneSession::OnReuqestedOrientationChange(uint32_t orientation)
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
         WLOGFI("[NAPI]change rotation success %{public}u", rotation);
     };
-    taskScheduler_->PostMainThreadTask(task);
+    taskScheduler_->PostMainThreadTask(task, "OnReuqestedOrientationChange:orientation" +std::to_string(orientation));
 }
 
 napi_value JsSceneSession::OnSetShowRecent(napi_env env, napi_callback_info info)
@@ -1615,7 +1666,17 @@ napi_value JsSceneSession::OnSetShowRecent(napi_env env, napi_callback_info info
         WLOGFE("[NAPI]session is null");
         return NapiGetUndefined(env);
     }
-    session->SetShowRecent(true);
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    bool showRecent = true;
+    if (argc == ARGC_ONE && GetType(env, argv[0]) == napi_boolean) {
+        if (!ConvertFromJsValue(env, argv[0], showRecent)) {
+            WLOGFE("[NAPI]Failed to convert parameter to bool");
+            return NapiGetUndefined(env);
+        }
+    }
+    session->SetShowRecent(showRecent);
     return NapiGetUndefined(env);
 }
 
@@ -1675,6 +1736,36 @@ napi_value JsSceneSession::OnSetFloatingScale(napi_env env, napi_callback_info i
     }
     session->SetFloatingScale(static_cast<float_t>(floatingScale));
     return NapiGetUndefined(env);
+}
+
+void JsSceneSession::ProcessPrepareClosePiPSessionRegister()
+{
+    auto sessionchangeCallback = sessionchangeCallback_.promote();
+    if (sessionchangeCallback == nullptr) {
+        WLOGFE("sessionchangeCallback is nullptr");
+        return;
+    }
+    sessionchangeCallback->onPrepareClosePiPSession_ = std::bind(&JsSceneSession::OnPrepareClosePiPSession, this);
+    WLOGFD("ProcessPrepareClosePiPSessionRegister success");
+}
+
+void JsSceneSession::OnPrepareClosePiPSession()
+{
+    WLOGFI("[NAPI]OnPrepareClosePiPSession");
+    auto iter = jsCbMap_.find(PREPARE_CLOSE_PIP_SESSION);
+    if (iter == jsCbMap_.end()) {
+        return;
+    }
+    auto jsCallBack = iter-> second;
+    auto task = [jsCallBack, env = env_]() {
+        if (!jsCallBack) {
+            WLOGFE("[NAPI]jsCallBack is nullptr");
+            return;
+        }
+        napi_value argv[] = {};
+        napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), 0, argv, nullptr);
+    };
+    taskScheduler_->PostMainThreadTask(task, "OnPrepareClosePiPSession");
 }
 
 sptr<SceneSession> JsSceneSession::GetNativeSession() const

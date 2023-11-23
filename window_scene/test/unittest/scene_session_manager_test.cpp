@@ -26,14 +26,13 @@
 #include "mock/mock_window_event_channel.h"
 #include "context.h"
 
-const std::string EMPTY_DEVICE_ID = "";
-
 using namespace testing;
 using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
 namespace {
+    const std::string EMPTY_DEVICE_ID = "";
     constexpr int WAIT_SLEEP_TIME = 1;
     using ConfigItem = WindowSceneConfig::ConfigItem;
     ConfigItem ReadConfig(const std::string& xmlStr)
@@ -650,7 +649,7 @@ HWTEST_F(SceneSessionManagerTest, ConfigDecor06, Function | SmallTest | Level3)
 
 /**
  * @tc.name: ConfigWindowSceneXml01
- * @tc.desc: call defaultWindowMode 
+ * @tc.desc: call defaultWindowMode
  * @tc.type: FUNC
  */
 HWTEST_F(SceneSessionManagerTest, ConfigWindowSceneXml01, Function | SmallTest | Level3)
@@ -678,7 +677,7 @@ HWTEST_F(SceneSessionManagerTest, ConfigWindowSceneXml01, Function | SmallTest |
 
 /**
  * @tc.name: ConfigWindowSceneXml02
- * @tc.desc: call defaultWindowMode 
+ * @tc.desc: call defaultWindowMode
  * @tc.type: FUNC
  */
 HWTEST_F(SceneSessionManagerTest, ConfigWindowSceneXml02, Function | SmallTest | Level3)
@@ -706,7 +705,7 @@ HWTEST_F(SceneSessionManagerTest, ConfigWindowSceneXml02, Function | SmallTest |
 
 /**
  * @tc.name: ConfigWindowSceneXml03
- * @tc.desc: call defaultMaximizeMode 
+ * @tc.desc: call defaultMaximizeMode
  * @tc.type: FUNC
  */
 HWTEST_F(SceneSessionManagerTest, ConfigWindowSceneXml03, Function | SmallTest | Level3)
@@ -734,7 +733,7 @@ HWTEST_F(SceneSessionManagerTest, ConfigWindowSceneXml03, Function | SmallTest |
 
 /**
  * @tc.name: ConfigWindowSceneXml04
- * @tc.desc: call defaultMaximizeMode 
+ * @tc.desc: call defaultMaximizeMode
  * @tc.type: FUNC
  */
 HWTEST_F(SceneSessionManagerTest, ConfigWindowSceneXml04, Function | SmallTest | Level3)
@@ -762,7 +761,7 @@ HWTEST_F(SceneSessionManagerTest, ConfigWindowSceneXml04, Function | SmallTest |
 
 /**
  * @tc.name: ConfigWindowSceneXml05
- * @tc.desc: call maxFloatingWindowSize 
+ * @tc.desc: call maxFloatingWindowSize
  * @tc.type: FUNC
  */
 HWTEST_F(SceneSessionManagerTest, ConfigWindowSceneXml05, Function | SmallTest | Level3)
@@ -1908,14 +1907,14 @@ HWTEST_F(SceneSessionManagerTest, DestroySpecificSession, Function | SmallTest |
 }
 
 /**
- * @tc.name: SetCreateSpecificSessionListener
+ * @tc.name: SetCreateSystemSessionListener
  * @tc.desc: SceneSesionManager set create specific session listener
  * @tc.type: FUNC
 */
-HWTEST_F(SceneSessionManagerTest, SetCreateSpecificSessionListener, Function | SmallTest | Level3)
+HWTEST_F(SceneSessionManagerTest, SetCreateSystemSessionListener, Function | SmallTest | Level3)
 {
     int ret = 0;
-    ssm_->SetCreateSpecificSessionListener(nullptr);
+    ssm_->SetCreateSystemSessionListener(nullptr);
     ASSERT_EQ(ret, 0);
 }
 
@@ -2209,15 +2208,15 @@ HWTEST_F(SceneSessionManagerTest, IsSessionClearable, Function | SmallTest | Lev
 }
 
 /**
- * @tc.name: UpdateProperty
+ * @tc.name: UpdateSessionProperty
  * @tc.desc: SceneSesionManager update property
  * @tc.type: FUNC
 */
-HWTEST_F(SceneSessionManagerTest, UpdateProperty, Function | SmallTest | Level3)
+HWTEST_F(SceneSessionManagerTest, UpdateSessionProperty, Function | SmallTest | Level3)
 {
     sptr<WindowSessionProperty> property = new WindowSessionProperty();
     WSPropertyChangeAction action = WSPropertyChangeAction::ACTION_UPDATE_TOUCHABLE;
-    WMError result = ssm_->UpdateProperty(property, action);
+    WMError result = ssm_->UpdateSessionProperty(property, action);
     ASSERT_EQ(result, WMError::WM_OK);
     SessionInfo info;
     info.abilityName_ = "Foreground01";
@@ -2253,7 +2252,7 @@ HWTEST_F(SceneSessionManagerTest, HandleUpdateProperty01, Function | SmallTest |
     ssm_->HandleUpdateProperty(property, action, scensession);
     action = WSPropertyChangeAction::ACTION_UPDATE_SET_BRIGHTNESS;
     ssm_->HandleUpdateProperty(property, action, scensession);
-    WMError result = ssm_->UpdateProperty(property, action);
+    WMError result = ssm_->UpdateSessionProperty(property, action);
     EXPECT_EQ(result, WMError::WM_OK);
     ssm_->HandleUpdateProperty(property, action, scensession);
     action = WSPropertyChangeAction::ACTION_UPDATE_ORIENTATION;
@@ -2298,7 +2297,7 @@ HWTEST_F(SceneSessionManagerTest, HandleUpdateProperty02, Function | SmallTest |
     ssm_->HandleUpdateProperty(property, action, scensession);
     action = WSPropertyChangeAction::ACTION_UPDATE_RAISEENABLED;
     ssm_->HandleUpdateProperty(property, action, scensession);
-    WMError result = ssm_->UpdateProperty(property, action);
+    WMError result = ssm_->UpdateSessionProperty(property, action);
     EXPECT_EQ(result, WMError::WM_OK);
     action = WSPropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE;
     ssm_->HandleUpdateProperty(property, action, scensession);
@@ -2325,7 +2324,7 @@ HWTEST_F(SceneSessionManagerTest, HandleTurnScreenOn, Function | SmallTest | Lev
     ssm_->HandleKeepScreenOn(scensession, requireLock);
     requireLock = false;
     ssm_->HandleKeepScreenOn(scensession, requireLock);
-    WMError result = ssm_->UpdateProperty(property, action);
+    WMError result = ssm_->UpdateSessionProperty(property, action);
     ASSERT_EQ(result, WMError::WM_OK);
     delete scensession;
     delete property;
@@ -2442,6 +2441,25 @@ HWTEST_F(SceneSessionManagerTest, RequestFocusStatus, Function | SmallTest | Lev
     EXPECT_EQ(result02, WMError::WM_OK);
     WMError result03 = ssm_->RequestFocusStatus(persistentId_, false);
     EXPECT_EQ(result03, WMError::WM_OK);
+}
+
+/**
+ * @tc.name: RaiseWindowToTop
+ * @tc.desc: SceneSesionManager raise window to top
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, RaiseWindowToTop, Function | SmallTest | Level3)
+{
+    int32_t focusedSession_ = ssm_->GetFocusedSession();
+    EXPECT_EQ(focusedSession_, INVALID_SESSION_ID);
+    int32_t persistentId_ = INVALID_SESSION_ID;
+    WSError result01 = ssm_->RaiseWindowToTop(persistentId_);
+    EXPECT_EQ(result01, WSError::WS_OK);
+    persistentId_ = 10000;
+    WSError result02 = ssm_->RaiseWindowToTop(persistentId_);
+    EXPECT_EQ(result02, WSError::WS_OK);
+    WSError result03 = ssm_->RaiseWindowToTop(persistentId_);
+    EXPECT_EQ(result03, WSError::WS_OK);
 }
 
 /**
@@ -2799,7 +2817,7 @@ HWTEST_F(SceneSessionManagerTest, FindMainWindowWithToken, Function | SmallTest 
     sptr<SceneSession> result = ssm_->FindMainWindowWithToken(targetToken);
     EXPECT_EQ(result, nullptr);
     uint64_t persistentId = 1423;
-    WSError result01 = ssm_->BindDialogTarget(persistentId, targetToken);
+    WSError result01 = ssm_->BindDialogSessionTarget(persistentId, targetToken);
     EXPECT_EQ(result01, WSError::WS_ERROR_NULLPTR);
 }
 
@@ -2856,6 +2874,19 @@ HWTEST_F(SceneSessionManagerTest, UpdateImmersiveState, Function | SmallTest | L
     int ret = 0;
     ssm_->UpdateImmersiveState();
     ASSERT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name: NotifyAINavigationBarShowStatus
+ * @tc.desc: test NotifyAINavigationBarShowStatus
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, NotifyAINavigationBarShowStatus, Function | SmallTest | Level3)
+{
+    bool isVisible = false;
+    WSRect barArea = { 0, 0, 320, 240}; // width: 320, height: 240
+    WSError result = ssm_->NotifyAINavigationBarShowStatus(isVisible, barArea);
+    ASSERT_EQ(result, WSError::WS_OK);
 }
 
 /**

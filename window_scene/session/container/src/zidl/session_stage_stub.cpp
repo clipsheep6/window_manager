@@ -69,6 +69,8 @@ const std::map<uint32_t, SessionStageStubFunc> SessionStageStub::stubFuncMap_{
         &SessionStageStub::HandleNotifySessionForeground),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SESSION_BACKGROUND),
         &SessionStageStub::HandleNotifySessionBackground),
+    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TITLE_POSITION_CHANGE),
+        &SessionStageStub::HandleUpdateTitleInTargetPos),
 };
 
 int SessionStageStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -104,12 +106,11 @@ int SessionStageStub::HandleUpdateRect(MessageParcel& data, MessageParcel& reply
     SizeChangeReason reason = static_cast<SizeChangeReason>(data.ReadUint32());
     bool hasRSTransaction = data.ReadBool();
     if (hasRSTransaction) {
-        auto rsTransaction = data.ReadParcelable<RSTransaction>();
-        if (!rsTransaction) {
-            WLOGFE("RSTransaction unMarsh failed");
+        std::shared_ptr<RSTransaction> transaction(data.ReadParcelable<RSTransaction>());
+        if (!transaction) {
+            WLOGFE("transaction unMarsh failed");
             return -1;
         }
-        std::shared_ptr<RSTransaction> transaction(rsTransaction);
         WSError errCode = UpdateRect(rect, reason, transaction);
         reply.WriteUint32(static_cast<uint32_t>(errCode));
     } else {
@@ -297,6 +298,16 @@ int SessionStageStub::HandleNotifySessionBackground(MessageParcel& data, Message
     bool withAnimation = data.ReadBool();
     bool isFromInnerkits = data.ReadBool();
     NotifySessionBackground(reason, withAnimation, isFromInnerkits);
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleUpdateTitleInTargetPos(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("HandleUpdateTitleInTargetPos!");
+    bool isShow = data.ReadBool();
+    int32_t height = data.ReadInt32();
+    WSError errCode = UpdateTitleInTargetPos(isShow, height);
+    reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen
