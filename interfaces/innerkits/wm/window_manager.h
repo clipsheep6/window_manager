@@ -25,6 +25,7 @@
 #include "wm_common.h"
 #include "focus_change_info.h"
 #include "window_visibility_info.h"
+#include "window_drawing_content_info.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -118,7 +119,7 @@ public:
      *
      * @param DrawingContentInfo Window visibility info.
      */
-    virtual void OnWindowDrawingContentChanged(const std::vector<sptr<DrawingContentInfo>>& DrawingContentInfo) = 0;
+    virtual void OnWindowDrawingContentChanged(const std::vector<sptr<WindowDrawingContentInfo>>& DrawingContentInfo) = 0;
 };
 
 
@@ -419,6 +420,12 @@ public:
      * @return WM_OK means get success, others means get failed.
      */
     WMError GetDrawingContentWindowInfo(std::vector<sptr<WindowDrawingContentInfo>>& infos) const;
+
+    void NotifyWindowDrawingContentInfoChanged(
+        const std::vector<sptr<WindowDrawingContentInfo>>& windowDrawingContentInfos);
+    
+    void UpdateWindowDrawingContentInfo(
+    const std::vector<sptr<WindowDrawingContentInfo>>& windowDrawingContentInfos) const;
 
 private:
     WindowManager();

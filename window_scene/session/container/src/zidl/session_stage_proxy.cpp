@@ -532,6 +532,11 @@ WSError SessionStageProxy::UpdateTitleInTargetPos(bool isShow, int32_t height)
         return WSError::WS_ERROR_IPC_FAILED;
     }
 
+    if (!data.WriteUint32(height)) {
+        WLOGFE("Write height failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
     if (Remote()->SendRequest(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TITLE_POSITION_CHANGE),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");

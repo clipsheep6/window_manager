@@ -44,7 +44,6 @@ public:
         TRANS_ID_UPDATE_CAMERA_FLOAT,
         TRANS_ID_UPDATE_WATER_MARK_FLAG,
         TRANS_ID_UPDATE_GESTURE_NAVIGATION_ENABLED,
-        TRANS_ID_UPDATE_WINDOW_DRAWING_STATUS,
     };
 
     virtual void UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused) = 0;

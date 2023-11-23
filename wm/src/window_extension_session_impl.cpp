@@ -325,7 +325,7 @@ void WindowExtensionSessionImpl::NotifySessionBackground(uint32_t reason, bool w
 {
 }
 
-void UpdateWindowDrawingContentInfo(std::vector<sptr<WindowDrawingContentInfo>> infos)
+void WindowExtensionSessionImpl::UpdateWindowDrawingContentInfo(const std::vector<sptr<WindowDrawingContentInfo>>& infos)
 {
 }
 } // namespace Rosen

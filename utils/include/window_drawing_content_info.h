@@ -65,7 +65,7 @@ public:
     uint32_t windowId_ { INVALID_WINDOW_ID };
     int32_t pid_ { 0 };
     int32_t uid_ { 0 };
-    bool drawingContentState {false};
+    bool drawingContentState_ {false};
     WindowType windowType_ { WindowType::WINDOW_TYPE_APP_MAIN_WINDOW };
 };
 } // namespace OHOS::Rosen
