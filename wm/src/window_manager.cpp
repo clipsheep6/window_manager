@@ -25,6 +25,9 @@
 #include "window_manager_agent.h"
 #include "window_manager_hilog.h"
 #include "wm_common.h"
+#ifdef EFFICIENCY_MANAGER_ENABLE
+#include "suspend_manager_client.h"
+#endif // EFFICIENCY_MANAGER_ENABLE
 
 namespace OHOS {
 namespace Rosen {
@@ -55,6 +58,7 @@ public:
     void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing);
     void NotifyWaterMarkFlagChangedResult(bool showWaterMark);
     void NotifyGestureNavigationEnabledResult(bool enable);
+    void NotifyWindowDrawingContentInfoChanged(const std::vector<sptr<DrawingContentInfo>>& infos);
 
     static inline SingletonDelegator<WindowManager> delegator_;
 
@@ -73,6 +77,8 @@ public:
     sptr<WindowManagerAgent> waterMarkFlagChangeAgent_;
     std::vector<sptr<IGestureNavigationEnabledChangedListener>> gestureNavigationEnabledListeners_;
     sptr<WindowManagerAgent> gestureNavigationEnabledAgent_;
+    std::vector<sptr<IDrawingContentChangedListener>>windowDrawingContentListeners_;
+    sptr<WindowManagerAgent> windowDrawingContentListenerAgent_;
 };
 
 void WindowManager::Impl::NotifyFocused(const sptr<FocusChangeInfo>& focusChangeInfo)
@@ -661,6 +667,10 @@ void WindowManager::UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChan
     }
     WLOGFD("window focus change: %{public}d, id: %{public}u", focused, focusChangeInfo->windowId_);
     if (focused) {
+#ifdef EFFICIENCY_MANAGER_ENABLE
+        SuspendManager::SuspendManagerClient::GetInstance().ThawOneApplication(focusChangeInfo->uid_,
+            "", "THAW_BY_FOCUS_CHANGED");
+#endif // EFFICIENCY_MANAGER_ENABLE
         pImpl_->NotifyFocused(focusChangeInfo);
     } else {
         pImpl_->NotifyUnfocused(focusChangeInfo);
@@ -762,13 +772,45 @@ void WindowManager::OnRemoteDied()
     pImpl_->cameraFloatWindowChangedListenerAgent_ = nullptr;
 }
 
-WMError WindowManager::RaiseWindowToTop(int32_t persistentId)
+void WindowManager::Impl::NotifyDrawingContentChange(const std::vector<sptr<DrawingContenInfo>>& infos,
+    )
 {
-    WMError ret = SingletonContainer::Get<WindowAdapter>().RaiseWindowToTop(persistentId);
-    if (ret != WMError::WM_OK) {
-        WLOGFE("raise window to top failed");
+    if (infos.empty()) {
+        WLOGFE("infos is empty");
+        return;
     }
-    return ret;
+    for (auto& info : infos) {
+        WLOGFD("NotifyDrawingContentChange: wid[%{public}u], innerWid_[%{public}u], uiNodeId_[%{public}u]," \
+            "rect[%{public}d %{public}d %{public}d %{public}d]," \
+            "isFocused[%{public}d], isDecorEnable[%{public}d], displayId[%{public}" PRIu64"], layer[%{public}u]," \
+            "mode[%{public}u], type[%{public}u, updateType[%{public}d]",
+            info->wid_, info->innerWid_, info->uiNodeId_, info->windowRect_.width_, info->windowRect_.height_,
+            info->windowRect_.posX_, info->windowRect_.posY_, info->focused_, info->isDecorEnable_, info->displayId_,
+            info->layer_, info->mode_, info->type_, type);
+    }
+
+    std::vector<sptr<IWindowUpdateListener>> windowUpdateListeners;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        windowUpdateListeners = windowUpdateListeners_;
+    }
+    for (auto& listener : windowUpdateListeners) {
+        listener->OnWindowUpdate(infos, type);
+    }
+}
+
+void WindowManager::Impl::NotifyWindowDrawingContentInfoChanged(
+    const std::vector<sptr<WindowDrawingContentInfo>>& windowDrawingContentInfos)
+{
+    std::vector<sptr<IDrawingContentChangedListener>> windowDrawingContentChangeListeners;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        windowDrawingContentChangeListeners = windowDrawingContentListeners_;
+    }
+    for (auto& listener : windowDrawingContentChangeListeners) {
+        WLOGD("Notify windowDrawingContentInfo to caller");
+        listener->OnWindowDrawingContentChanged(windowDrawingContentInfos);
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

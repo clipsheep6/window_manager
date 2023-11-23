@@ -518,32 +518,27 @@ void SessionStageProxy::NotifySessionBackground(uint32_t reason, bool withAnimat
     }
 }
 
-WSError SessionStageProxy::UpdateTitleInTargetPos(bool isShow, int32_t height)
+void SessionStageProxy::UpdateWindowDrawingContentInfo(const std::vector<sptr<WindowDrawingContentInfo>>& infos)
 {
     MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
-        return WSError::WS_ERROR_IPC_FAILED;
+        return;
     }
-
-    if (!data.WriteBool(isShow)) {
-        WLOGFE("Write isShow failed");
-        return WSError::WS_ERROR_IPC_FAILED;
+    if (!MarshallingHelper::MarshallingVectorParcelableObj<WindowDrawingContentInfo>(data, infos)) {
+        WLOGFE("Write DrawingContent window infos failed");
+        return;
     }
-
-    if (!data.WriteUint32(height)) {
-        WLOGFE("Write height failed");
-        return WSError::WS_ERROR_IPC_FAILED;
+    if (!data.WriteUint32(static_cast<uint32_t>(type))) {
+        WLOGFE("Write windowUpdateType failed");
+        return;
     }
-
-    if (Remote()->SendRequest(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TITLE_POSITION_CHANGE),
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_UPDATE_WINDOW_DRAWING_STATUS),
         data, reply, option) != ERR_NONE) {
-        WLOGFE("SendRequest failed");
-        return WSError::WS_ERROR_IPC_FAILED;
+        WLOGFE("SendRequest UpdateWindowDrawingContentInfo failed");
     }
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WSError>(ret);
 }
+
 } // namespace OHOS::Rosen

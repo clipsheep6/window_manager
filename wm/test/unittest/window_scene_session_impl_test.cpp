@@ -1822,7 +1822,8 @@ HWTEST_F(WindowSceneSessionImplTest, NotifySessionForeground, Function | SmallTe
 
     uint32_t reason = 1;
     bool withAnimation = true;
-    windowscenesession->NotifySessionForeground(reason, withAnimation);
+    WMError ret = windowscenesession->Show(reason, withAnimation);
+    ASSERT_EQ(ret, WMError::WM_OK);
 }
 
 /**
@@ -1841,7 +1842,8 @@ HWTEST_F(WindowSceneSessionImplTest, NotifySessionBackground, Function | SmallTe
     uint32_t reason = 1;
     bool withAnimation = true;
     bool isFromInnerkits = true;
-    windowscenesession->NotifySessionBackground(reason, withAnimation, isFromInnerkits);
+    WMError ret = windowscenesession->Hide(reason, withAnimation, isFromInnerkits);
+    ASSERT_EQ(ret, WMError::WM_OK);
 }
 }
 } // namespace Rosen

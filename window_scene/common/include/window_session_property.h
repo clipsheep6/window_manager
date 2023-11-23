@@ -238,6 +238,7 @@ struct SystemSessionConfig : public Parcelable {
             return nullptr;
         }
         config->isSystemDecorEnable_ = parcel.ReadBool();
+        config->backgroundswitch = parcel.ReadBool();
         config->isStretchable_ = parcel.ReadBool();
         config->decorModeSupportInfo_ = parcel.ReadUint32();
         config->defaultWindowMode_ = static_cast<WindowMode>(parcel.ReadUint32());
