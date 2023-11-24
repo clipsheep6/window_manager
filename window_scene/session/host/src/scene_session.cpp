@@ -2007,4 +2007,13 @@ bool SceneSession::IsDirtyWindow()
     std::lock_guard<std::recursive_mutex> lock(sizeChangeMutex_);
     return isDirty_;
 }
+
+void SceneSession::UpdateWindowDrawingContentInfo(
+    const std::vector<sptr<WindowDrawingContentInfo>>& infos)
+{
+     if (!sessionStage_) {
+        return;
+    }
+    return sessionStage_->UpdateWindowDrawingContentInfo(infos);
+}
 } // namespace OHOS::Rosen

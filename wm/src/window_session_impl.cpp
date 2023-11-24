@@ -1742,5 +1742,10 @@ void WindowSessionImpl::UpdatePiPRect(const uint32_t width, const uint32_t heigh
     }
     hostSession_->UpdatePiPRect(width, height, reason);
 }
+
+void WindowSessionImpl::UpdateWindowDrawingContentInfo(const std::vector<sptr<WindowDrawingContentInfo>>& infos)
+{
+    WLOGFD("UpdateWindowDrawingContentInfo");
+}
 } // namespace Rosen
 } // namespace OHOS

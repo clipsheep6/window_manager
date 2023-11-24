@@ -1038,5 +1038,25 @@ void WindowManagerProxy::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
     sptr<FocusChangeInfo> info = reply.ReadParcelable<FocusChangeInfo>();
     focusInfo = *info;
 }
+
+// WMError WindowManagerProxy::GetDrawingContentWindowInfo(std::vector<sptr<WindowDrawingContentInfo>>& infos)
+// {
+//     MessageParcel data;
+//     MessageParcel reply;
+//     MessageOption option;
+//     if (!data.WriteInterfaceToken(GetDescriptor())) {
+//         WLOGFE("WriteInterfaceToken failed");
+//         return WMError::WM_ERROR_IPC_FAILED;
+//     }
+//     if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerMessage::TRANS_ID_GET_DRAWING_CONTENT_WINDOW_INFO_ID),
+//         data, reply, option) != ERR_NONE) {
+//         return WMError::WM_ERROR_IPC_FAILED;
+//     }
+//     if (!MarshallingHelper::UnmarshallingVectorParcelableObj<WindowDrawingContentInfo>(reply, infos)) {
+//         WLOGFE("read visibility window infos failed");
+//         return WMError::WM_ERROR_IPC_FAILED;
+//     }
+//     return static_cast<WMError>(reply.ReadInt32());
+// }
 } // namespace Rosen
 } // namespace OHOS

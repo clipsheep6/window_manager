@@ -25,6 +25,7 @@
 #include "wm_common.h"
 #include "focus_change_info.h"
 #include "window_visibility_info.h"
+#include "window_drawing_content_info.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -105,6 +106,22 @@ public:
      */
     virtual void OnWindowVisibilityChanged(const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfo) = 0;
 };
+
+/**
+ * @class IDrawingContentChangedListener
+ *
+ * @brief Listener to observe visibility changed.
+ */
+class IDrawingContentChangedListener : virtual public RefBase {
+public:
+    /**
+     * @brief Notify caller when window visibility changed.
+     *
+     * @param DrawingContentInfo Window visibility info.
+     */
+    virtual void OnWindowDrawingContentChanged(const std::vector<sptr<WindowDrawingContentInfo>>& DrawingContentInfo) = 0;
+};
+
 
 /**
  * @class AccessibilityWindowInfo
@@ -375,13 +392,11 @@ public:
 
     /**
      * @brief raise window to top by windowId
-     *
      * @param persistentId this window to raise
      * @return WM_OK if raise success
      */
     WMError RaiseWindowToTop(int32_t persistentId);
 
-    /**
      * @brief notify window extension visibility change
      *
      * @param pid process id
@@ -390,6 +405,36 @@ public:
      * @return WM_OK means notify success, others means notify failed.
     */
     WMError NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible);
+
+    /**
+     * @brief Register drawingcontent changed listener.
+     *
+     * @param listener IDrawingContentChangedListener.
+     * @return WM_OK means register success, others means register failed.
+     */
+    WMError RegisterDrawingContentChangedListener(const sptr<IDrawingContentChangedListener>& listener);
+
+    /**
+     * @brief Unregister drawingcontent changed listener.
+     *
+     * @param listener IDrawingContentChangedListener.
+     * @return WM_OK means unregister success, others means unregister failed.
+     */
+    WMError UnregisterDrawingContentChangedListener(const sptr<IDrawingContentChangedListener>& listener);
+
+    /**
+     * @brief Get visibility window info.
+     *
+     * @param infos Visible window infos
+     * @return WM_OK means get success, others means get failed.
+     */
+    WMError GetDrawingContentWindowInfo(std::vector<sptr<WindowDrawingContentInfo>>& infos) const;
+
+    void NotifyWindowDrawingContentInfoChanged(
+        const std::vector<sptr<WindowDrawingContentInfo>>& windowDrawingContentInfos);
+    
+    void UpdateWindowDrawingContentInfo(
+    const std::vector<sptr<WindowDrawingContentInfo>>& windowDrawingContentInfos) const;
 
 private:
     WindowManager();

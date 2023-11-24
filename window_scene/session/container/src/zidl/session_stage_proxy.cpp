@@ -23,6 +23,7 @@
 
 #include "window_manager_hilog.h"
 #include "ws_common.h"
+#include "marshalling_helper.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -517,7 +518,6 @@ void SessionStageProxy::NotifySessionBackground(uint32_t reason, bool withAnimat
         return;
     }
 }
-
 WSError SessionStageProxy::UpdateTitleInTargetPos(bool isShow, int32_t height)
 {
     MessageParcel data;
@@ -546,4 +546,28 @@ WSError SessionStageProxy::UpdateTitleInTargetPos(bool isShow, int32_t height)
     int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
 }
+
+void SessionStageProxy::UpdateWindowDrawingContentInfo(const std::vector<sptr<WindowDrawingContentInfo>>& infos)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+    if (!MarshallingHelper::MarshallingVectorParcelableObj<WindowDrawingContentInfo>(data, infos)) {
+        WLOGFE("Write DrawingContent window infos failed");
+        return;
+    }
+    // if (!data.WriteUint32(static_cast<uint32_t>(type))) {
+    //     WLOGFE("Write windowUpdateType failed");
+    //     return;
+    // }
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_UPDATE_WINDOW_DRAWING_STATUS),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest UpdateWindowDrawingContentInfo failed");
+    }
+}
+
 } // namespace OHOS::Rosen

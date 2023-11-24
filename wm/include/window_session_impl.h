@@ -166,6 +166,7 @@ public:
     WSError UpdateTitleInTargetPos(bool isShow, int32_t height) override;
 
     void UpdatePiPRect(const uint32_t width, const uint32_t height, PiPRectUpdateReason reason) override;
+    void UpdateWindowDrawingContentInfo(const std::vector<sptr<WindowDrawingContentInfo>>& infos) override;
 protected:
     WMError Connect();
     bool IsWindowSessionInvalid() const;
