@@ -107,6 +107,22 @@ public:
 };
 
 /**
+ * @class IDrawingContentChangedListener
+ *
+ * @brief Listener to observe visibility changed.
+ */
+class IDrawingContentChangedListener : virtual public RefBase {
+public:
+    /**
+     * @brief Notify caller when window visibility changed.
+     *
+     * @param DrawingContentInfo Window visibility info.
+     */
+    virtual void OnWindowDrawingContentChanged(const std::vector<sptr<DrawingContentInfo>>& DrawingContentInfo) = 0;
+};
+
+
+/**
  * @class AccessibilityWindowInfo
  *
  * @brief Window info used for Accessibility.
@@ -380,6 +396,29 @@ public:
      * @return WM_OK if raise success
      */
     WMError RaiseWindowToTop(int32_t persistentId);
+    /**
+     * @brief Register drawingcontent changed listener.
+     *
+     * @param listener IDrawingContentChangedListener.
+     * @return WM_OK means register success, others means register failed.
+     */
+    WMError RegisterDrawingContentChangedListener(const sptr<IDrawingContentChangedListener>& listener);
+
+    /**
+     * @brief Unregister drawingcontent changed listener.
+     *
+     * @param listener IDrawingContentChangedListener.
+     * @return WM_OK means unregister success, others means unregister failed.
+     */
+    WMError UnregisterDrawingContentChangedListener(const sptr<IDrawingContentChangedListener>& listener);
+
+    /**
+     * @brief Get visibility window info.
+     *
+     * @param infos Visible window infos
+     * @return WM_OK means get success, others means get failed.
+     */
+    WMError GetDrawingContentWindowInfo(std::vector<sptr<WindowDrawingContentInfo>>& infos) const;
 
 private:
     WindowManager();
