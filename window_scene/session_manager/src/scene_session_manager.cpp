@@ -3027,7 +3027,7 @@ WSError SceneSessionManager::RequestFocusSpecificCheck(sptr<SceneSession>& scene
     }
     // app session will block lower zOrder request focus
     auto focusedSession = GetSceneSession(focusedSessionId_);
-    if (focusedSession && focusedSession->IsAppSession()
+    if (byForeground && focusedSession && focusedSession->IsAppSession()
         && sceneSession->GetZOrder() < focusedSession->GetZOrder()) {
             WLOGFD("session %{public}d is lower than focused session %{public}d", persistentId, focusedSessionId_);
             return WSError::WS_DO_NOTHING;
@@ -3036,7 +3036,7 @@ WSError SceneSessionManager::RequestFocusSpecificCheck(sptr<SceneSession>& scene
     bool isTypeBlocked = sceneSession->IsAppSession() ||
         sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_GLOBAL_SEARCH ||
         sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_NEGATIVE_SCREEN;
-    if (focusedSession && focusedSession->GetSessionInfo().isSystem_ &&
+    if (byForeground && focusedSession && focusedSession->GetSessionInfo().isSystem_ &&
         (focusedSession->GetWindowType() == WindowType::WINDOW_TYPE_PANEL ||
         focusedSession->GetWindowType() == WindowType::WINDOW_TYPE_KEYGUARD) && isTypeBlocked &&
         sceneSession->GetZOrder() < focusedSession->GetZOrder()) {
@@ -4814,6 +4814,22 @@ void SceneSessionManager::InitWithRenderServiceAdded()
     }
 }
 
+WSError SceneSessionManager::NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible)
+{
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("NotifyWindowExtensionVisibilityChange permission denied!");
+        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    }
+    WLOGFI("Notify WindowExtension visibility change to %{public}s for pid: %{public}d, uid: %{public}d",
+        visible ? "VISIBLE" : "INVISIBLE", pid, uid);
+    std::vector<sptr<WindowVisibilityInfo>> windowVisibilityInfos;
+    windowVisibilityInfos.emplace_back(new WindowVisibilityInfo(INVALID_WINDOW_ID, pid, uid,
+        visible ? WINDOW_VISIBILITY_STATE_NO_OCCLUSION : WINDOW_VISIBILITY_STATE_TOTALLY_OCCUSION,
+        WindowType::WINDOW_TYPE_APP_COMPONENT));
+    SessionManagerAgentController::GetInstance().UpdateWindowVisibilityInfo(windowVisibilityInfos);
+    return WSError::WS_OK;
+}
+
 void SceneSessionManager::WindowDestroyNotifyVisibility(const sptr<SceneSession>& sceneSession)
 {
     if (sceneSession == nullptr) {
@@ -5069,6 +5085,10 @@ WSError SceneSessionManager::NotifyAINavigationBarShowStatus(bool isVisible, WSR
                     continue;
                 }
                 AvoidArea avoidArea = sceneSession->GetAvoidAreaByType(AvoidAreaType::TYPE_NAVIGATION_INDICATOR);
+                if (!avoidArea.topRect_.IsUninitializedRect() || !avoidArea.leftRect_.IsUninitializedRect() ||
+                    !avoidArea.rightRect_.IsUninitializedRect()) {
+                    continue;
+                }
                 UpdateSessionAvoidAreaIfNeed(persistentId, sceneSession, avoidArea,
                                              AvoidAreaType::TYPE_NAVIGATION_INDICATOR);
             }

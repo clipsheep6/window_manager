@@ -426,6 +426,14 @@ public:
     
     void UpdateWindowDrawingContentInfo(
     const std::vector<sptr<WindowDrawingContentInfo>>& windowDrawingContentInfos) const;
+     * @brief notify window extension visibility change
+     *
+     * @param pid process id
+     * @param uid user id
+     * @param visible visibility
+     * @return WM_OK means notify success, others means notify failed.
+    */
+    WMError NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible);
 
 private:
     WindowManager();
