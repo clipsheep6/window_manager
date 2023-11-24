@@ -166,6 +166,12 @@ public:
     WSError UpdateTitleInTargetPos(bool isShow, int32_t height) override;
 
     void UpdatePiPRect(const uint32_t width, const uint32_t height, PiPRectUpdateReason reason) override;
+    void UpdateWindowDrawingContentInfo(const WindowDrawingContentInfo& infos) override;
+    WMError GetWindowDrawingContentChangeInfo(WindowDrawingContentInfo info);
+    bool GetDrawingContentState() const;
+    void SetDrawingContentState(bool drawingContentState);
+    bool lastProcessContentState_ = false;
+
 protected:
     WMError Connect();
     bool IsWindowSessionInvalid() const;
@@ -257,6 +263,7 @@ private:
     WindowSizeChangeReason lastSizeChangeReason_ = WindowSizeChangeReason::END;
     bool postTaskDone_ = false;
     int16_t rotationAnimationCount_ { 0 };
+    bool lastDrawingContentState_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS
