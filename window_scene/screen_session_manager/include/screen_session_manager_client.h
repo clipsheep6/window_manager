@@ -53,6 +53,7 @@ public:
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type) override;
     void OnScreenshot(DisplayId displayId) override;
     void OnImmersiveStateChanged(bool& immersive) override;
+    void SetScreenLockSurfaceNode(const std::shared_ptr<RSSurfaceNode>& surfaceNode);
 
 protected:
     ScreenSessionManagerClient() = default;

@@ -459,6 +459,8 @@ private:
     sptr<SceneSession> CreateSceneSession(const SessionInfo& sessionInfo, sptr<WindowSessionProperty> property);
 
     void ProcessPiPSessionForeground(const sptr<SceneSession> sceneSession);
+
+    std::shared_ptr<RSSurfaceNode> GetScreenLockSurfaceNode();
 };
 } // namespace OHOS::Rosen
 

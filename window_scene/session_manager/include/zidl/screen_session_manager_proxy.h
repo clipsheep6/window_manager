@@ -127,6 +127,7 @@ public:
     ScreenProperty GetPhyScreenProperty(ScreenId screenId) override;
     void NotifyDisplayChangeInfoChanged(const sptr<DisplayChangeInfo>& info) override;
     void SetScreenPrivacyState(bool hasPrivate) override;
+    // void SetScreenLockSurfaceNode(const std::shared_ptr<RSSurfaceNode>& surfaceNode) override;
 
 private:
     static inline BrokerDelegator<ScreenSessionManagerProxy> delegator_;
