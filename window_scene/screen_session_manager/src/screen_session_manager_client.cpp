@@ -225,4 +225,13 @@ void ScreenSessionManagerClient::SetScreenPrivacyState(bool hasPrivate)
     }
     screenSessionManager_->SetScreenPrivacyState(hasPrivate);
 }
+
+void ScreenSessionManagerClient::SetScreenLockSurfaceNode(const std::shared_ptr<RSSurfaceNode>& surfaceNode)
+{
+    if (!screenSessionManager_) {
+        WLOGFE("screenSessionManager_ is null");
+        return;
+    }
+    screenSessionManager_->SetScreenLockSurfaceNode(surfaceNode);
+}
 } // namespace OHOS::Rosen

@@ -196,6 +196,10 @@ void SceneSessionManager::Init()
     LoadWindowSceneXml();
     sptr<IDisplayChangeListener> listener = new DisplayChangeListener();
     ScreenSessionManagerClient::GetInstance().RegisterDisplayChangeListener(listener);
+    std::shared_ptr<RSSurfaceNode> screenLockSurfaceNode = GetScreenLockSurfaceNode();
+    if (screenLockSurfaceNode != nullptr) {
+        ScreenSessionManagerClient::GetInstance().SetScreenLockSurfaceNode(screenLockSurfaceNode);
+    }
     InitPrepareTerminateConfig();
 
     // create handler for inner command at server
@@ -5724,5 +5728,23 @@ void SceneSessionManager::NotifyUpdateRectAfterLayout()
     };
     // need sync task since animation transcation need
     return taskScheduler_->PostVoidSyncTask(task);
+}
+
+std::shared_ptr<RSSurfaceNode> SceneSessionManager::GetScreenLockSurfaceNode()
+{
+    WLOGFI("GetScreenLockSurfaceNode Called.");
+    std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+    for (const auto &item : sceneSessionMap_) {
+        auto sceneSession = item.second;
+        if (sceneSession == nullptr) {
+            continue;
+        }
+        wptr<SceneSession> weakSceneSession(sceneSession);
+        auto scnSession = weakSceneSession.promote();
+        if (scnSession->GetWindowType() == WindowType::WINDOW_TYPE_KEYGUARD) {
+            return scnSession->GetSurfaceNode();
+        }
+    }
+    return nullptr;
 }
 } // namespace OHOS::Rosen
