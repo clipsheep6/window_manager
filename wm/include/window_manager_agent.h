@@ -34,6 +34,7 @@ public:
     void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing) override;
     void NotifyWaterMarkFlagChangedResult(bool showWaterMark) override;
     void NotifyGestureNavigationEnabledResult(bool enable) override;
+    void NotifyDrawingContentChange(const std::vector<sptr<DrawingContentInfo>>& infos);
 };
 } // namespace Rosen
 } // namespace OHOS

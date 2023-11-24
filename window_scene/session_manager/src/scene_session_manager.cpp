@@ -4706,35 +4706,18 @@ sptr<SceneSession> SceneSessionManager::SelectSesssionFromMap(const uint64_t& su
     return nullptr;
 }
 
-void SceneSessionManager::WindowVisibilityChangeCallback(std::shared_ptr<RSOcclusionData> occlusiontionData)
+void SceneSessionManager::DealwithVisibilityChange(uint64_t& surfaceId, WindowVisibilityState& visibleState,
+    std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos,
+    std::vector<sptr<Memory::MemMgrWindowInfo>>& memMgrWindowInfos)
 {
-    WLOGFD("WindowVisibilityChangeCallback: entry");
-    std::weak_ptr<RSOcclusionData> weak(occlusiontionData);
-
-    taskScheduler_->PostVoidSyncTask([this, weak]() {
-    auto weakOcclusionData = weak.lock();
-    if (weakOcclusionData == nullptr) {
-        WLOGFE("weak occlusionData is nullptr");
-        return;
+    bool isVisible = visibleState < WINDOW_VISIBILITY_STATE_TOTALLY_OCCUSION;
+    sptr<SceneSession> session = SelectSesssionFromMap(surfaceId);
+    if (session == nullptr) {
+         continue;
     }
-
-    std::vector<std::pair<uint64_t, WindowVisibilityState>> visibilityChangeInfo =
-        GetWindowVisibilityChangeInfo(weakOcclusionData);
-    std::vector<sptr<WindowVisibilityInfo>> windowVisibilityInfos;
-#ifdef MEMMGR_WINDOW_ENABLE
-    std::vector<sptr<Memory::MemMgrWindowInfo>> memMgrWindowInfos;
-#endif
-    for (const auto& elem : visibilityChangeInfo) {
-        uint64_t surfaceId = elem.first;
-        WindowVisibilityState visibleState = elem.second;
-        bool isVisible = visibleState < WINDOW_VISIBILITY_STATE_TOTALLY_OCCUSION;
-        sptr<SceneSession> session = SelectSesssionFromMap(surfaceId);
-        if (session == nullptr) {
-            continue;
-        }
-        session->SetVisible(isVisible);
-        windowVisibilityInfos.emplace_back(new WindowVisibilityInfo(session->GetWindowId(), session->GetCallingPid(),
-            session->GetCallingUid(), visibleState, session->GetWindowType()));
+    session->SetVisible(isVisible);
+    windowVisibilityInfos.emplace_back(new WindowVisibilityInfo(session->GetWindowId(), session->GetCallingPid(),
+        session->GetCallingUid(), visibleState, session->GetWindowType()));
 #ifdef MEMMGR_WINDOW_ENABLE
         memMgrWindowInfos.emplace_back(new Memory::MemMgrWindowInfo(session->GetWindowId(), session->GetCallingPid(),
             session->GetCallingUid(), isVisible));
@@ -4742,17 +4725,82 @@ void SceneSessionManager::WindowVisibilityChangeCallback(std::shared_ptr<RSOcclu
         WLOGFD("NotifyWindowVisibilityChange: covered status changed window:%{public}u, visibleState:%{public}d",
             session->GetWindowId(), visibleState);
         CheckAndNotifyWaterMarkChangedResult();
+}
+
+void SceneSessionManager::DealwithDrawingContentChange(uint64_t& surfaceId, WindowVisibilityState& visibleState,
+    std::vector<sptr<WindowDrawingContentInfo>>& windowDrawingContentInfos,
+    std::vector<sptr<Memory::MemMgrWindowInfo>>& memMgrDrawingInfos)
+{
+    bool drawingContentState = visibleState == WINDOW_DRAWING_CONTENT_CHANGE;
+    sptr<SceneSession> session = SelectSesssionFromMap(surfaceId);
+    if (session == nullptr) {
+         continue;
     }
+    //session->SetVisible(isVisible);
+    windowDrawingContentInfos.emplace_back(new WindowVisibilityInfo(session->GetWindowId(), session->GetCallingPid(),
+        session->GetCallingUid(), drawingContentState, session->GetWindowType()));
+#ifdef MEMMGR_WINDOW_ENABLE
+        windowDrawingContentInfos.emplace_back(new Memory::MemMgrWindowInfo(session->GetWindowId(), session->GetCallingPid(),
+            session->GetCallingUid(), drawingContentState));
+        windowDrawingContentInfos.emplace_back(new Memory::MemMgrWindowInfo(session->GetWindowId(), session->GetCallingPid(),
+            session->GetCallingUid(), drawingContentState));
+#endif
+        WLOGFD("NotifyWindowDrawingContentChange: Drawing status changed window:%{public}u, drawingContentState:%{public}d",
+            session->GetWindowId(), drawingContentState);
+        //CheckAndNotifyWaterMarkChangedResult();
+}
+
+void SceneSessionManager::WindowVisibilityChangeCallback(std::shared_ptr<RSOcclusionData> occlusiontionData)
+{
+    WLOGFD("WindowVisibilityChangeCallback: entry");
+    std::weak_ptr<RSOcclusionData> weak(occlusiontionData);
+
+    taskScheduler_->PostVoidSyncTask([this, weak]() {
+        auto weakOcclusionData = weak.lock();
+        if (weakOcclusionData == nullptr) {
+            WLOGFE("weak occlusionData is nullptr");
+            return;
+        }
+
+        std::vector<std::pair<uint64_t, WindowVisibilityState>> visibilityChangeInfo =
+            GetWindowVisibilityChangeInfo(weakOcclusionData);
+        std::vector<sptr<WindowVisibilityInfo>> windowVisibilityInfos;
+        std::vector<sptr<WindowDrawingContentInfo>> windowDrawingContentInfos;
+    #ifdef MEMMGR_WINDOW_ENABLE
+        std::vector<sptr<Memory::MemMgrWindowInfo>> memMgrWindowInfos;
+        std::vector<sptr<Memory::MemMgrWindowInfo>> memMgrDrawingInfos;
+    #endif
+        for (const auto& elem : visibilityChangeInfo) {
+            uint64_t surfaceId = elem.first;
+            WindowVisibilityState visibleState = elem.second;
+            if (visibleState == WINDOW_DRAWING_CONTENT_CHANGE || visibleState == visibleState == WINDOW_DRAWING_CONTENT_NO_CHANGE)
+            {
+                DealwithDrawingContentChange(surfaceId, visibleState, windowDrawingContentInfos, memMgrDrawingInfos);
+            } else {
+                DealwithVisibilityChange(surfaceId, visibleState, windowVisibilityInfos, memMgrWindowInfos);
+            }
+        }
         if (windowVisibilityInfos.size() != 0) {
             WLOGD("Notify windowvisibilityinfo changed start");
             SessionManagerAgentController::GetInstance().UpdateWindowVisibilityInfo(windowVisibilityInfos);
         }
-#ifdef MEMMGR_WINDOW_ENABLE
+        if (windowDrawingContentInfos.size() != 0)
+        {
+            sptr<SceneSession> session = SelectSesssionFromMap(surfaceId);
+            WLOGD("Notify windowDrawingContentInfos changed start");
+            session->UpdateWindowDrawingContentInfo(windowDrawingContentInfos);
+        }
+        
+    #ifdef MEMMGR_WINDOW_ENABLE
         if (memMgrWindowInfos.size() != 0) {
             WLOGD("Notify memMgrWindowInfos changed start");
             Memory::MemMgrClient::GetInstance().OnWindowVisibilityChanged(memMgrWindowInfos);
         }
-#endif
+        if(memMgrDrawingInfos.size() != 0) {
+            WLOGD("Notify memMgrDrawingInfos changed start");
+            Memory::MemMgrClient::GetInstance().OnWindowDrawingContentChanged(memMgrDrawingInfos);
+        }
+    #endif
     });
 }
 
@@ -5788,4 +5836,63 @@ WSError SceneSessionManager::RaiseWindowToTop(int32_t persistentId)
     taskScheduler_->PostAsyncTask(task);
     return WSError::WS_OK;
 }
+
+// std::vector<std::pair<uint64_t, bool>> SceneSessionManager::GetWindowDrawingContentChangeInfo(
+//     std::shared_ptr<RSOcclusionData> occlusionData)
+// {
+//     std::vector<std::pair<uint64_t, bool>> DrawingContentChangeInfo;
+//     VisibleData& rsDrawingContentData = occlusionData->GetDrawingContentData();
+//     std::vector<std::pair<uint64_t, bool>> DrawingContentChangeInfo;
+//     currDrawingContentData.reserve(rsDrawingContentData.size());
+//     for (auto iter = rsDrawingContentData.begin(); iter != rsDrawingContentData.end(); iter++) {
+//         currDrawingContentData.emplace_back(iter->first, iter->second);
+//     }
+//     std::sort(currDrawingContentData.begin(), currDrawingContentData.end(), Comp);
+//     uint32_t i, j;
+//     i = j = 0;
+//     for (; i < lastDrawingContentData_.size() && j < currDrawingContentData_.size();) {
+//         if (lastDrawingContentData_[i].first < currDrawingContentData[j].first) {
+//             DrawingContentChangeInfo.emplace_back(lastDrawingContentData_[i].first, false);
+//             i++;
+//         } else if (lastDrawingContentData_[i].first > currVisibleData[j].first) {
+//             DrawingContentChangeInfo.emplace_back(currDrawingContentData[j].first, currDrawingContentData[j].second);
+//             j++;
+//         } else {
+//             DrawingContentChangeInfo.emplace_back(currDrawingContentData[j].first, currDrawingContentData[j].second);
+//             i++;
+//             j++;
+//         }
+//     }
+//     for (; i < lastDrawingContentData_.size(); ++i) {
+//         DrawingContentChangeInfo.emplace_back(lastDrawingContentData_[i].first, false);
+//     }
+//     for (; j < currDrawingContentData.size(); ++j) {
+//         DrawingContentChangeInfo.emplace_back(currDrawingContentData[j].first, currDrawingContentData[j].second);
+//     }
+//     lastDrawingContentData_ = currDrawingContentData;
+//     return DrawingContentChangeInfo;
+// }
+
+// void SceneSessionManager::NotifyDrawingContentChange(int32_t persistentId, WindowUpdateType type)
+// {
+//     WLOGFD("NotifyDrawingContentChange, persistentId = %{public}d, updateType = %{public}d", persistentId, type);
+//     sptr<SceneSession> sceneSession = GetSceneSession(persistentId);
+//     if (sceneSession == nullptr) {
+//         WLOGFE("NotifyDrawingContentChange sceneSession nullptr!");
+//         return;
+//     }
+//     wptr<SceneSession> weakSceneSession(sceneSession);
+//     auto task = [this, weakSceneSession, type]() {
+//         std::vector<sptr<AccessibilityWindowInfo>> infos;
+//         auto scnSession = weakSceneSession.promote();
+//         if (FillWindowInfo(infos, scnSession)) {
+//             SessionManagerAgentController::GetInstance().NotifyDrawingContentChange(infos);
+//         }
+//         if (WindowChangedFunc_ != nullptr && scnSession != nullptr &&
+//             scnSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+//             WindowChangedFunc_(scnSession->GetPersistentId(), type);
+//         }
+//     };
+//     taskScheduler_->PostAsyncTask(task);
+// }
 } // namespace OHOS::Rosen

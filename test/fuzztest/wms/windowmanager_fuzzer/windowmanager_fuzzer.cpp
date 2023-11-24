@@ -90,6 +90,13 @@ public:
     }
 };
 
+class DrawingContentChangedListener : public IDrawingContentChangedListener {
+public:
+    virtual void OnWindowDrawingContentChanged(const std::vector<sptr<DrawingContentInfo>>& infos) override
+    {
+    }
+}
+
 bool DoSomethingForWindowManagerImpl(WindowManager& windowManager, const uint8_t* data, size_t size)
 {
     if (data == nullptr || size < DATA_MIN_SIZE) {
@@ -187,6 +194,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     sptr<IGestureNavigationEnabledChangedListener> gestureListener = new GestureNavigationEnabledChangedListener();
     windowManager.RegisterGestureNavigationEnabledChangedListener(gestureListener);
     windowManager.UnregisterGestureNavigationEnabledChangedListener(gestureListener);
+    sptr<IDrawingContentChangedListener> drawingContentChangedListener = new DrawingContentChangedListener();
     return true;
 }
 } // namespace.OHOS

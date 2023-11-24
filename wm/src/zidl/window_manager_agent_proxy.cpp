@@ -202,7 +202,6 @@ void WindowManagerAgentProxy::NotifyGestureNavigationEnabledResult(bool enable)
         WLOGFE("SendRequest failed");
     }
 }
-
 } // namespace Rosen
 } // namespace OHOS
 
