@@ -769,7 +769,7 @@ bool JsSceneSession::IsCallbackRegistered(napi_env env, const std::string& type,
     if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
         return false;
     }
-    
+
     std::lock_guard<std::mutex> lock(jsCbMapMutex_);
     for (auto iter = jsCbMap_.begin(); iter != jsCbMap_.end(); ++iter) {
         bool isEquals = false;
