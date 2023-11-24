@@ -2100,5 +2100,11 @@ WMError WindowSceneSessionImpl::NotifyPrepareClosePiPWindow()
     WLOGFD("NotifyPrepareClosePiPWindow end");
     return WMError::WM_OK;
 }
+
+void WindowSceneSessionImpl::UpdateWindowDrawingContentInfo(const std::vector<sptr<WindowDrawingContentInfo>>& infos)
+{
+    WLOGFI("UpdateWindowDrawingContentInfo");
+    SingletonContainer::Get<WindowManager>().UpdateWindowDrawingContentInfo(infos);
+}
 } // namespace Rosen
 } // namespace OHOS

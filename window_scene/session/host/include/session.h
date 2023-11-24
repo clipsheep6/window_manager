@@ -29,6 +29,7 @@
 #include "session/host/include/scene_persistence.h"
 #include "wm_common.h"
 #include "occupied_area_change_info.h"
+#include "window_drawing_content_info.h"
 
 namespace OHOS::MMI {
 class PointerEvent;
@@ -278,6 +279,7 @@ public:
     WSError UpdateMaximizeMode(bool isMaximize);
     void NotifySessionForeground(uint32_t reason, bool withAnimation);
     void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits);
+    void UpdateWindowDrawingContentInfo(std::vector<sptr<WindowDrawingContentInfo>> infos);
     virtual std::vector<Rect> GetTouchHotAreas() const
     {
         return std::vector<Rect>();

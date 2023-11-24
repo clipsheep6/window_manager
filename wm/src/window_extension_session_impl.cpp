@@ -324,5 +324,9 @@ void WindowExtensionSessionImpl::NotifySessionForeground(uint32_t reason, bool w
 void WindowExtensionSessionImpl::NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits)
 {
 }
+
+void WindowExtensionSessionImpl::UpdateWindowDrawingContentInfo(const std::vector<sptr<WindowDrawingContentInfo>>& infos)
+{
+}
 } // namespace Rosen
 } // namespace OHOS
