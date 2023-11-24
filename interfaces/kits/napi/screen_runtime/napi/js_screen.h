@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace Rosen {
-enum class ApiColorSpaceType : uint32_t {
+enum class ColorSpace : uint32_t {
     UNKNOWN = 0,
     ADOBE_RGB = 1,
     BT2020_HLG = 2,
@@ -42,41 +42,41 @@ enum class ApiColorSpaceType : uint32_t {
     LINEAR_BT2020 = 13,
 };
 
-const std::map<GraphicCM_ColorSpaceType, ApiColorSpaceType> NATIVE_TO_JS_COLOR_SPACE_TYPE_MAP {
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_COLORSPACE_NONE,        ApiColorSpaceType::UNKNOWN },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_ADOBERGB_FULL,          ApiColorSpaceType::ADOBE_RGB },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_ADOBERGB_LIMIT,         ApiColorSpaceType::ADOBE_RGB },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT2020_HLG_FULL,        ApiColorSpaceType::BT2020_HLG },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT2020_HLG_LIMIT,       ApiColorSpaceType::BT2020_HLG },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_DISPLAY_BT2020_HLG,     ApiColorSpaceType::BT2020_HLG },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT2020_PQ_FULL,         ApiColorSpaceType::BT2020_PQ },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT2020_PQ_LIMIT,        ApiColorSpaceType::BT2020_PQ },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_DISPLAY_BT2020_PQ,      ApiColorSpaceType::BT2020_PQ },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT601_EBU_FULL,         ApiColorSpaceType::BT601_EBU },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT601_EBU_LIMIT,        ApiColorSpaceType::BT601_EBU },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT601_SMPLE_C_FULL,     ApiColorSpaceType::BT601_SMPTE_C },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT601_SMPLE_C_LIMIT,    ApiColorSpaceType::BT601_SMPTE_C },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT709_FULL,             ApiColorSpaceType::BT709 },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT709_LIMIT,            ApiColorSpaceType::BT709 },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_P3_HLG_FULL,            ApiColorSpaceType::P3_HLG },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_P3_HLG_LIMIT,           ApiColorSpaceType::P3_HLG },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_DISPLAY_P3_HLG,         ApiColorSpaceType::P3_HLG },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_P3_PQ_FULL,             ApiColorSpaceType::P3_PQ },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_P3_PQ_LIMIT,            ApiColorSpaceType::P3_PQ },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_DISPLAY_P3_PQ,          ApiColorSpaceType::P3_PQ },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_P3_FULL,                ApiColorSpaceType::DISPLAY_P3 },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_P3_LIMIT,               ApiColorSpaceType::DISPLAY_P3 },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_DISPLAY_P3_SRGB,        ApiColorSpaceType::DISPLAY_P3 },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_SRGB_FULL,              ApiColorSpaceType::SRGB },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_SRGB_LIMIT,             ApiColorSpaceType::SRGB },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_DISPLAY_SRGB,           ApiColorSpaceType::SRGB },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_LINEAR_SRGB,            ApiColorSpaceType::LINEAR_SRGB },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_LINEAR_BT709,           ApiColorSpaceType::LINEAR_SRGB },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_LINEAR_P3,              ApiColorSpaceType::LINEAR_P3 },
-    { GraphicCM_ColorSpaceType::GRAPHIC_CM_LINEAR_BT2020,          ApiColorSpaceType::LINEAR_BT2020 },
+const std::map<GraphicCM_ColorSpaceType, ColorSpace> NATIVE_TO_JS_COLOR_SPACE_TYPE_MAP {
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_COLORSPACE_NONE,        ColorSpace::UNKNOWN },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_ADOBERGB_FULL,          ColorSpace::ADOBE_RGB },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_ADOBERGB_LIMIT,         ColorSpace::ADOBE_RGB },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT2020_HLG_FULL,        ColorSpace::BT2020_HLG },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT2020_HLG_LIMIT,       ColorSpace::BT2020_HLG },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_DISPLAY_BT2020_HLG,     ColorSpace::BT2020_HLG },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT2020_PQ_FULL,         ColorSpace::BT2020_PQ },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT2020_PQ_LIMIT,        ColorSpace::BT2020_PQ },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_DISPLAY_BT2020_PQ,      ColorSpace::BT2020_PQ },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT601_EBU_FULL,         ColorSpace::BT601_EBU },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT601_EBU_LIMIT,        ColorSpace::BT601_EBU },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT601_SMPLE_C_FULL,     ColorSpace::BT601_SMPTE_C },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT601_SMPLE_C_LIMIT,    ColorSpace::BT601_SMPTE_C },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT709_FULL,             ColorSpace::BT709 },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_BT709_LIMIT,            ColorSpace::BT709 },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_P3_HLG_FULL,            ColorSpace::P3_HLG },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_P3_HLG_LIMIT,           ColorSpace::P3_HLG },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_DISPLAY_P3_HLG,         ColorSpace::P3_HLG },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_P3_PQ_FULL,             ColorSpace::P3_PQ },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_P3_PQ_LIMIT,            ColorSpace::P3_PQ },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_DISPLAY_P3_PQ,          ColorSpace::P3_PQ },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_P3_FULL,                ColorSpace::DISPLAY_P3 },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_P3_LIMIT,               ColorSpace::DISPLAY_P3 },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_DISPLAY_P3_SRGB,        ColorSpace::DISPLAY_P3 },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_SRGB_FULL,              ColorSpace::SRGB },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_SRGB_LIMIT,             ColorSpace::SRGB },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_DISPLAY_SRGB,           ColorSpace::SRGB },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_LINEAR_SRGB,            ColorSpace::LINEAR_SRGB },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_LINEAR_BT709,           ColorSpace::LINEAR_SRGB },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_LINEAR_P3,              ColorSpace::LINEAR_P3 },
+    { GraphicCM_ColorSpaceType::GRAPHIC_CM_LINEAR_BT2020,          ColorSpace::LINEAR_BT2020 },
 };
 
-enum class ApiHDRFormat : uint32_t {
+enum class HDRFormat : uint32_t {
     NONE = 0,
     VIDEO_HLG = 1,
     VIDEO_HDR10 = 2,
@@ -87,15 +87,15 @@ enum class ApiHDRFormat : uint32_t {
     IMAGE_HDR_ISO_SINGLE = 7,
 };
 
-const std::map<ScreenHDRFormat, ApiHDRFormat> NATIVE_TO_JS_HDR_FORMAT_TYPE_MAP {
-    { ScreenHDRFormat::NOT_SUPPORT_HDR,             ApiHDRFormat::NONE },
-    { ScreenHDRFormat::VIDEO_HLG,                   ApiHDRFormat::VIDEO_HLG },
-    { ScreenHDRFormat::VIDEO_HDR10,                 ApiHDRFormat::VIDEO_HDR10 },
-    { ScreenHDRFormat::VIDEO_HDR_VIVID,             ApiHDRFormat::VIDEO_HDR_VIVID },
-    { ScreenHDRFormat::IMAGE_HDR_VIVID_DUAL,        ApiHDRFormat::IMAGE_HDR_VIVID_DUAL },
-    { ScreenHDRFormat::IMAGE_HDR_VIVID_SINGLE,      ApiHDRFormat::IMAGE_HDR_VIVID_SINGLE },
-    { ScreenHDRFormat::IMAGE_HDR_ISO_DUAL,          ApiHDRFormat::IMAGE_HDR_ISO_DUAL },
-    { ScreenHDRFormat::IMAGE_HDR_ISO_SINGLE,        ApiHDRFormat::IMAGE_HDR_ISO_SINGLE },
+const std::map<ScreenHDRFormat, HDRFormat> NATIVE_TO_JS_HDR_FORMAT_TYPE_MAP {
+    { ScreenHDRFormat::NOT_SUPPORT_HDR,             HDRFormat::NONE },
+    { ScreenHDRFormat::VIDEO_HLG,                   HDRFormat::VIDEO_HLG },
+    { ScreenHDRFormat::VIDEO_HDR10,                 HDRFormat::VIDEO_HDR10 },
+    { ScreenHDRFormat::VIDEO_HDR_VIVID,             HDRFormat::VIDEO_HDR_VIVID },
+    { ScreenHDRFormat::IMAGE_HDR_VIVID_DUAL,        HDRFormat::IMAGE_HDR_VIVID_DUAL },
+    { ScreenHDRFormat::IMAGE_HDR_VIVID_SINGLE,      HDRFormat::IMAGE_HDR_VIVID_SINGLE },
+    { ScreenHDRFormat::IMAGE_HDR_ISO_DUAL,          HDRFormat::IMAGE_HDR_ISO_DUAL },
+    { ScreenHDRFormat::IMAGE_HDR_ISO_SINGLE,        HDRFormat::IMAGE_HDR_ISO_SINGLE },
 };
 
 napi_value CreateJsColorSpaceArray(napi_env env, const std::vector<GraphicCM_ColorSpaceType>& colorSpaces);
