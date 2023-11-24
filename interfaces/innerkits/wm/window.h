@@ -614,16 +614,18 @@ public:
      * @brief Set this window layout full screen, with hide status bar and nav bar above on this window
      *
      * @param status
+     * @param maximize true if need maximize, default is false
      * @return WMError
      */
-    virtual WMError SetLayoutFullScreen(bool status) { return WMError::WM_OK; }
+    virtual WMError SetLayoutFullScreen(bool status, bool maximize = false) { return WMError::WM_OK; }
     /**
      * @brief Set this window full screen, with hide status bar and nav bar
      *
      * @param status if true, hide status bar and nav bar; Otherwise, show status bar and nav bar
+     * @param maximize true if need maximize, default is false
      * @return WMError
      */
-    virtual WMError SetFullScreen(bool status) { return WMError::WM_OK; }
+    virtual WMError SetFullScreen(bool status, bool maximize = false) { return WMError::WM_OK; }
     /**
      * @brief destroy window
      *

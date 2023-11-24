@@ -73,8 +73,8 @@ public:
     WMError GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea) override;
     SystemBarProperty GetSystemBarPropertyByType(WindowType type) const override;
     WMError SetSystemBarProperty(WindowType type, const SystemBarProperty& property) override;
-    WMError SetLayoutFullScreen(bool status) override;
-    WMError SetFullScreen(bool status) override;
+    WMError SetLayoutFullScreen(bool status, bool maximize = false) override;
+    WMError SetFullScreen(bool status, bool maximize = false) override;
     WMError BindDialogTarget(sptr<IRemoteObject> targetToken) override;
     static void UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration);
     static sptr<Window> GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context = nullptr);

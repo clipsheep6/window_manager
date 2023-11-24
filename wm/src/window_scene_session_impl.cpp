@@ -272,7 +272,7 @@ void WindowSceneSessionImpl::GetConfigurationFromAbilityInfo()
         property_->SetModeSupportInfo(modeSupportInfo);
         auto isPhone = system::GetParameter("const.product.devicetype", "unknown") == "phone";
         if (modeSupportInfo == WindowModeSupport::WINDOW_MODE_SUPPORT_FULLSCREEN && !isPhone) {
-            SetFullScreen(true);
+            SetFullScreen(true, true);
         }
         // get orientation configuration
         OHOS::AppExecFwk::DisplayOrientation displayOrientation =
@@ -987,7 +987,7 @@ WMError WindowSceneSessionImpl::SetLayoutFullScreenByApiVersion(bool status)
     return WMError::WM_OK;
 }
 
-WMError WindowSceneSessionImpl::SetLayoutFullScreen(bool status)
+WMError WindowSceneSessionImpl::SetLayoutFullScreen(bool status, bool maximize)
 {
     WLOGFI("winId:%{public}u status:%{public}d", GetWindowId(), static_cast<int32_t>(status));
     if (hostSession_ == nullptr) {
@@ -996,8 +996,12 @@ WMError WindowSceneSessionImpl::SetLayoutFullScreen(bool status)
     if (!WindowHelper::IsWindowModeSupported(property_->GetModeSupportInfo(), WindowMode::WINDOW_MODE_FULLSCREEN)) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    hostSession_->OnSessionEvent(SessionEvent::EVENT_MAXIMIZE);
-    SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    WindowMode curMode = GetMode();
+    if (maximize ||
+        !(curMode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY || curMode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY)) {
+        hostSession_->OnSessionEvent(SessionEvent::EVENT_MAXIMIZE);
+        SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    }
     WMError ret = SetLayoutFullScreenByApiVersion(status);
     if (ret != WMError::WM_OK) {
         WLOGFE("SetLayoutFullScreenByApiVersion errCode:%{public}d winId:%{public}u",
@@ -1064,7 +1068,7 @@ WMError WindowSceneSessionImpl::SetSystemBarProperty(WindowType type, const Syst
     return ret;
 }
 
-WMError WindowSceneSessionImpl::SetFullScreen(bool status)
+WMError WindowSceneSessionImpl::SetFullScreen(bool status, bool maximize)
 {
     WLOGFI("winId:%{public}u status:%{public}d", GetWindowId(), static_cast<int32_t>(status));
     if (hostSession_ == nullptr) {
@@ -1073,8 +1077,12 @@ WMError WindowSceneSessionImpl::SetFullScreen(bool status)
     if (!WindowHelper::IsWindowModeSupported(property_->GetModeSupportInfo(), WindowMode::WINDOW_MODE_FULLSCREEN)) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    hostSession_->OnSessionEvent(SessionEvent::EVENT_MAXIMIZE);
-    SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    WindowMode curMode = GetMode();
+    if (maximize ||
+        !(curMode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY || curMode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY)) {
+        hostSession_->OnSessionEvent(SessionEvent::EVENT_MAXIMIZE);
+        SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    }
     WMError ret = SetLayoutFullScreenByApiVersion(status);
     if (ret != WMError::WM_OK) {
         WLOGFE("SetLayoutFullScreenByApiVersion errCode:%{public}d winId:%{public}u",
@@ -1135,7 +1143,7 @@ WMError WindowSceneSessionImpl::Maximize()
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (WindowHelper::IsMainWindow(GetType())) {
-        SetFullScreen(true);
+        SetFullScreen(true, true);
     }
     return WMError::WM_OK;
 }
@@ -1156,7 +1164,7 @@ WMError WindowSceneSessionImpl::MaximizeFloating()
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (GetGlobalMaximizeMode() != MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
-        SetFullScreen(true);
+        SetFullScreen(true, true);
         property_->SetMaximizeMode(MaximizeMode::MODE_FULL_FILL);
     } else {
         hostSession_->OnSessionEvent(SessionEvent::EVENT_MAXIMIZE_FLOATING);
