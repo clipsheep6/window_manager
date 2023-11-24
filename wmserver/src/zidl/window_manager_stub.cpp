@@ -351,7 +351,7 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
         }
         case WindowManagerMessage::TRANS_ID_GET_DRAWING_CONTENT_WINDOW_INFO_ID: {
             std::vector<sptr<WindowDrawingContentInfo>> infos;
-            WMError errCode = GetVisibilityWindowInfo(infos);
+            WMError errCode = WMError::WM_OK;//GetVisibilityWindowInfo(infos);
             if (!MarshallingHelper::MarshallingVectorParcelableObj<WindowDrawingContentInfo>(reply, infos)) {
                 WLOGFE("Write visibility window infos failed");
                 return -1;

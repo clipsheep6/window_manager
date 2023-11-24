@@ -20,6 +20,7 @@
 #include <transaction/rs_transaction.h>
 
 #include "window_manager_hilog.h"
+#include "marshalling_helper.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -71,6 +72,8 @@ const std::map<uint32_t, SessionStageStubFunc> SessionStageStub::stubFuncMap_{
         &SessionStageStub::HandleNotifySessionBackground),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TITLE_POSITION_CHANGE),
         &SessionStageStub::HandleUpdateTitleInTargetPos),
+    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_UPDATE_WINDOW_DRAWING_STATUS),
+        &SessionStageStub::HandleWindowDrawingContentInfoChange),    
 };
 
 int SessionStageStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)

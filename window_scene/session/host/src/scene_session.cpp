@@ -905,6 +905,7 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
             enterSession_ = nullptr;
         }
     }
+
     if (specificCallback_ != nullptr && specificCallback_->onSessionTouchOutside_ != nullptr &&
         (action == MMI::PointerEvent::POINTER_ACTION_DOWN || action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN)) {
         specificCallback_->onSessionTouchOutside_(GetPersistentId());

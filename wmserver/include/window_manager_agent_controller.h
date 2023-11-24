@@ -38,7 +38,7 @@ public:
     void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing);
     void NotifyWaterMarkFlagChangedResult(bool showWaterMark);
     void NotifyGestureNavigationEnabledResult(bool enable);
-    void NotifyDrawingContentChange(const std::vector<sptr<DrawingContentInfo>>);
+    void NotifyDrawingContentChange(const std::vector<sptr<WindowDrawingContentInfo>>);
 private:
     WindowManagerAgentController() {}
     virtual ~WindowManagerAgentController() = default;

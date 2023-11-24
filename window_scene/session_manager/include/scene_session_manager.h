@@ -233,6 +233,11 @@ public:
     void UnregisterCreateSubSessionListener(int32_t persistentId);
 
     void NotifyUpdateRectAfterLayout();
+    void DealwithVisibilityChange(uint64_t& surfaceId, WindowVisibilityState& visibleState,
+    std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos);
+    void DealwithDrawingContentChange(uint64_t& surfaceId, WindowVisibilityState& visibleState,
+    std::vector<sptr<WindowDrawingContentInfo>>& windowDrawingContentInfos);
+
 public:
     std::shared_ptr<TaskScheduler> GetTaskScheduler() {return taskScheduler_;};
 protected:
@@ -457,8 +462,8 @@ private:
     void NotifyCreateSpecificSession(sptr<SceneSession> session,
         sptr<WindowSessionProperty> property, const WindowType& type);
     sptr<SceneSession> CreateSceneSession(const SessionInfo& sessionInfo, sptr<WindowSessionProperty> property);
-
     void ProcessPiPSessionForeground(const sptr<SceneSession> sceneSession);
+    void UpdateWindowDrawingContentInfo(const std::vector<sptr<WindowDrawingContentInfo>>& infos);
 };
 } // namespace OHOS::Rosen
 
