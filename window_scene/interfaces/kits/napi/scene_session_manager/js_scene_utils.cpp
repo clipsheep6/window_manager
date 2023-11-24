@@ -431,14 +431,12 @@ napi_value CreateJsSessionState(napi_env env)
 
     napi_set_named_property(env, objValue, "STATE_DISCONNECT", CreateJsValue(env,
         static_cast<int32_t>(SessionState::STATE_DISCONNECT)));
+    napi_set_named_property(env, objValue, "STATE_CREATED", CreateJsValue(env,
+        static_cast<int32_t>(SessionState::STATE_CREATED)));
     napi_set_named_property(env, objValue, "STATE_CONNECT", CreateJsValue(env,
         static_cast<int32_t>(SessionState::STATE_CONNECT)));
     napi_set_named_property(env, objValue, "STATE_FOREGROUND", CreateJsValue(env,
         static_cast<int32_t>(SessionState::STATE_FOREGROUND)));
-    napi_set_named_property(env, objValue, "STATE_ACTIVE", CreateJsValue(env,
-        static_cast<int32_t>(SessionState::STATE_ACTIVE)));
-    napi_set_named_property(env, objValue, "STATE_INACTIVE", CreateJsValue(env,
-        static_cast<int32_t>(SessionState::STATE_INACTIVE)));
     napi_set_named_property(env, objValue, "STATE_BACKGROUND", CreateJsValue(env,
         static_cast<int32_t>(SessionState::STATE_BACKGROUND)));
     napi_set_named_property(env, objValue, "STATE_END", CreateJsValue(env,

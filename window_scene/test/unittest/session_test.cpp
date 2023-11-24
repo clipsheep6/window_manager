@@ -306,7 +306,6 @@ HWTEST_F(WindowSessionTest, Background01, Function | SmallTest | Level2)
     auto result = session_->Background();
     ASSERT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);
 
-    session_->state_ = SessionState::STATE_INACTIVE;
     result = session_->Background();
     ASSERT_EQ(result, WSError::WS_OK);
     ASSERT_EQ(session_->state_, SessionState::STATE_BACKGROUND);
@@ -412,7 +411,7 @@ HWTEST_F(WindowSessionTest, CheckDialogOnForeground, Function | SmallTest | Leve
     info.bundleName_ = "dialogBundleName";
     sptr<Session> dialogSession = new (std::nothrow) Session(info);
     ASSERT_NE(dialogSession, nullptr);
-    dialogSession->state_ = SessionState::STATE_INACTIVE;
+    dialogSession->state_ = SessionState::STATE_BACKGROUND;
     session_->dialogVec_.push_back(dialogSession);
     ASSERT_EQ(false, session_->CheckDialogOnForeground());
     session_->dialogVec_.clear();
@@ -436,21 +435,21 @@ HWTEST_F(WindowSessionTest, IsTopDialog, Function | SmallTest | Level2)
     ASSERT_NE(dialogSession1, nullptr);
     dialogSession1->persistentId_ = 33;
     dialogSession1->SetParentSession(session_);
-    dialogSession1->state_ = SessionState::STATE_ACTIVE;
+    dialogSession1->state_ = SessionState::STATE_FOREGROUND;
     session_->dialogVec_.push_back(dialogSession1);
 
     sptr<Session> dialogSession2 = new (std::nothrow) Session(info);
     ASSERT_NE(dialogSession2, nullptr);
     dialogSession2->persistentId_ = 34;
     dialogSession2->SetParentSession(session_);
-    dialogSession2->state_ = SessionState::STATE_ACTIVE;
+    dialogSession2->state_ = SessionState::STATE_FOREGROUND;
     session_->dialogVec_.push_back(dialogSession2);
 
     sptr<Session> dialogSession3 = new (std::nothrow) Session(info);
     ASSERT_NE(dialogSession3, nullptr);
     dialogSession3->persistentId_ = 35;
     dialogSession3->SetParentSession(session_);
-    dialogSession3->state_ = SessionState::STATE_INACTIVE;
+    dialogSession3->state_ = SessionState::STATE_FOREGROUND;
     session_->dialogVec_.push_back(dialogSession3);
 
     ASSERT_EQ(false, dialogSession3->IsTopDialog());
@@ -919,10 +918,6 @@ HWTEST_F(WindowSessionTest, IsSessionForeground, Function | SmallTest | Level2)
     ASSERT_NE(session_, nullptr);
     session_->state_ = SessionState::STATE_FOREGROUND;
     ASSERT_EQ(true, session_->IsSessionForeground());
-    session_->state_ = SessionState::STATE_ACTIVE;
-    ASSERT_EQ(true, session_->IsSessionForeground());
-    session_->state_ = SessionState::STATE_INACTIVE;
-    ASSERT_EQ(false, session_->IsSessionForeground());
     session_->state_ = SessionState::STATE_BACKGROUND;
     ASSERT_EQ(false, session_->IsSessionForeground());
     session_->state_ = SessionState::STATE_DISCONNECT;
@@ -1499,7 +1494,7 @@ HWTEST_F(WindowSessionTest, TransferPointerEvent03, Function | SmallTest | Level
     info.bundleName_ = "dialogBundleName";
     sptr<Session> dialogSession = new (std::nothrow) Session(info);
     ASSERT_NE(dialogSession, nullptr);
-    dialogSession->state_ = SessionState::STATE_ACTIVE;
+    dialogSession->state_ = SessionState::STATE_FOREGROUND;
     session_->dialogVec_.push_back(dialogSession);
 
     ASSERT_EQ(WSError::WS_ERROR_INVALID_PERMISSION, session_->TransferPointerEvent(pointerEvent));
@@ -1528,7 +1523,7 @@ HWTEST_F(WindowSessionTest, TransferPointerEvent04, Function | SmallTest | Level
     info.bundleName_ = "dialogBundleName";
     sptr<Session> dialogSession = new (std::nothrow) Session(info);
     ASSERT_NE(dialogSession, nullptr);
-    dialogSession->state_ = SessionState::STATE_ACTIVE;
+    dialogSession->state_ = SessionState::STATE_FOREGROUND;
     session_->dialogVec_.push_back(dialogSession);
     session_->parentSession_ = session_;
 
@@ -1592,7 +1587,7 @@ HWTEST_F(WindowSessionTest, TransferKeyEvent03, Function | SmallTest | Level2)
     info.bundleName_ = "dialogBundleName";
     sptr<Session> dialogSession = new (std::nothrow) Session(info);
     ASSERT_NE(dialogSession, nullptr);
-    dialogSession->state_ = SessionState::STATE_ACTIVE;
+    dialogSession->state_ = SessionState::STATE_FOREGROUND;
     session_->dialogVec_.push_back(dialogSession);
 
     ASSERT_EQ(WSError::WS_ERROR_INVALID_PERMISSION, session_->TransferKeyEvent(keyEvent));
@@ -1621,7 +1616,7 @@ HWTEST_F(WindowSessionTest, TransferKeyEvent04, Function | SmallTest | Level2)
     info.bundleName_ = "dialogBundleName";
     sptr<Session> dialogSession = new (std::nothrow) Session(info);
     ASSERT_NE(dialogSession, nullptr);
-    dialogSession->state_ = SessionState::STATE_ACTIVE;
+    dialogSession->state_ = SessionState::STATE_FOREGROUND;
     session_->dialogVec_.push_back(dialogSession);
     session_->parentSession_ = session_;
 

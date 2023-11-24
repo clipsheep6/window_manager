@@ -200,9 +200,6 @@ void ProxyInterfaceFuzzTestPart1(const uint8_t* data, size_t size)
     proxy->Background();
     proxy->RaiseToAppTop();
 
-    bool active = source.GetObject<bool>();
-    proxy->UpdateActiveStatus(active);
-
     SessionEvent event = source.GetObject<SessionEvent>();
     proxy->OnSessionEvent(event);
 

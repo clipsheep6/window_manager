@@ -85,7 +85,7 @@ HWTEST_F(SceneSessionTest, Foreground01, Function | SmallTest | Level2)
     };
     scensession = new (std::nothrow) SceneSession(info, specificCallback_);
     EXPECT_NE(scensession, nullptr);
-    scensession->UpdateSessionState(SessionState::STATE_INACTIVE);
+    scensession->UpdateSessionState(SessionState::STATE_BACKGROUND);
     scensession->isActive_ = true;
     result = scensession->Foreground(property);
     ASSERT_EQ(result, WSError::WS_OK);
@@ -1158,61 +1158,6 @@ HWTEST_F(SceneSessionTest, Disconnect, Function | SmallTest | Level2)
     scensession->SetSessionProperty(property);
     scensession->isActive_ = true;
     auto result = scensession->Disconnect();
-    ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
-}
-
-/**
- * @tc.name: UpdateActiveStatus
- * @tc.desc: normal function
- * @tc.type: FUNC
- */
-HWTEST_F(SceneSessionTest, UpdateActiveStatus, Function | SmallTest | Level2)
-{
-    SessionInfo info;
-    info.abilityName_ = "UpdateActiveStatus";
-    info.bundleName_ = "UpdateActiveStatus";
-    sptr<Rosen::ISession> session_;
-    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
-        new (std::nothrow) SceneSession::SpecificSessionCallback();
-    EXPECT_NE(specificCallback_, nullptr);
-    sptr<SceneSession> scensession = new (std::nothrow) SceneSession(info, nullptr);
-    EXPECT_NE(scensession, nullptr);
-
-    sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
-    property->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
-    scensession->SetSessionProperty(property);
-    scensession->isActive_ = true;
-    auto result = scensession->UpdateActiveStatus(true);
-    ASSERT_EQ(result, WSError::WS_OK);
-
-    result = scensession->UpdateActiveStatus(false);
-    ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
-}
-
-/**
- * @tc.name: UpdateActiveStatus01
- * @tc.desc: normal function
- * @tc.type: FUNC
- */
-HWTEST_F(SceneSessionTest, UpdateActiveStatus01, Function | SmallTest | Level2)
-{
-    SessionInfo info;
-    info.abilityName_ = "UpdateActiveStatus01";
-    info.bundleName_ = "UpdateActiveStatus01";
-    sptr<Rosen::ISession> session_;
-    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
-        new (std::nothrow) SceneSession::SpecificSessionCallback();
-    EXPECT_NE(specificCallback_, nullptr);
-    sptr<SceneSession> scensession = new (std::nothrow) SceneSession(info, nullptr);
-    EXPECT_NE(scensession, nullptr);
-
-    sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
-    property->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
-    scensession->SetSessionProperty(property);
-    scensession->isActive_ = false;
-    auto result = scensession->UpdateActiveStatus(true);
     ASSERT_EQ(result, WSError::WS_OK);
     delete scensession;
 }

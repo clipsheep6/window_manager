@@ -1258,7 +1258,7 @@ void SceneSessionManager::NotifyForegroundInteractiveStatus(const sptr<SceneSess
         }
         const auto& state = scnSession->GetSessionState();
         if (WindowHelper::IsMainWindow(scnSession->GetWindowType()) &&
-            (scnSession->IsVisible() || state == SessionState::STATE_ACTIVE || state == SessionState::STATE_FOREGROUND)) {
+            (scnSession->IsVisible() || state == SessionState::STATE_FOREGROUND)) {
             scnSession->NotifyForegroundInteractiveStatus(interactive);
         }
     };
@@ -1656,8 +1656,7 @@ void SceneSessionManager::NotifySessionTouchOutside(int32_t persistentId)
                 continue;
             }
             if (sceneSession->GetSessionInfo().isSystem_ ||
-                (sceneSession->GetSessionState() != SessionState::STATE_FOREGROUND &&
-                sceneSession->GetSessionState() != SessionState::STATE_ACTIVE)) {
+                (sceneSession->GetSessionState() != SessionState::STATE_FOREGROUND)) {
                 continue;
             }
             auto sessionId = sceneSession->GetPersistentId();
@@ -1694,7 +1693,6 @@ WSError SceneSessionManager::DestroyAndDisconnectSpecificSession(const int32_t& 
         if (sceneSession == nullptr) {
             return WSError::WS_ERROR_NULLPTR;
         }
-        auto ret = sceneSession->UpdateActiveStatus(false);
         WindowDestroyNotifyVisibility(sceneSession);
         if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
             auto parentSession = GetSceneSession(sceneSession->GetParentPersistentId());
@@ -1705,7 +1703,7 @@ WSError SceneSessionManager::DestroyAndDisconnectSpecificSession(const int32_t& 
             }
             sceneSession->NotifyDestroy();
         }
-        ret = sceneSession->Disconnect();
+        autoret = sceneSession->Disconnect();
         sceneSession->ClearSpecificSessionCbMap();
         if (SessionHelper::IsSubWindow(sceneSession->GetWindowType())) {
             auto parentSession = GetSceneSession(sceneSession->GetParentPersistentId());
@@ -2574,8 +2572,8 @@ bool SceneSessionManager::IsSessionVisible(const sptr<SceneSession>& session)
             return false;
         }
         const auto& parentState = parentSceneSession->GetSessionState();
-        if (session->IsVisible() || (state == SessionState::STATE_ACTIVE || state == SessionState::STATE_FOREGROUND)) {
-            if (parentState == SessionState::STATE_INACTIVE || parentState == SessionState::STATE_BACKGROUND) {
+        if (session->IsVisible() || (state == SessionState::STATE_FOREGROUND)) {
+            if (parentState == SessionState::STATE_BACKGROUND) {
                 WLOGFD("Parent of this sub window is at background, id: %{public}d", session->GetPersistentId());
                 return false;
             }
@@ -2586,7 +2584,7 @@ bool SceneSessionManager::IsSessionVisible(const sptr<SceneSession>& session)
         return false;
     }
 
-    if (session->IsVisible() || state == SessionState::STATE_ACTIVE || state == SessionState::STATE_FOREGROUND) {
+    if (session->IsVisible() || state == SessionState::STATE_FOREGROUND) {
         WLOGFD("Window is at foreground, id: %{public}d", session->GetPersistentId());
         return true;
     }
@@ -3349,11 +3347,9 @@ int SceneSessionManager::GetSceneSessionPrivacyModeCount()
 {
     auto countFunc = [](const std::pair<int32_t, sptr<SceneSession>>& sessionPair) -> bool {
         sptr<SceneSession> sceneSession = sessionPair.second;
-        bool isForeground =  sceneSession->GetSessionState() == SessionState::STATE_FOREGROUND ||
-            sceneSession->GetSessionState() == SessionState::STATE_ACTIVE;
+        bool isForeground =  sceneSession->GetSessionState() == SessionState::STATE_FOREGROUND;
         if (isForeground && sceneSession->GetParentSession() != nullptr) {
-            isForeground &= sceneSession->GetParentSession()->GetSessionState() == SessionState::STATE_FOREGROUND ||
-            sceneSession->GetParentSession()->GetSessionState() == SessionState::STATE_ACTIVE;
+            isForeground &= sceneSession->GetParentSession()->GetSessionState() == SessionState::STATE_FOREGROUND;
         }
         bool isPrivate = sceneSession->GetSessionProperty() != nullptr &&
             sceneSession->GetSessionProperty()->GetPrivacyMode();
@@ -3470,7 +3466,7 @@ void SceneSessionManager::ProcessSubSessionForeground(sptr<SceneSession>& sceneS
             continue;
         }
         const auto& state = subSession->GetSessionState();
-        if (state != SessionState::STATE_FOREGROUND && state != SessionState::STATE_ACTIVE) {
+        if (state != SessionState::STATE_FOREGROUND) {
             WLOGFD("sub session is not active");
             continue;
         }
@@ -3484,7 +3480,7 @@ void SceneSessionManager::ProcessSubSessionForeground(sptr<SceneSession>& sceneS
             continue;
         }
         const auto& state = dialog->GetSessionState();
-        if (state != SessionState::STATE_FOREGROUND && state != SessionState::STATE_ACTIVE) {
+        if (state != SessionState::STATE_FOREGROUND) {
             WLOGFD("dialog is not active");
             continue;
         }
@@ -3534,7 +3530,7 @@ void SceneSessionManager::ProcessSubSessionBackground(sptr<SceneSession>& sceneS
             continue;
         }
         const auto& state = subSession->GetSessionState();
-        if (state != SessionState::STATE_FOREGROUND && state != SessionState::STATE_ACTIVE) {
+        if (state != SessionState::STATE_FOREGROUND) {
             WLOGFD("sub session is not active");
             continue;
         }
@@ -5080,8 +5076,7 @@ void SceneSessionManager::ProcessVirtualPixelRatioChange(DisplayId defaultDispla
             if (sessionInfo.isSystem_) {
                 continue;
             }
-            if (scnSession->GetSessionState() == SessionState::STATE_FOREGROUND ||
-                scnSession->GetSessionState() == SessionState::STATE_ACTIVE) {
+            if (scnSession->GetSessionState() == SessionState::STATE_FOREGROUND) {
                 scnSession->UpdateDensity();
                 WLOGFD("UpdateDensity name=%{public}s, persistendId=%{public}d, winType=%{public}d, "
                     "state=%{public}d, visible-%{public}d", scnSession->GetWindowName().c_str(), item.first,
@@ -5108,8 +5103,7 @@ void SceneSessionManager::ProcessUpdateRotationChange(DisplayId defaultDisplayId
                 WLOGFE("SceneSessionManager::ProcessUpdateRotationChange null scene session");
                 continue;
             }
-            if (scnSession->GetSessionState() == SessionState::STATE_FOREGROUND ||
-                scnSession->GetSessionState() == SessionState::STATE_ACTIVE) {
+            if (scnSession->GetSessionState() == SessionState::STATE_FOREGROUND) {
                 scnSession->UpdateRotationAvoidArea();
                 WLOGFD("UpdateRotationAvoidArea name=%{public}s, persistendId=%{public}d, winType=%{public}d, "
                     "state=%{public}d, visible-%{public}d", scnSession->GetWindowName().c_str(), item.first,
@@ -5666,7 +5660,7 @@ bool SceneSessionManager::UpdateImmersiveState()
             continue;
         }
         auto state = sceneSession->GetSessionState();
-        if (state != SessionState::STATE_FOREGROUND && state != SessionState::STATE_ACTIVE) {
+        if (state != SessionState::STATE_FOREGROUND) {
             continue;
         }
         if (sceneSession->GetWindowMode() != WindowMode::WINDOW_MODE_FULLSCREEN) {

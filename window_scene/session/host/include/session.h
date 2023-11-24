@@ -340,7 +340,7 @@ protected:
     }
 
     int32_t persistentId_ = INVALID_SESSION_ID;
-    SessionState state_ = SessionState::STATE_DISCONNECT;
+    SessionState state_ = SessionState::STATE_CREATED;
     SessionInfo sessionInfo_;
     std::recursive_mutex sessionInfoMutex_;
     std::shared_ptr<RSSurfaceNode> surfaceNode_;
@@ -382,7 +382,7 @@ protected:
     bool isFocused_ = false;
     float aspectRatio_ = 0.0f;
     std::map<MMI::WindowArea, WSRectF> windowAreas_;
-    bool isTerminating = false;
+    bool isTerminating_ = false;
     float floatingScale_ = 1.0f;
     bool scbKeepKeyboardFlag_ = false;
 

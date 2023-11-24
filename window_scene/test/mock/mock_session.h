@@ -42,7 +42,6 @@ public:
     MOCK_METHOD0(Recover, WSError(void));
     MOCK_METHOD0(Maximize, WSError(void));
     MOCK_METHOD1(PendingSessionActivation, WSError(const sptr<AAFwk::SessionInfo> info));
-    MOCK_METHOD1(UpdateActiveStatus, WSError(bool isActive));
     MOCK_METHOD1(OnSessionEvent, WSError(SessionEvent event));
     MOCK_METHOD1(RequestSessionBack, WSError(bool needMoveToBackground));
     MOCK_METHOD0(RaiseToAppTop, WSError(void));

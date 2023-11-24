@@ -177,51 +177,17 @@ WSError SceneSession::Disconnect()
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
         auto state = session->GetSessionState();
-        if (state == SessionState::STATE_ACTIVE && WindowHelper::IsMainWindow(session->GetWindowType())) {
+        if (state == SessionState::STATE_FOREGROUND && WindowHelper::IsMainWindow(session->GetWindowType())) {
             session->snapshot_ = session->Snapshot();
             if (session->scenePersistence_ && session->snapshot_) {
                 session->scenePersistence_->SaveSnapshot(session->snapshot_);
             }
-            session->isActive_ = false;
+            session->SetActive(false);
         }
         session->Session::Disconnect();
         session->snapshot_.reset();
-        session->isTerminating = false;
+        session->isTerminating_ = false;
         return WSError::WS_OK;
-    });
-    return WSError::WS_OK;
-}
-
-WSError SceneSession::UpdateActiveStatus(bool isActive)
-{
-    PostTask([weakThis = wptr(this), isActive]() {
-        auto session = weakThis.promote();
-        if (!session) {
-            WLOGFE("session is null");
-            return WSError::WS_ERROR_DESTROYED_OBJECT;
-        }
-        if (!session->IsSessionValid()) {
-            return WSError::WS_ERROR_INVALID_SESSION;
-        }
-        if (isActive == session->isActive_) {
-            WLOGFD("Session active do not change: %{public}d", isActive);
-            return WSError::WS_DO_NOTHING;
-        }
-
-        WSError ret = WSError::WS_DO_NOTHING;
-        if (isActive && session->GetSessionState() == SessionState::STATE_FOREGROUND) {
-            session->UpdateSessionState(SessionState::STATE_ACTIVE);
-            session->isActive_ = isActive;
-            ret = WSError::WS_OK;
-        }
-        if (!isActive && session->GetSessionState() == SessionState::STATE_ACTIVE) {
-            session->UpdateSessionState(SessionState::STATE_INACTIVE);
-            session->isActive_ = isActive;
-            ret = WSError::WS_OK;
-        }
-        WLOGFD("UpdateActiveStatus, isActive: %{public}d, state: %{public}u",
-            session->isActive_, session->GetSessionState());
-        return ret;
     });
     return WSError::WS_OK;
 }
@@ -690,8 +656,7 @@ void SceneSession::GetKeyboardAvoidArea(WSRect& rect, AvoidArea& avoidArea)
     std::vector<sptr<SceneSession>> inputMethodVector =
         specificCallback_->onGetSceneSessionVectorByType_(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
     for (auto& inputMethod : inputMethodVector) {
-        if (inputMethod->GetSessionState() != SessionState::STATE_FOREGROUND &&
-            inputMethod->GetSessionState() != SessionState::STATE_ACTIVE) {
+        if (inputMethod->GetSessionState() != SessionState::STATE_FOREGROUND) {
             continue;
         }
         SessionGravity gravity;
@@ -1647,11 +1612,11 @@ WSError SceneSession::TerminateSession(const sptr<AAFwk::SessionInfo> abilitySes
             WLOGFE("abilitySessionInfo is null");
             return WSError::WS_ERROR_NULLPTR;
         }
-        if (session->isTerminating) {
+        if (session->isTerminating_) {
             WLOGFE("TerminateSession isTerminating, return!");
             return WSError::WS_ERROR_INVALID_OPERATION;
         }
-        session->isTerminating = true;
+        session->isTerminating_ = true;
         SessionInfo info;
         info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
         info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
@@ -1682,11 +1647,11 @@ WSError SceneSession::NotifySessionException(const sptr<AAFwk::SessionInfo> abil
             WLOGFE("abilitySessionInfo is null");
             return WSError::WS_ERROR_NULLPTR;
         }
-        if (session->isTerminating) {
+        if (session->isTerminating_) {
             WLOGFE("NotifySessionException isTerminating, return!");
             return WSError::WS_ERROR_INVALID_OPERATION;
         }
-        session->isTerminating = true;
+        session->isTerminating_ = true;
         SessionInfo info;
         info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
         info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
@@ -1941,7 +1906,7 @@ WSError SceneSession::UpdatePiPRect(uint32_t width, uint32_t height, PiPRectUpda
             WLOGE("SceneSession::UpdatePiPRect session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
-        if (session->isTerminating) {
+        if (session->isTerminating_) {
             WLOGE("SceneSession::UpdatePiPRect session is terminating");
             return WSError::WS_ERROR_INVALID_OPERATION;
         }

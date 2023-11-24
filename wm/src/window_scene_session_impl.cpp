@@ -503,10 +503,6 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
      */
 
     if (WindowHelper::IsMainWindow(type)) {
-        res = static_cast<WMError>(SetActive(false));
-        if (res != WMError::WM_OK) {
-            return res;
-        }
         res = static_cast<WMError>(hostSession_->Background());
     } else if (WindowHelper::IsSubWindow(type) || WindowHelper::IsSystemWindow(type)) {
         res = static_cast<WMError>(hostSession_->Hide());
@@ -572,17 +568,6 @@ void WindowSceneSessionImpl::SetDefaultProperty()
 
 WSError WindowSceneSessionImpl::SetActive(bool active)
 {
-    WLOGFD("active status: %{public}d", active);
-    if (!WindowHelper::IsMainWindow(GetType())) {
-        if (hostSession_ == nullptr) {
-            WLOGFD("hostSession_ nullptr");
-            return WSError::WS_ERROR_INVALID_WINDOW;
-        }
-        WSError ret = hostSession_->UpdateActiveStatus(active);
-        if (ret != WSError::WS_OK) {
-            return ret;
-        }
-    }
     if (active) {
         NotifyAfterActive();
     } else {

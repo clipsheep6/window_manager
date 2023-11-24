@@ -113,7 +113,6 @@ public:
     WSError Background() override;
     WSError Disconnect() override;
 
-    WSError UpdateActiveStatus(bool isActive) override;
     WSError OnSessionEvent(SessionEvent event) override;
     WSError RaiseToAppTop() override;
     WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,

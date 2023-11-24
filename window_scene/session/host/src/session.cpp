@@ -311,7 +311,7 @@ SessionState Session::GetSessionState() const
 
 void Session::SetSessionState(SessionState state)
 {
-    if (state < SessionState::STATE_DISCONNECT || state > SessionState::STATE_END) {
+    if (state < SessionState::STATE_CREATED || state > SessionState::STATE_END) {
         WLOGFD("Invalid session state: %{public}u", state);
         return;
     }
@@ -446,7 +446,7 @@ bool Session::IsSessionValid() const
             GetPersistentId(), sessionInfo_.bundleName_.c_str(), state_);
         return false;
     }
-    bool res = state_ > SessionState::STATE_DISCONNECT && state_ < SessionState::STATE_END;
+    bool res = state_ > SessionState::STATE_CREATED && state_ < SessionState::STATE_DISCONNECT;
     if (!res) {
         WLOGFI("session is already destroyed or not created! id: %{public}d state: %{public}u",
             GetPersistentId(), state_);
@@ -466,12 +466,12 @@ bool Session::IsSystemSession() const
 
 bool Session::IsTerminated() const
 {
-    return (GetSessionState() == SessionState::STATE_DISCONNECT || isTerminating);
+    return (GetSessionState() == SessionState::STATE_DISCONNECT || isTerminating_);
 }
 
 bool Session::IsSessionForeground() const
 {
-    return state_ == SessionState::STATE_FOREGROUND || state_ == SessionState::STATE_ACTIVE;
+    return state_ == SessionState::STATE_FOREGROUND;
 }
 
 WSError Session::SetPointerStyle(MMI::WindowArea area)
@@ -639,9 +639,9 @@ WSError Session::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWi
     const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
     sptr<WindowSessionProperty> property, sptr<IRemoteObject> token, int32_t pid, int32_t uid)
 {
-    WLOGFD("Connect session, id: %{public}d, state: %{public}u, isTerminating: %{public}d", GetPersistentId(),
-        static_cast<uint32_t>(GetSessionState()), isTerminating);
-    if (GetSessionState() != SessionState::STATE_DISCONNECT && !isTerminating) {
+    WLOGFD("Connect session, id: %{public}d, state: %{public}u, isTerminating_: %{public}d", GetPersistentId(),
+        static_cast<uint32_t>(GetSessionState()), isTerminating_);
+    if (GetSessionState() != SessionState::STATE_CREATED && !isTerminating_) {
         WLOGFE("state is not disconnect!");
         return WSError::WS_ERROR_INVALID_SESSION;
     }
@@ -680,8 +680,7 @@ WSError Session::Foreground(sptr<WindowSessionProperty> property)
     SessionState state = GetSessionState();
     WLOGFD("Foreground session, id: %{public}d, state: %{public}" PRIu32"", GetPersistentId(),
         static_cast<uint32_t>(state));
-    if (state != SessionState::STATE_CONNECT && state != SessionState::STATE_BACKGROUND &&
-        state != SessionState::STATE_INACTIVE) {
+    if (state != SessionState::STATE_CONNECT && state != SessionState::STATE_BACKGROUND) {
         WLOGFE("Foreground state invalid! state:%{public}u", state);
         return WSError::WS_ERROR_INVALID_SESSION;
     }
@@ -751,7 +750,7 @@ void Session::HandleDialogForeground()
             continue;
         }
         WLOGFD("Foreground dialog, id: %{public}d, dialogId: %{public}d", GetPersistentId(), dialog->GetPersistentId());
-        dialog->SetSessionState(SessionState::STATE_ACTIVE);
+        dialog->SetSessionState(SessionState::STATE_FOREGROUND);
     }
 }
 
@@ -761,14 +760,8 @@ WSError Session::Background()
     SessionState state = GetSessionState();
     WLOGFD("Background session, id: %{public}d, state: %{public}" PRIu32"", GetPersistentId(),
         static_cast<uint32_t>(state));
-    if (state == SessionState::STATE_ACTIVE && GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
-        UpdateSessionState(SessionState::STATE_INACTIVE);
-        state = SessionState::STATE_INACTIVE;
-        isActive_ = false;
-    }
-    if (state != SessionState::STATE_INACTIVE) {
-        WLOGFE("Background state invalid! state:%{public}u", state);
-        return WSError::WS_ERROR_INVALID_SESSION;
+    if (isActive_) {
+        SetActive(false);
     }
     UpdateSessionState(SessionState::STATE_BACKGROUND);
     if (GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
@@ -821,14 +814,12 @@ WSError Session::SetActive(bool active)
         WLOGFD("Session active do not change: [%{public}d]", active);
         return WSError::WS_DO_NOTHING;
     }
-    if (active && GetSessionState() == SessionState::STATE_FOREGROUND) {
+    if (active) {
         sessionStage_->SetActive(true);
-        UpdateSessionState(SessionState::STATE_ACTIVE);
         isActive_ = active;
     }
-    if (!active && GetSessionState() == SessionState::STATE_ACTIVE) {
+    if (!active) {
         sessionStage_->SetActive(false);
-        UpdateSessionState(SessionState::STATE_INACTIVE);
         isActive_ = active;
     }
     return WSError::WS_OK;
@@ -864,11 +855,11 @@ WSError Session::TerminateSessionNew(const sptr<AAFwk::SessionInfo> abilitySessi
         WLOGFE("abilitySessionInfo is null");
         return WSError::WS_ERROR_INVALID_SESSION;
     }
-    if (isTerminating) {
-        WLOGFE("TerminateSessionNew isTerminating, return!");
+    if (isTerminating_) {
+        WLOGFE("TerminateSessionNew isTerminating_, return!");
         return WSError::WS_ERROR_INVALID_OPERATION;
     }
-    isTerminating = true;
+    isTerminating_ = true;
     SessionInfo info;
     info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
     info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
@@ -896,11 +887,11 @@ WSError Session::TerminateSessionTotal(const sptr<AAFwk::SessionInfo> abilitySes
         WLOGFE("abilitySessionInfo is null");
         return WSError::WS_ERROR_INVALID_SESSION;
     }
-    if (isTerminating) {
-        WLOGFE("TerminateSessionTotal isTerminating, return!");
+    if (isTerminating_) {
+        WLOGFE("TerminateSessionTotal isTerminating_, return!");
         return WSError::WS_ERROR_INVALID_OPERATION;
     }
-    isTerminating = true;
+    isTerminating_ = true;
     SessionInfo info;
     info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
     info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
@@ -958,11 +949,11 @@ void Session::SetUpdateSessionIconListener(const NofitySessionIconUpdatedFunc &f
 
 WSError Session::Clear()
 {
-    if (isTerminating) {
-        WLOGFE("Clear isTerminating, return!");
+    if (isTerminating_) {
+        WLOGFE("Clear isTerminating_, return!");
         return WSError::WS_ERROR_INVALID_OPERATION;
     }
-    isTerminating = true;
+    isTerminating_ = true;
     SessionInfo info = GetSessionInfo();
     if (terminateSessionFuncNew_) {
         terminateSessionFuncNew_(info, false);
@@ -1142,8 +1133,7 @@ bool Session::CheckDialogOnForeground()
     }
     for (auto iter = dialogVec_.rbegin(); iter != dialogVec_.rend(); iter++) {
         auto dialogSession = *iter;
-        if (dialogSession && (dialogSession->GetSessionState() == SessionState::STATE_ACTIVE ||
-            dialogSession->GetSessionState() == SessionState::STATE_FOREGROUND)) {
+        if (dialogSession && (dialogSession->GetSessionState() == SessionState::STATE_FOREGROUND)) {
             dialogSession->NotifyTouchDialogTarget();
             WLOGFD("Notify touch dialog window, id: %{public}d", GetPersistentId());
             return true;
@@ -1160,7 +1150,6 @@ bool Session::CheckPointerEventDispatch(const std::shared_ptr<MMI::PointerEvent>
     int32_t action = pointerEvent->GetPointerAction();
     if (!isSystemWindow && WindowHelper::IsMainWindow(windowType) &&
         sessionState != SessionState::STATE_FOREGROUND &&
-        sessionState != SessionState::STATE_ACTIVE &&
         action != MMI::PointerEvent::POINTER_ACTION_LEAVE_WINDOW) {
         WLOGFW("Current Session Info: [persistentId: %{public}d, isSystemWindow: %{public}d,"
             "state: %{public}d, action:%{public}d]", GetPersistentId(), isSystemWindow, state_, action);
@@ -1189,10 +1178,8 @@ bool Session::CheckKeyEventDispatch(const std::shared_ptr<MMI::KeyEvent>& keyEve
         return false;
     }
     auto parentSessionState = parentSession->GetSessionState();
-    if ((parentSessionState != SessionState::STATE_FOREGROUND &&
-        parentSessionState != SessionState::STATE_ACTIVE) ||
-        (state_ != SessionState::STATE_FOREGROUND &&
-        state_ != SessionState::STATE_ACTIVE)) {
+    if ((parentSessionState != SessionState::STATE_FOREGROUND) ||
+        (state_ != SessionState::STATE_FOREGROUND)) {
         WLOGFE("Dialog's parent info : [persistentId: %{publicd}d, state:%{public}d];"
             "Dialog info:[persistentId: %{publicd}d, state:%{public}d]",
             parentSession->GetPersistentId(), parentSessionState, GetPersistentId(), state_);
@@ -1216,8 +1203,8 @@ bool Session::IsTopDialog() const
     auto parentDialogVec = parentSession->dialogVec_;
     for (auto iter = parentDialogVec.rbegin(); iter != parentDialogVec.rend(); iter++) {
         auto dialogSession = *iter;
-        if (dialogSession && (dialogSession->GetSessionState() == SessionState::STATE_ACTIVE ||
-            dialogSession->GetSessionState() == SessionState::STATE_FOREGROUND)) {
+        if (dialogSession && (dialogSession->GetSessionState() == SessionState::STATE_FOREGROUND)) {
+            WLOGFI("Dialog id: %{public}d, current dialog id: %{public}d", dialogSession->GetPersistentId(), currentPersistentId);
             return dialogSession->GetPersistentId() == currentPersistentId;
         }
     }
@@ -1262,8 +1249,7 @@ void Session::HandlePointDownDialog(int32_t pointAction)
         return;
     }
     for (auto dialog : dialogVec_) {
-        if (dialog && (dialog->GetSessionState() == SessionState::STATE_FOREGROUND ||
-            dialog->GetSessionState() == SessionState::STATE_ACTIVE)) {
+        if (dialog && (dialog->GetSessionState() == SessionState::STATE_FOREGROUND)) {
             dialog->RaiseToAppTopForPointDown();
             dialog->PresentFoucusIfNeed(pointAction);
             WLOGFD("Point main window, raise to top and dialog need focus, id: %{public}d, dialogId: %{public}d",

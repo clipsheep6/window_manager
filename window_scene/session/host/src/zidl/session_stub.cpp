@@ -45,8 +45,6 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_HIDE),
         &SessionStub::HandleHide),
 
-    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_ACTIVE_STATUS),
-        &SessionStub::HandleUpdateActivateStatus),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SESSION_EVENT),
         &SessionStub::HandleSessionEvent),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_SESSION_RECT),
@@ -278,15 +276,6 @@ int SessionStub::HandlePendingSessionActivation(MessageParcel& data, MessageParc
         abilitySessionInfo->startSetting.reset(data.ReadParcelable<AAFwk::AbilityStartSetting>());
     }
     const WSError& errCode = PendingSessionActivation(abilitySessionInfo);
-    reply.WriteUint32(static_cast<uint32_t>(errCode));
-    return ERR_NONE;
-}
-
-int SessionStub::HandleUpdateActivateStatus(MessageParcel& data, MessageParcel& reply)
-{
-    WLOGFD("HandleUpdateActivateStatus!");
-    bool isActive = data.ReadBool();
-    const WSError& errCode = UpdateActiveStatus(isActive);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
