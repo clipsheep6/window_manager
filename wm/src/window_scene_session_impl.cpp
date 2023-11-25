@@ -2101,5 +2101,63 @@ WMError WindowSceneSessionImpl::NotifyPrepareClosePiPWindow()
     WLOGFD("NotifyPrepareClosePiPWindow end");
     return WMError::WM_OK;
 }
+
+WMError WindowSceneSessionImpl::GetWindowDrawingContentChangeInfo(
+    WindowDrawingContentInfo info)
+{
+    WindowDrawingContentInfo windowDrawingInfo(info);
+    uint32_t windowId = info.windowId_;
+    bool currentDrawingContentState = info.drawingContentState_;
+    bool currentProcessContentState = currentDrawingContentState;
+    if (currentDrawingContentState)
+    {
+        std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
+        if (windowSessionMap_.empty()) {
+            WLOGFE("Please create mainWindow First!");
+            return WMError::WM_ERROR_NULLPTR;
+        }
+        for (const auto & item : windowSessionMap_)
+        {
+            if(item.second.second->GetWindowId() == windowId) {
+                lastDrawingContentState_ = item.second.second->GetDrawingContentState();
+                item.second.second->SetDrawingContentState(currentDrawingContentState);
+            }
+            if(currentDrawingContentState != lastDrawingContentState_ &&
+               currentProcessContentState != lastProcessContentState_) {
+                windowDrawingInfo.drawingContentState_ = currentProcessContentState;
+                SingletonContainer::Get<WindowManager>().UpdateWindowDrawingContentInfo(windowDrawingInfo);
+                lastProcessContentState_ = currentProcessContentState;
+            }
+        }
+    } else {
+        std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
+        for (const auto & item : windowSessionMap_)
+        {
+            if(item.second.second->GetWindowId() == windowId) {
+                item.second.second->SetDrawingContentState(currentDrawingContentState);
+            }
+            if(item.second.second->GetPersistentId() == persistentId) {
+                if (item.second.second->GetDrawingContentState())
+                    break;
+                } else {
+                    continue;
+                }
+            }
+            if (lastProcessContentState_)
+            {
+                windowDrawingInfo.drawingContentState_ = currentProcessContentState;
+                SingletonContainer::Get<WindowManager>().UpdateWindowDrawingContentInfo(windowDrawingInfo);
+                lastProcessContentState_ = currentProcessContentState;
+            }   
+    }
+    return WMError::WM_OK;
+    }
+}
+
+void WindowSceneSessionImpl::UpdateWindowDrawingContentInfo(const WindowDrawingContentInfo& info)
+{
+    WLOGFI("UpdateWindowDrawingContentInfo");
+    GetWindowDrawingContentChangeInfo(info);
+}
 } // namespace Rosen
 } // namespace OHOS
