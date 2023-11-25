@@ -128,6 +128,7 @@ public:
     virtual ScreenProperty GetPhyScreenProperty(ScreenId screenId) { return ScreenProperty(); }
     virtual void NotifyDisplayChangeInfoChanged(const sptr<DisplayChangeInfo>& info) {}
     virtual void SetScreenPrivacyState(bool hasPrivate) {}
+    virtual void SetScreenLockSurfaceNode(const std::shared_ptr<RSSurfaceNode>& surfaceNode) {}
 };
 } // namespace Rosen
 } // namespace OHOS

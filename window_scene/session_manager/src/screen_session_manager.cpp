@@ -45,7 +45,6 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "Screen
 const std::string SCREEN_SESSION_MANAGER_THREAD = "ScreenSessionManager";
 const std::string SCREEN_CAPTURE_PERMISSION = "ohos.permission.CAPTURE_SCREEN";
 const std::string BOOTEVENT_BOOT_COMPLETED = "bootevent.boot.completed";
-const int SLEEP_US = 48 * 1000; // 48ms
 const std::u16string DEFAULT_USTRING = u"error";
 const std::string DEFAULT_STRING = "error";
 const std::string ARG_DUMP_HELP = "-h";
@@ -776,6 +775,11 @@ bool ScreenSessionManager::SetSpecifiedScreenPower(ScreenId screenId, ScreenPowe
         DisplayPowerEvent::DISPLAY_OFF, EventStatus::END, reason);
 }
 
+void ScreenSessionManager::SetScreenLockSurfaceNode(const std::shared_ptr<RSSurfaceNode>& surfaceNode)
+{
+    screenLockSurfaceNode_ = surfaceNode;
+}
+
 bool ScreenSessionManager::SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -803,6 +807,7 @@ bool ScreenSessionManager::SetScreenPowerForAll(ScreenPowerState state, PowerSta
         }
         case ScreenPowerState::POWER_OFF: {
             keyguardDrawnDone_ = false;
+            screenLockSurfaceNode_->SetIsNotifyUIBufferAvailable(false);
             status = ScreenPowerStatus::POWER_STATUS_OFF;
             break;
         }
@@ -906,8 +911,9 @@ void ScreenSessionManager::NotifyDisplayEvent(DisplayEvent event)
         keyguardDrawnDone_ = true;
         if (needScreenOnWhenKeyguardNotify_) {
             taskScheduler_->RemoveTask("screenOnTask");
-            usleep(SLEEP_US);
-            SetScreenPower(ScreenPowerStatus::POWER_STATUS_ON, PowerStateChangeReason::STATE_CHANGE_REASON_INIT);
+            screenLockSurfaceNode_->SetBufferAvailableCallback([this]() {
+                SetScreenPower(ScreenPowerStatus::POWER_STATUS_ON, PowerStateChangeReason::STATE_CHANGE_REASON_INIT);
+            });
             needScreenOnWhenKeyguardNotify_ = false;
         }
     }
