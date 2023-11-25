@@ -318,10 +318,11 @@ void ScreenSession::UpdatePropertyAfterRotation(RRect bounds, int rotation, Fold
     if (transactionProxy != nullptr) {
         transactionProxy->FlushImplicitTransaction();
     }
-    WLOGFI("bounds:[%{public}f %{public}f %{public}f %{public}f],rotation:%{public}d,displayOrientation:%{public}u",
+    WLOGFI("bounds:[%{public}f %{public}f %{public}f %{public}f],rotation:%{public}d,foldDisplayMode:%{public}u"
+        "displayOrientation:%{public}u,displayScreenRotation:%{public}u",
         property_.GetBounds().rect_.GetLeft(), property_.GetBounds().rect_.GetTop(),
         property_.GetBounds().rect_.GetWidth(), property_.GetBounds().rect_.GetHeight(),
-        rotation, displayOrientation);
+        rotation, foldDisplayMode, displayOrientation, displayScreenRotation);
 }
 
 sptr<SupportedScreenModes> ScreenSession::GetActiveScreenMode() const
