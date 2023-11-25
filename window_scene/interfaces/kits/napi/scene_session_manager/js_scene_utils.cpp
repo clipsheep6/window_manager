@@ -76,126 +76,6 @@ napi_valuetype GetType(napi_env env, napi_value value)
     return res;
 }
 
-bool IsJsBundleNameUndefind(napi_env env, napi_value jsBundleName, SessionInfo& sessionInfo)
-{
-    if (GetType(env, jsBundleName) != napi_undefined) {
-        std::string bundleName;
-        if (!ConvertFromJsValue(env, jsBundleName, bundleName)) {
-            WLOGFE("[NAPI]Failed to convert parameter to bundleName");
-            return false;
-        }
-        sessionInfo.bundleName_ = bundleName;
-    }
-    return true;
-}
-
-bool IsJsModuleNameUndefind(napi_env env, napi_value jsModuleName, SessionInfo& sessionInfo)
-{
-    if (GetType(env, jsModuleName) != napi_undefined) {
-        std::string moduleName;
-        if (!ConvertFromJsValue(env, jsModuleName, moduleName)) {
-            WLOGFE("[NAPI]Failed to convert parameter to moduleName");
-            return false;
-        }
-        sessionInfo.moduleName_ = moduleName;
-    }
-    return true;
-}
-
-bool IsJsAbilityUndefind(napi_env env, napi_value jsAbilityName, SessionInfo& sessionInfo)
-{
-    if (GetType(env, jsAbilityName) != napi_undefined) {
-        std::string abilityName;
-        if (!ConvertFromJsValue(env, jsAbilityName, abilityName)) {
-            WLOGFE("[NAPI]Failed to convert parameter to abilityName");
-            return false;
-        }
-        sessionInfo.abilityName_ = abilityName;
-    }
-    return true;
-}
-
-bool IsJsAppIndexUndefind(napi_env env, napi_value jsAppIndex, SessionInfo& sessionInfo)
-{
-    if (GetType(env, jsAppIndex) != napi_undefined) {
-        int32_t appIndex;
-        if (!ConvertFromJsValue(env, jsAppIndex, appIndex)) {
-            WLOGFE("[NAPI]Failed to convert parameter to appIndex");
-            return false;
-        }
-        sessionInfo.appIndex_ = appIndex;
-    }
-    return true;
-}
-
-bool IsJsIsSystemUndefind(napi_env env, napi_value jsIsSystem, SessionInfo& sessionInfo)
-{
-    if (GetType(env, jsIsSystem) != napi_undefined) {
-        bool isSystem;
-        if (!ConvertFromJsValue(env, jsIsSystem, isSystem)) {
-            WLOGFE("[NAPI]Failed to convert parameter to isSystem");
-            return false;
-        }
-        sessionInfo.isSystem_ = isSystem;
-    }
-    return true;
-}
-
-bool IsJsPersistentIdUndefind(napi_env env, napi_value jsPersistentId, SessionInfo& sessionInfo)
-{
-    if (GetType(env, jsPersistentId) != napi_undefined) {
-        int32_t persistentId;
-        if (!ConvertFromJsValue(env, jsPersistentId, persistentId)) {
-            WLOGFE("[NAPI]Failed to convert parameter to persistentId");
-            return false;
-        }
-        sessionInfo.persistentId_ = persistentId;
-    }
-    return true;
-}
-
-bool IsJsCallStateUndefind(napi_env env, napi_value jsCallState, SessionInfo& sessionInfo)
-{
-    if (GetType(env, jsCallState) != napi_undefined) {
-        int32_t callState;
-        if (!ConvertFromJsValue(env, jsCallState, callState)) {
-            WLOGFE("[NAPI]Failed to convert parameter to callState");
-            return false;
-        }
-        sessionInfo.callState_ = static_cast<uint32_t>(callState);
-    }
-    return true;
-}
-
-bool IsJsSessionTypeUndefind(napi_env env, napi_value jsSessionType, SessionInfo& sessionInfo)
-{
-    if (GetType(env, jsSessionType) != napi_undefined) {
-        uint32_t windowType = 0;
-        if (!ConvertFromJsValue(env, jsSessionType, windowType)) {
-            WLOGFE("[NAPI]Failed to convert parameter to windowType");
-            return false;
-        }
-        if (JS_SESSION_TO_WINDOW_TYPE_MAP.count(static_cast<JsSessionType>(windowType)) != 0) {
-            sessionInfo.windowType_ = static_cast<uint32_t>(
-                JS_SESSION_TO_WINDOW_TYPE_MAP.at(static_cast<JsSessionType>(windowType)));
-        }
-    }
-    return true;
-}
-
-bool IsJsScreenIdUndefind(napi_env env, napi_value JsScreenId, SessionInfo& sessionInfo)
-{
-    if (GetType(env, JsScreenId) != napi_undefined) {
-        int32_t screenId = 0;
-        if (!ConvertFromJsValue(env, JsScreenId, screenId)) {
-            WLOGFE("[NAPI]Failed to convert parameter to screenId");
-            return false;
-        }
-        sessionInfo.screenId_ = static_cast<uint64_t>(screenId);
-    }
-    return true;
-}
-
 bool ConvertSessionInfoFromJs(napi_env env, napi_value jsObject, SessionInfo& sessionInfo)
 {
     napi_value jsBundleName = nullptr;
@@ -217,32 +97,80 @@ bool ConvertSessionInfoFromJs(napi_env env, napi_value jsObject, SessionInfo& se
     napi_value jsScreenId = nullptr;
     napi_get_named_property(env, jsObject, "screenId", &jsScreenId);
 
-    if (!IsJsBundleNameUndefind(env, jsBundleName, sessionInfo)) {
-        return false;
+    if (GetType(env, jsBundleName) != napi_undefined) {
+        std::string bundleName;
+        if (!ConvertFromJsValue(env, jsBundleName, bundleName)) {
+            WLOGFE("[NAPI]Failed to convert parameter to bundleName");
+            return false;
+        }
+        sessionInfo.bundleName_ = bundleName;
     }
-    if (!IsJsModuleNameUndefind(env, jsModuleName, sessionInfo)) {
-        return false;
+    if (GetType(env, jsModuleName) != napi_undefined) {
+        std::string moduleName;
+        if (!ConvertFromJsValue(env, jsModuleName, moduleName)) {
+            WLOGFE("[NAPI]Failed to convert parameter to moduleName");
+            return false;
+        }
+        sessionInfo.moduleName_ = moduleName;
     }
-    if (!IsJsAbilityUndefind(env, jsAbilityName, sessionInfo)) {
-        return false;
+    if (GetType(env, jsAbilityName) != napi_undefined) {
+        std::string abilityName;
+        if (!ConvertFromJsValue(env, jsAbilityName, abilityName)) {
+            WLOGFE("[NAPI]Failed to convert parameter to abilityName");
+            return false;
+        }
+        sessionInfo.abilityName_ = abilityName;
     }
-    if (!IsJsAppIndexUndefind(env, jsAppIndex, sessionInfo)) {
-        return false;
+    if (GetType(env, jsAppIndex) != napi_undefined) {
+        int32_t appIndex;
+        if (!ConvertFromJsValue(env, jsAppIndex, appIndex)) {
+            WLOGFE("[NAPI]Failed to convert parameter to appIndex");
+            return false;
+        }
+        sessionInfo.appIndex_ = appIndex;
     }
-    if (!IsJsIsSystemUndefind(env, jsIsSystem, sessionInfo)) {
-        return false;
+    if (GetType(env, jsIsSystem) != napi_undefined) {
+        bool isSystem;
+        if (!ConvertFromJsValue(env, jsIsSystem, isSystem)) {
+            WLOGFE("[NAPI]Failed to convert parameter to isSystem");
+            return false;
+        }
+        sessionInfo.isSystem_ = isSystem;
     }
-    if (!IsJsPersistentIdUndefind(env, jsPersistentId, sessionInfo)) {
-        return false;
+    if (GetType(env, jsPersistentId) != napi_undefined) {
+        int32_t persistentId;
+        if (!ConvertFromJsValue(env, jsPersistentId, persistentId)) {
+            WLOGFE("[NAPI]Failed to convert parameter to persistentId");
+            return false;
+        }
+        sessionInfo.persistentId_ = persistentId;
     }
-    if (!IsJsCallStateUndefind(env, jsCallState, sessionInfo)) {
-        return false;
+    if (GetType(env, jsCallState) != napi_undefined) {
+        int32_t callState;
+        if (!ConvertFromJsValue(env, jsCallState, callState)) {
+            WLOGFE("[NAPI]Failed to convert parameter to callState");
+            return false;
+        }
+        sessionInfo.callState_ = static_cast<uint32_t>(callState);
     }
-    if (!IsJsSessionTypeUndefind(env, jsSessionType, sessionInfo)) {
-        return false;
+    if (GetType(env, jsSessionType) != napi_undefined) {
+        uint32_t windowType = 0;
+        if (!ConvertFromJsValue(env, jsSessionType, windowType)) {
+            WLOGFE("[NAPI]Failed to convert parameter to windowType");
+            return false;
+        }
+        if (JS_SESSION_TO_WINDOW_TYPE_MAP.count(static_cast<JsSessionType>(windowType)) != 0) {
+            sessionInfo.windowType_ = static_cast<uint32_t>(
+                JS_SESSION_TO_WINDOW_TYPE_MAP.at(static_cast<JsSessionType>(windowType)));
+        }
     }
-    if (!IsJsScreenIdUndefind(env, jsSessionType, sessionInfo)) {
-        return false;
+    if (GetType(env, jsScreenId) != napi_undefined) {
+        int32_t screenId = 0;
+        if (!ConvertFromJsValue(env, jsScreenId, screenId)) {
+            WLOGFE("[NAPI]Failed to convert parameter to screenId");
+            return false;
+        }
+        sessionInfo.screenId_ = static_cast<uint64_t>(screenId);
     }
     return true;
 }
