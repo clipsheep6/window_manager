@@ -247,6 +247,80 @@ napi_value JsScreen::OnSetDensityDpi(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value JsScreen::GetSupportedColorSpaces(napi_env env, napi_callback_info info)
+{
+    WLOGI("GetSupportedColorSpaces is called");
+    JsScreen* me = CheckParamsAndGetThis<JsScreen>(env, info);
+    return (me != nullptr) ? me->OnGetSupportedColorSpaces(env, info) : nullptr;
+}
+
+napi_value JsScreen::OnGetSupportedColorSpaces(napi_env env, napi_callback_info info)
+{
+    WLOGI("OnGetSupportedColorSpaces is called");
+    NapiAsyncTask::CompleteCallback complete =
+        [=](napi_env env, NapiAsyncTask& task, int32_t status) {
+            std::vector<GraphicCM_ColorSpaceType> colorSpaces;
+            DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->GetSupportedColorSpaces(colorSpaces));
+            if (ret == DmErrorCode::DM_OK) {
+                task.Resolve(env, CreateJsColorSpaceArray(env, colorSpaces));
+                WLOGI("OnGetSupportedColorSpaces success");
+            } else {
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret),
+                                                "JsScreen::OnGetSupportedColorSpaces failed."));
+                WLOGFE("OnGetSupportedColorSpaces failed");
+            }
+        };
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    napi_value lastParam = nullptr;
+    if (argc >= ARGC_ONE && argv[ARGC_ONE - 1] != nullptr &&
+        GetType(env, argv[ARGC_ONE - 1]) == napi_function) {
+        lastParam = argv[ARGC_ONE - 1];
+    }
+    napi_value result = nullptr;
+    NapiAsyncTask::Schedule("JsScreen::OnGetSupportedColorSpaces",
+        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
+napi_value JsScreen::GetSupportedHDRFormats(napi_env env, napi_callback_info info)
+{
+    WLOGI("GetSupportedHDRFormats is called");
+    JsScreen* me = CheckParamsAndGetThis<JsScreen>(env, info);
+    return (me != nullptr) ? me->OnGetSupportedHDRFormat(env, info) : nullptr;
+}
+
+napi_value JsScreen::OnGetSupportedHDRFormat(napi_env env, napi_callback_info info)
+{
+    WLOGI("OnGetSupportedHDRFormat is called");
+    NapiAsyncTask::CompleteCallback complete =
+        [=](napi_env env, NapiAsyncTask& task, int32_t status) {
+            std::vector<ScreenHDRFormat> hdrFormats;
+            DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->GetSupportedHDRFormats(hdrFormats));
+            if (ret == DmErrorCode::DM_OK) {
+                task.Resolve(env, CreateJsHDRFormatArray(env, hdrFormats));
+                WLOGI("OnGetSupportedHDRFormat success");
+            } else {
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret),
+                                                "JsScreen::OnGetSupportedHDRFormat failed."));
+                WLOGFE("OnGetSupportedHDRFormat failed");
+            }
+        };
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    napi_value lastParam = nullptr;
+    if (argc >= ARGC_ONE && argv[ARGC_ONE - 1] != nullptr &&
+        GetType(env, argv[ARGC_ONE - 1]) == napi_function) {
+        lastParam = argv[ARGC_ONE - 1];
+    }
+    napi_value result = nullptr;
+    NapiAsyncTask::Schedule("JsScreen::OnGetSupportedHDRFormat",
+        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    return result;
+}
+
 std::shared_ptr<NativeReference> FindJsDisplayObject(ScreenId screenId)
 {
     WLOGI("[NAPI]Try to find screen %{public}" PRIu64" in g_JsScreenMap", screenId);
@@ -337,6 +411,56 @@ napi_value CreateJsScreenModeObject(napi_env env, const sptr<SupportedScreenMode
     napi_set_named_property(env, objValue, "height", CreateJsValue(env, height));
     napi_set_named_property(env, objValue, "refreshRate", CreateJsValue(env, refreshRate));
     return objValue;
+}
+
+napi_value CreateJsColorSpaceArray(napi_env env, const std::vector<GraphicCM_ColorSpaceType>& colorSpaces)
+{
+    WLOGI("JsScreen::CreateJsColorSpaceArray is called");
+    std::set<uint32_t> nativeColorSpaces;
+    for (const auto& colorSpace : colorSpaces) {
+        if (NATIVE_TO_JS_COLOR_SPACE_TYPE_MAP.count(colorSpace) == 0) {
+            WLOGFE("Get color space name %{public}u, but not in api type", colorSpace);
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(DMError::DM_ERROR_DEVICE_NOT_SUPPORT)));
+            return NapiGetUndefined(env);
+        }
+        nativeColorSpaces.insert(static_cast<uint32_t>(NATIVE_TO_JS_COLOR_SPACE_TYPE_MAP.at(colorSpace)));
+    }
+    napi_value arrayValue = nullptr;
+    napi_create_array_with_length(env, nativeColorSpaces.size(), &arrayValue);
+    if (arrayValue == nullptr) {
+        WLOGFE("Failed to create color space array");
+        return NapiGetUndefined(env);
+    }
+    uint32_t index = 0;
+    for (const auto& nativeColorSpace : nativeColorSpaces) {
+        napi_set_element(env, arrayValue, index++, CreateJsValue(env, nativeColorSpace));
+    }
+    return arrayValue;
+}
+
+napi_value CreateJsHDRFormatArray(napi_env env, const std::vector<ScreenHDRFormat>& hdrFormats)
+{
+    WLOGI("JsScreen::CreateJsHDRFormatArray is called");
+    std::set<uint32_t> nativeHDRFormats;
+    for (const auto& hdrFormat : hdrFormats) {
+        if (NATIVE_TO_JS_HDR_FORMAT_TYPE_MAP.count(hdrFormat) == 0) {
+            WLOGFE("Get HDR format name %{public}u, but not in api type", hdrFormat);
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(DMError::DM_ERROR_DEVICE_NOT_SUPPORT)));
+            return NapiGetUndefined(env);
+        }
+        nativeHDRFormats.insert(static_cast<uint32_t>(NATIVE_TO_JS_HDR_FORMAT_TYPE_MAP.at(hdrFormat)));
+    }
+    napi_value arrayValue = nullptr;
+    napi_create_array_with_length(env, hdrFormats.size(), &arrayValue);
+    if (arrayValue == nullptr) {
+        WLOGFE("Failed to create HDR format array");
+        return NapiGetUndefined(env);
+    }
+    uint32_t index = 0;
+    for (const auto& nativeHDRFormat : nativeHDRFormats) {
+        napi_set_element(env, arrayValue, index++, CreateJsValue(env, nativeHDRFormat));
+    }
+    return arrayValue;
 }
 }  // namespace Rosen
 }  // namespace OHOS
