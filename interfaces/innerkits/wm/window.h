@@ -142,6 +142,13 @@ public:
      * @param hasDeco Window has decoration or not.
      */
     virtual void OnModeChange(WindowMode mode, bool hasDeco = true) {}
+    /**
+     * @brief Notify caller when window status changed.
+     *
+     * @param status Mode of the current window.
+     * @param hasDeco Window has decoration or not.
+     */
+    virtual void OnWindowStatusChange(WindowStatus status) {}
 };
 
 /**

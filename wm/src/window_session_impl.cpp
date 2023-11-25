@@ -1742,5 +1742,35 @@ void WindowSessionImpl::UpdatePiPRect(const uint32_t width, const uint32_t heigh
     }
     hostSession_->UpdatePiPRect(width, height, reason);
 }
+
+void WindowSessionImpl::NotifyWindowStatusChange(WindowMode mode)
+{
+    WLOGFD("NotifySessionBackground");
+    auto WindowStatus = WindowStatus::WINDOW_STATUS_UNDEFINED;
+    if (mode == WindowMode::WINDOW_MODE_FLOATING) {
+        WindowStatus = WindowStatus::WINDOW_STATUS_FLOATING;
+        if (property_->GetMaximizeMode() == MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
+            WindowStatus = WindowStatus::WINDOW_STATUS_MAXMIZE;
+        }
+    } else if (mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY) {
+        WindowStatus = WindowStatus::WINDOW_STATUS_SPLIT_PRIMARY;
+    } else if (mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        WindowStatus = WindowStatus::WINDOW_STATUS_SPLIT_SECONDARY;
+    }
+    if (mode == WindowMode::WINDOW_MODE_FULLSCREEN) {
+        WindowStatus = WindowStatus::WINDOW_STATUS_FULLSCREEN;
+    }
+    if (state_ == WindowState::STATE_HIDDEN) {
+        WindowStatus = WindowStatus::WINDOW_STATUS_MINIMIZE;
+    }
+    
+    auto windowChangeListeners = GetListeners<IWindowChangeListener>();
+    for (auto& listener : windowChangeListeners) {
+        if (listener != nullptr) {
+            listener->OnWindowStatusChange(WindowStatus);
+        }
+    }
+}
+
 } // namespace Rosen
 } // namespace OHOS
