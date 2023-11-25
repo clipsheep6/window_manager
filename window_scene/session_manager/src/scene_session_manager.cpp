@@ -5709,6 +5709,29 @@ bool SceneSessionManager::UpdateImmersiveState()
     return false;
 }
 
+WMError SceneSessionManager::GetTopWindowId(uint32_t mainPersistentId, uint32_t& topPersistentId)
+{
+    if (sceneSessionMap_.find(mainPersistentId) == sceneSessionMap_.end()) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    auto sceneSession = sceneSessionMap_[mainPersistentId];
+    // if window is invisible, it should not be got.
+    if (!sceneSession->IsVisible()) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    auto subSession = sceneSession->GetSubSession();
+    if (!subSession.empty()) {
+        auto iter = subSession.rbegin();
+        if (WindowHelper::IsSubWindow((*iter)->GetWindowType()) ||
+            WindowHelper::IsSystemSubWindow((*iter)->GetWindowType())) {
+            topPersistentId = (*iter)->GetPersistentId();
+            return WMError::WM_OK;
+        }
+    }
+    topPersistentId = mainPersistentId;
+    return WMError::WM_OK;
+}
+
 void SceneSessionManager::NotifySessionForeground(const sptr<SceneSession>& session, uint32_t reason,
     bool withAnimation)
 {

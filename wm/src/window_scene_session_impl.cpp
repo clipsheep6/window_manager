@@ -1485,7 +1485,7 @@ sptr<Window> WindowSceneSessionImpl::GetTopWindowWithContext(const std::shared_p
 {
     std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
     if (windowSessionMap_.empty()) {
-        WLOGFE("Please create mainWindow First!");
+        WLOGFI("Please create mainWindow First!");
         return nullptr;
     }
     uint32_t mainWinId = INVALID_WINDOW_ID;
@@ -1497,13 +1497,45 @@ sptr<Window> WindowSceneSessionImpl::GetTopWindowWithContext(const std::shared_p
             return win;
         }
     }
-    WLOGFE("Cannot find topWindow!");
-    return nullptr;
+    WLOGFI("GetTopWindowfinal winId:%{public}u!", mainWinId);
+    if (mainWinId == INVALID_WINDOW_ID) {
+        WLOGFE("Cannot find topWindow!");
+        return nullptr;
+    }
+    uint32_t topWinId = INVALID_WINDOW_ID;
+    WMError ret = SingletonContainer::Get<WindowAdapter>().GetTopWindowId(mainWinId, topWinId);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("GetTopWindowId failed with errCode:%{public}d", static_cast<int32_t>(ret));
+        return nullptr;
+    }
+    return FindWindowById(topWinId);
 }
 
 sptr<Window> WindowSceneSessionImpl::GetTopWindowWithId(uint32_t mainWinId)
 {
-    return GetMainWindowWithId(mainWinId);
+    uint32_t topWinId = INVALID_WINDOW_ID;
+    WMError ret = SingletonContainer::Get<WindowAdapter>().GetTopWindowId(mainWinId, topWinId);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("GetTopWindowId failed with errCode:%{public}d", static_cast<int32_t>(ret));
+        return nullptr;
+    }
+    return FindWindowById(topWinId);
+}
+
+sptr<Window> WindowSceneSessionImpl::FindWindowById(uint32_t winId)
+{
+    if (windowSessionMap_.empty()) {
+        WLOGFE("There is no Window");
+        return nullptr;
+    }
+    for (auto iter = windowSessionMap_.begin(); iter != windowSessionMap_.end(); iter++) {
+        if (winId == iter->second.first) {
+            WLOGI("FindWindow id: %{public}u", winId);
+            return iter->second.second;
+        }
+    }
+    WLOGFE("miss window with id %{public}u", windId);
+    return nullptr;
 }
 
 sptr<WindowSessionImpl> WindowSceneSessionImpl::GetMainWindowWithId(uint32_t mainWinId)
