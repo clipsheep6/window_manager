@@ -996,7 +996,7 @@ WMError WindowSceneSessionImpl::SetLayoutFullScreen(bool status)
     if (!WindowHelper::IsWindowModeSupported(property_->GetModeSupportInfo(), WindowMode::WINDOW_MODE_FULLSCREEN)) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    if ((property_->GetWindowMode() == WindowMode::WindowMode::WINDOW_MODE_FLOATIN ||
+    if ((property_->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATIN ||
         property_->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
         property_->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_SECONDARY)  &&
         system::GetParameter("const.product.devicetype", "unknown") == "phone") {
