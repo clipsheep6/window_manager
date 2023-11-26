@@ -25,6 +25,7 @@
 #include "wm_common.h"
 #include "focus_change_info.h"
 #include "window_visibility_info.h"
+#inlcude "window_drawing_content_info.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -407,6 +408,8 @@ private:
         WindowUpdateType type) const;
     void UpdateWindowVisibilityInfo(
         const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos) const;
+    void UpdateWindowDrawingContentInfo(
+        const std::vector<sptr<WindowDrawingContentInfo>>& windowDrawingContentInfos) const;
     void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing) const;
     void NotifyWaterMarkFlagChangedResult(bool showWaterMark) const;
     void NotifyGestureNavigationEnabledResult(bool enable) const;

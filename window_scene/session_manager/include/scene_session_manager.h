@@ -237,6 +237,11 @@ public:
     void RegisterCreateSubSessionListener(int32_t persistentId, const NotifyCreateSubSessionFunc& func);
     void UnregisterCreateSubSessionListener(int32_t persistentId);
     WSError NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible) override;
+    void DealwithVisibilityChange(bool isVisible, uint64_t& surfaceId, WindowVisibilityState& visibleState,
+        std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos);
+    void DealwithDrawingContentChange(bool isDrawing, uint64_t& surfaceId, WindowVisibilityState& visibleState,
+        std::vector<sptr<WindowDrawingContentInfo>>& windowDrawingContentInfos);
+
 
     void NotifyUpdateRectAfterLayout();
 public:
@@ -333,9 +338,11 @@ private:
     void NotifyWindowInfoChange(int32_t persistentId, WindowUpdateType type);
     bool FillWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos,
         const sptr<SceneSession>& sceneSession);
-    std::vector<std::pair<uint64_t, WindowVisibilityState>> GetWindowVisibilityChangeInfo(
+    std::vector<std::pair<uint64_t, WindowVisibilityState>> GetWindowVisibilityContentChangeInfo(
         std::shared_ptr<RSOcclusionData> occlusionData);
-    void WindowVisibilityChangeCallback(std::shared_ptr<RSOcclusionData> occlusiontionData);
+    std::vector<std::pair<uint64_t, WindowVisibilityState>> GetWindowDrawingContentChangeInfo(
+        std::shared_ptr<RSOcclusionData> occlusionData);
+    void WindowLayerInfoChangeCallback(std::shared_ptr<RSOcclusionData> occlusiontionData);
     sptr<SceneSession> SelectSesssionFromMap(const uint64_t& surfaceId);
     void WindowDestroyNotifyVisibility(const sptr<SceneSession>& sceneSession);
     void RegisterInputMethodUpdateFunc(const sptr<SceneSession>& sceneSession);
@@ -366,6 +373,8 @@ private:
     sptr<RootSceneSession> rootSceneSession_;
     std::weak_ptr<AbilityRuntime::Context> rootSceneContextWeak_;
     std::shared_mutex sceneSessionMapMutex_;
+    std::map<int32_t, bool> processDrawingStateMap_;
+    bool lastProcessContentState_ = false;
     std::map<int32_t, sptr<SceneSession>> sceneSessionMap_;
     std::map<int32_t, sptr<SceneSession>> systemTopSceneSessionMap_;
     std::map<int32_t, sptr<SceneSession>> nonSystemFloatSceneSessionMap_;
