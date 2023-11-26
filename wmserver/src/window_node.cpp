@@ -422,12 +422,12 @@ void WindowNode::GetWindowGravity(WindowGravity& gravity, uint32_t& percent) con
     property_->GetWindowGravity(gravity, percent);
 }
 
-void WindowNode::SetVisibilityState(WindowVisibilityState state)
+void WindowNode::SetVisibilityState(WindowLayerState state)
 {
     visibilityState_ = state;
 }
 
-WindowVisibilityState WindowNode::GetVisibilityState() const
+WindowLayerState WindowNode::GetVisibilityState() const
 {
     return visibilityState_;
 }

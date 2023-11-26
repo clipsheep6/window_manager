@@ -43,7 +43,7 @@ WindowVisibilityInfo* WindowVisibilityInfo::Unmarshalling(Parcel &parcel)
         delete windowVisibilityInfo;
         return nullptr;
     }
-    windowVisibilityInfo->visibilityState_ = static_cast<WindowVisibilityState>(visibilityState);
+    windowVisibilityInfo->visibilityState_ = static_cast<WindowLayerState>(visibilityState);
     windowVisibilityInfo->windowType_ = static_cast<WindowType>(parcel.ReadUint32());
     return windowVisibilityInfo;
 }

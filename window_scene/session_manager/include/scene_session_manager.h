@@ -237,6 +237,10 @@ public:
     void RegisterCreateSubSessionListener(int32_t persistentId, const NotifyCreateSubSessionFunc& func);
     void UnregisterCreateSubSessionListener(int32_t persistentId);
     WSError NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible) override;
+    void DealwithVisibilityChange(std::vector<std::pair<uint64_t, WindowLayerState>> visibilityChangeInfos);
+    void DealwithDrawingContentChange(std::vector<std::pair<uint64_t, WindowLayerState>> drawingChangeInfos);
+    bool lastProcessContentState_ = false;
+    std::map<int32_t, bool> processDrawingStateMap_;
 
     void NotifyUpdateRectAfterLayout();
 public:
@@ -333,9 +337,13 @@ private:
     void NotifyWindowInfoChange(int32_t persistentId, WindowUpdateType type);
     bool FillWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos,
         const sptr<SceneSession>& sceneSession);
-    std::vector<std::pair<uint64_t, WindowVisibilityState>> GetWindowVisibilityChangeInfo(
+    std::vector<std::pair<uint64_t, WindowLayerState>> GetWindowVisibilityContentChangeInfo(
         std::shared_ptr<RSOcclusionData> occlusionData);
-    void WindowVisibilityChangeCallback(std::shared_ptr<RSOcclusionData> occlusiontionData);
+    std::vector<std::pair<uint64_t, WindowLayerState>> GetWindowDrawingContentChangeInfo(
+        std::shared_ptr<RSOcclusionData> occlusionData);
+    std::vector<std::pair<uint64_t, WindowLayerState>> GetProcessDrawingContentChangeInfo(
+        std::vector<std::pair<uint64_t, WindowLayerState>> drawingContentChangeInfo);
+    void WindowLayerInfoChangeCallback(std::shared_ptr<RSOcclusionData> occlusiontionData);
     sptr<SceneSession> SelectSesssionFromMap(const uint64_t& surfaceId);
     void WindowDestroyNotifyVisibility(const sptr<SceneSession>& sceneSession);
     void RegisterInputMethodUpdateFunc(const sptr<SceneSession>& sceneSession);
@@ -412,7 +420,7 @@ private:
     std::shared_ptr<AppExecFwk::EventRunner> eventLoop_;
     std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
     bool isReportTaskStart_ = false;
-    std::vector<std::pair<uint64_t, WindowVisibilityState> > lastVisibleData_;
+    std::vector<std::pair<uint64_t, WindowLayerState> > lastVisibleData_;
     RSInterfaces& rsInterface_;
     void RegisterSessionStateChangeNotifyManagerFunc(sptr<SceneSession>& sceneSession);
     void OnSessionStateChange(int32_t persistentId, const SessionState& state);

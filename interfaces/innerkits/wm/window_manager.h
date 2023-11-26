@@ -25,6 +25,7 @@
 #include "wm_common.h"
 #include "focus_change_info.h"
 #include "window_visibility_info.h"
+#include "window_drawing_content_info.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -104,6 +105,22 @@ public:
      * @param windowVisibilityInfo Window visibility info.
      */
     virtual void OnWindowVisibilityChanged(const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfo) = 0;
+};
+
+/**
+ * @class IVisibilityChangedListener
+ *
+ * @brief Listener to observe visibility changed.
+ */
+class IDrawingContentChangedListener : virtual public RefBase {
+public:
+    /**
+     * @brief Notify caller when window DrawingContent changed.
+     *
+     * @param WindowDrawingContentInfo Window DrawingContent info.
+     */
+    virtual void OnWindowDrawingContentChanged(const std::vector<sptr<WindowDrawingContentInfo>>&
+        windowDrawingInfo) = 0;
 };
 
 /**
@@ -264,6 +281,20 @@ public:
      */
     WMError UnregisterVisibilityChangedListener(const sptr<IVisibilityChangedListener>& listener);
     /**
+     * @brief Register drawing content changed listener.
+     *
+     * @param listener IDrawingContentChangedListener.
+     * @return WM_OK means register success, others means register failed.
+     */
+    WMError RegisterDrawingContentChangedListener(const sptr<IDrawingContentChangedListener>& listener);
+    /**
+     * @brief Unregister drawing content changed listener.
+     *
+     * @param listener IDrawingContentChangedListener.
+     * @return WM_OK means unregister success, others means unregister failed.
+     */
+    WMError UnregisterDrawingContentChangedListener(const sptr<IDrawingContentChangedListener>& listener);
+    /**
      * @brief Register camera float window changed listener.
      *
      * @param listener ICameraFloatWindowChangedListener.
@@ -407,6 +438,8 @@ private:
         WindowUpdateType type) const;
     void UpdateWindowVisibilityInfo(
         const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos) const;
+    void UpdateWindowDrawingContentInfo(
+        const std::vector<sptr<WindowDrawingContentInfo>>& windowDrawingContentInfos) const;
     void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing) const;
     void NotifyWaterMarkFlagChangedResult(bool showWaterMark) const;
     void NotifyGestureNavigationEnabledResult(bool enable) const;
