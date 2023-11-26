@@ -647,6 +647,20 @@ enum class PiPScalePivot : int32_t {
 };
 
 /**
+ * @enum WindowLayerState
+ *
+ * @brief Layer state of a window
+ */
+enum WindowLayerState : uint32_t {
+    WINDOW_VISIBILITY_STATE_NO_OCCLUSION = 0,
+    WINDOW_VISIBILITY_STATE_PARTICALLY_OCCLUSION,
+    WINDOW_VISIBILITY_STATE_TOTALLY_OCCUSION,
+    WINDOW_DRAWING_CONTENT_CHANGE,
+    WINDOW_DRAWING_CONTENT_NO_CHANGE,
+    WINDOW_LAYER_STATE_MAX
+};
+
+/**
  * @brief Structure of picture in picture rect info.
  */
 struct PiPRectInfo {

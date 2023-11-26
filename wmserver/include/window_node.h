@@ -96,7 +96,7 @@ public:
     void UpdateZoomTransform(const Transform& trans, bool isDisplayZoomOn);
     void SetAspectRatio(float ratio);
     void SetWindowGravity(WindowGravity gravity, uint32_t percent);
-    void SetVisibilityState(WindowVisibilityState state);
+    void SetVisibilityState(WindowLayerState state);
 
     const sptr<IWindow>& GetWindowToken() const;
     uint32_t GetWindowId() const;
@@ -135,7 +135,7 @@ public:
     WindowSizeLimits GetWindowUpdatedSizeLimits() const;
     float GetAspectRatio() const;
     void GetWindowGravity(WindowGravity& gravity, uint32_t& percent) const;
-    WindowVisibilityState GetVisibilityState() const;
+    WindowLayerState GetVisibilityState() const;
 
     bool EnableDefaultAnimation(bool animationPlayed);
     sptr<WindowNode> parent_;
@@ -155,7 +155,7 @@ public:
     uint32_t zOrder_ { 0 };
     bool requestedVisibility_ { false };
     bool currentVisibility_ { false };
-    WindowVisibilityState visibilityState_ { WINDOW_VISIBILITY_STATE_MAX };
+    WindowLayerState visibilityState_ { WINDOW_LAYER_STATE_MAX };
     bool isAppCrash_ { false };
     bool isPlayAnimationShow_ { false }; // delete when enable state machine
     bool isPlayAnimationHide_ { false }; // delete when enable state machine

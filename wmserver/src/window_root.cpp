@@ -41,7 +41,7 @@ namespace OHOS {
 namespace Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "Root"};
-    int Comp(const std::pair<uint64_t, WindowVisibilityState> &a, const std::pair<uint64_t, WindowVisibilityState> &b)
+    int Comp(const std::pair<uint64_t, WindowLayerState> &a, const std::pair<uint64_t, WindowLayerState> &b)
     {
         return a.first < b.first;
     }
@@ -366,15 +366,16 @@ void WindowRoot::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>
     }
 }
 
-std::vector<std::pair<uint64_t, WindowVisibilityState>> WindowRoot::GetWindowVisibilityChangeInfo(
+std::vector<std::pair<uint64_t, WindowLayerState>> WindowRoot::GetWindowVisibilityChangeInfo(
     std::shared_ptr<RSOcclusionData> occlusionData)
 {
-    std::vector<std::pair<uint64_t, WindowVisibilityState>> visibilityChangeInfo;
+    std::vector<std::pair<uint64_t, WindowLayerState>> visibilityChangeInfo;
     VisibleData& rsVisibleData = occlusionData->GetVisibleData();
-    std::vector<std::pair<uint64_t, WindowVisibilityState> > currVisibleData;
-    currVisibleData.reserve(rsVisibleData.size());
+    std::vector<std::pair<uint64_t, WindowLayerState> > currVisibleData;
     for (auto iter = rsVisibleData.begin(); iter != rsVisibleData.end(); iter++) {
-        currVisibleData.emplace_back(iter->first, static_cast<WindowVisibilityState>(iter->second));
+        if (static_cast<WindowLayerState>(iter->second) < WINDOW_DRAWING_CONTENT_CHANGE) {
+            currVisibleData.emplace_back(iter->first, static_cast<WindowLayerState>(iter->second));
+        }
     }
     std::sort(currVisibleData.begin(), currVisibleData.end(), Comp);
     uint32_t i, j;
@@ -404,7 +405,7 @@ std::vector<std::pair<uint64_t, WindowVisibilityState>> WindowRoot::GetWindowVis
 
 void WindowRoot::NotifyWindowVisibilityChange(std::shared_ptr<RSOcclusionData> occlusionData)
 {
-    std::vector<std::pair<uint64_t, WindowVisibilityState>> visibilityChangeInfo =
+    std::vector<std::pair<uint64_t, WindowLayerState>> visibilityChangeInfo =
         GetWindowVisibilityChangeInfo(occlusionData);
     std::vector<sptr<WindowVisibilityInfo>> windowVisibilityInfos;
 #ifdef MEMMGR_WINDOW_ENABLE
@@ -412,7 +413,7 @@ void WindowRoot::NotifyWindowVisibilityChange(std::shared_ptr<RSOcclusionData> o
 #endif
     for (const auto& elem : visibilityChangeInfo) {
         uint64_t surfaceId = elem.first;
-        WindowVisibilityState visibilityState = elem.second;
+        WindowLayerState visibilityState = elem.second;
         bool isVisible = visibilityState < WINDOW_VISIBILITY_STATE_TOTALLY_OCCUSION;
         auto iter = surfaceIdWindowNodeMap_.find(surfaceId);
         if (iter == surfaceIdWindowNodeMap_.end()) {
