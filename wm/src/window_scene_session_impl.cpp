@@ -468,6 +468,8 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
     } else {
         NotifyForegroundFailed(ret);
     }
+    WindowMode mode = GetMode();
+    NotifyWindowStatusChange(mode);
     return ret;
 }
 
@@ -533,6 +535,8 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
         state_ = WindowState::STATE_HIDDEN;
         requestState_ = WindowState::STATE_HIDDEN;
     }
+    WindowMode mode = GetMode();
+    NotifyWindowStatusChange(mode);
     return res;
 }
 
