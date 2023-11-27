@@ -79,7 +79,7 @@ public:
     uint32_t windowId_ { INVALID_WINDOW_ID };
     int32_t pid_ { 0 };
     int32_t uid_ { 0 };
-    WindowVisibilityState visibilityState_ =     WINDOW_LAYER_STATE_MAX
+    WindowVisibilityState visibilityState_ = WINDOW_LAYER_STATE_MAX;
 ;
     WindowType windowType_ { WindowType::WINDOW_TYPE_APP_MAIN_WINDOW };
 };
