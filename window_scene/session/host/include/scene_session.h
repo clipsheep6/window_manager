@@ -36,9 +36,6 @@ namespace PARAM_KEY {
 }
 class SceneSession;
 
-using SpecificSessionCreateCallback =
-    std::function<sptr<SceneSession>(const SessionInfo& info, sptr<WindowSessionProperty> property)>;
-using SpecificSessionDestroyCallback = std::function<WSError(const int32_t& persistentId)>;
 using CameraFloatSessionChangeCallback = std::function<void(uint32_t accessTokenId, bool isShowing)>;
 using GetSceneSessionVectorByTypeCallback = std::function<std::vector<sptr<SceneSession>>(WindowType type)>;
 using UpdateAvoidAreaCallback = std::function<void(const int32_t& persistentId)>;
@@ -67,8 +64,6 @@ class SceneSession : public Session {
 public:
     // callback for notify SceneSessionManager
     struct SpecificSessionCallback : public RefBase {
-        SpecificSessionCreateCallback onCreate_;
-        SpecificSessionDestroyCallback onDestroy_;
         CameraFloatSessionChangeCallback onCameraFloatSessionChange_;
         GetSceneSessionVectorByTypeCallback onGetSceneSessionVectorByType_;
         UpdateAvoidAreaCallback onUpdateAvoidArea_;

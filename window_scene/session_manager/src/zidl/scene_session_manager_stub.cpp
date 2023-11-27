@@ -184,7 +184,8 @@ int SceneSessionManagerStub::HandleDestroyAndDisconnectSpcificSession(MessagePar
 {
     WLOGFI("run HandleDestroyAndDisconnectSpcificSession!");
     auto persistentId = data.ReadInt32();
-    const WSError& ret = DestroyAndDisconnectSpecificSession(persistentId);
+    auto isRemoteDie = data.ReadBool();
+    const WSError& ret = DestroyAndDisconnectSpecificSession(persistentId, isRemoteDie);
     reply.WriteUint32(static_cast<uint32_t>(ret));
     return ERR_NONE;
 }
