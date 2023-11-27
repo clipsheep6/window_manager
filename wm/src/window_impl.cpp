@@ -746,7 +746,7 @@ WMError WindowImpl::UpdateSystemBarProperty(bool status)
     return ret;
 }
 
-WMError WindowImpl::SetLayoutFullScreen(bool status)
+WMError WindowImpl::SetLayoutFullScreen(bool status, bool maximize)
 {
     WLOGI("Window %{public}u status: %{public}u", property_->GetWindowId(), status);
     if (!IsWindowValid() ||
@@ -759,7 +759,11 @@ WMError WindowImpl::SetLayoutFullScreen(bool status)
     if ((context_ != nullptr) && (context_->GetApplicationInfo() != nullptr)) {
         version = context_->GetApplicationInfo()->apiCompatibleVersion;
     }
-    ret = SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    WindowMode curMode = GetMode();
+    if (maximize ||
+        !(curMode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY || curMode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY)) {
+        SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    }
     if (ret != WMError::WM_OK) {
         WLOGFE("SetWindowMode errCode:%{public}d winId:%{public}u",
             static_cast<int32_t>(ret), property_->GetWindowId());
@@ -792,7 +796,7 @@ WMError WindowImpl::SetLayoutFullScreen(bool status)
     return ret;
 }
 
-WMError WindowImpl::SetFullScreen(bool status)
+WMError WindowImpl::SetFullScreen(bool status, bool maximize)
 {
     WLOGI("Window %{public}u status: %{public}d", property_->GetWindowId(), status);
     if (!IsWindowValid() ||
@@ -805,7 +809,7 @@ WMError WindowImpl::SetFullScreen(bool status)
         WLOGFE("UpdateSystemBarProperty errCode:%{public}d winId:%{public}u",
             static_cast<int32_t>(ret), property_->GetWindowId());
     }
-    ret = SetLayoutFullScreen(status);
+    ret = SetLayoutFullScreen(status, maximize);
     if (ret != WMError::WM_OK) {
         WLOGFE("SetLayoutFullScreen errCode:%{public}d winId:%{public}u",
             static_cast<int32_t>(ret), property_->GetWindowId());
@@ -823,7 +827,7 @@ WMError WindowImpl::SetFloatingMaximize(bool isEnter)
     }
 
     if (isEnter && GetGlobalMaximizeMode() != MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
-        WMError ret = SetFullScreen(true);
+        WMError ret = SetFullScreen(true, true);
         if (ret == WMError::WM_OK) {
             property_->SetMaximizeMode(MaximizeMode::MODE_FULL_FILL);
         }
@@ -1860,7 +1864,7 @@ WMError WindowImpl::Maximize()
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
-        return SetFullScreen(true);
+        return SetFullScreen(true, true);
     } else {
         WLOGI("Maximize fail, not main window");
         return WMError::WM_ERROR_INVALID_PARAM;
@@ -2467,7 +2471,7 @@ void WindowImpl::HandleModeChangeHotZones(int32_t posX, int32_t posY)
             hotZones.secondary_.posY_, hotZones.secondary_.width_, hotZones.secondary_.height_);
 
         if (WindowHelper::IsPointInTargetRectWithBound(posX, posY, hotZones.fullscreen_)) {
-            SetFullScreen(true);
+            SetFullScreen(true, true);
         } else if (WindowHelper::IsPointInTargetRectWithBound(posX, posY, hotZones.primary_)) {
             SetWindowMode(WindowMode::WINDOW_MODE_SPLIT_PRIMARY);
         } else if (WindowHelper::IsPointInTargetRectWithBound(posX, posY, hotZones.secondary_)) {

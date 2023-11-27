@@ -145,8 +145,8 @@ public:
     virtual WMError SetWindowFlags(uint32_t flags) override;
     virtual WMError SetSystemBarProperty(WindowType type, const SystemBarProperty& property) override;
     virtual WMError UpdateSystemBarProperty(bool status);
-    virtual WMError SetLayoutFullScreen(bool status) override;
-    virtual WMError SetFullScreen(bool status) override;
+    virtual WMError SetLayoutFullScreen(bool status, bool maximize = false) override;
+    virtual WMError SetFullScreen(bool status, bool maximize = false) override;
     virtual const Transform& GetTransform() const override;
     virtual const Transform& GetZoomTransform() const;
     virtual WMError UpdateSurfaceNodeAfterCustomAnimation(bool isAdd) override;
