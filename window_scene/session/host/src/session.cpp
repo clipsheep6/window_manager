@@ -381,9 +381,20 @@ WSError Session::SetVisible(bool isVisible)
     return WSError::WS_OK;
 }
 
+WSError Session::SetDrawing(bool isDrawing)
+{
+    isRSDrawing_ = isDrawing;
+    return WSError::WS_OK;
+}
+
 bool Session::GetVisible() const
 {
     return isRSVisible_;
+}
+
+bool Session::GetVisible() const
+{
+    return isRSDrawing_;
 }
 
 int32_t Session::GetWindowId() const
