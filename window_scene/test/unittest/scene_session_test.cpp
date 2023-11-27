@@ -65,7 +65,6 @@ HWTEST_F(SceneSessionTest, Foreground01, Function | SmallTest | Level2)
     sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
         new (std::nothrow) SceneSession::SpecificSessionCallback();
     EXPECT_NE(specificCallback_, nullptr);
-    int resultValue = 0;
     sptr<SceneSession> scensession;
 
     scensession = new (std::nothrow) SceneSession(info, nullptr);
@@ -75,14 +74,6 @@ HWTEST_F(SceneSessionTest, Foreground01, Function | SmallTest | Level2)
     ASSERT_NE(nullptr, property);
     auto result = scensession->Foreground(property);
     ASSERT_EQ(result, WSError::WS_OK);
-    specificCallback_->onCreate_ = [&resultValue, specificCallback_](const SessionInfo &info,
-                                                            sptr<WindowSessionProperty> property) -> sptr<SceneSession>
-    {
-        sptr<SceneSession> scensessionreturn = new (std::nothrow) SceneSession(info, specificCallback_);
-        EXPECT_NE(scensessionreturn, nullptr);
-        resultValue = 1;
-        return scensessionreturn;
-    };
     scensession = new (std::nothrow) SceneSession(info, specificCallback_);
     EXPECT_NE(scensession, nullptr);
     scensession->UpdateSessionState(SessionState::STATE_INACTIVE);
@@ -105,7 +96,6 @@ HWTEST_F(SceneSessionTest, Background01, Function | SmallTest | Level2)
     sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
         new (std::nothrow) SceneSession::SpecificSessionCallback();
     EXPECT_NE(specificCallback_, nullptr);
-    int resultValue = 0;
     sptr<SceneSession> scensession;
 
     scensession = new (std::nothrow) SceneSession(info, nullptr);
@@ -113,14 +103,6 @@ HWTEST_F(SceneSessionTest, Background01, Function | SmallTest | Level2)
     scensession->isActive_ = true;
     auto result = scensession->Background();
     ASSERT_EQ(result, WSError::WS_OK);
-    specificCallback_->onCreate_ = [&resultValue, specificCallback_](const SessionInfo &info,
-                                                            sptr<WindowSessionProperty> property) -> sptr<SceneSession>
-    {
-        sptr<SceneSession> scensessionreturn = new (std::nothrow) SceneSession(info, specificCallback_);
-        EXPECT_NE(scensessionreturn, nullptr);
-        resultValue = 1;
-        return scensessionreturn;
-    };
     scensession = new (std::nothrow) SceneSession(info, specificCallback_);
     EXPECT_NE(scensession, nullptr);
     scensession->UpdateSessionState(SessionState::STATE_CONNECT);

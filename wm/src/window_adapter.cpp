@@ -416,10 +416,10 @@ void WindowAdapter::CreateAndConnectSpecificSession(const sptr<ISessionStage>& s
         surfaceNode, property, persistentId, session, token);
 }
 
-void WindowAdapter::DestroyAndDisconnectSpecificSession(const int32_t& persistentId)
+void WindowAdapter::DestroyAndDisconnectSpecificSession(const int32_t& persistentId, bool isRemoteDie)
 {
     INIT_PROXY_CHECK_RETURN();
-    windowManagerServiceProxy_->DestroyAndDisconnectSpecificSession(persistentId);
+    windowManagerServiceProxy_->DestroyAndDisconnectSpecificSession(persistentId, isRemoteDie);
 }
 
 WMError WindowAdapter::UpdateSessionProperty(const sptr<WindowSessionProperty>& property,

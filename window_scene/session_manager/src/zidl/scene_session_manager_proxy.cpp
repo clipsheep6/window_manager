@@ -85,7 +85,7 @@ WSError SceneSessionManagerProxy::CreateAndConnectSpecificSession(const sptr<ISe
     return static_cast<WSError>(ret);
 }
 
-WSError SceneSessionManagerProxy::DestroyAndDisconnectSpecificSession(const int32_t& persistentId)
+WSError SceneSessionManagerProxy::DestroyAndDisconnectSpecificSession(const int32_t& persistentId, bool isRemoteDie)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -96,6 +96,9 @@ WSError SceneSessionManagerProxy::DestroyAndDisconnectSpecificSession(const int3
     }
     if (!data.WriteInt32(persistentId)) {
         WLOGFE("Write persistentId failed");
+    }
+    if (!data.WriteBool(isRemoteDie)) {
+        WLOGFE("Write isRemoteDie failed");
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(
         SceneSessionManagerMessage::TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION),

@@ -800,10 +800,6 @@ sptr<SceneSession::SpecificSessionCallback> SceneSessionManager::CreateSpecificS
         WLOGFE("SpecificSessionCallback is nullptr");
         return nullptr;
     }
-    specificCb->onCreate_ = std::bind(&SceneSessionManager::RequestSceneSession,
-        this, std::placeholders::_1, std::placeholders::_2);
-    specificCb->onDestroy_ = std::bind(&SceneSessionManager::DestroyAndDisconnectSpecificSession,
-        this, std::placeholders::_1);
     specificCb->onCameraFloatSessionChange_ = std::bind(&SceneSessionManager::UpdateCameraFloatWindowStatus,
         this, std::placeholders::_1, std::placeholders::_2);
     specificCb->onGetSceneSessionVectorByType_ = std::bind(&SceneSessionManager::GetSceneSessionVectorByType,
@@ -1416,7 +1412,7 @@ void SceneSessionManager::DestroySpecificSession(const sptr<IRemoteObject>& remo
             return;
         }
         WLOGFD("Remote died, id: %{public}d", iter->second);
-        DestroyAndDisconnectSpecificSession(iter->second);
+        DestroyAndDisconnectSpecificSession(iter->second, true);
         remoteObjectMap_.erase(iter);
     };
     taskScheduler_->PostAsyncTask(task);
@@ -1694,17 +1690,18 @@ void SceneSessionManager::SetOutsideDownEventListener(const ProcessOutsideDownEv
     outsideDownEventFunc_ = func;
 }
 
-WSError SceneSessionManager::DestroyAndDisconnectSpecificSession(const int32_t& persistentId)
+WSError SceneSessionManager::DestroyAndDisconnectSpecificSession(const int32_t& persistentId, bool isRemoteDie)
 {
     const auto& callingPid = IPCSkeleton::GetCallingPid();
-    auto task = [this, persistentId, callingPid]() {
-        WLOGFI("[WMSSystem][WMSSub] Destroy specific session start, id: %{public}d", persistentId);
+    auto task = [this, persistentId, callingPid, isRemoteDie]() {
+        WLOGFI("[WMSSystem][WMSSub] Destroy specific session start, id: %{public}d, isRemoteDie: %{public}d",
+            persistentId, isRemoteDie);
         auto sceneSession = GetSceneSession(persistentId);
         if (sceneSession == nullptr) {
             return WSError::WS_ERROR_NULLPTR;
         }
 
-        if (callingPid != sceneSession->GetCallingPid()) {
+        if (!isRemoteDie && callingPid != sceneSession->GetCallingPid()) {
             WLOGFE("[WMSSystem][WMSSub] Permission denied, not destroy by the same process");
             return WSError::WS_ERROR_INVALID_PERMISSION;
         }
@@ -4802,7 +4799,7 @@ void SceneSessionManager::WindowVisibilityChangeCallback(std::shared_ptr<RSOcclu
             WLOGD("Notify windowvisibilityinfo changed start");
             SessionManagerAgentController::GetInstance().UpdateWindowVisibilityInfo(windowVisibilityInfos);
         }
-        
+
     #ifdef MEMMGR_WINDOW_ENABLE
         if (memMgrWindowInfos.size() != 0) {
             WLOGD("Notify memMgrWindowInfos changed start");

@@ -96,7 +96,7 @@ public:
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
         sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session,
         sptr<IRemoteObject> token = nullptr);
-    virtual void DestroyAndDisconnectSpecificSession(const int32_t& persistentId);
+    virtual void DestroyAndDisconnectSpecificSession(const int32_t& persistentId, bool isRemoteDie = false);
     virtual WMError UpdateSessionProperty(const sptr<WindowSessionProperty>& property, WSPropertyChangeAction action);
     virtual WMError SetSessionGravity(int32_t persistentId, SessionGravity gravity, uint32_t percent);
     virtual WMError BindDialogSessionTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken);
