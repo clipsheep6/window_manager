@@ -435,6 +435,36 @@ napi_value CreateJsSessionInfo(napi_env env, const SessionInfo& sessionInfo)
         CreateJsValue(env, static_cast<int32_t>(sessionInfo.windowMode)));
     napi_set_named_property(env, objValue, "screenId",
         CreateJsValue(env, static_cast<int32_t>(sessionInfo.screenId_)));
+    if (sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_TOP, -9999) != -9999) {
+        napi_set_named_property(env, objValue, "windowTop",
+            CreateJsValue(env, sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_TOP, -9999)));
+    } else {
+        napi_set_named_property(env, objValue, "windowTop", NapiGetUndefined(env));
+    }
+
+    if (sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_LEFT, -9999) != -9999) {
+        napi_set_named_property(env, objValue, "windowLeft",
+            CreateJsValue(env, sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_LEFT, -9999)));
+    } else {
+        napi_set_named_property(env, objValue, "windowLeft", NapiGetUndefined(env));
+    }
+
+    if (sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_WIDTH, -9999) != -9999) {
+        napi_set_named_property(env, objValue, "windowWidth",
+            CreateJsValue(env, sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_WIDTH, -9999)));
+    } else {
+        napi_set_named_property(env, objValue, "windowWidth", NapiGetUndefined(env));
+    }
+
+    if (sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_HEIGH, -9999) != -9999) {
+        napi_set_named_property(env, objValue, "windowHeight",
+            CreateJsValue(env, sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_HEIGH, -9999)));
+    } else {
+        napi_set_named_property(env, objValue, "windowHeight", NapiGetUndefined(env));
+    }
+
+    napi_set_named_property(env, objValue, "withAnimation",
+        CreateJsValue(env, sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WITH_ANIMATION, true)));
     return objValue;
 }
 
