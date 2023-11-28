@@ -238,6 +238,7 @@ public:
     bool GetTouchable() const;
     WSError SetVisible(bool isVisible);
     bool GetVisible() const;
+    bool GetDrawing() const;
     WSError SetBrightness(float brightness);
     float GetBrightness() const;
     void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info);

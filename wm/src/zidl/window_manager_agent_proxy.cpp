@@ -160,7 +160,7 @@ void WindowManagerAgentProxy::UpdateWindowDrawingContentInfo(
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
     if (Remote()->SendRequest(
-        static_cast<uint32_t>(WindowManagerAgentMsg::WINDOW_MANAGER_AGENT_TYPE_WINDOW_DRAWING_STATE), data, reply,
+        static_cast<uint32_t>(WindowManagerAgentMsg::TRANS_ID_UPDATE_WINDOW_DRAWING_STATE), data, reply,
         option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
     }

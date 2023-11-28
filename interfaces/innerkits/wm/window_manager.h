@@ -280,6 +280,9 @@ public:
      * @return WM_OK means unregister success, others means unregister failed.
      */
     WMError UnregisterVisibilityChangedListener(const sptr<IVisibilityChangedListener>& listener);
+
+    WMError RegisterDrawingContentChangedListener(const sptr<IDrawingContentChangedListener>& listener);
+    WMError UnregisterDrawingContentChangedListener(const sptr<IDrawingContentChangedListener>& listener);
     /**
      * @brief Register drawing content changed listener.
      *
