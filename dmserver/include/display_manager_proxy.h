@@ -43,6 +43,7 @@ public:
     DMError SetOrientation(ScreenId screenId, Orientation orientation) override;
     std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId,
         DmErrorCode* errorCode = nullptr) override;
+    DMError DisableDisplaySnapshot(bool disableOrNot) override;
     DMError IsScreenRotationLocked(bool& isLocked) override;
     DMError SetScreenRotationLocked(bool isLocked) override;
 
@@ -82,6 +83,7 @@ public:
     bool SetFreeze(std::vector<DisplayId> displayIds, bool isFreeze) override;
     DMError MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId, ScreenId& screenGroupId) override;
     DMError StopMirror(const std::vector<ScreenId>& mirrorScreenIds) override;
+    DMError DisableMirror(bool disableOrNot) override;
     sptr<ScreenInfo> GetScreenInfoById(ScreenId screenId) override;
     sptr<ScreenGroupInfo> GetScreenGroupInfoById(ScreenId screenId) override;
     DMError GetAllScreenInfos(std::vector<sptr<ScreenInfo>>& screens) override;
