@@ -30,6 +30,7 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "JsScen
 constexpr int32_t NUMBER_2 = 2;
 constexpr int32_t NUMBER_3 = 3;
 constexpr int32_t US_PER_NS = 1000;
+constexpr int32_t INVALID_VAL = -9999;
 
 int32_t GetMMITouchType(int32_t aceType)
 {
@@ -133,7 +134,7 @@ bool IsJsIsSystemUndefind(napi_env env, napi_value jsIsSystem, SessionInfo& sess
     if (GetType(env, jsIsSystem) != napi_undefined) {
         bool isSystem;
         if (!ConvertFromJsValue(env, jsIsSystem, isSystem)) {
-            WLOGFE("[NAPI]Failed to convert parameter to isSystem");
+            WLOGFE("[NAPI]Failed to convert parameter to isSystem");if (
             return false;
         }
         sessionInfo.isSystem_ = isSystem;
@@ -435,6 +436,36 @@ napi_value CreateJsSessionInfo(napi_env env, const SessionInfo& sessionInfo)
         CreateJsValue(env, static_cast<int32_t>(sessionInfo.windowMode)));
     napi_set_named_property(env, objValue, "screenId",
         CreateJsValue(env, static_cast<int32_t>(sessionInfo.screenId_)));
+
+    if (sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_TOP, INVALID_VAL) != INVALID_VAL) {
+        napi_set_named_property(env, objValue, "windowTop",
+            CreateJsValue(env, sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_TOP, INVALID_VAL)));
+    } else {
+        napi_set_named_property(env, objValue, "windowTop", NapiGetUndefined(env));
+    }
+
+    if (sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_LEFT, INVALID_VAL) != INVALID_VAL) {
+        napi_set_named_property(env, objValue, "windowLeft",
+            CreateJsValue(env, sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_LEFT, INVALID_VAL)));
+    } else {
+        napi_set_named_property(env, objValue, "windowLeft", NapiGetUndefined(env));
+    }
+
+    if (sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_WIDTH, INVALID_VAL) != INVALID_VAL) {
+        napi_set_named_property(env, objValue, "windowWidth",
+            CreateJsValue(env, sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_WIDTH, INVALID_VAL)));
+    } else {
+        napi_set_named_property(env, objValue, "windowWidth", NapiGetUndefined(env));
+    }
+
+    if (sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_HEIGHT, INVALID_VAL) != INVALID_VAL) {
+        napi_set_named_property(env, objValue, "windowHeight",
+            CreateJsValue(env, sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_HEIGHT, INVALID_VAL)));
+    } else {
+        napi_set_named_property(env, objValue, "windowHeight", NapiGetUndefined(env));
+    }
+    napi_set_named_property(env, objValue, "withAnimation",
+        CreateJsValue(env, sessionInfo.want->GetIntParam(AAFwk::Want::PARAM_RESV_WITH_ANIMATION, true)));
     return objValue;
 }
 
