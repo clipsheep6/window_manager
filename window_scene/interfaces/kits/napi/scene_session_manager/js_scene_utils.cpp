@@ -30,7 +30,7 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "JsScen
 constexpr int32_t NUMBER_2 = 2;
 constexpr int32_t NUMBER_3 = 3;
 constexpr int32_t US_PER_NS = 1000;
-constexpr uint32_t INVALID_VAL = -9999;
+constexpr int32_t INVALID_VAL = -9999;
 
 int32_t GetMMITouchType(int32_t aceType)
 {
