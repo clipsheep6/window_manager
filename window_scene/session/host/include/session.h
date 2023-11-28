@@ -239,6 +239,7 @@ public:
     bool GetTouchable() const;
     WSError SetVisible(bool isVisible);
     bool GetVisible() const;
+    bool GetDrawing() const;
     WSError SetBrightness(float brightness);
     float GetBrightness() const;
     void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info);
@@ -259,6 +260,8 @@ public:
     void SetCallingUid(int32_t id);
     int32_t GetCallingPid() const;
     int32_t GetCallingUid() const;
+    bool GetDrawingContentState() const;
+    void SetDrawingContentState(bool isRSDrawing);
     void SetAbilityToken(sptr<IRemoteObject> token);
     sptr<IRemoteObject> GetAbilityToken() const;
     WindowMode GetWindowMode();
@@ -441,6 +444,7 @@ private:
     std::string callingBundleName_ { "unknow" };
     bool isRSVisible_ {false};
     bool needNotify_ {true};
+    bool isRSDrawing_ {false};
     sptr<IRemoteObject> abilityToken_ = nullptr;
     float vpr_ { 1.5f };
 };

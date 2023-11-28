@@ -406,6 +406,16 @@ int32_t Session::GetCallingPid() const
     return callingPid_;
 }
 
+bool Session::GetDrawingContentState() const
+{
+    return isRSDrawing_;
+}
+
+void Session::SetDrawingContentState(bool isRSDrawing)
+{
+    isRSDrawing = isRSDrawing_;
+}
+
 int32_t Session::GetCallingUid() const
 {
     return callingUid_;
