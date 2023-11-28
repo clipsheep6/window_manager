@@ -793,7 +793,7 @@ WMError WindowManager::RegisterDrawingContentChangedListener(const sptr<IDrawing
     if (pImpl_->windowDrawingContentListenerAgent_ == nullptr) {
         pImpl_->windowDrawingContentListenerAgent_ = new WindowManagerAgent();
         ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
-            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_VISIBILITY,
+            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_DRAWING,
             pImpl_->windowDrawingContentListenerAgent_);
     }
     if (ret != WMError::WM_OK) {
@@ -826,7 +826,7 @@ WMError WindowManager::UnregisterDrawingContentChangedListener(const sptr<IDrawi
     WMError ret = WMError::WM_OK;
     if (pImpl_->windowDrawingContentListeners_.empty() && pImpl_->windowDrawingContentListenerAgent_ != nullptr) {
         ret = SingletonContainer::Get<WindowAdapter>().UnregisterWindowManagerAgent(
-            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_VISIBILITY,
+            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_DRAWING,
             pImpl_->windowDrawingContentListenerAgent_);
         if (ret == WMError::WM_OK) {
             pImpl_->windowDrawingContentListenerAgent_ = nullptr;
