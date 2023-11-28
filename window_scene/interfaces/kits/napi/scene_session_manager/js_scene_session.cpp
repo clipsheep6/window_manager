@@ -192,7 +192,7 @@ void JsSceneSession::ProcessWindowDragHotAreaRegister()
 void JsSceneSession::OnWindowDragHotArea(int32_t type, const SizeChangeReason& reason)
 {
     WLOGFI("[NAPI]OnWindowDragHotArea");
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(WINDOW_DRAG_HOT_AREA_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -239,7 +239,7 @@ void JsSceneSession::ClearCbMap(bool needRemove, int32_t persistentId)
     auto task = [this, persistentId]() {
         WLOGFI("clear callbackMap");
         {
-            std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+            std::unique_lock<std::shared_mutex> lock(jsCbMapMutex_);
             jsCbMap_.clear();
         }
         auto iter = jsSceneSessionMap_.find(persistentId);
@@ -272,7 +272,7 @@ void JsSceneSession::ProcessSessionDefaultAnimationFlagChangeRegister()
 void JsSceneSession::OnDefaultAnimationFlagChange(bool isNeedDefaultAnimationFlag)
 {
     WLOGFI("[NAPI]OnDefaultAnimationFlagChange, flag: %{public}u", isNeedDefaultAnimationFlag);
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -538,7 +538,7 @@ void JsSceneSession::ProcessClickRegister()
 void JsSceneSession::OnSessionEvent(uint32_t eventId)
 {
     WLOGFI("[NAPI]OnSessionEvent, eventId: %{public}d", eventId);
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(SESSION_EVENT_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -647,7 +647,7 @@ void JsSceneSession::ProcessForceHideChangeRegister()
 void JsSceneSession::OnForceHideChange(bool hide)
 {
     WLOGFI("[NAPI]OnForceHideChange, hide: %{public}u", hide);
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(FORCE_HIDE_CHANGE_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -679,7 +679,7 @@ void JsSceneSession::ProcessTouchOutsideRegister()
 void JsSceneSession::OnTouchOutside()
 {
     WLOGFI("[NAPI]OnTouchOutside");
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(TOUCH_OUTSIDE_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -774,7 +774,7 @@ napi_value JsSceneSession::SetSCBKeepKeyboard(napi_env env, napi_callback_info i
 
 bool JsSceneSession::IsCallbackRegistered(napi_env env, const std::string& type, napi_value jsListenerObject)
 {
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
         return false;
     }
@@ -1009,7 +1009,7 @@ void JsSceneSession::OnCreateSubSession(const sptr<SceneSession>& sceneSession)
         return;
     }
 
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(CREATE_SUB_SESSION_CB);
     if (iter == jsCbMap_.end()) {
         WLOGFE("[WMSSub][NAPI]Can't find callback, id: %{public}d", sceneSession->GetPersistentId());
@@ -1045,7 +1045,7 @@ void JsSceneSession::OnBindDialogTarget(const sptr<SceneSession>& sceneSession)
     }
 
     WLOGFI("[NAPI][WMSDialog] OnBindDialogTarget, id: %{public}d", sceneSession->GetPersistentId());
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(BIND_DIALOG_TARGET_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1075,7 +1075,7 @@ void JsSceneSession::OnBindDialogTarget(const sptr<SceneSession>& sceneSession)
 void JsSceneSession::OnSessionStateChange(const SessionState& state)
 {
     WLOGFD("[NAPI]OnSessionStateChange, state: %{public}u", static_cast<uint32_t>(state));
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(SESSION_STATE_CHANGE_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1100,7 +1100,7 @@ void JsSceneSession::OnSessionRectChange(const WSRect& rect, const SizeChangeRea
         return;
     }
     WLOGFD("[NAPI]OnSessionRectChange");
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(SESSION_RECT_CHANGE_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1124,7 +1124,7 @@ void JsSceneSession::OnSessionRectChange(const WSRect& rect, const SizeChangeRea
 void JsSceneSession::OnRaiseToTop()
 {
     WLOGFI("[NAPI]OnRaiseToTop");
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(RAISE_TO_TOP_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1144,7 +1144,7 @@ void JsSceneSession::OnRaiseToTop()
 void JsSceneSession::OnRaiseToTopForPointDown()
 {
     WLOGFI("[NAPI]OnRaiseToTopForPointDown");
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(RAISE_TO_TOP_POINT_DOWN_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1164,7 +1164,7 @@ void JsSceneSession::OnRaiseToTopForPointDown()
 void JsSceneSession::OnRaiseAboveTarget(int32_t subWindowId)
 {
     WLOGFI("[NAPI]OnRaiseAboveTarget");
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(RAISE_ABOVE_TARGET_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1190,7 +1190,7 @@ void JsSceneSession::OnRaiseAboveTarget(int32_t subWindowId)
 void JsSceneSession::OnSessionFocusableChange(bool isFocusable)
 {
     WLOGFI("[NAPI]OnSessionFocusableChange, state: %{public}u", isFocusable);
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(SESSION_FOCUSABLE_CHANGE_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1211,7 +1211,7 @@ void JsSceneSession::OnSessionFocusableChange(bool isFocusable)
 void JsSceneSession::OnSessionTouchableChange(bool touchable)
 {
     WLOGFI("[NAPI]OnSessionTouchableChange, state: %{public}u", touchable);
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(SESSION_TOUCHABLE_CHANGE_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1232,7 +1232,7 @@ void JsSceneSession::OnSessionTouchableChange(bool touchable)
 void JsSceneSession::OnClick()
 {
     WLOGFI("[NAPI]OnClick");
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(CLICK_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1297,7 +1297,7 @@ void JsSceneSession::PendingSessionActivation(SessionInfo& info)
 
 void JsSceneSession::PendingSessionActivationInner(SessionInfo& info)
 {
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(PENDING_SCENE_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1328,7 +1328,7 @@ void JsSceneSession::PendingSessionActivationInner(SessionInfo& info)
 void JsSceneSession::OnBackPressed(bool needMoveToBackground)
 {
     WLOGFI("[NAPI]OnBackPressed needMoveToBackground %{public}d", needMoveToBackground);
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(BACK_PRESSED_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1350,7 +1350,7 @@ void JsSceneSession::TerminateSession(const SessionInfo& info)
 {
     WLOGFI("[NAPI]run TerminateSession, bundleName = %{public}s, abilityName = %{public}s, persistentId = %{public}d",
         info.bundleName_.c_str(), info.abilityName_.c_str(), info.persistentId_);
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(TERMINATE_SESSION_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1381,7 +1381,7 @@ void JsSceneSession::TerminateSessionNew(const SessionInfo& info, bool needStart
 {
     WLOGFI("[NAPI]run TerminateSessionNew, bundleName = %{public}s, id = %{public}s",
         info.bundleName_.c_str(), info.abilityName_.c_str());
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(TERMINATE_SESSION_CB_NEW);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1407,7 +1407,7 @@ void JsSceneSession::TerminateSessionTotal(const SessionInfo& info, TerminateTyp
 {
     WLOGFI("[NAPI]run TerminateSession, bundleName = %{public}s, id = %{public}s, terminateType = %{public}d",
         info.bundleName_.c_str(), info.abilityName_.c_str(), static_cast<int32_t>(terminateType));
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(TERMINATE_SESSION_CB_TOTAL);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1432,7 +1432,7 @@ void JsSceneSession::TerminateSessionTotal(const SessionInfo& info, TerminateTyp
 void JsSceneSession::UpdateSessionLabel(const std::string &label)
 {
     WLOGFI("[NAPI]run UpdateSessionLabel");
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(UPDATE_SESSION_LABEL_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1487,7 +1487,7 @@ void JsSceneSession::ProcessUpdateSessionIconRegister()
 void JsSceneSession::UpdateSessionIcon(const std::string &iconPath)
 {
     WLOGFI("[NAPI]run UpdateSessionIcon");
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(UPDATE_SESSION_ICON_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1513,7 +1513,7 @@ void JsSceneSession::OnSessionException(const SessionInfo& info)
 {
     WLOGFI("[NAPI]run OnSessionException, bundleName = %{public}s, id = %{public}s",
         info.bundleName_.c_str(), info.abilityName_.c_str());
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(SESSION_EXCEPTION_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1544,7 +1544,7 @@ void JsSceneSession::PendingSessionToForeground(const SessionInfo& info)
 {
     WLOGFI("[NAPI]run PendingSessionToForeground, bundleName = %{public}s, id = %{public}s",
         info.bundleName_.c_str(), info.abilityName_.c_str());
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(PENDING_SESSION_TO_FOREGROUND_CB);
     if (iter == jsCbMap_.end()) {
         WLOGFE("[NAPI]fail to find pending session to foreground callback");
@@ -1576,7 +1576,7 @@ void JsSceneSession::PendingSessionToBackgroundForDelegator(const SessionInfo& i
 {
     WLOGFI("[NAPI]run PendingSessionToBackgroundForDelegator, bundleName = %{public}s, id = %{public}s",
         info.bundleName_.c_str(), info.abilityName_.c_str());
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR_CB);
     if (iter == jsCbMap_.end()) {
         WLOGFE("[NAPI]fail to find pending session to background for delegator callback");
@@ -1607,7 +1607,7 @@ void JsSceneSession::PendingSessionToBackgroundForDelegator(const SessionInfo& i
 void JsSceneSession::OnSystemBarPropertyChange(const std::unordered_map<WindowType, SystemBarProperty>& propertyMap)
 {
     WLOGFI("[NAPI]OnSystemBarPropertyChange");
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(SYSTEMBAR_PROPERTY_CHANGE_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1628,7 +1628,7 @@ void JsSceneSession::OnSystemBarPropertyChange(const std::unordered_map<WindowTy
 void JsSceneSession::OnNeedAvoid(bool status)
 {
     WLOGFI("[NAPI]OnNeedAvoid %{public}d", status);
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(NEED_AVOID_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1645,7 +1645,7 @@ void JsSceneSession::OnNeedAvoid(bool status)
 void JsSceneSession::OnIsCustomAnimationPlaying(bool status)
 {
     WLOGFI("[NAPI]OnIsCustomAnimationPlaying %{public}d", status);
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(CUSTOM_ANIMATION_PLAYING_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1662,7 +1662,7 @@ void JsSceneSession::OnIsCustomAnimationPlaying(bool status)
 void JsSceneSession::OnShowWhenLocked(bool showWhenLocked)
 {
     WLOGFI("[NAPI]OnShowWhenLocked %{public}d", showWhenLocked);
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(SHOW_WHEN_LOCKED_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1679,7 +1679,7 @@ void JsSceneSession::OnShowWhenLocked(bool showWhenLocked)
 void JsSceneSession::OnReuqestedOrientationChange(uint32_t orientation)
 {
     WLOGFI("[NAPI]OnReuqestedOrientationChange %{public}u", orientation);
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(REQUESTED_ORIENTATION_CHANGE_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -1822,7 +1822,7 @@ void JsSceneSession::ProcessPrepareClosePiPSessionRegister()
 void JsSceneSession::OnPrepareClosePiPSession()
 {
     WLOGFI("[NAPI]OnPrepareClosePiPSession");
-    std::lock_guard<std::mutex> lock(jsCbMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     auto iter = jsCbMap_.find(PREPARE_CLOSE_PIP_SESSION);
     if (iter == jsCbMap_.end()) {
         return;
