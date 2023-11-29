@@ -538,8 +538,18 @@ void WindowSessionImpl::UpdateViewportConfig(const Rect& rect, WindowSizeChangeR
         WLOGFE("uiContent_ is null!");
         return;
     }
+    uint32_t width = rect.width_;
+    uint32_t height = rect.height_;
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_FLOAT) {
+        if (rect.width_ == 0) {
+            width = GetRequestRect().width_;
+        }
+        if (rect.height_ == 0) {
+            height = GetRequestRect().height_;
+        }
+    }
     Ace::ViewportConfig config;
-    config.SetSize(rect.width_, rect.height_);
+    config.SetSize(width, height);
     config.SetPosition(rect.posX_, rect.posY_);
     auto display = SingletonContainer::Get<DisplayManager>().GetDisplayById(property_->GetDisplayId());
     if (display == nullptr || display->GetDisplayInfo() == nullptr) {

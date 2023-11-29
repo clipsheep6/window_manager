@@ -84,8 +84,6 @@ public:
     void SetMainEventHandler();
     void OnWindowStatusChange(WindowStatus status) override;
 private:
-    uint32_t currentWidth_ = 0;
-    uint32_t currentHeight_ = 0;
     WindowState state_ {WindowState::STATE_INITIAL};
     void LifeCycleCallBack(LifeCycleEventType eventType);
     napi_env env_ = nullptr;
