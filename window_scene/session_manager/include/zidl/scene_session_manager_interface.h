@@ -90,6 +90,7 @@ public:
         TRANS_ID_UPDATE_TOUCHOUTSIDE_LISTENER,
         TRANS_ID_RAISE_WINDOW_TO_TOP,
         TRANS_ID_NOTIFY_WINDOW_EXTENSION_VISIBILITY_CHANGE,
+        TRANS_ID_GET_TOP_WINDOW_ID,
     };
 
     virtual WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) = 0;
@@ -141,7 +142,7 @@ public:
     WMError DestroyWindow(uint32_t windowId, bool onlySelf = false) override { return WMError::WM_OK; }
     WMError RequestFocus(uint32_t windowId) override { return WMError::WM_OK; }
     AvoidArea GetAvoidAreaByType(uint32_t windowId, AvoidAreaType type) override { return {}; }
-    WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId) override { return WMError::WM_OK; }
+    virtual WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId) override { return WMError::WM_OK; }
     void NotifyServerReadyToMoveOrDrag(uint32_t windowId, sptr<WindowProperty>& windowProperty,
         sptr<MoveDragProperty>& moveDragProperty) override {}
     void ProcessPointDown(uint32_t windowId, bool isPointDown) override {}

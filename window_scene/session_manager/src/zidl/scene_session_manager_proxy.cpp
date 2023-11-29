@@ -1217,6 +1217,32 @@ WSError SceneSessionManagerProxy::UnregisterIAbilityManagerCollaborator(int32_t 
     return static_cast<WSError>(reply.ReadInt32());
 }
 
+WMError SceneSessionManagerProxy::GetTopWindowId(uint32_t mainPersistentId, uint32_t& topPersistentId)
+{
+    WLOGFI("run SceneSessionManagerProxy::GetTopWindow");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("Write interface token failed.");
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    if (!data.WriteInt32(mainPersistentId)) {
+        WLOGFE("type write failed.");
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_TOP_WINDOW_ID),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    topPersistentId = reply.ReadUint32();
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WMError>(ret);
+}
+
 WSError SceneSessionManagerProxy::NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible)
 {
     WLOGFI("run SceneSessionManagerProxy::NotifyWindowExtensionVisibilityChange");

@@ -120,6 +120,8 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
     std::make_pair(static_cast<uint32_t>(
         SceneSessionManagerMessage::TRANS_ID_NOTIFY_WINDOW_EXTENSION_VISIBILITY_CHANGE),
         &SceneSessionManagerStub::HandleNotifyWindowExtensionVisibilityChange),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_TOP_WINDOW_ID),
+        &SceneSessionManagerStub::HandleGetTopWindowId),
 };
 
 int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
@@ -665,6 +667,16 @@ int SceneSessionManagerStub::HandleNotifyWindowExtensionVisibilityChange(Message
     bool visible = data.ReadBool();
     const WSError& ret = NotifyWindowExtensionVisibilityChange(pid, uid, visible);
     reply.WriteUint32(static_cast<uint32_t>(ret));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleGetTopWindowId(MessageParcel& data, MessageParcel& reply)
+{
+    auto mainPersistentId = data.ReadInt32();
+    uint32_t topPersistentId;
+    WSError errCode = GetTopWindowId(mainPersistentId, topPersistentId);
+    reply.WriteUint32(topPersistentId);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

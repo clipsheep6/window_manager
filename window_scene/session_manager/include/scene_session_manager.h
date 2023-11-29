@@ -237,7 +237,7 @@ public:
     void RegisterCreateSubSessionListener(int32_t persistentId, const NotifyCreateSubSessionFunc& func);
     void UnregisterCreateSubSessionListener(int32_t persistentId);
     WSError NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible) override;
-
+    WMError GetTopWindowId(uint32_t mainPersistentId, uint32_t& topPersistentId);
     void NotifyUpdateRectAfterLayout();
     void DealwithVisibilityChange(bool isVisible, uint64_t& surfaceId, WindowVisibilityState& visibleState,
         std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos);
