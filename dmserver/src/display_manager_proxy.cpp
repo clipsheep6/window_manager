@@ -300,6 +300,34 @@ std::shared_ptr<Media::PixelMap> DisplayManagerProxy::GetDisplaySnapshot(Display
     return pixelMap;
 }
 
+DMError DisplayManagerProxy::DisableDisplaySnapshot(bool disableOrNot)
+{
+    WLOGFI("SCB: DisplayManagerProxy::DisableDisplaySnapshot %{public}d", disableOrNot);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("DisableDisplaySnapshot fail: remote is null");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("DisableDisplaySnapshot fail: WriteinterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteBool(disableOrNot)) {
+        WLOGFE("DisableDisplaySnapshot fail: data write failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_DISABLE_DISPLAY_SNAPSHOT),
+        data, reply, option) != ERR_NONE) {
+        WLOGFW("DisableDisplaySnapshot fail: SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    return static_cast<DMError>(reply.ReadInt32());
+}
+
 DMError DisplayManagerProxy::GetScreenSupportedColorGamuts(ScreenId screenId,
     std::vector<ScreenColorGamut>& colorGamuts)
 {
@@ -1215,6 +1243,34 @@ DMError DisplayManagerProxy::StopMirror(const std::vector<ScreenId>& mirrorScree
     if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SCREEN_STOP_MIRROR),
         data, reply, option) != ERR_NONE) {
         WLOGFW("StopMirror fail: SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    return static_cast<DMError>(reply.ReadInt32());
+}
+
+DMError DisplayManagerProxy::DisableMirror(bool disableOrNot)
+{
+    WLOGFI("SCB: DisplayManagerProxy::DisableMirror %{public}d", disableOrNot);
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("DisableMirror fail: remote is null");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("DisableMirror fail: WriteinterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteBool(disableOrNot)) {
+        WLOGFE("DisableMirror fail: data write failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SCREEN_DISABLE_MIRROR),
+        data, reply, option) != ERR_NONE) {
+        WLOGFW("DisableMirror fail: SendRequest failed");
         return DMError::DM_ERROR_IPC_FAILED;
     }
     return static_cast<DMError>(reply.ReadInt32());
