@@ -5926,7 +5926,7 @@ void SceneSessionManager::UpdateWindowDrawingContentInfo(const sptr<SceneSession
 float SceneSessionManager::GetSceneSessionFloatingScaleByWindowId(const int32_t windowId)
 {
     float floatingScale = 1.0F;
-    auto cmpFunc = [token](const std::map<uint64_t, sptr<SceneSession>>::value_type& pair) {
+    auto cmpFunc = [windowId](const std::map<uint64_t, sptr<SceneSession>>::value_type& pair) {
         if (pair.second == nullptr) {
             return false;
         }
