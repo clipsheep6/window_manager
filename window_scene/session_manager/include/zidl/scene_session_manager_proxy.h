@@ -81,6 +81,7 @@ public:
         const sptr<AAFwk::IAbilityManagerCollaborator> &impl) override;
     WSError UnregisterIAbilityManagerCollaborator(int32_t type) override;
     WSError NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible) override;
+    float GetSceneSessionFloatingScaleByWindowId(const int32_t windowId) override;
 
 private:
     template<typename T>

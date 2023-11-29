@@ -1251,4 +1251,31 @@ WSError SceneSessionManagerProxy::NotifyWindowExtensionVisibilityChange(int32_t 
     }
     return static_cast<WSError>(reply.ReadInt32());
 }
+
+float SceneSessionManagerProxy::GetSceneSessionFloatingScaleByWindowId(const int32_t windowId)
+{
+    WLOGFI("run SceneSessionManagerProxy::GetSceneSessionFloatingScaleByWindowId");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    float floatingScale = 1.0F;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("Write interface token failed.");
+        return floatingScale;
+    }
+    if (!data.WriteInt32(windowId)) {
+        WLOGFE("windowId write failed.");
+        return floatingScale;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+        SceneSessionManagerMessage::TRANS_ID_GET_SCENE_SESSION_FLOATING_SCALE),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return floatingScale;
+    }
+    floatingScale = reply.ReadFloat();
+    return floatingScale;
+}
 } // namespace OHOS::Rosen

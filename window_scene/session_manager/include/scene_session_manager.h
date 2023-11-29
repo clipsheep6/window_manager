@@ -473,6 +473,7 @@ private:
 
     void ProcessPiPSessionForeground(const sptr<SceneSession> sceneSession);
     void UpdateWindowDrawingContentInfo(const sptr<SceneSession>& sceneSession, const WindowDrawingContentInfo& info);
+    float GetSceneSessionFloatingScaleByWindowId(const int32_t windowId) override;
 };
 } // namespace OHOS::Rosen
 
