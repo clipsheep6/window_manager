@@ -243,10 +243,6 @@ public:
     std::map<int32_t, bool> processDrawingStateMap_;
 
     void NotifyUpdateRectAfterLayout();
-    void DealwithVisibilityChange(bool isVisible, uint64_t& surfaceId, WindowVisibilityState& visibleState,
-        std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos);
-    void DealwithDrawingContentChange(uint64_t& surfaceId, WindowVisibilityState& visibleState,
-        WindowVisibilityInfo& windowVisibilityInfo);
 
 public:
     std::shared_ptr<TaskScheduler> GetTaskScheduler() {return taskScheduler_;};

@@ -281,9 +281,22 @@ public:
      * @return WM_OK means unregister success, others means unregister failed.
      */
     WMError UnregisterVisibilityChangedListener(const sptr<IVisibilityChangedListener>& listener);
-
+    /**
+ * @brief Register drawingcontent changed listener.
+ *
+ * @param listener IDrawingContentChangedListener.
+ * @return WM_OK means register success, others means register failed.
+ */
     WMError RegisterDrawingContentChangedListener(const sptr<IDrawingContentChangedListener>& listener);
+
+    /**
+     * @brief Unregister drawingcontent changed listener.
+     *
+     * @param listener IDrawingContentChangedListener.
+     * @return WM_OK means unregister success, others means unregister failed.
+     */
     WMError UnregisterDrawingContentChangedListener(const sptr<IDrawingContentChangedListener>& listener);
+
     /**
      * @brief Register camera float window changed listener.
      *
@@ -411,22 +424,6 @@ public:
      * @return WM_OK means notify success, others means notify failed.
     */
     WMError NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible);
-
-    /**
-     * @brief Register drawingcontent changed listener.
-     *
-     * @param listener IDrawingContentChangedListener.
-     * @return WM_OK means register success, others means register failed.
-     */
-    WMError RegisterDrawingContentChangedListener(const sptr<IDrawingContentChangedListener>& listener);
-
-    /**
-     * @brief Unregister drawingcontent changed listener.
-     *
-     * @param listener IDrawingContentChangedListener.
-     * @return WM_OK means unregister success, others means unregister failed.
-     */
-    WMError UnregisterDrawingContentChangedListener(const sptr<IDrawingContentChangedListener>& listener);
 
     /**
      * @brief NotifyWindowDrawingContentInfoChanged.
