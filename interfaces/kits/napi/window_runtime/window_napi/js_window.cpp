@@ -659,11 +659,11 @@ napi_value JsWindow::RaiseAboveTarget(napi_env env, napi_callback_info info)
     return (me != nullptr) ? me->OnRaiseAboveTarget(env, info) : nullptr;
 }
 
-napi_value JsWindow::SetNeedKeepKeyboard(napi_env env, napi_callback_info info)
+napi_value JsWindow::SetWindowSoftInputMode(napi_env env, napi_callback_info info)
 {
-    WLOGI("[NAPI]SetNeedKeepKeyboard");
+    WLOGI("[NAPI]SetWindowSoftInputMode");
     JsWindow* me = CheckParamsAndGetThis<JsWindow>(env, info);
-    return (me != nullptr) ? me->OnSetNeedKeepKeyboard(env, info) : nullptr;
+    return (me != nullptr) ? me->OnSetWindowSoftInputMode(env, info) : nullptr;
 }
 
 napi_value JsWindow::GetWindowLimits(napi_env env, napi_callback_info info)
@@ -3305,7 +3305,7 @@ napi_value JsWindow::OnRaiseAboveTarget(napi_env env, napi_callback_info info)
     return result;
 }
 
-napi_value JsWindow::OnSetNeedKeepKeyboard(napi_env env, napi_callback_info info)
+napi_value JsWindow::SetWindowSoftInputMode(napi_env env, napi_callback_info info)
 {
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
@@ -3314,28 +3314,39 @@ napi_value JsWindow::OnSetNeedKeepKeyboard(napi_env env, napi_callback_info info
         WLOGFE("Argc is invalid: %{public}zu", argc);
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
-    bool isNeedKeepKeyboard = false;
+    SoftInputMode softInputMode = SoftInputMode::UNSPECIFICED;
     napi_value nativeVal = argv[0];
     if (nativeVal == nullptr) {
-        WLOGFE("Failed to get parameter isNeedKeepKeyboard");
+        WLOGFE("Failed to get parameter softInputMode");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     } else {
-        napi_get_value_bool(env, nativeVal, &isNeedKeepKeyboard);
+        uint32_t resultValue = 0;
+        napi_get_value_uint32(env, nativeVal, &resultValue);
+        softInputMode = static_cast<SoftInputMode>(resultValue);
+        if (softInputMode > SoftInputMode::KEEP_VISIBLE || softInputMode < SoftInputMode::UNSPECIFICED) {
+            WLOGFE("softInputMode is invalid: %{public}u", static_cast<uint32_t>(softInputMode));
+            return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+        }
     }
 
     if (windowToken_ == nullptr) {
         WLOGFE("WindowToken_ is nullptr");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
     }
+    if (!WindowHelper::IsSystemWindow(windowToken_->GetType()) &&
+        !WindowHelper::IsSubWindow(windowToken_->GetType())) {
+        WLOGFE("SetWindowSoftInputMode is not allowed since window is not system window");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_CALLING);
+    }
 
-    WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(windowToken_->SetNeedKeepKeyboard(isNeedKeepKeyboard));
+    WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(windowToken_->SetWindowSoftInputMode(softInputMode));
     if (ret != WmErrorCode::WM_OK) {
-        WLOGFE("Window SetNeedKeepKeyboard failed");
+        WLOGFE("Window SetWindowSoftInputMode failed");
         return NapiThrowError(env, ret);
     }
 
-    WLOGI("Window [%{public}u, %{public}s] SetNeedKeepKeyboard end, isNeedKeepKeyboard = %{public}u",
-        windowToken_->GetWindowId(), windowToken_->GetWindowName().c_str(), isNeedKeepKeyboard);
+    WLOGI("Window [%{public}u, %{public}s] SetWindowSoftInputMode end, softInputMode = %{public}u",
+        windowToken_->GetWindowId(), windowToken_->GetWindowName().c_str(), softInputMode);
 
     return NapiGetUndefined(env);
 }
@@ -4819,7 +4830,7 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "raiseAboveTarget", moduleName, JsWindow::RaiseAboveTarget);
     BindNativeFunction(env, object, "hideNonSystemFloatingWindows", moduleName,
         JsWindow::HideNonSystemFloatingWindows);
-    BindNativeFunction(env, object, "setNeedKeepKeyboard", moduleName, JsWindow::SetNeedKeepKeyboard);
+    BindNativeFunction(env, object, "setWindowSoftInputMode", moduleName, JsWindow::SetWindowSoftInputMode);
     BindNativeFunction(env, object, "setWindowLimits", moduleName, JsWindow::SetWindowLimits);
     BindNativeFunction(env, object, "getWindowLimits", moduleName, JsWindow::GetWindowLimits);
 }

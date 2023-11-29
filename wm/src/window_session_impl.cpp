@@ -1113,9 +1113,9 @@ void WindowSessionImpl::NotifyAfterBackground(bool needNotifyListeners, bool nee
     VsyncStation::GetInstance().SetFrameRateLinkerEnable(false);
 }
 
-static void RequestInputMethodCloseKeyboard(bool isNeedKeyboard, bool isNeedKeepKeyboard)
+static void RequestInputMethodCloseKeyboard(bool isNeedKeyboard, SoftInputMode softInputMode)
 {
-    if (!isNeedKeyboard && !isNeedKeepKeyboard) {
+    if (!isNeedKeyboard && softInputMode == SoftInputMode::UNSPECIFICED) {
 #ifdef IMF_ENABLE
         WLOGFI("[WMSInput] Notify InputMethod framework close keyboard");
         if (MiscServices::InputMethodController::GetInstance()) {
@@ -1138,13 +1138,13 @@ void WindowSessionImpl::NotifyAfterFocused()
             if (uiContent_ != nullptr) {
                 // isNeedKeyboard is set by arkui and indicates whether the window needs a keyboard or not.
                 bool isNeedKeyboard = uiContent_->NeedSoftKeyboard();
-                /* isNeedKeyboard is set by the system window and the app subwindow,
-                 * which indicates whether the window is set to keep the keyboard.
-                 */
-                bool isNeedKeepKeyboard = (property_ != nullptr) ? property_->IsNeedKeepKeyboard() : false;
-                WLOGFD("[WMSInput] isNeedKeyboard: %{public}d, isNeedKeepKeyboard: %{public}d",
-                    isNeedKeyboard, isNeedKeepKeyboard);
-                RequestInputMethodCloseKeyboard(isNeedKeyboard, isNeedKeepKeyboard);
+                SoftInputMode softInputMode = SoftInputMode::UNSPECIFICED;
+                if (property_ != nullptr) {
+                    softInputMode = property_->GetWindowSoftInputMode();
+                }
+                WLOGFD("[WMSInput] isNeedKeyboard: %{public}d, softInputMode: %{public}u",
+                    isNeedKeyboard, static_cast<uint32_t>(softInputMode));
+                RequestInputMethodCloseKeyboard(isNeedKeyboard, softInputMode);
             }
         };
         uiContent_->SetOnWindowFocused(task);

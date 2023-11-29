@@ -874,5 +874,10 @@ WMError WindowImpl::UnregisterWindowVisibilityChangeListener(const WindowVisibil
 {
     return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
 }
+
+WMError WindowImpl::SetWindowSoftInputMode(SoftInputMode softInputMode)
+{
+    return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+}
 } // namespace Rosen
 } // namespace OHOS
