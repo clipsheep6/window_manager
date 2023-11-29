@@ -90,6 +90,7 @@ public:
         TRANS_ID_UPDATE_TOUCHOUTSIDE_LISTENER,
         TRANS_ID_RAISE_WINDOW_TO_TOP,
         TRANS_ID_NOTIFY_WINDOW_EXTENSION_VISIBILITY_CHANGE,
+        TRANS_ID_GET_SCENE_SESSION_FLOATING_SCALE
     };
 
     virtual WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) = 0;
@@ -132,6 +133,8 @@ public:
     virtual WSError RegisterIAbilityManagerCollaborator(int32_t type,
         const sptr<AAFwk::IAbilityManagerCollaborator> &impl) = 0;
     virtual WSError UnregisterIAbilityManagerCollaborator(int32_t type) = 0;
+    virtual float GetSceneSessionFloatingScaleByWindowId(const int32_t windowId) = 0;
+
     // interfaces of IWindowManager
     WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode,

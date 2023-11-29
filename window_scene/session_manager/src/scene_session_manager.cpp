@@ -5922,4 +5922,24 @@ void SceneSessionManager::UpdateWindowDrawingContentInfo(const sptr<SceneSession
 {
     session->UpdateWindowDrawingContentInfo(info);
 }
+
+float SceneSessionManager::GetSceneSessionFloatingScaleByWindowId(const int32_t windowId)
+{
+    float floatingScale = 1.0F;
+    auto cmpFunc = [windowId](const std::map<uint64_t, sptr<SceneSession>>::value_type& pair) {
+        if (pair.second == nullptr) {
+            return false;
+        }
+        return pair.second->GetPersistentId() == windowId;
+    };
+    std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+    auto iter = std::find_if(sceneSessionMap_.begin(), sceneSessionMap_.end(), cmpFunc);
+    if (iter != sceneSessionMap_.end()) {
+        sptr<SceneSession> session = iter->second;
+        if (session != nullptr) {
+            floatingScale =session->GetFloatingScale();
+        }
+    }
+    return floatingScale;
+}
 } // namespace OHOS::Rosen
