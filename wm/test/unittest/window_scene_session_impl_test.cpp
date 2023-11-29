@@ -1866,6 +1866,23 @@ HWTEST_F(WindowSceneSessionImplTest, UpdateWindowDrawingContentInfo, Function | 
 
     windowscenesession->UpdateWindowDrawingContentInfo(info);
 }
+ * @tc.name: NotifyPrepareClosePiPWindow01
+ * @tc.desc: NotifyPrepareClosePiPWindow
+ * @tc.type: FUNC
+*/
+HWTEST_F(WindowSceneSessionImplTest, NotifyPrepareClosePiPWindow01, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("pip_window");
+    option->SetWindowType(WindowType::WINDOW_TYPE_PIP);
+    sptr<WindowSceneSessionImpl> windowscenesession = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, windowscenesession);
+    SessionInfo sessionInfo = {"CreateTestBundle", "CreateTestModule", "CreateTestAbility"};
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    windowscenesession->hostSession_ = session;
+    ASSERT_EQ(WMError::WM_OK, windowscenesession->NotifyPrepareClosePiPWindow());
+}
 
 /**
  * @tc.name: GetWindowLimits01
@@ -1891,7 +1908,7 @@ HWTEST_F(WindowSceneSessionImplTest, GetWindowLimits01, Function | SmallTest | L
     window->hostSession_ = session;
 
     WindowSizeLimits windowSizeLimits;
-    ASSERT_EQ(WMError:WM_OK, Window->GetWindowLimits(windowSizeLimits));
+    ASSERT_EQ(WMError::WM_OK, window->GetWindowLimits(windowSizeLimits));
     ASSERT_EQ(windowSizeLimits.maxWidth_, 1000);
     ASSERT_EQ(windowSizeLimits.maxHeight_, 1000);
     ASSERT_EQ(windowSizeLimits.minWidth_, 1000);
@@ -1919,14 +1936,14 @@ HWTEST_F(WindowSceneSessionImplTest, SetWindowLimits01, Function | SmallTest | L
     ASSERT_NE(nullptr, session);
     window->hostSession_ = session;
 
-    WindowLimits windowLimits = {1000, 1000, 1000, 1000, 0.0f, 0.0f};
-    ASSERT_EQ(WMError::WM_DO_THING, window->SetWindowLimits(windowLimits));
+    WindowSizeLimits windowSizeLimits = {1000, 1000, 1000, 1000, 0.0f, 0.0f};
+    ASSERT_EQ(WMError::WM_OK, window->SetWindowLimits(windowSizeLimits));
     
-    WindowSizeLimits windowSizeLimits = window->property_->GetWindowLimits();
-    ASSERT_EQ(windowSizeLimits.maxWidth_, 1000);
-    ASSERT_EQ(windowSizeLimits.maxHeight_, 1000);
-    ASSERT_EQ(windowSizeLimits.minWidth_, 1000);
-    ASSERT_EQ(windowSizeLimits.minHeight_, 1000);
+    WindowLimits windowLimits = window->property_->GetWindowLimits();
+    ASSERT_EQ(windowLimits.maxWidth_, 1000);
+    ASSERT_EQ(windowLimits.maxHeight_, 1000);
+    ASSERT_EQ(windowLimits.minWidth_, 1000);
+    ASSERT_EQ(windowLimits.minHeight_, 1000);
 }
 }
 } // namespace Rosen
