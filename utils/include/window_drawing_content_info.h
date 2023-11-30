@@ -20,6 +20,29 @@
 
 namespace OHOS::Rosen {
 /**
+ * @enum WindowDrawingContentState
+ *
+ * @brief DrawingContent state of a window
+ */
+enum WindowDrawingContentState {
+    WINDOW_DRAWING_CONTENT_CHANGE = 0,
+    WINDOW_DRAWING_CONTENT_NO_CHANGE,
+    WINDOW_DRAWING_CONTENT_UNKNOWN_TYPE,
+};
+/**
+ * @enum WindowLayerState
+ *
+ * @brief Layer state of a window
+ */
+enum WindowLayerState {
+    WINDOW_ALL_VISIBLE = 0,
+    WINDOW_SEMI_VISIBLE,
+    WINDOW_IN_VISIBLE,
+    WINDOW_LAYER_DRAWING,
+    WINDOW_LAYER_NO_DRAWING,
+    WINDOW_LAYER_UNKNOWN_STATE,
+};
+/**
  * @class WindowDrawingContentInfo
  *
  * @brief DrawingContent info of window.

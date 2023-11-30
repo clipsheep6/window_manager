@@ -37,6 +37,7 @@
 #include "display_info.h"
 #include "display_change_info.h"
 #include "display_change_listener.h"
+#include "window_visibility_info.h"
 
 namespace OHOS::AAFwk {
 class SessionInfo;
@@ -240,10 +241,8 @@ public:
     WSError NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible) override;
 
     void NotifyUpdateRectAfterLayout();
-    void DealwithVisibilityChange(bool isVisible, uint64_t& surfaceId, WindowVisibilityState& visibleState,
-        std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos);
-    void DealwithDrawingContentChange(uint64_t& surfaceId, WindowVisibilityState& visibleState,
-        WindowVisibilityInfo& windowVisibilityInfo);
+    void DealwithVisibilityChange(const std::vector<std::pair<uint64_t, WindowVisibilityState>>& visibilityChangeInfo);
+    void DealwithDrawingContentChange(const std::vector<std::pair<uint64_t, bool>>& currDrawingData);
 
 public:
     std::shared_ptr<TaskScheduler> GetTaskScheduler() {return taskScheduler_;};
@@ -340,7 +339,10 @@ private:
     bool FillWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos,
         const sptr<SceneSession>& sceneSession);
     std::vector<std::pair<uint64_t, WindowVisibilityState>> GetWindowVisibilityChangeInfo(
-        std::shared_ptr<RSOcclusionData> occlusionData);
+        std::vector<std::pair<uint64_t, WindowVisibilityState>> currVisibleData);
+    void GetWindowLayerChangeInfo(std::shared_ptr<RSOcclusionData> occlusiontionData,
+        std::vector<std::pair<uint64_t, WindowVisibilityState>>& currVisibleData,
+        std::vector<std::pair<uint64_t, bool>>& currDrawingData);
     void WindowVisibilityChangeCallback(std::shared_ptr<RSOcclusionData> occlusiontionData);
     sptr<SceneSession> SelectSesssionFromMap(const uint64_t& surfaceId);
     void WindowDestroyNotifyVisibility(const sptr<SceneSession>& sceneSession);
