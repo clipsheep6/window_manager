@@ -238,12 +238,12 @@ public:
     void RegisterCreateSubSessionListener(int32_t persistentId, const NotifyCreateSubSessionFunc& func);
     void UnregisterCreateSubSessionListener(int32_t persistentId);
     WSError NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible) override;
+    void DealwithVisibilityChange(std::vector<std::pair<uint64_t, WindowVisibilityState>> visibilityChangeInfos);
+    void DealwithDrawingContentChange(std::vector<std::pair<uint64_t, bool>> drawingChangeInfos);
+    bool lastProcessContentState_ = false;
+    std::map<int32_t, bool> processDrawingStateMap_;
 
     void NotifyUpdateRectAfterLayout();
-    void DealwithVisibilityChange(bool isVisible, uint64_t& surfaceId, WindowVisibilityState& visibleState,
-        std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos);
-    void DealwithDrawingContentChange(uint64_t& surfaceId, WindowVisibilityState& visibleState,
-        WindowVisibilityInfo& windowVisibilityInfo);
 
 public:
     std::shared_ptr<TaskScheduler> GetTaskScheduler() {return taskScheduler_;};
@@ -339,9 +339,16 @@ private:
     void NotifyWindowInfoChange(int32_t persistentId, WindowUpdateType type);
     bool FillWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos,
         const sptr<SceneSession>& sceneSession);
-    std::vector<std::pair<uint64_t, WindowVisibilityState>> GetWindowVisibilityChangeInfo(
-        std::shared_ptr<RSOcclusionData> occlusionData);
-    void WindowVisibilityChangeCallback(std::shared_ptr<RSOcclusionData> occlusiontionData);
+    std::vector<std::pair<uint64_t, WindowVisibilityState>> GetWindowVisibilityContentChangeInfo(
+        std::vector<std::pair<uint64_t, WindowVisibilityState>>& currVisibleData);
+    std::vector<std::pair<uint64_t, bool>> GetWindowDrawingContentChangeInfo(
+        std::vector<std::pair<uint64_t, bool>>& currDrawingContentData);
+    void GetWindowLayerChangeInfo(std::shared_ptr<RSOcclusionData> occlusionData,
+        std::vector<std::pair<uint64_t, WindowVisibilityState>>& currVisibleData,
+        std::vector<std::pair<uint64_t, bool>>& currDrawingContentData);
+    std::vector<std::pair<uint64_t, bool>> GetProcessDrawingContentChangeInfo(
+        std::vector<std::pair<uint64_t, bool>> drawingContentChangeInfo);
+    void WindowLayerInfoChangeCallback(std::shared_ptr<RSOcclusionData> occlusiontionData);
     sptr<SceneSession> SelectSesssionFromMap(const uint64_t& surfaceId);
     void WindowDestroyNotifyVisibility(const sptr<SceneSession>& sceneSession);
     void RegisterInputMethodUpdateFunc(const sptr<SceneSession>& sceneSession);
