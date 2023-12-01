@@ -387,6 +387,17 @@ bool Session::GetVisible() const
     return isRSVisible_;
 }
 
+WSError Session::SetDrawingContentState(bool isRSDrawing)
+{
+    isRSDrawing_ = isRSDrawing;
+    return WSError::WS_OK;
+}
+
+bool Session::GetDrawingContentState() const
+{
+    return isRSDrawing_;
+}
+
 int32_t Session::GetWindowId() const
 {
     return GetPersistentId();
@@ -642,14 +653,15 @@ WSError Session::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWi
     const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
     sptr<WindowSessionProperty> property, sptr<IRemoteObject> token, int32_t pid, int32_t uid)
 {
-    WLOGFI("[WMSCom] Connect session, id: %{public}d, state: %{public}u, isTerminating: %{public}d", GetPersistentId(),
+    WLOGFI("[WMSLife] Connect session, id: %{public}d, state: %{public}u, isTerminating: %{public}d", GetPersistentId(),
         static_cast<uint32_t>(GetSessionState()), isTerminating);
     if (GetSessionState() != SessionState::STATE_DISCONNECT && !isTerminating) {
-        WLOGFE("state is not disconnect!");
+        WLOGFE("[WMSLife]state is not disconnect state:%{public}u id:%{public}u!",
+            GetSessionState(), GetPersistentId());
         return WSError::WS_ERROR_INVALID_SESSION;
     }
     if (sessionStage == nullptr || eventChannel == nullptr) {
-        WLOGFE("session stage or eventChannel is nullptr");
+        WLOGFE("[WMSLife]session stage or eventChannel is nullptr");
         return WSError::WS_ERROR_NULLPTR;
     }
     sessionStage_ = sessionStage;
@@ -673,7 +685,7 @@ WSError Session::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWi
     if (WindowHelper::IsUIExtensionWindow(GetWindowType())) {
         UpdateRect(winRect_, SizeChangeReason::UNDEFINED);
     } else {
-        NotifyClientToUpdateRect();
+        NotifyClientToUpdateRect(nullptr);
     }
     NotifyConnect();
     callingBundleName_ = DelayedSingleton<ANRManager>::GetInstance()->GetBundleName(callingPid_, callingUid_);
