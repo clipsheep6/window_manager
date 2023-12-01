@@ -2045,6 +2045,7 @@ napi_value JsWindow::OnSetSpecificSystemBarEnabled(napi_env env, napi_callback_i
 {
     WmErrorCode errCode = WmErrorCode::WM_OK;
     std::map<WindowType, SystemBarProperty> systemBarProperties;
+    std::map<WindowType, SystemBarPropertyFlag> systemBarPropertyFlags;
     errCode = (windowToken_ == nullptr) ? WmErrorCode::WM_ERROR_STATE_ABNORMALLY : WmErrorCode::WM_OK;
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
@@ -2055,7 +2056,7 @@ napi_value JsWindow::OnSetSpecificSystemBarEnabled(napi_env env, napi_callback_i
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
     if (errCode == WmErrorCode::WM_OK && (argc < 1 || // 1: params num
-        !GetSpecificBarStatus(systemBarProperties, systemBarPropertyFlags, env, info, windowToken_))) {
+        !GetSpecificBarStatus(systemBarProperties, env, info, windowToken_))) {
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
     wptr<Window> weakToken(windowToken_);
