@@ -26,7 +26,8 @@
       "rom": "8000KB",
       "ram": "8000KB",
       "hisysevent_config": [
-        "//foundation/window/window_manager/hisysevent.yaml"
+        "//foundation/window/window_manager/hisysevent.yaml",
+        "//foundation/window/window_manager/mulitwindow_hisysevent.yaml"
       ],
       "deps": {
         "components": [
