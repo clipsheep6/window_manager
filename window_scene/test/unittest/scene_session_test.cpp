@@ -2322,7 +2322,7 @@ HWTEST_F(SceneSessionTest, NotifyClientToUpdateRect01, Function | SmallTest | Le
     ASSERT_NE(mockSessionStage, nullptr);
     scensession->isDirty_ = true;
     scensession->sessionStage_ = mockSessionStage;
-    auto ret = scensession->NotifyClientToUpdateRect();
+    auto ret = scensession->NotifyClientToUpdateRect(nullptr);
     ASSERT_EQ(ret, WSError::WS_OK);
 }
 
@@ -2381,39 +2381,6 @@ HWTEST_F(SceneSessionTest, UpdatePiPRect, Function | SmallTest | Level2)
     WSError result = scenesession->UpdatePiPRect(width, height, reason);
     ASSERT_EQ(result, WSError::WS_OK);
     delete scenesession;
-}
-
-/**
- * @tc.name: NotifySessionBackground01
- * @tc.desc: NotifySessionBackground
- * @tc.type: FUNC
- */
-HWTEST_F(SceneSessionTest, UpdateWindowDrawingContentInfo, Function | SmallTest | Level2)
-{
-    SessionInfo info;
-    info.abilityName_ = "UpdateWindowDrawingContentInfo01";
-    info.bundleName_ = "IsFloatingWindowAppType";
-    info.windowType_ = 1;
-    sptr<Rosen::ISession> session_;
-    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
-        new (std::nothrow) SceneSession::SpecificSessionCallback();
-    EXPECT_NE(specificCallback_, nullptr);
-    sptr<SceneSession> scensession;
-    scensession = new (std::nothrow) SceneSession(info, nullptr);
-    EXPECT_NE(scensession, nullptr);
-    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
-    ASSERT_NE(mockSessionStage, nullptr);
-    WindowDrawingContentInfo windowDrawingContentinfo;
-    windowDrawingContentinfo.windowId_ = 0;
-    windowDrawingContentinfo.pid_ = 0;
-    windowDrawingContentinfo.uid_ = 0;
-    windowDrawingContentinfo.drawingContentState_ = true;
-    windowDrawingContentinfo.windowType_  = static_cast<WindowType>(3);
-    int ret = 1;
-
-    scensession->sessionStage_ = mockSessionStage;
-    scensession->UpdateWindowDrawingContentInfo(windowDrawingContentinfo);
-    ASSERT_EQ(ret, 1);
 }
 }
 }
