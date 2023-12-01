@@ -21,6 +21,8 @@
 #include "native_engine/native_engine.h"
 #include <gmock/gmock.h>
 #include "accessibility_element_info.h"
+#include "wm_common.h"
+
 namespace OHOS {
 namespace Ace {
 class UIContentMocker : public UIContent {
@@ -74,7 +76,6 @@ public:
     MOCK_METHOD1(CloseModalUIExtension, void(int32_t sessionId));
     MOCK_METHOD1(SetParentToken, void(sptr<IRemoteObject> token));
     MOCK_METHOD0(GetParentToken, sptr<IRemoteObject>());
-
     MOCK_METHOD4(
         SearchElementInfoByAccessibilityId, void(int32_t elementId,
         int32_t mode, int32_t baseParent, std::list<Accessibility::AccessibilityElementInfo>& output));
@@ -87,6 +88,7 @@ public:
     MOCK_METHOD4(
         FocusMoveSearch, void(int32_t elementId, int32_t direction, int32_t baseParent,
         Accessibility::AccessibilityElementInfo &output));
+    MOCK_METHOD0(GetAppPaintSize, OHOS::Rosen::Rect());
 };
 } // namespace Ace
 } // namespace OHOS
