@@ -2990,6 +2990,11 @@ WMError SceneSessionManager::RequestFocusStatus(int32_t persistentId, bool isFoc
     return WMError::WM_OK;
 }
 
+WMError SceneSessionManager::ProcessPointDown(uint32_t windowId, bool isPointDown)
+{
+    return WMError::WM_OK;
+}
+
 /**
  * request focus and ignore its state
  * only used when app main window start before foreground

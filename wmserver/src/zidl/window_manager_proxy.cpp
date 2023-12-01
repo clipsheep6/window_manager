@@ -325,27 +325,33 @@ void WindowManagerProxy::NotifyServerReadyToMoveOrDrag(uint32_t windowId, sptr<W
     }
 }
 
-void WindowManagerProxy::ProcessPointDown(uint32_t windowId, bool isPointDown)
+WMError WindowManagerProxy::ProcessPointDown(uint32_t windowId, bool isPointDown)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
     if (!data.WriteUint32(windowId)) {
         WLOGFE("Write windowId failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
     if (!data.WriteBool(isPointDown)) {
         WLOGFE("Write isPointDown failed");
-        return;
+        return WMError::WM_ERROR_IPC_FAILED;
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerMessage::TRANS_ID_PROCESS_POINT_DOWN),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
     }
+    int32_t ret;
+    if (!reply.ReadInt32(ret)) {
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    return static_cast<WMError>(ret);
 }
 
 void WindowManagerProxy::ProcessPointUp(uint32_t windowId)
