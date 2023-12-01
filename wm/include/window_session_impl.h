@@ -170,6 +170,7 @@ public:
     bool lastProcessContentState_ = false;
     bool GetDrawingContentState() const override;
     void UpdateWindowDrawingContentInfo(const WindowDrawingContentInfo& info) override;
+    WMError SetSpecificBarProperty(WindowType type, const SystemBarProperty& property) override;
 
 protected:
     WMError Connect();
