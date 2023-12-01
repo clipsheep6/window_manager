@@ -313,6 +313,7 @@ WMError WindowSessionImpl::Show(uint32_t reason, bool withAnimation)
     if (state_ == WindowState::STATE_SHOWN) {
         WLOGFD("[WMSLife]window session is alreay shown [name:%{public}s, id:%{public}d, type: %{public}u]",
             property_->GetWindowName().c_str(), GetPersistentId(), property_->GetWindowType());
+        SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetPersistentId(),false);
         NotifyAfterForeground(true, false);
         return WMError::WM_OK;
     }
