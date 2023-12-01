@@ -106,6 +106,7 @@ public:
     static napi_value Minimize(napi_env env, napi_callback_info info);
     static napi_value RaiseAboveTarget(napi_env env, napi_callback_info info);
     static napi_value SetNeedKeepKeyboard(napi_env env, napi_callback_info info);
+    static napi_value SetSpecificSystemBarEnabled(napi_env env, napi_callback_info info);
 
     // colorspace, gamut
     static napi_value IsSupportWideGamut(napi_env env, napi_callback_info info);
@@ -180,6 +181,7 @@ private:
     napi_value OnMinimize(napi_env env, napi_callback_info info);
     napi_value OnRaiseAboveTarget(napi_env env, napi_callback_info info);
     napi_value OnSetNeedKeepKeyboard(napi_env env, napi_callback_info info);
+    napi_value OnSetSpecificSystemBarEnabled(napi_env env, napi_callback_info info);
 
     // colorspace, gamut
     napi_value OnIsSupportWideGamut(napi_env env, napi_callback_info info);

@@ -1447,6 +1447,14 @@ public:
      * @return True means set isNeedKeepKeyboard flag success, others means failed.
     */
     virtual WMError SetNeedKeepKeyboard(bool isNeedKeepKeyboard) { return WMError::WM_OK; }
+    /**
+     * @brief Set Specific System Bar(include status bar and nav bar) Property
+     *
+     * @param type WINDOW_TYPE_STATUS_BAR or WINDOW_TYPE_NAVIGATION_BAR
+     * @param property system bar prop,include content color, background color
+     * @return WMError
+     */
+    virtual WMError SetSpecificBarProperty(WindowType type, const SystemBarProperty& property) { return WMError::WM_OK; }
 };
 }
 }
