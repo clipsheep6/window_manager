@@ -1946,5 +1946,16 @@ void WindowSessionImpl::NotifyWindowStatusChange(WindowMode mode)
         }
     }
 }
+
+void WindowSessionImpl::NotifyTransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
+    const std::vector<int32_t>& uiExtensionIdLevelVec)
+{
+    auto lifecycleListeners = GetListeners<ILifecycleListener>();
+    for (auto& listener : lifecycleListeners) {
+        if (listener != nullptr) {
+            listener->OnAccessibilityEvent(info, uiExtensionIdLevelVec);
+        }
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

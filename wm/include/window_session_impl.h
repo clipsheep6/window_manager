@@ -192,6 +192,8 @@ protected:
     void NotifySizeChange(Rect rect, WindowSizeChangeReason reason);
     void NotifyWindowStatusChange(WindowMode mode);
     static sptr<Window> FindWindowById(uint32_t winId);
+    void NotifyTransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
+        const std::vector<int32_t>& uiExtensionIdLevelVec);
 
     sptr<ISession> hostSession_;
     std::unique_ptr<Ace::UIContent> uiContent_;

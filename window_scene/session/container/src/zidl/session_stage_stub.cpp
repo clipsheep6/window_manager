@@ -18,7 +18,7 @@
 
 #include <ipc_types.h>
 #include <transaction/rs_transaction.h>
-
+#include "accessibility_event_info_parcel.h"
 #include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
@@ -73,6 +73,8 @@ const std::map<uint32_t, SessionStageStubFunc> SessionStageStub::stubFuncMap_{
         &SessionStageStub::HandleUpdateTitleInTargetPos),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_WINDOW_VISIBILITY_CHANGE),
         &SessionStageStub::HandleNotifyWindowVisibilityChange),
+    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_REPORT_ACCESSIBILITY_EVENT),
+        &SessionStageStub::HandleTransferAccessibilityEvent),
 };
 
 int SessionStageStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -319,6 +321,21 @@ int SessionStageStub::HandleUpdateTitleInTargetPos(MessageParcel& data, MessageP
     int32_t height = data.ReadInt32();
     WSError errCode = UpdateTitleInTargetPos(isShow, height);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleTransferAccessibilityEvent(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFI("HandleTransferAccessibilityEvent begin!");
+    sptr<AccessibilityEventInfoParcel> infoPtr =
+        data.ReadStrongParcelable<AccessibilityEventInfoParcel>();
+    std::vector<int32_t> uiExtensionIdLevelVec;
+    if (!data.ReadInt32Vector(&uiExtensionIdLevelVec)) {
+        WLOGFE("read idVect error");
+        return ERR_INVALID_DATA;
+    }
+    NotifyTransferAccessibilityEvent(*infoPtr, uiExtensionIdLevelVec);
+    WLOGFI("HandleTransferAccessibilityEvent end!");
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen
