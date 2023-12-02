@@ -55,7 +55,10 @@ WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId)
 };
 void NotifyServerReadyToMoveOrDrag(uint32_t windowId, sptr<WindowProperty>& windowProperty,
     sptr<MoveDragProperty>& moveDragProperty){};
-void ProcessPointDown(uint32_t windowId, bool isPointDown){};
+WMError ProcessPointDown(uint32_t windowId, bool isPointDown)
+{
+    return WMError::WM_OK;
+};
 void ProcessPointUp(uint32_t windowId){};
 WMError MinimizeAllAppWindows(DisplayId displayId)
 {

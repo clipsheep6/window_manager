@@ -38,6 +38,8 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandleUpdateProperty),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REQUEST_FOCUS),
         &SceneSessionManagerStub::HandleRequestFocusStatus),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_PROCESS_POINT_DOWN),
+        &SceneSessionManagerStub::HandleProcessPointDown),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT),
         &SceneSessionManagerStub::HandleRegisterWindowManagerAgent),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT),
@@ -214,6 +216,16 @@ int SceneSessionManagerStub::HandleRequestFocusStatus(MessageParcel &data, Messa
     int32_t persistentId = data.ReadInt32();
     bool isFocused = data.ReadBool();
     const WMError& ret = RequestFocusStatus(persistentId, isFocused);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleProcessPointDown(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleProcessPointDown!");
+    int32_t persistentId = data.ReadInt32();
+    bool isPointDown = data.ReadBool();
+    const WMError& ret = ProcessPointDown(persistentId, isPointDown);
     reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }

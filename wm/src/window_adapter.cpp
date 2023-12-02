@@ -131,9 +131,9 @@ void WindowAdapter::NotifyServerReadyToMoveOrDrag(uint32_t windowId, sptr<Window
     return windowManagerServiceProxy_->NotifyServerReadyToMoveOrDrag(windowId, windowProperty, moveDragProperty);
 }
 
-void WindowAdapter::ProcessPointDown(uint32_t windowId, bool isPointDown)
+WMError WindowAdapter::ProcessPointDown(uint32_t windowId, bool isPointDown)
 {
-    INIT_PROXY_CHECK_RETURN();
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
     return windowManagerServiceProxy_->ProcessPointDown(windowId, isPointDown);
 }
 

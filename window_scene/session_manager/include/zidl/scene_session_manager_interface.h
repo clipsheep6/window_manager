@@ -51,6 +51,7 @@ public:
         TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION,
         TRANS_ID_UPDATE_PROPERTY,
         TRANS_ID_REQUEST_FOCUS,
+        TRANS_ID_PROCESS_POINT_DOWN,
         TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT,
         TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT,
         TRANS_ID_BIND_DIALOG_TARGET,
@@ -146,7 +147,7 @@ public:
     WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId) override { return WMError::WM_OK; }
     void NotifyServerReadyToMoveOrDrag(uint32_t windowId, sptr<WindowProperty>& windowProperty,
         sptr<MoveDragProperty>& moveDragProperty) override {}
-    void ProcessPointDown(uint32_t windowId, bool isPointDown) override {}
+    WMError ProcessPointDown(uint32_t windowId, bool isPointDown) override { return WMError::WM_OK; }
     void ProcessPointUp(uint32_t windowId) override {}
     WMError MinimizeAllAppWindows(DisplayId displayId) override { return WMError::WM_OK; }
     WMError ToggleShownStateForAllAppWindows() override { return WMError::WM_OK; }
