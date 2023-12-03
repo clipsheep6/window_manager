@@ -287,12 +287,16 @@ void Session::NotifyExtensionDied()
 void Session::NotifyTransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
     const std::vector<int32_t>& uiExtensionIdLevelVec)
 {
+    WLOGFI("rm032 NotifyTransferAccessibilityEvent begin");
     auto lifecycleListeners = GetListeners<ILifecycleListener>();
+    WLOGFI("rm032 NotifyTransferAccessibilityEvent  lifecycleListeners.size:%{public}d", lifecycleListeners.size());
     for (auto& listener : lifecycleListeners) {
         if (!listener.expired()) {
+            WLOGFI("rm032 NotifyTransferAccessibilityEvent ---1");
             listener.lock()->OnAccessibilityEvent(info, uiExtensionIdLevelVec);
         }
     }
+    WLOGFI("rm032 NotifyTransferAccessibilityEvent end");
 }
 
 float Session::GetAspectRatio() const

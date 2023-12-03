@@ -31,6 +31,7 @@ class AxisEvent;
 } // namespace MMI
 namespace OHOS::Accessibility {
 class AccessibilityElementInfo;
+class AccessibilityEventInfo;
 }
 namespace OHOS::Rosen {
 class RSTransaction;
@@ -105,6 +106,11 @@ public:
     {
         return WSErrorCode::WS_OK;
     }
+    virtual WSError NotifyTransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
+        const std::vector<int32_t>& uiExtensionIdLevelVec)
+    {
+        return WSError::WS_OK;
+    };
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_SESSION_STAGE_INTERFACE_H

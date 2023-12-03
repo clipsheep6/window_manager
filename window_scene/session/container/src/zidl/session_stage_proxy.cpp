@@ -21,6 +21,7 @@
 #include <message_option.h>
 #include <message_parcel.h>
 
+#include "accessibility_event_info_parcel.h"
 #include "window_manager_hilog.h"
 #include "ws_common.h"
 
@@ -568,5 +569,34 @@ WSError SessionStageProxy::UpdateTitleInTargetPos(bool isShow, int32_t height)
     }
     int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
+}
+
+WSError SessionStageProxy::NotifyTransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
+    const std::vector<int32_t>& uiExtensionIdLevelVec)
+{
+    WLOGFI("rm032 TransferAccessibilityEvent begin");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    AccessibilityEventInfoParcel infoParcel(info);
+    if (!data.WriteParcelable(&infoParcel)) {
+        WLOGFE("infoParcel write failed.");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32Vector(uiExtensionIdLevelVec)) {
+        WLOGFE("idVec write failed.");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+        SessionStageInterfaceCode::TRANS_ID_NOTIFY_REPORT_ACCESSIBILITY_EVENT), data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    WLOGFI("rm032 TransferAccessibilityEvent end");
+    return WSError::WS_OK;
 }
 } // namespace OHOS::Rosen

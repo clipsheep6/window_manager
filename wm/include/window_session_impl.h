@@ -170,7 +170,6 @@ public:
 
     void UpdatePiPRect(const uint32_t width, const uint32_t height, PiPRectUpdateReason reason) override;
     void SetDrawingContentState(bool drawingContentState);
-
 protected:
     WMError Connect();
     bool IsWindowSessionInvalid() const;

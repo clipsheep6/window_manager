@@ -310,10 +310,12 @@ WSError WindowExtensionSessionImpl::NotifyExecuteAction(int32_t elementId,
 WMError WindowExtensionSessionImpl::TransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
     const std::vector<int32_t>& uiExtensionIdLevelVec)
 {
+    WLOGFE("rm032 TransferAccessibilityEvent begin");
     if (IsWindowSessionInvalid()) {
         WLOGFE("Window session invalid.");
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
+    WLOGFE("rm032 TransferAccessibilityEvent end");
     return static_cast<WMError>(hostSession_->TransferAccessibilityEvent(info, uiExtensionIdLevelVec));
 }
 
@@ -324,6 +326,5 @@ void WindowExtensionSessionImpl::NotifySessionForeground(uint32_t reason, bool w
 void WindowExtensionSessionImpl::NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits)
 {
 }
-
 } // namespace Rosen
 } // namespace OHOS

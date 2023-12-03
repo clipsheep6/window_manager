@@ -475,6 +475,7 @@ int SessionStub::HandleNotifyExtensionDied(MessageParcel& data, MessageParcel& r
 
 int SessionStub::HandleTransferAccessibilityEvent(MessageParcel& data, MessageParcel& reply)
 {
+    WLOGFI("rm032 HandleTransferAccessibilityEvent begin");
     sptr<AccessibilityEventInfoParcel> infoPtr =
         data.ReadStrongParcelable<AccessibilityEventInfoParcel>();
     std::vector<int32_t> uiExtensionIdLevelVec;
@@ -483,6 +484,7 @@ int SessionStub::HandleTransferAccessibilityEvent(MessageParcel& data, MessagePa
         return ERR_INVALID_DATA;
     }
     NotifyTransferAccessibilityEvent(*infoPtr, uiExtensionIdLevelVec);
+    WLOGFI("rm032 HandleTransferAccessibilityEvent end");
     return ERR_NONE;
 }
 
