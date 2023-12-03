@@ -3327,6 +3327,11 @@ napi_value JsWindow::OnSetNeedKeepKeyboard(napi_env env, napi_callback_info info
         WLOGFE("WindowToken_ is nullptr");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
     }
+    if (!WindowHelper::IsSystemWindow(windowToken_->GetType()) &&
+        !WindowHelper::IsSubWindow(windowToken_->GetType())) {
+        WLOGFE("SetNeedKeepKeyboard is not allowed since window is not system window");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_CALLING);
+    }
 
     WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(windowToken_->SetNeedKeepKeyboard(isNeedKeepKeyboard));
     if (ret != WmErrorCode::WM_OK) {
