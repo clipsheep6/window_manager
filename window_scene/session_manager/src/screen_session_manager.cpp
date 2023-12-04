@@ -2483,7 +2483,10 @@ void ScreenSessionManager::SetScreenPrivacyState(bool hasPrivate)
 
 DMError ScreenSessionManager::HasPrivateWindow(DisplayId id, bool& hasPrivateWindow)
 {
-    // delete permission
+    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
+        WLOGFE("SCB: ScreenSessionManager HasPrivateWindow permission denied!");
+        return DMError::DM_ERROR_NOT_SYSTEM_APP;
+    }
     std::vector<ScreenId> screenIds = GetAllScreenIds();
     auto iter = std::find(screenIds.begin(), screenIds.end(), id);
     if (iter == screenIds.end()) {
