@@ -34,6 +34,7 @@
 #include "permission.h"
 #include "request_info.h"
 #include "ui_content.h"
+#include "js_runtime_utils.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -2051,7 +2052,7 @@ napi_value JsWindow::OnSetSpecificSystemBarEnabled(napi_env env, napi_callback_i
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     std::string name;
-    if (ConvertFormJsValue(env, argv[0], name)) {
+    if (!ConvertFromJsValue(env, argv[0], name)) {
         WLOGFE("Failed to convert parameter to SystemBarName");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
@@ -2060,7 +2061,7 @@ napi_value JsWindow::OnSetSpecificSystemBarEnabled(napi_env env, napi_callback_i
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
     wptr<Window> weakToken(windowToken_);
-    NapiAsyncTask::CompleteCallback complete = [weakToken, systemBarProperties, systemBarPropertyFlags, errCode]
+    NapiAsyncTask::CompleteCallback complete = [weakToken, systemBarProperties, systemBarPropertyFlags, name, errCode]
             (napi_env env, NapiAsyncTask& task, int32_t status) mutable {
         auto weakWindow = weakToken.promote();
         errCode = (weakWindow == nullptr) ? WmErrorCode::WM_ERROR_STATE_ABNORMALLY : errCode;
@@ -2068,7 +2069,7 @@ napi_value JsWindow::OnSetSpecificSystemBarEnabled(napi_env env, napi_callback_i
             task.Reject(env, CreateJsError(env, static_cast<int32_t>(errCode)));
             return;
         }
-        WmErrorCode ret == WmErrorCode::WM_OK;
+        WmErrorCode ret = WmErrorCode::WM_OK;
         if (name.compare("status") == 0) {
             ret = WM_JS_TO_ERROR_CODE_MAP.at(weakWindow->SetSpecificBarProperty(
                     WindowType::WINDOW_TYPE_STATUS_BAR, systemBarProperties.at(WindowType::WINDOW_TYPE_STATUS_BAR)));
