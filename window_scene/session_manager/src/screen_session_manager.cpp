@@ -571,6 +571,10 @@ DMError ScreenSessionManager::SetResolution(ScreenId screenId, uint32_t width, u
 DMError ScreenSessionManager::GetScreenColorGamut(ScreenId screenId, ScreenColorGamut& colorGamut)
 {
     WLOGFI("GetScreenColorGamut::ScreenId: %{public}" PRIu64 "", screenId);
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("ScreenSessionManager get screen color gamut permission denied!");
+        return DMError::DM_ERROR_INVALID_PERMISSION;
+    }
     if (screenId == SCREEN_ID_INVALID) {
         WLOGFE("screenId invalid");
         return DMError::DM_ERROR_INVALID_PARAM;
@@ -585,6 +589,10 @@ DMError ScreenSessionManager::GetScreenColorGamut(ScreenId screenId, ScreenColor
 DMError ScreenSessionManager::SetScreenColorGamut(ScreenId screenId, int32_t colorGamutIdx)
 {
     WLOGFI("SetScreenColorGamut::ScreenId: %{public}" PRIu64 ", colorGamutIdx %{public}d", screenId, colorGamutIdx);
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("ScreenSessionManager set screen color gamut permission denied!");
+        return DMError::DM_ERROR_INVALID_PERMISSION;
+    }
     if (screenId == SCREEN_ID_INVALID) {
         WLOGFE("screenId invalid");
         return DMError::DM_ERROR_INVALID_PARAM;
@@ -599,6 +607,10 @@ DMError ScreenSessionManager::SetScreenColorGamut(ScreenId screenId, int32_t col
 DMError ScreenSessionManager::GetScreenGamutMap(ScreenId screenId, ScreenGamutMap& gamutMap)
 {
     WLOGFI("GetScreenGamutMap::ScreenId: %{public}" PRIu64 "", screenId);
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("ScreenSessionManager get screen gamut map permission denied!");
+        return DMError::DM_ERROR_INVALID_PERMISSION;
+    }
     if (screenId == SCREEN_ID_INVALID) {
         WLOGFE("screenId invalid");
         return DMError::DM_ERROR_INVALID_PARAM;
@@ -614,6 +626,10 @@ DMError ScreenSessionManager::SetScreenGamutMap(ScreenId screenId, ScreenGamutMa
 {
     WLOGFI("SetScreenGamutMap::ScreenId: %{public}" PRIu64 ", ScreenGamutMap %{public}u",
         screenId, static_cast<uint32_t>(gamutMap));
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("ScreenSessionManager set screen gamut map permission denied!");
+        return DMError::DM_ERROR_INVALID_PERMISSION;
+    }
     if (screenId == SCREEN_ID_INVALID) {
         WLOGFE("screenId invalid");
         return DMError::DM_ERROR_INVALID_PARAM;
@@ -628,6 +644,10 @@ DMError ScreenSessionManager::SetScreenGamutMap(ScreenId screenId, ScreenGamutMa
 DMError ScreenSessionManager::SetScreenColorTransform(ScreenId screenId)
 {
     WLOGFI("SetScreenColorTransform::ScreenId: %{public}" PRIu64 "", screenId);
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("ScreenSessionManager set screen color transform permission denied!");
+        return DMError::DM_ERROR_INVALID_PERMISSION;
+    }
     if (screenId == SCREEN_ID_INVALID) {
         WLOGFE("screenId invalid");
         return DMError::DM_ERROR_INVALID_PARAM;
@@ -705,6 +725,10 @@ ScreenId ScreenSessionManager::GetDefaultScreenId()
 bool ScreenSessionManager::WakeUpBegin(PowerStateChangeReason reason)
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:WakeUpBegin(%u)", reason);
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("ScreenSessionManager wake up begin permission denied!");
+        return false;
+    }
     WLOGFI("ScreenSessionManager::WakeUpBegin remove suspend begin task");
     blockScreenPowerChange_ = false;
     taskScheduler_->RemoveTask("suspendBeginTask");
@@ -718,6 +742,10 @@ bool ScreenSessionManager::WakeUpBegin(PowerStateChangeReason reason)
 bool ScreenSessionManager::WakeUpEnd()
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:WakeUpEnd");
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("ScreenSessionManager wake up end permission denied!");
+        return false;
+    }
     if (isMultiScreenCollaboration_) {
         isMultiScreenCollaboration_ = false;
         return true;
@@ -729,6 +757,10 @@ bool ScreenSessionManager::WakeUpEnd()
 bool ScreenSessionManager::SuspendBegin(PowerStateChangeReason reason)
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:SuspendBegin(%u)", reason);
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("ScreenSessionManager suspend begin permission denied!");
+        return false;
+    }
     WLOGFI("ScreenSessionManager::SuspendBegin block screen power change is true");
     blockScreenPowerChange_ = true;
     auto suspendBeginTask = [this]() {
@@ -749,6 +781,10 @@ bool ScreenSessionManager::SuspendEnd()
 {
     WLOGFI("ScreenSessionManager::SuspendEnd enter");
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:SuspendEnd");
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("ScreenSessionManager suspend end permission denied!");
+        return false;
+    }
     blockScreenPowerChange_ = false;
     if (isMultiScreenCollaboration_) {
         isMultiScreenCollaboration_ = false;
@@ -761,6 +797,10 @@ bool ScreenSessionManager::SuspendEnd()
 bool ScreenSessionManager::SetDisplayState(DisplayState state)
 {
     WLOGFI("ScreenSessionManager::SetDisplayState enter");
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("ScreenSessionManager set display state permission denied!");
+        return false;
+    }
     return sessionDisplayPowerController_->SetDisplayState(state);
 }
 
@@ -809,6 +849,11 @@ bool ScreenSessionManager::SetSpecifiedScreenPower(ScreenId screenId, ScreenPowe
 
 bool ScreenSessionManager::SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason)
 {
+    WLOGFI("ScreenSessionManager SetScreenPowerForAll enter");
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("ScreenSessionManager set screen power for all permission denied!");
+        return false;
+    }
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     ScreenPowerStatus status;
     if (blockScreenPowerChange_) {
@@ -932,6 +977,10 @@ void ScreenSessionManager::SetDpiFromSettingData()
 std::vector<ScreenId> ScreenSessionManager::GetAllScreenIds()
 {
     std::vector<ScreenId> res;
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("ScreenSessionManager get all display id permission denied!");
+        return res;
+    }
     std::lock_guard<std::recursive_mutex> lock(screenSessionMapMutex_);
     for (const auto& iter : screenSessionMap_) {
         res.emplace_back(iter.first);
@@ -941,13 +990,21 @@ std::vector<ScreenId> ScreenSessionManager::GetAllScreenIds()
 
 DisplayState ScreenSessionManager::GetDisplayState(DisplayId displayId)
 {
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("ScreenSessionManager get display state permission denied!");
+        return DisplayState::UNKNOWN;
+    }
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     return sessionDisplayPowerController_->GetDisplayState(displayId);
 }
 
 void ScreenSessionManager::NotifyDisplayEvent(DisplayEvent event)
 {
-    WLOGFI("ScreenSessionManager::NotifyDisplayEvent receive keyguardDrawnDone");
+    WLOGFI("ScreenSessionManager::NotifyDisplayEvent receive screen lock notify");
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("ScreenSessionManager notify display event permission denied!");
+        return;
+    }
     sessionDisplayPowerController_->NotifyDisplayEvent(event);
     if (event == DisplayEvent::KEYGUARD_DRAWN) {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -977,6 +1034,10 @@ void ScreenSessionManager::NotifyDisplayEvent(DisplayEvent event)
 
 ScreenPowerState ScreenSessionManager::GetScreenPower(ScreenId screenId)
 {
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("ScreenSessionManager get screen power permission denied!");
+        return ScreenPowerState::INVALID_STATE;
+    }
     auto state = static_cast<ScreenPowerState>(RSInterfaces::GetInstance().GetScreenPowerStatus(screenId));
     WLOGFI("GetScreenPower:%{public}u, rsscreen:%{public}" PRIu64".", state, screenId);
     return state;
