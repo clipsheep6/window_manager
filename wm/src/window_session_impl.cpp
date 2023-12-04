@@ -66,10 +66,12 @@ std::map<int32_t, std::vector<sptr<IDialogTargetTouchListener>>> WindowSessionIm
 std::map<int32_t, std::vector<sptr<IOccupiedAreaChangeListener>>> WindowSessionImpl::occupiedAreaChangeListeners_;
 std::map<int32_t, std::vector<sptr<IScreenshotListener>>> WindowSessionImpl::screenshotListeners_;
 std::map<int32_t, std::vector<sptr<ITouchOutsideListener>>> WindowSessionImpl::touchOutsideListeners_;
+std::map<int32_t, std::vector<IWindowVisibilityListenerSptr>> WindowSessionImpl::windowVisibilityChangeListeners_;
 std::recursive_mutex WindowSessionImpl::globalMutex_;
 std::map<std::string, std::pair<int32_t, sptr<WindowSessionImpl>>> WindowSessionImpl::windowSessionMap_;
 std::shared_mutex WindowSessionImpl::windowSessionMutex_;
 std::map<int32_t, std::vector<sptr<WindowSessionImpl>>> WindowSessionImpl::subWindowSessionMap_;
+std::map<int32_t, std::vector<sptr<IWindowStatusChangeListener>>> WindowSessionImpl::windowStatusChangeListeners_;
 
 #define CALL_LIFECYCLE_LISTENER(windowLifecycleCb, listeners) \
     do {                                                      \
@@ -119,6 +121,7 @@ WindowSessionImpl::WindowSessionImpl(const sptr<WindowOption>& option)
     property_->SetKeepScreenOn(option->IsKeepScreenOn());
     property_->SetWindowMode(option->GetWindowMode());
     property_->SetWindowFlags(option->GetWindowFlags());
+    property_->SetCallingWindow(option->GetCallingWindow());
 
     auto isPC = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
     if (isPC && WindowHelper::IsSubWindow(option->GetWindowType())) {
@@ -961,6 +964,21 @@ WMError WindowSessionImpl::UnregisterWindowChangeListener(const sptr<IWindowChan
     return UnregisterListener(windowChangeListeners_[GetPersistentId()], listener);
 }
 
+WMError WindowSessionImpl::RegisterWindowStatusChangeListener(const sptr<IWindowStatusChangeListener>& listener)
+{
+    WLOGFD("Start register");
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    return RegisterListener(windowStatusChangeListeners_[GetPersistentId()], listener);
+}
+
+WMError WindowSessionImpl::UnregisterWindowStatusChangeListener(const sptr<IWindowStatusChangeListener>& listener)
+{
+    WLOGFD("Start register");
+    std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+    return UnregisterListener(windowStatusChangeListeners_[GetPersistentId()], listener);
+}
+
+
 template<typename T>
 EnableIfSame<T, IWindowLifeCycle, std::vector<sptr<IWindowLifeCycle>>> WindowSessionImpl::GetListeners()
 {
@@ -1035,6 +1053,19 @@ void WindowSessionImpl::ClearUselessListeners(std::map<int32_t, T>& listeners, i
     listeners.erase(persistentId);
 }
 
+template<typename T>
+EnableIfSame<T, IWindowStatusChangeListener, std::vector<sptr<IWindowStatusChangeListener>>> WindowSessionImpl::GetListeners()
+{
+    std::vector<sptr<IWindowStatusChangeListener>> windowStatusChangeListeners;
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        for (auto& listener : windowStatusChangeListeners_[GetPersistentId()]) {
+            windowStatusChangeListeners.push_back(listener);
+        }
+    }
+    return windowStatusChangeListeners;
+}
+
 void WindowSessionImpl::ClearListenersById(int32_t persistentId)
 {
     std::lock_guard<std::recursive_mutex> lock(globalMutex_);
@@ -1044,6 +1075,7 @@ void WindowSessionImpl::ClearListenersById(int32_t persistentId)
     ClearUselessListeners(dialogDeathRecipientListeners_, persistentId);
     ClearUselessListeners(dialogTargetTouchListener_, persistentId);
     ClearUselessListeners(screenshotListeners_, persistentId);
+    ClearUselessListeners(windowStatusChangeListeners_, persistentId);
 }
 
 void WindowSessionImpl::RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func)
@@ -1081,11 +1113,42 @@ void WindowSessionImpl::NotifyAfterBackground(bool needNotifyListeners, bool nee
     VsyncStation::GetInstance().SetFrameRateLinkerEnable(false);
 }
 
+static void RequestInputMethodCloseKeyboard(bool isNeedKeyboard, bool isNeedKeepKeyboard)
+{
+    if (!isNeedKeyboard && !isNeedKeepKeyboard) {
+#ifdef IMF_ENABLE
+        WLOGFI("[WMSInput] Notify InputMethod framework close keyboard");
+        if (MiscServices::InputMethodController::GetInstance()) {
+            int32_t ret = MiscServices::InputMethodController::GetInstance()->RequestHideInput();
+            if (ret != 0) { // 0 - NO_ERROR
+                WLOGFE("[WMSInput] InputMethod framework close keyboard failed, ret: %{public}d", ret);
+            }
+        }
+#endif
+    }
+}
+
 void WindowSessionImpl::NotifyAfterFocused()
 {
     auto lifecycleListeners = GetListeners<IWindowLifeCycle>();
     CALL_LIFECYCLE_LISTENER(AfterFocused, lifecycleListeners);
     CALL_UI_CONTENT(Focus);
+    if (uiContent_ != nullptr) {
+        auto task = [this]() {
+            if (uiContent_ != nullptr) {
+                // isNeedKeyboard is set by arkui and indicates whether the window needs a keyboard or not.
+                bool isNeedKeyboard = uiContent_->NeedSoftKeyboard();
+                /* isNeedKeyboard is set by the system window and the app subwindow,
+                 * which indicates whether the window is set to keep the keyboard.
+                 */
+                bool isNeedKeepKeyboard = (property_ != nullptr) ? property_->IsNeedKeepKeyboard() : false;
+                WLOGFD("[WMSInput] isNeedKeyboard: %{public}d, isNeedKeepKeyboard: %{public}d",
+                    isNeedKeyboard, isNeedKeepKeyboard);
+                RequestInputMethodCloseKeyboard(isNeedKeyboard, isNeedKeepKeyboard);
+            }
+        };
+        uiContent_->SetOnWindowFocused(task);
+    }
 }
 
 void WindowSessionImpl::NotifyAfterUnfocused(bool needNotifyUiContent)
@@ -1467,6 +1530,74 @@ WSError WindowSessionImpl::NotifyTouchOutside()
     return WSError::WS_OK;
 }
 
+WMError WindowSessionImpl::RegisterWindowVisibilityChangeListener(const IWindowVisibilityListenerSptr& listener)
+{
+    auto persistentId = GetPersistentId();
+    WLOGFD("Start to register window visibility change listener, persistentId=%{public}d.", persistentId);
+    WMError ret = WMError::WM_OK;
+    bool isFirstRegister = false;
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        ret = RegisterListener(windowVisibilityChangeListeners_[persistentId], listener);
+        if (ret != WMError::WM_OK) {
+            return ret;
+        }
+        isFirstRegister = windowVisibilityChangeListeners_[persistentId].size() == 1;
+    }
+
+    if (isFirstRegister) {
+        ret = SingletonContainer::Get<WindowAdapter>().UpdateSessionWindowVisibilityListener(persistentId, true);
+    }
+    return ret;
+}
+
+WMError WindowSessionImpl::UnregisterWindowVisibilityChangeListener(const IWindowVisibilityListenerSptr& listener)
+{
+    auto persistentId = GetPersistentId();
+    WLOGFD("Start to unregister window visibility change listener, persistentId=%{public}d.", persistentId);
+    WMError ret = WMError::WM_OK;
+    bool isFirstUnregister = false;
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        ret = UnregisterListener(windowVisibilityChangeListeners_[persistentId], listener);
+        if (ret != WMError::WM_OK) {
+            return ret;
+        }
+        isFirstUnregister = windowVisibilityChangeListeners_[persistentId].empty();
+    }
+    
+    if (isFirstUnregister) {
+        ret = SingletonContainer::Get<WindowAdapter>().UpdateSessionWindowVisibilityListener(persistentId, false);
+    }
+    return ret;
+}
+
+template<typename T>
+EnableIfSame<T, IWindowVisibilityChangedListener, std::vector<IWindowVisibilityListenerSptr>> WindowSessionImpl::GetListeners()
+{
+    std::vector<IWindowVisibilityListenerSptr> windowVisibilityChangeListeners;
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        for (auto& listener : windowVisibilityChangeListeners_[GetPersistentId()]) {
+            windowVisibilityChangeListeners.push_back(listener);
+        }
+    }
+    return windowVisibilityChangeListeners;
+}
+
+WSError WindowSessionImpl::NotifyWindowVisibility(bool isVisible)
+{
+    WLOGFD("Notify window visibility Change, window: name=%{public}s, id=%{public}u, isVisible:%{public}d",
+        GetWindowName().c_str(), GetPersistentId(), isVisible);
+    auto windowVisibilityListeners = GetListeners<IWindowVisibilityChangedListener>();
+    for (auto& listener : windowVisibilityListeners) {
+        if (listener != nullptr) {
+            listener->OnWindowVisibilityChangedCallback(isVisible);
+        }
+    }
+    return WSError::WS_OK;
+}
+
 void WindowSessionImpl::NotifyPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
     if (!pointerEvent) {
@@ -1808,8 +1939,8 @@ void WindowSessionImpl::NotifyWindowStatusChange(WindowMode mode)
         WindowStatus = WindowStatus::WINDOW_STATUS_MINIMIZE;
     }
 
-    auto windowChangeListeners = GetListeners<IWindowChangeListener>();
-    for (auto& listener : windowChangeListeners) {
+    auto windowStatusChangeListeners = GetListeners<IWindowStatusChangeListener>();
+    for (auto& listener : windowStatusChangeListeners) {
         if (listener != nullptr) {
             listener->OnWindowStatusChange(WindowStatus);
         }

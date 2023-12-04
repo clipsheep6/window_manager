@@ -106,8 +106,8 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneS
 #ifdef RES_SCHED_ENABLE
 const std::string SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 #endif
-const std::string SCENE_SESSION_MANAGER_THREAD = "SceneSessionManager";
-const std::string WINDOW_INFO_REPORT_THREAD = "WindowInfoReportThread";
+const std::string SCENE_SESSION_MANAGER_THREAD = "OS_SceneSessionManager";
+const std::string WINDOW_INFO_REPORT_THREAD = "OS_WindowInfoReportThread";
 constexpr const char* PREPARE_TERMINATE_ENABLE_PARAMETER = "persist.sys.prepare_terminate";
 std::recursive_mutex g_instanceMutex;
 constexpr uint32_t MAX_BRIGHTNESS = 255;
@@ -1026,10 +1026,20 @@ void SceneSessionManager::OnInputMethodShown(const int32_t& persistentId)
         WLOGFE("[WMSInput] Input method is null");
         return;
     }
-    callingSession_ = GetSceneSession(focusedSessionId_);
+
+    uint32_t callingWindowId_ = INVALID_WINDOW_ID;
+    if (scnSession->GetSessionProperty() != nullptr) {
+        callingWindowId_ = scnSession->GetSessionProperty()->GetCallingWindow();
+    }
+    WLOGFD("[WMSInput] Calling window id: %{public}d", callingWindowId_);
+    callingSession_ = GetSceneSession(callingWindowId_);
     if (callingSession_ == nullptr) {
-        WLOGFE("[WMSInput] calling session is nullptr");
-        return;
+        WLOGFI("[WMSInput] The calling session obtained through callingWindowId_ is nullptr");
+        callingSession_ = GetSceneSession(focusedSessionId_);
+        if (callingSession_ == nullptr) {
+            WLOGFE("[WMSInput] The calling session obtained through focusedSessionId_ is nullptr");
+            return;
+        }
     }
     callingSession_->SetTextFieldAvoidInfo(scnSession->textFieldPositionY_, scnSession->textFieldHeight_);
     ResizeSoftInputCallingSessionIfNeed(scnSession);
@@ -2201,6 +2211,15 @@ WMError SceneSessionManager::HandleUpdateProperty(const sptr<WindowSessionProper
             }
             break;
         }
+        case WSPropertyChangeAction::ACTION_UPDATE_CALLING_WINDOW: {
+            if (sceneSession->GetSessionProperty() != nullptr) {
+                sceneSession->GetSessionProperty()->SetCallingWindow(property->GetCallingWindow());
+            }
+            if (callingWindowIdChangeFunc_ != nullptr) {
+                callingWindowIdChangeFunc_(property->GetCallingWindow());
+            }
+            break;
+        }
         case WSPropertyChangeAction::ACTION_UPDATE_DECOR_ENABLE: {
             if (sceneSession->GetSessionProperty() != nullptr) {
                 sceneSession->GetSessionProperty()->SetDecorEnable(property->IsDecorEnable());
@@ -3160,6 +3179,12 @@ void SceneSessionManager::SetShowPiPMainWindowListener(const ProcessShowPiPMainW
 {
     WLOGFD("SetShowPiPMainWindowListener");
     showPiPMainWindowFunc_ = func;
+}
+
+void SceneSessionManager::SetCallingWindowIdChangeListenser(const ProcessCallingWindowIdChangeFunc& func)
+{
+    WLOGFD("SetCallingWindowIdChangeListenser");
+    callingWindowIdChangeFunc_ = func;
 }
 
 WSError SceneSessionManager::ShiftFocus(sptr<SceneSession>& nextSession)
@@ -4399,6 +4424,9 @@ WMError SceneSessionManager::GetSurfaceNodeIdsFromMissionIds(std::vector<uint64_
                 continue;
             }
             surfaceNodeIds.push_back(sceneSession->GetSurfaceNode()->GetId());
+            if (sceneSession->GetLeashWinSurfaceNode()) {
+                surfaceNodeIds.push_back(sceneSession->GetLeashWinSurfaceNode()->GetId());
+            }
         }
         return WMError::WM_OK;
     };
@@ -4899,14 +4927,18 @@ for (const auto& elem : visibilityChangeInfo) {
         continue;
     }
     session->SetVisible(isVisible);
-    windowVisibilityInfos.emplace_back(new WindowVisibilityInfo(session->GetWindowId(), session->GetCallingPid(),
-        session->GetCallingUid(), visibleState, session->GetWindowType()));
+    int32_t windowId = session->GetWindowId();
+    if (windowVisibilityListenerSessionSet_.find(windowId) != windowVisibilityListenerSessionSet_.end()) {
+        session->NotifyWindowVisibility();
+    }
+    windowVisibilityInfos.emplace_back(new WindowVisibilityInfo(windowId, session->GetCallingPid(),
+         session->GetCallingUid(), visibleState, session->GetWindowType()));
 #ifdef MEMMGR_WINDOW_ENABLE
     memMgrWindowInfos.emplace_back(new Memory::MemMgrWindowInfo(session->GetWindowId(), session->GetCallingPid(),
         session->GetCallingUid(), isVisible));
 #endif
-    WLOGFD("NotifyWindowVisibilityChange: covered status changed window:%{public}u, visibleState:%{public}d",
-        session->GetWindowId(), visibleState);
+    WLOGFD("Notify window visibility Change, window: name=%{public}s, id=%{public}u, visibleState:%{public}d",
+        session->GetWindowName().c_str(), windowId, visibleState);
     CheckAndNotifyWaterMarkChangedResult();
 }
     if (windowVisibilityInfos.size() != 0) {
@@ -5312,6 +5344,27 @@ WSError SceneSessionManager::UpdateSessionTouchOutsideListener(int32_t& persiste
             touchOutsideListenerSessionSet_.insert(persistentId);
         } else {
             touchOutsideListenerSessionSet_.erase(persistentId);
+        }
+        return WSError::WS_OK;
+    };
+    return taskScheduler_->PostSyncTask(task);
+}
+
+WSError SceneSessionManager::UpdateSessionWindowVisibilityListener(int32_t persistentId, bool haveListener)
+{
+    auto task = [this, persistentId, haveListener]() -> WSError {
+        WLOGFI("UpdateSessionWindowVisibilityListener persistentId: %{public}d haveListener:%{public}d",
+            persistentId, haveListener);
+        auto sceneSession = GetSceneSession(persistentId);
+        if (sceneSession == nullptr) {
+            WLOGFD("sceneSession is nullptr.");
+            return WSError::WS_DO_NOTHING;
+        }
+        if (haveListener) {
+            windowVisibilityListenerSessionSet_.insert(persistentId);
+            sceneSession->NotifyWindowVisibility();
+        } else {
+            windowVisibilityListenerSessionSet_.erase(persistentId);
         }
         return WSError::WS_OK;
     };

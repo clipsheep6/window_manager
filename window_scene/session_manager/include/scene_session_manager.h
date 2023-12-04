@@ -76,6 +76,7 @@ using CmpFunc = std::function<bool(std::pair<int32_t, sptr<SceneSession>>& lhs,
     std::pair<int32_t, sptr<SceneSession>>& rhs)>;
 using ProcessShowPiPMainWindowFunc = std::function<void(int32_t persistentId)>;
 using NotifySCBAfterUpdateFocusFunc = std::function<void()>;
+using ProcessCallingWindowIdChangeFunc = std::function<void(uint32_t callingWindowId)>;
 
 class DisplayChangeListener : public IDisplayChangeListener {
 public:
@@ -122,6 +123,7 @@ public:
     void SetSCBFocusedListener(const NotifySCBAfterUpdateFocusFunc& func);
     void SetSCBUnfocusedListener(const NotifySCBAfterUpdateFocusFunc& func);
     void SetShowPiPMainWindowListener(const ProcessShowPiPMainWindowFunc& func);
+    void SetCallingWindowIdChangeListenser(const ProcessCallingWindowIdChangeFunc& func);
     const AppWindowSceneConfig& GetWindowSceneConfig() const;
     WSError ProcessBackEvent();
     WSError BindDialogSessionTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken) override;
@@ -241,7 +243,7 @@ public:
     void DealwithVisibilityChange(const std::vector<std::pair<uint64_t, WindowVisibilityState>>& visibilityChangeInfos);
     void DealwithDrawingContentChange(const std::vector<std::pair<uint64_t, bool>>& drawingChangeInfos);
     void NotifyUpdateRectAfterLayout();
-
+    WSError UpdateSessionWindowVisibilityListener(int32_t persistentId, bool haveListener) override;
 public:
     std::shared_ptr<TaskScheduler> GetTaskScheduler() {return taskScheduler_;};
 protected:
@@ -384,6 +386,7 @@ private:
     std::map<sptr<IRemoteObject>, int32_t> remoteObjectMap_;
     std::set<int32_t> avoidAreaListenerSessionSet_;
     std::set<int32_t> touchOutsideListenerSessionSet_;
+    std::set<int32_t> windowVisibilityListenerSessionSet_;
     std::map<int32_t, std::map<AvoidAreaType, AvoidArea>> lastUpdatedAvoidArea_;
 
     NotifyCreateSystemSessionFunc createSystemSessionFunc_;
@@ -397,6 +400,7 @@ private:
     NotifySCBAfterUpdateFocusFunc notifySCBAfterFocusedFunc_;
     NotifySCBAfterUpdateFocusFunc notifySCBAfterUnfocusedFunc_;
     ProcessShowPiPMainWindowFunc showPiPMainWindowFunc_;
+    ProcessCallingWindowIdChangeFunc callingWindowIdChangeFunc_;
     AppWindowSceneConfig appWindowSceneConfig_;
     SystemSessionConfig systemConfig_;
     float snapshotScale_ = 0.5;
