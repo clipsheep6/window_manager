@@ -644,9 +644,9 @@ bool JsWindowStage::ParseSubWindowOptions(napi_env env, napi_value jsObject, Win
         return false;
     }
 
-    bool decorEnabled;
-    if (ParseJsValue(jsObject, env, "decorEnabled", decorEnabled)) {
-        option.SetSubWindowDecorEnabled(decorEnabled);
+    bool decorEnable;
+    if (ParseJsValue(jsObject, env, "decorEnabled", decorEnable)) {
+        option.SetSubWindowDecorEnable(decorEnable);
     } else {
         WLOGFE("Failed to convert parameter to decorEnabled");
         return false;
