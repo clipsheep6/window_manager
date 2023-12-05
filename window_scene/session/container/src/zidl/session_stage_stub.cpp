@@ -326,7 +326,7 @@ int SessionStageStub::HandleUpdateTitleInTargetPos(MessageParcel& data, MessageP
 
 int SessionStageStub::HandleTransferAccessibilityEvent(MessageParcel& data, MessageParcel& reply)
 {
-    WLOGFI("rm032 HandleTransferAccessibilityEvent begin!");
+    WLOGFI("MR031 HandleTransferAccessibilityEvent begin!");
     sptr<AccessibilityEventInfoParcel> infoPtr =
         data.ReadStrongParcelable<AccessibilityEventInfoParcel>();
     std::vector<int32_t> uiExtensionIdLevelVec;
@@ -335,7 +335,7 @@ int SessionStageStub::HandleTransferAccessibilityEvent(MessageParcel& data, Mess
         return ERR_INVALID_DATA;
     }
     NotifyTransferAccessibilityEvent(*infoPtr, uiExtensionIdLevelVec);
-    WLOGFI("rm032 HandleTransferAccessibilityEvent end!");
+    WLOGFI("MR031 HandleTransferAccessibilityEvent end!");
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

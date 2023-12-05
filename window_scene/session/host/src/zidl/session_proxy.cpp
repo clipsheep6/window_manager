@@ -815,7 +815,7 @@ WSError SessionProxy::UpdateWindowAnimationFlag(bool needDefaultAnimationFlag)
 WSError SessionProxy::TransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
     const std::vector<int32_t>& uiExtensionIdLevelVec)
 {
-    WLOGFE("rm032 TransferAccessibilityEvent begin");
+    WLOGFE("MR031 TransferAccessibilityEvent begin");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
@@ -837,7 +837,7 @@ WSError SessionProxy::TransferAccessibilityEvent(const Accessibility::Accessibil
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    WLOGFE("rm032 TransferAccessibilityEvent end");
+    WLOGFE("MR031 TransferAccessibilityEvent end");
     return WSError::WS_OK;
 }
 

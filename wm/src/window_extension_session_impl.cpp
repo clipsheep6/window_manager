@@ -310,12 +310,12 @@ WSError WindowExtensionSessionImpl::NotifyExecuteAction(int32_t elementId,
 WMError WindowExtensionSessionImpl::TransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
     const std::vector<int32_t>& uiExtensionIdLevelVec)
 {
-    WLOGFE("rm032 TransferAccessibilityEvent begin");
+    WLOGFE("MR031 TransferAccessibilityEvent begin");
     if (IsWindowSessionInvalid()) {
         WLOGFE("Window session invalid.");
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    WLOGFE("rm032 TransferAccessibilityEvent end");
+    WLOGFE("MR031 TransferAccessibilityEvent end");
     return static_cast<WMError>(hostSession_->TransferAccessibilityEvent(info, uiExtensionIdLevelVec));
 }
 

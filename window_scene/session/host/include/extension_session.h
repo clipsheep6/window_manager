@@ -23,6 +23,8 @@
 namespace OHOS::Rosen {
 using NotifyTransferAbilityResultFunc = std::function<void(uint32_t resultCode, const AAFwk::Want& want)>;
 using NotifyTransferExtensionDataFunc = std::function<void(const AAFwk::WantParams& wantParams)>;
+using NotifyTransferAccessibilityEventFunc = std::function<WSError(const Accessibility::AccessibilityEventInfo& info,
+    const std::vector<int32_t>& uiExtensionIdLevelVec)>;
 using NotifyRemoteReadyFunc = std::function<void()>;
 using NotifySyncOnFunc = std::function<void()>;
 using NotifyAsyncOnFunc = std::function<void()>;
@@ -34,6 +36,7 @@ public:
         NotifyRemoteReadyFunc notifyRemoteReadyFunc_;
         NotifySyncOnFunc notifySyncOnFunc_;
         NotifyAsyncOnFunc notifyAsyncOnFunc_;
+        NotifyTransferAccessibilityEventFunc transferAccessibilityEventFunc_;
     };
 
     explicit ExtensionSession(const SessionInfo& info);

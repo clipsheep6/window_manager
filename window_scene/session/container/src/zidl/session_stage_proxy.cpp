@@ -574,7 +574,7 @@ WSError SessionStageProxy::UpdateTitleInTargetPos(bool isShow, int32_t height)
 WSError SessionStageProxy::NotifyTransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
     const std::vector<int32_t>& uiExtensionIdLevelVec)
 {
-    WLOGFI("rm032 TransferAccessibilityEvent begin");
+    WLOGFI("MR031 TransferAccessibilityEvent begin");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
@@ -596,7 +596,7 @@ WSError SessionStageProxy::NotifyTransferAccessibilityEvent(const Accessibility:
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    WLOGFI("rm032 TransferAccessibilityEvent end");
+    WLOGFI("MR031 TransferAccessibilityEvent end");
     return WSError::WS_OK;
 }
 } // namespace OHOS::Rosen

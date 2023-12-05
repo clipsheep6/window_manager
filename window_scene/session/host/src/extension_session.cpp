@@ -129,12 +129,14 @@ sptr<ExtensionSession::ExtensionSessionEventCallback> ExtensionSession::GetExten
 WSError ExtensionSession::TransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
     const std::vector<int32_t>& uiExtensionIdLevelVec)
 {
-    WLOGFI("rm032 TransferAccessibilityEvent begin");
-    if (!IsSessionValid()) {
-        WLOGFE("Window session invalid.");
-        return WSError::WS_ERROR_INVALID_SESSION;
+    WLOGFI("MR031 TransferAccessibilityEvent begin");
+    if (extSessionEventCallback_ != nullptr &&
+        extSessionEventCallback_->transferAccessibilityEventFunc_ != nullptr) {
+        WLOGFI("MR031 TransferAccessibilityEvent 1");
+        extSessionEventCallback_->transferAccessibilityEventFunc_(info, uiExtensionIdLevelVec);
+        WLOGFI("MR031 TransferAccessibilityEvent 2");
     }
-    WLOGFI("rm032 TransferAccessibilityEvent end");
-    return sessionStage_->NotifyTransferAccessibilityEvent(info, uiExtensionIdLevelVec);
+    WLOGFI("MR031 TransferAccessibilityEvent end");
+    return WSError::WS_OK;
 }
 } // namespace OHOS::Rosen
