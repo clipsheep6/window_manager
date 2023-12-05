@@ -686,6 +686,11 @@ struct VsyncCallback {
     OnCallback onCallback;
 };
 
+/**
+ * @struct WindowLimits
+ *
+ * @brief Limits of window
+ */
 struct WindowLimits {
     uint32_t maxWidth_;
     uint32_t maxHeight_;
