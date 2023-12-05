@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("../scene_board_enabled.gni")
 import("../windowmanager_aafwk.gni")
 
 config("libwms_config") {
@@ -84,6 +85,14 @@ config("libmockwms_config") {
   ]
 }
 
+group("group_wms") {
+  if (!scene_board_enabled) {
+    deps = [ ":libwms" ]
+  } else {
+    deps = [ ":sms" ]
+  }
+}
+
 ohos_shared_library("sms") {
   branch_protector_ret = "pac_ret"
   sanitize = {
@@ -105,6 +114,7 @@ ohos_shared_library("sms") {
     "${window_base_path}/window_scene/session_manager_service:session_manager_service",
     "../utils:libwmutil",
   ]
+
   external_deps = [
     "ability_base:want",
     "ability_runtime:mission_info",
