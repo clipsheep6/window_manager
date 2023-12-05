@@ -4658,6 +4658,27 @@ WMError SceneSessionManager::GetAccessibilityWindowInfo(std::vector<sptr<Accessi
     return taskScheduler_->PostSyncTask(task);
 }
 
+WMError SceneSessionManager::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos)
+{
+    WLOGFI("GetVisibilityWindowInfo Called.");
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("Get Visible Window Permission Denied");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
+    auto task = [this, &infos]() {
+        for (auto [surfaceId, _] : lastVisibleData_) {
+            sptr<SceneSession> session = SelectSesssionFromMap(surfaceId);
+            if(session == nullptr) {
+                continue;
+            }
+            infos.emplace_back(new WindowVisibilityInfo(session->GetWindowId(), session->GetCallingPid(),
+                session->GetCallingUid(), session->GetVisibilityState(), session->GetWindowType()));
+        }
+        return WMError::WM_OK;
+    }
+    return taskScheduler_->PostSyncTask(task);
+}
+
 void SceneSessionManager::NotifyWindowInfoChange(int32_t persistentId, WindowUpdateType type)
 {
     WLOGFD("NotifyWindowInfoChange, persistentId = %{public}d, updateType = %{public}d", persistentId, type);
@@ -4824,6 +4845,7 @@ void SceneSessionManager::WindowVisibilityChangeCallback(std::shared_ptr<RSOcclu
             if (session == nullptr) {
                 continue;
             }
+            session->SetVisibilityState(visibleState);
             if (visibleState == WINDOW_DRAWING_CONTENT_CHANGE || visibleState == WINDOW_DRAWING_CONTENT_NO_CHANGE) {
                 WindowVisibilityInfo windowVisibilityInfo(session->GetWindowId(),
                 session->GetCallingPid(), session->GetCallingUid(), visibleState, session->GetWindowType());
@@ -4912,6 +4934,7 @@ void SceneSessionManager::WindowDestroyNotifyVisibility(const sptr<SceneSession>
     if (sceneSession->GetVisible()) {
         std::vector<sptr<WindowVisibilityInfo>> windowVisibilityInfos;
         sceneSession->SetVisible(false);
+        sceneSession->SetVisibilityState(WINDOW_VISIBILITY_STATE_TOTALLY_OCCUSION);
         windowVisibilityInfos.emplace_back(new WindowVisibilityInfo(sceneSession->GetWindowId(),
             sceneSession->GetCallingPid(), sceneSession->GetCallingUid(),
             WINDOW_VISIBILITY_STATE_TOTALLY_OCCUSION, sceneSession->GetWindowType()));

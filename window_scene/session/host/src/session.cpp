@@ -386,6 +386,16 @@ bool Session::GetVisible() const
     return isRSVisible_;
 }
 
+void Session::SetVisibilityState(WindowVisibilityState state)
+{
+    visibilityState_ = state;
+}
+
+WindowVisibilityState Session::GetVisibilityState() const
+{
+    return visibilityState_;
+}
+
 int32_t Session::GetWindowId() const
 {
     return GetPersistentId();

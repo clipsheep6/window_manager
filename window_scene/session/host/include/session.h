@@ -29,6 +29,7 @@
 #include "session/host/include/scene_persistence.h"
 #include "wm_common.h"
 #include "occupied_area_change_info.h"
+#include "window_visibility_info.h"
 
 namespace OHOS::MMI {
 class PointerEvent;
@@ -244,6 +245,8 @@ public:
     void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info);
     void SetSessionInfoLockedStateChangeListener(const NotifySessionInfoLockedStateChangeFunc& func);
     void NotifySessionInfoLockedStateChange(bool lockedState);
+    void SetVisibilityState(WindowVisibilityState state);
+    WindowVisibilityState GetVisibilityState() const;
 
     bool IsSessionValid() const;
     bool IsActive() const;
@@ -440,6 +443,7 @@ private:
     int32_t appIndex_ = { 0 };
     std::string callingBundleName_ { "unknow" };
     bool isRSVisible_ {false};
+    WindowVisibilityState visibilityState_ { WINDOW_VISIBILITY_STATE_MAX };
     bool needNotify_ {true};
     sptr<IRemoteObject> abilityToken_ = nullptr;
     float vpr_ { 1.5f };

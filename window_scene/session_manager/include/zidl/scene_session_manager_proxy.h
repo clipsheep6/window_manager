@@ -50,6 +50,7 @@ public:
     WSError RegisterSessionListener(const sptr<ISessionChangeListener> sessionListener) override;
     void UnregisterSessionListener() override;
     WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) override;
+    WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) override;
     WSError PendingSessionToForeground(const sptr<IRemoteObject> &token) override;
     WSError PendingSessionToBackgroundForDelegator(const sptr<IRemoteObject> &token) override;
     WSError GetFocusSessionToken(sptr<IRemoteObject> &token) override;

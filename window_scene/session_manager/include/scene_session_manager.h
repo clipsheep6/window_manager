@@ -197,6 +197,7 @@ public:
     void NotifySessionTouchOutside(int32_t persistentId);
 
     WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) override;
+    WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) override;
     WSError SetWindowFlags(const sptr<SceneSession>& sceneSession, uint32_t flags);
 
     void NotifyOccupiedAreaChangeInfo(const sptr<SceneSession> sceneSession,

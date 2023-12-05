@@ -67,6 +67,8 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandleSetGestureNavigationEnabled),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_INFO),
         &SceneSessionManagerStub::HandleGetAccessibilityWindowInfo),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID),
+        &SceneSessionManagerStub::HandleGetVisibilityWindowInfo),
 
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REGISTER_SESSION_LISTENER),
         &SceneSessionManagerStub::HandleRegisterSessionListener),
@@ -459,6 +461,18 @@ int SceneSessionManagerStub::HandleGetAccessibilityWindowInfo(MessageParcel &dat
     WMError errCode = GetAccessibilityWindowInfo(infos);
     if (!MarshallingHelper::MarshallingVectorParcelableObj<AccessibilityWindowInfo>(reply, infos)) {
         WLOGFE("Write window infos failed.");
+        return ERR_TRANSACTION_FAILED;
+    }
+    reply.WriteInt32(static_cast<int32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleGetVisibilityWindowInfo(MessageParcel &data, MessageParcel &reply)
+{
+    std::vector<sptr<WindowVisibilityInfo>> infos;
+    WMError errCode = GetVisibilityWindowInfo(infos);
+    if (!MarshallingHelper::MarshallingVectorParcelableObj<WindowVisibilityInfo>(reply, infos)) {
+        WLOGFE("Write visibility window infos failed");
         return ERR_TRANSACTION_FAILED;
     }
     reply.WriteInt32(static_cast<int32_t>(errCode));
