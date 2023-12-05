@@ -78,6 +78,7 @@ public:
     void SetRotation(Rotation rotation);
     void SetScreenRequestedOrientation(Orientation orientation);
     Orientation GetScreenRequestedOrientation() const;
+    void SetUpdateToInputManagerCallback(std::function<void(float)> updateToInputManagerCallback);
 
     void SetVirtualPixelRatio(float virtualPixelRatio);
     void SetScreenType(ScreenType type);
@@ -101,6 +102,15 @@ public:
     DMError GetScreenGamutMap(ScreenGamutMap& gamutMap);
     DMError SetScreenGamutMap(ScreenGamutMap gamutMap);
     DMError SetScreenColorTransform();
+
+    DMError GetPixelFormat(GraphicPixelFormat& pixelFormat);
+    DMError SetPixelFormat(GraphicPixelFormat pixelFormat);
+    DMError GetSupportedHDRFormats(std::vector<ScreenHDRFormat>& hdrFormats);
+    DMError GetScreenHDRFormat(ScreenHDRFormat& hdrFormat);
+    DMError SetScreenHDRFormat(int32_t modeIdx);
+    DMError GetSupportedColorSpaces(std::vector<GraphicCM_ColorSpaceType>& colorSpaces);
+    DMError GetScreenColorSpace(GraphicCM_ColorSpaceType& colorSpace);
+    DMError SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace);
 
     bool HasPrivateSessionForeground() const;
     void SetPrivateSessionForeground(bool hasPrivate);
@@ -136,6 +146,9 @@ public:
     void SensorRotationChange(float sensorRotation);
     void ScreenOrientationChange(Orientation orientation, FoldDisplayMode foldDisplayMode);
     void ScreenOrientationChange(float orientation);
+    DMRect GetAvailableArea();
+    void SetAvailableArea(DMRect area);
+    bool UpdateAvailableArea(DMRect area);
 
 private:
     float ConvertRotationToFloat(Rotation sensorRotation);
@@ -147,6 +160,7 @@ private:
     ScreenCombination combination_ { ScreenCombination::SCREEN_ALONE };
     bool hasPrivateWindowForeground_ = false;
     std::recursive_mutex mutex_;
+    std::function<void(float)> updateToInputManagerCallback_ = nullptr;
 };
 
 class ScreenSessionGroup : public ScreenSession {

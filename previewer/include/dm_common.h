@@ -274,6 +274,62 @@ enum class ScreenSourceMode: uint32_t {
     SCREEN_EXTEND = 2,
     SCREEN_ALONE = 3,
 };
+
+/**
+ * @brief Enumerates the fold status.
+ */
+enum class FoldStatus: uint32_t {
+    UNKNOWN = 0,
+    EXPAND = 1,
+    FOLDED = 2,
+    HALF_FOLD = 3,
+};
+
+/**
+ * @brief Enumerates the fold display mode.
+ */
+enum class FoldDisplayMode: uint32_t {
+    UNKNOWN = 0,
+    FULL = 1,
+    MAIN = 2,
+    SUB = 3,
+    COORDINATION = 4,
+};
+
+/**
+ * @brief displayRect
+ */
+struct DMRect {
+    int32_t posX_;
+    int32_t posY_;
+    uint32_t width_;
+    uint32_t height_;
+
+    bool operator==(const DMRect& a) const
+    {
+        return (posX_ == a.posX_ && posY_ == a.posY_ && width_ == a.width_ && height_ == a.height_);
+    }
+
+    bool operator!=(const DMRect& a) const
+    {
+        return !this->operator==(a);
+    }
+
+    bool IsUninitializedRect() const
+    {
+        return (posX_ == 0 && posY_ == 0 && width_ == 0 && height_ == 0);
+    }
+
+    bool IsInsideOf(const DMRect& a) const
+    {
+        return (posX_ >= a.posX_ && posY_ >= a.posY_ &&
+            posX_ + width_ <= a.posX_ + a.width_ && posY_ + height_ <= a.posY_ + a.height_);
+    }
+    static DMRect NONE()
+    {
+        return {0, 0, 0, 0};
+    }
+};
 }
 }
 #endif // OHOS_ROSEN_DM_COMMON_H

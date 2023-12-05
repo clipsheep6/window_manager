@@ -40,6 +40,15 @@ public:
     virtual DMError SetScreenGamutMap(ScreenId screenId, ScreenGamutMap gamutMap) override;
     virtual DMError SetScreenColorTransform(ScreenId screenId) override;
 
+    DMError GetPixelFormat(ScreenId screenId, GraphicPixelFormat& pixelFormat) override;
+    DMError SetPixelFormat(ScreenId screenId, GraphicPixelFormat pixelFormat) override;
+    DMError GetSupportedHDRFormats(ScreenId screenId, std::vector<ScreenHDRFormat>& hdrFormats) override;
+    DMError GetScreenHDRFormat(ScreenId screenId, ScreenHDRFormat& hdrFormat) override;
+    DMError SetScreenHDRFormat(ScreenId screenId, int32_t modeIdx) override;
+    DMError GetSupportedColorSpaces(ScreenId screenId, std::vector<GraphicCM_ColorSpaceType>& colorSpaces) override;
+    DMError GetScreenColorSpace(ScreenId screenId, GraphicCM_ColorSpaceType& colorSpace) override;
+    DMError SetScreenColorSpace(ScreenId screenId, GraphicCM_ColorSpaceType colorSpace) override;
+
     virtual DMError RegisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
         DisplayManagerAgentType type) override;
 
@@ -65,7 +74,7 @@ public:
 
     virtual DMError ResizeVirtualScreen(ScreenId screenId, uint32_t width, uint32_t height) override;
 
-    virtual DMError SetVirtualMirrorScreenBufferRotation(ScreenId screenId, bool autoRotate) override;
+    virtual DMError SetVirtualMirrorScreenCanvasRotation(ScreenId screenId, bool autoRotate) override;
 
     virtual DMError MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenIds,
         ScreenId& screenGroupId) override;
@@ -124,10 +133,12 @@ public:
     ScreenProperty GetScreenProperty(ScreenId screenId) override;
     std::shared_ptr<RSDisplayNode> GetDisplayNode(ScreenId screenId) override;
     void UpdateScreenRotationProperty(ScreenId screenId, const RRectT<float>& bounds, float rotation) override;
+    void UpdateAvailableArea(ScreenId ScreenId, DMRect area) override;
     uint32_t GetCurvedCompressionArea() override;
     ScreenProperty GetPhyScreenProperty(ScreenId screenId) override;
     void NotifyDisplayChangeInfoChanged(const sptr<DisplayChangeInfo>& info) override;
     void SetScreenPrivacyState(bool hasPrivate) override;
+    virtual DMError GetAvailableArea(DisplayId displayId, DMRect& area) override;
 
 private:
     static inline BrokerDelegator<ScreenSessionManagerProxy> delegator_;

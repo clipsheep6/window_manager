@@ -19,6 +19,7 @@
 #include <system_ability.h>
 
 #include "common/include/task_scheduler.h"
+#include "dm_common.h"
 #include "session/screen/include/screen_session.h"
 #include "zidl/screen_session_manager_stub.h"
 #include "client_agent_container.h"
@@ -54,6 +55,15 @@ public:
     DMError SetScreenGamutMap(ScreenId screenId, ScreenGamutMap gamutMap) override;
     DMError SetScreenColorTransform(ScreenId screenId) override;
 
+    DMError GetPixelFormat(ScreenId screenId, GraphicPixelFormat& pixelFormat) override;
+    DMError SetPixelFormat(ScreenId screenId, GraphicPixelFormat pixelFormat) override;
+    DMError GetSupportedHDRFormats(ScreenId screenId, std::vector<ScreenHDRFormat>& hdrFormats) override;
+    DMError GetScreenHDRFormat(ScreenId screenId, ScreenHDRFormat& hdrFormat) override;
+    DMError SetScreenHDRFormat(ScreenId screenId, int32_t modeIdx) override;
+    DMError GetSupportedColorSpaces(ScreenId screenId, std::vector<GraphicCM_ColorSpaceType>& colorSpaces) override;
+    DMError GetScreenColorSpace(ScreenId screenId, GraphicCM_ColorSpaceType& colorSpace) override;
+    DMError SetScreenColorSpace(ScreenId screenId, GraphicCM_ColorSpaceType colorSpace) override;
+
     void DumpAllScreensInfo(std::string& dumpInfo) override;
     void DumpSpecialScreenInfo(ScreenId id, std::string& dumpInfo) override;
 
@@ -80,7 +90,7 @@ public:
     virtual ScreenId CreateVirtualScreen(VirtualScreenOption option,
                                          const sptr<IRemoteObject>& displayManagerAgent) override;
     virtual DMError SetVirtualScreenSurface(ScreenId screenId, sptr<IBufferProducer> surface) override;
-    virtual DMError SetVirtualMirrorScreenBufferRotation(ScreenId screenId, bool autoRotate) override;
+    virtual DMError SetVirtualMirrorScreenCanvasRotation(ScreenId screenId, bool autoRotate) override;
     virtual DMError DestroyVirtualScreen(ScreenId screenId) override;
     DMError ResizeVirtualScreen(ScreenId screenId, uint32_t width, uint32_t height) override;
     virtual DMError MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenIds,
@@ -198,7 +208,9 @@ public:
     uint32_t GetCurvedCompressionArea() override;
     ScreenProperty GetPhyScreenProperty(ScreenId screenId) override;
     void SetScreenPrivacyState(bool hasPrivate) override;
-
+    void UpdateAvailableArea(ScreenId screenId, DMRect area) override;
+    DMError GetAvailableArea(DisplayId displayId, DMRect& area) override;
+    void NotifyAvailableAreaChanged(DMRect area);
 protected:
     ScreenSessionManager();
     virtual ~ScreenSessionManager() = default;
@@ -221,6 +233,7 @@ private:
     bool OnRemoteDied(const sptr<IRemoteObject>& agent);
     std::string TransferTypeToString(ScreenType type) const;
     bool SetScreenPower(ScreenPowerStatus status, PowerStateChangeReason reason);
+    void HandlerSensor(ScreenPowerStatus status);
 
     // notify scb virtual screen change
     void OnVirtualScreenChange(ScreenId screenId, ScreenEvent screenEvent);

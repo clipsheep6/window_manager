@@ -44,6 +44,7 @@ class PixelMap;
 namespace OHOS::Rosen {
 class RSSurfaceNode;
 class RSTransaction;
+class RSSyncTransactionController;
 using NotifyPendingSessionActivationFunc = std::function<void(SessionInfo& info)>;
 using NotifySessionStateChangeFunc = std::function<void(const SessionState& state)>;
 using NotifySessionStateChangeNotifyManagerFunc = std::function<void(int32_t persistentId, const SessionState& state)>;
@@ -68,6 +69,7 @@ using NotifyRaiseToTopForPointDownFunc = std::function<void()>;
 using NotifyUIRequestFocusFunc = std::function<void()>;
 using NotifyUILostFocusFunc = std::function<void()>;
 using GetStateFromManagerFunc = std::function<bool(const ManagerState key)>;
+using NotifySessionInfoLockedStateChangeFunc = std::function<void(const bool lockedState)>;
 
 class ILifecycleListener {
 public:
@@ -121,7 +123,7 @@ public:
         Accessibility::AccessibilityElementInfo& info);
     virtual WSError TransferFocusMoveSearch(int32_t elementId, int32_t direction, int32_t baseParent,
         Accessibility::AccessibilityElementInfo& info);
-    virtual WSError NotifyClientToUpdateRect() { return WSError::WS_OK; };
+    virtual WSError NotifyClientToUpdateRect(std::shared_ptr<RSTransaction> rsTransaction) { return WSError::WS_OK; };
     WSError TransferBackPressedEventForConsumed(bool& isConsumed);
     WSError TransferKeyEventForConsumed(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed);
     WSError TransferFocusActiveEvent(bool isFocusActive);
@@ -144,7 +146,7 @@ public:
     void SetSessionInfoPersistentId(int32_t persistentId);
     void SetSessionInfoCallerPersistentId(int32_t callerPersistentId);
     void SetSessionInfoContinueState(ContinueState state);
-    void SetSessionInfoLockedState(bool state);
+    void SetSessionInfoLockedState(bool lockedState);
     void SetSessionInfoIsClearSession(bool isClearSession);
     void SetSessionInfoAffinity(std::string affinity);
     void GetCloseAbilityWantAndClean(AAFwk::Want& outWant);
@@ -238,9 +240,13 @@ public:
     bool GetTouchable() const;
     WSError SetVisible(bool isVisible);
     bool GetVisible() const;
+    WSError SetDrawingContentState(bool isRSDrawing);
+    bool GetDrawingContentState() const;
     WSError SetBrightness(float brightness);
     float GetBrightness() const;
     void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info);
+    void SetSessionInfoLockedStateChangeListener(const NotifySessionInfoLockedStateChangeFunc& func);
+    void NotifySessionInfoLockedStateChange(bool lockedState);
 
     bool IsSessionValid() const;
     bool IsActive() const;
@@ -375,6 +381,7 @@ protected:
     NotifyCallingSessionForegroundFunc notifyCallingSessionForegroundFunc_;
     NotifyCallingSessionBackgroundFunc notifyCallingSessionBackgroundFunc_;
     NotifyRaiseToTopForPointDownFunc raiseToTopForPointDownFunc_;
+    NotifySessionInfoLockedStateChangeFunc sessionInfoLockedStateChangeFunc_;
     SystemSessionConfig systemConfig_;
     bool needSnapshot_ = false;
     float snapshotScale_ = 0.5;
@@ -388,7 +395,6 @@ protected:
     float floatingScale_ = 1.0f;
     bool scbKeepKeyboardFlag_ = false;
     bool isDirty_ = false;
-    std::recursive_mutex sizeChangeMutex_;
 
 private:
     void HandleDialogForeground();
@@ -437,6 +443,7 @@ private:
     std::string callingBundleName_ { "unknow" };
     bool isRSVisible_ {false};
     bool needNotify_ {true};
+    bool isRSDrawing_ {false};
     sptr<IRemoteObject> abilityToken_ = nullptr;
     float vpr_ { 1.5f };
 };
