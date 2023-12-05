@@ -664,6 +664,11 @@ enum class PiPScalePivot : int32_t {
     END,
 };
 
+enum class SoftInputMode : uint32_t {
+    UNSPECIFICED = 0,
+    KEEP_VISIBLE,
+};
+
 /**
  * @brief Structure of picture in picture rect info.
  */

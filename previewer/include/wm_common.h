@@ -651,5 +651,10 @@ public:
     }
 };
 }
+
+enum class SoftInputMode : uint32_t {
+    UNSPECIFICED = 0,
+    KEEP_VISIBLE,
+};
 }
 #endif // OHOS_ROSEN_WM_COMMON_H

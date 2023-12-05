@@ -1461,12 +1461,12 @@ public:
     virtual WMError RecoveryPullPiPMainWindow(const Rect& rect) { return WMError::WM_OK; }
 
     /**
-     * @brief Set to keep keyboard.
+     * @brief Set soft keyborad mode.
      *
-     * @param isNeedKeepKeyboard true means the keyboard should be preserved, otherwise means the opposite.
-     * @return True means set isNeedKeepKeyboard flag success, others means failed.
+     * @param softInputMode SoftInputMode object.
+     * @return True means set softInputMode success, others means failed.
     */
-    virtual WMError SetNeedKeepKeyboard(bool isNeedKeepKeyboard) { return WMError::WM_OK; }
+    virtual WMError SetWindowSoftInputMode(SoftInputMode softInputMode) { return WMError::WM_OK; }
 
     /**
      * @brief Get the window limits of current window.
