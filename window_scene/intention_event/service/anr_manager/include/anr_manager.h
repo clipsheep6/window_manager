@@ -41,6 +41,7 @@ public:
     void SwitchAnr(bool status);
     void OnSessionLost(int32_t persistentId);
     void OnBackground(int32_t persistentId);
+    void OnSessionUnfocused(int32_t persistentId);
     void SetApplicationInfo(int32_t persistentId, int32_t pid, const std::string& uid);
     void SetAnrObserver(std::function<void(int32_t)> anrObserver);
     void SetAppInfoGetter(std::function<void(int32_t, std::string&, int32_t)> callback);

@@ -122,6 +122,16 @@ void ANRManager::OnBackground(int32_t persistentId)
     RemovePersistentId(persistentId);
 }
 
+void ANRManager::OnSessionUnfocused(int32_t persistentId)
+{
+    CALL_DEBUG_ENTER;
+    std::lock_guard<std::mutex> guard(mtx_);
+    WLOGFD("Unfocused session, persistentId:%{public}d -> pid:%{public}d, bundleName:%{public}s",
+        persistentId, applicationMap_[persistentId].pid, applicationMap_[persistentId].bundleName.c_str());
+    RemoveTimers(persistentId);
+    RemovePersistentId(persistentId);
+}
+
 void ANRManager::SetApplicationInfo(int32_t persistentId, int32_t pid, const std::string& bundleName)
 {
     std::lock_guard<std::mutex> guard(mtx_);
