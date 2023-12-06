@@ -1945,7 +1945,9 @@ void SceneSession::GetNewPiPRect(const uint32_t displayWidth, const uint32_t dis
     auto sessionRect = GetSessionRect();
     WLOGFD("session rect = (%{public}d, %{public}d, %{public}d, %{public}d)",
         sessionRect.posX_, sessionRect.posY_, sessionRect.width_, sessionRect.height_);
-    if (sessionRect.width_ != 0 && sessionRect.height_ != 0) {
+    bool isMoveOrDrag = moveDragController_ && 
+        (moveDragController_->GetStartDragFlag() || moveDragController_->GetStartMoveFlag());
+    if (sessionRect.width_ != 0 && sessionRect.height_ != 0 && !isMoveOrDrag) {
         if (pipRectInfo_.xPivot_ == PiPScalePivot::UNDEFINED || pipRectInfo_.yPivot_ == PiPScalePivot::UNDEFINED) {
             // If no anchor, create anchor
             PiPUtil::UpdateRectPivot(sessionRect.posX_, sessionRect.width_, displayWidth, pipRectInfo_.xPivot_);
@@ -2035,6 +2037,14 @@ WSError SceneSession::UpdatePiPRect(uint32_t width, uint32_t height, PiPRectUpda
                 session->ClearPiPRectPivotInfo();
                 session->pipRectInfo_.originWidth_ = width;
                 session->pipRectInfo_.originHeight_ = height;
+                if (session->moveDragController_ && (session->moveDragController_->GetStartDragFlag() ||
+                    session->moveDragController_->GetStartMoveFlag())) {
+                    WSRect rect = session->moveDragController_->GetTargetRect();
+                    ScenePersistentStorage::Insert("pip_window_pos_x", rect.posX_,
+                        ScenePersistentStorageType::PIP_INFO);
+                    ScenePersistentStorage::Insert("pip_window_pos_y", rect.posY_,
+                        ScenePersistentStorageType::PIP_INFO);
+                }
                 session->ProcessUpdatePiPRect(SizeChangeReason::UNDEFINED);
                 SingletonContainer::Get<PiPReporter>().ReportPiPRatio(width, height);
                 break;
