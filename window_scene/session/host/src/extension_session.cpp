@@ -130,12 +130,7 @@ WSError ExtensionSession::TransferAccessibilityEvent(const Accessibility::Access
     const std::vector<int32_t>& uiExtensionIdLevelVec)
 {
     WLOGFI("MR031 TransferAccessibilityEvent begin");
-    if (extSessionEventCallback_ != nullptr &&
-        extSessionEventCallback_->transferAccessibilityEventFunc_ != nullptr) {
-        WLOGFI("MR031 TransferAccessibilityEvent 1");
-        extSessionEventCallback_->transferAccessibilityEventFunc_(info, uiExtensionIdLevelVec);
-        WLOGFI("MR031 TransferAccessibilityEvent 2");
-    }
+    NotifyTransferAccessibilityEvent(info, uiExtensionIdLevelVec);
     WLOGFI("MR031 TransferAccessibilityEvent end");
     return WSError::WS_OK;
 }
