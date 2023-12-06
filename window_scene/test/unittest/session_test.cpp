@@ -1971,7 +1971,6 @@ HWTEST_F(WindowSessionTest, NotifyForegroundInteractiveStatus, Function | SmallT
     session_->state_ = SessionState::STATE_DISCONNECT;
     ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
-
 }
 } // namespace Rosen
 } // namespace OHOS
