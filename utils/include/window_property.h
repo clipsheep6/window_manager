@@ -165,6 +165,7 @@ private:
     void HandleComputeTransform(const Transform& trans);
     static void PropertySetWindow(Parcel& parcel, WindowProperty* property);
     static void PropertySetState(Parcel& parcel, WindowProperty* property);
+    bool ParcelWritePos(Parcel& parcel);
     bool WriteActionUpdate(Parcel& parcel, PropertyChangeAction action);
 
     std::string windowName_;

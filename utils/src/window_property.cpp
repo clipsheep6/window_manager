@@ -768,7 +768,7 @@ WindowProperty* WindowProperty::Unmarshalling(Parcel& parcel)
 void WindowProperty::PropertySetWindow(Parcel& parcel, WindowProperty* property)
 {
     if (property == nullptr) {
-        return nullptr;
+        return ;
     }
     property->SetWindowName(parcel.ReadString());
     Rect rect = { parcel.ReadInt32(), parcel.ReadInt32(), parcel.ReadUint32(), parcel.ReadUint32() };
@@ -795,7 +795,7 @@ void WindowProperty::PropertySetWindow(Parcel& parcel, WindowProperty* property)
 void WindowProperty::PropertySetState(Parcel& parcel, WindowProperty* property)
 {
     if (property == nullptr) {
-        return nullptr;
+        return ;
     }
     property->SetDecorEnable(parcel.ReadBool());
     PointInfo offset = {parcel.ReadInt32(), parcel.ReadInt32()};
@@ -823,16 +823,21 @@ bool WindowProperty::Write(Parcel& parcel, PropertyChangeAction action)
     return ret;
 }
 
+bool WindowProperty::ParcelWritePos(Parcel& parcel)
+{
+    return parcel.WriteBool(decoStatus_) && parcel.WriteUint32(static_cast<uint32_t>(dragType_)) &&
+    parcel.WriteInt32(originRect_.posX_) && parcel.WriteInt32(originRect_.posY_) &&
+    parcel.WriteUint32(originRect_.width_) && parcel.WriteUint32(originRect_.height_) &&
+    parcel.WriteInt32(requestRect_.posX_) && parcel.WriteInt32(requestRect_.posY_) &&
+    parcel.WriteUint32(requestRect_.width_) && parcel.WriteUint32(requestRect_.height_) &&
+    parcel.WriteUint32(static_cast<uint32_t>(windowSizeChangeReason_));
+}
+
 bool WindowProperty::WriteActionUpdate(Parcel& parcel, PropertyChangeAction action)
 {
     switch (action) {
         case PropertyChangeAction::ACTION_UPDATE_RECT:
-            return parcel.WriteBool(decoStatus_) && parcel.WriteUint32(static_cast<uint32_t>(dragType_)) &&
-                parcel.WriteInt32(originRect_.posX_) && parcel.WriteInt32(originRect_.posY_) &&
-                parcel.WriteUint32(originRect_.width_) && parcel.WriteUint32(originRect_.height_) &&
-                parcel.WriteInt32(requestRect_.posX_) && parcel.WriteInt32(requestRect_.posY_) &&
-                parcel.WriteUint32(requestRect_.width_) && parcel.WriteUint32(requestRect_.height_) &&
-                parcel.WriteUint32(static_cast<uint32_t>(windowSizeChangeReason_));
+            return ParcelWritePos(parcel);
         case PropertyChangeAction::ACTION_UPDATE_MODE:
             return parcel.WriteUint32(static_cast<uint32_t>(mode_)) && parcel.WriteBool(isDecorEnable_);
         case PropertyChangeAction::ACTION_UPDATE_FLAGS:
