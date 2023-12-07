@@ -84,6 +84,7 @@ public:
     virtual WSError UpdatePiPRect(uint32_t width, uint32_t height, PiPRectUpdateReason reason)
         { return WSError::WS_OK; }
     virtual WSError RecoveryPullPiPMainWindow(int32_t persistentId, const Rect& rect) { return WSError::WS_OK; }
+    virtual std::string GetName() { return ""; }
 };
 } // namespace OHOS::Rosen
 

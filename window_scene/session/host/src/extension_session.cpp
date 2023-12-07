@@ -132,4 +132,9 @@ WSError ExtensionSession::TransferAccessibilityEvent(const Accessibility::Access
     NotifyTransferAccessibilityEvent(info, uiExtensionIdLevelVec);
     return WSError::WS_OK;
 }
+
+std::string ExtensionSession::GetName()
+{
+    return "ExtensionSession";
+}
 } // namespace OHOS::Rosen

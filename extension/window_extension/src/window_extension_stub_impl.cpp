@@ -53,9 +53,11 @@ sptr<Window> WindowExtensionStubImpl::CreateWindow(
     if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
         WLOGI("Window::Create with session.");
         window_ = Window::Create(option, context, iSession);
+        WLOGI("MR031 CreateWindow =1");
     } else {
         WLOGI("Window::Create");
         window_ = Window::Create(windowName_, option, context);
+        WLOGI("MR031 CreateWindow =2");
     }
     return window_.promote();
 }

@@ -15,6 +15,11 @@
 
 #include "static_call.h"
 #include "session/host/include/zidl/session_interface.h"
+#include "window_manager_hilog.h"
+
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE,  OHOS::Rosen::HILOG_DOMAIN_WINDOW, "StaticCall"};
+}
 
 namespace OHOS {
 namespace Rosen {
@@ -23,12 +28,14 @@ WM_IMPLEMENT_SINGLE_INSTANCE(StaticCall)
 sptr<Window> StaticCall::CreateWindow(const std::string& windowName,
     sptr<WindowOption>& option, std::shared_ptr<AbilityRuntime::Context> context)
 {
+    WLOGI("MR031 CreateWindow =1");
     return Window::Create(windowName, option, context);
 }
 
 sptr<Window> StaticCall::CreateWindow(sptr<WindowOption>& option, std::shared_ptr<AbilityRuntime::Context> context,
     const sptr<IRemoteObject>& iSession)
 {
+    WLOGI("MR031 CreateWindow =2");
     return Window::Create(option, context, iSession);
 }
 

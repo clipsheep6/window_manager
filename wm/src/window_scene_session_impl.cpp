@@ -174,6 +174,7 @@ WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
         return WMError::WM_ERROR_NULLPTR;
     }
     hostSession_ = session;
+    WLOGFE("MR031 name:%{public}s", session->GetName().c_str());
     WLOGFI("[WMSSystem][WMSSub] CreateAndConnectSpecificSession [name:%{public}s, id:%{public}d, type: %{public}u]",
         property_->GetWindowName().c_str(), property_->GetPersistentId(), GetType());
     return WMError::WM_OK;
@@ -221,6 +222,7 @@ WMError WindowSceneSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Con
         return ret;
     }
     hostSession_ = iSession;
+    WLOGFE("MR031 name:%{public}s", iSession->GetName().c_str());
     context_ = context;
     AdjustWindowAnimationFlag();
     if (context && context->GetApplicationInfo() &&

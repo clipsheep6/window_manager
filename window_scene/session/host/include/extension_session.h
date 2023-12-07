@@ -56,6 +56,8 @@ public:
     void RegisterExtensionSessionEventCallback(const sptr<ExtensionSessionEventCallback>& extSessionEventCallback);
     sptr<ExtensionSessionEventCallback> GetExtensionSessionEventCallback();
 
+    std::string GetName() override;
+
 private:
     sptr<ExtensionSessionEventCallback> extSessionEventCallback_ = nullptr;
 };

@@ -36,7 +36,7 @@ static sptr<Window> CreateWindowWithSession(sptr<WindowOption>& option,
     const std::shared_ptr<OHOS::AbilityRuntime::Context>& context, WMError& errCode,
     sptr<ISession> iSession = nullptr)
 {
-    WLOGFD("CreateWindowWithSession");
+    WLOGFI("MR031 CreateWindowWithSession");
     sptr<WindowSessionImpl> windowSessionImpl = nullptr;
     auto sessionType = option->GetWindowSessionType();
     if (sessionType == WindowSessionType::SCENE_SESSION) {
@@ -52,6 +52,9 @@ static sptr<Window> CreateWindowWithSession(sptr<WindowOption>& option,
     }
 
     windowSessionImpl->SetWindowType(option->GetWindowType());
+    if (iSession != nullptr) {
+        WLOGFI("MR031 CreateWindowWithSession name:%{public}s", iSession->GetName().c_str());
+    }
     WMError error = windowSessionImpl->Create(context, iSession);
     if (error != WMError::WM_OK) {
         errCode = error;
@@ -64,6 +67,7 @@ static sptr<Window> CreateWindowWithSession(sptr<WindowOption>& option,
 sptr<Window> Window::Create(const std::string& windowName, sptr<WindowOption>& option,
     const std::shared_ptr<OHOS::AbilityRuntime::Context>& context, WMError& errCode)
 {
+    WLOGFI("MR031 Create====1");
     if (windowName.empty()) {
         WLOGFE("window name is empty");
         return nullptr;
@@ -112,6 +116,7 @@ sptr<Window> Window::Create(const std::string& windowName, sptr<WindowOption>& o
 sptr<Window> Window::Create(sptr<WindowOption>& option, const std::shared_ptr<OHOS::AbilityRuntime::Context>& context,
     const sptr<IRemoteObject>& iSession, WMError& errCode)
 {
+    WLOGFI("MR031 Create====2");
     // create from ability mgr service
     if (!iSession || !option) {
         WLOGFE("host window session is nullptr: %{public}u or option is null: %{public}u",
