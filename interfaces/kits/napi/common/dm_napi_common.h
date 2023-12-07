@@ -64,6 +64,7 @@ void ProcessPromise(napi_env env, Rosen::DmErrorCode wret, napi_deferred deferre
     napi_value result[], int count);
 void ProcessCallback(napi_env env, napi_ref ref, napi_value result[], int count);
 bool NAPICall(napi_env env, napi_status status);
+void NAPICallAsyncComplete(napi_env env);
 
 template<typename ParamT>
 napi_value AsyncProcess(napi_env env,
@@ -108,36 +109,9 @@ napi_value AsyncProcess(napi_env env,
             return nullptr;
         }
     }
+    
+    NAPICallAsyncComplete(env);
 
-    auto asyncFunc = [](napi_env env, void *data) {
-        AsyncCallbackInfo *info = reinterpret_cast<AsyncCallbackInfo *>(data);
-        if (info->async) {
-            info->async(env, info->param);
-        }
-    };
-
-    auto completeFunc = [](napi_env env, napi_status status, void *data) {
-        AsyncCallbackInfo *info = reinterpret_cast<AsyncCallbackInfo *>(data);
-        napi_value result[PARAM_NUMBER] = {nullptr};
-        if (info->param->wret == Rosen::DmErrorCode::DM_OK) {
-            napi_get_undefined(env, &result[0]);
-            result[1] = info->resolve(env, info->param);
-        } else {
-            SetErrorInfo(env, info->param->wret, info->param->errMessage, result, PARAM_NUMBER);
-        }
-        if (info->deferred) {
-            ProcessPromise(env, info->param->wret, info->deferred, result, PARAM_NUMBER);
-        } else {
-            ProcessCallback(env, info->ref, result, PARAM_NUMBER);
-        }
-        napi_delete_async_work(env, info->asyncWork);
-        delete info;
-    };
-    if (!NAPICall(env, napi_create_async_work(env, nullptr, resourceName, asyncFunc,
-        completeFunc, reinterpret_cast<void *>(info), &info->asyncWork))) {
-        delete info;
-        return nullptr;
-    }
     if (!NAPICall(env, napi_queue_async_work(env, info->asyncWork))) {
         delete info;
         return nullptr;
