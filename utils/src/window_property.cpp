@@ -819,76 +819,62 @@ void WindowProperty::PropertySetState(Parcel& parcel, WindowProperty* property)
 bool WindowProperty::Write(Parcel& parcel, PropertyChangeAction action)
 {
     bool ret = parcel.WriteUint32(static_cast<uint32_t>(windowId_));
+    ret = ret && WriteActionUpdate(action);
+    return ret;
+}
+
+bool WindowProperty::WriteActionUpdate(PropertyChangeAction action)
+{
     switch (action) {
         case PropertyChangeAction::ACTION_UPDATE_RECT:
-            ret = ret && parcel.WriteBool(decoStatus_) && parcel.WriteUint32(static_cast<uint32_t>(dragType_)) &&
+            return parcel.WriteBool(decoStatus_) && parcel.WriteUint32(static_cast<uint32_t>(dragType_)) &&
                 parcel.WriteInt32(originRect_.posX_) && parcel.WriteInt32(originRect_.posY_) &&
                 parcel.WriteUint32(originRect_.width_) && parcel.WriteUint32(originRect_.height_) &&
                 parcel.WriteInt32(requestRect_.posX_) && parcel.WriteInt32(requestRect_.posY_) &&
                 parcel.WriteUint32(requestRect_.width_) && parcel.WriteUint32(requestRect_.height_) &&
                 parcel.WriteUint32(static_cast<uint32_t>(windowSizeChangeReason_));
-            break;
         case PropertyChangeAction::ACTION_UPDATE_MODE:
-            ret = ret && parcel.WriteUint32(static_cast<uint32_t>(mode_)) && parcel.WriteBool(isDecorEnable_);
-            break;
+            return parcel.WriteUint32(static_cast<uint32_t>(mode_)) && parcel.WriteBool(isDecorEnable_);
         case PropertyChangeAction::ACTION_UPDATE_FLAGS:
-            ret = ret && parcel.WriteUint32(flags_);
-            break;
+            return parcel.WriteUint32(flags_);
         case PropertyChangeAction::ACTION_UPDATE_OTHER_PROPS:
-            ret = ret && MapMarshalling(parcel);
-            break;
+            return MapMarshalling(parcel);
         case PropertyChangeAction::ACTION_UPDATE_FOCUSABLE:
-            ret = ret && parcel.WriteBool(focusable_);
-            break;
+            return parcel.WriteBool(focusable_);
         case PropertyChangeAction::ACTION_UPDATE_TOUCHABLE:
-            ret = ret && parcel.WriteBool(touchable_);
-            break;
+            return parcel.WriteBool(touchable_);
         case PropertyChangeAction::ACTION_UPDATE_CALLING_WINDOW:
-            ret = ret && parcel.WriteUint32(callingWindow_);
-            break;
+            return parcel.WriteUint32(callingWindow_);
         case PropertyChangeAction::ACTION_UPDATE_ORIENTATION:
-            ret = ret && parcel.WriteUint32(static_cast<uint32_t>(requestedOrientation_));
-            break;
+            return parcel.WriteUint32(static_cast<uint32_t>(requestedOrientation_));
         case PropertyChangeAction::ACTION_UPDATE_TURN_SCREEN_ON:
-            ret = ret && parcel.WriteBool(turnScreenOn_);
-            break;
+            return parcel.WriteBool(turnScreenOn_);
         case PropertyChangeAction::ACTION_UPDATE_KEEP_SCREEN_ON:
-            ret = ret && parcel.WriteBool(keepScreenOn_);
-            break;
+            return parcel.WriteBool(keepScreenOn_);
         case PropertyChangeAction::ACTION_UPDATE_SET_BRIGHTNESS:
-            ret = ret && parcel.WriteFloat(brightness_);
-            break;
+            return parcel.WriteFloat(brightness_);
         case PropertyChangeAction::ACTION_UPDATE_MODE_SUPPORT_INFO:
-            ret = ret && parcel.WriteUint32(modeSupportInfo_);
-            break;
+            return parcel.WriteUint32(modeSupportInfo_);
         case PropertyChangeAction::ACTION_UPDATE_TOUCH_HOT_AREA:
-            ret = ret && MarshallingTouchHotAreas(parcel);
-            break;
+            return MarshallingTouchHotAreas(parcel);
         case PropertyChangeAction::ACTION_UPDATE_TRANSFORM_PROPERTY:
-            ret = ret && MarshallingTransform(parcel);
-            break;
+            return MarshallingTransform(parcel);
         case PropertyChangeAction::ACTION_UPDATE_ANIMATION_FLAG:
-            ret = ret && parcel.WriteUint32(animationFlag_);
-            break;
+            return parcel.WriteUint32(animationFlag_);
         case PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE:
-            ret = ret && parcel.WriteBool(isPrivacyMode_) && parcel.WriteBool(isSystemPrivacyMode_);
-            break;
+            return parcel.WriteBool(isPrivacyMode_) && parcel.WriteBool(isSystemPrivacyMode_);
         case PropertyChangeAction::ACTION_UPDATE_SYSTEM_PRIVACY_MODE:
-            ret = ret && parcel.WriteBool(isPrivacyMode_) && parcel.WriteBool(isSystemPrivacyMode_);
-            break;
+            return parcel.WriteBool(isPrivacyMode_) && parcel.WriteBool(isSystemPrivacyMode_);
         case PropertyChangeAction::ACTION_UPDATE_SNAPSHOT_SKIP:
-            ret = ret && parcel.WriteBool(isSnapshotSkip_) && parcel.WriteBool(isSystemPrivacyMode_);
-            break;
+            return parcel.WriteBool(isSnapshotSkip_) && parcel.WriteBool(isSystemPrivacyMode_);
         case PropertyChangeAction::ACTION_UPDATE_ASPECT_RATIO:
-            ret = ret && parcel.WriteFloat(aspectRatio_);
-            break;
+            return parcel.WriteFloat(aspectRatio_);
         case PropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE:
-            ret = ret && parcel.WriteUint32(static_cast<uint32_t>(maximizeMode_));
-            break;
+            return parcel.WriteUint32(static_cast<uint32_t>(maximizeMode_));
         default:
             break;
     }
-    return ret;
+    return false;
 }
 
 void WindowProperty::Read(Parcel& parcel, PropertyChangeAction action)
@@ -900,70 +886,49 @@ void WindowProperty::Read(Parcel& parcel, PropertyChangeAction action)
             SetDragType(static_cast<DragType>(parcel.ReadUint32()));
             SetOriginRect(Rect { parcel.ReadInt32(), parcel.ReadInt32(), parcel.ReadUint32(), parcel.ReadUint32() });
             SetRequestRect(Rect { parcel.ReadInt32(), parcel.ReadInt32(), parcel.ReadUint32(), parcel.ReadUint32() });
-            SetWindowSizeChangeReason(static_cast<WindowSizeChangeReason>(parcel.ReadUint32()));
-            break;
+            return SetWindowSizeChangeReason(static_cast<WindowSizeChangeReason>(parcel.ReadUint32()));
         case PropertyChangeAction::ACTION_UPDATE_MODE:
             SetWindowMode(static_cast<WindowMode>(parcel.ReadUint32()));
-            SetDecorEnable(parcel.ReadBool());
-            break;
+            return SetDecorEnable(parcel.ReadBool());
         case PropertyChangeAction::ACTION_UPDATE_FLAGS:
-            SetWindowFlags(parcel.ReadUint32());
-            break;
+            return SetWindowFlags(parcel.ReadUint32());
         case PropertyChangeAction::ACTION_UPDATE_OTHER_PROPS:
-            MapUnmarshalling(parcel, this);
-            break;
+            return MapUnmarshalling(parcel, this);
         case PropertyChangeAction::ACTION_UPDATE_FOCUSABLE:
-            SetFocusable(parcel.ReadBool());
-            break;
+            return SetFocusable(parcel.ReadBool());
         case PropertyChangeAction::ACTION_UPDATE_TOUCHABLE:
-            SetTouchable(parcel.ReadBool());
-            break;
+            return SetTouchable(parcel.ReadBool());
         case PropertyChangeAction::ACTION_UPDATE_CALLING_WINDOW:
-            SetCallingWindow(parcel.ReadUint32());
-            break;
+            return SetCallingWindow(parcel.ReadUint32());
         case PropertyChangeAction::ACTION_UPDATE_ORIENTATION:
-            SetRequestedOrientation(static_cast<Orientation>(parcel.ReadUint32()));
-            break;
+            return SetRequestedOrientation(static_cast<Orientation>(parcel.ReadUint32()));
         case PropertyChangeAction::ACTION_UPDATE_TURN_SCREEN_ON:
-            SetTurnScreenOn(parcel.ReadBool());
-            break;
+            return SetTurnScreenOn(parcel.ReadBool());
         case PropertyChangeAction::ACTION_UPDATE_KEEP_SCREEN_ON:
-            SetKeepScreenOn(parcel.ReadBool());
-            break;
+            return SetKeepScreenOn(parcel.ReadBool());
         case PropertyChangeAction::ACTION_UPDATE_SET_BRIGHTNESS:
-            SetBrightness(parcel.ReadFloat());
-            break;
+            return SetBrightness(parcel.ReadFloat());
         case PropertyChangeAction::ACTION_UPDATE_MODE_SUPPORT_INFO:
-            SetModeSupportInfo(parcel.ReadUint32());
-            break;
+            return SetModeSupportInfo(parcel.ReadUint32());
         case PropertyChangeAction::ACTION_UPDATE_TOUCH_HOT_AREA:
-            UnmarshallingTouchHotAreas(parcel, this);
-            break;
+            return UnmarshallingTouchHotAreas(parcel, this);
         case PropertyChangeAction::ACTION_UPDATE_TRANSFORM_PROPERTY:
-            UnmarshallingTransform(parcel, this);
-            break;
-        case PropertyChangeAction::ACTION_UPDATE_ANIMATION_FLAG: {
-            SetAnimationFlag(parcel.ReadUint32());
-            break;
-        }
+            return UnmarshallingTransform(parcel, this);
+        case PropertyChangeAction::ACTION_UPDATE_ANIMATION_FLAG:
+            return SetAnimationFlag(parcel.ReadUint32());
         case PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE:
             SetPrivacyMode(parcel.ReadBool());
-            SetSystemPrivacyMode(parcel.ReadBool());
-            break;
+            return SetSystemPrivacyMode(parcel.ReadBool());
         case PropertyChangeAction::ACTION_UPDATE_SYSTEM_PRIVACY_MODE:
             SetPrivacyMode(parcel.ReadBool());
-            SetSystemPrivacyMode(parcel.ReadBool());
-            break;
+            return SetSystemPrivacyMode(parcel.ReadBool());
         case PropertyChangeAction::ACTION_UPDATE_SNAPSHOT_SKIP:
             SetSnapshotSkip(parcel.ReadBool());
-            SetSystemPrivacyMode(parcel.ReadBool());
-            break;
+            return SetSystemPrivacyMode(parcel.ReadBool());
         case PropertyChangeAction::ACTION_UPDATE_ASPECT_RATIO:
-            SetAspectRatio(parcel.ReadFloat());
-            break;
+            return SetAspectRatio(parcel.ReadFloat());
         case PropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE:
-            SetMaximizeMode(static_cast<MaximizeMode>(parcel.ReadUint32()));
-            break;
+            return SetMaximizeMode(static_cast<MaximizeMode>(parcel.ReadUint32()));
         default:
             break;
     }
