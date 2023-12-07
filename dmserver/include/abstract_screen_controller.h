@@ -92,6 +92,8 @@ private:
     }
     void SetScreenRotateAnimation(sptr<AbstractScreen>& screen, ScreenId screenId,
         Rotation rotationAfter, bool withAnimation);
+    void RotateWithAnimation(Rotation rotationAfter, ScreenId screenId);
+    void RotateWithoutAnimation(Rotation rotationAfter);
     void RegisterRsScreenConnectionChangeListener();
     void OnRsScreenConnectionChange(ScreenId rsScreenId, ScreenEvent screenEvent);
     bool OnRemoteDied(const sptr<IRemoteObject>& agent);

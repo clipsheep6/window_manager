@@ -795,37 +795,47 @@ void AbstractScreenController::SetScreenRotateAnimation(
         displayNode->SetRotation(-360.f);
     }
     if (withAnimation) {
-        WLOGFD("[FixOrientation] display rotate with animation %{public}u", rotationAfter);
-        std::weak_ptr<RSDisplayNode> weakNode = GetRSDisplayNodeByScreenId(screenId);
-        static const RSAnimationTimingProtocol timingProtocol(600); // animation time
-        static const RSAnimationTimingCurve curve =
-            RSAnimationTimingCurve::CreateCubicCurve(0.2, 0.0, 0.2, 1.0); // animation curve: cubic [0.2, 0.0, 0.2, 1.0]
-    #ifdef SOC_PERF_ENABLE
-        // Increase frequency to improve windowRotation perf
-        // 10027 means "gesture" level that setting duration: 800, lit_cpu_min_freq: 1421000, mid_cpu_min_feq: 1882000
-        OHOS::SOCPERF::SocPerfClient::GetInstance().PerfRequest(10027, "");
-    #endif
-        RSNode::Animate(timingProtocol, curve, [weakNode, x, y, w, h, rotationAfter]() {
-            auto displayNode = weakNode.lock();
-            if (displayNode == nullptr) {
-                WLOGFE("error, cannot get DisplayNode");
-                return;
-            }
-            displayNode->SetRotation(-90.f * static_cast<uint32_t>(rotationAfter)); // 90.f is base degree
-            displayNode->SetFrame(x, y, w, h);
-            displayNode->SetBounds(x, y, w, h);
-        }, []() {
-    #ifdef SOC_PERF_ENABLE
-            // ClosePerf in finishCallBack
-            OHOS::SOCPERF::SocPerfClient::GetInstance().PerfRequestEx(10027, false, "");
-    #endif
-        });
+        RotateWithAnimation(rotationAfter);
     } else {
-        WLOGFD("[FixOrientation] display rotate without animation %{public}u", rotationAfter);
+        RotateWithoutAnimation();
+    }
+}
+
+void AbstractDisplayController::RotateWithAnimation(Rotation rotationAfter, ScreenId screenId)
+{
+    WLOGFD("[FixOrientation] display rotate with animation %{public}u", rotationAfter);
+    std::weak_ptr<RSDisplayNode> weakNode = GetRSDisplayNodeByScreenId(screenId);
+    static const RSAnimationTimingProtocol timingProtocol(600); // animation time
+    static const RSAnimationTimingCurve curve =
+        RSAnimationTimingCurve::CreateCubicCurve(0.2, 0.0, 0.2, 1.0); // animation curve: cubic [0.2, 0.0, 0.2, 1.0]
+#ifdef SOC_PERF_ENABLE
+    // Increase frequency to improve windowRotation perf
+    // 10027 means "gesture" level that setting duration: 800, lit_cpu_min_freq: 1421000, mid_cpu_min_feq: 1882000
+    OHOS::SOCPERF::SocPerfClient::GetInstance().PerfRequest(10027, "");
+#endif
+    RSNode::Animate(timingProtocol, curve, [weakNode, x, y, w, h, rotationAfter]() {
+        auto displayNode = weakNode.lock();
+        if (displayNode == nullptr) {
+            WLOGFE("error, cannot get DisplayNode");
+            return;
+        }
         displayNode->SetRotation(-90.f * static_cast<uint32_t>(rotationAfter)); // 90.f is base degree
         displayNode->SetFrame(x, y, w, h);
         displayNode->SetBounds(x, y, w, h);
-    }
+    }, []() {
+#ifdef SOC_PERF_ENABLE
+        // ClosePerf in finishCallBack
+        OHOS::SOCPERF::SocPerfClient::GetInstance().PerfRequestEx(10027, false, "");
+#endif
+    });
+}
+
+void AbstractDisplayController::RotateWithoutAnimation(Rotation rotationAfter)
+{
+    WLOGFD("[FixOrientation] display rotate without animation %{public}u", rotationAfter);
+    displayNode->SetRotation(-90.f * static_cast<uint32_t>(rotationAfter)); // 90.f is base degree
+    displayNode->SetFrame(x, y, w, h);
+    displayNode->SetBounds(x, y, w, h);
 }
 
 void AbstractScreenController::OpenRotationSyncTransaction()
