@@ -48,6 +48,8 @@ public:
     WSError TransferComponentData(const AAFwk::WantParams& wantParams);
     WSErrorCode TransferComponentDataSync(const AAFwk::WantParams& wantParams,
                                           AAFwk::WantParams& reWantParams);
+    WSError TransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
+        const std::vector<int32_t>& uiExtensionIdLevelVec) override;
     void NotifyRemoteReady() override;
     void NotifySyncOn() override;
     void NotifyAsyncOn() override;
