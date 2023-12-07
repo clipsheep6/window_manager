@@ -746,6 +746,30 @@ WindowProperty* WindowProperty::Unmarshalling(Parcel& parcel)
     if (property == nullptr) {
         return nullptr;
     }
+    PropertySetWindow(parcel, property);
+    MapUnmarshalling(parcel, property);
+    PropertySetState(parcel, property);
+    UnmarshallingTouchHotAreas(parcel, property);
+    property->SetAccessTokenId(parcel.ReadUint32());
+    UnmarshallingTransform(parcel, property);
+    UnmarshallingWindowSizeLimits(parcel, property);
+    Transform zoomTrans;
+    zoomTrans.Unmarshalling(parcel);
+    property->SetZoomTransform(zoomTrans);
+    property->SetDisplayZoomState(parcel.ReadBool());
+    AbilityInfo info = { parcel.ReadString(), parcel.ReadString(), parcel.ReadInt32() };
+    property->SetAbilityInfo(info);
+    property->SetSnapshotSkip(parcel.ReadBool());
+    property->SetTextFieldPositionY(parcel.ReadDouble());
+    property->SetTextFieldHeight(parcel.ReadDouble());
+    return property;
+}
+
+void WindowProperty::PropertySetWindow(Parcel& parcel, WindowProperty* property)
+{
+    if (property == nullptr) {
+        return nullptr;
+    }
     property->SetWindowName(parcel.ReadString());
     Rect rect = { parcel.ReadInt32(), parcel.ReadInt32(), parcel.ReadUint32(), parcel.ReadUint32() };
     property->SetWindowRect(rect);
@@ -766,7 +790,13 @@ WindowProperty* WindowProperty::Unmarshalling(Parcel& parcel)
     property->SetDisplayId(parcel.ReadUint64());
     property->SetWindowId(parcel.ReadUint32());
     property->SetParentId(parcel.ReadUint32());
-    MapUnmarshalling(parcel, property);
+}
+
+void WindowProperty::PropertySetState(Parcel& parcel, WindowProperty* property)
+{
+    if (property == nullptr) {
+        return nullptr;
+    }
     property->SetDecorEnable(parcel.ReadBool());
     PointInfo offset = {parcel.ReadInt32(), parcel.ReadInt32()};
     property->SetHitOffset(offset);
@@ -784,20 +814,6 @@ WindowProperty* WindowProperty::Unmarshalling(Parcel& parcel)
     uint32_t h = parcel.ReadUint32();
     property->SetOriginRect(Rect { 0, 0, w, h });
     property->SetStretchable(parcel.ReadBool());
-    UnmarshallingTouchHotAreas(parcel, property);
-    property->SetAccessTokenId(parcel.ReadUint32());
-    UnmarshallingTransform(parcel, property);
-    UnmarshallingWindowSizeLimits(parcel, property);
-    Transform zoomTrans;
-    zoomTrans.Unmarshalling(parcel);
-    property->SetZoomTransform(zoomTrans);
-    property->SetDisplayZoomState(parcel.ReadBool());
-    AbilityInfo info = { parcel.ReadString(), parcel.ReadString(), parcel.ReadInt32() };
-    property->SetAbilityInfo(info);
-    property->SetSnapshotSkip(parcel.ReadBool());
-    property->SetTextFieldPositionY(parcel.ReadDouble());
-    property->SetTextFieldHeight(parcel.ReadDouble());
-    return property;
 }
 
 bool WindowProperty::Write(Parcel& parcel, PropertyChangeAction action)
