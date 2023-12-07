@@ -41,379 +41,142 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
     DisplayManagerMessage msgId = static_cast<DisplayManagerMessage>(code);
     switch (msgId) {
         case DisplayManagerMessage::TRANS_ID_GET_DEFAULT_DISPLAY_INFO: {
-            auto info = GetDefaultDisplayInfo();
-            reply.WriteParcelable(info);
-            break;
+            return DoGetDefaultDisplayInfo();
         }
         case DisplayManagerMessage::TRANS_ID_GET_DISPLAY_BY_ID: {
-            DisplayId displayId = data.ReadUint64();
-            auto info = GetDisplayInfoById(displayId);
-            reply.WriteParcelable(info);
-            break;
+            return DoGetDisplayInfoById(data);
         }
         case DisplayManagerMessage::TRANS_ID_GET_DISPLAY_BY_SCREEN: {
-            ScreenId screenId = data.ReadUint64();
-            auto info = GetDisplayInfoByScreen(screenId);
-            reply.WriteParcelable(info);
-            break;
+            return DoGetDisplayInfoByScreen(data);
         }
         case DisplayManagerMessage::TRANS_ID_CREATE_VIRTUAL_SCREEN: {
-            std::string name = data.ReadString();
-            uint32_t width = data.ReadUint32();
-            uint32_t height = data.ReadUint32();
-            float density = data.ReadFloat();
-            int32_t flags = data.ReadInt32();
-            bool isForShot = data.ReadBool();
-            bool isSurfaceValid = data.ReadBool();
-            sptr<Surface> surface = nullptr;
-            if (isSurfaceValid) {
-                sptr<IRemoteObject> surfaceObject = data.ReadRemoteObject();
-                sptr<IBufferProducer> bp = iface_cast<IBufferProducer>(surfaceObject);
-                surface = Surface::CreateSurfaceAsProducer(bp);
-            }
-            sptr<IRemoteObject> virtualScreenAgent = data.ReadRemoteObject();
-            VirtualScreenOption virScrOption = {
-                .name_ = name,
-                .width_ = width,
-                .height_ = height,
-                .density_ = density,
-                .surface_ = surface,
-                .flags_ = flags,
-                .isForShot_ = isForShot
-            };
-            ScreenId screenId = CreateVirtualScreen(virScrOption, virtualScreenAgent);
-            reply.WriteUint64(static_cast<uint64_t>(screenId));
-            break;
+            return DoCreateVirtualScreen(data);
         }
         case DisplayManagerMessage::TRANS_ID_DESTROY_VIRTUAL_SCREEN: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            DMError result = DestroyVirtualScreen(screenId);
-            reply.WriteInt32(static_cast<int32_t>(result));
-            break;
+            return DoDestroyVirtualScreen(data);
         }
         case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_SCREEN_SURFACE: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            bool isSurfaceValid = data.ReadBool();
-            sptr<IBufferProducer> bp = nullptr;
-            if (isSurfaceValid) {
-                sptr<IRemoteObject> surfaceObject = data.ReadRemoteObject();
-                bp = iface_cast<IBufferProducer>(surfaceObject);
-            }
-            DMError result = SetVirtualScreenSurface(screenId, bp);
-            reply.WriteInt32(static_cast<int32_t>(result));
-            break;
+            return DoSetVirtualScreenSurface(data);
         }
         case DisplayManagerMessage::TRANS_ID_SET_ORIENTATION: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            Orientation orientation = static_cast<Orientation>(data.ReadUint32());
-            DMError ret = SetOrientation(screenId, orientation);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
+            return DoSetOrientation(data);
         }
         case DisplayManagerMessage::TRANS_ID_GET_DISPLAY_SNAPSHOT: {
-            DisplayId displayId = data.ReadUint64();
-            DmErrorCode errorCode = DmErrorCode::DM_OK;
-            std::shared_ptr<Media::PixelMap> displaySnapshot = GetDisplaySnapshot(displayId, &errorCode);
-            reply.WriteParcelable(displaySnapshot == nullptr ? nullptr : displaySnapshot.get());
-            reply.WriteInt32(static_cast<int32_t>(errorCode));
-            break;
+            return DoGetDisplaySnapshot(data);
         }
         case DisplayManagerMessage::TRANS_ID_REGISTER_DISPLAY_MANAGER_AGENT: {
-            auto agent = iface_cast<IDisplayManagerAgent>(data.ReadRemoteObject());
-            auto type = static_cast<DisplayManagerAgentType>(data.ReadUint32());
-            DMError ret = RegisterDisplayManagerAgent(agent, type);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
+            return DoRegisterDisplayManagerAgent(data);
         }
         case DisplayManagerMessage::TRANS_ID_UNREGISTER_DISPLAY_MANAGER_AGENT: {
-            auto agent = iface_cast<IDisplayManagerAgent>(data.ReadRemoteObject());
-            auto type = static_cast<DisplayManagerAgentType>(data.ReadUint32());
-            DMError ret = UnregisterDisplayManagerAgent(agent, type);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
+            return DoUnregisterDisplayManagerAgent(data);
         }
         case DisplayManagerMessage::TRANS_ID_WAKE_UP_BEGIN: {
-            PowerStateChangeReason reason = static_cast<PowerStateChangeReason>(data.ReadUint32());
-            reply.WriteBool(WakeUpBegin(reason));
-            break;
+            return DoWakeUpBegin(data);
         }
         case DisplayManagerMessage::TRANS_ID_WAKE_UP_END: {
-            reply.WriteBool(WakeUpEnd());
-            break;
+            return DoWakeUpEnd(data);
         }
         case DisplayManagerMessage::TRANS_ID_SUSPEND_BEGIN: {
-            PowerStateChangeReason reason = static_cast<PowerStateChangeReason>(data.ReadUint32());
-            reply.WriteBool(SuspendBegin(reason));
-            break;
+            return DoSuspendBegin(data);
         }
         case DisplayManagerMessage::TRANS_ID_SUSPEND_END: {
-            reply.WriteBool(SuspendEnd());
-            break;
+            return DoSuspendEnd();
         }
         case DisplayManagerMessage::TRANS_ID_SET_SPECIFIED_SCREEN_POWER: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint32());
-            ScreenPowerState state = static_cast<ScreenPowerState>(data.ReadUint32());
-            PowerStateChangeReason reason = static_cast<PowerStateChangeReason>(data.ReadUint32());
-            reply.WriteBool(SetSpecifiedScreenPower(screenId, state, reason));
-            break;
+            return DoSetSpecifiedScreenPower(data);
         }
         case DisplayManagerMessage::TRANS_ID_SET_SCREEN_POWER_FOR_ALL: {
-            ScreenPowerState state = static_cast<ScreenPowerState>(data.ReadUint32());
-            PowerStateChangeReason reason = static_cast<PowerStateChangeReason>(data.ReadUint32());
-            reply.WriteBool(SetScreenPowerForAll(state, reason));
-            break;
+            return DoSetScreenPowerForAll(data);
         }
         case DisplayManagerMessage::TRANS_ID_GET_SCREEN_POWER: {
-            ScreenId dmsScreenId;
-            if (!data.ReadUint64(dmsScreenId)) {
-                WLOGFE("fail to read dmsScreenId.");
-                break;
-            }
-            reply.WriteUint32(static_cast<uint32_t>(GetScreenPower(dmsScreenId)));
-            break;
+            return DoGetScreenPower(data);
         }
         case DisplayManagerMessage::TRANS_ID_SET_DISPLAY_STATE: {
-            DisplayState state = static_cast<DisplayState>(data.ReadUint32());
-            reply.WriteBool(SetDisplayState(state));
-            break;
+            return DoSetDisplayState(data);
         }
         case DisplayManagerMessage::TRANS_ID_GET_DISPLAY_STATE: {
-            DisplayState state = GetDisplayState(data.ReadUint64());
-            reply.WriteUint32(static_cast<uint32_t>(state));
-            break;
+            return DoGetDisplayState(data);
         }
         case DisplayManagerMessage::TRANS_ID_NOTIFY_DISPLAY_EVENT: {
-            DisplayEvent event = static_cast<DisplayEvent>(data.ReadUint32());
-            NotifyDisplayEvent(event);
-            break;
+            return DoNotifyDisplayEvent(data);
         }
         case DisplayManagerMessage::TRANS_ID_SET_FREEZE_EVENT: {
-            std::vector<DisplayId> ids;
-            data.ReadUInt64Vector(&ids);
-            SetFreeze(ids, data.ReadBool());
-            break;
+            return DoSetFreeze(data);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_MAKE_MIRROR: {
-            ScreenId mainScreenId = static_cast<ScreenId>(data.ReadUint64());
-            std::vector<ScreenId> mirrorScreenId;
-            if (!data.ReadUInt64Vector(&mirrorScreenId)) {
-                WLOGE("fail to receive mirror screen in stub. screen:%{public}" PRIu64"", mainScreenId);
-                break;
-            }
-            ScreenId screenGroupId = INVALID_SCREEN_ID;
-            DMError ret = MakeMirror(mainScreenId, mirrorScreenId, screenGroupId);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            reply.WriteUint64(static_cast<uint64_t>(screenGroupId));
-            break;
+            return DoMakeMirror(data);
         }
         case DisplayManagerMessage::TRANS_ID_GET_SCREEN_INFO_BY_ID: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            auto screenInfo = GetScreenInfoById(screenId);
-            reply.WriteStrongParcelable(screenInfo);
-            break;
+            return DoGetScreenInfoById(data);
         }
         case DisplayManagerMessage::TRANS_ID_GET_SCREEN_GROUP_INFO_BY_ID: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            auto screenGroupInfo = GetScreenGroupInfoById(screenId);
-            reply.WriteStrongParcelable(screenGroupInfo);
-            break;
+            return DoGetScreenGroupInfoById(data);
         }
         case DisplayManagerMessage::TRANS_ID_GET_ALL_SCREEN_INFOS: {
-            std::vector<sptr<ScreenInfo>> screenInfos;
-            DMError ret  = GetAllScreenInfos(screenInfos);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            if (!MarshallingHelper::MarshallingVectorParcelableObj<ScreenInfo>(reply, screenInfos)) {
-                WLOGE("fail to marshalling screenInfos in stub.");
-            }
-            break;
+            return DoGetAllScreenInfos();
         }
         case DisplayManagerMessage::TRANS_ID_GET_ALL_DISPLAYIDS: {
-            std::vector<DisplayId> allDisplayIds = GetAllDisplayIds();
-            reply.WriteUInt64Vector(allDisplayIds);
-            break;
+            return DoGetAllDisplayIds();
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_MAKE_EXPAND: {
-            std::vector<ScreenId> screenId;
-            if (!data.ReadUInt64Vector(&screenId)) {
-                WLOGE("fail to receive expand screen in stub.");
-                break;
-            }
-            std::vector<Point> startPoint;
-            if (!MarshallingHelper::UnmarshallingVectorObj<Point>(data, startPoint, [](Parcel& parcel, Point& point) {
-                    return parcel.ReadInt32(point.posX_) && parcel.ReadInt32(point.posY_);
-                })) {
-                WLOGE("fail to receive startPoint in stub.");
-                break;
-            }
-            ScreenId screenGroupId = INVALID_SCREEN_ID;
-            DMError ret = MakeExpand(screenId, startPoint, screenGroupId);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            reply.WriteUint64(static_cast<uint64_t>(screenGroupId));
-            break;
+            return DoScreenMakeExpand(data);
         }
         case DisplayManagerMessage::TRANS_ID_REMOVE_VIRTUAL_SCREEN_FROM_SCREEN_GROUP: {
-            std::vector<ScreenId> screenId;
-            if (!data.ReadUInt64Vector(&screenId)) {
-                WLOGE("fail to receive screens in stub.");
-                break;
-            }
-            RemoveVirtualScreenFromGroup(screenId);
-            break;
+            return DoRemoveVirtualScreenFromGroup(data);
         }
         case DisplayManagerMessage::TRANS_ID_SET_SCREEN_ACTIVE_MODE: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            uint32_t modeId = data.ReadUint32();
-            DMError ret = SetScreenActiveMode(screenId, modeId);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
+            return DoSetScreenActiveMode(data);
         }
         case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_PIXEL_RATIO: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            float virtualPixelRatio = data.ReadFloat();
-            DMError ret = SetVirtualPixelRatio(screenId, virtualPixelRatio);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
+            return DoSetVirtualPixelRatio(data);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_GET_SUPPORTED_COLOR_GAMUTS: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            std::vector<ScreenColorGamut> colorGamuts;
-            DMError ret = GetScreenSupportedColorGamuts(screenId, colorGamuts);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            if (ret != DMError::DM_OK) {
-                break;
-            }
-            MarshallingHelper::MarshallingVectorObj<ScreenColorGamut>(reply, colorGamuts,
-                [](Parcel& parcel, const ScreenColorGamut& color) {
-                    return parcel.WriteUint32(static_cast<uint32_t>(color));
-                }
-            );
-            break;
+            return DoGetScreenSupportedColorGamuts(data);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_GET_COLOR_GAMUT: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            ScreenColorGamut colorGamut;
-            DMError ret = GetScreenColorGamut(screenId, colorGamut);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            if (ret != DMError::DM_OK) {
-                break;
-            }
-            reply.WriteUint32(static_cast<uint32_t>(colorGamut));
-            break;
+            return DoGetScreenColorGamut(data);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_SET_COLOR_GAMUT: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            int32_t colorGamutIdx = data.ReadInt32();
-            DMError ret = SetScreenColorGamut(screenId, colorGamutIdx);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
+            return DoSetScreenColorGamut(data);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_GET_GAMUT_MAP: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            ScreenGamutMap gamutMap;
-            DMError ret = GetScreenGamutMap(screenId, gamutMap);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            if (ret != DMError::DM_OK) {
-                break;
-            }
-            reply.WriteInt32(static_cast<uint32_t>(gamutMap));
-            break;
+            return DoGetScreenGamutMap(data);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_SET_GAMUT_MAP: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            ScreenGamutMap gamutMap = static_cast<ScreenGamutMap>(data.ReadUint32());
-            DMError ret = SetScreenGamutMap(screenId, gamutMap);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
+            return DoSetScreenGamutMap(data);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_SET_COLOR_TRANSFORM: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            DMError ret = SetScreenColorTransform(screenId);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
+            return DoSetScreenColorTransform(data);
         }
         case DisplayManagerMessage::TRANS_ID_IS_SCREEN_ROTATION_LOCKED: {
-            bool isLocked = false;
-            DMError ret = IsScreenRotationLocked(isLocked);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            reply.WriteBool(isLocked);
-            break;
+            return DoIsScreenRotationLocked(data);
         }
         case DisplayManagerMessage::TRANS_ID_SET_SCREEN_ROTATION_LOCKED: {
-            bool isLocked = static_cast<bool>(data.ReadBool());
-            DMError ret = SetScreenRotationLocked(isLocked);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
+            return DoSetScreenRotationLocked(data);
         }
         case DisplayManagerMessage::TRANS_ID_HAS_PRIVATE_WINDOW: {
-            DisplayId id = static_cast<DisplayId>(data.ReadUint64());
-            bool hasPrivateWindow = false;
-            DMError ret = HasPrivateWindow(id, hasPrivateWindow);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            reply.WriteBool(hasPrivateWindow);
-            break;
+            return DoHasPrivateWindow(data);
         }
         case DisplayManagerMessage::TRANS_ID_GET_CUTOUT_INFO: {
-            DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
-            sptr<CutoutInfo> cutoutInfo = GetCutoutInfo(displayId);
-            reply.WriteParcelable(cutoutInfo);
-            break;
+            return DoGetCutoutInfo(data);
         }
         case DisplayManagerMessage::TRANS_ID_ADD_SURFACE_NODE: {
-            DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
-            std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
-            auto ret = AddSurfaceNodeToDisplay(displayId, surfaceNode, true);
-            reply.WriteUint32(static_cast<uint32_t>(ret));
-            break;
+            return DoAddSurfaceNodeToDisplay(data);
         }
         case DisplayManagerMessage::TRANS_ID_REMOVE_SURFACE_NODE: {
-            DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
-            std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
-            auto ret = RemoveSurfaceNodeFromDisplay(displayId, surfaceNode);
-            reply.WriteUint32(static_cast<uint32_t>(ret));
-            break;
+            return DoRemoveSurfaceNodeFromDisplay(data);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_STOP_MIRROR: {
-            std::vector<ScreenId> mirrorScreenIds;
-            if (!data.ReadUInt64Vector(&mirrorScreenIds)) {
-                WLOGE("fail to receive mirror screens in stub.");
-                break;
-            }
-            DMError ret = StopMirror(mirrorScreenIds);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
+            return DoStopMirror(data);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_STOP_EXPAND: {
-            std::vector<ScreenId> expandScreenIds;
-            if (!data.ReadUInt64Vector(&expandScreenIds)) {
-                WLOGE("fail to receive expand screens in stub.");
-                break;
-            }
-            DMError ret = StopExpand(expandScreenIds);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
+            return DoStopExpand(data);
         }
         case DisplayManagerMessage::TRANS_ID_RESIZE_VIRTUAL_SCREEN: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            uint32_t width = data.ReadUint32();
-            uint32_t height = data.ReadUint32();
-            DMError ret = ResizeVirtualScreen(screenId, width, height);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
+            return DoResizeVirtualScreen(data);
         }
         case DisplayManagerMessage::TRANS_ID_SCENE_BOARD_MAKE_UNIQUE_SCREEN: {
-            std::vector<ScreenId> uniqueScreenIds;
-            uint32_t size = data.ReadUint32();
-            if (size > MAX_SCREEN_SIZE) {
-                WLOGFE("screenIds size is bigger than %{public}u", MAX_SCREEN_SIZE);
-                break;
-            }
-            if (!data.ReadUInt64Vector(&uniqueScreenIds)) {
-                WLOGFE("failed to receive unique screens in stub");
-                break;
-            }
-            DMError ret = MakeUniqueScreen(uniqueScreenIds);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
+            return DoMakeUniqueScreen(data);
         }
         default:
             WLOGFW("unknown transaction code");
@@ -421,4 +184,473 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
     }
     return 0;
 }
+
+int32_t DisplayManagerStub::DoGetDefaultDisplayInfo()
+{
+    auto info = GetDefaultDisplayInfo();
+    reply.WriteParcelable(info);
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoGetDisplayInfoById(MessageParcel &data)
+{
+    DisplayId displayId = data.ReadUint64();
+    auto info = GetDisplayInfoById(displayId);
+    reply.WriteParcelable(info);
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoGetDisplayInfoByScreen(MessageParcel &data)
+{
+    ScreenId screenId = data.ReadUint64();
+    auto info = GetDisplayInfoByScreen(screenId);
+    reply.WriteParcelable(info);
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoCreateVirtualScreen(MessageParcel &data)
+{
+    std::string name = data.ReadString();
+    uint32_t width = data.ReadUint32();
+    uint32_t height = data.ReadUint32();
+    float density = data.ReadFloat();
+    int32_t flags = data.ReadInt32();
+    bool isForShot = data.ReadBool();
+    bool isSurfaceValid = data.ReadBool();
+    sptr<Surface> surface = nullptr;
+    if (isSurfaceValid) {
+        sptr<IRemoteObject> surfaceObject = data.ReadRemoteObject();
+        sptr<IBufferProducer> bp = iface_cast<IBufferProducer>(surfaceObject);
+        surface = Surface::CreateSurfaceAsProducer(bp);
+    }
+    sptr<IRemoteObject> virtualScreenAgent = data.ReadRemoteObject();
+    VirtualScreenOption virScrOption = {
+        .name_ = name,
+        .width_ = width,
+        .height_ = height,
+        .density_ = density,
+        .surface_ = surface,
+        .flags_ = flags,
+        .isForShot_ = isForShot
+    };
+    ScreenId screenId = CreateVirtualScreen(virScrOption, virtualScreenAgent);
+    reply.WriteUint64(static_cast<uint64_t>(screenId));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoDestroyVirtualScreen(MessageParcel &data)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    DMError result = DestroyVirtualScreen(screenId);
+    reply.WriteInt32(static_cast<int32_t>(result));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoSetVirtualScreenSurface(MessageParcel &data)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    bool isSurfaceValid = data.ReadBool();
+    sptr<IBufferProducer> bp = nullptr;
+    if (isSurfaceValid) {
+        sptr<IRemoteObject> surfaceObject = data.ReadRemoteObject();
+        bp = iface_cast<IBufferProducer>(surfaceObject);
+    }
+    DMError result = SetVirtualScreenSurface(screenId, bp);
+    reply.WriteInt32(static_cast<int32_t>(result));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoSetOrientation(MessageParcel &data)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    Orientation orientation = static_cast<Orientation>(data.ReadUint32());
+    DMError ret = SetOrientation(screenId, orientation);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoGetDisplaySnapshot(MessageParcel &data)
+{
+    DisplayId displayId = data.ReadUint64();
+    DmErrorCode errorCode = DmErrorCode::DM_OK;
+    std::shared_ptr<Media::PixelMap> displaySnapshot = GetDisplaySnapshot(displayId, &errorCode);
+    reply.WriteParcelable(displaySnapshot == nullptr ? nullptr : displaySnapshot.get());
+    reply.WriteInt32(static_cast<int32_t>(errorCode));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoRegisterDisplayManagerAgent(MessageParcel &data)
+{
+    auto agent = iface_cast<IDisplayManagerAgent>(data.ReadRemoteObject());
+    auto type = static_cast<DisplayManagerAgentType>(data.ReadUint32());
+    DMError ret = RegisterDisplayManagerAgent(agent, type);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoUnregisterDisplayManagerAgent(MessageParcel &data)
+{
+    auto agent = iface_cast<IDisplayManagerAgent>(data.ReadRemoteObject());
+    auto type = static_cast<DisplayManagerAgentType>(data.ReadUint32());
+    DMError ret = UnregisterDisplayManagerAgent(agent, type);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoWakeUpBegin(MessageParcel &data)
+{
+    PowerStateChangeReason reason = static_cast<PowerStateChangeReason>(data.ReadUint32());
+    reply.WriteBool(WakeUpBegin(reason));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoWakeUpEnd()
+{
+    reply.WriteBool(WakeUpEnd());
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoSuspendBegin(MessageParcel &data)
+{
+    PowerStateChangeReason reason = static_cast<PowerStateChangeReason>(data.ReadUint32());
+    reply.WriteBool(SuspendBegin(reason));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoSuspendEnd()
+{
+    reply.WriteBool(SuspendEnd());
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoSetSpecifiedScreenPower(MessageParcel &data)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint32());
+    ScreenPowerState state = static_cast<ScreenPowerState>(data.ReadUint32());
+    PowerStateChangeReason reason = static_cast<PowerStateChangeReason>(data.ReadUint32());
+    reply.WriteBool(SetSpecifiedScreenPower(screenId, state, reason));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoSetScreenPowerForAll(MessageParcel &data)
+{
+    ScreenPowerState state = static_cast<ScreenPowerState>(data.ReadUint32());
+    PowerStateChangeReason reason = static_cast<PowerStateChangeReason>(data.ReadUint32());
+    reply.WriteBool(SetScreenPowerForAll(state, reason));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoGetScreenPower(MessageParcel &data)
+{
+    ScreenId dmsScreenId;
+    if (!data.ReadUint64(dmsScreenId)) {
+        WLOGFE("fail to read dmsScreenId.");
+        return -1;
+    }
+    reply.WriteUint32(static_cast<uint32_t>(GetScreenPower(dmsScreenId)));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoSetDisplayState(MessageParcel &data)
+{
+    DisplayState state = static_cast<DisplayState>(data.ReadUint32());
+    reply.WriteBool(SetDisplayState(state));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoGetDisplayState(MessageParcel &data)
+{
+    DisplayState state = GetDisplayState(data.ReadUint64());
+    reply.WriteUint32(static_cast<uint32_t>(state));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoNotifyDisplayEvent(MessageParcel &data)
+{
+    DisplayEvent event = static_cast<DisplayEvent>(data.ReadUint32());
+    NotifyDisplayEvent(event);
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoSetFreeze(MessageParcel &data)
+{
+    std::vector<DisplayId> ids;
+    data.ReadUInt64Vector(&ids);
+    SetFreeze(ids, data.ReadBool());
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoMakeMirror(MessageParcel &data)
+{
+    ScreenId mainScreenId = static_cast<ScreenId>(data.ReadUint64());
+    std::vector<ScreenId> mirrorScreenId;
+    if (!data.ReadUInt64Vector(&mirrorScreenId)) {
+        WLOGE("fail to receive mirror screen in stub. screen:%{public}" PRIu64"", mainScreenId);
+        return -1;
+    }
+    ScreenId screenGroupId = INVALID_SCREEN_ID;
+    DMError ret = MakeMirror(mainScreenId, mirrorScreenId, screenGroupId);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    reply.WriteUint64(static_cast<uint64_t>(screenGroupId));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoGetScreenInfoById(MessageParcel &data)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    auto screenInfo = GetScreenInfoById(screenId);
+    reply.WriteStrongParcelable(screenInfo);
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoGetScreenGroupInfoById(MessageParcel &data)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    auto screenGroupInfo = GetScreenGroupInfoById(screenId);
+    reply.WriteStrongParcelable(screenGroupInfo);
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoGetAllScreenInfos()
+{
+    std::vector<sptr<ScreenInfo>> screenInfos;
+    DMError ret = GetAllScreenInfos(screenInfos);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    if (!MarshallingHelper::MarshallingVectorParcelableObj<ScreenInfo>(reply, screenInfos)) {
+        WLOGE("fail to marshalling screenInfos in stub.");
+        return -1;
+    }
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoGetAllDisplayIds()
+{
+    std::vector<DisplayId> allDisplayIds = GetAllDisplayIds();
+    reply.WriteUInt64Vector(allDisplayIds);
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoScreenMakeExpand(MessageParcel &data)
+{
+    std::vector<ScreenId> screenId;
+    if (!data.ReadUInt64Vector(&screenId)) {
+        WLOGE("fail to receive expand screen in stub.");
+        return -1;
+    }
+    std::vector<Point> startPoint;
+    if (!MarshallingHelper::UnmarshallingVectorObj<Point>(data, startPoint, [](Parcel& parcel, Point& point) {
+            return parcel.ReadInt32(point.posX_) && parcel.ReadInt32(point.posY_);
+        })) {
+        WLOGE("fail to receive startPoint in stub.");
+        return 0;
+    }
+    ScreenId screenGroupId = INVALID_SCREEN_ID;
+    DMError ret = MakeExpand(screenId, startPoint, screenGroupId);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    reply.WriteUint64(static_cast<uint64_t>(screenGroupId));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoRemoveVirtualScreenFromGroup(MessageParcel &data)
+{
+    std::vector<ScreenId> screenId;
+    if (!data.ReadUInt64Vector(&screenId)) {
+        WLOGE("fail to receive screens in stub.");
+        return 0;
+    }
+    RemoveVirtualScreenFromGroup(screenId);
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoSetScreenActiveMode(MessageParcel &data)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    uint32_t modeId = data.ReadUint32();
+    DMError ret = SetScreenActiveMode(screenId, modeId);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoSetVirtualPixelRatio(MessageParcel &data)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    float virtualPixelRatio = data.ReadFloat();
+    DMError ret = SetVirtualPixelRatio(screenId, virtualPixelRatio);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoGetScreenSupportedColorGamuts(MessageParcel &data)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    std::vector<ScreenColorGamut> colorGamuts;
+    DMError ret = GetScreenSupportedColorGamuts(screenId, colorGamuts);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    if (ret != DMError::DM_OK) {
+        return -1;
+    }
+    MarshallingHelper::MarshallingVectorObj<ScreenColorGamut>(reply, colorGamuts,
+        [](Parcel& parcel, const ScreenColorGamut& color) {
+            return parcel.WriteUint32(static_cast<uint32_t>(color));
+        }
+    );
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoGetScreenColorGamut(MessageParcel &data)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    ScreenColorGamut colorGamut;
+    DMError ret = GetScreenColorGamut(screenId, colorGamut);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    if (ret != DMError::DM_OK) {
+        return -1;
+    }
+    reply.WriteUint32(static_cast<uint32_t>(colorGamut));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoSetScreenColorGamut(MessageParcel &data)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    int32_t colorGamutIdx = data.ReadInt32();
+    DMError ret = SetScreenColorGamut(screenId, colorGamutIdx);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoGetScreenGamutMap(MessageParcel &data)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    ScreenGamutMap gamutMap;
+    DMError ret = GetScreenGamutMap(screenId, gamutMap);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    if (ret != DMError::DM_OK) {
+        return -1;
+    }
+    reply.WriteInt32(static_cast<uint32_t>(gamutMap));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoSetScreenGamutMap(MessageParcel &data)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    ScreenGamutMap gamutMap = static_cast<ScreenGamutMap>(data.ReadUint32());
+    DMError ret = SetScreenGamutMap(screenId, gamutMap);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoSetScreenColorTransform(MessageParcel &data)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    DMError ret = SetScreenColorTransform(screenId);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoIsScreenRotationLocked(MessageParcel &data)
+{
+    bool isLocked = false;
+    DMError ret = IsScreenRotationLocked(isLocked);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    reply.WriteBool(isLocked);
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoSetScreenRotationLocked(MessageParcel &data)
+{
+    bool isLocked = static_cast<bool>(data.ReadBool());
+    DMError ret = SetScreenRotationLocked(isLocked);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoHasPrivateWindow(MessageParcel &data)
+{
+    DisplayId id = static_cast<DisplayId>(data.ReadUint64());
+    bool hasPrivateWindow = false;
+    DMError ret = HasPrivateWindow(id, hasPrivateWindow);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    reply.WriteBool(hasPrivateWindow);
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoGetCutoutInfo(MessageParcel &data)
+{
+    DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
+    sptr<CutoutInfo> cutoutInfo = GetCutoutInfo(displayId);
+    reply.WriteParcelable(cutoutInfo);
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoAddSurfaceNodeToDisplay(MessageParcel &data)
+{
+    DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
+    std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
+    auto ret = AddSurfaceNodeToDisplay(displayId, surfaceNode, true);
+    reply.WriteUint32(static_cast<uint32_t>(ret));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoRemoveSurfaceNodeFromDisplay(MessageParcel &data)
+{
+    DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
+    std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
+    auto ret = RemoveSurfaceNodeFromDisplay(displayId, surfaceNode);
+    reply.WriteUint32(static_cast<uint32_t>(ret));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoStopMirror(MessageParcel &data)
+{
+    std::vector<ScreenId> mirrorScreenIds;
+    if (!data.ReadUInt64Vector(&mirrorScreenIds)) {
+        WLOGE("fail to receive mirror screens in stub.");
+        return -1;
+    }
+    DMError ret = StopMirror(mirrorScreenIds);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoStopExpand(MessageParcel &data)
+{
+    std::vector<ScreenId> expandScreenIds;
+    if (!data.ReadUInt64Vector(&expandScreenIds)) {
+        WLOGE("fail to receive expand screens in stub.");
+        return -1;
+    }
+    DMError ret = StopExpand(expandScreenIds);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoResizeVirtualScreen(MessageParcel &data)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    uint32_t width = data.ReadUint32();
+    uint32_t height = data.ReadUint32();
+    DMError ret = ResizeVirtualScreen(screenId, width, height);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return 0;
+}
+
+int32_t DisplayManagerStub::DoMakeUniqueScreen(MessageParcel &data)
+{
+    std::vector<ScreenId> uniqueScreenIds;
+    uint32_t size = data.ReadUint32();
+    if (size > MAX_SCREEN_SIZE) {
+        WLOGFE("screenIds size is bigger than %{public}u", MAX_SCREEN_SIZE);
+        return -1;
+    }
+    if (!data.ReadUInt64Vector(&uniqueScreenIds)) {
+        WLOGFE("failed to receive unique screens in stub");
+        return -1;
+    }
+    DMError ret = MakeUniqueScreen(uniqueScreenIds);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return 0;
+}
 } // namespace OHOS::Rosen
+
