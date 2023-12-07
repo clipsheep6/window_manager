@@ -823,7 +823,7 @@ bool WindowProperty::Write(Parcel& parcel, PropertyChangeAction action)
     return ret;
 }
 
-bool WindowProperty::WriteActionUpdate(PropertyChangeAction action)
+bool WindowProperty::WriteActionUpdate(Parcel& parcel, PropertyChangeAction action)
 {
     switch (action) {
         case PropertyChangeAction::ACTION_UPDATE_RECT:
