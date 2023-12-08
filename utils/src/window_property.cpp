@@ -819,7 +819,7 @@ void WindowProperty::PropertySetState(Parcel& parcel, WindowProperty* property)
 bool WindowProperty::Write(Parcel& parcel, PropertyChangeAction action)
 {
     bool ret = parcel.WriteUint32(static_cast<uint32_t>(windowId_));
-    ret = ret && WriteActionUpdate(action);
+    ret = ret && WriteActionUpdate(parcel, action);
     return ret;
 }
 
