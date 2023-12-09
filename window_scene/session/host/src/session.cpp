@@ -1923,14 +1923,32 @@ void Session::SetNeedSnapshot(bool needSnapshot)
     needSnapshot_ = needSnapshot;
 }
 
-void Session::SetFloatingScale(float floatingScale)
+void Session::SetScale(float scaleX, float scaleY, float pivotX, float pivotY)
 {
-    floatingScale_ = floatingScale;
+    scaleX_ = scaleX;
+    scaleY_ = scaleY;
+    pivotX_ = pivotX;
+    pivotY_ = pivotY;
 }
 
-float Session::GetFloatingScale() const
+float Session::GetScaleX() const
 {
-    return floatingScale_;
+    return scaleX_;
+}
+
+float Session::GetScaleY() const
+{
+    return scaleY_;
+}
+
+float Session::GetPivotX() const
+{
+    return pivotX_;
+}
+
+float Session::GetPivotY() const
+{
+    return pivotY_;
 }
 
 void Session::SetSCBKeepKeyboard(bool scbKeepKeyboardFlag)
