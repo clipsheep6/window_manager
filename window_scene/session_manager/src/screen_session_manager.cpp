@@ -868,6 +868,7 @@ bool ScreenSessionManager::SetScreenPower(ScreenPowerStatus status, PowerStateCh
 
 void ScreenSessionManager::HandlerSensor(ScreenPowerStatus status)
 {
+    WLOGFI("sswlog-- into handler sensor");
     auto isPhone = system::GetParameter("const.product.devicetype", "unknown") == "phone";
     if (isPhone) {
         if (status == ScreenPowerStatus::POWER_STATUS_ON) {
