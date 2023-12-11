@@ -2111,4 +2111,12 @@ WSError SceneSession::RequestHideKeyboard()
 #endif
     return WSError::WS_OK;
 }
+
+void SceneSession::NotifyUILostFocus()
+{
+    if (moveDragController_) {
+        moveDragController_->OnLostFocus();
+    }
+    Session::NotifyUILostFocus();
+}
 } // namespace OHOS::Rosen
