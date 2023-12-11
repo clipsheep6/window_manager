@@ -41,142 +41,142 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
     DisplayManagerMessage msgId = static_cast<DisplayManagerMessage>(code);
     switch (msgId) {
         case DisplayManagerMessage::TRANS_ID_GET_DEFAULT_DISPLAY_INFO: {
-            return DoGetDefaultDisplayInfo();
+            return DoGetDefaultDisplayInfo(reply);
         }
         case DisplayManagerMessage::TRANS_ID_GET_DISPLAY_BY_ID: {
-            return DoGetDisplayInfoById(data);
+            return DoGetDisplayInfoById(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_GET_DISPLAY_BY_SCREEN: {
-            return DoGetDisplayInfoByScreen(data);
+            return DoGetDisplayInfoByScreen(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_CREATE_VIRTUAL_SCREEN: {
-            return DoCreateVirtualScreen(data);
+            return DoCreateVirtualScreen(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_DESTROY_VIRTUAL_SCREEN: {
-            return DoDestroyVirtualScreen(data);
+            return DoDestroyVirtualScreen(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_SCREEN_SURFACE: {
-            return DoSetVirtualScreenSurface(data);
+            return DoSetVirtualScreenSurface(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SET_ORIENTATION: {
-            return DoSetOrientation(data);
+            return DoSetOrientation(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_GET_DISPLAY_SNAPSHOT: {
-            return DoGetDisplaySnapshot(data);
+            return DoGetDisplaySnapshot(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_REGISTER_DISPLAY_MANAGER_AGENT: {
-            return DoRegisterDisplayManagerAgent(data);
+            return DoRegisterDisplayManagerAgent(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_UNREGISTER_DISPLAY_MANAGER_AGENT: {
-            return DoUnregisterDisplayManagerAgent(data);
+            return DoUnregisterDisplayManagerAgent(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_WAKE_UP_BEGIN: {
-            return DoWakeUpBegin(data);
+            return DoWakeUpBegin(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_WAKE_UP_END: {
-            return DoWakeUpEnd(data);
+            return DoWakeUpEnd(reply);
         }
         case DisplayManagerMessage::TRANS_ID_SUSPEND_BEGIN: {
-            return DoSuspendBegin(data);
+            return DoSuspendBegin(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SUSPEND_END: {
-            return DoSuspendEnd();
+            return DoSuspendEnd(reply);
         }
         case DisplayManagerMessage::TRANS_ID_SET_SPECIFIED_SCREEN_POWER: {
-            return DoSetSpecifiedScreenPower(data);
+            return DoSetSpecifiedScreenPower(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SET_SCREEN_POWER_FOR_ALL: {
-            return DoSetScreenPowerForAll(data);
+            return DoSetScreenPowerForAll(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_GET_SCREEN_POWER: {
-            return DoGetScreenPower(data);
+            return DoGetScreenPower(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SET_DISPLAY_STATE: {
-            return DoSetDisplayState(data);
+            return DoSetDisplayState(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_GET_DISPLAY_STATE: {
-            return DoGetDisplayState(data);
+            return DoGetDisplayState(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_NOTIFY_DISPLAY_EVENT: {
-            return DoNotifyDisplayEvent(data);
+            return DoNotifyDisplayEvent(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SET_FREEZE_EVENT: {
-            return DoSetFreeze(data);
+            return DoSetFreeze(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_MAKE_MIRROR: {
-            return DoMakeMirror(data);
+            return DoMakeMirror(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_GET_SCREEN_INFO_BY_ID: {
-            return DoGetScreenInfoById(data);
+            return DoGetScreenInfoById(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_GET_SCREEN_GROUP_INFO_BY_ID: {
-            return DoGetScreenGroupInfoById(data);
+            return DoGetScreenGroupInfoById(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_GET_ALL_SCREEN_INFOS: {
-            return DoGetAllScreenInfos();
+            return DoGetAllScreenInfos(reply);
         }
         case DisplayManagerMessage::TRANS_ID_GET_ALL_DISPLAYIDS: {
-            return DoGetAllDisplayIds();
+            return DoGetAllDisplayIds(reply);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_MAKE_EXPAND: {
-            return DoScreenMakeExpand(data);
+            return DoScreenMakeExpand(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_REMOVE_VIRTUAL_SCREEN_FROM_SCREEN_GROUP: {
-            return DoRemoveVirtualScreenFromGroup(data);
+            return DoRemoveVirtualScreenFromGroup(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SET_SCREEN_ACTIVE_MODE: {
-            return DoSetScreenActiveMode(data);
+            return DoSetScreenActiveMode(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_PIXEL_RATIO: {
-            return DoSetVirtualPixelRatio(data);
+            return DoSetVirtualPixelRatio(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_GET_SUPPORTED_COLOR_GAMUTS: {
-            return DoGetScreenSupportedColorGamuts(data);
+            return DoGetScreenSupportedColorGamuts(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_GET_COLOR_GAMUT: {
-            return DoGetScreenColorGamut(data);
+            return DoGetScreenColorGamut(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_SET_COLOR_GAMUT: {
-            return DoSetScreenColorGamut(data);
+            return DoSetScreenColorGamut(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_GET_GAMUT_MAP: {
-            return DoGetScreenGamutMap(data);
+            return DoGetScreenGamutMap(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_SET_GAMUT_MAP: {
-            return DoSetScreenGamutMap(data);
+            return DoSetScreenGamutMap(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_SET_COLOR_TRANSFORM: {
-            return DoSetScreenColorTransform(data);
+            return DoSetScreenColorTransform(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_IS_SCREEN_ROTATION_LOCKED: {
-            return DoIsScreenRotationLocked(data);
+            return DoIsScreenRotationLocked(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SET_SCREEN_ROTATION_LOCKED: {
-            return DoSetScreenRotationLocked(data);
+            return DoSetScreenRotationLocked(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_HAS_PRIVATE_WINDOW: {
-            return DoHasPrivateWindow(data);
+            return DoHasPrivateWindow(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_GET_CUTOUT_INFO: {
-            return DoGetCutoutInfo(data);
+            return DoGetCutoutInfo(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_ADD_SURFACE_NODE: {
-            return DoAddSurfaceNodeToDisplay(data);
+            return DoAddSurfaceNodeToDisplay(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_REMOVE_SURFACE_NODE: {
-            return DoRemoveSurfaceNodeFromDisplay(data);
+            return DoRemoveSurfaceNodeFromDisplay(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_STOP_MIRROR: {
-            return DoStopMirror(data);
+            return DoStopMirror(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_STOP_EXPAND: {
-            return DoStopExpand(data);
+            return DoStopExpand(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_RESIZE_VIRTUAL_SCREEN: {
-            return DoResizeVirtualScreen(data);
+            return DoResizeVirtualScreen(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SCENE_BOARD_MAKE_UNIQUE_SCREEN: {
-            return DoMakeUniqueScreen(data);
+            return DoMakeUniqueScreen(data, reply);
         }
         default:
             WLOGFW("unknown transaction code");
@@ -185,14 +185,14 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
     return 0;
 }
 
-int32_t DisplayManagerStub::DoGetDefaultDisplayInfo()
+int32_t DisplayManagerStub::DoGetDefaultDisplayInfo(MessageParcel &reply)
 {
     auto info = GetDefaultDisplayInfo();
     reply.WriteParcelable(info);
     return 0;
 }
 
-int32_t DisplayManagerStub::DoGetDisplayInfoById(MessageParcel &data)
+int32_t DisplayManagerStub::DoGetDisplayInfoById(MessageParcel &data, MessageParcel &reply)
 {
     DisplayId displayId = data.ReadUint64();
     auto info = GetDisplayInfoById(displayId);
@@ -200,7 +200,7 @@ int32_t DisplayManagerStub::DoGetDisplayInfoById(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoGetDisplayInfoByScreen(MessageParcel &data)
+int32_t DisplayManagerStub::DoGetDisplayInfoByScreen(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId screenId = data.ReadUint64();
     auto info = GetDisplayInfoByScreen(screenId);
@@ -208,7 +208,7 @@ int32_t DisplayManagerStub::DoGetDisplayInfoByScreen(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoCreateVirtualScreen(MessageParcel &data)
+int32_t DisplayManagerStub::DoCreateVirtualScreen(MessageParcel &data, MessageParcel &reply)
 {
     std::string name = data.ReadString();
     uint32_t width = data.ReadUint32();
@@ -238,7 +238,7 @@ int32_t DisplayManagerStub::DoCreateVirtualScreen(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoDestroyVirtualScreen(MessageParcel &data)
+int32_t DisplayManagerStub::DoDestroyVirtualScreen(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
     DMError result = DestroyVirtualScreen(screenId);
@@ -246,7 +246,7 @@ int32_t DisplayManagerStub::DoDestroyVirtualScreen(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoSetVirtualScreenSurface(MessageParcel &data)
+int32_t DisplayManagerStub::DoSetVirtualScreenSurface(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
     bool isSurfaceValid = data.ReadBool();
@@ -260,7 +260,7 @@ int32_t DisplayManagerStub::DoSetVirtualScreenSurface(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoSetOrientation(MessageParcel &data)
+int32_t DisplayManagerStub::DoSetOrientation(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
     Orientation orientation = static_cast<Orientation>(data.ReadUint32());
@@ -269,7 +269,7 @@ int32_t DisplayManagerStub::DoSetOrientation(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoGetDisplaySnapshot(MessageParcel &data)
+int32_t DisplayManagerStub::DoGetDisplaySnapshot(MessageParcel &data, MessageParcel &reply)
 {
     DisplayId displayId = data.ReadUint64();
     DmErrorCode errorCode = DmErrorCode::DM_OK;
@@ -279,7 +279,7 @@ int32_t DisplayManagerStub::DoGetDisplaySnapshot(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoRegisterDisplayManagerAgent(MessageParcel &data)
+int32_t DisplayManagerStub::DoRegisterDisplayManagerAgent(MessageParcel &data, MessageParcel &reply)
 {
     auto agent = iface_cast<IDisplayManagerAgent>(data.ReadRemoteObject());
     auto type = static_cast<DisplayManagerAgentType>(data.ReadUint32());
@@ -288,7 +288,7 @@ int32_t DisplayManagerStub::DoRegisterDisplayManagerAgent(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoUnregisterDisplayManagerAgent(MessageParcel &data)
+int32_t DisplayManagerStub::DoUnregisterDisplayManagerAgent(MessageParcel &data, MessageParcel &reply)
 {
     auto agent = iface_cast<IDisplayManagerAgent>(data.ReadRemoteObject());
     auto type = static_cast<DisplayManagerAgentType>(data.ReadUint32());
@@ -297,33 +297,33 @@ int32_t DisplayManagerStub::DoUnregisterDisplayManagerAgent(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoWakeUpBegin(MessageParcel &data)
+int32_t DisplayManagerStub::DoWakeUpBegin(MessageParcel &data, MessageParcel &reply)
 {
     PowerStateChangeReason reason = static_cast<PowerStateChangeReason>(data.ReadUint32());
     reply.WriteBool(WakeUpBegin(reason));
     return 0;
 }
 
-int32_t DisplayManagerStub::DoWakeUpEnd()
+int32_t DisplayManagerStub::DoWakeUpEnd(MessageParcel &reply)
 {
     reply.WriteBool(WakeUpEnd());
     return 0;
 }
 
-int32_t DisplayManagerStub::DoSuspendBegin(MessageParcel &data)
+int32_t DisplayManagerStub::DoSuspendBegin(MessageParcel &data, MessageParcel &reply)
 {
     PowerStateChangeReason reason = static_cast<PowerStateChangeReason>(data.ReadUint32());
     reply.WriteBool(SuspendBegin(reason));
     return 0;
 }
 
-int32_t DisplayManagerStub::DoSuspendEnd()
+int32_t DisplayManagerStub::DoSuspendEnd(MessageParcel &reply)
 {
     reply.WriteBool(SuspendEnd());
     return 0;
 }
 
-int32_t DisplayManagerStub::DoSetSpecifiedScreenPower(MessageParcel &data)
+int32_t DisplayManagerStub::DoSetSpecifiedScreenPower(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint32());
     ScreenPowerState state = static_cast<ScreenPowerState>(data.ReadUint32());
@@ -332,7 +332,7 @@ int32_t DisplayManagerStub::DoSetSpecifiedScreenPower(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoSetScreenPowerForAll(MessageParcel &data)
+int32_t DisplayManagerStub::DoSetScreenPowerForAll(MessageParcel &data, MessageParcel &reply)
 {
     ScreenPowerState state = static_cast<ScreenPowerState>(data.ReadUint32());
     PowerStateChangeReason reason = static_cast<PowerStateChangeReason>(data.ReadUint32());
@@ -340,7 +340,7 @@ int32_t DisplayManagerStub::DoSetScreenPowerForAll(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoGetScreenPower(MessageParcel &data)
+int32_t DisplayManagerStub::DoGetScreenPower(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId dmsScreenId;
     if (!data.ReadUint64(dmsScreenId)) {
@@ -351,14 +351,14 @@ int32_t DisplayManagerStub::DoGetScreenPower(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoSetDisplayState(MessageParcel &data)
+int32_t DisplayManagerStub::DoSetDisplayState(MessageParcel &data, MessageParcel &reply)
 {
     DisplayState state = static_cast<DisplayState>(data.ReadUint32());
     reply.WriteBool(SetDisplayState(state));
     return 0;
 }
 
-int32_t DisplayManagerStub::DoGetDisplayState(MessageParcel &data)
+int32_t DisplayManagerStub::DoGetDisplayState(MessageParcel &data, MessageParcel &reply)
 {
     DisplayState state = GetDisplayState(data.ReadUint64());
     reply.WriteUint32(static_cast<uint32_t>(state));
@@ -380,7 +380,7 @@ int32_t DisplayManagerStub::DoSetFreeze(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoMakeMirror(MessageParcel &data)
+int32_t DisplayManagerStub::DoMakeMirror(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId mainScreenId = static_cast<ScreenId>(data.ReadUint64());
     std::vector<ScreenId> mirrorScreenId;
@@ -395,7 +395,7 @@ int32_t DisplayManagerStub::DoMakeMirror(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoGetScreenInfoById(MessageParcel &data)
+int32_t DisplayManagerStub::DoGetScreenInfoById(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
     auto screenInfo = GetScreenInfoById(screenId);
@@ -403,7 +403,7 @@ int32_t DisplayManagerStub::DoGetScreenInfoById(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoGetScreenGroupInfoById(MessageParcel &data)
+int32_t DisplayManagerStub::DoGetScreenGroupInfoById(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
     auto screenGroupInfo = GetScreenGroupInfoById(screenId);
@@ -411,7 +411,7 @@ int32_t DisplayManagerStub::DoGetScreenGroupInfoById(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoGetAllScreenInfos()
+int32_t DisplayManagerStub::DoGetAllScreenInfos(MessageParcel &reply)
 {
     std::vector<sptr<ScreenInfo>> screenInfos;
     DMError ret = GetAllScreenInfos(screenInfos);
@@ -423,14 +423,14 @@ int32_t DisplayManagerStub::DoGetAllScreenInfos()
     return 0;
 }
 
-int32_t DisplayManagerStub::DoGetAllDisplayIds()
+int32_t DisplayManagerStub::DoGetAllDisplayIds(MessageParcel &reply)
 {
     std::vector<DisplayId> allDisplayIds = GetAllDisplayIds();
     reply.WriteUInt64Vector(allDisplayIds);
     return 0;
 }
 
-int32_t DisplayManagerStub::DoScreenMakeExpand(MessageParcel &data)
+int32_t DisplayManagerStub::DoScreenMakeExpand(MessageParcel &data, MessageParcel &reply)
 {
     std::vector<ScreenId> screenId;
     if (!data.ReadUInt64Vector(&screenId)) {
@@ -462,7 +462,7 @@ int32_t DisplayManagerStub::DoRemoveVirtualScreenFromGroup(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoSetScreenActiveMode(MessageParcel &data)
+int32_t DisplayManagerStub::DoSetScreenActiveMode(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
     uint32_t modeId = data.ReadUint32();
@@ -471,7 +471,7 @@ int32_t DisplayManagerStub::DoSetScreenActiveMode(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoSetVirtualPixelRatio(MessageParcel &data)
+int32_t DisplayManagerStub::DoSetVirtualPixelRatio(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
     float virtualPixelRatio = data.ReadFloat();
@@ -480,7 +480,7 @@ int32_t DisplayManagerStub::DoSetVirtualPixelRatio(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoGetScreenSupportedColorGamuts(MessageParcel &data)
+int32_t DisplayManagerStub::DoGetScreenSupportedColorGamuts(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
     std::vector<ScreenColorGamut> colorGamuts;
@@ -497,7 +497,7 @@ int32_t DisplayManagerStub::DoGetScreenSupportedColorGamuts(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoGetScreenColorGamut(MessageParcel &data)
+int32_t DisplayManagerStub::DoGetScreenColorGamut(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
     ScreenColorGamut colorGamut;
@@ -510,7 +510,7 @@ int32_t DisplayManagerStub::DoGetScreenColorGamut(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoSetScreenColorGamut(MessageParcel &data)
+int32_t DisplayManagerStub::DoSetScreenColorGamut(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
     int32_t colorGamutIdx = data.ReadInt32();
@@ -519,7 +519,7 @@ int32_t DisplayManagerStub::DoSetScreenColorGamut(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoGetScreenGamutMap(MessageParcel &data)
+int32_t DisplayManagerStub::DoGetScreenGamutMap(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
     ScreenGamutMap gamutMap;
@@ -532,7 +532,7 @@ int32_t DisplayManagerStub::DoGetScreenGamutMap(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoSetScreenGamutMap(MessageParcel &data)
+int32_t DisplayManagerStub::DoSetScreenGamutMap(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
     ScreenGamutMap gamutMap = static_cast<ScreenGamutMap>(data.ReadUint32());
@@ -541,7 +541,7 @@ int32_t DisplayManagerStub::DoSetScreenGamutMap(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoSetScreenColorTransform(MessageParcel &data)
+int32_t DisplayManagerStub::DoSetScreenColorTransform(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
     DMError ret = SetScreenColorTransform(screenId);
@@ -549,7 +549,7 @@ int32_t DisplayManagerStub::DoSetScreenColorTransform(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoIsScreenRotationLocked(MessageParcel &data)
+int32_t DisplayManagerStub::DoIsScreenRotationLocked(MessageParcel &data, MessageParcel &reply)
 {
     bool isLocked = false;
     DMError ret = IsScreenRotationLocked(isLocked);
@@ -558,7 +558,7 @@ int32_t DisplayManagerStub::DoIsScreenRotationLocked(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoSetScreenRotationLocked(MessageParcel &data)
+int32_t DisplayManagerStub::DoSetScreenRotationLocked(MessageParcel &data, MessageParcel &reply)
 {
     bool isLocked = static_cast<bool>(data.ReadBool());
     DMError ret = SetScreenRotationLocked(isLocked);
@@ -566,7 +566,7 @@ int32_t DisplayManagerStub::DoSetScreenRotationLocked(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoHasPrivateWindow(MessageParcel &data)
+int32_t DisplayManagerStub::DoHasPrivateWindow(MessageParcel &data, MessageParcel &reply)
 {
     DisplayId id = static_cast<DisplayId>(data.ReadUint64());
     bool hasPrivateWindow = false;
@@ -576,7 +576,7 @@ int32_t DisplayManagerStub::DoHasPrivateWindow(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoGetCutoutInfo(MessageParcel &data)
+int32_t DisplayManagerStub::DoGetCutoutInfo(MessageParcel &data, MessageParcel &reply)
 {
     DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
     sptr<CutoutInfo> cutoutInfo = GetCutoutInfo(displayId);
@@ -584,7 +584,7 @@ int32_t DisplayManagerStub::DoGetCutoutInfo(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoAddSurfaceNodeToDisplay(MessageParcel &data)
+int32_t DisplayManagerStub::DoAddSurfaceNodeToDisplay(MessageParcel &data, MessageParcel &reply)
 {
     DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
     std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
@@ -593,7 +593,7 @@ int32_t DisplayManagerStub::DoAddSurfaceNodeToDisplay(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoRemoveSurfaceNodeFromDisplay(MessageParcel &data)
+int32_t DisplayManagerStub::DoRemoveSurfaceNodeFromDisplay(MessageParcel &data, MessageParcel &reply)
 {
     DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
     std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
@@ -602,7 +602,7 @@ int32_t DisplayManagerStub::DoRemoveSurfaceNodeFromDisplay(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoStopMirror(MessageParcel &data)
+int32_t DisplayManagerStub::DoStopMirror(MessageParcel &data, MessageParcel &reply)
 {
     std::vector<ScreenId> mirrorScreenIds;
     if (!data.ReadUInt64Vector(&mirrorScreenIds)) {
@@ -614,7 +614,7 @@ int32_t DisplayManagerStub::DoStopMirror(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoStopExpand(MessageParcel &data)
+int32_t DisplayManagerStub::DoStopExpand(MessageParcel &data, MessageParcel &reply)
 {
     std::vector<ScreenId> expandScreenIds;
     if (!data.ReadUInt64Vector(&expandScreenIds)) {
@@ -626,7 +626,7 @@ int32_t DisplayManagerStub::DoStopExpand(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoResizeVirtualScreen(MessageParcel &data)
+int32_t DisplayManagerStub::DoResizeVirtualScreen(MessageParcel &data, MessageParcel &reply)
 {
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
     uint32_t width = data.ReadUint32();
@@ -636,7 +636,7 @@ int32_t DisplayManagerStub::DoResizeVirtualScreen(MessageParcel &data)
     return 0;
 }
 
-int32_t DisplayManagerStub::DoMakeUniqueScreen(MessageParcel &data)
+int32_t DisplayManagerStub::DoMakeUniqueScreen(MessageParcel &data, MessageParcel &reply)
 {
     std::vector<ScreenId> uniqueScreenIds;
     uint32_t size = data.ReadUint32();
