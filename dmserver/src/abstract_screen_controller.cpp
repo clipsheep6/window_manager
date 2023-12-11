@@ -795,13 +795,14 @@ void AbstractScreenController::SetScreenRotateAnimation(
         displayNode->SetRotation(-360.f);
     }
     if (withAnimation) {
-        RotateWithAnimation(rotationAfter);
+        RotateWithAnimation(rotationAfter, screenId, x, y, w, h);
     } else {
-        RotateWithoutAnimation();
+        RotateWithoutAnimation(rotationAfter, screenId, x, y, w, h);
     }
 }
 
-void AbstractDisplayController::RotateWithAnimation(Rotation rotationAfter, ScreenId screenId)
+void AbstractScreenController::RotateWithAnimation(Rotation rotationAfter, ScreenId screenId,
+    float x, float y, float w, float h)
 {
     WLOGFD("[FixOrientation] display rotate with animation %{public}u", rotationAfter);
     std::weak_ptr<RSDisplayNode> weakNode = GetRSDisplayNodeByScreenId(screenId);
@@ -830,8 +831,13 @@ void AbstractDisplayController::RotateWithAnimation(Rotation rotationAfter, Scre
     });
 }
 
-void AbstractDisplayController::RotateWithoutAnimation(Rotation rotationAfter)
+void AbstractScreenController::RotateWithoutAnimation(Rotation rotationAfter, ScreenId screenId,
+    float x, float y, float w, float h)
 {
+    auto displayNode = GetRSDisplayNodeByScreenId(screenId);
+    if (displayNode == nullptr) {
+        return;
+    }
     WLOGFD("[FixOrientation] display rotate without animation %{public}u", rotationAfter);
     displayNode->SetRotation(-90.f * static_cast<uint32_t>(rotationAfter)); // 90.f is base degree
     displayNode->SetFrame(x, y, w, h);
