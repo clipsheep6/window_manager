@@ -27,6 +27,53 @@ public:
     ~DisplayManagerStub() = default;
     virtual int32_t OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option) override;
+private:
+	int32_t DoGetDefaultDisplayInfo();
+	int32_t DoGetDisplayInfoById(MessageParcel &data);
+	int32_t DoGetDisplayInfoByScreen(MessageParcel &data);
+	int32_t DoCreateVirtualScreen(MessageParcel &data);
+	int32_t DoDestroyVirtualScreen(MessageParcel &data);
+	int32_t DoSetVirtualScreenSurface(MessageParcel &data);
+	int32_t DoSetOrientation(MessageParcel &data);
+	int32_t DoGetDisplaySnapshot(MessageParcel &data);
+	int32_t DoRegisterDisplayManagerAgent(MessageParcel &data);
+	int32_t DoUnregisterDisplayManagerAgent(MessageParcel &data);
+	int32_t DoWakeUpBegin(MessageParcel &data);
+	int32_t DoWakeUpEnd();
+	int32_t DoSuspendBegin(MessageParcel &data);
+	int32_t DoSuspendEnd();
+	int32_t DoSetSpecifiedScreenPower(MessageParcel &data);
+	int32_t DoSetScreenPowerForAll(MessageParcel &data);
+	int32_t DoGetScreenPower(MessageParcel &data);
+	int32_t DoSetDisplayState(MessageParcel &data);
+	int32_t DoGetDisplayState(MessageParcel &data);
+	int32_t DoNotifyDisplayEvent(MessageParcel &data);
+	int32_t DoSetFreeze(MessageParcel &data);
+	int32_t DoMakeMirror(MessageParcel &data);
+	int32_t DoGetScreenInfoById(MessageParcel &data);
+	int32_t DoGetScreenGroupInfoById(MessageParcel &data);
+	int32_t DoGetAllScreenInfos();
+	int32_t DoGetAllDisplayIds();
+	int32_t DoScreenMakeExpand(MessageParcel &data);
+	int32_t DoRemoveVirtualScreenFromGroup(MessageParcel &data);
+	int32_t DoSetScreenActiveMode(MessageParcel &data);
+	int32_t DoSetVirtualPixelRatio(MessageParcel &data);
+	int32_t DoGetScreenSupportedColorGamuts(MessageParcel &data);
+	int32_t DoGetScreenColorGamut(MessageParcel &data);
+	int32_t DoSetScreenColorGamut(MessageParcel &data);
+	int32_t DoGetScreenGamutMap(MessageParcel &data);
+	int32_t DoSetScreenGamutMap(MessageParcel &data);
+	int32_t DoSetScreenColorTransform(MessageParcel &data);
+	int32_t DoIsScreenRotationLocked(MessageParcel &data);
+	int32_t DoSetScreenRotationLocked(MessageParcel &data);
+	int32_t DoHasPrivateWindow(MessageParcel &data);
+	int32_t DoGetCutoutInfo(MessageParcel &data);
+	int32_t DoAddSurfaceNodeToDisplay(MessageParcel &data);
+	int32_t DoRemoveSurfaceNodeFromDisplay(MessageParcel &data);
+	int32_t DoStopMirror(MessageParcel &data);
+	int32_t DoStopExpand(MessageParcel &data);
+	int32_t DoResizeVirtualScreen(MessageParcel &data);
+	int32_t DoMakeUniqueScreen(MessageParcel &data);
 };
 } // namespace OHOS::Rosen
 
