@@ -1262,10 +1262,10 @@ void SceneSession::SetZOrder(uint32_t zOrder)
     }
 }
 
-void SceneSession::SetScale(float scaleX, float scaleY, float pivotX, float pivotY)
+void SceneSession::SetFloatingScale(float floatingScale)
 {
-    if (scaleX_ != scaleX || scaleY_ != scaleY || pivotX_ != pivotX || pivotY_ != pivotY) {
-        Session::SetScale(scaleX, scaleY, pivotX, pivotY);
+    if (floatingScale_ != floatingScale) {
+        Session::SetFloatingScale(floatingScale);
         if (specificCallback_ != nullptr) {
             specificCallback_->onWindowInfoUpdate_(GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
         }
@@ -2110,5 +2110,23 @@ WSError SceneSession::RequestHideKeyboard()
     }
 #endif
     return WSError::WS_OK;
+}
+
+void SceneSession::SetScale(float scaleX, float scaleY, float pivotX, float pivotY)
+{
+    if (scaleX_ != scaleX || scaleY_ != scaleY || pivotX_ != pivotX || pivotY_ != pivotY) {
+        Session::SetScale(scaleX, scaleY, pivotX, pivotY);
+        if (specificCallback_ != nullptr) {
+            specificCallback_->onWindowInfoUpdate_(GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
+        }
+    }
+}
+
+void SceneSession::NotifyUILostFocus()
+{
+    if (moveDragController_) {
+        moveDragController_->OnLostFocus();
+    }
+    Session::NotifyUILostFocus();
 }
 } // namespace OHOS::Rosen

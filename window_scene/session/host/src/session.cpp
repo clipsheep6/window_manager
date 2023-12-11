@@ -1923,6 +1923,11 @@ void Session::SetNeedSnapshot(bool needSnapshot)
     needSnapshot_ = needSnapshot;
 }
 
+void Session::SetFloatingScale(float floatingScale)
+{
+    floatingScale_ = floatingScale;
+}
+
 void Session::SetScale(float scaleX, float scaleY, float pivotX, float pivotY)
 {
     scaleX_ = scaleX;

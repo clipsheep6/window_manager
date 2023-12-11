@@ -226,7 +226,7 @@ public:
     void NotifyClick();
     void NotifyRequestFocusStatusNotifyManager(bool isFocused);
     void NotifyUIRequestFocus();
-    void NotifyUILostFocus();
+    virtual void NotifyUILostFocus();
     bool GetStateFromManager(const ManagerState key);
     void PresentFoucusIfNeed(int32_t pointerAcrion);
     WSError UpdateFocus(bool isFocused);
@@ -269,6 +269,8 @@ public:
     uint32_t GetZOrder() const;
     void SetUINodeId(uint32_t uiNodeId);
     uint32_t GetUINodeId() const;
+    virtual void SetFloatingScale(float floatingScale);
+    float GetFloatingScale() const;
     void SetSCBKeepKeyboard(bool scbKeepKeyboardFlag);
     bool GetSCBKeepKeyboardFlag() const;
     virtual void SetScale(float scaleX, float scaleY, float pivotX, float pivotY);
@@ -396,6 +398,7 @@ protected:
     float aspectRatio_ = 0.0f;
     std::map<MMI::WindowArea, WSRectF> windowAreas_;
     bool isTerminating = false;
+    float floatingScale_ = 1.0f;
     bool scbKeepKeyboardFlag_ = false;
     bool isDirty_ = false;
     float scaleX_ = 1.0f;

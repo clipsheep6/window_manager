@@ -56,6 +56,11 @@ const std::string TOUCH_OUTSIDE_CB = "touchOutside";
 const std::string WINDOW_DRAG_HOT_AREA_CB = "windowDragHotArea";
 const std::string SESSIONINFO_LOCKEDSTATE_CHANGE_CB = "sessionInfoLockedStateChange";
 const std::string PREPARE_CLOSE_PIP_SESSION = "prepareClosePiPSession";
+constexpr int SCALE_ARG_COUNT = 4;
+constexpr int ARG_INDEX_0 = 0;
+constexpr int ARG_INDEX_1 = 1;
+constexpr int ARG_INDEX_2 = 2;
+constexpr int ARG_INDEX_3 = 3;
 } // namespace
 
 std::map<int32_t, napi_ref> JsSceneSession::jsSceneSessionMap_;
@@ -86,12 +91,13 @@ napi_value JsSceneSession::Create(napi_env env, const sptr<SceneSession>& sessio
     BindNativeFunction(env, objValue, "setShowRecent", moduleName, JsSceneSession::SetShowRecent);
     BindNativeFunction(env, objValue, "setZOrder", moduleName, JsSceneSession::SetZOrder);
     BindNativeFunction(env, objValue, "setPrivacyMode", moduleName, JsSceneSession::SetPrivacyMode);
-    BindNativeFunction(env, objValue, "setScale", moduleName, JsSceneSession::SetScale);
+    BindNativeFunction(env, objValue, "setFloatingScale", moduleName, JsSceneSession::SetFloatingScale);
     BindNativeFunction(env, objValue, "setSystemSceneOcclusionAlpha", moduleName,
         JsSceneSession::SetSystemSceneOcclusionAlpha);
     BindNativeFunction(env, objValue, "setFocusable", moduleName, JsSceneSession::SetFocusable);
     BindNativeFunction(env, objValue, "setSCBKeepKeyboard", moduleName, JsSceneSession::SetSCBKeepKeyboard);
     BindNativeFunction(env, objValue, "requestHideKeyboard", moduleName, JsSceneSession::RequestHideKeyboard);
+    BindNativeFunction(env, objValue, "setScale", moduleName, JsSceneSession::SetScale);
     napi_ref jsRef = nullptr;
     napi_status status = napi_create_reference(env, objValue, 1, &jsRef);
     if (status != napi_ok) {
@@ -813,11 +819,11 @@ napi_value JsSceneSession::SetZOrder(napi_env env, napi_callback_info info)
     return (me != nullptr) ? me->OnSetZOrder(env, info) : nullptr;
 }
 
-napi_value JsSceneSession::SetScale(napi_env env, napi_callback_info info)
+napi_value JsSceneSession::SetFloatingScale(napi_env env, napi_callback_info info)
 {
-    WLOGI("[NAPI]SetScale");
+    WLOGI("[NAPI]SetFloatingScale");
     JsSceneSession* me = CheckParamsAndGetThis<JsSceneSession>(env, info);
-    return (me != nullptr) ? me->OnSetScale(env, info) : nullptr;
+    return (me != nullptr) ? me->OnSetFloatingScale(env, info) : nullptr;
 }
 
 napi_value JsSceneSession::SetSCBKeepKeyboard(napi_env env, napi_callback_info info)
@@ -1882,41 +1888,20 @@ napi_value JsSceneSession::OnSetZOrder(napi_env env, napi_callback_info info)
     return NapiGetUndefined(env);
 }
 
-napi_value JsSceneSession::OnSetScale(napi_env env, napi_callback_info info)
+napi_value JsSceneSession::OnSetFloatingScale(napi_env env, napi_callback_info info)
 {
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc < 4) { // 4: params num
+    if (argc < 1) { // 1: params num
         WLOGFE("[NAPI]Argc is invalid: %{public}zu", argc);
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
             "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
-    double_t scaleX = 1.0;
-    if (!ConvertFromJsValue(env, argv[0], scaleX)) {
+    double_t floatingScale = 1.0;
+    if (!ConvertFromJsValue(env, argv[0], floatingScale)) {
         WLOGFE("[NAPI]Failed to convert parameter to scaleX");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
-            "Input parameter is missing or invalid"));
-        return NapiGetUndefined(env);
-    }
-    double_t scaleY = 1.0;
-    if (!ConvertFromJsValue(env, argv[0], scaleY)) {
-        WLOGFE("[NAPI]Failed to convert parameter to scaleY");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
-            "Input parameter is missing or invalid"));
-        return NapiGetUndefined(env);
-    }
-    double_t pivotX = 0.0;
-    if (!ConvertFromJsValue(env, argv[0], pivotX)) {
-        WLOGFE("[NAPI]Failed to convert parameter to pivotX");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
-            "Input parameter is missing or invalid"));
-        return NapiGetUndefined(env);
-    }
-    double_t pivotY = 0.0;
-    if (!ConvertFromJsValue(env, argv[0], pivotY)) {
-        WLOGFE("[NAPI]Failed to convert parameter to pivotY");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
             "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
@@ -1928,8 +1913,7 @@ napi_value JsSceneSession::OnSetScale(napi_env env, napi_callback_info info)
             "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
-    session->SetScale(static_cast<float_t>(scaleX), static_cast<float_t>(scaleY), static_cast<float_t>(pivotX),
-        static_cast<float_t>(pivotY));
+    session->SetFloatingScale(static_cast<float_t>(floatingScale));
     return NapiGetUndefined(env);
 }
 
@@ -2014,6 +1998,64 @@ napi_value JsSceneSession::OnRequestHideKeyboard(napi_env env, napi_callback_inf
         return NapiGetUndefined(env);
     }
     session->RequestHideKeyboard();
+    return NapiGetUndefined(env);
+}
+
+napi_value JsSceneSession::SetScale(napi_env env, napi_callback_info info)
+{
+    WLOGI("[NAPI]SetScale");
+    JsSceneSession* me = CheckParamsAndGetThis<JsSceneSession>(env, info);
+    return (me != nullptr) ? me->OnSetScale(env, info) : nullptr;
+}
+
+napi_value JsSceneSession::OnSetScale(napi_env env, napi_callback_info info)
+{
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc < SCALE_ARG_COUNT) { // SCALE_ARG_COUNT: params num
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu", argc);
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    double_t scaleX = 1.0;
+    if (!ConvertFromJsValue(env, argv[ARG_INDEX_0], scaleX)) {
+        WLOGFE("[NAPI]Failed to convert parameter to scaleX");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    double_t scaleY = 1.0;
+    if (!ConvertFromJsValue(env, argv[ARG_INDEX_1], scaleY)) {
+        WLOGFE("[NAPI]Failed to convert parameter to scaleY");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    double_t pivotX = 0.0;
+    if (!ConvertFromJsValue(env, argv[ARG_INDEX_2], pivotX)) {
+        WLOGFE("[NAPI]Failed to convert parameter to pivotX");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    double_t pivotY = 0.0;
+    if (!ConvertFromJsValue(env, argv[ARG_INDEX_3], pivotY)) {
+        WLOGFE("[NAPI]Failed to convert parameter to pivotY");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        WLOGFE("[NAPI]session is nullptr");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    session->SetScale(static_cast<float_t>(scaleX), static_cast<float_t>(scaleY), static_cast<float_t>(pivotX),
+        static_cast<float_t>(pivotY));
     return NapiGetUndefined(env);
 }
 

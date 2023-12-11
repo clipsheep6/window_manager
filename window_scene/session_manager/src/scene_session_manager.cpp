@@ -129,6 +129,7 @@ constexpr int VALUE_MAX_WIDTH = 5;
 constexpr int ORIEN_MAX_WIDTH = 12;
 constexpr int PID_MAX_WIDTH = 8;
 constexpr int PARENT_ID_MAX_WIDTH = 6;
+constexpr int SCALE_MAX_WIDTH = 12;
 constexpr int WINDOW_NAME_MAX_LENGTH = 20;
 constexpr int32_t STATUS_BAR_AVOID_AREA = 0;
 const std::string ARG_DUMP_ALL = "-a";
@@ -2767,8 +2768,8 @@ void SceneSessionManager::DumpSessionInfo(const sptr<SceneSession>& session, std
         << std::left << std::setw(VALUE_MAX_WIDTH) << rect.width_
         << std::left << std::setw(VALUE_MAX_WIDTH) << rect.height_
         << "]"
-        << std::left << std::setw(VALUE_MAX_WIDTH) << session->GetScaleX()
-        << std::left << std::setw(VALUE_MAX_WIDTH) << session->GetScaleY()
+        << std::left << std::setw(SCALE_MAX_WIDTH) << session->GetScaleX()
+        << std::left << std::setw(SCALE_MAX_WIDTH) << session->GetScaleY()
         << std::endl;
 }
 
@@ -2812,7 +2813,8 @@ WSError SceneSessionManager::GetAllSessionDumpInfo(std::string& dumpInfo)
     std::ostringstream oss;
     oss << "-------------------------------------ScreenGroup " << screenGroupId
         << "-------------------------------------" << std::endl;
-    oss << "WindowName           DisplayId Pid     WinId Type Mode Flag ZOrd Orientation [ x    y    w    h    ] scaleX  scaleY "
+    oss << "WindowName           DisplayId Pid     WinId Type Mode Flag ZOrd Orientation [ x    y    w    h    ]"
+    oss << "scaleX  scaleY"
         << std::endl;
 
     std::vector<sptr<SceneSession>> allSession;
@@ -5113,6 +5115,24 @@ void SceneSessionManager::InitWithRenderServiceAdded()
     if (rsInterface_.RegisterOcclusionChangeCallback(windowVisibilityChangeCb) != WM_OK) {
         WLOGFE("RegisterWindowVisibilityChangeCallback failed");
     }
+}
+
+WMError SceneSessionManager::SetSystemAnimatedScenes(SystemAnimatedSceneType sceneType)
+{
+    if (sceneType > SystemAnimatedSceneType::SCENE_UNKNOWN) {
+        WLOGFE("The input scene type is valid, scene type is %{public}d", sceneType);
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+
+    auto task = [this, sceneType]() {
+        WLOGFD("Set system animated scene %{public}d.", sceneType);
+        bool ret = rsInterface_.SetSystemAnimatedScenes(static_cast<SystemAnimatedScenes>(sceneType));
+        if (!ret) {
+            WLOGFE("Set system animated scene failed.");
+        }
+    };
+    taskScheduler_->PostAsyncTask(task);
+    return WMError::WM_OK;
 }
 
 WSError SceneSessionManager::NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible)

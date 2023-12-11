@@ -116,9 +116,7 @@ ohos_shared_library("scene_session") {
   } else {
     imf_enable = false
   }
-
   print("imf_enable: ", imf_enable)
-
   if (imf_enable == true) {
     external_deps += [ "imf:inputmethod_client" ]
     defines += [ "IMF_ENABLE" ]
