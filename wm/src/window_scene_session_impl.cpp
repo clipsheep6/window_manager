@@ -1250,6 +1250,7 @@ WMError WindowSceneSessionImpl::MaximizeFloating()
         SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
         property_->SetMaximizeMode(MaximizeMode::MODE_AVOID_SYSTEM_BAR);
         UpdateDecorEnable(true);
+        NotifyWindowStatusChange(GetMode());
     }
     UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE);
 
@@ -1278,6 +1279,7 @@ WMError WindowSceneSessionImpl::Recover()
         WLOGFE("recovery is invalid on sub window");
         return WMError::WM_ERROR_INVALID_OPERATION;
     }
+    NotifyWindowStatusChange(GetMode());
     return WMError::WM_OK;
 }
 
