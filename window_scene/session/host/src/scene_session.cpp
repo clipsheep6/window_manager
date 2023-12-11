@@ -18,6 +18,9 @@
 
 #include <algorithm>
 #include <hitrace_meter.h>
+#ifdef IMF_ENABLE
+#include <input_method_controller.h>
+#endif // IMF_ENABLE
 #include <ipc_skeleton.h>
 #include <pointer_event.h>
 #include <transaction/rs_transaction.h>
@@ -1259,10 +1262,10 @@ void SceneSession::SetZOrder(uint32_t zOrder)
     }
 }
 
-void SceneSession::SetFloatingScale(float floatingScale)
+void SceneSession::SetScale(float scaleX, float scaleY, float pivotX, float pivotY)
 {
-    if (floatingScale_ != floatingScale) {
-        Session::SetFloatingScale(floatingScale);
+    if (scaleX_ != scaleX || scaleY_ != scaleY || pivotX_ != pivotX || pivotY_ != pivotY) {
+        Session::SetScale(scaleX, scaleY, pivotX, pivotY);
         if (specificCallback_ != nullptr) {
             specificCallback_->onWindowInfoUpdate_(GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
         }
@@ -2093,6 +2096,20 @@ WSError SceneSession::UpdateSizeChangeReason(SizeChangeReason reason)
 bool SceneSession::IsDirtyWindow()
 {
     return isDirty_;
+}
+
+WSError SceneSession::RequestHideKeyboard()
+{
+#ifdef IMF_ENABLE
+    WLOGFI("[WMSInput] Notify InputMethod framework close keyboard");
+    if (MiscServices::InputMethodController::GetInstance()) {
+        int32_t ret = MiscServices::InputMethodController::GetInstance()->RequestHideInput();
+        if (ret != 0) { // 0 - NO_ERROR
+            WLOGFE("[WMSInput] InputMethod framework close keyboard failed, ret: %{public}d", ret);
+        }
+    }
+#endif
+    return WSError::WS_OK;
 }
 
 void SceneSession::NotifyUILostFocus()

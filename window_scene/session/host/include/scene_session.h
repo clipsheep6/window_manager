@@ -134,7 +134,7 @@ public:
     WSError UpdateWindowAnimationFlag(bool needDefaultAnimationFlag) override;
     void SetZOrder(uint32_t zOrder) override;
     std::vector<Rect> GetTouchHotAreas() const override;
-    void SetFloatingScale(float floatingScale) override;
+    void SetScale(float scaleX, float scaleY, float pivotX, float pivotY) override;
     WSError RaiseAboveTarget(int32_t subWindowId) override;
     WSError SetTextFieldAvoidInfo(double textFieldPositionY, double textFieldHeight) override;
     WSError UpdatePiPRect(uint32_t width, uint32_t height, PiPRectUpdateReason reason) override;
@@ -199,6 +199,7 @@ public:
     void RegisterSessionChangeCallback(const sptr<SceneSession::SessionChangeCallback>& sessionChangeCallback);
     WSError UpdateSizeChangeReason(SizeChangeReason reason);
     void ClearSpecificSessionCbMap();
+    WSError RequestHideKeyboard();
 
     double textFieldPositionY_ = 0.0;
     double textFieldHeight_ = 0.0;
