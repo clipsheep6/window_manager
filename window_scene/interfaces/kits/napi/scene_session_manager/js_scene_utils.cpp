@@ -222,6 +222,12 @@ bool ConvertSessionInfoName(napi_env env, napi_value jsObject, SessionInfo& sess
     napi_get_named_property(env, jsObject, "appIndex", &jsAppIndex);
     napi_value jsIsSystem = nullptr;
     napi_get_named_property(env, jsObject, "isSystem", &jsIsSystem);
+    napi_value jsIsRa = nullptr;
+    napi_get_named_property(env, jsObject, "isRotatable", &jsIsRa);
+    napi_value jsIsSysInput = nullptr;
+    napi_get_named_property(env, jsObject, "isSystemInput", &jsIsSysInput);
+    
+
     if (!IsJsBundleNameUndefind(env, jsBundleName, sessionInfo)) {
         return false;
     }
@@ -267,6 +273,21 @@ bool ConvertSessionInfoState(napi_env env, napi_value jsObject, SessionInfo& ses
     }
     if (!IsJsIsPersistentRecoverUndefined(env, jsIsPersistentRecover, sessionInfo)) {
         return false;
+    }
+    if ( GetType(env, jsIsRa)!= napi_undefined ) {
+        bool isRotatable;
+        if(!ConvertFromJsValue(env, jsIsRa, isRotatable)){
+          WLOGFE("[napi] Failed to convert parameter to isRotatable");
+          return false;
+        }
+    }
+    
+    if ( GetType(env, jsIsSysInput)!= napi_undefined ) {
+        bool isSystemInput;
+        if(!ConvertFromJsValue(env, jsIsSysInput, isSystemInput)){
+          WLOGFE("[napi] Failed to convert parameter to isSystemInput");
+          return false;
+        }
     }
     return true;
 }
@@ -680,7 +701,6 @@ napi_value SessionTypeInit(napi_env env)
     SetTypeProperty(objValue, env, "TYPE_SYSTEM_FLOAT", JsSessionType::TYPE_SYSTEM_FLOAT);
     SetTypeProperty(objValue, env, "TYPE_PIP", JsSessionType::TYPE_PIP);
     SetTypeProperty(objValue, env, "TYPE_THEME_EDITOR", JsSessionType::TYPE_THEME_EDITOR);
-    SetTypeProperty(objValue, env, "TYPE_NAVIGATION_INDICATOR", JsSessionType::TYPE_NAVIGATION_INDICATOR);
     return objValue;
 }
 } // namespace OHOS::Rosen

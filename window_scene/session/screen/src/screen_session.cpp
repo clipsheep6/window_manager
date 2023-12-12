@@ -315,6 +315,16 @@ void ScreenSession::SetUpdateToInputManagerCallback(std::function<void(float)> u
     updateToInputManagerCallback_ = updateToInputManagerCallback;
 }
 
+void ScreenSession::UpdatePropertyWithRotation(RRect bounds, int rotation, FoldDisplayMode folrDisplayMode)
+{
+    Rotation targetRotation = ConvertIntToRotation(rotation);
+    DisplayOrientation displayOrientation = CalcDisplayOrientation(targetRotation, foldDisplaMode);
+    property_.SetBounds(bounds);
+    property_.SetRotation(static_cast<float>(rotation));
+    property_.UpdateScreenRotation(targetRotation);
+    property_.SetDisplayOrientation(displayOrientation);
+}
+
 void ScreenSession::UpdateToInputManager(RRect bounds, int rotation, FoldDisplayMode foldDisplayMode)
 {
     bool needUpdateToInputManager = false;

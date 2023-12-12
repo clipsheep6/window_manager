@@ -887,6 +887,7 @@ napi_value JsSceneSessionManager::OnGetRootSceneSession(napi_env env, napi_callb
         });
     rootScene_->SetFrameLayoutFinishCallback([]() {
         SceneSessionManager::GetInstance().NotifyUpdateRectAfterLayout();
+        SceneSessionManager::GetInstance().NotifySceneInfoUpdateToMMI();
     });
     napi_value jsRootSceneSessionObj = JsRootSceneSession::Create(env, rootSceneSession);
     if (jsRootSceneSessionObj == nullptr) {
@@ -921,6 +922,7 @@ napi_value JsSceneSessionManager::OnRequestSceneSession(napi_env env, napi_callb
             WLOGFE("[NAPI]Failed to get session info from js object");
             errCode = WSErrorCode::WS_ERROR_INVALID_PARAM;
         }
+        WLOGFI("[NAPI] hzz OnRequestSceneSession isRotatable %{public}d", sessionInfo.isRotatable_);
     }
     if (errCode == WSErrorCode::WS_ERROR_INVALID_PARAM) {
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),

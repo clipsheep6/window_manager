@@ -186,6 +186,8 @@ struct SessionInfo {
     bool isClearSession = false;
     std::string sessionAffinity;
     int32_t collaboratorType_ = CollaboratorType::DEFAULT_TYPE;
+    bool isRotatable_ = false;
+    bool isSystemInput_ = false;
 };
 
 enum class SessionFlag : uint32_t {
