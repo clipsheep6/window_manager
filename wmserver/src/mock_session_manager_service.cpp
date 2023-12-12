@@ -57,6 +57,20 @@ const std::string SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 const std::string TEST_MODULE_NAME_SUFFIX = "_test";
 } // namespace
 
+class ClientListenerDeathRecipient : public IRemoteObject::DeathRecipient {
+public:
+    void SetPid(int64_t pid) { pid_ = pid; }
+
+    void OnRemoteDied(const wptr<IRemoteObject> &wptrDeath) override
+    {
+        WLOGFI("[RECOVER] OnRemoteDied, pid = %{public}ld", pid_);
+        MockSessionManagerService::GetInstance().UnRegisterSessionManagerServiceRecoverListener(pid_);
+    }
+
+private:
+    int64_t pid_ = -1;
+};
+
 WM_IMPLEMENT_SINGLE_INSTANCE(MockSessionManagerService)
 
 void MockSessionManagerService::SMSDeathRecipient::OnRemoteDied(const wptr<IRemoteObject>& object)
@@ -71,14 +85,7 @@ void MockSessionManagerService::SMSDeathRecipient::OnRemoteDied(const wptr<IRemo
         WLOGFI("SceneBoard is testing, do not kill foundation.");
         return;
     }
-    WLOGFI("SessionManagerService died, restart foundation now!");
-    int32_t pid = getpid();
-    MockSessionManagerService::WriteStringToFile(pid, "0");
-    if (needKillService_) {
-        _exit(0);
-    } else {
-        needKillService_ = true;
-    }
+    WLOGFW("SessionManagerService died!");
 }
 
 MockSessionManagerService::MockSessionManagerService() : SystemAbility(WINDOW_MANAGER_SERVICE_ID, true)
@@ -163,6 +170,9 @@ bool MockSessionManagerService::SetSessionManagerService(const sptr<IRemoteObjec
 
     RegisterMockSessionManagerService();
     WLOGFI("sessionManagerService set success!");
+
+    GetSceneSessionManager();
+
     return true;
 }
 
@@ -174,6 +184,52 @@ sptr<IRemoteObject> MockSessionManagerService::GetSessionManagerService()
     }
     WLOGFD("Get session manager service success");
     return sessionManagerService_;
+}
+
+void MockSessionManagerService::NotifySceneBoardAvailable()
+{
+    WLOGFI("[RECOVER] scene board is available");
+    NotifySceneBoardAvailableToClient();
+}
+
+void MockSessionManagerService::RegisterSessionManagerServiceRecoverListener(
+    int64_t pid, const sptr<IRemoteObject>& listener)
+{
+    WLOGFI("[RECOVER] pid = %{public}ld", pid);
+
+    std::lock_guard<std::mutex> lock(smsRecoverListenerLock_);
+    if (listener == nullptr) {
+        WLOGFE("[RECOVER] listener is nullptr");
+        return;
+    }
+
+    sptr<ClientListenerDeathRecipient> clientDeathLisntener = new ClientListenerDeathRecipient();
+    clientDeathLisntener->SetPid(pid);
+    listener->AddDeathRecipient(clientDeathLisntener);
+
+    smsRecoverListenerMap_[pid] = iface_cast<ISessionManagerServiceRecoverListener>(listener);
+}
+
+void MockSessionManagerService::UnRegisterSessionManagerServiceRecoverListener(int64_t pid)
+{
+    std::lock_guard<std::mutex> lock(smsRecoverListenerLock_);
+    WLOGFI("[RECOVER] pid = %{public}ld", pid);
+    auto it = smsRecoverListenerMap_.find(pid);
+    if (it != smsRecoverListenerMap_.end()) {
+        smsRecoverListenerMap_.erase(it);
+    }
+}
+
+void MockSessionManagerService::NotifySceneBoardAvailableToClient()
+{
+    WLOGFI("[RECOVER] Remote process count = %{public}lu", smsRecoverListenerMap_.size());
+    std::lock_guard<std::mutex> lock(smsRecoverListenerLock_);
+    for (auto& it: smsRecoverListenerMap_) {
+        if (it.second != nullptr) {
+            WLOGFI("[RECOVER] Call OnSessionManagerServiceRecover pid = %{public}ld", it.first);
+            it.second->OnSessionManagerServiceRecover(sessionManagerService_);
+        }
+    }
 }
 
 void MockSessionManagerService::ShowIllegalArgsInfo(std::string& dumpInfo)

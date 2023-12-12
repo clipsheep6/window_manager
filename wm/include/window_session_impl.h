@@ -32,9 +32,11 @@
 #include "interfaces/include/ws_common_inner.h"
 #include "session/container/include/zidl/session_stage_stub.h"
 #include "session/host/include/zidl/session_interface.h"
+#include "session_manager/include/session_manager.h"
 #include "window.h"
 #include "window_option.h"
 #include "wm_common.h"
+
 
 namespace OHOS {
 namespace Rosen {
@@ -168,6 +170,7 @@ public:
     void NotifySessionForeground(uint32_t reason, bool withAnimation) override;
     void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
     WSError UpdateTitleInTargetPos(bool isShow, int32_t height) override;
+    WMError RecoverAndReconnectSceneSession();
 
     void UpdatePiPRect(const uint32_t width, const uint32_t height, PiPRectUpdateReason reason) override;
     void SetDrawingContentState(bool drawingContentState);
@@ -183,6 +186,8 @@ protected:
     void NotifyBeforeDestroy(std::string windowName);
     void NotifyAfterDestroy();
     void ClearListenersById(int32_t persistentId);
+    void RegisterSessionRecoverListener(SessionManager::SessionRecoverCallbackFunc callbackFunc);
+    void UnRegisterSessionRecoverListener();
     WMError WindowSessionCreateCheck();
     void UpdateDecorEnable(bool needNotify = false, WindowMode mode = WindowMode::WINDOW_MODE_UNDEFINED);
     void NotifyModeChange(WindowMode mode, bool hasDeco = true);

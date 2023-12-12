@@ -13,24 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_SERVICE_H
-#define OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_SERVICE_H
+#ifndef OHOS_SESSION_MANAGER_SERVICE_RECOVER_LISTENER_H
+#define OHOS_SESSION_MANAGER_SERVICE_RECOVER_LISTENER_H
 
-#include "session_manager_service_stub.h"
+#include <iremote_broker.h>
 
-#include "wm_single_instance.h"
-
-namespace OHOS::Rosen {
-class SessionManagerService : public SessionManagerServiceStub {
-WM_DECLARE_SINGLE_INSTANCE(SessionManagerService)
+namespace OHOS {
+namespace Rosen {
+class ISessionManagerServiceRecoverListener : public IRemoteBroker {
 public:
-    void Init();
-    void NotifySceneBoardAvailable();
-    sptr<IRemoteObject> GetSceneSessionManager() override;
+    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.ISessionManagerServiceRecoverListener");
+    enum class SessionManagerServiceRecoverMessage : uint32_t {
+        TRANS_ID_ON_SESSION_MANAGER_SERVICE_RECOVER,
+    };
 
-private:
-    sptr<IRemoteObject> sceneSessionManagerObj_;
+    virtual void OnSessionManagerServiceRecover(const sptr<IRemoteObject>& sessionManagerService) = 0;
 };
-} // namesapce OHOS::Rosen
+}
+}
 
-#endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_SERVICE_H
+#endif // OHOS_SESSION_MANAGER_SERVICE_RECOVER_LISTENER_H
