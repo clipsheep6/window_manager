@@ -126,4 +126,39 @@ bool NAPICall(napi_env env, napi_status status)
 
     return false;
 }
+
+
+void NAPICallAsyncComplete(napi_env env)
+{
+    auto asyncFunc = [](napi_env env, void *data) {
+        AsyncCallbackInfo *info = reinterpret_cast<AsyncCallbackInfo *>(data);
+        if (info->async) {
+            info->async(env, info->param);
+        }
+    };
+
+    auto completeFunc = [](napi_env env, napi_status status, void *data) {
+        AsyncCallbackInfo *info = reinterpret_cast<AsyncCallbackInfo *>(data);
+        napi_value results[PARAM_NUMBER] = {nullptr};
+        if (info->param->wret == Rosen::DmErrorCode::DM_OK) {
+            napi_get_undefined(env, &results[0]);
+            results[1] = info->resolve(env, info->param);
+        } else {
+            SetErrorInfo(env, info->param->wret, info->param->errMessage, results, PARAM_NUMBER);
+        }
+        if (info->deferred) {
+            ProcessPromise(env, info->param->wret, info->deferred, results, PARAM_NUMBER);
+        } else {
+            ProcessCallback(env, info->ref, results, PARAM_NUMBER);
+        }
+        napi_delete_async_work(env, info->asyncWork);
+        delete info;
+    };
+    if (!NAPICall(env, napi_create_async_work(env, nullptr, resourceName, asyncFunc,
+        completeFunc, reinterpret_cast<void *>(info), &info->asyncWork))) {
+        delete info;
+        return nullptr;
+    }
+}
+
 } // namespace OHOS
