@@ -253,6 +253,9 @@ WMError WindowSceneSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Con
     }
     WLOGFD("[WMSLife] Window Create [name:%{public}s, id:%{public}d], state:%{pubic}u, windowmode:%{public}u",
         property_->GetWindowName().c_str(), property_->GetPersistentId(), state_, GetMode());
+    sptr<Window> self(this);
+    InputTransferStation::GetInstance().AddInputWindow(self);
+    needRemoveWindowInputChannel_ = true;
     return ret;
 }
 

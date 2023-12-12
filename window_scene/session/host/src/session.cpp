@@ -371,9 +371,14 @@ bool Session::NeedNotify() const
 
 WSError Session::SetTouchable(bool touchable)
 {
-    if (!IsSessionValid()) {
-        return WSError::WS_ERROR_INVALID_SESSION;
+    if (touchable) {
+        SetTouchableEx(1);
+    }else{
+         SetTouchableEx(0);
     }
+    if(!IsSessionValid())
+        return WSError::WS_ERROR_INVALID_SESSION;
+
     UpdateSessionTouchable(touchable);
     return WSError::WS_OK;
 }
@@ -1539,6 +1544,11 @@ void Session::SetSessionStateChangeNotifyManagerListener(const NotifySessionStat
     NotifySessionStateChange(state_);
 }
 
+void Session::SetSessionInfoChangeNotifyManagerListener(const NotifySessionInfoChangeNotifyManagerFunc& func)
+{
+    sessionInfoChangeNotifyManagerFunc_  = func;
+}
+
 void Session::SetRequestFocusStatusNotifyManagerListener(const NotifyRequestFocusStatusNotifyManagerFunc& func)
 {
     requestFocusStatusNotifyManagerFunc_ = func;
@@ -1606,7 +1616,14 @@ void Session::NotifySessionFocusableChange(bool isFocusable)
 
 void Session::NotifySessionTouchableChange(bool touchable)
 {
-    WLOGFD("Notify session touchable change: %{public}u", touchable);
+    if(touchable){
+        SetTouchableEx(1);
+    }
+    else{
+        SetTouchable(0);
+    }
+    auto bundleName = sessionInfo_.bundleName_;
+    WLOGFD("hzz new Notify session touchable change: %{public}u", touchable);
     if (sessionTouchableChangeFunc_) {
         sessionTouchableChangeFunc_(touchable);
     }
@@ -2051,4 +2068,87 @@ bool Session::NeedSystemPermission(WindowType type)
         type == WindowType::WINDOW_TYPE_DRAGGING_EFFECT || type == WindowType::WINDOW_TYPE_APP_LAUNCHING ||
         type == WindowType::WINDOW_TYPE_PIP);
 }
+
+void Session::SetNotifySystemSessionEventFunc(const NotifySystemSessionEventFunc& func)
+{
+    WLOGFI("hzz SetNotifySystemSessionEventFunc");
+    systemsessionEventFunc_ = func;
+}
+
+void Session::SetNotifyGetReponeRegionEventFunc(const NotifyGetReponeRegionEventFunc& func)
+{
+    WLOGFI("hzz SetNotifyGetReponeRegionEventFunc");
+    responeRegionEventFunc_ = func;
+}
+
+void Session::SetNotifySystemSessionKeyEventFunc(const NotifySystemSessionKeyEventFunc& func)
+{
+    WLOGFI("hzz SetNotifyGetReponeRegionEventFunc");
+    systemsessionKeyEventFunc_ = func;
+}
+
+void Session::NotifySessionInfoChange()
+{
+    PostTask([weakThis = wptr(this)](){
+        auto session = weakThis.promote();
+        if(session == nullptr){
+            WLOGFE("session is null");
+            return;
+        }
+        if(session->sessionInfoChangeNotifyManagerFunc_){
+            session->sessionInfoChangeNotifyManagerFunc_(session->GetPersistentId());
+        }
+    });
+}
+
+
+void Session::SetResponseRegion(const std::vector<WSRect>& responseRect)
+{
+    WLOGFI("hzz  SetResponseRegin 1");
+    responseRect_ = responseRect;
+    NotifySessionInfoChange();
+}
+
+std::vector<WSRect> Session::GetResponseRegion() const
+{
+    auto bundleName = sessionInfo_.bundleName_;
+    if(bundleName.find("SCBGestureBack") != std::string::npos){
+        WSRect rect3 = {
+            .posX_ = std::round(0),
+            .posY_ = std::round(200),
+            .width_ = std::round(200),
+            .height_ = std::round(2320),
+        };
+        
+        WSRect rect4 = {
+            .posX_ = std::round(1060),
+            .posY_ = std::round(2520),
+            .width_ = std::round(200),
+            .height_ = std::round(2320),
+        };
+        return {rect3, rect4};
+    }
+    if(responeRegionEventFunc_){
+        responeRegionEventFunc_();
+    }
+    WLOGFI("hzz GetResponseRegion end");
+    return responseRect_;
+}
+
+bool Session::IsSystemInput()
+{
+    return sessionInfo_.isSystemInput_;
+}
+
+void Session::SetTouchableEx(uint32_t touchable)
+{
+    touchableEx_ = touchable;
+    NotifySessionInfoChange();
+}
+
+uint32_t Session::GetTouchableEx() const
+{
+    return touchableEx_;
+}
+
 } // namespace OHOS::Rosen

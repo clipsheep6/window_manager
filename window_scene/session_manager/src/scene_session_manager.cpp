@@ -99,6 +99,7 @@
 
 #ifdef EFFICIENCY_MANAGER_ENABLE
 #include "suspend_manager_client.h"
+#include "scene_input_manager.h"
 #endif // EFFICIENCY_MANAGER_ENABLE
 
 #ifdef SECURITY_COMPONENT_MANAGER_ENABLE
@@ -4860,6 +4861,12 @@ void SceneSessionManager::NotifyWindowInfoChange(int32_t persistentId, WindowUpd
         }
     };
     taskScheduler_->PostAsyncTask(task);
+    
+    auto task2 = [this, weakSceneSession, type](){
+        auto scnSession = weakSceneSession.promote();
+        SceneInputManager::GetInstance().NotifyWindowInfoChange(scnSession, type);
+    };
+    taskScheduler_->PostAsyncTask(task2);
 }
 
 bool SceneSessionManager::FillWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos,
@@ -5088,6 +5095,14 @@ void SceneSessionManager::DealwithDrawingContentChange(const std::vector<std::pa
     }
 }
 
+void SceneSessionManager::NotifySceneInfoUpdateToMMI()
+{
+  auto task = []()-> WSError{
+     SceneInputManager::GetInstance().NotifyMMIDisplayInfo();
+     return WSError::WS_OK;
+  }; 
+  return taskScheduler_->PostAsyncTask(task);
+}
 std::vector<std::pair<uint64_t, bool>> SceneSessionManager::GetWindowDrawingContentChangeInfo(
     std::vector<std::pair<uint64_t, bool>> currDrawingContentData)
 {
@@ -6173,6 +6188,11 @@ WSError SceneSessionManager::UpdateTitleInTargetPos(int32_t persistentId, bool i
         return WSError::WS_ERROR_INVALID_WINDOW;
     }
     return sceneSession->UpdateTitleInTargetPos(isShow, height);
+}
+
+const std::map<int32_t, sptr<SceneSession>>& SceneSessionManager::GetSceneSessionMap()
+{
+  return sceneSessionMap_;
 }
 
 void SceneSessionManager::NotifyUpdateRectAfterLayout()

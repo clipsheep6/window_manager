@@ -121,6 +121,7 @@ public:
 
     void UpdateToInputManager(RRect bounds, int rotation, FoldDisplayMode foldDisplayMode);
     void UpdatePropertyAfterRotation(RRect bounds, int rotation, FoldDisplayMode foldDisplayMode);
+    void UpdatePropertyWithRotation(RRect bounds, int rotation, FoldDisplayMode folrDisplayMode);
     void UpdatePropertyByFoldControl(RRect bounds, RRect phyBounds);
     void UpdatePropertyByResolution(uint32_t width, uint32_t height);
     void SetName(std::string name);
