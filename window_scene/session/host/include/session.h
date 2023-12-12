@@ -70,6 +70,10 @@ using NotifyUIRequestFocusFunc = std::function<void()>;
 using NotifyUILostFocusFunc = std::function<void()>;
 using GetStateFromManagerFunc = std::function<bool(const ManagerState key)>;
 using NotifySessionInfoLockedStateChangeFunc = std::function<void(const bool lockedState)>;
+using NotifySystemSessionEventFunc = std::function< void(std::shared_ptr<MMI::PointerEvent> pointerEvent) >;
+using NotifyGetReponeRegionEventFunc = std::function<void()>;
+using NotifySessionInfoChangeNotifyManagerFunc = std::function<void(int32_t persistentid)>;
+using NotifySystemSessionKeyEventFunc = std::function<void(std::shared_ptr<MMI::KeyEvent> pointerEvent)>;
 
 class ILifecycleListener {
 public:
@@ -193,6 +197,7 @@ public:
     void SetSessionStateChangeListenser(const NotifySessionStateChangeFunc& func);
     void UnregisterSessionChangeListeners();
     void SetSessionStateChangeNotifyManagerListener(const NotifySessionStateChangeNotifyManagerFunc& func);
+    void SetSessionInfoChangeNotifyManagerListener(const NotifySessionInfoChangeNotifyManagerFunc& func);
     void SetRequestFocusStatusNotifyManagerListener(const NotifyRequestFocusStatusNotifyManagerFunc& func);
     void SetNotifyUIRequestFocusFunc(const NotifyUIRequestFocusFunc& func);
     void SetNotifyUILostFocusFunc(const NotifyUILostFocusFunc& func);
@@ -269,6 +274,8 @@ public:
     sptr<IRemoteObject> GetAbilityToken() const;
     WindowMode GetWindowMode();
     virtual void SetZOrder(uint32_t zOrder);
+    virtual void SetTouchableEx(uint32_t touchable);
+    uint32_t GetTouchableEx() const;
     uint32_t GetZOrder() const;
     void SetUINodeId(uint32_t uiNodeId);
     uint32_t GetUINodeId() const;
@@ -319,6 +326,13 @@ public:
 
     void NotifyForegroundInteractiveStatus(bool interactive);
     WSError UpdateTitleInTargetPos(bool isShow, int32_t height);
+    void SetNotifySystemSessionEventFunc(const NotifySystemSessionEventFunc& func);
+    
+    void SetNotifyGetReponeRegionEventFunc(const NotifyGetReponeRegionEventFunc& func);
+    void SetNotifySystemSessionKeyEventFunc(const NotifySystemSessionKeyEventFunc& func);
+    void SetResponseRegion(const std::vector<WSRect>& responseRect);
+    std::vector<WSRect> GetResponseRegion() const;
+    bool IsSystemInput();
 
 protected:
     void GeneratePersistentId(bool isExtension, int32_t persistentId);
@@ -365,6 +379,7 @@ protected:
 
     NotifyPendingSessionActivationFunc pendingSessionActivationFunc_;
     NotifySessionStateChangeFunc sessionStateChangeFunc_;
+    NotifySessionInfoChangeNotifyManagerFunc sessionInfoChangeNotifyManagerFunc_;
     NotifySessionStateChangeNotifyManagerFunc sessionStateChangeNotifyManagerFunc_;
     NotifyRequestFocusStatusNotifyManagerFunc requestFocusStatusNotifyManagerFunc_;
     NotifyUIRequestFocusFunc requestFocusFunc_;
@@ -399,6 +414,10 @@ protected:
     std::map<MMI::WindowArea, WSRectF> windowAreas_;
     bool isTerminating = false;
     float floatingScale_ = 1.0f;
+    NotifySystemSessionEventFunc systemsessionEventFunc_ = nullptr;
+    NotifySystemSessionKeyEventFunc systemsessionKeyEventFunc_ = nullptr;
+    NotifyGetReponeRegionEventFunc responeRegionEventFunc_ = nullptr;
+    
     bool scbKeepKeyboardFlag_ = false;
     bool isDirty_ = false;
 
@@ -406,6 +425,7 @@ private:
     void HandleDialogForeground();
     void HandleDialogBackground();
     void HandlePointDownDialog(int32_t pointAction);
+    void NotifySessionInfoChange();
 
     template<typename T>
     bool RegisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener);
@@ -452,6 +472,8 @@ private:
     bool isRSDrawing_ {false};
     sptr<IRemoteObject> abilityToken_ = nullptr;
     float vpr_ { 1.5f };
+    std::vector<WSRect> responseRect_;
+    uint32_t touchableEx_ = 1;
 };
 } // namespace OHOS::Rosen
 

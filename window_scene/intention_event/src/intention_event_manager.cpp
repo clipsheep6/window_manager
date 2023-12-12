@@ -58,17 +58,16 @@ bool IntentionEventManager::EnableInputEventListener(Ace::UIContent* uiContent,
     return true;
 }
 
-void IntentionEventManager::InputEventListener::RegisterWindowChanged()
-{
-    SceneSessionManager::GetInstance().RegisterWindowChanged(
-        [this](int32_t persistentId, WindowUpdateType type) {
-            WLOGFD("Window changed, persistentId:%{public}d, type:%{public}d",
-                persistentId, type);
-            if (type == WindowUpdateType::WINDOW_UPDATE_BOUNDS) {
-                this->ProcessEnterLeaveEventAsync();
-            }
-        }
-    );
+void IntentionEventManager::InputEventListener::RegisterWindowChanged(){
+    //SceneSessionManager::GetInstance().RegisterWindowChanged(
+    //    [this](int32_t persistentId, WindowUpdateType type) {
+    //       WLOGFD("Window changed, persistentId:%{public}d, type:%{public}d",
+    //            persistentId, type);
+    //        if (type == WindowUpdateType::WINDOW_UPDATE_BOUNDS) {
+    //            this->ProcessEnterLeaveEventAsync();
+    //        }
+    //    }
+    //);
 }
 
 void IntentionEventManager::InputEventListener::ProcessEnterLeaveEventAsync()
@@ -134,6 +133,29 @@ void IntentionEventManager::InputEventListener::UpdateLastMouseEvent(
     }
 }
 
+void LogPointInfo(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
+    //
+    uint32_t windowId = static_cast<uint32_t>(pointerEvent->GetTargetWindowId());
+    WLOGFI("point source:%{public}d", pointerEvent->GetSourceType());
+    auto actionId = pointerEvent->GetPointerId();
+    MMI::PointerEvent::PointerItem item;
+    if(pointerEvent->GetPointerItem(actionId, item)){
+        WLOGFI("lkfaction point info : windowid: %{public}d, id:%{public}d, displayx:%{public}d, displayy:%{public}d, windowx:%{public}d, windowy :%{public}d, action :%{public}d pressure: "
+        "%{public}f, tiltx :%{public}f, tiltY :%{public}f", 
+        windowId, actionId, item.GetDisplayX(), item.GetDisplayY(), item.GetWindowX(), item.GetWindowY(), 
+        pointerEvent->GetPointerAction(), item.GetPressure(), item.GetTiltX(), item.GetTiltY());
+    }
+    auto ids = pointerEvent->GetPointerIds();
+    for(auto&& id :ids){
+        MMI::PointerEvent::PointerItem item;
+        if(pointerEvent->GetPointerItem(id, item)){
+            WLOGFI("all point info: id: %{public}d, x:%{public}d, y:%{public}d, isPressend:%{public}d, pressure:%{public}f, tiltX:%{public}f, tiltY:%{public}f", 
+            actionId, item.GetWindowX(), item.GetWindowY(), item.IsPressed(), item.GetPressure(), item.GetTiltX(), item.GetTiltY());
+        }
+    }
+}
+
 void IntentionEventManager::InputEventListener::OnInputEvent(
     std::shared_ptr<MMI::PointerEvent> pointerEvent) const
 {
@@ -161,7 +183,23 @@ void IntentionEventManager::InputEventListener::OnInputEvent(
                 pointerItem.GetDisplayX(), pointerItem.GetDisplayY());
         }
     }
-    uiContent_->ProcessPointerEvent(pointerEvent);
+    
+    //uiContent_->ProcessPointerEvent(pointerEvent);
+    uint32_t windowId = static_cast<uint32_t>(pointerEvent->GetTargetWindowId());
+    auto pscensession = SceneSessionManager::GetInstance().GetSceneSession(windowId);
+    if(pscensession != nullptr){
+        WLOGI("lkf hzz InputEventListener::OnInputEvent id:%{public}d, wid:%{public}u", pointerEvent->GetId(), windowId);
+        
+        auto actionId = pointerEvent->GetPointerId();
+        MMI::PointerEvent::PointerItem item;
+        if(pointerEvent->GetPointerItem(actionId, item)){
+            item.SetWindowX(item.GetDisplayX());
+            item.SetWindowY(item.GetDisplayY());
+            pointerEvent->UpdatePointerItem(actionId, item);
+        }
+        LogPointInfo(pointerEvent);
+        pscensession->SendPointerEventToUI(pointerEvent);
+    }
     UpdateLastMouseEvent(pointerEvent);
 }
 
@@ -186,8 +224,8 @@ void IntentionEventManager::InputEventListener::OnInputEvent(
         bool isKeyboardEvent = IsKeyboardEvent(keyEvent);
         if (isKeyboardEvent) {
             WLOGD("dispatch keyEvent to input method");
-            inputMethodHasProcessed =
-                MiscServices::InputMethodController::GetInstance()->DispatchKeyEvent(keyEvent);
+                //inputMethodHasProcessed =
+                //MiscServices::InputMethodController::GetInstance()->DispatchKeyEvent(keyEvent);
         }
 #endif // IMF_ENABLE
         if (inputMethodHasProcessed) {
@@ -199,7 +237,8 @@ void IntentionEventManager::InputEventListener::OnInputEvent(
             WLOGFE("uiContent_ is null");
             return;
         }
-        uiContent_->ProcessKeyEvent(keyEvent);
+        //uiContent_->ProcessKeyEvent(keyEvent);
+        focusedSceneSession->SendKeyEventToUI(keyEvent);
         return;
     }
     focusedSceneSession->TransferKeyEvent(keyEvent);

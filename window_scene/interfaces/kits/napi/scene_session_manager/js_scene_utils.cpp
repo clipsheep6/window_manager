@@ -222,6 +222,12 @@ bool ConvertSessionInfoName(napi_env env, napi_value jsObject, SessionInfo& sess
     napi_get_named_property(env, jsObject, "appIndex", &jsAppIndex);
     napi_value jsIsSystem = nullptr;
     napi_get_named_property(env, jsObject, "isSystem", &jsIsSystem);
+    napi_value jsIsRa = nullptr;
+    napi_get_named_property(env, jsObject, "isRotatable", &jsIsRa);
+    napi_value jsIsSysInput = nullptr;
+    napi_get_named_property(env, jsObject, "isSystemInput", &jsIsSysInput);
+    
+
     if (!IsJsBundleNameUndefind(env, jsBundleName, sessionInfo)) {
         return false;
     }
@@ -267,6 +273,23 @@ bool ConvertSessionInfoState(napi_env env, napi_value jsObject, SessionInfo& ses
     }
     if (!IsJsIsPersistentRecoverUndefined(env, jsIsPersistentRecover, sessionInfo)) {
         return false;
+    }
+    if ( GetType(env, jsIsRa)!= napi_undefined ) {
+        bool isRotatable;
+        if(!ConvertFromJsValue(env, jsIsRa, isRotatable)){
+          WLOGFE("[napi] Failed to convert parameter to isRotatable");
+          return false;
+        }
+        sessionInfo.isRotatable_ = isRotatable;
+    }
+    
+    if ( GetType(env, jsIsSysInput)!= napi_undefined ) {
+        bool isSystemInput;
+        if(!ConvertFromJsValue(env, jsIsSysInput, isSystemInput)){
+          WLOGFE("[napi] Failed to convert parameter to isSystemInput");
+          return false;
+        }
+        sessionInfo.isSystemInput_ = isSystemInpu;t
     }
     return true;
 }

@@ -199,6 +199,9 @@ public:
     void RegisterSessionChangeCallback(const sptr<SceneSession::SessionChangeCallback>& sessionChangeCallback);
     WSError UpdateSizeChangeReason(SizeChangeReason reason);
     void ClearSpecificSessionCbMap();
+    bool GetisRotatable();
+    float GetRotationEx();
+    void SendPointerEventToUI(std::shared_ptr<MMI::PointerEvent> pointerEvent);
 
     double textFieldPositionY_ = 0.0;
     double textFieldHeight_ = 0.0;

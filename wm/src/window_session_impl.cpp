@@ -303,6 +303,18 @@ WMError WindowSessionImpl::Connect()
     return static_cast<WMError>(ret);
 }
 
+void WindowSessionImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
+    //
+    NotifyPointerEvent(pointerEvent);
+}
+
+void WindowSessionImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
+{
+    bool isConsumed = true;
+    NotifyKeyEvent(keyEvent, isConsumed);
+}
+
 WMError WindowSessionImpl::Show(uint32_t reason, bool withAnimation)
 {
     WLOGFI("[WMSLife]Window Show [name:%{public}s, id:%{public}d, type:%{public}u], reason:%{public}u state:%{public}u",
@@ -377,6 +389,10 @@ WMError WindowSessionImpl::Destroy(bool needNotifyServer, bool needClearListener
     NotifyAfterDestroy();
     if (needClearListener) {
         ClearListenersById(GetPersistentId());
+    }
+    if(needRemoveWindowInputChannel_)
+    {
+        InputTransferStation::GetInstance().RemoveInputWindow(GetPersistentId());
     }
     return WMError::WM_OK;
 }

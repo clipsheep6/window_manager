@@ -2065,6 +2065,29 @@ WSError SceneSession::UpdatePiPRect(uint32_t width, uint32_t height, PiPRectUpda
     return WSError::WS_OK;
 }
 
+bool SceneSession::GetisRotatable()
+{
+    return sessionInfo_.isRotatable_;
+}
+
+float SceneSession::GetRotationEx()
+{
+    auto propt = surfaceNode_->GetStagingProperties();
+    float fRot = propt.GetRotation();
+    if(!sessionInfo_.isRotatable_){
+        return 0.0;
+    }else{
+        return fRot;
+    }
+}
+
+void SceneSession::SendPointerEventToUI(std::shared_ptr<MMI::PointerEvent> pointerEvent)
+{
+    if(systemsessionEventFunc_ != nullptr){
+        systemsessionEventFunc_(pointerEvent);
+    }
+}
+
 WSError SceneSession::UpdateSizeChangeReason(SizeChangeReason reason)
 {
     PostTask([weakThis = wptr(this), reason]() {

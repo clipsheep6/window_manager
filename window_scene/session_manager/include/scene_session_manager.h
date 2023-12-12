@@ -100,6 +100,7 @@ public:
 class SceneSessionManager : public SceneSessionManagerStub {
 WM_DECLARE_SINGLE_INSTANCE_BASE(SceneSessionManager)
 public:
+    bool IsSessionVisible(const sptr<SceneSession>& session);
     sptr<SceneSession> RequestSceneSession(const SessionInfo& sessionInfo,
         sptr<WindowSessionProperty> property = nullptr);
     void UpdateSceneSessionWant(const SessionInfo& sessionInfo);
@@ -254,6 +255,10 @@ public:
     void NotifyUpdateRectAfterLayout();
     WSError UpdateSessionWindowVisibilityListener(int32_t persistentId, bool haveListener) override;
     WMError SetSystemAnimatedScenes(SystemAnimatedSceneType sceneType);
+    const std::map<int32_t, sptr<SceneSession>>& GetSceneSessionMap();
+    void GetAllSceneSession(std::vector<sptr<SceneSession>>& sceneSessions);
+    void NotifySceneInfoUpdateToMMI();
+
 public:
     std::shared_ptr<TaskScheduler> GetTaskScheduler() {return taskScheduler_;};
 protected:
@@ -369,7 +374,7 @@ private:
     void RegisterSessionExceptionFunc(const sptr<SceneSession>& sceneSession);
     void RegisterSessionSnapshotFunc(const sptr<SceneSession>& sceneSession);
     void NotifySessionForCallback(const sptr<SceneSession>& scnSession, const bool needRemoveSession);
-    bool IsSessionVisible(const sptr<SceneSession>& session);
+    //bool IsSessionVisible(const sptr<SceneSession>& session);
     void DumpSessionInfo(const sptr<SceneSession>& session, std::ostringstream& oss);
     void DumpAllAppSessionInfo(std::ostringstream& oss);
     void DumpSessionElementInfo(const sptr<SceneSession>& session,
@@ -443,6 +448,7 @@ private:
     std::vector<std::pair<uint64_t, WindowVisibilityState> > lastVisibleData_;
     RSInterfaces& rsInterface_;
     void RegisterSessionStateChangeNotifyManagerFunc(sptr<SceneSession>& sceneSession);
+    void RegisterSessionInfoChangeNotifyManagerFunc(sptr<SceneSession>& sceneSession);
     void OnSessionStateChange(int32_t persistentId, const SessionState& state);
     void ProcessSubSessionForeground(sptr<SceneSession>& sceneSession);
     void ProcessSubSessionBackground(sptr<SceneSession>& sceneSession);

@@ -99,6 +99,7 @@
 
 #ifdef EFFICIENCY_MANAGER_ENABLE
 #include "suspend_manager_client.h"
+#include "scene_input_manager.h"
 #endif // EFFICIENCY_MANAGER_ENABLE
 
 #ifdef SECURITY_COMPONENT_MANAGER_ENABLE
@@ -972,6 +973,7 @@ void SceneSessionManager::PerformRegisterInRequestSceneSession(sptr<SceneSession
 {
     RegisterSessionSnapshotFunc(sceneSession);
     RegisterSessionStateChangeNotifyManagerFunc(sceneSession);
+    RegisterSessionInfoChangeNotifyManagerFunc(sceneSession);
     RegisterRequestFocusStatusNotifyManagerFunc(sceneSession);
     RegisterGetStateFromManagerFunc(sceneSession);
     RegisterInputMethodUpdateFunc(sceneSession);
@@ -2706,6 +2708,23 @@ void SceneSessionManager::NotifySessionForCallback(const sptr<SceneSession>& scn
     listenerController_->NotifySessionClosed(scnSession->GetPersistentId());
 }
 
+
+void SceneSessionManager::NotifyWindowInfoChangeFromSession(int32_t persistentid){
+    //
+    sptr<SceneSession> sceneSession = GetSceneSession(persistentid);
+    if(sceneSession == nullptr){
+        WLOGFE("NotifyWindowInfoChangeFromSession sceneSession nullptr");
+        return;
+    }
+
+    wptr<SceneSession> weakSceneSession(sceneSession);
+    auto task = [this, weakSceneSession](){
+        auto scnSession = weakSceneSession.promote();
+        SceneInputManager::GetInstance().NotifyWindowInfoChangeFromSession(scnSession);
+    };
+    taskScheduler_->PostAsyncTask(task);
+}
+
 bool SceneSessionManager::IsSessionVisible(const sptr<SceneSession>& session)
 {
     if (session == nullptr) {
@@ -3486,35 +3505,10 @@ WSError SceneSessionManager::SendTouchEvent(const std::shared_ptr<MMI::PointerEv
         WLOGFE("Failed to get pointerItem");
         return WSError::WS_ERROR_INVALID_PARAM;
     }
-    auto windowX = pointerItem.GetWindowX();
-    auto windowY = pointerItem.GetWindowY();
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SendTouchEvent [%d, %d]", windowX, windowY);
-    {
-        std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
-        for (const auto& [id, session] : sceneSessionMap_) {
-            if (!session || session->IsSystemSession() || !session->GetTouchable() || !IsSessionVisible(session)) {
-                continue;
-            }
-            auto zOrder = session->GetZOrder();
-            if (zOrder <= targetZIndex || zOrder >= zIndex) {
-                continue;
-            }
-            if (!session->GetSessionRect().IsInRegion(windowX, windowY)) {
-                continue;
-            }
-            targetZIndex = zOrder;
-            targetSession = session;
-        }
-    }
-    if (!targetSession) {
-        return WSError::WS_DO_NOTHING;
-    }
-    WLOGFI("Send touch event to session with id: %{public}d, zIndex: %{public}u, "
-        "windowX: %{public}d, windowY: %{public}d", targetSession->GetPersistentId(), targetZIndex, windowX, windowY);
 #ifdef SECURITY_COMPONENT_MANAGER_ENABLE
     FillSecCompEnhanceData(pointerEvent, pointerItem);
 #endif
-    targetSession->TransferPointerEvent(pointerEvent);
+    MMI::InputManager::GetInstance()->SimulateInputEvent(pointetEvent, static_cast<float>(zIndex));
     return WSError::WS_OK;
 }
 
@@ -3571,6 +3565,19 @@ void SceneSessionManager::RegisterSessionStateChangeNotifyManagerFunc(sptr<Scene
     }
     sceneSession->SetSessionStateChangeNotifyManagerListener(func);
     WLOGFD("RegisterSessionStateChangeFunc success");
+}
+
+void SceneSessionManager::RegisterSessionInfoChangeNotifyManagerFunc(sptr<SceneSession>& sceneSession)
+{
+    NotifySessionInfoChangeNotifyManagerFunc func = [this](int32_t persistentId){
+        this->NotifyWindowInfoChangeFromSession(persistentId);
+    };
+    if(sceneSession == nullptr){
+        WLOGFE("session is nullptr");
+        return;
+    }
+    sceneSession->SetSessionInfoChangeNotifyManagerListener(func);
+    WLOGFD("RegisterSessionInfoChangeNotifyManagerFunc success");
 }
 
 void SceneSessionManager::RegisterRequestFocusStatusNotifyManagerFunc(sptr<SceneSession>& sceneSession)
@@ -4858,6 +4865,12 @@ void SceneSessionManager::NotifyWindowInfoChange(int32_t persistentId, WindowUpd
         }
     };
     taskScheduler_->PostAsyncTask(task);
+    
+    auto notifySceneInputtask = [this, weakSceneSession, type](){
+        auto scnSession = weakSceneSession.promote();
+        SceneInputManager::GetInstance().NotifyWindowInfoChange(scnSession, type);
+    };
+    taskScheduler_->PostAsyncTask(notifySceneInputtask);
 }
 
 bool SceneSessionManager::FillWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos,
@@ -6173,6 +6186,11 @@ WSError SceneSessionManager::UpdateTitleInTargetPos(int32_t persistentId, bool i
     return sceneSession->UpdateTitleInTargetPos(isShow, height);
 }
 
+const std::map<int32_t, sptr<SceneSession>>& SceneSessionManager::GetSceneSessionMap()
+{
+  return sceneSessionMap_;
+}
+
 void SceneSessionManager::NotifyUpdateRectAfterLayout()
 {
     auto transactionController = Rosen::RSSyncTransactionController::GetInstance();
@@ -6254,5 +6272,14 @@ void AppAnrListener::OnAppDebugStoped(const std::vector<AppExecFwk::AppDebugInfo
         return;
     }
     DelayedSingleton<ANRManager>::GetInstance()->SwitchAnr(true);
+}
+
+void SceneSessionManager::NotifySceneInfoUpdateToMMI()
+{
+  auto task = []()-> WSError{
+     SceneInputManager::GetInstance().NotifyMMIDisplayInfo();
+     return WSError::WS_OK;
+  }; 
+  return taskScheduler_->PostAsyncTask(task);
 }
 } // namespace OHOS::Rosen
