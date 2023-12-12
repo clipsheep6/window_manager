@@ -98,10 +98,10 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
             return DoGetDisplayState(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_NOTIFY_DISPLAY_EVENT: {
-            return DoNotifyDisplayEvent(data, reply);
+            return DoNotifyDisplayEvent(data);
         }
         case DisplayManagerMessage::TRANS_ID_SET_FREEZE_EVENT: {
-            return DoSetFreeze(data, reply);
+            return DoSetFreeze(data);
         }
         case DisplayManagerMessage::TRANS_ID_SCREEN_MAKE_MIRROR: {
             return DoMakeMirror(data, reply);
@@ -122,7 +122,7 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
             return DoScreenMakeExpand(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_REMOVE_VIRTUAL_SCREEN_FROM_SCREEN_GROUP: {
-            return DoRemoveVirtualScreenFromGroup(data, reply);
+            return DoRemoveVirtualScreenFromGroup(data);
         }
         case DisplayManagerMessage::TRANS_ID_SET_SCREEN_ACTIVE_MODE: {
             return DoSetScreenActiveMode(data, reply);

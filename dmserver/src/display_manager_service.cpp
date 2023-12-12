@@ -668,7 +668,7 @@ DMError DisplayManagerService::MakeExpand(std::vector<ScreenId> expandScreenIds,
         return DMError::DM_ERROR_INVALID_PARAM;
     }
     std::map<ScreenId, Point> pointsMap;
-    CollectExpandScreenPoint(expandScreenIds, pointsMap);
+    CollectExpandScreenPoint(expandScreenIds, pointsMap, startPoints);
     ScreenId defaultScreenId = abstractScreenController_->GetDefaultAbstractScreenId();
     WLOGFI("MakeExpand, defaultScreenId:%{public}" PRIu64"", defaultScreenId);
     auto allExpandScreenIds = abstractScreenController_->GetAllValidScreenIds(expandScreenIds);
@@ -680,7 +680,8 @@ DMError DisplayManagerService::MakeExpand(std::vector<ScreenId> expandScreenIds,
         WLOGFE("allExpandScreenIds is empty. make expand failed.");
         return DMError::DM_ERROR_NULLPTR;
     }
-    DisplayOffset(allExpandScreenIds, pointsMap);
+    std::vector<Point> points;
+    DisplayOffset(allExpandScreenIds, pointsMap, points);
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:MakeExpand");
     if (!abstractScreenController_->MakeExpand(allExpandScreenIds, points)) {
         WLOGFE("make expand failed.");
@@ -695,8 +696,8 @@ DMError DisplayManagerService::MakeExpand(std::vector<ScreenId> expandScreenIds,
     return DMError::DM_OK;
 }
 
-void DisplayCutoutController::CollectExpandScreenPoint(const std::vector<ScreenId>& expandScreenIds,
-    std::map<ScreenId, Point>& pointsMap)
+void DisplayManagerService::CollectExpandScreenPoint(const std::vector<ScreenId>& expandScreenIds,
+    std::map<ScreenId, Point>& pointsMap, const std::vector<Point> &startPoints)
 {
     uint32_t size = expandScreenIds.size();
     for (uint32_t i = 0; i < size; i++) {
@@ -707,11 +708,10 @@ void DisplayCutoutController::CollectExpandScreenPoint(const std::vector<ScreenI
     }
 }
 
-void DisplayCutoutController::DisplayOffset(const std::vector<ScreenId>& allExpandScreenIds,
-    std::map<ScreenId, Point>& pointsMap)
+void DisplayManagerService::DisplayOffset(const std::vector<ScreenId>& allExpandScreenIds,
+    std::map<ScreenId, Point>& pointsMap, std::vector<Point>& points)
 {
     std::shared_ptr<RSDisplayNode> rsDisplayNode;
-    std::vector<Point> points;
     for (uint32_t i = 0; i < allExpandScreenIds.size(); i++) {
         rsDisplayNode = abstractScreenController_->GetRSDisplayNodeByScreenId(allExpandScreenIds[i]);
         points.emplace_back(pointsMap[allExpandScreenIds[i]]);
