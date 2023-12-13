@@ -422,6 +422,22 @@ napi_value OnMakeMirror(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value GetExpandOption(std::vector<ExpandOption>& options)
+{
+    for (uint32_t i = 0; i < size; ++i) {
+        napi_value object = nullptr;
+        napi_get_element(env, array, i, &object);
+        ExpandOption expandOption;
+        int32_t res = GetExpandOptionFromJs(env, object, expandOption);
+        if (res == -1) {
+            WLOGE("expandoption param %{public}d error!", i);
+            return NapiThrowError(env, DmErrorCode::DM_ERROR_INVALID_PARAM);
+        }
+        options.emplace_back(expandOption);
+    }
+    return nullptr;
+}
+
 napi_value OnMakeExpand(napi_env env, napi_callback_info info)
 {
     WLOGI("OnMakeExpand is called");
@@ -441,17 +457,7 @@ napi_value OnMakeExpand(napi_env env, napi_callback_info info)
     uint32_t size = 0;
     napi_get_array_length(env, array, &size);
     std::vector<ExpandOption> options;
-    for (uint32_t i = 0; i < size; ++i) {
-        napi_value object = nullptr;
-        napi_get_element(env, array, i, &object);
-        ExpandOption expandOption;
-        int32_t res = GetExpandOptionFromJs(env, object, expandOption);
-        if (res == -1) {
-            WLOGE("expandoption param %{public}d error!", i);
-            return NapiThrowError(env, DmErrorCode::DM_ERROR_INVALID_PARAM);
-        }
-        options.emplace_back(expandOption);
-    }
+    GetExpandOption(options);
 
     NapiAsyncTask::CompleteCallback complete =
         [options](napi_env env, NapiAsyncTask& task, int32_t status) {
