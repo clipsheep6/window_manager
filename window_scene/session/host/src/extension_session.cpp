@@ -31,6 +31,12 @@ ExtensionSession::ExtensionSession(const SessionInfo& info) : Session(info)
     GeneratePersistentId(true, info.persistentId_);
 }
 
+
+ExtensionSession::~ExtensionSession()
+{
+    WLOGFD("=====>>>>> ExtensionSession::~ExtensionSession <<<<<=====");
+}
+
 WSError ExtensionSession::Connect(
     const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
     const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
