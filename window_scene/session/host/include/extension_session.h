@@ -48,11 +48,15 @@ public:
     WSError TransferComponentData(const AAFwk::WantParams& wantParams);
     WSErrorCode TransferComponentDataSync(const AAFwk::WantParams& wantParams,
                                           AAFwk::WantParams& reWantParams);
+    WSError TransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
+        const std::vector<int32_t>& uiExtensionIdLevelVec) override;
     void NotifyRemoteReady() override;
     void NotifySyncOn() override;
     void NotifyAsyncOn() override;
     void RegisterExtensionSessionEventCallback(const sptr<ExtensionSessionEventCallback>& extSessionEventCallback);
     sptr<ExtensionSessionEventCallback> GetExtensionSessionEventCallback();
+
+    std::string GetName() override;
 
 private:
     sptr<ExtensionSessionEventCallback> extSessionEventCallback_ = nullptr;

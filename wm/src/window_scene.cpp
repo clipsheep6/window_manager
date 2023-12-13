@@ -72,6 +72,7 @@ WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRunt
 WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRuntime::Context>& context,
     sptr<IWindowLifeCycle>& listener, sptr<WindowOption> option, const sptr<IRemoteObject>& iSession)
 {
+    WLOGFI("MR031 Init");
     WLOGFI("[WMSMain]WindowScene with window session!");
     displayId_ = displayId;
     if (option == nullptr || iSession == nullptr) {

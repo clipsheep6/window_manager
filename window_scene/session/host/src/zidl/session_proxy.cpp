@@ -939,4 +939,10 @@ WSError SessionProxy::RecoveryPullPiPMainWindow(int32_t persistentId, const Rect
     }
     return WSError::WS_OK;
 }
+
+std::string SessionProxy::GetName()
+{
+    return "SessionProxy";
+}
+
 } // namespace OHOS::Rosen

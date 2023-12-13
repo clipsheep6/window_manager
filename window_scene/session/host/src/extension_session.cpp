@@ -125,4 +125,16 @@ sptr<ExtensionSession::ExtensionSessionEventCallback> ExtensionSession::GetExten
 
     return extSessionEventCallback_;
 }
+
+WSError ExtensionSession::TransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
+    const std::vector<int32_t>& uiExtensionIdLevelVec)
+{
+    NotifyTransferAccessibilityEvent(info, uiExtensionIdLevelVec);
+    return WSError::WS_OK;
+}
+
+std::string ExtensionSession::GetName()
+{
+    return "ExtensionSession";
+}
 } // namespace OHOS::Rosen

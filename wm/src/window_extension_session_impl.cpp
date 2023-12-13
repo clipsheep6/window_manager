@@ -53,6 +53,7 @@ WMError WindowExtensionSessionImpl::Create(const std::shared_ptr<AbilityRuntime:
         std::pair<uint64_t, sptr<WindowSessionImpl>>(property_->GetPersistentId(), this)));
     }
     state_ = WindowState::STATE_CREATED;
+    WLOGFE("MR031 name:%{public}s", iSession->GetName().c_str());
     return WMError::WM_OK;
 }
 

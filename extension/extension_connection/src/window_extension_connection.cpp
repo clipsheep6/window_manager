@@ -130,6 +130,7 @@ int WindowExtensionConnection::Impl::ConnectExtension(const AppExecFwk::ElementN
     const Rect& rect, uint32_t uid, uint32_t windowId, const sptr<IWindowExtensionCallback>& callback,
     const sptr<ExtensionSession>& extensionSession)
 {
+    WLOGI("MR031 ConnectExtension,name:%{public}s", extensionSession.GetRefPtr()->GetName().c_str());
     AAFwk::Want want;
     want.SetElement(element);
     StartAsyncTraceArgs(HITRACE_TAG_WINDOW_MANAGER, static_cast<int32_t>(TraceTaskId::CONNECT_EXTENSION),
@@ -142,6 +143,7 @@ int WindowExtensionConnection::Impl::ConnectExtension(const AppExecFwk::ElementN
     componentCallback_ = callback;
     auto extSessionInfo = SetAbilitySessionInfo(extensionSession);
     auto ret = AAFwk::AbilityManagerClient::GetInstance()->ConnectUIExtensionAbility(want, this, extSessionInfo, uid);
+    WLOGI("MR031 ConnectExtension-1,name:%{public}s", extensionSession.GetRefPtr()->GetName().c_str());
     WLOGI("Connection ui extension end ret = %{public}d windowId = %{public}u uid = %{public}u", ret, windowId, uid);
     return ret;
 }

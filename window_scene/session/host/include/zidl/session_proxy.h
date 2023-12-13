@@ -68,6 +68,7 @@ public:
     void NotifyPiPWindowPrepareClose() override;
     WSError UpdatePiPRect(const uint32_t width, const uint32_t height, PiPRectUpdateReason reason) override;
     WSError RecoveryPullPiPMainWindow(int32_t persistentId, const Rect& rect) override;
+    std::string GetName() override;
 private:
     static inline BrokerDelegator<SessionProxy> delegator_;
 };
