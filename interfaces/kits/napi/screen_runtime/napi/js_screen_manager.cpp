@@ -422,7 +422,7 @@ napi_value OnMakeMirror(napi_env env, napi_callback_info info)
     return result;
 }
 
-napi_value GetExpandOption(std::vector<ExpandOption>& options)
+napi_value GetExpandOption(napi_env env, napi_value array, uint32_t size, std::vector<ExpandOption>& options)
 {
     for (uint32_t i = 0; i < size; ++i) {
         napi_value object = nullptr;
@@ -457,7 +457,7 @@ napi_value OnMakeExpand(napi_env env, napi_callback_info info)
     uint32_t size = 0;
     napi_get_array_length(env, array, &size);
     std::vector<ExpandOption> options;
-    GetExpandOption(options);
+    GetExpandOption(env, array, size, options);
 
     NapiAsyncTask::CompleteCallback complete =
         [options](napi_env env, NapiAsyncTask& task, int32_t status) {

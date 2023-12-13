@@ -322,7 +322,7 @@ napi_value ScreenshotModuleInit(napi_env env, napi_value exports)
     napi_create_object(env, &errorCode);
     napi_create_object(env, &dmErrorCode);
     
-    SetPropertyError(env, errorCode);
+    SetPropertyError(env, errorCode, dmErrorCode);
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("save", save::MainFunc),
         DECLARE_NAPI_PROPERTY("DMError", errorCode),
