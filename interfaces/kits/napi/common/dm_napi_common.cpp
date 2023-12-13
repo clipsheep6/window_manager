@@ -126,5 +126,4 @@ bool NAPICall(napi_env env, napi_status status)
 
     return false;
 }
-
 } // namespace OHOS
