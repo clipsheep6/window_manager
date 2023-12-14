@@ -1153,6 +1153,20 @@ public:
         return WMError::WM_OK;
     }
     /**
+     * @brief set window ui content by abc
+     *
+     * @param abcPath abc path
+     * @param env
+     * @param storage
+     * @param ability
+     * @return WMError
+     */
+    virtual WMError SetUIContentByAbc(const std::string& abcPath, napi_env env, napi_value storage,
+        AppExecFwk::Ability* ability = nullptr)
+    {
+        return WMError::WM_OK;
+    }
+    /**
      * @brief Get ui content info.
      *
      * @return UI content info.
@@ -1438,7 +1452,7 @@ public:
      * @param func Function to notify transfer component data.
     */
     virtual WMError TransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
-        const std::vector<int32_t>& uiExtensionIdLevelVec) { return WMError::WM_OK; };
+        int32_t uiExtensionIdLevel) { return WMError::WM_OK; };
 
     /**
      * @brief Notify prepare to close window

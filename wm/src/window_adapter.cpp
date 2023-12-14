@@ -242,8 +242,8 @@ void WindowAdapter::WindowManagerRecover()
 
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         for (const auto& it: windowManagerAgentMap_) {
-            WLOGFI("[RECOVER] RecoverWindowManagerAgents type = %{public}u, size = %{public}lu",
-                it.first, it.second.size());
+            WLOGFI("[RECOVER] RecoverWindowManagerAgents type = %{public}" PRIu32 ", size = %{public}" PRIu64,
+                it.first, static_cast<uint64_t>(it.second.size()));
             for (auto& agent: it.second) {
                 if (windowManagerServiceProxy_->RegisterWindowManagerAgent(it.first, agent) != WMError::WM_OK) {
                     WLOGFE("[RECOVER] RecoverWindowManagerAgent failed");

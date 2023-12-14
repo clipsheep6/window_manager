@@ -81,7 +81,7 @@ public:
     virtual void OnDisconnect() = 0;
     virtual void OnExtensionDied() = 0;
     virtual void OnAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
-        const std::vector<int32_t>& uiExtensionIdLevelVec) = 0;
+        int32_t uiExtensionIdLevel) = 0;
 };
 
 class Session : public SessionStub {
@@ -115,7 +115,7 @@ public:
     void NotifyDisconnect();
     void NotifyExtensionDied() override;
     void NotifyTransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
-        const std::vector<int32_t>& uiExtensionIdLevelVec) override;
+        int32_t uiExtensionIdLevel) override;
 
     virtual WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     virtual WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent);
@@ -135,7 +135,6 @@ public:
     WSError TransferFocusStateEvent(bool focusState);
     virtual WSError TransferExecuteAction(int32_t elementId, const std::map<std::string, std::string>& actionArguments,
         int32_t action, int32_t baseParent);
-    WSError UpdateConfiguration();
 
     int32_t GetPersistentId() const;
     std::shared_ptr<RSSurfaceNode> GetSurfaceNode() const;
@@ -282,6 +281,11 @@ public:
     float GetFloatingScale() const;
     void SetSCBKeepKeyboard(bool scbKeepKeyboardFlag);
     bool GetSCBKeepKeyboardFlag() const;
+    virtual void SetScale(float scaleX, float scaleY, float pivotX, float pivotY);
+    float GetScaleX() const;
+    float GetScaleY() const;
+    float GetPivotX() const;
+    float GetPivotY() const;
 
     void SetNotifyCallingSessionUpdateRectFunc(const NotifyCallingSessionUpdateRectFunc& func);
     void NotifyCallingSessionUpdateRect();
@@ -343,16 +347,16 @@ protected:
     bool NeedSystemPermission(WindowType type);
 
     using Task = std::function<void()>;
-    void PostTask(Task&& task, int64_t delayTime = 0);
+    void PostTask(Task&& task, const std::string& name = "sessionTask", int64_t delayTime = 0);
     template<typename SyncTask, typename Return = std::invoke_result_t<SyncTask>>
-    Return PostSyncTask(SyncTask&& task)
+    Return PostSyncTask(SyncTask&& task, const std::string& name = "sessionTask")
     {
         if (!handler_ || handler_->GetEventRunner()->IsCurrentRunnerThread()) {
             return task();
         }
         Return ret;
         auto syncTask = [&ret, &task]() { ret = task(); };
-        handler_->PostSyncTask(std::move(syncTask), AppExecFwk::EventQueue::Priority::IMMEDIATE);
+        handler_->PostSyncTask(std::move(syncTask), name, AppExecFwk::EventQueue::Priority::IMMEDIATE);
         return ret;
     }
 
@@ -408,6 +412,10 @@ protected:
     float floatingScale_ = 1.0f;
     bool scbKeepKeyboardFlag_ = false;
     bool isDirty_ = false;
+    float scaleX_ = 1.0f;
+    float scaleY_ = 1.0f;
+    float pivotX_ = 0.0f;
+    float pivotY_ = 0.0f;
 
 private:
     void HandleDialogForeground();

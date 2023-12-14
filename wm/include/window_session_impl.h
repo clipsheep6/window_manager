@@ -32,7 +32,6 @@
 #include "interfaces/include/ws_common_inner.h"
 #include "session/container/include/zidl/session_stage_stub.h"
 #include "session/host/include/zidl/session_interface.h"
-#include "session_manager/include/session_manager.h"
 #include "window.h"
 #include "window_option.h"
 #include "wm_common.h"
@@ -61,6 +60,8 @@ public:
     WMError NapiSetUIContent(const std::string& contentInfo, napi_env env,
         napi_value storage, bool isdistributed, sptr<IRemoteObject> token, AppExecFwk::Ability* ability) override;
     WMError SetUIContentByName(const std::string& contentInfo, napi_env env, napi_value storage,
+        AppExecFwk::Ability* ability) override;
+    WMError SetUIContentByAbc(const std::string& abcPath, napi_env env, napi_value storage,
         AppExecFwk::Ability* ability) override;
     std::shared_ptr<RSSurfaceNode> GetSurfaceNode() const override;
     const std::shared_ptr<AbilityRuntime::Context> GetContext() const override;
@@ -163,7 +164,7 @@ public:
     WSError NotifyTouchOutside() override;
     WSError NotifyWindowVisibility(bool isVisible) override;
     WMError TransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
-        const std::vector<int32_t>& uiExtensionIdLevelVec) override;
+        int32_t uiExtensionIdLevel) override;
     WindowState state_ { WindowState::STATE_INITIAL };
     WindowState requestState_ { WindowState::STATE_INITIAL };
     WSError UpdateMaximizeMode(MaximizeMode mode) override;
@@ -186,7 +187,7 @@ protected:
     void NotifyBeforeDestroy(std::string windowName);
     void NotifyAfterDestroy();
     void ClearListenersById(int32_t persistentId);
-    void RegisterSessionRecoverListener(SessionManager::SessionRecoverCallbackFunc callbackFunc);
+    void RegisterSessionRecoverListener(std::function<void()> callbackFunc);
     void UnRegisterSessionRecoverListener();
     WMError WindowSessionCreateCheck();
     void UpdateDecorEnable(bool needNotify = false, WindowMode mode = WindowMode::WINDOW_MODE_UNDEFINED);
@@ -258,23 +259,23 @@ private:
     void NotifyAfterPaused();
 
     WMError SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
-        bool isdistributed, bool isLoadedByName, AppExecFwk::Ability* ability);
+        WindowSetUIContentType type, AppExecFwk::Ability* ability);
+    std::shared_ptr<std::vector<uint8_t>> GetAbcContent(const std::string& abcPath);
 
     bool IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const;
     void UpdateRectForRotation(const Rect& wmRect, const Rect& preRect, WindowSizeChangeReason wmReason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
 
-    static std::recursive_mutex globalMutex_;
-    std::mutex lifeCycleListenerMutex_;
-    std::mutex windowChangeListenerMutex_;
-    std::mutex avoidAreaChangeListenerMutex_;
-    std::mutex dialogDeathRecipientListenerMutex_;
-    std::mutex dialogTargetTouchListenerMutex_;
-    std::mutex occupiedAreaChangeListenerMutex_;
-    std::mutex screenshotListenerMutex_;
-    std::mutex touchOutsideListenerMutex_;
-    std::mutex windowVisibilityChangeListenerMutex_;
-    std::mutex windowStatusChangeListenerMutex_;
+    static std::mutex lifeCycleListenerMutex_;
+    static std::mutex windowChangeListenerMutex_;
+    static std::mutex avoidAreaChangeListenerMutex_;
+    static std::mutex dialogDeathRecipientListenerMutex_;
+    static std::mutex dialogTargetTouchListenerMutex_;
+    static std::mutex occupiedAreaChangeListenerMutex_;
+    static std::mutex screenshotListenerMutex_;
+    static std::mutex touchOutsideListenerMutex_;
+    static std::mutex windowVisibilityChangeListenerMutex_;
+    static std::mutex windowStatusChangeListenerMutex_;
     static std::map<int32_t, std::vector<sptr<IWindowLifeCycle>>> lifecycleListeners_;
     static std::map<int32_t, std::vector<sptr<IWindowChangeListener>>> windowChangeListeners_;
     static std::map<int32_t, std::vector<sptr<IAvoidAreaChangedListener>>> avoidAreaChangeListeners_;

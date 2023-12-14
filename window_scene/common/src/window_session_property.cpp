@@ -528,7 +528,7 @@ bool WindowSessionProperty::Marshalling(Parcel& parcel) const
         parcel.WriteBool(isPrivacyMode_) && parcel.WriteBool(isSystemPrivacyMode_) &&
         parcel.WriteUint64(displayId_) && parcel.WriteInt32(persistentId_) &&
         parcel.WriteString(sessionInfo_.bundleName_) && parcel.WriteString(sessionInfo_.moduleName_) &&
-        parcel.WriteString(sessionInfo_.abilityName_) && parcel.WriteInt32(sessionInfo_.persistentId_) &&
+        parcel.WriteString(sessionInfo_.abilityName_) &&
         parcel.WriteInt32(parentPersistentId_) &&
         parcel.WriteUint32(accessTokenId_) && parcel.WriteUint32(static_cast<uint32_t>(maximizeMode_)) &&
         parcel.WriteUint32(static_cast<uint32_t>(requestedOrientation_)) &&
@@ -567,7 +567,6 @@ WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
     property->SetDisplayId(parcel.ReadUint64());
     property->SetPersistentId(parcel.ReadInt32());
     SessionInfo info = { parcel.ReadString(), parcel.ReadString(), parcel.ReadString() };
-    info.persistentId_ = parcel.ReadInt32();
     property->SetSessionInfo(info);
     property->SetParentPersistentId(parcel.ReadInt32());
     property->SetAccessTokenId(parcel.ReadUint32());

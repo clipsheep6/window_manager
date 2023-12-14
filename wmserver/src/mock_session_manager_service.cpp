@@ -15,6 +15,7 @@
 
 #include "mock_session_manager_service.h"
 
+#include <cstdint>
 #include <fcntl.h>
 #include <securec.h>
 #include <unistd.h>
@@ -63,7 +64,7 @@ public:
 
     void OnRemoteDied(const wptr<IRemoteObject> &wptrDeath) override
     {
-        WLOGFI("[RECOVER] OnRemoteDied, pid = %{public}ld", pid_);
+        WLOGFI("[RECOVER] OnRemoteDied, pid = %{public}" PRId64, pid_);
         MockSessionManagerService::GetInstance().UnRegisterSessionManagerServiceRecoverListener(pid_);
     }
 
@@ -195,7 +196,7 @@ void MockSessionManagerService::NotifySceneBoardAvailable()
 void MockSessionManagerService::RegisterSessionManagerServiceRecoverListener(
     int64_t pid, const sptr<IRemoteObject>& listener)
 {
-    WLOGFI("[RECOVER] pid = %{public}ld", pid);
+    WLOGFI("[RECOVER] pid = %{public}" PRId64, pid);
 
     std::lock_guard<std::mutex> lock(smsRecoverListenerLock_);
     if (listener == nullptr) {
@@ -213,7 +214,7 @@ void MockSessionManagerService::RegisterSessionManagerServiceRecoverListener(
 void MockSessionManagerService::UnRegisterSessionManagerServiceRecoverListener(int64_t pid)
 {
     std::lock_guard<std::mutex> lock(smsRecoverListenerLock_);
-    WLOGFI("[RECOVER] pid = %{public}ld", pid);
+    WLOGFI("[RECOVER] pid = %{public}" PRId64, pid);
     auto it = smsRecoverListenerMap_.find(pid);
     if (it != smsRecoverListenerMap_.end()) {
         smsRecoverListenerMap_.erase(it);
@@ -222,11 +223,11 @@ void MockSessionManagerService::UnRegisterSessionManagerServiceRecoverListener(i
 
 void MockSessionManagerService::NotifySceneBoardAvailableToClient()
 {
-    WLOGFI("[RECOVER] Remote process count = %{public}lu", smsRecoverListenerMap_.size());
+    WLOGFI("[RECOVER] Remote process count = %{public}" PRIu64, static_cast<uint64_t>(smsRecoverListenerMap_.size()));
     std::lock_guard<std::mutex> lock(smsRecoverListenerLock_);
     for (auto& it: smsRecoverListenerMap_) {
         if (it.second != nullptr) {
-            WLOGFI("[RECOVER] Call OnSessionManagerServiceRecover pid = %{public}ld", it.first);
+            WLOGFI("[RECOVER] Call OnSessionManagerServiceRecover pid = %{public}" PRId64, it.first);
             it.second->OnSessionManagerServiceRecover(sessionManagerService_);
         }
     }

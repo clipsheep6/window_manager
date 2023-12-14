@@ -26,6 +26,9 @@ SystemSession::SystemSession(const SessionInfo& info, const sptr<SpecificSession
     : SceneSession(info, specificCallback)
 {
     WLOGFD("[WMSSystem] Create SystemSession");
+    // moveDragController for WINDOW_TYPE_PIP
+    moveDragController_ = new (std::nothrow) MoveDragController(GetPersistentId());
+    SetMoveDragCallback();
 }
 
 SystemSession::~SystemSession()
@@ -43,7 +46,7 @@ void SystemSession::UpdateCameraFloatWindowStatus(bool isShowing)
 
 WSError SystemSession::Show(sptr<WindowSessionProperty> property)
 {
-    PostTask([weakThis = wptr(this), property]() {
+    auto task = [weakThis = wptr(this), property]() {
         auto session = weakThis.promote();
         if (!session) {
             WLOGFE("session is null");
@@ -59,13 +62,14 @@ WSError SystemSession::Show(sptr<WindowSessionProperty> property)
         session->UpdateCameraFloatWindowStatus(true);
         auto ret = session->SceneSession::Foreground(property);
         return ret;
-    });
+    };
+    PostTask(task, "Show");
     return WSError::WS_OK;
 }
 
 WSError SystemSession::Hide()
 {
-    PostTask([weakThis = wptr(this)]() {
+    auto task = [weakThis = wptr(this)]() {
         auto session = weakThis.promote();
         if (!session) {
             WLOGFE("[WMSSystem] session is null");
@@ -87,13 +91,14 @@ WSError SystemSession::Hide()
         session->UpdateCameraFloatWindowStatus(false);
         ret = session->SceneSession::Background();
         return ret;
-    });
+    };
+    PostTask(task, "Hide");
     return WSError::WS_OK;
 }
 
 WSError SystemSession::Disconnect()
 {
-    PostTask([weakThis = wptr(this)]() {
+    auto task = [weakThis = wptr(this)]() {
         auto session = weakThis.promote();
         if (!session) {
             WLOGFE("[WMSSystem] session is null");
@@ -106,7 +111,8 @@ WSError SystemSession::Disconnect()
         }
         session->UpdateCameraFloatWindowStatus(false);
         return WSError::WS_OK;
-    });
+    };
+    PostTask(task, "Disconnect");
     return WSError::WS_OK;
 }
 } // namespace OHOS::Rosen

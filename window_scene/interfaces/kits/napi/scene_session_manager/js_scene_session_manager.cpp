@@ -1209,7 +1209,7 @@ napi_value JsSceneSessionManager::OnRequestSceneSessionDestruction(napi_env env,
             jsSceneSession->ClearCbMap(needRemoveSession, persistentId);
         }
     };
-    localScheduler->PostAsyncTask(clearTask);
+    localScheduler->PostAsyncTask(clearTask, "Clear callback Map");
     return NapiGetUndefined(env);
 }
 
