@@ -25,6 +25,8 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SubSes
 SubSession::SubSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback)
     : SceneSession(info, specificCallback)
 {
+    moveDragController_ = new (std::nothrow) MoveDragController(GetPersistentId());
+    SetMoveDragCallback();
     WLOGFD("[WMSSub] Create SubSession");
 }
 
@@ -35,7 +37,7 @@ SubSession::~SubSession()
 
 WSError SubSession::Show(sptr<WindowSessionProperty> property)
 {
-    PostTask([weakThis = wptr(this), property]() {
+    auto task = [weakThis = wptr(this), property]() {
         auto session = weakThis.promote();
         if (!session) {
             WLOGFE("[WMSSub] session is null");
@@ -50,13 +52,14 @@ WSError SubSession::Show(sptr<WindowSessionProperty> property)
         }
         auto ret = session->SceneSession::Foreground(property);
         return ret;
-    });
+    };
+    PostTask(task, "Show");
     return WSError::WS_OK;
 }
 
 WSError SubSession::Hide()
 {
-    PostTask([weakThis = wptr(this)]() {
+    auto task = [weakThis = wptr(this)]() {
         auto session = weakThis.promote();
         if (!session) {
             WLOGFE("[WMSSub] session is null");
@@ -76,7 +79,8 @@ WSError SubSession::Hide()
         }
         ret = session->SceneSession::Background();
         return ret;
-    });
+    };
+    PostTask(task, "Hide");
     return WSError::WS_OK;
 }
 } // namespace OHOS::Rosen

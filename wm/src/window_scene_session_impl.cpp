@@ -190,6 +190,8 @@ WMError WindowSceneSessionImpl::RecoverAndConnectSpecificSession()
     WLOGI("[RECOVER] RecoverAndConnectSpecificSession windowName = %{public}s, windowMode = %{public}u, "
         "windowType = %{public}u, persistentId = %{public}d, windowState = %{public}d", GetWindowName().c_str(),
         property_->GetWindowMode(), property_->GetWindowType(), persistentId, state_);
+    
+    property_->SetWindowState(state_);
 
     sptr<ISessionStage> iSessionStage(this);
     sptr<WindowEventChannel> channel = new (std::nothrow) WindowEventChannel(iSessionStage);
@@ -1476,7 +1478,7 @@ WSError WindowSceneSessionImpl::HandleBackEvent()
         }
         weakSession->PerformBack();
     };
-    if (!handler_->PostTask(task)) {
+    if (!handler_->PostTask(task, "wms:PerformBack")) {
         WLOGFE("Failed to post PerformBack");
         return WSError::WS_ERROR_INVALID_OPERATION;
     }

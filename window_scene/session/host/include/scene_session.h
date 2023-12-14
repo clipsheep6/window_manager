@@ -144,6 +144,7 @@ public:
     WSError UpdatePiPRect(uint32_t width, uint32_t height, PiPRectUpdateReason reason) override;
     void NotifyPiPWindowPrepareClose() override;
     WSError RecoveryPullPiPMainWindow(int32_t persistentId, const Rect& rect) override;
+    void SetScale(float scaleX, float scaleY, float pivotX, float pivotY) override;
 
     WSError SetKeepScreenOn(bool keepScreenOn);
     void SetParentPersistentId(int32_t parentId);
@@ -217,6 +218,13 @@ protected:
     void NotifyIsCustomAnimationPlaying(bool isPlaying);
     void SetMoveDragCallback();
     std::string GetRatioPreferenceKey();
+
+    std::string GetRectInfo(const WSRect& rect)
+    {
+        using std::to_string;
+        return "[" + to_string(rect.width_) + ", " + to_string(rect.height_) + "; "
+        + to_string(rect.posX_) + ", " + to_string(rect.posY_) + "]";
+    }
 
     sptr<SpecificSessionCallback> specificCallback_ = nullptr;
     sptr<SessionChangeCallback> sessionChangeCallback_ = nullptr;

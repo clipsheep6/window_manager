@@ -78,6 +78,7 @@ ScreenSessionManager::ScreenSessionManager()
     bool foldScreenFlag = system::GetParameter("const.window.foldscreen.type", "") != "";
     if (foldScreenFlag) {
         foldScreenController_ = new (std::nothrow) FoldScreenController(displayInfoMutex_);
+        foldScreenController_->SetOnBootAnimation(true);
         rsInterface_.SetScreenCorrection(SCREEN_ID_FULL, ScreenRotation::ROTATION_270);
         SetFoldScreenPowerInit([&]() {
             int64_t timeStamp = 50;
@@ -118,6 +119,7 @@ ScreenSessionManager::ScreenSessionManager()
             } else {
                 WLOGFI("ScreenSessionManager Fold Screen Power Init, invalid active screen id");
             }
+            foldScreenController_->SetOnBootAnimation(false);
         });
     }
     WatchParameter(BOOTEVENT_BOOT_COMPLETED.c_str(), BootFinishedCallback, this);
@@ -251,7 +253,7 @@ void ScreenSessionManager::RegisterScreenChangeListener()
         [this](ScreenId screenId, ScreenEvent screenEvent) { OnScreenChange(screenId, screenEvent); });
     if (res != StatusCode::SUCCESS) {
         auto task = [this]() { RegisterScreenChangeListener(); };
-        taskScheduler_->PostAsyncTask(task, 50); // Retry after 50 ms.
+        taskScheduler_->PostAsyncTask(task, "RegisterScreenChangeListener", 50); // Retry after 50 ms.
     }
 }
 
@@ -287,22 +289,11 @@ void ScreenSessionManager::OnScreenChange(ScreenId screenId, ScreenEvent screenE
         WLOGFE("screenSession is nullptr");
         return;
     }
-    // If SetDisplayMode failed, try again
-    if (foldScreenController_ != nullptr && foldScreenController_->GetCurrentScreenId() == SCREEN_ID_INVALID) {
-        auto foldStatus = GetFoldStatus();
-        switch (foldStatus) {
-            case FoldStatus::EXPAND: {
-                foldScreenController_->SetDisplayMode(FoldDisplayMode::FULL);
-                break;
-            }
-            case FoldStatus::FOLDED: {
-                foldScreenController_->SetDisplayMode(FoldDisplayMode::MAIN);
-                break;
-            }
-            default:
-                break;
-        }
+
+    if (foldScreenController_ != nullptr) {
+        screenSession->SetFoldScreen(true);
     }
+
     if (screenEvent == ScreenEvent::CONNECTED) {
         if (foldScreenController_ != nullptr) {
             if (screenId == 0 && clientProxy_) {
@@ -491,7 +482,7 @@ void ScreenSessionManager::NotifyScreenChanged(sptr<ScreenInfo> screenInfo, Scre
             agent->OnScreenChange(screenInfo, event);
         }
     };
-    taskScheduler_->PostAsyncTask(task);
+    taskScheduler_->PostAsyncTask(task, "NotifyScreenChanged:SID:" + std::to_string(screenInfo->GetScreenId()));
 }
 
 DMError ScreenSessionManager::SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio)
@@ -683,8 +674,12 @@ sptr<ScreenSession> ScreenSessionManager::GetOrCreateScreenSession(ScreenId scre
         phyScreenPropMap_[screenId] = property;
     }
 
-    if (foldScreenController_ != nullptr && screenId != 0) {
-        return nullptr;
+    if (foldScreenController_ != nullptr) {
+        // sensor may earlier than screen connect, when physical screen property changed, update
+        foldScreenController_->UpdateForPhyScreenPropertyChange();
+        if (screenId != 0) {
+            return nullptr;
+        }
     }
 
     sptr<ScreenSession> session = new ScreenSession(screenId, property, GetDefaultScreenId());
@@ -1058,7 +1053,7 @@ void ScreenSessionManager::NotifyDisplayChanged(sptr<DisplayInfo> displayInfo, D
             agent->OnDisplayChange(displayInfo, event);
         }
     };
-    taskScheduler_->PostAsyncTask(task);
+    taskScheduler_->PostAsyncTask(task, "NotifyDisplayChanged");
 }
 
 DMError ScreenSessionManager::SetOrientation(ScreenId screenId, Orientation orientation)
@@ -2405,7 +2400,7 @@ void ScreenSessionManager::NotifyScreenConnected(sptr<ScreenInfo> screenInfo)
         WLOGFI("SCB: NotifyScreenConnected,  screenId:%{public}" PRIu64"", screenInfo->GetScreenId());
         OnScreenConnect(screenInfo);
     };
-    taskScheduler_->PostAsyncTask(task);
+    taskScheduler_->PostAsyncTask(task, "NotifyScreenConnected");
 }
 
 void ScreenSessionManager::NotifyScreenDisconnected(ScreenId screenId)
@@ -2414,7 +2409,7 @@ void ScreenSessionManager::NotifyScreenDisconnected(ScreenId screenId)
         WLOGFI("NotifyScreenDisconnected,  screenId:%{public}" PRIu64"", screenId);
         OnScreenDisconnect(screenId);
     };
-    taskScheduler_->PostAsyncTask(task);
+    taskScheduler_->PostAsyncTask(task, "NotifyScreenDisconnected");
 }
 
 void ScreenSessionManager::NotifyDisplayCreate(sptr<DisplayInfo> displayInfo)
@@ -2456,7 +2451,7 @@ void ScreenSessionManager::NotifyScreenGroupChanged(
         WLOGFI("SCB: screenId:%{public}" PRIu64", trigger:[%{public}s]", screenInfo->GetScreenId(), trigger.c_str());
         OnScreenGroupChange(trigger, screenInfo, event);
     };
-    taskScheduler_->PostAsyncTask(task);
+    taskScheduler_->PostAsyncTask(task, "NotifyScreenGroupChanged:PID");
 }
 
 void ScreenSessionManager::NotifyScreenGroupChanged(
@@ -2470,7 +2465,7 @@ void ScreenSessionManager::NotifyScreenGroupChanged(
         WLOGFI("SCB: trigger:[%{public}s]", trigger.c_str());
         OnScreenGroupChange(trigger, screenInfo, event);
     };
-    taskScheduler_->PostAsyncTask(task);
+    taskScheduler_->PostAsyncTask(task, "NotifyScreenGroupChanged");
 }
 
 void ScreenSessionManager::NotifyPrivateSessionStateChanged(bool hasPrivate)
@@ -2907,7 +2902,7 @@ void ScreenSessionManager::SetClient(const sptr<IScreenSessionManagerClient>& cl
         bool isModeChanged = (localScreenBounds.rect_.width_ < localScreenBounds.rect_.height_) !=
                              (remoteScreenMode.GetScreenWidth() < remoteScreenMode.GetScreenHeight());
         if (isModeChanged) {
-            WLOGFI("screen(id:%{public}lu) current mode is not default mode, reset it", iter.first);
+            WLOGFI("[RECOVER]screen(id:%{public}" PRIu64 ") current mode is not default mode, reset it", iter.first);
             SetRotation(iter.first, Rotation::ROTATION_0, false);
             iter.second->SetDisplayBoundary(
                 RectF(0, 0, remoteScreenMode.GetScreenWidth(), remoteScreenMode.GetScreenHeight()), 0);

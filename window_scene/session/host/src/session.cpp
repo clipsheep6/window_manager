@@ -64,12 +64,12 @@ void Session::SetEventHandler(const std::shared_ptr<AppExecFwk::EventHandler>& h
     handler_ = handler;
 }
 
-void Session::PostTask(Task&& task, int64_t delayTime)
+void Session::PostTask(Task&& task, const std::string& name, int64_t delayTime)
 {
     if (!handler_ || handler_->GetEventRunner()->IsCurrentRunnerThread()) {
         return task();
     }
-    handler_->PostTask(std::move(task), delayTime, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+    handler_->PostTask(std::move(task), "wms:" + name, delayTime, AppExecFwk::EventQueue::Priority::IMMEDIATE);
 }
 
 int32_t Session::GetPersistentId() const
@@ -291,13 +291,13 @@ void Session::NotifyExtensionDied()
 }
 
 void Session::NotifyTransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
-    const std::vector<int32_t>& uiExtensionIdLevelVec)
+    int32_t uiExtensionIdLevel)
 {
     auto lifecycleListeners = GetListeners<ILifecycleListener>();
     std::lock_guard<std::mutex> lock(lifecycleListenersMutex_);
     for (auto& listener : lifecycleListeners) {
         if (!listener.expired()) {
-            listener.lock()->OnAccessibilityEvent(info, uiExtensionIdLevelVec);
+            listener.lock()->OnAccessibilityEvent(info, uiExtensionIdLevel);
         }
     }
 }
@@ -1514,16 +1514,6 @@ WSError Session::TransferFocusStateEvent(bool focusState)
     return windowEventChannel_->TransferFocusState(focusState);
 }
 
-WSError Session::UpdateConfiguration()
-{
-    if (!sessionStage_) {
-        WLOGFE("session stage is nullptr");
-        return WSError::WS_ERROR_NULLPTR;
-    }
-    sessionStage_->NotifyConfigurationUpdated();
-    return WSError::WS_OK;
-}
-
 std::shared_ptr<Media::PixelMap> Session::Snapshot() const
 {
     if (!surfaceNode_ || (!surfaceNode_->IsBufferAvailable() && !bufferAvailable_)) {
@@ -1566,7 +1556,7 @@ void Session::SetBufferAvailableChangeListener(const NotifyBufferAvailableChange
 
 void Session::UnregisterSessionChangeListeners()
 {
-    PostTask([weakThis = wptr(this)]() {
+    auto task = [weakThis = wptr(this)]() {
         auto session = weakThis.promote();
         if (session == nullptr) {
             WLOGFE("session is null");
@@ -1577,7 +1567,8 @@ void Session::UnregisterSessionChangeListeners()
         session->sessionTouchableChangeFunc_ = nullptr;
         session->clickFunc_ = nullptr;
         WLOGFD("UnregisterSessionChangeListenser, id: %{public}d", session->GetPersistentId());
-    });
+    };
+    PostTask(task, "UnregisterSessionChangeListeners");
 }
 
 void Session::SetSessionStateChangeNotifyManagerListener(const NotifySessionStateChangeNotifyManagerFunc& func)
@@ -1608,7 +1599,7 @@ void Session::SetGetStateFromManagerListener(const GetStateFromManagerFunc& func
 
 void Session::NotifySessionStateChange(const SessionState& state)
 {
-    PostTask([weakThis = wptr(this), state]() {
+    auto task = [weakThis = wptr(this), state]() {
         auto session = weakThis.promote();
         if (session == nullptr) {
             WLOGFE("session is null");
@@ -1623,7 +1614,8 @@ void Session::NotifySessionStateChange(const SessionState& state)
         if (session->sessionStateChangeNotifyManagerFunc_) {
             session->sessionStateChangeNotifyManagerFunc_(session->GetPersistentId(), state);
         }
-    });
+    };
+    PostTask(task, "NotifySessionStateChange");
 }
 
 void Session::SetSessionFocusableChangeListener(const NotifySessionFocusableChangeFunc& func)
@@ -1993,6 +1985,34 @@ void Session::SetFloatingScale(float floatingScale)
 float Session::GetFloatingScale() const
 {
     return floatingScale_;
+}
+
+void Session::SetScale(float scaleX, float scaleY, float pivotX, float pivotY)
+{
+    scaleX_ = scaleX;
+    scaleY_ = scaleY;
+    pivotX_ = pivotX;
+    pivotY_ = pivotY;
+}
+
+float Session::GetScaleX() const
+{
+    return scaleX_;
+}
+
+float Session::GetScaleY() const
+{
+    return scaleY_;
+}
+
+float Session::GetPivotX() const
+{
+    return pivotX_;
+}
+
+float Session::GetPivotY() const
+{
+    return pivotY_;
 }
 
 void Session::SetSCBKeepKeyboard(bool scbKeepKeyboardFlag)

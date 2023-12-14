@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cinttypes>
 #include "zidl/mock_session_manager_service_proxy.h"
 #include "window_manager_hilog.h"
 
@@ -62,7 +63,7 @@ void MockSessionManagerServiceProxy::NotifySceneBoardAvailable()
 void MockSessionManagerServiceProxy::RegisterSessionManagerServiceRecoverListener(
     int64_t pid, const sptr<IRemoteObject>& listener)
 {
-    WLOGFD("[RECOVER] RegisterSessionManagerServiceRecoverListener pid = %{public}ld", pid);
+    WLOGFD("[RECOVER] RegisterSessionManagerServiceRecoverListener pid = %{public}" PRId64, pid);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -91,7 +92,7 @@ void MockSessionManagerServiceProxy::RegisterSessionManagerServiceRecoverListene
 
 void MockSessionManagerServiceProxy::UnRegisterSessionManagerServiceRecoverListener(int64_t pid)
 {
-    WLOGFD("[RECOVER] UnRegisterSessionManagerServiceRecoverListener pid = %{public}ld", pid);
+    WLOGFD("[RECOVER] UnRegisterSessionManagerServiceRecoverListener pid = %{public}" PRId64, pid);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
