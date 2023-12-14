@@ -158,9 +158,10 @@ private:
     napi_value OnMoveWindowTo(napi_env env, napi_callback_info info);
     napi_value OnResize(napi_env env, napi_callback_info info);
     napi_value OnResizeWindow(napi_env env, napi_callback_info info);
-    napi_value NapiAsyncResizeComplete(napi_env env);
+    napi_value NapiAsyncResizeComplete(napi_env env, int32_t width, int32_t height)
     napi_value OnSetWindowType(napi_env env, napi_callback_info info);
-    napi_value NapiAsyncSetWindowTypeComplete(napi_env env);
+    napi_value NapiAsyncSetWindowTypeComplete(napi_env env, size_t argc, napi_value* argv, WindowType winType,
+        WMError errCode);
     napi_value OnSetWindowMode(napi_env env, napi_callback_info info);
     napi_value NapiAsyncSetWindowModeComplete(napi_env env);
     napi_value OnGetProperties(napi_env env, napi_callback_info info);

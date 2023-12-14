@@ -1226,7 +1226,7 @@ napi_value JsWindow::OnResizeWindow(napi_env env, napi_callback_info info)
     return NapiAsyncResizeComplete(env);
 }
 
-napi_value NapiAsyncResizeComplete(napi_env env)
+napi_value JsWindow::NapiAsyncResizeComplete(napi_env env, int32_t width, int32_t height)
 {
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
@@ -1287,10 +1287,11 @@ napi_value JsWindow::OnSetWindowType(napi_env env, napi_callback_info info)
             }
         }
     }
-    return NapiAsyncSetWindowTypeComplete(env);
+    return NapiAsyncSetWindowTypeComplete(env, argc, argv, winType, errCode);
 }
 
-napi_value JsWindow::NapiAsyncSetWindowTypeComplete(napi_env env)
+napi_value JsWindow::NapiAsyncSetWindowTypeComplete(napi_env env, size_t argc, napi_value* argv, WindowType winType,
+    WMError errCode)
 {
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
