@@ -34,6 +34,9 @@ namespace Rosen {
 napi_value CreateJsWindowObject(napi_env env, sptr<Window>& window);
 std::shared_ptr<NativeReference> FindJsWindowObject(std::string windowName);
 void BindFunctions(napi_env env, napi_value object, const char *moduleName);
+void BindFunctionsWindowEvent(napi_env env, napi_value object, const char *moduleName);
+void BindFunctionsWindowState(napi_env env, napi_value object, const char *moduleName);
+void BindFunctionsWindowArgs(napi_env env, napi_value object, const char *moduleName);
 napi_value NapiGetUndefined(napi_env env);
 napi_valuetype GetType(napi_env env, napi_value value);
 bool NapiIsCallable(napi_env env, napi_value value);
@@ -155,8 +158,11 @@ private:
     napi_value OnMoveWindowTo(napi_env env, napi_callback_info info);
     napi_value OnResize(napi_env env, napi_callback_info info);
     napi_value OnResizeWindow(napi_env env, napi_callback_info info);
+    napi_value NapiAsyncResizeComplete(napi_env env);
     napi_value OnSetWindowType(napi_env env, napi_callback_info info);
+    napi_value NapiAsyncSetWindowTypeComplete(napi_env env);
     napi_value OnSetWindowMode(napi_env env, napi_callback_info info);
+    napi_value NapiAsyncSetWindowModeComplete(napi_env env);
     napi_value OnGetProperties(napi_env env, napi_callback_info info);
     napi_value OnGetWindowPropertiesSync(napi_env env, napi_callback_info info);
     napi_value OnRegisterWindowCallback(napi_env env, napi_callback_info info);
@@ -182,6 +188,7 @@ private:
     napi_value OnResetAspectRatio(napi_env env, napi_callback_info info);
     napi_value OnMinimize(napi_env env, napi_callback_info info);
     napi_value OnRaiseAboveTarget(napi_env env, napi_callback_info info);
+    napi_value NapiAsyncRaiseAboveComplete(napi_env env);
     napi_value OnKeepKeyboardOnFocus(napi_env env, napi_callback_info info);
     napi_value OnSetWindowLimits(napi_env env, napi_callback_info info);
     napi_value OnGetWindowLimits(napi_env env, napi_callback_info info);
