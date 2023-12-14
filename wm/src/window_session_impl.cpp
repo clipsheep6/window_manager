@@ -67,6 +67,7 @@ std::map<int32_t, std::vector<sptr<IOccupiedAreaChangeListener>>> WindowSessionI
 std::map<int32_t, std::vector<sptr<IScreenshotListener>>> WindowSessionImpl::screenshotListeners_;
 std::map<int32_t, std::vector<sptr<ITouchOutsideListener>>> WindowSessionImpl::touchOutsideListeners_;
 std::map<int32_t, std::vector<IWindowVisibilityListenerSptr>> WindowSessionImpl::windowVisibilityChangeListeners_;
+std::map<int32_t, std::vector<sptr<IWindowTitleButtonRectChangedListener>>> WindowSessionImpl::windowTitleButtonRectChangeListeners_;
 std::recursive_mutex WindowSessionImpl::globalMutex_;
 std::map<std::string, std::pair<int32_t, sptr<WindowSessionImpl>>> WindowSessionImpl::windowSessionMap_;
 std::shared_mutex WindowSessionImpl::windowSessionMutex_;
@@ -981,6 +982,136 @@ WMError WindowSessionImpl::UnregisterWindowStatusChangeListener(const sptr<IWind
     return UnregisterListener(windowStatusChangeListeners_[GetPersistentId()], listener);
 }
 
+WMError WindowSessionImpl::SetDecorVisible(bool isVisible)
+{
+    if (uiContent_ == nullptr) {
+        WLOGFE("uicontent is empty");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    uiContent_->SetContainerModalTitleVisible(!isVisible, true);
+    WLOGI("Set app window decor visible or not success");
+    return WMError::WM_OK;
+}
+
+WMError WindowSessionImpl::SetDecorHeight(uint32_t decorHeight)
+{
+    if (uiContent_ == nullptr) {
+        WLOGFE("uicontent is empty");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    uiContent_->SetContainerModalTitleHeight(decorHeight);
+    WLOGI("Set app window decor height success, height : %{public}u", decorHeight);
+    return WMError::WM_OK;
+}
+
+WMError WindowSessionImpl::GetDecorHeight(int32_t& height)
+{
+    if (uiContent_ == nullptr) {
+        WLOGFE("uiContent is nullptr, windowId: %{public}u", GetWindowId());
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    height = uiContent_->GetContainerModalTitleHeight();
+    if (height == -1)
+    {
+        return WMError::WM_DO_NOTHING;
+    }
+    WLOGI("Get app window decor height success, height : %{public}d", height);
+    return WMError::WM_OK;
+}
+
+WMError WindowSessionImpl::GetTitleButtonArea(TitleButtonRect& titleButtonRect)
+{
+    if (uiContent_ == nullptr) {
+        WLOGFE("uicontent is empty");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    Rect decorRect;
+    Rect titleButtonLeftRect;
+    bool res = uiContent_->GetContainerModalButtionsRect(decorRect, titleButtonLeftRect);
+    if (!res) {
+        WLOGFE("get window title buttons area failed");
+        titleButtonRect.IsUninitializedRect();
+        return WMError::WM_DO_NOTHING;
+    }
+    titleButtonRect.posX_ = decorRect.width_ - titleButtonLeftRect.width_ - titleButtonLeftRect.x_;
+    titleButtonRect.posY_ = titleButtonLeftRect.y_;
+    titleButtonRect.width_ = titleButtonLeftRect.width_;
+    titleButtonRect.height_ = titleButtonLeftRect.height_;
+    return WMError::WM_OK;
+}
+
+WMError WindowSessionImpl::RegisterWindowTitleButtonRectChangeListener(const sptr<IWindowTitleButtonRectChangedListener>& listener)
+{
+    WMError ret = WMError::WM_OK;
+    auto persistentId = GetPersistentId();
+    WLOGFD("Start register windowTitleButtonRectChange listener, id:%{public}d", persistentId);
+    if (listener == nullptr) {
+        WLOGFE("listener is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        ret = RegisterListener(windowTitleButtonRectChangeListeners_[persistentId], listener);
+        if (ret != WMError::WM_OK) {
+            return ret;
+        }
+    }
+        uiContent_->WatchContainerModalButtonsRect([this](Rect& decorRect, Rect& titleButtonLeftRect) {
+            TitleButtonRect titleButtonRect;
+            titleButtonRect.posX_ = decorRect.width_ - titleButtonLeftRect.width_ - titleButtonLeftRect.x_;
+            titleButtonRect.posY_ = titleButtonLeftRect.y_;
+            titleButtonRect.width_ = titleButtonLeftRect.width_;
+            titleButtonRect.height_ = titleButtonLeftRect.height_;
+            NotifyWindowTitleButtonRectChange(titleButtonRect);
+    });
+    return ret;
+}
+
+WMError WindowSessionImpl::UnregisterWindowTitleButtonRectChangeListener(const sptr<IWindowTitleButtonRectChangedListener>& listener)
+{
+    WMError ret = WMError::WM_OK;
+    auto persistentId = GetPersistentId();
+    WLOGFD("Start unregister windowTitleButtonRectChange listener, id:%{public}d", persistentId);
+    if (listener == nullptr) {
+        WLOGFE("listener is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        ret = UnregisterListener(windowTitleButtonRectChangeListeners_[persistentId], listener);
+        if (ret != WMError::WM_OK) {
+            return ret;
+        }
+    }
+    uiContent_->WatchContainerModalButtonsRect(nullptr);
+    return ret;
+}
+
+template<typename T>
+EnableIfSame<T, IWindowTitleButtonRectChangedListener,
+    std::vector<sptr<IWindowTitleButtonRectChangedListener>>> WindowSessionImpl::GetListeners()
+{
+    std::vector<sptr<IWindowTitleButtonRectChangedListener>> windowTitleButtonRectListeners;
+    {
+        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        for (auto& listener : windowTitleButtonRectChangeListeners_[GetPersistentId()]) {
+            windowTitleButtonRectListeners.push_back(listener);
+        }
+    }
+    return windowTitleButtonRectListeners;
+}
+
+void WindowSessionImpl::NotifyWindowTitleButtonRectChange(TitleButtonRect titleButtonRect)
+{
+    auto windowTitleButtonRectListeners = GetListeners<IWindowTitleButtonRectChangedListener>();
+    for (auto& listener : windowTitleButtonRectListeners) {
+        if (listener != nullptr) {
+            listener->OnWindowTitleButtonRectChanged(titleButtonRect);
+        }
+    }
+}
 
 template<typename T>
 EnableIfSame<T, IWindowLifeCycle, std::vector<sptr<IWindowLifeCycle>>> WindowSessionImpl::GetListeners()
@@ -1081,6 +1212,7 @@ void WindowSessionImpl::ClearListenersById(int32_t persistentId)
     ClearUselessListeners(dialogTargetTouchListener_, persistentId);
     ClearUselessListeners(screenshotListeners_, persistentId);
     ClearUselessListeners(windowStatusChangeListeners_, persistentId);
+    ClearUselessListeners(windowTitleButtonRectChangeListeners_, persistentId);
 }
 
 void WindowSessionImpl::RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func)

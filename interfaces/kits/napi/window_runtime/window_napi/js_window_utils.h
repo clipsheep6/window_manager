@@ -198,6 +198,7 @@ struct SystemBarPropertyFlag {
     napi_value BlurStyleInit(napi_env env);
     napi_value WindowErrorCodeInit(napi_env env);
     napi_value WindowErrorInit(napi_env env);
+    napi_value ConvertTitleButtonAreaToJsValue(napi_env env, const TitleButtonRect& titleButtonRect);
     napi_value GetWindowLimitsAndConvertToJsValue(napi_env env, const WindowLimits& windowLimits);
     bool GetAPI7Ability(napi_env env, AppExecFwk::Ability* &ability);
     template<class T>

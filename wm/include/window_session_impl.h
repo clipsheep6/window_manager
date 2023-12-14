@@ -172,6 +172,13 @@ public:
     void SetDrawingContentState(bool drawingContentState);
     WMError RegisterWindowStatusChangeListener(const sptr<IWindowStatusChangeListener>& listener) override;
     WMError UnregisterWindowStatusChangeListener(const sptr<IWindowStatusChangeListener>& listener) override;
+    virtual WMError SetDecorVisible(bool isVisible) override;
+    virtual WMError SetDecorHeight(uint32_t decorHeight) override;
+    virtual WMError GetDecorHeight(int32_t& height) override;
+    virtual WMError GetTitleButtonArea(TitleButtonRect& titleButtonRect) override;
+    virtual WMError RegisterWindowTitleButtonRectChangeListener(const sptr<IWindowTitleButtonRectChangedListener>& listener) override;
+    virtual WMError UnregisterWindowTitleButtonRectChangeListener(const sptr<IWindowTitleButtonRectChangedListener>& listener) override;
+    void NotifyWindowTitleButtonRectChange(TitleButtonRect& titleButtonRect);
 
 protected:
     WMError Connect();
@@ -238,6 +245,8 @@ private:
     EnableIfSame<T, ITouchOutsideListener, std::vector<sptr<ITouchOutsideListener>>> GetListeners();
     template<typename T>
     EnableIfSame<T, IWindowVisibilityChangedListener, std::vector<IWindowVisibilityListenerSptr>> GetListeners();
+    template<typename T>
+    EnableIfSame<T, IWindowTitleButtonRectChangedListener, std::vector<sptr<IWindowTitleButtonRectChangedListener>>> GetListeners();
     template<typename T> void ClearUselessListeners(std::map<int32_t, T>& listeners, int32_t persistentId);
     RSSurfaceNode::SharedPtr CreateSurfaceNode(std::string name, WindowType type);
     template<typename T>
@@ -266,6 +275,7 @@ private:
     static std::map<int32_t, std::vector<sptr<ITouchOutsideListener>>> touchOutsideListeners_;
     static std::map<int32_t, std::vector<IWindowVisibilityListenerSptr>> windowVisibilityChangeListeners_;
     static std::map<int32_t, std::vector<sptr<IWindowStatusChangeListener>>> windowStatusChangeListeners_;
+    static std::map<int32_t, std::vector<sptr<IWindowTitleButtonRectChangedListener>>> windowTitleButtonRectChangeListeners_;
 
     // FA only
     sptr<IAceAbilityHandler> aceAbilityHandler_;
