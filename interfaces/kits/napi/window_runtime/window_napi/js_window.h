@@ -218,6 +218,7 @@ private:
     napi_value OnSetResizeByDragEnabled(napi_env env, napi_callback_info info);
     napi_value OnSetRaiseByClickEnabled(napi_env env, napi_callback_info info);
     napi_value OnHideNonSystemFloatingWindows(napi_env env, napi_callback_info info);
+    napi_value NapiAsyncHideFloatComplete(napi_env env, bool shouldHide, WMError errCode);
     napi_value OnSetWindowTouchable(napi_env env, napi_callback_info info);
     napi_value OnSetTransparent(napi_env env, napi_callback_info info);
     napi_value OnSetCallingWindow(napi_env env, napi_callback_info info);

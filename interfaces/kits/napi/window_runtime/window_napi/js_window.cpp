@@ -1360,7 +1360,7 @@ napi_value JsWindow::OnSetWindowMode(napi_env env, napi_callback_info info)
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
-    return NapiAsyncSetWindowModeComplete(env);
+    return NapiAsyncSetWindowModeComplete(env, winMode);
 }
 
 napi_value JsWindow::NapiAsyncSetWindowModeComplete(napi_env env, WindowMode winMode)
@@ -3216,10 +3216,10 @@ napi_value JsWindow::OnHideNonSystemFloatingWindows(napi_env env, napi_callback_
             napi_get_value_bool(env, nativeVal, &shouldHide);
         }
     }
-    return NapiAsyncHideFloatComplete（env);
+    return NapiAsyncHideFloatComplete(env);
 }
 
-napi_value NapiAsyncHideFloatComplete(napi_env env)
+napi_value JsWindow::NapiAsyncHideFloatComplete(napi_env env, bool shouldHide, WMError errCode)
 {
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
