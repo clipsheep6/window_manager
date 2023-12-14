@@ -151,14 +151,14 @@ WMError PictureInPictureController::StartPictureInPicture(StartPipType startType
         WLOGFE("Get PictureInPictureOption failed");
         return WMError::WM_ERROR_PIP_CREATE_FAILED;
     }
-    auto context = static_cast<std::weak_ptr<AbilityRuntime::Context>*>(pipOption_->GetContext());
-    sptr<Window> callWindow = Window::GetTopWindowWithContext(context->lock());
-    if (callWindow == nullptr) {
-        WLOGFE("Get call window failed");
+    if (mainWindow_ == nullptr && !InitMainWindowAndId()) {
+        WLOGFE("Init main window failed");
         return WMError::WM_ERROR_PIP_CREATE_FAILED;
     }
-    mainWindowId_ = callWindow->GetWindowId();
-    mainWindow_ = callWindow;
+    if (!IsPullPiPAndHandleNavigation()) {
+        WLOGFE("Navigation operate failed");
+        return WMError::WM_ERROR_PIP_CREATE_FAILED;
+    }
     curState_ = PipWindowState::STATE_STARTING;
     if (PictureInPictureManager::HasActiveController() && !PictureInPictureManager::IsActiveController(weakRef_)) {
         // if current controller is not the active one, but belongs to the same mainWindow, reserve pipWindow
@@ -305,9 +305,17 @@ void PictureInPictureController::SetAutoStartEnabled(bool enable)
 {
     isAutoStartEnabled_ = enable;
     if (isAutoStartEnabled_) {
-        PictureInPictureManager::AttachAutoStartController(pipOption_->GetNavigationId(), this);
+        if (mainWindow_ == nullptr && !InitMainWindowAndId()) {
+            WLOGFE("Init main window failed");
+            return;
+        }
+        if (!IsPullPiPAndHandleNavigation()) {
+            WLOGFE("Navigation operate failed");
+            return;
+        }
+        PictureInPictureManager::AttachAutoStartController(handleId_, this);
     } else {
-        PictureInPictureManager::DetachAutoStartController(pipOption_->GetNavigationId(), this);
+        PictureInPictureManager::DetachAutoStartController(handleId_, this);
     }
 }
 
@@ -363,7 +371,7 @@ void PictureInPictureController::PipMainWindowLifeCycleImpl::AfterBackground()
         WLOGFE("screen is off");
         return;
     }
-    PictureInPictureManager::AutoStartPipWindow();
+    PictureInPictureManager::AutoStartPipWindow(navigationId_);
 }
 
 void PictureInPictureController::PipMainWindowLifeCycleImpl::BackgroundFailed(int32_t type)
@@ -384,11 +392,21 @@ void PictureInPictureController::DoActionEvent(std::string& actionName)
 
 void PictureInPictureController::RestorePictureInPictureWindow()
 {
-    if (window_ == nullptr) {
-        WLOGFE("window_ is nullptr");
+    if (window_ == nullptr || mainWindow_ == nullptr) {
+        WLOGFE("window or main window is nullptr");
         return;
     }
     window_->RecoveryPullPiPMainWindow(windowRect_);
+    std::string navId = pipOption_->GetNavigationId();
+    if (navId != "") {
+        auto navController = NavigationController::GetNavigationController(mainWindow_->GetUIContent(), navId);
+        if (navController) {
+            navController->PushInPIP(handleId_);
+            WLOGFI("Push in pip handleId: %{public}d", handleId_);
+        } else {
+            WLOGFE("navController is nullptr");
+        }
+    }
     auto stopPipTask = [weakThis = wptr(this)]() {
         auto session = weakThis.promote();
         if (!session) {
@@ -489,6 +507,57 @@ sptr<IPiPLifeCycle> PictureInPictureController::GetPictureInPictureLifecycle() c
 sptr<IPiPActionObserver> PictureInPictureController::GetPictureInPictureActionObserver() const
 {
     return pipActionObserver_;
+}
+
+bool PictureInPictureController::InitMainWindowAndId()
+{
+    auto context = static_cast<std::weak_ptr<AbilityRuntime::Context>*>(pipOption_->GetContext());
+    sptr<Window> callWindow = Window::GetTopWindowWithContext(context->lock());
+    if (callWindow == nullptr) {
+        WLOGFE("Get call window failed");
+        return false;
+    }
+    mainWindowId_ = callWindow->GetWindowId();
+    mainWindow_ = callWindow;
+    return true;
+}
+
+bool PictureInPictureController::IsPullPiPAndHandleNavigation()
+{
+    if (pipOption_->GetNavigationId() == "") {
+        WLOGFI("App not use navigation");
+        return true;
+    }
+    if (mainWindow_ == nullptr) {
+        WLOGFE("Main window init error");
+        return false;
+    }
+    std::string navId = pipOption_->GetNavigationId();
+    auto navController = NavigationController::GetNavigationController(mainWindow_->GetUIContent(), navId);
+    if (navController) {
+        if (navController->IsNavDestinationInTopStack()) {
+            handleId_ = navController->GetTopHandle();
+            if (handleId_ != -1) {
+                WLOGFD("Top handle id : %{public}d", handleId_);
+                navController->SetInPiPMode(handleId_);
+                return true;
+            } else {
+                WLOGFE("Get top handle error");
+                return false;
+            }
+        } else {
+            WLOGFE("Top is not navDestination");
+            return false;
+        }
+    } else {
+        WLOGFE("Get navController error");
+    }
+    return false;
+}
+
+std::string PictureInPictureController::GetPiPNavigationId()
+{
+    return pipOption_? pipOption_->GetNavigationId() : "";
 }
 } // namespace Rosen
 } // namespace OHOS
