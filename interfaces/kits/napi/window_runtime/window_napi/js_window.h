@@ -189,7 +189,7 @@ private:
     napi_value OnResetAspectRatio(napi_env env, napi_callback_info info);
     napi_value OnMinimize(napi_env env, napi_callback_info info);
     napi_value OnRaiseAboveTarget(napi_env env, napi_callback_info info);
-    napi_value NapiAsyncRaiseAboveComplete(napi_env env);
+    napi_value NapiAsyncRaiseAboveComplete(napi_env env, int32_t subWindowId, WmErrorCode errCode);
     napi_value OnKeepKeyboardOnFocus(napi_env env, napi_callback_info info);
     napi_value OnSetWindowLimits(napi_env env, napi_callback_info info);
     napi_value OnGetWindowLimits(napi_env env, napi_callback_info info);

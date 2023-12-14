@@ -1223,7 +1223,7 @@ napi_value JsWindow::OnResizeWindow(napi_env env, napi_callback_info info)
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
-    return NapiAsyncResizeComplete(env);
+    return NapiAsyncResizeComplete(env, width, height);
 }
 
 napi_value JsWindow::NapiAsyncResizeComplete(napi_env env, int32_t width, int32_t height)
@@ -3299,7 +3299,7 @@ napi_value JsWindow::OnRaiseAboveTarget(napi_env env, napi_callback_info info)
     return NapiAsyncRaiseAboveComplete(env);
 }
 
-napi_value JsWindow::NapiAsyncRaiseAboveComplete(napi_env env)
+napi_value JsWindow::NapiAsyncRaiseAboveComplete(napi_env env, int32_t subWindowId, WmErrorCode errCode)
 {
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
