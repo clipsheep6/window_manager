@@ -69,6 +69,7 @@ std::map<int32_t, std::vector<sptr<ITouchOutsideListener>>> WindowSessionImpl::t
 std::map<int32_t, std::vector<IWindowVisibilityListenerSptr>> WindowSessionImpl::windowVisibilityChangeListeners_;
 std::map<int32_t, std::vector<sptr<IWindowTitleButtonRectChangedListener>>> WindowSessionImpl::windowTitleButtonRectChangeListeners_;
 std::recursive_mutex WindowSessionImpl::globalMutex_;
+std::mutex WindowSessionImpl::windowTitleButtonRectChangeListenerMutex_;
 std::map<std::string, std::pair<int32_t, sptr<WindowSessionImpl>>> WindowSessionImpl::windowSessionMap_;
 std::shared_mutex WindowSessionImpl::windowSessionMutex_;
 std::map<int32_t, std::vector<sptr<WindowSessionImpl>>> WindowSessionImpl::subWindowSessionMap_;
@@ -1051,7 +1052,7 @@ WMError WindowSessionImpl::RegisterWindowTitleButtonRectChangeListener(const spt
     }
 
     {
-        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        std::lock_guard<std::recursive_mutex> lockListener(windowTitleButtonRectChangeListenerMutex_);
         ret = RegisterListener(windowTitleButtonRectChangeListeners_[persistentId], listener);
         if (ret != WMError::WM_OK) {
             return ret;
@@ -1079,7 +1080,7 @@ WMError WindowSessionImpl::UnregisterWindowTitleButtonRectChangeListener(const s
     }
 
     {
-        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
+        std::lock_guard<std::recursive_mutex> lockListener(windowTitleButtonRectChangeListenerMutex_);
         ret = UnregisterListener(windowTitleButtonRectChangeListeners_[persistentId], listener);
         if (ret != WMError::WM_OK) {
             return ret;
@@ -1094,17 +1095,15 @@ EnableIfSame<T, IWindowTitleButtonRectChangedListener,
     std::vector<sptr<IWindowTitleButtonRectChangedListener>>> WindowSessionImpl::GetListeners()
 {
     std::vector<sptr<IWindowTitleButtonRectChangedListener>> windowTitleButtonRectListeners;
-    {
-        std::lock_guard<std::recursive_mutex> lock(globalMutex_);
         for (auto& listener : windowTitleButtonRectChangeListeners_[GetPersistentId()]) {
             windowTitleButtonRectListeners.push_back(listener);
         }
-    }
     return windowTitleButtonRectListeners;
 }
 
 void WindowSessionImpl::NotifyWindowTitleButtonRectChange(TitleButtonRect titleButtonRect)
 {
+    std::lock_guard<std::recursive_mutex> lockListener(windowTitleButtonRectChangeListenerMutex_);
     auto windowTitleButtonRectListeners = GetListeners<IWindowTitleButtonRectChangedListener>();
     for (auto& listener : windowTitleButtonRectListeners) {
         if (listener != nullptr) {
@@ -1212,7 +1211,10 @@ void WindowSessionImpl::ClearListenersById(int32_t persistentId)
     ClearUselessListeners(dialogTargetTouchListener_, persistentId);
     ClearUselessListeners(screenshotListeners_, persistentId);
     ClearUselessListeners(windowStatusChangeListeners_, persistentId);
-    ClearUselessListeners(windowTitleButtonRectChangeListeners_, persistentId);
+    {
+        std::lock_guard<std::mutex> lockListener(windowTitleButtonRectChangeListenerMutex_);
+        ClearUselessListeners(windowTitleButtonRectChangeListeners_, persistentId);
+    }
 }
 
 void WindowSessionImpl::RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func)
