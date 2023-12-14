@@ -1363,7 +1363,7 @@ napi_value JsWindow::OnSetWindowMode(napi_env env, napi_callback_info info)
     return NapiAsyncSetWindowModeComplete(env);
 }
 
-napi_value JsWindow::NapiAsyncSetWindowModeComplete(napi_env env)
+napi_value JsWindow::NapiAsyncSetWindowModeComplete(napi_env env, WindowMode winMode)
 {
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =

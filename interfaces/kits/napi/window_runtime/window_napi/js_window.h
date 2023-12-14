@@ -163,7 +163,7 @@ private:
     napi_value NapiAsyncSetWindowTypeComplete(napi_env env, size_t argc, napi_value* argv, WindowType winType,
         WMError errCode);
     napi_value OnSetWindowMode(napi_env env, napi_callback_info info);
-    napi_value NapiAsyncSetWindowModeComplete(napi_env env);
+    napi_value NapiAsyncSetWindowModeComplete(napi_env env, WindowMode winMode);
     napi_value OnGetProperties(napi_env env, napi_callback_info info);
     napi_value OnGetWindowPropertiesSync(napi_env env, napi_callback_info info);
     napi_value OnRegisterWindowCallback(napi_env env, napi_callback_info info);
