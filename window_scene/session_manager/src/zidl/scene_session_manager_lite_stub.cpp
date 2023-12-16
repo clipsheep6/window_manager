@@ -65,6 +65,24 @@ const std::map<uint32_t, SceneSessionManagerLiteStubFunc> SceneSessionManagerLit
         &SceneSessionManagerLiteStub::HandleMoveSessionsToForeground),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerLiteMessage::TRANS_ID_MOVE_MISSIONS_TO_BACKGROUND),
         &SceneSessionManagerLiteStub::HandleMoveSessionsToBackground),
+    // for window manager service
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerLiteMessage::TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT),
+        &SceneSessionManagerLiteStub::HandleRegisterWindowManagerAgent),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerLiteMessage::TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT),
+        &SceneSessionManagerLiteStub::HandleUnregisterWindowManagerAgent),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerLiteMessage::TRANS_ID_GET_WINDOW_INFO),
+        &SceneSessionManagerLiteStub::HandleGetAccessibilityWindowInfo),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerLiteMessage::TRANS_ID_DUMP_SESSION_ALL),
+        &SceneSessionManagerLiteStub::HandleDumpSessionAll),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerLiteMessage::TRANS_ID_DUMP_SESSION_WITH_ID),
+        &SceneSessionManagerLiteStub::HandleDumpSessionWithId),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerLiteMessage::TRANS_ID_GET_FOCUS_SESSION_INFO),
+        &SceneSessionManagerLiteStub::HandleGetFocusSessionInfo),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerLiteMessage::TRANS_ID_SET_GESTURE_NAVIGATION_ENABLED),
+        &SceneSessionManagerLiteStub::HandleSetGestureNavigationEnabled),
+    std::make_pair(static_cast<uint32_t>(
+        SceneSessionManagerLiteMessage::TRANS_ID_NOTIFY_WINDOW_EXTENSION_VISIBILITY_CHANGE),
+        &SceneSessionManagerLiteStub::HandleNotifyWindowExtensionVisibilityChange),
 };
 
 int SceneSessionManagerLiteStub::OnRemoteRequest(uint32_t code,
@@ -291,4 +309,135 @@ int SceneSessionManagerLiteStub::HandleMoveSessionsToBackground(MessageParcel &d
     reply.WriteUint32(static_cast<uint32_t>(ret));
     return ERR_NONE;
 }
+
+int SceneSessionManagerLiteStub::HandleRegisterWindowManagerAgent(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("[Test]run HandleRegisterWindowManagerAgent!");
+    auto type = static_cast<WindowManagerAgentType>(data.ReadUint32());
+    sptr<IRemoteObject> windowManagerAgentObject = data.ReadRemoteObject();
+    sptr<IWindowManagerAgent> windowManagerAgentProxy =
+        iface_cast<IWindowManagerAgent>(windowManagerAgentObject);
+    WMError errCode = RegisterWindowManagerAgent(type, windowManagerAgentProxy);
+    reply.WriteInt32(static_cast<int32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerLiteStub::HandleUnregisterWindowManagerAgent(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("[Test]run HandleUnregisterWindowManagerAgent!");
+    auto type = static_cast<WindowManagerAgentType>(data.ReadUint32());
+    sptr<IRemoteObject> windowManagerAgentObject = data.ReadRemoteObject();
+    sptr<IWindowManagerAgent> windowManagerAgentProxy =
+        iface_cast<IWindowManagerAgent>(windowManagerAgentObject);
+    WMError errCode = UnregisterWindowManagerAgent(type, windowManagerAgentProxy);
+    reply.WriteInt32(static_cast<int32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerLiteStub::HandleGetAccessibilityWindowInfo(MessageParcel &data, MessageParcel &reply)
+{
+    std::vector<sptr<AccessibilityWindowInfo>> infos;
+    WMError errCode = GetAccessibilityWindowInfo(infos);
+    if (!MarshallingHelper::MarshallingVectorParcelableObj<AccessibilityWindowInfo>(reply, infos)) {
+        WLOGFE("Write window infos failed.");
+        return ERR_TRANSACTION_FAILED;
+    }
+    reply.WriteInt32(static_cast<int32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerLiteStub::HandleDumpSessionAll(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFI("run HandleDumpSessionAll!");
+    std::vector<std::string> infos;
+    WSError errCode = DumpSessionAll(infos);
+    if (!reply.WriteStringVector(infos)) {
+        WLOGFE("HandleDumpSessionAll write info failed.");
+        return ERR_TRANSACTION_FAILED;
+    }
+
+    if (!reply.WriteInt32(static_cast<int32_t>(errCode))) {
+        WLOGFE("HandleDumpSessionAll write errcode failed.");
+        return ERR_TRANSACTION_FAILED;
+    }
+    return ERR_NONE;
+}
+
+int SceneSessionManagerLiteStub::HandleDumpSessionWithId(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFI("run HandleDumpSessionWithId!");
+    int32_t persistentId = data.ReadInt32();
+    std::vector<std::string> infos;
+    WSError errCode = DumpSessionWithId(persistentId, infos);
+    if (!reply.WriteStringVector(infos)) {
+        WLOGFE("HandleDumpSessionWithId write info failed.");
+        return ERR_TRANSACTION_FAILED;
+    }
+
+    if (!reply.WriteInt32(static_cast<int32_t>(errCode))) {
+        WLOGFE("HandleDumpSessionWithId write errcode failed.");
+        return ERR_TRANSACTION_FAILED;
+    }
+    return ERR_NONE;
+}
+
+
+int SceneSessionManagerLiteStub::HandleGetFocusSessionInfo(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("[Test]run HandleGetFocusSessionInfo lite!");
+    FocusChangeInfo focusInfo;
+    GetFocusWindowInfo(focusInfo);
+    reply.WriteParcelable(&focusInfo);
+    return ERR_NONE;
+}
+
+int SceneSessionManagerLiteStub::HandleCheckWindowId(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleCheckWindowId!");
+    int32_t windowId = INVALID_WINDOW_ID;
+    if (!data.ReadInt32(windowId)) {
+        WLOGE("Failed to readInt32 windowId");
+        return ERR_INVALID_DATA;
+    }
+    int32_t pid = INVALID_PID;
+    WMError errCode = CheckWindowId(windowId, pid);
+    if (errCode != WMError::WM_OK) {
+        WLOGE("Failed to checkWindowId(%{public}d)", pid);
+        return ERR_INVALID_DATA;
+    }
+    if (!reply.WriteInt32(pid)) {
+        WLOGE("Failed to WriteInt32 pid");
+        return ERR_INVALID_DATA;
+    }
+    return ERR_NONE;
+}
+
+int SceneSessionManagerLiteStub::HandleSetGestureNavigationEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleSetGestureNavigationEnabled!");
+    bool enable = data.ReadBool();
+    const WMError &ret = SetGestureNavigaionEnabled(enable);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return ERR_NONE;
+}
+
+
+int SceneSessionManagerLiteStub::HandleNotifyWindowExtensionVisibilityChange(MessageParcel& data, MessageParcel& reply)
+{
+    auto pid = data.ReadInt32();
+    auto uid = data.ReadInt32();
+    bool visible = data.ReadBool();
+    const WSError& ret = NotifyWindowExtensionVisibilityChange(pid, uid, visible);
+    reply.WriteUint32(static_cast<uint32_t>(ret));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerLiteStub::HandleRaiseWindowToTop(MessageParcel& data, MessageParcel& reply)
+{
+    auto persistentId = data.ReadInt32();
+    WSError errCode = RaiseWindowToTop(persistentId);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
 } // namespace OHOS::Rosen
