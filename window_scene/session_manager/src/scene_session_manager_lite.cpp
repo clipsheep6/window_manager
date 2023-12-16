@@ -153,4 +153,55 @@ WSError SceneSessionManagerLite::MoveSessionsToBackground(const std::vector<int3
     WLOGFD("run MoveSessionsToBackground");
     return SceneSessionManager::GetInstance().MoveSessionsToBackground(sessionIds, result);
 }
+
+WMError SceneSessionManagerLite::RegisterWindowManagerAgent(WindowManagerAgentType type, const sptr<IWindowManagerAgent> &windowManagerAgent)
+{
+    return SceneSessionManager::GetInstance().RegisterWindowManagerAgent(type, windowManagerAgent);
+}
+
+WMError SceneSessionManagerLite::UnregisterWindowManagerAgent(WindowManagerAgentType type, const sptr<IWindowManagerAgent> &windowManagerAgent)
+{
+    return SceneSessionManager::GetInstance().UnregisterWindowManagerAgent(type, windowManagerAgent);
+}
+
+WMError SceneSessionManagerLite::GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>> &infos)
+{
+    return SceneSessionManager::GetInstance().GetAccessibilityWindowInfo(infos);
+}
+
+WSError SceneSessionManagerLite::DumpSessionAll(std::vector<std::string> &infos)
+{
+    return SceneSessionManager::GetInstance().DumpSessionAll(infos);
+}
+
+WSError SceneSessionManagerLite::DumpSessionWithId(int32_t persistentId, std::vector<std::string> &infos)
+{
+    return SceneSessionManager::GetInstance().DumpSessionWithId(persistentId, infos);
+}
+
+
+void SceneSessionManagerLite::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
+{
+    return SceneSessionManager::GetInstance().GetFocusWindowInfo(focusInfo);
+}
+
+WMError SceneSessionManagerLite::CheckWindowId(int32_t windowId, int32_t &pid)
+{
+    return SceneSessionManager::GetInstance().CheckWindowId(windowId, pid);
+}
+
+WSError SceneSessionManagerLite::RaiseWindowToTop(int32_t persistentId)
+{
+    return SceneSessionManager::GetInstance().RaiseWindowToTop(persistentId);
+}
+
+WMError SceneSessionManagerLite::SetGestureNavigaionEnabled(bool enable)
+{
+    return SceneSessionManager::GetInstance().SetGestureNavigaionEnabled(enable);
+}
+
+WSError SceneSessionManagerLite::NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible)
+{
+    return SceneSessionManager::GetInstance().NotifyWindowExtensionVisibilityChange(pid, uid, visible);
+}
 } // namespace OHOS::Rosen
