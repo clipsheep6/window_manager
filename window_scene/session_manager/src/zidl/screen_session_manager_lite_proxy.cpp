@@ -34,6 +34,7 @@ DMError ScreenSessionManagerLiteProxy::RegisterDisplayManagerAgent(
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
@@ -63,6 +64,7 @@ DMError ScreenSessionManagerLiteProxy::UnregisterDisplayManagerAgent(
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
@@ -92,6 +94,7 @@ std::vector<DisplayId> ScreenSessionManagerLiteProxy::GetAllDisplayIds()
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return allDisplayIds;
@@ -116,6 +119,7 @@ sptr<DisplayInfo> ScreenSessionManagerLiteProxy::GetDisplayInfoById(DisplayId di
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("GetDisplayInfoById: WriteInterfaceToken failed");
         return nullptr;
@@ -143,6 +147,7 @@ sptr<DisplayInfo> OHOS::Rosen::ScreenSessionManagerLiteProxy::GetDefaultDisplayI
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return nullptr;
@@ -172,6 +177,7 @@ sptr<DisplayInfo> ScreenSessionManagerLiteProxy::GetDisplayInfoByScreen(ScreenId
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("fail to get displayInfo by screenId: WriteInterfaceToken failed");
         return nullptr;
@@ -205,6 +211,7 @@ DMError OHOS::Rosen::ScreenSessionManagerLiteProxy::HasPrivateWindow(DisplayId d
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
@@ -236,6 +243,7 @@ DMError ScreenSessionManagerLiteProxy::DisableDisplaySnapshot(bool disableOrNot)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("DisableDisplaySnapshot fail: WriteinterfaceToken failed");
         return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
@@ -368,6 +376,7 @@ bool OHOS::Rosen::ScreenSessionManagerLiteProxy::SetSpecifiedScreenPower(ScreenI
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return false;
@@ -404,6 +413,7 @@ bool OHOS::Rosen::ScreenSessionManagerLiteProxy::SetScreenPowerForAll(ScreenPowe
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return false;
@@ -435,6 +445,7 @@ bool OHOS::Rosen::ScreenSessionManagerLiteProxy::SetDisplayState(DisplayState st
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return false;
@@ -462,6 +473,7 @@ DisplayState OHOS::Rosen::ScreenSessionManagerLiteProxy::GetDisplayState(Display
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return DisplayState::UNKNOWN;
@@ -489,6 +501,7 @@ void OHOS::Rosen::ScreenSessionManagerLiteProxy::NotifyDisplayEvent(DisplayEvent
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return;
