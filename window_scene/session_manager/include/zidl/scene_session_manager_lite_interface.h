@@ -18,17 +18,23 @@
 
 #include <iremote_broker.h>
 #include "interfaces/include/ws_common.h"
+#include "interfaces/include/ws_common_inner.h"
+#include "common/include/window_session_property.h"
 #include "session_info.h"
 #include "mission_listener_interface.h"
 #include "mission_info.h"
 #include "mission_snapshot.h"
 #include "iability_manager_collaborator.h"
+#include "zidl/window_manager_lite_interface.h"
+namespace OHOS::Media {
+class PixelMap;
+} // namespace OHOS::Media
 
 namespace OHOS::Rosen {
 using ISessionListener = AAFwk::IMissionListener;
 using SessionInfoBean = AAFwk::MissionInfo;
 using SessionSnapshot = AAFwk::MissionSnapshot;
-class ISceneSessionManagerLite : public IRemoteBroker {
+class ISceneSessionManagerLite : public OHOS::Rosen::IWindowManagerLite{
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.ISceneSessionManagerLite");
 
@@ -52,6 +58,18 @@ public:
         TRANS_ID_UNLOCK_SESSION,
         TRANS_ID_MOVE_MISSIONS_TO_FOREGROUND,
         TRANS_ID_MOVE_MISSIONS_TO_BACKGROUND,
+
+        //window manager message
+        TRANS_ID_RAISE_WINDOW_TO_TOP,
+        TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT,
+        TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT,
+        TRANS_ID_GET_FOCUS_SESSION_INFO,
+        TRANS_ID_GET_WINDOW_INFO,
+        TRANS_ID_DUMP_SESSION_ALL,
+        TRANS_ID_CHECK_WINDOW_ID,
+        TRANS_ID_DUMP_SESSION_WITH_ID,
+        TRANS_ID_SET_GESTURE_NAVIGATION_ENABLED,
+        TRANS_ID_NOTIFY_WINDOW_EXTENSION_VISIBILITY_CHANGE
     };
 
     virtual WSError SetSessionLabel(const sptr<IRemoteObject>& token, const std::string& label) = 0;
@@ -76,6 +94,7 @@ public:
     virtual WSError MoveSessionsToForeground(const std::vector<std::int32_t>& sessionIds, int32_t topSessionId) = 0;
     virtual WSError MoveSessionsToBackground(const std::vector<std::int32_t>& sessionIds,
         std::vector<std::int32_t>& result) = 0;
+    //window manager interface need to be realize
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_LITE_INTERFACE_H

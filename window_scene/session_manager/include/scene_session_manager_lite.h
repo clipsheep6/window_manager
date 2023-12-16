@@ -47,6 +47,20 @@ public:
     WSError UnlockSession(int32_t sessionId) override;
     WSError MoveSessionsToForeground(const std::vector<int32_t>& sessionIds, int32_t topSessionId) override;
     WSError MoveSessionsToBackground(const std::vector<int32_t>& sessionIds, std::vector<int32_t>& result) override;
+
+    WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
+        const sptr<IWindowManagerAgent>& windowManagerAgent) override; //
+    WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
+        const sptr<IWindowManagerAgent>& windowManagerAgent) override; //
+    WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) override; //
+    WSError DumpSessionAll(std::vector<std::string> &infos) override; //
+    WSError DumpSessionWithId(int32_t persistentId, std::vector<std::string> &infos) override; //
+    void GetFocusWindowInfo(FocusChangeInfo& focusInfo) override; //
+    WMError CheckWindowId(int32_t windowId, int32_t &pid) override;
+    WSError RaiseWindowToTop(int32_t persistentId) override;
+    WMError SetGestureNavigaionEnabled(bool enable) override;
+    WSError NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible) override;
+
 protected:
     SceneSessionManagerLite() = default;
     virtual ~SceneSessionManagerLite() = default;
