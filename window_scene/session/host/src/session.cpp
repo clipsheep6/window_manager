@@ -371,6 +371,7 @@ bool Session::NeedNotify() const
 
 WSError Session::SetTouchable(bool touchable)
 {
+    SetSessionTouchable(touchable);
     if (!IsSessionValid()) {
         return WSError::WS_ERROR_INVALID_SESSION;
     }
@@ -482,6 +483,16 @@ bool Session::IsActive() const
 bool Session::IsSystemSession() const
 {
     return sessionInfo_.isSystem_;
+}
+
+bool Session::IsSystemActive() const
+{
+    return isSystemActive_;
+}
+
+void Session::SetSystemActive(bool systemActive)
+{
+    isSystemActive_ = systemActive;
 }
 
 bool Session::IsTerminated() const
@@ -1581,6 +1592,11 @@ void Session::SetSessionStateChangeNotifyManagerListener(const NotifySessionStat
     NotifySessionStateChange(state_);
 }
 
+void Session::SetSessionInfoChangeNotifyManagerListener(const NotifySessionInfoChangeNotifyManagerFunc& func)
+{
+    sessionInfoChangeNotifyManagerFunc_ = func;
+}
+
 void Session::SetRequestFocusStatusNotifyManagerListener(const NotifyRequestFocusStatusNotifyManagerFunc& func)
 {
     requestFocusStatusNotifyManagerFunc_ = func;
@@ -1649,7 +1665,8 @@ void Session::NotifySessionFocusableChange(bool isFocusable)
 
 void Session::NotifySessionTouchableChange(bool touchable)
 {
-    WLOGFD("Notify session touchable change: %{public}u", touchable);
+    SetSessionTouchable(touchable);
+    WLOGFD("Notify session touchable change: %{public}d", touchable);
     if (sessionTouchableChangeFunc_) {
         sessionTouchableChangeFunc_(touchable);
     }
@@ -1952,6 +1969,7 @@ WSError Session::UpdateMaximizeMode(bool isMaximize)
 void Session::SetZOrder(uint32_t zOrder)
 {
     zOrder_ = zOrder;
+    NotifySessionInfoChange();
 }
 
 uint32_t Session::GetZOrder() const
@@ -2162,4 +2180,57 @@ bool Session::NeedSystemPermission(WindowType type)
         type == WindowType::WINDOW_TYPE_DRAGGING_EFFECT || type == WindowType::WINDOW_TYPE_APP_LAUNCHING ||
         type == WindowType::WINDOW_TYPE_PIP);
 }
+
+void Session::SetNotifySystemSessionPointerEventFunc(const NotifySystemSessionPointerEventFunc& func)
+{
+    systemSessionPointerEventFunc_ = func;
+}
+
+void Session::SetNotifySystemSessionKeyEventFunc(const NotifySystemSessionKeyEventFunc& func)
+{
+    systemSessionKeyEventFunc_ = func;
+}
+
+void Session::NotifySessionInfoChange()
+{
+    PostTask([weakThis = wptr(this)]() {
+        auto session = weakThis.promote();
+        if (session == nullptr) {
+            WLOGFE("session is null");
+            return;
+        }
+        if (session->sessionInfoChangeNotifyManagerFunc_) {
+            session->sessionInfoChangeNotifyManagerFunc_(session->GetPersistentId());
+        }
+    } );
+}
+
+
+void Session::SetResponseRegion(const std::vector<WSRect>& responseRect)
+{
+    responseRect_ = responseRect;
+    NotifySessionInfoChange();
+}
+
+std::vector<WSRect> Session::GetResponseRegion() const
+{
+    return responseRect_;
+}
+
+bool Session::IsSystemInput()
+{
+    return sessionInfo_.isSystemInput_;
+}
+
+void Session::SetSessionTouchable(bool touchable)
+{
+    sessionTouchable_ = touchable;
+    NotifySessionInfoChange();
+}
+
+bool Session::GetSessionTouchable() const
+{
+    return sessionTouchable_;
+}
+
 } // namespace OHOS::Rosen

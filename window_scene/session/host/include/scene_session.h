@@ -43,6 +43,7 @@ using CameraFloatSessionChangeCallback = std::function<void(uint32_t accessToken
 using GetSceneSessionVectorByTypeCallback = std::function<std::vector<sptr<SceneSession>>(WindowType type)>;
 using UpdateAvoidAreaCallback = std::function<void(const int32_t& persistentId)>;
 using NotifyWindowInfoUpdateCallback = std::function<void(int32_t persistentId, WindowUpdateType type)>;
+using NotifyWindowPidChangeCallback = std::function<void(int32_t windowId, bool startMoving)>;
 using NotifySessionTouchOutsideCallback = std::function<void(int32_t persistentId)>;
 using GetAINavigationBarArea = std::function<WSRect()>;
 using RecoveryCallback = std::function<void(int32_t persistentId, Rect rect)>;
@@ -73,6 +74,7 @@ public:
         GetSceneSessionVectorByTypeCallback onGetSceneSessionVectorByType_;
         UpdateAvoidAreaCallback onUpdateAvoidArea_;
         NotifyWindowInfoUpdateCallback onWindowInfoUpdate_;
+        NotifyWindowPidChangeCallback onWindowMove_;
         NotifySessionTouchOutsideCallback onSessionTouchOutside_;
         GetAINavigationBarArea onGetAINavigationBarArea_;
         RecoveryCallback onRecoveryPullPiPMainWindow_;
@@ -204,6 +206,10 @@ public:
     void RegisterSessionChangeCallback(const sptr<SceneSession::SessionChangeCallback>& sessionChangeCallback);
     WSError UpdateSizeChangeReason(SizeChangeReason reason);
     void ClearSpecificSessionCbMap();
+    bool GetIsRotable();
+    float GetRotationWithDisplay();
+    void SendPointerEventToUI(std::shared_ptr<MMI::PointerEvent> pointerEvent);
+    void SendKeyEventToUI(std::shared_ptr<MMI::KeyEvent> keyEvent);
 
     double textFieldPositionY_ = 0.0;
     double textFieldHeight_ = 0.0;
