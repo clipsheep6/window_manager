@@ -43,6 +43,7 @@ public:
     sptr<ScreenSession> GetScreenSession(ScreenId screenId) const;
     sptr<ScreenSession> GetDefaultScreenSession();
     std::vector<ScreenId> GetAllScreenIds();
+    void GetAllScreensProperties(std::unordered_map<ScreenId, ScreenProperty>& screensProperties) const;
 
     sptr<DisplayInfo> GetDefaultDisplayInfo() override;
     DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) override;
