@@ -50,13 +50,8 @@ constexpr char EVENT_KEY_SCALE_LEVEL[] = "SCALE_LEVEL";
 constexpr char EVENT_KEY_WINDOW_WIDTH[] = "WINDOW_WIDTH";
 constexpr char EVENT_KEY_WINDOW_HEIGHT[] = "WINDOW_HEIGHT";
 
-void PiPReporter::SetCurrentPackageName(const std::string &packageName)
-{
-    packageName_ = packageName;
-}
-
-void PiPReporter::ReportPiPStartWindow(int32_t source, int32_t templateType,
-                                       int32_t isSuccess, const std::string& errorReason)
+void PiPReporter::ReportPiPStartWindow(const std::string &packageName, int32_t source, int32_t templateType,
+    int32_t isSuccess, const std::string& errorReason)
 {
     WLOGI("Report start pip widow");
     if (source == 0) {
@@ -71,7 +66,7 @@ void PiPReporter::ReportPiPStartWindow(int32_t source, int32_t templateType,
         EVENT_KEY_PVERSION, PVERSION,
         EVENT_KEY_SOURCE, source,
         EVENT_KEY_TEMPLATE_TYPE, templateType,
-        EVENT_KEY_START_PACKAGE_NAME, packageName_,
+        EVENT_KEY_START_PACKAGE_NAME, packageName,
         EVENT_KEY_OPERATION_CODE, isSuccess,
         EVENT_KEY_OPERATION_ERROR_REASON, errorReason);
     if (ret != 0) {
@@ -79,8 +74,8 @@ void PiPReporter::ReportPiPStartWindow(int32_t source, int32_t templateType,
     }
 }
 
-void PiPReporter::ReportPiPStopWindow(int32_t source, int32_t templateType,
-                                      int32_t isSuccess, const std::string& errorReason)
+void PiPReporter::ReportPiPStopWindow(const std::string &packageName, int32_t source, int32_t templateType,
+    int32_t isSuccess, const std::string& errorReason)
 {
     WLOGI("Report stop pip widow");
     if (source == 0) {
@@ -95,7 +90,7 @@ void PiPReporter::ReportPiPStopWindow(int32_t source, int32_t templateType,
         EVENT_KEY_PVERSION, PVERSION,
         EVENT_KEY_SOURCE, source,
         EVENT_KEY_TEMPLATE_TYPE, templateType,
-        EVENT_KEY_STOP_PACKAGE_NAME, packageName_,
+        EVENT_KEY_STOP_PACKAGE_NAME, packageName,
         EVENT_KEY_OPERATION_CODE, isSuccess,
         EVENT_KEY_OPERATION_ERROR_REASON, errorReason);
     if (ret != 0) {
@@ -103,7 +98,8 @@ void PiPReporter::ReportPiPStopWindow(int32_t source, int32_t templateType,
     }
 }
 
-void PiPReporter::ReportPiPActionEvent(int32_t templateType, const std::string &actionEvent)
+void PiPReporter::ReportPiPActionEvent(const std::string &packageName, int32_t templateType,
+    const std::string &actionEvent)
 {
     WLOGI("Report pip widow action event");
     std::string eventName = "CONTROL_PANNEL_ACTION_EVENT";
@@ -115,13 +111,14 @@ void PiPReporter::ReportPiPActionEvent(int32_t templateType, const std::string &
         EVENT_KEY_PVERSION, PVERSION,
         EVENT_KEY_TEMPLATE_TYPE, templateType,
         EVENT_KEY_ACTION_EVENT, currentAction,
-        EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
+        EVENT_KEY_OPERATION_PACKAGE_NAME, packageName);
     if (ret != 0) {
         WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
     }
 }
 
-void PiPReporter::ReportPiPResize(int32_t scaleLevel, int32_t windowWidth, int32_t windowHeight)
+void PiPReporter::ReportPiPResize(const std::string &packageName, int32_t scaleLevel, int32_t windowWidth,
+    int32_t windowHeight)
 {
     WLOGI("Report pip widow resize");
     std::string eventName = "RESIZE_PIP_SIZE";
@@ -134,13 +131,13 @@ void PiPReporter::ReportPiPResize(int32_t scaleLevel, int32_t windowWidth, int32
         EVENT_KEY_SCALE_LEVEL, currentScaleLevel,
         EVENT_KEY_WINDOW_WIDTH, windowWidth,
         EVENT_KEY_WINDOW_HEIGHT, windowHeight,
-        EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
+        EVENT_KEY_OPERATION_PACKAGE_NAME, packageName);
     if (ret != 0) {
         WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
     }
 }
 
-void PiPReporter::ReportPiPRatio(int32_t windowWidth, int32_t windowHeight)
+void PiPReporter::ReportPiPRatio(const std::string &packageName, int32_t windowWidth, int32_t windowHeight)
 {
     WLOGI("Report pip widow ratio");
     std::string eventName = "UPDATE_PIP_RATIO";
@@ -151,13 +148,13 @@ void PiPReporter::ReportPiPRatio(int32_t windowWidth, int32_t windowHeight)
         EVENT_KEY_PVERSION, PVERSION,
         EVENT_KEY_WINDOW_WIDTH, windowWidth,
         EVENT_KEY_WINDOW_HEIGHT, windowHeight,
-        EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
+        EVENT_KEY_OPERATION_PACKAGE_NAME, packageName);
     if (ret != 0) {
         WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
     }
 }
 
-void PiPReporter::ReportPiPRestore()
+void PiPReporter::ReportPiPRestore(const std::string &packageName)
 {
     WLOGI("Report pip widow restore");
     std::string eventName = "RESTORE_PIP";
@@ -166,13 +163,13 @@ void PiPReporter::ReportPiPRestore()
         OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
         EVENT_KEY_PNAMEID, PNAMEID,
         EVENT_KEY_PVERSION, PVERSION,
-        EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
+        EVENT_KEY_OPERATION_PACKAGE_NAME, packageName);
     if (ret != 0) {
         WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
     }
 }
 
-void PiPReporter::ReportPiPMove()
+void PiPReporter::ReportPiPMove(const std::string &packageName)
 {
     WLOGI("Report pip widow move");
     std::string eventName = "MOVE_PIP";
@@ -181,7 +178,7 @@ void PiPReporter::ReportPiPMove()
         OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
         EVENT_KEY_PNAMEID, PNAMEID,
         EVENT_KEY_PVERSION, PVERSION,
-        EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
+        EVENT_KEY_OPERATION_PACKAGE_NAME, packageName);
     if (ret != 0) {
         WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
     }

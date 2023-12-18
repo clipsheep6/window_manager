@@ -24,16 +24,15 @@ class PiPReporter {
 WM_DECLARE_SINGLE_INSTANCE(PiPReporter);
 
 public:
-    void SetCurrentPackageName(const std::string &packageName);
-    void ReportPiPStartWindow(int32_t source, int32_t templateType, int32_t isSuccess, const std::string &errorReason);
-    void ReportPiPStopWindow(int32_t source, int32_t templateType, int32_t isSuccess, const std::string &errorReason);
-    void ReportPiPActionEvent(int32_t templateType, const std::string &actionEvent);
-    void ReportPiPResize(int32_t scaleLevel, int32_t windowWidth, int32_t windowHeight);
-    void ReportPiPRatio(int32_t windowWidth, int32_t windowHeight);
-    void ReportPiPRestore();
-    void ReportPiPMove();
-private:
-    std::string packageName_;
+    void ReportPiPStartWindow(const std::string &packageName, int32_t source, int32_t templateType, int32_t isSuccess,
+        const std::string &errorReason);
+    void ReportPiPStopWindow(const std::string &packageName, int32_t source, int32_t templateType, int32_t isSuccess,
+        const std::string &errorReason);
+    void ReportPiPActionEvent(const std::string &packageName, int32_t templateType, const std::string &actionEvent);
+    void ReportPiPResize(const std::string &packageName, int32_t scaleLevel, int32_t windowWidth, int32_t windowHeight);
+    void ReportPiPRatio(const std::string &packageName, int32_t windowWidth, int32_t windowHeight);
+    void ReportPiPRestore(const std::string &packageName);
+    void ReportPiPMove(const std::string &packageName);
 };
 } // namespace OHOS::Rosen
 

@@ -94,6 +94,7 @@ private:
     std::shared_ptr<XComponentController> pipXComponentController_;
     std::shared_ptr<XComponentController> mainWindowXComponentController_;
     napi_env env_;
+    std::string packageName_;
 };
 } // namespace Rosen
 } // namespace OHOS
