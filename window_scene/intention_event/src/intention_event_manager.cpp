@@ -210,13 +210,6 @@ void IntentionEventManager::InputEventListener::OnInputEvent(
     if (sceneSession->GetSessionInfo().isSystem_) {
         WLOGD("[WMSEvent] InputEventListener::OnInputEvent id:%{public}d, wid:%{public}u",
                 pointerEvent->GetId(), windowId);
-        auto actionId = pointerEvent->GetPointerId();
-        MMI::PointerEvent::PointerItem item;
-        if (pointerEvent->GetPointerItem(actionId, item)) {
-            item.SetWindowX(item.GetDisplayX());
-            item.SetWindowY(item.GetDisplayY());
-            pointerEvent->UpdatePointerItem(actionId, item);
-        }
         sceneSession->SendPointerEventToUI(pointerEvent);
     } else {
         // transfer pointer event for move and drag

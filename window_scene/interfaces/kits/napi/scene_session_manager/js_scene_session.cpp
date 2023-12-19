@@ -838,13 +838,13 @@ napi_value JsSceneSession::SetZOrder(napi_env env, napi_callback_info info)
 napi_value JsSceneSession::SetTouchable(napi_env env, napi_callback_info info)
 {
     JsSceneSession* me = CheckParamsAndGetThis<JsSceneSession>(env, info);
-    return (me !=  nullptr) ? me->OnSetTouchable(env, info): nullptr;
+    return (me != nullptr) ? me->OnSetTouchable(env, info): nullptr;
 }
 
 napi_value JsSceneSession::SetSystemActive(napi_env env, napi_callback_info info)
 {
     JsSceneSession* me = CheckParamsAndGetThis<JsSceneSession>(env, info);
-    return (me !=  nullptr) ? me->OnSetSystemActive(env, info): nullptr;
+    return (me != nullptr) ? me->OnSetSystemActive(env, info): nullptr;
 }
 
 napi_value JsSceneSession::SetFloatingScale(napi_env env, napi_callback_info info)
@@ -2068,7 +2068,7 @@ napi_value JsSceneSession::OnSetTouchable(napi_env env, napi_callback_info info)
         return NapiGetUndefined(env);
     }
 
-    session->SetTouchable(touchable);
+    session->SetSystemTouchable(touchable);
     return NapiGetUndefined(env);
 }
 

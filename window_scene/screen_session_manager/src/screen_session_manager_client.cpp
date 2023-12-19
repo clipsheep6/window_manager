@@ -205,7 +205,7 @@ void ScreenSessionManagerClient::OnImmersiveStateChanged(bool& immersive)
     }
 }
 
-const std::unordered_map<ScreenId, ScreenProperty> ScreenSessionManagerClient::GetAllScreensProperties() const
+std::unordered_map<ScreenId, ScreenProperty> ScreenSessionManagerClient::GetAllScreensProperties() const
 {
     std::lock_guard<std::mutex> lock(screenSessionMapMutex_);
     std::unordered_map<ScreenId, ScreenProperty> screensProperties;

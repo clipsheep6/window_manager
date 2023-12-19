@@ -667,7 +667,7 @@ double WindowSessionProperty::GetTextFieldHeight() const
     return textFieldHeight_;
 }
 
-void WindowSessionProperty::SetTouchHotAreasChangeCallback(std::function<void()>&& callback)
+void WindowSessionProperty::SetSessionPropertyChangeCallback(std::function<void()>&& callback)
 {
     touchHotAreasChangeCallback_ = std::move(callback);
 }

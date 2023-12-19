@@ -132,7 +132,7 @@ public:
     double GetTextFieldPositionY() const;
     double GetTextFieldHeight() const;
 
-    void SetTouchHotAreasChangeCallback(std::function<void()>&& callback);
+    void SetSessionPropertyChangeCallback(std::function<void()>&& callback);
 
 private:
     bool MarshallingTouchHotAreas(Parcel& parcel) const;

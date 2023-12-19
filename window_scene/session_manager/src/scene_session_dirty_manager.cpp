@@ -33,8 +33,9 @@ constexpr float DIRECTION270 = 270 ;
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneSessionDirtyManager"};
 constexpr int POINTER_CHANGE_AREA_SEXTEEN = 16;
 constexpr int POINTER_CHANGE_AREA_FIVE = 5;
+} //namespace
 
-void PrintLogGetFullWindowInfoList(const std::vector<MMI::WindowInfo>& windowInfoList)
+void SceneSessionDirtyManager::PrintLogGetFullWindowInfoList(const std::vector<MMI::WindowInfo>& windowInfoList)
 {
     WLOGFD("[WMSEvent] GetFullWindowInfoList Start WindowInfoList_.size = %{public}d", int(windowInfoList.size()));
     for (const auto& e: windowInfoList) {
@@ -46,7 +47,8 @@ void PrintLogGetFullWindowInfoList(const std::vector<MMI::WindowInfo>& windowInf
     }
 }
 
-void PrintLogGetIncrementWindowInfoList(const std::map<uint64_t, std::vector<MMI::WindowInfo>>& screen2windowInfo)
+void SceneSessionDirtyManager::PrintLogGetIncrementWindowInfoList(
+    const std::map<uint64_t, std::vector<MMI::WindowInfo>>& screen2windowInfo)
 {
     for (const auto& windowinfolist : screen2windowInfo) {
         WLOGFD("[WMSEvent] GetIncrementWindowInfoList screen id = %{public}d windowinfolist = %{public}d",
@@ -60,7 +62,7 @@ void PrintLogGetIncrementWindowInfoList(const std::map<uint64_t, std::vector<MMI
     }
 }
 
-void CalTramform(const sptr<SceneSession> sceneSession, Matrix3f& tranform)
+void SceneSessionDirtyManager::CalTramform(const sptr<SceneSession> sceneSession, Matrix3f& tranform) const
 {
     if (sceneSession == nullptr) {
         WLOGFE("sceneSession is nullptr");
@@ -76,7 +78,7 @@ void CalTramform(const sptr<SceneSession> sceneSession, Matrix3f& tranform)
     tranform = tranform.Inverse();
 }
 
-MMI::WindowInfo PrepareWindowInfo(sptr<SceneSession> sceneSession, int action)
+MMI::WindowInfo SceneSessionDirtyManager::PrepareWindowInfo(sptr<SceneSession> sceneSession, int action) const
 {
     if (sceneSession == nullptr) {
         WLOGFE("sceneSession is nullptr");
@@ -123,7 +125,7 @@ MMI::WindowInfo PrepareWindowInfo(sptr<SceneSession> sceneSession, int action)
         .defaultHotAreas = mmiHotAreas,
         .pointerHotAreas = mmiHotAreas,
         .agentWindowId = agentWindowId,
-        .flags = (!sceneSession->GetTouchable()),
+        .flags = (!sceneSession->GetSystemTouchable()),
         .displayId = displayId,
         .pointerChangeAreas = pointerChangeAreas,
         .action = static_cast<MMI::WINDOW_UPDATE_ACTION>(action),
@@ -132,7 +134,6 @@ MMI::WindowInfo PrepareWindowInfo(sptr<SceneSession> sceneSession, int action)
     };
     return windowInfo;
 }
-} //namespace
 
 void SceneSessionDirtyManager::Clear()
 {
@@ -225,7 +226,7 @@ void SceneSessionDirtyManager::NotifyWindowInfoChange(const sptr<SceneSession>& 
     PushWindowInfoList(windowinfo.displayId, windowinfo);
 }
 
-std::vector<MMI::WindowInfo>& SceneSessionDirtyManager::GetFullWindowInfoList()
+std::vector<MMI::WindowInfo> SceneSessionDirtyManager::GetFullWindowInfoList()
 {
     auto windowInfoList = FullSceneSessionInfoUpdate();
     PrintLogGetFullWindowInfoList(windowInfoList);
@@ -233,7 +234,7 @@ std::vector<MMI::WindowInfo>& SceneSessionDirtyManager::GetFullWindowInfoList()
     return windowInfoList;
 }
 
-std::map<uint64_t, std::vector<MMI::WindowInfo>>& SceneSessionDirtyManager::GetIncrementWindowInfoList()
+std::map<uint64_t, std::vector<MMI::WindowInfo>> SceneSessionDirtyManager::GetIncrementWindowInfoList()
 {
     auto screen2windowInfo = screen2windowInfo_;
     PrintLogGetIncrementWindowInfoList(screen2windowInfo);

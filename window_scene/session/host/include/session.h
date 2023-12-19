@@ -255,6 +255,8 @@ public:
     bool GetFocusable() const;
     WSError SetTouchable(bool touchable);
     bool GetTouchable() const;
+    void SetSystemTouchable(bool touchable);
+    bool GetSystemTouchable() const;
     WSError SetVisible(bool isVisible);
     bool GetVisible() const;
     WSError SetDrawingContentState(bool isRSDrawing);
@@ -492,6 +494,7 @@ private:
     bool isRSDrawing_ {false};
     sptr<IRemoteObject> abilityToken_ = nullptr;
     float vpr_ { 1.5f };
+    bool systemTouchable_ { true };
 };
 } // namespace OHOS::Rosen
 

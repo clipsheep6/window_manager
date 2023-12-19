@@ -49,8 +49,8 @@ public:
     void SetScreenChange(const bool value);
     void NotifyWindowInfoChange(const sptr<SceneSession>& sceneSession,
         const WindowUpdateType& type, int32_t sceneBoardPid = -1);
-    std::vector<MMI::WindowInfo>& GetFullWindowInfoList();
-    std::map<uint64_t, std::vector<MMI::WindowInfo>>& GetIncrementWindowInfoList();
+    std::vector<MMI::WindowInfo> GetFullWindowInfoList();
+    std::map<uint64_t, std::vector<MMI::WindowInfo>> GetIncrementWindowInfoList();
 
 private:
     void Clear();
@@ -59,6 +59,10 @@ private:
     MMI::WindowInfo GetWindowInfo(const sptr<SceneSession>& sceneSession, const WindowAction& action) const;
     void PushWindowInfoList(uint64_t displayID, const MMI::WindowInfo& windowinfo);
     WindowAction GetSceneSessionAction(const WindowUpdateType& type);
+    void PrintLogGetFullWindowInfoList(const std::vector<MMI::WindowInfo>& windowInfoList);
+    void PrintLogGetIncrementWindowInfoList(const std::map<uint64_t, std::vector<MMI::WindowInfo>>& screen2windowInfo);
+    void CalTramform(const sptr<SceneSession> sceneSession, Matrix3f& tranform) const;
+    MMI::WindowInfo PrepareWindowInfo(sptr<SceneSession> sceneSession, int action) const;
 
     std::map<WindowUpdateType, WindowAction> windowType2Action_;
     std::map<uint64_t, std::vector<MMI::WindowInfo>> screen2windowInfo_;
