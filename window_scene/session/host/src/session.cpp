@@ -371,11 +371,11 @@ bool Session::NeedNotify() const
 
 WSError Session::SetTouchable(bool touchable)
 {
-    SetSessionTouchable(touchable);
     if (!IsSessionValid()) {
         return WSError::WS_ERROR_INVALID_SESSION;
     }
     UpdateSessionTouchable(touchable);
+    NotifySessionInfoChange();
     return WSError::WS_OK;
 }
 
@@ -462,6 +462,12 @@ float Session::GetBrightness() const
 
 bool Session::IsSessionValid() const
 {
+    if (sessionInfo_.isSystemInput_) {
+        WLOGFD("session is systemInput, id: %{public}d, name: %{public}s, state: %{public}u",
+            GetPersistentId(), sessionInfo_.bundleName_.c_str(), state_);
+        return true;
+    }
+
     if (sessionInfo_.isSystem_) {
         WLOGFD("session is system, id: %{public}d, name: %{public}s, state: %{public}u",
             GetPersistentId(), sessionInfo_.bundleName_.c_str(), state_);
@@ -1665,7 +1671,6 @@ void Session::NotifySessionFocusableChange(bool isFocusable)
 
 void Session::NotifySessionTouchableChange(bool touchable)
 {
-    SetSessionTouchable(touchable);
     WLOGFD("Notify session touchable change: %{public}d", touchable);
     if (sessionTouchableChangeFunc_) {
         sessionTouchableChangeFunc_(touchable);
@@ -1816,6 +1821,19 @@ WSError Session::SetSessionProperty(const sptr<WindowSessionProperty>& property)
 {
     std::unique_lock<std::shared_mutex> lock(propertyMutex_);
     property_ = property;
+    if (property_ == nullptr) {
+        return WSError::WS_OK;
+    }
+
+    auto hotAreasChangeCallback = [weakThis = wptr(this)]() {
+        auto session = weakThis.promote();
+        if (session == nullptr) {
+            WLOGFE("session is nullptr");
+            return;
+        }
+        session->NotifySessionInfoChange();
+    };
+    property_->SetTouchHotAreasChangeCallback(hotAreasChangeCallback);
     return WSError::WS_OK;
 }
 
@@ -2183,38 +2201,21 @@ bool Session::NeedSystemPermission(WindowType type)
 
 void Session::SetNotifySystemSessionPointerEventFunc(const NotifySystemSessionPointerEventFunc& func)
 {
+    std::lock_guard<std::mutex> lock(pointerEventMutex_);
     systemSessionPointerEventFunc_ = func;
 }
 
 void Session::SetNotifySystemSessionKeyEventFunc(const NotifySystemSessionKeyEventFunc& func)
 {
+    std::lock_guard<std::mutex> lock(keyEventMutex_);
     systemSessionKeyEventFunc_ = func;
 }
 
 void Session::NotifySessionInfoChange()
 {
-    PostTask([weakThis = wptr(this)]() {
-        auto session = weakThis.promote();
-        if (session == nullptr) {
-            WLOGFE("session is null");
-            return;
-        }
-        if (session->sessionInfoChangeNotifyManagerFunc_) {
-            session->sessionInfoChangeNotifyManagerFunc_(session->GetPersistentId());
-        }
-    } );
-}
-
-
-void Session::SetResponseRegion(const std::vector<WSRect>& responseRect)
-{
-    responseRect_ = responseRect;
-    NotifySessionInfoChange();
-}
-
-std::vector<WSRect> Session::GetResponseRegion() const
-{
-    return responseRect_;
+    if (sessionInfoChangeNotifyManagerFunc_) {
+        sessionInfoChangeNotifyManagerFunc_(GetPersistentId());
+    }
 }
 
 bool Session::IsSystemInput()
@@ -2222,15 +2223,13 @@ bool Session::IsSystemInput()
     return sessionInfo_.isSystemInput_;
 }
 
-void Session::SetSessionTouchable(bool touchable)
+void Session::SetTouchHotAreas(const std::vector<Rect>& touchHotAreas)
 {
-    sessionTouchable_ = touchable;
-    NotifySessionInfoChange();
-}
+    auto property = GetSessionProperty();
+    if (property == nullptr) {
+        return;
+    }
 
-bool Session::GetSessionTouchable() const
-{
-    return sessionTouchable_;
+    property->SetTouchHotAreas(touchHotAreas);
 }
-
 } // namespace OHOS::Rosen

@@ -16,7 +16,7 @@
 #include "scene_input_manager.h"
 
 #include "input_manager.h"
-#include "scene_session_markdirty.h"
+#include "scene_session_dirty_manager.h"
 #include "screen_session_manager/include/screen_session_manager_client.h"
 #include "session/host/include/scene_session.h"
 #include "session_manager/include/scene_session_manager.h"
@@ -38,39 +38,39 @@ constexpr float DIRECTION270 = 270;
 
 MMI::Direction ConvertDegreeToMMIRotation(float degree, MMI::DisplayMode displayMode)
 {
-    MMI::Direction out = MMI::DIRECTION0;
+    MMI::Direction rotation = MMI::DIRECTION0;
     if (NearEqual(degree, DIRECTION0)) {
-        out = MMI::DIRECTION0;
+        rotation = MMI::DIRECTION0;
     }
     if (NearEqual(degree, DIRECTION90)) {
-        out = MMI::DIRECTION90;
+        rotation = MMI::DIRECTION90;
     }
     if (NearEqual(degree, DIRECTION180)) {
-        out = MMI::DIRECTION180;
+        rotation = MMI::DIRECTION180;
     }
     if (NearEqual(degree, DIRECTION270)) {
-        out = MMI::DIRECTION270;
+        rotation = MMI::DIRECTION270;
     }
     if (displayMode == MMI::DisplayMode::FULL) {
-        switch (out) {
+        switch (rotation) {
             case MMI::DIRECTION0: 
-                out = MMI::DIRECTION90; 
+                rotation = MMI::DIRECTION90; 
                 break;
             case MMI::DIRECTION90: 
-                out = MMI::DIRECTION180;
+                rotation = MMI::DIRECTION180;
                 break;
             case MMI::DIRECTION180: 
-                out = MMI::DIRECTION270;
+                rotation = MMI::DIRECTION270;
                 break;
             case MMI::DIRECTION270:
-                out = MMI::DIRECTION0;
+                rotation = MMI::DIRECTION0;
                 break;
             default:
-                out = MMI::DIRECTION0;
+                rotation = MMI::DIRECTION0;
                 break;
         }
     }
-    return out;
+    return rotation;
 }
 
 std::string DumpRect(const std::vector<MMI::Rect>& rects)
@@ -120,16 +120,16 @@ SceneInputManager& SceneInputManager::GetInstance()
 
 void SceneInputManager::Init()
 {
-    sceneSessionDirty_ = std::make_shared<SceneSessionDirty>();
+    sceneSessionDirty_ = std::make_shared<SceneSessionDirtyManager>();
     if (sceneSessionDirty_) {
         sceneSessionDirty_->Init();
     }
 }
 
-void SceneInputManager::NotifyFullInfo()
+void SceneInputManager::FlushFullInfoToMMI()
 {
-    std::unordered_map<ScreenId, ScreenProperty> screensProperties;
-    Rosen::ScreenSessionManagerClient::GetInstance().GetAllScreensProperties(screensProperties);
+    std::unordered_map<ScreenId, ScreenProperty> screensProperties =
+        Rosen::ScreenSessionManagerClient::GetInstance().GetAllScreensProperties();
     auto displayMode = Rosen::ScreenSessionManagerClient::GetInstance().GetFoldDisplayMode();
     auto ConstructDisplayInfos = [&](std::vector<MMI::DisplayInfo>& displayInfos) {
         for (auto& iter: screensProperties) {
@@ -152,23 +152,22 @@ void SceneInputManager::NotifyFullInfo()
     };
     std::vector<MMI::DisplayInfo> displayInfos;
     ConstructDisplayInfos(displayInfos);
-    std::vector<MMI::WindowInfo> windowsInfo;
-    int firstWidth = 0; 
-    int firstHeight = 0;
+    int mainScreenWidth = 0; 
+    int mainScreenHeight = 0;
     if (!displayInfos.empty()) {
-        firstWidth = displayInfos[0].width;
-        firstHeight = displayInfos[0].height;
+        mainScreenWidth = displayInfos[0].width;
+        mainScreenHeight = displayInfos[0].height;
     }
     if (sceneSessionDirty_ == nullptr) {
+        WLOG_E("scene session dirty is null");
         return;
     }
 
-    std::vector<MMI::WindowInfo> windowInfoList;
-    sceneSessionDirty_->GetFullWindowInfoList(windowInfoList);
+    std::vector<MMI::WindowInfo> windowInfoList = sceneSessionDirty_->GetFullWindowInfoList();
     int32_t focusId = Rosen::SceneSessionManager::GetInstance().GetFocusedSession();
     MMI::DisplayGroupInfo displayGroupInfo = {
-        .width = firstWidth,
-        .height = firstHeight,
+        .width = mainScreenWidth,
+        .height = mainScreenHeight,
         .focusWindowId = focusId,
         .windowsInfo = windowInfoList,
         .displaysInfo = displayInfos,
@@ -193,7 +192,7 @@ void SceneInputManager::NotifyMMIWindowPidChange(const sptr<SceneSession>& scene
 {
     if (sceneSessionDirty_) {
         sceneSessionDirty_->NotifyWindowInfoChange(sceneSession, WindowUpdateType::WINDOW_UPDATE_PROPERTY, pid);
-        NotifyChangeInfo();
+        FlushChangeInfoToMMI();
     }
 }
 
@@ -204,11 +203,11 @@ void SceneInputManager::NotifyWindowInfoChangeFromSession(const sptr<SceneSessio
     }
 }
 
-void SceneInputManager::NotifyChangeInfo()
+void SceneInputManager::FlushChangeInfoToMMI()
 {
     std::map<uint64_t, std::vector<MMI::WindowInfo>> screenId2Windows;
     if (sceneSessionDirty_) {
-        sceneSessionDirty_->GetIncrementWindowInfoList(screenId2Windows);
+        screenId2Windows = sceneSessionDirty_->GetIncrementWindowInfoList();
     }
 
     for (auto& iter : screenId2Windows) {
@@ -224,12 +223,13 @@ void SceneInputManager::NotifyChangeInfo()
     }
 }
 
-void SceneInputManager::NotifyMMIDisplayInfo(){
+void SceneInputManager::FlushDisplayInfoToMMI() {
     if (sceneSessionDirty_->IsScreenChange()) {
-        NotifyFullInfo();
+        sceneSessionDirty_->SetScreenChange(false);
+        FlushFullInfoToMMI();
         return;
     }
-    NotifyChangeInfo();
+    FlushChangeInfoToMMI();
 }
 }
 } // namespace OHOS::Rosen

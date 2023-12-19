@@ -284,8 +284,6 @@ public:
     sptr<IRemoteObject> GetAbilityToken() const;
     WindowMode GetWindowMode();
     virtual void SetZOrder(uint32_t zOrder);
-    virtual void SetSessionTouchable(bool touchable);
-    bool GetSessionTouchable() const;
     uint32_t GetZOrder() const;
     void SetUINodeId(uint32_t uiNodeId);
     uint32_t GetUINodeId() const;
@@ -315,6 +313,8 @@ public:
         return std::vector<Rect>();
     }
 
+    virtual void SetTouchHotAreas(const std::vector<Rect>& touchHotAreas);
+
     void SetVpr(float vpr)
     {
         vpr_ = vpr;
@@ -343,8 +343,6 @@ public:
     WSError UpdateTitleInTargetPos(bool isShow, int32_t height);
     void SetNotifySystemSessionPointerEventFunc(const NotifySystemSessionPointerEventFunc& func);
     void SetNotifySystemSessionKeyEventFunc(const NotifySystemSessionKeyEventFunc& func);
-    void SetResponseRegion(const std::vector<WSRect>& responseRect);
-    std::vector<WSRect> GetResponseRegion() const;
     bool IsSystemInput();
 
 protected:
@@ -440,6 +438,9 @@ protected:
     float pivotX_ = 0.0f;
     float pivotY_ = 0.0f;
 
+    mutable std::mutex pointerEventMutex_;
+    mutable std::mutex keyEventMutex_;
+
 private:
     void HandleDialogForeground();
     void HandleDialogBackground();
@@ -491,8 +492,6 @@ private:
     bool isRSDrawing_ {false};
     sptr<IRemoteObject> abilityToken_ = nullptr;
     float vpr_ { 1.5f };
-    std::vector<WSRect> responseRect_;
-    bool sessionTouchable_ { true };
 };
 } // namespace OHOS::Rosen
 

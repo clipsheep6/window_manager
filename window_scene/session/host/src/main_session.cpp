@@ -30,8 +30,8 @@ MainSession::MainSession(const SessionInfo& info, const sptr<SpecificSessionCall
     : SceneSession(info, specificCallback)
 {
     moveDragController_ = new (std::nothrow) MoveDragController(GetPersistentId());
-    if (specificCallback != nullptr && specificCallback->onWindowMove_ != nullptr) {
-        moveDragController_->SetNotifyWindowPidChangeCallback(specificCallback_->onWindowMove_);
+    if (specificCallback != nullptr && specificCallback->onWindowInputPidChangeCallback_ != nullptr) {
+        moveDragController_->SetNotifyWindowPidChangeCallback(specificCallback_->onWindowInputPidChangeCallback_);
     }
     SetMoveDragCallback();
     std::string key = GetRatioPreferenceKey();

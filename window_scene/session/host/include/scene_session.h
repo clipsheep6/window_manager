@@ -74,7 +74,7 @@ public:
         GetSceneSessionVectorByTypeCallback onGetSceneSessionVectorByType_;
         UpdateAvoidAreaCallback onUpdateAvoidArea_;
         NotifyWindowInfoUpdateCallback onWindowInfoUpdate_;
-        NotifyWindowPidChangeCallback onWindowMove_;
+        NotifyWindowPidChangeCallback onWindowInputPidChangeCallback_;
         NotifySessionTouchOutsideCallback onSessionTouchOutside_;
         GetAINavigationBarArea onGetAINavigationBarArea_;
         RecoveryCallback onRecoveryPullPiPMainWindow_;
@@ -206,8 +206,6 @@ public:
     void RegisterSessionChangeCallback(const sptr<SceneSession::SessionChangeCallback>& sessionChangeCallback);
     WSError UpdateSizeChangeReason(SizeChangeReason reason);
     void ClearSpecificSessionCbMap();
-    bool GetIsRotable();
-    float GetRotationWithDisplay();
     void SendPointerEventToUI(std::shared_ptr<MMI::PointerEvent> pointerEvent);
     void SendKeyEventToUI(std::shared_ptr<MMI::KeyEvent> keyEvent);
 

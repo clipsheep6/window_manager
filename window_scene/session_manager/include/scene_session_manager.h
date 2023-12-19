@@ -272,9 +272,9 @@ public:
     WMError SetSystemAnimatedScenes(SystemAnimatedSceneType sceneType);
     WSError ShiftAppWindowFocus(int32_t sourcePersistentId, int32_t targetPersistentId) override;
     std::shared_ptr<Media::PixelMap> GetSessionSnapshotPixelMap(const int32_t persistentId, const float scaleParam);
-    const std::map<int32_t, sptr<SceneSession>>& GetSceneSessionMap() const;
+    const std::map<int32_t, sptr<SceneSession>> GetSceneSessionMap();
     void GetAllSceneSession(std::vector<sptr<SceneSession>>& sceneSessions);
-    void NotifySceneInfoUpdateToMMI();
+    void FlushWindowInfoToMMI();
 
 public:
     std::shared_ptr<TaskScheduler> GetTaskScheduler() {return taskScheduler_;};

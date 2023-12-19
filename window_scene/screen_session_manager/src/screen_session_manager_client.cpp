@@ -205,10 +205,10 @@ void ScreenSessionManagerClient::OnImmersiveStateChanged(bool& immersive)
     }
 }
 
-void ScreenSessionManagerClient::GetAllScreensProperties(
-    std::unordered_map<ScreenId, ScreenProperty>& screensProperties) const
+const std::unordered_map<ScreenId, ScreenProperty> ScreenSessionManagerClient::GetAllScreensProperties() const
 {
     std::lock_guard<std::mutex> lock(screenSessionMapMutex_);
+    std::unordered_map<ScreenId, ScreenProperty> screensProperties;
     for (const auto& iter: screenSessionMap_) {
         auto session = iter.second;
         if (session == nullptr) {
@@ -216,6 +216,7 @@ void ScreenSessionManagerClient::GetAllScreensProperties(
         }
         screensProperties[iter.first] = session->GetScreenProperty();
     }
+    return screensProperties;
 }
 
 FoldDisplayMode ScreenSessionManagerClient::GetFoldDisplayMode() const
