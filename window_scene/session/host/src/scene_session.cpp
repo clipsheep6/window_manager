@@ -105,11 +105,13 @@ WSError SceneSession::Foreground(sptr<WindowSessionProperty> property)
     PostTask([weakThis = wptr(this), property]() {
         auto session = weakThis.promote();
         if (!session) {
-            WLOGFE("[WMSCom] session is null");
+            WLOGFE("[WMSCom] session or property is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
         WLOGFI("[WMSCom] Foreground session, id: %{public}d", session->GetPersistentId());
-        weakThis->SetTextFieldAvoidInfo(property->GetTextFieldPositionY(), property->GetTextFieldHeight());
+        if (!property) {
+            weakThis->SetTextFieldAvoidInfo(property->GetTextFieldPositionY(), property->GetTextFieldHeight());
+        }
         auto ret = session->Session::Foreground(property);
         if (ret != WSError::WS_OK) {
             return ret;
@@ -680,7 +682,6 @@ void SceneSession::CalculateAvoidAreaRect(WSRect& rect, WSRect& avoidRect, Avoid
 
 void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 {
-    float vpr = 3.5f; // 3.5f: default pixel ratio
     int32_t floatingBarHeight = 32; // 32: floating windowBar Height
     if (GetSessionProperty()->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID)) {
         return;
@@ -689,6 +690,7 @@ void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
          Session::GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
          Session::GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) &&
         system::GetParameter("const.product.devicetype", "unknown") == "phone") {
+        float vpr = 3.5f; // 3.5f: default pixel ratio
         auto display = DisplayManager::GetInstance().GetDefaultDisplay();
         if (display) {
             vpr = display->GetVirtualPixelRatio();
