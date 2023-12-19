@@ -877,7 +877,7 @@ sptr<SceneSession::SpecificSessionCallback> SceneSessionManager::CreateSpecificS
     specificCb->onUpdateAvoidArea_ = std::bind(&SceneSessionManager::UpdateAvoidArea, this, std::placeholders::_1);
     specificCb->onWindowInfoUpdate_ = std::bind(&SceneSessionManager::NotifyWindowInfoChange,
         this, std::placeholders::_1, std::placeholders::_2);
-    specificCb->onWindowMove_ = std::bind(&SceneSessionManager::NotifyMMIWindowPidChange,
+    specificCb->onWindowInputPidChangeCallback_ = std::bind(&SceneSessionManager::NotifyMMIWindowPidChange,
         this, std::placeholders::_1, std::placeholders::_2);
     specificCb->onSessionTouchOutside_ = std::bind(&SceneSessionManager::NotifySessionTouchOutside,
         this, std::placeholders::_1);
@@ -2919,16 +2919,7 @@ void SceneSessionManager::NotifyWindowInfoChangeFromSession(int32_t persistentId
         return;
     }
 
-    wptr<SceneSession> weakSceneSession(sceneSession);
-    auto task = [weakSceneSession]() {
-        auto scnSession = weakSceneSession.promote();
-        if (scnSession == nullptr) {
-            WLOGFE("scnSession nullptr");
-            return;
-        }
-        SceneInputManager::GetInstance().NotifyWindowInfoChangeFromSession(scnSession);
-    };
-    taskScheduler_->PostAsyncTask(task);
+    SceneInputManager::GetInstance().NotifyWindowInfoChangeFromSession(sceneSession);
 }
 
 bool SceneSessionManager::IsSessionVisible(const sptr<SceneSession>& session)
@@ -6439,8 +6430,9 @@ WSError SceneSessionManager::UpdateTitleInTargetPos(int32_t persistentId, bool i
     return sceneSession->UpdateTitleInTargetPos(isShow, height);
 }
 
-const std::map<int32_t, sptr<SceneSession>>& SceneSessionManager::GetSceneSessionMap() const
+const std::map<int32_t, sptr<SceneSession>> SceneSessionManager::GetSceneSessionMap()
 {
+    std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
     return sceneSessionMap_;
 }
 
@@ -6615,10 +6607,11 @@ void AppAnrListener::OnAppDebugStoped(const std::vector<AppExecFwk::AppDebugInfo
     DelayedSingleton<ANRManager>::GetInstance()->SwitchAnr(true);
 }
 
-void SceneSessionManager::NotifySceneInfoUpdateToMMI()
+void SceneSessionManager::FlushWindowInfoToMMI()
 {
     auto task = []()-> WSError {
-        SceneInputManager::GetInstance().NotifyMMIDisplayInfo();
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SceneSessionManager::FlushWindowInfoToMMI");
+        SceneInputManager::GetInstance().FlushDisplayInfoToMMI();
         return WSError::WS_OK;
     }; 
     return taskScheduler_->PostAsyncTask(task);

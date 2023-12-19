@@ -27,12 +27,12 @@
 
 namespace OHOS {
 namespace Rosen {
-class SceneSessionDirty;
+class SceneSessionDirtyManager;
 
 class SceneInputManager : public std::enable_shared_from_this<SceneInputManager> {
 WM_DECLARE_SINGLE_INSTANCE_BASE(SceneInputManager)
 public:
-    void NotifyMMIDisplayInfo();
+    void FlushDisplayInfoToMMI();
     void NotifyWindowInfoChange(const sptr<SceneSession>& scenenSession, const WindowUpdateType& type);
     void NotifyWindowInfoChangeFromSession(const sptr<SceneSession>& sceneSession);
     void NotifyMMIWindowPidChange(const sptr<SceneSession>& sceneSession, int32_t pid);
@@ -43,10 +43,10 @@ protected:
 
 private:
     void Init();
-    void NotifyFullInfo();
-    void NotifyChangeInfo();
+    void FlushFullInfoToMMI();
+    void FlushChangeInfoToMMI();
 
-    std::shared_ptr<SceneSessionDirty> sceneSessionDirty_;
+    std::shared_ptr<SceneSessionDirtyManager> sceneSessionDirty_;
 };
 }//Rosen
 }//OHOS

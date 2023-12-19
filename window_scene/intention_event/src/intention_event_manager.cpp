@@ -39,19 +39,32 @@ void LogPointInfo(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
     uint32_t windowId = static_cast<uint32_t>(pointerEvent->GetTargetWindowId());
     WLOGFD("point source:%{public}d", pointerEvent->GetSourceType());
     auto actionId = pointerEvent->GetPointerId();
+    int32_t action = pointerEvent->GetPointerAction();
+    if (action == MMI::PointerEvent::POINTER_ACTION_MOVE) {
+        return;
+    }
+
     MMI::PointerEvent::PointerItem item;
     if (pointerEvent->GetPointerItem(actionId, item)) {
-        WLOGFD("OnInputEvent action point info : windowid: %{public}d, id:%{public}d, displayx:%{public}d, "
-            "displayy:%{public}d, windowx:%{public}d, windowy :%{public}d, action :%{public}d pressure: "
-            "%{public}f, tiltx :%{public}f, tiltY :%{public}f", 
-        windowId, actionId, item.GetDisplayX(), item.GetDisplayY(), item.GetWindowX(), item.GetWindowY(), 
-        pointerEvent->GetPointerAction(), item.GetPressure(), item.GetTiltX(), item.GetTiltY());
+        if (action == MMI::PointerEvent::POINTER_ACTION_DOWN) {
+            WLOGFI("[WMSEvent] action point info : windowid: %{public}d, id:%{public}d, displayx:%{public}d, "
+                "displayy:%{public}d, windowx:%{public}d, windowy :%{public}d, action :%{public}d pressure: "
+                "%{public}f, tiltx :%{public}f, tiltY :%{public}f", 
+            windowId, actionId, item.GetDisplayX(), item.GetDisplayY(), item.GetWindowX(), item.GetWindowY(), 
+            pointerEvent->GetPointerAction(), item.GetPressure(), item.GetTiltX(), item.GetTiltY());
+        } else {
+            WLOGFD("[WMSEvent] action point info : windowid: %{public}d, id:%{public}d, displayx:%{public}d, "
+                "displayy:%{public}d, windowx:%{public}d, windowy :%{public}d, action :%{public}d pressure: "
+                "%{public}f, tiltx :%{public}f, tiltY :%{public}f", 
+            windowId, actionId, item.GetDisplayX(), item.GetDisplayY(), item.GetWindowX(), item.GetWindowY(), 
+            pointerEvent->GetPointerAction(), item.GetPressure(), item.GetTiltX(), item.GetTiltY());
+        }
     }
     auto ids = pointerEvent->GetPointerIds();
     for (auto&& id :ids) {
         MMI::PointerEvent::PointerItem item;
         if (pointerEvent->GetPointerItem(id, item)) {
-            WLOGFD("OnInputEvent all point info: id: %{public}d, x:%{public}d, y:%{public}d, isPressend:%{public}d, "
+            WLOGFD("[WMSEvent] all point info: id: %{public}d, x:%{public}d, y:%{public}d, isPressend:%{public}d, "
                 "pressure:%{public}f, tiltX:%{public}f, tiltY:%{public}f", 
             actionId, item.GetWindowX(), item.GetWindowY(), item.IsPressed(), item.GetPressure(),
             item.GetTiltX(), item.GetTiltY());
@@ -190,21 +203,24 @@ void IntentionEventManager::InputEventListener::OnInputEvent(
     
     uint32_t windowId = static_cast<uint32_t>(pointerEvent->GetTargetWindowId());
     auto sceneSession = SceneSessionManager::GetInstance().GetSceneSession(windowId);
-    if (sceneSession != nullptr) {
-        if (sceneSession->GetSessionInfo().isSystem_) {
-            WLOGD("[EventDispatch] InputEventListener::OnInputEvent id:%{public}d, wid:%{public}u",
-                  pointerEvent->GetId(), windowId);
-            auto actionId = pointerEvent->GetPointerId();
-            MMI::PointerEvent::PointerItem item;
-            if (pointerEvent->GetPointerItem(actionId, item)) {
-                item.SetWindowX(item.GetDisplayX());
-                item.SetWindowY(item.GetDisplayY());
-                pointerEvent->UpdatePointerItem(actionId, item);
-            }
-            sceneSession->SendPointerEventToUI(pointerEvent);
-        } else {
-            sceneSession->TransferPointerEvent(pointerEvent);
+    if (sceneSession == nullptr) {
+        return;
+    }
+
+    if (sceneSession->GetSessionInfo().isSystem_) {
+        WLOGD("[WMSEvent] InputEventListener::OnInputEvent id:%{public}d, wid:%{public}u",
+                pointerEvent->GetId(), windowId);
+        auto actionId = pointerEvent->GetPointerId();
+        MMI::PointerEvent::PointerItem item;
+        if (pointerEvent->GetPointerItem(actionId, item)) {
+            item.SetWindowX(item.GetDisplayX());
+            item.SetWindowY(item.GetDisplayY());
+            pointerEvent->UpdatePointerItem(actionId, item);
         }
+        sceneSession->SendPointerEventToUI(pointerEvent);
+    } else {
+        // transfer pointer event for move and drag
+        sceneSession->TransferPointerEvent(pointerEvent);
     }
     UpdateLastMouseEvent(pointerEvent);
 }
@@ -248,9 +264,9 @@ void IntentionEventManager::InputEventListener::OnInputEvent(
             return;
         }
         focusedSceneSession->SendKeyEventToUI(keyEvent);
-        return;
+    } else {
+        focusedSceneSession->TransferKeyEvent(keyEvent);
     }
-    focusedSceneSession->TransferKeyEvent(keyEvent);
 }
 
 bool IntentionEventManager::InputEventListener::IsKeyboardEvent(

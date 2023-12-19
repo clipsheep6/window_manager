@@ -13,12 +13,11 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_ROSEN_SCENE_SESSION_MARKDIRTY_H
-#define OHOS_ROSEN_SCENE_SESSION_MARKDIRTY_H
+#ifndef OHOS_ROSEN_SCENE_SESSION_DIRTY_MANAGER_H
+#define OHOS_ROSEN_SCENE_SESSION_DIRTY_MANAGER_H
 
 
 #include <map>
-#include <refbase.h>
 
 #include "common/rs_vector4.h"
 #include "session/host/include/scene_session.h"
@@ -29,9 +28,9 @@ namespace OHOS::MMI {
     struct WindowInfo;
 }
 namespace OHOS::Rosen {
-class SceneSessionDirty : public virtual RefBase {
+class SceneSessionDirtyManager {
 private:
-    enum WindowAction:uint32_t {
+    enum WindowAction : uint32_t {
         UNKNOWN = 0,
         WINDOW_ADD,
         WINDOW_DELETE,
@@ -40,26 +39,26 @@ private:
 
 using ScreenInfoChangeListener = std::function<void(int32_t)>;
 public:
-    SceneSessionDirty() = default;
-    virtual ~SceneSessionDirty() = default;
+    SceneSessionDirtyManager() = default;
+    virtual ~SceneSessionDirtyManager() = default;
 
     void RegisterScreenInfoChangeListener();
     void Init();
     bool IsScreenChange();
     void SetScreenChange(const uint64_t id);
+    void SetScreenChange(const bool value);
     void NotifyWindowInfoChange(const sptr<SceneSession>& sceneSession,
         const WindowUpdateType& type, int32_t sceneBoardPid = -1);
-    void GetFullWindowInfoList(std::vector<MMI::WindowInfo>& windowInfoList);
-    void GetIncrementWindowInfoList(std::map<uint64_t, std::vector<MMI::WindowInfo>>& screen2windowInfo);
+    std::vector<MMI::WindowInfo>& GetFullWindowInfoList();
+    std::map<uint64_t, std::vector<MMI::WindowInfo>>& GetIncrementWindowInfoList();
 
 private:
     void Clear();
-    std::vector<MMI::WindowInfo> FullSceneSessionInfoUpdate();
+    std::vector<MMI::WindowInfo> FullSceneSessionInfoUpdate() const;
     bool IsWindowBackGround(const sptr<SceneSession>& sceneSession) const;
     MMI::WindowInfo GetWindowInfo(const sptr<SceneSession>& sceneSession, const WindowAction& action) const;
     void PushWindowInfoList(uint64_t displayID, const MMI::WindowInfo& windowinfo);
     WindowAction GetSceneSessionAction(const WindowUpdateType& type);
-    void SetScreenChange(const bool value);
 
     std::map<WindowUpdateType, WindowAction> windowType2Action_;
     std::map<uint64_t, std::vector<MMI::WindowInfo>> screen2windowInfo_;

@@ -215,7 +215,7 @@ bool IsJsIsRotatableUndefined(napi_env env, napi_value jsIsRotatable, SessionInf
     if (GetType(env, jsIsRotatable) != napi_undefined) {
         bool isRotable = false;
         if (!ConvertFromJsValue(env, jsIsRotatable, isRotable)) {
-            WLOGFE("[NAPI]Failed to convert parameter to isPersistentRecover");
+            WLOGFE("[NAPI]Failed to convert parameter to isRotable");
             return false;
         }
         sessionInfo.isRotable_ = isRotable;
@@ -228,7 +228,7 @@ bool IsJsIsSystemInputUndefined(napi_env env, napi_value jsIsSystemInput, Sessio
     if (GetType(env, jsIsSystemInput) != napi_undefined) {
         bool isSystemInput = false;
         if (!ConvertFromJsValue(env, jsIsSystemInput, isSystemInput)) {
-            WLOGFE("[NAPI]Failed to convert parameter to isPersistentRecover");
+            WLOGFE("[NAPI]Failed to convert parameter to isSystemInput");
             return false;
         }
         sessionInfo.isSystemInput_ = isSystemInput;

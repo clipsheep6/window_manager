@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "scene_session_markdirty.h"
+#include "scene_session_dirty_manager.h"
 
 #include <cinttypes>
 #include <memory>
@@ -30,31 +30,16 @@ constexpr float DIRECTION0 = 0 ;
 constexpr float DIRECTION90 = 90 ;
 constexpr float DIRECTION180 = 180 ;
 constexpr float DIRECTION270 = 270 ;
-constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneSessionDirty"};
-
-static MMI::Direction ConvertDegreeToMMIRotation(float degree)
-{
-    if (NearEqual(degree, DIRECTION0)) {
-        return MMI::DIRECTION0;
-    }
-    if (NearEqual(degree, DIRECTION90)) {
-        return MMI::DIRECTION90;
-    }
-    if (NearEqual(degree, DIRECTION180)) {
-        return MMI::DIRECTION180;
-    }
-    if (NearEqual(degree, DIRECTION270)) {
-        return MMI::DIRECTION270;
-    }
-    return MMI::DIRECTION0;
-}
+constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneSessionDirtyManager"};
+constexpr int POINTER_CHANGE_AREA_SEXTEEN = 16;
+constexpr int POINTER_CHANGE_AREA_FIVE = 5;
 
 void PrintLogGetFullWindowInfoList(const std::vector<MMI::WindowInfo>& windowInfoList)
 {
-    WLOGFD("GetFullWindowInfoList Start WindowInfoList_.size = %{public}d", int(windowInfoList.size()));
+    WLOGFD("[WMSEvent] GetFullWindowInfoList Start WindowInfoList_.size = %{public}d", int(windowInfoList.size()));
     for (const auto& e: windowInfoList) {
         auto sessionleft = SceneSessionManager::GetInstance().GetSceneSession(e.id);
-        WLOGFD("GetFullWindowInfoList windowInfoList id = %{public}d area.x = %{public}d  area.y = %{public}d"
+        WLOGFD("[WMSEvent] GetFullWindowInfoList windowInfoList id = %{public}d area.x = %{public}d  area.y = %{public}d"
             "area.w = %{public}d area.h = %{public}d  agentWindowId = %{public}d flags = %{pulic}d "
             "GetZOrder = %{public}d", e.id , e.area.x, e.area.y, e.area.width, e.area.height, e.agentWindowId,
             e.flags, int(sessionleft->GetZOrder()));
@@ -64,10 +49,10 @@ void PrintLogGetFullWindowInfoList(const std::vector<MMI::WindowInfo>& windowInf
 void PrintLogGetIncrementWindowInfoList(const std::map<uint64_t, std::vector<MMI::WindowInfo>>& screen2windowInfo)
 {
     for (const auto& windowinfolist : screen2windowInfo) {
-        WLOGFD("GetIncrementWindowInfoList screen id = %{public}d windowinfolist = %{public}d",
+        WLOGFD("[WMSEvent] GetIncrementWindowInfoList screen id = %{public}d windowinfolist = %{public}d",
             int(windowinfolist.first), int(windowinfolist.second.size()));
         for (const auto& e: windowinfolist.second) {
-            WLOGFD("GetIncrementWindowInfoList  windowInfoList id = %{public}d action = %{public}d"
+            WLOGFD("[WMSEvent] GetIncrementWindowInfoList  windowInfoList id = %{public}d action = %{public}d"
                 "area.x = %{public}d area.y = %{public}d area.w = %{publid}d area.h = %{public}d"
                 " agentWindowId = %{public}d  flags = %{public}d", e.id, int(e.action), e.area.x,
                 e.area.y, e.area.width, e.area.height, e.agentWindowId, e.flags);
@@ -110,8 +95,10 @@ MMI::WindowInfo PrepareWindowInfo(sptr<SceneSession> sceneSession, int action)
 
     auto agentWindowId = sceneSession->GetWindowId();
     auto zOrder = sceneSession->GetZOrder();
-    const std::vector<int32_t> pointerChangeAreas{ 16, 5, 16, 5, 16, 5, 16, 5 };
-    const std::vector<WSRect>& hotAreas = sceneSession->GetResponseRegion();
+    const std::vector<int32_t> pointerChangeAreas{ POINTER_CHANGE_AREA_SEXTEEN, POINTER_CHANGE_AREA_FIVE,
+        POINTER_CHANGE_AREA_SEXTEEN, POINTER_CHANGE_AREA_FIVE, POINTER_CHANGE_AREA_SEXTEEN,
+        POINTER_CHANGE_AREA_FIVE, POINTER_CHANGE_AREA_SEXTEEN, POINTER_CHANGE_AREA_FIVE };
+    const std::vector<Rect>& hotAreas = sceneSession->GetTouchHotAreas();
     std::vector<MMI::Rect> mmiHotAreas;
     for (auto area : hotAreas) {
         MMI::Rect rect;
@@ -136,7 +123,7 @@ MMI::WindowInfo PrepareWindowInfo(sptr<SceneSession> sceneSession, int action)
         .defaultHotAreas = mmiHotAreas,
         .pointerHotAreas = mmiHotAreas,
         .agentWindowId = agentWindowId,
-        .flags = (!sceneSession->GetSessionTouchable()),
+        .flags = (!sceneSession->GetTouchable()),
         .displayId = displayId,
         .pointerChangeAreas = pointerChangeAreas,
         .action = static_cast<MMI::WINDOW_UPDATE_ACTION>(action),
@@ -147,21 +134,13 @@ MMI::WindowInfo PrepareWindowInfo(sptr<SceneSession> sceneSession, int action)
 }
 } //namespace
 
-struct windowinfochangetype {
-    int32_t UNKNOW = 0;
-    int32_t ADD = 0;
-    int32_t DELETE = 0;
-    int32_t CHANGE = 0;
-    int32_t Num = 0;
-};
-
-void SceneSessionDirty::Clear()
+void SceneSessionDirtyManager::Clear()
 {
     screen2windowInfo_.clear();
     isScreenSessionChange_ = false;
 }
 
-void SceneSessionDirty::Init()
+void SceneSessionDirtyManager::Init()
 {
     windowType2Action_ = {
         {WindowUpdateType::WINDOW_UPDATE_ADDED, WindowAction::WINDOW_ADD},
@@ -174,7 +153,7 @@ void SceneSessionDirty::Init()
     RegisterScreenInfoChangeListener();
 }
 
-std::vector<MMI::WindowInfo> SceneSessionDirty::FullSceneSessionInfoUpdate()
+std::vector<MMI::WindowInfo> SceneSessionDirtyManager::FullSceneSessionInfoUpdate() const
 {
     std::vector<MMI::WindowInfo> windowInfoList;
     const auto& sceneSessionMap = Rosen::SceneSessionManager::GetInstance().GetSceneSessionMap();
@@ -195,7 +174,7 @@ std::vector<MMI::WindowInfo> SceneSessionDirty::FullSceneSessionInfoUpdate()
     return windowInfoList;
 }
 
-bool SceneSessionDirty::IsWindowBackGround(const sptr<SceneSession>& sceneSession) const
+bool SceneSessionDirtyManager::IsWindowBackGround(const sptr<SceneSession>& sceneSession) const
 {
     if (sceneSession == nullptr) {
         return true;
@@ -203,7 +182,7 @@ bool SceneSessionDirty::IsWindowBackGround(const sptr<SceneSession>& sceneSessio
 
     if (sceneSession->IsSystemInput()) {
         return false;
-    } else if (sceneSession->GetVisible() && sceneSession->IsSystemSession() && sceneSession->IsSystemActive()) {
+    } else if (sceneSession->IsSystemSession() && sceneSession->GetVisible() && sceneSession->IsSystemActive()) {
         return false;
     }
     if (!Rosen::SceneSessionManager::GetInstance().IsSessionVisible(sceneSession)) {
@@ -212,7 +191,7 @@ bool SceneSessionDirty::IsWindowBackGround(const sptr<SceneSession>& sceneSessio
     return false;
 }
 
-void SceneSessionDirty::NotifyWindowInfoChange(const sptr<SceneSession>& sceneSession,
+void SceneSessionDirtyManager::NotifyWindowInfoChange(const sptr<SceneSession>& sceneSession,
     const WindowUpdateType& type, int32_t sceneBoardPid)
 {
     MMI::WindowInfo windowinfo;
@@ -243,24 +222,26 @@ void SceneSessionDirty::NotifyWindowInfoChange(const sptr<SceneSession>& sceneSe
     if (sceneBoardPid > 0) {
         windowinfo.pid = sceneBoardPid;
     }
-    PushWindowInfoList(windowinfo.displayId,  windowinfo);
+    PushWindowInfoList(windowinfo.displayId, windowinfo);
 }
 
-void SceneSessionDirty::GetFullWindowInfoList(std::vector<MMI::WindowInfo>& windowInfoList)
+std::vector<MMI::WindowInfo>& SceneSessionDirtyManager::GetFullWindowInfoList()
 {
-    windowInfoList = FullSceneSessionInfoUpdate();
+    auto windowInfoList = FullSceneSessionInfoUpdate();
     PrintLogGetFullWindowInfoList(windowInfoList);
     Clear();
+    return windowInfoList;
 }
 
-void SceneSessionDirty::GetIncrementWindowInfoList(std::map<uint64_t, std::vector<MMI::WindowInfo>>& screen2windowInfo)
+std::map<uint64_t, std::vector<MMI::WindowInfo>>& SceneSessionDirtyManager::GetIncrementWindowInfoList()
 {
-    screen2windowInfo = screen2windowInfo_;
+    auto screen2windowInfo = screen2windowInfo_;
     PrintLogGetIncrementWindowInfoList(screen2windowInfo);
     Clear();
+    return screen2windowInfo;
 }
 
-SceneSessionDirty::WindowAction SceneSessionDirty::GetSceneSessionAction(const WindowUpdateType& type)
+SceneSessionDirtyManager::WindowAction SceneSessionDirtyManager::GetSceneSessionAction(const WindowUpdateType& type)
 {
     auto iter = windowType2Action_.find(type);
     if (iter != windowType2Action_.end()) {
@@ -270,28 +251,24 @@ SceneSessionDirty::WindowAction SceneSessionDirty::GetSceneSessionAction(const W
     return WindowAction::UNKNOWN;
 }
 
-bool SceneSessionDirty::IsScreenChange()
+bool SceneSessionDirtyManager::IsScreenChange()
 {
-    auto ret = isScreenSessionChange_;
-    if (ret) {
-        SetScreenChange(false);
-    }
-    return ret;
+    return isScreenSessionChange_;
 }
 
-void SceneSessionDirty::SetScreenChange(bool value)
+void SceneSessionDirtyManager::SetScreenChange(bool value)
 {
     std::lock_guard<std::mutex> lock(mutexlock_);
     isScreenSessionChange_ = value;
 }
 
-void SceneSessionDirty::SetScreenChange(uint64_t id)
+void SceneSessionDirtyManager::SetScreenChange(uint64_t id)
 {
     WLOGFD("SetScreenChange screenID = %{public}d ",static_cast<int>(id));
     SetScreenChange(true);
 }
 
-void SceneSessionDirty::PushWindowInfoList(uint64_t displayID, const MMI::WindowInfo& windowinfo)
+void SceneSessionDirtyManager::PushWindowInfoList(uint64_t displayID, const MMI::WindowInfo& windowinfo)
 {
     if (screen2windowInfo_.find(displayID) == screen2windowInfo_.end()) {
         screen2windowInfo_.emplace(displayID, std::vector<MMI::WindowInfo>());
@@ -300,22 +277,16 @@ void SceneSessionDirty::PushWindowInfoList(uint64_t displayID, const MMI::Window
     twindowinlist.emplace_back(windowinfo);
 }
 
-MMI::WindowInfo SceneSessionDirty::GetWindowInfo(const sptr<SceneSession>& sceneSession,
-    const SceneSessionDirty::WindowAction& action) const
+MMI::WindowInfo SceneSessionDirtyManager::GetWindowInfo(const sptr<SceneSession>& sceneSession,
+    const SceneSessionDirtyManager::WindowAction& action) const
 {
     return PrepareWindowInfo(sceneSession, static_cast<int32_t>(action));
 }
 
-void SceneSessionDirty::RegisterScreenInfoChangeListener()
+void SceneSessionDirtyManager::RegisterScreenInfoChangeListener()
 {
-    wptr<SceneSessionDirty> weakThis = this;
-    auto fun = [weakThis](uint64_t screenID) {
-        auto sessionDirty = weakThis.promote();
-        if (sessionDirty == nullptr) {
-            WLOGFE("sessionDirty is null");
-            return;
-        }
-        sessionDirty->SetScreenChange(screenID);
+    auto fun = [this](uint64_t screenID) {
+        SetScreenChange(screenID);
     };
     ScreenSessionManagerClient::GetInstance().RegisterScreenInfoChangeListener(fun);
     WLOGFI("RegisterScreenInfoChangeListener");

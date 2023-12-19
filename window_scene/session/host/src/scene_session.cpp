@@ -2138,24 +2138,9 @@ WSError SceneSession::UpdatePiPRect(uint32_t width, uint32_t height, PiPRectUpda
     return WSError::WS_OK;
 }
 
-bool SceneSession::GetIsRotable()
-{
-    return sessionInfo_.isRotable_;
-}
-
-float SceneSession::GetRotationWithDisplay()
-{
-    auto properties = surfaceNode_->GetStagingProperties();
-    float rotation = properties.GetRotation();
-    if (!sessionInfo_.isRotable_) {
-        return 0.0;
-    } else {
-        return rotation;
-    }
-}
-
 void SceneSession::SendPointerEventToUI(std::shared_ptr<MMI::PointerEvent> pointerEvent)
 {
+    std::lock_guard<std::mutex> lock(pointerEventMutex_);
     if (systemSessionPointerEventFunc_ != nullptr) {
         systemSessionPointerEventFunc_(pointerEvent);
     }
@@ -2163,6 +2148,7 @@ void SceneSession::SendPointerEventToUI(std::shared_ptr<MMI::PointerEvent> point
 
 void SceneSession::SendKeyEventToUI(std::shared_ptr<MMI::KeyEvent> keyEvent)
 {
+    std::lock_guard<std::mutex> lock(keyEventMutex_);
     if (systemSessionKeyEventFunc_ != nullptr) {
         systemSessionKeyEventFunc_(keyEvent);
     }

@@ -91,7 +91,7 @@ napi_value JsSceneSession::Create(napi_env env, const sptr<SceneSession>& sessio
     BindNativeFunction(env, objValue, "updateNativeVisibility", moduleName, JsSceneSession::UpdateNativeVisibility);
     BindNativeFunction(env, objValue, "setShowRecent", moduleName, JsSceneSession::SetShowRecent);
     BindNativeFunction(env, objValue, "setZOrder", moduleName, JsSceneSession::SetZOrder);
-    BindNativeFunction(env, objValue, "setSessionTouchable", moduleName, JsSceneSession::SetSessionTouchable);
+    BindNativeFunction(env, objValue, "setTouchable", moduleName, JsSceneSession::SetTouchable);
     BindNativeFunction(env, objValue, "setSystemActive", moduleName, JsSceneSession::SetSystemActive);
     BindNativeFunction(env, objValue, "setPrivacyMode", moduleName, JsSceneSession::SetPrivacyMode);
     BindNativeFunction(env, objValue, "setFloatingScale", moduleName, JsSceneSession::SetFloatingScale);
@@ -835,10 +835,10 @@ napi_value JsSceneSession::SetZOrder(napi_env env, napi_callback_info info)
     return (me != nullptr) ? me->OnSetZOrder(env, info) : nullptr;
 }
 
-napi_value JsSceneSession::SetSessionTouchable(napi_env env, napi_callback_info info)
+napi_value JsSceneSession::SetTouchable(napi_env env, napi_callback_info info)
 {
     JsSceneSession* me = CheckParamsAndGetThis<JsSceneSession>(env, info);
-    return (me !=  nullptr) ? me->OnSetSessionTouchable(env, info): nullptr;
+    return (me !=  nullptr) ? me->OnSetTouchable(env, info): nullptr;
 }
 
 napi_value JsSceneSession::SetSystemActive(napi_env env, napi_callback_info info)
@@ -2040,7 +2040,7 @@ napi_value JsSceneSession::OnSetFloatingScale(napi_env env, napi_callback_info i
     return NapiGetUndefined(env);
 }
 
-napi_value JsSceneSession::OnSetSessionTouchable(napi_env env, napi_callback_info info)
+napi_value JsSceneSession::OnSetTouchable(napi_env env, napi_callback_info info)
 {
     size_t argc = 4;
     napi_value argv[4] = { nullptr };
@@ -2052,9 +2052,9 @@ napi_value JsSceneSession::OnSetSessionTouchable(napi_env env, napi_callback_inf
         return NapiGetUndefined(env);
     }
 
-    bool sessionTouchable = false;
-    if (!ConvertFromJsValue(env, argv[0], sessionTouchable)) {
-      WLOGFE("[NAPI] Failed to  convert parameter to sessionTouchable");
+    bool touchable = false;
+    if (!ConvertFromJsValue(env, argv[0], touchable)) {
+      WLOGFE("[NAPI] Failed to  convert parameter to touchable");
       napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
         "Input parameter is missing or invalid" ));
       return NapiGetUndefined(env);
@@ -2068,7 +2068,7 @@ napi_value JsSceneSession::OnSetSessionTouchable(napi_env env, napi_callback_inf
         return NapiGetUndefined(env);
     }
 
-    session->SetSessionTouchable(sessionTouchable);
+    session->SetTouchable(touchable);
     return NapiGetUndefined(env);
 }
 
