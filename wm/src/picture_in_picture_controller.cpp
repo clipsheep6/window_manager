@@ -62,7 +62,7 @@ WMError PictureInPictureController::CreatePictureInPictureWindow()
     }
     auto context = static_cast<std::weak_ptr<AbilityRuntime::Context>*>(pipOption_->GetContext());
     const std::shared_ptr<AbilityRuntime::Context>& abilityContext = context->lock();
-    SingletonContainer::Get<PiPReporter>().SetCurrentPackageName(abilityContext->GetApplicationInfo()->name);
+    packageName_ = abilityContext->GetApplicationInfo()->name;
     sptr<WindowOption> windowOption = new(std::nothrow) WindowOption();
     if (windowOption == nullptr) {
         WLOGFE("Get WindowOption failed");
@@ -78,6 +78,7 @@ WMError PictureInPictureController::CreatePictureInPictureWindow()
     windowOption->SetWindowType(WindowType::WINDOW_TYPE_PIP);
     windowOption->SetWindowMode(WindowMode::WINDOW_MODE_PIP);
     windowOption->SetWindowRect(windowRect_);
+    windowOption->SetBundleName(packageName_);
     WMError errCode;
     sptr<Window> window = Window::Create(windowOption->GetWindowName(), windowOption, context->lock(), errCode);
     if (window == nullptr || errCode != WMError::WM_OK) {
@@ -94,7 +95,7 @@ WMError PictureInPictureController::ShowPictureInPictureWindow(StartPipType star
     WLOGD("ShowPictureInPictureWindow is called");
     if (window_ == nullptr) {
         WLOGFD("window_ is nullptr");
-        SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(static_cast<int32_t>(startType),
+        SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(packageName_, static_cast<int32_t>(startType),
             pipOption_->GetPipTemplate(), FAILED, "window_ is nullptr");
         return WMError::WM_ERROR_PIP_STATE_ABNORMALLY;
     }
@@ -130,12 +131,12 @@ WMError PictureInPictureController::ShowPictureInPictureWindow(StartPipType star
         if (pipLifeCycleListener_ != nullptr) {
             pipLifeCycleListener_->OnPictureInPictureOperationError(err);
         }
-        SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(static_cast<int32_t>(startType),
+        SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(packageName_, static_cast<int32_t>(startType),
             pipOption_->GetPipTemplate(), FAILED, "window_ show failed");
         return WMError::WM_ERROR_PIP_INTERNAL_ERROR;
     }
     PictureInPictureManager::SetActiveController(this);
-    SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(static_cast<int32_t>(startType),
+    SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(packageName_, static_cast<int32_t>(startType),
         pipOption_->GetPipTemplate(), SUCCESS, "show pip success");
     return WMError::WM_OK;
 }
@@ -147,7 +148,7 @@ WMError PictureInPictureController::StartPictureInPicture(StartPipType startType
     if (curState_ == PipWindowState::STATE_STARTING || curState_ == PipWindowState::STATE_STARTED) {
         WLOGFW("pip window is starting, state: %{public}u, pipWindow: %{public}u, mainWindow: %{public}u",
             curState_, window_->GetWindowId(), mainWindowId_);
-        SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(static_cast<int32_t>(startType),
+        SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(packageName_, static_cast<int32_t>(startType),
             pipOption_->GetPipTemplate(), FAILED, "Pip window is starting");
         return WMError::WM_ERROR_PIP_REPEAT_OPERATION;
     }
@@ -195,7 +196,7 @@ WMError PictureInPictureController::StartPictureInPictureInner(StartPipType star
     if (errCode != WMError::WM_OK) {
         curState_ = PipWindowState::STATE_UNDEFINED;
         WLOGFE("Create pip window failed, err: %{public}u", errCode);
-        SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(static_cast<int32_t>(startType),
+        SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(packageName_, static_cast<int32_t>(startType),
             pipOption_->GetPipTemplate(), FAILED, "Create pip window failed");
         return errCode;
     }
@@ -203,13 +204,11 @@ WMError PictureInPictureController::StartPictureInPictureInner(StartPipType star
     if (errCode != WMError::WM_OK) {
         curState_ = PipWindowState::STATE_UNDEFINED;
         WLOGFE("Show pip window failed, err: %{public}u", errCode);
-        SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(static_cast<int32_t>(startType),
+        SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(packageName_, static_cast<int32_t>(startType),
             pipOption_->GetPipTemplate(), FAILED, "Show pip window failed");
         return errCode;
     }
     curState_ = PipWindowState::STATE_STARTED;
-    SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(static_cast<int32_t>(startType),
-        pipOption_->GetPipTemplate(), SUCCESS, "start pip success");
     return WMError::WM_OK;
 }
 
@@ -219,13 +218,13 @@ WMError PictureInPictureController::StopPictureInPicture(bool destroyWindow, boo
     std::lock_guard<std::mutex> lock(mutex_);
     if (curState_ == PipWindowState::STATE_STOPPING || curState_ == PipWindowState::STATE_STOPPED) {
         WLOGFE("Repeat stop request, curState: %{public}u", curState_);
-        SingletonContainer::Get<PiPReporter>().ReportPiPStopWindow(static_cast<int32_t>(stopPipType),
+        SingletonContainer::Get<PiPReporter>().ReportPiPStopWindow(packageName_, static_cast<int32_t>(stopPipType),
             pipOption_->GetPipTemplate(), FAILED, "Repeat stop request");
         return WMError::WM_ERROR_PIP_REPEAT_OPERATION;
     }
     if (window_ == nullptr) {
         WLOGFE("window_ is nullptr");
-        SingletonContainer::Get<PiPReporter>().ReportPiPStopWindow(static_cast<int32_t>(stopPipType),
+        SingletonContainer::Get<PiPReporter>().ReportPiPStopWindow(packageName_, static_cast<int32_t>(stopPipType),
             pipOption_->GetPipTemplate(), FAILED, "window_ is nullptr");
         return WMError::WM_ERROR_PIP_STATE_ABNORMALLY;
     }
@@ -253,8 +252,8 @@ WMError PictureInPictureController::StopPictureInPictureInner(bool needAnim, Sto
         auto session = weakThis.promote();
         if (!session) {
             WLOGFE("session is null");
-            SingletonContainer::Get<PiPReporter>().ReportPiPStopWindow(static_cast<int32_t>(currentStopType),
-                currentPipOption->GetPipTemplate(), FAILED, "session is null");
+            SingletonContainer::Get<PiPReporter>().ReportPiPStopWindow(packageName_,
+                static_cast<int32_t>(currentStopType), currentPipOption->GetPipTemplate(), FAILED, "session is null");
             return WMError::WM_ERROR_PIP_INTERNAL_ERROR;
         }
         session->ResetExtController();
@@ -266,8 +265,9 @@ WMError PictureInPictureController::StopPictureInPictureInner(bool needAnim, Sto
             if (session->pipLifeCycleListener_ != nullptr) {
                 session->pipLifeCycleListener_->OnPictureInPictureOperationError(err);
             }
-            SingletonContainer::Get<PiPReporter>().ReportPiPStopWindow(static_cast<int32_t>(currentStopType),
-                currentPipOption->GetPipTemplate(), FAILED, "Window destroy failed");
+            SingletonContainer::Get<PiPReporter>().ReportPiPStopWindow(packageName_,
+                static_cast<int32_t>(currentStopType), currentPipOption->GetPipTemplate(), FAILED,
+                "Window destroy failed");
             return WMError::WM_ERROR_PIP_DESTROY_FAILED;
         }
         if (session->pipLifeCycleListener_ != nullptr) {
@@ -286,7 +286,7 @@ WMError PictureInPictureController::StopPictureInPictureInner(bool needAnim, Sto
                 WLOGFI("Delete pip mode id: %{public}d", session->handleId_);
             }
         }
-        SingletonContainer::Get<PiPReporter>().ReportPiPStopWindow(static_cast<int32_t>(currentStopType),
+        SingletonContainer::Get<PiPReporter>().ReportPiPStopWindow(packageName_, static_cast<int32_t>(currentStopType),
             currentPipOption->GetPipTemplate(), SUCCESS, "pip window stop success");
         return WMError::WM_OK;
     };
@@ -364,7 +364,7 @@ void PictureInPictureController::StartMove()
         return;
     }
     WLOGI("StartMove is called, window: %{public}u", window_->GetWindowId());
-    SingletonContainer::Get<PiPReporter>().ReportPiPMove();
+    SingletonContainer::Get<PiPReporter>().ReportPiPMove(packageName_);
     window_->StartMove();
 }
 
@@ -400,7 +400,7 @@ void PictureInPictureController::DoActionEvent(std::string& actionName)
         WLOGFE("pipActionObserver is not registered");
         return;
     }
-    SingletonContainer::Get<PiPReporter>().ReportPiPActionEvent(pipOption_->GetPipTemplate(), actionName);
+    SingletonContainer::Get<PiPReporter>().ReportPiPActionEvent(packageName_, pipOption_->GetPipTemplate(), actionName);
     pipActionObserver_->OnActionEvent(actionName);
 }
 
@@ -436,7 +436,7 @@ void PictureInPictureController::RestorePictureInPictureWindow()
         return;
     }
     handler_->PostTask(stopPipTask, "wms:RestorePictureInPictureWindow", DELAY_ANIM);
-    SingletonContainer::Get<PiPReporter>().ReportPiPRestore();
+    SingletonContainer::Get<PiPReporter>().ReportPiPRestore(packageName_);
     WLOGFI("restore pip main window finished");
 }
 
