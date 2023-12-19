@@ -371,17 +371,28 @@ bool Session::NeedNotify() const
 
 WSError Session::SetTouchable(bool touchable)
 {
+    SetSystemTouchable(touchable);
     if (!IsSessionValid()) {
         return WSError::WS_ERROR_INVALID_SESSION;
     }
     UpdateSessionTouchable(touchable);
-    NotifySessionInfoChange();
     return WSError::WS_OK;
 }
 
 bool Session::GetTouchable() const
 {
     return GetSessionProperty()->GetTouchable();
+}
+
+void Session::SetSystemTouchable(bool touchable)
+{
+    systemTouchable_ = touchable;
+    NotifySessionInfoChange();
+}
+
+bool Session::GetSystemTouchable() const
+{
+    return systemTouchable_;
 }
 
 WSError Session::SetVisible(bool isVisible)
@@ -462,12 +473,6 @@ float Session::GetBrightness() const
 
 bool Session::IsSessionValid() const
 {
-    if (sessionInfo_.isSystemInput_) {
-        WLOGFD("session is systemInput, id: %{public}d, name: %{public}s, state: %{public}u",
-            GetPersistentId(), sessionInfo_.bundleName_.c_str(), state_);
-        return true;
-    }
-
     if (sessionInfo_.isSystem_) {
         WLOGFD("session is system, id: %{public}d, name: %{public}s, state: %{public}u",
             GetPersistentId(), sessionInfo_.bundleName_.c_str(), state_);

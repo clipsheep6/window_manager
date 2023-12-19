@@ -2068,7 +2068,7 @@ napi_value JsSceneSession::OnSetTouchable(napi_env env, napi_callback_info info)
         return NapiGetUndefined(env);
     }
 
-    session->SetTouchable(touchable);
+    session->SetSystemTouchable(touchable);
     return NapiGetUndefined(env);
 }
 

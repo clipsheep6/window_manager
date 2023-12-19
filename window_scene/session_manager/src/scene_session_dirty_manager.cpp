@@ -123,7 +123,7 @@ MMI::WindowInfo PrepareWindowInfo(sptr<SceneSession> sceneSession, int action)
         .defaultHotAreas = mmiHotAreas,
         .pointerHotAreas = mmiHotAreas,
         .agentWindowId = agentWindowId,
-        .flags = (!sceneSession->GetTouchable()),
+        .flags = (!sceneSession->GetSystemTouchable()),
         .displayId = displayId,
         .pointerChangeAreas = pointerChangeAreas,
         .action = static_cast<MMI::WINDOW_UPDATE_ACTION>(action),
@@ -225,7 +225,7 @@ void SceneSessionDirtyManager::NotifyWindowInfoChange(const sptr<SceneSession>& 
     PushWindowInfoList(windowinfo.displayId, windowinfo);
 }
 
-std::vector<MMI::WindowInfo>& SceneSessionDirtyManager::GetFullWindowInfoList()
+std::vector<MMI::WindowInfo> SceneSessionDirtyManager::GetFullWindowInfoList()
 {
     auto windowInfoList = FullSceneSessionInfoUpdate();
     PrintLogGetFullWindowInfoList(windowInfoList);
@@ -233,7 +233,7 @@ std::vector<MMI::WindowInfo>& SceneSessionDirtyManager::GetFullWindowInfoList()
     return windowInfoList;
 }
 
-std::map<uint64_t, std::vector<MMI::WindowInfo>>& SceneSessionDirtyManager::GetIncrementWindowInfoList()
+std::map<uint64_t, std::vector<MMI::WindowInfo>> SceneSessionDirtyManager::GetIncrementWindowInfoList()
 {
     auto screen2windowInfo = screen2windowInfo_;
     PrintLogGetIncrementWindowInfoList(screen2windowInfo);

@@ -49,8 +49,8 @@ public:
     void SetScreenChange(const bool value);
     void NotifyWindowInfoChange(const sptr<SceneSession>& sceneSession,
         const WindowUpdateType& type, int32_t sceneBoardPid = -1);
-    std::vector<MMI::WindowInfo>& GetFullWindowInfoList();
-    std::map<uint64_t, std::vector<MMI::WindowInfo>>& GetIncrementWindowInfoList();
+    std::vector<MMI::WindowInfo> GetFullWindowInfoList();
+    std::map<uint64_t, std::vector<MMI::WindowInfo>> GetIncrementWindowInfoList();
 
 private:
     void Clear();
