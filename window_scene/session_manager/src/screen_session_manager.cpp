@@ -3154,7 +3154,7 @@ DMError ScreenSessionManager::GetAvailableArea(DisplayId displayId, DMRect& area
     auto screenSession = GetScreenSession(displayInfo->GetScreenId());
     if (screenSession == nullptr) {
         WLOGFE("can not get default screen now");
-        return;
+        return DMError::DM_ERROR_NULLPTR;
     }
     area = screenSession->GetAvailableArea();
     return DMError::DM_OK;
