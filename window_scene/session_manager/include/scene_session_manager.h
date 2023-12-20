@@ -302,6 +302,10 @@ private:
     std::shared_ptr<AppExecFwk::AbilityInfo> QueryAbilityInfoFromBMS(const int32_t uId, const std::string& bundleName,
         const std::string& abilityName, const std::string& moduleName);
 
+    void OnSessionStateChangeToForeground(sptr<SceneSession>& sceneSession);
+    void OnSessionStateChangeToBackground(sptr<SceneSession>& sceneSession);
+    void OnSessionStateChangeToDisconnect(sptr<SceneSession>& sceneSession);
+
     std::vector<std::pair<int32_t, sptr<SceneSession>>> GetSceneSessionVector(CmpFunc cmp);
     void TraverseSessionTree(TraverseFunc func, bool isFromTopToBottom);
     void TraverseSessionTreeFromTopToBottom(TraverseFunc func);
@@ -386,6 +390,7 @@ private:
     void RegisterSessionSnapshotFunc(const sptr<SceneSession>& sceneSession);
     void NotifySessionForCallback(const sptr<SceneSession>& scnSession, const bool needRemoveSession);
     bool IsSessionVisible(const sptr<SceneSession>& session);
+    bool IsSessionSeemsForeground(const sptr<SceneSession>& session);
     void DumpSessionInfo(const sptr<SceneSession>& session, std::ostringstream& oss);
     void DumpAllAppSessionInfo(std::ostringstream& oss);
     void DumpSessionElementInfo(const sptr<SceneSession>& session,

@@ -58,4 +58,14 @@ MainSession::~MainSession()
 {
     WLOGD("~MainSession, id: %{public}d", GetPersistentId());
 }
+
+void MainSession::SetFakeForeground(bool fakeForeground)
+{
+    fakeForeground_ = fakeForeground;
+}
+
+bool MainSession::IsFakeForeground() const
+{
+    return fakeForeground_;
+}
 } // namespace OHOS::Rosen

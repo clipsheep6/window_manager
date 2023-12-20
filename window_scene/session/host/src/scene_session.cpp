@@ -2201,6 +2201,11 @@ bool SceneSession::IsDirtyWindow()
     return isDirty_;
 }
 
+bool SceneSession::IsFakeForeground() const
+{
+    return false;
+}
+
 void SceneSession::NotifyUILostFocus()
 {
     if (moveDragController_) {

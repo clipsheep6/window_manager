@@ -2970,6 +2970,14 @@ bool SceneSessionManager::IsSessionVisible(const sptr<SceneSession>& session)
     return false;
 }
 
+bool SceneSessionManager::IsSessionSeemsForeground(const sptr<SceneSession>& session)
+{
+    if (session == nullptr) {
+        return false;
+    }
+    return IsSessionVisible(session) || session->IsFakeForeground();
+}
+
 void SceneSessionManager::DumpSessionInfo(const sptr<SceneSession>& session, std::ostringstream& oss)
 {
     if (session == nullptr) {
@@ -3343,15 +3351,15 @@ WSError SceneSessionManager::RequestSessionFocus(int32_t persistentId, bool byFo
         WLOGFE("[WMSComm]session is nullptr");
         return WSError::WS_ERROR_INVALID_SESSION;
     }
-    if (!sceneSession->GetFocusable() || !IsSessionVisible(sceneSession)) {
-        WLOGFD("[WMSFocus]session is not focusable or not visible!");
+    if (!sceneSession->GetFocusable() || !IsSessionSeemsForeground(sceneSession)) {
+        WLOGFD("[WMSFocus]session is not focusable or not seems foreground!");
         return WSError::WS_DO_NOTHING;
     }
     // subwindow/dialog state block
     if ((WindowHelper::IsSubWindow(sceneSession->GetWindowType()) ||
         sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) &&
         GetSceneSession(sceneSession->GetParentPersistentId()) &&
-        !IsSessionVisible(GetSceneSession(sceneSession->GetParentPersistentId()))) {
+        !IsSessionSeemsForeground(GetSceneSession(sceneSession->GetParentPersistentId()))) {
             WLOGFD("[WMSFocus]parent session id: %{public}d is not visible!", sceneSession->GetParentPersistentId());
             return WSError::WS_DO_NOTHING;
     }
@@ -3412,6 +3420,10 @@ WSError SceneSessionManager::RequestFocusBasicCheck(int32_t persistentId)
 WSError SceneSessionManager::RequestFocusSpecificCheck(sptr<SceneSession>& sceneSession, bool byForeground)
 {
     int32_t persistentId = sceneSession->GetPersistentId();
+    if (sceneSession->IsFakeForeground()) {
+        WLOGFD("[WMSFocus]session is fake foreground");
+        return WSError::WS_DO_NOTHING;
+    }
     // dialog get focus
     if ((sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW ||
         SessionHelper::IsSubWindow(sceneSession->GetWindowType())) &&
@@ -3446,10 +3458,10 @@ sptr<SceneSession> SceneSessionManager::GetNextFocusableSession(int32_t persiste
         if ((WindowHelper::IsSubWindow(session->GetWindowType()) ||
             session->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) &&
             GetSceneSession(session->GetParentPersistentId()) &&
-            !IsSessionVisible(GetSceneSession(session->GetParentPersistentId()))) {
+            !IsSessionSeemsForeground(GetSceneSession(session->GetParentPersistentId()))) {
                 parentVisible = false;
         }
-        if (previousFocusedSessionFound && session->GetFocusable() && IsSessionVisible(session) && parentVisible) {
+        if (previousFocusedSessionFound && session->GetFocusable() && IsSessionSeemsForeground(session) && parentVisible) {
             ret = session;
             return true;
         }
@@ -3849,40 +3861,61 @@ void SceneSessionManager::OnSessionStateChange(int32_t persistentId, const Sessi
     }
     switch (state) {
         case SessionState::STATE_FOREGROUND:
-            if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW &&
-                persistentId == focusedSessionId_) {
-                if (needBlockNotifyFocusStatusUntilForeground_) {
-                    needBlockNotifyUnfocusStatus_ = false;
-                    needBlockNotifyFocusStatusUntilForeground_ = false;
-                    NotifyFocusStatus(sceneSession, true);
-                }
-            } else {
-                RequestSessionFocus(persistentId, true);
-            }
-            UpdateForceHideState(sceneSession, sceneSession->GetSessionProperty(), true);
-            NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_ADDED);
-            HandleKeepScreenOn(sceneSession, sceneSession->IsKeepScreenOn());
-            UpdatePrivateStateAndNotify(persistentId);
-            if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
-                ProcessSubSessionForeground(sceneSession);
-            }
-            if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
-                ProcessPiPSessionForeground(sceneSession);
-            }
+            OnSessionStateChangeToForeground(sceneSession);
             break;
         case SessionState::STATE_BACKGROUND:
-            RequestSessionUnfocus(persistentId);
-            UpdateForceHideState(sceneSession, sceneSession->GetSessionProperty(), false);
-            NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_REMOVED);
-            HandleKeepScreenOn(sceneSession, false);
-            UpdatePrivateStateAndNotify(persistentId);
-            if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
-                ProcessSubSessionBackground(sceneSession);
-            }
+            OnSessionStateChangeToBackground(sceneSession);
+            break;
+        case SessionState::STATE_DISCONNECT:
+            OnSessionStateChangeToDisconnect(sceneSession);
             break;
         default:
             break;
     }
+}
+
+void SceneSessionManager::OnSessionStateChangeToForeground(sptr<SceneSession>& sceneSession)
+{
+    int32_t persistentId = sceneSession->GetPersistentId();
+    if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW &&
+        persistentId == focusedSessionId_) {
+        if (needBlockNotifyFocusStatusUntilForeground_) {
+            needBlockNotifyUnfocusStatus_ = false;
+            needBlockNotifyFocusStatusUntilForeground_ = false;
+            NotifyFocusStatus(sceneSession, true);
+        }
+    } else {
+        RequestSessionFocus(persistentId, true);
+    }
+    UpdateForceHideState(sceneSession, sceneSession->GetSessionProperty(), true);
+    NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_ADDED);
+    HandleKeepScreenOn(sceneSession, sceneSession->IsKeepScreenOn());
+    UpdatePrivateStateAndNotify(persistentId);
+    if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        ProcessSubSessionForeground(sceneSession);
+    }
+    if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
+        ProcessPiPSessionForeground(sceneSession);
+    }
+    sceneSession->SetFakeForeground(false);
+}
+
+void SceneSessionManager::OnSessionStateChangeToBackground(sptr<SceneSession>& sceneSession)
+{
+    int32_t persistentId = sceneSession->GetPersistentId();
+    RequestSessionUnfocus(persistentId);
+    UpdateForceHideState(sceneSession, sceneSession->GetSessionProperty(), false);
+    NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_REMOVED);
+    HandleKeepScreenOn(sceneSession, false);
+    UpdatePrivateStateAndNotify(persistentId);
+    if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        ProcessSubSessionBackground(sceneSession);
+    }
+}
+
+void SceneSessionManager::OnSessionStateChangeToDisconnect(sptr<SceneSession>& sceneSession)
+{
+    sceneSession->SetFakeForeground(false);
 }
 
 void SceneSessionManager::ProcessSubSessionForeground(sptr<SceneSession>& sceneSession)

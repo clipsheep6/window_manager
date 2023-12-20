@@ -179,6 +179,8 @@ public:
     bool IsFloatingWindowAppType() const;
     bool IsNeedDefaultAnimation() const;
     bool IsDirtyWindow();
+    virtual void SetFakeForeground(bool fakeForeground) { return; }
+    virtual bool IsFakeForeground() const;
     void NotifyUILostFocus() override;
 
     WSError UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type);

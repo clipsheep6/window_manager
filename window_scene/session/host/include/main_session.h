@@ -23,6 +23,11 @@ class MainSession : public SceneSession {
 public:
     MainSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback);
     ~MainSession();
+
+    void SetFakeForeground(bool fakeForeground) override;
+    bool IsFakeForeground() const override;
+private:
+    bool fakeForeground_ {false};
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_MAIN_SESSION_H
