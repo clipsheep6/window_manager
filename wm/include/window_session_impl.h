@@ -171,7 +171,6 @@ public:
     void NotifySessionForeground(uint32_t reason, bool withAnimation) override;
     void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
     WSError UpdateTitleInTargetPos(bool isShow, int32_t height) override;
-    WMError RecoverAndReconnectSceneSession();
 
     void UpdatePiPRect(const uint32_t width, const uint32_t height, PiPRectUpdateReason reason) override;
     void SetDrawingContentState(bool drawingContentState);
@@ -187,6 +186,7 @@ public:
     virtual WMError UnregisterWindowTitleButtonRectChangeListener(
         const sptr<IWindowTitleButtonRectChangedListener>& listener) override;
     void NotifyWindowTitleButtonRectChange(TitleButtonRect titleButtonRect);
+    void RecoverSessionListener();
 
 protected:
     WMError Connect();
@@ -196,8 +196,6 @@ protected:
     void NotifyBeforeDestroy(std::string windowName);
     void NotifyAfterDestroy();
     void ClearListenersById(int32_t persistentId);
-    void RegisterSessionRecoverListener(std::function<void()> callbackFunc);
-    void UnRegisterSessionRecoverListener();
     WMError WindowSessionCreateCheck();
     void UpdateDecorEnableToAce(bool isDecorEnable);
     void UpdateDecorEnable(bool needNotify = false, WindowMode mode = WindowMode::WINDOW_MODE_UNDEFINED);
