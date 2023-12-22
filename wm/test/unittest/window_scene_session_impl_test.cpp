@@ -164,6 +164,23 @@ HWTEST_F(WindowSceneSessionImplTest, CreateAndConnectSpecificSession02, Function
 }
 
 /**
+ * @tc.name: RecoverAndReconnectSceneSession
+ * @tc.desc: RecoverAndReconnectSceneSession
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, RecoverAndReconnectSceneSession, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSceneSessionImplTest: RecoverAndReconnectSceneSession start";
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("RecoverAndReconnectSceneSession");
+    sptr<WindowSceneSessionImpl> windowSceneSession = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, windowSceneSession);
+
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, windowSceneSession->RecoverAndReconnectSceneSession());
+    GTEST_LOG_(INFO) << "WindowSceneSessionImplTest: RecoverAndReconnectSceneSession end";
+}
+
+/**
  * @tc.name: IsValidSystemWindowType01
  * @tc.desc: IsValidSystemWindowType
  * @tc.type: FUNC
@@ -466,7 +483,7 @@ HWTEST_F(WindowSceneSessionImplTest, Close01, Function | SmallTest | Level2)
     sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
     ASSERT_NE(nullptr, session);
     windowscenesession->hostSession_ = session;
-    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, windowscenesession->Close());
+    ASSERT_EQ(WMError::WM_OK, windowscenesession->Close());
 }
 
 /**
@@ -486,7 +503,7 @@ HWTEST_F(WindowSceneSessionImplTest, Close02, Function | SmallTest | Level2)
     sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
     ASSERT_NE(nullptr, session);
     windowscenesession->hostSession_ = session;
-    ASSERT_EQ(WMError::WM_OK, windowscenesession->Close());
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, windowscenesession->Close());
 }
 
 /**
@@ -945,7 +962,7 @@ HWTEST_F(WindowSceneSessionImplTest, SetTurnScreenOn, Function | SmallTest | Lev
     sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
     ASSERT_NE(nullptr, session);
     window->hostSession_ = session;
-    ASSERT_EQ(WMError::WM_DO_NOTHING, window->SetTurnScreenOn(false));
+    ASSERT_EQ(WMError::WM_OK, window->SetTurnScreenOn(false));
 }
 
 /*
@@ -987,7 +1004,7 @@ HWTEST_F(WindowSceneSessionImplTest, SetKeepScreenOn, Function | SmallTest | Lev
     sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
     ASSERT_NE(nullptr, session);
     window->hostSession_ = session;
-    ASSERT_EQ(WMError::WM_DO_NOTHING, window->SetKeepScreenOn(false));
+    ASSERT_EQ(WMError::WM_OK, window->SetKeepScreenOn(false));
     ASSERT_FALSE(window->IsKeepScreenOn());
 }
 
@@ -1872,7 +1889,7 @@ HWTEST_F(WindowSceneSessionImplTest, BindDialogTarget01, Function | SmallTest | 
     ASSERT_NE(nullptr, windowscenesession);
     sptr<IRemoteObject> targetToken;
     WMError ret = windowscenesession->BindDialogTarget(targetToken);
-    ASSERT_EQ(ret, WMError::WM_DO_NOTHING);
+    ASSERT_EQ(ret, WMError::WM_OK);
 }
 
 /**
@@ -1984,7 +2001,7 @@ HWTEST_F(WindowSceneSessionImplTest, SetWindowLimits01, Function | SmallTest | L
     window->hostSession_ = session;
 
     WindowLimits windowLimits = {1000, 1000, 1000, 1000, 0.0f, 0.0f};
-    ASSERT_EQ(WMError::WM_DO_NOTHING, window->SetWindowLimits(windowLimits));
+    ASSERT_EQ(WMError::WM_OK, window->SetWindowLimits(windowLimits));
     
     WindowLimits windowSizeLimits = window->property_->GetWindowLimits();
     ASSERT_EQ(windowSizeLimits.maxWidth_, 1000);

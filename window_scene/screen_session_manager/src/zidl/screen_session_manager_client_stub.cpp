@@ -41,6 +41,8 @@ const std::map<uint32_t, ScreenSessionManagerClientStub::StubFunc> ScreenSession
         &ScreenSessionManagerClientStub::HandleOnScreenshot },
     { static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_ON_IMMERSIVE_STATE_CHANGED),
         &ScreenSessionManagerClientStub::HandleOnImmersiveStateChanged },
+    { static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_SET_DISPLAY_NODE_SCREEN_ID),
+        &ScreenSessionManagerClientStub::HandleOnSetDisplayNodeScreenId },
     { static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_GET_SURFACENODEID_FROM_MISSIONID),
         &ScreenSessionManagerClientStub::HandleOnGetSurfaceNodeIdsFromMissionIdsChanged },
 };
@@ -133,8 +135,8 @@ int ScreenSessionManagerClientStub::HandleOnDisplayStateChanged(MessageParcel& d
     std::map<DisplayId, sptr<DisplayInfo>> displayInfoMap;
     while (mapSize--) {
         auto displayId = data.ReadUint64();
-        auto displayInfo = data.ReadStrongParcelable<DisplayInfo>();
-        displayInfoMap.emplace(displayId, displayInfo);
+        auto displayInfoValue = data.ReadStrongParcelable<DisplayInfo>();
+        displayInfoMap.emplace(displayId, displayInfoValue);
     }
     auto type = static_cast<DisplayStateChangeType>(data.ReadUint32());
     OnDisplayStateChanged(defaultDisplayId, displayInfo, displayInfoMap, type);
@@ -173,6 +175,15 @@ int ScreenSessionManagerClientStub::HandleOnImmersiveStateChanged(MessageParcel&
         WLOGFE("Write immersive failed");
         return ERR_TRANSACTION_FAILED;
     }
+    return ERR_NONE;
+}
+
+int ScreenSessionManagerClientStub::HandleOnSetDisplayNodeScreenId(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGD("HandleOnSetDisplayNodeScreenId");
+    auto screenId = static_cast<ScreenId>(data.ReadUint64());
+    auto displayNodeScreenId = static_cast<ScreenId>(data.ReadUint64());
+    SetDisplayNodeScreenId(screenId, displayNodeScreenId);
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

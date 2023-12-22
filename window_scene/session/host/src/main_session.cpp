@@ -30,6 +30,10 @@ MainSession::MainSession(const SessionInfo& info, const sptr<SpecificSessionCall
     : SceneSession(info, specificCallback)
 {
     moveDragController_ = new (std::nothrow) MoveDragController(GetPersistentId());
+    if (moveDragController_  != nullptr && specificCallback != nullptr &&
+        specificCallback->onWindowInputPidChangeCallback_ != nullptr) {
+        moveDragController_->SetNotifyWindowPidChangeCallback(specificCallback_->onWindowInputPidChangeCallback_);
+    }
     SetMoveDragCallback();
     std::string key = GetRatioPreferenceKey();
     if (!key.empty()) {
@@ -57,5 +61,17 @@ MainSession::MainSession(const SessionInfo& info, const sptr<SpecificSessionCall
 MainSession::~MainSession()
 {
     WLOGD("~MainSession, id: %{public}d", GetPersistentId());
+}
+
+WSError MainSession::ProcessPointDownSession(int32_t posX, int32_t posY)
+{
+    const auto& id = GetPersistentId();
+    WLOGFI("id: %{public}d, type: %{public}d", id, GetWindowType());
+    if (CheckDialogOnForeground()) {
+        HandlePointDownDialog();
+        return WSError::WS_OK;
+    }
+    PresentFocusIfPointDown();
+    return SceneSession::ProcessPointDownSession(posX, posY);
 }
 } // namespace OHOS::Rosen

@@ -207,7 +207,7 @@ HWTEST_F(WindowSessionImplTest, SetResizeByDragEnabled01, Function | SmallTest |
     window->hostSession_ = session;
     window->state_ = WindowState::STATE_CREATED;
     retCode = window->SetResizeByDragEnabled(true);
-    ASSERT_EQ(retCode, WMError::WM_DO_NOTHING);
+    ASSERT_EQ(retCode, WMError::WM_OK);
 }
 
 /**
@@ -539,23 +539,6 @@ HWTEST_F(WindowSessionImplTest, GetFloatingWindowParentId, Function | SmallTest 
     int32_t res = window->GetFloatingWindowParentId();
     ASSERT_EQ(res, INVALID_SESSION_ID);
     GTEST_LOG_(INFO) << "WindowSessionImplTest: GetFloatingWindowParentId start";
-}
-
-/**
- * @tc.name: RecoverAndReconnectSceneSession
- * @tc.desc: RecoverAndReconnectSceneSession
- * @tc.type: FUNC
- */
-HWTEST_F(WindowSessionImplTest, RecoverAndReconnectSceneSession, Function | SmallTest | Level2)
-{
-    GTEST_LOG_(INFO) << "WindowSessionImplTest: RecoverAndReconnectSceneSession start";
-    sptr<WindowOption> option = new WindowOption();
-    option->SetWindowName("RecoverAndReconnectSceneSession");
-    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
-    ASSERT_NE(nullptr, window);
-
-    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->RecoverAndReconnectSceneSession());
-    GTEST_LOG_(INFO) << "WindowSessionImplTest: RecoverAndReconnectSceneSession end";
 }
 
 /**
@@ -1386,7 +1369,7 @@ HWTEST_F(WindowSessionImplTest, SetRaiseByClickEnabled01, Function | SmallTest |
     window->hostSession_ = session;
     window->state_ = WindowState::STATE_CREATED;
     retCode = window->SetRaiseByClickEnabled(true);
-    ASSERT_EQ(retCode, WMError::WM_DO_NOTHING);
+    ASSERT_EQ(retCode, WMError::WM_OK);
 }
 
 /**
@@ -1409,7 +1392,7 @@ HWTEST_F(WindowSessionImplTest, HideNonSystemFloatingWindows01, Function | Small
     window->hostSession_ = session;
     window->state_ = WindowState::STATE_CREATED;
     retCode = window->HideNonSystemFloatingWindows(false);
-    ASSERT_EQ(retCode, WMError::WM_DO_NOTHING);
+    ASSERT_EQ(retCode, WMError::WM_OK);
 }
 
 /**

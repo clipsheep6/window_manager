@@ -176,8 +176,9 @@ public:
 
     //Fold Screen
     void SetFoldDisplayMode(const FoldDisplayMode displayMode) override;
+    void SetDisplayNodeScreenId(ScreenId screenId, ScreenId displayNodeScreenId);
 
-    void LockFoldDisplayStatus(bool locked) override;
+    void SetFoldStatusLocked(bool locked) override;
 
     FoldDisplayMode GetFoldDisplayMode() override;
 
@@ -250,7 +251,7 @@ private:
     int DumpSpecifiedScreenInfo(ScreenId screenId, std::string& dumpInfo);
     bool IsValidDigitString(const std::string& idStr) const;
     int SetFoldDisplayMode(const std::string& modeParam);
-    int LockFoldDisplayStatus(const std::string& lockParam);
+    int SetFoldStatusLocked(const std::string& lockParam);
 
     class ScreenIdManager {
     friend class ScreenSessionGroup;

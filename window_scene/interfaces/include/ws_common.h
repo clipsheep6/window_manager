@@ -189,6 +189,8 @@ struct SessionInfo {
     int32_t collaboratorType_ = CollaboratorType::DEFAULT_TYPE;
     SessionState sessionState_ = SessionState::STATE_DISCONNECT;
     uint32_t requestOrientation_ = 0;
+    bool isRotable_ = false;
+    bool isSystemInput_ = false;
 };
 
 enum class SessionFlag : uint32_t {
@@ -230,6 +232,7 @@ enum class SessionEvent : uint32_t {
     EVENT_EXCEPTION,
     EVENT_SPLIT_PRIMARY,
     EVENT_SPLIT_SECONDARY,
+    EVENT_DRAG_START,
 };
 
 enum class BrokerStates: uint32_t {
@@ -302,6 +305,11 @@ struct WSRectT {
     {
         return GreatOrEqual(pointX, posX_) && LessOrEqual(pointX, posX_ + width_) &&
                GreatOrEqual(pointY, posY_) && LessOrEqual(pointY, posY_ + height_);
+    }
+
+    inline bool IsInvalid() const
+    {
+        return IsEmpty() || NearZero(width_) || NearZero(height_);
     }
 
     inline std::string ToString() const

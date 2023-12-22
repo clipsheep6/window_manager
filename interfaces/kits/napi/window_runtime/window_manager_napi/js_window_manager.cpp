@@ -791,7 +791,7 @@ static void GetTopWindowTask(void* contextPtr, napi_env env, NapiAsyncTask& task
     } else {
         task.Resolve(env, CreateJsWindowObject(env, window));
     }
-    WLOGI("Get top window %{public}s success", windowName.c_str());
+    WLOGD("Get top window %{public}s success", windowName.c_str());
     return;
 }
 
@@ -980,7 +980,7 @@ napi_value JsWindowManager::OnSetWaterMarkImage(napi_env env, napi_callback_info
     } else {
         if (argc > 0 && GetType(env, argv[0]) == napi_object) {
             nativeObject = argv[0];
-            nativeBoolean = (argc == 1) ? nullptr : (GetType(env, argv[1]) == napi_boolean ? argv[1] : nullptr);
+            nativeBoolean = (GetType(env, argv[1]) == napi_boolean ? argv[1] : nullptr);
         }
     }
     
@@ -1086,6 +1086,7 @@ napi_value JsWindowManagerInit(napi_env env, napi_value exportObj)
     napi_set_named_property(env, exportObj, "BlurStyle", BlurStyleInit(env));
     napi_set_named_property(env, exportObj, "WmErrorCode", WindowErrorCodeInit(env));
     napi_set_named_property(env, exportObj, "WMError", WindowErrorInit(env));
+    napi_set_named_property(env, exportObj, "WindowStatusType", WindowStatusTypeInit(env));
     const char *moduleName = "JsWindowManager";
     BindNativeFunction(env, exportObj, "create", moduleName, JsWindowManager::Create);
     BindNativeFunction(env, exportObj, "createWindow", moduleName, JsWindowManager::CreateWindow);

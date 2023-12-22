@@ -29,7 +29,7 @@ namespace {
 }
 
 sptr<PictureInPictureController> PictureInPictureManager::activeController_ = nullptr;
-sptr<PictureInPictureController> PictureInPictureManager::autoStartController_ = nullptr;
+wptr<PictureInPictureController> PictureInPictureManager::autoStartController_ = nullptr;
 std::map<int32_t, wptr<PictureInPictureController>> PictureInPictureManager::autoStartControllerMap_ = {};
 std::map<int32_t, sptr<PictureInPictureController>> PictureInPictureManager::windowToControllerMap_ = {};
 sptr<IWindowLifeCycle> PictureInPictureManager::mainWindowLifeCycleImpl_;
@@ -61,7 +61,6 @@ void PictureInPictureManager::RemovePipControllerInfo(int32_t windowId)
 
 sptr<PictureInPictureController> PictureInPictureManager::GetPipControllerInfo(int32_t windowId)
 {
-    WLOGD("GetPipControllerInfo called");
     if (windowToControllerMap_.empty() || windowToControllerMap_.find(windowId) == windowToControllerMap_.end()) {
         WLOGE("GetPipControllerInfo error, %{public}d not registered!", windowId);
         return nullptr;
@@ -71,17 +70,17 @@ sptr<PictureInPictureController> PictureInPictureManager::GetPipControllerInfo(i
 
 bool PictureInPictureManager::HasActiveController()
 {
-    WLOGD("HasActiveController called");
     return activeController_ != nullptr;
 }
 
 bool PictureInPictureManager::IsActiveController(wptr<PictureInPictureController> pipController)
 {
-    WLOGD("IsActiveController called");
     if (!HasActiveController()) {
         return false;
     }
-    return pipController.GetRefPtr() == activeController_.GetRefPtr();
+    bool res = pipController.GetRefPtr() == activeController_.GetRefPtr();
+    WLOGD("IsActiveController %{public}u", res);
+    return res;
 }
 
 void PictureInPictureManager::SetActiveController(sptr<PictureInPictureController> pipController)
@@ -90,26 +89,19 @@ void PictureInPictureManager::SetActiveController(sptr<PictureInPictureControlle
     activeController_ = pipController;
 }
 
-void PictureInPictureManager::RemoveActiveController()
+void PictureInPictureManager::RemoveActiveController(wptr<PictureInPictureController> pipController)
 {
     WLOGD("RemoveActiveController called");
+    if (!IsActiveController(pipController)) {
+        return;
+    }
     activeController_ = nullptr;
 }
 
-void PictureInPictureManager::RemoveActiveControllerSafe()
-{
-    WLOGD("RemoveActiveControllerSafe called");
-    if (!HasActiveController()) {
-        return;
-    }
-    activeController_->SetPipWindow(nullptr);
-    RemoveActiveController();
-}
-
 void PictureInPictureManager::AttachAutoStartController(int32_t handleId,
-    sptr<PictureInPictureController> pipController)
+    wptr<PictureInPictureController> pipController)
 {
-    WLOGD("AttachAutoStartController called");
+    WLOGD("AttachAutoStartController, %{public}u", handleId);
     if (pipController == nullptr) {
         return;
     }
@@ -128,13 +120,17 @@ void PictureInPictureManager::AttachAutoStartController(int32_t handleId,
             pipController->GetPiPNavigationId());
         mainWindow->RegisterLifeCycleListener(mainWindowLifeCycleImpl_);
     }
-    autoStartControllerMap_[handleId] = wptr(pipController);
+    autoStartControllerMap_[handleId] = pipController;
 }
 
 void PictureInPictureManager::DetachAutoStartController(int32_t handleId,
-    sptr<PictureInPictureController> pipController)
+    wptr<PictureInPictureController> pipController)
 {
-    WLOGD("Detach active pipController");
+    WLOGD("Detach active pipController, %{public}u", handleId);
+    autoStartControllerMap_.erase(handleId);
+    if (autoStartController_ == nullptr) {
+        return;
+    }
     if (pipController != nullptr &&
         pipController.GetRefPtr() != autoStartController_.GetRefPtr()) {
         WLOGFE("not same pip controller or no active pip controller");
@@ -145,13 +141,12 @@ void PictureInPictureManager::DetachAutoStartController(int32_t handleId,
     if (mainWindow != nullptr && mainWindowLifeCycleImpl_ != nullptr) {
         mainWindow->UnregisterLifeCycleListener(mainWindowLifeCycleImpl_);
     }
-    autoStartControllerMap_.erase(handleId);
     autoStartController_ = nullptr;
 }
 
 bool PictureInPictureManager::IsAttachedToSameWindow(uint32_t windowId)
 {
-    WLOGD("IsAttachedToSameWindow called");
+    WLOGD("IsAttachedToSameWindow called %{public}u", windowId);
     if (!HasActiveController()) {
         return false;
     }
@@ -160,7 +155,6 @@ bool PictureInPictureManager::IsAttachedToSameWindow(uint32_t windowId)
 
 sptr<Window> PictureInPictureManager::GetCurrentWindow()
 {
-    WLOGD("GetCurrentWindow is called");
     if (!HasActiveController()) {
         return nullptr;
     }
@@ -220,7 +214,7 @@ void PictureInPictureManager::DoActionEvent(std::string actionName)
 
 void PictureInPictureManager::AutoStartPipWindow(std::string navigationId)
 {
-    WLOGD("AutoStartPipWindow is called");
+    WLOGD("AutoStartPipWindow is called, navId: %{public}s", navigationId.c_str());
     if (autoStartController_ == nullptr) {
         WLOGFE("autoStartController_ is null");
         return;

@@ -47,6 +47,8 @@ class WindowSessionImpl : public Window, public virtual SessionStageStub {
 public:
     explicit WindowSessionImpl(const sptr<WindowOption>& option);
     ~WindowSessionImpl();
+    void ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
+    void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent) override;
     static sptr<Window> Find(const std::string& name);
     static std::vector<sptr<Window>> GetSubWindow(int parentId);
     // inherits from window
@@ -154,7 +156,7 @@ public:
     WSError NotifyCloseExistPipWindow() override;
     void NotifyAvoidAreaChange(const sptr<AvoidArea>& avoidArea, AvoidAreaType type);
     WSError UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type) override;
-    void NotifyTouchDialogTarget() override;
+    void NotifyTouchDialogTarget(int32_t posX = 0, int32_t posY = 0) override;
     void NotifyScreenshot() override;
     void DumpSessionElementInfo(const std::vector<std::string>& params) override;
     // colorspace, gamut
@@ -171,7 +173,6 @@ public:
     void NotifySessionForeground(uint32_t reason, bool withAnimation) override;
     void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
     WSError UpdateTitleInTargetPos(bool isShow, int32_t height) override;
-    WMError RecoverAndReconnectSceneSession();
 
     void UpdatePiPRect(const uint32_t width, const uint32_t height, PiPRectUpdateReason reason) override;
     void SetDrawingContentState(bool drawingContentState);
@@ -187,6 +188,7 @@ public:
     virtual WMError UnregisterWindowTitleButtonRectChangeListener(
         const sptr<IWindowTitleButtonRectChangedListener>& listener) override;
     void NotifyWindowTitleButtonRectChange(TitleButtonRect titleButtonRect);
+    void RecoverSessionListener();
 
 protected:
     WMError Connect();
@@ -196,9 +198,8 @@ protected:
     void NotifyBeforeDestroy(std::string windowName);
     void NotifyAfterDestroy();
     void ClearListenersById(int32_t persistentId);
-    void RegisterSessionRecoverListener(std::function<void()> callbackFunc);
-    void UnRegisterSessionRecoverListener();
     WMError WindowSessionCreateCheck();
+    void UpdateDecorEnableToAce(bool isDecorEnable);
     void UpdateDecorEnable(bool needNotify = false, WindowMode mode = WindowMode::WINDOW_MODE_UNDEFINED);
     void NotifyModeChange(WindowMode mode, bool hasDeco = true);
     WMError UpdateProperty(WSPropertyChangeAction action);
@@ -232,6 +233,8 @@ protected:
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     bool shouldReNotifyFocus_ = false;
     std::shared_ptr<IInputEventConsumer> inputEventConsumer_;
+    bool needRemoveWindowInputChannel_ = false;
+    float virtualPixelRatio_ { 1.0f };
 
 private:
     //Trans between colorGamut and colorSpace
@@ -278,17 +281,17 @@ private:
     void UpdateRectForRotation(const Rect& wmRect, const Rect& preRect, WindowSizeChangeReason wmReason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
 
-    static std::mutex lifeCycleListenerMutex_;
-    static std::mutex windowChangeListenerMutex_;
-    static std::mutex avoidAreaChangeListenerMutex_;
-    static std::mutex dialogDeathRecipientListenerMutex_;
-    static std::mutex dialogTargetTouchListenerMutex_;
-    static std::mutex occupiedAreaChangeListenerMutex_;
-    static std::mutex screenshotListenerMutex_;
-    static std::mutex touchOutsideListenerMutex_;
-    static std::mutex windowVisibilityChangeListenerMutex_;
-    static std::mutex windowStatusChangeListenerMutex_;
-    static std::mutex windowTitleButtonRectChangeListenerMutex_;
+    static std::recursive_mutex lifeCycleListenerMutex_;
+    static std::recursive_mutex windowChangeListenerMutex_;
+    static std::recursive_mutex avoidAreaChangeListenerMutex_;
+    static std::recursive_mutex dialogDeathRecipientListenerMutex_;
+    static std::recursive_mutex dialogTargetTouchListenerMutex_;
+    static std::recursive_mutex occupiedAreaChangeListenerMutex_;
+    static std::recursive_mutex screenshotListenerMutex_;
+    static std::recursive_mutex touchOutsideListenerMutex_;
+    static std::recursive_mutex windowVisibilityChangeListenerMutex_;
+    static std::recursive_mutex windowStatusChangeListenerMutex_;
+    static std::recursive_mutex windowTitleButtonRectChangeListenerMutex_;
     static std::map<int32_t, std::vector<sptr<IWindowLifeCycle>>> lifecycleListeners_;
     static std::map<int32_t, std::vector<sptr<IWindowChangeListener>>> windowChangeListeners_;
     static std::map<int32_t, std::vector<sptr<IAvoidAreaChangedListener>>> avoidAreaChangeListeners_;

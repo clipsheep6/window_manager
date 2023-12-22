@@ -27,9 +27,29 @@
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SessionManagerService" };
+std::mutex g_instanceMutex;
+SessionManagerService* g_sessionManagerService;
 }
 
-WM_IMPLEMENT_SINGLE_INSTANCE(SessionManagerService)
+SessionManagerService::~SessionManagerService()
+{
+    if (g_sessionManagerService != nullptr) {
+        g_sessionManagerService = nullptr;
+    }
+    WLOGFI("[WMSRecover] ~SessionManagerService");
+}
+
+SessionManagerService* SessionManagerService::GetInstance()
+{
+    if (g_sessionManagerService == nullptr) {
+        std::lock_guard<std::mutex> lock(g_instanceMutex);
+        if (g_sessionManagerService == nullptr) {
+            WLOGFI("[WMSRecover] new SessionManagerService");
+            g_sessionManagerService = new SessionManagerService();
+        }
+    }
+    return g_sessionManagerService;
+}
 
 void SessionManagerService::Init()
 {
@@ -41,22 +61,21 @@ void SessionManagerService::NotifySceneBoardAvailable()
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (!systemAbilityManager) {
-        WLOGFE("[RECOVER] Failed to get system ability manager.");
+        WLOGFE("[WMSRecover] Failed to get system ability manager.");
         return;
     }
 
     sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(WINDOW_MANAGER_SERVICE_ID);
     if (!remoteObject) {
-        WLOGFE("[RECOVER] Get window manager service failed, remote object is nullptr");
+        WLOGFE("[WMSRecover] Get window manager service failed, remote object is nullptr");
         return;
     }
 
     auto mockSessionManagerServiceProxy = iface_cast<IMockSessionManagerInterface>(remoteObject);
     if (!mockSessionManagerServiceProxy) {
-        WLOGFE("[RECOVER] Get mock session manager service proxy failed, nullptr");
+        WLOGFE("[WMSRecover] Get mock session manager service proxy failed, nullptr");
         return;
     }
-    WLOGFI("[RECOVER] Get mock session manager ok");
     mockSessionManagerServiceProxy->NotifySceneBoardAvailable();
 }
 

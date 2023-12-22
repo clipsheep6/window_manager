@@ -45,13 +45,12 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     if (data == nullptr || size < DATA_MIN_SIZE) {
         return false;
     }
-    std::string name = "PipFuzzTest";
     size_t startPos = 0;
     sptr<PipOption> option = new PipOption();
     AbilityRuntime::Context* context = nullptr;
     startPos += GetObject(context, data + startPos, size - startPos);
     option->SetContext(static_cast<void*>(context));
-    std::string navigationId = "nav_id";
+    std::string navigationId = "";
     option->SetNavigationId(navigationId);
     std::shared_ptr<XComponentController> xComponentController = nullptr;
     option->SetXComponentController(xComponentController);

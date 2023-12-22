@@ -67,6 +67,27 @@ void SessionStubTest::TearDown()
 
 namespace {
 /**
+ * @tc.name: HandleTransferAccessibilityEvent
+ * @tc.desc: sessionStub HandleTransferAccessibilityEvent
+ * @tc.type: FUNC
+ * @tc.require: #I6JLSI
+ */
+HWTEST_F(SessionStubTest, HandleTransferAccessibilityEvent, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+
+    Accessibility::AccessibilityEventInfo info;
+    Accessibility::AccessibilityEventInfoParcel infoParcel(info);
+    data.WriteParcelable(&infoParcel);
+
+    int32_t uiExtensionIdLevel = 0;
+    data.WriteInt32(uiExtensionIdLevel);
+    ASSERT_EQ(ERR_NONE, session_->HandleTransferAccessibilityEvent(data, reply));
+}
+
+/**
  * @tc.name: OnRemoteRequest01
  * @tc.desc: sessionStub OnRemoteRequest01
  * @tc.type: FUNC
@@ -116,9 +137,6 @@ HWTEST_F(SessionStubTest, sessionStubTest01, Function | SmallTest | Level2)
     EXPECT_NE(data.WriteParcelable(&options), false);
     res = session_->HandleTerminateSession(data, reply);
     ASSERT_EQ(0, res);
-    res = session_->HandleSessionException(data, reply);
-    ASSERT_EQ(0, res);
-    ASSERT_EQ(data.WriteUint64(2), true);
     res = session_->HandleUpdateActivateStatus(data, reply);
     ASSERT_EQ(0, res);
     res = session_->HandleUpdateSessionRect(data, reply);
@@ -148,7 +166,7 @@ HWTEST_F(SessionStubTest, sessionStubTest02, Function | SmallTest | Level2)
     auto res = session_->HandleRaiseAboveTarget(data, reply);
     ASSERT_EQ(0, res);
     res = session_->HandleRaiseAppMainWindowToTop(data, reply);
-    ASSERT_EQ(5, res);
+    ASSERT_EQ(0, res);
     res = session_->HandleBackPressed(data, reply);
     ASSERT_EQ(5, res);
     res = session_->HandleMarkProcessed(data, reply);
@@ -175,27 +193,6 @@ HWTEST_F(SessionStubTest, sessionStubTest02, Function | SmallTest | Level2)
     ASSERT_EQ(0, res);
     res = session_->HandleNotifyExtensionDied(data, reply);
     ASSERT_EQ(0, res);
-}
-
-/**
- * @tc.name: HandleTransferAccessibilityEvent
- * @tc.desc: sessionStub HandleTransferAccessibilityEvent
- * @tc.type: FUNC
- * @tc.require: #I6JLSI
- */
-HWTEST_F(SessionStubTest, HandleTransferAccessibilityEvent, Function | SmallTest | Level2)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
-
-    Accessibility::AccessibilityEventInfo info;
-    Accessibility::AccessibilityEventInfoParcel infoParcel(info);
-    data.WriteParcelable(&infoParcel);
-
-    int32_t uiExtensionIdLevel = 0;
-    data.WriteInt32(uiExtensionIdLevel);
-    ASSERT_EQ(ERR_NONE, session_->HandleTransferAccessibilityEvent(data, reply));
 }
 }
 } // namespace Rosen
