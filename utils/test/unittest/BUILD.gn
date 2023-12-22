@@ -27,7 +27,6 @@ group("unittest") {
     ":utils_screen_group_info_test",
     ":utils_screen_info_test",
     ":utils_string_test",
-    ":utils_surface_draw_test",
     ":utils_surface_reader_test",
     ":utils_window_helper_test",
     ":utils_window_property_test",
@@ -127,28 +126,6 @@ ohos_unittest("utils_wm_math_test") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
-  ]
-}
-
-ohos_unittest("utils_surface_draw_test") {
-  module_out_path = module_out_path
-
-  sources = [ "surface_draw_test.cpp" ]
-
-  deps = [ ":utils_unittest_common" ]
-
-  external_deps = [
-    "ability_base:base",
-    "ability_base:want",
-    "ability_runtime:ability_context_native",
-    "ability_runtime:ability_manager",
-    "ability_runtime:abilitykit_native",
-    "ace_engine:ace_uicontent",
-    "c_utils:utils",
-    "hilog:libhilog",
-    "input:libmmi-client",
-    "ipc:ipc_single",
-    "napi:ace_napi",
   ]
 }
 

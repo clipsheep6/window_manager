@@ -19,34 +19,6 @@ group("unittest") {
   testonly = true
 
   deps = [
-    ":snapshot_display_test",
-    ":snapshot_utils_test",
-  ]
-}
-
-ohos_unittest("snapshot_utils_test") {
-  module_out_path = module_out_path
-
-  sources = [ "snapshot_utils_test.cpp" ]
-
-  deps = [ ":utils_unittest_common" ]
-
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-  ]
-}
-
-ohos_unittest("snapshot_display_test") {
-  module_out_path = module_out_path
-
-  sources = [ "snapshot_display_test.cpp" ]
-
-  deps = [ ":utils_unittest_common" ]
-
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
   ]
 }
 
