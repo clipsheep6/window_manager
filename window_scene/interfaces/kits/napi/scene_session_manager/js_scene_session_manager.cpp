@@ -1412,22 +1412,23 @@ napi_value JsSceneSessionManager::OnSetSystemAnimatedScenes(napi_env env, napi_c
     size_t argc = 4;
     napi_value argv[4] = { nullptr };
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc < 1) {
+    if (argc < 2) {
         WLOGFE("[NAPI]Argc is invalid: %{public}zu", argc);
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
-        "Input parameter is missing."));
+            "Input parameter is missing."));
         return NapiGetUndefined(env);
     }
     uint32_t sceneCode;
-    if (!ConvertFromJsValue(env, argv[0], sceneCode)) {
-        WLOGFE("[NAPI]Faile to convert parameter to sceneCode.");
+    bool sceneEnabled = false;
+    if (!ConvertFromJsValue(env, argv[0], sceneCode) || !ConvertFromJsValue(env, argv[0], sceneEnabled)) {
+        WLOGFE("[NAPI]Faile to convert parameter.");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
             "Input parameter is invalid."));
         return NapiGetUndefined(env);
     }
 
     SystemAnimatedSceneType sceneType = static_cast<SystemAnimatedSceneType>(sceneCode);
-    WMError ret = SceneSessionManager::GetInstance().SetSystemAnimatedScenes(sceneType);
+    WMError ret = SceneSessionManager::GetInstance().SetSystemAnimatedScenes(sceneType, sceneEnabled);
     if (ret != WMError::WM_OK) {
         WmErrorCode wmErrorCode = WM_JS_TO_ERROR_CODE_MAP.at(ret);
         WLOGFE("[NAPI]Set system animated scene failed, return %{public}d", wmErrorCode);
