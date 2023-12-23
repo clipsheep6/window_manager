@@ -66,6 +66,19 @@ void DisplayManagerTest::TearDown()
 
 namespace {
 /**
+ * @tc.name: Freeze01
+ * @tc.desc: success
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerTest, Freeze01, Function | SmallTest | Level1)
+{
+    std::vector<DisplayId> displayIds;
+    displayIds.push_back(0);
+    bool ret = DisplayManager::GetInstance().Freeze(displayIds);
+    ASSERT_TRUE(ret);
+}
+
+/**
  * @tc.name: Freeze02
  * @tc.desc: test Freeze displayIds exceed the maximum
  * @tc.type: FUNC
