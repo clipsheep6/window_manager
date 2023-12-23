@@ -196,7 +196,7 @@ ColorSpace WindowSessionImpl::GetColorSpaceFromSurfaceGamut(GraphicColorGamut co
 {
     if (colorGamut == GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB) {
         return ColorSpace::COLOR_SPACE_DEFAULT;
-    } else if (colorGamut == GraphicColorGamut::GRAPHIC_COLOR_GAMUT_DCI_P3) {
+    } else if (colorGamut == GraphicColorGamut::GRAPHIC_COLOR_GAMUT_DISPLAY_P3) {
         return ColorSpace::COLOR_SPACE_WIDE_GAMUT;
     } else {
         WLOGFE("try to get not exist ColorSpace");
@@ -209,7 +209,7 @@ GraphicColorGamut WindowSessionImpl::GetSurfaceGamutFromColorSpace(ColorSpace co
     if (colorSpace == ColorSpace::COLOR_SPACE_DEFAULT) {
         return GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
     } else if (colorSpace == ColorSpace::COLOR_SPACE_WIDE_GAMUT) {
-        return GraphicColorGamut::GRAPHIC_COLOR_GAMUT_DCI_P3;
+        return GraphicColorGamut::GRAPHIC_COLOR_GAMUT_DISPLAY_P3;
     } else {
         WLOGFE("try to get not exist colorGamut");
         return GraphicColorGamut::GRAPHIC_COLOR_GAMUT_SRGB;
