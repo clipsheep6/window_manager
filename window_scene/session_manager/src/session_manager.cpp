@@ -124,8 +124,8 @@ void SessionManager::InitSessionManagerServiceProxy()
         return;
     }
 
-    if (!IsRecoverListenerRegistered_) {
-        IsRecoverListenerRegistered_ = true;
+    if (!isRecoverListenerRegistered_) {
+        isRecoverListenerRegistered_ = true;
         sptr<IRemoteObject> listener = this;
         mockSessionManagerServiceProxy_->RegisterSessionManagerServiceRecoverListener(listener);
     }
