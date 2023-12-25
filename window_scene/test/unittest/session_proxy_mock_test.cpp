@@ -44,7 +44,7 @@ HWTEST_F(SessionProxyMockTest, TransferAccessibilityEvent01, Function | SmallTes
     sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
     SessionProxy* sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
     Accessibility::AccessibilityEventInfo info;
-    int32_t uiExtensionIdLevel = 0;
+    int64_t uiExtensionIdLevel = 0;
     MockMessageParcel::SetWriteInterfaceTokenErrorFlag(true);
     WSError res = sProxy->TransferAccessibilityEvent(info, uiExtensionIdLevel);
     ASSERT_EQ(res, WSError::WS_ERROR_IPC_FAILED);
@@ -63,7 +63,7 @@ HWTEST_F(SessionProxyMockTest, TransferAccessibilityEvent02, Function | SmallTes
     sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
     SessionProxy* sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
     Accessibility::AccessibilityEventInfo info;
-    int32_t uiExtensionIdLevel = 0;
+    int64_t uiExtensionIdLevel = 0;
 
     MockMessageParcel::SetWriteParcelableErrorFlag(true);
     WSError res = sProxy->TransferAccessibilityEvent(info, uiExtensionIdLevel);
@@ -83,9 +83,9 @@ HWTEST_F(SessionProxyMockTest, TransferAccessibilityEvent03, Function | SmallTes
     sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
     SessionProxy* sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
     Accessibility::AccessibilityEventInfo info;
-    int32_t uiExtensionIdLevel = 0;
+    int64_t uiExtensionIdLevel = 0;
 
-    MockMessageParcel::SetWriteInt32ErrorFlag(true);
+    MockMessageParcel::SetWriteInt64ErrorFlag(true);
     WSError res = sProxy->TransferAccessibilityEvent(info, uiExtensionIdLevel);
     ASSERT_EQ(res, WSError::WS_ERROR_IPC_FAILED);
     WLOGI("TransferAccessibilityEvent03 end");

@@ -82,8 +82,8 @@ HWTEST_F(SessionStubTest, HandleTransferAccessibilityEvent, Function | SmallTest
     Accessibility::AccessibilityEventInfoParcel infoParcel(info);
     data.WriteParcelable(&infoParcel);
 
-    int32_t uiExtensionIdLevel = 0;
-    data.WriteInt32(uiExtensionIdLevel);
+    int64_t uiExtensionIdLevel = 0;
+    data.WriteInt64(uiExtensionIdLevel);
     ASSERT_EQ(ERR_NONE, session_->HandleTransferAccessibilityEvent(data, reply));
 }
 
