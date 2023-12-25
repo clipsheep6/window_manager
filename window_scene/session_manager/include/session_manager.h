@@ -58,6 +58,7 @@ private:
     sptr<SSMDeathRecipient> ssmDeath_ = nullptr;
     WindowManagerRecoverCallbackFunc windowManagerRecoverFunc_ = nullptr;
     std::recursive_mutex mutex_;
+    bool IsRecoverListenerRegistered_ = false;
     bool destroyed_ = false;
 };
 } // namespace OHOS::Rosen

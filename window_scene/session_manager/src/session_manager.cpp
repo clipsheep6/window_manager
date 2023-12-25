@@ -124,8 +124,11 @@ void SessionManager::InitSessionManagerServiceProxy()
         return;
     }
 
-    sptr<IRemoteObject> listener = this;
-    mockSessionManagerServiceProxy_->RegisterSessionManagerServiceRecoverListener(listener);
+    if (!IsRecoverListenerRegistered_) {
+        IsRecoverListenerRegistered_ = true;
+        sptr<IRemoteObject> listener = this;
+        mockSessionManagerServiceProxy_->RegisterSessionManagerServiceRecoverListener(listener);
+    }
 
     sptr<IRemoteObject> remoteObject2 = mockSessionManagerServiceProxy_->GetSessionManagerService();
     if (!remoteObject2) {
