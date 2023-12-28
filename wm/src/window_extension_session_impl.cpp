@@ -16,6 +16,7 @@
 #include "window_extension_session_impl.h"
 
 #include <transaction/rs_transaction.h>
+#includ "parameters.h"
 #include "window_manager_hilog.h"
 #include "anr_handler.h"
 
@@ -366,5 +367,14 @@ void WindowExtensionSessionImpl::NotifySessionBackground(uint32_t reason, bool w
 {
 }
 
+WMError WindowExtensionSessionImpl::GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea)
+{
+    WLOGFI("Window Extension Session Get Avoid Area Type");
+    if (hostSession_ == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    avoidArea = hostSession_->GetAvoidAreaByType(type);
+    return WSError::WS_OK;
+}
 } // namespace Rosen
 } // namespace OHOS
