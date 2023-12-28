@@ -65,7 +65,8 @@ void WindowExtensionSessionImpl::UpdateConfiguration(const std::shared_ptr<AppEx
     }
 }
 
-void WindowExtensionSessionImpl::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
+void WindowExtensionSessionImpl::UpdateConfigurationForAll(
+    const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
     WLOGD("notify scene ace update config");
     std::unique_lock<std::shared_mutex> lock(windowExtensionSessionMutex_);
