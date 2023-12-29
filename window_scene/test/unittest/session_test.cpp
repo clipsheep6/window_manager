@@ -44,16 +44,16 @@ public:
     WSError TransferKeyEventForConsumed(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed) override;
     WSError TransferFocusState(bool focusState) override;
     WSError TransferBackpressedEventForConsumed(bool& isConsumed) override;
-    WSError TransferSearchElementInfo(int32_t elementId, int32_t mode, int32_t baseParent,
+    WSError TransferSearchElementInfo(int64_t elementId, int32_t mode, int64_t baseParent,
         std::list<Accessibility::AccessibilityElementInfo>& infos) override;
-    WSError TransferSearchElementInfosByText(int32_t elementId, const std::string& text, int32_t baseParent,
+    WSError TransferSearchElementInfosByText(int64_t elementId, const std::string& text, int64_t baseParent,
         std::list<Accessibility::AccessibilityElementInfo>& infos) override;
-    WSError TransferFindFocusedElementInfo(int32_t elementId, int32_t focusType, int32_t baseParent,
+    WSError TransferFindFocusedElementInfo(int64_t elementId, int32_t focusType, int64_t baseParent,
         Accessibility::AccessibilityElementInfo& info) override;
-    WSError TransferFocusMoveSearch(int32_t elementId, int32_t direction, int32_t baseParent,
+    WSError TransferFocusMoveSearch(int64_t elementId, int32_t direction, int64_t baseParent,
         Accessibility::AccessibilityElementInfo& info) override;
-    WSError TransferExecuteAction(int32_t elementId, const std::map<std::string, std::string>& actionArguments,
-        int32_t action, int32_t baseParent) override;
+    WSError TransferExecuteAction(int64_t elementId, const std::map<std::string, std::string>& actionArguments,
+        int32_t action, int64_t baseParent) override;
 
     sptr<IRemoteObject> AsObject() override
     {
@@ -92,32 +92,32 @@ WSError TestWindowEventChannel::TransferBackpressedEventForConsumed(bool& isCons
     return WSError::WS_OK;
 }
 
-WSError TestWindowEventChannel::TransferSearchElementInfo(int32_t elementId, int32_t mode, int32_t baseParent,
+WSError TestWindowEventChannel::TransferSearchElementInfo(int64_t elementId, int32_t mode, int64_t baseParent,
     std::list<Accessibility::AccessibilityElementInfo>& infos)
 {
     return WSError::WS_OK;
 }
 
-WSError TestWindowEventChannel::TransferSearchElementInfosByText(int32_t elementId, const std::string& text,
-    int32_t baseParent, std::list<Accessibility::AccessibilityElementInfo>& infos)
+WSError TestWindowEventChannel::TransferSearchElementInfosByText(int64_t elementId, const std::string& text,
+    int64_t baseParent, std::list<Accessibility::AccessibilityElementInfo>& infos)
 {
     return WSError::WS_OK;
 }
 
-WSError TestWindowEventChannel::TransferFindFocusedElementInfo(int32_t elementId, int32_t focusType, int32_t baseParent,
+WSError TestWindowEventChannel::TransferFindFocusedElementInfo(int64_t elementId, int32_t focusType, int64_t baseParent,
     Accessibility::AccessibilityElementInfo& info)
 {
     return WSError::WS_OK;
 }
 
-WSError TestWindowEventChannel::TransferFocusMoveSearch(int32_t elementId, int32_t direction, int32_t baseParent,
+WSError TestWindowEventChannel::TransferFocusMoveSearch(int64_t elementId, int32_t direction, int64_t baseParent,
     Accessibility::AccessibilityElementInfo& info)
 {
     return WSError::WS_OK;
 }
 
-WSError TestWindowEventChannel::TransferExecuteAction(int32_t elementId,
-    const std::map<std::string, std::string>& actionArguments, int32_t action, int32_t baseParent)
+WSError TestWindowEventChannel::TransferExecuteAction(int64_t elementId,
+    const std::map<std::string, std::string>& actionArguments, int32_t action, int64_t baseParent)
 {
     return WSError::WS_OK;
 }
@@ -174,9 +174,9 @@ RSSurfaceNode::SharedPtr WindowSessionTest::CreateRSSurfaceNode()
 
 WSError WindowSessionTest::TransferSearchElementInfo(bool isChannelNull)
 {
-    int32_t elementId = 0;
+    int64_t elementId = 0;
     int32_t mode = 0;
-    int32_t baseParent = 0;
+    int64_t baseParent = 0;
     std::list<Accessibility::AccessibilityElementInfo> infos;
     if (isChannelNull) {
         return session_->TransferSearchElementInfo(elementId, mode, baseParent, infos);
@@ -188,9 +188,9 @@ WSError WindowSessionTest::TransferSearchElementInfo(bool isChannelNull)
 
 WSError WindowSessionTest::TransferSearchElementInfosByText(bool isChannelNull)
 {
-    int32_t elementId = 0;
+    int64_t elementId = 0;
     std::string text;
-    int32_t baseParent = 0;
+    int64_t baseParent = 0;
     std::list<Accessibility::AccessibilityElementInfo> infos;
     if (isChannelNull) {
         return session_->TransferSearchElementInfosByText(elementId, text, baseParent, infos);
@@ -202,9 +202,9 @@ WSError WindowSessionTest::TransferSearchElementInfosByText(bool isChannelNull)
 
 WSError WindowSessionTest::TransferFindFocusedElementInfo(bool isChannelNull)
 {
-    int32_t elementId = 0;
+    int64_t elementId = 0;
     int32_t focusType = 0;
-    int32_t baseParent = 0;
+    int64_t baseParent = 0;
     Accessibility::AccessibilityElementInfo info;
     if (isChannelNull) {
         return session_->TransferFindFocusedElementInfo(elementId, focusType, baseParent, info);
@@ -216,9 +216,9 @@ WSError WindowSessionTest::TransferFindFocusedElementInfo(bool isChannelNull)
 
 WSError WindowSessionTest::TransferFocusMoveSearch(bool isChannelNull)
 {
-    int32_t elementId = 0;
+    int64_t elementId = 0;
     int32_t direction = 0;
-    int32_t baseParent = 0;
+    int64_t baseParent = 0;
     Accessibility::AccessibilityElementInfo info;
     if (isChannelNull) {
         return session_->TransferFocusMoveSearch(elementId, direction, baseParent, info);
@@ -230,10 +230,10 @@ WSError WindowSessionTest::TransferFocusMoveSearch(bool isChannelNull)
 
 WSError WindowSessionTest::TransferExecuteAction(bool isChannelNull)
 {
-    int32_t elementId = 0;
+    int64_t elementId = 0;
     std::map<std::string, std::string> actionArguments;
     int32_t action = 0;
-    int32_t baseParent = 0;
+    int64_t baseParent = 0;
     if (isChannelNull) {
         return session_->TransferExecuteAction(elementId, actionArguments, action, baseParent);
     } else {
