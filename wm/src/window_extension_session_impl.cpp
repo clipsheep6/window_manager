@@ -15,6 +15,8 @@
 
 #include "window_extension_session_impl.h"
 
+#include <parameters.h>
+
 #include <transaction/rs_transaction.h>
 #include "window_manager_hilog.h"
 #include "anr_handler.h"
@@ -23,7 +25,7 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowExtensionSessionImpl"};
-}
+} // OHOS::Rosen
 
 std::map<std::string, std::pair<int32_t, sptr<WindowSessionImpl>>> WindowExtensionSessionImpl::windowExtensionSessionMap_;
 std::shared_mutex WindowExtensionSessionImpl::windowExtensionSessionMutex_;
@@ -367,5 +369,25 @@ void WindowExtensionSessionImpl::NotifySessionBackground(uint32_t reason, bool w
 {
 }
 
+WMError WindowExtensionSessionImpl::GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea)
+{
+    WLOGFI("Window Extension Session Get Avoid Area Type");
+    WindowMode mode = GetMode();
+    if (type != AvoidAreaType::TYPE_KEYBOARD &&
+        mode != WindowMode::WINDOW_MODE_FULLSCREEN &&
+        mode != WindowMode::WINDOW_MODE_SPLIT_PRIMARY &&
+        mode != WindowMode::WINDOW_MODE_SPLIT_SECONDARY &&
+        !(mode == WindowMode::WINDOW_MODE_FLOATING &&
+          system::GetParameter("const.product.devicetype", "unknown") == "phone")) {
+        WLOGI("[WMSImms]avoidAreaType:%{public}u, windowMode:%{public}u, return default avoid area.",
+            static_cast<uint32_t>(type), static_cast<uint32_t>(mode));
+        return WMError::WM_OK;
+    }
+    if (hostSession_ == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    avoidArea = hostSession_->GetAvoidAreaByType(type);
+    return WMError::WM_OK;
+}
 } // namespace Rosen
 } // namespace OHOS

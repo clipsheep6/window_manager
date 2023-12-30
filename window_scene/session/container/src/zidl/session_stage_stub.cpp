@@ -24,7 +24,7 @@
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "SessionStageStub"};
-}
+} // namespace
 
 const std::map<uint32_t, SessionStageStubFunc> SessionStageStub::stubFuncMap_{
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_SET_ACTIVE),
