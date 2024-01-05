@@ -111,6 +111,7 @@ napi_value JsSceneSession::Create(napi_env env, const sptr<SceneSession>& sessio
     }
     jsSceneSessionMap_[session->GetPersistentId()] = jsRef;
     BindNativeFunction(env, objValue, "updateSizeChangeReason", moduleName, JsSceneSession::UpdateSizeChangeReason);
+    BindNativeFunction(env, objValue, "setStartSceneWithRotate", moduleName, JsSceneSession::SetStartSceneWithRotate);
     return objValue;
 }
 
@@ -439,7 +440,7 @@ void JsSceneSession::ProcessRaiseToTopRegister()
     }
     sessionchangeCallback->onRaiseToTop_ = [weak = weak_from_this()]() {
         auto weakJsSceneSession = weak.lock();
-        if (weakJsSceneSession) weakJsSceneSession->OnRaiseToTop(); 
+        if (weakJsSceneSession) weakJsSceneSession->OnRaiseToTop();
     };
     WLOGFD("ProcessRaiseToTopRegister success");
 }
@@ -448,7 +449,7 @@ void JsSceneSession::ProcessRaiseToTopForPointDownRegister()
 {
     NotifyRaiseToTopForPointDownFunc func = [weak = weak_from_this()]() {
         auto weakJsSceneSession = weak.lock();
-        if (weakJsSceneSession) weakJsSceneSession->OnRaiseToTopForPointDown(); 
+        if (weakJsSceneSession) weakJsSceneSession->OnRaiseToTopForPointDown();
     };
     auto session = weakSession_.promote();
     if (session == nullptr) {
@@ -469,7 +470,7 @@ void JsSceneSession::ProcessRaiseAboveTargetRegister()
     sessionchangeCallback->onRaiseAboveTarget_ = [weak = weak_from_this()](int32_t subWindowId){
         auto weakJsSceneSession = weak.lock();
         if (weakJsSceneSession) weakJsSceneSession->OnRaiseAboveTarget(subWindowId);
-    };  
+    };
     WLOGFD("ProcessRaiseToTopRegister success");
 }
 
@@ -2019,21 +2020,21 @@ napi_value JsSceneSession::OnSetSystemActive(napi_env env, napi_callback_info in
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc < 1) {
        WLOGFE("[NAPI]argc is invalid : %{public}zu", argc);
-       napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM), 
+       napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
        "Input parameter is missing or invalid"));
        return NapiGetUndefined(env);
     }
     bool scbSystemActive = false;
     if (!ConvertFromJsValue(env, argv[0], scbSystemActive)){
         WLOGFE("[NAPI] Failed to convert parameter to bool");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM), 
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
         "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
     auto session = weakSession_.promote();
     if (session == nullptr) {
         WLOGFE("[NAPI] session_ is null");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_STATE_ABNORMALLY), 
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_STATE_ABNORMALLY),
         "session is null"));
         return NapiGetUndefined(env);
     }
@@ -2223,7 +2224,7 @@ void JsSceneSession::OnPrepareClosePiPSession()
         if (iter == jsCbMap_.end()) {
             return;
         }
-        jsCallBack = iter-> second;
+        jsCallBack = iter->second;
     }
     auto task = [jsCallBack, env = env_]() {
         if (!jsCallBack) {
@@ -2315,6 +2316,46 @@ napi_value JsSceneSession::OnRequestHideKeyboard(napi_env env, napi_callback_inf
     return NapiGetUndefined(env);
 }
 
+napi_value JsSceneSession::SetStartSceneWithRotate(napi_env env, napi_callback_info info)
+{
+    JsSceneSession* me = CheckParamsAndGetThis<JsSceneSession>(env, info);
+    return (me != nullptr) ? me->OnSetStartSceneWithRotate(env, info) : nullptr;
+}
+
+napi_value JsSceneSession::OnSetStartSceneWithRotate(napi_env env, napi_callback_info info)
+{
+    size_t argc = 4;
+    napi_value argv[4] = { nullptr };
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc < 1) {
+       WLOGFE("[NAPI]argc is invalid : %{public}zu", argc);
+       napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+       "Input parameter is missing or invalid"));
+       return NapiGetUndefined(env);
+    }
+    int32_t rotateDiff = 0;
+    if (!ConvertFromJsValue(env, argv[0], rotateDiff)){
+        WLOGFE("[NAPI] Failed to convert parameter to rotateDiff");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+        "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        WLOGFE("[NAPI] session_ is null");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_STATE_ABNORMALLY),
+        "session is null"));
+        return NapiGetUndefined(env);
+    }
+    auto errCode = session->SetStartSceneWithRotate(rotateDiff);
+    WLOGI("[NAPI]OnSetStartSceneWithRotate %{public}d end, errCode:%{public}u",
+        rotateDiff, static_cast<uint32_t>(errCode));
+    if (errCode != WSError::WS_OK) {
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_STATE_ABNORMALLY),
+        "handler is null"));
+    }
+    return NapiGetUndefined(env);
+}
 
 sptr<SceneSession> JsSceneSession::GetNativeSession() const
 {

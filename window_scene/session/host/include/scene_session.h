@@ -208,6 +208,7 @@ public:
     void ClearSpecificSessionCbMap();
     void SendPointerEventToUI(std::shared_ptr<MMI::PointerEvent> pointerEvent);
     void SendKeyEventToUI(std::shared_ptr<MMI::KeyEvent> keyEvent);
+    WSError SetStartSceneWithRotate(int32_t rotateDiff);
 
     double textFieldPositionY_ = 0.0;
     double textFieldHeight_ = 0.0;

@@ -2277,6 +2277,19 @@ void SceneSession::SetScale(float scaleX, float scaleY, float pivotX, float pivo
     }
 }
 
+WSError SceneSession::SetStartSceneWithRotate(int32_t rotateDiff)
+{
+    std::lock_guard<std::recursive_mutex> lock(windowPatternHandlerMutex_);
+    if (!windowPatternHandler_) {
+        WLOGFI("windowPatternHandler is nullptr with session id: %{public}d", GetPersistentId());
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    WLOGFI("id: %{public}d name:%{public}s rotateDiff:%{public}d",
+        GetPersistentId(), sessionInfo_.bundleName_.c_str(), rotateDiff);
+    windowPatternHandler_->OnStartSceneRotationChange(rotateDiff);
+    return WSError::WS_OK;
+}
+
 void SceneSession::RequestHideKeyboard()
 {
 #ifdef IMF_ENABLE

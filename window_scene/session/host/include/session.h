@@ -93,6 +93,12 @@ enum class LifeCycleTaskType : uint32_t {
     STOP
 };
 
+// notify window_pattern
+class IWindowPatternHandler {
+public:
+    virtual void OnStartSceneRotationChange(int32_t rotateDiff) = 0;
+};
+
 class Session : public SessionStub {
 public:
     using Task = std::function<void()>;
@@ -116,6 +122,9 @@ public:
 
     bool RegisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
     bool UnregisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
+
+    bool RegisterWindowPatternHandler(const std::shared_ptr<IWindowPatternHandler>& handler);
+    void UnregisterWindowPatternHandler(const std::shared_ptr<IWindowPatternHandler>& handler);
 
     void NotifyActivation();
     void NotifyConnect();
@@ -472,6 +481,8 @@ protected:
 
     mutable std::mutex pointerEventMutex_;
     mutable std::mutex keyEventMutex_;
+    std::recursive_mutex windowPatternHandlerMutex_;
+    std::shared_ptr<IWindowPatternHandler> windowPatternHandler_;
 
 private:
     void HandleDialogForeground();
