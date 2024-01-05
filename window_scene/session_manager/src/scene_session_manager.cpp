@@ -1395,8 +1395,7 @@ void SceneSessionManager::NotifyForegroundInteractiveStatus(const sptr<SceneSess
             return;
         }
         const auto& state = scnSession->GetSessionState();
-        if (WindowHelper::IsMainWindow(scnSession->GetWindowType()) &&
-            (scnSession->IsVisible() || state == SessionState::STATE_ACTIVE || state == SessionState::STATE_FOREGROUND)) {
+        if ((scnSession->IsVisible() || state == SessionState::STATE_ACTIVE || state == SessionState::STATE_FOREGROUND)) {
             scnSession->NotifyForegroundInteractiveStatus(interactive);
         }
     };
