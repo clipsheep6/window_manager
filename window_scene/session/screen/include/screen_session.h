@@ -86,8 +86,11 @@ public:
     void SetScreenType(ScreenType type);
 
     std::string GetName();
+    void SetName(std::string name);
     ScreenId GetScreenId();
+    void SetScreenId(ScreenId screenId);
     ScreenId GetRSScreenId();
+    void SetRSScreenId(ScreenId rsScreenId);
     ScreenProperty GetScreenProperty() const;
     void UpdatePropertyByActiveMode();
     std::shared_ptr<RSDisplayNode> GetDisplayNode() const;
@@ -129,12 +132,8 @@ public:
     void UpdateAfterFoldExpand(bool foldToExpand);
     void UpdatePropertyByFoldControl(RRect bounds, RRect phyBounds);
     void UpdatePropertyByResolution(uint32_t width, uint32_t height);
-    void SetName(std::string name);
     void Resize(uint32_t width, uint32_t height);
-
-    std::string name_ { "UNKNOW" };
-    ScreenId screenId_ {};
-    ScreenId rsId_ {};
+    
     ScreenId defaultScreenId_ = SCREEN_ID_INVALID;
 
     NodeId nodeId_ {};
@@ -165,6 +164,9 @@ public:
 private:
     float ConvertRotationToFloat(Rotation sensorRotation);
     Rotation ConvertIntToRotation(int rotation);
+    std::string name_ { "UNKNOW" };
+    ScreenId screenId_ {};
+    ScreenId rsId_ {};
     ScreenProperty property_;
     std::shared_ptr<RSDisplayNode> displayNode_;
     ScreenState screenState_ { ScreenState::INIT };

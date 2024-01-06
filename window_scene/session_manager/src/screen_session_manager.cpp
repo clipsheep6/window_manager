@@ -1743,7 +1743,7 @@ DMError ScreenSessionManager::StopScreens(const std::vector<ScreenId>& screenIds
             continue;
         }
         if (screenGroup->combination_ == ScreenCombination::SCREEN_MIRROR &&
-            screen->screenId_ == screenGroup->mirrorScreenId_) {
+            screen->GetScreenId() == screenGroup->mirrorScreenId_) {
             WLOGFW("SCB: StopMirror try to stop main mirror screen");
             continue;
         }
@@ -2002,9 +2002,9 @@ sptr<ScreenSession> ScreenSessionManager::InitVirtualScreen(ScreenId smsScreenId
 bool ScreenSessionManager::InitAbstractScreenModesInfo(sptr<ScreenSession>& screenSession)
 {
     std::vector<RSScreenModeInfo> allModes = rsInterface_.GetScreenSupportedModes(
-        screenIdManager_.ConvertToRsScreenId(screenSession->screenId_));
+        screenIdManager_.ConvertToRsScreenId(screenSession->GetScreenId()));
     if (allModes.size() == 0) {
-        WLOGE("SCB: allModes.size() == 0, screenId=%{public}" PRIu64"", screenSession->rsId_);
+        WLOGE("SCB: allModes.size() == 0, screenId=%{public}" PRIu64"", screenSession->GetRSScreenId());
         return false;
     }
     for (const RSScreenModeInfo& rsScreenModeInfo : allModes) {
@@ -2021,11 +2021,11 @@ bool ScreenSessionManager::InitAbstractScreenModesInfo(sptr<ScreenSession>& scre
         WLOGI("SCB: fill screen idx:%{public}d w/h:%{public}d/%{public}d",
             rsScreenModeInfo.GetScreenModeId(), info->width_, info->height_);
     }
-    int32_t activeModeId = rsInterface_.GetScreenActiveMode(screenSession->rsId_).GetScreenModeId();
+    int32_t activeModeId = rsInterface_.GetScreenActiveMode(screenSession->GetRSScreenId()).GetScreenModeId();
     WLOGI("SCB: ScreenSessionManager::InitAbstractScreenModesInfo: fill screen activeModeId:%{public}d", activeModeId);
     if (static_cast<std::size_t>(activeModeId) >= allModes.size()) {
         WLOGE("SCB: activeModeId exceed, screenId=%{public}" PRIu64", activeModeId:%{public}d/%{public}ud",
-            screenSession->rsId_, activeModeId, static_cast<uint32_t>(allModes.size()));
+            screenSession->GetRSScreenId(), activeModeId, static_cast<uint32_t>(allModes.size()));
         return false;
     }
     screenSession->activeIdx_ = activeModeId;
@@ -2095,7 +2095,7 @@ sptr<ScreenSessionGroup> ScreenSessionManager::AddAsFirstScreenLocked(sptr<Scree
     screenGroup->groupSmsId_ = 1;
     Point point;
     if (!screenGroup->AddChild(newScreen, point, GetScreenSession(GetDefaultScreenId()))) {
-        WLOGE("fail to add screen to group. screen=%{public}" PRIu64"", newScreen->screenId_);
+        WLOGE("fail to add screen to group. screen=%{public}" PRIu64"", newScreen->GetScreenId());
         screenIdManager_.DeleteScreenId(smsGroupScreenId);
         return nullptr;
     }
@@ -2107,9 +2107,9 @@ sptr<ScreenSessionGroup> ScreenSessionManager::AddAsFirstScreenLocked(sptr<Scree
     }
     smsScreenGroupMap_.insert(std::make_pair(smsGroupScreenId, screenGroup));
     screenSessionMap_.insert(std::make_pair(smsGroupScreenId, screenGroup));
-    screenGroup->mirrorScreenId_ = newScreen->screenId_;
+    screenGroup->mirrorScreenId_ = newScreen->GetScreenId();
     WLOGI("connect new group screen, screenId: %{public}" PRIu64", screenGroupId: %{public}" PRIu64", "
-        "combination:%{public}u", newScreen->screenId_, smsGroupScreenId,
+        "combination:%{public}u", newScreen->GetScreenId(), smsGroupScreenId,
         newScreen->GetScreenProperty().GetScreenType());
     return screenGroup;
 }
@@ -2160,15 +2160,15 @@ bool ScreenSessionManager::RemoveChildFromGroup(sptr<ScreenSession> screen, sptr
     bool res = screenGroup->RemoveChild(screen);
     if (!res) {
         WLOGE("RemoveFromGroupLocked. remove screen:%{public}" PRIu64" failed from screenGroup:%{public}" PRIu64".",
-              screen->screenId_, screen->groupSmsId_);
+              screen->GetScreenId(), screen->groupSmsId_);
         return false;
     }
     if (screenGroup->GetChildCount() == 0) {
         // Group removed, need to do something.
         std::lock_guard<std::recursive_mutex> lock(screenSessionMapMutex_);
-        smsScreenGroupMap_.erase(screenGroup->screenId_);
-        screenSessionMap_.erase(screenGroup->screenId_);
-        WLOGE("SCB: RemoveFromGroupLocked. screenSessionMap_ remove screen:%{public}" PRIu64"", screenGroup->screenId_);
+        smsScreenGroupMap_.erase(screenGroup->GetScreenId());
+        screenSessionMap_.erase(screenGroup->GetScreenId());
+        WLOGE("SCB: RemoveFromGroupLocked. screenSessionMap_ remove screen:%{public}" PRIu64"", screenGroup->GetScreenId());
     }
     return true;
 }
@@ -2195,8 +2195,8 @@ DMError ScreenSessionManager::SetMirror(ScreenId screenId, std::vector<ScreenId>
     std::vector<Point> startPoints;
     startPoints.insert(startPoints.begin(), screens.size(), point);
     bool filterMirroredScreen =
-        group->combination_ == ScreenCombination::SCREEN_MIRROR && group->mirrorScreenId_ == screen->screenId_;
-    group->mirrorScreenId_ = screen->screenId_;
+        group->combination_ == ScreenCombination::SCREEN_MIRROR && group->mirrorScreenId_ == screen->GetScreenId();
+    group->mirrorScreenId_ = screen->GetScreenId();
     ChangeScreenGroup(group, screens, startPoints, filterMirroredScreen, ScreenCombination::SCREEN_MIRROR);
     WLOGFI("SetMirror success");
     return DMError::DM_OK;
@@ -2223,7 +2223,7 @@ bool ScreenSessionManager::CheckScreenInScreenGroup(sptr<ScreenSession> screen) 
         return false;
     }
     sptr<ScreenSessionGroup> screenGroup = iter->second;
-    return screenGroup->HasChild(screen->screenId_);
+    return screenGroup->HasChild(screen->GetScreenId());
 }
 
 void ScreenSessionManager::ChangeScreenGroup(sptr<ScreenSessionGroup> group, const std::vector<ScreenId>& screens,
@@ -2242,7 +2242,7 @@ void ScreenSessionManager::ChangeScreenGroup(sptr<ScreenSessionGroup> group, con
         }
         WLOGFI("Screen->groupSmsId_: %{public}" PRIu64"", screen->groupSmsId_);
         screen->groupSmsId_ = 1;
-        if (filterScreen && screen->groupSmsId_ == group->screenId_ && group->HasChild(screen->screenId_)) {
+        if (filterScreen && screen->groupSmsId_ == group->GetScreenId() && group->HasChild(screen->GetScreenId())) {
             continue;
         }
         if (CheckScreenInScreenGroup(screen)) {
@@ -2272,7 +2272,7 @@ void ScreenSessionManager::AddScreenToGroup(sptr<ScreenSessionGroup> group,
         }
         Point expandPoint = addChildPos[i];
         WLOGFI("screenId: %{public}" PRIu64", Point: %{public}d, %{public}d",
-            screen->screenId_, expandPoint.posX_, expandPoint.posY_);
+            screen->GetScreenId(), expandPoint.posX_, expandPoint.posY_);
         bool addChildRes = group->AddChild(screen, expandPoint, GetScreenSession(GetDefaultScreenId()));
         if (removeChildResMap[screenId] && addChildRes) {
             changeGroup.emplace_back(screen->ConvertToScreenInfo());
@@ -2336,7 +2336,7 @@ const std::shared_ptr<RSDisplayNode> ScreenSessionManager::GetRSDisplayNodeByScr
         return notFound;
     }
     WLOGI("GetRSDisplayNodeByScreenId: screen: %{public}" PRIu64", nodeId: %{public}" PRIu64" ",
-        screen->screenId_, screen->GetDisplayNode()->GetId());
+        screen->GetScreenId(), screen->GetDisplayNode()->GetId());
     return screen->GetDisplayNode();
 }
 
@@ -2749,8 +2749,8 @@ void ScreenSessionManager::DumpAllScreensInfo(std::string& dumpInfo)
         oss << std::left << std::setw(21) << screenInfo->GetName()
             << std::left << std::setw(9) << screenType
             << std::left << std::setw(8) << (screenSession->isScreenGroup_ ? "true" : "false")
-            << std::left << std::setw(6) << screenSession->screenId_
-            << std::left << std::setw(21) << screenSession->rsId_
+            << std::left << std::setw(6) << screenSession->GetScreenId()
+            << std::left << std::setw(21) << screenSession->GetRSScreenId()
             << std::left << std::setw(10) << screenSession->activeIdx_
             << std::left << std::setw(4) << screenInfo->GetVirtualPixelRatio()
             << std::left << std::setw(9) << static_cast<uint32_t>(screenInfo->GetRotation())
@@ -2788,7 +2788,7 @@ void ScreenSessionManager::DumpSpecialScreenInfo(ScreenId id, std::string& dumpI
     oss << "Type: " << screenType << std::endl;
     oss << "IsGroup: " << (session->isScreenGroup_ ? "true" : "false") << std::endl;
     oss << "DmsId: " << id << std::endl;
-    oss << "RsId: " << session->rsId_ << std::endl;
+    oss << "RsId: " << session->GetRSScreenId() << std::endl;
     oss << "ActiveIdx: " << session->activeIdx_ << std::endl;
     oss << "VPR: " << screenInfo->GetVirtualPixelRatio() << std::endl;
     oss << "Rotation: " << static_cast<uint32_t>(screenInfo->GetRotation()) << std::endl;

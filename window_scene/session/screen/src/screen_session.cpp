@@ -33,7 +33,7 @@ ScreenSession::ScreenSession(ScreenId screenId, ScreenId rsId, const std::string
 {}
 
 ScreenSession::ScreenSession(ScreenId screenId, const ScreenProperty& property, ScreenId defaultScreenId)
-    : screenId_(screenId), defaultScreenId_(defaultScreenId), property_(property)
+    : defaultScreenId_(defaultScreenId), screenId_(screenId), property_(property)
 {
     Rosen::RSDisplayNodeConfig config = { .screenId = screenId_ };
     displayNode_ = Rosen::RSDisplayNode::Create(config);
@@ -50,7 +50,7 @@ ScreenSession::ScreenSession(ScreenId screenId, const ScreenProperty& property, 
 
 ScreenSession::ScreenSession(ScreenId screenId, const ScreenProperty& property,
     NodeId nodeId, ScreenId defaultScreenId)
-    : screenId_(screenId), defaultScreenId_(defaultScreenId), property_(property)
+    : defaultScreenId_(defaultScreenId), screenId_(screenId), property_(property)
 {
     rsId_ = screenId;
     Rosen::RSDisplayNodeConfig config = { .screenId = screenId_, .isMirrored = true, .mirrorNodeId = nodeId};
@@ -67,7 +67,7 @@ ScreenSession::ScreenSession(ScreenId screenId, const ScreenProperty& property,
 }
 
 ScreenSession::ScreenSession(const std::string& name, ScreenId smsId, ScreenId rsId, ScreenId defaultScreenId)
-    : name_(name), screenId_(smsId), rsId_(rsId), defaultScreenId_(defaultScreenId)
+    : defaultScreenId_(defaultScreenId), name_(name), screenId_(smsId), rsId_(rsId)
 {
     (void)rsId_;
     Rosen::RSDisplayNodeConfig config = { .screenId = screenId_ };
@@ -179,9 +179,19 @@ ScreenId ScreenSession::GetScreenId()
     return screenId_;
 }
 
+void ScreenSession::SetScreenId(ScreenId screenId)
+{
+    screenId_ = screenId;
+}
+
 ScreenId ScreenSession::GetRSScreenId()
 {
     return rsId_;
+}
+
+void ScreenSession::SetRSScreenId(ScreenId rsScreenId)
+{
+    rsId_ = rsScreenId;
 }
 
 ScreenProperty ScreenSession::GetScreenProperty() const
@@ -871,9 +881,9 @@ void ScreenSession::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startP
 ScreenSessionGroup::ScreenSessionGroup(ScreenId screenId, ScreenId rsId,
     std::string name, ScreenCombination combination) : combination_(combination)
 {
-    name_ = name;
-    screenId_ = screenId;
-    rsId_ = rsId;
+    SetName(name);
+    SetScreenId(screenId);
+    SetRSScreenId(rsId);
     SetScreenType(ScreenType::UNDEFINED);
     isScreenGroup_ = true;
 }
@@ -891,7 +901,7 @@ bool ScreenSessionGroup::GetRSDisplayNodeConfig(sptr<ScreenSession>& screenSessi
         WLOGE("screenSession is nullptr.");
         return false;
     }
-    config = { screenSession->rsId_ };
+    config = { screenSession->GetRSScreenId() };
     switch (combination_) {
         case ScreenCombination::SCREEN_ALONE:
             [[fallthrough]];
@@ -900,7 +910,7 @@ bool ScreenSessionGroup::GetRSDisplayNodeConfig(sptr<ScreenSession>& screenSessi
         case ScreenCombination::SCREEN_UNIQUE:
             break;
         case ScreenCombination::SCREEN_MIRROR: {
-            if (GetChildCount() == 0 || mirrorScreenId_ == screenSession->screenId_) {
+            if (GetChildCount() == 0 || mirrorScreenId_ == screenSession->GetScreenId()) {
                 WLOGI("AddChild, SCREEN_MIRROR, config is not mirror");
                 break;
             }
@@ -915,8 +925,8 @@ bool ScreenSessionGroup::GetRSDisplayNodeConfig(sptr<ScreenSession>& screenSessi
             }
             NodeId nodeId = displayNode->GetId();
             WLOGI("AddChild, mirrorScreenId_:%{public}" PRIu64", rsId_:%{public}" PRIu64", nodeId:%{public}" PRIu64"",
-                mirrorScreenId_, screenSession->rsId_, nodeId);
-            config = {screenSession->rsId_, true, nodeId};
+                mirrorScreenId_, screenSession->GetRSScreenId(), nodeId);
+            config = {screenSession->GetRSScreenId(), true, nodeId};
             break;
         }
         default:
@@ -933,7 +943,7 @@ bool ScreenSessionGroup::AddChild(sptr<ScreenSession>& smsScreen, Point& startPo
         WLOGE("AddChild, smsScreen is nullptr.");
         return false;
     }
-    ScreenId screenId = smsScreen->screenId_;
+    ScreenId screenId = smsScreen->GetScreenId();
     auto iter = screenSessionMap_.find(screenId);
     if (iter != screenSessionMap_.end()) {
         WLOGE("AddChild, screenSessionMap_ has smsScreen:%{public}" PRIu64"", screenId);
@@ -945,7 +955,7 @@ bool ScreenSessionGroup::AddChild(sptr<ScreenSession>& smsScreen, Point& startPo
     }
     smsScreen->InitRSDisplayNode(config, startPoint);
     smsScreen->lastGroupSmsId_ = smsScreen->groupSmsId_;
-    smsScreen->groupSmsId_ = screenId_;
+    smsScreen->groupSmsId_ = GetScreenId();
     screenSessionMap_.insert(std::make_pair(screenId, std::make_pair(smsScreen, startPoint)));
     return true;
 }
@@ -970,7 +980,7 @@ bool ScreenSessionGroup::RemoveChild(sptr<ScreenSession>& smsScreen)
         WLOGE("RemoveChild, smsScreen is nullptr.");
         return false;
     }
-    ScreenId screenId = smsScreen->screenId_;
+    ScreenId screenId = smsScreen->GetScreenId();
     smsScreen->lastGroupSmsId_ = smsScreen->groupSmsId_;
     smsScreen->groupSmsId_ = SCREEN_ID_INVALID;
     if (smsScreen->GetDisplayNode() != nullptr) {
