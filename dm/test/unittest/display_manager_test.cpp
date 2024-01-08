@@ -594,14 +594,13 @@ HWTEST_F(DisplayManagerTest, OnDisplayCreate02, Function | SmallTest | Level1)
     auto displayManagerListener = DisplayManager::GetInstance().pImpl_->displayManagerListener_;
     ASSERT_NE(displayManagerListener, nullptr);
     sptr<DisplayInfo> displayInfo = nullptr;
-   int resultValue = 0;
+    int resultValue = 0;
     std::function<void()> func = [&]() {
-        displayManagerListener->OnDisplayCreate(displayInfo);//调用接口函数
+        displayManagerListener->OnDisplayCreate(displayInfo);
         resultValue = 1;
     };
     func();
     ASSERT_EQ(resultValue, 1);
-
 }
 
 /**
@@ -641,7 +640,7 @@ HWTEST_F(DisplayManagerTest, NotifyPrivateWindowStateChanged, Function | SmallTe
     bool hasPrivate = true;
     int resultValue = 0;
     std::function<void()> func = [&]() {
-        DisplayManager::GetInstance().pImpl_->NotifyPrivateWindowStateChanged(hasPrivate);//调用接口函数
+        DisplayManager::GetInstance().pImpl_->NotifyPrivateWindowStateChanged(hasPrivate);
         resultValue = 1;
     };
 }
