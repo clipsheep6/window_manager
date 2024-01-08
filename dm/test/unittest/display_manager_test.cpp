@@ -621,7 +621,7 @@ HWTEST_F(DisplayManagerTest, OnDisplayDestroy01, Function | SmallTest | Level1)
     displayManagerListener->pImpl_ = nullptr;
     displayManagerListener->OnDisplayDestroy(1);
     DisplayManager::GetInstance().pImpl_->displayManagerListener_ = nullptr;
-   int resultValue = 0;
+    int resultValue = 0;
     std::function<void()> func = [&]() {
         displayManagerListener->OnDisplayDestroy(DISPLAY_ID_INVALID);
         resultValue = 1;
