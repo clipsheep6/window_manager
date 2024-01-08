@@ -2163,7 +2163,7 @@ bool ScreenSessionManager::RemoveChildFromGroup(sptr<ScreenSession> screen, sptr
               screen->screenId_, screen->groupSmsId_);
         return false;
     }
-    if (screenGroup->GetChildCount() == 0) {
+    if (screenGroup->GetChildCount() == 1) {
         // Group removed, need to do something.
         std::lock_guard<std::recursive_mutex> lock(screenSessionMapMutex_);
         smsScreenGroupMap_.erase(screenGroup->screenId_);
