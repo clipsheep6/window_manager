@@ -203,6 +203,26 @@ bool Session::UnregisterLifecycleListener(const std::shared_ptr<ILifecycleListen
     return UnregisterListenerLocked(lifecycleListeners_, listener);
 }
 
+bool Session::RegisterWindowPatternHandler(const std::shared_ptr<IWindowPatternHandler>& handler)
+{
+    if (handler == nullptr) {
+        WLOGFE("handler is nullptr");
+        return false;
+    }
+    std::lock_guard<std::recursive_mutex> lock(windowPatternHandlerMutex_);
+    if (windowPatternHandler_ != nullptr) {
+        WLOGFW("session:%{public}d name:%{public}s", GetPersistentId(), sessionInfo_.bundleName_.c_str());
+    }
+    windowPatternHandler_ = handler;
+    return true;
+}
+
+void Session::UnregisterWindowPatternHandler(const std::shared_ptr<IWindowPatternHandler>& handler)
+{
+    std::lock_guard<std::recursive_mutex> lock(windowPatternHandlerMutex_);
+    windowPatternHandler_ = nullptr;
+}
+
 template<typename T>
 bool Session::RegisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener)
 {
