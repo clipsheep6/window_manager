@@ -81,6 +81,7 @@ using ProcessShowPiPMainWindowFunc = std::function<void(int32_t persistentId)>;
 using ProcessStartUIAbilityErrorFunc = std::function<void(int32_t startUIAbilityError)>;
 using NotifySCBAfterUpdateFocusFunc = std::function<void()>;
 using ProcessCallingWindowIdChangeFunc = std::function<void(uint32_t callingWindowId)>;
+using FlushWindowInfoTask = std::function<void()>;
 
 class AppAnrListener : public IRemoteStub<AppExecFwk::IAppDebugListener> {
 public:
@@ -280,6 +281,7 @@ public:
     void GetAllSceneSession(std::vector<sptr<SceneSession>>& sceneSessions);
     WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) override;
     void FlushWindowInfoToMMI();
+    void PostFlushWindowInfoTask(FlushWindowInfoTask &&task, const std::string taskName, const int delayTime);
 
 public:
     std::shared_ptr<TaskScheduler> GetTaskScheduler() {return taskScheduler_;};
@@ -457,7 +459,9 @@ private:
     bool isScreenLocked_ {false};
     bool isPrepareTerminateEnable_ {false};
     WSRect callingWindowRestoringRect_ = {0, 0, 0, 0};
+    WSRect callingWindowNewRect_ = {0, 0, 0, 0};
     bool needUpdateSessionRect_ = false;
+    bool openDebugTrace {false};
     int32_t currentUserId_;
     std::atomic<bool> enableInputEvent_ = true;
     bool gestureNavigationEnabled_ {true};
@@ -491,6 +495,7 @@ private:
     sptr<AgentDeathRecipient> windowDeath_ = new AgentDeathRecipient(
         std::bind(&SceneSessionManager::DestroySpecificSession, this, std::placeholders::_1));
     sptr<SceneSession> callingSession_ = nullptr;
+    uint32_t callingWindowId_ = 0;
 
     WSError ClearSession(sptr<SceneSession> sceneSession);
     bool IsSessionClearable(sptr<SceneSession> scnSession);

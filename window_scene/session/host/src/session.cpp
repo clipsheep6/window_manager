@@ -33,6 +33,7 @@
 #include "window_manager_hilog.h"
 #include "parameters.h"
 #include <hisysevent.h>
+#include "hitrace_meter.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -71,9 +72,14 @@ void Session::SetEventHandler(const std::shared_ptr<AppExecFwk::EventHandler>& h
 void Session::PostTask(Task&& task, const std::string& name, int64_t delayTime)
 {
     if (!handler_ || handler_->GetEventRunner()->IsCurrentRunnerThread()) {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "s:%s", name.c_str());
         return task();
     }
-    handler_->PostTask(std::move(task), "wms:" + name, delayTime, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+    auto localTask = [task, name]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "s:%s", name.c_str());
+        task();
+    };
+    handler_->PostTask(std::move(localTask), "wms:" + name, delayTime, AppExecFwk::EventQueue::Priority::IMMEDIATE);
 }
 
 int32_t Session::GetPersistentId() const
@@ -495,8 +501,10 @@ bool Session::IsSessionValid() const
     }
     bool res = state_ > SessionState::STATE_DISCONNECT && state_ < SessionState::STATE_END;
     if (!res) {
-        WLOGFI("session is already destroyed or not created! id: %{public}d state: %{public}u",
-            GetPersistentId(), state_);
+        if (state_ == SessionState::STATE_DISCONNECT && sessionStage_) {
+            WLOGFI("session is already destroyed or not created! id: %{public}d state: %{public}u",
+                GetPersistentId(), state_);
+        }
     }
     return res;
 }
@@ -2106,7 +2114,15 @@ WSError Session::UpdateMaximizeMode(bool isMaximize)
 
 void Session::SetZOrder(uint32_t zOrder)
 {
-    zOrder_ = zOrder;
+    auto task = [weakThis = wptr(this), zOrder]() {
+        auto session = weakThis.promote();
+        if (session == nullptr) {
+            WLOGFE("session is null");
+            return;
+        }
+        session->zOrder_ = zOrder;
+    };
+    PostTask(task, "SetZOrder");
     NotifySessionInfoChange();
 }
 

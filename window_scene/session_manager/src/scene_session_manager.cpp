@@ -229,6 +229,7 @@ void SceneSessionManager::Init()
     StartWindowInfoReportLoop();
     WLOGI("SceneSessionManager init success.");
     RegisterAppListener();
+    openDebugTrace = std::atoi((system::GetParameter("persist.sys.graphic.openDebugTrace", "0")).c_str()) != 0;
 }
 
 void SceneSessionManager::RegisterAppListener()
@@ -1845,6 +1846,14 @@ void SceneSessionManager::RecoverWindowSessionProperty(
     auto windowType = property->GetWindowType();
     if (windowType == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
         RelayoutKeyBoard(sceneSession);
+        callingWindowId_ = property->GetCallingWindow();
+        const auto& callingSession = GetSceneSession(static_cast<int32_t>(callingWindowId_));
+        if (callingSession != nullptr) {
+            WLOGFI("[WMSRecover] NotifyOccupiedAreaChangeInfo after inputMethod session recovered,"
+                "persistentId = %{public}" PRId32, callingSession->GetPersistentId());
+            sptr<OccupiedAreaChangeInfo> info = new OccupiedAreaChangeInfo();
+            callingSession->NotifyOccupiedAreaChangeInfo(info);
+        }
     } else {
         const auto& rect = property->GetWindowRect();
         const auto& requestRect = sceneSession->GetSessionProperty()->GetRequestRect();
@@ -1856,6 +1865,14 @@ void SceneSessionManager::RecoverWindowSessionProperty(
         sceneSession->GetSessionProperty()->SetRequestRect(rect);
         auto wsRectPos = SessionHelper::TransferToWSRect(rect);
         sceneSession->UpdateSessionRect(wsRectPos, SizeChangeReason::MOVE);
+
+        auto persistentId = sceneSession->GetPersistentId();
+        if (persistentId == callingWindowId_) {
+            WLOGFI("[WMSRecover] NotifyOccupiedAreaChangeInfo after calling session recovered,"
+                "persistentId = %{public}" PRId32, persistentId);
+            sptr<OccupiedAreaChangeInfo> info = new OccupiedAreaChangeInfo();
+            sceneSession->NotifyOccupiedAreaChangeInfo(info);
+        }
     }
 }
 
@@ -5081,6 +5098,7 @@ void SceneSessionManager::ResizeSoftInputCallingSessionIfNeed(
     if (isCallingSessionFloating) {
         needUpdateSessionRect_ = true;
         callingSession_->UpdateSessionRect(newRect, SizeChangeReason::UNDEFINED);
+        callingWindowNewRect_ = callingSession_->GetSessionRect();
     }
 }
 
@@ -5115,7 +5133,8 @@ void SceneSessionManager::RestoreCallingSessionSizeIfNeed()
         WSRect overlapRect = { 0, 0, 0, 0 };
         NotifyOccupiedAreaChangeInfo(callingSession_, callingWindowRestoringRect_, overlapRect);
         if (needUpdateSessionRect_ && callingSession_->GetSessionProperty() &&
-            callingSession_->GetSessionProperty()->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING) {
+            callingSession_->GetSessionProperty()->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
+            callingSession_->GetSessionRect() == callingWindowNewRect_) {
             callingSession_->UpdateSessionRect(callingWindowRestoringRect_, SizeChangeReason::UNDEFINED);
         }
     }
@@ -5272,7 +5291,7 @@ bool SceneSessionManager::FillWindowInfo(std::vector<sptr<AccessibilityWindowInf
     }
     if (sceneSession->GetSessionInfo().bundleName_.find("SCBGestureBack") != std::string::npos
         || sceneSession->GetSessionInfo().bundleName_.find("SCBGestureNavBar") != std::string::npos
-        || sceneSession->GetSystemTouchable() == false) {
+        || sceneSession->GetSessionInfo().bundleName_.find("SCBScenePanel") != std::string::npos) {
         WLOGFD("filter gesture window.");
         return false;
     }
@@ -5497,6 +5516,10 @@ void SceneSessionManager::DealwithDrawingContentChange(const std::vector<std::pa
         }
         windowDrawingContenInfos.emplace_back(new WindowDrawingContentInfo(session->GetWindowId(),
             session->GetCallingPid(), session->GetCallingUid(), drawingState, session->GetWindowType()));
+        if (openDebugTrace) {
+            HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "Drawing status changed pid:(%d ) surfaceId:(%" PRIu64 ")"
+                "drawingState:(%d )", session->GetCallingPid(), surfaceId, drawingState);
+        }
         WLOGFD("NotifyWindowDrawingContenInfoChange: drawing status changed pid:%{public}d,"
             "surfaceId:%{public}" PRIu64", drawingState:%{public}d", session->GetCallingPid(), surfaceId, drawingState);
     }
@@ -5862,13 +5885,13 @@ void SceneSessionManager::NotifyMMIWindowPidChange(int32_t windowId, bool startM
 
     wptr<SceneSession> weakSceneSession(sceneSession);
     WLOGFI("SceneSessionManager NotifyMMIWindowPidChange to notify window: %{public}d, pid: %{public}d", windowId, pid);
-    auto task = [weakSceneSession, pid]() -> WSError {
+    auto task = [weakSceneSession, startMoving]() -> WSError {
         auto scnSession = weakSceneSession.promote();
         if (scnSession == nullptr) {
             WLOGFW("session is null");
             return WSError::WS_ERROR_NULLPTR;
         }
-        SceneInputManager::GetInstance().NotifyMMIWindowPidChange(scnSession, pid);
+        SceneInputManager::GetInstance().NotifyMMIWindowPidChange(scnSession, startMoving);
         return WSError::WS_OK;
     };
     return taskScheduler_->PostAsyncTask(task);
@@ -6345,7 +6368,7 @@ WSError SceneSessionManager::RecoveryPullPiPMainWindow(const int32_t& persistent
 bool SceneSessionManager::CheckCollaboratorType(int32_t type)
 {
     if (type != CollaboratorType::RESERVE_TYPE && type != CollaboratorType::OTHERS_TYPE) {
-        WLOGFI("type is invalid");
+        WLOGFD("type is invalid");
         return false;
     }
     return true;
@@ -6396,7 +6419,7 @@ BrokerStates SceneSessionManager::NotifyStartAbility(int32_t collaboratorType, c
             sessionInfo.moduleName_);
     }
     auto collaborator = iter->second;
-    uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
+    auto accessTokenIDEx = sessionInfo.callingTokenId_;
     if (collaborator != nullptr) {
         containerStartAbilityTime = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()).count();
@@ -6407,7 +6430,7 @@ BrokerStates SceneSessionManager::NotifyStartAbility(int32_t collaboratorType, c
             return BrokerStates::BROKER_UNKOWN;
         }
         int32_t ret = collaborator->NotifyStartAbility(*(sessionInfo.abilityInfo),
-            currentUserId_, *(sessionInfo.want), accessTokenIDEx);
+            currentUserId_, *(sessionInfo.want), static_cast<uint64_t>(accessTokenIDEx));
         WLOGFI("NotifyStartAbility ret: %{public}d", ret);
         if (ret == 0) {
             return BrokerStates::BROKER_STARTED;
@@ -6846,6 +6869,12 @@ WMError SceneSessionManager::GetVisibilityWindowInfo(std::vector<sptr<WindowVisi
         }
         return WMError::WM_OK;
     };
-    return taskScheduler_->PostSyncTask(task);
+    return taskScheduler_->PostSyncTask(task, "GetVisibilityWindowInfo");
+}
+
+void SceneSessionManager::PostFlushWindowInfoTask(FlushWindowInfoTask &&task,
+    const std::string taskName, const int delayTime)
+{
+    taskScheduler_->PostAsyncTask(std::move(task), taskName, delayTime);
 }
 } // namespace OHOS::Rosen
