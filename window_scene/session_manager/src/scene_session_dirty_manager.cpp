@@ -182,9 +182,13 @@ MMI::WindowInfo SceneSessionDirtyManager::PrepareWindowInfo(sptr<SceneSession> s
 
     auto agentWindowId = sceneSession->GetWindowId();
     auto zOrder = sceneSession->GetZOrder();
-    const std::vector<int32_t> pointerChangeAreas{ POINTER_CHANGE_AREA_SEXTEEN, POINTER_CHANGE_AREA_FIVE,
+    std::vector<int32_t> pointerChangeAreas{ POINTER_CHANGE_AREA_SEXTEEN, POINTER_CHANGE_AREA_FIVE,
         POINTER_CHANGE_AREA_SEXTEEN, POINTER_CHANGE_AREA_FIVE, POINTER_CHANGE_AREA_SEXTEEN,
         POINTER_CHANGE_AREA_FIVE, POINTER_CHANGE_AREA_SEXTEEN, POINTER_CHANGE_AREA_FIVE };
+    auto windowMode = sceneSession->GetSessionProperty()->GetWindowMode();
+    if (windowMode != Rosen::WindowMode::WINDOW_MODE_FLOATING) {
+        std::for_each(pointerChangeAreas.begin(), pointerChangeAreas.end(), [](int32_t& area) {area = 0;});
+    }
 
     std::vector<MMI::Rect> touchHotAreas;
     std::vector<MMI::Rect> pointerHotAreas;
