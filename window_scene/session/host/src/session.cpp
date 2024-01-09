@@ -51,6 +51,7 @@ Session::Session(const SessionInfo& info) : sessionInfo_(info)
 {
     property_ = new WindowSessionProperty();
     property_->SetWindowType(static_cast<WindowType>(info.windowType_));
+    property_->SetWindowMode(static_cast<WindowMode>(info.windowMode));
 
     using type = std::underlying_type_t<MMI::WindowArea>;
     for (type area = static_cast<type>(MMI::WindowArea::FOCUS_ON_TOP);
@@ -719,6 +720,10 @@ WSError Session::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWi
     windowEventChannel_ = eventChannel;
     surfaceNode_ = surfaceNode;
     abilityToken_ = token;
+    WindowMode windowMode = GetSessionProperty()->GetWindowMode();
+    if (windowMode != WindowMode::WINDOW_MODE_UNDEFINED) {
+        UpdateWindowMode(windowMode);
+    }
     systemConfig = systemConfig_;
     if (property_ && property_->GetIsNeedUpdateWindowMode() && property) {
         property->SetIsNeedUpdateWindowMode(true);
