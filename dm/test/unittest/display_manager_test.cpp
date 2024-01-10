@@ -643,8 +643,9 @@ HWTEST_F(DisplayManagerTest, NotifyPrivateWindowStateChanged, Function | SmallTe
         DisplayManager::GetInstance().pImpl_->NotifyPrivateWindowStateChanged(hasPrivate);
         resultValue = 1;
     };
+    func();
+    ASSERT_EQ(resultValue, 1);
 }
-
 
 /**
  * @tc.name: RegisterDisplayListener
