@@ -1614,7 +1614,8 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
     WLOGFI("[WMSLife] create specific start, name: %{public}s, type: %{public}d",
         property->GetWindowName().c_str(), property->GetWindowType());
 
-    if (CheckParentIsBackground(property)) {
+    auto isPC = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
+    if (!isPC && CheckParentIsBackground(property)) {
         WLOGFE("Parent window is hidden.");
         return WSError::WS_ERROR_INVALID_OPERATION;
     }
