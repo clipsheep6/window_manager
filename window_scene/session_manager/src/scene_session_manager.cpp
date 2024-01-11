@@ -2626,6 +2626,8 @@ WMError SceneSessionManager::HandleUpdateProperty(const sptr<WindowSessionProper
         case WSPropertyChangeAction::ACTION_UPDATE_MODE: {
             if (sceneSession->GetSessionProperty() != nullptr) {
                 sceneSession->GetSessionProperty()->SetWindowMode(property->GetWindowMode());
+                // The Floating window should update it's hot rect
+                sceneSession->UpdatePointerArea(sceneSession->GetSessionRect());
             }
             NotifyWindowInfoChange(property->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
             break;
