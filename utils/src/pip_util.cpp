@@ -95,7 +95,7 @@ void PiPUtil::GetRectByScale(const uint32_t width, const uint32_t height, const 
     }
 }
 
-bool PiPUtil::GetValidRect(const uint32_t width, const uint32_t height, Rect& rect)
+bool PiPUtil::GetValidRect(const uint32_t width, const int32_t height, Rect& rect)
 {
     int32_t safePaddingHorizontal = static_cast<int32_t>(SAFE_PADDING_HORIZONTAL_VP * g_vpr);
     bool hasChanged = false;
@@ -109,7 +109,7 @@ bool PiPUtil::GetValidRect(const uint32_t width, const uint32_t height, Rect& re
     if (rect.posY_ < SAFE_PADDING_VERTICAL_TOP) {
         rect.posY_ = SAFE_PADDING_VERTICAL_TOP;
         hasChanged = true;
-    } else if ((rect.posY_ + rect.height_) > (height - SAFE_PADDING_VERTICAL_BOTTOM)) {
+    } else if ((rect.posY_ + static_cast<int32_t>(rect.height_)) > (height - SAFE_PADDING_VERTICAL_BOTTOM)) {
         rect.posY_ = height - SAFE_PADDING_VERTICAL_BOTTOM - rect.height_;
         hasChanged = true;
     }

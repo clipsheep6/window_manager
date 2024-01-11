@@ -196,7 +196,7 @@ bool ConvertDMRectFromJs(napi_env env, napi_value jsObject, DMRect& rect)
         rect.posY_ = top;
     }
     if (GetType(env, jsWidth) != napi_undefined) {
-        int32_t width;
+        uint32_t width;
         if (!ConvertFromJsValue(env, jsWidth, width)) {
             WLOGFE("[NAPI]Failed to convert parameter to width");
             return false;
