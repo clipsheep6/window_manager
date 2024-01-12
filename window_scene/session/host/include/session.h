@@ -182,6 +182,7 @@ public:
     virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
     WSError UpdateDensity();
+    void UpdatePointerArea(const WSRect& rect);
 
     void SetShowRecent(bool showRecent);
     void SetSystemActive(bool systemActive);
@@ -382,7 +383,6 @@ protected:
     WSRectF UpdateTopBottomArea(const WSRectF& rect, MMI::WindowArea area);
     WSRectF UpdateLeftRightArea(const WSRectF& rect, MMI::WindowArea area);
     WSRectF UpdateInnerAngleArea(const WSRectF& rect, MMI::WindowArea area);
-    void UpdatePointerArea(const WSRect& rect);
     bool CheckPointerEventDispatch(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) const;
     bool CheckKeyEventDispatch(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const;
     bool IsTopDialog() const;
