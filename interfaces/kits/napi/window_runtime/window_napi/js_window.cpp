@@ -1268,7 +1268,11 @@ napi_value JsWindow::OnResizeWindow(napi_env env, napi_callback_info info)
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
+    return NapiAsyncResizeComplete(env, width, height);
+}
 
+napi_value JsWindow::NapiAsyncResizeComplete(napi_env env, int32_t width, int32_t height)
+{
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
         [weakToken, width, height](napi_env env, NapiAsyncTask& task, int32_t status) {
@@ -1323,7 +1327,12 @@ napi_value JsWindow::OnSetWindowType(napi_env env, napi_callback_info info)
         WLOGFE("Do not support this type: %{public}u", resultValue);
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
+    return NapiAsyncSetWindowTypeComplete(env, argc, argv, winType, errCode);
+}
 
+napi_value JsWindow::NapiAsyncSetWindowTypeComplete(napi_env env, size_t argc, napi_value* argv, WindowType winType,
+    WMError errCode)
+{
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
         [weakToken, winType, errCode](napi_env env, NapiAsyncTask& task, int32_t status) {
@@ -1391,6 +1400,11 @@ napi_value JsWindow::OnSetWindowMode(napi_env env, napi_callback_info info)
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
+    return NapiAsyncSetWindowModeComplete(env, winMode);
+}
+
+napi_value JsWindow::NapiAsyncSetWindowModeComplete(napi_env env, WindowMode winMode)
+{
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
         [weakToken, winMode](napi_env env, NapiAsyncTask& task, int32_t status) {
@@ -3298,6 +3312,11 @@ napi_value JsWindow::OnHideNonSystemFloatingWindows(napi_env env, napi_callback_
             napi_get_value_bool(env, nativeVal, &shouldHide);
         }
     }
+    return NapiAsyncHideFloatComplete(env);
+}
+
+napi_value JsWindow::NapiAsyncHideFloatComplete(napi_env env, bool shouldHide, WMError errCode)
+{
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
         [weakToken, shouldHide, errCode](napi_env env, NapiAsyncTask& task, int32_t status) {
@@ -3439,7 +3458,11 @@ napi_value JsWindow::OnRaiseAboveTarget(napi_env env, napi_callback_info info)
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
+    return NapiAsyncRaiseAboveComplete(env);
+}
 
+napi_value JsWindow::NapiAsyncRaiseAboveComplete(napi_env env, int32_t subWindowId, WmErrorCode errCode)
+{
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
         [weakToken, subWindowId, errCode](napi_env env, NapiAsyncTask& task, int32_t status) {
@@ -5017,6 +5040,13 @@ napi_value JsWindow::OnGetTitleButtonRect(napi_env env, napi_callback_info info)
 
 void BindFunctions(napi_env env, napi_value object, const char *moduleName)
 {
+    BindFunctionsWindowEvent(env, object, moduleName);
+    BindFunctionsWindowState(env, object, moduleName);
+    BindFunctionsWindowArgs(env, object, moduleName);
+}
+
+void BindFunctionsWindowEvent(napi_env env, napi_value object, const char *moduleName)
+{
     BindNativeFunction(env, object, "show", moduleName, JsWindow::Show);
     BindNativeFunction(env, object, "showWindow", moduleName, JsWindow::ShowWindow);
     BindNativeFunction(env, object, "showWithAnimation", moduleName, JsWindow::ShowWithAnimation);
@@ -5048,6 +5078,10 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "setSystemBarProperties", moduleName, JsWindow::SetSystemBarProperties);
     BindNativeFunction(env, object, "setWindowSystemBarProperties",
         moduleName, JsWindow::SetWindowSystemBarProperties);
+}
+
+void BindFunctionsWindowState(napi_env env, napi_value object, const char *moduleName)
+{
     BindNativeFunction(env, object, "getAvoidArea", moduleName, JsWindow::GetAvoidArea);
     BindNativeFunction(env, object, "getWindowAvoidArea", moduleName, JsWindow::GetWindowAvoidAreaSync);
     BindNativeFunction(env, object, "isShowing", moduleName, JsWindow::IsShowing);
@@ -5081,6 +5115,10 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "dump", moduleName, JsWindow::Dump);
     BindNativeFunction(env, object, "setForbidSplitMove", moduleName, JsWindow::SetForbidSplitMove);
     BindNativeFunction(env, object, "setPreferredOrientation", moduleName, JsWindow::SetPreferredOrientation);
+}
+
+void BindFunctionsWindowArgs(napi_env env, napi_value object, const char *moduleName)
+{
     BindNativeFunction(env, object, "opacity", moduleName, JsWindow::Opacity);
     BindNativeFunction(env, object, "scale", moduleName, JsWindow::Scale);
     BindNativeFunction(env, object, "rotate", moduleName, JsWindow::Rotate);

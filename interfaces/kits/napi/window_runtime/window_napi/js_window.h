@@ -34,6 +34,9 @@ namespace Rosen {
 napi_value CreateJsWindowObject(napi_env env, sptr<Window>& window);
 std::shared_ptr<NativeReference> FindJsWindowObject(std::string windowName);
 void BindFunctions(napi_env env, napi_value object, const char *moduleName);
+void BindFunctionsWindowEvent(napi_env env, napi_value object, const char *moduleName);
+void BindFunctionsWindowState(napi_env env, napi_value object, const char *moduleName);
+void BindFunctionsWindowArgs(napi_env env, napi_value object, const char *moduleName);
 napi_value NapiGetUndefined(napi_env env);
 napi_valuetype GetType(napi_env env, napi_value value);
 bool NapiIsCallable(napi_env env, napi_value value);
@@ -161,8 +164,12 @@ private:
     napi_value OnMoveWindowTo(napi_env env, napi_callback_info info);
     napi_value OnResize(napi_env env, napi_callback_info info);
     napi_value OnResizeWindow(napi_env env, napi_callback_info info);
+    napi_value NapiAsyncResizeComplete(napi_env env, int32_t width, int32_t height);
     napi_value OnSetWindowType(napi_env env, napi_callback_info info);
+    napi_value NapiAsyncSetWindowTypeComplete(napi_env env, size_t argc, napi_value* argv, WindowType winType,
+        WMError errCode);
     napi_value OnSetWindowMode(napi_env env, napi_callback_info info);
+    napi_value NapiAsyncSetWindowModeComplete(napi_env env, WindowMode winMode);
     napi_value OnGetProperties(napi_env env, napi_callback_info info);
     napi_value OnGetWindowPropertiesSync(napi_env env, napi_callback_info info);
     napi_value OnRegisterWindowCallback(napi_env env, napi_callback_info info);
@@ -188,6 +195,7 @@ private:
     napi_value OnResetAspectRatio(napi_env env, napi_callback_info info);
     napi_value OnMinimize(napi_env env, napi_callback_info info);
     napi_value OnRaiseAboveTarget(napi_env env, napi_callback_info info);
+    napi_value NapiAsyncRaiseAboveComplete(napi_env env, int32_t subWindowId, WmErrorCode errCode);
     napi_value OnKeepKeyboardOnFocus(napi_env env, napi_callback_info info);
     napi_value OnSetWindowLimits(napi_env env, napi_callback_info info);
     napi_value OnGetWindowLimits(napi_env env, napi_callback_info info);
@@ -221,6 +229,7 @@ private:
     napi_value OnSetResizeByDragEnabled(napi_env env, napi_callback_info info);
     napi_value OnSetRaiseByClickEnabled(napi_env env, napi_callback_info info);
     napi_value OnHideNonSystemFloatingWindows(napi_env env, napi_callback_info info);
+    napi_value NapiAsyncHideFloatComplete(napi_env env, bool shouldHide, WMError errCode);
     napi_value OnSetWindowTouchable(napi_env env, napi_callback_info info);
     napi_value OnSetTransparent(napi_env env, napi_callback_info info);
     napi_value OnSetCallingWindow(napi_env env, napi_callback_info info);
