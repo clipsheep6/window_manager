@@ -45,6 +45,11 @@ public:
     void LockDisplayStatus(bool locked);
     void SetOnBootAnimation(bool onBootAnimation);
     void UpdateForPhyScreenPropertyChange();
+    void SetLockDisplayModeChange(bool locked);
+    FoldDisplayMode GetNextDisplayMode();
+    void SetNeedPowerOnAfterPropertyChange(bool needed);
+    bool GetNeedPowerOnAfterPropertyChange();
+    void TriggerScreenDisplayModeUpdate(FoldDisplayMode displayMode);
 private:
     sptr<FoldScreenPolicy> GetFoldScreenPolicy(DisplayDeviceType productType);
     sptr<FoldScreenPolicy> foldScreenPolicy_;

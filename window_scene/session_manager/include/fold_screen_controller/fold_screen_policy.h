@@ -38,6 +38,11 @@ public:
     virtual void LockDisplayStatus(bool locked);
     virtual void SetOnBootAnimation(bool onBootAnimation);
     virtual void UpdateForPhyScreenPropertyChange();
+    virtual void SetLockDisplayModeChange(bool locked);
+    virtual FoldDisplayMode GetNextDisplayMode();
+    virtual void SetNeedPowerOnAfterPropertyChange(bool needed);
+    virtual bool GetNeedPowerOnAfterPropertyChange();
+    virtual void TriggerScreenDisplayModeUpdate(FoldDisplayMode displayMode);
 
     ScreenId screenId_ { SCREEN_ID_INVALID };
     ScreenProperty screenProperty_;
@@ -47,6 +52,9 @@ public:
     sptr<FoldCreaseRegion> currentFoldCreaseRegion_ = nullptr;
     bool lockDisplayStatus_ = false;
     bool onBootAnimation_ = false;
+    bool lockDisplayModeChange_ = false;
+    FoldDisplayMode nextDisplayMode_ = FoldDisplayMode::UNKNOWN;
+    bool needPowerOnAfterPropertyChange_ = false;
 };
 } // namespace OHOS::Rosen
 #endif //OHOS_ROSEN_WINDOW_SCENE_FOLD_SCREEN_POLICY_H

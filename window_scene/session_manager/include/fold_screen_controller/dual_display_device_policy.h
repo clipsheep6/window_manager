@@ -37,13 +37,17 @@ public:
     void LockDisplayStatus(bool locked) override;
     void SetOnBootAnimation(bool onBootAnimation) override;
     void UpdateForPhyScreenPropertyChange() override;
+    void SetLockDisplayModeChange(bool locked) override;
+    FoldDisplayMode GetNextDisplayMode() override;
+    void SetNeedPowerOnAfterPropertyChange(bool needed) override;
+    bool GetNeedPowerOnAfterPropertyChange() override;
+    void TriggerScreenDisplayModeUpdate(FoldDisplayMode displayMode) override;
 private:
     void ChangeScreenDisplayModeToMain(sptr<ScreenSession> screenSession);
     void ChangeScreenDisplayModeToFull(sptr<ScreenSession> screenSession);
     void ChangeScreenDisplayModeToMainOnBootAnimation(sptr<ScreenSession> screenSession);
     void ChangeScreenDisplayModeToFullOnBootAnimation(sptr<ScreenSession> screenSession);
     void RecoverWhenBootAnimationExit();
-    void TriggerScreenDisplayModeUpdate(FoldDisplayMode displayMode);
     FoldDisplayMode GetModeMatchStatus();
     void ReportFoldDisplayModeChange(FoldDisplayMode displayMode);
     void ReportFoldStatusChangeBegin(int32_t offScreen, int32_t onScreen);
