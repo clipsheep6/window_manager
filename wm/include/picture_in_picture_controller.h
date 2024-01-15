@@ -109,6 +109,7 @@ private:
     napi_env env_;
     std::mutex mutex_;
     int32_t handleId_ = -1;
+    std::string packageName_;
 };
 } // namespace Rosen
 } // namespace OHOS
