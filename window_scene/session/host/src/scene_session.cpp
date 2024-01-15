@@ -2163,8 +2163,6 @@ void SceneSession::ProcessUpdatePiPRect(SizeChangeReason reason)
     SetSessionRequestRect(newRect);
     Session::UpdateRect(newRect, reason);
     NotifySessionRectChange(newRect, reason);
-    SingletonContainer::Get<PiPReporter>()
-        .ReportPiPResize(static_cast<int32_t>(pipRectInfo_.level_), newRect.width_, newRect.height_);
 }
 
 WSError SceneSession::UpdatePiPRect(uint32_t width, uint32_t height, PiPRectUpdateReason reason)
@@ -2183,6 +2181,7 @@ WSError SceneSession::UpdatePiPRect(uint32_t width, uint32_t height, PiPRectUpda
             WLOGE("SceneSession::UpdatePiPRect session is terminating");
             return WSError::WS_ERROR_INVALID_OPERATION;
         }
+        std::string operationPackageName = session->GetSessionProperty()->GetSessionInfo().bundleName_;
         switch (reason) {
             case PiPRectUpdateReason::REASON_PIP_START_WINDOW:
                 session->InitPiPRectInfo();
@@ -2192,6 +2191,9 @@ WSError SceneSession::UpdatePiPRect(uint32_t width, uint32_t height, PiPRectUpda
                 session->pipRectInfo_.level_ = static_cast<PiPScaleLevel>((static_cast<int32_t>(
                     session->pipRectInfo_.level_) + 1) % static_cast<int32_t>(PiPScaleLevel::COUNT));
                 session->ProcessUpdatePiPRect(SizeChangeReason::TRANSFORM);
+                SingletonContainer::Get<PiPReporter>().ReportPiPResize(operationPackageName,
+                    static_cast<int32_t>(session->pipRectInfo_.level_), session->GetSessionRect().width_,
+                    session->GetSessionRect().height_);
                 break;
             case PiPRectUpdateReason::REASON_PIP_VIDEO_RATIO_CHANGE:
                 session->ClearPiPRectPivotInfo();
@@ -2206,7 +2208,7 @@ WSError SceneSession::UpdatePiPRect(uint32_t width, uint32_t height, PiPRectUpda
                         "pip_window_pos_y", rect.posY_, ScenePersistentStorageType::PIP_INFO);
                 }
                 session->ProcessUpdatePiPRect(SizeChangeReason::UNDEFINED);
-                SingletonContainer::Get<PiPReporter>().ReportPiPRatio(width, height);
+                SingletonContainer::Get<PiPReporter>().ReportPiPRatio(operationPackageName, width, height);
                 break;
             default:
                 return WSError::WS_DO_NOTHING;
