@@ -235,6 +235,9 @@ private:
 
     ScreenId GetDefaultScreenId();
 
+    ScreenId CreateVirtualScreenInner(ScreenId rsId, VirtualScreenOption option,
+        const sptr<IRemoteObject>& displayManagerAgent);
+
     void NotifyDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type);
     bool OnMakeExpand(std::vector<ScreenId> screenId, std::vector<Point> startPoint);

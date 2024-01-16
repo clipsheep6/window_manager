@@ -226,6 +226,10 @@ ScreenId DisplayManagerService::CreateVirtualScreen(VirtualScreenOption option,
         WLOGFE("displayManagerAgent invalid");
         return SCREEN_ID_INVALID;
     }
+    if (!Permission::IsSystemCalling()) {
+        WLOGFE("(permission denied)only support system app");
+        return SCREEN_ID_INVALID;
+    }
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:CreateVirtualScreen(%s)", option.name_.c_str());
     if (option.surface_ != nullptr && !Permission::CheckCallingPermission(SCREEN_CAPTURE_PERMISSION) &&
         !Permission::IsStartByHdcd()) {
