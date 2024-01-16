@@ -144,9 +144,9 @@ void SceneInputManager::FlushFullInfoToMMI()
                 .dpi = screenProperty.GetDensity() *  DOT_PER_INCH,
                 .name = "display" + std::to_string(screenId),
                 .uniq = "default" + std::to_string(screenId),
-                .displayMode = static_cast<MMI::DisplayMode>(displayMode),
                 .direction = ConvertDegreeToMMIRotation(screenProperty.GetRotation(),
-                    static_cast<MMI::DisplayMode>(displayMode))};
+                    static_cast<MMI::DisplayMode>(displayMode)),
+                .displayMode = static_cast<MMI::DisplayMode>(displayMode)};
             displayInfos.emplace_back(displayInfo);
         }
     };

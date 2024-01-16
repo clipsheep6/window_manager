@@ -164,10 +164,10 @@ MMI::WindowInfo SceneSessionDirtyManager::PrepareWindowInfo(sptr<SceneSession> s
         .agentWindowId = agentWindowId,
         .flags = (!sceneSession->GetSystemTouchable()),
         .displayId = displayId,
-        .pointerChangeAreas = pointerChangeAreas,
         .action = static_cast<MMI::WINDOW_UPDATE_ACTION>(action),
-        .transform = transformData,
-        .zOrder = zOrder
+        .pointerChangeAreas = pointerChangeAreas,
+        .zOrder = zOrder,
+        .transform = transformData
     };
     return windowInfo;
 }
