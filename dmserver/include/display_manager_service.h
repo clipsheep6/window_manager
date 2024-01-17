@@ -122,6 +122,11 @@ private:
     ScreenId GetScreenIdByDisplayId(DisplayId displayId) const;
     void ConfigureDisplayManagerService();
     void ConfigureWaterfallDisplayCompressionParams();
+    void CollectExpandScreenPoint(const std::vector<ScreenId>& expandScreenIds,
+        std::map<ScreenId, Point>& pointsMap, const std::vector<Point> &startPoints);
+    void DisplayOffset(const std::vector<ScreenId>& allExpandScreenIds,
+        std::map<ScreenId, Point>& pointsMap, std::vector<Point>& points);
+
 
     std::recursive_mutex mutex_;
     static inline SingletonDelegator<DisplayManagerService> delegator_;
