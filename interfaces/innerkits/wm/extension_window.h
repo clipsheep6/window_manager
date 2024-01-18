@@ -30,6 +30,9 @@ public:
 
     virtual WMError GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea) = 0;
 
+    virtual WMError NapiSetUIContent(const std::string& contentInfo, napi_env env, napi_value storage,
+        bool isdistributed, sptr<IRemoteObject> token, AppExecFwk::Ability* ability = nullptr) = 0;
+
     virtual sptr<Window> GetWindow() = 0;
 };
 } // namespace Rosen

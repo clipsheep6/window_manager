@@ -29,6 +29,8 @@ public:
     ExtensionWindowImpl(sptr<Window> sessionImpl);
     ~ExtensionWindowImpl();
     WMError GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea) override;
+    WMError NapiSetUIContent(const std::string& contentInfo, napi_env env, napi_value storage,
+        bool isdistributed, sptr<IRemoteObject> token, AppExecFwk::Ability* ability) override;
     sptr<Window> GetWindow() override;
 private:
     sptr<Window> windowExtensionSessionImpl_;
