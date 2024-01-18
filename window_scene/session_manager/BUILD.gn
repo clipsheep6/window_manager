@@ -233,6 +233,7 @@ ohos_shared_library("screen_session_manager") {
     "data_share:datashare_consumer",
     "eventhandler:libeventhandler",
     "graphic_2d:librender_service_client",
+    "graphic_surface:surface",
     "hicollie:libhicollie",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
