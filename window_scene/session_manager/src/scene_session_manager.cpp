@@ -1256,13 +1256,13 @@ void SceneSessionManager::RequestInputMethodCloseKeyboard(const int32_t persiste
     }
     if (!sceneSession->IsSessionValid()) {
 #ifdef IMF_ENABLE
-        WLOGFI("[WMSInput] When the app is cold-started, Notify InputMethod framework close keyboard");
-        if (MiscServices::InputMethodController::GetInstance()) {
-            int32_t ret = MiscServices::InputMethodController::GetInstance()->RequestHideInput();
-            if (ret != 0) { // 0 - NO_ERROR
-                WLOGFE("[WMSInput] InputMethod framework close keyboard failed, ret: %{public}d", ret);
+        auto task = []() {
+            WLOGFI("[WMSInput] When the app is cold-started, Notify InputMethod framework close keyboard");
+            if (MiscServices::InputMethodController::GetInstance()) {
+                MiscServices::InputMethodController::GetInstance()->RequestHideInput();
             }
-        }
+        };
+        taskScheduler_->PostAsyncTask(task, "RequestInputMethodCloseKeyboard");
 #endif
     }
 }
@@ -2491,7 +2491,8 @@ WMError SceneSessionManager::UpdateSessionProperty(const sptr<WindowSessionPrope
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:UpdateProperty");
         return weakSession->HandleUpdateProperty(property, action, sceneSession);
     };
-    return taskScheduler_->PostSyncTask(task, "UpdateProperty");
+    taskScheduler_->PostAsyncTask(task, "UpdateProperty");
+    return WMError::WM_OK;
 }
 
 WMError SceneSessionManager::UpdatePropertyDragEnabled(const sptr<WindowSessionProperty>& property,
@@ -5172,7 +5173,8 @@ WSError SceneSessionManager::SetSessionGravity(int32_t persistentId, SessionGrav
         }
         return WSError::WS_OK;
     };
-    return taskScheduler_->PostSyncTask(task, "SetSessionGravity" + std::to_string(persistentId));
+    taskScheduler_->PostAsyncTask(task, "SetSessionGravity" + std::to_string(persistentId));
+    return WSError::WS_OK;
 }
 
 void SceneSessionManager::RelayoutKeyBoard(sptr<SceneSession> sceneSession)
