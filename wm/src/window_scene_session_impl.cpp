@@ -153,6 +153,9 @@ WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
         // set parent persistentId
         property_->SetParentPersistentId(parentSession->GetPersistentId());
         windowSystemConfig_ = parentSession->GetSystemSessionConfig();
+        if (windowSystemConfig_.maxFloatingWindowSize_ != UINT32_MAX) {
+            maxFloatingWindowSize_ = windowSystemConfig_.maxFloatingWindowSize_;
+        }
         // creat sub session by parent session
         SingletonContainer::Get<WindowAdapter>().CreateAndConnectSpecificSession(iSessionStage, eventChannel,
             surfaceNode_, property_, persistentId, session, token);
@@ -171,6 +174,9 @@ WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
                 property_->SetParentPersistentId(mainWindow->GetPersistentId());
                 WLOGFD("[WMSDialog] Set parentId for dialog, parentId:%{public}d", mainWindow->GetPersistentId());
             }
+        }
+        if (windowSystemConfig_.maxFloatingWindowSize_ != UINT32_MAX) {
+            maxFloatingWindowSize_ = windowSystemConfig_.maxFloatingWindowSize_;
         }
         PreProcessCreate();
         SingletonContainer::Get<WindowAdapter>().CreateAndConnectSpecificSession(iSessionStage, eventChannel,
