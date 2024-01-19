@@ -135,6 +135,51 @@ void FoldScreenController::SetOnBootAnimation(bool onBootAnimation)
     foldScreenPolicy_->SetOnBootAnimation(onBootAnimation);
 }
 
+void FoldScreenController::SetLockDisplayModeChange(bool locked)
+{
+    if (foldScreenPolicy_ == nullptr) {
+        WLOGW("SetLockDisplayModeChange: foldScreenPolicy_ is null");
+        return;
+    }
+    foldScreenPolicy_->SetLockDisplayModeChange(locked);
+}
+
+FoldDisplayMode FoldScreenController::GetNextDisplayMode()
+{
+    if (foldScreenPolicy_ == nullptr) {
+        WLOGW("GetNextDisplayMode: foldScreenPolicy_ is null");
+        return FoldDisplayMode::UNKNOWN;
+    }
+    return foldScreenPolicy_->GetNextDisplayMode();
+}
+
+void FoldScreenController::SetNeedPowerOnAfterPropertyChange(bool needed)
+{
+    if (foldScreenPolicy_ == nullptr) {
+        WLOGW("SetNeedPowerOnAfterPropertyChange: foldScreenPolicy_ is null");
+        return;
+    }
+    foldScreenPolicy_->SetNeedPowerOnAfterPropertyChange(needed);
+}
+
+bool FoldScreenController::GetNeedPowerOnAfterPropertyChange()
+{
+    if (foldScreenPolicy_ == nullptr) {
+        WLOGW("GetNeedPowerOnAfterPropertyChange: foldScreenPolicy_ is null");
+        return false;
+    }
+    return foldScreenPolicy_->GetNeedPowerOnAfterPropertyChange();
+}
+
+void FoldScreenController::TriggerScreenDisplayModeUpdate(FoldDisplayMode displayMode)
+{
+    if (foldScreenPolicy_ == nullptr) {
+        WLOGW("TriggerScreenDisplayModeUpdate: foldScreenPolicy_ is null");
+        return;
+    }
+    foldScreenPolicy_->TriggerScreenDisplayModeUpdate(displayMode);
+}
+
 void FoldScreenController::UpdateForPhyScreenPropertyChange()
 {
     if (foldScreenPolicy_ == nullptr) {

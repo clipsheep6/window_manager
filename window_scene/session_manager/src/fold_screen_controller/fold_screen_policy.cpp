@@ -33,5 +33,27 @@ void FoldScreenPolicy::SetOnBootAnimation(bool onBootAnimation)
     onBootAnimation_ = onBootAnimation;
 }
 
+void FoldScreenPolicy::SetLockDisplayModeChange(bool locked)
+{
+    lockDisplayModeChange_ = locked;
+}
+
+FoldDisplayMode FoldScreenPolicy::GetNextDisplayMode()
+{
+    return nextDisplayMode_;
+}
+
+void FoldScreenPolicy::SetNeedPowerOnAfterPropertyChange(bool needed)
+{
+    needPowerOnAfterPropertyChange_ = needed;
+}
+
+bool FoldScreenPolicy::GetNeedPowerOnAfterPropertyChange()
+{
+    return needPowerOnAfterPropertyChange_;
+}
+
+void FoldScreenPolicy::TriggerScreenDisplayModeUpdate(FoldDisplayMode displayMode) {}
+
 void FoldScreenPolicy::UpdateForPhyScreenPropertyChange() {}
 } // namespace OHOS::Rosen

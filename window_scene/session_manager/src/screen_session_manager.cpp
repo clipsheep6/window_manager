@@ -3283,13 +3283,32 @@ void ScreenSessionManager::UpdateAvailableArea(ScreenId screenId, DMRect area)
 void ScreenSessionManager::NotifyFoldToExpandCompletion(bool foldToExpand)
 {
     WLOGFI("ScreenSessionManager::NotifyFoldToExpandCompletion");
-    SetDisplayNodeScreenId(SCREEN_ID_FULL, foldToExpand ? SCREEN_ID_FULL : SCREEN_ID_MAIN);
-    sptr<ScreenSession> screenSession = GetDefaultScreenSession();
-    if (screenSession == nullptr) {
-        WLOGFE("fail to get default screenSession");
-        return;
+    if (foldScreenController_ != nullptr) {
+        WLOGFI("NotifyFoldToExpandCompletion currentDisplayMode = %{public}d, nextDisplayMode = %{public}d",
+            foldScreenController_->GetDisplayMode(), foldScreenController_->GetNextDisplayMode());
+        if (foldScreenController_->GetDisplayMode() != foldScreenController_->GetNextDisplayMode()) {
+            WLOGFI("NotifyFoldToExpandCompletion change to next display mode");
+            foldScreenController_->SetNeedPowerOnAfterPropertyChange(true);
+            foldScreenController_->TriggerScreenDisplayModeUpdate(foldScreenController_->GetNextDisplayMode());
+        } else {
+            if (foldScreenController_->GetNeedPowerOnAfterPropertyChange()) {
+                WLOGFI("NotifyFoldToExpandCompletion GetNeedPowerOnAfterPropertyChange is true");
+                foldScreenController_->SetNeedPowerOnAfterPropertyChange(false);
+                int64_t timeStamp = 500;
+                std::this_thread::sleep_for(std::chrono::milliseconds(timeStamp));
+                SetScreenPower(ScreenPowerStatus::POWER_STATUS_ON, PowerStateChangeReason::STATE_CHANGE_REASON_INIT);
+            }
+            WLOGFI("NotifyFoldToExpandCompletion no need to change display mode");
+            SetDisplayNodeScreenId(SCREEN_ID_FULL, foldToExpand ? SCREEN_ID_FULL : SCREEN_ID_MAIN);
+            sptr<ScreenSession> screenSession = GetDefaultScreenSession();
+            if (screenSession == nullptr) {
+                WLOGFE("fail to get default screenSession");
+                return;
+            }
+            screenSession->UpdateAfterFoldExpand(foldToExpand);
+            foldScreenController_->SetLockDisplayModeChange(false);
+            WLOGFI("NotifyFoldToExpandCompletion SetLockDisplayModeChange is false, change display mode completed");
+        }
     }
-    screenSession->UpdateAfterFoldExpand(foldToExpand);
 }
-
 } // namespace OHOS::Rosen
