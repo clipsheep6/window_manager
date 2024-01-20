@@ -76,7 +76,6 @@ WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRunt
     );
 
     ScreenId screenIdFull = 0;
-    ScreenId screenIdMain = 5;
     int32_t foldCreaseRegionPosX = 0;
     int32_t foldCreaseRegionPosY = 1096;
     int32_t foldCreaseRegionPosWidth = 2496;
@@ -89,7 +88,7 @@ WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRunt
         }
     };
 
-    currentFold = new FoldCreaseRegion(screenIdFull, rect);
+    sptr<FoldCreaseRegion> currentFold = new FoldCreaseRegion(screenIdFull, rect);
 
     Previewer::PreviewerDisplay::GetInstance().SetCurrentFoldCreaseRegion(currentFold);
 
