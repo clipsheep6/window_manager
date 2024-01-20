@@ -21,10 +21,27 @@
 #include <functional>
 
 #include "window.h"
+#include "dm_common.h"
 
 namespace OHOS {
 namespace Previewer {
 using namespace OHOS::Rosen;
+
+class FoldCreaseRegion {
+public:
+    FoldCreaseRegion() = default;
+
+    FoldCreaseRegion(DisplayId displayId, const std::vector<DMRect>& creaseRects){
+        displayId_ = displayId;
+        creaseRects_ = creaseRects;
+    };
+
+    ~FoldCreaseRegion() override = default;
+
+private:
+    DisplayId displayId_;
+    std::vector<DMRect>& creaseRects_;
+}
 
 class WINDOW_EXPORT PreviewerDisplay {
 using DisplayCallback = std::function<void(const FoldStatus&)>;
@@ -34,10 +51,12 @@ public:
 
     void SetFoldable(const bool foldable);
     void SetFoldStatus(const FoldStatus foldStatus);
+    void SetCurrentFoldCreaseRegion(const sptr<FoldCreaseRegion> currentFoldCreaseRegion);
     void ExecStatusChangedCallback();
 
     bool IsFoldable() const;
     FoldStatus GetFoldStatus() const;
+    sptr<FoldCreaseRegion> GetCurrentFoldCreaseRegion() const;
     void RegisterStatusChangedCallback(const DisplayCallback callback);
 
 private:
@@ -46,6 +65,7 @@ private:
 
     bool foldable_ = false;
     FoldStatus foldStatus_ = FoldStatus::UNKNOWN;
+    sptr<FoldCreaseRegion> currentFoldCreaseRegion_ = nullptr;
     DisplayCallback displayCallback_;
 };
 } // namespace Previewer
