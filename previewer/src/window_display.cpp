@@ -59,7 +59,7 @@ FoldStatus PreviewerDisplay::GetFoldStatus() const
 
 sptr<FoldCreaseRegion> PreviewerDisplay::GetCurrentFoldCreaseRegion() const
 {
-    return currentFoldCreaseRegion;
+    return currentFoldCreaseRegion_;
 }
 
 void PreviewerDisplay::RegisterStatusChangedCallback(const DisplayCallback callback)
