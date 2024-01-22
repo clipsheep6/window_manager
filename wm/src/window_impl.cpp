@@ -2462,8 +2462,7 @@ void WindowImpl::PerformBack()
         }
         bool needMoveToBackground = false;
         int ret = abilityContext->OnBackPressedCallBack(needMoveToBackground);
-        if (ret == ERR_OK && needMoveToBackground)
-        {
+        if (ret == ERR_OK && needMoveToBackground) {
             abilityContext->MoveAbilityToBackground();
             WLOGD("id: %{public}u closed, to move Ability: %{public}u",
                   property_->GetWindowId(), needMoveToBackground);
