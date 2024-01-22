@@ -671,6 +671,10 @@ WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, nap
     WindowSetUIContentType type, AppExecFwk::Ability* ability)
 {
     WLOGFD("[WMSLife]NapiSetUIContent: %{public}s state:%{public}u", contentInfo.c_str(), state_);
+    if (IsWindowSessionInvalid()) {
+        WLOGFE("[WMSLife]interrupt set uicontent because window is invalid! window state: %{public}d", state_);
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
     if (uiContent_) {
         uiContent_->Destroy();
     }
@@ -1446,9 +1450,10 @@ static void RequestInputMethodCloseKeyboard(bool isNeedKeyboard, bool keepKeyboa
 {
     if (!isNeedKeyboard && !keepKeyboardFlag) {
 #ifdef IMF_ENABLE
-        WLOGFI("[WMSInput] Notify InputMethod framework close keyboard");
+        WLOGFI("[WMSInput] Notify InputMethod framework close keyboard start.");
         if (MiscServices::InputMethodController::GetInstance()) {
             int32_t ret = MiscServices::InputMethodController::GetInstance()->RequestHideInput();
+            WLOGFI("[WMSInput] Notify InputMethod framework close keyboard end.");
             if (ret != 0) { // 0 - NO_ERROR
                 WLOGFE("[WMSInput] InputMethod framework close keyboard failed, ret: %{public}d", ret);
             }
@@ -2278,7 +2283,8 @@ void WindowSessionImpl::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo
     for (auto& listener : occupiedAreaChangeListeners) {
         if (listener != nullptr) {
             if (property_->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
-                system::GetParameter("const.product.devicetype", "unknown") == "phone") {
+                (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
+                 system::GetParameter("const.product.devicetype", "unknown") == "tablet")) {
                 sptr<OccupiedAreaChangeInfo> occupiedAreaChangeInfo = new OccupiedAreaChangeInfo();
                 listener->OnSizeChange(occupiedAreaChangeInfo);
                 continue;
@@ -2368,5 +2374,11 @@ void WindowSessionImpl::NotifyTransformChange(const Transform& transform)
         uiContent_->UpdateTransform(transform);
     }
 }
+
+WMError WindowSessionImpl::HideNonSecureWindows(bool shouldHide)
+{
+    return SingletonContainer::Get<WindowAdapter>().HideNonSecureWindows(shouldHide);
+}
+
 } // namespace Rosen
 } // namespace OHOS

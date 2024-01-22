@@ -141,6 +141,11 @@ WSError SceneSession::Foreground(sptr<WindowSessionProperty> property)
             return ret;
         }
         session->NotifyForeground();
+        auto sessionProperty = session->GetSessionProperty();
+        if (session->leashWinSurfaceNode_ && sessionProperty) {
+            bool lastPrivacyMode = sessionProperty->GetPrivacyMode() || sessionProperty->GetSystemPrivacyMode();
+            session->leashWinSurfaceNode_->SetSecurityLayer(lastPrivacyMode);
+        }
         if (session->specificCallback_ != nullptr) {
             session->specificCallback_->onUpdateAvoidArea_(session->GetPersistentId());
             session->specificCallback_->onWindowInfoUpdate_(
@@ -677,7 +682,7 @@ WSError SceneSession::RaiseAppMainWindowToTop()
             WLOGFE("session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
-        session->NotifyRequestFocusStatusNotifyManager(true);
+        session->NotifyRequestFocusStatusNotifyManager(true, true);
         session->NotifyClick();
         return WSError::WS_OK;
     };
@@ -758,7 +763,8 @@ void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
          Session::GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
          Session::GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) &&
         WindowHelper::IsMainWindow(Session::GetWindowType()) &&
-        system::GetParameter("const.product.devicetype", "unknown") == "phone") {
+        (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
+         system::GetParameter("const.product.devicetype", "unknown") == "tablet")) {
         float miniScale = 0.316f; // Pressed mini floating Scale with 0.001 precision
         if (Session::GetScaleX() <= miniScale) {
             return;
@@ -789,7 +795,8 @@ void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 void SceneSession::GetKeyboardAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 {
     if (Session::GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
-        system::GetParameter("const.product.devicetype", "unknown") == "phone") {
+        (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
+         system::GetParameter("const.product.devicetype", "unknown") == "tablet")) {
         return;
     }
     std::vector<sptr<SceneSession>> inputMethodVector =
@@ -1866,13 +1873,13 @@ WSError SceneSession::TerminateSession(const sptr<AAFwk::SessionInfo> abilitySes
     return WSError::WS_OK;
 }
 
-WSError SceneSession::NotifySessionException(const sptr<AAFwk::SessionInfo> abilitySessionInfo)
+WSError SceneSession::NotifySessionException(const sptr<AAFwk::SessionInfo> abilitySessionInfo, bool needRemoveSession)
 {
     if (!SessionPermission::VerifySessionPermission()) {
         WLOGFE("The interface permission failed.");
         return WSError::WS_ERROR_INVALID_PERMISSION;
     }
-    auto task = [weakThis = wptr(this), abilitySessionInfo]() {
+    auto task = [weakThis = wptr(this), abilitySessionInfo, needRemoveSession]() {
         auto session = weakThis.promote();
         if (!session) {
             WLOGFE("session is null");
@@ -1900,11 +1907,13 @@ WSError SceneSession::NotifySessionException(const sptr<AAFwk::SessionInfo> abil
             session->sessionInfo_.errorCode = abilitySessionInfo->errorCode;
             session->sessionInfo_.errorReason = abilitySessionInfo->errorReason;
         }
-        if (!session->sessionExceptionFuncs_.empty()) {
-            for (auto funcPtr : session->sessionExceptionFuncs_) {
-                auto sessionExceptionFunc = *funcPtr;
-                sessionExceptionFunc(info);
-            }
+        if (session->sessionExceptionFunc_) {
+            auto exceptionFunc = *(session->sessionExceptionFunc_);
+            exceptionFunc(info, needRemoveSession);
+        }
+        if (session->jsSceneSessionExceptionFunc_) {
+            auto exceptionFunc = *(session->jsSceneSessionExceptionFunc_);
+            exceptionFunc(info, needRemoveSession);
         }
         return WSError::WS_OK;
     };
@@ -2291,13 +2300,24 @@ void SceneSession::SetScale(float scaleX, float scaleY, float pivotX, float pivo
     }
 }
 
-void SceneSession::RequestHideKeyboard()
+void SceneSession::RequestHideKeyboard(bool isAppColdStart)
 {
 #ifdef IMF_ENABLE
-    WLOGFI("Notify InputMethod framework hide keyboard, id: %{public}d", Session::GetPersistentId());
-    if (MiscServices::InputMethodController::GetInstance()) {
-        MiscServices::InputMethodController::GetInstance()->RequestHideInput();
-    }
+    auto task = [weakThis = wptr(this), isAppColdStart]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGFE("[WMSInput] Session is null, notify inputMethod framework hide keyboard failed!");
+            return;
+        }
+        WLOGFI("[WMSInput] Notify inputMethod framework hide keyboard start, id: %{public}d,"
+            "isAppColdStart: %{public}d", session->GetPersistentId(), isAppColdStart);
+        if (MiscServices::InputMethodController::GetInstance()) {
+            MiscServices::InputMethodController::GetInstance()->RequestHideInput();
+            WLOGFI("[WMSInput] Notify inputMethod framework hide keyboard end, id: %{public}d",
+                session->GetPersistentId());
+        }
+    };
+    PostExportTask(task, "RequestHideKeyboard");
 #endif
 }
 

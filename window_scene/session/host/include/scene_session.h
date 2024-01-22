@@ -122,7 +122,8 @@ public:
     WSError UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason) override;
     WSError PendingSessionActivation(const sptr<AAFwk::SessionInfo> info) override;
     WSError TerminateSession(const sptr<AAFwk::SessionInfo> info) override;
-    WSError NotifySessionException(const sptr<AAFwk::SessionInfo> info) override;
+    WSError NotifySessionException(
+        const sptr<AAFwk::SessionInfo> info, bool needRemoveSession = false) override;
     WSError NotifyClientToUpdateRect(std::shared_ptr<RSTransaction> rsTransaction) override;
     WSError OnNeedAvoid(bool status) override;
     AvoidArea GetAvoidAreaByType(AvoidAreaType type) override;
@@ -143,7 +144,7 @@ public:
     void NotifyPiPWindowPrepareClose() override;
     WSError RecoveryPullPiPMainWindow(int32_t persistentId, const Rect& rect) override;
     void SetScale(float scaleX, float scaleY, float pivotX, float pivotY) override;
-    void RequestHideKeyboard();
+    void RequestHideKeyboard(bool isAppColdStart = false);
     WSError ProcessPointDownSession(int32_t posX, int32_t posY) override;
     WSError SendPointEventForMoveDrag(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
     void NotifyOutsideDownEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
