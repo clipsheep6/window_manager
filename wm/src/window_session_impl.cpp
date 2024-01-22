@@ -667,6 +667,11 @@ WMError WindowSessionImpl::SetUIContentByAbc(
     return SetUIContentInner(contentInfo, env, storage, WindowSetUIContentType::BY_ABC, ability);
 }
 
+WMError WindowSessionImpl::CreateContent(napi_env env, AppExecFwk::Ability* ability)
+{
+    return SetUIContentInner("", env, nullptr, WindowSetUIContentType::WITHOUT_CONTENT, ability);
+}
+
 WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
     WindowSetUIContentType type, AppExecFwk::Ability* ability)
 {
@@ -699,9 +704,13 @@ WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, nap
         case WindowSetUIContentType::BY_NAME:
             uiContent->InitializeByName(this, contentInfo, storage);
             break;
-        case WindowSetUIContentType::BY_ABC:
+        case WindowSetUIContentType::BY_ABC: {
             auto abcContent = GetAbcContent(contentInfo);
             uiContent->Initialize(this, abcContent, storage);
+            break;
+        }
+        case WindowSetUIContentType::WITHOUT_CONTENT:
+            uiContent->InitializeWithoutContentInfo(this);
             break;
     }
     // make uiContent available after Initialize/Restore

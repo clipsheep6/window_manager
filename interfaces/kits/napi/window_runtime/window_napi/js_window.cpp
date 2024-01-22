@@ -252,6 +252,13 @@ napi_value JsWindow::LoadContentByName(napi_env env, napi_callback_info info)
     return (me != nullptr) ? me->OnLoadContent(env, info, true) : nullptr;
 }
 
+napi_value JsWindow::CreateContent(napi_env env, napi_callback_info info)
+{
+    WLOGI("CreateContent");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(env, info);
+    return (me != nullptr) ? me->OnCreateContent(env, info) : nullptr;
+}
+
 napi_value JsWindow::GetUIContext(napi_env env, napi_callback_info info)
 {
     WLOGD("GetUIContext");
@@ -1658,7 +1665,7 @@ napi_value JsWindow::OnBindDialogTarget(napi_env env, napi_callback_info info)
 }
 
 static void LoadContentTask(std::shared_ptr<NativeReference> contentStorage, std::string contextUrl,
-    sptr<Window> weakWindow, napi_env env, NapiAsyncTask& task, bool isLoadedByName)
+    sptr<Window> weakWindow, napi_env env, NapiAsyncTask& task, bool isLoadedByName, bool withoutContentInfo = false)
 {
     napi_value nativeStorage =  (contentStorage == nullptr) ? nullptr : contentStorage->GetNapiValue();
     AppExecFwk::Ability* ability = nullptr;
@@ -1666,6 +1673,8 @@ static void LoadContentTask(std::shared_ptr<NativeReference> contentStorage, std
     WmErrorCode ret;
     if (isLoadedByName) {
         ret = WM_JS_TO_ERROR_CODE_MAP.at(weakWindow->SetUIContentByName(contextUrl, env, nativeStorage, ability));
+    } else if (withoutContentInfo) {
+        ret = WM_JS_TO_ERROR_CODE_MAP.at(weakWindow->CreateContent(env, ability));
     } else {
         ret = WM_JS_TO_ERROR_CODE_MAP.at(
             weakWindow->NapiSetUIContent(contextUrl, env, nativeStorage, false, nullptr, ability));
@@ -1700,26 +1709,7 @@ napi_value JsWindow::LoadContentScheduleOld(napi_env env, napi_callback_info inf
         callBack = argv[1];
     }
     std::shared_ptr<NativeReference> contentStorage = nullptr;
-    wptr<Window> weakToken(windowToken_);
-    NapiAsyncTask::CompleteCallback complete = [weakToken, contentStorage, contextUrl, errCode, isLoadedByName](
-                                               napi_env env, NapiAsyncTask& task, int32_t status) {
-        auto weakWindow = weakToken.promote();
-        if (weakWindow == nullptr) {
-            WLOGFE("window is nullptr");
-            task.Reject(env, CreateJsError(env, static_cast<int32_t>(WMError::WM_ERROR_NULLPTR)));
-            return;
-        }
-        if (errCode != WMError::WM_OK) {
-            task.Reject(env, CreateJsError(env, static_cast<int32_t>(errCode)));
-            WLOGFE("Window is nullptr or get invalid param");
-            return;
-        }
-        LoadContentTask(contentStorage, contextUrl, weakWindow, env, task, isLoadedByName);
-    };
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsWindow::OnLoadContent",
-        env, CreateAsyncTaskWithLastParam(env, callBack, nullptr, std::move(complete), &result));
-    return result;
+    return ScheduleCallback(env, callBack, false, contentStorage, contextUrl, isLoadedByName);
 }
 
 napi_value JsWindow::LoadContentScheduleNew(napi_env env, napi_callback_info info, bool isLoadedByName)
@@ -1756,21 +1746,7 @@ napi_value JsWindow::LoadContentScheduleNew(napi_env env, napi_callback_info inf
         napi_create_reference(env, storage, 1, &result);
         contentStorage = std::shared_ptr<NativeReference>(reinterpret_cast<NativeReference*>(result));
     }
-    wptr<Window> weakToken(windowToken_);
-    NapiAsyncTask::CompleteCallback complete = [weakToken, contentStorage, contextUrl, isLoadedByName](
-                                               napi_env env, NapiAsyncTask& task, int32_t status) {
-        auto weakWindow = weakToken.promote();
-        if (weakWindow == nullptr) {
-            WLOGFE("Window is nullptr or get invalid param");
-            task.Reject(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
-            return;
-        }
-        LoadContentTask(contentStorage, contextUrl, weakWindow, env, task, isLoadedByName);
-    };
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsWindow::OnLoadContent",
-        env, CreateAsyncTaskWithLastParam(env, callBack, nullptr, std::move(complete), &result));
-    return result;
+    return ScheduleCallback(env, callBack, false, contentStorage, contextUrl, isLoadedByName);
 }
 
 napi_value JsWindow::OnLoadContent(napi_env env, napi_callback_info info, bool isLoadedByName)
@@ -1794,6 +1770,40 @@ napi_value JsWindow::OnLoadContent(napi_env env, napi_callback_info info, bool i
     } else {
         return LoadContentScheduleNew(env, info, isLoadedByName);
     }
+}
+
+napi_value JsWindow::ScheduleCallback(napi_env env, napi_value& callBack, bool withoutContentInfo,
+    std::shared_ptr<NativeReference> contentStorage, const std::string& contextUrl, bool isLoadedByName)
+{
+    wptr<Window> weakToken(windowToken_);
+    NapiAsyncTask::CompleteCallback complete =
+        [weakToken, contentStorage, contextUrl, isLoadedByName, withoutContentInfo](
+                                               napi_env env, NapiAsyncTask& task, int32_t status) {
+        auto weakWindow = weakToken.promote();
+        if (weakWindow == nullptr) {
+            WLOGFE("Window is nullptr or get invalid param");
+            task.Reject(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
+            return;
+        }
+        LoadContentTask(contentStorage, contextUrl, weakWindow, env, task, isLoadedByName, withoutContentInfo);
+    };
+    napi_value result = nullptr;
+    NapiAsyncTask::Schedule("JsWindow::OnLoadContent",
+        env, CreateAsyncTaskWithLastParam(env, callBack, nullptr, std::move(complete), &result));
+    return result;
+}
+
+napi_value JsWindow::OnCreateContent(napi_env env, napi_callback_info info)
+{
+    WLOGFI("JsWindow::OnCreateContent");
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    napi_value callBack = nullptr;
+    if (argc == 1) { // 1: num of params
+        callBack = ((argv[0] != nullptr && GetType(env, argv[0]) == napi_function) ? argv[0] : nullptr);
+    }
+    return ScheduleCallback(env, callBack, true);
 }
 
 napi_value JsWindow::OnGetUIContext(napi_env env, napi_callback_info info)
@@ -1851,23 +1861,7 @@ napi_value JsWindow::OnSetUIContent(napi_env env, napi_callback_info info)
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
-
-    wptr<Window> weakToken(windowToken_);
-    NapiAsyncTask::CompleteCallback complete =
-        [weakToken, contentStorage, contextUrl](napi_env env, NapiAsyncTask& task, int32_t status) {
-            auto weakWindow = weakToken.promote();
-            if (weakWindow == nullptr) {
-                WLOGFE("Window is nullptr");
-                task.Reject(env,
-                    CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
-                return;
-            }
-            LoadContentTask(contentStorage, contextUrl, weakWindow, env, task, false);
-        };
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsWindow::OnSetUIContent",
-        env, CreateAsyncTaskWithLastParam(env, callBack, nullptr, std::move(complete), &result));
-    return result;
+    return ScheduleCallback(env, callBack, false, contentStorage, contextUrl);
 }
 
 napi_value JsWindow::OnSetFullScreen(napi_env env, napi_callback_info info)
@@ -5070,6 +5064,7 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "bindDialogTarget", moduleName, JsWindow::BindDialogTarget);
     BindNativeFunction(env, object, "loadContent", moduleName, JsWindow::LoadContent);
     BindNativeFunction(env, object, "loadContentByName", moduleName, JsWindow::LoadContentByName);
+    BindNativeFunction(env, object, "createContent", moduleName, JsWindow::CreateContent);
     BindNativeFunction(env, object, "getUIContext", moduleName, JsWindow::GetUIContext);
     BindNativeFunction(env, object, "setUIContent", moduleName, JsWindow::SetUIContent);
     BindNativeFunction(env, object, "setFullScreen", moduleName, JsWindow::SetFullScreen);

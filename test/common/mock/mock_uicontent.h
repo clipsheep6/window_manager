@@ -31,6 +31,7 @@ public:
     MOCK_METHOD3(InitializeByName, void(OHOS::Rosen::Window* window, const std::string& name, napi_value storage));
     MOCK_METHOD4(Initialize,
         void(OHOS::Rosen::Window* window, const std::string& url, napi_value storage, uint32_t focusWindowID));
+    MOCK_METHOD1(InitializeWithoutContentInfo, void(OHOS::Rosen::Window* window));
     MOCK_METHOD0(Foreground, void());
     MOCK_METHOD0(Background, void());
     MOCK_METHOD0(Focus, void());

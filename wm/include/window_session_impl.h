@@ -65,6 +65,7 @@ public:
         AppExecFwk::Ability* ability) override;
     WMError SetUIContentByAbc(const std::string& abcPath, napi_env env, napi_value storage,
         AppExecFwk::Ability* ability) override;
+    WMError CreateContent(napi_env env, AppExecFwk::Ability* ability) override;
     std::shared_ptr<RSSurfaceNode> GetSurfaceNode() const override;
     const std::shared_ptr<AbilityRuntime::Context> GetContext() const override;
     Rect GetRequestRect() const override;

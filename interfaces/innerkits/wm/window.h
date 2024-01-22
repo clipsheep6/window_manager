@@ -1181,6 +1181,17 @@ public:
         return WMError::WM_OK;
     }
     /**
+     * @brief Create content without loading page.
+     *
+     * @param engine
+     * @param ability
+     * @return WMError
+     */
+    virtual WMError CreateContent(napi_env env, AppExecFwk::Ability* ability = nullptr)
+    {
+        return WMError::WM_OK;
+    }
+    /**
      * @brief Get ui content info.
      *
      * @return UI content info.

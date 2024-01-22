@@ -221,6 +221,10 @@ public:
     {
         return WMError::WM_OK;
     }
+    virtual WMError CreateContent(napi_env env, AppExecFwk::Ability* ability = nullptr)
+    {
+        return WMError::WM_OK;
+    }
     virtual std::string GetContentInfo() = 0;
     virtual Ace::UIContent* GetUIContent() const = 0;
     virtual void OnNewWant(const AAFwk::Want& want) = 0;
