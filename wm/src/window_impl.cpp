@@ -2471,12 +2471,10 @@ void WindowImpl::PerformBack()
         }
         // TerminateAbility will invoke last ability, CloseAbility will not.
         bool shouldTerminateAbility = WindowHelper::IsFullScreenWindow(property_->GetWindowMode());
-        if (shouldTerminateAbility)
-        {
+        if (shouldTerminateAbility){
             abilityContext->TerminateSelf();
         }
-        else
-        {
+        else{
             abilityContext->CloseAbility();
         }
         WLOGD("id: %{public}u closed, to kill Ability: %{public}u",
