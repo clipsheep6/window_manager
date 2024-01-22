@@ -50,7 +50,8 @@ using NotifyPendingSessionActivationFunc = std::function<void(SessionInfo& info)
 using NotifySessionStateChangeFunc = std::function<void(const SessionState& state)>;
 using NotifyBufferAvailableChangeFunc = std::function<void(const bool isAvailable)>;
 using NotifySessionStateChangeNotifyManagerFunc = std::function<void(int32_t persistentId, const SessionState& state)>;
-using NotifyRequestFocusStatusNotifyManagerFunc = std::function<void(int32_t persistentId, const bool isFocused)>;
+using NotifyRequestFocusStatusNotifyManagerFunc =
+    std::function<void(int32_t persistentId, const bool isFocused, const bool byForeground)>;
 using NotifyBackPressedFunc = std::function<void(const bool needMoveToBackground)>;
 using NotifySessionFocusableChangeFunc = std::function<void(const bool isFocusable)>;
 using NotifySessionTouchableChangeFunc = std::function<void(const bool touchable)>;
@@ -60,7 +61,7 @@ using NotifyTerminateSessionFuncNew = std::function<void(const SessionInfo& info
 using NotifyTerminateSessionFuncTotal = std::function<void(const SessionInfo& info, TerminateType terminateType)>;
 using NofitySessionLabelUpdatedFunc = std::function<void(const std::string &label)>;
 using NofitySessionIconUpdatedFunc = std::function<void(const std::string &iconPath)>;
-using NotifySessionExceptionFunc = std::function<void(const SessionInfo& info)>;
+using NotifySessionExceptionFunc = std::function<void(const SessionInfo& info, bool needRemoveSession)>;
 using NotifySessionSnapshotFunc = std::function<void(const int32_t& persistentId)>;
 using NotifyPendingSessionToForegroundFunc = std::function<void(const SessionInfo& info)>;
 using NotifyPendingSessionToBackgroundForDelegatorFunc = std::function<void(const SessionInfo& info)>;
@@ -99,7 +100,8 @@ public:
     explicit Session(const SessionInfo& info);
     virtual ~Session() = default;
 
-    void SetEventHandler(const std::shared_ptr<AppExecFwk::EventHandler>& handler);
+    void SetEventHandler(const std::shared_ptr<AppExecFwk::EventHandler>& handler,
+        const std::shared_ptr<AppExecFwk::EventHandler>& exportHandler = nullptr);
 
     WSError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
@@ -110,7 +112,7 @@ public:
         sptr<IRemoteObject> token = nullptr, int32_t pid = -1, int32_t uid = -1);
     WSError Foreground(sptr<WindowSessionProperty> property) override;
     WSError Background() override;
-    WSError Disconnect() override;
+    WSError Disconnect(bool isFromClient = false) override;
     WSError Show(sptr<WindowSessionProperty> property) override;
     WSError Hide() override;
 
@@ -149,6 +151,7 @@ public:
 
     int32_t GetPersistentId() const;
     std::shared_ptr<RSSurfaceNode> GetSurfaceNode() const;
+    void SetLeashWinSurfaceNode(std::shared_ptr<RSSurfaceNode> leashWinSurfaceNode);
     std::shared_ptr<RSSurfaceNode> GetLeashWinSurfaceNode() const;
     std::shared_ptr<Media::PixelMap> GetSnapshot() const;
     std::shared_ptr<Media::PixelMap> Snapshot(const float scaleParam = 0.0f) const;
@@ -199,7 +202,7 @@ public:
     void SetTerminateSessionListener(const NotifyTerminateSessionFunc& func);
     WSError TerminateSessionNew(const sptr<AAFwk::SessionInfo> info, bool needStartCaller);
     void SetTerminateSessionListenerNew(const NotifyTerminateSessionFuncNew& func);
-    void SetSessionExceptionListener(const NotifySessionExceptionFunc& func);
+    void SetSessionExceptionListener(const NotifySessionExceptionFunc& func, bool fromJsScene);
     void SetSessionSnapshotListener(const NotifySessionSnapshotFunc& func);
     WSError TerminateSessionTotal(const sptr<AAFwk::SessionInfo> info, TerminateType terminateType);
     void SetTerminateSessionListenerTotal(const NotifyTerminateSessionFuncTotal& func);
@@ -246,7 +249,7 @@ public:
     void NotifySessionFocusableChange(bool isFocusable);
     void NotifySessionTouchableChange(bool touchable);
     void NotifyClick();
-    void NotifyRequestFocusStatusNotifyManager(bool isFocused);
+    void NotifyRequestFocusStatusNotifyManager(bool isFocused, bool byForeground = true);
     void NotifyUIRequestFocus();
     virtual void NotifyUILostFocus();
     bool GetStateFromManager(const ManagerState key);
@@ -392,6 +395,7 @@ protected:
     void HandlePointDownDialog(int32_t pointAction);
 
     void PostTask(Task&& task, const std::string& name = "sessionTask", int64_t delayTime = 0);
+    void PostExportTask(Task&& task, const std::string& name = "sessionExportTask", int64_t delayTime = 0);
     template<typename SyncTask, typename Return = std::invoke_result_t<SyncTask>>
     Return PostSyncTask(SyncTask&& task, const std::string& name = "sessionTask")
     {
@@ -447,7 +451,8 @@ protected:
     NotifyTerminateSessionFuncTotal terminateSessionFuncTotal_;
     NofitySessionLabelUpdatedFunc updateSessionLabelFunc_;
     NofitySessionIconUpdatedFunc updateSessionIconFunc_;
-    std::vector<std::shared_ptr<NotifySessionExceptionFunc>> sessionExceptionFuncs_;
+    std::shared_ptr<NotifySessionExceptionFunc> sessionExceptionFunc_;
+    std::shared_ptr<NotifySessionExceptionFunc> jsSceneSessionExceptionFunc_;
     NotifySessionSnapshotFunc notifySessionSnapshotFunc_;
     NotifyPendingSessionToForegroundFunc pendingSessionToForegroundFunc_;
     NotifyPendingSessionToBackgroundForDelegatorFunc pendingSessionToBackgroundForDelegatorFunc_;
@@ -514,6 +519,7 @@ private:
     std::vector<std::shared_ptr<ILifecycleListener>> lifecycleListeners_;
     sptr<IWindowEventChannel> windowEventChannel_;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
+    std::shared_ptr<AppExecFwk::EventHandler> exportHandler_;
 
     mutable std::shared_mutex propertyMutex_;
     sptr<WindowSessionProperty> property_;

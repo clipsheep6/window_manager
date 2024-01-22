@@ -41,7 +41,7 @@ public:
     WSError DestroyAndDisconnectSpecificSession(const int32_t& persistentId) override;
     WMError UpdateSessionProperty(const sptr<WindowSessionProperty>& property, WSPropertyChangeAction action) override;
     WSError BindDialogSessionTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken) override;
-    WMError RequestFocusStatus(int32_t persistentId, bool isFocused, bool byForeground = false) override;
+    WMError RequestFocusStatus(int32_t persistentId, bool isFocused, bool byForeground = true) override;
     WSError RaiseWindowToTop(int32_t persistentId) override;
 
     WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
@@ -92,6 +92,7 @@ public:
     WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId) override;
     WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) override;
     WSError ShiftAppWindowFocus(int32_t sourcePersistentId, int32_t targetPersistentId) override;
+    WSError HideNonSecureWindows(bool shouldHide) override;
 
 private:
     template<typename T>

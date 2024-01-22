@@ -44,6 +44,10 @@ class ExtensionWindow {
   loadContentByName(url, storage, asyncCallback) {
     return this.__extension_window__.loadContentByName(url, storage, asyncCallback);
   }
+  
+  hideNonSecureWindows(type, callback) {
+    return this.__extension_window__.hideNonSecureWindows(type, callback);
+  }
 }
 
 export default ExtensionWindow;

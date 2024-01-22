@@ -22,8 +22,11 @@
 #include "mock/js_transition_controller.h"
 #endif
 
-#include "js_window_utils.h"
+#ifdef SCENE_BOARD_ENABLE
 #include "scene_board_judgement.h"
+#endif
+
+#include "js_window_utils.h"
 #include "window.h"
 #include "window_helper.h"
 #include "window_manager_hilog.h"
@@ -51,6 +54,12 @@ std::recursive_mutex g_mutex;
 static int ctorCnt = 0;
 static int dtorCnt = 0;
 static int finalizerCnt = 0;
+
+#ifdef SCENE_BOARD_ENABLE
+static bool g_isSceneEnabled = SceneBoardJudgement::IsSceneBoardEnabled();
+#else
+static bool g_isSceneEnabled = false;
+#endif
 JsWindow::JsWindow(const sptr<Window>& window)
     : windowToken_(window), registerManager_(std::make_unique<JsWindowRegisterManager>())
 {
@@ -794,7 +803,7 @@ napi_value JsWindow::OnShow(napi_env env, napi_callback_info info)
                 return;
             }
             // intercept show main window if window is created
-            if (SceneBoardJudgement::IsSceneBoardEnabled() && WindowHelper::IsMainWindow(weakWindow->GetType()) &&
+            if (g_isSceneEnabled && WindowHelper::IsMainWindow(weakWindow->GetType()) &&
                 weakWindow->GetWindowState() == WindowState::STATE_CREATED) {
                 WLOGFI("MainWindow is created but not show, can not show by napi, [%{public}u, %{public}s]",
                     weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str());
@@ -829,7 +838,7 @@ napi_value JsWindow::OnShowWindow(napi_env env, napi_callback_info info)
                 return;
             }
             // intercept show main window if window is created
-            if (SceneBoardJudgement::IsSceneBoardEnabled() && WindowHelper::IsMainWindow(weakWindow->GetType()) &&
+            if (g_isSceneEnabled && WindowHelper::IsMainWindow(weakWindow->GetType()) &&
                 weakWindow->GetWindowState() == WindowState::STATE_CREATED) {
                 WLOGFI("MainWindow is created but not show, can not show by napi, [%{public}u, %{public}s]",
                     weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str());
@@ -3121,9 +3130,15 @@ napi_value JsWindow::OnSetWindowPrivacyMode(napi_env env, napi_callback_info inf
                     "Invalidate params"));
                 return;
             }
-            weakWindow->SetPrivacyMode(isPrivacyMode);
+            WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(weakWindow->SetPrivacyMode(isPrivacyMode));
+            if (ret == WmErrorCode::WM_ERROR_NO_PERMISSION) {
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret)));
+                WLOGI("Window [%{public}u, %{public}s] set privacy mode failed, mode = %{public}u",
+                    weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), isPrivacyMode);
+                return;
+            }
             task.Resolve(env, NapiGetUndefined(env));
-            WLOGI("Window [%{public}u, %{public}s] set privacy mode end, mode = %{public}u",
+            WLOGI("Window [%{public}u, %{public}s] set privacy mode succeed, mode = %{public}u",
                 weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), isPrivacyMode);
         };
 

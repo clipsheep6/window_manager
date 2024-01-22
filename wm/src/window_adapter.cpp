@@ -248,6 +248,22 @@ void WindowAdapter::UnregisterSessionRecoverCallbackFunc(int32_t persistentId)
     }
 }
 
+WMError WindowAdapter::RegisterWMSConnectionChangedListener(const WMSConnectionChangedCallbackFunc& callbackFunc)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    WLOGFI("RegisterWMSConnectionChangedListener in");
+    SessionManager::GetInstance().RegisterWMSConnectionChangedListener(callbackFunc);
+    return WMError::WM_OK;
+}
+
+WMError WindowAdapter::UnregisterWMSConnectionChangedListener()
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    WLOGFI("UnregisterWMSConnectionChangedListener in");
+    SessionManager::GetInstance().UnregisterWMSConnectionChangedListener();
+    return WMError::WM_OK;
+}
+
 void WindowAdapter::WindowManagerAndSessionRecover()
 {
     ClearWindowAdapter();
@@ -570,5 +586,12 @@ WMError WindowAdapter::ShiftAppWindowFocus(int32_t sourcePersistentId, int32_t t
     return static_cast<WMError>(
         windowManagerServiceProxy_->ShiftAppWindowFocus(sourcePersistentId, targetPersistentId));
 }
+
+WMError WindowAdapter::HideNonSecureWindows(bool shouldHide)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
+    return static_cast<WMError>(windowManagerServiceProxy_->HideNonSecureWindows(shouldHide));
+}
+
 } // namespace Rosen
 } // namespace OHOS

@@ -159,7 +159,8 @@ WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
         // update subWindowSessionMap_
         subWindowSessionMap_[parentSession->GetPersistentId()].push_back(this);
     } else { // system window
-        if (WindowHelper::IsAppFloatingWindow(type) || WindowHelper::IsPipWindow(type)) {
+        if (WindowHelper::IsAppFloatingWindow(type) || WindowHelper::IsPipWindow(type) ||
+            (type == WindowType::WINDOW_TYPE_TOAST)) {
             property_->SetParentPersistentId(GetFloatingWindowParentId());
             WLOGFI("[WMSSystem] set parentId: %{public}d, type: %{public}d", property_->GetParentPersistentId(), type);
             auto mainWindow = FindMainWindowWithContext();
@@ -753,14 +754,7 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
         return res;
     }
 
-    uint32_t animationFlag = property_->GetAnimationFlag();
-    if (animationFlag == static_cast<uint32_t>(WindowAnimation::CUSTOM)) {
-        animationTransitionController_->AnimationForHidden();
-        RSTransaction::FlushImplicitTransaction();
-    }
-
     /*
-     * delete after replace WSError with WMError
      * main window no need to notify host, since host knows hide first
      * main window notify host temporarily, since host background may failed
      * need to SetActive(false) for host session before background
@@ -783,6 +777,11 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
         UpdateSubWindowState(type);
         state_ = WindowState::STATE_HIDDEN;
         requestState_ = WindowState::STATE_HIDDEN;
+    }
+    uint32_t animationFlag = property_->GetAnimationFlag();
+    if (animationFlag == static_cast<uint32_t>(WindowAnimation::CUSTOM)) {
+        animationTransitionController_->AnimationForHidden();
+        RSTransaction::FlushImplicitTransaction();
     }
     NotifyWindowStatusChange(GetMode());
     WLOGFI("[WMSLife] Window hide success [id:%{public}d, type: %{public}d", property_->GetPersistentId(), type);
@@ -908,6 +907,30 @@ void WindowSceneSessionImpl::DestroySubWindow()
     }
 }
 
+WMError WindowSceneSessionImpl::DestroyInner(bool needNotifyServer)
+{
+    if (!WindowHelper::IsMainWindow(GetType()) && needNotifyServer) {
+        if (WindowHelper::IsSystemWindow(GetType())) {
+            // main window no need to notify host, since host knows hide first
+            SingletonContainer::Get<WindowAdapter>().DestroyAndDisconnectSpecificSession(property_->GetPersistentId());
+        } else if (WindowHelper::IsSubWindow(GetType())) {
+            auto parentSession = FindParentSessionByParentId(GetParentId());
+            if (parentSession == nullptr || parentSession->GetHostSession() == nullptr) {
+                return WMError::WM_ERROR_NULLPTR;
+            }
+            SingletonContainer::Get<WindowAdapter>().DestroyAndDisconnectSpecificSession(property_->GetPersistentId());
+        }
+    }
+
+    WMError ret = WMError::WM_OK;
+    if (WindowHelper::IsMainWindow(GetType()) && state_ == WindowState::STATE_HIDDEN) {
+        if (hostSession_ != nullptr) {
+            ret = static_cast<WMError>(hostSession_->Disconnect(true));
+        }
+    }
+    return ret;
+}
+
 WMError WindowSceneSessionImpl::Destroy(bool needNotifyServer, bool needClearListener)
 {
     if (property_ == nullptr) {
@@ -925,18 +948,13 @@ WMError WindowSceneSessionImpl::Destroy(bool needNotifyServer, bool needClearLis
         return WMError::WM_OK;
     }
     SingletonContainer::Get<WindowAdapter>().UnregisterSessionRecoverCallbackFunc(property_->GetPersistentId());
-    if (!WindowHelper::IsMainWindow(GetType()) && needNotifyServer) {
-        if (WindowHelper::IsSystemWindow(GetType())) {
-            // main window no need to notify host, since host knows hide first
-            SingletonContainer::Get<WindowAdapter>().DestroyAndDisconnectSpecificSession(property_->GetPersistentId());
-        } else if (WindowHelper::IsSubWindow(GetType())) {
-            auto parentSession = FindParentSessionByParentId(GetParentId());
-            if (parentSession == nullptr || parentSession->GetHostSession() == nullptr) {
-                return WMError::WM_ERROR_NULLPTR;
-            }
-            SingletonContainer::Get<WindowAdapter>().DestroyAndDisconnectSpecificSession(property_->GetPersistentId());
-        }
+
+    auto ret = DestroyInner(needNotifyServer);
+    if (ret != WMError::WM_OK) {
+        WLOGFW("[WMSLife] Destroy window failed, id: %{public}d", GetPersistentId());
+        return ret;
     }
+
     // delete after replace WSError with WMError
     NotifyBeforeDestroy(GetWindowName());
     {
@@ -1199,7 +1217,8 @@ WMError WindowSceneSessionImpl::GetAvoidAreaByType(AvoidAreaType type, AvoidArea
         mode != WindowMode::WINDOW_MODE_SPLIT_PRIMARY &&
         mode != WindowMode::WINDOW_MODE_SPLIT_SECONDARY &&
         !(mode == WindowMode::WINDOW_MODE_FLOATING &&
-          system::GetParameter("const.product.devicetype", "unknown") == "phone")) {
+          (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
+           system::GetParameter("const.product.devicetype", "unknown") == "tablet"))) {
         WLOGI("[WMSImms]avoidAreaType:%{public}u, windowMode:%{public}u, return default avoid area.",
             static_cast<uint32_t>(type), static_cast<uint32_t>(mode));
         return WMError::WM_OK;
@@ -1287,10 +1306,11 @@ WMError WindowSceneSessionImpl::SetLayoutFullScreen(bool status)
 
     WindowMode mode = GetMode();
     if (!((mode == WindowMode::WINDOW_MODE_FLOATING ||
-            mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
-            mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY)  &&
-            WindowHelper::IsMainWindow(GetType()) &&
-          system::GetParameter("const.product.devicetype", "unknown") == "phone")) {
+           mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
+           mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) &&
+          WindowHelper::IsMainWindow(GetType()) &&
+          (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
+           system::GetParameter("const.product.devicetype", "unknown") == "tablet"))) {
         hostSession_->OnSessionEvent(SessionEvent::EVENT_MAXIMIZE);
         SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
     }
@@ -1418,9 +1438,10 @@ WMError WindowSceneSessionImpl::SetFullScreen(bool status)
     WindowMode mode = GetMode();
     if (!((mode == WindowMode::WINDOW_MODE_FLOATING ||
            mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
-           mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY)  &&
-            WindowHelper::IsMainWindow(GetType()) &&
-          system::GetParameter("const.product.devicetype", "unknown") == "phone")) {
+           mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) &&
+          WindowHelper::IsMainWindow(GetType()) &&
+          (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
+           system::GetParameter("const.product.devicetype", "unknown") == "tablet"))) {
         hostSession_->OnSessionEvent(SessionEvent::EVENT_MAXIMIZE);
         SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
     };

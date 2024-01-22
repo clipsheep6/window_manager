@@ -34,6 +34,8 @@ public:
         bool isdistributed, sptr<IRemoteObject> token, AppExecFwk::Ability* ability = nullptr) = 0;
 
     virtual sptr<Window> GetWindow() = 0;
+
+    virtual WMError HideNonSecureWindows(bool shouldHide) = 0;
 };
 } // namespace Rosen
 } // namespace OHOS

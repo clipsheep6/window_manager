@@ -53,6 +53,19 @@ void SystemSession::UpdateCameraFloatWindowStatus(bool isShowing)
 
 WSError SystemSession::Show(sptr<WindowSessionProperty> property)
 {
+    auto type = GetWindowType();
+    if (((type == WindowType::WINDOW_TYPE_TOAST) || (type == WindowType::WINDOW_TYPE_FLOAT)) &&
+        !SessionPermission::IsSystemCalling()) {
+        auto parentSession = GetParentSession();
+        if (parentSession == nullptr) {
+            WLOGFW("parent session is null");
+            return WSError::WS_ERROR_INVALID_PARENT;
+        }
+        if (parentSession->IsSessionForeground()) {
+            WLOGFW("parent session is not in foreground");
+            return WSError::WS_ERROR_INVALID_OPERATION;
+        }
+    }
     auto task = [weakThis = wptr(this), property]() {
         auto session = weakThis.promote();
         if (!session) {
@@ -110,16 +123,16 @@ WSError SystemSession::Hide()
     return WSError::WS_OK;
 }
 
-WSError SystemSession::Disconnect()
+WSError SystemSession::Disconnect(bool isFromClient)
 {
-    auto task = [weakThis = wptr(this)]() {
+    auto task = [weakThis = wptr(this), isFromClient]() {
         auto session = weakThis.promote();
         if (!session) {
             WLOGFE("[WMSLife] session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
         WLOGFI("[WMSLife] Disconnect session, id: %{public}d", session->GetPersistentId());
-        session->SceneSession::Disconnect();
+        session->SceneSession::Disconnect(isFromClient);
         if (session->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
             session->NotifyCallingSessionBackground();
         }

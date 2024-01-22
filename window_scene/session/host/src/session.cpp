@@ -63,9 +63,11 @@ Session::Session(const SessionInfo& info) : sessionInfo_(info)
     }
 }
 
-void Session::SetEventHandler(const std::shared_ptr<AppExecFwk::EventHandler>& handler)
+void Session::SetEventHandler(const std::shared_ptr<AppExecFwk::EventHandler>& handler,
+    const std::shared_ptr<AppExecFwk::EventHandler>& exportHandler)
 {
     handler_ = handler;
+    exportHandler_ = exportHandler;
 }
 
 void Session::PostTask(Task&& task, const std::string& name, int64_t delayTime)
@@ -81,6 +83,20 @@ void Session::PostTask(Task&& task, const std::string& name, int64_t delayTime)
     handler_->PostTask(std::move(localTask), "wms:" + name, delayTime, AppExecFwk::EventQueue::Priority::IMMEDIATE);
 }
 
+void Session::PostExportTask(Task&& task, const std::string& name, int64_t delayTime)
+{
+    if (!exportHandler_ || exportHandler_->GetEventRunner()->IsCurrentRunnerThread()) {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "s:%s", name.c_str());
+        return task();
+    }
+    auto localTask = [task, name]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "s:%s", name.c_str());
+        task();
+    };
+    exportHandler_->PostTask(std::move(localTask), "wms:" + name, delayTime,
+        AppExecFwk::EventQueue::Priority::IMMEDIATE);
+}
+
 int32_t Session::GetPersistentId() const
 {
     return persistentId_;
@@ -89,6 +105,11 @@ int32_t Session::GetPersistentId() const
 std::shared_ptr<RSSurfaceNode> Session::GetSurfaceNode() const
 {
     return surfaceNode_;
+}
+
+void Session::SetLeashWinSurfaceNode(std::shared_ptr<RSSurfaceNode> leashWinSurfaceNode)
+{
+    leashWinSurfaceNode_ = leashWinSurfaceNode;
 }
 
 std::shared_ptr<RSSurfaceNode> Session::GetLeashWinSurfaceNode() const
@@ -724,6 +745,9 @@ WSError Session::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWi
         property->SetIsNeedUpdateWindowMode(true);
         property->SetWindowMode(property_->GetWindowMode());
     }
+    if (SessionHelper::IsMainWindow(GetWindowType()) && GetSessionInfo().screenId_ != 0 && property) {
+        property->SetDisplayId(GetSessionInfo().screenId_);
+    }
     SetSessionProperty(property);
     if (property) {
         property->SetPersistentId(GetPersistentId());
@@ -913,7 +937,7 @@ void Session::NotifyCallingSessionBackground()
     }
 }
 
-WSError Session::Disconnect()
+WSError Session::Disconnect(bool isFromClient)
 {
     auto state = GetSessionState();
     WLOGFI("[WMSLife] Disconnect session, id: %{public}d, state: %{public}u", GetPersistentId(), state);
@@ -1174,19 +1198,18 @@ WSError Session::Clear()
     return WSError::WS_OK;
 }
 
-void Session::SetSessionExceptionListener(const NotifySessionExceptionFunc& func)
+void Session::SetSessionExceptionListener(const NotifySessionExceptionFunc& func, bool fromJsScene)
 {
     if (func == nullptr) {
         WLOGFE("func is nullptr");
         return;
     }
     std::shared_ptr<NotifySessionExceptionFunc> funcSptr = std::make_shared<NotifySessionExceptionFunc>(func);
-    if (std::find(sessionExceptionFuncs_.begin(), sessionExceptionFuncs_.end(), funcSptr) !=
-        sessionExceptionFuncs_.end()) {
-        WLOGFW("func already regitered");
-        return;
+    if (fromJsScene) {
+        jsSceneSessionExceptionFunc_ = funcSptr;
+    } else {
+        sessionExceptionFunc_ = funcSptr;
     }
-    sessionExceptionFuncs_.emplace_back(funcSptr);
 }
 
 void Session::SetSessionSnapshotListener(const NotifySessionSnapshotFunc& func)
@@ -1456,7 +1479,7 @@ void Session::PresentFocusIfPointDown()
 {
     WLOGFI("PresentFocusIfPointDown, id: %{public}d, type: %{public}d", GetPersistentId(), GetWindowType());
     if (!isFocused_ && GetFocusable()) {
-        NotifyRequestFocusStatusNotifyManager(true);
+        NotifyRequestFocusStatusNotifyManager(true, false);
     }
     if (!sessionInfo_.isSystem_ || (!isFocused_ && GetFocusable())) {
         NotifyClick();
@@ -1708,6 +1731,8 @@ void Session::SetSessionStateChangeListenser(const NotifySessionStateChangeFunc&
         changedState = SessionState::STATE_FOREGROUND;
     } else if (changedState == SessionState::STATE_INACTIVE) {
         changedState = SessionState::STATE_BACKGROUND;
+    } else if (changedState == SessionState::STATE_DISCONNECT) {
+        return;
     }
     NotifySessionStateChange(changedState);
     WLOGFD("SetSessionStateChangeListenser, id: %{public}d, state_: %{public}d, changedState: %{public}d",
@@ -1735,6 +1760,8 @@ void Session::UnregisterSessionChangeListeners()
         session->sessionFocusableChangeFunc_ = nullptr;
         session->sessionTouchableChangeFunc_ = nullptr;
         session->clickFunc_ = nullptr;
+        session->jsSceneSessionExceptionFunc_ = nullptr;
+        session->sessionExceptionFunc_ = nullptr;
         WLOGFD("UnregisterSessionChangeListenser, id: %{public}d", session->GetPersistentId());
     };
     PostTask(task, "UnregisterSessionChangeListeners");
@@ -1743,6 +1770,9 @@ void Session::UnregisterSessionChangeListeners()
 void Session::SetSessionStateChangeNotifyManagerListener(const NotifySessionStateChangeNotifyManagerFunc& func)
 {
     sessionStateChangeNotifyManagerFunc_ = func;
+    if (state_ == SessionState::STATE_DISCONNECT) {
+        return;
+    }
     NotifySessionStateChange(state_);
 }
 
@@ -1833,11 +1863,11 @@ void Session::NotifyClick()
     }
 }
 
-void Session::NotifyRequestFocusStatusNotifyManager(bool isFocused)
+void Session::NotifyRequestFocusStatusNotifyManager(bool isFocused, bool byForeground)
 {
     WLOGFD("NotifyRequestFocusStatusNotifyManager id: %{public}d, focused: %{public}d", GetPersistentId(), isFocused);
     if (requestFocusStatusNotifyManagerFunc_) {
-        requestFocusStatusNotifyManagerFunc_(GetPersistentId(), isFocused);
+        requestFocusStatusNotifyManagerFunc_(GetPersistentId(), isFocused, byForeground);
     }
 }
 
@@ -1878,7 +1908,7 @@ void Session::PresentFoucusIfNeed(int32_t pointerAction)
     if (pointerAction == MMI::PointerEvent::POINTER_ACTION_DOWN ||
         pointerAction == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
         if (!isFocused_ && GetFocusable()) {
-            NotifyRequestFocusStatusNotifyManager(true);
+            NotifyRequestFocusStatusNotifyManager(true, false);
         }
         if (!sessionInfo_.isSystem_ || (!isFocused_ && GetFocusable())) {
             NotifyClick();

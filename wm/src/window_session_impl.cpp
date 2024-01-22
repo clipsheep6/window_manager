@@ -449,6 +449,12 @@ WSError WindowSessionImpl::UpdateRect(const WSRect& rect, SizeChangeReason reaso
     Rect wmRect = { rect.posX_, rect.posY_, rect.width_, rect.height_ };
     auto preRect = GetRect();
     property_->SetWindowRect(wmRect);
+    WLOGFI("[WMSLayout] updateRect %{public}s, reason:%{public}u"
+        "WindowInfo:[name: %{public}s, persistentId:%{public}d]", rect.ToString().c_str(),
+        wmReason, GetWindowName().c_str(), GetPersistentId());
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER,
+        "WindowSessionImpl::UpdateRect%d [%d, %d, %u, %u] reason:%u",
+        GetPersistentId(), wmRect.posX_, wmRect.posY_, wmRect.width_, wmRect.height_, wmReason);
     if (handler_ != nullptr && wmReason == WindowSizeChangeReason::ROTATION) {
         postTaskDone_ = false;
         UpdateRectForRotation(wmRect, preRect, wmReason, rsTransaction);
@@ -460,12 +466,6 @@ WSError WindowSessionImpl::UpdateRect(const WSRect& rect, SizeChangeReason reaso
         }
         UpdateViewportConfig(wmRect, wmReason, rsTransaction);
     }
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER,
-        "WindowSessionImpl::UpdateRect%d [%d, %d, %u, %u] reason:%u",
-        GetPersistentId(), wmRect.posX_, wmRect.posY_, wmRect.width_, wmRect.height_, wmReason);
-    WLOGFI("[WMSLayout] updateRect [%{public}d, %{public}d, %{public}u, %{public}u], reason:%{public}u"
-        "WindowInfo:[name: %{public}s, persistentId:%{public}d]", rect.posX_, rect.posY_,
-        rect.width_, rect.height_, wmReason, GetWindowName().c_str(), GetPersistentId());
     return WSError::WS_OK;
 }
 
@@ -671,6 +671,10 @@ WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, nap
     WindowSetUIContentType type, AppExecFwk::Ability* ability)
 {
     WLOGFD("[WMSLife]NapiSetUIContent: %{public}s state:%{public}u", contentInfo.c_str(), state_);
+    if (IsWindowSessionInvalid()) {
+        WLOGFE("[WMSLife]interrupt set uicontent because window is invalid! window state: %{public}d", state_);
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
     if (uiContent_) {
         uiContent_->Destroy();
     }
@@ -1446,9 +1450,10 @@ static void RequestInputMethodCloseKeyboard(bool isNeedKeyboard, bool keepKeyboa
 {
     if (!isNeedKeyboard && !keepKeyboardFlag) {
 #ifdef IMF_ENABLE
-        WLOGFI("[WMSInput] Notify InputMethod framework close keyboard");
+        WLOGFI("[WMSInput] Notify InputMethod framework close keyboard start.");
         if (MiscServices::InputMethodController::GetInstance()) {
             int32_t ret = MiscServices::InputMethodController::GetInstance()->RequestHideInput();
+            WLOGFI("[WMSInput] Notify InputMethod framework close keyboard end.");
             if (ret != 0) { // 0 - NO_ERROR
                 WLOGFE("[WMSInput] InputMethod framework close keyboard failed, ret: %{public}d", ret);
             }
@@ -1941,17 +1946,17 @@ WMError WindowSessionImpl::UnregisterWindowVisibilityChangeListener(const IWindo
     auto persistentId = GetPersistentId();
     WLOGFD("Start to unregister window visibility change listener, persistentId=%{public}d.", persistentId);
     WMError ret = WMError::WM_OK;
-    bool isFirstUnregister = false;
+    bool isLastUnregister = false;
     {
         std::lock_guard<std::recursive_mutex> lockListener(windowVisibilityChangeListenerMutex_);
         ret = UnregisterListener(windowVisibilityChangeListeners_[persistentId], listener);
         if (ret != WMError::WM_OK) {
             return ret;
         }
-        isFirstUnregister = windowVisibilityChangeListeners_[persistentId].empty();
+        isLastUnregister = windowVisibilityChangeListeners_[persistentId].empty();
     }
 
-    if (isFirstUnregister) {
+    if (isLastUnregister) {
         ret = SingletonContainer::Get<WindowAdapter>().UpdateSessionWindowVisibilityListener(persistentId, false);
     }
     return ret;
@@ -2278,7 +2283,8 @@ void WindowSessionImpl::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo
     for (auto& listener : occupiedAreaChangeListeners) {
         if (listener != nullptr) {
             if (property_->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
-                system::GetParameter("const.product.devicetype", "unknown") == "phone") {
+                (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
+                 system::GetParameter("const.product.devicetype", "unknown") == "tablet")) {
                 sptr<OccupiedAreaChangeInfo> occupiedAreaChangeInfo = new OccupiedAreaChangeInfo();
                 listener->OnSizeChange(occupiedAreaChangeInfo);
                 continue;
@@ -2368,5 +2374,11 @@ void WindowSessionImpl::NotifyTransformChange(const Transform& transform)
         uiContent_->UpdateTransform(transform);
     }
 }
+
+WMError WindowSessionImpl::HideNonSecureWindows(bool shouldHide)
+{
+    return SingletonContainer::Get<WindowAdapter>().HideNonSecureWindows(shouldHide);
+}
+
 } // namespace Rosen
 } // namespace OHOS

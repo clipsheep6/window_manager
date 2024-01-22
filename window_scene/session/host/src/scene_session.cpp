@@ -141,6 +141,11 @@ WSError SceneSession::Foreground(sptr<WindowSessionProperty> property)
             return ret;
         }
         session->NotifyForeground();
+        auto sessionProperty = session->GetSessionProperty();
+        if (session->leashWinSurfaceNode_ && sessionProperty) {
+            bool lastPrivacyMode = sessionProperty->GetPrivacyMode() || sessionProperty->GetSystemPrivacyMode();
+            session->leashWinSurfaceNode_->SetSecurityLayer(lastPrivacyMode);
+        }
         if (session->specificCallback_ != nullptr) {
             session->specificCallback_->onUpdateAvoidArea_(session->GetPersistentId());
             session->specificCallback_->onWindowInfoUpdate_(
@@ -209,15 +214,20 @@ void SceneSession::ClearSpecificSessionCbMap()
     PostTask(task, "ClearSpecificSessionCbMap");
 }
 
-WSError SceneSession::Disconnect()
+WSError SceneSession::Disconnect(bool isFromClient)
 {
-    PostTask([weakThis = wptr(this)]() {
+    PostTask([weakThis = wptr(this), isFromClient]() {
         auto session = weakThis.promote();
         if (!session) {
             WLOGFE("[WMSLife] session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
         WLOGFI("[WMSLife] Disconnect session, id: %{public}d", session->GetPersistentId());
+        if (isFromClient) {
+            WLOGFI("[WMSLife] Client need notify destroy session, id: %{public}d", session->GetPersistentId());
+            session->SetSessionState(SessionState::STATE_DISCONNECT);
+            return WSError::WS_OK;
+        }
         if (session->needSnapshot_) {
             session->snapshot_ = session->Snapshot();
             if (session->scenePersistence_ && session->snapshot_) {
@@ -228,7 +238,7 @@ WSError SceneSession::Disconnect()
         if (WindowHelper::IsPipWindow(session->GetWindowType())) {
             session->SavePiPRectInfo();
         }
-        session->Session::Disconnect();
+        session->Session::Disconnect(isFromClient);
         session->snapshot_.reset();
         session->isTerminating = false;
         return WSError::WS_OK;
@@ -404,12 +414,13 @@ WSError SceneSession::UpdateRect(const WSRect& rect, SizeChangeReason reason,
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
         if (session->winRect_ == rect) {
-            WLOGFW("[WMSLayout] skip same rect update id:%{public}d!", session->GetPersistentId());
+            WLOGFI("[WMSLayout] skip same rect update id:%{public}d rect:%{public}s!",
+                session->GetPersistentId(), rect.ToString().c_str());
             return WSError::WS_OK;
         }
         if (rect.IsInvalid()) {
-            WLOGFE("[WMSLayout] id:%{public}d rect:[%{public}d, %{public}d, %{public}u, %{public}u] is invalid",
-                session->GetPersistentId(), rect.posX_, rect.posY_, rect.width_, rect.height_);
+            WLOGFE("[WMSLayout] id:%{public}d rect:%{public}s is invalid",
+                session->GetPersistentId(), rect.ToString().c_str());
             return WSError::WS_ERROR_INVALID_PARAM;
         }
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER,
@@ -417,18 +428,17 @@ WSError SceneSession::UpdateRect(const WSRect& rect, SizeChangeReason reason,
             session->GetPersistentId(), rect.posX_, rect.posY_, rect.width_, rect.height_);
         // position change no need to notify client, since frame layout finish will notify
         if (NearEqual(rect.width_, session->winRect_.width_) && NearEqual(rect.height_, session->winRect_.height_)) {
-            WLOGFI("[WMSLayout] position change no need notify client id:%{public}d, rect:[%{public}d, %{public}d, \
-                %{public}u, %{public}u], preRect: [%{public}d, %{public}d, %{public}u, %{public}u]",
-                session->GetPersistentId(), rect.posX_, rect.posY_, rect.width_, rect.height_,
-                session->winRect_.posX_, session->winRect_.posY_, session->winRect_.width_, session->winRect_.height_);
+            WLOGFI("[WMSLayout] position change no need notify client id:%{public}d, rect:%{public}s, \
+                preRect: %{public}s",
+                session->GetPersistentId(), rect.ToString().c_str(), session->winRect_.ToString().c_str());
             session->winRect_ = rect;
             session->isDirty_ = true;
         } else {
             session->winRect_ = rect;
             session->NotifyClientToUpdateRect(rsTransaction);
         }
-        WLOGFD("[WMSLayout] id:%{public}d, reason:%{public}d, rect:[%{public}d, %{public}d, %{public}u, %{public}u]",
-            session->GetPersistentId(), session->reason_, rect.posX_, rect.posY_, rect.width_, rect.height_);
+        WLOGFD("[WMSLayout] id:%{public}d, reason:%{public}d, rect:%{public}s",
+            session->GetPersistentId(), session->reason_, rect.ToString().c_str());
 
         return WSError::WS_OK;
     };
@@ -444,10 +454,8 @@ WSError SceneSession::NotifyClientToUpdateRect(std::shared_ptr<RSTransaction> rs
             WLOGFE("session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
-        WLOGD("[WMSLayout] NotifyClientToUpdateRect id:%{public}d, reason:%{public}d, rect:[%{public}d, "
-            "%{public}d, %{public}u, %{public}u]",
-            session->GetPersistentId(), session->reason_, session->winRect_.posX_,
-            session->winRect_.posY_, session->winRect_.width_, session->winRect_.height_);
+        WLOGD("[WMSLayout] NotifyClientToUpdateRect id:%{public}d, reason:%{public}d, rect:%{public}s",
+            session->GetPersistentId(), session->reason_, session->winRect_.ToString().c_str());
         bool isMoveOrDrag = session->moveDragController_ &&
             (session->moveDragController_->GetStartDragFlag() || session->moveDragController_->GetStartMoveFlag());
         if (isMoveOrDrag && session->reason_ == SizeChangeReason::UNDEFINED) {
@@ -674,7 +682,7 @@ WSError SceneSession::RaiseAppMainWindowToTop()
             WLOGFE("session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
-        session->NotifyRequestFocusStatusNotifyManager(true);
+        session->NotifyRequestFocusStatusNotifyManager(true, true);
         session->NotifyClick();
         return WSError::WS_OK;
     };
@@ -755,7 +763,8 @@ void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
          Session::GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
          Session::GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) &&
         WindowHelper::IsMainWindow(Session::GetWindowType()) &&
-        system::GetParameter("const.product.devicetype", "unknown") == "phone") {
+        (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
+         system::GetParameter("const.product.devicetype", "unknown") == "tablet")) {
         float miniScale = 0.316f; // Pressed mini floating Scale with 0.001 precision
         if (Session::GetScaleX() <= miniScale) {
             return;
@@ -786,7 +795,8 @@ void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 void SceneSession::GetKeyboardAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 {
     if (Session::GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
-        system::GetParameter("const.product.devicetype", "unknown") == "phone") {
+        (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
+         system::GetParameter("const.product.devicetype", "unknown") == "tablet")) {
         return;
     }
     std::vector<sptr<SceneSession>> inputMethodVector =
@@ -1069,12 +1079,7 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
     if (property == nullptr) {
         return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
     }
-    if (property->GetMaximizeMode() != MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
-        auto ret = HandlePointerStyle(pointerEvent);
-        if ((ret != WSError::WS_OK) && (ret != WSError::WS_DO_NOTHING)) {
-            WLOGFE("Failed to update the mouse cursor style, ret:%{public}d", ret);
-        }
-    }
+
     auto windowType = property->GetWindowType();
     if (property->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
         (WindowHelper::IsMainWindow(windowType) || WindowHelper::IsSubWindow(windowType)) &&
@@ -1868,13 +1873,13 @@ WSError SceneSession::TerminateSession(const sptr<AAFwk::SessionInfo> abilitySes
     return WSError::WS_OK;
 }
 
-WSError SceneSession::NotifySessionException(const sptr<AAFwk::SessionInfo> abilitySessionInfo)
+WSError SceneSession::NotifySessionException(const sptr<AAFwk::SessionInfo> abilitySessionInfo, bool needRemoveSession)
 {
     if (!SessionPermission::VerifySessionPermission()) {
         WLOGFE("The interface permission failed.");
         return WSError::WS_ERROR_INVALID_PERMISSION;
     }
-    auto task = [weakThis = wptr(this), abilitySessionInfo]() {
+    auto task = [weakThis = wptr(this), abilitySessionInfo, needRemoveSession]() {
         auto session = weakThis.promote();
         if (!session) {
             WLOGFE("session is null");
@@ -1902,11 +1907,13 @@ WSError SceneSession::NotifySessionException(const sptr<AAFwk::SessionInfo> abil
             session->sessionInfo_.errorCode = abilitySessionInfo->errorCode;
             session->sessionInfo_.errorReason = abilitySessionInfo->errorReason;
         }
-        if (!session->sessionExceptionFuncs_.empty()) {
-            for (auto funcPtr : session->sessionExceptionFuncs_) {
-                auto sessionExceptionFunc = *funcPtr;
-                sessionExceptionFunc(info);
-            }
+        if (session->sessionExceptionFunc_) {
+            auto exceptionFunc = *(session->sessionExceptionFunc_);
+            exceptionFunc(info, needRemoveSession);
+        }
+        if (session->jsSceneSessionExceptionFunc_) {
+            auto exceptionFunc = *(session->jsSceneSessionExceptionFunc_);
+            exceptionFunc(info, needRemoveSession);
         }
         return WSError::WS_OK;
     };
@@ -2293,13 +2300,24 @@ void SceneSession::SetScale(float scaleX, float scaleY, float pivotX, float pivo
     }
 }
 
-void SceneSession::RequestHideKeyboard()
+void SceneSession::RequestHideKeyboard(bool isAppColdStart)
 {
 #ifdef IMF_ENABLE
-    WLOGFI("Notify InputMethod framework hide keyboard, id: %{public}d", Session::GetPersistentId());
-    if (MiscServices::InputMethodController::GetInstance()) {
-        MiscServices::InputMethodController::GetInstance()->RequestHideInput();
-    }
+    auto task = [weakThis = wptr(this), isAppColdStart]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGFE("[WMSInput] Session is null, notify inputMethod framework hide keyboard failed!");
+            return;
+        }
+        WLOGFI("[WMSInput] Notify inputMethod framework hide keyboard start, id: %{public}d,"
+            "isAppColdStart: %{public}d", session->GetPersistentId(), isAppColdStart);
+        if (MiscServices::InputMethodController::GetInstance()) {
+            MiscServices::InputMethodController::GetInstance()->RequestHideInput();
+            WLOGFI("[WMSInput] Notify inputMethod framework hide keyboard end, id: %{public}d",
+                session->GetPersistentId());
+        }
+    };
+    PostExportTask(task, "RequestHideKeyboard");
 #endif
 }
 
