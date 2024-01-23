@@ -1426,7 +1426,7 @@ void WindowSessionImpl::NotifyAfterForeground(bool needNotifyListeners, bool nee
     if (needNotifyUiContent) {
         CALL_UI_CONTENT(Foreground);
     }
-    if (WindowHelper::IsMainWindow(GetType()) || WindowHelper::IsUIExtensionWindow(GetType())) {
+    if (WindowHelper::IsMainWindow(GetType())) {
         VsyncStation::GetInstance().SetFrameRateLinkerEnable(true);
     }
 }
@@ -1441,7 +1441,7 @@ void WindowSessionImpl::NotifyAfterBackground(bool needNotifyListeners, bool nee
     if (needNotifyUiContent) {
         CALL_UI_CONTENT(Background);
     }
-    if (WindowHelper::IsMainWindow(GetType()) || WindowHelper::IsUIExtensionWindow(GetType())) {
+    if (WindowHelper::IsMainWindow(GetType())) {
         VsyncStation::GetInstance().SetFrameRateLinkerEnable(false);
     }
 }
