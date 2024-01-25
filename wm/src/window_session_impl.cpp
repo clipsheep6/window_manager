@@ -778,6 +778,14 @@ void WindowSessionImpl::UpdateDecorEnableToAce(bool isDecorEnable)
     if (uiContent_ != nullptr) {
         uiContent_->UpdateWindowMode(GetMode(), isDecorEnable);
         WLOGFD("Notify uiContent window mode change end");
+    } else {
+        std::lock_guard<std::recursive_mutex> lockListener(windowChangeListenerMutex_);
+        auto windowChangeListeners = GetListeners<IWindowChangeListener>();
+        for (auto& listener : windowChangeListeners) {
+            if (listener.GetRefPtr() != nullptr) {
+                listener.GetRefPtr()->OnModeChange(GetMode(), isDecorEnable);
+            }
+        }
     }
 }
 
