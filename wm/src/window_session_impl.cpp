@@ -783,6 +783,13 @@ void WindowSessionImpl::UpdateDecorEnableToAce(bool isDecorEnable)
         WLOGFD("[WSLayout]Notify uiContent window mode change end,decorVisible:%{public}d", decorVisible);
         uiContent_->UpdateDecorVisible(decorVisible, isDecorEnable);
     }
+    std::lock_guard<std::recursive_mutex> lockListener(windowChangeListenerMutex_);
+    auto windowChangeListeners = GetListeners<IWindowChangeListener>();
+    for (auto& listener : windowChangeListeners) {
+        if (listener.GetRefPtr() != nullptr) {
+            listener.GetRefPtr()->OnModeChange(GetMode(), isDecorEnable);
+        }
+    }
 }
 
 void WindowSessionImpl::UpdateDecorEnable(bool needNotify, WindowMode mode)
