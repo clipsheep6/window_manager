@@ -76,7 +76,7 @@
 #include "session_helper.h"
 #include "window_helper.h"
 #include "session/screen/include/screen_session.h"
-#include "screen_session_manager/include/screen_session_manager_client.h"
+#include "../dms/screen_client/include/screen_session_manager_client.h"
 #include "singleton_container.h"
 #include "window_manager_hilog.h"
 #include "wm_common.h"
