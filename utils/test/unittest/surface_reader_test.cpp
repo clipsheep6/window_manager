@@ -41,6 +41,58 @@ HWTEST_F(SurfaceReaderTest, Init, Function | SmallTest | Level2)
     ASSERT_EQ(res, true);
     GTEST_LOG_(INFO) << "SurfaceReaderTest: Init end";
 }
+
+/**
+ * @tc.name: SetHandler
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SurfaceReaderTest, SetHandler, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "SurfaceReaderTest: SetHandler start";
+    SurfaceReader* reader = new(std::nothrow) SurfaceReader();
+    sptr<SurfaceReaderHandler> handler;
+    int resultValue = 0;
+    std::function<void()> func = [&]() {
+      reader->SetHandler(handler);
+      resultValue = 1;
+    };
+    func();
+    ASSERT_EQ(resultValue, 1);
+    GTEST_LOG_(INFO) << "SurfaceReaderTest: SetHandler end";
+}
+
+/**
+ * @tc.name: ProcessBuffer
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SurfaceReaderTest, ProcessBuffer, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "SurfaceReaderTest: ProcessBuffer start";
+    SurfaceReader* reader = new(std::nothrow) SurfaceReader();
+    sptr<SurfaceBuffer> buf;
+    bool res = reader->ProcessBuffer(buf);
+    ASSERT_EQ(res, false);
+    GTEST_LOG_(INFO) << "SurfaceReaderTest: ProcessBuffer end";
+}
+
+/**
+ * @tc.name: ProcessBuffer01
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SurfaceReaderTest, ProcessBuffer01, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "SurfaceReaderTest: ProcessBuffer start";
+    SurfaceReader* reader = new(std::nothrow) SurfaceReader();
+    sptr<SurfaceBuffer> buf;
+    sptr<SurfaceReaderHandler> handler;
+    reader->SetHandler(handler);
+    bool res = reader->ProcessBuffer(buf);
+    ASSERT_EQ(res, false);
+    GTEST_LOG_(INFO) << "SurfaceReaderTest: ProcessBuffer end";
+}
 } // namespace
 }
 }

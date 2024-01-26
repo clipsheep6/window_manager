@@ -63,6 +63,75 @@ HWTEST_F(ModalSystemUiExtensionTest, ModalSystemUiExtensionConnection01, Functio
     ASSERT_TRUE(connection->CreateModalUIExtension(want) == ERR_OK);
     delete connection;
 }
+
+/**
+ * @tc.name: ToString
+ * @tc.desc: connect modal system ui_extension
+ * @tc.type: FUNC
+ */
+HWTEST_F(ModalSystemUiExtensionTest, ToString, Function | SmallTest | Level2)
+{
+    auto connection = new(std::nothrow)ModalSystemUiExtension();
+    if (connection == nullptr) {
+        return;
+    }
+    OHOS::AAFwk::WantParams wantParams_;
+    int resultValue = 0;
+    std::function<void()> func = [&]() {
+        connection->ToString(wantParams_);
+        resultValue = 1;
+    };
+    func();
+    ASSERT_EQ(resultValue, 1);
+    delete connection;
+}
+
+/**
+ * @tc.name: OnAbilityConnectDone
+ * @tc.desc: connect modal system ui_extension
+ * @tc.type: FUNC
+ */
+HWTEST_F(ModalSystemUiExtensionTest, OnAbilityConnectDone, Function | SmallTest | Level2)
+{
+    sptr<ModalSystemUiExtension::DialogAbilityConnection> connection = nullptr;
+    if (connection == nullptr) {
+        return;
+    }
+    AppExecFwk::ElementName element;
+    sptr<IRemoteObject> remoteObject;
+    int resultCode = 0;
+    int resultValue = 0;
+    std::function<void()> func = [&]() {
+        connection->OnAbilityConnectDone(element, remoteObject, resultCode);
+        resultValue = 1;
+    };
+    func();
+    ASSERT_EQ(resultValue, 1);
+    delete connection;
+}
+
+/**
+ * @tc.name: OnAbilityDisconnectDone
+ * @tc.desc: connect modal system ui_extension
+ * @tc.type: FUNC
+ */
+HWTEST_F(ModalSystemUiExtensionTest, OnAbilityDisconnectDone, Function | SmallTest | Level2)
+{
+    sptr<ModalSystemUiExtension::DialogAbilityConnection> connection = nullptr;
+    if (connection == nullptr) {
+        return;
+    }
+    AppExecFwk::ElementName element;
+    int resultCode = 0;
+    int resultValue = 0;
+    std::function<void()> func = [&]() {
+        connection->OnAbilityDisconnectDone(element, resultCode);
+        resultValue = 1;
+    };
+    func();
+    ASSERT_EQ(resultValue, 1);
+    delete connection;
+}
 }
 } // Rosen
 } // OHOS
