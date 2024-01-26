@@ -54,8 +54,8 @@ HWTEST_F(SurfaceReaderTest, SetHandler, Function | SmallTest | Level2)
     sptr<SurfaceReaderHandler> handler;
     int resultValue = 0;
     std::function<void()> func = [&]() {
-      reader->SetHandler(handler);
-      resultValue = 1;
+        reader->SetHandler(handler);
+        resultValue = 1;
     };
     func();
     ASSERT_EQ(resultValue, 1);
