@@ -23,6 +23,7 @@
 #include <unique_fd.h>
 
 #include <hitrace_meter.h>
+#include <ipc_skeleton.h>
 #include <parameter.h>
 #include <parameters.h>
 #include <system_ability_definition.h>
@@ -62,7 +63,22 @@ const std::string ARG_LOCK_FOLD_DISPLAY_STATUS = "-l";
 const std::string ARG_UNLOCK_FOLD_DISPLAY_STATUS = "-u";
 const ScreenId SCREEN_ID_FULL = 0;
 const ScreenId SCREEN_ID_MAIN = 5;
+constexpr int32_t INVALID_UID = -1;
+constexpr int32_t INVALID_USERID = -1;
+constexpr int32_t BASE_USER_RANGE = 200000;
 } // namespace
+
+// based on the bundle_util
+inline int32_t GetUserIdByCallingUid()
+{
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    WLOGFD("get calling uid(%{public}d)", uid);
+    if (uid <= INVALID_UID) {
+        WLOGFE("uid is illegal: %{public}d", uid);
+        return INVALID_USERID;
+    }
+    return uid / BASE_USER_RANGE;
+}
 
 WM_IMPLEMENT_SINGLE_INSTANCE(ScreenSessionManager)
 
@@ -1089,7 +1105,7 @@ void ScreenSessionManager::NotifyDisplayEvent(DisplayEvent event)
 ScreenPowerState ScreenSessionManager::GetScreenPower(ScreenId screenId)
 {
     auto state = static_cast<ScreenPowerState>(RSInterfaces::GetInstance().GetScreenPowerStatus(screenId));
-    WLOGFI("GetScreenPower:%{public}u, rsscreen:%{public}" PRIu64".", state, screenId);
+    WLOGFI("GetScreenPower:%{public}u, screenId:%{public}" PRIu64".", state, screenId);
     return state;
 }
 
@@ -1355,7 +1371,7 @@ DMError ScreenSessionManager::GetAllScreenInfos(std::vector<sptr<ScreenInfo>>& s
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     std::vector<ScreenId> screenIds = GetAllScreenIds();
-    for (auto screenId: screenIds) {
+    for (auto screenId : screenIds) {
         auto screenInfo = GetScreenInfoById(screenId);
         if (screenInfo == nullptr) {
             WLOGE("SCB: ScreenSessionManager::GetAllScreenInfos cannot find screenInfo: %{public}" PRIu64"", screenId);
@@ -1532,7 +1548,7 @@ ScreenId ScreenSessionManager::CreateVirtualScreen(VirtualScreenOption option,
         smsScreenId = screenIdManager_.CreateAndGetNewScreenId(rsId);
         auto screenSession = InitVirtualScreen(smsScreenId, rsId, option);
         if (screenSession == nullptr) {
-            WLOGFI("SCB: ScreenSessionManager::CreateVirtualScreen screensession is nullptr");
+            WLOGFI("SCB: ScreenSessionManager::CreateVirtualScreen screenSession is nullptr");
             screenIdManager_.DeleteScreenId(smsScreenId);
             return SCREEN_ID_INVALID;
         }
@@ -2927,7 +2943,7 @@ void ScreenSessionManager::NotifyFoldStatusChanged(FoldStatus foldStatus)
     if (agents.empty()) {
         return;
     }
-    for (auto& agent: agents) {
+    for (auto& agent : agents) {
         agent->NotifyFoldStatusChanged(foldStatus);
     }
 }
@@ -2938,7 +2954,7 @@ void ScreenSessionManager::NotifyDisplayChangeInfoChanged(const sptr<DisplayChan
     if (agents.empty()) {
         return;
     }
-    for (auto& agent: agents) {
+    for (auto& agent : agents) {
         agent->NotifyDisplayChangeInfoChanged(info);
     }
 }
@@ -2950,7 +2966,7 @@ void ScreenSessionManager::NotifyDisplayModeChanged(FoldDisplayMode displayMode)
     if (agents.empty()) {
         return;
     }
-    for (auto& agent: agents) {
+    for (auto& agent : agents) {
         agent->NotifyDisplayModeChanged(displayMode);
     }
 }
@@ -3019,12 +3035,13 @@ void ScreenSessionManager::OnScreenRotationLockedChange(bool isLocked, ScreenId 
     clientProxy_->OnScreenRotationLockedChanged(screenId, isLocked);
 }
 
-void ScreenSessionManager::SetClient(const sptr<IScreenSessionManagerClient>& client, int32_t userId)
+void ScreenSessionManager::SetClient(const sptr<IScreenSessionManagerClient>& client)
 {
     if (!client) {
         WLOGFE("client is null");
         return;
     }
+    auto userId = GetUserIdByCallingUid();
     WLOGFI("SetClient userId= %{public}d", userId);
     MockSessionManagerService::GetInstance().NotifyWMSConnected(userId, 0);
     clientProxy_ = client;
@@ -3254,7 +3271,7 @@ void ScreenSessionManager::NotifyAvailableAreaChanged(DMRect area)
     if (agents.empty()) {
         return;
     }
-    for (auto& agent: agents) {
+    for (auto& agent : agents) {
         agent->NotifyAvailableAreaChanged(area);
     }
 }
