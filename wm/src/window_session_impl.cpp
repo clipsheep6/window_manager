@@ -350,7 +350,7 @@ void WindowSessionImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent
 
 WMError WindowSessionImpl::Show(uint32_t reason, bool withAnimation)
 {
-    WLOGFI("[WMSLife]Window Show [name:%{public}s, id:%{public}d, type:%{public}u], reason:%{public}u state:%{public}u",
+    WLOGFI("[WMSLife]WindowShow [name:%{public}s, id:%{public}d, type:%{public}u], reason:%{public}u state:%{public}u",
         property_->GetWindowName().c_str(), property_->GetPersistentId(), GetType(), reason, state_);
     if (IsWindowSessionInvalid()) {
         WLOGFE("session is invalid");
@@ -608,7 +608,7 @@ void WindowSessionImpl::UpdateViewportConfig(const Rect& rect, WindowSizeChangeR
     config.SetDensity(density);
     config.SetOrientation(orientation);
     uiContent_->UpdateViewportConfig(config, reason, rsTransaction);
-    WLOGFI("[WMSLayout] Id:%{public}d, reason:%{public}d, windowRect:[%{public}d, %{public}d, %{public}u, %{public}u], "
+    WLOGFI("[WMSLayout] Id:%{public}d, reason:%{public}d, windowRect:[%{public}d, %{public}d, %{public}u, %{public}u],"
         "orientation: %{public}d", GetPersistentId(), reason, rect.posX_, rect.posY_,
         rect.width_, rect.height_, orientation);
 }
@@ -1340,7 +1340,8 @@ EnableIfSame<T, IWindowChangeListener, std::vector<sptr<IWindowChangeListener>>>
 }
 
 template<typename T>
-EnableIfSame<T, IOccupiedAreaChangeListener, std::vector<sptr<IOccupiedAreaChangeListener>>> WindowSessionImpl::GetListeners()
+EnableIfSame<T, IOccupiedAreaChangeListener,
+    std::vector<sptr<IOccupiedAreaChangeListener>>> WindowSessionImpl::GetListeners()
 {
     std::vector<sptr<IOccupiedAreaChangeListener>> occupiedAreaChangeListeners;
     for (auto& listener : occupiedAreaChangeListeners_[GetPersistentId()]) {
@@ -1385,7 +1386,8 @@ void WindowSessionImpl::ClearUselessListeners(std::map<int32_t, T>& listeners, i
 }
 
 template<typename T>
-EnableIfSame<T, IWindowStatusChangeListener, std::vector<sptr<IWindowStatusChangeListener>>> WindowSessionImpl::GetListeners()
+EnableIfSame<T, IWindowStatusChangeListener, 
+    std::vector<sptr<IWindowStatusChangeListener>>> WindowSessionImpl::GetListeners()
 {
     std::vector<sptr<IWindowStatusChangeListener>> windowStatusChangeListeners;
     for (auto& listener : windowStatusChangeListeners_[GetPersistentId()]) {
@@ -1676,8 +1678,8 @@ WMError WindowSessionImpl::UnregisterScreenshotListener(const sptr<IScreenshotLi
 }
 
 template<typename T>
-EnableIfSame<T, IDialogDeathRecipientListener, std::vector<sptr<IDialogDeathRecipientListener>>> WindowSessionImpl::
-    GetListeners()
+EnableIfSame<T, IDialogDeathRecipientListener,
+    std::vector<sptr<IDialogDeathRecipientListener>>> WindowSessionImpl::GetListeners()
 {
     std::vector<sptr<IDialogDeathRecipientListener>> dialogDeathRecipientListener;
     for (auto& listener : dialogDeathRecipientListeners_[GetPersistentId()]) {
@@ -1698,7 +1700,8 @@ EnableIfSame<T, IDialogTargetTouchListener,
 }
 
 template<typename T>
-EnableIfSame<T, IScreenshotListener, std::vector<sptr<IScreenshotListener>>> WindowSessionImpl::GetListeners()
+EnableIfSame<T, IScreenshotListener,
+    std::vector<sptr<IScreenshotListener>>> WindowSessionImpl::GetListeners()
 {
     std::vector<sptr<IScreenshotListener>> screenshotListeners;
     for (auto& listener : screenshotListeners_[GetPersistentId()]) {
@@ -1984,7 +1987,8 @@ WMError WindowSessionImpl::UnregisterWindowVisibilityChangeListener(const IWindo
 }
 
 template<typename T>
-EnableIfSame<T, IWindowVisibilityChangedListener, std::vector<IWindowVisibilityListenerSptr>> WindowSessionImpl::GetListeners()
+EnableIfSame<T, IWindowVisibilityChangedListener,
+    std::vector<IWindowVisibilityListenerSptr>> WindowSessionImpl::GetListeners()
 {
     std::vector<IWindowVisibilityListenerSptr> windowVisibilityChangeListeners;
     for (auto& listener : windowVisibilityChangeListeners_[GetPersistentId()]) {
