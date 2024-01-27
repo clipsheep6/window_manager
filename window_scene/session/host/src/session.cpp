@@ -416,13 +416,14 @@ bool Session::GetTouchable() const
 
 void Session::SetSystemTouchable(bool touchable)
 {
+    WLOGFI("SetSystemTouchable id: %{public}d, systemtouchable: %{public}d,propertytouchable: %{public}d", GetPersistentId(), touchable, GetTouchable());
     systemTouchable_ = touchable;
     NotifySessionInfoChange();
 }
 
 bool Session::GetSystemTouchable() const
 {
-    return systemTouchable_;
+    return systemTouchable_ && GetTouchable();
 }
 
 WSError Session::SetVisible(bool isVisible)
