@@ -33,6 +33,7 @@ public:
     virtual DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) override;
     virtual DMError SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio) override;
     virtual DMError SetResolution(ScreenId screenId, uint32_t width, uint32_t height, float virtualPixelRatio) override;
+    virtual DMError GetDensityInCurResolution(ScreenId screenId, float& virtualPixelRatio) override;
 
     virtual DMError GetScreenColorGamut(ScreenId screenId, ScreenColorGamut& colorGamut) override;
     virtual DMError SetScreenColorGamut(ScreenId screenId, int32_t colorGamutIdx) override;
@@ -128,7 +129,7 @@ public:
     // unique screen
     DMError MakeUniqueScreen(const std::vector<ScreenId>& screenIds) override;
 
-    void SetClient(const sptr<IScreenSessionManagerClient>& client, int32_t userId) override;
+    void SetClient(const sptr<IScreenSessionManagerClient>& client) override;
     ScreenProperty GetScreenProperty(ScreenId screenId) override;
     std::shared_ptr<RSDisplayNode> GetDisplayNode(ScreenId screenId) override;
     void UpdateScreenRotationProperty(ScreenId screenId, const RRectT<float>& bounds, float rotation) override;

@@ -416,13 +416,14 @@ bool Session::GetTouchable() const
 
 void Session::SetSystemTouchable(bool touchable)
 {
+    WLOGFI("SetSystemTouchable id: %{public}d, systemtouchable: %{public}d,propertytouchable: %{public}d", GetPersistentId(), touchable, GetTouchable());
     systemTouchable_ = touchable;
     NotifySessionInfoChange();
 }
 
 bool Session::GetSystemTouchable() const
 {
-    return systemTouchable_;
+    return systemTouchable_ && GetTouchable();
 }
 
 WSError Session::SetVisible(bool isVisible)
@@ -2170,15 +2171,7 @@ WSError Session::UpdateMaximizeMode(bool isMaximize)
 
 void Session::SetZOrder(uint32_t zOrder)
 {
-    auto task = [weakThis = wptr(this), zOrder]() {
-        auto session = weakThis.promote();
-        if (session == nullptr) {
-            WLOGFE("session is null");
-            return;
-        }
-        session->zOrder_ = zOrder;
-    };
-    PostTask(task, "SetZOrder");
+    zOrder_ = zOrder;
     NotifySessionInfoChange();
 }
 

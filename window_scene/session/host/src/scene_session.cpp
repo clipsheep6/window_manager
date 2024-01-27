@@ -1387,12 +1387,21 @@ void SceneSession::SetSurfaceBounds(const WSRect& rect)
 
 void SceneSession::SetZOrder(uint32_t zOrder)
 {
-    if (zOrder_ != zOrder) {
-        Session::SetZOrder(zOrder);
-        if (specificCallback_ != nullptr) {
-            specificCallback_->onWindowInfoUpdate_(GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
+    auto task = [weakThis = wptr(this), zOrder]() {
+        auto session = weakThis.promote();
+        if (session == nullptr) {
+            WLOGFE("session is null");
+            return;
         }
-    }
+        if (session->zOrder_ != zOrder) {
+            session->Session::SetZOrder(zOrder);
+            if (session->specificCallback_ != nullptr) {
+                session->specificCallback_->onWindowInfoUpdate_(session->GetPersistentId(),
+                    WindowUpdateType::WINDOW_UPDATE_PROPERTY);
+            }
+        }
+    };
+    PostTask(task, "SetZOrder");
 }
 
 void SceneSession::SetFloatingScale(float floatingScale)
@@ -1679,7 +1688,7 @@ void SceneSession::DumpSessionElementInfo(const std::vector<std::string>& params
 
 void SceneSession::NotifyTouchOutside()
 {
-    WLOGFD("id: %{public}d NotifyTouchOutside", GetPersistentId());
+    WLOGFI("id: %{public}d, type: %{public}d", GetPersistentId(), GetWindowType());
     if (sessionStage_) {
         WLOGFD("Notify sessionStage TouchOutside");
         sessionStage_->NotifyTouchOutside();
@@ -1789,6 +1798,59 @@ void SceneSession::SetSelfToken(sptr<IRemoteObject> selfToken)
 sptr<IRemoteObject> SceneSession::GetSelfToken() const
 {
     return selfToken_;
+}
+
+void SceneSession::SetSessionState(SessionState state)
+{
+    Session::SetSessionState(state);
+    NotifyAccessibilityVisibilityChange();
+}
+
+WSError SceneSession::SetVisible(bool isVisible)
+{
+    WSError err = Session::SetVisible(isVisible);
+    NotifyAccessibilityVisibilityChange();
+    return err;
+}
+
+
+bool SceneSession::IsVisibleForAccessibility() const
+{
+    return GetSystemTouchable() && GetForegroundInteractiveStatus() &&
+        (IsVisible() || GetSessionState() == SessionState::STATE_ACTIVE ||
+        GetSessionState() == SessionState::STATE_FOREGROUND);
+}
+
+void SceneSession::SetForegroundInteractiveStatus(bool interactive)
+{
+    Session::SetForegroundInteractiveStatus(interactive);
+    NotifyAccessibilityVisibilityChange();
+}
+
+void SceneSession::NotifyAccessibilityVisibilityChange()
+{
+    bool isVisibleForAccessibilityNew = IsVisibleForAccessibility();
+    if (isVisibleForAccessibilityNew == isVisibleForAccessibility_.load()) {
+        return;
+    }
+    WLOGFD("[WMSAccess] NotifyAccessibilityVisibilityChange id: %{public}d, visible: %{public}d",
+        GetPersistentId(), isVisibleForAccessibilityNew);
+    isVisibleForAccessibility_.store(isVisibleForAccessibilityNew);
+    if (specificCallback_ && specificCallback_->onWindowInfoUpdate_) {
+        if (isVisibleForAccessibilityNew) {
+            specificCallback_->onWindowInfoUpdate_(GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_ADDED);
+        } else {
+            specificCallback_->onWindowInfoUpdate_(GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_REMOVED);
+        }
+    } else {
+        WLOGFD("specificCallback_->onWindowInfoUpdate_ not exist, persistent id: %{public}d", GetPersistentId());
+    }
+}
+
+void SceneSession::SetSystemTouchable(bool touchable)
+{
+    Session::SetSystemTouchable(touchable);
+    NotifyAccessibilityVisibilityChange();
 }
 
 WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> abilitySessionInfo)

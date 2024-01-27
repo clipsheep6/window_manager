@@ -100,6 +100,8 @@ public:
     virtual DMError SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio) override { return DMError::DM_OK; }
     virtual DMError SetResolution(ScreenId screenId, uint32_t width, uint32_t height,
         float virtualPixelRatio) override { return DMError::DM_OK; }
+    virtual DMError GetDensityInCurResolution(ScreenId screenId,
+        float& virtualPixelRatio) override { return DMError::DM_OK; }
     virtual DMError ResizeVirtualScreen(ScreenId screenId, uint32_t width,
         uint32_t height) override { return DMError::DM_OK; }
     virtual DMError AddSurfaceNodeToDisplay(DisplayId displayId,
@@ -123,7 +125,7 @@ public:
 
     virtual DMError MakeUniqueScreen(const std::vector<ScreenId>& screenIds) override { return DMError::DM_OK; };
 
-    virtual void SetClient(const sptr<IScreenSessionManagerClient>& client, int32_t userId) {}
+    virtual void SetClient(const sptr<IScreenSessionManagerClient>& client) {}
     virtual ScreenProperty GetScreenProperty(ScreenId screenId) { return ScreenProperty(); }
     virtual std::shared_ptr<RSDisplayNode> GetDisplayNode(ScreenId screenId) { return nullptr; }
     virtual void UpdateScreenRotationProperty(ScreenId screenId, const RRectT<float>& bounds, float rotation) {}
