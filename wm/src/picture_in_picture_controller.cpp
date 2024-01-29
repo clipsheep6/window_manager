@@ -33,10 +33,7 @@ namespace {
     constexpr int32_t DELAY_ANIM = 500;
     constexpr int32_t SUCCESS = 1;
     constexpr int32_t FAILED = 0;
-    const std::string VIDEO_PAGE_PATH = "/system/etc/window/resources/pip_video.abc";
-    const std::string CALL_PAGE_PATH = "/system/etc/window/resources/pip_call.abc";
-    const std::string MEETING_PAGE_PATH = "/system/etc/window/resources/pip_meeting.abc";
-    const std::string LIVE_PAGE_PATH = "/system/etc/window/resources/pip_live.abc";
+    const std::string PIP_CONTENT_PATH = "/system/etc/window/resources/pip_content.abc";
 }
 
 PictureInPictureController::PictureInPictureController(sptr<PipOption> pipOption, sptr<Window> mainWindow,
@@ -106,24 +103,7 @@ WMError PictureInPictureController::ShowPictureInPictureWindow(StartPipType star
         WLOGFE("Get PictureInPicture option failed");
         return WMError::WM_ERROR_PIP_CREATE_FAILED;
     }
-    auto pipTemplateType = static_cast<PipTemplateType>(pipOption_->GetPipTemplate());
-    WLOGFI("mainWindow: %{public}u, pipWindow: %{public}u, template:%{public}u", mainWindowId_,
-        window_->GetWindowId(), pipTemplateType);
-    switch (pipTemplateType) {
-        default:
-        case PipTemplateType::VIDEO_PLAY:
-            window_->SetUIContentByAbc(VIDEO_PAGE_PATH, env_, nullptr, nullptr);
-            break;
-        case PipTemplateType::VIDEO_CALL:
-            window_->SetUIContentByAbc(CALL_PAGE_PATH, env_, nullptr, nullptr);
-            break;
-        case PipTemplateType::VIDEO_MEETING:
-            window_->SetUIContentByAbc(MEETING_PAGE_PATH, env_, nullptr, nullptr);
-            break;
-        case PipTemplateType::VIDEO_LIVE:
-            window_->SetUIContentByAbc(LIVE_PAGE_PATH, env_, nullptr, nullptr);
-            break;
-    }
+    window_->SetUIContentByAbc(PIP_CONTENT_PATH, env_, nullptr, nullptr);
     WMError errCode = window_->Show(0, false);
     if (errCode != WMError::WM_OK) {
         WLOGFD("window_ show failed, err: %{public}u", errCode);
