@@ -214,9 +214,6 @@ std::vector<MMI::WindowInfo> SceneSessionDirtyManager::GetFullWindowInfoList()
         WLOGFD("[EventDispatch] FullSceneSessionInfoUpdate windowName = %{public}s bundleName = %{public}s"
             " windowId = %{public}d", sceneSessionValue->GetWindowName().c_str(),
             sceneSessionValue->GetSessionInfo().bundleName_.c_str(), sceneSessionValue->GetWindowId());
-        if (IsFilterSession(sceneSessionValue)) {
-            continue;
-        }
         auto windowInfo = GetWindowInfo(sceneSessionValue, WindowAction::WINDOW_ADD);
         auto iter = (sceneSessionValue->GetParentPersistentId() == INVALID_SESSION_ID) ?
             dialogMap.find(sceneSessionValue->GetPersistentId()) :
