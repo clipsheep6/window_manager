@@ -52,6 +52,6 @@ export class PiPContent extends ViewPU {
     }
 }
 
-ViewStackProcessor.StartGetAccessRecordingFor(ViewStackProcessor.AllocateNewElmtIdForNextComponent());
+ViewStackProcessor.StartGetAccessRecordingFor(ViewStackProcessor.AllocateNewElmetIdForNextComponent());
 loadDocument(new PiPContent(void 0, {}));
 ViewStackProcessor.StopGetAccessRecording();
