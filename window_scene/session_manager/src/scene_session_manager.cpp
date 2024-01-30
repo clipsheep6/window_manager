@@ -1838,6 +1838,10 @@ void SceneSessionManager::RecoverWindowSessionProperty(
     if (windowType == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
         RelayoutKeyBoard(sceneSession);
         callingWindowId_ = property->GetCallingWindow();
+        if (callingWindowId_ != INVALID_WINDOW_ID && callingWindowIdChangeFunc_ != nullptr) {
+            WLOGFI("[WMSRecover] notify calling window to scb for recovering, "
+                "calling window id: %{public}" PRIu32, callingWindowId_);
+        }
         const auto& callingSession = GetSceneSession(static_cast<int32_t>(callingWindowId_));
         if (callingSession != nullptr) {
             WLOGFI("[WMSRecover] NotifyOccupiedAreaChangeInfo after inputMethod session recovered,"
