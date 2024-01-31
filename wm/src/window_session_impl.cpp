@@ -258,6 +258,19 @@ bool WindowSessionImpl::IsSupportWideGamut()
     return true;
 }
 
+WMError WindowSessionImpl::SetPipTemplateInfo(PipTemplateInfo pipTemplateInfo) const {
+    if (!property_) {
+        property_->SetPipTemplateInfo();
+        return WMError::WM_OK;
+    } else {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+}
+
+PipTemplateInfo WindowSessionProperty::GetPipTemplateInfo() const
+{
+    return pipTemplateInfo_;
+}
 void WindowSessionImpl::SetColorSpace(ColorSpace colorSpace)
 {
     auto colorGamut = GetSurfaceGamutFromColorSpace(colorSpace);

@@ -689,6 +689,12 @@ struct PiPRectInfo {
     PiPScaleLevel level_;
 };
 
+struct PipTemplateInfo {
+    uint32_t pipTemplateType;
+    uint32_t priority;
+    std::vector<std::string> controlGroup;
+}
+
 using OnCallback = std::function<void(int64_t)>;
 
 /**
