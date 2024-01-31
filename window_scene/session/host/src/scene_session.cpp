@@ -1561,6 +1561,10 @@ void SceneSession::SetPrivacyMode(bool isPrivacy)
     RSTransaction::FlushImplicitTransaction();
 }
 
+void SceneSession::SetPipTemplateInfo(PipTemplateInfo pipTemplateInfo) {
+    pipTemplateInfo_ = pipTemplateInfo;
+}
+
 void SceneSession::SetSystemSceneOcclusionAlpha(double alpha)
 {
     if (alpha < 0 || alpha > 1.0) {
@@ -1676,6 +1680,15 @@ std::vector<Rect> SceneSession::GetTouchHotAreas() const
         property->GetTouchHotAreas(touchHotAreas);
     }
     return touchHotAreas;
+}
+
+PipTemplateInfo SceneSession::GetPipTemplateInfo() const
+{
+<<<<<<< HEAD
+
+=======
+    return pipTemplateInfo_;
+>>>>>>> a85f9742a (画中画抢占优先级)
 }
 
 void SceneSession::DumpSessionElementInfo(const std::vector<std::string>& params)

@@ -153,6 +153,7 @@ public:
     WSError SetKeepScreenOn(bool keepScreenOn);
     void SetParentPersistentId(int32_t parentId);
     WSError SetTurnScreenOn(bool turnScreenOn);
+    void SetPipTemplateInfo(PipTemplateInfo pipTemplateInfo);
     void SetPrivacyMode(bool isPrivacy);
     void SetSystemSceneOcclusionAlpha(double alpha);
     void SetRequestedOrientation(Orientation orientation);
@@ -179,6 +180,7 @@ public:
     Orientation GetRequestedOrientation() const;
     std::vector<sptr<SceneSession>> GetSubSession() const;
     std::shared_ptr<AppExecFwk::AbilityInfo> GetAbilityInfo() const;
+    PipTemplateInfo GetPipTemplateInfo() const;
 
     bool IsVisible() const;
     bool IsDecorEnable() const;

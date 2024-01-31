@@ -25,6 +25,7 @@
 #include "window.h"
 #include "wm_common.h"
 #include "singleton_container.h"
+#include "pip_util.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -80,7 +81,11 @@ WMError PictureInPictureController::CreatePictureInPictureWindow()
     windowOption->SetWindowMode(WindowMode::WINDOW_MODE_PIP);
     windowOption->SetWindowRect(windowRect_);
     WMError errCode;
-    sptr<Window> window = Window::Create(windowOption->GetWindowName(), windowOption, context->lock(), errCode);
+    PipTemplateInfo pipTemplateInfo;
+    pipTemplateInfo.pipTemplateType = pipOption_->GetPipTemplate();
+    pipTemplateInfo.controlGroup = pipOption_->GetControlGroup();
+    pipTemplateInfo.priority = PiPUtil::GetPipPriority(pipOption_->GetPipTemplate());
+    sptr<Window> window = Window::CreatePip(windowOption, context->lock(), pipTemplateInfo, errCode);
     if (window == nullptr || errCode != WMError::WM_OK) {
         WLOGFE("Window create failed, reason: %{public}d", errCode);
         return WMError::WM_ERROR_PIP_CREATE_FAILED;
