@@ -271,6 +271,7 @@ PipTemplateInfo WindowSessionProperty::GetPipTemplateInfo() const
 {
     return pipTemplateInfo_;
 }
+
 void WindowSessionImpl::SetColorSpace(ColorSpace colorSpace)
 {
     auto colorGamut = GetSurfaceGamutFromColorSpace(colorSpace);

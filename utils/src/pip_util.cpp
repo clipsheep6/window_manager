@@ -23,8 +23,6 @@ namespace {
     constexpr int32_t NUMBER_THREE = 3;
     constexpr int32_t NUMBER_FOUR = 4;
     constexpr int32_t NUMBER_SEVEN = 7;
-    constexpr uint32_t PIP_LOW_PRIORITY = 0;
-    constexpr uint32_t PIP_HIGH_PRIORITY = 1;
     float g_vpr = 1.0f;
 }
 
@@ -145,15 +143,6 @@ bool PiPUtil::GetValidRect(const int32_t width, const int32_t height, Rect& rect
         hasChanged = true;
     }
     return hasChanged;
-}
-
-uint32_t PiPUtil::GetPipPriority(uint32_t pipTemplateType) {
-    if (pipTemplateType == static_cast<uint32_t>(PipTemplateType::VIDEO_PLAY) ||
-        pipTemplateType == static_cast<uint32_t>(PipTemplateType::VIDEO_LIVE))) {
-        return PIP_LOW_PRIORITY;
-    } else {
-        return PIP_HIGH_PRIORITY;
-    }
 }
 } // namespace Rosen
 } // namespace OHOS
