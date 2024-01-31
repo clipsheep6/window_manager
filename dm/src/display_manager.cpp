@@ -30,6 +30,8 @@
 namespace OHOS::Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "DisplayManager"};
+    const static uint32_t MAX_RETRY_NUM = 6; 
+    const static uint32_t RETRY_WAIT_MS = 500; 
     const static uint32_t MAX_DISPLAY_SIZE = 32;
     const static uint32_t MAX_INTERVAL_US = 5000;
 }
@@ -469,6 +471,22 @@ sptr<Display> DisplayManager::Impl::GetDefaultDisplaySync()
         if (iter != displayMap_.end()) {
             return displayMap_[defaultDisplayId_];
         }
+    }
+
+    uint32_t retryTimes = 0;
+    sptr<DisplayInfo> displayInfo = nullptr;
+    while (retryTimes < MAX_RETRY_NUM) {
+        displayInfo = SingletonContainer::Get<DisplayManagerAdapter>().GetDefaultDisplayInfo();
+        if (displayInfo != nullptr) {
+            break;
+        }
+        retryTimes++;
+        WLOGFW("Current get display info is null, retry %{public}u times", retryTimes);
+        std::this_thread::sleep_for(std::chrono::microseconds(RETRY_WAIT_MS));
+    }
+    if (retryTimes >= MAX_RETRY_NUM || displayInfo == nullptr) {
+        WLOGFW("Get display info failed, please check whether the onscreenchange event is triggered");
+        return nullptr;
     }
 
     auto displayInfo = SingletonContainer::Get<DisplayManagerAdapter>().GetDefaultDisplayInfo();
