@@ -1684,11 +1684,7 @@ std::vector<Rect> SceneSession::GetTouchHotAreas() const
 
 PipTemplateInfo SceneSession::GetPipTemplateInfo() const
 {
-<<<<<<< HEAD
-
-=======
     return pipTemplateInfo_;
->>>>>>> a85f9742a (画中画抢占优先级)
 }
 
 void SceneSession::DumpSessionElementInfo(const std::vector<std::string>& params)

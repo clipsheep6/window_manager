@@ -34,6 +34,8 @@ namespace {
     constexpr int32_t DELAY_ANIM = 500;
     constexpr int32_t SUCCESS = 1;
     constexpr int32_t FAILED = 0;
+    constexpr uint32_t PIP_LOW_PRIORITY = 0;
+    constexpr uint32_t PIP_HIGH_PRIORITY = 1;
     const std::string VIDEO_PAGE_PATH = "/system/etc/window/resources/pip_video.abc";
     const std::string CALL_PAGE_PATH = "/system/etc/window/resources/pip_call.abc";
     const std::string MEETING_PAGE_PATH = "/system/etc/window/resources/pip_meeting.abc";
@@ -84,7 +86,7 @@ WMError PictureInPictureController::CreatePictureInPictureWindow()
     PipTemplateInfo pipTemplateInfo;
     pipTemplateInfo.pipTemplateType = pipOption_->GetPipTemplate();
     pipTemplateInfo.controlGroup = pipOption_->GetControlGroup();
-    pipTemplateInfo.priority = PiPUtil::GetPipPriority(pipOption_->GetPipTemplate());
+    pipTemplateInfo.priority = GetPipPriority(pipOption_->GetPipTemplate());
     sptr<Window> window = Window::CreatePip(windowOption, context->lock(), pipTemplateInfo, errCode);
     if (window == nullptr || errCode != WMError::WM_OK) {
         WLOGFE("Window create failed, reason: %{public}d", errCode);
@@ -610,6 +612,15 @@ bool PictureInPictureController::IsPullPiPAndHandleNavigation()
 std::string PictureInPictureController::GetPiPNavigationId()
 {
     return pipOption_? pipOption_->GetNavigationId() : "";
+}
+
+uint32_t PiPUtil::GetPipPriority(uint32_t pipTemplateType) {
+    if (pipTemplateType == static_cast<uint32_t>(PipTemplateType::VIDEO_PLAY) ||
+        pipTemplateType == static_cast<uint32_t>(PipTemplateType::VIDEO_LIVE))) {
+        return PIP_LOW_PRIORITY;
+    } else {
+        return PIP_HIGH_PRIORITY;
+    }
 }
 } // namespace Rosen
 } // namespace OHOS
