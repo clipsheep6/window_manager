@@ -518,6 +518,25 @@ void WindowSessionProperty::UnmarshallingTouchHotAreas(Parcel& parcel, WindowSes
     }
 }
 
+bool WindowSessionProperty::MarshallingPipTemplateInfo(Parcel& parcel) const 
+{
+    if (!parcel.WriteUint32(pipTemplateInfo_piptemplateType)) {
+        return false;
+    }
+    if (!parcel.WriteUint32(pipTemplateInfo_priority)) {
+        return false;
+    }
+    auto size = pipTemplateInfo_.controlGroup.size();
+    if (!parcel.WriteUint32(static_cast<uint32_t>(size))) {
+        return false;
+    }
+    for (uint32_t i = 0; i < size; i++) {
+        if (!parcel.WriteString(pipTemplateInfo_.controlGroup[i])) {
+            return false;
+        }
+    }
+    return true;
+}
 bool WindowSessionProperty::Marshalling(Parcel& parcel) const
 {
     return parcel.WriteString(windowName_) && parcel.WriteInt32(windowRect_.posX_) &&
