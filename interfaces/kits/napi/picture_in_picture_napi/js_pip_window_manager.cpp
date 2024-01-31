@@ -41,7 +41,7 @@ static bool GetControlGroupFromJs(napi_env env, napi_value controlGroup, std::ve
     for (uint32_t i = 0; i < size; i++) {
         std::string controlName;
         napi_value getElementValue = nullptr;
-        napi_get_element(env, getElementValue, controlName);
+        napi_get_element(env, controlGroup, i, &getElementValue);
         if (!ConvertFromJsValue(env, getElementValue, controlName)) {
             WLOGE("Failed to convert parameter to controlName");
             return false;
@@ -86,7 +86,7 @@ static int32_t GetPictureInPictureOptionFromJs(napi_env env, napi_value optionOb
     option.SetNavigationId(navigationId);
     option.SetPipTemplate(templateType);
     option.SetContentSize(width, height);
-    option.setControlGroup(controls);
+    option.SetControlGroup(controls);
     option.SetXComponentController(xComponentControllerResult);
     return 0;
 }

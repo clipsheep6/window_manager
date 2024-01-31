@@ -83,7 +83,7 @@ WMError PictureInPictureController::CreatePictureInPictureWindow()
     windowOption->SetWindowMode(WindowMode::WINDOW_MODE_PIP);
     windowOption->SetWindowRect(windowRect_);
     WMError errCode;
-    PipTemplateInfo pipTemplateInfo;
+    PiPTemplateInfo pipTemplateInfo;
     pipTemplateInfo.pipTemplateType = pipOption_->GetPipTemplate();
     pipTemplateInfo.controlGroup = pipOption_->GetControlGroup();
     pipTemplateInfo.priority = GetPipPriority(pipOption_->GetPipTemplate());
@@ -614,9 +614,9 @@ std::string PictureInPictureController::GetPiPNavigationId()
     return pipOption_? pipOption_->GetNavigationId() : "";
 }
 
-uint32_t PiPUtil::GetPipPriority(uint32_t pipTemplateType) {
+uint32_t PictureInPictureController::GetPipPriority(uint32_t pipTemplateType) {
     if (pipTemplateType == static_cast<uint32_t>(PipTemplateType::VIDEO_PLAY) ||
-        pipTemplateType == static_cast<uint32_t>(PipTemplateType::VIDEO_LIVE))) {
+        pipTemplateType == static_cast<uint32_t>(PipTemplateType::VIDEO_LIVE)) {
         return PIP_LOW_PRIORITY;
     } else {
         return PIP_HIGH_PRIORITY;

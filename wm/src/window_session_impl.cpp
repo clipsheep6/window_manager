@@ -258,16 +258,16 @@ bool WindowSessionImpl::IsSupportWideGamut()
     return true;
 }
 
-WMError WindowSessionImpl::SetPipTemplateInfo(PipTemplateInfo pipTemplateInfo) const {
+WMError WindowSessionImpl::SetPiPTemplateInfo(PiPTemplateInfo pipTemplateInfo) const {
     if (!property_) {
-        property_->SetPipTemplateInfo();
+        property_->SetPiPTemplateInfo(pipTemplateInfo);
         return WMError::WM_OK;
     } else {
         return WMError::WM_ERROR_NULLPTR;
     }
 }
 
-PipTemplateInfo WindowSessionProperty::GetPipTemplateInfo() const
+PiPTemplateInfo WindowSessionProperty::GetPiPTemplateInfo() const
 {
     return pipTemplateInfo_;
 }

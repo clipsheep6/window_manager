@@ -153,7 +153,7 @@ public:
     WSError SetKeepScreenOn(bool keepScreenOn);
     void SetParentPersistentId(int32_t parentId);
     WSError SetTurnScreenOn(bool turnScreenOn);
-    void SetPipTemplateInfo(PipTemplateInfo pipTemplateInfo);
+    void SetPiPTemplateInfo(PiPTemplateInfo pipTemplateInfo);
     void SetPrivacyMode(bool isPrivacy);
     void SetSystemSceneOcclusionAlpha(double alpha);
     void SetRequestedOrientation(Orientation orientation);
@@ -180,7 +180,7 @@ public:
     Orientation GetRequestedOrientation() const;
     std::vector<sptr<SceneSession>> GetSubSession() const;
     std::shared_ptr<AppExecFwk::AbilityInfo> GetAbilityInfo() const;
-    PipTemplateInfo GetPipTemplateInfo() const;
+    PiPTemplateInfo GetPiPTemplateInfo() const;
 
     bool IsVisible() const;
     bool IsDecorEnable() const;
@@ -282,6 +282,7 @@ private:
     std::vector<sptr<SceneSession>> subSession_;
     bool needDefaultAnimationFlag_ = true;
     PiPRectInfo pipRectInfo_;
+    PiPTemplateInfo pipTemplateInfo_;
     SizeChangeReason reason_ = SizeChangeReason::UNDEFINED;
     std::atomic_bool isStartMoving_ { false };
     std::atomic_bool isVisibleForAccessibility_ { true };

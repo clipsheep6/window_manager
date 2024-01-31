@@ -140,7 +140,7 @@ sptr<Window> Window::Create(sptr<WindowOption>& option, const std::shared_ptr<OH
 }
 
 sptr<Window> Window::CreatePip(sptr<WindowOption>& option, const std::shared_ptr<OHOS::AbilityRuntime::Context>& context,
-    PipTemplateInfo& pipTemplateInfo, WMError& errCode)
+    PiPTemplateInfo& pipTemplateInfo, WMError& errCode)
 {
     if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
         return nullptr;
@@ -155,7 +155,7 @@ sptr<Window> Window::CreatePip(sptr<WindowOption>& option, const std::shared_ptr
         return nullptr;
     }
     uint32_t version = 10;
-    if ((constexpr != nullptr) && (context->GetApplicationInfo() != nullptr)) {
+    if ((context != nullptr) && (context->GetApplicationInfo() != nullptr)) {
         version = context->GetApplicationInfo()->apiCompatibleVersion;
     }
     if (version < 10) {
@@ -166,10 +166,10 @@ sptr<Window> Window::CreatePip(sptr<WindowOption>& option, const std::shared_ptr
         WLOGFE("malloc windowSessionImpl failed.");
         return nullptr;
     }
-    windowSessionImpl->SetPipTemplateInfo(pipTemplateInfo);
+    windowSessionImpl->SetPiPTemplateInfo(pipTemplateInfo);
     WMError error = windowSessionImpl->Create(context, nullptr);
     if (error != WMError::WM_OK) {
-        errorCode = error;
+        errCode = error;
         WLOGFD("CreateWindowWithSession, error: %{public}u", static_cast<uint32_t>(errCode));
         return nullptr;
     }

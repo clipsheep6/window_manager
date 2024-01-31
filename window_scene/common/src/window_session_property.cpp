@@ -422,12 +422,12 @@ uint32_t WindowSessionProperty::GetCallingWindow() const
     return callingWindowId_;
 }
 
-void WindowSessionProperty::SetPipTemplateInfo(PipTemplateInfo pipTemplateInfo)
+void WindowSessionProperty::SetPiPTemplateInfo(PiPTemplateInfo pipTemplateInfo)
 {
     pipTemplateInfo_ = pipTemplateInfo;
 }
 
-PipTemplateInfo WindowSessionProperty::GetPipTemplateInfo()
+PiPTemplateInfo WindowSessionProperty::GetPiPTemplateInfo() const
 {
     return pipTemplateInfo_;
 }
@@ -528,9 +528,9 @@ void WindowSessionProperty::UnmarshallingTouchHotAreas(Parcel& parcel, WindowSes
     }
 }
 
-bool WindowSessionProperty::MarshallingPipTemplateInfo(Parcel& parcel) const 
+bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const 
 {
-    if (!parcel.WriteUint32(pipTemplateInfo_.piptemplateType)) {
+    if (!parcel.WriteUint32(pipTemplateInfo_.pipTemplateType)) {
         return false;
     }
     if (!parcel.WriteUint32(pipTemplateInfo_.priority)) {
@@ -548,16 +548,16 @@ bool WindowSessionProperty::MarshallingPipTemplateInfo(Parcel& parcel) const
     return true;
 }
 
-void WindowSessionProperty::UnmarshallingPipTemplateInfo(Parcel& parcel, WindowSessionProperty* property) const 
+void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowSessionProperty* property)
 {   
-    PipTemplateInfo pipTemplateInfo;
-    pipTemplateInfo.piptemplateType = parcel.ReadUint32();
+    PiPTemplateInfo pipTemplateInfo;
+    pipTemplateInfo.pipTemplateType = parcel.ReadUint32();
     pipTemplateInfo.priority = parcel.ReadUint32();
     auto size = parcel.ReadUint32();
     for (uint32_t i = 0; i < size; i++) {
-        pipTemplateInfo_.controlGroup.push_back(parcel.ReadString());
+        pipTemplateInfo.controlGroup.push_back(parcel.ReadString());
     }
-    property->SetPipTemplateInfo(pipTemplateInfo);
+    property->SetPiPTemplateInfo(pipTemplateInfo);
 }
 
 bool WindowSessionProperty::Marshalling(Parcel& parcel) const
@@ -583,7 +583,7 @@ bool WindowSessionProperty::Marshalling(Parcel& parcel) const
         parcel.WriteBool(hideNonSystemFloatingWindows_) && parcel.WriteBool(forceHide_) &&
         MarshallingWindowLimits(parcel) && parcel.WriteFloat(brightness_) &&
         MarshallingSystemBarMap(parcel) && parcel.WriteUint32(animationFlag_) &&
-        MarshallingPipTemplateInfo(parcel) &&
+        MarshallingPiPTemplateInfo(parcel) &&
         parcel.WriteBool(isFloatingWindowAppType_) && MarshallingTouchHotAreas(parcel) &&
         parcel.WriteBool(isSystemCalling_) &&
         parcel.WriteDouble(textFieldPositionY_) && parcel.WriteDouble(textFieldHeight_) &&
@@ -630,7 +630,7 @@ WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
     property->SetBrightness(parcel.ReadFloat());
     UnMarshallingSystemBarMap(parcel, property);
     property->SetAnimationFlag(parcel.ReadUint32());
-    UnmarshallingPipTemplateInfo(parcel, property);
+    UnmarshallingPiPTemplateInfo(parcel, property);
     property->SetFloatingWindowAppType(parcel.ReadBool());
     UnmarshallingTouchHotAreas(parcel, property);
     property->SetSystemCalling(parcel.ReadBool());

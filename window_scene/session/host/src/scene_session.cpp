@@ -1561,7 +1561,7 @@ void SceneSession::SetPrivacyMode(bool isPrivacy)
     RSTransaction::FlushImplicitTransaction();
 }
 
-void SceneSession::SetPipTemplateInfo(PipTemplateInfo pipTemplateInfo) {
+void SceneSession::SetPiPTemplateInfo(PiPTemplateInfo pipTemplateInfo) {
     pipTemplateInfo_ = pipTemplateInfo;
 }
 
@@ -1682,7 +1682,7 @@ std::vector<Rect> SceneSession::GetTouchHotAreas() const
     return touchHotAreas;
 }
 
-PipTemplateInfo SceneSession::GetPipTemplateInfo() const
+PiPTemplateInfo SceneSession::GetPiPTemplateInfo() const
 {
     return pipTemplateInfo_;
 }
