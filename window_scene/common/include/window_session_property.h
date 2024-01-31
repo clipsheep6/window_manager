@@ -123,7 +123,7 @@ public:
     bool MarshallingSystemBarMap(Parcel& parcel) const;
     static void UnMarshallingSystemBarMap(Parcel& parcel, WindowSessionProperty* property);
     bool MarshallingPipTemplateInfo(Parcel& parcel) const;
-    static void UnMarshallingPipTemplateInfo(Parcel& parcel, WindowSessionProperty* property);
+    static void UnmarshallingPipTemplateInfo(Parcel& parcel, WindowSessionProperty* property);
     bool Marshalling(Parcel& parcel) const override;
     static WindowSessionProperty* Unmarshalling(Parcel& parcel);
 
@@ -170,6 +170,7 @@ private:
     WindowMode windowMode_ = WindowMode::WINDOW_MODE_FULLSCREEN;
     WindowState windowState_ = WindowState::STATE_INITIAL;
     WindowLimits limits_;
+    PipTemplateInfo pipTemplateInfo_;
     SessionGravity sessionGravity_ = SessionGravity::SESSION_GRAVITY_DEFAULT;
     uint32_t sessionGravitySizePercent_ = 0;
     uint32_t modeSupportInfo_ {WindowModeSupport::WINDOW_MODE_SUPPORT_ALL};
