@@ -16,6 +16,7 @@
 #include "common/include/window_session_property.h"
 #include "window_manager_hilog.h"
 #include "wm_common.h"
+#include "window_helper.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -530,7 +531,7 @@ void WindowSessionProperty::UnmarshallingTouchHotAreas(Parcel& parcel, WindowSes
 
 bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const 
 {   
-    if (!WindowHelper::IsPipWindow(GetWindowType())) {
+    if (!WindowHelper::IsPipWindow(type_)) {
         return true;
     }
     if (!parcel.WriteUint32(pipTemplateInfo_.pipTemplateType)) {
@@ -553,7 +554,7 @@ bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const
 
 void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowSessionProperty* property)
 {   
-    if (!WindowHelper::IsPipWindow(GetWindowType())) {
+    if (!WindowHelper::IsPipWindow(property->GetWindowType())) {
         return;
     }
     PiPTemplateInfo pipTemplateInfo;
