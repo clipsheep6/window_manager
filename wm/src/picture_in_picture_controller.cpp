@@ -25,7 +25,6 @@
 #include "window.h"
 #include "wm_common.h"
 #include "singleton_container.h"
-#include "pip_util.h"
 
 namespace OHOS {
 namespace Rosen {
