@@ -173,5 +173,75 @@ void JsExtensionWindowListener::OnSizeChange(const sptr<OccupiedAreaChangeInfo>&
     NapiAsyncTask::Schedule("JsExtensionWindowListener::OnSizeChange", env_,
                             std::make_unique<NapiAsyncTask>(callback, std::move(execute), std::move(complete)));
 }
+
+void JsExtensionWindowListener::LifeCycleCallBack(LifeCycleEventType eventType)
+{
+    WLOGI("[NAPI]LifeCycleCallBack, envent type: %{public}u", eventType);
+    auto task = [self = weakRef_, eventType, eng = env_] () {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "JsExtensionWindowListener::LifeCycleCallBack");
+        auto thisListener = self.promote();
+        if (thisListener == nullptr || eng == nullptr) {
+            WLOGFE("[NAPI]this listener or eng is nullptr");
+            return;
+        }
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(eng, &scope);
+        napi_value argv[] = {CreateJsValue(eng, static_cast<uint32_t>(eventType))};
+        thisListener->CallJsMethod(LIFECYCLE_EVENT_CB.c_str(), argv, ArraySize(argv));
+        napi_close_handle_scope(eng, scope);
+    };
+    if (!eventHandler_) {
+        WLOGFE("get main event handler failed!");
+        return;
+    }
+    eventHandler_->PostTask(task, "wms:JsWindowListener::LifeCycleCallBack", 0,
+        AppExecFwk::EventQueue::Priority::IMMEDIATE);
+}
+
+void JsExtensionWindowListener::AfterForeground()
+{
+    if (state_ == WindowState::STATE_INITIAL || state_ == WindowState::STATE_HIDDEN) {
+        LifeCycleCallBack(LifeCycleEventType::FOREGROUND);
+        state_ = WindowState::STATE_SHOWN;
+    } else {
+        WLOGFD("[NAPI]window is already shown");
+    }
+}
+
+void JsExtensionWindowListener::AfterBackground()
+{
+    if (state_ == WindowState::STATE_INITIAL || state_ == WindowState::STATE_SHOWN) {
+        LifeCycleCallBack(LifeCycleEventType::BACKGROUND);
+        state_ = WindowState::STATE_HIDDEN;
+    } else {
+        WLOGFD("[NAPI]window is already hide");
+    }
+}
+
+void JsExtensionWindowListener::AfterFocused()
+{
+    LifeCycleCallBack(LifeCycleEventType::ACTIVE);
+}
+
+void JsExtensionWindowListener::AfterUnfocused()
+{
+    LifeCycleCallBack(LifeCycleEventType::INACTIVE);
+}
+
+void JsExtensionWindowListener::AfterResumed()
+{
+    LifeCycleCallBack(LifeCycleEventType::RESUMED);
+}
+
+void JsExtensionWindowListener::AfterPaused()
+{
+    LifeCycleCallBack(LifeCycleEventType::PAUSED);
+}
+
+void JsExtensionWindowListener::AfterDestroyed()
+{
+    LifeCycleCallBack(LifeCycleEventType::DESTROYED);
+}
+
 } // namespace Rosen
 } // namespace OHOS

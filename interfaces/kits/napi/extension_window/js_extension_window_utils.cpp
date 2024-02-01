@@ -95,5 +95,12 @@ napi_value NapiThrowError(napi_env env, WmErrorCode errCode)
     napi_throw(env, CreateJsError(env, static_cast<int32_t>(errCode)));
     return NapiGetUndefined(env);
 }
+
+napi_valuetype GetType(napi_env env, napi_value value)
+{
+    napi_valuetype result = napi_undefined;
+    napi_typeof(env, value, &result);
+    return result;
+}
 }  // namespace Rosen
 }  // namespace OHOS
