@@ -2199,7 +2199,11 @@ sptr<ScreenSessionGroup> ScreenSessionManager::AddAsFirstScreenLocked(sptr<Scree
     }
     screenGroup->groupSmsId_ = 1;
     Point point;
-    if (!screenGroup->AddChild(newScreen, point, GetScreenSession(GetDefaultScreenId()))) {
+    bool isFoldable = false;
+    if (foldScreenController_ != nullptr && GetDefaultScreenId() == 0) {
+        isFoldable = true;
+    }
+    if (!screenGroup->AddChild(newScreen, point, GetScreenSession(GetDefaultScreenId()), isFoldable)) {
         WLOGE("fail to add screen to group. screen=%{public}" PRIu64"", newScreen->screenId_);
         screenIdManager_.DeleteScreenId(smsGroupScreenId);
         return nullptr;

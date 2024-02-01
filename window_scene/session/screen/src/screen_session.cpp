@@ -839,7 +839,7 @@ void ScreenSession::SetPrivateSessionForeground(bool hasPrivate)
     hasPrivateWindowForeground_ = hasPrivate;
 }
 
-void ScreenSession::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startPoint)
+void ScreenSession::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startPoint, bool isFoldable)
 {
     if (displayNode_ != nullptr) {
         displayNode_->SetDisplayNodeMirrorConfig(config);
@@ -873,7 +873,11 @@ void ScreenSession::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startP
     // If setDisplayOffset is not valid for SetFrame/SetBounds
     WLOGFI("InitRSDisplayNode screnId:%{public}" PRIu64" width:%{public}u height:%{public}u", screenId_, width, height);
     displayNode_->SetFrame(0, 0, width, height);
-    displayNode_->SetBounds(0, 0, width, height);
+    if (isFoldable) {
+        displayNode_->SetBounds(0, 0, height, width);
+    } else {
+        displayNode_->SetBounds(0, 0, width, height);
+    }
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
         transactionProxy->FlushImplicitTransaction();
@@ -939,7 +943,7 @@ bool ScreenSessionGroup::GetRSDisplayNodeConfig(sptr<ScreenSession>& screenSessi
 }
 
 bool ScreenSessionGroup::AddChild(sptr<ScreenSession>& smsScreen, Point& startPoint,
-                                  sptr<ScreenSession> defaultScreenSession)
+                                  sptr<ScreenSession> defaultScreenSession, bool isFoldable)
 {
     if (smsScreen == nullptr) {
         WLOGE("AddChild, smsScreen is nullptr.");
@@ -955,7 +959,7 @@ bool ScreenSessionGroup::AddChild(sptr<ScreenSession>& smsScreen, Point& startPo
     if (!GetRSDisplayNodeConfig(smsScreen, config, defaultScreenSession)) {
         return false;
     }
-    smsScreen->InitRSDisplayNode(config, startPoint);
+    smsScreen->InitRSDisplayNode(config, startPoint, isFoldable);
     smsScreen->lastGroupSmsId_ = smsScreen->groupSmsId_;
     smsScreen->groupSmsId_ = screenId_;
     screenSessionMap_.insert(std::make_pair(screenId, std::make_pair(smsScreen, startPoint)));
