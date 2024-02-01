@@ -35,6 +35,12 @@ JsExtensionWindow::JsExtensionWindow(const std::shared_ptr<Rosen::ExtensionWindo
     extensionRegisterManager_(std::make_unique<JsExtensionWindowRegisterManager>()) {
 }
 
+JsExtensionWindow::JsExtensionWindow(const std::shared_ptr<Rosen::ExtensionWindow> extensionWindow,
+    sptr<AAFwk::SessionInfo> sessionInfo)
+    : extensionWindow_(extensionWindow), sessionInfo_(sessionInfo),
+    extensionRegisterManager_(std::make_unique<JsExtensionWindowRegisterManager>()) {
+}
+
 JsExtensionWindow::~JsExtensionWindow() {}
 
 napi_value JsExtensionWindow::CreateJsExtensionWindow(napi_env env, sptr<Rosen::Window> window)
@@ -66,6 +72,31 @@ napi_value JsExtensionWindow::CreateJsExtensionWindow(napi_env env, sptr<Rosen::
     return objValue;
 }
 
+napi_value JsExtensionWindow::CreateJsWindowStage(napi_env env, sptr<Rosen::Window> window,
+    sptr<AAFwk::SessionInfo> sessionInfo)
+{
+    WLOGI("JsExtensionWindow CreateJsWindowStage");
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+
+    if (env == nullptr || window == nullptr) {
+        WLOGFE("JsExtensionWindow env or window is nullptr");
+        return nullptr;
+    }
+
+    std::shared_ptr<ExtensionWindow> extensionWindow = std::make_shared<ExtensionWindowImpl>(window);
+    std::unique_ptr<JsExtensionWindow> jsExtensionWindow = std::make_unique<JsExtensionWindow>(extensionWindow);
+    napi_wrap(env, objValue, jsExtensionWindow.release(), JsExtensionWindow::Finalizer, nullptr, nullptr);
+
+    const char *moduleName = "JsExtensionWindow";
+    BindNativeFunction(env, objValue, "on", moduleName, JsExtensionWindow::RegisterExtensionWindowCallback);
+    BindNativeFunction(env, objValue, "off", moduleName, JsExtensionWindow::UnRegisterExtensionWindowCallback);
+    BindNativeFunction(env, objValue, "loadContent", moduleName, JsExtensionWindow::LoadContent);
+    BindNativeFunction(env, objValue, "loadContentByName", moduleName, JsExtensionWindow::LoadContentByName);
+
+    return objValue;
+}
+
 void JsExtensionWindow::Finalizer(napi_env env, void* data, void* hint)
 {
     WLOGI("Finalizer is called");
@@ -91,6 +122,91 @@ napi_value JsExtensionWindow::UnRegisterExtensionWindowCallback(napi_env env, na
     WLOGI("UnRegisterExtensionWindowCallback is called");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnUnRegisterExtensionWindowCallback(env, info) : nullptr;
+}
+
+napi_value JsExtensionWindow::LoadContent(napi_env env, napi_callback_info info)
+{
+    WLOGI("LoadContent is called");
+    JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
+    return (me != nullptr) ? me->OnLoadContent(env, info, false) : nullptr;
+}
+
+napi_value JsExtensionWindow::LoadContentByName(napi_env env, napi_callback_info info)
+{
+    WLOGI("LoadContentByName is called");
+    JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
+    return (me != nullptr) ? me->OnLoadContent(env, info, true) : nullptr;
+}
+
+static void LoadContentTask(std::shared_ptr<NativeReference> contentStorage, std::string contextUrl,
+    const std::shared_ptr<Rosen::ExtensionWindow> win, napi_env env, NapiAsyncTask& task,
+    sptr<IRemoteObject> parentToken, bool isLoadedByName)
+{
+    napi_value nativeStorage = (contentStorage == nullptr) ? nullptr : contentStorage->GetNapiValue();
+    sptr<Window> windowImpl = win->GetWindow();
+    WMError ret;
+    if (isLoadedByName) {
+        ret = windowImpl->SetUIContentByName(contextUrl, env, nativeStorage);
+    } else {
+        ret = win->NapiSetUIContent(contextUrl, env, nativeStorage, false, parentToken);
+    }
+    if (ret == WMError::WM_OK) {
+        task.Resolve(env, NapiGetUndefined(env));
+    } else {
+        task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret), "Window load content failed"));
+    }
+    WLOGI("[NAPI]Window [%{public}u, %{public}s] load content end, ret = %{public}d",
+        windowImpl->GetWindowId(), windowImpl->GetWindowName().c_str(), ret);
+    return;
+}
+
+napi_value JsExtensionWindow::OnLoadContent(napi_env env, napi_callback_info info, bool isLoadedByName)
+{
+    WLOGI("OnLoadContent is called");
+    WmErrorCode errCode = WmErrorCode::WM_OK;
+    std::string contextUrl;
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (!ConvertFromJsValue(env, argv[0], contextUrl)) {
+        WLOGI("[NAPI]Failed to convert parameter to context url");
+        errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
+    }
+    napi_value storage = nullptr;
+    napi_value callBack = nullptr;
+    napi_value value1 = argv[1];
+    napi_value value2 = argv[2];
+    if (GetType(env, value1) == napi_function) {
+        callBack = value1;
+    } else if (GetType(env, value1) == napi_object) {
+        storage = value1;
+    }
+    if (GetType(env, value2) == napi_function) {
+        callBack = value2;
+    }
+    if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
+        WLOGI("[NAPI]Window is null or get invalid param");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
+        return NapiGetUndefined(env);
+    }
+
+    std::shared_ptr<NativeReference> contentStorage = nullptr;
+    if (storage != nullptr) {
+        napi_ref result = nullptr;
+        napi_create_reference(env, storage, 1, &result);
+        contentStorage = std::shared_ptr<NativeReference>(reinterpret_cast<NativeReference*>(result));
+    }
+    
+    sptr<IRemoteObject> parentToken = sessionInfo_->parentToken;
+    NapiAsyncTask::CompleteCallback complete =
+        [extwin = extensionWindow_, contentStorage, contextUrl, parentToken, isLoadedByName](
+            napi_env env, NapiAsyncTask& task, int32_t status) {
+            LoadContentTask(contentStorage, contextUrl, extwin, env, task, parentToken, isLoadedByName);
+        };
+    napi_value result = nullptr;
+    NapiAsyncTask::Schedule("JsExtensionWindow::OnLoadContent",
+        env, CreateAsyncTaskWithLastParam(env, callBack, nullptr, std::move(complete), &result));
+    return result;
 }
 
 napi_value JsExtensionWindow::HideNonSecureWindows(napi_env env, napi_callback_info info)

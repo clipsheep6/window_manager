@@ -35,6 +35,13 @@ WMError ExtensionWindowImpl::GetAvoidAreaByType(AvoidAreaType type, AvoidArea& a
     return windowExtensionSessionImpl_->GetAvoidAreaByType(type, avoidArea);
 }
 
+WMError ExtensionWindowImpl::NapiSetUIContent(const std::string& contentInfo, napi_env env,
+    napi_value storage, bool isdistributed, sptr<IRemoteObject> token, AppExecFwk::Ability* ability)
+{
+    WLOGI("NapiSetUIContent is called");
+    return windowExtensionSessionImpl_->NapiSetUIContent(contentInfo, env, storage, isdistributed, token, ability);
+}
+
 sptr<Window> ExtensionWindowImpl::GetWindow()
 {
     return windowExtensionSessionImpl_;
