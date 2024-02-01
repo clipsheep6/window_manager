@@ -147,7 +147,7 @@ sptr<Window> Window::CreatePip(sptr<WindowOption>& option, const std::shared_ptr
     }
     if (!option || option->GetWindowName().empty()) {
         WLOGE("host window session is nullptr:%{public}u or option is null: %{public}u",
-            option->GetWindowName().empty(), option== nullptr);
+            option->GetWindowName().empty(), option == nullptr);
         return nullptr;
     }
     if (!WindowHelper::IsPipWindow(option->GetWindowType())) {
@@ -170,7 +170,7 @@ sptr<Window> Window::CreatePip(sptr<WindowOption>& option, const std::shared_ptr
     WMError error = windowSessionImpl->Create(context, nullptr);
     if (error != WMError::WM_OK) {
         errCode = error;
-        WLOGFD("CreateWindowWithSession, error: %{public}u", static_cast<uint32_t>(errCode));
+        WLOGFD("Create pip window with session, error: %{public}u", static_cast<uint32_t>(errCode));
         return nullptr;
     }
     return windowSessionImpl;

@@ -614,6 +614,9 @@ std::string PictureInPictureController::GetPiPNavigationId()
 }
 
 uint32_t PictureInPictureController::GetPipPriority(uint32_t pipTemplateType) {
+    if (pipTemplateType < 0 || pipTemplateType >= PipTemplateType::END) {
+        return PIP_LOW_PRIORITY;
+    }
     if (pipTemplateType == static_cast<uint32_t>(PipTemplateType::VIDEO_PLAY) ||
         pipTemplateType == static_cast<uint32_t>(PipTemplateType::VIDEO_LIVE)) {
         return PIP_LOW_PRIORITY;

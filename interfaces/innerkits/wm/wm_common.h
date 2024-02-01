@@ -633,6 +633,7 @@ enum class PipTemplateType : uint32_t {
     VIDEO_CALL = 1,
     VIDEO_MEETING = 2,
     VIDEO_LIVE = 3,
+    END,
 };
 
 /**

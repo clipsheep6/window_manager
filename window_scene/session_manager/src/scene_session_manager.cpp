@@ -1678,8 +1678,9 @@ bool SceneSessionManager::CheckPipPriorityHighEnough(const PiPTemplateInfo& pipT
     std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
     for (const auto& iter: sceneSessionMap_) {
         auto& session = iter.second;
-        if (session && session->GetWindowType() == WindowType::WINDOW_TYPE_PIP &&
-            session->GetPiPTemplateInfo().priority > pipTemplateInfo.priority) {
+        if (session && session->GetWindowMode() == WindowMode::WINDOW_MODE_PIP &&
+            pipTemplateInfo.priority < session->GetPiPTemplateInfo().priority &&
+            IsSessionVisible(session)) {
             WLOGFE("create pip window failed, reason: low priority.");
             return false;
         }
