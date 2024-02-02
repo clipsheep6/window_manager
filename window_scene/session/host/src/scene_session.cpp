@@ -1561,7 +1561,8 @@ void SceneSession::SetPrivacyMode(bool isPrivacy)
     RSTransaction::FlushImplicitTransaction();
 }
 
-void SceneSession::SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo) {
+void SceneSession::SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo)
+{
     pipTemplateInfo_ = pipTemplateInfo;
 }
 

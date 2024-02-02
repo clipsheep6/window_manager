@@ -139,8 +139,8 @@ sptr<Window> Window::Create(sptr<WindowOption>& option, const std::shared_ptr<OH
     return CreateWindowWithSession(option, context, errCode, iface_cast<Rosen::ISession>(iSession));
 }
 
-sptr<Window> Window::CreatePip(sptr<WindowOption>& option, const std::shared_ptr<OHOS::AbilityRuntime::Context>& context,
-    const PiPTemplateInfo& pipTemplateInfo, WMError& errCode)
+sptr<Window> Window::CreatePip(sptr<WindowOption>& option, const PiPTemplateInfo& pipTemplateInfo,
+    const std::shared_ptr<OHOS::AbilityRuntime::Context>& context, WMError& errCode)
 {
     if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
         return nullptr;
@@ -153,13 +153,6 @@ sptr<Window> Window::CreatePip(sptr<WindowOption>& option, const std::shared_ptr
     if (!WindowHelper::IsPipWindow(option->GetWindowType())) {
         WLOGE("window type is not pip window.");
         return nullptr;
-    }
-    uint32_t version = 10;
-    if ((context != nullptr) && (context->GetApplicationInfo() != nullptr)) {
-        version = context->GetApplicationInfo()->apiCompatibleVersion;
-    }
-    if (version < 10) {
-        option->AddWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
     }
     sptr<WindowSessionImpl> windowSessionImpl = new(std::nothrow) WindowSceneSessionImpl(option);
     if (windowSessionImpl == nullptr) {

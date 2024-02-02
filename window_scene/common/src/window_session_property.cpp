@@ -529,8 +529,8 @@ void WindowSessionProperty::UnmarshallingTouchHotAreas(Parcel& parcel, WindowSes
     }
 }
 
-bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const 
-{   
+bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const
+{
     if (!WindowHelper::IsPipWindow(type_)) {
         return true;
     }
@@ -553,7 +553,7 @@ bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const
 }
 
 void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowSessionProperty* property)
-{   
+{
     if (!WindowHelper::IsPipWindow(property->GetWindowType())) {
         return;
     }

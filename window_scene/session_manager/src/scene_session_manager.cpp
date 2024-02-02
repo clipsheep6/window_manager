@@ -1674,7 +1674,8 @@ void SceneSessionManager::ClosePipWindowIfExist(WindowType type)
     }
 }
 
-bool SceneSessionManager::CheckPipPriorityHighEnough(const PiPTemplateInfo& pipTemplateInfo) {
+bool SceneSessionManager::CheckPipPriorityHighEnough(const PiPTemplateInfo& pipTemplateInfo)
+{
     std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
     for (const auto& iter: sceneSessionMap_) {
         auto& session = iter.second;

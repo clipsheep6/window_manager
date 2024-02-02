@@ -67,7 +67,8 @@ void PipOption::GetContentSize(uint32_t& width, uint32_t& height)
     height = contentHeight_;
 }
 
-std::vector<std::uint32_t> PipOption::GetControlGroup() {
+std::vector<std::uint32_t> PipOption::GetControlGroup()
+{
     return controlGroup_;
 }
 

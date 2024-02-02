@@ -436,8 +436,8 @@ public:
      * @param errCode error code of create pip window
      * @return sptr<Window> If create pip window success, return window instance; Otherwise, return nullptr
      */
-    static sptr<Window> CreatePip(sptr<WindowOption>& option, const std::shared_ptr<OHOS::AbilityRuntime::Context>& context,
-        const PiPTemplateInfo& pipTemplateInfo, WMError& errCode = DefaultCreateErrCode);
+    static sptr<Window> CreatePip(sptr<WindowOption>& option, const PiPTemplateInfo& pipTemplateInfo,
+        const std::shared_ptr<OHOS::AbilityRuntime::Context>& context, WMError& errCode = DefaultCreateErrCode);
 
     /**
      * @brief find window by windowName
