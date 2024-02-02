@@ -75,7 +75,7 @@ public:
     void KeepKeyboardOnFocus(bool keepKeyboardFlag);
     void SetIsNeedUpdateWindowMode(bool isNeedUpdateWindowMode);
     void SetCallingWindow(uint32_t windowId);
-    void SetPiPTemplateInfo(PiPTemplateInfo pipTemplateInfo);
+    void SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo);
 
     bool GetIsNeedUpdateWindowMode() const;
     const std::string& GetWindowName() const;

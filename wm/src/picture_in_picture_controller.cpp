@@ -614,7 +614,7 @@ std::string PictureInPictureController::GetPiPNavigationId()
 }
 
 uint32_t PictureInPictureController::GetPipPriority(uint32_t pipTemplateType) {
-    if (pipTemplateType < 0 || static_cast<uint32_t>(pipTemplateType >= PipTemplateType::END)) {
+    if (pipTemplateType < 0 || pipTemplateType >= static_cast<uint32_t>(PipTemplateType::END)) {
         WLOGFE("param invalid, pipTemplateType is %{public}d", pipTemplateType);
         return PIP_LOW_PRIORITY;
     }

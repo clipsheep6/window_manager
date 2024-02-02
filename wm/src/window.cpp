@@ -140,7 +140,7 @@ sptr<Window> Window::Create(sptr<WindowOption>& option, const std::shared_ptr<OH
 }
 
 sptr<Window> Window::CreatePip(sptr<WindowOption>& option, const std::shared_ptr<OHOS::AbilityRuntime::Context>& context,
-    PiPTemplateInfo& pipTemplateInfo, WMError& errCode)
+    const PiPTemplateInfo& pipTemplateInfo, WMError& errCode)
 {
     if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
         return nullptr;

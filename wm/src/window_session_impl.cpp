@@ -258,7 +258,7 @@ bool WindowSessionImpl::IsSupportWideGamut()
     return true;
 }
 
-WMError WindowSessionImpl::SetPiPTemplateInfo(PiPTemplateInfo pipTemplateInfo) const {
+WMError WindowSessionImpl::SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo) const {
     if (!property_) {
         property_->SetPiPTemplateInfo(pipTemplateInfo);
         return WMError::WM_OK;

@@ -31,11 +31,11 @@ public:
     void SetPipTemplate(uint32_t templateType);
     void SetContentSize(uint32_t width, uint32_t height);
     void SetXComponentController(std::shared_ptr<XComponentController> xComponentController);
-    void SetControlGroup(std::vector<std::string> controlGroup);
+    void SetControlGroup(std::vector<std::uint32_t> controlGroup);
     void* GetContext() const;
     std::string GetNavigationId() const;
     uint32_t GetPipTemplate();
-    std::vector<std::string> GetControlGroup();
+    std::vector<std::uint32_t> GetControlGroup();
     void GetContentSize(uint32_t& width, uint32_t& height);
     std::shared_ptr<XComponentController> GetXComponentController();
 private:

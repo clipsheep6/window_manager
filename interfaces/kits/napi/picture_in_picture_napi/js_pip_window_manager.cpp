@@ -32,17 +32,17 @@ namespace {
 
 std::mutex JsPipWindowManager::mutex_;
 
-static bool GetControlGroupFromJs(napi_env env, napi_value controlGroup, std::vector<std::string> &controls) {
+static bool GetControlGroupFromJs(napi_env env, napi_value controlGroup, std::vector<std::uint32_t> &controls) {
     if (controlGroup == nullptr) {
         return false;
     }
     uint32_t size = 0;
     napi_get_array_length(env, controlGroup, &size);
     for (uint32_t i = 0; i < size; i++) {
-        std::string controlName;
+        uint32_t controlType;
         napi_value getElementValue = nullptr;
         napi_get_element(env, controlGroup, i, &getElementValue);
-        if (!ConvertFromJsValue(env, getElementValue, controlName)) {
+        if (!ConvertFromJsValue(env, getElementValue, controlType)) {
             WLOGE("Failed to convert parameter to controlName");
             return false;
         }
@@ -65,7 +65,7 @@ static int32_t GetPictureInPictureOptionFromJs(napi_env env, napi_value optionOb
     uint32_t templateType = 0;
     uint32_t width = 0;
     uint32_t height = 0;
-    std::vector<std::string> controls;
+    std::vector<std::uint32_t> controls;
 
     napi_get_named_property(env, optionObject, "context", &contextPtrValue);
     napi_get_named_property(env, optionObject, "navigationId", &navigationIdValue);

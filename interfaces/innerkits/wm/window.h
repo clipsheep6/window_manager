@@ -437,7 +437,7 @@ public:
      * @return sptr<Window> If create pip window success, return window instance; Otherwise, return nullptr
      */
     static sptr<Window> CreatePip(sptr<WindowOption>& option, const std::shared_ptr<OHOS::AbilityRuntime::Context>& context,
-        PiPTemplateInfo& pipTemplateInfo, WMError& errCode = DefaultCreateErrCode);
+        const PiPTemplateInfo& pipTemplateInfo, WMError& errCode = DefaultCreateErrCode);
 
     /**
      * @brief find window by windowName

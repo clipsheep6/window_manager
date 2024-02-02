@@ -693,7 +693,7 @@ struct PiPRectInfo {
 struct PiPTemplateInfo {
     uint32_t pipTemplateType;
     uint32_t priority;
-    std::vector<std::string> controlGroup;
+    std::vector<uint32_t> controlGroup;
 };
 
 using OnCallback = std::function<void(int64_t)>;

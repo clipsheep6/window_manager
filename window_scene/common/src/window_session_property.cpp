@@ -423,7 +423,7 @@ uint32_t WindowSessionProperty::GetCallingWindow() const
     return callingWindowId_;
 }
 
-void WindowSessionProperty::SetPiPTemplateInfo(PiPTemplateInfo pipTemplateInfo)
+void WindowSessionProperty::SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo)
 {
     pipTemplateInfo_ = pipTemplateInfo;
 }
@@ -545,7 +545,7 @@ bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const
         return false;
     }
     for (uint32_t i = 0; i < size; i++) {
-        if (!parcel.WriteString(pipTemplateInfo_.controlGroup[i])) {
+        if (!parcel.WriteUint32(pipTemplateInfo_.controlGroup[i])) {
             return false;
         }
     }
@@ -562,7 +562,7 @@ void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowS
     pipTemplateInfo.priority = parcel.ReadUint32();
     auto size = parcel.ReadUint32();
     for (uint32_t i = 0; i < size; i++) {
-        pipTemplateInfo.controlGroup.push_back(parcel.ReadString());
+        pipTemplateInfo.controlGroup.push_back(parcel.ReadUint32());
     }
     property->SetPiPTemplateInfo(pipTemplateInfo);
 }
