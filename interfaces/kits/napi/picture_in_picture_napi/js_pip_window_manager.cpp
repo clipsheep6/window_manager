@@ -43,10 +43,10 @@ static bool GetControlGroupFromJs(napi_env env, napi_value controlGroup, std::ve
         napi_value getElementValue = nullptr;
         napi_get_element(env, controlGroup, i, &getElementValue);
         if (!ConvertFromJsValue(env, getElementValue, controlType)) {
-            WLOGE("Failed to convert parameter to controlName");
+            WLOGE("Failed to convert parameter to controlType");
             return false;
         }
-        controls.push_back(controlName);
+        controls.push_back(controlType);
     }
     return true;
 }
