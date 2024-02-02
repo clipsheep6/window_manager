@@ -258,6 +258,20 @@ bool WindowSessionImpl::IsSupportWideGamut()
     return true;
 }
 
+WMError WindowSessionImpl::SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo) const {
+    if (!property_) {
+        property_->SetPiPTemplateInfo(pipTemplateInfo);
+        return WMError::WM_OK;
+    } else {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+}
+
+PiPTemplateInfo WindowSessionProperty::GetPiPTemplateInfo() const
+{
+    return pipTemplateInfo_;
+}
+
 void WindowSessionImpl::SetColorSpace(ColorSpace colorSpace)
 {
     auto colorGamut = GetSurfaceGamutFromColorSpace(colorSpace);
