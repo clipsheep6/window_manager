@@ -45,7 +45,7 @@ private:
     uint32_t contentWidth_ = 0;
     uint32_t contentHeight_ = 0;
     std::shared_ptr<XComponentController> xComponentController_;
-    std::vector<std::string> controlGroup_;
+    std::vector<std::uint32_t> controlGroup_;
 };
 }
 }
