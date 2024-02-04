@@ -1207,17 +1207,19 @@ WSError SceneSessionManager::PrepareTerminate(int32_t persistentId, bool& isPrep
     return WSError::WS_OK;
 }
 
-std::future<int32_t> SceneSessionManager::RequestSceneSessionActivation(
-    const sptr<SceneSession>& sceneSession, bool isNewActive)
+WSError SceneSessionManager::RequestSceneSessionActivation(const sptr<SceneSession>& sceneSession, bool isNewActive)
 {
+    if (sceneSession == nullptr) {
+        WLOGFE("scene session is nullptr");
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSessionActivation begin(%d )",
+        sceneSession->GetPersistentId());
     wptr<SceneSession> weakSceneSession(sceneSession);
-    std::shared_ptr<std::promise<int32_t>> promise = std::make_shared<std::promise<int32_t>>();
-    auto future = promise->get_future();
-    auto task = [this, weakSceneSession, isNewActive, promise]() {
+    auto task = [this, weakSceneSession, isNewActive]() {
         sptr<SceneSession> scnSession = weakSceneSession.promote();
         if (scnSession == nullptr) {
             WLOGFE("[WMSMain]session is nullptr");
-            promise->set_value(static_cast<int32_t>(WSError::WS_ERROR_NULLPTR));
             return WSError::WS_ERROR_INVALID_WINDOW;
         }
 
@@ -1228,21 +1230,20 @@ std::future<int32_t> SceneSessionManager::RequestSceneSessionActivation(
             persistentId, static_cast<uint32_t>(scnSession->GetSessionInfo().isSystem_));
         if (!GetSceneSession(persistentId)) {
             WLOGFE("[WMSMain]session is invalid with %{public}d", persistentId);
-            promise->set_value(static_cast<int32_t>(WSError::WS_ERROR_INVALID_SESSION));
             return WSError::WS_ERROR_INVALID_WINDOW;
         }
         if (CheckCollaboratorType(scnSession->GetCollaboratorType())) {
             WLOGFI("collaborator use native session");
             scnSession = GetSceneSession(persistentId);
         }
-        auto ret = RequestSceneSessionActivationInner(scnSession, isNewActive, promise);
+        auto ret = RequestSceneSessionActivationInner(scnSession, isNewActive);
         scnSession->RemoveLifeCycleTask(LifeCycleTaskType::START);
         return ret;
     };
     std::string taskName = "RequestSceneSessionActivation:PID:" +
         (sceneSession != nullptr ? std::to_string(sceneSession->GetPersistentId()):"nullptr");
     taskScheduler_->PostAsyncTask(task, taskName);
-    return future;
+    return WSError::WS_OK;
 }
 
 void SceneSessionManager::RequestInputMethodCloseKeyboard(const int32_t persistentId)
@@ -1257,8 +1258,7 @@ void SceneSessionManager::RequestInputMethodCloseKeyboard(const int32_t persiste
     }
 }
 
-WSError SceneSessionManager::RequestSceneSessionActivationInner(
-    sptr<SceneSession>& scnSession, bool isNewActive, const std::shared_ptr<std::promise<int32_t>>& promise)
+WSError SceneSessionManager::RequestSceneSessionActivationInner(sptr<SceneSession>& scnSession, bool isNewActive)
 {
     auto persistentId = scnSession->GetPersistentId();
     RequestInputMethodCloseKeyboard(persistentId);
@@ -1271,7 +1271,6 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
     }
     auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
     if (!scnSessionInfo) {
-        promise->set_value(static_cast<int32_t>(WSError::WS_ERROR_NULLPTR));
         return WSError::WS_ERROR_INVALID_WINDOW;
     }
     scnSession->NotifyActivation();
@@ -1307,7 +1306,6 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
         WindowInfoReporter::GetInstance().InsertShowReportInfo(sessionInfo.bundleName_);
     }
     NotifyCollaboratorAfterStart(scnSession, scnSessionInfo);
-    promise->set_value(static_cast<int32_t>(errCode));
 
     if (errCode != ERR_OK) {
         WLOGFE("session activate failed. errCode: %{public}d", errCode);
@@ -1357,22 +1355,12 @@ WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSessi
         if (persistentId == brightnessSessionId_) {
             UpdateBrightness(focusedSessionId_);
         }
-        auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
-        if (!scnSessionInfo) {
-            return WSError::WS_ERROR_NULLPTR;
-        }
 
         if (systemConfig_.backgroundswitch) {
             WLOGFD("[WMSMain]RequestSceneSessionBackground: %{public}d", systemConfig_.backgroundswitch);
             scnSession->NotifySessionBackground(1, true, true);
         } else {
-            WLOGFI("[WMSMain]begin MinimzeUIAbility: %{public}d isSystem:%{public}u",
-                persistentId, static_cast<uint32_t>(scnSession->GetSessionInfo().isSystem_));
-            if (!isDelegator) {
-                AAFwk::AbilityManagerClient::GetInstance()->MinimizeUIAbilityBySCB(scnSessionInfo);
-            } else {
-                AAFwk::AbilityManagerClient::GetInstance()->MinimizeUIAbilityBySCB(scnSessionInfo, true);
-            }
+            MinimizeUIAbilityBySCB(scnSession, isDelegator);
         }
 
         if (WindowHelper::IsMainWindow(scnSession->GetWindowType())) {
@@ -1385,6 +1373,31 @@ WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSessi
         (sceneSession != nullptr ? std::to_string(sceneSession->GetPersistentId()):"nullptr");
     taskScheduler_->PostAsyncTask(task, taskName);
     return WSError::WS_OK;
+}
+
+void SceneSessionManager::MinimizeUIAbilityBySCB(const sptr<SceneSession>& sceneSession, bool isDelegator)
+{
+    wptr<SceneSession> weakSceneSession(sceneSession);
+    auto task = [this, weakSceneSession, isDelegator]() {
+        auto scnSession = weakSceneSession.promote();
+        if (scnSession == nullptr) {
+            WLOGFE("[WMSMain]session is nullptr");
+            return;
+        }
+        auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
+        if (!scnSessionInfo) {
+            WLOGFE("[WMSMain]scnSessionInfo is nullptr");
+            return;
+        }
+        WLOGFI("[WMSMain]begin MinimzeUIAbility: %{public}d isSystem:%{public}u",
+            scnSession->GetPersistentId(), static_cast<uint32_t>(scnSession->GetSessionInfo().isSystem_));
+        if (!isDelegator) {
+            AAFwk::AbilityManagerClient::GetInstance()->MinimizeUIAbilityBySCB(scnSessionInfo);
+        } else {
+            AAFwk::AbilityManagerClient::GetInstance()->MinimizeUIAbilityBySCB(scnSessionInfo, true);
+        }
+    };
+    PostAsyncExportTask(task, "MinimizeUIAbilityBySCB");
 }
 
 void SceneSessionManager::NotifyForegroundInteractiveStatus(const sptr<SceneSession>& sceneSession, bool interactive)
@@ -1523,26 +1536,34 @@ WSError SceneSessionManager::RequestSceneSessionDestruction(
 WSError SceneSessionManager::RequestSceneSessionDestructionInner(
     sptr<SceneSession> &scnSession, sptr<AAFwk::SessionInfo> scnSessionInfo, const bool needRemoveSession)
 {
-    auto persistentId = scnSession->GetPersistentId();
-    NotifySessionUpdate(scnSession->GetSessionInfo(), ActionType::SINGLE_CLOSE);
-    WLOGFI("[WMSMain]begin CloseUIAbility: %{public}d isSystem:%{public}u",
-        persistentId,
-        static_cast<uint32_t>(scnSession->GetSessionInfo().isSystem_));
-    AAFwk::AbilityManagerClient::GetInstance()->CloseUIAbilityBySCB(scnSessionInfo);
-    scnSession->SetSessionInfoAncoSceneState(AncoSceneState::DEFAULT_STATE);
-    if (needRemoveSession) {
-        if (CheckCollaboratorType(scnSession->GetCollaboratorType())) {
-            NotifyClearSession(scnSession->GetCollaboratorType(), scnSessionInfo->persistentId);
+    auto task = [this, weakThis = wptr(scnSession), scnSessionInfo, needRemoveSession]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGFE("[WMSMain]session is null");
+            return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
-        EraseSceneSessionMapById(persistentId);
-    } else {
-        // if terminate, set want to null. so start from recent, start a new one.
-        scnSession->SetSessionInfoWant(nullptr);
-    }
-    if (listenerController_ != nullptr) {
-        NotifySessionForCallback(scnSession, needRemoveSession);
-    }
-    scnSession->RemoveLifeCycleTask(LifeCycleTaskType::STOP);
+        auto persistentId = session->GetPersistentId();
+        NotifySessionUpdate(session->GetSessionInfo(), ActionType::SINGLE_CLOSE);
+        WLOGFI("[WMSMain]begin CloseUIAbility: %{public}d isSystem:%{public}u", persistentId,
+            static_cast<uint32_t>(session->GetSessionInfo().isSystem_));
+        AAFwk::AbilityManagerClient::GetInstance()->CloseUIAbilityBySCB(scnSessionInfo);
+        session->SetSessionInfoAncoSceneState(AncoSceneState::DEFAULT_STATE);
+        if (needRemoveSession) {
+            if (CheckCollaboratorType(session->GetCollaboratorType())) {
+                NotifyClearSession(session->GetCollaboratorType(), scnSessionInfo->persistentId);
+            }
+            EraseSceneSessionMapById(persistentId);
+        } else {
+            // if terminate, set want to null. so start from recent, start a new one.
+            session->SetSessionInfoWant(nullptr);
+        }
+        if (listenerController_ != nullptr) {
+            NotifySessionForCallback(session, needRemoveSession);
+        }
+        session->RemoveLifeCycleTask(LifeCycleTaskType::STOP);
+        return WSError::WS_OK;
+    };
+    PostAsyncExportTask(task, "RequestSceneSessionDestructionInner");
     return WSError::WS_OK;
 }
 
@@ -6970,5 +6991,19 @@ WSError SceneSessionManager::HideNonSecureWindows(bool shouldHide)
         return WSError::WS_OK;
     };
     return taskScheduler_->PostSyncTask(task);
+}
+
+void SceneSessionManager::PostAsyncExportTask(Task&& task, const std::string& name, int64_t delayTime)
+{
+    if (!eventHandler_ || eventHandler_->GetEventRunner()->IsCurrentRunnerThread()) {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:%s", name.c_str());
+        return task();
+    }
+    auto localTask = [task, name]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:%s", name.c_str());
+        task();
+    };
+    eventHandler_->PostTask(std::move(localTask), "wms:" + name, delayTime,
+        AppExecFwk::EventQueue::Priority::IMMEDIATE);
 }
 } // namespace OHOS::Rosen
