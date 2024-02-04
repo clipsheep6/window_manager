@@ -376,6 +376,20 @@ HWTEST_F(WindowSessionPropertyTest, UnmarshallingTouchHotAreas, Function | Small
 }
 
 /**
+ * @tc.name: UnmarshallingPiPTemplateInfo
+ * @tc.desc: UnmarshallingPiPTemplateInfo test
+ * @tc.type: FUNC
+*/
+HWTEST_F(WindowSessionPropertyTest, UnmarshallingPiPTemplateInfo, Function | SmallTest | Level2)
+{
+    Parcel parcel = Parcel();
+    WindowSessionProperty *property = new WindowSessionProperty();
+    WindowSessionProperty windowSessionProperty;
+    windowSessionProperty.UnmarshallingPiPTemplateInfo(parcel, property);
+    ASSERT_EQ(property->GetTokenState(), false);
+}
+
+/**
  * @tc.name: Unmarshalling
  * @tc.desc: Unmarshalling test
  * @tc.type: FUNC
