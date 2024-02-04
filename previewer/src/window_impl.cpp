@@ -607,20 +607,34 @@ void WindowImpl::SetRequestModeSupportInfo(uint32_t modeSupportInfo)
 
 void WindowImpl::ConsumeKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
+    if (keyEvent == nullptr) {
+        WLOGFE("The key event is nullptr");
+        return;
+    }
     if (uiContent_ == nullptr) {
         WLOGFE("ConsumeKeyEvent to uiContent failed,uiContent_ is null");
         return;
     }
-    uiContent_->ProcessKeyEvent(keyEvent);
+    if (!(uiContent_->ProcessKeyEvent(keyEvent))) {
+        WLOGFE("The UI content consumes key event failed.");
+        keyEvent->MarkProcessed();
+    }
 }
 
 void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
+    if (pointerEvent == nullptr) {
+        WLOGFE("The pointer event is nullptr");
+        return;
+    }
     if (uiContent_ == nullptr) {
         WLOGFE("ConsumePointerEvent to uiContent failed,uiContent_ is null");
         return;
     }
-    (void)uiContent_->ProcessPointerEvent(pointerEvent);
+    if (!(uiContent_->ProcessPointerEvent(pointerEvent))) {
+        WLOGFI("The UI content consumes pointer event failed");
+        pointerEvent->MarkProcessed();
+    }
 }
 
 
