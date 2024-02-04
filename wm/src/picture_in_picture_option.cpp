@@ -42,7 +42,8 @@ void PipOption::SetContentSize(uint32_t width, uint32_t height)
     contentHeight_ = height;
 }
 
-void PipOption::SetControlGroup(std::vector<std::uint32_t> controlGroup) {
+void PipOption::SetControlGroup(std::vector<std::uint32_t> controlGroup)
+{
     controlGroup_ = controlGroup;
 }
 

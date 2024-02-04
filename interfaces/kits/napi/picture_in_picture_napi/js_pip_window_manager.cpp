@@ -32,7 +32,8 @@ namespace {
 
 std::mutex JsPipWindowManager::mutex_;
 
-static bool GetControlGroupFromJs(napi_env env, napi_value controlGroup, std::vector<std::uint32_t> &controls) {
+static bool GetControlGroupFromJs(napi_env env, napi_value controlGroup, std::vector<std::uint32_t> &controls)
+{
     if (controlGroup == nullptr) {
         return false;
     }
