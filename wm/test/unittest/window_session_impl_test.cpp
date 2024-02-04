@@ -211,6 +211,24 @@ HWTEST_F(WindowSessionImplTest, SetResizeByDragEnabled01, Function | SmallTest |
 }
 
 /**
+ * @tc.name: SetAndGetPipTemplateInfo
+ * @tc.desc: SetAndGetPipTemplateInfo Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTest, SetAndGetPipTemplateInfo, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("SetResizeByDragEnabled01");
+    sptr<WindowSessionImpl> window = new(std::nothrow) WindowSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    PiPTemplateInfo pipTemplateInfo;
+    pipTemplateInfo.pipTemplateType = static_cast<uint32_t>(PipTemplateType::VIDEO_CALL);
+    window.SetPiPTemplateInfo(pipTemplateInfo);
+    ASSERT_EQ(window->GetPiPTemplateInfo().pipTemplateType,
+        static_cast<uint32_t>(PipTemplateType::VIDEO_CALL));
+}
+
+/**
  * @tc.name: SetWindowType01
  * @tc.desc: SetWindowType
  * @tc.type: FUNC
