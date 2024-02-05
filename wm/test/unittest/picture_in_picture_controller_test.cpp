@@ -83,12 +83,12 @@ HWTEST_F(PictureInPictureControllerTest, ShowPictureInPictureWindow01, Function 
  * @tc.type: FUNC
  */
 HWTEST_F(PictureInPictureControllerTest, GetPipPriority, Function | SmallTest | Level2)
-{   
+{
     sptr<MockWindow> mw = new MockWindow();
     ASSERT_NE(nullptr, mw);
     sptr<PipOption> option = new PipOption();
     sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
-    uint32_t pipTemplateType; 
+    uint32_t pipTemplateType;
     pipTemplateType = static_cast<uint32_t>(PipTemplateType::VIDEO_CALL);
     ASSERT_EQ(pipControl->GetPipPriority(pipTemplateType), 1);
     pipTemplateType = static_cast<uint32_t>(PipTemplateType::VIDEO_PLAY);
