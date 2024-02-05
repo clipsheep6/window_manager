@@ -203,13 +203,13 @@ void PictureInPictureManager::DoScale()
     activeController_->DoScale();
 }
 
-void PictureInPictureManager::DoActionEvent(std::string actionName)
+void PictureInPictureManager::DoActionEvent(const std::string& actionName, int32_t status)
 {
     WLOGD("DoActionEvent is called");
     if (!HasActiveController()) {
         return;
     }
-    activeController_->DoActionEvent(actionName);
+    activeController_->DoActionEvent(actionName, status);
 }
 
 void PictureInPictureManager::AutoStartPipWindow(std::string navigationId)

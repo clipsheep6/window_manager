@@ -1874,6 +1874,13 @@ WSError WindowSessionImpl::UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, Avo
     return WSError::WS_OK;
 }
 
+WSError WindowSessionImpl::SetPipActionEvent(const std::string& action, int32_t status)
+{
+    WLOGFI("action: %{public}s, status: %{public}d", action.c_str(), status);
+    PictureInPictureManager::DoActionEvent(action, status);
+    return WSError::WS::OK;
+}
+
 WMError WindowSessionImpl::RegisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener)
 {
     bool isUpdate = false;

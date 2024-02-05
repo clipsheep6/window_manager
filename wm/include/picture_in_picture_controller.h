@@ -64,7 +64,7 @@ public:
     void UpdateContentSize(int32_t width, int32_t height);
     void StartMove();
     void DoScale();
-    void DoActionEvent(std::string& actionName);
+    void DoActionEvent(const std::string& actionName, int32_t status);
     void RestorePictureInPictureWindow();
     void SetPictureInPictureLifecycle(sptr<IPiPLifeCycle> listener);
     void SetPictureInPictureActionObserver(sptr<IPiPActionObserver> listener);
