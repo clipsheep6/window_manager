@@ -260,17 +260,12 @@ bool WindowSessionImpl::IsSupportWideGamut()
 
 WMError WindowSessionImpl::SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo) const
 {
-    if (!property_) {
+    if (property_) {
         property_->SetPiPTemplateInfo(pipTemplateInfo);
         return WMError::WM_OK;
     } else {
         return WMError::WM_ERROR_NULLPTR;
     }
-}
-
-PiPTemplateInfo WindowSessionImpl::GetPiPTemplateInfo() const
-{
-    return pipTemplateInfo_;
 }
 
 void WindowSessionImpl::SetColorSpace(ColorSpace colorSpace)
