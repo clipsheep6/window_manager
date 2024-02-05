@@ -196,7 +196,7 @@ HWTEST_F(SceneSessionTest, SetAndGetPipTemplateInfo, Function | SmallTest | Leve
     scensession->isActive_ = true;
     PiPTemplateInfo pipTemplateInfo;
     pipTemplateInfo.pipTemplateType = static_cast<uint32_t>(PipTemplateType::VIDEO_CALL);
-    auto result = scensession->SetPiPTemplateInfo(pipTemplateInfo);
+    scensession->SetPiPTemplateInfo(pipTemplateInfo);
     ASSERT_EQ(scensession->GetPiPTemplateInfo().pipTemplateType,
         static_cast<uint32_t>(PipTemplateType::VIDEO_CALL));
 }

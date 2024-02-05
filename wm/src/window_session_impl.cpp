@@ -268,7 +268,7 @@ WMError WindowSessionImpl::SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplate
     }
 }
 
-PiPTemplateInfo WindowSessionProperty::GetPiPTemplateInfo() const
+PiPTemplateInfo WindowSessionImpl::GetPiPTemplateInfo() const
 {
     return pipTemplateInfo_;
 }
