@@ -44,7 +44,6 @@ namespace OHOS::Rosen {
 using namespace AbilityRuntime;
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "JsSceneSessionManager" };
-constexpr int WAIT_FOR_SECONDS = 2;
 constexpr int MIN_ARG_COUNT = 3;
 constexpr int ARG_INDEX_1 = 1;
 constexpr int ARG_INDEX_2 = 2;
@@ -1135,14 +1134,8 @@ napi_value JsSceneSessionManager::OnRequestSceneSessionActivation(napi_env env, 
     bool isNewActive = true;
     ConvertFromJsValue(env, argv[1], isNewActive);
 
-    int32_t errCode = static_cast<int32_t>(WSErrorCode::WS_ERROR_TIMEOUT);
-    auto future = SceneSessionManager::GetInstance().RequestSceneSessionActivation(sceneSession, isNewActive);
-    if (future.wait_for(std::chrono::seconds(WAIT_FOR_SECONDS)) == std::future_status::ready) {
-        errCode = future.get();
-    }
-    napi_value number = nullptr;
-    napi_create_int32(env, errCode, &number);
-    return number;
+    SceneSessionManager::GetInstance().RequestSceneSessionActivation(sceneSession, isNewActive);
+    return NapiGetUndefined(env);
 }
 
 napi_value JsSceneSessionManager::OnRequestSceneSessionBackground(napi_env env, napi_callback_info info)
