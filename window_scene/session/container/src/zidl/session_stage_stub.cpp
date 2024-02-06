@@ -343,6 +343,6 @@ int SessionStageStub::HandleSetPipActionEvent(MessageParcel& data, MessageParcel
         return ERR_INVALID_VALUE;
     }
     SetPipActionEvent(action, status);
-    return ERR_MONE;
+    return ERR_NONE;
 }
 } // namespace OHOS::Rosen
