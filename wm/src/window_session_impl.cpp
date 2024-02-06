@@ -1878,7 +1878,7 @@ WSError WindowSessionImpl::SetPipActionEvent(const std::string& action, int32_t 
 {
     WLOGFI("action: %{public}s, status: %{public}d", action.c_str(), status);
     PictureInPictureManager::DoActionEvent(action, status);
-    return WSError::WS::OK;
+    return WSError::WS_OK;
 }
 
 WMError WindowSessionImpl::RegisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener)
