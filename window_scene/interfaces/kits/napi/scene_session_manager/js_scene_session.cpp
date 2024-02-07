@@ -69,10 +69,12 @@ std::map<int32_t, napi_ref> JsSceneSession::jsSceneSessionMap_;
 static napi_value CreatePipTemplateInfo(napi_env env, const sptr<SceneSession>& session)
 {
     napi_value pipTemplateInfoValue = nullptr;
+    napi_create_object(env, &pipTemplateInfoValue);
     napi_set_named_property(env, pipTemplateInfoValue, "pipTemplateType", CreateJsValue(env, session->GetPiPTemplateInfo().pipTemplateType));
     napi_set_named_property(env, pipTemplateInfoValue, "priority", CreateJsValue(env, session->GetPiPTemplateInfo().priority));
     napi_value controlArrayValue = nullptr;
-    std::vector<std::string> controlGroups = session->GetPiPTemplateInfo().controlGroup;
+    std::vector<std::uint32_t> controlGroups = session->GetPiPTemplateInfo().controlGroup;
+    napi_create_array_with_length(env, controlGroups.size(), &controlArrayValue);
     auto index = 0;
     for (const auto& controlGroup : controlGroups) {
         napi_set_element(env, controlArrayValue, index++, CreateJsValue(env, controlGroup));
