@@ -65,6 +65,7 @@ public:
     FoldStatus GetFoldStatus();
     std::shared_ptr<Media::PixelMap> GetScreenSnapshot(ScreenId screenId, float scaleX, float scaleY);
     sptr<ScreenSession> GetScreenSessionById(const ScreenId id);
+    void SetExitingProcessFlag();
 
 protected:
     ScreenSessionManagerClient() = default;
@@ -89,6 +90,7 @@ private:
     std::map<ScreenId, sptr<ScreenSession>> screenSessionMap_;
 
     sptr<IScreenSessionManager> screenSessionManager_;
+    bool isExitingProcess = false;
 
     IScreenConnectionListener* screenConnectionListener_;
     sptr<IDisplayChangeListener> displayChangeListener_;

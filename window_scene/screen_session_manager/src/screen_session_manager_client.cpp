@@ -71,6 +71,12 @@ void ScreenSessionManagerClient::ConnectToServer()
     screenSessionManager_->SetClient(this, userId);
 }
 
+void ScreenSessionManagerClient::SetExitingProcessFlag()
+{
+    isExitingProcess = true;
+    WLOGFE("Processs exiting, the screen_session_manager_client will exit.")
+}
+
 void ScreenSessionManagerClient::RegisterScreenConnectionListener(IScreenConnectionListener* listener)
 {
     if (listener == nullptr) {
@@ -251,8 +257,8 @@ std::unordered_map<ScreenId, ScreenProperty> ScreenSessionManagerClient::GetAllS
 
 FoldDisplayMode ScreenSessionManagerClient::GetFoldDisplayMode() const
 {
-    if (screenSessionManager_ == nullptr) {
-        WLOGFE("screenSessionManager_ is null while get displayMode");
+    if (isExitingProcess || screenSessionManager_ == nullptr) {
+        WLOGFE("screenSessionManager is invalid.");
         return FoldDisplayMode::UNKNOWN;
     }
     return screenSessionManager_->GetFoldDisplayMode();
@@ -260,8 +266,8 @@ FoldDisplayMode ScreenSessionManagerClient::GetFoldDisplayMode() const
 
 void ScreenSessionManagerClient::UpdateScreenRotationProperty(ScreenId screenId, const RRect& bounds, float rotation)
 {
-    if (!screenSessionManager_) {
-        WLOGFE("screenSessionManager_ is null");
+    if (isExitingProcess || !screenSessionManager_) {
+        WLOGFE("screenSessionManager is invalid.");
         return;
     }
     screenSessionManager_->UpdateScreenRotationProperty(screenId, bounds, rotation);
@@ -287,8 +293,8 @@ void ScreenSessionManagerClient::SetDisplayNodeScreenId(ScreenId screenId, Scree
 
 uint32_t ScreenSessionManagerClient::GetCurvedCompressionArea()
 {
-    if (!screenSessionManager_) {
-        WLOGFE("screenSessionManager_ is null");
+    if (isExitingProcess || !screenSessionManager_) {
+        WLOGFE("screenSessionManager is invalid.");
         return 0;
     }
     return screenSessionManager_->GetCurvedCompressionArea();
@@ -296,8 +302,8 @@ uint32_t ScreenSessionManagerClient::GetCurvedCompressionArea()
 
 ScreenProperty ScreenSessionManagerClient::GetPhyScreenProperty(ScreenId screenId)
 {
-    if (!screenSessionManager_) {
-        WLOGFE("screenSessionManager_ is null");
+    if (isExitingProcess || !screenSessionManager_) {
+        WLOGFE("screenSessionManager is invalid.");
         return {};
     }
     return screenSessionManager_->GetPhyScreenProperty(screenId);
@@ -306,8 +312,8 @@ ScreenProperty ScreenSessionManagerClient::GetPhyScreenProperty(ScreenId screenI
 __attribute__((no_sanitize("cfi")))
 void ScreenSessionManagerClient::NotifyDisplayChangeInfoChanged(const sptr<DisplayChangeInfo>& info)
 {
-    if (!screenSessionManager_) {
-        WLOGFE("screenSessionManager_ is null");
+    if (isExitingProcess || !screenSessionManager_) {
+        WLOGFE("screenSessionManager is invalid.");
         return;
     }
     screenSessionManager_->NotifyDisplayChangeInfoChanged(info);
@@ -315,8 +321,8 @@ void ScreenSessionManagerClient::NotifyDisplayChangeInfoChanged(const sptr<Displ
 
 void ScreenSessionManagerClient::SetScreenPrivacyState(bool hasPrivate)
 {
-    if (!screenSessionManager_) {
-        WLOGFE("screenSessionManager_ is null");
+    if (isExitingProcess || !screenSessionManager_) {
+        WLOGFE("screenSessionManager is invalid.");
         return;
     }
     screenSessionManager_->SetScreenPrivacyState(hasPrivate);
@@ -324,8 +330,8 @@ void ScreenSessionManagerClient::SetScreenPrivacyState(bool hasPrivate)
 
 void ScreenSessionManagerClient::UpdateAvailableArea(ScreenId screenId, DMRect area)
 {
-    if (!screenSessionManager_) {
-        WLOGFE("screenSessionManager_ is null");
+    if (isExitingProcess || !screenSessionManager_) {
+        WLOGFE("screenSessionManager is invalid.");
         return;
     }
     screenSessionManager_->UpdateAvailableArea(screenId, area);
@@ -333,8 +339,8 @@ void ScreenSessionManagerClient::UpdateAvailableArea(ScreenId screenId, DMRect a
 
 void ScreenSessionManagerClient::NotifyFoldToExpandCompletion(bool foldToExpand)
 {
-    if (!screenSessionManager_) {
-        WLOGFE("screenSessionManager_ is null");
+    if (isExitingProcess || !screenSessionManager_) {
+        WLOGFE("screenSessionManager is invalid.");
         return;
     }
     screenSessionManager_->NotifyFoldToExpandCompletion(foldToExpand);
@@ -342,8 +348,8 @@ void ScreenSessionManagerClient::NotifyFoldToExpandCompletion(bool foldToExpand)
 
 FoldStatus ScreenSessionManagerClient::GetFoldStatus()
 {
-    if (!screenSessionManager_) {
-        WLOGFE("screenSessionManager_ is null");
+    if (isExitingProcess || !screenSessionManager_) {
+        WLOGFE("screenSessionManager is invalid.");
         return FoldStatus::UNKNOWN;
     }
     return screenSessionManager_->GetFoldStatus();
