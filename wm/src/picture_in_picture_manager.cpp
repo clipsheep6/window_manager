@@ -26,6 +26,8 @@ namespace OHOS {
 namespace Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "PictureInPictureManager"};
+    const std::string CLOSE = "close";
+    const std::string RESTORE = "restore";
 }
 
 sptr<PictureInPictureController> PictureInPictureManager::activeController_ = nullptr;
@@ -203,13 +205,18 @@ void PictureInPictureManager::DoScale()
     activeController_->DoScale();
 }
 
-void PictureInPictureManager::DoActionEvent(std::string actionName)
+void PictureInPictureManager::DoActionEvent(const std::string& actionName, int32_t status)
 {
     WLOGD("DoActionEvent is called");
     if (!HasActiveController()) {
         return;
     }
-    activeController_->DoActionEvent(actionName);
+    activeController_->DoActionEvent(actionName, status);
+    if (actionName.c_str() == CLOSE) {
+        DoClose(true, false);
+    } else if (actionName.c_str() == RESTORE) {
+        DoRestore();
+    }
 }
 
 void PictureInPictureManager::AutoStartPipWindow(std::string navigationId)
