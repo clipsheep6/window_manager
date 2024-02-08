@@ -1593,6 +1593,7 @@ void SceneSessionManager::DestroySpecificSession(const sptr<IRemoteObject>& remo
         DestroyAndDisconnectSpecificSessionInner(sceneSession);
         remoteObjectMap_.erase(iter);
     };
+    ScreenSessionManagerClient::GetInstance().SetExitingProcessFlag();
     taskScheduler_->PostAsyncTask(task, "DestroySpecificSession");
 }
 
