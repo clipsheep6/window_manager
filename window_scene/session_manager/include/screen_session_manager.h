@@ -223,6 +223,10 @@ public:
     void NotifyAvailableAreaChanged(DMRect area);
     void NotifyFoldToExpandCompletion(bool foldToExpand) override;
 
+    // virtual screen flag
+    VirtualScreenFlag GetVirtualScreenFlag(ScreenId screenId) override;
+    DMError SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag flag) override;
+
 protected:
     ScreenSessionManager();
     virtual ~ScreenSessionManager() = default;

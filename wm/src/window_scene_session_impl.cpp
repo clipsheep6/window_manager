@@ -1620,7 +1620,7 @@ WMError WindowSceneSessionImpl::Recover(uint32_t reason)
 
 void WindowSceneSessionImpl::StartMove()
 {
-    WLOGFI("WindowSceneSessionImpl::StartMove id：%{public}d", GetPersistentId());
+    WLOGFI("WindowSceneSessionImpl::StartMove id: %{public}d", GetPersistentId());
     if (IsWindowSessionInvalid()) {
         WLOGFE("session is invalid");
         return;

@@ -644,6 +644,18 @@ DMError ScreenManagerAdapter::MakeUniqueScreen(const std::vector<ScreenId>& scre
     return displayManagerServiceProxy_->MakeUniqueScreen(screenIds);
 }
 
+VirtualScreenFlag ScreenManagerAdapter::GetVirtualScreenFlag(ScreenId screenId)
+{
+    INIT_PROXY_CHECK_RETURN(VirtualScreenFlag::UNKNOWN);
+    return displayManagerServiceProxy_->GetVirtualScreenFlag(screenId);
+}
+
+DMError ScreenManagerAdapter::SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag virtualFlag)
+{
+    INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
+    return displayManagerServiceProxy_->SetVirtualScreenFlag(screenId, virtualFlag);
+}
+
 DMError DisplayManagerAdapter::GetAvailableArea(DisplayId displayId, DMRect& area)
 {
     if (displayId == DISPLAY_ID_INVALID) {

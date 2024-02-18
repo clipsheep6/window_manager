@@ -142,7 +142,7 @@ public:
     ScreenId screenId_ {};
     ScreenId rsId_ {};
     ScreenId defaultScreenId_ = SCREEN_ID_INVALID;
-
+    VirtualScreenFlag virtualFlag_ { VirtualScreenFlag::UNKNOWN };
     NodeId nodeId_ {};
 
     int32_t activeIdx_ { 0 };
@@ -167,6 +167,8 @@ public:
     bool UpdateAvailableArea(DMRect area);
     void SetFoldScreen(bool isFold);
     std::shared_ptr<Media::PixelMap> GetScreenSnapshot(float scaleX, float scaleY);
+    VirtualScreenFlag GetVirtualScreenFlag(ScreenId screenId);
+    DMError SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag flag);
 
 private:
     Rotation ConvertIntToRotation(int rotation);

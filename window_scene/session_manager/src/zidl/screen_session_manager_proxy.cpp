@@ -2072,7 +2072,7 @@ void ScreenSessionManagerProxy::UpdateAvailableArea(ScreenId screenId, DMRect ar
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
-        return ;
+        return;
     }
     if (!data.WriteUint64(screenId)) {
         WLOGFE("Write screenId failed");
@@ -2131,5 +2131,47 @@ void ScreenSessionManagerProxy::NotifyFoldToExpandCompletion(bool foldToExpand)
         WLOGFE("SendRequest failed");
         return;
     }
+}
+
+VirtualScreenFlag ScreenSessionManagerProxy::GetVirtualScreenFlag(ScreenId screenId)
+{
+    MessageOption option(MessageOption::TF_SYNC);
+    MessageParcel reply;
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return VirtualScreenFlag::UNKNOWN;
+    }
+    if (!data.WriteUint64(screenId)) {
+        WLOGFE("Write screenId failed");
+        return VirtualScreenFlag::UNKNOWN;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_GET_VIRTUAL_SCREEN_FLAG),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest GetVirtualScreenFlag failed");
+        return VirtualScreenFlag::UNKNOWN;
+    }
+    return static_cast<VirtualScreenFlag>(reply.ReadInt32());
+}
+
+DMError ScreenSessionManagerProxy::SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag virtualFlag)
+{
+    MessageOption option(MessageOption::TF_ASYNC);
+    MessageParcel reply;
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("set virtual screen flag WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(virtualFlag))) {
+        WLOGFE("set virtual screen flag Write virtual flag failed");
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_SCREEN_FLAG),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("Send set virtual screen flag request failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    return static_cast<DMError>(reply.ReadInt32());
 }
 } // namespace OHOS::Rosen

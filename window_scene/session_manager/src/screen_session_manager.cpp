@@ -174,15 +174,15 @@ void ScreenSessionManager::Init()
 
 void ScreenSessionManager::OnStart()
 {
-    WLOGFI("begin");
+    WLOGFI("ScreenSessionManager OnStart");
     Init();
     sptr<ScreenSessionManager> dms(this);
     dms->IncStrongRef(nullptr);
     if (!Publish(dms)) {
-        WLOGFE("Publish failed");
+        WLOGFE("Publish dms failed");
         return;
     }
-    WLOGFI("end");
+    WLOGFI("ScreenSessionManager OnStart end");
 }
 
 DMError ScreenSessionManager::RegisterDisplayManagerAgent(
@@ -237,7 +237,7 @@ void ScreenSessionManager::ConfigureScreenScene()
     auto stringConfig = ScreenSceneConfig::GetStringConfig();
     if (numbersConfig.count("dpi") != 0) {
         uint32_t densityDpi = static_cast<uint32_t>(numbersConfig["dpi"][0]);
-        WLOGFD("densityDpi = %u", densityDpi);
+        WLOGFI("densityDpi = %u", densityDpi);
         if (densityDpi >= DOT_PER_INCH_MINIMUM_VALUE && densityDpi <= DOT_PER_INCH_MAXIMUM_VALUE) {
             isDensityDpiLoad_ = true;
             defaultDpi = densityDpi;
@@ -419,7 +419,7 @@ void ScreenSessionManager::OnHgmRefreshRateModeChange(int32_t refreshRateMode)
     } else {
         WLOGFE("Get default screen session failed.");
     }
-    return ;
+    return;
 }
 
 sptr<ScreenSession> ScreenSessionManager::GetScreenSession(ScreenId screenId) const
@@ -3421,6 +3421,26 @@ void ScreenSessionManager::NotifyFoldToExpandCompletion(bool foldToExpand)
         return;
     }
     screenSession->UpdateAfterFoldExpand(foldToExpand);
+}
+
+VirtualScreenFlag ScreenSessionManager::GetVirtualScreenFlag(ScreenId screenId)
+{
+    auto screenSession = GetScreenSession(screenId);
+    if (screenSession == nullptr) {
+        WLOGFE("get virtual screen flag get default screen fail");
+        return VirtualScreenFlag::UNKNOWN;
+    }
+    return screenSession->GetVirtualScreenFlag();
+}
+
+DMError ScreenSessionManager::SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag virtualFlag)
+{
+    auto screenSession = GetScreenSession(screenId);
+    if (screenSession == nullptr) {
+        WLOGFE("set virtual screen flag get default screen fail");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+    return screenSession->SetVirtualScreenFlag(virtualFlag);
 }
 
 void ScreenSessionManager::CheckAndSendHiSysEvent(const std::string& eventName, const std::string& bundleName) const

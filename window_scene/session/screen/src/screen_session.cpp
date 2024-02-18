@@ -847,7 +847,7 @@ void ScreenSession::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startP
     if (displayNode_ != nullptr) {
         displayNode_->SetDisplayNodeMirrorConfig(config);
         if (screenId_ == 0 && isFold_) {
-            WLOGFI("Return InitRSDisplayNode flodScreen0");
+            WLOGFI("Return InitRSDisplayNode foldScreen0");
             return;
         }
     } else {
@@ -874,7 +874,8 @@ void ScreenSession::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startP
         WLOGFI("virtualScreen SetSecurityDisplay success");
     }
     // If setDisplayOffset is not valid for SetFrame/SetBounds
-    WLOGFI("InitRSDisplayNode screnId:%{public}" PRIu64" width:%{public}u height:%{public}u", screenId_, width, height);
+    WLOGFI("InitRSDisplayNode screenId:%{public}" PRIu64" width:%{public}u height:%{public}u",
+        screenId_, width, height);
     displayNode_->SetFrame(0, 0, width, height);
     displayNode_->SetBounds(0, 0, width, height);
     auto transactionProxy = RSTransactionProxy::GetInstance();
@@ -1133,4 +1134,15 @@ std::shared_ptr<Media::PixelMap> ScreenSession::GetScreenSnapshot(float scaleX, 
     }
     return pixelMap;
 }
+
+VirtualScreenFlag ScreenSession::GetVirtualScreenFlag(ScreenId screenId)
+{
+    return virtualFlag_;
+}
+
+DMError ScreenSession::SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag virtualFlag)
+{
+    virtualFlag_ = virtualFlag;
+}
+
 } // namespace OHOS::Rosen
