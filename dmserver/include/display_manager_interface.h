@@ -118,6 +118,8 @@ public:
         TRANS_ID_RESIZE_VIRTUAL_SCREEN,
         TRANS_ID_GET_AVAILABLE_AREA,
         TRANS_ID_NOTIFY_FOLD_TO_EXPAND_COMPLETION,
+        TRANS_ID_GET_VIRTUAL_SCREEN_FLAG,
+        TRANS_ID_SET_VIRTUAL_SCREEN_FLAG,
     };
 
     virtual sptr<DisplayInfo> GetDefaultDisplayInfo() = 0;
@@ -233,6 +235,13 @@ public:
 
     // unique screen
     virtual DMError MakeUniqueScreen(const std::vector<ScreenId>& screenIds) { return DMError::DM_OK; }
+
+    // virtual screen flag
+    virtual VirtualScreenFlag GetVirtualScreenFlag(ScreenId screenId) { return VirtualScreenFlag::UNKNOWN; }
+    virtual DMError SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag flag)
+    {
+        return DMError::DM_ERROR_DEVICE_NOT_SUPPORT;
+    }
 };
 } // namespace OHOS::Rosen
 

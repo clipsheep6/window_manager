@@ -39,6 +39,16 @@ struct VirtualScreenOption {
     std::vector<uint64_t> missionIds_ {};
 };
 
+/*
+ * @brief virtual screen flag
+ */
+enum class VirtualScreenFlag : int32_t {
+    UNKNOWN = 0,
+    CAST = 1,
+    RECORD = 2,
+    MAX = 3,
+};
+
 class Screen : public RefBase {
 friend class ScreenManager;
 public:
@@ -289,6 +299,21 @@ public:
      * @return DM_OK means set success, others means set failed.
      */
     DMError SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace);
+
+    /**
+     * @brief get virtual screen flag
+     *
+     * @return virtual screen flag
+     */
+    VirtualScreenFlag GetVirtualScreenFlag() const;
+
+    /**
+     * @brief set virtual screen flag
+     *
+     * @param screenFlag value of VirtualScreenFlag
+     * @return DM_OK means set success, others means set failed.
+     */
+    DMError SetVirtualScreenFlag(VirtualScreenFlag screenFlag);
 
 protected:
     // No more methods or variables can be defined here.

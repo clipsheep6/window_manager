@@ -644,6 +644,19 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             NotifyFoldToExpandCompletion(foldToExpand);
             break;
         }
+        case DisplayManagerMessage::TRANS_ID_GET_VIRTUAL_SCREEN_FLAG: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUInt64());
+            VirtualScreenFlag virtualFlag = GetVirtualScreenFlag(screenId);
+            reply.WriteInt32(static_cast<int32_t>(virtualFlag));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_SCREEN_FLAG: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUInt64());
+            VirtualScreenFlag virtualFlag = static_cast<VirtualScreenFlag>(data.ReadInt32());
+            DMError ret = SetVirtualScreenFlag(screenId, virtualFlag);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
         default:
             WLOGFW("unknown transaction code");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);

@@ -265,6 +265,20 @@ DMError Screen::GetDensityInCurResolution(float& virtualPixelRatio) const
     return SingletonContainer::Get<ScreenManagerAdapter>().GetDensityInCurResolution(GetId(), virtualPixelRatio);
 }
 
+VirtualScreenFlag Screen::GetVirtualScreenFlag() const
+{
+    return SingletonContainer::Get<ScreenManagerAdapter>().GetVirtualScreenFlag(GetId());
+}
+
+DMError Screen::SetVirtualScreenFlag(VirtualScreenFlag virtualFlag)
+{
+    if (flag <= VirtualScreenFlag::UNKNOWN || flag >= VirtualScreenFlag::MAX) {
+        WLOGFE("virtual screen flag invalid");
+        return DMError::DM_ERROR_INVALID_PARAM;
+    }
+    return SingletonContainer::Get<ScreenManagerAdapter>().SetVirtualScreenFlag(GetId(), virtualFlag);
+}
+
 sptr<ScreenInfo> Screen::GetScreenInfo() const
 {
     UpdateScreenInfo();
