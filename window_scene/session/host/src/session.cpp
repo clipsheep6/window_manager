@@ -815,6 +815,7 @@ WSError Session::Reconnect(const sptr<ISessionStage>& sessionStage, const sptr<I
     auto type = property->GetWindowType();
     if (windowState == WindowState::STATE_SHOWN || SessionHelper::IsSubWindow(type)) {
         isActive_ = true;
+        isDialogWindowShow_ = true;
         if (SessionHelper::IsMainWindow(type) || type == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
             UpdateSessionState(SessionState::STATE_ACTIVE);
         } else {
@@ -822,6 +823,7 @@ WSError Session::Reconnect(const sptr<ISessionStage>& sessionStage, const sptr<I
         }
     } else {
         isActive_ = false;
+        isDialogWindowShow_ = false;
         UpdateSessionState(SessionState::STATE_BACKGROUND);
     }
     bufferAvailable_ = true;
@@ -1762,6 +1764,13 @@ void Session::SetSessionStateChangeListenser(const NotifySessionStateChangeFunc&
         changedState = SessionState::STATE_BACKGROUND;
     } else if (changedState == SessionState::STATE_DISCONNECT) {
         return;
+    }
+    if(GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
+        if(isDialogWindowShow_){
+            changedState = SessionState::STATE_FOREGROUND;
+        } else{
+            changedState = SessionState::STATE_BACKGROUND;
+        }
     }
     NotifySessionStateChange(changedState);
     WLOGFD("SetSessionStateChangeListenser, id: %{public}d, state_: %{public}d, changedState: %{public}d",
