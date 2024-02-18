@@ -1302,18 +1302,23 @@ bool DisplayManager::Impl::UpdateDisplayInfoLocked(sptr<DisplayInfo> displayInfo
         return false;
     }
     DisplayId displayId = displayInfo->GetDisplayId();
-    WLOGFD("displayId:%{public}" PRIu64".", displayId);
+    WLOGFI("displayId:%{public}" PRIu64".", displayId);
     if (displayId == DISPLAY_ID_INVALID) {
         WLOGFE("displayId is invalid.");
         return false;
     }
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     auto iter = displayMap_.find(displayId);
     if (iter != displayMap_.end() && iter->second != nullptr) {
-        WLOGFD("get screen in screen map");
+        WLOGFI("get screen in screen map");
         iter->second->UpdateDisplayInfo(displayInfo);
         return true;
     }
     sptr<Display> display = new Display("", displayInfo);
+    if (display == nullptr) {
+        WLOGFE("malloc display failed");
+        return false;
+    }
     displayMap_[displayId] = display;
     return true;
 }
