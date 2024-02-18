@@ -1765,10 +1765,10 @@ void Session::SetSessionStateChangeListenser(const NotifySessionStateChangeFunc&
     } else if (changedState == SessionState::STATE_DISCONNECT) {
         return;
     }
-    if(GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
-        if(isDialogWindowShow_){
+    if (GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
+        if (isDialogWindowShow_) {
             changedState = SessionState::STATE_FOREGROUND;
-        } else{
+        } else {
             changedState = SessionState::STATE_BACKGROUND;
         }
     }
