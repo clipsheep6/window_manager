@@ -155,6 +155,7 @@ ohos_shared_library("screen_session") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "graphic_surface:surface",
   ]
 
   innerapi_tags = [ "platformsdk" ]

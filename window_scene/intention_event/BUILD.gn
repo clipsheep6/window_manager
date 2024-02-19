@@ -48,6 +48,7 @@ ohos_shared_library("libintention_event") {
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "input:libmmi-client",
+    "graphic_surface:surface",
   ]
 
   defines = []
