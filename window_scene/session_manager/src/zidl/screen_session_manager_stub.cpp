@@ -24,7 +24,8 @@
 
 namespace OHOS::Rosen {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "ScreenSessionManagerStub"};
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DMS_SCREEN_SESSION_MANAGER,
+                                          "ScreenSessionManagerStub" };
 const static uint32_t MAX_SCREEN_SIZE = 32;
 }
 
@@ -313,6 +314,14 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             uint32_t height = data.ReadUint32();
             float virtualPixelRatio = data.ReadFloat();
             DMError ret = SetResolution(screenId, width, height, virtualPixelRatio);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_GET_DENSITY_IN_CURRENT_RESOLUTION: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            float virtualPixelRatio;
+            DMError ret = GetDensityInCurResolution(screenId, virtualPixelRatio);
+            reply.WriteFloat(virtualPixelRatio);
             reply.WriteInt32(static_cast<int32_t>(ret));
             break;
         }

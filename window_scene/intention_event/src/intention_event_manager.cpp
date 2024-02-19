@@ -118,16 +118,26 @@ void IntentionEventManager::InputEventListener::ProcessEnterLeaveEventAsync()
             enterSession->GetPersistentId());
         auto leavePointerEvent = std::make_shared<MMI::PointerEvent>(*g_lastMouseEvent);
         leavePointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_LEAVE_WINDOW);
-        enterSession->TransferPointerEvent(leavePointerEvent);
+        WSError ret = enterSession->TransferPointerEvent(leavePointerEvent);
+        if (ret != WSError::WS_OK && leavePointerEvent != nullptr) {
+            leavePointerEvent->MarkProcessed();
+        }
         g_lastLeaveWindowId = enterSession->GetPersistentId();
 
         auto enterPointerEvent = std::make_shared<MMI::PointerEvent>(*g_lastMouseEvent);
+        if (enterPointerEvent == nullptr) {
+            WLOGFE("The enter pointer event is nullptr");
+            return;
+        }
         enterPointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_ENTER_WINDOW);
         if (uiContent_ == nullptr) {
             WLOGFE("ProcessEnterLeaveEventAsync uiContent_ is null");
             return;
         }
-        uiContent_->ProcessPointerEvent(enterPointerEvent);
+        if (!(uiContent_->ProcessPointerEvent(enterPointerEvent))) {
+            WLOGFE("The UI content consumes pointer event failed");
+            enterPointerEvent->MarkProcessed();
+        }
     };
     auto eventHandler = weakEventConsumer_.lock();
     if (eventHandler == nullptr) {
@@ -167,10 +177,12 @@ void IntentionEventManager::InputEventListener::OnInputEvent(
     }
     if (uiContent_ == nullptr) {
         WLOGFE("OnInputEvent uiContent_ is null");
+        pointerEvent->MarkProcessed();
         return;
     }
     if (!SceneSessionManager::GetInstance().IsInputEventEnabled()) {
         WLOGFD("OnInputEvent is disabled temporarily");
+        pointerEvent->MarkProcessed();
         return;
     }
 
@@ -184,11 +196,13 @@ void IntentionEventManager::InputEventListener::OnInputEvent(
     uint32_t windowId = static_cast<uint32_t>(pointerEvent->GetTargetWindowId());
     auto sceneSession = SceneSessionManager::GetInstance().GetSceneSession(windowId);
     if (sceneSession == nullptr) {
+        WLOGFE("The scene session is nullptr");
+        pointerEvent->MarkProcessed();
         return;
     }
 
     if (sceneSession->GetSessionInfo().isSystem_) {
-        WLOGI("[WMSEvent] InputEventListener::OnInputEvent id:%{public}d, wid:%{public}u windowName:%{public}s"
+        WLOGI("[WMSEvent] InputEventListener::OnInputEvent id:%{public}d, wid:%{public}u windowName:%{public}s "
             "action = %{public}d", pointerEvent->GetId(), windowId, sceneSession->GetSessionInfo().abilityName_.c_str(),
             action);
         sceneSession->SendPointerEventToUI(pointerEvent);
@@ -200,7 +214,13 @@ void IntentionEventManager::InputEventListener::OnInputEvent(
         }
     } else {
         // transfer pointer event for move and drag
-        sceneSession->TransferPointerEvent(pointerEvent);
+        WSError ret = sceneSession->TransferPointerEvent(pointerEvent);
+        if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_SYSTEM_FLOAT) {
+            sceneSession->NotifyOutsideDownEvent(pointerEvent);
+        }
+        if (ret != WSError::WS_OK && pointerEvent != nullptr) {
+            pointerEvent->MarkProcessed();
+        }
     }
     UpdateLastMouseEvent(pointerEvent);
 }
@@ -223,11 +243,13 @@ void IntentionEventManager::InputEventListener::DispatchKeyEventCallback(
     auto focusedSceneSession = SceneSessionManager::GetInstance().GetSceneSession(focusedSessionId);
     if (focusedSceneSession == nullptr) {
         WLOGFE("focusedSceneSession is null");
+        keyEvent->MarkProcessed();
         return;
     }
 
     if (uiContent_ == nullptr) {
         WLOGFE("uiContent_ is null");
+        keyEvent->MarkProcessed();
         return;
     }
 
@@ -236,25 +258,35 @@ void IntentionEventManager::InputEventListener::DispatchKeyEventCallback(
 
 void IntentionEventManager::InputEventListener::OnInputEvent(std::shared_ptr<MMI::KeyEvent> keyEvent) const
 {
+    if (keyEvent == nullptr) {
+        WLOGFE("The key event is nullptr");
+        return;
+    }
     if (!SceneSessionManager::GetInstance().IsInputEventEnabled()) {
         WLOGFD("OnInputEvent is disabled temporarily");
+        keyEvent->MarkProcessed();
         return;
     }
     auto focusedSessionId = SceneSessionManager::GetInstance().GetFocusedSession();
     if (focusedSessionId == INVALID_SESSION_ID) {
         WLOGFE("focusedSessionId is invalid");
+        keyEvent->MarkProcessed();
         return;
     }
     auto focusedSceneSession = SceneSessionManager::GetInstance().GetSceneSession(focusedSessionId);
     if (focusedSceneSession == nullptr) {
         WLOGFE("focusedSceneSession is null");
+        keyEvent->MarkProcessed();
         return;
     }
     auto isSystem = focusedSceneSession->GetSessionInfo().isSystem_;
     WLOGFI("EventListener OnInputEvent InputTracking id:%{public}d, focusedSessionId:%{public}d, isSystem:%{public}d",
         keyEvent->GetId(), focusedSessionId, isSystem);
     if (!isSystem) {
-        focusedSceneSession->TransferKeyEvent(keyEvent);
+        WSError ret = focusedSceneSession->TransferKeyEvent(keyEvent);
+        if (ret != WSError::WS_OK && keyEvent != nullptr) {
+            keyEvent->MarkProcessed();
+        }
         return;
     }
 #ifdef IMF_ENABLE
@@ -268,6 +300,7 @@ void IntentionEventManager::InputEventListener::OnInputEvent(std::shared_ptr<MMI
         if (ret != 0) {
             WLOGFE("DispatchKeyEvent failed, ret:%{public}d, id:%{public}d, focusedSessionId:%{public}d",
                 ret, keyEvent->GetId(), focusedSessionId);
+            keyEvent->MarkProcessed();
         }
         return;
     }
@@ -275,6 +308,7 @@ void IntentionEventManager::InputEventListener::OnInputEvent(std::shared_ptr<MMI
     WLOGFD("Syetem window scene, transfer key event to root scene");
     if (uiContent_ == nullptr) {
         WLOGFE("uiContent_ is null");
+        keyEvent->MarkProcessed();
         return;
     }
     focusedSceneSession->SendKeyEventToUI(keyEvent);
@@ -294,11 +328,18 @@ bool IntentionEventManager::InputEventListener::IsKeyboardEvent(
 void IntentionEventManager::InputEventListener::OnInputEvent(
     std::shared_ptr<MMI::AxisEvent> axisEvent) const
 {
+    if (axisEvent == nullptr) {
+        WLOGFE("axisEvent is nullptr");
+    }
     if (uiContent_ == nullptr) {
         WLOGFE("uiContent_ is null");
+        axisEvent->MarkProcessed();
         return;
     }
-    uiContent_->ProcessAxisEvent(axisEvent);
+    if (!(uiContent_->ProcessAxisEvent(axisEvent))) {
+        WLOGFI("The UI content consumes the axis event failed.");
+        axisEvent->MarkProcessed();
+    }
 }
 }
 } // namespace OHOS::Rosen

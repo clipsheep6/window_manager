@@ -21,7 +21,7 @@
 
 namespace OHOS::Rosen {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DISPLAY, "ScreenSessionManagerClient" };
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DMS_SCREEN_CLIENT, "ScreenSessionManagerClient" };
 std::mutex g_instanceMutex;
 } // namespace
 
@@ -308,7 +308,9 @@ void ScreenSessionManagerClient::SetScreenPrivacyState(bool hasPrivate)
         WLOGFE("screenSessionManager_ is null");
         return;
     }
+    WLOGFI("Begin calling the SetScreenPrivacyState() of screenSessionManager_, hasPrivate: %{public}d", hasPrivate);
     screenSessionManager_->SetScreenPrivacyState(hasPrivate);
+    WLOGFI("End calling the SetScreenPrivacyState() of screenSessionManager_");
 }
 
 void ScreenSessionManagerClient::UpdateAvailableArea(ScreenId screenId, DMRect area)
@@ -347,5 +349,14 @@ std::shared_ptr<Media::PixelMap> ScreenSessionManagerClient::GetScreenSnapshot(S
         return nullptr;
     }
     return screenSession->GetScreenSnapshot(scaleX, scaleY);
+}
+
+sptr<ScreenSession> ScreenSessionManagerClient::GetScreenSessionById(const ScreenId id)
+{
+    auto iter = screenSessionMap_.find(id);
+    if (iter == screenSessionMap_.end()) {
+        return nullptr;
+    }
+    return iter->second;
 }
 } // namespace OHOS::Rosen

@@ -35,6 +35,7 @@ constexpr float DIRECTION270 = 270 ;
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneSessionDirtyManager"};
 constexpr unsigned int POINTER_CHANGE_AREA_COUNT = 8;
 constexpr int POINTER_CHANGE_AREA_SEXTEEN = 16;
+constexpr int POINTER_CHANGE_AREA_DEFAULT = 0;
 constexpr int POINTER_CHANGE_AREA_FIVE = 5;
 constexpr int UPDATE_TASK_DURATION = 10;
 const std::string UPDATE_WINDOW_INFO_TASK = "UpdateWindowInfoTask";
@@ -45,21 +46,117 @@ static bool operator==(const MMI::Rect left, const MMI::Rect right)
     return ((left.x == right.x) && (left.y == right.y) && (left.width == right.width) && (left.height == right.height));
 }
 
+static MMI::Direction ConvertDegreeToMMIRotation(float degree, MMI::DisplayMode displayMode)
+{
+    MMI::Direction rotation = MMI::DIRECTION0;
+    if (NearEqual(degree, DIRECTION0)) {
+        rotation = MMI::DIRECTION0;
+    }
+    if (NearEqual(degree, DIRECTION90)) {
+        rotation = MMI::DIRECTION90;
+    }
+    if (NearEqual(degree, DIRECTION180)) {
+        rotation = MMI::DIRECTION180;
+    }
+    if (NearEqual(degree, DIRECTION270)) {
+        rotation = MMI::DIRECTION270;
+    }
+    if (displayMode == MMI::DisplayMode::FULL) {
+        switch (rotation) {
+            case MMI::DIRECTION0:
+                rotation = MMI::DIRECTION90;
+                break;
+            case MMI::DIRECTION90:
+                rotation = MMI::DIRECTION180;
+                break;
+            case MMI::DIRECTION180:
+                rotation = MMI::DIRECTION270;
+                break;
+            case MMI::DIRECTION270:
+                rotation = MMI::DIRECTION0;
+                break;
+            default:
+                rotation = MMI::DIRECTION0;
+                break;
+        }
+    }
+    return rotation;
+}
+
+void SceneSessionDirtyManager::CalNotRotateTramform(const sptr<SceneSession> sceneSession, Matrix3f& tranform) const
+{
+    if (sceneSession == nullptr || sceneSession->GetSessionProperty() == nullptr) {
+        WLOGFE("SceneSession or SessionProperty is nullptr");
+        return;
+    }
+    auto displayId = sceneSession->GetSessionProperty()->GetDisplayId();
+    auto displayMode = Rosen::ScreenSessionManagerClient::GetInstance().GetFoldDisplayMode();
+    std::unordered_map<ScreenId, ScreenProperty> screensProperties =
+        Rosen::ScreenSessionManagerClient::GetInstance().GetAllScreensProperties();
+    if (screensProperties.find(displayId) == screensProperties.end()) {
+        return;
+    }
+    auto screenProperty = screensProperties[displayId];
+    auto screenSession = Rosen::ScreenSessionManagerClient::GetInstance().GetScreenSessionById(displayId);
+    MMI::Direction displayRotation = ConvertDegreeToMMIRotation(screenProperty.GetRotation(),
+        static_cast<MMI::DisplayMode>(displayMode));
+    float width = screenProperty.GetBounds().rect_.GetWidth();
+    float height = screenProperty.GetBounds().rect_.GetHeight();
+    Vector2f scale(sceneSession->GetScaleX(), sceneSession->GetScaleY());
+    Vector2f offset(sceneSession->GetSessionRect().posX_, sceneSession->GetSessionRect().posY_);
+    Vector2f translate = offset;
+    float rotate = 0.0f;
+    switch (displayRotation) {
+        case MMI::DIRECTION0: {
+            break;
+        }
+        case MMI::DIRECTION270: {
+            translate.x_ = offset.y_;
+            translate.y_ = height - offset.x_;
+            rotate = -M_PI_2;
+            break;
+        }
+        case MMI::DIRECTION180:
+            translate.x_ = width - offset.x_;
+            translate.y_ = height - offset.y_;
+            rotate = M_PI;
+            break;
+        case MMI::DIRECTION90: {
+            translate.x_ = width - offset.y_;
+            translate.y_ = offset.x_;
+            rotate = M_PI_2;
+            break;
+        }
+        default:
+            break;
+    }
+    tranform = tranform.Translate(translate).Rotate(rotate).Scale(scale, sceneSession->GetPivotX(),
+        sceneSession->GetPivotY());
+    tranform = tranform.Inverse();
+}
+
 void SceneSessionDirtyManager::CalTramform(const sptr<SceneSession> sceneSession, Matrix3f& tranform) const
 {
     if (sceneSession == nullptr) {
         WLOGFE("sceneSession is nullptr");
         return;
     }
-
-    Vector2f scale(sceneSession->GetScaleX(), sceneSession->GetScaleY());
-    WSRect windowRect = sceneSession->GetSessionRect();
-    Vector2f translate(windowRect.posX_, windowRect.posY_);
     tranform = Matrix3f::IDENTITY;
-    tranform = tranform.Translate(translate);
-    tranform = tranform.Scale(scale, sceneSession->GetPivotX(), sceneSession->GetPivotY());
-    tranform = tranform.Inverse();
+    bool isRotate = sceneSession->GetSessionInfo().isRotable_;
+    auto displayMode = Rosen::ScreenSessionManagerClient::GetInstance().GetFoldDisplayMode();
+    if (isRotate || !sceneSession->GetSessionInfo().isSystem_ ||
+        static_cast<MMI::DisplayMode>(displayMode) == MMI::DisplayMode::FULL) {
+        Vector2f scale(sceneSession->GetScaleX(), sceneSession->GetScaleY());
+        WSRect windowRect = sceneSession->GetSessionRect();
+        Vector2f translate(windowRect.posX_, windowRect.posY_);
+        tranform = tranform.Translate(translate);
+        tranform = tranform.Scale(scale, sceneSession->GetPivotX(), sceneSession->GetPivotY());
+        tranform = tranform.Inverse();
+        return;
+    }
+    CalNotRotateTramform(sceneSession, tranform);
 }
+
 
 void SceneSessionDirtyManager::UpdateDefaultHotAreas(sptr<SceneSession> sceneSession,
     std::vector<MMI::Rect>& touchHotAreas,
@@ -212,11 +309,9 @@ std::vector<MMI::WindowInfo> SceneSessionDirtyManager::GetFullWindowInfoList()
             continue;
         }
         WLOGFD("[EventDispatch] FullSceneSessionInfoUpdate windowName = %{public}s bundleName = %{public}s"
-            " windowId = %{public}d", sceneSessionValue->GetWindowName().c_str(),
-            sceneSessionValue->GetSessionInfo().bundleName_.c_str(), sceneSessionValue->GetWindowId());
-        if (IsFilterSession(sceneSessionValue)) {
-            continue;
-        }
+            " windowId = %{public}d activeStatus = %{public}d", sceneSessionValue->GetWindowName().c_str(),
+            sceneSessionValue->GetSessionInfo().bundleName_.c_str(), sceneSessionValue->GetWindowId(),
+            sceneSessionValue->GetForegroundInteractiveStatus());
         auto windowInfo = GetWindowInfo(sceneSessionValue, WindowAction::WINDOW_ADD);
         auto iter = (sceneSessionValue->GetParentPersistentId() == INVALID_SESSION_ID) ?
             dialogMap.find(sceneSessionValue->GetPersistentId()) :
@@ -231,6 +326,30 @@ std::vector<MMI::WindowInfo> SceneSessionDirtyManager::GetFullWindowInfoList()
     return windowInfoList;
 }
 
+void SceneSessionDirtyManager::UpdatePointerAreas(sptr<SceneSession> sceneSession,
+    std::vector<int32_t>& pointerChangeAreas) const
+{
+    bool dragEnabled = sceneSession->GetSessionProperty()->GetDragEnabled();
+    if (dragEnabled) {
+        auto limits = sceneSession->GetSessionProperty()->GetWindowLimits();
+        if (limits.minWidth_ == limits.maxWidth_ && limits.minHeight_ != limits.maxHeight_) {
+            pointerChangeAreas = {POINTER_CHANGE_AREA_DEFAULT, POINTER_CHANGE_AREA_FIVE,
+                POINTER_CHANGE_AREA_DEFAULT, POINTER_CHANGE_AREA_DEFAULT, POINTER_CHANGE_AREA_DEFAULT,
+                POINTER_CHANGE_AREA_FIVE, POINTER_CHANGE_AREA_DEFAULT,  POINTER_CHANGE_AREA_DEFAULT};
+        } else if (limits.minWidth_ != limits.maxWidth_ && limits.minHeight_ == limits.maxHeight_) {
+            pointerChangeAreas = {POINTER_CHANGE_AREA_DEFAULT, POINTER_CHANGE_AREA_DEFAULT,
+                POINTER_CHANGE_AREA_DEFAULT, POINTER_CHANGE_AREA_FIVE, POINTER_CHANGE_AREA_DEFAULT,
+                POINTER_CHANGE_AREA_DEFAULT, POINTER_CHANGE_AREA_DEFAULT, POINTER_CHANGE_AREA_FIVE};
+        } else if (limits.minWidth_ != limits.maxWidth_ && limits.minHeight_ != limits.maxHeight_) {
+            pointerChangeAreas = {POINTER_CHANGE_AREA_SEXTEEN, POINTER_CHANGE_AREA_FIVE,
+                POINTER_CHANGE_AREA_SEXTEEN, POINTER_CHANGE_AREA_FIVE, POINTER_CHANGE_AREA_SEXTEEN,
+                POINTER_CHANGE_AREA_FIVE, POINTER_CHANGE_AREA_SEXTEEN, POINTER_CHANGE_AREA_FIVE};
+        }
+    } else {
+        WLOGFD("UpdatePointerAreas sceneSession is: %{public}d dragEnabled is false", sceneSession->GetPersistentId());
+    }
+}
+
 MMI::WindowInfo SceneSessionDirtyManager::GetWindowInfo(const sptr<SceneSession>& sceneSession,
     const SceneSessionDirtyManager::WindowAction& action) const
 {
@@ -239,6 +358,11 @@ MMI::WindowInfo SceneSessionDirtyManager::GetWindowInfo(const sptr<SceneSession>
         return {};
     }
 
+    if (sceneSession->GetSessionProperty() == nullptr) {
+        WLOGFE("SceneSession` property is nullptr");
+        return {};
+    }
+    
     Matrix3f tranform;
     WSRect windowRect = sceneSession->GetSessionRect();
     auto pid = sceneSession->GetCallingPid();
@@ -257,9 +381,7 @@ MMI::WindowInfo SceneSessionDirtyManager::GetWindowInfo(const sptr<SceneSession>
     if (windowMode == Rosen::WindowMode::WINDOW_MODE_FLOATING &&
         Rosen::WindowHelper::IsMainWindow(sceneSession->GetSessionProperty()->GetWindowType()) &&
         maxMode != Rosen::MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
-        pointerChangeAreas = { POINTER_CHANGE_AREA_SEXTEEN, POINTER_CHANGE_AREA_FIVE,
-        POINTER_CHANGE_AREA_SEXTEEN, POINTER_CHANGE_AREA_FIVE, POINTER_CHANGE_AREA_SEXTEEN,
-        POINTER_CHANGE_AREA_FIVE, POINTER_CHANGE_AREA_SEXTEEN, POINTER_CHANGE_AREA_FIVE };
+            UpdatePointerAreas(sceneSession, pointerChangeAreas);
     }
     std::vector<MMI::Rect> touchHotAreas;
     std::vector<MMI::Rect> pointerHotAreas;

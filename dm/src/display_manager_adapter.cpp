@@ -28,7 +28,7 @@
 
 namespace OHOS::Rosen {
 namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "DisplayManagerAdapter"};
+    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DMS_DM, "DisplayManagerAdapter"};
 }
 WM_IMPLEMENT_SINGLE_INSTANCE(DisplayManagerAdapter)
 WM_IMPLEMENT_SINGLE_INSTANCE(ScreenManagerAdapter)
@@ -621,6 +621,13 @@ DMError ScreenManagerAdapter::SetResolution(ScreenId screenId, uint32_t width, u
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
 
     return displayManagerServiceProxy_->SetResolution(screenId, width, height, virtualPixelRatio);
+}
+
+DMError ScreenManagerAdapter::GetDensityInCurResolution(ScreenId screenId, float& virtualPixelRatio)
+{
+    INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
+
+    return displayManagerServiceProxy_->GetDensityInCurResolution(screenId, virtualPixelRatio);
 }
 
 DMError ScreenManagerAdapter::ResizeVirtualScreen(ScreenId screenId, uint32_t width, uint32_t height)

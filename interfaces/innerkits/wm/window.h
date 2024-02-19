@@ -428,6 +428,18 @@ public:
         const sptr<IRemoteObject>& iSession, WMError& errCode = DefaultCreateErrCode);
 
     /**
+     * @brief create pip window with session
+     *
+     * @param option window propertion
+     * @param pipTemplateInfo pipTemplateInfo
+     * @param context ability context
+     * @param errCode error code of create pip window
+     * @return sptr<Window> If create pip window success, return window instance; Otherwise, return nullptr
+     */
+    static sptr<Window> CreatePiP(sptr<WindowOption>& option, const PiPTemplateInfo& pipTemplateInfo,
+        const std::shared_ptr<OHOS::AbilityRuntime::Context>& context, WMError& errCode = DefaultCreateErrCode);
+
+    /**
      * @brief find window by windowName
      *
      * @param windowName
@@ -1290,7 +1302,7 @@ public:
      *
      * @return WMError
      */
-    virtual WMError Recover() { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
+    virtual WMError Recover() { return WMError::WM_OK; }
     /**
      * @brief close the main window. It is called by ACE when close button is clicked.
      *
@@ -1652,6 +1664,14 @@ public:
     {
         return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
     }
+
+    /**
+     * @brief recovery the main window by function overloading. It is called by JsWindow.
+     *
+     * @param reason reason of update.
+     * @return WMError
+     */
+    virtual WMError Recover(uint32_t reason) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
 };
 }
 }

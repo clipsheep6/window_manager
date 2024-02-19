@@ -27,7 +27,7 @@
 
 namespace OHOS::Rosen {
 namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "Screen"};
+    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DMS_DM, "Screen"};
 }
 class Screen::Impl : public RefBase {
 public:
@@ -258,6 +258,11 @@ DMError Screen::SetResolution(uint32_t width, uint32_t height, uint32_t dpi) con
     // Calculate display density, Density = Dpi / 160.
     float density = static_cast<float>(dpi) / 160; // 160 is the coefficient between density and dpi.
     return SingletonContainer::Get<ScreenManagerAdapter>().SetResolution(GetId(), width, height, density);
+}
+
+DMError Screen::GetDensityInCurResolution(float& virtualPixelRatio) const
+{
+    return SingletonContainer::Get<ScreenManagerAdapter>().GetDensityInCurResolution(GetId(), virtualPixelRatio);
 }
 
 sptr<ScreenInfo> Screen::GetScreenInfo() const

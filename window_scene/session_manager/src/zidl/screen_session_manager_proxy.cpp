@@ -23,7 +23,8 @@
 
 namespace OHOS::Rosen {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "ScreenSessionManagerProxy"};
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DMS_SCREEN_SESSION_MANAGER,
+                                          "ScreenSessionManagerProxy" };
 }
 
 sptr<DisplayInfo> OHOS::Rosen::ScreenSessionManagerProxy::GetDefaultDisplayInfo()
@@ -110,6 +111,28 @@ DMError ScreenSessionManagerProxy::SetResolution(ScreenId screenId, uint32_t wid
         WLOGFE("SendRequest failed");
         return DMError::DM_ERROR_IPC_FAILED;
     }
+    return static_cast<DMError>(reply.ReadInt32());
+}
+
+DMError ScreenSessionManagerProxy::GetDensityInCurResolution(ScreenId screenId, float& virtualPixelRatio)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteUint64(screenId)) {
+        WLOGFE("write screenId failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_GET_DENSITY_IN_CURRENT_RESOLUTION),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    virtualPixelRatio = reply.ReadFloat();
     return static_cast<DMError>(reply.ReadInt32());
 }
 
@@ -2049,7 +2072,7 @@ void ScreenSessionManagerProxy::UpdateAvailableArea(ScreenId screenId, DMRect ar
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
-        return ;
+        return;
     }
     if (!data.WriteUint64(screenId)) {
         WLOGFE("Write screenId failed");

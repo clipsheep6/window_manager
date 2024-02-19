@@ -296,11 +296,9 @@ WMError WindowManager::RegisterWMSConnectionChangedListener(const sptr<IWMSConne
 WMError WindowManager::UnregisterWMSConnectionChangedListener()
 {
     WLOGFI("UnregisterWMSConnectionChangedListener in");
-    {
-        std::lock_guard<std::recursive_mutex> lock(pImpl_->mutex_);
-        pImpl_->wmsConnectionChangedListener_ = nullptr;
-    }
-    return SingletonContainer::Get<WindowAdapter>().UnregisterWMSConnectionChangedListener();
+    std::lock_guard<std::recursive_mutex> lock(pImpl_->mutex_);
+    pImpl_->wmsConnectionChangedListener_ = nullptr;
+    return WMError::WM_OK;
 }
 
 WMError WindowManager::RegisterFocusChangedListener(const sptr<IFocusChangedListener>& listener)
@@ -314,11 +312,11 @@ WMError WindowManager::RegisterFocusChangedListener(const sptr<IFocusChangedList
     WMError ret = WMError::WM_OK;
     if (pImpl_->focusChangedListenerAgent_ == nullptr) {
         pImpl_->focusChangedListenerAgent_ = new WindowManagerAgent();
-        ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
-            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS, pImpl_->focusChangedListenerAgent_);
     }
+    ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS, pImpl_->focusChangedListenerAgent_);
     if (ret != WMError::WM_OK) {
-        WLOGFW("RegisterWindowManagerAgent failed !");
+        WLOGFW("RegisterWindowManagerAgent failed!");
         pImpl_->focusChangedListenerAgent_ = nullptr;
     } else {
         auto iter = std::find(pImpl_->focusChangedListeners_.begin(), pImpl_->focusChangedListeners_.end(), listener);
@@ -367,11 +365,11 @@ WMError WindowManager::RegisterSystemBarChangedListener(const sptr<ISystemBarCha
     WMError ret = WMError::WM_OK;
     if (pImpl_->systemBarChangedListenerAgent_ == nullptr) {
         pImpl_->systemBarChangedListenerAgent_ = new WindowManagerAgent();
-        ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
-            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_SYSTEM_BAR, pImpl_->systemBarChangedListenerAgent_);
     }
+    ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_SYSTEM_BAR, pImpl_->systemBarChangedListenerAgent_);
     if (ret != WMError::WM_OK) {
-        WLOGFW("RegisterWindowManagerAgent failed !");
+        WLOGFW("RegisterWindowManagerAgent failed!");
         pImpl_->systemBarChangedListenerAgent_ = nullptr;
     } else {
         auto iter = std::find(pImpl_->systemBarChangedListeners_.begin(), pImpl_->systemBarChangedListeners_.end(),
@@ -447,7 +445,7 @@ WMError WindowManager::RegisterWindowUpdateListener(const sptr<IWindowUpdateList
     ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
         WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_UPDATE, pImpl_->windowUpdateListenerAgent_);
     if (ret != WMError::WM_OK) {
-        WLOGFW("RegisterWindowManagerAgent failed !");
+        WLOGFW("RegisterWindowManagerAgent failed!");
         pImpl_->windowUpdateListenerAgent_ = nullptr;
     } else {
         auto iter = std::find(pImpl_->windowUpdateListeners_.begin(), pImpl_->windowUpdateListeners_.end(), listener);
@@ -494,12 +492,12 @@ WMError WindowManager::RegisterVisibilityChangedListener(const sptr<IVisibilityC
     WMError ret = WMError::WM_OK;
     if (pImpl_->windowVisibilityListenerAgent_ == nullptr) {
         pImpl_->windowVisibilityListenerAgent_ = new WindowManagerAgent();
-        ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
-            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_VISIBILITY,
-            pImpl_->windowVisibilityListenerAgent_);
     }
+    ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_VISIBILITY,
+        pImpl_->windowVisibilityListenerAgent_);
     if (ret != WMError::WM_OK) {
-        WLOGFW("RegisterWindowManagerAgent failed !");
+        WLOGFW("RegisterWindowManagerAgent failed!");
         pImpl_->windowVisibilityListenerAgent_ = nullptr;
     } else {
         auto iter = std::find(pImpl_->windowVisibilityListeners_.begin(), pImpl_->windowVisibilityListeners_.end(),
@@ -548,12 +546,12 @@ WMError WindowManager::RegisterCameraFloatWindowChangedListener(const sptr<ICame
     WMError ret = WMError::WM_OK;
     if (pImpl_->cameraFloatWindowChangedListenerAgent_ == nullptr) {
         pImpl_->cameraFloatWindowChangedListenerAgent_ = new WindowManagerAgent();
-        ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
-            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_CAMERA_FLOAT,
-            pImpl_->cameraFloatWindowChangedListenerAgent_);
     }
+    ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_CAMERA_FLOAT,
+        pImpl_->cameraFloatWindowChangedListenerAgent_);
     if (ret != WMError::WM_OK) {
-        WLOGFW("RegisterWindowManagerAgent failed !");
+        WLOGFW("RegisterWindowManagerAgent failed!");
         pImpl_->cameraFloatWindowChangedListenerAgent_ = nullptr;
     } else {
         auto iter = std::find(pImpl_->cameraFloatWindowChangedListeners_.begin(),
@@ -607,12 +605,12 @@ WMError WindowManager::RegisterWaterMarkFlagChangedListener(const sptr<IWaterMar
     WMError ret = WMError::WM_OK;
     if (pImpl_->waterMarkFlagChangeAgent_ == nullptr) {
         pImpl_->waterMarkFlagChangeAgent_ = new WindowManagerAgent();
-        ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
-            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WATER_MARK_FLAG,
-            pImpl_->waterMarkFlagChangeAgent_);
     }
+    ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WATER_MARK_FLAG,
+        pImpl_->waterMarkFlagChangeAgent_);
     if (ret != WMError::WM_OK) {
-        WLOGFW("RegisterWindowManagerAgent failed !");
+        WLOGFW("RegisterWindowManagerAgent failed!");
         pImpl_->waterMarkFlagChangeAgent_ = nullptr;
     } else {
         auto iter = std::find(pImpl_->waterMarkFlagChangeListeners_.begin(),
@@ -668,17 +666,17 @@ WMError WindowManager::RegisterGestureNavigationEnabledChangedListener(
     WMError ret = WMError::WM_OK;
     if (pImpl_->gestureNavigationEnabledAgent_ == nullptr) {
         pImpl_->gestureNavigationEnabledAgent_ = new (std::nothrow)WindowManagerAgent();
-        if (pImpl_->gestureNavigationEnabledAgent_ != nullptr) {
-            ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
-                WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_GESTURE_NAVIGATION_ENABLED,
-                pImpl_->gestureNavigationEnabledAgent_);
-        } else {
-            WLOGFE("Create windowManagerAgent object failed !");
-            ret = WMError::WM_ERROR_NULLPTR;
-        }
+    }
+    if (pImpl_->gestureNavigationEnabledAgent_ != nullptr) {
+        ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_GESTURE_NAVIGATION_ENABLED,
+            pImpl_->gestureNavigationEnabledAgent_);
+    } else {
+        WLOGFE("Create windowManagerAgent object failed!");
+        ret = WMError::WM_ERROR_NULLPTR;
     }
     if (ret != WMError::WM_OK) {
-        WLOGFE("RegisterWindowManagerAgent failed !");
+        WLOGFE("RegisterWindowManagerAgent failed!");
         pImpl_->gestureNavigationEnabledAgent_ = nullptr;
     } else {
         auto iter = std::find(pImpl_->gestureNavigationEnabledListeners_.begin(),
@@ -865,12 +863,12 @@ WMError WindowManager::RegisterDrawingContentChangedListener(const sptr<IDrawing
     WMError ret = WMError::WM_OK;
     if (pImpl_->windowDrawingContentListenerAgent_ == nullptr) {
         pImpl_->windowDrawingContentListenerAgent_ = new WindowManagerAgent();
-        ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
-            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_DRAWING_STATE,
-            pImpl_->windowDrawingContentListenerAgent_);
     }
+    ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_DRAWING_STATE,
+        pImpl_->windowDrawingContentListenerAgent_);
     if (ret != WMError::WM_OK) {
-        WLOGFW("RegisterWindowManagerAgent failed !");
+        WLOGFW("RegisterWindowManagerAgent failed!");
         pImpl_->windowDrawingContentListenerAgent_ = nullptr;
     } else {
         auto iter = std::find(pImpl_->windowDrawingContentListeners_.begin(),

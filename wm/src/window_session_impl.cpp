@@ -44,6 +44,7 @@
 #include "window_adapter.h"
 #include "window_manager_hilog.h"
 #include "window_helper.h"
+#include "window_rate_manager.h"
 #include "color_parser.h"
 #include "singleton_container.h"
 #include "perform_reporter.h"
@@ -496,6 +497,7 @@ void WindowSessionImpl::UpdateRectForRotation(const Rect& wmRect, const Rect& pr
             if (window->rotationAnimationCount_ == 0) {
                 RSSystemProperties::SetDrawTextAsBitmap(false);
                 RSInterfaces::GetInstance().DisableCacheForRotation();
+                window->NotifyRotationAnimationEnd();
             }
         });
         if ((wmRect != preRect) || (wmReason != window->lastSizeChangeReason_)) {
@@ -511,6 +513,14 @@ void WindowSessionImpl::UpdateRectForRotation(const Rect& wmRect, const Rect& pr
         }
         window->postTaskDone_ = true;
     }, "WMS_WindowSessionImpl_UpdateRectForRotation");
+}
+
+void WindowSessionImpl::NotifyRotationAnimationEnd()
+{
+    if (uiContent_ == nullptr) {
+        return;
+    }
+    uiContent_->NotifyRotationAnimationEnd();
 }
 
 void WindowSessionImpl::UpdateDensity()
@@ -688,22 +698,25 @@ WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, nap
         WLOGFE("[WMSLife]fail to NapiSetUIContent id: %{public}d", GetPersistentId());
         return WMError::WM_ERROR_NULLPTR;
     }
+
+    OHOS::Ace::UIContentErrorCode aceRet = OHOS::Ace::UIContentErrorCode::NO_ERRORS;
     switch (type) {
         default:
         case WindowSetUIContentType::DEFAULT:
-            uiContent->Initialize(this, contentInfo, storage);
+            aceRet = uiContent->Initialize(this, contentInfo, storage);
             break;
         case WindowSetUIContentType::DISTRIBUTE:
-            uiContent->Restore(this, contentInfo, storage);
+            aceRet = uiContent->Restore(this, contentInfo, storage);
             break;
         case WindowSetUIContentType::BY_NAME:
-            uiContent->InitializeByName(this, contentInfo, storage);
+            aceRet = uiContent->InitializeByName(this, contentInfo, storage);
             break;
         case WindowSetUIContentType::BY_ABC:
             auto abcContent = GetAbcContent(contentInfo);
-            uiContent->Initialize(this, abcContent, storage);
+            aceRet = uiContent->Initialize(this, abcContent, storage);
             break;
     }
+
     // make uiContent available after Initialize/Restore
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -739,6 +752,11 @@ WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, nap
         // uiContent may be nullptr when notify focus status, need to notify again when uiContent is not empty.
         NotifyUIContentFocusStatus();
         shouldReNotifyFocus_ = false;
+    }
+    if (aceRet != OHOS::Ace::UIContentErrorCode::NO_ERRORS) {
+        WLOGFE("failed to init or restore uicontent with file %{public}s. errorCode: %{public}d",
+            contentInfo.c_str(), static_cast<uint16_t>(aceRet));
+        return WMError::WM_ERROR_INVALID_PARAM;
     }
     WLOGFD("[WMSLife]notify uiContent window size change end");
     return WMError::WM_OK;
@@ -1441,9 +1459,7 @@ void WindowSessionImpl::NotifyAfterForeground(bool needNotifyListeners, bool nee
     if (needNotifyUiContent) {
         CALL_UI_CONTENT(Foreground);
     }
-    if (WindowHelper::IsMainWindow(GetType()) || WindowHelper::IsUIExtensionWindow(GetType())) {
-        VsyncStation::GetInstance().SetFrameRateLinkerEnable(true);
-    }
+    WindowRateManager::GetInstance().AddWindowRate(GetPersistentId());
 }
 
 void WindowSessionImpl::NotifyAfterBackground(bool needNotifyListeners, bool needNotifyUiContent)
@@ -1456,9 +1472,7 @@ void WindowSessionImpl::NotifyAfterBackground(bool needNotifyListeners, bool nee
     if (needNotifyUiContent) {
         CALL_UI_CONTENT(Background);
     }
-    if (WindowHelper::IsMainWindow(GetType()) || WindowHelper::IsUIExtensionWindow(GetType())) {
-        VsyncStation::GetInstance().SetFrameRateLinkerEnable(false);
-    }
+    WindowRateManager::GetInstance().RemoveWindowRate(GetPersistentId());
 }
 
 static void RequestInputMethodCloseKeyboard(bool isNeedKeyboard, bool keepKeyboardFlag)
@@ -2015,7 +2029,9 @@ void WindowSessionImpl::NotifyPointerEvent(const std::shared_ptr<MMI::PointerEve
     }
     if (inputEventConsumer != nullptr) {
         WLOGFD("Transfer pointer event to inputEventConsumer");
-        (void)inputEventConsumer->OnInputEvent(pointerEvent);
+        if (!(inputEventConsumer->OnInputEvent(pointerEvent))) {
+            pointerEvent->MarkProcessed();
+        }
         return;
     }
 
@@ -2026,7 +2042,10 @@ void WindowSessionImpl::NotifyPointerEvent(const std::shared_ptr<MMI::PointerEve
                 WLOGFI("InputTracking id:%{public}d, WindowSessionImpl::NotifyPointerEvent",
                     pointerEvent->GetId());
             }
-            (void)uiContent_->ProcessPointerEvent(pointerEvent);
+            if (!(uiContent_->ProcessPointerEvent(pointerEvent))) {
+                WLOGFI("UI content dose not consume this pointer event");
+                pointerEvent->MarkProcessed();
+            }
         } else {
             WLOGFW("pointerEvent is not consumed, windowId: %{public}u", GetWindowId());
             pointerEvent->MarkProcessed();
@@ -2051,21 +2070,32 @@ void WindowSessionImpl::DispatchKeyEventCallback(std::shared_ptr<MMI::KeyEvent>&
                 return;
             }
             PerformBack();
+            keyEvent->MarkProcessed();
             return;
         }
         HandleBackEvent();
+        keyEvent->MarkProcessed();
         return;
     }
     if (inputEventConsumer != nullptr) {
         WLOGD("Transfer key event to inputEventConsumer");
-        (void)inputEventConsumer->OnInputEvent(keyEvent);
+        if (!(inputEventConsumer->OnInputEvent(keyEvent))) {
+            keyEvent->MarkProcessed();
+        }
     } else if (uiContent_) {
         auto isConsumed = uiContent_->ProcessKeyEvent(keyEvent);
         if (!isConsumed && keyEvent->GetKeyCode() == MMI::KeyEvent::KEYCODE_ESCAPE &&
             property_->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
-            property_->GetMaximizeMode() == MaximizeMode::MODE_FULL_FILL) {
+            property_->GetMaximizeMode() == MaximizeMode::MODE_FULL_FILL &&
+            keyAction == MMI::KeyEvent::KEY_ACTION_DOWN && !escKeyEventTriggered_) {
             WLOGI("recover from fullscreen cause KEYCODE_ESCAPE");
             Recover();
+        }
+        if (!isConsumed) {
+            keyEvent->MarkProcessed();
+        }
+        if (keyEvent->GetKeyCode() == MMI::KeyEvent::KEYCODE_ESCAPE) {
+            escKeyEventTriggered_ = (keyAction == MMI::KeyEvent::KEY_ACTION_UP) ? false : true;
         }
     }
 }
@@ -2082,6 +2112,7 @@ void WindowSessionImpl::NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& key
         auto promoteThis = weakThis.promote();
         if (promoteThis == nullptr) {
             WLOGFW("promoteThis is nullptr");
+            keyEvent->MarkProcessed();
             return;
         }
         promoteThis->DispatchKeyEventCallback(const_cast<std::shared_ptr<MMI::KeyEvent>&>(keyEvent));
@@ -2108,6 +2139,7 @@ void WindowSessionImpl::NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& key
             const_cast<std::shared_ptr<MMI::KeyEvent>&>(keyEvent), callback);
         if (ret != 0) {
             WLOGFE("DispatchKeyEvent failed, ret:%{public}" PRId32 ", id:%{public}" PRId32, ret, keyEvent->GetId());
+            keyEvent->MarkProcessed();
         }
         return;
     }
@@ -2144,9 +2176,7 @@ int64_t WindowSessionImpl::GetVSyncPeriod()
 void WindowSessionImpl::FlushFrameRate(uint32_t rate)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (WindowHelper::IsMainWindow(GetType()) || WindowHelper::IsUIExtensionWindow(GetType())) {
-        VsyncStation::GetInstance().FlushFrameRate(rate);
-    }
+    WindowRateManager::GetInstance().FlushFrameRate(GetPersistentId(), rate);
 }
 
 WMError WindowSessionImpl::UpdateProperty(WSPropertyChangeAction action)
@@ -2231,7 +2261,7 @@ sptr<Window> WindowSessionImpl::FindWindowById(uint32_t winId)
         return nullptr;
     }
     for (auto iter = windowSessionMap_.begin(); iter != windowSessionMap_.end(); iter++) {
-        if (winId == iter->second.first) {
+        if (static_cast<int32_t>(winId) == iter->second.first) {
             WLOGD("FindWindow id: %{public}u", winId);
             return iter->second.second;
         }
@@ -2269,6 +2299,11 @@ WMError WindowSessionImpl::SetLayoutFullScreenByApiVersion(bool status)
 
 WMError WindowSessionImpl::SetWindowGravity(WindowGravity gravity, uint32_t percent)
 {
+    auto sessionGravity = static_cast<SessionGravity>(gravity);
+    WLOGFI("[WMSInput] Set window gravity: %{public}" PRIu32 ", percent: %{public}" PRIu32, sessionGravity, percent);
+    if (property_ != nullptr) {
+        property_->SetSessionGravity(sessionGravity, percent);
+    }
     return SingletonContainer::Get<WindowAdapter>().SetSessionGravity(GetPersistentId(),
         static_cast<SessionGravity>(gravity), percent);
 }
@@ -2299,7 +2334,10 @@ void WindowSessionImpl::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo
     auto occupiedAreaChangeListeners = GetListeners<IOccupiedAreaChangeListener>();
     for (auto& listener : occupiedAreaChangeListeners) {
         if (listener != nullptr) {
-            if (property_->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
+            if (((property_->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
+                  WindowHelper::IsMainWindow(GetType())) ||
+                 (WindowHelper::IsSubWindow(GetType()) && FindWindowById(GetParentId()) != nullptr &&
+                  FindWindowById(GetParentId())->GetMode() == WindowMode::WINDOW_MODE_FLOATING)) &&
                 (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
                  system::GetParameter("const.product.devicetype", "unknown") == "tablet")) {
                 sptr<OccupiedAreaChangeInfo> occupiedAreaChangeInfo = new OccupiedAreaChangeInfo();

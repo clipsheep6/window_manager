@@ -48,6 +48,7 @@ public:
     DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) override;
     DMError SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio) override;
     DMError SetResolution(ScreenId screenId, uint32_t width, uint32_t height, float virtualPixelRatio) override;
+    DMError GetDensityInCurResolution(ScreenId screenId, float& virtualPixelRatio) override;
     void NotifyScreenChanged(sptr<ScreenInfo> screenInfo, ScreenChangeEvent event);
 
     DMError GetScreenColorGamut(ScreenId screenId, ScreenColorGamut& colorGamut) override;
@@ -234,6 +235,8 @@ private:
     void ConfigureWaterfallDisplayCompressionParams();
     void RegisterScreenChangeListener();
     void OnScreenChange(ScreenId screenId, ScreenEvent screenEvent);
+    void RegisterRefreshRateModeChangeListener();
+    void OnHgmRefreshRateModeChange(int32_t refreshRateMode);
     sptr<ScreenSession> GetOrCreateScreenSession(ScreenId screenId);
     sptr<ScreenSession> GetScreenSessionInner(ScreenId screenId, ScreenProperty property);
     void FreeDisplayMirrorNodeInner(const sptr<ScreenSession> mirrorSession);
@@ -260,7 +263,8 @@ private:
     bool IsValidDigitString(const std::string& idStr) const;
     int SetFoldDisplayMode(const std::string& modeParam);
     int SetFoldStatusLocked(const std::string& lockParam);
-
+    int NotifyFoldStatusChanged(const std::string& lockParam);
+    void ShowFoldStatusChangedInfo(int errCode, std::string& dumpInfo);
     class ScreenIdManager {
     friend class ScreenSessionGroup;
     public:
@@ -277,7 +281,7 @@ private:
         ScreenId ConvertToSmsScreenId(ScreenId) const;
 
     private:
-        std::atomic<ScreenId> smsScreenCount_ {2};
+        std::atomic<ScreenId> smsScreenCount_ { 1000 };
         std::map<ScreenId, ScreenId> rs2SmsScreenIdMap_;
         std::map<ScreenId, ScreenId> sms2RsScreenIdMap_;
         mutable std::shared_mutex screenIdMapMutex_;

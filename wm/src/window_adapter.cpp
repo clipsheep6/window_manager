@@ -256,14 +256,6 @@ WMError WindowAdapter::RegisterWMSConnectionChangedListener(const WMSConnectionC
     return WMError::WM_OK;
 }
 
-WMError WindowAdapter::UnregisterWMSConnectionChangedListener()
-{
-    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
-    WLOGFI("UnregisterWMSConnectionChangedListener in");
-    SessionManager::GetInstance().UnregisterWMSConnectionChangedListener();
-    return WMError::WM_OK;
-}
-
 void WindowAdapter::WindowManagerAndSessionRecover()
 {
     ClearWindowAdapter();
@@ -321,10 +313,10 @@ bool WindowAdapter::InitSSMProxy()
 
 void WindowAdapter::ClearWindowAdapter()
 {
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
     if ((windowManagerServiceProxy_ != nullptr) && (windowManagerServiceProxy_->AsObject() != nullptr)) {
         windowManagerServiceProxy_->AsObject()->RemoveDeathRecipient(wmsDeath_);
     }
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     isProxyValid_ = false;
 }
 

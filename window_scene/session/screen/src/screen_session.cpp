@@ -24,7 +24,7 @@
 
 namespace OHOS::Rosen {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "ScreenSession" };
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DMS_SCREEN_SESSION, "ScreenSession" };
 }
 
 ScreenSession::ScreenSession(ScreenId screenId, ScreenId rsId, const std::string& name,
@@ -38,6 +38,7 @@ ScreenSession::ScreenSession(ScreenId screenId, const ScreenProperty& property, 
     Rosen::RSDisplayNodeConfig config = { .screenId = screenId_ };
     displayNode_ = Rosen::RSDisplayNode::Create(config);
     if (displayNode_) {
+        WLOGI("Success to create displayNode in constructor_1, screenid is %{public}" PRIu64"", screenId_);
         displayNode_->SetFrame(property_.GetBounds().rect_.left_, property_.GetBounds().rect_.top_,
             property_.GetBounds().rect_.width_, property_.GetBounds().rect_.height_);
         displayNode_->SetBounds(property_.GetBounds().rect_.left_, property_.GetBounds().rect_.top_,
@@ -56,6 +57,7 @@ ScreenSession::ScreenSession(ScreenId screenId, const ScreenProperty& property,
     Rosen::RSDisplayNodeConfig config = { .screenId = screenId_, .isMirrored = true, .mirrorNodeId = nodeId};
     displayNode_ = Rosen::RSDisplayNode::Create(config);
     if (displayNode_) {
+        WLOGI("Success to create displayNode in constructor_2, screenid is %{public}" PRIu64"", screenId_);
         displayNode_->SetFrame(property_.GetBounds().rect_.left_, property_.GetBounds().rect_.top_,
             property_.GetBounds().rect_.width_, property_.GetBounds().rect_.height_);
         displayNode_->SetBounds(property_.GetBounds().rect_.left_, property_.GetBounds().rect_.top_,
@@ -73,6 +75,7 @@ ScreenSession::ScreenSession(const std::string& name, ScreenId smsId, ScreenId r
     Rosen::RSDisplayNodeConfig config = { .screenId = screenId_ };
     displayNode_ = Rosen::RSDisplayNode::Create(config);
     if (displayNode_) {
+        WLOGI("Success to create displayNode in constructor_3, screenid is %{public}" PRIu64"", screenId_);
         displayNode_->SetFrame(property_.GetBounds().rect_.left_, property_.GetBounds().rect_.top_,
             property_.GetBounds().rect_.width_, property_.GetBounds().rect_.height_);
         displayNode_->SetBounds(property_.GetBounds().rect_.left_, property_.GetBounds().rect_.top_,
@@ -129,7 +132,6 @@ sptr<DisplayInfo> ScreenSession::ConvertToDisplayInfo()
     if (displayInfo == nullptr) {
         return displayInfo;
     }
-    uint32_t refreshRate = RSInterfaces::GetInstance().GetScreenCurrentRefreshRate(screenId_);
     displayInfo->name_ = name_;
     displayInfo->SetWidth(property_.GetBounds().rect_.GetWidth());
     displayInfo->SetHeight(property_.GetBounds().rect_.GetHeight());
@@ -137,7 +139,7 @@ sptr<DisplayInfo> ScreenSession::ConvertToDisplayInfo()
     displayInfo->SetPhysicalHeight(property_.GetPhyBounds().rect_.GetHeight());
     displayInfo->SetScreenId(screenId_);
     displayInfo->SetDisplayId(screenId_);
-    displayInfo->SetRefreshRate(refreshRate);
+    displayInfo->SetRefreshRate(property_.GetRefreshRate());
     displayInfo->SetVirtualPixelRatio(property_.GetVirtualPixelRatio());
     displayInfo->SetXDpi(property_.GetXDpi());
     displayInfo->SetYDpi(property_.GetYDpi());
@@ -208,12 +210,18 @@ void ScreenSession::UpdatePropertyByFoldControl(RRect bounds, RRect phyBounds)
     property_.SetPhyBounds(phyBounds);
 }
 
-void ScreenSession::UpdatePropertyByResolution(uint32_t width, uint32_t height)
+void ScreenSession::UpdateRefreshRate(uint32_t refreshRate)
+{
+    property_.SetRefreshRate(refreshRate);
+}
+
+void ScreenSession::UpdatePropertyByResolution(uint32_t width, uint32_t height, float virtualPixelRatio)
 {
     auto screenBounds = property_.GetBounds();
     screenBounds.rect_.width_ = width;
     screenBounds.rect_.height_ = height;
     property_.SetBounds(screenBounds);
+    property_.SetDensityInCurResolution(virtualPixelRatio);
 }
 
 std::shared_ptr<RSDisplayNode> ScreenSession::GetDisplayNode() const
@@ -286,26 +294,15 @@ float ScreenSession::ConvertRotationToFloat(Rotation sensorRotation)
     return rotation;
 }
 
-void ScreenSession::SetSensorRotation(DeviceRotation sensorRotation)
+void ScreenSession::HandleSensorRotation(float sensorRotation)
 {
-    sensorRotation_ = sensorRotation;
-}
-
-DeviceRotation ScreenSession::GetSensorRotation()
-{
-    return sensorRotation_;
+    SensorRotationChange(sensorRotation);
 }
 
 void ScreenSession::SensorRotationChange(Rotation sensorRotation)
 {
     float rotation = ConvertRotationToFloat(sensorRotation);
-    currentSensorRotation_ = rotation;
     SensorRotationChange(rotation);
-}
-
-float ScreenSession::GetCurrentSensorRotation()
-{
-    return currentSensorRotation_;
 }
 
 void ScreenSession::SensorRotationChange(float sensorRotation)
@@ -400,18 +397,6 @@ void ScreenSession::UpdatePropertyAfterRotation(RRect bounds, int rotation, Fold
         property_.GetBounds().rect_.GetLeft(), property_.GetBounds().rect_.GetTop(),
         property_.GetBounds().rect_.GetWidth(), property_.GetBounds().rect_.GetHeight(),
         rotation, displayOrientation);
-}
-
-void ScreenSession::UpdateAfterFoldExpand(bool foldToExpand)
-{
-    if (foldToExpand) {
-        SensorRotationChange(currentSensorRotation_);
-    } else {
-        if (GetSensorRotation() == DeviceRotation::INVALID) {
-            WLOGFI("ScreenSession::UpdateAfterFoldExpand fix rotation:%{public}f", property_.GetRotation());
-            SensorRotationChange(property_.GetScreenRotation());
-        }
-    }
 }
 
 sptr<SupportedScreenModes> ScreenSession::GetActiveScreenMode() const
@@ -839,7 +824,7 @@ void ScreenSession::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startP
     if (displayNode_ != nullptr) {
         displayNode_->SetDisplayNodeMirrorConfig(config);
         if (screenId_ == 0 && isFold_) {
-            WLOGFI("Return InitRSDisplayNode flodScreen0");
+            WLOGFI("Return InitRSDisplayNode foldScreen0");
             return;
         }
     } else {
@@ -866,7 +851,8 @@ void ScreenSession::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startP
         WLOGFI("virtualScreen SetSecurityDisplay success");
     }
     // If setDisplayOffset is not valid for SetFrame/SetBounds
-    WLOGFI("InitRSDisplayNode screnId:%{public}" PRIu64" width:%{public}u height:%{public}u", screenId_, width, height);
+    WLOGFI("InitRSDisplayNode screenId:%{public}" PRIu64" width:%{public}u height:%{public}u",
+        screenId_, width, height);
     displayNode_->SetFrame(0, 0, width, height);
     displayNode_->SetBounds(0, 0, width, height);
     auto transactionProxy = RSTransactionProxy::GetInstance();

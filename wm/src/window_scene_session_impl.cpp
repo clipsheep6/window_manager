@@ -18,12 +18,14 @@
 #include <ability_manager_client.h>
 #include <parameters.h>
 #include <transaction/rs_transaction.h>
+#include <hitrace_meter.h>
 
 #include "anr_handler.h"
 #include "color_parser.h"
 #include "display_info.h"
 #include "singleton_container.h"
 #include "display_manager.h"
+#include "display_manager_adapter.h"
 #include "input_transfer_station.h"
 #include "perform_reporter.h"
 #include "session_helper.h"
@@ -404,13 +406,16 @@ void WindowSceneSessionImpl::ConsumePointerEventInner(const std::shared_ptr<MMI:
         action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN);
     bool needNotifyEvent = true;
     if (isPointDown) {
-        auto display = SingletonContainer::Get<DisplayManager>().GetDisplayById(property_->GetDisplayId());
-        if (display == nullptr || display->GetDisplayInfo() == nullptr) {
+        auto displayInfo = SingletonContainer::Get<DisplayManagerAdapter>().GetDisplayInfo(property_->GetDisplayId());
+        if (displayInfo == nullptr) {
+            WLOGFE("The display or display info is nullptr");
+            pointerEvent->MarkProcessed();
             return;
         }
-        float vpr = display->GetDisplayInfo()->GetVirtualPixelRatio();
+        float vpr = displayInfo->GetVirtualPixelRatio();
         if (MathHelper::NearZero(vpr)) {
             WLOGFW("vpr is zero");
+            pointerEvent->MarkProcessed();
             return;
         }
         needNotifyEvent = HandlePointDownEvent(pointerEvent, pointerItem, sourceType, vpr, rect);
@@ -425,6 +430,8 @@ void WindowSceneSessionImpl::ConsumePointerEventInner(const std::shared_ptr<MMI:
 
     if (needNotifyEvent) {
         NotifyPointerEvent(pointerEvent);
+    } else {
+        pointerEvent->MarkProcessed();
     }
     if (isPointDown || isPointUp) {
         WLOGFI("[WMSEvent]: windowId: %{public}u, pointId: %{public}d, sourceType: %{public}d, "
@@ -443,11 +450,13 @@ void WindowSceneSessionImpl::ConsumePointerEvent(const std::shared_ptr<MMI::Poin
 
     if (hostSession_ == nullptr) {
         WLOGFE("[WMSEvent] hostSession is nullptr, windowId: %{public}d", GetWindowId());
+        pointerEvent->MarkProcessed();
         return;
     }
     MMI::PointerEvent::PointerItem pointerItem;
     if (!pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem)) {
         WLOGFW("[WMSEvent] invalid pointerEvent, windowId: %{public}d", GetWindowId());
+        pointerEvent->MarkProcessed();
         return;
     }
 
@@ -464,6 +473,10 @@ void WindowSceneSessionImpl::RegisterSessionRecoverListener(bool isSpecificSessi
         auto promoteThis = weakThis.promote();
         if (promoteThis == nullptr) {
             WLOGFW("[WMSRecover] promoteThis is nullptr");
+            return;
+        }
+        if (promoteThis->state_ == WindowState::STATE_DESTROYED) {
+            WLOGFW("[WMSRecover] windowState is STATE_DESTROYED, no need to recover");
             return;
         }
 
@@ -784,6 +797,7 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
         RSTransaction::FlushImplicitTransaction();
     }
     NotifyWindowStatusChange(GetMode());
+    escKeyEventTriggered_ = false;
     WLOGFI("[WMSLife] Window hide success [id:%{public}d, type: %{public}d", property_->GetPersistentId(), type);
     return res;
 }
@@ -923,7 +937,7 @@ WMError WindowSceneSessionImpl::DestroyInner(bool needNotifyServer)
     }
 
     WMError ret = WMError::WM_OK;
-    if (WindowHelper::IsMainWindow(GetType()) && state_ == WindowState::STATE_HIDDEN) {
+    if (WindowHelper::IsMainWindow(GetType())) {
         if (hostSession_ != nullptr) {
             ret = static_cast<WMError>(hostSession_->Disconnect(true));
         }
@@ -1558,8 +1572,38 @@ WMError WindowSceneSessionImpl::Recover()
             return WMError::WM_ERROR_REPEAT_OPERATION;
         }
         hostSession_->OnSessionEvent(SessionEvent::EVENT_RECOVER);
+        SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+        property_->SetMaximizeMode(MaximizeMode::MODE_RECOVER);
+        UpdateDecorEnable(true);
+        UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE);
+        NotifyWindowStatusChange(GetMode());
+    } else {
+        WLOGFE("recovery is invalid on sub window");
+        return WMError::WM_ERROR_INVALID_OPERATION;
+    }
+    return WMError::WM_OK;
+}
+
+WMError WindowSceneSessionImpl::Recover(uint32_t reason)
+{
+    WLOGFI("WindowSceneSessionImpl::Recover id: %{public}d, reason:%{public}u", GetPersistentId(), reason);
+    if (IsWindowSessionInvalid()) {
+        WLOGFE("session is invalid");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    if (system::GetParameter("const.product.devicetype", "unknown") == "2in1") {
+        WLOGFE("The device is not supported");
+        return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+    }
+    if (WindowHelper::IsMainWindow(GetType()) && hostSession_) {
+        if (property_->GetMaximizeMode() == MaximizeMode::MODE_RECOVER &&
+            property_->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING) {
+            WLOGFW("Recover fail, already MODE_RECOVER");
+            return WMError::WM_ERROR_REPEAT_OPERATION;
+        }
+        hostSession_->OnSessionEvent(SessionEvent::EVENT_RECOVER);
         // need notify arkui maximize mode change
-        if (property_->GetMaximizeMode() == MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
+        if (reason == 1 && property_->GetMaximizeMode() == MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
             UpdateMaximizeMode(MaximizeMode::MODE_RECOVER);
         }
         SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
@@ -2155,6 +2199,7 @@ WMError WindowSceneSessionImpl::NotifyMemoryLevel(int32_t level)
         return WMError::WM_ERROR_NULLPTR;
     }
     // notify memory level
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ArkUI:NotifyMemoryLevel");
     uiContent_->NotifyMemoryLevel(level);
     WLOGFD("WindowSceneSessionImpl::NotifyMemoryLevel End!");
     return WMError::WM_OK;

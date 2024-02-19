@@ -49,7 +49,7 @@ public:
     Screen& operator=(Screen&&) = delete;
     bool IsGroup() const;
     std::string GetName() const;
-    
+
     /**
      * @brief Get screen id.
      *
@@ -63,7 +63,7 @@ public:
      * @return Width of the screen.
      */
     uint32_t GetWidth() const;
-    
+
     /**
      * @brief Get height of the screen.
      *
@@ -137,7 +137,7 @@ public:
     /**
      * @brief Set screen active mode.
      *
-     * @param moddId Mode id.
+     * @param modeId Mode id.
      * @return DM_OK means set success, others means set failed.
      */
     DMError SetScreenActiveMode(uint32_t modeId);
@@ -212,7 +212,7 @@ public:
      * @return DM_OK means set success, others means set failed.
      */
     DMError SetScreenColorTransform();
-    
+
     /**
      * @brief Set the resolution for the screen.
      *
@@ -224,6 +224,13 @@ public:
     DMError SetResolution(uint32_t width, uint32_t height, uint32_t dpi) const;
 
     /**
+     * @brief get Density in current resolution
+     * @param virtualPixelRatio virtualPixelRatio of the screen
+     * @return DM_OK means set success, others means set failed.
+     */
+    DMError GetDensityInCurResolution(float& virtualPixelRatio) const;
+
+    /**
      * @brief Get the pixel format of the screen.
      *
      * @return DM_OK means set success, others means set failed.
@@ -231,7 +238,7 @@ public:
     DMError GetPixelFormat(GraphicPixelFormat& pixelFormat) const;
 
     /**
-     * @brief Set the color gamut of the screen.
+     * @brief Set the pixel format of the screen.
      *
      * @return DM_OK means set success, others means set failed.
      */

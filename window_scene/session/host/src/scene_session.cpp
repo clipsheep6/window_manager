@@ -53,6 +53,7 @@ MaximizeMode SceneSession::maximizeMode_ = MaximizeMode::MODE_RECOVER;
 wptr<SceneSession> SceneSession::enterSession_ = nullptr;
 std::mutex SceneSession::enterSessionMutex_;
 std::map<int32_t, WSRect> SceneSession::windowDragHotAreaMap_;
+static bool g_enableForceUIFirst = system::GetParameter("window.forceUIFirst.enabled", "1") == "1";
 
 SceneSession::SceneSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback)
     : Session(info)
@@ -472,7 +473,7 @@ WSError SceneSession::NotifyClientToUpdateRect(std::shared_ptr<RSTransaction> rs
             session->winRect_.posY_, session->winRect_.width_, session->winRect_.height_, session->reason_);
         // once reason is undefined, not use rsTransaction
         // when rotation, sync cnt++ in marshalling. Although reason is undefined caused by resize
-        if (session->reason_ == SizeChangeReason::UNDEFINED) {
+        if (session->reason_ == SizeChangeReason::UNDEFINED || session->reason_ == SizeChangeReason::MOVE) {
             ret = session->Session::UpdateRect(session->winRect_, session->reason_, nullptr);
         } else {
             ret = session->Session::UpdateRect(session->winRect_, session->reason_, rsTransaction);
@@ -797,7 +798,10 @@ void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 
 void SceneSession::GetKeyboardAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 {
-    if (Session::GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
+    if (((Session::GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
+          WindowHelper::IsMainWindow(Session::GetWindowType())) ||
+         (WindowHelper::IsSubWindow(Session::GetWindowType()) && GetParentSession() != nullptr &&
+          GetParentSession()->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING)) &&
         (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
          system::GetParameter("const.product.devicetype", "unknown") == "tablet")) {
         return;
@@ -1093,6 +1097,7 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
         property->GetMaximizeMode() != MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
         if (CheckDialogOnForeground() && isPointDown) {
             HandlePointDownDialog();
+            pointerEvent->MarkProcessed();
             WLOGFI("[WMSDialog] There is dialog window foreground");
             return WSError::WS_OK;
         }
@@ -1105,11 +1110,13 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
             if (is2in1 && moveDragController_->ConsumeDragEvent(pointerEvent, winRect_, property, systemConfig_)) {
                 moveDragController_->UpdateGravityWhenDrag(pointerEvent, surfaceNode_);
                 PresentFoucusIfNeed(pointerEvent->GetPointerAction());
+                pointerEvent->MarkProcessed();
                 return WSError::WS_OK;
             }
         }
         if (IsDecorEnable() && moveDragController_->ConsumeMoveEvent(pointerEvent, winRect_)) {
             PresentFoucusIfNeed(pointerEvent->GetPointerAction());
+            pointerEvent->MarkProcessed();
             return WSError::WS_OK;
         }
     }
@@ -1121,6 +1128,7 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
             return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
         }
         if (moveDragController_->ConsumeMoveEvent(pointerEvent, winRect_)) {
+            pointerEvent->MarkProcessed();
             return WSError::WS_OK;
         }
     }
@@ -1144,6 +1152,21 @@ WSError SceneSession::RequestSessionBack(bool needMoveToBackground)
         if (!session->backPressedFunc_) {
             WLOGFW("Session didn't register back event consumer!");
             return WSError::WS_DO_NOTHING;
+        }
+        if (g_enableForceUIFirst) {
+            auto rsTransaction = RSTransactionProxy::GetInstance();
+            if (rsTransaction) {
+                rsTransaction->Begin();
+            }
+            if (session->leashWinSurfaceNode_) {
+                session->leashWinSurfaceNode_->SetForceUIFirst(true);
+                WLOGFI("leashWinSurfaceNode_ SetForceUIFirst id:%{public}u!", session->GetPersistentId());
+            } else {
+                WLOGFI("failed, leashWinSurfaceNode_ null id:%{public}u", session->GetPersistentId());
+            }
+            if (rsTransaction) {
+                rsTransaction->Commit();
+            }
         }
         session->backPressedFunc_(needMoveToBackground);
         return WSError::WS_OK;
@@ -1516,6 +1539,7 @@ void SceneSession::UpdateNativeVisibility(bool visible)
     } else {
         specificCallback_->onWindowInfoUpdate_(GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_REMOVED);
     }
+    NotifyAccessibilityVisibilityChange();
     specificCallback_->onUpdateAvoidArea_(GetPersistentId());
     // update private state
     if (!GetSessionProperty()) {
@@ -1559,6 +1583,11 @@ void SceneSession::SetPrivacyMode(bool isPrivacy)
         leashWinSurfaceNode_->SetSecurityLayer(isPrivacy);
     }
     RSTransaction::FlushImplicitTransaction();
+}
+
+void SceneSession::SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo)
+{
+    pipTemplateInfo_ = pipTemplateInfo;
 }
 
 void SceneSession::SetSystemSceneOcclusionAlpha(double alpha)
@@ -1678,6 +1707,11 @@ std::vector<Rect> SceneSession::GetTouchHotAreas() const
     return touchHotAreas;
 }
 
+PiPTemplateInfo SceneSession::GetPiPTemplateInfo() const
+{
+    return pipTemplateInfo_;
+}
+
 void SceneSession::DumpSessionElementInfo(const std::vector<std::string>& params)
 {
     if (!sessionStage_) {
@@ -1688,7 +1722,7 @@ void SceneSession::DumpSessionElementInfo(const std::vector<std::string>& params
 
 void SceneSession::NotifyTouchOutside()
 {
-    WLOGFD("id: %{public}d NotifyTouchOutside", GetPersistentId());
+    WLOGFI("id: %{public}d, type: %{public}d", GetPersistentId(), GetWindowType());
     if (sessionStage_) {
         WLOGFD("Notify sessionStage TouchOutside");
         sessionStage_->NotifyTouchOutside();
@@ -1800,6 +1834,56 @@ sptr<IRemoteObject> SceneSession::GetSelfToken() const
     return selfToken_;
 }
 
+void SceneSession::SetSessionState(SessionState state)
+{
+    Session::SetSessionState(state);
+    NotifyAccessibilityVisibilityChange();
+}
+
+void SceneSession::UpdateSessionState(SessionState state)
+{
+    Session::UpdateSessionState(state);
+    NotifyAccessibilityVisibilityChange();
+}
+
+bool SceneSession::IsVisibleForAccessibility() const
+{
+    return GetSystemTouchable() && GetForegroundInteractiveStatus() &&
+        (IsVisible() || state_ == SessionState::STATE_ACTIVE || state_ == SessionState::STATE_FOREGROUND);
+}
+
+void SceneSession::SetForegroundInteractiveStatus(bool interactive)
+{
+    Session::SetForegroundInteractiveStatus(interactive);
+    NotifyAccessibilityVisibilityChange();
+}
+
+void SceneSession::NotifyAccessibilityVisibilityChange()
+{
+    bool isVisibleForAccessibilityNew = IsVisibleForAccessibility();
+    if (isVisibleForAccessibilityNew == isVisibleForAccessibility_.load()) {
+        return;
+    }
+    WLOGFD("[WMSAccess] NotifyAccessibilityVisibilityChange id: %{public}d, visible: %{public}d",
+        GetPersistentId(), isVisibleForAccessibilityNew);
+    isVisibleForAccessibility_.store(isVisibleForAccessibilityNew);
+    if (specificCallback_ && specificCallback_->onWindowInfoUpdate_) {
+        if (isVisibleForAccessibilityNew) {
+            specificCallback_->onWindowInfoUpdate_(GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_ADDED);
+        } else {
+            specificCallback_->onWindowInfoUpdate_(GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_REMOVED);
+        }
+    } else {
+        WLOGFD("specificCallback_->onWindowInfoUpdate_ not exist, persistent id: %{public}d", GetPersistentId());
+    }
+}
+
+void SceneSession::SetSystemTouchable(bool touchable)
+{
+    Session::SetSystemTouchable(touchable);
+    NotifyAccessibilityVisibilityChange();
+}
+
 WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> abilitySessionInfo)
 {
     if (!SessionPermission::VerifySessionPermission()) {
@@ -1836,14 +1920,19 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
         if (info.want != nullptr) {
             info.windowMode = info.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_MODE, 0);
             info.sessionAffinity = info.want->GetStringParam(Rosen::PARAM_KEY::PARAM_MISSION_AFFINITY_KEY);
-            info.screenId_ = info.want->GetIntParam(AAFwk::Want::PARAM_RESV_DISPLAY_ID, 0);
+            info.screenId_ = info.want->GetIntParam(AAFwk::Want::PARAM_RESV_DISPLAY_ID, -1);
+            WLOGFI("[WMSLife]PendingSessionActivation: want info - uri: %{public}s",
+                info.want->GetElement().GetURI().c_str());
         }
+
         WLOGFI("PendingSessionActivation:bundleName %{public}s, moduleName:%{public}s, abilityName:%{public}s, \
             appIndex:%{public}d, affinity:%{public}s", info.bundleName_.c_str(), info.moduleName_.c_str(),
             info.abilityName_.c_str(), info.appIndex_, info.sessionAffinity.c_str());
         WLOGFI("PendingSessionActivation callState:%{public}d, want persistentId: %{public}d, "
-            "callingTokenId:%{public}d, uiAbilityId: %{public}" PRIu64 ", windowMode: %{public}d",
-            info.callState_, info.persistentId_, info.callingTokenId_, info.uiAbilityId_, info.windowMode);
+            "callingTokenId:%{public}d, uiAbilityId: %{public}" PRIu64
+            ", windowMode: %{public}d, caller persistentId: %{public}d",
+            info.callState_, info.persistentId_, info.callingTokenId_, info.uiAbilityId_,
+            info.windowMode, info.callerPersistentId_);
         if (session->pendingSessionActivationFunc_) {
             session->pendingSessionActivationFunc_(info);
         }

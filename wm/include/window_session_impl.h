@@ -89,6 +89,7 @@ public:
     bool GetFocusable() const override;
     std::string GetContentInfo() override;
     Ace::UIContent* GetUIContent() const override;
+    PiPTemplateInfo GetPiPTemplateInfo() const;
     void OnNewWant(const AAFwk::Want& want) override;
     WMError SetAPPWindowLabel(const std::string& label) override;
     WMError SetAPPWindowIcon(const std::shared_ptr<Media::PixelMap>& icon) override;
@@ -242,6 +243,7 @@ protected:
     std::shared_ptr<IInputEventConsumer> inputEventConsumer_;
     bool needRemoveWindowInputChannel_ = false;
     float virtualPixelRatio_ { 1.0f };
+    bool escKeyEventTriggered_ = false;
 
 private:
     //Trans between colorGamut and colorSpace
@@ -288,6 +290,7 @@ private:
     bool IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const;
     void UpdateRectForRotation(const Rect& wmRect, const Rect& preRect, WindowSizeChangeReason wmReason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
+    void NotifyRotationAnimationEnd();
 
     static std::recursive_mutex lifeCycleListenerMutex_;
     static std::recursive_mutex windowChangeListenerMutex_;

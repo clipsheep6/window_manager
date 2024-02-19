@@ -282,7 +282,7 @@ napi_value JsWindow::SetLayoutFullScreen(napi_env env, napi_callback_info info)
 
 napi_value JsWindow::SetWindowLayoutFullScreen(napi_env env, napi_callback_info info)
 {
-    WLOGI("SetLayoutFullScreen");
+    WLOGI("SetWindowLayoutFullScreen");
     JsWindow* me = CheckParamsAndGetThis<JsWindow>(env, info);
     return (me != nullptr) ? me->OnSetWindowLayoutFullScreen(env, info) : nullptr;
 }
@@ -1087,7 +1087,7 @@ napi_value JsWindow::OnRecover(napi_env env, napi_callback_info info)
                     CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
                 return;
             }
-            WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(weakWindow->Recover());
+            WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(weakWindow->Recover(1));
             if (ret == WmErrorCode::WM_OK) {
                 task.Resolve(env, NapiGetUndefined(env));
             } else {
@@ -2012,7 +2012,7 @@ napi_value JsWindow::OnSetWindowLayoutFullScreen(napi_env env, napi_callback_inf
                 task.Reject(env, CreateJsError(env,
                     static_cast<int32_t>(ret), "Window OnSetLayoutFullScreen failed."));
             }
-            WLOGI("Window [%{public}u, %{public}s] set layout full screen end, ret = %{public}d",
+            WLOGI("Window [%{public}u, %{public}s] set window layout full screen end, ret = %{public}d",
                 weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), ret);
         };
 
@@ -3392,7 +3392,8 @@ napi_value JsWindow::OnSetSingleFrameComposerEnabled(napi_env env, napi_callback
                 WLOGFE("Invalid parameter, failed to convert parameter to enabled");
                 errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
             } else {
-                napi_get_value_bool(env, nativeVal, &enabled);
+                CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+                    napi_get_value_bool(env, nativeVal, &enabled));
             }
         }
     }
@@ -4680,7 +4681,8 @@ napi_value JsWindow::OnSetAspectRatio(napi_env env, napi_callback_info info)
             if (ret == WMError::WM_OK) {
                 task.Resolve(env, NapiGetUndefined(env));
             } else {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret), "SetAspectRatio failed."));
+                task.Reject(env, CreateJsError(env,
+                    static_cast<int32_t>(WM_JS_TO_ERROR_CODE_MAP.at(ret)), "SetAspectRatio failed."));
             }
             WLOGI("[NAPI]Window [%{public}u, %{public}s] set aspect ratio end, ret = %{public}d",
                 weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), ret);

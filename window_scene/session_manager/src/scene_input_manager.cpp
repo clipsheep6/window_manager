@@ -15,6 +15,7 @@
 
 #include "scene_input_manager.h"
 
+#include <hitrace_meter.h>
 #include "input_manager.h"
 #include "scene_session_dirty_manager.h"
 #include "screen_session_manager/include/screen_session_manager_client.h"
@@ -29,6 +30,7 @@ namespace Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneInputManager" };
 const std::string SCENE_INPUT_MANAGER_THREAD = "SceneInputManager";
+const std::string FLUSH_DISPLAY_INFO_THREAD = "OS_FlushDisplayInfoThread";
 std::recursive_mutex g_instanceMutex;
 
 constexpr float DIRECTION0 = 0;
@@ -123,6 +125,8 @@ SceneInputManager& SceneInputManager::GetInstance()
 void SceneInputManager::Init()
 {
     sceneSessionDirty_ = std::make_shared<SceneSessionDirtyManager>();
+    eventLoop_ = AppExecFwk::EventRunner::Create(FLUSH_DISPLAY_INFO_THREAD);
+    eventHandler_ = std::make_shared<AppExecFwk::EventHandler>(eventLoop_);
     if (sceneSessionDirty_) {
         auto callback = [this]() {
             FlushDisplayInfoToMMI();
@@ -131,30 +135,43 @@ void SceneInputManager::Init()
     }
 }
 
-void SceneInputManager::FlushFullInfoToMMI(const std::vector<MMI::WindowInfo>& windowInfoList)
+void SceneInputManager::ConstructDisplayInfos(std::vector<MMI::DisplayInfo>& displayInfos)
 {
     std::unordered_map<ScreenId, ScreenProperty> screensProperties =
         Rosen::ScreenSessionManagerClient::GetInstance().GetAllScreensProperties();
     auto displayMode = Rosen::ScreenSessionManagerClient::GetInstance().GetFoldDisplayMode();
-    auto ConstructDisplayInfos = [&](std::vector<MMI::DisplayInfo>& displayInfos) {
-        for (auto& iter: screensProperties) {
-            auto screenId = iter.first;
-            auto& screenProperty = iter.second;
-            MMI::DisplayInfo displayInfo = {
-                .id = screenId,
-                .x = screenProperty.GetOffsetX(),
-                .y = screenProperty.GetOffsetY(),
-                .width = screenProperty.GetBounds().rect_.GetWidth(),
-                .height = screenProperty.GetBounds().rect_.GetHeight(),
-                .dpi = screenProperty.GetDensity() *  DOT_PER_INCH,
-                .name = "display" + std::to_string(screenId),
-                .uniq = "default" + std::to_string(screenId),
-                .direction = ConvertDegreeToMMIRotation(screenProperty.GetRotation(),
-                    static_cast<MMI::DisplayMode>(displayMode)),
-                .displayMode = static_cast<MMI::DisplayMode>(displayMode)};
-            displayInfos.emplace_back(displayInfo);
+    for (auto& iter: screensProperties) {
+        auto screenId = iter.first;
+        auto& screenProperty = iter.second;
+        auto screenSession = Rosen::ScreenSessionManagerClient::GetInstance().GetScreenSessionById(screenId);
+        MMI::Direction displayRotation;
+        if (screenSession && screenSession->GetDisplayNode()) {
+            displayRotation = ConvertDegreeToMMIRotation(
+                screenSession->GetDisplayNode()->GetStagingProperties().GetRotation(),
+                static_cast<MMI::DisplayMode>(displayMode));
+        } else {
+            displayRotation = ConvertDegreeToMMIRotation(screenProperty.GetRotation(),
+                static_cast<MMI::DisplayMode>(displayMode));
         }
-    };
+        MMI::DisplayInfo displayInfo = {
+            .id = screenId,
+            .x = screenProperty.GetOffsetX(),
+            .y = screenProperty.GetOffsetY(),
+            .width = screenProperty.GetBounds().rect_.GetWidth(),
+            .height = screenProperty.GetBounds().rect_.GetHeight(),
+            .dpi = screenProperty.GetDensity() *  DOT_PER_INCH,
+            .name = "display" + std::to_string(screenId),
+            .uniq = "default" + std::to_string(screenId),
+            .direction = ConvertDegreeToMMIRotation(screenProperty.GetRotation(),
+                static_cast<MMI::DisplayMode>(displayMode)),
+            .displayDirection = displayRotation,
+            .displayMode = static_cast<MMI::DisplayMode>(displayMode)};
+        displayInfos.emplace_back(displayInfo);
+    }
+}
+
+void SceneInputManager::FlushFullInfoToMMI(const std::vector<MMI::WindowInfo>& windowInfoList)
+{
     std::vector<MMI::DisplayInfo> displayInfos;
     ConstructDisplayInfos(displayInfos);
     int mainScreenWidth = 0; 
@@ -225,22 +242,27 @@ void SceneInputManager::FlushChangeInfoToMMI(const std::map<uint64_t, std::vecto
     }
 }
 
-void SceneInputManager::FlushDisplayInfoToMMI() {
-    if (sceneSessionDirty_ == nullptr) {
-        return;
-    }
-    sceneSessionDirty_->ResetSessionDirty();
+void SceneInputManager::FlushDisplayInfoToMMI()
+{
+    auto task = [this]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "FlushDisplayInfoToMMI");
+        if (sceneSessionDirty_ == nullptr) {
+            return;
+        }
+        sceneSessionDirty_->ResetSessionDirty();
 
-    std::vector<MMI::WindowInfo> windowInfoList = sceneSessionDirty_->GetFullWindowInfoList();
-    WLOG_D("[EventDispatch] - windowInfo:windowList = %{public}d", static_cast<int>(windowInfoList.size()));
-    if (windowInfoList.size() == 0) {
-        FlushFullInfoToMMI(windowInfoList);
-        return;
-    }
-    windowInfoList.back().action = MMI::WINDOW_UPDATE_ACTION::ADD_END;
-    if (windowInfoList.size() <= MAX_WINDOWINFO_NUM) {
-        FlushFullInfoToMMI(windowInfoList);
-    } else {
+        std::vector<MMI::WindowInfo> windowInfoList = sceneSessionDirty_->GetFullWindowInfoList();
+        WLOG_D("[EventDispatch] - windowInfo:windowList = %{public}d", static_cast<int>(windowInfoList.size()));
+        if (windowInfoList.size() == 0) {
+            FlushFullInfoToMMI(windowInfoList);
+            return;
+        }
+        windowInfoList.back().action = MMI::WINDOW_UPDATE_ACTION::ADD_END;
+        if (windowInfoList.size() <= MAX_WINDOWINFO_NUM) {
+            FlushFullInfoToMMI(windowInfoList);
+            return;
+        }
+
         auto iterBegin = windowInfoList.begin();
         auto iterEnd = windowInfoList.end();
         auto iterNext = std::next(iterBegin, MAX_WINDOWINFO_NUM);
@@ -256,6 +278,9 @@ void SceneInputManager::FlushDisplayInfoToMMI() {
             screenToWindowInfoList.emplace(DEFALUT_DISPLAYID, std::vector<MMI::WindowInfo>(iterNewBegin, iterNext));
             FlushChangeInfoToMMI(screenToWindowInfoList);
         }
+    };
+    if (eventHandler_) {
+        eventHandler_->PostTask(task);
     }
 }
 }

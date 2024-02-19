@@ -22,6 +22,7 @@
 #include "key_event.h"
 #include "pointer_event.h"
 #include <transaction/rs_interfaces.h>
+#include <transaction/rs_transaction.h>
 #include <ui/rs_surface_node.h>
 #include "../../proxy/include/window_info.h"
 
@@ -45,12 +46,15 @@ constexpr float OUTSIDE_BORDER_VP = 4.0f;
 constexpr float INNER_ANGLE_VP = 16.0f;
 constexpr uint32_t MAX_LIFE_CYCLE_TASK_IN_QUEUE = 15;
 constexpr int64_t LIFE_CYCLE_TASK_EXPIRED_TIME_MILLI = 200;
+static bool g_enableForceUIFirst = system::GetParameter("window.forceUIFirst.enabled", "1") == "1";
 } // namespace
 
 Session::Session(const SessionInfo& info) : sessionInfo_(info)
 {
     property_ = new WindowSessionProperty();
     property_->SetWindowType(static_cast<WindowType>(info.windowType_));
+    auto runner = AppExecFwk::EventRunner::GetMainEventRunner();
+    mainHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
 
     using type = std::underlying_type_t<MMI::WindowArea>;
     for (type area = static_cast<type>(MMI::WindowArea::FOCUS_ON_TOP);
@@ -109,6 +113,18 @@ std::shared_ptr<RSSurfaceNode> Session::GetSurfaceNode() const
 
 void Session::SetLeashWinSurfaceNode(std::shared_ptr<RSSurfaceNode> leashWinSurfaceNode)
 {
+    if (g_enableForceUIFirst) {
+        auto rsTransaction = RSTransactionProxy::GetInstance();
+        if (rsTransaction) {
+            rsTransaction->Begin();
+        }
+        if (!leashWinSurfaceNode && leashWinSurfaceNode_) {
+            leashWinSurfaceNode_->SetForceUIFirst(false);
+        }
+        if (rsTransaction) {
+            rsTransaction->Commit();
+        }
+    }
     leashWinSurfaceNode_ = leashWinSurfaceNode;
 }
 
@@ -416,13 +432,15 @@ bool Session::GetTouchable() const
 
 void Session::SetSystemTouchable(bool touchable)
 {
+    WLOGFD("SetSystemTouchable id: %{public}d, systemtouchable: %{public}d, propertytouchable: %{public}d",
+        GetPersistentId(), touchable, GetTouchable());
     systemTouchable_ = touchable;
     NotifySessionInfoChange();
 }
 
 bool Session::GetSystemTouchable() const
 {
-    return systemTouchable_;
+    return systemTouchable_ && GetTouchable();
 }
 
 WSError Session::SetVisible(bool isVisible)
@@ -746,7 +764,7 @@ WSError Session::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWi
         property->SetIsNeedUpdateWindowMode(true);
         property->SetWindowMode(property_->GetWindowMode());
     }
-    if (SessionHelper::IsMainWindow(GetWindowType()) && GetSessionInfo().screenId_ != 0 && property) {
+    if (SessionHelper::IsMainWindow(GetWindowType()) && GetSessionInfo().screenId_ != -1 && property) {
         property->SetDisplayId(GetSessionInfo().screenId_);
     }
     SetSessionProperty(property);
@@ -946,7 +964,11 @@ WSError Session::Disconnect(bool isFromClient)
     auto state = GetSessionState();
     WLOGFI("[WMSLife] Disconnect session, id: %{public}d, state: %{public}u", GetPersistentId(), state);
     isActive_ = false;
-    surfaceNode_.reset();
+    if (mainHandler_) {
+        mainHandler_->PostTask([surfaceNode = std::move(surfaceNode_)]() mutable {
+            surfaceNode.reset();
+        });
+    }
     UpdateSessionState(SessionState::STATE_BACKGROUND);
     UpdateSessionState(SessionState::STATE_DISCONNECT);
     NotifyDisconnect();
@@ -1583,6 +1605,8 @@ WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& 
                 pointerEvent->GetId(), ret);
         }
         return ret;
+    } else {
+        pointerEvent->MarkProcessed();
     }
 
     if (pointerAction == MMI::PointerEvent::POINTER_ACTION_MOVE ||
@@ -1601,8 +1625,6 @@ WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& 
         pointerAction == MMI::PointerEvent::POINTER_ACTION_PULL_OUT_WINDOW) {
         WLOGFD("Action:%{public}s, eventId:%{public}d, report without timer",
             pointerEvent->DumpPointerAction(), pointerEvent->GetId());
-    } else {
-        DelayedSingleton<ANRManager>::GetInstance()->AddTimer(pointerEvent->GetId(), persistentId_);
     }
     return WSError::WS_OK;
 }
@@ -1654,11 +1676,11 @@ WSError Session::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent
         return WSError::WS_ERROR_NULLPTR;
     }
     WLOGD("TransferKeyEvent, id: %{public}d", persistentId_);
-    if (WSError ret = windowEventChannel_->TransferKeyEvent(keyEvent); ret != WSError::WS_OK) {
+    WSError ret = windowEventChannel_->TransferKeyEvent(keyEvent);
+    if (ret != WSError::WS_OK) {
         WLOGFE("TransferKeyEvent failed, ret:%{public}d", ret);
         return ret;
     }
-    DelayedSingleton<ANRManager>::GetInstance()->AddTimer(keyEvent->GetId(), persistentId_);
     return WSError::WS_OK;
 }
 

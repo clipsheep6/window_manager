@@ -176,6 +176,32 @@ HWTEST_F(SceneSessionTest, GetGlobalMaximizeMode01, Function | SmallTest | Level
 }
 
 /**
+ * @tc.name: SetAndGetPipTemplateInfo
+ * @tc.desc: SetAndGetPipTemplateInfo Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, SetAndGetPipTemplateInfo, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "Background01";
+    info.bundleName_ = "Background01";
+    sptr<Rosen::ISession> session_;
+    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(specificCallback_, nullptr);
+
+    sptr<SceneSession> scensession;
+    scensession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(scensession, nullptr);
+    scensession->isActive_ = true;
+    PiPTemplateInfo pipTemplateInfo;
+    pipTemplateInfo.pipTemplateType = static_cast<uint32_t>(PipTemplateType::VIDEO_CALL);
+    scensession->SetPiPTemplateInfo(pipTemplateInfo);
+    ASSERT_EQ(scensession->GetPiPTemplateInfo().pipTemplateType,
+        static_cast<uint32_t>(PipTemplateType::VIDEO_CALL));
+}
+
+/**
  * @tc.name: UpdateWindowSceneAfterCustomAnimation01
  * @tc.desc: UpdateWindowSceneAfterCustomAnimation
  * @tc.type: FUNC
@@ -1146,7 +1172,6 @@ HWTEST_F(SceneSessionTest, Foreground03, Function | SmallTest | Level2)
     property->SetAnimationFlag(static_cast<uint32_t>(WindowAnimation::CUSTOM));
     auto result = scensession->Foreground(property);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1172,7 +1197,6 @@ HWTEST_F(SceneSessionTest, Background02, Function | SmallTest | Level2)
     scensession->isActive_ = true;
     auto result = scensession->Background();
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1198,7 +1222,6 @@ HWTEST_F(SceneSessionTest, Disconnect, Function | SmallTest | Level2)
     scensession->isActive_ = true;
     auto result = scensession->Disconnect();
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1227,7 +1250,6 @@ HWTEST_F(SceneSessionTest, UpdateActiveStatus, Function | SmallTest | Level2)
 
     result = scensession->UpdateActiveStatus(false);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1253,7 +1275,6 @@ HWTEST_F(SceneSessionTest, UpdateActiveStatus01, Function | SmallTest | Level2)
     scensession->isActive_ = false;
     auto result = scensession->UpdateActiveStatus(true);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1281,7 +1302,6 @@ HWTEST_F(SceneSessionTest, OnSessionEvent, Function | SmallTest | Level2)
     SessionEvent event = SessionEvent::EVENT_START_MOVE;
     auto result = scensession->OnSessionEvent(event);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1311,7 +1331,6 @@ HWTEST_F(SceneSessionTest, SetAspectRatio2, Function | SmallTest | Level2)
     scensession->SetSessionProperty(property);
     result = scensession->SetAspectRatio(ratio);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1338,7 +1357,6 @@ HWTEST_F(SceneSessionTest, SetAspectRatio3, Function | SmallTest | Level2)
     scensession->SetSessionProperty(property);
     auto result = scensession->SetAspectRatio(ratio);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1369,7 +1387,6 @@ HWTEST_F(SceneSessionTest, SetAspectRatio4, Function | SmallTest | Level2)
     scensession->SetSessionProperty(property);
     auto result = scensession->SetAspectRatio(ratio);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1400,7 +1417,6 @@ HWTEST_F(SceneSessionTest, SetAspectRatio5, Function | SmallTest | Level2)
     scensession->SetSessionProperty(property);
     auto result = scensession->SetAspectRatio(ratio);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1431,7 +1447,6 @@ HWTEST_F(SceneSessionTest, SetAspectRatio6, Function | SmallTest | Level2)
     scensession->SetSessionProperty(property);
     auto result = scensession->SetAspectRatio(ratio);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1462,7 +1477,6 @@ HWTEST_F(SceneSessionTest, SetAspectRatio7, Function | SmallTest | Level2)
     scensession->SetSessionProperty(property);
     auto result = scensession->SetAspectRatio(ratio);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1491,7 +1505,6 @@ HWTEST_F(SceneSessionTest, UpdateRect, Function | SmallTest | Level2)
     SizeChangeReason reason = SizeChangeReason::UNDEFINED;
     WSError result = scensession->UpdateRect(rect, reason);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1522,8 +1535,7 @@ HWTEST_F(SceneSessionTest, UpdateInputMethodSessionRect, Function | SmallTest | 
     WSRect newWinRect;
     WSRect newRequestRect;
     bool result = scensession->UpdateInputMethodSessionRect(rect, newWinRect, newRequestRect);
-    ASSERT_EQ(result, true);
-    delete scensession;
+    ASSERT_EQ(result, false);
 }
 
 /**
@@ -1554,7 +1566,6 @@ HWTEST_F(SceneSessionTest, UpdateSessionRect, Function | SmallTest | Level2)
     SizeChangeReason reason = SizeChangeReason::MOVE;
     WSError result = scensession->UpdateSessionRect(rect, reason);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1585,7 +1596,6 @@ HWTEST_F(SceneSessionTest, UpdateSessionRect1, Function | SmallTest | Level2)
     SizeChangeReason reason = SizeChangeReason::RESIZE;
     WSError result = scensession->UpdateSessionRect(rect, reason);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1616,7 +1626,6 @@ HWTEST_F(SceneSessionTest, UpdateSessionRect2, Function | SmallTest | Level2)
     SizeChangeReason reason = SizeChangeReason::UNDEFINED;
     WSError result = scensession->UpdateSessionRect(rect, reason);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1645,7 +1654,6 @@ HWTEST_F(SceneSessionTest, RaiseAboveTarget, Function | SmallTest | Level2)
     scensession->SetSessionProperty(property);
     WSError result = scensession->RaiseAboveTarget(0);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1679,7 +1687,6 @@ HWTEST_F(SceneSessionTest, BindDialogSessionTarget, Function | SmallTest | Level
     sptr<SceneSession> sceneSession1 = scensession;
     result = scensession->BindDialogSessionTarget(sceneSession1);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -1709,7 +1716,6 @@ HWTEST_F(SceneSessionTest, NotifyPropertyWhenConnect1, Function | SmallTest | Le
     sptr<WindowSessionProperty> property = nullptr;
     scensession->NotifyPropertyWhenConnect();
     ASSERT_EQ(ret, 1);
-    delete scensession;
 }
 
 /**
@@ -1740,7 +1746,6 @@ HWTEST_F(SceneSessionTest, GetSystemAvoidArea, Function | SmallTest | Level2)
     AvoidArea avoidArea;
     scensession->GetSystemAvoidArea(rect, avoidArea);
     ASSERT_EQ(p, 10);
-    delete scensession;
 }
 
 /**
@@ -1774,7 +1779,6 @@ HWTEST_F(SceneSessionTest, HandleEnterWinwdowArea1, Function | SmallTest | Level
 
     result = scensession->HandleEnterWinwdowArea(-1, 1);
     ASSERT_EQ(result, WSError::WS_ERROR_INVALID_PARAM);
-    delete scensession;
 }
 
 /**
@@ -1822,7 +1826,6 @@ HWTEST_F(SceneSessionTest, HandleEnterWinwdowArea2, Function | SmallTest | Level
     scensession->SetSessionProperty(property);
     result = scensession->HandleEnterWinwdowArea(1, 1);
     ASSERT_EQ(result, WSError::WS_ERROR_INVALID_TYPE);
-    delete scensession;
 }
 
 /**
@@ -1871,7 +1874,6 @@ HWTEST_F(SceneSessionTest, HandlePointerStyle, Function | SmallTest | Level2)
     pointerEvent_->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_MOVE);
     pointerEvent_->SetButtonId(MMI::PointerEvent::BUTTON_NONE);
     ASSERT_EQ(scensession->HandlePointerStyle(pointerEvent_), WSError::WS_DO_NOTHING);
-    delete scensession;
 }
 
 /**
@@ -1905,7 +1907,6 @@ HWTEST_F(SceneSessionTest, TransferPointerEvent01, Function | SmallTest | Level2
     std::shared_ptr<MMI::PointerEvent> pointerEvent_ = MMI::PointerEvent::Create();
     pointerEvent_->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_ENTER_WINDOW);
     ASSERT_EQ(scensession->TransferPointerEvent(pointerEvent_), WSError::WS_DO_NOTHING);
-    delete scensession;
 }
 
 /**
@@ -1939,7 +1940,6 @@ HWTEST_F(SceneSessionTest, TransferPointerEvent02, Function | SmallTest | Level2
     std::shared_ptr<MMI::PointerEvent> pointerEvent_ = MMI::PointerEvent::Create();
     pointerEvent_->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_DOWN);
     ASSERT_EQ(scensession->TransferPointerEvent(pointerEvent_), WSError::WS_ERROR_INVALID_SESSION);
-    delete scensession;
 }
 
 /**
@@ -1968,7 +1968,6 @@ HWTEST_F(SceneSessionTest, RequestSessionBack, Function | SmallTest | Level2)
 
     WSError result = scensession->RequestSessionBack(true);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -2000,7 +1999,6 @@ HWTEST_F(SceneSessionTest, SetParentPersistentId, Function | SmallTest | Level2)
     scensession->SetParentPersistentId(0);
     result = scensession->GetParentPersistentId();
     ASSERT_EQ(result, 0);
-    delete scensession;
 }
 
 /**
@@ -2027,9 +2025,7 @@ HWTEST_F(SceneSessionTest, GetSessionSnapshotFilePath, Function | SmallTest | Le
 
     std::string result = scensession->GetSessionSnapshotFilePath();
     ASSERT_NE(result, "0");
-    delete scensession;
 }
-
 /**
  * @tc.name: Connect
  * @tc.desc: Connect
@@ -2055,9 +2051,7 @@ HWTEST_F(SceneSessionTest, Connect, Function | SmallTest | Level2)
     WSError res = scensession->Connect(sessionStage, eventChannel,
         surfaceNode, systemConfig, property, token, pid, uid);
     ASSERT_EQ(res, WSError::WS_ERROR_NULLPTR);
-    delete scensession;
 }
-
 /**
  * @tc.name: Reconnect
  * @tc.desc: Reconnect
@@ -2082,7 +2076,6 @@ HWTEST_F(SceneSessionTest, Reconnect, Function | SmallTest | Level2)
     WSError res =
         scensession->Reconnect(sessionStage, eventChannel, surfaceNode, property, token, pid, uid);
     ASSERT_EQ(res, WSError::WS_ERROR_NULLPTR);
-    delete scensession;
 }
 
 /**
@@ -2107,7 +2100,6 @@ HWTEST_F(SceneSessionTest, Foreground02, Function | SmallTest | Level2)
     sptr<WindowSessionProperty> property = nullptr;
     auto result = scensession->Foreground(property);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -2142,7 +2134,6 @@ HWTEST_F(SceneSessionTest, PendingSessionActivation, Function | SmallTest | Leve
 
     result = scensession->PendingSessionActivation(abilitySessionInfo);
     ASSERT_EQ(result, WSError::WS_ERROR_INVALID_PERMISSION);
-    delete scensession;
 }
 
 /**
@@ -2177,7 +2168,6 @@ HWTEST_F(SceneSessionTest, TerminateSession, Function | SmallTest | Level2)
 
     result = scensession->TerminateSession(abilitySessionInfo);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scensession;
 }
 
 /**
@@ -2212,7 +2202,6 @@ HWTEST_F(SceneSessionTest, NotifySessionException, Function | SmallTest | Level2
 
     result = scensession->NotifySessionException(abilitySessionInfo);
     ASSERT_EQ(result, WSError::WS_ERROR_INVALID_PERMISSION);
-    delete scensession;
 }
 
 /**
@@ -2408,7 +2397,6 @@ HWTEST_F(SceneSessionTest, UpdatePiPRect, Function | SmallTest | Level2)
     PiPRectUpdateReason reason = PiPRectUpdateReason::REASON_PIP_START_WINDOW;
     WSError result = scenesession->UpdatePiPRect(width, height, reason);
     ASSERT_EQ(result, WSError::WS_OK);
-    delete scenesession;
 }
 
 /**

@@ -24,7 +24,7 @@
 
 namespace OHOS::Rosen {
 namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "DisplayManagerProxy"};
+    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DMS_DM_SERVER, "DisplayManagerProxy"};
 }
 
 sptr<DisplayInfo> DisplayManagerProxy::GetDefaultDisplayInfo()
@@ -1484,6 +1484,34 @@ DMError DisplayManagerProxy::SetResolution(ScreenId screenId, uint32_t width, ui
         WLOGFE("SendRequest failed");
         return DMError::DM_ERROR_IPC_FAILED;
     }
+    return static_cast<DMError>(reply.ReadInt32());
+}
+
+DMError DisplayManagerProxy::GetDensityInCurResolution(ScreenId screenId, float& virtualPixelRatio)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("GetDensityInCurResolution: remote is null");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteUint64(screenId)) {
+        WLOGFE("write screenId failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_GET_DENSITY_IN_CURRENT_RESOLUTION),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    virtualPixelRatio = reply.ReadFloat();
     return static_cast<DMError>(reply.ReadInt32());
 }
 

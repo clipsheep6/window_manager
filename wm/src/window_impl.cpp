@@ -570,20 +570,22 @@ WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, napi_env e
         WLOGFE("fail to NapiSetUIContent id: %{public}u", property_->GetWindowId());
         return WMError::WM_ERROR_NULLPTR;
     }
+
+    OHOS::Ace::UIContentErrorCode aceRet = OHOS::Ace::UIContentErrorCode::NO_ERRORS;
     switch (type) {
         default:
         case WindowSetUIContentType::DEFAULT:
-            uiContent->Initialize(this, contentInfo, storage);
+            aceRet = uiContent->Initialize(this, contentInfo, storage);
             break;
         case WindowSetUIContentType::DISTRIBUTE:
-            uiContent->Restore(this, contentInfo, storage);
+            aceRet = uiContent->Restore(this, contentInfo, storage);
             break;
         case WindowSetUIContentType::BY_NAME:
-            uiContent->InitializeByName(this, contentInfo, storage);
+            aceRet = uiContent->InitializeByName(this, contentInfo, storage);
             break;
         case WindowSetUIContentType::BY_ABC:
             auto abcContent = GetAbcContent(contentInfo);
-            uiContent->Initialize(this, abcContent, storage);
+            aceRet = uiContent->Initialize(this, abcContent, storage);
             break;
     }
     // make uiContent available after Initialize/Restore
@@ -591,6 +593,7 @@ WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, napi_env e
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         uiContent_ = std::move(uiContent);
     }
+
     if (isIgnoreSafeAreaNeedNotify_) {
         uiContent_->SetIgnoreViewSafeArea(isIgnoreSafeArea_);
     }
@@ -616,6 +619,11 @@ WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, napi_env e
         config.SetOrientation(static_cast<int32_t>(display->GetOrientation()));
         uiContent_->UpdateViewportConfig(config, WindowSizeChangeReason::UNDEFINED, nullptr);
         WLOGFD("notify uiContent window size change end");
+    }
+    if (aceRet != OHOS::Ace::UIContentErrorCode::NO_ERRORS) {
+        WLOGFE("failed to init or restore uicontent with file %{public}s. errorCode: %{public}d",
+            contentInfo.c_str(), static_cast<uint16_t>(aceRet));
+        return WMError::WM_ERROR_INVALID_PARAM;
     }
     return WMError::WM_OK;
 }
@@ -1576,6 +1584,7 @@ WMError WindowImpl::Hide(uint32_t reason, bool withAnimation, bool isFromInnerki
         animationTransitionController_->AnimationForHidden();
     }
     ResetMoveOrDragState();
+    escKeyEventTriggered_ = false;
     return ret;
 }
 
@@ -2451,32 +2460,36 @@ void WindowImpl::HandleBackKeyPressedEvent(const std::shared_ptr<MMI::KeyEvent>&
 
 void WindowImpl::PerformBack()
 {
-    if (!WindowHelper::IsMainWindow(property_->GetWindowType())) {
-        WLOGD("it is not a main window");
-        return;
-    }
-    auto abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(context_);
-    if (abilityContext == nullptr) {
-        WLOGFE("abilityContext is null");
-        return;
-    }
-    bool needMoveToBackground = false;
-    int ret = abilityContext->OnBackPressedCallBack(needMoveToBackground);
-    if (ret == ERR_OK && needMoveToBackground) {
-        abilityContext->MoveAbilityToBackground();
-        WLOGD("id: %{public}u closed, to move Ability: %{public}u",
-            property_->GetWindowId(), needMoveToBackground);
-        return;
-    }
-    // TerminateAbility will invoke last ability, CloseAbility will not.
-    bool shouldTerminateAbility = WindowHelper::IsFullScreenWindow(property_->GetWindowMode());
-    if (shouldTerminateAbility) {
-        abilityContext->TerminateSelf();
-    } else {
-        abilityContext->CloseAbility();
-    }
-    WLOGD("id: %{public}u closed, to kill Ability: %{public}u",
-        property_->GetWindowId(), static_cast<uint32_t>(shouldTerminateAbility));
+    auto task = [this]() {
+        if (!WindowHelper::IsMainWindow(property_->GetWindowType())) {
+            WLOGD("it is not a main window");
+            return;
+        }
+        auto abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(context_);
+        if (abilityContext == nullptr) {
+            WLOGFE("abilityContext is null");
+            return;
+        }
+        bool needMoveToBackground = false;
+        int ret = abilityContext->OnBackPressedCallBack(needMoveToBackground);
+        if (ret == ERR_OK && needMoveToBackground) {
+            abilityContext->MoveAbilityToBackground();
+            WLOGD("id: %{public}u closed, to move Ability: %{public}u",
+                  property_->GetWindowId(), needMoveToBackground);
+            return;
+        }
+        // TerminateAbility will invoke last ability, CloseAbility will not.
+        bool shouldTerminateAbility = WindowHelper::IsFullScreenWindow(property_->GetWindowMode());
+        if (shouldTerminateAbility) {
+            abilityContext->TerminateSelf();
+        } else {
+            abilityContext->CloseAbility();
+        }
+        WLOGD("id: %{public}u closed, to kill Ability: %{public}u",
+              property_->GetWindowId(), static_cast<uint32_t>(shouldTerminateAbility));
+    };
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    handler_->PostTask(task, "WindowImpl::PerformBack");
 }
 
 void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
@@ -2484,6 +2497,7 @@ void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
     int32_t keyCode = keyEvent->GetKeyCode();
     int32_t keyAction = keyEvent->GetKeyAction();
     WLOGFD("KeyCode: %{public}d, action: %{public}d", keyCode, keyAction);
+    bool shouldMarkProcess = true;
     if (keyCode == MMI::KeyEvent::KEYCODE_BACK && keyAction == MMI::KeyEvent::KEY_ACTION_UP) {
         HandleBackKeyPressedEvent(keyEvent);
     } else {
@@ -2495,15 +2509,21 @@ void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
         if (inputEventConsumer != nullptr) {
             WLOGD("Transfer key event to inputEventConsumer");
             (void)inputEventConsumer->OnInputEvent(keyEvent);
+            shouldMarkProcess = false;
         } else if (uiContent_ != nullptr) {
             WLOGD("Transfer key event to uiContent");
             bool handled = static_cast<bool>(uiContent_->ProcessKeyEvent(keyEvent));
             if (!handled && keyCode == MMI::KeyEvent::KEYCODE_ESCAPE &&
                 GetMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
-                property_->GetMaximizeMode() == MaximizeMode::MODE_FULL_FILL) {
+                property_->GetMaximizeMode() == MaximizeMode::MODE_FULL_FILL &&
+                keyAction == MMI::KeyEvent::KEY_ACTION_DOWN && !escKeyEventTriggered_) {
                 WLOGI("recover from fullscreen cause KEYCODE_ESCAPE");
                 Recover();
             }
+            if (keyEvent->GetKeyCode() == MMI::KeyEvent::KEYCODE_ESCAPE) {
+                escKeyEventTriggered_ = (keyAction == MMI::KeyEvent::KEY_ACTION_UP) ? false : true;
+            }
+            shouldMarkProcess = !handled;
         } else {
             WLOGFE("There is no key event consumer");
         }
@@ -2513,6 +2533,9 @@ void WindowImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
         SingletonContainer::Get<WindowAdapter>().DispatchKeyEvent(GetWindowId(), keyEvent);
         keyEvent->MarkProcessed();
         return;
+    }
+    if (shouldMarkProcess) {
+        keyEvent->MarkProcessed();
     }
 }
 
@@ -2776,6 +2799,10 @@ bool WindowImpl::IsPointerEventConsumed()
 
 void WindowImpl::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
+    if (pointerEvent == nullptr) {
+        WLOGFE("The pointer event is nullptr");
+        return;
+    }
     if (windowSystemConfig_.isStretchable_ && GetMode() == WindowMode::WINDOW_MODE_FLOATING) {
         UpdatePointerEventForStretchableWindow(pointerEvent);
     }
@@ -2786,10 +2813,16 @@ void WindowImpl::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& 
     }
     if (inputEventConsumer != nullptr) {
         WLOGFD("Transfer pointer event to inputEventConsumer");
-        (void)inputEventConsumer->OnInputEvent(pointerEvent);
+        if (!(inputEventConsumer->OnInputEvent(pointerEvent))) {
+            WLOGFI("The Input event consumer consumes pointer event failed.");
+            pointerEvent->MarkProcessed();
+        }
     } else if (uiContent_ != nullptr) {
         WLOGFD("Transfer pointer event to uiContent");
-        (void)uiContent_->ProcessPointerEvent(pointerEvent);
+        if (!(uiContent_->ProcessPointerEvent(pointerEvent))) {
+            WLOGFI("The UI content consumes pointer event failed.");
+            pointerEvent->MarkProcessed();
+        }
     } else {
         WLOGFW("pointerEvent is not consumed, windowId: %{public}u", GetWindowId());
         pointerEvent->MarkProcessed();

@@ -173,7 +173,7 @@ bool IsJsSessionTypeUndefind(napi_env env, napi_value jsSessionType, SessionInfo
 bool IsJsScreenIdUndefind(napi_env env, napi_value JsScreenId, SessionInfo& sessionInfo)
 {
     if (GetType(env, JsScreenId) != napi_undefined) {
-        int32_t screenId = 0;
+        int32_t screenId = -1;
         if (!ConvertFromJsValue(env, JsScreenId, screenId)) {
             WLOGFE("[NAPI]Failed to convert parameter to screenId");
             return false;
@@ -265,7 +265,7 @@ bool ConvertSessionInfoState(napi_env env, napi_value jsObject, SessionInfo& ses
     napi_value jsIsPersistentRecover = nullptr;
     napi_get_named_property(env, jsObject, "isPersistentRecover", &jsIsPersistentRecover);
     napi_value jsIsRotable = nullptr;
-    napi_get_named_property(env, jsObject, "isRotable", &jsIsRotable);
+    napi_get_named_property(env, jsObject, "isRotatable", &jsIsRotable);
     napi_value jsIsSystemInput = nullptr;
     napi_get_named_property(env, jsObject, "isSystemInput", &jsIsSystemInput);
 
@@ -769,9 +769,9 @@ void NapiAsyncWork(napi_env env, std::function<void()> task)
         AsyncInfo* info = (AsyncInfo*)data;
         info->func();
         napi_delete_async_work(env, info->work);
+        delete info;
     }, (void*)info, &info->work);
     napi_queue_async_work(env, info->work);
-    delete info;
 }
 
 MainThreadScheduler::MainThreadScheduler(napi_env env)
