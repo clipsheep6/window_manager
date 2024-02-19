@@ -417,14 +417,14 @@ void JsSceneSession::ProcessBindDialogTargetRegister()
 
     auto session = weakSession_.promote();
     if (session != nullptr) {
-        std::vector<sptr<Session>> dialogVec = sceneSession->GetDialogVector();
+        std::vector<sptr<Session>> dialogVec = session->GetDialogVector();
         for (const auto& dialog : dialogVec) {
             if (dialog == nullptr) {
                 continue;
             }
-            auto sceneSession = SceneSessionManager::GetInstance().GetSceneSession(dialog->GetPersistentId);
+            auto sceneSession = SceneSessionManager::GetInstance().GetSceneSession(dialog->GetPersistentId());
+            OnBindDialogTarget(sceneSession);
         }
-        OnBindDialogTarget(sceneSession);
     }
 
     WLOGFD("[WMSDialog] ProcessBindDialogTargetRegister success");
