@@ -1605,6 +1605,9 @@ WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& 
         if (ret != WSError::WS_OK) {
             WLOGFE("InputTracking id:%{public}d, TransferPointer failed, ret:%{public}d ",
                 pointerEvent->GetId(), ret);
+        } else if (callingPid_ != static_cast<int32_t>(getpid())) {
+            WLOGI("The event is transferred to other application to consume.");
+            pointerEvent->MarkProcessed();
         }
         return ret;
     } else {
