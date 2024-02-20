@@ -1019,6 +1019,10 @@ bool ScreenSessionManager::SetScreenPower(ScreenPowerStatus status, PowerStateCh
         return false;
     }
 
+    if (status == ScreenPowerStatus::POWER_STATUS_OFF) {
+        taskScheduler_->RemoveTask("screenOnTask");
+    }
+
     if (foldScreenController_ != nullptr) {
         rsInterface_.SetScreenPowerStatus(foldScreenController_->GetCurrentScreenId(), status);
     } else {
