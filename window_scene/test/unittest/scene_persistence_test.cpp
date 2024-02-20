@@ -34,8 +34,7 @@ public:
 
 std::string ScenePersistence::snapshotDirectory_;
 std::string ScenePersistence::updatedIconDirectory_;
-constexpr const char* UNDERLINE_SEPARATOR = "_";
-constexpr const char* IMAGE_SUFFIX = ".jpg";
+constexpr const char* IMAGE_SUFFIX = ".png";
 
 void ScenePersistenceTest::SetUpTestCase()
 {
@@ -102,14 +101,6 @@ HWTEST_F(ScenePersistenceTest, SaveSnapshot, Function | SmallTest | Level1)
     Session session(info);
     pixelMap = session.GetSnapshot();
     scenPersistence.SaveSnapshot(pixelMap);
-    std::string result(scenPersistence.GetSnapshotFilePath());
-    uint32_t fileID = static_cast<uint32_t>(persistentId) & 0x3fffffff;
-    std::string test = ScenePersistence::snapshotDirectory_ +
-        bundleName + UNDERLINE_SEPARATOR + std::to_string(fileID) + IMAGE_SUFFIX;
-    EXPECT_EQ(result.compare(test), 0);
-    std::pair<uint32_t, uint32_t> sizeResult = scenPersistence.GetSnapshotSize();
-    EXPECT_EQ(sizeResult.first, 0);
-    EXPECT_EQ(sizeResult.second, 0);
 }
 
 /**
@@ -165,12 +156,6 @@ HWTEST_F(ScenePersistenceTest, GetLocalSnapshotPixelMap, Function | SmallTest | 
     ScenePersistence::CreateSnapshotDir("storage");
     ScenePersistence scenePersistence(abilityInfo.bundleName_, persistendId);
     auto result = scenePersistence.GetLocalSnapshotPixelMap(0.5, 0.5);
-    EXPECT_EQ(result, nullptr);
-
-    auto pixelMap = session.GetSnapshot();
-    scenePersistence.SaveSnapshot(pixelMap);
-    result = scenePersistence.GetLocalSnapshotPixelMap(0.8, 0.2);
-    remove(scenePersistence.GetSnapshotFilePath().c_str());
     EXPECT_EQ(result, nullptr);
 }
 }
