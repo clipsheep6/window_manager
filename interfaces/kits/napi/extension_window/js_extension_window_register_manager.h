@@ -47,6 +47,8 @@ private:
         sptr<Window> window, bool isRegister);
     WmErrorCode ProcessAvoidAreaChangeRegister(sptr<JsExtensionWindowListener> listener,
         sptr<Window> window, bool isRegister);
+    WmErrorCode ProcessLifeCycleEventRegister(sptr<JsExtensionWindowListener> listener,
+        sptr<Window> window, bool isRegister);
     using Func = WmErrorCode(JsExtensionWindowRegisterManager::*)(sptr<JsExtensionWindowListener>,
         sptr<Window> window, bool);
     std::map<std::string, std::map<std::shared_ptr<NativeReference>, sptr<JsExtensionWindowListener>>> jsCbMap_;

@@ -38,6 +38,7 @@ namespace Rosen {
     bool NapiIsCallable(napi_env env, napi_value value);
     napi_value NapiGetUndefined(napi_env env);
     napi_value NapiThrowError(napi_env env, WmErrorCode errCode);
+    napi_valuetype GetType(napi_env env, napi_value value);
 }  // namespace Rosen
 }  // namespace OHOS
 #endif  // OHOS_JS_EXTENSION_WINDOW_UTILS_H
