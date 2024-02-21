@@ -64,6 +64,7 @@ public:
     static napi_value BindDialogTarget(napi_env env, napi_callback_info info);
     static napi_value LoadContent(napi_env env, napi_callback_info info);
     static napi_value LoadContentByName(napi_env env, napi_callback_info info);
+    static napi_value CreateContent(napi_env env, napi_callback_info info);
     static napi_value GetUIContext(napi_env env, napi_callback_info info);
     static napi_value SetUIContent(napi_env env, napi_callback_info info);
     static napi_value SetFullScreen(napi_env env, napi_callback_info info);
@@ -176,6 +177,10 @@ private:
     napi_value OnSetSystemBarProperties(napi_env env, napi_callback_info info);
     napi_value OnSetWindowSystemBarProperties(napi_env env, napi_callback_info info);
     napi_value OnLoadContent(napi_env env, napi_callback_info info, bool isLoadedByName);
+    napi_value OnCreateContent(napi_env env, napi_callback_info info);
+    napi_value ScheduleCallback(napi_env env, napi_value& callBack, bool withoutContentInfo = false,
+        std::shared_ptr<NativeReference> contentStorage = nullptr, const std::string& contextUrl = "",
+        bool isLoadedByName = false);
     napi_value OnGetUIContext(napi_env env, napi_callback_info info);
     napi_value OnSetUIContent(napi_env env, napi_callback_info info);
     napi_value OnGetAvoidArea(napi_env env, napi_callback_info info);

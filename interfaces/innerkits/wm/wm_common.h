@@ -341,6 +341,7 @@ enum class WindowSetUIContentType: uint32_t {
     DISTRIBUTE,
     BY_NAME,
     BY_ABC,
+    WITHOUT_CONTENT,
 };
 
 /**
