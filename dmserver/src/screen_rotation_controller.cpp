@@ -348,6 +348,19 @@ void ScreenRotationController::ProcessRotationMapping()
 
     // 0 means PORTRAIT, 1 means LANDSCAPE.
     defaultDeviceRotation_ = (modes == nullptr || modes->width_ < modes->height_) ? 0 : 1;
+    if (modes == nullptr) {
+        defaultDeviceRotation_ = 1;
+        WLOGFE("Get screen modes is nullptr. defaultDisplayId: %{public}u", defaultDisplayId_);
+    } else {
+        defaultDeviceRotation_ = (modes->width_ < modes->height_) ? 0 : 1;
+        WLOGFI("Get screen modes width: %{public}d, height: %{public}d, defaultDisplayId: %{public}u", modes->width_, modes->height_, defaultDisplayId_);
+    }
+    if (system::GetParameter("const.product.devicetype", "unknown") == "phone") {
+        WLOGFI("Current device type is phone, set defaultDeviceRotation is portrait");
+        defaultDeviceRotation_ = 0;
+    }
+    WLOGFI("defaultDeviceRotation is %{public}u", defaultDeviceRotation_);
+
     if (deviceToDisplayRotationMap_.empty()) {
         deviceToDisplayRotationMap_ = {
             {DeviceRotation::ROTATION_PORTRAIT,
