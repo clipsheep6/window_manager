@@ -1315,6 +1315,10 @@ bool DisplayManager::Impl::UpdateDisplayInfoLocked(sptr<DisplayInfo> displayInfo
         return true;
     }
     sptr<Display> display = new Display("", displayInfo);
+    if (display == nullptr) {
+        WLOGFE("malloc display failed");
+        return false;
+    }
     displayMap_[displayId] = display;
     return true;
 }
