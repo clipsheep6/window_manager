@@ -6419,7 +6419,7 @@ void SceneSessionManager::ProcessPiPSessionForeground(const sptr<SceneSession> s
         return;
     }
     WLOGFD("start pip rect");
-    sceneSession->UpdatePiPRect(0, 0, PiPRectUpdateReason::REASON_PIP_START_WINDOW);
+//    sceneSession->UpdatePiPRect(0, 0, SizeChangeReason::PIP_START);
 }
 
 WSError SceneSessionManager::RecoveryPullPiPMainWindow(const int32_t& persistentId, const Rect& rect)

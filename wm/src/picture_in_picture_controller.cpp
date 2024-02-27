@@ -121,6 +121,15 @@ WMError PictureInPictureController::ShowPictureInPictureWindow(StartPipType star
             pipOption_->GetPipTemplate(), FAILED, "window_ show failed");
         return WMError::WM_ERROR_PIP_INTERNAL_ERROR;
     }
+    uint32_t requestWidth = 0;
+    uint32_t requestHeight = 0;
+    pipOption_->GetContentSize(requestWidth, requestHeight);
+    if (requestWidth > 0 && requestHeight > 0) {
+        Rect requestRect = {0, 0, requestWidth, requestHeight};
+        window_->UpdatePiPRect(requestRect, WindowSizeChangeReason::PIP_START);
+    } else {
+        window_->UpdatePiPRect(windowRect_, WindowSizeChangeReason::PIP_START);
+    }
     PictureInPictureManager::SetActiveController(this);
     SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(static_cast<int32_t>(startType),
         pipOption_->GetPipTemplate(), SUCCESS, "show pip success");
@@ -347,7 +356,8 @@ void PictureInPictureController::UpdateContentSize(int32_t width, int32_t height
     }
     WLOGI("UpdateContentSize window: %{public}u width:%{public}u height:%{public}u",
         window_->GetWindowId(), width, height);
-    window_->UpdatePiPRect(width, height, PiPRectUpdateReason::REASON_PIP_VIDEO_RATIO_CHANGE);
+    Rect rect = {0, 0, width, height};
+    window_->UpdatePiPRect(rect, WindowSizeChangeReason::PIP_RATIO_CHANGE);
 }
 
 void PictureInPictureController::StartMove()
@@ -368,7 +378,7 @@ void PictureInPictureController::DoScale()
         return;
     }
     WLOGI("DoScale is called, window: %{public}u", window_->GetWindowId());
-    window_->UpdatePiPRect(0, 0, PiPRectUpdateReason::REASON_PIP_SCALE_CHANGE);
+//    window_->UpdatePiPRect(0, 0, WindowSizeChangeReason::UNDEFINED);
 }
 
 void PictureInPictureController::PipMainWindowLifeCycleImpl::AfterBackground()
@@ -409,10 +419,9 @@ void PictureInPictureController::PipDisplayListener::OnChange(DisplayId displayI
         WLOGFI("display rotation changed from %{public}d to %{public}d", static_cast<int32_t>(preRotation_),
             static_cast<int32_t>(rotation));
         preRotation_ = rotation;
-        if (pipController_ != nullptr && pipController_->GetPipWindow() != nullptr) {
-            pipController_->GetPipWindow()->UpdatePiPRect(pipController_->windowRect_.width_,
-                pipController_->windowRect_.height_, PiPRectUpdateReason::REASON_DISPLAY_ROTATION_CHANGE);
-        }
+//        if (pipController_ != nullptr && pipController_->GetPipWindow() != nullptr) {
+//            pipController_->GetPipWindow()->UpdatePiPRect(pipController_->windowRect_, WindowSizeChangeReason::ROTATION);
+//        }
     }
 }
 
@@ -478,19 +487,6 @@ void PictureInPictureController::UpdateXComponentPositionAndSize()
     windowRect_.height_ = static_cast<uint32_t>(height);
     windowRect_.posX_ = static_cast<uint32_t>(posX);
     windowRect_.posY_ = static_cast<uint32_t>(posY);
-
-    bool isFullScreen = mainWindow_->IsLayoutFullScreen();
-    if (!isFullScreen) {
-        // calculate status bar height as offset
-        WLOGFI("not full screen");
-        AvoidAreaType avoidAreaType = AvoidAreaType::TYPE_SYSTEM;
-        AvoidArea avoidArea;
-        mainWindow_->GetAvoidAreaByType(avoidAreaType, avoidArea);
-
-        uint32_t offset = avoidArea.topRect_.height_;
-        windowRect_.posY_ += offset;
-        WLOGFD("status bar height = %{public}d", offset);
-    }
     WLOGFD("position width: %{public}u, height: %{public}u, posX: %{public}d, posY: %{public}d",
         windowRect_.width_, windowRect_.height_, windowRect_.posX_, windowRect_.posY_);
 }

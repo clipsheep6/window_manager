@@ -2384,13 +2384,14 @@ WSError WindowSessionImpl::UpdateTitleInTargetPos(bool isShow, int32_t height)
     return WSError::WS_OK;
 }
 
-void WindowSessionImpl::UpdatePiPRect(const uint32_t width, const uint32_t height, PiPRectUpdateReason reason)
+void WindowSessionImpl::UpdatePiPRect(const Rect& rect, WindowSizeChangeReason reason)
 {
     if (IsWindowSessionInvalid()) {
         WLOGFE("HostSession is invalid");
         return;
     }
-    hostSession_->UpdatePiPRect(width, height, reason);
+    auto wsReason = static_cast<SizeChangeReason>(reason);
+    hostSession_->UpdatePiPRect(rect, wsReason);
 }
 
 void WindowSessionImpl::NotifyWindowStatusChange(WindowMode mode)
