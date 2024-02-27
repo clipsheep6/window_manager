@@ -223,6 +223,7 @@ public:
     DMError GetAvailableArea(DisplayId displayId, DMRect& area) override;
     void NotifyAvailableAreaChanged(DMRect area);
     void NotifyFoldToExpandCompletion(bool foldToExpand) override;
+    ScreenId GetDefaultScreenId() override;
 
 protected:
     ScreenSessionManager();
@@ -241,8 +242,6 @@ private:
     sptr<ScreenSession> GetOrCreateScreenSession(ScreenId screenId);
     sptr<ScreenSession> GetScreenSessionInner(ScreenId screenId, ScreenProperty property);
     void FreeDisplayMirrorNodeInner(const sptr<ScreenSession> mirrorSession);
-
-    ScreenId GetDefaultScreenId();
 
     void NotifyDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type);

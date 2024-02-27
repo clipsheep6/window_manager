@@ -2166,4 +2166,21 @@ void ScreenSessionManagerProxy::NotifyFoldToExpandCompletion(bool foldToExpand)
         return;
     }
 }
+
+ScreenId ScreenSessionManagerProxy::GetDefaultScreenId()
+{
+    MessageOption option(MessageOption::TF_SYNC);
+    MessageParcel reply;
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return SCREEN_ID_INVALID;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_GET_DEFAULT_SCREEN_ID),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return SCREEN_ID_INVALID;
+    }
+    return static_cast<ScreenId>(reply.ReadUint64());
+}
 } // namespace OHOS::Rosen

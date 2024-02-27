@@ -141,7 +141,7 @@ public:
     void SetScreenPrivacyState(bool hasPrivate) override;
     virtual DMError GetAvailableArea(DisplayId displayId, DMRect& area) override;
     void NotifyFoldToExpandCompletion(bool foldToExpand) override;
-
+    ScreenId GetDefaultScreenId() override;
 private:
     static inline BrokerDelegator<ScreenSessionManagerProxy> delegator_;
 };

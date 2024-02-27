@@ -295,6 +295,13 @@ public:
      * @return DM_OK means unregister success, others means unregister failed.
      */
     DMError UnregisterVirtualScreenGroupListener(sptr<IVirtualScreenGroupListener> listener);
+
+    /**
+     * @brief get default screen id.
+     *
+     * @return default screen id.
+     */
+    ScreenId GetDefaultScreenId();
 private:
     ScreenManager();
     ~ScreenManager();
