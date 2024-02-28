@@ -217,7 +217,7 @@ public:
     std::shared_ptr<RSDisplayNode> GetDisplayNode(ScreenId screenId) override;
     void UpdateScreenRotationProperty(ScreenId screenId, const RRect& bounds, float rotation) override;
     uint32_t GetCurvedCompressionArea() override;
-    ScreenProperty GetPhyScreenProperty(ScreenId screenId) override;  
+    ScreenProperty GetPhyScreenProperty(ScreenId screenId) override;
     void SetFocusedWindowId(int32_t focusedWinId) override;
     void UpdateAvailableArea(ScreenId screenId, DMRect area) override;
     DMError GetAvailableArea(DisplayId displayId, DMRect& area) override;
