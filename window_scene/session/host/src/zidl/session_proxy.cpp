@@ -21,6 +21,7 @@
 #include <ui/rs_surface_node.h>
 
 #include "accessibility_event_info_parcel.h"
+#include "process_option.h"
 #include "want.h"
 #include "key_event.h"
 #include "pointer_event.h"
@@ -253,7 +254,8 @@ WSError SessionProxy::ChangeSessionVisibilityWithStatusBar(sptr<AAFwk::SessionIn
         }
     }
     data.WriteBool(visible);
-    if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_CHANGE_SESSION_VISIBILITY_STATUS_BAR),
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+        SessionInterfaceCode::TRANS_ID_CHANGE_SESSION_VISIBILITY_WITH_STATUS_BAR),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
@@ -320,7 +322,8 @@ bool SessionProxy::WriteAbilitySessionInfoBasic(MessageParcel& data, sptr<AAFwk:
         !(data.WriteInt32(static_cast<uint32_t>(abilitySessionInfo->state))) ||
         !(data.WriteInt64(abilitySessionInfo->uiAbilityId)) ||
         !data.WriteInt32(abilitySessionInfo->callingTokenId) ||
-        !data.WriteBool(abilitySessionInfo->reuse)) {
+        !data.WriteBool(abilitySessionInfo->reuse) ||
+        !data.WriteParcelable(abilitySessionInfo->processOption.get()) {
         return false;
     }
     return true;

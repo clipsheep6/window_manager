@@ -27,6 +27,7 @@
 
 namespace OHOS::AAFwk {
 class AbilityStartSetting;
+class ProcessOption;
 }
 namespace OHOS::AppExecFwk {
 struct AbilityInfo;
@@ -106,11 +107,12 @@ const std::map<WSError, WSErrorCode> WS_JS_TO_ERROR_CODE_MAP {
 };
 
 enum class SessionState : uint32_t {
-    STATE_DISCONNECT = 0,
+    STATE_DISCONNECT,
     STATE_CONNECT,
     STATE_FOREGROUND,
     STATE_ACTIVE,
     STATE_INACTIVE,
+    STATE_HIDE,
     STATE_BACKGROUND,
     STATE_END,
 };
@@ -172,6 +174,7 @@ struct SessionInfo {
     mutable std::shared_ptr<AAFwk::Want> want; // want for ability start
     std::shared_ptr<AAFwk::Want> closeAbilityWant;
     std::shared_ptr<AAFwk::AbilityStartSetting> startSetting = nullptr;
+    std::shared_ptr<AAFwk::ProcessOption> processOption = nullptr;
     mutable std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo = nullptr;
     int32_t resultCode = -1;
     int32_t requestCode;

@@ -832,8 +832,9 @@ WSError Session::Foreground(sptr<WindowSessionProperty> property)
     SessionState state = GetSessionState();
     WLOGFI("[WMSLife] Foreground session, id: %{public}d, state: %{public}" PRIu32"", GetPersistentId(),
         static_cast<uint32_t>(state));
-    if (state != SessionState::STATE_CONNECT && state != SessionState::STATE_BACKGROUND &&
-        state != SessionState::STATE_INACTIVE) {
+    bool isStateValid = state == SessionState::STATE_CONNECT || state == SessionState::STATE_BACKGROUND ||
+        state == SessionState::STATE_INACTIVE || state == SessionState::STATE_HIDE;
+    if (!isStateValid) {
         WLOGFE("[WMSLife] Foreground state invalid! state:%{public}u", state);
         return WSError::WS_ERROR_INVALID_SESSION;
     }

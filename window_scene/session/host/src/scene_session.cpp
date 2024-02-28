@@ -1890,7 +1890,7 @@ WSError SceneSession::ChangeSessionVisibilityWithStatusBar(const sptr<AAFwk::Ses
         WLOGFE("The interface permission failed.");
         return WSError::WS_ERROR_INVALID_PERMISSION;
     }
-    auto task = [weakThis = wptr(this), abilitySessionInfo]() {
+    auto task = [weakThis = wptr(this), abilitySessionInfo, visible]() {
         auto session = weakThis.promote();
         if (!session) {
             WLOGFE("session is null");
@@ -1899,9 +1899,6 @@ WSError SceneSession::ChangeSessionVisibilityWithStatusBar(const sptr<AAFwk::Ses
         if (abilitySessionInfo == nullptr) {
             WLOGFE("abilitySessionInfo is null");
             return WSError::WS_ERROR_NULLPTR;
-        }
-        if (session->startUIAbilityBySCBFunc_) {
-            session->startUIAbilityBySCBFunc_(abilitySessionInfo);
         }
 
         SessionInfo info;
@@ -1919,10 +1916,18 @@ WSError SceneSession::ChangeSessionVisibilityWithStatusBar(const sptr<AAFwk::Ses
         info.startSetting = abilitySessionInfo->startSetting;
         info.callingTokenId_ = abilitySessionInfo->callingTokenId;
         info.reuse = abilitySessionInfo->reuse;
+        info.processOption = abilitySessionInfo->processOption;
         
         if (session->changeSessionVisibilityWithStatusBarFunc_) {
             session->changeSessionVisibilityWithStatusBarFunc_(info, visible);
         }
+        SessionState oldState = session->GetSessionState();
+        SessionState newState = visible == false ? SessionState::STATE_HIDE : SessionState::STATE_FOREGROUND;
+        if (oldState != newState) {
+            session->SetSessionState(newState);
+            session->NotifySessionStateChange(newState);
+        }
+        
         return WSError::WS_OK;
     };
     PostTask(task, "ChangeSessionVisibilityWithStatusBar");
@@ -1962,6 +1967,7 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
         info.startSetting = abilitySessionInfo->startSetting;
         info.callingTokenId_ = abilitySessionInfo->callingTokenId;
         info.reuse = abilitySessionInfo->reuse;
+        info.processOption = abilitySessionInfo->processOption;
         if (info.want != nullptr) {
             info.windowMode = info.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_MODE, 0);
             info.sessionAffinity = info.want->GetStringParam(Rosen::PARAM_KEY::PARAM_MISSION_AFFINITY_KEY);

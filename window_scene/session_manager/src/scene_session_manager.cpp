@@ -1056,6 +1056,7 @@ void SceneSessionManager::PerformRegisterInRequestSceneSession(sptr<SceneSession
     RegisterSessionInfoChangeNotifyManagerFunc(sceneSession);
     RegisterRequestFocusStatusNotifyManagerFunc(sceneSession);
     RegisterGetStateFromManagerFunc(sceneSession);
+    RegisterStartUIAbilityBySCBFunc(sceneSession);
     RegisterInputMethodUpdateFunc(sceneSession);
     RegisterInputMethodShownFunc(sceneSession);
     RegisterInputMethodHideFunc(sceneSession);
@@ -1182,6 +1183,7 @@ sptr<AAFwk::SessionInfo> SceneSessionManager::SetAbilitySessionInfo(const sptr<S
     abilitySessionInfo->callingTokenId = sessionInfo.callingTokenId_;
     abilitySessionInfo->userId = currentUserId_;
     abilitySessionInfo->isClearSession = sessionInfo.isClearSession;
+    abilitySessionInfo->processOption = sessionInfo.processOption;
     if (sessionInfo.want != nullptr) {
         abilitySessionInfo->want = *sessionInfo.want;
     } else {
@@ -1274,9 +1276,36 @@ void SceneSessionManager::RequestInputMethodCloseKeyboard(const int32_t persiste
     }
 }
 
+int32_t SceneSessionManager::StartUIAbilityBySCB(sptr<SceneSession>& scnSession)
+{
+    auto abilitySessionInfo = SetAbilitySessionInfo(scnSession);
+    if (abilitySessionInfo == nullptr) {
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    
+    if (CheckCollaboratorType(scnSession->GetCollaboratorType())) {
+        abilitySessionInfo->want.SetParam(AncoConsts::ANCO_MISSION_ID, abilitySessionInfo->persistentId);
+        abilitySessionInfo->collaboratorType = scnSession->GetCollaboratorType();
+    }
+    return StartUIAbilityBySCB(abilitySessionInfo);
+}
+
 int32_t SceneSessionManager::StartUIAbilityBySCB(sptr<AAFwk::SessionInfo>& abilitySessionInfo)
 {
-    return AAFwk::AbilityManagerClient::GetInstance()->StartUIAbilityBySCB(scnSessionInfo);
+    return AAFwk::AbilityManagerClient::GetInstance()->StartUIAbilityBySCB(abilitySessionInfo);
+}
+
+int32_t SceneSessionManager::ChangeUIAbilityVisibilityBySCB(sptr<SceneSession>& scnSession, bool visibility)
+{
+    auto abilitySessionInfo = SetAbilitySessionInfo(scnSession);
+    if (abilitySessionInfo == nullptr) {
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    if (CheckCollaboratorType(scnSession->GetCollaboratorType())) {
+        abilitySessionInfo->want.SetParam(AncoConsts::ANCO_MISSION_ID, abilitySessionInfo->persistentId);
+        abilitySessionInfo->collaboratorType = scnSession->GetCollaboratorType();
+    }
+    return AAFwk::AbilityManagerClient::GetInstance()->ChangeUIAbilityVisibilityBySCB(abilitySessionInfo, visibility);
 }
 
 WSError SceneSessionManager::RequestSceneSessionActivationInner(
@@ -3169,7 +3198,8 @@ bool SceneSessionManager::IsSessionVisible(const sptr<SceneSession>& session)
         }
         const auto& parentState = parentSceneSession->GetSessionState();
         if (session->IsVisible() || (state == SessionState::STATE_ACTIVE || state == SessionState::STATE_FOREGROUND)) {
-            if (parentState == SessionState::STATE_INACTIVE || parentState == SessionState::STATE_BACKGROUND) {
+            if (parentState == SessionState::STATE_INACTIVE || parentState == SessionState::STATE_BACKGROUND || 
+                parentState == SessionState::STATE_HIDE) {
                 WLOGFD("Parent of this sub window is at background, id: %{public}d", session->GetPersistentId());
                 return false;
             }
@@ -4178,6 +4208,16 @@ __attribute__((no_sanitize("cfi"))) void SceneSessionManager::OnSessionStateChan
             }
             break;
         case SessionState::STATE_BACKGROUND:
+            RequestSessionUnfocus(persistentId);
+            UpdateForceHideState(sceneSession, sceneSession->GetSessionProperty(), false);
+            NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_REMOVED);
+            HandleKeepScreenOn(sceneSession, false);
+            UpdatePrivateStateAndNotify(persistentId);
+            if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+                ProcessSubSessionBackground(sceneSession);
+            }
+            break;
+        case SessionState::STATE_HIDE:
             RequestSessionUnfocus(persistentId);
             UpdateForceHideState(sceneSession, sceneSession->GetSessionProperty(), false);
             NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_REMOVED);

@@ -23,6 +23,7 @@
 #include "key_event.h"
 
 #include "accessibility_event_info_parcel.h"
+#include "process_option.h"
 #include "session/host/include/zidl/session_ipc_interface_code.h"
 #include "window_manager_hilog.h"
 
@@ -80,7 +81,7 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
         &SessionStub::HandleRaiseAboveTarget),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_RAISE_APP_MAIN_WINDOW),
         &SessionStub::HandleRaiseAppMainWindowToTop),
-    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_CHANGE_SESSION_VISIBILITY_STATUS_BAR),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_CHANGE_SESSION_VISIBILITY_WITH_STATUS_BAR),
         &SessionStub::HandleChangeSessionVisibilityWithStatusBar),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_ACTIVE_PENDING_SESSION),
         &SessionStub::HandlePendingSessionActivation),
@@ -284,7 +285,7 @@ int SessionStub::HandleSessionException(MessageParcel& data, MessageParcel& repl
 
 int SessionStub::HandleChangeSessionVisibilityWithStatusBar(MessageParcel& data, MessageParcel& reply)
 {
-    WLOGFD("PendingSessionActivation!");
+    WLOGFD("HandleChangeSessionVisibilityWithStatusBar");
     sptr<AAFwk::SessionInfo> abilitySessionInfo(new AAFwk::SessionInfo());
     sptr<AAFwk::Want> localWant = data.ReadParcelable<AAFwk::Want>();
     abilitySessionInfo->want = *localWant;
@@ -294,6 +295,8 @@ int SessionStub::HandleChangeSessionVisibilityWithStatusBar(MessageParcel& data,
     abilitySessionInfo->uiAbilityId = data.ReadInt64();
     abilitySessionInfo->callingTokenId = data.ReadUint32();
     abilitySessionInfo->reuse = data.ReadBool();
+    abilitySessionInfo->processOption = 
+        std::shared_ptr<AAFwk::ProcessOption>(data.ReadParcelable<AAFwk::ProcessOption>());
     if (data.ReadBool()) {
         abilitySessionInfo->callerToken = data.ReadRemoteObject();
     }
@@ -318,6 +321,7 @@ int SessionStub::HandlePendingSessionActivation(MessageParcel& data, MessageParc
     abilitySessionInfo->uiAbilityId = data.ReadInt64();
     abilitySessionInfo->callingTokenId = data.ReadUint32();
     abilitySessionInfo->reuse = data.ReadBool();
+    abilitySessionInfo->processOption.reset(data.ReadParcelable<AAFwk::ProcessOption>())
     if (data.ReadBool()) {
         abilitySessionInfo->callerToken = data.ReadRemoteObject();
     }
