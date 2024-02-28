@@ -5233,17 +5233,15 @@ void SceneSessionManager::NotifyOccupiedAreaChangeInfo(const sptr<SceneSession> 
 {
     // if keyboard will occupy calling, notify calling window the occupied area and safe height
     const WSRect& safeRect = SessionHelper::GetOverlap(occupiedArea, rect, 0, 0);
-    const WSRect& lastSafeRect = callingSession_->GetLastSafeRect();
-    if (lastSafeRect == safeRect) {
-        WLOGFI("[WMSInput] NotifyOccupiedAreaChangeInfo lastSafeRect is same to safeRect");
+    if (lastSafeRect_ == safeRect) {
+        WLOGFI("[WMSInput] safeRect is same to lastSafeRect_, safeRect: %{public}s", safeRect.ToString().c_str());
         return;
     }
-    callingSession_->SetLastSafeRect(safeRect);
+    lastSafeRect_ = safeRect;
     sptr<OccupiedAreaChangeInfo> info = new OccupiedAreaChangeInfo(OccupiedAreaType::TYPE_INPUT,
         SessionHelper::TransferToRect(safeRect), safeRect.height_,
         sceneSession->textFieldPositionY_, sceneSession->textFieldHeight_);
-    WLOGFD("[WMSInput] OccupiedAreaChangeInfo rect: %{public}u %{public}u %{public}u %{public}u",
-        occupiedArea.posX_, occupiedArea.posY_, occupiedArea.width_, occupiedArea.height_);
+    WLOGFD("[WMSInput] OccupiedAreaChangeInfo rect: %{public}s", occupiedArea.ToString().c_str());
     callingSession_->NotifyOccupiedAreaChangeInfo(info);
 }
 

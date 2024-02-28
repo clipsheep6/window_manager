@@ -471,6 +471,7 @@ private:
     bool isPrepareTerminateEnable_ {false};
     WSRect callingWindowRestoringRect_ = {0, 0, 0, 0};
     WSRect callingWindowNewRect_ = {0, 0, 0, 0};
+    WSRect lastSafeRect_ = {0, 0, 0, 0};
     bool needUpdateSessionRect_ = false;
     bool openDebugTrace {false};
     int32_t currentUserId_;
