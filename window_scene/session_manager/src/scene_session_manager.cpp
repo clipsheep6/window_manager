@@ -1274,6 +1274,11 @@ void SceneSessionManager::RequestInputMethodCloseKeyboard(const int32_t persiste
     }
 }
 
+int32_t SceneSessionManager::StartUIAbilityBySCB(sptr<AAFwk::SessionInfo>& abilitySessionInfo)
+{
+    return AAFwk::AbilityManagerClient::GetInstance()->StartUIAbilityBySCB(scnSessionInfo);
+}
+
 WSError SceneSessionManager::RequestSceneSessionActivationInner(
     sptr<SceneSession>& scnSession, bool isNewActive, const std::shared_ptr<std::promise<int32_t>>& promise)
 {
@@ -4124,6 +4129,19 @@ void SceneSessionManager::RegisterGetStateFromManagerFunc(sptr<SceneSession>& sc
     }
     sceneSession->SetGetStateFromManagerListener(func);
     WLOGFD("RegisterGetStateFromManagerFunc success");
+}
+
+void SceneSessionManager::RegisterStartUIAbilityBySCBFunc(sptr<SceneSession>& sceneSession)
+{
+    if (sceneSession == nullptr) {
+        WLOGFE("session is nullptr");
+        return;
+    }
+    StartUIAbilityBySCBFunc func = [this](sptr<AAFwk::SessionInfo>& abilitySessionInfo) {
+        return this->StartUIAbilityBySCB(abilitySessionInfo);
+    };
+    sceneSession->SetStartUIAbilityBySCBFunc(func);
+    WLOGFD("RegisterStartUIAbilityBySCBFunc success");
 }
 
 __attribute__((no_sanitize("cfi"))) void SceneSessionManager::OnSessionStateChange(

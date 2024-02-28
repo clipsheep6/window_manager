@@ -1038,6 +1038,12 @@ bool Session::GetForegroundInteractiveStatus() const
     return foregroundInteractiveStatus_.load();
 }
 
+void Session::SetChangeSessionVisibilityWithStatusBarEventListener(
+    const NotifyChangeSessionVisibilityWithStatusBarFunc& func)
+{
+    changeSessionVisibilityWithStatusBarFunc_ = func;
+}
+
 void Session::SetPendingSessionActivationEventListener(const NotifyPendingSessionActivationFunc& func)
 {
     pendingSessionActivationFunc_ = func;
@@ -1826,6 +1832,11 @@ void Session::SetNotifyUILostFocusFunc(const NotifyUILostFocusFunc& func)
 void Session::SetGetStateFromManagerListener(const GetStateFromManagerFunc& func)
 {
     getStateFromManagerFunc_ = func;
+}
+
+void Session::SetStartUIAbilityBySCBFunc(const StartUIAbilityBySCBFunc& func)
+{
+    startUIAbilityBySCBFunc_ = func;
 }
 
 void Session::NotifySessionStateChange(const SessionState& state)

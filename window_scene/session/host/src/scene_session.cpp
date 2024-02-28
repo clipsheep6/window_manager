@@ -1884,6 +1884,51 @@ void SceneSession::SetSystemTouchable(bool touchable)
     NotifyAccessibilityVisibilityChange();
 }
 
+WSError SceneSession::ChangeSessionVisibilityWithStatusBar(const sptr<AAFwk::SessionInfo> abilitySessionInfo, bool visible)
+{
+    if (!SessionPermission::VerifySessionPermission()) {
+        WLOGFE("The interface permission failed.");
+        return WSError::WS_ERROR_INVALID_PERMISSION;
+    }
+    auto task = [weakThis = wptr(this), abilitySessionInfo]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGFE("session is null");
+            return WSError::WS_ERROR_DESTROYED_OBJECT;
+        }
+        if (abilitySessionInfo == nullptr) {
+            WLOGFE("abilitySessionInfo is null");
+            return WSError::WS_ERROR_NULLPTR;
+        }
+        if (session->startUIAbilityBySCBFunc_) {
+            session->startUIAbilityBySCBFunc_(abilitySessionInfo);
+        }
+
+        SessionInfo info;
+        info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
+        info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
+        info.moduleName_ = abilitySessionInfo->want.GetModuleName();
+        info.appIndex_ = abilitySessionInfo->want.GetIntParam(DLP_INDEX, 0);
+        info.persistentId_ = abilitySessionInfo->persistentId;
+        info.callerPersistentId_ = session->GetPersistentId();
+        info.callState_ = static_cast<uint32_t>(abilitySessionInfo->state);
+        info.uiAbilityId_ = abilitySessionInfo->uiAbilityId;
+        info.want = std::make_shared<AAFwk::Want>(abilitySessionInfo->want);
+        info.requestCode = abilitySessionInfo->requestCode;
+        info.callerToken_ = abilitySessionInfo->callerToken;
+        info.startSetting = abilitySessionInfo->startSetting;
+        info.callingTokenId_ = abilitySessionInfo->callingTokenId;
+        info.reuse = abilitySessionInfo->reuse;
+        
+        if (session->changeSessionVisibilityWithStatusBarFunc_) {
+            session->changeSessionVisibilityWithStatusBarFunc_(info, visible);
+        }
+        return WSError::WS_OK;
+    };
+    PostTask(task, "ChangeSessionVisibilityWithStatusBar");
+    return WSError::WS_OK;
+}
+
 WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> abilitySessionInfo)
 {
     if (!SessionPermission::VerifySessionPermission()) {
