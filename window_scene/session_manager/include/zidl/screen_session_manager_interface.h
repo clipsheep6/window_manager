@@ -134,7 +134,7 @@ public:
     virtual uint32_t GetCurvedCompressionArea() { return 0; }
     virtual ScreenProperty GetPhyScreenProperty(ScreenId screenId) { return ScreenProperty(); }
     virtual void NotifyDisplayChangeInfoChanged(const sptr<DisplayChangeInfo>& info) {}
-    virtual void SetScreenPrivacyState(bool hasPrivate) {}
+    virtual void SetFocusedWindowId(int32_t focusedWinId) {}
     virtual void NotifyFoldToExpandCompletion(bool foldToExpand) {}
 };
 } // namespace Rosen

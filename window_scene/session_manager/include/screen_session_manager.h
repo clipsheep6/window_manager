@@ -218,7 +218,7 @@ public:
     void UpdateScreenRotationProperty(ScreenId screenId, const RRect& bounds, float rotation) override;
     uint32_t GetCurvedCompressionArea() override;
     ScreenProperty GetPhyScreenProperty(ScreenId screenId) override;
-    void SetScreenPrivacyState(bool hasPrivate) override;
+    void SetFocusedWindowId(int32_t focusedWinId) override;
     void UpdateAvailableArea(ScreenId screenId, DMRect area) override;
     DMError GetAvailableArea(DisplayId displayId, DMRect& area) override;
     void NotifyAvailableAreaChanged(DMRect area);
@@ -323,7 +323,7 @@ private:
     bool screenPrivacyStates = false;
     bool keyguardDrawnDone_ = true;
     bool needScreenOnWhenKeyguardNotify_ = false;
-    bool blockScreenPowerChange_ = false;
+    int32_t focusedSessionId_ {0};
 
     //Fold Screen
     std::map<ScreenId, ScreenProperty> phyScreenPropMap_;

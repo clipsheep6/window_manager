@@ -652,6 +652,11 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             NotifyFoldToExpandCompletion(foldToExpand);
             break;
         }
+        case DisplayManagerMessage::TRANS_ID_SET_FOCUSED_WINDOW_ID: {
+            int32_t focusedWinId = data.ReadInt32();
+            SetFocusedWindowId(focusedWinId);
+            break;
+        }
         default:
             WLOGFW("unknown transaction code");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);

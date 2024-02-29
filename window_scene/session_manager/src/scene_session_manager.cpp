@@ -2990,7 +2990,7 @@ WSError SceneSessionManager::SetFocusedSession(int32_t persistentId)
         return WSError::WS_DO_NOTHING;
     }
     lastFocusedSessionId_ = focusedSessionId_;
-    focusedSessionId_ = persistentId;
+    ScreenSessionManagerClient::GetInstance().SetFocusedWindowId(focusedSessionId_);
     return WSError::WS_OK;
 }
 
