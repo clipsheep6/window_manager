@@ -73,6 +73,8 @@ const std::map<uint32_t, SessionStageStubFunc> SessionStageStub::stubFuncMap_{
         &SessionStageStub::HandleNotifyTransformChange),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DIALOG_STATE_CHANGE),
         &SessionStageStub::HandleNotifyDialogStateChange),
+    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DENSITY_VALUE),
+        &SessionStageStub::HandleNotifyDensityValue),
 };
 
 int SessionStageStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -325,6 +327,14 @@ int SessionStageStub::HandleNotifyDialogStateChange(MessageParcel& data, Message
     WLOGD("HandleNotifyDialogStateChange!");
     bool isForeground = data.ReadBool();
     NotifyDialogStateChange(isForeground);
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleNotifyDensityValue(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("HandleNotifyDensityValue!");
+    float value = data.ReadFloat();
+    NotifyDensityValue(value);
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

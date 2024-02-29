@@ -19,6 +19,7 @@
 #include <transaction/rs_transaction.h>
 #include "window_manager_hilog.h"
 #include "parameters.h"
+#include "display_info.h"
 #include "anr_handler.h"
 
 namespace OHOS {

@@ -87,6 +87,10 @@ public:
     {
         return WSError::WS_OK;
     }
+    virtual WSError NotifyDensityValue(float value)
+    {
+        return WSError::WS_OK;
+    }
     virtual WSError SetActive(bool active) = 0;
     virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) = 0;

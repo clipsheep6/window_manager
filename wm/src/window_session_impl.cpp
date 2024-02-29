@@ -585,6 +585,43 @@ WSError WindowSessionImpl::UpdateWindowMode(WindowMode mode)
     return WSError::WS_OK;
 }
 
+WSError WindowSessionImpl::NotifyDensityValue(float value)
+{
+    WLOGFD("WindowSessionImpl NotifyDensityValue %{public}f", value);
+    if (std::islessequal(value, 0.0f)) {
+        return WSError::WS_ERROR_INVALID_PARAM;
+    }
+    if (densityValue_ != std::nullopt &&
+        std::abs(densityValue_->load() - value) < std::numeric_limits<float>::epsilon()) {
+        return WSError::WS_OK;
+    }
+    densityValue_ = value;
+    UpdateViewportConfig(GetRect(), WindowSizeChangeReason::UNDEFINED);
+    return WSError::WS_OK;
+}
+
+WMError WindowSessionImpl::SetDensityFollowSystem(bool isFollowSystem)
+{
+    WLOGFD("WindowSessionImpl SetDensityFollowSystem %{public}d", isFollowSystem);
+    if (isDensityFollowSystem_ == isFollowSystem) {
+        return WMError::WM_OK;
+    }
+    isDensityFollowSystem_ = isFollowSystem;
+    UpdateViewportConfig(GetRect(), WindowSizeChangeReason::UNDEFINED);
+    return WMError::WM_OK;
+}
+
+float WindowSessionImpl::GetVirtualPixelRatio(sptr<DisplayInfo> displayInfo)
+{
+    float density = 0.0f;
+    if (!isDensityFollowSystem_ && densityValue_ != std::nullopt) {
+        density = densityValue_->load();
+    } else {
+        density = displayInfo->GetVirtualPixelRatio();
+    }
+    return density;
+}
+
 void WindowSessionImpl::UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason,
     const std::shared_ptr<RSTransaction>& rsTransaction)
 {
@@ -608,9 +645,9 @@ void WindowSessionImpl::UpdateViewportConfig(const Rect& rect, WindowSizeChangeR
     config.SetDensity(density);
     config.SetOrientation(orientation);
     uiContent_->UpdateViewportConfig(config, reason, rsTransaction);
-    WLOGFI("[WMSLayout] Id:%{public}d, reason:%{public}d, windowRect:[%{public}d, %{public}d, %{public}u, %{public}u], "
-        "orientation: %{public}d", GetPersistentId(), reason, rect.posX_, rect.posY_,
-        rect.width_, rect.height_, orientation);
+    WLOGFI("[WMSLayout] Id:%{public}d, reason:%{public}d, windowRect:[%{public}d, %{public}d, %{public}u, "
+        "%{public}u], orientation: %{public}d, density: %{public}f", GetPersistentId(), reason, rect.posX_,
+        rect.posY_, rect.width_, rect.height_, orientation, density);
 }
 
 int32_t WindowSessionImpl::GetFloatingWindowParentId()

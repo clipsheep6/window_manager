@@ -32,6 +32,8 @@ public:
 
     virtual sptr<Window> GetWindow() = 0;
 
+    virtual WMError SetDensityFollowSystem(bool isFollowSystem) = 0;
+
     virtual WMError HideNonSecureWindows(bool shouldHide) = 0;
 };
 } // namespace Rosen
