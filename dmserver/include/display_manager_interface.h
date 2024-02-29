@@ -119,6 +119,7 @@ public:
         TRANS_ID_GET_AVAILABLE_AREA,
         TRANS_ID_NOTIFY_FOLD_TO_EXPAND_COMPLETION,
         TRANS_ID_CONVERT_SCREENID_TO_RSSCREENID,
+        TRANS_ID_SET_FOCUSED_WINDOW_ID,
     };
 
     virtual sptr<DisplayInfo> GetDefaultDisplayInfo() = 0;

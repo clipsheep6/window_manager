@@ -314,6 +314,15 @@ void ScreenSessionManagerClient::SetScreenPrivacyState(bool hasPrivate)
     WLOGFI("End calling the SetScreenPrivacyState() of screenSessionManager_");
 }
 
+void ScreenSessionManagerClient::SetFocusedWindowId(int32_t focusedWinId)
+{
+    if (!screenSessionManager_) {
+        WLOGFE("screenSessionManager_ is null");
+        return;
+    }
+    screenSessionManager_->SetFocusedWindowId(focusedWinId);
+}
+
 void ScreenSessionManagerClient::UpdateAvailableArea(ScreenId screenId, DMRect area)
 {
     if (!screenSessionManager_) {

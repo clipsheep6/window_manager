@@ -3457,6 +3457,11 @@ void ScreenSessionManager::NotifyFoldToExpandCompletion(bool foldToExpand)
     SetDisplayNodeScreenId(SCREEN_ID_FULL, foldToExpand ? SCREEN_ID_FULL : SCREEN_ID_MAIN);
 }
 
+void ScreenSessionManager::SetFocusedWindowId(int32_t focusedWinId)
+{
+    focusedSessionId_ = focusedWinId;
+}
+
 void ScreenSessionManager::CheckAndSendHiSysEvent(const std::string& eventName, const std::string& bundleName) const
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:CheckAndSendHiSysEvent");
@@ -3468,8 +3473,8 @@ void ScreenSessionManager::CheckAndSendHiSysEvent(const std::string& eventName, 
         OHOS::HiviewDFX::HiSysEvent::Domain::WINDOW_MANAGER,
         eventName, // CREATE_VIRTUAL_SCREEN, GET_DISPLAY_SNAPSHOT
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
-        "PID", getpid(),
-        "UID", getuid());
+        "UID", getuid(),
+        "FOCUS_WINDOW", focusedSessionId_);
     WLOGI("%{public}s: Write HiSysEvent ret:%{public}d", eventName.c_str(), eventRet);
 }
 } // namespace OHOS::Rosen

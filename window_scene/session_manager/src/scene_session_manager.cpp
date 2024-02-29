@@ -2991,6 +2991,7 @@ WSError SceneSessionManager::SetFocusedSession(int32_t persistentId)
     }
     lastFocusedSessionId_ = focusedSessionId_;
     focusedSessionId_ = persistentId;
+    ScreenSessionManagerClient::GetInstance().SetFocusedWindowId(focusedSessionId_);
     return WSError::WS_OK;
 }
 
