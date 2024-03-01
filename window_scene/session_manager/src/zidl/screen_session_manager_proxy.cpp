@@ -2095,7 +2095,7 @@ void ScreenSessionManagerProxy::SetScreenPrivacyState(bool hasPrivate)
     }
 }
 
-void ScreenSessionManagerProxy::SetFocusedWindowId(int32_t focusedWinId) //SetFocusedWindowId(int32_t focusedWinId)
+void ScreenSessionManagerProxy::SetFocusedWindowId(int32_t focusedWinId)
 {
     MessageParcel data;
     MessageParcel reply;

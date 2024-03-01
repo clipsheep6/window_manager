@@ -3473,6 +3473,7 @@ void ScreenSessionManager::CheckAndSendHiSysEvent(const std::string& eventName, 
         OHOS::HiviewDFX::HiSysEvent::Domain::WINDOW_MANAGER,
         eventName, // CREATE_VIRTUAL_SCREEN, GET_DISPLAY_SNAPSHOT
         OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
+        "PID", getpid(),
         "UID", getuid(),
         "FOCUS_WINDOW", focusedSessionId_);
     WLOGI("%{public}s: Write HiSysEvent ret:%{public}d", eventName.c_str(), eventRet);
