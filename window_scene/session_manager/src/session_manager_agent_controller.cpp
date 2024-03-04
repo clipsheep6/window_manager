@@ -102,7 +102,7 @@ void SessionManagerAgentController::UpdateWindowDrawingContentInfo(
 void SessionManagerAgentController::UpdateCameraWindowStatus(uint32_t accessTokenId, bool isShowing)
 {
     WLOGFD("accessTokenId:%{private}u, isShowing:%{public}d", accessTokenId, static_cast<int>(isShowing));
-    for (auto &agent: smAgentController_.GetAgentsByType(
+    for (auto &agent: smAgentContainer_.GetAgentsByType(
         WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_CAMERA_WINDOW)) {
         if (agent != nullptr) {
             agent->UpdateCameraWindowStatus(accessTokenId, isShowing);

@@ -53,10 +53,10 @@ void SystemSession::UpdateCameraWindowStatus(bool isShowing)
         WLOGFD("[WMSSystem] CameraFloat status: %{public}d, id: %{public}d", isShowing, GetPersistentId());
         specificCallback_->onCameraFloatSessionChange_(GetSessionProperty()->GetAccessTokenId(), isShowing);
     } else if (GetWindowType() == WindowType::WINDOW_TYPE_PIP && GetWindowMode() == WindowMode::WINDOW_MODE_PIP) {
-        auto pipType = GetPiPTemplateInfo().pipTempalte;
+        auto pipType = GetPiPTemplateInfo().pipTemplateType;
         if (pipType == static_cast<uint32_t>(PipTemplateType::VIDEO_CALL) ||
             pipType == static_cast<uint32_t>(PipTemplateType::VIDEO_MEETING)) {
-            WLOGFD("PiPWindow status: %{public}d, id: %{public}d", isShowing, GetPersistantId());
+            WLOGFD("PiPWindow status: %{public}d, id: %{public}d", isShowing, GetPersistentId());
             specificCallback_->onCameraSessionChange_(GetSessionProperty()->GetAccessTokenId(), isShowing);
         }
     } else {
