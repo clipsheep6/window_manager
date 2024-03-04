@@ -59,6 +59,7 @@ using NotifyTouchOutsideFunc = std::function<void()>;
 using ClearCallbackMapFunc = std::function<void(bool needRemove, int32_t persistentId)>;
 using NotifyPrepareClosePiPSessionFunc = std::function<void()>;
 using OnOutsideDownEvent = std::function<void(int32_t x, int32_t y)>;
+using CameraSessionChangeCallback = std::function<void(uint32_t accessTokenId, bool isShowing)>;
 class SceneSession : public Session {
 public:
     // callback for notify SceneSessionManager
@@ -74,6 +75,7 @@ public:
         GetAINavigationBarArea onGetAINavigationBarArea_;
         RecoveryCallback onRecoveryPullPiPMainWindow_;
         OnOutsideDownEvent onOutsideDownEvent_;
+        CameraSessionChangeCallback onCameraSessionChange_;
     };
 
     // callback for notify SceneBoard
@@ -256,6 +258,7 @@ private:
     WSError HandleEnterWinwdowArea(int32_t windowX, int32_t windowY);
     WSError HandlePointerStyle(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
 
+    void UpdateCameraWindowStatus(bool isShowing);
     void NotifySessionRectChange(const WSRect& rect, const SizeChangeReason& reason = SizeChangeReason::UNDEFINED);
     void OnMoveDragCallback(const SizeChangeReason& reason);
     void FixRectByLimits(WindowLimits limits, WSRect& rect, float ratio, bool isDecor, float vpr);
