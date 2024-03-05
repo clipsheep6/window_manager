@@ -54,7 +54,6 @@ namespace {
     constexpr int W_ABSTR_SCREEN_ID = 9;
     constexpr int W_REFRESH_RATE = 12;
     constexpr int W_DISPLAY_ROTATION = 9;
-    constexpr int W_ORIENTATION = 12;
     constexpr int W_DISPLAY_ORIENTATION = 18;
     constexpr int W_DISPLAY_FREEZE_FLAG = 11;
     constexpr int W_DISPLAY_OFFSET_X = 5;
