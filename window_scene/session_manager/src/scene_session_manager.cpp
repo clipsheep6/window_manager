@@ -3789,7 +3789,7 @@ WSError SceneSessionManager::ShiftFocus(sptr<SceneSession>& nextSession)
     int32_t nextId = INVALID_SESSION_ID;
     if (nextSession == nullptr) {
         std::string sessionLog(GetAllSessionFocusInfo());
-        WLOGFW("[WMSFocus]ShiftFocus to nullptr! id: %{public}d, info: %{public}s", focusedSessionId_, sessionLog.c_str());
+        WLOGFW("[WMSFocus]ShiftFocus null. id: %{public}d, info: %{public}s", focusedSessionId_, sessionLog.c_str());
     } else {
         nextId = nextSession->GetPersistentId();
     }
@@ -4876,7 +4876,7 @@ WSError SceneSessionManager::GetSessionSnapshot(const std::string& deviceId, int
                 OHOS::Media::InitializationOptions options;
                 options.size.width = oriSnapshot->GetWidth() / 2; // low resolution ratio
                 options.size.height = oriSnapshot->GetHeight() / 2; // low resolution ratio
-                std::unique_ptr<OHOS::Media::PixelMap> reducedPixelMap = OHOS::Media::PixelMap::Create(*oriSnapshot, options);
+                auto reducedPixelMap = OHOS::Media::PixelMap::Create(*oriSnapshot, options);
                 snapshot.snapshot = std::shared_ptr<OHOS::Media::PixelMap>(reducedPixelMap.release());
             } else {
                 snapshot.snapshot = oriSnapshot;
