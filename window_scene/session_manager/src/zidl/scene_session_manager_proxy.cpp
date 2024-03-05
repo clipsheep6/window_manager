@@ -1488,4 +1488,116 @@ WSError SceneSessionManagerProxy::HideNonSecureWindows(bool shouldHide)
     }
     return static_cast<WSError>(reply.ReadInt32());
 }
+
+WSError SceneSessionManagerProxy::AddExentsionSessionInfo(int32_t parentId, int32_t persistentId)
+{
+    WLOGFD("run SceneSessionManagerProxy::AddExentsionSessionInfo");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("Write interface token failed.");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32(parentId)) {
+        WLOGFE("Write parentId failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32(persistentId)) {
+        WLOGFE("Write persistentId failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_ADD_EXTENSION_SESSION_INFO),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest AddExentsionSessionInfo failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    return static_cast<WSError>(reply.ReadInt32());
+}
+
+WSError SceneSessionManagerProxy::RemoveExtensionSessionInfo(int32_t parentId, int32_t persistentId)    
+{
+    WLOGFD("run SceneSessionManagerProxy::RemoveExtensionSessionInfo");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("Write interface token failed.");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32(parentId)) {
+        WLOGFE("Write parentId failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32(persistentId)) {
+        WLOGFE("Write persistentId failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REMOVE_EXTENSION_SESSION_INFO),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest RemoveExtensionSessionInfo failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    return static_cast<WSError>(reply.ReadInt32());
+}
+
+WSError SceneSessionManagerProxy::SetExtensionVisibility(int32_t parentId, int32_t persistentId, bool isVisible)
+{
+    WLOGFD("run SceneSessionManagerProxy::SetExtensionVisibility");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("Write interface token failed.");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32(parentId)) {
+        WLOGFE("Write parentId failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32(persistentId)) {
+        WLOGFE("Write persistentId failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteBool(isVisible)) {
+        WLOGFE("Write isVisible failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_EXTENSION_VISIBILITY),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest SetExtensionVisibility failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    return static_cast<WSError>(reply.ReadInt32());
+}
+
+WSError SceneSessionManagerProxy::SetExtensionWaterMark(int32_t parentId, int32_t persistentId, bool isEnable)
+{
+    WLOGFD("run SceneSessionManagerProxy::AddExentsionSessionInfo");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("Write interface token failed.");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32(parentId)) {
+        WLOGFE("Write parentId failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32(persistentId)) {
+        WLOGFE("Write persistentId failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteBool(isEnable)) {
+        WLOGFE("Write isEnable failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_EXTENSION_WATER_MARK),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest SetExtensionWaterMark failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    return static_cast<WSError>(reply.ReadInt32());
+}
 } // namespace OHOS::Rosen

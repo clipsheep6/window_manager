@@ -31,6 +31,7 @@
 #include "scene_session_converter.h"
 #include "scb_session_handler.h"
 #include "session/host/include/root_scene_session.h"
+#include "session/host/include/extension_session_info.h"
 #include "session_manager/include/zidl/scene_session_manager_stub.h"
 #include "wm_single_instance.h"
 #include "window_scene_config.h"
@@ -288,6 +289,10 @@ public:
     void FlushWindowInfoToMMI();
     void PostFlushWindowInfoTask(FlushWindowInfoTask &&task, const std::string taskName, const int delayTime);
     WSError HideNonSecureWindows(bool shouldHide) override;
+    WSError AddExentsionSessionInfo(int32_t parentId, int32_t persistentId) override;
+    WSError RemoveExtensionSessionInfo(int32_t parentId, int32_t persistentId) override;
+    WSError SetExtensionVisibility(int32_t parentId, int32_t persistentId, bool isVisible) override;
+    WSError SetExtensionWaterMark(int32_t parentId, int32_t persistentId, bool isEnable) override;
 
 public:
     std::shared_ptr<TaskScheduler> GetTaskScheduler() {return taskScheduler_;};
@@ -441,6 +446,8 @@ private:
     std::set<int32_t> touchOutsideListenerSessionSet_;
     std::set<int32_t> windowVisibilityListenerSessionSet_;
     std::map<int32_t, std::map<AvoidAreaType, AvoidArea>> lastUpdatedAvoidArea_;
+    std::shared_mutex extensionSessionInfoMapMutex_;
+    std::map<int64_t, sptr<ExtensionSessionInfo>> extensionSessionInfoMap_;
 
     NotifyCreateSystemSessionFunc createSystemSessionFunc_;
     std::map<int32_t, NotifyCreateSubSessionFunc> createSubSessionFuncMap_;
@@ -551,6 +558,10 @@ private:
     bool GetProcessDrawingState(uint64_t windowId, int32_t pid, bool currentDrawingContentState);
     void ProcessPiPSessionForeground(const sptr<SceneSession> sceneSession);
     WSError GetAppMainSceneSession(sptr<SceneSession>& sceneSession, int32_t persistentId);
+
+
+    sptr<ExtensionSessionInfo> GetExtensionSessionInfo(int32_t parentId, int32_t persistentId);
+    int64_t ConvertParentIdAndPersistentIdToExtId(int32_t parentId, int32_t persistentId);
 };
 } // namespace OHOS::Rosen
 
