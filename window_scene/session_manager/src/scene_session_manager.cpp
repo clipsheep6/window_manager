@@ -4093,9 +4093,6 @@ __attribute__((no_sanitize("cfi"))) void SceneSessionManager::OnSessionStateChan
             if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
                 ProcessSubSessionForeground(sceneSession);
             }
-            if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
-                ProcessPiPSessionForeground(sceneSession);
-            }
             break;
         case SessionState::STATE_BACKGROUND:
             RequestSessionUnfocus(persistentId);
@@ -6410,16 +6407,6 @@ WSError SceneSessionManager::UnregisterIAbilityManagerCollaborator(int32_t type)
         collaboratorMap_.erase(type);
     }
     return WSError::WS_OK;
-}
-
-void SceneSessionManager::ProcessPiPSessionForeground(const sptr<SceneSession> sceneSession)
-{
-    if (sceneSession == nullptr) {
-        WLOGFE("pip window not found");
-        return;
-    }
-    WLOGFD("start pip rect");
-//    sceneSession->UpdatePiPRect(0, 0, SizeChangeReason::PIP_START);
 }
 
 WSError SceneSessionManager::RecoveryPullPiPMainWindow(const int32_t& persistentId, const Rect& rect)
