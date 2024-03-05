@@ -346,7 +346,7 @@ void DisplayDumper::GetScreenInfo(const sptr<AbstractScreen>& screen, std::ostri
         << std::left << std::setw(W_DMS_ID) << screen->dmsId_
         << std::left << std::setw(W_RS_ID) << screen->rsId_
         << std::left << std::setw(W_ACTIVE_IDX) << screen->activeIdx_
-        << std::left << std::setw(W_VIRTUAL_PIXEL_RATIO) << screen->virtualPixelRatio_
+        << std::left << std::setw(W_VIR_PIXEL_RATIO) << screen->virtualPixelRatio_
         << std::left << std::setw(W_SCREEN_ROTATION) << static_cast<uint32_t>(screen->rotation_)
         << std::left << std::setw(W_ORIENTATION) << static_cast<uint32_t>(screen->orientation_)
         << std::left << std::setw(W_REQUESTED_ORIENTATION) << static_cast<uint32_t>(screen->screenRequestedOrientation_)
