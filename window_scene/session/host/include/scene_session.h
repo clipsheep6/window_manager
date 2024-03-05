@@ -161,7 +161,6 @@ public:
     void SetWindowAnimationFlag(bool needDefaultAnimationFlag);
     void SetCollaboratorType(int32_t collaboratorType);
     void SetSelfToken(sptr<IRemoteObject> selfToken);
-    void SetLastSafeRect(WSRect rect);
     WSError SetSystemBarProperty(WindowType type, SystemBarProperty systemBarProperty);
     void SetAbilitySessionInfo(std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo);
     void SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFunc& func);
@@ -169,7 +168,6 @@ public:
 
     int32_t GetCollaboratorType() const;
     sptr<IRemoteObject> GetSelfToken() const;
-    WSRect GetLastSafeRect() const;
     WSRect GetSessionTargetRect() const;
     std::string GetUpdatedIconPath() const;
     std::string GetSessionSnapshotFilePath() const;
@@ -279,7 +277,6 @@ private:
     mutable std::mutex sessionChangeCbMutex_;
     int32_t collaboratorType_ = CollaboratorType::DEFAULT_TYPE;
     sptr<IRemoteObject> selfToken_ = nullptr;
-    WSRect lastSafeRect = { 0, 0, 0, 0 };
     std::vector<sptr<SceneSession>> subSession_;
     bool needDefaultAnimationFlag_ = true;
     PiPRectInfo pipRectInfo_;

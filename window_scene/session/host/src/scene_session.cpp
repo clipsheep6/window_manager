@@ -2026,20 +2026,6 @@ WSError SceneSession::NotifySessionException(const sptr<AAFwk::SessionInfo> abil
     return WSError::WS_OK;
 }
 
-WSRect SceneSession::GetLastSafeRect() const
-{
-    return lastSafeRect;
-}
-
-void SceneSession::SetLastSafeRect(WSRect rect)
-{
-    lastSafeRect.posX_ = rect.posX_;
-    lastSafeRect.posY_ = rect.posY_;
-    lastSafeRect.width_ = rect.width_;
-    lastSafeRect.height_ = rect.height_;
-    return;
-}
-
 bool SceneSession::AddSubSession(const sptr<SceneSession>& subSession)
 {
     if (subSession == nullptr) {
