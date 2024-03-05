@@ -38,6 +38,21 @@ namespace {
     const std::string ARG_DUMP_HELP = "-h";
     const std::string ARG_DUMP_ALL = "-a";
     const std::string ARG_DUMP_WINDOW = "-w";
+    // set the output width of window
+    constexpr int W_WINDOW_NAME = 21;
+    constexpr int W_DISPLAY_ID = 10;
+    constexpr int W_CALLING_PID = 8;
+    constexpr int W_WINDOW_ID = 6;
+
+    constexpr int W_WINDOW_TYPE = 5;
+    constexpr int W_WINDOW_MODE = 5;
+    constexpr int W_WINDOW_FLAGS = 5;
+    constexpr int W_WINDOW_ZORDER = 5;
+    constexpr int W_WINDOW_REQUEST_ORIENTATION = 12;
+    constexpr int W_WINDOW_POS_X = 5;
+    constexpr int W_WINDOW_POS_Y = 5;
+    constexpr int W_WINDOW_WIDTH = 5;
+    constexpr int W_WINDOW_HEITHT = 5;
 }
 
 WMError WindowDumper::Dump(int fd, const std::vector<std::u16string>& args)
@@ -106,20 +121,20 @@ WMError WindowDumper::DumpScreenGroupWindowInfo(ScreenId screenGroupId,
         const std::string& windowName = windowNode->GetWindowName().size() <= WINDOW_NAME_MAX_LENGTH ?
             windowNode->GetWindowName() : windowNode->GetWindowName().substr(0, WINDOW_NAME_MAX_LENGTH);
         // std::setw is used to set the output width and different width values are set to keep the format aligned.
-        oss << std::left << std::setw(21) << windowName
-            << std::left << std::setw(10) << windowNode->GetDisplayId()
-            << std::left << std::setw(8) << windowNode->GetCallingPid()
-            << std::left << std::setw(6) << windowNode->GetWindowId()
-            << std::left << std::setw(5) << static_cast<uint32_t>(windowNode->GetWindowType())
-            << std::left << std::setw(5) << static_cast<uint32_t>(windowNode->GetWindowMode())
-            << std::left << std::setw(5) << windowNode->GetWindowFlags()
-            << std::left << std::setw(5) << --zOrder
-            << std::left << std::setw(12) << static_cast<uint32_t>(windowNode->GetRequestedOrientation())
+        oss << std::left << std::setw(W_WINDOW_NAME) << windowName
+            << std::left << std::setw(W_DISPLAY_ID) << windowNode->GetDisplayId()
+            << std::left << std::setw(W_CALLING_PID) << windowNode->GetCallingPid()
+            << std::left << std::setw(W_WINDOW_ID) << windowNode->GetWindowId()
+            << std::left << std::setw(W_WINDOW_TYPE) << static_cast<uint32_t>(windowNode->GetWindowType())
+            << std::left << std::setw(W_WINDOW_MODE) << static_cast<uint32_t>(windowNode->GetWindowMode())
+            << std::left << std::setw(W_WINDOW_FLAGS) << windowNode->GetWindowFlags()
+            << std::left << std::setw(W_WINDOW_ZORDER) << --zOrder
+            << std::left << std::setw(W_WINDOW_REQUEST_ORIENTATION) << static_cast<uint32_t>(windowNode->GetRequestedOrientation())
             << "[ "
-            << std::left << std::setw(5) << rect.posX_
-            << std::left << std::setw(5) << rect.posY_
-            << std::left << std::setw(5) << rect.width_
-            << std::left << std::setw(5) << rect.height_
+            << std::left << std::setw(W_WINDOW_POS_X) << rect.posX_
+            << std::left << std::setw(W_WINDOW_POS_Y) << rect.posY_
+            << std::left << std::setw(W_WINDOW_WIDTH) << rect.width_
+            << std::left << std::setw(W_WINDOW_HEITHT) << rect.height_
             << "]"
             << std::endl;
     }

@@ -72,6 +72,7 @@ bool WmsUtils::IsExpectedRotatableWindow(Orientation requestOrientation,
     if (disOrientation == currentOrientation) {
         return false;
     }
+    // Enum 0,1,2,3 indicates 0,90,180,270 degrees respectively, %2 is an Enum Difference. difference is 180°
     if (restricted && (static_cast<int32_t>(disOrientation) - static_cast<int32_t>(currentOrientation)) % 2 == 0) {
         return false;
     }
