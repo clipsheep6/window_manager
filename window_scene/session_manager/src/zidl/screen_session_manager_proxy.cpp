@@ -2095,6 +2095,26 @@ void ScreenSessionManagerProxy::SetScreenPrivacyState(bool hasPrivate)
     }
 }
 
+void ScreenSessionManagerProxy::SetFocusedWindowId(int32_t focusedWinId)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+    if (!data.WriteInt32(focusedWinId)) {
+        WLOGFE("Write focusedWinId failed");
+        return;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SET_FOCUSED_WINDOW_ID),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return;
+    }
+}
+
 void ScreenSessionManagerProxy::UpdateAvailableArea(ScreenId screenId, DMRect area)
 {
     MessageOption option(MessageOption::TF_ASYNC);
