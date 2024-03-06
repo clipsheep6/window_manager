@@ -45,7 +45,7 @@ public:
         bool showWhenLocked;
         uint32_t parentId;
         bool focusable { true };
-        Orientation orientation_ { Orientation::UNSPECIFIED };
+        Orientation orientation { Orientation::UNSPECIFIED };
     };
     static Rect displayRect_;
     static Rect limitDisplayRect_;
