@@ -96,8 +96,7 @@ WMError WindowDumper::DumpScreenGroupWindowInfo(ScreenId screenGroupId,
         return WMError::WM_ERROR_NULLPTR;
     }
     std::ostringstream oss;
-    oss << "-------------------------------------ScreenGroup " << screenGroupId
-        << "-------------------------------------"
+    oss << "-----------------------------------ScreenGroup " << screenGroupId << "-----------------------------------"
         << std::endl;
     oss << "WindowName           DisplayId Pid     WinId Type Mode Flag ZOrd Orientation [ x    y    w    h    ]"
         << std::endl;
