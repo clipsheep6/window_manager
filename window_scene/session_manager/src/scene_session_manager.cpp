@@ -4327,13 +4327,13 @@ void SceneSessionManager::CheckAndNotifyWaterMarkChangedResult()
                 break;
             }
         }
-        std::shared_lock<std::shared_mutex> lock(extensionSessionInfoMapMutex_);
+        std::shared_lock<std::shared_mutex> extLock(extensionSessionInfoMapMutex_);
         for (const auto& iter: extensionSessionInfoMap_) {
             auto& extInfo = iter.second;
             if (!extInfo) {
                 continue;
             }
-            if (extInfo->GetWaterMark() && session->GetVisibility()) {
+            if (extInfo->GetWaterMark() && extInfo->GetVisibility()) {
                 currentWaterMarkShowState = true;
                 break;
             }
@@ -7104,7 +7104,7 @@ WSError SceneSessionManager::AddExentsionSessionInfo(int32_t parentId, int32_t p
         extInfo->SetPersistentId(persistentId);
         int64_t extId = ConvertParentIdAndPersistentIdToExtId(parentId, persistentId);
         std::shared_lock<std::shared_mutex> lock(extensionSessionInfoMapMutex_);
-        extensionSessionInfoMap_.insert(extId, extInfo);
+        extensionSessionInfoMap_.insert(<extId, extInfo>);
         return WSError::WS_OK;
     };
     return taskScheduler_->PostSyncTask(task);
@@ -7129,15 +7129,15 @@ WSError SceneSessionManager::RemoveExtensionSessionInfo(int32_t parentId, int32_
 WSError SceneSessionManager::SetExtensionVisibility(int32_t parentId, int32_t persistentId, bool isVisible)
 {
     WLOGFI("SetExtensionVisibility, parentId:%{public}d, persistentId:%{public}d, isVisible:%{public}u",
-    parentId, persistentId, isVisible);
+        parentId, persistentId, isVisible);
     if (!SessionPermission::IsSystemCalling()) {
         WLOGFE("SetExtensionVisibility permission denied!");
         return WSError::WS_ERROR_NOT_SYSTEM_APP;
     }
     auto task = [this, parentId, persistentId, isVisible]() {
         auto extInfo = GetExtensionSessionInfo(parentId, persistentId);
-        if(extInfo == nullptr) {
-            WLOGFE("extension is nullptr, parentId:%{public}d, persistentId:%{public}d",parentId, persistentId);
+        if (extInfo == nullptr) {
+            WLOGFE("extension is nullptr, parentId:%{public}d, persistentId:%{public}d", parentId, persistentId);
             return WSError::WS_ERROR_NULLPTR;
         }
         extInfo->SetVisibility(isVisible);
@@ -7150,18 +7150,18 @@ WSError SceneSessionManager::SetExtensionVisibility(int32_t parentId, int32_t pe
 WSError SceneSessionManager::SetExtensionWaterMark(int32_t parentId, int32_t persistentId, bool isEnable)
 {
     WLOGFI("SetExtensionVisibility, parentId:%{public}d, persistentId:%{public}d, isEnable:%{public}u",
-    parentId, persistentId, isEnable);
+        parentId, persistentId, isEnable);
     if (!SessionPermission::IsSystemCalling()) {
         WLOGFE("SetExtensionWaterMark permission denied!");
         return WSError::WS_ERROR_NOT_SYSTEM_APP;
     }
     auto task = [this, parentId, persistentId, isEnable]() {
         auto extInfo = GetExtensionSessionInfo(parentId, persistentId);
-        if(extInfo == nullptr) {
-            WLOGFE("extension is nullptr, parentId:%{public}d, persistentId:%{public}d",parentId, persistentId);
+        if (extInfo == nullptr) {
+            WLOGFE("extension is nullptr, parentId:%{public}d, persistentId:%{public}d", parentId, persistentId);
             return WSError::WS_ERROR_NULLPTR;
         }
-        extInfo->setWaterMark(isEnable);
+        extInfo->SetWaterMark(isEnable);
         CheckAndNotifyWaterMarkChangedResult();
         return WSError::WS_OK;
     };
@@ -7183,7 +7183,7 @@ sptr<ExtensionSessionInfo> SceneSessionManager::GetExtensionSessionInfo(int32_t 
 int64_t SceneSessionManager::ConvertParentIdAndPersistentIdToExtId(int32_t parentId, int32_t persistentId)
 {
     int64_t result = parentId;
-    result = result << 32 | persistentId;
+    result = (result << 32) | persistentId;
     return result;
 }
 } // namespace OHOS::Rosen
