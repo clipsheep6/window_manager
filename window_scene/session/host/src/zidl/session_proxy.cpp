@@ -25,6 +25,7 @@
 #include "want.h"
 #include "key_event.h"
 #include "pointer_event.h"
+#include "process_options.h"
 #include "session/host/include/zidl/session_ipc_interface_code.h"
 #include "window_manager_hilog.h"
 namespace OHOS::Rosen {
@@ -323,7 +324,7 @@ bool SessionProxy::WriteAbilitySessionInfoBasic(MessageParcel& data, sptr<AAFwk:
         !(data.WriteInt64(abilitySessionInfo->uiAbilityId)) ||
         !data.WriteInt32(abilitySessionInfo->callingTokenId) ||
         !data.WriteBool(abilitySessionInfo->reuse) ||
-        !data.WriteParcelable(abilitySessionInfo->processOptions.get()) {
+        !data.WriteParcelable(abilitySessionInfo->processOptions.get())) {
         return false;
     }
     return true;
