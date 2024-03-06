@@ -16,6 +16,8 @@
 #ifndef INTERFACES_KITS_JS_COMMON_INCLUDE_PIXEL_MAP_NAPI_H_
 #define INTERFACES_KITS_JS_COMMON_INCLUDE_PIXEL_MAP_NAPI_H_
 
+#include <memory>
+
 #include "pixel_map.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
