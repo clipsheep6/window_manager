@@ -91,7 +91,7 @@ void SceneSessionDirtyManager::CalNotRotateTramform(const sptr<SceneSession> sce
     }
     auto displayId = sceneSession->GetSessionProperty()->GetDisplayId();
     auto displayMode = Rosen::ScreenSessionManagerClient::GetInstance().GetFoldDisplayMode();
-    std::unordered_map<ScreenId, ScreenProperty> screensProperties =
+    std::map<ScreenId, ScreenProperty> screensProperties =
         Rosen::ScreenSessionManagerClient::GetInstance().GetAllScreensProperties();
     if (screensProperties.find(displayId) == screensProperties.end()) {
         return;
@@ -308,6 +308,7 @@ std::vector<MMI::WindowInfo> SceneSessionDirtyManager::GetFullWindowInfoList()
     const auto sceneSessionMap = Rosen::SceneSessionManager::GetInstance().GetSceneSessionMap();
     // all input event should trans to dialog window if dialog exists
     const auto dialogMap = GetDialogSessionMap(sceneSessionMap);
+    std::string windowIDlist;
     for (const auto& sceneSessionValuePair : sceneSessionMap) {
         const auto& sceneSessionValue = sceneSessionValuePair.second;
         if (sceneSessionValue == nullptr) {
@@ -328,7 +329,10 @@ std::vector<MMI::WindowInfo> SceneSessionDirtyManager::GetFullWindowInfoList()
                 iter->second->GetPersistentId(), sceneSessionValue->GetPersistentId());
         }
         windowInfoList.emplace_back(windowInfo);
+        windowIDlist.append(std::to_string(windowInfo.id).append(", "));
     }
+    WLOGFI("[WMSEvent] windowIDlist size = %{public}d IDList: %{public}s",
+        static_cast<int>(windowIDlist.size()), windowIDlist.c_str());
     return windowInfoList;
 }
 
