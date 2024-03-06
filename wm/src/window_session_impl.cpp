@@ -1479,13 +1479,10 @@ static void RequestInputMethodCloseKeyboard(bool isNeedKeyboard, bool keepKeyboa
 {
     if (!isNeedKeyboard && !keepKeyboardFlag) {
 #ifdef IMF_ENABLE
-        WLOGFI("[WMSInput] Notify InputMethod framework close keyboard start.");
+        TLOGI(WmsLogTag::WMS_KEYBOARD, "Notify InputMethod framework close keyboard start.");
         if (MiscServices::InputMethodController::GetInstance()) {
-            int32_t ret = MiscServices::InputMethodController::GetInstance()->RequestHideInput();
-            WLOGFI("[WMSInput] Notify InputMethod framework close keyboard end.");
-            if (ret != 0) { // 0 - NO_ERROR
-                WLOGFE("[WMSInput] InputMethod framework close keyboard failed, ret: %{public}d", ret);
-            }
+            MiscServices::InputMethodController::GetInstance()->RequestHideInput();
+            TLOGI(WmsLogTag::WMS_KEYBOARD, "Notify InputMethod framework close keyboard end.");
         }
 #endif
     }
@@ -1513,14 +1510,14 @@ void WindowSessionImpl::NotifyUIContentFocusStatus()
         }
         // whether keep the keyboard created by other windows, support system window and app subwindow.
         bool keepKeyboardFlag = (window->property_) ? window->property_->GetKeepKeyboardFlag() : false;
-        WLOGFI("[WMSInput] isNeedKeyboard: %{public}d, keepKeyboardFlag: %{public}d",
+        TLOGI(WmsLogTag::WMS_KEYBOARD, "isNeedKeyboard: %{public}d, keepKeyboardFlag: %{public}d",
             isNeedKeyboard, keepKeyboardFlag);
         RequestInputMethodCloseKeyboard(isNeedKeyboard, keepKeyboardFlag);
     };
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (uiContent_ != nullptr) {
         uiContent_->SetOnWindowFocused(task);
-        WLOGFI("[WMSInput] set need soft keyboard callback success!");
+        TLOGI(WmsLogTag::WMS_KEYBOARD, "set need soft keyboard callback success!");
     }
 }
 
@@ -2053,7 +2050,7 @@ void WindowSessionImpl::NotifyPointerEvent(const std::shared_ptr<MMI::PointerEve
     }
 }
 
-void WindowSessionImpl::DispatchKeyEventCallback(std::shared_ptr<MMI::KeyEvent>& keyEvent)
+void WindowSessionImpl::DispatchKeyEventCallback(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed)
 {
     std::shared_ptr<IInputEventConsumer> inputEventConsumer;
     {
@@ -2083,7 +2080,7 @@ void WindowSessionImpl::DispatchKeyEventCallback(std::shared_ptr<MMI::KeyEvent>&
             keyEvent->MarkProcessed();
         }
     } else if (uiContent_) {
-        auto isConsumed = uiContent_->ProcessKeyEvent(keyEvent);
+        isConsumed = uiContent_->ProcessKeyEvent(keyEvent);
         if (!isConsumed && keyEvent->GetKeyCode() == MMI::KeyEvent::KEYCODE_ESCAPE &&
             property_->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
             property_->GetMaximizeMode() == MaximizeMode::MODE_FULL_FILL &&
@@ -2108,21 +2105,11 @@ void WindowSessionImpl::NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& key
         return;
     }
 
-    auto dispatchFunc = [weakThis = wptr(this), keyEvent] () {
-        auto promoteThis = weakThis.promote();
-        if (promoteThis == nullptr) {
-            WLOGFW("promoteThis is nullptr");
-            keyEvent->MarkProcessed();
-            return;
-        }
-        promoteThis->DispatchKeyEventCallback(const_cast<std::shared_ptr<MMI::KeyEvent>&>(keyEvent));
-    };
-
 #ifdef IMF_ENABLE
     bool isKeyboardEvent = IsKeyboardEvent(keyEvent);
     if (isKeyboardEvent && notifyInputMethod) {
         WLOGD("Async dispatch keyEvent to input method");
-        auto callback = [dispatchFunc] (std::shared_ptr<MMI::KeyEvent>& keyEvent, bool consumed) {
+        auto callback = [weakThis = wptr(this)] (std::shared_ptr<MMI::KeyEvent>& keyEvent, bool consumed) {
             if (keyEvent == nullptr) {
                 WLOGFW("keyEvent is null, consumed:%{public}" PRId32, consumed);
                 return;
@@ -2133,18 +2120,25 @@ void WindowSessionImpl::NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& key
                 return;
             }
 
-            dispatchFunc();
+            auto promoteThis = weakThis.promote();
+            if (promoteThis == nullptr) {
+                WLOGFW("promoteThis is nullptr");
+                keyEvent->MarkProcessed();
+                return;
+            }
+            bool isConsumed = false;
+            promoteThis->DispatchKeyEventCallback(keyEvent, isConsumed);
         };
         auto ret = MiscServices::InputMethodController::GetInstance()->DispatchKeyEvent(
             const_cast<std::shared_ptr<MMI::KeyEvent>&>(keyEvent), callback);
         if (ret != 0) {
             WLOGFE("DispatchKeyEvent failed, ret:%{public}" PRId32 ", id:%{public}" PRId32, ret, keyEvent->GetId());
-            keyEvent->MarkProcessed();
+            DispatchKeyEventCallback(keyEvent, isConsumed);
         }
         return;
     }
 #endif // IMF_ENABLE
-    dispatchFunc();
+    DispatchKeyEventCallback(keyEvent, isConsumed);
 }
 
 bool WindowSessionImpl::IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const
@@ -2300,7 +2294,7 @@ WMError WindowSessionImpl::SetLayoutFullScreenByApiVersion(bool status)
 WMError WindowSessionImpl::SetWindowGravity(WindowGravity gravity, uint32_t percent)
 {
     auto sessionGravity = static_cast<SessionGravity>(gravity);
-    WLOGFI("[WMSInput] Set window gravity: %{public}" PRIu32 ", percent: %{public}" PRIu32, sessionGravity, percent);
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "Set window gravity: %{public}u, percent: %{public}u", sessionGravity, percent);
     if (property_ != nullptr) {
         property_->SetSessionGravity(sessionGravity, percent);
     }

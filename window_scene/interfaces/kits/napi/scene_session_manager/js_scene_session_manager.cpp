@@ -342,7 +342,7 @@ void JsSceneSessionManager::OnShowPiPMainWindow(int32_t persistentId)
 
 void JsSceneSessionManager::OnCallingWindowIdChange(const uint32_t windowId)
 {
-    WLOGFD("[WMSInput][NAPI]OnCallingWindowIdChange");
+    TLOGD(WmsLogTag::WMS_KEYBOARD, "[NAPI]OnCallingWindowIdChange");
     auto iter = jsCbMap_.find(CALLING_WINDOW_ID_CHANGE_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -2089,18 +2089,15 @@ napi_value JsSceneSessionManager::OnReportData(napi_env env, napi_callback_info 
             "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
-    int32_t payloadPid;
-    if (!ConvertFromJsValue(env, argv[ARG_INDEX_2], payloadPid)) { // third args int pid
+    
+    std::unordered_map<std::string, std::string> mapPayload;
+    if (!ConvertStringMapFromJs(env, argv[ARG_INDEX_2], mapPayload)) {
         WLOGFE("[NAPI]Failed to convert parameter to pauloadPid");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
             "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
-    if (payloadPid == getpid()) {
-        payloadPid = getprocpid();
-    }
-    std::unordered_map<std::string, std::string> mapPayload;
-    mapPayload.emplace("srcPid", std::to_string(payloadPid));
+    mapPayload["srcPid"] = std::to_string(getprocpid());
 #ifdef RESOURCE_SCHEDULE_SERVICE_ENABLE
     OHOS::ResourceSchedule::ResSchedClient::GetInstance().ReportData(resType, value, mapPayload);
 #endif
