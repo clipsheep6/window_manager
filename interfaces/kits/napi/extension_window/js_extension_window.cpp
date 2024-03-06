@@ -69,6 +69,7 @@ napi_value JsExtensionWindow::CreateJsExtensionWindow(napi_env env, sptr<Rosen::
     BindNativeFunction(env, objValue, "on", moduleName, JsExtensionWindow::RegisterExtensionWindowCallback);
     BindNativeFunction(env, objValue, "off", moduleName, JsExtensionWindow::UnRegisterExtensionWindowCallback);
     BindNativeFunction(env, objValue, "hideNonSecureWindows", moduleName, JsExtensionWindow::HideNonSecureWindows);
+    BindNativeFunction(env, objValue, "setWaterMarkFlag", moduleName, JsExtensionWindow::SetWaterMarkFlag);
 
     return objValue;
 }
@@ -186,6 +187,13 @@ napi_value JsExtensionWindow::SetWindowBackgroundColorSync(napi_env env, napi_ca
     WLOGI("SetBackgroundColor is called");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnSetWindowBackgroundColorSync(env, info) : nullptr;
+}
+
+napi_value JsExtensionWindow::SetWaterMarkFlag(napi_env env, napi_callback_info info)
+{
+    WLOGI("SetWaterMark is called");
+    JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
+    return (me != nullptr) ? me->OnSetWaterMarkFlag(env, info) : nullptr;
 }
 
 napi_valuetype GetType(napi_env env, napi_value value)
@@ -616,6 +624,40 @@ napi_value JsExtensionWindow::GetProperties(napi_env env, napi_callback_info inf
     }
     sptr<Rosen::Window> window = jsExtensionWindow->extensionWindow_->GetWindow();
     return CreateJsExtensionWindowPropertiesObject(env, window);
+}
+
+napi_value JsExtensionWindow::SetWaterMarkFlag(napi_env env, napi_callback_info info)
+{
+    if (extensionWindow_ == nullptr) {
+        WLOGFE("extensionWindow_ is nullptr");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
+    }
+    sptr<Window> windowImpl = extensionWindow_->GetWindow();
+    if (windowImpl == nullptr) {
+        WLOGFE("windowImpl is nullptr");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
+    }
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc < 1) {
+        WLOGFE("Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
+    bool isEnable = false;
+    if (!ConvertFromJsValue(env, argv[0], isEnable)) {
+        WLOGFE("Failed to convert parameter to bool");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
+
+    WmErrorCode ret = WmErrorCode::WM_OK;
+    ret = WM_JS_TO_ERROR_CODE_MAP.at(extensionWindow_->SetWaterMarkFlag(isEnable));
+    if (ret != WmErrorCode::WM_OK) {
+        return NapiThrowError(env, ret);
+    }
+    WLOGI("OnSetWaterMark end, window [%{public}u, %{public}s], isEnable:%{public}u.",
+          windowImpl->GetWindowId(), windowImpl->GetWindowName().c_str(), isEnable);
+    return NapiGetUndefined(env);
 }
 }  // namespace Rosen
 }  // namespace OHOS
