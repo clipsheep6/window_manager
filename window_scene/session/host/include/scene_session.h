@@ -216,6 +216,7 @@ public:
     void SendKeyEventToUI(std::shared_ptr<MMI::KeyEvent> keyEvent);
     bool IsStartMoving() const;
     void SetIsStartMoving(const bool startMoving);
+    WSError SetPipActionEvent(const std::string& action, int32_t status);
 
     void SetSessionState(SessionState state) override;
     void UpdateSessionState(SessionState state) override;

@@ -449,7 +449,7 @@ void PictureInPictureController::PipDisplayListener::OnChange(DisplayId displayI
     }
 }
 
-void PictureInPictureController::DoActionEvent(std::string& actionName)
+void PictureInPictureController::DoActionEvent(const std::string& actionName, int32_t status)
 {
     WLOGFD("actionName: %{public}s", actionName.c_str());
     if (pipActionObserver_ == nullptr) {
@@ -457,7 +457,7 @@ void PictureInPictureController::DoActionEvent(std::string& actionName)
         return;
     }
     SingletonContainer::Get<PiPReporter>().ReportPiPActionEvent(pipOption_->GetPipTemplate(), actionName);
-    pipActionObserver_->OnActionEvent(actionName);
+    pipActionObserver_->OnActionEvent(actionName, status);
 }
 
 void PictureInPictureController::RestorePictureInPictureWindow()
