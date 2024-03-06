@@ -432,6 +432,8 @@ private:
                                        const sptr<SceneSession>& sceneSession);
     void ClosePipWindowIfExist(WindowType type);
     WSError DestroyAndDisconnectSpecificSessionInner(sptr<SceneSession> sceneSession);
+    sptr<ExtensionSessionInfo> GetExtensionSessionInfo(int32_t parentId, int32_t persistentId);
+    int64_t ConvertParentIdAndPersistentIdToExtId(int32_t parentId, int32_t persistentId);
 
     sptr<RootSceneSession> rootSceneSession_;
     std::weak_ptr<AbilityRuntime::Context> rootSceneContextWeak_;
@@ -558,10 +560,6 @@ private:
     bool GetProcessDrawingState(uint64_t windowId, int32_t pid, bool currentDrawingContentState);
     void ProcessPiPSessionForeground(const sptr<SceneSession> sceneSession);
     WSError GetAppMainSceneSession(sptr<SceneSession>& sceneSession, int32_t persistentId);
-
-
-    sptr<ExtensionSessionInfo> GetExtensionSessionInfo(int32_t parentId, int32_t persistentId);
-    int64_t ConvertParentIdAndPersistentIdToExtId(int32_t parentId, int32_t persistentId);
 };
 } // namespace OHOS::Rosen
 
