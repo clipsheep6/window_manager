@@ -22,7 +22,7 @@
 
 #include "root_scene.h"
 #include "window_manager_hilog.h"
-#include "process_options.h"
+#include "process_option.h"
 
 namespace OHOS::Rosen {
 using namespace AbilityRuntime;
@@ -226,7 +226,7 @@ bool IsJsIsSystemInputUndefined(napi_env env, napi_value jsIsSystemInput, Sessio
 bool IsJsProcessOptionUndefined(napi_env env, napi_value jsProcessOption, SessionInfo& sessionInfo)
 {
     if (GetType(env, jsProcessOption) != napi_undefined) {
-        std::shared_ptr<AAFwk::ProcessOption> processOption;
+        std::shared_ptr<AAFwk::ProcessOptions> processOption;
         if (!ConvertProcessOptionFromJs(env, jsProcessOption, processOption)) {
             WLOGFE("[NAPI]Failed to convert parameter to processOption");
             return false;
@@ -275,7 +275,7 @@ bool ConvertSessionInfoName(napi_env env, napi_value jsObject, SessionInfo& sess
     return true;
 }
 
-bool ConvertProcessOptionFromJs(napi_env env, napi_value jsObject, std::shared_ptr<AAFwk::ProcessOption> processOption)
+bool ConvertProcessOptionFromJs(napi_env env, napi_value jsObject, std::shared_ptr<AAFwk::ProcessOptions> processOption)
 {
     napi_value jsProcessMode = nullptr;
     napi_get_named_property(env, jsObject, "processMode", &jsProcessMode);
@@ -292,7 +292,7 @@ bool ConvertProcessOptionFromJs(napi_env env, napi_value jsObject, std::shared_p
         return false;
     }
     processOption->processMode = static_cast<AAFwk::ProcessMode>(processMode);
-    processOption->startupVisibility = static_cast<AAFwk::StartupVisibility>(startupVisibility);
+    processOption->startupVisibility = static_cast<AAFwk::StartupVisibility>(startupVisibilityMode);
     
     return true;
 }
@@ -348,7 +348,7 @@ bool ConvertSessionInfoState(napi_env env, napi_value jsObject, SessionInfo& ses
     return true;
 }
 
-napi_value CreateJsProcessOption(napi_env env, std::shared_ptr<AAFwk::ProcessOption> processOption)
+napi_value CreateJsProcessOption(napi_env env, std::shared_ptr<AAFwk::ProcessOptions> processOption)
 {
     napi_value objValue = nullptr;
     napi_create_object(env, &objValue);
@@ -358,10 +358,10 @@ napi_value CreateJsProcessOption(napi_env env, std::shared_ptr<AAFwk::ProcessOpt
     }
 
     int32_t processMode = static_cast<int32_t>(processOption->processMode);
-    int32_t startupVisibility = static_cast<int32_t>(processOption->startupVisibility);
+    int32_t startupVisibilityMode = static_cast<int32_t>(processOption->startupVisibilityMode);
 
     napi_set_named_property(env, objValue, "processMode", CreateJsValue(env, processMode));
-    napi_set_named_property(env, objValue, "startupVisibility", CreateJsValue(env, startupVisibility));
+    napi_set_named_property(env, objValue, "startupVisibilityMode", CreateJsValue(env, startupVisibilityMode));
 
     return objValue;
 }

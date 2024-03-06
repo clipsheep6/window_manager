@@ -296,7 +296,7 @@ int SessionStub::HandleChangeSessionVisibilityWithStatusBar(MessageParcel& data,
     abilitySessionInfo->callingTokenId = data.ReadUint32();
     abilitySessionInfo->reuse = data.ReadBool();
     abilitySessionInfo->processOption = 
-        std::shared_ptr<AAFwk::ProcessOption>(data.ReadParcelable<AAFwk::ProcessOption>());
+        std::shared_ptr<AAFwk::ProcessOptions>(data.ReadParcelable<AAFwk::ProcessOptions>());
     if (data.ReadBool()) {
         abilitySessionInfo->callerToken = data.ReadRemoteObject();
     }
@@ -321,7 +321,7 @@ int SessionStub::HandlePendingSessionActivation(MessageParcel& data, MessageParc
     abilitySessionInfo->uiAbilityId = data.ReadInt64();
     abilitySessionInfo->callingTokenId = data.ReadUint32();
     abilitySessionInfo->reuse = data.ReadBool();
-    abilitySessionInfo->processOption.reset(data.ReadParcelable<AAFwk::ProcessOption>());
+    abilitySessionInfo->processOption.reset(data.ReadParcelable<AAFwk::ProcessOptions>());
     if (data.ReadBool()) {
         abilitySessionInfo->callerToken = data.ReadRemoteObject();
     }
