@@ -1515,7 +1515,7 @@ WSError SceneSessionManagerProxy::AddExentsionSessionInfo(int32_t parentId, int3
     return static_cast<WSError>(reply.ReadInt32());
 }
 
-WSError SceneSessionManagerProxy::RemoveExtensionSessionInfo(int32_t parentId, int32_t persistentId)    
+WSError SceneSessionManagerProxy::RemoveExtensionSessionInfo(int32_t parentId, int32_t persistentId)
 {
     WLOGFD("run SceneSessionManagerProxy::RemoveExtensionSessionInfo");
     MessageParcel data;
