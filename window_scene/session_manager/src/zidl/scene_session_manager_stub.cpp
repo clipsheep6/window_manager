@@ -134,6 +134,14 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandleGetVisibilityWindowInfo),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_HIDE_NON_SECURE_WINDOWS),
         &SceneSessionManagerStub::HandleHideNonSecureWindows),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_ADD_EXTENSION_SESSION_INFO),
+        &SceneSessionManagerStub::HandleAddExentsionSessionInfo),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REMOVE_EXTENSION_SESSION_INFO),
+        &SceneSessionManagerStub::HandleRemoveExtensionSessionInfo),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_EXTENSION_VISIBILITY),
+        &SceneSessionManagerStub::HandleSetExtensionVisibility),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_EXTENSION_WATER_MARK),
+        &SceneSessionManagerStub::HandleSetExtensionWaterMark),
 };
 
 int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
@@ -803,6 +811,48 @@ int SceneSessionManagerStub::HandleHideNonSecureWindows(MessageParcel &data, Mes
     WLOGFI("run HandleHideNonSecureWindows!");
     bool shouldHide = data.ReadBool();
     WSError ret = HideNonSecureWindows(shouldHide);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleAddExentsionSessionInfo(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleAddExentsionSessionInfo!");
+    int32_t parentId = data.ReadInt32();
+    int32_t persistentId = data.ReadInt32();
+    WSError ret = AddExentsionSessionInfo(parentId, persistentId);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleRemoveExtensionSessionInfo(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleRemoveExtensionSessionInfo!");
+    int32_t parentId = data.ReadInt32();
+    int32_t persistentId = data.ReadInt32();
+    WSError ret = RemoveExtensionSessionInfo(parentId, persistentId);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleSetExtensionVisibility(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleSetExtensionVisibility!");
+    int32_t parentId = data.ReadInt32();
+    int32_t persistentId = data.ReadInt32();
+    bool isVisible = data.ReadBool();
+    WSError ret = SetExtensionVisibility(parentId, persistentId, isVisible);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleSetExtensionWaterMark(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleSetExtensionWaterMark!");
+    int32_t parentId = data.ReadInt32();
+    int32_t persistentId = data.ReadInt32();
+    bool isEnable = data.ReadBool();
+    WSError ret = SetExtensionWaterMark(parentId, persistentId, isEnable);
     reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }
