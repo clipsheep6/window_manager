@@ -824,6 +824,7 @@ int SceneSessionManagerStub::HandleAddExentsionSessionInfo(MessageParcel &data, 
     reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }
+
 int SceneSessionManagerStub::HandleRemoveExtensionSessionInfo(MessageParcel &data, MessageParcel &reply)
 {
     WLOGFI("run HandleRemoveExtensionSessionInfo!");
@@ -832,7 +833,9 @@ int SceneSessionManagerStub::HandleRemoveExtensionSessionInfo(MessageParcel &dat
     WSError ret = RemoveExtensionSessionInfo(parentId, persistentId);
     reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
-}int SceneSessionManagerStub::HandleSetExtensionVisibility(MessageParcel &data, MessageParcel &reply)
+}
+
+int SceneSessionManagerStub::HandleSetExtensionVisibility(MessageParcel &data, MessageParcel &reply)
 {
     WLOGFI("run HandleSetExtensionVisibility!");
     int32_t parentId = data.ReadInt32();
@@ -841,7 +844,9 @@ int SceneSessionManagerStub::HandleRemoveExtensionSessionInfo(MessageParcel &dat
     WSError ret = SetExtensionVisibility(parentId, persistentId, isVisible);
     reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
-}int SceneSessionManagerStub::HandleSetExtensionWaterMark(MessageParcel &data, MessageParcel &reply)
+}
+
+int SceneSessionManagerStub::HandleSetExtensionWaterMark(MessageParcel &data, MessageParcel &reply)
 {
     WLOGFI("run HandleSetExtensionWaterMark!");
     int32_t parentId = data.ReadInt32();
