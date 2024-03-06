@@ -148,6 +148,7 @@ const std::string ARG_DUMP_WINDOW = "-w";
 const std::string ARG_DUMP_SCREEN = "-s";
 const std::string ARG_DUMP_DISPLAY = "-d";
 constexpr uint64_t NANO_SECOND_PER_SEC = 1000000000; // ns
+const int32_t LOGICAL_DISPLACEMENT_32 = 32;
 std::string GetCurrentTime()
 {
     struct timespec tn;
@@ -7183,7 +7184,7 @@ sptr<ExtensionSessionInfo> SceneSessionManager::GetExtensionSessionInfo(int32_t 
 int64_t SceneSessionManager::ConvertParentIdAndPersistentIdToExtId(int32_t parentId, int32_t persistentId)
 {
     int64_t result = parentId;
-    result = (result << 32) | persistentId;
+    result = (result << LOGICAL_DISPLACEMENT_32) | persistentId;
     return result;
 }
 } // namespace OHOS::Rosen
