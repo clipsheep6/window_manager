@@ -321,7 +321,7 @@ int SessionStub::HandlePendingSessionActivation(MessageParcel& data, MessageParc
     abilitySessionInfo->uiAbilityId = data.ReadInt64();
     abilitySessionInfo->callingTokenId = data.ReadUint32();
     abilitySessionInfo->reuse = data.ReadBool();
-    abilitySessionInfo->processOption.reset(data.ReadParcelable<AAFwk::ProcessOption>())
+    abilitySessionInfo->processOption.reset(data.ReadParcelable<AAFwk::ProcessOption>());
     if (data.ReadBool()) {
         abilitySessionInfo->callerToken = data.ReadRemoteObject();
     }

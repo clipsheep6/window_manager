@@ -695,6 +695,20 @@ void Session::UpdatePointerArea(const WSRect& rect)
     preRect_ = rect;
 }
 
+WSError Session::UpdateSizeChangeReason(SizeChangeReason reason)
+{
+    if (reason_ == reason) {
+        return WSError::WS_DO_NOTHING;
+    }
+    reason_ = reason;
+    return WSError::WS_OK;
+}
+
+SizeChangeReason Session::GetSizeChangeReason() const
+{
+    return reason_;
+}
+
 WSError Session::UpdateRect(const WSRect& rect, SizeChangeReason reason,
     const std::shared_ptr<RSTransaction>& rsTransaction)
 {
@@ -860,7 +874,7 @@ WSError Session::Foreground(sptr<WindowSessionProperty> property)
 void Session::NotifyCallingSessionForeground()
 {
     if (notifyCallingSessionForegroundFunc_) {
-        WLOGFI("[WMSInput] Notify calling window that input method shown");
+        TLOGI(WmsLogTag::WMS_KEYBOARD, "Notify calling window that input method shown");
         notifyCallingSessionForegroundFunc_(persistentId_);
     }
 }
@@ -943,7 +957,7 @@ WSError Session::Background()
     if (GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
         NotifyCallingSessionBackground();
         if (property_) {
-            WLOGFI("[WMSInput] When the soft keyboard is hidden, set the callingWindowId to 0.");
+            TLOGI(WmsLogTag::WMS_KEYBOARD, "When the soft keyboard is hidden, set the callingWindowId to 0.");
             property_->SetCallingWindow(INVALID_WINDOW_ID);
         }
     }
@@ -955,7 +969,7 @@ WSError Session::Background()
 void Session::NotifyCallingSessionBackground()
 {
     if (notifyCallingSessionBackgroundFunc_) {
-        WLOGFI("[WMSInput] Notify calling window that input method hide");
+        TLOGI(WmsLogTag::WMS_KEYBOARD, "Notify calling window that input method hide");
         notifyCallingSessionBackgroundFunc_();
     }
 }
@@ -1822,11 +1836,13 @@ void Session::SetRequestFocusStatusNotifyManagerListener(const NotifyRequestFocu
 
 void Session::SetNotifyUIRequestFocusFunc(const NotifyUIRequestFocusFunc& func)
 {
+    std::unique_lock<std::shared_mutex> lock(uiRequestFocusMutex_);
     requestFocusFunc_ = func;
 }
 
 void Session::SetNotifyUILostFocusFunc(const NotifyUILostFocusFunc& func)
 {
+    std::unique_lock<std::shared_mutex> lock(uiLostFocusMutex_);
     lostFocusFunc_ = func;
 }
 
@@ -1928,6 +1944,7 @@ bool Session::GetStateFromManager(const ManagerState key)
 void Session::NotifyUIRequestFocus()
 {
     WLOGFD("NotifyUIRequestFocus id: %{public}d", GetPersistentId());
+    std::shared_lock<std::shared_mutex> lock(uiRequestFocusMutex_);
     if (requestFocusFunc_) {
         requestFocusFunc_();
     }
@@ -1936,6 +1953,7 @@ void Session::NotifyUIRequestFocus()
 void Session::NotifyUILostFocus()
 {
     WLOGFD("NotifyUILostFocus id: %{public}d", GetPersistentId());
+    std::shared_lock<std::shared_mutex> lock(uiLostFocusMutex_);
     if (lostFocusFunc_) {
         lostFocusFunc_();
     }
@@ -1966,6 +1984,13 @@ WSError Session::UpdateFocus(bool isFocused)
     // notify scb arkui focus
     if (isFocused) {
         if (sessionInfo_.isSystem_) {
+            HiSysEventWrite(
+                OHOS::HiviewDFX::HiSysEvent::Domain::WINDOW_MANAGER,
+                "FOCUS_WINDOW",
+                OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+                "PID", getpid(),
+                "UID", getuid(),
+                "BUNDLE_NAME", sessionInfo_.bundleName_);
             NotifyUIRequestFocus();
         }
     } else {

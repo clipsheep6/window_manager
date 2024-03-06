@@ -232,6 +232,15 @@ bool IsJsProcessOptionUndefined(napi_env env, napi_value jsProcessOption, Sessio
             return false;
         }
         sessionInfo.processOption = processOption;
+bool IsJsIsSetPointerAreasUndefined(napi_env env, napi_value jsIsSetPointerAreas, SessionInfo& sessionInfo)
+{
+    if (GetType(env, jsIsSetPointerAreas) != napi_undefined) {
+        bool isSetPointerAreas = false;
+        if (!ConvertFromJsValue(env, jsIsSetPointerAreas, isSetPointerAreas)) {
+            WLOGFE("[NAPI]Failed to convert parameter to isSetPointerAreas");
+            return false;
+        }
+        sessionInfo.isSetPointerAreas_ = isSetPointerAreas;
     }
     return true;
 }
@@ -272,7 +281,6 @@ bool ConvertProcessOptionFromJs(napi_env env, napi_value jsObject, std::shared_p
     napi_get_named_property(env, jsObject, "processMode", &jsProcessMode);
     napi_value jsStartupVisibilityMode = nullptr;
     napi_get_named_property(env, jsObject, "startupVisibilityMode", &jsStartupVisibilityMode);
-    
 
     int32_t processMode;
     if (!ConvertFromJsValue(env, jsProcessMode, processMode)) {
@@ -307,6 +315,8 @@ bool ConvertSessionInfoState(napi_env env, napi_value jsObject, SessionInfo& ses
     napi_get_named_property(env, jsObject, "isSystemInput", &jsIsSystemInput);
     napi_value jsProcessOption = nullptr;
     napi_get_named_property(env, jsObject, "processOption", &jsProcessOption);
+    napi_value jsIsSetPointerAreas = nullptr;
+    napi_get_named_property(env, jsObject, "isSetPointerAreas", &jsIsSetPointerAreas);
 
     if (!IsJsPersistentIdUndefind(env, jsPersistentId, sessionInfo)) {
         return false;
@@ -330,6 +340,9 @@ bool ConvertSessionInfoState(napi_env env, napi_value jsObject, SessionInfo& ses
         return false;
     }
     if (!IsJsProcessOptionUndefined(env, jsProcessOption, sessionInfo)) {
+        return false;
+    }
+    if (!IsJsIsSetPointerAreasUndefined(env, jsIsSetPointerAreas, sessionInfo)) {
         return false;
     }
     return true;
@@ -530,6 +543,78 @@ bool ConvertInt32ArrayFromJs(napi_env env, napi_value jsObject, std::vector<int3
         intList.push_back(persistentId);
     }
 
+    return true;
+}
+
+bool ConvertStringMapFromJs(napi_env env, napi_value value, std::unordered_map<std::string, std::string> &stringMap)
+{
+    if (value == nullptr) {
+        WLOGFE("value is nullptr");
+        return false;
+    }
+
+    if (!CheckTypeForNapiValue(env, value, napi_object)) {
+        WLOGFE("The type of value is not napi_object.");
+        return false;
+    }
+
+    std::vector<std::string> propNames;
+    napi_value array = nullptr;
+    napi_get_property_names(env, value, &array);
+    if (!ParseArrayStringValue(env, array, propNames)) {
+        WLOGFE("Failed to property names");
+        return false;
+    }
+
+    for (const auto &propName : propNames) {
+        napi_value prop = nullptr;
+        napi_get_named_property(env, value, propName.c_str(), &prop);
+        if (prop == nullptr) {
+            WLOGFW("prop is null: %{public}s", propName.c_str());
+            continue;
+        }
+        if (!CheckTypeForNapiValue(env, prop, napi_string)) {
+            WLOGFW("prop is not string: %{public}s", propName.c_str());
+            continue;
+        }
+        std::string valName;
+        if (!ConvertFromJsValue(env, prop, valName)) {
+            WLOGFW("Failed to ConvertFromJsValue: %{public}s", propName.c_str());
+            continue;
+        }
+        stringMap.emplace(propName, valName);
+    }
+    return true;
+}
+
+bool ParseArrayStringValue(napi_env env, napi_value array, std::vector<std::string> &vector)
+{
+    if (array == nullptr) {
+        WLOGFE("array is nullptr!");
+        return false;
+    }
+    bool isArray = false;
+    if (napi_is_array(env, array, &isArray) != napi_ok || isArray == false) {
+        WLOGFE("not array!");
+        return false;
+    }
+
+    uint32_t arrayLen = 0;
+    napi_get_array_length(env, array, &arrayLen);
+    if (arrayLen == 0) {
+        return true;
+    }
+    vector.reserve(arrayLen);
+    for (uint32_t i = 0; i < arrayLen; i++) {
+        std::string strItem;
+        napi_value jsValue = nullptr;
+        napi_get_element(env, array, i, &jsValue);
+        if (!ConvertFromJsValue(env, jsValue, strItem)) {
+            WLOGFW("Failed to ConvertFromJsValue, index: %{public}u", i);
+            continue;
+        }
+        vector.emplace_back(std::move(strItem));
+    }
     return true;
 }
 

@@ -184,6 +184,8 @@ public:
     WSRect GetSessionRequestRect() const;
 
     virtual WSError SetActive(bool active);
+    virtual WSError UpdateSizeChangeReason(SizeChangeReason reason);
+    SizeChangeReason GetSizeChangeReason() const;
     virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
     WSError UpdateDensity();
@@ -438,6 +440,7 @@ protected:
     float offsetX_ = 0.0f;
     float offsetY_ = 0.0f;
     bool isVisible_ = false;
+    SizeChangeReason reason_ = SizeChangeReason::UNDEFINED;
 
     NotifyPendingSessionActivationFunc pendingSessionActivationFunc_;
     NotifyChangeSessionVisibilityWithStatusBarFunc changeSessionVisibilityWithStatusBarFunc_;
@@ -532,6 +535,9 @@ private:
 
     mutable std::shared_mutex propertyMutex_;
     sptr<WindowSessionProperty> property_;
+
+    mutable std::shared_mutex uiRequestFocusMutex_;
+    mutable std::shared_mutex uiLostFocusMutex_;
 
     bool showRecent_ = false;
     bool bufferAvailable_ = false;
