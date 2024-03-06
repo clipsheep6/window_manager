@@ -655,7 +655,7 @@ napi_value JsExtensionWindow::OnSetWaterMarkFlag(napi_env env, napi_callback_inf
     if (ret != WmErrorCode::WM_OK) {
         return NapiThrowError(env, ret);
     }
-    WLOGI("OnSetWaterMark end, window [%{public}u, %{public}s], isEnable:%{public}u",
+    WLOGI("OnSetWaterMark end, window [%{public}u, %{public}s], isEnable:%{public}u.",
           windowImpl->GetWindowId(), windowImpl->GetWindowName().c_str(), isEnable);
     return NapiGetUndefined(env);
 }
