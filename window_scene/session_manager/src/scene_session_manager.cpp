@@ -7173,7 +7173,7 @@ sptr<ExtensionSessionInfo> SceneSessionManager::GetExtensionSessionInfo(int32_t 
 {
     std::shared_lock<std::shared_mutex> lock(extensionSessionInfoMapMutex_);
     int64_t extId = ConvertParentIdAndPersistentIdToExtId(parentId, persistentId);
-    auto iter = extensionSessionInfoMap_.find(persistentId);
+    auto iter = extensionSessionInfoMap_.find(extId);
     if (iter == extensionSessionInfoMap_.end()) {
         WLOGFD("Error found ext session with id: %{public}d, %{public}d", parentId, persistentId);
         return nullptr;
