@@ -52,7 +52,7 @@ bool ExtensionSessionInfo::GetVisibility() const
     return isVisible_;
 }
 
-bool ExtensionSessionInfo::GetWaterMark() const;
+bool ExtensionSessionInfo::GetWaterMark() const
 {
     return isWaterMarkEnable_;
 }
