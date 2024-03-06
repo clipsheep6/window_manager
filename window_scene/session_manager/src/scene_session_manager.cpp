@@ -7105,7 +7105,7 @@ WSError SceneSessionManager::AddExentsionSessionInfo(int32_t parentId, int32_t p
         extInfo->SetPersistentId(persistentId);
         int64_t extId = ConvertParentIdAndPersistentIdToExtId(parentId, persistentId);
         std::shared_lock<std::shared_mutex> lock(extensionSessionInfoMapMutex_);
-        extensionSessionInfoMap_.insert(<extId, extInfo>);
+        extensionSessionInfoMap_.insert({extId, extInfo});
         return WSError::WS_OK;
     };
     return taskScheduler_->PostSyncTask(task);
