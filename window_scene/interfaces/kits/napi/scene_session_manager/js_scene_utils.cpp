@@ -784,10 +784,14 @@ napi_value CreateJsSessionStartupVisibility(napi_env env)
         return NapiGetUndefined(env);
     }
 
+    napi_set_named_property(env, objValue, "UNSPECIFIED", CreateJsValue(env,
+        static_cast<int32_t>(AAFwk::StartupVisibility::UNSPECIFIED)));
     napi_set_named_property(env, objValue, "STARTUP_HIDE", CreateJsValue(env,
         static_cast<int32_t>(AAFwk::StartupVisibility::STARTUP_HIDE)));
     napi_set_named_property(env, objValue, "STARTUP_SHOW", CreateJsValue(env,
         static_cast<int32_t>(AAFwk::StartupVisibility::STARTUP_SHOW)));
+    napi_set_named_property(env, objValue, "END", CreateJsValue(env,
+        static_cast<int32_t>(AAFwk::StartupVisibility::END)));
     return objValue;
 }
 
@@ -808,8 +812,10 @@ napi_value CreateJsSessionProcessMode(napi_env env)
         static_cast<int32_t>(AAFwk::ProcessMode::UNSPECIFIED)));
     napi_set_named_property(env, objValue, "NEW_PROCESS_ATTACH_TO_PARENT", CreateJsValue(env,
         static_cast<int32_t>(AAFwk::ProcessMode::NEW_PROCESS_ATTACH_TO_PARENT)));
-    napi_set_named_property(env, objValue, "NEW_PROCESS_ATTACH_TO_STATUS_BAR", CreateJsValue(env,
-        static_cast<int32_t>(AAFwk::ProcessMode::NEW_PROCESS_ATTACH_TO_STATUS_BAR)));
+    napi_set_named_property(env, objValue, "NEW_PROCESS_ATTACH_TO_STATUS_BAR_ITEM", CreateJsValue(env,
+        static_cast<int32_t>(AAFwk::ProcessMode::NEW_PROCESS_ATTACH_TO_STATUS_BAR_ITEM)));
+    napi_set_named_property(env, objValue, "END", CreateJsValue(env,
+        static_cast<int32_t>(AAFwk::ProcessMode::END)));
     return objValue;
 }
 
