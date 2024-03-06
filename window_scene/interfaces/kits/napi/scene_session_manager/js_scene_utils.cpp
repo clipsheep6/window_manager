@@ -22,7 +22,7 @@
 
 #include "root_scene.h"
 #include "window_manager_hilog.h"
-#include "process_option.h"
+#include "process_options.h"
 
 namespace OHOS::Rosen {
 using namespace AbilityRuntime;
@@ -226,12 +226,12 @@ bool IsJsIsSystemInputUndefined(napi_env env, napi_value jsIsSystemInput, Sessio
 bool IsJsProcessOptionUndefined(napi_env env, napi_value jsProcessOption, SessionInfo& sessionInfo)
 {
     if (GetType(env, jsProcessOption) != napi_undefined) {
-        std::shared_ptr<AAFwk::ProcessOptions> processOption;
-        if (!ConvertProcessOptionFromJs(env, jsProcessOption, processOption)) {
-            WLOGFE("[NAPI]Failed to convert parameter to processOption");
+        std::shared_ptr<AAFwk::ProcessOptions> processOptions;
+        if (!ConvertProcessOptionFromJs(env, jsProcessOption, processOptions)) {
+            WLOGFE("[NAPI]Failed to convert parameter to processOptions");
             return false;
         }
-        sessionInfo.processOption = processOption;
+        sessionInfo.processOptions = processOptions;
 bool IsJsIsSetPointerAreasUndefined(napi_env env, napi_value jsIsSetPointerAreas, SessionInfo& sessionInfo)
 {
     if (GetType(env, jsIsSetPointerAreas) != napi_undefined) {
@@ -275,7 +275,7 @@ bool ConvertSessionInfoName(napi_env env, napi_value jsObject, SessionInfo& sess
     return true;
 }
 
-bool ConvertProcessOptionFromJs(napi_env env, napi_value jsObject, std::shared_ptr<AAFwk::ProcessOptions> processOption)
+bool ConvertProcessOptionFromJs(napi_env env, napi_value jsObject, std::shared_ptr<AAFwk::ProcessOptions> processOptions)
 {
     napi_value jsProcessMode = nullptr;
     napi_get_named_property(env, jsObject, "processMode", &jsProcessMode);
@@ -291,8 +291,8 @@ bool ConvertProcessOptionFromJs(napi_env env, napi_value jsObject, std::shared_p
     if (!ConvertFromJsValue(env, jsStartupVisibility, startupVisibility)) {
         return false;
     }
-    processOption->processMode = static_cast<AAFwk::ProcessMode>(processMode);
-    processOption->startupVisibility = static_cast<AAFwk::StartupVisibility>(startupVisibilityMode);
+    processOptions->processMode = static_cast<AAFwk::ProcessMode>(processMode);
+    processOptions->startupVisibility = static_cast<AAFwk::StartupVisibility>(startupVisibility);
     
     return true;
 }
@@ -314,7 +314,7 @@ bool ConvertSessionInfoState(napi_env env, napi_value jsObject, SessionInfo& ses
     napi_value jsIsSystemInput = nullptr;
     napi_get_named_property(env, jsObject, "isSystemInput", &jsIsSystemInput);
     napi_value jsProcessOption = nullptr;
-    napi_get_named_property(env, jsObject, "processOption", &jsProcessOption);
+    napi_get_named_property(env, jsObject, "processOptions", &jsProcessOption);
     napi_value jsIsSetPointerAreas = nullptr;
     napi_get_named_property(env, jsObject, "isSetPointerAreas", &jsIsSetPointerAreas);
 
@@ -348,7 +348,7 @@ bool ConvertSessionInfoState(napi_env env, napi_value jsObject, SessionInfo& ses
     return true;
 }
 
-napi_value CreateJsProcessOption(napi_env env, std::shared_ptr<AAFwk::ProcessOptions> processOption)
+napi_value CreateJsProcessOption(napi_env env, std::shared_ptr<AAFwk::ProcessOptions> processOptions)
 {
     napi_value objValue = nullptr;
     napi_create_object(env, &objValue);
@@ -357,11 +357,11 @@ napi_value CreateJsProcessOption(napi_env env, std::shared_ptr<AAFwk::ProcessOpt
         return nullptr;
     }
 
-    int32_t processMode = static_cast<int32_t>(processOption->processMode);
-    int32_t startupVisibilityMode = static_cast<int32_t>(processOption->startupVisibilityMode);
+    int32_t processMode = static_cast<int32_t>(processOptions->processMode);
+    int32_t startupVisibility = static_cast<int32_t>(processOptions->startupVisibility);
 
     napi_set_named_property(env, objValue, "processMode", CreateJsValue(env, processMode));
-    napi_set_named_property(env, objValue, "startupVisibilityMode", CreateJsValue(env, startupVisibilityMode));
+    napi_set_named_property(env, objValue, "startupVisibility", CreateJsValue(env, startupVisibility));
 
     return objValue;
 }
@@ -661,8 +661,8 @@ napi_value CreateJsSessionInfo(napi_env env, const SessionInfo& sessionInfo)
     napi_set_named_property(env, objValue, "requestOrientation",
         CreateJsValue(env, static_cast<uint32_t>(requestOrientation)));
 
-    if (sessionInfo.processOption != nullptr) {
-        napi_set_named_property(env, objValue, "processOption", CreateJsProcessOption(env, sessionInfo.processOption));
+    if (sessionInfo.processOptions != nullptr) {
+        napi_set_named_property(env, objValue, "processOptions", CreateJsProcessOption(env, sessionInfo.processOptions));
     }
 
     if (sessionInfo.want != nullptr) {
