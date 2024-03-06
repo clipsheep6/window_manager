@@ -600,8 +600,8 @@ WMError WindowExtensionSessionImpl::AddWindowFlag(WindowFlag flag)
         return WMError::WM_ERROR_INVALID_PERMISSION;
     }
 
-    WMError ret = WMError.WM_OK;
-    switch(flag) {
+    WMError ret = WMError::WM_OK;
+    switch (flag) {
         case WindowFlag::WINDOW_FLAG_WATER_MARK: {
             ret = SingletonContainer::Get<WindowAdapter>().SetExtensionWaterMark(property_->GetParentId(),
                 GetPersistentId(), true);
@@ -621,8 +621,8 @@ WMError WindowExtensionSessionImpl::RemoveWindowFlag(WindowFlag flag)
         WLOGI("Can not add window flag WINDOW_FLAG_SHOW_WHEN_LOCKED");
         return WMError::WM_ERROR_INVALID_PERMISSION;
     }
-    WMError ret = WMError.WM_OK;
-    switch(flag) {
+    WMError ret = WMError::WM_OK;
+    switch (flag) {
         case WindowFlag::WINDOW_FLAG_WATER_MARK: {
             ret = SingletonContainer::Get<WindowAdapter>().SetExtensionWaterMark(property_->GetParentId(),
                 GetPersistentId(), false);
