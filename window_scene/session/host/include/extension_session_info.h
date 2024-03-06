@@ -21,8 +21,8 @@
 namespace OHOS::Rosen {
 class ExtensionSessionInfo : public RefBase {
 public:
-    ExtensionSession() = default;
-    ~ExtensionSession() = default;
+    ExtensionSessionInfo() = default;
+    ~ExtensionSessionInfo() = default;
 
     void SetParentId(int32_t parentId);
     void SetPersistentId(int32_t persistentId);
