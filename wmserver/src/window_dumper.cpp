@@ -48,7 +48,7 @@ namespace {
     constexpr int W_WINDOW_MODE = 5;
     constexpr int W_WINDOW_FLAGS = 5;
     constexpr int W_WINDOW_ZORDER = 5;
-    constexpr int W_WINDOW_REQUEST_ORIENTATION = 12;
+    constexpr int W_REQUEST_ORIENTATION = 12;
     constexpr int W_WINDOW_POS_X = 5;
     constexpr int W_WINDOW_POS_Y = 5;
     constexpr int W_WINDOW_WIDTH = 5;
@@ -129,7 +129,7 @@ WMError WindowDumper::DumpScreenGroupWindowInfo(ScreenId screenGroupId,
             << std::left << std::setw(W_WINDOW_MODE) << static_cast<uint32_t>(windowNode->GetWindowMode())
             << std::left << std::setw(W_WINDOW_FLAGS) << windowNode->GetWindowFlags()
             << std::left << std::setw(W_WINDOW_ZORDER) << --zOrder
-            << std::left << std::setw(W_WINDOW_REQUEST_ORIENTATION) << static_cast<uint32_t>(windowNode->GetRequestedOrientation())
+            << std::left << std::setw(W_REQUEST_ORIENTATION) << static_cast<uint32_t>(windowNode->GetRequestedOrientation())
             << "[ "
             << std::left << std::setw(W_WINDOW_POS_X) << rect.posX_
             << std::left << std::setw(W_WINDOW_POS_Y) << rect.posY_

@@ -2887,7 +2887,8 @@ void ScreenSessionManager::DumpAllScreensInfo(std::string& dumpInfo)
             << std::left << std::setw(W_VIR_PIXEL_RATIO) << screenInfo->GetVirtualPixelRatio()
             << std::left << std::setw(W_ROTATION) << static_cast<uint32_t>(screenInfo->GetRotation())
             << std::left << std::setw(W_ORIENTATION) << static_cast<uint32_t>(screenInfo->GetOrientation())
-            << std::left << std::setw(W_REQUESTED_ORIENTATION) << static_cast<uint32_t>(screenSession->GetScreenRequestedOrientation())
+            << std::left << std::setw(W_REQUESTED_ORIENTATION)
+            << static_cast<uint32_t>(screenSession->GetScreenRequestedOrientation())
             << std::left << std::setw(W_NODE_ID) << nodeId
             << std::endl;
     }
