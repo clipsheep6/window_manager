@@ -626,7 +626,7 @@ napi_value JsExtensionWindow::GetProperties(napi_env env, napi_callback_info inf
     return CreateJsExtensionWindowPropertiesObject(env, window);
 }
 
-napi_value JsExtensionWindow::OnSetWaterMarkFlag(napi_env env, napi_callback_info info)
+napi_value JsExtensionWindow::SetWaterMarkFlag(napi_env env, napi_callback_info info)
 {
     if (extensionWindow_ == nullptr) {
         WLOGFE("extensionWindow_ is nullptr");
