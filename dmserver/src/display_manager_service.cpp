@@ -434,7 +434,8 @@ bool DisplayManagerService::SuspendEnd()
         EventStatus::END);
 }
 
-bool DisplayManagerService::SetSpecifiedScreenPower(ScreenId screenId, ScreenPowerState state, PowerStateChangeReason reason)
+bool DisplayManagerService::SetSpecifiedScreenPower(ScreenId screenId, ScreenPowerState state,
+    PowerStateChangeReason reason)
 {
     WLOGFE("DMS not support SetSpecifiedScreenPower: screen:%{public}" PRIu64 ", state:%{public}u",
         screenId, state);

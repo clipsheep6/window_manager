@@ -726,7 +726,8 @@ bool OHOS::Rosen::ScreenSessionManagerProxy::SetDisplayState(DisplayState state)
     return reply.ReadBool();
 }
 
-bool OHOS::Rosen::ScreenSessionManagerProxy::SetSpecifiedScreenPower(ScreenId screenId, ScreenPowerState state, PowerStateChangeReason reason)
+bool OHOS::Rosen::ScreenSessionManagerProxy::SetSpecifiedScreenPower(ScreenId screenId, ScreenPowerState state,
+    PowerStateChangeReason reason)
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
