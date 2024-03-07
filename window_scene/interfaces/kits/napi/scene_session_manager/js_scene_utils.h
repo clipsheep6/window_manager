@@ -59,6 +59,7 @@ enum class JsSessionType : uint32_t {
     TYPE_PIP,
     TYPE_THEME_EDITOR,
     TYPE_NAVIGATION_INDICATOR,
+    TYPE_UIEXTENSION,
 };
 
 // should same with bundlemanager ability info
@@ -109,6 +110,7 @@ const std::map<WindowType, JsSessionType> WINDOW_TO_JS_SESSION_TYPE_MAP {
     { WindowType::WINDOW_TYPE_PIP,                      JsSessionType::TYPE_PIP                     },
     { WindowType::WINDOW_TYPE_THEME_EDITOR,             JsSessionType::TYPE_THEME_EDITOR            },
     { WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR,     JsSessionType::TYPE_NAVIGATION_INDICATOR    },
+    { WindowType::WINDOW_TYPE_UI_EXTENSION,             JsSessionType::TYPE_UIEXTENSION             },
 };
 
 const std::map<JsSessionType, WindowType> JS_SESSION_TO_WINDOW_TYPE_MAP {
@@ -142,6 +144,7 @@ const std::map<JsSessionType, WindowType> JS_SESSION_TO_WINDOW_TYPE_MAP {
     { JsSessionType::TYPE_PIP,                      WindowType::WINDOW_TYPE_PIP,                    },
     { JsSessionType::TYPE_THEME_EDITOR,             WindowType::WINDOW_TYPE_THEME_EDITOR            },
     { JsSessionType::TYPE_NAVIGATION_INDICATOR,     WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR    },
+    { JsSessionType::TYPE_UIEXTENSION,              WindowType::WINDOW_TYPE_UI_EXTENSION            },
 };
 
 const std::map<Orientation, JsSessionOrientation> WINDOW_ORIENTATION_TO_JS_SESSION_MAP {

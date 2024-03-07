@@ -159,6 +159,14 @@ WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
             surfaceNode_, property_, persistentId, session, windowSystemConfig_, token);
         // update subWindowSessionMap_
         subWindowSessionMap_[parentSession->GetPersistentId()].push_back(this);
+    } else if (WindowHelper::IsUIExtensionWindow(type)) { //uiextension sub window
+        // set parent persistentId
+        property_->SetParentPersistentId(parentSession->GetPersistentId());
+        // creat sub session by parent session
+        SingletonContainer::Get<WindowAdapter>().CreateAndConnectSpecificSession(iSessionStage, eventChannel,
+            surfaceNode_, property_, persistentId, session, windowSystemConfig_, token);
+        // update subWindowSessionMap_
+        subWindowSessionMap_[parentSession->GetPersistentId()].push_back(this);
     } else { // system window
         if (WindowHelper::IsAppFloatingWindow(type) || WindowHelper::IsPipWindow(type) ||
             (type == WindowType::WINDOW_TYPE_TOAST)) {
@@ -353,7 +361,7 @@ WMError WindowSceneSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Con
             if (!IsValidSystemWindowType(type)) {
                 return WMError::WM_OK;
             }
-        } else if (!WindowHelper::IsSubWindow(type)) {
+        } else if (!WindowHelper::IsSubWindow(type) && !WindowHelper::IsUIExtensionWindow(type)) {
             WLOGFI("[WMSLife] create failed not system or sub type, type: %{public}d", type);
             return WMError::WM_ERROR_INVALID_TYPE;
         }
@@ -720,7 +728,8 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
     UpdateTitleButtonVisibility();
     if (WindowHelper::IsMainWindow(type)) {
         ret = static_cast<WMError>(hostSession_->Foreground(property_));
-    } else if (WindowHelper::IsSubWindow(type) || WindowHelper::IsSystemWindow(type)) {
+    } else if (WindowHelper::IsSubWindow(type) || WindowHelper::IsSystemWindow(type)
+               || WindowHelper::IsUIExtensionWindow(type)) {
         ret = static_cast<WMError>(hostSession_->Show(property_));
     } else {
         ret = WMError::WM_ERROR_INVALID_WINDOW;
@@ -783,7 +792,8 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
             return res;
         }
         res = static_cast<WMError>(hostSession_->Background());
-    } else if (WindowHelper::IsSubWindow(type) || WindowHelper::IsSystemWindow(type)) {
+    } else if (WindowHelper::IsSubWindow(type) || WindowHelper::IsSystemWindow(type)
+               || WindowHelper::IsUIExtensionWindow(type)) {
         res = static_cast<WMError>(hostSession_->Hide());
     } else {
         res = WMError::WM_ERROR_INVALID_WINDOW;
