@@ -2686,7 +2686,8 @@ HWTEST_F(SceneSessionTest, SetFloatingScale, Function | SmallTest | Level2)
     };
     scensession->specificCallback_->onWindowInfoUpdate_ = windowInfoUpdateFun;
     scensession->specificCallback_->onUpdateAvoidArea_ = updateAvoidAreaFun;
-    EXPECT_NE(3.1415928, scensession->floatingScale_);
+    scensession->SetFloatingScale(3.14f);
+    EXPECT_EQ(3.14f, scensession->floatingScale_);
 }
 
 /**
