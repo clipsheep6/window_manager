@@ -226,6 +226,7 @@ enum class SizeChangeReason : uint32_t {
     FULL_TO_FLOATING,
     FLOATING_TO_FULL,
     PIP_START,
+    PIP_SHOW,
     PIP_RATIO_CHANGE,
     END,
 };

@@ -77,6 +77,7 @@ WMError PictureInPictureController::CreatePictureInPictureWindow()
     windowOption->SetWindowType(WindowType::WINDOW_TYPE_PIP);
     windowOption->SetWindowMode(WindowMode::WINDOW_MODE_PIP);
     windowOption->SetWindowRect(windowRect_);
+    windowOption->SetTouchable(false);
     WMError errCode;
     PiPTemplateInfo pipTemplateInfo;
     pipTemplateInfo.pipTemplateType = pipOption_->GetPipTemplate();
@@ -88,6 +89,7 @@ WMError PictureInPictureController::CreatePictureInPictureWindow()
         return WMError::WM_ERROR_PIP_CREATE_FAILED;
     }
     window_ = window;
+    window_->UpdatePiPRect(windowRect_, WindowSizeChangeReason::PIP_START);
     PictureInPictureManager::PutPipControllerInfo(window_->GetWindowId(), thisController);
     return WMError::WM_OK;
 }
@@ -125,9 +127,9 @@ WMError PictureInPictureController::ShowPictureInPictureWindow(StartPipType star
     pipOption_->GetContentSize(requestWidth, requestHeight);
     if (requestWidth > 0 && requestHeight > 0) {
         Rect requestRect = {0, 0, requestWidth, requestHeight};
-        window_->UpdatePiPRect(requestRect, WindowSizeChangeReason::PIP_START);
+        window_->UpdatePiPRect(requestRect, WindowSizeChangeReason::PIP_SHOW);
     } else {
-        window_->UpdatePiPRect(windowRect_, WindowSizeChangeReason::PIP_START);
+        window_->UpdatePiPRect(windowRect_, WindowSizeChangeReason::PIP_SHOW);
     }
     PictureInPictureManager::SetActiveController(this);
     SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(static_cast<int32_t>(startType),
@@ -313,10 +315,7 @@ void PictureInPictureController::SetAutoStartEnabled(bool enable)
     WLOGI("SetAutoStartEnabled called, enable: %{public}u, mainWindow: %{public}u", enable, mainWindowId_);
     isAutoStartEnabled_ = enable;
     if (isAutoStartEnabled_) {
-        if (mainWindow_ == nullptr) {
-            WLOGFE("Init main window failed");
-            return;
-        }
+        // cache navigation here as we cannot get containerId while BG
         if (!IsPullPiPAndHandleNavigation()) {
             WLOGFE("Navigation operate failed");
             return;
