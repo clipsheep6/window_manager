@@ -586,5 +586,29 @@ WMError WindowAdapter::HideNonSecureWindows(bool shouldHide)
     return static_cast<WMError>(windowManagerServiceProxy_->HideNonSecureWindows(shouldHide));
 }
 
+WMError WindowAdapter::AddExentsionSessionInfo(int32_t parentId, int32_t persistentId)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
+    return static_cast<WMError>(windowManagerServiceProxy_->AddExentsionSessionInfo(parentId, persistentId));
+}
+
+WMError WindowAdapter::RemoveExtensionSessionInfo(int32_t parentId, int32_t persistentId)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
+    return static_cast<WMError>(windowManagerServiceProxy_->RemoveExtensionSessionInfo(parentId, persistentId));
+}
+
+WMError WindowAdapter::SetExtensionVisibility(int32_t parentId, int32_t persistentId, bool isVisible)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
+    return static_cast<WMError>(windowManagerServiceProxy_->SetExtensionVisibility(parentId, persistentId, isVisible));
+}
+
+WMError WindowAdapter::SetExtensionWaterMark(int32_t parentId, int32_t persistentId, bool isEnable)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
+    return static_cast<WMError>(windowManagerServiceProxy_->SetExtensionWaterMark(parentId, persistentId, isEnable));
+}
+
 } // namespace Rosen
 } // namespace OHOS

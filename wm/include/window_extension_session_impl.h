@@ -78,6 +78,9 @@ public:
     void UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration) override;
     static void UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration);
     WMError Hide(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
+    WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
+    WMError AddWindowFlag(WindowFlag flag) override;
+    WMError RemoveWindowFlag(WindowFlag flag) override;
 
 protected:
     NotifyTransferComponentDataFunc notifyTransferComponentDataFunc_;

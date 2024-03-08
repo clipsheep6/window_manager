@@ -56,6 +56,10 @@ class ExtensionWindow {
   getMainWindowSync() {
     return this.__extension_window__.getMainWindowSync();
   }
+
+  setWaterMarkFlag(type, callback) {
+    return this.__extension_window__.setWaterMarkFlag(type, callback);
+  }
 }
 
 export default ExtensionWindow;
