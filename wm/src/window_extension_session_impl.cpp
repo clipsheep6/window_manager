@@ -618,7 +618,7 @@ WMError WindowExtensionSessionImpl::RemoveWindowFlag(WindowFlag flag)
     if (flag == WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED && context_ && context_->GetApplicationInfo() &&
         context_->GetApplicationInfo()->apiCompatibleVersion >= 9 && // 9: api version
         !SessionPermission::IsSystemCalling()) {
-        WLOGI("Can not add window flag WINDOW_FLAG_SHOW_WHEN_LOCKED");
+        WLOGI("Can not remove window flag WINDOW_FLAG_SHOW_WHEN_LOCKED");
         return WMError::WM_ERROR_INVALID_PERMISSION;
     }
     WMError ret = WMError::WM_OK;
