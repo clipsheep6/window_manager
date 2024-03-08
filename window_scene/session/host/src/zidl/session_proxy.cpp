@@ -554,6 +554,26 @@ AvoidArea SessionProxy::GetAvoidAreaByType(AvoidAreaType type)
     return *area;
 }
 
+bool SessionProxy::ShouldChangeSecureState(bool shouldHide)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        return false;
+    }
+    if (!data.WriteBool(shouldHide)) {
+        WLOGFE("Write shouldHide failed");
+        return false;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SHOULD_CHANGE_SECURE_STATE),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return false;
+    }
+    return reply.ReadBool();
+}
+
 WSError SessionProxy::RequestSessionBack(bool needMoveToBackground)
 {
     MessageParcel data;
@@ -652,6 +672,28 @@ WSError SessionProxy::SetSessionProperty(const sptr<WindowSessionProperty>& prop
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_SESSION_PROPERTY),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WSError>(ret);
+}
+
+WSError SessionProxy::SetParentId(int32_t parentId)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32(parentId)) {
+        WLOGFE("Write parentId failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_PARENT_ID),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;

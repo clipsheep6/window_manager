@@ -23,6 +23,7 @@
 #include "window_manager_hilog.h"
 #include "parameters.h"
 #include "anr_handler.h"
+#include "window_adapter.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -59,6 +60,9 @@ WMError WindowExtensionSessionImpl::Create(const std::shared_ptr<AbilityRuntime:
     if (ret == WMError::WM_OK) {
         std::unique_lock<std::shared_mutex> lock(windowExtensionSessionMutex_);
         windowExtensionSessionSet_.insert(this);
+    }
+    if (hostSession_->SetParentId(property_->GetParentId()) != WSError::WS_OK) {
+        WLOGI("Set parentId for extension session failed");
     }
     state_ = WindowState::STATE_CREATED;
     return WMError::WM_OK;
@@ -574,6 +578,16 @@ WMError WindowExtensionSessionImpl::Hide(uint32_t reason, bool withAnimation, bo
         WLOGFD("[WMSLife]window extension session Hide to Background is error");
     }
     return WMError::WM_OK;
+}
+
+WMError WindowExtensionSessionImpl::HideNonSecureWindows(bool shouldHide)
+{
+    if (!hostSession_->ShouldChangeSecureState(shouldHide)) {
+        return WMError::WM_OK;
+    }
+
+    return SingletonContainer::Get<WindowAdapter>().AddOrRemoveSecureExtSession(property_->GetPersistentId(),
+        property_->GetParentId(), shouldHide);
 }
 } // namespace Rosen
 } // namespace OHOS

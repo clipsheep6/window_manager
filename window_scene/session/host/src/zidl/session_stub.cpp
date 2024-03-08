@@ -69,8 +69,12 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
         &SessionStub::HandleNeedAvoid),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_GET_AVOID_AREA),
         &SessionStub::HandleGetAvoidAreaByType),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SHOULD_CHANGE_SECURE_STATE),
+        &SessionStub::HandleShouldChangeSecureState),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_SESSION_PROPERTY),
         &SessionStub::HandleSetSessionProperty),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_PARENT_ID),
+        &SessionStub::HandleSetParentId),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_ASPECT_RATIO),
         &SessionStub::HandleSetAspectRatio),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_WINDOW_ANIMATION_FLAG),
@@ -418,11 +422,29 @@ int SessionStub::HandleGetAvoidAreaByType(MessageParcel& data, MessageParcel& re
     return ERR_NONE;
 }
 
+int SessionStub::HandleShouldChangeSecureState(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("HandleShouldChangeSecureState!");
+    auto shouldHide = data.ReadBool();
+    auto ret = ShouldChangeSecureState(shouldHide);
+    reply.WriteBool(ret);
+    return ERR_NONE;
+}
+
 int SessionStub::HandleSetSessionProperty(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("HandleSetSessionProperty!");
     auto property = data.ReadStrongParcelable<WindowSessionProperty>();
     auto errCode = SetSessionProperty(property);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleSetParentId(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("HandleSetParentId!");
+    auto parentId = data.ReadInt32();
+    auto errCode = SetParentId(parentId);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }

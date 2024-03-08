@@ -49,11 +49,13 @@ public:
     virtual WSError UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason) { return WSError::WS_OK; }
     virtual WSError OnNeedAvoid(bool status) { return WSError::WS_OK; }
     virtual AvoidArea GetAvoidAreaByType(AvoidAreaType type) { return {}; }
+    virtual bool ShouldChangeSecureState(bool shouldHide) { return false; }
     virtual WSError RequestSessionBack(bool needMoveToBackground) { return WSError::WS_OK; }
     virtual WSError MarkProcessed(int32_t eventId) { return WSError::WS_OK; }
     virtual WSError SetGlobalMaximizeMode(MaximizeMode mode) { return WSError::WS_OK; }
     virtual WSError GetGlobalMaximizeMode(MaximizeMode& mode) { return WSError::WS_OK; }
     virtual WSError SetSessionProperty(const sptr<WindowSessionProperty>& property) { return WSError::WS_OK; }
+    virtual WSError SetParentId(int32_t parentId) { return WSError::WS_OK; }
     virtual WSError SetAspectRatio(float ratio) { return WSError::WS_OK; }
     virtual WSError UpdateWindowAnimationFlag(bool needDefaultAnimationFlag) { return WSError::WS_OK; }
     virtual WSError UpdateWindowSceneAfterCustomAnimation(bool isAdd) { return WSError::WS_OK; }

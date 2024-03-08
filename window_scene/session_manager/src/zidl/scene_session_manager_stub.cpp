@@ -132,8 +132,8 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandleShiftAppWindowFocus),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID),
         &SceneSessionManagerStub::HandleGetVisibilityWindowInfo),
-    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_HIDE_NON_SECURE_WINDOWS),
-        &SceneSessionManagerStub::HandleHideNonSecureWindows),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_ADD_OR_REMOVE_SECURE_EXT_SESSION),
+        &SceneSessionManagerStub::HandleAddOrRemoveSecureExtSession),
 };
 
 int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
@@ -798,11 +798,13 @@ int SceneSessionManagerStub::HandleGetVisibilityWindowInfo(MessageParcel& data, 
     return ERR_NONE;
 }
 
-int SceneSessionManagerStub::HandleHideNonSecureWindows(MessageParcel &data, MessageParcel &reply)
+int SceneSessionManagerStub::HandleAddOrRemoveSecureExtSession(MessageParcel &data, MessageParcel &reply)
 {
-    WLOGFI("run HandleHideNonSecureWindows!");
+    WLOGFI("run HandleAddOrRemoveSecureExtSession!");
+    int32_t persistentId = data.ReadInt32();
+    int32_t parentId = data.ReadInt32();
     bool shouldHide = data.ReadBool();
-    WSError ret = HideNonSecureWindows(shouldHide);
+    WSError ret = AddOrRemoveSecureExtSession(persistentId, parentId, shouldHide);
     reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }

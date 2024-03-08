@@ -46,11 +46,13 @@ public:
     WSError UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason) override;
     WSError OnNeedAvoid(bool status) override;
     AvoidArea GetAvoidAreaByType(AvoidAreaType type) override;
+    bool ShouldChangeSecureState(bool shouldHide) override;
     WSError RequestSessionBack(bool needMoveToBackground) override;
     WSError MarkProcessed(int32_t eventId) override;
     WSError SetGlobalMaximizeMode(MaximizeMode mode) override;
     WSError GetGlobalMaximizeMode(MaximizeMode& mode) override;
     WSError SetSessionProperty(const sptr<WindowSessionProperty>& property) override;
+    WSError SetParentId(int32_t parentId) override;
     WSError SetAspectRatio(float ratio) override;
     WSError UpdateWindowAnimationFlag(bool needDefaultAnimationFlag) override;
     WSError UpdateWindowSceneAfterCustomAnimation(bool isAdd) override;

@@ -1468,7 +1468,8 @@ WSError SceneSessionManagerProxy::ShiftAppWindowFocus(int32_t sourcePersistentId
     return static_cast<WSError>(reply.ReadInt32());
 }
 
-WSError SceneSessionManagerProxy::HideNonSecureWindows(bool shouldHide)
+WSError SceneSessionManagerProxy::AddOrRemoveSecureExtSession(int32_t persistentId, int32_t parentId,
+    bool shouldHide)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -1477,11 +1478,20 @@ WSError SceneSessionManagerProxy::HideNonSecureWindows(bool shouldHide)
         WLOGFE("WriteInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
+    if (!data.WriteInt32(persistentId)) {
+        WLOGFE("Write persistentId failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32(parentId)) {
+        WLOGFE("Write parentId failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
     if (!data.WriteBool(shouldHide)) {
         WLOGFE("Write shouldHide failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_HIDE_NON_SECURE_WINDOWS),
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+                              SceneSessionManagerMessage::TRANS_ID_ADD_OR_REMOVE_SECURE_EXT_SESSION),
                               data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;

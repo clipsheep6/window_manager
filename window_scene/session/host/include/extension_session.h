@@ -46,6 +46,7 @@ public:
     WSError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
         sptr<WindowSessionProperty> property, sptr<IRemoteObject> token, int32_t pid, int32_t uid) override;
+    WSError SetParentId(int32_t parentId) override;
 
     AvoidArea GetAvoidAreaByType(AvoidAreaType type) override;
 
@@ -63,7 +64,9 @@ public:
     void TriggerBindModalUIExtension() override;
     void RegisterExtensionSessionEventCallback(const sptr<ExtensionSessionEventCallback>& extSessionEventCallback);
     sptr<ExtensionSessionEventCallback> GetExtensionSessionEventCallback();
+    WSError Foreground(sptr<WindowSessionProperty> property) override;
     WSError Background() override;
+    WSError Disconnect(bool isFromClient = false) override;
 
 private:
     sptr<ExtensionSessionEventCallback> extSessionEventCallback_ = nullptr;

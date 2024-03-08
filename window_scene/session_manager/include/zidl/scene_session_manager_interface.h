@@ -96,7 +96,7 @@ public:
         TRANS_ID_UPDATE_WINDOW_VISIBILITY_LISTENER,
         TRANS_ID_SHIFT_APP_WINDOW_FOCUS,
         TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID,
-        TRANS_ID_HIDE_NON_SECURE_WINDOWS,
+        TRANS_ID_ADD_OR_REMOVE_SECURE_EXT_SESSION,
     };
 
     virtual WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) = 0;
@@ -202,7 +202,7 @@ public:
     {
         return WSError::WS_OK;
     }
-    WSError HideNonSecureWindows(bool shouldHide) override
+    WSError AddOrRemoveSecureExtSession(int32_t persistentId, int32_t parentId, bool shouldHide) override
     {
         return WSError::WS_OK;
     }
