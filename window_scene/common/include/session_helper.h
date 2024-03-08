@@ -107,6 +107,11 @@ public:
         return (type >= WindowType::APP_SUB_WINDOW_BASE && type < WindowType::APP_SUB_WINDOW_END);
     }
 
+    static inline bool IsUIExtensionWindow(WindowType type)
+    {
+        return (type == WindowType::WINDOW_TYPE_UI_EXTENSION);
+    }
+
     static AreaType GetAreaType(int32_t pointWinX, int32_t pointWinY,
         int32_t sourceType, int outside, float vpr, const WSRect& rect)
     {

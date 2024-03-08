@@ -2025,7 +2025,7 @@ void SceneSessionManager::NotifyCreateSpecificSession(sptr<SceneSession> newSess
                 "type: %{public}d", newSession->GetPersistentId(), type);
             return;
         }
-    } else if (SessionHelper::IsSubWindow(type)) {
+    } else if (SessionHelper::IsSubWindow(type) || SessionHelper::IsUIExtensionWindow(type)) {
         NotifyCreateSubSession(property->GetParentPersistentId(), newSession);
         WLOGFD("[WMSLife] Notify sub jsSceneSession, id:%{public}d, parentId: %{public}d, type: %{public}d",
             newSession->GetPersistentId(), property->GetParentPersistentId(), type);

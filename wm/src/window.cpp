@@ -84,7 +84,8 @@ sptr<Window> Window::Create(const std::string& windowName, sptr<WindowOption>& o
         option->AddWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
     }
     WindowType type = option->GetWindowType();
-    if (!(WindowHelper::IsAppWindow(type) || WindowHelper::IsSystemWindow(type))) {
+    if (!(WindowHelper::IsAppWindow(type) || WindowHelper::IsSystemWindow(type)
+        || WindowHelper::IsUIExtensionWindow(type))) {
         WLOGFE("window type is invalid %{public}d", type);
         return nullptr;
     }
