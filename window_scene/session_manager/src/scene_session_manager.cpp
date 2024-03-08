@@ -7101,6 +7101,10 @@ WSError SceneSessionManager::AddExentsionSessionInfo(int32_t parentId, int32_t p
     }
     auto task = [this, parentId, persistentId]() {
         sptr<ExtensionSessionInfo> extInfo = new (std::nothrow) ExtensionSessionInfo();
+        if (extInfo == nullptr) {
+            WLOGFE("AddExentsionSessionInfo error, extInfo is null");
+            return WSError::WS_ERROR_NULLPTR;
+        }
         extInfo->SetParentId(parentId);
         extInfo->SetPersistentId(persistentId);
         int64_t extId = ConvertParentIdAndPersistentIdToExtId(parentId, persistentId);
