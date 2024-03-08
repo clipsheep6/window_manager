@@ -2282,6 +2282,9 @@ WSError SceneSession::UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
             return WSError::WS_ERROR_INVALID_OPERATION;
         }
         WSRect wsRect = SessionHelper::TransferToWSRect(rect);
+        if (reason == SizeChangeReason::PIP_START) {
+            session->SetSessionRequestRect(wsRect);
+        }
         session->NotifySessionRectChange(wsRect, reason);
         return WSError::WS_OK;
     };
