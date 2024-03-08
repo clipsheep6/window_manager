@@ -17,6 +17,7 @@
 #define OHOS_ROSEN_WINDOW_SCENE_EXTENSION_SESSION_INFO_H
 
 #include "refbase.h"
+#include "interfaces/include/ws_common.h"
 
 namespace OHOS::Rosen {
 class ExtensionSessionInfo : public RefBase {
@@ -35,10 +36,10 @@ public:
     bool GetWaterMark() const;
 
 private:
-    int32_t parentId_ = { -1 };
-    int32_t persistentId_ = { -1 };
-    bool isVisible_ = { false };
-    bool isWaterMarkEnable_ = { false };
+    int32_t parentId_ = INVALID_SESSION_ID;
+    int32_t persistentId_ = INVALID_SESSION_ID;
+    bool isVisible_ = false;
+    bool isWaterMarkEnable_ = false;
 };
 } // namespace OHOS::Rosen
 
