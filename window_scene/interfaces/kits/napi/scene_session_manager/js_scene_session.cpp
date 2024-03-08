@@ -524,10 +524,11 @@ void JsSceneSession::ProcessTerminateSessionRegisterNew()
 void JsSceneSession::ProcessTerminateSessionRegisterTotal()
 {
     WLOGFD("begin to run ProcessTerminateSessionRegisterTotal");
-    NotifyTerminateSessionFuncTotal func = [weak = weak_from_this()](const SessionInfo& info, TerminateType terminateType) {
-        auto weakJsSceneSession = weak.lock();
-        if (weakJsSceneSession) weakJsSceneSession->TerminateSessionTotal(info, terminateType);
-    };
+    NotifyTerminateSessionFuncTotal func =
+        [weak = weak_from_this()](const SessionInfo& info, TerminateType terminateType) {
+            auto weakJsSceneSession = weak.lock();
+            if (weakJsSceneSession) weakJsSceneSession->TerminateSessionTotal(info, terminateType);
+        };
     auto session = weakSession_.promote();
     if (session == nullptr) {
         WLOGFE("session is nullptr");
