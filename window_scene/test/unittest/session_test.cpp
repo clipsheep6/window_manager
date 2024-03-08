@@ -2959,7 +2959,7 @@ HWTEST_F(WindowSessionTest, SetTerminateSessionListener54, Function | SmallTest 
 
 /**
  * @tc.name: SetUpdateSessionIconListener55
- * @tc.desc: SetUpdateSessionIconListener 
+ * @tc.desc: SetUpdateSessionIconListener
  * @tc.type: FUNC
  */
 HWTEST_F(WindowSessionTest, SetUpdateSessionIconListener55, Function | SmallTest | Level2)
@@ -2974,7 +2974,7 @@ HWTEST_F(WindowSessionTest, SetUpdateSessionIconListener55, Function | SmallTest
 
 /**
  * @tc.name: PendingSessionToForeground56
- * @tc.desc: PendingSessionToForeground 
+ * @tc.desc: PendingSessionToForeground
  * @tc.type: FUNC
  */
 HWTEST_F(WindowSessionTest, PendingSessionToForeground56, Function | SmallTest | Level2)
@@ -2986,11 +2986,11 @@ HWTEST_F(WindowSessionTest, PendingSessionToForeground56, Function | SmallTest |
 }
 
 /**
- * @tc.name: SetNotifyCallingSessionUpdateRectFunc56
- * @tc.desc: SetNotifyCallingSessionUpdateRectFunc 
+ * @tc.name: SetNotifyCallingSessionUpdateRectFunc57
+ * @tc.desc: SetNotifyCallingSessionUpdateRectFunc
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetNotifyCallingSessionUpdateRectFunc56, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetNotifyCallingSessionUpdateRectFunc57, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->state_ = SessionState::STATE_DISCONNECT;
@@ -3001,11 +3001,11 @@ HWTEST_F(WindowSessionTest, SetNotifyCallingSessionUpdateRectFunc56, Function | 
 }
 
 /**
- * @tc.name: SetNotifyCallingSessionBackgroundFunc57
- * @tc.desc: SetNotifyCallingSessionBackgroundFunc 
+ * @tc.name: SetNotifyCallingSessionBackgroundFunc58
+ * @tc.desc: SetNotifyCallingSessionBackgroundFunc
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetNotifyCallingSessionBackgroundFunc57, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetNotifyCallingSessionBackgroundFunc58, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->state_ = SessionState::STATE_DISCONNECT;
@@ -3016,11 +3016,11 @@ HWTEST_F(WindowSessionTest, SetNotifyCallingSessionBackgroundFunc57, Function | 
 }
 
 /**
- * @tc.name: SetRaiseToAppTopForPointDownFunc58
- * @tc.desc: SetRaiseToAppTopForPointDownFunc 
+ * @tc.name: SetRaiseToAppTopForPointDownFunc59
+ * @tc.desc: SetRaiseToAppTopForPointDownFunc
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetRaiseToAppTopForPointDownFunc58, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetRaiseToAppTopForPointDownFunc59, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->state_ = SessionState::STATE_DISCONNECT;
