@@ -761,6 +761,7 @@ sptr<ScreenSession> ScreenSessionManager::GetScreenSessionInner(ScreenId screenI
     ScreenId defScreenId = GetDefaultScreenId();
     if (phyMirrorEnable && screenId != defScreenId) {
         NodeId nodeId = 0;
+        std::lock_guard<std::recursive_mutex> lock(screenSessionMapMutex_);
         auto sIt = screenSessionMap_.find(defScreenId);
         if (sIt != screenSessionMap_.end() && sIt->second != nullptr && sIt->second->GetDisplayNode() != nullptr) {
             nodeId = sIt->second->GetDisplayNode()->GetId();
@@ -776,10 +777,12 @@ sptr<ScreenSession> ScreenSessionManager::GetScreenSessionInner(ScreenId screenI
 sptr<ScreenSession> ScreenSessionManager::GetOrCreateScreenSession(ScreenId screenId)
 {
     WLOGFI("GetOrCreateScreenSession ENTER");
-    std::lock_guard<std::recursive_mutex> lock(screenSessionMapMutex_);
-    auto sessionIt = screenSessionMap_.find(screenId);
-    if (sessionIt != screenSessionMap_.end()) {
-        return sessionIt->second;
+    {
+        std::lock_guard<std::recursive_mutex> lock(screenSessionMapMutex_);
+        auto sessionIt = screenSessionMap_.find(screenId);
+        if (sessionIt != screenSessionMap_.end()) {
+            return sessionIt->second;
+        }
     }
 
     ScreenId rsId = screenId;
@@ -829,7 +832,10 @@ sptr<ScreenSession> ScreenSessionManager::GetOrCreateScreenSession(ScreenId scre
     session->RegisterScreenChangeListener(this);
     InitAbstractScreenModesInfo(session);
     session->groupSmsId_ = 1;
-    screenSessionMap_[screenId] = session;
+    {
+        std::lock_guard<std::recursive_mutex> lock(screenSessionMapMutex_);
+        screenSessionMap_[screenId] = session;
+    }
     SetHdrFormats(screenId, session);
     SetColorSpaces(screenId, session);
     return session;
