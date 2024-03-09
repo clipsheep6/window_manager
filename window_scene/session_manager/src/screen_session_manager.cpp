@@ -774,25 +774,13 @@ sptr<ScreenSession> ScreenSessionManager::GetScreenSessionInner(ScreenId screenI
     return session;
 }
 
-sptr<ScreenSession> ScreenSessionManager::GetOrCreateScreenSession(ScreenId screenId)
+void ScreenSessionManager::CreateScreenProperty(ScreenId screenId, ScreenProperty& property)
 {
-    WLOGFI("GetOrCreateScreenSession ENTER");
-    {
-        std::lock_guard<std::recursive_mutex> lock(screenSessionMapMutex_);
-        auto sessionIt = screenSessionMap_.find(screenId);
-        if (sessionIt != screenSessionMap_.end()) {
-            return sessionIt->second;
-        }
-    }
-
-    ScreenId rsId = screenId;
-    screenIdManager_.UpdateScreenId(rsId, screenId);
-
     auto screenMode = rsInterface_.GetScreenActiveMode(screenId);
     auto screenBounds = RRect({ 0, 0, screenMode.GetScreenWidth(), screenMode.GetScreenHeight() }, 0.0f, 0.0f);
     auto screenRefreshRate = screenMode.GetScreenRefreshRate();
     auto screenCapability = rsInterface_.GetScreenCapability(screenId);
-    ScreenProperty property;
+    WLOGFI("Call RS interface end, create ScreenProperty begin");
     property.SetRotation(0.0f);
     property.SetPhyWidth(screenCapability.GetPhyWidth());
     property.SetPhyHeight(screenCapability.GetPhyHeight());
@@ -813,6 +801,21 @@ sptr<ScreenSession> ScreenSessionManager::GetOrCreateScreenSession(ScreenId scre
         property.SetBounds(screenBounds);
     }
     property.CalcDefaultDisplayOrientation();
+}
+
+sptr<ScreenSession> ScreenSessionManager::GetOrCreateScreenSession(ScreenId screenId)
+{
+    WLOGFI("GetOrCreateScreenSession ENTER");
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (screenSession) {
+        return screenSession;
+    }
+
+    ScreenId rsId = screenId;
+    screenIdManager_.UpdateScreenId(rsId, screenId);
+
+    ScreenProperty property;
+    CreateScreenProperty(screenID, property);
 
     {
         std::lock_guard<std::recursive_mutex> lock_phy(phyScreenPropMapMutex_);
