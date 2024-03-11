@@ -1655,6 +1655,17 @@ public:
     }
 
     /**
+     * @brief Set density.
+     *
+     * @param isFollowSystem bool.
+     * @return WMError
+     */
+    virtual WMError SetDensityFollowSystem(bool isFollowSystem)
+    {
+        return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+    }
+
+    /**
      * @brief Hide None Secure Windows.
      *
      * @param shouldHide bool.

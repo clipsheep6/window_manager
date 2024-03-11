@@ -68,6 +68,7 @@ napi_value JsExtensionWindow::CreateJsExtensionWindow(napi_env env, sptr<Rosen::
     BindNativeFunction(env, objValue, "getWindowAvoidArea", moduleName, JsExtensionWindow::GetWindowAvoidArea);
     BindNativeFunction(env, objValue, "on", moduleName, JsExtensionWindow::RegisterExtensionWindowCallback);
     BindNativeFunction(env, objValue, "off", moduleName, JsExtensionWindow::UnRegisterExtensionWindowCallback);
+    BindNativeFunction(env, objValue, "setDensityFollowSystem", moduleName, JsExtensionWindow::SetDensityFollowSystem);
     BindNativeFunction(env, objValue, "hideNonSecureWindows", moduleName, JsExtensionWindow::HideNonSecureWindows);
 
     return objValue;
@@ -130,6 +131,13 @@ napi_value JsExtensionWindow::UnRegisterExtensionWindowCallback(napi_env env, na
     WLOGI("UnRegisterExtensionWindowCallback is called");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnUnRegisterExtensionWindowCallback(env, info) : nullptr;
+}
+
+napi_value JsExtensionWindow::SetDensityFollowSystem(napi_env env, napi_callback_info info)
+{
+    WLOGI("SetDensityFollowSystem is called");
+    JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
+    return (me != nullptr) ? me->OnSetDensityFollowSystem(env, info) : nullptr;
 }
 
 napi_value JsExtensionWindow::HideNonSecureWindows(napi_env env, napi_callback_info info)
@@ -565,6 +573,35 @@ napi_value JsExtensionWindow::OnUnRegisterExtensionWindowCallback(napi_env env, 
     }
     WLOGI("UnRegister end, window [%{public}u, %{public}s], type = %{public}s",
           windowImpl->GetWindowId(), windowImpl->GetWindowName().c_str(), cbType.c_str());
+    return NapiGetUndefined(env);
+}
+
+napi_value JsExtensionWindow::OnSetDensityFollowSystem(napi_env env, napi_callback_info info)
+{
+    WLOGI("OnSetDensityFollowSystem is called");
+
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc < 1) { // 1: params num
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
+    bool isFollowSystem = false;
+    if (!ConvertFromJsValue(env, argv[0], isFollowSystem)) {
+        WLOGFE("Failed to convert parameter to bool");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
+
+    if (extensionWindow_ == nullptr) {
+        WLOGFE("extensionWindow_ is nullptr");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STAGE_ABNORMALLY)));
+        return CreateJsValue(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STAGE_ABNORMALLY));
+    }
+    WmErrorCode ret = WmErrorCode::WM_OK;
+    ret = WM_JS_TO_ERROR_CODE_MAP.at(extensionWindow_->SetDensityFollowSystem(isFollowSystem));
+    if (ret != WmErrorCode::WM_OK) {
+        return NapiThrowError(env, ret);
+    }
     return NapiGetUndefined(env);
 }
 

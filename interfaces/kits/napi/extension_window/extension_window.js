@@ -37,6 +37,10 @@ class ExtensionWindow {
     return this.__extension_window__.off(type, callback);
   }
 
+  setDensityFollowSystem(type) {
+    return this.__extension_window__.setDensityFollowSystem(type);
+  }
+
   hideNonSecureWindows(type, callback) {
     return this.__extension_window__.hideNonSecureWindows(type, callback);
   }

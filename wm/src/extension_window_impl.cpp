@@ -40,6 +40,12 @@ sptr<Window> ExtensionWindowImpl::GetWindow()
     return windowExtensionSessionImpl_;
 }
 
+WMError ExtensionWindowImpl::SetDensityFollowSystem(bool isFollowSystem)
+{
+    WLOGI("SetDensityFollowSystem is called");
+    return windowExtensionSessionImpl_->SetDensityFollowSystem(isFollowSystem);
+}
+
 WMError ExtensionWindowImpl::HideNonSecureWindows(bool shouldHide)
 {
     WLOGI("HideNonSecureWindows is called");

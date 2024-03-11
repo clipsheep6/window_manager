@@ -40,6 +40,7 @@ public:
     static napi_value GetWindowAvoidArea(napi_env env, napi_callback_info info);
     static napi_value RegisterExtensionWindowCallback(napi_env env, napi_callback_info info);
     static napi_value UnRegisterExtensionWindowCallback(napi_env env, napi_callback_info info);
+    static napi_value SetDensityFollowSystem(napi_env env, napi_callback_info info);
     static napi_value HideNonSecureWindows(napi_env env, napi_callback_info info);
     static napi_value LoadContent(napi_env env, napi_callback_info info);
     static napi_value LoadContentByName(napi_env env, napi_callback_info info);
@@ -52,6 +53,7 @@ private:
     napi_value OnGetWindowAvoidArea(napi_env env, napi_callback_info info);
     napi_value OnRegisterExtensionWindowCallback(napi_env env, napi_callback_info info);
     napi_value OnUnRegisterExtensionWindowCallback(napi_env env, napi_callback_info info);
+    napi_value OnSetDensityFollowSystem(napi_env env, napi_callback_info info);
     napi_value OnHideNonSecureWindows(napi_env env, napi_callback_info info);
     napi_value OnLoadContent(napi_env env, napi_callback_info info, bool isLoadedByName);
     napi_value OnShowWindow(napi_env env, napi_callback_info info);

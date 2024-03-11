@@ -1027,6 +1027,19 @@ WSError Session::SetActive(bool active)
     return WSError::WS_OK;
 }
 
+WSError Session::NotifyDensityValue(float value)
+{
+    if (!IsSessionValid()) {
+        return WSError::WS_ERROR_INVALID_SESSION;
+    }
+    if (!sessionStage_) {
+        WLOGFE("session stage is null!");
+        return WSError::WS_ERROR_NULLPTR;
+    }
+
+    return sessionStage_->NotifyDensityValue(value);
+}
+
 void Session::NotifyForegroundInteractiveStatus(bool interactive)
 {
     SetForegroundInteractiveStatus(interactive);

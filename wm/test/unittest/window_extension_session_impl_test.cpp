@@ -386,6 +386,56 @@ HWTEST_F(WindowExtensionSessionImplTest, TransferAccessibilityEvent, Function | 
 }
 
 /**
+ * @tc.name: SetDensityFollowSystem
+ * @tc.desc: Set desity mode DENSITY_SYSTEM
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, SetDensityFollowSystem, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("WindowSessionCreateCheck");
+    sptr<WindowExtensionSessionImpl> window = new (std::nothrow) WindowExtensionSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+
+    DisplayId displayId = 0;
+    window->property_->SetDisplayId(displayId);
+    sptr<Display> defaultDisplay = DisplayManager::GetInstance().GetDisplayById(displayId);
+    ASSERT_NE(defaultDisplay, nullptr);
+
+    auto value = defaultDisplay->GetVirtualPixelRatio();
+
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+    Ace::UIContentMocker* content = reinterpret_cast<Ace::UIContentMocker*>(window->uiContent_.get());
+    window->isDensityFollowSystem_ = false;
+    EXPECT_CALL(*content, UpdateViewportConfig(Field(&Ace::ViewportConfig::density_, value), _, _));
+    ASSERT_EQ(window->SetDensityFollowSystem(true), WMError::WM_OK);
+}
+
+/**
+ * @tc.name: NotifyDensityValue
+ * @tc.desc: NotifyDensityValue test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, NotifyDensityValue, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("WindowSessionCreateCheck");
+    sptr<WindowExtensionSessionImpl> window = new (std::nothrow) WindowExtensionSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+
+    DisplayId displayId = 0;
+    window->property_->SetDisplayId(displayId);
+
+    auto value = 0.1f;
+
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+    Ace::UIContentMocker* content = reinterpret_cast<Ace::UIContentMocker*>(window->uiContent_.get());
+    window->isDensityFollowSystem_ = false;
+    EXPECT_CALL(*content, UpdateViewportConfig(Field(&Ace::ViewportConfig::density_, value), _, _));
+    ASSERT_EQ(window->NotifyDensityValue(value), WSError::WS_OK);
+}
+
+/**
  * @tc.name: RegisterAvoidAreaChangeListener
  * @tc.desc: RegisterAvoidAreaChangeListener Test
  * @tc.type: FUNC

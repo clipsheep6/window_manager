@@ -193,6 +193,8 @@ public:
     void NotifyWindowTitleButtonRectChange(TitleButtonRect titleButtonRect);
     void RecoverSessionListener();
     void SetDefaultDisplayIdIfNeed();
+    WSError NotifyDensityValue(float value) override;
+    WMError SetDensityFollowSystem(bool isFollowSystem) override;
     WMError HideNonSecureWindows(bool shouldHide) override;
 protected:
     WMError Connect();
@@ -212,6 +214,7 @@ protected:
     WMError SetBackgroundColor(uint32_t color);
     uint32_t GetBackgroundColor() const;
     virtual WMError SetLayoutFullScreenByApiVersion(bool status);
+    float GetVirtualPixelRatio(sptr<DisplayInfo> displayInfo);
     void UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
     void NotifySizeChange(Rect rect, WindowSizeChangeReason reason);
@@ -248,6 +251,8 @@ protected:
     bool needRemoveWindowInputChannel_ = false;
     float virtualPixelRatio_ { 1.0f };
     bool escKeyEventTriggered_ = false;
+    std::atomic<bool> isDensityFollowSystem_ { true };
+    std::optional<std::atomic<float>> densityValue_ = std::nullopt;
 
 private:
     //Trans between colorGamut and colorSpace
