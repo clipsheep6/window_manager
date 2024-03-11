@@ -665,7 +665,7 @@ WSError SceneSession::SetSystemBarProperty(WindowType type, SystemBarProperty sy
         return WSError::WS_ERROR_NULLPTR;
     }
     property->SetSystemBarProperty(type, systemBarProperty);
-    WLOGFI("[WMSImms]SceneSession SetSystemBarProperty persistentId():%{public}u type:%{public}u"
+    TLOGI(WmsLogTag::WMS_IMMS, "SceneSession SetSystemBarProperty persistentId():%{public}u type:%{public}u"
         "enable:%{public}u bgColor:%{public}x Color:%{public}x",
         GetPersistentId(), static_cast<uint32_t>(type),
         systemBarProperty.enable_, systemBarProperty.backgroundColor_, systemBarProperty.contentColor_);
@@ -709,10 +709,10 @@ WSError SceneSession::OnNeedAvoid(bool status)
     auto task = [weakThis = wptr(this), status]() {
         auto session = weakThis.promote();
         if (!session) {
-            WLOGFE("session is null");
+            TLOGE(WmsLogTag::WMS_IMMS, "session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
-        WLOGFI("[WMSImms]SceneSession OnNeedAvoid status:%{public}d", static_cast<int32_t>(status));
+        TLOGI(WmsLogTag::WMS_IMMS, "SceneSession OnNeedAvoid status:%{public}d", static_cast<int32_t>(status));
         if (session->sessionChangeCallback_ && session->sessionChangeCallback_->OnNeedAvoid_) {
             session->sessionChangeCallback_->OnNeedAvoid_(status);
         }
@@ -840,17 +840,17 @@ void SceneSession::GetCutoutAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 {
     auto display = DisplayManager::GetInstance().GetDisplayById(GetSessionProperty()->GetDisplayId());
     if (display == nullptr) {
-        WLOGFE("Failed to get display manager");
+        TLOGE(WmsLogTag::WMS_IMMS, "Failed to get display manager");
         return;
     }
     sptr<CutoutInfo> cutoutInfo = display->GetCutoutInfo();
     if (cutoutInfo == nullptr) {
-        WLOGFI("GetCutoutAvoidArea There is no CutoutInfo");
+        TLOGI(WmsLogTag::WMS_IMMS, "GetCutoutAvoidArea There is no CutoutInfo");
         return;
     }
     std::vector<DMRect> cutoutAreas = cutoutInfo->GetBoundingRects();
     if (cutoutAreas.empty()) {
-        WLOGFI("GetCutoutAvoidArea There is no cutoutAreas");
+        TLOGI(WmsLogTag::WMS_IMMS, "GetCutoutAvoidArea There is no cutoutAreas");
         return;
     }
     for (auto& cutoutArea : cutoutAreas) {
@@ -881,12 +881,12 @@ AvoidArea SceneSession::GetAvoidAreaByType(AvoidAreaType type)
     auto task = [weakThis = wptr(this), type]() -> AvoidArea {
         auto session = weakThis.promote();
         if (!session) {
-            WLOGFE("session is null");
+            TLOGE(WmsLogTag::WMS_IMMS, "session is null");
             return {};
         }
         AvoidArea avoidArea;
         WSRect rect = session->GetSessionRect();
-        WLOGFD("[WMSImms]GetAvoidAreaByType avoidAreaType:%{public}u", type);
+        TLOGD(WmsLogTag::WMS_IMMS, "GetAvoidAreaByType avoidAreaType:%{public}u", type);
         switch (type) {
             case AvoidAreaType::TYPE_SYSTEM: {
                 session->GetSystemAvoidArea(rect, avoidArea);
@@ -905,7 +905,7 @@ AvoidArea SceneSession::GetAvoidAreaByType(AvoidAreaType type)
                 return avoidArea;
             }
             default: {
-                WLOGFI("[WMSImms]cannot find avoidAreaType: %{public}u", type);
+                TLOGI(WmsLogTag::WMS_IMMS, "cannot find avoidAreaType: %{public}u", type);
                 return avoidArea;
             }
         }
@@ -1894,13 +1894,14 @@ void SceneSession::SetSystemTouchable(bool touchable)
     NotifyAccessibilityVisibilityChange();
 }
 
-WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> abilitySessionInfo)
+WSError SceneSession::ChangeSessionVisibilityWithStatusBar(
+    const sptr<AAFwk::SessionInfo> abilitySessionInfo, bool visible)
 {
     if (!SessionPermission::VerifySessionPermission()) {
         WLOGFE("The interface permission failed.");
         return WSError::WS_ERROR_INVALID_PERMISSION;
     }
-    auto task = [weakThis = wptr(this), abilitySessionInfo]() {
+    auto task = [weakThis = wptr(this), abilitySessionInfo, visible]() {
         auto session = weakThis.promote();
         if (!session) {
             WLOGFE("session is null");
@@ -1908,6 +1909,56 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
         }
         if (abilitySessionInfo == nullptr) {
             WLOGFE("abilitySessionInfo is null");
+            return WSError::WS_ERROR_NULLPTR;
+        }
+
+        SessionInfo info;
+        info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
+        info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
+        info.moduleName_ = abilitySessionInfo->want.GetModuleName();
+        info.appIndex_ = abilitySessionInfo->want.GetIntParam(DLP_INDEX, 0);
+        info.persistentId_ = abilitySessionInfo->persistentId;
+        info.callerPersistentId_ = session->GetPersistentId();
+        info.callState_ = static_cast<uint32_t>(abilitySessionInfo->state);
+        info.uiAbilityId_ = abilitySessionInfo->uiAbilityId;
+        info.want = std::make_shared<AAFwk::Want>(abilitySessionInfo->want);
+        info.requestCode = abilitySessionInfo->requestCode;
+        info.callerToken_ = abilitySessionInfo->callerToken;
+        info.startSetting = abilitySessionInfo->startSetting;
+        info.callingTokenId_ = abilitySessionInfo->callingTokenId;
+        info.reuse = abilitySessionInfo->reuse;
+        info.processOptions = abilitySessionInfo->processOptions;
+        
+        if (session->changeSessionVisibilityWithStatusBarFunc_) {
+            session->changeSessionVisibilityWithStatusBarFunc_(info, visible);
+        }
+        SessionState oldState = session->GetSessionState();
+        SessionState newState = visible == false ? SessionState::STATE_BACKGROUND : SessionState::STATE_FOREGROUND;
+        if (oldState != newState) {
+            session->SetSessionState(newState);
+            session->NotifySessionStateChange(newState);
+        }
+        
+        return WSError::WS_OK;
+    };
+    PostTask(task, "ChangeSessionVisibilityWithStatusBar");
+    return WSError::WS_OK;
+}
+
+WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> abilitySessionInfo)
+{
+    if (!SessionPermission::VerifySessionPermission()) {
+        TLOGE(WmsLogTag::WMS_LIFE, "The permission check failed.");
+        return WSError::WS_ERROR_INVALID_PERMISSION;
+    }
+    auto task = [weakThis = wptr(this), abilitySessionInfo]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            TLOGE(WmsLogTag::WMS_LIFE, "session is null");
+            return WSError::WS_ERROR_DESTROYED_OBJECT;
+        }
+        if (abilitySessionInfo == nullptr) {
+            TLOGE(WmsLogTag::WMS_LIFE, "abilitySessionInfo is null");
             return WSError::WS_ERROR_NULLPTR;
         }
         session->sessionInfo_.startMethod = StartMethod::START_CALL;
@@ -1932,14 +1983,14 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
             info.windowMode = info.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_MODE, 0);
             info.sessionAffinity = info.want->GetStringParam(Rosen::PARAM_KEY::PARAM_MISSION_AFFINITY_KEY);
             info.screenId_ = info.want->GetIntParam(AAFwk::Want::PARAM_RESV_DISPLAY_ID, -1);
-            WLOGFI("[WMSLife]PendingSessionActivation: want screenId %{public}" PRIu64 " uri: %{public}s",
+            TLOGI(WmsLogTag::WMS_LIFE, "want: screenId %{public}" PRIu64 " uri: %{public}s",
                 info.screenId_, info.want->GetElement().GetURI().c_str());
         }
 
-        WLOGFI("PendingSessionActivation:bundleName %{public}s, moduleName:%{public}s, abilityName:%{public}s, \
+        TLOGI(WmsLogTag::WMS_LIFE, "bundleName %{public}s, moduleName:%{public}s, abilityName:%{public}s, \
             appIndex:%{public}d, affinity:%{public}s", info.bundleName_.c_str(), info.moduleName_.c_str(),
             info.abilityName_.c_str(), info.appIndex_, info.sessionAffinity.c_str());
-        WLOGFI("PendingSessionActivation callState:%{public}d, want persistentId: %{public}d, "
+        TLOGI(WmsLogTag::WMS_LIFE, "callState:%{public}d, want persistentId: %{public}d, "
             "callingTokenId:%{public}d, uiAbilityId: %{public}" PRIu64
             ", windowMode: %{public}d, caller persistentId: %{public}d",
             info.callState_, info.persistentId_, info.callingTokenId_, info.uiAbilityId_,
