@@ -158,7 +158,11 @@ HWTEST_F(SessionStubTest, sessionStubTest02, Function | SmallTest | Level2)
     ASSERT_EQ(0, res);
     res = session_->HandleGetAvoidAreaByType(data, reply);
     ASSERT_EQ(0, res);
+    res = session_->HandleShouldChangeSecureState(data, reply);
+    ASSERT_EQ(0, res);
     res = session_->HandleSetSessionProperty(data, reply);
+    ASSERT_EQ(0, res);
+    res = session_->HandleSetParentId(data, reply);
     ASSERT_EQ(0, res);
     res = session_->HandleSetAspectRatio(data, reply);
     ASSERT_EQ(0, res);

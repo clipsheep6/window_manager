@@ -2442,6 +2442,33 @@ HWTEST_F(SceneSessionTest, RequestHideKeyboard, Function | SmallTest | Level2)
     scensession->RequestHideKeyboard();
     ASSERT_EQ(0, resultValue);
 }
+
+/**
+ * @tc.name: AddOrRemoveSecureExtSession
+ * @tc.desc:  * @tc.name: AddOrRemoveSecureExtSession
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, AddOrRemoveSecureExtSession, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "AddOrRemoveSecureExtSession";
+    info.bundleName_ = "AddOrRemoveSecureExtSession";
+
+    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
+            new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(specificCallback_, nullptr);
+
+    sptr<SceneSession> sceneSession;
+    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(sceneSession, nullptr);
+
+    EXPECT_TRUE(sceneSession->secureExtSessionSet_.empty());
+    sceneSession->AddOrRemoveSecureExtSession(12345, true);
+    EXPECT_EQ(sceneSession->secureExtSessionSet_.size(), 1);
+    EXPECT_EQ(*sceneSession->secureExtSessionSet_.begin(), 12345);
+    sceneSession->AddOrRemoveSecureExtSession(12345, false);
+    EXPECT_TRUE(sceneSession->secureExtSessionSet_.empty());
+}
 }
 }
 }
