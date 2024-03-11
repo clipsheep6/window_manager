@@ -320,7 +320,7 @@ WMError WindowSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Context>
 WMError WindowSessionImpl::Connect()
 {
     if (hostSession_ == nullptr) {
-        WLOGFE("[WMSLife]Session is null!");
+        TLOGE(WmsLogTag::WMS_LIFE, "Session is null!");
         return WMError::WM_ERROR_NULLPTR;
     }
     sptr<ISessionStage> iSessionStage(this);
@@ -332,7 +332,7 @@ WMError WindowSessionImpl::Connect()
     }
     auto ret = hostSession_->Connect(
         iSessionStage, iWindowEventChannel, surfaceNode_, windowSystemConfig_, property_, token);
-    WLOGFI("[WMSLife]Window Connect [name:%{public}s, id:%{public}d, type:%{public}u], ret:%{public}u",
+    TLOGI(WmsLogTag::WMS_LIFE, "Window Connect [name:%{public}s, id:%{public}d, type:%{public}u], ret:%{public}u",
         property_->GetWindowName().c_str(), GetPersistentId(), property_->GetWindowType(), ret);
     return static_cast<WMError>(ret);
 }
@@ -350,14 +350,14 @@ void WindowSessionImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent
 
 WMError WindowSessionImpl::Show(uint32_t reason, bool withAnimation)
 {
-    WLOGFI("[WMSLife]Window Show [name:%{public}s, id:%{public}d, type:%{public}u], reason:%{public}u state:%{public}u",
-        property_->GetWindowName().c_str(), property_->GetPersistentId(), GetType(), reason, state_);
+    TLOGI(WmsLogTag::WMS_LIFE, "Window Show [name:%{public}s, id:%{public}d, type:%{public}u], reason:%{public}u \
+        state:%{public}u", property_->GetWindowName().c_str(), property_->GetPersistentId(), GetType(), reason, state_);
     if (IsWindowSessionInvalid()) {
         WLOGFE("session is invalid");
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (state_ == WindowState::STATE_SHOWN) {
-        WLOGFD("[WMSLife]window session is alreay shown [name:%{public}s, id:%{public}d, type: %{public}u]",
+        TLOGD(WmsLogTag::WMS_LIFE, "window session is alreay shown [name:%{public}s, id:%{public}d, type: %{public}u]",
             property_->GetWindowName().c_str(), GetPersistentId(), property_->GetWindowType());
         NotifyAfterForeground(true, false);
         return WMError::WM_OK;
@@ -378,14 +378,14 @@ WMError WindowSessionImpl::Show(uint32_t reason, bool withAnimation)
 
 WMError WindowSessionImpl::Hide(uint32_t reason, bool withAnimation, bool isFromInnerkits)
 {
-    WLOGFI("[WMSLife]id:%{public}d Hide, reason:%{public}u, state:%{public}u",
+    TLOGI(WmsLogTag::WMS_LIFE, "id:%{public}d Hide, reason:%{public}u, state:%{public}u",
         GetPersistentId(), reason, state_);
     if (IsWindowSessionInvalid()) {
         WLOGFE("session is invalid");
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (state_ == WindowState::STATE_HIDDEN || state_ == WindowState::STATE_CREATED) {
-        WLOGFD("[WMSLife]window session is alreay hidden [name:%{public}s, id:%{public}d, type: %{public}u]",
+        TLOGD(WmsLogTag::WMS_LIFE, "window session is alreay hidden [name:%{public}s, id:%{public}d, type: %{public}u]",
             property_->GetWindowName().c_str(), GetPersistentId(), property_->GetWindowType());
         NotifyBackgroundFailed(WMError::WM_DO_NOTHING);
         return WMError::WM_OK;
@@ -398,7 +398,7 @@ WMError WindowSessionImpl::Hide(uint32_t reason, bool withAnimation, bool isFrom
 
 WMError WindowSessionImpl::Destroy(bool needNotifyServer, bool needClearListener)
 {
-    WLOGFI("[WMSLife]Id: %{public}d Destroy, state_:%{public}u, needNotifyServer: %{public}d, "
+    TLOGI(WmsLogTag::WMS_LIFE, "Id: %{public}d Destroy, state_:%{public}u, needNotifyServer: %{public}d, "
         "needClearListener: %{public}d", GetPersistentId(), state_, needNotifyServer, needClearListener);
     if (IsWindowSessionInvalid()) {
         WLOGFW("[WMSLife]session is invalid");
@@ -450,7 +450,7 @@ WSError WindowSessionImpl::UpdateRect(const WSRect& rect, SizeChangeReason reaso
     Rect wmRect = { rect.posX_, rect.posY_, rect.width_, rect.height_ };
     auto preRect = GetRect();
     property_->SetWindowRect(wmRect);
-    WLOGFI("[WMSLayout] updateRect %{public}s, reason:%{public}u"
+    TLOGI(WmsLogTag::WMS_LAYOUT, "updateRect %{public}s, reason:%{public}u"
         "WindowInfo:[name: %{public}s, persistentId:%{public}d]", rect.ToString().c_str(),
         wmReason, GetWindowName().c_str(), GetPersistentId());
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER,
@@ -533,7 +533,7 @@ void WindowSessionImpl::UpdateDensity()
 
 WSError WindowSessionImpl::UpdateFocus(bool isFocused)
 {
-    WLOGFI("[WMSFocus]Report update focus: %{public}u, id: %{public}d", isFocused, GetPersistentId());
+    TLOGI(WmsLogTag::WMS_FOCUS, "Report update focus: %{public}u, id: %{public}d", isFocused, GetPersistentId());
     isFocused_ = isFocused;
     if (isFocused) {
         HiSysEventWrite(
@@ -608,8 +608,8 @@ void WindowSessionImpl::UpdateViewportConfig(const Rect& rect, WindowSizeChangeR
     config.SetDensity(density);
     config.SetOrientation(orientation);
     uiContent_->UpdateViewportConfig(config, reason, rsTransaction);
-    WLOGFI("[WMSLayout] Id:%{public}d, reason:%{public}d, windowRect:[%{public}d, %{public}d, %{public}u, %{public}u], "
-        "orientation: %{public}d", GetPersistentId(), reason, rect.posX_, rect.posY_,
+    TLOGI(WmsLogTag::WMS_LAYOUT, "Id:%{public}d, reason:%{public}d, windowRect:[%{public}d, %{public}d, \
+        %{public}u, %{public}u], orientation: %{public}d", GetPersistentId(), reason, rect.posX_, rect.posY_,
         rect.width_, rect.height_, orientation);
 }
 
@@ -680,9 +680,10 @@ WMError WindowSessionImpl::SetUIContentByAbc(
 WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
     WindowSetUIContentType type, AppExecFwk::Ability* ability)
 {
-    WLOGFD("[WMSLife]NapiSetUIContent: %{public}s state:%{public}u", contentInfo.c_str(), state_);
+    TLOGD(WmsLogTag::WMS_LIFE, "NapiSetUIContent: %{public}s state:%{public}u", contentInfo.c_str(), state_);
     if (IsWindowSessionInvalid()) {
-        WLOGFE("[WMSLife]interrupt set uicontent because window is invalid! window state: %{public}d", state_);
+        TLOGE(WmsLogTag::WMS_LIFE, "interrupt set uicontent because window is invalid! window state: %{public}d",
+            state_);
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (uiContent_) {
@@ -695,7 +696,7 @@ WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, nap
         uiContent = Ace::UIContent::Create(context_.get(), reinterpret_cast<NativeEngine*>(env));
     }
     if (uiContent == nullptr) {
-        WLOGFE("[WMSLife]fail to NapiSetUIContent id: %{public}d", GetPersistentId());
+        TLOGE(WmsLogTag::WMS_LIFE, "fail to NapiSetUIContent id: %{public}d", GetPersistentId());
         return WMError::WM_ERROR_NULLPTR;
     }
 
@@ -758,7 +759,7 @@ WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, nap
             contentInfo.c_str(), static_cast<uint16_t>(aceRet));
         return WMError::WM_ERROR_INVALID_PARAM;
     }
-    WLOGFD("[WMSLife]notify uiContent window size change end");
+    TLOGD(WmsLogTag::WMS_LIFE, "notify uiContent window size change end");
     return WMError::WM_OK;
 }
 
@@ -1016,7 +1017,7 @@ float WindowSessionImpl::GetBrightness() const
 
 void WindowSessionImpl::SetRequestedOrientation(Orientation orientation)
 {
-    WLOGFI("[WMSMain]id:%{public}u lastReqOrientation: %{public}u target:%{public}u state_:%{public}u",
+    TLOGI(WmsLogTag::WMS_MAIN, "id:%{public}u lastReqOrientation: %{public}u target:%{public}u state_:%{public}u",
         GetPersistentId(), property_->GetRequestedOrientation(), orientation, state_);
     if (property_->GetRequestedOrientation() == orientation) {
         return;
@@ -1479,13 +1480,10 @@ static void RequestInputMethodCloseKeyboard(bool isNeedKeyboard, bool keepKeyboa
 {
     if (!isNeedKeyboard && !keepKeyboardFlag) {
 #ifdef IMF_ENABLE
-        WLOGFI("[WMSInput] Notify InputMethod framework close keyboard start.");
+        TLOGI(WmsLogTag::WMS_KEYBOARD, "Notify InputMethod framework close keyboard start.");
         if (MiscServices::InputMethodController::GetInstance()) {
-            int32_t ret = MiscServices::InputMethodController::GetInstance()->RequestHideInput();
-            WLOGFI("[WMSInput] Notify InputMethod framework close keyboard end.");
-            if (ret != 0) { // 0 - NO_ERROR
-                WLOGFE("[WMSInput] InputMethod framework close keyboard failed, ret: %{public}d", ret);
-            }
+            MiscServices::InputMethodController::GetInstance()->RequestHideInput();
+            TLOGI(WmsLogTag::WMS_KEYBOARD, "Notify InputMethod framework close keyboard end.");
         }
 #endif
     }
@@ -1513,14 +1511,14 @@ void WindowSessionImpl::NotifyUIContentFocusStatus()
         }
         // whether keep the keyboard created by other windows, support system window and app subwindow.
         bool keepKeyboardFlag = (window->property_) ? window->property_->GetKeepKeyboardFlag() : false;
-        WLOGFI("[WMSInput] isNeedKeyboard: %{public}d, keepKeyboardFlag: %{public}d",
+        TLOGI(WmsLogTag::WMS_KEYBOARD, "isNeedKeyboard: %{public}d, keepKeyboardFlag: %{public}d",
             isNeedKeyboard, keepKeyboardFlag);
         RequestInputMethodCloseKeyboard(isNeedKeyboard, keepKeyboardFlag);
     };
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (uiContent_ != nullptr) {
         uiContent_->SetOnWindowFocused(task);
-        WLOGFI("[WMSInput] set need soft keyboard callback success!");
+        TLOGI(WmsLogTag::WMS_KEYBOARD, "set need soft keyboard callback success!");
     }
 }
 
@@ -1561,7 +1559,7 @@ void WindowSessionImpl::NotifyBeforeDestroy(std::string windowName)
     auto task = [uiContent]() {
         if (uiContent != nullptr) {
             uiContent->Destroy();
-            WLOGFD("[WMSLife]NotifyBeforeDestroy: uiContent destroy success");
+            TLOGD(WmsLogTag::WMS_LIFE, "NotifyBeforeDestroy: uiContent destroy success");
         }
     };
     if (handler_) {
@@ -1775,9 +1773,9 @@ WMError WindowSessionImpl::RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChange
     bool isUpdate = false;
     WMError ret = WMError::WM_OK;
     auto persistentId = GetPersistentId();
-    WLOGFD("Start register avoidAreaChange listener, id:%{public}d", persistentId);
+    TLOGD(WmsLogTag::WMS_IMMS, "Start register avoidAreaChange listener, id:%{public}d", persistentId);
     if (listener == nullptr) {
-        WLOGFE("listener is nullptr");
+        TLOGE(WmsLogTag::WMS_IMMS, "listener is nullptr");
         return WMError::WM_ERROR_NULLPTR;
     }
 
@@ -1802,7 +1800,7 @@ WMError WindowSessionImpl::UnregisterAvoidAreaChangeListener(sptr<IAvoidAreaChan
     bool isUpdate = false;
     WMError ret = WMError::WM_OK;
     auto persistentId = GetPersistentId();
-    WLOGFD("Start unregister avoidAreaChange listener, id:%{public}d", persistentId);
+    TLOGD(WmsLogTag::WMS_IMMS, "Start unregister avoidAreaChange listener, id:%{public}d", persistentId);
     if (listener == nullptr) {
         WLOGFE("listener is nullptr");
         return WMError::WM_ERROR_NULLPTR;
@@ -1864,7 +1862,8 @@ void WindowSessionImpl::NotifyAvoidAreaChange(const sptr<AvoidArea>& avoidArea, 
 
 WSError WindowSessionImpl::UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type)
 {
-    WLOGI("UpdateAvoidArea: id:%{public}d, type:%{public}d, top{%{public}d,%{public}d,%{public}d,%{public}d}, "
+    TLOGI(WmsLogTag::WMS_IMMS,
+        "UpdateAvoidArea: id:%{public}d, type:%{public}d, top{%{public}d,%{public}d,%{public}d,%{public}d}, "
         "down{%{public}d,%{public}d,%{public}d,%{public}d}", GetPersistentId(), type,
         avoidArea->topRect_.posX_, avoidArea->topRect_.posY_, avoidArea->topRect_.width_, avoidArea->topRect_.height_,
         avoidArea->bottomRect_.posX_, avoidArea->bottomRect_.posY_, avoidArea->bottomRect_.width_,
@@ -2297,7 +2296,7 @@ WMError WindowSessionImpl::SetLayoutFullScreenByApiVersion(bool status)
 WMError WindowSessionImpl::SetWindowGravity(WindowGravity gravity, uint32_t percent)
 {
     auto sessionGravity = static_cast<SessionGravity>(gravity);
-    WLOGFI("[WMSInput] Set window gravity: %{public}" PRIu32 ", percent: %{public}" PRIu32, sessionGravity, percent);
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "Set window gravity: %{public}u, percent: %{public}u", sessionGravity, percent);
     if (property_ != nullptr) {
         property_->SetSessionGravity(sessionGravity, percent);
     }

@@ -308,6 +308,7 @@ std::vector<MMI::WindowInfo> SceneSessionDirtyManager::GetFullWindowInfoList()
     const auto sceneSessionMap = Rosen::SceneSessionManager::GetInstance().GetSceneSessionMap();
     // all input event should trans to dialog window if dialog exists
     const auto dialogMap = GetDialogSessionMap(sceneSessionMap);
+    std::string windowIDLstLog;
     for (const auto& sceneSessionValuePair : sceneSessionMap) {
         const auto& sceneSessionValue = sceneSessionValuePair.second;
         if (sceneSessionValue == nullptr) {
@@ -328,7 +329,10 @@ std::vector<MMI::WindowInfo> SceneSessionDirtyManager::GetFullWindowInfoList()
                 iter->second->GetPersistentId(), sceneSessionValue->GetPersistentId());
         }
         windowInfoList.emplace_back(windowInfo);
+        windowIDLstLog.append(std::to_string(windowInfo.id).append(", "));
     }
+    TLOGI(WmsLogTag::WMS_EVENT, "windowIDList: size:%{public}d %{public}s ",
+        static_cast<int>(windowInfoList.size()), windowIDLstLog.c_str());
     return windowInfoList;
 }
 
@@ -337,6 +341,12 @@ void SceneSessionDirtyManager::UpdatePointerAreas(sptr<SceneSession> sceneSessio
 {
     bool dragEnabled = sceneSession->GetSessionProperty()->GetDragEnabled();
     if (dragEnabled) {
+        if (sceneSession->GetSessionInfo().isSetPointerAreas_) {
+            pointerChangeAreas = {POINTER_CHANGE_AREA_DEFAULT, POINTER_CHANGE_AREA_DEFAULT,
+                POINTER_CHANGE_AREA_DEFAULT, POINTER_CHANGE_AREA_FIVE, POINTER_CHANGE_AREA_SEXTEEN,
+                POINTER_CHANGE_AREA_FIVE, POINTER_CHANGE_AREA_SEXTEEN, POINTER_CHANGE_AREA_FIVE};
+            return;
+        }
         auto limits = sceneSession->GetSessionProperty()->GetWindowLimits();
         if (limits.minWidth_ == limits.maxWidth_ && limits.minHeight_ != limits.maxHeight_) {
             pointerChangeAreas = {POINTER_CHANGE_AREA_DEFAULT, POINTER_CHANGE_AREA_FIVE,
@@ -384,9 +394,9 @@ MMI::WindowInfo SceneSessionDirtyManager::GetWindowInfo(const sptr<SceneSession>
     std::vector<int32_t> pointerChangeAreas(POINTER_CHANGE_AREA_COUNT, 0);
     auto windowMode = sceneSession->GetSessionProperty()->GetWindowMode();
     auto maxMode = sceneSession->GetSessionProperty()->GetMaximizeMode();
-    if (windowMode == Rosen::WindowMode::WINDOW_MODE_FLOATING &&
+    if ((windowMode == Rosen::WindowMode::WINDOW_MODE_FLOATING &&
         Rosen::WindowHelper::IsMainWindow(sceneSession->GetSessionProperty()->GetWindowType()) &&
-        maxMode != Rosen::MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
+        maxMode != Rosen::MaximizeMode::MODE_AVOID_SYSTEM_BAR) || (sceneSession->GetSessionInfo().isSetPointerAreas_)) {
             UpdatePointerAreas(sceneSession, pointerChangeAreas);
     }
     std::vector<MMI::Rect> touchHotAreas;
