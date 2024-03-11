@@ -51,9 +51,9 @@ namespace {
 
 static thread_local std::map<std::string, std::shared_ptr<NativeReference>> g_jsWindowMap;
 std::recursive_mutex g_mutex;
-static int ctorCnt = 0;
-static int dtorCnt = 0;
-static int finalizerCnt = 0;
+static int g_ctorCnt = 0;
+static int g_dtorCnt = 0;
+static int g_finalizerCnt = 0;
 
 #ifdef SCENE_BOARD_ENABLE
 static bool g_isSceneEnabled = SceneBoardJudgement::IsSceneBoardEnabled();
@@ -74,12 +74,12 @@ JsWindow::JsWindow(const sptr<Window>& window)
         WLOGI("Destroy window %{public}s in js window", windowName.c_str());
     };
     windowToken_->RegisterWindowDestroyedListener(func);
-    WLOGI(" constructorCnt: %{public}d", ++ctorCnt);
+    WLOGI(" constructorCnt: %{public}d", ++g_ctorCnt);
 }
 
 JsWindow::~JsWindow()
 {
-    WLOGI(" deConstructorCnt:%{public}d", ++dtorCnt);
+    WLOGI(" deConstructorCnt:%{public}d", ++g_dtorCnt);
     windowToken_ = nullptr;
 }
 
@@ -93,7 +93,7 @@ std::string JsWindow::GetWindowName()
 
 void JsWindow::Finalizer(napi_env env, void* data, void* hint)
 {
-    WLOGI("finalizerCnt:%{public}d", ++finalizerCnt);
+    WLOGI("finalizerCnt:%{public}d", ++g_finalizerCnt);
     auto jsWin = std::unique_ptr<JsWindow>(static_cast<JsWindow*>(data));
     if (jsWin == nullptr) {
         WLOGFE("jsWin is nullptr");

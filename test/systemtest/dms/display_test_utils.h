@@ -39,7 +39,7 @@ public:
     ~DisplayTestUtils();
     static bool SizeEqualToDisplay(const sptr<Display>& display, const Media::Size cur);
     static bool SizeEqual(const Media::Size dst, const Media::Size cur);
-    void init();
+    void Init();
     bool CreateSurface();
     void SetDefaultWH(const sptr<Display>& display);
     class BufferListener : public IBufferConsumerListener {

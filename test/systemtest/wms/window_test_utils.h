@@ -44,8 +44,8 @@ public:
         bool forbidSplitMove {false};
         bool showWhenLocked;
         uint32_t parentId;
-        bool focusable_ { true };
-        Orientation orientation_ { Orientation::UNSPECIFIED };
+        bool focusable { true };
+        Orientation orientation { Orientation::UNSPECIFIED };
     };
     static Rect displayRect_;
     static Rect limitDisplayRect_;

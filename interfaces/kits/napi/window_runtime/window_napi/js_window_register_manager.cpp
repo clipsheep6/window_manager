@@ -229,7 +229,7 @@ WmErrorCode JsWindowRegisterManager::ProcessScreenshotRegister(sptr<JsWindowList
 {
     WLOGI("called");
     if (window == nullptr) {
-        WLOGFE("%{public}sregister screenshot listener failed. window is null", isRegister? "" : "un");
+        WLOGFE("%{public}sregister screenshot listener failed. window is null", isRegister ? "" : "un");
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
     sptr<IScreenshotListener> thisListener(listener);

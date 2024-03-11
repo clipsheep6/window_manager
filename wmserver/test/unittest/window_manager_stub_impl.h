@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#ifndef OHOS_WINDOW_MANAGER_STUB_IMPL_H
+#define OHOS_WINDOW_MANAGER_STUB_IMPL_H
+
 #include "window_manager_stub.h"
 #include "window_manager_agent.h"
 #include <rs_iwindow_animation_controller.h>
@@ -157,3 +160,4 @@ void GetFocusWindowInfo(FocusChangeInfo& focusInfo) override {}
 };
 }
 }
+#endif // OHOS_WINDOW_MANAGER_STUB_IMPL_H

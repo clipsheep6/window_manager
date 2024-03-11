@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
-#include "session/host/include/zidl/session_stub.h"
+#ifndef OHOS_MOCK_SESSION_STUB_H
+#define OHOS_MOCK_SESSION_STUB_H
 
+#include "session/host/include/zidl/session_stub.h"
 #include "ability_start_setting.h"
 #include <ipc_types.h>
 #include "want.h"
@@ -72,3 +74,4 @@ public:
 };
 } // namespace Rosen
 } // namespace OHOS
+#endif // OHOS_MOCK_SESSION_STUB_H

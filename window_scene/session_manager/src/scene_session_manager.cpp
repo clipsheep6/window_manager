@@ -4132,12 +4132,10 @@ void SceneSessionManager::RegisterGetStateFromManagerFunc(sptr<SceneSession>& sc
     GetStateFromManagerFunc func = [this](const ManagerState key) {
         switch (key)
         {
-        case ManagerState::MANAGER_STATE_SCREEN_LOCKED:
-            return this->IsScreenLocked();
-            break;
-        default:
-            return false;
-            break;
+            case ManagerState::MANAGER_STATE_SCREEN_LOCKED:
+                return this->IsScreenLocked();
+            default:
+                return false;
         }
     };
     if (sceneSession == nullptr) {
@@ -5582,8 +5580,8 @@ std::vector<std::pair<uint64_t, WindowVisibilityState>> SceneSessionManager::Get
 {
     std::vector<std::pair<uint64_t, WindowVisibilityState>> visibilityChangeInfo;
     std::sort(currVisibleData.begin(), currVisibleData.end(), Comp);
-    uint32_t i, j;
-    i = j = 0;
+    uint32_t i = 0;
+    uint32_t j = 0;
     for (; i < lastVisibleData_.size() && j < currVisibleData.size();) {
         if (lastVisibleData_[i].first < currVisibleData[j].first) {
             visibilityChangeInfo.emplace_back(lastVisibleData_[i].first, WINDOW_VISIBILITY_STATE_TOTALLY_OCCUSION);
@@ -6733,7 +6731,6 @@ void SceneSessionManager::PreHandleCollaborator(sptr<SceneSession>& sceneSession
             WLOGFI("PreHandleCollaborator cant notify");
             return;
         }
-
     }
     if (sceneSession->GetSessionInfo().want != nullptr) {
         WLOGFI("broker persistentId: %{public}d",

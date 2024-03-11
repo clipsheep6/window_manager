@@ -193,7 +193,6 @@ void JsSceneSession::InitListenerFuncs()
 
 void JsSceneSession::ProcessWindowDragHotAreaRegister()
 {
-
     WLOGFI("[NAPI]ProcessWindowDragHotAreaRegister");
     NotifyWindowDragHotAreaFunc func = [weak = weak_from_this()](int32_t type, const SizeChangeReason& reason) {
         auto weakJsSceneSession = weak.lock();
@@ -492,7 +491,7 @@ void JsSceneSession::ProcessRaiseAboveTargetRegister()
         WLOGFE("sessionchangeCallback is nullptr");
         return;
     }
-    sessionchangeCallback->onRaiseAboveTarget_ = [weak = weak_from_this()](int32_t subWindowId){
+    sessionchangeCallback->onRaiseAboveTarget_ = [weak = weak_from_this()](int32_t subWindowId) {
         auto weakJsSceneSession = weak.lock();
         if (weakJsSceneSession) weakJsSceneSession->OnRaiseAboveTarget(subWindowId);
     };

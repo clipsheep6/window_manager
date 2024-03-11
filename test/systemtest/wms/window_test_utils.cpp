@@ -51,8 +51,8 @@ sptr<Window> WindowTestUtils::CreateTestWindow(const TestWindowInfo& info)
     option->SetWindowRect(info.rect);
     option->SetWindowType(info.type);
     option->SetWindowMode(info.mode);
-    option->SetFocusable(info.focusable_);
-    option->SetRequestedOrientation(info.orientation_);
+    option->SetFocusable(info.focusable);
+    option->SetRequestedOrientation(info.orientation);
     if (info.parentId != INVALID_WINDOW_ID) {
         option->SetParentId(info.parentId);
     }

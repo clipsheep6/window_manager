@@ -128,7 +128,7 @@ namespace {
 HWTEST_F(WindowFocusTest, FocusChangedTest01, Function | MediumTest | Level3)
 {
     fullScreenAppInfo_.name = "FocusChangedTest01_1";
-    fullScreenAppInfo_.focusable_ = false;
+    fullScreenAppInfo_.focusable = false;
     const sptr<Window>& window1 = Utils::CreateTestWindow(fullScreenAppInfo_);
     if (window1 == nullptr) {
         return;

@@ -119,8 +119,8 @@ void DisplayZoomController::UpdateAllWindowsZoomInfo(DisplayId displayId)
     if (windowNodeContainer == nullptr) {
         return;
     }
-    int32_t deltaX, deltaY;
-    deltaX = deltaY = 0;
+    int32_t deltaX = 0;
+    int32_t deltaY = 0;
     if (UpdateZoomTranslateInfo(windowNodeContainer, displayId, deltaX, deltaY)) {
         WLOGFD("Change ZoomInfo translation, deltaX:%{public}d, deltaY:%{public}d", deltaX, deltaY);
     }

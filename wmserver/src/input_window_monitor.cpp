@@ -86,7 +86,7 @@ void InputWindowMonitor::UpdateInputWindowByDisplayId(DisplayId displayId)
 void InputWindowMonitor::UpdateDisplayGroupInfo(const sptr<WindowNodeContainer>& windowNodeContainer,
                                                 MMI::DisplayGroupInfo& displayGroupInfo)
 {
-    const Rect&& rect = windowNodeContainer->GetDisplayGroupRect();
+    const Rect && rect = windowNodeContainer->GetDisplayGroupRect();
     displayGroupInfo.width = static_cast<int32_t>(rect.width_);
     displayGroupInfo.height = static_cast<int32_t>(rect.height_);
     displayGroupInfo.focusWindowId = static_cast<int32_t>(windowNodeContainer->GetFocusWindow());

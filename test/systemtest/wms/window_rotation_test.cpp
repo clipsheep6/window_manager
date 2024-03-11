@@ -136,7 +136,7 @@ namespace {
 HWTEST_F(WindowRotationTest, WindowRotationTest1, Function | MediumTest | Level3)
 {
     fullInfo_.name  = "fullscreen.1";
-    fullInfo_.orientation_ = Orientation::UNSPECIFIED;
+    fullInfo_.orientation = Orientation::UNSPECIFIED;
     const sptr<Window>& fullWindow = Utils::CreateTestWindow(fullInfo_);
     if (fullWindow == nullptr) {
         return;
@@ -172,7 +172,7 @@ HWTEST_F(WindowRotationTest, WindowRotationTest1, Function | MediumTest | Level3
 HWTEST_F(WindowRotationTest, WindowRotationTest2, Function | MediumTest | Level3)
 {
     fullInfo_.name  = "fullscreen.2";
-    fullInfo_.orientation_ = Orientation::REVERSE_HORIZONTAL;
+    fullInfo_.orientation = Orientation::REVERSE_HORIZONTAL;
     const sptr<Window>& fullWindow = Utils::CreateTestWindow(fullInfo_);
     if (fullWindow == nullptr) {
         return;
@@ -212,7 +212,7 @@ HWTEST_F(WindowRotationTest, WindowRotationTest3, Function | MediumTest | Level3
     auto curDisplayOrientation = display->GetOrientation();
 
     fullInfo_.name  = "fullscreen.3";
-    fullInfo_.orientation_ = Orientation::REVERSE_HORIZONTAL;
+    fullInfo_.orientation = Orientation::REVERSE_HORIZONTAL;
     fullInfo_.mode = WindowMode::WINDOW_MODE_FLOATING;
     const sptr<Window>& fullWindow = Utils::CreateTestWindow(fullInfo_);
     if (fullWindow == nullptr) {
@@ -249,7 +249,7 @@ HWTEST_F(WindowRotationTest, WindowRotationTest4, Function | MediumTest | Level3
     sleep(SPLIT_TEST_SLEEP_S);
 
     fullInfo_.name  = "fullscreen.4";
-    fullInfo_.orientation_ = Orientation::HORIZONTAL;
+    fullInfo_.orientation = Orientation::HORIZONTAL;
     const sptr<Window>& fullWindow = Utils::CreateTestWindow(fullInfo_);
     if (fullWindow == nullptr) {
         return;
@@ -290,7 +290,7 @@ HWTEST_F(WindowRotationTest, WindowRotationTest5, Function | MediumTest | Level3
     sleep(SPLIT_TEST_SLEEP_S);
 
     fullInfo_.name  = "fullscreen.5";
-    fullInfo_.orientation_ = Orientation::HORIZONTAL;
+    fullInfo_.orientation = Orientation::HORIZONTAL;
     const sptr<Window>& fullWindow = Utils::CreateTestWindow(fullInfo_);
     if (fullWindow == nullptr) {
         return;
