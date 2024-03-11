@@ -2051,6 +2051,19 @@ void WindowSessionImpl::NotifyPointerEvent(const std::shared_ptr<MMI::PointerEve
     }
 }
 
+bool WindowSessionImpl::FilterKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
+{
+    if (keyEventFilter_ != nullptr) {
+        bool isFilter = keyEventFilter_(*keyEvent.get());
+        WLOGFE("[WMEvent] filter keyEvent!keyCode:%{public}d res:%{public}d", keyEvent->GetKeyCode(), isFilter);
+        if (isFilter) {
+            keyEvent->MarkProcessed();
+            return true;
+        }
+    }
+    return false;
+}
+
 void WindowSessionImpl::DispatchKeyEventCallback(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed)
 {
     std::shared_ptr<IInputEventConsumer> inputEventConsumer;
@@ -2081,6 +2094,7 @@ void WindowSessionImpl::DispatchKeyEventCallback(const std::shared_ptr<MMI::KeyE
             keyEvent->MarkProcessed();
         }
     } else if (uiContent_) {
+        if (FilterKeyEvent(keyEvent)) return;
         isConsumed = uiContent_->ProcessKeyEvent(keyEvent);
         if (!isConsumed && keyEvent->GetKeyCode() == MMI::KeyEvent::KEYCODE_ESCAPE &&
             property_->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
@@ -2428,6 +2442,18 @@ void WindowSessionImpl::NotifyTransformChange(const Transform& transform)
 WMError WindowSessionImpl::HideNonSecureWindows(bool shouldHide)
 {
     return SingletonContainer::Get<WindowAdapter>().HideNonSecureWindows(shouldHide);
+}
+
+WMError WindowSessionImpl::SetKeyEventFilter(KeyEventFilterFunc filter)
+{
+    keyEventFilter_ = std::move(filter);
+    return WMError::WM_OK;
+}
+
+WMError WindowSessionImpl::ClearKeyEventFilter()
+{
+    keyEventFilter_ = nullptr;
+    return WMError::WM_OK;
 }
 
 } // namespace Rosen
