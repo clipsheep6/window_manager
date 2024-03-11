@@ -100,7 +100,7 @@ WSError SceneSession::Reconnect(const sptr<ISessionStage>& sessionStage, const s
     return PostSyncTask([weakThis = wptr(this), sessionStage, eventChannel, surfaceNode, property, token, pid, uid]() {
         auto session = weakThis.promote();
         if (!session) {
-            WLOGFE("session is null");
+            TLOGE(WmsLogTag::WMS_LIFE, "session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
         return session->Session::Reconnect(sessionStage, eventChannel, surfaceNode, property, token, pid, uid);
@@ -114,7 +114,7 @@ WSError SceneSession::Foreground(sptr<WindowSessionProperty> property)
         GetStateFromManager(ManagerState::MANAGER_STATE_SCREEN_LOCKED) && !IsShowWhenLocked() &&
         sessionInfo_.bundleName_.find("startupguide") == std::string::npos &&
         sessionInfo_.bundleName_.find("samplemanagement") == std::string::npos) {
-        WLOGFW("[WMSLife] Foreground failed: Screen is locked, session %{public}d show without ShowWhenLocked flag",
+        TLOGW(WmsLogTag::WMS_LIFE, "failed: Screen is locked, session %{public}d show without ShowWhenLocked flag",
             GetPersistentId());
         return WSError::WS_ERROR_INVALID_SESSION;
     }
@@ -672,7 +672,7 @@ void SceneSession::NotifyPropertyWhenConnect()
     WLOGFI("Notify property when connect.");
     auto property = GetSessionProperty();
     if (property == nullptr) {
-        WLOGFD("id: %{public}d property is nullptr", persistentId_);
+        TLOGD(WmsLogTag::WMS_LIFE, "id: %{public}d property is nullptr", persistentId_);
         return;
     }
     NotifySessionFocusableChange(property->GetFocusable());
@@ -1152,7 +1152,7 @@ WSError SceneSession::RequestSessionBack(bool needMoveToBackground)
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
         if (!session->backPressedFunc_) {
-            WLOGFW("Session didn't register back event consumer!");
+            TLOGW(WmsLogTag::WMS_LIFE, "Session didn't register back event consumer!");
             return WSError::WS_DO_NOTHING;
         }
         if (g_enableForceUIFirst) {
@@ -1162,9 +1162,10 @@ WSError SceneSession::RequestSessionBack(bool needMoveToBackground)
             }
             if (session->leashWinSurfaceNode_) {
                 session->leashWinSurfaceNode_->SetForceUIFirst(true);
-                WLOGFI("leashWinSurfaceNode_ SetForceUIFirst id:%{public}u!", session->GetPersistentId());
+                TLOGI(WmsLogTag::WMS_LIFE, "leashWinSurfaceNode_ SetForceUIFirst id:%{public}u!",
+                    session->GetPersistentId());
             } else {
-                WLOGFI("failed, leashWinSurfaceNode_ null id:%{public}u", session->GetPersistentId());
+                TLOGI(WmsLogTag::WMS_LIFE, "leashWinSurfaceNode_ null id:%{public}u", session->GetPersistentId());
             }
             if (rsTransaction) {
                 rsTransaction->Commit();
@@ -1975,14 +1976,15 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
             info.windowMode = info.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_MODE, 0);
             info.sessionAffinity = info.want->GetStringParam(Rosen::PARAM_KEY::PARAM_MISSION_AFFINITY_KEY);
             info.screenId_ = info.want->GetIntParam(AAFwk::Want::PARAM_RESV_DISPLAY_ID, -1);
-            TLOGI(WmsLogTag::WMS_LIFE, "want: screenId %{public}" PRIu64 " uri: %{public}s",
+            TLOGI(WmsLogTag::WMS_LIFE, "PendingSessionActivation: want: screenId %{public}" PRIu64 " uri: %{public}s",
                 info.screenId_, info.want->GetElement().GetURI().c_str());
         }
 
-        TLOGI(WmsLogTag::WMS_LIFE, "bundleName %{public}s, moduleName:%{public}s, abilityName:%{public}s, \
-            appIndex:%{public}d, affinity:%{public}s", info.bundleName_.c_str(), info.moduleName_.c_str(),
-            info.abilityName_.c_str(), info.appIndex_, info.sessionAffinity.c_str());
-        TLOGI(WmsLogTag::WMS_LIFE, "callState:%{public}d, want persistentId: %{public}d, "
+        TLOGI(WmsLogTag::WMS_LIFE, "PendingSessionActivation: bundleName %{public}s, moduleName:%{public}s, \
+            abilityName:%{public}s, appIndex:%{public}d, affinity:%{public}s",
+            info.bundleName_.c_str(), info.moduleName_.c_str(), info.abilityName_.c_str(), info.appIndex_,
+            info.sessionAffinity.c_str());
+        TLOGI(WmsLogTag::WMS_LIFE, "PendingSessionActivation: callState:%{public}d, want persistentId: %{public}d, "
             "callingTokenId:%{public}d, uiAbilityId: %{public}" PRIu64
             ", windowMode: %{public}d, caller persistentId: %{public}d",
             info.callState_, info.persistentId_, info.callingTokenId_, info.uiAbilityId_,
@@ -2001,15 +2003,15 @@ WSError SceneSession::TerminateSession(const sptr<AAFwk::SessionInfo> abilitySes
     auto task = [weakThis = wptr(this), abilitySessionInfo]() {
         auto session = weakThis.promote();
         if (!session) {
-            WLOGFE("session is null");
+            TLOGE(WmsLogTag::WMS_LIFE, "session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
         if (abilitySessionInfo == nullptr) {
-            WLOGFE("abilitySessionInfo is null");
+            TLOGE(WmsLogTag::WMS_LIFE, "abilitySessionInfo is null");
             return WSError::WS_ERROR_NULLPTR;
         }
         if (session->isTerminating) {
-            WLOGFE("TerminateSession isTerminating, return!");
+            TLOGE(WmsLogTag::WMS_LIFE, "is terminating, return!");
             return WSError::WS_ERROR_INVALID_OPERATION;
         }
         session->isTerminating = true;
@@ -2035,21 +2037,21 @@ WSError SceneSession::TerminateSession(const sptr<AAFwk::SessionInfo> abilitySes
 WSError SceneSession::NotifySessionException(const sptr<AAFwk::SessionInfo> abilitySessionInfo, bool needRemoveSession)
 {
     if (!SessionPermission::VerifySessionPermission()) {
-        WLOGFE("The interface permission failed.");
+        TLOGE(WmsLogTag::WMS_LIFE, "permission failed.");
         return WSError::WS_ERROR_INVALID_PERMISSION;
     }
     auto task = [weakThis = wptr(this), abilitySessionInfo, needRemoveSession]() {
         auto session = weakThis.promote();
         if (!session) {
-            WLOGFE("session is null");
+            TLOGE(WmsLogTag::WMS_LIFE, "session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
         if (abilitySessionInfo == nullptr) {
-            WLOGFE("abilitySessionInfo is null");
+            TLOGE(WmsLogTag::WMS_LIFE, "abilitySessionInfo is null");
             return WSError::WS_ERROR_NULLPTR;
         }
         if (session->isTerminating) {
-            WLOGFE("NotifySessionException isTerminating, return!");
+            TLOGE(WmsLogTag::WMS_LIFE, "is terminating, return!");
             return WSError::WS_ERROR_INVALID_OPERATION;
         }
         session->isTerminating = true;
