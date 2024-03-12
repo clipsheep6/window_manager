@@ -19,6 +19,10 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr int RGB_STR_LEN = 7;
+    constexpr int ARGB_STR_LEN = 9;
+}
 bool ColorParser::Parse(const std::string& colorStr, uint32_t& colorValue)
 {
     if (colorStr.empty()) {
@@ -32,11 +36,11 @@ bool ColorParser::Parse(const std::string& colorStr, uint32_t& colorValue)
         }
         constexpr int HEX = 16;
         colorValue = std::strtoul(color.c_str(), 0, HEX); // convert hex string to number
-        if (colorStr.size() == 7) { // #RRGGBB: RRGGBB -> AARRGGBB
+        if (colorStr.size() == RGB_STR_LEN) { // #RRGGBB: RRGGBB -> AARRGGBB
             colorValue |= 0xff000000;
             return true;
         }
-        if (colorStr.size() == 9) { // #AARRGGBB
+        if (colorStr.size() == ARGB_STR_LEN) { // #AARRGGBB
             return true;
         }
     }

@@ -69,6 +69,20 @@ const ScreenId SCREEN_ID_MAIN = 5;
 constexpr int32_t INVALID_UID = -1;
 constexpr int32_t INVALID_USERID = -1;
 constexpr int32_t BASE_USER_RANGE = 200000;
+constexpr int32_t DELAY_TIME_SUSPEND_BEGIN_TASK = 1500;
+// set output width of screen
+constexpr int32_t W_SCREEN_NAME = 21;
+constexpr int32_t W_SCREEN_TYPE = 9;
+constexpr int32_t W_GROUP_TYPE = 8;
+constexpr int32_t W_SCREEN_ID = 6;
+constexpr int32_t W_RS_ID = 21;
+constexpr int32_t W_ACTIVE_IDX = 10;
+constexpr int32_t W_VIR_PIXEL_RATIO = 4;
+constexpr int32_t W_ROTATION = 9;
+constexpr int32_t W_ORIENTATION = 12;
+constexpr int32_t W_REQUESTED_ORIENTATION = 19;
+constexpr int32_t W_NODE_ID = 21;
+
 static bool g_foldScreenFlag = system::GetParameter("const.window.foldscreen.type", "") != "";
 } // namespace
 
@@ -918,7 +932,7 @@ bool ScreenSessionManager::SuspendBegin(PowerStateChangeReason reason)
         blockScreenPowerChange_ = false;
         SetScreenPower(ScreenPowerStatus::POWER_STATUS_OFF, PowerStateChangeReason::STATE_CHANGE_REASON_INIT);
     };
-    taskScheduler_->PostTask(suspendBeginTask, "suspendBeginTask", 1500);
+    taskScheduler_->PostTask(suspendBeginTask, "suspendBeginTask", DELAY_TIME_SUSPEND_BEGIN_TASK);
     sessionDisplayPowerController_->SuspendBegin(reason);
     if (reason == PowerStateChangeReason::STATE_CHANGE_REASON_COLLABORATION) {
         isMultiScreenCollaboration_ = true;
@@ -2837,17 +2851,18 @@ void ScreenSessionManager::DumpAllScreensInfo(std::string& dumpInfo)
         std::string screenType = TransferTypeToString(screenInfo->GetType());
         NodeId nodeId = (screenSession->GetDisplayNode() == nullptr) ?
             SCREEN_ID_INVALID : screenSession->GetDisplayNode()->GetId();
-        oss << std::left << std::setw(21) << screenInfo->GetName()
-            << std::left << std::setw(9) << screenType
-            << std::left << std::setw(8) << (screenSession->isScreenGroup_ ? "true" : "false")
-            << std::left << std::setw(6) << screenSession->screenId_
-            << std::left << std::setw(21) << screenSession->rsId_
-            << std::left << std::setw(10) << screenSession->activeIdx_
-            << std::left << std::setw(4) << screenInfo->GetVirtualPixelRatio()
-            << std::left << std::setw(9) << static_cast<uint32_t>(screenInfo->GetRotation())
-            << std::left << std::setw(12) << static_cast<uint32_t>(screenInfo->GetOrientation())
-            << std::left << std::setw(19) << static_cast<uint32_t>(screenSession->GetScreenRequestedOrientation())
-            << std::left << std::setw(21) << nodeId
+        oss << std::left << std::setw(W_SCREEN_NAME) << screenInfo->GetName()
+            << std::left << std::setw(W_SCREEN_TYPE) << screenType
+            << std::left << std::setw(W_GROUP_TYPE) << (screenSession->isScreenGroup_ ? "true" : "false")
+            << std::left << std::setw(W_SCREEN_ID) << screenSession->screenId_
+            << std::left << std::setw(W_RS_ID) << screenSession->rsId_
+            << std::left << std::setw(W_ACTIVE_IDX) << screenSession->activeIdx_
+            << std::left << std::setw(W_VIR_PIXEL_RATIO) << screenInfo->GetVirtualPixelRatio()
+            << std::left << std::setw(W_ROTATION) << static_cast<uint32_t>(screenInfo->GetRotation())
+            << std::left << std::setw(W_ORIENTATION) << static_cast<uint32_t>(screenInfo->GetOrientation())
+            << std::left << std::setw(W_REQUESTED_ORIENTATION)
+            << static_cast<uint32_t>(screenSession->GetScreenRequestedOrientation())
+            << std::left << std::setw(W_NODE_ID) << nodeId
             << std::endl;
     }
     oss << "total screen num: " << screenSessionMap_.size() << std::endl;
