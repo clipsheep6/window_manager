@@ -261,7 +261,14 @@ void DisplayCutoutController::TransferBoundingRectsByRotation(DisplayId displayI
     }
     uint32_t displayHeight = modes->height_;
     uint32_t displayWidth = modes->width_;
+    RotateBoundary(displayBoundingRects, resultVec, currentRotation, displayHeight, displayWidth);
 
+    boundingRects = resultVec;
+}
+
+void DisplayCutoutController::RotateBoundary(const std::vector<DMRect>& displayBoundingRects, std::vector<DMRect>& resultVec,
+    Rotation currentRotation, uint32_t displayHeight, uint32_t displayWidth)
+{
     switch (currentRotation) {
         case Rotation::ROTATION_90: {
             for (DMRect rect : displayBoundingRects) {
@@ -287,7 +294,6 @@ void DisplayCutoutController::TransferBoundingRectsByRotation(DisplayId displayI
         default: {
         }
     }
-    boundingRects = resultVec;
 }
 
 DMRect DisplayCutoutController::CreateWaterfallRect(uint32_t left, uint32_t top, uint32_t width, uint32_t height)
