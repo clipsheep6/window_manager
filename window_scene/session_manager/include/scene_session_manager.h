@@ -129,7 +129,7 @@ public:
     WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
         sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session,
-        sptr<IRemoteObject> token = nullptr) override;
+        SystemSessionConfig& systemConfig, sptr<IRemoteObject> token = nullptr) override;
     WSError RecoverAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
         sptr<WindowSessionProperty> property, sptr<ISession>& session, sptr<IRemoteObject> token = nullptr) override;
@@ -288,6 +288,9 @@ public:
     void FlushWindowInfoToMMI();
     void PostFlushWindowInfoTask(FlushWindowInfoTask &&task, const std::string taskName, const int delayTime);
     WSError HideNonSecureWindows(bool shouldHide) override;
+    int32_t StartUIAbilityBySCB(sptr<AAFwk::SessionInfo>& abilitySessionInfo);
+    int32_t StartUIAbilityBySCB(sptr<SceneSession>& sceneSessions);
+    int32_t ChangeUIAbilityVisibilityBySCB(sptr<SceneSession>& sceneSessions, bool visibility);
 
 public:
     std::shared_ptr<TaskScheduler> GetTaskScheduler() {return taskScheduler_;};
@@ -297,6 +300,7 @@ protected:
 
 private:
     void Init();
+    void InitScheduleUtils();
     void RegisterAppListener();
     void InitPrepareTerminateConfig();
     void LoadWindowSceneXml();
@@ -344,7 +348,6 @@ private:
     void RelayoutKeyBoard(sptr<SceneSession> sceneSession);
     void RestoreCallingSessionSizeIfNeed();
     void ResizeSoftInputCallingSessionIfNeed(const sptr<SceneSession>& sceneSession, bool isInputUpdated = false);
-    void SetCallingSession(const sptr<SceneSession>& sceneSession, uint32_t newCallingWindowId);
 
     sptr<AAFwk::SessionInfo> SetAbilitySessionInfo(const sptr<SceneSession>& scnSession);
     WSError DestroyDialogWithMainWindow(const sptr<SceneSession>& scnSession);
@@ -533,6 +536,7 @@ private:
     void NotifyCollaboratorAfterStart(sptr<SceneSession>& scnSession, sptr<AAFwk::SessionInfo>& scnSessionInfo);
     void UpdateCollaboratorSessionWant(sptr<SceneSession>& session, int32_t persistentId = 0);
     bool CheckSystemWindowPermission(const sptr<WindowSessionProperty>& property);
+    bool CheckPiPPriority(const PiPTemplateInfo& pipTemplateInfo);
     void DestroySubSession(const sptr<SceneSession>& sceneSession);
     void NotifyStatusBarEnabledChange(bool enable);
     void NotifySessionForeground(const sptr<SceneSession>& session, uint32_t reason, bool withAnimation);

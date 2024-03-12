@@ -15,7 +15,11 @@
 
 #include "window_extension_session_impl.h"
 
+#include <transaction/rs_interfaces.h>
 #include <transaction/rs_transaction.h>
+#ifdef IMF_ENABLE
+#include <input_method_controller.h>
+#endif
 #include "window_manager_hilog.h"
 #include "parameters.h"
 #include "anr_handler.h"
@@ -24,6 +28,8 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowExtensionSessionImpl"};
+constexpr int32_t ANIMATION_TIME = 400;
+constexpr int64_t DISPATCH_KEY_EVENT_TIMEOUT_TIME_MS = 1000;
 }
 
 std::set<sptr<WindowSessionImpl>> WindowExtensionSessionImpl::windowExtensionSessionSet_;
@@ -77,10 +83,10 @@ void WindowExtensionSessionImpl::UpdateConfigurationForAll(const std::shared_ptr
 
 WMError WindowExtensionSessionImpl::Destroy(bool needNotifyServer, bool needClearListener)
 {
-    WLOGFI("[WMSLife]Id: %{public}d Destroy, state_:%{public}u, needNotifyServer: %{public}d, "
+    TLOGI(WmsLogTag::WMS_LIFE, "Id: %{public}d Destroy, state_:%{public}u, needNotifyServer: %{public}d, "
         "needClearListener: %{public}d", GetPersistentId(), state_, needNotifyServer, needClearListener);
     if (IsWindowSessionInvalid()) {
-        WLOGFE("[WMSLife]session is invalid");
+        TLOGE(WmsLogTag::WMS_LIFE, "session is invalid");
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (hostSession_ != nullptr) {
@@ -234,6 +240,79 @@ void WindowExtensionSessionImpl::NotifyBackpressedEvent(bool& isConsumed)
     WLOGFD("Backpressed event is not cosumed");
 }
 
+void WindowExtensionSessionImpl::InputMethodKeyEventResultCallback(const std::shared_ptr<MMI::KeyEvent>& keyEvent,
+    bool consumed, std::shared_ptr<std::promise<bool>> isConsumedPromise, std::shared_ptr<bool> isTimeout)
+{
+    if (keyEvent == nullptr) {
+        WLOGFW("keyEvent is null, consumed:%{public}" PRId32, consumed);
+        if (isConsumedPromise != nullptr) {
+            isConsumedPromise->set_value(consumed);
+        }
+        return;
+    }
+
+    auto id = keyEvent->GetId();
+    if (isConsumedPromise == nullptr || isTimeout == nullptr) {
+        WLOGFW("Shared point isConsumedPromise or isTimeout is null, id:%{public}" PRId32, id);
+        keyEvent->MarkProcessed();
+        return;
+    }
+
+    if (*isTimeout) {
+        WLOGFW("DispatchKeyEvent timeout id:%{public}" PRId32, id);
+        keyEvent->MarkProcessed();
+        return;
+    }
+
+    if (consumed) {
+        isConsumedPromise->set_value(consumed);
+        WLOGD("Input method has processed key event, id:%{public}" PRId32, id);
+        return;
+    }
+
+    bool isConsumed = false;
+    DispatchKeyEventCallback(const_cast<std::shared_ptr<MMI::KeyEvent>&>(keyEvent), isConsumed);
+    isConsumedPromise->set_value(isConsumed);
+}
+
+void WindowExtensionSessionImpl::NotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed,
+    bool notifyInputMethod)
+{
+    if (keyEvent == nullptr) {
+        WLOGFE("keyEvent is nullptr");
+        return;
+    }
+
+#ifdef IMF_ENABLE
+    bool isKeyboardEvent = IsKeyboardEvent(keyEvent);
+    if (isKeyboardEvent && notifyInputMethod) {
+        WLOGD("Async dispatch keyEvent to input method, id:%{public}" PRId32, keyEvent->GetId());
+        auto isConsumedPromise = std::make_shared<std::promise<bool>>();
+        auto isConsumedFuture = isConsumedPromise->get_future().share();
+        auto isTimeout = std::make_shared<bool>(false);
+        auto ret = MiscServices::InputMethodController::GetInstance()->DispatchKeyEvent(keyEvent,
+            std::bind(&WindowExtensionSessionImpl::InputMethodKeyEventResultCallback, this,
+                std::placeholders::_1, std::placeholders::_2, isConsumedPromise, isTimeout));
+        if (ret != 0) {
+            WLOGFW("DispatchKeyEvent failed, ret:%{public}" PRId32 ", id:%{public}" PRId32, ret, keyEvent->GetId());
+            DispatchKeyEventCallback(keyEvent, isConsumed);
+            return;
+        }
+        if (isConsumedFuture.wait_for(std::chrono::milliseconds(DISPATCH_KEY_EVENT_TIMEOUT_TIME_MS)) ==
+            std::future_status::timeout) {
+            *isTimeout = true;
+            isConsumed = true;
+            WLOGFE("DispatchKeyEvent timeout, id:%{public}" PRId32, keyEvent->GetId());
+        } else {
+            isConsumed = isConsumedFuture.get();
+        }
+        WLOGFD("Input Method DispatchKeyEvent isConsumed:%{public}" PRId32, isConsumed);
+        return;
+    }
+#endif // IMF_ENABLE
+    DispatchKeyEventCallback(keyEvent, isConsumed);
+}
+
 WMError WindowExtensionSessionImpl::NapiSetUIContent(const std::string& contentInfo,
     napi_env env, napi_value storage, bool isdistributed, sptr<IRemoteObject> token, AppExecFwk::Ability* ability)
 {
@@ -293,9 +372,62 @@ WSError WindowExtensionSessionImpl::UpdateRect(const WSRect& rect, SizeChangeRea
     auto wmReason = static_cast<WindowSizeChangeReason>(reason);
     Rect wmRect = {rect.posX_, rect.posY_, rect.width_, rect.height_};
     property_->SetWindowRect(wmRect);
-    NotifySizeChange(wmRect, wmReason);
-    UpdateViewportConfig(wmRect, wmReason);
+    if (wmReason == WindowSizeChangeReason::ROTATION) {
+        auto preRect = GetRect();
+        UpdateRectForRotation(wmRect, preRect, wmReason, rsTransaction);
+    } else {
+        NotifySizeChange(wmRect, wmReason);
+        UpdateViewportConfig(wmRect, wmReason);
+    }
     return WSError::WS_OK;
+}
+
+void WindowExtensionSessionImpl::UpdateRectForRotation(const Rect& wmRect, const Rect& preRect,
+    WindowSizeChangeReason wmReason, const std::shared_ptr<RSTransaction>& rsTransaction)
+{
+    if (!handler_) {
+        return;
+    }
+    auto task = [weak = wptr(this), wmReason, wmRect, preRect, rsTransaction]() mutable {
+        auto window = weak.promote();
+        if (!window) {
+            return;
+        }
+        int32_t duration = ANIMATION_TIME;
+        if (rsTransaction) {
+            duration = rsTransaction->GetDuration() ? rsTransaction->GetDuration() : duration;
+            RSTransaction::FlushImplicitTransaction();
+            rsTransaction->Begin();
+        }
+        RSSystemProperties::SetDrawTextAsBitmap(true);
+        RSInterfaces::GetInstance().EnableCacheForRotation();
+        window->rotationAnimationCount_++;
+        RSAnimationTimingProtocol protocol;
+        protocol.SetDuration(duration);
+        auto curve = RSAnimationTimingCurve::CreateCubicCurve(0.2, 0.0, 0.2, 1.0);
+        RSNode::OpenImplicitAnimation(protocol, curve, [weak]() {
+            auto window = weak.promote();
+            if (!window) {
+                return;
+            }
+            window->rotationAnimationCount_--;
+            if (window->rotationAnimationCount_ == 0) {
+                RSSystemProperties::SetDrawTextAsBitmap(false);
+                RSInterfaces::GetInstance().DisableCacheForRotation();
+            }
+        });
+        if (wmRect != preRect) {
+            window->NotifySizeChange(wmRect, wmReason);
+        }
+        window->UpdateViewportConfig(wmRect, wmReason, rsTransaction);
+        RSNode::CloseImplicitAnimation();
+        if (rsTransaction) {
+            rsTransaction->Commit();
+        } else {
+            RSTransaction::FlushImplicitTransaction();
+        }
+    };
+    handler_->PostTask(task, "WMS_WindowExtensionSessionImpl_UpdateRectForRotation");
 }
 
 WSError WindowExtensionSessionImpl::NotifySearchElementInfoByAccessibilityId(int64_t elementId, int32_t mode,
@@ -420,15 +552,16 @@ WMError WindowExtensionSessionImpl::UnregisterAvoidAreaChangeListener(sptr<IAvoi
 
 WMError WindowExtensionSessionImpl::Hide(uint32_t reason, bool withAnimation, bool isFromInnerkits)
 {
-    WLOGFI("[WMSLife]id:%{public}d WindowExtensionSessionImpl Hide, reason:%{public}u, state:%{public}u",
-           GetPersistentId(), reason, state_);
+    TLOGI(WmsLogTag::WMS_LIFE, "id:%{public}d WindowExtensionSessionImpl Hide, reason:%{public}u, state:%{public}u",
+        GetPersistentId(), reason, state_);
     if (IsWindowSessionInvalid()) {
         WLOGFE("session is invalid");
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (state_ == WindowState::STATE_HIDDEN || state_ == WindowState::STATE_CREATED) {
-        WLOGFD("[WMSLife]window extension session is already hidden [name:%{public}s,id:%{public}d,type: %{public}u]",
-               property_->GetWindowName().c_str(), GetPersistentId(), property_->GetWindowType());
+        TLOGD(WmsLogTag::WMS_LIFE, "window extension session is already hidden \
+            [name:%{public}s,id:%{public}d,type: %{public}u]",
+            property_->GetWindowName().c_str(), GetPersistentId(), property_->GetWindowType());
         NotifyBackgroundFailed(WMError::WM_DO_NOTHING);
         return WMError::WM_OK;
     }
@@ -439,7 +572,7 @@ WMError WindowExtensionSessionImpl::Hide(uint32_t reason, bool withAnimation, bo
         requestState_ = WindowState::STATE_HIDDEN;
         NotifyAfterBackground();
     } else {
-        WLOGFD("[WMSLife]window extension session Hide to Background is error");
+        TLOGD(WmsLogTag::WMS_LIFE, "window extension session Hide to Background is error");
     }
     return WMError::WM_OK;
 }

@@ -47,6 +47,7 @@ class RSSurfaceNode;
 class RSTransaction;
 class RSSyncTransactionController;
 using NotifyPendingSessionActivationFunc = std::function<void(SessionInfo& info)>;
+using NotifyChangeSessionVisibilityWithStatusBarFunc = std::function<void(SessionInfo& info, const bool visible)>;
 using NotifySessionStateChangeFunc = std::function<void(const SessionState& state)>;
 using NotifyBufferAvailableChangeFunc = std::function<void(const bool isAvailable)>;
 using NotifySessionStateChangeNotifyManagerFunc = std::function<void(int32_t persistentId, const SessionState& state)>;
@@ -182,6 +183,8 @@ public:
     WSRect GetSessionRequestRect() const;
 
     virtual WSError SetActive(bool active);
+    virtual WSError UpdateSizeChangeReason(SizeChangeReason reason);
+    SizeChangeReason GetSizeChangeReason() const;
     virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
     WSError UpdateDensity();
@@ -199,6 +202,8 @@ public:
     void SetNeedSnapshot(bool needSnapshot);
 
     void SetPendingSessionActivationEventListener(const NotifyPendingSessionActivationFunc& func);
+    void SetChangeSessionVisibilityWithStatusBarEventListener(
+        const NotifyChangeSessionVisibilityWithStatusBarFunc& func);
     void SetTerminateSessionListener(const NotifyTerminateSessionFunc& func);
     WSError TerminateSessionNew(const sptr<AAFwk::SessionInfo> info, bool needStartCaller);
     void SetTerminateSessionListenerNew(const NotifyTerminateSessionFuncNew& func);
@@ -434,8 +439,10 @@ protected:
     float offsetX_ = 0.0f;
     float offsetY_ = 0.0f;
     bool isVisible_ = false;
+    SizeChangeReason reason_ = SizeChangeReason::UNDEFINED;
 
     NotifyPendingSessionActivationFunc pendingSessionActivationFunc_;
+    NotifyChangeSessionVisibilityWithStatusBarFunc changeSessionVisibilityWithStatusBarFunc_;
     NotifySessionStateChangeFunc sessionStateChangeFunc_;
     NotifyBufferAvailableChangeFunc bufferAvailableChangeFunc_;
     NotifySessionInfoChangeNotifyManagerFunc sessionInfoChangeNotifyManagerFunc_;
@@ -526,6 +533,9 @@ private:
 
     mutable std::shared_mutex propertyMutex_;
     sptr<WindowSessionProperty> property_;
+
+    mutable std::shared_mutex uiRequestFocusMutex_;
+    mutable std::shared_mutex uiLostFocusMutex_;
 
     bool showRecent_ = false;
     bool bufferAvailable_ = false;

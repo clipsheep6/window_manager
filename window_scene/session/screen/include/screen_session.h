@@ -83,6 +83,7 @@ public:
     void SetUpdateToInputManagerCallback(std::function<void(float)> updateToInputManagerCallback);
 
     void SetVirtualPixelRatio(float virtualPixelRatio);
+    void SetDensityInCurResolution(float densityInCurResolution);
     void SetScreenType(ScreenType type);
 
     std::string GetName();
@@ -114,10 +115,8 @@ public:
     DMError GetScreenColorSpace(GraphicCM_ColorSpaceType& colorSpace);
     DMError SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace);
 
-    void SetSensorRotation(DeviceRotation sensorRotation);
-    DeviceRotation GetSensorRotation();
+    void HandleSensorRotation(float sensorRotation);
     float ConvertRotationToFloat(Rotation sensorRotation);
-    float GetCurrentSensorRotation();
 
     bool HasPrivateSessionForeground() const;
     void SetPrivateSessionForeground(bool hasPrivate);
@@ -128,10 +127,9 @@ public:
 
     void UpdateToInputManager(RRect bounds, int rotation, FoldDisplayMode foldDisplayMode);
     void UpdatePropertyAfterRotation(RRect bounds, int rotation, FoldDisplayMode foldDisplayMode);
-    void UpdateAfterFoldExpand(bool foldToExpand);
     void UpdatePropertyByFoldControl(RRect bounds, RRect phyBounds);
     void UpdateRefreshRate(uint32_t refreshRate);
-    void UpdatePropertyByResolution(uint32_t width, uint32_t height, float virtualPixelRatio);
+    void UpdatePropertyByResolution(uint32_t width, uint32_t height);
     void SetName(std::string name);
     void Resize(uint32_t width, uint32_t height);
 
@@ -181,8 +179,6 @@ private:
     bool isFold_ = false;
     std::vector<uint32_t> hdrFormats_;
     std::vector<uint32_t> colorSpaces_;
-    DeviceRotation sensorRotation_ = DeviceRotation::INVALID;
-    float currentSensorRotation_ { 0.0f };
 };
 
 class ScreenSessionGroup : public ScreenSession {

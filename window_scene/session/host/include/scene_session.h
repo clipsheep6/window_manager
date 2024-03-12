@@ -117,9 +117,11 @@ public:
     WSError UpdateActiveStatus(bool isActive) override;
     WSError OnSessionEvent(SessionEvent event) override;
     WSError RaiseToAppTop() override;
+    WSError UpdateSizeChangeReason(SizeChangeReason reason) override;
     WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override;
     WSError UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason) override;
+    WSError ChangeSessionVisibilityWithStatusBar(const sptr<AAFwk::SessionInfo> info, bool visible) override;
     WSError PendingSessionActivation(const sptr<AAFwk::SessionInfo> info) override;
     WSError TerminateSession(const sptr<AAFwk::SessionInfo> info) override;
     WSError NotifySessionException(
@@ -153,6 +155,7 @@ public:
     WSError SetKeepScreenOn(bool keepScreenOn);
     void SetParentPersistentId(int32_t parentId);
     WSError SetTurnScreenOn(bool turnScreenOn);
+    void SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo);
     void SetPrivacyMode(bool isPrivacy);
     void SetSystemSceneOcclusionAlpha(double alpha);
     void SetRequestedOrientation(Orientation orientation);
@@ -177,6 +180,7 @@ public:
     Orientation GetRequestedOrientation() const;
     std::vector<sptr<SceneSession>> GetSubSession() const;
     std::shared_ptr<AppExecFwk::AbilityInfo> GetAbilityInfo() const;
+    PiPTemplateInfo GetPiPTemplateInfo() const;
 
     bool IsVisible() const;
     bool IsDecorEnable() const;
@@ -208,7 +212,6 @@ public:
     void NotifySessionForeground(uint32_t reason, bool withAnimation);
     void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits);
     void RegisterSessionChangeCallback(const sptr<SceneSession::SessionChangeCallback>& sessionChangeCallback);
-    WSError UpdateSizeChangeReason(SizeChangeReason reason);
     void ClearSpecificSessionCbMap();
     void SendPointerEventToUI(std::shared_ptr<MMI::PointerEvent> pointerEvent);
     void SendKeyEventToUI(std::shared_ptr<MMI::KeyEvent> keyEvent);
@@ -281,7 +284,7 @@ private:
     std::vector<sptr<SceneSession>> subSession_;
     bool needDefaultAnimationFlag_ = true;
     PiPRectInfo pipRectInfo_;
-    SizeChangeReason reason_ = SizeChangeReason::UNDEFINED;
+    PiPTemplateInfo pipTemplateInfo_;
     std::atomic_bool isStartMoving_ { false };
     std::atomic_bool isVisibleForAccessibility_ { true };
 };

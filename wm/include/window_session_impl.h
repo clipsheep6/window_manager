@@ -89,6 +89,7 @@ public:
     bool GetFocusable() const override;
     std::string GetContentInfo() override;
     Ace::UIContent* GetUIContent() const override;
+    PiPTemplateInfo GetPiPTemplateInfo() const;
     void OnNewWant(const AAFwk::Want& want) override;
     WMError SetAPPWindowLabel(const std::string& label) override;
     WMError SetAPPWindowIcon(const std::shared_ptr<Media::PixelMap>& icon) override;
@@ -196,6 +197,8 @@ public:
 protected:
     WMError Connect();
     bool IsWindowSessionInvalid() const;
+    void NotifyAfterUnfocused(bool needNotifyUiContent = true);
+    void NotifyAfterFocused();
     void NotifyAfterActive();
     void NotifyAfterInactive();
     void NotifyBeforeDestroy(std::string windowName);
@@ -215,6 +218,8 @@ protected:
     void NotifyWindowStatusChange(WindowMode mode);
     static sptr<Window> FindWindowById(uint32_t winId);
     void NotifyTransformChange(const Transform& transForm) override;
+    bool IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const;
+    void DispatchKeyEventCallback(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed);
 
     WMError RegisterExtensionAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener);
     WMError UnregisterExtensionAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener);
@@ -275,10 +280,8 @@ private:
     RSSurfaceNode::SharedPtr CreateSurfaceNode(std::string name, WindowType type);
     template<typename T>
     EnableIfSame<T, IWindowStatusChangeListener, std::vector<sptr<IWindowStatusChangeListener>>> GetListeners();
-    void DispatchKeyEventCallback(std::shared_ptr<MMI::KeyEvent>& keyEvent);
-    void NotifyAfterFocused();
+
     void NotifyUIContentFocusStatus();
-    void NotifyAfterUnfocused(bool needNotifyUiContent = true);
     void NotifyAfterResumed();
     void NotifyAfterPaused();
 
@@ -286,7 +289,6 @@ private:
         WindowSetUIContentType type, AppExecFwk::Ability* ability);
     std::shared_ptr<std::vector<uint8_t>> GetAbcContent(const std::string& abcPath);
 
-    bool IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const;
     void UpdateRectForRotation(const Rect& wmRect, const Rect& preRect, WindowSizeChangeReason wmReason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
     void NotifyRotationAnimationEnd();

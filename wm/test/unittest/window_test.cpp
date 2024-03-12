@@ -112,6 +112,20 @@ HWTEST_F(WindowTest, Create04, Function | SmallTest | Level2)
 }
 
 /**
+ * @tc.name: CreatePiP
+ * @tc.desc: Create PiP window with option
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, CreatePiP, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = nullptr;
+    PiPTemplateInfo pipTemplateInfo;
+    ASSERT_EQ(nullptr, Window::CreatePiP(option, pipTemplateInfo, abilityContext_));
+    option = new WindowOption();
+    ASSERT_NE(nullptr, Window::CreatePiP(option, pipTemplateInfo, abilityContext_));
+}
+
+/**
  * @tc.name: Find01
  * @tc.desc: Find with no name
  * @tc.type: FUNC
@@ -1592,7 +1606,11 @@ HWTEST_F(WindowTest, Recover, Function | SmallTest | Level2)
     sptr<Window> window = new Window();
     ASSERT_NE(nullptr, window);
     auto ret = window->Recover();
-    ASSERT_EQ(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, ret);
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, ret);
+    } else {
+        ASSERT_EQ(WMError::WM_OK, ret);
+    }
     ASSERT_EQ(WMError::WM_OK, window->Destroy());
 }
 

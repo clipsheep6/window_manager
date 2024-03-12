@@ -116,8 +116,6 @@ public:
     DMError IsScreenRotationLocked(bool& isLocked) override;
     DMError SetScreenRotationLocked(bool isLocked) override;
     DMError SetOrientation(ScreenId screenId, Orientation orientation) override;
-    DMError SetOrientationFromWindow(DisplayId displayId, Orientation orientation);
-    DMError SetOrientationController(ScreenId screenId, Orientation newOrientation, bool isFromWindow);
     bool SetRotation(ScreenId screenId, Rotation rotationAfter, bool isFromWindow);
     void SetSensorSubscriptionEnabled();
     bool SetRotationFromWindow(Rotation targetRotation);
@@ -162,6 +160,7 @@ public:
 
     void NotifyPrivateSessionStateChanged(bool hasPrivate);
     DMError HasPrivateWindow(DisplayId id, bool& hasPrivateWindow) override;
+    bool ConvertScreenIdToRsScreenId(ScreenId screenId, ScreenId& rsScreenId) override;
 
     void OnScreenConnect(const sptr<ScreenInfo> screenInfo);
     void OnScreenDisconnect(ScreenId screenId);
@@ -238,6 +237,7 @@ private:
     void RegisterRefreshRateModeChangeListener();
     void OnHgmRefreshRateModeChange(int32_t refreshRateMode);
     sptr<ScreenSession> GetOrCreateScreenSession(ScreenId screenId);
+    void CreateScreenProperty(ScreenId screenId, ScreenProperty& property);
     sptr<ScreenSession> GetScreenSessionInner(ScreenId screenId, ScreenProperty property);
     void FreeDisplayMirrorNodeInner(const sptr<ScreenSession> mirrorSession);
 
@@ -323,6 +323,7 @@ private:
     bool keyguardDrawnDone_ = true;
     bool needScreenOnWhenKeyguardNotify_ = false;
     bool blockScreenPowerChange_ = false;
+    bool isReasonScreenOnSwitch_ = false;
 
     //Fold Screen
     std::map<ScreenId, ScreenProperty> phyScreenPropMap_;
@@ -331,6 +332,7 @@ private:
     std::function<void()> foldScreenPowerInit_ = nullptr;
     void SetFoldScreenPowerInit(std::function<void()> foldScreenPowerInit);
     void SetDpiFromSettingData();
+    void NotifyClientProxyUpdateFoldDisplayMode(FoldDisplayMode displayMode);
 };
 } // namespace OHOS::Rosen
 

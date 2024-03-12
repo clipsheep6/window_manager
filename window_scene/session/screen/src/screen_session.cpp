@@ -141,6 +141,7 @@ sptr<DisplayInfo> ScreenSession::ConvertToDisplayInfo()
     displayInfo->SetDisplayId(screenId_);
     displayInfo->SetRefreshRate(property_.GetRefreshRate());
     displayInfo->SetVirtualPixelRatio(property_.GetVirtualPixelRatio());
+    displayInfo->SetDensityInCurResolution(property_.GetDensityInCurResolution());
     displayInfo->SetXDpi(property_.GetXDpi());
     displayInfo->SetYDpi(property_.GetYDpi());
     displayInfo->SetDpi(property_.GetVirtualPixelRatio() * DOT_PER_INCH);
@@ -215,13 +216,12 @@ void ScreenSession::UpdateRefreshRate(uint32_t refreshRate)
     property_.SetRefreshRate(refreshRate);
 }
 
-void ScreenSession::UpdatePropertyByResolution(uint32_t width, uint32_t height, float virtualPixelRatio)
+void ScreenSession::UpdatePropertyByResolution(uint32_t width, uint32_t height)
 {
     auto screenBounds = property_.GetBounds();
     screenBounds.rect_.width_ = width;
     screenBounds.rect_.height_ = height;
     property_.SetBounds(screenBounds);
-    property_.SetDensityInCurResolution(virtualPixelRatio);
 }
 
 std::shared_ptr<RSDisplayNode> ScreenSession::GetDisplayNode() const
@@ -294,26 +294,15 @@ float ScreenSession::ConvertRotationToFloat(Rotation sensorRotation)
     return rotation;
 }
 
-void ScreenSession::SetSensorRotation(DeviceRotation sensorRotation)
+void ScreenSession::HandleSensorRotation(float sensorRotation)
 {
-    sensorRotation_ = sensorRotation;
-}
-
-DeviceRotation ScreenSession::GetSensorRotation()
-{
-    return sensorRotation_;
+    SensorRotationChange(sensorRotation);
 }
 
 void ScreenSession::SensorRotationChange(Rotation sensorRotation)
 {
     float rotation = ConvertRotationToFloat(sensorRotation);
-    currentSensorRotation_ = rotation;
     SensorRotationChange(rotation);
-}
-
-float ScreenSession::GetCurrentSensorRotation()
-{
-    return currentSensorRotation_;
 }
 
 void ScreenSession::SensorRotationChange(float sensorRotation)
@@ -410,18 +399,6 @@ void ScreenSession::UpdatePropertyAfterRotation(RRect bounds, int rotation, Fold
         rotation, displayOrientation);
 }
 
-void ScreenSession::UpdateAfterFoldExpand(bool foldToExpand)
-{
-    if (foldToExpand) {
-        SensorRotationChange(currentSensorRotation_);
-    } else {
-        if (GetSensorRotation() == DeviceRotation::INVALID) {
-            WLOGFI("ScreenSession::UpdateAfterFoldExpand fix rotation:%{public}f", property_.GetRotation());
-            SensorRotationChange(property_.GetScreenRotation());
-        }
-    }
-}
-
 sptr<SupportedScreenModes> ScreenSession::GetActiveScreenMode() const
 {
     if (activeIdx_ < 0 || activeIdx_ >= static_cast<int32_t>(modes_.size())) {
@@ -490,6 +467,11 @@ Orientation ScreenSession::GetScreenRequestedOrientation() const
 void ScreenSession::SetVirtualPixelRatio(float virtualPixelRatio)
 {
     property_.SetVirtualPixelRatio(virtualPixelRatio);
+}
+
+void ScreenSession::SetDensityInCurResolution(float densityInCurResolution)
+{
+    property_.SetDensityInCurResolution(densityInCurResolution);
 }
 
 void ScreenSession::SetScreenType(ScreenType type)
@@ -847,7 +829,7 @@ void ScreenSession::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startP
     if (displayNode_ != nullptr) {
         displayNode_->SetDisplayNodeMirrorConfig(config);
         if (screenId_ == 0 && isFold_) {
-            WLOGFI("Return InitRSDisplayNode flodScreen0");
+            WLOGFI("Return InitRSDisplayNode foldScreen0");
             return;
         }
     } else {
@@ -874,7 +856,8 @@ void ScreenSession::InitRSDisplayNode(RSDisplayNodeConfig& config, Point& startP
         WLOGFI("virtualScreen SetSecurityDisplay success");
     }
     // If setDisplayOffset is not valid for SetFrame/SetBounds
-    WLOGFI("InitRSDisplayNode screnId:%{public}" PRIu64" width:%{public}u height:%{public}u", screenId_, width, height);
+    WLOGFI("InitRSDisplayNode screenId:%{public}" PRIu64" width:%{public}u height:%{public}u",
+        screenId_, width, height);
     displayNode_->SetFrame(0, 0, width, height);
     displayNode_->SetBounds(0, 0, width, height);
     auto transactionProxy = RSTransactionProxy::GetInstance();
