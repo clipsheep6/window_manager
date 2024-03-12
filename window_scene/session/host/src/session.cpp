@@ -2124,6 +2124,22 @@ WSRect Session::GetSessionRequestRect() const
     return rect;
 }
 
+bool Session::ShouldHideNonSecureWindows() const
+{
+    return shouldHideNonSecureWindows_.load();
+}
+
+void Session::SetShouldHideNonSecureWindows(bool shouldHide)
+{
+    shouldHideNonSecureWindows_.store(shouldHide);
+}
+
+bool Session::ShouldChangeSecureState(bool shouldHide)
+{
+    SetShouldHideNonSecureWindows(shouldHide);
+    return IsSessionForeground();
+}
+
 WindowType Session::GetWindowType() const
 {
     auto property = GetSessionProperty();

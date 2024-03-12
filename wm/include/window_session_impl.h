@@ -193,7 +193,6 @@ public:
     void NotifyWindowTitleButtonRectChange(TitleButtonRect titleButtonRect);
     void RecoverSessionListener();
     void SetDefaultDisplayIdIfNeed();
-    WMError HideNonSecureWindows(bool shouldHide) override;
 protected:
     WMError Connect();
     bool IsWindowSessionInvalid() const;

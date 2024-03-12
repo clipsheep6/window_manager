@@ -19,6 +19,7 @@
 
 #include "window_manager_hilog.h"
 #include "anr_manager.h"
+#include "session_manager.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -152,6 +153,12 @@ WSError ExtensionSession::UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, Avoi
     return sessionStage_->UpdateAvoidArea(avoidArea, type);
 }
 
+WSError ExtensionSession::SetParentId(int32_t parentId)
+{
+    GetSessionProperty()->SetParentId(parentId);
+    return WSError::WS_OK;
+}
+
 AvoidArea ExtensionSession::GetAvoidAreaByType(AvoidAreaType type)
 {
     Rosen::AvoidArea avoidArea;
@@ -159,6 +166,31 @@ AvoidArea ExtensionSession::GetAvoidAreaByType(AvoidAreaType type)
         avoidArea = extSessionEventCallback_->notifyGetAvoidAreaByTypeFunc_(type);
     }
     return avoidArea;
+}
+
+WSError ExtensionSession::Foreground(sptr<WindowSessionProperty> property)
+{
+    auto task = [weakThis = wptr(this), property]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGFE("[WMSLife] session is null");
+            return WSError::WS_ERROR_DESTROYED_OBJECT;
+        }
+
+        auto ret = session->Session::Foreground(property);
+        if (ret != WSError::WS_OK) {
+            return ret;
+        }
+
+        if (session->extSessionEventCallback_ != nullptr && session->ShouldHideNonSecureWindows()) {
+            // add to secure secureExtSessionSet_
+            return SessionManager::GetInstance().GetSceneSessionManagerProxy()->AddOrRemoveSecureExtSession(
+                session->persistentId_, session->GetSessionProperty()->GetParentId(), true);
+        }
+        return WSError::WS_OK;
+    };
+
+    return PostSyncTask(task, "Foreground");
 }
 
 WSError ExtensionSession::Background()
@@ -177,7 +209,37 @@ WSError ExtensionSession::Background()
     }
     UpdateSessionState(SessionState::STATE_BACKGROUND);
     NotifyBackground();
+    if (extSessionEventCallback_ != nullptr && ShouldHideNonSecureWindows()) {
+        // remove from secure secureExtSessionSet_
+        SessionManager::GetInstance().GetSceneSessionManagerProxy()->AddOrRemoveSecureExtSession(persistentId_,
+            GetSessionProperty()->GetParentId(), false);
+    }
     DelayedSingleton<ANRManager>::GetInstance()->OnBackground(persistentId_);
     return WSError::WS_OK;
+}
+
+WSError ExtensionSession::Disconnect(bool isFromClient)
+{
+    auto task = [weakThis = wptr(this), isFromClient]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGFE("[WMSLife] session is null");
+            return WSError::WS_ERROR_DESTROYED_OBJECT;
+        }
+
+        auto ret = session->Session::Disconnect(isFromClient);
+        if (ret != WSError::WS_OK) {
+            return ret;
+        }
+
+        if (session->extSessionEventCallback_ != nullptr && session->ShouldHideNonSecureWindows()) {
+            // remove from secure secureExtSessionSet_
+            return SessionManager::GetInstance().GetSceneSessionManagerProxy()->AddOrRemoveSecureExtSession(
+                session->persistentId_, session->GetSessionProperty()->GetParentId(), false);
+        }
+        return WSError::WS_OK;
+    };
+
+    return PostSyncTask(task, "Disconnect");
 }
 } // namespace OHOS::Rosen

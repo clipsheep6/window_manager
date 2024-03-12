@@ -910,6 +910,8 @@ sptr<SceneSession::SpecificSessionCallback> SceneSessionManager::CreateSpecificS
         this, std::placeholders::_1, std::placeholders::_2);
     specificCb->onOutsideDownEvent_ = std::bind(&SceneSessionManager::OnOutsideDownEvent,
         this, std::placeholders::_1, std::placeholders::_2);
+    specificCb->onAddOrRemoveSecureSession_ = std::bind(&SceneSessionManager::AddOrRemoveSecureSession,
+        this, std::placeholders::_1, std::placeholders::_2);
     return specificCb;
 }
 
@@ -7084,24 +7086,69 @@ void SceneSessionManager::PostFlushWindowInfoTask(FlushWindowInfoTask &&task,
     taskScheduler_->PostAsyncTask(std::move(task), taskName, delayTime);
 }
 
-WSError SceneSessionManager::HideNonSecureWindows(bool shouldHide)
+WSError SceneSessionManager::AddOrRemoveSecureSession(const sptr<SceneSession>& sceneSession, bool shouldHide)
 {
-    WLOGFI("HideNonSecureWindows, shouldHide %{public}u", shouldHide);
-    if (!SessionPermission::IsSystemCalling()) {
-        WLOGFE("HideNonSecureWindows permission denied!");
-        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    if (sceneSession == nullptr) {
+        WLOGE("AddOrRemoveSecureSession null scene session");
+        return WSError::WS_ERROR_INVALID_SESSION;
     }
-    auto task = [this, shouldHide]() {
+
+    auto persistentId = sceneSession->GetPersistentId();
+    auto sizeBefore = secureSessionSet_.size();
+    if (shouldHide) {
+        secureSessionSet_.insert(persistentId);
+    } else {
+        secureSessionSet_.erase(persistentId);
+    }
+
+    auto sizeAfter = secureSessionSet_.size();
+    auto stateShouldChange = (sizeBefore == 0 && sizeAfter > 0) || (sizeBefore > 0 && sizeAfter == 0);
+    if (stateShouldChange) {
         for (const auto& item: nonSystemFloatSceneSessionMap_) {
             auto session = item.second;
             if (session && session->GetWindowType() == WindowType::WINDOW_TYPE_FLOAT) {
                 session->NotifyForceHideChange(shouldHide);
                 WLOGFI("HideNonSecureWindows name=%{public}s, persistendId=%{public}d",
-                       session->GetWindowName().c_str(), item.first);
+                    session->GetWindowName().c_str(), item.first);
             }
+        }
+    }
+
+    if (sizeBefore != sizeAfter) {
+        auto subSessions = sceneSession->GetSubSession();
+        for (const auto& subSession: subSessions) {
+            subSession->NotifyForceHideChange(shouldHide);
+            WLOGFI("HideNonSecureWindows name=%{public}s, persistendId=%{public}d",
+                subSession->GetWindowName().c_str(), subSession->GetPersistentId());
+        }
+    }
+    return WSError::WS_OK;
+}
+
+WSError SceneSessionManager::AddOrRemoveSecureExtSession(int32_t persistentId, int32_t parentId,
+    bool shouldHide)
+{
+    WLOGFI("AddOrRemoveSecureExtSession, shouldHide %{public}u", shouldHide);
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("HideNonSecureWindows permission denied!");
+        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    }
+
+    auto task = [this, persistentId, parentId, shouldHide]() {
+        std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+        auto iter = sceneSessionMap_.find(parentId);
+        if (iter == sceneSessionMap_.end()) {
+            WLOGFE("Session with persistentId %{public}d not found", parentId);
+            return WSError::WS_ERROR_INVALID_SESSION;
+        }
+
+        auto sceneSession = iter->second;
+        if (sceneSession->AddOrRemoveSecureExtSession(persistentId, shouldHide)) {
+            return AddOrRemoveSecureSession(sceneSession, shouldHide);
         }
         return WSError::WS_OK;
     };
+
     return taskScheduler_->PostSyncTask(task);
 }
 } // namespace OHOS::Rosen

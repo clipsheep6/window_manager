@@ -181,6 +181,9 @@ public:
     WSRect GetSessionRect() const;
     void SetSessionRequestRect(const WSRect& rect);
     WSRect GetSessionRequestRect() const;
+    bool ShouldHideNonSecureWindows() const;
+    void SetShouldHideNonSecureWindows(bool shouldHide);
+    bool ShouldChangeSecureState(bool shouldHide) override;
 
     virtual WSError SetActive(bool active);
     virtual WSError UpdateSizeChangeReason(SizeChangeReason reason);
@@ -551,6 +554,7 @@ private:
     float vpr_ { 1.5f };
     bool systemTouchable_ { true };
     std::atomic_bool foregroundInteractiveStatus_ { true };
+    std::atomic_bool shouldHideNonSecureWindows_ { false };
 };
 } // namespace OHOS::Rosen
 

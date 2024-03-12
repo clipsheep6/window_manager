@@ -266,6 +266,22 @@ HWTEST_F(ExtensionSessionTest, UpdateAvoidArea, Function | SmallTest | Level1)
     ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, res);
 }
 
+/**
+ * @tc.name: SetParentId
+ * @tc.desc: test function : SetParentId
+ * @tc.type: FUNC
+ */
+HWTEST_F(ExtensionSessionTest, SetParentId, Function | SmallTest | Level1)
+{
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    ExtensionSession extensionSession_(info);
+    ASSERT_TRUE(extensionSession_ != nullptr);
+    extensionSession_.SetParentId(12345);
+    ASSERT_EQ(extensionSession_.GetSessionProperty()->GetParentId(), 12345);
+}
+
 }
 }
 }

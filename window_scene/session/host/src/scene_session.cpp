@@ -147,6 +147,10 @@ WSError SceneSession::Foreground(sptr<WindowSessionProperty> property)
             session->specificCallback_->onUpdateAvoidArea_(session->GetPersistentId());
             session->specificCallback_->onWindowInfoUpdate_(
                 session->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_ADDED);
+            if (session->ShouldHideNonSecureWindows()) {
+                // add to secure secureSessionSet_
+                session->specificCallback_->onAddOrRemoveSecureSession_(session, true);
+            }
         }
         return WSError::WS_OK;
     };
@@ -187,6 +191,10 @@ WSError SceneSession::Background()
             session->specificCallback_->onUpdateAvoidArea_(session->GetPersistentId());
             session->specificCallback_->onWindowInfoUpdate_(
                 session->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_REMOVED);
+            if (session->ShouldHideNonSecureWindows()) {
+                // remove from secure secureSessionSet_
+                session->specificCallback_->onAddOrRemoveSecureSession_(session, false);
+            }
         }
         return WSError::WS_OK;
     };
@@ -243,6 +251,10 @@ WSError SceneSession::Disconnect(bool isFromClient)
         }
         session->Session::Disconnect(isFromClient);
         session->isTerminating = false;
+        if (session->specificCallback_ != nullptr && session->ShouldHideNonSecureWindows()) {
+            // remove from secure secureSessionSet_
+            session->specificCallback_->onAddOrRemoveSecureSession_(session, false);
+        }
         return WSError::WS_OK;
     },
         "Disconnect");
@@ -2488,5 +2500,28 @@ bool SceneSession::IsStartMoving() const
 void SceneSession::SetIsStartMoving(const bool startMoving)
 {
     isStartMoving_.store(startMoving);
+}
+
+bool SceneSession::AddOrRemoveSecureExtSession(int32_t persistentId, bool shouldHide)
+{
+    auto task = [weakThis = wptr(this), persistentId, shouldHide]() {
+        auto session = weakThis.promote();
+        auto& sessionSet = session->secureExtSessionSet_;
+        auto sizeBefore = sessionSet.size();
+        if (shouldHide) {
+            sessionSet.insert(persistentId);
+        } else {
+            sessionSet.erase(persistentId);
+        }
+
+        auto sizeAfter = sessionSet.size();
+        auto stateShouldChange = (sizeBefore == 0 && sizeAfter > 0) || (sizeBefore > 0 && sizeAfter == 0);
+        if (stateShouldChange) {
+            return session->ShouldChangeSecureState(shouldHide);
+        }
+        return false;
+    };
+
+    return PostSyncTask(task, "AddOrRemoveSecureExtSession");
 }
 } // namespace OHOS::Rosen

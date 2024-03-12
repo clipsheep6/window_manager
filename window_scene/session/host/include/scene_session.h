@@ -59,6 +59,8 @@ using NotifyTouchOutsideFunc = std::function<void()>;
 using ClearCallbackMapFunc = std::function<void(bool needRemove, int32_t persistentId)>;
 using NotifyPrepareClosePiPSessionFunc = std::function<void()>;
 using OnOutsideDownEvent = std::function<void(int32_t x, int32_t y)>;
+using NotifyAddOrRemoveSecureSessionFunc = std::function<WSError(const sptr<SceneSession>& sceneSession,
+    bool shouldHide)>;
 class SceneSession : public Session {
 public:
     // callback for notify SceneSessionManager
@@ -74,6 +76,7 @@ public:
         GetAINavigationBarArea onGetAINavigationBarArea_;
         RecoveryCallback onRecoveryPullPiPMainWindow_;
         OnOutsideDownEvent onOutsideDownEvent_;
+        NotifyAddOrRemoveSecureSessionFunc onAddOrRemoveSecureSession_;
     };
 
     // callback for notify SceneBoard
@@ -217,6 +220,7 @@ public:
     void SendKeyEventToUI(std::shared_ptr<MMI::KeyEvent> keyEvent);
     bool IsStartMoving() const;
     void SetIsStartMoving(const bool startMoving);
+    bool AddOrRemoveSecureExtSession(int32_t persistentId, bool shouldHide);
 
     void SetSessionState(SessionState state) override;
     void UpdateSessionState(SessionState state) override;
@@ -287,6 +291,7 @@ private:
     PiPTemplateInfo pipTemplateInfo_;
     std::atomic_bool isStartMoving_ { false };
     std::atomic_bool isVisibleForAccessibility_ { true };
+    std::set<int32_t> secureExtSessionSet_;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SCENE_SESSION_H

@@ -279,6 +279,22 @@ HWTEST_F(SessionProxyTest, GetAvoidAreaByType, Function | SmallTest | Level2)
 }
 
 /**
+ * @tc.name: ShouldChangeSecureState
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SessionProxyTest, ShouldChangeSecureState, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "SessionProxyTest: ShouldChangeSecureState start";
+    sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
+    SessionProxy* sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
+    auto res = sProxy->ShouldChangeSecureState(true);
+    ASSERT_EQ(res, false);
+
+    GTEST_LOG_(INFO) << "SessionProxyTest: HideNonSecureWindows end";
+}
+
+/**
  * @tc.name: RequestSessionBack
  * @tc.desc: normal function
  * @tc.type: FUNC
@@ -361,6 +377,23 @@ HWTEST_F(SessionProxyTest, SetSessionProperty, Function | SmallTest | Level2)
     ASSERT_EQ(res, WSError::WS_OK);
 
     GTEST_LOG_(INFO) << "SessionProxyTest: SetSessionProperty end";
+}
+
+/**
+ * @tc.name: SetParentId
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SessionProxyTest, SetParentId, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "SessionProxyTest: SetParentId start";
+    sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
+    SessionProxy* sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
+    int32_t parentId = 12345;
+    WSError res = sProxy->SetParentId(parentId);
+    ASSERT_EQ(res, WSError::WS_OK);
+
+    GTEST_LOG_(INFO) << "SessionProxyTest: SetParentId end";
 }
 
 /**

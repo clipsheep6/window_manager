@@ -580,10 +580,11 @@ WMError WindowAdapter::ShiftAppWindowFocus(int32_t sourcePersistentId, int32_t t
         windowManagerServiceProxy_->ShiftAppWindowFocus(sourcePersistentId, targetPersistentId));
 }
 
-WMError WindowAdapter::HideNonSecureWindows(bool shouldHide)
+WMError WindowAdapter::AddOrRemoveSecureExtSession(int32_t persistentId, int32_t parentId, bool shouldHide)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
-    return static_cast<WMError>(windowManagerServiceProxy_->HideNonSecureWindows(shouldHide));
+    return static_cast<WMError>(windowManagerServiceProxy_->AddOrRemoveSecureExtSession(persistentId, parentId,
+        shouldHide));
 }
 
 } // namespace Rosen
