@@ -2134,7 +2134,6 @@ void Session::SetShouldHideNonSecureWindows(bool shouldHide)
     shouldHideNonSecureWindows_.store(shouldHide);
 }
 
-
 bool Session::ShouldChangeSecureState(bool shouldHide)
 {
     SetShouldHideNonSecureWindows(shouldHide);
