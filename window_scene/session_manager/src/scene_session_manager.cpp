@@ -7117,17 +7117,17 @@ WSError SceneSessionManager::HideNonSecureWindows(bool shouldHide)
     return taskScheduler_->PostSyncTask(task);
 }
 
-WSError SceneSessionManager::AddExentsionSessionInfo(int32_t parentId, int32_t persistentId)
+WSError SceneSessionManager::AddExtensionSessionInfo(int32_t parentId, int32_t persistentId)
 {
-    WLOGFI("AddExentsionSessionInfo, parentId:%{public}d, persistentId:%{public}d", parentId, persistentId);
+    WLOGFI("AddExtensionSessionInfo, parentId:%{public}d, persistentId:%{public}d", parentId, persistentId);
     if (!SessionPermission::IsSystemCalling()) {
-        WLOGFE("AddExentsionSessionInfo permission denied!");
+        WLOGFE("AddExtensionSessionInfo permission denied!");
         return WSError::WS_ERROR_NOT_SYSTEM_APP;
     }
     auto task = [this, parentId, persistentId]() {
         sptr<ExtensionSessionInfo> extInfo = new (std::nothrow) ExtensionSessionInfo();
         if (extInfo == nullptr) {
-            WLOGFE("AddExentsionSessionInfo error, extInfo is null");
+            WLOGFE("AddExtensionSessionInfo error, extInfo is null");
             return WSError::WS_ERROR_NULLPTR;
         }
         extInfo->SetParentId(parentId);

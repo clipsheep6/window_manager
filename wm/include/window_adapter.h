@@ -115,7 +115,7 @@ public:
     virtual WMError RaiseWindowToTop(int32_t persistentId);
     virtual WMError ShiftAppWindowFocus(int32_t sourcePersistentId, int32_t targetPersistentId);
     virtual WMError HideNonSecureWindows(bool shouldHide);
-    virtual WMError AddExentsionSessionInfo(int32_t parentId, int32_t persistentId);
+    virtual WMError AddExtensionSessionInfo(int32_t parentId, int32_t persistentId);
     virtual WMError RemoveExtensionSessionInfo(int32_t parentId, int32_t persistentId);
     virtual WMError SetExtensionVisibility(int32_t parentId, int32_t persistentId, bool isVisible);
     virtual WMError SetExtensionWaterMark(int32_t parentId, int32_t persistentId, bool isEnable);

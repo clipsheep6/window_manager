@@ -93,7 +93,7 @@ public:
     WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) override;
     WSError ShiftAppWindowFocus(int32_t sourcePersistentId, int32_t targetPersistentId) override;
     WSError HideNonSecureWindows(bool shouldHide) override;
-    WSError AddExentsionSessionInfo(int32_t parentId, int32_t persistentId) override;
+    WSError AddExtensionSessionInfo(int32_t parentId, int32_t persistentId) override;
     WSError RemoveExtensionSessionInfo(int32_t parentId, int32_t persistentId) override;
     WSError SetExtensionVisibility(int32_t parentId, int32_t persistentId, bool isVisible) override;
     WSError SetExtensionWaterMark(int32_t parentId, int32_t persistentId, bool isEnable) override;

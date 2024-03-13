@@ -210,7 +210,7 @@ public:
     {
         return WSError::WS_OK;
     }
-    WSError AddExentsionSessionInfo(int32_t parentId, int32_t persistentId) override
+    WSError AddExtensionSessionInfo(int32_t parentId, int32_t persistentId) override
     {
         return WSError::WS_OK;
     }

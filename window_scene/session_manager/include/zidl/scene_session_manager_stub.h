@@ -87,7 +87,7 @@ private:
     int HandleShiftAppWindowFocus(MessageParcel& data, MessageParcel& reply);
     int HandleGetVisibilityWindowInfo(MessageParcel& data, MessageParcel& reply);
     int HandleHideNonSecureWindows(MessageParcel& data, MessageParcel& reply);
-    int HandleAddExentsionSessionInfo(MessageParcel& data, MessageParcel& reply);
+    int HandleAddExtensionSessionInfo(MessageParcel& data, MessageParcel& reply);
     int HandleRemoveExtensionSessionInfo(MessageParcel& data, MessageParcel& reply);
     int HandleSetExtensionVisibility(MessageParcel& data, MessageParcel& reply);
     int HandleSetExtensionWaterMark(MessageParcel& data, MessageParcel& reply);

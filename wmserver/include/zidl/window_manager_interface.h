@@ -195,7 +195,7 @@ public:
     {
         return WSError::WS_OK;
     }
-    virtual WSError AddExentsionSessionInfo(int32_t parentId, int32_t persistentId)
+    virtual WSError AddExtensionSessionInfo(int32_t parentId, int32_t persistentId)
     {
         return WSError::WS_OK;
     }

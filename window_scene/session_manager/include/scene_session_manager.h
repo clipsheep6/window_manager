@@ -292,7 +292,7 @@ public:
     int32_t StartUIAbilityBySCB(sptr<AAFwk::SessionInfo>& abilitySessionInfo);
     int32_t StartUIAbilityBySCB(sptr<SceneSession>& sceneSessions);
     int32_t ChangeUIAbilityVisibilityBySCB(sptr<SceneSession>& sceneSessions, bool visibility);
-    WSError AddExentsionSessionInfo(int32_t parentId, int32_t persistentId) override;
+    WSError AddExtensionSessionInfo(int32_t parentId, int32_t persistentId) override;
     WSError RemoveExtensionSessionInfo(int32_t parentId, int32_t persistentId) override;
     WSError SetExtensionVisibility(int32_t parentId, int32_t persistentId, bool isVisible) override;
     WSError SetExtensionWaterMark(int32_t parentId, int32_t persistentId, bool isEnable) override;

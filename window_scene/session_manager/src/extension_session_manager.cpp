@@ -39,7 +39,7 @@ std::recursive_mutex g_instanceMutex;
 class ExtensionLifecycleListener : public ILifecycleListener {
 public:
     explicit ExtensionLifecycleListener(int32_t persistentId) : persistentId_(persistentId) {}
-    ~ExtensionLifecycleListener() = default;
+    virtual ~ExtensionLifecycleListener() = default;
 
     void OnActivation() override {}
     void OnForeground() override {}

@@ -1489,9 +1489,9 @@ WSError SceneSessionManagerProxy::HideNonSecureWindows(bool shouldHide)
     return static_cast<WSError>(reply.ReadInt32());
 }
 
-WSError SceneSessionManagerProxy::AddExentsionSessionInfo(int32_t parentId, int32_t persistentId)
+WSError SceneSessionManagerProxy::AddExtensionSessionInfo(int32_t parentId, int32_t persistentId)
 {
-    WLOGFD("run SceneSessionManagerProxy::AddExentsionSessionInfo");
+    WLOGFD("run SceneSessionManagerProxy::AddExtensionSessionInfo");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -1509,7 +1509,7 @@ WSError SceneSessionManagerProxy::AddExentsionSessionInfo(int32_t parentId, int3
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_ADD_EXTENSION_SESSION_INFO),
         data, reply, option) != ERR_NONE) {
-        WLOGFE("SendRequest AddExentsionSessionInfo failed");
+        WLOGFE("SendRequest AddExtensionSessionInfo failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     return static_cast<WSError>(reply.ReadInt32());

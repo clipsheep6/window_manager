@@ -135,7 +135,7 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_HIDE_NON_SECURE_WINDOWS),
         &SceneSessionManagerStub::HandleHideNonSecureWindows),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_ADD_EXTENSION_SESSION_INFO),
-        &SceneSessionManagerStub::HandleAddExentsionSessionInfo),
+        &SceneSessionManagerStub::HandleAddExtensionSessionInfo),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REMOVE_EXTENSION_SESSION_INFO),
         &SceneSessionManagerStub::HandleRemoveExtensionSessionInfo),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_EXTENSION_VISIBILITY),
@@ -815,12 +815,12 @@ int SceneSessionManagerStub::HandleHideNonSecureWindows(MessageParcel &data, Mes
     return ERR_NONE;
 }
 
-int SceneSessionManagerStub::HandleAddExentsionSessionInfo(MessageParcel &data, MessageParcel &reply)
+int SceneSessionManagerStub::HandleAddExtensionSessionInfo(MessageParcel &data, MessageParcel &reply)
 {
-    WLOGFI("run HandleAddExentsionSessionInfo!");
+    WLOGFI("run HandleAddExtensionSessionInfo!");
     int32_t parentId = data.ReadInt32();
     int32_t persistentId = data.ReadInt32();
-    WSError ret = AddExentsionSessionInfo(parentId, persistentId);
+    WSError ret = AddExtensionSessionInfo(parentId, persistentId);
     reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }
