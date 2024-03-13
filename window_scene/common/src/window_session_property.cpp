@@ -597,15 +597,13 @@ bool WindowSessionProperty::Marshalling(Parcel& parcel) const
         parcel.WriteDouble(textFieldPositionY_) && parcel.WriteDouble(textFieldHeight_) &&
         parcel.WriteUint32(static_cast<uint32_t>(windowState_)) &&
         parcel.WriteBool(isNeedUpdateWindowMode_) && parcel.WriteUint32(callingWindowId_) &&
-        parcel.WriteBool(isLayoutFullScreen_);
+        parcel.WriteBool(isLayoutFullScreen_) && parcel.WriteInt32(parentId_);
 }
 
 WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
 {
     WindowSessionProperty* property = new(std::nothrow) WindowSessionProperty();
-    if (property == nullptr) {
-        return nullptr;
-    }
+    if (property == nullptr) return nullptr;
     property->SetWindowName(parcel.ReadString());
     Rect rect = { parcel.ReadInt32(), parcel.ReadInt32(), parcel.ReadUint32(), parcel.ReadUint32() };
     property->SetWindowRect(rect);
@@ -649,6 +647,7 @@ WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
     property->SetIsNeedUpdateWindowMode(parcel.ReadBool());
     property->SetCallingWindow(parcel.ReadUint32());
     property->SetIsLayoutFullScreen(parcel.ReadBool());
+    property->SetParentId(parcel.ReadInt32());
     return property;
 }
 

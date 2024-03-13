@@ -19,10 +19,14 @@
 
 #include <ability_manager_client.h>
 #include <hitrace_meter.h>
+#include <iservice_registry.h>
 #include <session_info.h>
 #include <start_options.h>
+#include <system_ability_definition.h>
 
+#include "scene_board_judgement.h"
 #include "session/host/include/extension_session.h"
+#include "session_manager/include/session_manager.h"
 #include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
@@ -31,6 +35,28 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "Extens
 const std::string EXTENSION_SESSION_MANAGER_THREAD = "OS_ExtensionSessionManager";
 std::recursive_mutex g_instanceMutex;
 } // namespace
+
+class ExtensionLifecycleListener : public ILifecycleListener {
+public:
+    explicit ExtensionLifecycleListener(int32_t persistentId) : persistentId_(persistentId) {}
+    ~ExtensionLifecycleListener() = default;
+
+    void OnActivation() override {}
+    void OnForeground() override {}
+    void OnBackground() override {}
+    void OnConnect() override {}
+    void OnDisconnect() override {}
+
+    void OnExtensionDied() override
+    {
+        ExtensionSessionManager::GetInstance().OnExtensionDied(persistentId_);
+    }
+
+    void OnAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
+        int64_t uiExtensionIdLevel) override {}
+private:
+    int32_t persistentId_;
+};
 
 ExtensionSessionManager& ExtensionSessionManager::GetInstance()
 {
@@ -46,6 +72,140 @@ ExtensionSessionManager& ExtensionSessionManager::GetInstance()
 void ExtensionSessionManager::Init()
 {
     taskScheduler_ = std::make_shared<TaskScheduler>(EXTENSION_SESSION_MANAGER_THREAD);
+    InitWms();
+}
+
+void ExtensionSessionManager::InitWms()
+{
+    if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
+            if (!InitSsmProxy()) {
+                WLOGFE("InitSSMProxy failed!");
+            }
+        } else {
+            if (!InitWmsProxy()) {
+                WLOGFE("InitWMSProxy failed!");
+            }
+        }
+}
+bool ExtensionSessionManager::InitWmsProxy()
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (!isProxyValid_) {
+        sptr<ISystemAbilityManager> systemAbilityManager =
+                SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (!systemAbilityManager) {
+            WLOGFE("Failed to get system ability mgr.");
+            return false;
+        }
+
+        sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(WINDOW_MANAGER_SERVICE_ID);
+        if (!remoteObject) {
+            WLOGFE("Failed to get window manager service.");
+            return false;
+        }
+
+        windowManagerServiceProxy_ = iface_cast<IWindowManager>(remoteObject);
+        if ((!windowManagerServiceProxy_) || (!windowManagerServiceProxy_->AsObject())) {
+            WLOGFE("Failed to get system window manager services");
+            return false;
+        }
+
+        wmsDeath_ = new ExtensionWmsDeathRecipient();
+        if (!wmsDeath_) {
+            WLOGFE("Failed to create death Recipient ptr WMSDeathRecipient");
+            return false;
+        }
+        if (remoteObject->IsProxyObject() && !remoteObject->AddDeathRecipient(wmsDeath_)) {
+            WLOGFE("Failed to add death recipient");
+            return false;
+        }
+        isProxyValid_ = true;
+    }
+    return true;
+}
+bool ExtensionSessionManager::InitSsmProxy()
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (!isProxyValid_) {
+        windowManagerServiceProxy_ = SessionManager::GetInstance().GetSceneSessionManagerProxy();
+        if ((!windowManagerServiceProxy_) || (!windowManagerServiceProxy_->AsObject())) {
+            WLOGFE("Failed to get system scene session manager services");
+            return false;
+        }
+
+        wmsDeath_ = new (std::nothrow) ExtensionWmsDeathRecipient();
+        if (!wmsDeath_) {
+            WLOGFE("Failed to create death Recipient ptr WMSDeathRecipient");
+            return false;
+        }
+        sptr<IRemoteObject> remoteObject = windowManagerServiceProxy_->AsObject();
+        if (remoteObject->IsProxyObject() && !remoteObject->AddDeathRecipient(wmsDeath_)) {
+            WLOGFE("Failed to add death recipient");
+            return false;
+        }
+        isProxyValid_ = true;
+    }
+    return true;
+}
+
+void ExtensionWmsDeathRecipient::OnRemoteDied(const wptr<IRemoteObject>& wptrDeath)
+{
+    if (wptrDeath == nullptr) {
+        WLOGFE("wptrDeath is null");
+        return;
+    }
+
+    sptr<IRemoteObject> object = wptrDeath.promote();
+    if (!object) {
+        WLOGFE("object is null");
+        return;
+    }
+    WLOGI("wms OnRemoteDied");
+    ExtensionSessionManager::GetInstance().ClearWindowAdapter();
+}
+
+void ExtensionSessionManager::ClearWindowAdapter()
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if ((windowManagerServiceProxy_ != nullptr) && (windowManagerServiceProxy_->AsObject() != nullptr)) {
+        windowManagerServiceProxy_->AsObject()->RemoveDeathRecipient(wmsDeath_);
+    }
+    isProxyValid_ = false;
+}
+
+void ExtensionSessionManager::OnExtensionDied(int32_t persistentId)
+{
+    auto iter = extensionSessionMap_.find(persistentId);
+    if (iter != extensionSessionMap_.end()) {
+        auto extensionSession = iter->second;
+        auto property = extensionSession->GetSessionProperty();
+        if (property != nullptr) {
+            auto parentId = property->GetParentId();
+            WLOGFI("OnExtensionDied parentId: %{public}d, persistentId: %{public}d,", parentId, persistentId);
+            InitWms();
+            windowManagerServiceProxy_->RemoveExtensionSessionInfo(parentId, persistentId);
+        }
+        UnregisterLifecycleListener(persistentId, extensionSession);
+    }
+}
+void ExtensionSessionManager::RegisterLifecycleListener(int32_t persistentId,
+    const sptr<ExtensionSession>& extensionSession)
+{
+    WLOGFI("RegisterLifecycleListener persistentId: %{public}d,", persistentId);
+    std::shared_ptr<ILifecycleListener> lifecycleListener = std::make_shared<ExtensionLifecycleListener>(persistentId);
+    extensionSession->RegisterLifecycleListener(lifecycleListener);
+    lifecycleListenerMap_.insert({ persistentId, lifecycleListener});
+}
+void ExtensionSessionManager::UnregisterLifecycleListener(int32_t persistentId,
+    const sptr<ExtensionSession>& extensionSession)
+{
+    WLOGFI("UnregisterLifecycleListener persistentId: %{public}d,", persistentId);
+    auto iter = lifecycleListenerMap_.find(persistentId);
+    if (iter != lifecycleListenerMap_.end()) {
+        auto listener = iter->second;
+        extensionSession->UnregisterLifecycleListener(listener);
+        lifecycleListenerMap_.erase(persistentId);
+    }
 }
 
 sptr<AAFwk::SessionInfo> ExtensionSessionManager::SetAbilitySessionInfo(const sptr<ExtensionSession>& extSession)
@@ -77,6 +237,7 @@ sptr<ExtensionSession> ExtensionSessionManager::RequestExtensionSession(const Se
         WLOGFI("persistentId: %{public}d, bundleName: %{public}s, moduleName: %{public}s, abilityName: %{public}s",
             persistentId, sessionInfo.bundleName_.c_str(), sessionInfo.moduleName_.c_str(),
             sessionInfo.abilityName_.c_str());
+        RegisterLifecycleListener(persistentId, extensionSession);
         extensionSessionMap_.insert({ persistentId, extensionSession });
         return extensionSession;
     };
@@ -166,6 +327,7 @@ WSError ExtensionSessionManager::RequestExtensionSessionDestruction(const sptr<E
         }
         auto persistentId = extSession->GetPersistentId();
         WLOGFI("Destroy session with persistentId: %{public}d", persistentId);
+        UnregisterLifecycleListener(persistentId, extSession);
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "esm:RequestExtensionSessionDestruction");
         extSession->Disconnect();
         if (extensionSessionMap_.count(persistentId) == 0) {
