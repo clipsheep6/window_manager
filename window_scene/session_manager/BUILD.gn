@@ -193,6 +193,7 @@ ohos_shared_library("screen_session_manager") {
   sources = [
     "../../dm/src/zidl/display_manager_agent_proxy.cpp",
     "../screen_session_manager/src/zidl/screen_session_manager_client_proxy.cpp",
+    "src/screen_session_dumper.cpp",
     "src/fold_screen_controller/dual_display_device_policy.cpp",
     "src/fold_screen_controller/fold_screen_controller.cpp",
     "src/fold_screen_controller/fold_screen_policy.cpp",
