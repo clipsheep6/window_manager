@@ -178,7 +178,7 @@ WSError SceneSession::Background()
             if (session->scenePersistence_ && session->snapshot_) {
                 const std::function<void()> func = std::bind(&Session::ResetSnapshot, session);
                 session->scenePersistence_->SaveSnapshot(session->snapshot_, func);
-            } else {
+            } else if (session->snapshot_) {
                 session->snapshot_.reset();
             }
         }
@@ -231,7 +231,7 @@ WSError SceneSession::Disconnect(bool isFromClient)
             if (session->scenePersistence_ && session->snapshot_) {
                 const std::function<void()> func = std::bind(&Session::ResetSnapshot, session);
                 session->scenePersistence_->SaveSnapshot(session->snapshot_, func);
-            } else {
+            } else if (session->snapshot_){
                 session->snapshot_.reset();
             }
         }
