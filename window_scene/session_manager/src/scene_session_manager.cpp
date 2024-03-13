@@ -7151,6 +7151,7 @@ WSError SceneSessionManager::RemoveExtensionSessionInfo(int32_t parentId, int32_
         int64_t extId = ConvertParentIdAndPersistentIdToExtId(parentId, persistentId);
         std::shared_lock<std::shared_mutex> lock(extensionSessionInfoMapMutex_);
         extensionSessionInfoMap_.erase(extId);
+        CheckAndNotifyWaterMarkChangedResult();
         return WSError::WS_OK;
     };
     return taskScheduler_->PostSyncTask(task);
