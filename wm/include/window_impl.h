@@ -528,6 +528,7 @@ private:
     void DestroyDialogWindow();
     void DestroyFloatingWindow();
     void DestroySubWindow();
+    void SetWindowModeFloating();
     void SetDefaultOption(); // for api7
     bool IsWindowValid() const;
     static sptr<Window> FindWindowById(uint32_t WinId);
@@ -577,6 +578,13 @@ private:
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
     void UpdateDecorEnable(bool needNotify = false);
     WMError SetFloatingMaximize(bool isEnter);
+    void HandleUpdateRectangle(WindowSizeChangeReason reason,
+    const std::shared_ptr<RSTransaction>& rsTransaction, Rect& rectToAce, 
+        Rect& lastOriRect, const sptr<Display>& display);
+    WMError NotifyUIContentChanged();
+    WMError ProcessWindowAndShow();
+    WMError BuildUIContentByType(const std::string& contentInfo, napi_env env, napi_value storage, 
+        WindowSetUIContentType type, AppExecFwk::Ability* ability);
     WMError SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
         WindowSetUIContentType type, AppExecFwk::Ability* ability);
     std::shared_ptr<std::vector<uint8_t>> GetAbcContent(const std::string& abcPath);
