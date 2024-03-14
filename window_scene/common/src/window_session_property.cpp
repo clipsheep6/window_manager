@@ -597,7 +597,7 @@ bool WindowSessionProperty::Marshalling(Parcel& parcel) const
         parcel.WriteDouble(textFieldPositionY_) && parcel.WriteDouble(textFieldHeight_) &&
         parcel.WriteUint32(static_cast<uint32_t>(windowState_)) &&
         parcel.WriteBool(isNeedUpdateWindowMode_) && parcel.WriteUint32(callingWindowId_) &&
-        parcel.WriteBool(isLayoutFullScreen_) && parcel.WriteInt32(parentId_);
+        parcel.WriteBool(isLayoutFullScreen_);
 }
 
 WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
@@ -647,7 +647,6 @@ WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
     property->SetIsNeedUpdateWindowMode(parcel.ReadBool());
     property->SetCallingWindow(parcel.ReadUint32());
     property->SetIsLayoutFullScreen(parcel.ReadBool());
-    property->SetParentId(parcel.ReadInt32());
     return property;
 }
 

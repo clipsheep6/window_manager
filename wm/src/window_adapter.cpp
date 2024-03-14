@@ -586,6 +586,13 @@ WMError WindowAdapter::HideNonSecureWindows(bool shouldHide)
     return static_cast<WMError>(windowManagerServiceProxy_->HideNonSecureWindows(shouldHide));
 }
 
+void WindowAdapter::AddExtensionDeathRecipient(int32_t parentId, int32_t persistentId,
+    sptr<ISessionStage>& sessionStage)
+{
+    INIT_PROXY_CHECK_RETURN();
+    windowManagerServiceProxy_->AddExtensionDeathRecipient(parentId, persistentId, sessionStage);
+}
+
 WMError WindowAdapter::AddExtensionSessionInfo(int32_t parentId, int32_t persistentId)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);

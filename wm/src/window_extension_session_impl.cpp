@@ -64,8 +64,16 @@ WMError WindowExtensionSessionImpl::Create(const std::shared_ptr<AbilityRuntime:
         std::unique_lock<std::shared_mutex> lock(windowExtensionSessionMutex_);
         windowExtensionSessionSet_.insert(this);
     }
+    AddExtensionDeathRecipient();
     state_ = WindowState::STATE_CREATED;
     return WMError::WM_OK;
+}
+
+void WindowExtensionSessionImpl::AddExtensionDeathRecipient()
+{
+    sptr<ISessionStage> iSessionStage(this);
+    SingletonContainer::Get<WindowAdapter>().AddExtensionDeathRecipient(property_->GetParentId(), GetPersistentId(),
+        iSessionStage);
 }
 
 void WindowExtensionSessionImpl::UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration)

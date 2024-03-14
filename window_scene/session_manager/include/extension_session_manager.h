@@ -18,9 +18,7 @@
 
 #include "common/include/task_scheduler.h"
 #include "interfaces/include/ws_common.h"
-#include "session/host/include/extension_session.h"
 #include "wm_single_instance.h"
-#include "zidl/window_manager_interface.h"
 
 namespace OHOS::AAFwk {
 class SessionInfo;
@@ -28,10 +26,6 @@ class SessionInfo;
 
 namespace OHOS::Rosen {
 class ExtensionSession;
-class ExtensionWmsDeathRecipient : public IRemoteObject::DeathRecipient {
-public:
-    virtual void OnRemoteDied(const wptr<IRemoteObject>& wptrDeath) override;
-};
 class ExtensionSessionManager {
 WM_DECLARE_SINGLE_INSTANCE(ExtensionSessionManager)
 public:
@@ -67,34 +61,12 @@ public:
     WSError RequestExtensionSessionDestruction(
         const sptr<ExtensionSession>& extensionSession, const std::function<void(WSError)>&& resultCallback);
 
-    /**
-     * @brief clear window manager service adapter
-     */
-    void ClearWindowAdapter();
-
-    /**
-     * @brief handle when extension died abnormally
-     *
-     * @param persistentId the died extension persistentId
-     */
-    void OnExtensionDied(int32_t persistentId);
-
 private:
     void Init();
     sptr<AAFwk::SessionInfo> SetAbilitySessionInfo(const sptr<ExtensionSession>& extensionSession);
-    void InitWms();
-    bool InitWmsProxy();
-    bool InitSsmProxy();
-    void RegisterLifecycleListener(int32_t persistentId, const sptr<ExtensionSession>& extensionSession);
-    void UnregisterLifecycleListener(int32_t persistentId, const sptr<ExtensionSession>& extensionSession);
 
     std::shared_ptr<TaskScheduler> taskScheduler_;
     std::map<int32_t, sptr<ExtensionSession>> extensionSessionMap_;
-    std::recursive_mutex mutex_;
-    sptr<IWindowManager> windowManagerServiceProxy_ = nullptr;
-    sptr<ExtensionWmsDeathRecipient> wmsDeath_ = nullptr;
-    bool isProxyValid_ { false };
-    std::map<int32_t, std::shared_ptr<ILifecycleListener>> lifecycleListenerMap_;
 };
 } // namespace OHOS::Rosen
 

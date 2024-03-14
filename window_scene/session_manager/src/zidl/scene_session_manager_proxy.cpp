@@ -1489,6 +1489,35 @@ WSError SceneSessionManagerProxy::HideNonSecureWindows(bool shouldHide)
     return static_cast<WSError>(reply.ReadInt32());
 }
 
+void SceneSessionManagerProxy::AddExtensionDeathRecipient(int32_t parentId, int32_t persistentId,
+    sptr<ISessionStage>& sessionStage)
+{
+    WLOGFD("run SceneSessionManagerProxy::AddExtensionDeathRecipient");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("Write interface token failed.");
+        return;
+    }
+    if (!data.WriteInt32(parentId)) {
+        WLOGFE("Write parentId failed");
+        return;
+    }
+    if (!data.WriteInt32(persistentId)) {
+        WLOGFE("Write persistentId failed");
+        return;
+    }
+    if (!data.WriteRemoteObject(sessionStage->AsObject())) {
+        WLOGFE("Write ISessionStage failed!");
+        return;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+        SceneSessionManagerMessage::TRANS_ID_ADD_EXTENSION_DEATH_RECIPIENT), data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest AddExtensionDeathRecipient failed");
+    }
+}
+
 WSError SceneSessionManagerProxy::AddExtensionSessionInfo(int32_t parentId, int32_t persistentId)
 {
     WLOGFD("run SceneSessionManagerProxy::AddExtensionSessionInfo");

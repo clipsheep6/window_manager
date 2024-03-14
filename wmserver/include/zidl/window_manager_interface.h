@@ -84,6 +84,7 @@ public:
         TRANS_ID_GET_MAXIMIZE_MODE,
         TRANS_ID_GET_FOCUS_WINDOW_INFO,
         TRANS_ID_HIDE_NON_SECURE_WINDOWS,
+        TRANS_ID_ADD_EXTENSION_DEATH_RECIPIENT,
         TRANS_ID_ADD_EXTENSION_SESSION_INFO,
         TRANS_ID_REMOVE_EXTENSION_SESSION_INFO,
         TRANS_ID_SET_EXTENSION_VISIBILITY,
@@ -195,6 +196,8 @@ public:
     {
         return WSError::WS_OK;
     }
+    virtual void AddExtensionDeathRecipient(int32_t parentId, int32_t persistentId,
+        sptr<ISessionStage>& sessionStage) {}
     virtual WSError AddExtensionSessionInfo(int32_t parentId, int32_t persistentId)
     {
         return WSError::WS_OK;

@@ -292,6 +292,8 @@ public:
     int32_t StartUIAbilityBySCB(sptr<AAFwk::SessionInfo>& abilitySessionInfo);
     int32_t StartUIAbilityBySCB(sptr<SceneSession>& sceneSessions);
     int32_t ChangeUIAbilityVisibilityBySCB(sptr<SceneSession>& sceneSessions, bool visibility);
+    void AddExtensionDeathRecipient(int32_t parentId, int32_t persistentId,
+        sptr<ISessionStage>& sessionStage) override;
     WSError AddExtensionSessionInfo(int32_t parentId, int32_t persistentId) override;
     WSError RemoveExtensionSessionInfo(int32_t parentId, int32_t persistentId) override;
     WSError SetExtensionVisibility(int32_t parentId, int32_t persistentId, bool isVisible) override;
@@ -434,9 +436,9 @@ private:
                                        const sptr<SceneSession>& sceneSession);
     void ClosePipWindowIfExist(WindowType type);
     WSError DestroyAndDisconnectSpecificSessionInner(sptr<SceneSession> sceneSession);
+    void OnExtSessionStageDied(const sptr<IRemoteObject>& remoteExtSessionStage);
     sptr<ExtensionSessionInfo> GetExtensionSessionInfo(int32_t parentId, int32_t persistentId);
     int64_t ConvertParentIdAndPersistentIdToExtId(int32_t parentId, int32_t persistentId);
-    void CheckAndRemoveExtensionSessionInfo(int32_t persistentId);
 
     sptr<RootSceneSession> rootSceneSession_;
     std::weak_ptr<AbilityRuntime::Context> rootSceneContextWeak_;
@@ -451,6 +453,7 @@ private:
     std::set<int32_t> touchOutsideListenerSessionSet_;
     std::set<int32_t> windowVisibilityListenerSessionSet_;
     std::map<int32_t, std::map<AvoidAreaType, AvoidArea>> lastUpdatedAvoidArea_;
+    std::map<sptr<IRemoteObject>, std::pair<int32_t, int32_t>> remoteExtSessionStageMap_;
     std::shared_mutex extensionSessionInfoMapMutex_;
     std::map<int64_t, sptr<ExtensionSessionInfo>> extensionSessionInfoMap_;
 
@@ -519,6 +522,8 @@ private:
     WindowChangedFunc WindowChangedFunc_;
     sptr<AgentDeathRecipient> windowDeath_ = new AgentDeathRecipient(
         std::bind(&SceneSessionManager::DestroySpecificSession, this, std::placeholders::_1));
+    sptr<AgentDeathRecipient> extSessionStageDeath_ = new AgentDeathRecipient(
+        std::bind(&SceneSessionManager::OnExtSessionStageDied, this, std::placeholders::_1));
     sptr<SceneSession> callingSession_ = nullptr;
     uint32_t callingWindowId_ = 0;
 

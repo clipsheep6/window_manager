@@ -1602,7 +1602,6 @@ WSError SceneSessionManager::RequestSceneSessionDestructionInner(
         NotifySessionForCallback(scnSession, needRemoveSession);
     }
     scnSession->RemoveLifeCycleTask(LifeCycleTaskType::STOP);
-    CheckAndRemoveExtensionSessionInfo(persistentId);
     return WSError::WS_OK;
 }
 
@@ -7118,6 +7117,26 @@ WSError SceneSessionManager::HideNonSecureWindows(bool shouldHide)
     return taskScheduler_->PostSyncTask(task);
 }
 
+WSError SceneSessionManager::AddExtensionDeathRecipient(int32_t parentId, int32_t persistentId,
+    sptr<ISessionStage>& sessionStage)
+{
+    WLOGFI("AddExtensionDeathRecipient, parentId:%{public}d, persistentId:%{public}d", parentId, persistentId);
+    if (sessionStage == nullptr) {
+        WLOGFE("AddExtensionDeathRecipient, sessionStage is null");
+        return;
+    }
+    auto remoteExtSessionStage = sessionStage->AsObject();
+    remoteExtSessionStageMap_.insert({remoteExtSessionStage, std::make_pair(parentId, persistentId)});
+    if (extSessionStageDeath_ == nullptr) {
+        WLOGFE("AddExtensionDeathRecipient, extSessionStageDeath_ is null");
+        return;
+    }
+    if (!remoteExtSessionStage->AddDeathRecipient(extSessionStageDeath_)) {
+        WLOGFE("AddExtensionDeathRecipient, AddDeathRecipient error");
+        return;
+    }
+}
+
 WSError SceneSessionManager::AddExtensionSessionInfo(int32_t parentId, int32_t persistentId)
 {
     WLOGFI("AddExtensionSessionInfo, parentId:%{public}d, persistentId:%{public}d", parentId, persistentId);
@@ -7206,7 +7225,7 @@ sptr<ExtensionSessionInfo> SceneSessionManager::GetExtensionSessionInfo(int32_t 
     int64_t extId = ConvertParentIdAndPersistentIdToExtId(parentId, persistentId);
     auto iter = extensionSessionInfoMap_.find(extId);
     if (iter == extensionSessionInfoMap_.end()) {
-        WLOGFD("Error found ext session with id: %{public}d, %{public}d", parentId, persistentId);
+        WLOGFE("Error found ext session with id: %{public}d, %{public}d", parentId, persistentId);
         return nullptr;
     }
     return iter->second;
@@ -7219,16 +7238,21 @@ int64_t SceneSessionManager::ConvertParentIdAndPersistentIdToExtId(int32_t paren
     return result;
 }
 
-void SceneSessionManager::CheckAndRemoveExtensionSessionInfo(int32_t persistentId)
+void SceneSessionManager::OnExtSessionStageDied(const sptr<IRemoteObject>& remoteExtSessionStage)
 {
-    auto iter = extensionSessionInfoMap_.begin();
-    while (iter != extensionSessionInfoMap_.end()) {
-        if (iter->second != nullptr && iter->second->GetParentId() == persistentId) {
-            iter = extensionSessionInfoMap_.erase(iter);
-        } else {
-            iter++;
+    WLOGFI("OnExtSessionStageDied");
+    auto task = [this, remoteExtSessionStage]() {
+        auto iter = remoteExtSessionStageMap_.find(remoteExtSessionStage);
+        if (iter == remoteExtSessionStageMap_.end()) {
+            WLOGFE("OnExtSessionStageDied invalid remoteExtSessionStage");
+            return;
         }
-    }
-    CheckAndNotifyWaterMarkChangedResult();
+        auto parentId = iter->second.first;
+        auto persistentId = iter->second.second;
+        WLOGFI("OnExtSessionStageDied parentId: %{public}d, persistentId: %{public}d", parentId, persistentId);
+        RemoveExtensionSessionInfo(parentId, persistentId);
+        remoteExtSessionStageMap_.erase(iter);
+    };
+    return taskScheduler_->PostASyncTask(task, "OnExtSessionStageDied");
 }
 } // namespace OHOS::Rosen

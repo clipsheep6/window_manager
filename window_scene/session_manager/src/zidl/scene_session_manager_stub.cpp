@@ -134,6 +134,8 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandleGetVisibilityWindowInfo),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_HIDE_NON_SECURE_WINDOWS),
         &SceneSessionManagerStub::HandleHideNonSecureWindows),
+        std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_ADD_EXTENSION_DEATH_RECIPIENT),
+        &SceneSessionManagerStub::HandleAddExtensionDeathRecipient),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_ADD_EXTENSION_SESSION_INFO),
         &SceneSessionManagerStub::HandleAddExtensionSessionInfo),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REMOVE_EXTENSION_SESSION_INFO),
@@ -822,6 +824,17 @@ int SceneSessionManagerStub::HandleAddExtensionSessionInfo(MessageParcel &data, 
     int32_t persistentId = data.ReadInt32();
     WSError ret = AddExtensionSessionInfo(parentId, persistentId);
     reply.WriteInt32(static_cast<int32_t>(ret));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleAddExtensionDeathRecipient(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleAddExtensionDeathRecipient!");
+    int32_t parentId = data.ReadInt32();
+    int32_t persistentId = data.ReadInt32();
+    sptr<IRemoteObject> sessionStageObject = data.ReadRemoteObject();
+    sptr<ISessionStage> sessionStage = iface_cast<ISessionStage>(sessionStageObject);
+    AddExtensionDeathRecipient(parentId, persistentId, sessionStage);
     return ERR_NONE;
 }
 

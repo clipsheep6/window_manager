@@ -97,6 +97,7 @@ public:
         TRANS_ID_SHIFT_APP_WINDOW_FOCUS,
         TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID,
         TRANS_ID_HIDE_NON_SECURE_WINDOWS,
+        TRANS_ID_ADD_EXTENSION_DEATH_RECIPIENT,
         TRANS_ID_ADD_EXTENSION_SESSION_INFO,
         TRANS_ID_REMOVE_EXTENSION_SESSION_INFO,
         TRANS_ID_SET_EXTENSION_VISIBILITY,
@@ -210,6 +211,8 @@ public:
     {
         return WSError::WS_OK;
     }
+    void AddExtensionDeathRecipient(int32_t parentId, int32_t persistentId,
+        sptr<ISessionStage>& sessionStage) override {}
     WSError AddExtensionSessionInfo(int32_t parentId, int32_t persistentId) override
     {
         return WSError::WS_OK;
