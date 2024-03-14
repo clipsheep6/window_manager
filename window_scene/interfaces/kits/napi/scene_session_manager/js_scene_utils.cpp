@@ -430,6 +430,16 @@ bool ConvertRectInfoFromJs(napi_env env, napi_value jsObject, WSRect& rect)
     return true;
 }
 
+template<class T>
+inline bool ConvertFromJsValueWithLog(napi_env env, const char* name, napi_value jsValue, T& value)
+{
+    if (!ConvertFromJsValue(env, jsValue, value)) {
+        WLOGFE("[NAPI]Failed to convert parameter to %{public}s", name);
+        return false;
+    }
+    return true;
+}
+
 bool ConvertPointerItemFromJs(napi_env env, napi_value touchObject, MMI::PointerEvent& pointerEvent)
 {
     auto vpr = RootScene::staticRootScene_->GetDisplayDensity();
@@ -447,39 +457,33 @@ bool ConvertPointerItemFromJs(napi_env env, napi_value touchObject, MMI::Pointer
     napi_value jsDisplayY = nullptr;
     napi_get_named_property(env, touchObject, "displayY", &jsDisplayY);
     int32_t id;
-    if (!ConvertFromJsValue(env, jsId, id)) {
-        WLOGFE("[NAPI]Failed to convert parameter to id");
+    if (!ConvertFromJsValueWithLog(env, "id", jsId, id)) {
         return false;
     }
     pointerItem.SetPointerId(id);
     pointerEvent.SetPointerId(id);
     int32_t touchType;
-    if (!ConvertFromJsValue(env, jsTouchType, touchType)) {
-        WLOGFE("[NAPI]Failed to convert parameter to touchType");
+    if (!ConvertFromJsValueWithLog(env, "touchType", jsTouchType, touchType)) {
         return false;
     }
     pointerEvent.SetPointerAction(GetMMITouchType(touchType));
     double windowX;
-    if (!ConvertFromJsValue(env, jsWindowX, windowX)) {
-        WLOGFE("[NAPI]Failed to convert parameter to windowX");
+    if (!ConvertFromJsValueWithLog(env, "windowX", jsWindowX, windowX)) {
         return false;
     }
     pointerItem.SetWindowX(std::round(windowX * vpr));
     double windowY;
-    if (!ConvertFromJsValue(env, jsWindowY, windowY)) {
-        WLOGFE("[NAPI]Failed to convert parameter to windowY");
+    if (!ConvertFromJsValueWithLog(env, "windowY", jsWindowY, windowY)) {
         return false;
     }
     pointerItem.SetWindowY(std::round(windowY * vpr));
     double displayX;
-    if (!ConvertFromJsValue(env, jsDisplayX, displayX)) {
-        WLOGFE("[NAPI]Failed to convert parameter to displayX");
+    if (!ConvertFromJsValueWithLog(env, "displayX", jsDisplayX, displayX)) {
         return false;
     }
     pointerItem.SetDisplayX(std::round(displayX * vpr));
     double displayY;
-    if (!ConvertFromJsValue(env, jsDisplayY, displayY)) {
-        WLOGFE("[NAPI]Failed to convert parameter to displayY");
+    if (!ConvertFromJsValueWithLog(env, "displayY", jsDisplayY, displayY)) {
         return false;
     }
     pointerItem.SetDisplayY(std::round(displayY * vpr));
