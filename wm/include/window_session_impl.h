@@ -195,6 +195,8 @@ public:
     void RecoverSessionListener();
     void SetDefaultDisplayIdIfNeed();
     WMError HideNonSecureWindows(bool shouldHide) override;
+    virtual WMError SetKeyEventFilter(KeyEventFilterFunc filter) override;
+    virtual WMError ClearKeyEventFilter() override;
 protected:
     WMError Connect();
     bool IsWindowSessionInvalid() const;
@@ -221,6 +223,7 @@ protected:
     void NotifyTransformChange(const Transform& transForm) override;
     bool IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const;
     void DispatchKeyEventCallback(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed);
+    bool FilterKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent);
 
     WMError RegisterExtensionAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener);
     WMError UnregisterExtensionAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener);
@@ -249,7 +252,7 @@ protected:
     bool needRemoveWindowInputChannel_ = false;
     float virtualPixelRatio_ { 1.0f };
     bool escKeyEventTriggered_ = false;
-
+    KeyEventFilterFunc keyEventFilter_;
 private:
     //Trans between colorGamut and colorSpace
     static ColorSpace GetColorSpaceFromSurfaceGamut(GraphicColorGamut colorGamut);

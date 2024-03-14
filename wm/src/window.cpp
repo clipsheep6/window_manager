@@ -198,6 +198,15 @@ sptr<Window> Window::GetTopWindowWithId(uint32_t mainWinId)
     }
 }
 
+sptr<Window> Window::GetMainWindowWithId(uint32_t mainWinId)
+{
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        return WindowSceneSessionImpl::GetMainWindowWithId(mainWinId);
+    } else {
+        return WindowImpl::GetMainWindowWithId(mainWinId);
+    }
+}
+
 std::vector<sptr<Window>> Window::GetSubWindow(uint32_t parentId)
 {
     if (SceneBoardJudgement::IsSceneBoardEnabled()) {

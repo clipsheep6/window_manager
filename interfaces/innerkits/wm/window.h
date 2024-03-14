@@ -62,6 +62,7 @@ namespace Rosen {
 using NotifyNativeWinDestroyFunc = std::function<void(std::string windowName)>;
 using NotifyTransferComponentDataFunc = std::function<void(const AAFwk::WantParams& wantParams)>;
 using NotifyTransferComponentDataForResultFunc = std::function<AAFwk::WantParams(const AAFwk::WantParams& wantParams)>;
+using KeyEventFilterFunc = std::function<bool(MMI::KeyEvent&)>;
 class RSSurfaceNode;
 class RSTransaction;
 class ISession;
@@ -460,6 +461,15 @@ public:
      * @return sptr<Window>
      */
     static sptr<Window> GetTopWindowWithId(uint32_t mainWinId);
+    
+    /**
+     * @brief Get main window by id
+     *
+     * @param mainWinId main window id
+     * @return sptr<Window>
+     */
+    static sptr<Window> GetMainWindowWithId(uint32_t mainWinId);
+
     /**
      * @brief Get the all sub windows by parent
      *
@@ -1672,6 +1682,24 @@ public:
      * @return WMError
      */
     virtual WMError Recover(uint32_t reason) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
+    
+    /**
+     * @brief register keyEvent filter.
+     *
+     * @param KeyEventFilterFunc callback func when window recieve keyEvent
+     * @return WMError
+     */
+    virtual WMError SetKeyEventFilter(KeyEventFilterFunc KeyEventFilterFunc)
+    {
+        return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+    }
+
+    /**
+     * @brief clear keyEvent filter.
+     *
+     * @return WMError
+    */
+    virtual WMError ClearKeyEventFilter() { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
 };
 }
 }

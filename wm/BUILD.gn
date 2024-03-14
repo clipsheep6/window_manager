@@ -187,6 +187,7 @@ ohos_shared_library("libwm") {
     "../window_scene/intention_event/framework/anr_handler/include",
     "${window_base_path}/window_scene/intention_event/include",
     "${accessibility_path}/interfaces/innerkits/common/include/",
+    "${window_base_path}/interfaces/kits/ndk/wm/",
   ]
 
   sources = [
@@ -218,6 +219,7 @@ ohos_shared_library("libwm") {
     "src/window_session_impl.cpp",
     "src/zidl/window_manager_agent_stub.cpp",
     "src/zidl/window_stub.cpp",
+    "src/native_window_event_filter.cpp",
   ]
 
   configs = [
@@ -344,4 +346,37 @@ ohos_shared_library("libwm_lite") {
 group("test") {
   testonly = true
   deps = [ "test:test" ]
+}
+
+## Build libwm_ndk.so
+ohos_shared_library("libwm_ndk") {
+  output_name = "libnative_wm"
+  output_extension = "so"
+  branch_protector_ret = "pac_ret"
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  include_dirs = [ 
+    "${window_base_path}/interfaces/kits/ndk/wm",
+    "${window_base_path}/interfaces/inner_kits/wm",
+  ]
+
+  sources = [
+    "src/native_window_event_filter.cpp",
+  ]
+
+  deps = [":libwm"]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "input:libmmi-client"
+  ]
+
+  part_name = "window_manager"
+  subsystem_name = "window"
 }
