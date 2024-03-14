@@ -1602,6 +1602,7 @@ WSError SceneSessionManager::RequestSceneSessionDestructionInner(
         NotifySessionForCallback(scnSession, needRemoveSession);
     }
     scnSession->RemoveLifeCycleTask(LifeCycleTaskType::STOP);
+    CheckAndRemoveExtensionSessionInfo(persistentId);
     return WSError::WS_OK;
 }
 
@@ -7216,5 +7217,18 @@ int64_t SceneSessionManager::ConvertParentIdAndPersistentIdToExtId(int32_t paren
     int64_t result = parentId;
     result = (result << LOGICAL_DISPLACEMENT_32) | persistentId;
     return result;
+}
+
+void SceneSessionManager::CheckAndRemoveExtensionSessionInfo(int32_t persistentId)
+{
+    auto iter = extensionSessionInfoMap_.begin();
+    while (iter != extensionSessionInfoMap_.end()) {
+        if (iter->second != nullptr && iter->second->GetParentId() == persistentId) {
+            iter = extensionSessionInfoMap_.erase(iter);
+        } else {
+            iter++;
+        }
+    }
+    CheckAndNotifyWaterMarkChangedResult();
 }
 } // namespace OHOS::Rosen

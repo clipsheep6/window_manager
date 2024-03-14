@@ -78,15 +78,16 @@ void ExtensionSessionManager::Init()
 void ExtensionSessionManager::InitWms()
 {
     if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
-            if (!InitSsmProxy()) {
-                WLOGFE("InitSSMProxy failed!");
-            }
-        } else {
-            if (!InitWmsProxy()) {
-                WLOGFE("InitWMSProxy failed!");
-            }
+        if (!InitSsmProxy()) {
+            WLOGFE("InitSSMProxy failed!");
         }
+    } else {
+        if (!InitWmsProxy()) {
+            WLOGFE("InitWMSProxy failed!");
+        }
+    }
 }
+
 bool ExtensionSessionManager::InitWmsProxy()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);

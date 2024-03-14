@@ -436,6 +436,7 @@ private:
     WSError DestroyAndDisconnectSpecificSessionInner(sptr<SceneSession> sceneSession);
     sptr<ExtensionSessionInfo> GetExtensionSessionInfo(int32_t parentId, int32_t persistentId);
     int64_t ConvertParentIdAndPersistentIdToExtId(int32_t parentId, int32_t persistentId);
+    void CheckAndRemoveExtensionSessionInfo(int32_t persistentId);
 
     sptr<RootSceneSession> rootSceneSession_;
     std::weak_ptr<AbilityRuntime::Context> rootSceneContextWeak_;
