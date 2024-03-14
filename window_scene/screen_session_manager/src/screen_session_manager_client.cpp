@@ -81,6 +81,9 @@ bool ScreenSessionManagerClient::CheckIfNeedConnectScreen(ScreenId screenId, Scr
         if (name == "HiCar" || name == "SuperLauncher") {
             WLOGFI("HiCar or SuperLauncher, need to connect the screen");
             return true;
+        } else if (name == "CastEngine") {
+            WLOGFI("CastEngine, need to connect the screen");
+            return true;
         } else {
             WLOGFE("ScreenType is virtual, no need to connect the screen");
             return false;

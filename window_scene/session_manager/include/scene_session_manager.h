@@ -430,6 +430,8 @@ private:
     void ClosePipWindowIfExist(WindowType type);
     WSError DestroyAndDisconnectSpecificSessionInner(sptr<SceneSession> sceneSession);
 
+    WSError HandleCastScreenEvent(const sptr<SceneSession>& sceneSession);
+
     sptr<RootSceneSession> rootSceneSession_;
     std::weak_ptr<AbilityRuntime::Context> rootSceneContextWeak_;
     std::shared_mutex sceneSessionMapMutex_;

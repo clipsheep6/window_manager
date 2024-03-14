@@ -42,6 +42,8 @@
 #include <running_lock.h>
 #include "singleton_container.h"
 #include "pip_report.h"
+#include "screen_manager.h"
+#include "screen.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -2001,12 +2003,39 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
             ", windowMode: %{public}d, caller persistentId: %{public}d",
             info.callState_, info.persistentId_, info.callingTokenId_, info.uiAbilityId_,
             info.windowMode, info.callerPersistentId_);
+
+        if (HandleCastScreenEvent(info, session) != WSError::WS_OK) {
+            return WSError::WS_ERROR_NULLPTR;
+        }
         if (session->pendingSessionActivationFunc_) {
             session->pendingSessionActivationFunc_(info);
         }
         return WSError::WS_OK;
     };
     PostTask(task, "PendingSessionActivation");
+    return WSError::WS_OK;
+}
+
+WSError SceneSession::HandleCastScreenEvent(SessionInfo info, sptr<SceneSession> session)
+{
+    auto displayInfo = Rosen::ScreenManager::GetInstance().GetScreenById(info.screenId);
+    if (displayInfo != nullptr) {
+        if (displayInfo->GetName() == "CastEngine") {
+            TLOGI(WmsLogTag::WMS_LIFE, "RequestSceneSession in castEngine screen.");
+            TLOGI(WmsLogTag::WMS_LIFE, "Get exist session state: %{public}d", session->GetSessionState());
+            if (session->GetSessionState() != SessionState::STATE_FOREGROUND &&
+                session->GetSessionState() != SessionState::STATE_ACTIVE) {
+                TLOGE(WmsLogTag::WMS_LIFE, "Session state is not foreground or active.");
+                return WSError::WS_ERROR_NULLPTR;
+            }
+            std::vector<uint64_t> uniqueIds{ info.screenId_ };
+            Rosen::DMError ret = Rosen::ScreenManager::GetInstance().MakeUniqueScreen(uniqueIds);
+            if (ret != Rosen::DMError::DM_OK) {
+                TLOGE(WmsLogTag::WMS_LIFE, "MakeUniqueScreen failed, ret: %{public}d.", ret);
+                return WSError::WS_ERROR_NULLPTR;
+            }
+        }
+    }
     return WSError::WS_OK;
 }
 

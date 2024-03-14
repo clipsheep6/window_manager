@@ -44,6 +44,8 @@
 #include <transaction/rs_interfaces.h>
 #include <transaction/rs_transaction.h>
 #include "transaction/rs_sync_transaction_controller.h"
+#include "screen_manager.h"
+#include "screen.h"
 
 #ifdef POWERMGR_DISPLAY_MANAGER_ENABLE
 #include <display_power_mgr_client.h>
@@ -1541,6 +1543,9 @@ WSError SceneSessionManager::RequestSceneSessionDestruction(
             TLOGE(WmsLogTag::WMS_MAIN, "session is nullptr");
             return WSError::WS_ERROR_NULLPTR;
         }
+        if (HandleCastScreenEvent(sceneSession) != WSError::WS_OK) {
+            return WSError::WS_ERROR_NULLPTR;
+        }
         auto persistentId = scnSession->GetPersistentId();
         RequestSessionUnfocus(persistentId);
         lastUpdatedAvoidArea_.erase(persistentId);
@@ -1601,6 +1606,26 @@ WSError SceneSessionManager::RequestSceneSessionDestructionInner(
         NotifySessionForCallback(scnSession, needRemoveSession);
     }
     scnSession->RemoveLifeCycleTask(LifeCycleTaskType::STOP);
+    return WSError::WS_OK;
+}
+
+WSError SceneSessionManager::HandleCastScreenEvent(const sptr<SceneSession>& sceneSession)
+{
+    auto sessionInfo = sceneSession->GetSessionInfo();
+    TLOGI(WmsLogTag::WMS_MAIN, "RequestSceneSessionDestruction in castEngine screen. %{public}" PRIu64"", sessionInfo.screenId_);
+    auto displayInfo = Rosen::ScreenManager::GetInstance().GetScreenById(sessionInfo.screenId_);
+    if (displayInfo != nullptr) {
+        if (displayInfo->GetName() == "CastEngine") {
+            TLOGI(WmsLogTag::WMS_MAIN, "RequestSceneSessionDestruction in castEngine screen.");
+            std::vector<uint64_t> mirrorIds{ sessionInfo.screenId_ };
+            ScreenId groupId;
+            Rosen::DMError ret = Rosen::ScreenManager::GetInstance().MakeMirror(0, mirrorIds, groupId);
+            if (ret != Rosen::DMError::DM_OK) {
+                TLOGE(WmsLogTag::WMS_MAIN, "MakeUniqueScreen failed, ret: %{public}d.", ret);
+                return WSError::WS_ERROR_NULLPTR;
+            }
+        }
+    }
     return WSError::WS_OK;
 }
 
