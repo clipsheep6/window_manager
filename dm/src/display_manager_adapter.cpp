@@ -661,4 +661,11 @@ DMError DisplayManagerAdapter::GetAvailableArea(DisplayId displayId, DMRect& are
 
     return displayManagerServiceProxy_->GetAvailableArea(displayId, area);
 }
+
+ScreenId ScreenManagerAdapter::GetDefaultScreenId()
+{
+    INIT_PROXY_CHECK_RETURN(SCREEN_ID_INVALID);
+
+    return displayManagerServiceProxy_->GetDefaultScreenId();
+}
 } // namespace OHOS::Rosen

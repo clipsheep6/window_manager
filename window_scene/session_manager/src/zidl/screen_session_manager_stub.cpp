@@ -652,6 +652,11 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             NotifyFoldToExpandCompletion(foldToExpand);
             break;
         }
+        case DisplayManagerMessage::TRANS_ID_GET_DEFAULT_SCREEN_ID: {
+            ScreenId screenId = GetDefaultScreenId();
+            reply.WriteUint64(static_cast<uint64_t>(screenId));
+            break;
+        }
         default:
             WLOGFW("unknown transaction code");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);

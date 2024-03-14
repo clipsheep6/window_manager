@@ -536,6 +536,11 @@ ScreenId ScreenManager::Impl::CreateVirtualScreen(VirtualScreenOption option)
     return SingletonContainer::Get<ScreenManagerAdapter>().CreateVirtualScreen(option, virtualScreenAgent_);
 }
 
+ScreenId ScreenManager::GetDefaultScreenId()
+{
+    return SingletonContainer::Get<ScreenManagerAdapter>().GetDefaultScreenId();
+}
+
 DMError ScreenManager::DestroyVirtualScreen(ScreenId screenId)
 {
     return SingletonContainer::Get<ScreenManagerAdapter>().DestroyVirtualScreen(screenId);

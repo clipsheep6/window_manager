@@ -119,6 +119,7 @@ public:
         TRANS_ID_GET_AVAILABLE_AREA,
         TRANS_ID_NOTIFY_FOLD_TO_EXPAND_COMPLETION,
         TRANS_ID_CONVERT_SCREENID_TO_RSSCREENID,
+        TRANS_ID_GET_DEFAULT_SCREEN_ID,
     };
 
     virtual sptr<DisplayInfo> GetDefaultDisplayInfo() = 0;
@@ -235,6 +236,8 @@ public:
 
     // unique screen
     virtual DMError MakeUniqueScreen(const std::vector<ScreenId>& screenIds) { return DMError::DM_OK; }
+
+    virtual ScreenId GetDefaultScreenId() { return SCREEN_ID_INVALID; }
 };
 } // namespace OHOS::Rosen
 
