@@ -603,7 +603,9 @@ bool WindowSessionProperty::Marshalling(Parcel& parcel) const
 WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
 {
     WindowSessionProperty* property = new(std::nothrow) WindowSessionProperty();
-    if (property == nullptr) return nullptr;
+    if (property == nullptr) {
+        return nullptr;
+    }
     property->SetWindowName(parcel.ReadString());
     Rect rect = { parcel.ReadInt32(), parcel.ReadInt32(), parcel.ReadUint32(), parcel.ReadUint32() };
     property->SetWindowRect(rect);
