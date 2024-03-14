@@ -23,6 +23,9 @@
 #include "window_manager_hilog.h"
 #include "parameters.h"
 #include "anr_handler.h"
+#include "session_permission.h"
+#include "singleton_container.h"
+#include "window_adapter.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -57,11 +60,20 @@ WMError WindowExtensionSessionImpl::Create(const std::shared_ptr<AbilityRuntime:
     context_ = context;
     WMError ret = Connect();
     if (ret == WMError::WM_OK) {
+        SingletonContainer::Get<WindowAdapter>().AddExtensionSessionInfo(property_->GetParentId(), GetPersistentId());
         std::unique_lock<std::shared_mutex> lock(windowExtensionSessionMutex_);
         windowExtensionSessionSet_.insert(this);
     }
+    AddExtensionDeathRecipient();
     state_ = WindowState::STATE_CREATED;
     return WMError::WM_OK;
+}
+
+void WindowExtensionSessionImpl::AddExtensionDeathRecipient()
+{
+    sptr<ISessionStage> iSessionStage(this);
+    SingletonContainer::Get<WindowAdapter>().AddExtensionDeathRecipient(property_->GetParentId(), GetPersistentId(),
+        iSessionStage);
 }
 
 void WindowExtensionSessionImpl::UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
@@ -90,6 +102,8 @@ WMError WindowExtensionSessionImpl::Destroy(bool needNotifyServer, bool needClea
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (hostSession_ != nullptr) {
+        SingletonContainer::Get<WindowAdapter>().RemoveExtensionSessionInfo(property_->GetParentId(),
+            GetPersistentId());
         hostSession_->Disconnect();
     }
     NotifyBeforeDestroy(GetWindowName());
@@ -571,6 +585,8 @@ WMError WindowExtensionSessionImpl::Hide(uint32_t reason, bool withAnimation, bo
         NotifyBackgroundFailed(WMError::WM_DO_NOTHING);
         return WMError::WM_OK;
     }
+    SingletonContainer::Get<WindowAdapter>().SetExtensionVisibility(property_->GetParentId(),
+        GetPersistentId(), false);
     WSError ret = hostSession_->Background();
     WMError res = static_cast<WMError>(ret);
     if (res == WMError::WM_OK) {
@@ -581,6 +597,56 @@ WMError WindowExtensionSessionImpl::Hide(uint32_t reason, bool withAnimation, bo
         TLOGD(WmsLogTag::WMS_LIFE, "window extension session Hide to Background is error");
     }
     return WMError::WM_OK;
+}
+
+WMError WindowExtensionSessionImpl::Show(uint32_t reason, bool withAnimation)
+{
+    SingletonContainer::Get<WindowAdapter>().SetExtensionVisibility(property_->GetParentId(),
+        GetPersistentId(), true);
+    return this->WindowSessionImpl::Show(reason, withAnimation);
+}
+
+WMError WindowExtensionSessionImpl::AddWindowFlag(WindowFlag flag)
+{
+    if (flag == WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED && context_ && context_->GetApplicationInfo() &&
+        context_->GetApplicationInfo()->apiCompatibleVersion >= 9 && // 9: api version
+        !SessionPermission::IsSystemCalling()) {
+        WLOGI("Can not add window flag WINDOW_FLAG_SHOW_WHEN_LOCKED");
+        return WMError::WM_ERROR_INVALID_PERMISSION;
+    }
+
+    WMError ret = WMError::WM_OK;
+    switch (flag) {
+        case WindowFlag::WINDOW_FLAG_WATER_MARK: {
+            ret = SingletonContainer::Get<WindowAdapter>().SetExtensionWaterMark(property_->GetParentId(),
+                GetPersistentId(), true);
+            break;
+        }
+        default:
+            break;
+    }
+    return ret;
+}
+
+WMError WindowExtensionSessionImpl::RemoveWindowFlag(WindowFlag flag)
+{
+    if (flag == WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED && context_ && context_->GetApplicationInfo() &&
+        context_->GetApplicationInfo()->apiCompatibleVersion >= 9 && // 9: api version
+        !SessionPermission::IsSystemCalling()) {
+        WLOGI("Can not remove window flag WINDOW_FLAG_SHOW_WHEN_LOCKED");
+        return WMError::WM_ERROR_INVALID_PERMISSION;
+    }
+    WMError ret = WMError::WM_OK;
+    switch (flag) {
+        case WindowFlag::WINDOW_FLAG_WATER_MARK: {
+            ret = SingletonContainer::Get<WindowAdapter>().SetExtensionWaterMark(property_->GetParentId(),
+                GetPersistentId(), false);
+            break;
+        }
+        default:
+            break;
+    }
+    return ret;
 }
 } // namespace Rosen
 } // namespace OHOS

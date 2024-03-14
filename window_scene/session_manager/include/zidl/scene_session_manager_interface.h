@@ -97,6 +97,11 @@ public:
         TRANS_ID_SHIFT_APP_WINDOW_FOCUS,
         TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID,
         TRANS_ID_HIDE_NON_SECURE_WINDOWS,
+        TRANS_ID_ADD_EXTENSION_DEATH_RECIPIENT,
+        TRANS_ID_ADD_EXTENSION_SESSION_INFO,
+        TRANS_ID_REMOVE_EXTENSION_SESSION_INFO,
+        TRANS_ID_SET_EXTENSION_VISIBILITY,
+        TRANS_ID_SET_EXTENSION_WATER_MARK,
     };
 
     virtual WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) = 0;
@@ -203,6 +208,24 @@ public:
         return WSError::WS_OK;
     }
     WSError HideNonSecureWindows(bool shouldHide) override
+    {
+        return WSError::WS_OK;
+    }
+    void AddExtensionDeathRecipient(int32_t parentId, int32_t persistentId,
+        sptr<ISessionStage>& sessionStage) override {}
+    WSError AddExtensionSessionInfo(int32_t parentId, int32_t persistentId) override
+    {
+        return WSError::WS_OK;
+    }
+    WSError RemoveExtensionSessionInfo(int32_t parentId, int32_t persistentId) override
+    {
+        return WSError::WS_OK;
+    }
+    WSError SetExtensionVisibility(int32_t parentId, int32_t persistentId, bool isVisible) override
+    {
+        return WSError::WS_OK;
+    }
+    WSError SetExtensionWaterMark(int32_t parentId, int32_t persistentId, bool isEnable) override
     {
         return WSError::WS_OK;
     }

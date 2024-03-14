@@ -84,6 +84,11 @@ public:
         TRANS_ID_GET_MAXIMIZE_MODE,
         TRANS_ID_GET_FOCUS_WINDOW_INFO,
         TRANS_ID_HIDE_NON_SECURE_WINDOWS,
+        TRANS_ID_ADD_EXTENSION_DEATH_RECIPIENT,
+        TRANS_ID_ADD_EXTENSION_SESSION_INFO,
+        TRANS_ID_REMOVE_EXTENSION_SESSION_INFO,
+        TRANS_ID_SET_EXTENSION_VISIBILITY,
+        TRANS_ID_SET_EXTENSION_WATER_MARK,
     };
     virtual WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode,
@@ -188,6 +193,24 @@ public:
         return WSError::WS_ERROR_DEVICE_NOT_SUPPORT;
     }
     virtual WSError HideNonSecureWindows(bool shouldHide)
+    {
+        return WSError::WS_OK;
+    }
+    virtual void AddExtensionDeathRecipient(int32_t parentId, int32_t persistentId,
+        sptr<ISessionStage>& sessionStage) {}
+    virtual WSError AddExtensionSessionInfo(int32_t parentId, int32_t persistentId)
+    {
+        return WSError::WS_OK;
+    }
+    virtual WSError RemoveExtensionSessionInfo(int32_t parentId, int32_t persistentId)
+    {
+        return WSError::WS_OK;
+    }
+    virtual WSError SetExtensionVisibility(int32_t parentId, int32_t persistentId, bool isVisible)
+    {
+        return WSError::WS_OK;
+    }
+    virtual WSError SetExtensionWaterMark(int32_t parentId, int32_t persistentId, bool isEnable)
     {
         return WSError::WS_OK;
     }

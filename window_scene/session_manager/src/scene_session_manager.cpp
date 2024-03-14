@@ -148,6 +148,7 @@ const std::string ARG_DUMP_WINDOW = "-w";
 const std::string ARG_DUMP_SCREEN = "-s";
 const std::string ARG_DUMP_DISPLAY = "-d";
 constexpr uint64_t NANO_SECOND_PER_SEC = 1000000000; // ns
+const int32_t LOGICAL_DISPLACEMENT_32 = 32;
 std::string GetCurrentTime()
 {
     struct timespec tn;
@@ -4346,6 +4347,17 @@ void SceneSessionManager::CheckAndNotifyWaterMarkChangedResult()
                 break;
             }
         }
+        std::shared_lock<std::shared_mutex> extLock(extensionSessionInfoMapMutex_);
+        for (const auto& iter: extensionSessionInfoMap_) {
+            auto& extInfo = iter.second;
+            if (!extInfo) {
+                continue;
+            }
+            if (extInfo->GetWaterMark() && extInfo->GetVisibility()) {
+                currentWaterMarkShowState = true;
+                break;
+            }
+        }
     }
     if (lastWaterMarkShowState_ != currentWaterMarkShowState) {
         lastWaterMarkShowState_ = currentWaterMarkShowState;
@@ -7090,5 +7102,144 @@ WSError SceneSessionManager::HideNonSecureWindows(bool shouldHide)
         return WSError::WS_OK;
     };
     return taskScheduler_->PostSyncTask(task);
+}
+
+WSError SceneSessionManager::AddExtensionDeathRecipient(int32_t parentId, int32_t persistentId,
+    sptr<ISessionStage>& sessionStage)
+{
+    WLOGFI("AddExtensionDeathRecipient, parentId:%{public}d, persistentId:%{public}d", parentId, persistentId);
+    if (sessionStage == nullptr) {
+        WLOGFE("AddExtensionDeathRecipient, sessionStage is null");
+        return;
+    }
+    auto remoteExtSessionStage = sessionStage->AsObject();
+    remoteExtSessionStageMap_.insert({remoteExtSessionStage, std::make_pair(parentId, persistentId)});
+    if (extSessionStageDeath_ == nullptr) {
+        WLOGFE("AddExtensionDeathRecipient, extSessionStageDeath_ is null");
+        return;
+    }
+    if (!remoteExtSessionStage->AddDeathRecipient(extSessionStageDeath_)) {
+        WLOGFE("AddExtensionDeathRecipient, AddDeathRecipient error");
+        return;
+    }
+}
+
+WSError SceneSessionManager::AddExtensionSessionInfo(int32_t parentId, int32_t persistentId)
+{
+    WLOGFI("AddExtensionSessionInfo, parentId:%{public}d, persistentId:%{public}d", parentId, persistentId);
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("AddExtensionSessionInfo permission denied!");
+        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    }
+    auto task = [this, parentId, persistentId]() {
+        sptr<ExtensionSessionInfo> extInfo = new (std::nothrow) ExtensionSessionInfo();
+        if (extInfo == nullptr) {
+            WLOGFE("AddExtensionSessionInfo error, extInfo is null");
+            return WSError::WS_ERROR_NULLPTR;
+        }
+        extInfo->SetParentId(parentId);
+        extInfo->SetPersistentId(persistentId);
+        int64_t extId = ConvertParentIdAndPersistentIdToExtId(parentId, persistentId);
+        std::shared_lock<std::shared_mutex> lock(extensionSessionInfoMapMutex_);
+        extensionSessionInfoMap_.insert({extId, extInfo});
+        return WSError::WS_OK;
+    };
+    return taskScheduler_->PostSyncTask(task);
+}
+
+WSError SceneSessionManager::RemoveExtensionSessionInfo(int32_t parentId, int32_t persistentId)
+{
+    WLOGFI("RemoveExtensionSessionInfo, parentId:%{public}d, persistentId:%{public}d", parentId, persistentId);
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("RemoveExtensionSessionInfo permission denied!");
+        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    }
+    auto task = [this, parentId, persistentId]() {
+        int64_t extId = ConvertParentIdAndPersistentIdToExtId(parentId, persistentId);
+        std::shared_lock<std::shared_mutex> lock(extensionSessionInfoMapMutex_);
+        extensionSessionInfoMap_.erase(extId);
+        CheckAndNotifyWaterMarkChangedResult();
+        return WSError::WS_OK;
+    };
+    return taskScheduler_->PostSyncTask(task);
+}
+
+WSError SceneSessionManager::SetExtensionVisibility(int32_t parentId, int32_t persistentId, bool isVisible)
+{
+    WLOGFI("SetExtensionVisibility, parentId:%{public}d, persistentId:%{public}d, isVisible:%{public}u",
+        parentId, persistentId, isVisible);
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("SetExtensionVisibility permission denied!");
+        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    }
+    auto task = [this, parentId, persistentId, isVisible]() {
+        auto extInfo = GetExtensionSessionInfo(parentId, persistentId);
+        if (extInfo == nullptr) {
+            WLOGFE("extension is nullptr, parentId:%{public}d, persistentId:%{public}d", parentId, persistentId);
+            return WSError::WS_ERROR_NULLPTR;
+        }
+        extInfo->SetVisibility(isVisible);
+        CheckAndNotifyWaterMarkChangedResult();
+        return WSError::WS_OK;
+    };
+    return taskScheduler_->PostSyncTask(task);
+}
+
+WSError SceneSessionManager::SetExtensionWaterMark(int32_t parentId, int32_t persistentId, bool isEnable)
+{
+    WLOGFI("SetExtensionVisibility, parentId:%{public}d, persistentId:%{public}d, isEnable:%{public}u",
+        parentId, persistentId, isEnable);
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("SetExtensionWaterMark permission denied!");
+        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    }
+    auto task = [this, parentId, persistentId, isEnable]() {
+        auto extInfo = GetExtensionSessionInfo(parentId, persistentId);
+        if (extInfo == nullptr) {
+            WLOGFE("extension is nullptr, parentId:%{public}d, persistentId:%{public}d", parentId, persistentId);
+            return WSError::WS_ERROR_NULLPTR;
+        }
+        extInfo->SetWaterMark(isEnable);
+        CheckAndNotifyWaterMarkChangedResult();
+        return WSError::WS_OK;
+    };
+    return taskScheduler_->PostSyncTask(task);
+}
+
+sptr<ExtensionSessionInfo> SceneSessionManager::GetExtensionSessionInfo(int32_t parentId, int32_t persistentId)
+{
+    std::shared_lock<std::shared_mutex> lock(extensionSessionInfoMapMutex_);
+    int64_t extId = ConvertParentIdAndPersistentIdToExtId(parentId, persistentId);
+    auto iter = extensionSessionInfoMap_.find(extId);
+    if (iter == extensionSessionInfoMap_.end()) {
+        WLOGFE("Error found ext session with id: %{public}d, %{public}d", parentId, persistentId);
+        return nullptr;
+    }
+    return iter->second;
+}
+
+int64_t SceneSessionManager::ConvertParentIdAndPersistentIdToExtId(int32_t parentId, int32_t persistentId)
+{
+    int64_t result = parentId;
+    result = (result << LOGICAL_DISPLACEMENT_32) | persistentId;
+    return result;
+}
+
+void SceneSessionManager::OnExtSessionStageDied(const sptr<IRemoteObject>& remoteExtSessionStage)
+{
+    WLOGFI("OnExtSessionStageDied");
+    auto task = [this, remoteExtSessionStage]() {
+        auto iter = remoteExtSessionStageMap_.find(remoteExtSessionStage);
+        if (iter == remoteExtSessionStageMap_.end()) {
+            WLOGFE("OnExtSessionStageDied invalid remoteExtSessionStage");
+            return;
+        }
+        auto parentId = iter->second.first;
+        auto persistentId = iter->second.second;
+        WLOGFI("OnExtSessionStageDied parentId: %{public}d, persistentId: %{public}d", parentId, persistentId);
+        RemoveExtensionSessionInfo(parentId, persistentId);
+        remoteExtSessionStageMap_.erase(iter);
+    };
+    return taskScheduler_->PostASyncTask(task, "OnExtSessionStageDied");
 }
 } // namespace OHOS::Rosen
