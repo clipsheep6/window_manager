@@ -38,6 +38,7 @@ private:
     napi_value OnLoadContent(napi_env env, napi_callback_info info);
     bool IsCallbackRegistered(napi_env env, const std::string& type, napi_value jsListenerObject);
     void PendingSessionActivation(SessionInfo& info);
+    napi_value NapiThrow(napi_env env, WSErrorCode error, const std::string& message = std::string());
     void PendingSessionActivationInner(std::shared_ptr<SessionInfo> sessionInfo);
     sptr<SceneSession> GenSceneSession(SessionInfo& info);
 
