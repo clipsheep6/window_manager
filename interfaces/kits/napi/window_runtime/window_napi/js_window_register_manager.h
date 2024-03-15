@@ -24,40 +24,59 @@
 #include "window.h"
 namespace OHOS {
 namespace Rosen {
+
+/**
+ * @struct JsWindowListenerInfo.
+ */
+struct JsWindowListenerInfo {
+    napi_env env;
+    std::string type;
+    napi_value callback;
+    std::vector<napi_value> parameters;
+};
+
 class JsWindowRegisterManager {
 public:
     JsWindowRegisterManager();
     ~JsWindowRegisterManager();
-    WmErrorCode RegisterListener(sptr<Window> window, std::string type,
-        CaseType caseType, napi_env env, napi_value value);
-    WmErrorCode UnregisterListener(sptr<Window> window, std::string type,
-        CaseType caseType, napi_env env, napi_value value);
+    WmErrorCode RegisterListener(sptr<Window> window, CaseType caseType, const JsWindowListenerInfo& listenerInfo);
+    WmErrorCode UnregisterListener(sptr<Window> window, CaseType caseType, const JsWindowListenerInfo& listenerInfo);
 private:
     bool IsCallbackRegistered(napi_env env, std::string type, napi_value jsListenerObject);
-    WmErrorCode ProcessWindowChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
+    WmErrorCode ProcessWindowChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister,
+        napi_env env, const std::vector<napi_value>& parameters);
     WmErrorCode ProcessSystemAvoidAreaChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window,
-        bool isRegister);
-    WmErrorCode ProcessAvoidAreaChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
-    WmErrorCode ProcessLifeCycleEventRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
+        bool isRegister, napi_env env, const std::vector<napi_value>& parameters);
+    WmErrorCode ProcessAvoidAreaChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister,
+        napi_env env, const std::vector<napi_value>& parameters);
+    WmErrorCode ProcessLifeCycleEventRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister,
+        napi_env env, const std::vector<napi_value>& parameters);
     WmErrorCode ProcessOccupiedAreaChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window,
-        bool isRegister);
-    WmErrorCode ProcessSystemBarChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
-    WmErrorCode ProcessTouchOutsideRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
-    WmErrorCode ProcessScreenshotRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
-    WmErrorCode ProcessDialogTargetTouchRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister);
+        bool isRegister, napi_env env, const std::vector<napi_value>& parameters);
+    WmErrorCode ProcessSystemBarChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister,
+        napi_env env, const std::vector<napi_value>& parameters);
+    WmErrorCode ProcessTouchOutsideRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister,
+        napi_env env, const std::vector<napi_value>& parameters);
+    WmErrorCode ProcessScreenshotRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister,
+        napi_env env, const std::vector<napi_value>& parameters);
+    WmErrorCode ProcessDialogTargetTouchRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister,
+        napi_env env, const std::vector<napi_value>& parameters);
     WmErrorCode ProcessDialogDeathRecipientRegister(sptr<JsWindowListener> listener, sptr<Window> window,
-        bool isRegister);
+        bool isRegister, napi_env env, const std::vector<napi_value>& parameters);
     WmErrorCode ProcessGestureNavigationEnabledChangeRegister(sptr<JsWindowListener> listener,
-        sptr<Window> window, bool isRegister);
+        sptr<Window> window, bool isRegister, napi_env env, const std::vector<napi_value>& parameters);
     WmErrorCode ProcessWaterMarkFlagChangeRegister(sptr<JsWindowListener> listener,
-        sptr<Window> window, bool isRegister);
+        sptr<Window> window, bool isRegister, napi_env env, const std::vector<napi_value>& parameters);
     WmErrorCode ProcessWindowVisibilityChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window,
-        bool isRegister);
+        bool isRegister, napi_env env, const std::vector<napi_value>& parameters);
+    WmErrorCode ProcessWindowNoInteractionRegister(sptr<JsWindowListener> listener, sptr<Window> window,
+        bool isRegister, napi_env env, const std::vector<napi_value>& parameters);
     WmErrorCode ProcessWindowStatusChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window,
-        bool isRegister);
+        bool isRegister, napi_env env, const std::vector<napi_value>& parameters);
     WmErrorCode ProcessWindowTitleButtonRectChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window,
-        bool isRegister);
-    using Func = WmErrorCode(JsWindowRegisterManager::*)(sptr<JsWindowListener>, sptr<Window> window, bool);
+        bool isRegister, napi_env env, const std::vector<napi_value>& parameters);
+    using Func = WmErrorCode(JsWindowRegisterManager::*)(sptr<JsWindowListener>, sptr<Window> window, bool,
+        napi_env env, const std::vector<napi_value>& parameters);
     std::map<std::string, std::map<std::shared_ptr<NativeReference>, sptr<JsWindowListener>>> jsCbMap_;
     std::mutex mtx_;
     std::map<CaseType, std::map<std::string, Func>> listenerProcess_;

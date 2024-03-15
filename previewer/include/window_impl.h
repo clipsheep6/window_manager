@@ -213,6 +213,9 @@ public:
     virtual WMError HideNonSystemFloatingWindows(bool shouldHide) override;
     virtual WMError RegisterWindowVisibilityChangeListener(const WindowVisibilityListenerSptr& listener) override;
     virtual WMError UnregisterWindowVisibilityChangeListener(const WindowVisibilityListenerSptr& listener) override;
+    virtual WMError RegisterWindowNoInteractionListener(const IWindowNoInteractionListenerSptr& listener,
+                                                        uint32_t timeout) override;
+    virtual WMError UnregisterWindowNoInteractionListener(const IWindowNoInteractionListenerSptr& listener) override;
     virtual WmErrorCode KeepKeyboardOnFocus(bool keepKeyboardFlag) override;
     virtual WMError SetSingleFrameComposerEnabled(bool enable) override;
 private:

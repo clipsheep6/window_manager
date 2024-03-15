@@ -1547,10 +1547,11 @@ napi_value JsWindow::OnRegisterWindowCallback(napi_env env, napi_callback_info i
         WLOGFE("Window is nullptr");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
     }
+    constexpr size_t ARGC_MIN = 2;
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc < 2) { // 2: params num
+    if (argc < ARGC_MIN) { // 2: params num
         WLOGFE("Argc is invalid: %{public}zu", argc);
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
@@ -1559,12 +1560,24 @@ napi_value JsWindow::OnRegisterWindowCallback(napi_env env, napi_callback_info i
         WLOGFE("Failed to convert parameter to callbackType");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
-    napi_value value = argv[1];
-    if (!NapiIsCallable(env, value)) {
-        WLOGI("Callback(info->argv[1]) is not callable");
+    size_t cbIndex = argc - 1;
+    napi_value callback = argv[cbIndex];
+    if (!NapiIsCallable(env, callback)) {
+        WLOGI("Callback(info->argv[%{public}zu]) is not callable", cbIndex);
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
-    WmErrorCode ret = registerManager_->RegisterListener(windowToken_, cbType, CaseType::CASE_WINDOW, env, value);
+
+    std::vector<napi_value> parameters;
+    if (argc > ARGC_MIN) {
+        size_t lastParameterIndex = cbIndex - 1;
+        for (size_t index = 1; index <= lastParameterIndex; index++) {
+            parameters.push_back(argv[index]);
+        }
+    }
+
+    struct JsWindowListenerInfo listenerInfo = {.env = env, .type = cbType, .callback = callback,
+        .parameters = parameters};
+    WmErrorCode ret = registerManager_->RegisterListener(windowToken_, CaseType::CASE_WINDOW, listenerInfo);
     if (ret != WmErrorCode::WM_OK) {
         return NapiThrowError(env, ret);
     }
@@ -1592,19 +1605,14 @@ napi_value JsWindow::OnUnregisterWindowCallback(napi_env env, napi_callback_info
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
 
-    napi_value value = nullptr;
-    WmErrorCode ret = WmErrorCode::WM_OK;
-    if (argc == 1) {
-        ret = registerManager_->UnregisterListener(windowToken_, cbType, CaseType::CASE_WINDOW, env, value);
-    } else {
-        value = argv[1];
-        if (value == nullptr || !NapiIsCallable(env, value)) {
-            ret = registerManager_->UnregisterListener(windowToken_, cbType, CaseType::CASE_WINDOW, env, nullptr);
-        } else {
-            ret = registerManager_->UnregisterListener(windowToken_, cbType, CaseType::CASE_WINDOW, env, value);
+    struct JsWindowListenerInfo listenerInfo = {.env = env, .type = cbType, .callback = nullptr};
+    if (argc > 1) {
+        napi_value callback = argv[1];
+        if (callback != nullptr && NapiIsCallable(env, callback)) {
+            listenerInfo.callback = callback;
         }
     }
-
+    WmErrorCode ret = registerManager_->UnregisterListener(windowToken_, CaseType::CASE_WINDOW, listenerInfo);
     if (ret != WmErrorCode::WM_OK) {
         return NapiThrowError(env, ret);
     }
@@ -1637,11 +1645,12 @@ napi_value JsWindow::OnBindDialogTarget(napi_env env, napi_callback_info info)
     }
 
     napi_value value = argv[1];
+    struct JsWindowListenerInfo listenerInfo = {.env = env, .type = "dialogDeathRecipient", .callback = nullptr};
     if (value == nullptr || !NapiIsCallable(env, value)) {
-        registerManager_->RegisterListener(windowToken_,
-            "dialogDeathRecipient", CaseType::CASE_WINDOW, env, nullptr);
+        registerManager_->RegisterListener(windowToken_, CaseType::CASE_WINDOW, listenerInfo);
     } else {
-        registerManager_->RegisterListener(windowToken_, "dialogDeathRecipient", CaseType::CASE_WINDOW, env, value);
+        listenerInfo.callback = value;
+        registerManager_->RegisterListener(windowToken_, CaseType::CASE_WINDOW, listenerInfo);
     }
 
     wptr<Window> weakToken(windowToken_);

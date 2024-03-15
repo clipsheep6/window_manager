@@ -229,10 +229,11 @@ napi_value JsWindowStage::OnEvent(napi_env env, napi_callback_info info)
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
         return NapiGetUndefined(env);
     }
+    constexpr size_t ARGC_MIN = 2;
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc < 2) { // 2: minimum param nums
+    if (argc < ARGC_MIN) { // 2: minimum param nums
         WLOGFE("[NAPI]argc is invalid: %{public}zu", argc);
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
         return NapiGetUndefined(env);
@@ -245,11 +246,20 @@ napi_value JsWindowStage::OnEvent(napi_env env, napi_callback_info info)
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
         return NapiGetUndefined(env);
     }
-    napi_value value = argv[1];
-    if (!NapiIsCallable(env, value)) {
-        WLOGFE("[NAPI]Callback(argv[1]) is not callable");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
-        return NapiGetUndefined(env);
+
+    size_t cbIndex = argc - 1;
+    napi_value callback = argv[cbIndex];
+    if (!NapiIsCallable(env, callback)) {
+        WLOGI("Callback(info->argv[%{public}zu]) is not callable", cbIndex);
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
+
+    std::vector<napi_value> parameters;
+    if (argc > ARGC_MIN) {
+        size_t lastParameterIndex = cbIndex - 1;
+        for (size_t index = 1; index <= lastParameterIndex; index++) {
+            parameters.push_back(argv[index]);
+        }
     }
 
     auto window = weakScene->GetMainWindow();
@@ -258,7 +268,9 @@ napi_value JsWindowStage::OnEvent(napi_env env, napi_callback_info info)
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
         return NapiGetUndefined(env);
     }
-    g_listenerManager->RegisterListener(window, eventString, CaseType::CASE_STAGE, env, value);
+    struct JsWindowListenerInfo listenerInfo = {.env = env, .type = eventString, .callback = callback,
+        .parameters = parameters};
+    g_listenerManager->RegisterListener(window, CaseType::CASE_STAGE, listenerInfo);
     WLOGI("[NAPI]Window [%{public}u, %{public}s] register event %{public}s",
         window->GetWindowId(), window->GetWindowName().c_str(), eventString.c_str());
 
@@ -295,17 +307,15 @@ napi_value JsWindowStage::OffEvent(napi_env env, napi_callback_info info)
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
         return NapiGetUndefined(env);
     }
-    napi_value value = nullptr;
-    if (argc == 1) {
-        g_listenerManager->UnregisterListener(window, eventString, CaseType::CASE_STAGE, env, nullptr);
-    } else {
-        value = argv[1];
-        if (value != nullptr && GetType(env, value) == napi_function) {
-            g_listenerManager->UnregisterListener(window, eventString, CaseType::CASE_STAGE, env, value);
-        } else {
-            g_listenerManager->UnregisterListener(window, eventString, CaseType::CASE_STAGE, env, nullptr);
+
+    struct JsWindowListenerInfo listenerInfo = {.env = env, .type = eventString, .callback = nullptr};
+    if (argc > 1) {
+        napi_value callback = argv[1];
+        if (callback != nullptr && GetType(env, callback) == napi_function) {
+            listenerInfo.callback = callback;
         }
     }
+    g_listenerManager->UnregisterListener(window, CaseType::CASE_STAGE, listenerInfo);
     WLOGI("[NAPI]Window [%{public}u, %{public}s] unregister event %{public}s",
         window->GetWindowId(), window->GetWindowName().c_str(), eventString.c_str());
 

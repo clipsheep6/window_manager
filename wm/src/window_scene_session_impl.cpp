@@ -467,6 +467,7 @@ void WindowSceneSessionImpl::ConsumePointerEventInner(const std::shared_ptr<MMI:
             return;
         }
         needNotifyEvent = HandlePointDownEvent(pointerEvent, pointerItem, sourceType, vpr, rect);
+        RefreshNoInteractionTimeoutMonitor(pointerEvent->GetId());
     }
 
     bool isPointUp = (action == MMI::PointerEvent::POINTER_ACTION_UP ||
@@ -739,6 +740,7 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
             hostSession_->RaiseAppMainWindowToTop();
         }
         NotifyAfterForeground(true, false);
+        RefreshNoInteractionTimeoutMonitor(-1);
         return WMError::WM_OK;
     }
 
@@ -778,6 +780,7 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
         state_ = WindowState::STATE_SHOWN;
         requestState_ = WindowState::STATE_SHOWN;
         NotifyAfterForeground();
+        RefreshNoInteractionTimeoutMonitor(-1);
     } else {
         NotifyForegroundFailed(ret);
     }
@@ -919,6 +922,7 @@ WSError WindowSceneSessionImpl::SetActive(bool active)
     }
     if (active) {
         NotifyAfterActive();
+        RefreshNoInteractionTimeoutMonitor(-1);
     } else {
         NotifyAfterInactive();
     }
