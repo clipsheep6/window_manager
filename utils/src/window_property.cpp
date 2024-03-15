@@ -608,6 +608,26 @@ void WindowProperty::GetWindowGravity(WindowGravity& gravity, uint32_t& percent)
     percent = windowGravitySizePercent_;
 }
 
+bool WindowProperty::MarshallingWindowAndRequestRects(Parcel& parcel) const
+{
+    if (parcel.WriteInt32(windowRect_.posX_) &&
+        parcel.WriteInt32(windowRect_.posY_) && parcel.WriteUint32(windowRect_.width_) &&
+        parcel.WriteUint32(windowRect_.height_) && parcel.WriteInt32(requestRect_.posX_) &&
+        parcel.WriteInt32(requestRect_.posY_) && parcel.WriteUint32(requestRect_.width_) &&
+        parcel.WriteUint32(requestRect_.height_)) {
+        return true;
+    }
+    return false;
+}
+
+void WindowProperty::UnmarshallingWindowAndRequestRects(Parcel& parcel, WindowProperty* property)
+{
+    Rect rect = { parcel.ReadInt32(), parcel.ReadInt32(), parcel.ReadUint32(), parcel.ReadUint32() };
+    property->SetWindowRect(rect);
+    Rect reqRect = { parcel.ReadInt32(), parcel.ReadInt32(), parcel.ReadUint32(), parcel.ReadUint32() };
+    property->SetRequestRect(reqRect);
+}
+
 bool WindowProperty::MapMarshalling(Parcel& parcel) const
 {
     auto size = sysBarPropMap_.size();
@@ -639,6 +659,35 @@ void WindowProperty::MapUnmarshalling(Parcel& parcel, WindowProperty* property)
         SystemBarProperty prop = { parcel.ReadBool(), parcel.ReadUint32(), parcel.ReadUint32() };
         property->SetSystemBarProperty(type, prop);
     }
+}
+
+bool WindowProperty::MarshallingHitOffset(Parcel& parcel) const
+{
+    if (parcel.WriteInt32(hitOffset_.x) && parcel.WriteInt32(hitOffset_.y)) {
+        return true;
+    }
+    return false;
+}
+
+void WindowProperty::UnmarshallingHitOffset(Parcel& parcel, WindowProperty* property)
+{
+    PointInfo offset = {parcel.ReadInt32(), parcel.ReadInt32()};
+    property->SetHitOffset(offset);
+}
+
+bool WindowProperty::MarshallingOriginRect(Parcel& parcel) const
+{
+    if (parcel.WriteUint32(originRect_.width_) && parcel.WriteUint32(originRect_.height_)) {
+        return true;
+    }
+    return false;
+}
+
+void WindowProperty::UnmarshallingOriginRect(Parcel& parcel, WindowProperty* property)
+{
+    uint32_t w = parcel.ReadUint32();
+    uint32_t h = parcel.ReadUint32();
+    property->SetOriginRect(Rect { 0, 0, w, h });
 }
 
 bool WindowProperty::MarshallingTouchHotAreas(Parcel& parcel) const
@@ -711,13 +760,39 @@ void WindowProperty::UnmarshallingWindowSizeLimits(Parcel& parcel, WindowPropert
     property->SetSizeLimits(sizeLimits);
 }
 
+bool WindowProperty::MarshallingZoomTransform(Parcel& parcel) const
+{
+    if (zoomTrans_.Marshalling(parcel)) {
+        return true;
+    }
+    return false;
+}
+
+void WindowProperty::UnmarshallingZoomTransform(Parcel& parcel, WindowProperty* property)
+{
+    Transform zoomTrans;
+    zoomTrans.Unmarshalling(parcel);
+    property->SetZoomTransform(zoomTrans);
+}
+
+bool WindowProperty::MarshallingAbilityInfo(Parcel& parcel) const
+{
+    if (parcel.WriteString(abilityInfo_.bundleName_) &&
+        parcel.WriteString(abilityInfo_.abilityName_) && parcel.WriteInt32(abilityInfo_.missionId_)) {
+        return true;
+    }
+    return false;
+}
+
+void WindowProperty::UnmarshallingAbilityInfo(Parcel& parcel, WindowProperty* property)
+{
+    AbilityInfo info = { parcel.ReadString(), parcel.ReadString(), parcel.ReadInt32() };
+    property->SetAbilityInfo(info);
+}
+
 bool WindowProperty::Marshalling(Parcel& parcel) const
 {
-    return parcel.WriteString(windowName_) && parcel.WriteInt32(windowRect_.posX_) &&
-        parcel.WriteInt32(windowRect_.posY_) && parcel.WriteUint32(windowRect_.width_) &&
-        parcel.WriteUint32(windowRect_.height_) && parcel.WriteInt32(requestRect_.posX_) &&
-        parcel.WriteInt32(requestRect_.posY_) && parcel.WriteUint32(requestRect_.width_) &&
-        parcel.WriteUint32(requestRect_.height_) && parcel.WriteBool(decoStatus_) &&
+    return parcel.WriteString(windowName_) && MarshallingWindowAndRequestRects(parcel) && parcel.WriteBool(decoStatus_) &&
         parcel.WriteUint32(static_cast<uint32_t>(type_)) &&
         parcel.WriteUint32(static_cast<uint32_t>(mode_)) && parcel.WriteUint32(static_cast<uint32_t>(lastMode_)) &&
         parcel.WriteUint32(flags_) &&
@@ -725,7 +800,7 @@ bool WindowProperty::Marshalling(Parcel& parcel) const
         parcel.WriteBool(isPrivacyMode_) && parcel.WriteBool(isTransparent_) && parcel.WriteFloat(alpha_) &&
         parcel.WriteFloat(brightness_) && parcel.WriteUint64(displayId_) && parcel.WriteUint32(windowId_) &&
         parcel.WriteUint32(parentId_) && MapMarshalling(parcel) && parcel.WriteBool(isDecorEnable_) &&
-        parcel.WriteInt32(hitOffset_.x) && parcel.WriteInt32(hitOffset_.y) && parcel.WriteUint32(animationFlag_) &&
+        MarshallingHitOffset(parcel) && parcel.WriteUint32(animationFlag_) &&
         parcel.WriteUint32(static_cast<uint32_t>(windowSizeChangeReason_)) && parcel.WriteBool(tokenState_) &&
         parcel.WriteUint32(callingWindow_) && parcel.WriteUint32(static_cast<uint32_t>(requestedOrientation_)) &&
         parcel.WriteBool(turnScreenOn_) && parcel.WriteBool(keepScreenOn_) &&
@@ -733,9 +808,8 @@ bool WindowProperty::Marshalling(Parcel& parcel) const
         parcel.WriteUint32(static_cast<uint32_t>(dragType_)) &&
         parcel.WriteUint32(originRect_.width_) && parcel.WriteUint32(originRect_.height_) &&
         parcel.WriteBool(isStretchable_) && MarshallingTouchHotAreas(parcel) && parcel.WriteUint32(accessTokenId_) &&
-        MarshallingTransform(parcel) && MarshallingWindowSizeLimits(parcel) && zoomTrans_.Marshalling(parcel) &&
-        parcel.WriteBool(isDisplayZoomOn_) && parcel.WriteString(abilityInfo_.bundleName_) &&
-        parcel.WriteString(abilityInfo_.abilityName_) && parcel.WriteInt32(abilityInfo_.missionId_) &&
+        MarshallingTransform(parcel) && MarshallingWindowSizeLimits(parcel) && MarshallingZoomTransform(parcel) &&
+        parcel.WriteBool(isDisplayZoomOn_) && MarshallingAbilityInfo(parcel) &&
         parcel.WriteBool(isSnapshotSkip_) &&
         parcel.WriteDouble(textFieldPositionY_) && parcel.WriteDouble(textFieldHeight_);
 }
@@ -747,10 +821,7 @@ WindowProperty* WindowProperty::Unmarshalling(Parcel& parcel)
         return nullptr;
     }
     property->SetWindowName(parcel.ReadString());
-    Rect rect = { parcel.ReadInt32(), parcel.ReadInt32(), parcel.ReadUint32(), parcel.ReadUint32() };
-    property->SetWindowRect(rect);
-    Rect reqRect = { parcel.ReadInt32(), parcel.ReadInt32(), parcel.ReadUint32(), parcel.ReadUint32() };
-    property->SetRequestRect(reqRect);
+    UnmarshallingWindowAndRequestRects(parcel, property);
     property->SetDecoStatus(parcel.ReadBool());
     property->SetWindowType(static_cast<WindowType>(parcel.ReadUint32()));
     property->SetWindowMode(static_cast<WindowMode>(parcel.ReadUint32()));
@@ -768,8 +839,7 @@ WindowProperty* WindowProperty::Unmarshalling(Parcel& parcel)
     property->SetParentId(parcel.ReadUint32());
     MapUnmarshalling(parcel, property);
     property->SetDecorEnable(parcel.ReadBool());
-    PointInfo offset = {parcel.ReadInt32(), parcel.ReadInt32()};
-    property->SetHitOffset(offset);
+    UnmarshallingHitOffset(parcel, property);
     property->SetAnimationFlag(parcel.ReadUint32());
     property->SetWindowSizeChangeReason(static_cast<WindowSizeChangeReason>(parcel.ReadUint32()));
     property->SetTokenState(parcel.ReadBool());
@@ -780,20 +850,15 @@ WindowProperty* WindowProperty::Unmarshalling(Parcel& parcel)
     property->SetModeSupportInfo(parcel.ReadUint32());
     property->SetRequestModeSupportInfo(parcel.ReadUint32());
     property->SetDragType(static_cast<DragType>(parcel.ReadUint32()));
-    uint32_t w = parcel.ReadUint32();
-    uint32_t h = parcel.ReadUint32();
-    property->SetOriginRect(Rect { 0, 0, w, h });
+    UnmarshallingOriginRect(parcel, property);
     property->SetStretchable(parcel.ReadBool());
     UnmarshallingTouchHotAreas(parcel, property);
     property->SetAccessTokenId(parcel.ReadUint32());
     UnmarshallingTransform(parcel, property);
     UnmarshallingWindowSizeLimits(parcel, property);
-    Transform zoomTrans;
-    zoomTrans.Unmarshalling(parcel);
-    property->SetZoomTransform(zoomTrans);
+    UnmarshallingZoomTransform(parcel, property);
     property->SetDisplayZoomState(parcel.ReadBool());
-    AbilityInfo info = { parcel.ReadString(), parcel.ReadString(), parcel.ReadInt32() };
-    property->SetAbilityInfo(info);
+    UnmarshallingAbilityInfo(parcel, property);
     property->SetSnapshotSkip(parcel.ReadBool());
     property->SetTextFieldPositionY(parcel.ReadDouble());
     property->SetTextFieldHeight(parcel.ReadDouble());

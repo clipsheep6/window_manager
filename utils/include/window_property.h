@@ -154,14 +154,24 @@ public:
     double GetTextFieldPositionY() const;
     double GetTextFieldHeight() const;
 private:
+    bool MarshallingWindowAndRequestRects(Parcel& parcel) const;
+    static void UnmarshallingWindowAndRequestRects(Parcel& parcel, WindowProperty* property);
     bool MapMarshalling(Parcel& parcel) const;
     static void MapUnmarshalling(Parcel& parcel, WindowProperty* property);
+    bool MarshallingHitOffset(Parcel& parcel) const;
+    static void UnmarshallingHitOffset(Parcel& parcel, WindowProperty* property);
+    bool MarshallingOriginRect(Parcel& parcel) const;
+    static void UnmarshallingOriginRect(Parcel& parcel, WindowProperty* property);
     bool MarshallingTouchHotAreas(Parcel& parcel) const;
     static void UnmarshallingTouchHotAreas(Parcel& parcel, WindowProperty* property);
     bool MarshallingTransform(Parcel& parcel) const;
     static void UnmarshallingTransform(Parcel& parcel, WindowProperty* property);
     bool MarshallingWindowSizeLimits(Parcel& parcel) const;
     static void UnmarshallingWindowSizeLimits(Parcel& parcel, WindowProperty* property);
+    bool MarshallingZoomTransform(Parcel& parcel) const;
+    static void UnmarshallingZoomTransform(Parcel& parcel, WindowProperty* property);
+    bool MarshallingAbilityInfo(Parcel& parcel) const;
+    static void UnmarshallingAbilityInfo(Parcel& parcel, WindowProperty* property);
     void HandleComputeTransform(const Transform& trans);
 
     std::string windowName_;
