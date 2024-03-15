@@ -433,6 +433,7 @@ private:
                                        const sptr<SceneSession>& sceneSession);
     void ClosePipWindowIfExist(WindowType type);
     WSError DestroyAndDisconnectSpecificSessionInner(sptr<SceneSession> sceneSession);
+    void UpdateCameraWindowStatus(uint32_t accessTokenId, bool isShowing);
 
     sptr<RootSceneSession> rootSceneSession_;
     std::weak_ptr<AbilityRuntime::Context> rootSceneContextWeak_;
