@@ -781,7 +781,9 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
      * main window notify host temporarily, since host background may failed
      * need to SetActive(false) for host session before background
      */
-
+    if (hostSession_ == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
     if (WindowHelper::IsMainWindow(type)) {
         res = static_cast<WMError>(SetActive(false));
         if (res != WMError::WM_OK) {
