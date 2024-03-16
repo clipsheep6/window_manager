@@ -2311,7 +2311,7 @@ void JsSceneSession::ProcessPrepareClosePiPSessionRegister()
 {
     auto sessionchangeCallback = sessionchangeCallback_.promote();
     if (sessionchangeCallback == nullptr) {
-        WLOGFE("sessionchangeCallback is nullptr");
+        TLOGE(WmsLogTag::WMS_PIP, "sessionchangeCallback is nullptr");
         return;
     }
     sessionchangeCallback->onPrepareClosePiPSession_ = [weak = weak_from_this()]() {
@@ -2429,14 +2429,14 @@ napi_value JsSceneSession::OnSetPipActionEvent(napi_env env, napi_callback_info 
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc < 1) {
-        WLOGFE("[NAPI]Argc count is invalid: %{public}zu", argc);
+        TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Argc count is invalid: %{public}zu", argc);
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
             "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
     std::string action;
     if (!ConvertFromJsValue(env, argv[0], action)) {
-        WLOGFE("[NAPI]Failed to convert parameter to string");
+        TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Failed to convert parameter to string");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
             "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
@@ -2444,7 +2444,7 @@ napi_value JsSceneSession::OnSetPipActionEvent(napi_env env, napi_callback_info 
     int32_t status = -1;
     if (argc > 1) {
         if (!ConvertFromJsValue(env, argv[1], status)) {
-            WLOGFE("[NAPI]Failed to convert parameter to int");
+            TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Failed to convert parameter to int");
             napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
                 "Input parameter is missing or invalid"));
             return NapiGetUndefined(env);
@@ -2453,9 +2453,7 @@ napi_value JsSceneSession::OnSetPipActionEvent(napi_env env, napi_callback_info 
 
     auto session = weakSession_.promote();
     if (session == nullptr) {
-        WLOGFE("[NAPI]Session is nullptr");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
-            "Session is nullptr"));
+        TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Session is nullptr");
         return NapiGetUndefined(env);
     }
     session->SetPipActionEvent(action, status);
