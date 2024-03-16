@@ -782,7 +782,8 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
      * need to SetActive(false) for host session before background
      */
     if (hostSession_ == nullptr) {
-        return WMError::WM_ERROR_NULLPTR;
+        WLOGFD("hostSession_ nullptr");
+        return WSError::WS_ERROR_INVALID_WINDOW;
     }
     if (WindowHelper::IsMainWindow(type)) {
         res = static_cast<WMError>(SetActive(false));
