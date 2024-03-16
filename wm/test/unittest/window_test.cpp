@@ -122,6 +122,10 @@ HWTEST_F(WindowTest, CreatePiP, Function | SmallTest | Level2)
     PiPTemplateInfo pipTemplateInfo;
     ASSERT_EQ(nullptr, Window::CreatePiP(option, pipTemplateInfo, abilityContext_));
     option = new WindowOption();
+    ASSERT_EQ(nullptr, Window::CreatePiP(option, pipTemplateInfo, abilityContext_));
+    option->SetWindowName("pip_window");
+    option->SetWindowType(WindowType::WINDOW_TYPE_PIP);
+    option->SetWindowMode(WindowMode::WINDOW_MODE_PIP);
     ASSERT_NE(nullptr, Window::CreatePiP(option, pipTemplateInfo, abilityContext_));
 }
 
