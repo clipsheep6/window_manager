@@ -150,7 +150,7 @@ WMError PictureInPictureController::ShowPictureInPictureWindow(StartPipType star
 
 WMError PictureInPictureController::StartPictureInPicture(StartPipType startType)
 {
-    TLOGE(WmsLogTag::WMS_PIP, "StartPictureInPicture called");
+    TLOGI(WmsLogTag::WMS_PIP, "StartPictureInPicture called");
     std::lock_guard<std::mutex> lock(mutex_);
     if (curState_ == PipWindowState::STATE_STARTING || curState_ == PipWindowState::STATE_STARTED) {
         TLOGW(WmsLogTag::WMS_PIP, "pipWindow is starting, state: %{public}u, id: %{public}u, mainWindow: %{public}u",
