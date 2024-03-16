@@ -970,7 +970,7 @@ napi_value JsSceneSession::SetOffset(napi_env env, napi_callback_info info) {
 
 napi_value JsSceneSession::SetPipActionEvent(napi_env env, napi_callback_info info)
 {
-    WLOGI("[NAPI]SetPipActionEvent");
+    TLOGI(WmsLogTag::WMS_PIP, "[NAPI]SetPipActionEvent");
     JsSceneSession *me = CheckParamsAndGetThis<JsSceneSession>(env, info);
     return (me != nullptr) ? me->OnSetPipActionEvent(env, info) : nullptr;
 }
@@ -2318,12 +2318,12 @@ void JsSceneSession::ProcessPrepareClosePiPSessionRegister()
         auto weakJsSceneSession = weak.lock();
         if (weakJsSceneSession) weakJsSceneSession->OnPrepareClosePiPSession();
     };
-    WLOGFD("ProcessPrepareClosePiPSessionRegister success");
+    TLOGD(WmsLogTag::WMS_PIP, "ProcessPrepareClosePiPSessionRegister success");
 }
 
 void JsSceneSession::OnPrepareClosePiPSession()
 {
-    WLOGFI("[NAPI]OnPrepareClosePiPSession");
+    TLOGI(WmsLogTag::WMS_PIP, "[NAPI]OnPrepareClosePiPSession");
     std::shared_ptr<NativeReference> jsCallBack = nullptr;
     {
         std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);

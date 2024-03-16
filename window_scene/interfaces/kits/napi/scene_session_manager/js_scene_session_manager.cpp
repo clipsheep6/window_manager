@@ -326,7 +326,7 @@ void JsSceneSessionManager::OnShiftFocus(int32_t persistentId)
 
 void JsSceneSessionManager::OnShowPiPMainWindow(int32_t persistentId)
 {
-    WLOGFI("[NAPI]OnShowPiPMainWindow");
+    TLOGI(WmsLogTag::WMS_PIP, "[NAPI]OnShowPiPMainWindow");
     auto iter = jsCbMap_.find(SHOW_PIP_MAIN_WINDOW_CB);
     if (iter == jsCbMap_.end()) {
         return;
@@ -441,7 +441,7 @@ void JsSceneSessionManager::ProcessShiftFocus()
 void JsSceneSessionManager::ProcessShowPiPMainWindow()
 {
     ProcessShowPiPMainWindowFunc func = [this](int32_t persistentId) {
-        WLOGFD("ProcessShowPiPMainWindow called, persistentId: %{public}d", persistentId);
+        TLOGD(WmsLogTag::WMS_PIP, "ProcessShowPiPMainWindow called, persistentId: %{public}d", persistentId);
         this->OnShowPiPMainWindow(persistentId);
     };
     SceneSessionManager::GetInstance().SetShowPiPMainWindowListener(func);

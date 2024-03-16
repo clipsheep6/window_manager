@@ -88,7 +88,6 @@
 #include "softbus_bus_center.h"
 #include "window_manager.h"
 #include "perform_reporter.h"
-#include "pip_util.h"
 #include "focus_change_info.h"
 #include "anr_manager.h"
 
@@ -1751,7 +1750,7 @@ bool SceneSessionManager::CheckPiPPriority(const PiPTemplateInfo& pipTemplateInf
         if (session && session->GetWindowMode() == WindowMode::WINDOW_MODE_PIP &&
             pipTemplateInfo.priority < session->GetPiPTemplateInfo().priority &&
             IsSessionVisible(session)) {
-            WLOGFE("create pip window failed, reason: low priority.");
+            TLOGE(WmsLogTag::WMS_PIP, "create pip window failed, reason: low priority.");
             return false;
         }
     }
@@ -3802,7 +3801,7 @@ void SceneSessionManager::SetSCBUnfocusedListener(const NotifySCBAfterUpdateFocu
 
 void SceneSessionManager::SetShowPiPMainWindowListener(const ProcessShowPiPMainWindowFunc& func)
 {
-    WLOGFD("SetShowPiPMainWindowListener");
+    TLOGD(WmsLogTag::WMS_PIP, "SetShowPiPMainWindowListener");
     showPiPMainWindowFunc_ = func;
 }
 
@@ -6525,16 +6524,16 @@ WSError SceneSessionManager::RecoveryPullPiPMainWindow(const int32_t& persistent
 {
     auto scnSession = GetSceneSession(persistentId);
     if (scnSession == nullptr) {
-        WLOGFE("scnSession is nullptr, persistentId: %{public}d", persistentId);
+        TLOGE(WmsLogTag::WMS_PIP, "scnSession is nullptr, persistentId: %{public}d", persistentId);
         return WSError::WS_ERROR_NULLPTR;
     }
     if (!WindowHelper::IsPipWindow(scnSession->GetWindowType())) {
-        WLOGFE("not pip window");
+        TLOGE(WmsLogTag::WMS_PIP, "not pip window type");
         return WSError::WS_DO_NOTHING;
     }
     auto task = [this, scnSession, rect, persistentId]() {
         if (!showPiPMainWindowFunc_) {
-            WLOGFE("showPiPMainWindowFunc_ init error, persistentId: %{public}d", persistentId);
+            TLOGE(WmsLogTag::WMS_PIP, "showPiPMainWindowFunc_ init error, persistentId: %{public}d", persistentId);
             return WSError::WS_DO_NOTHING;
         }
         showPiPMainWindowFunc_(scnSession->GetParentPersistentId());

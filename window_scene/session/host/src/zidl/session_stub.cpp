@@ -549,14 +549,14 @@ int SessionStub::HandleTransferAccessibilityEvent(MessageParcel& data, MessagePa
 
 int SessionStub::HandleNotifyPiPWindowPrepareClose(MessageParcel& data, MessageParcel& reply)
 {
-    WLOGFD("HandleNotifyPiPWindowPrepareClose");
+    TLOGD(WmsLogTag::WMS_PIP, "HandleNotifyPiPWindowPrepareClose");
     NotifyPiPWindowPrepareClose();
     return ERR_NONE;
 }
 
 int SessionStub::HandleUpdatePiPRect(MessageParcel& data, MessageParcel& reply)
 {
-    WLOGFD("HandleUpdatePiPRect!");
+    TLOGD(WmsLogTag::WMS_PIP, "HandleUpdatePiPRect!");
     Rect rect = {data.ReadInt32(), data.ReadInt32(), data.ReadUint32(), data.ReadUint32()};
     auto reason = static_cast<SizeChangeReason>(data.ReadInt32());
     WSError errCode = UpdatePiPRect(rect, reason);
@@ -566,7 +566,7 @@ int SessionStub::HandleUpdatePiPRect(MessageParcel& data, MessageParcel& reply)
 
 int SessionStub::HandleRecoveryPullPiPMainWindow(MessageParcel& data, MessageParcel& reply)
 {
-    WLOGFD("HandleNotifyRecoveryPullPiPMainWindow");
+    TLOGD(WmsLogTag::WMS_PIP, "HandleNotifyRecoveryPullPiPMainWindow");
     int32_t persistentId = 0;
     if (!data.ReadInt32(persistentId)) {
         WLOGFE("Read eventId from parcel failed!");

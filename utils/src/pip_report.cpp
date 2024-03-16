@@ -58,9 +58,9 @@ void PiPReporter::SetCurrentPackageName(const std::string &packageName)
 void PiPReporter::ReportPiPStartWindow(int32_t source, int32_t templateType,
                                        int32_t isSuccess, const std::string& errorReason)
 {
-    WLOGI("Report start pip widow");
+    TLOGI(WmsLogTag::WMS_PIP,"Report start pip widow");
     if (source == 0) {
-        WLOGI("need not report start pip widow");
+        TLOGI(WmsLogTag::WMS_PIP, "need not report start pip widow");
         return;
     }
     std::string eventName = "START_PIP";
@@ -82,9 +82,9 @@ void PiPReporter::ReportPiPStartWindow(int32_t source, int32_t templateType,
 void PiPReporter::ReportPiPStopWindow(int32_t source, int32_t templateType,
                                       int32_t isSuccess, const std::string& errorReason)
 {
-    WLOGI("Report stop pip widow");
+    TLOGI(WmsLogTag::WMS_PIP, "Report stop pip widow");
     if (source == 0) {
-        WLOGI("need not report stop pip widow");
+        TLOGI(WmsLogTag::WMS_PIP, "need not report stop pip widow");
         return;
     }
     std::string eventName = "STOP_PIP";
@@ -105,7 +105,7 @@ void PiPReporter::ReportPiPStopWindow(int32_t source, int32_t templateType,
 
 void PiPReporter::ReportPiPActionEvent(int32_t templateType, const std::string &actionEvent)
 {
-    WLOGI("Report pip widow action event");
+    TLOGI(WmsLogTag::WMS_PIP, "Report pip widow action event");
     std::string eventName = "CONTROL_PANNEL_ACTION_EVENT";
     int32_t currentAction = CONTROL_ACTION_MAP[actionEvent];
     int32_t ret = HiSysEventWrite(
@@ -123,7 +123,7 @@ void PiPReporter::ReportPiPActionEvent(int32_t templateType, const std::string &
 
 void PiPReporter::ReportPiPResize(int32_t scaleLevel, int32_t windowWidth, int32_t windowHeight)
 {
-    WLOGI("Report pip widow resize");
+    TLOGI(WmsLogTag::WMS_PIP, "Report pip widow resize");
     std::string eventName = "RESIZE_PIP_SIZE";
     int32_t currentScaleLevel = scaleLevel + 1;
     int32_t ret = HiSysEventWrite(
@@ -142,7 +142,7 @@ void PiPReporter::ReportPiPResize(int32_t scaleLevel, int32_t windowWidth, int32
 
 void PiPReporter::ReportPiPRatio(int32_t windowWidth, int32_t windowHeight)
 {
-    WLOGI("Report pip widow ratio");
+    TLOGI(WmsLogTag::WMS_PIP, "Report pip widow ratio");
     std::string eventName = "UPDATE_PIP_RATIO";
     int32_t ret = HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::MULTIWINDOW_UE, eventName,
@@ -159,7 +159,7 @@ void PiPReporter::ReportPiPRatio(int32_t windowWidth, int32_t windowHeight)
 
 void PiPReporter::ReportPiPRestore()
 {
-    WLOGI("Report pip widow restore");
+    TLOGI(WmsLogTag::WMS_PIP, "Report pip widow restore");
     std::string eventName = "RESOTRE_PIP";
     int32_t ret = HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::MULTIWINDOW_UE, eventName,
@@ -174,7 +174,7 @@ void PiPReporter::ReportPiPRestore()
 
 void PiPReporter::ReportPiPMove()
 {
-    WLOGI("Report pip widow move");
+    TLOGI(WmsLogTag::WMS_PIP, "Report pip widow move");
     std::string eventName = "MOVE_PIP";
     int32_t ret = HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::MULTIWINDOW_UE, eventName,

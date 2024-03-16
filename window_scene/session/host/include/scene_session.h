@@ -273,12 +273,6 @@ private:
     void SetSurfaceBounds(const WSRect &rect);
     void UpdateWinRectForSystemBar(WSRect& rect);
     bool UpdateInputMethodSessionRect(const WSRect& rect, WSRect& newWinRect, WSRect& newRequestRect);
-    void OnPiPMoveCallback(const WSRect& rect, const SizeChangeReason& reason);
-    bool InitPiPRectInfo();
-    void ClearPiPRectPivotInfo();
-    void SavePiPRectInfo();
-    void GetNewPiPRect(const uint32_t displayWidth, const uint32_t displayHeight, Rect& rect);
-    void ProcessUpdatePiPRect(SizeChangeReason reason);
 
     NotifySessionRectChangeFunc sessionRectChangeFunc_;
     static wptr<SceneSession> enterSession_;

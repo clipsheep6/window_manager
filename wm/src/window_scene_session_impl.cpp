@@ -2514,12 +2514,12 @@ WSError WindowSceneSessionImpl::UpdateWindowMode(WindowMode mode)
 
 WMError WindowSceneSessionImpl::RecoveryPullPiPMainWindow(const Rect& rect)
 {
-    WLOGFI("RecoveryPullPiPMainWindow");
+    TLOGI(WmsLogTag::WMS_PIP, "RecoveryPullPiPMainWindow");
     if (hostSession_ && property_->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
         hostSession_->RecoveryPullPiPMainWindow(GetPersistentId(), rect);
         return WMError::WM_OK;
     }
-    WLOGFW("not pip window, nothing to do");
+    TLOGW(WmsLogTag::WMS_PIP, "not pip window, nothing to do");
     return WMError::WM_DO_NOTHING;
 }
 
@@ -2588,7 +2588,7 @@ WSError WindowSceneSessionImpl::UpdateTitleInTargetPos(bool isShow, int32_t heig
 
 WMError WindowSceneSessionImpl::NotifyPrepareClosePiPWindow()
 {
-    WLOGFD("NotifyPrepareClosePiPWindow type: %{public}u", GetType());
+    TLOGD(WmsLogTag::WMS_PIP, "NotifyPrepareClosePiPWindow type: %{public}u", GetType());
     if (!WindowHelper::IsPipWindow(GetType())) {
         return WMError::WM_DO_NOTHING;
     }
