@@ -21,7 +21,6 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "PictureInPictureReport"};
     const std::string PNAMEID = "windowManager";
     const std::string PVERSION = "1.0";
 }
@@ -75,7 +74,7 @@ void PiPReporter::ReportPiPStartWindow(int32_t source, int32_t templateType,
         EVENT_KEY_OPERATION_CODE, isSuccess,
         EVENT_KEY_OPERATION_ERROR_REASON, errorReason);
     if (ret != 0) {
-        WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
+        TLOGE(WmsLogTag::WMS_PIP, "Write HiSysEvent error, ret:%{public}d", ret);
     }
 }
 
@@ -99,7 +98,7 @@ void PiPReporter::ReportPiPStopWindow(int32_t source, int32_t templateType,
         EVENT_KEY_OPERATION_CODE, isSuccess,
         EVENT_KEY_OPERATION_ERROR_REASON, errorReason);
     if (ret != 0) {
-        WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
+        TLOGE(WmsLogTag::WMS_PIP, "Write HiSysEvent error, ret:%{public}d", ret);
     }
 }
 
@@ -117,7 +116,7 @@ void PiPReporter::ReportPiPActionEvent(int32_t templateType, const std::string &
         EVENT_KEY_ACTION_EVENT, currentAction,
         EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
     if (ret != 0) {
-        WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
+        TLOGE(WmsLogTag::WMS_PIP, "Write HiSysEvent error, ret:%{public}d", ret);
     }
 }
 
@@ -136,7 +135,7 @@ void PiPReporter::ReportPiPResize(int32_t scaleLevel, int32_t windowWidth, int32
         EVENT_KEY_WINDOW_HEIGHT, windowHeight,
         EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
     if (ret != 0) {
-        WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
+        TLOGE(WmsLogTag::WMS_PIP, "Write HiSysEvent error, ret:%{public}d", ret);
     }
 }
 
@@ -153,7 +152,7 @@ void PiPReporter::ReportPiPRatio(int32_t windowWidth, int32_t windowHeight)
         EVENT_KEY_WINDOW_HEIGHT, windowHeight,
         EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
     if (ret != 0) {
-        WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
+        TLOGE(WmsLogTag::WMS_PIP, "Write HiSysEvent error, ret:%{public}d", ret);
     }
 }
 
@@ -168,7 +167,7 @@ void PiPReporter::ReportPiPRestore()
         EVENT_KEY_PVERSION, PVERSION,
         EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
     if (ret != 0) {
-        WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
+        TLOGE(WmsLogTag::WMS_PIP, "Write HiSysEvent error, ret:%{public}d", ret);
     }
 }
 
@@ -183,7 +182,7 @@ void PiPReporter::ReportPiPMove()
         EVENT_KEY_PVERSION, PVERSION,
         EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
     if (ret != 0) {
-        WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
+        TLOGE(WmsLogTag::WMS_PIP, "Write HiSysEvent error, ret:%{public}d", ret);
     }
 }
 } // namespace Rosen

@@ -25,7 +25,6 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "PictureInPictureManager"};
     const std::string ACTION_CLOSE = "close";
     const std::string ACTION_RESTORE = "restore";
 }

@@ -28,7 +28,6 @@ namespace OHOS {
 namespace Rosen {
 using namespace AbilityRuntime;
 namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsPipController"};
     constexpr int32_t NUMBER_TWO = 2;
     const std::string STATE_CHANGE_CB = "stateChange";
     const std::string CONTROL_PANEL_ACTION_EVENT_CB = "controlPanelActionEvent";
@@ -235,7 +234,7 @@ napi_value JsPipController::RegisterCallback(napi_env env, napi_callback_info in
 
 napi_value JsPipController::OnRegisterCallback(napi_env env, napi_callback_info info)
 {
-    TLOGEI(WmsLogTag::WMS_PIP, "OnRegisterCallback is called");
+    TLOGI(WmsLogTag::WMS_PIP, "OnRegisterCallback is called");
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);

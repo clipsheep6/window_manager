@@ -26,9 +26,6 @@ namespace OHOS {
 namespace Rosen {
 using namespace AbilityRuntime;
 using namespace Ace;
-namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsPipWindowManager"};
-}
 
 std::mutex JsPipWindowManager::mutex_;
 

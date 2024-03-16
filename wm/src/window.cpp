@@ -156,7 +156,7 @@ sptr<Window> Window::CreatePiP(sptr<WindowOption>& option, const PiPTemplateInfo
     }
     sptr<WindowSessionImpl> windowSessionImpl = new(std::nothrow) WindowSceneSessionImpl(option);
     if (windowSessionImpl == nullptr) {
-        WLOGFE("malloc windowSessionImpl failed.");
+        TLOGE(WmsLogTag::WMS_PIP, "malloc windowSessionImpl failed.");
         return nullptr;
     }
     if (windowSessionImpl->GetProperty() != nullptr) {
