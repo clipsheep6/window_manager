@@ -172,11 +172,11 @@ int32_t DisplayManagerStub::ProcCreateVirtualScreen(MessageParcel &data, Message
     std::vector<uint64_t> missionIds;
     data.ReadUInt64Vector(&missionIds);
     bool isSurfaceValid = data.ReadBool();
-    sptr<Surface> surface = nullptr;
+    sptr<Surface> surf = nullptr;
     if (isSurfaceValid) {
         sptr<IRemoteObject> surfaceObject = data.ReadRemoteObject();
         sptr<IBufferProducer> bp = iface_cast<IBufferProducer>(surfaceObject);
-        surface = Surface::CreateSurfaceAsProducer(bp);
+        surf = Surface::CreateSurfaceAsProducer(bp);
     }
     sptr<IRemoteObject> virtualScreenAgent = data.ReadRemoteObject();
     VirtualScreenOption virScrOption = {
@@ -184,7 +184,7 @@ int32_t DisplayManagerStub::ProcCreateVirtualScreen(MessageParcel &data, Message
         .width_ = width,
         .height_ = height,
         .density_ = density,
-        .surface_ = surface,
+        .surface_ = surf,
         .flags_ = flags,
         .isForShot_ = isForShot,
         .missionIds_ = missionIds
