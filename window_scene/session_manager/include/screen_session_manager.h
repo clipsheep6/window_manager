@@ -244,6 +244,11 @@ private:
     void CreateScreenProperty(ScreenId screenId, ScreenProperty& property);
     sptr<ScreenSession> GetScreenSessionInner(ScreenId screenId, ScreenProperty property);
     void FreeDisplayMirrorNodeInner(const sptr<ScreenSession> mirrorSession);
+    void FoldScreenAnimation();
+    void RemoveScreenIdFromAgentMap(ScreenId screenId);
+    
+    ScreenId VirtualScreenInit(VirtualScreenOption option,
+        const sptr<IRemoteObject>& displayManagerAgent, ScreenId rsId);
 
     ScreenId GetDefaultScreenId();
 
