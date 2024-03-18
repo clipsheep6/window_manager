@@ -25,6 +25,91 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowManagerAgentStub"};
 }
 
+int WindowManagerAgentStub::ProcUpdateFocus(MessageParcel& data)
+{
+    sptr<FocusChangeInfo> info = data.ReadParcelable<FocusChangeInfo>();
+    UpdateFocusChangeInfo(info, data.ReadBool());
+    return 0;
+}
+
+int WindowManagerAgentStub::ProcUpdateSystemBarProps(MessageParcel& data)
+{
+    DisplayId displayId = data.ReadUint64();
+    SystemBarRegionTints tints;
+    bool res = MarshallingHelper::UnmarshallingVectorObj<SystemBarRegionTint>(data, tints,
+        [](Parcel& parcel, SystemBarRegionTint& tint) {
+            uint32_t type;
+            SystemBarProperty prop;
+            Rect region;
+            bool res = parcel.ReadUint32(type) && parcel.ReadBool(prop.enable_) &&
+                parcel.ReadUint32(prop.backgroundColor_) && parcel.ReadUint32(prop.contentColor_) &&
+                parcel.ReadInt32(region.posX_) && parcel.ReadInt32(region.posY_) &&
+                parcel.ReadUint32(region.width_) && parcel.ReadUint32(region.height_);
+            tint.type_ = static_cast<WindowType>(type);
+            tint.prop_ = prop;
+            tint.region_ = region;
+            return res;
+        }
+    );
+    if (!res) {
+        WLOGFE("fail to read SystemBarRegionTints.");
+    } else {
+        UpdateSystemBarRegionTints(displayId, tints);
+    }
+    return 0;
+}
+
+int WindowManagerAgentStub::ProcUpdateWindowStatus(MessageParcel& data) 
+{
+    std::vector<sptr<AccessibilityWindowInfo>> infos;
+    if (!MarshallingHelper::UnmarshallingVectorParcelableObj<AccessibilityWindowInfo>(data, infos)) {
+        WLOGFE("read accessibility window infos failed");
+        return -1;
+    }
+    NotifyAccessibilityWindowInfo(infos, static_cast<WindowUpdateType>(data.ReadUint32()));
+    return 0;
+}
+
+int WindowManagerAgentStub::ProcUpdateWindowVisibility(MessageParcel& data)
+{
+    std::vector<sptr<WindowVisibilityInfo>> infos;
+    if (!MarshallingHelper::UnmarshallingVectorParcelableObj<WindowVisibilityInfo>(data, infos)) {
+        WLOGFE("fail to read WindowVisibilityInfo.");
+    } else {
+        UpdateWindowVisibilityInfo(infos);
+    }
+    return 0;
+}
+
+int WindowManagerAgentStub::ProcUpdateWindowDrawingState(MessageParcel& data)
+{
+    std::vector<sptr<WindowDrawingContentInfo>> infos;
+    if (!MarshallingHelper::UnmarshallingVectorParcelableObj<WindowDrawingContentInfo>(data, infos)) {
+        WLOGFE("fail to read WindowDrawingContentInfo.");
+    } else {
+        UpdateWindowDrawingContentInfo(infos);
+    }
+    return 0;
+}
+
+int WindowManagerAgentStub::ProcUpdateCameraFloat(MessageParcel& data)
+{
+    UpdateCameraFloatWindowStatus(data.ReadUint32(), data.ReadBool());
+    return 0;
+}
+
+int WindowManagerAgentStub::ProcUpdateWaterMarkFlag(MessageParcel& data)
+{
+    NotifyWaterMarkFlagChangedResult(data.ReadBool());
+    return 0;
+}
+
+int WindowManagerAgentStub::ProcUpdateGestureNavigationEnabled(MessageParcel& data)
+{
+    NotifyGestureNavigationEnabledResult(data.ReadBool());
+    return 0;
+}
+
 int WindowManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
     MessageParcel& reply, MessageOption& option)
 {
@@ -35,81 +120,22 @@ int WindowManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
     }
     WindowManagerAgentMsg msgId = static_cast<WindowManagerAgentMsg>(code);
     switch (msgId) {
-        case WindowManagerAgentMsg::TRANS_ID_UPDATE_FOCUS: {
-            sptr<FocusChangeInfo> info = data.ReadParcelable<FocusChangeInfo>();
-            bool focused = data.ReadBool();
-            UpdateFocusChangeInfo(info, focused);
-            break;
-        }
-        case WindowManagerAgentMsg::TRANS_ID_UPDATE_SYSTEM_BAR_PROPS: {
-            DisplayId displayId = data.ReadUint64();
-            SystemBarRegionTints tints;
-            bool res = MarshallingHelper::UnmarshallingVectorObj<SystemBarRegionTint>(data, tints,
-                [](Parcel& parcel, SystemBarRegionTint& tint) {
-                    uint32_t type;
-                    SystemBarProperty prop;
-                    Rect region;
-                    bool res = parcel.ReadUint32(type) && parcel.ReadBool(prop.enable_) &&
-                        parcel.ReadUint32(prop.backgroundColor_) && parcel.ReadUint32(prop.contentColor_) &&
-                        parcel.ReadInt32(region.posX_) && parcel.ReadInt32(region.posY_) &&
-                        parcel.ReadUint32(region.width_) && parcel.ReadUint32(region.height_);
-                    tint.type_ = static_cast<WindowType>(type);
-                    tint.prop_ = prop;
-                    tint.region_ = region;
-                    return res;
-                }
-            );
-            if (!res) {
-                WLOGFE("fail to read SystemBarRegionTints.");
-                break;
-            }
-            UpdateSystemBarRegionTints(displayId, tints);
-            break;
-        }
-        case WindowManagerAgentMsg::TRANS_ID_UPDATE_WINDOW_STATUS: {
-            std::vector<sptr<AccessibilityWindowInfo>> infos;
-            if (!MarshallingHelper::UnmarshallingVectorParcelableObj<AccessibilityWindowInfo>(data, infos)) {
-                WLOGFE("read accessibility window infos failed");
-                return -1;
-            }
-            WindowUpdateType type = static_cast<WindowUpdateType>(data.ReadUint32());
-            NotifyAccessibilityWindowInfo(infos, type);
-            break;
-        }
-        case WindowManagerAgentMsg::TRANS_ID_UPDATE_WINDOW_VISIBILITY: {
-            std::vector<sptr<WindowVisibilityInfo>> infos;
-            if (!MarshallingHelper::UnmarshallingVectorParcelableObj<WindowVisibilityInfo>(data, infos)) {
-                WLOGFE("fail to read WindowVisibilityInfo.");
-                break;
-            }
-            UpdateWindowVisibilityInfo(infos);
-            break;
-        }
-        case WindowManagerAgentMsg::TRANS_ID_UPDATE_WINDOW_DRAWING_STATE: {
-            std::vector<sptr<WindowDrawingContentInfo>> infos;
-            if (!MarshallingHelper::UnmarshallingVectorParcelableObj<WindowDrawingContentInfo>(data, infos)) {
-                WLOGFE("fail to read WindowDrawingContentInfo.");
-                break;
-            }
-            UpdateWindowDrawingContentInfo(infos);
-            break;
-        }
-        case WindowManagerAgentMsg::TRANS_ID_UPDATE_CAMERA_FLOAT: {
-            uint32_t accessTokenId = data.ReadUint32();
-            bool isShowing = data.ReadBool();
-            UpdateCameraFloatWindowStatus(accessTokenId, isShowing);
-            break;
-        }
-        case WindowManagerAgentMsg::TRANS_ID_UPDATE_WATER_MARK_FLAG: {
-            bool showWaterMark = data.ReadBool();
-            NotifyWaterMarkFlagChangedResult(showWaterMark);
-            break;
-        }
-        case WindowManagerAgentMsg::TRANS_ID_UPDATE_GESTURE_NAVIGATION_ENABLED: {
-            bool enbale = data.ReadBool();
-            NotifyGestureNavigationEnabledResult(enbale);
-            break;
-        }
+        case WindowManagerAgentMsg::TRANS_ID_UPDATE_FOCUS:
+            return ProcUpdateFocus(data);
+        case WindowManagerAgentMsg::TRANS_ID_UPDATE_SYSTEM_BAR_PROPS:
+            return ProcUpdateSystemBarProps(data);
+        case WindowManagerAgentMsg::TRANS_ID_UPDATE_WINDOW_STATUS:
+            return ProcUpdateWindowStatus(data);
+        case WindowManagerAgentMsg::TRANS_ID_UPDATE_WINDOW_VISIBILITY:
+            return ProcUpdateWindowVisibility(data);
+        case WindowManagerAgentMsg::TRANS_ID_UPDATE_WINDOW_DRAWING_STATE:
+            return ProcUpdateWindowDrawingState(data);
+        case WindowManagerAgentMsg::TRANS_ID_UPDATE_CAMERA_FLOAT:
+            return ProcUpdateCameraFloat(data);
+        case WindowManagerAgentMsg::TRANS_ID_UPDATE_WATER_MARK_FLAG:
+            return ProcUpdateWaterMarkFlag(data);
+        case WindowManagerAgentMsg::TRANS_ID_UPDATE_GESTURE_NAVIGATION_ENABLED:
+            return ProcUpdateGestureNavigationEnabled(data);
         default:
             WLOGFW("unknown transaction code %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);

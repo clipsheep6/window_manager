@@ -28,6 +28,16 @@ public:
 
     virtual int OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply,
         MessageOption& option) override;
+
+private:
+    int ProcUpdateFocus(MessageParcel& data);
+    int ProcUpdateSystemBarProps(MessageParcel& data);
+    int ProcUpdateWindowStatus(MessageParcel& data);
+    int ProcUpdateWindowVisibility(MessageParcel& data);
+    int ProcUpdateWindowDrawingState(MessageParcel& data);
+    int ProcUpdateCameraFloat(MessageParcel& data);
+    int ProcUpdateWaterMarkFlag(MessageParcel& data);
+    int ProcUpdateGestureNavigationEnabled(MessageParcel& data);
 };
 } // namespace Rosen
 } // namespace OHOS
