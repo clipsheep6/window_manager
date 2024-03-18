@@ -629,44 +629,8 @@ WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, napi_env e
         uiContent_->Destroy();
     }
 
-    std::unique_ptr<Ace::UIContent> uiContent;
-    if (ability != nullptr) {
-        uiContent = Ace::UIContent::Create(ability);
-    } else {
-        uiContent = Ace::UIContent::Create(context_.get(), reinterpret_cast<NativeEngine*>(env));
-    }
-    if (uiContent == nullptr) {
-        WLOGFE("fail to NapiSetUIContent id: %{public}u", property_->GetWindowId());
-        return WMError::WM_ERROR_NULLPTR;
-    }
-
-    OHOS::Ace::UIContentErrorCode aceRet = OHOS::Ace::UIContentErrorCode::NO_ERRORS;
-    switch (type) {
-        default:
-        case WindowSetUIContentType::DEFAULT:
-            aceRet = uiContent->Initialize(this, contentInfo, storage);
-            break;
-        case WindowSetUIContentType::DISTRIBUTE:
-            aceRet = uiContent->Restore(this, contentInfo, storage);
-            break;
-        case WindowSetUIContentType::BY_NAME:
-            aceRet = uiContent->InitializeByName(this, contentInfo, storage);
-            break;
-        case WindowSetUIContentType::BY_ABC:
-            auto abcContent = GetAbcContent(contentInfo);
-            aceRet = uiContent->Initialize(this, abcContent, storage);
-            break;
-    }
-    // make uiContent available after Initialize/Restore
-    {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
-        uiContent_ = std::move(uiContent);
-    }
-    if (aceRet != OHOS::Ace::UIContentErrorCode::NO_ERRORS) {
-        WLOGFE("failed to init or restore uicontent with file %{public}s. errorCode: %{public}d",
-            contentInfo.c_str(), static_cast<uint16_t>(aceRet));
-        return WMError::WM_ERROR_INVALID_PARAM;
-    }
+    auto err = BuildUIContentByType(contentInfo, env, storage, type, ability);
+    if (err != WMError::WM_OK) return err;
 
     if (isIgnoreSafeAreaNeedNotify_) {
         uiContent_->SetIgnoreViewSafeArea(isIgnoreSafeArea_);
@@ -674,25 +638,8 @@ WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, napi_env e
     UpdateDecorEnable(true);
 
     if (state_ == WindowState::STATE_SHOWN) {
-        // UIContent may be nullptr when show window, need to notify again when window is shown
-        uiContent_->Foreground();
-        UpdateTitleButtonVisibility();
-        Ace::ViewportConfig config;
-        Rect rect = GetRect();
-        config.SetSize(rect.width_, rect.height_);
-        config.SetPosition(rect.posX_, rect.posY_);
-        auto display = SingletonContainer::IsDestroyed() ? nullptr :
-            SingletonContainer::Get<DisplayManager>().GetDisplayById(property_->GetDisplayId());
-        if (display == nullptr) {
-            WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u", property_->GetDisplayId(),
-                property_->GetWindowId());
-            return WMError::WM_ERROR_NULLPTR;
-        }
-        float virtualPixelRatio = display->GetVirtualPixelRatio();
-        config.SetDensity(virtualPixelRatio);
-        config.SetOrientation(static_cast<int32_t>(display->GetOrientation()));
-        uiContent_->UpdateViewportConfig(config, WindowSizeChangeReason::UNDEFINED, nullptr);
-        WLOGFD("notify uiContent window size change end");
+        err = NotifyUIContentChanged();
+        if (err != WMError::WM_OK) return err;
     }
 
     return WMError::WM_OK;
