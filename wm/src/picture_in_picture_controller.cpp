@@ -444,7 +444,7 @@ void PictureInPictureController::RestorePictureInPictureWindow()
             TLOGE(WmsLogTag::WMS_PIP, "navController is nullptr");
         }
     }
-   StopPictureInPicture(true, StopPipType::NULL_STOP);
+    StopPictureInPicture(true, StopPipType::NULL_STOP);
     SingletonContainer::Get<PiPReporter>().ReportPiPRestore();
     TLOGI(WmsLogTag::WMS_PIP, "restore pip main window finished");
 }
