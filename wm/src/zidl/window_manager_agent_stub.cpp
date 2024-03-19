@@ -59,7 +59,7 @@ int WindowManagerAgentStub::ProcUpdateSystemBarProps(MessageParcel& data)
     return 0;
 }
 
-int WindowManagerAgentStub::ProcUpdateWindowStatus(MessageParcel& data) 
+int WindowManagerAgentStub::ProcUpdateWindowStatus(MessageParcel& data)
 {
     std::vector<sptr<AccessibilityWindowInfo>> infos;
     if (!MarshallingHelper::UnmarshallingVectorParcelableObj<AccessibilityWindowInfo>(data, infos)) {
