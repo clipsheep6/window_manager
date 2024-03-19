@@ -73,7 +73,6 @@ public:
         NotifyWindowPidChangeCallback onWindowInputPidChangeCallback_;
         NotifySessionTouchOutsideCallback onSessionTouchOutside_;
         GetAINavigationBarArea onGetAINavigationBarArea_;
-        RecoveryCallback onRecoveryPullPiPMainWindow_;
         OnOutsideDownEvent onOutsideDownEvent_;
         NotifyAddOrRemoveSecureSessionFunc onHandleSecureSessionShouldHide_;
     };
@@ -146,7 +145,6 @@ public:
     WSError SetTextFieldAvoidInfo(double textFieldPositionY, double textFieldHeight) override;
     WSError UpdatePiPRect(const Rect& rect, SizeChangeReason reason) override;
     void NotifyPiPWindowPrepareClose() override;
-    WSError RecoveryPullPiPMainWindow(int32_t persistentId, const Rect& rect) override;
     void SetScale(float scaleX, float scaleY, float pivotX, float pivotY) override;
     void RequestHideKeyboard(bool isAppColdStart = false);
     WSError ProcessPointDownSession(int32_t posX, int32_t posY) override;

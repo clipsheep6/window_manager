@@ -2175,24 +2175,6 @@ void SceneSession::NotifyPiPWindowPrepareClose()
     PostTask(task, "NotifyPiPWindowPrepareClose");
 }
 
-WSError SceneSession::RecoveryPullPiPMainWindow(int32_t persistentId, const Rect& rect)
-{
-    WLOGFD("NotifyRecoveryPullPiPMainWindow");
-    auto task = [weakThis = wptr(this), persistentId, rect]() {
-        auto session = weakThis.promote();
-        if (!session) {
-            WLOGFE("session is null");
-            return WSError::WS_ERROR_DESTROYED_OBJECT;
-        }
-        if (session->specificCallback_ != nullptr) {
-            session->specificCallback_->onRecoveryPullPiPMainWindow_(persistentId, rect);
-        }
-        return WSError::WS_OK;
-    };
-    PostTask(task, "RecoveryPullPiPMainWindow");
-    return WSError::WS_OK;
-}
-
 std::vector<sptr<SceneSession>> SceneSession::GetSubSession() const
 {
     return subSession_;
