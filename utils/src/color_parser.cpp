@@ -14,6 +14,7 @@
  */
 
 #include "color_parser.h"
+#include "string_ex.h"
 
 #include <cstdlib>
 
@@ -24,7 +25,6 @@ bool ColorParser::Parse(const std::string& colorStr, uint32_t& colorValue)
     if (colorStr.empty()) {
         return false;
     }
-
     if (colorStr[0] == '#') { // start with '#'
         std::string color = colorStr.substr(1);
         if (!IsValidHexString(color)) {
@@ -43,18 +43,5 @@ bool ColorParser::Parse(const std::string& colorStr, uint32_t& colorValue)
     return false;
 }
 
-bool ColorParser::IsValidHexString(const std::string& colorStr)
-{
-    if (colorStr.empty()) {
-        return false;
-    }
-    for (char ch : colorStr) {
-        if ((ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F')) {
-            continue;
-        }
-        return false;
-    }
-    return true;
-}
 } // namespace Rosen
 } // namespace OHOS
