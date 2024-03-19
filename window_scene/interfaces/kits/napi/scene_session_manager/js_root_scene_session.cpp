@@ -136,32 +136,28 @@ napi_value JsRootSceneSession::OnLoadContent(napi_env env, napi_callback_info in
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc < ARGC_TWO) {
         WLOGFE("[NAPI]Argc is invalid: %{public}zu", argc);
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
-            "Input parameter is missing or invalid"));
-        return NapiGetUndefined(env);
+        return NapiThrow(env, WSErrorCode::WS_ERROR_INVALID_PARAM,
+            "Input parameter is missing or invalid");
     }
     std::string contentUrl;
     napi_value context = argv[1];
     napi_value storage = argc < 3 ? nullptr : argv[2];
     if (!ConvertFromJsValue(env, argv[0], contentUrl)) {
         WLOGFE("[NAPI]Failed to convert parameter to content url");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
-            "Input parameter is missing or invalid"));
-        return NapiGetUndefined(env);
+        return NapiThrow(env, WSErrorCode::WS_ERROR_INVALID_PARAM,
+            "Input parameter is missing or invalid");
     }
 
     if (context == nullptr) {
         WLOGFE("[NAPI]Failed to get context object");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_STATE_ABNORMALLY)));
-        return NapiGetUndefined(env);
+        return NapiThrow(env, WSErrorCode::WS_ERROR_STATE_ABNORMALLY);
     }
     void* pointerResult = nullptr;
     napi_unwrap(env, context, &pointerResult);
     auto contextNativePointer = static_cast<std::weak_ptr<Context>*>(pointerResult);
     if (contextNativePointer == nullptr) {
         WLOGFE("[NAPI]Failed to get context pointer from js object");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_STATE_ABNORMALLY)));
-        return NapiGetUndefined(env);
+        return NapiThrow(env, WSErrorCode::WS_ERROR_STATE_ABNORMALLY);
     }
     auto contextWeakPtr = *contextNativePointer;
     SceneSessionManager::GetInstance().SetRootSceneContext(contextWeakPtr);
@@ -311,5 +307,11 @@ sptr<SceneSession> JsRootSceneSession::GenSceneSession(SessionInfo& info)
         }
     }
     return sceneSession;
+}
+
+napi_value JsRootSceneSession::NapiThrow(napi_env env, WSErrorCode error, const std::string& message)
+{
+    napi_throw(env, CreateJsError(env, static_cast<int32_t>(error), message));
+    return NapiGetUndefined(env);
 }
 } // namespace OHOS::Rosen

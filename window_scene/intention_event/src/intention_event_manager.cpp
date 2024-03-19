@@ -286,18 +286,7 @@ void IntentionEventManager::InputEventListener::OnInputEvent(std::shared_ptr<MMI
         return;
     }
 #ifdef IMF_ENABLE
-    bool isKeyboardEvent = IsKeyboardEvent(keyEvent);
-    if (isKeyboardEvent) {
-        WLOGD("Async dispatch keyEvent to input method");
-        auto callback = [this, focusedSessionId] (std::shared_ptr<MMI::KeyEvent>& keyEvent, bool consumed) {
-            this->DispatchKeyEventCallback(focusedSessionId, keyEvent, consumed);
-        };
-        auto ret = MiscServices::InputMethodController::GetInstance()->DispatchKeyEvent(keyEvent, callback);
-        if (ret != 0) {
-            WLOGFE("DispatchKeyEvent failed, ret:%{public}d, id:%{public}d, focusedSessionId:%{public}d",
-                ret, keyEvent->GetId(), focusedSessionId);
-            DispatchKeyEventCallback(focusedSessionId, keyEvent, false);
-        }
+    if (HandleKeyboardEvent(focusedSessionId, keyEvent)) {
         return;
     }
 #endif // IMF_ENABLE
@@ -310,15 +299,28 @@ void IntentionEventManager::InputEventListener::OnInputEvent(std::shared_ptr<MMI
     focusedSceneSession->SendKeyEventToUI(keyEvent);
 }
 
-bool IntentionEventManager::InputEventListener::IsKeyboardEvent(
-    const std::shared_ptr<MMI::KeyEvent>& keyEvent) const
+bool IntentionEventManager::InputEventListener::HandleKeyboardEvent(
+    int32_t focusedSessionId, const std::shared_ptr<MMI::KeyEvent>& keyEvent) const
 {
     int32_t keyCode = keyEvent->GetKeyCode();
     bool isKeyFN = (keyCode == MMI::KeyEvent::KEYCODE_FN);
     bool isKeyBack = (keyCode == MMI::KeyEvent::KEYCODE_BACK);
     bool isKeyboard = (keyCode >= MMI::KeyEvent::KEYCODE_0 && keyCode <= MMI::KeyEvent::KEYCODE_NUMPAD_RIGHT_PAREN);
     TLOGI(WmsLogTag::WMS_EVENT, "isKeyFN: %{public}d, isKeyboard: %{public}d", isKeyFN, isKeyboard);
-    return (isKeyFN || isKeyboard || isKeyBack);
+    if (isKeyFN || isKeyboard || isKeyBack) {
+        WLOGD("Async dispatch keyEvent to input method");
+        auto callback = [this, focusedSessionId] (std::shared_ptr<MMI::KeyEvent>& keyEvent, bool consumed) {
+            this->DispatchKeyEventCallback(focusedSessionId, keyEvent, consumed);
+        };
+        auto ret = MiscServices::InputMethodController::GetInstance()->DispatchKeyEvent(keyEvent, callback);
+        if (ret != 0) {
+            WLOGFE("DispatchKeyEvent failed, ret:%{public}d, id:%{public}d, focusedSessionId:%{public}d",
+                ret, keyEvent->GetId(), focusedSessionId);
+            DispatchKeyEventCallback(focusedSessionId, keyEvent, false);
+        }
+        return true;
+    }
+    return false;
 }
 
 void IntentionEventManager::InputEventListener::OnInputEvent(
