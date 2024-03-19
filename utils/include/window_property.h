@@ -154,8 +154,10 @@ public:
     double GetTextFieldPositionY() const;
     double GetTextFieldHeight() const;
 private:
-    bool MarshallingWindowAndRequestRects(Parcel& parcel) const;
-    static void UnmarshallingWindowAndRequestRects(Parcel& parcel, WindowProperty* property);
+    bool MarshallingWindowRect(Parcel& parcel) const;
+    static void UnmarshallingWindowRect(Parcel& parcel, WindowProperty* property);
+    bool MarshallingRequestRect(Parcel& parcel) const;
+    static void UnmarshallingRequestRect(Parcel& parcel, WindowProperty* property);
     bool MapMarshalling(Parcel& parcel) const;
     static void MapUnmarshalling(Parcel& parcel, WindowProperty* property);
     bool MarshallingHitOffset(Parcel& parcel) const;

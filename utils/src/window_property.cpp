@@ -608,22 +608,32 @@ void WindowProperty::GetWindowGravity(WindowGravity& gravity, uint32_t& percent)
     percent = windowGravitySizePercent_;
 }
 
-bool WindowProperty::MarshallingWindowAndRequestRects(Parcel& parcel) const
+bool WindowProperty::MarshallingWindowRect(Parcel& parcel) const
 {
-    if (parcel.WriteInt32(windowRect_.posX_) &&
-        parcel.WriteInt32(windowRect_.posY_) && parcel.WriteUint32(windowRect_.width_) &&
-        parcel.WriteUint32(windowRect_.height_) && parcel.WriteInt32(requestRect_.posX_) &&
-        parcel.WriteInt32(requestRect_.posY_) && parcel.WriteUint32(requestRect_.width_) &&
-        parcel.WriteUint32(requestRect_.height_)) {
+    if (parcel.WriteInt32(windowRect_.posX_) && parcel.WriteInt32(windowRect_.posY_) && 
+        parcel.WriteUint32(windowRect_.width_) && parcel.WriteUint32(windowRect_.height_)) {
         return true;
     }
     return false;
 }
 
-void WindowProperty::UnmarshallingWindowAndRequestRects(Parcel& parcel, WindowProperty* property)
+void WindowProperty::UnmarshallingWindowRect(Parcel& parcel, WindowProperty* property)
 {
     Rect rect = { parcel.ReadInt32(), parcel.ReadInt32(), parcel.ReadUint32(), parcel.ReadUint32() };
     property->SetWindowRect(rect);
+}
+
+bool WindowProperty::MarshallingRequestRect(Parcel& parcel) const
+{
+    if (parcel.WriteInt32(requestRect_.posX_) && parcel.WriteInt32(requestRect_.posY_) && 
+        parcel.WriteUint32(requestRect_.width_) && parcel.WriteUint32(requestRect_.height_)) {
+        return true;                
+    }
+    return false;
+}
+
+void WindowProperty::UnmarshallingRequestRect(Parcel& parcel, WindowProperty* property)
+{
     Rect reqRect = { parcel.ReadInt32(), parcel.ReadInt32(), parcel.ReadUint32(), parcel.ReadUint32() };
     property->SetRequestRect(reqRect);
 }
@@ -792,8 +802,8 @@ void WindowProperty::UnmarshallingAbilityInfo(Parcel& parcel, WindowProperty* pr
 
 bool WindowProperty::Marshalling(Parcel& parcel) const
 {
-    return parcel.WriteString(windowName_) && MarshallingWindowAndRequestRects(parcel) && parcel.WriteBool(decoStatus_) &&
-        parcel.WriteUint32(static_cast<uint32_t>(type_)) &&
+    return parcel.WriteString(windowName_) && MarshallingWindowRect(parcel) && MarshallingRequestRect(parcel) && 
+        parcel.WriteBool(decoStatus_) && parcel.WriteUint32(static_cast<uint32_t>(type_)) &&
         parcel.WriteUint32(static_cast<uint32_t>(mode_)) && parcel.WriteUint32(static_cast<uint32_t>(lastMode_)) &&
         parcel.WriteUint32(flags_) &&
         parcel.WriteBool(isFullScreen_) && parcel.WriteBool(focusable_) && parcel.WriteBool(touchable_) &&
@@ -821,7 +831,8 @@ WindowProperty* WindowProperty::Unmarshalling(Parcel& parcel)
         return nullptr;
     }
     property->SetWindowName(parcel.ReadString());
-    UnmarshallingWindowAndRequestRects(parcel, property);
+    UnmarshallingWindowRect(parcel, property);
+    UnmarshallingRequestRect(parcel, property);
     property->SetDecoStatus(parcel.ReadBool());
     property->SetWindowType(static_cast<WindowType>(parcel.ReadUint32()));
     property->SetWindowMode(static_cast<WindowMode>(parcel.ReadUint32()));
@@ -850,7 +861,7 @@ WindowProperty* WindowProperty::Unmarshalling(Parcel& parcel)
     property->SetModeSupportInfo(parcel.ReadUint32());
     property->SetRequestModeSupportInfo(parcel.ReadUint32());
     property->SetDragType(static_cast<DragType>(parcel.ReadUint32()));
-    UnmarshallingOriginRect(parcel, property);
+    property->SetOriginRect(Rect { 0, 0, parcel.ReadUint32(), parcel.ReadUint32() });
     property->SetStretchable(parcel.ReadBool());
     UnmarshallingTouchHotAreas(parcel, property);
     property->SetAccessTokenId(parcel.ReadUint32());
@@ -873,9 +884,7 @@ bool WindowProperty::Write(Parcel& parcel, PropertyChangeAction action)
             ret = ret && parcel.WriteBool(decoStatus_) && parcel.WriteUint32(static_cast<uint32_t>(dragType_)) &&
                 parcel.WriteInt32(originRect_.posX_) && parcel.WriteInt32(originRect_.posY_) &&
                 parcel.WriteUint32(originRect_.width_) && parcel.WriteUint32(originRect_.height_) &&
-                parcel.WriteInt32(requestRect_.posX_) && parcel.WriteInt32(requestRect_.posY_) &&
-                parcel.WriteUint32(requestRect_.width_) && parcel.WriteUint32(requestRect_.height_) &&
-                parcel.WriteUint32(static_cast<uint32_t>(windowSizeChangeReason_));
+                MarshallingRequestRect(parcel) && parcel.WriteUint32(static_cast<uint32_t>(windowSizeChangeReason_));
             break;
         case PropertyChangeAction::ACTION_UPDATE_MODE:
             ret = ret && parcel.WriteUint32(static_cast<uint32_t>(mode_)) && parcel.WriteBool(isDecorEnable_);
@@ -991,10 +1000,9 @@ void WindowProperty::Read(Parcel& parcel, PropertyChangeAction action)
         case PropertyChangeAction::ACTION_UPDATE_TRANSFORM_PROPERTY:
             UnmarshallingTransform(parcel, this);
             break;
-        case PropertyChangeAction::ACTION_UPDATE_ANIMATION_FLAG: {
+        case PropertyChangeAction::ACTION_UPDATE_ANIMATION_FLAG: 
             SetAnimationFlag(parcel.ReadUint32());
             break;
-        }
         case PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE:
             SetPrivacyMode(parcel.ReadBool());
             SetSystemPrivacyMode(parcel.ReadBool());
