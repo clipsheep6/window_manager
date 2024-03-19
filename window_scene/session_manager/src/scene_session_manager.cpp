@@ -3797,12 +3797,6 @@ void SceneSessionManager::SetSCBUnfocusedListener(const NotifySCBAfterUpdateFocu
     notifySCBAfterUnfocusedFunc_ = func;
 }
 
-void SceneSessionManager::SetShowPiPMainWindowListener(const ProcessShowPiPMainWindowFunc& func)
-{
-    TLOGD(WmsLogTag::WMS_PIP, "SetShowPiPMainWindowListener");
-    showPiPMainWindowFunc_ = func;
-}
-
 void SceneSessionManager::SetCallingWindowIdChangeListenser(const ProcessCallingWindowIdChangeFunc& func)
 {
     WLOGFD("SetCallingWindowIdChangeListenser");

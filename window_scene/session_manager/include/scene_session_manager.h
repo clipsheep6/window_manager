@@ -77,7 +77,6 @@ using WindowChangedFunc = std::function<void(int32_t persistentId, WindowUpdateT
 using TraverseFunc = std::function<bool(const sptr<SceneSession>& session)>;
 using CmpFunc = std::function<bool(std::pair<int32_t, sptr<SceneSession>>& lhs,
     std::pair<int32_t, sptr<SceneSession>>& rhs)>;
-using ProcessShowPiPMainWindowFunc = std::function<void(int32_t persistentId)>;
 using ProcessStartUIAbilityErrorFunc = std::function<void(int32_t startUIAbilityError)>;
 using NotifySCBAfterUpdateFocusFunc = std::function<void()>;
 using ProcessCallingWindowIdChangeFunc = std::function<void(uint32_t callingWindowId)>;
@@ -149,7 +148,6 @@ public:
     void SetShiftFocusListener(const ProcessShiftFocusFunc& func);
     void SetSCBFocusedListener(const NotifySCBAfterUpdateFocusFunc& func);
     void SetSCBUnfocusedListener(const NotifySCBAfterUpdateFocusFunc& func);
-    void SetShowPiPMainWindowListener(const ProcessShowPiPMainWindowFunc& func);
     void SetCallingWindowIdChangeListenser(const ProcessCallingWindowIdChangeFunc& func);
     const AppWindowSceneConfig& GetWindowSceneConfig() const;
     WSError ProcessBackEvent();
@@ -461,7 +459,6 @@ private:
     ProcessShiftFocusFunc shiftFocusFunc_;
     NotifySCBAfterUpdateFocusFunc notifySCBAfterFocusedFunc_;
     NotifySCBAfterUpdateFocusFunc notifySCBAfterUnfocusedFunc_;
-    ProcessShowPiPMainWindowFunc showPiPMainWindowFunc_;
     ProcessCallingWindowIdChangeFunc callingWindowIdChangeFunc_;
     ProcessStartUIAbilityErrorFunc startUIAbilityErrorFunc_;
     ProcessVirtualPixelRatioChangeFunc processVirtualPixelRatioChangeFunc_ = nullptr;
