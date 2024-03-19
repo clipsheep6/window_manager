@@ -2335,7 +2335,7 @@ void JsSceneSession::OnPrepareClosePiPSession()
     }
     auto task = [jsCallBack, env = env_]() {
         if (!jsCallBack) {
-            WLOGFE("[NAPI]jsCallBack is nullptr");
+            TLOGE(WmsLogTag::WMS_PIP, "[NAPI]jsCallBack is nullptr");
             return;
         }
         napi_value argv[] = {};
