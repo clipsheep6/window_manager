@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-//luochong test
 #include "session_manager/include/scene_session_manager.h"
 
 #include <cinttypes>
