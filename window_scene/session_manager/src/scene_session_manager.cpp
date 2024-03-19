@@ -1802,7 +1802,10 @@ bool SceneSessionManager::CheckSystemWindowPermission(const sptr<WindowSessionPr
         // some system types could be created by normal app
         return true;
     }
-    if (type == WindowType::WINDOW_TYPE_FLOAT &&
+
+    auto isPC = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
+
+    if (type == WindowType::WINDOW_TYPE_FLOAT && isPC &&
         SessionPermission::VerifyCallingPermission("ohos.permission.SYSTEM_FLOAT_WINDOW")) {
         // WINDOW_TYPE_FLOAT could be created with the corresponding permission
         return true;
