@@ -86,8 +86,16 @@ void WindowLayoutTest::SetUpTestCase()
 
 void WindowLayoutTest::InitAvoidArea()
 {
-    floatAppInfo_.name = "avoidArea";
-    const sptr<Window>& window = Utils::CreateTestWindow(floatAppInfo_);
+    Utils::TestWindowInfo info = {
+        .name = "avoidArea",
+        .rect = {0, 0, 0, 0},
+        .type = WindowType::WINDOW_TYPE_APP_MAIN_WINDOW,
+        .mode = WindowMode::WINDOW_MODE_FLOATING,
+        .needAvoid = true,
+        .parentLimit = false,
+        .parentId = INVALID_WINDOW_ID,
+    };
+    const sptr<Window>& window = Utils::CreateTestWindow(info);
     if (window == nullptr) {
         return;
     }
