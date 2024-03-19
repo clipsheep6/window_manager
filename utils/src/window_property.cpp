@@ -610,7 +610,7 @@ void WindowProperty::GetWindowGravity(WindowGravity& gravity, uint32_t& percent)
 
 bool WindowProperty::MarshallingWindowRect(Parcel& parcel) const
 {
-    if (parcel.WriteInt32(windowRect_.posX_) && parcel.WriteInt32(windowRect_.posY_) && 
+    if (parcel.WriteInt32(windowRect_.posX_) && parcel.WriteInt32(windowRect_.posY_) &&
         parcel.WriteUint32(windowRect_.width_) && parcel.WriteUint32(windowRect_.height_)) {
         return true;
     }
@@ -625,9 +625,9 @@ void WindowProperty::UnmarshallingWindowRect(Parcel& parcel, WindowProperty* pro
 
 bool WindowProperty::MarshallingRequestRect(Parcel& parcel) const
 {
-    if (parcel.WriteInt32(requestRect_.posX_) && parcel.WriteInt32(requestRect_.posY_) && 
+    if (parcel.WriteInt32(requestRect_.posX_) && parcel.WriteInt32(requestRect_.posY_) &&
         parcel.WriteUint32(requestRect_.width_) && parcel.WriteUint32(requestRect_.height_)) {
-        return true;                
+        return true;
     }
     return false;
 }
@@ -802,7 +802,7 @@ void WindowProperty::UnmarshallingAbilityInfo(Parcel& parcel, WindowProperty* pr
 
 bool WindowProperty::Marshalling(Parcel& parcel) const
 {
-    return parcel.WriteString(windowName_) && MarshallingWindowRect(parcel) && MarshallingRequestRect(parcel) && 
+    return parcel.WriteString(windowName_) && MarshallingWindowRect(parcel) && MarshallingRequestRect(parcel) &&
         parcel.WriteBool(decoStatus_) && parcel.WriteUint32(static_cast<uint32_t>(type_)) &&
         parcel.WriteUint32(static_cast<uint32_t>(mode_)) && parcel.WriteUint32(static_cast<uint32_t>(lastMode_)) &&
         parcel.WriteUint32(flags_) &&
@@ -1000,7 +1000,7 @@ void WindowProperty::Read(Parcel& parcel, PropertyChangeAction action)
         case PropertyChangeAction::ACTION_UPDATE_TRANSFORM_PROPERTY:
             UnmarshallingTransform(parcel, this);
             break;
-        case PropertyChangeAction::ACTION_UPDATE_ANIMATION_FLAG: 
+        case PropertyChangeAction::ACTION_UPDATE_ANIMATION_FLAG:
             SetAnimationFlag(parcel.ReadUint32());
             break;
         case PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE:
