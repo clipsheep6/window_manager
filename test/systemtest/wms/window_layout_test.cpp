@@ -538,7 +538,7 @@ HWTEST_F(WindowLayoutTest, LayoutTileNegative01, Function | MediumTest | Level3)
 {
     WindowManager::GetInstance().SetWindowLayoutMode(WindowLayoutMode::CASCADE);
     floatAppInfo_.name = "mainTileNegative1";
-    floatAppInfo_.rect = {-1, -100, -1, -100}, // -1, -100, -1, -100 is typical negative case nums
+    floatAppInfo_.rect = {-1, -100, -1, -100}; // -1, -100, -1, -100 is typical negative case nums
 
     const sptr<Window>& window = Utils::CreateTestWindow(floatAppInfo_);
     if (window == nullptr) {
