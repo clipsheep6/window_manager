@@ -57,7 +57,7 @@ void PiPReporter::SetCurrentPackageName(const std::string &packageName)
 void PiPReporter::ReportPiPStartWindow(int32_t source, int32_t templateType,
                                        int32_t isSuccess, const std::string& errorReason)
 {
-    TLOGI(WmsLogTag::WMS_PIP,"Report start pip widow");
+    TLOGI(WmsLogTag::WMS_PIP, "Report start pip widow");
     if (source == 0) {
         TLOGI(WmsLogTag::WMS_PIP, "need not report start pip widow");
         return;

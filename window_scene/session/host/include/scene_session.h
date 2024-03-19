@@ -283,7 +283,6 @@ private:
     WSRect lastSafeRect = { 0, 0, 0, 0 };
     std::vector<sptr<SceneSession>> subSession_;
     bool needDefaultAnimationFlag_ = true;
-    PiPRectInfo pipRectInfo_;
     PiPTemplateInfo pipTemplateInfo_;
     std::atomic_bool isStartMoving_ { false };
     std::atomic_bool isVisibleForAccessibility_ { true };

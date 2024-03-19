@@ -670,17 +670,6 @@ enum class PiPScalePivot : int32_t {
     END,
 };
 
-/**
- * @brief Structure of picture in picture rect info.
- */
-struct PiPRectInfo {
-    PiPScalePivot xPivot_;
-    PiPScalePivot yPivot_;
-    uint32_t originWidth_;
-    uint32_t originHeight_;
-    PiPScaleLevel level_;
-};
-
 struct PiPTemplateInfo {
     uint32_t pipTemplateType;
     uint32_t priority;

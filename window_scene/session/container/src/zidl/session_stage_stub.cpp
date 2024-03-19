@@ -337,7 +337,7 @@ int SessionStageStub::HandleSetPipActionEvent(MessageParcel& data, MessageParcel
     TLOGD(WmsLogTag::WMS_PIP, "HandleSetPipActionEvent");
     std::string action = data.ReadString();
     if (action.empty()) {
-        TLOGE(WmsLogTag::WMS_PIP,"SessionStageStub pip action event is nullptr");
+        TLOGE(WmsLogTag::WMS_PIP, "SessionStageStub pip action event is nullptr");
         return ERR_INVALID_VALUE;
     }
     int32_t status;
