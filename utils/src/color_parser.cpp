@@ -25,7 +25,6 @@ bool ColorParser::Parse(const std::string& colorStr, uint32_t& colorValue)
     if (colorStr.empty()) {
         return false;
     }
-
     if (colorStr[0] == '#') { // start with '#'
         std::string color = colorStr.substr(1);
         if (!IsValidHexString(color)) {
