@@ -29,7 +29,6 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
-    constexpr int32_t DELAY_ANIM = 500;
     constexpr int32_t SUCCESS = 1;
     constexpr int32_t FAILED = 0;
     constexpr uint32_t PIP_LOW_PRIORITY = 0;
@@ -428,16 +427,13 @@ void PictureInPictureController::DoActionEvent(const std::string& actionName, in
 
 void PictureInPictureController::RestorePictureInPictureWindow()
 {
-    if (window_ == nullptr || mainWindow_ == nullptr) {
-        TLOGE(WmsLogTag::WMS_PIP, "window or mainWindow is nullptr");
-        return;
-    }
-    TLOGI(WmsLogTag::WMS_PIP, "restore pipWindow %{public}u to [%{public}u, %{public}u, %{public}u, %{public}u]",
-        window_->GetWindowId(), windowRect_.posX_, windowRect_.posY_, windowRect_.width_, windowRect_.height_);
     if (pipLifeCycleListener_) {
         pipLifeCycleListener_->OnRestoreUserInterface();
     }
-    window_->RecoveryPullPiPMainWindow(windowRect_);
+    if (mainWindow_ == nullptr) {
+        WLOGFE("main window is nullptr");
+        return;
+    }
     std::string navId = pipOption_->GetNavigationId();
     if (navId != "") {
         auto navController = NavigationController::GetNavigationController(mainWindow_->GetUIContent(), navId);
@@ -448,19 +444,7 @@ void PictureInPictureController::RestorePictureInPictureWindow()
             TLOGE(WmsLogTag::WMS_PIP, "navController is nullptr");
         }
     }
-    auto stopPipTask = [weakThis = wptr(this)]() {
-        auto session = weakThis.promote();
-        if (!session) {
-            TLOGE(WmsLogTag::WMS_PIP, "pipController is null");
-            return;
-        }
-        session->StopPictureInPicture(true, StopPipType::NULL_STOP);
-    };
-    if (handler_ == nullptr) {
-        TLOGE(WmsLogTag::WMS_PIP, "handler is nullptr");
-        return;
-    }
-    handler_->PostTask(stopPipTask, "wms:RestorePictureInPictureWindow", DELAY_ANIM);
+   StopPictureInPicture(true, StopPipType::NULL_STOP);
     SingletonContainer::Get<PiPReporter>().ReportPiPRestore();
     TLOGI(WmsLogTag::WMS_PIP, "restore pip main window finished");
 }

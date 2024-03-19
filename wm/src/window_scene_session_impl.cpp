@@ -2512,17 +2512,6 @@ WSError WindowSceneSessionImpl::UpdateWindowMode(WindowMode mode)
     return static_cast<WSError>(ret);
 }
 
-WMError WindowSceneSessionImpl::RecoveryPullPiPMainWindow(const Rect& rect)
-{
-    TLOGI(WmsLogTag::WMS_PIP, "RecoveryPullPiPMainWindow");
-    if (hostSession_ && property_->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
-        hostSession_->RecoveryPullPiPMainWindow(GetPersistentId(), rect);
-        return WMError::WM_OK;
-    }
-    TLOGW(WmsLogTag::WMS_PIP, "not pip window, nothing to do");
-    return WMError::WM_DO_NOTHING;
-}
-
 WMError WindowSceneSessionImpl::UpdateWindowModeImmediately(WindowMode mode)
 {
     if (state_ == WindowState::STATE_CREATED || state_ == WindowState::STATE_HIDDEN) {
