@@ -74,6 +74,17 @@ WMError WindowDumper::Dump(int fd, const std::vector<std::u16string>& args)
     return WMError::WM_OK;
 }
 
+void WindowDumper::DumpRectInfo(std::ostringstream& oss, const sptr<WindowNode>& windowNode) {
+    Rect rect = windowNode->GetWindowRect();
+    oss << "[ "
+        << std::left << std::setw(5) << rect.posX_
+        << std::left << std::setw(5) << rect.posY_
+        << std::left << std::setw(5) << rect.width_
+        << std::left << std::setw(5) << rect.height_
+        << "]"
+        << std::endl;
+}
+
 WMError WindowDumper::DumpScreenGroupWindowInfo(ScreenId screenGroupId,
     const sptr<WindowNodeContainer>& windowNodeContainer, std::string& dumpInfo)
 {
@@ -102,7 +113,6 @@ WMError WindowDumper::DumpScreenGroupWindowInfo(ScreenId screenGroupId,
             --zOrder;
             break;
         }
-        Rect rect = windowNode->GetWindowRect();
         const std::string& windowName = windowNode->GetWindowName().size() <= WINDOW_NAME_MAX_LENGTH ?
             windowNode->GetWindowName() : windowNode->GetWindowName().substr(0, WINDOW_NAME_MAX_LENGTH);
         // std::setw is used to set the output width and different width values are set to keep the format aligned.
@@ -114,14 +124,8 @@ WMError WindowDumper::DumpScreenGroupWindowInfo(ScreenId screenGroupId,
             << std::left << std::setw(5) << static_cast<uint32_t>(windowNode->GetWindowMode())
             << std::left << std::setw(5) << windowNode->GetWindowFlags()
             << std::left << std::setw(5) << --zOrder
-            << std::left << std::setw(12) << static_cast<uint32_t>(windowNode->GetRequestedOrientation())
-            << "[ "
-            << std::left << std::setw(5) << rect.posX_
-            << std::left << std::setw(5) << rect.posY_
-            << std::left << std::setw(5) << rect.width_
-            << std::left << std::setw(5) << rect.height_
-            << "]"
-            << std::endl;
+            << std::left << std::setw(12) << static_cast<uint32_t>(windowNode->GetRequestedOrientation());
+        DumpRectInfo(oss, windowNode);
     }
     oss << "Focus window: " << windowNodeContainer->GetFocusWindow() << std::endl;
     oss << "total window num: " << windowRoot_->GetTotalWindowNum()<< std::endl;
@@ -167,6 +171,21 @@ bool WindowDumper::IsValidDigitString(const std::string& windowIdStr)
     return true;
 }
 
+void WindowDumper::DumpTouchHotAreas(std::ostringstream& oss, const sptr<WindowNode>& node) {
+    oss << "TouchHotAreas: ";
+    std::vector<Rect> touchHotAreas;
+    node->GetTouchHotAreas(touchHotAreas);
+    int index = 0;
+    for (const auto& area : touchHotAreas) {
+        oss << "[ " << area.posX_ << ", " << area.posY_ << ", " << area.width_ << ", " << area.height_ << " ]";
+        index++;
+        if (index < static_cast<int32_t>(touchHotAreas.size())) {
+            oss <<", ";
+        }
+    }
+    oss << std::endl;
+}
+
 WMError WindowDumper::DumpSpecifiedWindowInfo(uint32_t windowId, const std::vector<std::string>& params,
     std::string& dumpInfo)
 {
@@ -203,18 +222,7 @@ WMError WindowDumper::DumpSpecifiedWindowInfo(uint32_t windowId, const std::vect
     oss << "WindowRect: " << "[ "
         << rect.posX_ << ", " << rect.posY_ << ", " << rect.width_ << ", " << rect.height_
         << " ]" << std::endl;
-    oss << "TouchHotAreas: ";
-    std::vector<Rect> touchHotAreas;
-    node->GetTouchHotAreas(touchHotAreas);
-    int index = 0;
-    for (const auto& area : touchHotAreas) {
-        oss << "[ " << area.posX_ << ", " << area.posY_ << ", " << area.width_ << ", " << area.height_ << " ]";
-        index++;
-        if (index < static_cast<int32_t>(touchHotAreas.size())) {
-            oss <<", ";
-        }
-    }
-    oss << std::endl;
+    DumpTouchHotAreas(oss, node);
     dumpInfo.append(oss.str());
     if (node->GetWindowToken() != nullptr) {
         std::vector<std::string> resetParams;

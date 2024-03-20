@@ -316,11 +316,9 @@ int WindowManagerService::Dump(int fd, const std::vector<std::u16string>& args)
 void WindowManagerService::ConfigureWindowManagerService()
 {
     const auto& config = WindowManagerConfig::GetConfig();
-    WindowManagerConfig::ConfigItem item = config["decor"];
-    if (item.IsMap()) {
-        ConfigDecor(item);
-    }
-    item = config["minimizeByOther"].GetProp("enable");
+    ConfigDecor(config["decor"]);
+
+    WindowManagerConfig::ConfigItem item = config["minimizeByOther"].GetProp("enable");
     if (item.IsBool()) {
         MinimizeApp::SetMinimizedByOtherConfig(item.boolValue_);
     }
@@ -358,72 +356,20 @@ void WindowManagerService::ConfigureWindowManagerService()
             windowRoot_->SetMaxAppWindowNumber(static_cast<uint32_t>(numbers[0]));
         }
     }
-    item = config["modeChangeHotZones"];
-    if (item.IsInts()) {
-        ConfigHotZones(*item.intsValue_);
-    }
-    item = config["splitRatios"];
-    if (item.IsFloats()) {
-        windowRoot_->SetSplitRatios(*item.floatsValue_);
-    }
-    item = config["exitSplitRatios"];
-    if (item.IsFloats()) {
-        windowRoot_->SetExitSplitRatios(*item.floatsValue_);
-    }
-    item = config["windowAnimation"];
-    if (item.IsMap()) {
-        ConfigWindowAnimation(item);
-    }
-    item = config["keyboardAnimation"];
-    if (item.IsMap()) {
-        ConfigKeyboardAnimation(item);
-    }
-    item = config["startWindowTransitionAnimation"];
-    if (item.IsMap()) {
-        ConfigStartingWindowAnimation(item);
-    }
-    item = config["windowEffect"];
-    if (item.IsMap()) {
-        ConfigWindowEffect(item);
-    }
-    item = config["floatingBottomPosY"];
-    if (item.IsInts()) {
-        auto numbers = *item.intsValue_;
-        if (numbers.size() == 1 && numbers[0] > 0) {
-            WindowLayoutPolicy::SetCascadeRectBottomPosYLimit(static_cast<uint32_t>(numbers[0]));
-        }
-    }
-    item = config["configMainFloatingWindowAbove"].GetProp("enable");
-    if (item.IsBool()) {
-        WindowNodeContainer::SetConfigMainFloatingWindowAbove(item.boolValue_);
-    }
-    item = config["maxMainFloatingWindowNumber"];
-    if (item.IsInts()) {
-        auto numbers = *item.intsValue_;
-        if (numbers.size() == 1 && numbers[0] > 0) {
-            WindowNodeContainer::SetMaxMainFloatingWindowNumber(static_cast<uint32_t>(numbers[0]));
-        }
-    }
-    item = config["maxFloatingWindowSize"];
-    if (item.IsInts()) {
-        auto numbers = *item.intsValue_;
-        if (numbers.size() == 1 && numbers[0] > 0) {
-            WindowLayoutPolicy::SetMaxFloatingWindowSize(static_cast<uint32_t>(numbers[0]));
-        }
-    }
-    item = config["defaultMaximizeMode"];
-    if (item.IsInts()) {
-        auto numbers = *item.intsValue_;
-        if (numbers.size() == 1 &&
-            (numbers[0] == static_cast<int32_t>(MaximizeMode::MODE_AVOID_SYSTEM_BAR) ||
-            numbers[0] == static_cast<int32_t>(MaximizeMode::MODE_FULL_FILL))) {
-            maximizeMode_ = static_cast<MaximizeMode>(numbers[0]);
-        }
-    }
+
+    ConfigHotZones(config["modeChangeHotZones"]);
+    ConfigSplitRatios(config);
+    ConfigAnimation(config);
+    ConfigWindowEffect(config["windowEffect"]);
+    ConfigFloatingProperties(config);
+    ConfigDefaultMaximizeMode(config["defaultMaximizeMode"]);
 }
 
-void WindowManagerService::ConfigHotZones(const std::vector<int>& numbers)
+void WindowManagerService::ConfigHotZones(const WindowManagerConfig::ConfigItem& hotZonesConfig)
 {
+    if (!hotZonesConfig.IsInts()) return;
+
+    const std::vector<int>& numbers = *hotZonesConfig.intsValue_;
     if (numbers.size() == 3) { // 3 hot zones
         hotZonesConfig_.fullscreenRange_ = static_cast<uint32_t>(numbers[0]); // 0 fullscreen
         hotZonesConfig_.primaryRange_ = static_cast<uint32_t>(numbers[1]);    // 1 primary
@@ -434,6 +380,8 @@ void WindowManagerService::ConfigHotZones(const std::vector<int>& numbers)
 
 void WindowManagerService::ConfigDecor(const WindowManagerConfig::ConfigItem& decorConfig)
 {
+    if (!decorConfig.IsMap()) return;
+
     WindowManagerConfig::ConfigItem item = decorConfig.GetProp("enable");
     if (item.IsBool()) {
         systemConfig_.isSystemDecorEnable_ = item.boolValue_;
@@ -459,6 +407,32 @@ void WindowManagerService::ConfigDecor(const WindowManagerConfig::ConfigItem& de
                 break;
             }
         }
+    }
+}
+
+void WindowManagerService::ConfigSplitRatios(const WindowManagerConfig::ConfigItem& config) {
+    WindowManagerConfig::ConfigItem item = config["splitRatios"];
+    if (item.IsFloats()) {
+        windowRoot_->SetSplitRatios(*item.floatsValue_);
+    }
+    item = config["exitSplitRatios"];
+    if (item.IsFloats()) {
+        windowRoot_->SetExitSplitRatios(*item.floatsValue_);
+    }
+}
+
+void WindowManagerService::ConfigAnimation(const WindowManagerConfig::ConfigItem& config) {
+    WindowManagerConfig::ConfigItem item = config["windowAnimation"];
+    if (item.IsMap()) {
+        ConfigWindowAnimation(item);
+    }
+    item = config["keyboardAnimation"];
+    if (item.IsMap()) {
+        ConfigKeyboardAnimation(item);
+    }
+    item = config["startWindowTransitionAnimation"];
+    if (item.IsMap()) {
+        ConfigStartingWindowAnimation(item);
     }
 }
 
@@ -568,6 +542,45 @@ void WindowManagerService::ConfigStartingWindowAnimation(const WindowManagerConf
     }
 }
 
+void WindowManagerService::ConfigFloatingProperties(const WindowManagerConfig::ConfigItem& config) {
+    WindowManagerConfig::ConfigItem item = config["floatingBottomPosY"];
+    if (item.IsInts()) {
+        auto numbers = *item.intsValue_;
+        if (numbers.size() == 1 && numbers[0] > 0) {
+            WindowLayoutPolicy::SetCascadeRectBottomPosYLimit(static_cast<uint32_t>(numbers[0]));
+        }
+    }
+    item = config["configMainFloatingWindowAbove"].GetProp("enable");
+    if (item.IsBool()) {
+        WindowNodeContainer::SetConfigMainFloatingWindowAbove(item.boolValue_);
+    }
+    item = config["maxMainFloatingWindowNumber"];
+    if (item.IsInts()) {
+        auto numbers = *item.intsValue_;
+        if (numbers.size() == 1 && numbers[0] > 0) {
+            WindowNodeContainer::SetMaxMainFloatingWindowNumber(static_cast<uint32_t>(numbers[0]));
+        }
+    }
+    item = config["maxFloatingWindowSize"];
+    if (item.IsInts()) {
+        auto numbers = *item.intsValue_;
+        if (numbers.size() == 1 && numbers[0] > 0) {
+            WindowLayoutPolicy::SetMaxFloatingWindowSize(static_cast<uint32_t>(numbers[0]));
+        }
+    }
+}
+
+void WindowManagerService::ConfigDefaultMaximizeMode(const WindowManagerConfig::ConfigItem& defaultMaximizeModeConfig) {
+    if (!defaultMaximizeModeConfig.IsInts()) return;
+
+    auto numbers = *defaultMaximizeModeConfig.intsValue_;
+    if (numbers.size() == 1 &&
+        (numbers[0] == static_cast<int32_t>(MaximizeMode::MODE_AVOID_SYSTEM_BAR) ||
+        numbers[0] == static_cast<int32_t>(MaximizeMode::MODE_FULL_FILL))) {
+        maximizeMode_ = static_cast<MaximizeMode>(numbers[0]);
+    }
+}
+
 bool WindowManagerService::ConfigAppWindowCornerRadius(const WindowManagerConfig::ConfigItem& item, float& out)
 {
     std::map<std::string, float> stringToCornerRadius = {
@@ -649,6 +662,8 @@ bool WindowManagerService::ConfigAppWindowShadow(const WindowManagerConfig::Conf
 
 void WindowManagerService::ConfigWindowEffect(const WindowManagerConfig::ConfigItem& effectConfig)
 {
+    if (!effectConfig.IsMap()) return;
+
     AppWindowEffectConfig config;
     AppWindowEffectConfig systemEffectConfig;
     // config corner radius
@@ -1262,13 +1277,8 @@ WMError WindowManagerService::SetWindowLayoutMode(WindowLayoutMode mode)
     return PostSyncTask(task, "SetWindowLayoutMode");
 }
 
-WMError WindowManagerService::UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action,
-    bool isAsyncTask)
+WMError WindowManagerService::ValidateUpdate(sptr<WindowProperty>& windowProperty, PropertyChangeAction action)
 {
-    if (windowProperty == nullptr) {
-        WLOGFE("windowProperty is nullptr");
-        return WMError::WM_ERROR_NULLPTR;
-    }
     if ((windowProperty->GetWindowFlags() == static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_FORBID_SPLIT_MOVE) ||
         action == PropertyChangeAction::ACTION_UPDATE_TRANSFORM_PROPERTY) &&
         !Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
@@ -1280,13 +1290,26 @@ WMError WindowManagerService::UpdateProperty(sptr<WindowProperty>& windowPropert
         WLOGI("Operation rejected");
         return WMError::WM_ERROR_INVALID_OPERATION;
     }
-
-    if (action == PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE && 
+    if (action == PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE &&
         !Permission::CheckCallingPermission("ohos.permission.PRIVACY_WINDOW")) {
         WLOGFE("Set privacy mode permission denied!");
         return WMError::WM_ERROR_INVALID_PERMISSION;
     }
 
+    return WMError::WM_OK;
+}
+
+WMError WindowManagerService::UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action,
+    bool isAsyncTask)
+{
+    if (windowProperty == nullptr) {
+        WLOGFE("windowProperty is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    auto validationError = ValidateUpdate(windowProperty, action);
+    if (validationError != WMError::WM_OK) {
+        return validationError;
+    }
     windowProperty->isSystemCalling_ = Permission::IsSystemCalling();
     if (action == PropertyChangeAction::ACTION_UPDATE_TRANSFORM_PROPERTY) {
         auto task = [this, windowProperty, action]() mutable {
