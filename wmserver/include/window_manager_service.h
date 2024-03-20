@@ -166,6 +166,7 @@ private:
     WMError GetFocusWindowInfo(sptr<IRemoteObject>& abilityToken);
     bool CheckSystemWindowPermission(const sptr<WindowProperty>& property) const;
     bool CheckAnimationPermission(const sptr<WindowProperty>& property) const;
+    WMError ValidateUpdate(sptr<WindowProperty>& windowProperty, PropertyChangeAction action);
     void ConfigureWindowManagerService();
     void PostVoidSyncTask(Task task, const std::string& taskName = "WMSTask");
     template<typename SyncTask, typename Return = std::invoke_result_t<SyncTask>>
@@ -178,11 +179,15 @@ private:
         }
         return ret;
     }
-    void ConfigHotZones(const std::vector<int>& hotZones);
+    void ConfigHotZones(const WindowManagerConfig::ConfigItem& hotZonesConfig);
     void ConfigDecor(const WindowManagerConfig::ConfigItem& decorConfig);
+    void ConfigSplitRatios(const WindowManagerConfig::ConfigItem& config);
+    void ConfigAnimation(const WindowManagerConfig::ConfigItem& config);
     void ConfigWindowAnimation(const WindowManagerConfig::ConfigItem& animeConfig);
     void ConfigKeyboardAnimation(const WindowManagerConfig::ConfigItem& animeConfig);
     void ConfigStartingWindowAnimation(const WindowManagerConfig::ConfigItem& animeConfig);
+    void ConfigFloatingProperties(const WindowManagerConfig::ConfigItem& config);
+    void ConfigDefaultMaximizeMode(const WindowManagerConfig::ConfigItem& defaultMaximizeModeConfig);
     RSAnimationTimingCurve CreateCurve(const WindowManagerConfig::ConfigItem& curveConfig, bool isForKeyboard = false);
     void RecordShowTimeEvent(int64_t costTime);
     void ConfigWindowEffect(const WindowManagerConfig::ConfigItem& effectConfig);
