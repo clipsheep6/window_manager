@@ -781,6 +781,38 @@ bool WindowNodeContainer::IsWindowFollowParent(WindowType type)
     return WindowHelper::IsWindowFollowParent(type);
 }
 
+bool WindowNodeContainer::UpdateRSTreeHandlerAddRemoveNode(sptr<WindowNode>& node, DisplayId displayId,
+    DisplayId parentDisplayId, bool isAdd, bool isMultiDisplay)
+{
+    if (IsWindowFollowParent(node->GetWindowType())) {
+        const auto& parentNode = node->parent_;
+        if (parentNode != nullptr && parentNode->surfaceNode_ != nullptr &&
+            node->surfaceNode_ != nullptr) {
+                if (isAdd) {
+                    node->surfaceNode_->SetTranslateX(node->GetWindowRect().posX_ - parentNode->GetWindowRect().posX_);
+                    node->surfaceNode_->SetTranslateY(node->GetWindowRect().posY_ - parentNode->GetWindowRect().posY_);
+                    node->surfaceNode_->SetVisible(true);
+                    parentNode->surfaceNode_->AddChild(node->surfaceNode_, -1);
+                    WLOGFD("Add surfaceNode to parent surfaceNode succeed.");
+                } else {
+                    node->surfaceNode_->SetVisible(false);
+                    parentNode->surfaceNode_->RemoveChild(node->surfaceNode_);
+                    WLOGFD("Remove surfaceNode to parent surfaceNode succeed.");
+                }
+            return true;
+        }
+    }
+    auto& dms = DisplayManagerServiceInner::GetInstance();
+    auto& surfaceNode = node->leashWinSurfaceNode_ != nullptr ? node->leashWinSurfaceNode_ : node->surfaceNode_;
+    dms.UpdateRSTree(displayId, parentDisplayId, surfaceNode, isAdd, isMultiDisplay);
+    for (auto& child : node->children_) {
+        if (child->currentVisibility_ && !IsWindowFollowParent(child->GetWindowType())) {
+            dms.UpdateRSTree(displayId, parentDisplayId, child->surfaceNode_, isAdd, isMultiDisplay);
+        }
+    }
+    return false;
+}
+
 bool WindowNodeContainer::AddNodeOnRSTree(sptr<WindowNode>& node, DisplayId displayId, DisplayId parentDisplayId,
     WindowUpdateType type, bool animationPlayed)
 {
@@ -799,26 +831,8 @@ bool WindowNodeContainer::AddNodeOnRSTree(sptr<WindowNode>& node, DisplayId disp
             WLOGI("id: %{public}d invisible, no need update RS tree", node->GetWindowId());
             return;
         }
-
-        if (IsWindowFollowParent(node->GetWindowType())) {
-            auto& parentNode = node->parent_;
-            if (parentNode != nullptr && parentNode->surfaceNode_ != nullptr &&
-                node->surfaceNode_ != nullptr) {
-                node->surfaceNode_->SetTranslateX(node->GetWindowRect().posX_ - parentNode->GetWindowRect().posX_);
-                node->surfaceNode_->SetTranslateY(node->GetWindowRect().posY_ - parentNode->GetWindowRect().posY_);
-                node->surfaceNode_->SetVisible(true);
-                parentNode->surfaceNode_->AddChild(node->surfaceNode_, -1);
-                WLOGFD("Add surfaceNode to parent surfaceNode succeed.");
-                return;
-            }
-        }
-        auto& dms = DisplayManagerServiceInner::GetInstance();
-        auto& surfaceNode = node->leashWinSurfaceNode_ != nullptr ? node->leashWinSurfaceNode_ : node->surfaceNode_;
-        dms.UpdateRSTree(displayId, parentDisplayId, surfaceNode, true, isMultiDisplay);
-        for (auto& child : node->children_) {
-            if (child->currentVisibility_ && !IsWindowFollowParent(child->GetWindowType())) {
-                dms.UpdateRSTree(displayId, parentDisplayId, child->surfaceNode_, true, isMultiDisplay);
-            }
+        if (UpdateRSTreeHandlerAddRemoveNode(node, displayId, parentDisplayId, true, isMultiDisplay)) {
+            return;
         }
     };
 
@@ -837,8 +851,8 @@ bool WindowNodeContainer::AddNodeOnRSTree(sptr<WindowNode>& node, DisplayId disp
             animationConfig_.windowAnimationConfig_.animationTiming_.timingCurve_, updateRSTreeFunc);
         FinishTrace(HITRACE_TAG_WINDOW_MANAGER);
     } else if (node->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT &&
-        windowGravity != WindowGravity::WINDOW_GRAVITY_FLOAT &&
-        !animationPlayed) { // add keyboard with animation
+        windowGravity != WindowGravity::WINDOW_GRAVITY_FLOAT && !animationPlayed) {
+        // add keyboard with animation
         auto timingProtocol = animationConfig_.keyboardAnimationConfig_.durationIn_;
         OpenInputMethodSyncTransaction();
         RSNode::Animate(timingProtocol, animationConfig_.keyboardAnimationConfig_.curve_, updateRSTreeFunc);
@@ -864,23 +878,8 @@ bool WindowNodeContainer::RemoveNodeFromRSTree(sptr<WindowNode>& node, DisplayId
         "parentDisplayId: %{public}" PRIu64", animationPlayed: %{public}d",
         node->GetWindowId(), displayId, isMultiDisplay, parentDisplayId, animationPlayed);
     auto updateRSTreeFunc = [&]() {
-        if (IsWindowFollowParent(node->GetWindowType())) {
-            const auto& parentNode = node->parent_;
-            if (parentNode != nullptr && parentNode->surfaceNode_ != nullptr &&
-                node->surfaceNode_ != nullptr) {
-                node->surfaceNode_->SetVisible(false);
-                parentNode->surfaceNode_->RemoveChild(node->surfaceNode_);
-                WLOGFD("Remove surfaceNode to parent surfaceNode succeed.");
-                return;
-            }
-        }
-        auto& dms = DisplayManagerServiceInner::GetInstance();
-        auto& surfaceNode = node->leashWinSurfaceNode_ != nullptr ? node->leashWinSurfaceNode_ : node->surfaceNode_;
-        dms.UpdateRSTree(displayId, parentDisplayId, surfaceNode, false, isMultiDisplay);
-        for (auto& child : node->children_) {
-            if (child->currentVisibility_ && !IsWindowFollowParent(child->GetWindowType())) {
-                dms.UpdateRSTree(displayId, parentDisplayId, child->surfaceNode_, false, isMultiDisplay);
-            }
+        if (UpdateRSTreeHandlerAddRemoveNode(node, displayId, parentDisplayId, false, isMultiDisplay)) {
+            return;
         }
     };
 
@@ -1394,27 +1393,9 @@ void WindowNodeContainer::NotifyIfSystemBarRegionChanged(DisplayId displayId) co
     WindowManagerAgentController::GetInstance().UpdateSystemBarRegionTints(displayId, tints);
 }
 
-void WindowNodeContainer::NotifyIfKeyboardRegionChanged(const sptr<WindowNode>& node,
-    const AvoidControlType avoidType) const
+void WindowNodeContainer::NotifyIfKeyboardRegionOverlap(const sptr<WindowNode>& node,
+    const sptr<WindowNode>& callingWindow, const AvoidControlType avoidType) const
 {
-    WindowGravity windowGravity;
-    uint32_t percent;
-    node->GetWindowGravity(windowGravity, percent);
-    if (node->GetWindowType() != WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT ||
-        windowGravity == WindowGravity::WINDOW_GRAVITY_FLOAT) {
-        WLOGFD("windowType: %{public}u", node->GetWindowType());
-        return;
-    }
-
-    auto callingWindow = FindWindowNodeById(node->GetCallingWindow());
-    if (callingWindow == nullptr) {
-        WLOGD("callingWindow: %{public}u does not be set", node->GetCallingWindow());
-        callingWindow = FindWindowNodeById(GetFocusWindow());
-    }
-    if (callingWindow == nullptr || callingWindow->GetWindowToken() == nullptr) {
-        WLOGE("does not have correct callingWindow for input method window");
-        return;
-    }
     const WindowMode callingWindowMode = callingWindow->GetWindowMode();
     if (callingWindowMode == WindowMode::WINDOW_MODE_FULLSCREEN ||
         callingWindowMode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
@@ -1454,6 +1435,30 @@ void WindowNodeContainer::NotifyIfKeyboardRegionChanged(const sptr<WindowNode>& 
         return;
     }
     WLOGFE("does not have correct callingWindowMode for input method window");
+}
+
+void WindowNodeContainer::NotifyIfKeyboardRegionChanged(const sptr<WindowNode>& node,
+    const AvoidControlType avoidType) const
+{
+    WindowGravity windowGravity;
+    uint32_t percent;
+    node->GetWindowGravity(windowGravity, percent);
+    if (node->GetWindowType() != WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT ||
+        windowGravity == WindowGravity::WINDOW_GRAVITY_FLOAT) {
+        WLOGFD("windowType: %{public}u", node->GetWindowType());
+        return;
+    }
+
+    auto callingWindow = FindWindowNodeById(node->GetCallingWindow());
+    if (callingWindow == nullptr) {
+        WLOGD("callingWindow: %{public}u does not be set", node->GetCallingWindow());
+        callingWindow = FindWindowNodeById(GetFocusWindow());
+    }
+    if (callingWindow == nullptr || callingWindow->GetWindowToken() == nullptr) {
+        WLOGE("does not have correct callingWindow for input method window");
+        return;
+    }
+    NotifyIfKeyboardRegionOverlap(node, callingWindow, avoidType);
 }
 
 void WindowNodeContainer::NotifySystemBarTints(std::vector<DisplayId> displayIdVec)

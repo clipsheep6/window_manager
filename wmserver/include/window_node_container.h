@@ -187,6 +187,10 @@ private:
         const std::unordered_map<WindowType, SystemBarProperty>& systemBarPropInfo) const;
 
     bool IsWindowFollowParent(WindowType type);
+    bool UpdateRSTreeHandlerAddRemoveNode(sptr<WindowNode>& node, DisplayId displayId, DisplayId parentDisplayId,
+        bool isAdd, bool isMultiDisplay);
+    void NotifyIfKeyboardRegionOverlap(const sptr<WindowNode>& node,
+        const sptr<WindowNode>& callingWindow, const AvoidControlType avoidType) const;
 
     float displayBrightness_ = UNDEFINED_BRIGHTNESS;
     uint32_t brightnessWindow_ = INVALID_WINDOW_ID;
