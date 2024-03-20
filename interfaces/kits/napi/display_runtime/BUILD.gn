@@ -33,6 +33,9 @@ ohos_shared_library("display_napi") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
   }
   sources = [
     "js_display.cpp",
