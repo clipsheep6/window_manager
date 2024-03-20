@@ -44,6 +44,9 @@ ohos_shared_library("scene_session") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
   }
   sources = [
     "container/src/window_event_channel.cpp",
@@ -140,6 +143,9 @@ ohos_shared_library("screen_session") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
   }
   sources = [
     "screen/src/screen_property.cpp",
