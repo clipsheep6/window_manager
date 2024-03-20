@@ -103,7 +103,7 @@ WMError WindowAdapter::UnregisterWindowManagerAgent(WindowManagerAgentType type,
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
     auto ret = windowManagerServiceProxy_->UnregisterWindowManagerAgent(type, windowManagerAgent);
 
-    std::shared_lock<std::shared_mutex> lock(WindowManagerAgentMapMutex_);
+    std::unique_lock<std::shared_mutex> lock(WindowManagerAgentMapMutex_);
     if (windowManagerAgentMap_.find(type) == windowManagerAgentMap_.end()) {
         WLOGFW("WindowManagerAgentType = %{public}d not found", type);
         return ret;
