@@ -64,6 +64,7 @@ ohos_shared_library("intention_event_anr_manager") {
       defined(global_parts_info.barrierfree_accessibility)) {
     external_deps += [ "accessibility:accessibility_common" ]
   }
+  innerapi_tags = [ "platformsdk_indirect" ]
   part_name = "window_manager"
   subsystem_name = "window"
 }

@@ -70,6 +70,7 @@ ohos_shared_library("libintention_event") {
     defines += [ "IMF_ENABLE" ]
   }
 
+  innerapi_tags = [ "platformsdk_indirect" ]
   part_name = "window_manager"
   subsystem_name = "window"
 }
