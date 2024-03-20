@@ -431,7 +431,7 @@ void PictureInPictureController::RestorePictureInPictureWindow()
         pipLifeCycleListener_->OnRestoreUserInterface();
     }
     if (mainWindow_ == nullptr) {
-        WLOGFE("main window is nullptr");
+        TLOGI(WmsLogTag::WMS_PIP, "main window is nullptr");
         return;
     }
     std::string navId = pipOption_->GetNavigationId();
