@@ -28,14 +28,16 @@ WMError SessionManagerAgentController::RegisterWindowManagerAgent(const sptr<IWi
     WindowManagerAgentType type)
 {
     WLOGFD("RegisterWindowManagerAgent");
-    return smAgentContainer_.RegisterAgent(windowManagerAgent, type) ? WMError::WM_OK : WMError::WM_ERROR_NULLPTR;
+    return smAgentContainer_.RegisterAgent(windowManagerAgent, type) ? WMError::WM_OK :
+        WMError::WM_ERROR_REPEAT_OPERATION;
 }
 
 WMError SessionManagerAgentController::UnregisterWindowManagerAgent(const sptr<IWindowManagerAgent>& windowManagerAgent,
     WindowManagerAgentType type)
 {
     WLOGFD("UnregisterWindowManagerAgent");
-    return smAgentContainer_.UnregisterAgent(windowManagerAgent, type) ? WMError::WM_OK : WMError::WM_ERROR_NULLPTR;
+    return smAgentContainer_.UnregisterAgent(windowManagerAgent, type) ? WMError::WM_OK :
+        WMError::WM_ERROR_REPEAT_OPERATION;
 }
 
 void SessionManagerAgentController::UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing)
