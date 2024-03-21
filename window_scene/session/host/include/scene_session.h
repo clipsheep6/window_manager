@@ -283,6 +283,7 @@ private:
     void SavePiPRectInfo();
     void GetNewPiPRect(const uint32_t displayWidth, const uint32_t displayHeight, Rect& rect);
     void ProcessUpdatePiPRect(SizeChangeReason reason);
+    void HandleCastScreenConnection(SessionInfo info, sptr<SceneSession> session);
 
     NotifySessionRectChangeFunc sessionRectChangeFunc_;
     static wptr<SceneSession> enterSession_;
