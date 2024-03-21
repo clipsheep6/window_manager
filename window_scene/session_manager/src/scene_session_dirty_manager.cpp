@@ -381,7 +381,7 @@ MMI::WindowInfo SceneSessionDirtyManager::GetWindowInfo(const sptr<SceneSession>
     const SceneSessionDirtyManager::WindowAction& action) const
 {
     if (sceneSession == nullptr) {
-        WLOGFE("sceneSession is nullptr");
+        WLOGFI("sceneSession is nullptr");
         return {};
     }
 
