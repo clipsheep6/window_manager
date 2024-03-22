@@ -18,6 +18,7 @@
 
 #include <map>
 #include <mutex>
+#include "js_window_utils.h"
 #include "js_extension_window_listener.h"
 #include "native_engine/native_engine.h"
 #include "native_engine/native_reference.h"
@@ -27,6 +28,8 @@
 
 namespace OHOS {
 namespace Rosen {
+struct JsWindowListenerInfo;
+
 class JsExtensionWindowRegisterManager {
 public:
     JsExtensionWindowRegisterManager();
@@ -41,7 +44,7 @@ private:
     WmErrorCode ProcessAvoidAreaChangeRegister(sptr<JsExtensionWindowListener> listener,
         sptr<Window> window, bool isRegister, napi_env env, const std::vector<napi_value>& parameters);
     using Func = WmErrorCode(JsExtensionWindowRegisterManager::*)(sptr<JsExtensionWindowListener>,
-        sptr<Window> window, bool，napi_env env, const std::vector<napi_value>& parameters);
+        sptr<Window> window, bool, napi_env env, const std::vector<napi_value>& parameters);
     WmErrorCode ProcessLifeCycleEventRegister(sptr<JsExtensionWindowListener> listener,
         sptr<Window> window, bool isRegister, napi_env env, const std::vector<napi_value>& parameters);
     std::map<std::string, std::map<std::shared_ptr<NativeReference>, sptr<JsExtensionWindowListener>>> jsCbMap_;

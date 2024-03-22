@@ -189,7 +189,7 @@ napi_value JsEmbeddableWindowStage::OnEvent(napi_env env, napi_callback_info inf
         WLOGFE("[NAPI]argc is invalid: %{public}zu", argc);
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
         return NapiGetUndefined(env);
-    }    
+    }
 
     // Parse argv[0] as string
     std::string eventString;
