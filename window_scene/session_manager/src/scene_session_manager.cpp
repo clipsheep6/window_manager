@@ -924,8 +924,6 @@ sptr<SceneSession::SpecificSessionCallback> SceneSessionManager::CreateSpecificS
     specificCb->onSessionTouchOutside_ = std::bind(&SceneSessionManager::NotifySessionTouchOutside,
         this, std::placeholders::_1);
     specificCb->onGetAINavigationBarArea_ = std::bind(&SceneSessionManager::GetAINavigationBarArea, this);
-    specificCb->onRecoveryPullPiPMainWindow_ = std::bind(&SceneSessionManager::RecoveryPullPiPMainWindow,
-        this, std::placeholders::_1, std::placeholders::_2);
     specificCb->onOutsideDownEvent_ = std::bind(&SceneSessionManager::OnOutsideDownEvent,
         this, std::placeholders::_1, std::placeholders::_2);
     specificCb->onHandleSecureSessionShouldHide_ = std::bind(&SceneSessionManager::HandleSecureSessionShouldHide,
@@ -6574,31 +6572,6 @@ WSError SceneSessionManager::UnregisterIAbilityManagerCollaborator(int32_t type)
         std::unique_lock<std::shared_mutex> lock(collaboratorMapLock_);
         collaboratorMap_.erase(type);
     }
-    return WSError::WS_OK;
-}
-
-WSError SceneSessionManager::RecoveryPullPiPMainWindow(const int32_t& persistentId, const Rect& rect)
-{
-    auto scnSession = GetSceneSession(persistentId);
-    if (scnSession == nullptr) {
-        WLOGFE("scnSession is nullptr, persistentId: %{public}d", persistentId);
-        return WSError::WS_ERROR_NULLPTR;
-    }
-    if (!WindowHelper::IsPipWindow(scnSession->GetWindowType())) {
-        WLOGFE("not pip window");
-        return WSError::WS_DO_NOTHING;
-    }
-    auto task = [this, scnSession, rect, persistentId]() {
-        if (!showPiPMainWindowFunc_) {
-            WLOGFE("showPiPMainWindowFunc_ init error, persistentId: %{public}d", persistentId);
-            return WSError::WS_DO_NOTHING;
-        }
-        showPiPMainWindowFunc_(scnSession->GetParentPersistentId());
-        WSRect rectPos = SessionHelper::TransferToWSRect(rect);
-        scnSession->UpdateSessionRect(rectPos, SizeChangeReason::RECOVER);
-        return WSError::WS_OK;
-    };
-    taskScheduler_->PostAsyncTask(task, "RecoveryPullPiPMainWindow");
     return WSError::WS_OK;
 }
 
