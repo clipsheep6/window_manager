@@ -181,6 +181,7 @@ napi_value JsEmbeddableWindowStage::OnEvent(napi_env env, napi_callback_info inf
         WLOGFE("[NAPI]windowImpl is null");
         return NapiGetUndefined(env);
     }
+    constexpr size_t ARGC_MIN = 2;
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
@@ -188,7 +189,7 @@ napi_value JsEmbeddableWindowStage::OnEvent(napi_env env, napi_callback_info inf
         WLOGFE("[NAPI]argc is invalid: %{public}zu", argc);
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
         return NapiGetUndefined(env);
-    }
+    }    
 
     // Parse argv[0] as string
     std::string eventString;
@@ -197,15 +198,25 @@ napi_value JsEmbeddableWindowStage::OnEvent(napi_env env, napi_callback_info inf
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
         return NapiGetUndefined(env);
     }
-    napi_value value = argv[1];
-    if (!NapiIsCallable(env, value)) {
-        WLOGFE("[NAPI]Callback(argv[1]) is not callable");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
-        return NapiGetUndefined(env);
+
+    size_t cbIndex = argc - 1;
+    napi_value callback = argv[cbIndex];
+    if (!NapiIsCallable(env, callback)) {
+        WLOGI("Callback(info->argv[%{public}zu]) is not callable", cbIndex);
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
 
-    WmErrorCode ret = extwinRegisterManager_->RegisterListener(windowImpl, eventString,
-        CaseType::CASE_STAGE, env, value);
+    std::vector<napi_value> parameters;
+    if (argc > ARGC_MIN) {
+        size_t lastParameterIndex = cbIndex - 1;
+        for (size_t index = 1; index <= lastParameterIndex; index++) {
+            parameters.push_back(argv[index]);
+        }
+    }
+
+    JsWindowListenerInfo listenerInfo = {.env = env, .type = eventString,
+        .callback = callback, .parameters = parameters};
+    WmErrorCode ret = extwinRegisterManager_->RegisterListener(windowImpl, CaseType::CASE_STAGE, listenerInfo);
     if (ret != WmErrorCode::WM_OK) {
         WLOGFE("[NAPI]RegisterListener fail");
         return NapiThrowError(env, ret);
@@ -239,19 +250,14 @@ napi_value JsEmbeddableWindowStage::OffEvent(napi_env env, napi_callback_info in
         return NapiGetUndefined(env);
     }
 
-    napi_value value = nullptr;
-    WmErrorCode ret = WmErrorCode::WM_OK;
-    if (argc == 1) {
-        ret = extwinRegisterManager_->UnregisterListener(windowImpl, eventString, CaseType::CASE_STAGE, env, nullptr);
-    } else {
-        value = argv[1];
-        if (value != nullptr && GetType(env, value) == napi_function) {
-            ret = extwinRegisterManager_->UnregisterListener(windowImpl, eventString, CaseType::CASE_STAGE, env, value);
-        } else {
-            ret = extwinRegisterManager_->UnregisterListener(windowImpl, eventString,
-                CaseType::CASE_STAGE, env, nullptr);
+J   sWindowListenerInfo listenerInfo = {.env = env, .type = eventString, .callback = nullptr};
+    if (argc > 1) {
+        napi_value callback = argv[1];
+        if (callback != nullptr && NapiIsCallable(env, callback)) {
+            listenerInfo.callback = callback;
         }
     }
+    WmErrorCode ret = registerManager_->UnregisterListener(windowImpl, CaseType::CASE_STAGE, listenerInfo);
     if (ret != WmErrorCode::WM_OK) {
         WLOGFE("[NAPI]UnregisterListener fail");
         return NapiThrowError(env, ret);

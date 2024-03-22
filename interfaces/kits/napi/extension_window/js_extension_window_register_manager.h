@@ -31,21 +31,19 @@ class JsExtensionWindowRegisterManager {
 public:
     JsExtensionWindowRegisterManager();
     ~JsExtensionWindowRegisterManager();
-    WmErrorCode RegisterListener(sptr<Window> window, std::string type,
-        CaseType caseType, napi_env env, napi_value value);
-    WmErrorCode UnregisterListener(sptr<Window> window, std::string type,
-        CaseType caseType, napi_env env, napi_value value);
+    WmErrorCode RegisterListener(sptr<Window> window, CaseType caseType, const JsWindowListenerInfo& listenerInfo);
+    WmErrorCode UnregisterListener(sptr<Window> window, CaseType caseType, const JsWindowListenerInfo& listenerInfo);
 
 private:
     bool IsCallbackRegistered(napi_env env, std::string type, napi_value jsListenerObject);
     WmErrorCode ProcessWindowChangeRegister(sptr<JsExtensionWindowListener> listener,
-        sptr<Window> window, bool isRegister);
+        sptr<Window> window, bool isRegister, napi_env env, const std::vector<napi_value>& parameters);
     WmErrorCode ProcessAvoidAreaChangeRegister(sptr<JsExtensionWindowListener> listener,
-        sptr<Window> window, bool isRegister);
+        sptr<Window> window, bool isRegister, napi_env env, const std::vector<napi_value>& parameters);
     using Func = WmErrorCode(JsExtensionWindowRegisterManager::*)(sptr<JsExtensionWindowListener>,
-        sptr<Window> window, bool);
+        sptr<Window> window, bool，napi_env env, const std::vector<napi_value>& parameters);
     WmErrorCode ProcessLifeCycleEventRegister(sptr<JsExtensionWindowListener> listener,
-        sptr<Window> window, bool isRegister);
+        sptr<Window> window, bool isRegister, napi_env env, const std::vector<napi_value>& parameters);
     std::map<std::string, std::map<std::shared_ptr<NativeReference>, sptr<JsExtensionWindowListener>>> jsCbMap_;
     std::mutex mtx_;
     std::map<CaseType, std::map<std::string, Func>> listenerProcess_;
