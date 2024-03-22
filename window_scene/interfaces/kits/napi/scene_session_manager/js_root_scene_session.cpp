@@ -252,7 +252,7 @@ void JsRootSceneSession::PendingSessionActivation(SessionInfo& info)
     if (info.want != nullptr) {
         bool isNeedBackToOther = info.want->GetBoolParam(AAFwk::Want::PARAM_BACK_TO_OTHER_MISSION_STACK, false);
         TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]session: %{public}d isNeedBackToOther: %{public}d",
-            sceneSession->GetPersistentID(), isNeedBackToOther);
+            sceneSession->GetPersistentId(), isNeedBackToOther);
         if (isNeedBackToOther) {
             int32_t realCallerSessionId = SceneSessionManager::GetInstance().GetFocusedSession();
             if (realCallerSessionId == sceneSession->GetPersistentId()) {
