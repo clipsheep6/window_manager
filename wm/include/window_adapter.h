@@ -18,6 +18,7 @@
 
 #include <refbase.h>
 #include <zidl/window_manager_agent_interface.h>
+#include <shared_mutex>
 
 #include "common/include/window_session_property.h"
 #include "window.h"
@@ -123,6 +124,7 @@ private:
     void WindowManagerAndSessionRecover();
 
     std::recursive_mutex mutex_;
+    std::shared_mutex WindowManagerAgentMapMutex_;
     sptr<IWindowManager> windowManagerServiceProxy_ = nullptr;
     sptr<WMSDeathRecipient> wmsDeath_ = nullptr;
     bool isProxyValid_ { false };
