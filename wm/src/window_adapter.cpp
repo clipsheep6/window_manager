@@ -87,7 +87,7 @@ WMError WindowAdapter::RegisterWindowManagerAgent(WindowManagerAgentType type,
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
 
     {
-        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        std::unique_lock<std::shared_mutex> lock(WindowManagerAgentMapMutex_);
         if (windowManagerAgentMap_.find(type) == windowManagerAgentMap_.end()) {
             windowManagerAgentMap_[type] = std::set<sptr<IWindowManagerAgent>>();
         }
@@ -103,7 +103,7 @@ WMError WindowAdapter::UnregisterWindowManagerAgent(WindowManagerAgentType type,
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
     auto ret = windowManagerServiceProxy_->UnregisterWindowManagerAgent(type, windowManagerAgent);
 
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(WindowManagerAgentMapMutex_);
     if (windowManagerAgentMap_.find(type) == windowManagerAgentMap_.end()) {
         WLOGFW("WindowManagerAgentType = %{public}d not found", type);
         return ret;
@@ -264,7 +264,7 @@ void WindowAdapter::WindowManagerAndSessionRecover()
         return;
     }
 
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(WindowManagerAgentMapMutex_);
     for (const auto& it : windowManagerAgentMap_) {
         WLOGFI("[WMSRecover] RecoverWindowManagerAgents type = %{public}" PRIu32 ", size = %{public}" PRIu64, it.first,
             static_cast<uint64_t>(it.second.size()));
