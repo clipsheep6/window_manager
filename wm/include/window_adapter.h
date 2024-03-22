@@ -18,6 +18,7 @@
 
 #include <refbase.h>
 #include <zidl/window_manager_agent_interface.h>
+#include <shared_mutex>
 
 #include "common/include/window_session_property.h"
 #include "window.h"
