@@ -268,7 +268,7 @@ napi_value JsWindowStage::OnEvent(napi_env env, napi_callback_info info)
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
         return NapiGetUndefined(env);
     }
-    struct JsWindowListenerInfo listenerInfo = {.env = env, .type = eventString, .callback = callback,
+    JsWindowListenerInfo listenerInfo = {.env = env, .type = eventString, .callback = callback,
         .parameters = parameters};
     g_listenerManager->RegisterListener(window, CaseType::CASE_STAGE, listenerInfo);
     WLOGI("[NAPI]Window [%{public}u, %{public}s] register event %{public}s",
@@ -308,7 +308,7 @@ napi_value JsWindowStage::OffEvent(napi_env env, napi_callback_info info)
         return NapiGetUndefined(env);
     }
 
-    struct JsWindowListenerInfo listenerInfo = {.env = env, .type = eventString, .callback = nullptr};
+    JsWindowListenerInfo listenerInfo = {.env = env, .type = eventString, .callback = nullptr};
     if (argc > 1) {
         napi_value callback = argv[1];
         if (callback != nullptr && GetType(env, callback) == napi_function) {

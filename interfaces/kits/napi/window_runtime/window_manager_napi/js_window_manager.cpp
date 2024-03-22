@@ -720,7 +720,7 @@ napi_value JsWindowManager::OnRegisterWindowManagerCallback(napi_env env, napi_c
         }
     }
 
-    struct JsWindowListenerInfo listenerInfo = {.env = env, .type = cbType, .callback = callback,
+    JsWindowListenerInfo listenerInfo = {.env = env, .type = cbType, .callback = callback,
         .parameters = parameters};
     WmErrorCode ret = registerManager_->RegisterListener(nullptr, CaseType::CASE_WINDOW_MANAGER, listenerInfo);
     if (ret != WmErrorCode::WM_OK) {
@@ -748,7 +748,7 @@ napi_value JsWindowManager::OnUnregisterWindowManagerCallback(napi_env env, napi
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
         return NapiGetUndefined(env);
     }
-    struct JsWindowListenerInfo listenerInfo = {.env = env, .type = cbType, .callback = nullptr};
+    JsWindowListenerInfo listenerInfo = {.env = env, .type = cbType, .callback = nullptr};
     if (argc > 1) {
         napi_value callback = argv[1];
         if (callback != nullptr && GetType(env, callback) == napi_function) {

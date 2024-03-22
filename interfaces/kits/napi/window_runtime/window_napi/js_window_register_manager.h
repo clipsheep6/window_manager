@@ -24,16 +24,7 @@
 #include "window.h"
 namespace OHOS {
 namespace Rosen {
-
-/**
- * @struct JsWindowListenerInfo.
- */
-struct JsWindowListenerInfo {
-    napi_env env;
-    std::string type;
-    napi_value callback;
-    std::vector<napi_value> parameters;
-};
+struct JsWindowListenerInfo;
 
 class JsWindowRegisterManager {
 public:

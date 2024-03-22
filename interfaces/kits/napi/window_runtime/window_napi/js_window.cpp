@@ -1575,7 +1575,7 @@ napi_value JsWindow::OnRegisterWindowCallback(napi_env env, napi_callback_info i
         }
     }
 
-    struct JsWindowListenerInfo listenerInfo = {.env = env, .type = cbType, .callback = callback,
+    JsWindowListenerInfo listenerInfo = {.env = env, .type = cbType, .callback = callback,
         .parameters = parameters};
     WmErrorCode ret = registerManager_->RegisterListener(windowToken_, CaseType::CASE_WINDOW, listenerInfo);
     if (ret != WmErrorCode::WM_OK) {
@@ -1605,7 +1605,7 @@ napi_value JsWindow::OnUnregisterWindowCallback(napi_env env, napi_callback_info
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
 
-    struct JsWindowListenerInfo listenerInfo = {.env = env, .type = cbType, .callback = nullptr};
+    JsWindowListenerInfo listenerInfo = {.env = env, .type = cbType, .callback = nullptr};
     if (argc > 1) {
         napi_value callback = argv[1];
         if (callback != nullptr && NapiIsCallable(env, callback)) {
@@ -1645,7 +1645,7 @@ napi_value JsWindow::OnBindDialogTarget(napi_env env, napi_callback_info info)
     }
 
     napi_value value = argv[1];
-    struct JsWindowListenerInfo listenerInfo = {.env = env, .type = "dialogDeathRecipient", .callback = nullptr};
+    JsWindowListenerInfo listenerInfo = {.env = env, .type = "dialogDeathRecipient", .callback = nullptr};
     if (value == nullptr || !NapiIsCallable(env, value)) {
         registerManager_->RegisterListener(windowToken_, CaseType::CASE_WINDOW, listenerInfo);
     } else {
