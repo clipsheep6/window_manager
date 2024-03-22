@@ -2909,6 +2909,140 @@ HWTEST_F(WindowSessionTest, SetChangeSessionVisibilityWithStatusBarEventListener
     ASSERT_EQ(resultValue, 2);
 }
 
+/**
+ * @tc.name: UpdateDensity
+ * @tc.desc: UpdateDensity
+ * @tc.type: FUNC
+ * @tc.require: FUNC
+ */
+HWTEST_F(WindowSessionTest, UpdateDensity, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    sptr<ISession> sessionToken = nullptr;
+    sptr<SessionStageMocker> mockSessionStage = new(std::nothrow) SessionStageMocker();
+    EXPECT_NE(nullptr, mockSessionStage);
+    session_->sessionStage_ = mockSessionStage;
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->UpdateDensity());
+    session_->sessionStage_ = nullptr;
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->UpdateDensity());
+}
+
+/**
+ * @tc.name: GetForegroundInteractiveStatus
+ * @tc.desc: GetForegroundInteractiveStatus
+ * @tc.type: FUNC
+ * @tc.require: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetForegroundInteractiveStatus, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    bool res = session_->GetForegroundInteractiveStatus();
+    ASSERT_EQ(res, true);
+}
+
+/**
+ * @tc.name: SetPendingSessionActivationEventListener
+ * @tc.desc: SetPendingSessionActivationEventListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetPendingSessionActivationEventListener, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NotifyPendingSessionActivationFunc func = nullptr;
+    session_->SetPendingSessionActivationEventListener(func);
+
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetBackPressedListenser
+ * @tc.desc: SetBackPressedListenser
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetBackPressedListenser, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NotifyBackPressedFunc func = nullptr;
+    session_->SetBackPressedListenser(func);
+
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetUpdateSessionIconListener
+ * @tc.desc: SetUpdateSessionIconListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetUpdateSessionIconListener, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NofitySessionIconUpdatedFunc func = nullptr;
+    session_->SetUpdateSessionIconListener(func);
+
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: PendingSessionToForeground
+ * @tc.desc: PendingSessionToForeground
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, PendingSessionToForeground, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    ASSERT_EQ(WSError::WS_OK, session_->PendingSessionToForeground());
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetNotifyCallingSessionUpdateRectFunc
+ * @tc.desc: SetNotifyCallingSessionUpdateRectFunc
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetNotifyCallingSessionUpdateRectFunc, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NotifyCallingSessionUpdateRectFunc func = nullptr;
+    session_->SetNotifyCallingSessionUpdateRectFunc(func);
+
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetNotifyCallingSessionBackgroundFunc
+ * @tc.desc: SetNotifyCallingSessionBackgroundFunc
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetNotifyCallingSessionBackgroundFunc, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NotifyCallingSessionBackgroundFunc func = nullptr;
+    session_->SetNotifyCallingSessionBackgroundFunc(func);
+
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetRaiseToAppTopForPointDownFunc
+ * @tc.desc: SetRaiseToAppTopForPointDownFunc
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetRaiseToAppTopForPointDownFunc, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NotifyRaiseToTopForPointDownFunc func = nullptr;
+    session_->SetRaiseToAppTopForPointDownFunc(func);
+
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
 }
 } // namespace Rosen
 } // namespace OHOS
