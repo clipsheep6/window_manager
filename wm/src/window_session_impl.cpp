@@ -2059,7 +2059,7 @@ EnableIfSame<T, IWindowVisibilityChangedListener, std::vector<IWindowVisibilityL
 }
 
 template<typename T>
-EnableIfSame<T, IWindowNoInteractionListener, std::vector<IWindowNoInteractionListenerSptr>> WindowSessionImpl::GetListeners()
+EnableIfSameSample<T, IWindowNoInteractionListener> WindowSessionImpl::GetListeners()
 {
     std::vector<IWindowNoInteractionListenerSptr> noInteractionListeners;
     for (auto& listener : windowNoInteractionListeners_[GetPersistentId()]) {
