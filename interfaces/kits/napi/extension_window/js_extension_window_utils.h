@@ -32,6 +32,17 @@
 
 namespace OHOS {
 namespace Rosen {
+
+    /**
+     * @struct JsWindowListenerInfo.
+     */
+    struct JsWindowListenerInfo {
+        napi_env env;
+        std::string type;
+        napi_value callback;
+        std::vector<napi_value> parameters;
+    };
+
     napi_value GetRectAndConvertToJsValue(napi_env env, const Rect& rect);
     napi_value ConvertAvoidAreaToJsValue(napi_env env, const AvoidArea& avoidArea, AvoidAreaType type);
     napi_value CreateJsExtensionWindowPropertiesObject(napi_env env, sptr<Window>& window);

@@ -18,7 +18,6 @@
 
 #include <map>
 #include <mutex>
-#include "js_window_utils.h"
 #include "js_extension_window_listener.h"
 #include "native_engine/native_engine.h"
 #include "native_engine/native_reference.h"
