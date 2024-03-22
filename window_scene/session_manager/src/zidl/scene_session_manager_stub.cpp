@@ -816,7 +816,6 @@ int SceneSessionManagerStub::HandleAddExtensionWindowStageToSCB(MessageParcel &d
 
 int SceneSessionManagerStub::HandleAddOrRemoveSecureSession(MessageParcel &data, MessageParcel &reply)
 {
-    TLOGI(WmsLogTag::WMS_UIEXT, "run HandleAddOrRemoveSecureSession!");
     int32_t persistentId = data.ReadInt32();
     bool shouldHide = data.ReadBool();
     WSError ret = AddOrRemoveSecureSession(persistentId, shouldHide);
@@ -826,7 +825,6 @@ int SceneSessionManagerStub::HandleAddOrRemoveSecureSession(MessageParcel &data,
 
 int SceneSessionManagerStub::HandleAddOrRemoveSecureExtSession(MessageParcel &data, MessageParcel &reply)
 {
-    TLOGI(WmsLogTag::WMS_UIEXT, "run HandleAddOrRemoveSecureExtSession!");
     int32_t persistentId = data.ReadInt32();
     int32_t parentId = data.ReadInt32();
     bool shouldHide = data.ReadBool();
