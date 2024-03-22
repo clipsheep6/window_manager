@@ -945,7 +945,7 @@ sptr<SceneSession> SceneSessionManager::CreateSceneSession(const SessionInfo& se
         WLOGFI("[WMSSCB]Create SCBSystemSession, type: %{public}d", sessionInfo.windowType_);
     } else if (property == nullptr && SessionHelper::IsMainWindow(static_cast<WindowType>(sessionInfo.windowType_))) {
         sceneSession = new (std::nothrow) MainSession(sessionInfo, specificCb);
-        TLOGI(WmsLogTag::WMS_MAIN, "Create MainSession");
+        TLOGI(WmsLogTag::WMS_MAIN, "Create MainSession, name:%{public}s", sessionInfo.bundleName_.c_str());
     } else if (property != nullptr && SessionHelper::IsSubWindow(property->GetWindowType())) {
         sceneSession = new (std::nothrow) SubSession(sessionInfo, specificCb);
         TLOGI(WmsLogTag::WMS_SUB, "Create SubSession, type: %{public}d", property->GetWindowType());
@@ -1249,8 +1249,9 @@ std::future<int32_t> SceneSessionManager::RequestSceneSessionActivation(
         auto persistentId = scnSession->GetPersistentId();
         scnSession->NotifyForegroundInteractiveStatus(true);
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSessionActivation(%d )", persistentId);
-        TLOGI(WmsLogTag::WMS_MAIN, "active persistentId: %{public}d isSystem_:%{public}u",
-            persistentId, static_cast<uint32_t>(scnSession->GetSessionInfo().isSystem_));
+        TLOGI(WmsLogTag::WMS_MAIN, "active persistentId: %{public}d isSystem_:%{public}u, name:%{public}s",
+            persistentId, static_cast<uint32_t>(scnSession->GetSessionInfo().isSystem_),
+            scnSession->GetWindowName().c_str());
         if (!GetSceneSession(persistentId)) {
             TLOGE(WmsLogTag::WMS_MAIN, "session is invalid with %{public}d", persistentId);
             promise->set_value(static_cast<int32_t>(WSError::WS_ERROR_INVALID_SESSION));
@@ -1338,15 +1339,17 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
         scnSessionInfo->want.GetElement().GetURI().c_str());
     int32_t errCode = ERR_OK;
     if (systemConfig_.backgroundswitch == false) {
-        TLOGI(WmsLogTag::WMS_MAIN, "begin StartUIAbility: %{public}d isSystem:%{public}u", persistentId,
-            static_cast<uint32_t>(scnSession->GetSessionInfo().isSystem_));
+        TLOGI(WmsLogTag::WMS_MAIN, "begin StartUIAbility: %{public}d isSystem:%{public}u name:%{public}s",
+            persistentId, static_cast<uint32_t>(scnSession->GetSessionInfo().isSystem_),
+            scnSession->GetWindowName().c_str());
         errCode = AAFwk::AbilityManagerClient::GetInstance()->StartUIAbilityBySCB(scnSessionInfo);
     } else {
         TLOGD(WmsLogTag::WMS_MAIN, "RequestSceneSessionActivationInner: %{public}d", systemConfig_.backgroundswitch);
         if (isNewActive || scnSession->GetSessionState() == SessionState::STATE_DISCONNECT ||
             scnSession->GetSessionState() == SessionState::STATE_END) {
-            TLOGI(WmsLogTag::WMS_MAIN, "begin StartUIAbility: %{public}d isSystem:%{public}u", persistentId,
-                static_cast<uint32_t>(scnSession->GetSessionInfo().isSystem_));
+            TLOGI(WmsLogTag::WMS_MAIN, "begin StartUIAbility: %{public}d isSystem:%{public}u, name:%{public}s",
+                persistentId, static_cast<uint32_t>(scnSession->GetSessionInfo().isSystem_),
+                scnSession->GetWindowName().c_str());
             errCode = AAFwk::AbilityManagerClient::GetInstance()->StartUIAbilityBySCB(scnSessionInfo);
         } else {
             scnSession->NotifySessionForeground(1, true);

@@ -33,7 +33,7 @@ const std::string WindowScene::MAIN_WINDOW_ID = "main window";
 
 WindowScene::~WindowScene()
 {
-    TLOGI(WmsLogTag::WMS_MAIN, "~WindowScene");
+    TLOGD(WmsLogTag::WMS_MAIN, "~WindowScene");
     if (mainWindow_ != nullptr) {
         mainWindow_->Destroy();
         mainWindow_ = nullptr;
@@ -72,7 +72,6 @@ WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRunt
 WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRuntime::Context>& context,
     sptr<IWindowLifeCycle>& listener, sptr<WindowOption> option, const sptr<IRemoteObject>& iSession)
 {
-    TLOGI(WmsLogTag::WMS_MAIN, "WindowScene with window session!");
     displayId_ = displayId;
     if (option == nullptr || iSession == nullptr) {
         TLOGE(WmsLogTag::WMS_MAIN, "Cannot init scene with option or iSession null!");
@@ -80,6 +79,7 @@ WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRunt
     }
     option->SetDisplayId(displayId);
     option->SetWindowName(GenerateMainWindowName(context));
+    TLOGI(WmsLogTag::WMS_MAIN, "WindowScene init with session name:%{public}s!", option->GetWindowName().c_str());
     if (context != nullptr) {
         option->SetBundleName(context->GetBundleName());
     }
@@ -136,21 +136,21 @@ std::vector<sptr<Window>> WindowScene::GetSubWindow()
 
 WMError WindowScene::GoForeground(uint32_t reason)
 {
-    TLOGI(WmsLogTag::WMS_MAIN, "reason:%{public}u", reason);
     if (mainWindow_ == nullptr) {
         TLOGE(WmsLogTag::WMS_MAIN, "Go foreground failed, because main window is null");
         return WMError::WM_ERROR_NULLPTR;
     }
+    TLOGI(WmsLogTag::WMS_MAIN, "reason:%{public}u id:%{public}u", reason, mainWindow_->GetWindowId());
     return mainWindow_->Show(reason);
 }
 
 WMError WindowScene::GoBackground(uint32_t reason)
 {
-    TLOGI(WmsLogTag::WMS_MAIN, "reason:%{public}u", reason);
     if (mainWindow_ == nullptr) {
         WLOGFE("Go background failed, because main window is null");
         return WMError::WM_ERROR_NULLPTR;
     }
+    TLOGI(WmsLogTag::WMS_MAIN, "reason:%{public}u id:%{public}u", reason, mainWindow_->GetWindowId());
     return mainWindow_->Hide(reason);
 }
 
