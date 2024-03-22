@@ -88,7 +88,10 @@ ohos_shared_library("extensionwindow_napi") {
     "../../../../resources/config/build:coverage_flags",
   ]
 
-  include_dirs = [ "extension_window" ]
+  include_dirs = [
+    "extension_window",
+    "../window_runtime/window_napi",
+  ]
   deps = [
     "../../../../utils:libwmutil",
     "../../../../wm:libwm",
