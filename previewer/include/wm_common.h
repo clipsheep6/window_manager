@@ -371,7 +371,6 @@ public:
                parcel.WriteFloat(translateX_) && parcel.WriteFloat(translateY_) && parcel.WriteFloat(translateZ_);
     }
 
-
     void Unmarshalling(Parcel& parcel)
     {
         pivotX_ = parcel.ReadFloat();
