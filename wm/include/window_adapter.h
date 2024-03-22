@@ -128,6 +128,7 @@ private:
     void WindowManagerAndSessionRecover();
 
     std::recursive_mutex mutex_;
+    std::shared_mutex WindowManagerAgentMapMutex_;
     sptr<IWindowManager> windowManagerServiceProxy_ = nullptr;
     sptr<WMSDeathRecipient> wmsDeath_ = nullptr;
     bool isProxyValid_ { false };
