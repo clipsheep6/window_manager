@@ -284,6 +284,8 @@ private:
     void GetNewPiPRect(const uint32_t displayWidth, const uint32_t displayHeight, Rect& rect);
     void ProcessUpdatePiPRect(SizeChangeReason reason);
 
+    WSError HandleCastScreenEvent(SessionInfo info, sptr<SceneSession> sceneSession);
+
     NotifySessionRectChangeFunc sessionRectChangeFunc_;
     static wptr<SceneSession> enterSession_;
     static std::mutex enterSessionMutex_;
