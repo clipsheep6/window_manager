@@ -806,7 +806,6 @@ int SceneSessionManagerStub::HandleGetVisibilityWindowInfo(MessageParcel& data, 
 
 int SceneSessionManagerStub::HandleAddExtensionWindowStageToSCB(MessageParcel &data, MessageParcel &reply)
 {
-    TLOGI(WmsLogTag::WMS_UIEXT, "run HandleAddExtensionWindowStageToSCB!");
     sptr<IRemoteObject> sessionStageObject = data.ReadRemoteObject();
     sptr<ISessionStage> sessionStage = iface_cast<ISessionStage>(sessionStageObject);
     int32_t persistentId = data.ReadInt32();
