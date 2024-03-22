@@ -907,28 +907,6 @@ void WindowSceneSessionImpl::SetDefaultProperty()
     }
 }
 
-WSError WindowSceneSessionImpl::SetActive(bool active)
-{
-    WLOGFI("[WMSCom] active status: %{public}d", active);
-    if (!WindowHelper::IsMainWindow(GetType())) {
-        if (hostSession_ == nullptr) {
-            WLOGFD("hostSession_ nullptr");
-            return WSError::WS_ERROR_INVALID_WINDOW;
-        }
-        WSError ret = hostSession_->UpdateActiveStatus(active);
-        if (ret != WSError::WS_OK) {
-            return ret;
-        }
-    }
-    if (active) {
-        NotifyAfterActive();
-        RefreshNoInteractionTimeoutMonitor(-1);
-    } else {
-        NotifyAfterInactive();
-    }
-    return WSError::WS_OK;
-}
-
 void WindowSceneSessionImpl::DestroySubWindow()
 {
     const int32_t& parentPersistentId = property_->GetParentPersistentId();
@@ -1123,7 +1101,8 @@ void WindowSceneSessionImpl::UpdateFloatingWindowSizeBySizeLimits(uint32_t& widt
     // get new limit config with the settings of system and app
     const auto& sizeLimits = property_->GetWindowLimits();
     // limit minimum size of floating (not system type) window
-    if (!WindowHelper::IsSystemWindow(property_->GetWindowType())) {
+    if ((!WindowHelper::IsSystemWindow(property_->GetWindowType())) ||
+        (property_->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG)) {
         width = std::max(sizeLimits.minWidth_, width);
         height = std::max(sizeLimits.minHeight_, height);
     }
@@ -1164,6 +1143,12 @@ WMError WindowSceneSessionImpl::Resize(uint32_t width, uint32_t height)
     }
     if (property_->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
         TLOGW(WmsLogTag::WMS_LAYOUT, "Unsupported operation for pip window");
+        return WMError::WM_ERROR_INVALID_OPERATION;
+    }
+
+    if (GetMode() != WindowMode::WINDOW_MODE_FLOATING) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, "Unsupport operation for full screen window. WindowId: %{public}d",
+            GetWindowId());
         return WMError::WM_ERROR_INVALID_OPERATION;
     }
     // Float camera window has special limits

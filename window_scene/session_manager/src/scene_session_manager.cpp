@@ -1705,6 +1705,20 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
         return WSError::WS_ERROR_NOT_SYSTEM_APP;
     }
 
+    if (SessionPermission::IsStartedByUIExtension() &&
+        property->GetWindowType() == WindowType::WINDOW_TYPE_APP_SUB_WINDOW) {
+        auto extensionParentSession = GetSceneSession(property->GetParentPersistentId());
+        SessionInfo sessionInfo = extensionParentSession->GetSessionInfo();
+        AAFwk::UIExtensionHostInfo hostInfo;
+        AAFwk::AbilityManagerClient::GetInstance()->GetUIExtensionRootHostInfo(token, hostInfo);
+        if (sessionInfo.bundleName_ != hostInfo.elementName_.GetBundleName()) {
+            WLOGE("The hostWindow is not thie parentwindow ! parentwindow bundleName: %{public}s, "
+                "hostwindow bundleName: %{public}s", sessionInfo.bundleName_.c_str(),
+                hostInfo.elementName_.GetBundleName().c_str());
+            return WSError::WS_ERROR_INVALID_WINDOW;
+        }
+    }
+
     // WINDOW_TYPE_SYSTEM_ALARM_WINDOW has been deprecated, will be deleted after 5 versions.
     if (property->GetWindowType() == WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW) {
         WLOGFE("The alarm window has been deprecated!");
@@ -3641,7 +3655,7 @@ WSError SceneSessionManager::RequestSessionFocusImmediately(int32_t persistentId
 
 WSError SceneSessionManager::RequestSessionFocus(int32_t persistentId, bool byForeground)
 {
-    TLOGI(WmsLogTag::WMS_FOCUS, "RequestSessionFocus, id: %{public}d, by foreground: %{public}d",
+    TLOGD(WmsLogTag::WMS_FOCUS, "RequestSessionFocus, id: %{public}d, by foreground: %{public}d",
         persistentId, byForeground);
     WSError basicCheckRet = RequestFocusBasicCheck(persistentId);
     if (basicCheckRet != WSError::WS_OK) {
@@ -3679,7 +3693,7 @@ WSError SceneSessionManager::RequestSessionFocus(int32_t persistentId, bool byFo
 
 WSError SceneSessionManager::RequestSessionUnfocus(int32_t persistentId)
 {
-    TLOGI(WmsLogTag::WMS_FOCUS, "RequestSessionUnfocus, id: %{public}d", persistentId);
+    TLOGD(WmsLogTag::WMS_FOCUS, "RequestSessionUnfocus, id: %{public}d", persistentId);
     if (persistentId == INVALID_SESSION_ID) {
         WLOGFE("id is invalid");
         return WSError::WS_ERROR_INVALID_SESSION;
