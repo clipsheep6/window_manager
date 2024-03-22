@@ -245,25 +245,6 @@ enum class Rotation : uint32_t {
     ROTATION_270,
 };
 
-/**
- * @brief Enumerates orientations.
- */
-enum class Orientation : uint32_t {
-    BEGIN = 0,
-    UNSPECIFIED = BEGIN,
-    VERTICAL = 1,
-    HORIZONTAL = 2,
-    REVERSE_VERTICAL = 3,
-    REVERSE_HORIZONTAL = 4,
-    SENSOR = 5,
-    SENSOR_VERTICAL = 6,
-    SENSOR_HORIZONTAL = 7,
-    AUTO_ROTATION_RESTRICTED = 8,
-    AUTO_ROTATION_PORTRAIT_RESTRICTED = 9,
-    AUTO_ROTATION_LANDSCAPE_RESTRICTED = 10,
-    LOCKED = 11,
-    END = LOCKED,
-};
 
 /**
  * @brief Enumerates display orientations.

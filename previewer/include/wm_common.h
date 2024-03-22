@@ -245,31 +245,6 @@ enum class WindowFlag : uint32_t {
     WINDOW_FLAG_END = 1 << 5,
 };
 
-/**
- * @brief Enumerates window size change reason.
- */
-enum class WindowSizeChangeReason : uint32_t {
-    UNDEFINED = 0,
-    MAXIMIZE,
-    RECOVER,
-    ROTATION,
-    DRAG,
-    DRAG_START,
-    DRAG_END,
-    RESIZE,
-    MOVE,
-    HIDE,
-    TRANSFORM,
-    CUSTOM_ANIMATION_SHOW,
-    FULL_TO_SPLIT,
-    SPLIT_TO_FULL,
-    FULL_TO_FLOATING,
-    FLOATING_TO_FULL,
-    PIP_START,
-    PIP_SHOW,
-    PIP_RATIO_CHANGE,
-    END,
-};
 
 /**
  * @brief Enumerates layout mode of window.
@@ -395,6 +370,7 @@ public:
                parcel.WriteFloat(rotationX_) && parcel.WriteFloat(rotationY_) && parcel.WriteFloat(rotationZ_) &&
                parcel.WriteFloat(translateX_) && parcel.WriteFloat(translateY_) && parcel.WriteFloat(translateZ_);
     }
+
 
     void Unmarshalling(Parcel& parcel)
     {
