@@ -42,6 +42,8 @@ namespace Rosen {
 namespace {
 template<typename T1, typename T2, typename Ret>
 using EnableIfSame = typename std::enable_if<std::is_same_v<T1, T2>, Ret>::type;
+template<typename T1, typename T2>
+using EnableIfSameSample = typename std::enable_if<std::is_same_v<T1, T2>, std::vector<sptr<T2>>>::type;
 }
 class WindowSessionImpl : public Window, public virtual SessionStageStub {
 public:
@@ -282,7 +284,7 @@ private:
     template<typename T>
     EnableIfSame<T, IWindowVisibilityChangedListener, std::vector<IWindowVisibilityListenerSptr>> GetListeners();
     template<typename T>
-    EnableIfSame<T, IWindowNoInteractionListener, std::vector<IWindowNoInteractionListenerSptr>> GetListeners();
+    EnableIfSameSample<T, IWindowNoInteractionListener> GetListeners();
     template<typename T>
     EnableIfSame<T, IWindowTitleButtonRectChangedListener,
         std::vector<sptr<IWindowTitleButtonRectChangedListener>>> GetListeners();

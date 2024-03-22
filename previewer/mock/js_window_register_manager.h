@@ -21,6 +21,7 @@
 #include "native_engine/native_value.h"
 #include "refbase.h"
 #include "window.h"
+#include "js_window_utils.h"
 namespace OHOS {
 namespace Rosen {
 enum class CaseType {
@@ -32,10 +33,10 @@ class JsWindowRegisterManager {
 public:
     JsWindowRegisterManager();
     ~JsWindowRegisterManager();
-    WmErrorCode RegisterListener(sptr<Window> window, std::string type,
-        CaseType caseType, napi_env env, napi_value value);
-    WmErrorCode UnregisterListener(sptr<Window> window, std::string type,
-        CaseType caseType, napi_env env, napi_value value);
+    WmErrorCode RegisterListener(sptr<Window> window, CaseType caseType,
+        const JsWindowListenerInfo& listenerInfo);
+    WmErrorCode UnregisterListener(sptr<Window> window, CaseType caseType,
+        const JsWindowListenerInfo& listenerInfo);
 };
 } // namespace Rosen
 } // namespace OHOS

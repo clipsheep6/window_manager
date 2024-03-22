@@ -84,7 +84,11 @@ ohos_shared_library("embeddablewindowstage_kit") {
     "../../../../resources/config/build:coverage_flags",
   ]
 
-  include_dirs = [ "embeddable_window_stage" ]
+  include_dirs = [
+    "embeddable_window_stage",
+    "../window_runtime/window_napi",
+  ]
+
   deps = [
     "../../../../utils:libwmutil",
     "../../../../wm:libwm",
