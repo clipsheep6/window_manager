@@ -2045,7 +2045,12 @@ WMError WindowSessionImpl::UnregisterWindowNoInteractionListener(const IWindowNo
 {
     WLOGFD("Start to unregister window no interaction listener.");
     std::lock_guard<std::recursive_mutex> lockListener(windowNoInteractionListenerMutex_);
-    return UnregisterListener(windowNoInteractionListeners_[GetPersistentId()], listener);
+    WMError ret = UnregisterListener(windowNoInteractionListeners_[GetPersistentId()], listener);
+    if (windowNoInteractionListeners_[GetPersistentId()].empty()) {
+        noInteractionTimeout_ = 0;
+        lastInteractionEventId_ = -1;
+    }
+    return ret;
 }
 
 template<typename T>
@@ -2511,6 +2516,10 @@ void WindowSessionImpl::NotifyTransformChange(const Transform& transform)
 
 void WindowSessionImpl::RefreshNoInteractionTimeoutMonitor(int32_t eventId)
 {
+    if (noInteractionTimeout_ <= 0) {
+        return;
+    }
+    
     this->lastInteractionEventId_ = eventId;
     auto task = [sessionWptr = wptr(this), eventId]() {
         auto session = sessionWptr.promote();

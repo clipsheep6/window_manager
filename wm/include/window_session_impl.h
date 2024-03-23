@@ -337,7 +337,7 @@ private:
     sptr<IAceAbilityHandler> aceAbilityHandler_;
 
     int32_t lastInteractionEventId_ { -1 };
-    int32_t noInteractionTimeout_ { 15000 }; // ms
+    int32_t noInteractionTimeout_ { 0 }; // ms
 
     WindowSizeChangeReason lastSizeChangeReason_ = WindowSizeChangeReason::END;
     bool postTaskDone_ = false;
