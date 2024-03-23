@@ -79,6 +79,16 @@ enum class LifeCycleEventType : uint32_t {
     DESTROYED,
 };
 
+/**
+ * @struct JsWindowListenerInfo.
+ */
+struct JsWindowListenerInfo {
+    napi_env env;
+    std::string type;
+    napi_value callback;
+    std::vector<napi_value> parameters;
+};
+
 const std::map<WindowType, ApiWindowType> NATIVE_JS_TO_WINDOW_TYPE_MAP {
     { WindowType::WINDOW_TYPE_APP_SUB_WINDOW,      ApiWindowType::TYPE_APP               },
     { WindowType::WINDOW_TYPE_DIALOG,              ApiWindowType::TYPE_DIALOG            },
