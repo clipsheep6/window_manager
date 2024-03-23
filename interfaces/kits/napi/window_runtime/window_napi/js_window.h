@@ -112,6 +112,7 @@ public:
     static napi_value SetWindowLimits(napi_env env, napi_callback_info info);
     static napi_value SetSpecificSystemBarEnabled(napi_env env, napi_callback_info info);
     static napi_value SetSingleFrameComposerEnabled(napi_env env, napi_callback_info info);
+    static napi_value SetTouchableAreas(napi_env env, napi_callback_info info);
 
     // colorspace, gamut
     static napi_value IsSupportWideGamut(napi_env env, napi_callback_info info);
@@ -148,6 +149,8 @@ private:
     static bool ParseRotateOption(napi_env env, napi_value jsObject, Transform& trans);
     static bool ParseTranslateOption(napi_env env, napi_value jsObject, Transform& trans);
     static bool ParseWindowLimits(napi_env env, napi_value jsObject, WindowLimits& windowLimits);
+    static bool ParseTouchableArea(napi_env env, napi_value jsObject, const Rect& windowRect, Rect& touchableRect);
+    static WmErrorCode ParseSetTouchableAreas(napi_env env, napi_value jsObject, const Rect& windowRect, std::vector<Rect>& touchableAreas);
     napi_value LoadContentScheduleOld(napi_env env, napi_callback_info info, bool isLoadedByName);
     napi_value LoadContentScheduleNew(napi_env env, napi_callback_info info, bool isLoadedByName);
     napi_value HideWindowFunction(napi_env env, napi_callback_info info);
@@ -200,6 +203,7 @@ private:
     napi_value OnSetWindowDecorHeight(napi_env env, napi_callback_info info);
     napi_value OnGetWindowDecorHeight(napi_env env, napi_callback_info info);
     napi_value OnGetTitleButtonRect(napi_env env, napi_callback_info info);
+    napi_value OnSetTouchableAreas(napi_env env, napi_callback_info info);
 
     // colorspace, gamut
     napi_value OnIsSupportWideGamut(napi_env env, napi_callback_info info);
