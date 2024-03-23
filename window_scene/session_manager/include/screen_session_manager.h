@@ -226,6 +226,8 @@ public:
     void NotifyAvailableAreaChanged(DMRect area);
     void NotifyFoldToExpandCompletion(bool foldToExpand) override;
 
+    VirtualScreenFlag GetVirtualScreenFlag(ScreenId screenId) override;
+    DMError SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag screenFlag) override;
 protected:
     ScreenSessionManager();
     virtual ~ScreenSessionManager() = default;
@@ -244,7 +246,8 @@ private:
     void CreateScreenProperty(ScreenId screenId, ScreenProperty& property);
     sptr<ScreenSession> GetScreenSessionInner(ScreenId screenId, ScreenProperty property);
     void FreeDisplayMirrorNodeInner(const sptr<ScreenSession> mirrorSession);
-
+    DMError MirrorUniqueSwitch(const std::vector<ScreenId>& screenIds);
+    void MirrorSwitchNotify(ScreenId screenId);
     ScreenId GetDefaultScreenId();
 
     void NotifyDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
