@@ -428,6 +428,7 @@ protected:
     std::list<sptr<SessionLifeCycleTask>> lifeCycleTaskQueue_;
     bool isActive_ = false;
     bool isSystemActive_ = false;
+    bool isDialogWindowShow_ = false;
     WSRect winRect_;
     WSRectF bounds_;
     float offsetX_ = 0.0f;
