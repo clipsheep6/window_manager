@@ -39,6 +39,8 @@
 #include "window_manager_hilog.h"
 #include "wm_math.h"
 #include <running_lock.h>
+#include "screen_manager.h"
+#include "screen.h"
 #include "singleton_container.h"
 
 namespace OHOS::Rosen {
@@ -1977,6 +1979,7 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
             ", windowMode: %{public}d, caller persistentId: %{public}d",
             info.callState_, info.persistentId_, info.callingTokenId_, info.uiAbilityId_,
             info.windowMode, info.callerPersistentId_);
+        session->HandleCastScreenConnection(info, session);
         if (session->pendingSessionActivationFunc_) {
             session->pendingSessionActivationFunc_(info);
         }
@@ -1984,6 +1987,32 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
     };
     PostTask(task, "PendingSessionActivation");
     return WSError::WS_OK;
+}
+
+void SceneSession::HandleCastScreenConnection(SessionInfo& info, sptr<SceneSession> session)
+{
+    auto displayInfo = Rosen::ScreenManager::GetInstance().GetScreenById(info.screenId_);
+    if (displayInfo == nullptr || displayInfo->GetName() != "CastEngine") {
+        return;
+    }
+    auto flag = Rosen::ScreenManager::GetInstance().GetVirtualScreenFlag(info.screenId_);
+    if (flag != VirtualScreenFlag::CAST) {
+        return;
+    }
+    TLOGI(WmsLogTag::WMS_LIFE, "et exist session state :%{public}d persistentId:%{public}d",
+        session->GetSessionState(), info.callerPersistentId_);
+    if (session->GetSessionState() != SessionState::STATE_FOREGROUND &&
+        session->GetSessionState() != SessionState::STATE_ACTIVE) {
+        TLOGI(WmsLogTag::WMS_LIFE, "Get exist session state is not foreground");
+        return;
+    }
+    info.isCastSession_ = true;
+    std::vector<uint64_t> mirrorIds { info.screenId_ };
+    Rosen::DMError ret = Rosen::ScreenManager::GetInstance().MakeUniqueScreen(mirrorIds);
+    if (ret != Rosen::DMError::DM_OK) {
+        TLOGI(WmsLogTag::WMS_LIFE, "MakeUniqueScreen failed,ret: %{public}d", ret);
+        return;
+    }
 }
 
 WSError SceneSession::TerminateSession(const sptr<AAFwk::SessionInfo> abilitySessionInfo)
