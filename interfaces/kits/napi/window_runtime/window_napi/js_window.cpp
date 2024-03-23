@@ -47,6 +47,7 @@ namespace {
     constexpr Rect g_emptyRect = {0, 0, 0, 0};
     constexpr int32_t MIN_DECOR_HEIGHT = 37;
     constexpr int32_t MAX_DECOR_HEIGHT = 112;
+    constexpr int32_t MAX_TOUCHABLEAREAS = 10;
 }
 
 static thread_local std::map<std::string, std::shared_ptr<NativeReference>> g_jsWindowMap;
@@ -468,6 +469,13 @@ napi_value JsWindow::SetTouchable(napi_env env, napi_callback_info info)
     WLOGI("SetTouchable");
     JsWindow* me = CheckParamsAndGetThis<JsWindow>(env, info);
     return (me != nullptr) ? me->OnSetTouchable(env, info) : nullptr;
+}
+
+napi_value JsWindow::SetTouchableAreas(napi_env env, napi_callback_info info)
+{
+    WLOGI("SetTouchableAreas");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(env, info);
+    return (me != nullptr) ? me->OnSetTouchableAreas(env, info) : nullptr;
 }
 
 napi_value JsWindow::SetResizeByDragEnabled(napi_env env, napi_callback_info info)
@@ -3237,6 +3245,80 @@ napi_value JsWindow::OnSetTouchable(napi_env env, napi_callback_info info)
     return result;
 }
 
+bool JsWindow::ParseTouchableArea(napi_env env, napi_value jsObject,
+    const Rect& windowRect, Rect& touchableRect)
+{
+    return trun;
+}
+
+WmErrorCode JsWindow::ParseSetTouchableAreas(napi_env env, napi_value jsObject,
+    const Rect& windowRect, std::vector<Rect>& touchableAreas)
+{
+    WMError errCode = WMError::WM_OK;
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc < 1) {
+        WLOGFE("ParseSetTouchableAreas Argc is invalid: %{public}zu", argc);
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+        return errCode;     
+    }
+    if (GetType(env, argv[0]) == napi_function) {
+        WLOGFE("ParseSetTouchableAreas GetType error");
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+        return errCode; 
+    }
+    napi_value nativeArray =  argv[0];
+    if (nativeArray == nullptr) {
+        TLOGE(WmsLogTag::WMS_IMMS, "ParseSetTouchableAreas Failed to convert parameter");
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+        return false;
+    }
+    uint32_t size = 0;
+    napi_get_array_length(env, nativeArray, &size);
+    if (size > MAX_TOUCHABLEAREAS) {
+        TLOGE(WmsLogTag::WMS_IMMS, "ParseSetTouchableAreas size error");
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+        return false;
+    }
+    for (uint32_t i = 0; i < size; i++) {
+        napi_value getElementValue = nullptr;
+        napi_get_element(env, nativeArray, i, &getElementValue);
+        Rect touchableArea;
+        if (ParseTouchableArea(env, getElementValue, windowRect, touchableArea)) {
+            touchableAreas.emplace_back(touchableArea);
+        } else {
+            errCode = WMError::WM_ERROR_INVALID_PARAM;
+            break;
+        }
+        
+    }
+    return errCode;
+}
+
+napi_value JsWindow::OnSetTouchableAreas(napi_env env, napi_callback_info info)
+{
+    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("OnSetTouchableAreas permission denied!");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_NOT_SYSTEM_APP);
+    }
+
+    WmErrorCode errCode = WmErrorCode::WM_OK;
+    wptr<Window> weakToken(windowToken_);
+    auto window = weakToken.promote();
+    if (window == nullptr) {
+        WLOGFE("window is nullptr");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
+    }
+    Rect windowRect = window->GetRect();
+    std::vector<Rect> touchableAreas;
+    errCode = ParseSetTouchableAreas(env, info, windowRect, touchableAreas);
+    if (errCode != WmErrorCode::WM_OK) {
+        return NapiThrowError(env, errCode);
+    }
+
+}
+
 napi_value JsWindow::OnSetResizeByDragEnabled(napi_env env, napi_callback_info info)
 {
     WMError errCode = WMError::WM_OK;
@@ -5238,6 +5320,7 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "setWindowDecorVisible", moduleName, JsWindow::SetWindowDecorVisible);
     BindNativeFunction(env, object, "setWindowDecorHeight", moduleName, JsWindow::SetWindowDecorHeight);
     BindNativeFunction(env, object, "getWindowDecorHeight", moduleName, JsWindow::GetWindowDecorHeight);
+    BindNativeFunction(env, object, "setTouchableAreas", moduleName, JsWindow::SetTouchableAreas);
     BindNativeFunction(env, object, "getTitleButtonRect", moduleName, JsWindow::GetTitleButtonRect);
 }
 }  // namespace Rosen
