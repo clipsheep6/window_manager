@@ -349,7 +349,9 @@ void WindowSceneSessionImpl::UpdateWindowState()
             (property_->GetWindowFlags()) & (static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID)));
         GetConfigurationFromAbilityInfo();
     } else {
-        UpdateWindowSizeLimits();
+        UpdateWindowSizeLimits({
+            UINT32_MAX, UINT32_MAX, 0, 0, FLT_MAX, 0.0f
+        });
         if (WindowHelper::IsSubWindow(GetType()) && property_->GetDragEnabled()) {
             WLOGFD("sync window limits to server side in order to make size limits work while resizing");
             UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_WINDOW_LIMITS);
@@ -545,12 +547,11 @@ void WindowSceneSessionImpl::GetConfigurationFromAbilityInfo()
     }
     auto abilityInfo = abilityContext->GetAbilityInfo();
     if (abilityInfo != nullptr) {
-        property_->SetWindowLimits({
+        UpdateWindowSizeLimits({
             abilityInfo->maxWindowWidth, abilityInfo->maxWindowHeight,
             abilityInfo->minWindowWidth, abilityInfo->minWindowHeight,
             static_cast<float>(abilityInfo->maxWindowRatio), static_cast<float>(abilityInfo->minWindowRatio)
         });
-        UpdateWindowSizeLimits();
         UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_WINDOW_LIMITS);
         // get support modes configuration
         uint32_t modeSupportInfo = WindowHelper::ConvertSupportModesToSupportInfo(abilityInfo->windowModes);
@@ -615,67 +616,64 @@ WindowLimits WindowSceneSessionImpl::GetSystemSizeLimits(uint32_t displayWidth,
     return systemLimits;
 }
 
-void WindowSceneSessionImpl::UpdateWindowSizeLimits()
+void WindowSceneSessionImpl::UpdateWindowSizeLimits(WindowLimits customizedLimitsVp)
 {
     auto display = SingletonContainer::Get<DisplayManager>().GetDisplayById(property_->GetDisplayId());
-    if (display == nullptr || display->GetDisplayInfo() == nullptr) {
+    if (display == nullptr || display->GetWidth() == 0 || display->GetHeight() == 0 ||
+        display->GetDisplayInfo() == nullptr) {
         return;
     }
     uint32_t displayWidth = static_cast<uint32_t>(display->GetWidth());
     uint32_t displayHeight = static_cast<uint32_t>(display->GetHeight());
-    if (displayWidth == 0 || displayHeight == 0) {
-        return;
-    }
-
     float virtualPixelRatio = display->GetDisplayInfo()->GetVirtualPixelRatio();
-    const auto& systemLimits = GetSystemSizeLimits(displayWidth, displayHeight, virtualPixelRatio);
-    const auto& customizedLimits = property_->GetWindowLimits();
-
-    WindowLimits newLimits = systemLimits;
+    WindowLimits newLimits = GetSystemSizeLimits(displayWidth, displayHeight, virtualPixelRatio);
 
     // configured limits of floating window
-    uint32_t configuredMaxWidth = static_cast<uint32_t>(customizedLimits.maxWidth_ * virtualPixelRatio);
-    uint32_t configuredMaxHeight = static_cast<uint32_t>(customizedLimits.maxHeight_ * virtualPixelRatio);
-    uint32_t configuredMinWidth = static_cast<uint32_t>(customizedLimits.minWidth_ * virtualPixelRatio);
-    uint32_t configuredMinHeight = static_cast<uint32_t>(customizedLimits.minHeight_ * virtualPixelRatio);
+    uint32_t configuredMaxWidth = static_cast<uint32_t>(std::round(customizedLimitsVp.maxWidth_ * virtualPixelRatio));
+    uint32_t configuredMaxHeight = static_cast<uint32_t>(std::round(customizedLimitsVp.maxHeight_ * virtualPixelRatio));
+    uint32_t configuredMinWidth = static_cast<uint32_t>(std::round(customizedLimitsVp.minWidth_ * virtualPixelRatio));
+    uint32_t configuredMinHeight = static_cast<uint32_t>(std::round(customizedLimitsVp.minHeight_ * virtualPixelRatio));
 
     // calculate new limit size
-    if (systemLimits.minWidth_ <= configuredMaxWidth && configuredMaxWidth <= systemLimits.maxWidth_) {
+    if (newLimits.minWidth_ <= configuredMaxWidth && configuredMaxWidth <= newLimits.maxWidth_) {
         newLimits.maxWidth_ = configuredMaxWidth;
     }
-    if (systemLimits.minHeight_ <= configuredMaxHeight && configuredMaxHeight <= systemLimits.maxHeight_) {
+    if (newLimits.minHeight_ <= configuredMaxHeight && configuredMaxHeight <= newLimits.maxHeight_) {
         newLimits.maxHeight_ = configuredMaxHeight;
     }
-    if (systemLimits.minWidth_ <= configuredMinWidth && configuredMinWidth <= newLimits.maxWidth_) {
+    if (newLimits.minWidth_ <= configuredMinWidth && configuredMinWidth <= newLimits.maxWidth_) {
         newLimits.minWidth_ = configuredMinWidth;
     }
-    if (systemLimits.minHeight_ <= configuredMinHeight && configuredMinHeight <= newLimits.maxHeight_) {
+    if (newLimits.minHeight_ <= configuredMinHeight && configuredMinHeight <= newLimits.maxHeight_) {
         newLimits.minHeight_ = configuredMinHeight;
     }
 
     // calculate new limit ratio
-    newLimits.maxRatio_ = static_cast<float>(newLimits.maxWidth_) / static_cast<float>(newLimits.minHeight_);
-    newLimits.minRatio_ = static_cast<float>(newLimits.minWidth_) / static_cast<float>(newLimits.maxHeight_);
-    if (!MathHelper::GreatNotEqual(newLimits.minRatio_, customizedLimits.maxRatio_) &&
-        !MathHelper::GreatNotEqual(customizedLimits.maxRatio_, newLimits.maxRatio_)) {
-        newLimits.maxRatio_ = customizedLimits.maxRatio_;
+    float maxRatio = static_cast<float>(newLimits.maxWidth_) / static_cast<float>(newLimits.minHeight_);
+    float minRatio = static_cast<float>(newLimits.minWidth_) / static_cast<float>(newLimits.maxHeight_);
+    if (!MathHelper::GreatNotEqual(minRatio, customizedLimitsVp.maxRatio_) &&
+        !MathHelper::GreatNotEqual(customizedLimitsVp.maxRatio_, maxRatio)) {
+        maxRatio = customizedLimitsVp.maxRatio_;
     }
-    if (!MathHelper::GreatNotEqual(newLimits.minRatio_, customizedLimits.minRatio_) &&
-        !MathHelper::GreatNotEqual(customizedLimits.minRatio_, newLimits.maxRatio_)) {
-        newLimits.minRatio_ = customizedLimits.minRatio_;
+    if (!MathHelper::GreatNotEqual(minRatio, customizedLimitsVp.minRatio_) &&
+        !MathHelper::GreatNotEqual(customizedLimitsVp.minRatio_, maxRatio)) {
+        minRatio = customizedLimitsVp.minRatio_;
     }
 
     // recalculate limit size by new ratio
-    uint32_t newMaxWidth = static_cast<uint32_t>(static_cast<float>(newLimits.maxHeight_) * newLimits.maxRatio_);
+    uint32_t newMaxWidth = static_cast<uint32_t>(static_cast<float>(newLimits.maxHeight_) * maxRatio);
     newLimits.maxWidth_ = std::min(newMaxWidth, newLimits.maxWidth_);
-    uint32_t newMinWidth = static_cast<uint32_t>(static_cast<float>(newLimits.minHeight_) * newLimits.minRatio_);
+    uint32_t newMinWidth = static_cast<uint32_t>(static_cast<float>(newLimits.minHeight_) * minRatio);
     newLimits.minWidth_ = std::max(newMinWidth, newLimits.minWidth_);
-    uint32_t newMaxHeight = static_cast<uint32_t>(static_cast<float>(newLimits.maxWidth_) / newLimits.minRatio_);
+    uint32_t newMaxHeight = static_cast<uint32_t>(static_cast<float>(newLimits.maxWidth_) / minRatio);
     newLimits.maxHeight_ = std::min(newMaxHeight, newLimits.maxHeight_);
-    uint32_t newMinHeight = static_cast<uint32_t>(static_cast<float>(newLimits.minWidth_) / newLimits.maxRatio_);
+    uint32_t newMinHeight = static_cast<uint32_t>(static_cast<float>(newLimits.minWidth_) / maxRatio);
     newLimits.minHeight_ = std::max(newMinHeight, newLimits.minHeight_);
+    newLimits.maxRatio_ = customizedLimitsVp.maxRatio_;
+    newLimits.minRatio_ = customizedLimitsVp.minRatio_;
 
     property_->SetWindowLimits(newLimits);
+    property_->SetLastLimitsVpr(virtualPixelRatio);
 }
 
 void WindowSceneSessionImpl::UpdateSubWindowStateAndNotify(int32_t parentPersistentId, const WindowState& newState)
@@ -2727,10 +2725,9 @@ WMError WindowSceneSessionImpl::SetWindowLimits(WindowLimits& windowLimits)
     maxWidth = static_cast<uint32_t>(ceil(maxWidth / vpr));
     maxHeight = static_cast<uint32_t>(ceil(maxHeight / vpr));
 
-    property_->SetWindowLimits({
+    UpdateWindowSizeLimits({
         maxWidth, maxHeight, minWidth, minHeight, customizedLimits.maxRatio_, customizedLimits.minRatio_
     });
-    UpdateWindowSizeLimits();
     WMError ret = UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_WINDOW_LIMITS);
     if (ret != WMError::WM_OK) {
         WLOGFE("update window proeprty failed! id: %{public}u.", GetWindowId());
@@ -2805,6 +2802,38 @@ WMError WindowSceneSessionImpl::SetTextFieldAvoidInfo(double textFieldPositionY,
     property_->SetTextFieldHeight(textFieldHeight);
     UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_TEXTFIELD_AVOID_INFO);
     return WMError::WM_OK;
+}
+
+void WindowSceneSessionImpl::UpdateDensity()
+{
+    const auto& customizedLimits = property_->GetWindowLimits();
+    uint32_t minWidth = customizedLimits.minWidth_;
+    uint32_t minHeight = customizedLimits.minHeight_;
+    uint32_t maxWidth = customizedLimits.maxWidth_;
+    uint32_t maxHeight = customizedLimits.maxHeight_;
+    float vpr = property_->GetLastLimitsVpr();
+    if (MathHelper::NearZero(vpr)) {
+        WLOGFW("update window proeprty failed, because of vpr near zero: %{public}f", vpr);
+        return;
+    }
+    minWidth = static_cast<uint32_t>(std::round(minWidth / vpr));
+    minHeight = static_cast<uint32_t>(std::round(minHeight / vpr));
+    maxWidth = static_cast<uint32_t>(std::round(maxWidth / vpr));
+    maxHeight = static_cast<uint32_t>(std::round(maxHeight / vpr));
+    UpdateWindowSizeLimits({
+        maxWidth, maxHeight, minWidth, minHeight, customizedLimits.maxRatio_, customizedLimits.minRatio_
+    });
+
+    UpdateNewSize();
+
+    auto preRect = GetRect();
+    UpdateViewportConfig(preRect, WindowSizeChangeReason::UNDEFINED);
+
+    WMError ret = UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_WINDOW_LIMITS);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("update window proeprty failed! id: %{public}u.", GetWindowId());
+        return;
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

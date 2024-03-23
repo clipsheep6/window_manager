@@ -749,5 +749,15 @@ bool WindowSessionProperty::GetExtensionFlag() const
 {
     return isExtensionFlag_;
 }
+
+void WindowSessionProperty::SetLastLimitsVpr(float vpr)
+{
+    lastVpr_ = vpr;
+}
+
+float WindowSessionProperty::GetLastLimitsVpr() const
+{
+    return lastVpr_;
+}
 } // namespace Rosen
 } // namespace OHOS
