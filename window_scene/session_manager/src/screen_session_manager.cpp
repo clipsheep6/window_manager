@@ -164,7 +164,7 @@ void ScreenSessionManager::Init()
     }
 
     RegisterScreenChangeListener();
-    RegisterRefreshRateModeChangeListener();
+    RegisterRefreshRateChangeListener();
 
     bool isPcDevice = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
     if (isPcDevice) {
@@ -294,14 +294,14 @@ void ScreenSessionManager::RegisterScreenChangeListener()
     }
 }
 
-void ScreenSessionManager::RegisterRefreshRateModeChangeListener()
+void ScreenSessionManager::RegisterRefreshRateChangeListener()
 {
     WLOGFI("Register refreshrate mode change listener.");
     auto res = rsInterface_.RegisterHgmRefreshRateModeChangeCallback(
-        [this](int32_t refreshRateMode) { OnHgmRefreshRateModeChange(refreshRateMode); });
+        [this](int32_t refreshRateName) { OnHgmRefreshRateChange(refreshRateName); });
     if (res != StatusCode::SUCCESS) {
         WLOGFE("Register refreshrate mode change listener failed, retry after 50 ms.");
-        auto task = [this]() { RegisterRefreshRateModeChangeListener(); };
+        auto task = [this]() { RegisterRefreshRateChangeListener(); };
         taskScheduler_->PostAsyncTask(task, "RegisterRefreshRateModeChangeListener", 50); // Retry after 50 ms.
     }
 }
@@ -396,25 +396,15 @@ void ScreenSessionManager::OnScreenChange(ScreenId screenId, ScreenEvent screenE
     }
 }
 
-void ScreenSessionManager::OnHgmRefreshRateModeChange(int32_t refreshRateMode)
+void ScreenSessionManager::OnHgmRefreshRateChange(int32_t refreshRateName)
 {
     GetDefaultScreenId();
-    WLOGFI("Set refreshRateMode: %{public}d, defaultscreenid: %{public}" PRIu64"", refreshRateMode, defaultScreenId_);
+    WLOGFI("Set refreshRateName: %{public}d, defaultscreenid: %{public}" PRIu64"", refreshRateName, defaultScreenId_);
     uint32_t refreshRate;
-    RefreshRateMode mode = static_cast<RefreshRateMode>(refreshRateMode);
-    switch (mode) {
-        case RefreshRateMode::NORMAL :
-            refreshRate = static_cast<uint32_t>(RefreshRate::NORMAL);
-            break;
-        case RefreshRateMode::MIDDLE :
-            refreshRate = static_cast<uint32_t>(RefreshRate::MIDDLE);
-            break;
-        case RefreshRateMode::HIGH :
-            refreshRate = static_cast<uint32_t>(RefreshRate::HIGH);
-            break;
-        default:
-            refreshRate = static_cast<uint32_t>(RefreshRate::HIGH);
+    if (refreshRateName == -1) {
+        refreshRate = MaxRefreshrate::MAX_REFRESHRATE_120;
     }
+    refreshRate = static_cast<uint32_t>(refreshRateName);
     sptr<ScreenSession> screenSession = GetScreenSession(defaultScreenId_);
     if (screenSession) {
         screenSession->UpdateRefreshRate(refreshRate);
