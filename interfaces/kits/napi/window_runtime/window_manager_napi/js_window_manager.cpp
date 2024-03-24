@@ -689,10 +689,11 @@ napi_value JsWindowManager::OnToggleShownStateForAllAppWindows(napi_env env, nap
 napi_value JsWindowManager::OnRegisterWindowManagerCallback(napi_env env, napi_callback_info info)
 {
     WLOGFD("OnRegisterWindowManagerCallback");
+    constexpr size_t ARGC_MIN = 2;
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc < 2) { // 2: params num
+    if (argc < ARGC_MIN) { // 2: params num
         WLOGFE("Argc is invalid: %{public}zu", argc);
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
         return NapiGetUndefined(env);
@@ -703,14 +704,25 @@ napi_value JsWindowManager::OnRegisterWindowManagerCallback(napi_env env, napi_c
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
         return NapiGetUndefined(env);
     }
-    napi_value value = argv[1];
-    if (!NapiIsCallable(env, value)) {
-        WLOGI("Callback(argv[1]) is not callable");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
-        return NapiGetUndefined(env);
+
+    size_t cbIndex = argc - 1;
+    napi_value callback = argv[cbIndex];
+    if (!NapiIsCallable(env, callback)) {
+        WLOGI("Callback(info->argv[%{public}zu]) is not callable", cbIndex);
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
 
-    WmErrorCode ret = registerManager_->RegisterListener(nullptr, cbType, CaseType::CASE_WINDOW_MANAGER, env, value);
+    std::vector<napi_value> parameters;
+    if (argc > ARGC_MIN) {
+        size_t lastParameterIndex = cbIndex - 1;
+        for (size_t index = 1; index <= lastParameterIndex; index++) {
+            parameters.push_back(argv[index]);
+        }
+    }
+
+    JsWindowListenerInfo listenerInfo = {.env = env, .type = cbType, .callback = callback,
+        .parameters = parameters};
+    WmErrorCode ret = registerManager_->RegisterListener(nullptr, CaseType::CASE_WINDOW_MANAGER, listenerInfo);
     if (ret != WmErrorCode::WM_OK) {
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(ret)));
         return NapiGetUndefined(env);
@@ -736,19 +748,14 @@ napi_value JsWindowManager::OnUnregisterWindowManagerCallback(napi_env env, napi
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
         return NapiGetUndefined(env);
     }
-
-    napi_value value = nullptr;
-    WmErrorCode ret = WmErrorCode::WM_OK;
-    if (argc == 1) {
-        ret = registerManager_->UnregisterListener(nullptr, cbType, CaseType::CASE_WINDOW_MANAGER, env, value);
-    } else {
-        value = argv[1];
-        if ((value == nullptr) || (!NapiIsCallable(env, value))) {
-            ret = registerManager_->UnregisterListener(nullptr, cbType, CaseType::CASE_WINDOW_MANAGER, env, nullptr);
-        } else {
-            ret = registerManager_->UnregisterListener(nullptr, cbType, CaseType::CASE_WINDOW_MANAGER, env, value);
+    JsWindowListenerInfo listenerInfo = {.env = env, .type = cbType, .callback = nullptr};
+    if (argc > 1) {
+        napi_value callback = argv[1];
+        if (callback != nullptr && GetType(env, callback) == napi_function) {
+            listenerInfo.callback = callback;
         }
     }
+    WmErrorCode ret = registerManager_->UnregisterListener(nullptr, CaseType::CASE_WINDOW_MANAGER, listenerInfo);
     if (ret != WmErrorCode::WM_OK) {
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(ret)));
         return NapiGetUndefined(env);

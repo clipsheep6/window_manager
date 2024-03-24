@@ -880,6 +880,17 @@ WMError WindowImpl::UnregisterWindowVisibilityChangeListener(const WindowVisibil
     return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
 }
 
+WMError WindowImpl::RegisterWindowNoInteractionListener(const IWindowNoInteractionListenerSptr& listener,
+                                                        uint32_t timeout)
+{
+    return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+}
+
+WMError WindowImpl::UnregisterWindowNoInteractionListener(const IWindowNoInteractionListenerSptr& listener)
+{
+    return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+}
+
 WmErrorCode WindowImpl::KeepKeyboardOnFocus(bool keepKeyboardFlag)
 {
     return WmErrorCode::WM_ERROR_DEVICE_NOT_SUPPORT;
