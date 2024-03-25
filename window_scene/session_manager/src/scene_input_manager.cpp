@@ -269,8 +269,6 @@ void SceneInputManager::FlushFullInfoToMMI(const std::vector<MMI::DisplayInfo>& 
             windowinfolst.append(DumpWindowInfo(windowInfo).append("  ||  "));
         }
         TLOGD(WmsLogTag::WMS_EVENT, "[EventDispatch] - %s", windowinfolst.c_str());
-    TLOGI(WmsLogTag::WMS_EVENT, "[WMSEvent] UpdateDisplayInfo windowListSize: %{public}d",
-        static_cast<int>(windowInfoList.size()));
     MMI::InputManager::GetInstance()->UpdateDisplayInfo(displayGroupInfo);
 } 
 
