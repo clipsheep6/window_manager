@@ -74,7 +74,8 @@ WMError WindowDumper::Dump(int fd, const std::vector<std::u16string>& args)
     return WMError::WM_OK;
 }
 
-void WindowDumper::DumpRectInfo(std::ostringstream& oss, const sptr<WindowNode>& windowNode) {
+void WindowDumper::DumpRectInfo(std::ostringstream& oss, const sptr<WindowNode>& windowNode)
+{
     Rect rect = windowNode->GetWindowRect();
     oss << "[ "
         << std::left << std::setw(5) << rect.posX_
@@ -171,7 +172,8 @@ bool WindowDumper::IsValidDigitString(const std::string& windowIdStr)
     return true;
 }
 
-void WindowDumper::DumpTouchHotAreas(std::ostringstream& oss, const sptr<WindowNode>& node) {
+void WindowDumper::DumpTouchHotAreas(std::ostringstream& oss, const sptr<WindowNode>& node)
+{
     oss << "TouchHotAreas: ";
     std::vector<Rect> touchHotAreas;
     node->GetTouchHotAreas(touchHotAreas);
