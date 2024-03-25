@@ -313,6 +313,15 @@ int WindowManagerService::Dump(int fd, const std::vector<std::u16string>& args)
     return PostSyncTask(task, "Dump");
 }
 
+bool GetSingleIntItem(const WindowManagerConfig::ConfigItem& item, int32_t& value)
+{
+    if (item.IsInts() && item.intsValue_ && item.intsValue_->size() == 1) {
+        value = (*item.intsValue_)[0];
+        return true;
+    }
+    return false;
+}
+
 void WindowManagerService::ConfigureWindowManagerService()
 {
     const auto& config = WindowManagerConfig::GetConfig();
@@ -326,35 +335,27 @@ void WindowManagerService::ConfigureWindowManagerService()
     if (item.IsBool()) {
         systemConfig_.isStretchable_ = item.boolValue_;
     }
+    int32_t param = -1;
     item = config["defaultWindowMode"];
-    if (item.IsInts()) {
-        auto numbers = *item.intsValue_;
-        if (numbers.size() == 1 &&
-            (numbers[0] == static_cast<int32_t>(WindowMode::WINDOW_MODE_FULLSCREEN) ||
-             numbers[0] == static_cast<int32_t>(WindowMode::WINDOW_MODE_FLOATING))) {
-            systemConfig_.defaultWindowMode_ = static_cast<WindowMode>(static_cast<uint32_t>(numbers[0]));
-            StartingWindow::SetDefaultWindowMode(systemConfig_.defaultWindowMode_);
-        }
+    if (GetSingleIntItem(item, param) &&
+        (param == static_cast<int32_t>(WindowMode::WINDOW_MODE_FULLSCREEN) ||
+         param == static_cast<int32_t>(WindowMode::WINDOW_MODE_FLOATING))) {
+        systemConfig_.defaultWindowMode_ = static_cast<WindowMode>(static_cast<uint32_t>(param));
+        StartingWindow::SetDefaultWindowMode(systemConfig_.defaultWindowMode_);
     }
     item = config["dragFrameGravity"];
-    if (item.IsInts()) {
-        auto numbers = *item.intsValue_;
-        if (numbers.size() == 1
-            && (numbers[0] == static_cast<int32_t>(Gravity::RESIZE)
-            || numbers[0] == static_cast<int32_t>(Gravity::TOP_LEFT))) {
-            windowController_->SetDragFrameGravity(static_cast<int32_t>(numbers[0]));
-        }
+    if (GetSingleIntItem(item, param) &&
+        (param == static_cast<int32_t>(Gravity::RESIZE) ||
+         param == static_cast<int32_t>(Gravity::TOP_LEFT))) {
+        windowController_->SetDragFrameGravity(static_cast<int32_t>(param));
     }
     item = config["remoteAnimation"].GetProp("enable");
     if (item.IsBool()) {
         RemoteAnimation::isRemoteAnimationEnable_ = item.boolValue_;
     }
     item = config["maxAppWindowNumber"];
-    if (item.IsInts()) {
-        auto numbers = *item.intsValue_;
-        if (numbers.size() == 1 && numbers[0] > 0) {
-            windowRoot_->SetMaxAppWindowNumber(static_cast<uint32_t>(numbers[0]));
-        }
+    if (GetSingleIntItem(item, param) && param > 0) {
+        windowRoot_->SetMaxAppWindowNumber(static_cast<uint32_t>(param));
     }
 
     ConfigHotZones(config["modeChangeHotZones"]);
@@ -367,7 +368,9 @@ void WindowManagerService::ConfigureWindowManagerService()
 
 void WindowManagerService::ConfigHotZones(const WindowManagerConfig::ConfigItem& hotZonesConfig)
 {
-    if (!hotZonesConfig.IsInts()) return;
+    if (!hotZonesConfig.IsInts()) {
+        return;
+    }
 
     const std::vector<int>& numbers = *hotZonesConfig.intsValue_;
     if (numbers.size() == 3) { // 3 hot zones
@@ -380,7 +383,9 @@ void WindowManagerService::ConfigHotZones(const WindowManagerConfig::ConfigItem&
 
 void WindowManagerService::ConfigDecor(const WindowManagerConfig::ConfigItem& decorConfig)
 {
-    if (!decorConfig.IsMap()) return;
+    if (!decorConfig.IsMap()) {
+        return;
+    }
 
     WindowManagerConfig::ConfigItem item = decorConfig.GetProp("enable");
     if (item.IsBool()) {
@@ -410,7 +415,8 @@ void WindowManagerService::ConfigDecor(const WindowManagerConfig::ConfigItem& de
     }
 }
 
-void WindowManagerService::ConfigSplitRatios(const WindowManagerConfig::ConfigItem& config) {
+void WindowManagerService::ConfigSplitRatios(const WindowManagerConfig::ConfigItem& config)
+{
     WindowManagerConfig::ConfigItem item = config["splitRatios"];
     if (item.IsFloats()) {
         windowRoot_->SetSplitRatios(*item.floatsValue_);
@@ -421,7 +427,8 @@ void WindowManagerService::ConfigSplitRatios(const WindowManagerConfig::ConfigIt
     }
 }
 
-void WindowManagerService::ConfigAnimation(const WindowManagerConfig::ConfigItem& config) {
+void WindowManagerService::ConfigAnimation(const WindowManagerConfig::ConfigItem& config)
+{
     WindowManagerConfig::ConfigItem item = config["windowAnimation"];
     if (item.IsMap()) {
         ConfigWindowAnimation(item);
@@ -443,13 +450,10 @@ void WindowManagerService::ConfigWindowAnimation(const WindowManagerConfig::Conf
     if (item.IsMap() && item.mapValue_->count("curve")) {
         windowAnimationConfig.animationTiming_.timingCurve_ = CreateCurve(item["curve"]);
     }
+    int32_t param = -1;
     item = animeConfig["timing"]["duration"];
-    if (item.IsInts()) {
-        auto numbers = *item.intsValue_;
-        if (numbers.size() == 1) { // duration
-            windowAnimationConfig.animationTiming_.timingProtocol_ =
-                RSAnimationTimingProtocol(numbers[0]);
-        }
+    if (GetSingleIntItem(item, param)) { // duration
+        windowAnimationConfig.animationTiming_.timingProtocol_ = RSAnimationTimingProtocol(param);
     }
     item = animeConfig["scale"];
     if (item.IsFloats()) {
@@ -494,21 +498,16 @@ void WindowManagerService::ConfigKeyboardAnimation(const WindowManagerConfig::Co
     if (item.IsMap() && item.mapValue_->count("curve")) {
         animationConfig.keyboardAnimationConfig_.curve_ = CreateCurve(item["curve"], true);
     }
+    int32_t param = -1;
     item = animeConfig["timing"]["durationIn"];
-    if (item.IsInts()) {
-        auto numbers = *item.intsValue_;
-        if (numbers.size() == 1) { // duration
-            animationConfig.keyboardAnimationConfig_.durationIn_ = RSAnimationTimingProtocol(numbers[0]);
-            systemConfig_.keyboardAnimationConfig_.durationIn_ = static_cast<uint32_t>(numbers[0]);
-        }
+    if (GetSingleIntItem(item, param)) { // duration
+        animationConfig.keyboardAnimationConfig_.durationIn_ = RSAnimationTimingProtocol(param);
+        systemConfig_.keyboardAnimationConfig_.durationIn_ = static_cast<uint32_t>(param);
     }
     item = animeConfig["timing"]["durationOut"];
-    if (item.IsInts()) {
-        auto numbers = *item.intsValue_;
-        if (numbers.size() == 1) { // duration
-            animationConfig.keyboardAnimationConfig_.durationOut_ = RSAnimationTimingProtocol(numbers[0]);
-            systemConfig_.keyboardAnimationConfig_.durationOut_ = numbers[0];
-        }
+    if (GetSingleIntItem(item, param)) { // duration
+        animationConfig.keyboardAnimationConfig_.durationOut_ = RSAnimationTimingProtocol(param);
+        systemConfig_.keyboardAnimationConfig_.durationOut_ = param;
     }
 }
 
@@ -523,12 +522,10 @@ void WindowManagerService::ConfigStartingWindowAnimation(const WindowManagerConf
     if (item.IsMap() && item.mapValue_->count("curve")) {
         startWinAnimationConfig.timingCurve_ = CreateCurve(item["curve"]);
     }
+    int32_t param = -1;
     item = animeConfig["timing"]["duration"];
-    if (item.IsInts()) {
-        auto numbers = *item.intsValue_;
-        if (numbers.size() == 1) { // duration
-            startWinAnimationConfig.timingProtocol_ = RSAnimationTimingProtocol(numbers[0]);
-        }
+    if (GetSingleIntItem(item, param)) { // duration
+        startWinAnimationConfig.timingProtocol_ = RSAnimationTimingProtocol(param);
     }
     item = animeConfig["opacityStart"];
     if (item.IsFloats()) {
@@ -542,36 +539,31 @@ void WindowManagerService::ConfigStartingWindowAnimation(const WindowManagerConf
     }
 }
 
-void WindowManagerService::ConfigFloatingProperties(const WindowManagerConfig::ConfigItem& config) {
+void WindowManagerService::ConfigFloatingProperties(const WindowManagerConfig::ConfigItem& config)
+{
+    int32_t param = -1;
     WindowManagerConfig::ConfigItem item = config["floatingBottomPosY"];
-    if (item.IsInts()) {
-        auto numbers = *item.intsValue_;
-        if (numbers.size() == 1 && numbers[0] > 0) {
-            WindowLayoutPolicy::SetCascadeRectBottomPosYLimit(static_cast<uint32_t>(numbers[0]));
-        }
+    if (GetSingleIntItem(item, param) && param > 0) {
+        WindowLayoutPolicy::SetCascadeRectBottomPosYLimit(static_cast<uint32_t>(param));
     }
     item = config["configMainFloatingWindowAbove"].GetProp("enable");
     if (item.IsBool()) {
         WindowNodeContainer::SetConfigMainFloatingWindowAbove(item.boolValue_);
     }
     item = config["maxMainFloatingWindowNumber"];
-    if (item.IsInts()) {
-        auto numbers = *item.intsValue_;
-        if (numbers.size() == 1 && numbers[0] > 0) {
-            WindowNodeContainer::SetMaxMainFloatingWindowNumber(static_cast<uint32_t>(numbers[0]));
-        }
+    if (GetSingleIntItem(item, param) && param > 0) {
+        WindowNodeContainer::SetMaxMainFloatingWindowNumber(static_cast<uint32_t>(param));
     }
     item = config["maxFloatingWindowSize"];
-    if (item.IsInts()) {
-        auto numbers = *item.intsValue_;
-        if (numbers.size() == 1 && numbers[0] > 0) {
-            WindowLayoutPolicy::SetMaxFloatingWindowSize(static_cast<uint32_t>(numbers[0]));
-        }
+    if (GetSingleIntItem(item, param) && param > 0) {
+        WindowLayoutPolicy::SetMaxFloatingWindowSize(static_cast<uint32_t>(param));
     }
 }
 
 void WindowManagerService::ConfigDefaultMaximizeMode(const WindowManagerConfig::ConfigItem& defaultMaximizeModeConfig) {
-    if (!defaultMaximizeModeConfig.IsInts()) return;
+    if (!defaultMaximizeModeConfig.IsInts()) {
+        return;
+    }
 
     auto numbers = *defaultMaximizeModeConfig.intsValue_;
     if (numbers.size() == 1 &&
@@ -662,7 +654,9 @@ bool WindowManagerService::ConfigAppWindowShadow(const WindowManagerConfig::Conf
 
 void WindowManagerService::ConfigWindowEffect(const WindowManagerConfig::ConfigItem& effectConfig)
 {
-    if (!effectConfig.IsMap()) return;
+    if (!effectConfig.IsMap()) {
+        return;
+    }
 
     AppWindowEffectConfig config;
     AppWindowEffectConfig systemEffectConfig;
@@ -1306,8 +1300,7 @@ WMError WindowManagerService::UpdateProperty(sptr<WindowProperty>& windowPropert
         WLOGFE("windowProperty is nullptr");
         return WMError::WM_ERROR_NULLPTR;
     }
-    auto validationError = ValidateUpdate(windowProperty, action);
-    if (validationError != WMError::WM_OK) {
+    if (auto validationError = ValidateUpdate(windowProperty, action); validationError != WMError::WM_OK) {
         return validationError;
     }
     windowProperty->isSystemCalling_ = Permission::IsSystemCalling();

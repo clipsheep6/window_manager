@@ -425,10 +425,9 @@ void WindowLayoutPolicyCascade::ApplyWindowRectConstraints(const sptr<WindowNode
         node->GetWindowId(), winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
 }
 
-void WindowLayoutPolicyCascade::HandleWindowMode(const WindowMode mode, const sptr<WindowNode>& node, Rect& winRect)
+void WindowLayoutPolicyCascade::HandleWindowMode(const WindowMode mode, const sptr<WindowNode>& node, const sptr<WindowProperty> property, Rect& winRect)
 {
     auto displayId = node->GetDisplayId();
-    auto property = node->GetWindowProperty();
     switch (mode) {
         case WindowMode::WINDOW_MODE_SPLIT_PRIMARY:
             winRect = cascadeRectsMap_[displayId].primaryRect_;
@@ -485,7 +484,7 @@ void WindowLayoutPolicyCascade::UpdateLayoutRect(const sptr<WindowNode>& node)
         "%{public}d, %{public}u, %{public}u]", node->GetWindowId(), mode, node->GetWindowType(), winRect.posX_,
         winRect.posY_, winRect.width_, winRect.height_);
     
-    HandleWindowMode(mode, node, winRect);
+    HandleWindowMode(mode, node, property, winRect);
 
     WLOGFD("[After CascadeLayout] windowId: %{public}u, isDecor: %{public}u, winRect: [%{public}d, %{public}d, "
         "%{public}u, %{public}u], reason: %{public}u", node->GetWindowId(), node->GetDecoStatus(), winRect.posX_,
