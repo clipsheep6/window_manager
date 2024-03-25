@@ -2165,7 +2165,6 @@ HWTEST_F(WindowSceneSessionImplTest, GetHideButtonActionFlags01, Function | Smal
 {
     sptr<WindowOption> option = new (std::nothrow) WindowOption();
     option->SetWindowName("GetHideButtonActionFlags01");
-
     sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
     ASSERT_NE(nullptr, window);
     uint32_t modeSupportInfo = 1 | (1 << 1) | (1 << 2);
@@ -2173,13 +2172,10 @@ HWTEST_F(WindowSceneSessionImplTest, GetHideButtonActionFlags01, Function | Smal
     window->property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
     // show Maximize, Minimize, Split buttons.
     window->windowTitleVisibleFlags_ = { false, false, false };
-
     bool hideMaximizeButton = false;
     bool hideMinimizeButton = false;
     bool hideSplitButton = false;
-
     window->GetHideButtonActionFlags(true, hideMaximizeButton, hideMinimizeButton, hideSplitButton);
-
     ASSERT_EQ(hideMaximizeButton, true);
     ASSERT_EQ(hideMinimizeButton, true);
     ASSERT_EQ(hideSplitButton, true);
@@ -2194,7 +2190,6 @@ HWTEST_F(WindowSceneSessionImplTest, GetHideButtonActionFlags02, Function | Smal
 {
     sptr<WindowOption> option = new (std::nothrow) WindowOption();
     option->SetWindowName("GetHideButtonActionFlags02");
-
     sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
     ASSERT_NE(nullptr, window);
     // only not support WINDOW_MODE_SUPPORT_SPLIT
@@ -2203,13 +2198,10 @@ HWTEST_F(WindowSceneSessionImplTest, GetHideButtonActionFlags02, Function | Smal
     window->property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
     // show Maximize, Minimize, Split buttons.
     window->windowTitleVisibleFlags_ = { true, true, true };
-
     bool hideMaximizeButton = false;
     bool hideMinimizeButton = false;
     bool hideSplitButton = false;
-
     window->GetHideButtonActionFlags(true, hideMaximizeButton, hideMinimizeButton, hideSplitButton);
-
     ASSERT_EQ(hideMaximizeButton, false);
     ASSERT_EQ(hideMinimizeButton, false);
     ASSERT_EQ(hideSplitButton, true);
@@ -2224,7 +2216,6 @@ HWTEST_F(WindowSceneSessionImplTest, GetHideButtonActionFlags03, Function | Smal
 {
     sptr<WindowOption> option = new (std::nothrow) WindowOption();
     option->SetWindowName("GetHideButtonActionFlags03");
-
     sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
     ASSERT_NE(nullptr, window);
     // only not support WINDOW_MODE_SUPPORT_SPLIT
@@ -2233,13 +2224,10 @@ HWTEST_F(WindowSceneSessionImplTest, GetHideButtonActionFlags03, Function | Smal
     window->property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
     // show Maximize, Minimize, Split buttons.
     window->windowTitleVisibleFlags_ = { false, false, false };
-
     bool hideMaximizeButton = false;
     bool hideMinimizeButton = false;
     bool hideSplitButton = false;
-
     window->GetHideButtonActionFlags(false, hideMaximizeButton, hideMinimizeButton, hideSplitButton);
-
     ASSERT_EQ(hideMaximizeButton, false);
     ASSERT_EQ(hideMinimizeButton, false);
     ASSERT_EQ(hideSplitButton, false);
