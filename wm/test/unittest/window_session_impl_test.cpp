@@ -1708,7 +1708,6 @@ HWTEST_F(WindowSessionImplTest, GetTitleButtonArea, Function | SmallTest | Level
  */
 HWTEST_F(WindowSessionImplTest, SetTitleButtonVisible, Function | SmallTest | Level2)
 {
-    GTEST_LOG_(INFO) << "WindowSessionImplTest: SetTitleButtonVisible01 start";
     sptr<WindowOption> option = new WindowOption();
     ASSERT_NE(option, nullptr);
     option->SetWindowName("SetTitleButtonVisible");
@@ -1717,7 +1716,6 @@ HWTEST_F(WindowSessionImplTest, SetTitleButtonVisible, Function | SmallTest | Le
     ASSERT_NE(window, nullptr);
     WMError res = window->SetTitleButtonVisible(false, false, false);
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_CALLING);
-    GTEST_LOG_(INFO) << "WindowSessionImplTest: SetTitleButtonVisible01 end";
 }
 
 /**
