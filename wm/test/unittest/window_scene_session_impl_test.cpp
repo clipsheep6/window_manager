@@ -2155,6 +2155,95 @@ HWTEST_F(WindowSceneSessionImplTest, Maximize03, Function | SmallTest | Level2)
     layoutOption.decor = ShowType::SHOW;
     ASSERT_NE(WMError::WM_ERROR_INVALID_PARAM, window->Maximize(layoutOption));
 }
+
+/**
+ * @tc.name: GetHideButtonActionFlags01
+ * @tc.desc: GetHideButtonActionFlags
+ * @tc.type: FUNC
+*/
+HWTEST_F(WindowSceneSessionImplTest, GetHideButtonActionFlags01, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("GetHideButtonActionFlags01");
+
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    uint32_t modeSupportInfo = 1 | (1 << 1) | (1 << 2);
+    window->property_->SetModeSupportInfo(modeSupportInfo);
+    window->property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+    // show Maximize, Minimize, Split buttons.
+    window->windowTitleVisibleFlags_ = { false, false, false };
+
+    bool hideMaximizeButton = false;
+    bool hideMinimizeButton = false;
+    bool hideSplitButton = false;
+
+    window->GetHideButtonActionFlags(true, hideMaximizeButton, hideMinimizeButton, hideSplitButton);
+
+    ASSERT_EQ(hideMaximizeButton, true);
+    ASSERT_EQ(hideMinimizeButton, true);
+    ASSERT_EQ(hideSplitButton, true);
+}
+
+/**
+ * @tc.name: GetHideButtonActionFlags02
+ * @tc.desc: GetHideButtonActionFlags
+ * @tc.type: FUNC
+*/
+HWTEST_F(WindowSceneSessionImplTest, GetHideButtonActionFlags02, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("GetHideButtonActionFlags02");
+
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    // only not support WINDOW_MODE_SUPPORT_SPLIT
+    uint32_t modeSupportInfo = 1 | (1 << 1);
+    window->property_->SetModeSupportInfo(modeSupportInfo);
+    window->property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+    // show Maximize, Minimize, Split buttons.
+    window->windowTitleVisibleFlags_ = { true, true, true };
+
+    bool hideMaximizeButton = false;
+    bool hideMinimizeButton = false;
+    bool hideSplitButton = false;
+
+    window->GetHideButtonActionFlags(true, hideMaximizeButton, hideMinimizeButton, hideSplitButton);
+
+    ASSERT_EQ(hideMaximizeButton, false);
+    ASSERT_EQ(hideMinimizeButton, false);
+    ASSERT_EQ(hideSplitButton, true);
+}
+
+/**
+ * @tc.name: GetHideButtonActionFlags03
+ * @tc.desc: GetHideButtonActionFlags
+ * @tc.type: FUNC
+*/
+HWTEST_F(WindowSceneSessionImplTest, GetHideButtonActionFlags03, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("GetHideButtonActionFlags03");
+
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    // only not support WINDOW_MODE_SUPPORT_SPLIT
+    uint32_t modeSupportInfo = 1 | (1 << 1) | (1 << 2);
+    window->property_->SetModeSupportInfo(modeSupportInfo);
+    window->property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+    // show Maximize, Minimize, Split buttons.
+    window->windowTitleVisibleFlags_ = { false, false, false };
+
+    bool hideMaximizeButton = false;
+    bool hideMinimizeButton = false;
+    bool hideSplitButton = false;
+
+    window->GetHideButtonActionFlags(false, hideMaximizeButton, hideMinimizeButton, hideSplitButton);
+
+    ASSERT_EQ(hideMaximizeButton, false);
+    ASSERT_EQ(hideMinimizeButton, false);
+    ASSERT_EQ(hideSplitButton, false);
+}
 }
 } // namespace Rosen
 } // namespace OHOS
