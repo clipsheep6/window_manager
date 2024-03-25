@@ -177,9 +177,18 @@ bool MoveDragController::ConsumeMoveEvent(const std::shared_ptr<MMI::PointerEven
         return false;
     }
     ResetOriginalPositionWhenFullScreenToFloating(originalRect);
-
-    SizeChangeReason reason = SizeChangeReason::MOVE;
     bool ret = true;
+    SizeChangeReason reason = ProcessWindowDragHotAreaReason(pointerEvent, action, ret);
+    if (CalcMoveTargetRect(pointerEvent, originalRect)) {
+        ProcessSessionRectChange(reason);
+    }
+    return ret;
+}
+
+SizeChangeReason MoveDragController::ProcessWindowDragHotAreaReason(
+    const std::shared_ptr<MMI::PointerEvent>& pointerEvent, int32_t action, bool& ret)
+{
+    SizeChangeReason reason = SizeChangeReason::MOVE;
     switch (action) {
         case MMI::PointerEvent::POINTER_ACTION_MOVE: {
             reason = SizeChangeReason::MOVE;
@@ -204,10 +213,7 @@ bool MoveDragController::ConsumeMoveEvent(const std::shared_ptr<MMI::PointerEven
         default:
             break;
     }
-    if (CalcMoveTargetRect(pointerEvent, originalRect)) {
-        ProcessSessionRectChange(reason);
-    }
-    return ret;
+    return reason;
 }
 
 void MoveDragController::ProcessWindowDragHotAreaFunc(bool isSendHotAreaMessage, const SizeChangeReason& reason)

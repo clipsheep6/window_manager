@@ -167,37 +167,25 @@ WSError SessionProxy::Connect(const sptr<ISessionStage>& sessionStage, const spt
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteRemoteObject(sessionStage->AsObject())) {
+    } else if (!data.WriteRemoteObject(sessionStage->AsObject())) {
         WLOGFE("Write ISessionStage failed");
         return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteRemoteObject(eventChannel->AsObject())) {
+    } else if (!data.WriteRemoteObject(eventChannel->AsObject())) {
         WLOGFE("Write IWindowEventChannel failed");
         return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!surfaceNode || !surfaceNode->Marshalling(data)) {
+    } else if (!surfaceNode || !surfaceNode->Marshalling(data)) {
         WLOGFE("Write surfaceNode failed");
         return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (property) {
-        if (!data.WriteBool(true) || !data.WriteParcelable(property.GetRefPtr())) {
-            WLOGFE("Write property failed");
-            return WSError::WS_ERROR_IPC_FAILED;
-        }
-    } else {
-        if (!data.WriteBool(false)) {
-            WLOGFE("Write property failed");
-            return WSError::WS_ERROR_IPC_FAILED;
-        }
-    }
-    if (token != nullptr) {
-        if (!data.WriteRemoteObject(token)) {
-            WLOGFE("Write abilityToken failed");
-            return WSError::WS_ERROR_IPC_FAILED;
-        }
-    }
-    if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_CONNECT),
+    } else if (property && (!data.WriteBool(true) || !data.WriteParcelable(property.GetRefPtr()))) {
+        WLOGFE("Write property failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    } else if (!property && !data.WriteBool(false)) {
+        WLOGFE("Write property failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    } else if (token != nullptr && !data.WriteRemoteObject(token)) {
+        WLOGFE("Write abilityToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    } else if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_CONNECT),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;

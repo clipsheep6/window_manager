@@ -319,6 +319,12 @@ private:
     bool IsMovableWindowType();
     void HandleCastScreenConnection(SessionInfo& info, sptr<SceneSession> session);
     void FixKeyboardPositionByKeyboardPanel(sptr<SceneSession> panelSession, sptr<SceneSession> keyboardSession);
+    WSError AspectRatioCheckLimits(const sptr<SceneSession>& session, float ratio, float vpr);
+    int32_t InitEnterSession(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
+    void InitSessionInfo(const sptr<SceneSession>& session,
+        const sptr<AAFwk::SessionInfo> abilitySessionInfo, SessionInfo& info);
+    WSError ProcessEventWindowModeFloating(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
+        bool needNotifyClient, bool isPointDown, const sptr<WindowSessionProperty>& property, bool& success);
 
     NotifySessionRectChangeFunc sessionRectChangeFunc_;
     static wptr<SceneSession> enterSession_;
