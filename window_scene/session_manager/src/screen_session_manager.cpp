@@ -1821,7 +1821,15 @@ void ScreenSessionManager::DumpSpecialScreenInfo(ScreenId id, std::string& dumpI
 // --- Fold Screen ---
 void ScreenSessionManager::SetFoldDisplayMode(const FoldDisplayMode displayMode)
 {
-    WLOGFI("ScreenSessionManager::SetFoldDisplayMode");
+    if (foldScreenController_ == nullptr) {
+        WLOGFW("SetFoldDisplayMode foldScreenController_ is null");
+        return;
+    }
+    if (!SessionPermission::IsSystemCalling()) {
+        WLOGFE("SetFoldDisplayMode permission denied!");
+        return;
+    }
+    foldScreenController_->SetDisplayMode(displayMode);
 }
 
 FoldDisplayMode ScreenSessionManager::GetFoldDisplayMode()
