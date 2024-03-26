@@ -561,7 +561,8 @@ void WindowManagerService::ConfigFloatingProperties(const WindowManagerConfig::C
     }
 }
 
-void WindowManagerService::ConfigDefaultMaximizeMode(const WindowManagerConfig::ConfigItem& defaultMaximizeModeConfig) {
+void WindowManagerService::ConfigDefaultMaximizeMode(const WindowManagerConfig::ConfigItem& defaultMaximizeModeConfig)
+{
     if (!defaultMaximizeModeConfig.IsInts()) {
         return;
     }
