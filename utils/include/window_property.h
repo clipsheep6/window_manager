@@ -157,8 +157,6 @@ private:
     bool MarshallingRequestRect(Parcel& parcel) const;
     bool MapMarshalling(Parcel& parcel) const;
     static void MapUnmarshalling(Parcel& parcel, WindowProperty* property);
-    bool MarshallingOriginRect(Parcel& parcel) const;
-    static void UnmarshallingOriginRect(Parcel& parcel, WindowProperty* property);
     bool MarshallingTouchHotAreas(Parcel& parcel) const;
     static void UnmarshallingTouchHotAreas(Parcel& parcel, WindowProperty* property);
     bool MarshallingTransform(Parcel& parcel) const;

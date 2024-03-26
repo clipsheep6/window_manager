@@ -647,21 +647,6 @@ void WindowProperty::MapUnmarshalling(Parcel& parcel, WindowProperty* property)
     }
 }
 
-bool WindowProperty::MarshallingOriginRect(Parcel& parcel) const
-{
-    if (parcel.WriteUint32(originRect_.width_) && parcel.WriteUint32(originRect_.height_)) {
-        return true;
-    }
-    return false;
-}
-
-void WindowProperty::UnmarshallingOriginRect(Parcel& parcel, WindowProperty* property)
-{
-    uint32_t w = parcel.ReadUint32();
-    uint32_t h = parcel.ReadUint32();
-    property->SetOriginRect(Rect { 0, 0, w, h });
-}
-
 bool WindowProperty::MarshallingTouchHotAreas(Parcel& parcel) const
 {
     auto size = touchHotAreas_.size();
