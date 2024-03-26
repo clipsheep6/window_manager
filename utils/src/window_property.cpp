@@ -608,6 +608,12 @@ void WindowProperty::GetWindowGravity(WindowGravity& gravity, uint32_t& percent)
     percent = windowGravitySizePercent_;
 }
 
+bool WindowProperty::MarshallingRequestRect(Parcel& parcel) const
+{
+    return parcel.WriteInt32(requestRect_.posX_) && parcel.WriteInt32(requestRect_.posY_) &&
+        parcel.WriteUint32(requestRect_.width_) && parcel.WriteUint32(requestRect_.height_);
+}
+
 bool WindowProperty::MapMarshalling(Parcel& parcel) const
 {
     auto size = sysBarPropMap_.size();
@@ -743,11 +749,9 @@ void WindowProperty::UnmarshallingZoomTransform(Parcel& parcel, WindowProperty* 
 
 bool WindowProperty::Marshalling(Parcel& parcel) const
 {
-   return parcel.WriteString(windowName_) && parcel.WriteInt32(windowRect_.posX_) &&
+    return parcel.WriteString(windowName_) && parcel.WriteInt32(windowRect_.posX_) &&
         parcel.WriteInt32(windowRect_.posY_) && parcel.WriteUint32(windowRect_.width_) &&
-        parcel.WriteUint32(windowRect_.height_) && parcel.WriteInt32(requestRect_.posX_) &&
-        parcel.WriteInt32(requestRect_.posY_) && parcel.WriteUint32(requestRect_.width_) &&
-        parcel.WriteUint32(requestRect_.height_) && parcel.WriteBool(decoStatus_) &&
+        parcel.WriteUint32(windowRect_.height_) && MarshallingRequestRect(parcel) &&
         parcel.WriteBool(decoStatus_) && parcel.WriteUint32(static_cast<uint32_t>(type_)) &&
         parcel.WriteUint32(static_cast<uint32_t>(mode_)) && parcel.WriteUint32(static_cast<uint32_t>(lastMode_)) &&
         parcel.WriteUint32(flags_) &&
@@ -875,8 +879,6 @@ bool WindowProperty::Write(Parcel& parcel, PropertyChangeAction action)
             ret = ret && parcel.WriteUint32(animationFlag_);
             break;
         case PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE:
-            ret = ret && parcel.WriteBool(isPrivacyMode_) && parcel.WriteBool(isSystemPrivacyMode_);
-            break;
         case PropertyChangeAction::ACTION_UPDATE_SYSTEM_PRIVACY_MODE:
             ret = ret && parcel.WriteBool(isPrivacyMode_) && parcel.WriteBool(isSystemPrivacyMode_);
             break;
