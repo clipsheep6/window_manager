@@ -365,6 +365,15 @@ namespace {
     constexpr float MAXIMUM_BRIGHTNESS = 1.0f;
     constexpr int32_t INVALID_PID = -1;
     constexpr int32_t INVALID_UID = -1;
+
+    constexpr int WINDOW_NAME_MAX_WIDTH = 21;
+    constexpr int DISPLAY_NAME_MAX_WIDTH = 10;
+    constexpr int VALUE_MAX_WIDTH = 5;
+    constexpr int ORIEN_MAX_WIDTH = 12;
+    constexpr int OFFSET_MAX_WIDTH = 8;
+    constexpr int PID_MAX_WIDTH = 8;
+    constexpr int PARENT_ID_MAX_WIDTH = 6;
+    constexpr int SCALE_MAX_WIDTH = 8;
 }
 
 /**
