@@ -425,7 +425,8 @@ void WindowLayoutPolicyCascade::ApplyWindowRectConstraints(const sptr<WindowNode
         node->GetWindowId(), winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
 }
 
-void WindowLayoutPolicyCascade::HandleWindowMode(const WindowMode mode, const sptr<WindowNode>& node, const sptr<WindowProperty>& property, Rect& winRect)
+void WindowLayoutPolicyCascade::HandleWindowMode(const WindowMode mode, const sptr<WindowNode>& node,
+    const sptr<WindowProperty>& property, Rect& winRect)
 {
     auto displayId = node->GetDisplayId();
     switch (mode) {
