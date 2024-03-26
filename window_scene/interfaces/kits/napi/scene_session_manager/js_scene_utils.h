@@ -172,6 +172,8 @@ bool ConvertSessionInfoFromJs(napi_env env, napi_value jsObject, SessionInfo& se
 bool ConvertSessionInfoName(napi_env env, napi_value jsObject, SessionInfo& sessionInfo);
 bool ConvertSessionInfoState(napi_env env, napi_value jsObject, SessionInfo& sessionInfo);
 bool ConvertPointerEventFromJs(napi_env env, napi_value jsObject, MMI::PointerEvent& pointerEvent);
+bool ConvertWindowItemFromJs(napi_env env, napi_value touchObject, MMI::PointerEvent& pointerEvent,
+    MMI::PointerEvent::PointerItem& pointerItem);
 bool ConvertInt32ArrayFromJs(napi_env env, napi_value jsObject, std::vector<int32_t>& intList);
 bool ConvertProcessOptionFromJs(napi_env env, napi_value jsObject,
     std::shared_ptr<AAFwk::ProcessOptions> processOptions);
