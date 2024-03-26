@@ -1790,6 +1790,38 @@ HWTEST_F(SceneSessionManagerTest, GetSceneSessionVectorByType, Function | SmallT
 }
 
 /**
+ * @tc.name: StartUIAbilityBySCB
+ * @tc.desc: StartUIAbilityBySCB
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, StartUIAbilityBySCB, Function | SmallTest | Level3)
+{
+    SessionInfo info;
+    info.abilityName_ = "StartUIAbilityBySCB";
+    info.bundleName_ = "StartUIAbilityBySCB";
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    sceneSession->SetSessionState(SessionState::STATE_ACTIVE);
+    int32_t ret = ssm_->StartUIAbilityBySCB(sceneSession);
+    EXPECT_EQ(ret, 2097202);
+}
+
+/**
+ * @tc.name: ChangeUIAbilityVisibilityBySCB
+ * @tc.desc: ChangeUIAbilityVisibilityBySCB
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, ChangeUIAbilityVisibilityBySCB, Function | SmallTest | Level3)
+{
+    SessionInfo info;
+    info.abilityName_ = "ChangeUIAbilityVisibilityBySCB";
+    info.bundleName_ = "ChangeUIAbilityVisibilityBySCB";
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    sceneSession->SetSessionState(SessionState::STATE_ACTIVE);
+    int32_t ret = ssm_->ChangeUIAbilityVisibilityBySCB(sceneSession, true);
+    EXPECT_EQ(ret, 2097202);
+}
+
+/**
  * @tc.name: RegisterInputMethodShownFunc
  * @tc.desc: SceneSesionManager register input method show func
  * @tc.type: FUNC
@@ -3099,7 +3131,7 @@ HWTEST_F(SceneSessionManagerTest, AddOrRemoveSecureSession, Function | SmallTest
 
     int32_t persistentId = 12345;
     auto ret = ssm_->AddOrRemoveSecureSession(persistentId, true);
-    EXPECT_EQ(ret, WSError::WS_ERROR_INVALID_SESSION);
+    EXPECT_EQ(ret, WSError::WS_OK);
 }
 
 /**
@@ -3116,7 +3148,7 @@ HWTEST_F(SceneSessionManagerTest, AddOrRemoveSecureExtSession, Function | SmallT
     int32_t persistentId = 12345;
     int32_t parentId = 1234;
     auto ret = ssm_->AddOrRemoveSecureExtSession(persistentId, parentId, true);
-    EXPECT_EQ(ret, WSError::WS_ERROR_INVALID_SESSION);
+    EXPECT_EQ(ret, WSError::WS_OK);
 }
 
 }
