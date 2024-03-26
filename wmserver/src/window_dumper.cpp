@@ -78,10 +78,10 @@ void WindowDumper::DumpRectInfo(std::ostringstream& oss, const sptr<WindowNode>&
 {
     Rect rect = windowNode->GetWindowRect();
     oss << "[ "
-        << std::left << std::setw(5) << rect.posX_
-        << std::left << std::setw(5) << rect.posY_
-        << std::left << std::setw(5) << rect.width_
-        << std::left << std::setw(5) << rect.height_
+        << std::left << std::setw(VALUE_MAX_WIDTH) << rect.posX_
+        << std::left << std::setw(VALUE_MAX_WIDTH) << rect.posY_
+        << std::left << std::setw(VALUE_MAX_WIDTH) << rect.width_
+        << std::left << std::setw(VALUE_MAX_WIDTH) << rect.height_
         << "]"
         << std::endl;
 }
@@ -117,15 +117,15 @@ WMError WindowDumper::DumpScreenGroupWindowInfo(ScreenId screenGroupId,
         const std::string& windowName = windowNode->GetWindowName().size() <= WINDOW_NAME_MAX_LENGTH ?
             windowNode->GetWindowName() : windowNode->GetWindowName().substr(0, WINDOW_NAME_MAX_LENGTH);
         // std::setw is used to set the output width and different width values are set to keep the format aligned.
-        oss << std::left << std::setw(21) << windowName
-            << std::left << std::setw(10) << windowNode->GetDisplayId()
-            << std::left << std::setw(8) << windowNode->GetCallingPid()
-            << std::left << std::setw(6) << windowNode->GetWindowId()
-            << std::left << std::setw(5) << static_cast<uint32_t>(windowNode->GetWindowType())
-            << std::left << std::setw(5) << static_cast<uint32_t>(windowNode->GetWindowMode())
-            << std::left << std::setw(5) << windowNode->GetWindowFlags()
-            << std::left << std::setw(5) << --zOrder
-            << std::left << std::setw(12) << static_cast<uint32_t>(windowNode->GetRequestedOrientation());
+        oss << std::left << std::setw(WINDOW_NAME_MAX_WIDTH) << windowName
+            << std::left << std::setw(DISPLAY_NAME_MAX_WIDTH) << windowNode->GetDisplayId()
+            << std::left << std::setw(PID_MAX_WIDTH) << windowNode->GetCallingPid()
+            << std::left << std::setw(PARENT_ID_MAX_WIDTH) << windowNode->GetWindowId()
+            << std::left << std::setw(VALUE_MAX_WIDTH) << static_cast<uint32_t>(windowNode->GetWindowType())
+            << std::left << std::setw(VALUE_MAX_WIDTH) << static_cast<uint32_t>(windowNode->GetWindowMode())
+            << std::left << std::setw(VALUE_MAX_WIDTH) << windowNode->GetWindowFlags()
+            << std::left << std::setw(VALUE_MAX_WIDTH) << --zOrder
+            << std::left << std::setw(ORIEN_MAX_WIDTH) << static_cast<uint32_t>(windowNode->GetRequestedOrientation());
         DumpRectInfo(oss, windowNode);
     }
     oss << "Focus window: " << windowNodeContainer->GetFocusWindow() << std::endl;
