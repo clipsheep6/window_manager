@@ -52,7 +52,9 @@ private:
     void UpdateLastMouseEvent(std::shared_ptr<MMI::PointerEvent> pointerEvent) const;
     bool CheckPointerEvent(const std::shared_ptr<MMI::PointerEvent> pointerEvent) const;
     void ProcessEnterLeaveEventAsync();
-    bool IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const;
+#ifdef IMF_ENABLE
+    bool HandleKeyboardEvent(int32_t focusedSessionId, const std::shared_ptr<MMI::KeyEvent>& keyEvent) const;
+#endif
     Ace::UIContent* uiContent_ = nullptr;
     std::weak_ptr<AppExecFwk::EventHandler> weakEventConsumer_;
     mutable std::mutex mouseEventMutex_;

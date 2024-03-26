@@ -143,7 +143,6 @@ napi_value JsRootSceneSession::OnLoadContent(napi_env env, napi_callback_info in
         return NapiGetUndefined(env);
     }
     std::string contentUrl;
-    napi_value context = argv[1];
     napi_value storage = argc < 3 ? nullptr : argv[2];
     if (!ConvertFromJsValue(env, argv[0], contentUrl)) {
         WLOGFE("[NAPI]Failed to convert parameter to content url");
@@ -152,20 +151,10 @@ napi_value JsRootSceneSession::OnLoadContent(napi_env env, napi_callback_info in
         return NapiGetUndefined(env);
     }
 
-    if (context == nullptr) {
-        WLOGFE("[NAPI]Failed to get context object");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_STATE_ABNORMALLY)));
+    std::weak_ptr<Context> contextWeakPtr;
+    if (!ConvertContextFromJs(env, argv[1], contextWeakPtr)) {
         return NapiGetUndefined(env);
     }
-    void* pointerResult = nullptr;
-    napi_unwrap(env, context, &pointerResult);
-    auto contextNativePointer = static_cast<std::weak_ptr<Context>*>(pointerResult);
-    if (contextNativePointer == nullptr) {
-        WLOGFE("[NAPI]Failed to get context pointer from js object");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_STATE_ABNORMALLY)));
-        return NapiGetUndefined(env);
-    }
-    auto contextWeakPtr = *contextNativePointer;
     SceneSessionManager::GetInstance().SetRootSceneContext(contextWeakPtr);
 
     std::shared_ptr<NativeReference> contentStorage = nullptr;
@@ -334,5 +323,24 @@ sptr<SceneSession> JsRootSceneSession::GenSceneSession(SessionInfo& info)
         }
     }
     return sceneSession;
+}
+
+bool JsRootSceneSession::ConvertContextFromJs(napi_env env, napi_value context, std::weak_ptr<Context>& result)
+{
+    if (context == nullptr) {
+        WLOGFE("[NAPI]Failed to get context object");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_STATE_ABNORMALLY)));
+        return false;
+    }
+    void* pointerResult = nullptr;
+    napi_unwrap(env, context, &pointerResult);
+    auto contextNativePointer = static_cast<std::weak_ptr<Context>*>(pointerResult);
+    if (contextNativePointer == nullptr) {
+        WLOGFE("[NAPI]Failed to get context pointer from js object");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_STATE_ABNORMALLY)));
+        return false;
+    }
+    result = *contextNativePointer;
+    return true;
 }
 } // namespace OHOS::Rosen
