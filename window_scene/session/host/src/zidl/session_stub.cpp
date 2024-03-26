@@ -95,6 +95,8 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
         &SessionStub::HandleProcessPointDownSession),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SEND_POINTEREVENT_FOR_MOVE_DRAG),
         &SessionStub::HandleSendPointerEvenForMoveDrag),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_CALLING_WINDOW_ID),
+        &SessionStub::HandleSetCallingWindowId),
 
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TRANSFER_ABILITY_RESULT),
         &SessionStub::HandleTransferAbilityResult),
@@ -612,6 +614,15 @@ int SessionStub::HandleSendPointerEvenForMoveDrag(MessageParcel& data, MessagePa
     }
     WSError errCode = SendPointEventForMoveDrag(pointerEvent);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleSetCallingWindowId(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("HandleSetCallingWindowId!");
+    uint32_t callingWindowId = data.ReadUint32();
+
+    SetCallingWindowId(callingWindowId);
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen
