@@ -1393,8 +1393,7 @@ napi_value JsWindow::OnSetWindowType(napi_env env, napi_callback_info info)
                 WLOGFE("window is nullptr");
                 task.Reject(env, CreateJsError(env, static_cast<int32_t>(WMError::WM_ERROR_NULLPTR)));
                 return;
-            }
-            if (errCode != WMError::WM_OK) {
+            } else if (errCode != WMError::WM_OK) {
                 task.Reject(env, CreateJsError(env, static_cast<int32_t>(errCode)));
                 WLOGFE("get invalid param");
                 return;
@@ -1409,8 +1408,7 @@ napi_value JsWindow::OnSetWindowType(napi_env env, napi_callback_info info)
                 weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), ret);
         };
 
-    napi_value lastParam = (argc <= 1) ? nullptr :
-        (GetType(env, argv[1]) == napi_function ? argv[1] : nullptr);
+    napi_value lastParam = (argc <= 1) ? nullptr : (GetType(env, argv[1]) == napi_function ? argv[1] : nullptr);
     napi_value result = nullptr;
     NapiAsyncTask::Schedule("JsWindow::OnSetWindowType",
         env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
@@ -1440,8 +1438,7 @@ napi_value JsWindow::OnSetWindowMode(napi_env env, napi_callback_info info)
                 winMode = static_cast<WindowMode>(resultValue);
             } else if (resultValue >= static_cast<uint32_t>(ApiWindowMode::UNDEFINED) &&
                 resultValue <= static_cast<uint32_t>(ApiWindowMode::MODE_END)) {
-                winMode = JS_TO_NATIVE_WINDOW_MODE_MAP.at(
-                    static_cast<ApiWindowMode>(resultValue));
+                winMode = JS_TO_NATIVE_WINDOW_MODE_MAP.at(static_cast<ApiWindowMode>(resultValue));
             } else {
                 return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
             }
@@ -1456,8 +1453,11 @@ napi_value JsWindow::OnSetWindowMode(napi_env env, napi_callback_info info)
                 return;
             }
             WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(weakWindow->SetWindowMode(winMode));
-            (ret == WmErrorCode::WM_OK) ? task.Resolve(env, NapiGetUndefined(env)) :
+            if (ret == WmErrorCode::WM_OK) {
+                task.Resolve(env, NapiGetUndefined(env));
+            } else {
                 task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret), "Window set mode failed"));
+            }
             WLOGI("Window [%{public}u, %{public}s] set type end, ret = %{public}d",
                 weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), ret);
         };
