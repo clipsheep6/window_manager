@@ -717,14 +717,6 @@ void WindowProperty::UnmarshallingWindowSizeLimits(Parcel& parcel, WindowPropert
     property->SetSizeLimits(sizeLimits);
 }
 
-bool WindowProperty::MarshallingZoomTransform(Parcel& parcel) const
-{
-    if (zoomTrans_.Marshalling(parcel)) {
-        return true;
-    }
-    return false;
-}
-
 void WindowProperty::UnmarshallingZoomTransform(Parcel& parcel, WindowProperty* property)
 {
     Transform zoomTrans;
@@ -752,7 +744,7 @@ bool WindowProperty::Marshalling(Parcel& parcel) const
         parcel.WriteUint32(static_cast<uint32_t>(dragType_)) &&
         parcel.WriteUint32(originRect_.width_) && parcel.WriteUint32(originRect_.height_) &&
         parcel.WriteBool(isStretchable_) && MarshallingTouchHotAreas(parcel) && parcel.WriteUint32(accessTokenId_) &&
-        MarshallingTransform(parcel) && MarshallingWindowSizeLimits(parcel) && MarshallingZoomTransform(parcel) &&
+        MarshallingTransform(parcel) && MarshallingWindowSizeLimits(parcel) && zoomTrans_.Marshalling(parcel) &&
         parcel.WriteBool(isDisplayZoomOn_) && parcel.WriteString(abilityInfo_.bundleName_) &&
         parcel.WriteString(abilityInfo_.abilityName_) && parcel.WriteInt32(abilityInfo_.missionId_) &&
         parcel.WriteBool(isSnapshotSkip_) &&

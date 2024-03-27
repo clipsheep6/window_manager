@@ -163,7 +163,6 @@ private:
     static void UnmarshallingTransform(Parcel& parcel, WindowProperty* property);
     bool MarshallingWindowSizeLimits(Parcel& parcel) const;
     static void UnmarshallingWindowSizeLimits(Parcel& parcel, WindowProperty* property);
-    bool MarshallingZoomTransform(Parcel& parcel) const;
     static void UnmarshallingZoomTransform(Parcel& parcel, WindowProperty* property);
     void HandleComputeTransform(const Transform& trans);
 
