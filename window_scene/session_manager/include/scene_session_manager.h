@@ -558,6 +558,8 @@ private:
     WSError GetAppMainSceneSession(sptr<SceneSession>& sceneSession, int32_t persistentId);
     WSError HandleSecureSessionShouldHide(const sptr<SceneSession>& sceneSession);
     void HandleCastScreenDisConnection(const sptr<SceneSession> sceneSession);
+    void ProcessSplitFloating();
+    void NotifyRSSWindowModeTypeUpdate(bool inSplit, bool inFloating);
 };
 } // namespace OHOS::Rosen
 

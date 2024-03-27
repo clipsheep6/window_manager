@@ -1011,6 +1011,10 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
                 sessionInfo.screenId_);
         }
         sceneSession->SetEventHandler(taskScheduler_->GetEventHandler(), eventHandler_);
+        auto callback: (lambda) = [this]() {
+            ProcessSplitFloating();
+        };
+        sceneSession->RegisterWindowModeCallback(callback);
         if (sessionInfo.isSystem_) {
             sceneSession->SetCallingPid(IPCSkeleton::GetCallingRealPid());
             sceneSession->SetCallingUid(IPCSkeleton::GetCallingUid());
@@ -4278,6 +4282,48 @@ __attribute__((no_sanitize("cfi"))) void SceneSessionManager::OnSessionStateChan
         default:
             break;
     }
+    ProcessSplitFloating();
+}
+
+void SceneSessionManager::ProcessSplitFloating()
+{
+    bool inSplit = false;
+    bool inFloating = false;
+    for (const auto& session : sceneSessionMap_) {
+        if (Session.second == nullptr || !Rosen::SceneSessionManager::GetInstance().IsSessionVisible(Session.second)) {
+            continue;
+        }
+        auto mode : WindowMode = Session.second->GetWindowMode();
+        if (mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY || mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+            inSplit = true;
+        }
+        if (mode == WindowMode::WINDOW_MODE_FLOATING) {
+            inFloating = true;
+        }
+    }
+    NotifyRSSWindowModeTypeUpdate(inSplit, inFloating);
+}
+
+void SceneSessionManager::NotifyRSSWindowModeTypeUpdate(bool inSplit, bool inFloating)
+{
+    WLOGFI("Notify RSS Window Mode Type Update, inSplit: %{public}d, inFloating: %{public}u",
+           inSplit, inFloating);
+    WindowModeType type;
+    if (inSplit && !inFloating) {
+        type = WindowModeType::WINDOW_MODE_SPLIT;
+    }
+    if (!inSplit && inFloating) {
+        type = WindowModeType::WINDOW_MODE_FLOATING;
+    }
+    if (inSplit && inFloating) {
+        type = WindowModeType::WINDOW_MODE_SPLIT_FLOATING;
+    }
+    if (!inSplit && !inFloating) {
+        type = WindowModeType::WINDOW_MODE_OTHER;
+    }
+    lastWindowModeType_ = type;
+    WLOGFI("Window Mode Type Update, type: %{public}d", static_cast<int8_t>(type));
+    SessionManagerAgentController::GetInstance().UpdateWindowModeTypeInfo(type);
 }
 
 void SceneSessionManager::ProcessSubSessionForeground(sptr<SceneSession>& sceneSession)

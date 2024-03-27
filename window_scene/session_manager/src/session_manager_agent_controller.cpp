@@ -58,6 +58,17 @@ void SessionManagerAgentController::UpdateFocusChangeInfo(const sptr<FocusChange
     }
 }
 
+void SessionManagerAgentController::UpdateWindowModeTypeInfo(const WindowModeType type)
+{
+    WLOGFD("SessionManagerAgentController UpdateWindowModeTypeInfo type: %{public}d", static_cast<int8_t>(type));
+    for (auto& agent : smAgentContainer_.GetAgentsByType(
+        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_MODE)) {
+        if (agent != nullptr) {
+            agent->UpdateWindowModeTypeInfo(type);
+        }
+    }
+}
+
 void SessionManagerAgentController::NotifyAccessibilityWindowInfo(
     const std::vector<sptr<AccessibilityWindowInfo>>& infos, WindowUpdateType type)
 {
