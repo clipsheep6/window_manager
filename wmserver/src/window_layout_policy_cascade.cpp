@@ -425,19 +425,10 @@ void WindowLayoutPolicyCascade::ApplyWindowRectConstraints(const sptr<WindowNode
         node->GetWindowId(), winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
 }
 
-void WindowLayoutPolicyCascade::UpdateLayoutRect(const sptr<WindowNode>& node)
+void WindowLayoutPolicyCascade::HandleWindowMode(const WindowMode mode, const sptr<WindowNode>& node,
+    const sptr<WindowProperty>& property, Rect& winRect)
 {
-    auto property = node->GetWindowProperty();
-    if (property == nullptr) {
-        WLOGFE("window property is nullptr.");
-        return;
-    }
-    auto mode = node->GetWindowMode();
-    Rect winRect = property->GetRequestRect();
     auto displayId = node->GetDisplayId();
-    WLOGFD("[Before CascadeLayout] windowId: %{public}u, mode: %{public}u, type: %{public}u requestRect: [%{public}d, "
-        "%{public}d, %{public}u, %{public}u]", node->GetWindowId(), mode, node->GetWindowType(), winRect.posX_,
-        winRect.posY_, winRect.width_, winRect.height_);
     switch (mode) {
         case WindowMode::WINDOW_MODE_SPLIT_PRIMARY:
             winRect = cascadeRectsMap_[displayId].primaryRect_;
@@ -479,6 +470,23 @@ void WindowLayoutPolicyCascade::UpdateLayoutRect(const sptr<WindowNode>& node)
         default:
             WLOGFW("Layout invalid mode, winId: %{public}u, mode: %{public}u", node->GetWindowId(), mode);
     }
+}
+
+void WindowLayoutPolicyCascade::UpdateLayoutRect(const sptr<WindowNode>& node)
+{
+    auto property = node->GetWindowProperty();
+    if (property == nullptr) {
+        WLOGFE("window property is nullptr.");
+        return;
+    }
+    auto mode = node->GetWindowMode();
+    Rect winRect = property->GetRequestRect();
+    WLOGFD("[Before CascadeLayout] windowId: %{public}u, mode: %{public}u, type: %{public}u requestRect: [%{public}d, "
+        "%{public}d, %{public}u, %{public}u]", node->GetWindowId(), mode, node->GetWindowType(), winRect.posX_,
+        winRect.posY_, winRect.width_, winRect.height_);
+    
+    HandleWindowMode(mode, node, property, winRect);
+
     WLOGFD("[After CascadeLayout] windowId: %{public}u, isDecor: %{public}u, winRect: [%{public}d, %{public}d, "
         "%{public}u, %{public}u], reason: %{public}u", node->GetWindowId(), node->GetDecoStatus(), winRect.posX_,
         winRect.posY_, winRect.width_, winRect.height_, node->GetWindowSizeChangeReason());

@@ -42,6 +42,8 @@ private:
     bool IsValidDigitString(const std::string& windowIdStr);
     WMError DumpSpecifiedWindowInfo(uint32_t windowId, const std::vector<std::string>& params,
         std::string& dumpInfo);
+    void DumpRectInfo(std::ostringstream& oss, const sptr<WindowNode>& windowNode);
+    void DumpTouchHotAreas(std::ostringstream& oss, const sptr<WindowNode>& node);
     void ShowHelpInfo(std::string& dumpInfo);
     void ShowAceDumpHelp(std::string& dumpInfo);
     void ShowIllegalArgsInfo(std::string& dumpInfo, WMError errCode);

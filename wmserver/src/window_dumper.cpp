@@ -74,6 +74,18 @@ WMError WindowDumper::Dump(int fd, const std::vector<std::u16string>& args)
     return WMError::WM_OK;
 }
 
+void WindowDumper::DumpRectInfo(std::ostringstream& oss, const sptr<WindowNode>& windowNode)
+{
+    Rect rect = windowNode->GetWindowRect();
+    oss << "[ "
+        << std::left << std::setw(VALUE_MAX_WIDTH) << rect.posX_
+        << std::left << std::setw(VALUE_MAX_WIDTH) << rect.posY_
+        << std::left << std::setw(VALUE_MAX_WIDTH) << rect.width_
+        << std::left << std::setw(VALUE_MAX_WIDTH) << rect.height_
+        << "]"
+        << std::endl;
+}
+
 WMError WindowDumper::DumpScreenGroupWindowInfo(ScreenId screenGroupId,
     const sptr<WindowNodeContainer>& windowNodeContainer, std::string& dumpInfo)
 {
@@ -102,26 +114,19 @@ WMError WindowDumper::DumpScreenGroupWindowInfo(ScreenId screenGroupId,
             --zOrder;
             break;
         }
-        Rect rect = windowNode->GetWindowRect();
         const std::string& windowName = windowNode->GetWindowName().size() <= WINDOW_NAME_MAX_LENGTH ?
             windowNode->GetWindowName() : windowNode->GetWindowName().substr(0, WINDOW_NAME_MAX_LENGTH);
         // std::setw is used to set the output width and different width values are set to keep the format aligned.
-        oss << std::left << std::setw(21) << windowName
-            << std::left << std::setw(10) << windowNode->GetDisplayId()
-            << std::left << std::setw(8) << windowNode->GetCallingPid()
-            << std::left << std::setw(6) << windowNode->GetWindowId()
-            << std::left << std::setw(5) << static_cast<uint32_t>(windowNode->GetWindowType())
-            << std::left << std::setw(5) << static_cast<uint32_t>(windowNode->GetWindowMode())
-            << std::left << std::setw(5) << windowNode->GetWindowFlags()
-            << std::left << std::setw(5) << --zOrder
-            << std::left << std::setw(12) << static_cast<uint32_t>(windowNode->GetRequestedOrientation())
-            << "[ "
-            << std::left << std::setw(5) << rect.posX_
-            << std::left << std::setw(5) << rect.posY_
-            << std::left << std::setw(5) << rect.width_
-            << std::left << std::setw(5) << rect.height_
-            << "]"
-            << std::endl;
+        oss << std::left << std::setw(WINDOW_NAME_MAX_WIDTH) << windowName
+            << std::left << std::setw(DISPLAY_NAME_MAX_WIDTH) << windowNode->GetDisplayId()
+            << std::left << std::setw(PID_MAX_WIDTH) << windowNode->GetCallingPid()
+            << std::left << std::setw(PARENT_ID_MAX_WIDTH) << windowNode->GetWindowId()
+            << std::left << std::setw(VALUE_MAX_WIDTH) << static_cast<uint32_t>(windowNode->GetWindowType())
+            << std::left << std::setw(VALUE_MAX_WIDTH) << static_cast<uint32_t>(windowNode->GetWindowMode())
+            << std::left << std::setw(VALUE_MAX_WIDTH) << windowNode->GetWindowFlags()
+            << std::left << std::setw(VALUE_MAX_WIDTH) << --zOrder
+            << std::left << std::setw(ORIEN_MAX_WIDTH) << static_cast<uint32_t>(windowNode->GetRequestedOrientation());
+        DumpRectInfo(oss, windowNode);
     }
     oss << "Focus window: " << windowNodeContainer->GetFocusWindow() << std::endl;
     oss << "total window num: " << windowRoot_->GetTotalWindowNum()<< std::endl;
@@ -167,42 +172,8 @@ bool WindowDumper::IsValidDigitString(const std::string& windowIdStr)
     return true;
 }
 
-WMError WindowDumper::DumpSpecifiedWindowInfo(uint32_t windowId, const std::vector<std::string>& params,
-    std::string& dumpInfo)
+void WindowDumper::DumpTouchHotAreas(std::ostringstream& oss, const sptr<WindowNode>& node)
 {
-    auto node = windowRoot_->GetWindowNode(windowId);
-    if (node == nullptr) {
-        WLOGFE("invalid window");
-        return WMError::WM_ERROR_NULLPTR;
-    }
-    Rect rect = node->GetWindowRect();
-    std::string isShown_ = node->startingWindowShown_ ? "true" : "false";
-    std::string visibilityState = std::to_string(node->GetVisibilityState());
-    std::string Focusable = node->GetWindowProperty()->GetFocusable() ? "true" : "false";
-    std::string DecoStatus = node->GetWindowProperty()->GetDecoStatus() ? "true" : "false";
-    bool PrivacyMode = node->GetWindowProperty()->GetSystemPrivacyMode() ||
-        node->GetWindowProperty()->GetPrivacyMode();
-    bool isSnapshotSkip = node->GetWindowProperty()->GetSnapshotSkip();
-    std::string isPrivacyMode = PrivacyMode ? "true" : "false";
-    std::ostringstream oss;
-    oss << "WindowName: " << node->GetWindowName()  << std::endl;
-    oss << "DisplayId: " << node->GetDisplayId() << std::endl;
-    oss << "WinId: " << node->GetWindowId() << std::endl;
-    oss << "Pid: " << node->GetCallingPid() << std::endl;
-    oss << "Type: " << static_cast<uint32_t>(node->GetWindowType()) << std::endl;
-    oss << "Mode: " << static_cast<uint32_t>(node->GetWindowMode()) << std::endl;
-    oss << "Flag: " << node->GetWindowFlags() << std::endl;
-    oss << "Orientation: " << static_cast<uint32_t>(node->GetRequestedOrientation()) << std::endl;
-    oss << "IsStartingWindow: " << isShown_ << std::endl;
-    oss << "FirstFrameCallbackCalled: " << node->firstFrameAvailable_ << std::endl;
-    oss << "VisibilityState: " << visibilityState << std::endl;
-    oss << "Focusable: "  << Focusable << std::endl;
-    oss << "DecoStatus: "  << DecoStatus << std::endl;
-    oss << "IsPrivacyMode: "  << isPrivacyMode << std::endl;
-    oss << "isSnapshotSkip: "  << isSnapshotSkip << std::endl;
-    oss << "WindowRect: " << "[ "
-        << rect.posX_ << ", " << rect.posY_ << ", " << rect.width_ << ", " << rect.height_
-        << " ]" << std::endl;
     oss << "TouchHotAreas: ";
     std::vector<Rect> touchHotAreas;
     node->GetTouchHotAreas(touchHotAreas);
@@ -215,6 +186,43 @@ WMError WindowDumper::DumpSpecifiedWindowInfo(uint32_t windowId, const std::vect
         }
     }
     oss << std::endl;
+}
+
+WMError WindowDumper::DumpSpecifiedWindowInfo(uint32_t windowId, const std::vector<std::string>& params,
+    std::string& dumpInfo)
+{
+    auto node = windowRoot_->GetWindowNode(windowId);
+    if (node == nullptr) {
+        WLOGFE("invalid window");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    Rect rect = node->GetWindowRect();
+    std::string isShown_ = node->startingWindowShown_ ? "true" : "false";
+    std::string Focusable = node->GetWindowProperty()->GetFocusable() ? "true" : "false";
+    std::string DecoStatus = node->GetWindowProperty()->GetDecoStatus() ? "true" : "false";
+    bool PrivacyMode = node->GetWindowProperty()->GetSystemPrivacyMode() ||
+        node->GetWindowProperty()->GetPrivacyMode();
+    std::string isPrivacyMode = PrivacyMode ? "true" : "false";
+    std::ostringstream oss;
+    oss << "WindowName: " << node->GetWindowName()  << std::endl;
+    oss << "DisplayId: " << node->GetDisplayId() << std::endl;
+    oss << "WinId: " << node->GetWindowId() << std::endl;
+    oss << "Pid: " << node->GetCallingPid() << std::endl;
+    oss << "Type: " << static_cast<uint32_t>(node->GetWindowType()) << std::endl;
+    oss << "Mode: " << static_cast<uint32_t>(node->GetWindowMode()) << std::endl;
+    oss << "Flag: " << node->GetWindowFlags() << std::endl;
+    oss << "Orientation: " << static_cast<uint32_t>(node->GetRequestedOrientation()) << std::endl;
+    oss << "IsStartingWindow: " << isShown_ << std::endl;
+    oss << "FirstFrameCallbackCalled: " << node->firstFrameAvailable_ << std::endl;
+    oss << "VisibilityState: " << std::to_string(node->GetVisibilityState()) << std::endl;
+    oss << "Focusable: "  << Focusable << std::endl;
+    oss << "DecoStatus: "  << DecoStatus << std::endl;
+    oss << "IsPrivacyMode: "  << isPrivacyMode << std::endl;
+    oss << "isSnapshotSkip: "  << node->GetWindowProperty()->GetSnapshotSkip() << std::endl;
+    oss << "WindowRect: " << "[ "
+        << rect.posX_ << ", " << rect.posY_ << ", " << rect.width_ << ", " << rect.height_
+        << " ]" << std::endl;
+    DumpTouchHotAreas(oss, node);
     dumpInfo.append(oss.str());
     if (node->GetWindowToken() != nullptr) {
         std::vector<std::string> resetParams;
