@@ -765,12 +765,15 @@ static napi_value GetTopWindowTask(void* contextPtr, napi_env env, napi_value ca
         int32_t errorCode = 0;
         std::string errMsg = "";
     };
+    WLOGFE("ineoui OnGetTopWindow 3");
     std::shared_ptr<TopWindowInfoList> lists = std::make_shared<TopWindowInfoList>();
     bool isOldApi = GetAPI7Ability(env, lists->ability);
     NapiAsyncTask::ExecuteCallback execute = [lists, isOldApi, newApi, contextPtr]() {
         if (lists == nullptr) {
+            WLOGFE("ineoui OnGetTopWindow 4");
             return;
         }
+        WLOGFE("ineoui OnGetTopWindow 5");
         if (isOldApi) {
             if (lists->ability->GetWindow() == nullptr) {
                 lists->errorCode = newApi ? static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY) :
@@ -778,6 +781,7 @@ static napi_value GetTopWindowTask(void* contextPtr, napi_env env, napi_value ca
                 lists->errMsg = "FA mode can not get ability window";
                 return;
             }
+            WLOGFE("ineoui OnGetTopWindow 6");
             lists->window = Window::GetTopWindowWithId(lists->ability->GetWindow()->GetWindowId());
         } else {
             auto context = static_cast<std::weak_ptr<AbilityRuntime::Context>*>(contextPtr);
@@ -787,27 +791,36 @@ static napi_value GetTopWindowTask(void* contextPtr, napi_env env, napi_value ca
                 lists->errMsg = "Stage mode without context";
                 return;
             }
+            WLOGFE("ineoui OnGetTopWindow 6");
             lists->window = Window::GetTopWindowWithContext(context->lock());
         }
+
+        WLOGFE("ineoui OnGetTopWindow 7");
     };
     NapiAsyncTask::CompleteCallback complete = [lists, newApi](napi_env env, NapiAsyncTask& task, int32_t status) {
+        WLOGFE("ineoui OnGetTopWindow 8");
         if (lists == nullptr) {
             int32_t error = newApi ? static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY) :
                 static_cast<int32_t>(WMError::WM_ERROR_NULLPTR);
             task.Reject(env, CreateJsError(env, error, "napi abnormal"));
+            WLOGFE("ineoui OnGetTopWindow 9");
             return;
         }
+        WLOGFE("ineoui OnGetTopWindow info %{public}d, %{public}s", lists->errCode, lists->errMsg.c_str());
         if (lists->errorCode != 0) {
             task.Reject(env, CreateJsError(env, lists->errorCode, lists->errMsg));
+            WLOGFE("ineoui OnGetTopWindow 9");
             WLOGFE("%{public}s", lists->errMsg.c_str());
             return;
         }
         if (lists->window == nullptr) {
             auto error = newApi ? static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY) :
                 static_cast<int32_t>(WMError::WM_ERROR_NULLPTR);
+            WLOGFE("ineoui OnGetTopWindow 9");
             task.Reject(env, CreateJsError(env, error, "Get top window failed"));
             return;
         }
+        WLOGFE("ineoui OnGetTopWindow 10");
         task.Resolve(env, CreateJsWindowObject(env, lists->window));
         WLOGD("Get top window success");
     };
@@ -819,7 +832,7 @@ static napi_value GetTopWindowTask(void* contextPtr, napi_env env, napi_value ca
 
 napi_value JsWindowManager::OnGetTopWindow(napi_env env, napi_callback_info info)
 {
-    WLOGFD("OnGetTopWindow");
+    WLOGFE("ineoui OnGetTopWindow");
     WMError errCode = WMError::WM_OK;
     napi_value nativeContext = nullptr;
     napi_value nativeCallback = nullptr;
@@ -841,12 +854,13 @@ napi_value JsWindowManager::OnGetTopWindow(napi_env env, napi_callback_info info
         }
         GetNativeContext(env, nativeContext, contextPtr, errCode);
     }
+    WLOGFE("ineoui OnGetTopWindow 2");
     return GetTopWindowTask(contextPtr, env, nativeCallback, false);
 }
 
 napi_value JsWindowManager::OnGetLastWindow(napi_env env, napi_callback_info info)
 {
-    WLOGFD("OnGetLastWindow");
+    WLOGFE("OnGetLastWindow");
     WMError errCode = WMError::WM_OK;
     napi_value nativeContext = nullptr;
     napi_value nativeCallback = nullptr;
@@ -868,6 +882,7 @@ napi_value JsWindowManager::OnGetLastWindow(napi_env env, napi_callback_info inf
         return NapiGetUndefined(env);
     }
 
+    WLOGFE("ineoui OnGetTopWindow 2");
     return GetTopWindowTask(contextPtr, env, nativeCallback, true);
 }
 
