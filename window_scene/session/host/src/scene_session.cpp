@@ -2352,12 +2352,12 @@ void SceneSession::RequestHideKeyboard(bool isAppColdStart)
             TLOGE(WmsLogTag::WMS_KEYBOARD, "Session is null, notify inputMethod framework hide keyboard failed!");
             return;
         }
-        TLOGI(WmsLogTag::WMS_KEYBOARD, "Notify inputMethod framework hide keyboard start, id: %{public}d,"
+        TLOGI(WmsLogTag::WMS_KEYBOARD, "Notify inputMethod framework hide keyboard start, id: %{public}d, "
             "isAppColdStart: %{public}d", session->GetPersistentId(), isAppColdStart);
         if (MiscServices::InputMethodController::GetInstance()) {
             MiscServices::InputMethodController::GetInstance()->RequestHideInput();
-            TLOGI(WmsLogTag::WMS_KEYBOARD, "Notify inputMethod framework hide keyboard end, id: %{public}d",
-                session->GetPersistentId());
+        } else {
+            TLOGE(WmsLogTag::WMS_KEYBOARD, "GetInstance failed, notify inputMethod framework hide keyboard failed!");
         }
     };
     PostExportTask(task, "RequestHideKeyboard");

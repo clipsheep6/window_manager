@@ -5256,55 +5256,51 @@ void SceneSessionManager::ResizeSoftInputCallingSessionIfNeed(
     const sptr<SceneSession>& sceneSession, bool isInputUpdated)
 {
     if (callingSession_ == nullptr) {
-        TLOGI(WmsLogTag::WMS_KEYBOARD, "calling session is nullptr");
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "calling session is nullptr");
         return;
     }
-    SessionGravity gravity;
+    SessionGravity gravity = SessionGravity::SESSION_GRAVITY_DEFAULT;
     uint32_t percent = 0;
-    sceneSession->GetSessionProperty()->GetSessionGravity(gravity, percent);
-    if (gravity != SessionGravity::SESSION_GRAVITY_BOTTOM && gravity != SessionGravity::SESSION_GRAVITY_DEFAULT) {
+    if (sceneSession->GetSessionProperty() != nullptr) {
+        sceneSession->GetSessionProperty()->GetSessionGravity(gravity, percent);
+    }
+    if (gravity == SessionGravity::SESSION_GRAVITY_FLOAT) {
         TLOGI(WmsLogTag::WMS_KEYBOARD, "No need to raise calling window, gravity: %{public}d", gravity);
         return;
     }
 
-    bool isCallingSessionFloating;
-    if (callingSession_->GetSessionProperty() &&
-        callingSession_->GetSessionProperty()->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING) {
-        isCallingSessionFloating = true;
-    } else {
-        isCallingSessionFloating = false;
-    }
+    bool isCallingSessionFloating = (callingSession_->GetSessionProperty() &&
+        callingSession_->GetSessionProperty()->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING);
 
     const WSRect& softInputSessionRect = sceneSession->GetSessionRect();
-    WSRect callingSessionRect;
+    WSRect callingSessionRect = callingSession_->GetSessionRect();
     if (isInputUpdated && isCallingSessionFloating) {
         callingSessionRect = callingSession_->callingWindowRestoringRect_;
-    } else {
-        callingSessionRect = callingSession_->GetSessionRect();
     }
-    TLOGI(WmsLogTag::WMS_KEYBOARD, "softInputSessionRect: %{public}s, callingSessionRect: %{public}s",
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "id: %{public}d, isInputUpdated: %{public}d, isCallingSessionFloating: %{public}d"
+        ", softInputSessionRect: %{public}s, callingSessionRect: %{public}s",
+        callingSession_->GetPersistentId(), isInputUpdated, isCallingSessionFloating,
         softInputSessionRect.ToString().c_str(), callingSessionRect.ToString().c_str());
     if (SessionHelper::IsEmptyRect(SessionHelper::GetOverlap(softInputSessionRect, callingSessionRect, 0, 0))) {
         TLOGI(WmsLogTag::WMS_KEYBOARD, "There is no overlap area");
         return;
     }
 
+    if (!isInputUpdated) {
+        callingSession_->callingWindowRestoringRect_ = callingSessionRect;
+    }
+
     WSRect newRect = callingSessionRect;
     int32_t statusHeight = GetStatusBarHeight();
     if (isCallingSessionFloating && callingSessionRect.posY_ > statusHeight) {
         // calculate new rect of calling window
-        newRect.posY_ = softInputSessionRect.posY_ - static_cast<int32_t>(newRect.height_);
-        newRect.posY_ = std::max(newRect.posY_, statusHeight);
-    }
-
-    if (!isInputUpdated) {
-        callingSession_->callingWindowRestoringRect_ = callingSessionRect;
-    }
-    NotifyOccupiedAreaChangeInfo(sceneSession, newRect, softInputSessionRect);
-    if (isCallingSessionFloating && callingSessionRect.posY_ > statusHeight) {
+        newRect.posY_ = std::max(softInputSessionRect.posY_ - static_cast<int32_t>(newRect.height_), statusHeight);
+        NotifyOccupiedAreaChangeInfo(sceneSession, newRect, softInputSessionRect);
         callingSession_->needUpdateSessionRect_ = true;
         callingSession_->UpdateSessionRect(newRect, SizeChangeReason::UNDEFINED);
         callingSession_->callingWindowNewRect_ = callingSession_->GetSessionRect();
+    } else {
+        NotifyOccupiedAreaChangeInfo(sceneSession, newRect, softInputSessionRect);
     }
 }
 
@@ -5328,11 +5324,16 @@ void SceneSessionManager::NotifyOccupiedAreaChangeInfo(const sptr<SceneSession> 
 
 void SceneSessionManager::RestoreCallingSessionSizeIfNeed()
 {
-    TLOGD(WmsLogTag::WMS_KEYBOARD, "RestoreCallingSessionSizeIfNeed");
     if (callingSession_ == nullptr) {
         TLOGI(WmsLogTag::WMS_KEYBOARD, "Calling session is nullptr");
         return;
     }
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "id: %{public}d, needUpdateSessionRect_: %{public}d"
+        ", callingWindowRestoringRect_: %{public}s, curRect: %{public}s, callingWindowNewRect_: %{public}s",
+        callingSession_->GetPersistentId(), callingSession_->needUpdateSessionRect_,
+        callingSession_->callingWindowRestoringRect_.ToString().c_str(),
+        callingSession_->GetSessionRect().ToString().c_str(),
+        callingSession_->callingWindowNewRect_.ToString().c_str());
 
     WSRect overlapRect = { 0, 0, 0, 0 };
     NotifyOccupiedAreaChangeInfo(callingSession_, callingSession_->callingWindowRestoringRect_, overlapRect);
