@@ -549,11 +549,6 @@ float Session::GetBrightness() const
 
 bool Session::IsSessionValid() const
 {
-    if (sessionInfo_.isSystem_) {
-        WLOGFD("session is system, id: %{public}d, name: %{public}s, state: %{public}u",
-            GetPersistentId(), sessionInfo_.bundleName_.c_str(), state_);
-        return false;
-    }
     bool res = state_ > SessionState::STATE_DISCONNECT && state_ < SessionState::STATE_END;
     if (!res) {
         if (state_ == SessionState::STATE_DISCONNECT && sessionStage_) {
@@ -571,7 +566,7 @@ bool Session::IsActive() const
 
 bool Session::IsSystemSession() const
 {
-    return sessionInfo_.isSystem_;
+    return false;
 }
 
 bool Session::IsSystemActive() const
@@ -686,14 +681,6 @@ WSRectF Session::UpdateHotRect(const WSRect& rect)
 
 void Session::UpdatePointerArea(const WSRect& rect)
 {
-    if (IsSystemSession()) {
-        return;
-    }
-    if (!((GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW ||
-            (WindowHelper::IsSubWindow(GetWindowType()) && property_->IsDecorEnable())) &&
-        GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING)) {
-        return;
-    }
     if (preRect_ == rect) {
         WLOGFD("The window area does not change");
         return;
@@ -742,9 +729,6 @@ WSError Session::UpdateRect(const WSRect& rect, SizeChangeReason reason,
         WLOGFE("sessionStage_ is nullptr");
     }
     UpdatePointerArea(winRect_);
-    if (GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
-        NotifyCallingSessionUpdateRect();
-    }
     return WSError::WS_OK;
 }
 
@@ -761,14 +745,6 @@ WSError Session::UpdateDensity()
         return WSError::WS_ERROR_NULLPTR;
     }
     return WSError::WS_OK;
-}
-
-void Session::NotifyCallingSessionUpdateRect()
-{
-    if (notifyCallingSessionUpdateRectFunc_) {
-        WLOGFI("Notify calling window that input method update rect");
-        notifyCallingSessionUpdateRectFunc_(persistentId_);
-    }
 }
 
 WSError Session::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
@@ -847,19 +823,6 @@ WSError Session::Reconnect(const sptr<ISessionStage>& sessionStage, const sptr<I
     persistentId_ = property->GetPersistentId();
     callingPid_ = pid;
     callingUid_ = uid;
-    WindowState windowState = property->GetWindowState();
-    auto type = property->GetWindowType();
-    if (windowState == WindowState::STATE_SHOWN || SessionHelper::IsSubWindow(type)) {
-        isActive_ = true;
-        if (SessionHelper::IsMainWindow(type) || type == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
-            UpdateSessionState(SessionState::STATE_ACTIVE);
-        } else {
-            UpdateSessionState(SessionState::STATE_FOREGROUND);
-        }
-    } else {
-        isActive_ = false;
-        UpdateSessionState(SessionState::STATE_BACKGROUND);
-    }
     bufferAvailable_ = true;
     return WSError::WS_OK;
 }
@@ -894,70 +857,18 @@ WSError Session::Foreground(sptr<WindowSessionProperty> property)
     return WSError::WS_OK;
 }
 
-void Session::NotifyCallingSessionForeground()
-{
-    if (notifyCallingSessionForegroundFunc_) {
-        TLOGI(WmsLogTag::WMS_KEYBOARD, "Notify calling window that input method shown");
-        notifyCallingSessionForegroundFunc_(persistentId_);
-    }
-}
-
 void Session::HandleDialogBackground()
 {
-    const auto& type = GetWindowType();
-    if (type < WindowType::APP_MAIN_WINDOW_BASE || type >= WindowType::APP_MAIN_WINDOW_END) {
-        TLOGD(WmsLogTag::WMS_DIALOG, "Current session is not main window, id: %{public}d, type: %{public}d",
-            GetPersistentId(), type);
-        return;
-    }
-
-    std::vector<sptr<Session>> dialogVec;
-    {
-        std::unique_lock<std::mutex> lock(dialogVecMutex_);
-        dialogVec = dialogVec_;
-    }
-    for (const auto& dialog : dialogVec) {
-        if (dialog == nullptr) {
-            continue;
-        }
-        TLOGI(WmsLogTag::WMS_DIALOG, "Background dialog, id: %{public}d, dialogId: %{public}d",
-            GetPersistentId(), dialog->GetPersistentId());
-        dialog->SetSessionState(SessionState::STATE_BACKGROUND);
-        if (!dialog->sessionStage_) {
-            TLOGE(WmsLogTag::WMS_DIALOG, "dialog session stage is nullptr");
-            return;
-        }
-        dialog->sessionStage_->NotifyDialogStateChange(false);
-    }
+    TLOGD(WmsLogTag::WMS_DIALOG, "Current session is not main window, id: %{public}d, type: %{public}d",
+        GetPersistentId(), GetWindowType());
+    return;
 }
 
 void Session::HandleDialogForeground()
 {
-    const auto& type = GetWindowType();
-    if (type < WindowType::APP_MAIN_WINDOW_BASE || type >= WindowType::APP_MAIN_WINDOW_END) {
-        TLOGD(WmsLogTag::WMS_DIALOG, "Current session is not main window, id: %{public}d, type: %{public}d",
-            GetPersistentId(), type);
-        return;
-    }
-
-    std::vector<sptr<Session>> dialogVec;
-    {
-        std::unique_lock<std::mutex> lock(dialogVecMutex_);
-        dialogVec = dialogVec_;
-    }
-    for (const auto& dialog : dialogVec) {
-        if (dialog == nullptr) {
-            continue;
-        }
-        TLOGI(WmsLogTag::WMS_DIALOG, "Foreground dialog, id: %{public}d, dialogId: %{public}d",
-            GetPersistentId(), dialog->GetPersistentId());
-        dialog->SetSessionState(SessionState::STATE_ACTIVE);
-        if (!dialog->sessionStage_) {
-            TLOGE(WmsLogTag::WMS_DIALOG, "dialog session stage is nullptr");
-            return;
-        }
-        dialog->sessionStage_->NotifyDialogStateChange(true);
-    }
+    TLOGD(WmsLogTag::WMS_DIALOG, "Current session is not main window, id: %{public}d, type: %{public}d",
+        GetPersistentId(), GetWindowType());
+    return;
 }
 
 WSError Session::Background()
@@ -988,14 +899,6 @@ WSError Session::Background()
     NotifyBackground();
     DelayedSingleton<ANRManager>::GetInstance()->OnBackground(persistentId_);
     return WSError::WS_OK;
-}
-
-void Session::NotifyCallingSessionBackground()
-{
-    if (notifyCallingSessionBackgroundFunc_) {
-        TLOGI(WmsLogTag::WMS_KEYBOARD, "Notify calling window that input method hide");
-        notifyCallingSessionBackgroundFunc_();
-    }
 }
 
 WSError Session::Disconnect(bool isFromClient)
@@ -1055,15 +958,6 @@ WSError Session::SetActive(bool active)
 void Session::NotifyForegroundInteractiveStatus(bool interactive)
 {
     SetForegroundInteractiveStatus(interactive);
-    if (!IsSessionValid() || !sessionStage_) {
-        return;
-    }
-    const auto& state = GetSessionState();
-    if (WindowHelper::IsMainWindow(GetWindowType()) &&
-        (isVisible_ || state == SessionState::STATE_ACTIVE || state == SessionState::STATE_FOREGROUND)) {
-        WLOGFI("NotifyForegroundInteractiveStatus %{public}d", interactive);
-        sessionStage_->NotifyForegroundInteractiveStatus(interactive);
-    }
 }
 
 void Session::SetForegroundInteractiveStatus(bool interactive)
@@ -1331,21 +1225,6 @@ WSError Session::PendingSessionToBackgroundForDelegator()
     return WSError::WS_OK;
 }
 
-void Session::SetNotifyCallingSessionUpdateRectFunc(const NotifyCallingSessionUpdateRectFunc& func)
-{
-    notifyCallingSessionUpdateRectFunc_ = func;
-}
-
-void Session::SetNotifyCallingSessionForegroundFunc(const NotifyCallingSessionForegroundFunc& func)
-{
-    notifyCallingSessionForegroundFunc_ = func;
-}
-
-void Session::SetNotifyCallingSessionBackgroundFunc(const NotifyCallingSessionBackgroundFunc& func)
-{
-    notifyCallingSessionBackgroundFunc_ = func;
-}
-
 void Session::SetRaiseToAppTopForPointDownFunc(const NotifyRaiseToTopForPointDownFunc& func)
 {
     raiseToTopForPointDownFunc_ = func;
@@ -1452,52 +1331,6 @@ bool Session::CheckDialogOnForeground()
 
 bool Session::CheckPointerEventDispatch(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) const
 {
-    auto windowType = GetWindowType();
-    bool isSystemWindow = GetSessionInfo().isSystem_;
-    auto sessionState = GetSessionState();
-    int32_t action = pointerEvent->GetPointerAction();
-    auto isPC = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
-    if (!isSystemWindow &&
-        (WindowHelper::IsMainWindow(windowType) || (WindowHelper::IsSubWindow(windowType) && isPC)) &&
-        sessionState != SessionState::STATE_FOREGROUND &&
-        sessionState != SessionState::STATE_ACTIVE &&
-        action != MMI::PointerEvent::POINTER_ACTION_LEAVE_WINDOW) {
-        WLOGFW("Current Session Info: [persistentId: %{public}d, isSystemWindow: %{public}d,"
-            "state: %{public}d, action:%{public}d]", GetPersistentId(), isSystemWindow, state_, action);
-        return false;
-    }
-    return true;
-}
-
-bool Session::CheckKeyEventDispatch(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const
-{
-    if (GetWindowType() != WindowType::WINDOW_TYPE_DIALOG) {
-        return true;
-    }
-
-    auto currentRect = winRect_;
-    if (!isRSVisible_ || currentRect.width_ == 0 || currentRect.height_ == 0) {
-        WLOGE("Error size: [width: %{public}d, height: %{public}d], isRSVisible_: %{public}d,"
-            " persistentId: %{public}d",
-            currentRect.width_, currentRect.height_, isRSVisible_, GetPersistentId());
-        return false;
-    }
-
-    auto parentSession = GetParentSession();
-    if (parentSession == nullptr) {
-        WLOGFW("Dialog parent is null");
-        return false;
-    }
-    auto parentSessionState = parentSession->GetSessionState();
-    if ((parentSessionState != SessionState::STATE_FOREGROUND &&
-        parentSessionState != SessionState::STATE_ACTIVE) ||
-        (state_ != SessionState::STATE_FOREGROUND &&
-        state_ != SessionState::STATE_ACTIVE)) {
-        TLOGE(WmsLogTag::WMS_DIALOG, "Dialog's parent info : [persistentId: %{publicd}d, state:%{public}d];"
-            "Dialog info:[persistentId: %{publicd}d, state:%{public}d]",
-            parentSession->GetPersistentId(), parentSessionState, GetPersistentId(), state_);
-        return false;
-    }
     return true;
 }
 
@@ -1560,9 +1393,7 @@ void Session::PresentFocusIfPointDown()
     if (!isFocused_ && GetFocusable()) {
         NotifyRequestFocusStatusNotifyManager(true, false);
     }
-    if (!sessionInfo_.isSystem_ || (!isFocused_ && GetFocusable())) {
-        NotifyClick();
-    }
+    NotifyClick();
 }
 
 void Session::HandlePointDownDialog()
@@ -1682,38 +1513,6 @@ WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& 
 
 WSError Session::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
-    if (!IsSystemSession() && !IsSessionValid()) {
-        return WSError::WS_ERROR_INVALID_SESSION;
-    }
-    if (keyEvent == nullptr) {
-        WLOGFE("KeyEvent is nullptr");
-        return WSError::WS_ERROR_NULLPTR;
-    }
-    if (GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
-        if (CheckDialogOnForeground()) {
-            TLOGD(WmsLogTag::WMS_DIALOG, "Has dialog on foreground, not transfer pointer event");
-            return WSError::WS_ERROR_INVALID_PERMISSION;
-        }
-    } else if (GetWindowType() == WindowType::WINDOW_TYPE_APP_SUB_WINDOW) {
-        if (parentSession_ && parentSession_->CheckDialogOnForeground()) {
-            TLOGD(WmsLogTag::WMS_DIALOG, "Its main window has dialog on foreground, not transfer pointer event");
-            return WSError::WS_ERROR_INVALID_PERMISSION;
-        }
-    } else if (GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
-        if (keyEvent->GetKeyCode() == MMI::KeyEvent::KEYCODE_BACK) {
-            return WSError::WS_ERROR_INVALID_PERMISSION;
-        }
-        if (parentSession_ && parentSession_->CheckDialogOnForeground() &&
-            !IsTopDialog()) {
-            return WSError::WS_ERROR_INVALID_PERMISSION;
-        }
-    }
-
-    if (!CheckKeyEventDispatch(keyEvent)) {
-        WLOGFW("Do not dispatch the key event.");
-        return WSError::WS_DO_NOTHING;
-    }
-
     WLOGFD("Session TransferKeyEvent eventId:%{public}d persistentId:%{public}d bundleName:%{public}s pid:%{public}d",
         keyEvent->GetId(), persistentId_, callingBundleName_.c_str(), callingPid_);
     if (DelayedSingleton<ANRManager>::GetInstance()->IsANRTriggered(persistentId_)) {
@@ -2000,9 +1799,7 @@ void Session::PresentFoucusIfNeed(int32_t pointerAction)
         if (!isFocused_ && GetFocusable()) {
             NotifyRequestFocusStatusNotifyManager(true, false);
         }
-        if (!sessionInfo_.isSystem_ || (!isFocused_ && GetFocusable())) {
-            NotifyClick();
-        }
+        NotifyClick();
     }
 }
 
@@ -2014,19 +1811,8 @@ WSError Session::UpdateFocus(bool isFocused)
     }
     isFocused_ = isFocused;
     // notify scb arkui focus
-    if (isFocused) {
-        if (sessionInfo_.isSystem_) {
-            HiSysEventWrite(
-                OHOS::HiviewDFX::HiSysEvent::Domain::WINDOW_MANAGER,
-                "FOCUS_WINDOW",
-                OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-                "PID", getpid(),
-                "UID", getuid(),
-                "BUNDLE_NAME", sessionInfo_.bundleName_);
-            NotifyUIRequestFocus();
-        }
-    } else {
-         NotifyUILostFocus();
+    if (!isFocused) {
+        NotifyUILostFocus();
     }
     return WSError::WS_OK;
 }
@@ -2045,12 +1831,6 @@ WSError Session::UpdateWindowMode(WindowMode mode)
 {
     WLOGFD("Session update window mode, id: %{public}d, mode: %{public}d", GetPersistentId(),
         static_cast<int32_t>(mode));
-    if (sessionInfo_.isSystem_) {
-        WLOGFD("session is system, id: %{public}d, name: %{public}s, state: %{public}u",
-            GetPersistentId(), sessionInfo_.bundleName_.c_str(), state_);
-        return WSError::WS_ERROR_INVALID_SESSION;
-    }
-
     if (property_ == nullptr) {
         WLOGFD("id: %{public}d property is nullptr", persistentId_);
         return WSError::WS_ERROR_NULLPTR;
@@ -2081,14 +1861,9 @@ WSError Session::UpdateWindowMode(WindowMode mode)
 
 WSError Session::SetSystemSceneBlockingFocus(bool blocking)
 {
-    TLOGD(WmsLogTag::WMS_FOCUS, "Session set blocking focus, id: %{public}d, mode: %{public}d",
+    TLOGW(WmsLogTag::WMS_FOCUS, "Session set blocking focus, id: %{public}d, mode: %{public}d, Session is not system.",
         GetPersistentId(), blocking);
-    if (!sessionInfo_.isSystem_) {
-        TLOGW(WmsLogTag::WMS_FOCUS, "Session is not system.");
-        return WSError::WS_ERROR_INVALID_SESSION;
-    }
-    blockingFocus_ = blocking;
-    return WSError::WS_OK;
+    return WSError::WS_ERROR_INVALID_SESSION;
 }
 
 bool Session::GetBlockingFocus() const
@@ -2186,10 +1961,6 @@ WSError Session::ProcessBackEvent()
 {
     if (!IsSessionValid()) {
         return WSError::WS_ERROR_INVALID_SESSION;
-    }
-    if (GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
-        TLOGI(WmsLogTag::WMS_DIALOG, "this is dialog, id: %{public}d", GetPersistentId());
-        return WSError::WS_OK;
     }
     return sessionStage_->HandleBackEvent();
 }
@@ -2492,11 +2263,10 @@ WSError Session::UpdateTitleInTargetPos(bool isShow, int32_t height)
 
 bool Session::NeedSystemPermission(WindowType type)
 {
-    return !(WindowHelper::IsAppWindow(type) || type == WindowType::WINDOW_TYPE_UI_EXTENSION ||
-        type == WindowType::WINDOW_TYPE_SCENE_BOARD || type == WindowType::WINDOW_TYPE_SYSTEM_FLOAT ||
-        type == WindowType::WINDOW_TYPE_SYSTEM_SUB_WINDOW || type == WindowType::WINDOW_TYPE_TOAST ||
-        type == WindowType::WINDOW_TYPE_DRAGGING_EFFECT || type == WindowType::WINDOW_TYPE_APP_LAUNCHING ||
-        type == WindowType::WINDOW_TYPE_PIP);
+    return !(type == WindowType::WINDOW_TYPE_UI_EXTENSION || type == WindowType::WINDOW_TYPE_SCENE_BOARD ||
+        type == WindowType::WINDOW_TYPE_SYSTEM_FLOAT || type == WindowType::WINDOW_TYPE_SYSTEM_SUB_WINDOW ||
+        type == WindowType::WINDOW_TYPE_TOAST || type == WindowType::WINDOW_TYPE_DRAGGING_EFFECT ||
+        type == WindowType::WINDOW_TYPE_APP_LAUNCHING || type == WindowType::WINDOW_TYPE_PIP);
 }
 
 void Session::SetNotifySystemSessionPointerEventFunc(const NotifySystemSessionPointerEventFunc& func)
@@ -2547,5 +2317,10 @@ std::shared_ptr<Media::PixelMap> Session::GetSnapshotPixelMap(const float oriSca
         return scenePersistence_->GetLocalSnapshotPixelMap(oriScale, newScale);
     }
     return nullptr;
+}
+
+void Session::NotifyDialogStateChange(bool state)
+{
+    return;
 }
 } // namespace OHOS::Rosen
