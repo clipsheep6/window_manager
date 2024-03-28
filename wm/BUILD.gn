@@ -47,6 +47,7 @@ ohos_static_library("libwm_static") {
     "../window_scene/intention_event/service/anr_manager/include",
     "../window_scene/intention_event/framework/anr_handler/include",
     "${window_base_path}/window_scene/intention_event/include",
+    "${accessibility_path}/interfaces/innerkits/common/include/",
   ]
 
   sources = [
@@ -187,6 +188,7 @@ ohos_shared_library("libwm") {
     "../window_scene/intention_event/service/anr_manager/include",
     "../window_scene/intention_event/framework/anr_handler/include",
     "${window_base_path}/window_scene/intention_event/include",
+    "${accessibility_path}/interfaces/innerkits/common/include/",
   ]
 
   sources = [
