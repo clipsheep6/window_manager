@@ -207,7 +207,7 @@ public:
     }
     virtual WMError GetGectByWindowId(uint32_t windowId, Rect& rect)
     {
-        return WMError:WM_OK;
+        return WMError::WM_OK;
     }
 };
 }
