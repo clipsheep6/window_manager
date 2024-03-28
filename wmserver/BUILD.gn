@@ -87,6 +87,9 @@ ohos_shared_library("sms") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
   }
   sources = [
     "${window_base_path}/window_scene/session_manager/src/screen_session_manager_lite.cpp",
@@ -142,6 +145,9 @@ if (scene_board_enabled) {
       cfi = true
       cfi_cross_dso = true
       debug = false
+      integer_overflow = true
+      ubsan = true
+      boundary_sanitize = true
     }
     defines = []
     if (use_musl) {

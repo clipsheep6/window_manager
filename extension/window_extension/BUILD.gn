@@ -36,6 +36,9 @@ ohos_shared_library("libwindow_extension") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
   }
   sources = [
     "../extension_connection/src/zidl/window_extension_client_proxy.cpp",
@@ -97,6 +100,9 @@ ohos_shared_library("window_extension_module") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
   }
   sources = [ "src/window_extension_module_loader.cpp" ]
 
