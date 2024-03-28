@@ -2671,5 +2671,33 @@ void WindowSessionImpl::RefreshNoInteractionTimeoutMonitor(int32_t eventId)
     }
 }
 
+WMError WindowSessionImpl::GetWindowStatusByWindowId(uint32_t windowId, WindowStatus& windowStatus) const
+{
+    WLOGFD ("GetWindowStatusByWindowId, windId:%{public}u", windowId);
+    if (IsWindowSessionInvalid()) {
+        WLOGFE("session is invalid");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
+        WLOGFE("[WMSLayoUt] Unsupported operation for pip window");
+        return WMError::WM_ERROR_INVALID_OPERATION;
+    }
+    return SingletonContainer::Get<WindowAdapter>().GetWindowStatusByWindowId(windowId, windowStatus);
+}
+
+WMError WindowSessionImpl::GetRectByWindowId(uint32_t windowId, Rect& rect) const
+{
+    WLOGFD("GetRectByWindowId, windId:%{public}u", windowId);
+    if (IsWindowSessionInvalid()) {
+        WLOGFE("session is invalid").
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
+        WLOGFE("[WMSLayout] Unsupported operation for pip window");
+        return WMError::WM_ERROR_INVALID_OPERATION;
+    }
+    return SingletonContainer::Get<WindowAdapter>().GetRectByWindowId(windowId, rect);
+}
+
 } // namespace Rosen
 } // namespace OHOS

@@ -1342,7 +1342,7 @@ public:
      * @return WMError
      */
     virtual WMError Maximize() { return WMError::WM_OK; }
-    
+
     /**
      * @brief maximize window with layoutOption.
      *
@@ -1809,6 +1809,28 @@ public:
      * @return WM_OK means unregister success, others means unregister failed.
      */
     virtual WMError UnregisterWindowRectChangeListener(const sptr<IWindowRectChangeListener>& listener)
+    {
+        return WMError::WM_OK;
+    }
+
+    /**
+    * @brief get window status by sub window id or main window id.
+    * @param windowId Window id.
+    * @param windowStatus
+    * @return WM_OK means set success, others means set Failed.
+    */
+    virtual WMError GetWindowStatusByWindowId(uint32_t windowId, WindowStatus& windowStatus)
+    {
+         return WMError::WM_OK;
+    }
+
+    /**
+    * @brief get rect by sub window id or main window id
+    * @param windowId Window id.
+    * @param rect.
+    * @return WM_OK means set success, others means set failed
+    */
+    virtual WMError GetRectByWindowId(uint32_t windowId, Rect& rect)
     {
         return WMError::WM_OK;
     }
