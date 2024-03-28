@@ -225,9 +225,9 @@ public:
     {
         return WMError::WM_OK;
     }
-    WMError GetRectByWindowId(unit32_t windowId, Rect& rect) override
+    WMError GetRectByWindowId(uint32_t windowId, Rect& rect) override
     {
-        return WMError:WM_OK;
+        return WMError::WM_OK;
     }
 };
 } // namespace OHOS::Rosen

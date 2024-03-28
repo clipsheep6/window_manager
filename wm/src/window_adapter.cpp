@@ -607,13 +607,13 @@ WMError WindowAdapter::UpdateExtWindowFlags(int32_t parentId, int32_t persistent
         extWindowFlags));
 }
 
-WMError WindowAdapter::GetWindowStatusByWindowId(unit32_t windowId, WindowStatus& windowStatus)
+WMError WindowAdapter::GetWindowStatusByWindowId(uint32_t windowId, WindowStatus& windowStatus)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
     return static_cast<WMError>(windowManagerServiceProxy_->GetWindowStatusByWindowId(windowId, windowStatus));
 }
 
-WMError WindowAdapter::GetRectByWindowId(unit32_t windowId, Rect& rect)
+WMError WindowAdapter::GetRectByWindowId(uint32_t windowId, Rect& rect)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
     return static_cast<WMError>(windowManagerServiceProxy_->GetRectByWindowId(windowId, rect));

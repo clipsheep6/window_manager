@@ -7396,14 +7396,14 @@ WMError SceneSessionManager::GetWindowStatusByWindowId(unit32_t windowId, Window
     return WMError::WM_OK;
 }
 
-WMError SceneSessionManager::GetRectByWindowId(unit32_t windowId, Rect& rect)
+WMError SceneSessionManager::GetRectByWindowId(uint32_t windowId, Rect& rect)
 {
     sptr<SceneSession> sceneSession = GetSceneSession(windowId);
     if (sceneSession == nullptr) {
         WLOGFE("Get WindowStatus Fail, Can not find session, WindowId: %{public}u", windowId);
         return WMError::WM_ERROR_INVALID_WINDOW:
     }
-    if (SessionHelper::IsSubWindow(sceneSession->GetWindowType()){
+    if (SessionHelper::IsSubWindow(sceneSession->GetWindowType()) {
         sceneSession = GetSceneSession(sceneSession->GetParentPersistentId()) :
         if (sceneSession == nullptr) {
             WLOGFE("Get WindowStatus Fail, ParentSession is nutlptr, windowId: %{public}u", windowId);
@@ -7415,7 +7415,8 @@ WMError SceneSessionManager::GetRectByWindowId(unit32_t windowId, Rect& rect)
     rect.posY_ = sessiohRect.posY_;
     rect.width_= sessiohRect.width_;
     rect.height_ = sessiohRect.height_;
-    WLOGFE("Get Rect windowId: %{public}d, x: %{public}d, y: %{public}d, height: %{public}u, width: %{public}u", windowId, rect.posX_, rect.posY_, rect.width_, rect.height_);
+    WLOGFE("Get Rect windowId: %{public}d, x: %{public}d, y: %{public}d, height: %{public}u, width: %{public}u",
+        windowId, rect.posX_, rect.posY_, rect.width_, rect.height_);
     return WMError::WM_OK;
 }
 } // namespace OHOS::Rosen

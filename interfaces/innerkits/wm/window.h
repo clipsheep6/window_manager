@@ -1821,7 +1821,7 @@ public:
     */
     virtual WMError GetWindowStatusByWindowId(uint32_t windowId, WindowStatus& windowStatus)
     {
-         return WMError::WM_OK;
+        return WMError::WM_OK;
     }
 
     /**

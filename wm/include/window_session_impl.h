@@ -211,8 +211,8 @@ public:
     void SetDefaultDisplayIdIfNeed();
     WMError RegisterWindowRectChangeListener(const sptr<IWindowRectChangeListener>& listener) override;
     WMError UnregisterWindowRectChangeListener(const sptr<IWindowRectChangeListener>& listener) override;
-    virtual WMError GetRectByWindowId(unit32_t windowId, Rect& rect) const override;
-    virtual WMError GetWindowStatusByWindowId(unit32_t windowId, WindowStatus& windowStatus) const override;
+    virtual WMError GetRectByWindowId(uint32_t windowId, Rect& rect) const override;
+    virtual WMError GetWindowStatusByWindowId(uint32_t windowId, WindowStatus& windowStatus) const override;
 
 protected:
     WMError Connect();
