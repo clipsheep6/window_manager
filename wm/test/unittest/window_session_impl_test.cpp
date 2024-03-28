@@ -1702,6 +1702,25 @@ HWTEST_F(WindowSessionImplTest, GetTitleButtonArea, Function | SmallTest | Level
 }
 
 /**
+ * @tc.name: SetTitleButtonVisible
+ * @tc.desc: SetTitleButtonVisible and check the retCode
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTest, SetTitleButtonVisible, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTest: SetTitleButtonVisible01 start";
+    sptr<WindowOption> option = new WindowOption();
+    ASSERT_NE(option, nullptr);
+    option->SetWindowName("SetTitleButtonVisible");
+    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
+    ASSERT_NE(window, nullptr);
+    WMError res = window->SetTitleButtonVisible(false, false, false);
+    ASSERT_EQ(res, WMError::WM_ERROR_INVALID_CALLING);
+    GTEST_LOG_(INFO) << "WindowSessionImplTest: SetTitleButtonVisible01 end";
+}
+
+/**
  * @tc.name: RegisterExtensionAvoidAreaChangeListener
  * @tc.desc: RegisterExtensionAvoidAreaChangeListener Test
  * @tc.type: FUNC

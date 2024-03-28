@@ -147,6 +147,7 @@ public:
     static napi_value SetWindowDecorHeight(napi_env env, napi_callback_info info);
     static napi_value GetWindowDecorHeight(napi_env env, napi_callback_info info);
     static napi_value GetTitleButtonRect(napi_env env, napi_callback_info info);
+    static napi_value SetTitleButtonVisible(napi_env env, napi_callback_info info);
 private:
     std::string GetWindowName();
     static bool ParseScaleOption(napi_env env, napi_value jsObject, Transform& trans);
@@ -207,6 +208,7 @@ private:
     napi_value OnSetWindowDecorHeight(napi_env env, napi_callback_info info);
     napi_value OnGetWindowDecorHeight(napi_env env, napi_callback_info info);
     napi_value OnGetTitleButtonRect(napi_env env, napi_callback_info info);
+    napi_value OnSetTitleButtonVisible(napi_env env, napi_callback_info info);
 
     // colorspace, gamut
     napi_value OnIsSupportWideGamut(napi_env env, napi_callback_info info);

@@ -784,6 +784,13 @@ napi_value JsWindow::GetTitleButtonRect(napi_env env, napi_callback_info info)
     return (me != nullptr) ? me->OnGetTitleButtonRect(env, info) : nullptr;
 }
 
+napi_value JsWindow::SetTitleButtonVisible(napi_env env, napi_callback_info info)
+{
+    TLOGW(WmsLogTag::WMS_LAYOUT, "[NAPI]SetTitleButtonVisible");
+    JsWindow* me = CheckParamsAndGetThis<JsWindow>(env, info);
+    return (me != nullptr) ? me->OnSetTitleButtonVisible(env, info) : nullptr;
+}
+
 static void UpdateSystemBarProperties(std::map<WindowType, SystemBarProperty>& systemBarProperties,
     const std::map<WindowType, SystemBarPropertyFlag>& systemBarPropertyFlags, wptr<Window> weakToken)
 {
@@ -5383,6 +5390,58 @@ napi_value JsWindow::OnGetTitleButtonRect(napi_env env, napi_callback_info info)
     return TitleButtonAreaObj;
 }
 
+napi_value JsWindow::OnSetTitleButtonVisible(napi_env env, napi_callback_info info)
+{
+    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, "set title button visible permission denied!");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_NOT_SYSTEM_APP);
+    }
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc < 3) { // 3: maximum params num
+        WLOGFE("Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
+    constexpr size_t isMaximizeArgc = 0, isMinimizeArgc = 1, isSplitVisArgc = 2;
+    napi_value nativeVal = argv[isMaximizeArgc];
+    if (nativeVal == nullptr) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, "Failed to convert parameter to isMaximizeVisible");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
+    bool isMaximizeVisible = true;
+    napi_get_value_bool(env, nativeVal, &isMaximizeVisible);
+    nativeVal = argv[isMinimizeArgc];
+    if (nativeVal == nullptr) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, "Failed to convert parameter to isMinimizeVisible");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
+    bool isMinimizeVisible = true;
+    napi_get_value_bool(env, nativeVal, &isMinimizeVisible);
+    nativeVal = argv[isSplitVisArgc];
+    if (nativeVal == nullptr) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, "Failed to convert parameter to isSplitVisible");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
+    bool isSplitVisible = true;
+    napi_get_value_bool(env, nativeVal, &isSplitVisible);
+    if (windowToken_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, "WindowToken_ is nullptr");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
+    }
+    WMError errCode = windowToken_->SetTitleButtonVisible(isMaximizeVisible, isMinimizeVisible, isSplitVisible);
+    WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(errCode);
+    if (ret != WmErrorCode::WM_OK) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, "set title button visible failed!");
+        return NapiThrowError(env, ret);
+    }
+    TLOGE(WmsLogTag::WMS_LAYOUT,
+        "Window [%{public}u, %{public}s] set title button visible [%{public}d, %{public}d, %{public}d]",
+        windowToken_->GetWindowId(), windowToken_->GetWindowName().c_str(), isMaximizeVisible, isMinimizeVisible,
+        isSplitVisible);
+    return NapiGetUndefined(env);
+}
+
 void BindFunctions(napi_env env, napi_value object, const char *moduleName)
 {
     BindNativeFunction(env, object, "show", moduleName, JsWindow::Show);
@@ -5487,6 +5546,7 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "setWindowDecorHeight", moduleName, JsWindow::SetWindowDecorHeight);
     BindNativeFunction(env, object, "getWindowDecorHeight", moduleName, JsWindow::GetWindowDecorHeight);
     BindNativeFunction(env, object, "getTitleButtonRect", moduleName, JsWindow::GetTitleButtonRect);
+    BindNativeFunction(env, object, "setTitleButtonVisible", moduleName, JsWindow::SetTitleButtonVisible);
 }
 }  // namespace Rosen
 }  // namespace OHOS

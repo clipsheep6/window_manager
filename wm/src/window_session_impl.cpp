@@ -545,6 +545,33 @@ void WindowSessionImpl::NotifyRotationAnimationEnd()
     uiContent_->NotifyRotationAnimationEnd();
 }
 
+void WindowSessionImpl::GetHideButtonActionFlags(bool isPC, bool &hideMaximizeButton, bool &hideMinimizeButton,
+    bool &hideSplitButton)
+{
+    auto modeSupportInfo = property_->GetModeSupportInfo();
+    hideSplitButton = !(modeSupportInfo & WindowModeSupport::WINDOW_MODE_SUPPORT_SPLIT_PRIMARY);
+    // not support fullscreen in split and floating mode, or not support float in fullscreen mode
+    hideMaximizeButton = (!(modeSupportInfo & WindowModeSupport::WINDOW_MODE_SUPPORT_FULLSCREEN) &&
+        (GetMode() == WindowMode::WINDOW_MODE_FLOATING || WindowHelper::IsSplitWindowMode(GetMode()))) ||
+        (!(modeSupportInfo & WindowModeSupport::WINDOW_MODE_SUPPORT_FLOATING) &&
+        GetMode() == WindowMode::WINDOW_MODE_FULLSCREEN);
+    if (!isPC) {
+        return;
+    }
+    if (hideMaximizeButton > !windowTitleVisibleFlags_.isMaximizeVisible) {
+        TLOGW(WmsLogTag::WMS_LAYOUT, "isMaximizeVisible param INVALID");
+    }
+    hideMaximizeButton = hideMaximizeButton || (!windowTitleVisibleFlags_.isMaximizeVisible);
+    if (hideMinimizeButton > !windowTitleVisibleFlags_.isMinimizeVisible) {
+        TLOGW(WmsLogTag::WMS_LAYOUT, "isMinimizeVisible param INVALID");
+    }
+    hideMinimizeButton = hideMinimizeButton || (!windowTitleVisibleFlags_.isMinimizeVisible);
+    if (hideSplitButton > !windowTitleVisibleFlags_.isSplitVisible) {
+        TLOGW(WmsLogTag::WMS_LAYOUT, "isSplitVisible param INVALID");
+    }
+    hideSplitButton = hideSplitButton || (!windowTitleVisibleFlags_.isSplitVisible);
+}
+
 void WindowSessionImpl::UpdateDensity()
 {
     auto preRect = GetRect();
@@ -681,15 +708,13 @@ void WindowSessionImpl::UpdateTitleButtonVisibility()
         uiContent_->HideWindowTitleButton(true, true, true);
         return;
     }
-    auto modeSupportInfo = property_->GetModeSupportInfo();
-    bool hideSplitButton = !(modeSupportInfo & WindowModeSupport::WINDOW_MODE_SUPPORT_SPLIT_PRIMARY);
-    // not support fullscreen in split and floating mode, or not support float in fullscreen mode
-    bool hideMaximizeButton = (!(modeSupportInfo & WindowModeSupport::WINDOW_MODE_SUPPORT_FULLSCREEN) &&
-        (GetMode() == WindowMode::WINDOW_MODE_FLOATING || WindowHelper::IsSplitWindowMode(GetMode()))) ||
-        (!(modeSupportInfo & WindowModeSupport::WINDOW_MODE_SUPPORT_FLOATING) &&
-        GetMode() == WindowMode::WINDOW_MODE_FULLSCREEN);
-    WLOGFI("[hideSplit, hideMaximize]: [%{public}d, %{public}d]", hideSplitButton, hideMaximizeButton);
-    uiContent_->HideWindowTitleButton(hideSplitButton, hideMaximizeButton, false);
+    bool hideMaximizeButton = false;
+    bool hideMinimizeButton = false;
+    bool hideSplitButton = false;
+    GetHideButtonActionFlags(isPC, hideMaximizeButton, hideMinimizeButton, hideSplitButton);
+    TLOGI(WmsLogTag::WMS_LAYOUT, "[hideSplit, hideMaximize, hideMinimizeButton]: [%{public}d, %{public}d, %{public}d]",
+        hideSplitButton, hideMaximizeButton, hideMinimizeButton);
+    uiContent_->HideWindowTitleButton(hideSplitButton, hideMaximizeButton, hideMinimizeButton);
 }
 
 WMError WindowSessionImpl::NapiSetUIContent(const std::string& contentInfo, napi_env env, napi_value storage,
@@ -1558,6 +1583,20 @@ void WindowSessionImpl::SetInputEventConsumer(const std::shared_ptr<IInputEventC
     inputEventConsumer_ = inputEventConsumer;
 }
 
+WMError WindowSessionImpl::SetTitleButtonVisible(bool isMaximizeVisible, bool isMinimizeVisible, bool isSplitVisible)
+{
+    if (uiContent_ == nullptr || !IsDecorEnable() || !WindowHelper::IsMainWindow(GetType())) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    auto isPC = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
+    if (!isPC) {
+        return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+    }
+    windowTitleVisibleFlags_ = { isMaximizeVisible, isMinimizeVisible, isSplitVisible };
+    UpdateTitleButtonVisibility();
+    return WMError::WM_OK;
+}
+
 void WindowSessionImpl::NotifyAfterForeground(bool needNotifyListeners, bool needNotifyUiContent)
 {
     if (needNotifyListeners) {
@@ -2353,7 +2392,7 @@ bool WindowSessionImpl::IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& ke
     bool isKeyFN = (keyCode == MMI::KeyEvent::KEYCODE_FN);
     bool isKeyBack = (keyCode == MMI::KeyEvent::KEYCODE_BACK);
     bool isKeyboard = (keyCode >= MMI::KeyEvent::KEYCODE_0 && keyCode <= MMI::KeyEvent::KEYCODE_NUMPAD_RIGHT_PAREN);
-    WLOGI("isKeyFN: %{public}d, isKeyboard: %{public}d", isKeyFN, isKeyboard);
+    WLOGD("isKeyFN: %{public}d, isKeyboard: %{public}d", isKeyFN, isKeyboard);
     return (isKeyFN || isKeyboard || isKeyBack);
 }
 
