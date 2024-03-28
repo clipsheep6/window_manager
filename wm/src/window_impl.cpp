@@ -548,18 +548,33 @@ WMError WindowImpl::SetUIContentByAbc(
     return SetUIContentInner(contentInfo, env, storage, WindowSetUIContentType::BY_ABC, ability);
 }
 
-WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
+WMError WindowImpl::NotifyUIContentChanged()
+{
+    // UIContent may be nullptr when show window, need to notify again when window is shown
+    uiContent_->Foreground();
+    UpdateTitleButtonVisibility();
+    Ace::ViewportConfig config;
+    Rect rect = GetRect();
+    config.SetSize(rect.width_, rect.height_);
+    config.SetPosition(rect.posX_, rect.posY_);
+    auto display = SingletonContainer::IsDestroyed() ? nullptr :
+        SingletonContainer::Get<DisplayManager>().GetDisplayById(property_->GetDisplayId());
+    if (display == nullptr) {
+        WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u", property_->GetDisplayId(),
+            property_->GetWindowId());
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    float virtualPixelRatio = display->GetVirtualPixelRatio();
+    config.SetDensity(virtualPixelRatio);
+    config.SetOrientation(static_cast<int32_t>(display->GetOrientation()));
+    uiContent_->UpdateViewportConfig(config, WindowSizeChangeReason::UNDEFINED, nullptr);
+    WLOGFD("notify uiContent window size change end");
+    return WMError::WM_OK;
+}
+
+WMError WindowImpl::BuildUIContentByType(const std::string& contentInfo, napi_env env, napi_value storage,
     WindowSetUIContentType type, AppExecFwk::Ability* ability)
 {
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "loadContent");
-    if (!IsWindowValid()) {
-        WLOGFD("interrupt set uicontent because window is invalid! window state: %{public}d", state_);
-        return WMError::WM_ERROR_INVALID_WINDOW;
-    }
-    WLOGFD("NapiSetUIContent: %{public}s", contentInfo.c_str());
-    if (uiContent_) {
-        uiContent_->Destroy();
-    }
     std::unique_ptr<Ace::UIContent> uiContent;
     if (ability != nullptr) {
         uiContent = Ace::UIContent::Create(ability);
@@ -593,6 +608,29 @@ WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, napi_env e
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         uiContent_ = std::move(uiContent);
     }
+    if (aceRet != OHOS::Ace::UIContentErrorCode::NO_ERRORS) {
+        WLOGFE("failed to init or restore uicontent with file %{public}s. errorCode: %{public}d",
+            contentInfo.c_str(), static_cast<uint16_t>(aceRet));
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    return WMError::WM_OK;
+}
+
+WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
+    WindowSetUIContentType type, AppExecFwk::Ability* ability)
+{
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "loadContent");
+    if (!IsWindowValid()) {
+        WLOGFD("interrupt set uicontent because window is invalid! window state: %{public}d", state_);
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    WLOGFD("NapiSetUIContent: %{public}s", contentInfo.c_str());
+    if (uiContent_) {
+        uiContent_->Destroy();
+    }
+
+    auto err = BuildUIContentByType(contentInfo, env, storage, type, ability);
+    if (err != WMError::WM_OK) return err;
 
     if (isIgnoreSafeAreaNeedNotify_) {
         uiContent_->SetIgnoreViewSafeArea(isIgnoreSafeArea_);
@@ -600,31 +638,10 @@ WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, napi_env e
     UpdateDecorEnable(true);
 
     if (state_ == WindowState::STATE_SHOWN) {
-        // UIContent may be nullptr when show window, need to notify again when window is shown
-        uiContent_->Foreground();
-        UpdateTitleButtonVisibility();
-        Ace::ViewportConfig config;
-        Rect rect = GetRect();
-        config.SetSize(rect.width_, rect.height_);
-        config.SetPosition(rect.posX_, rect.posY_);
-        auto display = SingletonContainer::IsDestroyed() ? nullptr :
-            SingletonContainer::Get<DisplayManager>().GetDisplayById(property_->GetDisplayId());
-        if (display == nullptr) {
-            WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u", property_->GetDisplayId(),
-                property_->GetWindowId());
-            return WMError::WM_ERROR_NULLPTR;
-        }
-        float virtualPixelRatio = display->GetVirtualPixelRatio();
-        config.SetDensity(virtualPixelRatio);
-        config.SetOrientation(static_cast<int32_t>(display->GetOrientation()));
-        uiContent_->UpdateViewportConfig(config, WindowSizeChangeReason::UNDEFINED, nullptr);
-        WLOGFD("notify uiContent window size change end");
+        err = NotifyUIContentChanged();
+        if (err != WMError::WM_OK) return err;
     }
-    if (aceRet != OHOS::Ace::UIContentErrorCode::NO_ERRORS) {
-        WLOGFE("failed to init or restore uicontent with file %{public}s. errorCode: %{public}d",
-            contentInfo.c_str(), static_cast<uint16_t>(aceRet));
-        return WMError::WM_ERROR_INVALID_PARAM;
-    }
+
     return WMError::WM_OK;
 }
 
@@ -1094,6 +1111,15 @@ void WindowImpl::SetSystemConfig()
             }
         }
     }
+    if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
+        GetConfigurationFromAbilityInfo();
+    } else if (property_->GetWindowMode() == WindowMode::WINDOW_MODE_UNDEFINED) {
+        property_->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    }
+
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_VOLUME_OVERLAY && surfaceNode_) {
+        surfaceNode_->SetFrameGravity(Gravity::TOP_LEFT);
+    }
 }
 
 KeyboardAnimationConfig WindowImpl::GetKeyboardAnimationConfig()
@@ -1197,16 +1223,6 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
     ChangePropertyByApiVersion();
     InitAbilityInfo();
     SetSystemConfig();
-
-    if (WindowHelper::IsMainWindow(property_->GetWindowType())) {
-        GetConfigurationFromAbilityInfo();
-    } else if (property_->GetWindowMode() == WindowMode::WINDOW_MODE_UNDEFINED) {
-        property_->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
-    }
-
-    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_VOLUME_OVERLAY && surfaceNode_) {
-        surfaceNode_->SetFrameGravity(Gravity::TOP_LEFT);
-    }
 
     ret = SingletonContainer::Get<WindowAdapter>().CreateWindow(windowAgent, property_, surfaceNode_,
         windowId, token);
@@ -1489,6 +1505,7 @@ WMError WindowImpl::PreProcessShow(uint32_t reason, bool withAnimation)
         return WMError::WM_ERROR_INVALID_OPERATION;
     }
     SetDefaultOption();
+    SetWindowModeFloating();
     SetModeSupportInfo(GetRequestModeSupportInfo());
     AdjustWindowAnimationFlag(withAnimation);
 
@@ -1498,6 +1515,25 @@ WMError WindowImpl::PreProcessShow(uint32_t reason, bool withAnimation)
 
     // update title button visibility when show
     UpdateTitleButtonVisibility();
+    return WMError::WM_OK;
+}
+
+WMError WindowImpl::ProcessWindowAndShow()
+{
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
+        SingletonContainer::Get<WindowAdapter>().MinimizeAllAppWindows(property_->GetDisplayId());
+    } else {
+        WLOGI("window is already shown id: %{public}u", property_->GetWindowId());
+        SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(), false);
+    }
+    // when show sub window, check its parent state
+    sptr<Window> parent = FindWindowById(property_->GetParentId());
+    if (parent != nullptr && parent->GetWindowState() == WindowState::STATE_HIDDEN) {
+        WLOGFD("sub window can not show, because main window hide");
+        return WMError::WM_OK;
+    } else {
+        NotifyAfterForeground(true, false);
+    }
     return WMError::WM_OK;
 }
 
@@ -1517,21 +1553,8 @@ WMError WindowImpl::Show(uint32_t reason, bool withAnimation)
         return WMError::WM_OK;
     }
     if (state_ == WindowState::STATE_SHOWN) {
-        if (property_->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
-            SingletonContainer::Get<WindowAdapter>().MinimizeAllAppWindows(property_->GetDisplayId());
-        } else {
-            WLOGI("window is already shown id: %{public}u", property_->GetWindowId());
-            SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(), false);
-        }
-        // when show sub window, check its parent state
-        sptr<Window> parent = FindWindowById(property_->GetParentId());
-        if (parent != nullptr && parent->GetWindowState() == WindowState::STATE_HIDDEN) {
-            WLOGFD("sub window can not show, because main window hide");
-            return WMError::WM_OK;
-        } else {
-            NotifyAfterForeground(true, false);
-        }
-        return WMError::WM_OK;
+        auto err = ProcessWindowAndShow();
+        if (err != WMError::WM_OK) return err;
     }
     WMError ret = PreProcessShow(reason, withAnimation);
     if (ret != WMError::WM_OK) {
@@ -2360,6 +2383,45 @@ void WindowImpl::SetModeSupportInfo(uint32_t modeSupportInfo)
     property_->SetModeSupportInfo(modeSupportInfo);
 }
 
+void WindowImpl::HandleUpdateRectangle(WindowSizeChangeReason reason,
+    const std::shared_ptr<RSTransaction>& rsTransaction, Rect& rectToAce,
+    Rect& lastOriRect, const sptr<Display>& display)
+{
+    auto task = [this, reason, rsTransaction, rectToAce, lastOriRect, display]() mutable {
+        if (rsTransaction) {
+            RSTransaction::FlushImplicitTransaction();
+            rsTransaction->Begin();
+        }
+        RSAnimationTimingProtocol protocol;
+        protocol.SetDuration(600);
+        auto curve = RSAnimationTimingCurve::CreateCubicCurve(0.2, 0.0, 0.2, 1.0);
+        RSNode::OpenImplicitAnimation(protocol, curve);
+        if ((rectToAce != lastOriRect) || (reason != lastSizeChangeReason_)) {
+            NotifySizeChange(rectToAce, reason, rsTransaction);
+            lastSizeChangeReason_ = reason;
+        }
+        UpdateViewportConfig(rectToAce, display, reason, rsTransaction);
+        RSNode::CloseImplicitAnimation();
+        if (rsTransaction) {
+            rsTransaction->Commit();
+        }
+        postTaskDone_ = true;
+    };
+    ResSchedReport::GetInstance().RequestPerfIfNeed(reason, GetType(), GetMode());
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    if (handler_ != nullptr && reason == WindowSizeChangeReason::ROTATION) {
+        postTaskDone_ = false;
+        handler_->PostTask(task, "wms:UpdateRect");
+    } else {
+        if ((rectToAce != lastOriRect) || (reason != lastSizeChangeReason_) || !postTaskDone_) {
+            NotifySizeChange(rectToAce, reason, rsTransaction);
+            lastSizeChangeReason_ = reason;
+            postTaskDone_ = true;
+        }
+        UpdateViewportConfig(rectToAce, display, reason, rsTransaction);
+    }
+}
+
 void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
     const std::shared_ptr<RSTransaction>& rsTransaction)
 {
@@ -2399,39 +2461,7 @@ void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSize
             property_->SetOriginRect(rect);
         }
     }
-    auto task = [this, reason, rsTransaction, rectToAce, lastOriRect, display]() mutable {
-        if (rsTransaction) {
-            RSTransaction::FlushImplicitTransaction();
-            rsTransaction->Begin();
-        }
-        RSAnimationTimingProtocol protocol;
-        protocol.SetDuration(600);
-        auto curve = RSAnimationTimingCurve::CreateCubicCurve(0.2, 0.0, 0.2, 1.0);
-        RSNode::OpenImplicitAnimation(protocol, curve);
-        if ((rectToAce != lastOriRect) || (reason != lastSizeChangeReason_)) {
-            NotifySizeChange(rectToAce, reason, rsTransaction);
-            lastSizeChangeReason_ = reason;
-        }
-        UpdateViewportConfig(rectToAce, display, reason, rsTransaction);
-        RSNode::CloseImplicitAnimation();
-        if (rsTransaction) {
-            rsTransaction->Commit();
-        }
-        postTaskDone_ = true;
-    };
-    ResSchedReport::GetInstance().RequestPerfIfNeed(reason, GetType(), GetMode());
-    handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
-    if (handler_ != nullptr && reason == WindowSizeChangeReason::ROTATION) {
-        postTaskDone_ = false;
-        handler_->PostTask(task, "wms:UpdateRect");
-    } else {
-        if ((rectToAce != lastOriRect) || (reason != lastSizeChangeReason_) || !postTaskDone_) {
-            NotifySizeChange(rectToAce, reason, rsTransaction);
-            lastSizeChangeReason_ = reason;
-            postTaskDone_ = true;
-        }
-        UpdateViewportConfig(rectToAce, display, reason, rsTransaction);
-    }
+    HandleUpdateRectangle(reason, rsTransaction, rectToAce, lastOriRect, display);
 }
 
 void WindowImpl::UpdateMode(WindowMode mode)
@@ -2860,12 +2890,7 @@ void WindowImpl::HandlePointerStyle(const std::shared_ptr<MMI::PointerEvent>& po
         pointerEvent->MarkProcessed();
         return;
     }
-    auto action = pointerEvent->GetPointerAction();
-    uint32_t windowId = pointerEvent->GetAgentWindowId();
-    int32_t mousePointX = pointerItem.GetDisplayX();
-    int32_t mousePointY = pointerItem.GetDisplayY();
-    int32_t sourceType = pointerEvent->GetSourceType();
-    uint32_t oldStyleID = mouseStyleID_;
+
     uint32_t newStyleID = 0;
     if (WindowHelper::IsMainFloatingWindow(GetType(), GetMode())) {
         auto display = SingletonContainer::IsDestroyed() ? nullptr :
@@ -2877,29 +2902,30 @@ void WindowImpl::HandlePointerStyle(const std::shared_ptr<MMI::PointerEvent>& po
         }
         float vpr = display->GetVirtualPixelRatio();
         CalculateStartRectExceptHotZone(vpr);
-        if (IsPointInDragHotZone(mousePointX, mousePointY, sourceType) &&
+        if (IsPointInDragHotZone(pointerItem.GetDisplayX(), pointerItem.GetDisplayY(), pointerEvent->GetSourceType()) &&
             property_->GetMaximizeMode() != MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
-            newStyleID = CalculatePointerDirection(mousePointX, mousePointY);
-        } else if (action == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP) {
+            newStyleID = CalculatePointerDirection(pointerItem.GetDisplayX(), pointerItem.GetDisplayY());
+        } else if (pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP) {
             newStyleID = MMI::MOUSE_ICON::DEFAULT;
         }
     } else if (GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
         newStyleID = (GetRect().width_ > GetRect().height_) ?
             MMI::MOUSE_ICON::NORTH_SOUTH : MMI::MOUSE_ICON::WEST_EAST;
         // when receive up event, set default style
-        if (action == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP) {
+        if (pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP) {
             newStyleID = MMI::MOUSE_ICON::DEFAULT;
         }
     }
     WLOGD("winId : %{public}u, Mouse posX : %{public}u, posY %{public}u, Pointer action : %{public}u, "
            "winRect posX : %{public}u, posY : %{public}u, W : %{public}u, H : %{public}u, "
            "newStyle : %{public}u, oldStyle : %{public}u",
-           windowId, mousePointX, mousePointY, action, GetRect().posX_,
-           GetRect().posY_, GetRect().width_, GetRect().height_, newStyleID, oldStyleID);
-    if (oldStyleID != newStyleID) {
+        pointerEvent->GetAgentWindowId(), pointerItem.GetDisplayX(), pointerItem.GetDisplayY(),
+        pointerEvent->GetPointerAction(), GetRect().posX_, GetRect().posY_, GetRect().width_,
+        GetRect().height_, newStyleID, mouseStyleID_);
+    if (mouseStyleID_ != newStyleID) {
         MMI::PointerStyle pointerStyle;
         pointerStyle.id = newStyleID;
-        int32_t res = MMI::InputManager::GetInstance()->SetPointerStyle(windowId, pointerStyle);
+        int32_t res = MMI::InputManager::GetInstance()->SetPointerStyle(pointerEvent->GetAgentWindowId(), pointerStyle);
         if (res != 0) {
             WLOGFE("set pointer style failed, res is %{public}u", res);
             return;
@@ -3499,7 +3525,7 @@ Rect WindowImpl::GetSystemAlarmWindowDefaultSize(Rect defaultRect)
     return rect;
 }
 
-void WindowImpl::SetDefaultOption()
+void WindowImpl::SetWindowModeFloating()
 {
     switch (property_->GetWindowType()) {
         case WindowType::WINDOW_TYPE_STATUS_BAR:
@@ -3516,13 +3542,15 @@ void WindowImpl::SetDefaultOption()
             property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
             break;
         }
-        case WindowType::WINDOW_TYPE_KEYGUARD: {
-            RemoveWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
-            property_->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+        case WindowType::WINDOW_TYPE_DOCK_SLICE: {
+            property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+            property_->SetFocusable(false);
             break;
         }
-        case WindowType::WINDOW_TYPE_DRAGGING_EFFECT: {
-            property_->SetWindowFlags(0);
+        case WindowType::WINDOW_TYPE_SYSTEM_TOAST: {
+            property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+            property_->SetTouchable(false);
+            property_->SetFocusable(false);
             break;
         }
         case WindowType::WINDOW_TYPE_APP_COMPONENT: {
@@ -3543,19 +3571,25 @@ void WindowImpl::SetDefaultOption()
             property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
             break;
         }
+        default:
+            break;
+    }
+}
+
+void WindowImpl::SetDefaultOption()
+{
+    switch (property_->GetWindowType()) {
+        case WindowType::WINDOW_TYPE_KEYGUARD: {
+            RemoveWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
+            property_->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+            break;
+        }
+        case WindowType::WINDOW_TYPE_DRAGGING_EFFECT: {
+            property_->SetWindowFlags(0);
+            break;
+        }
         case WindowType::WINDOW_TYPE_BOOT_ANIMATION:
         case WindowType::WINDOW_TYPE_POINTER: {
-            property_->SetFocusable(false);
-            break;
-        }
-        case WindowType::WINDOW_TYPE_DOCK_SLICE: {
-            property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
-            property_->SetFocusable(false);
-            break;
-        }
-        case WindowType::WINDOW_TYPE_SYSTEM_TOAST: {
-            property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
-            property_->SetTouchable(false);
             property_->SetFocusable(false);
             break;
         }
