@@ -35,6 +35,7 @@ using SpecificSessionCreateCallback =
 using SpecificSessionDestroyCallback = std::function<WSError(const int32_t& persistentId)>;
 using CameraFloatSessionChangeCallback = std::function<void(uint32_t accessTokenId, bool isShowing)>;
 using GetSceneSessionVectorByTypeCallback = std::function<std::vector<sptr<SceneSession>>(WindowType type)>;
+using GetSceneSessionCallback = std::function<sptr<SceneSession>(uint32_t callingWindowId)>;
 using UpdateAvoidAreaCallback = std::function<void(const int32_t& persistentId)>;
 using NotifyWindowInfoUpdateCallback = std::function<void(int32_t persistentId, WindowUpdateType type)>;
 using NotifyWindowPidChangeCallback = std::function<void(int32_t windowId, bool startMoving)>;
@@ -69,6 +70,7 @@ public:
         SpecificSessionDestroyCallback onDestroy_;
         CameraFloatSessionChangeCallback onCameraFloatSessionChange_;
         GetSceneSessionVectorByTypeCallback onGetSceneSessionVectorByType_;
+        GetSceneSessionCallback onGetSceneSession_;
         UpdateAvoidAreaCallback onUpdateAvoidArea_;
         NotifyWindowInfoUpdateCallback onWindowInfoUpdate_;
         NotifyWindowPidChangeCallback onWindowInputPidChangeCallback_;
@@ -241,6 +243,10 @@ public:
     static void ClearEnterWindow();
     static MaximizeMode maximizeMode_;
     static std::map<int32_t, WSRect> windowDragHotAreaMap_;
+    virtual uint32_t GetCallingWindowId()
+    {
+        return INVALID_WINDOW_ID;
+    };
 
     WSRect callingWindowRestoringRect_ = {0, 0, 0, 0};
     WSRect callingWindowNewRect_ = {0, 0, 0, 0};

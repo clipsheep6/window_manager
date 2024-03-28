@@ -62,6 +62,7 @@ ohos_shared_library("scene_session") {
     "host/src/session.cpp",
     "host/src/sub_session.cpp",
     "host/src/system_session.cpp",
+    "host/src/keyboard_session.cpp",
     "host/src/zidl/session_proxy.cpp",
     "host/src/zidl/session_stub.cpp",
   ]

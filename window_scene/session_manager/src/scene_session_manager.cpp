@@ -75,6 +75,7 @@
 #include "session/host/include/session_utils.h"
 #include "session/host/include/sub_session.h"
 #include "session/host/include/system_session.h"
+#include "session/host/include/keyboard_session.h"
 #include "session_helper.h"
 #include "window_helper.h"
 #include "session/screen/include/screen_session.h"
@@ -917,6 +918,7 @@ sptr<SceneSession::SpecificSessionCallback> SceneSessionManager::CreateSpecificS
         this, std::placeholders::_1, std::placeholders::_2);
     specificCb->onGetSceneSessionVectorByType_ = std::bind(&SceneSessionManager::GetSceneSessionVectorByType,
         this, std::placeholders::_1);
+    specificCb->onGetSceneSession_ = std::bind(&SceneSessionManager::GetSceneSession, this, std::placeholders::_1);
     specificCb->onUpdateAvoidArea_ = std::bind(&SceneSessionManager::UpdateAvoidArea, this, std::placeholders::_1);
     specificCb->onWindowInfoUpdate_ = std::bind(&SceneSessionManager::NotifyWindowInfoChange,
         this, std::placeholders::_1, std::placeholders::_2);
@@ -968,9 +970,13 @@ sptr<SceneSession> SceneSessionManager::CreateSceneSession(const SessionInfo& se
     } else if (property != nullptr && SessionHelper::IsSubWindow(property->GetWindowType())) {
         sceneSession = new (std::nothrow) SubSession(sessionInfo, specificCb);
         TLOGI(WmsLogTag::WMS_SUB, "Create SubSession, type: %{public}d", property->GetWindowType());
-    } else if (property != nullptr && SessionHelper::IsSystemWindow(property->GetWindowType())) {
+    } else if (property != nullptr && SessionHelper::IsSystemWindow(property->GetWindowType()) &&
+        property->GetWindowType() != WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
         sceneSession = new (std::nothrow) SystemSession(sessionInfo, specificCb);
         TLOGI(WmsLogTag::WMS_SYSTEM, "Create SystemSession, type: %{public}d", property->GetWindowType());
+    } else if (property != nullptr && property->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
+        sceneSession = new (std::nothrow) KeyboardSession(sessionInfo, specificCb);
+        TLOGI(WmsLogTag::WMS_KEYBOARD, "Create KeyboardSession, type: %{public}d", property->GetWindowType());
     } else {
         TLOGE(WmsLogTag::WMS_LIFE, "Invalid window type");
     }

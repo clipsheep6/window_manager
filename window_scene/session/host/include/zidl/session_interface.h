@@ -95,6 +95,10 @@ public:
     {
         return WSError::WS_OK;
     }
+    virtual WSError SetCallingWindowId(uint32_t callingWindowId)
+    {
+        return WSError::WS_OK;
+    }
 };
 } // namespace OHOS::Rosen
 

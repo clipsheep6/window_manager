@@ -2504,7 +2504,15 @@ WMError WindowSceneSessionImpl::SetCallingWindow(uint32_t callingWindowId)
         TLOGE(WmsLogTag::WMS_KEYBOARD, "Set calling window id failed, property_ is nullptr!");
         return WMError::WM_ERROR_NULLPTR;
     }
+    if (hostSession_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Set calling window id failed, hostSession_ is nullptr!");
+        return WMError::WM_ERROR_NULLPTR;
+    }
     TLOGI(WmsLogTag::WMS_KEYBOARD, "Set calling window id: %{public}d", callingWindowId);
+    WMError ret = static_cast<WMError>(hostSession_->SetCallingWindowId(callingWindowId));
+    if (ret != WMError::WM_OK) {
+        TLOGI(WmsLogTag::WMS_KEYBOARD, "Set calling window id failed");
+    }
     property_->SetCallingWindow(callingWindowId);
 
     return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_CALLING_WINDOW);
