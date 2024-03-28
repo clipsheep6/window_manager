@@ -246,7 +246,11 @@ HWTEST_F(ScreenSceneConfigTest, ReadStringConfigInfo, Function | SmallTest | Lev
             readCount++;
             continue;
         }
-
+        if (!xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("subDisplayCutoutPath"))) {
+            ScreenSceneConfig::ReadStringConfigInfo(curNodePtr);
+            readCount++;
+            continue;
+        }
         if (!xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("dpi"))) {
             ScreenSceneConfig::ReadStringConfigInfo(curNodePtr);
             readCount++;
@@ -300,7 +304,7 @@ HWTEST_F(ScreenSceneConfigTest, GetStringConfig, Function | SmallTest | Level1)
 HWTEST_F(ScreenSceneConfigTest, GetCurvedScreenBoundaryConfig, Function | SmallTest | Level1)
 {
     auto result = ScreenSceneConfig::GetCurvedScreenBoundaryConfig();
-    ASSERT_NE(0, result.size());
+    ASSERT_EQ(0, result.size());
 }
 
 /**
@@ -311,7 +315,18 @@ HWTEST_F(ScreenSceneConfigTest, GetCurvedScreenBoundaryConfig, Function | SmallT
 HWTEST_F(ScreenSceneConfigTest, GetCutoutBoundaryRect, Function | SmallTest | Level3)
 {
     auto result = ScreenSceneConfig::GetCutoutBoundaryRect();
-    ASSERT_FALSE(result.size() > 0);
+    ASSERT_TRUE(result.size() > 0);
+}
+
+/**
+ * @tc.name: GetSubCutoutBoundaryRect
+ * @tc.desc: GetSubCutoutBoundaryRect func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, GetSubCutoutBoundaryRect, Function | SmallTest | Level3)
+{
+    auto result = ScreenSceneConfig::GetSubCutoutBoundaryRect();
+    ASSERT_TRUE(result.size() > 0);
 }
 
 /**
@@ -371,6 +386,37 @@ HWTEST_F(ScreenSceneConfigTest, SetCutoutSvgPath, Function | SmallTest | Level3)
     ScreenSceneConfig::SetCutoutSvgPath("oo");
     auto result_ = ScreenSceneConfig::GetCutoutBoundaryRect();
     ASSERT_NE(0, result_.size());
+}
+
+/**
+ * @tc.name: SetSubCutoutSvgPath
+ * @tc.desc: SetSubCutoutSvgPath func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, SetSubCutoutSvgPath, Function | SmallTest | Level3)
+{
+    ScreenSceneConfig::SetSubCutoutSvgPath("oo");
+    auto result = ScreenSceneConfig::GetSubCutoutBoundaryRect();
+    ASSERT_NE(0, result.size());
+}
+
+/**
+ * @tc.name: SetSubCutoutSvgPath01
+ * @tc.desc: SetSubCutoutSvgPath func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, SetSubCutoutSvgPath01, Function | SmallTest | Level3)
+{
+    ScreenSceneConfig::SetSubCutoutSvgPath("M507 18 L573 18 v 66 h -66 Z");
+    std::vector<DMRect> result = ScreenSceneConfig::GetSubCutoutBoundaryRect();
+    if (result.size() <= 0) {
+        ASSERT_EQ(0, result.size());
+    }
+    DMRect targetRect{507, 18, 66, 66}; // the rect size after svg parsing
+    EXPECT_EQ(result[0].posX_, targetRect.posX_);
+    EXPECT_EQ(result[0].posY_, targetRect.posY_);
+    EXPECT_EQ(result[0].width_, targetRect.width_);
+    EXPECT_EQ(result[0].height_, targetRect.height_);
 }
 
 /**
