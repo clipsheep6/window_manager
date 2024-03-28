@@ -87,6 +87,21 @@ public:
 };
 
 /**
+ * @class IWindowModeListener
+ *
+ * @brief Listener to observe window mode change.
+ */
+class IWindowModeListener : virtual public RefBase {
+public:
+    /**
+     * @brief Notify caller when window mode update.
+     *
+     * @param mode Window mode.
+     */
+    virtual void OnWindowModeUpdate(const WindowModeType mode) = 0;
+};
+
+/**
  * @class ISystemBarChangedListener
  *
  * @brief Listener to observe systembar changed.
@@ -279,6 +294,20 @@ public:
      * @return WM_OK means unregister success, others means unregister failed.
      */
     WMError UnregisterFocusChangedListener(const sptr<IFocusChangedListener>& listener);
+    /**
+     * @brief Register window mode listener.
+     *
+     * @param listener IWindowModeListener.
+     * @return WM_OK means register success, others means register failed.
+     */
+    WMError RegisterWindowModeListener(const sptr<IWindowModeListener> &listener);
+    /**
+     * @brief Unregister window mode listener.
+     *
+     * @param listener IWindowModeListener.
+     * @return WM_OK means unregister success, others means unregister failed.
+     */
+    WMError UnregisterWindowModeListener(const sptr<IWindowModeListener> &listener);
     /**
      * @brief Register system bar changed listener.
      *
@@ -502,6 +531,7 @@ private:
     void UpdateFocusStatus(uint32_t windowId, const sptr<IRemoteObject>& abilityToken, WindowType windowType,
         DisplayId displayId, bool focused) const;
     void UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused) const;
+    void UpdateWindowModeTypeInfo(const WindowModeType type) const;
     void UpdateSystemBarRegionTints(DisplayId displayId, const SystemBarRegionTints& tints) const;
     void NotifyAccessibilityWindowInfo(const std::vector<sptr<AccessibilityWindowInfo>>& infos,
         WindowUpdateType type) const;
