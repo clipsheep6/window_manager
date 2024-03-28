@@ -1812,6 +1812,14 @@ public:
     {
         return WMError::WM_OK;
     }
+
+    /**
+     * @brief Get the rect of host window.
+     *
+     * @param listener IWindowRectChangeListener.
+     * @return WM_OK means unregister success, others means unregister failed.
+     */
+    virtual Rect GetHostWindowRect(int32_t hostWindowId) { return {}; }
 };
 }
 }

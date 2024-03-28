@@ -84,6 +84,7 @@ public:
     WMError HideNonSecureWindows(bool shouldHide) override;
     WMError AddExtensionWindowFlag(ExtensionWindowFlag flag) override;
     WMError RemoveExtensionWindowFlag(ExtensionWindowFlag flag) override;
+    WMError GetHostWindowRect(int32_t hostWindowId) override;
 
 protected:
     NotifyTransferComponentDataFunc notifyTransferComponentDataFunc_;

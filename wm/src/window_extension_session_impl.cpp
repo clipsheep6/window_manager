@@ -699,5 +699,12 @@ WMError WindowExtensionSessionImpl::UpdateExtWindowFlags()
     return SingletonContainer::Get<WindowAdapter>().UpdateExtWindowFlags(property_->GetParentId(), GetPersistentId(),
         extensionWindowFlags_);
 }
+
+Rect WindowExtensionSessionImpl::GetHostWindowRect(int32_t hostWindowId)
+{
+    Rect rect;
+    SingletonContainer::Get<WindowAdapter>().GetHostWindowRect(hostWindowId, rect);
+    return rect;
+}
 } // namespace Rosen
 } // namespace OHOS
