@@ -72,7 +72,6 @@ ohos_static_library("libwmutil_static") {
   ]
 
   public_configs = [ ":libwmutil_public_config" ]
-
   deps = [
     "${graphic_base_path}/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
   ]
