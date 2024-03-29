@@ -7473,7 +7473,7 @@ WSError SceneSessionManager::GetHostWindowRect(int32_t hostWindowId, Rect& rect)
         rect = persrect;
         return WSError::WS_OK;
     };
-    taskScheduler_->PostAsyncTask(task, "UpdateExtWindowFlags");
+    taskScheduler_->PostSyncTask(task, "UpdateExtWindowFlags");
     return WSError::WS_OK;
 }
 } // namespace OHOS::Rosen

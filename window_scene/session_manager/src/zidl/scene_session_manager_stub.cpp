@@ -141,7 +141,7 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_EXTENSION_WINDOW_FLAGS),
         &SceneSessionManagerStub::HandleUpdateExtWindowFlags),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_HOST_WINDOW_RECT),
-        &SceneSessionManagerStub::HandleUpdateExtWindowFlags),
+        &SceneSessionManagerStub::HandleGetHostWindowRect),
 };
 
 int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
