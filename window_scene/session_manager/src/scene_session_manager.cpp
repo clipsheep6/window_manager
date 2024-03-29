@@ -7471,7 +7471,7 @@ WSError SceneSessionManager::GetHostWindowRect(int32_t hostWindowId, Rect& rect)
         }
         if (!sceneSession->GetSessionProperty()) {
             TLOGE(WmsLogTag::WMS_UIEXT, "scene session property is nullptr");
-            return;
+            return WS_ERROR_INVALID_SESSION;
         }
         Rect persrect = sceneSession->GetSessionProperty()->GetWindowRect();
         rect = persrect;
