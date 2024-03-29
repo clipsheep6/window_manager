@@ -23,7 +23,10 @@ config("libwmutil_private_config") {
 }
 
 config("libwmutil_public_config") {
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+    "//foundation/multimodalinput/input/interfaces/native/innerkits/event/include",
+  ]
 }
 
 ## build libwmutil_static.a
@@ -70,6 +73,10 @@ ohos_static_library("libwmutil_static") {
 
   public_configs = [ ":libwmutil_public_config" ]
 
+  deps = [
+    "${graphic_base_path}/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
+  ]
+
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_manager",
@@ -78,7 +85,6 @@ ohos_static_library("libwmutil_static") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
-    "graphic_2d:2d_graphics",
     "graphic_2d:librender_service_client",
     "graphic_surface:surface",
     "hilog:libhilog",

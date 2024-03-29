@@ -31,6 +31,8 @@ config("libdm_public_config") {
   include_dirs = [
     "../interfaces/innerkits/dm",
     "../utils/include",
+    "${graphic_base_path}/graphic_2d/utils/color_manager/export",
+    "${multimedia_path}/interfaces/innerkits/include",
   ]
 }
 
@@ -65,8 +67,6 @@ ohos_static_library("libdm_static") {
     "${window_base_path}/utils:libwmutil",
     "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",
   ]
-
-  public_external_deps = [ "graphic_2d:color_manager" ]
 
   external_deps = [
     "ability_runtime:ability_manager",
@@ -104,8 +104,6 @@ ohos_shared_library("libdm") {
   ]
 
   public_configs = [ ":libdm_public_config" ]
-
-  public_external_deps = [ "graphic_2d:color_manager" ]
 
   deps = [
     "${window_base_path}/utils:libwmutil",
