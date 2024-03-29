@@ -2279,7 +2279,6 @@ WMError SceneSessionManagerProxy::GetRectByWindowId(uint32_t windowId, Rect& rec
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
-    7
     if (data.WriteUint32(windowId)) {
         WLOGFE ("Write windowId failed");
         return WMError::WM_ERROR_IPC_FAILED;
