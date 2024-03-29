@@ -7365,4 +7365,67 @@ WSError SceneSessionManager::UpdateExtWindowFlags(int32_t parentId, int32_t pers
     taskScheduler_->PostAsyncTask(task, "UpdateExtWindowFlags");
     return WSError::WS_OK;
 }
+
+WindowStatus SceneSessionManager::GetWindowStatus(WindowMode mode, const sptr<WindowSessionProperty>& property)
+{
+    auto windowStatus = WindowStatus::WINDOW_STATUS_UNDEFINED;
+    if (mode == WindowMode::WINDOW_MODE_FLOATING) {
+        windowStatus = WindowStatus::WINDOW_STATUS_FLOATING;
+        if (property->GetMaximizeMode() == MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
+            windowStatus = WindowStatus::WINDOW_STATUS_MAXMIZE;
+        }
+    } else if (mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY || mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        windowStatus = WindowStatus::WINDOW_STATUS_SPLITSCREENS
+    }
+    if (mode == WindowMode::WINDOW_MODE_FULLSCREEN) {
+        windowStatus = WindowStatus::WINDOW_STATUS_FULLSCREEN;
+    }
+    if (property->GetWindowState() == WindowState::STATE_HIDDEN)
+        windowStatus = WindowStatus::WINDOW_STATUS_MINIMIZE;
+    }
+    return windowStatus;
+}
+
+WMError SceneSessionManager::GetWindowStatusByWindowId(unit32_t windowId, WindowStatus& windowStatus)
+{
+    sptr<SceneSession> sceneSession = GetSceneSession(windowId);
+    if (sceneSession == nullptr) {
+        WLOGFE("Get windowstatus Fail, Can not find session, WindowId - %{public}u", windowId);
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    if (SessionHelper::IsSubWindow(sceneSession->GetWindowType())) {
+        sceneSession = GetSceneSession(sceneSession->GetParentPersistentId());
+        if (sceneSession == nullptr) {
+            WLOGFE("Get WindowStatus Fail, Parent session is nullptr, windowId = %{public}u", windowId);
+            return WMError::WM_ERROR_INVALID_WINDOW;
+        }
+    }
+    windowStatus = GetWindowStatus(sceneSession->GetWindowMode(), sceneSession->GetSessionProperty()):
+    WLOGFE("Get WindowStatus windowId: %{public}d windowstatus: %{public}d", windowId, windowStatus);
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::GetRectByWindowId(uint32_t windowId, Rect& rect)
+{
+    sptr<SceneSession> sceneSession = GetSceneSession(windowId);
+    if (sceneSession == nullptr) {
+        WLOGFE("Get WindowStatus Fail, Can not find session, WindowId: %{public}u", windowId);
+        return WMError::WM_ERROR_INVALID_WINDOW:
+    }
+    if (SessionHelper::IsSubWindow(sceneSession->GetWindowType()) {
+        sceneSession = GetSceneSession(sceneSession->GetParentPersistentId()) :
+        if (sceneSession == nullptr) {
+            WLOGFE("Get WindowStatus Fail, ParentSession is nutlptr, windowId: %{public}u", windowId);
+            return WMError::WM_ERROR_INVALID_WINDOW;
+        }
+    }
+    WSRectT sessiohRect = sceneSession->GetSessionRect();
+    rect.posX_ = sessiohRect.pos×_;
+    rect.posY_ = sessiohRect.posY_;
+    rect.width_= sessiohRect.width_;
+    rect.height_ = sessiohRect.height_;
+    WLOGFE("Get Rect windowId: %{public}d, x: %{public}d, y: %{public}d, height: %{public}u, width: %{public}u",
+        windowId, rect.posX_, rect.posY_, rect.width_, rect.height_);
+    return WMError::WM_OK;
+}
 } // namespace OHOS::Rosen
