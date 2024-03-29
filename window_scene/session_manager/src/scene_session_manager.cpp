@@ -7469,6 +7469,10 @@ WSError SceneSessionManager::GetHostWindowRect(int32_t hostWindowId, Rect& rect)
             TLOGE(WmsLogTag::WMS_UIEXT, "Session with persistentId %{public}d not found", hostWindowId);
             return WSError::WS_ERROR_INVALID_SESSION;
         }
+        if (!sceneSession->GetSessionProperty()) {
+            TLOGE(WmsLogTag::WMS_UIEXT, "scene session property is nullptr");
+            return;
+        }
         Rect persrect = sceneSession->GetSessionProperty()->GetWindowRect();
         rect = persrect;
         return WSError::WS_OK;
