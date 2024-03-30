@@ -18,8 +18,8 @@ config("libwm_private_config") {
   visibility = [ ":*" ]
 
   include_dirs = [
-    "include",
-    "../wmserver/include",
+//    "include",
+//    "../wmserver/include",
     "../wmserver/include/zidl",
     "../window_scene/session/host/include",
   ]
