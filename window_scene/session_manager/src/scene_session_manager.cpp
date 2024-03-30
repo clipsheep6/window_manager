@@ -7460,7 +7460,7 @@ WSError SceneSessionManager::GetHostWindowRect(int32_t hostWindowId, Rect& rect)
 {
     TLOGI(WmsLogTag::WMS_UIEXT, "GetHostWindowRect, hostWindowId:%{public}d", hostWindowId);
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "UpdateExtWindowFlags permission denied!");
+        TLOGE(WmsLogTag::WMS_UIEXT, "GetHostWindowRect permission denied!");
         return WSError::WS_ERROR_NOT_SYSTEM_APP;
     }
     auto task = [this, hostWindowId, &rect]() {
@@ -7477,7 +7477,7 @@ WSError SceneSessionManager::GetHostWindowRect(int32_t hostWindowId, Rect& rect)
         rect = persrect;
         return WSError::WS_OK;
     };
-    taskScheduler_->PostSyncTask(task, "UpdateExtWindowFlags");
+    taskScheduler_->PostSyncTask(task, "GetHostWindowRect");
     return WSError::WS_OK;
 }
 } // namespace OHOS::Rosen
