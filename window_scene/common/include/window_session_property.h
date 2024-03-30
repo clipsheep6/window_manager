@@ -77,6 +77,7 @@ public:
     void SetCallingWindow(uint32_t windowId);
     void SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo);
     void SetExtensionFlag(bool isExtensionFlag);
+    void SetLastLimitsVpr(float vpr);
 
     bool GetIsNeedUpdateWindowMode() const;
     const std::string& GetWindowName() const;
@@ -119,6 +120,7 @@ public:
     uint32_t GetCallingWindow() const;
     PiPTemplateInfo GetPiPTemplateInfo() const;
     bool GetExtensionFlag() const;
+    float GetLastLimitsVpr() const;
 
     bool MarshallingWindowLimits(Parcel& parcel) const;
     static void UnmarshallingWindowLimits(Parcel& parcel, WindowSessionProperty* property);
@@ -198,6 +200,7 @@ private:
     std::function<void()> touchHotAreasChangeCallback_;
     bool isLayoutFullScreen_ = false;
     bool isExtensionFlag_ = false;
+    float lastVpr_ = 0.0f;
 };
 
 struct SystemSessionConfig : public Parcelable {

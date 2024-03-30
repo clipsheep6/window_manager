@@ -140,6 +140,7 @@ public:
     void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
     WSError NotifyDialogStateChange(bool isForeground) override;
     WMError HideNonSecureWindows(bool shouldHide) override;
+    void UpdateDensity() override;
 
 protected:
     void DestroySubWindow();
@@ -156,7 +157,7 @@ protected:
     WMError NotifyWindowSessionProperty();
     WMError NotifyWindowNeedAvoid(bool status = false);
     WMError SetLayoutFullScreenByApiVersion(bool status) override;
-    void UpdateWindowSizeLimits();
+    void UpdateWindowSizeLimits(WindowLimits customizedLimitsVp);
     WindowLimits GetSystemSizeLimits(uint32_t displayWidth, uint32_t displayHeight, float vpr);
     void GetConfigurationFromAbilityInfo();
     WMError NotifySpecificWindowSessionProperty(WindowType type, const SystemBarProperty& property);
