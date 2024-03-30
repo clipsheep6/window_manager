@@ -29,6 +29,7 @@
 #include "../../proxy/include/window_info.h"
 
 #include "common/include/session_permission.h"
+#include "interaction_manager.h"
 #include "interfaces/include/ws_common.h"
 #include "pixel_map.h"
 #include "session/screen/include/screen_session.h"
@@ -479,6 +480,12 @@ WSError SceneSession::NotifyClientToUpdateRect(std::shared_ptr<RSTransaction> rs
             ret = session->Session::UpdateRect(session->winRect_, session->reason_, nullptr);
         } else {
             ret = session->Session::UpdateRect(session->winRect_, session->reason_, rsTransaction);
+            // When the drag is in progress, the drag window needs to be notified to rotate.
+            Msdp::DeviceStatus::DragState state = Msdp::DeviceStatus::DragState::STOP;
+            Msdp::DeviceStatus::InteractionManager::GetInstance()->GetDragState(state);
+            if (state == Msdp::DeviceStatus::DragState::START) {
+                Msdp::DeviceStatus::InteractionManager::GetInstance()->RotateDragWindowSync(rsTransaction);
+            }
         }
         if ((ret == WSError::WS_OK || session->sessionInfo_.isSystem_) && session->specificCallback_ != nullptr) {
             session->specificCallback_->onUpdateAvoidArea_(session->GetPersistentId());
