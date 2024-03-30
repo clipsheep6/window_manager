@@ -580,6 +580,89 @@ HWTEST_F(WindowExtensionSessionImplTest, RegisterTransferComponentDataForResultL
     };
     ASSERT_EQ(0, res);
 }
+
+/**
+ * @tc.name: AddExtensionWindowFlag
+ * @tc.desc: AddExtensionWindowFlag Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, AddExtensionWindowFlag, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    WindowExtensionSessionImpl windowExtensionSessionImpl(option);
+
+    auto res = windowExtensionSessionImpl.AddExtensionWindowFlag(ExtensionWindowFlag::EXTENSION_WINDOW_FLAG_WATER_MARK);
+    ASSERT_EQ(WSErrorCode::WM_ERROR_INVALID_WINDOW, res);
+}
+
+/**
+ * @tc.name: RemoveExtensionWindowFlag
+ * @tc.desc: RemoveExtensionWindowFlag Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, RemoveExtensionWindowFlag, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    WindowExtensionSessionImpl windowExtensionSessionImpl(option);
+
+    auto res = windowExtensionSessionImpl.RemoveExtensionWindowFlag(ExtensionWindowFlag::EXTENSION_WINDOW_FLAG_WATER_MARK);
+    ASSERT_EQ(WSErrorCode::WM_ERROR_INVALID_WINDOW, res);
+}
+
+/**
+ * @tc.name: CheckAndAddExtWindowFlags
+ * @tc.desc: CheckAndAddExtWindowFlags Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, CheckAndAddExtWindowFlags, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    WindowExtensionSessionImpl windowExtensionSessionImpl(option);
+
+    auto res = windowExtensionSessionImpl.CheckAndAddExtWindowFlags();
+    ASSERT_EQ(WSErrorCode::WM_ERROR_INVALID_WINDOW, res);
+}
+
+/**
+ * @tc.name: CheckAndRemoveExtWindowFlags
+ * @tc.desc: CheckAndRemoveExtWindowFlags Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, CheckAndRemoveExtWindowFlags, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    WindowExtensionSessionImpl windowExtensionSessionImpl(option);
+
+    auto res = windowExtensionSessionImpl.CheckAndRemoveExtWindowFlags();
+    ASSERT_EQ(WSErrorCode::WM_ERROR_INVALID_WINDOW, res);
+}
+
+/**
+ * @tc.name: SetExtWindowFlags
+ * @tc.desc: SetExtWindowFlags Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, SetExtWindowFlags, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    WindowExtensionSessionImpl windowExtensionSessionImpl(option);
+
+    auto res = windowExtensionSessionImpl.SetExtWindowFlags(1);
+    ASSERT_EQ(WSErrorCode::WM_ERROR_INVALID_WINDOW, res);
+}
+/**
+ * @tc.name: UpdateExtWindowFlags
+ * @tc.desc: UpdateExtWindowFlags Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, UpdateExtWindowFlags, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    WindowExtensionSessionImpl windowExtensionSessionImpl(option);
+
+    auto res = windowExtensionSessionImpl.UpdateExtWindowFlags();
+    ASSERT_EQ(WSErrorCode::WM_DO_NOTHING, res);
+}
 }
 } // namespace Rosen
 } // namespace OHOS

@@ -421,6 +421,24 @@ HWTEST_F(SceneSessionManagerStubTest, HandleAddOrRemoveSecureExtSession, Functio
     EXPECT_EQ(res, ERR_NONE);
 }
 
+/**
+ * @tc.name: HandleUpdateExtWindowFlags
+ * @tc.desc: test HandleUpdateExtWindowFlags
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleUpdateExtWindowFlags, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    data.WriteInt32(12345);
+    data.WriteInt32(1073741826);
+    data.WriteUint32(1);
+
+    int res = stub_->HandleUpdateExtWindowFlags(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
 }
 }
 }
