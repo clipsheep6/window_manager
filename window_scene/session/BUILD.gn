@@ -98,6 +98,7 @@ ohos_shared_library("scene_session") {
     "input:libmmi-client",
     "ipc:ipc_single",
     "preferences:native_preferences",
+    "device_status:devicestatus_client",
   ]
 
   defines = []
