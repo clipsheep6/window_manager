@@ -54,7 +54,7 @@ const std::string DLP_INDEX = "ohos.dlp.params.index";
 MaximizeMode SceneSession::maximizeMode_ = MaximizeMode::MODE_RECOVER;
 wptr<SceneSession> SceneSession::enterSession_ = nullptr;
 std::mutex SceneSession::enterSessionMutex_;
-std::map<int32_t, WSRect> SceneSession::windowDragHotAreaMap_;
+std::map<uint32_t, WSRect> SceneSession::windowDragHotAreaMap_;
 static bool g_enableForceUIFirst = system::GetParameter("window.forceUIFirst.enabled", "1") == "1";
 
 SceneSession::SceneSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback)
@@ -294,6 +294,7 @@ WSError SceneSession::OnSessionEvent(SessionEvent event)
             session->moveDragController_->InitMoveDragProperty();
             session->moveDragController_->SetStartMoveFlag(true);
             session->moveDragController_->ClacFirstMoveTargetRect(session->winRect_);
+            session->moveDragController_->ProcessStartMovePositionFunc();
         }
         if (session->sessionChangeCallback_ && session->sessionChangeCallback_->OnSessionEvent_) {
             session->sessionChangeCallback_->OnSessionEvent_(static_cast<uint32_t>(event));
@@ -1114,9 +1115,7 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
     }
 
     auto windowType = property->GetWindowType();
-    if (property->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
-        (WindowHelper::IsMainWindow(windowType) || WindowHelper::IsSubWindow(windowType)) &&
-        property->GetMaximizeMode() != MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
+    if (IsMovableWindowType() && (WindowHelper::IsMainWindow(windowType) || WindowHelper::IsSubWindow(windowType))) {
         if (CheckDialogOnForeground() && isPointDown) {
             HandlePointDownDialog();
             pointerEvent->MarkProcessed();
@@ -1127,7 +1126,7 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
             WLOGE("moveDragController_ is null");
             return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
         }
-        if (property->GetDragEnabled()) {
+        if (property->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING && property->GetDragEnabled()) {
             auto is2in1 = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
             if (is2in1 && moveDragController_->ConsumeDragEvent(pointerEvent, winRect_, property, systemConfig_)) {
                 moveDragController_->UpdateGravityWhenDrag(pointerEvent, surfaceNode_);
@@ -1149,6 +1148,18 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
         RaiseToAppTopForPointDown();
     }
     return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
+}
+
+bool Scenesession::IsMovableWindowType()
+{
+    auto property = GetSessionProperty();
+    if (property == nullptr) {
+        return false;
+    }
+    return property->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING ||
+        property->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
+        property->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_SECONDARY ||
+        property->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN;
 }
 
 WSError SceneSession::RequestSessionBack(bool needMoveToBackground)
@@ -2223,6 +2234,13 @@ void SceneSession::SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFun
 {
     if (moveDragController_) {
         moveDragController_->SetWindowDragHotAreaFunc(func);
+    }
+}
+
+void SceneSession::SetStartMovePositionListener(const NotifyStartMovePositionFunc& func)
+{
+    if (moveDragController_) {
+        moveDragController_->SetStartMovePositionFunc(func);
     }
 }
 

@@ -169,6 +169,7 @@ public:
     WSError SetSystemBarProperty(WindowType type, SystemBarProperty systemBarProperty);
     void SetAbilitySessionInfo(std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo);
     void SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFunc& func);
+    void SetStartMovePositionListener(const NotifyStartMovePositionFunc& func);
     void SetSessionRectChangeCallback(const NotifySessionRectChangeFunc& func);
 
     int32_t GetCollaboratorType() const;
@@ -240,7 +241,7 @@ public:
     static const wptr<SceneSession> GetEnterWindow();
     static void ClearEnterWindow();
     static MaximizeMode maximizeMode_;
-    static std::map<int32_t, WSRect> windowDragHotAreaMap_;
+    static std::map<uint32_t, WSRect> windowDragHotAreaMap_;
 
     WSRect callingWindowRestoringRect_ = {0, 0, 0, 0};
     WSRect callingWindowNewRect_ = {0, 0, 0, 0};
@@ -283,6 +284,7 @@ private:
     void SetSurfaceBounds(const WSRect &rect);
     void UpdateWinRectForSystemBar(WSRect& rect);
     bool UpdateInputMethodSessionRect(const WSRect& rect, WSRect& newWinRect, WSRect& newRequestRect);
+    bool IsMovableWindowType();
     void HandleCastScreenConnection(SessionInfo& info, sptr<SceneSession> session);
 
     NotifySessionRectChangeFunc sessionRectChangeFunc_;

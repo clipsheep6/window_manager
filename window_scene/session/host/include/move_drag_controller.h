@@ -32,11 +32,13 @@ namespace OHOS::Rosen {
 
 using MoveDragCallback = std::function<void(const SizeChangeReason&)>;
 
-using NotifyWindowDragHotAreaFunc = std::function<void(int32_t type, const SizeChangeReason& reason)>;
+using NotifyWindowDragHotAreaFunc = std::function<void(uint32_t type, const SizeChangeReason& reason)>;
+
+using NotifyStartMovePositionFunc = std::function<void(int32_t x, int32_t y);
 
 using NotifyWindowPidChangeCallback = std::function<void(int32_t windowId, bool startMoving)>;
 
-const int32_t WINDOW_HOT_AREA_TYPE_UNDEFINED = -1;
+const uint32_t WINDOW_HOT_AREA_TYPE_UNDEFINED = 0;
 
 class MoveDragController : public RefBase {
 public:
@@ -59,6 +61,8 @@ public:
     void HandleMouseStyle(const std::shared_ptr<MMI::PointerEvent>& pointerEvent, const WSRect& winRect);
     void ClacFirstMoveTargetRect(const WSRect& windowRect);
     void SetWindowDragHotAreaFunc(const NotifyWindowDragHotAreaFunc& func);
+    void SetStartMovePositionFunc(const NotifyStartMovePositionFunc& func);
+    void ProcessStartMovePositionFunc();
     void UpdateGravityWhenDrag(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode);
     void OnLostFocus();
@@ -108,6 +112,7 @@ private:
     void CalcFixedAspectRatioTranslateLimits(AreaType type, AxisType axis);
     void FixTranslateByLimits(int32_t& tranX, int32_t& tranY);
     bool InitMainAxis(AreaType type, int32_t tranX, int32_t tranY);
+    void ResetOriginalPositionWhenFullScreenToFloating(const WSRect& winRect);
     void ConvertXYByAspectRatio(int32_t& tx, int32_t& ty, float aspectRatio);
     void ProcessSessionRectChange(const SizeChangeReason& reason);
     void InitDecorValue(const sptr<WindowSessionProperty> property, const SystemSessionConfig& sysConfig);
@@ -164,6 +169,7 @@ private:
     void ProcessWindowDragHotAreaFunc(bool flag, const SizeChangeReason& reason);
     int32_t windowDragHotAreaType_ = WINDOW_HOT_AREA_TYPE_UNDEFINED;
     NotifyWindowDragHotAreaFunc windowDragHotAreaFunc_;
+    NotifyStartMovePositionFunc startMovePositionFunc_;
     NotifyWindowPidChangeCallback pidChangeCallback_;
 
     const std::map<AreaType, Gravity> GRAVITY_MAP = {
