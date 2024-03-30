@@ -85,13 +85,8 @@ WSError SystemSession::Show(sptr<WindowSessionProperty> property)
 WSError SystemSession::Hide()
 {
     auto type = GetWindowType();
-    if (WindowHelper::IsSystemWindow(type) && NeedSystemPermission(type)) {
-        if (type == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
-            if (!SessionPermission::IsStartedByInputMethod()) {
-                TLOGE(WmsLogTag::WMS_LIFE, "Hide permission denied, keyboard is not hidden by current input method");
-                return WSError::WS_ERROR_INVALID_PERMISSION;
-            }
-        } else if (!SessionPermission::IsSystemCalling()) {
+    if (NeedSystemPermission(type)) {
+        if (!SessionPermission::IsSystemCalling()) {
             TLOGE(WmsLogTag::WMS_LIFE, "Hide permission denied id: %{public}d type:%{public}u",
                 GetPersistentId(), type);
             return WSError::WS_ERROR_INVALID_PERMISSION;
@@ -165,9 +160,6 @@ WSError SystemSession::Disconnect(bool isFromClient)
         }
         TLOGI(WmsLogTag::WMS_LIFE, "Disconnect session, id: %{public}d", session->GetPersistentId());
         session->SceneSession::Disconnect(isFromClient);
-        if (session->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
-            session->NotifyCallingSessionBackground();
-        }
         session->UpdateCameraFloatWindowStatus(false);
         return WSError::WS_OK;
     };

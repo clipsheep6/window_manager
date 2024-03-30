@@ -180,8 +180,6 @@ void IPCSpecificInterfaceFuzzTest2(sptr<IRemoteObject> proxy, MessageParcel& sen
         sendData, reply, option);
     proxy->SendRequest(static_cast<uint32_t>(SSMMessage::TRANS_ID_SET_SESSION_CONTINUE_STATE),
         sendData, reply, option);
-    proxy->SendRequest(static_cast<uint32_t>(SSMMessage::TRANS_ID_SET_SESSION_GRAVITY),
-        sendData, reply, option);
     proxy->SendRequest(static_cast<uint32_t>(SSMMessage::TRANS_ID_CLEAR_SESSION),
         sendData, reply, option);
     proxy->SendRequest(static_cast<uint32_t>(SSMMessage::TRANS_ID_CLEAR_ALL_SESSIONS),
