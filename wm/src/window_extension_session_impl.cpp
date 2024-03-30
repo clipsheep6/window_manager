@@ -703,6 +703,10 @@ WMError WindowExtensionSessionImpl::UpdateExtWindowFlags()
 Rect WindowExtensionSessionImpl::GetHostWindowRect(int32_t hostWindowId)
 {
     Rect rect;
+    if (hostWindowId != property_->GetParentId()) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "hostWindowId is invalid");
+        return rect;
+    }
     SingletonContainer::Get<WindowAdapter>().GetHostWindowRect(hostWindowId, rect);
     return rect;
 }

@@ -1816,8 +1816,8 @@ public:
     /**
      * @brief Get the rect of host window.
      *
-     * @param listener IWindowRectChangeListener.
-     * @return WM_OK means unregister success, others means unregister failed.
+     * @param hostWindowId window Id of the host window.
+     * @return Rect of window.
      */
     virtual Rect GetHostWindowRect(int32_t hostWindowId) { return {}; }
 };
