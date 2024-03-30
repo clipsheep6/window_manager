@@ -90,6 +90,8 @@ private:
     int HandleAddOrRemoveSecureSession(MessageParcel& data, MessageParcel& reply);
     int HandleAddOrRemoveSecureExtSession(MessageParcel& data, MessageParcel& reply);
     int HandleUpdateExtWindowFlags(MessageParcel& data, MessageParcel& reply);
+    int HandleGetWindowStatusByWindowId(MessageParcel& data, MessageParcel& reply);
+    int HandleGetRectByWindowId(MessageParcel& data, MessageParcel& reply);
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_STUB_H

@@ -1758,6 +1758,44 @@ HWTEST_F(WindowSessionImplTest, SetPipActionEvent, Function | SmallTest | Level2
 }
 
 /**
+ * @tc.name: GetRectByWindowId
+ * @tc.desc: GetRectByWindowId Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTest, GetRectByWindowId, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("GetRectByWindowId");
+    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
+    window->property_->SetPersistentId(1);
+    ASSERT_NE(nullptr, window);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Show());
+    Rect rect = {0, 0, 0, 0};
+    WMError retCode = window->GetRectByWindowId(1, rect);
+    ASSERT_EQ(retCode, WMError::WM_ERROR_NULLPTR);
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: GetWindowStatusByWindowId
+ * @tc.desc: GetWindowStatusByWindowld Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTest, GetwindowstatusByWindowId, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("GetwindowstatusByWindowId");
+    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
+    window->property_->SetPersistentId(1);
+    ASSERT_NE(nullptr, window);
+    ASSERT_EQ (WMError::WM_ERROR_INVALID_WINDOW, window->Show());
+    WindowStatus windowStatus = WindowStatus::WINDOW_STATUS_UNDEFINED;
+    WMError retCode = window->GetWindowStatusByWindowId(1, windowStatus);
+    ASSERT_EQ(retCode, WMError::WM_ERROR_NULLPTR);
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
  * @tc.name: SetUIContentInner
  * @tc.desc: SetUIContentInner Test
  * @tc.type: FUNC
