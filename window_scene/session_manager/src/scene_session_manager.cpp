@@ -2404,7 +2404,7 @@ WSError SceneSessionManager::SwitchUser(int32_t oldUserId, int32_t newUserId, st
         ScenePersistence::CreateUpdatedIconDir(fileDir);
         currentUserId_ = newUserId;
         {
-            std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+            std::unique_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
             for (const auto &item : sceneSessionMap_) {
                 auto scnSession = item.second;
                 auto persistentId = scnSession->GetPersistentId();
