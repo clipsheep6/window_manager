@@ -6901,7 +6901,10 @@ void SceneSessionManager::AddWindowDragHotArea(int32_t type, WSRect& area)
 {
     WLOGFI("run AddWindowDragHotArea, type: %{public}d,posX: %{public}d,posY: %{public}d,width: %{public}d,"
         "height: %{public}d", type, area.posX_, area.posY_, area.width_, area.height_);
-    SceneSession::windowDragHotAreaMap_.insert({type, area});
+    auto const result = SceneSession::windowDragHotAreaMap_.insert({type, area});
+    if (!result.second) {
+        result.first->second = area;
+    }
 }
 
 WSError SceneSessionManager::UpdateMaximizeMode(int32_t persistentId, bool isMaximize)
