@@ -869,6 +869,12 @@ HWTEST_F(WindowSessionImplTest, RegisterListener01, Function | SmallTest | Level
     res = window->UnregisterDisplayMoveListener(listener6);
     ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
 
+    sptr<IWindowRectChangeListener> listener7 = nullptr;
+    res = window->RegisterWindowRectChangeListener(listener7);
+    ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
+    res = window->UnregisterWindowRectChangeListener(listener7);
+    ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
+
     GTEST_LOG_(INFO) << "WindowSessionImplTest: RegisterListener01 end";
 }
 
@@ -1765,7 +1771,7 @@ HWTEST_F(WindowSessionImplTest, SetUIContentInner, Function | SmallTest | Level2
     option->SetExtensionTag(true);
     sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
     ASSERT_NE(window, nullptr);
-    string url = "";
+    std::string url = "";
     WMError res = window->SetUIContentInner(url, nullptr, nullptr, WindowSetUIContentType::DEFAULT, nullptr);
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_PARAM);
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetUIContentInner end";
