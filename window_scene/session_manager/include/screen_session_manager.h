@@ -243,8 +243,8 @@ private:
     void ConfigureWaterfallDisplayCompressionParams();
     void RegisterScreenChangeListener();
     void OnScreenChange(ScreenId screenId, ScreenEvent screenEvent);
-    void RegisterRefreshRateModeChangeListener();
-    void OnHgmRefreshRateModeChange(int32_t refreshRateMode);
+    void RegisterRefreshRateChangeListener();
+    void OnHgmRefreshRateChange(int32_t refreshRateModeName);
     sptr<ScreenSession> GetOrCreateScreenSession(ScreenId screenId);
     void CreateScreenProperty(ScreenId screenId, ScreenProperty& property);
     sptr<ScreenSession> GetScreenSessionInner(ScreenId screenId, ScreenProperty property);
@@ -260,6 +260,7 @@ private:
     std::string TransferTypeToString(ScreenType type) const;
     void CheckAndSendHiSysEvent(const std::string& eventName, const std::string& bundleName) const;
     void HandlerSensor(ScreenPowerStatus status);
+    bool GetPowerStatus(ScreenPowerState state, PowerStateChangeReason reason, ScreenPowerStatus& status);
 
     // notify scb virtual screen change
     void OnVirtualScreenChange(ScreenId screenId, ScreenEvent screenEvent);
