@@ -59,7 +59,6 @@ namespace AncoConsts {
     constexpr const char* ANCO_MISSION_ID = "ohos.anco.param.missionId";
     constexpr const char* ANCO_SESSION_ID = "ohos.anco.param.sessionId";
 }
-
 class SceneSession;
 class AccessibilityWindowInfo;
 using NotifyCreateSystemSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
@@ -435,6 +434,7 @@ private:
     void NotifySessionAINavigationBarChange(int32_t persistentId);
     WSError DestroyAndDisconnectSpecificSessionInner(sptr<SceneSession> sceneSession);
     void UpdateCameraWindowStatus(uint32_t accessTokenId, bool isShowing);
+    void ReportWindowProfileInfos();
 
     sptr<RootSceneSession> rootSceneSession_;
     std::weak_ptr<AbilityRuntime::Context> rootSceneContextWeak_;
