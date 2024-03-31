@@ -17,14 +17,12 @@
 #define OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_LITE_INTERFACE_H
 
 #include <iremote_broker.h>
-#include "common/include/window_session_property.h"
-#include "iability_manager_collaborator.h"
 #include "interfaces/include/ws_common.h"
-#include "interfaces/include/ws_common_inner.h"
-#include "mission_info.h"
-#include "mission_listener_interface.h"
-#include "mission_snapshot.h"
 #include "session_info.h"
+#include "mission_listener_interface.h"
+#include "mission_info.h"
+#include "mission_snapshot.h"
+#include "iability_manager_collaborator.h"
 #include "zidl/window_manager_lite_interface.h"
 namespace OHOS::Media {
 class PixelMap;
@@ -60,11 +58,6 @@ public:
         TRANS_ID_MOVE_MISSIONS_TO_BACKGROUND,
         //window manager message
         TRANS_ID_GET_FOCUS_SESSION_INFO,
-        TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT,
-        TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT,
-        TRANS_ID_GET_WINDOW_INFO,
-        TRANS_ID_CHECK_WINDOW_ID,
-        TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID,
     };
 
     virtual WSError SetSessionLabel(const sptr<IRemoteObject>& token, const std::string& label) = 0;
