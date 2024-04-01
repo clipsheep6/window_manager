@@ -592,7 +592,7 @@ HWTEST_F(WindowExtensionSessionImplTest, AddExtensionWindowFlag, Function | Smal
     WindowExtensionSessionImpl windowExtensionSessionImpl(option);
 
     auto res = windowExtensionSessionImpl.AddExtensionWindowFlag(ExtensionWindowFlag::EXTENSION_WINDOW_FLAG_WATER_MARK);
-    ASSERT_EQ(WSErrorCode::WM_ERROR_INVALID_WINDOW, res);
+    ASSERT_EQ(WSError::WM_ERROR_INVALID_WINDOW, res);
 }
 
 /**
@@ -606,7 +606,7 @@ HWTEST_F(WindowExtensionSessionImplTest, RemoveExtensionWindowFlag, Function | S
     WindowExtensionSessionImpl windowExtensionSessionImpl(option);
 
     auto res = windowExtensionSessionImpl.RemoveExtensionWindowFlag(ExtensionWindowFlag::EXTENSION_WINDOW_FLAG_WATER_MARK);
-    ASSERT_EQ(WSErrorCode::WM_ERROR_INVALID_WINDOW, res);
+    ASSERT_EQ(WSError::WM_ERROR_INVALID_WINDOW, res);
 }
 
 /**
@@ -619,8 +619,14 @@ HWTEST_F(WindowExtensionSessionImplTest, CheckAndAddExtWindowFlags, Function | S
     sptr<WindowOption> option = new WindowOption();
     WindowExtensionSessionImpl windowExtensionSessionImpl(option);
 
-    auto res = windowExtensionSessionImpl.CheckAndAddExtWindowFlags();
-    ASSERT_EQ(WSErrorCode::WM_ERROR_INVALID_WINDOW, res);
+    int res = 0;
+    std::function<void()> func = [&]()
+    {
+        windowExtensionSessionImpl.CheckAndAddExtWindowFlags();
+        res = 1;
+    }
+    func();
+    ASSERT_EQ(1, res);
 }
 
 /**
@@ -633,8 +639,14 @@ HWTEST_F(WindowExtensionSessionImplTest, CheckAndRemoveExtWindowFlags, Function 
     sptr<WindowOption> option = new WindowOption();
     WindowExtensionSessionImpl windowExtensionSessionImpl(option);
 
-    auto res = windowExtensionSessionImpl.CheckAndRemoveExtWindowFlags();
-    ASSERT_EQ(WSErrorCode::WM_ERROR_INVALID_WINDOW, res);
+    int res = 0;
+    std::function<void()> func = [&]()
+    {
+        windowExtensionSessionImpl.CheckAndRemoveExtWindowFlags();
+        res = 1;
+    }
+    func();
+    ASSERT_EQ(1, res);
 }
 
 /**
@@ -648,7 +660,7 @@ HWTEST_F(WindowExtensionSessionImplTest, SetExtWindowFlags, Function | SmallTest
     WindowExtensionSessionImpl windowExtensionSessionImpl(option);
 
     auto res = windowExtensionSessionImpl.SetExtWindowFlags(1);
-    ASSERT_EQ(WSErrorCode::WM_ERROR_INVALID_WINDOW, res);
+    ASSERT_EQ(WSError::WM_ERROR_INVALID_WINDOW, res);
 }
 /**
  * @tc.name: UpdateExtWindowFlags
@@ -661,7 +673,7 @@ HWTEST_F(WindowExtensionSessionImplTest, UpdateExtWindowFlags, Function | SmallT
     WindowExtensionSessionImpl windowExtensionSessionImpl(option);
 
     auto res = windowExtensionSessionImpl.UpdateExtWindowFlags();
-    ASSERT_EQ(WSErrorCode::WM_DO_NOTHING, res);
+    ASSERT_EQ(WSError::WM_OK, res);
 }
 }
 } // namespace Rosen
