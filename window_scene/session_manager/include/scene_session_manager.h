@@ -291,6 +291,8 @@ public:
     int32_t StartUIAbilityBySCB(sptr<SceneSession>& sceneSessions);
     int32_t ChangeUIAbilityVisibilityBySCB(sptr<SceneSession>& sceneSessions, bool visibility);
     WSError UpdateExtWindowFlags(int32_t parentId, int32_t persistentId, uint32_t extWindowFlags) override;
+    WMError GetWindowStatusByWindowId(uint32_t windowId, WindowStatus& windowStatus) override;
+    WMError GetRectByWindowId(uint32_t windowId, Rect& rect) override;
 
 public:
     std::shared_ptr<TaskScheduler> GetTaskScheduler() {return taskScheduler_;};
@@ -567,6 +569,7 @@ private:
     void HandleCastScreenDisConnection(const sptr<SceneSession> sceneSession);
     void ProcessSplitFloating();
     void NotifyRSSWindowModeTypeUpdate(bool inSplit, bool inFloating);
+    WindowStatus GetWindowStatus(WindowMode mode, const sptr<WindowSessionProperty>& property);
 };
 } // namespace OHOS::Rosen
 
