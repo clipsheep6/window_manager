@@ -536,12 +536,6 @@ WMError WindowAdapter::UpdateSessionProperty(const sptr<WindowSessionProperty>& 
     return windowManagerServiceProxy_->UpdateSessionProperty(property, action);
 }
 
-WMError WindowAdapter::SetSessionGravity(int32_t persistentId, SessionGravity gravity, uint32_t percent)
-{
-    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
-    return static_cast<WMError>(windowManagerServiceProxy_->SetSessionGravity(persistentId, gravity, percent));
-}
-
 WMError WindowAdapter::BindDialogSessionTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);

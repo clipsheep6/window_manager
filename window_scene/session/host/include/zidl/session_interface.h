@@ -67,7 +67,7 @@ public:
         bool isShow) { return WSError::WS_OK; }
     virtual WSError NotifySessionException(
         const sptr<AAFwk::SessionInfo> abilitySessionInfo, bool needRemoveSession = false) { return WSError::WS_OK; }
-    virtual WSError SetTextFieldAvoidInfo(double textFieldPositionY, double textFieldHeight) { return WSError::WS_OK; }
+    virtual void SetTextFieldAvoidInfo(double textFieldPositionY, double textFieldHeight) { }
 
     // extension session
     virtual WSError TransferAbilityResult(uint32_t resultCode, const AAFwk::Want& want) { return WSError::WS_OK; }
@@ -99,6 +99,16 @@ public:
     {
         return WSError::WS_OK;
     }
+    virtual WSError SetSessionGravity(SessionGravity gravity, uint32_t percent)
+    {
+        return WSError::WS_OK;
+    }
+    virtual void SetCallingWindowId(uint32_t callingWindowId) { }
+    virtual uint32_t GetCallingWindowId()
+    {
+        return INVALID_WINDOW_ID;
+    }
+
 };
 } // namespace OHOS::Rosen
 

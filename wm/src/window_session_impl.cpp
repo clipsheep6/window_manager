@@ -2548,8 +2548,11 @@ WMError WindowSessionImpl::SetWindowGravity(WindowGravity gravity, uint32_t perc
     if (property_ != nullptr) {
         property_->SetSessionGravity(sessionGravity, percent);
     }
-    return SingletonContainer::Get<WindowAdapter>().SetSessionGravity(GetPersistentId(),
-        static_cast<SessionGravity>(gravity), percent);
+
+    if (hostSession_ != nullptr) {
+        return static_cast<WMError>(hostSession_->SetSessionGravity(static_cast<SessionGravity>(gravity), percent));
+    }
+    return WMError::WM_OK;
 }
 
 WMError WindowSessionImpl::SetSystemBarProperty(WindowType type, const SystemBarProperty& property)
@@ -2562,12 +2565,6 @@ WMError WindowSessionImpl::SetSpecificBarProperty(WindowType type, const SystemB
     return WMError::WM_OK;
 }
 
-WMError WindowSessionImpl::SetTextFieldAvoidInfo(double textFieldPositionY, double textFieldHeight)
-{
-    property_->SetTextFieldPositionY(textFieldPositionY);
-    property_->SetTextFieldHeight(textFieldHeight);
-    return WMError::WM_OK;
-}
 
 void WindowSessionImpl::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info)
 {

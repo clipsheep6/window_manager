@@ -66,6 +66,8 @@ private:
     int HandleSendPointerEvenForMoveDrag(MessageParcel& data, MessageParcel& reply);
     int HandleSetLandscapeMultiWindow(MessageParcel& data, MessageParcel& reply);
     int HandleUpdateRectChangeListenerRegistered(MessageParcel& data, MessageParcel& reply);
+    int HandleSetSessionGravity(MessageParcel& data, MessageParcel& reply);
+    int HandleSetCallingWindowId(MessageParcel& data, MessageParcel& reply);
 
     // extension extension
     int HandleTransferAbilityResult(MessageParcel& data, MessageParcel& reply);

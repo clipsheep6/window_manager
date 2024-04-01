@@ -166,10 +166,6 @@ public:
     {
         return WSError::WS_OK;
     }
-    virtual WSError SetSessionGravity(int32_t persistentId, SessionGravity gravity, uint32_t percent)
-    {
-        return WSError::WS_OK;
-    }
     virtual WMError RequestFocusStatus(int32_t persistentId, bool isFocused, bool byForeground = true)
     {
         return WMError::WM_OK;

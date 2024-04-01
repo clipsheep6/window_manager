@@ -2520,9 +2520,11 @@ WMError WindowSceneSessionImpl::SetCallingWindow(uint32_t callingWindowId)
         TLOGI(WmsLogTag::WMS_KEYBOARD, "Set calling window id form %{public}d to: %{public}d",
             property_->GetCallingWindow(), callingWindowId);
     }
+    if (hostSession_) {
+        hostSession_->SetCallingWindowId(callingWindowId);
+    }
     property_->SetCallingWindow(callingWindowId);
-
-    return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_CALLING_WINDOW);
+    return WMError::WM_OK;
 }
 
 void WindowSceneSessionImpl::DumpSessionElementInfo(const std::vector<std::string>& params)
@@ -2829,6 +2831,8 @@ WMError WindowSceneSessionImpl::HideNonSecureWindows(bool shouldHide)
 
 WMError WindowSceneSessionImpl::SetTextFieldAvoidInfo(double textFieldPositionY, double textFieldHeight)
 {
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "Set textFieldPositionY: %{public}f, textFieldHeight:%{public}f",
+        textFieldPositionY, textFieldHeight);
     property_->SetTextFieldPositionY(textFieldPositionY);
     property_->SetTextFieldHeight(textFieldHeight);
     UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_TEXTFIELD_AVOID_INFO);
