@@ -244,7 +244,17 @@ std::map<int32_t, sptr<SceneSession>> SceneSessionDirtyManager::GetDialogSession
 
     for (const auto& elem: sessionMap) {
         const auto& session = elem.second;
-        if (session != nullptr && session->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
+        if (session == nullptr) {
+            continue;
+        }
+        bool isModalSubWindow = false;
+        auto property = session->GetSessionProperty();
+        if (property != nullptr) {
+            bool isSubWindow = WindowHelper::IsSubWindow(property->GetWindowType());
+            bool isModal = property->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_IS_MODAL);
+            isModalSubWindow = isSubWindow && isModal;
+        }
+        if (isModalSubWindow || session->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
             const auto& parentSession = session->GetParentSession();
             if (parentSession == nullptr) {
                 continue;
@@ -349,28 +359,28 @@ void SceneSessionDirtyManager::UpdatePointerAreas(sptr<SceneSession> sceneSessio
                 vpr = screenSession->GetScreenProperty().GetDensity();
             }
         }
-        int32_t pointerArea_Five_PX = static_cast<int32_t>(POINTER_CHANGE_AREA_FIVE * vpr);
-        int32_t pointerArea_Sexteen_PX = static_cast<int32_t>(POINTER_CHANGE_AREA_SEXTEEN * vpr);
+        int32_t pointerArea_Five_Px = static_cast<int32_t>(POINTER_CHANGE_AREA_FIVE * vpr);
+        int32_t pointerArea_Sexteen_Px = static_cast<int32_t>(POINTER_CHANGE_AREA_SEXTEEN * vpr);
 
         if (sceneSession->GetSessionInfo().isSetPointerAreas_) {
             pointerChangeAreas = {POINTER_CHANGE_AREA_DEFAULT, POINTER_CHANGE_AREA_DEFAULT,
-                POINTER_CHANGE_AREA_DEFAULT, pointerArea_Five_PX, pointerArea_Sexteen_PX,
-                pointerArea_Five_PX, pointerArea_Sexteen_PX, pointerArea_Five_PX};
+                POINTER_CHANGE_AREA_DEFAULT, pointerArea_Five_Px, pointerArea_Sexteen_Px,
+                pointerArea_Five_Px, pointerArea_Sexteen_Px, pointerArea_Five_Px};
             return;
         }
         auto limits = sceneSession->GetSessionProperty()->GetWindowLimits();
         if (limits.minWidth_ == limits.maxWidth_ && limits.minHeight_ != limits.maxHeight_) {
-            pointerChangeAreas = {POINTER_CHANGE_AREA_DEFAULT, pointerArea_Five_PX,
+            pointerChangeAreas = {POINTER_CHANGE_AREA_DEFAULT, pointerArea_Five_Px,
                 POINTER_CHANGE_AREA_DEFAULT, POINTER_CHANGE_AREA_DEFAULT, POINTER_CHANGE_AREA_DEFAULT,
-                pointerArea_Five_PX, POINTER_CHANGE_AREA_DEFAULT,  POINTER_CHANGE_AREA_DEFAULT};
+                pointerArea_Five_Px, POINTER_CHANGE_AREA_DEFAULT,  POINTER_CHANGE_AREA_DEFAULT};
         } else if (limits.minWidth_ != limits.maxWidth_ && limits.minHeight_ == limits.maxHeight_) {
             pointerChangeAreas = {POINTER_CHANGE_AREA_DEFAULT, POINTER_CHANGE_AREA_DEFAULT,
-                POINTER_CHANGE_AREA_DEFAULT, pointerArea_Five_PX, POINTER_CHANGE_AREA_DEFAULT,
-                POINTER_CHANGE_AREA_DEFAULT, POINTER_CHANGE_AREA_DEFAULT, pointerArea_Five_PX};
+                POINTER_CHANGE_AREA_DEFAULT, pointerArea_Five_Px, POINTER_CHANGE_AREA_DEFAULT,
+                POINTER_CHANGE_AREA_DEFAULT, POINTER_CHANGE_AREA_DEFAULT, pointerArea_Five_Px};
         } else if (limits.minWidth_ != limits.maxWidth_ && limits.minHeight_ != limits.maxHeight_) {
-            pointerChangeAreas = {pointerArea_Sexteen_PX, pointerArea_Five_PX,
-                pointerArea_Sexteen_PX, pointerArea_Five_PX, pointerArea_Sexteen_PX,
-                pointerArea_Five_PX, pointerArea_Sexteen_PX, pointerArea_Five_PX};
+            pointerChangeAreas = {pointerArea_Sexteen_Px, pointerArea_Five_Px,
+                pointerArea_Sexteen_Px, pointerArea_Five_Px, pointerArea_Sexteen_Px,
+                pointerArea_Five_Px, pointerArea_Sexteen_Px, pointerArea_Five_Px};
         }
     } else {
         WLOGFD("UpdatePointerAreas sceneSession is: %{public}d dragEnabled is false", sceneSession->GetPersistentId());
@@ -413,6 +423,7 @@ MMI::WindowInfo SceneSessionDirtyManager::GetWindowInfo(const sptr<SceneSession>
     std::vector<MMI::Rect> touchHotAreas;
     std::vector<MMI::Rect> pointerHotAreas;
     UpdateHotAreas(sceneSession, touchHotAreas, pointerHotAreas);
+    auto pixelMap = sceneSession->GetSessionProperty()->GetWindowMask().GetRefPtr();
     MMI::WindowInfo windowInfo = {
         .id = windowId,
         .pid = sceneSession->IsStartMoving() ? static_cast<int32_t>(getpid()) : pid,
@@ -426,8 +437,15 @@ MMI::WindowInfo SceneSessionDirtyManager::GetWindowInfo(const sptr<SceneSession>
         .action = static_cast<MMI::WINDOW_UPDATE_ACTION>(action),
         .pointerChangeAreas = pointerChangeAreas,
         .zOrder = zOrder,
-        .transform = transformData
+        .transform = transformData,
+        .pixelMap = pixelMap
     };
+    auto property = sceneSession->GetSessionProperty();
+    if (property != nullptr && (property->GetWindowFlags() &
+        static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_HANDWRITING))) {
+        WLOGFI("Add handwrite flag for session, id: %{public}d", windowId);
+        windowInfo.flags |= MMI::WindowInfo::FLAG_BIT_HANDWRITING;
+    }
     return windowInfo;
 }
 

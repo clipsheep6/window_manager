@@ -48,7 +48,17 @@ public:
     static napi_value SetUIContent(napi_env env, napi_callback_info info);
     static napi_value DestroyWindow(napi_env env, napi_callback_info info);
     static napi_value SetWindowBackgroundColorSync(napi_env env, napi_callback_info info);
+    static napi_value GetWindowPropertiesSync(napi_env env, napi_callback_info info);
+    static napi_value MoveWindowTo(napi_env env, napi_callback_info info);
+    static napi_value ResizeWindow(napi_env env, napi_callback_info info);
+    static napi_value SetSpecificSystemBarEnabled(napi_env env, napi_callback_info info);
+    static napi_value SetPreferredOrientation(napi_env env, napi_callback_info info);
+    static napi_value GetPreferredOrientation(napi_env env, napi_callback_info info);
+    static napi_value GetUIContext(napi_env env, napi_callback_info info);
+    static napi_value SetWindowBrightness(napi_env env, napi_callback_info info);
+    static napi_value SetWindowKeepScreenOn(napi_env env, napi_callback_info info);
     static napi_value CreateSubWindowWithOptions(napi_env env, napi_callback_info info);
+    static napi_value SetWaterMarkFlag(napi_env env, napi_callback_info info);
 private:
     napi_value OnGetWindowAvoidArea(napi_env env, napi_callback_info info);
     napi_value OnRegisterExtensionWindowCallback(napi_env env, napi_callback_info info);
@@ -60,7 +70,17 @@ private:
     napi_value OnSetUIContent(napi_env env, napi_callback_info info);
     napi_value OnDestroyWindow(napi_env env, napi_callback_info info);
     napi_value OnSetWindowBackgroundColorSync(napi_env env, napi_callback_info info);
+    napi_value OnGetWindowPropertiesSync(napi_env env, napi_callback_info info);
+    napi_value OnMoveWindowTo(napi_env env, napi_callback_info info);
+    napi_value OnResizeWindow(napi_env env, napi_callback_info info);
+    napi_value OnSetSpecificSystemBarEnabled(napi_env env, napi_callback_info info);
+    napi_value OnSetPreferredOrientation(napi_env env, napi_callback_info info);
+    napi_value OnGetPreferredOrientation(napi_env env, napi_callback_info info);
+    napi_value OnGetUIContext(napi_env env, napi_callback_info info);
+    napi_value OnSetWindowBrightness(napi_env env, napi_callback_info info);
+    napi_value OnSetWindowKeepScreenOn(napi_env env, napi_callback_info info);
     napi_value OnCreateSubWindowWithOptions(napi_env env, napi_callback_info info);
+    napi_value OnSetWaterMarkFlag(napi_env env, napi_callback_info info);
     
     static napi_value GetProperties(napi_env env, napi_callback_info info);
 
@@ -69,7 +89,7 @@ private:
     sptr<AAFwk::SessionInfo> sessionInfo_ = nullptr;
     std::unique_ptr<JsExtensionWindowRegisterManager> extensionRegisterManager_ = nullptr;
     static void SetWindowOption(sptr<Rosen::WindowOption> windowOption);
-    WindowOption SetOption(WindowOption option, std::string title, bool decorEnabled);
+    bool ParseSubWindowOptions(napi_env env, napi_value jsObject, WindowOption& option);
 };
 }  // namespace Rosen
 }  // namespace OHOS
