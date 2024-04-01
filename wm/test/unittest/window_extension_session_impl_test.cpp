@@ -591,7 +591,8 @@ HWTEST_F(WindowExtensionSessionImplTest, AddExtensionWindowFlag, Function | Smal
     sptr<WindowOption> option = new WindowOption();
     WindowExtensionSessionImpl windowExtensionSessionImpl(option);
 
-    auto res = windowExtensionSessionImpl.AddExtensionWindowFlag(ExtensionWindowFlag::EXTENSION_WINDOW_FLAG_WATER_MARK);
+    auto res = windowExtensionSessionImpl.AddExtensionWindowFlag(
+        ExtensionWindowFlag::EXTENSION_WINDOW_FLAG_WATER_MARK);
     ASSERT_EQ(WSError::WM_ERROR_INVALID_WINDOW, res);
 }
 
@@ -605,7 +606,8 @@ HWTEST_F(WindowExtensionSessionImplTest, RemoveExtensionWindowFlag, Function | S
     sptr<WindowOption> option = new WindowOption();
     WindowExtensionSessionImpl windowExtensionSessionImpl(option);
 
-    auto res = windowExtensionSessionImpl.RemoveExtensionWindowFlag(ExtensionWindowFlag::EXTENSION_WINDOW_FLAG_WATER_MARK);
+    auto res = windowExtensionSessionImpl.RemoveExtensionWindowFlag(
+        ExtensionWindowFlag::EXTENSION_WINDOW_FLAG_WATER_MARK);
     ASSERT_EQ(WSError::WM_ERROR_INVALID_WINDOW, res);
 }
 
