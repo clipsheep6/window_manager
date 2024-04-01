@@ -593,7 +593,7 @@ HWTEST_F(WindowExtensionSessionImplTest, AddExtensionWindowFlag, Function | Smal
 
     auto res = windowExtensionSessionImpl.AddExtensionWindowFlag(
         ExtensionWindowFlag::EXTENSION_WINDOW_FLAG_WATER_MARK);
-    ASSERT_EQ(WSError::WM_ERROR_INVALID_WINDOW, res);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
 }
 
 /**
@@ -608,7 +608,7 @@ HWTEST_F(WindowExtensionSessionImplTest, RemoveExtensionWindowFlag, Function | S
 
     auto res = windowExtensionSessionImpl.RemoveExtensionWindowFlag(
         ExtensionWindowFlag::EXTENSION_WINDOW_FLAG_WATER_MARK);
-    ASSERT_EQ(WSError::WM_ERROR_INVALID_WINDOW, res);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
 }
 
 /**
@@ -662,7 +662,7 @@ HWTEST_F(WindowExtensionSessionImplTest, SetExtWindowFlags, Function | SmallTest
     WindowExtensionSessionImpl windowExtensionSessionImpl(option);
 
     auto res = windowExtensionSessionImpl.SetExtWindowFlags(1);
-    ASSERT_EQ(WSError::WM_ERROR_INVALID_WINDOW, res);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, res);
 }
 /**
  * @tc.name: UpdateExtWindowFlags
@@ -675,7 +675,7 @@ HWTEST_F(WindowExtensionSessionImplTest, UpdateExtWindowFlags, Function | SmallT
     WindowExtensionSessionImpl windowExtensionSessionImpl(option);
 
     auto res = windowExtensionSessionImpl.UpdateExtWindowFlags();
-    ASSERT_EQ(WSError::WM_OK, res);
+    ASSERT_EQ(WMError::WM_OK, res);
 }
 }
 } // namespace Rosen
