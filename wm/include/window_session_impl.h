@@ -219,6 +219,8 @@ public:
     void SetDefaultDisplayIdIfNeed();
     WMError RegisterWindowRectChangeListener(const sptr<IWindowRectChangeListener>& listener) override;
     WMError UnregisterWindowRectChangeListener(const sptr<IWindowRectChangeListener>& listener) override;
+    virtual WMError GetRectByWindowId(uint32_t windowId, Rect& rect) const override;
+    virtual WMError GetWindowStatusByWindowId(uint32_t windowId, WindowStatus& windowStatus) const override;
 
 protected:
     WMError Connect();
@@ -373,6 +375,7 @@ private:
     bool isMainHandlerAvailable_ = true;
 
     std::string subWindowTitle_ = { "" };
+    bool IfNotNeedAvoidKeyBoardForSplit();
     WindowTitleVisibleFlags windowTitleVisibleFlags_;
 };
 } // namespace Rosen
