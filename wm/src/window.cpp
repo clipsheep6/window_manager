@@ -142,9 +142,6 @@ sptr<Window> Window::Create(sptr<WindowOption>& option, const std::shared_ptr<OH
 sptr<Window> Window::CreatePiP(sptr<WindowOption>& option, const PiPTemplateInfo& pipTemplateInfo,
     const std::shared_ptr<OHOS::AbilityRuntime::Context>& context, WMError& errCode)
 {
-    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
-        return nullptr;
-    }
     if (!option) {
         TLOGE(WmsLogTag::WMS_PIP, "option is null.");
         return nullptr;
