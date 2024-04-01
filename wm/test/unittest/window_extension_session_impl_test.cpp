@@ -626,7 +626,7 @@ HWTEST_F(WindowExtensionSessionImplTest, CheckAndAddExtWindowFlags, Function | S
     {
         windowExtensionSessionImpl.CheckAndAddExtWindowFlags();
         res = 1;
-    }
+    };
     func();
     ASSERT_EQ(1, res);
 }
@@ -646,7 +646,7 @@ HWTEST_F(WindowExtensionSessionImplTest, CheckAndRemoveExtWindowFlags, Function 
     {
         windowExtensionSessionImpl.CheckAndRemoveExtWindowFlags();
         res = 1;
-    }
+    };
     func();
     ASSERT_EQ(1, res);
 }
