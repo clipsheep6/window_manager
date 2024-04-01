@@ -226,7 +226,7 @@ void MoveDragController::ProcessStartMovePositionFunc()
     }
     if (startMovePositionFunc_) {
         WLOGFI("ProcessStartMovePositionFunc start, xPosition: %{public}u, yPosition: %{public}u",
-        moveTempProperty_.lastDownPointerPosX_, moveTempProperty_.lastDownPointerPosY_);
+            moveTempProperty_.lastDownPointerPosX_, moveTempProperty_.lastDownPointerPosY_);
         startMovePositionFunc_(moveTempProperty_.lastDownPointerPosX_, moveTempProperty_.lastDownPointerPosY_);
     }
 }

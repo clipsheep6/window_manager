@@ -278,7 +278,6 @@ void JsSceneSession::OnWindowDragHotArea(uint32_t type, const SizeChangeReason& 
 
 void JsSceneSession::ProcessStartMovePositionRegister()
 {
-
     WLOGFI("[NAPI]ProcessStartMovePositionRegister");
     NotifyStartMovePositionFunc func = [weak = weak_from_this()](int32_t pointerPosX, int32_t pointerPosY) {
         auto weakJsSceneSession = weak.lock();
