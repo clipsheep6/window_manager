@@ -206,6 +206,14 @@ public:
     {
         return WSError::WS_OK;
     }
+    virtual WMError GetWindowStatusByWindowId(uint32_t windowId, WindowStatus& windowStatus)
+    {
+        return WMError::WM_OK;
+    }
+    virtual WMError GetRectByWindowId(uint32_t windowId, Rect& rect)
+    {
+        return WMError::WM_OK;
+    }
 };
 }
 }
