@@ -1095,6 +1095,80 @@ HWTEST_F(ScreenSessionManagerTest, SetSpecifiedScreenPower, Function | SmallTest
     EXPECT_TRUE(ssm_->SetSpecifiedScreenPower(mainScreenId, state, reason));
 }
 
+/**
+ * @tc.name: GetAllScreenIds
+ * @tc.desc: GetAllScreenIds screen power
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerTest, GetAllScreenIds, Function | SmallTest | Level3)
+{
+    sptr<ScreenSession> screenSession = new ScreenSession();
+    ssm_->screenSessionMap_.insert(std::pair<ScreenId, sptr<ScreenSession>>(1, screenSession));
+    auto res = ssm_->GetAllScreenIds();
+    EXPECT_EQ(res[0], 1);
+}
+
+/**
+ * @tc.name: GetDensityInCurResolution
+ * @tc.desc: GetDensityInCurResolution screen power
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerTest, GetDensityInCurResolution, Function | SmallTest | Level3)
+{
+    sptr<ScreenSession> screenSession = new ScreenSession();
+    ssm_->screenSessionMap_.insert(std::pair<ScreenId, sptr<ScreenSession>>(1, screenSession));
+    ScreenId screenId = 100;
+    float x = 3.14;
+    auto res = ssm_->GetDensityInCurResolution(screenId, x);
+    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, res);
+    screenId = 1;
+    res = ssm_->GetDensityInCurResolution(screenId, x);
+    EXPECT_EQ(DMError::DM_OK, res);
+}
+
+/**
+ * @tc.name: SetScreenColorTransform
+ * @tc.desc: SetScreenColorTransform screen power
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerTest, SetScreenColorTransform, Function | SmallTest | Level3)
+{
+    sptr<ScreenSession> screenSession = new ScreenSession();
+    ssm_->screenSessionMap_.insert(std::pair<ScreenId, sptr<ScreenSession>>(1, screenSession));
+    ScreenId screenId = SCREEN_ID_INVALID;
+    auto res = ssm_->SetScreenColorTransform(screenId);
+    EXPECT_EQ(DMError::DM_ERROR_INVALID_PARAM, res);
+    screenId = 100;
+    res = ssm_->SetScreenColorTransform(screenId);
+    EXPECT_EQ(DMError::DM_ERROR_INVALID_PARAM, res);
+    screenId = 1;
+    res = ssm_->SetScreenColorTransform(screenId);
+    EXPECT_EQ(DMError::DM_OK, res);
+}
+
+/**
+ * @tc.name: GetPixelFormat
+ * @tc.desc: GetPixelFormat screen power
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerTest, GetPixelFormat, Function | SmallTest | Level3)
+{
+    GraphicPixelFormat format = { GraphicPixelFormat::GRAPHIC_PIXEL_FMT_CLUT8 };
+    sptr<ScreenSession> screenSession = new ScreenSession();
+    ssm_->screenSessionMap_.insert(std::pair<ScreenId, sptr<ScreenSession>>(1, screenSession));
+    ScreenId screenId = SCREEN_ID_INVALID;
+
+    auto res = ssm_->GetPixelFormat(screenId, format);
+    EXPECT_EQ(DMError::DM_ERROR_INVALID_PARAM, res);
+
+    screenId = 100;
+    res = ssm_->GetPixelFormat(screenId, format);
+    EXPECT_EQ(DMError::DM_ERROR_INVALID_PARAM, res);
+
+    screenId = 1;
+    res = ssm_->GetPixelFormat(screenId, format);
+    EXPECT_EQ(DMError::DM_OK, res);
+}
 }
 } // namespace Rosen
 } // namespace OHOS
