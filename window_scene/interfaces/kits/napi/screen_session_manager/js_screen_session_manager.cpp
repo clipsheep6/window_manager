@@ -39,7 +39,11 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "JsScre
 const std::string ON_SCREEN_CONNECTION_CHANGE_CALLBACK = "screenConnectChange";
 } // namespace
 
-JsScreenSessionManager::JsScreenSessionManager(napi_env env) : env_(env) {}
+JsScreenSessionManager::JsScreenSessionManager(napi_env env) : env_(env),
+    taskScheduler_(std::make_shared<MainThreadScheduler>(env))
+{
+    WLOGFI("Create JsScreenSessionManager instance");
+}
 
 napi_value JsScreenSessionManager::Init(napi_env env, napi_value exportObj)
 {
@@ -81,6 +85,25 @@ napi_value JsScreenSessionManager::Init(napi_env env, napi_value exportObj)
     BindNativeFunction(env, exportObj, "getScreenSnapshot", moduleName,
         JsScreenSessionManager::GetScreenSnapshot);
     return NapiGetUndefined(env);
+}
+
+JsScreenSessionManager::~JsScreenSessionManager()
+{
+    WLOGFI("Destroy JsScreenSessionManager instance");
+    ClearNativeReference();
+}
+
+void JsScreenSessionManager::ClearNativeReference()
+{
+    auto localScreenConnectionCallback = screenConnectionCallback_;
+    auto localShutdownCallback = shutdownCallback_;
+    // Capture shared_ptr by value to ensure that its life cycle is in the alive state
+    auto task = [localScreenConnectionCallback, localShutdownCallback]() mutable {
+        WLOGFI("Clear NativeReference callback");
+        localScreenConnectionCallback = nullptr;
+        localShutdownCallback = nullptr;
+    };
+    taskScheduler_->PostMainThreadTask(task, "ClearScreenNativeReference");
 }
 
 void JsScreenSessionManager::Finalizer(napi_env env, void* data, void* hint)
@@ -171,7 +194,7 @@ void JsScreenSessionManager::OnScreenConnected(const sptr<ScreenSession>& screen
         WLOGE("[NAPI]screenConnectionCallback is nullptr");
         return;
     }
-
+    WLOGFD("[NAPI]OnScreenConnected");
     std::shared_ptr<NativeReference> callback_ = screenConnectionCallback_;
     std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback>(
         [callback_, screenSession](napi_env env, NapiAsyncTask& task, int32_t status) {
@@ -205,7 +228,7 @@ void JsScreenSessionManager::OnScreenDisconnected(const sptr<ScreenSession>& scr
     if (screenConnectionCallback_ == nullptr) {
         return;
     }
-
+    WLOGFD("[NAPI]OnScreenDisconnected");
     std::shared_ptr<NativeReference> callback_ = screenConnectionCallback_;
     std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback>(
         [callback_, screenSession](napi_env env, NapiAsyncTask& task, int32_t status) {
@@ -239,6 +262,7 @@ bool JsScreenSessionManager::OnTakeOverShutdown(bool isReboot)
     if (!shutdownCallback_) {
         return false;
     }
+    WLOGFD("[NAPI]OnTakeOverShutdown");
     std::shared_ptr<NativeReference> callback_ = shutdownCallback_;
     std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback>(
         [callback_, isReboot](napi_env env, NapiAsyncTask& task, int32_t status) {
@@ -260,7 +284,7 @@ bool JsScreenSessionManager::OnTakeOverShutdown(bool isReboot)
 
 napi_value JsScreenSessionManager::OnRegisterShutdownCallback(napi_env env, const napi_callback_info info)
 {
-    WLOGD("[NAPI]OnRegisterShutdownCallback");
+    WLOGFI("[NAPI]OnRegisterShutdownCallback");
     if (shutdownCallback_ != nullptr) {
         WLOGFE("Failed to register callback, callback exits");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_REPEAT_OPERATION)));
@@ -296,7 +320,7 @@ napi_value JsScreenSessionManager::OnRegisterShutdownCallback(napi_env env, cons
 
 napi_value JsScreenSessionManager::OnUnRegisterShutdownCallback(napi_env env, const napi_callback_info info)
 {
-    WLOGD("[NAPI]OnUnRegisterShutdownCallback");
+    WLOGFD("[NAPI]OnUnRegisterShutdownCallback");
     if (shutdownCallback_ == nullptr) {
         WLOGFE("Failed to unregister callback, callback is not exits");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_NOT_REGISTER_SYNC_CALLBACK)));
@@ -314,7 +338,7 @@ napi_value JsScreenSessionManager::OnUnRegisterShutdownCallback(napi_env env, co
 
 napi_value JsScreenSessionManager::OnRegisterCallback(napi_env env, const napi_callback_info info)
 {
-    WLOGD("On register callback.");
+    WLOGFI("On register callback.");
     if (screenConnectionCallback_ != nullptr) {
         return NapiGetUndefined(env);
     }
@@ -358,6 +382,7 @@ napi_value JsScreenSessionManager::OnRegisterCallback(napi_env env, const napi_c
 napi_value JsScreenSessionManager::OnUpdateScreenRotationProperty(napi_env env,
     const napi_callback_info info)
 {
+    WLOGFD("[NAPI]OnUpdateScreenRotationProperty");
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
@@ -397,6 +422,7 @@ napi_value JsScreenSessionManager::OnUpdateScreenRotationProperty(napi_env env,
 napi_value JsScreenSessionManager::OnNotifyScreenLockEvent(napi_env env,
     const napi_callback_info info)
 {
+    WLOGFI("[NAPI]OnNotifyScreenLockEvent");
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
@@ -428,7 +454,7 @@ napi_value JsScreenSessionManager::OnNotifyScreenLockEvent(napi_env env,
 
 napi_value JsScreenSessionManager::OnGetCurvedCompressionArea(napi_env env, const napi_callback_info info)
 {
-    WLOGD("[NAPI]OnGetCurvedCompressionArea");
+    WLOGFD("[NAPI]OnGetCurvedCompressionArea");
     napi_value result = nullptr;
     napi_create_uint32(env, ScreenSessionManagerClient::GetInstance().GetCurvedCompressionArea(), &result);
     return result;
@@ -436,7 +462,7 @@ napi_value JsScreenSessionManager::OnGetCurvedCompressionArea(napi_env env, cons
 
 napi_value JsScreenSessionManager::OnGetPhyScreenProperty(napi_env env, const napi_callback_info info)
 {
-    WLOGD("[NAPI]OnGetPhyScreenProperty");
+    WLOGFD("[NAPI]OnGetPhyScreenProperty");
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
@@ -459,7 +485,7 @@ napi_value JsScreenSessionManager::OnGetPhyScreenProperty(napi_env env, const na
 
 napi_value JsScreenSessionManager::OnUpdateAvailableArea(napi_env env, const napi_callback_info info)
 {
-    WLOGD("[NAPI]OnUpdateAvailableArea");
+    WLOGFD("[NAPI]OnUpdateAvailableArea");
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
@@ -491,7 +517,7 @@ napi_value JsScreenSessionManager::OnUpdateAvailableArea(napi_env env, const nap
 
 napi_value JsScreenSessionManager::OnNotifyFoldToExpandCompletion(napi_env env, const napi_callback_info info)
 {
-    WLOGD("[NAPI]OnNotifyFoldToExpandCompletion");
+    WLOGFD("[NAPI]OnNotifyFoldToExpandCompletion");
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
@@ -514,7 +540,7 @@ napi_value JsScreenSessionManager::OnNotifyFoldToExpandCompletion(napi_env env, 
 
 napi_value JsScreenSessionManager::OnGetFoldStatus(napi_env env, napi_callback_info info)
 {
-    WLOGD("[NAPI]OnGetFoldStatus");
+    WLOGFD("[NAPI]OnGetFoldStatus");
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
@@ -529,7 +555,7 @@ napi_value JsScreenSessionManager::OnGetFoldStatus(napi_env env, napi_callback_i
 
 napi_value JsScreenSessionManager::OnGetScreenSnapshot(napi_env env, const napi_callback_info info)
 {
-    WLOGD("[NAPI]OnGetScreenSnapshot");
+    WLOGFD("[NAPI]OnGetScreenSnapshot");
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
