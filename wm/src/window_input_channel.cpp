@@ -55,6 +55,7 @@ void WindowInputChannel::DispatchKeyEventCallback(std::shared_ptr<MMI::KeyEvent>
     }
 }
 
+__attribute__((no_sanitize("cfi")))
 void WindowInputChannel::HandleKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
     if (keyEvent == nullptr) {
