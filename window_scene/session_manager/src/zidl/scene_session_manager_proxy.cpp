@@ -1635,4 +1635,60 @@ WSError SceneSessionManagerProxy::GetHostWindowRect(int32_t hostWindowId, Rect& 
     rect = {posX, posY, height, width};
     return static_cast<WSError>(reply.ReadInt32());
 }
+
+WMError SceneSessionManagerProxy::GetWindowStatusByWindowId(uint32_t windowId, WindowStatus& windowStatus)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    AvoidArea avoidArea;
+    if (data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteUint32(windowId)) {
+        WLOGFE("Write windowId failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (data.WriteUint32(static_cast<uint32_t>(windowStatus))) {
+        WLOGFE("Write AvoidAreaType failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_STATUS),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    return static_cast<WMError>(reply.ReadInt32());
+}
+
+WMError SceneSessionManagerProxy::GetRectByWindowId(uint32_t windowId, Rect& rect)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    AvoidArea avoidArea;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (data.WriteUint32(windowId)) {
+        WLOGFE ("Write windowId failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_RECT),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    auto ret = static_cast<WMError>(reply.ReadInt32());
+    if (ret == WMError::WM_OK) {
+        rect.posX_ = reply.ReadInt32();
+        rect.posY_ = reply.ReadInt32();
+        rect.width_ = reply.ReadUint32();
+        rect.height_ = reply.ReadUint32();
+    }
+    return ret;
+}
 } // namespace OHOS::Rosen
