@@ -125,12 +125,12 @@ HWTEST_F(sceneSessionManagerProxyTest, AddOrRemoveSecureExtSession001, Function 
 HWTEST_F(sceneSessionManagerProxyTest, UpdateExtWindowFlags001, Function | SmallTest | Level2)
 {
     sptr<IRemoteObject> iRemoteObjectMocker = new (std::nothrow) IRemoteObjectMocker();
-    sptr<SceneSessionManagerProxy> sceneSessionManagerProxy_ = new SceneSessionManagerProxy(iRemoteObjectMocker);
+    sptr<SceneSessionManagerProxy> sceneSessionManagerProxy = new SceneSessionManagerProxy(iRemoteObjectMocker);
 
     int32_t parentId = 12345;
     int32_t persistentId = 1073741826;
-    ASSERT_EQ(WSError::WS_OK, sceneSessionManagerProxy_->UpdateExtWindowFlags(parentId, persistentId, 1));
-    ASSERT_EQ(WSError::WS_OK, sceneSessionManagerProxy_->UpdateExtWindowFlags(parentId, persistentId, 0));
+    ASSERT_EQ(WSError::WS_OK, sceneSessionManagerProxy->UpdateExtWindowFlags(parentId, persistentId, 1));
+    ASSERT_EQ(WSError::WS_OK, sceneSessionManagerProxy->UpdateExtWindowFlags(parentId, persistentId, 0));
     sceneSessionManagerProxy_ = nullptr;
 }
 
