@@ -612,5 +612,17 @@ WMError WindowAdapter::GetHostWindowRect(int32_t hostWindowId, Rect& rect)
     INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
     return static_cast<WMError>(windowManagerServiceProxy_->GetHostWindowRect(hostWindowId, rect));
 }
+
+WMError WindowAdapter::GetWindowStatusByWindowId(uint32_t windowId, WindowStatus& windowStatus)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
+    return static_cast<WMError>(windowManagerServiceProxy_->GetWindowStatusByWindowId(windowId, windowStatus));
+}
+
+WMError WindowAdapter::GetRectByWindowId(uint32_t windowId, Rect& rect)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
+    return static_cast<WMError>(windowManagerServiceProxy_->GetRectByWindowId(windowId, rect));
+}
 } // namespace Rosen
 } // namespace OHOS

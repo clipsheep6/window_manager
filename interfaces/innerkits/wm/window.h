@@ -1342,7 +1342,7 @@ public:
      * @return WMError
      */
     virtual WMError Maximize() { return WMError::WM_OK; }
-    
+
     /**
      * @brief maximize window with layoutOption.
      *
@@ -1843,6 +1843,28 @@ public:
     virtual WMError SetWindowMask(const std::vector<std::vector<uint32_t>>& windowMask)
     {
         return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+    }
+
+    /**
+     * @brief get window status by sub window id or main window id.
+     * @param windowId Window id.
+     * @param windowStatus
+     * @return WM_OK means set success, others means set Failed.
+     */
+    virtual WMError GetWindowStatusByWindowId(uint32_t windowId, WindowStatus& windowStatus) const
+    {
+        return WMError::WM_OK;
+    }
+
+    /**
+     * @brief get rect by sub window id or main window id
+     * @param windowId Window id.
+     * @param rect.
+     * @return WM_OK means set success, others means set failed
+     */
+    virtual WMError GetRectByWindowId(uint32_t windowId, Rect& rect) const
+    {
+        return WMError::WM_OK;
     }
 };
 }
