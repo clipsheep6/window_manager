@@ -389,6 +389,15 @@ public:
      * @return WM_OK means register success, others means register failed.
      */
     WMError RegisterCameraFloatWindowChangedListener(const sptr<ICameraFloatWindowChangedListener>& listener);
+
+    /**
+    * @brief Register camera float window changed listener.
+    *
+    * @param listener ICameraWindowChangedListener.
+    * @return WM_OK means register success, others means register failed.
+    */
+    WMError RegisterCameraWindowChangedListener(const sptr<ICameraWindowChangedListener>& listener);
+
     /**
      * @brief Unregister camera float window changed listener.
      *
@@ -396,6 +405,15 @@ public:
      * @return WM_OK means unregister success, others means unregister failed.
      */
     WMError UnregisterCameraFloatWindowChangedListener(const sptr<ICameraFloatWindowChangedListener>& listener);
+
+    /**
+   * @brief Unregister camera float window changed listener.
+   *
+   * @param listener ICameraWindowChangedListener.
+   * @return WM_OK means unregister success, others means unregister failed.
+   */
+    WMError UnregisterCameraWindowChangedListener(const sptr<ICameraWindowChangedListener>& listener);
+
     /**
      * @brief Register water mark flag changed listener.
      *
@@ -556,6 +574,7 @@ private:
     void UpdateWindowDrawingContentInfo(
         const std::vector<sptr<WindowDrawingContentInfo>>& windowDrawingContentInfos) const;
     void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing) const;
+    void UpdateCameraWindowStatus(uint32_t accessTokenId, bool isShowing) const;
     void NotifyWaterMarkFlagChangedResult(bool showWaterMark) const;
     void NotifyGestureNavigationEnabledResult(bool enable) const;
 };
