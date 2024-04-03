@@ -1181,10 +1181,14 @@ bool SceneSession::IsMovableWindowType()
     if (property == nullptr) {
         return false;
     }
+
+    bool existFloating = WindowHelper::IsWindowModeSupported(property->GetModeSupportInfo(),
+        WindowMode::WINDOW_MODE_FLOATING);
+
     return property->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING ||
         property->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
         property->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_SECONDARY ||
-        property->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN;
+        (property->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN && existFloating);
 }
 
 WSError SceneSession::RequestSessionBack(bool needMoveToBackground)
