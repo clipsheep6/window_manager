@@ -1312,10 +1312,6 @@ WMError WindowManagerService::ValidateUpdate(sptr<WindowProperty>& windowPropert
 WMError WindowManagerService::UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action,
     bool isAsyncTask)
 {
-    if (windowProperty == nullptr) {
-        WLOGFE("windowProperty is nullptr");
-        return WMError::WM_ERROR_NULLPTR;
-    }
     if (auto validationError = ValidateUpdate(windowProperty, action); validationError != WMError::WM_OK) {
         return validationError;
     }
