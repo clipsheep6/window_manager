@@ -2596,6 +2596,26 @@ WMError WindowSessionImpl::SetTextFieldAvoidInfo(double textFieldPositionY, doub
     return WMError::WM_OK;
 }
 
+bool WindowSessionImpl::IfNotNeedAvoidKeyBoardForSplit()
+{
+    if (WindowHelper::IsMainWindow(property_->GetWindowType()) &&
+            property_->GetWindowMode() != WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        return false;
+    }
+    if (WindowHelper::IsSubWindow(property_->GetWindowType()) && FindWindowById(GetParentId()) != nullptr &&
+            FindWindowById(GetParentId())->GetMode() == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        return false;
+    }
+    if (DisplayManager::GetInstance().IsFoldable() &&
+            DisplayManager::GetInstance().GetFoldStatus() != OHOS::Rosen::FoldStatus::FOLDED) {
+        return false;
+    }
+    if (!IsFocused() || GetRect().posY_ == 0) {
+        return false;
+    }
+    return true;
+}
+
 void WindowSessionImpl::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info)
 {
     WLOGFD("NotifyOccupiedAreaChangeInfo, safeHeight: %{public}u "
@@ -2608,7 +2628,8 @@ void WindowSessionImpl::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo
             if (((property_->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
                   WindowHelper::IsMainWindow(GetType())) ||
                  (WindowHelper::IsSubWindow(GetType()) && FindWindowById(GetParentId()) != nullptr &&
-                  FindWindowById(GetParentId())->GetMode() == WindowMode::WINDOW_MODE_FLOATING)) &&
+                  FindWindowById(GetParentId())->GetMode() == WindowMode::WINDOW_MODE_FLOATING) ||
+                  IfNotNeedAvoidKeyBoardForSplit()) &&
                 (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
                  system::GetParameter("const.product.devicetype", "unknown") == "tablet")) {
                 sptr<OccupiedAreaChangeInfo> occupiedAreaChangeInfo = new OccupiedAreaChangeInfo();
@@ -2740,6 +2761,34 @@ void WindowSessionImpl::RefreshNoInteractionTimeoutMonitor(int32_t eventId)
     for (const auto& listenerItem : noInteractionListeners) {
         SubmitNoInteractionMonitorTask(eventId, listenerItem);
     }
+}
+
+WMError WindowSessionImpl::GetWindowStatusByWindowId(uint32_t windowId, WindowStatus& windowStatus) const
+{
+    WLOGFD ("GetWindowStatusByWindowId, windId:%{public}u", windowId);
+    if (IsWindowSessionInvalid()) {
+        WLOGFE("session is invalid");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
+        WLOGFE("[WMSLayoUt] Unsupported operation for pip window");
+        return WMError::WM_ERROR_INVALID_OPERATION;
+    }
+    return SingletonContainer::Get<WindowAdapter>().GetWindowStatusByWindowId(windowId, windowStatus);
+}
+
+WMError WindowSessionImpl::GetRectByWindowId(uint32_t windowId, Rect& rect) const
+{
+    WLOGFD("GetRectByWindowId, windId:%{public}u", windowId);
+    if (IsWindowSessionInvalid()) {
+        WLOGFE("session is invalid");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
+        WLOGFE("[WMSLayout] Unsupported operation for pip window");
+        return WMError::WM_ERROR_INVALID_OPERATION;
+    }
+    return SingletonContainer::Get<WindowAdapter>().GetRectByWindowId(windowId, rect);
 }
 
 } // namespace Rosen
