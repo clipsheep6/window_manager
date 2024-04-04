@@ -285,6 +285,12 @@ void IntentionEventManager::InputEventListener::OnInputEvent(std::shared_ptr<MMI
         }
         return;
     }
+    bool isConsumed = focusedSceneSession->SendKeyEventToUI(keyEvent, true);
+    if (isConsumed) {
+        TLOGI(WmsLogTag::WMS_EVENT, "SendKeyEventToUI id:%{public}d isConsumed:%{public}d",
+            keyEvent->GetId(), static_cast<int>(isConsumed));
+        return;
+    }
 #ifdef IMF_ENABLE
     bool isKeyboardEvent = IsKeyboardEvent(keyEvent);
     if (isKeyboardEvent) {

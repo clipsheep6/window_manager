@@ -66,6 +66,7 @@ public:
         TRANS_ID_PENDING_SESSION_TO_FOREGROUND,
         TRANS_ID_PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR,
         TRANS_ID_GET_FOCUS_SESSION_TOKEN,
+        TRANS_ID_GET_FOCUS_SESSION_ELEMENT,
         TRANS_ID_CHECK_WINDOW_ID,
         TRANS_ID_REGISTER_SESSION_LISTENER,
         TRANS_ID_UNREGISTER_SESSION_LISTENER,
@@ -99,6 +100,8 @@ public:
         TRANS_ID_ADD_EXTENSION_WINDOW_STAGE_TO_SCB,
         TRANS_ID_ADD_OR_REMOVE_SECURE_SESSION,
         TRANS_ID_ADD_OR_REMOVE_SECURE_EXT_SESSION,
+        TRANS_ID_UPDATE_EXTENSION_WINDOW_FLAGS,
+        TRANS_ID_GET_HOST_WINDOW_RECT,
     };
 
     virtual WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) = 0;
@@ -109,6 +112,7 @@ public:
     virtual WSError PendingSessionToForeground(const sptr<IRemoteObject> &token) = 0;
     virtual WSError PendingSessionToBackgroundForDelegator(const sptr<IRemoteObject> &token) = 0;
     virtual WSError GetFocusSessionToken(sptr<IRemoteObject> &token) = 0;
+    virtual WSError GetFocusSessionElement(AppExecFwk::ElementName& element) = 0;
 
     virtual WSError RegisterSessionListener(const sptr<ISessionListener>& listener) = 0;
     virtual WSError UnRegisterSessionListener(const sptr<ISessionListener>& listener) = 0;
@@ -211,6 +215,14 @@ public:
         return WSError::WS_OK;
     }
     WSError AddOrRemoveSecureExtSession(int32_t persistentId, int32_t parentId, bool shouldHide) override
+    {
+        return WSError::WS_OK;
+    }
+    WSError UpdateExtWindowFlags(int32_t parentId, int32_t persistentId, uint32_t extWindowFlags) override
+    {
+        return WSError::WS_OK;
+    }
+    WSError GetHostWindowRect(int32_t hostWindowId, Rect& rect) override
     {
         return WSError::WS_OK;
     }

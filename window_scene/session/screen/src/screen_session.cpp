@@ -30,7 +30,9 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DMS_SCREEN_SESS
 ScreenSession::ScreenSession(ScreenId screenId, ScreenId rsId, const std::string& name,
     const ScreenProperty& property, const std::shared_ptr<RSDisplayNode>& displayNode)
     : name_(name), screenId_(screenId), rsId_(rsId), property_(property), displayNode_(displayNode)
-{}
+{
+    WLOGFI("Success to create screenSession in constructor_0, screenid is %{public}" PRIu64"", screenId_);
+}
 
 ScreenSession::ScreenSession(ScreenId screenId, const ScreenProperty& property, ScreenId defaultScreenId)
     : screenId_(screenId), defaultScreenId_(defaultScreenId), property_(property)
@@ -112,6 +114,7 @@ void ScreenSession::RegisterScreenChangeListener(IScreenChangeListener* screenCh
     if (screenState_ == ScreenState::CONNECTION) {
         screenChangeListener->OnConnect(screenId_);
     }
+    WLOGFI("Success to register screen change listener.");
 }
 
 void ScreenSession::UnregisterScreenChangeListener(IScreenChangeListener* screenChangeListener)
@@ -238,6 +241,10 @@ void ScreenSession::ReleaseDisplayNode()
 void ScreenSession::Connect()
 {
     screenState_ = ScreenState::CONNECTION;
+    if (screenChangeListenerList_.empty()) {
+        WLOGFE("screenChangeListenerList is empty.");
+        return;
+    }
     for (auto& listener : screenChangeListenerList_) {
         listener->OnConnect(screenId_);
     }
@@ -308,6 +315,7 @@ void ScreenSession::SensorRotationChange(Rotation sensorRotation)
 
 void ScreenSession::SensorRotationChange(float sensorRotation)
 {
+    currentSensorRotation_ = sensorRotation;
     for (auto& listener : screenChangeListenerList_) {
         listener->OnSensorRotationChange(sensorRotation, screenId_);
     }
@@ -350,6 +358,16 @@ Rotation ScreenSession::ConvertIntToRotation(int rotation)
 void ScreenSession::SetUpdateToInputManagerCallback(std::function<void(float)> updateToInputManagerCallback)
 {
     updateToInputManagerCallback_ = updateToInputManagerCallback;
+}
+
+VirtualScreenFlag ScreenSession::GetVirtualScreenFlag()
+{
+    return screenFlag_;
+}
+
+void ScreenSession::SetVirtualScreenFlag(VirtualScreenFlag screenFlag)
+{
+    screenFlag_ = screenFlag;
 }
 
 void ScreenSession::UpdateToInputManager(RRect bounds, int rotation, FoldDisplayMode foldDisplayMode)
@@ -398,6 +416,15 @@ void ScreenSession::UpdatePropertyAfterRotation(RRect bounds, int rotation, Fold
         property_.GetBounds().rect_.GetLeft(), property_.GetBounds().rect_.GetTop(),
         property_.GetBounds().rect_.GetWidth(), property_.GetBounds().rect_.GetHeight(),
         rotation, displayOrientation);
+}
+
+void ScreenSession::UpdateRotationAfterBoot(bool foldToExpand)
+{
+    if (foldToExpand) {
+        if (property_.GetRotation() != currentSensorRotation_) {
+            SensorRotationChange(currentSensorRotation_);
+        }
+    }
 }
 
 sptr<SupportedScreenModes> ScreenSession::GetActiveScreenMode() const
@@ -516,14 +543,11 @@ Rotation ScreenSession::CalcRotation(Orientation orientation, FoldDisplayMode fo
 
 DisplayOrientation ScreenSession::CalcDisplayOrientation(Rotation rotation, FoldDisplayMode foldDisplayMode) const
 {
-    sptr<SupportedScreenModes> info = GetActiveScreenMode();
-    if (info == nullptr) {
-        return DisplayOrientation::UNKNOWN;
-    }
     // vertical: phone(Plugin screen); horizontal: pad & external screen
-    bool isVerticalScreen = info->width_ < info->height_;
+    bool isVerticalScreen = property_.GetPhyWidth() < property_.GetPhyHeight();
     if (foldDisplayMode != FoldDisplayMode::UNKNOWN) {
-        isVerticalScreen = info->width_ > info->height_;
+        WLOGD("foldDisplay is verticalScreen when width is greater than height");
+        isVerticalScreen = property_.GetPhyWidth() > property_.GetPhyHeight();
     }
     switch (rotation) {
         case Rotation::ROTATION_0: {
@@ -560,6 +584,9 @@ ScreenSourceMode ScreenSession::GetSourceMode() const
         }
         case ScreenCombination::SCREEN_ALONE: {
             return ScreenSourceMode::SCREEN_ALONE;
+        }
+        case ScreenCombination::SCREEN_UNIQUE: {
+            return ScreenSourceMode::SCREEN_UNIQUE;
         }
         default: {
             return ScreenSourceMode::SCREEN_ALONE;

@@ -28,7 +28,6 @@ namespace OHOS {
 namespace Rosen {
 using namespace AbilityRuntime;
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsExtensionWindow"};
 constexpr Rect g_emptyRect = {0, 0, 0, 0};
 } // namespace
 
@@ -49,12 +48,12 @@ JsExtensionWindow::~JsExtensionWindow() {}
 
 napi_value JsExtensionWindow::CreateJsExtensionWindow(napi_env env, sptr<Rosen::Window> window, int32_t hostWindowId)
 {
-    WLOGI("JsExtensionWindow CreateJsExtensionWindow");
+    TLOGI(WmsLogTag::WMS_UIEXT, "JsExtensionWindow CreateJsExtensionWindow");
     napi_value objValue = nullptr;
     napi_create_object(env, &objValue);
 
     if (env == nullptr || window == nullptr) {
-        WLOGFE("JsExtensionWindow env or window is nullptr");
+        TLOGE(WmsLogTag::WMS_UIEXT, "JsExtensionWindow env or window is nullptr");
         return nullptr;
     }
 
@@ -75,6 +74,7 @@ napi_value JsExtensionWindow::CreateJsExtensionWindow(napi_env env, sptr<Rosen::
     BindNativeFunction(env, objValue, "hideNonSecureWindows", moduleName, JsExtensionWindow::HideNonSecureWindows);
     BindNativeFunction(env, objValue, "createSubWindowWithOptions", moduleName,
         JsExtensionWindow::CreateSubWindowWithOptions);
+    BindNativeFunction(env, objValue, "setWaterMarkFlag", moduleName, JsExtensionWindow::SetWaterMarkFlag);
 
     return objValue;
 }
@@ -82,12 +82,12 @@ napi_value JsExtensionWindow::CreateJsExtensionWindow(napi_env env, sptr<Rosen::
 napi_value JsExtensionWindow::CreateJsExtensionWindowObject(napi_env env, sptr<Rosen::Window> window,
     sptr<AAFwk::SessionInfo> sessionInfo)
 {
-    WLOGI("JsExtensionWindow CreateJsExtensionWindow");
+    TLOGI(WmsLogTag::WMS_UIEXT, "JsExtensionWindow CreateJsExtensionWindow");
     napi_value objValue = nullptr;
     napi_create_object(env, &objValue);
 
     if (env == nullptr || window == nullptr) {
-        WLOGFE("JsExtensionWindow env or window is nullptr");
+        TLOGE(WmsLogTag::WMS_UIEXT, "JsExtensionWindow env or window is nullptr");
         return nullptr;
     }
 
@@ -118,152 +118,167 @@ napi_value JsExtensionWindow::CreateJsExtensionWindowObject(napi_env env, sptr<R
         JsExtensionWindow::SetSpecificSystemBarEnabled);
     BindNativeFunction(env, objValue, "setPreferredOrientation", moduleName,
         JsExtensionWindow::SetPreferredOrientation);
-
+    BindNativeFunction(env, objValue, "getPreferredOrientation", moduleName,
+        JsExtensionWindow::GetPreferredOrientation);
     return objValue;
 }
 
 void JsExtensionWindow::Finalizer(napi_env env, void* data, void* hint)
 {
-    WLOGI("Finalizer is called");
+    TLOGI(WmsLogTag::WMS_UIEXT, "Finalizer is called");
     std::unique_ptr<JsExtensionWindow>(static_cast<JsExtensionWindow*>(data));
 }
 
 napi_value JsExtensionWindow::GetWindowAvoidArea(napi_env env, napi_callback_info info)
 {
-    WLOGI("GetWindowAvoidArea is called");
+    TLOGI(WmsLogTag::WMS_UIEXT, "GetWindowAvoidArea is called");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnGetWindowAvoidArea(env, info) : nullptr;
 }
 
 napi_value JsExtensionWindow::RegisterExtensionWindowCallback(napi_env env, napi_callback_info info)
 {
-    WLOGI("RegisterExtensionWindowCallback is called");
+    TLOGI(WmsLogTag::WMS_UIEXT, "RegisterExtensionWindowCallback is called");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnRegisterExtensionWindowCallback(env, info) : nullptr;
 }
 
 napi_value JsExtensionWindow::UnRegisterExtensionWindowCallback(napi_env env, napi_callback_info info)
 {
-    WLOGI("UnRegisterExtensionWindowCallback is called");
+    TLOGI(WmsLogTag::WMS_UIEXT, "UnRegisterExtensionWindowCallback is called");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnUnRegisterExtensionWindowCallback(env, info) : nullptr;
 }
 
 napi_value JsExtensionWindow::HideNonSecureWindows(napi_env env, napi_callback_info info)
 {
-    WLOGI("HideNonSecureWindows is called");
+    TLOGI(WmsLogTag::WMS_UIEXT, "HideNonSecureWindows is called");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnHideNonSecureWindows(env, info) : nullptr;
 }
 
 napi_value JsExtensionWindow::CreateSubWindowWithOptions(napi_env env, napi_callback_info info)
 {
-    WLOGI("CreateSubWindowWithOptions is called");
+    TLOGI(WmsLogTag::WMS_UIEXT, "CreateSubWindowWithOptions is called");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnCreateSubWindowWithOptions(env, info) : nullptr;
 }
 
+napi_value JsExtensionWindow::SetWaterMarkFlag(napi_env env, napi_callback_info info)
+{
+    TLOGI(WmsLogTag::WMS_UIEXT, "SetWaterMark is called");
+    JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
+    return (me != nullptr) ? me->OnSetWaterMarkFlag(env, info) : nullptr;
+}
+
 napi_value JsExtensionWindow::LoadContent(napi_env env, napi_callback_info info)
 {
-    WLOGI("LoadContent is called");
+    TLOGI(WmsLogTag::WMS_UIEXT, "LoadContent is called");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnLoadContent(env, info, false) : nullptr;
 }
 
 napi_value JsExtensionWindow::LoadContentByName(napi_env env, napi_callback_info info)
 {
-    WLOGI("LoadContentByName is called");
+    TLOGI(WmsLogTag::WMS_UIEXT, "LoadContentByName is called");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnLoadContent(env, info, true) : nullptr;
 }
 
 napi_value JsExtensionWindow::ShowWindow(napi_env env, napi_callback_info info)
 {
-    WLOGI("ShowWindow is called");
+    TLOGI(WmsLogTag::WMS_UIEXT, "ShowWindow is called");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnShowWindow(env, info) : nullptr;
 }
 
 napi_value JsExtensionWindow::IsWindowShowingSync(napi_env env, napi_callback_info info)
 {
-    WLOGI("IsShowing is called");
+    TLOGI(WmsLogTag::WMS_UIEXT, "IsShowing is called");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnIsWindowShowingSync(env, info) : nullptr;
 }
 
 napi_value JsExtensionWindow::SetUIContent(napi_env env, napi_callback_info info)
 {
-    WLOGI("LoadContent is called");
+    TLOGI(WmsLogTag::WMS_UIEXT, "LoadContent is called");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnSetUIContent(env, info) : nullptr;
 }
 
 napi_value JsExtensionWindow::DestroyWindow(napi_env env, napi_callback_info info)
 {
-    WLOGI("Destroy is called");
+    TLOGI(WmsLogTag::WMS_UIEXT, "Destroy is called");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnDestroyWindow(env, info) : nullptr;
 }
 
 napi_value JsExtensionWindow::SetWindowBackgroundColorSync(napi_env env, napi_callback_info info)
 {
-    WLOGI("SetBackgroundColor is called");
+    TLOGI(WmsLogTag::WMS_UIEXT, "SetBackgroundColor is called");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnSetWindowBackgroundColorSync(env, info) : nullptr;
 }
 
 napi_value JsExtensionWindow::GetWindowPropertiesSync(napi_env env, napi_callback_info info)
 {
-    WLOGD("GetProperties is called");
+    TLOGD(WmsLogTag::WMS_UIEXT, "GetProperties is called");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnGetWindowPropertiesSync(env, info) : nullptr;
 }
 
 napi_value JsExtensionWindow::MoveWindowTo(napi_env env, napi_callback_info info)
 {
-    WLOGD("MoveTo");
+    TLOGD(WmsLogTag::WMS_UIEXT, "MoveTo");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnMoveWindowTo(env, info) : nullptr;
 }
 
 napi_value JsExtensionWindow::ResizeWindow(napi_env env, napi_callback_info info)
 {
-    WLOGI("Resize");
+    TLOGI(WmsLogTag::WMS_UIEXT, "Resize");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnResizeWindow(env, info) : nullptr;
 }
 
 napi_value JsExtensionWindow::SetSpecificSystemBarEnabled(napi_env env, napi_callback_info info)
 {
-    WLOGI("SetSystemBarEnable");
+    TLOGI(WmsLogTag::WMS_UIEXT, "SetSystemBarEnable");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnSetSpecificSystemBarEnabled(env, info) : nullptr;
 }
 
 napi_value JsExtensionWindow::SetPreferredOrientation(napi_env env, napi_callback_info info)
 {
-    WLOGD("SetPreferredOrientation");
+    TLOGD(WmsLogTag::WMS_UIEXT, "SetPreferredOrientation");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnSetPreferredOrientation(env, info) : nullptr;
 }
 
+napi_value JsExtensionWindow::GetPreferredOrientation(napi_env env, napi_callback_info info)
+{
+    TLOGD(WmsLogTag::WMS_UIEXT, "GetPreferredOrientation");
+    JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
+    return (me != nullptr) ? me->OnGetPreferredOrientation(env, info) : nullptr;
+}
+
 napi_value JsExtensionWindow::GetUIContext(napi_env env, napi_callback_info info)
 {
-    WLOGD("GetUIContext");
+    TLOGD(WmsLogTag::WMS_UIEXT, "GetUIContext");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnGetUIContext(env, info) : nullptr;
 }
 
 napi_value JsExtensionWindow::SetWindowBrightness(napi_env env, napi_callback_info info)
 {
-    WLOGI("SetBrightness");
+    TLOGI(WmsLogTag::WMS_UIEXT, "SetBrightness");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnSetWindowBrightness(env, info) : nullptr;
 }
 
 napi_value JsExtensionWindow::SetWindowKeepScreenOn(napi_env env, napi_callback_info info)
 {
-    WLOGI("SetKeepScreenOn");
+    TLOGI(WmsLogTag::WMS_UIEXT, "SetKeepScreenOn");
     JsExtensionWindow* me = CheckParamsAndGetThis<JsExtensionWindow>(env, info);
     return (me != nullptr) ? me->OnSetWindowKeepScreenOn(env, info) : nullptr;
 }
@@ -292,7 +307,7 @@ static void LoadContentTask(std::shared_ptr<NativeReference> contentStorage, std
     } else {
         task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret), "Window load content failed"));
     }
-    WLOGI("Window [%{public}u, %{public}s] load content end, ret = %{public}d",
+    TLOGI(WmsLogTag::WMS_UIEXT, "Window [%{public}u, %{public}s] load content end, ret = %{public}d",
         windowImpl->GetWindowId(), windowImpl->GetWindowName().c_str(), ret);
     return;
 }
@@ -358,6 +373,11 @@ napi_value JsExtensionWindow::OnSetPreferredOrientation(napi_env env, napi_callb
     return result;
 }
 
+napi_value JsExtensionWindow::OnGetPreferredOrientation(napi_env env, napi_callback_info info)
+{
+    return NapiThrowError(env, WmErrorCode::WM_ERROR_DEVICE_NOT_SUPPORT);
+}
+
 napi_value JsExtensionWindow::OnSetSpecificSystemBarEnabled(napi_env env, napi_callback_info info)
 {
     NapiAsyncTask::CompleteCallback complete =
@@ -413,11 +433,11 @@ napi_value JsExtensionWindow::OnGetWindowPropertiesSync(napi_env env, napi_callb
 {
     sptr<Window> windowImpl = extensionWindow_->GetWindow();
     if (windowImpl == nullptr) {
-        WLOGFW("window is nullptr or get invalid param");
+        TLOGW(WmsLogTag::WMS_UIEXT, "window is nullptr or get invalid param");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
     }
     auto objValue = CreateJsExtensionWindowProperties(env, windowImpl);
-    WLOGI("Window [%{public}u, %{public}s] get properties end",
+    TLOGI(WmsLogTag::WMS_UIEXT, "Window [%{public}u, %{public}s] get properties end",
         windowImpl->GetWindowId(), windowImpl->GetWindowName().c_str());
     if (objValue != nullptr) {
         return objValue;
@@ -436,20 +456,20 @@ napi_value JsExtensionWindow::OnDestroyWindow(napi_env env, napi_callback_info i
     NapiAsyncTask::CompleteCallback complete =
         [this, extwin = extensionWindow_](napi_env env, NapiAsyncTask& task, int32_t status) {
             if (extwin == nullptr) {
-                WLOGFE("extensionWindow is null");
+                TLOGE(WmsLogTag::WMS_UIEXT, "extensionWindow is null");
                 task.Reject(env,
                     CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
                 return;
             }
             sptr<Window> windowImpl = extwin->GetWindow();
             if (windowImpl == nullptr) {
-                WLOGFE("window is nullptr or get invalid param");
+                TLOGE(WmsLogTag::WMS_UIEXT, "window is nullptr or get invalid param");
                 task.Reject(env,
                     CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
                 return;
             }
             WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(windowImpl->Destroy());
-            WLOGI("Window [%{public}u, %{public}s] destroy end, ret = %{public}d",
+            TLOGI(WmsLogTag::WMS_UIEXT, "Window [%{public}u, %{public}s] destroy end, ret = %{public}d",
                 windowImpl->GetWindowId(), windowImpl->GetWindowName().c_str(), ret);
             if (ret != WmErrorCode::WM_OK) {
                 task.Reject(env,
@@ -475,11 +495,11 @@ napi_value JsExtensionWindow::OnIsWindowShowingSync(napi_env env, napi_callback_
 {
     sptr<Window> windowImpl = extensionWindow_->GetWindow();
     if (windowImpl == nullptr) {
-        WLOGFE("window is nullptr");
+        TLOGE(WmsLogTag::WMS_UIEXT, "window is nullptr");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
     }
     bool state = (windowImpl->GetWindowState() == WindowState::STATE_SHOWN);
-    WLOGI("Window [%{public}u, %{public}s] get show state end, state = %{public}u",
+    TLOGI(WmsLogTag::WMS_UIEXT, "Window [%{public}u, %{public}s] get show state end, state = %{public}u",
         windowImpl->GetWindowId(), windowImpl->GetWindowName().c_str(), state);
     return CreateJsValue(env, state);
 }
@@ -489,7 +509,7 @@ napi_value JsExtensionWindow::OnShowWindow(napi_env env, napi_callback_info info
     NapiAsyncTask::CompleteCallback complete =
         [extwin = extensionWindow_](napi_env env, NapiAsyncTask& task, int32_t status) {
             if (extwin == nullptr) {
-                WLOGFE("extensionWindow is null");
+                TLOGE(WmsLogTag::WMS_UIEXT, "extensionWindow is null");
                 task.Reject(env, CreateJsError(env,
                     static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
                 return;
@@ -498,11 +518,11 @@ napi_value JsExtensionWindow::OnShowWindow(napi_env env, napi_callback_info info
             if (windowImpl == nullptr) {
                 task.Reject(env, CreateJsError(env,
                     static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
-                WLOGFE("window is nullptr or get invalid param");
+                TLOGE(WmsLogTag::WMS_UIEXT, "window is nullptr or get invalid param");
                 return;
             }
             WMError ret = windowImpl->Show(0, false);
-            WLOGI("Window [%{public}u, %{public}s] show with ret = %{public}d",
+            TLOGI(WmsLogTag::WMS_UIEXT, "Window [%{public}u, %{public}s] show with ret = %{public}d",
                 windowImpl->GetWindowId(), windowImpl->GetWindowName().c_str(), ret);
             if (ret == WMError::WM_OK) {
                 task.Resolve(env, NapiGetUndefined(env));
@@ -510,7 +530,7 @@ napi_value JsExtensionWindow::OnShowWindow(napi_env env, napi_callback_info info
                 task.Reject(env, CreateJsError(env,
                     static_cast<int32_t>(WM_JS_TO_ERROR_CODE_MAP.at(ret)), "Window show failed"));
             }
-            WLOGI("Window [%{public}u, %{public}s] show end, ret = %{public}d",
+            TLOGI(WmsLogTag::WMS_UIEXT, "Window [%{public}u, %{public}s] show end, ret = %{public}d",
                 windowImpl->GetWindowId(), windowImpl->GetWindowName().c_str(), ret);
         };
     napi_value result = nullptr;
@@ -531,12 +551,12 @@ napi_value JsExtensionWindow::OnSetUIContent(napi_env env, napi_callback_info in
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc < 1) { // 2 maximum param num
-        WLOGFE("Argc is invalid: %{public}zu", argc);
+        TLOGE(WmsLogTag::WMS_UIEXT, "Argc is invalid: %{public}zu", argc);
         errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
     }
     std::string contextUrl;
     if (errCode == WmErrorCode::WM_OK && !ConvertFromJsValue(env, argv[0], contextUrl)) {
-        WLOGFE("Failed to convert parameter to context url");
+        TLOGE(WmsLogTag::WMS_UIEXT, "Failed to convert parameter to context url");
         errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
     }
     napi_value callBack = nullptr;
@@ -553,7 +573,7 @@ napi_value JsExtensionWindow::OnSetUIContent(napi_env env, napi_callback_info in
         [extwin = extensionWindow_, contentStorage, contextUrl, parentToken]
         (napi_env env, NapiAsyncTask& task, int32_t status) {
             if (extwin == nullptr) {
-                WLOGFE("Window is nullptr");
+                TLOGE(WmsLogTag::WMS_UIEXT, "Window is nullptr");
                 task.Reject(env,
                     CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
                 return;
@@ -568,14 +588,14 @@ napi_value JsExtensionWindow::OnSetUIContent(napi_env env, napi_callback_info in
 
 napi_value JsExtensionWindow::OnLoadContent(napi_env env, napi_callback_info info, bool isLoadedByName)
 {
-    WLOGI("OnLoadContent is called");
+    TLOGI(WmsLogTag::WMS_UIEXT, "OnLoadContent is called");
     WmErrorCode errCode = WmErrorCode::WM_OK;
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     std::string contextUrl;
     if (!ConvertFromJsValue(env, argv[0], contextUrl)) {
-        WLOGI("Failed to convert parameter to context url");
+        TLOGI(WmsLogTag::WMS_UIEXT, "Failed to convert parameter to context url");
         errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
     }
     napi_value storage = nullptr;
@@ -591,7 +611,7 @@ napi_value JsExtensionWindow::OnLoadContent(napi_env env, napi_callback_info inf
         callBack = value2;
     }
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
-        WLOGI("Window is null or get invalid param");
+        TLOGI(WmsLogTag::WMS_UIEXT, "Window is null or get invalid param");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
         return NapiGetUndefined(env);
     }
@@ -608,7 +628,7 @@ napi_value JsExtensionWindow::OnLoadContent(napi_env env, napi_callback_info inf
         [extwin = extensionWindow_, contentStorage, contextUrl, parentToken, isLoadedByName](
             napi_env env, NapiAsyncTask& task, int32_t status) {
             if (extwin == nullptr) {
-                WLOGFE("Window is nullptr or get invalid param");
+                TLOGE(WmsLogTag::WMS_UIEXT, "Window is nullptr or get invalid param");
                 task.Reject(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
                 return;
             }
@@ -622,7 +642,7 @@ napi_value JsExtensionWindow::OnLoadContent(napi_env env, napi_callback_info inf
 
 napi_value JsExtensionWindow::OnGetWindowAvoidArea(napi_env env, napi_callback_info info)
 {
-    WLOGI("OnGetWindowAvoidArea is called");
+    TLOGI(WmsLogTag::WMS_UIEXT, "OnGetWindowAvoidArea is called");
 
     WmErrorCode errCode = WmErrorCode::WM_OK;
     size_t argc = 4;
@@ -648,7 +668,7 @@ napi_value JsExtensionWindow::OnGetWindowAvoidArea(napi_env env, napi_callback_i
     }
 
     if (extensionWindow_ == nullptr) {
-        WLOGFE("extensionWindow_ is nullptr");
+        TLOGE(WmsLogTag::WMS_UIEXT, "extensionWindow_ is nullptr");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STAGE_ABNORMALLY)));
         return CreateJsValue(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STAGE_ABNORMALLY));
     }
@@ -656,7 +676,7 @@ napi_value JsExtensionWindow::OnGetWindowAvoidArea(napi_env env, napi_callback_i
     AvoidArea avoidArea;
     WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(extensionWindow_->GetAvoidAreaByType(avoidAreaType, avoidArea));
     if (ret != WmErrorCode::WM_OK) {
-        WLOGFE("OnGetAvoidAreaByType failed");
+        TLOGE(WmsLogTag::WMS_UIEXT, "OnGetAvoidAreaByType failed");
         avoidArea.topRect_ = g_emptyRect;
         avoidArea.leftRect_ = g_emptyRect;
         avoidArea.rightRect_ = g_emptyRect;
@@ -664,10 +684,10 @@ napi_value JsExtensionWindow::OnGetWindowAvoidArea(napi_env env, napi_callback_i
     }
     napi_value avoidAreaObj = ConvertAvoidAreaToJsValue(env, avoidArea, avoidAreaType);
     if (avoidAreaObj != nullptr) {
-        WLOGI("avoidAreaObj is finish");
+        TLOGI(WmsLogTag::WMS_UIEXT, "avoidAreaObj is finish");
         return avoidAreaObj;
     } else {
-        WLOGFE("avoidAreaObj is nullptr");
+        TLOGE(WmsLogTag::WMS_UIEXT, "avoidAreaObj is nullptr");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
     }
 }
@@ -676,33 +696,33 @@ napi_value JsExtensionWindow::OnRegisterExtensionWindowCallback(napi_env env, na
 {
     sptr<Window> windowImpl = extensionWindow_->GetWindow();
     if (windowImpl == nullptr) {
-        WLOGFE("WindowImpl is nullptr");
+        TLOGE(WmsLogTag::WMS_UIEXT, "WindowImpl is nullptr");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
     }
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc < 2) { // 2: params num
-        WLOGFE("Argc is invalid: %{public}zu", argc);
+        TLOGE(WmsLogTag::WMS_UIEXT, "Argc is invalid: %{public}zu", argc);
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
     std::string cbType;
     if (!ConvertFromJsValue(env, argv[0], cbType)) {
-        WLOGFE("Failed to convert parameter to callbackType");
+        TLOGE(WmsLogTag::WMS_UIEXT, "Failed to convert parameter to callbackType");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
     napi_value value = argv[1];
     if (!NapiIsCallable(env, value)) {
-        WLOGFE("Callback(info->argv[1]) is not callable");
+        TLOGE(WmsLogTag::WMS_UIEXT, "Callback(info->argv[1]) is not callable");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
     WmErrorCode ret = extensionRegisterManager_->RegisterListener(windowImpl, cbType, CaseType::CASE_WINDOW,
         env, value);
     if (ret != WmErrorCode::WM_OK) {
-        WLOGFE("Callback(info->argv[1]) is not callable");
+        TLOGE(WmsLogTag::WMS_UIEXT, "Callback(info->argv[1]) is not callable");
         return NapiThrowError(env, ret);
     }
-    WLOGI("Register end, window [%{public}u, %{public}s], type = %{public}s",
+    TLOGI(WmsLogTag::WMS_UIEXT, "Register end, window [%{public}u, %{public}s], type = %{public}s",
           windowImpl->GetWindowId(), windowImpl->GetWindowName().c_str(), cbType.c_str());
     return NapiGetUndefined(env);
 }
@@ -711,19 +731,19 @@ napi_value JsExtensionWindow::OnUnRegisterExtensionWindowCallback(napi_env env, 
 {
     sptr<Window> windowImpl = extensionWindow_->GetWindow();
     if (windowImpl == nullptr) {
-        WLOGFE("windowImpl is nullptr");
+        TLOGE(WmsLogTag::WMS_UIEXT, "windowImpl is nullptr");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
     }
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc < 1) {
-        WLOGFE("Argc is invalid: %{public}zu", argc);
+        TLOGE(WmsLogTag::WMS_UIEXT, "Argc is invalid: %{public}zu", argc);
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
     std::string cbType;
     if (!ConvertFromJsValue(env, argv[0], cbType)) {
-        WLOGFE("Failed to convert parameter to callbackType");
+        TLOGE(WmsLogTag::WMS_UIEXT, "Failed to convert parameter to callbackType");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
 
@@ -744,7 +764,7 @@ napi_value JsExtensionWindow::OnUnRegisterExtensionWindowCallback(napi_env env, 
     if (ret != WmErrorCode::WM_OK) {
         return NapiThrowError(env, ret);
     }
-    WLOGI("UnRegister end, window [%{public}u, %{public}s], type = %{public}s",
+    TLOGI(WmsLogTag::WMS_UIEXT, "UnRegister end, window [%{public}u, %{public}s], type = %{public}s",
           windowImpl->GetWindowId(), windowImpl->GetWindowName().c_str(), cbType.c_str());
     return NapiGetUndefined(env);
 }
@@ -752,24 +772,24 @@ napi_value JsExtensionWindow::OnUnRegisterExtensionWindowCallback(napi_env env, 
 napi_value JsExtensionWindow::OnHideNonSecureWindows(napi_env env, napi_callback_info info)
 {
     if (extensionWindow_ == nullptr) {
-        WLOGFE("extensionWindow_ is nullptr");
+        TLOGE(WmsLogTag::WMS_UIEXT, "extensionWindow_ is nullptr");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
     }
     sptr<Window> windowImpl = extensionWindow_->GetWindow();
     if (windowImpl == nullptr) {
-        WLOGFE("windowImpl is nullptr");
+        TLOGE(WmsLogTag::WMS_UIEXT, "windowImpl is nullptr");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
     }
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc < 1) {
-        WLOGFE("Argc is invalid: %{public}zu", argc);
+        TLOGE(WmsLogTag::WMS_UIEXT, "Argc is invalid: %{public}zu", argc);
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
     bool shouldHide = false;
     if (!ConvertFromJsValue(env, argv[0], shouldHide)) {
-        WLOGFE("Failed to convert parameter to bool");
+        TLOGE(WmsLogTag::WMS_UIEXT, "Failed to convert parameter to bool");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
 
@@ -778,21 +798,55 @@ napi_value JsExtensionWindow::OnHideNonSecureWindows(napi_env env, napi_callback
     if (ret != WmErrorCode::WM_OK) {
         return NapiThrowError(env, ret);
     }
-    WLOGI("OnHideNonSecureWindows end, window [%{public}u, %{public}s], shouldHide:%{public}u",
+    TLOGI(WmsLogTag::WMS_UIEXT, "OnHideNonSecureWindows end, window [%{public}u, %{public}s], shouldHide:%{public}u",
           windowImpl->GetWindowId(), windowImpl->GetWindowName().c_str(), shouldHide);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsExtensionWindow::OnSetWaterMarkFlag(napi_env env, napi_callback_info info)
+{
+    if (extensionWindow_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "extensionWindow_ is nullptr");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
+    }
+    sptr<Window> windowImpl = extensionWindow_->GetWindow();
+    if (windowImpl == nullptr) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "windowImpl is nullptr");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
+    }
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc < 1) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "Argc is invalid: %{public}zu", argc);
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
+    bool isEnable = false;
+    if (!ConvertFromJsValue(env, argv[0], isEnable)) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "Failed to convert parameter to bool");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
+
+    WmErrorCode ret = WmErrorCode::WM_OK;
+    ret = WM_JS_TO_ERROR_CODE_MAP.at(extensionWindow_->SetWaterMarkFlag(isEnable));
+    if (ret != WmErrorCode::WM_OK) {
+        return NapiThrowError(env, ret);
+    }
+    TLOGI(WmsLogTag::WMS_UIEXT, "OnSetWaterMark end, window [%{public}u, %{public}s], isEnable:%{public}u.",
+          windowImpl->GetWindowId(), windowImpl->GetWindowName().c_str(), isEnable);
     return NapiGetUndefined(env);
 }
 
 napi_value JsExtensionWindow::GetProperties(napi_env env, napi_callback_info info)
 {
-    WLOGI("GetProperties is called");
+    TLOGI(WmsLogTag::WMS_UIEXT, "GetProperties is called");
     napi_value jsThis;
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &jsThis, nullptr));
 
     JsExtensionWindow* jsExtensionWindow = nullptr;
     NAPI_CALL(env, napi_unwrap(env, jsThis, reinterpret_cast<void**>(&jsExtensionWindow)));
     if (!jsExtensionWindow || !jsExtensionWindow->extensionWindow_) {
-        WLOGFE("window is nullptr");
+        TLOGE(WmsLogTag::WMS_UIEXT, "window is nullptr");
         return nullptr;
     }
     sptr<Rosen::Window> window = jsExtensionWindow->extensionWindow_->GetWindow();
@@ -806,22 +860,16 @@ napi_value JsExtensionWindow::OnCreateSubWindowWithOptions(napi_env env, napi_ca
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     std::string windowName;
     if (!ConvertFromJsValue(env, argv[0], windowName)) {
-        WLOGFE("[NAPI]Failed to convert parameter to windowName");
+        TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Failed to convert parameter to windowName");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
         return NapiGetUndefined(env);
     }
     WindowOption option;
-    std::string title;
-    if (!ParseJsValue(argv[1], env, "title", title)) {
+    if (!ParseSubWindowOptions(env, argv[1], option)) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Get invalid options param");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
         return NapiGetUndefined(env);
     }
-    bool decorEnabled;
-    if (!ParseJsValue(argv[1], env, "decorEnabled", decorEnabled)) {
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
-        return NapiGetUndefined(env);
-    }
-    option = SetOption(option, title, decorEnabled);
     NapiAsyncTask::CompleteCallback complete =
         [weak = extensionWindow_, windowName, option](napi_env env, NapiAsyncTask& task, int32_t status) {
             if (weak == nullptr) {
@@ -842,7 +890,7 @@ napi_value JsExtensionWindow::OnCreateSubWindowWithOptions(napi_env env, napi_ca
                 return;
             }
             task.Resolve(env, CreateJsWindowObject(env, window));
-            WLOGI("[NAPI]Create sub window %{public}s end", windowName.c_str());
+            TLOGI(WmsLogTag::WMS_UIEXT, "[NAPI]Create sub window %{public}s end", windowName.c_str());
         };
     napi_value callback = (argv[2] != nullptr && GetType(env, argv[2]) == napi_function) ? argv[2] : nullptr;
     napi_value result = nullptr;
@@ -859,13 +907,33 @@ void JsExtensionWindow::SetWindowOption(sptr<Rosen::WindowOption> windowOption)
     windowOption->SetExtensionTag(true);
 }
 
-WindowOption JsExtensionWindow::SetOption(WindowOption option, std::string title,
-    bool decorEnabled)
+bool JsExtensionWindow::ParseSubWindowOptions(napi_env env, napi_value jsObject, WindowOption& option)
 {
+    if (jsObject == nullptr) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "jsObject is null");
+        return false;
+    }
+    std::string title;
+    if (!ParseJsValue(jsObject, env, "title", title)) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "Failed to convert parameter to title");
+        return false;
+    }
+    bool decorEnabled;
+    if (!ParseJsValue(jsObject, env, "decorEnabled", decorEnabled)) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "Failed to convert parameter to decorEnabled");
+        return false;
+    }
+    bool isModal = false;
+    if (ParseJsValue(jsObject, env, "isModal", isModal)) {
+        TLOGI(WmsLogTag::WMS_UIEXT, "isModal:%{public}d", isModal);
+        if (isModal) {
+            option.AddWindowFlag(WindowFlag::WINDOW_FLAG_IS_MODAL);
+        }
+    }
     option.SetSubWindowTitle(title);
     option.SetSubWindowDecorEnable(decorEnabled);
     option.SetParentId(hostWindowId_);
-    return option;
+    return true;
 }
 }  // namespace Rosen
 }  // namespace OHOS

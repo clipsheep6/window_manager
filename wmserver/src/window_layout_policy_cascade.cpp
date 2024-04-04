@@ -437,6 +437,7 @@ void WindowLayoutPolicyCascade::HandleWindowMode(const WindowMode mode, const sp
             winRect = cascadeRectsMap_[displayId].secondaryRect_;
             break;
         case WindowMode::WINDOW_MODE_FULLSCREEN: {
+            UpdateWindowSizeLimits(node);
             bool needAvoid = (node->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID));
             winRect = needAvoid ? limitRectMap_[displayId] : DisplayGroupInfo::GetInstance().GetDisplayRect(displayId);
             auto displayInfo = DisplayGroupInfo::GetInstance().GetDisplayInfo(displayId);
