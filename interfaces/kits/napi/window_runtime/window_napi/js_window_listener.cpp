@@ -28,8 +28,58 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsListener"};
 }
 
+void ThreadFinished(napi_env env, void* data, [[maybe_unused]] void* context)
+{
+    WLOGFI("NAPI Thread finished");
+}
+
+//for OnSizeChange Use only Now
+void ThreadSafeCallback(napi_env env, napi_value js_callback, void* context,
+        void* data)
+{
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "JsWindowListener::OnSizeChange");
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(env, &scope);
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue == nullptr) {
+        WLOGFE("Failed to convert rect to jsObject");
+        return;
+    }
+    Rect* rect = reinterpret_cast<Rect*>(data);
+    napi_set_named_property(env, objValue, "width", CreateJsValue(env, rect->width_));
+    napi_set_named_property(env, objValue, "height", CreateJsValue(env, rect->height_));
+    napi_value argv[] = {objValue};
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    napi_call_function(env, result, js_callback, ArraySize(argv), argv, nullptr);
+    napi_close_handle_scope(env, scope);
+    delete rect;
+}
+
+JsWindowListener::JsWindowListener(napi_env env, std::shared_ptr<NativeReference> callback): 
+    env_(env), jsCallBack_(callback), weakRef_(wptr<JsWindowListener> (this)) {
+    napi_value resourceName =  nullptr;
+    napi_status result = napi_create_string_utf8(env, "JsWindowListenerFunc", NAPI_AUTO_LENGTH, &resourceName);
+    if (result != napi_status::napi_ok) {
+        WLOGFE("[NAPI] napi abormal, return");
+        return;
+    }
+    result = napi_create_threadsafe_function(env, callback->GetNapiValue(), nullptr, resourceName, 0, 1, nullptr, 
+        ThreadFinished, nullptr,ThreadSafeCallback,&tsfn);
+    if (result != napi_status::napi_ok) {
+        WLOGFE("[NAPI] napi abormal, return");
+        return;
+    }
+}
+
 JsWindowListener::~JsWindowListener()
 {
+    napi_status status = napi_release_threadsafe_function(tsfn, napi_tsfn_release);
+    if (status != napi_status::napi_ok) {
+        WLOGFE("[NAPI] napi abormal, return");
+        return;
+    }
     WLOGI("[NAPI]~JsWindowListener");
 }
 
@@ -96,8 +146,17 @@ void JsWindowListener::OnSizeChange(Rect rect, WindowSizeChangeReason reason,
             WLOGFE("get main event handler failed!");
             return;
         }
-        eventHandler_->PostTask(jsCallback, "wms:JsWindowListener::OnSizeChange", 0,
-            AppExecFwk::EventQueue::Priority::IMMEDIATE);
+        Rect* rectPtr = new Rect(rect);
+        napi_status status = napi_acquire_threadsafe_function(tsfn);
+        if (status != napi_status::napi_ok) {
+            WLOGFE("[NAPI] napi abormal with error %{public}d, return", status);
+            return;
+        }
+        status = napi_call_threadsafe_function(tsfn, rectPtr, napi_tsfn_nonblocking);
+        if (status != napi_status::napi_ok) {
+            WLOGFE("[NAPI] napi abormal with error %{public}d, return", status);
+            return;
+        }
     }
     currentWidth_ = rect.width_;
     currentHeight_ = rect.height_;
