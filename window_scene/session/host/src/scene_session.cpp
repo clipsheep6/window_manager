@@ -1454,6 +1454,7 @@ void SceneSession::SetSurfaceBounds(const WSRect& rect)
         WLOGE("SetSurfaceBounds surfaceNode is null!");
     }
     if (rsTransaction) {
+        RSTransation::FlushImplicitTransaction();
         rsTransaction->Commit();
     }
 }
