@@ -2364,7 +2364,7 @@ WSError SceneSessionManager::SwitchUser(int32_t oldUserId, int32_t newUserId, st
         ScenePersistence::CreateUpdatedIconDir(fileDir);
         currentUserId_ = newUserId;
         {
-            std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+            std::unique_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
             for (const auto &item : sceneSessionMap_) {
                 auto scnSession = item.second;
                 auto persistentId = scnSession->GetPersistentId();
@@ -5793,6 +5793,7 @@ sptr<SceneSession> SceneSessionManager::FindSessionByAffinity(std::string affini
 void SceneSessionManager::PreloadInLakeApp(const std::string& bundleName)
 {
     WLOGFI("run PreloadInLakeApp");
+    std::shared_lock<std::shared_mutex> lock(collaboratorMapLock_);
     auto iter = collaboratorMap_.find(CollaboratorType::RESERVE_TYPE);
     if (iter == collaboratorMap_.end()) {
         WLOGFE("Fail to found collaborator with type: RESERVE_TYPE");
@@ -6531,6 +6532,7 @@ BrokerStates SceneSessionManager::NotifyStartAbility(
     int32_t collaboratorType, const SessionInfo& sessionInfo, int32_t persistentId)
 {
     WLOGFI("run NotifyStartAbility type %{public}d param id %{public}d", collaboratorType, persistentId);
+    std::shared_lock<std::shared_mutex> lock(collaboratorMapLock_);
     auto iter = collaboratorMap_.find(collaboratorType);
     if (iter == collaboratorMap_.end()) {
         WLOGFI("Fail to found collaborator with type: %{public}d", collaboratorType);
@@ -6577,6 +6579,7 @@ void SceneSessionManager::NotifySessionCreate(sptr<SceneSession> sceneSession, c
         WLOGFI("sessionInfo.want is nullptr");
         return;
     }
+    std::shared_lock<std::shared_mutex> lock(collaboratorMapLock_);
     auto iter = collaboratorMap_.find(sceneSession->GetCollaboratorType());
     if (iter == collaboratorMap_.end()) {
         WLOGFI("Fail to found collaborator with type: %{public}d", sceneSession->GetCollaboratorType());
@@ -6600,6 +6603,7 @@ void SceneSessionManager::NotifyLoadAbility(int32_t collaboratorType,
     sptr<AAFwk::SessionInfo> abilitySessionInfo, std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo)
 {
     WLOGFI("run NotifyLoadAbility");
+    std::shared_lock<std::shared_mutex> lock(collaboratorMapLock_);
     auto iter = collaboratorMap_.find(collaboratorType);
     if (iter == collaboratorMap_.end()) {
         WLOGFE("Fail to found collaborator with type: %{public}d", collaboratorType);
@@ -6619,6 +6623,7 @@ void SceneSessionManager::NotifyUpdateSessionInfo(sptr<SceneSession> sceneSessio
         WLOGFE("sceneSession is nullptr");
         return;
     }
+    std::shared_lock<std::shared_mutex> lock(collaboratorMapLock_);
     auto iter = collaboratorMap_.find(sceneSession->GetCollaboratorType());
     if (iter == collaboratorMap_.end()) {
         WLOGFE("Fail to found collaborator with type: %{public}d", sceneSession->GetCollaboratorType());
@@ -6634,6 +6639,7 @@ void SceneSessionManager::NotifyUpdateSessionInfo(sptr<SceneSession> sceneSessio
 void SceneSessionManager::NotifyMoveSessionToForeground(int32_t collaboratorType, int32_t persistentId)
 {
     WLOGFI("run NotifyMoveSessionToForeground");
+    std::shared_lock<std::shared_mutex> lock(collaboratorMapLock_);
     auto iter = collaboratorMap_.find(collaboratorType);
     if (iter == collaboratorMap_.end()) {
         WLOGFE("Fail to found collaborator with type: %{public}d", collaboratorType);
@@ -6648,6 +6654,7 @@ void SceneSessionManager::NotifyMoveSessionToForeground(int32_t collaboratorType
 void SceneSessionManager::NotifyClearSession(int32_t collaboratorType, int32_t persistentId)
 {
     WLOGFI("run NotifyClearSession with persistentId %{public}d", persistentId);
+    std::shared_lock<std::shared_mutex> lock(collaboratorMapLock_);
     auto iter = collaboratorMap_.find(collaboratorType);
     if (iter == collaboratorMap_.end()) {
         WLOGFE("Fail to found collaborator with type: %{public}d", collaboratorType);
