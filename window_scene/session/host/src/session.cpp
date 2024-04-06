@@ -867,7 +867,7 @@ void Session::HandleDialogBackground()
 
     std::vector<sptr<Session>> dialogVec;
     {
-        std::unique_lock<std::mutex> lock(dialogVecMutex_);
+        std::shared_lock<std::mutex> lock(dialogVecMutex_);
         dialogVec = dialogVec_;
     }
     for (const auto& dialog : dialogVec) {
@@ -896,7 +896,7 @@ void Session::HandleDialogForeground()
 
     std::vector<sptr<Session>> dialogVec;
     {
-        std::unique_lock<std::mutex> lock(dialogVecMutex_);
+        std::shared_lock<std::mutex> lock(dialogVecMutex_);
         dialogVec = dialogVec_;
     }
     for (const auto& dialog : dialogVec) {
@@ -1335,7 +1335,7 @@ void Session::RemoveDialogToParentSession(const sptr<Session>& session)
 
 std::vector<sptr<Session>> Session::GetDialogVector() const
 {
-    std::unique_lock<std::mutex> lock(dialogVecMutex_);
+    std::shared_lock<std::mutex> lock(dialogVecMutex_);
     return dialogVec_;
 }
 
@@ -1349,7 +1349,7 @@ void Session::ClearDialogVector()
 
 bool Session::CheckDialogOnForeground()
 {
-    std::unique_lock<std::mutex> lock(dialogVecMutex_);
+    std::shared_lock<std::mutex> lock(dialogVecMutex_);
     if (dialogVec_.empty()) {
         TLOGD(WmsLogTag::WMS_DIALOG, "Dialog is empty, id: %{public}d", GetPersistentId());
         return false;
@@ -1378,7 +1378,7 @@ bool Session::IsTopDialog() const
         TLOGW(WmsLogTag::WMS_DIALOG, "Dialog's Parent is NULL. id: %{public}d", currentPersistentId);
         return false;
     }
-    std::unique_lock<std::mutex> lock(parentSession->dialogVecMutex_);
+    std::shared_lock<std::mutex> lock(parentSession->dialogVecMutex_);
     if (parentSession->dialogVec_.size() <= 1) {
         return true;
     }
@@ -1434,6 +1434,7 @@ void Session::PresentFocusIfPointDown()
 
 void Session::HandlePointDownDialog()
 {
+    std::shared_lock<std::mutex> lock(dialogVecMutex_);
     for (auto dialog : dialogVec_) {
         if (dialog && (dialog->GetSessionState() == SessionState::STATE_FOREGROUND ||
             dialog->GetSessionState() == SessionState::STATE_ACTIVE)) {
