@@ -250,7 +250,7 @@ void NapiAsyncWork(napi_env env, std::function<void()> task)
     napi_value resource = nullptr;
     AsyncInfo* info = new (std::nothrow) AsyncInfo();
     if (info == nullptr) {
-        WLOGFE("malloc asyncinfo failed");
+        TLOGE(WmsLogTag::DMS, "malloc asyncinfo failed");
         return;
     }
     info->env = env;
@@ -260,12 +260,12 @@ void NapiAsyncWork(napi_env env, std::function<void()> task)
     },
     [](napi_env env, napi_status status, void* data) {
         AsyncInfo* info = (AsyncInfo*)data;
-        info->func();
-        napi_delete_async_work(env, info->work);
         if (info == nullptr) {
-            WLOGFE("asyncinfo is nullptr");
+            TLOGE(WmsLogTag::DMS, "async info is nullptr");
             return;
         }
+        info->func();
+        napi_delete_async_work(env, info->work);
         delete info;
     }, (void*)info, &info->work);
     napi_queue_async_work(env, info->work);

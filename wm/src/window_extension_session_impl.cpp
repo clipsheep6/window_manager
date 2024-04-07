@@ -401,7 +401,6 @@ WSError WindowExtensionSessionImpl::UpdateRect(const WSRect& rect, SizeChangeRea
     }
     property_->SetWindowRect(wmRect);
     if (wmReason == WindowSizeChangeReason::ROTATION) {
-        auto preRect = GetRect();
         UpdateRectForRotation(wmRect, preRect, wmReason, rsTransaction);
     } else {
         NotifySizeChange(wmRect, wmReason);
@@ -549,7 +548,8 @@ void WindowExtensionSessionImpl::NotifySessionBackground(uint32_t reason, bool w
 
 void WindowExtensionSessionImpl::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info)
 {
-    WLOGD("TextFieldPosY = %{public}lf, KeyBoardHeight = %{public}d", info->textFieldPositionY_, info->rect_.height_);
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "TextFieldPosY = %{public}f, KeyBoardHeight = %{public}d",
+        info->textFieldPositionY_, info->rect_.height_);
     if (occupiedAreaChangeListener_) {
         occupiedAreaChangeListener_->OnSizeChange(info);
     }
