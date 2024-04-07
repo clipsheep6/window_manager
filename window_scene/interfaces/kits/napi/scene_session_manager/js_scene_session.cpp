@@ -57,6 +57,7 @@ const std::string RAISE_ABOVE_TARGET_CB = "raiseAboveTarget";
 const std::string FORCE_HIDE_CHANGE_CB = "sessionForceHideChange";
 const std::string TOUCH_OUTSIDE_CB = "touchOutside";
 const std::string WINDOW_DRAG_HOT_AREA_CB = "windowDragHotArea";
+const std::string START_MOVE_POSITION_CB = "startMovePosition";
 const std::string SESSIONINFO_LOCKEDSTATE_CHANGE_CB = "sessionInfoLockedStateChange";
 const std::string PREPARE_CLOSE_PIP_SESSION = "prepareClosePiPSession";
 const std::string LANDSCAPE_MULTI_WINDOW_CB = "landscapeMultiWindow";
@@ -210,6 +211,7 @@ void JsSceneSession::InitListenerFuncs()
         { FORCE_HIDE_CHANGE_CB,                  &JsSceneSession::ProcessForceHideChangeRegister },
         { TOUCH_OUTSIDE_CB,                      &JsSceneSession::ProcessTouchOutsideRegister },
         { WINDOW_DRAG_HOT_AREA_CB,               &JsSceneSession::ProcessWindowDragHotAreaRegister },
+        { START_MOVE_POSITION_CB,                &JsSceneSession::ProcessStartMovePositionRegister },
         { SESSIONINFO_LOCKEDSTATE_CHANGE_CB,     &JsSceneSession::ProcessSessionInfoLockedStateChangeRegister },
         { PREPARE_CLOSE_PIP_SESSION,             &JsSceneSession::ProcessPrepareClosePiPSessionRegister},
         { LANDSCAPE_MULTI_WINDOW_CB,             &JsSceneSession::ProcessLandscapeMultiWindowRegister },
@@ -220,7 +222,7 @@ void JsSceneSession::ProcessWindowDragHotAreaRegister()
 {
 
     WLOGFI("[NAPI]ProcessWindowDragHotAreaRegister");
-    NotifyWindowDragHotAreaFunc func = [weak = weak_from_this()](int32_t type, const SizeChangeReason& reason) {
+    NotifyWindowDragHotAreaFunc func = [weak = weak_from_this()](uint32_t type, const SizeChangeReason& reason) {
         auto weakJsSceneSession = weak.lock();
         if (weakJsSceneSession) weakJsSceneSession->OnWindowDragHotArea(type, reason);
     };
@@ -232,7 +234,7 @@ void JsSceneSession::ProcessWindowDragHotAreaRegister()
     session->SetWindowDragHotAreaListener(func);
 }
 
-void JsSceneSession::OnWindowDragHotArea(int32_t type, const SizeChangeReason& reason)
+void JsSceneSession::OnWindowDragHotArea(uint32_t type, const SizeChangeReason& reason)
 {
     WLOGFI("[NAPI]OnWindowDragHotArea");
     std::shared_ptr<NativeReference> jsCallBack = nullptr;
@@ -274,6 +276,60 @@ void JsSceneSession::OnWindowDragHotArea(int32_t type, const SizeChangeReason& r
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
     taskScheduler_->PostMainThreadTask(task, "OnWindowDragHotArea");
+}
+
+void JsSceneSession::ProcessStartMovePositionRegister()
+{
+    WLOGFI("[NAPI]ProcessStartMovePositionRegister");
+    NotifyStartMovePositionFunc func = [this](int32_t pointerPosX, int32_t pointerPosY) {
+        this->OnStartMovePosition(pointerPosX, pointerPosY);
+    };
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        WLOGFE("session is nullptr");
+        return;
+    }
+    session->SetStartMovePositionListener(func);
+}
+
+
+void JsSceneSession::OnStartMovePosition(int32_t pointerPosX, int32_t pointerPosY)
+{
+    WLOGFI("[NAPI]OnStartMovePosition");
+    std::shared_ptr<NativeReference> jsCallBack = nullptr;
+    {
+        std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
+        auto iter = jsCbMap_.find(START_MOVE_POSITION_CB);
+        if (iter == jsCbMap_.end()) {
+            return;
+        }
+        jsCallBack = iter->second;
+    }
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        WLOGFE("session is nullptr");
+        return;
+    }
+
+    auto task = [jsCallBack, env = env_, pointerPosX, pointerPosY]() {
+        if (!jsCallBack) {
+            WLOGFE("[NAPI]jsCallBack is nullptr");
+            return;
+        }
+        napi_value jsPointerPosX = CreateJsValue(env, pointerPosX);
+        if (jsPointerPosX == nullptr) {
+            WLOGFE("[NAPI]jsPointerPosX is nullptr");
+            return;
+        }
+        napi_value jsPointerPosY = CreateJsValue(env, pointerPosY);
+        if (jsPointerPosY == nullptr) {
+            WLOGFE("[NAPI]jsPointerPosY is nullptr");
+            return;
+        }
+        napi_value argv[] = {[0] = jsPointerPosX, [1] = jsPointerPosY};
+        napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
+    };
+    taskScheduler_->PostMainThreadTask(task, "OnStartMovePosition");
 }
 
 void JsSceneSession::ProcessSessionInfoLockedStateChangeRegister()
