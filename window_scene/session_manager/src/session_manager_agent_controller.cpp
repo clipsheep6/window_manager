@@ -98,5 +98,14 @@ void SessionManagerAgentController::UpdateWindowDrawingContentInfo(
         agent->UpdateWindowDrawingContentInfo(windowDrawingContentInfos);
     }
 }
+
+void UpdateVisibleWindowNum(const std::vector<DiffScreenVisibleWindowNum> diffScreenVisibleWindowNum) {
+    for (auto& agent : smAgentContainer_.GetAgentsByType(
+        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_VISIBLE_WINDOW_NUM)) {
+        if (agent != nullptr) {
+            agent->UpdateVisibleWindowNum(diffScreenVisibleWindowNum);
+        }
+    }
+}
 } // namespace Rosen
 } // namespace OHOS

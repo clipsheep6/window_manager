@@ -1043,6 +1043,9 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
             std::unique_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
             sceneSessionMap_.insert({ persistentId, sceneSession });
         }
+        if (!sessionInfo.isSystem_) {
+            CacVisibleWindowNum();
+        }
         PerformRegisterInRequestSceneSession(sceneSession);
         NotifySessionUpdate(sessionInfo, ActionType::SINGLE_START);
         TLOGI(WmsLogTag::WMS_LIFE, "RequestSceneSession, id: %{public}d, type: %{public}d",
@@ -1638,6 +1641,9 @@ WSError SceneSessionManager::RequestSceneSessionDestructionInner(
             NotifyClearSession(scnSession->GetCollaboratorType(), scnSessionInfo->persistentId);
         }
         EraseSceneSessionMapById(persistentId);
+        if (!scnSession->GetSessionInfo().isSystem_) {
+            CacVisibleWindowNum();
+        }
     } else {
         // if terminate, set want to null. so start from recent, start a new one.
         scnSession->SetSessionInfoWant(nullptr);
@@ -4266,6 +4272,9 @@ __attribute__((no_sanitize("cfi"))) void SceneSessionManager::OnSessionStateChan
             }
             break;
         case SessionState::STATE_BACKGROUND:
+            if (!scnSession->GetSessionInfo().isSystem_) {
+                CacVisibleWindowNum();
+            }
             RequestSessionUnfocus(persistentId);
             UpdateForceHideState(sceneSession, sceneSession->GetSessionProperty(), false);
             NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_REMOVED);
@@ -7355,6 +7364,58 @@ void SceneSessionManager::ReportWindowProfileInfos()
             "windowLocatedScreen:%{public}d, windowSceneMode:%{public}d",
             windowProfileInfo.bundleName.c_str(), windowProfileInfo.windowVisibleState,
             windowProfileInfo.windowLocatedScreen, windowProfileInfo.windowSceneMode);
+    }
+}
+
+void SceneSessionManager::CacVisibleWindowNum()
+{
+    std::map<int32_t, sptr<SceneSession>> sceneSessionMapCopy;
+    {
+        std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+        sceneSessionMapCopy = sceneSessionMap_;
+    }
+    std::map<int32_t, std::pair<int32_t, int32_t>> diffScreenVisibleWindowNumMap;
+    for (const auto& elem : sceneSessionMapCopy) {
+        auto curSession = elem.second;
+        if (curSession == nullptr || curSession->GetSessionInfo().isSystem_ ||
+            curSession->GetWindowType() !=  WindowType::WINDOW_TYPE_APP_MAIN_WINDOW ||
+            curSession->GetSessionState() == SessionState::STATE_BACKGROUND) {
+            continue;
+        }
+
+        bool isWindowVisible = curSession->GetVisible();
+        int32_t displayId = static_cast<int32_t>(curSession->GetSessionProperty()->GetDisplayId());
+        if (isWindowVisible) {
+            auto it = diffScreenVisibleWindowNumMap.find(displayId);
+            if (it == diffScreenVisibleWindowNumMap.end()) {
+                diffScreenVisibleWindowNumMap。insert(std::make_pair(displayId, std::make_pair(1, 0)));
+            } else {
+                diffScreenVisibleWindowNumMap[displayId].first += 1;
+            }
+            auto mode = curSession->GetWindowMode();
+            if (mode = WindowType::WINDOW_MODE_FULLSCREEN ||
+                mode = WindowType::WINDOW_MODE_SPLIT_PRIMARY ||
+                mode = WindowType::WINDOW_MODE_SPLIT_SECONDARY) {
+                diffScreenVisibleWindowNumMap[displayId].second += 1;
+            }
+        }
+    }
+    std::vector<DiffScreenVisibleWindowNum> diffScreenVisibleWindowNum;
+    for (auto it = diffScreenVisibleWindowNumMap.begin(); it != diffScreenVisibleWindowNumMap.end(); ++it) {
+        DiffScreenVisibleWindowNum oneScreenVisibleWindowNum;
+        oneScreenVisibleWindowNum.displayId = it->first;
+        if (it->scond.second == 0) {
+            oneScreenVisibleWindowNum.visibleWindowNum = it->scond.first += 1;
+        } else if (it->scond.second > 0) {
+            oneScreenVisibleWindowNum.visibleWindowNum = it->scond.first;
+        }
+        diffScreenVisibleWindowNum.push_back(oneScreenVisibleWindowNum);
+    }
+    if (diffScreenVisibleWindowNum.size > 0) {
+        for (const auto& num : diffScreenVisibleWindowNum) {
+            WLOGFI("displayId = %{public}d, visibleWindowNum = %{public}d", num.displayId, num.visibleWindowNum);
+        }
+        SessionManagerAgentController::GetInstance().UpdateVisibleWindowNum(diffScreenVisibleWindowNum);
     }
 }
 } // namespace OHOS::Rosen

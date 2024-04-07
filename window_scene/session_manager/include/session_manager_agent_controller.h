@@ -40,6 +40,7 @@ public:
     void NotifyWaterMarkFlagChangedResult(bool hasWaterMark);
     void UpdateWindowVisibilityInfo(const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos);
     void UpdateWindowDrawingContentInfo(const std::vector<sptr<WindowDrawingContentInfo>>& windowDrawingContentInfos);
+    void UpdateVisibleWindowNum(const std::vector<DiffScreenVisibleWindowNum> diffScreenVisibleWindowNum);
 private:
     SessionManagerAgentController() {}
     virtual ~SessionManagerAgentController() = default;

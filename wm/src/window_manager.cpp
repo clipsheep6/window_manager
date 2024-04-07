@@ -59,6 +59,7 @@ public:
     void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing);
     void NotifyWaterMarkFlagChangedResult(bool showWaterMark);
     void NotifyGestureNavigationEnabledResult(bool enable);
+    void NotifyVisibleWindowNumChanged(const std::vector<DiffScreenVisibleWindowNum> diffScreenVisibleWindowNum);
 
     static inline SingletonDelegator<WindowManager> delegator_;
 
@@ -80,6 +81,8 @@ public:
     sptr<WindowManagerAgent> waterMarkFlagChangeAgent_;
     std::vector<sptr<IGestureNavigationEnabledChangedListener>> gestureNavigationEnabledListeners_;
     sptr<WindowManagerAgent> gestureNavigationEnabledAgent_;
+    std::vector<sptr<IVisibleWindowNumChangedListener>> visibleWindowNumChangedListeners_;
+    sptr<WindowManagerAgent> visibleWindowNumChangedListenerAgent_;
 };
 
 void WindowManager::Impl::NotifyWMSConnected(int32_t userId, int32_t screenId)
@@ -248,6 +251,18 @@ void WindowManager::Impl::NotifyGestureNavigationEnabledResult(bool enable)
     }
     for (auto& listener : gestureNavigationEnabledListeners) {
         listener->OnGestureNavigationEnabledUpdate(enable);
+    }
+}
+
+void WindowManager::Impl::NotifyVisibleWindowNumChanged(const std::vector<DiffScreenVisibleWindowNum> diffScreenVisibleWindowNum)
+{
+    std::vector<sptr<IVisibleWindowNumChangedListener>> visibleWindowNumChangedListeners;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        visibleWindowNumChangedListeners = visibleWindowNumChangedListeners_;
+    }
+    for (auto& listener : visibleWindowNumChangedListeners) {
+        listener->OnVisibleWindowNumChange(diffScreenVisibleWindowNum);
     }
 }
 
@@ -913,6 +928,64 @@ WMError WindowManager::ShiftAppWindowFocus(int32_t sourcePersistentId, int32_t t
         WLOGFE("shift application window focus failed");
     }
     return ret;
+}
+
+WMError WindowManager::RegisterVisibleWindowNumChangedListener(const sptr<IVisibleWindowNumChangedListener>& listener)
+{
+    if (listener == nullptr) {
+        WLOGFE("listener could not be null");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    std::lock_guard<std::recursive_mutex> lock(pImpl_->mutex_);
+    WMError ret = WMError::WM_OK;
+    if (pImpl_->visibleWindowNumChangedListenerAgent_ == nullptr) {
+        pImpl_->visibleWindowNumChangedListenerAgent_ = new WindowManagerAgent();
+    }
+    ret = SingletonContainer::Get<WindowAdapter>().RegisterWindowManagerAgent(
+        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_VISIBLE_WINDOW_NUM,
+        pImpl_->visibleWindowNumChangedListenerAgent_);
+    if (ret != WMError::WM_OK) {
+        WLOGFW("RegisterWindowManagerAgent failed!");
+        pImpl_->visibleWindowNumChangedListenerAgent_ = nullptr;
+    } else {
+        auto iter = std::find(pImpl_->visibleWindowNumChangedListeners_.begin(),
+            pImpl_->visibleWindowNumChangedListeners_.end(), listener);
+        if (iter != pImpl_->visibleWindowNumChangedListeners_.end()) {
+            WLOGFW("Listener is already registered.");
+            return WMError::WM_OK;
+        }
+        pImpl_->visibleWindowNumChangedListeners_.emplace_back(listener);
+    }
+    return ret;
+}
+
+WMError WindowManager::UnregisterDrawingContentChangedListener(const sptr<IVisibleWindowNumChangedListener>& listener)
+{
+    if (listener == nullptr) {
+        WLOGFE("listener could not be null");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    std::lock_guard<std::recursive_mutex> lock(pImpl_->mutex_);
+    pImpl_->visibleWindowNumChangedListeners_.erase(std::remove_if(pImpl_->visibleWindowNumChangedListeners_.begin(),
+        pImpl_->visibleWindowNumChangedListeners_.end(),
+        [listener](sptr<IVisibleWindowNumChangedListener> registeredListener) { return registeredListener == listener; }),
+        pImpl_->visibleWindowNumChangedListeners_.end());
+
+    WMError ret = WMError::WM_OK;
+    if (pImpl_->visibleWindowNumChangedListeners_.empty() && pImpl_->visibleWindowNumChangedListenerAgent_ != nullptr) {
+        ret = SingletonContainer::Get<WindowAdapter>().UnregisterWindowManagerAgent(
+            WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_VISIBLE_WINDOW_NUM,
+            pImpl_->visibleWindowNumChangedListenerAgent_);
+        if (ret == WMError::WM_OK) {
+            pImpl_->visibleWindowNumChangedListenerAgent_ = nullptr;
+        }
+    }
+    return ret;
+}
+
+void WindowManager::UpdateVisibleWindowNum(const std::vector<DiffScreenVisibleWindowNum> diffScreenVisibleWindowNum)
+{
+    pImpl_->NotifyVisibleWindowNumChanged(diffScreenVisibleWindowNum);
 }
 
 } // namespace Rosen

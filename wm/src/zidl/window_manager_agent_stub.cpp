@@ -110,6 +110,24 @@ int WindowManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
             NotifyGestureNavigationEnabledResult(enbale);
             break;
         }
+        case WindowManagerAgentMsg::TRANS_ID_UPDATE_VISIBLE_WINDOW_NUM: {
+            std::vector<DiffScreenVisibleWindowNum> diffScreenVisibleWindowNum;
+            bool res = MarshallingHelper::UnmarshallingVectorObj<DiffScreenVisibleWindowNum>(data, diffScreenVisibleWindowNum,
+                [](Parcel& parcel, DiffScreenVisibleWindowNum& num) {
+                    uint32_t displayId = -1;
+                    uint32_t visibleWindowNum = -1;
+                    bool res = parcel.ReadUint32(displayId) && parcel.ReadUint32(visibleWindowNum);
+                    num.displayId = displayId;
+                    num.visibleWindowNum = visibleWindowNum;
+                    return res;
+                }
+            if (!res) {
+                WLOGFE("fail to read DiffScreenVisibleWindowNum.");
+                break;
+            }
+            UpdateVisibleWindowNum(diffScreenVisibleWindowNum);
+            break;
+        }
         default:
             WLOGFW("unknown transaction code %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);

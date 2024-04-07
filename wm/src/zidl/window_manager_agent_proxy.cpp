@@ -230,6 +230,35 @@ void WindowManagerAgentProxy::NotifyGestureNavigationEnabledResult(bool enable)
     }
 }
 
+void WindowManagerAgentProxy::UpdateVisibleWindowNum(const std::vector<DiffScreenVisibleWindowNum> diffScreenVisibleWindowNum)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+
+    if (!data.WriteUint64(displayId)) {
+        WLOGFE("Write displayId failed");
+        return;
+    }
+    bool res = MarshallingHelper::MarshallingVectorObj<DiffScreenVisibleWindowNum>(data, diffScreenVisibleWindowNum,
+        [](Parcel& parcel, const DiffScreenVisibleWindowNum& num) {
+            return parcel.WriteUint32(num.displayId) && parcel.WriteUint32(num.visibleWindowNum);
+        }
+    );
+    if (!res) {
+        WLOGFE("Write DiffScreenVisibleWindowNum failed");
+        return;
+    }
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerAgentMsg::TRANS_ID_UPDATE_VISIBLE_WINDOW_NUM),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+    }
+}
+
 } // namespace Rosen
 } // namespace OHOS
 

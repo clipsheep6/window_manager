@@ -40,6 +40,11 @@ struct SystemBarRegionTint {
 };
 using SystemBarRegionTints = std::vector<SystemBarRegionTint>;
 
+struct DiffScreenVisibleWindowNum {
+    uint32_t displayId;
+    uint32_t visibleWindowNum;
+};
+
 /**
  * @class IWMSConnectionChangedListener
  *
@@ -239,6 +244,21 @@ public:
      * @param isShowing True means camera is shown, false means the opposite.
      */
     virtual void OnCameraFloatWindowChange(uint32_t accessTokenId, bool isShowing) = 0;
+};
+
+/**
+ * @class IVisibleWindowNumChangedListener
+ *
+ * @brief Listener to observe visible window num changed.
+ */
+class IVisibleWindowNumChangedListener : virtual public RefBase {
+public:
+    /**
+     * @brief Notify caller when visible window num changed
+     *
+     * @param visibleWindowNum visible window num .
+     */
+    virtual void OnVisibleWindowNumChange(const std::vector<DiffScreenVisibleWindowNum> diffScreenVisibleWindowNum) = 0;
 };
 
 /**
@@ -489,6 +509,21 @@ public:
      * @return WM_OK means shift window focus success, others means failed.
     */
     WMError ShiftAppWindowFocus(int32_t sourcePersistentId, int32_t targetPersistentId);
+
+    /**
+     * @brief Register visible window num changed listener.
+     *
+     * @param listener IVisibleWindowNumChangedListener.
+     * @return WM_OK means register success, others means register failed.
+     */
+    WMError RegisterVisibleWindowNumChangedListener(const sptr<IVisibleWindowNumChangedListener>& listener);
+    /**
+     * @brief Unregister visible window num changed listener.
+     *
+     * @param listener IVisibleWindowNumChangedListener.
+     * @return WM_OK means unregister success, others means unregister failed.
+     */
+    WMError UnregisterVisibleWindowNumChangedListener(const sptr<IVisibleWindowNumChangedListener>& listener);
     
 private:
     WindowManager();
@@ -512,6 +547,7 @@ private:
     void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing) const;
     void NotifyWaterMarkFlagChangedResult(bool showWaterMark) const;
     void NotifyGestureNavigationEnabledResult(bool enable) const;
+    void UpdateVisibleWindowNum(const std::vector<DiffScreenVisibleWindowNum> diffScreenVisibleWindowNum);
 };
 } // namespace Rosen
 } // namespace OHOS
