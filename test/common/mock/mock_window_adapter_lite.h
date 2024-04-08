@@ -29,6 +29,10 @@ public:
         const sptr<IWindowManagerAgent>& windowManagerAgent));
     MOCK_METHOD2(UnregisterWindowManagerAgent, WMError(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent));
+<<<<<<< HEAD
+=======
+
+>>>>>>> 8c178f2d9 (修复编译问题)
 };
 }
 } // namespace OHOS
