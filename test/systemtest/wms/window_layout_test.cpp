@@ -36,6 +36,7 @@ public:
     std::vector<sptr<Window>> activeWindows_;
     static vector<Rect> fullScreenExpecteds_;
     static inline float virtualPixelRatio_ = 0.0;
+    Utils::TestWindowInfo floatAppInfo_;
 private:
     static constexpr uint32_t WAIT_SYANC_US = 100000;
     static void InitAvoidArea();
@@ -111,6 +112,15 @@ void WindowLayoutTest::TearDownTestCase()
 
 void WindowLayoutTest::SetUp()
 {
+    floatAppInfo_ = {
+        .name = "mainTile",
+        .rect = {0, 0, 0, 0},
+        .type = WindowType::WINDOW_TYPE_APP_MAIN_WINDOW,
+        .mode = WindowMode::WINDOW_MODE_FLOATING,
+        .needAvoid = true,
+        .parentLimit = false,
+        .parentId = INVALID_WINDOW_ID,
+    };
     activeWindows_.clear();
 }
 
@@ -467,17 +477,8 @@ HWTEST_F(WindowLayoutTest, LayoutWindow10, Function | MediumTest | Level3)
  */
 HWTEST_F(WindowLayoutTest, LayoutTile01, Function | MediumTest | Level3)
 {
-    Utils::TestWindowInfo info = {
-        .name = "mainTile1",
-        .rect = {0, 0, 0, 0},
-        .type = WindowType::WINDOW_TYPE_APP_MAIN_WINDOW,
-        .mode = WindowMode::WINDOW_MODE_FLOATING,
-        .needAvoid = true,
-        .parentLimit = false,
-        .parentId = INVALID_WINDOW_ID,
-    };
-
-    const sptr<Window>& window = Utils::CreateTestWindow(info);
+    floatAppInfo_.name = "mainTile1";
+    const sptr<Window>& window = Utils::CreateTestWindow(floatAppInfo_);
     if (window == nullptr) {
         return;
     }
@@ -498,8 +499,8 @@ HWTEST_F(WindowLayoutTest, LayoutTile01, Function | MediumTest | Level3)
     usleep(WAIT_SYANC_US);
     ASSERT_TRUE(Utils::RectEqualTo(window, Utils::singleTileRect_));
 
-    info.name = "test1";
-    const sptr<Window>& test1 = Utils::CreateTestWindow(info);
+    floatAppInfo_.name = "test1";
+    const sptr<Window>& test1 = Utils::CreateTestWindow(floatAppInfo_);
     activeWindows_.push_back(test1);
     ASSERT_EQ(WMError::WM_OK, test1->Show());
     usleep(WAIT_SYANC_US);
@@ -511,8 +512,8 @@ HWTEST_F(WindowLayoutTest, LayoutTile01, Function | MediumTest | Level3)
     ASSERT_TRUE(Utils::RectEqualTo(window, Utils::doubleTileRects_[0]));
     ASSERT_TRUE(Utils::RectEqualTo(test1, Utils::doubleTileRects_[1]));
 
-    info.name = "test2";
-    const sptr<Window>& test2 = Utils::CreateTestWindow(info);
+    floatAppInfo_.name = "test2";
+    const sptr<Window>& test2 = Utils::CreateTestWindow(floatAppInfo_);
     activeWindows_.push_back(test2);
     ASSERT_EQ(WMError::WM_OK, test2->Show());
     usleep(WAIT_SYANC_US);
@@ -536,16 +537,10 @@ HWTEST_F(WindowLayoutTest, LayoutTile01, Function | MediumTest | Level3)
 HWTEST_F(WindowLayoutTest, LayoutTileNegative01, Function | MediumTest | Level3)
 {
     WindowManager::GetInstance().SetWindowLayoutMode(WindowLayoutMode::CASCADE);
-    Utils::TestWindowInfo info = {
-        .name = "mainTileNegative1",
-        .rect = {-1, -100, -1, -100}, // -1, -100, -1, -100 is typical negative case nums
-        .type = WindowType::WINDOW_TYPE_APP_MAIN_WINDOW,
-        .mode = WindowMode::WINDOW_MODE_FLOATING,
-        .needAvoid = true,
-        .parentLimit = false,
-        .parentId = INVALID_WINDOW_ID,
-    };
-    const sptr<Window>& window = Utils::CreateTestWindow(info);
+    floatAppInfo_.name = "mainTileNegative1";
+    floatAppInfo_.rect = {-1, -100, -1, -100}; // -1, -100, -1, -100 is typical negative case nums
+
+    const sptr<Window>& window = Utils::CreateTestWindow(floatAppInfo_);
     if (window == nullptr) {
         return;
     }
@@ -564,8 +559,8 @@ HWTEST_F(WindowLayoutTest, LayoutTileNegative01, Function | MediumTest | Level3)
     usleep(WAIT_SYANC_US);
     ASSERT_TRUE(Utils::RectEqualTo(window, Utils::singleTileRect_));
 
-    info.name = "test1";
-    const sptr<Window>& test1 = Utils::CreateTestWindow(info);
+    floatAppInfo_.name = "test1";
+    const sptr<Window>& test1 = Utils::CreateTestWindow(floatAppInfo_);
     activeWindows_.push_back(test1);
     ASSERT_EQ(WMError::WM_OK, test1->Show());
     usleep(WAIT_SYANC_US);
@@ -577,8 +572,8 @@ HWTEST_F(WindowLayoutTest, LayoutTileNegative01, Function | MediumTest | Level3)
     ASSERT_TRUE(Utils::RectEqualTo(window, Utils::doubleTileRects_[0]));
     ASSERT_TRUE(Utils::RectEqualTo(test1, Utils::doubleTileRects_[1]));
 
-    info.name = "test2";
-    const sptr<Window>& test2 = Utils::CreateTestWindow(info);
+    floatAppInfo_.name = "test2";
+    const sptr<Window>& test2 = Utils::CreateTestWindow(floatAppInfo_);
     activeWindows_.push_back(test2);
     ASSERT_EQ(WMError::WM_OK, test2->Show());
     usleep(WAIT_SYANC_US);
@@ -602,16 +597,8 @@ HWTEST_F(WindowLayoutTest, LayoutTileNegative01, Function | MediumTest | Level3)
 HWTEST_F(WindowLayoutTest, LayoutNegative01, Function | MediumTest | Level3)
 {
     WindowManager::GetInstance().SetWindowLayoutMode(WindowLayoutMode::CASCADE);
-    Utils::TestWindowInfo info = {
-        .name = "mainNegative1",
-        .rect = {0, 0, 0, 0},
-        .type = WindowType::WINDOW_TYPE_APP_MAIN_WINDOW,
-        .mode = WindowMode::WINDOW_MODE_FLOATING,
-        .needAvoid = true,
-        .parentLimit = false,
-        .parentId = INVALID_WINDOW_ID,
-    };
-    const sptr<Window>& window = Utils::CreateTestWindow(info);
+    floatAppInfo_.name = "mainNegative1";
+    const sptr<Window>& window = Utils::CreateTestWindow(floatAppInfo_);
     if (window == nullptr) {
         return;
     }
@@ -632,16 +619,9 @@ HWTEST_F(WindowLayoutTest, LayoutNegative02, Function | MediumTest | Level3)
     WindowManager::GetInstance().SetWindowLayoutMode(WindowLayoutMode::CASCADE);
     const uint32_t negativeW = 0;
     const uint32_t negativeH = 0;
-    Utils::TestWindowInfo info = {
-        .name = "mainNegative2",
-        .rect = {0, 0, 0, 0},
-        .type = WindowType::WINDOW_TYPE_APP_MAIN_WINDOW,
-        .mode = WindowMode::WINDOW_MODE_FLOATING,
-        .needAvoid = true,
-        .parentLimit = false,
-        .parentId = INVALID_WINDOW_ID,
-    };
-    const sptr<Window>& window = Utils::CreateTestWindow(info);
+    floatAppInfo_.name = "mainNegative2";
+
+    const sptr<Window>& window = Utils::CreateTestWindow(floatAppInfo_);
     if (window == nullptr) {
         return;
     }
