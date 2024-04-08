@@ -31,6 +31,7 @@ public:
 
 private:
     int ProcUpdateFocus(MessageParcel& data);
+    int ProcUpdateWindowModeType(MessageParcel& data);
     int ProcUpdateSystemBarProps(MessageParcel& data);
     int ProcUpdateWindowStatus(MessageParcel& data);
     int ProcUpdateWindowVisibility(MessageParcel& data);
