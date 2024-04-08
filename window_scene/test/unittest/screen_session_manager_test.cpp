@@ -1103,7 +1103,8 @@ HWTEST_F(ScreenSessionManagerTest, SetSpecifiedScreenPower, Function | SmallTest
 HWTEST_F(ScreenSessionManagerTest, GetAllScreenIds, Function | SmallTest | Level3)
 {
     sptr<ScreenSession> screenSession = new ScreenSession();
-    ssm_->screenSessionMap_.insert(std::pair<ScreenId, sptr<ScreenSession>>(1, screenSession));
+    ASSERT_NE(nullptr, screenSession);
+    ssm_->screenSessionMap_.insert(std::make_pair(1, screenSession));
     auto res = ssm_->GetAllScreenIds();
     EXPECT_EQ(res[0], 1);
 }
@@ -1116,7 +1117,8 @@ HWTEST_F(ScreenSessionManagerTest, GetAllScreenIds, Function | SmallTest | Level
 HWTEST_F(ScreenSessionManagerTest, GetDensityInCurResolution, Function | SmallTest | Level3)
 {
     sptr<ScreenSession> screenSession = new ScreenSession();
-    ssm_->screenSessionMap_.insert(std::pair<ScreenId, sptr<ScreenSession>>(1, screenSession));
+    ASSERT_NE(nullptr, screenSession);
+    ssm_->screenSessionMap_.insert(std::make_pair(1, screenSession));
     ScreenId screenId = 100;
     float x = 3.14;
     auto res = ssm_->GetDensityInCurResolution(screenId, x);
@@ -1134,7 +1136,8 @@ HWTEST_F(ScreenSessionManagerTest, GetDensityInCurResolution, Function | SmallTe
 HWTEST_F(ScreenSessionManagerTest, SetScreenColorTransform, Function | SmallTest | Level3)
 {
     sptr<ScreenSession> screenSession = new ScreenSession();
-    ssm_->screenSessionMap_.insert(std::pair<ScreenId, sptr<ScreenSession>>(1, screenSession));
+    ASSERT_NE(nullptr, screenSession);
+    ssm_->screenSessionMap_.insert(std::make_pair(1, screenSession));
     ScreenId screenId = SCREEN_ID_INVALID;
     auto res = ssm_->SetScreenColorTransform(screenId);
     EXPECT_EQ(DMError::DM_ERROR_INVALID_PARAM, res);
@@ -1155,7 +1158,8 @@ HWTEST_F(ScreenSessionManagerTest, GetPixelFormat, Function | SmallTest | Level3
 {
     GraphicPixelFormat format = { GraphicPixelFormat::GRAPHIC_PIXEL_FMT_CLUT8 };
     sptr<ScreenSession> screenSession = new ScreenSession();
-    ssm_->screenSessionMap_.insert(std::pair<ScreenId, sptr<ScreenSession>>(1, screenSession));
+    ASSERT_NE(nullptr, screenSession);
+    ssm_->screenSessionMap_.insert(std::make_pair(1, screenSession));
     ScreenId screenId = SCREEN_ID_INVALID;
 
     auto res = ssm_->GetPixelFormat(screenId, format);
