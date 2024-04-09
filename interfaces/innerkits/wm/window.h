@@ -62,6 +62,7 @@ namespace Rosen {
 using NotifyNativeWinDestroyFunc = std::function<void(std::string windowName)>;
 using NotifyTransferComponentDataFunc = std::function<void(const AAFwk::WantParams& wantParams)>;
 using NotifyTransferComponentDataForResultFunc = std::function<AAFwk::WantParams(const AAFwk::WantParams& wantParams)>;
+using KeyEventFilterFunc = std::function<bool(MMI::KeyEvent&)>;
 class RSSurfaceNode;
 class RSTransaction;
 class ISession;
@@ -656,6 +657,19 @@ public:
      * @return WMError
      */
     virtual WMError SetWindowMode(WindowMode mode) { return WMError::WM_OK; }
+    /**
+     * @brief Set whether the window is topmost
+     *
+     * @param topmost whether window is topmost
+     * @return WMError
+     */
+    virtual WMError SetTopmost(bool topmost) { return WMError::WM_OK; }
+    /**
+     * @brief Get whether window is topmost
+     *
+     * @return True means window is topmost
+     */
+    virtual bool IsTopmost() const { return false; }
     /**
      * @brief Set alpha of window.
      *
@@ -1748,6 +1762,21 @@ public:
     }
 
     /**
+     * @brief Set whether to use default density.
+     *
+     * @param enabled bool.
+     * @return WM_OK means set success, others means failed.
+     */
+    virtual WMError SetDefaultDensityEnabled(bool enabled) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
+
+    /**
+     * @brief Get whether to use default density.
+     *
+     * @return True means use default density, window's layout not follow to system change, false means the opposite.
+     */
+    virtual bool GetDefaultDensityEnabled() { return false; }
+
+    /**
      * @brief Hide None Secure Windows.
      *
      * @param shouldHide bool.
@@ -1827,6 +1856,14 @@ public:
     }
 
     /**
+     * @brief Get the rect of host window.
+     *
+     * @param hostWindowId window Id of the host window.
+     * @return Rect of window.
+     */
+    virtual Rect GetHostWindowRect(int32_t hostWindowId) { return {}; }
+    
+    /**
      * @brief Set Shaped Window Mask.
      *
      * @param windowMask Mask of the shaped window.
@@ -1836,6 +1873,32 @@ public:
     {
         return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
     }
+
+    /**
+     * @brief Get window by id
+     *
+     * @param windId window id
+     * @return sptr<Window>
+     */
+    static sptr<Window> GetWindowWithId(uint32_t windId);
+
+    /**
+     * @brief register keyEvent filter.
+     *
+     * @param KeyEventFilterFunc callback func when window recieve keyEvent
+     * @return WMError
+     */
+    virtual WMError SetKeyEventFilter(KeyEventFilterFunc KeyEventFilterFunc)
+    {
+        return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+    }
+
+    /**
+     * @brief clear keyEvent filter.
+     *
+     * @return WMError
+    */
+    virtual WMError ClearKeyEventFilter() { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;}
 };
 }
 }
