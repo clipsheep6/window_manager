@@ -2308,7 +2308,7 @@ HWTEST_F(WindowTest, Maximize01, Function | SmallTest | Level2)
 
 /**
  * @tc.name: RegisterWindowRectChangeListener
- * @tc.desc: get
+ * @tc.desc: RegisterWindowRectChangeListener test
  * @tc.type: FUNC
  */
 HWTEST_F(WindowTest, RegisterWindowRectChangeListener, Function | SmallTest | Level2)
@@ -2323,7 +2323,7 @@ HWTEST_F(WindowTest, RegisterWindowRectChangeListener, Function | SmallTest | Le
 
 /**
  * @tc.name: UnregisterWindowRectChangeListener
- * @tc.desc: get
+ * @tc.desc: UnregisterWindowRectChangeListener test
  * @tc.type: FUNC
  */
 HWTEST_F(WindowTest, UnregisterWindowRectChangeListener, Function | SmallTest | Level2)
@@ -2332,6 +2332,25 @@ HWTEST_F(WindowTest, UnregisterWindowRectChangeListener, Function | SmallTest | 
     ASSERT_NE(nullptr, window);
     sptr<IWindowRectChangeListener> listener = nullptr;
     auto ret = window->UnregisterWindowRectChangeListener(listener);
+    ASSERT_EQ(WMError::WM_OK, ret);
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: MultiRegisterWindowRectChangeListener
+ * @tc.desc: multiple times RegisterWindowRectChangeListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, MultiRegisterWindowRectChangeListener, Function | SmallTest | Level2)
+{
+    sptr<Window> window = new Window();
+    ASSERT_NE(nullptr, window);
+    sptr<IWindowRectChangeListener> listener = nullptr;
+    auto ret = window->RegisterWindowRectChangeListener(listener);
+    ASSERT_EQ(WMError::WM_OK, ret);
+    ret = window->RegisterWindowRectChangeListener(listener);
+    ASSERT_EQ(WMError::WM_OK, ret);
+    ret = window->RegisterWindowRectChangeListener(listener);
     ASSERT_EQ(WMError::WM_OK, ret);
     ASSERT_EQ(WMError::WM_OK, window->Destroy());
 }
