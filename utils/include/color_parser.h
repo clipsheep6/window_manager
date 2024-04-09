@@ -23,9 +23,6 @@ namespace Rosen {
 class ColorParser {
 public:
     static bool Parse(const std::string& colorStr, uint32_t& colorValue);
-
-private:
-    static bool IsValidHexString(const std::string& colorStr);
 };
 } // namespace Rosen
 } // namespace OHOS
