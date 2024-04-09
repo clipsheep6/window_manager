@@ -2249,11 +2249,11 @@ HWTEST_F(WindowSessionTest, PostTask002, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: GetSurfaceNode003
+ * @tc.name: GetSurfaceNode
  * @tc.desc: GetSurfaceNode Test
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, GetSurfaceNode003, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, GetSurfaceNode, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->surfaceNode_ = nullptr;
@@ -2262,11 +2262,11 @@ HWTEST_F(WindowSessionTest, GetSurfaceNode003, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: GetLeashWinSurfaceNode004
+ * @tc.name: GetLeashWinSurfaceNode
  * @tc.desc: GetLeashWinSurfaceNode Test
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, GetLeashWinSurfaceNode004, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, GetLeashWinSurfaceNode, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->leashWinSurfaceNode_ = nullptr;
@@ -2275,11 +2275,11 @@ HWTEST_F(WindowSessionTest, GetLeashWinSurfaceNode004, Function | SmallTest | Le
 }
 
 /**
- * @tc.name: SetSessionInfoAncoSceneState005
+ * @tc.name: SetSessionInfoAncoSceneState
  * @tc.desc: SetSessionInfoAncoSceneState Test
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetSessionInfoAncoSceneState005, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetSessionInfoAncoSceneState, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     int res = 0;
@@ -2289,11 +2289,11 @@ HWTEST_F(WindowSessionTest, SetSessionInfoAncoSceneState005, Function | SmallTes
 }
 
 /**
- * @tc.name: SetSessionInfoTime006
+ * @tc.name: SetSessionInfoTime
  * @tc.desc: SetSessionInfoTime Test
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetSessionInfoTime006, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetSessionInfoTime, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     int res = 0;
@@ -2303,11 +2303,11 @@ HWTEST_F(WindowSessionTest, SetSessionInfoTime006, Function | SmallTest | Level2
 }
 
 /**
- * @tc.name: SetSessionInfoAbilityInfo007
+ * @tc.name: SetSessionInfoAbilityInfo
  * @tc.desc: SetSessionInfoAbilityInfo Test
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetSessionInfoAbilityInfo007, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetSessionInfoAbilityInfo, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     int res = 0;
@@ -2317,11 +2317,11 @@ HWTEST_F(WindowSessionTest, SetSessionInfoAbilityInfo007, Function | SmallTest |
 }
 
 /**
- * @tc.name: SetSessionInfoWant008
+ * @tc.name: SetSessionInfoWant
  * @tc.desc: SetSessionInfoWant Test
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetSessionInfoWant008, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetSessionInfoWant, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     int res = 0;
@@ -2331,11 +2331,11 @@ HWTEST_F(WindowSessionTest, SetSessionInfoWant008, Function | SmallTest | Level2
 }
 
 /**
- * @tc.name: SetSessionInfoPersistentId009
+ * @tc.name: SetSessionInfoPersistentId
  * @tc.desc: SetSessionInfoPersistentId Test
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetSessionInfoPersistentId009, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetSessionInfoPersistentId, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     int res = 0;
@@ -2345,11 +2345,11 @@ HWTEST_F(WindowSessionTest, SetSessionInfoPersistentId009, Function | SmallTest 
 }
 
 /**
- * @tc.name: SetSessionInfoCallerPersistentId010
+ * @tc.name: SetSessionInfoCallerPersistentId
  * @tc.desc: SetSessionInfoCallerPersistentId Test
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetSessionInfoCallerPersistentId010, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetSessionInfoCallerPersistentId, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     int res = 0;
@@ -2359,11 +2359,11 @@ HWTEST_F(WindowSessionTest, SetSessionInfoCallerPersistentId010, Function | Smal
 }
 
 /**
- * @tc.name: PostExportTask011
+ * @tc.name: PostExportTask
  * @tc.desc: PostExportTask Test
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, PostExportTask011, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, PostExportTask, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     int32_t persistentId = 0;
@@ -2375,11 +2375,11 @@ HWTEST_F(WindowSessionTest, PostExportTask011, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: GetPersistentId012
+ * @tc.name: GetPersistentId
  * @tc.desc: GetPersistentId Test
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, GetPersistentId012, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, GetPersistentId, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     int32_t persistentId = 0;
@@ -2391,11 +2391,11 @@ HWTEST_F(WindowSessionTest, GetPersistentId012, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: SetLeashWinSurfaceNode013
+ * @tc.name: SetLeashWinSurfaceNode
  * @tc.desc: SetLeashWinSurfaceNode Test
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetLeashWinSurfaceNode013, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetLeashWinSurfaceNode, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     auto leashWinSurfaceNode = WindowSessionTest::CreateRSSurfaceNode();
@@ -2404,11 +2404,11 @@ HWTEST_F(WindowSessionTest, SetLeashWinSurfaceNode013, Function | SmallTest | Le
 }
 
 /**
- * @tc.name: SetSessionInfoContinueState014
+ * @tc.name: SetSessionInfoContinueState
  * @tc.desc: SetSessionInfoContinueState Test
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetSessionInfoContinueState014, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetSessionInfoContinueState, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     enum ContinueState state;
@@ -2418,11 +2418,11 @@ HWTEST_F(WindowSessionTest, SetSessionInfoContinueState014, Function | SmallTest
 }
 
 /**
- * @tc.name: SetSessionInfoIsClearSession015
+ * @tc.name: SetSessionInfoIsClearSession01
  * @tc.desc: SetSessionInfoIsClearSession return false
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetSessionInfoIsClearSession015, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetSessionInfoIsClearSession01, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->SetSessionInfoIsClearSession(false);
@@ -2430,11 +2430,11 @@ HWTEST_F(WindowSessionTest, SetSessionInfoIsClearSession015, Function | SmallTes
 }
 
 /**
- * @tc.name: SetSessionInfoIsClearSession016
+ * @tc.name: SetSessionInfoIsClearSession02
  * @tc.desc: SetSessionInfoIsClearSession return true
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetSessionInfoIsClearSession016, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetSessionInfoIsClearSession02, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->SetSessionInfoIsClearSession(true);
@@ -2442,11 +2442,11 @@ HWTEST_F(WindowSessionTest, SetSessionInfoIsClearSession016, Function | SmallTes
 }
 
 /**
- * @tc.name: SetSessionInfoAffinity017
+ * @tc.name: SetSessionInfoAffinity
  * @tc.desc: SetSessionInfoAffinity
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetSessionInfoAffinity017, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetSessionInfoAffinity, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     std::string affinity = "setSessionIofoAffinity";
@@ -2455,11 +2455,11 @@ HWTEST_F(WindowSessionTest, SetSessionInfoAffinity017, Function | SmallTest | Le
 }
 
 /**
- * @tc.name: SetSessionInfo018
+ * @tc.name: SetSessionInfo
  * @tc.desc: SetSessionInfo
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetSessionInfo018, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetSessionInfo, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     SessionInfo info;
@@ -2481,11 +2481,11 @@ HWTEST_F(WindowSessionTest, SetSessionInfo018, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: SetScreenId019
+ * @tc.name: SetScreenId
  * @tc.desc: SetScreenId
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetScreenId019, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetScreenId, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     uint64_t screenId = 0;
@@ -2494,11 +2494,11 @@ HWTEST_F(WindowSessionTest, SetScreenId019, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: RegisterLifecycleListener020
+ * @tc.name: RegisterLifecycleListener
  * @tc.desc: RegisterLifecycleListener
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, RegisterLifecycleListener020, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, RegisterLifecycleListener, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     const std::shared_ptr<ILifecycleListener>& listener = nullptr;
@@ -2507,11 +2507,11 @@ HWTEST_F(WindowSessionTest, RegisterLifecycleListener020, Function | SmallTest |
 }
 
 /**
- * @tc.name: UnregisterLifecycleListener021
+ * @tc.name: UnregisterLifecycleListener
  * @tc.desc: UnregisterLifecycleListener
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, UnregisterLifecycleListener021, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, UnregisterLifecycleListener, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     const std::shared_ptr<ILifecycleListener>& listener = nullptr;
@@ -2520,11 +2520,11 @@ HWTEST_F(WindowSessionTest, UnregisterLifecycleListener021, Function | SmallTest
 }
 
 /**
- * @tc.name: NotifyActivation022
+ * @tc.name: NotifyActivation02
  * @tc.desc: NotifyActivation
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, NotifyActivation022, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, NotifyActivation02, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->NotifyActivation();
@@ -2534,11 +2534,11 @@ HWTEST_F(WindowSessionTest, NotifyActivation022, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: NotifyConnect023
+ * @tc.name: NotifyConnect
  * @tc.desc: NotifyConnect
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, NotifyConnect023, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, NotifyConnect, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->NotifyConnect();
@@ -2548,11 +2548,11 @@ HWTEST_F(WindowSessionTest, NotifyConnect023, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: NotifyForeground024
+ * @tc.name: NotifyForeground02
  * @tc.desc: NotifyForeground
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, NotifyForeground024, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, NotifyForeground02, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->NotifyForeground();
@@ -2562,11 +2562,11 @@ HWTEST_F(WindowSessionTest, NotifyForeground024, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: NotifyBackground025
+ * @tc.name: NotifyBackground02
  * @tc.desc: NotifyBackground
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, NotifyBackground025, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, NotifyBackground02, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->NotifyBackground();
@@ -2576,11 +2576,11 @@ HWTEST_F(WindowSessionTest, NotifyBackground025, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: NotifyDisconnect026
+ * @tc.name: NotifyDisconnect
  * @tc.desc: NotifyDisconnect
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, NotifyDisconnect026, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, NotifyDisconnect, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->NotifyDisconnect();
@@ -2590,11 +2590,11 @@ HWTEST_F(WindowSessionTest, NotifyDisconnect026, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: NotifyExtensionDied027
+ * @tc.name: NotifyExtensionDied02
  * @tc.desc: NotifyExtensionDied
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, NotifyExtensionDied027, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, NotifyExtensionDied02, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->NotifyExtensionDied();
@@ -2604,11 +2604,11 @@ HWTEST_F(WindowSessionTest, NotifyExtensionDied027, Function | SmallTest | Level
 }
 
 /**
- * @tc.name: GetAspectRatio028
+ * @tc.name: GetAspectRatio
  * @tc.desc: GetAspectRatio
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, GetAspectRatio028, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, GetAspectRatio, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     float ret = session_->aspectRatio_;
@@ -2617,11 +2617,11 @@ HWTEST_F(WindowSessionTest, GetAspectRatio028, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: SetAspectRatio029
+ * @tc.name: SetAspectRatio02
  * @tc.desc: SetAspectRatio
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetAspectRatio029, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetAspectRatio02, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     float radio = 2.0f;
@@ -2632,11 +2632,11 @@ HWTEST_F(WindowSessionTest, SetAspectRatio029, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: GetSessionState030
+ * @tc.name: GetSessionState
  * @tc.desc: GetSessionState
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, GetSessionState030, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, GetSessionState, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     SessionState state = session_->GetSessionState();
@@ -2644,11 +2644,11 @@ HWTEST_F(WindowSessionTest, GetSessionState030, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: SetSessionState031
+ * @tc.name: SetSessionState02
  * @tc.desc: SetSessionState
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetSessionState031, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetSessionState02, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     SessionState state = SessionState::STATE_CONNECT;
@@ -2657,11 +2657,11 @@ HWTEST_F(WindowSessionTest, SetSessionState031, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: UpdateSessionState32
+ * @tc.name: UpdateSessionState
  * @tc.desc: UpdateSessionState
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, UpdateSessionState32, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, UpdateSessionState, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     SessionState state = SessionState::STATE_CONNECT;
@@ -2670,11 +2670,11 @@ HWTEST_F(WindowSessionTest, UpdateSessionState32, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: GetTouchable33
+ * @tc.name: GetTouchable
  * @tc.desc: GetTouchable
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, GetTouchable33, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, GetTouchable, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     bool res = session_->GetTouchable();
@@ -2682,11 +2682,11 @@ HWTEST_F(WindowSessionTest, GetTouchable33, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: SetSystemTouchable34
+ * @tc.name: SetSystemTouchable
  * @tc.desc: SetSystemTouchable
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetSystemTouchable34, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetSystemTouchable, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     bool touchable = false;
@@ -2695,11 +2695,11 @@ HWTEST_F(WindowSessionTest, SetSystemTouchable34, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: GetSystemTouchable35
+ * @tc.name: GetSystemTouchable
  * @tc.desc: GetSystemTouchable
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, GetSystemTouchable35, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, GetSystemTouchable, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     bool res = session_->GetSystemTouchable();
@@ -2707,11 +2707,11 @@ HWTEST_F(WindowSessionTest, GetSystemTouchable35, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: SetVisible36
+ * @tc.name: SetVisible
  * @tc.desc: SetVisible
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetVisible36, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetVisible, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     bool isVisible = false;
@@ -2719,11 +2719,11 @@ HWTEST_F(WindowSessionTest, SetVisible36, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: GetVisible37
+ * @tc.name: GetVisible02
  * @tc.desc: GetVisible
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, GetVisible37, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, GetVisible02, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     if (!session_->GetVisible()) {
@@ -2732,11 +2732,11 @@ HWTEST_F(WindowSessionTest, GetVisible37, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: SetVisibilityState38
+ * @tc.name: SetVisibilityState
  * @tc.desc: SetVisibilityState
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetVisibilityState38, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetVisibilityState, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     WindowVisibilityState state { WINDOW_VISIBILITY_STATE_NO_OCCLUSION};
@@ -2745,11 +2745,11 @@ HWTEST_F(WindowSessionTest, SetVisibilityState38, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: GetVisibilityState39
+ * @tc.name: GetVisibilityState
  * @tc.desc: GetVisibilityState
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, GetVisibilityState39, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, GetVisibilityState, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     WindowVisibilityState state { WINDOW_LAYER_STATE_MAX};
@@ -2757,11 +2757,11 @@ HWTEST_F(WindowSessionTest, GetVisibilityState39, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: SetDrawingContentState40
+ * @tc.name: SetDrawingContentState
  * @tc.desc: SetDrawingContentState
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetDrawingContentState40, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetDrawingContentState, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     bool isRSDrawing = false;
@@ -2770,11 +2770,11 @@ HWTEST_F(WindowSessionTest, SetDrawingContentState40, Function | SmallTest | Lev
 }
 
 /**
- * @tc.name: GetDrawingContentState41
+ * @tc.name: GetDrawingContentState
  * @tc.desc: GetDrawingContentState
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, GetDrawingContentState41, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, GetDrawingContentState, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     bool res = session_->GetDrawingContentState();
@@ -2782,11 +2782,11 @@ HWTEST_F(WindowSessionTest, GetDrawingContentState41, Function | SmallTest | Lev
 }
 
 /**
- * @tc.name: GetBrightness42
+ * @tc.name: GetBrightness
  * @tc.desc: GetBrightness
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, GetBrightness42, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, GetBrightness, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->state_ = SessionState::STATE_DISCONNECT;
@@ -2795,11 +2795,11 @@ HWTEST_F(WindowSessionTest, GetBrightness42, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: IsActive43
+ * @tc.name: IsActive02
  * @tc.desc: IsActive
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, IsActive43, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, IsActive02, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     bool res = session_->IsActive();
@@ -2807,11 +2807,11 @@ HWTEST_F(WindowSessionTest, IsActive43, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: IsSystemSession44
+ * @tc.name: IsSystemSession
  * @tc.desc: IsSystemSession
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, IsSystemSession44, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, IsSystemSession, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     bool res = session_->IsSystemSession();
@@ -2819,11 +2819,11 @@ HWTEST_F(WindowSessionTest, IsSystemSession44, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: Hide45
+ * @tc.name: Hide
  * @tc.desc: Hide
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, Hide45, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, Hide, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     auto result = session_->Hide();
@@ -2831,11 +2831,11 @@ HWTEST_F(WindowSessionTest, Hide45, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: Show46
+ * @tc.name: Show
  * @tc.desc: Show
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, Show46, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, Show, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     sptr<WindowSessionProperty> property = new (std::nothrow) WindowSessionProperty();
@@ -2845,11 +2845,11 @@ HWTEST_F(WindowSessionTest, Show46, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: IsSystemActive47
+ * @tc.name: IsSystemActive
  * @tc.desc: IsSystemActive
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, IsSystemActive47, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, IsSystemActive, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     bool res = session_->IsSystemActive();
@@ -2857,11 +2857,11 @@ HWTEST_F(WindowSessionTest, IsSystemActive47, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: SetSystemActive48
+ * @tc.name: SetSystemActive
  * @tc.desc: SetSystemActive
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, SetSystemActive48, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, SetSystemActive, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     bool systemActive = false;
@@ -2870,11 +2870,11 @@ HWTEST_F(WindowSessionTest, SetSystemActive48, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: IsTerminated49
+ * @tc.name: IsTerminated
  * @tc.desc: IsTerminated
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionTest, IsTerminated49, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionTest, IsTerminated, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->state_ = SessionState::STATE_DISCONNECT;
@@ -2898,7 +2898,7 @@ HWTEST_F(WindowSessionTest, IsTerminated49, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: SetSystemActive48
+ * @tc.name: SetSystemActive
  * @tc.desc: SetSystemActive
  * @tc.type: FUNC
  */
@@ -2923,6 +2923,140 @@ HWTEST_F(WindowSessionTest, SetChangeSessionVisibilityWithStatusBarEventListener
     ASSERT_NE(session_->changeSessionVisibilityWithStatusBarFunc_, nullptr);
     session_->changeSessionVisibilityWithStatusBarFunc_(info, true);
     ASSERT_EQ(resultValue, 2);
+}
+
+/**
+ * @tc.name: UpdateDensity
+ * @tc.desc: UpdateDensity
+ * @tc.type: FUNC
+ * @tc.require: FUNC
+ */
+HWTEST_F(WindowSessionTest, UpdateDensity, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    sptr<ISession> sessionToken = nullptr;
+    sptr<SessionStageMocker> mockSessionStage = new(std::nothrow) SessionStageMocker();
+    EXPECT_NE(nullptr, mockSessionStage);
+    session_->sessionStage_ = mockSessionStage;
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->UpdateDensity());
+    session_->sessionStage_ = nullptr;
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, session_->UpdateDensity());
+}
+
+/**
+ * @tc.name: GetForegroundInteractiveStatus
+ * @tc.desc: GetForegroundInteractiveStatus
+ * @tc.type: FUNC
+ * @tc.require: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetForegroundInteractiveStatus, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    bool res = session_->GetForegroundInteractiveStatus();
+    ASSERT_EQ(res, true);
+}
+
+/**
+ * @tc.name: SetPendingSessionActivationEventListener
+ * @tc.desc: SetPendingSessionActivationEventListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetPendingSessionActivationEventListener, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NotifyPendingSessionActivationFunc func = nullptr;
+    session_->SetPendingSessionActivationEventListener(func);
+
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetBackPressedListenser
+ * @tc.desc: SetBackPressedListenser
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetBackPressedListenser, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NotifyBackPressedFunc func = nullptr;
+    session_->SetBackPressedListenser(func);
+
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetUpdateSessionIconListener
+ * @tc.desc: SetUpdateSessionIconListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetUpdateSessionIconListener, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NofitySessionIconUpdatedFunc func = nullptr;
+    session_->SetUpdateSessionIconListener(func);
+
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: PendingSessionToForeground
+ * @tc.desc: PendingSessionToForeground
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, PendingSessionToForeground, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    ASSERT_EQ(WSError::WS_OK, session_->PendingSessionToForeground());
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetNotifyCallingSessionUpdateRectFunc
+ * @tc.desc: SetNotifyCallingSessionUpdateRectFunc
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetNotifyCallingSessionUpdateRectFunc, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NotifyCallingSessionUpdateRectFunc func = nullptr;
+    session_->SetNotifyCallingSessionUpdateRectFunc(func);
+
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetNotifyCallingSessionBackgroundFunc
+ * @tc.desc: SetNotifyCallingSessionBackgroundFunc
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetNotifyCallingSessionBackgroundFunc, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NotifyCallingSessionBackgroundFunc func = nullptr;
+    session_->SetNotifyCallingSessionBackgroundFunc(func);
+
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
+}
+
+/**
+ * @tc.name: SetRaiseToAppTopForPointDownFunc
+ * @tc.desc: SetRaiseToAppTopForPointDownFunc
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetRaiseToAppTopForPointDownFunc, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    NotifyRaiseToTopForPointDownFunc func = nullptr;
+    session_->SetRaiseToAppTopForPointDownFunc(func);
+
+    ASSERT_EQ(WSError::WS_OK, session_->SetFocusable(false));
 }
 
 }
