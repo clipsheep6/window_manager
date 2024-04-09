@@ -39,8 +39,7 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "JsScre
 const std::string ON_SCREEN_CONNECTION_CHANGE_CALLBACK = "screenConnectChange";
 } // namespace
 
-JsScreenSessionManager::JsScreenSessionManager(napi_env env) : env_(env),
-    taskScheduler_(std::make_shared<MainThreadScheduler>(env))
+JsScreenSessionManager::JsScreenSessionManager(napi_env env) : env_(env)
 {
     TLOGI(WmsLogTag::DMS, "Create JsScreenSessionManager instance");
 }
@@ -53,8 +52,13 @@ napi_value JsScreenSessionManager::Init(napi_env env, napi_value exportObj)
         return nullptr;
     }
 
-    auto jsScreenSessionManager = std::make_unique<JsScreenSessionManager>(env);
-    napi_wrap(env, exportObj, jsScreenSessionManager.release(), JsScreenSessionManager::Finalizer, nullptr, nullptr);
+    sptr<JsScreenSessionManager> jsScreenSessionManager = new JsScreenSessionManager(env);
+    if(jsScreenSessionManager == nullptr) {
+        TLOGE(WmsLogTag::DMS, "Failed to create, jsScreenSessionManager is null!");
+        return nullptr;
+    }
+    jsScreenSessionManager->IncRefCount(); // 避免在该函数结束后被释放
+    napi_wrap(env, exportObj, jsScreenSessionManager->GetRefPtr(), JsScreenSessionManager::Finalizer, nullptr, nullptr);
     napi_set_named_property(env, exportObj, "ScreenConnectChangeType",
         JsScreenUtils::CreateJsScreenConnectChangeType(env));
     napi_set_named_property(env, exportObj, "ScreenPropertyChangeReason",
@@ -87,32 +91,13 @@ napi_value JsScreenSessionManager::Init(napi_env env, napi_value exportObj)
     return NapiGetUndefined(env);
 }
 
-JsScreenSessionManager::~JsScreenSessionManager()
-{
-    TLOGI(WmsLogTag::DMS, "Destroy JsScreenSessionManager instance");
-    ClearNativeReference();
-}
-
-void JsScreenSessionManager::ClearNativeReference()
-{
-    auto localScreenConnectionCallback = screenConnectionCallback_;
-    auto localShutdownCallback = shutdownCallback_;
-    // Capture shared_ptr by value to ensure that its life cycle is in the alive state
-    auto task = [localScreenConnectionCallback, localShutdownCallback]() mutable {
-        TLOGI(WmsLogTag::DMS, "Clear NativeReference callback");
-        localScreenConnectionCallback = nullptr;
-        localShutdownCallback = nullptr;
-    };
-    if (taskScheduler_ == nullptr) {
-        TLOGE(WmsLogTag::DMS, "taskScheduler instance is nullptr");
-        return;
-    }
-    taskScheduler_->PostMainThreadTask(task, "ClearScreenNativeReference");
-}
-
 void JsScreenSessionManager::Finalizer(napi_env env, void* data, void* hint)
 {
-    std::unique_ptr<JsScreenSessionManager>(static_cast<JsScreenSessionManager*>(data));
+    sptr<JsScreenSessionManager> jsScreenSessionManager = static_cast<JsScreenSessionManager*>(data);
+    TLOGI(WmsLogTag::DMS, "[NAPI]Finalizer.
+        jsScreenSessionManager refcount: %{public}d", jsScreenSessionManager->RefCount());
+    // 期望在此释放jsScreenSessionManager对象
+    static_cast<JsScreenSessionManager*>(data)->DecRefCount();
 }
 
 napi_value JsScreenSessionManager::RegisterCallback(napi_env env, napi_callback_info info)
