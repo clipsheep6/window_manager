@@ -819,12 +819,33 @@ void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
     return;
 }
 
+bool SceneSession::IfNotNeedAvoidKeyBoardForSplit()
+{
+    if (ScreenSessionManagerClient::GetInstance().IsFoldable() &&
+            ScreenSessionManagerClient::GetInstance().GetFoldStatus() != OHOS::Rosen::FoldStatus::FOLDED) {
+        return false;
+    }
+    if (WindowHelper::IsMainWindow(Session::GetWindowType()) &&
+            Session::GetWindowMode() != WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        return false;
+    }
+    if (WindowHelper::IsSubWindow(Session::GetWindowType()) && GetParentSession() != nullptr &&
+            GetParentSession()->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        return false;
+    }
+    if (!Session::GetFocused() || Session::GetSessionRect().posY_ == 0) {
+        return false;
+    }
+    return true;
+}
+
 void SceneSession::GetKeyboardAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 {
     if (((Session::GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
           WindowHelper::IsMainWindow(Session::GetWindowType())) ||
          (WindowHelper::IsSubWindow(Session::GetWindowType()) && GetParentSession() != nullptr &&
-          GetParentSession()->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING)) &&
+          GetParentSession()->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING) ||
+          IfNotNeedAvoidKeyBoardForSplit()) &&
         (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
          system::GetParameter("const.product.devicetype", "unknown") == "tablet")) {
         return;

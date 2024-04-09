@@ -101,6 +101,8 @@ public:
         TRANS_ID_ADD_OR_REMOVE_SECURE_EXT_SESSION,
         TRANS_ID_UPDATE_EXTENSION_WINDOW_FLAGS,
         TRANS_ID_GET_HOST_WINDOW_RECT,
+        TRANS_ID_GET_WINDOW_STATUS,
+        TRANS_ID_GET_WINDOW_RECT,
     };
 
     virtual WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) = 0;
@@ -224,6 +226,14 @@ public:
     WSError GetHostWindowRect(int32_t hostWindowId, Rect& rect) override
     {
         return WSError::WS_OK;
+    }
+    WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus) override
+    {
+        return WMError::WM_OK;
+    }
+    WMError GetCallingWindowRect(int32_t persistentId, Rect& rect) override
+    {
+        return WMError::WM_OK;
     }
 };
 } // namespace OHOS::Rosen
