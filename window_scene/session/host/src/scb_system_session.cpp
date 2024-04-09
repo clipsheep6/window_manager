@@ -16,16 +16,21 @@
 #include "session/host/include/scb_system_session.h"
 
 #include <hisysevent.h>
+#include <ui/rs_surface_node.h>
+
+#include "bundle_mgr_client.h"
+#include "input_method_controller.h"
 #include "key_event.h"
 #include "pointer_event.h"
-#include <ui/rs_surface_node.h>
 #include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SCBSystemSession" };
 } // namespace
-
+constexpr const char *SMART_MENU_METADATA_NAME = "ohos.extension.smart_menu";
+using namespace OHOS::AppExecFwk;
+using namespace OHOS::MiscServices;
 SCBSystemSession::SCBSystemSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback)
     : SceneSession(info, specificCallback)
 {
@@ -146,5 +151,42 @@ WSError SCBSystemSession::SetSystemSceneBlockingFocus(bool blocking)
 void SCBSystemSession::UpdatePointerArea(const WSRect& rect)
 {
     return;
+}
+
+std::string SCBSystemSession::GetSmartMenuCfg()
+{
+    auto imc = InputMethodController::GetInstance();
+    if (imc == nullptr) {
+        return "";
+    }
+    std::shared_ptr<Property> prop = nullptr;
+    int32_t ret = imc->GetDefaultInputMethod(prop);
+    if (ret != 0 || prop == nullptr) {
+        WLOGFE("GetDefaultInputMethod failed");
+        return "";
+    }
+    BundleMgrClient client;
+    BundleInfo bundleInfo;
+    if (!client.GetBundleInfo(prop->name, BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO, bundleInfo)) {
+        WLOGFE("GetBundleInfo failed");
+        return "";
+    }
+    ExtensionAbilityInfo extInfo;
+    auto extensionInfos = bundleInfo.extensionInfos;
+    for (size_t i = 0; i < extensionInfos.size(); i++) {
+        auto metadata = extensionInfos[i].metadata;
+        for (size_t j = 0; j < metadata.size(); j++) {
+            if (metadata[j].name == SMART_MENU_METADATA_NAME) {
+                extInfo = extensionInfos[i];
+                break;
+            }
+        }
+    }
+    std::vector<std::string> profiles;
+    if (!client.GetResConfigFile(extInfo, SMART_MENU_METADATA_NAME, profiles) || profiles.empty()) {
+        WLOGFE("GetResConfigFile failed");
+        return "";
+    }
+    return profiles[0];
 }
 } // namespace OHOS::Rosen
