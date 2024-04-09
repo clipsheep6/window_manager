@@ -4966,17 +4966,17 @@ WSError SceneSessionManager::TerminateSessionNew(const sptr<AAFwk::SessionInfo> 
         info->want.GetElement().GetBundleName().c_str(), needStartCaller);
     sptr<SceneSession> sceneSession = FindSessionByToken(info->sessionToken);
     if (sceneSession == nullptr) {
-        TLOGE(WmsLogTag::WMS_LIFE, "TerminateSessionNew:fail to find session by token.");
+        TLOGE(WmsLogTag::WMS_LIFE, "fail to find session by token.");
         return WSError::WS_ERROR_INVALID_PARAM;
     }
     if (!SessionPermission::IsSameBundleNameAsCalling(sceneSession->GetSessionInfo().bundleName_)) {
-        WLOGFE("TerminateSessionNew calling denied!");
+        TLOGE(WmsLogTag::WMS_LIFE, "isSameBundleNameAsCalling denied!");
         return WSError::WS_ERROR_INVALID_CALLING;
     }
     auto task = [this, info, needStartCaller]() {
         sptr<SceneSession> sceneSession = FindSessionByToken(info->sessionToken);
         if (sceneSession == nullptr) {
-            TLOGE(WmsLogTag::WMS_LIFE, "TerminateSessionNew:fail to find session by token.");
+            TLOGE(WmsLogTag::WMS_LIFE, "fail to find session by token.");
             return WSError::WS_ERROR_INVALID_PARAM;
         }
         const WSError& errCode = sceneSession->TerminateSessionNew(info, needStartCaller);
