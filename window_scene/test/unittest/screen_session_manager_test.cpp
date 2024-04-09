@@ -1172,6 +1172,7 @@ HWTEST_F(ScreenSessionManagerTest, GetPixelFormat, Function | SmallTest | Level3
     screenId = 1;
     res = ssm_->GetPixelFormat(screenId, format);
     EXPECT_EQ(DMError::DM_OK, res);
+}
 
 /*
  * @tc.name: NotifyFoldStatusChanged
