@@ -4963,8 +4963,8 @@ WSError SceneSessionManager::TerminateSessionNew(const sptr<AAFwk::SessionInfo> 
         return WSError::WS_ERROR_INVALID_PARAM;
     }
     TLOGI(WmsLogTag::WMS_LIFE, "bundleName=%{public}s, needStartCaller=%{public}d",
-    info->want.GetElement().GetBundleName().c_str(), needStartCaller);
-            sptr<SceneSession> sceneSession = FindSessionByToken(info->sessionToken);
+        info->want.GetElement().GetBundleName().c_str(), needStartCaller);
+    sptr<SceneSession> sceneSession = FindSessionByToken(info->sessionToken);
     if (sceneSession == nullptr) {
         TLOGE(WmsLogTag::WMS_LIFE, "TerminateSessionNew:fail to find session by token.");
         return WSError::WS_ERROR_INVALID_PARAM;
