@@ -3225,6 +3225,24 @@ HWTEST_F(SceneSessionManagerTest, AddOrRemoveSecureExtSession, Function | SmallT
     EXPECT_EQ(ret, WSError::WS_OK);
 }
 
+/**
+ * @tc.name: UpdateExtWindowFlags
+ * @tc.desc: SceneSesionManager update ui extension window flags
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, UpdateExtWindowFlags, Function | SmallTest | Level3)
+{
+    SessionInfo info;
+    info.abilityName_ = "UpdateExtWindowFlags";
+    info.bundleName_ = "UpdateExtWindowFlags1";
+
+    
+    int32_t parentId = 12345;
+    int32_t persistentId = 1073741826;
+    auto ret = ssm_->UpdateExtWindowFlags(parentId, persistentId, 1);
+    EXPECT_EQ(ret, WSError::WS_OK);
+}
+
 }
 } // namespace Rosen
 } // namespace OHOS

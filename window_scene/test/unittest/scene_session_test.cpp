@@ -2919,6 +2919,108 @@ HWTEST_F(SceneSessionTest, AddOrRemoveSecureExtSession, Function | SmallTest | L
 }
 
 /**
+ * @tc.name: UpdateExtWindowFlags
+ * @tc.desc:  * @tc.name: UpdateExtWindowFlags
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, UpdateExtWindowFlags, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "UpdateExtWindowFlags";
+    info.bundleName_ = "UpdateExtWindowFlags";
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(sceneSession, nullptr);
+
+    EXPECT_TRUE(sceneSession->extWindowFlagsMap_.empty());
+    sceneSession->UpdateExtWindowFlags(1073741826, 1);
+    EXPECT_EQ(sceneSession->extWindowFlagsMap_.size(), 1);
+    sceneSession->RomoveExtWindowFlags(1073741826);
+    EXPECT_TRUE(sceneSession->extWindowFlagsMap_.empty());
+}
+
+/**
+ * @tc.name: RomoveExtWindowFlags
+ * @tc.desc:  * @tc.name: RomoveExtWindowFlags
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, RomoveExtWindowFlags, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "RomoveExtWindowFlags";
+    info.bundleName_ = "RomoveExtWindowFlags";
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(sceneSession, nullptr);
+
+    EXPECT_TRUE(sceneSession->extWindowFlagsMap_.empty());
+    sceneSession->UpdateExtWindowFlags(1073741826, 1);
+    sceneSession->UpdateExtWindowFlags(1073741827, 1);
+    EXPECT_EQ(sceneSession->extWindowFlagsMap_.size(), 2);
+    sceneSession->RomoveExtWindowFlags(1073741826);
+    EXPECT_EQ(sceneSession->extWindowFlagsMap_.size(), 1);
+    sceneSession->RomoveExtWindowFlags(1073741827);
+    EXPECT_TRUE(sceneSession->extWindowFlagsMap_.empty());
+}
+
+/**
+ * @tc.name: IsExtWindowHasWaterMarkFlag
+ * @tc.desc:  * @tc.name: IsExtWindowHasWaterMarkFlag
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, IsExtWindowHasWaterMarkFlag, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "IsExtWindowHasWaterMarkFlag";
+    info.bundleName_ = "IsExtWindowHasWaterMarkFlag";
+    SessionInfo info1;
+    info.abilityName_ = "IsExtWindowHasWaterMarkFlag1";
+    info.bundleName_ = "IsExtWindowHasWaterMarkFlag1";
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    sptr<SceneSession> sceneSession1 = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(sceneSession, nullptr);
+    EXPECT_NE(sceneSession1, nullptr);
+
+    sceneSession->UpdateExtWindowFlags(1073741826, 0);
+    EXPECT_FALSE(sceneSession->IsExtWindowHasWaterMarkFlag());
+    sceneSession->UpdateExtWindowFlags(1073741827, 1);
+    EXPECT_TRUE(sceneSession->IsExtWindowHasWaterMarkFlag());
+
+    sceneSession1->UpdateExtWindowFlags(1073741828, 1);
+    EXPECT_TRUE(sceneSession1->IsExtWindowHasWaterMarkFlag());
+
+    sceneSession->RomoveExtWindowFlags(1073741827);
+    EXPECT_FALSE(sceneSession->IsExtWindowHasWaterMarkFlag());
+    EXPECT_TRUE(sceneSession1->IsExtWindowHasWaterMarkFlag());
+
+    sceneSession1->RomoveExtWindowFlags(1073741828);
+    EXPECT_FALSE(sceneSession->IsExtWindowHasWaterMarkFlag());
+    EXPECT_FALSE(sceneSession1->IsExtWindowHasWaterMarkFlag());
+
+    sceneSession1->RomoveExtWindowFlags(1073741826);
+    EXPECT_FALSE(sceneSession->IsExtWindowHasWaterMarkFlag());
+    EXPECT_FALSE(sceneSession1->IsExtWindowHasWaterMarkFlag());
+}
+
+/**
+ * @tc.name: ClearExtWindowFlags
+ * @tc.desc:  * @tc.name: ClearExtWindowFlags
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, ClearExtWindowFlags, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "ClearExtWindowFlags";
+    info.bundleName_ = "ClearExtWindowFlags";
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(sceneSession, nullptr);
+
+    EXPECT_TRUE(sceneSession->extWindowFlagsMap_.empty());
+    sceneSession->UpdateExtWindowFlags(1073741826, 1);
+    EXPECT_EQ(sceneSession->extWindowFlagsMap_.size(), 1);
+    sceneSession->ClearExtWindowFlags();
+    EXPECT_TRUE(sceneSession->extWindowFlagsMap_.empty());
+}
+
+/**
  * @tc.name: ChangeSessionVisibilityWithStatusBar
  * @tc.desc:  * @tc.name: ChangeSessionVisibilityWithStatusBar
  * @tc.type: FUNC
