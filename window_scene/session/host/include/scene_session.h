@@ -287,6 +287,7 @@ private:
     void UpdateWinRectForSystemBar(WSRect& rect);
     bool UpdateInputMethodSessionRect(const WSRect& rect, WSRect& newWinRect, WSRect& newRequestRect);
     void HandleCastScreenConnection(SessionInfo& info, sptr<SceneSession> session);
+    bool IfNotNeedAvoidKeyBoardForSplit();
 
     NotifySessionRectChangeFunc sessionRectChangeFunc_;
     static wptr<SceneSession> enterSession_;
@@ -304,7 +305,6 @@ private:
     std::set<int32_t> secureExtSessionSet_;
     std::shared_mutex extWindowFlagsMapMutex_;
     std::map<int32_t, uint32_t> extWindowFlagsMap_;
-
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SCENE_SESSION_H
