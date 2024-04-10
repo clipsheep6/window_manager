@@ -179,7 +179,10 @@ ohos_unittest("ws_screen_session_test") {
     "${window_base_path}/window_scene/session:screen_session",
   ]
 
-  external_deps = [ "c_utils:utils" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
 }
 
 ohos_unittest("ws_extension_session_test") {
@@ -319,6 +322,7 @@ ohos_unittest("ws_screen_session_manager_client_stub_test") {
   sources = [ "screen_session_manager_client_stub_test.cpp" ]
 
   deps = [ ":ws_unittest_common" ]
+  external_deps = [ "hilog:libhilog" ]
 }
 
 ohos_unittest("ws_screen_session_manager_client_test") {
@@ -327,6 +331,7 @@ ohos_unittest("ws_screen_session_manager_client_test") {
   sources = [ "screen_session_manager_client_test.cpp" ]
 
   deps = [ ":ws_unittest_common" ]
+  external_deps = [ "hilog:libhilog" ]
 }
 
 ohos_unittest("ws_screen_session_manager_stub_test") {
@@ -582,6 +587,7 @@ ohos_unittest("ws_session_proxy_mock_test") {
     "ability_base:session_info",
     "ability_base:want",
     "c_utils:utils",
+    "hilog:libhilog",
   ]
 }
 ohos_unittest("ws_session_display_power_controller_test") {
