@@ -182,7 +182,7 @@ void WindowDumper::DumpTouchHotAreas(std::ostringstream& oss, const sptr<WindowN
         oss << "[ " << area.posX_ << ", " << area.posY_ << ", " << area.width_ << ", " << area.height_ << " ]";
         index++;
         if (index < static_cast<int32_t>(touchHotAreas.size())) {
-            oss <<", ";
+            oss << ", ";
         }
     }
     oss << std::endl;

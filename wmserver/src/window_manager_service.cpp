@@ -570,7 +570,7 @@ void WindowManagerService::ConfigDefaultMaximizeMode(const WindowManagerConfig::
     auto numbers = *defaultMaximizeModeConfig.intsValue_;
     if (numbers.size() == 1 &&
         (numbers[0] == static_cast<int32_t>(MaximizeMode::MODE_AVOID_SYSTEM_BAR) ||
-        numbers[0] == static_cast<int32_t>(MaximizeMode::MODE_FULL_FILL))) {
+         numbers[0] == static_cast<int32_t>(MaximizeMode::MODE_FULL_FILL))) {
         maximizeMode_ = static_cast<MaximizeMode>(numbers[0]);
     }
 }
