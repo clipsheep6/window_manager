@@ -279,6 +279,7 @@ public:
     bool GetSystemTouchable() const;
     virtual WSError SetVisible(bool isVisible);
     bool GetVisible() const;
+    bool GetFocused() const;
     WSError SetVisibilityState(WindowVisibilityState state);
     WindowVisibilityState GetVisibilityState() const;
     WSError SetDrawingContentState(bool isRSDrawing);

@@ -2643,6 +2643,25 @@ WMError WindowSessionImpl::SetSpecificBarProperty(WindowType type, const SystemB
     return WMError::WM_OK;
 }
 
+bool WindowSessionImpl::IfNotNeedAvoidKeyBoardForSplit()
+{
+    if (DisplayManager::GetInstance().IsFoldable() &&
+            DisplayManager::GetInstance().GetFoldStatus() != OHOS::Rosen::FoldStatus::FOLDED) {
+        return false;
+    }
+    if (WindowHelper::IsMainWindow(property_->GetWindowType()) &&
+            property_->GetWindowMode() != WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        return false;
+    }
+    if (WindowHelper::IsSubWindow(property_->GetWindowType()) && FindWindowById(GetParentId()) != nullptr &&
+            FindWindowById(GetParentId())->GetMode() == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        return false;
+    }
+    if (!IsFocused() || GetRect().posY_ == 0) {
+        return false;
+    }
+    return true;
+}
 
 void WindowSessionImpl::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info)
 {
@@ -2656,7 +2675,8 @@ void WindowSessionImpl::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo
             if (((property_->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
                   WindowHelper::IsMainWindow(GetType())) ||
                  (WindowHelper::IsSubWindow(GetType()) && FindWindowById(GetParentId()) != nullptr &&
-                  FindWindowById(GetParentId())->GetMode() == WindowMode::WINDOW_MODE_FLOATING)) &&
+                  FindWindowById(GetParentId())->GetMode() == WindowMode::WINDOW_MODE_FLOATING) ||
+                  IfNotNeedAvoidKeyBoardForSplit()) &&
                 (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
                  system::GetParameter("const.product.devicetype", "unknown") == "tablet")) {
                 sptr<OccupiedAreaChangeInfo> occupiedAreaChangeInfo = new OccupiedAreaChangeInfo();
@@ -2799,6 +2819,26 @@ bool WindowSessionImpl::IsUserOrientation(Orientation orientation) const
         return true;
     }
     return false;
+}
+
+WMError WindowSessionImpl::GetCallingWindowWindowStatus(WindowStatus& windowStatus) const
+{
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "Get CallingWindow WindowStatus");
+    if (IsWindowSessionInvalid()) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "session is invalid");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    return SingletonContainer::Get<WindowAdapter>().GetCallingWindowWindowStatus(GetPersistentId(), windowStatus);
+}
+
+WMError WindowSessionImpl::GetCallingWindowRect(Rect& rect) const
+{
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "Get CallingWindow Rect");
+    if (IsWindowSessionInvalid()) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "session is invalid");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    return SingletonContainer::Get<WindowAdapter>().GetCallingWindowRect(GetPersistentId(), rect);
 }
 
 } // namespace Rosen

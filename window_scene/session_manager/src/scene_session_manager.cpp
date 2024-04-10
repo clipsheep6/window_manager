@@ -7345,4 +7345,94 @@ int32_t SceneSessionManager::ReclaimPurgeableCleanMem()
     return -1;
 #endif
 }
+
+WindowStatus SceneSessionManager::GetWindowStatus(WindowMode mode, SessionState sessionState,
+    const sptr<WindowSessionProperty>& property)
+{
+    auto windowStatus = WindowStatus::WINDOW_STATUS_UNDEFINED;
+    if (property == nullptr) {
+        return windowStatus;
+    }
+    if (mode == WindowMode::WINDOW_MODE_FLOATING) {
+        windowStatus = WindowStatus::WINDOW_STATUS_FLOATING;
+        if (property->GetMaximizeMode() == MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
+            windowStatus = WindowStatus::WINDOW_STATUS_MAXMIZE;
+        }
+    } else if (mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY || mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        windowStatus = WindowStatus::WINDOW_STATUS_SPLITSCREEN;
+    } else if (mode == WindowMode::WINDOW_MODE_FULLSCREEN) {
+        windowStatus = WindowStatus::WINDOW_STATUS_FULLSCREEN;
+    } else if (sessionState != SessionState::STATE_FOREGROUND && sessionState != SessionState::STATE_ACTIVE) {
+        windowStatus = WindowStatus::WINDOW_STATUS_MINIMIZE;
+    }
+    return windowStatus;
+}
+
+WMError SceneSessionManager::GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus)
+{
+    if (!SessionPermission::IsStartedByInputMethod()) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "GetCallingWindowWindowStatus fail, permission is not allowed "
+            "persistentId: %{public}d", persistentId);
+        return WMError::WM_ERROR_INVALID_PERMISSION;
+    }
+    auto scnSession = GetSceneSession(persistentId);
+    if (scnSession == nullptr) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "scnSession is null, persistentId: %{public}d", persistentId);
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    TLOGD(WmsLogTag::WMS_KEYBOARD, "persistentId: %{public}d, windowType: %{public}d",
+        persistentId, scnSession->GetWindowType());
+
+    if (scnSession->GetSessionProperty() == nullptr) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "GetCallingWindowWindowStatus fail, session property is null");
+        return WMError::WM_ERROR_INVALID_WINDOW;;
+    }
+    uint32_t callingWindowId = scnSession->GetSessionProperty()->GetCallingSessionId();
+    auto callingSession_ = GetSceneSession(callingWindowId);
+    if (callingSession_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "GetCallingWindowWindowStatus fail, callingsSession is null");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    windowStatus = GetWindowStatus(callingSession_->GetWindowMode(), callingSession_->GetSessionState(),
+        callingSession_->GetSessionProperty());
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "Get WindowStatus persistentId: %{public}d windowstatus: %{public}d",
+        persistentId, windowStatus);
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::GetCallingWindowRect(int32_t persistentId, Rect& rect)
+{
+    if (!SessionPermission::IsStartedByInputMethod()) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "GetCallingWindowRect fail, permission is not allowed "
+            "persistentId: %{public}d", persistentId);
+        return WMError::WM_ERROR_INVALID_PERMISSION;
+    }
+    auto scnSession = GetSceneSession(persistentId);
+    if (scnSession == nullptr) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "scnSession is null, persistentId: %{public}d", persistentId);
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    TLOGD(WmsLogTag::WMS_KEYBOARD, "persistentId: %{public}d, windowType: %{public}d",
+        persistentId, scnSession->GetWindowType());
+    if (scnSession->GetSessionProperty() == nullptr) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "GetCallingWindowRect fail, session property is null");
+        return WMError::WM_ERROR_INVALID_WINDOW;;
+    }
+    uint32_t callingWindowId = scnSession->GetSessionProperty()->GetCallingSessionId();
+    auto callingSession_ = GetSceneSession(callingWindowId);
+    if (callingSession_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "GetCallingWindowRect fail, callingSession_ is null");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    WSRectT sessionRect = callingSession_->GetSessionRect();
+    rect.posX_ = sessionRect.posX_;
+    rect.posY_ = sessionRect.posY_;
+    rect.width_= sessionRect.width_;
+    rect.height_ = sessionRect.height_;
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "Get Rect persistentId: %{public}d, x: %{public}d, y: %{public}d, "
+        "height: %{public}u, width: %{public}u", persistentId, rect.posX_, rect.posY_, rect.width_, rect.height_);
+    return WMError::WM_OK;
+}
+
 } // namespace OHOS::Rosen
