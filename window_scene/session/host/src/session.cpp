@@ -471,6 +471,11 @@ bool Session::GetVisible() const
     return isRSVisible_;
 }
 
+bool Session::GetFocused() const
+{
+    return isFocused_;
+}
+
 WSError Session::SetVisibilityState(WindowVisibilityState state)
 {
     visibilityState_ = state;

@@ -221,7 +221,9 @@ public:
     void SetDefaultDisplayIdIfNeed();
     WMError RegisterWindowRectChangeListener(const sptr<IWindowRectChangeListener>& listener) override;
     WMError UnregisterWindowRectChangeListener(const sptr<IWindowRectChangeListener>& listener) override;
-
+    virtual WMError GetCallingWindowWindowStatus(WindowStatus& windowStatus) const override;
+    virtual WMError GetCallingWindowRect(Rect& rect) const override;
+    
 protected:
     WMError Connect();
     bool IsWindowSessionInvalid() const;
@@ -378,6 +380,7 @@ private:
     bool postTaskDone_ = false;
     int16_t rotationAnimationCount_ { 0 };
     bool isMainHandlerAvailable_ = true;
+    bool IfNotNeedAvoidKeyBoardForSplit();
 
     std::string subWindowTitle_ = { "" };
     WindowTitleVisibleFlags windowTitleVisibleFlags_;
