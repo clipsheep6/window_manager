@@ -62,7 +62,7 @@ public:
 
     static inline SingletonDelegator<WindowManager> delegator_;
 
-    std::shared_mutex& listenerMutex_;
+    std::shared_mutex listenerMutex_;
     sptr<IWMSConnectionChangedListener> wmsConnectionChangedListener_;
     std::vector<sptr<IFocusChangedListener>> focusChangedListeners_;
     sptr<WindowManagerAgent> focusChangedListenerAgent_;
