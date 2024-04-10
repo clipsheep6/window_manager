@@ -2369,7 +2369,7 @@ napi_value JsWindow::OnDisableLandscapeMultiWindow(napi_env env, napi_callback_i
 napi_value JsWindow::OnSetSystemBarProperties(napi_env env, napi_callback_info info)
 {
     WMError errCode = WMError::WM_OK;
-    if (windowToken_ == nullptr) {s
+    if (windowToken_ == nullptr) {
         TLOGE(WmsLogTag::WMS_IMMS, "windowToken_ is nullptr");
         errCode = WMError::WM_ERROR_NULLPTR;
         return;
