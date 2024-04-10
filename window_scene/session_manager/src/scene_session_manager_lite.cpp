@@ -192,4 +192,9 @@ WSError SceneSessionManagerLite::UpdateWindowMode(int32_t persistentId, int32_t 
     return SceneSessionManager::GetInstance().UpdateWindowMode(persistentId, windowMode);
 }
 
+WSError SceneSessionManagerLite::GetWindowBackHomeStatus(int32_t persistentId, int32_t windowMode)
+{
+    return SceneSessionManager::GetInstance().GetWindowBackHomeStatus(persistentId, windowMode);
+}
+
 } // namespace OHOS::Rosen
