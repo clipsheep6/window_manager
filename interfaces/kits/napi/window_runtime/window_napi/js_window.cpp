@@ -2369,9 +2369,10 @@ napi_value JsWindow::OnDisableLandscapeMultiWindow(napi_env env, napi_callback_i
 napi_value JsWindow::OnSetSystemBarProperties(napi_env env, napi_callback_info info)
 {
     WMError errCode = WMError::WM_OK;
-    if (windowToken_ == nullptr) {
+    if (windowToken_ == nullptr) {s
         TLOGE(WmsLogTag::WMS_IMMS, "windowToken_ is nullptr");
         errCode = WMError::WM_ERROR_NULLPTR;
+        return;
     }
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
@@ -2397,6 +2398,7 @@ napi_value JsWindow::OnSetSystemBarProperties(napi_env env, napi_callback_info i
             if (weakWindow == nullptr) {
                 TLOGE(WmsLogTag::WMS_IMMS, "windowToken is nullptr");
                 errCode = WMError::WM_ERROR_NULLPTR;
+                return;
             }
             if (errCode != WMError::WM_OK) {
                 task.Reject(env, CreateJsError(env, static_cast<int32_t>(errCode)));
