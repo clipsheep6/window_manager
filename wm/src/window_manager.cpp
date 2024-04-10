@@ -251,7 +251,7 @@ void WindowManager::Impl::NotifyGestureNavigationEnabledResult(bool enable)
     }
 }
 
-WindowManager::WindowManager()
+WindowManager::WindowManager() : pImpl_(std::make_unique<Impl>())
 {
     auto windowChecker = std::make_shared<WindowChecker>();
     MMI::InputManager::GetInstance()->SetWindowCheckerHandler(windowChecker);
