@@ -1556,7 +1556,7 @@ void WindowManagerService::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
 WMError WindowManagerService::GetWindowBackHomeStatus(bool &isBackHome)
 {
     auto task = [this, &infos]() {
-        return windowController_->GetWindowBackHomeStatus(infos);
+        return windowController_->GetWindowBackHomeStatus(isBackHome);
     };
     return PostSyncTask(task, "GetWindowBackHomeStatus");
 }
