@@ -444,7 +444,7 @@ WMError WindowManager::RegisterWindowBackHomeListener(const sptr<IWindowBackHome
 {
     TLOGI(WmsLogTag::WMS_MAIN, "RegisterWindowBackHomeListener!");
     if (listener == nullptr) {
-    TLOGE(WmsLogTag::WMS_MAIN, "listener could not be null");
+        TLOGE(WmsLogTag::WMS_MAIN, "listener could not be null");
         return WMError::WM_ERROR_NULLPTR;
     }
  
