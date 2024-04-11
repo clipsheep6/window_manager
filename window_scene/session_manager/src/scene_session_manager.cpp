@@ -4290,7 +4290,7 @@ __attribute__((no_sanitize("cfi"))) void SceneSessionManager::OnSessionStateChan
             if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
                 ProcessSubSessionBackground(sceneSession);
             }
-            ProcessBackHomeStatus()
+            ProcessBackHomeStatus();
             break;
         default:
             break;
@@ -4353,7 +4353,7 @@ void SceneSessionManager::ProcessBackHomeStatus()
 
 bool SceneSessionManager::IsBackHomeStatus()
 {
-    std::shared_lockstd::shared_mutex lock(sceneSessionMapMutex_);
+    std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
     for (const auto &item : sceneSessionMap_) {
         auto sceneSession = item.second;
         if (sceneSession == nullptr) {
