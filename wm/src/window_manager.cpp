@@ -906,7 +906,7 @@ void WindowManager::UpdateWindowBackHomeStatus(bool isBackHome) const
 
 WMError WindowManager::GetWindowBackHomeStatus(bool &isBackHome) const
 {
-    WMError ret = SingletonContainer::Get().GetWindowBackHomeStatus(isBackHome);
+    WMError ret = SingletonContainer::Get<WindowAdapter>().GetWindowBackHomeStatus(isBackHome);
     if (ret != WMError::WM_OK) {
         WLOGFE("get window back home status failed");
     }
