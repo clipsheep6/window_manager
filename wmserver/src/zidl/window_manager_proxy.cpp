@@ -1038,27 +1038,5 @@ void WindowManagerProxy::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
     sptr<FocusChangeInfo> info = reply.ReadParcelable<FocusChangeInfo>();
     focusInfo = *info;
 }
-
-WMError WindowManagerProxy::GetWindowBackHomeStatus(bool &isBackHome)
-{
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
- 
-    MessageParcel reply;
-    MessageOption option;
-    if (Remote()->SendRequest(static_cast<uint32_t>(
-        WindowManagerMessage::TRANS_ID_GET_WINDOW_BACK_HOME_STATUS), data, reply, option) != ERR_NONE) {
-        WLOGFE("SendRequest failed");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-    if (!reply.ReadBool(isBackHome)) {
-        WLOGFE("Failed to read isBackHome");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-    return WMError::WM_OK;
-}
 } // namespace Rosen
 } // namespace OHOS
