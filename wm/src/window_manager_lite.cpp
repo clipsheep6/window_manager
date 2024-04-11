@@ -448,7 +448,7 @@ void WindowManagerLite::UpdateWindowBackHomeStatus(bool isBackHome) const
 
 WMError WindowManagerLite::GetWindowBackHomeStatus(bool &isBackHome) const
 {
-    WMError ret = SingletonContainer::Get().GetWindowBackHomeStatus(isBackHome);
+    WMError ret = SingletonContainer::Get<WindowAdapterLite>().GetWindowBackHomeStatus(isBackHome);
     if (ret != WMError::WM_OK) {
         WLOGFE("get window visibility info failed");
     }
