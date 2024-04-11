@@ -230,7 +230,7 @@ void SessionManager::RegisterSMSRecoverListener()
         WLOGFI("[WMSRecover] Register recover listener");
         smsRecoverListener_ = new SessionManagerServiceRecoverListener();
         mockSessionManagerServiceProxy_->RegisterSMSRecoverListener(smsRecoverListener_);
-     }
+    }
  }
 
 void SessionManager::RegisterWindowManagerRecoverCallbackFunc(const WindowManagerRecoverCallbackFunc& callbackFunc)
