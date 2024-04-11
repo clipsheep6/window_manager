@@ -150,7 +150,6 @@ public:
     void SetMaximizeMode(MaximizeMode maximizeMode) override;
     MaximizeMode GetMaximizeMode() override;
     void GetFocusWindowInfo(FocusChangeInfo& focusInfo) override;
-    WMError GetWindowBackHomeStatus(bool &isBackHome) override;
 
 protected:
     WindowManagerService();
