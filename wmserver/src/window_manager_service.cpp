@@ -1552,13 +1552,5 @@ void WindowManagerService::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
     WLOGFD("Get Focus window info in wms");
     windowController_->GetFocusWindowInfo(focusInfo);
 }
-
-WMError WindowManagerService::GetWindowBackHomeStatus(bool &isBackHome)
-{
-    auto task = [this, &infos]() {
-        return windowController_->GetWindowBackHomeStatus(infos);
-    };
-    return PostSyncTask(task, "GetWindowBackHomeStatus");
-}
 } // namespace Rosen
 } // namespace OHOS
