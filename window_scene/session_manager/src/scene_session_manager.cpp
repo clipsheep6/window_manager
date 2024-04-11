@@ -4346,8 +4346,8 @@ void SceneSessionManager::ProcessBackHomeStatus()
 {
     TLOGD(WmsLogTag::WMS_MAIN, "ProcessBackHomeStatus");
     if (IsBackHomeStatus()) {
-    SessionManagerAgentController::GetInstance().UpdateWindowBackHomeStatus(true);
-    TLOGI(WmsLogTag::WMS_MAIN, "ProcessBackHomeStatus go back home status");
+        SessionManagerAgentController::GetInstance().UpdateWindowBackHomeStatus(true);
+        TLOGI(WmsLogTag::WMS_MAIN, "ProcessBackHomeStatus go back home status");
     }
 }
 
@@ -4355,7 +4355,7 @@ bool SceneSessionManager::IsBackHomeStatus()
 {
     std::shared_lockstd::shared_mutex lock(sceneSessionMapMutex_);
     for (const auto &item : sceneSessionMap_) {
-    auto sceneSession = item.second;
+        auto sceneSession = item.second;
         if (sceneSession == nullptr) {
             TLOGE(WmsLogTag::WMS_MAIN, "IsBackHomeStatus, sceneSession is null");
             continue;
