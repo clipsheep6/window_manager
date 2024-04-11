@@ -192,7 +192,7 @@ WSError SceneSessionManagerLite::UpdateWindowMode(int32_t persistentId, int32_t 
     return SceneSessionManager::GetInstance().UpdateWindowMode(persistentId, windowMode);
 }
 
-WSError SceneSessionManagerLite::GetWindowBackHomeStatus(bool isBackHome)
+WSError SceneSessionManagerLite::GetWindowBackHomeStatus(bool &isBackHome)
 {
     return SceneSessionManager::GetInstance().GetWindowBackHomeStatus(bool isBackHome);
 }
