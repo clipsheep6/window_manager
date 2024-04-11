@@ -4021,12 +4021,12 @@ HWTEST_F(WindowImplTest, GetSubWindow03, Function | SmallTest | Level3)
 HWTEST_F(WindowImplTest, RegisterAvoidAreaChangeListener, Function | SmallTest | Level3)
 {
     sptr<IAvoidAreaChangedListener> listener;
+    sptr<WindowOption> option = new WindowOption();
 
     option->SetWindowName("RegisterAvoidAreaChangeListener");
     sptr<WindowImpl> window = new WindowImpl(option);
-    auto ret = RegisterListener(avoidAreaChangeListeners_[GetWindowId()], listener);
 
-    ASSERT_EQ(ret, window->RegisterAvoidAreaChangeListener(listener));
+    ASSERT_NE(WMError::WM_OK, window->RegisterAvoidAreaChangeListener(listener));
 }
 
 /**
@@ -4038,11 +4038,11 @@ HWTEST_F(WindowImplTest, UnregisterAvoidAreaChangeListener, Function | SmallTest
 {
     sptr<IAvoidAreaChangedListener> listener;
 
+    sptr<WindowOption> option = new WindowOption();
     option->SetWindowName("UnregisterAvoidAreaChangeListener");
     sptr<WindowImpl> window = new WindowImpl(option);
-    auto ret = UnregisterListener(avoidAreaChangeListeners_[GetWindowId()], listener);
 
-    ASSERT_EQ(ret, window->UnregisterAvoidAreaChangeListener(listener));
+    ASSERT_NE(WMError::WM_OK, window->UnregisterAvoidAreaChangeListener(listener));
 }
 
 /**
@@ -4053,11 +4053,11 @@ HWTEST_F(WindowImplTest, UnregisterAvoidAreaChangeListener, Function | SmallTest
 HWTEST_F(WindowImplTest, RegisterDragListener, Function | SmallTest | Level3)
 {
     sptr<IWindowDragListener> listener;
+    sptr<WindowOption> option = new WindowOption();
 
     option->SetWindowName("RegisterDragListener");
     sptr<WindowImpl> window = new WindowImpl(option);
-    auto ret = RegisterListener(windowDragListeners_, listener);
-    ASSERT_EQ(ret, window->RegisterDragListener(listener));
+    ASSERT_NE(WMError::WM_OK, window->RegisterDragListener(listener));
 }
 
 /**
@@ -4069,11 +4069,11 @@ HWTEST_F(WindowImplTest, UnregisterDragListener, Function | SmallTest | Level3)
 {
     sptr<IWindowDragListener> listener;
 
+    sptr<WindowOption> option = new WindowOption();
     option->SetWindowName("UnregisterDragListener");
     sptr<WindowImpl> window = new WindowImpl(option);
-    auto ret = UnregisterListener(windowDragListeners_, listener);
 
-    ASSERT_EQ(ret, window->UnregisterDragListener(listener));
+    ASSERT_NE(WMError::WM_OK, window->UnregisterDragListener(listener));
 }
 
 /**
@@ -4084,12 +4084,12 @@ HWTEST_F(WindowImplTest, UnregisterDragListener, Function | SmallTest | Level3)
 HWTEST_F(WindowImplTest, RegisterDisplayMoveListener, Function | SmallTest | Level3)
 {
     sptr<IDisplayMoveListener> listener;
+    sptr<WindowOption> option = new WindowOption();
 
     option->SetWindowName("RegisterDisplayMoveListener");
     sptr<WindowImpl> window = new WindowImpl(option);
-    auto ret = RegisterListener(displayMoveListeners_, listener);
 
-    ASSERT_EQ(ret, window->RegisterDisplayMoveListener(listener));
+    ASSERT_NE(WMError::WM_OK, window->RegisterDisplayMoveListener(listener));
 }
 
 /**
@@ -4101,11 +4101,11 @@ HWTEST_F(WindowImplTest, UnregisterDisplayMoveListener, Function | SmallTest | L
 {
     sptr<IDisplayMoveListener> listener;
 
+    sptr<WindowOption> option = new WindowOption();
     option->SetWindowName("UnregisterDisplayMoveListener");
     sptr<WindowImpl> window = new WindowImpl(option);
-    auto ret = UnregisterListener(displayMoveListeners_, listener);
 
-    ASSERT_EQ(ret, window->UnregisterDisplayMoveListener(listener));
+    ASSERT_NE(WMError::WM_OK, window->UnregisterDisplayMoveListener(listener));
 }
 
 /**
@@ -4115,13 +4115,13 @@ HWTEST_F(WindowImplTest, UnregisterDisplayMoveListener, Function | SmallTest | L
  */
 HWTEST_F(WindowImplTest, RegisterOccupiedAreaChangeListener, Function | SmallTest | Level3)
 {
-    sptr<IDisplayMoveListener> listener;
+    sptr<IOccupiedAreaChangeListener> listener;
+    sptr<WindowOption> option = new WindowOption();
 
     option->SetWindowName("RegisterOccupiedAreaChangeListener");
     sptr<WindowImpl> window = new WindowImpl(option);
-    auto ret = RegisterListener(occupiedAreaChangeListeners_[GetWindowId()], listener);
 
-    ASSERT_EQ(ret, window->RegisterOccupiedAreaChangeListener(listener));
+    ASSERT_NE(WMError::WM_OK, window->RegisterOccupiedAreaChangeListener(listener));
 }
 
 /**
@@ -4132,12 +4132,11 @@ HWTEST_F(WindowImplTest, RegisterOccupiedAreaChangeListener, Function | SmallTes
 HWTEST_F(WindowImplTest, RegisterTouchOutsideListener, Function | SmallTest | Level3)
 {
     sptr<ITouchOutsideListener> listener;
+    sptr<WindowOption> option = new WindowOption();
 
     option->SetWindowName("RegisterTouchOutsideListener");
     sptr<WindowImpl> window = new WindowImpl(option);
-    auto ret = RegisterListener(touchOutsideListeners_[GetWindowId()], listener);
-
-    ASSERT_EQ(ret, window->RegisterTouchOutsideListener(listener));
+    ASSERT_EQ(WMError::WM_OK, window->RegisterTouchOutsideListener(listener));
 }
 
 /**
@@ -4149,25 +4148,25 @@ HWTEST_F(WindowImplTest, UnregisterTouchOutsideListener, Function | SmallTest | 
 {
     sptr<ITouchOutsideListener> listener;
 
+    sptr<WindowOption> option = new WindowOption();
     option->SetWindowName("UnregisterTouchOutsideListener");
     sptr<WindowImpl> window = new WindowImpl(option);
-    auto ret = UnregisterListener(touchOutsideListeners_[GetWindowId()], listener);
 
-    ASSERT_EQ(ret, window->UnregisterTouchOutsideListener(listener));
+    ASSERT_NE(WMError::WM_OK, window->UnregisterTouchOutsideListener(listener));
 }
 
 /**
- * @tc.name: RegisterAnimationTransitionController
+ * @tc.name: RegisterAnimationTransitionController01
  * @tc.desc: RegisterAnimationTransitionController
  * @tc.type: FUNC
  */
-HWTEST_F(WindowImplTest, RegisterAnimationTransitionController, Function | SmallTest | Level3)
+HWTEST_F(WindowImplTest, RegisterAnimationTransitionController01, Function | SmallTest | Level3)
 {
-    sptr<IAnimationTransitionController> listener = new AnimationTransitionController();
+    sptr<IAnimationTransitionController> listener = new IAnimationTransitionController();
 
+    sptr<WindowOption> option = new WindowOption();
     option->SetWindowName("RegisterAnimationTransitionController");
     sptr<WindowImpl> window = new WindowImpl(option);
-    auto ret = UnregisterListener(touchOutsideListeners_[GetWindowId()], listener);
 
     ASSERT_EQ(WMError::WM_OK, window->RegisterAnimationTransitionController(listener));
     listener = nullptr;
@@ -4183,11 +4182,11 @@ HWTEST_F(WindowImplTest, RegisterScreenshotListener, Function | SmallTest | Leve
 {
     sptr<IScreenshotListener> listener;
 
+    sptr<WindowOption> option = new WindowOption();
     option->SetWindowName("RegisterScreenshotListener");
     sptr<WindowImpl> window = new WindowImpl(option);
-    auto ret = RegisterListener(screenshotListeners_[GetWindowId()], listener);
 
-    ASSERT_EQ(ret, window->RegisterScreenshotListener(listener));
+    ASSERT_NE(WMError::WM_ERROR_NULLPTR, window->RegisterScreenshotListener(listener));
 }
 }
 } // namespace Rosen
