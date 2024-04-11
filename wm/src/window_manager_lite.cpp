@@ -54,7 +54,6 @@ public:
         windowDrawingContentInfos);
     void NotifyWindowModeChange(WindowModeType type);
     void UpdateCameraWindowStatus(uint32_t accessTokenId, bool isShowing);
-    void NotifyWindowModeChange(WindowModeType type);
     void NotifyWindowBackHomeStatus(bool isBackHome);
 
     static inline SingletonDelegator<WindowManagerLite> delegator_;
