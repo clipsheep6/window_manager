@@ -4097,6 +4097,7 @@ WSError SceneSessionManager::UpdateWindowMode(int32_t persistentId, int32_t wind
         return WSError::WS_ERROR_INVALID_WINDOW;
     }
     WindowMode mode = static_cast<WindowMode>(windowMode);
+    ProcessBackHomeStatus();
     return sceneSession->UpdateWindowMode(mode);
 }
 
@@ -4364,7 +4365,7 @@ bool SceneSessionManager::IsBackHomeStatus()
         auto state = sceneSession->GetSessionState();
         if ((WindowHelper::IsMainWindow(sceneSession->GetWindowType())) &&
             (WindowHelper::IsFullScreenWindow(mode) || WindowHelper::IsSplitWindowMode(mode)) &&
-            (state == SessionState::STATE_FOREGROUND)) {
+            (state == SessionState::STATE_FOREGROUND || state == SessionState::STATE_ACTIVE)) {
             return false;
         }
     }
