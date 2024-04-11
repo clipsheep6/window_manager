@@ -1802,6 +1802,27 @@ HWTEST_F(WindowSessionImplTest, GetDecorHeight, Function | SmallTest | Level2)
 }
 
 /**
+@tc.name: filterKeyEvent
+@tc.desc: filterKeyEvent Test
+@tc.type: FUNC
+*/
+HWTEST_F(WindowSessionImplTest, filterKeyEvent, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTest: filterKeyEvent start";
+    sptr option = new WindowOption();
+    ASSERT_NE(option, nullptr);
+    option->SetWindowName("filterKeyEvent");
+    sptr window = new (std::nothrow) WindowSessionImpl(option);
+    std::function<bool(MMI::KeyEvent&)> func = [](MMI::KeyEvent& event) -> bool {
+        return true;
+    };
+    auto res = window->SetKeyEventFilter(func);
+    ASSERT_EQ(WMError::WM_OK, res);
+    res = window->ClearKeyEventFilter();
+    ASSERT_EQ(WMError::WM_OK, res);
+}
+
+/**
  * @tc.name: GetTitleButtonArea
  * @tc.desc: GetTitleButtonArea and check the retCode
  * @tc.type: FUNC
