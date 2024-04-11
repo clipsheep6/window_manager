@@ -78,6 +78,7 @@ public:
     void KeepKeyboardOnFocus(bool keepKeyboardFlag);
     void SetIsNeedUpdateWindowMode(bool isNeedUpdateWindowMode);
     void SetCallingSessionId(uint32_t sessionId);
+    void SetShowKeyboardPanel(bool isShowPanel);
     void SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo);
     void SetExtensionFlag(bool isExtensionFlag);
     void SetWindowMask(const sptr<Media::PixelMap>& windowMask);
@@ -122,6 +123,7 @@ public:
     void GetTouchHotAreas(std::vector<Rect>& rects) const;
     bool GetKeepKeyboardFlag() const;
     uint32_t GetCallingSessionId() const;
+    bool GetShowKeyboardPanelFlag() const;
     PiPTemplateInfo GetPiPTemplateInfo() const;
     bool GetExtensionFlag() const;
     sptr<Media::PixelMap> GetWindowMask() const;
@@ -201,6 +203,7 @@ private:
     bool forceHide_ = false;
     bool keepKeyboardFlag_ = false;
     uint32_t callingSessionId_ = INVALID_SESSION_ID;
+    bool isShowKeyboardPanel_ = false;
 
     double textFieldPositionY_ = 0.0;
     double textFieldHeight_ = 0.0;

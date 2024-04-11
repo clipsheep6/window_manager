@@ -174,6 +174,16 @@ void KeyboardSession::SetCallingSessionId(uint32_t callingSessionId)
     keyboardCallback_->onCallingSessionIdChange_(GetSessionProperty()->GetCallingSessionId());
 }
 
+void KeyboardSession::SetShowKeyboardPanel(bool isShowPanel)
+{
+    if (GetSessionProperty() == nullptr) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Session property is null, set show keyboard flag failed");
+        return;
+    }
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "isShowPanel: %{public}d", isShowPanel);
+    GetSessionProperty()->SetShowKeyboardPanel(isShowPanel);
+}
+
 sptr<SceneSession> KeyboardSession::GetSceneSession(uint32_t persistentId)
 {
     if (keyboardCallback_ == nullptr || keyboardCallback_->onGetSceneSession_ == nullptr) {

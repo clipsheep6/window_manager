@@ -2566,6 +2566,27 @@ WMError WindowSceneSessionImpl::SetCallingWindow(uint32_t callingSessionId)
     return WMError::WM_OK;
 }
 
+WMError WindowSceneSessionImpl::SetShowKeyboardPanel(bool isShowPanel)
+{
+    if (IsWindowSessionInvalid()) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Set show keyboard panel flag failed, window session is invalid!");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+
+    if (property_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Set show keyboard panel flag failed, property_ is nullptr!");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "Set show keyboard panel flag form %{public}d to %{public}d",
+        property_->GetShowKeyboardPanelFlag(), isShowPanel);
+    if (hostSession_ && isShowPanel != property_->GetShowKeyboardPanelFlag()) {
+        hostSession_->SetShowKeyboardPanel(isShowPanel);
+        property_->SetShowKeyboardPanel(isShowPanel);
+    }
+    return WMError::WM_OK;
+}
+
 void WindowSceneSessionImpl::DumpSessionElementInfo(const std::vector<std::string>& params)
 {
     WLOGFD("DumpSessionElementInfo");

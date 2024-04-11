@@ -101,6 +101,8 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
         &SessionStub::HandleSetKeyboardSessionGravity),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_CALLING_SESSION_ID),
         &SessionStub::HandleSetCallingSessionId),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_SHOW_KEYBOARD_PANEL),
+        &SessionStub::HandleSetShowKeyboardPanel),
 
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TRANSFER_ABILITY_RESULT),
         &SessionStub::HandleTransferAbilityResult),
@@ -645,6 +647,16 @@ int SessionStub::HandleSetCallingSessionId(MessageParcel& data, MessageParcel& r
     uint32_t callingSessionId = data.ReadUint32();
 
     SetCallingSessionId(callingSessionId);
+    reply.WriteInt32(static_cast<int32_t>(WSError::WS_OK));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleSetShowKeyboardPanel(MessageParcel& data, MessageParcel& reply)
+{
+    TLOGD(WmsLogTag::WMS_KEYBOARD, "run HandleSetShowKeyboardPanel!");
+    uint32_t isShowPanel = data.ReadBool();
+
+    SetShowKeyboardPanel(isShowPanel);
     reply.WriteInt32(static_cast<int32_t>(WSError::WS_OK));
     return ERR_NONE;
 }

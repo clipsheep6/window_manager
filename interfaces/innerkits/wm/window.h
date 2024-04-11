@@ -862,6 +862,13 @@ public:
      */
     virtual WMError SetCallingWindow(uint32_t windowId) { return WMError::WM_OK; }
     /**
+     * @brief Set the keyboard session show panel flag.
+     *
+     * @param isShowPanel
+     * @return WM_OK means set success, others means set failed.
+     */
+    virtual WMError SetShowKeyboardPanel(bool isShowPanel) { return WMError::WM_OK; }
+    /**
      * @brief Set privacy mode of window.
      *
      * @param isPrivacyMode True means set window private, false means not set window private.
