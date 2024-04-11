@@ -755,8 +755,7 @@ WMError SceneSessionManagerLiteProxy::GetWindowBackHomeStatus(bool &isBackHome)
         return WMError::WM_ERROR_IPC_FAILED;
     }
 
-    isBackHome = reply.ReadBool()
-    return static_cast<WMError>(reply.ReadInt32())
-    return WMError::WM_OK;
+    isBackHome = reply.ReadBool();
+    return static_cast<WMError>(reply.ReadInt32());
 }
 } // namespace OHOS::Rosen
