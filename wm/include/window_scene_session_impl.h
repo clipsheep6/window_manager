@@ -115,6 +115,7 @@ public:
     WMError SetTouchHotAreas(const std::vector<Rect>& rects) override;
     virtual WmErrorCode KeepKeyboardOnFocus(bool keepKeyboardFlag) override;
     virtual WMError SetCallingWindow(uint32_t callingSessionId) override;
+    WMError SetShowKeyboardPanel(bool isShowPanel) override;
 
     virtual bool IsTransparent() const override;
     virtual bool IsTurnScreenOn() const override;

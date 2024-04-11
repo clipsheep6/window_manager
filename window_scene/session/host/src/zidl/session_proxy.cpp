@@ -1102,7 +1102,7 @@ WSError SessionProxy::SetKeyboardSessionGravity(SessionGravity gravity, uint32_t
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
+    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         TLOGE(WmsLogTag::WMS_KEYBOARD, "WriteInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
@@ -1123,11 +1123,11 @@ WSError SessionProxy::SetKeyboardSessionGravity(SessionGravity gravity, uint32_t
     return static_cast<WSError>(reply.ReadInt32());
 }
 
-void SessionProxy::SetCallingSessionId(const uint32_t callingSessionId)
+void SessionProxy::SetCallingSessionId(uint32_t callingSessionId)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
+    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         TLOGE(WmsLogTag::WMS_KEYBOARD, "writeInterfaceToken failed");
         return;
@@ -1137,6 +1137,26 @@ void SessionProxy::SetCallingSessionId(const uint32_t callingSessionId)
         return;
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_CALLING_SESSION_ID),
+        data, reply, option) != ERR_NONE) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "SendRequest failed");
+        return;
+    }
+}
+
+void SessionProxy::SetShowKeyboardPanel(bool isShowPanel)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "writeInterfaceToken failed");
+        return;
+    }
+    if (!data.WriteBool(isShowPanel)) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Write isShowPanel failed.");
+        return;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_SHOW_KEYBOARD_PANEL),
         data, reply, option) != ERR_NONE) {
         TLOGE(WmsLogTag::WMS_KEYBOARD, "SendRequest failed");
         return;

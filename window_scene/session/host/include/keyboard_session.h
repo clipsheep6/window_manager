@@ -47,6 +47,7 @@ private:
     WSError SetKeyboardSessionGravity(SessionGravity gravity, uint32_t percent) override;
     void SetCallingSessionId(uint32_t callingSessionId) override;
     sptr<SceneSession> GetCallingSession();
+    void SetShowKeyboardPanel(bool isShowPanel) override;
 
     bool IsStatusBarVisible(const sptr<SceneSession>& session);
     int32_t GetStatusBarHeight();

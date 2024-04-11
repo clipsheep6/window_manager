@@ -433,6 +433,16 @@ uint32_t WindowSessionProperty::GetCallingSessionId() const
     return callingSessionId_;
 }
 
+void WindowSessionProperty::SetShowKeyboardPanel(bool isShowPanel)
+{
+    isShowKeyboardPanel_ = isShowPanel;
+}
+
+bool WindowSessionProperty::GetShowKeyboardPanelFlag() const
+{
+    return isShowKeyboardPanel_;
+}
+
 void WindowSessionProperty::SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo)
 {
     pipTemplateInfo_ = pipTemplateInfo;
@@ -731,6 +741,7 @@ void WindowSessionProperty::CopyFrom(const sptr<WindowSessionProperty>& property
     isLayoutFullScreen_ = property->isLayoutFullScreen_;
     windowMask_ = property->windowMask_;
     isShaped_ = property->isShaped_;
+    isShowKeyboardPanel_ = property->isShowKeyboardPanel_;
 }
 
 void WindowSessionProperty::SetTransform(const Transform& trans)

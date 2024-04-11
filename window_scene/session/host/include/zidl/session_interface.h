@@ -103,6 +103,7 @@ public:
         return WSError::WS_OK;
     }
     virtual void SetCallingSessionId(uint32_t callingSessionId) {};
+    virtual void SetShowKeyboardPanel(bool isShowPanel) {};
 };
 } // namespace OHOS::Rosen
 
