@@ -46,10 +46,6 @@ int WindowManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
             UpdateWindowModeTypeInfo(type);
             break;
         }
-        case WindowManagerAgentMsg::TRANS_ID_UPDATE_WINDOW_BACK_HOME_STATUS: {
-            UpdateWindowBackHomeStatus(data.ReadBool());
-            break;
-        }
         case WindowManagerAgentMsg::TRANS_ID_UPDATE_SYSTEM_BAR_PROPS: {
             DisplayId displayId = data.ReadUint64();
             SystemBarRegionTints tints;
