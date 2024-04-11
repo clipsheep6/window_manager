@@ -231,7 +231,7 @@ void SessionManager::RegisterSMSRecoverListener()
         smsRecoverListener_ = new SessionManagerServiceRecoverListener();
         mockSessionManagerServiceProxy_->RegisterSMSRecoverListener(smsRecoverListener_);
     }
- }
+}
 
 void SessionManager::RegisterWindowManagerRecoverCallbackFunc(const WindowManagerRecoverCallbackFunc& callbackFunc)
 {
