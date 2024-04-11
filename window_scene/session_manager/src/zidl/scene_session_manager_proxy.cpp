@@ -1650,6 +1650,6 @@ WMError SceneSessionManagerProxy::GetWindowBackHomeStatus(bool &isBackHome)
         return WMError::WM_ERROR_IPC_FAILED;
     }
     isBackHome = reply.ReadBool();
-    return static_cast(reply.ReadInt32());
+    return static_cast<WSError>(reply.ReadInt32());
 }
 } // namespace OHOS::Rosen
