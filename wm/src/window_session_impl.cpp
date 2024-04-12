@@ -1740,10 +1740,11 @@ void WindowSessionImpl::NotifyBeforeDestroy(std::string windowName)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     std::shared_ptr<Ace::UIContent> uiContent = std::move(uiContent_);
-    auto task = [uiContent]() {
+    auto task = [uiContent, persistentId = GetPersistentId()]() {
         if (uiContent != nullptr) {
             uiContent->Destroy();
-            TLOGD(WmsLogTag::WMS_LIFE, "NotifyBeforeDestroy: uiContent destroy success");
+            TLOGD(WmsLogTag::WMS_LIFE, "NotifyBeforeDestroy: uiContent destroy success, persistentId:%{public}d",
+                persistentId);
         }
     };
     if (handler_) {
@@ -2642,6 +2643,10 @@ WMError WindowSessionImpl::SetSpecificBarProperty(WindowType type, const SystemB
     return WMError::WM_OK;
 }
 
+bool WindowSessionImpl::IfNotNeedAvoidKeyBoardForSplit()
+{
+    return false;
+}
 
 void WindowSessionImpl::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info)
 {
@@ -2655,7 +2660,8 @@ void WindowSessionImpl::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo
             if (((property_->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
                   WindowHelper::IsMainWindow(GetType())) ||
                  (WindowHelper::IsSubWindow(GetType()) && FindWindowById(GetParentId()) != nullptr &&
-                  FindWindowById(GetParentId())->GetMode() == WindowMode::WINDOW_MODE_FLOATING)) &&
+                  FindWindowById(GetParentId())->GetMode() == WindowMode::WINDOW_MODE_FLOATING) ||
+                  IfNotNeedAvoidKeyBoardForSplit()) &&
                 (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
                  system::GetParameter("const.product.devicetype", "unknown") == "tablet")) {
                 sptr<OccupiedAreaChangeInfo> occupiedAreaChangeInfo = new OccupiedAreaChangeInfo();
@@ -2776,13 +2782,14 @@ void WindowSessionImpl::SubmitNoInteractionMonitorTask(int32_t eventId,
     handler_->PostTask(task, listener->GetTimeout());
 }
 
-void WindowSessionImpl::RefreshNoInteractionTimeoutMonitor(int32_t eventId)
+void WindowSessionImpl::RefreshNoInteractionTimeoutMonitor()
 {
     std::lock_guard<std::recursive_mutex> lockListener(windowNoInteractionListenerMutex_);
     if (windowNoInteractionListeners_[GetPersistentId()].empty()) {
         return;
     }
-    this->lastInteractionEventId_.store(eventId);
+    this->lastInteractionEventId_.fetch_add(1);
+    int32_t eventId = lastInteractionEventId_.load();
     auto noInteractionListeners = GetListeners<IWindowNoInteractionListener>();
     for (const auto& listenerItem : noInteractionListeners) {
         SubmitNoInteractionMonitorTask(eventId, listenerItem);
@@ -2798,6 +2805,26 @@ bool WindowSessionImpl::IsUserOrientation(Orientation orientation) const
         return true;
     }
     return false;
+}
+
+WMError WindowSessionImpl::GetCallingWindowWindowStatus(WindowStatus& windowStatus) const
+{
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "id: %{public}d", GetPersistentId());
+    if (IsWindowSessionInvalid()) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "session is invalid");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    return SingletonContainer::Get<WindowAdapter>().GetCallingWindowWindowStatus(GetPersistentId(), windowStatus);
+}
+
+WMError WindowSessionImpl::GetCallingWindowRect(Rect& rect) const
+{
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "Get CallingWindow Rect");
+    if (IsWindowSessionInvalid()) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "session is invalid");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    return SingletonContainer::Get<WindowAdapter>().GetCallingWindowRect(GetPersistentId(), rect);
 }
 
 } // namespace Rosen

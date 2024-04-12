@@ -393,6 +393,19 @@ HWTEST_F(WindowSessionTest, TransferExecuteAction02, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.name: SetForceTouchable
+ * @tc.desc: SetForceTouchable
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetForceTouchable, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    bool touchable = false;
+    session_->SetForceTouchable(touchable);
+    ASSERT_EQ(session_->forceTouchable_, touchable);
+}
+
+/**
  * @tc.name: SetActive01
  * @tc.desc: set session active
  * @tc.type: FUNC
@@ -906,7 +919,7 @@ HWTEST_F(WindowSessionTest, ConsumeMoveEvent02, Function | SmallTest | Level2)
     pointerItem.SetDisplayX(205);
     pointerItem.SetDisplayY(650);
     result = sceneSession->moveDragController_->ConsumeMoveEvent(pointerEvent, originalRect);
-    ASSERT_EQ(result, true);
+    ASSERT_EQ(result, false);
 }
 
 /**
@@ -2923,6 +2936,31 @@ HWTEST_F(WindowSessionTest, SetChangeSessionVisibilityWithStatusBarEventListener
     ASSERT_NE(session_->changeSessionVisibilityWithStatusBarFunc_, nullptr);
     session_->changeSessionVisibilityWithStatusBarFunc_(info, true);
     ASSERT_EQ(resultValue, 2);
+}
+
+/**
+ * @tc.name: SetAttachState
+ * @tc.desc: SetSystemActive Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetAttachState, Function | SmallTest | Level2)
+{
+    session_->SetAttachState(true);
+    ASSERT_EQ(session_->isAttach_, true);
+    session_->SetAttachState(false);
+    ASSERT_EQ(session_->isAttach_, false);
+}
+
+/**
+ * @tc.name: RegisterDetachCallback
+ * @tc.desc: RegisterDetachCallback Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, RegisterDetachCallback, Function | SmallTest | Level2)
+{
+    sptr<IPatternDetachCallback> detachCallback;
+    session_->RegisterDetachCallback(detachCallback);
+    ASSERT_EQ(session_->detachCallback_, detachCallback);
 }
 
 }

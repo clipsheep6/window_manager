@@ -15,6 +15,8 @@
 
 #include "window_scene_session_impl.h"
 
+#include <chrono>
+#include <limits>
 #include <ability_manager_client.h>
 #include <parameters.h>
 #include <transaction/rs_transaction.h>
@@ -42,7 +44,7 @@
 #include "session_manager_agent_controller.h"
 #include <transaction/rs_interfaces.h>
 #include "surface_capture_future.h"
-
+#include "pattern_detach_callback.h"
 #include "window_session_impl.h"
 
 namespace OHOS {
@@ -67,6 +69,7 @@ union WSColorParam {
 };
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowSceneSessionImpl"};
+constexpr int32_t WINDOW_DETACH_TIMEOUT = 300;
 const std::string PARAM_DUMP_HELP = "-h";
 }
 uint32_t WindowSceneSessionImpl::maxFloatingWindowSize_ = 1920;
@@ -470,7 +473,7 @@ void WindowSceneSessionImpl::ConsumePointerEventInner(const std::shared_ptr<MMI:
             return;
         }
         needNotifyEvent = HandlePointDownEvent(pointerEvent, pointerItem, sourceType, vpr, rect);
-        RefreshNoInteractionTimeoutMonitor(pointerEvent->GetId());
+        RefreshNoInteractionTimeoutMonitor();
     }
 
     bool isPointUp = (action == MMI::PointerEvent::POINTER_ACTION_UP ||
@@ -515,11 +518,14 @@ void WindowSceneSessionImpl::ConsumePointerEvent(const std::shared_ptr<MMI::Poin
     ConsumePointerEventInner(pointerEvent, pointerItem);
 }
 
-void WindowSceneSessionImpl::ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
+bool WindowSceneSessionImpl::PreNotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
-    bool isConsumed = false;
-    NotifyKeyEvent(keyEvent, isConsumed, false);
-    RefreshNoInteractionTimeoutMonitor(keyEvent->GetId());
+    bool ret = false;
+    if (uiContent_ != nullptr) {
+        ret = uiContent_->ProcessKeyEvent(keyEvent, true);
+    }
+    RefreshNoInteractionTimeoutMonitor();
+    return ret;
 }
 
 void WindowSceneSessionImpl::RegisterSessionRecoverListener(bool isSpecificSession)
@@ -758,7 +764,7 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
             hostSession_->RaiseAppMainWindowToTop();
         }
         NotifyAfterForeground(true, false);
-        RefreshNoInteractionTimeoutMonitor(-1);
+        RefreshNoInteractionTimeoutMonitor();
         return WMError::WM_OK;
     }
 
@@ -798,7 +804,7 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
         state_ = WindowState::STATE_SHOWN;
         requestState_ = WindowState::STATE_SHOWN;
         NotifyAfterForeground();
-        RefreshNoInteractionTimeoutMonitor(-1);
+        RefreshNoInteractionTimeoutMonitor();
     } else {
         NotifyForegroundFailed(ret);
     }
@@ -975,15 +981,15 @@ WMError WindowSceneSessionImpl::DestroyInner(bool needNotifyServer)
     if (!WindowHelper::IsMainWindow(GetType()) && needNotifyServer) {
         if (WindowHelper::IsSystemWindow(GetType())) {
             // main window no need to notify host, since host knows hide first
-            SingletonContainer::Get<WindowAdapter>().DestroyAndDisconnectSpecificSession(property_->GetPersistentId());
+            SyncDestroyAndDisconnectSpecificSession(property_->GetPersistentId());
         } else if (WindowHelper::IsSubWindow(GetType()) && (property_->GetExtensionFlag() == false)) {
             auto parentSession = FindParentSessionByParentId(GetParentId());
             if (parentSession == nullptr || parentSession->GetHostSession() == nullptr) {
                 return WMError::WM_ERROR_NULLPTR;
             }
-            SingletonContainer::Get<WindowAdapter>().DestroyAndDisconnectSpecificSession(property_->GetPersistentId());
+            SyncDestroyAndDisconnectSpecificSession(property_->GetPersistentId());
         } else if (property_->GetExtensionFlag() == true) {
-            SingletonContainer::Get<WindowAdapter>().DestroyAndDisconnectSpecificSession(property_->GetPersistentId());
+            SyncDestroyAndDisconnectSpecificSession(property_->GetPersistentId());
         }
     }
 
@@ -994,6 +1000,24 @@ WMError WindowSceneSessionImpl::DestroyInner(bool needNotifyServer)
         }
     }
     return ret;
+}
+
+void WindowSceneSessionImpl::SyncDestroyAndDisconnectSpecificSession(int32_t persistentId)
+{
+    sptr<PatternDetachCallback> callback = new PatternDetachCallback();
+    SingletonContainer::Get<WindowAdapter>().DestroyAndDisconnectSpecificSessionWithDetachCallback(persistentId,
+        callback->AsObject());
+    auto startTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    callback->GetResult(WINDOW_DETACH_TIMEOUT);
+    auto endTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    auto waitTime = endTime - startTime;
+    if (waitTime >= WINDOW_DETACH_TIMEOUT) {
+        TLOGW(WmsLogTag::WMS_LIFE, "Destroy window timeout, persistentId:%{public}d", persistentId);
+        callback->GetResult(std::numeric_limits<int>::max());
+    }
+    TLOGI(WmsLogTag::WMS_LIFE, "Destroy window persistentId:%{public}d waitTime:%{public}lld", persistentId, waitTime);
 }
 
 WMError WindowSceneSessionImpl::Destroy(bool needNotifyServer, bool needClearListener)
@@ -1462,16 +1486,17 @@ WMError WindowSceneSessionImpl::SetSpecificBarProperty(WindowType type, const Sy
     } else if (GetSystemBarPropertyByType(type) == property) {
         setSameSystembarPropertyCnt_++;
         TLOGI(WmsLogTag::WMS_IMMS, "windowId:%{public}u %{public}s set same property %{public}u times, "
-            "type:%{public}u, enable:%{public}u bgColor:%{public}x Color:%{public}x",
+            "type:%{public}u, enable:%{public}u bgColor:%{public}x Color:%{public}x enableAnim:%{public}u",
             GetWindowId(), GetWindowName().c_str(), setSameSystembarPropertyCnt_,
-            static_cast<uint32_t>(type), property.enable_, property.backgroundColor_, property.contentColor_);
+            static_cast<uint32_t>(type), property.enable_, property.backgroundColor_, property.contentColor_,
+            property.enableAnimation_);
         return WMError::WM_OK;
     }
     setSameSystembarPropertyCnt_ = 0;
     TLOGI(WmsLogTag::WMS_IMMS, "windowId:%{public}u %{public}s type:%{public}u, "
-        "enable:%{public}u bgColor:%{public}x Color:%{public}x",
+        "enable:%{public}u bgColor:%{public}x Color:%{public}x enableAnim:%{public}u",
         GetWindowId(), GetWindowName().c_str(), static_cast<uint32_t>(type),
-        property.enable_, property.backgroundColor_, property.contentColor_);
+        property.enable_, property.backgroundColor_, property.contentColor_, property.enableAnimation_);
 
     if (property_ == nullptr) {
         TLOGE(WmsLogTag::WMS_IMMS, "property_ is null");
@@ -2979,6 +3004,26 @@ WMError WindowSceneSessionImpl::SetWindowMask(const std::vector<std::vector<uint
     property_->SetWindowMask(mask);
     property_->SetIsShaped(true);
     return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_WINDOW_MASK);
+}
+
+bool WindowSceneSessionImpl::IfNotNeedAvoidKeyBoardForSplit()
+{
+    if (DisplayManager::GetInstance().IsFoldable() &&
+            DisplayManager::GetInstance().GetFoldStatus() != OHOS::Rosen::FoldStatus::FOLDED) {
+        return false;
+    }
+    if (WindowHelper::IsMainWindow(property_->GetWindowType()) &&
+            property_->GetWindowMode() != WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        return false;
+    }
+    if (WindowHelper::IsSubWindow(property_->GetWindowType()) && FindWindowById(GetParentId()) != nullptr &&
+            FindWindowById(GetParentId())->GetMode() != WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        return false;
+    }
+    if (!IsFocused() || GetRect().posY_ == 0) {
+        return false;
+    }
+    return true;
 }
 } // namespace Rosen
 } // namespace OHOS
