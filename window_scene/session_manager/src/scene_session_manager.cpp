@@ -3170,10 +3170,6 @@ int32_t SceneSessionManager::GetFocusedSessionId() const
 
 void SceneSessionManager::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
 {
-    if (!SessionPermission::IsSACalling()) {
-        WLOGFE("GetFocusWindowInfo permission denied!");
-        return;
-    }
     auto sceneSession = GetSceneSession(focusedSessionId_);
     if (sceneSession) {
         WLOGFD("Get focus session info success");
@@ -5957,10 +5953,6 @@ WSError SceneSessionManager::PendingSessionToBackgroundForDelegator(const sptr<I
 
 WSError SceneSessionManager::GetFocusSessionToken(sptr<IRemoteObject>& token)
 {
-    if (!SessionPermission::IsSACalling()) {
-        WLOGFE("GetFocusSessionToken permission denied!");
-        return WSError::WS_ERROR_INVALID_PERMISSION;
-    }
     auto task = [this, &token]() {
         WLOGFD("run GetFocusSessionToken with focusedSessionId: %{public}d", focusedSessionId_);
         auto sceneSession = GetSceneSession(focusedSessionId_);
@@ -5975,22 +5967,6 @@ WSError SceneSessionManager::GetFocusSessionToken(sptr<IRemoteObject>& token)
         return WSError::WS_ERROR_INVALID_SESSION;
     };
     return taskScheduler_->PostSyncTask(task, "GetFocusSessionToken");
-}
-
-WSError SceneSessionManager::GetFocusSessionElement(AppExecFwk::ElementName& element)
-{
-    auto task = [this, &element]() {
-        WLOGFD("run GetFocusSessionElement with focusedSessionId: %{public}d", focusedSessionId_);
-        auto sceneSession = GetSceneSession(focusedSessionId_);
-        if (sceneSession) {
-            auto sessionInfo = sceneSession->GetSessionInfo();
-            element = AppExecFwk::ElementName("", sessionInfo.bundleName_,
-                sessionInfo.abilityName_, sessionInfo.moduleName_);
-            return WSError::WS_OK;
-        }
-        return WSError::WS_ERROR_INVALID_SESSION;
-    };
-    return taskScheduler_->PostSyncTask(task, "GetFocusSessionElement");
 }
 
 WSError SceneSessionManager::UpdateSessionAvoidAreaListener(int32_t& persistentId, bool haveListener)
