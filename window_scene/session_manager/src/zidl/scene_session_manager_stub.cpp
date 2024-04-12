@@ -145,10 +145,15 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandleUpdateExtWindowFlags),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_HOST_WINDOW_RECT),
         &SceneSessionManagerStub::HandleGetHostWindowRect),
+<<<<<<< HEAD
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_BACK_HOME_STATUS),
+        &SceneSessionManagerStub::HandleGetWindowBackHomeStatus),
+=======
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_STATUS),
         &SceneSessionManagerStub::HandleGetCallingWindowWindowStatus),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_RECT),
         &SceneSessionManagerStub::HandleGetCallingWindowRect),
+>>>>>>> 62819931ad1b1e773601c1b5e1c545aacd94e68c
 };
 
 int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
@@ -332,8 +337,8 @@ int SceneSessionManagerStub::HandleRequestFocusStatus(MessageParcel &data, Messa
 
 int SceneSessionManagerStub::HandleRegisterWindowManagerAgent(MessageParcel &data, MessageParcel &reply)
 {
-    WLOGFI("run HandleRegisterWindowManagerAgent!");
     auto type = static_cast<WindowManagerAgentType>(data.ReadUint32());
+    WLOGFI("run HandleRegisterWindowManagerAgent!, type=%{public}u", static_cast<uint32_t>(type));
     sptr<IRemoteObject> windowManagerAgentObject = data.ReadRemoteObject();
     sptr<IWindowManagerAgent> windowManagerAgentProxy =
         iface_cast<IWindowManagerAgent>(windowManagerAgentObject);
@@ -344,8 +349,8 @@ int SceneSessionManagerStub::HandleRegisterWindowManagerAgent(MessageParcel &dat
 
 int SceneSessionManagerStub::HandleUnregisterWindowManagerAgent(MessageParcel &data, MessageParcel &reply)
 {
-    WLOGFI("run HandleUnregisterWindowManagerAgent!");
     auto type = static_cast<WindowManagerAgentType>(data.ReadUint32());
+    WLOGFI("run HandleUnregisterWindowManagerAgent!, type=%{public}u", static_cast<uint32_t>(type));
     sptr<IRemoteObject> windowManagerAgentObject = data.ReadRemoteObject();
     sptr<IWindowManagerAgent> windowManagerAgentProxy =
         iface_cast<IWindowManagerAgent>(windowManagerAgentObject);
@@ -877,6 +882,18 @@ int SceneSessionManagerStub::HandleGetHostWindowRect(MessageParcel& data, Messag
     return ERR_NONE;
 }
 
+<<<<<<< HEAD
+int SceneSessionManagerStub::HandleGetWindowBackHomeStatus(MessageParcel &data, MessageParcel &reply)
+{
+    bool isBackHome = false;
+    WMError errCode = GetWindowBackHomeStatus(isBackHome);
+    WLOGFI("run HandleGetWindowBackHomeStatus, isBackHome:%{public}d!", isBackHome);
+    if (!reply.WriteBool(isBackHome)) {
+        WLOGE("Failed to WriteBool");
+        return ERR_INVALID_DATA;
+    }
+    reply.WriteInt32(static_cast<int32_t>(errCode));
+=======
 int SceneSessionManagerStub::HandleGetCallingWindowWindowStatus(MessageParcel&data, MessageParcel&reply)
 {
     TLOGI(WmsLogTag::WMS_KEYBOARD, "run HandleGetCallingWindowWindowStatus!");
@@ -907,6 +924,7 @@ int SceneSessionManagerStub::HandleGetCallingWindowRect(MessageParcel&data, Mess
     reply.WriteInt32(rect.posY_);
     reply.WriteUint32(rect.width_);
     reply.WriteUint32(rect.height_);
+>>>>>>> 62819931ad1b1e773601c1b5e1c545aacd94e68c
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

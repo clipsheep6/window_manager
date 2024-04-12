@@ -208,6 +208,10 @@ public:
     {
         return WSError::WS_OK;
     }
+    virtual WMError GetWindowBackHomeStatus(bool &isBackHome)
+    {
+        return WMError::WM_OK;
+    }
     virtual WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus)
     {
         return WMError::WM_OK;

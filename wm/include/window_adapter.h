@@ -122,9 +122,14 @@ public:
     virtual WMError AddOrRemoveSecureExtSession(int32_t persistentId, int32_t parentId, bool shouldHide);
     virtual WMError UpdateExtWindowFlags(int32_t parentId, int32_t persistentId, uint32_t extWindowFlags);
     virtual WMError GetHostWindowRect(int32_t hostWindowId, Rect& rect);
+<<<<<<< HEAD
+    virtual WMError GetWindowBackHomeStatus(bool &isBackHome);
+
+=======
     virtual WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus);
     virtual WMError GetCallingWindowRect(int32_t persistentId, Rect& rect);
     
+>>>>>>> 62819931ad1b1e773601c1b5e1c545aacd94e68c
 private:
     static inline SingletonDelegator<WindowAdapter> delegator;
     bool InitWMSProxy();
