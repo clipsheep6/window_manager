@@ -73,6 +73,8 @@ ohos_shared_library("scene_session_manager") {
     "../../wm/src/zidl/window_manager_agent_proxy.cpp",
     "src/distributed_client.cpp",
     "src/extension_session_manager.cpp",
+    "src/keyboard_panel_manager.cpp",
+    "src/scb_system_cmd_listener_impl.cpp",
     "src/scb_session_handler.cpp",
     "src/scene_input_manager.cpp",
     "src/scene_session_converter.cpp",

@@ -139,7 +139,7 @@ const std::map<JsSessionType, WindowType> JS_SESSION_TO_WINDOW_TYPE_MAP {
     { JsSessionType::TYPE_HANDWRITE,                WindowType::WINDOW_TYPE_HANDWRITE               },
     { JsSessionType::TYPE_KEYBOARD_PANEL,           WindowType::WINDOW_TYPE_KEYBOARD_PANEL          },
 };
-
+enum KeyboardPrivateDataValueType : int32_t {VALUE_TYPE_STRING = 0, VALUE_TYPE_BOOL, VALUE_TYPE_NUMBER};
 JsSessionType GetApiType(WindowType type);
 bool ConvertSessionInfoFromJs(napi_env env, napi_value jsObject, SessionInfo& sessionInfo);
 bool ConvertConfigurationFromJs(napi_env env, napi_value jsObject, AppExecFwk::Configuration& config);
@@ -168,6 +168,11 @@ napi_value NapiGetUndefined(napi_env env);
 napi_valuetype GetType(napi_env env, napi_value value);
 bool NapiIsCallable(napi_env env, napi_value value);
 bool ConvertRectInfoFromJs(napi_env env, napi_value jsObject, WSRect& rect);
+bool ConvertKeyboardPrivateCommandFromJs(napi_env env, napi_value in,
+    std::unordered_map<std::string, KeyboardPrivateDataValue> &out);
+bool GetPrivateDataValue(napi_env env, napi_value in, KeyboardPrivateDataValue& out);
+napi_value GetJsKeyboardPrivateCommand(napi_env env,
+    const std::unordered_map<std::string, KeyboardPrivateDataValue> &in);
 constexpr size_t ARGC_ONE = 1;
 constexpr size_t ARGC_TWO = 2;
 constexpr size_t ARGC_THREE = 3;

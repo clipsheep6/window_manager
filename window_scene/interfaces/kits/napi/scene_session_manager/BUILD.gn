@@ -29,6 +29,7 @@ ohos_shared_library("scenesessionmanager_napi") {
   sources = [
     "js_root_scene_session.cpp",
     "js_scene_session.cpp",
+    "js_keyboard_panel_manager.cpp",
     "js_scene_session_manager.cpp",
     "js_scene_utils.cpp",
     "js_window_scene_config.cpp",
@@ -61,6 +62,7 @@ ohos_shared_library("scenesessionmanager_napi") {
     "image_framework:image",
     "image_framework:image_native",
     "input:libmmi-client",
+    "imf:inputmethod_client",
     "ipc:ipc_single",
     "napi:ace_napi",
   ]
