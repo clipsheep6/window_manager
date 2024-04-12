@@ -268,6 +268,11 @@ void ScreenSessionManager::ConfigureScreenScene()
         WLOGFD("subDisplayCutoutPath = %{public}s.", subDisplayCutoutPath.c_str());
         ScreenSceneConfig::SetSubCutoutSvgPath(subDisplayCutoutPath);
     }
+    if (stringConfig.count("rotationPolicy") != 0) {
+        std::string rotationPolicy = static_cast<std::string>(stringConfig["rotationPolicy"]);
+        TLOGD(WmsLogTag::DMS, "rotationPolicy = %{public}s.", rotationPolicy.c_str());
+        deviceScreenConfig_.rotationPolicy_ = rotationPolicy;
+    }
     ConfigureWaterfallDisplayCompressionParams();
 
     if (numbersConfig.count("buildInDefaultOrientation") != 0) {
@@ -1199,19 +1204,23 @@ void ScreenSessionManager::HandlerSensor(ScreenPowerStatus status, PowerStateCha
         if (status == ScreenPowerStatus::POWER_STATUS_ON) {
             WLOGFI("subscribe rotation and posture sensor when phone turn on");
             ScreenSensorConnector::SubscribeRotationSensor();
+#ifdef SENSOR_ENABLE
             if (g_foldScreenFlag && reason != PowerStateChangeReason::STATE_CHANGE_REASON_DISPLAY_SWITCH) {
                 FoldScreenSensorManager::GetInstance().RegisterPostureCallback();
             } else {
                 WLOGFI("not fold product, switch screen reason, failed register posture.");
             }
+#endif
         } else if (status == ScreenPowerStatus::POWER_STATUS_OFF || status == ScreenPowerStatus::POWER_STATUS_SUSPEND) {
             WLOGFI("unsubscribe rotation and posture sensor when phone turn off");
             ScreenSensorConnector::UnsubscribeRotationSensor();
+#ifdef SENSOR_ENABLE
             if (g_foldScreenFlag && reason != PowerStateChangeReason::STATE_CHANGE_REASON_DISPLAY_SWITCH) {
                 FoldScreenSensorManager::GetInstance().UnRegisterPostureCallback();
             } else {
                 WLOGFI("not fold product, switch screen reason, failed unregister posture.");
             }
+#endif
         } else {
             WLOGFI("SetScreenPower state not support");
         }
@@ -3549,10 +3558,6 @@ int ScreenSessionManager::Dump(int fd, const std::vector<std::u16string>& args)
         if (errCode != 0) {
             ShowIllegalArgsInfo(dumpInfo);
         }
-    } else if (params.size() == 1 && (params[0] == STATUS_FOLD_HALF || params[0] == STATUS_EXPAND
-                || params[0] == STATUS_FOLD)) {
-        int errCode = NotifyFoldStatusChanged(params[0]);
-        ShowFoldStatusChangedInfo(errCode, dumpInfo);
     } else {
         int errCode = DumpScreenInfo(params, dumpInfo);
         if (errCode != 0) {
@@ -3628,17 +3633,6 @@ int ScreenSessionManager::NotifyFoldStatusChanged(const std::string& statusParam
     return 0;
 }
 
-void ScreenSessionManager::ShowFoldStatusChangedInfo(int errCode, std::string& dumpInfo)
-{
-    if (errCode != 0) {
-        ShowIllegalArgsInfo(dumpInfo);
-    } else {
-        std::ostringstream oss;
-        oss << "currentFoldStatus is:" << static_cast<uint32_t>(GetFoldStatus()) << std::endl;
-        dumpInfo.append(oss.str());
-    }
-}
-
 void ScreenSessionManager::NotifyAvailableAreaChanged(DMRect area)
 {
     WLOGI("NotifyAvailableAreaChanged call");
@@ -3707,5 +3701,10 @@ void ScreenSessionManager::CheckAndSendHiSysEvent(const std::string& eventName, 
         "PID", getpid(),
         "UID", getuid());
     WLOGI("%{public}s: Write HiSysEvent ret:%{public}d", eventName.c_str(), eventRet);
+}
+
+DeviceScreenConfig ScreenSessionManager::GetDeviceScreenConfig()
+{
+    return deviceScreenConfig_;
 }
 } // namespace OHOS::Rosen

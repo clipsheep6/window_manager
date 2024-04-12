@@ -201,6 +201,7 @@ public:
     sptr<FoldCreaseRegion> GetCurrentFoldCreaseRegion() override;
 
     void NotifyFoldStatusChanged(FoldStatus foldStatus);
+    int NotifyFoldStatusChanged(const std::string& statusParam);
     void NotifyDisplayModeChanged(FoldDisplayMode displayMode);
     void NotifyDisplayChangeInfoChanged(const sptr<DisplayChangeInfo>& info) override;
     void RegisterSettingDpiObserver();
@@ -232,6 +233,8 @@ public:
 
     VirtualScreenFlag GetVirtualScreenFlag(ScreenId screenId) override;
     DMError SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag screenFlag) override;
+
+    DeviceScreenConfig GetDeviceScreenConfig() override;
 protected:
     ScreenSessionManager();
     virtual ~ScreenSessionManager() = default;
@@ -275,7 +278,6 @@ private:
     bool IsValidDigitString(const std::string& idStr) const;
     int SetFoldDisplayMode(const std::string& modeParam);
     int SetFoldStatusLocked(const std::string& lockParam);
-    int NotifyFoldStatusChanged(const std::string& lockParam);
     void ShowFoldStatusChangedInfo(int errCode, std::string& dumpInfo);
     class ScreenIdManager {
     friend class ScreenSessionGroup;
@@ -304,6 +306,7 @@ private:
     std::shared_ptr<TaskScheduler> screenPowerTaskScheduler_;
     sptr<IScreenSessionManagerClient> clientProxy_;
     ClientAgentContainer<IDisplayManagerAgent, DisplayManagerAgentType> dmAgentContainer_;
+    DeviceScreenConfig deviceScreenConfig_;
 
     mutable std::recursive_mutex screenSessionMapMutex_;
     std::map<ScreenId, sptr<ScreenSession>> screenSessionMap_;

@@ -38,7 +38,9 @@ public:
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
         sptr<ISession>& session, sptr<WindowSessionProperty> property = nullptr,
         sptr<IRemoteObject> token = nullptr) override;
-    WSError DestroyAndDisconnectSpecificSession(const int32_t& persistentId) override;
+    WSError DestroyAndDisconnectSpecificSession(const int32_t persistentId) override;
+    WSError DestroyAndDisconnectSpecificSessionWithDetachCallback(const int32_t persistentId,
+        const sptr<IRemoteObject>& callback) override;
     WMError UpdateSessionProperty(const sptr<WindowSessionProperty>& property, WSPropertyChangeAction action) override;
     WSError BindDialogSessionTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken) override;
     WMError RequestFocusStatus(int32_t persistentId, bool isFocused, bool byForeground = true) override;
@@ -48,7 +50,6 @@ public:
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
-    WSError SetSessionGravity(int32_t persistentId, SessionGravity gravity, uint32_t percent) override;
     WMError SetGestureNavigaionEnabled(bool enable) override;
     void GetFocusWindowInfo(FocusChangeInfo& focusInfo) override;
     WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) override;
@@ -99,6 +100,8 @@ public:
     WSError AddOrRemoveSecureExtSession(int32_t persistentId, int32_t parentId, bool shouldHide) override;
     WSError UpdateExtWindowFlags(int32_t parentId, int32_t persistentId, uint32_t extWindowFlags) override;
     WSError GetHostWindowRect(int32_t hostWindowId, Rect& rect) override;
+    WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus) override;
+    WMError GetCallingWindowRect(int32_t persistentId, Rect& rect) override;
 
 private:
     template<typename T>

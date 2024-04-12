@@ -380,16 +380,33 @@ HWTEST_F(SceneSessionTest, SetRequestedOrientation01, Function | SmallTest | Lev
     SessionInfo info;
     info.abilityName_ = "Background01";
     info.bundleName_ = "SetRequestedOrientation";
-    sptr<Rosen::ISession> session_;
-    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
-        new (std::nothrow) SceneSession::SpecificSessionCallback();
-    EXPECT_NE(specificCallback_, nullptr);
     sptr<SceneSession> scensession;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     EXPECT_NE(scensession, nullptr);
-    int resultValue = 0;
-    scensession->SetRequestedOrientation(Orientation::UNSPECIFIED);
-    ASSERT_EQ(0, resultValue);
+    Orientation ori = Orientation::UNSPECIFIED;
+    scensession->SetRequestedOrientation(ori);
+    Orientation ret = scensession->GetRequestedOrientation();
+    ASSERT_EQ(ori, ret);
+
+    scensession->SetRequestedOrientation(Orientation::AUTO_ROTATION_UNSPECIFIED);
+    Orientation ret1 = scensession->GetRequestedOrientation();
+    ASSERT_EQ(ret1, Orientation::AUTO_ROTATION_UNSPECIFIED);
+
+    scensession->SetRequestedOrientation(Orientation::USER_ROTATION_PORTRAIT);
+    Orientation ret2 = scensession->GetRequestedOrientation();
+    ASSERT_EQ(ret2, Orientation::USER_ROTATION_PORTRAIT);
+
+    scensession->SetRequestedOrientation(Orientation::USER_ROTATION_LANDSCAPE);
+    Orientation ret3 = scensession->GetRequestedOrientation();
+    ASSERT_EQ(ret3, Orientation::USER_ROTATION_LANDSCAPE);
+
+    scensession->SetRequestedOrientation(Orientation::USER_ROTATION_PORTRAIT_INVERTED);
+    Orientation ret4 = scensession->GetRequestedOrientation();
+    ASSERT_EQ(ret4, Orientation::USER_ROTATION_PORTRAIT_INVERTED);
+
+    scensession->SetRequestedOrientation(Orientation::USER_ROTATION_LANDSCAPE_INVERTED);
+    Orientation ret5 = scensession->GetRequestedOrientation();
+    ASSERT_EQ(ret5, Orientation::USER_ROTATION_LANDSCAPE_INVERTED);
 }
 
 /**
@@ -402,15 +419,33 @@ HWTEST_F(SceneSessionTest, GetRequestedOrientation, Function | SmallTest | Level
     SessionInfo info;
     info.abilityName_ = "Background01";
     info.bundleName_ = "GetRequestedOrientation";
-    sptr<Rosen::ISession> session_;
-    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
-        new (std::nothrow) SceneSession::SpecificSessionCallback();
-    EXPECT_NE(specificCallback_, nullptr);
     sptr<SceneSession> scensession;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     EXPECT_NE(scensession, nullptr);
-    scensession->SetRequestedOrientation(Orientation::UNSPECIFIED);
-    ASSERT_EQ(Orientation::UNSPECIFIED, scensession->GetRequestedOrientation());
+    Orientation ori = Orientation::HORIZONTAL;
+    scensession->SetRequestedOrientation(ori);
+    Orientation ret = scensession->GetRequestedOrientation();
+    ASSERT_EQ(ori, ret);
+
+    scensession->SetRequestedOrientation(Orientation::AUTO_ROTATION_UNSPECIFIED);
+    Orientation ret1 = scensession->GetRequestedOrientation();
+    ASSERT_EQ(ret1, Orientation::AUTO_ROTATION_UNSPECIFIED);
+
+    scensession->SetRequestedOrientation(Orientation::USER_ROTATION_PORTRAIT);
+    Orientation ret2 = scensession->GetRequestedOrientation();
+    ASSERT_EQ(ret2, Orientation::USER_ROTATION_PORTRAIT);
+
+    scensession->SetRequestedOrientation(Orientation::USER_ROTATION_LANDSCAPE);
+    Orientation ret3 = scensession->GetRequestedOrientation();
+    ASSERT_EQ(ret3, Orientation::USER_ROTATION_LANDSCAPE);
+
+    scensession->SetRequestedOrientation(Orientation::USER_ROTATION_PORTRAIT_INVERTED);
+    Orientation ret4 = scensession->GetRequestedOrientation();
+    ASSERT_EQ(ret4, Orientation::USER_ROTATION_PORTRAIT_INVERTED);
+
+    scensession->SetRequestedOrientation(Orientation::USER_ROTATION_LANDSCAPE_INVERTED);
+    Orientation ret5 = scensession->GetRequestedOrientation();
+    ASSERT_EQ(ret5, Orientation::USER_ROTATION_LANDSCAPE_INVERTED);
 }
 
 
@@ -1047,15 +1082,15 @@ HWTEST_F(SceneSessionTest, GetAbilityInfo, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: UpdateCameraFloatWindowStatus
- * @tc.desc: UpdateCameraFloatWindowStatus
+ * @tc.name: UpdateCameraWindowStatus
+ * @tc.desc: UpdateCameraWindowStatus
  * @tc.type: FUNC
  */
-HWTEST_F(SceneSessionTest, UpdateCameraFloatWindowStatus, Function | SmallTest | Level2)
+HWTEST_F(SceneSessionTest, UpdateCameraWindowStatus, Function | SmallTest | Level2)
 {
     SessionInfo info;
     info.abilityName_ = "Background01";
-    info.bundleName_ = "UpdateCameraFloatWindowStatus";
+    info.bundleName_ = "UpdateCameraWindowStatus";
     info.windowType_ = 1;
     sptr<Rosen::ISession> session_;
     sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
@@ -1066,17 +1101,25 @@ HWTEST_F(SceneSessionTest, UpdateCameraFloatWindowStatus, Function | SmallTest |
     EXPECT_NE(sysSession, nullptr);
     int ret = 1;
     specificCallback_->onCameraFloatSessionChange_ = [](uint32_t accessTokenId, bool isShowing) {};
+    specificCallback_->onCameraSessionChange_ = [](uint32_t accessTokenId, bool isShowing) {};
 
-    sysSession->UpdateCameraFloatWindowStatus(false);
+    sysSession->UpdateCameraWindowStatus(false);
     sysSession = new (std::nothrow) SystemSession(info, specificCallback_);
-    sysSession->UpdateCameraFloatWindowStatus(false);
+    sysSession->UpdateCameraWindowStatus(false);
     sptr<WindowSessionProperty> property = new WindowSessionProperty();
     property->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
     sysSession->property_ = property;
-    sysSession->UpdateCameraFloatWindowStatus(false);
+    sysSession->UpdateCameraWindowStatus(false);
     property->SetWindowType(WindowType::WINDOW_TYPE_FLOAT_CAMERA);
     sysSession->property_ = property;
-    sysSession->UpdateCameraFloatWindowStatus(false);
+    sysSession->UpdateCameraWindowStatus(false);
+    property->SetWindowType(WindowType::WINDOW_TYPE_PIP);
+    property->SetWindowMode(WindowMode::WINDOW_MODE_PIP);
+    PiPTemplateInfo pipType;
+    pipType.pipTemplateType = static_cast<uint32_t>(PiPTemplateType::VIDEO_CALL);
+    sysSession->SetPiPTemplateInfo(pipType);
+    sysSession->property_ = property;
+    sysSession->UpdateCameraWindowStatus(false);
     ASSERT_EQ(ret, 1);
 }
 
@@ -1552,7 +1595,7 @@ HWTEST_F(SceneSessionTest, UpdateInputMethodSessionRect, Function | SmallTest | 
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
     uint32_t p = 10;
-    property->SetSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
+    property->SetKeyboardSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
 
     scensession->SetSessionProperty(property);
     WSRect rect({1, 1, 1, 1});
@@ -1583,7 +1626,7 @@ HWTEST_F(SceneSessionTest, UpdateSessionRect, Function | SmallTest | Level2)
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
     uint32_t p = 10;
-    property->SetSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
+    property->SetKeyboardSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
 
     scensession->SetSessionProperty(property);
     WSRect rect({1, 1, 1, 1});
@@ -1613,7 +1656,7 @@ HWTEST_F(SceneSessionTest, UpdateSessionRect1, Function | SmallTest | Level2)
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
     uint32_t p = 10;
-    property->SetSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
+    property->SetKeyboardSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
 
     scensession->SetSessionProperty(property);
     WSRect rect({1, 1, 1, 1});
@@ -1643,7 +1686,7 @@ HWTEST_F(SceneSessionTest, UpdateSessionRect2, Function | SmallTest | Level2)
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
     uint32_t p = 10;
-    property->SetSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
+    property->SetKeyboardSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
 
     scensession->SetSessionProperty(property);
     WSRect rect({1, 1, 1, 1});
@@ -1673,7 +1716,7 @@ HWTEST_F(SceneSessionTest, RaiseAboveTarget, Function | SmallTest | Level2)
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
     uint32_t p = 10;
-    property->SetSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
+    property->SetKeyboardSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
 
     scensession->SetSessionProperty(property);
     WSError result = scensession->RaiseAboveTarget(0);
@@ -1701,7 +1744,7 @@ HWTEST_F(SceneSessionTest, BindDialogSessionTarget, Function | SmallTest | Level
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
     uint32_t p = 10;
-    property->SetSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
+    property->SetKeyboardSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
     scensession->SetSessionProperty(property);
 
     sptr<SceneSession> sceneSession = nullptr;
@@ -1987,7 +2030,7 @@ HWTEST_F(SceneSessionTest, RequestSessionBack, Function | SmallTest | Level2)
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
     uint32_t p = 10;
-    property->SetSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
+    property->SetKeyboardSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
     scensession->SetSessionProperty(property);
 
     WSError result = scensession->RequestSessionBack(true);
@@ -2147,7 +2190,7 @@ HWTEST_F(SceneSessionTest, PendingSessionActivation, Function | SmallTest | Leve
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
     uint32_t p = 10;
-    property->SetSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
+    property->SetKeyboardSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
     scensession->SetSessionProperty(property);
 
     sptr<AAFwk::SessionInfo> abilitySessionInfo = new AAFwk::SessionInfo();
@@ -2181,7 +2224,7 @@ HWTEST_F(SceneSessionTest, TerminateSession, Function | SmallTest | Level2)
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
     uint32_t p = 10;
-    property->SetSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
+    property->SetKeyboardSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
     scensession->SetSessionProperty(property);
 
     sptr<AAFwk::SessionInfo> abilitySessionInfo = new AAFwk::SessionInfo();
@@ -2215,7 +2258,7 @@ HWTEST_F(SceneSessionTest, NotifySessionException, Function | SmallTest | Level2
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
     uint32_t p = 10;
-    property->SetSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
+    property->SetKeyboardSessionGravity(SessionGravity::SESSION_GRAVITY_BOTTOM, p);
     scensession->SetSessionProperty(property);
 
     sptr<AAFwk::SessionInfo> abilitySessionInfo = new AAFwk::SessionInfo();
