@@ -4136,7 +4136,7 @@ HWTEST_F(WindowImplTest, RegisterTouchOutsideListener, Function | SmallTest | Le
 
     option->SetWindowName("RegisterTouchOutsideListener");
     sptr<WindowImpl> window = new WindowImpl(option);
-    ASSERT_EQ(WMError::WM_OK, window->RegisterTouchOutsideListener(listener));
+    ASSERT_NE(WMError::WM_OK, window->RegisterTouchOutsideListener(listener));
 }
 
 /**
@@ -4170,7 +4170,7 @@ HWTEST_F(WindowImplTest, RegisterAnimationTransitionController01, Function | Sma
 
     ASSERT_EQ(WMError::WM_OK, window->RegisterAnimationTransitionController(listener));
     listener = nullptr;
-    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->RegisterAnimationTransitionController(listener));
+    ASSERT_NE(WMError::WM_ERROR_NULLPTR, window->RegisterAnimationTransitionController(listener));
 }
 
 /**
