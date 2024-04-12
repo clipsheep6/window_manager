@@ -626,5 +626,17 @@ WMError WindowAdapter::GetWindowBackHomeStatus(bool &isBackHome)
     WLOGFD("get back home status");
     return windowManagerServiceProxy_->GetWindowBackHomeStatus(isBackHome);
 }
+
+WMError WindowAdapter::GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
+    return static_cast<WMError>(windowManagerServiceProxy_->GetCallingWindowWindowStatus(persistentId, windowStatus));
+}
+
+WMError WindowAdapter::GetCallingWindowRect(int32_t persistentId, Rect& rect)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
+    return static_cast<WMError>(windowManagerServiceProxy_->GetCallingWindowRect(persistentId, rect));
+}
 } // namespace Rosen
 } // namespace OHOS

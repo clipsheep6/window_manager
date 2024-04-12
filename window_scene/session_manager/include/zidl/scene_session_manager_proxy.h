@@ -100,7 +100,12 @@ public:
     WSError AddOrRemoveSecureExtSession(int32_t persistentId, int32_t parentId, bool shouldHide) override;
     WSError UpdateExtWindowFlags(int32_t parentId, int32_t persistentId, uint32_t extWindowFlags) override;
     WSError GetHostWindowRect(int32_t hostWindowId, Rect& rect) override;
+<<<<<<< HEAD
     WMError GetWindowBackHomeStatus(bool &isBackHome) override;
+=======
+    WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus) override;
+    WMError GetCallingWindowRect(int32_t persistentId, Rect& rect) override;
+>>>>>>> 62819931ad1b1e773601c1b5e1c545aacd94e68c
 
 private:
     template<typename T>

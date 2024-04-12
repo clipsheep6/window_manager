@@ -1630,18 +1630,49 @@ WSError SceneSessionManagerProxy::GetHostWindowRect(int32_t hostWindowId, Rect& 
     }
     auto posX = reply.ReadInt32();
     auto posY = reply.ReadInt32();
-    auto height = reply.ReadUint32();
     auto width = reply.ReadUint32();
-    rect = {posX, posY, height, width};
+    auto height = reply.ReadUint32();
+    rect = {posX, posY, width, height};
     return static_cast<WSError>(reply.ReadInt32());
 }
 
+<<<<<<< HEAD
 WMError SceneSessionManagerProxy::GetWindowBackHomeStatus(bool &isBackHome)
+=======
+WMError SceneSessionManagerProxy::GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "WriteInterfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32(persistentId)) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Write windowId failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_STATUS),
+        data, reply, option) != ERR_NONE) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    auto ret = static_cast<WMError>(reply.ReadInt32());
+    if (ret == WMError::WM_OK) {
+        windowStatus = static_cast<WindowStatus>(reply.ReadUint32());
+    }
+    return ret;
+}
+
+WMError SceneSessionManagerProxy::GetCallingWindowRect(int32_t persistentId, Rect& rect)
+>>>>>>> 62819931ad1b1e773601c1b5e1c545aacd94e68c
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
+<<<<<<< HEAD
         WLOGFE("GetWindowBackHomeStatus Write interfaceToken failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
@@ -1651,5 +1682,27 @@ WMError SceneSessionManagerProxy::GetWindowBackHomeStatus(bool &isBackHome)
     }
     isBackHome = reply.ReadBool();
     return static_cast<WMError>(reply.ReadInt32());
+=======
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "WriteInterfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32(persistentId)) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Write windowId failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_RECT),
+        data, reply, option) != ERR_NONE) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    auto ret = static_cast<WMError>(reply.ReadInt32());
+    if (ret == WMError::WM_OK) {
+        rect.posX_ = reply.ReadInt32();
+        rect.posY_ = reply.ReadInt32();
+        rect.width_ = reply.ReadUint32();
+        rect.height_ = reply.ReadUint32();
+    }
+    return ret;
+>>>>>>> 62819931ad1b1e773601c1b5e1c545aacd94e68c
 }
 } // namespace OHOS::Rosen

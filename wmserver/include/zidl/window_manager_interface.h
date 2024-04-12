@@ -212,6 +212,14 @@ public:
     {
         return WMError::WM_OK;
     }
+    virtual WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus)
+    {
+        return WMError::WM_OK;
+    }
+    virtual WMError GetCallingWindowRect(int32_t persistentId, Rect& rect)
+    {
+        return WMError::WM_OK;
+    }
 };
 }
 }

@@ -145,8 +145,15 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandleUpdateExtWindowFlags),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_HOST_WINDOW_RECT),
         &SceneSessionManagerStub::HandleGetHostWindowRect),
+<<<<<<< HEAD
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_BACK_HOME_STATUS),
         &SceneSessionManagerStub::HandleGetWindowBackHomeStatus),
+=======
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_STATUS),
+        &SceneSessionManagerStub::HandleGetCallingWindowWindowStatus),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_RECT),
+        &SceneSessionManagerStub::HandleGetCallingWindowRect),
+>>>>>>> 62819931ad1b1e773601c1b5e1c545aacd94e68c
 };
 
 int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
@@ -869,12 +876,13 @@ int SceneSessionManagerStub::HandleGetHostWindowRect(MessageParcel& data, Messag
     WSError ret = GetHostWindowRect(hostWindowId, rect);
     reply.WriteInt32(rect.posX_);
     reply.WriteInt32(rect.posY_);
-    reply.WriteUint32(rect.height_);
     reply.WriteUint32(rect.width_);
+    reply.WriteUint32(rect.height_);
     reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }
 
+<<<<<<< HEAD
 int SceneSessionManagerStub::HandleGetWindowBackHomeStatus(MessageParcel &data, MessageParcel &reply)
 {
     bool isBackHome = false;
@@ -885,6 +893,38 @@ int SceneSessionManagerStub::HandleGetWindowBackHomeStatus(MessageParcel &data, 
         return ERR_INVALID_DATA;
     }
     reply.WriteInt32(static_cast<int32_t>(errCode));
+=======
+int SceneSessionManagerStub::HandleGetCallingWindowWindowStatus(MessageParcel&data, MessageParcel&reply)
+{
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "run HandleGetCallingWindowWindowStatus!");
+    int32_t persistentId = data.ReadInt32();
+    WindowStatus windowStatus = WindowStatus::WINDOW_STATUS_UNDEFINED;
+    WMError ret = GetCallingWindowWindowStatus(persistentId, windowStatus);
+    reply.WriteUint32(static_cast<int32_t>(ret));
+    if (ret != WMError::WM_OK) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Failed to GetCallingWindowWindowStatus(%{public}d)", persistentId);
+        return ERR_INVALID_DATA;
+    }
+    reply.WriteUint32(static_cast<uint32_t>(windowStatus));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleGetCallingWindowRect(MessageParcel&data, MessageParcel& reply)
+{
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "run HandleGetCallingWindowRect!");
+    int32_t persistentId = data.ReadInt32();
+    Rect rect = {0, 0, 0, 0};
+    WMError ret = GetCallingWindowRect(persistentId, rect);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    if (ret != WMError::WM_OK) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Failed to GetCallingWindowRect(%{public}d)", persistentId);
+        return ERR_INVALID_DATA;
+    }
+    reply.WriteInt32(rect.posX_);
+    reply.WriteInt32(rect.posY_);
+    reply.WriteUint32(rect.width_);
+    reply.WriteUint32(rect.height_);
+>>>>>>> 62819931ad1b1e773601c1b5e1c545aacd94e68c
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

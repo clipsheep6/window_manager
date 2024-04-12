@@ -102,7 +102,12 @@ public:
         TRANS_ID_UPDATE_EXTENSION_WINDOW_FLAGS,
         TRANS_ID_GET_HOST_WINDOW_RECT,
         TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION_WITH_DETACH_CALLBACK,
+<<<<<<< HEAD
         TRANS_ID_GET_WINDOW_BACK_HOME_STATUS,
+=======
+        TRANS_ID_GET_WINDOW_STATUS,
+        TRANS_ID_GET_WINDOW_RECT,
+>>>>>>> 62819931ad1b1e773601c1b5e1c545aacd94e68c
     };
 
     virtual WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) = 0;
@@ -227,7 +232,18 @@ public:
     {
         return WSError::WS_OK;
     }
+<<<<<<< HEAD
     WMError GetWindowBackHomeStatus(bool &isBackHome) override { return WMError::WM_OK; }
+=======
+    WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus) override
+    {
+        return WMError::WM_OK;
+    }
+    WMError GetCallingWindowRect(int32_t persistentId, Rect& rect) override
+    {
+        return WMError::WM_OK;
+    }
+>>>>>>> 62819931ad1b1e773601c1b5e1c545aacd94e68c
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_INTERFACE_H
