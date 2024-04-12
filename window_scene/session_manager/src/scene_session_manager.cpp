@@ -7385,7 +7385,6 @@ int32_t SceneSessionManager::ReclaimPurgeableCleanMem()
 #endif
 }
 
-<<<<<<< HEAD
 WMError SceneSessionManager::GetWindowBackHomeStatus(bool &isBackHome)
 {
     if (!SessionPermission::IsSACalling()) {
@@ -7396,7 +7395,7 @@ WMError SceneSessionManager::GetWindowBackHomeStatus(bool &isBackHome)
     WLOGFI("Get back home status success, isBackHome: %{public}d", isBackHome);
     return WMError::WM_OK;
 }
-=======
+
 WindowStatus SceneSessionManager::GetWindowStatus(WindowMode mode, SessionState sessionState,
     const sptr<WindowSessionProperty>& property)
 {
@@ -7492,6 +7491,4 @@ WMError SceneSessionManager::GetCallingWindowRect(int32_t persistentId, Rect& re
         "height: %{public}u, width: %{public}u", persistentId, rect.posX_, rect.posY_, rect.width_, rect.height_);
     return WMError::WM_OK;
 }
-
->>>>>>> 62819931ad1b1e773601c1b5e1c545aacd94e68c
 } // namespace OHOS::Rosen
