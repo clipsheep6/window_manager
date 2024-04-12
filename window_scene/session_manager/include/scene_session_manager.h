@@ -293,12 +293,9 @@ public:
     WSError UpdateExtWindowFlags(int32_t parentId, int32_t persistentId, uint32_t extWindowFlags) override;
     WSError GetHostWindowRect(int32_t hostWindowId, Rect& rect) override;
     int32_t ReclaimPurgeableCleanMem();
-<<<<<<< HEAD
     WMError GetWindowBackHomeStatus(bool &isBackHome) override;
-=======
     WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus) override;
     WMError GetCallingWindowRect(int32_t persistentId, Rect& rect) override;
->>>>>>> 62819931ad1b1e773601c1b5e1c545aacd94e68c
 
 public:
     std::shared_ptr<TaskScheduler> GetTaskScheduler() {return taskScheduler_;};
@@ -568,13 +565,10 @@ private:
     void ProcessSplitFloating();
     void NotifyRSSWindowModeTypeUpdate(bool inSplit, bool inFloating);
     bool IsKeyboardForeground();
-<<<<<<< HEAD
     void ProcessBackHomeStatus();
     bool IsBackHomeStatus();
-=======
     WindowStatus GetWindowStatus(WindowMode mode, SessionState sessionState,
         const sptr<WindowSessionProperty>& property);
->>>>>>> 62819931ad1b1e773601c1b5e1c545aacd94e68c
 };
 } // namespace OHOS::Rosen
 
