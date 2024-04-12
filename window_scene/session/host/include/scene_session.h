@@ -196,6 +196,7 @@ public:
 
     bool IsVisible() const;
     bool IsDecorEnable() const;
+    bool IsPCMode() const;
     bool IsAppSession() const;
     bool IsTurnScreenOn() const;
     bool IsKeepScreenOn() const;
