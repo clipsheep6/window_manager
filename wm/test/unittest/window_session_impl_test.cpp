@@ -967,6 +967,14 @@ HWTEST_F(WindowSessionImplTest, RegisterListener01, Function | SmallTest | Level
     res = window->UnregisterWindowRectChangeListener(listener7);
     ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
 
+    sptr<IDisplayMoveListener> listener8 = new IDisplayMoveListener();
+    res = window->RegisterDisplayMoveListener(listener8);
+    ASSERT_EQ(res, WMError::WM_OK);
+    res = res = window->RegisterDisplayMoveListener(listener8);
+    ASSERT_EQ(res, WMError::WM_OK);
+    res = window->UnregisterDisplayMoveListener(listener8);
+    ASSERT_EQ(res, WMError::WM_OK);
+
     GTEST_LOG_(INFO) << "WindowSessionImplTest: RegisterListener01 end";
 }
 
