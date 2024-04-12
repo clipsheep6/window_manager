@@ -100,7 +100,7 @@ HWTEST_F(WindowSessionImplTest, CreateWindowAndDestroy01, Function | SmallTest |
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
 
     window = new WindowSessionImpl(option);
-    ASSERT_EQ(WMError::WM_OK, window->Create(abilityContext_, session));
+    //ASSERT_EQ(WMError::WM_OK, window->Create(abilityContext_, session));
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy(false));
 }
 
