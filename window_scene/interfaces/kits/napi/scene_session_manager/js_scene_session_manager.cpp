@@ -80,64 +80,64 @@ napi_value JsSceneSessionManager::Init(napi_env env, napi_value exportObj)
     napi_set_named_property(env, exportObj, "StartupVisibility", CreateJsSessionStartupVisibility(env));
     napi_set_named_property(env, exportObj, "ProcessMode", CreateJsSessionProcessMode(env));
 
-    const char* moduleName = "JsSceneSessionManager";
-    BindNativeFunction(env, exportObj, "getRootSceneSession", moduleName, JsSceneSessionManager::GetRootSceneSession);
-    BindNativeFunction(env, exportObj, "requestSceneSession", moduleName, JsSceneSessionManager::RequestSceneSession);
-    BindNativeFunction(env, exportObj, "updateSceneSessionWant",
-        moduleName, JsSceneSessionManager::UpdateSceneSessionWant);
-    BindNativeFunction(env, exportObj, "requestSceneSessionActivation", moduleName,
-        JsSceneSessionManager::RequestSceneSessionActivation);
-    BindNativeFunction(env, exportObj, "requestSceneSessionBackground", moduleName,
-        JsSceneSessionManager::RequestSceneSessionBackground);
-    BindNativeFunction(env, exportObj, "requestSceneSessionDestruction", moduleName,
-        JsSceneSessionManager::RequestSceneSessionDestruction);
-    BindNativeFunction(env, exportObj, "notifyForegroundInteractiveStatus", moduleName,
-        JsSceneSessionManager::NotifyForegroundInteractiveStatus);
-    BindNativeFunction(env, exportObj, "on", moduleName, JsSceneSessionManager::RegisterCallback);
-    BindNativeFunction(env, exportObj, "getWindowSceneConfig", moduleName,
-        JsSceneSessionManager::GetWindowSceneConfig);
-    BindNativeFunction(env, exportObj, "processBackEvent", moduleName, JsSceneSessionManager::ProcessBackEvent);
-    BindNativeFunction(env, exportObj, "updateFocus", moduleName, JsSceneSessionManager::UpdateFocus);
-    BindNativeFunction(env, exportObj, "switchUser", moduleName, JsSceneSessionManager::SwitchUser);
-    BindNativeFunction(env, exportObj, "requestSceneSessionByCall", moduleName,
-        JsSceneSessionManager::RequestSceneSessionByCall);
-    BindNativeFunction(env, exportObj, "startAbilityBySpecified", moduleName,
-        JsSceneSessionManager::StartAbilityBySpecified);
-    BindNativeFunction(env, exportObj, "startUIAbilityBySCB", moduleName,
-        JsSceneSessionManager::StartUIAbilityBySCB);
-    BindNativeFunction(env, exportObj, "changeUIAbilityVisibilityBySCB", moduleName,
-        JsSceneSessionManager::ChangeUIAbilityVisibilityBySCB);
-    BindNativeFunction(env, exportObj, "getSessionSnapshot", moduleName,
-        JsSceneSessionManager::GetSessionSnapshotFilePath);
-    BindNativeFunction(env, exportObj, "InitWithRenderServiceAdded", moduleName,
-        JsSceneSessionManager::InitWithRenderServiceAdded);
-    BindNativeFunction(env, exportObj, "getAllAbilityInfo", moduleName, JsSceneSessionManager::GetAllAbilityInfos);
-    BindNativeFunction(env, exportObj, "prepareTerminate", moduleName, JsSceneSessionManager::PrepareTerminate);
-    BindNativeFunction(env, exportObj, "perfRequestEx", moduleName, JsSceneSessionManager::PerfRequestEx);
-    BindNativeFunction(env, exportObj, "updateWindowMode", moduleName, JsSceneSessionManager::UpdateWindowMode);
-    BindNativeFunction(env, exportObj, "getRootSceneUIContext", moduleName,
-        JsSceneSessionManager::GetRootSceneUIContext);
-    BindNativeFunction(env, exportObj, "sendTouchEvent", moduleName, JsSceneSessionManager::SendTouchEvent);
-    BindNativeFunction(env, exportObj, "requestFocusStatus", moduleName, JsSceneSessionManager::RequestFocusStatus);
-    BindNativeFunction(env, exportObj, "requestAllAppSessionUnfocus", moduleName,
-        JsSceneSessionManager::RequestAllAppSessionUnfocus);
-    BindNativeFunction(env, exportObj, "preloadInLakeApp", moduleName, JsSceneSessionManager::PreloadInLakeApp);
-    BindNativeFunction(env, exportObj, "addWindowDragHotArea", moduleName, JsSceneSessionManager::AddWindowDragHotArea);
-    BindNativeFunction(env, exportObj, "setScreenLocked", moduleName, JsSceneSessionManager::SetScreenLocked);
-    BindNativeFunction(env, exportObj, "updateMaximizeMode", moduleName, JsSceneSessionManager::UpdateMaximizeMode);
-    BindNativeFunction(env, exportObj, "updateSessionDisplayId", moduleName,
-        JsSceneSessionManager::UpdateSessionDisplayId);
-    BindNativeFunction(env, exportObj, "notifySessionRecoverStatus", moduleName,
-        JsSceneSessionManager::NotifySessionRecoverStatus);
-    BindNativeFunction(env, exportObj, "notifyAINavigationBarShowStatus", moduleName,
-        JsSceneSessionManager::NotifyAINavigationBarShowStatus);
-    BindNativeFunction(env, exportObj, "updateTitleInTargetPos", moduleName, JsSceneSessionManager::UpdateTitleInTargetPos);
-    BindNativeFunction(env, exportObj, "reportData", moduleName, JsSceneSessionManager::ReportData);
-    BindNativeFunction(env, exportObj, "setSystemAnimatedScenes", moduleName,
-        JsSceneSessionManager::SetSystemAnimatedScenes);
-    BindNativeFunction(env, exportObj, "getSessionSnapshotPixelMap", moduleName,
-        JsSceneSessionManager::GetSessionSnapshotPixelMap);
+    BindNativeFunctions(env, exportObj);
+
     return NapiGetUndefined(env);
+}
+
+void JsSceneSessionManager::BindModuleFunction(
+    napi_env env, napi_value exportObj, const char* name, napi_callback func)
+{
+    BindNativeFunction(env, exportObj, name, "JsSceneSessionManager", func);
+}
+
+void JsSceneSessionManager::BindNativeFunctions(napi_env env, napi_value exportObj)
+{
+    BindModuleFunction(env, exportObj, "getRootSceneSession", JsSceneSessionManager::GetRootSceneSession);
+    BindModuleFunction(env, exportObj, "requestSceneSession", JsSceneSessionManager::RequestSceneSession);
+    BindModuleFunction(env, exportObj, "updateSceneSessionWant",
+        JsSceneSessionManager::UpdateSceneSessionWant);
+    BindModuleFunction(env, exportObj, "requestSceneSessionActivation",
+        JsSceneSessionManager::RequestSceneSessionActivation);
+    BindModuleFunction(env, exportObj, "requestSceneSessionBackground",
+        JsSceneSessionManager::RequestSceneSessionBackground);
+    BindModuleFunction(env, exportObj, "requestSceneSessionDestruction",
+        JsSceneSessionManager::RequestSceneSessionDestruction);
+    BindModuleFunction(env, exportObj, "notifyForegroundInteractiveStatus",
+        JsSceneSessionManager::NotifyForegroundInteractiveStatus);
+    BindModuleFunction(env, exportObj, "on", JsSceneSessionManager::RegisterCallback);
+    BindModuleFunction(env, exportObj, "getWindowSceneConfig", JsSceneSessionManager::GetWindowSceneConfig);
+    BindModuleFunction(env, exportObj, "processBackEvent", JsSceneSessionManager::ProcessBackEvent);
+    BindModuleFunction(env, exportObj, "updateFocus", JsSceneSessionManager::UpdateFocus);
+    BindModuleFunction(env, exportObj, "switchUser", JsSceneSessionManager::SwitchUser);
+    BindModuleFunction(env, exportObj, "requestSceneSessionByCall", JsSceneSessionManager::RequestSceneSessionByCall);
+    BindModuleFunction(env, exportObj, "startAbilityBySpecified", JsSceneSessionManager::StartAbilityBySpecified);
+    BindModuleFunction(env, exportObj, "startUIAbilityBySCB", JsSceneSessionManager::StartUIAbilityBySCB);
+    BindModuleFunction(env, exportObj, "changeUIAbilityVisibilityBySCB",
+        JsSceneSessionManager::ChangeUIAbilityVisibilityBySCB);
+    BindModuleFunction(env, exportObj, "getSessionSnapshot", JsSceneSessionManager::GetSessionSnapshotFilePath);
+    BindModuleFunction(env, exportObj, "InitWithRenderServiceAdded", JsSceneSessionManager::InitWithRenderServiceAdded);
+    BindModuleFunction(env, exportObj, "getAllAbilityInfo", JsSceneSessionManager::GetAllAbilityInfos);
+    BindModuleFunction(env, exportObj, "prepareTerminate", JsSceneSessionManager::PrepareTerminate);
+    BindModuleFunction(env, exportObj, "perfRequestEx", JsSceneSessionManager::PerfRequestEx);
+    BindModuleFunction(env, exportObj, "updateWindowMode", JsSceneSessionManager::UpdateWindowMode);
+    BindModuleFunction(env, exportObj, "getRootSceneUIContext", JsSceneSessionManager::GetRootSceneUIContext);
+    BindModuleFunction(env, exportObj, "sendTouchEvent", JsSceneSessionManager::SendTouchEvent);
+    BindModuleFunction(env, exportObj, "requestFocusStatus", JsSceneSessionManager::RequestFocusStatus);
+    BindModuleFunction(env, exportObj, "requestAllAppSessionUnfocus",
+        JsSceneSessionManager::RequestAllAppSessionUnfocus);
+    BindModuleFunction(env, exportObj, "preloadInLakeApp", JsSceneSessionManager::PreloadInLakeApp);
+    BindModuleFunction(env, exportObj, "addWindowDragHotArea", JsSceneSessionManager::AddWindowDragHotArea);
+    BindModuleFunction(env, exportObj, "setScreenLocked", JsSceneSessionManager::SetScreenLocked);
+    BindModuleFunction(env, exportObj, "updateMaximizeMode", JsSceneSessionManager::UpdateMaximizeMode);
+    BindModuleFunction(env, exportObj, "updateSessionDisplayId", JsSceneSessionManager::UpdateSessionDisplayId);
+    BindModuleFunction(env, exportObj, "notifySessionRecoverStatus", JsSceneSessionManager::NotifySessionRecoverStatus);
+    BindModuleFunction(env, exportObj, "notifyAINavigationBarShowStatus",
+        JsSceneSessionManager::NotifyAINavigationBarShowStatus);
+    BindModuleFunction(env, exportObj, "updateTitleInTargetPos", JsSceneSessionManager::UpdateTitleInTargetPos);
+    BindModuleFunction(env, exportObj, "reportData", JsSceneSessionManager::ReportData);
+    BindModuleFunction(env, exportObj, "setSystemAnimatedScenes", JsSceneSessionManager::SetSystemAnimatedScenes);
+    BindModuleFunction(env, exportObj, "getSessionSnapshotPixelMap", JsSceneSessionManager::GetSessionSnapshotPixelMap);
 }
 
 JsSceneSessionManager::JsSceneSessionManager(napi_env env) : env_(env)
@@ -1166,21 +1166,7 @@ napi_value JsSceneSessionManager::OnRequestSceneSessionBackground(napi_env env, 
 
     sptr<SceneSession> sceneSession = nullptr;
     if (errCode == WSErrorCode::WS_OK) {
-        napi_value jsSceneSessionObj = argv[0];
-        if (jsSceneSessionObj == nullptr) {
-            TLOGE(WmsLogTag::WMS_LIFE, "[NAPI]Failed to get js scene session object");
-            errCode = WSErrorCode::WS_ERROR_INVALID_PARAM;
-        } else {
-            void* pointerResult = nullptr;
-            napi_unwrap(env, jsSceneSessionObj, &pointerResult);
-            auto jsSceneSession = static_cast<JsSceneSession*>(pointerResult);
-            if (jsSceneSession == nullptr) {
-                TLOGE(WmsLogTag::WMS_LIFE, "[NAPI]Failed to get scene session from js object");
-                errCode = WSErrorCode::WS_ERROR_INVALID_PARAM;
-            } else {
-                sceneSession = jsSceneSession->GetNativeSession();
-            }
-        }
+        errCode = GetSceneSession(env, argv[0], sceneSession);
     }
     if (sceneSession == nullptr) {
         TLOGE(WmsLogTag::WMS_LIFE, "[NAPI]sceneSession is nullptr");
@@ -2145,5 +2131,26 @@ napi_value JsSceneSessionManager::OnGetSessionSnapshotPixelMap(napi_env env, nap
     NapiAsyncTask::Schedule("JsSceneSessionManager::OnGetSessionSnapshotPixelMap",
         env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
     return result;
+}
+
+WSErrorCode JsSceneSessionManager::GetSceneSession(
+    napi_env env, napi_value jsSceneSessionObj, sptr<SceneSession>& sceneSession)
+{
+    if (jsSceneSessionObj == nullptr) {
+        TLOGE(WmsLogTag::WMS_LIFE, "[NAPI]Failed to get js scene session object");
+        return WSErrorCode::WS_ERROR_INVALID_PARAM;
+    } else {
+        void* pointerResult = nullptr;
+        napi_unwrap(env, jsSceneSessionObj, &pointerResult);
+        auto jsSceneSession = static_cast<JsSceneSession*>(pointerResult);
+        if (jsSceneSession == nullptr) {
+            TLOGE(WmsLogTag::WMS_LIFE, "[NAPI]Failed to get scene session from js object");
+            return WSErrorCode::WS_ERROR_INVALID_PARAM;
+        } else {
+            sceneSession = jsSceneSession->GetNativeSession();
+        }
+    }
+
+    return WSErrorCode::WS_OK;
 }
 } // namespace OHOS::Rosen

@@ -116,6 +116,10 @@ private:
     napi_value OnSetSystemAnimatedScenes(napi_env env, napi_callback_info info);
     napi_value OnGetSessionSnapshotPixelMap(napi_env env, napi_callback_info info);
 
+    static void BindModuleFunction(napi_env env, napi_value exportObj, const char* name, napi_callback func);
+    static void BindNativeFunctions(napi_env env, napi_value exportObj);
+    static WSErrorCode GetSceneSession(napi_env env, napi_value jsSceneSessionObj, sptr<SceneSession>& sceneSession);
+
     void OnStatusBarEnabledUpdate(bool enable);
     void OnGestureNavigationEnabledUpdate(bool enable);
     void OnCreateSystemSession(const sptr<SceneSession>& sceneSession);

@@ -38,6 +38,7 @@ private:
     napi_value OnLoadContent(napi_env env, napi_callback_info info);
     bool IsCallbackRegistered(napi_env env, const std::string& type, napi_value jsListenerObject);
     void PendingSessionActivation(SessionInfo& info);
+    bool ConvertContextFromJs(napi_env env, napi_value context, std::weak_ptr<AbilityRuntime::Context>& result);
     void PendingSessionActivationInner(std::shared_ptr<SessionInfo> sessionInfo);
     sptr<SceneSession> GenSceneSession(SessionInfo& info);
 
