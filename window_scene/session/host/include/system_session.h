@@ -37,7 +37,6 @@ public:
 
     WSError NotifyClientToUpdateRect(std::shared_ptr<RSTransaction> rsTransaction) override;
 
-    int32_t GetMissionId() const override;
 protected:
     bool CheckKeyEventDispatch(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const;
 

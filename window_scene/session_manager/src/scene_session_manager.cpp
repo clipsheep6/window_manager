@@ -3992,32 +3992,16 @@ void SceneSessionManager::NotifyFocusStatus(sptr<SceneSession>& sceneSession, bo
         return;
     }
     // notify listenerController
-    auto prevSession = GetSceneSession(lastFocusedSessionId_);
-    if (isFocused && MissionChanged(prevSession, sceneSession)) {
-        NotifyFocusStatusByMission(prevSession, sceneSession);
-    }
-}
-
-void SceneSessionManager::NotifyFocusStatusByMission(sptr<SceneSession>& prevSession, sptr<SceneSession>& currSession)
-{
-    if (listenerController_ != nullptr) {
-        if (prevSession && !prevSession->GetSessionInfo().isSystem_) {
-            TLOGD(WmsLogTag::WMS_FOCUS, "NotifyMissionUnfocused, id: %{public}d", prevSession->GetMissionId());
-            listenerController_->NotifySessionUnfocused(prevSession->GetMissionId());
-        }
-        if (currSession && !currSession->GetSessionInfo().isSystem_) {
-            TLOGD(WmsLogTag::WMS_FOCUS, "NotifyMissionFocused, id: %{public}d", currSession->GetMissionId());
-            listenerController_->NotifySessionFocused(currSession->GetMissionId());
+    if (listenerController_ != nullptr && !sceneSession->GetSessionInfo().isSystem_) {
+        if (isFocused) {
+            TLOGD(WmsLogTag::WMS_FOCUS, "NotifySessionFocused, id: %{public}d", sceneSession->GetPersistentId());
+            listenerController_->NotifySessionFocused(sceneSession->GetPersistentId());
+        } else {
+            TLOGD(WmsLogTag::WMS_FOCUS, "NotifySessionUnfocused, id: %{public}d", sceneSession->GetPersistentId());
+            listenerController_->NotifySessionUnfocused(sceneSession->GetPersistentId());
         }
     }
-}
-
-bool SceneSessionManager::MissionChanged(sptr<SceneSession>& prevSession, sptr<SceneSession>& currSession)
-{
-    if (prevSession == nullptr || currSession == nullptr) {
-        return false;
-    }
-    return prevSession->GetMissionId() != currSession->GetMissionId();
+    return;
 }
 
 std::string SceneSessionManager::GetAllSessionFocusInfo()
