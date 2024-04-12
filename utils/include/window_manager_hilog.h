@@ -63,6 +63,7 @@ enum class WmsLogTag : uint8_t {
     WMS_EVENT,                 // C0420C
     WMS_UIEXT,                 // C0420D
     WMS_PIP,                   // C0420E
+    WMS_CLIENT,                // C0420F
 
     END = 256,                 // Last one, do not use
 };
@@ -83,6 +84,7 @@ const std::unordered_map<WmsLogTag, const char *> DOMAIN_CONTENTS_MAP = {
     { WmsLogTag::WMS_EVENT, "WMSEvent" },
     { WmsLogTag::WMS_UIEXT, "WMSUiext" },
     { WmsLogTag::WMS_PIP, "WMSPiP" },
+    { WmsLogTag::WMS_CLIENT, "WMSClient" },
 };
 
 #define WMS_FILE_NAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)

@@ -292,27 +292,36 @@ WindowManager::~WindowManager()
 
 WMError WindowManager::RegisterWMSConnectionChangedListener(const sptr<IWMSConnectionChangedListener>& listener)
 {
+    int32_t clientUserId = GetUserIdByUid(getuid());
+    if (clientUserId != SYSTEM_USERID) {
+        TLOGW(WmsLogTag::WMS_CLIENT, "Not u0 user, permission denied");
+        return WMError::WM_ERROR_INVALID_PERMISSION;
+    }
     if (listener == nullptr) {
-        WLOGFE("WMS connection changed listener registered could not be null");
+        TLOGE(WmsLogTag::WMS_CLIENT, "WMS connection changed listener registered could not be null");
         return WMError::WM_ERROR_NULLPTR;
     }
-    WLOGFI("RegisterWMSConnectionChangedListener in");
+    TLOGI(WmsLogTag::WMS_CLIENT, "Register enter");
     {
         std::lock_guard<std::recursive_mutex> lock(pImpl_->mutex_);
         if (pImpl_->wmsConnectionChangedListener_) {
-            WLOGFI("wmsConnectionChangedListener is already registered, do nothing");
+            TLOGI(WmsLogTag::WMS_CLIENT, "wmsConnectionChangedListener is already registered, do nothing");
             return WMError::WM_OK;
         }
         pImpl_->wmsConnectionChangedListener_ = listener;
     }
-    return SingletonContainer::Get<WindowAdapter>().RegisterWMSConnectionChangedListener(
+    auto ret = SingletonContainer::Get<WindowAdapter>().RegisterWMSConnectionChangedListener(
         std::bind(&WindowManager::OnWMSConnectionChanged, this, std::placeholders::_1, std::placeholders::_2,
             std::placeholders::_3));
+    if (ret != WMError::WM_OK) {
+        pImpl_->wmsConnectionChangedListener_ = nullptr;
+    }
+    return ret;
 }
 
 WMError WindowManager::UnregisterWMSConnectionChangedListener()
 {
-    WLOGFI("UnregisterWMSConnectionChangedListener in");
+    TLOGI(WmsLogTag::WMS_CLIENT, "Unregister enter");
     std::lock_guard<std::recursive_mutex> lock(pImpl_->mutex_);
     pImpl_->wmsConnectionChangedListener_ = nullptr;
     return WMError::WM_OK;
