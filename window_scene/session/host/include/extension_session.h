@@ -58,7 +58,7 @@ public:
     };
 
     explicit ExtensionSession(const SessionInfo& info);
-    virtual ~ExtensionSession() = default;
+    virtual ~ExtensionSession();
 
     WSError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
