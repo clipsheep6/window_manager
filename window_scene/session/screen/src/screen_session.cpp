@@ -25,6 +25,7 @@
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DMS_SCREEN_SESSION, "ScreenSession" };
+const static uint32_t MAX_INTERVAL_US = 1000000;
 }
 
 ScreenSession::ScreenSession(ScreenId screenId, ScreenId rsId, const std::string& name,
@@ -136,6 +137,19 @@ sptr<DisplayInfo> ScreenSession::ConvertToDisplayInfo()
     if (displayInfo == nullptr) {
         return displayInfo;
     }
+    auto currentTime = std::chrono::steady_clock::now();
+    static std::chrono::steady_clock::time_point lastRequestTime = currentTime;
+    if (property_.GetRefreshRateFlag()) {
+        auto interval = std::chrono::duration_cast<std::chrono::microseconds>(currentTime - lastRequestTime).count();
+        if (interval > MAX_INTERVAL_US) {
+            uint32_t refreshRate = RSInterfaces::GetInstance().GetScreenCurrentRefreshRate(screenId_);
+            lastRequestTime = currentTime;
+            displayInfo->SetRefreshRate(refreshRate);
+        }
+    } else {
+        displayInfo->SetRefreshRate(property_.GetRefreshRate());
+    }
+
     displayInfo->name_ = name_;
     displayInfo->SetWidth(property_.GetBounds().rect_.GetWidth());
     displayInfo->SetHeight(property_.GetBounds().rect_.GetHeight());
@@ -143,7 +157,6 @@ sptr<DisplayInfo> ScreenSession::ConvertToDisplayInfo()
     displayInfo->SetPhysicalHeight(property_.GetPhyBounds().rect_.GetHeight());
     displayInfo->SetScreenId(screenId_);
     displayInfo->SetDisplayId(screenId_);
-    displayInfo->SetRefreshRate(property_.GetRefreshRate());
     displayInfo->SetVirtualPixelRatio(property_.GetVirtualPixelRatio());
     displayInfo->SetDensityInCurResolution(property_.GetDensityInCurResolution());
     displayInfo->SetDefaultVirtualPixelRatio(property_.GetDefaultDensity());
@@ -219,6 +232,11 @@ void ScreenSession::UpdatePropertyByFoldControl(RRect bounds, RRect phyBounds)
 void ScreenSession::UpdateRefreshRate(uint32_t refreshRate)
 {
     property_.SetRefreshRate(refreshRate);
+}
+
+void ScreenSession::UpdateRefreshRateFlag(bool needReadRefreshRate)
+{
+    property_.SetRefreshRateFlag(needReadRefreshRate);
 }
 
 uint32_t ScreenSession::GetRefreshRate()
