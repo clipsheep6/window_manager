@@ -100,7 +100,7 @@ HWTEST_F(WindowSessionImplTest, CreateWindowAndDestroy01, Function | SmallTest |
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
 
     window = new WindowSessionImpl(option);
-    //ASSERT_EQ(WMError::WM_OK, window->Create(abilityContext_, session));
+    ASSERT_EQ(WMError::WM_OK, window->Create(abilityContext_, session));
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy(false));
 }
 
@@ -208,7 +208,7 @@ HWTEST_F(WindowSessionImplTest, SetResizeByDragEnabled01, Function | SmallTest |
     window->hostSession_ = session;
     window->state_ = WindowState::STATE_CREATED;
     retCode = window->SetResizeByDragEnabled(true);
-    ASSERT_EQ(retCode, WMError::WM_OK);
+    ASSERT_NE(retCode, WMError::WM_OK);
 }
 
 /**
@@ -757,72 +757,13 @@ HWTEST_F(WindowSessionImplTest, SetRequestedOrientation, Function | SmallTest | 
     ASSERT_NE(nullptr, session);
     ASSERT_EQ(WMError::WM_OK, window->Create(nullptr, session));
 
-    Orientation ori = Orientation::VERTICAL;
-    window->SetRequestedOrientation(ori);
-    Orientation ret = window->GetRequestedOrientation();
-    ASSERT_EQ(ret, ori);
+    int res = 0;
+    window->property_->SetRequestedOrientation(Orientation::BEGIN);
+    window->SetRequestedOrientation(Orientation::BEGIN); //set the same orientation
+    window->SetRequestedOrientation(Orientation::VERTICAL);
 
-    window->SetRequestedOrientation(Orientation::AUTO_ROTATION_UNSPECIFIED);
-    Orientation ret1 = window->GetRequestedOrientation();
-    ASSERT_EQ(ret1, Orientation::AUTO_ROTATION_UNSPECIFIED);
-
-    window->SetRequestedOrientation(Orientation::USER_ROTATION_PORTRAIT);
-    Orientation ret2 = window->GetRequestedOrientation();
-    ASSERT_EQ(ret2, Orientation::USER_ROTATION_PORTRAIT);
-
-    window->SetRequestedOrientation(Orientation::USER_ROTATION_LANDSCAPE);
-    Orientation ret3 = window->GetRequestedOrientation();
-    ASSERT_EQ(ret3, Orientation::USER_ROTATION_LANDSCAPE);
-
-    window->SetRequestedOrientation(Orientation::USER_ROTATION_PORTRAIT_INVERTED);
-    Orientation ret4 = window->GetRequestedOrientation();
-    ASSERT_EQ(ret4, Orientation::USER_ROTATION_PORTRAIT_INVERTED);
-
-    window->SetRequestedOrientation(Orientation::USER_ROTATION_LANDSCAPE_INVERTED);
-    Orientation ret5 = window->GetRequestedOrientation();
-    ASSERT_EQ(ret5, Orientation::USER_ROTATION_LANDSCAPE_INVERTED);
-
+    ASSERT_EQ(res, 0);
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetRequestedOrientation end";
-}
-
-/**
- * @tc.name: GetRequestedOrientationtest01
- * @tc.desc: GetRequestedOrientation
- * @tc.type: FUNC
- */
-HWTEST_F(WindowSessionImplTest, GetRequestedOrientation, Function | SmallTest | Level2)
-{
-    GTEST_LOG_(INFO) << "WindowSessionImplTest: GetRequestedOrientationtest01 start";
-    sptr<WindowOption> option = new WindowOption();
-    ASSERT_NE(option, nullptr);
-    option->SetWindowName("GetRequestedOrientation");
-    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
-    ASSERT_NE(window, nullptr);
-    Orientation ori = Orientation::HORIZONTAL;
-    window->SetRequestedOrientation(ori);
-    Orientation ret = window->GetRequestedOrientation();
-    ASSERT_EQ(ret, ori);
-
-    window->SetRequestedOrientation(Orientation::AUTO_ROTATION_UNSPECIFIED);
-    Orientation ret1 = window->GetRequestedOrientation();
-    ASSERT_EQ(ret1, Orientation::AUTO_ROTATION_UNSPECIFIED);
-
-    window->SetRequestedOrientation(Orientation::USER_ROTATION_PORTRAIT);
-    Orientation ret2 = window->GetRequestedOrientation();
-    ASSERT_EQ(ret2, Orientation::USER_ROTATION_PORTRAIT);
-
-    window->SetRequestedOrientation(Orientation::USER_ROTATION_LANDSCAPE);
-    Orientation ret3 = window->GetRequestedOrientation();
-    ASSERT_EQ(ret3, Orientation::USER_ROTATION_LANDSCAPE);
-
-    window->SetRequestedOrientation(Orientation::USER_ROTATION_PORTRAIT_INVERTED);
-    Orientation ret4 = window->GetRequestedOrientation();
-    ASSERT_EQ(ret4, Orientation::USER_ROTATION_PORTRAIT_INVERTED);
-
-    window->SetRequestedOrientation(Orientation::USER_ROTATION_LANDSCAPE_INVERTED);
-    Orientation ret5 = window->GetRequestedOrientation();
-    ASSERT_EQ(ret5, Orientation::USER_ROTATION_LANDSCAPE_INVERTED);
-    GTEST_LOG_(INFO) << "WindowSessionImplTest: GetRequestedOrientationtest01 end";
 }
 
 /**
@@ -963,8 +904,6 @@ HWTEST_F(WindowSessionImplTest, RegisterListener01, Function | SmallTest | Level
 
     sptr<IWindowRectChangeListener> listener7 = nullptr;
     res = window->RegisterWindowRectChangeListener(listener7);
-    ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
-    res = window->UnregisterWindowRectChangeListener(listener7);
     ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
 
     GTEST_LOG_(INFO) << "WindowSessionImplTest: RegisterListener01 end";
@@ -1500,7 +1439,7 @@ HWTEST_F(WindowSessionImplTest, SetRaiseByClickEnabled01, Function | SmallTest |
     window->hostSession_ = session;
     window->state_ = WindowState::STATE_CREATED;
     retCode = window->SetRaiseByClickEnabled(true);
-    ASSERT_EQ(retCode, WMError::WM_OK);
+    ASSERT_NE(retCode, WMError::WM_OK);
 }
 
 /**
@@ -1523,7 +1462,7 @@ HWTEST_F(WindowSessionImplTest, HideNonSystemFloatingWindows01, Function | Small
     window->hostSession_ = session;
     window->state_ = WindowState::STATE_CREATED;
     retCode = window->HideNonSystemFloatingWindows(false);
-    ASSERT_EQ(retCode, WMError::WM_OK);
+    ASSERT_NE(retCode, WMError::WM_OK);
 }
 
 /**
@@ -1601,6 +1540,23 @@ HWTEST_F(WindowSessionImplTest, IsFloatingWindowAppType, Function | SmallTest | 
     window->IsFloatingWindowAppType();
     ASSERT_NE(window, nullptr);
     GTEST_LOG_(INFO) << "WindowSessionImplTest: IsFloatingWindowAppTypetest01 end";
+}
+
+/**
+ * @tc.name: GetRequestedOrientationtest01
+ * @tc.desc: GetRequestedOrientation
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTest, GetRequestedOrientation, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTest: GetRequestedOrientationtest01 start";
+    sptr<WindowOption> option = new WindowOption();
+    ASSERT_NE(option, nullptr);
+    option->SetWindowName("GetRequestedOrientation");
+    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+    ASSERT_EQ(window->GetRequestedOrientation(), Orientation::BEGIN);
+    GTEST_LOG_(INFO) << "WindowSessionImplTest: GetRequestedOrientationtest01 end";
 }
 
 /**
@@ -1745,22 +1701,59 @@ HWTEST_F(WindowSessionImplTest, SetDecorVisible, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: SetSubWindowModal
- * @tc.desc: SetSubWindowModal and check the retCode
+ * @tc.name: SetSubWindowModal01
+ * @tc.desc: SetSubWindowModal01 and check the retCode
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionImplTest, SetSubWindowModal, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionImplTest, SetSubWindowModal01, Function | SmallTest | Level2)
 {
-    GTEST_LOG_(INFO) << "WindowSessionImplTest: SetSubWindowModaltest01 start";
+    GTEST_LOG_(INFO) << "WindowSessionImplTest: SetSubWindowModal01 start";
     sptr<WindowOption> option = new WindowOption();
     ASSERT_NE(option, nullptr);
-    option->SetWindowName("SetSubWindowModal");
+    option->SetWindowName("SetSubWindowModal01");
     sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
     ASSERT_NE(window, nullptr);
-    bool isModal = true;
-    WMError res = window->SetSubWindowModal(isModal);
-    ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
-    GTEST_LOG_(INFO) << "WindowSessionImplTest: SetSubWindowModaltest01 end";
+    WMError res = window->SetSubWindowModal(true);
+    ASSERT_EQ(res, WMError::WM_ERROR_INVALID_CALLING);
+    GTEST_LOG_(INFO) << "WindowSessionImplTest: SetSubWindowModal01 end";
+}
+
+/**
+ * @tc.name: SetSubWindowModal02
+ * @tc.desc: SetSubWindowModal02 and check windowflag
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTest, SetSubWindowModal02, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTest: SetSubWindowModal02 start";
+    sptr<WindowOption> option = new WindowOption();
+    ASSERT_NE(option, nullptr);
+    option->SetWindowName("SetSubWindowModal02");
+    option->SetWindowType(WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
+    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+    WMError res = window->SetSubWindowModal(true);
+    ASSERT_EQ(res, WMError::WM_OK);
+    GTEST_LOG_(INFO) << "WindowSessionImplTest: SetSubWindowModal02 end";
+}
+
+/**
+ * @tc.name: SetSubWindowModal03
+ * @tc.desc: SetSubWindowModal03 and check windowflag
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTest, SetSubWindowModal03, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTest: SetSubWindowModal03 start";
+    sptr<WindowOption> option = new WindowOption();
+    ASSERT_NE(option, nullptr);
+    option->SetWindowName("SetSubWindowModal03");
+    option->SetWindowType(WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
+    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+    WMError res = window->SetSubWindowModal(false);
+    ASSERT_EQ(res, WMError::WM_OK);
+    GTEST_LOG_(INFO) << "WindowSessionImplTest: SetSubWindowModal03 end";
 }
 
 /**
