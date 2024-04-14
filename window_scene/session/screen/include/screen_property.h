@@ -63,6 +63,9 @@ public:
     void SetRefreshRate(uint32_t refreshRate);
     uint32_t GetRefreshRate() const;
 
+    void SetRefreshRateFlag(bool needReadRefreshRate);
+    bool GetRefreshRateFlag() const;
+
     void UpdateVirtualPixelRatio(const RRect& bounds);
     void SetVirtualPixelRatio(float virtualPixelRatio);
     float GetVirtualPixelRatio() const;
@@ -138,6 +141,7 @@ private:
     void UpdateYDpi();
     void CalculateXYDpi(uint32_t phyWidth, uint32_t phyHeight);
     DMRect availableArea_;
+    bool needReadRefreshRate_ = false;
 };
 } // namespace OHOS::Rosen
 

@@ -113,6 +113,16 @@ uint32_t ScreenProperty::GetRefreshRate() const
     return refreshRate_;
 }
 
+void ScreenProperty::SetRefreshRateFlag(bool needReadRefreshRate)
+{
+    needReadRefreshRate_ = needReadRefreshRate;
+}
+
+bool ScreenProperty::GetRefreshRateFlag() const
+{
+    return needReadRefreshRate_;
+}
+
 void ScreenProperty::SetVirtualPixelRatio(float virtualPixelRatio)
 {
     virtualPixelRatio_ = virtualPixelRatio;

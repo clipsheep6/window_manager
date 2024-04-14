@@ -420,12 +420,19 @@ void ScreenSessionManager::OnHgmRefreshRateChange(int32_t refreshRateModeName)
         refreshRateModeName, defaultScreenId_);
     uint32_t refreshRate;
     if (refreshRateModeName == -1) {
-        refreshRate = static_cast<uint32_t>(MaxRefreshrate::MAX_REFRESHRATE_120);
+        refreshRate = RSInterfaces::GetInstance().GetScreenCurrentRefreshRate(defaultScreenId_);
     } else {
         refreshRate = static_cast<uint32_t>(refreshRateModeName);
     }
     sptr<ScreenSession> screenSession = GetScreenSession(defaultScreenId_);
     if (screenSession) {
+        if (refreshRateModeName == -1) {
+            screenSession->UpdateRefreshRateFlag(true);
+            WLOGFE("needReadRefreshRate is true");
+        } else {
+            screenSession->UpdateRefreshRateFlag(false);
+            WLOGFE("needReadRefreshRate is false");
+        }
         screenSession->UpdateRefreshRate(refreshRate);
     } else {
         WLOGFE("Get default screen session failed.");
