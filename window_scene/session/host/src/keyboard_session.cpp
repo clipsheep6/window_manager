@@ -37,6 +37,32 @@ KeyboardSession::~KeyboardSession()
     TLOGI(WmsLogTag::WMS_KEYBOARD, "~KeyboardSession");
 }
 
+void KeyboardSession::BindKeyboardPanelSession(sptr<SceneSession> panelSession)
+{
+    if (panelSession == nullptr) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "panelSession is nullptr");
+        return;
+    }
+    keyboardPanelSession_ = panelSession;
+    TLOGI(WmsLogTag::WMS_KEYBOARD, "bind panel success, panelId: %{public}d", panelSession->GetPersistentId());
+}
+
+sptr<SceneSession> KeyboardSession::GetKeyboardPanelSession()
+{
+    return keyboardPanelSession_;
+}
+
+SessionGravity KeyboardSession::GetKeyboardGravity()
+{
+    SessionGravity gravity = SessionGravity::SESSION_GRAVITY_DEFAULT;
+    uint32_t percent = 0;
+    if (GetSessionProperty()) {
+        GetSessionProperty()->GetSessionGravity(gravity, percent);
+    }
+    TLOGI(WmsLogTag::WMS_KEYBOARD, ", gravity: %{public}d", gravity);
+    return gravity;
+}
+
 WSError KeyboardSession::Show(sptr<WindowSessionProperty> property)
 {
     auto task = [weakThis = wptr(this), property]() {
