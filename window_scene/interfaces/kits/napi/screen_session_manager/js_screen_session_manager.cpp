@@ -97,6 +97,7 @@ napi_value JsScreenSessionManager::Init(napi_env env, napi_value exportObj)
 
 JsScreenSessionManager::~JsScreenSessionManager()
 {
+    TLOGI(WmsLogTag::DMS, "Destroy JsScreenSessionManager Test");
     TLOGI(WmsLogTag::DMS, "Destroy JsScreenSessionManager instance");
 }
 
