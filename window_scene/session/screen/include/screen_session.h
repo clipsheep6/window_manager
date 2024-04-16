@@ -53,9 +53,28 @@ enum class ScreenState : int32_t {
     DISCONNECTION,
 };
 
+struct ScreenSessionConfig : int32_t {
+    ScreenId screenId = SCREEN_ID_INVALID,
+    ScreenId rsId = SCREEN_ID_INVALID,
+    ScreenId defaultScareenId = SCREEN_ID_INVALID,
+    ScreenId mirrorNodeId = SCREEN_ID_INVALID;
+    std::string name = "UNKNOWN",
+    ScreenProperty property,
+    std::shared_ptr<RSDisplayNode> displayNode,
+};
+
+enum class ScreenSessionReason : int32_t {
+    CREATE_SESSION_FOR_CLIENT,
+    CREATE_SESSION_FOR_VIRTUAL,
+    CREATE_SESSION_FOR_MIRROR,
+    CREATE_SESSION_FOR_REAL,
+    INVALID,
+};
+
 class ScreenSession : public RefBase {
 public:
     ScreenSession() = default;
+    ScreenSession(const ScreenSessionConfig& config, ScreenSessionReason reason); 
     ScreenSession(ScreenId screenId, ScreenId rsId, const std::string& name,
         const ScreenProperty& property, const std::shared_ptr<RSDisplayNode>& displayNode);
     ScreenSession(ScreenId screenId, const ScreenProperty& property, ScreenId defaultScreenId);
