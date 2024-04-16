@@ -105,8 +105,7 @@ bool WindowSystemEffect::IsAppMainOrSubOrFloatingWindow(const sptr<WindowNode>& 
 
 WMError WindowSystemEffect::SetWindowShadow(const sptr<WindowNode>& node)
 {
-    auto winRoot = windowRoot_.promote();
-    if (winRoot == nullptr || node == nullptr) {
+    if (windowRoot_.promote() == nullptr || node == nullptr) {
         return WMError::WM_ERROR_NULLPTR;
     }
 

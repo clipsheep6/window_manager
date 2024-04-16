@@ -145,24 +145,19 @@ HWTEST_F(WindowControllerTest, NotifyWindowTransition, Function | SmallTest | Le
     ASSERT_EQ(WMError::WM_ERROR_NO_REMOTE_ANIMATION, windowController_->NotifyWindowTransition(srcInfo, dstInfo));
 
     srcInfo = new WindowTransitionInfo();
-    sptr<IRemoteObject> srcAbilityTokenMocker = new IRemoteObjectMocker();
-    srcInfo->SetAbilityToken(srcAbilityTokenMocker);
+    srcInfo->SetAbilityToken(new IRemoteObjectMocker());
     sptr<WindowNode> srcNode = StartingWindow::CreateWindowNode(srcInfo, 102); // 102 is windowId
     srcNode->property_->modeSupportInfo_ = WindowModeSupport::WINDOW_MODE_SUPPORT_ALL;
 
     dstInfo = new WindowTransitionInfo();
-    sptr<IRemoteObject> dstAbilityTokenMocker = new IRemoteObjectMocker();
-    dstInfo->SetAbilityToken(dstAbilityTokenMocker);
+    dstInfo->SetAbilityToken(new IRemoteObjectMocker());
     sptr<WindowNode> dstNode = StartingWindow::CreateWindowNode(dstInfo, 103); // 103 is windowId
     dstNode->property_->modeSupportInfo_ = WindowModeSupport::WINDOW_MODE_SUPPORT_ALL;
 
     windowRoot_->windowNodeMap_.clear();
     windowRoot_->windowNodeMap_.insert(std::make_pair(srcNode->GetWindowId(), srcNode));
     windowRoot_->windowNodeMap_.insert(std::make_pair(dstNode->GetWindowId(), dstNode));
-
-    sptr<DisplayInfo> displayInfo = new DisplayInfo();
-    sptr<WindowNodeContainer> container = new WindowNodeContainer(displayInfo, 0);
-    windowRoot_->windowNodeContainerMap_.insert(std::make_pair(0, container));
+    windowRoot_->windowNodeContainerMap_.insert(std::make_pair(0, new WindowNodeContainer(new DisplayInfo(), 0)));
 
     sptr<MockRSIWindowAnimationController> mock = new MockRSIWindowAnimationController();
     RemoteAnimation::windowAnimationController_ = mock;
