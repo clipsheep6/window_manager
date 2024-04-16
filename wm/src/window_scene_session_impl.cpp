@@ -177,6 +177,12 @@ WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
                 property_->GetWindowName().c_str(), type);
             return WMError::WM_ERROR_NULLPTR;
         }
+        auto abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(context_);
+        if (property_ && abilityContext && abilityContext->GetAbilityInfo()) {
+            auto info = property_->GetSessionInfo();
+            info.bundleName_ = abilityContext->GetAbilityInfo()->bundleName;
+            property_->SetSessionInfo(info);
+        }
         // set parent persistentId
         property_->SetParentPersistentId(parentSession->GetPersistentId());
         // creat sub session by parent session
@@ -195,6 +201,13 @@ WMError WindowSceneSessionImpl::CreateAndConnectSpecificSession()
             return createSystemWindowRet;
         }
         PreProcessCreate();
+        auto abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(context_);
+        if (property_ && abilityContext && abilityContext->GetAbilityInfo()) {
+            auto info = property_->GetSessionInfo();
+            info.bundleName_ = abilityContext->GetAbilityInfo()->bundleName;
+            property_->SetSessionInfo(info);
+        }
+
         SingletonContainer::Get<WindowAdapter>().CreateAndConnectSpecificSession(iSessionStage, eventChannel,
             surfaceNode_, property_, persistentId, session, windowSystemConfig_, token);
         if (windowSystemConfig_.maxFloatingWindowSize_ != UINT32_MAX) {
