@@ -4269,16 +4269,19 @@ void SceneSessionManager::ProcessSplitFloating()
 {
     bool inSplit = false;
     bool inFloating = false;
-    for (const auto& session : sceneSessionMap_) {
-        if (session.second == nullptr || !Rosen::SceneSessionManager::GetInstance().IsSessionVisible(session.second)) {
-            continue;
-        }
-        auto mode = session.second->GetWindowMode();
-        if (mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY || mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
-            inSplit = true;
-        }
-        if (mode == WindowMode::WINDOW_MODE_FLOATING) {
-            inFloating = true;
+    {
+        std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+        for (const auto& session : sceneSessionMap_) {
+            if (session.second == nullptr || !Rosen::SceneSessionManager::GetInstance().IsSessionVisible(session.second)) {
+                continue;
+            }
+            auto mode = session.second->GetWindowMode();
+            if (mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY || mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+                inSplit = true;
+            }
+            if (mode == WindowMode::WINDOW_MODE_FLOATING) {
+                inFloating = true;
+            }
         }
     }
     NotifyRSSWindowModeTypeUpdate(inSplit, inFloating);
