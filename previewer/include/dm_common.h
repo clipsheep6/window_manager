@@ -217,6 +217,25 @@ enum class ScreenGroupChangeEvent : uint32_t {
 };
 
 /**
+ * @brief Enumerates refreshrate modes.
+ */
+enum class RefreshRateMode : int32_t {
+    SMART = -1,
+    NORMAL = 1,
+    MIDDLE = 2,
+    HIGH = 3,
+};
+
+/**
+ * @brief Enumerates refreshrates.
+ */
+enum class RefreshRate : uint32_t {
+    NORMAL = 60,
+    MIDDLE = 90,
+    HIGH = 120,
+};
+
+/**
  * @brief Enumerates rotations.
  */
 enum class Rotation : uint32_t {
@@ -243,13 +262,7 @@ enum class Orientation : uint32_t {
     AUTO_ROTATION_PORTRAIT_RESTRICTED = 9,
     AUTO_ROTATION_LANDSCAPE_RESTRICTED = 10,
     LOCKED = 11,
-    FOLLOW_RECENT = 12,
-    AUTO_ROTATION_UNSPECIFIED = 13,
-    USER_ROTATION_PORTRAIT = 14,
-    USER_ROTATION_LANDSCAPE = 15,
-    USER_ROTATION_PORTRAIT_INVERTED = 16,
-    USER_ROTATION_LANDSCAPE_INVERTED = 17,
-    END = USER_ROTATION_LANDSCAPE_INVERTED,
+    END = LOCKED,
 };
 
 /**

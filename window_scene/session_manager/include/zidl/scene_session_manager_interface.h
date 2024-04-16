@@ -55,6 +55,7 @@ public:
         TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT,
         TRANS_ID_BIND_DIALOG_TARGET,
         TRANS_ID_GET_FOCUS_SESSION_INFO,
+        TRANS_ID_SET_SESSION_GRAVITY,
         TRANS_ID_SET_SESSION_LABEL,
         TRANS_ID_SET_SESSION_ICON,
         TRANS_ID_IS_VALID_SESSION_IDS,
@@ -65,13 +66,11 @@ public:
         TRANS_ID_PENDING_SESSION_TO_FOREGROUND,
         TRANS_ID_PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR,
         TRANS_ID_GET_FOCUS_SESSION_TOKEN,
-        TRANS_ID_GET_FOCUS_SESSION_ELEMENT,
         TRANS_ID_CHECK_WINDOW_ID,
         TRANS_ID_REGISTER_SESSION_LISTENER,
         TRANS_ID_UNREGISTER_SESSION_LISTENER,
         TRANS_ID_GET_MISSION_INFOS,
         TRANS_ID_GET_MISSION_INFO_BY_ID,
-        TRANS_ID_GET_SESSION_INFO_BY_CONTINUE_SESSION_ID,
         TRANS_ID_DUMP_SESSION_ALL,
         TRANS_ID_DUMP_SESSION_WITH_ID,
         TRANS_ID_TERMINATE_SESSION_NEW,
@@ -101,11 +100,6 @@ public:
         TRANS_ID_ADD_OR_REMOVE_SECURE_SESSION,
         TRANS_ID_ADD_OR_REMOVE_SECURE_EXT_SESSION,
         TRANS_ID_UPDATE_EXTENSION_WINDOW_FLAGS,
-        TRANS_ID_GET_HOST_WINDOW_RECT,
-        TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION_WITH_DETACH_CALLBACK,
-        TRANS_ID_GET_WINDOW_STATUS,
-        TRANS_ID_GET_WINDOW_RECT,
-        TRANS_ID_GET_WINDOW_BACK_HOME_STATUS,
     };
 
     virtual WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) = 0;
@@ -116,15 +110,12 @@ public:
     virtual WSError PendingSessionToForeground(const sptr<IRemoteObject> &token) = 0;
     virtual WSError PendingSessionToBackgroundForDelegator(const sptr<IRemoteObject> &token) = 0;
     virtual WSError GetFocusSessionToken(sptr<IRemoteObject> &token) = 0;
-    virtual WSError GetFocusSessionElement(AppExecFwk::ElementName& element) = 0;
 
     virtual WSError RegisterSessionListener(const sptr<ISessionListener>& listener) = 0;
     virtual WSError UnRegisterSessionListener(const sptr<ISessionListener>& listener) = 0;
     virtual WSError GetSessionInfos(const std::string& deviceId,
                                     int32_t numMax, std::vector<SessionInfoBean>& sessionInfos) = 0;
     virtual WSError GetSessionInfo(const std::string& deviceId, int32_t persistentId, SessionInfoBean& sessionInfo) = 0;
-    virtual WSError GetSessionInfoByContinueSessionId(const std::string& continueSessionId,
-        SessionInfoBean& sessionInfo) = 0;
     virtual WSError DumpSessionAll(std::vector<std::string> &infos) override { return WSError::WS_OK; }
     virtual WSError DumpSessionWithId(int32_t persistentId, std::vector<std::string> &infos) override
     {
@@ -228,19 +219,6 @@ public:
     {
         return WSError::WS_OK;
     }
-    WSError GetHostWindowRect(int32_t hostWindowId, Rect& rect) override
-    {
-        return WSError::WS_OK;
-    }
-    WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus) override
-    {
-        return WMError::WM_OK;
-    }
-    WMError GetCallingWindowRect(int32_t persistentId, Rect& rect) override
-    {
-        return WMError::WM_OK;
-    }
-    WMError GetWindowBackHomeStatus(bool &isBackHome) override { return WMError::WM_OK; }
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_INTERFACE_H

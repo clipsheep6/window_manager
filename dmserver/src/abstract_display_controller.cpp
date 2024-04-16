@@ -309,7 +309,7 @@ void AbstractDisplayController::ProcessDisplayCompression(sptr<AbstractScreen> a
     WLOGFI("Enter");
     auto absDisplay = GetAbstractDisplayByAbsScreen(absScreen);
     DisplayId defaultDisplayId = GetDefaultDisplayId();
-    if (absDisplay == nullptr || absDisplay->GetId() != defaultDisplayId) {
+    if (absDisplay->GetId() != defaultDisplayId) {
         return;
     }
     uint32_t sizeInVp = DisplayCutoutController::GetWaterfallAreaCompressionSizeWhenHorizontal();

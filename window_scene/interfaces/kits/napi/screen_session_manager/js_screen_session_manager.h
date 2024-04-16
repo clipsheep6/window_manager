@@ -20,7 +20,6 @@
 #include <native_engine/native_value.h>
 
 #include "screen_session_manager_client.h"
-#include "js_screen_utils.h"
 
 #ifdef POWER_MANAGER_ENABLE
 #include "shutdown/takeover_shutdown_callback_stub.h"
@@ -31,7 +30,7 @@ class JsScreenSessionManager final : public IScreenConnectionListener,
     public PowerMgr::TakeOverShutdownCallbackStub {
 public:
     explicit JsScreenSessionManager(napi_env env);
-    ~JsScreenSessionManager();
+    virtual ~JsScreenSessionManager() = default;
 
     static napi_value Init(napi_env env, napi_value exportObj);
     static void Finalizer(napi_env env, void* data, void* hint);
@@ -52,7 +51,6 @@ private:
     static napi_value NotifyFoldToExpandCompletion(napi_env env, napi_callback_info info);
     static napi_value GetFoldStatus(napi_env env, napi_callback_info info);
     static napi_value GetScreenSnapshot(napi_env env, napi_callback_info info);
-    static napi_value GetDeviceScreenConfig(napi_env env, napi_callback_info info);
 
     napi_value OnRegisterCallback(napi_env env, const napi_callback_info info);
     napi_value OnUpdateScreenRotationProperty(napi_env env, const napi_callback_info info);
@@ -65,7 +63,6 @@ private:
     napi_value OnNotifyFoldToExpandCompletion(napi_env env, const napi_callback_info info);
     napi_value OnGetFoldStatus(napi_env env, const napi_callback_info info);
     napi_value OnGetScreenSnapshot(napi_env env, const napi_callback_info info);
-    napi_value OnGetDeviceScreenConfig(napi_env env, const napi_callback_info info);
 
     std::shared_ptr<NativeReference> screenConnectionCallback_;
     std::shared_ptr<NativeReference> shutdownCallback_;

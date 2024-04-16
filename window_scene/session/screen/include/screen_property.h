@@ -74,9 +74,6 @@ public:
     void SetOrientation(Orientation orientation);
     Orientation GetOrientation() const;
 
-    void SetDisplayState(DisplayState displayState);
-    DisplayState GetDisplayState() const;
-
     void SetDisplayOrientation(DisplayOrientation displayOrientation);
     DisplayOrientation GetDisplayOrientation() const;
     void CalcDefaultDisplayOrientation();
@@ -128,7 +125,6 @@ private:
     DisplayOrientation displayOrientation_ { DisplayOrientation::UNKNOWN };
     Rotation screenRotation_ { Rotation::ROTATION_0 };
     Orientation screenRequestedOrientation_ { Orientation::UNSPECIFIED };
-    DisplayState displayState_ { DisplayState::UNKNOWN };
 
     float xDpi_ { 0.0f };
     float yDpi_ { 0.0f };

@@ -180,16 +180,6 @@ Orientation ScreenProperty::GetOrientation() const
     return orientation_;
 }
 
-void ScreenProperty::SetDisplayState(DisplayState displayState)
-{
-    displayState_ = displayState;
-}
-
-DisplayState ScreenProperty::GetDisplayState() const
-{
-    return displayState_;
-}
-
 void ScreenProperty::SetDisplayOrientation(DisplayOrientation displayOrientation)
 {
     displayOrientation_ = displayOrientation;

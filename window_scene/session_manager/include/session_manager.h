@@ -29,10 +29,6 @@ class SSMDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
     virtual void OnRemoteDied(const wptr<IRemoteObject>& wptrDeath) override;
 };
-class FoundationDeathRecipient : public IRemoteObject::DeathRecipient {
-public:
-    virtual void OnRemoteDied(const wptr<IRemoteObject>& wptrDeath) override;
-};
 
 class SessionManager {
 WM_DECLARE_SINGLE_INSTANCE_BASE(SessionManager);
@@ -45,10 +41,9 @@ public:
     void OnWMSConnectionChanged(int32_t userId, int32_t screenId, bool isConnected);
     void ClearSessionManagerProxy();
     void Clear();
-    WMError RegisterWMSConnectionChangedListener(const WMSConnectionChangedCallbackFunc& callbackFunc);
+    void RegisterWMSConnectionChangedListener(const WMSConnectionChangedCallbackFunc& callbackFunc);
 
     sptr<ISceneSessionManager> GetSceneSessionManagerProxy();
-    void OnFoundationDied();
 
 protected:
     SessionManager() = default;
@@ -56,9 +51,7 @@ protected:
 
 private:
     void InitSessionManagerServiceProxy();
-    WMError InitMockSMSProxy();
     void InitSceneSessionManagerProxy();
-    void RegisterSMSRecoverListener();
     sptr<IMockSessionManagerInterface> mockSessionManagerServiceProxy_ = nullptr;
     sptr<ISessionManagerService> sessionManagerServiceProxy_ = nullptr;
     sptr<ISceneSessionManager> sceneSessionManagerProxy_ = nullptr;
@@ -67,14 +60,12 @@ private:
     WindowManagerRecoverCallbackFunc windowManagerRecoverFunc_ = nullptr;
     WMSConnectionChangedCallbackFunc wmsConnectionChangedFunc_ = nullptr;
     sptr<SSMDeathRecipient> ssmDeath_ = nullptr;
-    sptr<FoundationDeathRecipient> foundationDeath_ = nullptr;
     std::recursive_mutex recoverMutex_;
     std::recursive_mutex mutex_;
     int32_t currentUserId_ = 0;
     int32_t currentScreenId_ = 0;
     bool isWMSConnected_ = false;
     bool destroyed_ = false;
-    bool isFoundationListenerRegistered_ = false;
 };
 } // namespace OHOS::Rosen
 

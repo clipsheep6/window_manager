@@ -25,7 +25,6 @@
 #include "wm_common.h"
 #include "dm_common.h"
 #include <cfloat>
-#include "pixel_map.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -64,24 +63,20 @@ public:
     void SetWindowMode(WindowMode mode);
     void SetWindowLimits(const WindowLimits& windowLimits);
     void SetSystemBarProperty(WindowType type, const SystemBarProperty& property);
-    void SetKeyboardSessionGravity(SessionGravity gravity_, uint32_t percent);
+    void SetSessionGravity(SessionGravity gravity_, uint32_t percent);
     void SetDecorEnable(bool isDecorEnable);
     void SetAnimationFlag(uint32_t animationFlag);
     void SetTransform(const Transform& trans);
     void SetWindowFlags(uint32_t flags);
-    void SetTopmost(bool topmost);
-    bool IsTopmost() const;
     void AddWindowFlag(WindowFlag flag);
     void SetModeSupportInfo(uint32_t modeSupportInfo);
     void SetFloatingWindowAppType(bool isAppType);
     void SetTouchHotAreas(const std::vector<Rect>& rects);
     void KeepKeyboardOnFocus(bool keepKeyboardFlag);
     void SetIsNeedUpdateWindowMode(bool isNeedUpdateWindowMode);
-    void SetCallingSessionId(uint32_t sessionId);
+    void SetCallingWindow(uint32_t windowId);
     void SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo);
     void SetExtensionFlag(bool isExtensionFlag);
-    void SetWindowMask(const sptr<Media::PixelMap>& windowMask);
-    void SetIsShaped(bool isShaped);
 
     bool GetIsNeedUpdateWindowMode() const;
     const std::string& GetWindowName() const;
@@ -121,11 +116,9 @@ public:
     bool IsFloatingWindowAppType() const;
     void GetTouchHotAreas(std::vector<Rect>& rects) const;
     bool GetKeepKeyboardFlag() const;
-    uint32_t GetCallingSessionId() const;
+    uint32_t GetCallingWindow() const;
     PiPTemplateInfo GetPiPTemplateInfo() const;
     bool GetExtensionFlag() const;
-    sptr<Media::PixelMap> GetWindowMask() const;
-    bool GetIsShaped() const;
 
     bool MarshallingWindowLimits(Parcel& parcel) const;
     static void UnmarshallingWindowLimits(Parcel& parcel, WindowSessionProperty* property);
@@ -135,8 +128,6 @@ public:
     static void UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowSessionProperty* property);
     bool Marshalling(Parcel& parcel) const override;
     static WindowSessionProperty* Unmarshalling(Parcel& parcel);
-    bool MarshallingWindowMask(Parcel& parcel) const;
-    static void UnmarshallingWindowMask(Parcel& parcel, WindowSessionProperty* property);
 
     void SetTextFieldPositionY(double textFieldPositionY);
     void SetTextFieldHeight(double textFieldHeight);
@@ -167,7 +158,6 @@ private:
     bool tokenState_ { false };
     bool turnScreenOn_ = false;
     bool keepScreenOn_ = false;
-    bool topmost_ = false;
     Orientation requestedOrientation_ = Orientation::UNSPECIFIED;
     bool isPrivacyMode_ { false };
     bool isSystemPrivacyMode_ { false };
@@ -200,7 +190,7 @@ private:
     bool hideNonSystemFloatingWindows_ = false;
     bool forceHide_ = false;
     bool keepKeyboardFlag_ = false;
-    uint32_t callingSessionId_ = INVALID_SESSION_ID;
+    uint32_t callingWindowId_ = INVALID_WINDOW_ID;
 
     double textFieldPositionY_ = 0.0;
     double textFieldHeight_ = 0.0;
@@ -208,9 +198,6 @@ private:
     std::function<void()> touchHotAreasChangeCallback_;
     bool isLayoutFullScreen_ = false;
     bool isExtensionFlag_ = false;
-
-    bool isShaped_ = false;
-    sptr<Media::PixelMap> windowMask_ = nullptr;
 };
 
 struct SystemSessionConfig : public Parcelable {

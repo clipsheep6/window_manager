@@ -342,12 +342,5 @@ void WindowInnerManager::StartWindowInfoReportLoop()
     }
     isReportTaskStart_ = true;
 }
-
-void WindowInnerManager::SetWindowRoot(const sptr<WindowRoot> &windowRoot)
-{
-    if (moveDragController_ != nullptr) {
-        moveDragController_->SetWindowRoot(windowRoot);
-    }
-}
 } // Rosen
 } // OHOS

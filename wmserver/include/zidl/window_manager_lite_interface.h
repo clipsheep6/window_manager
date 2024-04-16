@@ -18,10 +18,7 @@
 
 #include <iremote_broker.h>
 
-#include "interfaces/include/ws_common.h"
-#include "window_property.h"
-#include "window_transition_info.h"
-#include "zidl/window_manager_agent_interface.h"
+#include "focus_change_info.h"
 
 namespace OHOS {
 namespace MMI {
@@ -33,14 +30,7 @@ class IWindowManagerLite : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.IWindowManagerLite");
     // do not need enum
-    virtual WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
-        const sptr<IWindowManagerAgent>& windowManagerAgent) = 0;
-    virtual WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
-        const sptr<IWindowManagerAgent>& windowManagerAgent) = 0;
-    virtual WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) { return WMError::WM_OK; };
     virtual void GetFocusWindowInfo(FocusChangeInfo& focusInfo) = 0;
-    virtual WMError CheckWindowId(int32_t windowId, int32_t &pid) = 0;
-    virtual WMError GetWindowBackHomeStatus(bool &isBackHome) { return WMError::WM_OK; };
 };
 }
 }

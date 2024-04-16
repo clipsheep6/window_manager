@@ -111,7 +111,6 @@ public:
     static sptr<Window> Find(const std::string& id);
     static sptr<Window> GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context = nullptr);
     static sptr<Window> GetTopWindowWithId(uint32_t mainWinId);
-    static sptr<Window> GetWindowWithId(uint32_t winId);
     static std::vector<sptr<Window>> GetSubWindow(uint32_t parantId);
     static void UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration);
     virtual std::shared_ptr<RSSurfaceNode> GetSurfaceNode() const override;
@@ -273,7 +272,6 @@ public:
     virtual std::string GetContentInfo() override;
     virtual const std::shared_ptr<AbilityRuntime::Context> GetContext() const override;
     virtual Ace::UIContent* GetUIContent() const override;
-    virtual Ace::UIContent* GetUIContentWithId(uint32_t winId) const override;
     virtual void OnNewWant(const AAFwk::Want& want) override;
     virtual void SetRequestedOrientation(Orientation) override;
     virtual Orientation GetRequestedOrientation() override;
@@ -518,7 +516,6 @@ private:
             reason == WindowSizeChangeReason::DRAG_START || reason == WindowSizeChangeReason::RECOVER ||
             reason == WindowSizeChangeReason::MOVE || reason == WindowSizeChangeReason::UNDEFINED;
     }
-    void InitWindowProperty(const sptr<WindowOption>& option);
     void ClearListenersById(uint32_t winId);
     void NotifySizeChange(Rect rect, WindowSizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
@@ -656,7 +653,6 @@ private:
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     bool needNotifyFocusLater_ = false;
     bool escKeyEventTriggered_ = false;
-    std::shared_ptr<VsyncStation> vsyncStation_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

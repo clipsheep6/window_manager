@@ -108,19 +108,17 @@ bool SessionPermission::IsSACalling()
         WLOGFW("SA Called, tokenId: %{public}u, flag: %{public}u", tokenId, flag);
         return true;
     }
-    WLOGFI("Not SA called, tokenId:%{public}u, flag:%{public}u", tokenId, flag);
+    WLOGFD("Not SA called");
     return false;
 }
 
 bool SessionPermission::VerifyCallingPermission(const std::string& permissionName)
 {
+    WLOGFI("VerifyCallingPermission permission %{public}s", permissionName.c_str());
     auto callerToken = IPCSkeleton::GetCallingTokenID();
-    WLOGFI("VerifyCallingPermission permission %{public}s, callingTokenID:%{public}u",
-        permissionName.c_str(), callerToken);
     int32_t ret = Security::AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
     if (ret != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
-        WLOGFE("permission %{public}s: PERMISSION_DENIED, CallingTokenID:%{public}u, ret:%{public}d",
-            permissionName.c_str(), callerToken, ret);
+        WLOGFE("permission %{public}s: PERMISSION_DENIED", permissionName.c_str());
         return false;
     }
     WLOGFI("verify AccessToken success");
@@ -158,7 +156,7 @@ bool SessionPermission::IsShellCall()
         WLOGFI("caller tokenType is shell, verify success");
         return true;
     }
-    WLOGFI("Not shell called. tokenId:%{public}u, flag:%{public}u", callerToken, tokenType);
+    WLOGFI("Not shell called.");
     return false;
 }
 
@@ -239,8 +237,8 @@ bool SessionPermission::IsSameBundleNameAsCalling(const std::string& bundleName)
 
 bool SessionPermission::IsStartedByUIExtension()
 {
-    auto bundleManagerServiceProxy = GetBundleManagerProxy();
-    if (!bundleManagerServiceProxy) {
+    auto bundleManagerServiceProxy_ = GetBundleManagerProxy();
+    if (!bundleManagerServiceProxy_) {
         WLOGFE("failed to get BundleManagerServiceProxy");
         return false;
     }
@@ -249,10 +247,11 @@ bool SessionPermission::IsStartedByUIExtension()
     // reset ipc identity
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     std::string bundleName;
-    bundleManagerServiceProxy->GetNameForUid(uid, bundleName);
+    bundleManagerServiceProxy_->GetNameForUid(uid, bundleName);
     AppExecFwk::BundleInfo bundleInfo;
-    int userId = uid / 200000; // 200000 use uid to caculate userId
-    bool result = bundleManagerServiceProxy->GetBundleInfo(bundleName,
+    // 200000 use uid to caculate userId
+    int userId = uid / 200000;
+    bool result = bundleManagerServiceProxy_->GetBundleInfo(bundleName,
         AppExecFwk::BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO, bundleInfo, userId);
     // set ipc identity to raw
     IPCSkeleton::SetCallingIdentity(identity);

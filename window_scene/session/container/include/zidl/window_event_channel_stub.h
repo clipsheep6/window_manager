@@ -37,7 +37,6 @@ private:
 
     int HandleTransferBackpressedEvent(MessageParcel& data, MessageParcel& reply);
     int HandleTransferKeyEvent(MessageParcel& data, MessageParcel& reply);
-    int HandleTransferKeyEventAsync(MessageParcel& data, MessageParcel& reply);
     int HandleTransferPointerEvent(MessageParcel& data, MessageParcel& reply);
     int HandleGetApplicationPid(MessageParcel& data, MessageParcel& reply);
     int HandleTransferFocusActiveEvent(MessageParcel& data, MessageParcel& reply);

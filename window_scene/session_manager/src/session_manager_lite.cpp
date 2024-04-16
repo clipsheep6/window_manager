@@ -138,14 +138,6 @@ sptr<IScreenSessionManagerLite> SessionManagerLite::GetScreenSessionManagerLiteP
     return screenSessionManagerLiteProxy_;
 }
 
-sptr<ISessionManagerService> SessionManagerLite::GetSessionManagerServiceProxy()
-{
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
-    InitSessionManagerServiceProxy();
-    InitSceneSessionManagerLiteProxy();
-    return sessionManagerServiceProxy_;
-}
-
 void SessionManagerLite::SaveSessionListener(const sptr<ISessionListener>& listener)
 {
     std::lock_guard<std::recursive_mutex> guard(listenerLock_);

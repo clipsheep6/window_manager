@@ -181,8 +181,6 @@ struct SessionInfo {
     std::string errorReason;
     int32_t persistentId_ = INVALID_SESSION_ID;
     int32_t callerPersistentId_ = INVALID_SESSION_ID;
-    std::string callerBundleName_ = "";
-    std::string callerAbilityName_ = "";
     uint32_t callState_ = 0;
     uint32_t callingTokenId_ = 0;
     bool reuse = false;
@@ -203,7 +201,6 @@ struct SessionInfo {
     bool isAsyncModalBinding_ = false;
     bool isSetPointerAreas_ = false;
     bool isCastSession_ = false;
-    std::string continueSessionId_ = "";
 };
 
 enum class SessionFlag : uint32_t {
@@ -395,10 +392,6 @@ struct AppWindowSceneConfig {
     KeyboardSceneAnimationConfig keyboardAnimationOut_;
     WindowAnimationConfig windowAnimation_;
     StartingWindowAnimationConfig startingWindowAnimationConfig_;
-};
-
-struct DeviceScreenConfig {
-    std::string rotationPolicy_ = "11"; // default use phone policy
 };
 
 /**

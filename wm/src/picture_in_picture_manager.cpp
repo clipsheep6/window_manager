@@ -21,7 +21,6 @@
 #include "window_manager_hilog.h"
 #include "window_scene_session_impl.h"
 #include "wm_common.h"
-#include "scene_board_judgement.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -42,11 +41,6 @@ PictureInPictureManager::PictureInPictureManager()
 
 PictureInPictureManager::~PictureInPictureManager()
 {
-}
-
-bool PictureInPictureManager::IsSupportPiP()
-{
-    return SceneBoardJudgement::IsSceneBoardEnabled();
 }
 
 bool PictureInPictureManager::ShouldAbortPipStart()

@@ -551,6 +551,13 @@ DMError ScreenManager::ResizeVirtualScreen(ScreenId screenId, uint32_t width, ui
     return SingletonContainer::Get<ScreenManagerAdapter>().ResizeVirtualScreen(screenId, width, height);
 }
 
+DMError ScreenManager::SetVirtualScreenRefreshRate(ScreenId screenId, uint32_t refreshRate)
+{
+    WLOGFI("SetVirtualScreenRefreshRate, screenId: %{public}" PRIu64", refreshRate: %{public}u.",
+        screenId, refreshRate);
+    return DMError::DM_OK;
+}
+
 DMError ScreenManager::SetVirtualMirrorScreenCanvasRotation(ScreenId screenId, bool rotation)
 {
     return SingletonContainer::Get<ScreenManagerAdapter>().SetVirtualMirrorScreenCanvasRotation(screenId, rotation);
@@ -569,11 +576,6 @@ VirtualScreenFlag ScreenManager::GetVirtualScreenFlag(ScreenId screenId)
 DMError ScreenManager::SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag screenFlag)
 {
     return SingletonContainer::Get<ScreenManagerAdapter>().SetVirtualScreenFlag(screenId, screenFlag);
-}
-
-DMError ScreenManager::SetVirtualScreenRefreshRate(ScreenId screenId, uint32_t refreshInterval)
-{
-    return SingletonContainer::Get<ScreenManagerAdapter>().SetVirtualScreenRefreshRate(screenId, refreshInterval);
 }
 
 bool ScreenManager::SetSpecifiedScreenPower(ScreenId screenId, ScreenPowerState state, PowerStateChangeReason reason)
@@ -637,7 +639,7 @@ bool ScreenManager::Impl::UpdateScreenInfoLocked(sptr<ScreenInfo> screenInfo)
         return false;
     }
     ScreenId screenId = screenInfo->GetScreenId();
-    WLOGFD("screenId:%{public}" PRIu64".", screenId);
+    WLOGFI("screenId:%{public}" PRIu64".", screenId);
     if (screenId == SCREEN_ID_INVALID) {
         WLOGFE("displayId is invalid.");
         return false;
@@ -660,7 +662,7 @@ bool ScreenManager::Impl::isAllListenersRemoved() const
 
 void ScreenManager::Impl::OnRemoteDied()
 {
-    WLOGFD("dms is died");
+    WLOGFI("dms is died");
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     screenManagerListener_ = nullptr;
     virtualScreenAgent_ = nullptr;

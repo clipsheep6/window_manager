@@ -41,11 +41,6 @@ DMError ScreenSessionManagerLiteProxy::RegisterDisplayManagerAgent(
         return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
     }
 
-    if (displayManagerAgent == nullptr) {
-        WLOGFE("IDisplayManagerAgent is null");
-        return DMError::DM_ERROR_INVALID_PARAM;
-    }
-
     if (!data.WriteRemoteObject(displayManagerAgent->AsObject())) {
         WLOGFE("Write IDisplayManagerAgent failed");
         return DMError::DM_ERROR_IPC_FAILED;
@@ -74,11 +69,6 @@ DMError ScreenSessionManagerLiteProxy::UnregisterDisplayManagerAgent(
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("UnregisterDisplayManagerAgent WriteInterfaceToken failed");
         return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
-    }
-
-    if (displayManagerAgent == nullptr) {
-        WLOGFE("IDisplayManagerAgent is null");
-        return DMError::DM_ERROR_INVALID_PARAM;
     }
 
     if (!data.WriteRemoteObject(displayManagerAgent->AsObject())) {

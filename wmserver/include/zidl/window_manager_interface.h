@@ -84,7 +84,6 @@ public:
         TRANS_ID_GET_MAXIMIZE_MODE,
         TRANS_ID_GET_FOCUS_WINDOW_INFO,
         TRANS_ID_UPDATE_EXTENSION_WINDOW_FLAGS,
-        TRANS_ID_GET_HOST_WINDOW_RECT,
     };
     virtual WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode,
@@ -152,9 +151,7 @@ public:
     {
         return WSError::WS_OK;
     }
-    virtual WSError DestroyAndDisconnectSpecificSession(const int32_t persistentId) { return WSError::WS_OK; }
-    virtual WSError DestroyAndDisconnectSpecificSessionWithDetachCallback(const int32_t persistentId,
-        const sptr<IRemoteObject>& callback) { return WSError::WS_OK; }
+    virtual WSError DestroyAndDisconnectSpecificSession(const int32_t& persistentId) { return WSError::WS_OK; };
     virtual WSError RecoverAndReconnectSceneSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
         sptr<ISession>& session, sptr<WindowSessionProperty> property, sptr<IRemoteObject> token = nullptr)
@@ -182,7 +179,7 @@ public:
     {
         return WSError::WS_OK;
     }
-    virtual WSError UpdateSessionWindowVisibilityListener(int32_t persistentId, bool haveListener)
+    virtual WSError UpdateSessionWindowVisibilityListener(int32_t persistendId, bool haveListener)
     {
         return WSError::WS_OK;
     }
@@ -204,22 +201,6 @@ public:
     {
         return WSError::WS_OK;
     }
-    virtual WSError GetHostWindowRect(int32_t hostWindowId, Rect& rect)
-    {
-        return WSError::WS_OK;
-    }
-    virtual WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus)
-    {
-        return WMError::WM_OK;
-    }
-    virtual WMError GetCallingWindowRect(int32_t persistentId, Rect& rect)
-    {
-        return WMError::WM_OK;
-    }
-    virtual WMError GetWindowBackHomeStatus(bool &isBackHome)
-    {
-        return WMError::WM_OK;
-    };
 };
 }
 }

@@ -20,7 +20,6 @@
 #include "js_runtime_utils.h"
 #include "window_manager_hilog.h"
 #include "window.h"
-#include "picture_in_picture_manager.h"
 #include "xcomponent_controller.h"
 
 namespace OHOS {
@@ -72,6 +71,24 @@ static int32_t checkControlsRules(uint32_t pipTemplateType, std::vector<std::uin
             TLOGE(WmsLogTag::WMS_PIP, "pipoption param error, %{public}u conflicts with %{public}u in controlGroups",
                 static_cast<uint32_t>(PiPControlGroup::VIDEO_PREVIOUS_NEXT),
                 static_cast<uint32_t>(PiPControlGroup::FAST_FORWARD_BACKWARD));
+            return -1;
+        }
+    }
+    if (pipTemplateType == static_cast<uint32_t>(PiPTemplateType::VIDEO_CALL)) {
+        auto iterator = std::find(controlGroups.begin(), controlGroups.end(),
+            static_cast<uint32_t>(PiPControlGroup::VIDEO_CALL_HANG_UP_BUTTON));
+        if (controlGroups.size() != 0 && iterator == controlGroups.end()) {
+            TLOGE(WmsLogTag::WMS_PIP, "pipoption param error, requires HANG_UP_BUTTON "
+                "when using controlGroups in VIDEO_CALL.");
+            return -1;
+        }
+    }
+    if (pipTemplateType == static_cast<uint32_t>(PiPTemplateType::VIDEO_MEETING)) {
+        auto iterator = std::find(controlGroups.begin(), controlGroups.end(),
+            static_cast<uint32_t>(PiPControlGroup::VIDEO_MEETING_HANG_UP_BUTTON));
+        if (controlGroups.size() != 0 && iterator == controlGroups.end()) {
+            TLOGE(WmsLogTag::WMS_PIP, "pipoption param error, requires HANG_UP_BUTTON "
+                "when using controlGroups in VIDEO_MEETING.");
             return -1;
         }
     }
@@ -206,34 +223,29 @@ napi_value JsPipWindowManager::OnCreatePipController(napi_env env, napi_callback
         return NapiThrowInvalidParam(env);
     }
     PipOption pipOption;
-    if (GetPictureInPictureOptionFromJs(env, config, pipOption) == -1) {
+    int32_t errCode = GetPictureInPictureOptionFromJs(env, config, pipOption);
+    if (errCode == -1) {
         TLOGE(WmsLogTag::WMS_PIP, "Configuration is invalid: %{public}zu", argc);
         return NapiThrowInvalidParam(env);
     }
-    napi_value callback = argc > 1 ? (GetType(env, argv[1]) == napi_function ? argv[1] : nullptr) : nullptr;
-    NapiAsyncTask::CompleteCallback complete = [=](napi_env env, NapiAsyncTask& task, int32_t status) {
-        if (!PictureInPictureManager::IsSupportPiP()) {
-            task.Reject(env, CreateJsError(env, static_cast<int32_t>(
-                WMError::WM_ERROR_DEVICE_NOT_SUPPORT), "device not support pip."));
-            return;
-        }
-        sptr<PipOption> pipOptionPtr = new PipOption(pipOption);
-        auto context = static_cast<std::weak_ptr<AbilityRuntime::Context>*>(pipOptionPtr->GetContext());
-        if (context == nullptr) {
-            task.Reject(env, CreateJsError(env, static_cast<int32_t>(
-                WMError::WM_ERROR_PIP_INTERNAL_ERROR), "Invalid context"));
-            return;
-        }
-        sptr<Window> mainWindow = Window::GetMainWindowWithContext(context->lock());
-        if (mainWindow == nullptr) {
-            task.Reject(env, CreateJsError(env, static_cast<int32_t>(
-                WMError::WM_ERROR_PIP_INTERNAL_ERROR), "Invalid mainWindow"));
-            return;
-        }
-        sptr<PictureInPictureController> pipController =
-            new PictureInPictureController(pipOptionPtr, mainWindow, mainWindow->GetWindowId(), env);
-        task.Resolve(env, CreateJsPipControllerObject(env, pipController));
-    };
+    napi_value callback = nullptr;
+    if (argc > 1) {
+        callback = GetType(env, argv[1]) == napi_function ? argv[1] : nullptr; // 1: index of callback
+    }
+    NapiAsyncTask::CompleteCallback complete =
+        [=](napi_env env, NapiAsyncTask& task, int32_t status) {
+            sptr<PipOption> pipOptionPtr = new PipOption(pipOption);
+            auto context = static_cast<std::weak_ptr<AbilityRuntime::Context>*>(pipOptionPtr->GetContext());
+            if (context == nullptr) {
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(
+                    WMError::WM_ERROR_PIP_INTERNAL_ERROR), "Invalid context"));
+                return;
+            }
+            sptr<Window> mainWindow = Window::GetMainWindowWithContext(context->lock());
+            sptr<PictureInPictureController> pipController =
+                new PictureInPictureController(pipOptionPtr, mainWindow, mainWindow->GetWindowId(), env);
+            task.Resolve(env, CreateJsPipControllerObject(env, pipController));
+        };
     napi_value result = nullptr;
     NapiAsyncTask::Schedule("JsPipWindowManager::OnCreatePipController", env,
         CreateAsyncTaskWithLastParam(env, callback, nullptr, std::move(complete), &result));

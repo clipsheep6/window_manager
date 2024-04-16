@@ -28,8 +28,6 @@ namespace Rosen {
 class JsDisplayListener : public DisplayManager::IDisplayListener,
                           public DisplayManager::IPrivateWindowListener,
                           public DisplayManager::IFoldStatusListener,
-                          public DisplayManager::IFoldAngleListener,
-                          public DisplayManager::ICaptureStatusListener,
                           public DisplayManager::IDisplayModeListener,
                           public DisplayManager::IAvailableAreaListener {
 public:
@@ -43,8 +41,6 @@ public:
     void OnChange(DisplayId id) override;
     void OnPrivateWindow(bool hasPrivate) override;
     void OnFoldStatusChanged(FoldStatus foldStatus) override;
-    void OnFoldAngleChanged(std::vector<float> foldAngles) override;
-    void OnCaptureStatusChanged(bool isCapture) override;
     void OnDisplayModeChanged(FoldDisplayMode displayMode) override;
     void OnAvailableAreaChanged(DMRect area) override;
 
@@ -60,8 +56,6 @@ const std::string EVENT_REMOVE = "remove";
 const std::string EVENT_CHANGE = "change";
 const std::string EVENT_PRIVATE_MODE_CHANGE = "privateModeChange";
 const std::string EVENT_FOLD_STATUS_CHANGED = "foldStatusChange";
-const std::string EVENT_FOLD_ANGLE_CHANGED = "foldAngleChange";
-const std::string EVENT_CAPTURE_STATUS_CHANGED = "captureStatusChange";
 const std::string EVENT_DISPLAY_MODE_CHANGED = "foldDisplayModeChange";
 const std::string EVENT_AVAILABLE_AREA_CHANGED = "availableAreaChange";
 }  // namespace Rosen

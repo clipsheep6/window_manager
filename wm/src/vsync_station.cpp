@@ -26,15 +26,10 @@ namespace OHOS {
 namespace Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "VsyncStation"};
-    const std::string VSYNC_TIME_OUT_TASK = "vsync_time_out_task_";
+    const std::string VSYNC_TIME_OUT_TASK = "vsync_time_out_task";
     constexpr int64_t VSYNC_TIME_OUT_MILLISECONDS = 600;
 }
-
-VsyncStation::VsyncStation(NodeId nodeId) : nodeId_(nodeId)
-{
-    vsyncTimeoutTaskName_ = VSYNC_TIME_OUT_TASK + std::to_string(nodeId_);
-    TLOGI(WmsLogTag::WMS_MAIN, "Vsync Constructor");
-}
+WM_IMPLEMENT_SINGLE_INSTANCE(VsyncStation)
 
 void VsyncStation::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback)
 {
@@ -51,8 +46,8 @@ void VsyncStation::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallb
         }
         hasRequestedVsync_ = true;
         if (vsyncHandler_) {
-            vsyncHandler_->RemoveTask(vsyncTimeoutTaskName_);
-            vsyncHandler_->PostTask(vsyncTimeoutCallback_, vsyncTimeoutTaskName_, VSYNC_TIME_OUT_MILLISECONDS);
+            vsyncHandler_->RemoveTask(VSYNC_TIME_OUT_TASK);
+            vsyncHandler_->PostTask(vsyncTimeoutCallback_, VSYNC_TIME_OUT_TASK, VSYNC_TIME_OUT_MILLISECONDS);
         }
     }
     WindowFrameTraceImpl::GetInstance()->VsyncStartFrameTrace();
@@ -103,8 +98,7 @@ void VsyncStation::Init()
         frameRateLinker_ = OHOS::Rosen::RSFrameRateLinker::Create();
         while (receiver_ == nullptr) {
             receiver_ = rsClient.CreateVSyncReceiver("WM_" + std::to_string(::getprocpid()), frameRateLinker_->GetId(),
-                vsyncHandler_, nodeId_);
-            TLOGI(WmsLogTag::WMS_MAIN, "Create vsync receiver for nodeId:%{public}" PRIu64"", nodeId_);
+                vsyncHandler_);
         }
         receiver_->Init();
         hasInitVsyncReceiver_ = true;
@@ -126,7 +120,7 @@ void VsyncStation::VsyncCallbackInner(int64_t timestamp)
         hasRequestedVsync_ = false;
         vsyncCallbacks = vsyncCallbacks_;
         vsyncCallbacks_.clear();
-        vsyncHandler_->RemoveTask(vsyncTimeoutTaskName_);
+        vsyncHandler_->RemoveTask(VSYNC_TIME_OUT_TASK);
     }
     for (const auto& callback: vsyncCallbacks) {
         if (callback && callback->onCallback) {

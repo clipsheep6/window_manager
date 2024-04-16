@@ -34,8 +34,6 @@ class FoldScreenSensorManager : public RefBase {
     WM_DECLARE_SINGLE_INSTANCE_BASE(FoldScreenSensorManager);
 
 public:
-    void RegisterPostureCallback();
-
     void UnRegisterPostureCallback();
 
     void UnRegisterHallCallback();
@@ -59,6 +57,8 @@ private:
 
     int allowUseSensorForAlta = 0;
 
+    void RegisterPostureCallback();
+
     void RegisterHallCallback();
 
     void HandleSensorData(float, int);
@@ -68,8 +68,6 @@ private:
     FoldStatus TransferAngleToScreenState(float, int);
 
     void ReportNotifyFoldStatusChange(int32_t currentStatus, int32_t nextStatus, float postureAngle);
-
-    void notifyFoldAngleChanged(float foldAngle);
 
     FoldScreenSensorManager();
 

@@ -27,7 +27,6 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DMS_SCREEN_SESSION_MANAGER,
                                           "ScreenSessionManagerStub" };
 const static uint32_t MAX_SCREEN_SIZE = 32;
-const static uint32_t ERR_INVALID_DATA = -1;
 }
 
 int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply,
@@ -36,7 +35,7 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
     WLOGFD("OnRemoteRequest code is %{public}u", code);
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         WLOGFE("InterfaceToken check failed");
-        return ERR_INVALID_DATA;
+        return -1;
     }
     DisplayManagerMessage msgId = static_cast<DisplayManagerMessage>(code);
     switch (msgId) {
@@ -47,9 +46,6 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
         }
         case DisplayManagerMessage::TRANS_ID_REGISTER_DISPLAY_MANAGER_AGENT: {
             auto agent = iface_cast<IDisplayManagerAgent>(data.ReadRemoteObject());
-            if (agent == nullptr) {
-                return ERR_INVALID_DATA;
-            }
             auto type = static_cast<DisplayManagerAgentType>(data.ReadUint32());
             DMError ret = RegisterDisplayManagerAgent(agent, type);
             reply.WriteInt32(static_cast<int32_t>(ret));
@@ -57,9 +53,6 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
         }
         case DisplayManagerMessage::TRANS_ID_UNREGISTER_DISPLAY_MANAGER_AGENT: {
             auto agent = iface_cast<IDisplayManagerAgent>(data.ReadRemoteObject());
-            if (agent == nullptr) {
-                return ERR_INVALID_DATA;
-            }
             auto type = static_cast<DisplayManagerAgentType>(data.ReadUint32());
             DMError ret = UnregisterDisplayManagerAgent(agent, type);
             reply.WriteInt32(static_cast<int32_t>(ret));
@@ -115,7 +108,7 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             ScreenId dmsScreenId;
             if (!data.ReadUint64(dmsScreenId)) {
                 WLOGFE("fail to read dmsScreenId.");
-                return ERR_INVALID_DATA;
+                return -1;
             }
             reply.WriteUint32(static_cast<uint32_t>(GetScreenPower(dmsScreenId)));
             break;
@@ -527,10 +520,6 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             reply.WriteString(dumpInfo);
             break;
         }
-        case DisplayManagerMessage::TRANS_ID_DEVICE_IS_CAPTURE: {
-            reply.WriteBool(IsCaptured());
-            break;
-        }
         //Fold Screen
         case DisplayManagerMessage::TRANS_ID_SCENE_BOARD_SET_FOLD_DISPLAY_MODE: {
             FoldDisplayMode displayMode = static_cast<FoldDisplayMode>(data.ReadUint32());
@@ -626,7 +615,7 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             sptr<DisplayChangeInfo> info = DisplayChangeInfo::Unmarshalling(data);
             if (!info) {
                 WLOGFE("Read DisplayChangeInfo failed");
-                return ERR_INVALID_DATA;
+                return -1;
             }
             NotifyDisplayChangeInfoChanged(info);
             break;
@@ -681,19 +670,6 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             VirtualScreenFlag screenFlag = static_cast<VirtualScreenFlag>(data.ReadUint32());
             DMError setRet = SetVirtualScreenFlag(screenId, screenFlag);
             reply.WriteInt32(static_cast<int32_t>(setRet));
-            break;
-        }
-        case DisplayManagerMessage::TRANS_ID_GET_DEVICE_SCREEN_CONFIG: {
-            if (!RSMarshallingHelper::Marshalling(reply, GetDeviceScreenConfig())) {
-                TLOGE(WmsLogTag::DMS, "Write deviceScreenConfig failed");
-            }
-            break;
-        }
-        case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_SCREEN_REFRESH_RATE: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            uint32_t refreshInterval = data.ReadUint32();
-            DMError ret = SetVirtualScreenRefreshRate(screenId, refreshInterval);
-            reply.WriteInt32(static_cast<int32_t>(ret));
             break;
         }
         default:

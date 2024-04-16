@@ -42,7 +42,6 @@ private:
     int HandleRecoverAndConnectSpecificSession(MessageParcel &data, MessageParcel &reply);
     int HandleRecoverAndReconnectSceneSession(MessageParcel &data, MessageParcel &reply);
     int HandleDestroyAndDisconnectSpcificSession(MessageParcel &data, MessageParcel &reply);
-    int HandleDestroyAndDisconnectSpcificSessionWithDetachCallback(MessageParcel& data, MessageParcel& reply);
     int HandleRegisterWindowManagerAgent(MessageParcel &data, MessageParcel &reply);
     int HandleUnregisterWindowManagerAgent(MessageParcel &data, MessageParcel &reply);
     int HandleGetFocusSessionInfo(MessageParcel &data, MessageParcel &reply);
@@ -54,15 +53,14 @@ private:
     int HandlePendingSessionToForeground(MessageParcel &data, MessageParcel &reply);
     int HandlePendingSessionToBackgroundForDelegator(MessageParcel &data, MessageParcel &reply);
     int HandleGetFocusSessionToken(MessageParcel &data, MessageParcel &reply);
-    int HandleGetFocusSessionElement(MessageParcel& data, MessageParcel& reply);
     int HandleSetGestureNavigationEnabled(MessageParcel &data, MessageParcel &reply);
+    int HandleSetSessionGravity(MessageParcel &data, MessageParcel &reply);
     int HandleCheckWindowId(MessageParcel &data, MessageParcel &reply);
 
     int HandleRegisterSessionListener(MessageParcel& data, MessageParcel& reply);
     int HandleUnRegisterSessionListener(MessageParcel& data, MessageParcel& reply);
     int HandleGetSessionInfos(MessageParcel& data, MessageParcel& reply);
     int HandleGetSessionInfo(MessageParcel& data, MessageParcel& reply);
-    int HandleGetSessionInfoByContinueSessionId(MessageParcel& data, MessageParcel& reply);
 
     int HandleDumpSessionAll(MessageParcel& data, MessageParcel& reply);
     int HandleDumpSessionWithId(MessageParcel& data, MessageParcel& reply);
@@ -92,10 +90,6 @@ private:
     int HandleAddOrRemoveSecureSession(MessageParcel& data, MessageParcel& reply);
     int HandleAddOrRemoveSecureExtSession(MessageParcel& data, MessageParcel& reply);
     int HandleUpdateExtWindowFlags(MessageParcel& data, MessageParcel& reply);
-    int HandleGetHostWindowRect(MessageParcel& data, MessageParcel& reply);
-    int HandleGetCallingWindowWindowStatus(MessageParcel& data, MessageParcel& reply);
-    int HandleGetCallingWindowRect(MessageParcel& data, MessageParcel& reply);
-    int HandleGetWindowBackHomeStatus(MessageParcel& data, MessageParcel& reply);
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_STUB_H

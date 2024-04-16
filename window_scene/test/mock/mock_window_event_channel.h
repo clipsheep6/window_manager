@@ -26,8 +26,6 @@ public:
     ~WindowEventChannelMocker() {};
     MOCK_METHOD1(TransferKeyEvent, WSError(const std::shared_ptr<MMI::KeyEvent>& keyEvent));
     MOCK_METHOD1(TransferPointerEvent, WSError(const std::shared_ptr<MMI::PointerEvent>& pointerEvent));
-    MOCK_METHOD3(TransferKeyEventForConsumedAsync, WSError(const std::shared_ptr<MMI::KeyEvent>& keyEvent,
-        bool isPreImeEvent, const sptr<IRemoteObject>& listener));
 };
 } // namespace Rosen
 } // namespace OHOS

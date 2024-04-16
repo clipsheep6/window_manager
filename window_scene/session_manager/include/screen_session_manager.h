@@ -33,7 +33,6 @@
 #include "screen.h"
 #include "screen_cutout_controller.h"
 #include "fold_screen_controller/fold_screen_controller.h"
-#include "fold_screen_controller/fold_screen_sensor_manager.h"
 
 namespace OHOS::Rosen {
 class RSInterfaces;
@@ -191,7 +190,6 @@ public:
     FoldDisplayMode GetFoldDisplayMode() override;
 
     bool IsFoldable() override;
-    bool IsCaptured() override;
 
     FoldStatus GetFoldStatus() override;
 
@@ -202,8 +200,6 @@ public:
     sptr<FoldCreaseRegion> GetCurrentFoldCreaseRegion() override;
 
     void NotifyFoldStatusChanged(FoldStatus foldStatus);
-    void NotifyFoldAngleChanged(std::vector<float> foldAngles);
-    int NotifyFoldStatusChanged(const std::string& statusParam);
     void NotifyDisplayModeChanged(FoldDisplayMode displayMode);
     void NotifyDisplayChangeInfoChanged(const sptr<DisplayChangeInfo>& info) override;
     void RegisterSettingDpiObserver();
@@ -235,9 +231,6 @@ public:
 
     VirtualScreenFlag GetVirtualScreenFlag(ScreenId screenId) override;
     DMError SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag screenFlag) override;
-
-    DeviceScreenConfig GetDeviceScreenConfig() override;
-    DMError SetVirtualScreenRefreshRate(ScreenId screenId, uint32_t refreshInterval) override;
 protected:
     ScreenSessionManager();
     virtual ~ScreenSessionManager() = default;
@@ -250,8 +243,8 @@ private:
     void ConfigureWaterfallDisplayCompressionParams();
     void RegisterScreenChangeListener();
     void OnScreenChange(ScreenId screenId, ScreenEvent screenEvent);
-    void RegisterRefreshRateChangeListener();
-    void OnHgmRefreshRateChange(uint32_t refreshRate);
+    void RegisterRefreshRateModeChangeListener();
+    void OnHgmRefreshRateModeChange(int32_t refreshRateMode);
     sptr<ScreenSession> GetOrCreateScreenSession(ScreenId screenId);
     void CreateScreenProperty(ScreenId screenId, ScreenProperty& property);
     sptr<ScreenSession> GetScreenSessionInner(ScreenId screenId, ScreenProperty property);
@@ -262,13 +255,11 @@ private:
 
     void NotifyDisplayStateChange(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type);
-    void NotifyCaptureStatusChanged();
     bool OnMakeExpand(std::vector<ScreenId> screenId, std::vector<Point> startPoint);
     bool OnRemoteDied(const sptr<IRemoteObject>& agent);
     std::string TransferTypeToString(ScreenType type) const;
     void CheckAndSendHiSysEvent(const std::string& eventName, const std::string& bundleName) const;
-    void HandlerSensor(ScreenPowerStatus status, PowerStateChangeReason reason);
-    bool GetPowerStatus(ScreenPowerState state, PowerStateChangeReason reason, ScreenPowerStatus& status);
+    void HandlerSensor(ScreenPowerStatus status);
 
     // notify scb virtual screen change
     void OnVirtualScreenChange(ScreenId screenId, ScreenEvent screenEvent);
@@ -282,6 +273,7 @@ private:
     bool IsValidDigitString(const std::string& idStr) const;
     int SetFoldDisplayMode(const std::string& modeParam);
     int SetFoldStatusLocked(const std::string& lockParam);
+    int NotifyFoldStatusChanged(const std::string& lockParam);
     void ShowFoldStatusChangedInfo(int errCode, std::string& dumpInfo);
     class ScreenIdManager {
     friend class ScreenSessionGroup;
@@ -310,7 +302,6 @@ private:
     std::shared_ptr<TaskScheduler> screenPowerTaskScheduler_;
     sptr<IScreenSessionManagerClient> clientProxy_;
     ClientAgentContainer<IDisplayManagerAgent, DisplayManagerAgentType> dmAgentContainer_;
-    DeviceScreenConfig deviceScreenConfig_;
 
     mutable std::recursive_mutex screenSessionMapMutex_;
     std::map<ScreenId, sptr<ScreenSession>> screenSessionMap_;
@@ -326,9 +317,6 @@ private:
 
     bool isAutoRotationOpen_ = false;
     bool isExpandCombination_ = false;
-    bool isScreenShot_ = false;
-    bool isHdmiScreen_ = false;
-    bool isVirtualScreen_ = false;
     sptr<AgentDeathRecipient> deathRecipient_ { nullptr };
 
     sptr<SessionDisplayPowerController> sessionDisplayPowerController_;

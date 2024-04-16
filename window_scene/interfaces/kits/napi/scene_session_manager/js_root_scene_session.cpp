@@ -21,8 +21,6 @@
 #include "window_manager_hilog.h"
 
 #include "js_scene_utils.h"
-#include "singleton_container.h"
-#include "dms_reporter.h"
 
 namespace OHOS::Rosen {
 using namespace AbilityRuntime;
@@ -256,7 +254,7 @@ void JsRootSceneSession::PendingSessionActivation(SessionInfo& info)
         TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]session: %{public}d isNeedBackToOther: %{public}d",
             sceneSession->GetPersistentId(), isNeedBackToOther);
         if (isNeedBackToOther) {
-            int32_t realCallerSessionId = SceneSessionManager::GetInstance().GetFocusedSessionId();
+            int32_t realCallerSessionId = SceneSessionManager::GetInstance().GetFocusedSession();
             if (realCallerSessionId == sceneSession->GetPersistentId()) {
                 TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]caller is self, need back to self caller.");
                 auto scnSession = SceneSessionManager::GetInstance().GetSceneSession(realCallerSessionId);
@@ -268,19 +266,6 @@ void JsRootSceneSession::PendingSessionActivation(SessionInfo& info)
             info.callerPersistentId_ = realCallerSessionId;
         } else {
             info.callerPersistentId_ = 0;
-        }
-
-        std::string continueSessionId = info.want->GetStringParam(Rosen::PARAM_KEY::PARAM_DMS_CONTINUE_SESSION_ID_KEY);
-        if (!continueSessionId.empty()) {
-            info.continueSessionId_ = continueSessionId;
-            TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]continueSessionId from ability manager: %{public}s",
-                continueSessionId.c_str());
-        }
-
-        // app continue report for distributed scheduled service
-        if (info.want->GetIntParam(Rosen::PARAM_KEY::PARAM_DMS_PERSISTENT_ID_KEY, 0) > 0) {
-            TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]continue app with persistentId: %{public}d", info.persistentId_);
-            SingletonContainer::Get<DmsReporter>().ReportContinueApp(true, static_cast<int32_t>(WSError::WS_OK));
         }
     }
     sceneSession->SetSessionInfo(info);
@@ -324,13 +309,7 @@ sptr<SceneSession> JsRootSceneSession::GenSceneSession(SessionInfo& info)
         sceneSession = SceneSessionManager::GetInstance().GetSceneSession(info.persistentId_);
         if (sceneSession == nullptr) {
             WLOGFE("GetSceneSession return nullptr");
-            sceneSession = SceneSessionManager::GetInstance().RequestSceneSession(info);
-            if (sceneSession == nullptr) {
-                WLOGFE("retry RequestSceneSession return nullptr");
-                return sceneSession;
-            }
-            info.persistentId_ = sceneSession->GetPersistentId();
-            sceneSession->SetSessionInfoPersistentId(sceneSession->GetPersistentId());
+            return sceneSession;
         }
     }
     return sceneSession;

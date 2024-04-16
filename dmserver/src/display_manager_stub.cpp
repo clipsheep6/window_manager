@@ -64,8 +64,6 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
             float density = data.ReadFloat();
             int32_t flags = data.ReadInt32();
             bool isForShot = data.ReadBool();
-            std::vector<uint64_t> missionIds;
-            data.ReadUInt64Vector(&missionIds);
             bool isSurfaceValid = data.ReadBool();
             sptr<Surface> surface = nullptr;
             if (isSurfaceValid) {
@@ -81,8 +79,7 @@ int32_t DisplayManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, 
                 .density_ = density,
                 .surface_ = surface,
                 .flags_ = flags,
-                .isForShot_ = isForShot,
-                .missionIds_ = missionIds
+                .isForShot_ = isForShot
             };
             ScreenId screenId = CreateVirtualScreen(virScrOption, virtualScreenAgent);
             reply.WriteUint64(static_cast<uint64_t>(screenId));

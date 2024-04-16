@@ -32,7 +32,6 @@
 #include "interfaces/include/ws_common_inner.h"
 #include "session/container/include/zidl/session_stage_stub.h"
 #include "session/host/include/zidl/session_interface.h"
-#include "vsync_station.h"
 #include "window.h"
 #include "window_option.h"
 #include "wm_common.h"
@@ -44,13 +43,6 @@ namespace {
 template<typename T1, typename T2, typename Ret>
 using EnableIfSame = typename std::enable_if<std::is_same_v<T1, T2>, Ret>::type;
 }
-
-struct WindowTitleVisibleFlags {
-    bool isMaximizeVisible = true;
-    bool isMinimizeVisible = true;
-    bool isSplitVisible = true;
-};
-
 class WindowSessionImpl : public Window, public virtual SessionStageStub {
 public:
     explicit WindowSessionImpl(const sptr<WindowOption>& option);
@@ -66,6 +58,7 @@ public:
         const sptr<Rosen::ISession>& iSession);
     WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
     WMError Hide(uint32_t reason = 0, bool withAnimation = false, bool isFromInnerkits = true) override;
+    WMError SetTextFieldAvoidInfo(double textFieldPositionY, double textFieldHeight) override;
     WMError Destroy() override;
     virtual WMError Destroy(bool needNotifyServer, bool needClearListener = true);
     WMError NapiSetUIContent(const std::string& contentInfo, napi_env env,
@@ -83,8 +76,6 @@ public:
     WindowState GetRequestWindowState() const;
     WMError SetFocusable(bool isFocusable) override;
     WMError SetTouchable(bool isTouchable) override;
-    WMError SetTopmost(bool topmost) override;
-    bool IsTopmost() const override;
     WMError SetResizeByDragEnabled(bool dragEnabled) override;
     WMError SetRaiseByClickEnabled(bool raiseEnabled) override;
     WMError HideNonSystemFloatingWindows(bool shouldHide) override;
@@ -100,7 +91,6 @@ public:
     bool GetFocusable() const override;
     std::string GetContentInfo() override;
     Ace::UIContent* GetUIContent() const override;
-    Ace::UIContent* GetUIContentWithId(uint32_t winId) const override;
     PiPTemplateInfo GetPiPTemplateInfo() const;
     void OnNewWant(const AAFwk::Want& want) override;
     WMError SetAPPWindowLabel(const std::string& label) override;
@@ -155,7 +145,6 @@ public:
     WMError UnregisterScreenshotListener(const sptr<IScreenshotListener>& listener) override;
     void SetAceAbilityHandler(const sptr<IAceAbilityHandler>& handler) override;
     void SetInputEventConsumer(const std::shared_ptr<IInputEventConsumer>& inputEventConsumer) override;
-    WMError SetTitleButtonVisible(bool isMaximizeVisible, bool isMinimizeVisible, bool isSplitVisible) override;
 
     WMError SetBackgroundColor(const std::string& color) override;
     virtual Orientation GetRequestedOrientation() override;
@@ -222,9 +211,7 @@ public:
     void SetDefaultDisplayIdIfNeed();
     WMError RegisterWindowRectChangeListener(const sptr<IWindowRectChangeListener>& listener) override;
     WMError UnregisterWindowRectChangeListener(const sptr<IWindowRectChangeListener>& listener) override;
-    virtual WMError GetCallingWindowWindowStatus(WindowStatus& windowStatus) const override;
-    virtual WMError GetCallingWindowRect(Rect& rect) const override;
-    
+
 protected:
     WMError Connect();
     bool IsWindowSessionInvalid() const;
@@ -243,7 +230,6 @@ protected:
     WMError SetBackgroundColor(uint32_t color);
     uint32_t GetBackgroundColor() const;
     virtual WMError SetLayoutFullScreenByApiVersion(bool status);
-    virtual float GetVirtualPixelRatio(sptr<DisplayInfo> displayInfo);
     void UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
     void NotifySizeChange(Rect rect, WindowSizeChangeReason reason);
@@ -252,12 +238,11 @@ protected:
     void NotifyTransformChange(const Transform& transForm) override;
     bool IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const;
     void DispatchKeyEventCallback(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed);
-    bool FilterKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent);
 
     WMError RegisterExtensionAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener);
     WMError UnregisterExtensionAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener);
 
-    void RefreshNoInteractionTimeoutMonitor();
+    void RefreshNoInteractionTimeoutMonitor(int32_t eventId);
 
     sptr<ISession> hostSession_;
     std::unique_ptr<Ace::UIContent> uiContent_;
@@ -279,16 +264,11 @@ protected:
     bool isFocused_ { false };
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     bool shouldReNotifyFocus_ = false;
-    std::shared_ptr<VsyncStation> vsyncStation_ = nullptr;
     std::shared_ptr<IInputEventConsumer> inputEventConsumer_;
     bool needRemoveWindowInputChannel_ = false;
     float virtualPixelRatio_ { 1.0f };
     bool escKeyEventTriggered_ = false;
-    // Check whether the UIExtensionAbility process is started
-    static bool isUIExtensionAbilityProcess_;
-    virtual WMError SetKeyEventFilter(KeyEventFilterFunc filter) override;
-    virtual WMError ClearKeyEventFilter() override;
-    virtual bool IfNotNeedAvoidKeyBoardForSplit();
+    static bool isUIExtensionAbility_;
 
 private:
     //Trans between colorGamut and colorSpace
@@ -341,8 +321,6 @@ private:
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
     void NotifyRotationAnimationEnd();
     void SubmitNoInteractionMonitorTask(int32_t eventId, const IWindowNoInteractionListenerSptr& listener);
-    void GetTitleButtonVisible(bool isPC, bool &hideMaximizeButton, bool &hideMinimizeButton, bool &hideSplitButton);
-    bool IsUserOrientation(Orientation orientation) const;
 
     static std::recursive_mutex lifeCycleListenerMutex_;
     static std::recursive_mutex windowChangeListenerMutex_;
@@ -377,7 +355,7 @@ private:
     // FA only
     sptr<IAceAbilityHandler> aceAbilityHandler_;
 
-    std::atomic<int32_t> lastInteractionEventId_ { 0 };
+    std::atomic<int32_t> lastInteractionEventId_ { -1 };
 
     WindowSizeChangeReason lastSizeChangeReason_ = WindowSizeChangeReason::END;
     bool postTaskDone_ = false;
@@ -385,8 +363,6 @@ private:
     bool isMainHandlerAvailable_ = true;
 
     std::string subWindowTitle_ = { "" };
-    WindowTitleVisibleFlags windowTitleVisibleFlags_;
-    KeyEventFilterFunc keyEventFilter_;
 };
 } // namespace Rosen
 } // namespace OHOS

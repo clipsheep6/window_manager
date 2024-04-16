@@ -40,8 +40,6 @@ public:
     sptr<ISceneSessionManagerLite> GetSceneSessionManagerLiteProxy();
     sptr<IScreenSessionManagerLite> GetScreenSessionManagerLiteProxy();
 
-    sptr<ISessionManagerService> GetSessionManagerServiceProxy();
-
     void SaveSessionListener(const sptr<ISessionListener>& listener);
     void DeleteSessionListener(const sptr<ISessionListener>& listener);
     void RecoverSessionManagerService(const sptr<ISessionManagerService>& sessionManagerService);

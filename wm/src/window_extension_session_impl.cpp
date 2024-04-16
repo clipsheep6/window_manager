@@ -21,7 +21,6 @@
 #include <input_method_controller.h>
 #endif
 #include "window_manager_hilog.h"
-#include "display_info.h"
 #include "parameters.h"
 #include "anr_handler.h"
 #include "session_permission.h"
@@ -66,7 +65,7 @@ WMError WindowExtensionSessionImpl::Create(const std::shared_ptr<AbilityRuntime:
     }
     AddExtensionWindowStageToSCB();
     state_ = WindowState::STATE_CREATED;
-    isUIExtensionAbilityProcess_ = true;
+    isUIExtensionAbility_ = true;
     return WMError::WM_OK;
 }
 
@@ -125,9 +124,6 @@ WMError WindowExtensionSessionImpl::Destroy(bool needNotifyServer, bool needClea
     NotifyAfterDestroy();
     if (needClearListener) {
         ClearListenersById(GetPersistentId());
-    }
-    if (context_) {
-        context_.reset();
     }
     return WMError::WM_OK;
 }
@@ -405,6 +401,7 @@ WSError WindowExtensionSessionImpl::UpdateRect(const WSRect& rect, SizeChangeRea
     }
     property_->SetWindowRect(wmRect);
     if (wmReason == WindowSizeChangeReason::ROTATION) {
+        auto preRect = GetRect();
         UpdateRectForRotation(wmRect, preRect, wmReason, rsTransaction);
     } else {
         NotifySizeChange(wmRect, wmReason);
@@ -552,8 +549,7 @@ void WindowExtensionSessionImpl::NotifySessionBackground(uint32_t reason, bool w
 
 void WindowExtensionSessionImpl::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info)
 {
-    TLOGI(WmsLogTag::WMS_KEYBOARD, "TextFieldPosY = %{public}f, KeyBoardHeight = %{public}d",
-        info->textFieldPositionY_, info->rect_.height_);
+    WLOGD("TextFieldPosY = %{public}lf, KeyBoardHeight = %{public}d", info->textFieldPositionY_, info->rect_.height_);
     if (occupiedAreaChangeListener_) {
         occupiedAreaChangeListener_->OnSizeChange(info);
     }
@@ -600,18 +596,6 @@ WMError WindowExtensionSessionImpl::Show(uint32_t reason, bool withAnimation)
             property_->GetParentId(), true);
     }
     CheckAndAddExtWindowFlags();
-
-    auto display = SingletonContainer::Get<DisplayManager>().GetDisplayById(property_->GetDisplayId());
-    if (display == nullptr || display->GetDisplayInfo() == nullptr) {
-        TLOGE(WmsLogTag::WMS_LIFE, "WindowExtensionSessionImpl::Show display is null!");
-        return WMError::WM_ERROR_NULLPTR;
-    }
-    auto displayInfo = display->GetDisplayInfo();
-    float density = GetVirtualPixelRatio(displayInfo);
-    if (virtualPixelRatio_ != density) {
-        UpdateDensity();
-    }
-
     return this->WindowSessionImpl::Show(reason, withAnimation);
 }
 
@@ -714,17 +698,6 @@ WMError WindowExtensionSessionImpl::UpdateExtWindowFlags()
 {
     return SingletonContainer::Get<WindowAdapter>().UpdateExtWindowFlags(property_->GetParentId(), GetPersistentId(),
         extensionWindowFlags_);
-}
-
-Rect WindowExtensionSessionImpl::GetHostWindowRect(int32_t hostWindowId)
-{
-    Rect rect;
-    if (hostWindowId != property_->GetParentId()) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "hostWindowId is invalid");
-        return rect;
-    }
-    SingletonContainer::Get<WindowAdapter>().GetHostWindowRect(hostWindowId, rect);
-    return rect;
 }
 } // namespace Rosen
 } // namespace OHOS

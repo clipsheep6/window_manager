@@ -17,6 +17,7 @@
 #include <vector>
 
 #include "display.h"
+#include "vsync_station.h"
 #include "window_helper.h"
 #include "window_inner_manager.h"
 #include "window_manager_hilog.h"
@@ -191,11 +192,6 @@ void MoveDragController::SetInputEventConsumer()
     MMI::InputManager::GetInstance()->SetWindowInputEventConsumer(inputListener_, inputEventHandler_);
 }
 
-void MoveDragController::SetWindowRoot(const sptr<WindowRoot>& windowRoot)
-{
-    windowRoot_ = windowRoot;
-}
-
 bool MoveDragController::Init()
 {
     // create handler for input event
@@ -210,6 +206,8 @@ bool MoveDragController::Init()
     }
     inputListener_ = std::make_shared<DragInputEventListener>(DragInputEventListener());
     SetInputEventConsumer();
+    VsyncStation::GetInstance().SetIsMainHandlerAvailable(false);
+    VsyncStation::GetInstance().SetVsyncEventHandler(inputEventHandler_);
     return true;
 }
 
@@ -245,17 +243,7 @@ void MoveDragController::HandleWindowRemovedOrDestroyed(uint32_t windowId)
     if (!(GetMoveDragProperty()->startMoveFlag_ || GetMoveDragProperty()->startDragFlag_)) {
         return;
     }
-
-    {
-        std::lock_guard<std::mutex> lock(mtx_);
-        auto iter = vsyncStationMap_.find(windowId);
-        if (iter != vsyncStationMap_.end()) {
-            auto vsyncStation = iter->second;
-            vsyncStation->RemoveCallback();
-            vsyncStationMap_.erase(windowId);
-        }
-    }
-
+    VsyncStation::GetInstance().RemoveCallback();
     ResetMoveOrDragState();
 }
 
@@ -282,11 +270,7 @@ void MoveDragController::ConsumePointerEvent(const std::shared_ptr<MMI::PointerE
     }
     if (pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_MOVE) {
         moveEvent_ = pointerEvent;
-        uint32_t windowId = static_cast<uint32_t>(pointerEvent->GetAgentWindowId());
-        auto vsyncStation = GetVsyncStationByWindowId(windowId);
-        if (vsyncStation != nullptr) {
-            vsyncStation->RequestVsync(vsyncCallback_);
-        }
+        VsyncStation::GetInstance().RequestVsync(vsyncCallback_);
     } else {
         WLOGFD("[WMS] Dispatch non-move event, action: %{public}d", pointerEvent->GetPointerAction());
         HandlePointerEvent(pointerEvent);
@@ -534,44 +518,6 @@ void MoveDragController::SetActiveWindowId(uint32_t activeWindowId)
 uint32_t MoveDragController::GetActiveWindowId() const
 {
     return activeWindowId_;
-}
-
-std::shared_ptr<VsyncStation> MoveDragController::GetVsyncStationByWindowId(uint32_t windowId)
-{
-    {
-        std::lock_guard<std::mutex> lock(mtx_);
-        auto iter = vsyncStationMap_.find(windowId);
-        if (iter != vsyncStationMap_.end()) {
-            return iter->second;
-        }
-    }
-    
-    if (windowRoot_ == nullptr) {
-        TLOGE(WmsLogTag::WMS_MAIN, "Get vsync station failed, windowRoot is nullptr");
-        return nullptr;
-    }
-
-    sptr<WindowNode> node = windowRoot_->GetWindowNode(windowId);
-    if (node == nullptr || node->surfaceNode_ == nullptr) {
-        TLOGE(WmsLogTag::WMS_MAIN, "Get vsync station failed, surfaceNode is nullptr");
-        return nullptr;
-    }
-
-    auto vsyncStation = std::make_shared<VsyncStation>(node->surfaceNode_->GetId());
-    if (vsyncStation == nullptr) {
-        TLOGE(WmsLogTag::WMS_MAIN, "Get vsync station failed, create vsyncStation is nullptr");
-        return nullptr;
-    }
-
-    vsyncStation->SetIsMainHandlerAvailable(false);
-    vsyncStation->SetVsyncEventHandler(inputEventHandler_);
-    
-    {
-        std::lock_guard<std::mutex> lock(mtx_);
-        vsyncStationMap_.emplace(windowId, vsyncStation);
-    }
-    
-    return vsyncStation;
 }
 }
 }

@@ -81,40 +81,6 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
         WLOGFE("Property is null");
         return;
     }
-    InitWindowProperty(option);
-
-    windowTag_ = option->GetWindowTag();
-    isMainHandlerAvailable_ = option->GetMainHandlerAvailable();
-    AdjustWindowAnimationFlag();
-    UpdateDecorEnable();
-    auto& sysBarPropMap = option->GetSystemBarProperty();
-    for (auto it : sysBarPropMap) {
-        property_->SetSystemBarProperty(it.first, it.second);
-    }
-    name_ = option->GetWindowName();
-
-    std::string surfaceNodeName;
-    if (auto bundleName = option->GetBundleName(); bundleName != "") {
-        surfaceNodeName = bundleName + "#" + property_->GetWindowName();
-    } else {
-        surfaceNodeName = property_->GetWindowName();
-    }
-    WLOGFD("surfaceNodeName: %{public}s", surfaceNodeName.c_str());
-    surfaceNode_ = CreateSurfaceNode(surfaceNodeName, option->GetWindowType());
-    if (surfaceNode_ != nullptr) {
-        vsyncStation_ = std::make_shared<VsyncStation>(surfaceNode_->GetId());
-    }
-
-    moveDragProperty_ = new (std::nothrow) MoveDragProperty();
-    if (moveDragProperty_ == nullptr) {
-        WLOGFE("MoveDragProperty is null");
-    }
-    WLOGFD("constructorCnt: %{public}d name: %{public}s",
-        ++constructorCnt, property_->GetWindowName().c_str());
-}
-
-void WindowImpl::InitWindowProperty(const sptr<WindowOption>& option)
-{
     property_->SetWindowName(option->GetWindowName());
     property_->SetRequestRect(option->GetWindowRect());
     property_->SetWindowType(option->GetWindowType());
@@ -131,9 +97,34 @@ void WindowImpl::InitWindowProperty(const sptr<WindowOption>& option)
     property_->SetWindowFlags(option->GetWindowFlags());
     property_->SetHitOffset(option->GetHitOffset());
     property_->SetRequestedOrientation(option->GetRequestedOrientation());
+    windowTag_ = option->GetWindowTag();
+    isMainHandlerAvailable_ = option->GetMainHandlerAvailable();
     property_->SetTurnScreenOn(option->IsTurnScreenOn());
     property_->SetKeepScreenOn(option->IsKeepScreenOn());
     property_->SetBrightness(option->GetBrightness());
+    AdjustWindowAnimationFlag();
+    UpdateDecorEnable();
+    auto& sysBarPropMap = option->GetSystemBarProperty();
+    for (auto it : sysBarPropMap) {
+        property_->SetSystemBarProperty(it.first, it.second);
+    }
+    name_ = option->GetWindowName();
+
+    std::string surfaceNodeName;
+    if (auto bundleName = option->GetBundleName(); bundleName != "") {
+        surfaceNodeName = bundleName + "#" + property_->GetWindowName();
+    } else {
+        surfaceNodeName = property_->GetWindowName();
+    }
+    WLOGFD("surfaceNodeName: %{public}s", surfaceNodeName.c_str());
+    surfaceNode_ = CreateSurfaceNode(surfaceNodeName, option->GetWindowType());
+
+    moveDragProperty_ = new (std::nothrow) MoveDragProperty();
+    if (moveDragProperty_ == nullptr) {
+        WLOGFE("MoveDragProperty is null");
+    }
+    WLOGFD("constructorCnt: %{public}d name: %{public}s",
+        ++constructorCnt, property_->GetWindowName().c_str());
 }
 
 RSSurfaceNode::SharedPtr WindowImpl::CreateSurfaceNode(std::string name, WindowType type)
@@ -207,11 +198,6 @@ sptr<Window> WindowImpl::GetTopWindowWithId(uint32_t mainWinId)
         return nullptr;
     }
     return FindWindowById(topWinId);
-}
-
-sptr<Window> WindowImpl::GetWindowWithId(uint32_t WinId)
-{
-    return FindWindowById(WinId);
 }
 
 sptr<Window> WindowImpl::GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context)
@@ -674,11 +660,6 @@ std::shared_ptr<std::vector<uint8_t>> WindowImpl::GetAbcContent(const std::strin
 Ace::UIContent* WindowImpl::GetUIContent() const
 {
     return uiContent_.get();
-}
-
-Ace::UIContent* WindowImpl::GetUIContentWithId(uint32_t winId) const
-{
-    return nullptr;
 }
 
 std::string WindowImpl::GetContentInfo()
@@ -1192,7 +1173,7 @@ void WindowImpl::SetDefaultDisplayIdIfNeed()
             SingletonContainer::Get<DisplayManager>().GetDefaultDisplayId();
         defaultDisplayId = (defaultDisplayId == DISPLAY_ID_INVALID)? 0 : defaultDisplayId;
         property_->SetDisplayId(defaultDisplayId);
-        WLOGFI("Reset displayId to %{public}" PRIu64, defaultDisplayId);
+        WLOGFI("Reset displayId to %{public}llu", defaultDisplayId);
     }
 }
 
@@ -1203,7 +1184,6 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
     if (ret != WMError::WM_OK) {
         return ret;
     }
-    property_->SetDisplayId(DISPLAY_ID_INVALID);
     SetDefaultDisplayIdIfNeed();
     context_ = context;
     sptr<WindowImpl> window(this);
@@ -3018,17 +2998,16 @@ void WindowImpl::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallbac
         WLOGFE("[WM] Receive Vsync Request failed, window is destroyed");
         return;
     }
-
-    if (!SingletonContainer::IsDestroyed() && vsyncStation_ != nullptr) {
-        vsyncStation_->RequestVsync(vsyncCallback);
+    if (!SingletonContainer::IsDestroyed()) {
+        VsyncStation::GetInstance().RequestVsync(vsyncCallback);
     }
 }
 
 int64_t WindowImpl::GetVSyncPeriod()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (!SingletonContainer::IsDestroyed() && vsyncStation_ != nullptr) {
-        return vsyncStation_->GetVSyncPeriod();
+    if (!SingletonContainer::IsDestroyed()) {
+        return VsyncStation::GetInstance().GetVSyncPeriod();
     }
     return 0;
 }

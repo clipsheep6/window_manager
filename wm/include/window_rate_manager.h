@@ -21,7 +21,6 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "vsync_station.h"
 #include "wm_single_instance.h"
 
 namespace OHOS {
@@ -31,10 +30,10 @@ WM_DECLARE_SINGLE_INSTANCE_BASE(WindowRateManager);
 public:
     WindowRateManager() = default;
     ~WindowRateManager() = default;
-    void FlushFrameRate(int32_t id, uint32_t rate, const std::shared_ptr<VsyncStation>& vsyncStation);
-    void FlushFrameRateForRootWindow(uint32_t rate, const std::shared_ptr<VsyncStation>& vsyncStation);
+    void FlushFrameRate(int32_t id, uint32_t rate);
+    void FlushFrameRateForRootWindow(uint32_t rate);
     void AddWindowRate(int32_t windowId, uint32_t rate = 0);
-    void RemoveWindowRate(int32_t windowId, const std::shared_ptr<VsyncStation>& vsyncStation);
+    void RemoveWindowRate(int32_t windowId);
     uint32_t GetExpectedRate();
 
 private:

@@ -74,13 +74,6 @@ WSError SceneSessionManagerLite::GetSessionInfo(const std::string& deviceId,
     return SceneSessionManager::GetInstance().GetSessionInfo(deviceId, persistentId, sessionInfo);
 }
 
-WSError SceneSessionManagerLite::GetSessionInfoByContinueSessionId(
-    const std::string& continueSessionId, SessionInfoBean& sessionInfo)
-{
-    TLOGD(WmsLogTag::WMS_MAIN, "liteProxy -> continueSessionId: %{public}s", continueSessionId.c_str());
-    return SceneSessionManager::GetInstance().GetSessionInfoByContinueSessionId(continueSessionId, sessionInfo);
-}
-
 WSError SceneSessionManagerLite::RegisterSessionListener(const sptr<ISessionListener>& listener)
 {
     WLOGFD("run RegisterSessionListener");
@@ -124,12 +117,6 @@ WSError SceneSessionManagerLite::GetFocusSessionToken(sptr<IRemoteObject>& token
     return SceneSessionManager::GetInstance().GetFocusSessionToken(token);
 }
 
-WSError SceneSessionManagerLite::GetFocusSessionElement(AppExecFwk::ElementName& element)
-{
-    WLOGFD("run GetFocusSessionElement");
-    return SceneSessionManager::GetInstance().GetFocusSessionElement(element);
-}
-
 WSError SceneSessionManagerLite::ClearSession(int32_t persistentId)
 {
     WLOGFD("run ClearSession with persistentId: %{public}d", persistentId);
@@ -171,37 +158,4 @@ void SceneSessionManagerLite::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
 {
     return SceneSessionManager::GetInstance().GetFocusWindowInfo(focusInfo);
 }
-
-WMError SceneSessionManagerLite::RegisterWindowManagerAgent(WindowManagerAgentType type,
-    const sptr<IWindowManagerAgent>& windowManagerAgent)
-{
-    return SceneSessionManager::GetInstance().RegisterWindowManagerAgent(type, windowManagerAgent);
-}
-
-WMError SceneSessionManagerLite::UnregisterWindowManagerAgent(WindowManagerAgentType type,
-    const sptr<IWindowManagerAgent>& windowManagerAgent)
-{
-    return SceneSessionManager::GetInstance().UnregisterWindowManagerAgent(type, windowManagerAgent);
-}
-
-WMError SceneSessionManagerLite::CheckWindowId(int32_t windowId, int32_t& pid)
-{
-    return SceneSessionManager::GetInstance().CheckWindowId(windowId, pid);
-}
-
-WMError SceneSessionManagerLite::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos)
-{
-    return SceneSessionManager::GetInstance().GetVisibilityWindowInfo(infos);
-}
-
-WSError SceneSessionManagerLite::UpdateWindowMode(int32_t persistentId, int32_t windowMode)
-{
-    return SceneSessionManager::GetInstance().UpdateWindowMode(persistentId, windowMode);
-}
-
-WMError SceneSessionManagerLite::GetWindowBackHomeStatus(bool &isBackHome)
-{
-    return SceneSessionManager::GetInstance().GetWindowBackHomeStatus(isBackHome);
-}
-
 } // namespace OHOS::Rosen

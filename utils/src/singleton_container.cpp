@@ -82,10 +82,6 @@ void* SingletonContainer::GetSingleton(const std::string& name)
         WLOGFE("can not get %{public}s", name.c_str());
         return nullptr;
     }
-    if (singletonMap.find(stringMap[name]) == singletonMap.end()) {
-        WLOGFE("can not find singleton, name is %{public}s", name.c_str());
-        return nullptr;
-    }
     return singletonMap[stringMap[name]].value;
 }
 

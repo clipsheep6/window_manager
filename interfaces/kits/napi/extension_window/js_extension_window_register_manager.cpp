@@ -20,6 +20,7 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
+constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsExtensionWindowRegisterManager"};
 const std::string WINDOW_SIZE_CHANGE_CB = "windowSizeChange";
 const std::string AVOID_AREA_CHANGE_CB = "avoidAreaChange";
 const std::string WINDOW_STAGE_EVENT_CB = "windowStageEvent";
@@ -48,7 +49,7 @@ WmErrorCode JsExtensionWindowRegisterManager::ProcessWindowChangeRegister(sptr<J
     sptr<Window> window, bool isRegister)
 {
     if (window == nullptr) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Window is nullptr");
+        WLOGFE("[NAPI]Window is nullptr");
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
     sptr<IWindowChangeListener> thisListener(listener);
@@ -65,7 +66,7 @@ WmErrorCode JsExtensionWindowRegisterManager::ProcessAvoidAreaChangeRegister(spt
     sptr<Window> window, bool isRegister)
 {
     if (window == nullptr) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Window is nullptr");
+        WLOGFE("[NAPI]Window is nullptr");
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
     sptr<IAvoidAreaChangedListener> thisListener(listener);
@@ -82,7 +83,7 @@ WmErrorCode JsExtensionWindowRegisterManager::ProcessLifeCycleEventRegister(sptr
     sptr<Window> window, bool isRegister)
 {
     if (window == nullptr) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "Window is nullptr");
+        WLOGFE("Window is nullptr");
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
     sptr<IWindowLifeCycle> thisListener(listener);
@@ -98,7 +99,7 @@ WmErrorCode JsExtensionWindowRegisterManager::ProcessLifeCycleEventRegister(sptr
 bool JsExtensionWindowRegisterManager::IsCallbackRegistered(napi_env env, std::string type, napi_value jsListenerObject)
 {
     if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
-        TLOGI(WmsLogTag::WMS_UIEXT, "[NAPI]Method %{public}s has not been registered", type.c_str());
+        WLOGI("[NAPI]Method %{public}s has not been registered", type.c_str());
         return false;
     }
 
@@ -106,7 +107,7 @@ bool JsExtensionWindowRegisterManager::IsCallbackRegistered(napi_env env, std::s
         bool isEquals = false;
         napi_strict_equals(env, jsListenerObject, iter->first->GetNapiValue(), &isEquals);
         if (isEquals) {
-            TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Method %{public}s has already been registered", type.c_str());
+            WLOGFE("[NAPI]Method %{public}s has already been registered", type.c_str());
             return true;
         }
     }
@@ -121,7 +122,7 @@ WmErrorCode JsExtensionWindowRegisterManager::RegisterListener(sptr<Window> wind
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
     if (listenerProcess_[caseType].count(type) == 0) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Type %{public}s is not supported", type.c_str());
+        WLOGFE("[NAPI]Type %{public}s is not supported", type.c_str());
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
     napi_ref result = nullptr;
@@ -130,17 +131,17 @@ WmErrorCode JsExtensionWindowRegisterManager::RegisterListener(sptr<Window> wind
     sptr<JsExtensionWindowListener> extensionWindowListener =
         new(std::nothrow) JsExtensionWindowListener(env, callbackRef);
     if (extensionWindowListener == nullptr) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]New JsExtensionWindowListener failed");
+        WLOGFE("[NAPI]New JsExtensionWindowListener failed");
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
     extensionWindowListener->SetMainEventHandler();
     WmErrorCode ret = (this->*listenerProcess_[caseType][type])(extensionWindowListener, window, true);
     if (ret != WmErrorCode::WM_OK) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Register type %{public}s failed", type.c_str());
+        WLOGFE("[NAPI]Register type %{public}s failed", type.c_str());
         return ret;
     }
     jsCbMap_[type][callbackRef] = extensionWindowListener;
-    TLOGI(WmsLogTag::WMS_UIEXT, "[NAPI]Register type %{public}s success! callback map size: %{public}zu", type.c_str(),
+    WLOGI("[NAPI]Register type %{public}s success! callback map size: %{public}zu", type.c_str(),
           jsCbMap_[type].size());
     return WmErrorCode::WM_OK;
 }
@@ -150,18 +151,18 @@ WmErrorCode JsExtensionWindowRegisterManager::UnregisterListener(sptr<Window> wi
 {
     std::lock_guard<std::mutex> lock(mtx_);
     if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Type %{public}s was not registered", type.c_str());
+        WLOGFE("[NAPI]Type %{public}s was not registered", type.c_str());
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
     if (listenerProcess_[caseType].count(type) == 0) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Type %{public}s is not supported", type.c_str());
+        WLOGFE("[NAPI]Type %{public}s is not supported", type.c_str());
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
     if (value == nullptr) {
         for (auto it = jsCbMap_[type].begin(); it != jsCbMap_[type].end();) {
             WmErrorCode ret = (this->*listenerProcess_[caseType][type])(it->second, window, false);
             if (ret != WmErrorCode::WM_OK) {
-                TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Unregister type %{public}s failed, no value", type.c_str());
+                WLOGFE("[NAPI]Unregister type %{public}s failed, no value", type.c_str());
                 return ret;
             }
             jsCbMap_[type].erase(it++);
@@ -177,19 +178,18 @@ WmErrorCode JsExtensionWindowRegisterManager::UnregisterListener(sptr<Window> wi
             findFlag = true;
             WmErrorCode ret = (this->*listenerProcess_[caseType][type])(it->second, window, false);
             if (ret != WmErrorCode::WM_OK) {
-                TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Unregister type %{public}s failed", type.c_str());
+                WLOGFE("[NAPI]Unregister type %{public}s failed", type.c_str());
                 return ret;
             }
             jsCbMap_[type].erase(it);
             break;
         }
         if (!findFlag) {
-            TLOGE(WmsLogTag::WMS_UIEXT,
-                "[NAPI]Unregister type %{public}s failed because not found callback!", type.c_str());
+            WLOGFE("[NAPI]Unregister type %{public}s failed because not found callback!", type.c_str());
             return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
         }
     }
-    TLOGI(WmsLogTag::WMS_UIEXT, "[NAPI]Unregister type %{public}s success! callback map size: %{public}zu",
+    WLOGI("[NAPI]Unregister type %{public}s success! callback map size: %{public}zu",
         type.c_str(), jsCbMap_[type].size());
     // erase type when there is no callback in one type
     if (jsCbMap_[type].empty()) {

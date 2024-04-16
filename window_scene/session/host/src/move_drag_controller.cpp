@@ -160,7 +160,6 @@ bool MoveDragController::ConsumeMoveEvent(const std::shared_ptr<MMI::PointerEven
         return false;
     }
     SizeChangeReason reason = SizeChangeReason::UNDEFINED;
-    bool ret = true;
     switch (action) {
         case MMI::PointerEvent::POINTER_ACTION_MOVE: {
             reason = SizeChangeReason::MOVE;
@@ -178,8 +177,6 @@ bool MoveDragController::ConsumeMoveEvent(const std::shared_ptr<MMI::PointerEven
             SetStartMoveFlag(false);
             hasPointDown_ = false;
             ProcessWindowDragHotAreaFunc(windowDragHotAreaType_ != WINDOW_HOT_AREA_TYPE_UNDEFINED, reason);
-            // The Pointer up event sent to the ArkUI.
-            ret = false;
             break;
         }
         default:
@@ -188,7 +185,7 @@ bool MoveDragController::ConsumeMoveEvent(const std::shared_ptr<MMI::PointerEven
     if (CalcMoveTargetRect(pointerEvent, originalRect)) {
         ProcessSessionRectChange(reason);
     }
-    return ret;
+    return true;
 }
 
 void MoveDragController::ProcessWindowDragHotAreaFunc(bool isSendHotAreaMessage, const SizeChangeReason& reason)

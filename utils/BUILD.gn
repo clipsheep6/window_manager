@@ -36,9 +36,6 @@ ohos_static_library("libwmutil_static") {
     cfi = true
     cfi_cross_dso = true
     debug = false
-    integer_overflow = true
-    ubsan = true
-    boundary_sanitize = true
   }
   sources = [
     "src/accessibility_window_info.cpp",
@@ -47,7 +44,6 @@ ohos_static_library("libwmutil_static") {
     "src/cutout_info.cpp",
     "src/display_change_info.cpp",
     "src/display_info.cpp",
-    "src/dms_reporter.cpp",
     "src/perform_reporter.cpp",
     "src/permission.cpp",
     "src/persistent_storage.cpp",
@@ -77,6 +73,10 @@ ohos_static_library("libwmutil_static") {
 
   public_configs = [ ":libwmutil_public_config" ]
 
+  deps = [
+    "${graphic_base_path}/graphic_2d/rosen/modules/2d_graphics:2d_graphics",
+  ]
+
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_manager",
@@ -85,7 +85,6 @@ ohos_static_library("libwmutil_static") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
-    "graphic_2d:2d_graphics",
     "graphic_2d:librender_service_client",
     "graphic_surface:surface",
     "hilog:libhilog",
@@ -145,7 +144,6 @@ ohos_shared_library("libwmutil_base") {
 ## Build libwmutil.so
 ohos_shared_library("libwmutil") {
   sources = [
-    "src/dms_reporter.cpp",
     "src/perform_reporter.cpp",
     "src/permission.cpp",
     "src/persistent_storage.cpp",

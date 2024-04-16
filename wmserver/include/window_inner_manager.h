@@ -64,7 +64,6 @@ public:
     pid_t GetPid();
     void SetInputEventConsumer();
     void StartWindowInfoReportLoop();
-    void SetWindowRoot(const sptr<WindowRoot>& windowRoot);
 
 protected:
     WindowInnerManager();

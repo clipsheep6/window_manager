@@ -16,7 +16,12 @@ import("../../../../../windowmanager_aafwk.gni")
 
 config("scene_session_manager_napi_config") {
   visibility = [ ":*" ]
-  include_dirs = [ "${window_base_path}/wm/include" ]
+  include_dirs = [
+    "${window_base_path}/wm/include",
+
+    # for ui_content
+    "${arkui_path}/ace_engine/interfaces/inner_api/ace",
+  ]
 }
 
 ohos_shared_library("scenesessionmanager_napi") {
@@ -38,7 +43,6 @@ ohos_shared_library("scenesessionmanager_napi") {
   configs = [ ":scene_session_manager_napi_config" ]
 
   deps = [
-    "${window_base_path}/utils:libwmutil",
     "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/session:scene_session",
     "${window_base_path}/window_scene/session_manager:scene_session_manager",

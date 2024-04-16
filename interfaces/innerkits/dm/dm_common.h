@@ -66,7 +66,6 @@ enum class PowerStateChangeReason : uint32_t {
     STATE_CHANGE_REASON_PRE_BRIGHT_AUTH_SUCCESS = 27,
     STATE_CHANGE_REASON_PRE_BRIGHT_AUTH_FAIL_SCREEN_ON = 28,
     STATE_CHANGE_REASON_PRE_BRIGHT_AUTH_FAIL_SCREEN_OFF = 29,
-    STATE_CHANGE_REASON_DISPLAY_SWITCH = 30,
     STATE_CHANGE_REASON_REMOTE = 100,
     STATE_CHANGE_REASON_UNKNOWN = 1000,
 };
@@ -218,6 +217,25 @@ enum class ScreenGroupChangeEvent : uint32_t {
 };
 
 /**
+ * @brief Enumerates refresh rate modes.
+ */
+enum class RefreshRateMode : int32_t {
+    SMART = -1,
+    NORMAL = 1,
+    MIDDLE = 2,
+    HIGH = 3,
+};
+
+/**
+ * @brief Enumerates refresh rates.
+ */
+enum class RefreshRate : uint32_t {
+    NORMAL = 60,
+    MIDDLE = 90,
+    HIGH = 120,
+};
+
+/**
  * @brief Enumerates rotations.
  */
 enum class Rotation : uint32_t {
@@ -244,13 +262,7 @@ enum class Orientation : uint32_t {
     AUTO_ROTATION_PORTRAIT_RESTRICTED = 9,
     AUTO_ROTATION_LANDSCAPE_RESTRICTED = 10,
     LOCKED = 11,
-    FOLLOW_RECENT = 12,
-    AUTO_ROTATION_UNSPECIFIED = 13,
-    USER_ROTATION_PORTRAIT = 14,
-    USER_ROTATION_LANDSCAPE = 15,
-    USER_ROTATION_PORTRAIT_INVERTED = 16,
-    USER_ROTATION_LANDSCAPE_INVERTED = 17,
-    END = USER_ROTATION_LANDSCAPE_INVERTED,
+    END = LOCKED,
 };
 
 /**

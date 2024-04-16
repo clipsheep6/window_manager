@@ -29,7 +29,6 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
-    constexpr int32_t DELAY_ANIM = 500;
     constexpr int32_t SUCCESS = 1;
     constexpr int32_t FAILED = 0;
     constexpr uint32_t PIP_LOW_PRIORITY = 0;
@@ -38,7 +37,7 @@ namespace {
 }
 static uint32_t GetPipPriority(uint32_t pipTemplateType)
 {
-    if (pipTemplateType >= static_cast<uint32_t>(PiPTemplateType::END)) {
+    if (pipTemplateType < 0 || pipTemplateType >= static_cast<uint32_t>(PiPTemplateType::END)) {
         TLOGE(WmsLogTag::WMS_PIP, "param invalid, pipTemplateType is %{public}d", pipTemplateType);
         return PIP_LOW_PRIORITY;
     }
@@ -97,7 +96,7 @@ WMError PictureInPictureController::CreatePictureInPictureWindow()
     pipTemplateInfo.priority = GetPipPriority(pipOption_->GetPipTemplate());
     sptr<Window> window = Window::CreatePiP(windowOption, pipTemplateInfo, context->lock(), errCode);
     if (window == nullptr || errCode != WMError::WM_OK) {
-        TLOGW(WmsLogTag::WMS_PIP, "Window create failed, reason: %{public}d", errCode);
+        TLOGE(WmsLogTag::WMS_PIP, "Window create failed, reason: %{public}d", errCode);
         return WMError::WM_ERROR_PIP_CREATE_FAILED;
     }
     window_ = window;
@@ -109,10 +108,6 @@ WMError PictureInPictureController::CreatePictureInPictureWindow()
 WMError PictureInPictureController::ShowPictureInPictureWindow(StartPipType startType)
 {
     TLOGD(WmsLogTag::WMS_PIP, "ShowPictureInPictureWindow is called");
-    if (pipOption_ == nullptr) {
-        TLOGE(WmsLogTag::WMS_PIP, "Get PictureInPicture option failed");
-        return WMError::WM_ERROR_PIP_CREATE_FAILED;
-    }
     if (window_ == nullptr) {
         TLOGE(WmsLogTag::WMS_PIP, "window is null when show pip");
         SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(static_cast<int32_t>(startType),
@@ -121,6 +116,10 @@ WMError PictureInPictureController::ShowPictureInPictureWindow(StartPipType star
     }
     if (pipLifeCycleListener_ != nullptr) {
         pipLifeCycleListener_->OnPreparePictureInPictureStart();
+    }
+    if (pipOption_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "Get PictureInPicture option failed");
+        return WMError::WM_ERROR_PIP_CREATE_FAILED;
     }
     window_->SetUIContentByAbc(PIP_CONTENT_PATH, env_, nullptr, nullptr);
     WMError errCode = window_->Show(0, false);
@@ -153,16 +152,16 @@ WMError PictureInPictureController::StartPictureInPicture(StartPipType startType
 {
     TLOGI(WmsLogTag::WMS_PIP, "StartPictureInPicture called");
     std::lock_guard<std::mutex> lock(mutex_);
-    if (pipOption_ == nullptr || pipOption_->GetContext() == nullptr) {
-        TLOGE(WmsLogTag::WMS_PIP, "pipOption is null or Get PictureInPictureOption failed");
-        return WMError::WM_ERROR_PIP_CREATE_FAILED;
-    }
     if (curState_ == PiPWindowState::STATE_STARTING || curState_ == PiPWindowState::STATE_STARTED) {
         TLOGW(WmsLogTag::WMS_PIP, "pipWindow is starting, state: %{public}u, id: %{public}u, mainWindow: %{public}u",
             curState_, window_->GetWindowId(), mainWindowId_);
         SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(static_cast<int32_t>(startType),
             pipOption_->GetPipTemplate(), FAILED, "Pip window is starting");
         return WMError::WM_ERROR_PIP_REPEAT_OPERATION;
+    }
+    if (pipOption_ == nullptr || pipOption_->GetContext() == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "Get PictureInPictureOption failed");
+        return WMError::WM_ERROR_PIP_CREATE_FAILED;
     }
     if (mainWindow_ == nullptr) {
         TLOGE(WmsLogTag::WMS_PIP, "Init main window failed");
@@ -177,9 +176,6 @@ WMError PictureInPictureController::StartPictureInPicture(StartPipType startType
         // if current controller is not the active one, but belongs to the same mainWindow, reserve pipWindow
         if (PictureInPictureManager::IsAttachedToSameWindow(mainWindowId_)) {
             window_ = PictureInPictureManager::GetCurrentWindow();
-            if (window_ == nullptr) {
-                return WMError::WM_ERROR_PIP_CREATE_FAILED;
-            }
             TLOGE(WmsLogTag::WMS_PIP, "Reuse pipWindow: %{public}u as attached to the same mainWindow: %{public}u",
                 window_->GetWindowId(), mainWindowId_);
             PictureInPictureManager::DoClose(false, false);
@@ -399,23 +395,8 @@ void PictureInPictureController::UpdateContentSize(int32_t width, int32_t height
         TLOGE(WmsLogTag::WMS_PIP, "pipWindow not exist");
         return;
     }
-    if (mainWindowXComponentController_) {
-        float posX = 0;
-        float posY = 0;
-        float newWidth = 0;
-        float newHeight = 0;
-        mainWindowXComponentController_->GetGlobalPosition(posX, posY);
-        mainWindowXComponentController_->GetSize(newWidth, newHeight);
-        if (windowRect_.width_ != static_cast<uint32_t>(newWidth) ||
-            windowRect_.height_ != static_cast<uint32_t>(newHeight) ||
-            windowRect_.posX_ != static_cast<uint32_t>(posX) || windowRect_.posY_ != static_cast<uint32_t>(posY)) {
-            Rect r = {posX, posY, newWidth, newHeight};
-            window_->UpdatePiPRect(r, WindowSizeChangeReason::TRANSFORM);
-        }
-    }
     TLOGI(WmsLogTag::WMS_PIP, "UpdateContentSize window: %{public}u width:%{public}u height:%{public}u",
         window_->GetWindowId(), width, height);
-    pipOption_->SetContentSize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
     Rect rect = {0, 0, width, height};
     window_->UpdatePiPRect(rect, WindowSizeChangeReason::PIP_RATIO_CHANGE);
 }
@@ -464,20 +445,7 @@ void PictureInPictureController::RestorePictureInPictureWindow()
             TLOGE(WmsLogTag::WMS_PIP, "navController is nullptr");
         }
     }
-    if (handler_) {
-        auto stopTask = [weakThis = wptr(this)]() {
-            auto controller = weakThis.promote();
-            if (!controller) {
-                TLOGE(WmsLogTag::WMS_PIP, "controller is nullptr");
-                return;
-            }
-            controller->StopPictureInPicture(true, StopPipType::NULL_STOP);
-        };
-        handler_->PostTask(stopTask, "wms:StopPictureInPicture_restore", DELAY_ANIM);
-    } else {
-        TLOGW(WmsLogTag::WMS_PIP, "StopPictureInPicture no delay while restore");
-        StopPictureInPicture(true, StopPipType::NULL_STOP);
-    }
+    StopPictureInPicture(true, StopPipType::NULL_STOP);
     SingletonContainer::Get<PiPReporter>().ReportPiPRestore();
     TLOGI(WmsLogTag::WMS_PIP, "restore pip main window finished");
 }
