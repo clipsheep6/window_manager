@@ -2840,7 +2840,7 @@ WMError SceneSessionManager::HandleUpdateProperty(const sptr<WindowSessionProper
             break;
         }
         case WSPropertyChangeAction::ACTION_UPDATE_TOUCH_HOT_AREA: {
-            if (sceneSession->GetSessionProperty() != nullptr) {
+            if (sceneSession->GetSessionProperty() != nullptr && property != nullptr) {
                 std::vector<Rect> touchHotAreas;
                 property->GetTouchHotAreas(touchHotAreas);
                 sceneSession->GetSessionProperty()->SetTouchHotAreas(touchHotAreas);
@@ -4477,6 +4477,10 @@ void SceneSessionManager::ProcessSubSessionForeground(sptr<SceneSession>& sceneS
             continue;
         }
         auto dialogSession = GetSceneSession(dialog->GetPersistentId());
+        if (dialogSession == nullptr) {
+            TLOGD(WmsLogTag::WMS_DIALOG, "dialogSession is not active");
+            continue;
+        }
         NotifyWindowInfoChange(dialog->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_ADDED);
         if (dialog->GetPersistentId() == focusedSessionId_ && needBlockNotifyFocusStatusUntilForeground_) {
             needBlockNotifyUnfocusStatus_ = false;
@@ -5148,10 +5152,19 @@ WSError SceneSessionManager::TerminateSessionNew(const sptr<AAFwk::SessionInfo> 
     }
     TLOGI(WmsLogTag::WMS_LIFE, "bundleName=%{public}s, needStartCaller=%{public}d",
         info->want.GetElement().GetBundleName().c_str(), needStartCaller);
+    sptr<SceneSession> sceneSession = FindSessionByToken(info->sessionToken);
+    if (sceneSession == nullptr) {
+        TLOGE(WmsLogTag::WMS_LIFE, "fail to find session by token.");
+        return WSError::WS_ERROR_INVALID_PARAM;
+    }
+    if (!SessionPermission::IsSameBundleNameAsCalling(sceneSession->GetSessionInfo().bundleName_)) {
+        TLOGE(WmsLogTag::WMS_LIFE, "isSameBundleNameAsCalling denied!");
+        return WSError::WS_ERROR_INVALID_CALLING;
+    }
     auto task = [this, info, needStartCaller]() {
         sptr<SceneSession> sceneSession = FindSessionByToken(info->sessionToken);
         if (sceneSession == nullptr) {
-            TLOGE(WmsLogTag::WMS_LIFE, "TerminateSessionNew:fail to find session by token.");
+            TLOGE(WmsLogTag::WMS_LIFE, "fail to find session by token.");
             return WSError::WS_ERROR_INVALID_PARAM;
         }
         const WSError& errCode = sceneSession->TerminateSessionNew(info, needStartCaller);
@@ -6787,6 +6800,10 @@ void SceneSessionManager::NotifySessionCreate(sptr<SceneSession> sceneSession, c
         collaborator = iter->second;
     }
     auto abilitySessionInfo = SetAbilitySessionInfo(sceneSession);
+    if (abilitySessionInfo == nullptr) {
+        WLOGFE("abilitySessionInfo is nullptr");
+        return;
+    }
     sceneSession->SetSelfToken(abilitySessionInfo->sessionToken);
     abilitySessionInfo->want = *(sessionInfo.want);
     if (collaborator != nullptr) {
