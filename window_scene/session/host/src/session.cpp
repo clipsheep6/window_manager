@@ -218,6 +218,7 @@ void Session::SetSessionInfo(const SessionInfo& info)
     sessionInfo_.callingTokenId_ = info.callingTokenId_;
     sessionInfo_.uiAbilityId_ = info.uiAbilityId_;
     sessionInfo_.startSetting = info.startSetting;
+    sessionInfo_.continueSessionId_ = info.continueSessionId_;
 }
 
 void Session::SetScreenId(uint64_t screenId)
@@ -788,15 +789,16 @@ __attribute__((no_sanitize("cfi"))) WSError Session::Connect(const sptr<ISession
     if (SessionHelper::IsMainWindow(GetWindowType()) && GetSessionInfo().screenId_ != -1 && property) {
         property->SetDisplayId(GetSessionInfo().screenId_);
     }
-    Rect rect = {
-        winRect_.posX_,
-        winRect_.posY_,
-        static_cast<uint32_t>(winRect_.width_),
-        static_cast<uint32_t>(winRect_.height_)
-    };
-    property->SetWindowRect(rect);
+
     SetSessionProperty(property);
     if (property) {
+        Rect rect = {
+            winRect_.posX_,
+            winRect_.posY_,
+            static_cast<uint32_t>(winRect_.width_),
+            static_cast<uint32_t>(winRect_.height_)
+        };
+        property->SetWindowRect(rect);
         property->SetPersistentId(GetPersistentId());
     }
     callingPid_ = pid;

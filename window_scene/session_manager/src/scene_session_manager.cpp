@@ -92,6 +92,7 @@
 #include "perform_reporter.h"
 #include "focus_change_info.h"
 #include "anr_manager.h"
+#include "dms_reporter.h"
 
 #include "window_visibility_info.h"
 #include "window_drawing_content_info.h"
@@ -4044,8 +4045,7 @@ void SceneSessionManager::NotifyFocusStatus(sptr<SceneSession>& sceneSession, bo
             "", "THAW_BY_FOCUS_CHANGED");
 #endif // EFFICIENCY_MANAGER_ENABLE
     SessionManagerAgentController::GetInstance().UpdateFocusChangeInfo(focusChangeInfo, isFocused);
-    WSError res = WSError::WS_OK;
-    res = sceneSession->NotifyFocusStatus(isFocused);
+    sceneSession->NotifyFocusStatus(isFocused);
     std::string sName = "FoucusWindow:";
     if (sceneSession->GetSessionInfo().isSystem_) {
         sName += sceneSession->GetSessionInfo().abilityName_;
@@ -4057,9 +4057,7 @@ void SceneSessionManager::NotifyFocusStatus(sptr<SceneSession>& sceneSession, bo
     } else {
         FinishAsyncTrace(HITRACE_TAG_WINDOW_MANAGER, sName, sceneSession->GetPersistentId());
     }
-    if (res != WSError::WS_OK) {
-        return;
-    }
+
     // notify listenerController
     auto prevSession = GetSceneSession(lastFocusedSessionId_);
     if (isFocused && MissionChanged(prevSession, sceneSession)) {
@@ -4779,12 +4777,18 @@ WSError SceneSessionManager::RegisterSessionListener(const sptr<ISessionListener
         return WSError::WS_ERROR_INVALID_PERMISSION;
     }
     auto task = [this, &listener]() {
+        WSError ret = WSError::WS_DO_NOTHING;
         if (listenerController_ != nullptr) {
-            return listenerController_->AddSessionListener(listener);
+            ret = listenerController_->AddSessionListener(listener);
         } else {
             WLOGFE("The listenerController is nullptr");
-            return WSError::WS_DO_NOTHING;
         }
+
+        // app continue report for distributed scheduled service
+        SingletonContainer::Get<DmsReporter>().ReportContinueApp(ret == WSError::WS_OK,
+            static_cast<int32_t>(ret));
+
+        return ret;
     };
     return taskScheduler_->PostSyncTask(task, "AddSessionListener");
 }
@@ -4929,6 +4933,40 @@ WSError SceneSessionManager::GetSessionInfo(const std::string& deviceId,
         }
     };
     return taskScheduler_->PostSyncTask(task, "GetSessionInfo");
+}
+
+WSError SceneSessionManager::GetSessionInfoByContinueSessionId(const std::string& continueSessionId,
+    SessionInfoBean& sessionInfo)
+{
+    TLOGI(WmsLogTag::WMS_LIFE, "query session info with continueSessionId: %{public}s",
+        continueSessionId.c_str());
+    if (!SessionPermission::JudgeCallerIsAllowedToUseSystemAPI()) {
+        TLOGE(WmsLogTag::WMS_LIFE, "The interface only support for system service.");
+        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    }
+    if (!SessionPermission::VerifySessionPermission()) {
+        TLOGE(WmsLogTag::WMS_LIFE, "The caller has not permission granted.");
+        return WSError::WS_ERROR_INVALID_PERMISSION;
+    }
+    auto task = [this, continueSessionId, &sessionInfo]() {
+        WSError ret = WSError::WS_ERROR_INVALID_SESSION;
+        {
+            std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+            for (auto& [persistentId, sceneSession] : sceneSessionMap_) {
+                if (sceneSession && sceneSession->GetSessionInfo().continueSessionId_ == continueSessionId) {
+                    ret = SceneSessionConverter::ConvertToMissionInfo(sceneSession, sessionInfo);
+                    break;
+                }
+            }
+        }
+
+        TLOGI(WmsLogTag::WMS_LIFE, "get session info finished with ret code: %{public}d", ret);
+        // app continue report for distributed scheduled service
+        SingletonContainer::Get<DmsReporter>().ReportQuerySessionInfo(ret == WSError::WS_OK,
+            static_cast<int32_t>(ret));
+        return ret;
+    };
+    return taskScheduler_->PostSyncTask(task, "GetSessionInfoByContinueSessionId");
 }
 
 int SceneSessionManager::GetRemoteSessionInfo(const std::string& deviceId,
