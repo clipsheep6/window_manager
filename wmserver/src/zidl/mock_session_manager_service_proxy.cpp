@@ -14,6 +14,7 @@
  */
 
 #include <cinttypes>
+#include <ipc_skeleton.h>
 #include "zidl/mock_session_manager_service_proxy.h"
 #include "window_manager_hilog.h"
 
