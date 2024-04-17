@@ -56,7 +56,7 @@ void AnomalyDetection::SceneZOrderCheckProcess()
             if ((callingSession != nullptr) && (callingSession->GetZOrder() > session->GetZOrder())) {
                 TLOGE(WmsLogTag::WMS_FOCUS, "ZOrderCheck err, callingSession: %{public}d curSession: %{public}d",
                     callingSession->GetZOrder(), session->GetZOrder());
-                ReportZOrderExcetion("check callingSession  check for input", session);
+                ReportZOrderExcetion("check callingSession check for input", session);
             }
         }
         // subWindow/dialogWindow
