@@ -68,7 +68,7 @@ JsWindow::JsWindow(const sptr<Window>& window)
 {
     NotifyNativeWinDestroyFunc func = [weakThis = wptr(this)](std::string windowName) {
         auto jsWindow = weakThis.promote();
-        if (!JsWindow) {
+        if (!jsWindow) {
             WLOGFE("NotifyNativeWinDestroyFunc: jsWindow is null");
         }
         std::lock_guard<std::recursive_mutex> lock(g_mutex);
