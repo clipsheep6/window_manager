@@ -94,7 +94,7 @@ void MockSessionManagerServiceProxy::RegisterSMSRecoverListener(const sptr<IRemo
         WLOGFE("[WMSRecover] WriteRemoteObject listener failed");
         return;
     }
-
+    IPCSkeleton::ResetCallingIdentity();
     if (Remote()->SendRequest(static_cast<uint32_t>(
         MockSessionManagerServiceMessage::TRANS_ID_REGISTER_SMS_RECOVER_LISTENER),
         data, reply, option) != ERR_NONE) {
@@ -112,6 +112,7 @@ void MockSessionManagerServiceProxy::UnregisterSMSRecoverListener()
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("[WMSRecover] WriteInterfaceToken failed");
     }
+    IPCSkeleton::ResetCallingIdentity();
     if (Remote()->SendRequest(static_cast<uint32_t>(
         MockSessionManagerServiceMessage::TRANS_ID_UNREGISTER_SMS_RECOVER_LISTENER),
         data, reply, option) != ERR_NONE) {
