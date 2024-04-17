@@ -77,7 +77,7 @@ JsWindow::JsWindow(const sptr<Window>& window)
             return;
         }
         g_jsWindowMap.erase(windowName);
-        jswindow.windowToken_ = nullptr;
+        jsWindow.windowToken_ = nullptr;
         WLOGI("Destroy window %{public}s in js window", windowName.c_str());
     };
     windowToken_->RegisterWindowDestroyedListener(func);
