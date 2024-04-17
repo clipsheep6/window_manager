@@ -21,16 +21,15 @@
 namespace OHOS {
 namespace Rosen {
 
-enum class WindowDFXHelperType : uint32_t {
-    WINDOW_RECT_CHECK,
-    WINDOW_ZORDER_CHECK,
-    WINDOW_FOCUS_CHECK,
-};
-
 class AnomalyDetection {
 public:
     static void SceneZOrderCheckProcess();
     static void FocusCheckProcess(int32_t focusedId, int32_t nextId);
+
+private:
+    static void ReportZOrderExcetion(const std::string& errorReason, sptr<SessionSession> session);
+    static void ReportFocusExcetion(const std::string& errorReason, int32_t focusedId, 
+        int32_t nextId, sptr<SessionSession> session);
 };
 } // namespace Rosen
 } // namespace OHOS
