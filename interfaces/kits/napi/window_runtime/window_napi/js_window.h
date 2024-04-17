@@ -28,6 +28,7 @@
 #include "native_engine/native_engine.h"
 #include "native_engine/native_value.h"
 #include "window.h"
+#include <refbase.h>
 
 namespace OHOS {
 namespace Rosen {
@@ -38,7 +39,7 @@ napi_value NapiGetUndefined(napi_env env);
 napi_valuetype GetType(napi_env env, napi_value value);
 bool NapiIsCallable(napi_env env, napi_value value);
 napi_value NapiThrowError(napi_env env, WmErrorCode errCode);
-class JsWindow final {
+class JsWindow final : public RefBase {
 public:
     explicit JsWindow(const sptr<Window>& window);
     ~JsWindow();
