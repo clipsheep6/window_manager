@@ -66,14 +66,18 @@ static bool g_isSceneEnabled = false;
 JsWindow::JsWindow(const sptr<Window>& window)
     : windowToken_(window), registerManager_(std::make_unique<JsWindowRegisterManager>())
 {
-    NotifyNativeWinDestroyFunc func = [this](std::string windowName) {
+    NotifyNativeWinDestroyFunc func = [weakThis = wptr(this)](std::string windowName) {
+        auto jsWindow = weakThis.promote();
+        if (!jsWindow) {
+            WLOGFE("NotifyNativeWinDestroyFunc: jsWindow is null");
+        }
         std::lock_guard<std::recursive_mutex> lock(g_mutex);
         if (windowName.empty() || g_jsWindowMap.count(windowName) == 0) {
             WLOGFE("Can not find window %{public}s ", windowName.c_str());
             return;
         }
         g_jsWindowMap.erase(windowName);
-        windowToken_ = nullptr;
+        jsWindow.windowToken_ = nullptr;
         WLOGI("Destroy window %{public}s in js window", windowName.c_str());
     };
     windowToken_->RegisterWindowDestroyedListener(func);
