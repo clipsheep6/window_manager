@@ -564,8 +564,7 @@ sptr<IRemoteObject> MockSessionManagerService::GetSceneSessionManager()
         WLOGFE("SessionManagerService is null");
         return nullptr;
     }
-    sptr<ISessionManagerService> sessionManagerServiceProxy =
-        iface_cast<ISessionManagerService>(sessionManagerService);
+    sptr<ISessionManagerService> sessionManagerServiceProxy = iface_cast<ISessionManagerService>(sessionManagerService);
     if (!sessionManagerServiceProxy) {
         WLOGFE("sessionManagerServiceProxy is nullptr");
         return nullptr;
