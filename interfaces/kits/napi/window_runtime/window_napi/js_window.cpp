@@ -1980,7 +1980,8 @@ napi_value JsWindow::OnSetFullScreen(napi_env env, napi_callback_info info)
             TLOGE(WmsLogTag::WMS_IMMS, "Failed to convert parameter to isFullScreen");
             errCode = WMError::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_bool(env, nativeVal, &isFullScreen);
+            CHECK_NAPI_RETCODE(errCode, WMError::WM_ERROR_INVALID_PARAM,
+                napi_get_value_bool(env, nativeVal, &isFullScreen));
         }
     }
 
@@ -2030,7 +2031,8 @@ napi_value JsWindow::OnSetLayoutFullScreen(napi_env env, napi_callback_info info
             TLOGE(WmsLogTag::WMS_IMMS, "Failed to convert parameter to isLayoutFullScreen");
             errCode = WMError::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_bool(env, nativeVal, &isLayoutFullScreen);
+            CHECK_NAPI_RETCODE(errCode, WMError::WM_ERROR_INVALID_PARAM,
+                napi_get_value_bool(env, nativeVal, &isLayoutFullScreen));
         }
     }
     wptr<Window> weakToken(windowToken_);
@@ -2079,7 +2081,8 @@ napi_value JsWindow::OnSetWindowLayoutFullScreen(napi_env env, napi_callback_inf
             TLOGE(WmsLogTag::WMS_IMMS, "Failed to convert parameter to isLayoutFullScreen");
             errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_bool(env, nativeVal, &isLayoutFullScreen);
+            CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+                    napi_get_value_bool(env, nativeVal, &isLayoutFullScreen));
         }
     }
     if (errCode != WmErrorCode::WM_OK) {
@@ -2510,7 +2513,8 @@ static void ParseAvoidAreaParam(napi_env env, napi_callback_info info, WMError& 
             errCode = WMError::WM_ERROR_INVALID_PARAM;
         } else {
             uint32_t resultValue = 0;
-            napi_get_value_uint32(env, nativeMode, &resultValue);
+            CHECK_NAPI_RETCODE(errCode, WMError::WM_ERROR_INVALID_PARAM,
+                napi_get_value_uint32(env, nativeMode, &resultValue));
             avoidAreaType = static_cast<AvoidAreaType>(resultValue);
             errCode = ((avoidAreaType > AvoidAreaType::TYPE_KEYBOARD) ||
                 (avoidAreaType < AvoidAreaType::TYPE_SYSTEM)) ? WMError::WM_ERROR_INVALID_PARAM : WMError::WM_OK;
@@ -2583,7 +2587,8 @@ napi_value JsWindow::OnGetWindowAvoidAreaSync(napi_env env, napi_callback_info i
         errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
     } else {
         uint32_t resultValue = 0;
-        napi_get_value_uint32(env, nativeMode, &resultValue);
+        CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+             napi_get_value_uint32(env, nativeMode, &resultValue));
         avoidAreaType = static_cast<AvoidAreaType>(resultValue);
         errCode = ((avoidAreaType > AvoidAreaType::TYPE_NAVIGATION_INDICATOR) ||
                    (avoidAreaType < AvoidAreaType::TYPE_SYSTEM)) ?
@@ -2923,7 +2928,8 @@ napi_value JsWindow::OnSetBrightness(napi_env env, napi_callback_info info)
             WLOGFE("Failed to convert parameter to brightness");
             errCode = WMError::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_double(env, nativeVal, &brightness);
+            CHECK_NAPI_RETCODE(errCode, WMError::WM_ERROR_INVALID_PARAM,
+                napi_get_value_double(env, nativeVal, &brightness));
         }
     }
 
@@ -2975,7 +2981,8 @@ napi_value JsWindow::OnSetWindowBrightness(napi_env env, napi_callback_info info
             WLOGFE("Failed to convert parameter to brightness");
             errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_double(env, nativeVal, &brightness);
+            CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+                napi_get_value_double(env, nativeVal, &brightness));
         }
     }
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
@@ -3043,7 +3050,8 @@ napi_value JsWindow::OnSetFocusable(napi_env env, napi_callback_info info)
             WLOGFE("Failed to convert parameter to focusable");
             errCode = WMError::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_bool(env, nativeVal, &focusable);
+            CHECK_NAPI_RETCODE(errCode, WMError::WM_ERROR_INVALID_PARAM,
+                napi_get_value_bool(env, nativeVal, &focusable));
         }
     }
 
@@ -3094,7 +3102,8 @@ napi_value JsWindow::OnSetWindowFocusable(napi_env env, napi_callback_info info)
             WLOGFE("Failed to convert parameter to focusable");
             errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_bool(env, nativeVal, &focusable);
+            CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+                napi_get_value_bool(env, nativeVal, &focusable));
         }
     }
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
@@ -3193,7 +3202,8 @@ napi_value JsWindow::OnSetKeepScreenOn(napi_env env, napi_callback_info info)
             WLOGFE("Failed to convert parameter to keepScreenOn");
             errCode = WMError::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_bool(env, nativeVal, &keepScreenOn);
+            CHECK_NAPI_RETCODE(errCode, WMError::WM_ERROR_INVALID_PARAM,
+                napi_get_value_bool(env, nativeVal, &keepScreenOn));
         }
     }
 
@@ -3246,7 +3256,8 @@ napi_value JsWindow::OnSetWindowKeepScreenOn(napi_env env, napi_callback_info in
             WLOGFE("Failed to convert parameter to keepScreenOn");
             errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_bool(env, nativeVal, &keepScreenOn);
+            CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+                napi_get_value_bool(env, nativeVal, &keepScreenOn));
         }
     }
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
@@ -3314,10 +3325,13 @@ napi_value JsWindow::OnSetWakeUpScreen(napi_env env, napi_callback_info info)
             WLOGFE("Failed to convert parameter to keepScreenOn");
             return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
         } else {
-            napi_get_value_bool(env, nativeVal, &wakeUp);
+            CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+                napi_get_value_bool(env, nativeVal, &wakeUp));
         }
     }
-
+    if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
     windowToken_->SetTurnScreenOn(wakeUp);
     WLOGI("Window [%{public}u, %{public}s] set wake up screen %{public}d end",
         windowToken_->GetWindowId(), windowToken_->GetWindowName().c_str(), wakeUp);
@@ -3358,7 +3372,8 @@ napi_value JsWindow::OnSetPrivacyMode(napi_env env, napi_callback_info info)
             WLOGFE("Failed to convert parameter to isPrivacyMode");
             errCode = WMError::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_bool(env, nativeVal, &isPrivacyMode);
+            CHECK_NAPI_RETCODE(errCode, WMError::WM_ERROR_INVALID_PARAM,
+                napi_get_value_bool(env, nativeVal, &isPrivacyMode));
         }
     }
 
@@ -3406,7 +3421,8 @@ napi_value JsWindow::OnSetWindowPrivacyMode(napi_env env, napi_callback_info inf
             WLOGFE("Failed to convert parameter to isPrivacyMode");
             errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_bool(env, nativeVal, &isPrivacyMode);
+            CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+                napi_get_value_bool(env, nativeVal, &isPrivacyMode));
         }
     }
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
@@ -3460,7 +3476,8 @@ napi_value JsWindow::OnSetTouchable(napi_env env, napi_callback_info info)
             WLOGFE("Failed to convert parameter to touchable");
             errCode = WMError::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_bool(env, nativeVal, &touchable);
+            CHECK_NAPI_RETCODE(errCode, WMError::WM_ERROR_INVALID_PARAM,
+                napi_get_value_bool(env, nativeVal, &touchable));
         }
     }
 
@@ -3553,10 +3570,13 @@ napi_value JsWindow::OnSetResizeByDragEnabled(napi_env env, napi_callback_info i
             WLOGFE("Failed to convert parameter to dragEnabled");
             errCode = WMError::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_bool(env, argv[0], &dragEnabled);
+            CHECK_NAPI_RETCODE(errCode, WMError::WM_ERROR_INVALID_PARAM,
+                napi_get_value_bool(env, argv[0], &dragEnabled));
         }
     }
-
+    if (errCode == WMError::WM_ERROR_INVALID_PARAM) {
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
         [weakToken, dragEnabled, errCode](napi_env env, NapiAsyncTask& task, int32_t status) {
@@ -3607,7 +3627,8 @@ napi_value JsWindow::OnSetRaiseByClickEnabled(napi_env env, napi_callback_info i
             WLOGFE("Failed to convert parameter to raiseEnabled");
             errCode = WMError::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_bool(env, argv[0], &raiseEnabled);
+            CHECK_NAPI_RETCODE(errCode, WMError::WM_ERROR_INVALID_PARAM,
+                napi_get_value_bool(env, argv[0], &raiseEnabled));
         }
     }
 
@@ -3778,7 +3799,8 @@ void GetSubWindowId(napi_env env, napi_value nativeVal, WmErrorCode &errCode, in
         errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
     } else {
         int32_t resultValue = 0;
-        napi_get_value_int32(env, nativeVal, &resultValue);
+        CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+            napi_get_value_int32(env, nativeVal, &resultValue));
         if (resultValue <= 0) {
             WLOGFE("Failed to get subWindowId due to resultValue less than or equal to 0");
             errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
@@ -3850,7 +3872,12 @@ napi_value JsWindow::OnKeepKeyboardOnFocus(napi_env env, napi_callback_info info
         WLOGFE("Failed to get parameter keepKeyboardFlag");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     } else {
-        napi_get_value_bool(env, nativeVal, &keepKeyboardFlag);
+        WmErrorCode errCode = WmErrorCode::WM_OK;
+        CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+            napi_get_value_bool(env, nativeVal, &keepKeyboardFlag));
+        if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
+            return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+        } 
     }
 
     if (windowToken_ == nullptr) {
@@ -3892,7 +3919,8 @@ napi_value JsWindow::OnSetWindowTouchable(napi_env env, napi_callback_info info)
             WLOGFE("Failed to convert parameter to touchable");
             errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_bool(env, nativeVal, &touchable);
+            CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+                napi_get_value_bool(env, nativeVal, &touchable));
         }
     }
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
@@ -4062,7 +4090,8 @@ napi_value JsWindow::OnSetColorSpace(napi_env env, napi_callback_info info)
             WLOGFE("Failed to convert parameter to ColorSpace");
         } else {
             uint32_t resultValue = 0;
-            napi_get_value_uint32(env, nativeType, &resultValue);
+            CHECK_NAPI_RETCODE(errCode, WMError::WM_ERROR_INVALID_PARAM,
+                napi_get_value_uint32(env, nativeType, &resultValue));
             colorSpace = static_cast<ColorSpace>(resultValue);
             if (colorSpace > ColorSpace::COLOR_SPACE_WIDE_GAMUT || colorSpace < ColorSpace::COLOR_SPACE_DEFAULT) {
                 WLOGFE("ColorSpace %{public}u invalid!", static_cast<uint32_t>(colorSpace));
@@ -4070,7 +4099,9 @@ napi_value JsWindow::OnSetColorSpace(napi_env env, napi_callback_info info)
             }
         }
     }
-
+    if (errCode == WMError::WM_ERROR_INVALID_PARAM) {
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
         [weakToken, colorSpace, errCode](napi_env env, NapiAsyncTask& task, int32_t status) {
@@ -4116,7 +4147,8 @@ napi_value JsWindow::OnSetWindowColorSpace(napi_env env, napi_callback_info info
             WLOGFE("Failed to convert parameter to ColorSpace");
         } else {
             uint32_t resultValue = 0;
-            napi_get_value_uint32(env, nativeType, &resultValue);
+            CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+                napi_get_value_uint32(env, nativeType, &resultValue));
             colorSpace = static_cast<ColorSpace>(resultValue);
             if (colorSpace > ColorSpace::COLOR_SPACE_WIDE_GAMUT || colorSpace < ColorSpace::COLOR_SPACE_DEFAULT) {
                 WLOGFE("ColorSpace %{public}u invalid!", static_cast<uint32_t>(colorSpace));
@@ -4253,7 +4285,8 @@ napi_value JsWindow::OnSetForbidSplitMove(napi_env env, napi_callback_info info)
         if (argv[0] == nullptr) {
             errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_bool(env, argv[0], &isForbidSplitMove);
+            CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+                napi_get_value_bool(env, argv[0], &isForbidSplitMove));
         }
     }
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
@@ -4347,7 +4380,8 @@ napi_value JsWindow::OnSetSnapshotSkip(napi_env env, napi_callback_info info)
         if (nativeVal == nullptr) {
             errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_bool(env, nativeVal, &isSkip);
+            CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+                napi_get_value_bool(env, nativeVal, &isSkip));
         }
     }
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
@@ -4428,7 +4462,12 @@ napi_value JsWindow::OnOpacity(napi_env env, napi_callback_info info)
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
     double alpha = 0.0;
-    napi_get_value_double(env, nativeVal, &alpha);
+    WmErrorCode errCode = WmErrorCode::WM_OK;
+    CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+        napi_get_value_double(env, nativeVal, &alpha));
+    if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
     if (MathHelper::LessNotEqual(alpha, 0.0) || MathHelper::GreatNotEqual(alpha, 1.0)) {
         WLOGFE("alpha should greater than 0 or smaller than 1.0");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
@@ -4735,7 +4774,12 @@ napi_value JsWindow::OnSetCornerRadius(napi_env env, napi_callback_info info)
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
     double radius = 0.0;
-    napi_get_value_double(env, nativeVal, &radius);
+    WmErrorCode errCode = WmErrorCode::WM_OK;
+    CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+        napi_get_value_double(env, nativeVal, &radius));
+    if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
     if (MathHelper::LessNotEqual(radius, 0.0)) {
         WLOGFE("SetCornerRadius invalid radius");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
@@ -4770,7 +4814,8 @@ napi_value JsWindow::OnSetShadow(napi_env env, napi_callback_info info)
     if (argv[0] == nullptr) {
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
-    napi_get_value_double(env, argv[0], &result);
+    CHECK_NAPI_RETCODE(ret, WmErrorCode::WM_ERROR_INVALID_PARAM,
+        napi_get_value_double(env, argv[0], &result));
     if (MathHelper::LessNotEqual(result, 0.0)) {
         return NapiThrowError(env,  WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
@@ -4826,7 +4871,12 @@ napi_value JsWindow::OnSetBlur(napi_env env, napi_callback_info info)
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
     double radius = 0.0;
-    napi_get_value_double(env, nativeVal, &radius);
+    WmErrorCode errCode = WmErrorCode::WM_OK;
+    CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+        napi_get_value_double(env, nativeVal, &radius));
+    if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
     if (MathHelper::LessNotEqual(radius, 0.0)) {
         WLOGFE("SetBlur invalid radius");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
@@ -4864,7 +4914,12 @@ napi_value JsWindow::OnSetBackdropBlur(napi_env env, napi_callback_info info)
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
     double radius = 0.0;
-    napi_get_value_double(env, nativeVal, &radius);
+    WmErrorCode errCode = WmErrorCode::WM_OK;
+    CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+        napi_get_value_double(env, nativeVal, &radius));
+    if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
     if (MathHelper::LessNotEqual(radius, 0.0)) {
         WLOGFE("SetBackdropBlur invalid radius");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
@@ -4903,7 +4958,12 @@ napi_value JsWindow::OnSetBackdropBlurStyle(napi_env env, napi_callback_info inf
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
     uint32_t resultValue = 0;
-    napi_get_value_uint32(env, nativeMode, &resultValue);
+    WmErrorCode errCode = WmErrorCode::WM_OK;
+    CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+        napi_get_value_uint32(env, nativeMode, &resultValue));
+    if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
     if (resultValue > static_cast<uint32_t>(WindowBlurStyle::WINDOW_BLUR_THICK)) {
         WLOGFE("SetBackdropBlurStyle Invalid window blur style");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
@@ -4937,7 +4997,13 @@ napi_value JsWindow::OnSetWaterMarkFlag(napi_env env, napi_callback_info info)
     }
 
     bool isAddSafetyLayer = false;
-    napi_get_value_bool(env, nativeBool, &isAddSafetyLayer);
+    WmErrorCode errCode = WmErrorCode::WM_OK;
+    CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+        napi_get_value_bool(env, nativeBool, &isAddSafetyLayer));
+    if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
+
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
         [weakToken, isAddSafetyLayer](napi_env env, NapiAsyncTask& task, int32_t status) {
@@ -5049,7 +5115,8 @@ napi_value JsWindow::OnSetAspectRatio(napi_env env, napi_callback_info info)
         if (nativeVal == nullptr) {
             errCode = WMError::WM_ERROR_INVALID_PARAM;
         } else {
-            napi_get_value_double(env, nativeVal, &aspectRatio);
+            CHECK_NAPI_RETCODE(errCode, WMError::WM_ERROR_INVALID_PARAM,
+                napi_get_value_double(env, nativeVal, &aspectRatio));
         }
     }
 
@@ -5401,7 +5468,12 @@ napi_value JsWindow::OnSetWindowDecorVisible(napi_env env, napi_callback_info in
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
     bool isVisible = true;
-    napi_get_value_bool(env, nativeVal, &isVisible);
+    WmErrorCode errCode = WmErrorCode::WM_OK;
+    CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+        napi_get_value_bool(env, nativeVal, &isVisible));
+    if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
     WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(windowToken_->SetDecorVisible(isVisible));
     if (ret != WmErrorCode::WM_OK) {
         WLOGFE("Window decor set visible failed");
@@ -5486,7 +5558,12 @@ napi_value JsWindow::OnSetWindowDecorHeight(napi_env env, napi_callback_info inf
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
     int32_t height = 0;
-    napi_get_value_int32(env, nativeVal, &height);
+    WmErrorCode errCode = WmErrorCode::WM_OK;
+    CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+        napi_get_value_int32(env, nativeVal, &height));
+    if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
     if (height < MIN_DECOR_HEIGHT || height > MAX_DECOR_HEIGHT) {
         WLOGFE("height should greater than 37 or smaller than 112");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
