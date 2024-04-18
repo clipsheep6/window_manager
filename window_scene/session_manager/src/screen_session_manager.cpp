@@ -3080,6 +3080,18 @@ void ScreenSessionManager::SetScreenPrivacyState(bool hasPrivate)
     NotifyPrivateSessionStateChanged(hasPrivate);
 }
 
+void ScreenSessionManager::NotifyPrivateWindowListChanged(DisplayId id, std::vector<std::string> privacyWindowList)
+{
+    WLOGI("Notify displayid: %{public}" PRIu64" PrivateWindowListChanged", id);
+    auto agents = dmAgentContainer_.GetAgentsByType(DisplayManagerAgentType::PRIVATE_WINDOW_LIST_LISTENER);
+    if (agents.empty()) {
+        return;
+    }
+    for (auto& agent : agents) {
+        agent->NotifyPrivateStateWindowListChanged(id, privacyWindowList);
+    }
+}
+
 DMError ScreenSessionManager::HasPrivateWindow(DisplayId id, bool& hasPrivateWindow)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
