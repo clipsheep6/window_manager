@@ -42,7 +42,7 @@ napi_value NapiThrowError(napi_env env, WmErrorCode errCode);
 class JsWindow final : public RefBase {
 public:
     explicit JsWindow(const sptr<Window>& window);
-    ~JsWindow();
+    virtual ~JsWindow();
     static void Finalizer(napi_env env, void* data, void* hint);
     static napi_value Show(napi_env env, napi_callback_info info);
     static napi_value ShowWindow(napi_env env, napi_callback_info info);
