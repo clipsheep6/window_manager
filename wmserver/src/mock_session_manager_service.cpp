@@ -319,7 +319,7 @@ void MockSessionManagerService::RegisterSMSRecoverListener(const sptr<IRemoteObj
         TLOGE(WmsLogTag::WMS_RECOVER, "userId is illegal: %{public}d", clientUserId);
         return;
     }
-    int32_t pid = IPCSkeleton::GetCallingPid();
+    int32_t pid = IPCSkeleton::GetCallingRealPid();
     TLOGI(WmsLogTag::WMS_RECOVER, "clientUserId = %{public}d, pid = %{public}d", clientUserId, pid);
     sptr<ClientListenerDeathRecipient> clientDeathListener = new ClientListenerDeathRecipient(clientUserId, pid, false);
     listener->AddDeathRecipient(clientDeathListener);
@@ -432,7 +432,7 @@ void MockSessionManagerService::UnregisterSMSLiteRecoverListener()
         TLOGE(WmsLogTag::WMS_RECOVER, "userId is illegal: %{public}d", clientUserId);
         return;
     }
-    int32_t pid = IPCSkeleton::GetCallingPid();
+    int32_t pid = IPCSkeleton::GetCallingRealPid();
     TLOGD(WmsLogTag::WMS_RECOVER, "clientUserId = %{public}d, pid = %{public}d", clientUserId, pid);
     UnregisterSMSLiteRecoverListener(clientUserId, pid);
 }
