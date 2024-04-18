@@ -71,12 +71,12 @@ std::string SysCapUtil::GetBundleName()
 
 std::string SysCapUtil::GetProcessName()
 {
-    OHOS::Security::AccessToken::NativeTokenInfo info;
-    if (Security::AccessToken::AccessTokenKit::GetNativeTokenInfo(IPCSkeleton::GetCallingTokenID(), info) != 0) {
+    std::string processName;
+    if (Security::AccessToken::AccessTokenKit::GetNativeTokenName(IPCSkeleton::GetCallingTokenID(), processName) != 0) {
         WLOGFW("get token info failed");
         return "";
     }
-    return StringUtil::Trim(info.processName);
+    return StringUtil::Trim(processName);
 }
 } // namespace Rosen
 } // namespace OHOS

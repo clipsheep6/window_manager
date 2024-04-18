@@ -164,11 +164,11 @@ bool SessionPermission::IsShellCall()
 
 bool SessionPermission::IsStartByHdcd()
 {
-    OHOS::Security::AccessToken::NativeTokenInfo info;
-    if (Security::AccessToken::AccessTokenKit::GetNativeTokenInfo(IPCSkeleton::GetCallingTokenID(), info) != 0) {
+    std::string processName;
+    if (Security::AccessToken::AccessTokenKit::GetNativeTokenName(IPCSkeleton::GetCallingTokenID(), processName) != 0) {
         return false;
     }
-    if (info.processName.compare("hdcd") == 0) {
+    if (processName.compare("hdcd") == 0) {
         return true;
     }
     return false;
