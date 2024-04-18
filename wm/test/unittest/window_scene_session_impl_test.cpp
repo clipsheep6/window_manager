@@ -2399,6 +2399,29 @@ HWTEST_F(WindowSceneSessionImplTest, GetDefaultDensityEnabled02, Function | Smal
 }
 
 /**
+ * @tc.name: GetWindowWithId
+ * @tc.desc: GetWindowWithId Test
+ * @tc.type: FUNC
+*/
+HWTEST_F(WindowSceneSessionImplTest, GetWindowWithId, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTest: GetWindowWithId start";
+    sptr option = new WindowOption();
+    ASSERT_NE(option, nullptr);
+    option->SetWindowName("SetTitleButtonVisible");
+    sptr window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+    auto res = WindowSceneSessionImpl::GetWindowWithId(-1);
+    ASSERT_EQ(res, nullptr);
+    for (auto iter =WindowSceneSessionImpl::windowSessionMap_.begin();
+        iter != WindowSceneSessionImpl::windowSessionMap_.end(); iter++) {
+        auto windId= iter->second.first;
+        res = WindowSceneSessionImpl::GetWindowWithId(windId);
+        ASSERT_NE(res, nullptr);
+    }
+}
+
+/**
  * @tc.name: GetVirtualPixelRatio01
  * @tc.desc: main window isDefaultDensityEnabled_ true
  * @tc.type: FUNC
