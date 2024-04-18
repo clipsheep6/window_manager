@@ -1406,7 +1406,6 @@ HWTEST_F(SceneSessionManagerTest, ConfigSnapshotScale05, Function | SmallTest | 
 HWTEST_F(SceneSessionManagerTest, ConfigSystemUIStatusBar01, Function | SmallTest | Level3)
 {
     std::string xmlStr = "<?xml version='1.0' encoding=\"utf-8\"?>"
-    std::string xmlStr = "<?xml version='1.0' encoding=\"utf-8\"?>"
         "<Configs>"
             "<systemUIStatusBar>"
                 "<showInLandscapeMode>1</showInLandscapeMode>"
