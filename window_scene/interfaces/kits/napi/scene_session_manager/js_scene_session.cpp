@@ -130,6 +130,7 @@ napi_value JsSceneSession::Create(napi_env env, const sptr<SceneSession>& sessio
     BindNativeFunction(env, objValue, "setScale", moduleName, JsSceneSession::SetScale);
     BindNativeFunction(env, objValue, "requestHideKeyboard", moduleName, JsSceneSession::RequestHideKeyboard);
     BindNativeFunction(env, objValue, "setPipActionEvent", moduleName, JsSceneSession::SetPipActionEvent);
+    BindNativeFunction(env, objValue, "getSmartMenuCfg", moduleName, JsSceneSession::GetSmartMenuCfg);
     napi_ref jsRef = nullptr;
     napi_status status = napi_create_reference(env, objValue, 1, &jsRef);
     if (status != napi_ok) {
@@ -1085,6 +1086,37 @@ napi_value JsSceneSession::SetPipActionEvent(napi_env env, napi_callback_info in
     TLOGI(WmsLogTag::WMS_PIP, "[NAPI]SetPipActionEvent");
     JsSceneSession *me = CheckParamsAndGetThis<JsSceneSession>(env, info);
     return (me != nullptr) ? me->OnSetPipActionEvent(env, info) : nullptr;
+}
+
+napi_value JsSceneSession::GetSmartMenuCfg(napi_env env, napi_callback_info info)
+{
+    WLOGI("[NAPI]GetSmartMenuCfg");
+    JsSceneSession *me = CheckParamsAndGetThis<JsSceneSession>(env, info);
+    return (me != nullptr) ? me->OnGetSmartMenuCfg(env, info) : nullptr;
+}
+
+napi_value JsSceneSession::OnGetSmartMenuCfg(napi_env env, napi_callback_info info)
+{
+    // 4 represent the maximum number of the parameters
+    size_t argc = 4;
+    napi_value argv[4] = { nullptr };
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc >= 1) {
+        WLOGFE("Argc is invalid: %{public}zu, expect zero params", argc);
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
+        return NapiGetUndefined(env);
+    }
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        WLOGFE("[NAPI]session is nullptr");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+                                      "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    auto smartMenuCfg = session->GetSmartMenuCfg();
+    napi_value result = nullptr;
+    napi_create_string_utf8(env, smartMenuCfg.c_str(), smartMenuCfg.length(), &result);
+    return result;
 }
 
 bool JsSceneSession::IsCallbackRegistered(napi_env env, const std::string& type, napi_value jsListenerObject)

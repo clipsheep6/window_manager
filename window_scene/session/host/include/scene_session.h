@@ -243,6 +243,10 @@ public:
 
     void SetSessionState(SessionState state) override;
     void UpdateSessionState(SessionState state) override;
+    virtual std::string GetSmartMenuCfg()
+    {
+        return "";
+    }
 
     std::shared_ptr<PowerMgr::RunningLock> keepScreenLock_;
 
