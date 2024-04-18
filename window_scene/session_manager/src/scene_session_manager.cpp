@@ -4003,8 +4003,8 @@ sptr<SceneSession> SceneSessionManager::GetNextFocusableSession(int32_t persiste
             return false;
         }
         if (session->GetForceHideState()) {
-           TLOGD(WmsLogTag::WMS_FOCUS, "the window hide");
-           return false;
+            TLOGD(WmsLogTag::WMS_FOCUS, "the window hide");
+            return false;
         }
         bool parentVisible = true;
         if ((WindowHelper::IsSubWindow(session->GetWindowType()) ||
