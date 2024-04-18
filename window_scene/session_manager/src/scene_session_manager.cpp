@@ -7957,8 +7957,106 @@ void SceneSessionManager::FillAccessibilityInfo(std::vector<sptr<SceneSession>>&
     }
 }
 
+Rect SceneSessionManager::ConvertRect(std::pair<PointInfo, PointInfo> rect)
+{
+    return {.posX_ = rect.first.x, .posY_ = rect.first.y,
+            .width_ = rect.second.x - rect.first.x, .height_ = rect.second.y - rect.first.y};
+}
+
+std::pair<PointInfo, PointInfo> SceneSessionManager::ConvertRect(Rect rect)
+{
+    return {{.x = rect.posX_, .y = rect.posY_},
+            {.x = rect.posX_ + rect.width_, .y = rect.posY_ + rect.height_}};
+}
+
+bool SceneSessionManager::IsRectOverlap(const std::pair<PointInfo, PointInfo>& rectA,
+                                        const std::pair<PointInfo, PointInfo>& rectB)
+{
+    if (rectA.first.x > rectB.second.x || rectB.first.x > rectA.second.x) {
+        return false;
+    }
+    if (rectA.first.y > rectB.second.y || rectB.first.y > rectA.second.y) {
+        return false;
+    }
+    return true;
+}
+
+std::pair<PointInfo, PointInfo> SceneSessionManager::CalcOverlapRect(const std::pair<PointInfo, PointInfo>& rectA,
+                                                                     const std::pair<PointInfo, PointInfo>& rectB)
+{
+    PointInfo leftTop = {.x = std::max(rectA.first.x, rectB.first.x),
+                         .y = std::max(rectA.first.y, rectB.first.y)};
+    PointInfo rightBottom = {.x = std::min(rectA.second.x, rectB.second.x),
+                             .y = std::min(rectA.second.y, rectB.second.y)};
+    return std::pair{leftTop, rightBottom};
+}
+
+void SceneSessionManager::CombineRect(const Rect& rectFirst, const Rect& rectSecond, uint32_t zOrder,
+    std::vector<std::pair<Rect, uint32_t>>& result)
+{
+    std::pair<PointInfo, PointInfo> rectA = ConvertRect(rectFirst);
+    std::pair<PointInfo, PointInfo> rectB = ConvertRect(rectSecond);
+    if (!IsRectOverlap(rectA, rectB)) {
+        return;
+    }
+    std::pair<PointInfo, PointInfo> overlapRect = CalcOverlapRect(rectA, rectB);
+
+    int32_t minimumRectLeft = std::min(rectA.first.x, rectB.first.x);
+    int32_t minimumRectRight = std::max(rectA.second.x, rectB.second.x);
+    int32_t minimumRectTop = std::min(rectA.first.y, rectB.first.y);
+    int32_t minimumRectBottom = std::max(rectA.second.y, rectB.second.y);
+
+    std::pair<PointInfo, PointInfo> overlapRectHorizontalExtRectTemp = {
+        {PointInfo{.x = minimumRectLeft, .y = overlapRect.first.y}},
+        {PointInfo{.x = minimumRectRight, .y = overlapRect.second.y}}};
+
+    std::pair<PointInfo, PointInfo> overlapRectVerticalExtRectTemp = {
+        {PointInfo{.x = overlapRect.first.x, .y = minimumRectTop}},
+        {PointInfo{.x = overlapRect.second.x, .y = minimumRectBottom}}};
+
+    Rect overlapRectHorizontalExtRect = ConvertRect(overlapRectHorizontalExtRectTemp);
+    if (!overlapRectHorizontalExtRect.IsInsideOf(rectFirst) && !overlapRectHorizontalExtRect.IsInsideOf(rectSecond)) {
+        result.push_back({overlapRectHorizontalExtRect, zOrder});
+    }
+
+    Rect overlapRectVerticalExtRect = ConvertRect(overlapRectVerticalExtRectTemp);
+    if (!overlapRectVerticalExtRect.IsInsideOf(rectFirst) && !overlapRectVerticalExtRect.IsInsideOf(rectSecond)) {
+        result.push_back({overlapRectVerticalExtRect, zOrder});
+    }
+}
+
+std::vector<std::pair<Rect, uint32_t>> SceneSessionManager::CombineSceneSessionRect(
+    const std::vector<sptr<SceneSession>>& sceneSessionList)
+{
+    std::vector<sptr<SceneSession>> sceneSessionListSorted = sceneSessionList;
+    std::sort(sceneSessionListSorted.begin(), sceneSessionListSorted.end(), 
+        [](sptr<SceneSession> a, sptr<SceneSession> b) {
+            return a->GetZOrder() < b->GetZOrder();
+        });
+
+    std::vector<std::pair<Rect, uint32_t>> rectList;
+    size_t sceneSessionListSortedCnt = sceneSessionListSorted.size();
+    for (size_t i = 0; i < sceneSessionListSortedCnt; i++) {
+        sptr<SceneSession> sceneSession = sceneSessionListSorted.at(i);
+        WSRect windowWSRect = sceneSession->GetSessionRect();
+        Rect windowRect = {windowWSRect.posX_, windowWSRect.posY_,
+                           windowWSRect.width_, windowWSRect.height_};
+        rectList.push_back({windowRect, sceneSession->GetZOrder()});
+
+        for (size_t j = i + 1; j < sceneSessionListSortedCnt; j++) {
+            sptr<SceneSession> sceneSessionTmp = sceneSessionListSorted.at(j);
+            WSRect windowTempWSRect = sceneSessionTmp->GetSessionRect();
+            Rect windowTempRect = {windowTempWSRect.posX_, windowTempWSRect.posY_,
+                       windowTempWSRect.width_, windowTempWSRect.height_};
+            CombineRect(windowRect, windowTempRect, sceneSession->GetZOrder(), rectList);
+        }
+    }
+
+    return rectList;
+}
+
 bool SceneSessionManager::IsCovered(const sptr<SceneSession>& sceneSession,
-                                    const std::vector<sptr<SceneSession>>& sceneSessionList)
+                                    const std::vector<std::pair<Rect, uint32_t>> rectList)
 {
     if (sceneSession == nullptr) {
         TLOGE(WmsLogTag::WMS_MAIN, "invalid parameter, scene session is nullptr.");
@@ -7968,19 +8066,11 @@ bool SceneSessionManager::IsCovered(const sptr<SceneSession>& sceneSession,
     WSRect windowWSRect = sceneSession->GetSessionRect();
     Rect windowRect = {windowWSRect.posX_, windowWSRect.posY_,
                        windowWSRect.width_, windowWSRect.height_};
-    for (const auto& item : sceneSessionList) {
-        if (item == nullptr) {
+    for (const auto& item : rectList) {
+        if (sceneSession->GetZOrder() >= item.second) {
             continue;
         }
-        if (item->GetWindowId() == sceneSession->GetWindowId()) {
-            continue;
-        }
-        if (sceneSession->GetZOrder() > item->GetZOrder()) {
-            continue;
-        }
-        WSRect itemWSRect = item->GetSessionRect();
-        Rect itemRect = {itemWSRect.posX_, itemWSRect.posY_, itemWSRect.width_, itemWSRect.height_};
-        if (windowRect.IsInsideOf(itemRect) && sceneSession->GetZOrder() < item->GetZOrder()) {
+        if (windowRect.IsInsideOf(item.first)) {
             return true;
         }
     }
@@ -7989,8 +8079,10 @@ bool SceneSessionManager::IsCovered(const sptr<SceneSession>& sceneSession,
 
 void SceneSessionManager::FilterSceneSessionForAccessibility(std::vector<sptr<SceneSession>>& sceneSessionList)
 {
+    std::vector<std::pair<Rect, uint32_t>> rects = CombineSceneSessionRect(sceneSessionList);
+
     for (auto it = sceneSessionList.begin(); it != sceneSessionList.end();) {
-        if (IsCovered(it->GetRefPtr(), sceneSessionList)) {
+        if (IsCovered(it->GetRefPtr(), rects)) {
             it = sceneSessionList.erase(it);
             continue;
         }

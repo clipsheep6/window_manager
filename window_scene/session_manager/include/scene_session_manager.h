@@ -455,8 +455,18 @@ private:
     WSError DestroyAndDisconnectSpecificSessionInner(const int32_t persistentId);
     void UpdateCameraWindowStatus(uint32_t accessTokenId, bool isShowing);
     void ReportWindowProfileInfos();
+    Rect ConvertRect(std::pair<PointInfo, PointInfo> rect);
+    std::pair<PointInfo, PointInfo> ConvertRect(Rect rect);
+    bool IsRectOverlap(const std::pair<PointInfo, PointInfo>& rectA, const std::pair<PointInfo, PointInfo>& rectB);
+    std::pair<PointInfo, PointInfo> CalcOverlapRect(const std::pair<PointInfo, PointInfo>& rectA,
+        const std::pair<PointInfo, PointInfo>& rectB);
+    void CombineRect(const Rect& rectFirst, const Rect& rectSecond, uint32_t zOrder,
+        std::vector<std::pair<Rect, uint32_t>>& result);
+
     void GetAllSceneSessionForAccessibility(std::vector<sptr<SceneSession>>& sceneSessionList);
-    bool IsCovered(const sptr<SceneSession>& session, const std::vector<sptr<SceneSession>>& sceneSessionList);
+    std::vector<std::pair<Rect, uint32_t>> CombineSceneSessionRect(
+        const std::vector<sptr<SceneSession>>& sceneSessionList);
+    bool IsCovered(const sptr<SceneSession>& session, const std::vector<std::pair<Rect, uint32_t>> rectList);
     void FillAccessibilityInfo(std::vector<sptr<SceneSession>>& sceneSessionList,
         std::vector<sptr<AccessibilityWindowInfo>>& accessibilityInfo);
     void FilterSceneSessionForAccessibility(std::vector<sptr<SceneSession>>& sceneSessionList);
