@@ -88,7 +88,7 @@ public:
 
 private:
     static sptr<IRemoteObject> remoteObj_;
-    static ErrCode IsAutoStartPipWindow(const std::string& key, std::string& value);
+    static ErrCode getSettingsAutoStartStatus(const std::string& key, std::string& value);
     WMError CreatePictureInPictureWindow();
     WMError ShowPictureInPictureWindow(StartPipType startType);
     WMError StartPictureInPictureInner(StartPipType startType);
