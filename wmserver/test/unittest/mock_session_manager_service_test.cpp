@@ -65,7 +65,7 @@ namespace {
 HWTEST_F(MockSessionManagerServiceTest, OnRemoteDied, Function | SmallTest | Level2)
 {
     WLOGI("OnRemoteDied");
-    MockSessionManagerService::SMSDeathRecipient smsDeathRecipient;
+    MockSessionManagerService::SMSDeathRecipient smsDeathRecipient(100);
     auto res = WMError::WM_OK;
     wptr<IRemoteObject> object = nullptr;
     smsDeathRecipient.OnRemoteDied(object);
