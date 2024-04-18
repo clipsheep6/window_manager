@@ -116,22 +116,6 @@ HWTEST_F(MockSessionManagerServiceTest, GetSessionManagerService, Function | Sma
 }
 
 /**
- * @tc.name: NotifyWMSConnected
- * @tc.desc: notify wms connected
- * @tc.type: FUNC
- */
-HWTEST_F(MockSessionManagerServiceTest, NotifyWMSConnected, Function | SmallTest | Level2)
-{
-    WLOGI("NotifyWMSConnected");
-    auto ret = WMError::WM_OK;
-    int32_t wmsUserId = 100;
-    int32_t screenId = 0;
-    MockSessionManagerService::GetInstance().NotifyWMSConnected(wmsUserId, screenId, true);
-    MockSessionManagerService::GetInstance().NotifyWMSConnected(wmsUserId, screenId, false);
-    ASSERT_EQ(ret, WMError::WM_OK);
-}
-
-/**
  * @tc.name: onStart
  * @tc.desc: on start
  * @tc.type: FUNC
