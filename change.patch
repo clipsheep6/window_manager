@@ -1,0 +1,346 @@
+diff --git a/dm/include/display_manager_agent_default.h b/dm/include/display_manager_agent_default.h
+index 11ac0f020..ee67a62cc 100644
+--- a/dm/include/display_manager_agent_default.h
++++ b/dm/include/display_manager_agent_default.h
+@@ -39,6 +39,7 @@ public:
+     void OnDisplayChange(const sptr<DisplayInfo>, DisplayChangeEvent) override {};
+     void OnScreenshot(sptr<ScreenshotInfo>) override {};
+     void NotifyPrivateWindowStateChanged(bool hasPrivate) override {};
++    void NotifyPrivateStateWindowListChanged(DisplayId id, std::vector<std::string> privacyWindowList) override {};
+     void NotifyFoldStatusChanged(FoldStatus foldStatus) override {};
+     void NotifyFoldAngleChanged(std::vector<float> foldAngles) override {};
+     void NotifyCaptureStatusChanged(bool isCapture) override {};
+diff --git a/dm/include/zidl/display_manager_agent_interface.h b/dm/include/zidl/display_manager_agent_interface.h
+index bf46a9ea1..b4462df51 100644
+--- a/dm/include/zidl/display_manager_agent_interface.h
++++ b/dm/include/zidl/display_manager_agent_interface.h
+@@ -40,6 +40,7 @@ enum class DisplayManagerAgentType : uint32_t {
+     CAPTURE_STATUS_CHANGED_LISTENER,
+     // add listener before
+     DISPLAY_MANAGER_MAX_AGENT_TYPE,
++    PRIVATE_WINDOW_LIST_LISTENER,
+ };
+ 
+ class IDisplayManagerAgent : public IRemoteBroker {
+@@ -64,6 +65,7 @@ public:
+         TRANS_ID_ON_DISPLAY_MODE_CHANGED,
+         TRANS_ID_ON_FOLD_ANGLE_CHANGED,
+         TRANS_ID_ON_CAPTURE_STATUS_CHANGED,
++        TRANS_ID_ON_PRIVATE_WINDOW_LIST,
+     };
+     virtual void NotifyDisplayPowerEvent(DisplayPowerEvent event, EventStatus status) = 0;
+     virtual void NotifyDisplayStateChanged(DisplayId id, DisplayState state) = 0;
+@@ -77,6 +79,7 @@ public:
+     virtual void OnDisplayChange(sptr<DisplayInfo>, DisplayChangeEvent) = 0;
+     virtual void OnScreenshot(sptr<ScreenshotInfo>) = 0;
+     virtual void NotifyPrivateWindowStateChanged(bool hasPrivate) = 0;
++    virtual void NotifyPrivateStateWindowListChanged(DisplayId id, std::vector<std::string> privacyWindowList) = 0;
+     virtual void NotifyFoldStatusChanged(FoldStatus) = 0;
+     virtual void NotifyFoldAngleChanged(std::vector<float> foldAngles) = 0;
+     virtual void NotifyCaptureStatusChanged(bool isCapture) = 0;
+diff --git a/dm/include/zidl/display_manager_agent_proxy.h b/dm/include/zidl/display_manager_agent_proxy.h
+index 4c40bd506..5dbbb1d9a 100644
+--- a/dm/include/zidl/display_manager_agent_proxy.h
++++ b/dm/include/zidl/display_manager_agent_proxy.h
+@@ -39,6 +39,7 @@ public:
+     virtual void OnDisplayChange(sptr<DisplayInfo>, DisplayChangeEvent) override;
+     virtual void OnScreenshot(sptr<ScreenshotInfo>) override;
+     virtual void NotifyPrivateWindowStateChanged(bool hasPrivate) override;
++    virtual void NotifyPrivateStateWindowListChanged(DisplayId id, std::vector<std::string> privacyWindowList) override;
+     virtual void NotifyFoldStatusChanged(FoldStatus) override;
+     virtual void NotifyFoldAngleChanged(std::vector<float> foldAngles) override;
+     virtual void NotifyCaptureStatusChanged(bool isCapture) override;
+diff --git a/dm/include/zidl/display_manager_agent_stub.h b/dm/include/zidl/display_manager_agent_stub.h
+index 7d1af599e..f180e9a6d 100644
+--- a/dm/include/zidl/display_manager_agent_stub.h
++++ b/dm/include/zidl/display_manager_agent_stub.h
+@@ -43,6 +43,7 @@ private:
+     int32_t ProcDisplayChanged(MessageParcel& data);
+     int32_t ProcScreenShot(MessageParcel& data);
+     int32_t ProcPrivateWindow(MessageParcel& data);
++    int32_t ProcPrivateWindowList(MessageParcel& data);
+     int32_t ProcFoldStatusChanged(MessageParcel& data);
+     int32_t ProcDisplayChangeInfoChanged(MessageParcel& data);
+     int32_t ProcDisplayModechanged(MessageParcel& data);
+diff --git a/dm/src/display_manager.cpp b/dm/src/display_manager.cpp
+index eb5b37748..bfcdb2948 100644
+--- a/dm/src/display_manager.cpp
++++ b/dm/src/display_manager.cpp
+@@ -72,6 +72,8 @@ public:
+     DMError UnregisterScreenshotListener(sptr<IScreenshotListener> listener);
+     DMError RegisterPrivateWindowListener(sptr<IPrivateWindowListener> listener);
+     DMError UnregisterPrivateWindowListener(sptr<IPrivateWindowListener> listener);
++    DMError RegisterPrivateWindowListChangeListener(sptr<IPrivateWindowListChangeListener> listener);
++    DMError UnregisterPrivateWindowListChangeListener(sptr<IPrivateWindowListChangeListener> listener);
+     DMError RegisterFoldStatusListener(sptr<IFoldStatusListener> listener);
+     DMError UnregisterFoldStatusListener(sptr<IFoldStatusListener> listener);
+     DMError RegisterFoldAngleListener(sptr<IFoldAngleListener> listener);
+@@ -117,6 +119,7 @@ private:
+     std::set<sptr<IDisplayPowerEventListener>> powerEventListeners_;
+     std::set<sptr<IScreenshotListener>> screenshotListeners_;
+     std::set<sptr<IPrivateWindowListener>> privateWindowListeners_;
++    std::set<sptr<IPrivateWindowListChangeListener>> privateWindowListChangeListeners_;
+     std::set<sptr<IFoldStatusListener>> foldStatusListeners_;
+     std::set<sptr<IFoldAngleListener>> foldAngleListeners_;
+     std::set<sptr<ICaptureStatusListener>> captureStatusListeners_;
+@@ -269,6 +272,21 @@ private:
+     sptr<Impl> pImpl_;
+ };
+ 
++class DisplayManager::Impl::DisplayManagerPrivateWindowListAgent : public DisplayManagerAgentDefault {
++public:
++    explicit DisplayManagerPrivateWindowListAgent(sptr<Impl> impl) : pImpl_(impl)
++    {
++    }
++    ~DisplayManagerPrivateWindowListAgent() = default;
++
++    virtual void NotifyPrivateStateWindowListChanged(DisplayId id, std::vector<std::string> privacyWindowList) override
++    {
++        pImpl_->NotifyPrivateStateWindowListChanged(id, privacyWindowList);
++    }
++private:
++    sptr<Impl> pImpl_;
++};
++
+ class DisplayManager::Impl::DisplayManagerFoldStatusAgent : public DisplayManagerAgentDefault {
+ public:
+     explicit DisplayManagerFoldStatusAgent(sptr<Impl> impl) : pImpl_(impl)
+@@ -839,6 +857,18 @@ void DisplayManager::Impl::NotifyPrivateWindowStateChanged(bool hasPrivate)
+     }
+ }
+ 
++void DisplayManager::Impl::NotifyPrivateStateWindowListChanged(DisplayId id, std::vector<std::string> privacyWindowList)
++{
++    std::set<sptr<IPrivateWindowListChangeListener>> privateWindowListChangeListeners;
++    {
++        std::lock_guard<std::recursive_mutex> lock(mutex_);
++        privateWindowListChangeListeners = privateWindowListChangeListeners_;
++    }
++    for (auto& listener : privateWindowListChangeListeners) {
++        listener->OnPrivateWindowListChange(id, privacyWindowList);
++    }
++}
++
+ DMError DisplayManager::RegisterPrivateWindowListener(sptr<IPrivateWindowListener> listener)
+ {
+     if (listener == nullptr) {
+@@ -857,6 +887,24 @@ DMError DisplayManager::UnregisterPrivateWindowListener(sptr<IPrivateWindowListe
+     return pImpl_->UnregisterPrivateWindowListener(listener);
+ }
+ 
++DMError DisplayManager::RegisterPrivateWindowListChangeListener(sptr<IPrivateWindowListChangeListener> listener)
++{
++    if (listener == nullptr) {
++        WLOGFE("RegisterPrivateWindowListChangeListener listener is nullptr.");
++        return DMError::DM_ERROR_NULLPTR;
++    }
++    return pImpl_->RegisterPrivateWindowListChangeListener(listener);
++}
++
++DMError DisplayManager::UnregisterPrivateWindowListChangeListener(sptr<IPrivateWindowListChangeListener> listener)
++{
++    if (listener == nullptr) {
++        WLOGFE("UnregisterPrivateWindowListChangeListener listener is nullptr.");
++        return DMError::DM_ERROR_NULLPTR;
++    }
++    return pImpl_->UnregisterPrivateWindowListChangeListener(listener);
++}
++
+ DMError DisplayManager::Impl::RegisterPrivateWindowListener(sptr<IPrivateWindowListener> listener)
+ {
+     std::lock_guard<std::recursive_mutex> lock(mutex_);
+@@ -895,6 +943,46 @@ DMError DisplayManager::Impl::UnregisterPrivateWindowListener(sptr<IPrivateWindo
+     }
+     return ret;
+ }
++
++DMError DisplayManager::Impl::RegisterPrivateWindowListChangeListener(sptr<IPrivateWindowListChangeListener> listener)
++{
++    std::lock_guard<std::recursive_mutex> lock(mutex_);
++    DMError ret = DMError::DM_OK;
++    if (privateWindowListChangeListenerAgent_ == nullptr) {
++        privateWindowListChangeListenerAgent_ = new DisplayManagerPrivateWindowListAgent(this);
++        ret = SingletonContainer::Get<DisplayManagerAdapter>().RegisterDisplayManagerAgent(
++            privateWindowListChangeListenerAgent_,
++            DisplayManagerAgentType::PRIVATE_WINDOW_LIST_LISTENER);
++    }
++    if (ret != DMError::DM_OK) {
++        WLOGFW("RegisterDisplayManagerAgent failed !");
++        privateWindowListChangeListenerAgent_ = nullptr;
++    } else {
++        WLOGI("privateWindowListChangeListener register success");
++        privateWindowListChangeListeners_.insert(listener);
++    }
++    return ret;
++}
++
++DMError DisplayManager::Impl::UnregisterPrivateWindowListChangeListener(sptr<IPrivateWindowListChangeListener> listener)
++{
++    std::lock_guard<std::recursive_mutex> lock(mutex_);
++    auto iter = std::find(privateWindowListChangeListeners_.begin(), privateWindowListChangeListeners_.end(), listener);
++    if (iter == privateWindowListChangeListeners_.end()) {
++        WLOGFE("could not find this listener");
++        return DMError::DM_ERROR_NULLPTR;
++    }
++    privateWindowListChangeListeners_.erase(iter);
++    DMError ret = DMError::DM_OK;
++    if (privateWindowListChangeListeners_.empty() && privateWindowListChangeListenerAgent_ != nullptr) {
++        ret = SingletonContainer::Get<DisplayManagerAdapter>().UnregisterDisplayManagerAgent(
++            privateWindowListChangeListenerAgent_,
++            DisplayManagerAgentType::PRIVATE_WINDOW_LIST_LISTENER);
++        privateWindowListChangeListenerAgent_ = nullptr;
++    }
++    return ret;
++}
++
+ DMError DisplayManager::RegisterDisplayListener(sptr<IDisplayListener> listener)
+ {
+     if (listener == nullptr) {
+diff --git a/dm/src/zidl/display_manager_agent_proxy.cpp b/dm/src/zidl/display_manager_agent_proxy.cpp
+index 1fa03f593..8b93bebf5 100644
+--- a/dm/src/zidl/display_manager_agent_proxy.cpp
++++ b/dm/src/zidl/display_manager_agent_proxy.cpp
+@@ -272,6 +272,29 @@ void DisplayManagerAgentProxy::NotifyPrivateWindowStateChanged(bool hasPrivate)
+     }
+ }
+ 
++void DisplayManagerAgentProxy::NotifyPrivateStateWindowListChanged(DisplayId id,
++    std::vector<std::string> privacyWindowList)
++{
++    MessageParcel data;
++    MessageParcel reply;
++    MessageOption option(MessageOption::TF_ASYNC);
++    if (!data.WriteInterfaceToken(GetDescriptor())) {
++        WLOGFE("WriteInterfaceToken failed");
++        return;
++    }
++    if (!data.WriteUint64(id)) {
++        WLOGFE("Write DisplayId failed");
++        return;
++    }
++    if (!data.WriteStringVector(privacyWindowList)) {
++        WLOGFE("Write privacyWindowList failed");
++        return;
++    }
++    if (Remote()->SendRequest(TRANS_ID_ON_PRIVATE_WINDOW_LIST, data, reply, option) != ERR_NONE) {
++        WLOGFE("SendRequest failed");
++    }
++}
++
+ void DisplayManagerAgentProxy::NotifyFoldStatusChanged(FoldStatus foldStatus)
+ {
+     MessageParcel data;
+diff --git a/dm/src/zidl/display_manager_agent_stub.cpp b/dm/src/zidl/display_manager_agent_stub.cpp
+index 214e6a913..12cc37a20 100644
+--- a/dm/src/zidl/display_manager_agent_stub.cpp
++++ b/dm/src/zidl/display_manager_agent_stub.cpp
+@@ -70,6 +70,9 @@ int32_t DisplayManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& d
+         case TRANS_ID_ON_PRIVATE_WINDOW: {
+             return ProcPrivateWindow(data);
+         }
++        case TRANS_ID_ON_PRIVATE_WINDOW_LIST: {
++            return ProcPrivateWindowList(data);
++        }
+         case TRANS_ID_ON_FOLD_STATUS_CHANGED: {
+             return ProcFoldStatusChanged(data);
+         }
+@@ -225,6 +228,15 @@ int32_t DisplayManagerAgentStub::ProcPrivateWindow(MessageParcel& data)
+     return 0;
+ }
+ 
++int32_t DisplayManagerAgentStub::ProcPrivateWindowList(MessageParcel& data)
++{
++    DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
++    std::vector<std::string> privacyWindowList;
++    data.ReadStringVector(&privacyWindowList);
++    NotifyPrivateStateWindowListChanged(displayId, privacyWindowList);
++    return 0;
++}
++
+ int32_t DisplayManagerAgentStub::ProcFoldStatusChanged(MessageParcel& data)
+ {
+     uint32_t foldStatus;
+diff --git a/interfaces/innerkits/dm/display_manager.h b/interfaces/innerkits/dm/display_manager.h
+index f316b6f10..e9d759545 100644
+--- a/interfaces/innerkits/dm/display_manager.h
++++ b/interfaces/innerkits/dm/display_manager.h
+@@ -70,6 +70,19 @@ public:
+         virtual void OnPrivateWindow([[maybe_unused]]bool hasPrivate) {}
+     };
+ 
++    class IPrivateWindowListChangeListener : public virtual RefBase {
++    public:
++        /**
++         * @brief Monitor whether the existence of privacy window has changed.
++         *
++         * @param displayId Id of the target display.
++         * 
++         * @param privacyWindowList privacywindow bundlename list of the target display.
++         */
++        virtual void OnPrivateWindowListChange([[maybe_unused]]DisplayId displayId,
++            [[maybe_unused]]std::vector<std::string> privacyWindowList) {}
++    };
++
+     class IFoldStatusListener : public virtual RefBase {
+     public:
+         /**
+@@ -362,6 +375,22 @@ public:
+      */
+     DMError UnregisterPrivateWindowListener(sptr<IPrivateWindowListener> listener);
+ 
++    /**
++     * @brief Register a listener for the event of private window.
++     *
++     * @param listener IPrivateWindowListChangeListener.
++     * @return DM_OK means register success, others means register failed.
++     */
++    DMError RegisterPrivateWindowListChangeListener(sptr<IPrivateWindowListChangeListener> listener);
++
++    /**
++     * @brief Unregister an existed listener for the event of private window.
++     *
++     * @param listener IPrivateWindowListChangeListener.
++     * @return DM_OK means unregister success, others means unregister failed.
++     */
++    DMError UnregisterPrivateWindowListChangeListener(sptr<IPrivateWindowListChangeListener> listener);
++
+     /**
+      * @brief Register a listener for the event of screen fold status changed.
+      *
+diff --git a/window_scene/session_manager/include/screen_session_manager.h b/window_scene/session_manager/include/screen_session_manager.h
+index a68859cdd..fa2b47b27 100644
+--- a/window_scene/session_manager/include/screen_session_manager.h
++++ b/window_scene/session_manager/include/screen_session_manager.h
+@@ -164,6 +164,7 @@ public:
+     void NotifyScreenGroupChanged(const std::vector<sptr<ScreenInfo>>& screenInfo, ScreenGroupChangeEvent event);
+ 
+     void NotifyPrivateSessionStateChanged(bool hasPrivate);
++    void NotifyPrivateWindowListChanged(DisplayId id, std::vector<std::string> privacyWindowList);
+     DMError HasPrivateWindow(DisplayId id, bool& hasPrivateWindow) override;
+     bool ConvertScreenIdToRsScreenId(ScreenId screenId, ScreenId& rsScreenId) override;
+ 
+diff --git a/window_scene/session_manager/src/screen_session_manager.cpp b/window_scene/session_manager/src/screen_session_manager.cpp
+index a5f80711a..29fba7898 100644
+--- a/window_scene/session_manager/src/screen_session_manager.cpp
++++ b/window_scene/session_manager/src/screen_session_manager.cpp
+@@ -3038,7 +3038,19 @@ void ScreenSessionManager::SetScreenPrivacyWindowList(DisplayId id, std::vector<
+         return;
+     }
+     screenSession->SetPrivateWindowList(privacyWindowList);
+-    // NotifyPrivateWindowListChanged(id, privacyWindowList);
++    NotifyPrivateWindowListChanged(id, privacyWindowList);
++}
++
++void ScreenSessionManager::NotifyPrivateWindowListChanged(DisplayId id, std::vector<std::string> privacyWindowList)
++{
++    WLOGI("Notify displayid: %{public}" PRIu64" PrivateWindowListChanged", id);
++    auto agents = dmAgentContainer_.GetAgentsByType(DisplayManagerAgentType::PRIVATE_WINDOW_LIST_LISTENER);
++    if (agents.empty()) {
++        return;
++    }
++    for (auto& agent : agents) {
++        agent->NotifyPrivateStateWindowListChanged(id, privacyWindowList);
++    }
+ }
+ 
+ DMError ScreenSessionManager::HasPrivateWindow(DisplayId id, bool& hasPrivateWindow)

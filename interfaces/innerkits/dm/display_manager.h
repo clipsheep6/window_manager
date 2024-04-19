@@ -70,6 +70,19 @@ public:
         virtual void OnPrivateWindow([[maybe_unused]]bool hasPrivate) {}
     };
 
+    class IPrivateWindowListChangeListener : public virtual RefBase {
+    public:
+        /**
+         * @brief Monitor whether the existence of privacy window has changed.
+         *
+         * @param displayId Id of the target display.
+         * 
+         * @param privacyWindowList privacywindow bundlename list of the target display.
+         */
+        virtual void OnPrivateWindowListChange([[maybe_unused]]DisplayId displayId,
+            [[maybe_unused]]std::vector<std::string> privacyWindowList) {}
+    };
+
     class IFoldStatusListener : public virtual RefBase {
     public:
         /**
@@ -371,6 +384,22 @@ public:
      * @return DM_OK means unregister success, others means unregister failed.
      */
     DMError UnregisterPrivateWindowListener(sptr<IPrivateWindowListener> listener);
+
+        /**
+     * @brief Register a listener for the event of private window.
+     *
+     * @param listener IPrivateWindowListChangeListener.
+     * @return DM_OK means register success, others means register failed.
+     */
+    DMError RegisterPrivateWindowListChangeListener(sptr<IPrivateWindowListChangeListener> listener);
+
+    /**
+     * @brief Unregister an existed listener for the event of private window.
+     *
+     * @param listener IPrivateWindowListChangeListener.
+     * @return DM_OK means unregister success, others means unregister failed.
+     */
+    DMError UnregisterPrivateWindowListChangeListener(sptr<IPrivateWindowListChangeListener> listener);
 
     /**
      * @brief Register a listener for the event of screen fold status changed.
