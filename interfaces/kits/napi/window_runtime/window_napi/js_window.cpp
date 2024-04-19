@@ -67,7 +67,7 @@ JsWindow::JsWindow(const sptr<Window>& window)
     : windowToken_(window), registerManager_(std::make_unique<JsWindowRegisterManager>())
 {
     NotifyNativeWinDestroyFunc func = [weakThis = wptr(this)](std::string windowName) {
-        auto jsWindow = weakThis.promote();
+        sptr<JsWindow> jsWindow = weakThis.promote();
         if (!jsWindow) {
             WLOGFE("NotifyNativeWinDestroyFunc: jsWindow is null");
         }
