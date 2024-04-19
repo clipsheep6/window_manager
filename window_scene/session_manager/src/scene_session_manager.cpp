@@ -137,14 +137,6 @@ constexpr int32_t NON_ANONYMIZE_LENGTH = 6;
 const std::string EMPTY_DEVICE_ID = "";
 const int32_t MAX_NUMBER_OF_DISTRIBUTED_SESSIONS = 20;
 
-constexpr int WINDOW_NAME_MAX_WIDTH = 21;
-constexpr int DISPLAY_NAME_MAX_WIDTH = 10;
-constexpr int VALUE_MAX_WIDTH = 5;
-constexpr int ORIEN_MAX_WIDTH = 12;
-constexpr int OFFSET_MAX_WIDTH = 8;
-constexpr int PID_MAX_WIDTH = 8;
-constexpr int PARENT_ID_MAX_WIDTH = 6;
-constexpr int SCALE_MAX_WIDTH = 8;
 constexpr int WINDOW_NAME_MAX_LENGTH = 20;
 constexpr int32_t STATUS_BAR_AVOID_AREA = 0;
 const std::string ARG_DUMP_ALL = "-a";
