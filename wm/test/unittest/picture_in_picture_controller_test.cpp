@@ -18,7 +18,13 @@
 #include "picture_in_picture_controller.h"
 #include "picture_in_picture_manager.h"
 #include "window.h"
-#include "errors.h"
+#include "datashare_predicates.h"
+#include "datashare_result_set.h"
+#include "datashare_helper.h"
+#include "iservice_registry.h"
+#include "result_set.h"
+#include "system_ability_definition.h"
+#include "uri.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -125,6 +131,53 @@ HWTEST_F(PictureInPictureControllerTest, CreatePictureInPictureWindow, Function 
     EXPECT_EQ(nullptr, windowOption);
     EXPECT_EQ(WMError::WM_ERROR_PIP_CREATE_FAILED, pipControl->CreatePictureInPictureWindow());
     ASSERT_NE(WMError::WM_OK, pipControl->CreatePictureInPictureWindow());
+}
+
+/**
+ * @tc.name: PictureInPictureController
+ * @tc.desc: PictureInPictureController
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureControllerTest, PictureInPictureController01, Function | SmallTest | Level2)
+{
+    sptr<MockWindow> mw = new MockWindow();
+    sptr<PipOption> option = new PipOption();
+    sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
+
+    auto systemAbilityManager = nullptr
+    EXPECT_EQ(nullptr, systemAbilityManager);
+}
+
+/**
+ * @tc.name: PictureInPictureController
+ * @tc.desc: PictureInPictureController
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureControllerTest, PictureInPictureController02, Function | SmallTest | Level2)
+{
+    sptr<MockWindow> mw = new MockWindow();
+    sptr<PipOption> option = new PipOption();
+    sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
+
+    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    auto remoteObj = nullptr;
+    EXPECT_EQ(nullptr, remoteObj);
+
+}
+
+/**
+ * @tc.name: PictureInPictureController
+ * @tc.desc: PictureInPictureController
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureControllerTest, PictureInPictureController03, Function | SmallTest | Level2)
+{
+    sptr<MockWindow> mw = new MockWindow();
+    sptr<PipOption> option = new PipOption();
+    sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
+    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    auto remoteObj = systemAbilityManager->GetSystemAbility(WINDOW_MANAGER_SERVICE_ID);
+    this->remoteObj_ = remoteObj;
 }
 
 /**
@@ -237,21 +290,145 @@ HWTEST_F(PictureInPictureControllerTest, UpdateContentSize, Function | SmallTest
  * @tc.desc: getSettingsAutoStartStatus
  * @tc.type: FUNC
  */
-HWTEST_F(PictureInPictureControllerTest, getSettingsAutoStartStatus, Function | SmallTest | Level2)
+HWTEST_F(PictureInPictureControllerTest, getSettingsAutoStartStatus01, Function | SmallTest | Level2)
 {
-    std::string key = " ";
-    std::string value = " ";
+    std::string key = "auto_start_pip_status";
+    std::string value;
     sptr<MockWindow> mw = new MockWindow();
     ASSERT_NE(nullptr, mw);
     sptr<PipOption> option = new PipOption();
     sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
 
-    ASSERT_NE(ERR_NO_INIT,  pipControl->getSettingsAutoStartStatus(key, value));
-    ASSERT_NE(ERR_INVALID_OPERATION,  pipControl->getSettingsAutoStartStatus(key, value));
-    ASSERT_EQ(ERR_NAME_NOT_FOUND,  pipControl->getSettingsAutoStartStatus(key, value));
-    ASSERT_NE(ERR_INVALID_VALUE,  pipControl->getSettingsAutoStartStatus(key, value));
-    ASSERT_NE(ERR_OK,  pipControl->getSettingsAutoStartStatus(key, value));
+    ASSERT_EQ(ERR_NO_INIT,  pipControl->getSettingsAutoStartStatus(key, value));
 }
+
+/**
+ * @tc.name: getSettingsAutoStartStatus
+ * @tc.desc: getSettingsAutoStartStatus
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureControllerTest, getSettingsAutoStartStatus02, Function | SmallTest | Level2)
+{
+    std::string key = "auto_start_pip_status";
+    std::string KEY = "auto_start_pip_status";
+    std::string SETTING_COLUMN_KEYWORD = "KEYWORD";
+    std::string SETTING_COLUMN_VALUE = "VALUE";
+    std::string SETTING_URI_PROXY = "datashare:///com.ohos.settingsdata/entry/"
+        "settingsdata/SETTINGSDATA?Proxy=true";
+    std::string SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
+    std::string value;
+
+    sptr<MockWindow> mw = new MockWindow();
+    ASSERT_NE(nullptr, mw);
+    sptr<PipOption> option = new PipOption();
+    sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
+
+    auto helper = DataShare::DataShareHelper::Creator(remoteObj_, SETTING_URI_PROXY, SETTINGS_DATA_EXT_URI);
+    auto resultSet = nullptr;
+
+    ASSERT_EQ(ERR_INVALID_OPERATION,  pipControl->getSettingsAutoStartStatus(key, value));
+}
+
+/**
+ * @tc.name: getSettingsAutoStartStatus
+ * @tc.desc: getSettingsAutoStartStatus
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureControllerTest, getSettingsAutoStartStatus03, Function | SmallTest | Level2)
+{
+    std::string key = "auto_start_pip_status";
+    std::string KEY = "auto_start_pip_status";
+    std::string SETTING_COLUMN_KEYWORD = "KEYWORD";
+    std::string SETTING_COLUMN_VALUE = "VALUE";
+    std::string SETTING_URI_PROXY = "datashare:///com.ohos.settingsdata/entry/"
+        "settingsdata/SETTINGSDATA?Proxy=true";
+    std::string SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
+    std::string value;
+
+    sptr<MockWindow> mw = new MockWindow();
+    ASSERT_NE(nullptr, mw);
+    sptr<PipOption> option = new PipOption();
+    sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
+
+    auto helper = DataShare::DataShareHelper::Creator(remoteObj_, SETTING_URI_PROXY, SETTINGS_DATA_EXT_URI);
+    std::vector<std::string> columns = {SETTING_COLUMN_VALUE};
+    DataShare::DataSharePredicates predicates;
+    predicates.EqualTo(SETTING_COLUMN_KEYWORD, key);
+    Uri uri(SETTING_URI_PROXY + "&key=" + key);
+    auto resultSet = helper->Query(uri, predicates, columns);
+    int32_t count = 0;
+
+    ASSERT_EQ(ERR_NAME_NOT_FOUND,  pipControl->getSettingsAutoStartStatus(key, value));
+}
+
+/**
+ * @tc.name: getSettingsAutoStartStatus
+ * @tc.desc: getSettingsAutoStartStatus
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureControllerTest, getSettingsAutoStartStatus04, Function | SmallTest | Level2)
+{
+    std::string key = "auto_start_pip_status";
+    std::string KEY = "auto_start_pip_status";
+    std::string SETTING_COLUMN_KEYWORD = "KEYWORD";
+    std::string SETTING_COLUMN_VALUE = "VALUE";
+    std::string SETTING_URI_PROXY = "datashare:///com.ohos.settingsdata/entry/"
+        "settingsdata/SETTINGSDATA?Proxy=true";
+    std::string SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
+    std::string value;
+
+    sptr<MockWindow> mw = new MockWindow();
+    ASSERT_NE(nullptr, mw);
+    sptr<PipOption> option = new PipOption();
+    sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
+
+    auto helper = DataShare::DataShareHelper::Creator(remoteObj_, SETTING_URI_PROXY, SETTINGS_DATA_EXT_URI);
+    std::vector<std::string> columns = {SETTING_COLUMN_VALUE};
+    DataShare::DataSharePredicates predicates;
+    predicates.EqualTo(SETTING_COLUMN_KEYWORD, key);
+    Uri uri(SETTING_URI_PROXY + "&key=" + key);
+    auto resultSet = helper->Query(uri, predicates, columns);
+    int32_t count;
+    resultSet->GetRowCount(count);
+    int32_t ret = 555;
+
+    ASSERT_EQ(ERR_INVALID_VALUE,  pipControl->getSettingsAutoStartStatus(key, value));
+}
+
+/**
+ * @tc.name: getSettingsAutoStartStatus
+ * @tc.desc: getSettingsAutoStartStatus
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureControllerTest, getSettingsAutoStartStatus05, Function | SmallTest | Level2)
+{
+    std::string key = "auto_start_pip_status";
+    std::string KEY = "auto_start_pip_status";
+    std::string SETTING_COLUMN_KEYWORD = "KEYWORD";
+    std::string SETTING_COLUMN_VALUE = "VALUE";
+    std::string SETTING_URI_PROXY = "datashare:///com.ohos.settingsdata/entry/"
+        "settingsdata/SETTINGSDATA?Proxy=true";
+    std::string SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
+    std::string value;
+
+    sptr<MockWindow> mw = new MockWindow();
+    ASSERT_NE(nullptr, mw);
+    sptr<PipOption> option = new PipOption();
+    sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
+
+    auto helper = DataShare::DataShareHelper::Creator(remoteObj_, SETTING_URI_PROXY, SETTINGS_DATA_EXT_URI);
+    std::vector<std::string> columns = {SETTING_COLUMN_VALUE};
+    DataShare::DataSharePredicates predicates;
+    predicates.EqualTo(SETTING_COLUMN_KEYWORD, key);
+    Uri uri(SETTING_URI_PROXY + "&key=" + key);
+    auto resultSet = helper->Query(uri, predicates, columns);
+    int32_t count;
+    resultSet->GetRowCount(count);
+    int32_t ret = resultSet->GetString(INDEX, value);
+
+    ASSERT_EQ(ERR_OK,  pipControl->getSettingsAutoStartStatus(key, value));
+}
+
 
 /**
  * @tc.name: StartMove
