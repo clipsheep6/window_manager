@@ -64,7 +64,6 @@ config("libmockwms_config") {
     # for scene session manager
     "${window_base_path}/interfaces/innerkits/wm",
     "${window_base_path}/wmserver/include",
-    "${graphic_base_path}/graphic_2d/rosen/modules/platform/image_native",
 
     # for window_manager_hilog
     "${window_base_path}/utils/include",
@@ -94,6 +93,7 @@ ohos_shared_library("sms") {
 
   deps = [
     "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/utils:libwmutil_base",
     "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",
     "../utils:libwmutil",
   ]
@@ -104,6 +104,7 @@ ohos_shared_library("sms") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "graphic_2d:image_native",
     "graphic_2d:librender_service_client",
     "hilog:libhilog",
     "image_framework:image_native",
@@ -200,6 +201,7 @@ if (scene_board_enabled) {
       "../dmserver:libdms",
       "../etc:wms_etc",
       "../utils:libwmutil",
+      "../utils:libwmutil_base",
       "../wm:libwm",
       "//third_party/libxml2:libxml2",
     ]

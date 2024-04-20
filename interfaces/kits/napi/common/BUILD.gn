@@ -27,7 +27,7 @@ config("dm_napi_common_config") {
 config("dm_napi_common_public_config") {
   include_dirs = [
     ".",
-    "//third_party/node/src",
+    "../../../../../../../third_party/node/src",
     "../../../innerkits/dm",
   ]
 }
@@ -53,6 +53,7 @@ ohos_static_library("dm_napi_common") {
 
   deps = [
     "../../../../utils:libwmutil",
+    "../../../../utils:libwmutil_base",
     "../../../../wm:libwm",
     "//third_party/bounds_checking_function:libsec_shared",
   ]

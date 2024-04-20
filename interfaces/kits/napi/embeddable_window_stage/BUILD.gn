@@ -63,6 +63,7 @@ config("embeddable_window_stage_kit_config") {
   include_dirs = [
     "../extension_window",
     "../window_runtime/window_napi",
+    "../../../innerkits/dm",
     "../../../innerkits/wm",
     "../../../../utils/include",
     "../../../../wm/include",
@@ -87,6 +88,7 @@ ohos_shared_library("embeddablewindowstage_kit") {
   include_dirs = [ "embeddable_window_stage" ]
   deps = [
     "../../../../utils:libwmutil",
+    "../../../../utils:libwmutil_base",
     "../../../../wm:libwm",
     "../extension_window:extensionwindow_napi",
   ]
