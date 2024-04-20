@@ -112,6 +112,7 @@ public:
     {
         return WSError::WS_OK;
     }
+    virtual void NotifyKeyboardPanelInfoChange(const WSRect& rect, uint32_t gravity, bool isKeyboardPanelShown) {}
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_SESSION_STAGE_INTERFACE_H

@@ -58,6 +58,8 @@ public:
     WSError SetPipActionEvent(const std::string& action, int32_t status) override;
     WSError UpdateDisplayId(uint64_t displayId) override;
     void NotifyDisplayMove(DisplayId from, DisplayId to) override;
+    void NotifyKeyboardPanelInfoChange(const WSRect& rect, uint32_t gravity,
+        bool isKeyboardPanelShown) override;
 
 private:
     static inline BrokerDelegator<SessionStageProxy> delegator_;

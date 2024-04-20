@@ -263,6 +263,16 @@ sptr<SceneSession> KeyboardSession::GetCallingSession()
     return callingSession;
 }
 
+void KeyboardSession::NotifyKeyboardPanelInfoChange(const WSRect& rect, uint32_t gravity, bool isKeyboardPanelShown)
+{
+    if (!sessionStage_) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "sessionStage_ is nullptr, notify keyboard panel rect change failed");
+        return;
+    }
+
+    sessionStage_->NotifyKeyboardPanelInfoChange(rect, gravity, isKeyboardPanelShown);
+}
+
 void KeyboardSession::RaiseCallingSession(bool isKeyboardUpdated)
 {
     sptr<SceneSession> callingSession = GetCallingSession();

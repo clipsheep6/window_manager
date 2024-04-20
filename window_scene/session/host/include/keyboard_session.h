@@ -58,6 +58,7 @@ private:
     void OnKeyboardSessionShown();
     void UpdateCallingSessionIdAndPosition(uint32_t callingSessionId);
     void RelayoutKeyBoard();
+    void NotifyKeyboardPanelInfoChange(const WSRect& rect, uint32_t gravity, bool isKeyboardPanelShown);
 
     sptr<KeyboardSessionCallback> keyboardCallback_ = nullptr;
     WSRect callingSessionRestoringRect_ = {0, 0, 0, 0};
