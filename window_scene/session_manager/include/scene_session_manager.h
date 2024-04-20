@@ -308,6 +308,7 @@ public:
     void OnConfigurationUpdated(const std::shared_ptr<AppExecFwk::Configuration>& configuration);
 
     std::shared_ptr<TaskScheduler> GetTaskScheduler() {return taskScheduler_;};
+    int32_t GetCustomDecorHeight(int32_t persistentId);
 
 protected:
     SceneSessionManager();

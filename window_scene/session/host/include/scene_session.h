@@ -251,6 +251,15 @@ public:
     static MaximizeMode maximizeMode_;
     static std::map<int32_t, WSRect> windowDragHotAreaMap_;
     WSError UpdateRectChangeListenerRegistered(bool isRegister) override;
+    int32_t GetCustomDecorHeight() override
+    {
+        return customDecorHeight_;
+    }
+
+    void SetCustomDecorHeight(const int32_t height) override
+    {
+        customDecorHeight_ = height;
+    }
 
 protected:
     void NotifyIsCustomAnimationPlaying(bool isPlaying);
@@ -309,7 +318,7 @@ private:
     std::atomic_bool shouldHideNonSecureWindows_ { false };
     std::set<int32_t> secureExtSessionSet_;
     std::map<int32_t, uint32_t> extWindowFlagsMap_;
-
+    int32_t customDecorHeight_ = 0;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SCENE_SESSION_H
