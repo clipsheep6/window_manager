@@ -1182,7 +1182,7 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
         }
         if (property->GetDragEnabled()) {
             auto is2in1 = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
-            if (is2in1 && moveDragController_->ConsumeDragEvent(pointerEvent, winRect_, property, systemConfig_)) {
+            if ((is2in1 || IsPCMode()) && moveDragController_->ConsumeDragEvent(pointerEvent, winRect_, property, systemConfig_)) {
                 moveDragController_->UpdateGravityWhenDrag(pointerEvent, surfaceNode_);
                 PresentFoucusIfNeed(pointerEvent->GetPointerAction());
                 pointerEvent->MarkProcessed();
@@ -1202,6 +1202,12 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
         RaiseToAppTopForPointDown();
     }
     return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
+}
+
+bool SceneSession::IsPCMode() const
+{
+    return system::GetParameter("persist.sceneboard.cascadescene.enable", "unknown") == "true" || 
+    system::GetParameter("persist.sceneboard.cascadescene.enable", "unknown") == "1";
 }
 
 WSError SceneSession::RequestSessionBack(bool needMoveToBackground)
