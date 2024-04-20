@@ -325,20 +325,20 @@ void KeyboardSession::RestoreCallingSession()
     sptr<SceneSession> callingSession = GetCallingSession();
     if (callingSession == nullptr) {
         TLOGI(WmsLogTag::WMS_KEYBOARD, "Calling session is nullptr");
-        return;
+    } else {
+        TLOGI(WmsLogTag::WMS_KEYBOARD, "Calling session, RestoringRect_: %{public}s, RaisedRect_: %{public}s"
+            ", curRect_: %{public}s, sessionMode: %{public}d", callingSessionRestoringRect_.ToString().c_str(),
+            callingSessionRaisedRect_.ToString().c_str(), callingSession->GetSessionRect().ToString().c_str(),
+            callingSession->GetWindowMode());
+        WSRect overlapRect = { 0, 0, 0, 0 };
+        NotifyOccupiedAreaChangeInfo(callingSession, callingSessionRestoringRect_, overlapRect);
+        if (!SessionHelper::IsEmptyRect(callingSessionRestoringRect_) &&
+            callingSession->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
+            callingSession->GetSessionRect() == callingSessionRaisedRect_) {
+            callingSession->UpdateSessionRect(callingSessionRestoringRect_, SizeChangeReason::UNDEFINED);
+        } 
     }
 
-    TLOGI(WmsLogTag::WMS_KEYBOARD, "Calling session, RestoringRect_: %{public}s, RaisedRect_: %{public}s"
-        ", curRect_: %{public}s, sessionMode: %{public}d", callingSessionRestoringRect_.ToString().c_str(),
-        callingSessionRaisedRect_.ToString().c_str(), callingSession->GetSessionRect().ToString().c_str(),
-        callingSession->GetWindowMode());
-    WSRect overlapRect = { 0, 0, 0, 0 };
-    NotifyOccupiedAreaChangeInfo(callingSession, callingSessionRestoringRect_, overlapRect);
-    if (!SessionHelper::IsEmptyRect(callingSessionRestoringRect_) &&
-        callingSession->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
-        callingSession->GetSessionRect() == callingSessionRaisedRect_) {
-        callingSession->UpdateSessionRect(callingSessionRestoringRect_, SizeChangeReason::UNDEFINED);
-    }
     callingSessionRestoringRect_ = { 0, 0, 0, 0 };
     callingSessionRaisedRect_ = { 0, 0, 0, 0 };
 }
