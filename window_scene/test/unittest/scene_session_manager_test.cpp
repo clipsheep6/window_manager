@@ -72,21 +72,15 @@ public:
     static void SetVisibleForAccessibility(sptr<SceneSession>& sceneSession);
 
     static bool gestureNavigationEnabled_;
-    static bool statusBarEnabled_;
     static ProcessGestureNavigationEnabledChangeFunc callbackFunc_;
-    static ProcessStatusBarEnabledChangeFunc statusBarEnabledCallbackFunc_;
     static sptr<SceneSessionManager> ssm_;
 };
 
 sptr<SceneSessionManager> SceneSessionManagerTest::ssm_ = nullptr;
 
 bool SceneSessionManagerTest::gestureNavigationEnabled_ = true;
-bool SceneSessionManagerTest::statusBarEnabled_ = true;
 ProcessGestureNavigationEnabledChangeFunc SceneSessionManagerTest::callbackFunc_ = [](bool enable) {
     gestureNavigationEnabled_ = enable;
-};
-ProcessStatusBarEnabledChangeFunc SceneSessionManagerTest::statusBarEnabledCallbackFunc_ = [](bool enable) {
-    statusBarEnabled_ = enable;
 };
 
 void WindowChangedFuncTest(int32_t persistentId, WindowUpdateType type)
@@ -168,35 +162,6 @@ HWTEST_F(SceneSessionManagerTest, SetGestureNavigaionEnabled, Function | SmallTe
     ASSERT_EQ(gestureNavigationEnabled_, false);
 
     ssm_->SetGestureNavigationEnabledChangeListener(nullptr);
-    WMError result03 = ssm_->SetGestureNavigaionEnabled(true);
-    ASSERT_EQ(result03, WMError::WM_DO_NOTHING);
-}
-
-/**
- * @tc.name: SetStatusBarEnabled
- * @tc.desc: SceneSessionManager set status bar enabled
- * @tc.type: FUNC
- */
-HWTEST_F(SceneSessionManagerTest, SetStatusBarEnabled, Function | SmallTest | Level3)
-{
-    ASSERT_NE(statusBarEnabledCallbackFunc_, nullptr);
-    ssm_->SetStatusBarEnabledChangeListener(nullptr);
-
-    WMError result00 = ssm_->SetGestureNavigaionEnabled(true);
-    ASSERT_EQ(result00, WMError::WM_DO_NOTHING);
-
-    ssm_->SetStatusBarEnabledChangeListener(statusBarEnabledCallbackFunc_);
-    WMError result01 = ssm_->SetGestureNavigaionEnabled(true);
-    ASSERT_EQ(result01, WMError::WM_OK);
-    sleep(WAIT_SLEEP_TIME);
-    ASSERT_EQ(statusBarEnabled_, true);
-
-    WMError result02 = ssm_->SetGestureNavigaionEnabled(false);
-    ASSERT_EQ(result02, WMError::WM_OK);
-    sleep(WAIT_SLEEP_TIME);
-    ASSERT_EQ(statusBarEnabled_, false);
-
-    ssm_->SetStatusBarEnabledChangeListener(nullptr);
     WMError result03 = ssm_->SetGestureNavigaionEnabled(true);
     ASSERT_EQ(result03, WMError::WM_DO_NOTHING);
 }
