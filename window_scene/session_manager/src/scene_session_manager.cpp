@@ -297,11 +297,13 @@ void SceneSessionManager::RegisterAppListener()
     if (appMgrClient_ == nullptr) {
         WLOGFE("appMgrClient_ is nullptr.");
     } else {
-        auto flag = static_cast<int32_t>(appMgrClient_->RegisterAppDebugListener(appAnrListener_));
-        if (flag != ERR_OK) {
-            WLOGFE("Register app debug listener failed.");
-        } else {
-            WLOGFI("Register app debug listener success.");
+        if (appAnrListener_ != nullptr) {
+            auto flag = static_cast<int32_t>(appMgrClient_->RegisterAppDebugListener(appAnrListener_));
+            if (flag != ERR_OK) {
+                WLOGFE("Register app debug listener failed.");
+            } else {
+                WLOGFI("Register app debug listener success.");
+            }
         }
     }
 }
@@ -2272,7 +2274,7 @@ void SceneSessionManager::NotifySessionTouchOutside(int32_t persistentId)
             }
             if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT &&
                 sceneSession->GetSessionProperty() != nullptr) {
-                callingSessionId = sceneSession->GetSessionProperty()->GetCallingSessionId();
+                callingSessionId = static_cast<int32_t>(sceneSession->GetSessionProperty()->GetCallingSessionId());
                 TLOGI(WmsLogTag::WMS_KEYBOARD, "persistentId: %{public}d, callingSessionId: %{public}d",
                     persistentId, callingSessionId);
             }
@@ -2760,7 +2762,7 @@ WMError SceneSessionManager::GetTopWindowId(uint32_t mainWinId, uint32_t& topWin
         for (const auto& subSession : subVec) {
             if (subSession != nullptr && (subSession->GetSessionState() == SessionState::STATE_FOREGROUND ||
                 subSession->GetSessionState() == SessionState::STATE_ACTIVE) && subSession->GetZOrder() > zOrder) {
-                topWinId = subSession->GetPersistentId();
+                topWinId = static_cast<uint32_t>(subSession->GetPersistentId());
                 zOrder = subSession->GetZOrder();
                 WLOGFD("[GetTopWin] Current zorder is larger than mainWin, mainId: %{public}d, topWinId: %{public}d, "
                     "zOrder: %{public}d", mainWinId, topWinId, zOrder);
@@ -4370,8 +4372,9 @@ int SceneSessionManager::GetSceneSessionPrivacyModeCount()
         bool isForeground =  sceneSession->GetSessionState() == SessionState::STATE_FOREGROUND ||
             sceneSession->GetSessionState() == SessionState::STATE_ACTIVE;
         if (isForeground && sceneSession->GetParentSession() != nullptr) {
-            isForeground &= sceneSession->GetParentSession()->GetSessionState() == SessionState::STATE_FOREGROUND ||
-            sceneSession->GetParentSession()->GetSessionState() == SessionState::STATE_ACTIVE;
+            isForeground = isForeground &&
+                            (sceneSession->GetParentSession()->GetSessionState() == SessionState::STATE_FOREGROUND ||
+                                sceneSession->GetParentSession()->GetSessionState() == SessionState::STATE_ACTIVE);
         }
         bool isPrivate = sceneSession->GetSessionProperty() != nullptr &&
             sceneSession->GetSessionProperty()->GetPrivacyMode();
@@ -7667,7 +7670,7 @@ bool SceneSessionManager::IsVectorSame(const std::vector<VisibleWindowNumInfo>& 
         WLOGFE("last and current info is not Same");
         return false;
     }
-    for (int i = 0; i < lastInfo.size(); i++) {
+    for (size_t i = 0; i < lastInfo.size(); i++) {
         if (lastInfo[i].displayId != currentInfo[i].displayId ||
             lastInfo[i].visibleWindowNum != currentInfo[i].visibleWindowNum) {
             WLOGFE("last and current visible window num is not Same");
