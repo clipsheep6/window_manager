@@ -257,6 +257,7 @@ void SceneSessionManager::Init()
     WLOGI("SceneSessionManager init success.");
     RegisterAppListener();
     openDebugTrace = std::atoi((system::GetParameter("persist.sys.graphic.openDebugTrace", "0")).c_str()) != 0;
+    isKeyboardPanelEnabled_ = system::GetParameter("persist.sceneboard.keyboardPanel.enabled", "0")  == "1";
 }
 
 void SceneSessionManager::InitScheduleUtils()
@@ -999,6 +1000,34 @@ WMError SceneSessionManager::CheckWindowId(int32_t windowId, int32_t &pid)
     return taskScheduler_->PostSyncTask(task, "CheckWindowId:" + std::to_string(windowId));
 }
 
+void SceneSessionManager::CreateKeyboardPanelSession(sptr<SceneSession> keyboardSession)
+{
+    if (isKeyboardPanelEnabled_) {
+        TLOGI(WmsLogTag::WMS_KEYBOARD, "KeyboardPanel is not enabled");
+        return;
+    }
+    if (keyboardSession == nullptr) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "KeyboardSession is nullptr");
+        return;
+    }
+    SessionInfo panelInfo = {
+        .bundleName_ = "SCBKeyboardPanel",
+        .moduleName_ = "SCBKeyboardPanel",
+        .abilityName_ = "SCBKeyboardPanel",
+        .isSystem_ = true,
+        .windowType_ = static_cast<uint32_t>(WindowType::WINDOW_TYPE_KEYBOARD_PANEL),
+        .isSystemInput_ = true,
+        .screenId_ = keyboardSession->GetSessionInfo().screenId_
+    };
+    sptr<SceneSession> panelSession = RequestSceneSession(panelInfo, nullptr);
+    if (panelSession == nullptr) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "PanelSession is nullptr");
+        return;
+    }
+    keyboardSession->BindKeyboardPanelSession(panelSession);
+    panelSession->BindKeyboardSession(keyboardSession);
+}
+
 sptr<SceneSession> SceneSessionManager::CreateSceneSession(const SessionInfo& sessionInfo,
     sptr<WindowSessionProperty> property)
 {
@@ -1016,6 +1045,7 @@ sptr<SceneSession> SceneSessionManager::CreateSceneSession(const SessionInfo& se
     } else if (property != nullptr && property->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
         sptr<KeyboardSession::KeyboardSessionCallback> keyboardCb = CreateKeyboardSessionCallback();
         sceneSession = new (std::nothrow) KeyboardSession(sessionInfo, specificCb, keyboardCb);
+        CreateKeyboardPanelSession(sceneSession);
         TLOGI(WmsLogTag::WMS_KEYBOARD, "Create KeyboardSession, type: %{public}d", property->GetWindowType());
     } else if (property != nullptr && SessionHelper::IsSystemWindow(property->GetWindowType())) {
         sceneSession = new (std::nothrow) SystemSession(sessionInfo, specificCb);
@@ -1025,6 +1055,7 @@ sptr<SceneSession> SceneSessionManager::CreateSceneSession(const SessionInfo& se
     }
     if (sceneSession != nullptr) {
         sceneSession->SetSessionInfoPersistentId(sceneSession->GetPersistentId());
+        sceneSession->isKeyboardPanelEnabled_ = isKeyboardPanelEnabled_;
     }
     return sceneSession;
 }
@@ -2120,6 +2151,11 @@ void SceneSessionManager::SetCreateSystemSessionListener(const NotifyCreateSyste
     createSystemSessionFunc_ = func;
 }
 
+void SceneSessionManager::SetCreateKeyboardSessionListener(const NotifyCreateKeyboardSessionFunc& func)
+{
+    createKeyboardSessionFunc_ = func;
+}
+
 void SceneSessionManager::RegisterCreateSubSessionListener(int32_t persistentId,
     const NotifyCreateSubSessionFunc& func)
 {
@@ -2155,10 +2191,13 @@ void SceneSessionManager::NotifyCreateSpecificSession(sptr<SceneSession> newSess
                 newSession->SetParentSession(parentSession);
             }
         }
-        if (createSystemSessionFunc_ && type != WindowType::WINDOW_TYPE_DIALOG) {
+        if (type != WindowType::WINDOW_TYPE_DIALOG) {
             if (WindowHelper::IsSystemSubWindow(type)) {
                 NotifyCreateSubSession(property->GetParentPersistentId(), newSession);
-            } else {
+            } else if (isKeyboardPanelEnabled_ && type == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT
+                && createKeyboardSessionFunc_) {
+                createKeyboardSessionFunc_(newSession, newSession->GetKeyboardPanelSession());
+            } else if (createSystemSessionFunc_) {
                 createSystemSessionFunc_(newSession);
             }
             TLOGD(WmsLogTag::WMS_LIFE, "Create system session, id:%{public}d, type: %{public}d",

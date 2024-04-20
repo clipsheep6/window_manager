@@ -449,6 +449,24 @@ WSError SceneSession::UpdateRect(const WSRect& rect, SizeChangeReason reason,
     return WSError::WS_OK;
 }
 
+void SceneSession::FixKeyboardPositionByKeyboardPanel(sptr<SceneSession> panelSession,
+    sptr<SceneSession> keyboardSession)
+{
+    TLOGI(WmsLogTag::WMS_LAYOUT, "[start] panelId:%{public}d, keyboardId:%{public}d, panelRect:%{public}s, "
+        "keyboardRect:%{public}s", panelSession->GetPersistentId(), keyboardSession->GetPersistentId(),
+        panelSession->winRect_.ToString().c_str(), keyboardSession->winRect_.ToString().c_str());
+    SessionGravity gravity = keyboardSession->GetSessionGravity();
+    if (gravity == SessionGravity::SESSION_GRAVITY_FLOAT) {
+        keyboardSession->winRect_.posX_ = panelSession->winRect_.posX_;
+    } else {
+        keyboardSession->winRect_.posX_ += panelSession->winRect_.posX_;  // liuqi todo: qufen zhibanji hengping
+    }
+    keyboardSession->winRect_.posY_ = panelSession->winRect_.posY_;
+    TLOGI(WmsLogTag::WMS_LAYOUT, "[end] panelId:%{public}d, keyboardId:%{public}d, panelRect:%{public}s, "
+        "keyboardRect:%{public}s", panelSession->GetPersistentId(), keyboardSession->GetPersistentId(),
+        panelSession->winRect_.ToString().c_str(), keyboardSession->winRect_.ToString().c_str());
+}
+
 WSError SceneSession::NotifyClientToUpdateRectTask(
     wptr<SceneSession> weakThis, std::shared_ptr<RSTransaction> rsTransaction)
 {
@@ -470,6 +488,23 @@ WSError SceneSession::NotifyClientToUpdateRectTask(
         "SceneSession::NotifyClientToUpdateRect%d [%d, %d, %u, %u] reason:%u",
         session->GetPersistentId(), session->winRect_.posX_,
         session->winRect_.posY_, session->winRect_.width_, session->winRect_.height_, session->reason_);
+
+    if (isKeyboardPanelEnabled_) {
+        if (session->GetWindowType() == WindowType::WINDOW_TYPE_KEYBOARD_PANEL) {
+            const auto& keyboardSession = session->GetKeyboardSession();
+            if (keyboardSession != nullptr) {
+                FixKeyboardPositionByKeyboardPanel(session, keyboardSession);
+                ret = keyboardSession->Session::UpdateRect(keyboardSession->winRect_, session->reason_, rsTransaction);
+            }
+        }
+        if (session->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
+            const auto& panelSession = session->GetKeyboardPanelSession();
+            if (panelSession != nullptr) {
+                FixKeyboardPositionByKeyboardPanel(panelSession, session);
+            }
+        }
+    }
+
     // once reason is undefined, not use rsTransaction
     // when rotation, sync cnt++ in marshalling. Although reason is undefined caused by resize
     if (session->reason_ == SizeChangeReason::UNDEFINED || session->reason_ == SizeChangeReason::MOVE ||
