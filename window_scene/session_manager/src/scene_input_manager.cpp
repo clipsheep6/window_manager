@@ -112,7 +112,7 @@ bool operator!=(const std::vector<float>& a, const std::vector<float>& b)
     if (a.size() != b.size()) {
         return true;
     }
-    for (int index = 0; index < a.size(); index++) {
+    for (size_t index = 0; index < a.size(); index++) {
         if (a[index] != b[index]) {
             return true;
         }
@@ -132,19 +132,19 @@ bool operator==(const MMI::WindowInfo& a, const MMI::WindowInfo& b)
         return false;
     }
 
-    for (int index = 0; index < a.defaultHotAreas.size(); index++) {
+    for (size_t index = 0; index < a.defaultHotAreas.size(); index++) {
         if (a.defaultHotAreas[index] != b.defaultHotAreas[index]) {
             return false;
         }
     }
 
-    for (int index = 0; index < a.pointerHotAreas.size(); index++) {
+    for (size_t index = 0; index < a.pointerHotAreas.size(); index++) {
         if (a.pointerHotAreas[index] != b.pointerHotAreas[index]) {
             return false;
         }
     }
 
-    for (int index = 0; index < a.pointerChangeAreas.size(); index++) {
+    for (size_t index = 0; index < a.pointerChangeAreas.size(); index++) {
         if (a.pointerChangeAreas[index] != b.pointerChangeAreas[index]) {
             return false;
         }
@@ -329,7 +329,7 @@ bool SceneInputManager::CheckNeedUpdate(const std::vector<MMI::DisplayInfo>& dis
         return true;
     }
 
-    for (int index = 0; index < displayInfos.size(); index++) {
+    for (size_t index = 0; index < displayInfos.size(); index++) {
         if (!(displayInfos[index] == lastDisplayInfos_[index])) {
             lastDisplayInfos_ = displayInfos;
             lastWindowInfoList_ = windowInfoList;
@@ -337,7 +337,7 @@ bool SceneInputManager::CheckNeedUpdate(const std::vector<MMI::DisplayInfo>& dis
         }
     }
 
-    for (int index = 0; index < windowInfoList.size(); index++) {
+    for (size_t index = 0; index < windowInfoList.size(); index++) {
         if (!(windowInfoList[index] == lastWindowInfoList_[index])) {
             lastWindowInfoList_ = windowInfoList;
             return true;
