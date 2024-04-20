@@ -2986,6 +2986,127 @@ HWTEST_F(SceneSessionTest, ChangeSessionVisibilityWithStatusBar, Function | Smal
     delete sceneSession;
 }
 
+/**
+ * @tc.name: RaiseToAppTop
+ * @tc.desc: RaiseToAppTop
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, RaiseToAppTop, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "RaiseToAppTop";
+    info.bundleName_ = "RaiseToAppTop";
+    sptr<SceneSession::SpecificSessionCallback> specificCallback =
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(nullptr, specificCallback);
+    sptr<SceneSession> scensession = new (std::nothrow) SceneSession(info, specificCallback);
+    EXPECT_NE(nullptr, scensession);
+
+    WSError result = scenesession->RaiseToAppTop();
+    ASSERT_EQ(result, WSError::WS_OK);
+}
+
+/**
+ * @tc.name: RaiseAppMainWindowToTop
+ * @tc.desc: RaiseAppMainWindowToTop
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, RaiseAppMainWindowToTop, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "RaiseAppMainWindowToTop";
+    info.bundleName_ = "RaiseAppMainWindowToTop";
+    sptr<SceneSession::SpecificSessionCallback> specificCallback =
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(nullptr, specificCallback);
+    sptr<SceneSession> scensession = new (std::nothrow) SceneSession(info, specificCallback);
+    EXPECT_NE(nullptr, scensession);
+
+    WSError result = scenesession->RaiseAppMainWindowToTop();
+    ASSERT_EQ(result, WSError::WS_OK);
+}
+
+/**
+ * @tc.name: SendPointEventForMoveDrag
+ * @tc.desc: SendPointEventForMoveDrag
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, SendPointEventForMoveDrag, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "SendPointEventForMoveDrag";
+    info.bundleName_ = "SendPointEventForMoveDrag";
+    sptr<SceneSession::SpecificSessionCallback> specificCallback =
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(nullptr, specificCallback);
+    sptr<SceneSession> scensession = new (std::nothrow) SceneSession(info, specificCallback);
+    EXPECT_NE(nullptr, scensession);
+
+    auto pointerEventFunc = [scensession](std::shared_ptr<MMI::PointerEvent> pointerEvent) {
+        scensession->NotifyOutsideDownEvent(pointerEvent);
+    };
+    scensession->systemSessionPointerEventFunc_ = pointerEventFunc;
+    std::shared_ptr<MMI::PointerEvent> pointerEvent =
+         MMI::PointerEvent::Create();
+    WSError result = scenesession->SendPointEventForMoveDrag(pointerEvent);
+    ASSERT_EQ(result, WSERROR::WS_OK);
+}
+
+/**
+ * @tc.name: FixRectByLimits
+ * @tc.desc: FixRectByLimits
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, FixRectByLimits, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "FixRectByLimits";
+    info.bundleName_ = "FixRectByLimits";
+    sptr<SceneSession::SpecificSessionCallback> specificCallback =
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(nullptr, specificCallback);
+    sptr<SceneSession> scensession = new (std::nothrow) SceneSession(info, specificCallback);
+    EXPECT_NE(nullptr, scensession);
+
+    WindowLimits limits;
+    WSRect rect = { 0, 0, 10, 53 };
+    bool isDecor = true;
+    float ratio = 1;
+    float vpr = 1;
+
+    scenesession->FixRectByLimits(limits, rect, ratio, isDecor, vpr);
+    ASSERT_EQ(0, rect.width_);
+    ASSERT_EQ(0, limits.minWidth_);
+    ASSERT_EQ(0, limits.maxWidth_);
+    ASSERT_EQ(0, rect.height_);
+    ASSERT_EQ(0, limits.minHeight_);
+    ASSERT_EQ(0, limits.maxHeight_);
+}
+
+/**
+ * @tc.name: OnMoveDragCallback
+ * @tc.desc: OnMoveDragCallback
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, OnMoveDragCallback, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "OnMoveDragCallback";
+    info.bundleName_ = "OnMoveDragCallback";
+    sptr<SceneSession::SpecificSessionCallback> specificCallback =
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(nullptr, specificCallback);
+    sptr<SceneSession> scensession = new (std::nothrow) SceneSession(info, specificCallback);
+    EXPECT_NE(nullptr, scensession);
+
+    WSRect rect = { 0, 0, 0, 0 };
+    scenesession->UpdateWinRectForSystemBar(rect);
+    scenesession->GetAINavigationBarArea();
+    scenesession->SetMoveDragCallback();
+    scenesession->OnMoveDragCallback();
+
+    WSError result = scenesession->RaiseToAppTop();
+    ASSERT_EQ(result, WSError::WS_OK);
 }
 }
 }
