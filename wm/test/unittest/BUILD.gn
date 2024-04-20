@@ -62,6 +62,7 @@ ohos_unittest("wm_window_manager_test") {
 
   external_deps = [
     "c_utils:utils",
+    "ffrt:libffrt",
     "hilog:libhilog",
   ]
 
@@ -202,7 +203,10 @@ ohos_unittest("wm_window_test") {
 
   sources = [ "window_test.cpp" ]
 
-  deps = [ ":wm_unittest_common" ]
+  deps = [ 
+    ":wm_unittest_common",
+    "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",
+  ]
 
   external_deps = [
     "c_utils:utils",
@@ -450,6 +454,7 @@ ohos_static_library("wm_unittest_common") {
     "${window_base_path}/dm:libdm",
     "${window_base_path}/dmserver:libdms",
     "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/utils:libwmutil_base",
     "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/session:scene_session",
     "${window_base_path}/window_scene/session_manager:scene_session_manager",

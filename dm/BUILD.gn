@@ -29,10 +29,14 @@ config("libdm_private_config") {
 
 config("libdm_public_config") {
   include_dirs = [
+    "../interfaces/innerkits",
     "../interfaces/innerkits/dm",
     "../utils/include",
-    "${multimedia_path}/interfaces/innerkits/include",
   ]
+}
+
+config("for_libdm_public_config") {
+  include_dirs = [ "../../../multimedia/image_framework/interfaces/innerkits/include" ]
 }
 
 ## Build libdm_static.a
@@ -67,17 +71,20 @@ ohos_static_library("libdm_static") {
 
   deps = [
     "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/utils:libwmutil_base",
     "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",
   ]
 
-  public_external_deps = [ "graphic_2d:color_manager" ]
+  public_external_deps = [ 
+    "graphic_2d:color_manager",
+    "image_framework:image_native",
+  ]
 
   external_deps = [
     "ability_runtime:ability_manager",
     "c_utils:utils",
     "graphic_2d:librender_service_client",
     "hilog:libhilog",
-    "image_framework:image_native",
     "ipc:ipc_single",
     "samgr:samgr_proxy",
   ]
@@ -106,10 +113,14 @@ ohos_shared_library("libdm") {
     "../resources/config/build:coverage_flags",
   ]
 
-  public_configs = [ ":libdm_public_config" ]
+  public_configs = [
+    ":for_libdm_public_config",
+    ":libdm_public_config",
+  ]
 
   deps = [
     "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/utils:libwmutil_base",
     "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",
   ]
 

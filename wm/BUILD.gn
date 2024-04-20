@@ -27,6 +27,8 @@ config("libwm_private_config") {
 
 config("libwm_public_config") {
   include_dirs = [
+    "../interfaces/innerkits",
+    "../interfaces/innerkits/dm",
     "../interfaces/innerkits/wm",
     "../utils/include",
     "../window_scene",
@@ -92,7 +94,9 @@ ohos_static_library("libwm_static") {
   deps = [
     "${window_base_path}/dm:libdm",
     "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/utils:libwmutil_base",
     "${window_base_path}/window_scene/common:window_scene_common",
+    "${window_base_path}/window_scene/interfaces/innerkits:libwsutils"
     "${window_base_path}/window_scene/intention_event:libintention_event",
     "${window_base_path}/window_scene/intention_event/service:intention_event_anr_manager",
     "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",
@@ -231,7 +235,9 @@ ohos_shared_library("libwm") {
   public_configs = [ ":libwm_public_config" ]
 
   deps = [
+    "${window_base_path}/utils:libwmutil_base",
     "${window_base_path}/window_scene/common:window_scene_common",
+    "${window_base_path}/window_scene/interfaces/innerkits:libwsutils"
     "${window_base_path}/window_scene/intention_event:libintention_event",
     "${window_base_path}/window_scene/intention_event/service:intention_event_anr_manager",
     "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",

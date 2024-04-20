@@ -48,6 +48,7 @@ ohos_shared_library("session_manager_service") {
     "hilog:libhilog",
     "ipc:ipc_single",
     "samgr:samgr_proxy",
+    "ffrt:libffrt",
   ]
 
   innerapi_tags = [ "platformsdk" ]

@@ -15,7 +15,11 @@ import("//build/ohos.gni")
 
 config("wm_interface_config") {
   visibility = [ ":*" ]
-  include_dirs = [ "../../interfaces/innerkits" ]
+  include_dirs = [ 
+    "../../interfaces/innerkits",
+    "../../interfaces/innerkits/dm",
+    "../../interfaces/innerkits/wm",
+  ]
 }
 
 ohos_shared_library("wm_interface") {
