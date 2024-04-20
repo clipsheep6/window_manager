@@ -144,6 +144,7 @@ public:
     bool GetDefaultDensityEnabled() override;
     WMError HideNonSecureWindows(bool shouldHide) override;
     virtual WMError SetWindowMask(const std::vector<std::vector<uint32_t>>& windowMask) override;
+    void NotifyKeyboardPanelInfoChange(const WSRect& rect, uint32_t gravity, bool isKeyboardPanelShown) override;
 
 protected:
     void DestroySubWindow();
@@ -192,6 +193,11 @@ private:
     uint32_t setSameSystembarPropertyCnt_ = 0;
     std::atomic<bool> isDefaultDensityEnabled_ = false;
     uint32_t getAvoidAreaCnt_ = 0;
+
+    WMError RegisterKeyboardPanelInfoChangeListener(const sptr<IKeyboardPanelInfoChangeListener>& listener) override;
+    WMError UnregisterKeyboardPanelInfoChangeListener(const sptr<IKeyboardPanelInfoChangeListener>& listener) override;
+    static std::mutex keyboardPanelInfoChangeListenerMutex_;
+    sptr<IKeyboardPanelInfoChangeListener> keyboardPanelInfoChangeListeners_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

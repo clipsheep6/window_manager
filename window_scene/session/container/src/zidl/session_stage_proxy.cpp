@@ -658,4 +658,38 @@ void SessionStageProxy::NotifyDisplayMove(DisplayId from, DisplayId to)
         return;
     }
 }
+
+void SessionStageProxy::NotifyKeyboardPanelInfoChange(const WSRect& rect, uint32_t gravity,
+    bool isKeyboardPanelShown)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+
+    if (!(data.WriteInt32(rect.posX_) && data.WriteInt32(rect.posY_) &&
+        data.WriteUint32(rect.width_) && data.WriteUint32(rect.height_))) {
+        WLOGFE("Write keyboard panel rect failed");
+        return;
+    }
+
+    if (!data.WriteUint32(static_cast<uint32_t>(gravity))) {
+        WLOGFE("Write gravity failed");
+        return;
+    }
+
+    if (!data.WriteBool(isKeyboardPanelShown)) {
+        WLOGFE("Write is KeyboardPanelShown failed");
+        return;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_KEYBOARD_INFO_CHANGE),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest notify display move failed");
+        return;
+    }
+}
 } // namespace OHOS::Rosen

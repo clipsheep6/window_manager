@@ -79,6 +79,8 @@ const std::map<uint32_t, SessionStageStubFunc> SessionStageStub::stubFuncMap_{
         &SessionStageStub::HandleUpdateDisplayId),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DISPLAY_MOVE),
         &SessionStageStub::HandleNotifyDisplayMove),
+    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_KEYBOARD_INFO_CHANGE),
+        &SessionStageStub::HandleNotifyKeyboardPanelInfoChange),
 };
 
 int SessionStageStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -365,6 +367,18 @@ int SessionStageStub::HandleNotifyDisplayMove(MessageParcel& data, MessageParcel
     DisplayId from = static_cast<DisplayId>(data.ReadUint64());
     DisplayId to = static_cast<DisplayId>(data.ReadUint64());
     NotifyDisplayMove(from, to);
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleNotifyKeyboardPanelInfoChange(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGD("HandleNotifyKeyboardPanelInfoChange!");
+    WSRect rect = { data.ReadInt32(), data.ReadInt32(), data.ReadUint32(), data.ReadUint32() };
+    uint32_t gravity = data.ReadUint32();
+    bool isKeyboardPanelShown = data.ReadBool();
+    NotifyKeyboardPanelInfoChange(rect, gravity, isKeyboardPanelShown);
+    reply.WriteUint32(static_cast<uint32_t>(WSErrorCode::WS_OK));
+
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

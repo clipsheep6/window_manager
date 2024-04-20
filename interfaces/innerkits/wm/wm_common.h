@@ -356,6 +356,7 @@ enum class WindowSessionType : uint32_t {
 enum class WindowGravity : uint32_t {
     WINDOW_GRAVITY_FLOAT = 0,
     WINDOW_GRAVITY_BOTTOM,
+    WINDOW_GRAVITY_DEFAULT,
 };
 
 /**
@@ -532,6 +533,17 @@ struct Rect {
         return (posX_ >= a.posX_ && posY_ >= a.posY_ &&
             posX_ + width_ <= a.posX_ + a.width_ && posY_ + height_ <= a.posY_ + a.height_);
     }
+};
+
+/**
+ * @struct KeyboardPanelInfo
+ *
+ * @brief Property of keyboard panel
+ */
+struct KeyboardPanelInfo {
+    Rect keyboardPanelRect;
+    bool isKeyboardPanelShown;
+    WindowGravity gravity;
 };
 
 /**
