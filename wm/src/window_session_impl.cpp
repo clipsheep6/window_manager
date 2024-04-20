@@ -1891,8 +1891,8 @@ WMError WindowSessionImpl::UnregisterScreenshotListener(const sptr<IScreenshotLi
 }
 
 template<typename T>
-EnableIfSame<T, IDialogDeathRecipientListener, std::vector<sptr<IDialogDeathRecipientListener>>> WindowSessionImpl::
-    GetListeners()
+EnableIfSame<T, IDialogDeathRecipientListener, std::vector<sptr<IDialogDeathRecipientListener>>>
+    WindowSessionImpl::GetListeners()
 {
     std::vector<sptr<IDialogDeathRecipientListener>> dialogDeathRecipientListener;
     for (auto& listener : dialogDeathRecipientListeners_[GetPersistentId()]) {
@@ -1902,8 +1902,8 @@ EnableIfSame<T, IDialogDeathRecipientListener, std::vector<sptr<IDialogDeathReci
 }
 
 template<typename T>
-EnableIfSame<T, IDialogTargetTouchListener,
-    std::vector<sptr<IDialogTargetTouchListener>>> WindowSessionImpl::GetListeners()
+EnableIfSame<T, IDialogTargetTouchListener, std::vector<sptr<IDialogTargetTouchListener>>>
+    WindowSessionImpl::GetListeners()
 {
     std::vector<sptr<IDialogTargetTouchListener>> dialogTargetTouchListener;
     for (auto& listener : dialogTargetTouchListener_[GetPersistentId()]) {
@@ -2081,8 +2081,8 @@ WMError WindowSessionImpl::UnregisterExtensionAvoidAreaChangeListener(sptr<IAvoi
 }
 
 template<typename T>
-EnableIfSame<T, IAvoidAreaChangedListener,
-    std::vector<sptr<IAvoidAreaChangedListener>>> WindowSessionImpl::GetListeners()
+EnableIfSame<T, IAvoidAreaChangedListener, std::vector<sptr<IAvoidAreaChangedListener>>>
+    WindowSessionImpl::GetListeners()
 {
     std::vector<sptr<IAvoidAreaChangedListener>> windowChangeListeners;
     for (auto& listener : avoidAreaChangeListeners_[GetPersistentId()]) {
