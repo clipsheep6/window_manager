@@ -22,6 +22,7 @@
 #include <vector>
 #include <refbase.h>
 
+#include "event_tracker.h"
 #include "dm_common.h"
 #include "window_manager_hilog.h"
 #include "screen_session_manager.h"
@@ -35,6 +36,7 @@ public:
     ~ScreenSessionDumper() = default;
 
     void ExcuteDumpCmd();
+    void DumpEventTracker(EventTracker& tracker);
 
 private:
     void ShowHelpInfo();
@@ -46,6 +48,8 @@ private:
     void DumpCutoutInfoById(ScreenId id);
     void DumpScreenInfoById(ScreenId id);
     void DumpScreenPropertyById(ScreenId id);
+    void ShowNotifyFoldStatusChangedInfo();
+    void ShowIllegalArgsInfo();
 
 private:
     int fd_;

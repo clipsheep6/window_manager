@@ -14,11 +14,13 @@
  */
 
 #include "session/host/include/sub_session.h"
+#include "screen_session_manager/include/screen_session_manager_client.h"
 
 #include "key_event.h"
 #include "parameters.h"
 #include "pointer_event.h"
 #include "window_manager_hilog.h"
+
 
 namespace OHOS::Rosen {
 namespace {
@@ -28,7 +30,10 @@ constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SubSes
 SubSession::SubSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback)
     : SceneSession(info, specificCallback)
 {
-    moveDragController_ = new (std::nothrow) MoveDragController(GetPersistentId());
+    {
+        std::unique_lock<std::shared_mutex> lock(moveDragControllerMutex_);
+        moveDragController_ = new (std::nothrow) MoveDragController(GetPersistentId());
+    }
     SetMoveDragCallback();
     TLOGD(WmsLogTag::WMS_LIFE, "Create SubSession");
 }
@@ -109,6 +114,7 @@ WSError SubSession::Reconnect(const sptr<ISessionStage>& sessionStage, const spt
 WSError SubSession::ProcessPointDownSession(int32_t posX, int32_t posY)
 {
     const auto& id = GetPersistentId();
+    std::shared_lock<std::shared_mutex> lock(parentSessionMutex_);
     WLOGFI("id: %{public}d, type: %{public}d", id, GetWindowType());
     if (parentSession_ && parentSession_->CheckDialogOnForeground()) {
         WLOGFI("Has dialog foreground, id: %{public}d, type: %{public}d", id, GetWindowType());
@@ -130,6 +136,7 @@ WSError SubSession::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEv
         WLOGFE("KeyEvent is nullptr");
         return WSError::WS_ERROR_NULLPTR;
     }
+    std::shared_lock<std::shared_mutex> lock(parentSessionMutex_);
     if (parentSession_ && parentSession_->CheckDialogOnForeground()) {
         TLOGD(WmsLogTag::WMS_DIALOG, "Its main window has dialog on foreground, not transfer pointer event");
         return WSError::WS_ERROR_INVALID_PERMISSION;
@@ -137,6 +144,12 @@ WSError SubSession::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEv
 
     WSError ret = Session::TransferKeyEvent(keyEvent);
     return ret;
+}
+
+int32_t SubSession::GetMissionId() const
+{
+    std::shared_lock<std::shared_mutex> lock(parentSessionMutex_);
+    return parentSession_ != nullptr ? parentSession_->GetPersistentId() : SceneSession::GetMissionId();
 }
 
 void SubSession::UpdatePointerArea(const WSRect& rect)
@@ -161,5 +174,29 @@ bool SubSession::CheckPointerEventDispatch(const std::shared_ptr<MMI::PointerEve
         return false;
     }
     return true;
+}
+
+bool SubSession::IfNotNeedAvoidKeyBoardForSplit()
+{
+    if (ScreenSessionManagerClient::GetInstance().IsFoldable() &&
+            ScreenSessionManagerClient::GetInstance().GetFoldStatus() != OHOS::Rosen::FoldStatus::FOLDED) {
+        return false;
+    }
+    if (GetParentSession() != nullptr &&
+            GetParentSession()->GetWindowMode() != WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        return false;
+    }
+    if (!Session::GetFocused() || Session::GetSessionRect().posY_ == 0) {
+        return false;
+    }
+    return true;
+}
+
+void SubSession::RectCheck(uint32_t curWidth, uint32_t curHeight)
+{
+    uint32_t minWidth = GetSystemConfig().miniWidthOfSubWindow_;
+    uint32_t minHeight = GetSystemConfig().miniHeightOfSubWindow_;
+    uint32_t maxFloatingWindowSize = GetSystemConfig().maxFloatingWindowSize_;
+    RectSizeCheckProcess(curWidth, curHeight, minWidth, minHeight, maxFloatingWindowSize);
 }
 } // namespace OHOS::Rosen

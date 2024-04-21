@@ -50,6 +50,7 @@ ohos_static_library("libwm_static") {
     "../utils/include",
     "../window_scene/intention_event/service/anr_manager/include",
     "../window_scene/intention_event/framework/anr_handler/include",
+    "${window_base_path}/interfaces/innerkits/dm",
     "${window_base_path}/window_scene/intention_event/include",
   ]
 
@@ -58,10 +59,12 @@ ohos_static_library("libwm_static") {
     "src/extension_window.cpp",
     "src/extension_window_impl.cpp",
     "src/input_transfer_station.cpp",
+    "src/pattern_detach_callback.cpp",
     "src/picture_in_picture_controller.cpp",
     "src/picture_in_picture_manager.cpp",
     "src/picture_in_picture_option.cpp",
     "src/root_scene.cpp",
+    "src/screen_scene.cpp",
     "src/static_call.cpp",
     "src/vsync_station.cpp",
     "src/window.cpp",
@@ -76,10 +79,11 @@ ohos_static_library("libwm_static") {
     "src/window_manager_agent.cpp",
     "src/window_option.cpp",
     "src/window_prepare_terminate.cpp",
-    "src/window_rate_manager.cpp",
     "src/window_scene.cpp",
     "src/window_scene_session_impl.cpp",
     "src/window_session_impl.cpp",
+    "src/zidl/pattern_detach_callback_proxy.cpp",
+    "src/zidl/pattern_detach_callback_stub.cpp",
     "src/zidl/window_manager_agent_stub.cpp",
     "src/zidl/window_stub.cpp",
   ]
@@ -192,6 +196,7 @@ ohos_shared_library("libwm") {
     "../utils/include",
     "../window_scene/intention_event/service/anr_manager/include",
     "../window_scene/intention_event/framework/anr_handler/include",
+    "${window_base_path}/interfaces/innerkits/dm",
     "${window_base_path}/window_scene/intention_event/include",
   ]
 
@@ -200,10 +205,12 @@ ohos_shared_library("libwm") {
     "src/extension_window.cpp",
     "src/extension_window_impl.cpp",
     "src/input_transfer_station.cpp",
+    "src/pattern_detach_callback.cpp",
     "src/picture_in_picture_controller.cpp",
     "src/picture_in_picture_manager.cpp",
     "src/picture_in_picture_option.cpp",
     "src/root_scene.cpp",
+    "src/screen_scene.cpp",
     "src/static_call.cpp",
     "src/vsync_station.cpp",
     "src/window.cpp",
@@ -218,10 +225,11 @@ ohos_shared_library("libwm") {
     "src/window_manager_agent.cpp",
     "src/window_option.cpp",
     "src/window_prepare_terminate.cpp",
-    "src/window_rate_manager.cpp",
     "src/window_scene.cpp",
     "src/window_scene_session_impl.cpp",
     "src/window_session_impl.cpp",
+    "src/zidl/pattern_detach_callback_proxy.cpp",
+    "src/zidl/pattern_detach_callback_stub.cpp",
     "src/zidl/window_manager_agent_stub.cpp",
     "src/zidl/window_stub.cpp",
   ]
@@ -248,6 +256,7 @@ ohos_shared_library("libwm") {
   external_deps = [
     "ability_base:configuration",
     "ability_base:want",
+    "ability_base:zuri",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
@@ -256,6 +265,8 @@ ohos_shared_library("libwm") {
     "ace_engine:ace_xcomponent_controller",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "data_share:datashare_common",
+    "data_share:datashare_consumer",
     "eventhandler:libeventhandler",
     "graphic_2d:librender_service_client",
     "graphic_2d:window_animation",
@@ -319,34 +330,27 @@ ohos_shared_library("libwm") {
 
 ## Build libwm_lite.so
 ohos_shared_library("libwm_lite") {
-  defines = []
-  if (scene_board_enabled) {
-    defines += [ "USE_ADAPTER_LITE" ]
-    include_dirs = [
-      "../utils/include",
-      "${accessibility_path}/interfaces/innerkits/common/include/",
-    ]
-    sources = [
-      "src/window_adapter_lite.cpp",
-      "src/window_manager_agent_lite.cpp",
-      "src/window_manager_lite.cpp",
-      "src/window_option.cpp",
-      "src/zidl/window_manager_agent_stub.cpp",
-    ]
+  defines = [ "USE_ADAPTER_LITE" ]
+  include_dirs = [ "../utils/include" ]
+  sources = [
+    "../utils/src/window_visibility_info.cpp",
+    "src/window_adapter_lite.cpp",
+    "src/window_manager_agent_lite.cpp",
+    "src/window_manager_lite.cpp",
+    "src/window_option.cpp",
+    "src/zidl/window_manager_agent_stub.cpp",
+  ]
 
-    configs = [
-      ":libwm_private_config",
-      "../resources/config/build:coverage_flags",
-    ]
+  configs = [
+    ":libwm_private_config",
+    "../resources/config/build:coverage_flags",
+  ]
 
-    deps = [
-      "${window_base_path}/utils:libwmutil",
-      "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",
-      "${window_base_path}/window_scene/session_manager:session_manager_lite",
-    ]
-
-    public_deps = [ "${window_base_path}/utils:libwmutil_base" ]
-  }
+  deps = [
+    "${window_base_path}/utils:libwmutil_base",
+    "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",
+    "${window_base_path}/window_scene/session_manager:session_manager_lite",
+  ]
 
   public_configs = [ ":libwm_public_config" ]
 
@@ -356,6 +360,7 @@ ohos_shared_library("libwm_lite") {
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hilog:libhilog",
+    "image_framework:image_native",
     "init:libbegetutil",
     "input:libmmi-client",
     "ipc:ipc_single",

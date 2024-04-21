@@ -139,9 +139,10 @@ WSError SceneSession::Foreground(sptr<WindowSessionProperty> property)
             return ret;
         }
         auto sessionProperty = session->GetSessionProperty();
-        if (session->leashWinSurfaceNode_ && sessionProperty) {
+        auto leashWinSurfaceNode = session->GetLeashWinSurfaceNode();
+        if (leashWinSurfaceNode && sessionProperty) {
             bool lastPrivacyMode = sessionProperty->GetPrivacyMode() || sessionProperty->GetSystemPrivacyMode();
-            session->leashWinSurfaceNode_->SetSecurityLayer(lastPrivacyMode);
+            leashWinSurfaceNode->SetSecurityLayer(lastPrivacyMode);
         }
         if (session->specificCallback_ != nullptr) {
             session->specificCallback_->onUpdateAvoidArea_(session->GetPersistentId());
@@ -305,7 +306,7 @@ WSError SceneSession::OnSessionEvent(SessionEvent event)
 void SceneSession::RegisterSessionChangeCallback(const sptr<SceneSession::SessionChangeCallback>&
     sessionChangeCallback)
 {
-    std::lock_guard<std::mutex> guard(sessionChangeCbMutex_);
+    std::unique_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     sessionChangeCallback_ = sessionChangeCallback;
 }
 
@@ -652,6 +653,7 @@ WSError SceneSession::BindDialogSessionTarget(const sptr<SceneSession>& sceneSes
         TLOGE(WmsLogTag::WMS_DIALOG, "dialog session is null");
         return WSError::WS_ERROR_NULLPTR;
     }
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->onBindDialogTarget_) {
         TLOGI(WmsLogTag::WMS_DIALOG, "id: %{public}d", sceneSession->GetPersistentId());
         sessionChangeCallback_->onBindDialogTarget_(sceneSession);
@@ -662,15 +664,17 @@ WSError SceneSession::BindDialogSessionTarget(const sptr<SceneSession>& sceneSes
 WSError SceneSession::SetSystemBarProperty(WindowType type, SystemBarProperty systemBarProperty)
 {
     TLOGD(WmsLogTag::WMS_IMMS, "persistentId():%{public}u type:%{public}u"
-        "enable:%{public}u bgColor:%{public}x Color:%{public}x",
+        "enable:%{public}u bgColor:%{public}x Color:%{public}x enableAnimation:%{public}u settingFlag:%{public}u",
         GetPersistentId(), static_cast<uint32_t>(type),
-        systemBarProperty.enable_, systemBarProperty.backgroundColor_, systemBarProperty.contentColor_);
+        systemBarProperty.enable_, systemBarProperty.backgroundColor_, systemBarProperty.contentColor_,
+        systemBarProperty.enableAnimation_, systemBarProperty.settingFlag_);
     auto property = GetSessionProperty();
     if (property == nullptr) {
         TLOGE(WmsLogTag::WMS_DIALOG, "property is null");
         return WSError::WS_ERROR_NULLPTR;
     }
     property->SetSystemBarProperty(type, systemBarProperty);
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->OnSystemBarPropertyChange_) {
         sessionChangeCallback_->OnSystemBarPropertyChange_(property->GetSystemBarProperty());
     }
@@ -728,6 +732,7 @@ WSError SceneSession::OnNeedAvoid(bool status)
 WSError SceneSession::OnShowWhenLocked(bool showWhenLocked)
 {
     WLOGFD("SceneSession ShowWhenLocked status:%{public}d", static_cast<int32_t>(showWhenLocked));
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->OnShowWhenLocked_) {
         sessionChangeCallback_->OnShowWhenLocked_(showWhenLocked);
     }
@@ -795,9 +800,11 @@ void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
         }
         float vpr = 3.5f; // 3.5f: default pixel ratio
         auto display = DisplayManager::GetInstance().GetDefaultDisplay();
-        if (display) {
-            vpr = display->GetVirtualPixelRatio();
+        if (display == nullptr) {
+            WLOGFE("display is null");
+            return;
         }
+        vpr = display->GetVirtualPixelRatio();
         int32_t floatingBarHeight = 32; // 32: floating windowBar Height
         avoidArea.topRect_.height_ = vpr * floatingBarHeight;
         avoidArea.topRect_.width_ = display->GetWidth();
@@ -824,7 +831,8 @@ void SceneSession::GetKeyboardAvoidArea(WSRect& rect, AvoidArea& avoidArea)
     if (((Session::GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
           WindowHelper::IsMainWindow(Session::GetWindowType())) ||
          (WindowHelper::IsSubWindow(Session::GetWindowType()) && GetParentSession() != nullptr &&
-          GetParentSession()->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING)) &&
+          GetParentSession()->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING) ||
+          IfNotNeedAvoidKeyBoardForSplit()) &&
         (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
          system::GetParameter("const.product.devicetype", "unknown") == "tablet")) {
         return;
@@ -911,6 +919,19 @@ AvoidArea SceneSession::GetAvoidAreaByType(AvoidAreaType type)
             TLOGE(WmsLogTag::WMS_IMMS, "session is null");
             return {};
         }
+
+        WindowMode mode = session->GetWindowMode();
+        WindowType winType = session->GetWindowType();
+        if (type != AvoidAreaType::TYPE_KEYBOARD && mode == WindowMode::WINDOW_MODE_FLOATING &&
+            (!WindowHelper::IsMainWindow(winType) ||
+            (system::GetParameter("const.product.devicetype", "unknown") != "phone" &&
+            system::GetParameter("const.product.devicetype", "unknown") != "tablet"))) {
+            TLOGI(WmsLogTag::WMS_IMMS,
+                "Id: %{public}d, avoidAreaType:%{public}u, windowMode:%{public}u, return default avoid area.",
+                session->GetPersistentId(), static_cast<uint32_t>(type), static_cast<uint32_t>(mode));
+            return {};
+        }
+
         AvoidArea avoidArea;
         WSRect rect = session->GetSessionRect();
         TLOGD(WmsLogTag::WMS_IMMS, "GetAvoidAreaByType avoidAreaType:%{public}u", type);
@@ -1154,13 +1175,17 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
             TLOGI(WmsLogTag::WMS_DIALOG, "There is dialog window foreground");
             return WSError::WS_OK;
         }
+        std::shared_lock<std::shared_mutex> lock(moveDragControllerMutex_);
         if (!moveDragController_) {
             WLOGE("moveDragController_ is null");
             return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
         }
         if (property->GetDragEnabled()) {
             auto is2in1 = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
-            if (is2in1 && moveDragController_->ConsumeDragEvent(pointerEvent, winRect_, property, systemConfig_)) {
+            bool freeMultiWindowSupportDevices = systemConfig_.freeMultiWindowSupport_ &&
+                systemConfig_.freeMultiWindowEnable_;
+            if ((is2in1 || freeMultiWindowSupportDevices) &&
+                moveDragController_->ConsumeDragEvent(pointerEvent, winRect_, property, systemConfig_)) {
                 moveDragController_->UpdateGravityWhenDrag(pointerEvent, surfaceNode_);
                 PresentFoucusIfNeed(pointerEvent->GetPointerAction());
                 pointerEvent->MarkProcessed();
@@ -1199,8 +1224,9 @@ WSError SceneSession::RequestSessionBack(bool needMoveToBackground)
             if (rsTransaction) {
                 rsTransaction->Begin();
             }
-            if (session->leashWinSurfaceNode_) {
-                session->leashWinSurfaceNode_->SetForceUIFirst(true);
+            auto leashWinSurfaceNode = session->GetLeashWinSurfaceNode();
+            if (leashWinSurfaceNode) {
+                leashWinSurfaceNode->SetForceUIFirst(true);
                 WLOGFI("leashWinSurfaceNode_ SetForceUIFirst id:%{public}u!", session->GetPersistentId());
             } else {
                 WLOGFI("failed, leashWinSurfaceNode_ null id:%{public}u", session->GetPersistentId());
@@ -1364,6 +1390,7 @@ bool SceneSession::FixRectByAspectRatio(WSRect& rect)
 
 void SceneSession::SetMoveDragCallback()
 {
+    std::shared_lock<std::shared_mutex> lock(moveDragControllerMutex_);
     if (moveDragController_) {
         MoveDragCallback callBack = [this](const SizeChangeReason& reason) {
             this->OnMoveDragCallback(reason);
@@ -1374,6 +1401,11 @@ void SceneSession::SetMoveDragCallback()
 
 void SceneSession::OnMoveDragCallback(const SizeChangeReason& reason)
 {
+    std::shared_lock<std::shared_mutex> lock(moveDragControllerMutex_);
+    if (!moveDragController_) {
+        WLOGE("moveDragController_ is null");
+        return;
+    }
     WSRect rect = moveDragController_->GetTargetRect();
     WLOGFD("OnMoveDragCallback rect: [%{public}d, %{public}d, %{public}u, %{public}u], reason : %{public}d",
         rect.posX_, rect.posY_, rect.width_, rect.height_, reason);
@@ -1434,9 +1466,10 @@ void SceneSession::SetSurfaceBounds(const WSRect& rect)
     if (rsTransaction) {
         rsTransaction->Begin();
     }
-    if (surfaceNode_ && leashWinSurfaceNode_) {
-        leashWinSurfaceNode_->SetBounds(rect.posX_, rect.posY_, rect.width_, rect.height_);
-        leashWinSurfaceNode_->SetFrame(rect.posX_, rect.posY_, rect.width_, rect.height_);
+    auto leashWinSurfaceNode = GetLeashWinSurfaceNode();
+    if (surfaceNode_ && leashWinSurfaceNode) {
+        leashWinSurfaceNode->SetBounds(rect.posX_, rect.posY_, rect.width_, rect.height_);
+        leashWinSurfaceNode->SetFrame(rect.posX_, rect.posY_, rect.width_, rect.height_);
         surfaceNode_->SetBounds(0, 0, rect.width_, rect.height_);
         surfaceNode_->SetFrame(0, 0, rect.width_, rect.height_);
     } else if (WindowHelper::IsPipWindow(GetWindowType()) && surfaceNode_) {
@@ -1501,11 +1534,6 @@ int32_t SceneSession::GetParentPersistentId() const
         return property->GetParentPersistentId();
     }
     return INVALID_SESSION_ID;
-}
-
-const std::string& SceneSession::GetWindowName() const
-{
-    return GetSessionProperty()->GetWindowName();
 }
 
 const std::string& SceneSession::GetWindowNameAllType() const
@@ -1627,8 +1655,9 @@ void SceneSession::SetPrivacyMode(bool isPrivacy)
     property->SetPrivacyMode(isPrivacy);
     property->SetSystemPrivacyMode(isPrivacy);
     surfaceNode_->SetSecurityLayer(isPrivacy);
-    if (leashWinSurfaceNode_ != nullptr) {
-        leashWinSurfaceNode_->SetSecurityLayer(isPrivacy);
+    auto leashWinSurfaceNode = GetLeashWinSurfaceNode();
+    if (leashWinSurfaceNode != nullptr) {
+        leashWinSurfaceNode->SetSecurityLayer(isPrivacy);
     }
     RSTransaction::FlushImplicitTransaction();
 }
@@ -1651,8 +1680,9 @@ void SceneSession::SetSystemSceneOcclusionAlpha(double alpha)
     uint8_t alpha8bit = static_cast<uint8_t>(alpha * 255);
     WLOGFI("surfaceNode SetAbilityBGAlpha=%{public}u.", alpha8bit);
     surfaceNode_->SetAbilityBGAlpha(alpha8bit);
-    if (leashWinSurfaceNode_ != nullptr) {
-        leashWinSurfaceNode_->SetAbilityBGAlpha(alpha8bit);
+    auto leashWinSurfaceNode = GetLeashWinSurfaceNode();
+    if (leashWinSurfaceNode != nullptr) {
+        leashWinSurfaceNode->SetAbilityBGAlpha(alpha8bit);
     }
     RSTransaction::FlushImplicitTransaction();
 }
@@ -1677,6 +1707,7 @@ WSError SceneSession::UpdateWindowAnimationFlag(bool needDefaultAnimationFlag)
 void SceneSession::SetWindowAnimationFlag(bool needDefaultAnimationFlag)
 {
     needDefaultAnimationFlag_ = needDefaultAnimationFlag;
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ && sessionChangeCallback_->onWindowAnimationFlagChange_) {
         sessionChangeCallback_->onWindowAnimationFlagChange_(needDefaultAnimationFlag);
     }
@@ -1702,6 +1733,7 @@ bool SceneSession::IsAppSession() const
 void SceneSession::NotifyIsCustomAnimationPlaying(bool isPlaying)
 {
     WLOGFI("id %{public}d %{public}u", GetPersistentId(), isPlaying);
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->onIsCustomAnimationPlaying_) {
         sessionChangeCallback_->onIsCustomAnimationPlaying_(isPlaying);
     }
@@ -1775,6 +1807,7 @@ void SceneSession::NotifyTouchOutside()
         WLOGFD("Notify sessionStage TouchOutside");
         sessionStage_->NotifyTouchOutside();
     }
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ && sessionChangeCallback_->OnTouchOutside_) {
         WLOGFD("Notify sessionChangeCallback TouchOutside");
         sessionChangeCallback_->OnTouchOutside_();
@@ -1792,6 +1825,7 @@ void SceneSession::NotifyWindowVisibility()
 
 bool SceneSession::CheckOutTouchOutsideRegister()
 {
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ && sessionChangeCallback_->OnTouchOutside_) {
         return true;
     }
@@ -1802,6 +1836,7 @@ void SceneSession::SetRequestedOrientation(Orientation orientation)
 {
     WLOGFI("id: %{public}d orientation: %{public}u", GetPersistentId(), static_cast<uint32_t>(orientation));
     GetSessionProperty()->SetRequestedOrientation(orientation);
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ && sessionChangeCallback_->OnRequestedOrientationChange_) {
         sessionChangeCallback_->OnRequestedOrientationChange_(static_cast<uint32_t>(orientation));
     }
@@ -1816,9 +1851,12 @@ void SceneSession::NotifyForceHideChange(bool hide)
         return;
     }
     property->SetForceHide(hide);
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ && sessionChangeCallback_->OnForceHideChange_) {
         sessionChangeCallback_->OnForceHideChange_(hide);
     }
+    SetForceTouchable(!hide);
+    SetForceHideState(hide);
 }
 
 Orientation SceneSession::GetRequestedOrientation() const
@@ -1874,11 +1912,13 @@ void SceneSession::SetAbilitySessionInfo(std::shared_ptr<AppExecFwk::AbilityInfo
 
 void SceneSession::SetSelfToken(sptr<IRemoteObject> selfToken)
 {
+    std::unique_lock<std::shared_mutex> lock(selfTokenMutex_);
     selfToken_ = selfToken;
 }
 
 sptr<IRemoteObject> SceneSession::GetSelfToken() const
 {
+    std::shared_lock<std::shared_mutex> lock(selfTokenMutex_);
     return selfToken_;
 }
 
@@ -2253,6 +2293,7 @@ std::vector<sptr<SceneSession>> SceneSession::GetSubSession() const
 WSRect SceneSession::GetSessionTargetRect() const
 {
     WSRect rect;
+    std::shared_lock<std::shared_mutex> lock(moveDragControllerMutex_);
     if (moveDragController_) {
         rect = moveDragController_->GetTargetRect();
     } else {
@@ -2263,6 +2304,7 @@ WSRect SceneSession::GetSessionTargetRect() const
 
 void SceneSession::SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFunc& func)
 {
+    std::shared_lock<std::shared_mutex> lock(moveDragControllerMutex_);
     if (moveDragController_) {
         moveDragController_->SetWindowDragHotAreaFunc(func);
     }
@@ -2355,6 +2397,7 @@ bool SceneSession::IsDirtyWindow()
 
 void SceneSession::NotifyUILostFocus()
 {
+    std::shared_lock<std::shared_mutex> lock(moveDragControllerMutex_);
     if (moveDragController_) {
         moveDragController_->OnLostFocus();
     }
@@ -2445,7 +2488,6 @@ WSError SceneSession::AddOrRemoveSecureExtSession(int32_t persistentId, bool sho
 
 void SceneSession::UpdateExtWindowFlags(int32_t extPersistentId, uint32_t extWindowFlags)
 {
-    std::shared_lock<std::shared_mutex> lock(extWindowFlagsMapMutex_);
     auto iter = extWindowFlagsMap_.find(extPersistentId);
     if (iter == extWindowFlagsMap_.end()) {
         extWindowFlagsMap_.insert({ extPersistentId, extWindowFlags });
@@ -2456,7 +2498,6 @@ void SceneSession::UpdateExtWindowFlags(int32_t extPersistentId, uint32_t extWin
 bool SceneSession::IsExtWindowHasWaterMarkFlag()
 {
     bool isExtWindowHasWaterMarkFlag = false;
-    std::shared_lock<std::shared_mutex> lock(extWindowFlagsMapMutex_);
     for (const auto& iter: extWindowFlagsMap_) {
         auto& extWindowFlags = iter.second;
         if (!extWindowFlags) {
@@ -2481,7 +2522,6 @@ void SceneSession::NotifyDisplayMove(DisplayId from, DisplayId to)
 
 void SceneSession::RomoveExtWindowFlags(int32_t extPersistentId)
 {
-    std::shared_lock<std::shared_mutex> lock(extWindowFlagsMapMutex_);
     auto iter = extWindowFlagsMap_.find(extPersistentId);
     if (iter != extWindowFlagsMap_.end()) {
         extWindowFlagsMap_.erase(iter);
@@ -2489,7 +2529,6 @@ void SceneSession::RomoveExtWindowFlags(int32_t extPersistentId)
 }
 void SceneSession::ClearExtWindowFlags()
 {
-    std::shared_lock<std::shared_mutex> lock(extWindowFlagsMapMutex_);
     extWindowFlagsMap_.clear();
 }
 
@@ -2506,5 +2545,15 @@ WSError SceneSession::UpdateRectChangeListenerRegistered(bool isRegister)
     };
     PostTask(task, "UpdateRectChangeListenerRegistered");
     return WSError::WS_OK;
+}
+
+void SceneSession::SetForceHideState(bool hideFlag)
+{
+    forceHideState_ = hideFlag;
+}
+
+bool SceneSession::GetForceHideState() const
+{
+    return forceHideState_;
 }
 } // namespace OHOS::Rosen

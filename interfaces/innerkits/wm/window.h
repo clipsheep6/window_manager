@@ -1276,6 +1276,14 @@ public:
      */
     virtual Ace::UIContent* GetUIContent() const { return nullptr; }
     /**
+     * @brief Get ui content object.
+     *
+     * @param winId window id.
+     *
+     * @return UIContent object of ACE.
+     */
+    virtual Ace::UIContent* GetUIContentWithId(uint32_t winId) const { return nullptr; }
+    /**
      * @brief Window handle new want.
      *
      * @param want Want object of AAFwk.
@@ -1356,7 +1364,7 @@ public:
      * @return WMError
      */
     virtual WMError Maximize() { return WMError::WM_OK; }
-    
+
     /**
      * @brief maximize window with layoutOption.
      *
@@ -1899,6 +1907,26 @@ public:
      * @return WMError
     */
     virtual WMError ClearKeyEventFilter() { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;}
+
+    /**
+     * @brief get callingWindow windowStatus.
+     * @param windowStatus
+     * @return WM_OK means set success, others means set Failed.
+     */
+    virtual WMError GetCallingWindowWindowStatus(WindowStatus& windowStatus) const
+    {
+        return WMError::WM_OK;
+    }
+
+    /**
+     * @brief get callingWindow windowStatus
+     * @param rect.
+     * @return WM_OK means set success, others means set failed
+     */
+    virtual WMError GetCallingWindowRect(Rect& rect) const
+    {
+        return WMError::WM_OK;
+    }
 };
 }
 }

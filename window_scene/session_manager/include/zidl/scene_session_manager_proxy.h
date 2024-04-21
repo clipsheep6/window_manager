@@ -38,7 +38,9 @@ public:
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
         sptr<ISession>& session, sptr<WindowSessionProperty> property = nullptr,
         sptr<IRemoteObject> token = nullptr) override;
-    WSError DestroyAndDisconnectSpecificSession(const int32_t& persistentId) override;
+    WSError DestroyAndDisconnectSpecificSession(const int32_t persistentId) override;
+    WSError DestroyAndDisconnectSpecificSessionWithDetachCallback(const int32_t persistentId,
+        const sptr<IRemoteObject>& callback) override;
     WMError UpdateSessionProperty(const sptr<WindowSessionProperty>& property, WSPropertyChangeAction action) override;
     WSError BindDialogSessionTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken) override;
     WMError RequestFocusStatus(int32_t persistentId, bool isFocused, bool byForeground = true) override;
@@ -67,6 +69,8 @@ public:
     WSError GetSessionInfos(const std::string& deviceId, int32_t numMax,
                             std::vector<SessionInfoBean>& sessionInfos) override;
     WSError GetSessionInfo(const std::string& deviceId, int32_t persistentId, SessionInfoBean& sessionInfo) override;
+    WSError GetSessionInfoByContinueSessionId(const std::string& continueSessionId,
+        SessionInfoBean& sessionInfo) override;
 
     WSError DumpSessionAll(std::vector<std::string> &infos) override;
     WSError DumpSessionWithId(int32_t persistentId, std::vector<std::string> &infos) override;
@@ -98,6 +102,9 @@ public:
     WSError AddOrRemoveSecureExtSession(int32_t persistentId, int32_t parentId, bool shouldHide) override;
     WSError UpdateExtWindowFlags(int32_t parentId, int32_t persistentId, uint32_t extWindowFlags) override;
     WSError GetHostWindowRect(int32_t hostWindowId, Rect& rect) override;
+    WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus) override;
+    WMError GetCallingWindowRect(int32_t persistentId, Rect& rect) override;
+    WMError GetWindowBackHomeStatus(bool &isBackHome) override;
 
 private:
     template<typename T>

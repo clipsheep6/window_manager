@@ -88,7 +88,8 @@ enum class WindowType : uint32_t {
     SYSTEM_WINDOW_END = SYSTEM_SUB_WINDOW_END,
 
     WINDOW_TYPE_UI_EXTENSION = 3000,
-    WINDOW_TYPE_SCENE_BOARD
+    WINDOW_TYPE_SCENE_BOARD,
+    WINDOW_TYPE_KEYBOARD_PANEL
 };
 
 /**
@@ -229,6 +230,15 @@ enum class WindowStatus : uint32_t {
     WINDOW_STATUS_SPLITSCREEN
 };
 
+/**
+ * @brief Enumerates setting flag of systemStatusBar
+ */
+enum class SystemBarSettingFlag : uint32_t {
+    DEFAULT_SETTING = 0,
+    COLOR_SETTING = 1,
+    ENABLE_SETTING = 1 << 1,
+    ALL_SETTING = 0b11
+};
 
 /**
  * @brief Used to map from WMError to WmErrorCode.
@@ -386,6 +396,15 @@ namespace {
     constexpr float MAXIMUM_BRIGHTNESS = 1.0f;
     constexpr int32_t INVALID_PID = -1;
     constexpr int32_t INVALID_UID = -1;
+    constexpr int32_t INVALID_USER_ID = -1;
+    constexpr int32_t SYSTEM_USERID = 0;
+    constexpr int32_t BASE_USER_RANGE = 200000;
+    constexpr int32_t DEFAULT_SCREEN_ID = 0;
+}
+
+inline int32_t GetUserIdByUid(int32_t uid)
+{
+    return uid / BASE_USER_RANGE;
 }
 
 /**
@@ -477,12 +496,24 @@ struct SystemBarProperty {
     bool enable_;
     uint32_t backgroundColor_;
     uint32_t contentColor_;
-    SystemBarProperty() : enable_(true), backgroundColor_(SYSTEM_COLOR_BLACK), contentColor_(SYSTEM_COLOR_WHITE) {}
+    bool enableAnimation_;
+    SystemBarSettingFlag settingFlag_;
+    SystemBarProperty() : enable_(true), backgroundColor_(SYSTEM_COLOR_BLACK), contentColor_(SYSTEM_COLOR_WHITE),
+                          enableAnimation_(false), settingFlag_(SystemBarSettingFlag::DEFAULT_SETTING) {}
     SystemBarProperty(bool enable, uint32_t background, uint32_t content)
-        : enable_(enable), backgroundColor_(background), contentColor_(content) {}
+        : enable_(enable), backgroundColor_(background), contentColor_(content), enableAnimation_(false),
+          settingFlag_(SystemBarSettingFlag::DEFAULT_SETTING) {}
+    SystemBarProperty(bool enable, uint32_t background, uint32_t content, bool enableAnimation)
+        : enable_(enable), backgroundColor_(background), contentColor_(content), enableAnimation_(enableAnimation),
+          settingFlag_(SystemBarSettingFlag::DEFAULT_SETTING) {}
+    SystemBarProperty(bool enable, uint32_t background, uint32_t content,
+                      bool enableAnimation, SystemBarSettingFlag settingFlag)
+        : enable_(enable), backgroundColor_(background), contentColor_(content), enableAnimation_(enableAnimation),
+          settingFlag_(settingFlag) {}
     bool operator == (const SystemBarProperty& a) const
     {
-        return (enable_ == a.enable_ && backgroundColor_ == a.backgroundColor_ && contentColor_ == a.contentColor_);
+        return (enable_ == a.enable_ && backgroundColor_ == a.backgroundColor_ && contentColor_ == a.contentColor_ &&
+            enableAnimation_ == a.enableAnimation_);
     }
 };
 
@@ -636,6 +667,7 @@ enum class WindowUpdateType : int32_t {
     WINDOW_UPDATE_BOUNDS,
     WINDOW_UPDATE_ACTIVE,
     WINDOW_UPDATE_PROPERTY,
+    WINDOW_UPDATE_ALL,
 };
 
 /**

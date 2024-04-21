@@ -27,6 +27,8 @@ namespace OHOS::PowerMgr {
 namespace OHOS::Rosen {
 namespace PARAM_KEY {
     const std::string PARAM_MISSION_AFFINITY_KEY = "ohos.anco.param.missionAffinity";
+    const std::string PARAM_DMS_CONTINUE_SESSION_ID_KEY = "ohos.dms.continueSessionId";
+    const std::string PARAM_DMS_PERSISTENT_ID_KEY = "ohos.dms.persistentId";
 }
 class SceneSession;
 
@@ -62,7 +64,9 @@ using ClearCallbackMapFunc = std::function<void(bool needRemove, int32_t persist
 using NotifyPrepareClosePiPSessionFunc = std::function<void()>;
 using OnOutsideDownEvent = std::function<void(int32_t x, int32_t y)>;
 using NotifyAddOrRemoveSecureSessionFunc = std::function<WSError(const sptr<SceneSession>& sceneSession)>;
+using CameraSessionChangeCallback = std::function<void(uint32_t accessTokenId, bool isShowing)>;
 using NotifyLandscapeMultiWindowSessionFunc = std::function<void(bool isLandscapeMultiWindow)>;
+using NotifyKeyboardGravityChangeFunc = std::function<void(SessionGravity gravity)>;
 class SceneSession : public Session {
 public:
     // callback for notify SceneSessionManager
@@ -78,6 +82,7 @@ public:
         GetAINavigationBarArea onGetAINavigationBarArea_;
         OnOutsideDownEvent onOutsideDownEvent_;
         NotifyAddOrRemoveSecureSessionFunc onHandleSecureSessionShouldHide_;
+        CameraSessionChangeCallback onCameraSessionChange_;
     };
 
     // callback for notify SceneBoard
@@ -99,6 +104,7 @@ public:
         ClearCallbackMapFunc clearCallbackFunc_;
         NotifyPrepareClosePiPSessionFunc onPrepareClosePiPSession_;
         NotifyLandscapeMultiWindowSessionFunc onSetLandscapeMultiWindowFunc_;
+        NotifyKeyboardGravityChangeFunc onKeyboardGravityChange_;
     };
 
     // func for change window scene pattern property
@@ -182,11 +188,11 @@ public:
     std::string GetUpdatedIconPath() const;
     std::string GetSessionSnapshotFilePath() const;
     int32_t GetParentPersistentId() const;
-    const std::string& GetWindowName() const;
-    const std::string& GetWindowNameAllType() const;
+    virtual int32_t GetMissionId() const { return persistentId_; };
     Orientation GetRequestedOrientation() const;
     std::vector<sptr<SceneSession>> GetSubSession() const;
     std::shared_ptr<AppExecFwk::AbilityInfo> GetAbilityInfo() const;
+    const std::string& GetWindowNameAllType() const;
     PiPTemplateInfo GetPiPTemplateInfo() const;
 
     bool IsVisible() const;
@@ -244,6 +250,8 @@ public:
     static MaximizeMode maximizeMode_;
     static std::map<int32_t, WSRect> windowDragHotAreaMap_;
     WSError UpdateRectChangeListenerRegistered(bool isRegister) override;
+    void SetForceHideState(bool hideFlag);
+    bool GetForceHideState() const;
 
 protected:
     void NotifyIsCustomAnimationPlaying(bool isPlaying);
@@ -258,8 +266,10 @@ protected:
         + to_string(rect.posX_) + ", " + to_string(rect.posY_) + "]";
     }
 
+    mutable std::shared_mutex sessionChangeCallbackMutex_;
     sptr<SpecificSessionCallback> specificCallback_ = nullptr;
     sptr<SessionChangeCallback> sessionChangeCallback_ = nullptr;
+    mutable std::shared_mutex moveDragControllerMutex_;
     sptr<MoveDragController> moveDragController_ = nullptr;
 
 private:
@@ -284,12 +294,12 @@ private:
     void UpdateWinRectForSystemBar(WSRect& rect);
     bool UpdateInputMethodSessionRect(const WSRect& rect, WSRect& newWinRect, WSRect& newRequestRect);
     void HandleCastScreenConnection(SessionInfo& info, sptr<SceneSession> session);
-
+    
     NotifySessionRectChangeFunc sessionRectChangeFunc_;
     static wptr<SceneSession> enterSession_;
     static std::mutex enterSessionMutex_;
-    mutable std::mutex sessionChangeCbMutex_;
     int32_t collaboratorType_ = CollaboratorType::DEFAULT_TYPE;
+    mutable std::shared_mutex selfTokenMutex_;
     sptr<IRemoteObject> selfToken_ = nullptr;
     WSRect lastSafeRect = { 0, 0, 0, 0 };
     std::vector<sptr<SceneSession>> subSession_;
@@ -299,9 +309,8 @@ private:
     std::atomic_bool isVisibleForAccessibility_ { true };
     std::atomic_bool shouldHideNonSecureWindows_ { false };
     std::set<int32_t> secureExtSessionSet_;
-    std::shared_mutex extWindowFlagsMapMutex_;
     std::map<int32_t, uint32_t> extWindowFlagsMap_;
-
+    bool forceHideState_ = false;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SCENE_SESSION_H

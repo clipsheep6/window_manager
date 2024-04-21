@@ -100,6 +100,7 @@ public:
     bool GetFocusable() const override;
     std::string GetContentInfo() override;
     Ace::UIContent* GetUIContent() const override;
+    Ace::UIContent* GetUIContentWithId(uint32_t winId) const override;
     PiPTemplateInfo GetPiPTemplateInfo() const;
     void OnNewWant(const AAFwk::Want& want) override;
     WMError SetAPPWindowLabel(const std::string& label) override;
@@ -221,7 +222,9 @@ public:
     void SetDefaultDisplayIdIfNeed();
     WMError RegisterWindowRectChangeListener(const sptr<IWindowRectChangeListener>& listener) override;
     WMError UnregisterWindowRectChangeListener(const sptr<IWindowRectChangeListener>& listener) override;
-
+    virtual WMError GetCallingWindowWindowStatus(WindowStatus& windowStatus) const override;
+    virtual WMError GetCallingWindowRect(Rect& rect) const override;
+    
 protected:
     WMError Connect();
     bool IsWindowSessionInvalid() const;
@@ -254,7 +257,7 @@ protected:
     WMError RegisterExtensionAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener);
     WMError UnregisterExtensionAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener);
 
-    void RefreshNoInteractionTimeoutMonitor(int32_t eventId);
+    void RefreshNoInteractionTimeoutMonitor();
 
     sptr<ISession> hostSession_;
     std::unique_ptr<Ace::UIContent> uiContent_;
@@ -285,6 +288,8 @@ protected:
     static bool isUIExtensionAbilityProcess_;
     virtual WMError SetKeyEventFilter(KeyEventFilterFunc filter) override;
     virtual WMError ClearKeyEventFilter() override;
+    virtual bool IfNotNeedAvoidKeyBoardForSplit();
+    WSError SwitchFreeMultiWindow(bool enable) override;
 private:
     //Trans between colorGamut and colorSpace
     static ColorSpace GetColorSpaceFromSurfaceGamut(GraphicColorGamut colorGamut);
@@ -372,7 +377,7 @@ private:
     // FA only
     sptr<IAceAbilityHandler> aceAbilityHandler_;
 
-    std::atomic<int32_t> lastInteractionEventId_ { -1 };
+    std::atomic<int32_t> lastInteractionEventId_ { 0 };
 
     WindowSizeChangeReason lastSizeChangeReason_ = WindowSizeChangeReason::END;
     bool postTaskDone_ = false;

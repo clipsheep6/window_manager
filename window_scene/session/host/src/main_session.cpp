@@ -22,6 +22,7 @@
 #include "session_helper.h"
 #include "session/host/include/scene_persistent_storage.h"
 #include "window_manager_hilog.h"
+#include "screen_session_manager/include/screen_session_manager_client.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -36,10 +37,13 @@ MainSession::MainSession(const SessionInfo& info, const sptr<SpecificSessionCall
         // persistentId changed due to id conflicts. Need to rename the old snapshot if exists
         scenePersistence_->RenameSnapshotFromOldPersistentId(info.persistentId_);
     }
-    moveDragController_ = new (std::nothrow) MoveDragController(GetPersistentId());
-    if (moveDragController_  != nullptr && specificCallback != nullptr &&
+    {
+        std::unique_lock<std::shared_mutex> lock(moveDragControllerMutex_);
+        moveDragController_ = new (std::nothrow) MoveDragController(GetPersistentId());
+        if (moveDragController_  != nullptr && specificCallback != nullptr &&
         specificCallback->onWindowInputPidChangeCallback_ != nullptr) {
-        moveDragController_->SetNotifyWindowPidChangeCallback(specificCallback_->onWindowInputPidChangeCallback_);
+            moveDragController_->SetNotifyWindowPidChangeCallback(specificCallback->onWindowInputPidChangeCallback_);
+        }
     }
     SetMoveDragCallback();
     std::string key = GetRatioPreferenceKey();
@@ -177,5 +181,28 @@ WSError MainSession::SetTopmost(bool topmost)
 bool MainSession::IsTopmost() const
 {
     return GetSessionProperty()->IsTopmost();
+}
+
+bool MainSession::IfNotNeedAvoidKeyBoardForSplit()
+{
+    if (ScreenSessionManagerClient::GetInstance().IsFoldable() &&
+            ScreenSessionManagerClient::GetInstance().GetFoldStatus() != OHOS::Rosen::FoldStatus::FOLDED) {
+        return false;
+    }
+    if (Session::GetWindowMode() != WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        return false;
+    }
+    if (!Session::GetFocused() || Session::GetSessionRect().posY_ == 0) {
+        return false;
+    }
+    return true;
+}
+
+void MainSession::RectCheck(uint32_t curWidth, uint32_t curHeight)
+{
+    uint32_t minWidth = GetSystemConfig().miniWidthOfMainWindow_;
+    uint32_t minHeight = GetSystemConfig().miniHeightOfMainWindow_;
+    uint32_t maxFloatingWindowSize = GetSystemConfig().maxFloatingWindowSize_;
+    RectSizeCheckProcess(curWidth, curHeight, minWidth, minHeight, maxFloatingWindowSize);
 }
 } // namespace OHOS::Rosen

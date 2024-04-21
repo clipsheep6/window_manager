@@ -32,10 +32,12 @@ public:
     WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
     WSError SetTopmost(bool topmost) override;
     bool IsTopmost() const override;
+    void RectCheck(uint32_t curWidth, uint32_t curHeight) override;
 
 protected:
     void UpdatePointerArea(const WSRect& rect) override;
     bool CheckPointerEventDispatch(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) const override;
+    bool IfNotNeedAvoidKeyBoardForSplit() override;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_MAIN_SESSION_H

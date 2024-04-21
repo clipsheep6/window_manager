@@ -42,14 +42,18 @@ public:
     virtual WMError CheckWindowId(int32_t windowId, int32_t &pid);
     virtual WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos);
     virtual void ClearWindowAdapter();
+    virtual WMError GetWindowBackHomeStatus(bool &isBackHome);
+
 private:
     static inline SingletonDelegator<WindowAdapterLite> delegator;
     bool InitSSMProxy();
+    void OnUserSwitch();
 
     std::recursive_mutex mutex_;
     sptr<IWindowManagerLite> windowManagerServiceProxy_ = nullptr;
     sptr<WMSDeathRecipient> wmsDeath_ = nullptr;
     bool isProxyValid_ { false };
+    bool isRegisteredUserSwitchListener_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

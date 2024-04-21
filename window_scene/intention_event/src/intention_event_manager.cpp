@@ -26,6 +26,7 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "IntentionEventManager" };
+constexpr int32_t TRANSPARENT_FINGER_ID = 10000;
 std::shared_ptr<MMI::PointerEvent> g_lastMouseEvent = nullptr;
 int32_t g_lastLeaveWindowId = -1;
 constexpr int32_t DELAY_TIME = 15;
@@ -168,21 +169,30 @@ void IntentionEventManager::InputEventListener::UpdateLastMouseEvent(
     }
 }
 
+bool IntentionEventManager::InputEventListener::CheckPointerEvent(
+    const std::shared_ptr<MMI::PointerEvent> pointerEvent) const
+{
+    if (pointerEvent == nullptr) {
+        TLOGE(WmsLogTag::WMS_EVENT, "pointerEvent is null");
+        return false;
+    }
+    if (uiContent_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_EVENT, "uiContent_ is null");
+        pointerEvent->MarkProcessed();
+        return false;
+    }
+    if (!SceneSessionManager::GetInstance().IsInputEventEnabled()) {
+        TLOGD(WmsLogTag::WMS_EVENT, "inputEvent is disabled temporarily");
+        pointerEvent->MarkProcessed();
+        return false;
+    }
+    return true;
+}
+
 void IntentionEventManager::InputEventListener::OnInputEvent(
     std::shared_ptr<MMI::PointerEvent> pointerEvent) const
 {
-    if (pointerEvent == nullptr) {
-        TLOGE(WmsLogTag::WMS_EVENT, "OnInputEvent pointerEvent is null");
-        return;
-    }
-    if (uiContent_ == nullptr) {
-        TLOGE(WmsLogTag::WMS_EVENT, "OnInputEvent uiContent_ is null");
-        pointerEvent->MarkProcessed();
-        return;
-    }
-    if (!SceneSessionManager::GetInstance().IsInputEventEnabled()) {
-        TLOGD(WmsLogTag::WMS_EVENT, "OnInputEvent is disabled temporarily");
-        pointerEvent->MarkProcessed();
+    if (!CheckPointerEvent(pointerEvent)) {
         return;
     }
     LogPointInfo(pointerEvent);
@@ -194,8 +204,18 @@ void IntentionEventManager::InputEventListener::OnInputEvent(
         pointerEvent->MarkProcessed();
         return;
     }
+    auto dispatchTimes = pointerEvent->GetDispatchTimes();
+    if (dispatchTimes > 0) {
+        MMI::PointerEvent::PointerItem pointerItem;
+        auto pointerId = pointerEvent->GetPointerId();
+        if (pointerEvent->GetPointerItem(pointerId, pointerItem)) {
+            pointerItem.SetPointerId(pointerId + dispatchTimes * TRANSPARENT_FINGER_ID);
+            pointerEvent->UpdatePointerItem(pointerId, pointerItem);
+            pointerEvent->SetPointerId(pointerId + dispatchTimes * TRANSPARENT_FINGER_ID);
+        }
+    }
     if (action != MMI::PointerEvent::POINTER_ACTION_MOVE) {
-        TLOGI(WmsLogTag::WMS_EVENT, "InputEventListener::OnInputEvent id:%{public}d, wid:%{public}u "
+        TLOGI(WmsLogTag::WMS_EVENT, "id:%{public}d, wid:%{public}u "
             "windowName:%{public}s action:%{public}d isSystem:%{public}d", pointerEvent->GetId(), windowId,
             sceneSession->GetSessionInfo().abilityName_.c_str(), action, sceneSession->GetSessionInfo().isSystem_);
     }
@@ -332,6 +352,7 @@ void IntentionEventManager::InputEventListener::OnInputEvent(
 {
     if (axisEvent == nullptr) {
         TLOGE(WmsLogTag::WMS_EVENT, "axisEvent is nullptr");
+        return;
     }
     if (uiContent_ == nullptr) {
         TLOGE(WmsLogTag::WMS_EVENT, "uiContent_ is null");
