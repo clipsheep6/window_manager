@@ -46,10 +46,10 @@ ohos_shared_library("transactionmanager_napi") {
     "ability_runtime:app_manager",
     "ability_runtime:runtime",
     "c_utils:utils",
+    "ffrt:libffrt",
     "graphic_2d:librender_service_client",
     "hilog:libhilog",
     "napi:ace_napi",
-    "ffrt:libffrt",
   ]
 
   relative_install_dir = "module"
