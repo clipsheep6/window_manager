@@ -115,6 +115,7 @@ private:
     void ProcessForceHideChangeRegister();
     void ProcessTouchOutsideRegister();
     void ProcessWindowDragHotAreaRegister();
+    void ProcessStartMovePositionRegister();
     void ProcessSessionInfoLockedStateChangeRegister();
     void ProcessPrepareClosePiPSessionRegister();
     void ProcessLandscapeMultiWindowRegister();
@@ -155,7 +156,8 @@ private:
     void OnReuqestedOrientationChange(uint32_t orientation);
     void OnForceHideChange(bool hide);
     void OnTouchOutside();
-    void OnWindowDragHotArea(int32_t type, const SizeChangeReason& reason);
+    void OnWindowDragHotArea(uint32_t type, const SizeChangeReason& reason);
+    void OnStartMovePosition(int32_t positionX, int32_t positionY);
     void OnSessionInfoLockedStateChange(bool lockedState);
     void OnPrepareClosePiPSession();
     void OnContextTransparent();
