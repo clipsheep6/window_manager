@@ -64,6 +64,7 @@ config("libmockwms_config") {
     # for scene session manager
     "${window_base_path}/interfaces/innerkits/wm",
     "${window_base_path}/wmserver/include",
+    "../../../graphic/graphic_2d/rosen/modules/platform/image_native",
 
     # for window_manager_hilog
     "${window_base_path}/utils/include",
@@ -104,7 +105,6 @@ ohos_shared_library("sms") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
-    "graphic_2d:image_native",
     "graphic_2d:librender_service_client",
     "hilog:libhilog",
     "image_framework:image_native",
