@@ -823,10 +823,12 @@ __attribute__((no_sanitize("cfi"))) WSError Session::Connect(const sptr<ISession
     surfaceNode_ = surfaceNode;
     abilityToken_ = token;
     systemConfig = systemConfig_;
-    std::shared_lock<std::shared_mutex> lock(propertyMutex_);
-    if (property_ && property_->GetIsNeedUpdateWindowMode() && property) {
-        property->SetIsNeedUpdateWindowMode(true);
-        property->SetWindowMode(property_->GetWindowMode());
+    {
+        std::shared_lock<std::shared_mutex> lock(propertyMutex_);
+        if (property_ && property_->GetIsNeedUpdateWindowMode() && property) {
+            property->SetIsNeedUpdateWindowMode(true);
+            property->SetWindowMode(property_->GetWindowMode());
+        }
     }
     if (SessionHelper::IsMainWindow(GetWindowType()) && GetSessionInfo().screenId_ != -1 && property) {
         property->SetDisplayId(GetSessionInfo().screenId_);
@@ -1390,7 +1392,6 @@ void Session::SetParentSession(const sptr<Session>& session)
         WLOGFW("Session is nullptr");
         return;
     }
-    std::unique_lock<std::shared_mutex> lock(parentSessionMutex_);
     parentSession_ = session;
     TLOGD(WmsLogTag::WMS_SUB, "[WMSDialog][WMSSub]Set parent success, parentId: %{public}d, id: %{public}d",
         session->GetPersistentId(), GetPersistentId());
@@ -1398,7 +1399,6 @@ void Session::SetParentSession(const sptr<Session>& session)
 
 sptr<Session> Session::GetParentSession() const
 {
-    std::shared_lock<std::shared_mutex> lock(parentSessionMutex_);
     return parentSession_;
 }
 
@@ -1560,12 +1560,9 @@ void Session::NotifyPointerEventToRs(int32_t pointAction)
 
 WSError Session::HandleSubWindowClick(int32_t action)
 {
-    {
-        std::shared_lock<std::shared_mutex> lock(parentSessionMutex_);
-        if (parentSession_ && parentSession_->CheckDialogOnForeground()) {
-            TLOGD(WmsLogTag::WMS_DIALOG, "Its main window has dialog on foreground, id: %{public}d", GetPersistentId());
-            return WSError::WS_ERROR_INVALID_PERMISSION;
-        }
+    if (parentSession_ && parentSession_->CheckDialogOnForeground()) {
+        TLOGD(WmsLogTag::WMS_DIALOG, "Its main window has dialog on foreground, id: %{public}d", GetPersistentId());
+        return WSError::WS_ERROR_INVALID_PERMISSION;
     }
     std::shared_lock<std::shared_mutex> lock(propertyMutex_);
     bool raiseEnabled = property_->GetRaiseEnabled() &&
