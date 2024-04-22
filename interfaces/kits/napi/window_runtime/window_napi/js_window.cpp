@@ -5643,6 +5643,88 @@ napi_value JsWindow::OnSetWindowMask(napi_env env, napi_callback_info info)
     return result;
 }
 
+void BindSetWindowFunctions(napi_env env, napi_value object, const char *moduleName)
+{
+    BindNativeFunction(env, object, "setWindowType", moduleName, JsWindow::SetWindowType);
+    BindNativeFunction(env, object, "setWindowMode", moduleName, JsWindow::SetWindowMode);
+    BindNativeFunction(env, object, "setWindowLayoutFullScreen", moduleName, JsWindow::SetWindowLayoutFullScreen);
+    BindNativeFunction(env, object, "setWindowSystemBarEnable", moduleName, JsWindow::SetWindowSystemBarEnable);
+    BindNativeFunction(env, object, "setWindowSystemBarProperties", moduleName, JsWindow::SetWindowSystemBarProperties);
+    BindNativeFunction(env, object, "setWindowColorSpace", moduleName, JsWindow::SetWindowColorSpace);
+    BindNativeFunction(env, object, "setWindowBackgroundColor", moduleName, JsWindow::SetWindowBackgroundColorSync);
+    BindNativeFunction(env, object, "setWindowBrightness", moduleName, JsWindow::SetWindowBrightness);
+    BindNativeFunction(env, object, "setWindowFocusable", moduleName, JsWindow::SetWindowFocusable);
+    BindNativeFunction(env, object, "setWindowKeepScreenOn", moduleName, JsWindow::SetWindowKeepScreenOn);
+    BindNativeFunction(env, object, "setWindowPrivacyMode", moduleName, JsWindow::SetWindowPrivacyMode);
+    BindNativeFunction(env, object, "setWindowTouchable", moduleName, JsWindow::SetWindowTouchable);
+    BindNativeFunction(env, object, "setWindowLimits", moduleName, JsWindow::SetWindowLimits);
+    BindNativeFunction(env, object, "setWindowDecorVisible", moduleName, JsWindow::SetWindowDecorVisible);
+    BindNativeFunction(env, object, "setWindowDecorHeight", moduleName, JsWindow::SetWindowDecorHeight);
+    BindNativeFunction(env, object, "setWindowMask", moduleName, JsWindow::SetWindowMask);
+}
+
+void BindSetFunctions(napi_env env, napi_value object, const char *moduleName)
+{
+    BindNativeFunction(env, object, "setUIContent", moduleName, JsWindow::SetUIContent);
+    BindNativeFunction(env, object, "setFullScreen", moduleName, JsWindow::SetFullScreen);
+    BindNativeFunction(env, object, "setLayoutFullScreen", moduleName, JsWindow::SetLayoutFullScreen);
+    BindNativeFunction(env, object, "setSystemBarEnable", moduleName, JsWindow::SetSystemBarEnable);
+    BindNativeFunction(env, object, "setSystemBarProperties", moduleName, JsWindow::SetSystemBarProperties);
+    BindNativeFunction(env, object, "setColorSpace", moduleName, JsWindow::SetColorSpace);
+    BindNativeFunction(env, object, "setBackgroundColor", moduleName, JsWindow::SetBackgroundColor);
+    BindNativeFunction(env, object, "setBrightness", moduleName, JsWindow::SetBrightness);
+    BindNativeFunction(env, object, "setTopmost", moduleName, JsWindow::SetTopmost);
+    BindNativeFunction(env, object, "setDimBehind", moduleName, JsWindow::SetDimBehind);
+    BindNativeFunction(env, object, "setFocusable", moduleName, JsWindow::SetFocusable);
+    BindNativeFunction(env, object, "setKeepScreenOn", moduleName, JsWindow::SetKeepScreenOn);
+    BindNativeFunction(env, object, "setWakeUpScreen", moduleName, JsWindow::SetWakeUpScreen);
+    BindNativeFunction(env, object, "setOutsideTouchable", moduleName, JsWindow::SetOutsideTouchable);
+    BindNativeFunction(env, object, "setPrivacyMode", moduleName, JsWindow::SetPrivacyMode);
+    BindNativeFunction(env, object, "setTouchable", moduleName, JsWindow::SetTouchable);
+    BindNativeFunction(env, object, "setTouchableAreas", moduleName, JsWindow::SetTouchableAreas);
+    BindNativeFunction(env, object, "setTransparent", moduleName, JsWindow::SetTransparent);
+    BindNativeFunction(env, object, "setCallingWindow", moduleName, JsWindow::SetCallingWindow);
+    BindNativeFunction(env, object, "setSnapshotSkip", moduleName, JsWindow::SetSnapshotSkip);
+    BindNativeFunction(env, object, "setForbidSplitMove", moduleName, JsWindow::SetForbidSplitMove);
+    BindNativeFunction(env, object, "setPreferredOrientation", moduleName, JsWindow::SetPreferredOrientation);
+    BindNativeFunction(env, object, "setCornerRadius", moduleName, JsWindow::SetCornerRadius);
+    BindNativeFunction(env, object, "setShadow", moduleName, JsWindow::SetShadow);
+    BindNativeFunction(env, object, "setBlur", moduleName, JsWindow::SetBlur);
+    BindNativeFunction(env, object, "setBackdropBlur", moduleName, JsWindow::SetBackdropBlur);
+    BindNativeFunction(env, object, "setBackdropBlurStyle", moduleName, JsWindow::SetBackdropBlurStyle);
+    BindNativeFunction(env, object, "setAspectRatio", moduleName, JsWindow::SetAspectRatio);
+    BindNativeFunction(env, object, "setWaterMarkFlag", moduleName, JsWindow::SetWaterMarkFlag);
+    BindNativeFunction(env, object, "setHandwritingFlag", moduleName, JsWindow::SetHandwritingFlag);
+    BindNativeFunction(env, object, "setResizeByDragEnabled", moduleName, JsWindow::SetResizeByDragEnabled);
+    BindNativeFunction(env, object, "setRaiseByClickEnabled", moduleName, JsWindow::SetRaiseByClickEnabled);
+    BindNativeFunction(env, object, "setSpecificSystemBarEnabled", moduleName, JsWindow::SetSpecificSystemBarEnabled);
+    BindNativeFunction(env, object, "setSingleFrameComposerEnabled", moduleName,
+                       JsWindow::SetSingleFrameComposerEnabled);
+    BindNativeFunction(env, object, "setSubWindowModal", moduleName, JsWindow::SetSubWindowModal);
+    BindNativeFunction(env, object, "setTitleButtonVisible", moduleName, JsWindow::SetTitleButtonVisible);
+    BindSetWindowFunctions(env, object, moduleName);
+}
+
+void BindGetFunctions(napi_env env, napi_value object, const char *moduleName)
+{
+    BindNativeFunction(env, object, "getProperties", moduleName, JsWindow::GetProperties);
+    BindNativeFunction(env, object, "getWindowProperties", moduleName, JsWindow::GetWindowPropertiesSync);
+    BindNativeFunction(env, object, "getUIContext", moduleName, JsWindow::GetUIContext);
+    BindNativeFunction(env, object, "getAvoidArea", moduleName, JsWindow::GetAvoidArea);
+    BindNativeFunction(env, object, "getWindowAvoidArea", moduleName, JsWindow::GetWindowAvoidAreaSync);
+    BindNativeFunction(env, object, "getColorSpace", moduleName, JsWindow::GetColorSpace);
+    BindNativeFunction(env, object, "getWindowColorSpace", moduleName, JsWindow::GetWindowColorSpaceSync);
+    BindNativeFunction(env, object, "getWindowLimits", moduleName, JsWindow::GetWindowLimits);
+    BindNativeFunction(env, object, "getWindowDecorHeight", moduleName, JsWindow::GetWindowDecorHeight);
+    BindNativeFunction(env, object, "getTitleButtonRect", moduleName, JsWindow::GetTitleButtonRect);
+    BindNativeFunction(env, object, "getWindowSystemBarProperties",
+                       moduleName, JsWindow::GetWindowSystemBarPropertiesSync);
+    BindNativeFunction(env, object, "getAvoidArea", moduleName, JsWindow::GetAvoidArea);
+    BindNativeFunction(env, object, "getWindowAvoidArea", moduleName, JsWindow::GetWindowAvoidAreaSync);
+    BindNativeFunction(env, object, "getPreferredOrientation", moduleName, JsWindow::GetPreferredOrientation);
+    BindNativeFunction(env, object, "getTransitionController", moduleName, JsWindow::GetTransitionController);
+}
+
 void BindFunctions(napi_env env, napi_value object, const char *moduleName)
 {
     BindNativeFunction(env, object, "show", moduleName, JsWindow::Show);
@@ -5657,100 +5739,33 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "moveWindowTo", moduleName, JsWindow::MoveWindowTo);
     BindNativeFunction(env, object, "resetSize", moduleName, JsWindow::Resize);
     BindNativeFunction(env, object, "resize", moduleName, JsWindow::ResizeWindow);
-    BindNativeFunction(env, object, "setWindowType", moduleName, JsWindow::SetWindowType);
-    BindNativeFunction(env, object, "setWindowMode", moduleName, JsWindow::SetWindowMode);
-    BindNativeFunction(env, object, "getProperties", moduleName, JsWindow::GetProperties);
-    BindNativeFunction(env, object, "getWindowProperties", moduleName, JsWindow::GetWindowPropertiesSync);
     BindNativeFunction(env, object, "on", moduleName, JsWindow::RegisterWindowCallback);
     BindNativeFunction(env, object, "off", moduleName, JsWindow::UnregisterWindowCallback);
     BindNativeFunction(env, object, "bindDialogTarget", moduleName, JsWindow::BindDialogTarget);
     BindNativeFunction(env, object, "loadContent", moduleName, JsWindow::LoadContent);
     BindNativeFunction(env, object, "loadContentByName", moduleName, JsWindow::LoadContentByName);
-    BindNativeFunction(env, object, "getUIContext", moduleName, JsWindow::GetUIContext);
-    BindNativeFunction(env, object, "setUIContent", moduleName, JsWindow::SetUIContent);
-    BindNativeFunction(env, object, "setFullScreen", moduleName, JsWindow::SetFullScreen);
-    BindNativeFunction(env, object, "setLayoutFullScreen", moduleName, JsWindow::SetLayoutFullScreen);
-    BindNativeFunction(env, object, "setWindowLayoutFullScreen", moduleName, JsWindow::SetWindowLayoutFullScreen);
-    BindNativeFunction(env, object, "setSystemBarEnable", moduleName, JsWindow::SetSystemBarEnable);
-    BindNativeFunction(env, object, "setWindowSystemBarEnable", moduleName, JsWindow::SetWindowSystemBarEnable);
-    BindNativeFunction(env, object, "setSystemBarProperties", moduleName, JsWindow::SetSystemBarProperties);
-    BindNativeFunction(env, object, "getWindowSystemBarProperties",
-        moduleName, JsWindow::GetWindowSystemBarPropertiesSync);
-    BindNativeFunction(env, object, "setWindowSystemBarProperties",
-        moduleName, JsWindow::SetWindowSystemBarProperties);
-    BindNativeFunction(env, object, "getAvoidArea", moduleName, JsWindow::GetAvoidArea);
-    BindNativeFunction(env, object, "getWindowAvoidArea", moduleName, JsWindow::GetWindowAvoidAreaSync);
     BindNativeFunction(env, object, "isShowing", moduleName, JsWindow::IsShowing);
     BindNativeFunction(env, object, "isWindowShowing", moduleName, JsWindow::IsWindowShowingSync);
     BindNativeFunction(env, object, "isSupportWideGamut", moduleName, JsWindow::IsSupportWideGamut);
     BindNativeFunction(env, object, "isWindowSupportWideGamut", moduleName, JsWindow::IsWindowSupportWideGamut);
-    BindNativeFunction(env, object, "setColorSpace", moduleName, JsWindow::SetColorSpace);
-    BindNativeFunction(env, object, "setWindowColorSpace", moduleName, JsWindow::SetWindowColorSpace);
-    BindNativeFunction(env, object, "getColorSpace", moduleName, JsWindow::GetColorSpace);
-    BindNativeFunction(env, object, "getWindowColorSpace", moduleName, JsWindow::GetWindowColorSpaceSync);
-    BindNativeFunction(env, object, "setBackgroundColor", moduleName, JsWindow::SetBackgroundColor);
-    BindNativeFunction(env, object, "setWindowBackgroundColor", moduleName, JsWindow::SetWindowBackgroundColorSync);
-    BindNativeFunction(env, object, "setBrightness", moduleName, JsWindow::SetBrightness);
-    BindNativeFunction(env, object, "setWindowBrightness", moduleName, JsWindow::SetWindowBrightness);
-    BindNativeFunction(env, object, "setTopmost", moduleName, JsWindow::SetTopmost);
-    BindNativeFunction(env, object, "setDimBehind", moduleName, JsWindow::SetDimBehind);
-    BindNativeFunction(env, object, "setFocusable", moduleName, JsWindow::SetFocusable);
-    BindNativeFunction(env, object, "setWindowFocusable", moduleName, JsWindow::SetWindowFocusable);
-    BindNativeFunction(env, object, "setKeepScreenOn", moduleName, JsWindow::SetKeepScreenOn);
-    BindNativeFunction(env, object, "setWindowKeepScreenOn", moduleName, JsWindow::SetWindowKeepScreenOn);
-    BindNativeFunction(env, object, "setWakeUpScreen", moduleName, JsWindow::SetWakeUpScreen);
-    BindNativeFunction(env, object, "setOutsideTouchable", moduleName, JsWindow::SetOutsideTouchable);
-    BindNativeFunction(env, object, "setPrivacyMode", moduleName, JsWindow::SetPrivacyMode);
-    BindNativeFunction(env, object, "setWindowPrivacyMode", moduleName, JsWindow::SetWindowPrivacyMode);
-    BindNativeFunction(env, object, "setTouchable", moduleName, JsWindow::SetTouchable);
-    BindNativeFunction(env, object, "setTouchableAreas", moduleName, JsWindow::SetTouchableAreas);
-    BindNativeFunction(env, object, "setWindowTouchable", moduleName, JsWindow::SetWindowTouchable);
-    BindNativeFunction(env, object, "setTransparent", moduleName, JsWindow::SetTransparent);
-    BindNativeFunction(env, object, "setCallingWindow", moduleName, JsWindow::SetCallingWindow);
-    BindNativeFunction(env, object, "setSnapshotSkip", moduleName, JsWindow::SetSnapshotSkip);
     BindNativeFunction(env, object, "raiseToAppTop", moduleName, JsWindow::RaiseToAppTop);
     BindNativeFunction(env, object, "disableWindowDecor", moduleName, JsWindow::DisableWindowDecor);
     BindNativeFunction(env, object, "dump", moduleName, JsWindow::Dump);
-    BindNativeFunction(env, object, "setForbidSplitMove", moduleName, JsWindow::SetForbidSplitMove);
-    BindNativeFunction(env, object, "setPreferredOrientation", moduleName, JsWindow::SetPreferredOrientation);
-    BindNativeFunction(env, object, "getPreferredOrientation", moduleName, JsWindow::GetPreferredOrientation);
     BindNativeFunction(env, object, "opacity", moduleName, JsWindow::Opacity);
     BindNativeFunction(env, object, "scale", moduleName, JsWindow::Scale);
     BindNativeFunction(env, object, "rotate", moduleName, JsWindow::Rotate);
     BindNativeFunction(env, object, "translate", moduleName, JsWindow::Translate);
-    BindNativeFunction(env, object, "getTransitionController", moduleName, JsWindow::GetTransitionController);
     BindNativeFunction(env, object, "snapshot", moduleName, JsWindow::Snapshot);
-    BindNativeFunction(env, object, "setCornerRadius", moduleName, JsWindow::SetCornerRadius);
-    BindNativeFunction(env, object, "setShadow", moduleName, JsWindow::SetShadow);
-    BindNativeFunction(env, object, "setBlur", moduleName, JsWindow::SetBlur);
-    BindNativeFunction(env, object, "setBackdropBlur", moduleName, JsWindow::SetBackdropBlur);
-    BindNativeFunction(env, object, "setBackdropBlurStyle", moduleName, JsWindow::SetBackdropBlurStyle);
-    BindNativeFunction(env, object, "setAspectRatio", moduleName, JsWindow::SetAspectRatio);
     BindNativeFunction(env, object, "resetAspectRatio", moduleName, JsWindow::ResetAspectRatio);
-    BindNativeFunction(env, object, "setWaterMarkFlag", moduleName, JsWindow::SetWaterMarkFlag);
-    BindNativeFunction(env, object, "setHandwritingFlag", moduleName, JsWindow::SetHandwritingFlag);
     BindNativeFunction(env, object, "minimize", moduleName, JsWindow::Minimize);
     BindNativeFunction(env, object, "maximize", moduleName, JsWindow::Maximize);
-    BindNativeFunction(env, object, "setResizeByDragEnabled", moduleName, JsWindow::SetResizeByDragEnabled);
-    BindNativeFunction(env, object, "setRaiseByClickEnabled", moduleName, JsWindow::SetRaiseByClickEnabled);
     BindNativeFunction(env, object, "raiseAboveTarget", moduleName, JsWindow::RaiseAboveTarget);
-    BindNativeFunction(env, object, "hideNonSystemFloatingWindows", moduleName,
-        JsWindow::HideNonSystemFloatingWindows);
+    BindNativeFunction(env, object, "hideNonSystemFloatingWindows", moduleName, JsWindow::HideNonSystemFloatingWindows);
     BindNativeFunction(env, object, "keepKeyboardOnFocus", moduleName, JsWindow::KeepKeyboardOnFocus);
-    BindNativeFunction(env, object, "setWindowLimits", moduleName, JsWindow::SetWindowLimits);
-    BindNativeFunction(env, object, "getWindowLimits", moduleName, JsWindow::GetWindowLimits);
-    BindNativeFunction(env, object, "setSpecificSystemBarEnabled", moduleName, JsWindow::SetSpecificSystemBarEnabled);
-    BindNativeFunction(env, object, "setSingleFrameComposerEnabled", moduleName,
-        JsWindow::SetSingleFrameComposerEnabled);
     BindNativeFunction(env, object, "enableLandscapeMultiWindow", moduleName, JsWindow::EnableLandscapeMultiWindow);
     BindNativeFunction(env, object, "disableLandscapeMultiWindow", moduleName, JsWindow::DisableLandscapeMultiWindow);
-    BindNativeFunction(env, object, "setWindowDecorVisible", moduleName, JsWindow::SetWindowDecorVisible);
-    BindNativeFunction(env, object, "setSubWindowModal", moduleName, JsWindow::SetSubWindowModal);
-    BindNativeFunction(env, object, "setWindowDecorHeight", moduleName, JsWindow::SetWindowDecorHeight);
-    BindNativeFunction(env, object, "getWindowDecorHeight", moduleName, JsWindow::GetWindowDecorHeight);
-    BindNativeFunction(env, object, "getTitleButtonRect", moduleName, JsWindow::GetTitleButtonRect);
-    BindNativeFunction(env, object, "setTitleButtonVisible", moduleName, JsWindow::SetTitleButtonVisible);
-    BindNativeFunction(env, object, "setWindowMask", moduleName, JsWindow::SetWindowMask);
+    BindSetFunctions(env, object, moduleName);
+    BindGetFunctions(env, object, moduleName);
 }
 }  // namespace Rosen
 }  // namespace OHOS
