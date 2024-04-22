@@ -28,29 +28,31 @@ SCBOnSystemCmdListenerImpl::SCBOnSystemCmdListenerImpl()
 
 void SCBOnSystemCmdListenerImpl::SetPrivateCommandListener(const NotifyReceiveKeyboardPrivateCommandFunc& func)
 {
-    std::lock_guard<std::mutex> autoLock(setPrivateCommandListenerLock);
+    std::unique_lock<std::shared_mutex> lock(privateCommandListenerLock_);
     receivePrivateCommandFunc_ = func;
 }
 
-void SCBOnSystemCmdListenerImpl::SetKeyboardPanelStatusListener(const NotifyReceiveKeyboardPanelStatusFunc& func)
+void SCBOnSystemCmdListenerImpl::SetKeyboardPanelStatusListener(const NotifyReceiveIsPanelShowFunc& func)
 {
-    std::lock_guard<std::mutex> autoLock(setKeyboardPanelShowListenerLock);
+    std::unique_lock<std::shared_mutex> lock(keyboardPanelShowListenerLock_);
     receiveKeyboardPanelShowFunc_ = func;
 }
 
 int32_t SCBOnSystemCmdListenerImpl::ReceivePrivateCommand(const std::unordered_map<std::string,
     MiscServices::PrivateDataValue>& privateCommand)
 {
+    std::shared_lock<std::shared_mutex> lock(privateCommandListenerLock_);
     if (receivePrivateCommandFunc_) {
         receivePrivateCommandFunc_(privateCommand);
     }
     return MiscServices::ErrorCode::NO_ERROR;
 }
 
-void SCBOnSystemCmdListenerImpl::OnNotifyIsShowSysPanel(bool isShow)
+void SCBOnSystemCmdListenerImpl::NotifyIsShowSysPanel(bool shouldSysPanelShow)
 {
+    std::shared_lock<std::shared_mutex> lock(keyboardPanelShowListenerLock_);
     if (receiveKeyboardPanelShowFunc_) {
-        receiveKeyboardPanelShowFunc_(isShow);
+        receiveKeyboardPanelShowFunc_(shouldSysPanelShow);
     }
 }
 } // namespace OHOS::Rosen

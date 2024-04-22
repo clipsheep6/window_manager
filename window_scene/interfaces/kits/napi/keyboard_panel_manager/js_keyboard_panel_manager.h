@@ -19,7 +19,9 @@
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
 #include <js_runtime_utils.h>
-#include "js_scene_utils.h"
+
+#include "interfaces/kits/napi/common/js_common_utils.h"
+#include "js_keyboard_panel_utils.h"
 #include "task_scheduler.h"
 
 namespace OHOS::Rosen {
@@ -33,9 +35,12 @@ public:
 
     static napi_value SendKeyboardPrivateCommand(napi_env env, napi_callback_info info);
     static napi_value GetSmartMenuCfg(napi_env env, napi_callback_info info);
+    static napi_value RegisterCallback(napi_env env, napi_callback_info info);
 private:
+    napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
     napi_value OnSendKeyboardPrivateCommand(napi_env env, napi_callback_info info);
     napi_value OnGetSmartMenuCfg(napi_env env, napi_callback_info info);
+    bool IsCallbackRegistered(napi_env env, const std::string& type, napi_value jsListenerObject);
     void ProcessKeyboardPrivateCommandRegister();
     void ProcessKeyboardIsPanelShowRegister();
 

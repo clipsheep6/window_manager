@@ -19,6 +19,7 @@
 #include <map>
 
 #include "interfaces/include/ws_common.h"
+#include "interfaces/kits/napi/common/js_common_utils.h"
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
 #include "interfaces/kits/napi/scene_session_manager/js_scene_utils.h"

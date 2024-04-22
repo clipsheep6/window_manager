@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,12 +14,12 @@
 import("//build/ohos.gni")
 import("../../../../../windowmanager_aafwk.gni")
 
-config("scene_session_manager_napi_config") {
+config("keyboard_panel_manager_napi_config") {
   visibility = [ ":*" ]
   include_dirs = [ "${window_base_path}/wm/include" ]
 }
 
-ohos_shared_library("scenesessionmanager_napi") {
+ohos_shared_library("keyboardpanelmanager_napi") {
   branch_protector_ret = "pac_ret"
   sanitize = {
     cfi = true
@@ -28,61 +28,30 @@ ohos_shared_library("scenesessionmanager_napi") {
   }
   sources = [
     "${window_base_path}/window_scene/interfaces/kits/napi/common/js_common_utils.cpp",
-    "js_root_scene_session.cpp",
-    "js_scene_session.cpp",
-    "js_scene_session_manager.cpp",
-    "js_scene_utils.cpp",
-    "js_window_scene_config.cpp",
-    "scene_session_manager_module.cpp",
+    "${window_base_path}/window_scene/interfaces/kits/napi/keyboard_panel_manager/js_keyboard_panel_utils.cpp",
+    "js_keyboard_panel_manager.cpp",
+    "keyboard_panel_manager_module.cpp",
   ]
 
-  configs = [ ":scene_session_manager_napi_config" ]
+  configs = [ ":keyboard_panel_manager_napi_config" ]
 
   deps = [
     "${window_base_path}/window_scene/common:window_scene_common",
-    "${window_base_path}/window_scene/session:scene_session",
     "${window_base_path}/window_scene/session_manager:scene_session_manager",
     "${window_base_path}/wm:libwm",
   ]
 
   external_deps = [
-    "ability_base:configuration",
-    "ability_base:want",
-    "ability_runtime:ability_context_native",
-    "ability_runtime:ability_start_setting",
     "ability_runtime:napi_common",
-    "ability_runtime:process_options",
     "ability_runtime:runtime",
-    "ace_engine:ace_uicontent",
     "c_utils:utils",
     "eventhandler:libeventhandler",
-    "graphic_2d:librender_service_client",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
-    "image_framework:image",
     "image_framework:image_native",
-    "input:libmmi-client",
-    "ipc:ipc_single",
+    "imf:inputmethod_client",
     "napi:ace_napi",
   ]
-
-  defines = []
-  if (defined(global_parts_info) &&
-      defined(global_parts_info.resourceschedule_soc_perf)) {
-    external_deps += [ "soc_perf:socperf_client" ]
-    defines += [ "SOC_PERF_ENABLE" ]
-  }
-
-  if (defined(global_parts_info) &&
-      defined(global_parts_info.powermgr_power_manager)) {
-    external_deps += [ "power_manager:powermgr_client" ]
-    defines += [ "POWER_MANAGER_ENABLE" ]
-  }
-  if (defined(global_parts_info) &&
-      defined(global_parts_info.resourceschedule_resource_schedule_service)) {
-    external_deps += [ "resource_schedule_service:ressched_client" ]
-    defines += [ "RESOURCE_SCHEDULE_SERVICE_ENABLE" ]
-  }
 
   relative_install_dir = "module"
   part_name = "window_manager"

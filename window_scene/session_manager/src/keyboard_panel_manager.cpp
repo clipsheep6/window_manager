@@ -49,12 +49,13 @@ bool KeyboardPanelManager::CheckSystemCmdChannel()
         return true;
     }
     WLOGFD("privateCommandListener is nullptr, need ConnectSystemCmd");
-    privateCommandListener_ = new SCBOnSystemCmdListenerImpl();
-    if (inputMethodController_ == nullptr) {
-        inputMethodController_ = InputMethodController::GetInstance();
+    privateCommandListener_ = new (std::nothrow) SCBOnSystemCmdListenerImpl();
+    if (imeSystemCmdChannel_ == nullptr) {
+        imeSystemCmdChannel_ = ImeSystemCmdChannel::GetInstance();
     }
-    auto ret = inputMethodController_->ConnectSystemCmd(privateCommandListener_);
+    auto ret = imeSystemCmdChannel_->ConnectSystemCmd(privateCommandListener_);
     if (ret != ErrorCode::NO_ERROR) {
+        privateCommandListener_ = nullptr;
         WLOGFE("connect system cmd failed, errorCode = %{public}d", ret);
         return false;
     }
@@ -62,11 +63,11 @@ bool KeyboardPanelManager::CheckSystemCmdChannel()
 }
 
 int32_t KeyboardPanelManager::SendKeyboardPrivateCommand(const std::unordered_map<std::string,
-                                                                              KeyboardPrivateDataValue> &privateCommand)
+    KeyboardPrivateDataValue> &privateCommand)
 {
     WLOGFD("Create SendKeyboardPrivateCommand");
     if (CheckSystemCmdChannel()) {
-        auto ret = inputMethodController_->SendPrivateCommand(privateCommand);
+        auto ret = imeSystemCmdChannel_->SendPrivateCommand(privateCommand);
         if (ret != ErrorCode::NO_ERROR) {
             WLOGFE("send keyboard privateCommand failed, errorCode = %{public}d", ret);
             return ret;
@@ -76,7 +77,7 @@ int32_t KeyboardPanelManager::SendKeyboardPrivateCommand(const std::unordered_ma
     return ErrorCode::NO_ERROR;
 }
 
-void KeyboardPanelManager::SetKeyboardPanelIsPanelShowsListener(const NotifyReceiveKeyboardPanelStatusFunc& func)
+void KeyboardPanelManager::SetKeyboardPanelIsPanelShowsListener(const NotifyReceiveIsPanelShowFunc& func)
 {
     if (CheckSystemCmdChannel()) {
         privateCommandListener_->SetKeyboardPanelStatusListener(func);
@@ -92,14 +93,12 @@ void KeyboardPanelManager::SetKeyboardPrivateCommandListener(const NotifyReceive
 
 std::string KeyboardPanelManager::GetSmartMenuCfg()
 {
-    if (inputMethodController_ == nullptr) {
-        inputMethodController_ = InputMethodController::GetInstance();
-    }
-    if (inputMethodController_ == nullptr) {
+    auto inputMethodController = InputMethodController::GetInstance();
+    if (inputMethodController == nullptr) {
         return "";
     }
     std::shared_ptr<Property> prop = nullptr;
-    int32_t ret = inputMethodController_->GetDefaultInputMethod(prop);
+    int32_t ret = inputMethodController->GetDefaultInputMethod(prop);
     if (ret != 0 || prop == nullptr) {
         WLOGFE("GetDefaultInputMethod failed");
         return "";
@@ -112,12 +111,13 @@ std::string KeyboardPanelManager::GetSmartMenuCfg()
     }
     ExtensionAbilityInfo extInfo;
     auto extensionInfos = bundleInfo.extensionInfos;
-    for (size_t i = 0; i < extensionInfos.size(); i++) {
+    bool breakFoo = true;
+    for (size_t i = 0; i < extensionInfos.size() && breakFoo; i++) {
         auto metadata = extensionInfos[i].metadata;
-        for (size_t j = 0; j < metadata.size(); j++) {
+        for (size_t j = 0; j < metadata.size() && breakFoo; j++) {
             if (metadata[j].name == SMART_MENU_METADATA_NAME) {
                 extInfo = extensionInfos[i];
-                break;
+                breakFoo = false;
             }
         }
     }

@@ -67,7 +67,6 @@ ohos_shared_library("libintention_event") {
 
   if (imf_enable == true) {
     external_deps += [ "imf:inputmethod_client" ]
-    external_deps += [ "ipc:ipc_single" ]
     defines += [ "IMF_ENABLE" ]
   }
 

@@ -16,6 +16,7 @@
 #ifndef OHOS_ROSEN_WINDOW_SCENE_KEYBOARD_PANEL_MANAGER_H
 #define OHOS_ROSEN_WINDOW_SCENE_KEYBOARD_PANEL_MANAGER_H
 
+#include "ime_system_channel.h"
 #include "scb_system_cmd_listener_impl.h"
 #include "wm_common.h"
 #include "wm_single_instance.h"
@@ -27,14 +28,14 @@ public:
     KeyboardPanelManager();
     ~KeyboardPanelManager() = default;
     void SetKeyboardPrivateCommandListener(const NotifyReceiveKeyboardPrivateCommandFunc& func);
-    void SetKeyboardPanelIsPanelShowsListener(const NotifyReceiveKeyboardPanelStatusFunc& func);
+    void SetKeyboardPanelIsPanelShowsListener(const NotifyReceiveIsPanelShowFunc& func);
     int32_t SendKeyboardPrivateCommand(const std::unordered_map<std::string,
-                                                                        KeyboardPrivateDataValue> &privateCommand);
+        KeyboardPrivateDataValue>& privateCommand);
     std::string GetSmartMenuCfg();
 private:
     bool CheckSystemCmdChannel();
     sptr<SCBOnSystemCmdListenerImpl> privateCommandListener_;
-    sptr<OHOS::MiscServices::InputMethodController> inputMethodController_;
+    sptr<OHOS::MiscServices::ImeSystemCmdChannel> imeSystemCmdChannel_;
 };
 } // namespace OHOS::Rosen
 

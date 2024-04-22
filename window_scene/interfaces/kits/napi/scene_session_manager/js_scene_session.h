@@ -24,6 +24,7 @@
 #include <refbase.h>
 
 #include "interfaces/include/ws_common.h"
+#include "interfaces/kits/napi/common/js_common_utils.h"
 #include "session/host/include/scene_session.h"
 #include "js_scene_utils.h"
 #include "task_scheduler.h"
@@ -119,7 +120,7 @@ private:
     void ProcessPrepareClosePiPSessionRegister();
     void ProcessLandscapeMultiWindowRegister();
     void ProcessKeyboardGravityChangeRegister();
- 
+
     void ChangeSessionVisibilityWithStatusBar(SessionInfo& info, bool visible);
     void ChangeSessionVisibilityWithStatusBarInner(std::shared_ptr<SessionInfo> sessionInfo, bool visible);
     void PendingSessionActivation(SessionInfo& info);

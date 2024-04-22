@@ -18,6 +18,8 @@
 
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
+
+#include "interfaces/kits/napi/common/js_common_utils.h"
 #include "session/host/include/root_scene_session.h"
 #include "js_scene_utils.h"
 

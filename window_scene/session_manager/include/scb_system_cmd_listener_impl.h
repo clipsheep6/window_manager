@@ -16,27 +16,29 @@
 #ifndef OHOS_ROSEN_WINDOW_SCENE_SCB_SYSTEM_CMD_LISTENER_IMPL_H
 #define OHOS_ROSEN_WINDOW_SCENE_SCB_SYSTEM_CMD_LISTENER_IMPL_H
 
+#include <shared_mutex>
+
 #include "wm_common.h"
-#include "input_method_controller.h"
+#include "ime_system_channel.h"
 
 namespace OHOS::Rosen {
 using NotifyReceiveKeyboardPrivateCommandFunc = std::function<void(const std::unordered_map<std::string,
     KeyboardPrivateDataValue>& privateCommand)>;
-using NotifyReceiveKeyboardPanelStatusFunc = std::function<void(const bool isShowKeyboardPanel)>;
+using NotifyReceiveIsPanelShowFunc = std::function<void(bool isShowKeyboardPanel)>;
 class SCBOnSystemCmdListenerImpl : public OHOS::MiscServices::OnSystemCmdListener {
 public:
     SCBOnSystemCmdListenerImpl();
     ~SCBOnSystemCmdListenerImpl() override = default;
     int32_t ReceivePrivateCommand(const std::unordered_map<std::string,
                                                            MiscServices::PrivateDataValue> &privateCommand) override;
-    void OnNotifyIsShowSysPanel(bool isShow) override;
+    void NotifyIsShowSysPanel(bool shouldSysPanelShow) override;
     void SetPrivateCommandListener(const NotifyReceiveKeyboardPrivateCommandFunc& func);
-    void SetKeyboardPanelStatusListener(const NotifyReceiveKeyboardPanelStatusFunc& func);
+    void SetKeyboardPanelStatusListener(const NotifyReceiveIsPanelShowFunc& func);
 private:
-    std::mutex setPrivateCommandListenerLock;
+    std::shared_mutex privateCommandListenerLock_;
     NotifyReceiveKeyboardPrivateCommandFunc receivePrivateCommandFunc_;
-    std::mutex setKeyboardPanelShowListenerLock;
-    NotifyReceiveKeyboardPanelStatusFunc receiveKeyboardPanelShowFunc_;
+    std::shared_mutex keyboardPanelShowListenerLock_;
+    NotifyReceiveIsPanelShowFunc receiveKeyboardPanelShowFunc_;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SCB_SYSTEM_CMD_LISTENER_IMPL_H

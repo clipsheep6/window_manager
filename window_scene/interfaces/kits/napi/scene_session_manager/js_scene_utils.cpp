@@ -51,20 +51,6 @@ int32_t GetMMITouchType(int32_t aceType)
 }
 } // namespace
 
-napi_value NapiGetUndefined(napi_env env)
-{
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-    return result;
-}
-
-napi_valuetype GetType(napi_env env, napi_value value)
-{
-    napi_valuetype res = napi_undefined;
-    napi_typeof(env, value, &res);
-    return res;
-}
-
 bool IsJsBundleNameUndefind(napi_env env, napi_value jsBundleName, SessionInfo& sessionInfo)
 {
     if (GetType(env, jsBundleName) != napi_undefined) {
@@ -588,109 +574,6 @@ bool ConvertInt32ArrayFromJs(napi_env env, napi_value jsObject, std::vector<int3
     return true;
 }
 
-bool ConvertKeyboardPrivateCommandFromJs(napi_env env, napi_value in,
-    std::unordered_map<std::string, KeyboardPrivateDataValue> &out)
-{
-    if (in == nullptr) {
-        WLOGFE("[NAPI]value is nullptr");
-        return false;
-    }
-
-    if (!CheckTypeForNapiValue(env, in, napi_object)) {
-        WLOGFE("The type of value is not napi_object.");
-        return false;
-    }
-
-    std::vector<std::string> propNames;
-    napi_value array = nullptr;
-    napi_get_property_names(env, in, &array);
-    if (!ParseArrayStringValue(env, array, propNames)) {
-        WLOGFE("Failed to property names");
-        return false;
-    }
-
-    for (const auto &propName : propNames) {
-        napi_value prop = nullptr;
-        napi_get_named_property(env, in, propName.c_str(), &prop);
-        if (prop == nullptr) {
-            WLOGFE("prop is null: %{public}s", propName.c_str());
-            continue;
-        }
-        KeyboardPrivateDataValue privateCommand;
-        if (!GetPrivateDataValue(env, prop, privateCommand)) {
-            WLOGFE("Get privateCommand failed: %{public}s", propName.c_str());
-            continue;
-        }
-        out.emplace(propName, privateCommand);
-    }
-    return true;
-}
-
-bool GetPrivateDataValue(napi_env env, napi_value in, KeyboardPrivateDataValue &out)
-{
-    napi_valuetype valueType = napi_undefined;
-    napi_status status = napi_typeof(env, in, &valueType);
-    if (status != napi_ok) {
-        WLOGFE("param is undefined");
-        return false;
-    }
-    if (valueType == napi_string) {
-        std::string privateDataStr;
-        if (!ConvertFromJsValue(env, in, privateDataStr)) {
-            WLOGFE("Failed to convert parameter to privateDataStr");
-            return false;
-        }
-        out.emplace<std::string>(privateDataStr);
-    } else if (valueType == napi_boolean) {
-        bool privateDataBool = false;
-        if (!ConvertFromJsValue(env, in, privateDataBool)) {
-            WLOGFE("Failed to convert parameter to privateDataBool");
-            return false;
-        }
-        out.emplace<bool>(privateDataBool);
-    } else if (valueType == napi_number) {
-        int32_t privateDataInt = 0;
-        if (!ConvertFromJsValue(env, in, privateDataInt)) {
-            WLOGFE("Failed to convert parameter to privateDataInt");
-            return false;
-        }
-        out.emplace<int32_t>(privateDataInt);
-    } else {
-        WLOGFE("value type must be string | boolean | number");
-        return false;
-    }
-    return status == napi_ok;
-}
-
-napi_value GetJsKeyboardPrivateCommand(napi_env env,
-    const std::unordered_map<std::string, KeyboardPrivateDataValue> &in)
-{
-    napi_value jsPrivateCommand = nullptr;
-    napi_create_object(env, &jsPrivateCommand);
-    for (const auto &iter : in) {
-        size_t idx = iter.second.index();
-        napi_value value = nullptr;
-        if (idx == static_cast<size_t>(KeyboardPrivateDataValueType::VALUE_TYPE_STRING)) {
-            auto stringValue = std::get_if<std::string>(&iter.second);
-            if (stringValue != nullptr) {
-                napi_create_string_utf8(env, (*stringValue).c_str(), (*stringValue).size(), &value);
-            }
-        } else if (idx == static_cast<size_t>(KeyboardPrivateDataValueType::VALUE_TYPE_BOOL)) {
-            auto boolValue = std::get_if<bool>(&iter.second);
-            if (boolValue != nullptr) {
-                NAPI_CALL(env, napi_get_boolean(env, *boolValue, &value));
-            }
-        } else if (idx == static_cast<size_t>(KeyboardPrivateDataValueType::VALUE_TYPE_NUMBER)) {
-            auto numberValue = std::get_if<int32_t>(&iter.second);
-            if (numberValue != nullptr) {
-                napi_create_int32(env, *numberValue, &value);
-            }
-        }
-        napi_set_named_property(env, jsPrivateCommand, iter.first.c_str(), value);
-    }
-    return jsPrivateCommand;
-}
-
 bool ConvertStringMapFromJs(napi_env env, napi_value value, std::unordered_map<std::string, std::string> &stringMap)
 {
     if (value == nullptr) {
@@ -728,37 +611,6 @@ bool ConvertStringMapFromJs(napi_env env, napi_value value, std::unordered_map<s
             continue;
         }
         stringMap.emplace(propName, valName);
-    }
-    return true;
-}
-
-bool ParseArrayStringValue(napi_env env, napi_value array, std::vector<std::string> &vector)
-{
-    if (array == nullptr) {
-        WLOGFE("array is nullptr!");
-        return false;
-    }
-    bool isArray = false;
-    if (napi_is_array(env, array, &isArray) != napi_ok || isArray == false) {
-        WLOGFE("not array!");
-        return false;
-    }
-
-    uint32_t arrayLen = 0;
-    napi_get_array_length(env, array, &arrayLen);
-    if (arrayLen == 0) {
-        return true;
-    }
-    vector.reserve(arrayLen);
-    for (uint32_t i = 0; i < arrayLen; i++) {
-        std::string strItem;
-        napi_value jsValue = nullptr;
-        napi_get_element(env, array, i, &jsValue);
-        if (!ConvertFromJsValue(env, jsValue, strItem)) {
-            WLOGFW("Failed to ConvertFromJsValue, index: %{public}u", i);
-            continue;
-        }
-        vector.emplace_back(std::move(strItem));
     }
     return true;
 }
@@ -1126,68 +978,5 @@ napi_value SessionTypeInit(napi_env env)
     SetTypeProperty(objValue, env, "TYPE_NAVIGATION_INDICATOR", JsSessionType::TYPE_NAVIGATION_INDICATOR);
     SetTypeProperty(objValue, env, "TYPE_HANDWRITE", JsSessionType::TYPE_HANDWRITE);
     return objValue;
-}
-
-
-struct AsyncInfo {
-    napi_env env;
-    napi_async_work work;
-    std::function<void()> func;
-};
-
-void NapiAsyncWork(napi_env env, std::function<void()> task)
-{
-    napi_value resource = nullptr;
-    AsyncInfo* info = new AsyncInfo();
-    info->env = env;
-    info->func = task;
-    napi_create_string_utf8(env, "AsyncWork", NAPI_AUTO_LENGTH, &resource);
-    napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-    },
-    [](napi_env env, napi_status status, void* data) {
-        AsyncInfo* info = (AsyncInfo*)data;
-        info->func();
-        napi_delete_async_work(env, info->work);
-        delete info;
-    }, (void*)info, &info->work);
-    napi_queue_async_work(env, info->work);
-}
-
-MainThreadScheduler::MainThreadScheduler(napi_env env)
-    : env_(env)
-{
-    GetMainEventHandler();
-}
-
-inline void MainThreadScheduler::GetMainEventHandler()
-{
-    if (handler_ != nullptr) {
-        return;
-    }
-    auto runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
-    if (runner == nullptr) {
-        return;
-    }
-    handler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
-}
-
-void MainThreadScheduler::PostMainThreadTask(Task&& localTask, std::string traceInfo, int64_t delayTime)
-{
-    GetMainEventHandler();
-    auto task = [env = env_, localTask, traceInfo] () {
-        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SCBCb:%s", traceInfo.c_str());
-        napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(env, &scope);
-        localTask();
-        napi_close_handle_scope(env, scope);
-    };
-    if (handler_ && handler_->GetEventRunner()->IsCurrentRunnerThread()) {
-        return task();
-    } else if (handler_ && !handler_->GetEventRunner()->IsCurrentRunnerThread()) {
-        handler_->PostTask(std::move(task), "wms:" + traceInfo, delayTime,
-            OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE);
-    } else {
-        NapiAsyncWork(env_, task);
-    }
 }
 } // namespace OHOS::Rosen

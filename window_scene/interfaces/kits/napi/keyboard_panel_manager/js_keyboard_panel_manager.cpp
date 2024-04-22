@@ -15,12 +15,10 @@
 
 #include "js_keyboard_panel_manager.h"
 
-#include <context.h>
-#include <js_runtime_utils.h>
 #include "interfaces/include/ws_common.h"
-#include "window_manager_hilog.h"
-#include "js_scene_utils.h"
 #include "session_manager/include/keyboard_panel_manager.h"
+#include "window_manager_hilog.h"
+
 
 namespace OHOS::Rosen {
 using namespace AbilityRuntime;
@@ -45,7 +43,14 @@ napi_value JsKeyboardPanelManager::Init(napi_env env, napi_value exportObj)
     BindNativeFunction(env, exportObj, "sendKeyboardPrivateCommand", moduleName,
         JsKeyboardPanelManager::SendKeyboardPrivateCommand);
     BindNativeFunction(env, exportObj, "getSmartMenuCfg", moduleName, JsKeyboardPanelManager::GetSmartMenuCfg);
+    BindNativeFunction(env, exportObj, "on", moduleName, JsKeyboardPanelManager::RegisterCallback);
     return NapiGetUndefined(env);
+}
+
+void JsKeyboardPanelManager::Finalizer(napi_env env, void* data, void* hint)
+{
+    WLOGI("[NAPI]Finalizer");
+    std::unique_ptr<JsKeyboardPanelManager>(static_cast<JsKeyboardPanelManager*>(data));
 }
 
 JsKeyboardPanelManager::JsKeyboardPanelManager(napi_env env) : env_(env)
@@ -55,6 +60,80 @@ JsKeyboardPanelManager::JsKeyboardPanelManager(napi_env env) : env_(env)
         { KEYBOARD_RECEIVE_IS_PANEL_SHOW_CB,     &JsKeyboardPanelManager::ProcessKeyboardIsPanelShowRegister },
     };
     taskScheduler_ = std::make_shared<MainThreadScheduler>(env);
+}
+
+bool NapiIsCallable(napi_env env, napi_value value)
+{
+    bool result = false;
+    napi_is_callable(env, value, &result);
+    return result;
+}
+
+napi_value JsKeyboardPanelManager::RegisterCallback(napi_env env, napi_callback_info info)
+{
+    WLOGFD("[NAPI]RegisterCallback");
+    JsKeyboardPanelManager* me = CheckParamsAndGetThis<JsKeyboardPanelManager>(env, info);
+    return (me != nullptr) ? me->OnRegisterCallback(env, info) : nullptr;
+}
+
+napi_value JsKeyboardPanelManager::OnRegisterCallback(napi_env env, napi_callback_info info)
+{
+    size_t argc = ARGC_FOUR;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc < ARGC_TWO) {
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu", argc);
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    std::string cbType;
+    if (!ConvertFromJsValue(env, argv[0], cbType)) {
+        WLOGFE("[NAPI]Failed to convert parameter to callbackType");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    napi_value value = argv[1];
+    if (value == nullptr || !NapiIsCallable(env, value)) {
+        WLOGFE("[NAPI]Callback is nullptr or not callable");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    if (IsCallbackRegistered(env, cbType, value)) {
+        return NapiGetUndefined(env);
+    }
+
+    (this->*listenerFunc_[cbType])();
+    std::shared_ptr<NativeReference> callbackRef;
+    napi_ref result = nullptr;
+    napi_create_reference(env, value, 1, &result);
+    callbackRef.reset(reinterpret_cast<NativeReference*>(result));
+    {
+        std::unique_lock<std::shared_mutex> lock(jsCbMapMutex_);
+        jsCbMap_[cbType] = callbackRef;
+    }
+    WLOGFD("[NAPI]Register end, type = %{public}s", cbType.c_str());
+    return NapiGetUndefined(env);
+}
+
+bool JsKeyboardPanelManager::IsCallbackRegistered(napi_env env, const std::string& type, napi_value jsListenerObject)
+{
+    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
+    if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
+        return false;
+    }
+
+    for (auto iter = jsCbMap_.begin(); iter != jsCbMap_.end(); ++iter) {
+        bool isEquals = false;
+        napi_strict_equals(env, jsListenerObject, iter->second->GetNapiValue(), &isEquals);
+        if (isEquals) {
+            WLOGFE("[NAPI]Method %{public}s has already been registered", type.c_str());
+            return true;
+        }
+    }
+    return false;
 }
 
 napi_value JsKeyboardPanelManager::GetSmartMenuCfg(napi_env env, napi_callback_info info)
@@ -115,14 +194,14 @@ void JsKeyboardPanelManager::ProcessKeyboardPrivateCommandRegister()
 {
     WLOGFI("[NAPI]ProcessKeyboardPrivateCommandRegister");
     NotifyReceiveKeyboardPrivateCommandFunc func = [this](const std::unordered_map<std::string,
-                                                            KeyboardPrivateDataValue> &privateCommand) {
+        KeyboardPrivateDataValue>& privateCommand) {
         this->ReceiveKeyboardPrivateCommand(privateCommand);
     };
     KeyboardPanelManager::GetInstance().SetKeyboardPrivateCommandListener(func);
 }
 
 void JsKeyboardPanelManager::ReceiveKeyboardPrivateCommand(const std::unordered_map<std::string,
-                                                                KeyboardPrivateDataValue> &privateCommand)
+    KeyboardPrivateDataValue>& privateCommand)
 {
     WLOGFI("[NAPI]ReceivePrivateCommand");
     std::shared_ptr<NativeReference> jsCallBack = nullptr;
@@ -153,7 +232,7 @@ void JsKeyboardPanelManager::ReceiveKeyboardPrivateCommand(const std::unordered_
 void JsKeyboardPanelManager::ProcessKeyboardIsPanelShowRegister()
 {
     WLOGFI("[NAPI]ProcessKeyboardStatusRegister");
-    NotifyReceiveKeyboardPanelStatusFunc func = [this](bool isShow) {
+    NotifyReceiveIsPanelShowFunc func = [this](bool isShow) {
         this->ReceiveKeyboardIsPanelShow(isShow);
     };
     KeyboardPanelManager::GetInstance().SetKeyboardPanelIsPanelShowsListener(func);
