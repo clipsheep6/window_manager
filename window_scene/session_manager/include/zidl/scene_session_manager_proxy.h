@@ -43,8 +43,7 @@ public:
         const sptr<IRemoteObject>& callback) override;
     WMError UpdateSessionProperty(const sptr<WindowSessionProperty>& property, WSPropertyChangeAction action) override;
     WSError BindDialogSessionTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken) override;
-    WMError RequestFocusStatus(int32_t persistentId, bool isFocused, bool byForeground = true,
-        FocusChangeReason reason = FocusChangeReason::DEFAULT) override;
+    WMError RequestFocusStatus(int32_t persistentId, bool isFocused, bool byForeground = true) override;
     WSError RaiseWindowToTop(int32_t persistentId) override;
 
     WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
