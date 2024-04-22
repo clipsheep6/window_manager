@@ -267,8 +267,8 @@ bool MoveDragController::ConsumeDragEvent(const std::shared_ptr<MMI::PointerEven
         default:
             return false;
     }
-    int32_t tranX = pointerItem.GetDisplayX() - moveDragProperty_.originalPointerPosX_;
-    int32_t tranY = pointerItem.GetDisplayY() - moveDragProperty_.originalPointerPosY_;
+    int32_t tranX = static_cast<int32_t>(pointerItem.GetDisplayX()) - moveDragProperty_.originalPointerPosX_;
+    int32_t tranY = static_cast<int32_t>(pointerItem.GetDisplayY()) - moveDragProperty_.originalPointerPosY_;
 
     if (aspectRatio_ > NEAR_ZERO) {
         moveDragProperty_.targetRect_ = CalcFixedAspectRatioTargetRect(type_, tranX, tranY, aspectRatio_,

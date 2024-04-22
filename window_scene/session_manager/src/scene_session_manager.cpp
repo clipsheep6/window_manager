@@ -4442,8 +4442,8 @@ static void FillSecCompEnhanceData(const std::shared_ptr<MMI::PointerEvent>& poi
         double y;
         uint64_t time;
     } pointerEventData = {
-        .x = pointerItem.GetDisplayX(),
-        .y = pointerItem.GetDisplayY(),
+        .x = static_cast<int32_t>(pointerItem.GetDisplayX()),
+        .y = static_cast<int32_t>(pointerItem.GetDisplayY()),
         .time = pointerEvent->GetActionTime()
     };
 

@@ -1066,8 +1066,8 @@ WSError SceneSession::HandlePointerStyle(const std::shared_ptr<MMI::PointerEvent
         pointerEvent->MarkProcessed();
         return WSError::WS_ERROR_INVALID_PARAM;
     }
-    int32_t mousePointX = pointerItem.GetDisplayX();
-    int32_t mousePointY = pointerItem.GetDisplayY();
+    int32_t mousePointX = static_cast<int32_t>(pointerItem.GetDisplayX());
+    int32_t mousePointY = static_cast<int32_t>(pointerItem.GetDisplayY());
 
     auto displayInfo = DisplayManager::GetInstance().GetDisplayById(pointerEvent->GetTargetDisplayId());
     if (displayInfo != nullptr) {

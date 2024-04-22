@@ -123,7 +123,7 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
             pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
             MMI::PointerEvent::PointerItem pointerItem;
             if (pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem)) {
-                window_->NotifyTouchDialogTarget(pointerItem.GetDisplayX(), pointerItem.GetDisplayY());
+                window_->NotifyTouchDialogTarget(static_cast<int32_t>(pointerItem.GetDisplayX()), static_cast<int32_t>(pointerItem.GetDisplayY()));
             }
         }
         pointerEvent->MarkProcessed();
@@ -135,15 +135,15 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
     if (isModal && isSubWindow) {
         MMI::PointerEvent::PointerItem pointerItem;
         bool validPointItem = pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem);
-        bool outsideWindow = !WindowHelper::IsPointInTargetRectWithBound(pointerItem.GetDisplayX(),
-            pointerItem.GetDisplayY(), window_->GetRect());
+        bool outsideWindow = !WindowHelper::IsPointInTargetRectWithBound(static_cast<int32_t>(pointerItem.GetDisplayX()),
+            static_cast<int32_t>(pointerItem.GetDisplayY()), window_->GetRect());
         auto action = pointerEvent->GetPointerAction();
         bool isTargetAction = (action == MMI::PointerEvent::POINTER_ACTION_DOWN ||
             action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN);
         bool isInterceptAction = isTargetAction || action == MMI::PointerEvent::POINTER_ACTION_MOVE;
         if (validPointItem && outsideWindow && isInterceptAction) {
             if (isTargetAction) {
-                window_->NotifyTouchDialogTarget(pointerItem.GetDisplayX(), pointerItem.GetDisplayY());
+                window_->NotifyTouchDialogTarget(static_cast<int32_t>(pointerItem.GetDisplayX()), static_cast<int32_t>(pointerItem.GetDisplayY()));
             }
             pointerEvent->MarkProcessed();
             return;

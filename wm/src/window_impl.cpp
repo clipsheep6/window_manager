@@ -2613,7 +2613,7 @@ void WindowImpl::UpdatePointerEventForStretchableWindow(const std::shared_ptr<MM
     const Rect& originRect = property_->GetOriginRect();
     PointInfo originPos =
         WindowHelper::CalculateOriginPosition(originRect, GetRect(),
-        { pointerItem.GetDisplayX(), pointerItem.GetDisplayY() });
+        { static_cast<int32_t>(pointerItem.GetDisplayX()), static_cast<int32_t>(pointerItem.GetDisplayY()) });
     pointerItem.SetDisplayX(originPos.x);
     pointerItem.SetDisplayY(originPos.y);
     pointerItem.SetWindowX(originPos.x - originRect.posX_);
