@@ -1907,7 +1907,7 @@ napi_value JsSceneSessionManager::OnRequestFocusStatus(napi_env env, napi_callba
         return NapiGetUndefined(env);
     }
     FocusChangeReason reason = FocusChangeReason::DEFAULT;
-    if (argc>MIN_ARG_COUNT) {
+    if (argc > MIN_ARG_COUNT){
         if (!ConvertFromJsValue(env, argv[ARG_INDEX_3], reason)) {
             WLOGFE("[NAPI]Failed to convert parameter to reason");
             napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
@@ -1917,6 +1917,7 @@ napi_value JsSceneSessionManager::OnRequestFocusStatus(napi_env env, napi_callba
     }
     TLOGI(WmsLogTag::WMS_FOCUS, "[NAPI]OnRequestFocusStatus persistentId: %{public}d, isFocused: %{public}d,\
         byForeground: %{public}d, reason: %{public}d", persistentId, isFocused, byForeground, reason);
+
     SceneSessionManager::GetInstance().RequestFocusStatus(persistentId, isFocused, byForeground, reason);
     return NapiGetUndefined(env);
 }

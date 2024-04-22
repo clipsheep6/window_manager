@@ -3946,10 +3946,11 @@ void SceneSessionManager::TraverseSessionTreeFromBottomToTop(TraverseFunc func)
     return;
 }
 
-WMError SceneSessionManager::RequestFocusStatus(int32_t persistentId, bool isFocused, bool byForeground, FocusChangeReason reason)
+WMError SceneSessionManager::RequestFocusStatus(int32_t persistentId, bool isFocused, bool byForeground,
+    FocusChangeReason reason)
 {
     TLOGI(WmsLogTag::WMS_FOCUS,"RequestFocusStatus ,id: %{public}d , reason: %{public}d", persistentId, reason);
-    auto task = [this, persistentId, isFocused, byForeground]() {
+    auto task = [this, persistentId, isFocused, byForeground, reason]() {
         if (isFocused) {
             RequestSessionFocus(persistentId, byForeground, reason);
         } else {
@@ -4063,11 +4064,11 @@ WSError SceneSessionManager::RequestSessionUnfocus(int32_t persistentId, FocusCh
             TLOGD(WmsLogTag::WMS_FOCUS, "focus is back to desktop");
             return WSError::WS_OK;
     }
-    auto nextSession = GetNextFocusableSession(persistentId, reason);
+    auto nextSession = GetNextFocusableSession(persistentId);
 
     needBlockNotifyUnfocusStatus_ = needBlockNotifyFocusStatusUntilForeground_;
     needBlockNotifyFocusStatusUntilForeground_ = false;
-    return ShiftFocus(nextSession);
+    return ShiftFocus(nextSession, reason);
 }
 
 WSError SceneSessionManager::RequestAllAppSessionUnfocusInner()
@@ -7469,7 +7470,7 @@ WSError SceneSessionManager::ShiftAppWindowFocus(int32_t sourcePersistentId, int
     }
     targetSession->NotifyClick();
     FocusChangeReason reason = FocusChangeReason::CLIENT_REQUEST;
-    return RequestSessionFocus(targetPersistentId, false);
+    return RequestSessionFocus(targetPersistentId, false, reason);
 }
 
 WSError SceneSessionManager::GetAppMainSceneSession(sptr<SceneSession>& sceneSession, int32_t persistentId)
