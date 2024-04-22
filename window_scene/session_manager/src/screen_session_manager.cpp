@@ -3581,7 +3581,7 @@ void ScreenSessionManager::NotifyClientProxyUpdateFoldDisplayMode(FoldDisplayMod
     }
 }
 
-void ScreenSessionManager::SetClient(const sptr<IScreenSessionManagerClient>& client)
+void ScreenSessionManager::SetClient(const sptr<ScreenSessionManagerClientInterface>& client)
 {
     if (!client) {
         WLOGFI("SetClient client is null");

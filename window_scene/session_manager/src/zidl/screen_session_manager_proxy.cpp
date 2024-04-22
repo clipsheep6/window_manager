@@ -2023,7 +2023,7 @@ DMError ScreenSessionManagerProxy::MakeUniqueScreen(const std::vector<ScreenId>&
     return static_cast<DMError>(reply.ReadInt32());
 }
 
-void ScreenSessionManagerProxy::SetClient(const sptr<IScreenSessionManagerClient>& client)
+void ScreenSessionManagerProxy::SetClient(const sptr<ScreenSessionManagerClientInterface>& client)
 {
     MessageParcel data;
     MessageParcel reply;
