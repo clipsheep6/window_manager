@@ -2164,8 +2164,8 @@ napi_value JsWindow::OnSetSystemBarEnable(napi_env env, napi_callback_info info)
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete = [weakToken, systemBarProperties, systemBarPropertyFlags, errCode]
         (napi_env env, NapiAsyncTask& task, int32_t status) mutable {
-            auto weakWindow = weakToken.promote();
-            if (weakWindow == nullptr) {
+            auto spWindow = weakToken.promote();
+            if (spWindow == nullptr) {
                 TLOGE(WmsLogTag::WMS_IMMS, "window is nullptr");
                 errCode = WMError::WM_ERROR_NULLPTR;
             }
@@ -2173,9 +2173,9 @@ napi_value JsWindow::OnSetSystemBarEnable(napi_env env, napi_callback_info info)
                 task.Reject(env, CreateJsError(env, static_cast<int32_t>(errCode)));
                 return;
             }
-            UpdateSystemBarProperties(systemBarProperties, systemBarPropertyFlags, weakToken);
+            UpdateSystemBarProperties(systemBarProperties, systemBarPropertyFlags, spWindow);
             WMError ret = SetSystemBarPropertiesByFlags(
-                systemBarPropertyFlags, systemBarProperties, weakToken);
+                systemBarPropertyFlags, systemBarProperties, spWindow);
             if (ret == WMError::WM_OK) {
                 task.Resolve(env, NapiGetUndefined(env));
             } else {
