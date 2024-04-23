@@ -62,6 +62,7 @@ config("extension_window_kit_config") {
 
   include_dirs = [
     "../window_runtime/window_napi",
+    "../../../innerkits/dm",
     "../../../innerkits/wm",
     "../../../../utils/include",
     "../../../../wm/include",
@@ -91,6 +92,7 @@ ohos_shared_library("extensionwindow_napi") {
   include_dirs = [ "extension_window" ]
   deps = [
     "../../../../utils:libwmutil",
+    "../../../../utils:libwmutil_base",
     "../../../../wm:libwm",
     "../window_runtime:window_native_kit",
   ]
