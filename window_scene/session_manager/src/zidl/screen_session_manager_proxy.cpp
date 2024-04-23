@@ -1509,7 +1509,7 @@ sptr<ScreenInfo> ScreenSessionManagerProxy::GetScreenInfoById(ScreenId screenId)
         return nullptr;
     }
     for (auto& mode : info->GetModes()) {
-        WLOGFD("info modes is id: %{public}u, width: %{public}u, height: %{public}u, refreshRate: %{public}u",
+        WLOGFI("info modes is id: %{public}u, width: %{public}u, height: %{public}u, refreshRate: %{public}u",
             mode->id_, mode->width_, mode->height_, mode->refreshRate_);
     }
     return info;
