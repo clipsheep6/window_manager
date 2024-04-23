@@ -122,8 +122,10 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
         if (pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_DOWN ||
             pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
             MMI::PointerEvent::PointerItem pointerItem;
+            int32_t displayX = static_cast<int32_t>(pointerItem.GetDisplayX())
+            int32_t displayY = static_cast<int32_t>(pointerItem.GetDisplayY())
             if (pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem)) {
-                window_->NotifyTouchDialogTarget(static_cast<int32_t>(pointerItem.GetDisplayX()), static_cast<int32_t>(pointerItem.GetDisplayY()));
+                window_->NotifyTouchDialogTarget(displayX, displayY);
             }
         }
         pointerEvent->MarkProcessed();
@@ -134,18 +136,17 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
     bool isSubWindow = WindowHelper::IsSubWindow(window_->GetType());
     if (isModal && isSubWindow) {
         MMI::PointerEvent::PointerItem pointerItem;
+        int32_t displayX = static_cast<int32_t>(pointerItem.GetDisplayX());
+        int32_t displayY = static_cast<int32_t>(pointerItem.GetDisplayY());
         bool validPointItem = pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem);
-        bool outsideWindow = !WindowHelper::IsPointInTargetRectWithBound
-        (static_cast<int32_t>(pointerItem.GetDisplayX()),
-            static_cast<int32_t>(pointerItem.GetDisplayY()), window_->GetRect());
+        bool outsideWindow = !WindowHelper::IsPointInTargetRectWithBound(displayX, displayY, window_->GetRect());
         auto action = pointerEvent->GetPointerAction();
         bool isTargetAction = (action == MMI::PointerEvent::POINTER_ACTION_DOWN ||
             action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN);
         bool isInterceptAction = isTargetAction || action == MMI::PointerEvent::POINTER_ACTION_MOVE;
         if (validPointItem && outsideWindow && isInterceptAction) {
             if (isTargetAction) {
-                window_->NotifyTouchDialogTarget
-                (static_cast<int32_t>(pointerItem.GetDisplayX()), static_cast<int32_t>(pointerItem.GetDisplayY()));
+                window_->NotifyTouchDialogTarget(displayX, displayY);
             }
             pointerEvent->MarkProcessed();
             return;

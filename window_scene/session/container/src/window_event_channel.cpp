@@ -203,15 +203,17 @@ void WindowEventChannel::PrintPointerEvent(const std::shared_ptr<MMI::PointerEve
 
         for (const auto &pointerId : pointerIds) {
             MMI::PointerEvent::PointerItem item;
+            int32_t displayX = static_cast<int32_t>(item.GetDisplayX());
+            int32_t displayY = static_cast<int32_t>(item.GetDisplayY());
+            int32_t windowX = static_cast<int32_t>(item.GetWindowX());
+            int32_t windowY = static_cast<int32_t>(item.GetWindowY());
             if (!event->GetPointerItem(pointerId, item)) {
                 WLOGFE("Invalid pointer: %{public}d.", pointerId);
                 return;
             }
             WLOGFD("pointerId:%{public}d,DownTime:%{public}" PRId64 ",IsPressed:%{public}d,"
                 "DisplayX:%{public}d,DisplayY:%{public}d,WindowX:%{public}d,WindowY:%{public}d,",
-                pointerId, item.GetDownTime(), item.IsPressed(), 
-                static_cast<int32_t>(item.GetDisplayX()), static_cast<int32_t>(item.GetDisplayY()),
-                static_cast<int32_t>(item.GetWindowX()), static_cast<int32_t>(item.GetWindowY()));
+                pointerId, item.GetDownTime(), item.IsPressed(), displayX, displayY, windowX, windowY);
         }
     } else {
         PrintInfoPointerEvent(event);
