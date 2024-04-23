@@ -458,7 +458,8 @@ bool WindowSceneSessionImpl::HandlePointDownEvent(const std::shared_ptr<MMI::Poi
         } else if (isMoveArea) {
             hostSession_->SendPointEventForMoveDrag(pointerEvent);
         } else {
-            hostSession_->ProcessPointDownSession(static_cast<int32_t>(pointerItem.GetDisplayX()), static_cast<int32_t>(pointerItem.GetDisplayY()));
+            hostSession_->ProcessPointDownSession
+            (static_cast<int32_t>(pointerItem.GetDisplayX()), static_cast<int32_t>(pointerItem.GetDisplayY()));
         }
     }
     return needNotifyEvent;

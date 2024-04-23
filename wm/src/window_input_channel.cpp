@@ -135,7 +135,8 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
     if (isModal && isSubWindow) {
         MMI::PointerEvent::PointerItem pointerItem;
         bool validPointItem = pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem);
-        bool outsideWindow = !WindowHelper::IsPointInTargetRectWithBound(static_cast<int32_t>(pointerItem.GetDisplayX()),
+        bool outsideWindow = !WindowHelper::IsPointInTargetRectWithBound
+        (static_cast<int32_t>(pointerItem.GetDisplayX()),
             static_cast<int32_t>(pointerItem.GetDisplayY()), window_->GetRect());
         auto action = pointerEvent->GetPointerAction();
         bool isTargetAction = (action == MMI::PointerEvent::POINTER_ACTION_DOWN ||
@@ -143,7 +144,8 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
         bool isInterceptAction = isTargetAction || action == MMI::PointerEvent::POINTER_ACTION_MOVE;
         if (validPointItem && outsideWindow && isInterceptAction) {
             if (isTargetAction) {
-                window_->NotifyTouchDialogTarget(static_cast<int32_t>(pointerItem.GetDisplayX()), static_cast<int32_t>(pointerItem.GetDisplayY()));
+                window_->NotifyTouchDialogTarget
+                (static_cast<int32_t>(pointerItem.GetDisplayX()), static_cast<int32_t>(pointerItem.GetDisplayY()));
             }
             pointerEvent->MarkProcessed();
             return;

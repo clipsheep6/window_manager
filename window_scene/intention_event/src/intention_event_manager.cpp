@@ -50,7 +50,8 @@ void LogPointInfo(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
         TLOGD(WmsLogTag::WMS_EVENT, "action point info:windowid:%{public}d,id:%{public}d,displayx:%{public}d,"
             "displayy:%{public}d, windowx:%{public}d, windowy :%{public}d, action :%{public}d pressure: "
             "%{public}f, tiltx :%{public}f, tiltY :%{public}f",
-            windowId, actionId, static_cast<int32_t>(item.GetDisplayX()), static_cast<int32_t>(item.GetDisplayY()), static_cast<int32_t>(item.GetWindowX()), static_cast<int32_t>(item.GetWindowY()),
+            windowId, actionId, static_cast<int32_t>(item.GetDisplayX()), static_cast<int32_t>(item.GetDisplayY()), 
+            static_cast<int32_t>(item.GetWindowX()), static_cast<int32_t>(item.GetWindowY()),
             pointerEvent->GetPointerAction(), item.GetPressure(), item.GetTiltX(), item.GetTiltY());
     }
     auto ids = pointerEvent->GetPointerIds();
@@ -58,8 +59,9 @@ void LogPointInfo(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
         MMI::PointerEvent::PointerItem item;
         if (pointerEvent->GetPointerItem(id, item)) {
             TLOGD(WmsLogTag::WMS_EVENT, "all point info: id: %{public}d, x:%{public}d, y:%{public}d, "
-                "isPressend:%{public}d, pressure:%{public}f, tiltX:%{public}f, tiltY:%{public}f",
-            actionId, static_cast<int32_t>(item.GetWindowX()), static_cast<int32_t>(item.GetWindowY()), item.IsPressed(), item.GetPressure(),
+            "isPressend:%{public}d, pressure:%{public}f, tiltX:%{public}f, tiltY:%{public}f",
+            actionId, static_cast<int32_t>(item.GetWindowX()), 
+            static_cast<int32_t>(item.GetWindowY()), item.IsPressed(), item.GetPressure(),
             item.GetTiltX(), item.GetTiltY());
         }
     }
