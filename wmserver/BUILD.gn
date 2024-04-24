@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/window/window_manager/wmserver/config_graphic_2d.gni")
 import("../windowmanager_aafwk.gni")
 
 config("libwms_config") {
@@ -64,7 +65,6 @@ config("libmockwms_config") {
     # for scene session manager
     "${window_base_path}/interfaces/innerkits/wm",
     "${window_base_path}/wmserver/include",
-    "${graphic_base_path}/graphic_2d/rosen/modules/platform/image_native",
 
     # for window_manager_hilog
     "${window_base_path}/utils/include",
@@ -119,6 +119,14 @@ ohos_shared_library("sms") {
     "input:libmmi-client",
     "input:libmmi-util",
   ]
+  if (platform == "ohos") {
+    public_external_deps += [ "image_framework:image_native" ]
+  } else if (platform == "android" || platform == "ios") {
+    public_external_deps += [ "image_framework:image_native" ]
+  } else {
+    public_external_deps += [ "graphic_2d:mock_image_native" ]
+  }
+
   if (scene_board_enabled) {
     deps += [ "${window_base_path}/window_scene/session_manager_service:session_manager_service" ]
   }
