@@ -70,6 +70,7 @@ JsWindow::JsWindow(const sptr<Window>& window)
         sptr<JsWindow> jsWindow = weakThis.promote();
         if (!jsWindow) {
             WLOGFE("NotifyNativeWinDestroyFunc: jsWindow is null");
+            return;
         }
         std::lock_guard<std::recursive_mutex> lock(g_mutex);
         if (windowName.empty() || g_jsWindowMap.count(windowName) == 0) {
