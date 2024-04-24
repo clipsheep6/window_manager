@@ -29,28 +29,32 @@ namespace {
 }
 typedef int32_t(DisplayManagerAgentStub::*HandlerFunc)(MessageParcel&);
 struct HandlerEntry{
-        uint32_t code;
+        DisplayManagerAgentStub::uint32_t code;
         HandlerFunc func;
     };
  static const HandlerEntry g_handlerTable[] = {
-        {TRANS_ID_NOTIFY_DISPLAY_POWER_EVENT, &DisplayManagerAgentStub::ProcNotifyDisplayPowerEvent},
-        {TRANS_ID_NOTIFY_DISPLAY_STATE_CHANGED, &DisplayManagerAgentStub::ProcNotifyDisplayStateChanged},
-        {TRANS_ID_ON_SCREEN_CONNECT, &DisplayManagerAgentStub::ProcScreenConnect},
-        {TRANS_ID_ON_SCREEN_DISCONNECT, &DisplayManagerAgentStub::ProcScreenDisconnect},
-        {TRANS_ID_ON_SCREEN_CHANGED, &DisplayManagerAgentStub::ProcScreenChanged},
-        {TRANS_ID_ON_SCREENGROUP_CHANGED, &DisplayManagerAgentStub::ProcScreenGroupChanged},
-        {TRANS_ID_ON_DISPLAY_CONNECT, &DisplayManagerAgentStub::ProcDisplayConnect},
-        {TRANS_ID_ON_DISPLAY_DISCONNECT, &DisplayManagerAgentStub::ProcDisplayDisconnect},
-        {TRANS_ID_ON_DISPLAY_CHANGED, &DisplayManagerAgentStub::ProcDisplayChanged},
-        {TRANS_ID_ON_SCREEN_SHOT, &DisplayManagerAgentStub::ProcScreenShot},
-        {TRANS_ID_ON_PRIVATE_WINDOW DisplayManagerAgentStub::ProcPrivateWindow},
-        {TRANS_ID_ON_FOLD_STATUS_CHANGED, &DisplayManagerAgentStub::ProcFoldStatusChanged},
-        {TRANS_ID_ON_DISPLAY_CHANGE_INFO_CHANGED, &DisplayManagerAgentStub::ProcDisplayChangeInfoChanged},
-        {TRANS_ID_ON_DISPLAY_MODE_CHANGED, &DisplayManagerAgentStub::ProcDisplayModechanged},
-        {TRANS_ID_ON_AVAILABLE_AREA_CHANGED, &DisplayManagerAgentStub::ProcAvailableAreaChanged},
-        {TRANS_ID_ON_FOLD_ANGLE_CHANGED, &DisplayManagerAgentStub::ProcFoldAngleChanged},
-        {TRANS_ID_ON_CAPTURE_STATUS_CHANGED, &DisplayManagerAgentStub::ProcCaptureStatusChanged},
+        {IDisplayManagerAgent::TRANS_ID_NOTIFY_DISPLAY_POWER_EVENT,
+        &DisplayManagerAgentStub::ProcNotifyDisplayPowerEvent},
+        {IDisplayManagerAgent::TRANS_ID_NOTIFY_DISPLAY_STATE_CHANGED,
+        &DisplayManagerAgentStub::ProcNotifyDisplayStateChanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_SCREEN_CONNECT, &DisplayManagerAgentStub::ProcScreenConnect},
+        {IDisplayManagerAgent::TRANS_ID_ON_SCREEN_DISCONNECT, &DisplayManagerAgentStub::ProcScreenDisconnect},
+        {IDisplayManagerAgent::TRANS_ID_ON_SCREEN_CHANGED, &DisplayManagerAgentStub::ProcScreenChanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_SCREENGROUP_CHANGED, &DisplayManagerAgentStub::ProcScreenGroupChanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_DISPLAY_CONNECT, &DisplayManagerAgentStub::ProcDisplayConnect},
+        {IDisplayManagerAgent::TRANS_ID_ON_DISPLAY_DISCONNECT, &DisplayManagerAgentStub::ProcDisplayDisconnect},
+        {IDisplayManagerAgent::TRANS_ID_ON_DISPLAY_CHANGED, &DisplayManagerAgentStub::ProcDisplayChanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_SCREEN_SHOT, &DisplayManagerAgentStub::ProcScreenShot},
+        {IDisplayManagerAgent::TRANS_ID_ON_PRIVATE_WINDOW DisplayManagerAgentStub::ProcPrivateWindow},
+        {IDisplayManagerAgent::TRANS_ID_ON_FOLD_STATUS_CHANGED, &DisplayManagerAgentStub::ProcFoldStatusChanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_DISPLAY_CHANGE_INFO_CHANGED,
+        &DisplayManagerAgentStub::ProcDisplayChangeInfoChanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_DISPLAY_MODE_CHANGED, &DisplayManagerAgentStub::ProcDisplayModechanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_AVAILABLE_AREA_CHANGED, &DisplayManagerAgentStub::ProcAvailableAreaChanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_FOLD_ANGLE_CHANGED, &DisplayManagerAgentStub::ProcFoldAngleChanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_CAPTURE_STATUS_CHANGED, &DisplayManagerAgentStub::ProcCaptureStatusChanged},
     };
+
 int32_t DisplayManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
     MessageParcel& reply, MessageOption& option)
 {
