@@ -28,6 +28,7 @@ ohos_shared_library("scenesessionmanager_napi") {
     debug = false
   }
   sources = [
+    "${window_base_path}/window_scene/interfaces/kits/napi/common/js_common_utils.cpp",
     "js_root_scene_session.cpp",
     "js_scene_session.cpp",
     "js_scene_session_manager.cpp",

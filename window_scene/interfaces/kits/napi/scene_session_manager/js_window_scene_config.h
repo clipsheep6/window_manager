@@ -19,9 +19,10 @@
 #include <js_runtime_utils.h>
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
-
 #include "interfaces/include/ws_common.h"
+#include "interfaces/kits/napi/common/js_common_utils.h"
 #include "window_session_property.h"
+
 namespace OHOS::Rosen {
 
 class JsWindowSceneConfig {

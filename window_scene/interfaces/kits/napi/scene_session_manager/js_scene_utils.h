@@ -17,13 +17,12 @@
 #define OHOS_WINDOW_SCENE_JS_SCENE_UTILS_H
 
 #include <js_runtime_utils.h>
-#include <native_engine/native_engine.h>
-#include <native_engine/native_value.h>
 #include <pointer_event.h>
 
 #include "configuration.h"
 #include "dm_common.h"
 #include "interfaces/include/ws_common.h"
+#include "interfaces/kits/napi/common/js_common_utils.h"
 #include "common/include/window_session_property.h"
 #include "wm_common.h"
 #include "hitrace_meter.h"
@@ -140,7 +139,6 @@ const std::map<JsSessionType, WindowType> JS_SESSION_TO_WINDOW_TYPE_MAP {
     { JsSessionType::TYPE_HANDWRITE,                WindowType::WINDOW_TYPE_HANDWRITE               },
     { JsSessionType::TYPE_KEYBOARD_PANEL,           WindowType::WINDOW_TYPE_KEYBOARD_PANEL          },
 };
-
 JsSessionType GetApiType(WindowType type);
 bool ConvertSessionInfoFromJs(napi_env env, napi_value jsObject, SessionInfo& sessionInfo);
 bool ConvertConfigurationFromJs(napi_env env, napi_value jsObject, AppExecFwk::Configuration& config);
@@ -151,7 +149,6 @@ bool ConvertInt32ArrayFromJs(napi_env env, napi_value jsObject, std::vector<int3
 bool ConvertProcessOptionFromJs(napi_env env, napi_value jsObject,
     std::shared_ptr<AAFwk::ProcessOptions> processOptions);
 bool ConvertStringMapFromJs(napi_env env, napi_value value, std::unordered_map<std::string, std::string> &stringMap);
-bool ParseArrayStringValue(napi_env env, napi_value array, std::vector<std::string> &vector);
 napi_value CreateJsSessionInfo(napi_env env, const SessionInfo& sessionInfo);
 napi_value CreateJsSessionRecoverInfo(
     napi_env env, const SessionInfo &sessionInfo, const sptr<WindowSessionProperty> property);
@@ -167,25 +164,11 @@ napi_value CreateJsSystemBarPropertyArrayObject(
     napi_env env, const std::unordered_map<WindowType, SystemBarProperty>& propertyMap);
 napi_value SessionTypeInit(napi_env env);
 napi_value KeyboardGravityInit(napi_env env);
-napi_value NapiGetUndefined(napi_env env);
-napi_valuetype GetType(napi_env env, napi_value value);
 bool NapiIsCallable(napi_env env, napi_value value);
 bool ConvertRectInfoFromJs(napi_env env, napi_value jsObject, WSRect& rect);
 constexpr size_t ARGC_ONE = 1;
 constexpr size_t ARGC_TWO = 2;
 constexpr size_t ARGC_THREE = 3;
 constexpr size_t ARGC_FOUR = 4;
-
-
-class MainThreadScheduler {
-public:
-    using Task = std::function<void()>;
-    explicit MainThreadScheduler(napi_env env);
-    void PostMainThreadTask(Task&& localTask, std::string traceInfo = "Unnamed", int64_t delayTime = 0);
-private:
-    void GetMainEventHandler();
-    napi_env env_;
-    std::shared_ptr<OHOS::AppExecFwk::EventHandler> handler_;
-};
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_JS_SCENE_UTILS_H

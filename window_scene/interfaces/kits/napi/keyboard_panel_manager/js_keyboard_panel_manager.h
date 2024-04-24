@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,41 +13,47 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_WINDOW_SCENE_JS_ROOT_SCENE_SESSION_H
-#define OHOS_WINDOW_SCENE_JS_ROOT_SCENE_SESSION_H
+#ifndef OHOS_WINDOW_SCENE_JS_KEYBOARD_PANEL_MANAGER_H
+#define OHOS_WINDOW_SCENE_JS_KEYBOARD_PANEL_MANAGER_H
 
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
+#include <js_runtime_utils.h>
 
 #include "interfaces/kits/napi/common/js_common_utils.h"
-#include "session/host/include/root_scene_session.h"
-#include "js_scene_utils.h"
+#include "js_keyboard_panel_utils.h"
+#include "task_scheduler.h"
 
 namespace OHOS::Rosen {
-class JsRootSceneSession : public RefBase {
+class JsKeyboardPanelManager final {
 public:
-    JsRootSceneSession(napi_env env, const sptr<RootSceneSession>& rootSceneSession);
-    ~JsRootSceneSession() = default;
+    explicit JsKeyboardPanelManager(napi_env env);
+    ~JsKeyboardPanelManager() = default;
 
-    static napi_value Create(napi_env env, const sptr<RootSceneSession>& rootSceneSession);
+    static napi_value Init(napi_env env, napi_value exportObj);
     static void Finalizer(napi_env env, void* data, void* hint);
 
+    static napi_value SendKeyboardPrivateCommand(napi_env env, napi_callback_info info);
+    static napi_value GetSmartMenuCfg(napi_env env, napi_callback_info info);
     static napi_value RegisterCallback(napi_env env, napi_callback_info info);
-    static napi_value LoadContent(napi_env env, napi_callback_info info);
-
 private:
     napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
-    napi_value OnLoadContent(napi_env env, napi_callback_info info);
+    napi_value OnSendKeyboardPrivateCommand(napi_env env, napi_callback_info info);
+    napi_value OnGetSmartMenuCfg(napi_env env, napi_callback_info info);
     bool IsCallbackRegistered(napi_env env, const std::string& type, napi_value jsListenerObject);
-    void PendingSessionActivation(SessionInfo& info);
-    void PendingSessionActivationInner(std::shared_ptr<SessionInfo> sessionInfo);
-    sptr<SceneSession> GenSceneSession(SessionInfo& info);
+    void ProcessKeyboardPrivateCommandRegister();
+    void ProcessKeyboardIsPanelShowRegister();
+
+    void ReceiveKeyboardPrivateCommand(const std::unordered_map<std::string, KeyboardPrivateDataValue>& privateCommand);
+    void ReceiveKeyboardIsPanelShow(bool isShow);
 
     napi_env env_;
+    std::shared_mutex jsCbMapMutex_;
     std::map<std::string, std::shared_ptr<NativeReference>> jsCbMap_;
-    sptr<RootSceneSession> rootSceneSession_;
+    using Func = void(JsKeyboardPanelManager::*)();
+
+    std::map<std::string, Func> listenerFunc_;
     std::shared_ptr<MainThreadScheduler> taskScheduler_;
 };
 } // namespace OHOS::Rosen
-
-#endif // OHOS_WINDOW_SCENE_JS_ROOT_SCENE_SESSION_H
+#endif // OHOS_WINDOW_SCENE_JS_KEYBOARD_PANEL_MANAGER_H

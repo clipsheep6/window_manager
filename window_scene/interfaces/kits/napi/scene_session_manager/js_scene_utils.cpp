@@ -51,20 +51,6 @@ int32_t GetMMITouchType(int32_t aceType)
 }
 } // namespace
 
-napi_value NapiGetUndefined(napi_env env)
-{
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-    return result;
-}
-
-napi_valuetype GetType(napi_env env, napi_value value)
-{
-    napi_valuetype res = napi_undefined;
-    napi_typeof(env, value, &res);
-    return res;
-}
-
 bool IsJsBundleNameUndefind(napi_env env, napi_value jsBundleName, SessionInfo& sessionInfo)
 {
     if (GetType(env, jsBundleName) != napi_undefined) {
@@ -647,37 +633,6 @@ bool ConvertStringMapFromJs(napi_env env, napi_value value, std::unordered_map<s
     return true;
 }
 
-bool ParseArrayStringValue(napi_env env, napi_value array, std::vector<std::string> &vector)
-{
-    if (array == nullptr) {
-        WLOGFE("array is nullptr!");
-        return false;
-    }
-    bool isArray = false;
-    if (napi_is_array(env, array, &isArray) != napi_ok || isArray == false) {
-        WLOGFE("not array!");
-        return false;
-    }
-
-    uint32_t arrayLen = 0;
-    napi_get_array_length(env, array, &arrayLen);
-    if (arrayLen == 0) {
-        return true;
-    }
-    vector.reserve(arrayLen);
-    for (uint32_t i = 0; i < arrayLen; i++) {
-        std::string strItem;
-        napi_value jsValue = nullptr;
-        napi_get_element(env, array, i, &jsValue);
-        if (!ConvertFromJsValue(env, jsValue, strItem)) {
-            WLOGFW("Failed to ConvertFromJsValue, index: %{public}u", i);
-            continue;
-        }
-        vector.emplace_back(std::move(strItem));
-    }
-    return true;
-}
-
 JsSessionType GetApiType(WindowType type)
 {
     auto iter = WINDOW_TO_JS_SESSION_TYPE_MAP.find(type);
@@ -1072,68 +1027,5 @@ napi_value SessionTypeInit(napi_env env)
     SetTypeProperty(objValue, env, "TYPE_NAVIGATION_INDICATOR", JsSessionType::TYPE_NAVIGATION_INDICATOR);
     SetTypeProperty(objValue, env, "TYPE_HANDWRITE", JsSessionType::TYPE_HANDWRITE);
     return objValue;
-}
-
-
-struct AsyncInfo {
-    napi_env env;
-    napi_async_work work;
-    std::function<void()> func;
-};
-
-void NapiAsyncWork(napi_env env, std::function<void()> task)
-{
-    napi_value resource = nullptr;
-    AsyncInfo* info = new AsyncInfo();
-    info->env = env;
-    info->func = task;
-    napi_create_string_utf8(env, "AsyncWork", NAPI_AUTO_LENGTH, &resource);
-    napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-    },
-    [](napi_env env, napi_status status, void* data) {
-        AsyncInfo* info = (AsyncInfo*)data;
-        info->func();
-        napi_delete_async_work(env, info->work);
-        delete info;
-    }, (void*)info, &info->work);
-    napi_queue_async_work(env, info->work);
-}
-
-MainThreadScheduler::MainThreadScheduler(napi_env env)
-    : env_(env)
-{
-    GetMainEventHandler();
-}
-
-inline void MainThreadScheduler::GetMainEventHandler()
-{
-    if (handler_ != nullptr) {
-        return;
-    }
-    auto runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
-    if (runner == nullptr) {
-        return;
-    }
-    handler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
-}
-
-void MainThreadScheduler::PostMainThreadTask(Task&& localTask, std::string traceInfo, int64_t delayTime)
-{
-    GetMainEventHandler();
-    auto task = [env = env_, localTask, traceInfo] () {
-        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SCBCb:%s", traceInfo.c_str());
-        napi_handle_scope scope = nullptr;
-        napi_open_handle_scope(env, &scope);
-        localTask();
-        napi_close_handle_scope(env, scope);
-    };
-    if (handler_ && handler_->GetEventRunner()->IsCurrentRunnerThread()) {
-        return task();
-    } else if (handler_ && !handler_->GetEventRunner()->IsCurrentRunnerThread()) {
-        handler_->PostTask(std::move(task), "wms:" + traceInfo, delayTime,
-            OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE);
-    } else {
-        NapiAsyncWork(env_, task);
-    }
 }
 } // namespace OHOS::Rosen

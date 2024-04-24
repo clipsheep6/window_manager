@@ -23,6 +23,7 @@
 namespace OHOS {
 namespace Rosen {
 using DisplayId = uint64_t;
+using KeyboardPrivateDataValue = std::variant<std::string, bool, int32_t>;
 /**
  * @brief Enumerates type of window.
  */

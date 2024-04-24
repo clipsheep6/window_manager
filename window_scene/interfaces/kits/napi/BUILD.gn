@@ -16,6 +16,7 @@ import("../../../../windowmanager_aafwk.gni")
 
 group("window_scene_napi_packages") {
   public_deps = [
+    "keyboard_panel_manager:keyboardpanelmanager_napi",
     "scene_session_manager:scenesessionmanager_napi",
     "screen_session_manager:screensessionmanager_napi",
     "transaction_manager:transactionmanager_napi",
