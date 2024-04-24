@@ -309,7 +309,7 @@ WSError SceneSession::OnSessionEvent(SessionEvent event)
 void SceneSession::RegisterSessionChangeCallback(const sptr<SceneSession::SessionChangeCallback>&
     sessionChangeCallback)
 {
-    std::lock_guard<std::mutex> guard(sessionChangeCbMutex_);
+    std::unique_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     sessionChangeCallback_ = sessionChangeCallback;
 }
 
@@ -710,6 +710,7 @@ WSError SceneSession::BindDialogSessionTarget(const sptr<SceneSession>& sceneSes
         TLOGE(WmsLogTag::WMS_DIALOG, "dialog session is null");
         return WSError::WS_ERROR_NULLPTR;
     }
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->onBindDialogTarget_) {
         TLOGI(WmsLogTag::WMS_DIALOG, "id: %{public}d", sceneSession->GetPersistentId());
         sessionChangeCallback_->onBindDialogTarget_(sceneSession);
@@ -730,6 +731,7 @@ WSError SceneSession::SetSystemBarProperty(WindowType type, SystemBarProperty sy
         return WSError::WS_ERROR_NULLPTR;
     }
     property->SetSystemBarProperty(type, systemBarProperty);
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->OnSystemBarPropertyChange_) {
         sessionChangeCallback_->OnSystemBarPropertyChange_(property->GetSystemBarProperty());
     }
@@ -787,6 +789,7 @@ WSError SceneSession::OnNeedAvoid(bool status)
 WSError SceneSession::OnShowWhenLocked(bool showWhenLocked)
 {
     WLOGFD("SceneSession ShowWhenLocked status:%{public}d", static_cast<int32_t>(showWhenLocked));
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->OnShowWhenLocked_) {
         sessionChangeCallback_->OnShowWhenLocked_(showWhenLocked);
     }
@@ -1233,6 +1236,7 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
             TLOGI(WmsLogTag::WMS_DIALOG, "There is dialog window foreground");
             return WSError::WS_OK;
         }
+        std::shared_lock<std::shared_mutex> lock(moveDragControllerMutex_);
         if (!moveDragController_) {
             WLOGE("moveDragController_ is null");
             return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
@@ -1452,6 +1456,7 @@ bool SceneSession::FixRectByAspectRatio(WSRect& rect)
 
 void SceneSession::SetMoveDragCallback()
 {
+    std::shared_lock<std::shared_mutex> lock(moveDragControllerMutex_);
     if (moveDragController_) {
         MoveDragCallback callBack = [this](const SizeChangeReason& reason) {
             this->OnMoveDragCallback(reason);
@@ -1462,6 +1467,11 @@ void SceneSession::SetMoveDragCallback()
 
 void SceneSession::OnMoveDragCallback(const SizeChangeReason& reason)
 {
+    std::shared_lock<std::shared_mutex> lock(moveDragControllerMutex_);
+    if (!moveDragController_) {
+        WLOGE("moveDragController_ is null");
+        return;
+    }
     WSRect rect = moveDragController_->GetTargetRect();
     WLOGFD("OnMoveDragCallback rect: [%{public}d, %{public}d, %{public}u, %{public}u], reason : %{public}d",
         rect.posX_, rect.posY_, rect.width_, rect.height_, reason);
@@ -1767,6 +1777,7 @@ WSError SceneSession::UpdateWindowAnimationFlag(bool needDefaultAnimationFlag)
 void SceneSession::SetWindowAnimationFlag(bool needDefaultAnimationFlag)
 {
     needDefaultAnimationFlag_ = needDefaultAnimationFlag;
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ && sessionChangeCallback_->onWindowAnimationFlagChange_) {
         sessionChangeCallback_->onWindowAnimationFlagChange_(needDefaultAnimationFlag);
     }
@@ -1792,6 +1803,7 @@ bool SceneSession::IsAppSession() const
 void SceneSession::NotifyIsCustomAnimationPlaying(bool isPlaying)
 {
     WLOGFI("id %{public}d %{public}u", GetPersistentId(), isPlaying);
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ != nullptr && sessionChangeCallback_->onIsCustomAnimationPlaying_) {
         sessionChangeCallback_->onIsCustomAnimationPlaying_(isPlaying);
     }
@@ -1865,6 +1877,7 @@ void SceneSession::NotifyTouchOutside()
         WLOGFD("Notify sessionStage TouchOutside");
         sessionStage_->NotifyTouchOutside();
     }
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ && sessionChangeCallback_->OnTouchOutside_) {
         WLOGFD("Notify sessionChangeCallback TouchOutside");
         sessionChangeCallback_->OnTouchOutside_();
@@ -1882,6 +1895,7 @@ void SceneSession::NotifyWindowVisibility()
 
 bool SceneSession::CheckOutTouchOutsideRegister()
 {
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ && sessionChangeCallback_->OnTouchOutside_) {
         return true;
     }
@@ -1892,6 +1906,7 @@ void SceneSession::SetRequestedOrientation(Orientation orientation)
 {
     WLOGFI("id: %{public}d orientation: %{public}u", GetPersistentId(), static_cast<uint32_t>(orientation));
     GetSessionProperty()->SetRequestedOrientation(orientation);
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ && sessionChangeCallback_->OnRequestedOrientationChange_) {
         sessionChangeCallback_->OnRequestedOrientationChange_(static_cast<uint32_t>(orientation));
     }
@@ -1906,6 +1921,7 @@ void SceneSession::NotifyForceHideChange(bool hide)
         return;
     }
     property->SetForceHide(hide);
+    std::shared_lock<std::shared_mutex> lock(sessionChangeCallbackMutex_);
     if (sessionChangeCallback_ && sessionChangeCallback_->OnForceHideChange_) {
         sessionChangeCallback_->OnForceHideChange_(hide);
     }
@@ -1966,11 +1982,13 @@ void SceneSession::SetAbilitySessionInfo(std::shared_ptr<AppExecFwk::AbilityInfo
 
 void SceneSession::SetSelfToken(sptr<IRemoteObject> selfToken)
 {
+    std::unique_lock<std::shared_mutex> lock(selfTokenMutex_);
     selfToken_ = selfToken;
 }
 
 sptr<IRemoteObject> SceneSession::GetSelfToken() const
 {
+    std::shared_lock<std::shared_mutex> lock(selfTokenMutex_);
     return selfToken_;
 }
 
@@ -2345,6 +2363,7 @@ std::vector<sptr<SceneSession>> SceneSession::GetSubSession() const
 WSRect SceneSession::GetSessionTargetRect() const
 {
     WSRect rect;
+    std::shared_lock<std::shared_mutex> lock(moveDragControllerMutex_);
     if (moveDragController_) {
         rect = moveDragController_->GetTargetRect();
     } else {
@@ -2355,6 +2374,7 @@ WSRect SceneSession::GetSessionTargetRect() const
 
 void SceneSession::SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFunc& func)
 {
+    std::shared_lock<std::shared_mutex> lock(moveDragControllerMutex_);
     if (moveDragController_) {
         moveDragController_->SetWindowDragHotAreaFunc(func);
     }
@@ -2447,6 +2467,7 @@ bool SceneSession::IsDirtyWindow()
 
 void SceneSession::NotifyUILostFocus()
 {
+    std::shared_lock<std::shared_mutex> lock(moveDragControllerMutex_);
     if (moveDragController_) {
         moveDragController_->OnLostFocus();
     }
