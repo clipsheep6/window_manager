@@ -27,6 +27,33 @@ namespace OHOS::Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DMS_DM, "DisplayManagerAgentStub"};
 }
+typedef int32_t(DisplayManagerAgentStub::*HandlerFunc)(MessageParcel&);
+struct HandlerEntry{
+        DisplayManagerAgentStub::uint32_t code;
+        HandlerFunc func;
+    };
+ static const HandlerEntry g_handlerTable[] = {
+        {IDisplayManagerAgent::TRANS_ID_NOTIFY_DISPLAY_POWER_EVENT,
+        &DisplayManagerAgentStub::ProcNotifyDisplayPowerEvent},
+        {IDisplayManagerAgent::TRANS_ID_NOTIFY_DISPLAY_STATE_CHANGED,
+        &DisplayManagerAgentStub::ProcNotifyDisplayStateChanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_SCREEN_CONNECT, &DisplayManagerAgentStub::ProcScreenConnect},
+        {IDisplayManagerAgent::TRANS_ID_ON_SCREEN_DISCONNECT, &DisplayManagerAgentStub::ProcScreenDisconnect},
+        {IDisplayManagerAgent::TRANS_ID_ON_SCREEN_CHANGED, &DisplayManagerAgentStub::ProcScreenChanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_SCREENGROUP_CHANGED, &DisplayManagerAgentStub::ProcScreenGroupChanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_DISPLAY_CONNECT, &DisplayManagerAgentStub::ProcDisplayConnect},
+        {IDisplayManagerAgent::TRANS_ID_ON_DISPLAY_DISCONNECT, &DisplayManagerAgentStub::ProcDisplayDisconnect},
+        {IDisplayManagerAgent::TRANS_ID_ON_DISPLAY_CHANGED, &DisplayManagerAgentStub::ProcDisplayChanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_SCREEN_SHOT, &DisplayManagerAgentStub::ProcScreenShot},
+        {IDisplayManagerAgent::TRANS_ID_ON_PRIVATE_WINDOW DisplayManagerAgentStub::ProcPrivateWindow},
+        {IDisplayManagerAgent::TRANS_ID_ON_FOLD_STATUS_CHANGED, &DisplayManagerAgentStub::ProcFoldStatusChanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_DISPLAY_CHANGE_INFO_CHANGED,
+        &DisplayManagerAgentStub::ProcDisplayChangeInfoChanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_DISPLAY_MODE_CHANGED, &DisplayManagerAgentStub::ProcDisplayModechanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_AVAILABLE_AREA_CHANGED, &DisplayManagerAgentStub::ProcAvailableAreaChanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_FOLD_ANGLE_CHANGED, &DisplayManagerAgentStub::ProcFoldAngleChanged},
+        {IDisplayManagerAgent::TRANS_ID_ON_CAPTURE_STATUS_CHANGED, &DisplayManagerAgentStub::ProcCaptureStatusChanged},
+    };
 
 int32_t DisplayManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
     MessageParcel& reply, MessageOption& option)
@@ -36,64 +63,14 @@ int32_t DisplayManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& d
         WLOGFE("InterfaceToken check failed");
         return -1;
     }
-    switch (code) {
-        case TRANS_ID_NOTIFY_DISPLAY_POWER_EVENT: {
-            return ProcNotifyDisplayPowerEvent(data);
+     for(auto& entry : g_handlerTable){
+          if(entry.code == code)
+          {
+            return (this->*(entry.func))(data);
+          }
         }
-        case TRANS_ID_NOTIFY_DISPLAY_STATE_CHANGED: {
-            return ProcNotifyDisplayStateChanged(data);
-        }
-        case TRANS_ID_ON_SCREEN_CONNECT: {
-            return ProcScreenConnect(data);
-        }
-        case TRANS_ID_ON_SCREEN_DISCONNECT: {
-            return ProcScreenDisconnect(data);
-        }
-        case TRANS_ID_ON_SCREEN_CHANGED: {
-            return ProcScreenChanged(data);
-        }
-        case TRANS_ID_ON_SCREENGROUP_CHANGED: {
-            return ProcScreenGroupChanged(data);
-        }
-        case TRANS_ID_ON_DISPLAY_CONNECT: {
-            return ProcDisplayConnect(data);
-        }
-        case TRANS_ID_ON_DISPLAY_DISCONNECT: {
-            return ProcDisplayDisconnect(data);
-        }
-        case TRANS_ID_ON_DISPLAY_CHANGED: {
-            return ProcDisplayChanged(data);
-        }
-        case TRANS_ID_ON_SCREEN_SHOT: {
-            return ProcScreenShot(data);
-        }
-        case TRANS_ID_ON_PRIVATE_WINDOW: {
-            return ProcPrivateWindow(data);
-        }
-        case TRANS_ID_ON_FOLD_STATUS_CHANGED: {
-            return ProcFoldStatusChanged(data);
-        }
-        case TRANS_ID_ON_DISPLAY_CHANGE_INFO_CHANGED: {
-            return ProcDisplayChangeInfoChanged(data);
-        }
-        case TRANS_ID_ON_DISPLAY_MODE_CHANGED: {
-            return ProcDisplayModechanged(data);
-        }
-        case TRANS_ID_ON_AVAILABLE_AREA_CHANGED: {
-            return ProcAvailableAreaChanged(data);
-        }
-        case TRANS_ID_ON_FOLD_ANGLE_CHANGED: {
-            return ProcFoldAngleChanged(data);
-        }
-        case TRANS_ID_ON_CAPTURE_STATUS_CHANGED: {
-            return ProcCaptureStatusChanged(data);
-        }
-        default: {
-            WLOGFW("unknown transaction code %{public}d", code);
-            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
-        }
-    }
-    return 0;
+    WLOGFW("unknown transaction code %{public}d", code);
+    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);  
 }
 
 int32_t DisplayManagerAgentStub::ProcFoldAngleChanged(MessageParcel& data)
