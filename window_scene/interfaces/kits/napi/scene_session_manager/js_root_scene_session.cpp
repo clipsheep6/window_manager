@@ -21,6 +21,8 @@
 #include "window_manager_hilog.h"
 
 #include "js_scene_utils.h"
+#include "singleton_container.h"
+#include "dms_reporter.h"
 
 namespace OHOS::Rosen {
 using namespace AbilityRuntime;
@@ -211,6 +213,7 @@ void JsRootSceneSession::PendingSessionActivationInner(std::shared_ptr<SessionIn
 {
     auto iter = jsCbMap_.find(PENDING_SCENE_CB);
     if (iter == jsCbMap_.end()) {
+        WLOGFE("[NAPI]PendingSessionActivationInner find callback failed.");
         return;
     }
     auto jsCallBack = iter->second;
@@ -248,7 +251,7 @@ void JsRootSceneSession::PendingSessionActivation(SessionInfo& info)
         TLOGE(WmsLogTag::WMS_LIFE, "sceneSession is nullptr");
         return;
     }
-    
+
     if (info.want != nullptr) {
         bool isNeedBackToOther = info.want->GetBoolParam(AAFwk::Want::PARAM_BACK_TO_OTHER_MISSION_STACK, false);
         TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]session: %{public}d isNeedBackToOther: %{public}d",
@@ -266,6 +269,19 @@ void JsRootSceneSession::PendingSessionActivation(SessionInfo& info)
             info.callerPersistentId_ = realCallerSessionId;
         } else {
             info.callerPersistentId_ = 0;
+        }
+
+        std::string continueSessionId = info.want->GetStringParam(Rosen::PARAM_KEY::PARAM_DMS_CONTINUE_SESSION_ID_KEY);
+        if (!continueSessionId.empty()) {
+            info.continueSessionId_ = continueSessionId;
+            TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]continueSessionId from ability manager: %{public}s",
+                continueSessionId.c_str());
+        }
+
+        // app continue report for distributed scheduled service
+        if (info.want->GetIntParam(Rosen::PARAM_KEY::PARAM_DMS_PERSISTENT_ID_KEY, 0) > 0) {
+            TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]continue app with persistentId: %{public}d", info.persistentId_);
+            SingletonContainer::Get<DmsReporter>().ReportContinueApp(true, static_cast<int32_t>(WSError::WS_OK));
         }
     }
     sceneSession->SetSessionInfo(info);

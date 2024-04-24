@@ -101,8 +101,8 @@ public:
     virtual void RecoverAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
         sptr<WindowSessionProperty> property, sptr<ISession>& session, sptr<IRemoteObject> token = nullptr);
-    virtual void DestroyAndDisconnectSpecificSession(const int32_t persistentId);
-    virtual void DestroyAndDisconnectSpecificSessionWithDetachCallback(const int32_t persistentId,
+    virtual WMError DestroyAndDisconnectSpecificSession(const int32_t persistentId);
+    virtual WMError DestroyAndDisconnectSpecificSessionWithDetachCallback(const int32_t persistentId,
         const sptr<IRemoteObject>& callback);
     virtual WMError RecoverAndReconnectSceneSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
@@ -124,9 +124,12 @@ public:
     virtual WMError GetHostWindowRect(int32_t hostWindowId, Rect& rect);
     virtual WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus);
     virtual WMError GetCallingWindowRect(int32_t persistentId, Rect& rect);
+    virtual WMError GetWindowBackHomeStatus(bool &isBackHome);
     
 private:
     static inline SingletonDelegator<WindowAdapter> delegator;
+    void ReregisterWindowManagerAgent();
+    void OnUserSwitch();
     bool InitWMSProxy();
     bool InitSSMProxy();
 
@@ -138,6 +141,7 @@ private:
     bool isProxyValid_ { false };
 
     bool recoverInitialized = false;
+    bool isRegisteredUserSwitchListener_ = false;
     std::map<int32_t, SessionRecoverCallbackFunc> sessionRecoverCallbackFuncMap_;
     std::map<WindowManagerAgentType, std::set<sptr<IWindowManagerAgent>>> windowManagerAgentMap_;
 };

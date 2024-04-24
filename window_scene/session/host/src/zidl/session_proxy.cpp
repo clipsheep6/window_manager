@@ -214,8 +214,17 @@ WSError SessionProxy::Connect(const sptr<ISessionStage>& sessionStage, const spt
         if (needUpdate) {
             property->SetWindowMode(static_cast<WindowMode>(reply.ReadUint32()));
         }
+        Rect preRect = property->GetWindowRect();
         Rect rect = { reply.ReadInt32(), reply.ReadInt32(), reply.ReadUint32(), reply.ReadUint32() };
-        property->SetWindowRect(rect);
+        TLOGI(WmsLogTag::WMS_LAYOUT, "updateRect when connect."
+            "preRect:[%{public}d, %{public}d, %{public}u, %{public}u]"
+            "rect:[%{public}d, %{public}d, %{public}u, %{public}u]",
+            preRect.posX_, preRect.posY_, preRect.width_, preRect.height_,
+            rect.posX_, rect.posY_, rect.width_, rect.height_);
+        if (preRect.IsUninitializedRect() && !rect.IsUninitializedRect()) {
+            property->SetWindowRect(rect);
+        }
+        property->SetCollaboratorType(reply.ReadInt32());
     }
     int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);

@@ -71,7 +71,6 @@ bool WindowAdapterLite::InitSSMProxy()
             WLOGFE("Failed to get system scene session manager services");
             return false;
         }
-
         wmsDeath_ = new (std::nothrow) WMSDeathRecipient();
         if (!wmsDeath_) {
             WLOGFE("Failed to create death Recipient ptr WMSDeathRecipient");
@@ -82,9 +81,23 @@ bool WindowAdapterLite::InitSSMProxy()
             WLOGFE("Failed to add death recipient");
             return false;
         }
+        // U0 system user needs to subscribe OnUserSwitch event
+        int32_t clientUserId = GetUserIdByUid(getuid());
+        if (clientUserId == SYSTEM_USERID && !isRegisteredUserSwitchListener_) {
+            SessionManagerLite::GetInstance().RegisterUserSwitchListener(
+                std::bind(&WindowAdapterLite::OnUserSwitch, this));
+            isRegisteredUserSwitchListener_ = true;
+        }
         isProxyValid_ = true;
     }
     return true;
+}
+
+void WindowAdapterLite::OnUserSwitch()
+{
+    TLOGI(WmsLogTag::WMS_MULTI_USER, "User switched lite");
+    ClearWindowAdapter();
+    InitSSMProxy();
 }
 
 void WindowAdapterLite::ClearWindowAdapter()
@@ -122,5 +135,11 @@ void WindowAdapterLite::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
     return windowManagerServiceProxy_->GetFocusWindowInfo(focusInfo);
 }
 
+WMError WindowAdapterLite::GetWindowBackHomeStatus(bool &isBackHome)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    WLOGFD("get back home status");
+    return windowManagerServiceProxy_->GetWindowBackHomeStatus(isBackHome);
+}
 } // namespace Rosen
 } // namespace OHOS

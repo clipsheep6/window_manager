@@ -58,7 +58,6 @@ public:
     const ScreenId testVirtualScreenId_ = 2;
     const uint32_t testVirtualScreenWidth_ = 1920;
     const uint32_t testVirtualScreenHeight_ = 1080;
-    const uint32_t testVirtualScreenRefreshRate_ = 60;
     static sptr<Display> defaultDisplay_;
     static uint32_t defaultWidth_;
     static uint32_t defaultHeight_;
@@ -469,17 +468,6 @@ HWTEST_F(ScreenManagerTest, StopMirror, Function | SmallTest | Level1)
 }
 
 /**
- * @tc.name: SetVirtualScreenRefreshRate
- * @tc.desc: Set virtual screen refrensh rate.
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenManagerTest, SetVirtualScreenRefreshRate, Function | SmallTest | Level1)
-{
-    ASSERT_EQ(DMError::DM_OK, ScreenManager::GetInstance().SetVirtualScreenRefreshRate(testVirtualScreenId_,
-        testVirtualScreenRefreshRate_));
-}
-
-/**
  * @tc.name: RegisterScreenListener
  * @tc.desc: RegisterScreenListener fun
  * @tc.type: FUNC
@@ -592,6 +580,38 @@ HWTEST_F(ScreenManagerTest, SetVirtualMirrorScreenScaleMode02, Function | SmallT
     ASSERT_EQ(DMError::DM_OK, ret);
     ret = ScreenManager::GetInstance().DestroyVirtualScreen(screenId);
     ASSERT_EQ(DMError::DM_OK, ret);
+}
+
+/**
+ * @tc.name: IsCaptured02
+ * @tc.desc: IsCaptured02 fun
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenManagerTest, IsCaptured02, Function | SmallTest | Level1)
+{
+    VirtualScreenOption defaultOption = {defaultName_, defaultWidth_, defaultHeight_,
+                                         defaultDensity_, nullptr, defaultFlags_};
+    ScreenId screenId = ScreenManager::GetInstance().CreateVirtualScreen(defaultOption);
+    bool isCapture = DisplayManager::GetInstance().IsCaptured();
+    ASSERT_TRUE(isCapture);
+    auto ret = ScreenManager::GetInstance().DestroyVirtualScreen(screenId);
+    ASSERT_EQ(DMError::DM_OK, ret);
+}
+
+/**
+ * @tc.name: IsCaptured03
+ * @tc.desc: IsCaptured03 fun
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenManagerTest, IsCaptured03, Function | SmallTest | Level1)
+{
+    VirtualScreenOption defaultOption = {defaultName_, defaultWidth_, defaultHeight_,
+                                         defaultDensity_, nullptr, defaultFlags_};
+    ScreenId screenId = ScreenManager::GetInstance().CreateVirtualScreen(defaultOption);
+    auto ret = ScreenManager::GetInstance().DestroyVirtualScreen(screenId);
+    ASSERT_EQ(DMError::DM_OK, ret);
+    bool isCapture = DisplayManager::GetInstance().IsCaptured();
+    ASSERT_FALSE(isCapture);
 }
 }
 } // namespace Rosen

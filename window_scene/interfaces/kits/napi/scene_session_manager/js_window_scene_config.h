@@ -30,11 +30,13 @@ public:
     JsWindowSceneConfig();
     ~JsWindowSceneConfig();
     static napi_value CreateWindowSceneConfig(napi_env env, const AppWindowSceneConfig& config);
+    static napi_value CreateFreeMultiWindowConfig(napi_env env, const SystemSessionConfig& config);
 
 private:
     static napi_value CreateShadowValue(napi_env env, const AppWindowSceneConfig& config, bool focused);
     static napi_value CreateKeyboardAnimationValue(napi_env env, const KeyboardSceneAnimationConfig& config);
     static napi_value CreateWindowAnimationValue(napi_env env, const AppWindowSceneConfig& config);
+    static napi_value CreateSystemUIStatusBarValue(napi_env env, const SystemUIStatusBarConfig& config);
 };
 } // namespace OHOS::Rosen
 

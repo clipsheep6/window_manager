@@ -20,14 +20,18 @@ group("unittest") {
 
   deps = [
     ":ws_distributed_client_test",
+    ":ws_dual_display_device_policy_test",
     ":ws_event_stage_test",
     ":ws_extension_session_manager_test",
     ":ws_extension_session_test",
     ":ws_fold_screen_controller_test",
     ":ws_fold_screen_state_machine_test",
     ":ws_keyboard_session_test",
+    ":ws_main_session_test",
     ":ws_move_drag_controller_test",
     ":ws_root_scene_session_test",
+    ":ws_scb_system_session_test",
+    ":ws_scene_input_manager_test",
     ":ws_scene_persistence_test",
     ":ws_scene_persistent_storage_test",
     ":ws_scene_session_converter_test",
@@ -57,6 +61,7 @@ group("unittest") {
     ":ws_session_stub_test",
     ":ws_session_test",
     ":ws_setting_observer_test",
+    ":ws_sub_session_test",
     ":ws_system_session_test",
     ":ws_task_scheduler_test",
     ":ws_timer_manager_test",
@@ -67,6 +72,28 @@ group("unittest") {
     ":ws_window_event_channel_test",
     ":ws_window_scene_config_test",
     ":ws_window_session_property_test",
+  ]
+}
+
+ohos_unittest("ws_scene_input_manager_test") {
+  module_out_path = module_out_path
+
+  sources = [ "scene_input_manager_test.cpp" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "ability_runtime:app_manager",
+    "accessibility:accessibility_common",
+    "ace_engine:ace_uicontent",
+    "c_utils:utils",
+    "eventhandler:libeventhandler",
+    "graphic_2d:libcomposer",
+    "graphic_2d:window_animation",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "input:libmmi-client",
   ]
 }
 
@@ -87,6 +114,59 @@ ohos_unittest("ws_keyboard_session_test") {
   module_out_path = module_out_path
 
   sources = [ "keyboard_session_test.cpp" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("ws_dual_display_device_policy_test") {
+  module_out_path = module_out_path
+
+  sources = [ "dual_display_device_policy_test.cpp" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "ability_runtime:app_manager",
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("ws_main_session_test") {
+  module_out_path = module_out_path
+
+  sources = [ "main_session_test.cpp" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("ws_scb_system_session_test") {
+  module_out_path = module_out_path
+
+  sources = [ "scb_system_session_test.cpp" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("ws_sub_session_test") {
+  module_out_path = module_out_path
+
+  sources = [ "sub_session_test.cpp" ]
 
   deps = [ ":ws_unittest_common" ]
 
@@ -255,8 +335,10 @@ ohos_unittest("ws_session_test") {
   external_deps = [
     "ability_base:session_info",
     "ability_base:want",
+    "ability_runtime:app_manager",
     "accessibility:accessibility_common",
     "c_utils:utils",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
   ]
 }
@@ -400,6 +482,7 @@ ohos_unittest("ws_scene_session_manager_test") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
   ]
 }
@@ -413,6 +496,7 @@ ohos_unittest("ws_scene_session_manager_proxy_test") {
 
   external_deps = [
     "ability_runtime:app_manager",
+    "ability_runtime:mission_info",
     "c_utils:utils",
     "hilog:libhilog",
   ]

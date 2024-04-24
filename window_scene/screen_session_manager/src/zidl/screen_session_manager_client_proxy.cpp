@@ -109,7 +109,12 @@ void ScreenSessionManagerClientProxy::OnPowerStatusChanged(DisplayPowerEvent eve
         WLOGFE("Write reason failed");
         return;
     }
-    if (Remote()->SendRequest(
+    auto remote = Remote();
+    if (remote == nullptr) {
+        WLOGFE("SendRequest failed, Remote is nullptr");
+        return;
+    }
+    if (remote->SendRequest(
         static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_ON_POWER_STATUS_CHANGED),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
@@ -343,6 +348,27 @@ void ScreenSessionManagerClientProxy::SetDisplayNodeScreenId(ScreenId screenId, 
     }
     if (Remote()->SendRequest(
         static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_SET_DISPLAY_NODE_SCREEN_ID),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return;
+    }
+}
+
+void ScreenSessionManagerClientProxy::SetVirtualPixelRatioSystem(ScreenId screenId, float virtualPixelRatio)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+    if (!data.WriteUint64(screenId) || !data.WriteFloat(virtualPixelRatio)) {
+        WLOGFE("Write screenId/virtualPixelRatio failed");
+        return;
+    }
+    if (Remote()->SendRequest(
+        static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_SET_VIRTUAL_PIXEL_RATIO_SYSTEM),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
         return;

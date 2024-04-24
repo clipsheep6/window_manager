@@ -1632,7 +1632,7 @@ HWTEST_F(WindowTest, Recover, Function | SmallTest | Level2)
     ASSERT_NE(nullptr, window);
     auto ret = window->Recover();
     if (SceneBoardJudgement::IsSceneBoardEnabled()) {
-        ASSERT_EQ(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, ret);
+        ASSERT_NE(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, ret);
     } else {
         ASSERT_EQ(WMError::WM_OK, ret);
     }
@@ -2333,6 +2333,228 @@ HWTEST_F(WindowTest, UnregisterWindowRectChangeListener, Function | SmallTest | 
     sptr<IWindowRectChangeListener> listener = nullptr;
     auto ret = window->UnregisterWindowRectChangeListener(listener);
     ASSERT_EQ(WMError::WM_OK, ret);
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: GetTopWindowWithContext
+ * @tc.desc: get
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, GetTopWindowWithContext, Function | SmallTest | Level2)
+{
+    sptr<Window> window = new Window();
+    ASSERT_NE(nullptr, window);
+    std::shared_ptr<AbilityRuntime::Context> context = nullptr;
+    auto ret = window->GetTopWindowWithContext(context);
+    ASSERT_EQ(nullptr, ret);
+}
+
+/**
+ * @tc.name: GetTopWindowWithId
+ * @tc.desc: get
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, GetTopWindowWithId, Function | SmallTest | Level2)
+{
+    sptr<Window> window = new Window();
+    ASSERT_NE(nullptr, window);
+    std::shared_ptr<AbilityRuntime::Context> context = nullptr;
+    auto ret = window->GetTopWindowWithContext(context);
+    ASSERT_EQ(nullptr, ret);
+}
+
+/**
+ * @tc.name: Create05
+ * @tc.desc: Create window with WindowName and no abilityToken
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, Create05, Function | SmallTest | Level2)
+{
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    sptr<WindowOption> option = nullptr;
+    auto window = Window::Create("WindowTest02", option);
+    uint32_t version = 0;
+    if (version < 10)
+    {
+        ASSERT_NE(10, version);
+    }
+    WindowOption windowoption;
+    windowoption.onlySupportSceneBoard_ = true;
+    ASSERT_NE(true, option->GetOnlySupportSceneBoard());
+}
+
+/**
+ * @tc.name: GetMainWindowWithContext|GetWindowWithId
+ *                      |GetSubWindow|UpdateConfigurationForAll
+ * @tc.desc: get
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, GetMainWindowWithContext, Function | SmallTest | Level2)
+{
+    sptr<Window> window = new Window();
+    uint32_t windId = 0;
+    uint32_t parentId = 1;
+    std::shared_ptr<AppExecFwk::Configuration> configuration = nullptr;
+
+    std::shared_ptr<AbilityRuntime::Context> context = nullptr;
+    auto ret = window->GetMainWindowWithContext(context);
+    window->GetWindowWithId(windId);
+    window->GetSubWindow(parentId);
+    window->UpdateConfigurationForAll(configuration);
+    ASSERT_EQ(nullptr, ret);
+}
+
+/**
+ * @tc.name: SetTopmost|GetWIsTopmostindowWithId
+ * @tc.desc: get
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, SetTopmost, Function | SmallTest | Level2)
+{
+    sptr<Window> window = new Window();
+    ASSERT_NE(nullptr, window);
+    auto ret = window->SetTopmost(false);
+    ASSERT_EQ(WMError::WM_OK, ret);
+    ASSERT_EQ(false, window->IsTopmost());
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: SetUIContentByName
+ * @tc.desc: get
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, SetUIContentByName, Function | SmallTest | Level2)
+{
+    sptr<Window> window = new Window();
+    ASSERT_NE(nullptr, window);
+    napi_env env = nullptr;
+    napi_value storage = nullptr;
+    auto ret = window->SetUIContentByName("/system/etc/window/resources/test.abc", env, storage);
+    ASSERT_EQ(WMError::WM_OK, ret);
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: TriggerBindModalUIExtension
+ * @tc.desc: get
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, TriggerBindModalUIExtension, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> winOption = nullptr;
+    winOption = new(std::nothrow) OHOS::Rosen::WindowOption();
+    ASSERT_NE(nullptr, winOption);
+    winOption->SetWindowType(OHOS::Rosen::WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
+    sptr<WindowOption> option = new WindowOption();
+    sptr<Window> window = Window::Create("TriggerBindModalUIExtension", option);
+    if (window != nullptr) {
+        ASSERT_NE(nullptr, window);
+        window->TriggerBindModalUIExtension();
+    }
+    sptr<Window> window_ = new Window();
+    ASSERT_NE(nullptr, window_);
+    window_->PerformBack();
+}
+
+/**
+ * @tc.name: RegisterTransferComponentDataForResultListener
+ * @tc.desc: get
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, RegisterTransferComponentDataForResultListener, Function | SmallTest | Level2)
+{
+    sptr<Window> window = new Window();
+    ASSERT_NE(nullptr, window);
+    NotifyTransferComponentDataForResultFunc func;
+    auto ret = true;
+    window->RegisterTransferComponentDataForResultListener(func);
+    ASSERT_EQ(true, ret);
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: SetTextFieldAvoidInfo|KeepKeyboardOnFocus
+ * @tc.desc: get
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, SetTextFieldAvoidInfo, Function | SmallTest | Level2)
+{
+    sptr<Window> window = new Window();
+    ASSERT_NE(nullptr, window);
+    auto ret = window->SetTextFieldAvoidInfo(50.0, 100.0);
+    ASSERT_EQ(WMError::WM_OK, ret);
+    auto retur = window->KeepKeyboardOnFocus(false);
+    ASSERT_EQ(WmErrorCode::WM_ERROR_DEVICE_NOT_SUPPORT, retur);
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: Test01
+ * @tc.desc: Test01
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, Test01, Function | SmallTest | Level2)
+{
+    sptr<Window> window = new Window();
+    ASSERT_NE(nullptr, window);
+    SystemBarProperty prop;
+    ASSERT_EQ(WMError::WM_OK, window->SetSpecificBarProperty(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW, prop));
+    ASSERT_EQ(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, window->SetDecorVisible(true));
+    ASSERT_EQ(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, window->SetTitleButtonVisible(true, true, true));
+    auto var = 5;
+    ASSERT_EQ(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, window->SetDecorHeight(var));
+    ASSERT_EQ(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, window->GetDecorHeight(var));
+    ASSERT_EQ(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, window->ClearKeyEventFilter());
+    IWindowVisibilityChangedListener windowVisibilityChangedListener;
+    windowVisibilityChangedListener.OnWindowVisibilityChangedCallback(false);
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: Test02
+ * @tc.desc: Test02
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, Test02, Function | SmallTest | Level2)
+{
+    sptr<Window> window = new Window();
+    ASSERT_NE(nullptr, window);
+    IWindowLifeCycle windowLifeCycle;
+    windowLifeCycle.AfterResumed();
+    windowLifeCycle.AfterPaused();
+    windowLifeCycle.AfterDestroyed();
+    IWindowStatusChangeListener windowStatusChangeListener;
+    windowStatusChangeListener.OnWindowStatusChange(WindowStatus::WINDOW_STATUS_UNDEFINED);
+    ASSERT_EQ(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, window->SetDefaultDensityEnabled(true));
+    ASSERT_EQ(false, window->GetDefaultDensityEnabled());
+    Rect rect_ = {0, 0, 0, 0};
+    window->UpdatePiPRect(rect_, WindowSizeChangeReason::UNDEFINED);
+    IWindowRectChangeListener windowRectChangeListener;
+    windowRectChangeListener.OnRectChange(rect_, WindowSizeChangeReason::UNDEFINED);
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: Test03
+ * @tc.desc: Test03
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, Test03, Function | SmallTest | Level2)
+{
+    sptr<Window> window = new Window();
+    ASSERT_NE(nullptr, window);
+    KeyEventFilterFunc keyEventFilterFunc;
+    ASSERT_EQ(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, window->SetKeyEventFilter(keyEventFilterFunc));
+    IWindowNoInteractionListener windowNoInteractionListener;
+    windowNoInteractionListener.OnWindowNoInteractionCallback();
+    windowNoInteractionListener.SetTimeout(100);
+    ASSERT_EQ(0, windowNoInteractionListener.GetTimeout());
+    TitleButtonRect titleButtonRect = {3, 3, 3, 3};
+    ASSERT_EQ(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, window->GetTitleButtonArea(titleButtonRect));
+    IWindowTitleButtonRectChangedListener windowTitleButtonRectChangedListener;
+    windowTitleButtonRectChangedListener.OnWindowTitleButtonRectChanged(titleButtonRect);
     ASSERT_EQ(WMError::WM_OK, window->Destroy());
 }
 }

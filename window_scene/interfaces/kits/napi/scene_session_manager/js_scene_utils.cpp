@@ -142,6 +142,19 @@ bool IsJsCallStateUndefind(napi_env env, napi_value jsCallState, SessionInfo& se
     return true;
 }
 
+bool IsJsWindowInputTypeUndefind(napi_env env, napi_value jsWindowInputType, SessionInfo& sessionInfo)
+{
+    if (GetType(env, jsWindowInputType) != napi_undefined) {
+        uint32_t windowInputType = 0;
+        if (!ConvertFromJsValue(env, jsWindowInputType, windowInputType)) {
+            WLOGFE("[NAPI]Failed to convert parameter to windowInputType");
+            return false;
+        }
+        sessionInfo.windowInputType_ = static_cast<uint32_t>(windowInputType);
+    }
+    return true;
+}
+
 bool IsJsSessionTypeUndefind(napi_env env, napi_value jsSessionType, SessionInfo& sessionInfo)
 {
     if (GetType(env, jsSessionType) != napi_undefined) {
@@ -248,6 +261,8 @@ bool ConvertSessionInfoName(napi_env env, napi_value jsObject, SessionInfo& sess
     napi_get_named_property(env, jsObject, "appIndex", &jsAppIndex);
     napi_value jsIsSystem = nullptr;
     napi_get_named_property(env, jsObject, "isSystem", &jsIsSystem);
+    napi_value jsWindowInputType = nullptr;
+    napi_get_named_property(env, jsObject, "windowInputType", &jsWindowInputType);
     if (!IsJsBundleNameUndefind(env, jsBundleName, sessionInfo)) {
         return false;
     }
@@ -261,6 +276,9 @@ bool ConvertSessionInfoName(napi_env env, napi_value jsObject, SessionInfo& sess
         return false;
     }
     if (!IsJsIsSystemUndefind(env, jsIsSystem, sessionInfo)) {
+        return false;
+    }
+    if (!IsJsWindowInputTypeUndefind(env, jsWindowInputType, sessionInfo)) {
         return false;
     }
     return true;
@@ -666,6 +684,35 @@ napi_value CreateJsSessionInfo(napi_env env, const SessionInfo& sessionInfo)
     return objValue;
 }
 
+napi_value CreateJsSessionRecoverInfo(
+    napi_env env, const SessionInfo &sessionInfo, const sptr<WindowSessionProperty> property)
+{
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue == nullptr) {
+        WLOGFE("[NAPI]Failed to get jsObject");
+        return nullptr;
+    }
+    napi_set_named_property(env, objValue, "bundleName", CreateJsValue(env, sessionInfo.bundleName_));
+    napi_set_named_property(env, objValue, "moduleName", CreateJsValue(env, sessionInfo.moduleName_));
+    napi_set_named_property(env, objValue, "abilityName", CreateJsValue(env, sessionInfo.abilityName_));
+    napi_set_named_property(env, objValue, "appIndex", CreateJsValue(env, sessionInfo.appIndex_));
+    napi_set_named_property(env, objValue, "screenId",
+        CreateJsValue(env, static_cast<int32_t>(sessionInfo.screenId_)));
+    napi_set_named_property(env, objValue, "windowMode",
+        CreateJsValue(env, static_cast<int32_t>(sessionInfo.windowMode)));
+    napi_set_named_property(env, objValue, "sessionState",
+        CreateJsValue(env, static_cast<int32_t>(sessionInfo.sessionState_)));
+    napi_set_named_property(env, objValue, "sessionType",
+        CreateJsValue(env, static_cast<uint32_t>(GetApiType(static_cast<WindowType>(sessionInfo.windowType_)))));
+    napi_set_named_property(env, objValue, "requestOrientation",
+        CreateJsValue(env, sessionInfo.requestOrientation_));
+    Rect rect = property->GetWindowRect();
+    WSRect wsRect = { rect.posX_, rect.posY_, rect.width_, rect.height_ };
+    napi_set_named_property(env, objValue, "recoverRect", CreateJsSessionRect(env, wsRect));
+    return objValue;
+}
+
 void SetJsSessionInfoByWant(napi_env env, const SessionInfo& sessionInfo, napi_value objValue)
 {
     if (sessionInfo.want != nullptr) {
@@ -877,6 +924,8 @@ static napi_value CreateJsSystemBarPropertyObject(
     std::string contentColor = GetHexColor(property.contentColor_);
     napi_set_named_property(env, objValue, "contentcolor", CreateJsValue(env, contentColor));
     napi_set_named_property(env, objValue, "enableAnimation", CreateJsValue(env, property.enableAnimation_));
+    napi_set_named_property(
+        env, objValue, "settingFlag", CreateJsValue(env, static_cast<uint32_t>(property.settingFlag_)));
 
     return objValue;
 }

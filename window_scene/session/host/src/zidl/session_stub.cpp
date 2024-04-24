@@ -251,6 +251,7 @@ int SessionStub::HandleConnect(MessageParcel& data, MessageParcel& reply)
         reply.WriteInt32(winRect.posY_);
         reply.WriteUint32(winRect.width_);
         reply.WriteUint32(winRect.height_);
+        reply.WriteInt32(property->GetCollaboratorType());
     }
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
@@ -601,8 +602,8 @@ int SessionStub::HandleUpdatePiPRect(MessageParcel& data, MessageParcel& reply)
 int SessionStub::HandleProcessPointDownSession(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("HandleProcessPointDownSession!");
-    uint32_t posX = data.ReadInt32();
-    uint32_t posY = data.ReadInt32();
+    int32_t posX = data.ReadInt32();
+    int32_t posY = data.ReadInt32();
     WSError errCode = ProcessPointDownSession(posX, posY);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;

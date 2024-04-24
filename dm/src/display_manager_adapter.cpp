@@ -62,6 +62,12 @@ std::shared_ptr<Media::PixelMap> DisplayManagerAdapter::GetDisplaySnapshot(Displ
     return displayManagerServiceProxy_->GetDisplaySnapshot(displayId, errorCode);
 }
 
+std::shared_ptr<Media::PixelMap> DisplayManagerAdapter::GetSnapshotByPicker(Media::Rect &rect, DmErrorCode* errorCode)
+{
+    INIT_PROXY_CHECK_RETURN(nullptr);
+    return displayManagerServiceProxy_->GetSnapshotByPicker(rect, errorCode);
+}
+
 DMError ScreenManagerAdapter::GetScreenSupportedColorGamuts(ScreenId screenId,
     std::vector<ScreenColorGamut>& colorGamuts)
 {
@@ -540,6 +546,12 @@ bool DisplayManagerAdapter::IsFoldable()
     return displayManagerServiceProxy_->IsFoldable();
 }
 
+bool DisplayManagerAdapter::IsCaptured()
+{
+    INIT_PROXY_CHECK_RETURN(false);
+    return displayManagerServiceProxy_->IsCaptured();
+}
+
 FoldStatus DisplayManagerAdapter::GetFoldStatus()
 {
     INIT_PROXY_CHECK_RETURN(FoldStatus::UNKNOWN);
@@ -630,6 +642,13 @@ DMError ScreenManagerAdapter::SetVirtualPixelRatio(ScreenId screenId, float virt
     return displayManagerServiceProxy_->SetVirtualPixelRatio(screenId, virtualPixelRatio);
 }
 
+DMError ScreenManagerAdapter::SetVirtualPixelRatioSystem(ScreenId screenId, float virtualPixelRatio)
+{
+    INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
+
+    return displayManagerServiceProxy_->SetVirtualPixelRatioSystem(screenId, virtualPixelRatio);
+}
+
 DMError ScreenManagerAdapter::SetResolution(ScreenId screenId, uint32_t width, uint32_t height, float virtualPixelRatio)
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
@@ -691,5 +710,12 @@ DMError ScreenManagerAdapter::SetVirtualScreenFlag(ScreenId screenId, VirtualScr
         return DMError::DM_ERROR_INVALID_PARAM;
     }
     return displayManagerServiceProxy_->SetVirtualScreenFlag(screenId, screenFlag);
+}
+
+DMError ScreenManagerAdapter::SetVirtualScreenRefreshRate(ScreenId screenId, uint32_t refreshInterval)
+{
+    INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
+
+    return displayManagerServiceProxy_->SetVirtualScreenRefreshRate(screenId, refreshInterval);
 }
 } // namespace OHOS::Rosen

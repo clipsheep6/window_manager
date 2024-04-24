@@ -104,6 +104,7 @@ public:
     virtual WMError SetBackdropBlur(float radius) override;
     virtual WMError SetBackdropBlurStyle(WindowBlurStyle blurStyle) override;
     virtual WMError SetWindowMode(WindowMode mode) override;
+    virtual WMError SetGrayScale(float grayScale) override;
 
     virtual WMError SetTransparent(bool isTransparent) override;
     virtual WMError SetTurnScreenOn(bool turnScreenOn) override;
@@ -144,7 +145,7 @@ public:
     bool GetDefaultDensityEnabled() override;
     WMError HideNonSecureWindows(bool shouldHide) override;
     virtual WMError SetWindowMask(const std::vector<std::vector<uint32_t>>& windowMask) override;
-
+    WSError SwitchFreeMultiWindow(bool enable) override;
 protected:
     void DestroySubWindow();
     WMError CreateAndConnectSpecificSession();
@@ -169,7 +170,7 @@ protected:
 
 private:
     WMError DestroyInner(bool needNotifyServer);
-    void SyncDestroyAndDisconnectSpecificSession(int32_t persistentId);
+    WMError SyncDestroyAndDisconnectSpecificSession(int32_t persistentId);
     bool IsValidSystemWindowType(const WindowType& type);
     WMError CheckParmAndPermission();
     static uint32_t maxFloatingWindowSize_;
@@ -187,6 +188,8 @@ private:
     bool HandlePointDownEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
         const MMI::PointerEvent::PointerItem& pointerItem, int32_t sourceType, float vpr, const WSRect& rect);
     std::unique_ptr<Media::PixelMap> HandleWindowMask(const std::vector<std::vector<uint32_t>>& windowMask);
+    void calculateNewLimitsBySystemLimits(WindowLimits& newLimits, const WindowLimits& customizedLimits);
+    void calculateNewLimitsByRatio(WindowLimits& newLimits, const WindowLimits& customizedLimits);
     bool enableDefaultAnimation_ = true;
     sptr<IAnimationTransitionController> animationTransitionController_;
     uint32_t setSameSystembarPropertyCnt_ = 0;
