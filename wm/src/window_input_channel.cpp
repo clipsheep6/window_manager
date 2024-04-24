@@ -122,8 +122,8 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
         if (pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_DOWN ||
             pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
             MMI::PointerEvent::PointerItem pointerItem;
-            int32_t displayX = static_cast<int32_t>(pointerItem.GetDisplayX())
-            int32_t displayY = static_cast<int32_t>(pointerItem.GetDisplayY())
+            int32_t displayX = static_cast<int32_t>(pointerItem.GetDisplayX());
+            int32_t displayY = static_cast<int32_t>(pointerItem.GetDisplayY());
             if (pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem)) {
                 window_->NotifyTouchDialogTarget(displayX, displayY);
             }
