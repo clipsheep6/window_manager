@@ -98,6 +98,11 @@ WSError KeyboardSession::Hide()
             TLOGE(WmsLogTag::WMS_KEYBOARD, "Set session active state failed, ret: %{public}d", ret);
             return ret;
         }
+        if (session->isKeyboardPanelEnabled_ == true) {
+            WSRect rect = {0, 0, 0, 0};
+            session->SetKeyboardPanelInfo(rect, false);
+            session->NotifyKeyboardPanelInfoChange(session->keyboardPanelInfo_);
+        }
         ret = session->SceneSession::Background();
         session->RestoreCallingSession();
         if (session->GetSessionProperty()) {
@@ -120,6 +125,11 @@ WSError KeyboardSession::Disconnect(bool isFromClient)
         TLOGI(WmsLogTag::WMS_KEYBOARD, "Disconnect keyboard session, id: %{public}d, isFromClient: %{public}d",
             session->GetPersistentId(), isFromClient);
         session->SceneSession::Disconnect(isFromClient);
+        if (session->isKeyboardPanelEnabled_ == true) {
+            WSRect rect = {0, 0, 0, 0};
+            session->SetKeyboardPanelInfo(rect, false);
+            session->NotifyKeyboardPanelInfoChange(session->keyboardPanelInfo_);
+        }
         session->RestoreCallingSession();
         if (session->GetSessionProperty()) {
             session->GetSessionProperty()->SetCallingSessionId(INVALID_WINDOW_ID);
@@ -198,6 +208,16 @@ void KeyboardSession::SetCallingSessionId(uint32_t callingSessionId)
         return;
     }
     keyboardCallback_->onCallingSessionIdChange_(GetSessionProperty()->GetCallingSessionId());
+}
+
+void KeyboardSession::SetKeyboardPanelInfo(WSRect rect, bool isKeyboardPanelShow)
+{
+    keyboardPanelInfo_.rect_.posX_ = rect.posX_;
+    keyboardPanelInfo_.rect_.posY_ = rect.posY_;
+    keyboardPanelInfo_.rect_.width_ = rect.width_;
+    keyboardPanelInfo_.rect_.height_ = rect.height_;
+    keyboardPanelInfo_.gravity_ = static_cast<WindowGravity>(GetKeyboardGravity());
+    keyboardPanelInfo_.isShowing_ = isKeyboardPanelShow;
 }
 
 sptr<SceneSession> KeyboardSession::GetSceneSession(uint32_t persistentId)
@@ -289,6 +309,16 @@ sptr<SceneSession> KeyboardSession::GetCallingSession()
     return callingSession;
 }
 
+void KeyboardSession::NotifyKeyboardPanelInfoChange(const KeyboardPanelInfo& keyboardPanelInfo)
+{
+    if (!sessionStage_) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "sessionStage_ is nullptr, notify keyboard panel rect change failed");
+        return;
+    }
+
+    sessionStage_->NotifyKeyboardPanelInfoChange(keyboardPanelInfo);
+}
+
 void KeyboardSession::RaiseCallingSession(bool isKeyboardUpdated)
 {
     sptr<SceneSession> callingSession = GetCallingSession();
@@ -319,6 +349,10 @@ void KeyboardSession::RaiseCallingSession(bool isKeyboardUpdated)
         callingSessionRect = callingSessionRestoringRect_;
     }
     const WSRect& keyboardSessionRect = (GetSessionRect().height_ != 0) ? GetSessionRect() : GetSessionRequestRect();
+    if (isKeyboardPanelEnabled_) {
+        SetKeyboardPanelInfo(keyboardSessionRect, true);
+        NotifyKeyboardPanelInfoChange(keyboardPanelInfo_);
+    }
     if (SessionHelper::IsEmptyRect(SessionHelper::GetOverlap(keyboardSessionRect, callingSessionRect, 0, 0))) {
         TLOGI(WmsLogTag::WMS_KEYBOARD, "No overlap area, keyboardRect: %{public}s, callingSessionRect: %{public}s",
             keyboardSessionRect.ToString().c_str(), callingSessionRect.ToString().c_str());

@@ -50,6 +50,7 @@ private:
     WSError SetKeyboardSessionGravity(SessionGravity gravity, uint32_t percent) override;
     void SetCallingSessionId(uint32_t callingSessionId) override;
     sptr<SceneSession> GetCallingSession();
+    void SetKeyboardPanelInfo(WSRect rect, bool isKeyboardPanelShow);
 
     bool IsStatusBarVisible(const sptr<SceneSession>& session);
     int32_t GetStatusBarHeight();
@@ -61,10 +62,12 @@ private:
     void OnKeyboardSessionShown();
     void UpdateCallingSessionIdAndPosition(uint32_t callingSessionId);
     void RelayoutKeyBoard();
+    void NotifyKeyboardPanelInfoChange(const KeyboardPanelInfo& keyboardPanelInfo);
 
     sptr<KeyboardSessionCallback> keyboardCallback_ = nullptr;
     WSRect callingSessionRestoringRect_ = {0, 0, 0, 0};
     WSRect callingSessionRaisedRect_ = {0, 0, 0, 0};
+    KeyboardPanelInfo keyboardPanelInfo_;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_KEYBOARD_SESSION_H
