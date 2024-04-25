@@ -2083,6 +2083,15 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
             TLOGE(WmsLogTag::WMS_LIFE, "session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
+        auto sessionState = session->GetSessionState();
+        if (sessionState != SessionState::STATE_FOREGROUND && sessionState != SessionState::STATE_ACTIVE) {
+            TLOGE(WmsLogTag::WMS_LIFE, "window state invalid.");
+            return WSError::WS_ERROR_INVALID_PERMISSION;
+        }
+        if (WindowHelper::IsMainWindow(session->GetWindowType()) && !(session->GetForegroundInteractiveStatus())) {
+            TLOGE(WmsLogTag::WMS_LIFE, "window state invalid.");
+            return WSError::WS_ERROR_INVALID_PERMISSION;
+        }
         if (abilitySessionInfo == nullptr) {
             TLOGE(WmsLogTag::WMS_LIFE, "abilitySessionInfo is null");
             return WSError::WS_ERROR_NULLPTR;
