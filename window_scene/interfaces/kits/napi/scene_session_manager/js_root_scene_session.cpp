@@ -283,6 +283,11 @@ void JsRootSceneSession::PendingSessionActivation(SessionInfo& info)
             TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]continue app with persistentId: %{public}d", info.persistentId_);
             SingletonContainer::Get<DmsReporter>().ReportContinueApp(true, static_cast<int32_t>(WSError::WS_OK));
         }
+
+        if (info.isSystem_) {
+            auto isFocusOnShow = info.want->GetBoolParam(AAFwk::Want::PARAM_RESV_WINDOW_FOCUS, true);
+            sceneSession->SetFocusOnShow(isFocusOnShow);
+        }
     }
     sceneSession->SetSessionInfo(info);
     std::shared_ptr<SessionInfo> sessionInfo = std::make_shared<SessionInfo>(info);

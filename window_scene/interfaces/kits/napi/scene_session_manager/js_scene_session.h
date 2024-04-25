@@ -123,6 +123,7 @@ private:
 
     void ChangeSessionVisibilityWithStatusBar(SessionInfo& info, bool visible);
     void ChangeSessionVisibilityWithStatusBarInner(std::shared_ptr<SessionInfo> sessionInfo, bool visible);
+    sptr<SceneSession> GenSceneSession(SessionInfo& info);
     void PendingSessionActivation(SessionInfo& info);
     void PendingSessionActivationInner(std::shared_ptr<SessionInfo> sessionInfo);
     void OnSessionStateChange(const SessionState& state);
