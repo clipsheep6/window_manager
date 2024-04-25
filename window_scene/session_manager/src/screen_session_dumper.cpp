@@ -131,6 +131,7 @@ void ScreenSessionDumper::ShowAllScreenInfo()
 void ScreenSessionDumper::DumpFoldStatus()
 {
     std::ostringstream oss;
+    oss << "[FOLD STATUS]" << std::endl;
     auto foldStatus = ScreenSessionManager::GetInstance().GetFoldStatus();
     std::string status = "UNKNOWN";
     switch (foldStatus) {
