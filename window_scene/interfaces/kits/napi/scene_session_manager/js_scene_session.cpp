@@ -1768,7 +1768,7 @@ void JsSceneSession::PendingSessionActivation(SessionInfo& info)
         return;
     }
 
-    if (info.want != nullptr && info.isSystem_) {
+    if (info.want != nullptr) {
         auto focusedOnShow = info.want->GetBoolParam(AAFwk::Want::PARAM_RESV_WINDOW_FOCUSED, true);
         sceneSession->SetFocusedOnShow(focusedOnShow);
     }
