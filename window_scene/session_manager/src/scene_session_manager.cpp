@@ -4724,9 +4724,7 @@ __attribute__((no_sanitize("cfi"))) void SceneSessionManager::OnSessionStateChan
             } else {
                 RequestSessionFocus(persistentId, true);
             }
-            if (!sceneSession->IsFocusedOnShow()) {
-                sceneSession->SetFocusedOnShow(true);
-            }
+            sceneSession->SetFocusedOnShow(true);
             UpdateForceHideState(sceneSession, sceneSession->GetSessionProperty(), true);
             NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_ADDED);
             HandleKeepScreenOn(sceneSession, sceneSession->IsKeepScreenOn());
