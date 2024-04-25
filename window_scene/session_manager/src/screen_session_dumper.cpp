@@ -132,24 +132,25 @@ void ScreenSessionDumper::DumpFoldStatus()
 {
     std::ostringstream oss;
     auto foldStatus = ScreenSessionManager::GetInstance().GetFoldStatus();
-    std::string status = "UNKNOWN"
+    std::string status = "UNKNOWN";
     switch (foldStatus) {
         case FoldStatus::UNKNOWN:
         break;
         case FoldStatus::EXPAND:
-        status = "EXPAND"
+        status = "EXPAND";
         break;
         case FoldStatus::FOLDED:
-        status = "FOLDED"
+        status = "FOLDED";
         break;
-        case FoldStatus::HALF_FOLDED:
-        status = "HALF_FOLD"
+        case FoldStatus::HALF_FOLD:
+        status = "HALF_FOLD";
         break;
         default:
         break;
     }
-        oss << std::left << std::setw(LINE_WIDTH) << "FoldStatus: "
+    oss << std::left << std::setw(LINE_WIDTH) << "FoldStatus: "
         << status << std::endl;
+    dumpInfo_.append(oss.str());
 }
 
 void ScreenSessionDumper::DumpScreenSessionById(ScreenId id)
