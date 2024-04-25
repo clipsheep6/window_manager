@@ -73,8 +73,11 @@ std::shared_ptr<AppExecFwk::EventHandler> g_mainHandler;
 
 Session::Session(const SessionInfo& info) : sessionInfo_(info)
 {
-    property_ = new WindowSessionProperty();
-    property_->SetWindowType(static_cast<WindowType>(info.windowType_));
+    {
+        std::unique_lock<std::shared_mutex> lock(propertyMutex_);
+        property_ = new WindowSessionProperty();
+        property_->SetWindowType(static_cast<WindowType>(info.windowType_));
+    }
     if (!g_mainHandler) {
         auto runner = AppExecFwk::EventRunner::GetMainEventRunner();
         g_mainHandler = std::make_shared<AppExecFwk::EventHandler>(runner);
@@ -820,6 +823,7 @@ __attribute__((no_sanitize("cfi"))) WSError Session::Connect(const sptr<ISession
     surfaceNode_ = surfaceNode;
     abilityToken_ = token;
     systemConfig = systemConfig_;
+    std::shared_lock<std::shared_mutex> lock(propertyMutex_);
     if (property_ && property_->GetIsNeedUpdateWindowMode() && property) {
         property->SetIsNeedUpdateWindowMode(true);
         property->SetWindowMode(property_->GetWindowMode());
@@ -1559,11 +1563,14 @@ void Session::NotifyPointerEventToRs(int32_t pointAction)
 
 WSError Session::HandleSubWindowClick(int32_t action)
 {
-    std::shared_lock<std::shared_mutex> lock(parentSessionMutex_);
-    if (parentSession_ && parentSession_->CheckDialogOnForeground()) {
-        TLOGD(WmsLogTag::WMS_DIALOG, "Its main window has dialog on foreground, id: %{public}d", GetPersistentId());
-        return WSError::WS_ERROR_INVALID_PERMISSION;
+    {
+        std::shared_lock<std::shared_mutex> lock(parentSessionMutex_);
+        if (parentSession_ && parentSession_->CheckDialogOnForeground()) {
+            TLOGD(WmsLogTag::WMS_DIALOG, "Its main window has dialog on foreground, id: %{public}d", GetPersistentId());
+            return WSError::WS_ERROR_INVALID_PERMISSION;
+        }
     }
+    std::shared_lock<std::shared_mutex> lock(propertyMutex_);
     bool raiseEnabled = property_->GetRaiseEnabled() &&
         (action == MMI::PointerEvent::POINTER_ACTION_DOWN || action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN);
     if (raiseEnabled) {
@@ -1978,7 +1985,7 @@ WSError Session::UpdateWindowMode(WindowMode mode)
         WLOGFD("id: %{public}d property is nullptr", persistentId_);
         return WSError::WS_ERROR_NULLPTR;
     }
-
+    std::shared_lock<std::shared_mutex> lock(propertyMutex_);
     if (state_ == SessionState::STATE_END) {
         WLOGFI("session is already destroyed or property is nullptr! id: %{public}d state: %{public}u",
             GetPersistentId(), GetSessionState());
@@ -2047,6 +2054,7 @@ void Session::RectSizeCheckProcess(uint32_t curWidth, uint32_t curHeight, uint32
         oss << " cur persistentId: " << GetPersistentId() << ",";
         oss << " windowType: " << static_cast<uint32_t>(GetWindowType()) << ",";
         if (property_) {
+            std::shared_lock<std::shared_mutex> lock(propertyMutex_);
             oss << " windowName: " << property_->GetWindowName() << ",";
             oss << " windowState: " << static_cast<uint32_t>(property_->GetWindowState()) << ",";
         }
@@ -2086,6 +2094,7 @@ void Session::RectCheckProcess()
             oss << " cur persistentId: " << GetPersistentId() << ",";
             oss << " windowType: " << static_cast<uint32_t>(GetWindowType()) << ",";
             if (property_) {
+                std::shared_lock<std::shared_mutex> lock(propertyMutex_);
                 oss << " windowName: " << property_->GetWindowName() << ",";
                 oss << " windowState: " << static_cast<uint32_t>(property_->GetWindowState()) << ",";
             }
