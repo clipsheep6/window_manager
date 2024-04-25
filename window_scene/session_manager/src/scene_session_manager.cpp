@@ -1564,7 +1564,7 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
 {
     auto persistentId = scnSession->GetPersistentId();
     RequestInputMethodCloseKeyboard(persistentId);
-    if (WindowHelper::IsMainWindow(scnSession->GetWindowType()) && scnSession->IsFocusOnShow()) {
+    if (WindowHelper::IsMainWindow(scnSession->GetWindowType()) && scnSession->IsFocusedOnShow()) {
         RequestSessionFocusImmediately(persistentId);
     }
     if (scnSession->GetSessionInfo().ancoSceneState < AncoSceneState::NOTIFY_CREATE) {
@@ -4077,8 +4077,8 @@ WSError SceneSessionManager::RequestSessionFocusImmediately(int32_t persistentId
         TLOGD(WmsLogTag::WMS_FOCUS, "session is not focusable!");
         return WSError::WS_DO_NOTHING;
     }
-    if (!sceneSession->IsFocusOnShow()) {
-        TLOGD(WmsLogTag::WMS_FOCUS, "session is not focus on show!");
+    if (!sceneSession->IsFocusedOnShow()) {
+        TLOGD(WmsLogTag::WMS_FOCUS, "session is not focused on show!");
         return WSError::WS_DO_NOTHING;
     }
     // specific block
@@ -4112,8 +4112,8 @@ WSError SceneSessionManager::RequestSessionFocus(int32_t persistentId, bool byFo
         TLOGD(WmsLogTag::WMS_FOCUS, "session is not focusable or not visible!");
         return WSError::WS_DO_NOTHING;
     }
-    if (!sceneSession->IsFocusOnShow()) {
-        TLOGD(WmsLogTag::WMS_FOCUS, "session is not focus on show!");
+    if (!sceneSession->IsFocusedOnShow()) {
+        TLOGD(WmsLogTag::WMS_FOCUS, "session is not focused on show!");
         return WSError::WS_DO_NOTHING;
     }
     // subwindow/dialog state block
@@ -4722,9 +4722,9 @@ __attribute__((no_sanitize("cfi"))) void SceneSessionManager::OnSessionStateChan
                     needBlockNotifyFocusStatusUntilForeground_ = false;
                     NotifyFocusStatus(sceneSession, true);
                 }
-            } else if (!sceneSession->IsFocusOnShow()) {
-                TLOGI(WmsLogTag::WMS_FOCUS, "IsFocusOnShow false");
-                sceneSession->SetFocusOnShow(true);
+            } else if (!sceneSession->IsFocusedOnShow()) {
+                TLOGI(WmsLogTag::WMS_FOCUS, "IsFocusedOnShow false");
+                sceneSession->SetFocusedOnShow(true);
             } else {
                 RequestSessionFocus(persistentId, true);
             }
