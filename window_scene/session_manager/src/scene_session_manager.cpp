@@ -4714,8 +4714,8 @@ __attribute__((no_sanitize("cfi"))) void SceneSessionManager::OnSessionStateChan
     }
     switch (state) {
         case SessionState::STATE_FOREGROUND:
-            if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW
-                && persistentId == focusedSessionId_) {
+            if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW &&
+                persistentId == focusedSessionId_) {
                 if (needBlockNotifyFocusStatusUntilForeground_) {
                     needBlockNotifyUnfocusStatus_ = false;
                     needBlockNotifyFocusStatusUntilForeground_ = false;
