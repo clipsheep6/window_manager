@@ -201,7 +201,6 @@ WSError SystemSession::ProcessPointDownSession(int32_t posX, int32_t posY)
     const auto& id = GetPersistentId();
     const auto& type = GetWindowType();
     WLOGFI("id: %{public}d, type: %{public}d", id, type);
-    std::shared_lock<std::shared_mutex> lock(parentSessionMutex_);
     if (parentSession_ && parentSession_->CheckDialogOnForeground()) {
         WLOGFI("Parent has dialog foreground, id: %{public}d, type: %{public}d", id, type);
         parentSession_->HandlePointDownDialog();
@@ -229,7 +228,6 @@ WSError SystemSession::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& ke
         if (keyEvent->GetKeyCode() == MMI::KeyEvent::KEYCODE_BACK) {
             return WSError::WS_ERROR_INVALID_PERMISSION;
         }
-        std::shared_lock<std::shared_mutex> lock(parentSessionMutex_);
         if (parentSession_ && parentSession_->CheckDialogOnForeground() &&
             !IsTopDialog()) {
             return WSError::WS_ERROR_INVALID_PERMISSION;
@@ -279,7 +277,6 @@ WSError SystemSession::NotifyClientToUpdateRect(std::shared_ptr<RSTransaction> r
 
 int32_t SystemSession::GetMissionId() const
 {
-    std::shared_lock<std::shared_mutex> lock(parentSessionMutex_);
     return parentSession_ != nullptr ? parentSession_->GetPersistentId() : SceneSession::GetMissionId();
 }
 
@@ -305,7 +302,7 @@ bool SystemSession::CheckKeyEventDispatch(const std::shared_ptr<MMI::KeyEvent>& 
         state_ != SessionState::STATE_ACTIVE)) {
         TLOGE(WmsLogTag::WMS_DIALOG, "Dialog's parent info : [persistentId: %{publicd}d, state:%{public}d];"
             "Dialog info:[persistentId: %{publicd}d, state:%{public}d]",
-            parentSession->GetPersistentId(), parentSessionState, GetPersistentId(), state_);
+            parentSession->GetPersistentId(), parentSessionState, GetPersistentId(), GetSessionState());
         return false;
     }
     return true;
@@ -329,7 +326,7 @@ bool SystemSession::CheckPointerEventDispatch(const std::shared_ptr<MMI::Pointer
         sessionState != SessionState::STATE_ACTIVE &&
         action != MMI::PointerEvent::POINTER_ACTION_LEAVE_WINDOW) {
         WLOGFW("CheckPointerEventDispatch false, Current Session Info: [persistentId: %{public}d, "
-            "state: %{public}d, action:%{public}d]", GetPersistentId(), state_, action);
+            "state: %{public}d, action:%{public}d]", GetPersistentId(), GetSessionState(), action);
         return false;
     }
     return true;
