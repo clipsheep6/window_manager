@@ -259,7 +259,11 @@ HWTEST_F(PictureInPictureControllerTest, getSettingsAutoStartStatus01, Function 
     sptr<PipOption> option = new PipOption();
     sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
 
-    ASSERT_EQ(false, pipControl->isAutoStartEnable_);
+    ASSERT_EQ(false, pipControl->isAutoStartEnabled_);
+
+    sptr<PictureInPictureController::PipMainWindowLifeCycleImpl> pipMainWindowLifeCycleImpl =
+        new PictureInPictureController::PipMainWindowLifeCycleImpl(pipControl->GetPiPNavigationId());
+    pipMainWindowLifeCycleImpl->AfterBackground();
 
     PictureInPictureController::remoteObj_ = nullptr;
     ASSERT_EQ(ERR_NO_INIT,  pipControl->getSettingsAutoStartStatus(key, value));
@@ -278,6 +282,13 @@ HWTEST_F(PictureInPictureControllerTest, getSettingsAutoStartStatus02, Function 
     ASSERT_NE(nullptr, mw);
     sptr<PipOption> option = new PipOption();
     sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
+
+    ASSERT_EQ(false, pipControl->isAutoStartEnabled_);
+
+    sptr<PictureInPictureController::PipMainWindowLifeCycleImpl> pipMainWindowLifeCycleImpl =
+        new PictureInPictureController::PipMainWindowLifeCycleImpl(pipControl->GetPiPNavigationId());
+    pipMainWindowLifeCycleImpl->AfterBackground();
+
     ASSERT_EQ(ERR_NAME_NOT_FOUND,  pipControl->getSettingsAutoStartStatus(key, value));
 }
 
@@ -295,6 +306,13 @@ HWTEST_F(PictureInPictureControllerTest, getSettingsAutoStartStatus03, Function 
     sptr<PipOption> option = new PipOption();
     sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
 
+
+    ASSERT_EQ(false, pipControl->isAutoStartEnabled_);
+
+    sptr<PictureInPictureController::PipMainWindowLifeCycleImpl> pipMainWindowLifeCycleImpl =
+        new PictureInPictureController::PipMainWindowLifeCycleImpl(pipControl->GetPiPNavigationId());
+    pipMainWindowLifeCycleImpl->AfterBackground();
+
     auto helper = DataShare::DataShareHelper::Creator(PictureInPictureController::remoteObj_, SETTING_URI_PROXY,
         SETTINGS_DATA_EXT_URI);
     std::vector<std::string> columns = {SETTING_COLUMN_VALUE};
@@ -307,6 +325,7 @@ HWTEST_F(PictureInPictureControllerTest, getSettingsAutoStartStatus03, Function 
     int32_t INDEX = 0;
     int32_t ret = resultSet->GetString(INDEX, value);
     ASSERT_NE(NativeRdb::E_OK,  ret);
+    PictureInPictureManager::AutoStartPipWindow(pipControl->GetPiPNavigationId());
     ASSERT_EQ(ERR_OK,  pipControl->getSettingsAutoStartStatus(key, value));
 }
 
