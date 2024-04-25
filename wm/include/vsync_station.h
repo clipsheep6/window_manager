@@ -58,8 +58,8 @@ public:
     }
 
 private:
-    static void OnVsync(int64_t nanoTimestamp, void* client);
-    void VsyncCallbackInner(int64_t nanoTimestamp);
+    static void OnVsync(int64_t nanoTimestamp, int64_t frameCount, void* client);
+    void VsyncCallbackInner(int64_t nanoTimestamp, int64_t frameCount);
     void OnVsyncTimeOut();
     void Init();
 
