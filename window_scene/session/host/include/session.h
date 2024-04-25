@@ -579,7 +579,7 @@ private:
     mutable std::shared_mutex uiRequestFocusMutex_;
     mutable std::shared_mutex uiLostFocusMutex_;
 
-    bool isFocusOnShow_ = true;
+    bool focusedOnShow_ = true;
     bool showRecent_ = false;
     bool bufferAvailable_ = false;
     WSRect preRect_;
