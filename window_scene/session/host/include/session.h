@@ -192,7 +192,7 @@ public:
     WindowType GetWindowType() const;
     float GetAspectRatio() const;
     WSError SetAspectRatio(float ratio) override;
-    void SetFocusOnShow(bool isFocusOnShow);
+    void SetFocusedOnShow(bool focusedOnShow);
     bool IsFocusOnShow() const;
     WSError SetSessionProperty(const sptr<WindowSessionProperty>& property) override;
     sptr<WindowSessionProperty> GetSessionProperty() const;
