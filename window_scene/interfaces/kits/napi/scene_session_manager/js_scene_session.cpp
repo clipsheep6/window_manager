@@ -1769,7 +1769,7 @@ void JsSceneSession::PendingSessionActivation(SessionInfo& info)
     }
 
     if (info.want != nullptr && info.isSystem_) {
-        auto isFocusOnShow = info.want->GetBoolParam(AAFwk::Want::PARAM_RESV_WINDOW_FOCUS, true);
+        auto isFocusOnShow = info.want->GetBoolParam(AAFwk::Want::PARAM_RESV_WINDOW_FOCUSED, true);
         sceneSession->SetFocusOnShow(isFocusOnShow);
     }
     std::shared_ptr<SessionInfo> sessionInfo = std::make_shared<SessionInfo>(info);
