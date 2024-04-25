@@ -4714,19 +4714,18 @@ __attribute__((no_sanitize("cfi"))) void SceneSessionManager::OnSessionStateChan
     }
     switch (state) {
         case SessionState::STATE_FOREGROUND:
-            if (sceneSession->GetWindowType() != WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
-                RequestSessionFocus(persistentId, true);
-            } else if (persistentId == focusedSessionId_) {
+            if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW
+                && persistentId == focusedSessionId_) {
                 if (needBlockNotifyFocusStatusUntilForeground_) {
                     needBlockNotifyUnfocusStatus_ = false;
                     needBlockNotifyFocusStatusUntilForeground_ = false;
                     NotifyFocusStatus(sceneSession, true);
                 }
-            } else if (!sceneSession->IsFocusedOnShow()) {
-                TLOGI(WmsLogTag::WMS_FOCUS, "IsFocusedOnShow false");
-                sceneSession->SetFocusedOnShow(true);
             } else {
                 RequestSessionFocus(persistentId, true);
+            }
+            if (!sceneSession->IsFocusedOnShow()) {
+                sceneSession->SetFocusedOnShow(true);
             }
             UpdateForceHideState(sceneSession, sceneSession->GetSessionProperty(), true);
             NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_ADDED);
