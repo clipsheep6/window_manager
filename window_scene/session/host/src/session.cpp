@@ -91,7 +91,7 @@ Session::Session(const SessionInfo& info) : sessionInfo_(info)
     }
 
     if (info.want != nullptr && info.isSystem_) {
-        auto isFocusOnShow = info.want->GetBoolParam(AAFwk::Want::PARAM_RESV_WINDOW_FOCUS, true);
+        auto isFocusOnShow = info.want->GetBoolParam(AAFwk::Want::PARAM_RESV_WINDOW_FOCUSED, true);
         TLOGI(WmsLogTag::WMS_FOCUS, "isFocusOnShow:%{public}d", isFocusOnShow);
         SetFocusOnShow(isFocusOnShow);
     }
