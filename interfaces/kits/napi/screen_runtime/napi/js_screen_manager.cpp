@@ -26,13 +26,13 @@
 #include "singleton_container.h"
 #include "surface_utils.h"
 #include "window_manager_hilog.h"
+#include "event_handler.h"
 
 namespace OHOS {
 namespace Rosen {
 using namespace AbilityRuntime;
 constexpr size_t ARGC_ONE = 1;
 constexpr size_t ARGC_TWO = 2;
-constexpr size_t ARGC_THREE = 3;
 constexpr int32_t INDEX_ONE = 1;
 constexpr uint32_t MAX_SCREENS_NUM = 1000;
 namespace {
@@ -127,37 +127,57 @@ private:
 std::map<std::string, std::map<std::unique_ptr<NativeReference>, sptr<JsScreenListener>>> jsCbMap_;
 std::mutex mtx_;
 
+napi_value CallJsMethod(const char* name, ScreenId screenId, napi_env env,
+     napi_value const * argv = nullptr, size_t argc = 0)
+{
+    napi_value method = nullptr;
+    std::shared_ptr<NativeReference> jsDisplayObj = FindJsDisplayObject(screenId);
+    if (jsDisplayObj == nullptr) {
+        WLOGFE("(%{public}s) jsDisplayObj is nullptr.", name);
+        return nullptr;
+    }
+    method = jsDisplayObj->GetNapiValue();
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    napi_call_function(env, result, method, argc, argv, nullptr);
+    return result;
+}
+
 napi_value OnGetAllScreens(napi_env env, napi_callback_info info)
 {
     WLOGI("OnGetAllScreens is called");
-    NapiAsyncTask::CompleteCallback complete =
-        [this](napi_env env, NapiAsyncTask& task, int32_t status) {
-            std::vector<sptr<Screen>> screens;
-            auto res = DM_JS_TO_ERROR_CODE_MAP.at(SingletonContainer::Get<ScreenManager>().GetAllScreens(screens));
-            if (res != DmErrorCode::DM_OK) {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(res),
-                    "JsScreenManager::OnGetAllScreens failed."));
-            } else if (!screens.empty()) {
-                task.Resolve(env, CreateJsScreenVectorObject(env, screens));
-                WLOGI("JsScreenManager::OnGetAllScreens success");
-            } else {
-                task.Reject(env, CreateJsError(env,
-                    static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_SCREEN),
-                    "JsScreenManager::OnGetAllScreens failed."));
+    auto task = [env, this] {
+        std::vector<sptr<Screen>> screens;
+        auto res = DM_JS_TO_ERROR_CODE_MAP.at(SingletonContainer::Get<ScreenManager>().GetAllScreens(screens));
+        if (res != DmErrorCode::DM_OK) {
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(res),
+                "JsScreenManager::OnGetAllScreens failed."));
+        } else if (!screens.empty()) {
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(env, &scope);
+            napi_value argv[] = {CreateJsScreenVectorObject(env, screens)};
+            size_t argc = ArraySize(argv);
+            for (auto &screen : screens) {
+                CallJsMethod("JsScreenManager::OnGetAllScreens", screen->GetId(), env, argv, argc);
             }
-        };
-    size_t argc = 4;
-    napi_value argv[4] = {nullptr};
-    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    napi_value lastParam = nullptr;
-    if (argc >= ARGC_ONE && argv[ARGC_ONE - 1] != nullptr &&
-        GetType(env, argv[ARGC_ONE - 1]) == napi_function) {
-        lastParam = argv[ARGC_ONE - 1];
+            napi_close_handle_scope(env, scope);
+            WLOGI("JsScreenManager::OnGetAllScreens success");
+        } else {
+            napi_throw(env, CreateJsError(env,
+                static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_SCREEN),
+                "JsScreenManager::OnGetAllScreens failed."));
+        }
+    };
+
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ =
+        std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    if (handler_ == nullptr) {
+        WLOGFE("OnGetAllScreens event handler is nullptr.");
+        return NapiGetUndefined(env);
     }
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsScreenManager::OnGetAllScreens",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
-    return result;
+    handler_->PostTask(task, "wms:OnGetAllScreens", 0,
+        AppExecFwk::EventQueue::Priority::HIGH);
+    return NapiGetUndefined(env);
 }
 
 napi_value CreateJsScreenVectorObject(napi_env env, std::vector<sptr<Screen>>& screens)
@@ -377,7 +397,6 @@ napi_value OnMakeMirror(napi_env env, napi_callback_info info)
     if (argc < ARGC_TWO) {
         return NapiThrowError(env, DmErrorCode::DM_ERROR_INVALID_PARAM);
     }
-
     int64_t mainScreenId;
     if (!ConvertFromJsValue(env, argv[0], mainScreenId)) {
         return NapiThrowError(env, DmErrorCode::DM_ERROR_INVALID_PARAM);
@@ -398,28 +417,29 @@ napi_value OnMakeMirror(napi_env env, napi_callback_info info)
         }
         screenIds.emplace_back(static_cast<ScreenId>(screenId));
     }
-
-    NapiAsyncTask::CompleteCallback complete =
-        [mainScreenId, screenIds](napi_env env, NapiAsyncTask& task, int32_t status) {
-            ScreenId screenGroupId = INVALID_SCREEN_ID;
-            DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(
-                SingletonContainer::Get<ScreenManager>().MakeMirror(mainScreenId, screenIds, screenGroupId));
-            if (ret == DmErrorCode::DM_OK) {
-                task.Resolve(env, CreateJsValue(env, static_cast<uint32_t>(screenGroupId)));
-            } else {
-                task.Reject(env,
-                    CreateJsError(env, static_cast<int32_t>(ret), "JsScreenManager::OnMakeMirror failed."));
-            }
-        };
-    napi_value lastParam = nullptr;
-    if (argc >= ARGC_THREE && argv[ARGC_THREE - 1] != nullptr &&
-        GetType(env, argv[ARGC_THREE - 1]) == napi_function) {
-        lastParam = argv[ARGC_THREE - 1];
+    auto task = [env, mainScreenId, screenIds, this] {
+        ScreenId screenGroupId = INVALID_SCREEN_ID;
+        DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(
+            SingletonContainer::Get<ScreenManager>().MakeMirror(mainScreenId, screenIds, screenGroupId));
+        if (ret == DmErrorCode::DM_OK) {
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(env, &scope);
+            napi_value argv[] = {CreateJsValue(env, static_cast<uint32_t>(screenGroupId))};
+            size_t argc = ArraySize(argv);
+            CallJsMethod("JsScreenManager::OnMakeMirror", screenGroupId, env, argv, argc);
+            napi_close_handle_scope(env, scope);
+        } else {
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(ret), "JsScreenManager::OnMakeMirror failed."));
+        }
+    };
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ =
+        std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    if (handler_ == nullptr) {
+        WLOGFE("OnMakeMirror event handler is nullptr.");
+        return NapiGetUndefined(env);
     }
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsScreenManager::OnMakeMirror",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
-    return result;
+    handler_->PostTask(task, "wms:OnMakeMirror", 0, AppExecFwk::EventQueue::Priority::HIGH);
+    return NapiGetUndefined(env);
 }
 
 napi_value OnMakeExpand(napi_env env, napi_callback_info info)
@@ -432,7 +452,6 @@ napi_value OnMakeExpand(napi_env env, napi_callback_info info)
         WLOGFE("Params not match");
         return NapiThrowError(env, DmErrorCode::DM_ERROR_INVALID_PARAM);
     }
-
     napi_value array = argv[0];
     if (array == nullptr) {
         WLOGFE("Failed to get options");
@@ -452,29 +471,30 @@ napi_value OnMakeExpand(napi_env env, napi_callback_info info)
         }
         options.emplace_back(expandOption);
     }
-
-    NapiAsyncTask::CompleteCallback complete =
-        [options](napi_env env, NapiAsyncTask& task, int32_t status) {
-            ScreenId screenGroupId = INVALID_SCREEN_ID;
-            DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(
-                SingletonContainer::Get<ScreenManager>().MakeExpand(options, screenGroupId));
-            if (ret == DmErrorCode::DM_OK) {
-                task.Resolve(env, CreateJsValue(env, static_cast<uint32_t>(screenGroupId)));
-                WLOGI("MakeExpand success");
-            } else {
-                task.Reject(env,
-                    CreateJsError(env, static_cast<int32_t>(ret), "JsScreenManager::OnMakeExpand failed."));
-                WLOGFE("MakeExpand failed");
-            }
-        };
-    napi_value lastParam = nullptr;
-    if (argc >= ARGC_TWO && argv[ARGC_TWO - 1] != nullptr && GetType(env, argv[ARGC_TWO - 1]) == napi_function) {
-        lastParam = argv[ARGC_TWO - 1];
+    auto task = [env, options, this] {
+        ScreenId screenGroupId = INVALID_SCREEN_ID;
+        DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(
+            SingletonContainer::Get<ScreenManager>().MakeExpand(options, screenGroupId));
+        if (ret == DmErrorCode::DM_OK) {
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(env, &scope);
+            napi_value argv[] = {CreateJsValue(env, static_cast<uint32_t>(screenGroupId))};
+            size_t argc = ArraySize(argv);
+            CallJsMethod("JsScreenManager::OnMakeExpand", screenGroupId, env, argv, argc);
+            napi_close_handle_scope(env, scope);
+            WLOGI("MakeExpand success");
+        } else {
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(ret), "JsScreenManager::OnMakeExpand failed."));
+        }
+    };
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ =
+        std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    if (handler_ == nullptr) {
+        WLOGFE("OnMakeExpand event handler is nullptr.");
+        return NapiGetUndefined(env);
     }
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsScreenManager::OnMakeExpand",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
-    return result;
+    handler_->PostTask(task, "wms:OnMakeExpand", 0, AppExecFwk::EventQueue::Priority::HIGH);
+    return NapiGetUndefined(env);
 }
 
 napi_value OnStopMirror(napi_env env, napi_callback_info info)
@@ -486,7 +506,6 @@ napi_value OnStopMirror(napi_env env, napi_callback_info info)
     if (argc < ARGC_ONE) {
         return NapiThrowError(env, DmErrorCode::DM_ERROR_INVALID_PARAM);
     }
-
     napi_value array = argv[0];
     if (array == nullptr) {
         return NapiThrowError(env, DmErrorCode::DM_ERROR_INVALID_PARAM);
@@ -506,26 +525,30 @@ napi_value OnStopMirror(napi_env env, napi_callback_info info)
         }
         screenIds.emplace_back(static_cast<ScreenId>(screenId));
     }
-
-    NapiAsyncTask::CompleteCallback complete =
-        [ screenIds](napi_env env, NapiAsyncTask& task, int32_t status) {
-            DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(
-                SingletonContainer::Get<ScreenManager>().StopMirror(screenIds));
-            if (ret == DmErrorCode::DM_OK) {
-                task.Resolve(env, NapiGetUndefined(env));
-            } else {
-                task.Reject(env,
-                    CreateJsError(env, static_cast<int32_t>(ret), "JsScreenManager::OnStopMirror failed."));
+    auto task = [env, screenIds, this] {
+        DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(
+            SingletonContainer::Get<ScreenManager>().StopMirror(screenIds));
+        if (ret == DmErrorCode::DM_OK) {
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(env, &scope);
+            napi_value argv[] = {NapiGetUndefined(env)};
+            size_t argc = ArraySize(argv);
+            for (auto& screenId : screenIds) {
+                CallJsMethod("JsScreenManager::OnStopMirror", screenId, env, argv, argc);
             }
-        };
-    napi_value lastParam = nullptr;
-    if (argc >= ARGC_TWO && argv[ARGC_TWO - 1] != nullptr && GetType(env, argv[ARGC_TWO - 1]) == napi_function) {
-        lastParam = argv[ARGC_TWO - 1];
+            napi_close_handle_scope(env, scope);
+        } else {
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(ret), "JsScreenManager::OnStopMirror failed."));
+        }
+    };
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ =
+        std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    if (handler_ == nullptr) {
+        WLOGFE("OnStopMirror event handler is nullptr.");
+        return NapiGetUndefined(env);
     }
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsScreenManager::OnStopMirror",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
-    return result;
+    handler_->PostTask(task, "wms:OnStopMirror", 0, AppExecFwk::EventQueue::Priority::HIGH);
+    return NapiGetUndefined(env);
 }
 
 napi_value OnStopExpand(napi_env env, napi_callback_info info)
@@ -538,7 +561,6 @@ napi_value OnStopExpand(napi_env env, napi_callback_info info)
         WLOGFE("Params not match");
         return NapiThrowError(env, DmErrorCode::DM_ERROR_INVALID_PARAM);
     }
-
     napi_value array = argv[0];
     if (array == nullptr) {
         return NapiThrowError(env, DmErrorCode::DM_ERROR_INVALID_PARAM);
@@ -558,28 +580,32 @@ napi_value OnStopExpand(napi_env env, napi_callback_info info)
         }
         screenIds.emplace_back(static_cast<ScreenId>(screenId));
     }
-
-    NapiAsyncTask::CompleteCallback complete =
-        [screenIds](napi_env env, NapiAsyncTask& task, int32_t status) {
-            DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(
-                SingletonContainer::Get<ScreenManager>().StopExpand(screenIds));
-            if (ret == DmErrorCode::DM_OK) {
-                task.Resolve(env, NapiGetUndefined(env));
-                WLOGI("MakeExpand success");
-            } else {
-                task.Reject(env,
-                    CreateJsError(env, static_cast<int32_t>(ret), "JsScreenManager::OnStopExpand failed."));
-                WLOGFE("MakeExpand failed");
+    auto task = [env, screenIds, this] {
+        DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(
+            SingletonContainer::Get<ScreenManager>().StopExpand(screenIds));
+        if (ret == DmErrorCode::DM_OK) {
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(env, &scope);
+            napi_value argv[] = {NapiGetUndefined(env)};
+            size_t argc = ArraySize(argv);
+            for (auto& screenId : screenIds) {
+                CallJsMethod("JsScreenManager::OnStopExpand", screenId, env, argv, argc);
             }
-        };
-    napi_value lastParam = nullptr;
-    if (argc >= ARGC_TWO && argv[ARGC_TWO - 1] != nullptr && GetType(env, argv[ARGC_TWO - 1]) == napi_function) {
-        lastParam = argv[ARGC_TWO - 1];
+            napi_close_handle_scope(env, scope);
+            WLOGI("MakeExpand success");
+        } else {
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(ret), "JsScreenManager::OnStopExpand failed."));
+            WLOGFE("MakeExpand failed");
+        }
+    };
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ =
+        std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    if (handler_ == nullptr) {
+        WLOGFE("OnStopExpand event handler is nullptr.");
+        return NapiGetUndefined(env);
     }
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsScreenManager::OnStopExpand",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
-    return result;
+    handler_->PostTask(task, "wms:OnStopExpand", 0, AppExecFwk::EventQueue::Priority::HIGH);
+    return NapiGetUndefined(env);
 }
 
 static int32_t GetExpandOptionFromJs(napi_env env, napi_value optionObject, ExpandOption& option)
@@ -632,29 +658,33 @@ napi_value OnCreateVirtualScreen(napi_env env, napi_callback_info info)
     if (errCode == DmErrorCode::DM_ERROR_INVALID_PARAM) {
         return NapiThrowError(env, DmErrorCode::DM_ERROR_INVALID_PARAM);
     }
-    NapiAsyncTask::CompleteCallback complete =
-        [option](napi_env env, NapiAsyncTask& task, int32_t status) {
-            auto screenId = SingletonContainer::Get<ScreenManager>().CreateVirtualScreen(option);
-            auto screen = SingletonContainer::Get<ScreenManager>().GetScreenById(screenId);
-            if (screen == nullptr) {
-                task.Reject(env, CreateJsError(env,
-                    static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_SCREEN),
-                    "ScreenManager::CreateVirtualScreen failed."));
-                WLOGFE("ScreenManager::CreateVirtualScreen failed.");
-                return;
-            }
-            task.Resolve(env, CreateJsScreenObject(env, screen));
-            WLOGI("JsScreenManager::OnCreateVirtualScreen success");
-        };
-    napi_value lastParam = nullptr;
-    if (argc >= ARGC_TWO && argv[ARGC_TWO - 1] != nullptr &&
-        GetType(env, argv[ARGC_TWO - 1]) == napi_function) {
-        lastParam = argv[ARGC_TWO - 1];
+    auto task = [option, env, this] {
+        auto screenId = SingletonContainer::Get<ScreenManager>().CreateVirtualScreen(option);
+        auto screen = SingletonContainer::Get<ScreenManager>().GetScreenById(screenId);
+        if (screen == nullptr) {
+            napi_throw(env, CreateJsError(env,
+                static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_SCREEN),
+                "ScreenManager::CreateVirtualScreen failed."));
+            WLOGFE("ScreenManager::CreateVirtualScreen failed.");
+            return;
+        }
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(env, &scope);
+        napi_value argv[] = {CreateJsScreenObject(env, screen)};
+        size_t argc = ArraySize(argv);
+        CallJsMethod("JsScreenManager::OnCreateVirtualScreen", screenId, env, argv, argc);
+        napi_close_handle_scope(env, scope);
+        WLOGI("JsScreenManager::OnCreateVirtualScreen success");
+    };
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ =
+        std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    if (handler_ == nullptr) {
+        WLOGFE("OnCreateVirtualScreen event handler is nullptr.");
+        return NapiGetUndefined(env);
     }
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsScreenManager::OnCreateVirtualScreen",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
-    return result;
+    handler_->PostTask(task, "wms:OnCreateVirtualScreen", 0,
+        AppExecFwk::EventQueue::Priority::HIGH);
+    return NapiGetUndefined(env);
 }
 
 DmErrorCode GetVirtualScreenOptionFromJs(napi_env env, napi_value optionObject, VirtualScreenOption& option)
@@ -738,28 +768,32 @@ napi_value OnDestroyVirtualScreen(napi_env env, napi_callback_info info)
         WLOGFE("JsScreenManager::OnDestroyVirtualScreen failed, Invalidate params.");
         return NapiThrowError(env, DmErrorCode::DM_ERROR_INVALID_PARAM);
     }
-    NapiAsyncTask::CompleteCallback complete =
-        [screenId](napi_env env, NapiAsyncTask& task, int32_t status) {
-            auto res = DM_JS_TO_ERROR_CODE_MAP.at(
-                SingletonContainer::Get<ScreenManager>().DestroyVirtualScreen(screenId));
-            if (res != DmErrorCode::DM_OK) {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(res),
-                    "ScreenManager::DestroyVirtualScreen failed."));
-                WLOGFE("ScreenManager::DestroyVirtualScreen failed.");
-                return;
-            }
-            task.Resolve(env, NapiGetUndefined(env));
-            WLOGI("JsScreenManager::OnDestroyVirtualScreen success");
-        };
-    napi_value lastParam = nullptr;
-    if (argc >= ARGC_TWO && argv[ARGC_TWO - 1] != nullptr &&
-        GetType(env, argv[ARGC_TWO - 1]) == napi_function) {
-        lastParam = argv[ARGC_TWO - 1];
+    auto task = [screenId, env, this] {
+        auto res = DM_JS_TO_ERROR_CODE_MAP.at(
+            SingletonContainer::Get<ScreenManager>().DestroyVirtualScreen(screenId));
+        if (res != DmErrorCode::DM_OK) {
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(res),
+                "ScreenManager::DestroyVirtualScreen failed."));
+            WLOGFE("ScreenManager::DestroyVirtualScreen failed.");
+            return;
+        }
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(env, &scope);
+        napi_value argv[] = {NapiGetUndefined(env)};
+        size_t argc = ArraySize(argv);
+        CallJsMethod("JsScreenManager::OnDestroyVirtualScreen", screenId, env, argv, argc);
+        napi_close_handle_scope(env, scope);
+        WLOGI("JsScreenManager::OnDestroyVirtualScreen success");
+    };
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ =
+        std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    if (handler_ == nullptr) {
+        WLOGFE("OnDestroyVirtualScreen event handler is nullptr.");
+        return NapiGetUndefined(env);
     }
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsScreenManager::OnDestroyVirtualScreen",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
-    return result;
+    handler_->PostTask(task, "wms:OnDestroyVirtualScreen", 0,
+        AppExecFwk::EventQueue::Priority::HIGH);
+    return NapiGetUndefined(env);
 }
 
 napi_value OnSetVirtualScreenSurface(napi_env env, napi_callback_info info)
@@ -788,28 +822,32 @@ napi_value OnSetVirtualScreenSurface(napi_env env, napi_callback_info info)
         WLOGFE("JsScreenManager::OnSetVirtualScreenSurface failed, Invalidate params.");
         return NapiThrowError(env, DmErrorCode::DM_ERROR_INVALID_PARAM);
     }
-    NapiAsyncTask::CompleteCallback complete =
-        [screenId, surface](napi_env env, NapiAsyncTask& task, int32_t status) {
-            auto res = DM_JS_TO_ERROR_CODE_MAP.at(
-                SingletonContainer::Get<ScreenManager>().SetVirtualScreenSurface(screenId, surface));
-            if (res != DmErrorCode::DM_OK) {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(res),
-                    "ScreenManager::SetVirtualScreenSurface failed."));
-                WLOGFE("ScreenManager::SetVirtualScreenSurface failed.");
-                return;
-            }
-            task.Resolve(env, NapiGetUndefined(env));
-            WLOGI("JsScreenManager::OnSetVirtualScreenSurface success");
-        };
-    napi_value lastParam = nullptr;
-    if (argc >= ARGC_THREE && argv[ARGC_THREE - 1] != nullptr &&
-        GetType(env, argv[ARGC_THREE - 1]) == napi_function) {
-        lastParam = argv[ARGC_THREE - 1];
+    auto task = [screenId, surf = surface, env, this] {
+        auto res = DM_JS_TO_ERROR_CODE_MAP.at(
+            SingletonContainer::Get<ScreenManager>().SetVirtualScreenSurface(screenId, surf));
+        if (res != DmErrorCode::DM_OK) {
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(res),
+                "ScreenManager::SetVirtualScreenSurface failed."));
+            WLOGFE("ScreenManager::SetVirtualScreenSurface failed.");
+            return;
+        }
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(env, &scope);
+        napi_value argv[] = {NapiGetUndefined(env)};
+        size_t argc = ArraySize(argv);
+        CallJsMethod("JsScreenManager::OnSetVirtualScreenSurface", screenId, env, argv, argc);
+        napi_close_handle_scope(env, scope);
+        WLOGI("JsScreenManager::OnSetVirtualScreenSurface success");
+    };
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ =
+        std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    if (handler_ == nullptr) {
+        WLOGFE("OnSetVirtualScreenSurface event handler is nullptr.");
+        return NapiGetUndefined(env);
     }
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsScreenManager::OnSetVirtualScreenSurface",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
-    return result;
+    handler_->PostTask(task, "wms:OnSetVirtualScreenSurface", 0,
+        AppExecFwk::EventQueue::Priority::HIGH);
+    return NapiGetUndefined(env);
 }
 
 napi_value OnIsScreenRotationLocked(napi_env env, napi_callback_info info)
@@ -818,29 +856,48 @@ napi_value OnIsScreenRotationLocked(napi_env env, napi_callback_info info)
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     WLOGI("OnIsScreenRotationLocked is called");
-    NapiAsyncTask::CompleteCallback complete =
-        [](napi_env env, NapiAsyncTask& task, int32_t status) {
-            bool isLocked = false;
-            auto res = DM_JS_TO_ERROR_CODE_MAP.at(
-                SingletonContainer::Get<ScreenManager>().IsScreenRotationLocked(isLocked));
+    int64_t screenId = -1LL;
+    DmErrorCode errCode = DmErrorCode::DM_OK;
+    if (argc < ARGC_ONE) {
+        WLOGFE("[NAPI]Argc is invalid: %{public}zu", argc);
+        errCode = DmErrorCode::DM_ERROR_INVALID_PARAM;
+    } else {
+        if (!ConvertFromJsValue(env, argv[0], screenId)) {
+            WLOGFE("Failed to convert parameter to screen id.");
+            errCode = DmErrorCode::DM_ERROR_INVALID_PARAM;
+        }
+    }
+    if (errCode == DmErrorCode::DM_ERROR_INVALID_PARAM || screenId == -1LL) {
+        WLOGFE("JsScreenManager::OnDestroyVirtualScreen failed, Invalidate params.");
+        return NapiThrowError(env, DmErrorCode::DM_ERROR_INVALID_PARAM);
+    }
+    auto task = [screenId, env, this] {
+        bool isLocked = false;
+        auto res = DM_JS_TO_ERROR_CODE_MAP.at(
+            SingletonContainer::Get<ScreenManager>().IsScreenRotationLocked(isLocked));
             if (res == DmErrorCode::DM_OK) {
-                task.Resolve(env, CreateJsValue(env, isLocked));
+                napi_handle_scope scope = nullptr;
+                napi_open_handle_scope(env, &scope);
+                napi_value argv[] = {CreateJsValue(env, isLocked)};
+                size_t argc = ArraySize(argv);
+                CallJsMethod("JsScreenManager::OnIsScreenRotationLocked", screenId, env, argv, argc);
+                napi_close_handle_scope(env, scope);
                 WLOGFI("OnIsScreenRotationLocked success");
             } else {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(res),
+                napi_throw(env, CreateJsError(env, static_cast<int32_t>(res),
                                                 "JsScreenManager::OnIsScreenRotationLocked failed."));
                 WLOGFE("OnIsScreenRotationLocked failed");
             }
-        };
-    napi_value lastParam = nullptr;
-    if (argc >= ARGC_ONE && argv[ARGC_ONE - 1] != nullptr &&
-        GetType(env, argv[ARGC_ONE - 1]) == napi_function) {
-        lastParam = argv[ARGC_ONE - 1];
+    };
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ =
+        std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    if (handler_ == nullptr) {
+        WLOGFE("OnIsScreenRotationLocked event handler is nullptr.");
+        return NapiGetUndefined(env);
     }
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsScreenManager::OnIsScreenRotationLocked",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
-    return result;
+    handler_->PostTask(task, "wms:OnIsScreenRotationLocked", 0,
+        AppExecFwk::EventQueue::Priority::HIGH);
+    return NapiGetUndefined(env);
 }
 
 napi_value OnSetScreenRotationLocked(napi_env env, napi_callback_info info)
@@ -850,9 +907,15 @@ napi_value OnSetScreenRotationLocked(napi_env env, napi_callback_info info)
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    int64_t screenId = -1LL;
     if (argc < ARGC_ONE) {
         WLOGFE("[NAPI]Argc is invalid: %{public}zu", argc);
         errCode = DmErrorCode::DM_ERROR_INVALID_PARAM;
+    } else {
+        if (!ConvertFromJsValue(env, argv[0], screenId)) {
+            WLOGFE("Failed to convert parameter to screen id.");
+            errCode = DmErrorCode::DM_ERROR_INVALID_PARAM;
+        }
     }
     bool isLocked = false;
     if (errCode == DmErrorCode::DM_OK) {
@@ -864,31 +927,35 @@ napi_value OnSetScreenRotationLocked(napi_env env, napi_callback_info info)
             napi_get_value_bool(env, nativeVal, &isLocked);
         }
     }
-    if (errCode == DmErrorCode::DM_ERROR_INVALID_PARAM) {
+    if (errCode == DmErrorCode::DM_ERROR_INVALID_PARAM || screenId == -1LL) {
         WLOGFE("JsScreenManager::OnSetScreenRotationLocked failed, Invalidate params.");
         return NapiThrowError(env, DmErrorCode::DM_ERROR_INVALID_PARAM);
     }
-
-    NapiAsyncTask::CompleteCallback complete =
-        [isLocked](napi_env env, NapiAsyncTask& task, int32_t status) {
-            auto res = DM_JS_TO_ERROR_CODE_MAP.at(
-                SingletonContainer::Get<ScreenManager>().SetScreenRotationLocked(isLocked));
-            if (res == DmErrorCode::DM_OK) {
-                task.Resolve(env, NapiGetUndefined(env));
-                WLOGFI("OnSetScreenRotationLocked success");
-            } else {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(res),
-                                                  "JsScreenManager::OnSetScreenRotationLocked failed."));
-                WLOGFE("OnSetScreenRotationLocked failed");
-            }
-        };
-    napi_value lastParam = (argc <= ARGC_ONE) ? nullptr :
-        ((argv[ARGC_TWO - 1] != nullptr && GetType(env, argv[ARGC_TWO - 1]) == napi_function) ?
-        argv[1] : nullptr);
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsScreenManager::OnSetScreenRotationLocked",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
-    return result;
+    auto task = [isLocked, screenId, env, this] {
+        auto res = DM_JS_TO_ERROR_CODE_MAP.at(
+            SingletonContainer::Get<ScreenManager>().SetScreenRotationLocked(isLocked));
+        if (res == DmErrorCode::DM_OK) {
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(env, &scope);
+            napi_value argv[] = {NapiGetUndefined(env)};
+            size_t argc = ArraySize(argv);
+            CallJsMethod("JsScreenManager::OnSetScreenRotationLocked", screenId, env, argv, argc);
+            napi_close_handle_scope(env, scope);
+            WLOGFI("OnSetScreenRotationLocked success");
+        } else {
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(res),
+                                                "JsScreenManager::OnSetScreenRotationLocked failed."));
+            WLOGFE("OnSetScreenRotationLocked failed");
+        }
+    };
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ =
+        std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    if (handler_ == nullptr) {
+        WLOGFE("OnSetScreenRotationLocked event handler is nullptr.");
+        return NapiGetUndefined(env);
+    }
+    handler_->PostTask(task, "wms:OnSetScreenRotationLocked", 0, AppExecFwk::EventQueue::Priority::HIGH);
+    return NapiGetUndefined(env);
 }
 };
 

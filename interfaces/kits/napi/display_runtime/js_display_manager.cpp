@@ -25,6 +25,7 @@
 #include "js_display_listener.h"
 #include "js_display.h"
 #include "js_display_manager.h"
+#include "event_handler.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -149,30 +150,44 @@ napi_value OnGetDefaultDisplay(napi_env env, napi_callback_info info)
         errCode = DMError::DM_ERROR_INVALID_PARAM;
     }
 
-    NapiAsyncTask::CompleteCallback complete =
-        [=](napi_env env, NapiAsyncTask& task, int32_t status) {
-            if (errCode != DMError::DM_OK) {
-                task.Reject(env, CreateJsError(env,
-                    static_cast<int32_t>(errCode), "JsDisplayManager::OnGetDefaultDisplay failed."));
+    auto task = [this, env, errCode] {
+        if (errCode != DMError::DM_OK) {
+            napi_throw(env, CreateJsError(env,
+                static_cast<int32_t>(errCode), "JsDisplayManager::OnGetDefaultDisplay failed."));
+        }
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "Async:GetDefaultDisplay");
+        sptr<Display> display = SingletonContainer::Get<DisplayManager>().GetDefaultDisplay();
+        if (display != nullptr) {
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(env, &scope);
+            napi_value argv[] = {CreateJsDisplayObject(env, display)};
+            napi_value method = nullptr;
+            std::shared_ptr<NativeReference> jsDisplayObj = FindJsDisplayObject(display->GetId());
+            if (jsDisplayObj == nullptr) {
+                WLOGFE("JsDisplayManager::OnGetDefaultDisplay jsDisplayObj is nullptr.");
+                return;
             }
-            HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "Async:GetDefaultDisplay");
-            sptr<Display> display = SingletonContainer::Get<DisplayManager>().GetDefaultDisplay();
-            if (display != nullptr) {
-                task.Resolve(env, CreateJsDisplayObject(env, display));
-                WLOGI("OnGetDefaultDisplay success");
-            } else {
-                task.Reject(env, CreateJsError(env,
-                    static_cast<int32_t>(DMError::DM_ERROR_NULLPTR), "JsDisplayManager::OnGetDefaultDisplay failed."));
-            }
-        };
-    napi_value lastParam = nullptr;
-    if (argc == ARGC_ONE && GetType(env, argv[0]) == napi_function) {
-        lastParam = argv[0];
+            method = jsDisplayObj->GetNapiValue();
+            napi_value result = nullptr;
+            napi_get_undefined(env, &result);
+            napi_call_function(env, result, method, ArraySize(argv), argv, nullptr);
+            napi_close_handle_scope(env, scope);
+            WLOGI("OnGetDefaultDisplay success");
+        } else {
+            napi_throw(env, CreateJsError(env,
+                static_cast<int32_t>(DMError::DM_ERROR_NULLPTR), "JsDisplayManager::OnGetDefaultDisplay failed."));
+        }
+    };
+
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ =
+        std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    if (handler_ == nullptr) {
+        WLOGFE("OnGetDefaultDisplay event handler is nullptr.");
+        return NapiGetUndefined(env);
     }
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsDisplayManager::OnGetDefaultDisplay",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
-    return result;
+    handler_->PostTask(task, "wms:OnGetDefaultDisplay", 0,
+        AppExecFwk::EventQueue::Priority::HIGH);
+    return NapiGetUndefined(env);
 }
 
 napi_value OnGetDefaultDisplaySync(napi_env env, napi_callback_info info)
@@ -199,67 +214,92 @@ napi_value OnGetAllDisplay(napi_env env, napi_callback_info info)
         WLOGFE("OnGetAllDisplay params not match");
         errCode = DMError::DM_ERROR_INVALID_PARAM;
     }
-
-    NapiAsyncTask::CompleteCallback complete =
-        [=](napi_env env, NapiAsyncTask& task, int32_t status) {
-            if (errCode != DMError::DM_OK) {
-                task.Reject(env, CreateJsError(env,
-                    static_cast<int32_t>(errCode), "JsDisplayManager::OnGetAllDisplay failed."));
+    
+    auto task = [this, env, errCode] {
+        if (errCode != DMError::DM_OK) {
+            napi_throw(env, CreateJsError(env,
+                static_cast<int32_t>(errCode), "JsDisplayManager::OnGetAllDisplay failed."));
+        }
+        std::vector<sptr<Display>> displays = SingletonContainer::Get<DisplayManager>().GetAllDisplays();
+        if (!displays.empty()) {
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(env, &scope);
+            napi_value argv[] = {CreateJsDisplayArrayObject(env, displays)};
+            napi_value method = nullptr;
+            for (auto &display : displays) {
+                std::shared_ptr<NativeReference> jsDisplayObj = FindJsDisplayObject(display->GetId());
+                if (jsDisplayObj == nullptr) {
+                    WLOGFE("JsDisplayManager::OnGetAllDisplay jsDisplayObj is nullptr.");
+                    return;
+                }
+                method = jsDisplayObj->GetNapiValue();
+                napi_value result = nullptr;
+                napi_get_undefined(env, &result);
+                napi_call_function(env, result, method, ArraySize(argv), argv, nullptr);
             }
-            std::vector<sptr<Display>> displays = SingletonContainer::Get<DisplayManager>().GetAllDisplays();
-            if (!displays.empty()) {
-                task.Resolve(env, CreateJsDisplayArrayObject(env, displays));
-                WLOGI("GetAllDisplays success");
-            } else {
-                task.Reject(env, CreateJsError(env,
-                    static_cast<int32_t>(DMError::DM_ERROR_NULLPTR), "JsDisplayManager::OnGetAllDisplay failed."));
-            }
-        };
+            napi_close_handle_scope(env, scope);
+            WLOGI("OnGetDefaultDisplay success");
+            WLOGI("GetAllDisplays success");
+        } else {
+            napi_throw(env, CreateJsError(env,
+                static_cast<int32_t>(DMError::DM_ERROR_NULLPTR), "JsDisplayManager::OnGetAllDisplay failed."));
+        }
+    };
 
-    napi_value lastParam = nullptr;
-    if (argc == ARGC_ONE && GetType(env, argv[0]) == napi_function) {
-        lastParam = argv[0];
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ =
+        std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    if (handler_ == nullptr) {
+        WLOGFE("OnGetDefaultDisplay event handler is nullptr.");
+        return NapiGetUndefined(env);
     }
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsDisplayManager::OnGetAllDisplay",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
-    return result;
+    handler_->PostTask(task, "wms:OnGetDefaultDisplay", 0,
+        AppExecFwk::EventQueue::Priority::HIGH);
+    return NapiGetUndefined(env);
 }
 
 napi_value OnGetAllDisplays(napi_env env, napi_callback_info info)
 {
     WLOGD("GetAllDisplays is called");
-
-    NapiAsyncTask::CompleteCallback complete =
-        [=](napi_env env, NapiAsyncTask& task, int32_t status) {
-            std::vector<sptr<Display>> displays = SingletonContainer::Get<DisplayManager>().GetAllDisplays();
-            if (!displays.empty()) {
-                task.Resolve(env, CreateJsDisplayArrayObject(env, displays));
-                WLOGD("GetAllDisplays success");
-            } else {
-                auto errorPending = false;
-                napi_is_exception_pending(env, &errorPending);
-                if (errorPending) {
-                    napi_value exception = nullptr;
-                    napi_get_and_clear_last_exception(env, &exception);
+    auto task = [this, env] {
+        std::vector<sptr<Display>> displays = SingletonContainer::Get<DisplayManager>().GetAllDisplays();
+        if (!displays.empty()) {
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(env, &scope);
+            napi_value argv[] = {CreateJsDisplayArrayObject(env, displays)};
+            napi_value method = nullptr;
+            for (auto &display : displays) {
+                std::shared_ptr<NativeReference> jsDisplayObj = FindJsDisplayObject(display->GetId());
+                if (jsDisplayObj == nullptr) {
+                    WLOGFE("JsDisplayManager::OnGetAllDisplays jsDisplayObj is nullptr.");
+                    return;
                 }
-                task.Reject(env, CreateJsError(env,
-                    static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_SCREEN),
-                    "JsDisplayManager::OnGetAllDisplays failed."));
+                method = jsDisplayObj->GetNapiValue();
+                napi_value result = nullptr;
+                napi_get_undefined(env, &result);
+                napi_call_function(env, result, method, ArraySize(argv), argv, nullptr);
             }
-        };
-    size_t argc = 4;
-    napi_value argv[4] = {nullptr};
-    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    napi_value lastParam = nullptr;
-    if (argc >= ARGC_ONE && argv[ARGC_ONE - 1] != nullptr &&
-        GetType(env, argv[ARGC_ONE - 1]) == napi_function) {
-        lastParam = argv[0];
+            napi_close_handle_scope(env, scope);
+            WLOGD("GetAllDisplays success");
+        } else {
+            auto errorPending = false;
+            napi_is_exception_pending(env, &errorPending);
+            if (errorPending) {
+                napi_value exception = nullptr;
+                napi_get_and_clear_last_exception(env, &exception);
+            }
+            napi_throw(env, CreateJsError(env,
+                static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_SCREEN),
+                "JsDisplayManager::OnGetAllDisplays failed."));
+        }
+    };
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ =
+        std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    if (handler_ == nullptr) {
+        WLOGFE("OnGetDefaultDisplay event handler is nullptr.");
+        return NapiGetUndefined(env);
     }
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsDisplayManager::OnGetAllDisplays",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
-    return result;
+    handler_->PostTask(task, "wms:OnGetDefaultDisplay", 0, AppExecFwk::EventQueue::Priority::HIGH);
+    return NapiGetUndefined(env);
 }
 
 DMError RegisterDisplayListenerWithType(napi_env env, const std::string& type, napi_value value)

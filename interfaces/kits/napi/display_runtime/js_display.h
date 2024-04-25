@@ -23,6 +23,7 @@
 #include "cutout_info.h"
 #include "display.h"
 #include "dm_common.h"
+#include "event_handler.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -81,6 +82,7 @@ private:
     napi_value OnGetSupportedColorSpaces(napi_env env, napi_callback_info info);
     napi_value OnGetSupportedHDRFormats(napi_env env, napi_callback_info info);
     napi_value OnGetAvailableArea(napi_env env, napi_callback_info info);
+    std::shared_ptr<AppExecFwk::EventHandler> handler_;
 };
 enum class DisplayStateMode : uint32_t {
     STATE_UNKNOWN = 0,

@@ -20,12 +20,14 @@
 #include "native_engine/native_engine.h"
 #include "native_engine/native_value.h"
 #include "screen_manager.h"
+#include "event_handler.h"
+#include "hitrace_meter.h"
 
 namespace OHOS {
 namespace Rosen {
 class JsScreenListener : public ScreenManager::IScreenListener {
 public:
-    explicit JsScreenListener(napi_env env) : env_(env) {}
+    explicit JsScreenListener(napi_env env);
     ~JsScreenListener() override = default;
     void AddCallback(const std::string& type, napi_value jsListenerObject);
     void RemoveAllCallback();
@@ -40,6 +42,8 @@ private:
     std::mutex mtx_;
     std::map<std::string, std::vector<std::unique_ptr<NativeReference>>> jsCallBack_;
     napi_value CreateScreenIdArray(napi_env env, const std::vector<ScreenId>& data);
+    std::shared_ptr<AppExecFwk::EventHandler> handler_;
+    wptr<JsScreenListener> weakRef_ = nullptr;
 };
 const std::string EVENT_CONNECT = "connect";
 const std::string EVENT_DISCONNECT = "disconnect";

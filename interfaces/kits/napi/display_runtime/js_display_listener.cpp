@@ -108,18 +108,25 @@ void JsDisplayListener::OnCreate(DisplayId id)
         WLOGE("JsDisplayListener::OnCreate not this event, return");
         return;
     }
-    sptr<JsDisplayListener> listener = this; // Avoid this be destroyed when using.
-    std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback> (
-        [this, listener, id] (napi_env env, NapiAsyncTask &task, int32_t status) {
-            napi_value argv[] = {CreateJsValue(env_, static_cast<uint32_t>(id))};
-            CallJsMethod(EVENT_ADD, argv, ArraySize(argv));
+    auto task = [self = weakRef_, id, eng = env_] {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "JsDisplayListener::OnCreate");
+        auto thisListener = self.promote();
+        if (thisListener == nullptr || eng == nullptr) {
+            WLOGFE("[NAPI]this listener or eng is nullptr");
+            return;
         }
-    );
-
-    napi_ref callback = nullptr;
-    std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
-    NapiAsyncTask::Schedule("JsDisplayListener::OnCreate", env_, std::make_unique<NapiAsyncTask>(
-        callback, std::move(execute), std::move(complete)));
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(eng, &scope);
+        napi_value argv[] = {CreateJsValue(eng, static_cast<uint32_t>(id))};
+        thisListener->CallJsMethod(EVENT_ADD, argv, ArraySize(argv));
+        napi_close_handle_scope(eng, scope);
+    };
+    if (!handler_) {
+        WLOGFE("get main event handler failed!");
+        return;
+    }
+    handler_->PostTask(task, "wms:JsDisplayListener::OnCreate",
+        0, AppExecFwk::EventQueue::Priority::HIGH);
 }
 
 void JsDisplayListener::OnDestroy(DisplayId id)
@@ -134,18 +141,25 @@ void JsDisplayListener::OnDestroy(DisplayId id)
         WLOGE("JsDisplayListener::OnDestroy not this event, return");
         return;
     }
-    sptr<JsDisplayListener> listener = this; // Avoid this be destroyed when using.
-    std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback> (
-        [this, listener, id] (napi_env env, NapiAsyncTask &task, int32_t status) {
-            napi_value argv[] = {CreateJsValue(env_, static_cast<uint32_t>(id))};
-            CallJsMethod(EVENT_REMOVE, argv, ArraySize(argv));
+    auto task = [self = weakRef_, id, eng = env_] {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "JsDisplayListener::OnDestroy");
+        auto thisListener = self.promote();
+        if (thisListener == nullptr || eng == nullptr) {
+            WLOGFE("[NAPI]this listener or eng is nullptr");
+            return;
         }
-    );
-
-    napi_ref callback = nullptr;
-    std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
-    NapiAsyncTask::Schedule("JsDisplayListener::OnDestroy", env_, std::make_unique<NapiAsyncTask>(
-            callback, std::move(execute), std::move(complete)));
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(eng, &scope);
+        napi_value argv[] = {CreateJsValue(eng, static_cast<uint32_t>(id))};
+        thisListener->CallJsMethod(EVENT_REMOVE, argv, ArraySize(argv));
+        napi_close_handle_scope(eng, scope);
+    };
+    if (!handler_) {
+        WLOGFE("get main event handler failed!");
+        return;
+    }
+    handler_->PostTask(task, "wms:JsDisplayListener::OnDestroy",
+        0, AppExecFwk::EventQueue::Priority::HIGH);
 }
 
 void JsDisplayListener::OnChange(DisplayId id)
@@ -160,18 +174,25 @@ void JsDisplayListener::OnChange(DisplayId id)
         WLOGE("JsDisplayListener::OnChange not this event, return");
         return;
     }
-    sptr<JsDisplayListener> listener = this; // Avoid this be destroyed when using.
-    std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback> (
-        [this, listener, id] (napi_env env, NapiAsyncTask &task, int32_t status) {
-            napi_value argv[] = {CreateJsValue(env_, static_cast<uint32_t>(id))};
-            CallJsMethod(EVENT_CHANGE, argv, ArraySize(argv));
+    auto task = [self = weakRef_, id, eng = env_] {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "JsDisplayListener::OnChange");
+        auto thisListener = self.promote();
+        if (thisListener == nullptr || eng == nullptr) {
+            WLOGFE("[NAPI]this listener or eng is nullptr");
+            return;
         }
-    );
-
-    napi_ref callback = nullptr;
-    std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
-    NapiAsyncTask::Schedule("JsDisplayListener::OnChange", env_, std::make_unique<NapiAsyncTask>(
-            callback, std::move(execute), std::move(complete)));
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(eng, &scope);
+        napi_value argv[] = {CreateJsValue(eng, static_cast<uint32_t>(id))};
+        thisListener->CallJsMethod(EVENT_CHANGE, argv, ArraySize(argv));
+        napi_close_handle_scope(eng, scope);
+    };
+    if (!handler_) {
+        WLOGFE("get main event handler failed!");
+        return;
+    }
+    handler_->PostTask(task, "wms:JsDisplayListener::OnChange",
+        0, AppExecFwk::EventQueue::Priority::HIGH);
 }
 
 void JsDisplayListener::OnPrivateWindow(bool hasPrivate)
@@ -187,17 +208,25 @@ void JsDisplayListener::OnPrivateWindow(bool hasPrivate)
         return;
     }
     sptr<JsDisplayListener> listener = this; // Avoid this be destroyed when using.
-    std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback> (
-        [this, listener, hasPrivate] (napi_env env, NapiAsyncTask &task, int32_t status) {
-            napi_value argv[] = {CreateJsValue(env_, hasPrivate)};
-            CallJsMethod(EVENT_PRIVATE_MODE_CHANGE, argv, ArraySize(argv));
+    auto task = [self = weakRef_, hasPrivate, eng = env_] {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "JsDisplayListener::OnPrivateWindow");
+        auto thisListener = self.promote();
+        if (thisListener == nullptr || eng == nullptr) {
+            WLOGFE("[NAPI]this listener or eng is nullptr");
+            return;
         }
-    );
-
-    napi_ref callback = nullptr;
-    std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
-    NapiAsyncTask::Schedule("JsDisplayListener::OnPrivateWindow", env_, std::make_unique<NapiAsyncTask>(
-            callback, std::move(execute), std::move(complete)));
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(eng, &scope);
+        napi_value argv[] = {CreateJsValue(eng, hasPrivate)};
+        thisListener->CallJsMethod(EVENT_PRIVATE_MODE_CHANGE, argv, ArraySize(argv));
+        napi_close_handle_scope(eng, scope);
+    };
+    if (!handler_) {
+        WLOGFE("get main event handler failed!");
+        return;
+    }
+    handler_->PostTask(task, "wms:JsDisplayListener::OnPrivateWindow",
+        0, AppExecFwk::EventQueue::Priority::HIGH);
 }
 
 void JsDisplayListener::OnFoldStatusChanged(FoldStatus foldStatus)
@@ -212,18 +241,25 @@ void JsDisplayListener::OnFoldStatusChanged(FoldStatus foldStatus)
         WLOGE("OnFoldStatusChanged not this event, return");
         return;
     }
-    sptr<JsDisplayListener> listener = this; // Avoid this be destroyed when using.
-    std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback> (
-        [this, listener, foldStatus] (napi_env env, NapiAsyncTask &task, int32_t status) {
-            napi_value argv[] = {CreateJsValue(env_, foldStatus)};
-            CallJsMethod(EVENT_FOLD_STATUS_CHANGED, argv, ArraySize(argv));
+    auto task = [self = weakRef_, foldStatus, eng = env_] {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "JsDisplayListener::OnFoldStatusChanged");
+        auto thisListener = self.promote();
+        if (thisListener == nullptr || eng == nullptr) {
+            WLOGFE("[NAPI]this listener or eng is nullptr");
+            return;
         }
-    );
-
-    napi_ref callback = nullptr;
-    std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
-    NapiAsyncTask::Schedule("JsDisplayListener::OnFoldStatusChanged", env_, std::make_unique<NapiAsyncTask>(
-            callback, std::move(execute), std::move(complete)));
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(eng, &scope);
+        napi_value argv[] = {CreateJsValue(eng, foldStatus)};
+        thisListener->CallJsMethod(EVENT_FOLD_STATUS_CHANGED, argv, ArraySize(argv));
+        napi_close_handle_scope(eng, scope);
+    };
+    if (!handler_) {
+        WLOGFE("get main event handler failed!");
+        return;
+    }
+    handler_->PostTask(task, "wms:JsDisplayListener::OnFoldStatusChanged",
+        0, AppExecFwk::EventQueue::Priority::HIGH);
 }
 
 void JsDisplayListener::OnFoldAngleChanged(std::vector<float> foldAngles)
@@ -237,18 +273,25 @@ void JsDisplayListener::OnFoldAngleChanged(std::vector<float> foldAngles)
         WLOGE("OnFoldAngleChanged not this event, return");
         return;
     }
-    sptr<JsDisplayListener> listener = this; // Avoid this be destroyed when using.
-    std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback> (
-        [this, listener, foldAngles] (napi_env env, NapiAsyncTask &task, int32_t status) {
-            napi_value argv[] = {CreateNativeArray(env_, foldAngles)};
-            CallJsMethod(EVENT_FOLD_ANGLE_CHANGED, argv, ArraySize(argv));
+    auto task = [self = weakRef_, foldAngles, eng = env_] {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "JsDisplayListener::OnFoldAngleChanged");
+        auto thisListener = self.promote();
+        if (thisListener == nullptr || eng == nullptr) {
+            WLOGFE("[NAPI]this listener or eng is nullptr");
+            return;
         }
-    );
-
-    napi_ref callback = nullptr;
-    std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
-    NapiAsyncTask::Schedule("JsDisplayListener::OnFoldAngleChanged", env_, std::make_unique<NapiAsyncTask>(
-            callback, std::move(execute), std::move(complete)));
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(eng, &scope);
+        napi_value argv[] = {CreateNativeArray(eng, foldAngles)};
+        thisListener->CallJsMethod(EVENT_FOLD_ANGLE_CHANGED, argv, ArraySize(argv));
+        napi_close_handle_scope(eng, scope);
+    };
+    if (!handler_) {
+        WLOGFE("get main event handler failed!");
+        return;
+    }
+    handler_->PostTask(task, "wms:JsDisplayListener::OnFoldAngleChanged",
+        0, AppExecFwk::EventQueue::Priority::HIGH);
 }
 
 void JsDisplayListener::OnCaptureStatusChanged(bool isCapture)
@@ -262,18 +305,25 @@ void JsDisplayListener::OnCaptureStatusChanged(bool isCapture)
         WLOGE("OnCaptureStatusChanged not this event, return");
         return;
     }
-    sptr<JsDisplayListener> listener = this; // Avoid this be destroyed when using.
-    std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback> (
-        [this, listener, isCapture] (napi_env env, NapiAsyncTask &task, int32_t status) {
-            napi_value argv[] = {CreateJsValue(env_, isCapture)};
-            CallJsMethod(EVENT_CAPTURE_STATUS_CHANGED, argv, ArraySize(argv));
+    auto task = [self = weakRef_, isCapture, eng = env_] {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "JsDisplayListener::OnCaptureStatusChanged");
+        auto thisListener = self.promote();
+        if (thisListener == nullptr || eng == nullptr) {
+            WLOGFE("[NAPI]this listener or eng is nullptr");
+            return;
         }
-    );
-
-    napi_ref callback = nullptr;
-    std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
-    NapiAsyncTask::Schedule("JsDisplayListener::OnCaptureStatusChanged", env_, std::make_unique<NapiAsyncTask>(
-            callback, std::move(execute), std::move(complete)));
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(eng, &scope);
+        napi_value argv[] = {CreateJsValue(eng, isCapture)};
+        thisListener->CallJsMethod(EVENT_CAPTURE_STATUS_CHANGED, argv, ArraySize(argv));
+        napi_close_handle_scope(eng, scope);
+    };
+    if (!handler_) {
+        WLOGFE("get main event handler failed!");
+        return;
+    }
+    handler_->PostTask(task, "wms:JsDisplayListener::OnFoldAngleChanged",
+        0, AppExecFwk::EventQueue::Priority::HIGH);
 }
 
 void JsDisplayListener::OnDisplayModeChanged(FoldDisplayMode displayMode)

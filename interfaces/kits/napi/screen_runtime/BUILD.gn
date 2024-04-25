@@ -49,8 +49,10 @@ ohos_shared_library("screen_napi") {
   external_deps = [
     "ability_runtime:runtime",
     "c_utils:utils",
+    "eventhandler:libeventhandler",
     "graphic_surface:surface",  # use for SurfaceUtils
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "hiview:libxpower_event_js",
     "napi:ace_napi",
   ]
