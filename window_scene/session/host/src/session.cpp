@@ -90,7 +90,7 @@ Session::Session(const SessionInfo& info) : sessionInfo_(info)
         }
     }
 
-    if (info.want != nullptr && info.isSystem_) {
+    if (info.want != nullptr) {
         auto focusedOnShow = info.want->GetBoolParam(AAFwk::Want::PARAM_RESV_WINDOW_FOCUSED, true);
         TLOGI(WmsLogTag::WMS_FOCUS, "focusedOnShow:%{public}d", focusedOnShow);
         SetFocusedOnShow(focusedOnShow);
@@ -488,7 +488,10 @@ WSError Session::SetTouchable(bool touchable)
 
 void Session::SetFocusedOnShow(bool focusedOnShow)
 {
-    TLOGI(WmsLogTag::WMS_FOCUS, "SetFocusedOnShow:%{public}d", focusedOnShow);
+    if (focusedOnShow == focusedOnShow_) {
+        return;
+    }
+    TLOGI(WmsLogTag::WMS_FOCUS, "focusedOnShow change to:%{public}d", focusedOnShow);
     focusedOnShow_ = focusedOnShow;
 }
 
