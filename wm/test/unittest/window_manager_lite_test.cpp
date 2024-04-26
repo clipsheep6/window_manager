@@ -223,12 +223,13 @@ HWTEST_F(WindowManagerLiteTest, GetTopNMainWindowInfos, Function | SmallTest | L
 
     int32_t topN = 3;
 
-    EXPECT_CALL(m->Mock(), GetTopNMainWindowInfos(_, _)).Times(1).WillOnce(DoAll(SetArgReferee<1>(infosResult), Return(WMError::WM_OK)));
+    EXPECT_CALL(m->Mock(), GetTopNMainWindowInfos(_, _)).Times(1).WillOnce(DoAll(SetArgReferee<1>(infosResult),
+        Return(WMError::WM_OK)));
 
     WindowManagerLite::GetInstance().GetTopNMainWindowInfos(topN, topNInfo);
 
     auto it1 = topNInfo.begin();
-    autp it2 = topNInfoResult.begin();
+    auto it2 = topNInfoResult.begin();
     for (; it1 != topNInfo.end() && it2 != topNInfoResult.end(); it1++, it2++) {
         ASSERT_EQ(it1->pid, it2->pid);
         ASSERT_EQ(it1->bundleName, it2->bundleName);
