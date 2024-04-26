@@ -207,15 +207,15 @@ HWTEST_F(WindowManagerLiteTest, GetTopNMainWindowInfos, Function | SmallTest | L
     std::vector<TopNMainWindowInfo> topNInfoResult;
     TopNMainWindowInfo info1;
     info1.pid = 1900;
-    info1.bundleName = "com.huawei.hmos.calendar";
+    info1.bundleName = "calendar";
 
     TopNMainWindowInfo info2;
     info1.pid = 1901;
-    info1.bundleName = "com.huawei.hmos.settings";
+    info1.bundleName = "settings";
 
     TopNMainWindowInfo info3;
     info1.pid = 1902;
-    info1.bundleName = "com.huawei.hmos.photos";
+    info1.bundleName = "photos";
 
     topNInfoResult.push_back(info1);
     topNInfoResult.push_back(info2);
