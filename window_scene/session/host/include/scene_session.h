@@ -326,7 +326,14 @@ private:
     void HandleCastScreenConnection(SessionInfo& info, sptr<SceneSession> session);
     void FixKeyboardPositionByKeyboardPanel(sptr<SceneSession> panelSession, sptr<SceneSession> keyboardSession);
     void UpdateSessionRectInner(const WSRect& rect, const SizeChangeReason& reason);
+<<<<<<< HEAD
     bool CheckGetAvoidAreaAvailable(AvoidAreaType type);
+=======
+    static WSError ValidateAspectRatioParameters(const wptr<SceneSession> session, const WindowLimits& limits,
+        float vpr, float ratio);
+    bool TransferFloatingWindowPointerEvent(sptr<WindowSessionProperty> property, WSError& result,
+        const std::shared_ptr<MMI::PointerEvent>& pointerEvent, bool needNotifyClient, bool isPointDown);
+>>>>>>> bae378b6a (Code static analysis fixes for window_scene)
 
     NotifySessionRectChangeFunc sessionRectChangeFunc_;
     static wptr<SceneSession> enterSession_;
