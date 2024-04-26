@@ -30,22 +30,8 @@ namespace {
     constexpr int32_t MAX_TOUCHABLE_AREAS = 10;
 }
 
-napi_value WindowTypeInit(napi_env env)
+void SetNamedProperties(napi_env env, napi_value objValue)
 {
-    WLOGFD("WindowTypeInit");
-
-    if (env == nullptr) {
-        WLOGFE("env is nullptr");
-        return nullptr;
-    }
-
-    napi_value objValue = nullptr;
-    napi_create_object(env, &objValue);
-    if (objValue == nullptr) {
-        WLOGFE("Failed to get object");
-        return nullptr;
-    }
-
     napi_set_named_property(env, objValue, "TYPE_APP", CreateJsValue(env,
         static_cast<int32_t>(ApiWindowType::TYPE_APP)));
     napi_set_named_property(env, objValue, "TYPE_SYSTEM_ALERT", CreateJsValue(env,
@@ -88,6 +74,26 @@ napi_value WindowTypeInit(napi_env env)
         static_cast<int32_t>(ApiWindowType::TYPE_GLOBAL_SEARCH)));
     napi_set_named_property(env, objValue, "TYPE_HANDWRITE", CreateJsValue(env,
         static_cast<int32_t>(ApiWindowType::TYPE_HANDWRITE)));
+
+}
+
+napi_value WindowTypeInit(napi_env env)
+{
+    WLOGFD("WindowTypeInit");
+
+    if (env == nullptr) {
+        WLOGFE("env is nullptr");
+        return nullptr;
+    }
+
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue == nullptr) {
+        WLOGFE("Failed to get object");
+        return nullptr;
+    }
+
+    SetNamedProperties(env, objValue);
 
     return objValue;
 }
@@ -805,6 +811,43 @@ static uint32_t GetColorFromJs(napi_env env, napi_value jsObject,
     return defaultColor;
 }
 
+struct SetContentColorPropertyData {
+    std::map<WindowType, SystemBarProperty>& properties;
+    std::map<WindowType, SystemBarPropertyFlag>& propertyFlags;
+};
+
+struct SetContentColorParam {
+    const char* contentColorName;
+    uint32_t propertyContentColor;
+    const char* isLightIconName;
+};
+
+bool SetContentColor(napi_env env, napi_value jsObject, SetContentColorPropertyData propertyData,
+                     SetContentColorParam colorParam, WindowType windowType)
+{
+    napi_value jsContentColor = nullptr;
+    napi_get_named_property(env, jsObject, colorParam.contentColorName, &jsContentColor);
+    napi_value jsIcon = nullptr;
+    napi_get_named_property(env, jsObject, colorParam.isLightIconName, &jsIcon);
+    if (GetType(env, jsContentColor) != napi_undefined) {
+        propertyData.properties[windowType].contentColor_ = GetColorFromJs(env,
+            jsObject, colorParam.contentColorName, colorParam.propertyContentColor,
+            propertyData.propertyFlags[windowType].contentColorFlag);
+    } else if (GetType(env, jsIcon) != napi_undefined) {
+        bool isLightIcon;
+        if (!ConvertFromJsValue(env, jsIcon, isLightIcon)) {
+            return false;
+        }
+        if (isLightIcon) {
+            propertyData.properties[windowType].contentColor_ = SYSTEM_COLOR_WHITE;
+        } else {
+            propertyData.properties[windowType].contentColor_ = SYSTEM_COLOR_BLACK;
+        }
+        propertyData.propertyFlags[windowType].contentColorFlag = true;
+    }
+    return true;
+}
+
 bool SetSystemBarPropertiesFromJs(napi_env env, napi_value jsObject,
     std::map<WindowType, SystemBarProperty>& properties, std::map<WindowType, SystemBarPropertyFlag>& propertyFlags,
     sptr<Window>& window)
@@ -820,57 +863,29 @@ bool SetSystemBarPropertiesFromJs(napi_env env, napi_value jsObject,
     properties[WindowType::WINDOW_TYPE_NAVIGATION_BAR].backgroundColor_ = GetColorFromJs(env,
         jsObject, "navigationBarColor", navProperty.backgroundColor_,
         propertyFlags[WindowType::WINDOW_TYPE_NAVIGATION_BAR].backgroundColorFlag);
-    napi_value jsStatusContentColor = nullptr;
-    napi_get_named_property(env, jsObject, "statusBarContentColor", &jsStatusContentColor);
-    napi_value jsStatusIcon = nullptr;
-    napi_get_named_property(env, jsObject, "isStatusBarLightIcon", &jsStatusIcon);
-    if (GetType(env, jsStatusContentColor) != napi_undefined) {
-        properties[WindowType::WINDOW_TYPE_STATUS_BAR].contentColor_ =  GetColorFromJs(env,
-            jsObject, "statusBarContentColor", statusProperty.contentColor_,
-            propertyFlags[WindowType::WINDOW_TYPE_STATUS_BAR].contentColorFlag);
-    } else if (GetType(env, jsStatusIcon) != napi_undefined) {
-        bool isStatusBarLightIcon;
-        if (!ConvertFromJsValue(env, jsStatusIcon, isStatusBarLightIcon)) {
-            return false;
-        }
-        if (isStatusBarLightIcon) {
-            properties[WindowType::WINDOW_TYPE_STATUS_BAR].contentColor_ = SYSTEM_COLOR_WHITE;
-        } else {
-            properties[WindowType::WINDOW_TYPE_STATUS_BAR].contentColor_ = SYSTEM_COLOR_BLACK;
-        }
-        propertyFlags[WindowType::WINDOW_TYPE_STATUS_BAR].contentColorFlag = true;
+    bool setContentColorResult = false;
+    if (SetContentColor(env, jsObject, { properties, propertyFlags },
+                        { "statusBarContentColor", statusProperty.contentColor_, "isStatusBarLightIcon" },
+                        WindowType::WINDOW_TYPE_STATUS_BAR)) {
+        setContentColorResult = SetContentColor(env, jsObject, { properties, propertyFlags },
+                                                { "navigationBarContentColor", navProperty.contentColor_,
+                                                  "isNavigationBarLightIcon" },
+                                                WindowType::WINDOW_TYPE_NAVIGATION_BAR);
     }
-    napi_value jsNavigationContentColor = nullptr;
-    napi_get_named_property(env, jsObject, "navigationBarContentColor", &jsNavigationContentColor);
-    napi_value jsNavigationIcon = nullptr;
-    napi_get_named_property(env, jsObject, "isNavigationBarLightIcon", &jsNavigationIcon);
-    if (GetType(env, jsNavigationContentColor) != napi_undefined) {
-        properties[WindowType::WINDOW_TYPE_NAVIGATION_BAR].contentColor_ = GetColorFromJs(env,
-            jsObject, "navigationBarContentColor", navProperty.contentColor_,
-            propertyFlags[WindowType::WINDOW_TYPE_NAVIGATION_BAR].contentColorFlag);
-    } else if (GetType(env, jsNavigationIcon) != napi_undefined) {
-        bool isNavigationBarLightIcon;
-        if (!ConvertFromJsValue(env, jsNavigationIcon, isNavigationBarLightIcon)) {
-            return false;
+    if (setContentColorResult) {
+        bool enableStatusBarAnimation = false;
+        if (ParseJsValue(jsObject, env, "enableStatusBarAnimation", enableStatusBarAnimation)) {
+            properties[WindowType::WINDOW_TYPE_STATUS_BAR].enableAnimation_ = enableStatusBarAnimation;
+            propertyFlags[WindowType::WINDOW_TYPE_STATUS_BAR].enableAnimationFlag = true;
         }
-        if (isNavigationBarLightIcon) {
-            properties[WindowType::WINDOW_TYPE_NAVIGATION_BAR].contentColor_ = SYSTEM_COLOR_WHITE;
-        } else {
-            properties[WindowType::WINDOW_TYPE_NAVIGATION_BAR].contentColor_ = SYSTEM_COLOR_BLACK;
+        bool enableNavigationBarAnimation = false;
+        if (ParseJsValue(jsObject, env, "enableNavigationBarAnimation", enableNavigationBarAnimation)) {
+            properties[WindowType::WINDOW_TYPE_NAVIGATION_BAR].enableAnimation_ = enableNavigationBarAnimation;
+            propertyFlags[WindowType::WINDOW_TYPE_NAVIGATION_BAR].enableAnimationFlag = true;
         }
-        propertyFlags[WindowType::WINDOW_TYPE_NAVIGATION_BAR].contentColorFlag = true;
+        return true;
     }
-    bool enableStatusBarAnimation = false;
-    if (ParseJsValue(jsObject, env, "enableStatusBarAnimation", enableStatusBarAnimation)) {
-        properties[WindowType::WINDOW_TYPE_STATUS_BAR].enableAnimation_ = enableStatusBarAnimation;
-        propertyFlags[WindowType::WINDOW_TYPE_STATUS_BAR].enableAnimationFlag = true;
-    }
-    bool enableNavigationBarAnimation = false;
-    if (ParseJsValue(jsObject, env, "enableNavigationBarAnimation", enableNavigationBarAnimation)) {
-        properties[WindowType::WINDOW_TYPE_NAVIGATION_BAR].enableAnimation_ = enableNavigationBarAnimation;
-        propertyFlags[WindowType::WINDOW_TYPE_NAVIGATION_BAR].enableAnimationFlag = true;
-    }
-    return true;
+    return false;
 }
 
 napi_value ConvertAvoidAreaToJsValue(napi_env env, const AvoidArea& avoidArea, AvoidAreaType type)
