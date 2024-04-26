@@ -49,7 +49,7 @@ private:
     int32_t ProcAvailableAreaChanged(MessageParcel& data);
     int32_t ProcFoldAngleChanged(MessageParcel& data);
     int32_t ProcCaptureStatusChanged(MessageParcel& data);
-    using StubFunc = int32_t(DisplayManagerAgentStub ::*)(MessageParcel& data);
+    using StubFunc = int32_t (DisplayManagerAgentStub ::*)(MessageParcel& data);
     static const std::map<uint32_t, StubFunc> stubFuncMap_;
 };
 } // namespace OHOS::Rosen
