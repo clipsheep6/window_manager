@@ -805,7 +805,7 @@ WMError SceneSessionManagerLiteProxy::GetTopNMainWindowInfos(int32_t topNum, std
         return WMError::WM_ERROR_IPC_FAILED;
     }
 
-    if (Remote()->SendRequest(static_cast<int32_t>(SceneSessionManagerLiteMessage::TRANS_ID_GET_TOP_MAIN_WINDOW_INFO),
+    if (Remote()->SendRequest(static_cast<int32_t>(SceneSessionManagerLiteMessage::TRANS_ID_GET_TOPN_MAIN_WINDOW_INFO),
                               data, reply, option) != ERR_NONE) {
         WLOGFE("GetTopNMainWindowInfos send request fail");
         return WMError::WM_ERROR_IPC_FAILED;
