@@ -423,6 +423,35 @@ WSError SceneSession::GetGlobalMaximizeMode(MaximizeMode &mode)
     return PostSyncTask(task, "GetGlobalMaximizeMode");
 }
 
+WSError SceneSession::ValidateAspectRatioParameters(const wptr<SceneSession> session, const WindowLimits& limits,
+    float vpr, float ratio)
+{
+    if (session->IsDecorEnable()) {
+        if (limits.minWidth_ && limits.maxHeight_ &&
+            MathHelper::LessNotEqual(ratio, SessionUtils::ToLayoutWidth(limits.minWidth_, vpr) /
+            SessionUtils::ToLayoutHeight(limits.maxHeight_, vpr))) {
+            WLOGE("Failed, because aspectRatio is smaller than minWidth/maxHeight");
+            return WSError::WS_ERROR_INVALID_PARAM;
+        } else if (limits.minHeight_ && limits.maxWidth_ &&
+            MathHelper::GreatNotEqual(ratio, SessionUtils::ToLayoutWidth(limits.maxWidth_, vpr) /
+            SessionUtils::ToLayoutHeight(limits.minHeight_, vpr))) {
+            WLOGE("Failed, because aspectRatio is bigger than maxWidth/minHeight");
+            return WSError::WS_ERROR_INVALID_PARAM;
+        }
+    } else {
+        if (limits.minWidth_ && limits.maxHeight_ && MathHelper::LessNotEqual(ratio,
+            static_cast<float>(limits.minWidth_) / limits.maxHeight_)) {
+            WLOGE("Failed, because aspectRatio is smaller than minWidth/maxHeight");
+            return WSError::WS_ERROR_INVALID_PARAM;
+        } else if (limits.minHeight_ && limits.maxWidth_ && MathHelper::GreatNotEqual(ratio,
+            static_cast<float>(limits.maxWidth_) / limits.minHeight_)) {
+            WLOGE("Failed, because aspectRatio is bigger than maxWidth/minHeight");
+            return WSError::WS_ERROR_INVALID_PARAM;
+        }
+    }
+    return WSError::WS_OK;
+}
+
 WSError SceneSession::SetAspectRatio(float ratio)
 {
     auto task = [weakThis = wptr(this), ratio]() {
@@ -444,28 +473,9 @@ WSError SceneSession::SetAspectRatio(float ratio)
         }
         if (!MathHelper::NearZero(ratio)) {
             auto limits = session->GetSessionProperty()->GetWindowLimits();
-            if (session->IsDecorEnable()) {
-                if (limits.minWidth_ && limits.maxHeight_ &&
-                    MathHelper::LessNotEqual(ratio, SessionUtils::ToLayoutWidth(limits.minWidth_, vpr) /
-                    SessionUtils::ToLayoutHeight(limits.maxHeight_, vpr))) {
-                    WLOGE("Failed, because aspectRatio is smaller than minWidth/maxHeight");
-                    return WSError::WS_ERROR_INVALID_PARAM;
-                } else if (limits.minHeight_ && limits.maxWidth_ &&
-                    MathHelper::GreatNotEqual(ratio, SessionUtils::ToLayoutWidth(limits.maxWidth_, vpr) /
-                    SessionUtils::ToLayoutHeight(limits.minHeight_, vpr))) {
-                    WLOGE("Failed, because aspectRatio is bigger than maxWidth/minHeight");
-                    return WSError::WS_ERROR_INVALID_PARAM;
-                }
-            } else {
-                if (limits.minWidth_ && limits.maxHeight_ && MathHelper::LessNotEqual(ratio,
-                    static_cast<float>(limits.minWidth_) / limits.maxHeight_)) {
-                    WLOGE("Failed, because aspectRatio is smaller than minWidth/maxHeight");
-                    return WSError::WS_ERROR_INVALID_PARAM;
-                } else if (limits.minHeight_ && limits.maxWidth_ && MathHelper::GreatNotEqual(ratio,
-                    static_cast<float>(limits.maxWidth_) / limits.minHeight_)) {
-                    WLOGE("Failed, because aspectRatio is bigger than maxWidth/minHeight");
-                    return WSError::WS_ERROR_INVALID_PARAM;
-                }
+            auto val = session->ValidateAspectRatioParameters(session, limits, vpr, ratio);
+            if (val != WSError::WS_OK) {
+                return val;
             }
         }
         session->aspectRatio_ = ratio;
@@ -1343,8 +1353,25 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
     }
 
     auto property = GetSessionProperty();
+    WSError result = WSError::WS_OK;
+    if (TransferFloatingWindowPointerEvent(property, result, pointerEvent, needNotifyClient, isPointDown)) {
+        return result;
+    }
+
+    bool raiseEnabled = property->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG && property->GetRaiseEnabled() &&
+        (action == MMI::PointerEvent::POINTER_ACTION_DOWN || action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN);
+    if (raiseEnabled) {
+        RaiseToAppTopForPointDown();
+    }
+    return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
+}
+
+bool SceneSession::TransferFloatingWindowPointerEvent(sptr<WindowSessionProperty> property,
+    WSError& result, const std::shared_ptr<MMI::PointerEvent>& pointerEvent, bool needNotifyClient, bool isPointDown)
+{
     if (property == nullptr) {
-        return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
+        result = Session::TransferPointerEvent(pointerEvent, needNotifyClient);
+        return true;
     }
 
     auto windowType = property->GetWindowType();
@@ -1359,11 +1386,13 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
             HandlePointDownDialog();
             pointerEvent->MarkProcessed();
             TLOGI(WmsLogTag::WMS_DIALOG, "There is dialog window foreground");
-            return WSError::WS_OK;
+            result = WSError::WS_OK;
+            return true;
         }
         if (!moveDragController_) {
             WLOGE("moveDragController_ is null");
-            return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
+            result = Session::TransferPointerEvent(pointerEvent, needNotifyClient);
+            return true;
         }
         if (property->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING && property->GetDragEnabled()) {
             auto is2in1 = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
@@ -1374,22 +1403,18 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
                 moveDragController_->UpdateGravityWhenDrag(pointerEvent, surfaceNode_);
                 PresentFoucusIfNeed(pointerEvent->GetPointerAction());
                 pointerEvent->MarkProcessed();
-                return WSError::WS_OK;
+                result = WSError::WS_OK;
+                return true;
             }
         }
         if (IsDecorEnable() && moveDragController_->ConsumeMoveEvent(pointerEvent, winRect_)) {
             PresentFoucusIfNeed(pointerEvent->GetPointerAction());
             pointerEvent->MarkProcessed();
-            return WSError::WS_OK;
+            result = WSError::WS_OK;
+            return true;
         }
     }
-
-    bool raiseEnabled = property->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG && property->GetRaiseEnabled() &&
-        (action == MMI::PointerEvent::POINTER_ACTION_DOWN || action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN);
-    if (raiseEnabled) {
-        RaiseToAppTopForPointDown();
-    }
-    return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
+    return false;
 }
 
 bool SceneSession::IsMovableWindowType()

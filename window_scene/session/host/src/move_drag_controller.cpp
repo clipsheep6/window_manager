@@ -133,29 +133,7 @@ void MoveDragController::SetAspectRatio(float ratio)
 bool MoveDragController::ConsumeMoveEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
     const WSRect& originalRect)
 {
-    if (pointerEvent == nullptr) {
-        WLOGE("ConsumeMoveEvent stop because of nullptr");
-        return false;
-    }
-    if (GetStartDragFlag()) {
-        WLOGFI("the window is being resized");
-        return false;
-    }
-    int32_t pointerId = pointerEvent->GetPointerId();
-    int32_t startPointerId = moveDragProperty_.pointerId_;
-    int32_t startPointerType = moveDragProperty_.pointerType_;
-    if ((startPointerId != -1 && startPointerId != pointerId) ||
-        (startPointerType != -1 && pointerEvent->GetSourceType() != startPointerType)) {
-        WLOGFI("block unnecessary pointer event inside the window");
-        return false;
-    }
-    MMI::PointerEvent::PointerItem pointerItem;
-    int32_t sourceType = pointerEvent->GetSourceType();
-    if (!pointerEvent->GetPointerItem(pointerId, pointerItem) ||
-        (sourceType == MMI::PointerEvent::SOURCE_TYPE_MOUSE &&
-        (pointerEvent->GetButtonId() != MMI::PointerEvent::MOUSE_BUTTON_LEFT &&
-        !GetStartMoveFlag()))) {
-        WLOGFD("invalid pointerEvent id: %{public}d", persistentId_);
+    if (!CheckConsumeMoveEventLegal(pointerEvent, originalRect)) {
         return false;
     }
 
@@ -176,38 +154,8 @@ bool MoveDragController::ConsumeMoveEvent(const std::shared_ptr<MMI::PointerEven
         WLOGFD("No need to move action id: %{public}d", action);
         return false;
     }
-    ResetOriginalPositionWhenFullScreenToFloating(originalRect);
 
-    SizeChangeReason reason = SizeChangeReason::MOVE;
-    bool ret = true;
-    switch (action) {
-        case MMI::PointerEvent::POINTER_ACTION_MOVE: {
-            reason = SizeChangeReason::MOVE;
-            uint32_t oldWindowDragHotAreaType = windowDragHotAreaType_;
-            UpdateHotAreaType(pointerEvent);
-            ProcessWindowDragHotAreaFunc(oldWindowDragHotAreaType != windowDragHotAreaType_, reason);
-            break;
-        }
-        case MMI::PointerEvent::POINTER_ACTION_UP:
-        case MMI::PointerEvent::POINTER_ACTION_BUTTON_UP:
-        case MMI::PointerEvent::POINTER_ACTION_CANCEL:
-        case MMI::PointerEvent::POINTER_ACTION_DOWN:
-        case MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN: {
-            reason = SizeChangeReason::DRAG_END;
-            SetStartMoveFlag(false);
-            hasPointDown_ = false;
-            ProcessWindowDragHotAreaFunc(windowDragHotAreaType_ != WINDOW_HOT_AREA_TYPE_UNDEFINED, reason);
-            // The Pointer up event sent to the ArkUI.
-            ret = false;
-            break;
-        }
-        default:
-            break;
-    }
-    if (CalcMoveTargetRect(pointerEvent, originalRect)) {
-        ProcessSessionRectChange(reason);
-    }
-    return ret;
+    return HandleConsumeMoveEventAction(pointerEvent, originalRect, action);
 }
 
 void MoveDragController::ProcessWindowDragHotAreaFunc(bool isSendHotAreaMessage, const SizeChangeReason& reason)
@@ -797,6 +745,74 @@ void MoveDragController::ClacFirstMoveTargetRect(const WSRect& windowRect)
         targetRect.width_, targetRect.height_);
     moveDragProperty_.targetRect_ = targetRect;
     ProcessSessionRectChange(SizeChangeReason::MOVE);
+}
+
+bool MoveDragController::CheckConsumeMoveEventLegal(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
+    const WSRect& originalRect)
+{
+    if (pointerEvent == nullptr) {
+        WLOGE("ConsumeMoveEvent stop because of nullptr");
+        return false;
+    }
+    if (GetStartDragFlag()) {
+        WLOGFI("the window is being resized");
+        return false;
+    }
+    int32_t pointerId = pointerEvent->GetPointerId();
+    int32_t startPointerId = moveDragProperty_.pointerId_;
+    int32_t startPointerType = moveDragProperty_.pointerType_;
+    if ((startPointerId != -1 && startPointerId != pointerId) ||
+        (startPointerType != -1 && pointerEvent->GetSourceType() != startPointerType)) {
+        WLOGFI("block unnecessary pointer event inside the window");
+        return false;
+    }
+    MMI::PointerEvent::PointerItem pointerItem;
+    int32_t sourceType = pointerEvent->GetSourceType();
+    if (!pointerEvent->GetPointerItem(pointerId, pointerItem) ||
+        (sourceType == MMI::PointerEvent::SOURCE_TYPE_MOUSE &&
+        (pointerEvent->GetButtonId() != MMI::PointerEvent::MOUSE_BUTTON_LEFT &&
+        !GetStartMoveFlag()))) {
+        WLOGFD("invalid pointerEvent id: %{public}d", persistentId_);
+        return false;
+    }
+    return true;
+}
+
+bool MoveDragController::HandleConsumeMoveEventAction(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
+    const WSRect& originalRect, const int32_t action)
+{
+    ResetOriginalPositionWhenFullScreenToFloating(originalRect);
+
+    SizeChangeReason reason = SizeChangeReason::MOVE;
+    bool ret = true;
+    switch (action) {
+        case MMI::PointerEvent::POINTER_ACTION_MOVE: {
+            reason = SizeChangeReason::MOVE;
+            uint32_t oldWindowDragHotAreaType = windowDragHotAreaType_;
+            UpdateHotAreaType(pointerEvent);
+            ProcessWindowDragHotAreaFunc(oldWindowDragHotAreaType != windowDragHotAreaType_, reason);
+            break;
+        }
+        case MMI::PointerEvent::POINTER_ACTION_UP:
+        case MMI::PointerEvent::POINTER_ACTION_BUTTON_UP:
+        case MMI::PointerEvent::POINTER_ACTION_CANCEL:
+        case MMI::PointerEvent::POINTER_ACTION_DOWN:
+        case MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN: {
+            reason = SizeChangeReason::DRAG_END;
+            SetStartMoveFlag(false);
+            hasPointDown_ = false;
+            ProcessWindowDragHotAreaFunc(windowDragHotAreaType_ != WINDOW_HOT_AREA_TYPE_UNDEFINED, reason);
+            // The Pointer up event sent to the ArkUI.
+            ret = false;
+            break;
+        }
+        default:
+            break;
+    }
+    if (CalcMoveTargetRect(pointerEvent, originalRect)) {
+        ProcessSessionRectChange(reason);
+    }
+    return ret;
 }
 
 bool MoveDragController::CheckDragEventLegal(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
