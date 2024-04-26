@@ -415,7 +415,8 @@ struct TopNMainWindowInfo : public Parcelable {
         return true;
     }
 
-    static TopNMainWindowInfo* Unmarshalling(Parcel& parcel) {
+    static TopNMainWindowInfo* Unmarshalling(Parcel& parcel)
+    {
         TopNMainWindowInfo* topNMainWindowInfo = new TopNMainWindowInfo;
         topNMainWindowInfo->pid = parcel.ReadInt32();
         topNMainWindowInfo->bundleName = parcel.ReadString();
