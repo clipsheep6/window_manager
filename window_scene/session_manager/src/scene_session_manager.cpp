@@ -8272,6 +8272,7 @@ WMError SceneSessionManager::GetTopNMainWindowInfos(int32_t topNum, std::vector<
         TopNMainWindowInfo info;
         info.pid = session->GetCallingPid();
         info.bundleName = session->GetSessionInfo().bundleName_;
+        topNInfo.push_back(info);
         topNum--;
         WLOGFD("GetTopNMainWindowInfos: topnNum: %{public}d, pid: %{public}d, bundleName: %{public}s",
             topNum, info.pid, info.bundleName.c_str());
