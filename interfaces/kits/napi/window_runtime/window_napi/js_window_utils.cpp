@@ -74,7 +74,6 @@ void SetNamedProperties(napi_env env, napi_value objValue)
         static_cast<int32_t>(ApiWindowType::TYPE_GLOBAL_SEARCH)));
     napi_set_named_property(env, objValue, "TYPE_HANDWRITE", CreateJsValue(env,
         static_cast<int32_t>(ApiWindowType::TYPE_HANDWRITE)));
-
 }
 
 napi_value WindowTypeInit(napi_env env)
