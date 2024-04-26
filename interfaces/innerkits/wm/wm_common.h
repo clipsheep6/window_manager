@@ -426,8 +426,6 @@ struct TopNMainWindowInfo : public Parcelable {
     std::sting bundleName;
 };
 
-
-
 namespace {
     constexpr uint32_t SYSTEM_COLOR_WHITE = 0xE5FFFFFF;
     constexpr uint32_t SYSTEM_COLOR_BLACK = 0x66000000;
