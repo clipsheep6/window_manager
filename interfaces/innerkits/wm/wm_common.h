@@ -424,7 +424,7 @@ struct TopNMainWindowInfo : public Parcelable {
     }
 
     int32_t pid;
-    std::sting bundleName;
+    std::string bundleName;
 };
 
 namespace {
