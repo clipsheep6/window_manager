@@ -21,7 +21,8 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
-constexpr uint32_t TOUCH_HOT_AREA_MAX_NUM = 10;
+    constexpr uint32_t TOUCH_HOT_AREA_MAX_NUM = 10;
+    constexpr uint32_t MAX_SIZE_PIP_CONTROL_GROUP = 8;
 }
 
 WindowSessionProperty::WindowSessionProperty(const sptr<WindowSessionProperty>& property)
@@ -553,6 +554,9 @@ bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const
         return false;
     }
     auto size = pipTemplateInfo_.controlGroup.size();
+    if (size > MAX_SIZE_PIP_CONTROL_GROUP) {
+        return false;
+    }
     if (!parcel.WriteUint32(static_cast<uint32_t>(size))) {
         return false;
     }
@@ -573,6 +577,9 @@ void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowS
     pipTemplateInfo.pipTemplateType = parcel.ReadUint32();
     pipTemplateInfo.priority = parcel.ReadUint32();
     auto size = parcel.ReadUint32();
+    if (size > MAX_SIZE_PIP_CONTROL_GROUP) {
+        return;
+    }
     for (uint32_t i = 0; i < size; i++) {
         pipTemplateInfo.controlGroup.push_back(parcel.ReadUint32());
     }
@@ -819,6 +826,36 @@ int32_t WindowSessionProperty::GetCollaboratorType() const
 void WindowSessionProperty::SetCollaboratorType(int32_t collaboratorType)
 {
     collaboratorType_ = collaboratorType;
+}
+
+void WindowSessionProperty::SetUserWindowLimits(const WindowLimits& windowUserLimits)
+{
+    userLimits_ = windowUserLimits;
+}
+
+WindowLimits WindowSessionProperty::GetUserWindowLimits() const
+{
+    return userLimits_;
+}
+
+void WindowSessionProperty::SetConfigWindowLimitsVP(const WindowLimits& windowConfigLimitsVP)
+{
+    configLimitsVP_ = windowConfigLimitsVP;
+}
+
+WindowLimits WindowSessionProperty::GetConfigWindowLimitsVP() const
+{
+    return configLimitsVP_;
+}
+
+void WindowSessionProperty::SetLastLimitsVpr(float vpr)
+{
+    lastVpr_ = vpr;
+}
+
+float WindowSessionProperty::GetLastLimitsVpr() const
+{
+    return lastVpr_;
 }
 } // namespace Rosen
 } // namespace OHOS

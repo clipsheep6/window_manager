@@ -149,6 +149,7 @@ napi_value JsSceneSessionManager::Init(napi_env env, napi_value exportObj)
         JsSceneSessionManager::SwitchFreeMultiWindow);
     BindNativeFunction(env, exportObj, "getFreeMultiWindowConfig", moduleName,
         JsSceneSessionManager::GetFreeMultiWindowConfig);
+    BindNativeFunction(env, exportObj, "getCustomDecorHeight", moduleName, JsSceneSessionManager::GetCustomDecorHeight);
     return NapiGetUndefined(env);
 }
 
@@ -1861,7 +1862,7 @@ napi_value JsSceneSessionManager::OnAddWindowDragHotArea(napi_env env, napi_call
             "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
-    int32_t type;
+    uint32_t type;
     if (!ConvertFromJsValue(env, argv[0], type)) {
         WLOGFE("[NAPI]Failed to convert parameter to type");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
@@ -2006,7 +2007,19 @@ napi_value JsSceneSessionManager::OnRequestFocusStatus(napi_env env, napi_callba
             "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
-    SceneSessionManager::GetInstance().RequestFocusStatus(persistentId, isFocused, byForeground);
+    FocusChangeReason reason = FocusChangeReason::DEFAULT;
+    if (argc > MIN_ARG_COUNT) {
+        if (!ConvertFromJsValue(env, argv[ARG_INDEX_3], reason)) {
+            TLOGI(WmsLogTag::WMS_FOCUS, "[NAPI]Failed to convert parameter to reason");
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+                "Input parameter is missing or invalid"));
+            return NapiGetUndefined(env);
+        }
+    }
+    TLOGI(WmsLogTag::WMS_FOCUS, "[NAPI]OnRequestFocusStatus persistentId: %{public}d, isFocused: %{public}d,\
+        byForeground: %{public}d, reason: %{public}d", persistentId, isFocused, byForeground, reason);
+
+    SceneSessionManager::GetInstance().RequestFocusStatus(persistentId, isFocused, byForeground, reason);
     return NapiGetUndefined(env);
 }
 
@@ -2387,5 +2400,36 @@ napi_value JsSceneSessionManager::OnGetFreeMultiWindowConfig(napi_env env, napi_
 {
     auto systemConfig = SceneSessionManager::GetInstance().GetSystemSessionConfig();
     return JsWindowSceneConfig::CreateFreeMultiWindowConfig(env, systemConfig);
+}
+
+napi_value JsSceneSessionManager::GetCustomDecorHeight(napi_env env, napi_callback_info info)
+{
+    TLOGD(WmsLogTag::WMS_LAYOUT, "[NAPI]GetCustomDecorHeight");
+    JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(env, info);
+    return (me != nullptr) ? me->OnGetCustomDecorHeight(env, info) : nullptr;
+}
+
+napi_value JsSceneSessionManager::OnGetCustomDecorHeight(napi_env env, napi_callback_info info)
+{
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc < 1) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, "[NAPI]Argc is invalid: %{public}zu", argc);
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    int32_t persistentId;
+    if (!ConvertFromJsValue(env, argv[0], persistentId)) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, "[NAPI]Failed to convert parameter to persistentId");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    int32_t customDecorHeight = SceneSessionManager::GetInstance().GetCustomDecorHeight(persistentId);
+    napi_value result = nullptr;
+    napi_create_int32(env, customDecorHeight, &result);
+    return result;
 }
 } // namespace OHOS::Rosen

@@ -1336,6 +1336,9 @@ WMError WindowSessionImpl::SetDecorHeight(int32_t decorHeight)
     float vpr = GetVirtualPixelRatio(display->GetDisplayInfo());
     int32_t decorHeightWithPx = static_cast<int32_t>(decorHeight * vpr);
     uiContent_->SetContainerModalTitleHeight(decorHeightWithPx);
+    if (hostSession_ != nullptr) {
+        hostSession_->SetCustomDecorHeight(decorHeight);
+    }
     WLOGI("Set app window decor height success, height : %{public}d", decorHeight);
     return WMError::WM_OK;
 }
@@ -1499,7 +1502,7 @@ WMError WindowSessionImpl::RegisterWindowRectChangeListener(const sptr<IWindowRe
 {
     std::lock_guard<std::mutex> lockListener(windowRectChangeListenerMutex_);
     WMError ret = RegisterListener(windowRectChangeListeners_[GetPersistentId()], listener);
-    if (ret == WMError::WM_OK) {
+    if (hostSession_ != nullptr && ret == WMError::WM_OK) {
         hostSession_->UpdateRectChangeListenerRegistered(true);
     }
     return ret;
@@ -1509,7 +1512,10 @@ WMError WindowSessionImpl::UnregisterWindowRectChangeListener(const sptr<IWindow
 {
     std::lock_guard<std::mutex> lockListener(windowRectChangeListenerMutex_);
     WMError ret = UnregisterListener(windowRectChangeListeners_[GetPersistentId()], listener);
-    hostSession_->UpdateRectChangeListenerRegistered(false);
+    if (hostSession_ != nullptr && (windowRectChangeListeners_.count(GetPersistentId()) == 0 ||
+        windowRectChangeListeners_[GetPersistentId()].empty())) {
+        hostSession_->UpdateRectChangeListenerRegistered(false);
+    }
     return ret;
 }
 
@@ -1819,6 +1825,7 @@ void WindowSessionImpl::NotifyBeforeDestroy(std::string windowName)
 
 void WindowSessionImpl::NotifyAfterDestroy()
 {
+    std::lock_guard<std::recursive_mutex> lockListener(lifeCycleListenerMutex_);
     auto lifecycleListeners = GetListeners<IWindowLifeCycle>();
     CALL_LIFECYCLE_LISTENER(AfterDestroyed, lifecycleListeners);
 }

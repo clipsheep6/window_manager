@@ -2157,25 +2157,29 @@ static WMError SetSystemBarPropertiesByFlags(std::map<WindowType, SystemBarPrope
 
 void SetSystemBarEnableTask(NapiAsyncTask::ExecuteCallback& execute, NapiAsyncTask::CompleteCallback& complete,
     wptr<Window> weakToken, std::map<WindowType, SystemBarProperty>& systemBarProperties,
-    std::shared_ptr<WMError> errCodePtr)
+    std::map<WindowType, SystemBarPropertyFlag>& systemBarPropertyFlags, std::shared_ptr<WMError> errCodePtr)
 {
-    execute = [weakToken, systemBarProperties, errCodePtr] () {
+    execute = [weakToken, systemBarProperties, systemBarPropertyFlags, errCodePtr]() mutable {
         if (errCodePtr == nullptr) {
             return;
         }
-        auto weakWindow = weakToken.promote();
-        if (weakWindow == nullptr) {
+        if (*errCodePtr != WMError::WM_OK) {
+            return;
+        }
+        auto spWindow = weakToken.promote();
+        if (spWindow == nullptr) {
             *errCodePtr = WMError::WM_ERROR_NULLPTR;
             return;
         }
-        *errCodePtr = weakWindow->SetSystemBarProperty(
+        UpdateSystemBarProperties(systemBarProperties, systemBarPropertyFlags, spWindow);
+        *errCodePtr = spWindow->SetSystemBarProperty(
             WindowType::WINDOW_TYPE_STATUS_BAR, systemBarProperties.at(WindowType::WINDOW_TYPE_STATUS_BAR));
-        *errCodePtr = weakWindow->SetSystemBarProperty(
+        *errCodePtr = spWindow->SetSystemBarProperty(
             WindowType::WINDOW_TYPE_NAVIGATION_BAR, systemBarProperties.at(WindowType::WINDOW_TYPE_NAVIGATION_BAR));
         TLOGI(WmsLogTag::WMS_IMMS, "Window [%{public}u, %{public}s] set set system bar enalbe end, ret = %{public}d",
-            weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), *errCodePtr);
+            spWindow->GetWindowId(), spWindow->GetWindowName().c_str(), *errCodePtr);
     };
-    complete = [weakToken, errCodePtr] (napi_env env, NapiAsyncTask& task, int32_t status) mutable {
+    complete = [weakToken, errCodePtr](napi_env env, NapiAsyncTask& task, int32_t status) {
         if (errCodePtr == nullptr) {
             task.Reject(env, CreateJsError(env, static_cast<int32_t>(WMError::WM_ERROR_NULLPTR)));
             return;
@@ -2191,33 +2195,29 @@ void SetSystemBarEnableTask(NapiAsyncTask::ExecuteCallback& execute, NapiAsyncTa
 
 napi_value JsWindow::OnSetSystemBarEnable(napi_env env, napi_callback_info info)
 {
-    WMError errCode = WMError::WM_OK;
+    std::shared_ptr<WMError> errCodePtr = std::make_shared<WMError>(WMError::WM_OK);
     if (windowToken_ == nullptr) {
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WMError::WM_ERROR_NULLPTR)));
+        TLOGE(WmsLogTag::WMS_IMMS, "window is null");
+        *errCodePtr = WMError::WM_ERROR_NULLPTR;
     }
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc > 2) { // 2: maximum params num
         TLOGE(WmsLogTag::WMS_IMMS, "Argc is invalid: %{public}zu", argc);
-        errCode = WMError::WM_ERROR_INVALID_PARAM;
+        *errCodePtr = WMError::WM_ERROR_INVALID_PARAM;
     }
     std::map<WindowType, SystemBarProperty> systemBarProperties;
     std::map<WindowType, SystemBarPropertyFlag> systemBarPropertyFlags;
-    if (errCode == WMError::WM_OK && !GetSystemBarStatus(systemBarProperties, systemBarPropertyFlags,
+    if (*errCodePtr == WMError::WM_OK && !GetSystemBarStatus(systemBarProperties, systemBarPropertyFlags,
         env, info, windowToken_)) {
         TLOGE(WmsLogTag::WMS_IMMS, "Failed to convert parameter to systemBarProperties");
-        errCode = WMError::WM_ERROR_INVALID_PARAM;
+        *errCodePtr = WMError::WM_ERROR_INVALID_PARAM;
     }
-    if (errCode != WMError::WM_OK) {
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WMError::WM_ERROR_NULLPTR)));
-    }
-    UpdateSystemBarProperties(systemBarProperties, systemBarPropertyFlags, windowToken_);
     wptr<Window> weakToken(windowToken_);
-    std::shared_ptr<WMError> errCodePtr = std::make_shared<WMError>(WMError::WM_OK);
     NapiAsyncTask::ExecuteCallback execute;
     NapiAsyncTask::CompleteCallback complete;
-    SetSystemBarEnableTask(execute, complete, weakToken, systemBarProperties, errCodePtr);
+    SetSystemBarEnableTask(execute, complete, weakToken, systemBarProperties, systemBarPropertyFlags, errCodePtr);
 
     napi_value lastParam = nullptr;
     if (argc > 0 && GetType(env, argv[0]) == napi_function) {
@@ -2714,8 +2714,8 @@ napi_value JsWindow::OnSetPreferredOrientation(napi_env env, napi_callback_info 
                 errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
             }
             auto apiOrientation = static_cast<ApiOrientation>(resultValue);
-            if (apiOrientation < ApiOrientation::UNSPECIFIED ||
-                apiOrientation > ApiOrientation::USER_ROTATION_LANDSCAPE_INVERTED) {
+            if (apiOrientation < ApiOrientation::BEGIN ||
+                apiOrientation > ApiOrientation::END) {
                 WLOGFE("Orientation %{public}u invalid!", static_cast<uint32_t>(apiOrientation));
                 errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
             } else {
@@ -2768,8 +2768,8 @@ napi_value JsWindow::OnGetPreferredOrientation(napi_env env, napi_callback_info 
     }
     Orientation requestedOrientation = window->GetRequestedOrientation();
     ApiOrientation apiOrientation = ApiOrientation::UNSPECIFIED;
-    if (requestedOrientation >= Orientation::UNSPECIFIED &&
-        requestedOrientation <= Orientation::USER_ROTATION_LANDSCAPE_INVERTED) {
+    if (requestedOrientation >= Orientation::BEGIN &&
+        requestedOrientation <= Orientation::END) {
         apiOrientation = NATIVE_TO_JS_ORIENTATION_MAP.at(requestedOrientation);
     } else {
         WLOGFE("OnGetPreferredOrientation Orientation %{public}u invalid!",
@@ -5116,6 +5116,11 @@ napi_value JsWindow::OnSetAspectRatio(napi_env env, napi_callback_info info)
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
 
+    if (windowToken_ == nullptr) {
+        WLOGFE("WindowToken_ is nullptr");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
+    }
+
     if (!WindowHelper::IsMainWindow(windowToken_->GetType())) {
         WLOGFE("[NAPI]SetAspectRatio is not allowed since window is main window");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_CALLING);
@@ -5171,6 +5176,11 @@ napi_value JsWindow::OnResetAspectRatio(napi_env env, napi_callback_info info)
     if (argc > 1) {
         WLOGFE("[NAPI]Argc is invalid: %{public}zu", argc);
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    }
+
+    if (windowToken_ == nullptr) {
+        WLOGFE("WindowToken_ is nullptr");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
     }
 
     if (!WindowHelper::IsMainWindow(windowToken_->GetType())) {

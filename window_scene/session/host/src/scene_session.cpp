@@ -55,7 +55,7 @@ const std::string DLP_INDEX = "ohos.dlp.params.index";
 MaximizeMode SceneSession::maximizeMode_ = MaximizeMode::MODE_RECOVER;
 wptr<SceneSession> SceneSession::enterSession_ = nullptr;
 std::mutex SceneSession::enterSessionMutex_;
-std::map<int32_t, WSRect> SceneSession::windowDragHotAreaMap_;
+std::map<uint32_t, WSRect> SceneSession::windowDragHotAreaMap_;
 static bool g_enableForceUIFirst = system::GetParameter("window.forceUIFirst.enabled", "1") == "1";
 
 SceneSession::SceneSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback)
@@ -296,14 +296,21 @@ WSError SceneSession::OnSessionEvent(SessionEvent event)
             session->moveDragController_->InitMoveDragProperty();
             session->moveDragController_->SetStartMoveFlag(true);
             session->moveDragController_->ClacFirstMoveTargetRect(session->winRect_);
+            session->SetSessionEventParam({session->moveDragController_->GetOriginalPointerPosX(),
+                session->moveDragController_->GetOriginalPointerPosY()});
         }
         if (session->sessionChangeCallback_ && session->sessionChangeCallback_->OnSessionEvent_) {
-            session->sessionChangeCallback_->OnSessionEvent_(static_cast<uint32_t>(event));
+            session->sessionChangeCallback_->OnSessionEvent_(static_cast<uint32_t>(event), session->sessionEventParam_);
         }
         return WSError::WS_OK;
     };
     PostTask(task, "OnSessionEvent:" + std::to_string(static_cast<int>(event)));
     return WSError::WS_OK;
+}
+
+void SceneSession::SetSessionEventParam(SessionEventParam param)
+{
+    sessionEventParam_ = param;
 }
 
 void SceneSession::RegisterSessionChangeCallback(const sptr<SceneSession::SessionChangeCallback>&
@@ -864,6 +871,9 @@ void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
         avoidArea.topRect_.width_ = static_cast<uint32_t>(display->GetWidth());
         return;
     }
+    if (isDisplayStatusBarTemporarily_.load()) {
+        return;
+    }
     std::vector<sptr<SceneSession>> statusBarVector;
     if (specificCallback_ != nullptr && specificCallback_->onGetSceneSessionVectorByType_) {
         statusBarVector = specificCallback_->onGetSceneSessionVectorByType_(
@@ -911,8 +921,16 @@ void SceneSession::GetKeyboardAvoidArea(WSRect& rect, AvoidArea& avoidArea)
         if (gravity == SessionGravity::SESSION_GRAVITY_FLOAT) {
             continue;
         }
-        WSRect inputMethodRect = inputMethod->GetSessionRect();
-        CalculateAvoidAreaRect(rect, inputMethodRect, avoidArea);
+        if (isKeyboardPanelEnabled_) {
+            WSRect keyboardRect = {0, 0, 0, 0};
+            if (inputMethod && inputMethod->GetKeyboardPanelSession()) {
+                keyboardRect = inputMethod->GetKeyboardPanelSession()->GetSessionRect();
+            }
+            CalculateAvoidAreaRect(rect, keyboardRect, avoidArea);
+        } else {
+            WSRect inputMethodRect = inputMethod->GetSessionRect();
+            CalculateAvoidAreaRect(rect, inputMethodRect, avoidArea);
+        }
     }
 
     return;
@@ -950,6 +968,9 @@ void SceneSession::GetCutoutAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 
 void SceneSession::GetAINavigationBarArea(WSRect rect, AvoidArea& avoidArea)
 {
+    if (isDisplayStatusBarTemporarily_.load()) {
+        return;
+    }
     if (Session::GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING ||
         Session::GetWindowMode() == WindowMode::WINDOW_MODE_PIP) {
         return;
@@ -1220,12 +1241,12 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
     }
 
     auto windowType = property->GetWindowType();
-    bool isWindowModeFloating = property->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING;
+    bool isMovableWindowType = IsMovableWindowType();
     bool isMainWindow = WindowHelper::IsMainWindow(windowType);
     bool isSubWindow = WindowHelper::IsSubWindow(windowType);
     bool isDialog = WindowHelper::IsDialogWindow(windowType);
     bool isMaxModeAvoidSysBar = property->GetMaximizeMode() == MaximizeMode::MODE_AVOID_SYSTEM_BAR;
-    if (isWindowModeFloating && (isMainWindow || isSubWindow || isDialog) &&
+    if (isMovableWindowType && (isMainWindow || isSubWindow || isDialog) &&
         !isMaxModeAvoidSysBar) {
         if (CheckDialogOnForeground() && isPointDown) {
             HandlePointDownDialog();
@@ -1237,7 +1258,7 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
             WLOGE("moveDragController_ is null");
             return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
         }
-        if (property->GetDragEnabled()) {
+        if (property->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING && property->GetDragEnabled()) {
             auto is2in1 = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
             bool freeMultiWindowSupportDevices = systemConfig_.freeMultiWindowSupport_ &&
                 systemConfig_.freeMultiWindowEnable_;
@@ -1262,6 +1283,22 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
         RaiseToAppTopForPointDown();
     }
     return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
+}
+
+bool SceneSession::IsMovableWindowType()
+{
+    auto property = GetSessionProperty();
+    if (property == nullptr) {
+        return false;
+    }
+
+    bool existFloating = WindowHelper::IsWindowModeSupported(property->GetModeSupportInfo(),
+        WindowMode::WINDOW_MODE_FLOATING);
+
+    return property->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING ||
+        property->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
+        property->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_SECONDARY ||
+        (property->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN && existFloating);
 }
 
 WSError SceneSession::RequestSessionBack(bool needMoveToBackground)
@@ -1476,6 +1513,11 @@ void SceneSession::OnMoveDragCallback(const SizeChangeReason& reason)
         UpdateRect(rect, reason);
     }
     if (reason == SizeChangeReason::DRAG_END) {
+        if (!SessionHelper::IsEmptyRect(GetRestoringRectForKeyboard())) {
+            TLOGI(WmsLogTag::WMS_KEYBOARD, "Calling session is moved and reset restoringRectForKeyboard_");
+            WSRect restoringRect = {0, 0, 0, 0};
+            SetRestoringRectForKeyboard(restoringRect);
+        }
         NotifySessionRectChange(rect, reason);
         OnSessionEvent(SessionEvent::EVENT_END_MOVE);
     }
@@ -1966,11 +2008,13 @@ void SceneSession::SetAbilitySessionInfo(std::shared_ptr<AppExecFwk::AbilityInfo
 
 void SceneSession::SetSelfToken(sptr<IRemoteObject> selfToken)
 {
+    std::unique_lock<std::shared_mutex> lock(selfTokenMutex_);
     selfToken_ = selfToken;
 }
 
 sptr<IRemoteObject> SceneSession::GetSelfToken() const
 {
+    std::shared_lock<std::shared_mutex> lock(selfTokenMutex_);
     return selfToken_;
 }
 
@@ -2255,6 +2299,16 @@ void SceneSession::SetLastSafeRect(WSRect rect)
     lastSafeRect.width_ = rect.width_;
     lastSafeRect.height_ = rect.height_;
     return;
+}
+
+WSRect SceneSession::GetRestoringRectForKeyboard() const
+{
+    return restoringRectForKeyboard_;
+}
+
+void SceneSession::SetRestoringRectForKeyboard(WSRect rect)
+{
+    restoringRectForKeyboard_ = rect;
 }
 
 bool SceneSession::AddSubSession(const sptr<SceneSession>& subSession)
@@ -2586,5 +2640,16 @@ void SceneSession::SetForceHideState(bool hideFlag)
 bool SceneSession::GetForceHideState() const
 {
     return forceHideState_;
+}
+
+void SceneSession::SetIsDisplayStatusBarTemporarily(bool isTemporary)
+{
+    TLOGI(WmsLogTag::WMS_IMMS, "SetIsTemporarily:%{public}u", isTemporary);
+    isDisplayStatusBarTemporarily_.store(isTemporary);
+}
+
+bool SceneSession::GetIsDisplayStatusBarTemporarily() const
+{
+    return isDisplayStatusBarTemporarily_.load();
 }
 } // namespace OHOS::Rosen
