@@ -45,6 +45,7 @@
 #include "screen_setting_helper.h"
 #include "screen_session_dumper.h"
 #include "mock_session_manager_service.h"
+#include "screen_snapshot_picker.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -2962,7 +2963,17 @@ std::shared_ptr<Media::PixelMap> ScreenSessionManager::GetSnapshotByPicker(Media
         WLOGFI("snapshot was disabled by edm!");
         return nullptr;
     }
-    ScreenId screenId = GetDefaultScreenId();
+    // ScreenId screenId = GetDefaultScreenId();
+    ScreenId screenId = SCREEN_ID_INVALID;
+    // get snapshot area frome Screenshot extension
+    if (ScreenSnapshotPicker::GetInstance().SnapshotPickerConnectExtension()) {
+        if (ScreenSnapshotPicker::GetInstance().GetScreenSnapshotInfo(rect, screenId) != 0) {
+            WLOGFE("GetScreenSnapshotInfo failed");
+            ScreenSnapshotPicker::GetInstance().SnapshotPickerDisconnectExtension();
+            return nullptr;
+        }
+        ScreenSnapshotPicker::GetInstance().SnapshotPickerDisconnectExtension();
+    }
     auto screenSession = GetScreenSession(screenId);
     if (screenSession == nullptr) {
         WLOGFE("can not get screen session");
@@ -2979,10 +2990,6 @@ std::shared_ptr<Media::PixelMap> ScreenSessionManager::GetSnapshotByPicker(Media
     if (pixelMap != nullptr) {
         CheckAndSendHiSysEvent("GET_DISPLAY_SNAPSHOT", "ohos.screenshot");
     }
-    rect.left = 0;
-    rect.top = 0;
-    rect.width = displayInfo->GetWidth();
-    rect.height = displayInfo->GetHeight();
     isScreenShot_ = true;
     NotifyCaptureStatusChanged();
     *errorCode = DmErrorCode::DM_OK;
