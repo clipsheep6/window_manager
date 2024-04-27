@@ -174,7 +174,7 @@ HWTEST_F(ScreenSessionManagerTest, SetScreenPowerForAll, Function | SmallTest | 
     ASSERT_EQ(true, ssm_->SetScreenPowerForAll(state, reason));
 
     reason = PowerStateChangeReason::STATE_CHANGE_REASON_SWITCH;
-    ASSERT_EQ(true, ssm_->WakeUpBegin(reason));
+    ASSERT_EQ(true, ssm_->SetScreenPowerForAll(reason));
 
     reason = PowerStateChangeReason::STATE_CHANGE_REASON_PRE_BRIGHT;
     ASSERT_EQ(true, ssm_->SetScreenPowerForAll(state, reason));
