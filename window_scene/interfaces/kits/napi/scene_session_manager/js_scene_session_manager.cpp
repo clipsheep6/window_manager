@@ -61,6 +61,7 @@ const std::string START_UI_ABILITY_ERROR = "startUIAbilityError";
 const std::string ARG_DUMP_HELP = "-h";
 const std::string SHIFT_FOCUS_CB = "shiftFocus";
 const std::string CALLING_WINDOW_ID_CHANGE_CB = "callingWindowIdChange";
+const std::string SWITCH_TO_ANOTHER_USER_CB = "switchToAnotherUser";
 } // namespace
 
 napi_value JsSceneSessionManager::Init(napi_env env, napi_value exportObj)
@@ -99,7 +100,7 @@ napi_value JsSceneSessionManager::Init(napi_env env, napi_value exportObj)
         JsSceneSessionManager::GetWindowSceneConfig);
     BindNativeFunction(env, exportObj, "processBackEvent", moduleName, JsSceneSessionManager::ProcessBackEvent);
     BindNativeFunction(env, exportObj, "updateFocus", moduleName, JsSceneSessionManager::UpdateFocus);
-    BindNativeFunction(env, exportObj, "switchUser", moduleName, JsSceneSessionManager::SwitchUser);
+    BindNativeFunction(env, exportObj, "initUserInfo", moduleName, JsSceneSessionManager::InitUserInfo);
     BindNativeFunction(env, exportObj, "requestSceneSessionByCall", moduleName,
         JsSceneSessionManager::RequestSceneSessionByCall);
     BindNativeFunction(env, exportObj, "startAbilityBySpecified", moduleName,
@@ -128,6 +129,8 @@ napi_value JsSceneSessionManager::Init(napi_env env, napi_value exportObj)
     BindNativeFunction(env, exportObj, "updateMaximizeMode", moduleName, JsSceneSessionManager::UpdateMaximizeMode);
     BindNativeFunction(env, exportObj, "updateSessionDisplayId", moduleName,
         JsSceneSessionManager::UpdateSessionDisplayId);
+    BindNativeFunction(env, exportObj, "notifySwitchingToCurrentUser", moduleName,
+        JsSceneSessionManager::NotifySwitchingToCurrentUser);
     BindNativeFunction(env, exportObj, "updateConfig", moduleName,
         JsSceneSessionManager::UpdateConfig);
     BindNativeFunction(env, exportObj, "notifySessionRecoverStatus", moduleName,
@@ -155,6 +158,7 @@ JsSceneSessionManager::JsSceneSessionManager(napi_env env) : env_(env)
         { GESTURE_NAVIGATION_ENABLED_CHANGE_CB,
             &JsSceneSessionManager::ProcessGestureNavigationEnabledChangeListener },
         { CALLING_WINDOW_ID_CHANGE_CB,  &JsSceneSessionManager::ProcessCallingSessionIdChangeRegister},
+        { SWITCH_TO_ANOTHER_USER_CB,    &JsSceneSessionManager::ProcessSwitchingToAnotherUserRegister },
     };
     taskScheduler_ = std::make_shared<MainThreadScheduler>(env);
 }
@@ -435,6 +439,30 @@ void JsSceneSessionManager::ProcessCallingSessionIdChangeRegister()
     SceneSessionManager::GetInstance().SetCallingSessionIdSessionListenser(func);
 }
 
+void JsSceneSessionManager::ProcessSwitchingToAnotherUserRegister()
+{
+    ProcessSwitchingToAnotherUserFunc func = [this]() {
+        TLOGD(WmsLogTag::WMS_MULTI_USER, "SwitchingToAnotherUserFunc called");
+        this->OnSwitchingToAnotherUser();
+    };
+    SceneSessionManager::GetInstance().SetSwitchingToAnotherUserListener(func);
+}
+
+void JsSceneSessionManager::OnSwitchingToAnotherUser()
+{
+    TLOGD(WmsLogTag::WMS_MULTI_USER, "[NAPI]OnSwitchingToAnotherUser");
+    auto iter = jsCbMap_.find(SWITCH_TO_ANOTHER_USER_CB);
+    if (iter == jsCbMap_.end()) {
+        return;
+    }
+    auto jsCallBack = iter->second;
+    auto task = [this, jsCallBack, env = env_]() {
+        napi_value argv[] = {};
+        napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), 0, argv, nullptr);
+    };
+    taskScheduler_->PostMainThreadTask(task, "OnSwitchingToAnotherUser");
+}
+
 napi_value JsSceneSessionManager::RegisterCallback(napi_env env, napi_callback_info info)
 {
     WLOGFD("[NAPI]RegisterCallback");
@@ -456,11 +484,11 @@ napi_value JsSceneSessionManager::ProcessBackEvent(napi_env env, napi_callback_i
     return (me != nullptr) ? me->OnProcessBackEvent(env, info) : nullptr;
 }
 
-napi_value JsSceneSessionManager::SwitchUser(napi_env env, napi_callback_info info)
+napi_value JsSceneSessionManager::InitUserInfo(napi_env env, napi_callback_info info)
 {
-    WLOGFI("[NAPI]SwitchUser");
+    TLOGI(WmsLogTag::WMS_MAIN, "[NAPI]Init user info");
     JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(env, info);
-    return (me != nullptr) ? me->OnSwitchUser(env, info) : nullptr;
+    return (me != nullptr) ? me->OnInitUserInfo(env, info) : nullptr;
 }
 
 void JsSceneSessionManager::Finalizer(napi_env env, void* data, void* hint)
@@ -663,6 +691,13 @@ napi_value JsSceneSessionManager::UpdateSessionDisplayId(napi_env env, napi_call
     WLOGI("[NAPI]UpdateSessionDisplayId");
     JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(env, info);
     return (me != nullptr) ? me->OnUpdateSessionDisplayId(env, info) : nullptr;
+}
+
+napi_value JsSceneSessionManager::NotifySwitchingToCurrentUser(napi_env env, napi_callback_info info)
+{
+    TLOGI(WmsLogTag::WMS_MULTI_USER, "[NAPI]Notify switching to current user");
+    JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(env, info);
+    return (me != nullptr) ? me->OnNotifySwitchingToCurrentUser(env, info) : nullptr;
 }
 
 napi_value JsSceneSessionManager::UpdateConfig(napi_env env, napi_callback_info info)
@@ -921,40 +956,34 @@ napi_value JsSceneSessionManager::CreateWindowSize(napi_env env, const AppExecFw
     return objValue;
 }
 
-napi_value JsSceneSessionManager::OnSwitchUser(napi_env env, napi_callback_info info)
+napi_value JsSceneSessionManager::OnInitUserInfo(napi_env env, napi_callback_info info)
 {
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc < ARGC_THREE) {
-        WLOGFE("[NAPI]Argc is invalid: %{public}zu", argc);
+    if (argc < ARGC_TWO) {
+        TLOGE(WmsLogTag::WMS_MAIN, "[NAPI]Argc is invalid: %{public}zu", argc);
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
             "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
-    int32_t oldUserId;
-    if (!ConvertFromJsValue(env, argv[0], oldUserId)) {
-        WLOGFE("[NAPI]Failed to convert parameter to oldUserId");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
-            "Input parameter is missing or invalid"));
-        return NapiGetUndefined(env);
-    }
-    int32_t newUserId;
-    if (!ConvertFromJsValue(env, argv[1], newUserId)) {
-        WLOGFE("[NAPI]Failed to convert parameter to newUserId");
+
+    int32_t userId;
+    if (!ConvertFromJsValue(env, argv[0], userId)) { // 1: params num
+        TLOGE(WmsLogTag::WMS_MAIN, "[NAPI]Failed to convert parameter to userId");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
             "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
     std::string fileDir;
-    if (!ConvertFromJsValue(env, argv[ARGC_TWO], fileDir)) {
-        WLOGFE("[NAPI]Failed to convert parameter to fileDir");
+    if (!ConvertFromJsValue(env, argv[1], fileDir)) { // 2: params num
+        TLOGE(WmsLogTag::WMS_MAIN, "NAPI]Failed to convert parameter to fileDir");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
             "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
     WSErrorCode ret =
-        WS_JS_TO_ERROR_CODE_MAP.at(SceneSessionManager::GetInstance().SwitchUser(oldUserId, newUserId, fileDir));
+        WS_JS_TO_ERROR_CODE_MAP.at(SceneSessionManager::GetInstance().InitUserInfo(userId, fileDir));
     if (ret != WSErrorCode::WS_OK) {
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_STATE_ABNORMALLY),
             "System is abnormal"));
@@ -1939,6 +1968,12 @@ napi_value JsSceneSessionManager::OnUpdateSessionDisplayId(napi_env env, napi_ca
         return NapiGetUndefined(env);
     }
     SceneSessionManager::GetInstance().UpdateSessionDisplayId(persistentId, screenId);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsSceneSessionManager::OnNotifySwitchingToCurrentUser(napi_env env, napi_callback_info info)
+{
+    SceneSessionManager::GetInstance().NotifySwitchingToCurrentUser();
     return NapiGetUndefined(env);
 }
 
