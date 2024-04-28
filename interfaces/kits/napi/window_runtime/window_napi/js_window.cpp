@@ -2952,26 +2952,38 @@ napi_value JsWindow::OnSetBrightness(napi_env env, napi_callback_info info)
     }
 
     wptr<Window> weakToken(windowToken_);
+
+    std::shared_ptr<WMError> errCodePtr = std::make_shared<WMError>(WMError::WM_OK);
+    NapiAsyncTask::ExecuteCallback execute = [weakToken, brightness, errCode, errCodePtr]() {
+        if (errCodePtr == nullptr) {
+            return;
+        }
+        auto weakWindow = weakToken.promote();
+        if (weakWindow == nullptr) {
+            WLOGFE("window is nullptr");
+            *errCodePtr = WMError::WM_ERROR_NULLPTR;
+            return;
+        }
+        *errCodePtr = weakWindow->SetBrightness(brightness);
+        WLOGI("Window [%{public}u, %{public}s] set brightness end",
+            weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str());
+    };
     NapiAsyncTask::CompleteCallback complete =
-        [weakToken, brightness, errCode](napi_env env, NapiAsyncTask& task, int32_t status) {
-            auto weakWindow = weakToken.promote();
-            if (weakWindow == nullptr) {
-                WLOGFE("window is nullptr");
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(WMError::WM_ERROR_NULLPTR)));
-                return;
-            }
+        [errCode, errCodePtr](napi_env env, NapiAsyncTask& task, int32_t status) {
             if (errCode != WMError::WM_OK) {
                 task.Reject(env, CreateJsError(env, static_cast<int32_t>(errCode), "Invalidate params."));
                 return;
             }
-            WMError ret = weakWindow->SetBrightness(brightness);
-            if (ret == WMError::WM_OK) {
+            if (errCodePtr == nullptr) {
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY),
+                "System abnormal."));
+                return;
+            }
+            if (*errCodePtr == WMError::WM_OK) {
                 task.Resolve(env, NapiGetUndefined(env));
             } else {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret), "Window set brightness failed"));
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(*errCodePtr), "Window set brightness failed"));
             }
-            WLOGI("Window [%{public}u, %{public}s] set brightness end",
-                weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str());
         };
 
     napi_value lastParam = (argc <= 1) ? nullptr :
@@ -3008,23 +3020,39 @@ napi_value JsWindow::OnSetWindowBrightness(napi_env env, napi_callback_info info
     }
 
     wptr<Window> weakToken(windowToken_);
+    std::shared_ptr<WmErrorCode> errCodePtr = std::make_shared<WmErrorCode>(WmErrorCode::WM_OK);
+    NapiAsyncTask::ExecuteCallback execute = [weakToken, brightness, errCodePtr]() {
+        if (errCodePtr == nullptr) {
+            return;
+        }
+        auto weakWindow = weakToken.promote();
+        if (weakWindow == nullptr) {
+            WLOGFE("window is nullptr");
+            *errCodePtr = WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
+            return;
+        }
+        *errCodePtr = WM_JS_TO_ERROR_CODE_MAP.at(weakWindow->SetBrightness(brightness));
+        WLOGI("Window [%{public}u, %{public}s] set brightness end",
+            weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str());
+    };
     NapiAsyncTask::CompleteCallback complete =
-        [weakToken, brightness](napi_env env, NapiAsyncTask& task, int32_t status) {
-            auto weakWindow = weakToken.promote();
-            if (weakWindow == nullptr) {
+        [errCodePtr](napi_env env, NapiAsyncTask& task, int32_t status) {
+            if (errCodePtr == nullptr) {
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY),
+                "System abnormal."));
+                return;
+            }
+            if (*errCodePtr == WmErrorCode::WM_ERROR_STATE_ABNORMALLY) {
                 task.Reject(env,
                     CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY),
                     "Invalidate params."));
                 return;
             }
-            WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(weakWindow->SetBrightness(brightness));
-            if (ret == WmErrorCode::WM_OK) {
+            if (*errCodePtr == WmErrorCode::WM_OK) {
                 task.Resolve(env, NapiGetUndefined(env));
             } else {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret), "Window set brightness failed"));
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(*errCodePtr), "Window set brightness failed"));
             }
-            WLOGI("Window [%{public}u, %{public}s] set brightness end",
-                weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str());
         };
 
     napi_value lastParam = (argc <= 1) ? nullptr :
