@@ -1631,6 +1631,7 @@ HWTEST_F(WindowTest, Recover, Function | SmallTest | Level2)
     sptr<Window> window = new Window();
     ASSERT_NE(nullptr, window);
     auto ret = window->Recover();
+    
     if (SceneBoardJudgement::IsSceneBoardEnabled()) {
         ASSERT_NE(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, ret);
     } else {
@@ -2332,6 +2333,36 @@ HWTEST_F(WindowTest, UnregisterWindowRectChangeListener, Function | SmallTest | 
     ASSERT_NE(nullptr, window);
     sptr<IWindowRectChangeListener> listener = nullptr;
     auto ret = window->UnregisterWindowRectChangeListener(listener);
+    ASSERT_EQ(WMError::WM_OK, ret);
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: RegisterKeyboardPanelInfoChangeListener
+ * @tc.desc: get
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, RegisterKeyboardPanelInfoChangeListener, Function | SmallTest | Level2)
+{
+    sptr<Window> window = new Window();
+    ASSERT_NE(nullptr, window);
+    sptr<IKeyboardPanelInfoChangeListener> listener = nullptr;
+    auto ret = window->RegisterKeyboardPanelInfoChangeListener(listener);
+    ASSERT_EQ(WMError::WM_OK, ret);
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
+}
+
+/**
+ * @tc.name: UnregisterKeyboardPanelInfoChangeListener
+ * @tc.desc: get
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowTest, UnregisterKeyboardPanelInfoChangeListener, Function | SmallTest | Level2)
+{
+    sptr<Window> window = new Window();
+    ASSERT_NE(nullptr, window);
+    sptr<IKeyboardPanelInfoChangeListener> listener = nullptr;
+    auto ret = window->UnregisterKeyboardPanelInfoChangeListener(listener);
     ASSERT_EQ(WMError::WM_OK, ret);
     ASSERT_EQ(WMError::WM_OK, window->Destroy());
 }

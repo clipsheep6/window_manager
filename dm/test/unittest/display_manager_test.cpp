@@ -350,7 +350,7 @@ HWTEST_F(DisplayManagerTest, GetScreenBrightness, Function | SmallTest | Level1)
 HWTEST_F(DisplayManagerTest, GetDisplayById, Function | SmallTest | Level1)
 {
     DisplayId displayId = -1;
-    DisplayManager::GetInstance().destroyed_ = true;
+    g_dmIsDestroyed = true;
     auto ret = DisplayManager::GetInstance().GetDisplayById(displayId);
     ASSERT_EQ(ret, nullptr);
 }
@@ -391,6 +391,73 @@ HWTEST_F(DisplayManagerTest, ImplUnregisterPrivateWindowListener, Function | Sma
     DisplayManager::Impl impl(mutex);
     sptr<DisplayManager::IPrivateWindowListener> listener;
     auto ret = impl.UnregisterPrivateWindowListener(listener);
+    ASSERT_EQ(ret, DMError::DM_ERROR_NULLPTR);
+}
+
+/**
+ * @tc.name: RegisterPrivateWindowListChangeListener
+ * @tc.desc: RegisterPrivateWindowListChangeListener fun
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerTest, RegisterPrivateWindowListChangeListener, Function | SmallTest | Level1)
+{
+    sptr<DisplayManager::IPrivateWindowListChangeListener> listener;
+    auto ret = DisplayManager::GetInstance().RegisterPrivateWindowListChangeListener(listener);
+    ASSERT_EQ(ret, DMError::DM_ERROR_NULLPTR);
+    listener = new DisplayManager::IPrivateWindowListChangeListener();
+    ret = DisplayManager::GetInstance().RegisterPrivateWindowListChangeListener(listener);
+    ASSERT_EQ(ret, DisplayManager::GetInstance().pImpl_->RegisterPrivateWindowListChangeListener(listener));
+    listener.clear();
+}
+
+/**
+ * @tc.name: UnregisterPrivateWindowListChangeListener
+ * @tc.desc: UnregisterPrivateWindowListChangeListener fun
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerTest, UnregisterPrivateWindowListChangeListener, Function | SmallTest | Level1)
+{
+    sptr<DisplayManager::IPrivateWindowListChangeListener> listener = nullptr;
+    auto ret = DisplayManager::GetInstance().UnregisterPrivateWindowListChangeListener(listener);
+    ASSERT_EQ(ret, DMError::DM_ERROR_NULLPTR);
+    listener = new DisplayManager::IPrivateWindowListChangeListener();
+    ret = DisplayManager::GetInstance().UnregisterPrivateWindowListChangeListener(listener);
+    ASSERT_EQ(ret, DisplayManager::GetInstance().pImpl_->UnregisterPrivateWindowListChangeListener(listener));
+    listener.clear();
+}
+
+/**
+ * @tc.name: ImplRegisterPrivateWindowListChangeListener
+ * @tc.desc: ImplRegisterPrivateWindowListChangeListener fun
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerTest, ImplRegisterPrivateWindowListChangeListener, Function | SmallTest | Level1)
+{
+    std::recursive_mutex mutex;
+    sptr<DisplayManager::Impl> impl_;
+    sptr<DisplayManager::IPrivateWindowListChangeListener> listener;
+    DisplayManager::GetInstance().pImpl_->privateWindowListChangeListenerAgent_ = nullptr;
+    sptr<DisplayManager::Impl::DisplayManagerPrivateWindowListAgent> privateWindowListChangeListenerAgent =
+        new DisplayManager::Impl::DisplayManagerPrivateWindowListAgent(impl_);
+    auto ret = DisplayManager::GetInstance().pImpl_->RegisterPrivateWindowListChangeListener(listener);
+    ASSERT_EQ(ret, SingletonContainer::Get<DisplayManagerAdapter>().RegisterDisplayManagerAgent(
+            privateWindowListChangeListenerAgent,
+            DisplayManagerAgentType::PRIVATE_WINDOW_LIST_LISTENER));
+    listener = nullptr;
+    privateWindowListChangeListenerAgent.clear();
+}
+
+/**
+ * @tc.name: ImplUnregisterPrivateWindowListChangeListener
+ * @tc.desc: ImplUnregisterPrivateWindowListChangeListener fun
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerTest, ImplUnregisterPrivateWindowListChangeListener, Function | SmallTest | Level1)
+{
+    std::recursive_mutex mutex;
+    DisplayManager::Impl impl(mutex);
+    sptr<DisplayManager::IPrivateWindowListChangeListener> listener;
+    auto ret = impl.UnregisterPrivateWindowListChangeListener(listener);
     ASSERT_EQ(ret, DMError::DM_ERROR_NULLPTR);
 }
 

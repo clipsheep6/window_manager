@@ -39,6 +39,7 @@ const std::map<uint32_t, DisplayManagerAgentStub::StubFunc> DisplayManagerAgentS
     {TRANS_ID_ON_DISPLAY_CHANGED, &DisplayManagerAgentStub::ProcDisplayChanged},
     {TRANS_ID_ON_SCREEN_SHOT, &DisplayManagerAgentStub::ProcScreenShot},
     {TRANS_ID_ON_PRIVATE_WINDOW, &DisplayManagerAgentStub::ProcPrivateWindow},
+    {TRANS_ID_ON_PRIVATE_WINDOW_LIST, &DisplayManagerAgentStub::ProcPrivateWindowList},
     {TRANS_ID_ON_FOLD_STATUS_CHANGED, &DisplayManagerAgentStub::ProcFoldStatusChanged},
     {TRANS_ID_ON_DISPLAY_CHANGE_INFO_CHANGED, &DisplayManagerAgentStub::ProcDisplayChangeInfoChanged},
     {TRANS_ID_ON_DISPLAY_MODE_CHANGED, &DisplayManagerAgentStub::ProcDisplayModechanged},
@@ -189,6 +190,15 @@ int32_t DisplayManagerAgentStub::ProcPrivateWindow(MessageParcel& data)
 {
     bool hasPrivate = data.ReadBool();
     NotifyPrivateWindowStateChanged(hasPrivate);
+    return 0;
+}
+
+int32_t DisplayManagerAgentStub::ProcPrivateWindowList(MessageParcel& data)
+{
+    DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
+    std::vector<std::string> privacyWindowList;
+    data.ReadStringVector(&privacyWindowList);
+    NotifyPrivateStateWindowListChanged(displayId, privacyWindowList);
     return 0;
 }
 

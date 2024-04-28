@@ -2843,16 +2843,29 @@ HWTEST_F(SceneSessionManagerTest, SetFocusedSessionId, Function | SmallTest | Le
 */
 HWTEST_F(SceneSessionManagerTest, RequestFocusStatus, Function | SmallTest | Level3)
 {
+    FocusChangeReason reasonInput = FocusChangeReason::DEFAULT;
+    FocusChangeReason reasonResult = FocusChangeReason::DEFAULT;
     int32_t focusedSession_ = ssm_->GetFocusedSessionId();
     EXPECT_EQ(focusedSession_, 10086);
+
     int32_t persistentId_ = INVALID_SESSION_ID;
     WMError result01 = ssm_->RequestFocusStatus(persistentId_, true);
     EXPECT_EQ(result01, WMError::WM_OK);
+    reasonResult = ssm_->GetFocusChangeReason();
+    EXPECT_EQ(reasonResult, FocusChangeReason::DEFAULT);
+
     persistentId_ = 10000;
-    WMError result02 = ssm_->RequestFocusStatus(persistentId_, true);
+    reasonInput = FocusChangeReason::SCB_SESSION_REQUEST;
+    WMError result02 = ssm_->RequestFocusStatus(persistentId_, true, true, reasonInput);
     EXPECT_EQ(result02, WMError::WM_OK);
-    WMError result03 = ssm_->RequestFocusStatus(persistentId_, false);
+    reasonResult = ssm_->GetFocusChangeReason();
+    EXPECT_EQ(reasonResult, FocusChangeReason::SCB_SESSION_REQUEST);
+
+    reasonInput = FocusChangeReason::SPLIT_SCREEN;
+    WMError result03 = ssm_->RequestFocusStatus(persistentId_, false, true, reasonInput);
     EXPECT_EQ(result03, WMError::WM_OK);
+    reasonResult = ssm_->GetFocusChangeReason();
+    EXPECT_EQ(reasonResult, FocusChangeReason::SPLIT_SCREEN);
 }
 
 /**
@@ -3240,6 +3253,25 @@ HWTEST_F(SceneSessionManagerTest, RequestSceneSessionByCall, Function | SmallTes
 }
 
 /**
+ * @tc.name: StartAbilityBySpecified
+ * @tc.desc: SceneSesionManager start ability by specified
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, StartAbilityBySpecified, Function | SmallTest | Level3)
+{
+    int ret = 0;
+    SessionInfo info;
+    ssm_->StartAbilityBySpecified(info);
+
+    std::shared_ptr<AAFwk::Want> want = std::make_shared<AAFwk::Want>();
+    AAFwk::WantParams wantParams;
+    want->SetParams(wantParams);
+    info.want = want;
+    ssm_->StartAbilityBySpecified(info);
+    ASSERT_EQ(ret, 0);
+}
+
+/**
  * @tc.name: FindMainWindowWithToken
  * @tc.desc: SceneSesionManager find main window with token
  * @tc.type: FUNC
@@ -3252,6 +3284,38 @@ HWTEST_F(SceneSessionManagerTest, FindMainWindowWithToken, Function | SmallTest 
     uint64_t persistentId = 1423;
     WSError result01 = ssm_->BindDialogSessionTarget(persistentId, targetToken);
     EXPECT_EQ(result01, WSError::WS_ERROR_NULLPTR);
+}
+
+/**
+ * @tc.name: UpdateParentSessionForDialog001
+ * @tc.desc: SceneSesionManager update parent session for dialog
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, UpdateParentSessionForDialog001, Function | SmallTest | Level3)
+{
+    SessionInfo dialogInfo;
+    dialogInfo.abilityName_ = "DialogWindows";
+    dialogInfo.bundleName_ = "DialogWindows";
+    SessionInfo parentInfo;
+    parentInfo.abilityName_ = "ParentWindows";
+    parentInfo.bundleName_ = "ParentWindows";
+
+    int32_t persistentId = 1005;
+    sptr<SceneSession> parentSession = new (std::nothrow) MainSession(parentInfo, nullptr);
+    EXPECT_NE(parentSession, nullptr);
+    ssm_->sceneSessionMap_.insert({ persistentId, parentSession });
+
+    sptr<SceneSession> dialogSession = new (std::nothrow) SystemSession(dialogInfo, nullptr);
+    EXPECT_NE(dialogSession, nullptr);
+
+    sptr<WindowSessionProperty> property = new WindowSessionProperty();
+    property->SetParentPersistentId(persistentId);
+    property->SetWindowType(WindowType::WINDOW_TYPE_DIALOG);
+
+    WSError result = ssm_->UpdateParentSessionForDialog(dialogSession, property);
+    EXPECT_EQ(dialogSession->GetParentPersistentId(), persistentId);
+    EXPECT_NE(dialogSession->GetParentSession(), nullptr);
+    EXPECT_EQ(result, WSError::WS_OK);
 }
 
 /**
@@ -3865,7 +3929,7 @@ HWTEST_F(SceneSessionManagerTest, AccessibilityFilterEmptySceneSessionList, Func
 {
     std::vector<sptr<SceneSession>> sceneSessionList;
 
-    ssm_->FilterSceneSessionForAccessibility(sceneSessionList);
+    ssm_->FilterSceneSessionCovered(sceneSessionList);
     ASSERT_EQ(sceneSessionList.size(), 0);
 }
 
@@ -3889,7 +3953,7 @@ HWTEST_F(SceneSessionManagerTest, AccessibilityFilterOneWindow, Function | Small
     std::vector<sptr<SceneSession>> sceneSessionList;
     std::vector<sptr<AccessibilityWindowInfo>> accessibilityInfo;
     ssm_->GetAllSceneSessionForAccessibility(sceneSessionList);
-    ssm_->FilterSceneSessionForAccessibility(sceneSessionList);
+    ssm_->FilterSceneSessionCovered(sceneSessionList);
     ssm_->FillAccessibilityInfo(sceneSessionList, accessibilityInfo);
     ASSERT_EQ(accessibilityInfo.size(), 1);
 }
@@ -3920,7 +3984,7 @@ HWTEST_F(SceneSessionManagerTest, AccessibilityFilterTwoWindowNotCovered, Functi
     std::vector<sptr<SceneSession>> sceneSessionList;
     std::vector<sptr<AccessibilityWindowInfo>> accessibilityInfo;
     ssm_->GetAllSceneSessionForAccessibility(sceneSessionList);
-    ssm_->FilterSceneSessionForAccessibility(sceneSessionList);
+    ssm_->FilterSceneSessionCovered(sceneSessionList);
     ssm_->FillAccessibilityInfo(sceneSessionList, accessibilityInfo);
     ASSERT_EQ(accessibilityInfo.size(), 2);
 }
@@ -3953,7 +4017,7 @@ HWTEST_F(SceneSessionManagerTest, AccessibilityFilterTwoWindowCovered, Function 
     std::vector<sptr<SceneSession>> sceneSessionList;
     std::vector<sptr<AccessibilityWindowInfo>> accessibilityInfo;
     ssm_->GetAllSceneSessionForAccessibility(sceneSessionList);
-    ssm_->FilterSceneSessionForAccessibility(sceneSessionList);
+    ssm_->FilterSceneSessionCovered(sceneSessionList);
     ssm_->FillAccessibilityInfo(sceneSessionList, accessibilityInfo);
     ASSERT_EQ(accessibilityInfo.size(), 1);
 }

@@ -167,6 +167,7 @@ public:
     void NotifyScreenGroupChanged(const std::vector<sptr<ScreenInfo>>& screenInfo, ScreenGroupChangeEvent event);
 
     void NotifyPrivateSessionStateChanged(bool hasPrivate);
+    void NotifyPrivateWindowListChanged(DisplayId id, std::vector<std::string> privacyWindowList);
     DMError HasPrivateWindow(DisplayId id, bool& hasPrivateWindow) override;
     bool ConvertScreenIdToRsScreenId(ScreenId screenId, ScreenId& rsScreenId) override;
 
@@ -234,6 +235,8 @@ public:
     uint32_t GetCurvedCompressionArea() override;
     ScreenProperty GetPhyScreenProperty(ScreenId screenId) override;
     void SetScreenPrivacyState(bool hasPrivate) override;
+    void SetPrivacyStateByDisplayId(DisplayId id, bool hasPrivate) override;
+    void SetScreenPrivacyWindowList(DisplayId id, std::vector<std::string> privacyWindowList) override;
     void UpdateAvailableArea(ScreenId screenId, DMRect area) override;
     DMError GetAvailableArea(DisplayId displayId, DMRect& area) override;
     void NotifyAvailableAreaChanged(DMRect area);
@@ -253,6 +256,7 @@ private:
     void Init();
     void LoadScreenSceneXml();
     void ConfigureScreenScene();
+    void ConfigureDpi();
     void ConfigureWaterfallDisplayCompressionParams();
     void RegisterScreenChangeListener();
     void OnScreenChange(ScreenId screenId, ScreenEvent screenEvent);
@@ -345,6 +349,7 @@ private:
 
     bool isDensityDpiLoad_ = false;
     float densityDpi_ { 1.0f };
+    float subDensityDpi_ { 1.0f };
     std::atomic<uint32_t> cachedSettingDpi_ {0};
     uint32_t defaultDpi {0};
 
@@ -372,9 +377,11 @@ private:
     mutable std::recursive_mutex phyScreenPropMapMutex_;
     static void BootFinishedCallback(const char *key, const char *value, void *context);
     std::function<void()> foldScreenPowerInit_ = nullptr;
+    void HandleFoldScreenPowerInit();
     void SetFoldScreenPowerInit(std::function<void()> foldScreenPowerInit);
     void SetDpiFromSettingData();
     void NotifyClientProxyUpdateFoldDisplayMode(FoldDisplayMode displayMode);
+    void RegisterApplicationStateObserver();
 };
 } // namespace OHOS::Rosen
 

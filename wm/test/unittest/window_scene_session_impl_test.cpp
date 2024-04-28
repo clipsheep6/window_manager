@@ -1214,7 +1214,8 @@ HWTEST_F(WindowSceneSessionImplTest, LimitCameraFloatWindowMininumSize, Function
     sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
     uint32_t width = 33;
     uint32_t height = 31;
-    window->LimitCameraFloatWindowMininumSize(width, height);
+    float vpr = 0.0f;
+    window->LimitCameraFloatWindowMininumSize(width, height, vpr);
 }
 
 /*
@@ -1854,6 +1855,36 @@ HWTEST_F(WindowSceneSessionImplTest, UpdateWindowMode01, Function | SmallTest | 
     ASSERT_NE(nullptr, session);
     windowscenesession->hostSession_ = session;
     ASSERT_EQ(WSError::WS_ERROR_INVALID_WINDOW,
+              windowscenesession->UpdateWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN));
+}
+
+/**
+ * @tc.name: UpdateWindowMode02
+ * @tc.desc: UpdateWindowMode
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, UpdateWindowMode02, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("DestroySubWindow");
+    option->SetWindowType(WindowType::SYSTEM_WINDOW_BASE);
+
+    sptr<WindowSceneSessionImpl> windowscenesession = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, windowscenesession);
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_WINDOW,
+              windowscenesession->UpdateWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN));
+    windowscenesession->state_ = WindowState::STATE_CREATED;
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_WINDOW,
+              windowscenesession->UpdateWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN));
+
+    SessionInfo sessionInfo = {"CreateTestBundle", "CreateTestModule", "CreateTestAbility"};
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    windowscenesession->hostSession_ = session;
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_WINDOW,
+              windowscenesession->UpdateWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN));
+    windowscenesession->property_->SetPersistentId(1);
+    ASSERT_EQ(WSError::WS_OK,
               windowscenesession->UpdateWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN));
 }
 
@@ -2676,6 +2707,36 @@ HWTEST_F(WindowSceneSessionImplTest, SetWindowLimits01, Function | SmallTest | L
     ASSERT_EQ(windowSizeLimits.minHeight_, 1000);
 }
 
+/**
+ * @tc.name: AdjustKeyboardLayout01
+ * @tc.desc: adjust keyboard layout
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, AdjustKeyboardLayout01, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("AdjustKeyboardLayout01");
+    option->SetDisplayId(0);
+
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+
+    window->property_->SetPersistentId(123);
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
+    window->state_ = WindowState::STATE_FROZEN;
+    SessionInfo sessionInfo = {"CreateTestBundle", "CreateTestModule", "CreateTestAbility"};
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+
+    KeyboardLayoutParams params;
+    params.gravity_ = WindowGravity::WINDOW_GRAVITY_FLOAT;
+    params.LandscapeKeyboardRect_ = {1, 2, 3, 4};
+    params.PortraitKeyboardRect_ = {1, 2, 3, 4};
+    params.LandscapePanelRect_ = {1, 2, 3, 4};
+    params.PortraitPanelRect_ = {1, 2, 3, 4};
+    ASSERT_EQ(WMError::WM_OK, window->AdjustKeyboardLayout(params));
+}
 /**
  * @tc.name: HideNonSecureWindows01
  * @tc.desc: HideNonSecureWindows

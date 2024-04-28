@@ -407,6 +407,10 @@ public:
     std::string GetWindowDetectTaskName() const;
     void RemoveWindowDetectTask();
     WSError SwitchFreeMultiWindow(bool enable);
+    virtual int32_t GetCustomDecorHeight()
+    {
+        return 0;
+    };
 
 protected:
     class SessionLifeCycleTask : public virtual RefBase {
@@ -522,6 +526,7 @@ protected:
     float pivotY_ = 0.0f;
     mutable std::shared_mutex dialogVecMutex_;
     std::vector<sptr<Session>> dialogVec_;
+    mutable std::shared_mutex parentSessionMutex_;
     sptr<Session> parentSession_;
     sptr<IWindowEventChannel> windowEventChannel_;
 
@@ -567,7 +572,6 @@ private:
     std::function<void()> windowModeCallback_;
     std::function<bool()> isScreenLockedCallback_;
 
-    mutable std::shared_mutex propertyMutex_;
     sptr<WindowSessionProperty> property_;
 
     mutable std::shared_mutex uiRequestFocusMutex_;

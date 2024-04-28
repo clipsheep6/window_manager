@@ -19,6 +19,8 @@
 #include <parcel.h>
 #include <map>
 #include <float.h>
+#include <sstream>
+#include <string>
 
 namespace OHOS {
 namespace Rosen {
@@ -373,6 +375,7 @@ enum class WindowSessionType : uint32_t {
 enum class WindowGravity : uint32_t {
     WINDOW_GRAVITY_FLOAT = 0,
     WINDOW_GRAVITY_BOTTOM,
+    WINDOW_GRAVITY_DEFAULT,
 };
 
 /**
@@ -555,6 +558,51 @@ struct Rect {
     {
         return (posX_ >= a.posX_ && posY_ >= a.posY_ &&
             posX_ + width_ <= a.posX_ + a.width_ && posY_ + height_ <= a.posY_ + a.height_);
+    }
+
+    inline std::string ToString() const
+    {
+        std::stringstream ss;
+        ss << "[" << posX_ << " " << posY_ << " " << width_ << " " << height_ << "]";
+        return ss.str();
+    }
+};
+
+/**
+ * @struct KeyboardPanelInfo
+ *
+ * @brief Info of keyboard panel
+ */
+struct KeyboardPanelInfo : public Parcelable {
+    Rect rect_ = {0, 0, 0, 0};
+    WindowGravity gravity_ = WindowGravity::WINDOW_GRAVITY_BOTTOM;
+    bool isShowing_ = false;
+
+    bool Marshalling(Parcel& parcel) const
+    {
+        return parcel.WriteInt32(rect_.posX_) && parcel.WriteInt32(rect_.posY_) &&
+               parcel.WriteUint32(rect_.width_) && parcel.WriteUint32(rect_.height_) &&
+               parcel.WriteUint32(static_cast<uint32_t>(gravity_)) &&
+               parcel.WriteBool(isShowing_);
+    }
+
+    static KeyboardPanelInfo* Unmarshalling(Parcel& parcel)
+    {
+        KeyboardPanelInfo* keyboardPanelInfo = new(std::nothrow)KeyboardPanelInfo;
+        if (keyboardPanelInfo == nullptr) {
+            return nullptr;
+        }
+        bool res = parcel.ReadInt32(keyboardPanelInfo->rect_.posX_) &&
+            parcel.ReadInt32(keyboardPanelInfo->rect_.posY_) && parcel.ReadUint32(keyboardPanelInfo->rect_.width_) &&
+            parcel.ReadUint32(keyboardPanelInfo->rect_.height_);
+        if (!res) {
+            delete keyboardPanelInfo;
+            return nullptr;
+        }
+        keyboardPanelInfo->gravity_ = static_cast<WindowGravity>(parcel.ReadUint32());
+        keyboardPanelInfo->isShowing_ = parcel.ReadBool();
+
+        return keyboardPanelInfo;
     }
 };
 
@@ -878,6 +926,76 @@ struct MaximizeLayoutOption {
     ShowType dock = ShowType::HIDE;
 };
 
+/**
+ * @class KeyboardLayoutParams
+ *
+ * @brief Keyboard need adjust layout
+ */
+class KeyboardLayoutParams : public Parcelable {
+public:
+    WindowGravity gravity_ = WindowGravity::WINDOW_GRAVITY_BOTTOM;
+    Rect LandscapeKeyboardRect_ { 0, 0, 0, 0 };
+    Rect PortraitKeyboardRect_ { 0, 0, 0, 0 };
+    Rect LandscapePanelRect_ { 0, 0, 0, 0 };
+    Rect PortraitPanelRect_ { 0, 0, 0, 0 };
+
+    bool operator==(const KeyboardLayoutParams& params) const
+    {
+        return (gravity_ == params.gravity_ && LandscapeKeyboardRect_ == params.LandscapeKeyboardRect_ &&
+            PortraitKeyboardRect_ == params.PortraitKeyboardRect_ &&
+            LandscapePanelRect_ == params.LandscapePanelRect_ &&
+            PortraitPanelRect_ == params.PortraitPanelRect_);
+    }
+
+    bool operator!=(const KeyboardLayoutParams& params) const
+    {
+        return !this->operator==(params);
+    }
+
+    bool isEmpty() const
+    {
+        return LandscapeKeyboardRect_.IsUninitializedRect() && PortraitKeyboardRect_.IsUninitializedRect() &&
+            LandscapePanelRect_.IsUninitializedRect() && PortraitPanelRect_.IsUninitializedRect();
+    }
+
+    static inline bool WriteParcel(Parcel& parcel, const Rect& rect)
+    {
+        return parcel.WriteInt32(rect.posX_) && parcel.WriteInt32(rect.posY_) &&
+            parcel.WriteUint32(rect.width_) && parcel.WriteUint32(rect.height_);
+    }
+
+    static inline bool ReadParcel(Parcel& parcel, Rect& rect)
+    {
+        return parcel.ReadInt32(rect.posX_) && parcel.ReadInt32(rect.posY_) &&
+            parcel.ReadUint32(rect.width_) && parcel.ReadUint32(rect.height_);
+    }
+
+    virtual bool Marshalling(Parcel& parcel) const override
+    {
+        return (parcel.WriteUint32(static_cast<uint32_t>(gravity_)) &&
+            WriteParcel(parcel, LandscapeKeyboardRect_) &&
+            WriteParcel(parcel, PortraitKeyboardRect_) &&
+            WriteParcel(parcel, LandscapePanelRect_) &&
+            WriteParcel(parcel, PortraitPanelRect_));
+    }
+
+    static KeyboardLayoutParams* Unmarshalling(Parcel& parcel)
+    {
+        KeyboardLayoutParams *params = new(std::nothrow) KeyboardLayoutParams();
+        if (params == nullptr) {
+            return nullptr;
+        }
+        params->gravity_ = static_cast<WindowGravity>(parcel.ReadUint32());
+        if (ReadParcel(parcel, params->LandscapeKeyboardRect_) &&
+            ReadParcel(parcel, params->PortraitKeyboardRect_) &&
+            ReadParcel(parcel, params->LandscapePanelRect_) &&
+            ReadParcel(parcel, params->PortraitPanelRect_)) {
+            return params;
+        }
+        delete params;
+        return nullptr;
+    }
+};
 }
 }
 #endif // OHOS_ROSEN_WM_COMMON_H

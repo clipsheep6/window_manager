@@ -11,8 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//arkcompiler/ets_frontend/es2panda/es2abc_config.gni")
 import("//build/ohos.gni")
+import("//build/ohos/ace/ace.gni")
+import("//build/templates/abc/ohos_abc.gni")
 
 es2abc_gen_abc("gen_embeddable_window_stage_abc") {
   src_js = rebase_path("embeddable_window_stage.js")
@@ -89,6 +90,7 @@ ohos_shared_library("embeddablewindowstage_kit") {
   include_dirs = [ "embeddable_window_stage" ]
   deps = [
     "../../../../utils:libwmutil",
+    "../../../../utils:libwmutil_base",
     "../../../../wm:libwm",
     "../extension_window:extensionwindow_napi",
   ]
