@@ -346,17 +346,6 @@ bool SceneInputManager::CheckNeedUpdate(const std::vector<MMI::DisplayInfo>& dis
     return false;
 }
 
-void SceneInputManager::SetUserBackground(bool userBackground)
-{
-    TLOGI(WmsLogTag::WMS_MULTI_USER, "userBackground = %{public}d", userBackground);
-    isUserBackground_ = userBackground;
-}
-
-bool SceneInputManager::IsUserBackground()
-{
-    return isUserBackground_;
-}
-
 void SceneInputManager::FlushDisplayInfoToMMI(const bool forceFlush)
 {
     auto task = [this, forceFlush]() {
@@ -407,6 +396,17 @@ void SceneInputManager::FlushDisplayInfoToMMI(const bool forceFlush)
     if (eventHandler_) {
         eventHandler_->PostTask(task);
     }
+}
+
+void SceneInputManager::SetUserBackground(bool userBackground)
+{
+    TLOGI(WmsLogTag::WMS_MULTI_USER, "userBackground = %{public}d", userBackground);
+    isUserBackground_ = userBackground;
+}
+
+bool SceneInputManager::IsUserBackground()
+{
+    return isUserBackground_;
 }
 }
 } // namespace OHOS::Rosen

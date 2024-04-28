@@ -157,8 +157,8 @@ JsSceneSessionManager::JsSceneSessionManager(napi_env env) : env_(env)
         { START_UI_ABILITY_ERROR,       &JsSceneSessionManager::ProcessStartUIAbilityErrorRegister},
         { GESTURE_NAVIGATION_ENABLED_CHANGE_CB,
             &JsSceneSessionManager::ProcessGestureNavigationEnabledChangeListener },
-        { CALLING_WINDOW_ID_CHANGE_CB,  &JsSceneSessionManager::ProcessCallingSessionIdChangeRegister},
         { SWITCH_TO_ANOTHER_USER_CB,    &JsSceneSessionManager::ProcessSwitchingToAnotherUserRegister },
+        { CALLING_WINDOW_ID_CHANGE_CB,  &JsSceneSessionManager::ProcessCallingSessionIdChangeRegister},
     };
     taskScheduler_ = std::make_shared<MainThreadScheduler>(env);
 }
@@ -477,18 +477,18 @@ napi_value JsSceneSessionManager::UpdateFocus(napi_env env, napi_callback_info i
     return (me != nullptr) ? me->OnUpdateFocus(env, info) : nullptr;
 }
 
-napi_value JsSceneSessionManager::ProcessBackEvent(napi_env env, napi_callback_info info)
-{
-    WLOGFI("[NAPI]ProcessBackEvent");
-    JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(env, info);
-    return (me != nullptr) ? me->OnProcessBackEvent(env, info) : nullptr;
-}
-
 napi_value JsSceneSessionManager::InitUserInfo(napi_env env, napi_callback_info info)
 {
     TLOGI(WmsLogTag::WMS_MAIN, "[NAPI]Init user info");
     JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(env, info);
     return (me != nullptr) ? me->OnInitUserInfo(env, info) : nullptr;
+}
+
+napi_value JsSceneSessionManager::ProcessBackEvent(napi_env env, napi_callback_info info)
+{
+    WLOGFI("[NAPI]ProcessBackEvent");
+    JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(env, info);
+    return (me != nullptr) ? me->OnProcessBackEvent(env, info) : nullptr;
 }
 
 void JsSceneSessionManager::Finalizer(napi_env env, void* data, void* hint)
