@@ -49,6 +49,8 @@ enum XmlNodeElement {
     ROTATION_POLICY,
     HALL_SWITCH_APP,
     PACKAGE_NAME,
+    SCREEN_SNAPSHOT_BUNDLE_NAME,
+    SCREEN_SNAPSHOT_ABILITY_NAME
 };
 }
 
@@ -75,6 +77,8 @@ std::map<int32_t, std::string> ScreenSceneConfig::xmlNodeMap_ = {
     {ROTATION_POLICY, "rotationPolicy"},
     {HALL_SWITCH_APP, "hallSwitchApp"},
     {PACKAGE_NAME, "packageName"},
+    {SCREEN_SNAPSHOT_BUNDLE_NAME, "screenSnapshotBundleName"},
+    {SCREEN_SNAPSHOT_ABILITY_NAME, "screenSnapshotAbilityName"},
 };
 
 
@@ -160,7 +164,9 @@ bool ScreenSceneConfig::LoadConfigXml()
             ReadIntNumbersConfigInfo(curNodePtr);
         } else if ((xmlNodeMap_[DEFAULT_DISPLAY_CUTOUT_PATH] == nodeName) ||
             (xmlNodeMap_[SUB_DISPLAY_CUTOUT_PATH] == nodeName) ||
-            (xmlNodeMap_[ROTATION_POLICY] == nodeName)) {
+            (xmlNodeMap_[ROTATION_POLICY] == nodeName) ||
+            (xmlNodeMap_[SCREEN_SNAPSHOT_BUNDLE_NAME] == nodeName) ||
+            (xmlNodeMap_[SCREEN_SNAPSHOT_ABILITY_NAME] == nodeName)) {
             ReadStringConfigInfo(curNodePtr);
         } else if (xmlNodeMap_[HALL_SWITCH_APP] == nodeName) {
             ReadStringListConfigInfo(curNodePtr, nodeName);
