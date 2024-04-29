@@ -16,10 +16,14 @@
 #ifndef OHOS_WINDOW_SCENE_JS_SCREEN_SESSION_H
 #define OHOS_WINDOW_SCENE_JS_SCREEN_SESSION_H
 
+#include <event_handler.h>
 #include <map>
 
 #include <native_engine/native_engine.h>
 #include <native_engine/native_value.h>
+
+#include "hitrace_mater.h"
+#include "process_options.h"
 #include "session/screen/include/screen_session.h"
 #include "screen_scene.h"
 
@@ -58,6 +62,8 @@ private:
     sptr<ScreenSession> screenSession_;
     sptr<ScreenScene> screenScene_ = nullptr;
     std::map<std::string, std::shared_ptr<NativeReference>> mCallback_;
+    std::shared_ptr<AppExecFwk::EventHandler> handler_;
+    wptr<JsScreenSession> weakRef_ = nullptr;
 };
 } // namespace OHOS::Rosen
 
