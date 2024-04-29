@@ -41,7 +41,8 @@ WindowScene::~WindowScene()
 }
 
 WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRuntime::Context>& context,
-    sptr<IWindowLifeCycle>& listener, sptr<WindowOption> option)
+    sptr<IWindowLifeCycle>& listener, sptr<WindowOption> option,
+    const sptr<IRemoteObject>& identityToken)
 {
     TLOGI(WmsLogTag::WMS_MAIN, "WindowScene init with normal option!");
     displayId_ = displayId;
@@ -58,7 +59,7 @@ WMError WindowScene::Init(DisplayId displayId, const std::shared_ptr<AbilityRunt
         option->SetBundleName(context->GetBundleName());
     }
     mainWindow_ = SingletonContainer::Get<StaticCall>().CreateWindow(
-        GenerateMainWindowName(context), option, context);
+        GenerateMainWindowName(context), option, context, identityToken);
     if (mainWindow_ == nullptr) {
         return WMError::WM_ERROR_NULLPTR;
     }

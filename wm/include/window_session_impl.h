@@ -63,7 +63,7 @@ public:
     static std::vector<sptr<Window>> GetSubWindow(int parentId);
     // inherits from window
     virtual WMError Create(const std::shared_ptr<AbilityRuntime::Context>& context,
-        const sptr<Rosen::ISession>& iSession);
+        const sptr<Rosen::ISession>& iSession, const sptr<IRemoteObject>& identityToken = nullptr);
     WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
     WMError Hide(uint32_t reason = 0, bool withAnimation = false, bool isFromInnerkits = true) override;
     WMError Destroy() override;
@@ -388,6 +388,7 @@ private:
     std::string dialogTitle_ = { "" };
     WindowTitleVisibleFlags windowTitleVisibleFlags_;
     KeyEventFilterFunc keyEventFilter_;
+    sptr<IRemoteObject>& identityToken_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS
