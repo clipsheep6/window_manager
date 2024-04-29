@@ -299,14 +299,14 @@ void SceneSessionManager::RegisterAppListener()
     auto appMgrClient_ = DelayedSingleton<AppExecFwk::AppMgrClient>::GetInstance();
     if (appMgrClient_ == nullptr) {
         WLOGFE("appMgrClient_ is nullptr.");
+    } else if (appAnrListener_ == nullptr) {
+        WLOGFE("appAnrListener_ is nullptr.");
     } else {
-        if (appAnrListener_ != nullptr) {
-            auto flag = static_cast<int32_t>(appMgrClient_->RegisterAppDebugListener(appAnrListener_));
-            if (flag != ERR_OK) {
-                WLOGFE("Register app debug listener failed.");
-            } else {
-                WLOGFI("Register app debug listener success.");
-            }
+        auto flag = static_cast<int32_t>(appMgrClient_->RegisterAppDebugListener(appAnrListener_));
+        if (flag != ERR_OK) {
+            WLOGFE("Register app debug listener failed.");
+        } else {
+            WLOGFI("Register app debug listener success.");
         }
     }
 }
@@ -4611,8 +4611,8 @@ int SceneSessionManager::GetSceneSessionPrivacyModeCount()
             sceneSession->GetSessionState() == SessionState::STATE_ACTIVE;
         if (isForeground && sceneSession->GetParentSession() != nullptr) {
             isForeground = isForeground &&
-                            (sceneSession->GetParentSession()->GetSessionState() == SessionState::STATE_FOREGROUND ||
-                                sceneSession->GetParentSession()->GetSessionState() == SessionState::STATE_ACTIVE);
+                           (sceneSession->GetParentSession()->GetSessionState() == SessionState::STATE_FOREGROUND ||
+                            sceneSession->GetParentSession()->GetSessionState() == SessionState::STATE_ACTIVE);
         }
         bool isPrivate = sceneSession->GetSessionProperty() != nullptr &&
             (sceneSession->GetSessionProperty()->GetPrivacyMode() ||

@@ -533,10 +533,10 @@ void KeyboardSession::RelayoutKeyBoard()
         requestRect.posX_ = 0;
         if (percent != 0) {
             // 100: for calc percent.
-            requestRect.height_ = static_cast<uint32_t>(screenHeight * percent / 100u);
+            requestRect.height_ = static_cast<uint32_t>(screenHeight) * percent / 100u;
         }
     }
-    requestRect.posY_ = screenHeight - static_cast<int32_t>(requestRect.height_);
+    requestRect.posY_ = screenHeight - requestRect.height_;
     GetSessionProperty()->SetRequestRect(requestRect);
     TLOGI(WmsLogTag::WMS_KEYBOARD, "Id: %{public}d, rect: %{public}s", GetPersistentId(),
         SessionHelper::TransferToWSRect(requestRect).ToString().c_str());

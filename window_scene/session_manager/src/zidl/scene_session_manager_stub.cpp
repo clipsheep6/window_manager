@@ -399,9 +399,6 @@ int SceneSessionManagerStub::HandleRegisterSessionChangeListener(MessageParcel &
 {
     WLOGFI("run HandleRegisterSessionChangeListener!");
     sptr<ISessionChangeListener> listener = iface_cast<ISessionChangeListener>(data.ReadRemoteObject());
-    if (listener == nullptr) {
-        return ERR_INVALID_DATA;
-    }
     WSError errCode = RegisterSessionListener(listener);
     reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
@@ -436,9 +433,6 @@ int SceneSessionManagerStub::HandleRegisterSessionListener(MessageParcel& data, 
 {
     WLOGFI("run HandleRegisterSessionListener!");
     sptr<ISessionListener> listener = iface_cast<ISessionListener>(data.ReadRemoteObject());
-    if (listener == nullptr) {
-        return ERR_INVALID_DATA;
-    }
     WSError errCode = RegisterSessionListener(listener);
     reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
@@ -448,9 +442,6 @@ int SceneSessionManagerStub::HandleUnRegisterSessionListener(MessageParcel& data
 {
     WLOGFI("run HandleUnRegisterSessionListener!");
     sptr<ISessionListener> listener = iface_cast<ISessionListener>(data.ReadRemoteObject());
-    if (listener == nullptr) {
-        return ERR_INVALID_DATA;
-    }
     WSError errCode = UnRegisterSessionListener(listener);
     reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
@@ -857,9 +848,6 @@ int SceneSessionManagerStub::HandleAddExtensionWindowStageToSCB(MessageParcel& d
 {
     sptr<IRemoteObject> sessionStageObject = data.ReadRemoteObject();
     sptr<ISessionStage> sessionStage = iface_cast<ISessionStage>(sessionStageObject);
-    if (sessionStage == nullptr) {
-        return ERR_INVALID_DATA;
-    }
     int32_t persistentId = data.ReadInt32();
     int32_t parentId = data.ReadInt32();
     AddExtensionWindowStageToSCB(sessionStage, persistentId, parentId);
