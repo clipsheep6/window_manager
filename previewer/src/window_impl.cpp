@@ -900,5 +900,15 @@ WMError WindowImpl::SetLandscapeMultiWindow(bool isLandscapeMultiWindow)
 {
     return WMError::WM_OK;
 }
+
+WMError SetImmersiveModeEnabledState(bool enable)
+{
+    return WMError::WM_OK;
+}
+
+bool GetImmersiveModeEnabledState() const
+{
+    return true;
+}
 } // namespace Rosen
 } // namespace OHOS

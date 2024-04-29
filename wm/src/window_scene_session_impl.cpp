@@ -77,6 +77,7 @@ constexpr float MAX_GRAY_SCALE = 1.0f;
 }
 uint32_t WindowSceneSessionImpl::maxFloatingWindowSize_ = 1920;
 std::mutex WindowSceneSessionImpl::keyboardPanelInfoChangeListenerMutex_;
+bool WindowImpl::g_enableImmersiveMode = true;
 
 WindowSceneSessionImpl::WindowSceneSessionImpl(const sptr<WindowOption>& option) : WindowSessionImpl(option)
 {
@@ -1538,7 +1539,7 @@ WMError WindowSceneSessionImpl::SetLayoutFullScreen(bool status)
     }
 
     bool preStatus = property_->IsLayoutFullScreen();
-    property_->SetIsLayoutFullScreen(status);
+    property_->SetIsLayoutFullScreen(true);
     UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE);
     WindowMode mode = GetMode();
     if (!((mode == WindowMode::WINDOW_MODE_FLOATING ||
@@ -1556,6 +1557,7 @@ WMError WindowSceneSessionImpl::SetLayoutFullScreen(bool status)
         TLOGE(WmsLogTag::WMS_IMMS, "SetLayoutFullScreenByApiVersion errCode:%{public}d winId:%{public}u",
             static_cast<int32_t>(ret), GetWindowId());
     }
+    g_enableImmersiveMode = status;
     return ret;
 }
 
@@ -1756,8 +1758,7 @@ WMError WindowSceneSessionImpl::Maximize(MaximizeLayoutOption option)
     if (!WindowHelper::IsWindowModeSupported(property_->GetModeSupportInfo(), WindowMode::WINDOW_MODE_FULLSCREEN)) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    property_->SetIsLayoutFullScreen(option.decor == ShowType::HIDE);
-    return SetFullScreen(true);
+    return SetIsLayoutFullScreen(g_enableImmersiveMode);
 }
 
 WMError WindowSceneSessionImpl::MaximizeFloating()
@@ -1776,7 +1777,7 @@ WMError WindowSceneSessionImpl::MaximizeFloating()
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (GetGlobalMaximizeMode() != MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
-        SetFullScreen(true);
+        SetIsLayoutFullScreen(g_enableImmersiveMode);
         property_->SetMaximizeMode(MaximizeMode::MODE_FULL_FILL);
     } else {
         hostSession_->OnSessionEvent(SessionEvent::EVENT_MAXIMIZE_FLOATING);
@@ -3291,6 +3292,31 @@ WMError WindowSceneSessionImpl::AdjustKeyboardLayout(const KeyboardLayoutParams&
         return static_cast<WMError>(hostSession_->AdjustKeyboardLayout(params));
     }
     return WMError::WM_OK;
+}
+
+WMError WindowSceneSessionImpl::SetImmersiveModeEnabledState(bool enable)
+{
+    WLOGFD("id: %{public}u， SetImmersiveModeEnabledState: %{public}u", GetWindowId(),
+        g_enableImmersiveMode);
+    if (hostSession_ == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    if (!WindowHelper::IsWindowModeSupported(property_->GetModeSupportInfo(), WindowMode::WINDOW_MODE_FULLSCREEN)) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    g_enableImmersiveMode = enable;
+    WindowMode mode = GetMode();
+    if (mode == WindowMode::WINDOW_MODE_FULLSCREEN) {
+        return SetIsLayoutFullScreen(g_enableImmersiveMode);
+    }
+    return WMError::WM_OK;
+}
+
+bool WindowSceneSessionImpl::GetImmersiveModeEnabledState() const
+{
+    WLOGFD("id: %{public}u， GetImmersiveModeEnabledState = %{public}u", GetWindowId(),
+        g_enableImmersiveMode);
+    return g_enableImmersiveMode;
 }
 } // namespace Rosen
 } // namespace OHOS
