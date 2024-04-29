@@ -626,6 +626,7 @@ private:
     void ProcessBackHomeStatus();
     bool IsBackHomeStatus();
     void DeleteStateDetectTask();
+    std::string iTempToken_;
 };
 } // namespace OHOS::Rosen
 

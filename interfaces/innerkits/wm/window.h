@@ -469,11 +469,12 @@ public:
      * @param windowName window name, identify window instance
      * @param option window propertion
      * @param context ability context
+     * @param identityToken sceneSession of token
      * @return sptr<Window> If create window success,return window instance;Otherwise, return nullptr
      */
     static sptr<Window> Create(const std::string& windowName,
         sptr<WindowOption>& option, const std::shared_ptr<AbilityRuntime::Context>& context = nullptr,
-        WMError& errCode = DefaultCreateErrCode);
+        WMError& errCode = DefaultCreateErrCode, const sptr<IRemoteObject>& identityToken = nullptr);
 
     /**
      * @brief create main/uiextension window with session
