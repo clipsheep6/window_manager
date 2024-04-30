@@ -1172,8 +1172,8 @@ void SceneSessionManager::CreateKeyboardPanelSession(sptr<SceneSession> keyboard
             .abilityName_ = "SCBKeyboardPanel",
             .isSystem_ = true,
             .windowType_ = static_cast<uint32_t>(WindowType::WINDOW_TYPE_KEYBOARD_PANEL),
-            .isSystemInput_ = true,
             .screenId_ = static_cast<uint64_t>(displayId)
+            .isSystemInput_ = true,
         };
         panelSession = RequestSceneSession(panelInfo, nullptr);
         if (panelSession == nullptr) {
@@ -7312,6 +7312,7 @@ void SceneSessionManager::AddWindowDragHotArea(int32_t type, WSRect& area)
 {
     WLOGFI("run AddWindowDragHotArea, type: %{public}d,posX: %{public}d,posY: %{public}d,width: %{public}d,"
         "height: %{public}d", type, area.posX_, area.posY_, area.width_, area.height_);
+    std::unique_lock<std::shared_timed_mutex> lock(hotAreaMutex_);
     SceneSession::windowDragHotAreaMap_.insert({type, area});
 }
 

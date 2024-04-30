@@ -2461,8 +2461,8 @@ sptr<ScreenSession> ScreenSessionManager::InitVirtualScreen(ScreenId smsScreenId
     ScreenSessionConfig config = {
         .screenId = smsScreenId,
         .rsId = rsId,
-        .name = option.name_,
         .defaultScreenId = GetDefaultScreenId(),
+        .name = option.name_,
     };
     sptr<ScreenSession> screenSession =
         new(std::nothrow) ScreenSession(config, ScreenSessionReason::CREATE_SESSION_FOR_VIRTUAL);

@@ -598,7 +598,6 @@ bool WindowManagerService::ConfigAppWindowShadow(const WindowManagerConfig::Conf
         }
         outShadow.elevation_ = elevation[0];
     }
-
     item = shadowConfig["color"];
     if (item.IsString()) {
         auto color = item.stringValue_;
@@ -608,7 +607,6 @@ bool WindowManagerService::ConfigAppWindowShadow(const WindowManagerConfig::Conf
         }
         outShadow.color_ = color;
     }
-
     item = shadowConfig["offsetX"];
     if (item.IsFloats()) {
         auto offsetX = *item.floatsValue_;
@@ -617,7 +615,6 @@ bool WindowManagerService::ConfigAppWindowShadow(const WindowManagerConfig::Conf
         }
         outShadow.offsetX_ = offsetX[0];
     }
-
     item = shadowConfig["offsetY"];
     if (item.IsFloats()) {
         auto offsetY = *item.floatsValue_;
@@ -626,7 +623,6 @@ bool WindowManagerService::ConfigAppWindowShadow(const WindowManagerConfig::Conf
         }
         outShadow.offsetY_ = offsetY[0];
     }
-
     item = shadowConfig["alpha"];
     if (item.IsFloats()) {
         auto alpha = *item.floatsValue_;
@@ -636,7 +632,6 @@ bool WindowManagerService::ConfigAppWindowShadow(const WindowManagerConfig::Conf
         }
         outShadow.alpha_ = alpha[0];
     }
-
     item = shadowConfig["radius"];
     if (item.IsFloats()) {
         auto radius = *item.floatsValue_;
@@ -645,7 +640,6 @@ bool WindowManagerService::ConfigAppWindowShadow(const WindowManagerConfig::Conf
         }
         outShadow.radius_ = radius[0];
     }
-
     return true;
 }
 

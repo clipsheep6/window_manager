@@ -1551,7 +1551,8 @@ EnableIfSame<T, IWindowChangeListener, std::vector<sptr<IWindowChangeListener>>>
 }
 
 template<typename T>
-EnableIfSame<T, IOccupiedAreaChangeListener, std::vector<sptr<IOccupiedAreaChangeListener>>> WindowSessionImpl::GetListeners()
+EnableIfSame<T, IOccupiedAreaChangeListener,
+    std::vector<sptr<IOccupiedAreaChangeListener>>> WindowSessionImpl::GetListeners()
 {
     std::vector<sptr<IOccupiedAreaChangeListener>> occupiedAreaChangeListeners;
     for (auto& listener : occupiedAreaChangeListeners_[GetPersistentId()]) {
