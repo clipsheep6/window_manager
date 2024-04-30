@@ -21,9 +21,11 @@
 #include <refbase.h>
 
 #include "screen.h"
+#include "event_handler.h"
 
 namespace OHOS {
 namespace Rosen {
+std::shared_ptr<NativeReference> FindJsDisplayObject(ScreenId screenId);
 napi_value CreateJsScreenObject(napi_env env, sptr<Screen>& screen);
 napi_value CreateJsScreenModeArrayObject(napi_env env, std::vector<sptr<SupportedScreenModes>> screenModes);
 napi_value CreateJsScreenModeObject(napi_env env, const sptr<SupportedScreenModes>& mode);
@@ -43,6 +45,9 @@ private:
     napi_value OnSetOrientation(napi_env env, napi_callback_info info);
     napi_value OnSetScreenActiveMode(napi_env env, napi_callback_info info);
     napi_value OnSetDensityDpi(napi_env env, napi_callback_info info);
+    napi_value CallJsMethod(const char* name, napi_env env, napi_value const * argv = nullptr, size_t argc = 0) const;
+    std::shared_ptr<AppExecFwk::EventHandler> handler_;
+    std::shared_ptr<NativeReference> jsDisplayObj_;
 };
 }  // namespace Rosen
 }  // namespace OHOS

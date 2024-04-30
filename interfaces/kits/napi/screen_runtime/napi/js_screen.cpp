@@ -25,7 +25,6 @@ namespace OHOS {
 namespace Rosen {
 using namespace AbilityRuntime;
 constexpr size_t ARGC_ONE = 1;
-constexpr size_t ARGC_TWO = 2;
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DMS_SCREEN_RUNTIME, "JsScreen"};
 }
@@ -35,6 +34,8 @@ std::recursive_mutex g_mutex;
 
 JsScreen::JsScreen(const sptr<Screen>& screen) : screen_(screen)
 {
+    handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
+    jsDisplayObj_ = nullptr;
 }
 
 JsScreen::~JsScreen()
@@ -111,28 +112,30 @@ napi_value JsScreen::OnSetOrientation(napi_env env, napi_callback_info info)
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
         return NapiGetUndefined(env);
     }
-
-    NapiAsyncTask::CompleteCallback complete =
-        [=](napi_env env, NapiAsyncTask& task, int32_t status) {
-            DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->SetOrientation(orientation));
-            if (ret == DmErrorCode::DM_OK) {
-                task.Resolve(env, NapiGetUndefined(env));
-                WLOGI("OnSetOrientation success");
-            } else {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret),
-                                                  "JsScreen::OnSetOrientation failed."));
-                WLOGFE("OnSetOrientation failed");
-            }
-        };
-    napi_value lastParam = nullptr;
-    if (argc >= ARGC_TWO && argv[ARGC_TWO - 1] != nullptr &&
-        GetType(env, argv[ARGC_TWO - 1]) == napi_function) {
-        lastParam = argv[ARGC_TWO - 1];
+    auto task = [this, env, orientation] {
+        DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->SetOrientation(orientation));
+        if (ret == DmErrorCode::DM_OK) {
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(env, &scope);
+            napi_value argv[] = {NapiGetUndefined(env)};
+            size_t argc = ArraySize(argv);
+            jsDisplayObj_ = FindJsDisplayObject(screen_->GetId());
+            this->CallJsMethod("JsScreen::OnSetOrientation", env, argv, argc);
+            napi_close_handle_scope(env, scope);
+            WLOGI("OnSetOrientation success");
+        } else {
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(ret),
+                                                "JsScreen::OnSetOrientation failed."));
+            WLOGFE("OnSetOrientation failed");
+        }
+    };
+    if (handler_ == nullptr) {
+        WLOGFE("JsScreen::OnSetOrientation event handler is nullptr.");
+        return NapiGetUndefined(env);
     }
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsScreen::OnSetOrientation",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
-    return result;
+    handler_->PostTask(task, "wms:JsScreen::OnSetOrientation", 0,
+        AppExecFwk::EventQueue::Priority::HIGH);
+    return NapiGetUndefined(env);
 }
 
 
@@ -169,29 +172,31 @@ napi_value JsScreen::OnSetScreenActiveMode(napi_env env, napi_callback_info info
         return NapiGetUndefined(env);
     }
 
-    NapiAsyncTask::CompleteCallback complete =
-        [=](napi_env env, NapiAsyncTask& task, int32_t status) {
-            DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->SetScreenActiveMode(modeId));
-            if (ret == DmErrorCode::DM_OK) {
-                task.Resolve(env, NapiGetUndefined(env));
-                WLOGI("OnSetScreenActiveMode success");
-            } else {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret),
-                                                "JsScreen::OnSetScreenActiveMode failed."));
-                WLOGFE("OnSetScreenActiveMode failed");
-            }
-        };
+    auto task = [this, env, modeId] {
+        DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->SetScreenActiveMode(modeId));
+        if (ret == DmErrorCode::DM_OK) {
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(env, &scope);
+            napi_value argv[] = {NapiGetUndefined(env)};
+            size_t argc = ArraySize(argv);
+            jsDisplayObj_ = FindJsDisplayObject(screen_->GetId());
+            this->CallJsMethod("JsScreen::OnSetScreenActiveMode", env, argv, argc);
+            napi_close_handle_scope(env, scope);
+            WLOGI("OnSetScreenActiveMode success");
+        } else {
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(ret),
+                                            "JsScreen::OnSetScreenActiveMode failed."));
+            WLOGFE("OnSetScreenActiveMode failed");
+        }
+    };
 
-    napi_value lastParam = nullptr;
-    if (argc >= ARGC_TWO && argv[ARGC_TWO - 1] != nullptr &&
-        GetType(env, argv[ARGC_TWO - 1]) == napi_function) {
-        lastParam = argv[ARGC_TWO - 1];
+    if (handler_ == nullptr) {
+        WLOGFE("JsScreen::OnSetScreenActiveMode event handler is nullptr.");
+        return NapiGetUndefined(env);
     }
-
-    napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsScreen::OnSetScreenActiveMode",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
-    return result;
+    handler_->PostTask(task, "wms:JsScreen::OnSetScreenActiveMode", 0,
+        AppExecFwk::EventQueue::Priority::HIGH);
+    return NapiGetUndefined(env);
 }
 
 napi_value JsScreen::SetDensityDpi(napi_env env, napi_callback_info info)
@@ -224,26 +229,44 @@ napi_value JsScreen::OnSetDensityDpi(napi_env env, napi_callback_info info)
         return NapiGetUndefined(env);
     }
 
-    NapiAsyncTask::CompleteCallback complete =
-        [=](napi_env env, NapiAsyncTask& task, int32_t status) {
-            DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->SetDensityDpi(densityDpi));
-            if (ret == DmErrorCode::DM_OK) {
-                task.Resolve(env, NapiGetUndefined(env));
-                WLOGI("OnSetDensityDpi success");
-            } else {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret),
-                                                "JsScreen::OnSetDensityDpi failed."));
-                WLOGFE("OnSetDensityDpi failed");
-            }
-        };
-    napi_value lastParam = nullptr;
-    if (argc >= ARGC_TWO && argv[ARGC_TWO - 1] != nullptr &&
-        GetType(env, argv[ARGC_TWO - 1]) == napi_function) {
-        lastParam = argv[ARGC_TWO - 1];
+    auto task = [this, env, densityDpi] {
+        DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->SetDensityDpi(densityDpi));
+        if (ret == DmErrorCode::DM_OK) {
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(env, &scope);
+            napi_value argv[] = {NapiGetUndefined(env)};
+            size_t argc = ArraySize(argv);
+            jsDisplayObj_ = FindJsDisplayObject(screen_->GetId());
+            this->CallJsMethod("JsScreen::OnSetDensityDpi", env, argv, argc);
+            napi_close_handle_scope(env, scope);
+            WLOGI("OnSetDensityDpi success");
+        } else {
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(ret),
+                                            "JsScreen::OnSetDensityDpi failed."));
+            WLOGFE("OnSetDensityDpi failed");
+        }
+    };
+    if (handler_ == nullptr) {
+        WLOGFE("JsScreen::OnSetDensityDpi event handler is nullptr.");
+        return NapiGetUndefined(env);
     }
+    handler_->PostTask(task, "wms:JsScreen::OnSetDensityDpi", 0,
+        AppExecFwk::EventQueue::Priority::HIGH);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsScreen::CallJsMethod(const char* name, napi_env env,
+    napi_value const * argv, size_t argc) const
+{
+    if (jsDisplayObj_ == nullptr) {
+        WLOGFE("(%{public}s) jsDisplayObj is nullptr.", name);
+        return nullptr;
+    }
+    napi_value method = nullptr;
+    method = jsDisplayObj_->GetNapiValue();
     napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsScreen::OnSetDensityDpi",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    napi_get_undefined(env, &result);
+    napi_call_function(env, result, method, argc, argv, nullptr);
     return result;
 }
 
