@@ -901,12 +901,12 @@ WMError WindowImpl::SetLandscapeMultiWindow(bool isLandscapeMultiWindow)
     return WMError::WM_OK;
 }
 
-WMError SetImmersiveModeEnabledState(bool enable)
+WMError WindowImpl::SetImmersiveModeEnabledState(bool enable)
 {
     return WMError::WM_OK;
 }
 
-bool GetImmersiveModeEnabledState() const
+bool WindowImpl::GetImmersiveModeEnabledState() const
 {
     return true;
 }

@@ -1983,7 +1983,7 @@ public:
 
     /**
      * @brief Get whether the immersive mode is enabled or not.
-     * @param params
+     * 
      * @return true means the immersive mode is enabled, and false means the opposite.
      */
     virtual bool GetImmersiveModeEnabledState() const { return true; }

@@ -3296,8 +3296,8 @@ WMError WindowSceneSessionImpl::AdjustKeyboardLayout(const KeyboardLayoutParams&
 
 WMError WindowSceneSessionImpl::SetImmersiveModeEnabledState(bool enable)
 {
-    WLOGFD("id: %{public}u， SetImmersiveModeEnabledState: %{public}u", GetWindowId(),
-        g_enableImmersiveMode);
+    WLOGFD("id: %{public}u, SetImmersiveModeEnabledState: %{public}u", GetWindowId(),
+        enable);
     if (hostSession_ == nullptr) {
         return WMError::WM_ERROR_NULLPTR;
     }

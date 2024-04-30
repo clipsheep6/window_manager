@@ -972,26 +972,26 @@ HWTEST_F(WindowSceneSessionImplTest, Immersive, Function | SmallTest | Level3)
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->SetImmersiveModeEnabledState(false));
     ASSERT_EQ(false, window->IsLayoutFullScreen());
     ASSERT_EQ(false, window->IsFullScreen());
-    ASSERT_EQ(WMError::OK, window->Destroy(false));
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
 
     option->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
     window = new (std::nothrow) WindowSceneSessionImpl(option);
-    ASSERT_EQ(WMError::OK, window->SetImmersiveModeEnabledState(true));
+    ASSERT_EQ(WMError::WM_OK, window->SetImmersiveModeEnabledState(true));
     ASSERT_EQ(true, window->IsLayoutFullScreen());
     ASSERT_EQ(true, window->IsFullScreen());
-    ASSERT_EQ(WMError::OK, window->Destroy(false));
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
 
     option->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
     window = new (std::nothrow) WindowSceneSessionImpl(option);
-    ASSERT_EQ(WMError::OK, window->SetImmersiveModeEnabledState(true));
+    ASSERT_EQ(WMError::WM_OK, window->SetImmersiveModeEnabledState(true));
     ASSERT_EQ(false, window->IsLayoutFullScreen());
     ASSERT_EQ(false, window->IsFullScreen());
     ASSERT_EQ(true, window->GetImmersiveModeEnabledState());
-    ASSERT_EQ(WMError::OK, window->Maximize());
+    ASSERT_EQ(WMError::WM_OK, window->Maximize());
     ASSERT_EQ(true, window->IsLayoutFullScreen());
     ASSERT_EQ(true, window->IsFullScreen());
     ASSERT_EQ(true, window->GetImmersiveModeEnabledState());
-    ASSERT_EQ(WMError::OK, window->Destroy(false));
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
 }
 
 /*

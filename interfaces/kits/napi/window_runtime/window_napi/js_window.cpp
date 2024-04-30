@@ -5804,14 +5804,14 @@ napi_value JsWindow::OnSetImmersiveModeEnabledState(napi_env env, napi_callback_
         return NapiThrowError(env, WmErrorCode::WM_ERROR_SYSTEM_ABNORMALLY);
     }
     WLOGI("window [%{public}u, %{public}s] OnSetImmersiveModeEnabledState end",
-        windowToken_->GetWindowId(), windowToken_->GetWindowName().c_tr());
+        windowToken_->GetWindowId(), windowToken_->GetWindowName().c_str());
     return NapiGetUndefined(env);
 }
 
 napi_value JsWindow::OnGetImmersiveModeEnabledState(napi_env env, napi_callback_info info)
 {
     if (windowToken_ == nullptr) {
-        WLOGFE("Window is nullptr");
+        WLOGFE("windowToken_ is nullptr");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
     }
     if (!WindowHelper::IsMainWindow(windowToken_->GetType())) {
@@ -5824,10 +5824,10 @@ napi_value JsWindow::OnGetImmersiveModeEnabledState(napi_env env, napi_callback_
         WLOGFE("window is nullptr");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
     }
-    bool isEnable = window->GetImmersiveModeEnabledState();
-    WLOGI("window [%{public}u, %{public}s] get isImmersiveMode end, isEnable = %{public}u",
-        windowToken_->GetWindowId(), windowToken_->GetWindowName().c_tr(), isEnable);
-    return CreateJsValue(env, isEnable);
+    bool isEnabled = window->GetImmersiveModeEnabledState();
+    WLOGI("window [%{public}u, %{public}s] get isImmersiveMode end, isEnabled = %{public}u",
+        window->GetWindowId(), window->GetWindowName().c_str(), isEnabled);
+    return CreateJsValue(env, isEnabled);
 }
 
 void BindFunctions(napi_env env, napi_value object, const char *moduleName)
