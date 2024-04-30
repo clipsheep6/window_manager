@@ -5791,8 +5791,7 @@ napi_value JsWindow::OnSetImmersiveModeEnabledState(napi_env env, napi_callback_
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_CALLING);
     }
     napi_value nativeVal = argv[0];
-    if (nativeVal == nullptr)
-    {
+    if (nativeVal == nullptr) {
         WLOGFE("Failed to convert parameter to enable");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }

@@ -77,7 +77,7 @@ constexpr float MAX_GRAY_SCALE = 1.0f;
 }
 uint32_t WindowSceneSessionImpl::maxFloatingWindowSize_ = 1920;
 std::mutex WindowSceneSessionImpl::keyboardPanelInfoChangeListenerMutex_;
-bool WindowImpl::g_enableImmersiveMode = true;
+bool WindowSceneSessionImpl::g_enableImmersiveMode = true;
 
 WindowSceneSessionImpl::WindowSceneSessionImpl(const sptr<WindowOption>& option) : WindowSessionImpl(option)
 {
@@ -1758,7 +1758,7 @@ WMError WindowSceneSessionImpl::Maximize(MaximizeLayoutOption option)
     if (!WindowHelper::IsWindowModeSupported(property_->GetModeSupportInfo(), WindowMode::WINDOW_MODE_FULLSCREEN)) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    return SetIsLayoutFullScreen(g_enableImmersiveMode);
+    return SetLayoutFullScreen(g_enableImmersiveMode);
 }
 
 WMError WindowSceneSessionImpl::MaximizeFloating()
@@ -1777,7 +1777,7 @@ WMError WindowSceneSessionImpl::MaximizeFloating()
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (GetGlobalMaximizeMode() != MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
-        SetIsLayoutFullScreen(g_enableImmersiveMode);
+        SetLayoutFullScreen(g_enableImmersiveMode);
         property_->SetMaximizeMode(MaximizeMode::MODE_FULL_FILL);
     } else {
         hostSession_->OnSessionEvent(SessionEvent::EVENT_MAXIMIZE_FLOATING);
@@ -3307,7 +3307,7 @@ WMError WindowSceneSessionImpl::SetImmersiveModeEnabledState(bool enable)
     g_enableImmersiveMode = enable;
     WindowMode mode = GetMode();
     if (mode == WindowMode::WINDOW_MODE_FULLSCREEN) {
-        return SetIsLayoutFullScreen(g_enableImmersiveMode);
+        return SetLayoutFullScreen(g_enableImmersiveMode);
     }
     return WMError::WM_OK;
 }

@@ -2030,7 +2030,7 @@ WMError WindowImpl::SetImmersiveModeEnabledState(bool enable)
     g_enableImmersiveMode = enable;
     WindowMode mode = GetMode();
     if (mode == WindowMode::WINDOW_MODE_FULLSCREEN) {
-        return SetIsLayoutFullScreen(g_enableImmersiveMode);
+        return SetLayoutFullScreen(g_enableImmersiveMode);
     }
     return WMError::WM_OK;
 }
