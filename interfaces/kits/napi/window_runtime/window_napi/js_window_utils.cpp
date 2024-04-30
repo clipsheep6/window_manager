@@ -259,6 +259,29 @@ napi_value WindowStageEventTypeInit(napi_env env)
     return objValue;
 }
 
+napi_value WindowStageAttributeInit(napi_env env)
+{
+    WLOGFI("WindowStageAttributeInit");
+
+    if (env == nullptr) {
+        WLOGFE("env is nullptr");
+        return nullptr;
+    }
+
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue == nullptr) {
+        WLOGFE("Failed to get object");
+        return nullptr;
+    }
+
+    napi_set_named_property(env, objValue, "SYSTEM_WINDOW_STAGE", CreateJsValue(env,
+        static_cast<int32_t>(WindowStageAttribute::SYSTEM_WINDOW_STAGE)));
+    napi_set_named_property(env, objValue, "SUB_WINDOW_STAGE", CreateJsValue(env,
+        static_cast<int32_t>(WindowStageAttribute::SUB_WINDOW_STAGE)));
+    return objValue;
+}
+
 napi_value WindowEventTypeInit(napi_env env)
 {
     WLOGFD("WindowEventTypeInit");

@@ -252,6 +252,14 @@ public:
     void SetDialogTitle(const std::string& dialogTitle);
 
     /**
+     * @brief Set window stage attribute.
+     *
+     * @param windowStageAttribute window stage attribute.
+     */
+    void SetWindowStageAttribute(WindowStageAttribute windowStageAttribute);
+
+
+    /**
      * @brief Get window rect.
      *
      * @return The rect of window.
@@ -449,6 +457,7 @@ private:
     bool isExtensionTag_ = false;
     bool dialogDecorEnable_ = false;
     std::string dialogTitle_ = { "" };
+    WindowStageAttribute windStageAttribute_ = WindowStageAttribute::UNKNOWN;
 };
 } // namespace Rosen
 } // namespace OHOS
