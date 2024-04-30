@@ -1566,7 +1566,7 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
 {
     auto persistentId = scnSession->GetPersistentId();
     RequestInputMethodCloseKeyboard(persistentId);
-    if (WindowHelper::IsMainWindow(scnSession->GetWindowType())) {
+    if (WindowHelper::IsMainWindow(scnSession->GetWindowType()) && scnSession->IsFocusedOnShow()) {
         RequestSessionFocusImmediately(persistentId);
     }
     if (scnSession->GetSessionInfo().ancoSceneState < AncoSceneState::NOTIFY_CREATE) {
@@ -4054,6 +4054,16 @@ WSError SceneSessionManager::RequestSessionFocusImmediately(int32_t persistentId
         TLOGD(WmsLogTag::WMS_FOCUS, "session is not focusable!");
         return WSError::WS_DO_NOTHING;
     }
+    if (!sceneSession->IsFocusedOnShow()) {
+        TLOGD(WmsLogTag::WMS_FOCUS, "session is not focused on show!");
+        return WSError::WS_DO_NOTHING;
+    }
+    auto parentSession = GetSceneSession(sceneSession->GetParentPersistentId());
+    while (parentSession != nullptr) {
+        parentSession->SetFocusedOnShow(true);
+        parentSession = GetSceneSession(parentSession->GetParentPersistentId());
+    }
+
     // specific block
     WSError specificCheckRet = RequestFocusSpecificCheck(sceneSession, true);
     if (specificCheckRet != WSError::WS_OK) {
@@ -4085,6 +4095,16 @@ WSError SceneSessionManager::RequestSessionFocus(int32_t persistentId, bool byFo
         TLOGD(WmsLogTag::WMS_FOCUS, "session is not focusable or not visible!");
         return WSError::WS_DO_NOTHING;
     }
+    if (!sceneSession->IsFocusedOnShow()) {
+        TLOGD(WmsLogTag::WMS_FOCUS, "session is not focused on show!");
+        return WSError::WS_DO_NOTHING;
+    }
+    auto parentSession = GetSceneSession(sceneSession->GetParentPersistentId());
+    while (parentSession != nullptr) {
+        parentSession->SetFocusedOnShow(true);
+        parentSession = GetSceneSession(parentSession->GetParentPersistentId());
+    }
+
     // subwindow/dialog state block
     if ((WindowHelper::IsSubWindow(sceneSession->GetWindowType()) ||
         sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) &&
@@ -4732,6 +4752,8 @@ __attribute__((no_sanitize("cfi"))) void SceneSessionManager::OnSessionStateChan
                     needBlockNotifyFocusStatusUntilForeground_ = false;
                     NotifyFocusStatus(sceneSession, true);
                 }
+            } else if (!sceneSession->IsFocusedOnShow()) {
+                sceneSession->SetFocusedOnShow(true);
             } else {
                 RequestSessionFocus(persistentId, true, FocusChangeReason::APP_FOREGROUND);
             }
