@@ -18,6 +18,7 @@
 
 #include <refbase.h>
 #include <struct_multimodal.h>
+#include <shared_mutex>
 
 #include "common/include/window_session_property.h"
 #include "property/rs_properties_def.h"
@@ -64,6 +65,7 @@ public:
     void UpdateGravityWhenDrag(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode);
     void OnLostFocus();
+    std::shared_mutex moveDragControllerMapMutex_;
 
 private:
     struct MoveDragProperty {
