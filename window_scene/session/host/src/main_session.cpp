@@ -40,7 +40,7 @@ MainSession::MainSession(const SessionInfo& info, const sptr<SpecificSessionCall
     moveDragController_ = new (std::nothrow) MoveDragController(GetPersistentId());
     if (moveDragController_  != nullptr && specificCallback != nullptr &&
         specificCallback->onWindowInputPidChangeCallback_ != nullptr) {
-        moveDragController_->SetNotifyWindowPidChangeCallback(specificCallback_->onWindowInputPidChangeCallback_);
+        moveDragController_->SetNotifyWindowPidChangeCallback(specificCallback->onWindowInputPidChangeCallback_);
     }
     SetMoveDragCallback();
     std::string key = GetRatioPreferenceKey();
@@ -146,7 +146,7 @@ bool MainSession::CheckPointerEventDispatch(const std::shared_ptr<MMI::PointerEv
         sessionState != SessionState::STATE_ACTIVE &&
         action != MMI::PointerEvent::POINTER_ACTION_LEAVE_WINDOW) {
         WLOGFW("Current Session Info: [persistentId: %{public}d, "
-            "state: %{public}d, action:%{public}d]", GetPersistentId(), state_, action);
+            "state: %{public}d, action:%{public}d]", GetPersistentId(), GetSessionState(), action);
         return false;
     }
     return true;
@@ -178,21 +178,6 @@ WSError MainSession::SetTopmost(bool topmost)
 bool MainSession::IsTopmost() const
 {
     return GetSessionProperty()->IsTopmost();
-}
-
-bool MainSession::IfNotNeedAvoidKeyBoardForSplit()
-{
-    if (ScreenSessionManagerClient::GetInstance().IsFoldable() &&
-            ScreenSessionManagerClient::GetInstance().GetFoldStatus() != OHOS::Rosen::FoldStatus::FOLDED) {
-        return false;
-    }
-    if (Session::GetWindowMode() != WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
-        return false;
-    }
-    if (!Session::GetFocused() || Session::GetSessionRect().posY_ == 0) {
-        return false;
-    }
-    return true;
 }
 
 void MainSession::RectCheck(uint32_t curWidth, uint32_t curHeight)

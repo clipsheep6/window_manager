@@ -21,10 +21,15 @@
 #include <transaction/rs_interfaces.h>
 #include <transaction/rs_transaction.h>
 #include "dm_common.h"
+#include "fold_screen_state_internel.h"
+#include <parameters.h>
 
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DMS_SCREEN_SESSION, "ScreenSession" };
+static const int32_t g_screenRotationOffSet = system::GetIntParameter<int32_t>("const.fold.screen_rotation.offset", 0);
+static const int32_t ROTATION_90 = 1;
+static const int32_t ROTATION_270 = 3;
 }
 
 ScreenSession::ScreenSession(const ScreenSessionConfig& config, ScreenSessionReason reason)
@@ -68,10 +73,9 @@ ScreenSession::ScreenSession(const ScreenSessionConfig& config, ScreenSessionRea
 
 void ScreenSession::CreateDisplayNode(const Rosen::RSDisplayNodeConfig& config)
 {
-    TLOGI(WmsLogTag::DMS, "[DPNODE]config screenId: %{public}d, isMirrored: %{public}d, mirrorNodeId: %{public}d ",
-        static_cast<int32_t>(config.screenId),
-        static_cast<int32_t>(config.isMirrored),
-        static_cast<int32_t>(config.mirrorNodeId));
+    TLOGI(WmsLogTag::DMS,
+        "[DPNODE]config screenId: %{public}" PRIu64", mirrorNodeId: %{public}" PRIu64", isMirrored: %{public}d",
+        config.screenId, config.mirrorNodeId, static_cast<int32_t>(config.isMirrored));
     displayNode_ = Rosen::RSDisplayNode::Create(config);
     if (displayNode_) {
         displayNode_->SetFrame(property_.GetBounds().rect_.left_, property_.GetBounds().rect_.top_,
@@ -170,6 +174,7 @@ void ScreenSession::RegisterScreenChangeListener(IScreenChangeListener* screenCh
     screenChangeListenerList_.emplace_back(screenChangeListener);
     if (screenState_ == ScreenState::CONNECTION) {
         screenChangeListener->OnConnect(screenId_);
+        WLOGFI("Success to call onconnect callback.");
     }
     WLOGFI("Success to register screen change listener.");
 }
@@ -452,7 +457,8 @@ void ScreenSession::UpdateToInputManager(RRect bounds, int rotation, FoldDisplay
     property_.SetRotation(static_cast<float>(rotation));
     property_.UpdateScreenRotation(targetRotation);
     property_.SetDisplayOrientation(displayOrientation);
-    if (needUpdateToInputManager && updateToInputManagerCallback_ != nullptr) {
+    if (needUpdateToInputManager && updateToInputManagerCallback_ != nullptr
+        && g_screenRotationOffSet == ROTATION_270) {
         // fold phone need fix 90 degree by remainder 360 degree
         int foldRotation = (rotation + 90) % 360;
         updateToInputManagerCallback_(static_cast<float>(foldRotation));
@@ -566,6 +572,21 @@ void ScreenSession::SetVirtualPixelRatio(float virtualPixelRatio)
     property_.SetVirtualPixelRatio(virtualPixelRatio);
 }
 
+void ScreenSession::SetScreenSceneDpiChangeListener(const SetScreenSceneDpiFunc& func)
+{
+    SetScreenSceneDpiCallback_ = func;
+    WLOGFI("SetScreenSceneDpiChangeListener");
+}
+
+void ScreenSession::SetScreenSceneDpi(float density)
+{
+    if (SetScreenSceneDpiCallback_ == nullptr) {
+        WLOGFI("SetScreenSceneDpiCallback_ is nullptr");
+        return;
+    }
+    SetScreenSceneDpiCallback_(density);
+}
+
 void ScreenSession::SetDensityInCurResolution(float densityInCurResolution)
 {
     property_.SetDensityInCurResolution(densityInCurResolution);
@@ -584,7 +605,8 @@ Rotation ScreenSession::CalcRotation(Orientation orientation, FoldDisplayMode fo
     }
     // vertical: phone(Plugin screen); horizontal: pad & external screen
     bool isVerticalScreen = info->width_ < info->height_;
-    if (foldDisplayMode != FoldDisplayMode::UNKNOWN) {
+    if (foldDisplayMode != FoldDisplayMode::UNKNOWN &&
+        (g_screenRotationOffSet == ROTATION_90 || g_screenRotationOffSet == ROTATION_270)) {
         isVerticalScreen = info->width_ > info->height_;
     }
     switch (orientation) {
@@ -614,7 +636,8 @@ DisplayOrientation ScreenSession::CalcDisplayOrientation(Rotation rotation, Fold
 {
     // vertical: phone(Plugin screen); horizontal: pad & external screen
     bool isVerticalScreen = property_.GetPhyWidth() < property_.GetPhyHeight();
-    if (foldDisplayMode != FoldDisplayMode::UNKNOWN) {
+    if (foldDisplayMode != FoldDisplayMode::UNKNOWN
+        && (g_screenRotationOffSet == ROTATION_90 || g_screenRotationOffSet == ROTATION_270)) {
         WLOGD("foldDisplay is verticalScreen when width is greater than height");
         isVerticalScreen = property_.GetPhyWidth() > property_.GetPhyHeight();
     }

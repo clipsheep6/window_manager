@@ -26,14 +26,17 @@ group("unittest") {
     ":ws_extension_session_test",
     ":ws_fold_screen_controller_test",
     ":ws_fold_screen_state_machine_test",
+    ":ws_intention_event_manager_test",
     ":ws_keyboard_session_test",
     ":ws_main_session_test",
     ":ws_move_drag_controller_test",
     ":ws_root_scene_session_test",
     ":ws_scb_system_session_test",
+    ":ws_scene_input_manager_test",
     ":ws_scene_persistence_test",
     ":ws_scene_persistent_storage_test",
     ":ws_scene_session_converter_test",
+    ":ws_scene_session_dirty_manager_test",
     ":ws_scene_session_manager_proxy_test",
     ":ws_scene_session_manager_stub_test",
     ":ws_scene_session_manager_test",
@@ -45,9 +48,12 @@ group("unittest") {
     ":ws_screen_session_manager_client_proxy_test",
     ":ws_screen_session_manager_client_stub_test",
     ":ws_screen_session_manager_client_test",
+    ":ws_screen_session_manager_proxy_test",
     ":ws_screen_session_manager_stub_test",
     ":ws_screen_session_manager_test",
     ":ws_screen_session_test",
+    ":ws_screen_snapshot_ability_connection_test",
+    ":ws_screen_snapshot_picker_test",
     ":ws_session_display_power_controller_test",
     ":ws_session_listener_controller_test",
     ":ws_session_manager_agent_controller_test",
@@ -71,6 +77,28 @@ group("unittest") {
     ":ws_window_event_channel_test",
     ":ws_window_scene_config_test",
     ":ws_window_session_property_test",
+  ]
+}
+
+ohos_unittest("ws_scene_input_manager_test") {
+  module_out_path = module_out_path
+
+  sources = [ "scene_input_manager_test.cpp" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "ability_runtime:app_manager",
+    "accessibility:accessibility_common",
+    "ace_engine:ace_uicontent",
+    "c_utils:utils",
+    "eventhandler:libeventhandler",
+    "graphic_2d:libcomposer",
+    "graphic_2d:window_animation",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "input:libmmi-client",
   ]
 }
 
@@ -239,6 +267,44 @@ ohos_unittest("ws_screen_session_test") {
   external_deps = [ "c_utils:utils" ]
 }
 
+ohos_unittest("ws_screen_snapshot_ability_connection_test") {
+  module_out_path = module_out_path
+
+  include_dirs = [ "${window_base_path}/window_scene/session/screen/include" ]
+  sources = [ "screen_snapshot_ability_connection_test.cpp" ]
+
+  deps = [
+    ":ws_unittest_common",
+    "${window_base_path}/window_scene/session:screen_session",
+  ]
+
+  external_deps = [
+    "ability_base:base",
+    "ability_base:want",
+    "ability_runtime:abilitykit_native",
+    "ability_runtime:extension_manager",
+    "c_utils:utils",
+    "ipc:ipc_core",
+  ]
+}
+
+ohos_unittest("ws_screen_snapshot_picker_test") {
+  module_out_path = module_out_path
+
+  include_dirs = [ "${window_base_path}/window_scene/session/screen/include" ]
+  sources = [ "screen_snapshot_picker_test.cpp" ]
+
+  deps = [
+    ":ws_unittest_common",
+    "${window_base_path}/window_scene/session:screen_session",
+  ]
+
+  external_deps = [
+    "ability_runtime:abilitykit_native",
+    "c_utils:utils",
+  ]
+}
+
 ohos_unittest("ws_extension_session_test") {
   module_out_path = module_out_path
 
@@ -312,8 +378,10 @@ ohos_unittest("ws_session_test") {
   external_deps = [
     "ability_base:session_info",
     "ability_base:want",
+    "ability_runtime:app_manager",
     "accessibility:accessibility_common",
     "c_utils:utils",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
   ]
 }
@@ -400,6 +468,20 @@ ohos_unittest("ws_screen_session_manager_stub_test") {
   ]
 }
 
+ohos_unittest("ws_screen_session_manager_proxy_test") {
+  module_out_path = module_out_path
+
+  sources = [ "screen_session_manager_proxy_test.cpp" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "ability_runtime:app_manager",
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
 ohos_unittest("ws_screen_session_manager_test") {
   module_out_path = module_out_path
 
@@ -457,6 +539,7 @@ ohos_unittest("ws_scene_session_manager_test") {
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
   ]
 }
@@ -528,6 +611,26 @@ ohos_unittest("ws_scene_session_test") {
     "ability_base:session_info",
     "c_utils:utils",
     "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("ws_scene_session_dirty_manager_test") {
+  module_out_path = module_out_path
+
+  sources = [ "scene_session_dirty_manager_test.cpp" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "ability_base:configuration",
+    "ability_base:session_info",
+    "ability_runtime:ability_context_native",
+    "ability_runtime:mission_info",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "input:libmmi-client",
   ]
 }
 
@@ -860,6 +963,26 @@ ohos_unittest("ws_setting_observer_test") {
   ]
 }
 
+ohos_unittest("ws_intention_event_manager_test") {
+  module_out_path = module_out_path
+
+  sources = [ "intention_event_manager_test.cpp" ]
+
+  deps = [
+    ":ws_unittest_common",
+    "${window_base_path}/window_scene/intention_event:libintention_event",
+  ]
+
+  external_deps = [
+    "ability_runtime:mission_info",
+    "ace_engine:ace_uicontent",
+    "c_utils:utils",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+    "input:libmmi-client",
+  ]
+}
+
 ## Build ws_unittest_common.a {{{
 config("ws_unittest_common_public_config") {
   include_dirs = [
@@ -923,6 +1046,7 @@ ohos_static_library("ws_unittest_common") {
   deps = [
     "${window_base_path}/dm:libdm",
     "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/utils:libwmutil_base",
     "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/intention_event/service:intention_event_anr_manager",
     "${window_base_path}/window_scene/screen_session_manager:screen_session_manager_client",
@@ -940,6 +1064,7 @@ ohos_static_library("ws_unittest_common") {
   public_deps = [
     "${graphic_base_path}/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/utils:libwmutil_base",
   ]
 
   external_deps = [

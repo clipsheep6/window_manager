@@ -65,6 +65,7 @@ public:
         TRANS_ID_GET_ALL_SCREEN_INFOS,
         TRANS_ID_SET_ORIENTATION,
         TRANS_ID_SET_VIRTUAL_PIXEL_RATIO,
+        TRANS_ID_SET_VIRTUAL_PIXEL_RATIO_SYSTEM,
         TRANS_ID_SET_RESOLUTION,
         TRANS_ID_GET_DENSITY_IN_CURRENT_RESOLUTION,
         TRANS_ID_SCREENGROUP_BASE = 1100,
@@ -115,6 +116,8 @@ public:
         TRANS_ID_GET_PHY_SCREEN_PROPERTY,
         TRANS_ID_NOTIFY_DISPLAY_CHANGE_INFO,
         TRANS_ID_SET_SCREEN_PRIVACY_STATE,
+        TRANS_ID_SET_SCREENID_PRIVACY_STATE,
+        TRANS_ID_SET_SCREEN_PRIVACY_WINDOW_LIST,
         TRANS_ID_RESIZE_VIRTUAL_SCREEN,
         TRANS_ID_GET_AVAILABLE_AREA,
         TRANS_ID_NOTIFY_FOLD_TO_EXPAND_COMPLETION,
@@ -126,6 +129,7 @@ public:
         TRANS_ID_SET_VIRTUAL_SCREEN_REFRESH_RATE,
         TRANS_ID_DEVICE_IS_CAPTURE,
         TRANS_ID_GET_SNAPSHOT_BY_PICKER,
+        TRANS_ID_SWITCH_USER,
     };
 
     virtual sptr<DisplayInfo> GetDefaultDisplayInfo() = 0;
@@ -227,6 +231,10 @@ public:
     virtual void RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens) = 0;
     virtual DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) = 0;
     virtual DMError SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio) = 0;
+    virtual DMError SetVirtualPixelRatioSystem(ScreenId screenId, float virtualPixelRatio)
+    {
+        return DMError::DM_ERROR_DEVICE_NOT_SUPPORT;
+    }
     virtual DMError SetResolution(ScreenId screenId, uint32_t width, uint32_t height, float virtualPixelRatio) = 0;
     virtual DMError GetDensityInCurResolution(ScreenId screenId, float& virtualPixelRatio) = 0;
     virtual DMError ResizeVirtualScreen(ScreenId screenId, uint32_t width, uint32_t height) { return DMError::DM_OK; }

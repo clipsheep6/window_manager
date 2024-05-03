@@ -48,6 +48,10 @@ const std::map<uint32_t, ScreenSessionManagerClientStub::StubFunc> ScreenSession
         &ScreenSessionManagerClientStub::HandleOnGetSurfaceNodeIdsFromMissionIdsChanged },
     { static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_SET_FOLD_DISPLAY_MODE),
         &ScreenSessionManagerClientStub::HandleOnUpdateFoldDisplayMode },
+    { static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_ON_REMOVE_ALL_DISPLAY_NODE_CHILDREN),
+        &ScreenSessionManagerClientStub::HandleSwitchUserCallback },
+    { static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_SET_VIRTUAL_PIXEL_RATIO_SYSTEM),
+        &ScreenSessionManagerClientStub::HandleSetVirtualPixelRatioSystem },
 };
 
 int ScreenSessionManagerClientStub::OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply,
@@ -65,6 +69,13 @@ int ScreenSessionManagerClientStub::OnRemoteRequest(uint32_t code, MessageParcel
     }
 
     return (this->*(iter->second))(data, reply);
+}
+
+int ScreenSessionManagerClientStub::HandleSwitchUserCallback(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGD("HandleSwitchUserCallback");
+    SwitchUserCallback();
+    return ERR_NONE;
 }
 
 int ScreenSessionManagerClientStub::HandleOnScreenConnectionChanged(MessageParcel& data, MessageParcel& reply)
@@ -195,6 +206,15 @@ int ScreenSessionManagerClientStub::HandleOnSetDisplayNodeScreenId(MessageParcel
     auto screenId = static_cast<ScreenId>(data.ReadUint64());
     auto displayNodeScreenId = static_cast<ScreenId>(data.ReadUint64());
     SetDisplayNodeScreenId(screenId, displayNodeScreenId);
+    return ERR_NONE;
+}
+
+int ScreenSessionManagerClientStub::HandleSetVirtualPixelRatioSystem(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGD("HandleSetVirtualPixelRatioSystem");
+    auto screenId = static_cast<ScreenId>(data.ReadUint64());
+    float virtualPixelRatio = data.ReadFloat();
+    SetVirtualPixelRatioSystem(screenId, virtualPixelRatio);
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

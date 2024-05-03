@@ -397,10 +397,12 @@ std::vector<std::pair<uint64_t, WindowVisibilityState>> WindowRoot::GetWindowVis
             visibilityChangeInfo.emplace_back(lastVisibleData_[i].first, WINDOW_VISIBILITY_STATE_TOTALLY_OCCUSION);
             i++;
         } else if (lastVisibleData_[i].first > currVisibleData[j].first) {
-            visibilityChangeInfo.emplace_back(currVisibleData[j].first, currVisibleData[i].second);
+            visibilityChangeInfo.emplace_back(currVisibleData[j].first, currVisibleData[j].second);
             j++;
         } else {
-            visibilityChangeInfo.emplace_back(currVisibleData[j].first, currVisibleData[i].second);
+            if (lastVisibleData_[i].second != currVisibleData[j].second) {
+                visibilityChangeInfo.emplace_back(currVisibleData[j].first, currVisibleData[j].second);
+            }
             i++;
             j++;
         }
@@ -1726,7 +1728,7 @@ void WindowRoot::SetSplitRatios(const std::vector<float>& splitRatioNumbers)
 
 void WindowRoot::SetExitSplitRatios(const std::vector<float>& exitSplitRatios)
 {
-    if (exitSplitRatios.size() != 2) {
+    if (exitSplitRatios.size() != 2) { // 2 is size of vector.
         return;
     }
     if (exitSplitRatios[0] > 0 && exitSplitRatios[0] < DEFAULT_SPLIT_RATIO) {

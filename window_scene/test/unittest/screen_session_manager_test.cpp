@@ -103,6 +103,9 @@ HWTEST_F(ScreenSessionManagerTest, WakeUpBegin, Function | SmallTest | Level3)
     PowerStateChangeReason reason = PowerStateChangeReason::STATE_CHANGE_REASON_POWER_KEY;
     ASSERT_EQ(true, ssm_->WakeUpBegin(reason));
 
+    reason = PowerStateChangeReason::STATE_CHANGE_REASON_SWITCH;
+    ASSERT_EQ(true, ssm_->WakeUpBegin(reason));
+
     reason = PowerStateChangeReason::STATE_CHANGE_REASON_PRE_BRIGHT;
     ASSERT_EQ(true, ssm_->WakeUpBegin(reason));
 
@@ -168,6 +171,9 @@ HWTEST_F(ScreenSessionManagerTest, SetScreenPowerForAll, Function | SmallTest | 
 
     PowerStateChangeReason reason = PowerStateChangeReason::STATE_CHANGE_REASON_POWER_KEY;
     ScreenPowerState state = ScreenPowerState::POWER_ON;
+    ASSERT_EQ(true, ssm_->SetScreenPowerForAll(state, reason));
+
+    reason = PowerStateChangeReason::STATE_CHANGE_REASON_SWITCH;
     ASSERT_EQ(true, ssm_->SetScreenPowerForAll(state, reason));
 
     reason = PowerStateChangeReason::STATE_CHANGE_REASON_PRE_BRIGHT;
@@ -1110,6 +1116,73 @@ HWTEST_F(ScreenSessionManagerTest, NotifyFoldStatusChanged, Function | SmallTest
     } else {
         ASSERT_EQ(1, 0);
     }
+}
+
+/**
+ * @tc.name: NotifyPrivateWindowListChanged
+ * @tc.desc: ScreenSessionManager notify PrivateWindowList changed
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerTest, NotifyPrivateWindowListChanged, Function | SmallTest | Level3)
+{
+    DisplayId id = 0;
+    std::vector<std::string> privacyWindowList{"win0", "win1"};
+    if (ssm_ != nullptr)
+    {
+        ssm_->NotifyPrivateWindowListChanged(id, privacyWindowList);
+        ASSERT_EQ(0, 0);
+    } else {
+        ASSERT_EQ(1, 0);
+    }
+}
+
+/**
+ * @tc.name: SetPrivacyStateByDisplayId01
+ * @tc.desc: SetPrivacyStateByDisplayId true test
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerTest, SetPrivacyStateByDisplayId01, Function | SmallTest | Level3)
+{
+    DisplayId id = 0;
+    bool hasPrivate = true;
+    sptr<ScreenSession> screenSession = new ScreenSession(id, ScreenProperty(), 0);
+    ssm_->screenSessionMap_[id] = screenSession;
+    ASSERT_NE(nullptr, screenSession);
+    ssm_->SetPrivacyStateByDisplayId(id, hasPrivate);
+    bool result = screenSession->HasPrivateSessionForeground();
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.name: SetPrivacyStateByDisplayId02
+ * @tc.desc: SetPrivacyStateByDisplayId false test
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerTest, SetPrivacyStateByDisplayId02, Function | SmallTest | Level3)
+{
+    DisplayId id = 0;
+    bool hasPrivate = false;
+    sptr<ScreenSession> screenSession = new ScreenSession(id, ScreenProperty(), 0);
+    ssm_->screenSessionMap_[id] = screenSession;
+    ASSERT_NE(nullptr, screenSession);
+    ssm_->SetPrivacyStateByDisplayId(id, hasPrivate);
+    bool result = screenSession->HasPrivateSessionForeground();
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.name: SetScreenPrivacyWindowList
+ * @tc.desc: SetScreenPrivacyWindowList test
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerTest, SetScreenPrivacyWindowList, Function | SmallTest | Level3)
+{
+    DisplayId id = 0;
+    std::vector<std::string> privacyWindowList{"win0", "win1"};
+    sptr<ScreenSession> screenSession = new ScreenSession(id, ScreenProperty(), 0);
+    ASSERT_NE(nullptr, screenSession);
+    ssm_->SetScreenPrivacyWindowList(id, privacyWindowList);
+    ASSERT_EQ(0, 0);
 }
 
 /**

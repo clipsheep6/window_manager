@@ -380,6 +380,10 @@ void CheckWindowImplFunctionsPart1(sptr<Window> window, const uint8_t* data, siz
 
     startPos += GetObject(boolVal, data + startPos, size - startPos);
     window->UpdateSurfaceNodeAfterCustomAnimation(boolVal);
+
+    float grayScale;
+    startPos += GetObject(grayScale, data + startPos, size - startPos);
+    window->SetGrayScale(grayScale);
 }
 
 void CheckWindowImplFunctionsPart2(sptr<WindowImpl> window, const uint8_t* data, size_t size)
@@ -742,8 +746,6 @@ void CheckWindowImplFunctionsPart9(sptr<WindowImpl> window, const uint8_t* data,
     }
     std::shared_ptr<IInputEventConsumer> iInputEventConsumer = std::make_shared<IInputEventConsumer>();
     window->SetInputEventConsumer(iInputEventConsumer);
-    std::shared_ptr<VsyncCallback> callback;
-    window->RequestVsync(callback);
     std::shared_ptr<AppExecFwk::Configuration> configuration = std::make_shared<AppExecFwk::Configuration>();
     window->UpdateConfiguration(configuration);
     sptr<IWindowLifeCycle> windowLifeCycleListener = new IWindowLifeCycle();

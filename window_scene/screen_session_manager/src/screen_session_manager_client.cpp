@@ -200,6 +200,11 @@ void ScreenSessionManagerClient::RegisterDisplayChangeListener(const sptr<IDispl
     displayChangeListener_ = listener;
 }
 
+void ScreenSessionManagerClient::RegisterSwitchingToAnotherUserFunction(std::function<void()>&& func)
+{
+    switchingToAnotherUserFunc_ = func;
+}
+
 void ScreenSessionManagerClient::OnDisplayStateChanged(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
     const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type)
 {
@@ -320,6 +325,28 @@ void ScreenSessionManagerClient::SetScreenPrivacyState(bool hasPrivate)
     WLOGFD("End calling the SetScreenPrivacyState() of screenSessionManager_");
 }
 
+void ScreenSessionManagerClient::SetPrivacyStateByDisplayId(DisplayId id, bool hasPrivate)
+{
+    if (!screenSessionManager_) {
+        WLOGFE("screenSessionManager_ is null");
+        return;
+    }
+    WLOGFD("Begin calling the SetPrivacyStateByDisplayId, hasPrivate: %{public}d", hasPrivate);
+    screenSessionManager_->SetPrivacyStateByDisplayId(id, hasPrivate);
+    WLOGFD("End calling the SetPrivacyStateByDisplayId");
+}
+
+void ScreenSessionManagerClient::SetScreenPrivacyWindowList(DisplayId id, std::vector<std::string> privacyWindowList)
+{
+    if (!screenSessionManager_) {
+        WLOGFE("screenSessionManager_ is null");
+        return;
+    }
+    WLOGFD("Begin calling the SetScreenPrivacyWindowList(), id: %{public}" PRIu64, id);
+    screenSessionManager_->SetScreenPrivacyWindowList(id, privacyWindowList);
+    WLOGFD("End calling the SetScreenPrivacyWindowList()");
+}
+
 void ScreenSessionManagerClient::UpdateAvailableArea(ScreenId screenId, DMRect area)
 {
     if (!screenSessionManager_) {
@@ -336,6 +363,23 @@ void ScreenSessionManagerClient::NotifyFoldToExpandCompletion(bool foldToExpand)
         return;
     }
     screenSessionManager_->NotifyFoldToExpandCompletion(foldToExpand);
+}
+
+void ScreenSessionManagerClient::SwitchUserCallback()
+{
+    if (switchingToAnotherUserFunc_ != nullptr) {
+        WLOGFE("switch to another user");
+        switchingToAnotherUserFunc_();
+    }
+}
+
+void ScreenSessionManagerClient::SwitchingCurrentUser()
+{
+    if (screenSessionManager_ == nullptr) {
+        WLOGFE("screenSessionManager_ is null");
+        return;
+    }
+    screenSessionManager_->SwitchUser();
 }
 
 FoldStatus ScreenSessionManagerClient::GetFoldStatus()
@@ -392,5 +436,19 @@ bool ScreenSessionManagerClient::IsFoldable()
         return false;
     }
     return screenSessionManager_->IsFoldable();
+}
+
+void ScreenSessionManagerClient::SetVirtualPixelRatioSystem(ScreenId screenId, float virtualPixelRatio)
+{
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (!screenSession) {
+        WLOGFE("screen session is null");
+        return;
+    }
+    if (screenSession->isScreenGroup_) {
+        WLOGFE("cannot set virtual pixel ratio to the combination. screen: %{public}" PRIu64, screenId);
+        return;
+    }
+    screenSession->SetScreenSceneDpi(virtualPixelRatio);
 }
 } // namespace OHOS::Rosen
