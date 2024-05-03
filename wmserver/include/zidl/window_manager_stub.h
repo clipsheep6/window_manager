@@ -30,49 +30,49 @@ public:
         OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option) override;
 
 private:
-    void CreateWindowFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void AddWindowFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void RemoveWindowFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void DestroyWindowFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void RequestFocusFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void GetAvoidAreaFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void RegisterWindowManagerAgentFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void UnregisterWindowManagerAgentFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void NotifyReadyMoveOrDragFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void ProcessPointDownFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void ProcessPointUpFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void GetTopWindowIdFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void MinimizeAllAppWindowsFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void ToggleShownStateForAllAppWindowsFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void UpdateLayoutFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void UpdatePropertyFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void GetAccessibilityWindowInfoFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void GetVisibilityWindowInfoFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void AnimationSetControllerFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void GetSystemConfigFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void NotifyWindowTransitionFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void GetModeChangeHotZonesFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void GetAnimationCallbackFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void UpdateAvoidAreaListenerwFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void UpdateRsTreeFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void BindDialogTargetFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void SetAnchorAndScaleFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void SetAnchorOffsetFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void OffWindowZoomFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void RaiseToAppTopFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void GetSnapshotFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void SetGestureNavigaionEnabledFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void SetWindowGravityFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void DispatchKeyEventFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void NotifyDumpInfoResultFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void GetWindowAnimationTargetsFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void SetMaximizeModeFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void GetMaximizeModeFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-    void GetFocusWindowInfoFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t CreateWindowFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t AddWindowFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t RemoveWindowFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t DestroyWindowFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t RequestFocusFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t GetAvoidAreaFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t RegisterWindowManagerAgentFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t UnregisterWindowManagerAgentFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t NotifyReadyMoveOrDragFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t ProcessPointDownFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t ProcessPointUpFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t GetTopWindowIdFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t MinimizeAllAppWindowsFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t ToggleShownStateForAllAppWindowsFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t UpdateLayoutFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t UpdatePropertyFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t GetAccessibilityWindowInfoFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t GetVisibilityWindowInfoFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t AnimationSetControllerFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t GetSystemConfigFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t NotifyWindowTransitionFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t GetModeChangeHotZonesFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t GetAnimationCallbackFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t UpdateAvoidAreaListenerwFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t UpdateRsTreeFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t BindDialogTargetFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t SetAnchorAndScaleFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t SetAnchorOffsetFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t OffWindowZoomFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t RaiseToAppTopFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t GetSnapshotFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t SetGestureNavigaionEnabledFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t SetWindowGravityFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t DispatchKeyEventFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t NotifyDumpInfoResultFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t GetWindowAnimationTargetsFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t SetMaximizeModeFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t GetMaximizeModeFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
+    int32_t GetFocusWindowInfoFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
 
 private: // data
     std::unordered_map<WindowManagerMessage,
-                       std::function<void(MessageParcel& data, MessageParcel& reply, MessageOption& option)>>
+                       std::function<int32_t(MessageParcel& data, MessageParcel& reply, MessageOption& option)>>
         ioOps_;
 };
 } // namespace Rosen

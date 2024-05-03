@@ -29,50 +29,51 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowManagerStub"};
 }
 
-#define BIND_OP(code, func) ioOps_[WindowManagerMessage::code] = std::bind(&WindowManagerStub::func, this, _1, _2, _3);
+#define BIND_OP(code, func)              \
+    ioOps_[WindowManagerMessage::code] = \
+        std::bind(&WindowManagerStub::func, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
 
 WindowManagerStub::WindowManagerStub()
 {
-    using namespace std::placeholders;
-    BIND_OP(TRANS_ID_CREATE_WINDOW, CreateWindowFunc)
-    BIND_OP(TRANS_ID_ADD_WINDOW, AddWindowFunc)
-    BIND_OP(TRANS_ID_REMOVE_WINDOW, RemoveWindowFunc)
-    BIND_OP(TRANS_ID_DESTROY_WINDOW, DestroyWindowFunc)
-    BIND_OP(TRANS_ID_REQUEST_FOCUS, RequestFocusFunc)
-    BIND_OP(TRANS_ID_GET_AVOID_AREA, GetAvoidAreaFunc)
-    BIND_OP(TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT, RegisterWindowManagerAgentFunc)
-    BIND_OP(TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT, UnregisterWindowManagerAgentFunc)
-    BIND_OP(TRANS_ID_NOTIFY_READY_MOVE_OR_DRAG, NotifyReadyMoveOrDragFunc)
-    BIND_OP(TRANS_ID_PROCESS_POINT_DOWN, ProcessPointDownFunc)
-    BIND_OP(TRANS_ID_PROCESS_POINT_UP, ProcessPointUpFunc)
-    BIND_OP(TRANS_ID_GET_TOP_WINDOW_ID, GetTopWindowIdFunc)
-    BIND_OP(TRANS_ID_MINIMIZE_ALL_APP_WINDOWS, MinimizeAllAppWindowsFunc)
-    BIND_OP(TRANS_ID_TOGGLE_SHOWN_STATE_FOR_ALL_APP_WINDOWS, ToggleShownStateForAllAppWindowsFunc)
-    BIND_OP(TRANS_ID_UPDATE_LAYOUT_MODE, UpdateLayoutFunc)
-    BIND_OP(TRANS_ID_UPDATE_PROPERTY, UpdatePropertyFunc)
-    BIND_OP(TRANS_ID_GET_ACCESSIBILITY_WINDOW_INFO_ID, GetAccessibilityWindowInfoFunc)
-    BIND_OP(TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID, GetVisibilityWindowInfoFunc)
-    BIND_OP(TRANS_ID_ANIMATION_SET_CONTROLLER, AnimationSetControllerFunc)
-    BIND_OP(TRANS_ID_GET_SYSTEM_CONFIG, GetSystemConfigFunc)
-    BIND_OP(TRANS_ID_NOTIFY_WINDOW_TRANSITION, NotifyWindowTransitionFunc)
-    BIND_OP(TRANS_ID_GET_FULLSCREEN_AND_SPLIT_HOT_ZONE, GetModeChangeHotZonesFunc)
-    BIND_OP(TRANS_ID_GET_ANIMATION_CALLBACK, GetAnimationCallbackFunc)
-    BIND_OP(TRANS_ID_UPDATE_AVOIDAREA_LISTENER, UpdateAvoidAreaListenerwFunc)
-    BIND_OP(TRANS_ID_UPDATE_RS_TREE, UpdateRsTreeFunc)
-    BIND_OP(TRANS_ID_BIND_DIALOG_TARGET, BindDialogTargetFunc)
-    BIND_OP(TRANS_ID_SET_ANCHOR_AND_SCALE, SetAnchorAndScaleFunc)
-    BIND_OP(TRANS_ID_SET_ANCHOR_OFFSET, SetAnchorOffsetFunc)
-    BIND_OP(TRANS_ID_OFF_WINDOW_ZOOM, OffWindowZoomFunc)
-    BIND_OP(TRANS_ID_RAISE_WINDOW_Z_ORDER, RaiseToAppTopFunc)
-    BIND_OP(TRANS_ID_GET_SNAPSHOT, GetSnapshotFunc)
-    BIND_OP(TRANS_ID_GESTURE_NAVIGATION_ENABLED, SetGestureNavigaionEnabledFunc)
-    BIND_OP(TRANS_ID_SET_WINDOW_GRAVITY, SetWindowGravityFunc)
-    BIND_OP(TRANS_ID_DISPATCH_KEY_EVENT, DispatchKeyEventFunc)
-    BIND_OP(TRANS_ID_NOTIFY_DUMP_INFO_RESULT, NotifyDumpInfoResultFunc)
-    BIND_OP(TRANS_ID_GET_WINDOW_ANIMATION_TARGETS, GetWindowAnimationTargetsFunc)
-    BIND_OP(TRANS_ID_SET_MAXIMIZE_MODE, SetMaximizeModeFunc)
-    BIND_OP(TRANS_ID_GET_MAXIMIZE_MODE, GetMaximizeModeFunc)
-    BIND_OP(TRANS_ID_GET_FOCUS_WINDOW_INFO, GetFocusWindowInfoFunc)
+    BIND_OP(TRANS_ID_CREATE_WINDOW, CreateWindowFunc);
+    BIND_OP(TRANS_ID_ADD_WINDOW, AddWindowFunc);
+    BIND_OP(TRANS_ID_REMOVE_WINDOW, RemoveWindowFunc);
+    BIND_OP(TRANS_ID_DESTROY_WINDOW, DestroyWindowFunc);
+    BIND_OP(TRANS_ID_REQUEST_FOCUS, RequestFocusFunc);
+    BIND_OP(TRANS_ID_GET_AVOID_AREA, GetAvoidAreaFunc);
+    BIND_OP(TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT, RegisterWindowManagerAgentFunc);
+    BIND_OP(TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT, UnregisterWindowManagerAgentFunc);
+    BIND_OP(TRANS_ID_NOTIFY_READY_MOVE_OR_DRAG, NotifyReadyMoveOrDragFunc);
+    BIND_OP(TRANS_ID_PROCESS_POINT_DOWN, ProcessPointDownFunc);
+    BIND_OP(TRANS_ID_PROCESS_POINT_UP, ProcessPointUpFunc);
+    BIND_OP(TRANS_ID_GET_TOP_WINDOW_ID, GetTopWindowIdFunc);
+    BIND_OP(TRANS_ID_MINIMIZE_ALL_APP_WINDOWS, MinimizeAllAppWindowsFunc);
+    BIND_OP(TRANS_ID_TOGGLE_SHOWN_STATE_FOR_ALL_APP_WINDOWS, ToggleShownStateForAllAppWindowsFunc);
+    BIND_OP(TRANS_ID_UPDATE_LAYOUT_MODE, UpdateLayoutFunc);
+    BIND_OP(TRANS_ID_UPDATE_PROPERTY, UpdatePropertyFunc);
+    BIND_OP(TRANS_ID_GET_ACCESSIBILITY_WINDOW_INFO_ID, GetAccessibilityWindowInfoFunc);
+    BIND_OP(TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID, GetVisibilityWindowInfoFunc);
+    BIND_OP(TRANS_ID_ANIMATION_SET_CONTROLLER, AnimationSetControllerFunc);
+    BIND_OP(TRANS_ID_GET_SYSTEM_CONFIG, GetSystemConfigFunc);
+    BIND_OP(TRANS_ID_NOTIFY_WINDOW_TRANSITION, NotifyWindowTransitionFunc);
+    BIND_OP(TRANS_ID_GET_FULLSCREEN_AND_SPLIT_HOT_ZONE, GetModeChangeHotZonesFunc);
+    BIND_OP(TRANS_ID_GET_ANIMATION_CALLBACK, GetAnimationCallbackFunc);
+    BIND_OP(TRANS_ID_UPDATE_AVOIDAREA_LISTENER, UpdateAvoidAreaListenerwFunc);
+    BIND_OP(TRANS_ID_UPDATE_RS_TREE, UpdateRsTreeFunc);
+    BIND_OP(TRANS_ID_BIND_DIALOG_TARGET, BindDialogTargetFunc);
+    BIND_OP(TRANS_ID_SET_ANCHOR_AND_SCALE, SetAnchorAndScaleFunc);
+    BIND_OP(TRANS_ID_SET_ANCHOR_OFFSET, SetAnchorOffsetFunc);
+    BIND_OP(TRANS_ID_OFF_WINDOW_ZOOM, OffWindowZoomFunc);
+    BIND_OP(TRANS_ID_RAISE_WINDOW_Z_ORDER, RaiseToAppTopFunc);
+    BIND_OP(TRANS_ID_GET_SNAPSHOT, GetSnapshotFunc);
+    BIND_OP(TRANS_ID_GESTURE_NAVIGATION_ENABLED, SetGestureNavigaionEnabledFunc);
+    BIND_OP(TRANS_ID_SET_WINDOW_GRAVITY, SetWindowGravityFunc);
+    BIND_OP(TRANS_ID_DISPATCH_KEY_EVENT, DispatchKeyEventFunc);
+    BIND_OP(TRANS_ID_NOTIFY_DUMP_INFO_RESULT, NotifyDumpInfoResultFunc);
+    BIND_OP(TRANS_ID_GET_WINDOW_ANIMATION_TARGETS, GetWindowAnimationTargetsFunc);
+    BIND_OP(TRANS_ID_SET_MAXIMIZE_MODE, SetMaximizeModeFunc);
+    BIND_OP(TRANS_ID_GET_MAXIMIZE_MODE, GetMaximizeModeFunc);
+    BIND_OP(TRANS_ID_GET_FOCUS_WINDOW_INFO, GetFocusWindowInfoFunc);
 }
 
 int32_t
@@ -86,8 +87,7 @@ int32_t
     auto msgId = static_cast<WindowManagerMessage>(code);
 
     if (auto ite = ioOps_.find(msgId); ite != ioOps_.cend()) {
-        ite->second(data, reply, option);
-        return 0;
+        return ite->second(data, reply, option);
     } else {
         WLOGFW("unknown transaction code %{public}d", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -95,7 +95,7 @@ int32_t
 }
 
 // WindowManagerMessage::TRANS_ID_CREATE_WINDOW
-void WindowManagerStub::CreateWindowFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+int32_t WindowManagerStub::CreateWindowFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     sptr<IRemoteObject> windowObject = data.ReadRemoteObject();
     sptr<IWindow> windowProxy = iface_cast<IWindow>(windowObject);
@@ -115,194 +115,217 @@ void WindowManagerStub::CreateWindowFunc(MessageParcel& data, MessageParcel& rep
         reply.WriteUint32(windowProperty->GetWindowFlags());
         reply.WriteUint32(windowProperty->GetApiCompatibleVersion());
     }
+    return 0;
 }
 
 // WindowManagerMessage::TRANS_ID_ADD_WINDOW
-void WindowManagerStub::AddWindowFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+int32_t WindowManagerStub::AddWindowFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     sptr<WindowProperty> windowProperty = data.ReadStrongParcelable<WindowProperty>();
     WMError errCode = AddWindow(windowProperty);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_REMOVE_WINDOW
-void WindowManagerStub::RemoveWindowFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_REMOVE_WINDOW
+int32_t WindowManagerStub::RemoveWindowFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     uint32_t windowId = data.ReadUint32();
     bool isFromInnerkits = data.ReadBool();
     WMError errCode = RemoveWindow(windowId, isFromInnerkits);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_DESTROY_WINDOW
-void WindowManagerStub::DestroyWindowFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_DESTROY_WINDOW
+int32_t WindowManagerStub::DestroyWindowFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     uint32_t windowId = data.ReadUint32();
     WMError errCode = DestroyWindow(windowId);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_REQUEST_FOCUS
-void WindowManagerStub::RequestFocusFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_REQUEST_FOCUS
+int32_t WindowManagerStub::RequestFocusFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     uint32_t windowId = data.ReadUint32();
     WMError errCode = RequestFocus(windowId);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_GET_AVOID_AREA
-void WindowManagerStub::GetAvoidAreaFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_GET_Aint32_t_AREA
+int32_t WindowManagerStub::GetAvoidAreaFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     uint32_t windowId = data.ReadUint32();
     auto avoidAreaType = static_cast<AvoidAreaType>(data.ReadUint32());
     AvoidArea avoidArea = GetAvoidAreaByType(windowId, avoidAreaType);
     reply.WriteParcelable(&avoidArea);
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT
-void WindowManagerStub::RegisterWindowManagerAgentFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT
+int32_t
+    WindowManagerStub::RegisterWindowManagerAgentFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     auto type = static_cast<WindowManagerAgentType>(data.ReadUint32());
     sptr<IRemoteObject> windowManagerAgentObject = data.ReadRemoteObject();
     sptr<IWindowManagerAgent> windowManagerAgentProxy = iface_cast<IWindowManagerAgent>(windowManagerAgentObject);
     WMError errCode = RegisterWindowManagerAgent(type, windowManagerAgentProxy);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT
-void WindowManagerStub::UnregisterWindowManagerAgentFunc(MessageParcel& data,
-                                                         MessageParcel& reply,
-                                                         MessageOption& option)
+// WindowManagerMessage::TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT
+int32_t WindowManagerStub::UnregisterWindowManagerAgentFunc(MessageParcel& data,
+                                                            MessageParcel& reply,
+                                                            MessageOption& option)
 {
     auto type = static_cast<WindowManagerAgentType>(data.ReadUint32());
     sptr<IRemoteObject> windowManagerAgentObject = data.ReadRemoteObject();
     sptr<IWindowManagerAgent> windowManagerAgentProxy = iface_cast<IWindowManagerAgent>(windowManagerAgentObject);
     WMError errCode = UnregisterWindowManagerAgent(type, windowManagerAgentProxy);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_NOTIFY_READY_MOVE_OR_DRAG
-void WindowManagerStub::NotifyReadyMoveOrDragFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_NOTIFY_READY_MOVE_OR_DRAG
+int32_t WindowManagerStub::NotifyReadyMoveOrDragFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     uint32_t windowId = data.ReadUint32();
     sptr<WindowProperty> windowProperty = data.ReadStrongParcelable<WindowProperty>();
     sptr<MoveDragProperty> moveDragProperty = data.ReadStrongParcelable<MoveDragProperty>();
     NotifyServerReadyToMoveOrDrag(windowId, windowProperty, moveDragProperty);
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_PROCESS_POINT_DOWN
-void WindowManagerStub::ProcessPointDownFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_PROCESS_POINT_DOWN
+int32_t WindowManagerStub::ProcessPointDownFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     uint32_t windowId = data.ReadUint32();
     bool isPointDown = data.ReadBool();
     ProcessPointDown(windowId, isPointDown);
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_PROCESS_POINT_UP
-void WindowManagerStub::ProcessPointUpFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_PROCESS_POINT_UP
+int32_t WindowManagerStub::ProcessPointUpFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     uint32_t windowId = data.ReadUint32();
     ProcessPointUp(windowId);
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_GET_TOP_WINDOW_ID
-void WindowManagerStub::GetTopWindowIdFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_GET_TOP_WINDOW_ID
+int32_t WindowManagerStub::GetTopWindowIdFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     uint32_t mainWinId = data.ReadUint32();
     uint32_t topWinId;
     WMError errCode = GetTopWindowId(mainWinId, topWinId);
     reply.WriteUint32(topWinId);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_MINIMIZE_ALL_APP_WINDOWS
-void WindowManagerStub::MinimizeAllAppWindowsFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_MINIMIZE_ALL_APP_WINDOWS
+int32_t WindowManagerStub::MinimizeAllAppWindowsFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     WMError errCode = MinimizeAllAppWindows(data.ReadUint64());
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_TOGGLE_SHOWN_STATE_FOR_ALL_APP_WINDOWS
-void WindowManagerStub::ToggleShownStateForAllAppWindowsFunc(MessageParcel& data,
-                                                             MessageParcel& reply,
-                                                             MessageOption& option)
+// WindowManagerMessage::TRANS_ID_TOGGLE_SHOWN_STATE_FOR_ALL_APP_WINDOWS
+int32_t WindowManagerStub::ToggleShownStateForAllAppWindowsFunc(MessageParcel& data,
+                                                                MessageParcel& reply,
+                                                                MessageOption& option)
 {
     WMError errCode = ToggleShownStateForAllAppWindows();
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_UPDATE_LAYOUT_MODE
-void WindowManagerStub::UpdateLayoutFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_UPDATE_LAYOUT_MODE
+int32_t WindowManagerStub::UpdateLayoutFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     auto mode = static_cast<WindowLayoutMode>(data.ReadUint32());
     WMError errCode = SetWindowLayoutMode(mode);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_UPDATE_PROPERTY
-void WindowManagerStub::UpdatePropertyFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_UPDATE_PROPERTY
+int32_t WindowManagerStub::UpdatePropertyFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     auto action = static_cast<PropertyChangeAction>(data.ReadUint32());
     sptr<WindowProperty> windowProperty = new WindowProperty();
     windowProperty->Read(data, action);
     WMError errCode = UpdateProperty(windowProperty, action);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_GET_ACCESSIBILITY_WINDOW_INFO_ID
-void WindowManagerStub::GetAccessibilityWindowInfoFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_GET_ACCESSIBILITY_WINDOW_INFO_ID
+int32_t
+    WindowManagerStub::GetAccessibilityWindowInfoFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     std::vector<sptr<AccessibilityWindowInfo>> infos;
     WMError errCode = GetAccessibilityWindowInfo(infos);
     if (!MarshallingHelper::MarshallingVectorParcelableObj<AccessibilityWindowInfo>(reply, infos)) {
         WLOGFE("Write accessibility window infos failed");
-        // errCode = -1;
+        return -1;
     }
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID
-void WindowManagerStub::GetVisibilityWindowInfoFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID
+int32_t WindowManagerStub::GetVisibilityWindowInfoFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     std::vector<sptr<WindowVisibilityInfo>> infos;
     WMError errCode = GetVisibilityWindowInfo(infos);
     if (!MarshallingHelper::MarshallingVectorParcelableObj<WindowVisibilityInfo>(reply, infos)) {
         WLOGFE("Write visibility window infos failed");
-        // errCode = -1;
+        return -1;
     }
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_ANIMATION_SET_CONTROLLER
-void WindowManagerStub::AnimationSetControllerFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_ANIMATION_SET_CONTROLLER
+int32_t WindowManagerStub::AnimationSetControllerFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     sptr<IRemoteObject> controllerObject = data.ReadRemoteObject();
     sptr<RSIWindowAnimationController> controller = iface_cast<RSIWindowAnimationController>(controllerObject);
     WMError errCode = SetWindowAnimationController(controller);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_GET_SYSTEM_CONFIG
-void WindowManagerStub::GetSystemConfigFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_GET_SYSTEM_CONFIG
+int32_t WindowManagerStub::GetSystemConfigFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     SystemConfig config;
     WMError errCode = GetSystemConfig(config);
     reply.WriteParcelable(&config);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_NOTIFY_WINDOW_TRANSITION
-void WindowManagerStub::NotifyWindowTransitionFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_NOTIFY_WINDOW_TRANSITION
+int32_t WindowManagerStub::NotifyWindowTransitionFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     sptr<WindowTransitionInfo> from = data.ReadParcelable<WindowTransitionInfo>();
     sptr<WindowTransitionInfo> to = data.ReadParcelable<WindowTransitionInfo>();
     bool isFromClient = data.ReadBool();
     WMError errCode = NotifyWindowTransition(from, to, isFromClient);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_GET_FULLSCREEN_AND_SPLIT_HOT_ZONE
-void WindowManagerStub::GetModeChangeHotZonesFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_GET_FULLSCREEN_AND_SPLIT_HOT_ZONE
+int32_t WindowManagerStub::GetModeChangeHotZonesFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     DisplayId displayId = data.ReadUint64();
     ModeChangeHotZones hotZones = {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}};
@@ -323,10 +346,11 @@ void WindowManagerStub::GetModeChangeHotZonesFunc(MessageParcel& data, MessagePa
     reply.WriteInt32(hotZones.secondary_.posY_);
     reply.WriteUint32(hotZones.secondary_.width_);
     reply.WriteUint32(hotZones.secondary_.height_);
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_GET_ANIMATION_CALLBACK
-void WindowManagerStub::GetAnimationCallbackFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_GET_ANIMATION_CALLBACK
+int32_t WindowManagerStub::GetAnimationCallbackFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     std::vector<uint32_t> windowIds;
     data.ReadUInt32Vector(&windowIds);
@@ -342,110 +366,127 @@ void WindowManagerStub::GetAnimationCallbackFunc(MessageParcel& data, MessagePar
             WLOGFE("finishedCallback is not nullptr and failed to write!");
         }
     }
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_UPDATE_AVOIDAREA_LISTENER
-void WindowManagerStub::UpdateAvoidAreaListenerwFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_UPDATE_AVOIDAREA_LISTENER
+int32_t
+    WindowManagerStub::UpdateAvoidAreaListenerwFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     uint32_t windowId = data.ReadUint32();
     bool haveAvoidAreaListener = data.ReadBool();
     WMError errCode = UpdateAvoidAreaListener(windowId, haveAvoidAreaListener);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_UPDATE_RS_TREE
-void WindowManagerStub::UpdateRsTreeFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_UPDATE_RS_TREE
+int32_t WindowManagerStub::UpdateRsTreeFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     uint32_t windowId = data.ReadUint32();
     bool isAdd = data.ReadBool();
     WMError errCode = UpdateRsTree(windowId, isAdd);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_BIND_DIALOG_TARGET
-void WindowManagerStub::BindDialogTargetFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_BIND_DIALOG_TARGET
+int32_t WindowManagerStub::BindDialogTargetFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     uint32_t windowId = data.ReadUint32();
     sptr<IRemoteObject> targetToken = data.ReadRemoteObject();
     WMError errCode = BindDialogTarget(windowId, targetToken);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_SET_ANCHOR_AND_SCALE
-void WindowManagerStub::SetAnchorAndScaleFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_SET_ANCHOR_AND_SCALE
+int32_t WindowManagerStub::SetAnchorAndScaleFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     int32_t x = data.ReadInt32();
     int32_t y = data.ReadInt32();
     float scale = data.ReadFloat();
     SetAnchorAndScale(x, y, scale);
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_SET_ANCHOR_OFFSET
-void WindowManagerStub::SetAnchorOffsetFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_SET_ANCHOR_OFFSET
+int32_t WindowManagerStub::SetAnchorOffsetFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     int32_t deltaX = data.ReadInt32();
     int32_t deltaY = data.ReadInt32();
     SetAnchorOffset(deltaX, deltaY);
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_OFF_WINDOW_ZOOM
-void WindowManagerStub::OffWindowZoomFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_OFF_WINDOW_ZOOM
+int32_t WindowManagerStub::OffWindowZoomFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     OffWindowZoom();
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_RAISE_WINDOW_Z_ORDER
-void WindowManagerStub::RaiseToAppTopFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_RAISE_WINDOW_Z_ORDER
+int32_t WindowManagerStub::RaiseToAppTopFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     uint32_t windowId = data.ReadUint32();
     WmErrorCode errCode = RaiseToAppTop(windowId);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_GET_SNAPSHOT
-void WindowManagerStub::GetSnapshotFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_GET_SNAPSHOT
+int32_t WindowManagerStub::GetSnapshotFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     uint32_t windowId = data.ReadUint32();
     std::shared_ptr<Media::PixelMap> pixelMap = GetSnapshot(windowId);
     reply.WriteParcelable(pixelMap.get());
+    return 0;
 }
-//        WindowManagerMessage::TRANS_ID_GESTURE_NAVIGATION_ENABLED
-void WindowManagerStub::SetGestureNavigaionEnabledFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+
+// WindowManagerMessage::TRANS_ID_GESTURE_NAVIGATION_ENABLED
+int32_t
+    WindowManagerStub::SetGestureNavigaionEnabledFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     bool enable = data.ReadBool();
     WMError errCode = SetGestureNavigaionEnabled(enable);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_SET_WINDOW_GRAVITY
-void WindowManagerStub::SetWindowGravityFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_SET_WINDOW_GRAVITY
+int32_t WindowManagerStub::SetWindowGravityFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     uint32_t windowId = data.ReadUint32();
     WindowGravity gravity = static_cast<WindowGravity>(data.ReadUint32());
     uint32_t percent = data.ReadUint32();
     WMError errCode = SetWindowGravity(windowId, gravity, percent);
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_DISPATCH_KEY_EVENT
-void WindowManagerStub::DispatchKeyEventFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_DISPATCH_KEY_EVENT
+int32_t WindowManagerStub::DispatchKeyEventFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     uint32_t windowId = data.ReadUint32();
     std::shared_ptr<MMI::KeyEvent> event = MMI::KeyEvent::Create();
     event->ReadFromParcel(data);
     DispatchKeyEvent(windowId, event);
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_NOTIFY_DUMP_INFO_RESULT
-void WindowManagerStub::NotifyDumpInfoResultFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_NOTIFY_DUMP_INFO_RESULT
+int32_t WindowManagerStub::NotifyDumpInfoResultFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     std::vector<std::string> info;
     data.ReadStringVector(&info);
     NotifyDumpInfoResult(info);
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_GET_WINDOW_ANIMATION_TARGETS
-void WindowManagerStub::GetWindowAnimationTargetsFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_GET_WINDOW_ANIMATION_TARGETS
+int32_t
+    WindowManagerStub::GetWindowAnimationTargetsFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     std::vector<uint32_t> missionIds;
     data.ReadUInt32Vector(&missionIds);
@@ -453,31 +494,35 @@ void WindowManagerStub::GetWindowAnimationTargetsFunc(MessageParcel& data, Messa
     auto errCode = GetWindowAnimationTargets(missionIds, targets);
     if (!MarshallingHelper::MarshallingVectorParcelableObj<RSWindowAnimationTarget>(reply, targets)) {
         WLOGFE("Write window animation targets failed");
-        // errCode = -1;
+        return -1;
     }
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_SET_MAXIMIZE_MODE
-void WindowManagerStub::SetMaximizeModeFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_SET_MAXIMIZE_MODE
+int32_t WindowManagerStub::SetMaximizeModeFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     MaximizeMode maximizeMode = static_cast<MaximizeMode>(data.ReadUint32());
     SetMaximizeMode(maximizeMode);
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_GET_MAXIMIZE_MODE
-void WindowManagerStub::GetMaximizeModeFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_GET_MAXIMIZE_MODE
+int32_t WindowManagerStub::GetMaximizeModeFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     MaximizeMode maximizeMode = GetMaximizeMode();
     reply.WriteInt32(static_cast<int32_t>(maximizeMode));
+    return 0;
 }
 
-//        WindowManagerMessage::TRANS_ID_GET_FOCUS_WINDOW_INFO
-void WindowManagerStub::GetFocusWindowInfoFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+// WindowManagerMessage::TRANS_ID_GET_FOCUS_WINDOW_INFO
+int32_t WindowManagerStub::GetFocusWindowInfoFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     FocusChangeInfo focusInfo;
     GetFocusWindowInfo(focusInfo);
     reply.WriteParcelable(&focusInfo);
+    return 0;
 }
 
 } // namespace Rosen
