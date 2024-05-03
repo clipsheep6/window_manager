@@ -23,9 +23,9 @@
 #include "session/screen/include/screen_property.h"
 
 namespace OHOS::Rosen {
-class IScreenSessionManagerClient : public IRemoteBroker {
+class ScreenSessionManagerClientInterface : public IRemoteBroker {
 public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.IScreenSessionManagerClient");
+    DECLARE_INTERFACE_DESCRIPTOR(u"OHOS.ScreenSessionManagerClientInterface");
 
     enum class ScreenSessionManagerClientMessage : uint32_t {
         TRANS_ID_ON_SCREEN_CONNECTION_CHANGED,

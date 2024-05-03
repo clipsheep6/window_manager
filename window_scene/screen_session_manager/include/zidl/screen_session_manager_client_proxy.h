@@ -21,10 +21,10 @@
 #include "screen_session_manager_client_interface.h"
 
 namespace OHOS::Rosen {
-class ScreenSessionManagerClientProxy : public IRemoteProxy<IScreenSessionManagerClient> {
+class ScreenSessionManagerClientProxy : public IRemoteProxy<ScreenSessionManagerClientInterface> {
 public:
     explicit ScreenSessionManagerClientProxy(const sptr<IRemoteObject>& impl)
-        : IRemoteProxy<IScreenSessionManagerClient>(impl) {}
+        : IRemoteProxy<ScreenSessionManagerClientInterface>(impl) {}
     virtual ~ScreenSessionManagerClientProxy() = default;
 
     void OnScreenConnectionChanged(ScreenId screenId, ScreenEvent screenEvent,

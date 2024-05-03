@@ -23,7 +23,7 @@
 #include "screen_session_manager_client_interface.h"
 
 namespace OHOS::Rosen {
-class ScreenSessionManagerClientStub : public IRemoteStub<IScreenSessionManagerClient> {
+class ScreenSessionManagerClientStub : public IRemoteStub<ScreenSessionManagerClientInterface> {
 public:
     ScreenSessionManagerClientStub() = default;
     virtual ~ScreenSessionManagerClientStub() = default;
