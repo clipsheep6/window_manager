@@ -69,6 +69,7 @@ public:
     virtual WSError SetPipActionEvent(const std::string& action, int32_t status) = 0;
     virtual WSError UpdateDisplayId(uint64_t displayId) = 0;
     virtual void NotifyDisplayMove(DisplayId from, DisplayId to) = 0;
+    virtual WSError SwitchFreeMultiWindow(bool enable) = 0;
 
     // **Non** IPC interface
     virtual void NotifyBackpressedEvent(bool& isConsumed) {}
@@ -112,6 +113,7 @@ public:
     {
         return WSError::WS_OK;
     }
+    virtual void NotifyKeyboardPanelInfoChange(const KeyboardPanelInfo& keyboardPanelInfo) {}
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_SESSION_STAGE_INTERFACE_H

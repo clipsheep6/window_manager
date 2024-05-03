@@ -21,7 +21,8 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
-constexpr uint32_t TOUCH_HOT_AREA_MAX_NUM = 10;
+    constexpr uint32_t TOUCH_HOT_AREA_MAX_NUM = 10;
+    constexpr uint32_t MAX_SIZE_PIP_CONTROL_GROUP = 8;
 }
 
 WindowSessionProperty::WindowSessionProperty(const sptr<WindowSessionProperty>& property)
@@ -365,6 +366,20 @@ void WindowSessionProperty::GetSessionGravity(SessionGravity& gravity, uint32_t&
     percent = sessionGravitySizePercent_;
 }
 
+void WindowSessionProperty::SetKeyboardLayoutParams(const KeyboardLayoutParams& params)
+{
+    keyboardLayoutParams_.gravity_ = params.gravity_;
+    keyboardLayoutParams_.LandscapeKeyboardRect_ = params.LandscapeKeyboardRect_;
+    keyboardLayoutParams_.PortraitKeyboardRect_ = params.PortraitKeyboardRect_;
+    keyboardLayoutParams_.LandscapePanelRect_ = params.LandscapePanelRect_;
+    keyboardLayoutParams_.PortraitPanelRect_ = params.PortraitPanelRect_;
+}
+
+KeyboardLayoutParams WindowSessionProperty::GetKeyboardLayoutParams() const
+{
+    return keyboardLayoutParams_;
+}
+
 void WindowSessionProperty::SetDecorEnable(bool isDecorEnable)
 {
     isDecorEnable_ = isDecorEnable;
@@ -487,7 +502,8 @@ bool WindowSessionProperty::MarshallingSystemBarMap(Parcel& parcel) const
             return false;
         }
         if (!(parcel.WriteBool(it.second.enable_) && parcel.WriteUint32(it.second.backgroundColor_) &&
-              parcel.WriteUint32(it.second.contentColor_) && parcel.WriteBool(it.second.enableAnimation_))) {
+              parcel.WriteUint32(it.second.contentColor_) && parcel.WriteBool(it.second.enableAnimation_) &&
+              parcel.WriteUint32(static_cast<uint32_t>(it.second.settingFlag_)))) {
             return false;
         }
     }
@@ -504,7 +520,8 @@ void WindowSessionProperty::UnMarshallingSystemBarMap(Parcel& parcel, WindowSess
 
     for (uint32_t i = 0; i < size; i++) {
         WindowType type = static_cast<WindowType>(parcel.ReadUint32());
-        SystemBarProperty prop = { parcel.ReadBool(), parcel.ReadUint32(), parcel.ReadUint32(), parcel.ReadBool() };
+        SystemBarProperty prop = { parcel.ReadBool(), parcel.ReadUint32(), parcel.ReadUint32(), parcel.ReadBool(),
+            static_cast<SystemBarSettingFlag>(parcel.ReadUint32()) };
         property->SetSystemBarProperty(type, prop);
     }
 }
@@ -551,6 +568,9 @@ bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const
         return false;
     }
     auto size = pipTemplateInfo_.controlGroup.size();
+    if (size > MAX_SIZE_PIP_CONTROL_GROUP) {
+        return false;
+    }
     if (!parcel.WriteUint32(static_cast<uint32_t>(size))) {
         return false;
     }
@@ -571,6 +591,9 @@ void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowS
     pipTemplateInfo.pipTemplateType = parcel.ReadUint32();
     pipTemplateInfo.priority = parcel.ReadUint32();
     auto size = parcel.ReadUint32();
+    if (size > MAX_SIZE_PIP_CONTROL_GROUP) {
+        return;
+    }
     for (uint32_t i = 0; i < size; i++) {
         pipTemplateInfo.controlGroup.push_back(parcel.ReadUint32());
     }
@@ -631,7 +654,8 @@ bool WindowSessionProperty::Marshalling(Parcel& parcel) const
         parcel.WriteBool(isNeedUpdateWindowMode_) && parcel.WriteUint32(callingSessionId_) &&
         parcel.WriteBool(isLayoutFullScreen_) &&
         parcel.WriteBool(isExtensionFlag_) &&
-        MarshallingWindowMask(parcel);
+        MarshallingWindowMask(parcel) &&
+        parcel.WriteParcelable(&keyboardLayoutParams_);
 }
 
 WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
@@ -686,6 +710,8 @@ WindowSessionProperty* WindowSessionProperty::Unmarshalling(Parcel& parcel)
     property->SetIsLayoutFullScreen(parcel.ReadBool());
     property->SetExtensionFlag(parcel.ReadBool());
     UnmarshallingWindowMask(parcel, property);
+    sptr<KeyboardLayoutParams> keyboardLayoutParams = parcel.ReadParcelable<KeyboardLayoutParams>();
+    property->SetKeyboardLayoutParams(*keyboardLayoutParams);
     return property;
 }
 
@@ -807,6 +833,46 @@ void WindowSessionProperty::SetIsShaped(bool isShaped)
 bool WindowSessionProperty::GetIsShaped() const
 {
     return isShaped_;
+}
+
+int32_t WindowSessionProperty::GetCollaboratorType() const
+{
+    return collaboratorType_;
+}
+
+void WindowSessionProperty::SetCollaboratorType(int32_t collaboratorType)
+{
+    collaboratorType_ = collaboratorType;
+}
+
+void WindowSessionProperty::SetUserWindowLimits(const WindowLimits& windowUserLimits)
+{
+    userLimits_ = windowUserLimits;
+}
+
+WindowLimits WindowSessionProperty::GetUserWindowLimits() const
+{
+    return userLimits_;
+}
+
+void WindowSessionProperty::SetConfigWindowLimitsVP(const WindowLimits& windowConfigLimitsVP)
+{
+    configLimitsVP_ = windowConfigLimitsVP;
+}
+
+WindowLimits WindowSessionProperty::GetConfigWindowLimitsVP() const
+{
+    return configLimitsVP_;
+}
+
+void WindowSessionProperty::SetLastLimitsVpr(float vpr)
+{
+    lastVpr_ = vpr;
+}
+
+float WindowSessionProperty::GetLastLimitsVpr() const
+{
+    return lastVpr_;
 }
 } // namespace Rosen
 } // namespace OHOS

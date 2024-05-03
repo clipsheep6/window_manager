@@ -19,6 +19,8 @@
 #include <parcel.h>
 #include <map>
 #include <float.h>
+#include <sstream>
+#include <string>
 
 namespace OHOS {
 namespace Rosen {
@@ -230,6 +232,15 @@ enum class WindowStatus : uint32_t {
     WINDOW_STATUS_SPLITSCREEN
 };
 
+/**
+ * @brief Enumerates setting flag of systemStatusBar
+ */
+enum class SystemBarSettingFlag : uint32_t {
+    DEFAULT_SETTING = 0,
+    COLOR_SETTING = 1,
+    ENABLE_SETTING = 1 << 1,
+    ALL_SETTING = 0b11
+};
 
 /**
  * @brief Used to map from WMError to WmErrorCode.
@@ -280,11 +291,19 @@ enum class WindowFlag : uint32_t {
 };
 
 /**
- * @brief Enumerates flag of uiextension window.
+ * @brief Flag of uiextension window.
  */
-enum class ExtensionWindowFlag : uint32_t {
-    EXTENSION_WINDOW_FLAG_WATER_MARK = 1,
-    EXTENSION_WINDOW_FLAG_END = 1 << 1,
+union ExtensionWindowFlags {
+    uint32_t bitData;
+    struct {
+        // Each flag should be false default, true when active
+        bool hideNonSecureWindowsFlag : 1;
+        bool waterMarkFlag : 1;
+        bool privacyModeFlag : 1;
+    };
+    ExtensionWindowFlags() : bitData(0) {}
+    ExtensionWindowFlags(uint32_t bits) : bitData(bits) {}
+    ~ExtensionWindowFlags() {}
 };
 
 /**
@@ -356,6 +375,7 @@ enum class WindowSessionType : uint32_t {
 enum class WindowGravity : uint32_t {
     WINDOW_GRAVITY_FLOAT = 0,
     WINDOW_GRAVITY_BOTTOM,
+    WINDOW_GRAVITY_DEFAULT,
 };
 
 /**
@@ -376,6 +396,37 @@ enum class WindowSetUIContentType: uint32_t {
 struct PointInfo {
     int32_t x;
     int32_t y;
+};
+
+/**
+ * @struct MainWindowInfo.
+ *
+ * @brief topN main window info.
+ */
+struct MainWindowInfo : public Parcelable {
+    virtual bool Marshalling(Parcel &parcel) const override
+    {
+        if (!parcel.WriteInt32(pid_)) {
+            return false;
+        }
+
+        if (!parcel.WriteString(bundleName_)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    static MainWindowInfo* Unmarshalling(Parcel& parcel)
+    {
+        MainWindowInfo* mainWindowInfo = new MainWindowInfo;
+        mainWindowInfo->pid_ = parcel.ReadInt32();
+        mainWindowInfo->bundleName_ = parcel.ReadString();
+        return mainWindowInfo;
+    }
+
+    int32_t pid_ = 0;
+    std::string bundleName_ = "";
 };
 
 namespace {
@@ -488,12 +539,19 @@ struct SystemBarProperty {
     uint32_t backgroundColor_;
     uint32_t contentColor_;
     bool enableAnimation_;
+    SystemBarSettingFlag settingFlag_;
     SystemBarProperty() : enable_(true), backgroundColor_(SYSTEM_COLOR_BLACK), contentColor_(SYSTEM_COLOR_WHITE),
-        enableAnimation_(false) {}
+                          enableAnimation_(false), settingFlag_(SystemBarSettingFlag::DEFAULT_SETTING) {}
     SystemBarProperty(bool enable, uint32_t background, uint32_t content)
-        : enable_(enable), backgroundColor_(background), contentColor_(content), enableAnimation_(false) {}
+        : enable_(enable), backgroundColor_(background), contentColor_(content), enableAnimation_(false),
+          settingFlag_(SystemBarSettingFlag::DEFAULT_SETTING) {}
     SystemBarProperty(bool enable, uint32_t background, uint32_t content, bool enableAnimation)
-        : enable_(enable), backgroundColor_(background), contentColor_(content), enableAnimation_(enableAnimation) {}
+        : enable_(enable), backgroundColor_(background), contentColor_(content), enableAnimation_(enableAnimation),
+          settingFlag_(SystemBarSettingFlag::DEFAULT_SETTING) {}
+    SystemBarProperty(bool enable, uint32_t background, uint32_t content,
+                      bool enableAnimation, SystemBarSettingFlag settingFlag)
+        : enable_(enable), backgroundColor_(background), contentColor_(content), enableAnimation_(enableAnimation),
+          settingFlag_(settingFlag) {}
     bool operator == (const SystemBarProperty& a) const
     {
         return (enable_ == a.enable_ && backgroundColor_ == a.backgroundColor_ && contentColor_ == a.contentColor_ &&
@@ -531,6 +589,51 @@ struct Rect {
     {
         return (posX_ >= a.posX_ && posY_ >= a.posY_ &&
             posX_ + width_ <= a.posX_ + a.width_ && posY_ + height_ <= a.posY_ + a.height_);
+    }
+
+    inline std::string ToString() const
+    {
+        std::stringstream ss;
+        ss << "[" << posX_ << " " << posY_ << " " << width_ << " " << height_ << "]";
+        return ss.str();
+    }
+};
+
+/**
+ * @struct KeyboardPanelInfo
+ *
+ * @brief Info of keyboard panel
+ */
+struct KeyboardPanelInfo : public Parcelable {
+    Rect rect_ = {0, 0, 0, 0};
+    WindowGravity gravity_ = WindowGravity::WINDOW_GRAVITY_BOTTOM;
+    bool isShowing_ = false;
+
+    bool Marshalling(Parcel& parcel) const
+    {
+        return parcel.WriteInt32(rect_.posX_) && parcel.WriteInt32(rect_.posY_) &&
+               parcel.WriteUint32(rect_.width_) && parcel.WriteUint32(rect_.height_) &&
+               parcel.WriteUint32(static_cast<uint32_t>(gravity_)) &&
+               parcel.WriteBool(isShowing_);
+    }
+
+    static KeyboardPanelInfo* Unmarshalling(Parcel& parcel)
+    {
+        KeyboardPanelInfo* keyboardPanelInfo = new(std::nothrow)KeyboardPanelInfo;
+        if (keyboardPanelInfo == nullptr) {
+            return nullptr;
+        }
+        bool res = parcel.ReadInt32(keyboardPanelInfo->rect_.posX_) &&
+            parcel.ReadInt32(keyboardPanelInfo->rect_.posY_) && parcel.ReadUint32(keyboardPanelInfo->rect_.width_) &&
+            parcel.ReadUint32(keyboardPanelInfo->rect_.height_);
+        if (!res) {
+            delete keyboardPanelInfo;
+            return nullptr;
+        }
+        keyboardPanelInfo->gravity_ = static_cast<WindowGravity>(parcel.ReadUint32());
+        keyboardPanelInfo->isShowing_ = parcel.ReadBool();
+
+        return keyboardPanelInfo;
     }
 };
 
@@ -854,6 +957,76 @@ struct MaximizeLayoutOption {
     ShowType dock = ShowType::HIDE;
 };
 
+/**
+ * @class KeyboardLayoutParams
+ *
+ * @brief Keyboard need adjust layout
+ */
+class KeyboardLayoutParams : public Parcelable {
+public:
+    WindowGravity gravity_ = WindowGravity::WINDOW_GRAVITY_BOTTOM;
+    Rect LandscapeKeyboardRect_ { 0, 0, 0, 0 };
+    Rect PortraitKeyboardRect_ { 0, 0, 0, 0 };
+    Rect LandscapePanelRect_ { 0, 0, 0, 0 };
+    Rect PortraitPanelRect_ { 0, 0, 0, 0 };
+
+    bool operator==(const KeyboardLayoutParams& params) const
+    {
+        return (gravity_ == params.gravity_ && LandscapeKeyboardRect_ == params.LandscapeKeyboardRect_ &&
+            PortraitKeyboardRect_ == params.PortraitKeyboardRect_ &&
+            LandscapePanelRect_ == params.LandscapePanelRect_ &&
+            PortraitPanelRect_ == params.PortraitPanelRect_);
+    }
+
+    bool operator!=(const KeyboardLayoutParams& params) const
+    {
+        return !this->operator==(params);
+    }
+
+    bool isEmpty() const
+    {
+        return LandscapeKeyboardRect_.IsUninitializedRect() && PortraitKeyboardRect_.IsUninitializedRect() &&
+            LandscapePanelRect_.IsUninitializedRect() && PortraitPanelRect_.IsUninitializedRect();
+    }
+
+    static inline bool WriteParcel(Parcel& parcel, const Rect& rect)
+    {
+        return parcel.WriteInt32(rect.posX_) && parcel.WriteInt32(rect.posY_) &&
+            parcel.WriteUint32(rect.width_) && parcel.WriteUint32(rect.height_);
+    }
+
+    static inline bool ReadParcel(Parcel& parcel, Rect& rect)
+    {
+        return parcel.ReadInt32(rect.posX_) && parcel.ReadInt32(rect.posY_) &&
+            parcel.ReadUint32(rect.width_) && parcel.ReadUint32(rect.height_);
+    }
+
+    virtual bool Marshalling(Parcel& parcel) const override
+    {
+        return (parcel.WriteUint32(static_cast<uint32_t>(gravity_)) &&
+            WriteParcel(parcel, LandscapeKeyboardRect_) &&
+            WriteParcel(parcel, PortraitKeyboardRect_) &&
+            WriteParcel(parcel, LandscapePanelRect_) &&
+            WriteParcel(parcel, PortraitPanelRect_));
+    }
+
+    static KeyboardLayoutParams* Unmarshalling(Parcel& parcel)
+    {
+        KeyboardLayoutParams *params = new(std::nothrow) KeyboardLayoutParams();
+        if (params == nullptr) {
+            return nullptr;
+        }
+        params->gravity_ = static_cast<WindowGravity>(parcel.ReadUint32());
+        if (ReadParcel(parcel, params->LandscapeKeyboardRect_) &&
+            ReadParcel(parcel, params->PortraitKeyboardRect_) &&
+            ReadParcel(parcel, params->LandscapePanelRect_) &&
+            ReadParcel(parcel, params->PortraitPanelRect_)) {
+            return params;
+        }
+        delete params;
+        return nullptr;
+    }
+};
 }
 }
 #endif // OHOS_ROSEN_WM_COMMON_H

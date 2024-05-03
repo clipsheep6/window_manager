@@ -260,11 +260,6 @@ WSError ExtensionSession::TransferKeyEventForConsumed(const std::shared_ptr<MMI:
 
     auto isConsumedPromise = std::make_shared<std::promise<bool>>();
     std::shared_ptr<WSError> retCode = std::make_shared<WSError>(WSError::WS_OK);
-    bool isAllocedNullptr = (isConsumedPromise == nullptr) || (retCode == nullptr);
-    if (isAllocedNullptr) {
-        TLOGE(WmsLogTag::WMS_EVENT, "Created isConsumedPromise or retCode is nullptr.");
-        return WSError::WS_ERROR_NULLPTR;
-    }
     channelListener_->SetTransferKeyEventForConsumedParams(isConsumedPromise, retCode);
     auto ret = windowEventChannel_->TransferKeyEventForConsumedAsync(keyEvent, isPreImeEvent, channelListener_);
     // if UiExtension was died, return transferKeyEvent before wait for timeout.
@@ -291,6 +286,24 @@ WSError ExtensionSession::TransferKeyEventForConsumed(const std::shared_ptr<MMI:
     }
     TLOGI(WmsLogTag::WMS_EVENT, "isConsumed is %{public}d, Timeout is %{public}d, ret is %{public}d in id:%{public}d.",
         isConsumed, isTimeout, ret, keyEvent->GetId());
+    return ret;
+}
+
+WSError ExtensionSession::TransferKeyEventAsync(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool isPreImeEvent)
+{
+    if (windowEventChannel_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_EVENT, "windowEventChannel_ is null");
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    if (keyEvent == nullptr) {
+        TLOGE(WmsLogTag::WMS_EVENT, "KeyEvent is nullptr");
+        return WSError::WS_ERROR_NULLPTR;
+    }
+
+    TLOGI(WmsLogTag::WMS_EVENT, "In with isPreImeEvent(%{public}d), id:%{public}d", isPreImeEvent, keyEvent->GetId());
+    channelListener_->ResetTransferKeyEventForConsumedParams();
+    auto ret = windowEventChannel_->TransferKeyEventForConsumedAsync(keyEvent, isPreImeEvent, channelListener_);
+    TLOGI(WmsLogTag::WMS_EVENT, "ret is %{public}d in id:%{public}d.", ret, keyEvent->GetId());
     return ret;
 }
 

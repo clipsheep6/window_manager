@@ -91,6 +91,27 @@ DMError ScreenSessionManagerProxy::SetVirtualPixelRatio(ScreenId screenId, float
     return static_cast<DMError>(reply.ReadInt32());
 }
 
+DMError ScreenSessionManagerProxy::SetVirtualPixelRatioSystem(ScreenId screenId, float virtualPixelRatio)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    if (!data.WriteUint64(screenId) || !data.WriteFloat(virtualPixelRatio)) {
+        WLOGFE("write screenId/modeId failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_PIXEL_RATIO_SYSTEM),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    return static_cast<DMError>(reply.ReadInt32());
+}
+
 DMError ScreenSessionManagerProxy::SetResolution(ScreenId screenId, uint32_t width, uint32_t height,
     float virtualPixelRatio)
 {
@@ -2171,7 +2192,7 @@ void ScreenSessionManagerProxy::SetScreenPrivacyState(bool hasPrivate)
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
+    MessageOption option(MessageOption::TF_SYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return;
@@ -2181,6 +2202,54 @@ void ScreenSessionManagerProxy::SetScreenPrivacyState(bool hasPrivate)
         return;
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SET_SCREEN_PRIVACY_STATE),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return;
+    }
+}
+
+void ScreenSessionManagerProxy::SetPrivacyStateByDisplayId(DisplayId id, bool hasPrivate)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+    if (!data.WriteUint64(id)) {
+        WLOGFE("Write DisplayId failed");
+        return;
+    }
+    if (!data.WriteBool(hasPrivate)) {
+        WLOGFE("Write hasPrivate failed");
+        return;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SET_SCREENID_PRIVACY_STATE),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return;
+    }
+}
+
+void ScreenSessionManagerProxy::SetScreenPrivacyWindowList(DisplayId id, std::vector<std::string> privacyWindowList)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return;
+    }
+    if (!data.WriteUint64(id)) {
+        WLOGFE("Write DisplayId failed");
+        return;
+    }
+    if (!data.WriteStringVector(privacyWindowList)) {
+        WLOGFE("Write privacyWindowList failed");
+        return;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SET_SCREEN_PRIVACY_WINDOW_LIST),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
         return;

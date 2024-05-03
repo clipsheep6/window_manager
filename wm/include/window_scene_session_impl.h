@@ -37,6 +37,8 @@ const std::map<OHOS::AppExecFwk::DisplayOrientation, Orientation> ABILITY_TO_SES
     {OHOS::AppExecFwk::DisplayOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED,
         Orientation::AUTO_ROTATION_PORTRAIT_RESTRICTED},
     {OHOS::AppExecFwk::DisplayOrientation::LOCKED,                              Orientation::LOCKED},
+    {OHOS::AppExecFwk::DisplayOrientation::AUTO_ROTATION_UNSPECIFIED,           Orientation::AUTO_ROTATION_UNSPECIFIED},
+    {OHOS::AppExecFwk::DisplayOrientation::FOLLOW_DESKTOP,                      Orientation::FOLLOW_DESKTOP},
 };
 
 class WindowSceneSessionImpl : public WindowSessionImpl {
@@ -104,6 +106,7 @@ public:
     virtual WMError SetBackdropBlur(float radius) override;
     virtual WMError SetBackdropBlurStyle(WindowBlurStyle blurStyle) override;
     virtual WMError SetWindowMode(WindowMode mode) override;
+    virtual WMError SetGrayScale(float grayScale) override;
 
     virtual WMError SetTransparent(bool isTransparent) override;
     virtual WMError SetTurnScreenOn(bool turnScreenOn) override;
@@ -144,6 +147,10 @@ public:
     bool GetDefaultDensityEnabled() override;
     WMError HideNonSecureWindows(bool shouldHide) override;
     virtual WMError SetWindowMask(const std::vector<std::vector<uint32_t>>& windowMask) override;
+    WSError SwitchFreeMultiWindow(bool enable) override;
+    void NotifyKeyboardPanelInfoChange(const KeyboardPanelInfo& keyboardPanelInfo) override;
+    void UpdateDensity() override;
+    WMError AdjustKeyboardLayout(const KeyboardLayoutParams& params) override;
 
 protected:
     void DestroySubWindow();
@@ -155,7 +162,8 @@ protected:
     bool isSessionMainWindow(uint32_t parentId);
     sptr<WindowSessionImpl> FindMainWindowWithContext();
     void UpdateSubWindowStateAndNotify(int32_t parentPersistentId, const WindowState& newState);
-    void LimitCameraFloatWindowMininumSize(uint32_t& width, uint32_t& height);
+    void LimitWindowSize(uint32_t& width, uint32_t& height);
+    void LimitCameraFloatWindowMininumSize(uint32_t& width, uint32_t& height, float& vpr);
     void UpdateFloatingWindowSizeBySizeLimits(uint32_t& width, uint32_t& height) const;
     WMError NotifyWindowSessionProperty();
     WMError NotifyWindowNeedAvoid(bool status = false);
@@ -165,7 +173,6 @@ protected:
     void GetConfigurationFromAbilityInfo();
     float GetVirtualPixelRatio(sptr<DisplayInfo> displayInfo) override;
     WMError NotifySpecificWindowSessionProperty(WindowType type, const SystemBarProperty& property);
-    virtual bool IfNotNeedAvoidKeyBoardForSplit() override;
 
 private:
     WMError DestroyInner(bool needNotifyServer);
@@ -187,11 +194,20 @@ private:
     bool HandlePointDownEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
         const MMI::PointerEvent::PointerItem& pointerItem, int32_t sourceType, float vpr, const WSRect& rect);
     std::unique_ptr<Media::PixelMap> HandleWindowMask(const std::vector<std::vector<uint32_t>>& windowMask);
+    void CalculateNewLimitsByLimits(
+        WindowLimits& newLimits, WindowLimits& customizedLimits, float& virtualPixelRatio);
+    void CalculateNewLimitsByRatio(WindowLimits& newLimits, WindowLimits& customizedLimits);
+    bool userLimitsSet_ = false;
     bool enableDefaultAnimation_ = true;
     sptr<IAnimationTransitionController> animationTransitionController_;
     uint32_t setSameSystembarPropertyCnt_ = 0;
     std::atomic<bool> isDefaultDensityEnabled_ = false;
     uint32_t getAvoidAreaCnt_ = 0;
+
+    WMError RegisterKeyboardPanelInfoChangeListener(const sptr<IKeyboardPanelInfoChangeListener>& listener) override;
+    WMError UnregisterKeyboardPanelInfoChangeListener(const sptr<IKeyboardPanelInfoChangeListener>& listener) override;
+    static std::mutex keyboardPanelInfoChangeListenerMutex_;
+    sptr<IKeyboardPanelInfoChangeListener> keyboardPanelInfoChangeListeners_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

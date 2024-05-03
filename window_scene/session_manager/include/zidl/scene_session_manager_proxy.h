@@ -43,7 +43,8 @@ public:
         const sptr<IRemoteObject>& callback) override;
     WMError UpdateSessionProperty(const sptr<WindowSessionProperty>& property, WSPropertyChangeAction action) override;
     WSError BindDialogSessionTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken) override;
-    WMError RequestFocusStatus(int32_t persistentId, bool isFocused, bool byForeground = true) override;
+    WMError RequestFocusStatus(int32_t persistentId, bool isFocused, bool byForeground = true,
+        FocusChangeReason reason = FocusChangeReason::DEFAULT) override;
     WSError RaiseWindowToTop(int32_t persistentId) override;
 
     WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
@@ -99,8 +100,8 @@ public:
     void AddExtensionWindowStageToSCB(const sptr<ISessionStage>& sessionStage, int32_t persistentId,
         int32_t parentId) override;
     WSError AddOrRemoveSecureSession(int32_t persistentId, bool shouldHide) override;
-    WSError AddOrRemoveSecureExtSession(int32_t persistentId, int32_t parentId, bool shouldHide) override;
-    WSError UpdateExtWindowFlags(int32_t parentId, int32_t persistentId, uint32_t extWindowFlags) override;
+    WSError UpdateExtWindowFlags(int32_t parentId, int32_t persistentId, uint32_t extWindowFlags,
+        uint32_t extWindowActions) override;
     WSError GetHostWindowRect(int32_t hostWindowId, Rect& rect) override;
     WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus) override;
     WMError GetCallingWindowRect(int32_t persistentId, Rect& rect) override;

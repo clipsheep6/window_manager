@@ -156,6 +156,19 @@ bool IsJsCallStateUndefind(napi_env env, napi_value jsCallState, SessionInfo& se
     return true;
 }
 
+bool IsJsWindowInputTypeUndefind(napi_env env, napi_value jsWindowInputType, SessionInfo& sessionInfo)
+{
+    if (GetType(env, jsWindowInputType) != napi_undefined) {
+        uint32_t windowInputType = 0;
+        if (!ConvertFromJsValue(env, jsWindowInputType, windowInputType)) {
+            WLOGFE("[NAPI]Failed to convert parameter to windowInputType");
+            return false;
+        }
+        sessionInfo.windowInputType_ = static_cast<uint32_t>(windowInputType);
+    }
+    return true;
+}
+
 bool IsJsSessionTypeUndefind(napi_env env, napi_value jsSessionType, SessionInfo& sessionInfo)
 {
     if (GetType(env, jsSessionType) != napi_undefined) {
@@ -262,6 +275,8 @@ bool ConvertSessionInfoName(napi_env env, napi_value jsObject, SessionInfo& sess
     napi_get_named_property(env, jsObject, "appIndex", &jsAppIndex);
     napi_value jsIsSystem = nullptr;
     napi_get_named_property(env, jsObject, "isSystem", &jsIsSystem);
+    napi_value jsWindowInputType = nullptr;
+    napi_get_named_property(env, jsObject, "windowInputType", &jsWindowInputType);
     if (!IsJsBundleNameUndefind(env, jsBundleName, sessionInfo)) {
         return false;
     }
@@ -275,6 +290,9 @@ bool ConvertSessionInfoName(napi_env env, napi_value jsObject, SessionInfo& sess
         return false;
     }
     if (!IsJsIsSystemUndefind(env, jsIsSystem, sessionInfo)) {
+        return false;
+    }
+    if (!IsJsWindowInputTypeUndefind(env, jsWindowInputType, sessionInfo)) {
         return false;
     }
     return true;
@@ -897,7 +915,8 @@ napi_value CreateJsSessionProcessMode(napi_env env)
     return objValue;
 }
 
-napi_value CreateJsSessionRect(napi_env env, const WSRect& rect)
+template<typename T>
+napi_value CreateJsSessionRect(napi_env env, const T& rect)
 {
     WLOGFD("CreateJsSessionRect.");
     napi_value objValue = nullptr;
@@ -911,6 +930,21 @@ napi_value CreateJsSessionRect(napi_env env, const WSRect& rect)
     napi_set_named_property(env, objValue, "posY_", CreateJsValue(env, rect.posY_));
     napi_set_named_property(env, objValue, "width_", CreateJsValue(env, rect.width_));
     napi_set_named_property(env, objValue, "height_", CreateJsValue(env, rect.height_));
+    return objValue;
+}
+
+napi_value CreateJsSessionEventParam(napi_env env, const SessionEventParam& param)
+{
+    WLOGFD("CreateJsSessionEventParam.");
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue == nullptr) {
+        WLOGFE("Failed to create object!");
+        return NapiGetUndefined(env);
+    }
+
+    napi_set_named_property(env, objValue, "pointerX", CreateJsValue(env, param.pointerX_));
+    napi_set_named_property(env, objValue, "pointerY", CreateJsValue(env, param.pointerY_));
     return objValue;
 }
 
@@ -951,7 +985,30 @@ static napi_value CreateJsSystemBarPropertyObject(
     std::string contentColor = GetHexColor(property.contentColor_);
     napi_set_named_property(env, objValue, "contentcolor", CreateJsValue(env, contentColor));
     napi_set_named_property(env, objValue, "enableAnimation", CreateJsValue(env, property.enableAnimation_));
+    napi_set_named_property(
+        env, objValue, "settingFlag", CreateJsValue(env, static_cast<uint32_t>(property.settingFlag_)));
 
+    return objValue;
+}
+
+napi_value CreateJsKeyboardLayoutParams(napi_env env, const KeyboardLayoutParams& params)
+{
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue == nullptr) {
+        WLOGFE("Failed to get jsObject");
+        return nullptr;
+    }
+
+    napi_set_named_property(env, objValue, "LandscapeKeyboardRect",
+        CreateJsSessionRect(env, params.LandscapeKeyboardRect_));
+    napi_set_named_property(env, objValue, "PortraitKeyboardRect",
+        CreateJsSessionRect(env, params.PortraitKeyboardRect_));
+    napi_set_named_property(env, objValue, "LandscapePanelRect",
+        CreateJsSessionRect(env, params.LandscapePanelRect_));
+    napi_set_named_property(env, objValue, "PortraitPanelRect",
+        CreateJsSessionRect(env, params.PortraitPanelRect_));
+    
     return objValue;
 }
 

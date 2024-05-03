@@ -160,6 +160,7 @@ enum class WMError : int32_t {
     WM_ERROR_OPER_FULLSCREEN_FAILED,
     WM_ERROR_REPEAT_OPERATION,
     WM_ERROR_INVALID_SESSION,
+    WM_ERROR_INVALID_CALLING,
 
     WM_ERROR_DEVICE_NOT_SUPPORT = 801, // the value do not change.It is defined on all system
 
@@ -171,6 +172,11 @@ enum class WMError : int32_t {
     WM_ERROR_IPC_FAILED,
     WM_ERROR_NEED_REPORT_END,
     WM_ERROR_START_ABILITY_FAILED,
+    WM_ERROR_PIP_DESTROY_FAILED,
+    WM_ERROR_PIP_STATE_ABNORMALLY,
+    WM_ERROR_PIP_CREATE_FAILED,
+    WM_ERROR_PIP_INTERNAL_ERROR,
+    WM_ERROR_PIP_REPEAT_OPERATION,
 };
 
 /**
@@ -192,6 +198,11 @@ enum class WmErrorCode : int32_t {
     WM_ERROR_INVALID_DISPLAY = 1300008,
     WM_ERROR_INVALID_PARENT = 1300009,
     WM_ERROR_OPER_FULLSCREEN_FAILED = 1300010,
+    WM_ERROR_PIP_DESTROY_FAILED = 1300011,
+    WM_ERROR_PIP_STATE_ABNORMALLY = 1300012,
+    WM_ERROR_PIP_CREATE_FAILED = 1300013,
+    WM_ERROR_PIP_INTERNAL_ERROR = 1300014,
+    WM_ERROR_PIP_REPEAT_OPERATION = 1300015,
 };
 
 
@@ -205,6 +216,16 @@ enum class WindowStatus : uint32_t {
     WINDOW_STATUS_MINIMIZE,
     WINDOW_STATUS_FLOATING,
     WINDOW_STATUS_SPLITSCREEN
+};
+
+/**
+ * @brief Enumerates setting flag of systemStatusBar
+ */
+enum class SystemBarSettingFlag : uint32_t {
+    DEFAULT_SETTING = 0,
+    COLOR_SETTING = 1,
+    ENABLE_SETTING = 1 << 1,
+    ALL_SETTING = 0b11
 };
 
 /**
@@ -430,12 +451,19 @@ struct SystemBarProperty {
     uint32_t backgroundColor_;
     uint32_t contentColor_;
     bool enableAnimation_;
+    SystemBarSettingFlag settingFlag_;
     SystemBarProperty() : enable_(true), backgroundColor_(SYSTEM_COLOR_BLACK), contentColor_(SYSTEM_COLOR_WHITE),
-        enableAnimation_(false) {}
+                          enableAnimation_(false), settingFlag_(SystemBarSettingFlag::DEFAULT_SETTING) {}
     SystemBarProperty(bool enable, uint32_t background, uint32_t content)
-        : enable_(enable), backgroundColor_(background), contentColor_(content), enableAnimation_(false) {}
+        : enable_(enable), backgroundColor_(background), contentColor_(content), enableAnimation_(false),
+          settingFlag_(SystemBarSettingFlag::DEFAULT_SETTING) {}
     SystemBarProperty(bool enable, uint32_t background, uint32_t content, bool enableAnimation)
-        : enable_(enable), backgroundColor_(background), contentColor_(content), enableAnimation_(enableAnimation) {}
+        : enable_(enable), backgroundColor_(background), contentColor_(content), enableAnimation_(enableAnimation),
+          settingFlag_(SystemBarSettingFlag::DEFAULT_SETTING) {}
+    SystemBarProperty(bool enable, uint32_t background, uint32_t content,
+                      bool enableAnimation, SystemBarSettingFlag settingFlag)
+        : enable_(enable), backgroundColor_(background), contentColor_(content), enableAnimation_(enableAnimation),
+          settingFlag_(settingFlag) {}
     bool operator == (const SystemBarProperty& a) const
     {
         return (enable_ == a.enable_ && backgroundColor_ == a.backgroundColor_ && contentColor_ == a.contentColor_ &&
@@ -725,7 +753,6 @@ struct MaximizeLayoutOption {
     ShowType decor = ShowType::HIDE;
     ShowType dock = ShowType::HIDE;
 };
-
 }
 }
 #endif // OHOS_ROSEN_WM_COMMON_H

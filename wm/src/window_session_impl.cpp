@@ -128,12 +128,13 @@ WindowSessionImpl::WindowSessionImpl(const sptr<WindowOption>& option)
         WLOGFE("[WMSCom]Property is null");
         return;
     }
+    WindowType optionWindowType = option->GetWindowType();
     SessionInfo sessionInfo;
     sessionInfo.bundleName_ = option->GetBundleName();
     property_->SetSessionInfo(sessionInfo);
     property_->SetWindowName(option->GetWindowName());
     property_->SetRequestRect(option->GetWindowRect());
-    property_->SetWindowType(option->GetWindowType());
+    property_->SetWindowType(optionWindowType);
     property_->SetFocusable(option->GetFocusable());
     property_->SetTouchable(option->GetTouchable());
     property_->SetDisplayId(option->GetDisplayId());
@@ -147,15 +148,24 @@ WindowSessionImpl::WindowSessionImpl(const sptr<WindowOption>& option)
     isMainHandlerAvailable_ = option->GetMainHandlerAvailable();
 
     auto isPC = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
-    if (isPC && WindowHelper::IsSubWindow(option->GetWindowType())) {
+    if (isPC && WindowHelper::IsSubWindow(optionWindowType)) {
         WLOGFD("create subwindow, title: %{public}s, decorEnable: %{public}d",
             option->GetSubWindowTitle().c_str(), option->GetSubWindowDecorEnable());
         property_->SetDecorEnable(option->GetSubWindowDecorEnable());
         property_->SetDragEnabled(option->GetSubWindowDecorEnable());
         subWindowTitle_ = option->GetSubWindowTitle();
     }
+    bool isDialog = WindowHelper::IsDialogWindow(optionWindowType);
+    if (isPC && isDialog) {
+        bool dialogDecorEnable = option->GetDialogDecorEnable();
+        property_->SetDecorEnable(dialogDecorEnable);
+        property_->SetDragEnabled(dialogDecorEnable);
+        dialogTitle_ = option->GetDialogTitle();
+        WLOGFD("create dialogWindow, title: %{public}s, decorEnable: %{public}d",
+            dialogTitle_.c_str(), dialogDecorEnable);
+    }
 
-    surfaceNode_ = CreateSurfaceNode(property_->GetWindowName(), option->GetWindowType());
+    surfaceNode_ = CreateSurfaceNode(property_->GetWindowName(), optionWindowType);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
     if (surfaceNode_ != nullptr) {
         vsyncStation_ = std::make_shared<VsyncStation>(surfaceNode_->GetId());
@@ -707,7 +717,10 @@ void WindowSessionImpl::UpdateTitleButtonVisibility()
         return;
     }
     auto isPC = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
-    if (isPC && WindowHelper::IsSubWindow(GetType())) {
+    WindowType windowType = GetType();
+    bool isSubWindow = WindowHelper::IsSubWindow(windowType);
+    bool isDialogWindow = WindowHelper::IsDialogWindow(windowType);
+    if (isPC && (isSubWindow || isDialogWindow)) {
         WLOGFD("hide other buttons except close");
         uiContent_->HideWindowTitleButton(true, true, true);
         return;
@@ -745,15 +758,9 @@ WMError WindowSessionImpl::SetUIContentByAbc(
     return SetUIContentInner(contentInfo, env, storage, WindowSetUIContentType::BY_ABC, ability);
 }
 
-WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
-    WindowSetUIContentType type, AppExecFwk::Ability* ability)
+WMError WindowSessionImpl::InitUIContent(const std::string& contentInfo, napi_env env, napi_value storage,
+    WindowSetUIContentType type, AppExecFwk::Ability* ability, OHOS::Ace::UIContentErrorCode& aceRet)
 {
-    TLOGD(WmsLogTag::WMS_LIFE, "NapiSetUIContent: %{public}s state:%{public}u", contentInfo.c_str(), state_);
-    if (IsWindowSessionInvalid()) {
-        TLOGE(WmsLogTag::WMS_LIFE, "interrupt set uicontent because window is invalid! window state: %{public}d",
-            state_);
-        return WMError::WM_ERROR_INVALID_WINDOW;
-    }
     if (uiContent_) {
         uiContent_->Destroy();
     }
@@ -767,8 +774,6 @@ WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, nap
         TLOGE(WmsLogTag::WMS_LIFE, "fail to NapiSetUIContent id: %{public}d", GetPersistentId());
         return WMError::WM_ERROR_NULLPTR;
     }
-
-    OHOS::Ace::UIContentErrorCode aceRet = OHOS::Ace::UIContentErrorCode::NO_ERRORS;
     switch (type) {
         default:
         case WindowSetUIContentType::DEFAULT:
@@ -799,9 +804,32 @@ WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, nap
 
     WLOGFI("UIContent Initialize, isUIExtensionSubWindow:%{public}d, isUIExtensionAbilityProcess:%{public}d",
         uiContent_->IsUIExtensionSubWindow(), uiContent_->IsUIExtensionAbilityProcess());
+    return WMError::WM_OK;
+}
 
-    if (WindowHelper::IsSubWindow(GetType()) && IsDecorEnable()) {
-        SetAPPWindowLabel(subWindowTitle_);
+WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
+    WindowSetUIContentType type, AppExecFwk::Ability* ability)
+{
+    TLOGD(WmsLogTag::WMS_LIFE, "NapiSetUIContent: %{public}s state:%{public}u", contentInfo.c_str(), state_);
+    if (IsWindowSessionInvalid()) {
+        TLOGE(WmsLogTag::WMS_LIFE, "interrupt set uicontent because window is invalid! window state: %{public}d",
+            state_);
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    OHOS::Ace::UIContentErrorCode aceRet = OHOS::Ace::UIContentErrorCode::NO_ERRORS;
+    WMError initUIContentRet = InitUIContent(contentInfo, env, storage, type, ability, aceRet);
+    if (initUIContentRet != WMError::WM_OK) {
+        return initUIContentRet;
+    }
+    WindowType winType = GetType();
+    bool isSubWindow = WindowHelper::IsSubWindow(winType);
+    bool isDialogWindow = WindowHelper::IsDialogWindow(winType);
+    if (IsDecorEnable()) {
+        if (isSubWindow) {
+            SetAPPWindowLabel(subWindowTitle_);
+        } else if (isDialogWindow) {
+            SetAPPWindowLabel(dialogTitle_);
+        }
     }
 
     uint32_t version = 0;
@@ -855,7 +883,7 @@ std::shared_ptr<std::vector<uint8_t>> WindowSessionImpl::GetAbcContent(const std
     begin = file.tellg();
     file.seekg(0, std::ios::end);
     end = file.tellg();
-    size_t len = end - begin;
+    size_t len = static_cast<uint32_t>(end - begin);
     WLOGFD("abc file: %{public}s, size: %{public}u", abcPath.c_str(), static_cast<uint32_t>(len));
 
     if (len <= 0) {
@@ -876,6 +904,9 @@ void WindowSessionImpl::UpdateDecorEnableToAce(bool isDecorEnable)
                 mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY || mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY
                 || (mode == WindowMode::WINDOW_MODE_FULLSCREEN && !property_->IsLayoutFullScreen());
         WLOGFD("[WSLayout]Notify uiContent window mode change end,decorVisible:%{public}d", decorVisible);
+        if (windowSystemConfig_.freeMultiWindowSupport_) {
+                decorVisible = decorVisible && windowSystemConfig_.freeMultiWindowEnable_;
+        }
         uiContent_->UpdateDecorVisible(decorVisible, isDecorEnable);
     } else {
         std::lock_guard<std::recursive_mutex> lockListener(windowChangeListenerMutex_);
@@ -898,6 +929,9 @@ void WindowSessionImpl::UpdateDecorEnable(bool needNotify, WindowMode mode)
             bool decorVisible = mode == WindowMode::WINDOW_MODE_FLOATING ||
                 mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY || mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY
                 || (mode == WindowMode::WINDOW_MODE_FULLSCREEN && !property_->IsLayoutFullScreen());
+            if (windowSystemConfig_.freeMultiWindowSupport_) {
+                decorVisible = decorVisible && windowSystemConfig_.freeMultiWindowEnable_;
+            }
             WLOGFD("[WSLayout]Notify uiContent window mode change end,decorVisible:%{public}d", decorVisible);
             uiContent_->UpdateDecorVisible(decorVisible, IsDecorEnable());
         }
@@ -1302,6 +1336,9 @@ WMError WindowSessionImpl::SetDecorHeight(int32_t decorHeight)
     float vpr = GetVirtualPixelRatio(display->GetDisplayInfo());
     int32_t decorHeightWithPx = static_cast<int32_t>(decorHeight * vpr);
     uiContent_->SetContainerModalTitleHeight(decorHeightWithPx);
+    if (hostSession_ != nullptr) {
+        hostSession_->SetCustomDecorHeight(decorHeight);
+    }
     WLOGI("Set app window decor height success, height : %{public}d", decorHeight);
     return WMError::WM_OK;
 }
@@ -1465,7 +1502,7 @@ WMError WindowSessionImpl::RegisterWindowRectChangeListener(const sptr<IWindowRe
 {
     std::lock_guard<std::mutex> lockListener(windowRectChangeListenerMutex_);
     WMError ret = RegisterListener(windowRectChangeListeners_[GetPersistentId()], listener);
-    if (ret == WMError::WM_OK) {
+    if (hostSession_ != nullptr && ret == WMError::WM_OK) {
         hostSession_->UpdateRectChangeListenerRegistered(true);
     }
     return ret;
@@ -1475,7 +1512,10 @@ WMError WindowSessionImpl::UnregisterWindowRectChangeListener(const sptr<IWindow
 {
     std::lock_guard<std::mutex> lockListener(windowRectChangeListenerMutex_);
     WMError ret = UnregisterListener(windowRectChangeListeners_[GetPersistentId()], listener);
-    hostSession_->UpdateRectChangeListenerRegistered(false);
+    if (hostSession_ != nullptr && (windowRectChangeListeners_.count(GetPersistentId()) == 0 ||
+        windowRectChangeListeners_[GetPersistentId()].empty())) {
+        hostSession_->UpdateRectChangeListenerRegistered(false);
+    }
     return ret;
 }
 
@@ -1785,6 +1825,7 @@ void WindowSessionImpl::NotifyBeforeDestroy(std::string windowName)
 
 void WindowSessionImpl::NotifyAfterDestroy()
 {
+    std::lock_guard<std::recursive_mutex> lockListener(lifeCycleListenerMutex_);
     auto lifecycleListeners = GetListeners<IWindowLifeCycle>();
     CALL_LIFECYCLE_LISTENER(AfterDestroyed, lifecycleListeners);
 }
@@ -2671,11 +2712,6 @@ WMError WindowSessionImpl::SetSpecificBarProperty(WindowType type, const SystemB
     return WMError::WM_OK;
 }
 
-bool WindowSessionImpl::IfNotNeedAvoidKeyBoardForSplit()
-{
-    return false;
-}
-
 void WindowSessionImpl::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info)
 {
     WLOGFD("NotifyOccupiedAreaChangeInfo, safeHeight: %{public}u "
@@ -2688,8 +2724,7 @@ void WindowSessionImpl::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo
             if (((property_->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING &&
                   WindowHelper::IsMainWindow(GetType())) ||
                  (WindowHelper::IsSubWindow(GetType()) && FindWindowById(GetParentId()) != nullptr &&
-                  FindWindowById(GetParentId())->GetMode() == WindowMode::WINDOW_MODE_FLOATING) ||
-                  IfNotNeedAvoidKeyBoardForSplit()) &&
+                  FindWindowById(GetParentId())->GetMode() == WindowMode::WINDOW_MODE_FLOATING)) &&
                 (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
                  system::GetParameter("const.product.devicetype", "unknown") == "tablet")) {
                 sptr<OccupiedAreaChangeInfo> occupiedAreaChangeInfo = new OccupiedAreaChangeInfo();
@@ -2733,6 +2768,11 @@ void WindowSessionImpl::NotifySessionBackground(uint32_t reason, bool withAnimat
 }
 
 WSError WindowSessionImpl::UpdateTitleInTargetPos(bool isShow, int32_t height)
+{
+    return WSError::WS_OK;
+}
+
+WSError WindowSessionImpl::SwitchFreeMultiWindow(bool enable)
 {
     return WSError::WS_OK;
 }
