@@ -27,28 +27,14 @@ void ScreenSessionManagerClientProxy::OnScreenConnectionChanged(ScreenId screenI
     ScreenId rsId, const std::string& name)
 {
     MessageParcel data;
+    if (CheckInterfaceToken(data)) { return; }
+    if (CheckScreenIdWriteUint64(data, screenId)) { return; }
+    if (CheckScreenEventWriteUnit8(data, screenEvent)) { return; }
+    if (CheckRsIdWriteUint64(data, rsId)) { return; }
+    if (CheckNameWriteString(data, name)) { return; }
+
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return;
-    }
-    if (!data.WriteUint64(screenId)) {
-        WLOGFE("Write screenId failed");
-        return;
-    }
-    if (!data.WriteUint8(static_cast<uint8_t>(screenEvent))) {
-        WLOGFE("Write screenEvent failed");
-        return;
-    }
-    if (!data.WriteUint64(rsId)) {
-        WLOGFE("Write rsId failed");
-        return;
-    }
-    if (!data.WriteString(name)) {
-        WLOGFE("Write name failed");
-        return;
-    }
     if (Remote()->SendRequest(
         static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_ON_SCREEN_CONNECTION_CHANGED),
         data, reply, option) != ERR_NONE) {
@@ -61,16 +47,8 @@ void ScreenSessionManagerClientProxy::OnPropertyChanged(ScreenId screenId,
     const ScreenProperty& property, ScreenPropertyChangeReason reason)
 {
     MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return;
-    }
-    if (!data.WriteUint64(screenId)) {
-        WLOGFE("Write screenId failed");
-        return;
-    }
+    if (CheckInterfaceToken(data)) { return; }
+    if (CheckScreenIdWriteUint64(data, screenId)) { return; }
     if (!RSMarshallingHelper::Marshalling(data, property)) {
         WLOGFE("Write property failed");
         return;
@@ -79,6 +57,9 @@ void ScreenSessionManagerClientProxy::OnPropertyChanged(ScreenId screenId,
         WLOGFE("Write reason failed");
         return;
     }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
     if (Remote()->SendRequest(
         static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_ON_PROPERTY_CHANGED),
         data, reply, option) != ERR_NONE) {
@@ -91,12 +72,7 @@ void ScreenSessionManagerClientProxy::OnPowerStatusChanged(DisplayPowerEvent eve
     PowerStateChangeReason reason)
 {
     MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return;
-    }
+    if (CheckInterfaceToken(data)) { return; }
     if (!data.WriteUint32(static_cast<uint32_t>(event))) {
         WLOGFE("Write event failed");
         return;
@@ -109,6 +85,9 @@ void ScreenSessionManagerClientProxy::OnPowerStatusChanged(DisplayPowerEvent eve
         WLOGFE("Write reason failed");
         return;
     }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
     if (Remote()->SendRequest(
         static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_ON_POWER_STATUS_CHANGED),
         data, reply, option) != ERR_NONE) {
@@ -120,20 +99,15 @@ void ScreenSessionManagerClientProxy::OnPowerStatusChanged(DisplayPowerEvent eve
 void ScreenSessionManagerClientProxy::OnSensorRotationChanged(ScreenId screenId, float sensorRotation)
 {
     MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return;
-    }
-    if (!data.WriteUint64(screenId)) {
-        WLOGFE("Write screenId failed");
-        return;
-    }
+    if (CheckInterfaceToken(data)) { return; }
+    if (CheckScreenIdWriteUint64(data, screenId)) { return; }
     if (!data.WriteFloat(sensorRotation)) {
         WLOGFE("Write sensorRotation failed");
         return;
     }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
     if (Remote()->SendRequest(
         static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_ON_SENSOR_ROTATION_CHANGED),
         data, reply, option) != ERR_NONE) {
@@ -170,20 +144,15 @@ void ScreenSessionManagerClientProxy::OnScreenOrientationChanged(ScreenId screen
 void ScreenSessionManagerClientProxy::OnScreenRotationLockedChanged(ScreenId screenId, bool isLocked)
 {
     MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return;
-    }
-    if (!data.WriteUint64(screenId)) {
-        WLOGFE("Write screenId failed");
-        return;
-    }
+    if (CheckInterfaceToken(data)) { return; }
+    if (CheckScreenIdWriteUint64(data, screenId)) { return; }
     if (!data.WriteBool(isLocked)) {
         WLOGFE("Write isLocked failed");
         return;
     }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
     if (Remote()->SendRequest(
         static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_ON_SCREEN_ROTATION_LOCKED_CHANGED),
         data, reply, option) != ERR_NONE) {
@@ -196,12 +165,7 @@ void ScreenSessionManagerClientProxy::OnDisplayStateChanged(DisplayId defaultDis
     const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type)
 {
     MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return;
-    }
+    if (CheckInterfaceToken(data)) { return; }
     if (!data.WriteUint64(defaultDisplayId)) {
         WLOGFE("Write defaultDisplayId failed");
         return;
@@ -229,6 +193,9 @@ void ScreenSessionManagerClientProxy::OnDisplayStateChanged(DisplayId defaultDis
         WLOGFE("Write type failed");
         return;
     }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
     if (Remote()->SendRequest(
         static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_ON_DISPLAY_STATE_CHANGED),
         data, reply, option) != ERR_NONE) {
@@ -241,12 +208,7 @@ void ScreenSessionManagerClientProxy::OnGetSurfaceNodeIdsFromMissionIdsChanged(s
     std::vector<uint64_t>& surfaceNodeIds)
 {
     MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return;
-    }
+    if (CheckInterfaceToken(data)) { return; }
     if (!data.WriteUInt64Vector(missionIds)) {
         WLOGFE("Write missionIds failed");
         return;
@@ -255,6 +217,9 @@ void ScreenSessionManagerClientProxy::OnGetSurfaceNodeIdsFromMissionIdsChanged(s
         WLOGFE("Write surfaceNodeIds failed");
         return;
     }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
     if (Remote()->SendRequest(static_cast<uint32_t>(
         ScreenSessionManagerClientMessage::TRANS_ID_GET_SURFACENODEID_FROM_MISSIONID),
         data, reply, option) != ERR_NONE) {
@@ -267,16 +232,14 @@ void ScreenSessionManagerClientProxy::OnGetSurfaceNodeIdsFromMissionIdsChanged(s
 void ScreenSessionManagerClientProxy::OnUpdateFoldDisplayMode(FoldDisplayMode displayMode)
 {
     MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return;
-    }
+    if (CheckInterfaceToken(data)) { return; }
     if (!data.WriteUint32(static_cast<uint32_t>(displayMode))) {
         WLOGFE("Write displayMode failed");
         return;
     }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
     if (Remote()->SendRequest(
         static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_SET_FOLD_DISPLAY_MODE),
         data, reply, option) != ERR_NONE) {
@@ -288,16 +251,14 @@ void ScreenSessionManagerClientProxy::OnUpdateFoldDisplayMode(FoldDisplayMode di
 void ScreenSessionManagerClientProxy::OnScreenshot(DisplayId displayId)
 {
     MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return;
-    }
+    if (CheckInterfaceToken(data)) { return; }
     if (!data.WriteUint64(displayId)) {
         WLOGFE("Write displayId failed");
         return;
     }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
     if (Remote()->SendRequest(
         static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_ON_SCREEN_SHOT),
         data, reply, option) != ERR_NONE) {
@@ -309,12 +270,10 @@ void ScreenSessionManagerClientProxy::OnScreenshot(DisplayId displayId)
 void ScreenSessionManagerClientProxy::OnImmersiveStateChanged(bool& immersive)
 {
     MessageParcel data;
+    if (CheckInterfaceToken(data)) { return; }
+
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return;
-    }
     if (Remote()->SendRequest(
         static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_ON_IMMERSIVE_STATE_CHANGED),
         data, reply, option) != ERR_NONE) {
@@ -327,25 +286,70 @@ void ScreenSessionManagerClientProxy::OnImmersiveStateChanged(bool& immersive)
 void ScreenSessionManagerClientProxy::SetDisplayNodeScreenId(ScreenId screenId, ScreenId displayNodeScreenId)
 {
     MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return;
-    }
-    if (!data.WriteUint64(screenId)) {
-        WLOGFE("Write screenId failed");
-        return;
-    }
+    if (CheckInterfaceToken(data)) { return; }
+    if (CheckScreenIdWriteUint64(data, screenId)) { return; }
     if (!data.WriteUint64(displayNodeScreenId)) {
         WLOGFE("Write displayNodeScreenId failed");
         return;
     }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
     if (Remote()->SendRequest(
         static_cast<uint32_t>(ScreenSessionManagerClientMessage::TRANS_ID_SET_DISPLAY_NODE_SCREEN_ID),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
         return;
+    }
+}
+
+bool ScreenSessionManagerClientProxy::CheckInterfaceToken(MessageParcel& data)
+{
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool ScreenSessionManagerClientProxy::CheckScreenIdWriteUint64(MessageParcel& data, ScreenId& screenId)
+{
+    if (!data.WriteUint64(screenId)) {
+        WLOGFE("Write screenId failed");
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool ScreenSessionManagerClientProxy::CheckScreenEventWriteUnit8(MessageParcel& data, ScreenEvent& screenEvent)
+{
+    if (!data.WriteUint8(static_cast<uint8_t>(screenEvent))) {
+        WLOGFE("Write screenEvent failed");
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool ScreenSessionManagerClientProxy::CheckRsIdWriteUint64(MessageParcel& data, ScreenId& rsId)
+{
+    if (!data.WriteUint64(rsId)) {
+        WLOGFE("Write rsId failed");
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool ScreenSessionManagerClientProxy::CheckNameWriteString(MessageParcel& data, const std::string& name)
+{
+    if (!data.WriteString(name)) {
+        WLOGFE("Write name failed");
+        return true;
+    } else {
+        return false;
     }
 }
 } // namespace OHOS::Rosen
