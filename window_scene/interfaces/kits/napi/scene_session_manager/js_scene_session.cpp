@@ -1818,11 +1818,13 @@ void JsSceneSession::PendingSessionActivation(SessionInfo& info)
         return;
     }
 
-    sceneSession->SetFocusedOnShow(true);
     if (info.want != nullptr) {
         auto focusedOnShow = info.want->GetBoolParam(AAFwk::Want::PARAM_RESV_WINDOW_FOCUSED, true);
         sceneSession->SetFocusedOnShow(focusedOnShow);
+    } else {
+        sceneSession->SetFocusedOnShow(true);
     }
+
     std::shared_ptr<SessionInfo> sessionInfo = std::make_shared<SessionInfo>(info);
     auto task = [this, sessionInfo]() {
         PendingSessionActivationInner(sessionInfo);
