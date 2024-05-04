@@ -271,6 +271,9 @@ void JsRootSceneSession::PendingSessionActivation(SessionInfo& info)
             info.callerPersistentId_ = 0;
         }
 
+        auto focusedOnShow = info.want->GetBoolParam(AAFwk::Want::PARAM_RESV_WINDOW_FOCUSED, true);
+        sceneSession->SetFocusedOnShow(focusedOnShow);
+
         std::string continueSessionId = info.want->GetStringParam(Rosen::PARAM_KEY::PARAM_DMS_CONTINUE_SESSION_ID_KEY);
         if (!continueSessionId.empty()) {
             info.continueSessionId_ = continueSessionId;
