@@ -1759,23 +1759,19 @@ void JsSceneSession::ChangeSessionVisibilityWithStatusBarInner(std::shared_ptr<S
         jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
 }
 
-void JsSceneSession::PendingSessionActivation(SessionInfo& info)
+sptr<SceneSession> JsSceneSession::GenSceneSession(SessionInfo& info)
 {
-    TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]bundleName %{public}s, moduleName %{public}s, abilityName %{public}s, \
-        appIndex %{public}d, reuse %{public}d", info.bundleName_.c_str(), info.moduleName_.c_str(),
-        info.abilityName_.c_str(), info.appIndex_, info.reuse);
     sptr<SceneSession> sceneSession = nullptr;
     if (info.persistentId_ == 0) {
         auto result = SceneSessionManager::GetInstance().CheckIfReuseSession(info);
         if (result == BrokerStates::BROKER_NOT_START) {
             TLOGE(WmsLogTag::WMS_LIFE, "[NAPI]BrokerStates not started");
-            return;
+            return nullptr;
         }
         if (info.reuse) {
             TLOGI(WmsLogTag::WMS_LIFE, "session need to be reusesd.");
             if (SceneSessionManager::GetInstance().CheckCollaboratorType(info.collaboratorType_)) {
-                sceneSession = SceneSessionManager::GetInstance().FindSessionByAffinity(
-                    info.sessionAffinity);
+                sceneSession = SceneSessionManager::GetInstance().FindSessionByAffinity(info.sessionAffinity);
             } else {
                 sceneSession = SceneSessionManager::GetInstance().GetSceneSessionByName(
                     info.bundleName_, info.moduleName_, info.abilityName_, info.appIndex_);
@@ -1786,7 +1782,7 @@ void JsSceneSession::PendingSessionActivation(SessionInfo& info)
             sceneSession = SceneSessionManager::GetInstance().RequestSceneSession(info);
             if (sceneSession == nullptr) {
                 TLOGE(WmsLogTag::WMS_LIFE, "RequestSceneSession return nullptr");
-                return;
+                return nullptr;
             }
         } else {
             sceneSession->SetSessionInfo(info);
@@ -1800,13 +1796,32 @@ void JsSceneSession::PendingSessionActivation(SessionInfo& info)
             sceneSession = SceneSessionManager::GetInstance().RequestSceneSession(info);
             if (sceneSession == nullptr) {
                 TLOGE(WmsLogTag::WMS_LIFE, "retry RequestSceneSession return nullptr");
-                return;
+                return nullptr;
             }
             info.persistentId_ = sceneSession->GetPersistentId();
             sceneSession->SetSessionInfoPersistentId(sceneSession->GetPersistentId());
         } else {
             sceneSession->SetSessionInfo(info);
         }
+    }
+    return sceneSession;
+}
+
+void JsSceneSession::PendingSessionActivation(SessionInfo& info)
+{
+    TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]bundleName %{public}s, moduleName %{public}s, abilityName %{public}s, \
+        appIndex %{public}d, reuse %{public}d", info.bundleName_.c_str(), info.moduleName_.c_str(),
+        info.abilityName_.c_str(), info.appIndex_, info.reuse);
+    auto sceneSession = GenSceneSession(info);
+    if (sceneSession == nullptr) {
+        TLOGE(WmsLogTag::WMS_LIFE, "GenSceneSession failed");
+        return;
+    }
+
+    sceneSession->SetFocusedOnShow(true);
+    if (info.want != nullptr) {
+        auto focusedOnShow = info.want->GetBoolParam(AAFwk::Want::PARAM_RESV_WINDOW_FOCUSED, true);
+        sceneSession->SetFocusedOnShow(focusedOnShow);
     }
     std::shared_ptr<SessionInfo> sessionInfo = std::make_shared<SessionInfo>(info);
     auto task = [this, sessionInfo]() {
