@@ -284,7 +284,6 @@ void JsRootSceneSession::PendingSessionActivation(SessionInfo& info)
             SingletonContainer::Get<DmsReporter>().ReportContinueApp(true, static_cast<int32_t>(WSError::WS_OK));
         }
     }
-
     sceneSession->SetSessionInfo(info);
     std::shared_ptr<SessionInfo> sessionInfo = std::make_shared<SessionInfo>(info);
     auto task = [this, sessionInfo, sceneSession]() {
