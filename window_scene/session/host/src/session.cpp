@@ -491,13 +491,13 @@ void Session::SetFocusedOnShow(bool focusedOnShow)
     if (focusedOnShow == focusedOnShow_) {
         return;
     }
-    TLOGI(WmsLogTag::WMS_FOCUS, "SetFocusedOnShow:%{public}d", focusedOnShow);
+    TLOGI(WmsLogTag::WMS_FOCUS, "SetFocusedOnShow:%{public}d, id: %{public}d", focusedOnShow, GetPersistentId());
     focusedOnShow_ = focusedOnShow;
 }
 
 bool Session::IsFocusedOnShow() const
 {
-    TLOGD(WmsLogTag::WMS_FOCUS, "IsFocusedOnShow:%{public}d", focusedOnShow_);
+    TLOGD(WmsLogTag::WMS_FOCUS, "IsFocusedOnShow:%{public}d, id: %{public}d", focusedOnShow, GetPersistentId());
     return focusedOnShow_;
 }
 
