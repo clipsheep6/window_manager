@@ -631,7 +631,7 @@ WSError SceneSession::UpdateSessionRect(const WSRect& rect, const SizeChangeReas
 {
     if ((reason == SizeChangeReason::MOVE || reason == SizeChangeReason::RESIZE) &&
         GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
-        return WSError::WS_DO_NOTHING; 
+        return WSError::WS_DO_NOTHING;
     }
     auto task = [weakThis = wptr(this), rect, reason]() {
         auto session = weakThis.promote();

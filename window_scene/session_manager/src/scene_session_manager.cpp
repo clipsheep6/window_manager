@@ -2003,7 +2003,7 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
 
     if (property->GetWindowType() == WindowType::WINDOW_TYPE_PIP && !isEnablePiPCreate(property)) {
         WLOGFE("pip window is not enable to create.");
-        return WSError::WS_WS_DO_NOTHING;
+        return WSError::WS_DO_NOTHING;
     }
     TLOGI(WmsLogTag::WMS_LIFE, "create specific start, name: %{public}s, type: %{public}d",
         property->GetWindowName().c_str(), property->GetWindowType());
@@ -2079,8 +2079,9 @@ bool SceneSessionManager::CheckPiPPriority(const PiPTemplateInfo& pipTemplateInf
     return true;
 }
 
-bool SceneSessionManager::isEnablePiPCreate(const sptr<WindowSessionProperty>& property) {
-    Rect pipRect = property->GetWindowRect();
+bool SceneSessionManager::isEnablePiPCreate(const sptr<WindowSessionProperty>& property)
+{
+    Rect pipRect = property->GetRequestRect();
     if (pipRect.width_ == 0 || pipRect.height_ == 0) {
         TLOGI(WmsLogTag::WMS_PIP, "pip rect is invalid.");
         return false;
