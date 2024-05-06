@@ -69,14 +69,10 @@ private:
     int32_t SetMaximizeModeFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
     int32_t GetMaximizeModeFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
     int32_t GetFocusWindowInfoFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option);
-
-    template<class F>
-    void BindOp(WindowManagerMessage code, F&& func);
-
+    template<class F> void BindOp(WindowManagerMessage code, F&& func);
     std::unordered_map<WindowManagerMessage,
                        std::function<int32_t(MessageParcel& data, MessageParcel& reply, MessageOption& option)>>
-        ioOps_;
-
+                    ioOps_;
 };
 } // namespace Rosen
 } // namespace OHOS

@@ -44,22 +44,28 @@ WindowManagerStub::WindowManagerStub()
     BindOp(WindowManagerMessage::TRANS_ID_DESTROY_WINDOW, &WindowManagerStub::DestroyWindowFunc);
     BindOp(WindowManagerMessage::TRANS_ID_REQUEST_FOCUS, &WindowManagerStub::RequestFocusFunc);
     BindOp(WindowManagerMessage::TRANS_ID_GET_AVOID_AREA, &WindowManagerStub::GetAvoidAreaFunc);
-    BindOp(WindowManagerMessage::TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT, &WindowManagerStub::RegisterWindowManagerAgentFunc);
-    BindOp(WindowManagerMessage::TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT, &WindowManagerStub::UnregisterWindowManagerAgentFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT,
+           &WindowManagerStub::RegisterWindowManagerAgentFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT,
+           &WindowManagerStub::UnregisterWindowManagerAgentFunc);
     BindOp(WindowManagerMessage::TRANS_ID_NOTIFY_READY_MOVE_OR_DRAG, &WindowManagerStub::NotifyReadyMoveOrDragFunc);
     BindOp(WindowManagerMessage::TRANS_ID_PROCESS_POINT_DOWN, &WindowManagerStub::ProcessPointDownFunc);
     BindOp(WindowManagerMessage::TRANS_ID_PROCESS_POINT_UP, &WindowManagerStub::ProcessPointUpFunc);
     BindOp(WindowManagerMessage::TRANS_ID_GET_TOP_WINDOW_ID, &WindowManagerStub::GetTopWindowIdFunc);
     BindOp(WindowManagerMessage::TRANS_ID_MINIMIZE_ALL_APP_WINDOWS, &WindowManagerStub::MinimizeAllAppWindowsFunc);
-    BindOp(WindowManagerMessage::TRANS_ID_TOGGLE_SHOWN_STATE_FOR_ALL_APP_WINDOWS, &WindowManagerStub::ToggleShownStateForAllAppWindowsFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_TOGGLE_SHOWN_STATE_FOR_ALL_APP_WINDOWS,
+           &WindowManagerStub::ToggleShownStateForAllAppWindowsFunc);
     BindOp(WindowManagerMessage::TRANS_ID_UPDATE_LAYOUT_MODE, &WindowManagerStub::UpdateLayoutFunc);
     BindOp(WindowManagerMessage::TRANS_ID_UPDATE_PROPERTY, &WindowManagerStub::UpdatePropertyFunc);
-    BindOp(WindowManagerMessage::TRANS_ID_GET_ACCESSIBILITY_WINDOW_INFO_ID, &WindowManagerStub::GetAccessibilityWindowInfoFunc);
-    BindOp(WindowManagerMessage::TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID, &WindowManagerStub::GetVisibilityWindowInfoFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GET_ACCESSIBILITY_WINDOW_INFO_ID,
+           &WindowManagerStub::GetAccessibilityWindowInfoFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID,
+           &WindowManagerStub::GetVisibilityWindowInfoFunc);
     BindOp(WindowManagerMessage::TRANS_ID_ANIMATION_SET_CONTROLLER, &WindowManagerStub::AnimationSetControllerFunc);
     BindOp(WindowManagerMessage::TRANS_ID_GET_SYSTEM_CONFIG, &WindowManagerStub::GetSystemConfigFunc);
     BindOp(WindowManagerMessage::TRANS_ID_NOTIFY_WINDOW_TRANSITION, &WindowManagerStub::NotifyWindowTransitionFunc);
-    BindOp(WindowManagerMessage::TRANS_ID_GET_FULLSCREEN_AND_SPLIT_HOT_ZONE, &WindowManagerStub::GetModeChangeHotZonesFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GET_FULLSCREEN_AND_SPLIT_HOT_ZONE,
+           &WindowManagerStub::GetModeChangeHotZonesFunc);
     BindOp(WindowManagerMessage::TRANS_ID_GET_ANIMATION_CALLBACK, &WindowManagerStub::GetAnimationCallbackFunc);
     BindOp(WindowManagerMessage::TRANS_ID_UPDATE_AVOIDAREA_LISTENER, &WindowManagerStub::UpdateAvoidAreaListenerwFunc);
     BindOp(WindowManagerMessage::TRANS_ID_UPDATE_RS_TREE, &WindowManagerStub::UpdateRsTreeFunc);
@@ -69,17 +75,19 @@ WindowManagerStub::WindowManagerStub()
     BindOp(WindowManagerMessage::TRANS_ID_OFF_WINDOW_ZOOM, &WindowManagerStub::OffWindowZoomFunc);
     BindOp(WindowManagerMessage::TRANS_ID_RAISE_WINDOW_Z_ORDER, &WindowManagerStub::RaiseToAppTopFunc);
     BindOp(WindowManagerMessage::TRANS_ID_GET_SNAPSHOT, &WindowManagerStub::GetSnapshotFunc);
-    BindOp(WindowManagerMessage::TRANS_ID_GESTURE_NAVIGATION_ENABLED, &WindowManagerStub::SetGestureNavigaionEnabledFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GESTURE_NAVIGATION_ENABLED,
+           &WindowManagerStub::SetGestureNavigaionEnabledFunc);
     BindOp(WindowManagerMessage::TRANS_ID_SET_WINDOW_GRAVITY, &WindowManagerStub::SetWindowGravityFunc);
     BindOp(WindowManagerMessage::TRANS_ID_DISPATCH_KEY_EVENT, &WindowManagerStub::DispatchKeyEventFunc);
     BindOp(WindowManagerMessage::TRANS_ID_NOTIFY_DUMP_INFO_RESULT, &WindowManagerStub::NotifyDumpInfoResultFunc);
-    BindOp(WindowManagerMessage::TRANS_ID_GET_WINDOW_ANIMATION_TARGETS, &WindowManagerStub::GetWindowAnimationTargetsFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GET_WINDOW_ANIMATION_TARGETS,
+           &WindowManagerStub::GetWindowAnimationTargetsFunc);
     BindOp(WindowManagerMessage::TRANS_ID_SET_MAXIMIZE_MODE, &WindowManagerStub::SetMaximizeModeFunc);
     BindOp(WindowManagerMessage::TRANS_ID_GET_MAXIMIZE_MODE, &WindowManagerStub::GetMaximizeModeFunc);
     BindOp(WindowManagerMessage::TRANS_ID_GET_FOCUS_WINDOW_INFO, &WindowManagerStub::GetFocusWindowInfoFunc);
 }
 
-int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& data, 
+int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
                                            MessageParcel& reply, MessageOption& option)
 {
     MemoryGuard cacheGuard;
@@ -269,14 +277,14 @@ int32_t WindowManagerStub::UpdatePropertyFunc(MessageParcel& data, MessageParcel
     return 0;
 }
 
-// WindowManagerMessage::TRANS_ID_GET_ACCESSIBILITY_WINDOW_INFO_ID
+// WindowManagerMessage::TRANS_ID_GET_ACCESS...
 int32_t
     WindowManagerStub::GetAccessibilityWindowInfoFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     std::vector<sptr<AccessibilityWindowInfo>> infos;
     WMError errCode = GetAccessibilityWindowInfo(infos);
     if (!MarshallingHelper::MarshallingVectorParcelableObj<AccessibilityWindowInfo>(reply, infos)) {
-        WLOGFE("Write accessibility window infos failed");
+        WLOGFE("Write accessib window infos failed");
         return -1;
     }
     reply.WriteInt32(static_cast<int32_t>(errCode));
@@ -488,8 +496,7 @@ int32_t WindowManagerStub::NotifyDumpInfoResultFunc(MessageParcel& data, Message
 }
 
 // WindowManagerMessage::TRANS_ID_GET_WINDOW_ANIMATION_TARGETS
-int32_t
-    WindowManagerStub::GetWindowAnimationTargetsFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+int32_t WindowManagerStub::GetWindowAnimationTargetsFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     std::vector<uint32_t> missionIds;
     data.ReadUInt32Vector(&missionIds);
