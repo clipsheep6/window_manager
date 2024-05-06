@@ -261,8 +261,7 @@ void SceneSessionManager::Init()
     openDebugTrace = std::atoi((system::GetParameter("persist.sys.graphic.openDebugTrace", "0")).c_str()) != 0;
     isKeyboardPanelEnabled_ = system::GetParameter("persist.sceneboard.keyboardPanel.enabled", "0")  == "1";
     ScreenSessionManagerClient::GetInstance().RegisterSwitchingToAnotherUserFunction(
-        std::bind(&SceneSessionManager::HandleSwitchingToAnotherUser, this));
-    
+        std::bind(&SceneSessionManager::HandleSwitchingToAnotherUser, this));    
 }
 
 void SceneSessionManager::InitScheduleUtils()
