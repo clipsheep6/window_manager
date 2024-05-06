@@ -387,6 +387,7 @@ void SceneInputManager::SetCurrentUserId(int32_t userId)
 {
     TLOGI(WmsLogTag::WMS_MULTI_USER, "Current userId = %{public}d", userId);
     currentUserId_ = userId;
+    MMI::InputManager::GetInstance()->SetCurrentUser(userId);
 }
 
 void SceneInputManager::FlushDisplayInfoToMMI(const bool forceFlush)
