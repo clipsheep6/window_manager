@@ -260,6 +260,9 @@ void SceneSessionManager::Init()
     RegisterAppListener();
     openDebugTrace = std::atoi((system::GetParameter("persist.sys.graphic.openDebugTrace", "0")).c_str()) != 0;
     isKeyboardPanelEnabled_ = system::GetParameter("persist.sceneboard.keyboardPanel.enabled", "0")  == "1";
+    ScreenSessionManagerClient::GetInstance().RegisterSwitchingToAnotherUserFunction(
+        std::bind(&sceneSessionManager::HandleSwitchingToAnotherUser, this));
+    
 }
 
 void SceneSessionManager::InitScheduleUtils()
@@ -2677,8 +2680,9 @@ void SceneSessionManager::HandleSwitchingToAnotherUser()
 void SceneSessionManager::NotifySwitchingToCurrentUser()
 {
     auto task = [this]() {
-        TLOGI(WmsLogTag::WMS_MULTI_USER, "Notify switching to current user");
+        TLOGI(WmsLogTag::WMS_MULTI_USER, "Notify switching to current user: %{public}d", currentUserId_);
         SceneInputManager::GetInstance().SetUserBackground(false);
+        SceneInputManager::GetInstance().SetCurrentUserId(currentUserId_);
         // notify screenSessionManager to recover current user
         FlushWindowInfoToMMI(true);
         return WSError::WS_OK;
