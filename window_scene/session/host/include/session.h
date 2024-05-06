@@ -542,6 +542,8 @@ private:
     void NotifyPointerEventToRs(int32_t pointAction);
     void NotifySessionInfoChange();
     WSError HandleSubWindowClick(int32_t action);
+    WSError TransferPointerPermission(const int32_t pointerAction);
+    void LogPointerAction(const std::shared_ptr<MMI::PointerEvent>& pointerEvent, int32_t pointerAction);
 
     template<typename T>
     bool RegisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener);

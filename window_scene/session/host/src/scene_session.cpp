@@ -361,6 +361,37 @@ WSError SceneSession::GetGlobalMaximizeMode(MaximizeMode &mode)
     return PostSyncTask(task, "GetGlobalMaximizeMode");
 }
 
+WSError SceneSession::AspectRatioCheckLimits(const sptr<SceneSession>& session, float ratio, float vpr)
+{
+    if (!MathHelper::NearZero(ratio)) {
+        auto limits = session->GetSessionProperty()->GetWindowLimits();
+        if (session->IsDecorEnable()) {
+            if (limits.minWidth_ && limits.maxHeight_ &&
+                MathHelper::LessNotEqual(ratio, SessionUtils::ToLayoutWidth(limits.minWidth_, vpr) /
+                SessionUtils::ToLayoutHeight(limits.maxHeight_, vpr))) {
+                WLOGE("Failed, because aspectRatio is smaller than minWidth/maxHeight");
+                return WSError::WS_ERROR_INVALID_PARAM;
+            } else if (limits.minHeight_ && limits.maxWidth_ &&
+                MathHelper::GreatNotEqual(ratio, SessionUtils::ToLayoutWidth(limits.maxWidth_, vpr) /
+                SessionUtils::ToLayoutHeight(limits.minHeight_, vpr))) {
+                WLOGE("Failed, because aspectRatio is bigger than maxWidth/minHeight");
+                return WSError::WS_ERROR_INVALID_PARAM;
+            }
+        } else {
+            if (limits.minWidth_ && limits.maxHeight_ && MathHelper::LessNotEqual(ratio,
+                static_cast<float>(limits.minWidth_) / limits.maxHeight_)) {
+                WLOGE("Failed, because aspectRatio is smaller than minWidth/maxHeight");
+                return WSError::WS_ERROR_INVALID_PARAM;
+            } else if (limits.minHeight_ && limits.maxWidth_ && MathHelper::GreatNotEqual(ratio,
+                static_cast<float>(limits.maxWidth_) / limits.minHeight_)) {
+                WLOGE("Failed, because aspectRatio is bigger than maxWidth/minHeight");
+                return WSError::WS_ERROR_INVALID_PARAM;
+            }
+        }
+    }
+    return WSError::WS_OK;
+}
+
 WSError SceneSession::SetAspectRatio(float ratio)
 {
     auto task = [weakThis = wptr(this), ratio]() {
@@ -380,32 +411,11 @@ WSError SceneSession::SetAspectRatio(float ratio)
             vpr = display->GetVirtualPixelRatio();
             WLOGD("vpr = %{public}f", vpr);
         }
-        if (!MathHelper::NearZero(ratio)) {
-            auto limits = session->GetSessionProperty()->GetWindowLimits();
-            if (session->IsDecorEnable()) {
-                if (limits.minWidth_ && limits.maxHeight_ &&
-                    MathHelper::LessNotEqual(ratio, SessionUtils::ToLayoutWidth(limits.minWidth_, vpr) /
-                    SessionUtils::ToLayoutHeight(limits.maxHeight_, vpr))) {
-                    WLOGE("Failed, because aspectRatio is smaller than minWidth/maxHeight");
-                    return WSError::WS_ERROR_INVALID_PARAM;
-                } else if (limits.minHeight_ && limits.maxWidth_ &&
-                    MathHelper::GreatNotEqual(ratio, SessionUtils::ToLayoutWidth(limits.maxWidth_, vpr) /
-                    SessionUtils::ToLayoutHeight(limits.minHeight_, vpr))) {
-                    WLOGE("Failed, because aspectRatio is bigger than maxWidth/minHeight");
-                    return WSError::WS_ERROR_INVALID_PARAM;
-                }
-            } else {
-                if (limits.minWidth_ && limits.maxHeight_ && MathHelper::LessNotEqual(ratio,
-                    static_cast<float>(limits.minWidth_) / limits.maxHeight_)) {
-                    WLOGE("Failed, because aspectRatio is smaller than minWidth/maxHeight");
-                    return WSError::WS_ERROR_INVALID_PARAM;
-                } else if (limits.minHeight_ && limits.maxWidth_ && MathHelper::GreatNotEqual(ratio,
-                    static_cast<float>(limits.maxWidth_) / limits.minHeight_)) {
-                    WLOGE("Failed, because aspectRatio is bigger than maxWidth/minHeight");
-                    return WSError::WS_ERROR_INVALID_PARAM;
-                }
-            }
+
+        if (auto error = session->AspectRatioCheckLimits(session, ratio, vpr); error != WSError::WS_OK) {
+            return error;
         }
+
         session->aspectRatio_ = ratio;
         if (session->moveDragController_) {
             session->moveDragController_->SetAspectRatio(ratio);
@@ -1214,21 +1224,7 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
         return WSError::WS_ERROR_NULLPTR;
     }
 
-    int32_t action = pointerEvent->GetPointerAction();
-    {
-        bool isSystemWindow = GetSessionInfo().isSystem_;
-        if (action == MMI::PointerEvent::POINTER_ACTION_ENTER_WINDOW) {
-            std::lock_guard<std::mutex> guard(enterSessionMutex_);
-            WLOGFD("Set enter session, persistentId:%{public}d", GetPersistentId());
-            enterSession_ = wptr<SceneSession>(this);
-        }
-        if ((enterSession_ != nullptr) &&
-            (isSystemWindow && (action != MMI::PointerEvent::POINTER_ACTION_ENTER_WINDOW))) {
-            std::lock_guard<std::mutex> guard(enterSessionMutex_);
-            WLOGFD("Remove enter session, persistentId:%{public}d", GetPersistentId());
-            enterSession_ = nullptr;
-        }
-    }
+    int32_t action = InitEnterSession(pointerEvent);
 
     if (!CheckPointerEventDispatch(pointerEvent)) {
         WLOGFI("Do not dispatch this pointer event");
@@ -1245,6 +1241,43 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
         return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
     }
 
+    bool success;
+    if (auto ret = ProcessEventWindowModeFloating(pointerEvent, needNotifyClient, isPointDown, property,
+        success); !success) {
+        return ret;
+    }
+
+    bool raiseEnabled = property->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG && property->GetRaiseEnabled() &&
+        (action == MMI::PointerEvent::POINTER_ACTION_DOWN || action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN);
+    if (raiseEnabled) {
+        RaiseToAppTopForPointDown();
+    }
+    return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
+}
+
+int32_t SceneSession::InitEnterSession(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
+    int32_t action = pointerEvent->GetPointerAction();
+    {
+        bool isSystemWindow = GetSessionInfo().isSystem_;
+        if (action == MMI::PointerEvent::POINTER_ACTION_ENTER_WINDOW) {
+            std::lock_guard<std::mutex> guard(enterSessionMutex_);
+            WLOGFD("Set enter session, persistentId:%{public}d", GetPersistentId());
+            enterSession_ = wptr<SceneSession>(this);
+        } else if ((enterSession_ != nullptr) && isSystemWindow) {
+            std::lock_guard<std::mutex> guard(enterSessionMutex_);
+            WLOGFD("Remove enter session, persistentId:%{public}d", GetPersistentId());
+            enterSession_ = nullptr;
+        }
+    }
+
+    return action;
+}
+
+WSError SceneSession::ProcessEventWindowModeFloating(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
+    bool needNotifyClient, bool isPointDown, const sptr<WindowSessionProperty>& property, bool& success)
+{
+    success = false;
     auto windowType = property->GetWindowType();
     bool isMovableWindowType = IsMovableWindowType();
     bool isMainWindow = WindowHelper::IsMainWindow(windowType);
@@ -1282,12 +1315,8 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
         }
     }
 
-    bool raiseEnabled = property->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG && property->GetRaiseEnabled() &&
-        (action == MMI::PointerEvent::POINTER_ACTION_DOWN || action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN);
-    if (raiseEnabled) {
-        RaiseToAppTopForPointDown();
-    }
-    return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
+    success = true;
+    return WSError::WS_OK;
 }
 
 bool SceneSession::IsMovableWindowType()
@@ -2073,6 +2102,26 @@ void SceneSession::SetSystemTouchable(bool touchable)
     NotifyAccessibilityVisibilityChange();
 }
 
+void SceneSession::InitSessionInfo(const sptr<SceneSession>& session,
+    const sptr<AAFwk::SessionInfo> abilitySessionInfo, SessionInfo& info)
+{
+    info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
+    info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
+    info.moduleName_ = abilitySessionInfo->want.GetModuleName();
+    info.appIndex_ = abilitySessionInfo->want.GetIntParam(DLP_INDEX, 0);
+    info.persistentId_ = abilitySessionInfo->persistentId;
+    info.callerPersistentId_ = session->GetPersistentId();
+    info.callState_ = static_cast<uint32_t>(abilitySessionInfo->state);
+    info.uiAbilityId_ = abilitySessionInfo->uiAbilityId;
+    info.want = std::make_shared<AAFwk::Want>(abilitySessionInfo->want);
+    info.requestCode = abilitySessionInfo->requestCode;
+    info.callerToken_ = abilitySessionInfo->callerToken;
+    info.startSetting = abilitySessionInfo->startSetting;
+    info.callingTokenId_ = abilitySessionInfo->callingTokenId;
+    info.reuse = abilitySessionInfo->reuse;
+    info.processOptions = abilitySessionInfo->processOptions;
+}
+
 WSError SceneSession::ChangeSessionVisibilityWithStatusBar(
     const sptr<AAFwk::SessionInfo> abilitySessionInfo, bool visible)
 {
@@ -2092,23 +2141,9 @@ WSError SceneSession::ChangeSessionVisibilityWithStatusBar(
         }
 
         SessionInfo info;
-        info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
-        info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
-        info.moduleName_ = abilitySessionInfo->want.GetModuleName();
-        info.appIndex_ = abilitySessionInfo->want.GetIntParam(DLP_INDEX, 0);
-        info.persistentId_ = abilitySessionInfo->persistentId;
-        info.callerPersistentId_ = session->GetPersistentId();
+        session->InitSessionInfo(session, abilitySessionInfo, info);
         info.callerBundleName_ = abilitySessionInfo->want.GetStringParam(AAFwk::Want::PARAM_RESV_CALLER_BUNDLE_NAME);
         info.callerAbilityName_ = abilitySessionInfo->want.GetStringParam(AAFwk::Want::PARAM_RESV_CALLER_ABILITY_NAME);
-        info.callState_ = static_cast<uint32_t>(abilitySessionInfo->state);
-        info.uiAbilityId_ = abilitySessionInfo->uiAbilityId;
-        info.want = std::make_shared<AAFwk::Want>(abilitySessionInfo->want);
-        info.requestCode = abilitySessionInfo->requestCode;
-        info.callerToken_ = abilitySessionInfo->callerToken;
-        info.startSetting = abilitySessionInfo->startSetting;
-        info.callingTokenId_ = abilitySessionInfo->callingTokenId;
-        info.reuse = abilitySessionInfo->reuse;
-        info.processOptions = abilitySessionInfo->processOptions;
 
         if (session->changeSessionVisibilityWithStatusBarFunc_) {
             session->changeSessionVisibilityWithStatusBarFunc_(info, visible);
@@ -2159,23 +2194,10 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
         }
         session->sessionInfo_.startMethod = StartMethod::START_CALL;
         SessionInfo info;
-        info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
-        info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
-        info.moduleName_ = abilitySessionInfo->want.GetModuleName();
-        info.appIndex_ = abilitySessionInfo->want.GetIntParam(DLP_INDEX, 0);
-        info.persistentId_ = abilitySessionInfo->persistentId;
-        info.callerPersistentId_ = session->GetPersistentId();
+        session->InitSessionInfo(session, abilitySessionInfo, info);
+
         info.callerBundleName_ = abilitySessionInfo->want.GetStringParam(AAFwk::Want::PARAM_RESV_CALLER_BUNDLE_NAME);
         info.callerAbilityName_ = abilitySessionInfo->want.GetStringParam(AAFwk::Want::PARAM_RESV_CALLER_ABILITY_NAME);
-        info.callState_ = static_cast<uint32_t>(abilitySessionInfo->state);
-        info.uiAbilityId_ = abilitySessionInfo->uiAbilityId;
-        info.want = std::make_shared<AAFwk::Want>(abilitySessionInfo->want);
-        info.requestCode = abilitySessionInfo->requestCode;
-        info.callerToken_ = abilitySessionInfo->callerToken;
-        info.startSetting = abilitySessionInfo->startSetting;
-        info.callingTokenId_ = abilitySessionInfo->callingTokenId;
-        info.reuse = abilitySessionInfo->reuse;
-        info.processOptions = abilitySessionInfo->processOptions;
         if (info.want != nullptr) {
             info.windowMode = info.want->GetIntParam(AAFwk::Want::PARAM_RESV_WINDOW_MODE, 0);
             info.sessionAffinity = info.want->GetStringParam(Rosen::PARAM_KEY::PARAM_MISSION_AFFINITY_KEY);

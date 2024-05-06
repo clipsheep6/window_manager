@@ -121,6 +121,8 @@ private:
         int32_t sourceType, const WSRect& winRect);
     void CalculateStartRectExceptHotZone(float vpr, const WSRect& winRect);
     WSError UpdateMoveTempProperty(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
+    SizeChangeReason ProcessWindowDragHotAreaReason(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
+        int32_t action, bool& ret);
     bool CheckDragEventLegal(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
         const sptr<WindowSessionProperty> property);
     void NotifyWindowInputPidChange(bool isServerPid);
