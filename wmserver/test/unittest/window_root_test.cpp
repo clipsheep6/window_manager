@@ -985,9 +985,9 @@ HWTEST_F(WindowRootTest, FocusFaultDetection, Function | SmallTest | Level2)
     DisplayId displayId = displayInfo->GetDisplayId();
     std::vector<DisplayId> displayVec = { displayId };
     windowRoot_->displayIdMap_.insert(std::make_pair(displayGroupId, displayVec));
-    windowRoot_->needCheckFocusWindow = false;
+    windowRoot_->needCheckFocusWindow_ = false;
     windowRoot_->FocusFaultDetection();
-    windowRoot_->needCheckFocusWindow = true;
+    windowRoot_->needCheckFocusWindow_ = true;
     ASSERT_TRUE((windowRoot_ != nullptr));
     windowRoot_->FocusFaultDetection();
 }

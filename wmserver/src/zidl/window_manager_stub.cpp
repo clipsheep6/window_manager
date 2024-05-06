@@ -26,58 +26,61 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowManagerStub"};
+    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowManagerStub"};
 }
 
-#define BIND_OP(code, func)              \
-    ioOps_[WindowManagerMessage::code] = \
-        std::bind(&WindowManagerStub::func, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+template<class F>
+void WindowManagerStub::BindOp(WindowManagerMessage code, F&& func)
+{
+    using namespace std::placeholders;
+    ioOps_[code] = std::bind(func, this, _1, _2, _3);
+}
 
 WindowManagerStub::WindowManagerStub()
 {
-    BIND_OP(TRANS_ID_CREATE_WINDOW, CreateWindowFunc);
-    BIND_OP(TRANS_ID_ADD_WINDOW, AddWindowFunc);
-    BIND_OP(TRANS_ID_REMOVE_WINDOW, RemoveWindowFunc);
-    BIND_OP(TRANS_ID_DESTROY_WINDOW, DestroyWindowFunc);
-    BIND_OP(TRANS_ID_REQUEST_FOCUS, RequestFocusFunc);
-    BIND_OP(TRANS_ID_GET_AVOID_AREA, GetAvoidAreaFunc);
-    BIND_OP(TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT, RegisterWindowManagerAgentFunc);
-    BIND_OP(TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT, UnregisterWindowManagerAgentFunc);
-    BIND_OP(TRANS_ID_NOTIFY_READY_MOVE_OR_DRAG, NotifyReadyMoveOrDragFunc);
-    BIND_OP(TRANS_ID_PROCESS_POINT_DOWN, ProcessPointDownFunc);
-    BIND_OP(TRANS_ID_PROCESS_POINT_UP, ProcessPointUpFunc);
-    BIND_OP(TRANS_ID_GET_TOP_WINDOW_ID, GetTopWindowIdFunc);
-    BIND_OP(TRANS_ID_MINIMIZE_ALL_APP_WINDOWS, MinimizeAllAppWindowsFunc);
-    BIND_OP(TRANS_ID_TOGGLE_SHOWN_STATE_FOR_ALL_APP_WINDOWS, ToggleShownStateForAllAppWindowsFunc);
-    BIND_OP(TRANS_ID_UPDATE_LAYOUT_MODE, UpdateLayoutFunc);
-    BIND_OP(TRANS_ID_UPDATE_PROPERTY, UpdatePropertyFunc);
-    BIND_OP(TRANS_ID_GET_ACCESSIBILITY_WINDOW_INFO_ID, GetAccessibilityWindowInfoFunc);
-    BIND_OP(TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID, GetVisibilityWindowInfoFunc);
-    BIND_OP(TRANS_ID_ANIMATION_SET_CONTROLLER, AnimationSetControllerFunc);
-    BIND_OP(TRANS_ID_GET_SYSTEM_CONFIG, GetSystemConfigFunc);
-    BIND_OP(TRANS_ID_NOTIFY_WINDOW_TRANSITION, NotifyWindowTransitionFunc);
-    BIND_OP(TRANS_ID_GET_FULLSCREEN_AND_SPLIT_HOT_ZONE, GetModeChangeHotZonesFunc);
-    BIND_OP(TRANS_ID_GET_ANIMATION_CALLBACK, GetAnimationCallbackFunc);
-    BIND_OP(TRANS_ID_UPDATE_AVOIDAREA_LISTENER, UpdateAvoidAreaListenerwFunc);
-    BIND_OP(TRANS_ID_UPDATE_RS_TREE, UpdateRsTreeFunc);
-    BIND_OP(TRANS_ID_BIND_DIALOG_TARGET, BindDialogTargetFunc);
-    BIND_OP(TRANS_ID_SET_ANCHOR_AND_SCALE, SetAnchorAndScaleFunc);
-    BIND_OP(TRANS_ID_SET_ANCHOR_OFFSET, SetAnchorOffsetFunc);
-    BIND_OP(TRANS_ID_OFF_WINDOW_ZOOM, OffWindowZoomFunc);
-    BIND_OP(TRANS_ID_RAISE_WINDOW_Z_ORDER, RaiseToAppTopFunc);
-    BIND_OP(TRANS_ID_GET_SNAPSHOT, GetSnapshotFunc);
-    BIND_OP(TRANS_ID_GESTURE_NAVIGATION_ENABLED, SetGestureNavigaionEnabledFunc);
-    BIND_OP(TRANS_ID_SET_WINDOW_GRAVITY, SetWindowGravityFunc);
-    BIND_OP(TRANS_ID_DISPATCH_KEY_EVENT, DispatchKeyEventFunc);
-    BIND_OP(TRANS_ID_NOTIFY_DUMP_INFO_RESULT, NotifyDumpInfoResultFunc);
-    BIND_OP(TRANS_ID_GET_WINDOW_ANIMATION_TARGETS, GetWindowAnimationTargetsFunc);
-    BIND_OP(TRANS_ID_SET_MAXIMIZE_MODE, SetMaximizeModeFunc);
-    BIND_OP(TRANS_ID_GET_MAXIMIZE_MODE, GetMaximizeModeFunc);
-    BIND_OP(TRANS_ID_GET_FOCUS_WINDOW_INFO, GetFocusWindowInfoFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_CREATE_WINDOW, &WindowManagerStub::CreateWindowFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_ADD_WINDOW, &WindowManagerStub::AddWindowFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_REMOVE_WINDOW, &WindowManagerStub::RemoveWindowFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_DESTROY_WINDOW, &WindowManagerStub::DestroyWindowFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_REQUEST_FOCUS, &WindowManagerStub::RequestFocusFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GET_AVOID_AREA, &WindowManagerStub::GetAvoidAreaFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT, &WindowManagerStub::RegisterWindowManagerAgentFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT, &WindowManagerStub::UnregisterWindowManagerAgentFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_NOTIFY_READY_MOVE_OR_DRAG, &WindowManagerStub::NotifyReadyMoveOrDragFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_PROCESS_POINT_DOWN, &WindowManagerStub::ProcessPointDownFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_PROCESS_POINT_UP, &WindowManagerStub::ProcessPointUpFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GET_TOP_WINDOW_ID, &WindowManagerStub::GetTopWindowIdFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_MINIMIZE_ALL_APP_WINDOWS, &WindowManagerStub::MinimizeAllAppWindowsFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_TOGGLE_SHOWN_STATE_FOR_ALL_APP_WINDOWS, &WindowManagerStub::ToggleShownStateForAllAppWindowsFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_UPDATE_LAYOUT_MODE, &WindowManagerStub::UpdateLayoutFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_UPDATE_PROPERTY, &WindowManagerStub::UpdatePropertyFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GET_ACCESSIBILITY_WINDOW_INFO_ID, &WindowManagerStub::GetAccessibilityWindowInfoFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID, &WindowManagerStub::GetVisibilityWindowInfoFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_ANIMATION_SET_CONTROLLER, &WindowManagerStub::AnimationSetControllerFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GET_SYSTEM_CONFIG, &WindowManagerStub::GetSystemConfigFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_NOTIFY_WINDOW_TRANSITION, &WindowManagerStub::NotifyWindowTransitionFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GET_FULLSCREEN_AND_SPLIT_HOT_ZONE, &WindowManagerStub::GetModeChangeHotZonesFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GET_ANIMATION_CALLBACK, &WindowManagerStub::GetAnimationCallbackFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_UPDATE_AVOIDAREA_LISTENER, &WindowManagerStub::UpdateAvoidAreaListenerwFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_UPDATE_RS_TREE, &WindowManagerStub::UpdateRsTreeFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_BIND_DIALOG_TARGET, &WindowManagerStub::BindDialogTargetFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_SET_ANCHOR_AND_SCALE, &WindowManagerStub::SetAnchorAndScaleFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_SET_ANCHOR_OFFSET, &WindowManagerStub::SetAnchorOffsetFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_OFF_WINDOW_ZOOM, &WindowManagerStub::OffWindowZoomFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_RAISE_WINDOW_Z_ORDER, &WindowManagerStub::RaiseToAppTopFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GET_SNAPSHOT, &WindowManagerStub::GetSnapshotFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GESTURE_NAVIGATION_ENABLED, &WindowManagerStub::SetGestureNavigaionEnabledFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_SET_WINDOW_GRAVITY, &WindowManagerStub::SetWindowGravityFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_DISPATCH_KEY_EVENT, &WindowManagerStub::DispatchKeyEventFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_NOTIFY_DUMP_INFO_RESULT, &WindowManagerStub::NotifyDumpInfoResultFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GET_WINDOW_ANIMATION_TARGETS, &WindowManagerStub::GetWindowAnimationTargetsFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_SET_MAXIMIZE_MODE, &WindowManagerStub::SetMaximizeModeFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GET_MAXIMIZE_MODE, &WindowManagerStub::GetMaximizeModeFunc);
+    BindOp(WindowManagerMessage::TRANS_ID_GET_FOCUS_WINDOW_INFO, &WindowManagerStub::GetFocusWindowInfoFunc);
 }
 
-int32_t
-    WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
+int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& data, 
+                                           MessageParcel& reply, MessageOption& option)
 {
     MemoryGuard cacheGuard;
     if (data.ReadInterfaceToken() != GetDescriptor()) {
