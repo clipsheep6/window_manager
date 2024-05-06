@@ -177,8 +177,8 @@ int32_t WindowManagerStub::GetAvoidAreaFunc(MessageParcel& data, MessageParcel& 
 }
 
 // WindowManagerMessage::TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT
-int32_t
-    WindowManagerStub::RegisterWindowManagerAgentFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+int32_t WindowManagerStub::RegisterWindowManagerAgentFunc(MessageParcel& data,
+                                                          MessageParcel& reply, MessageOption& option)
 {
     auto type = static_cast<WindowManagerAgentType>(data.ReadUint32());
     sptr<IRemoteObject> windowManagerAgentObject = data.ReadRemoteObject();
@@ -278,8 +278,8 @@ int32_t WindowManagerStub::UpdatePropertyFunc(MessageParcel& data, MessageParcel
 }
 
 // WindowManagerMessage::TRANS_ID_GET_ACCESS...
-int32_t
-    WindowManagerStub::GetAccessibilityWindowInfoFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+int32_t WindowManagerStub::GetAccessibilityWindowInfoFunc(MessageParcel& data,
+                                                          MessageParcel& reply, MessageOption& option)
 {
     std::vector<sptr<AccessibilityWindowInfo>> infos;
     WMError errCode = GetAccessibilityWindowInfo(infos);
@@ -381,8 +381,8 @@ int32_t WindowManagerStub::GetAnimationCallbackFunc(MessageParcel& data, Message
 }
 
 // WindowManagerMessage::TRANS_ID_UPDATE_AVOIDAREA_LISTENER
-int32_t
-    WindowManagerStub::UpdateAvoidAreaListenerwFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+int32_t WindowManagerStub::UpdateAvoidAreaListenerwFunc(MessageParcel& data, MessageParcel& reply,
+                                                        MessageOption& option)
 {
     uint32_t windowId = data.ReadUint32();
     bool haveAvoidAreaListener = data.ReadBool();
