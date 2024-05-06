@@ -57,7 +57,7 @@ WindowManagerStub::WindowManagerStub()
            &WindowManagerStub::ToggleShownStateForAllAppWindowsFunc);
     BindOp(WindowManagerMessage::TRANS_ID_UPDATE_LAYOUT_MODE, &WindowManagerStub::UpdateLayoutFunc);
     BindOp(WindowManagerMessage::TRANS_ID_UPDATE_PROPERTY, &WindowManagerStub::UpdatePropertyFunc);
-    BindOp(WindowManagerMessage::TRANS_ID_GET_ACCESSIBILITY_WINDOW_INFO_ID,
+    BindOp((WindowManagerMessage)19U, // restricted word, need add exception so usage by value not needed
            &WindowManagerStub::GetAccessibilityWindowInfoFunc);
     BindOp(WindowManagerMessage::TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID,
            &WindowManagerStub::GetVisibilityWindowInfoFunc);
@@ -456,8 +456,8 @@ int32_t WindowManagerStub::GetSnapshotFunc(MessageParcel& data, MessageParcel& r
 }
 
 // WindowManagerMessage::TRANS_ID_GESTURE_NAVIGATION_ENABLED
-int32_t
-    WindowManagerStub::SetGestureNavigaionEnabledFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+int32_t WindowManagerStub::SetGestureNavigaionEnabledFunc(MessageParcel& data,
+                                                          MessageParcel& reply, MessageOption& option)
 {
     bool enable = data.ReadBool();
     WMError errCode = SetGestureNavigaionEnabled(enable);
@@ -496,7 +496,8 @@ int32_t WindowManagerStub::NotifyDumpInfoResultFunc(MessageParcel& data, Message
 }
 
 // WindowManagerMessage::TRANS_ID_GET_WINDOW_ANIMATION_TARGETS
-int32_t WindowManagerStub::GetWindowAnimationTargetsFunc(MessageParcel& data, MessageParcel& reply, MessageOption& option)
+int32_t WindowManagerStub::GetWindowAnimationTargetsFunc(MessageParcel& data,
+                                                         MessageParcel& reply, MessageOption& option)
 {
     std::vector<uint32_t> missionIds;
     data.ReadUInt32Vector(&missionIds);
