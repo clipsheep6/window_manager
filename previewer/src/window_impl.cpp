@@ -900,5 +900,14 @@ WMError WindowImpl::SetLandscapeMultiWindow(bool isLandscapeMultiWindow)
 {
     return WMError::WM_OK;
 }
+
+void WindowImpl::SetUiDvsyncSwitch(bool dvsyncSwitch)
+{
+    if (vsyncStation_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_MAIN, "Set Ui-dvsync switch failed, vsyncStation is nullptr");
+        return;
+    }
+    vsyncStation_->SetUiDvsyncSwitch(dvsyncSwitch);
+}
 } // namespace Rosen
 } // namespace OHOS

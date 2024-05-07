@@ -3843,5 +3843,13 @@ WMError WindowImpl::SetTextFieldAvoidInfo(double textFieldPositionY, double text
     UpdateProperty(PropertyChangeAction::ACTION_UPDATE_TEXTFIELD_AVOID_INFO);
     return WMError::WM_OK;
 }
+
+void WindowImpl::SetUiDvsyncSwitch(bool dvsyncSwitch)
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (!SingletonContainer::IsDestroyed() && vsyncStation_ != nullptr) {
+        return vsyncStation_->SetUiDvsyncSwitch();
+    }
+}
 } // namespace Rosen
 } // namespace OHOS
