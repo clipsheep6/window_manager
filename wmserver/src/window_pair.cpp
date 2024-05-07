@@ -402,35 +402,67 @@ void WindowPair::UpdateIfSplitRelated(sptr<WindowNode>& node)
     }
 }
 
+bool WindowPair::IsDone() {
+    return (primary_ && secondary_ && divider_);
+}
+
+bool WindowPair::IsPrimaryAndSecondary() {
+    return (primary_ && secondary_  && !divider_);
+}
+
+bool WindowPair::IsSinglePrimary() {
+    return (primary_&& !secondary_ && !divider_);
+}
+
+bool WindowPair::IsPrimaryWithDivider() {
+    return (primary_ && !secondary_ && divider_);
+}
+
+bool WindowPair::IsSingleSecondary() {
+    return (!primary_ && secondary_ && !divider_);
+}
+
+bool WindowPair::IsSecondaryWithDivider() {
+    return (!primary_ && secondary_ && divider_);
+}
+
+bool WindowPair::IsSingleSplit() {
+    return (!primary_  && !secondary_ && divider_);
+}
+
+
 void WindowPair::UpdateWindowPairStatus()
 {
     WLOGI("Update window pair status.");
     WindowPairStatus prevStatus = status_;
-    if (primary_ != nullptr && secondary_ != nullptr && divider_ != nullptr) {
+    if (IsDone()) {
         status_ = WindowPairStatus::PAIRED_DONE;
-    } else if (primary_ != nullptr && secondary_ != nullptr && divider_ == nullptr) {
+    } else if (IsPrimaryAndSecondary()) {
         status_ = WindowPairStatus::PRIMARY_AND_SECONDARY;
-    } else if (primary_ != nullptr && secondary_ == nullptr && divider_ == nullptr) {
+    } else if (IsSinglePrimary()) {
         status_ = WindowPairStatus::SINGLE_PRIMARY;
-    } else if (primary_ != nullptr && secondary_ == nullptr && divider_ != nullptr) {
+    } else if (IsPrimaryWithDivider()) {
         status_ = WindowPairStatus::PRIMARY_AND_DIVIDER;
-    } else if (primary_ == nullptr && secondary_ != nullptr && divider_ == nullptr) {
+    } else if (IsSingleSecondary()) {
         status_ = WindowPairStatus::SINGLE_SECONDARY;
-    } else if (primary_ == nullptr && secondary_ != nullptr && divider_ != nullptr) {
+    } else if (IsSecondaryWithDivider()) {
         status_ = WindowPairStatus::SECONDARY_AND_DIVIDER;
-    } else if (primary_ == nullptr && secondary_ == nullptr && divider_ != nullptr) {
+    } else if (IsSingleSplit()) {
         status_ = WindowPairStatus::SINGLE_SPLIT;
     } else {
         status_ = WindowPairStatus::EMPTY;
     }
-    if ((prevStatus == WindowPairStatus::SINGLE_PRIMARY ||
-        prevStatus == WindowPairStatus::SINGLE_SECONDARY || prevStatus == WindowPairStatus::EMPTY) &&
-        status_ == WindowPairStatus::PRIMARY_AND_SECONDARY) {
-        // notify systemui to create divider
-        NotifyCreateOrDestroyDivider(primary_, false);
-    } else if ((prevStatus == WindowPairStatus::PAIRED_DONE || prevStatus == WindowPairStatus::PRIMARY_AND_SECONDARY) &&
-        (status_ != WindowPairStatus::PAIRED_DONE && status_ != WindowPairStatus::PRIMARY_AND_SECONDARY)) {
-        Clear();
+    if (status_ == WindowPairStatus::PRIMARY_AND_SECONDARY) {
+        if (prevStatus == WindowPairStatus::SINGLE_PRIMARY ||
+            prevStatus == WindowPairStatus::SINGLE_SECONDARY || prevStatus == WindowPairStatus::EMPTY) {
+            // notify systemui to create divider
+            NotifyCreateOrDestroyDivider(primary_, false);
+        }
+    } else {
+        if (status_ != WindowPairStatus::PAIRED_DONE && (prevStatus == WindowPairStatus::PAIRED_DONE ||
+            prevStatus == WindowPairStatus::PRIMARY_AND_SECONDARY)) {
+            Clear();
+        }
     }
     DumpPairInfo();
 }
