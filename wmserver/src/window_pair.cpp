@@ -402,31 +402,38 @@ void WindowPair::UpdateIfSplitRelated(sptr<WindowNode>& node)
     }
 }
 
-bool WindowPair::IsDone() {
+bool WindowPair::IsDone()
+{
     return (primary_ && secondary_ && divider_);
 }
 
-bool WindowPair::IsPrimaryAndSecondary() {
+bool WindowPair::IsPrimaryAndSecondary()
+{
     return (primary_ && secondary_  && !divider_);
 }
 
-bool WindowPair::IsSinglePrimary() {
+bool WindowPair::IsSinglePrimary()
+{
     return (primary_&& !secondary_ && !divider_);
 }
 
-bool WindowPair::IsPrimaryWithDivider() {
+bool WindowPair::IsPrimaryWithDivider()
+{
     return (primary_ && !secondary_ && divider_);
 }
 
-bool WindowPair::IsSingleSecondary() {
+bool WindowPair::IsSingleSecondary()
+{
     return (!primary_ && secondary_ && !divider_);
 }
 
-bool WindowPair::IsSecondaryWithDivider() {
+bool WindowPair::IsSecondaryWithDivider()
+{
     return (!primary_ && secondary_ && divider_);
 }
 
-bool WindowPair::IsSingleSplit() {
+bool WindowPair::IsSingleSplit()
+{
     return (!primary_  && !secondary_ && divider_);
 }
 
