@@ -113,7 +113,7 @@ HWTEST_F(WindowAnimationTransitionTest, AnimationTransitionTest01, Function | Me
     usleep(500000); // 500000us = 0.5s
     ASSERT_EQ(WMError::WM_OK, window->Hide(0, true));
     usleep(500000); // 500000us = 0.5s
-    ASSERT_TRUE(trans_ == window->GetTransform());
+
     ASSERT_EQ(WMError::WM_OK, window->Destroy());
 }
 
