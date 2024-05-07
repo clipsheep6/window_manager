@@ -22,6 +22,8 @@
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DMS_SCREEN_CLIENT, "ScreenSessionManagerClient" };
+constexpr uint32_t MAX_RETRY_GET_PROPERTY = 10;
+constexpr uint32_t RETRY_WAIT_MS = 10;
 std::mutex g_instanceMutex;
 } // namespace
 
@@ -105,7 +107,7 @@ void ScreenSessionManagerClient::OnScreenConnectionChanged(ScreenId screenId, Sc
             .rsId = rsId,
             .name = name,
         };
-        config.property = screenSessionManager_->GetScreenProperty(screenId);
+        config.property = GetVaildScreenProperty(screenId);
         config.displayNode = screenSessionManager_->GetDisplayNode(screenId);
         sptr<ScreenSession> screenSession = new ScreenSession(config, ScreenSessionReason::CREATE_SESSION_FOR_CLIENT);
         {
@@ -132,6 +134,22 @@ void ScreenSessionManagerClient::OnScreenConnectionChanged(ScreenId screenId, Sc
             screenSessionMap_.erase(screenId);
         }
     }
+}
+
+ScreenProperty ScreenSessionManagerClient::GetVaildScreenProperty(ScreenId screenId)
+{
+    uint32_t retryTimes = 0;
+    while (retryTimes < MAX_RETRY_GET_PROPERTY) {
+        auto property = screenSessionManager_->GetScreenProperty(screenId);
+        auto rrect = property.GetBounds();
+        if (rrect.rect_.width_ != 0 && rrect.rect_.height_ != 0) {
+            return property;
+        }
+        retryTimes++;
+        WLOGFE("Error get screen property is zero, retry %{public}u times", retryTimes);
+        std::this_thread::sleep_for(std::chrono::milliseconds(RETRY_WAIT_MS));
+    }
+    return ScreenProperty{};
 }
 
 sptr<ScreenSession> ScreenSessionManagerClient::GetScreenSession(ScreenId screenId) const
