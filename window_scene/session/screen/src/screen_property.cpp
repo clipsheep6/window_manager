@@ -38,6 +38,9 @@ float ScreenProperty::GetRotation() const
 
 void ScreenProperty::SetBounds(const RRect& bounds)
 {
+    if (bounds.rect_.width_ == 0 || bounds.rect_.height_ == 0) {
+        WLOGFW("screeBounds is zero");
+    }
     bounds_ = bounds;
     UpdateXDpi();
     UpdateYDpi();
