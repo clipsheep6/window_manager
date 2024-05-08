@@ -164,7 +164,6 @@ WindowSessionImpl::WindowSessionImpl(const sptr<WindowOption>& option)
         WLOGFD("create dialogWindow, title: %{public}s, decorEnable: %{public}d",
             dialogTitle_.c_str(), dialogDecorEnable);
     }
-
     surfaceNode_ = CreateSurfaceNode(property_->GetWindowName(), optionWindowType);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
     if (surfaceNode_ != nullptr) {
@@ -829,7 +828,12 @@ WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, nap
             SetAPPWindowLabel(dialogTitle_);
         }
     }
+    
+    return SetUIContentInnerUpdate(contentInfo, aceRet);
+}
 
+WMError WindowSessionImpl::SetUIContentInnerUpdate(const std::string& contentInfo, OHOS::Ace::UIContentErrorCode& aceRet)
+{
     uint32_t version = 0;
     if ((context_ != nullptr) && (context_->GetApplicationInfo() != nullptr)) {
         version = context_->GetApplicationInfo()->apiCompatibleVersion;

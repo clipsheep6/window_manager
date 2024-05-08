@@ -335,6 +335,7 @@ private:
         WindowSetUIContentType type, AppExecFwk::Ability* ability, OHOS::Ace::UIContentErrorCode& aceRet);
     WMError SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
         WindowSetUIContentType type, AppExecFwk::Ability* ability);
+    WMError SetUIContentInnerUpdate(const std::string& contentInfo, OHOS::Ace::UIContentErrorCode& aceRet);
     std::shared_ptr<std::vector<uint8_t>> GetAbcContent(const std::string& abcPath);
 
     void UpdateRectForRotation(const Rect& wmRect, const Rect& preRect, WindowSizeChangeReason wmReason,
