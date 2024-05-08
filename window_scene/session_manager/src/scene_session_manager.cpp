@@ -202,6 +202,13 @@ public:
 };
 } // namespace
 
+template<class F>
+void SceneSessionManager::BindOp(WSPropertyChangeAction code, F && func)
+{
+    using namespace std::placeholders;
+    updatePropertyOps_[code] = std::bind(func, this, _1, _2);
+}
+
 SceneSessionManager& SceneSessionManager::GetInstance()
 {
     std::lock_guard<std::recursive_mutex> lock(g_instanceMutex);
@@ -221,6 +228,36 @@ SceneSessionManager::SceneSessionManager() : rsInterface_(RSInterfaces::GetInsta
     if (!launcherService_->RegisterCallback(new BundleStatusCallback())) {
         WLOGFE("Failed to register bundle status callback.");
     }
+
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_TURN_SCREEN_ON, &SceneSessionManager::UpdateTurnScreenOnFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_KEEP_SCREEN_ON, &SceneSessionManager::UpdateKeepScreenOnFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_FOCUSABLE, &SceneSessionManager::UpdateFocusableFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_TOUCHABLE, &SceneSessionManager::UpdateTouchableFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_SET_BRIGHTNESS, &SceneSessionManager::UpdateSetBrightnessFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_ORIENTATION, &SceneSessionManager::UpdateOrientationFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE, &SceneSessionManager::UpdatePrivacyModeFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_SYSTEM_PRIVACY_MODE,
+        &SceneSessionManager::UpdateSystemPrivacyModeFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE, &SceneSessionManager::UpdateMaximizeStateFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_OTHER_PROPS, &SceneSessionManager::UpdateOtherPropsFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_STATUS_PROPS, &SceneSessionManager::UpdateStatusPropsFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_NAVIGATION_PROPS, &SceneSessionManager::UpdateNavigationPropsFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_NAVIGATION_INDICATOR_PROPS,
+        &SceneSessionManager::UpdateNavigationIndicatorPropsFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_FLAGS, &SceneSessionManager::UpdateFlagsFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_MODE, &SceneSessionManager::UpdateModeFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_ANIMATION_FLAG, &SceneSessionManager::UpdateAnimationFlagFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_TOUCH_HOT_AREA, &SceneSessionManager::UpdateTouchHotAreaFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_DECOR_ENABLE, &SceneSessionManager::UpdateDecorEnableFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_WINDOW_LIMITS, &SceneSessionManager::UpdateWindowLimitsFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_DRAGENABLED, &SceneSessionManager::UpdateDragenabledFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_RAISEENABLED, &SceneSessionManager::UpdateRaiseenabledFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_HIDE_NON_SYSTEM_FLOATING_WINDOWS,
+        &SceneSessionManager::UpdateHideNonSystemFloatingWindowsFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_TEXTFIELD_AVOID_INFO,
+        &SceneSessionManager::UpdateTextfieldAvoidInfoFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_WINDOW_MASK, &SceneSessionManager::UpdateWindowMaskFunc);
+    BindOp(WSPropertyChangeAction::ACTION_UPDATE_TOPMOST, &SceneSessionManager::UpdateTopmostFunc);
 }
 
 void SceneSessionManager::Init()
@@ -3109,154 +3146,231 @@ WMError SceneSessionManager::HandleUpdateProperty(const sptr<WindowSessionProper
         WLOGFI("property is nullptr");
         return WMError::WM_ERROR_NULLPTR;
     }
-    switch (action) {
-        case WSPropertyChangeAction::ACTION_UPDATE_TURN_SCREEN_ON: {
-            sceneSession->SetTurnScreenOn(property->IsTurnScreenOn());
-            HandleTurnScreenOn(sceneSession);
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_KEEP_SCREEN_ON: {
-            sceneSession->SetKeepScreenOn(property->IsKeepScreenOn());
-            HandleKeepScreenOn(sceneSession, property->IsKeepScreenOn());
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_FOCUSABLE: {
-            sceneSession->SetFocusable(property->GetFocusable());
-            NotifyWindowInfoChange(property->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_TOUCHABLE: {
-            sceneSession->SetTouchable(property->GetTouchable());
-            NotifyWindowInfoChange(property->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_SET_BRIGHTNESS: {
-            if (sceneSession->GetWindowType() != WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
-                WLOGW("only app main window can set brightness");
-                return WMError::WM_OK;
-            }
-            // @todo if sceneSession is inactive, return
-            SetBrightness(sceneSession, property->GetBrightness());
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_ORIENTATION: {
-            sceneSession->SetRequestedOrientation(property->GetRequestedOrientation());
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE: {
-            bool isPrivacyMode = property->GetPrivacyMode() || property->GetSystemPrivacyMode();
-            sceneSession->SetPrivacyMode(isPrivacyMode);
-            UpdatePrivateStateAndNotify(sceneSession->GetPersistentId());
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_SYSTEM_PRIVACY_MODE: {
-            bool isPrivacyMode = property->GetPrivacyMode() || property->GetSystemPrivacyMode();
-            sceneSession->SetPrivacyMode(isPrivacyMode);
-            UpdatePrivateStateAndNotify(sceneSession->GetPersistentId());
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE: {
-            if (sceneSession->GetSessionProperty() != nullptr) {
-                sceneSession->GetSessionProperty()->SetMaximizeMode(property->GetMaximizeMode());
-                sceneSession->GetSessionProperty()->SetIsLayoutFullScreen(property->IsLayoutFullScreen());
-            }
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_OTHER_PROPS: {
-            auto systemBarProperties = property->GetSystemBarProperty();
-            for (auto iter : systemBarProperties) {
-                sceneSession->SetSystemBarProperty(iter.first, iter.second);
-            }
-            NotifyWindowInfoChange(property->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_STATUS_PROPS: {
-            HandleSpecificSystemBarProperty(WindowType::WINDOW_TYPE_STATUS_BAR, property, sceneSession);
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_NAVIGATION_PROPS: {
-            HandleSpecificSystemBarProperty(WindowType::WINDOW_TYPE_NAVIGATION_BAR, property, sceneSession);
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_NAVIGATION_INDICATOR_PROPS: {
-            HandleSpecificSystemBarProperty(WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR, property, sceneSession);
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_FLAGS: {
-            SetWindowFlags(sceneSession, property);
-            NotifyWindowInfoChange(property->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_MODE: {
-            if (sceneSession->GetSessionProperty() != nullptr) {
-                sceneSession->GetSessionProperty()->SetWindowMode(property->GetWindowMode());
-                ProcessWindowModeType();
-            }
-            NotifyWindowInfoChange(property->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_ANIMATION_FLAG: {
-            if (sceneSession->GetSessionProperty() != nullptr) {
-                sceneSession->GetSessionProperty()->SetAnimationFlag(property->GetAnimationFlag());
-            }
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_TOUCH_HOT_AREA: {
-            if (sceneSession->GetSessionProperty() != nullptr) {
-                std::vector<Rect> touchHotAreas;
-                property->GetTouchHotAreas(touchHotAreas);
-                sceneSession->GetSessionProperty()->SetTouchHotAreas(touchHotAreas);
-            }
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_DECOR_ENABLE: {
-            if (property != nullptr && !property->GetSystemCalling()) {
-                WLOGFE("update decor enable permission denied!");
-                break;
-            }
-            if (sceneSession->GetSessionProperty() != nullptr) {
-                sceneSession->GetSessionProperty()->SetDecorEnable(property->IsDecorEnable());
-            }
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_WINDOW_LIMITS: {
-            if (sceneSession->GetSessionProperty() != nullptr) {
-                sceneSession->GetSessionProperty()->SetWindowLimits(property->GetWindowLimits());
-            }
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_DRAGENABLED: {
-            return UpdatePropertyDragEnabled(property, sceneSession);
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_RAISEENABLED: {
-            return UpdatePropertyRaiseEnabled(property, sceneSession);
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_HIDE_NON_SYSTEM_FLOATING_WINDOWS: {
-            UpdateHideNonSystemFloatingWindows(property, sceneSession);
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_TEXTFIELD_AVOID_INFO: {
-            if (sceneSession->GetSessionProperty() != nullptr) {
-                sceneSession->GetSessionProperty()->SetTextFieldPositionY(property->GetTextFieldPositionY());
-                sceneSession->GetSessionProperty()->SetTextFieldHeight(property->GetTextFieldHeight());
-            }
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_WINDOW_MASK: {
-            if (sceneSession->GetSessionProperty() != nullptr) {
-                sceneSession->GetSessionProperty()->SetWindowMask(property->GetWindowMask());
-                sceneSession->GetSessionProperty()->SetIsShaped(property->GetIsShaped());
-                FlushWindowInfoToMMI();
-            }
-            break;
-        }
-        case WSPropertyChangeAction::ACTION_UPDATE_TOPMOST: {
-            return UpdateTopmostProperty(property, sceneSession);
-        }
-        default:
-            break;
+
+    if (auto it = updatePropertyOps_.find(action); it != updatePropertyOps_.cend()) {
+        return it->second(property, sceneSession);
+    } else {
+        WLOGFW("unhandled property change action: %{public}u", action);
     }
     return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateTurnScreenOnFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    sceneSession->SetTurnScreenOn(property->IsTurnScreenOn());
+    HandleTurnScreenOn(sceneSession);
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateKeepScreenOnFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    sceneSession->SetKeepScreenOn(property->IsKeepScreenOn());
+    HandleKeepScreenOn(sceneSession, property->IsKeepScreenOn());
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateFocusableFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    sceneSession->SetFocusable(property->GetFocusable());
+    NotifyWindowInfoChange(property->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateTouchableFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    sceneSession->SetTouchable(property->GetTouchable());
+    NotifyWindowInfoChange(property->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateSetBrightnessFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    if (sceneSession->GetWindowType() != WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        WLOGW("only app main window can set brightness");
+        return WMError::WM_OK;
+    }
+    // @todo if sceneSession is inactive, return
+    SetBrightness(sceneSession, property->GetBrightness());
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateOrientationFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    sceneSession->SetRequestedOrientation(property->GetRequestedOrientation());
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdatePrivacyModeFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    bool isPrivacyMode = property->GetPrivacyMode() || property->GetSystemPrivacyMode();
+    sceneSession->SetPrivacyMode(isPrivacyMode);
+    UpdatePrivateStateAndNotify(sceneSession->GetPersistentId());
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateSystemPrivacyModeFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    bool isPrivacyMode = property->GetPrivacyMode() || property->GetSystemPrivacyMode();
+    sceneSession->SetPrivacyMode(isPrivacyMode);
+    UpdatePrivateStateAndNotify(sceneSession->GetPersistentId());
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateMaximizeStateFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    if (sceneSession->GetSessionProperty() != nullptr) {
+        sceneSession->GetSessionProperty()->SetMaximizeMode(property->GetMaximizeMode());
+        sceneSession->GetSessionProperty()->SetIsLayoutFullScreen(property->IsLayoutFullScreen());
+    }
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateOtherPropsFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    auto systemBarProperties = property->GetSystemBarProperty();
+    for (auto iter : systemBarProperties) {
+        sceneSession->SetSystemBarProperty(iter.first, iter.second);
+    }
+    NotifyWindowInfoChange(property->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateStatusPropsFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    HandleSpecificSystemBarProperty(WindowType::WINDOW_TYPE_STATUS_BAR, property, sceneSession);
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateNavigationPropsFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    HandleSpecificSystemBarProperty(WindowType::WINDOW_TYPE_NAVIGATION_BAR, property, sceneSession);
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateNavigationIndicatorPropsFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    HandleSpecificSystemBarProperty(WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR, property, sceneSession);
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateFlagsFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    SetWindowFlags(sceneSession, property);
+    NotifyWindowInfoChange(property->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateModeFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    if (sceneSession->GetSessionProperty() != nullptr) {
+        sceneSession->GetSessionProperty()->SetWindowMode(property->GetWindowMode());
+        ProcessWindowModeType();
+    }
+    NotifyWindowInfoChange(property->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_PROPERTY);
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateAnimationFlagFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    if (sceneSession->GetSessionProperty() != nullptr) {
+        sceneSession->GetSessionProperty()->SetAnimationFlag(property->GetAnimationFlag());
+    }
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateTouchHotAreaFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    if (sceneSession->GetSessionProperty() != nullptr) {
+        std::vector<Rect> touchHotAreas;
+        property->GetTouchHotAreas(touchHotAreas);
+        sceneSession->GetSessionProperty()->SetTouchHotAreas(touchHotAreas);
+    }
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateDecorEnableFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    if (property != nullptr && !property->GetSystemCalling()) {
+        WLOGFE("update decor enable permission denied!");
+        return WMError::WM_OK;
+    }
+    if (sceneSession->GetSessionProperty() != nullptr) {
+        sceneSession->GetSessionProperty()->SetDecorEnable(property->IsDecorEnable());
+    }
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateWindowLimitsFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    if (sceneSession->GetSessionProperty() != nullptr) {
+        sceneSession->GetSessionProperty()->SetWindowLimits(property->GetWindowLimits());
+    }
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateDragenabledFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    return UpdatePropertyDragEnabled(property, sceneSession);
+}
+
+WMError SceneSessionManager::UpdateRaiseenabledFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    return UpdatePropertyRaiseEnabled(property, sceneSession);
+}
+
+WMError SceneSessionManager::UpdateHideNonSystemFloatingWindowsFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    UpdateHideNonSystemFloatingWindows(property, sceneSession);
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateTextfieldAvoidInfoFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    if (sceneSession->GetSessionProperty() != nullptr) {
+        sceneSession->GetSessionProperty()->SetTextFieldPositionY(property->GetTextFieldPositionY());
+        sceneSession->GetSessionProperty()->SetTextFieldHeight(property->GetTextFieldHeight());
+    }
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateWindowMaskFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    if (sceneSession->GetSessionProperty() != nullptr) {
+        sceneSession->GetSessionProperty()->SetWindowMask(property->GetWindowMask());
+        sceneSession->GetSessionProperty()->SetIsShaped(property->GetIsShaped());
+        FlushWindowInfoToMMI();
+    }
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::UpdateTopmostFunc(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession)
+{
+    return UpdateTopmostProperty(property, sceneSession);
 }
 
 WMError SceneSessionManager::UpdateTopmostProperty(const sptr<WindowSessionProperty>& property,
