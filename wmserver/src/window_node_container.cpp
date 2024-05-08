@@ -132,6 +132,31 @@ uint32_t WindowNodeContainer::GetMainFloatingWindowCount()
     return windowNumber;
 }
 
+WMError ValidateHierarchy(sptr<WindowNode>& node, const sptr<WindowNode>& parentNode, const sptr<WindowNode>& root,
+                          const sptr<WindowNode>& aboveAppWindowNode)
+{
+    if (WindowHelper::IsSystemSubWindow(node->GetWindowType()) ||
+        node->GetWindowType() == WindowType::WINDOW_TYPE_APP_COMPONENT) {
+        if (WindowHelper::IsSubWindow(parentNode->GetWindowType()) ||
+            WindowHelper::IsSystemSubWindow(parentNode->GetWindowType()) ||
+            parentNode->GetWindowType() == WindowType::WINDOW_TYPE_APP_COMPONENT ||
+            parentNode->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
+            // some times, dialog is a child window, so exclude
+            WLOGFE("the parent of window cannot be any sub window");
+            return WMError::WM_ERROR_INVALID_PARAM;
+        }
+    } else {
+        if (parentNode->parent_ != root &&
+            !((parentNode->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED)) &&
+            (parentNode->parent_ == aboveAppWindowNode))) {
+            WLOGFE("window type and parent window not match \
+                or try to add subwindow to subwindow, which is forbidden");
+            return WMError::WM_ERROR_INVALID_PARAM;
+        }
+    }
+    return WMError::WM_OK;
+}
+
 WMError WindowNodeContainer::AddWindowNodeOnWindowTree(sptr<WindowNode>& node, const sptr<WindowNode>& parentNode)
 {
     sptr<WindowNode> root = FindRoot(node->GetWindowType());
@@ -140,27 +165,11 @@ WMError WindowNodeContainer::AddWindowNodeOnWindowTree(sptr<WindowNode>& node, c
         WLOGFE("root is nullptr!");
         return WMError::WM_ERROR_NULLPTR;
     }
+    if (auto ret = ValidateHierarchy(node, parentNode, root, aboveAppWindowNode_) ; ret != WMError::WM_OK) {
+        return ret;
+    }
     node->requestedVisibility_ = true;
     if (parentNode != nullptr) { // subwindow
-        if (WindowHelper::IsSystemSubWindow(node->GetWindowType()) ||
-            node->GetWindowType() == WindowType::WINDOW_TYPE_APP_COMPONENT) {
-            if (WindowHelper::IsSubWindow(parentNode->GetWindowType()) ||
-                WindowHelper::IsSystemSubWindow(parentNode->GetWindowType()) ||
-                parentNode->GetWindowType() == WindowType::WINDOW_TYPE_APP_COMPONENT ||
-                parentNode->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
-                // some times, dialog is a child window, so exclude
-                WLOGFE("the parent of window cannot be any sub window");
-                return WMError::WM_ERROR_INVALID_PARAM;
-            }
-        } else {
-            if (parentNode->parent_ != root &&
-                !((parentNode->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED)) &&
-                (parentNode->parent_ == aboveAppWindowNode_))) {
-                WLOGFE("window type and parent window not match \
-                    or try to add subwindow to subwindow, which is forbidden");
-                return WMError::WM_ERROR_INVALID_PARAM;
-            }
-        }
         node->currentVisibility_ = parentNode->currentVisibility_;
         node->parent_ = parentNode;
     } else { // mainwindow
@@ -240,6 +249,43 @@ void WindowNodeContainer::LayoutWhenAddWindowNode(sptr<WindowNode>& node, bool a
     }
 }
 
+WMError WindowNodeContainer::ResetPair(sptr<WindowNode>& node)
+{
+    auto windowPair = displayGroupController_->GetWindowPairByDisplayId(node->GetDisplayId());
+    if (windowPair == nullptr) {
+        WLOGFE("Window pair is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    windowPair->UpdateIfSplitRelated(node);
+    if (node->IsSplitMode()) {
+        // raise the z-order of window pair
+        RaiseSplitRelatedWindowToTop(node);
+        if (isFloatWindowAboveFullWindow_ && !windowPair->IsDuringSplit()) {
+            ResetAllMainFloatingWindowZOrder(appWindowNode_);
+        }
+    }
+    return WMError::WM_OK;
+}
+
+void WindowNodeContainer::HandleTypeSpecifics(sptr<WindowNode>& node)
+{
+    UpdateCameraFloatWindowStatus(node, true);
+
+    if (WindowHelper::IsMainWindow(node->GetWindowType())) {
+        backupWindowIds_.clear();
+    }
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_KEYGUARD) {
+        isScreenLocked_ = true;
+        SetBelowScreenlockVisible(node, false);
+    }
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_WALLPAPER) {
+        RemoteAnimation::NotifyAnimationUpdateWallpaper(node);
+    }
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
+        DisplayManagerServiceInner::GetInstance().SetGravitySensorSubscriptionEnabled();
+    }
+}
+
 WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode, bool afterAnimation)
 {
     if (!node->startingWindowShown_) { // window except main Window
@@ -261,39 +307,15 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
         ReZOrderShowWhenLockedWindowIfNeeded(node);
         RaiseZOrderForAppWindow(node, parentNode);
     }
-    auto windowPair = displayGroupController_->GetWindowPairByDisplayId(node->GetDisplayId());
-    if (windowPair == nullptr) {
-        WLOGFE("Window pair is nullptr");
-        return WMError::WM_ERROR_NULLPTR;
-    }
-    windowPair->UpdateIfSplitRelated(node);
-    if (node->IsSplitMode()) {
-        // raise the z-order of window pair
-        RaiseSplitRelatedWindowToTop(node);
-        if (isFloatWindowAboveFullWindow_ && !windowPair->IsDuringSplit()) {
-            ResetAllMainFloatingWindowZOrder(appWindowNode_);
-        }
+    if (auto ret = ResetPair(node) ; ret != WMError::WM_OK) {
+        return ret;
     }
     MinimizeOldestMainFloatingWindow(node->GetWindowId());
     AssignZOrder();
     LayoutWhenAddWindowNode(node, afterAnimation);
     NotifyIfAvoidAreaChanged(node, AvoidControlType::AVOID_NODE_ADD);
     DumpScreenWindowTreeByWinId(node->GetWindowId());
-    UpdateCameraFloatWindowStatus(node, true);
-    if (WindowHelper::IsMainWindow(node->GetWindowType())) {
-        backupWindowIds_.clear();
-    }
-
-    if (node->GetWindowType() == WindowType::WINDOW_TYPE_KEYGUARD) {
-        isScreenLocked_ = true;
-        SetBelowScreenlockVisible(node, false);
-    }
-    if (node->GetWindowType() == WindowType::WINDOW_TYPE_WALLPAPER) {
-        RemoteAnimation::NotifyAnimationUpdateWallpaper(node);
-    }
-    if (node->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
-        DisplayManagerServiceInner::GetInstance().SetGravitySensorSubscriptionEnabled();
-    }
+    HandleTypeSpecifics(node);
     WLOGI("AddWindowNode Id: %{public}u end", node->GetWindowId());
     RSInterfaces::GetInstance().SetAppWindowNum(GetAppWindowNum());
     // update private window count and notify dms private status changed
@@ -781,6 +803,42 @@ bool WindowNodeContainer::IsWindowFollowParent(WindowType type)
     return WindowHelper::IsWindowFollowParent(type);
 }
 
+void WindowNodeContainer::UpdateRSTreeFunc(const sptr<WindowNode>& node, DisplayId displayId,
+                                           DisplayId parentDisplayId, bool add)
+{
+    if (add && !node->currentVisibility_) {
+        WLOGI("id: %{public}d invisible, no need update RS tree", node->GetWindowId());
+        return;
+    }
+    if (IsWindowFollowParent(node->GetWindowType())) {
+        const auto& parentNode = node->parent_;
+        if (parentNode && parentNode->surfaceNode_ && node->surfaceNode_) {
+            if (add) {
+                node->surfaceNode_->SetTranslateX(node->GetWindowRect().posX_ - parentNode->GetWindowRect().posX_);
+                node->surfaceNode_->SetTranslateY(node->GetWindowRect().posY_ - parentNode->GetWindowRect().posY_);
+                node->surfaceNode_->SetVisible(true);
+                parentNode->surfaceNode_->AddChild(node->surfaceNode_, -1);
+                WLOGFD("Add surfaceNode to parent surfaceNode succeed.");
+            } else {
+                node->surfaceNode_->SetVisible(false);
+                parentNode->surfaceNode_->RemoveChild(node->surfaceNode_);
+                WLOGFD("Remove surfaceNode to parent surfaceNode succeed.");
+            }
+            return;
+        }
+    }
+    auto& dms = DisplayManagerServiceInner::GetInstance();
+    auto& surfaceNode = node->leashWinSurfaceNode_ != nullptr ? node->leashWinSurfaceNode_ : node->surfaceNode_;
+    bool isMultiDisplay = layoutPolicy_->IsMultiDisplay();
+
+    dms.UpdateRSTree(displayId, parentDisplayId, surfaceNode, add, isMultiDisplay);
+    for (auto& child : node->children_) {
+        if (child->currentVisibility_ && !IsWindowFollowParent(child->GetWindowType())) {
+            dms.UpdateRSTree(displayId, parentDisplayId, child->surfaceNode_, add, isMultiDisplay);
+        }
+    }
+}
+
 bool WindowNodeContainer::AddNodeOnRSTree(sptr<WindowNode>& node, DisplayId displayId, DisplayId parentDisplayId,
     WindowUpdateType type, bool animationPlayed)
 {
@@ -794,34 +852,9 @@ bool WindowNodeContainer::AddNodeOnRSTree(sptr<WindowNode>& node, DisplayId disp
     WLOGFD("Id: %{public}d, displayId: %{public}" PRIu64", parentDisplayId: %{public}" PRIu64", "
         "isMultiDisplay: %{public}d, animationPlayed: %{public}d",
         node->GetWindowId(), displayId, parentDisplayId, isMultiDisplay, animationPlayed);
-    auto updateRSTreeFunc = [&]() {
-        if (!node->currentVisibility_) {
-            WLOGI("id: %{public}d invisible, no need update RS tree", node->GetWindowId());
-            return;
-        }
-
-        if (IsWindowFollowParent(node->GetWindowType())) {
-            auto& parentNode = node->parent_;
-            if (parentNode != nullptr && parentNode->surfaceNode_ != nullptr &&
-                node->surfaceNode_ != nullptr) {
-                node->surfaceNode_->SetTranslateX(node->GetWindowRect().posX_ - parentNode->GetWindowRect().posX_);
-                node->surfaceNode_->SetTranslateY(node->GetWindowRect().posY_ - parentNode->GetWindowRect().posY_);
-                node->surfaceNode_->SetVisible(true);
-                parentNode->surfaceNode_->AddChild(node->surfaceNode_, -1);
-                WLOGFD("Add surfaceNode to parent surfaceNode succeed.");
-                return;
-            }
-        }
-        auto& dms = DisplayManagerServiceInner::GetInstance();
-        auto& surfaceNode = node->leashWinSurfaceNode_ != nullptr ? node->leashWinSurfaceNode_ : node->surfaceNode_;
-        dms.UpdateRSTree(displayId, parentDisplayId, surfaceNode, true, isMultiDisplay);
-        for (auto& child : node->children_) {
-            if (child->currentVisibility_ && !IsWindowFollowParent(child->GetWindowType())) {
-                dms.UpdateRSTree(displayId, parentDisplayId, child->surfaceNode_, true, isMultiDisplay);
-            }
-        }
+    auto updateRSTreeFunc = [this, node, displayId, parentDisplayId]() {
+        this->UpdateRSTreeFunc(node, displayId, parentDisplayId, true);
     };
-
     if (type != WindowUpdateType::WINDOW_UPDATE_ADDED && type != WindowUpdateType::WINDOW_UPDATE_REMOVED) {
         updateRSTreeFunc();
         return true;
@@ -863,27 +896,9 @@ bool WindowNodeContainer::RemoveNodeFromRSTree(sptr<WindowNode>& node, DisplayId
     WLOGFD("Id: %{public}d, displayId: %{public}" PRIu64", isMultiDisplay: %{public}d, "
         "parentDisplayId: %{public}" PRIu64", animationPlayed: %{public}d",
         node->GetWindowId(), displayId, isMultiDisplay, parentDisplayId, animationPlayed);
-    auto updateRSTreeFunc = [&]() {
-        if (IsWindowFollowParent(node->GetWindowType())) {
-            const auto& parentNode = node->parent_;
-            if (parentNode != nullptr && parentNode->surfaceNode_ != nullptr &&
-                node->surfaceNode_ != nullptr) {
-                node->surfaceNode_->SetVisible(false);
-                parentNode->surfaceNode_->RemoveChild(node->surfaceNode_);
-                WLOGFD("Remove surfaceNode to parent surfaceNode succeed.");
-                return;
-            }
-        }
-        auto& dms = DisplayManagerServiceInner::GetInstance();
-        auto& surfaceNode = node->leashWinSurfaceNode_ != nullptr ? node->leashWinSurfaceNode_ : node->surfaceNode_;
-        dms.UpdateRSTree(displayId, parentDisplayId, surfaceNode, false, isMultiDisplay);
-        for (auto& child : node->children_) {
-            if (child->currentVisibility_ && !IsWindowFollowParent(child->GetWindowType())) {
-                dms.UpdateRSTree(displayId, parentDisplayId, child->surfaceNode_, false, isMultiDisplay);
-            }
-        }
-    };
-
+    auto updateRSTreeFunc = [this, node, displayId, parentDisplayId]() {
+        this->UpdateRSTreeFunc(node, displayId, parentDisplayId, false);
+        };
     if (type != WindowUpdateType::WINDOW_UPDATE_ADDED && type != WindowUpdateType::WINDOW_UPDATE_REMOVED) {
         updateRSTreeFunc();
         return true;
@@ -1249,12 +1264,10 @@ std::unordered_map<WindowType, SystemBarProperty> WindowNodeContainer::GetExpect
         { WindowType::WINDOW_TYPE_STATUS_BAR,     SystemBarProperty() },
         { WindowType::WINDOW_TYPE_NAVIGATION_BAR, SystemBarProperty() },
     };
-
     std::vector<sptr<WindowNode>> rootNodes = { aboveAppWindowNode_, appWindowNode_, belowAppWindowNode_ };
     if (layoutMode_ == WindowLayoutMode::TILE) {
         rootNodes = { aboveAppWindowNode_, belowAppWindowNode_ };
     }
-
     for (const auto& node : rootNodes) {
         for (auto iter = node->children_.rbegin(); iter < node->children_.rend(); ++iter) {
             auto& sysBarPropMapNode = (*iter)->GetSystemBarProperty();
@@ -1394,8 +1407,7 @@ void WindowNodeContainer::NotifyIfSystemBarRegionChanged(DisplayId displayId) co
     WindowManagerAgentController::GetInstance().UpdateSystemBarRegionTints(displayId, tints);
 }
 
-void WindowNodeContainer::NotifyIfKeyboardRegionChanged(const sptr<WindowNode>& node,
-    const AvoidControlType avoidType) const
+bool WindowNodeContainer::CheckWindowTypeMatches(const sptr<WindowNode>& node, sptr<WindowNode>& callingWindow) const
 {
     WindowGravity windowGravity;
     uint32_t percent;
@@ -1403,18 +1415,28 @@ void WindowNodeContainer::NotifyIfKeyboardRegionChanged(const sptr<WindowNode>& 
     if (node->GetWindowType() != WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT ||
         windowGravity == WindowGravity::WINDOW_GRAVITY_FLOAT) {
         WLOGFD("windowType: %{public}u", node->GetWindowType());
-        return;
+        return false;
     }
-
-    auto callingWindow = FindWindowNodeById(node->GetCallingWindow());
-    if (callingWindow == nullptr) {
+    callingWindow = FindWindowNodeById(node->GetCallingWindow());
+    if (!callingWindow) {
         WLOGD("callingWindow: %{public}u does not be set", node->GetCallingWindow());
         callingWindow = FindWindowNodeById(GetFocusWindow());
     }
-    if (callingWindow == nullptr || callingWindow->GetWindowToken() == nullptr) {
+    if (!callingWindow || !callingWindow->GetWindowToken()) {
         WLOGE("does not have correct callingWindow for input method window");
+        return false;
+    }
+    return true;
+}
+
+void WindowNodeContainer::NotifyIfKeyboardRegionChanged(const sptr<WindowNode>& node,
+    const AvoidControlType avoidType) const
+{
+    sptr<WindowNode> callingWindow;
+    if (!CheckWindowTypeMatches(node, callingWindow)) {
         return;
     }
+
     const WindowMode callingWindowMode = callingWindow->GetWindowMode();
     if (callingWindowMode == WindowMode::WINDOW_MODE_FULLSCREEN ||
         callingWindowMode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
@@ -1446,7 +1468,6 @@ void WindowNodeContainer::NotifyIfKeyboardRegionChanged(const sptr<WindowNode>& 
         } else {
             callingWindow->GetWindowToken()->UpdateOccupiedAreaChangeInfo(info);
         }
-
         WLOGD("keyboard size change callingWindow: [%{public}s, %{public}u], "
             "overlap rect: [%{public}d, %{public}d, %{public}u, %{public}u]",
             callingWindow->GetWindowName().c_str(), callingWindow->GetWindowId(),
@@ -2265,24 +2286,30 @@ void WindowNodeContainer::RaiseInputMethodWindowPriorityIfNeeded(const sptr<Wind
     }
 }
 
+std::vector<sptr<WindowNode>> GatherNeedReZOrderNodes(const sptr<WindowNode>& srcRoot)
+{
+    std::vector<sptr<WindowNode>> ret;
+    for (auto iter = srcRoot->children_.begin(); iter != srcRoot->children_.end();) {
+        if ((*iter)->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED)) {
+            ret.emplace_back(*iter);
+            iter = srcRoot->children_.erase(iter);
+        } else {
+            iter++;
+        }
+    }
+    return ret;
+}
+
 void WindowNodeContainer::ReZOrderShowWhenLockedWindows(bool up)
 {
     WLOGD("Keyguard change %{public}u, re-zorder showWhenLocked window", up);
-    std::vector<sptr<WindowNode>> needReZOrderNodes;
     auto& srcRoot = up ? appWindowNode_ : aboveAppWindowNode_;
     auto& dstRoot = up ? aboveAppWindowNode_ : appWindowNode_;
 
     auto dstPriority = up ? zorderPolicy_->GetWindowPriority(WindowType::WINDOW_TYPE_KEYGUARD) + 1 :
         zorderPolicy_->GetWindowPriority(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
 
-    for (auto iter = srcRoot->children_.begin(); iter != srcRoot->children_.end();) {
-        if ((*iter)->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED)) {
-            needReZOrderNodes.emplace_back(*iter);
-            iter = srcRoot->children_.erase(iter);
-        } else {
-            iter++;
-        }
-    }
+    std::vector<sptr<WindowNode>> needReZOrderNodes = GatherNeedReZOrderNodes(srcRoot);
     const int32_t floatingPriorityOffset = 1;
     for (auto& needReZOrderNode : needReZOrderNodes) {
         needReZOrderNode->priority_ = dstPriority;
@@ -2465,41 +2492,50 @@ void WindowNodeContainer::UpdateSizeChangeReason(sptr<WindowNode>& node, WindowM
     }
 }
 
-WMError WindowNodeContainer::SetWindowMode(sptr<WindowNode>& node, WindowMode dstMode)
+WMError WindowNodeContainer::ValidateWindow(sptr<WindowNode>& node, const WindowMode& dstMode, WindowMode& srcMode,
+                                            sptr<WindowPair>& windowPair)
 {
-    if (node == nullptr) {
+    if (!node) {
         WLOGFE("could not find window");
         return WMError::WM_ERROR_NULLPTR;
     }
-    WindowMode srcMode = node->GetWindowMode();
+    srcMode = node->GetWindowMode();
     if (WindowHelper::IsSplitWindowMode(dstMode) && isScreenLocked_ &&
         (node->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED))) {
         return WMError::WM_ERROR_INVALID_PARAM;
     }
 
-    auto windowPair = displayGroupController_->GetWindowPairByDisplayId(node->GetDisplayId());
-    if (windowPair == nullptr) {
+    windowPair = displayGroupController_->GetWindowPairByDisplayId(node->GetDisplayId());
+    if (!windowPair) {
         WLOGFE("Window pair is nullptr");
         return WMError::WM_ERROR_NULLPTR;
     }
-
     WindowPairStatus status = windowPair->GetPairStatus();
     // when status is single primary or single secondary, split node is abandoned to set mode
     if (node->IsSplitMode() && (status == WindowPairStatus::SINGLE_PRIMARY ||
         status == WindowPairStatus::SINGLE_SECONDARY)) {
         return WMError::WM_ERROR_INVALID_OPERATION;
     }
+    
+    return WMError::WM_OK;
+}
+
+WMError WindowNodeContainer::SetWindowMode(sptr<WindowNode>& node, WindowMode dstMode)
+{
+    WindowMode srcMode;
+    sptr<WindowPair> windowPair;
+    if (auto ret = ValidateWindow(node, dstMode, srcMode, windowPair); ret != WMError::WM_OK) {
+        return ret;
+    }
+
     WMError res = WMError::WM_OK;
     UpdateSizeChangeReason(node, srcMode, dstMode);
     node->SetWindowMode(dstMode);
     windowPair->UpdateIfSplitRelated(node);
 
     if (WindowHelper::IsMainWindow(node->GetWindowType())) {
-        if (WindowHelper::IsFloatingWindow(node->GetWindowMode())) {
-            NotifyDockWindowStateChanged(node, true);
-        } else {
-            NotifyDockWindowStateChanged(node, false);
-        }
+        auto mode = WindowHelper::IsFloatingWindow(node->GetWindowMode());
+        NotifyDockWindowStateChanged(node, mode);
     }
 
     if (node->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN &&
