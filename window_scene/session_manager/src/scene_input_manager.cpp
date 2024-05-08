@@ -85,6 +85,7 @@ std::string DumpRect(const std::vector<MMI::Rect>& rects)
         " , " + std::to_string(rect.width) + " , " + std::to_string(rect.height) + "]"; 
     }
     return rectStr;
+    
 }
 
 std::string DumpWindowInfo(const MMI::WindowInfo& info)
