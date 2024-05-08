@@ -479,6 +479,50 @@ private:
     void FilterSceneSessionCovered(std::vector<sptr<SceneSession>>& sceneSessionList);
     void NotifyAllAccessibilityInfo();
     void removeFailRecoveredSession();
+    WMError UpdateTurnScreenOnFunc(const sptr<WindowSessionProperty>& property,
+        const sptr<SceneSession>& sceneSession);
+    WMError UpdateKeepScreenOnFunc(const sptr<WindowSessionProperty>& property,
+        const sptr<SceneSession>& sceneSession);
+    WMError UpdateFocusableFunc(const sptr<WindowSessionProperty>& property, const sptr<SceneSession>& sceneSession);
+    WMError UpdateTouchableFunc(const sptr<WindowSessionProperty>& property, const sptr<SceneSession>& sceneSession);
+    WMError UpdateSetBrightnessFunc(const sptr<WindowSessionProperty>& property,
+        const sptr<SceneSession>& sceneSession);
+    WMError UpdateOrientationFunc(const sptr<WindowSessionProperty>& property, const sptr<SceneSession>& sceneSession);
+    WMError UpdatePrivacyModeFunc(const sptr<WindowSessionProperty>& property, const sptr<SceneSession>& sceneSession);
+    WMError UpdateSystemPrivacyModeFunc(const sptr<WindowSessionProperty>& property,
+        const sptr<SceneSession>& sceneSession);
+    WMError UpdateMaximizeStateFunc(const sptr<WindowSessionProperty>& property,
+        const sptr<SceneSession>& sceneSession);
+    WMError UpdateOtherPropsFunc(const sptr<WindowSessionProperty>& property, const sptr<SceneSession>& sceneSession);
+    WMError UpdateStatusPropsFunc(const sptr<WindowSessionProperty>& property, const sptr<SceneSession>& sceneSession);
+    WMError UpdateNavigationPropsFunc(const sptr<WindowSessionProperty>& property,
+        const sptr<SceneSession>& sceneSession);
+    WMError UpdateNavigationIndicatorPropsFunc(const sptr<WindowSessionProperty>& property,
+        const sptr<SceneSession>& sceneSession);
+    WMError UpdateFlagsFunc(const sptr<WindowSessionProperty>& property, const sptr<SceneSession>& sceneSession);
+    WMError UpdateModeFunc(const sptr<WindowSessionProperty>& property, const sptr<SceneSession>& sceneSession);
+    WMError UpdateAnimationFlagFunc(const sptr<WindowSessionProperty>& property,
+        const sptr<SceneSession>& sceneSession);
+    WMError UpdateTouchHotAreaFunc(const sptr<WindowSessionProperty>& property,
+        const sptr<SceneSession>& sceneSession);
+    WMError UpdateDecorEnableFunc(const sptr<WindowSessionProperty>& property,
+        const sptr<SceneSession>& sceneSession);
+    WMError UpdateWindowLimitsFunc(const sptr<WindowSessionProperty>& property,
+        const sptr<SceneSession>& sceneSession);
+    WMError UpdateDragenabledFunc(const sptr<WindowSessionProperty>& property,
+        const sptr<SceneSession>& sceneSession);
+    WMError UpdateRaiseenabledFunc(const sptr<WindowSessionProperty>& property,
+        const sptr<SceneSession>& sceneSession);
+    WMError UpdateHideNonSystemFloatingWindowsFunc(const sptr<WindowSessionProperty>& property,
+        const sptr<SceneSession>& sceneSession);
+    WMError UpdateTextfieldAvoidInfoFunc(const sptr<WindowSessionProperty>& property,
+        const sptr<SceneSession>& sceneSession);
+    WMError UpdateWindowMaskFunc(const sptr<WindowSessionProperty>& property,
+        const sptr<SceneSession>& sceneSession);
+    WMError UpdateTopmostFunc(const sptr<WindowSessionProperty>& property, const sptr<SceneSession>& sceneSession);
+    template<class F> void BindOp(WSPropertyChangeAction code, F && func);
+    std::unordered_map<WSPropertyChangeAction, std::function<WMError(const sptr<WindowSessionProperty>& property, 
+        const sptr<SceneSession>& sceneSession)>> updatePropertyOps_;
 
     sptr<RootSceneSession> rootSceneSession_;
     std::weak_ptr<AbilityRuntime::Context> rootSceneContextWeak_;
