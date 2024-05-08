@@ -973,6 +973,30 @@ HWTEST_F(WindowSceneSessionImplTest, Immersive, Function | SmallTest | Level3)
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->SetFullScreen(false));
     ASSERT_EQ(false, window->IsLayoutFullScreen());
     ASSERT_EQ(false, window->IsFullScreen());
+
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->SetImmersiveModeEnabledState(false));
+    ASSERT_EQ(false, window->IsLayoutFullScreen());
+    ASSERT_EQ(false, window->IsFullScreen());
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+
+    option->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_EQ(WMError::WM_OK, window->SetImmersiveModeEnabledState(true));
+    ASSERT_EQ(true, window->IsLayoutFullScreen());
+    ASSERT_EQ(true, window->IsFullScreen());
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+
+    option->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+    window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_EQ(WMError::WM_OK, window->SetImmersiveModeEnabledState(true));
+    ASSERT_EQ(false, window->IsLayoutFullScreen());
+    ASSERT_EQ(false, window->IsFullScreen());
+    ASSERT_EQ(true, window->GetImmersiveModeEnabledState());
+    ASSERT_EQ(WMError::WM_OK, window->Maximize());
+    ASSERT_EQ(true, window->IsLayoutFullScreen());
+    ASSERT_EQ(true, window->IsFullScreen());
+    ASSERT_EQ(true, window->GetImmersiveModeEnabledState());
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
 }
 
 /*
@@ -1488,6 +1512,30 @@ HWTEST_F(WindowSceneSessionImplTest, SetSnapshotSkip, Function | SmallTest | Lev
     } else {
     ASSERT_EQ(nullptr, surfaceNode);
     }
+}
+
+/*
+ * @tc.name: SetImmersiveModeEnabledState
+ * @tc.desc: SetImmersiveModeEnabledState test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, SetImmersiveModeEnabledState, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    window->property_->SetWindowName("SetImmersiveModeEnabledState");
+    window->property_->SetWindowType(WindowType::SYSTEM_SUB_WINDOW_BASE);
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->SetImmersiveModeEnabledState(false));
+
+    window->property_->SetPersistentId(1);
+    SessionInfo sessionInfo = {"CreateTestBundle", "CreateTestModule", "CreateTestAbility"};
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    ASSERT_EQ(WMError::WM_OK, window->SetImmersiveModeEnabledState(true));
+    ASSERT_EQ(true, window->GetImmersiveModeEnabledState());
+    ASSERT_EQ(WMError::WM_OK, window->SetImmersiveModeEnabledState(false));
+    ASSERT_EQ(false, window->GetImmersiveModeEnabledState());
 }
 
 /*
