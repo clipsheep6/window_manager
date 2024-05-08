@@ -53,6 +53,7 @@ ohos_shared_library("window_native_kit") {
     "window_napi/js_window.cpp",
     "window_napi/js_window_listener.cpp",
     "window_napi/js_window_register_manager.cpp",
+    "window_napi/js_window_stage_config.cpp",
     "window_napi/js_window_utils.cpp",
   ]
 
@@ -60,6 +61,8 @@ ohos_shared_library("window_native_kit") {
     ":window_native_kit_config",
     "../../../../resources/config/build:coverage_flags",
   ]
+
+  public_configs = [ ":window_native_kit_config" ]
 
   deps = [
     "../../../../utils:libwmutil",

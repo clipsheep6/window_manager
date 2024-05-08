@@ -753,6 +753,18 @@ struct MaximizeLayoutOption {
     ShowType decor = ShowType::HIDE;
     ShowType dock = ShowType::HIDE;
 };
+
+enum class WindowStageAttribute : int32_t {
+    SYSTEM_WINDOW_STAGE,
+    SUB_WINDOW_STAGE,
+    UNKNOWN
+};
+
+struct WindowStageConfig {
+    WindowStageAttribute windowStageAttribute = WindowStageAttribute::UNKNOWN;
+    Rect rect;
+};
+
 }
 }
 #endif // OHOS_ROSEN_WM_COMMON_H

@@ -958,6 +958,17 @@ struct MaximizeLayoutOption {
     ShowType dock = ShowType::HIDE;
 };
 
+enum class WindowStageAttribute : int32_t {
+    SYSTEM_WINDOW_STAGE,
+    SUB_WINDOW_STAGE,
+    UNKNOWN
+};
+
+struct WindowStageConfig {
+    WindowStageAttribute windowStageAttribute = WindowStageAttribute::UNKNOWN;
+    Rect rect;
+};
+
 /**
  * @class KeyboardLayoutParams
  *
