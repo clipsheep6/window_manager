@@ -630,6 +630,7 @@ private:
     WindowStatus GetWindowStatus(WindowMode mode, SessionState sessionState,
         const sptr<WindowSessionProperty>& property);
     void DeleteStateDetectTask();
+    std::string iTempToken_;
 };
 } // namespace OHOS::Rosen
 

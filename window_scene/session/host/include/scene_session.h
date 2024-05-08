@@ -192,6 +192,8 @@ public:
     void SetSessionRectChangeCallback(const NotifySessionRectChangeFunc& func);
     void SetIsDisplayStatusBarTemporarily(bool isTemporary);
     void SetRestoringRectForKeyboard(WSRect rect);
+    void SetIdentityToken(sptr<IRemoteObject>& iToken);
+    sptr<IRemoteObject> GetIdentityToken() const;
 
     int32_t GetCollaboratorType() const;
     sptr<IRemoteObject> GetSelfToken() const;
@@ -342,6 +344,7 @@ private:
     bool forceHideState_ = false;
     int32_t customDecorHeight_ = 0;
     WSRect restoringRectForKeyboard_ = {0, 0, 0, 0};
+    const sptr<IRemoteObject>& iToken_ = nullptr
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SCENE_SESSION_H

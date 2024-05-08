@@ -1985,6 +1985,13 @@ void SceneSession::SetCollaboratorType(int32_t collaboratorType)
     sessionInfo_.collaboratorType_ = collaboratorType;
 }
 
+void SetIdentityToken(sptr<IRemoteObject>& iToken){
+    identityToken_ = iToken;
+}
+sptr<IRemoteObject> GetIdentityToken() const{
+    return identityToken_;
+}
+
 void SceneSession::DumpSessionInfo(std::vector<std::string> &info) const
 {
     std::string dumpInfo = "      Session ID #" + std::to_string(persistentId_);

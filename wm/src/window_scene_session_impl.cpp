@@ -379,7 +379,7 @@ void WindowSceneSessionImpl::UpdateWindowState()
 }
 
 WMError WindowSceneSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Context>& context,
-    const sptr<Rosen::ISession>& iSession)
+    const sptr<Rosen::ISession>& iSession, const sptr<IRemoteObject>& identityToken)
 {
     if (property_ == nullptr) {
         TLOGE(WmsLogTag::WMS_LIFE, "Window Create failed, property is nullptr");
@@ -398,6 +398,7 @@ WMError WindowSceneSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Con
     SetDefaultDisplayIdIfNeed();
     hostSession_ = iSession;
     context_ = context;
+    identityToken_ = identityToken;
     AdjustWindowAnimationFlag();
     if (context && context->GetApplicationInfo() &&
         context->GetApplicationInfo()->apiCompatibleVersion >= 9 && // 9: api version
