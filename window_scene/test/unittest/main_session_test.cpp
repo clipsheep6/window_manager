@@ -18,6 +18,7 @@
 
 #include "common/include/session_permission.h"
 #include "key_event.h"
+#include <pointer_event.h>
 #include "mock/mock_session_stage.h"
 #include "session/host/include/session.h"
 #include "session/host/include/system_session.h"
@@ -266,6 +267,33 @@ HWTEST_F(MainSessionTest, TransferKeyEvent03, Function | SmallTest | Level1)
     mainSession_->BindDialogToParentSession(dialogSession);
 
     ASSERT_EQ(WSError::WS_ERROR_INVALID_PERMISSION, mainSession_->TransferKeyEvent(keyEvent));
+}
+
+/**
+ * @tc.name: ProcessPointDownSession
+ * @tc.desc: check func ProcessPointDownSession
+ * @tc.type: FUNC
+ */
+HWTEST_F(MainSessionTest, ProcessPointDownSession, Function | SmallTest | Level1)
+{
+    WSRect rect;
+    mainSession_->UpdatePointerArea(rect);
+    ASSERT_EQ(WSError::WS_OK, mainSession_->ProcessPointDownSession(50, 100));
+}
+
+/**
+ * @tc.name: CheckPointerEventDispatch
+ * @tc.desc: check func CheckPointerEventDispatch
+ * @tc.type: FUNC
+ */
+HWTEST_F(MainSessionTest, CheckPointerEventDispatch, Function | SmallTest | Level1)
+{
+    std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
+    ASSERT_NE(pointerEvent, nullptr);
+    mainSession_->CheckPointerEventDispatch(pointerEvent);
+    mainSession_->RectCheck(50, 100);
+    ASSERT_EQ(false, mainSession_->CheckPointerEventDispatch(nullptr));
+    ASSERT_EQ(false, mainSession_->IsTopmost());
 }
 }
 }

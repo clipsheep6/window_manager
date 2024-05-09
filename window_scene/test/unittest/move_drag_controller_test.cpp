@@ -656,6 +656,89 @@ HWTEST_F(MoveDragControllerTest, UpdateMoveTempProperty, Function | SmallTest | 
     auto res = moveDragController->UpdateMoveTempProperty(pointerEvent);
     ASSERT_EQ(res, WSError::WS_ERROR_NULLPTR);
 }
+
+/**
+ * @tc.name: CalcFixedAspectRatioTargetRect03
+ * @tc.desc: test function : CalcFixedAspectRatioTargetRect03
+ * @tc.type: FUNC
+ */
+HWTEST_F(MoveDragControllerTest, CalcFixedAspectRatioTargetRect03, Function | SmallTest | Level1)
+{
+    AreaType type = AreaType::RIGHT;
+    float aspectRatio = 0.5;
+    WSRect originalRect = { 100, 100, 1000, 1000 };
+    int32_t tranX = 0;
+    int32_t tranY = 0;
+    ASSERT_TRUE((moveDragController != nullptr));
+    moveDragController->CalcFixedAspectRatioTargetRect(type, tranX, tranY, aspectRatio, originalRect);
+    type = AreaType::RIGHT_TOP;
+    moveDragController->CalcFixedAspectRatioTargetRect(type, tranX, tranY, aspectRatio, originalRect);
+}
+
+/**
+ * @tc.name: FixTranslateByLimits02
+ * @tc.desc: test function : FixTranslateByLimits02
+ * @tc.type: FUNC
+ */
+HWTEST_F(MoveDragControllerTest, FixTranslateByLimits02, Function | SmallTest | Level1)
+{
+    int32_t tranX = 20;
+    int32_t tranY = 20;
+    moveDragController->maxTranX_ = 50;
+    moveDragController->maxTranY_ = 50;
+    ASSERT_TRUE((moveDragController != nullptr));
+    moveDragController->FixTranslateByLimits(tranX, tranY);
+}
+
+/**
+ * @tc.name: InitMainAxis02
+ * @tc.desc: test function : InitMainAxis02
+ * @tc.type: FUNC
+ */
+HWTEST_F(MoveDragControllerTest, InitMainAxis02, Function | SmallTest | Level1)
+{
+    AreaType type = AreaType::LEFT;
+    int32_t tranX = 100;
+    int32_t tranY = 100;
+    ASSERT_TRUE((moveDragController != nullptr));
+    moveDragController->InitMainAxis(type, tranX, tranY);
+    type = AreaType::TOP;
+    moveDragController->InitMainAxis(type, tranX, tranY);
+    type = AreaType::UNDEFINED;
+    moveDragController->InitMainAxis(type, tranX, tranY);
+}
+
+/**
+ * @tc.name: ConvertXYByAspectRatio02
+ * @tc.desc: test function : ConvertXYByAspectRatio02
+ * @tc.type: FUNC
+ */
+HWTEST_F(MoveDragControllerTest, ConvertXYByAspectRatio02, Function | SmallTest | Level1)
+{
+    SizeChangeReason reason = SizeChangeReason::CUSTOM_ANIMATION_SHOW;
+    moveDragController->ProcessSessionRectChange(reason);
+    float aspectRatio = 1.0f;
+    int32_t tx = 100;
+    int32_t ty = 100;
+    moveDragController->mainMoveAxis_ = MoveDragController::AxisType::Y_AXIS;
+    ASSERT_TRUE((moveDragController != nullptr));
+    moveDragController->ConvertXYByAspectRatio(tx, ty, aspectRatio);
+}
+
+/**
+ * @tc.name: UpdateDragType04
+ * @tc.desc: test function : UpdateDragType
+ * @tc.type: FUNC
+ */
+HWTEST_F(MoveDragControllerTest, UpdateDragType04, Function | SmallTest | Level1)
+{
+    moveDragController->rectExceptCorner_.posX_ = 1;
+    moveDragController->rectExceptCorner_.width_ = 0;
+    moveDragController->rectExceptCorner_.posY_ = 1;
+    moveDragController->rectExceptCorner_.height_ = 0;
+    moveDragController->UpdateDragType(2, 2);
+    ASSERT_EQ(moveDragController->dragType_, MoveDragController::DragType::DRAG_LEFT_TOP_CORNER);
+}
 }
 }
 }
