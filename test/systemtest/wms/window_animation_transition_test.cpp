@@ -45,7 +45,7 @@ public:
     virtual void SetUp() override;
     virtual void TearDown() override;
     sptr<TestAnimationTransitionController> testAnimationTransitionListener_;
-    Utils::TestWindowInfo  windowInfo_;
+    Utils::TestWindowInfo windowInfo_;
     Transform trans_;
     Transform defaultTrans_;
 };
