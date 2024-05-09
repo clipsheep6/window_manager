@@ -193,7 +193,7 @@ void WindowProperty::UpdatePointerEvent(const std::shared_ptr<MMI::PointerEvent>
     }
     PointInfo originPos =
         WindowHelper::CalculateOriginPosition(transformMat_,
-        { pointerItem.GetDisplayX(), pointerItem.GetDisplayY() });
+        { static_cast<int32_t>(pointerItem.GetDisplayX()), static_cast<int32_t>(pointerItem.GetDisplayY()) });
     pointerItem.SetDisplayX(originPos.x);
     pointerItem.SetDisplayY(originPos.y);
     pointerItem.SetWindowX(originPos.x - windowRect_.posX_);

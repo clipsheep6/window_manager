@@ -46,21 +46,27 @@ void LogPointInfo(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
     }
 
     MMI::PointerEvent::PointerItem item;
+    int32_t windowX = static_cast<int32_t>(item.GetWindowX());
+    int32_t windowY = static_cast<int32_t>(item.GetWindowY());
+    int32_t displayX = static_cast<int32_t>(item.GetDisplayX());
+    int32_t displayY = static_cast<int32_t>(item.GetDisplayY());
     if (pointerEvent->GetPointerItem(actionId, item)) {
         TLOGD(WmsLogTag::WMS_EVENT, "action point info:windowid:%{public}d,id:%{public}d,displayx:%{public}d,"
             "displayy:%{public}d, windowx:%{public}d, windowy :%{public}d, action :%{public}d pressure: "
             "%{public}f, tiltx :%{public}f, tiltY :%{public}f",
-            windowId, actionId, item.GetDisplayX(), item.GetDisplayY(), item.GetWindowX(), item.GetWindowY(),
+            windowId, actionId, displayX, displayY, windowX, windowY,
             pointerEvent->GetPointerAction(), item.GetPressure(), item.GetTiltX(), item.GetTiltY());
     }
     auto ids = pointerEvent->GetPointerIds();
     for (auto&& id :ids) {
         MMI::PointerEvent::PointerItem item;
+        int32_t windowX = static_cast<int32_t>(item.GetWindowX());
+        int32_t windowY = static_cast<int32_t>(item.GetWindowY());
         if (pointerEvent->GetPointerItem(id, item)) {
             TLOGD(WmsLogTag::WMS_EVENT, "all point info: id: %{public}d, x:%{public}d, y:%{public}d, "
-                "isPressend:%{public}d, pressure:%{public}f, tiltX:%{public}f, tiltY:%{public}f",
-            actionId, item.GetWindowX(), item.GetWindowY(), item.IsPressed(), item.GetPressure(),
-            item.GetTiltX(), item.GetTiltY());
+            "isPressend:%{public}d, pressure:%{public}f, tiltX:%{public}f, tiltY:%{public}f",
+                actionId, windowX, windowY, item.IsPressed(), item.GetPressure(),
+                item.GetTiltX(), item.GetTiltY());
         }
     }
 }

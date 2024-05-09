@@ -460,8 +460,8 @@ void MoveDragController::HandlePointerEvent(const std::shared_ptr<MMI::PointerEv
         return;
     }
 
-    int32_t pointPosX = pointerItem.GetDisplayX();
-    int32_t pointPosY = pointerItem.GetDisplayY();
+    int32_t pointPosX = static_cast<int32_t>(pointerItem.GetDisplayX());
+    int32_t pointPosY = static_cast<int32_t>(pointerItem.GetDisplayY());
     int32_t action = pointerEvent->GetPointerAction();
     int32_t targetDisplayId = pointerEvent->GetTargetDisplayId();
     ConvertPointerPosToDisplayGroupPos(targetDisplayId, pointPosX, pointPosY);

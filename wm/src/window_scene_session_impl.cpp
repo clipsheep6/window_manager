@@ -443,8 +443,10 @@ bool WindowSceneSessionImpl::HandlePointDownEvent(const std::shared_ptr<MMI::Poi
 {
     bool needNotifyEvent = true;
     uint32_t titleBarHeight = static_cast<uint32_t>(WINDOW_TITLE_BAR_HEIGHT * vpr);
-    int32_t winX = pointerItem.GetWindowX();
-    int32_t winY = pointerItem.GetWindowY();
+    int32_t winX = static_cast<int32_t>(pointerItem.GetWindowX());
+    int32_t winY = static_cast<int32_t>(pointerItem.GetWindowY());
+    int32_t disX = static_cast<int32_t>(pointerItem.GetDisplayX());
+    int32_t disY = static_cast<int32_t>(pointerItem.GetDisplayY());
     bool isMoveArea = (0 <= winX && winX <= static_cast<int32_t>(rect.width_)) &&
         (0 <= winY && winY <= static_cast<int32_t>(titleBarHeight));
     int outside = (sourceType == MMI::PointerEvent::SOURCE_TYPE_MOUSE) ? static_cast<int>(HOTZONE_POINTER * vpr) :
@@ -454,7 +456,7 @@ bool WindowSceneSessionImpl::HandlePointDownEvent(const std::shared_ptr<MMI::Poi
     bool isDecorDialog = windowType == WindowType::WINDOW_TYPE_DIALOG && property_->IsDecorEnable();
     if ((WindowHelper::IsSystemWindow(windowType) && !isDecorDialog) ||
         (WindowHelper::IsSubWindow(windowType) && !property_->GetDragEnabled())) {
-        hostSession_->ProcessPointDownSession(pointerItem.GetDisplayX(), pointerItem.GetDisplayY());
+        hostSession_->ProcessPointDownSession(disX, disY);
     } else {
         if (dragType != AreaType::UNDEFINED) {
             hostSession_->SendPointEventForMoveDrag(pointerEvent);
@@ -462,7 +464,7 @@ bool WindowSceneSessionImpl::HandlePointDownEvent(const std::shared_ptr<MMI::Poi
         } else if (isMoveArea) {
             hostSession_->SendPointEventForMoveDrag(pointerEvent);
         } else {
-            hostSession_->ProcessPointDownSession(pointerItem.GetDisplayX(), pointerItem.GetDisplayY());
+            hostSession_->ProcessPointDownSession(disX, disY);
         }
     }
     return needNotifyEvent;

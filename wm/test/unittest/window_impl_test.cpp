@@ -2992,8 +2992,8 @@ HWTEST_F(WindowImplTest, UpdatePointerEventForStretchableWindow, Function | Smal
     pointerEvent->AddPointerItem(item);
     window->UpdatePointerEventForStretchableWindow(pointerEvent);
     ASSERT_TRUE(pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), item));
-    ASSERT_EQ(50, item.GetDisplayX());
-    ASSERT_EQ(50, item.GetDisplayY());
+    ASSERT_EQ(50, static_cast<int32_t>(item.GetDisplayX()));
+    ASSERT_EQ(50, static_cast<int32_t>(item.GetDisplayY()));
 }
 
 /**
