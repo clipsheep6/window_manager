@@ -154,7 +154,11 @@ bool Permission::CheckIsCallingBundleName(const std::string name)
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     std::string callingBundleName;
     bundleManagerServiceProxy_->GetNameForUid(uid, callingBundleName);
+    // set ipc identity to raw
+    IPCSkeleton::SetCallingIdentity(identity);
     WLOGFI("get the bundle name:%{public}s", callingBundleName.c_str());
+    WLOGFI("before setCallingIdentity:%{public}s", identity.c_str());
+    WLOGFI("after setCallingIdentity:%{public}s", identity.c_str());
     std::string::size_type idx = callingBundleName.find(name);
     if (idx != std::string::npos) {
         return true;
