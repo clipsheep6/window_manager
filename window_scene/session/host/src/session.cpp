@@ -1102,6 +1102,9 @@ void Session::SetForegroundInteractiveStatus(bool interactive)
             static_cast<int>(interactive));
     }
     foregroundInteractiveStatus_.store(interactive);
+    if (Session::IsScbCoreEnabled()) {
+        return;
+    }
     NotifySessionInfoChange();
 }
 
@@ -2233,8 +2236,11 @@ WindowType Session::GetWindowType() const
 
 std::string Session::GetWindowName() const
 {
-    auto property = GetSessionProperty();
-    return property ? property->GetWindowName() : "";
+    if (GetSessionInfo().isSystem_) {
+        return GetSessionInfo().abilityName_;
+    } else {
+        return GetWindowName();
+    }
 }
 
 void Session::SetSystemConfig(const SystemSessionConfig& systemConfig)
@@ -2768,7 +2774,7 @@ void Session::NotifyContextTransparent()
 
 bool Session::IsSystemInput()
 {
-    return sessionInfo_.isSystemInput_;
+    return sessionInfo_.sceneType_ == SceneType::INPUT_SCENE;
 }
 
 void Session::SetTouchHotAreas(const std::vector<Rect>& touchHotAreas)
@@ -2779,14 +2785,17 @@ void Session::SetTouchHotAreas(const std::vector<Rect>& touchHotAreas)
     }
     std::vector<Rect> lastTouchHotAreas;
     property->GetTouchHotAreas(lastTouchHotAreas);
-    if (touchHotAreas != lastTouchHotAreas) {
-        std::string rectStr = "";
-        for (const auto& rect : touchHotAreas) {
-            rectStr = rectStr + " hot : [ " + std::to_string(rect.posX_) +" , " + std::to_string(rect.posY_) +
-            " , " + std::to_string(rect.width_) + " , " + std::to_string(rect.height_) + "]";
-        }
-        TLOGI(WmsLogTag::WMS_EVENT, "id:%{public}d rects:%{public}s", GetPersistentId(), rectStr.c_str());
+    if (touchHotAreas == lastTouchHotAreas) {
+        return;
     }
+
+    isDirty_ = true;
+    std::string rectStr = "";
+    for (const auto& rect : touchHotAreas) {
+        rectStr = rectStr + " hot : [ " + std::to_string(rect.posX_) +" , " + std::to_string(rect.posY_) +
+        " , " + std::to_string(rect.width_) + " , " + std::to_string(rect.height_) + "]";
+    }
+    TLOGI(WmsLogTag::WMS_EVENT, "id:%{public}d rects:%{public}s", GetPersistentId(), rectStr.c_str());
     property->SetTouchHotAreas(touchHotAreas);
 }
 
@@ -2804,5 +2813,15 @@ std::shared_ptr<Media::PixelMap> Session::GetSnapshotPixelMap(const float oriSca
         return scenePersistence_->GetLocalSnapshotPixelMap(oriScale, newScale);
     }
     return nullptr;
+}
+
+bool Session::IsUIForeground() const
+{
+    return isVisible_ && (state_ == SessionState::STATE_ACTIVE || state_ == SessionState::STATE_FOREGROUND);
+}
+
+bool Session::IsScbCoreEnabled()
+{
+    return g_deviceType == "phone" && system::GetParameter("persist.window.scbcore.enable", "0") == "1";
 }
 } // namespace OHOS::Rosen

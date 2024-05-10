@@ -38,6 +38,7 @@ public:
     sptr<SceneSession> GetKeyboardSession() const override;
     void SetKeyboardPanelRectUpdateCallback(const KeyboardPanelRectUpdateCallback& func);
 
+    bool IsUIForeground() const override;
 protected:
     void UpdatePointerArea(const WSRect& rect) override;
 

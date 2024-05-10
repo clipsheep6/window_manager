@@ -1069,6 +1069,7 @@ sptr<RootSceneSession> SceneSessionManager::GetRootSceneSession()
             return rootSceneSession_;
         }
         system::SetParameter("bootevent.wms.fullscreen.ready", "true");
+        system::SetParameter("persist.window.scbcore.enable", "0");
         rootSceneSession_ = new RootSceneSession();
         rootSceneSession_->SetEventHandler(taskScheduler_->GetEventHandler());
         AAFwk::AbilityManagerClient::GetInstance()->SetRootSceneSession(rootSceneSession_->AsObject());
@@ -1249,14 +1250,14 @@ void SceneSessionManager::CreateKeyboardPanelSession(sptr<SceneSession> keyboard
             .moduleName_ = "SCBKeyboardPanel",
             .abilityName_ = "SCBKeyboardPanel",
             .isSystem_ = true,
+            .sceneType_ = SceneType::SYSTEM_WINDOW_SCENE,
             .windowType_ = static_cast<uint32_t>(WindowType::WINDOW_TYPE_KEYBOARD_PANEL),
             .screenId_ = static_cast<uint64_t>(displayId),
             .isRotable_ = true,
-            .isSystemInput_ = false,
         };
         static bool is2in1 = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
         if (is2in1) {
-            panelInfo.isSystemInput_ = true;
+            panelInfo.sceneType_ = SceneType::INPUT_SCENE;
             TLOGI(WmsLogTag::WMS_KEYBOARD, "Set panel canvasNode");
         } else {
             TLOGI(WmsLogTag::WMS_KEYBOARD, "Set panel surfaceNode");
@@ -1629,7 +1630,16 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
     auto persistentId = scnSession->GetPersistentId();
     RequestInputMethodCloseKeyboard(persistentId);
     if (WindowHelper::IsMainWindow(scnSession->GetWindowType()) && scnSession->IsFocusedOnShow()) {
-        RequestSessionFocusImmediately(persistentId);
+        if (Session::IsScbCoreEnabled()) {
+            if (scnSession->IsUIForeground()) {
+                RequestSessionFocusImmediately(persistentId);
+            } else {
+                PostProcessFocusState state = {true, true, FocusChangeReason::SCB_START_APP};
+                scnSession->SetPostProcessFocusState(state);
+            }
+        } else {
+            RequestSessionFocusImmediately(persistentId);
+        }
     }
     if (scnSession->GetSessionInfo().ancoSceneState < AncoSceneState::NOTIFY_CREATE) {
         FillSessionInfo(scnSession);
@@ -3767,6 +3777,9 @@ bool SceneSessionManager::IsSessionVisible(const sptr<SceneSession>& session)
     if (session == nullptr) {
         return false;
     }
+    if (Session::IsScbCoreEnabled()) {
+        return session->IsUIForeground();
+    }
     const auto& state = session->GetSessionState();
     if (WindowHelper::IsSubWindow(session->GetWindowType())) {
         const auto& parentSceneSession = GetSceneSession(session->GetParentPersistentId());
@@ -4135,6 +4148,35 @@ WMError SceneSessionManager::RequestFocusStatus(int32_t persistentId, bool isFoc
     };
     taskScheduler_->PostAsyncTask(task, "RequestFocusStatus" + std::to_string(persistentId));
     changeReason_ = reason;
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::RequestFocusStatusBySCB(int32_t persistentId, bool isFocused, bool byForeground,
+    FocusChangeReason reason)
+{
+    TLOGI(WmsLogTag::WMS_FOCUS, "id: %{public}d, reason: %{public}d", persistentId, reason);
+    auto task = [this, persistentId, isFocused, byForeground, reason]() {
+        if (isFocused) {
+            if (reason == FocusChangeReason::FOREGROUND || reason == FocusChangeReason::MOVE_UP) {
+                auto session = GetSceneSession(persistentId);
+                if (session) {
+                    PostProcessFocusState state = {true, true, reason};
+                    session->SetPostProcessFocusState(state);
+                }
+            } else {
+                if (RequestSessionFocus(persistentId, byForeground, reason) != WSError::WS_OK) {
+                    auto session = GetSceneSession(persistentId);
+                    if (session) {
+                        PostProcessFocusState state = {true, true, reason};
+                        session->SetPostProcessFocusState(state);
+                    }
+                }
+            }
+        } else {
+            RequestSessionUnfocus(persistentId, reason);
+        }
+    };
+    taskScheduler_->PostAsyncTask(task, "RequestFocusStatusBySCB" + std::to_string(persistentId));
     return WMError::WM_OK;
 }
 
@@ -4961,17 +5003,10 @@ __attribute__((no_sanitize("cfi"))) void SceneSessionManager::OnSessionStateChan
     }
     switch (state) {
         case SessionState::STATE_FOREGROUND:
-            if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW &&
-                persistentId == focusedSessionId_) {
-                if (needBlockNotifyFocusStatusUntilForeground_) {
-                    needBlockNotifyUnfocusStatus_ = false;
-                    needBlockNotifyFocusStatusUntilForeground_ = false;
-                    NotifyFocusStatus(sceneSession, true);
-                }
-            } else if (!sceneSession->IsFocusedOnShow()) {
-                sceneSession->SetFocusedOnShow(true);
-            } else {
-                RequestSessionFocus(persistentId, true, FocusChangeReason::APP_FOREGROUND);
+            ProcessFocusWhenForeground(sceneSession);
+            if (!IsSessionVisible(sceneSession)) {
+                sceneSession->SetPostProcessProperty(true);
+                break;
             }
             UpdateForceHideState(sceneSession, sceneSession->GetSessionProperty(), true);
             NotifyWindowInfoChange(persistentId, WindowUpdateType::WINDOW_UPDATE_ADDED);
@@ -4995,6 +5030,33 @@ __attribute__((no_sanitize("cfi"))) void SceneSessionManager::OnSessionStateChan
             break;
     }
     ProcessWindowModeType();
+}
+
+void SceneSessionManager::ProcessFocusWhenForeground(sptr<SceneSession> sceneSession)
+{
+    auto persistentId = sceneSession->GetPersistentId();
+    if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW &&
+        persistentId == focusedSessionId_) {
+        if (needBlockNotifyFocusStatusUntilForeground_) {
+            needBlockNotifyUnfocusStatus_ = false;
+            needBlockNotifyFocusStatusUntilForeground_ = false;
+            NotifyFocusStatus(sceneSession, true);
+        }
+    } else if (!sceneSession->IsFocusedOnShow()) {
+        sceneSession->SetFocusedOnShow(true);
+    } else {
+        if (Session::IsScbCoreEnabled()) {
+            if (IsSessionVisible(sceneSession)) {
+                RequestSessionFocus(persistentId, true, FocusChangeReason::APP_FOREGROUND);
+            } else {
+                PostProcessFocusState state = {true, true, FocusChangeReason::APP_FOREGROUND};
+                sceneSession->SetPostProcessFocusState(state);
+            }
+        } else {
+            RequestSessionFocus(persistentId, true, FocusChangeReason::APP_FOREGROUND);
+        }
+        RequestSessionFocus(persistentId, true, FocusChangeReason::APP_FOREGROUND);
+    }
 }
 
 void SceneSessionManager::ProcessWindowModeType()
@@ -7895,6 +7957,123 @@ void SceneSessionManager::NotifyUpdateRectAfterLayout()
     };
     // need sync task since animation transcation need
     return taskScheduler_->PostAsyncTask(task, "NotifyUpdateRectAfterLayout");
+}
+
+void SceneSessionManager::FlushUIParams(ScreenId screenId, std::map<int32_t, SessionUIParam> uiParams)
+{
+    if (!Session::IsScbCoreEnabled()) {
+        return;
+    }
+    auto task = [this, screenId, uiParams]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SceneSessionManager::FlushUIParams");
+        bool sessionDirty = false;
+        {
+            std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+            for (const auto& item : sceneSessionMap_) {
+                auto sceneSession = item.second;
+                if (sceneSession == nullptr) {
+                    continue;
+                }
+                auto iter = uiParams.find(sceneSession->GetPersistentId());
+                if (iter != uiParams.end()) {
+                    sessionDirty |= sceneSession->UpdateUIParam(iter->second);
+                } else {
+                    sessionDirty |= sceneSession->UpdateUIParam();
+                }
+            }
+        }
+        if (sessionDirty) {
+            TLOGI(WmsLogTag::WMS_MAIN, "UpdateUIParam has dirty session");
+            PostProcessFocus();
+            PostProcessProperty();
+            NotifyAllAccessibilityInfo();
+            FlushWindowInfoToMMI();
+            AnomalyDetection::SceneZOrderCheckProcess();
+        }
+    };
+    taskScheduler_->PostAsyncTask(task, "FlushUIParams");
+}
+
+void SceneSessionManager::PostProcessFocus()
+{
+    // priority process focus requests from top to bottom
+    std::vector<std::pair<int32_t, sptr<SceneSession>>> processingSessions;
+    {
+        std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+        for (auto& iter : sceneSessionMap_) {
+            auto session = iter.second;
+            if (session == nullptr || !session->GetPostProcessFocusState().enabled_) {
+                continue;
+            }
+            processingSessions.push_back(iter);
+        }
+    }
+    CmpFunc cmp = [](std::pair<int32_t, sptr<SceneSession>>& lhs, std::pair<int32_t, sptr<SceneSession>>& rhs) {
+        bool focusCmp = lhs.second->GetPostProcessFocusState().isFocused_ &&
+                        !rhs.second->GetPostProcessFocusState().isFocused_;
+        uint32_t lhsZOrder = lhs.second != nullptr ? lhs.second->GetZOrder() : 0;
+        uint32_t rhsZOrder = rhs.second != nullptr ? rhs.second->GetZOrder() : 0;
+        return focusCmp || lhsZOrder > rhsZOrder;
+    };
+    std::sort(processingSessions.begin(), processingSessions.end(), cmp);
+
+    // only change focus one time
+    bool focusChanged = false;
+    for (auto iter = processingSessions.begin(); iter != processingSessions.end(); ++iter) {
+        auto session = iter->second;
+        if (session == nullptr) {
+            WLOGFE("session is nullptr");
+            continue;
+        }
+        if (focusChanged) {
+            session->ResetPostProcessFocusState();
+            continue;
+        }
+        WSError ret = WSError::WS_DO_NOTHING;
+        if (session->GetPostProcessFocusState().isFocused_) {
+            if (session->GetPostProcessFocusState().reason_ == FocusChangeReason::SCB_START_APP) {
+                ret = RequestSessionFocusImmediately(session->GetPersistentId());
+            } else {
+                ret = RequestSessionFocus(session->GetPersistentId(), true, session->GetPostProcessFocusState().reason_);
+            }
+        } else {
+            ret = RequestSessionUnfocus(session->GetPersistentId(), session->GetPostProcessFocusState().reason_);
+        }
+        session->ResetPostProcessFocusState();
+        // if success then end process
+        if (ret == WSError::WS_OK) {
+            focusChanged = true;
+        }
+    }
+}
+
+void SceneSessionManager::PostProcessProperty()
+{
+    std::vector<std::pair<int32_t, sptr<SceneSession>>> processingSessions;
+    {
+        std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+        for (auto& iter : sceneSessionMap_) {
+            auto session = iter.second;
+            if (session == nullptr || !session->GetPostProcessProperty()) {
+                continue;
+            }
+            processingSessions.push_back(iter);
+        }
+    }
+
+    for (auto iter = processingSessions.begin(); iter != processingSessions.end(); ++iter) {
+        auto session = iter->second;
+        if (session == nullptr) {
+            WLOGFE("session is nullptr");
+            continue;
+        }
+        UpdateForceHideState(session, session->GetSessionProperty(), true);
+        HandleKeepScreenOn(session, session->IsKeepScreenOn());
+        UpdatePrivateStateAndNotify(session->GetPersistentId());
+        if (session->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+            ProcessSubSessionForeground(session);
+        }
+    }
 }
 
 WSError SceneSessionManager::RaiseWindowToTop(int32_t persistentId)
