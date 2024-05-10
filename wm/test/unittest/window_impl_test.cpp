@@ -4079,7 +4079,9 @@ HWTEST_F(WindowImplTest, CreateSurfaceNode, Function | SmallTest | Level3)
     Transform trans;
     window->TransformSurfaceNode(trans);
     std::string name = "CreateSurfaceNode";
-    auto ret = window->CreateSurfaceNode(name, WindowType::WINDOW_TYPE_UI_EXTENSION);
+    auto ret = window->CreateSurfaceNode(name, WindowType::WINDOW_TYPE_POINTER);
+    ASSERT_NE(nullptr, ret);
+    ret = window->CreateSurfaceNode(name, WindowType::WINDOW_TYPE_UI_EXTENSION);
     ASSERT_NE(nullptr, ret);
 }
 
@@ -4130,12 +4132,14 @@ HWTEST_F(WindowImplTest, SetTextFieldAvoidInfo, Function | SmallTest | Level3)
     sptr<WindowImpl> window = new (std::nothrow) WindowImpl(option);
     ASSERT_NE(nullptr, window);
     ASSERT_EQ(true, window->IsAllowHaveSystemSubWindow());
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_DIALOG);
+    ASSERT_EQ(false, window->IsAllowHaveSystemSubWindow());
     window->SetNeedDefaultAnimation(true);
     ASSERT_EQ(true, window->needDefaultAnimation_);
     window->SetNeedDefaultAnimation(false);
     ASSERT_EQ(false, window->needDefaultAnimation_);
-    ASSERT_EQ(WMERROR::WM_OK, window->SetTextFieldAvoidInfo(1.0, 1.0));
-    auto ret = window->CheckCameraFlaotingWiodowMultiCreated(WindowType::WINDOW_TYPE_FLAOT_CAMERA);
+    ASSERT_EQ(WMError::WM_OK, window->SetTextFieldAvoidInfo(1.0, 1.0));
+    auto ret = window->CheckCameraFloatingWindowMultiCreated(WindowType::WINDOW_TYPE_FLOAT_CAMERA);
     ASSERT_EQ(false, ret);
 }
 
@@ -4159,7 +4163,7 @@ HWTEST_F(WindowImplTest, GetWindowWithId, Function | SmallTest | Level3)
     sptr<IRemoteObject> token = nullptr;
     AppExecFwk::Ability* ability = nullptr;
     auto ret = window->NapiSetUIContent(contentInfo, env, storage, isdistributed, token, ability);
-    ASSERT_EQ(WMERROR::WM_ERROR_INVALID_WINDOW, ret);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, ret);
 }
 
 /**
@@ -4174,17 +4178,17 @@ HWTEST_F(WindowImplTest, SetUIContentByName, Function | SmallTest | Level3)
     option->SetWindowName("SetUIContentByName");
     sptr<WindowImpl> window = new (std::nothrow) WindowImpl(option);
     ASSERT_NE(nullptr, window);
-    std::string contentInfo = "SteUIContentByName";
+    std::string contentInfo = "SetUIContentByName";
     napi_env env = nullptr;
     napi_value storage = nullptr;
     AppExecFwk::Ability* ability = nullptr;
     auto ret = window->SetUIContentByName(contentInfo, env, storage, ability);
-    ASSERT_EQ(WMERROR::WM_ERROR_INVALID_WINDOW, ret);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, ret);
     auto ret1 = window->SetUIContentByAbc(contentInfo, env, storage, ability);
-    ASSERT_EQ(WMERROR::WM_ERROR_INVALID_WINDOW, ret1);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, ret1);
     auto type = WindowSetUIContentType::DEFAULT;
     auto ret2 = window->SetUIContentInner(contentInfo, env, storage, type, ability);
-    ASSERT_EQ(WMERROR::WM_ERROR_INVALID_WINDOW, ret2);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, ret2);
     ASSERT_EQ(nullptr, window->GetUIContent());
     ASSERT_EQ(nullptr, window->GetUIContentWithId(0));
 }
@@ -4204,10 +4208,10 @@ HWTEST_F(WindowImplTest, SetSpecificBarProperty, Function | SmallTest | Level3)
     SystemBarProperty property;
     auto ret = window->SetSpecificBarProperty(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW, property);
     ASSERT_EQ(WMError::WM_OK, ret);
-    ASSERT_EQ(WMError::Wm_ERROR_INVALID_WINDOW, window->UpdateSystemBarProperty(true));
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->UpdateSystemBarProperty(true));
     window->state_ = WindowState::STATE_CREATED;
-    ASSERT_EQ(WMERROR::WM_OK, window->UpdateSystemBarProperty(true));
-    ASSERT_EQ(WMERROR::WM_OK, window->UpdateSystemBarProperty(false));
+    ASSERT_EQ(WMError::WM_OK, window->UpdateSystemBarProperty(true));
+    ASSERT_EQ(WMError::WM_OK, window->UpdateSystemBarProperty(false));
 }
 
 /**
@@ -4242,7 +4246,7 @@ HWTEST_F(WindowImplTest, SetWindowGravity, Function | SmallTest | Level3)
     option->SetWindowName("SetSpecificBarProperty");
     sptr<WindowImpl> window = new (std::nothrow) WindowImpl(option);
     ASSERT_NE(nullptr, window);
-    WindowGravity gravity = WindowGravity::WINDOW_GRACITY_FLOAT;
+    WindowGravity gravity = WindowGravity::WINDOW_GRAVITY_FLOAT;
     ASSERT_EQ(WMError::WM_OK, window->SetWindowGravity(gravity, 0));
 }
 
@@ -4261,14 +4265,14 @@ HWTEST_F(WindowImplTest, SetGlobalMaximizeMode, Function | SmallTest | Level3)
     window->state_ = WindowState::STATE_INITIAL;
     MaximizeMode mode = MaximizeMode::MODE_AVOID_SYSTEM_BAR;
     auto ret = window->SetGlobalMaximizeMode(mode);
-    ASSERT_EQ(WMERROR::WM_ERROR_INVALID_WINDOW, ret);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, ret);
     window->state_ = WindowState::STATE_CREATED;
     window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
     ret = window->SetGlobalMaximizeMode(mode);
     ASSERT_EQ(WMError::WM_OK, ret);
     ASSERT_EQ(mode, window->GetGlobalMaximizeMode());
     window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_END);
-    ret =  window->SetGlobalMaximizeMode(mode);
+    ret = window->SetGlobalMaximizeMode(mode);
     ASSERT_EQ(WMError::WM_ERROR_INVALID_PARAM, ret);
 }
 
@@ -4288,7 +4292,7 @@ HWTEST_F(WindowImplTest, PendingClose, Function | SmallTest | Level3)
     window->PendingClose();
     std::shared_ptr<IInputEventConsumer> inputEventConsumer = nullptr;
     window->SetInputEventConsumer(inputEventConsumer);
-    window->SerRequestModeSupportInfo(0);
+    window->SetRequestModeSupportInfo(0);
     window->PerformBack();
     window->UpdateWindowStateUnfrozen();
     ASSERT_EQ(0, window->GetVSyncPeriod());
