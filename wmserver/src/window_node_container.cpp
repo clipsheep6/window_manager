@@ -889,6 +889,12 @@ bool WindowNodeContainer::RemoveNodeFromRSTree(sptr<WindowNode>& node, DisplayId
         return true;
     }
 
+    return RemoveNodeFromRSTreeAnimate(node, animationPlayed, updateRSTreeFunc);
+}
+
+bool WindowNodeContainer::RemoveNodeFromRSTreeAnimate(sptr<WindowNode>& node, bool animationPlayed,
+    const PropertyCallback& updateRSTreeFunc)
+{
     WindowGravity windowGravity;
     uint32_t percent;
     node->GetWindowGravity(windowGravity, percent);
