@@ -140,6 +140,24 @@ HWTEST_F(SCBSystemSessionTest, UpdateWindowMode, Function | SmallTest | Level1)
     auto ret = scbSystemSession_->UpdateWindowMode(WindowMode::WINDOW_MODE_UNDEFINED);
     ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, ret);
 }
+
+/**
+ * @tc.name: BindKeyboardSession
+ * @tc.desc: check func BindKeyboardSession
+ * @tc.type: FUNC
+ */
+HWTEST_F(SCBSystemSessionTest, BindKeyboardSession, Function | SmallTest | Level1)
+{
+    sptr<SceneSession> session = nullptr;
+    scbSystemSession_->BindKeyboardSession(session);
+    SessionInfo info;
+    sptr<SCBSystemSession::SpecificSessionCallback> specificCallback = nullptr;
+    session = new SceneSession(info, specificCallback);
+    scbSystemSession_->BindKeyboardSession(session);
+    scbSystemSession_->PresentFocusIfNeed(8);
+    scbSystemSession_->keyboardSession_ = nullptr;
+    ASSERT_EQ(nullptr, scbSystemSession_->GetKeyboardSession());
+}
 }
 }
 }
