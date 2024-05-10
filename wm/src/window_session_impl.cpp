@@ -832,7 +832,8 @@ WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, nap
     return SetUIContentInnerUpdate(contentInfo, aceRet);
 }
 
-WMError WindowSessionImpl::SetUIContentInnerUpdate(const std::string& contentInfo, OHOS::Ace::UIContentErrorCode& aceRet)
+WMError WindowSessionImpl::SetUIContentInnerUpdate(const std::string& contentInfo,
+    OHOS::Ace::UIContentErrorCode& aceRet)
 {
     uint32_t version = 0;
     if ((context_ != nullptr) && (context_->GetApplicationInfo() != nullptr)) {
