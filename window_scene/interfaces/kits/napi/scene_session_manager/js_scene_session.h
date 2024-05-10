@@ -61,6 +61,7 @@ private:
     static napi_value SetPipActionEvent(napi_env env, napi_callback_info info);
     static napi_value NotifyDisplayStatusBarTemporarily(napi_env env, napi_callback_info info);
     static napi_value SetTemporarilyShowWhenLocked(napi_env env, napi_callback_info info);
+    static void BindNativeMethod(napi_env env, napi_value objValue, const char* moduleName);
 
     napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
     napi_value OnUpdateNativeVisibility(napi_env env, napi_callback_info info);
@@ -82,7 +83,6 @@ private:
     napi_value OnNotifyDisplayStatusBarTemporarily(napi_env env, napi_callback_info info);
     napi_value OnSetTemporarilyShowWhenLocked(napi_env env, napi_callback_info info);
 
-    void BindNativeMethod(napi_env env, napi_value objValue, const char* moduleName);
     bool IsCallbackRegistered(napi_env env, const std::string& type, napi_value jsListenerObject);
     void ProcessChangeSessionVisibilityWithStatusBarRegister();
     bool IsCallbackTypeSupported(const std::string& type);
