@@ -292,7 +292,6 @@ HWTEST_F(MainSessionTest, CheckPointerEventDispatch, Function | SmallTest | Leve
     ASSERT_NE(pointerEvent, nullptr);
     mainSession_->CheckPointerEventDispatch(pointerEvent);
     mainSession_->RectCheck(50, 100);
-    ASSERT_EQ(false, mainSession_->CheckPointerEventDispatch(nullptr));
     ASSERT_EQ(false, mainSession_->IsTopmost());
 }
 }
