@@ -845,8 +845,8 @@ WSError SceneSession::OnShowWhenLocked(bool showWhenLocked)
 
 bool SceneSession::IsShowWhenLocked() const
 {
-     return (GetSessionProperty()->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED)) ||
-        IsTemporarilyShowWhenLocked();
+    return (GetSessionProperty()->GetWindowFlags() &
+        static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED)) || IsTemporarilyShowWhenLocked();
 }
 
 bool SceneSession::GetShowWhenLockedFlagValue() const

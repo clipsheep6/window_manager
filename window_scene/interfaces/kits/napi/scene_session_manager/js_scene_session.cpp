@@ -2700,23 +2700,23 @@ napi_value JsSceneSession::OnSetTemporarilyShowWhenLocked(napi_env env, napi_cal
     napi_value argv[4] = { nullptr };
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc < 1) {
-       TLOGE(WmsLogTag::WMS_SCB, "[NAPI]argc is invalid : %{public}zu", argc);
-       napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
-       "Input parameter is missing or invalid"));
-       return NapiGetUndefined(env);
+        TLOGE(WmsLogTag::WMS_SCB, "[NAPI]argc is invalid : %{public}zu", argc);
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
     }
     bool isTemporarilyShowWhenLocked = false;
-    if (!ConvertFromJsValue(env, argv[0], isTemporarilyShowWhenLocked)){
+    if (!ConvertFromJsValue(env, argv[0], isTemporarilyShowWhenLocked)) {
         TLOGE(WmsLogTag::WMS_SCB, "[NAPI] Failed to convert parameter to bool");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
-        "Input parameter is missing or invalid"));
+            "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
     auto session = weakSession_.promote();
     if (session == nullptr) {
         TLOGE(WmsLogTag::WMS_SCB, "[NAPI] session_ is null");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
-        "Input parameter is missing or invalid"));
+            "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
     session->SetTemporarilyShowWhenLocked(isTemporarilyShowWhenLocked);
