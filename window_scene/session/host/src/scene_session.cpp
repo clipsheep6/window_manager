@@ -2749,7 +2749,7 @@ void SceneSession::SetTemporarilyShowWhenLocked(bool isTemporarilyShowWhenLocked
         isTemporarilyShowWhenLocked);
 }
 
-void SceneSession::IsTemporarilyShowWhenLocked() const
+bool SceneSession::IsTemporarilyShowWhenLocked() const
 {
     return isTemporarilyShowWhenLocked_;
 }
