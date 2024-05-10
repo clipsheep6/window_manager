@@ -154,7 +154,7 @@ HWTEST_F(SCBSystemSessionTest, BindKeyboardSession, Function | SmallTest | Level
     sptr<SCBSystemSession::SpecificSessionCallback> specificCallback = nullptr;
     session = new SceneSession(info, specificCallback);
     scbSystemSession_->BindKeyboardSession(session);
-    scbSystemSession_->PresentFocusIfNeed(8);
+    scbSystemSession_->PresentFoucusIfNeed(8);
     scbSystemSession_->keyboardSession_ = nullptr;
     ASSERT_EQ(nullptr, scbSystemSession_->GetKeyboardSession());
 }
