@@ -267,6 +267,13 @@ void JsRootSceneSession::PendingSessionActivation(SessionInfo& info)
             }
             TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]caller session: %{public}d.", realCallerSessionId);
             info.callerPersistentId_ = realCallerSessionId;
+            auto callerSession = SceneSessionManager::GetInstance().GetSceneSession(info.callerPersistentId_);
+            if (callerSession != nullptr) {
+                bool isRealStartedBySeenFrom = info.callerToken_ == callerSession->GetAbilityToken();
+                TLOGI(WmsLogTag::WMS_SCB,
+                    "root isRealStartedBySeenFrom result: %{public}d", isRealStartedBySeenFrom);
+                info.isRealStartedBySeenFrom_ = isRealStartedBySeenFrom;
+            }
         } else {
             info.callerPersistentId_ = 0;
         }
