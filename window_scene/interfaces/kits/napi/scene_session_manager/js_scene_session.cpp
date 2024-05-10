@@ -1834,7 +1834,7 @@ void JsSceneSession::PendingSessionActivation(SessionInfo& info)
     if (callerSession != nullptr) {
         bool isRealStartedBySeenFrom = info.callerToken_ == callerSession->GetAbilityToken();
         TLOGI(WmsLogTag::WMS_SCB,
-            "isRealStartedBySeenFrom result: %{public}d", isRealStartedBySeenFrom);
+            "isRealStartedBySeenFrom result is: %{public}d", isRealStartedBySeenFrom);
         info.isRealStartedBySeenFrom_ = isRealStartedBySeenFrom;
     }
     std::shared_ptr<SessionInfo> sessionInfo = std::make_shared<SessionInfo>(info);

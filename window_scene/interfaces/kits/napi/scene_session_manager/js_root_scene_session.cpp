@@ -300,7 +300,7 @@ void JsRootSceneSession::VerifyCallerToken(SessionInfo& info)
     if (callerSession != nullptr) {
         bool isRealStartedBySeenFrom = info.callerToken_ == callerSession->GetAbilityToken();
         TLOGI(WmsLogTag::WMS_SCB,
-            "root isRealStartedBySeenFrom result: %{public}d", isRealStartedBySeenFrom);
+            "root isRealStartedBySeenFrom result is: %{public}d", isRealStartedBySeenFrom);
         info.isRealStartedBySeenFrom_ = isRealStartedBySeenFrom;_scene
     }
 }
