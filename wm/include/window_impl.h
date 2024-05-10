@@ -578,6 +578,8 @@ private:
     void UpdateWindowStateUnfrozen();
     void UpdateViewportConfig(const Rect& rect, const sptr<class Display>& display, WindowSizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
+    void UpdateRectTask(WindowSizeChangeReason reason, const std::shared_ptr<RSTransaction>& rsTransaction,
+        const struct Rect& rectToAce, const struct Rect& lastOriRect, const sptr<class Display>& display);
     void UpdateDecorEnable(bool needNotify = false);
     WMError SetFloatingMaximize(bool isEnter);
     WMError SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
