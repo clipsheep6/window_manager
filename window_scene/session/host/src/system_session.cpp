@@ -352,4 +352,13 @@ void SystemSession::RectCheck(uint32_t curWidth, uint32_t curHeight)
     uint32_t maxFloatingWindowSize = GetSystemConfig().maxFloatingWindowSize_;
     RectSizeCheckProcess(curWidth, curHeight, minWidth, minHeight, maxFloatingWindowSize);
 }
+
+bool SystemSession::IsUIForeground() const
+{
+    if (GetWindowType() == WindowType::WINDOW_TYPE_DIALOG &&
+        parentSession_ && parentSession_->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        return parentSession_->IsUIForeground() && Session::IsUIForeground();
+    }
+    return Session::IsUIForeground();
+}
 } // namespace OHOS::Rosen

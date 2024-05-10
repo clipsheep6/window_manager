@@ -298,6 +298,11 @@ public:
 
     bool CheckGetAvoidAreaAvailable(AvoidAreaType type) override;
 
+    bool UpdateUIParam(SessionUIParam uiParam);
+    bool UpdateUIParam();
+    void SetPostProcessFocusState(PostProcessFocusState state);
+    PostProcessFocusState GetPostProcessFocusState() const;
+    void ResetPostProcessFocusState();
 protected:
     void NotifyIsCustomAnimationPlaying(bool isPlaying);
     void SetMoveDragCallback();
@@ -310,6 +315,14 @@ protected:
         return "[" + to_string(rect.width_) + ", " + to_string(rect.height_) + "; "
         + to_string(rect.posX_) + ", " + to_string(rect.posY_) + "]";
     }
+
+    bool UpdateVisibilityInner(const bool visibility);
+    virtual bool UpdateInteractiveInner(const bool interactive);
+    virtual void NotifyClientToUpdateInteractive(const bool interactive);
+    virtual bool UpdateRectInner(const WSRect& rect, SizeChangeReason reason);
+    bool NotifyServerToUpdateRect(const WSRect& rect, SizeChangeReason reason);
+    bool UpdateScaleInner(float scaleX, float scaleY, float pivotX, float pivotY);
+    bool UpdateZOrderInner(const uint32_t zOrder);
 
     sptr<SpecificSessionCallback> specificCallback_ = nullptr;
     sptr<SessionChangeCallback> sessionChangeCallback_ = nullptr;
@@ -430,6 +443,7 @@ private:
     std::string clientIdentityToken_ = { "" };
     static const std::map<uint32_t, HandleUpdatePropertyFunc> sessionFuncMap_;
     SessionChangeByActionNotifyManagerFunc sessionChangeByActionNotifyManagerFunc_;
+    PostProcessFocusState postProcessFocusState_;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SCENE_SESSION_H

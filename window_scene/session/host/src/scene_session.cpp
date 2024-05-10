@@ -24,6 +24,7 @@
 #include <ipc_skeleton.h>
 #include <pointer_event.h>
 #include <transaction/rs_transaction.h>
+#include "transaction/rs_sync_transaction_controller.h"
 #include <ui/rs_surface_node.h>
 
 #include "proxy/include/window_info.h"
@@ -3348,5 +3349,129 @@ void SceneSession::SetTemporarilyShowWhenLocked(bool isTemporarilyShowWhenLocked
 bool SceneSession::IsTemporarilyShowWhenLocked() const
 {
     return isTemporarilyShowWhenLocked_.load();
+}
+
+// update visible session
+bool SceneSession::UpdateUIParam(SessionUIParam uiParam)
+{
+    bool isDirty = false;
+    isDirty |= UpdateVisibilityInner(true);
+    isDirty |= UpdateInteractiveInner(uiParam.interactive_);
+    isDirty |= UpdateRectInner(uiParam.rect_, SizeChangeReason::UNDEFINED);
+    isDirty |= UpdateScaleInner(uiParam.scaleX_, uiParam.scaleY_, uiParam.pivotX_, uiParam.pivotY_);
+    isDirty |= UpdateZOrderInner(uiParam.zOrder_);
+    return isDirty;
+}
+
+// update invisible session
+bool SceneSession::UpdateUIParam()
+{
+    bool oriVisible = isVisible_;
+    bool isDirty = UpdateVisibilityInner(false);
+    if (oriVisible && !isVisible_ && isFocused_) {
+        postProcessFocusState_.enabled_ = true;
+        postProcessFocusState_.isFocused_ = false;
+        postProcessFocusState_.reason_ = FocusChangeReason::BACKGROUND;
+    }
+    return isDirty;
+}
+
+bool SceneSession::UpdateVisibilityInner(const bool visibility)
+{
+    if (isVisible_ == visibility) {
+        return false;
+    }
+    isVisible_ = visibility;
+    return true;
+}
+
+bool SceneSession::UpdateInteractiveInner(const bool interactive)
+{
+    if (GetForegroundInteractiveStatus() == interactive) {
+        return false;
+    }
+    Session::SetForegroundInteractiveStatus(interactive);
+    NotifyClientToUpdateInteractive(interactive);
+    return true;
+}
+
+void SceneSession::NotifyClientToUpdateInteractive(const bool interactive)
+{
+    return;
+}
+
+bool SceneSession::UpdateRectInner(const WSRect& rect, SizeChangeReason reason)
+{
+    if (!NotifyServerToUpdateRect(rect, reason) && !IsDirtyWindow()) {
+        return false;
+    }
+    auto transactionController = RSSyncTransactionController::GetInstance();
+    std::shared_ptr<RSTransaction> rsTransaction = nullptr;
+    if (transactionController) {
+        rsTransaction = transactionController->GetRSTransaction();
+    }
+    NotifyClientToUpdateRect(rsTransaction);
+    return true;
+}
+
+bool SceneSession::NotifyServerToUpdateRect(const WSRect& rect, SizeChangeReason reason)
+{
+    if (winRect_ == rect) {
+        TLOGD(WmsLogTag::WMS_LAYOUT, "skip same rect update id:%{public}d rect:%{public}s!",
+            GetPersistentId(), rect.ToString().c_str());
+        return false;
+    }
+    if (rect.IsInvalid()) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, "id:%{public}d rect:%{public}s is invalid",
+            GetPersistentId(), rect.ToString().c_str());
+        return false;
+    }
+    winRect_ = rect;
+    RectCheckProcess();
+    return true;
+}
+
+bool SceneSession::UpdateScaleInner(const float scaleX, const float scaleY, const float pivotX, const float pivotY)
+{
+    if (NearEqual(scaleX_, scaleX) && NearEqual(scaleY_, scaleY) &&
+        NearEqual(pivotX_, pivotX) && NearEqual(pivotY_, pivotY)) {
+        return false;
+    }
+    Session::SetScale(scaleX, scaleY, pivotX, pivotY);
+    if (sessionStage_ != nullptr) {
+        Transform transform;
+        transform.scaleX_ = scaleX;
+        transform.scaleY_ = scaleY;
+        transform.pivotX_ = pivotX;
+        transform.pivotY_ = pivotY;
+        sessionStage_->NotifyTransformChange(transform);
+    } else {
+        WLOGFE("sessionStage_ is nullptr");
+    }
+    return true;
+}
+
+bool SceneSession::UpdateZOrderInner(const uint32_t zOrder)
+{
+    if (zOrder_ == zOrder) {
+        return false;
+    }
+    zOrder_ = zOrder;
+    return true;
+}
+
+void SceneSession::SetPostProcessFocusState(PostProcessFocusState state)
+{
+    postProcessFocusState_ = state;
+}
+
+PostProcessFocusState SceneSession::GetPostProcessFocusState() const
+{
+    return postProcessFocusState_;
+}
+
+void SceneSession::ResetPostProcessFocusState()
+{
+    postProcessFocusState_.Reset();
 }
 } // namespace OHOS::Rosen
