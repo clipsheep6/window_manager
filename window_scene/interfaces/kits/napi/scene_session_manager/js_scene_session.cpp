@@ -126,7 +126,8 @@ napi_value JsSceneSession::Create(napi_env env, const sptr<SceneSession>& sessio
     return objValue;
 }
 
-void JsSceneSession::BindNativeMethod(napi_env env, napi_value objValue, const char* moduleName) {
+void JsSceneSession::BindNativeMethod(napi_env env, napi_value objValue, const char* moduleName)
+{
     BindNativeFunction(env, objValue, "on", moduleName, JsSceneSession::RegisterCallback);
     BindNativeFunction(env, objValue, "updateNativeVisibility", moduleName, JsSceneSession::UpdateNativeVisibility);
     BindNativeFunction(env, objValue, "setShowRecent", moduleName, JsSceneSession::SetShowRecent);
