@@ -492,7 +492,7 @@ void KeyboardSession::UpdateCallingSessionIdAndPosition(uint32_t callingSessionI
     }
     uint32_t curSessionId = GetSessionProperty()->GetCallingSessionId();
     // When calling window id changes, restore the old calling session, raise the new calling session.
-    if (curSessionId != INVALID_WINDOW_ID && callingSessionId != curSessionId) {
+    if (curSessionId != INVALID_WINDOW_ID && callingSessionId != curSessionId && IsSessionForeground()) {
         TLOGI(WmsLogTag::WMS_KEYBOARD, "CallingSession curId: %{public}d, newId: %{public}d",
             curSessionId, callingSessionId);
         RestoreCallingSession();
@@ -529,11 +529,11 @@ void KeyboardSession::RelayoutKeyBoard()
 
     auto requestRect = GetSessionProperty()->GetRequestRect();
     if (gravity == SessionGravity::SESSION_GRAVITY_BOTTOM) {
-        requestRect.width_ = static_cast<uint32_t>(screenWidth);
+        requestRect.width_ = screenWidth;
         requestRect.posX_ = 0;
         if (percent != 0) {
             // 100: for calc percent.
-            requestRect.height_ = static_cast<uint32_t>(screenHeight * percent / 100u);
+            requestRect.height_ = static_cast<uint32_t>(screenHeight) * percent / 100u;
         }
     }
     requestRect.posY_ = static_cast<int32_t>(screenHeight - requestRect.height_);

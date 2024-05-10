@@ -41,6 +41,7 @@
 #include "app_debug_listener_interface.h"
 #include "app_mgr_client.h"
 #include "include/core/SkRegion.h"
+#include "ability_info.h"
 
 namespace OHOS::AAFwk {
 class SessionInfo;
@@ -62,6 +63,10 @@ namespace AncoConsts {
     constexpr const char* ANCO_MISSION_ID = "ohos.anco.param.missionId";
     constexpr const char* ANCO_SESSION_ID = "ohos.anco.param.sessionId";
 }
+struct SCBAbilityInfo {
+    AppExecFwk::AbilityInfo abilityInfo_;
+    int32_t sdkVersion_;
+};
 class SceneSession;
 class AccessibilityWindowInfo;
 using NotifyCreateSystemSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
@@ -115,7 +120,7 @@ public:
     void UpdateSceneSessionWant(const SessionInfo& sessionInfo);
     std::future<int32_t> RequestSceneSessionActivation(const sptr<SceneSession>& sceneSession, bool isNewActive);
     WSError RequestSceneSessionBackground(const sptr<SceneSession>& sceneSession, const bool isDelegator = false,
-        const bool isToDesktop = false, const bool isSaveSnapShot = true);
+        const bool isToDesktop = false, const bool isSaveSnapshot = true);
     WSError RequestSceneSessionDestruction(
         const sptr<SceneSession>& sceneSession, const bool needRemoveSession = true);
     WSError RequestSceneSessionDestructionInner(sptr<SceneSession> &scnSession, sptr<AAFwk::SessionInfo> scnSessionInfo,
@@ -217,7 +222,7 @@ public:
     WSError DumpSessionAll(std::vector<std::string> &infos) override;
     WSError DumpSessionWithId(int32_t persistentId, std::vector<std::string> &infos) override;
     WSError GetAllAbilityInfos(const AAFwk::Want &want, int32_t userId,
-        std::vector<AppExecFwk::AbilityInfo> &abilityInfos);
+        std::vector<SCBAbilityInfo> &scbAbilityInfos);
     WSError PrepareTerminate(int32_t persistentId, bool& isPrepareTerminate);
     WSError GetIsLayoutFullScreen(bool& isLayoutFullScreen);
 
@@ -456,7 +461,7 @@ private:
     void DestroyExtensionSession(const sptr<IRemoteObject>& remoteExtSession);
     void EraseSceneSessionMapById(int32_t persistentId);
     WSError GetAbilityInfosFromBundleInfo(std::vector<AppExecFwk::BundleInfo> &bundleInfos,
-        std::vector<AppExecFwk::AbilityInfo> &abilityInfos);
+        std::vector<SCBAbilityInfo> &scbAbilityInfos);
 
     WMError UpdatePropertyDragEnabled(const sptr<WindowSessionProperty>& property,
                                       const sptr<SceneSession>& sceneSession);
@@ -473,6 +478,7 @@ private:
         std::vector<sptr<AccessibilityWindowInfo>>& accessibilityInfo);
     void FilterSceneSessionCovered(std::vector<sptr<SceneSession>>& sceneSessionList);
     void NotifyAllAccessibilityInfo();
+    void removeFailRecoveredSession();
 
     sptr<RootSceneSession> rootSceneSession_;
     std::weak_ptr<AbilityRuntime::Context> rootSceneContextWeak_;
@@ -489,6 +495,7 @@ private:
     std::set<int32_t> windowVisibilityListenerSessionSet_;
     std::set<int32_t> secureSessionSet_;
     std::set<int32_t> waterMarkSessionSet_;
+    std::set<int32_t> failRecoveredPersistentIdSet_;
     std::map<int32_t, std::map<AvoidAreaType, AvoidArea>> lastUpdatedAvoidArea_;
 
     NotifyCreateSystemSessionFunc createSystemSessionFunc_;

@@ -50,11 +50,13 @@ namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneSession" };
 const std::string DLP_INDEX = "ohos.dlp.params.index";
+constexpr const char* APP_TWIN_INDEX = "ohos.extra.param.key.appTwinIndex";
 } // namespace
 
 MaximizeMode SceneSession::maximizeMode_ = MaximizeMode::MODE_RECOVER;
 wptr<SceneSession> SceneSession::enterSession_ = nullptr;
 std::mutex SceneSession::enterSessionMutex_;
+std::shared_mutex SceneSession::windowDragHotAreaMutex_;
 std::map<uint32_t, WSRect> SceneSession::windowDragHotAreaMap_;
 static bool g_enableForceUIFirst = system::GetParameter("window.forceUIFirst.enabled", "1") == "1";
 
@@ -164,9 +166,9 @@ WSError SceneSession::Background()
     return BackgroundTask(true);
 }
 
-WSError SceneSession::BackgroundTask(const bool isSaveSnapShot)
+WSError SceneSession::BackgroundTask(const bool isSaveSnapshot)
 {
-    auto task = [weakThis = wptr(this), isSaveSnapShot]() {
+    auto task = [weakThis = wptr(this), isSaveSnapshot]() {
         auto session = weakThis.promote();
         if (!session) {
             TLOGE(WmsLogTag::WMS_LIFE, "session is null");
@@ -180,7 +182,7 @@ WSError SceneSession::BackgroundTask(const bool isSaveSnapShot)
         if (ret != WSError::WS_OK) {
             return ret;
         }
-        if (WindowHelper::IsMainWindow(session->GetWindowType()) && isSaveSnapShot) {
+        if (WindowHelper::IsMainWindow(session->GetWindowType()) && isSaveSnapshot) {
             session->snapshot_ = session->Snapshot();
             if (session->scenePersistence_ && session->snapshot_) {
                 const std::function<void()> func = std::bind(&Session::ResetSnapshot, session);
@@ -315,6 +317,28 @@ WSError SceneSession::OnSessionEvent(SessionEvent event)
     };
     PostTask(task, "OnSessionEvent:" + std::to_string(static_cast<int>(event)));
     return WSError::WS_OK;
+}
+
+uint32_t SceneSession::GetWindowDragHotAreaType(uint32_t type, int32_t pointerX, int32_t pointerY)
+{
+    std::shared_lock<std::shared_mutex> lock(windowDragHotAreaMutex_);
+    for (auto it = windowDragHotAreaMap_.begin(); it != windowDragHotAreaMap_.end(); ++it) {
+        uint32_t key = it->first;
+        WSRect rect = it->second;
+        if (rect.IsInRegion(pointerX, pointerY)) {
+            type |= key;
+        }
+    }
+    return type;
+}
+
+void SceneSession::AddOrUpdateWindowDragHotArea(uint32_t type, const WSRect& area)
+{
+    std::unique_lock<std::shared_mutex> lock(windowDragHotAreaMutex_);
+    auto const result = windowDragHotAreaMap_.insert({type, area});
+    if (!result.second) {
+        result.first->second = area;
+    }
 }
 
 void SceneSession::SetSessionEventParam(SessionEventParam param)
@@ -781,7 +805,10 @@ WSError SceneSession::RaiseAppMainWindowToTop()
             WLOGFE("session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
-        session->NotifyRequestFocusStatusNotifyManager(true, true);
+        if (session->IsFocusedOnShow()) {
+            session->NotifyRequestFocusStatusNotifyManager(true, true);
+            session->NotifyClick();
+        }
         return WSError::WS_OK;
     };
     PostTask(task, "RaiseAppMainWindowToTop");
@@ -1005,6 +1032,33 @@ void SceneSession::GetAINavigationBarArea(WSRect rect, AvoidArea& avoidArea)
     CalculateAvoidAreaRect(rect, barArea, avoidArea);
 }
 
+bool SceneSession::CheckGetAvoidAreaAvailable(AvoidAreaType type)
+{
+    WindowMode mode = GetWindowMode();
+    WindowType winType = GetWindowType();
+
+    if (type == AvoidAreaType::TYPE_KEYBOARD) {
+        return true;
+    }
+    if (WindowHelper::IsMainWindow(winType)) {
+        if (mode != WindowMode::WINDOW_MODE_FLOATING ||
+            system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
+            system::GetParameter("const.product.devicetype", "unknown") == "tablet") {
+            return true;
+        }
+    }
+    if (WindowHelper::IsSubWindow(winType)) {
+        if (GetParentSession() && GetParentSession()->GetSessionRect() == GetSessionRect()) {
+            return true;
+        }
+    }
+    TLOGI(WmsLogTag::WMS_IMMS, "Window [%{public}u, %{public}s] type %{public}d "
+        "avoidAreaType %{public}u windowMode %{public}u, return default avoid area.",
+        GetPersistentId(), GetWindowName().c_str(), static_cast<uint32_t>(winType),
+        static_cast<uint32_t>(type), static_cast<uint32_t>(mode));
+    return false;
+}
+
 AvoidArea SceneSession::GetAvoidAreaByType(AvoidAreaType type)
 {
     auto task = [weakThis = wptr(this), type]() -> AvoidArea {
@@ -1014,15 +1068,7 @@ AvoidArea SceneSession::GetAvoidAreaByType(AvoidAreaType type)
             return {};
         }
 
-        WindowMode mode = session->GetWindowMode();
-        WindowType winType = session->GetWindowType();
-        if (type != AvoidAreaType::TYPE_KEYBOARD && mode == WindowMode::WINDOW_MODE_FLOATING &&
-            (!WindowHelper::IsMainWindow(winType) ||
-            (system::GetParameter("const.product.devicetype", "unknown") != "phone" &&
-            system::GetParameter("const.product.devicetype", "unknown") != "tablet"))) {
-            TLOGI(WmsLogTag::WMS_IMMS,
-                "Id: %{public}d, avoidAreaType:%{public}u, windowMode:%{public}u, return default avoid area.",
-                session->GetPersistentId(), static_cast<uint32_t>(type), static_cast<uint32_t>(mode));
+        if (!session->CheckGetAvoidAreaAvailable(type)) {
             return {};
         }
 
@@ -2110,7 +2156,8 @@ WSError SceneSession::ChangeSessionVisibilityWithStatusBar(
         info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
         info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
         info.moduleName_ = abilitySessionInfo->want.GetModuleName();
-        info.appIndex_ = abilitySessionInfo->want.GetIntParam(DLP_INDEX, 0);
+        int32_t appTwinIndex = abilitySessionInfo->want.GetIntParam(APP_TWIN_INDEX, 0);
+        info.appIndex_ = appTwinIndex == 0 ? abilitySessionInfo->want.GetIntParam(DLP_INDEX, 0) : appTwinIndex;
         info.persistentId_ = abilitySessionInfo->persistentId;
         info.callerPersistentId_ = session->GetPersistentId();
         info.callerBundleName_ = abilitySessionInfo->want.GetStringParam(AAFwk::Want::PARAM_RESV_CALLER_BUNDLE_NAME);
@@ -2177,7 +2224,8 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
         info.abilityName_ = abilitySessionInfo->want.GetElement().GetAbilityName();
         info.bundleName_ = abilitySessionInfo->want.GetElement().GetBundleName();
         info.moduleName_ = abilitySessionInfo->want.GetModuleName();
-        info.appIndex_ = abilitySessionInfo->want.GetIntParam(DLP_INDEX, 0);
+        int32_t appTwinIndex = abilitySessionInfo->want.GetIntParam(APP_TWIN_INDEX, 0);
+        info.appIndex_ = appTwinIndex == 0 ? abilitySessionInfo->want.GetIntParam(DLP_INDEX, 0) : appTwinIndex;
         info.persistentId_ = abilitySessionInfo->persistentId;
         info.callerPersistentId_ = session->GetPersistentId();
         info.callerBundleName_ = abilitySessionInfo->want.GetStringParam(AAFwk::Want::PARAM_RESV_CALLER_BUNDLE_NAME);

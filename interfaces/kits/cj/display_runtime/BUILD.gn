@@ -44,6 +44,7 @@ ohos_shared_library("cj_display_ffi") {
     deps = [
       "../../../../dm:libdm",
       "../../../../utils:libwmutil",
+      "../../../../utils:libwmutil_base",
     ]
     external_deps = [
       "ability_runtime:runtime",
@@ -53,12 +54,14 @@ ohos_shared_library("cj_display_ffi") {
       "hitrace:hitrace_meter",
       "napi:ace_napi",
       "napi:cj_bind_ffi",
+      "napi:cj_bind_native",
     ]
   } else {
     defines += [ "PREVIEWER" ]
     sources = [ "display_runtime_mock.cpp" ]
+    external_deps = [ "napi:cj_bind_ffi" ]
   }
-  relative_install_dir = "module"
+  innerapi_tags = [ "platformsdk" ]
   part_name = "window_manager"
   subsystem_name = "window"
 }

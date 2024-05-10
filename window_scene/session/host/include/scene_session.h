@@ -126,7 +126,7 @@ public:
         sptr<IRemoteObject> token = nullptr, int32_t pid = -1, int32_t uid = -1);
     WSError Foreground(sptr<WindowSessionProperty> property) override;
     WSError Background() override;
-    WSError BackgroundTask(const bool isSaveSnapShot = true);
+    WSError BackgroundTask(const bool isSaveSnapshot = true);
     WSError Disconnect(bool isFromClient = false) override;
     virtual void BindKeyboardPanelSession(sptr<SceneSession> panelSession) {};
     virtual sptr<SceneSession> GetKeyboardPanelSession() const { return nullptr; };
@@ -262,7 +262,8 @@ public:
     static const wptr<SceneSession> GetEnterWindow();
     static void ClearEnterWindow();
     static MaximizeMode maximizeMode_;
-    static std::map<uint32_t, WSRect> windowDragHotAreaMap_;
+    static uint32_t GetWindowDragHotAreaType(uint32_t type, int32_t pointerX, int32_t pointerY);
+    static void AddOrUpdateWindowDragHotArea(uint32_t type, const WSRect& area);
     WSError UpdateRectChangeListenerRegistered(bool isRegister) override;
     void SetForceHideState(bool hideFlag);
     bool GetForceHideState() const;
@@ -323,6 +324,7 @@ private:
     void HandleCastScreenConnection(SessionInfo& info, sptr<SceneSession> session);
     void FixKeyboardPositionByKeyboardPanel(sptr<SceneSession> panelSession, sptr<SceneSession> keyboardSession);
     void UpdateSessionRectInner(const WSRect& rect, const SizeChangeReason& reason);
+    bool CheckGetAvoidAreaAvailable(AvoidAreaType type);
 
     NotifySessionRectChangeFunc sessionRectChangeFunc_;
     static wptr<SceneSession> enterSession_;
@@ -345,6 +347,8 @@ private:
     bool forceHideState_ = false;
     int32_t customDecorHeight_ = 0;
     WSRect restoringRectForKeyboard_ = {0, 0, 0, 0};
+    static std::shared_mutex windowDragHotAreaMutex_;
+    static std::map<uint32_t, WSRect> windowDragHotAreaMap_;
     bool isTemporarilyShowWhenLocked_ = false;
 };
 } // namespace OHOS::Rosen
