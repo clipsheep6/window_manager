@@ -8402,4 +8402,21 @@ WMError SceneSessionManager::GetMainWindowInfos(int32_t topNum, std::vector<Main
 
     return WMError::WM_OK;
 }
+
+uint64_t SceneSessionManager::GetDisplayIdBySessionId(int32_t persistentId)
+{
+    uint64_t displayId = INVALID_SCREEN_ID;
+    auto sceneSession = GetSceneSession(persistentId);
+    if (sceneSession == nullptr) {
+        WLOGFE("Session with persistentId %{public}d not found", persistentId);
+        return displayId;
+    }
+    if (sceneSession->GetSessionProperty() == nullptr) {
+        WLOGFE("Session property with persistentId %{public}d not found", persistentId);
+        return displayId;
+    }
+    displayId = sceneSession->GetSessionProperty()->GetDisplayId();
+    WLOGFD("GetDisplayIdBySessionId: %{public}d", static_cast<int32_t>(displayId));
+    return displayId;
+}
 } // namespace OHOS::Rosen
