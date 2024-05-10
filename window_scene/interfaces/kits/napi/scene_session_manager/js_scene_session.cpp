@@ -135,8 +135,8 @@ napi_value JsSceneSession::Create(napi_env env, const sptr<SceneSession>& sessio
     BindNativeFunction(env, objValue, "setPipActionEvent", moduleName, JsSceneSession::SetPipActionEvent);
     BindNativeFunction(env, objValue, "notifyDisplayStatusBarTemporarily", moduleName,
         JsSceneSession::NotifyDisplayStatusBarTemporarily);
-    BindNativeFunction(env, objValue, "notifyDisplayStatusBarTemporarily", moduleName,
-        JsSceneSession::NotifyDisplayStatusBarTemporarily);
+    BindNativeFunction(env, objValue, "setTemporarilyShowWhenLocked", moduleName,
+        JsSceneSession::SetTemporarilyShowWhenLocked);
     napi_ref jsRef = nullptr;
     napi_status status = napi_create_reference(env, objValue, 1, &jsRef);
     if (status != napi_ok) {
