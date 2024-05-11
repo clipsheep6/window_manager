@@ -349,7 +349,7 @@ private:
     WSRect restoringRectForKeyboard_ = {0, 0, 0, 0};
     static std::shared_mutex windowDragHotAreaMutex_;
     static std::map<uint32_t, WSRect> windowDragHotAreaMap_;
-    bool isTemporarilyShowWhenLocked_ = false;
+    std::atomic_bool isTemporarilyShowWhenLocked_ { false };
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SCENE_SESSION_H
