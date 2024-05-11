@@ -2750,16 +2750,16 @@ bool SceneSession::GetIsDisplayStatusBarTemporarily() const
 
 void SceneSession::SetTemporarilyShowWhenLocked(bool isTemporarilyShowWhenLocked)
 {
-    if (isTemporarilyShowWhenLocked_ == isTemporarilyShowWhenLocked) {
+    if (isTemporarilyShowWhenLocked_.load() == isTemporarilyShowWhenLocked) {
         return;
     }
-    isTemporarilyShowWhenLocked_ = isTemporarilyShowWhenLocked;
+    isTemporarilyShowWhenLocked_.store(isTemporarilyShowWhenLocked);
     TLOGI(WmsLogTag::WMS_SCB, "SetTemporarilyShowWhenLocked successfully, target:%{public}u",
         isTemporarilyShowWhenLocked);
 }
 
 bool SceneSession::IsTemporarilyShowWhenLocked() const
 {
-    return isTemporarilyShowWhenLocked_;
+    return isTemporarilyShowWhenLocked_.load();
 }
 } // namespace OHOS::Rosen
