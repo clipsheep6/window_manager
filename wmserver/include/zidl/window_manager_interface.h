@@ -218,6 +218,10 @@ public:
     {
         return WMError::WM_OK;
     };
+    virtual WMError GetDisplayIdByWindowId(int32_t windowId, DisplayId& displayId)
+    {
+        return WMError::WM_OK;
+    };
 };
 }
 }

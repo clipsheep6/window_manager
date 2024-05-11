@@ -42,6 +42,7 @@ public:
     virtual WMError CheckWindowId(int32_t windowId, int32_t &pid) = 0;
     virtual WMError GetWindowModeType(WindowModeType& windowModeType) { return WMError::WM_OK; }
     virtual WMError GetMainWindowInfos(int32_t topNum, std::vector<MainWindowInfo>& topNInfo) = 0;
+    virtual WMError GetDisplayIdByWindowId(int32_t windowId, DisplayId& displayId) { return WMError::WM_OK; }
 };
 }
 }

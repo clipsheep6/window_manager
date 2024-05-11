@@ -8406,4 +8406,30 @@ WMError SceneSessionManager::GetMainWindowInfos(int32_t topNum, std::vector<Main
 
     return WMError::WM_OK;
 }
+
+WMError SceneSessionManager::GetDisplayIdByWindowId(int32_t windowId, DisplayId& displayId)
+{
+    if (!SessionPermission::IsSystemCalling()) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, "UpdateTopmostProperty permission denied!");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
+    auto task = [this, windowId, &displayId]() {
+        const auto& sceneSession = GetSceneSession(windowId);
+        if (sceneSession == nullptr) {
+            WLOGFE("[GetDisplayIdByWindowId] session is null");
+            return WMError::WM_ERROR_INVALID_WINDOW;
+        }
+        if (sceneSession->GetSessionProperty() == nullptr) {
+            WLOGFE("[GetDisplayIdByWindowId] session property is null");
+            return WMError::WM_ERROR_INVALID_WINDOW;
+        }
+        displayId = sceneSession->GetSessionProperty()->GetDisplayId();
+        WLOGFD("[GetDisplayIdByWindowId] windowId: %{public}d, displayId: %{public}" PRIu64"", windowId, displayId);
+        return WMError::WM_OK;
+    };
+    if (taskScheduler_ == nullptr) {
+        return WMError::WM_DO_NOTHING;
+    }
+    return taskScheduler_->PostSyncTask(task, "GetDisplayIdByWindowId");
+}
 } // namespace OHOS::Rosen

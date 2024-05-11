@@ -828,4 +828,31 @@ WMError SceneSessionManagerLiteProxy::GetMainWindowInfos(int32_t topNum, std::ve
 
     return static_cast<WMError>(reply.ReadInt32());
 }
+
+WMError SceneSessionManagerLiteProxy::GetDisplayIdByWindowId(int32_t windowId, DisplayId& displayId)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32(windowId)) {
+        WLOGFE("Write windowId failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (Remote() == nullptr) {
+        WLOGFE("remote is null");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+        SceneSessionManagerLiteMessage::TRANS_ID_GET_DISPLAY_ID_BY_WINDOW_ID), data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    displayId = reply.ReadUint64();
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WMError>(ret);
+}
 } // namespace OHOS::Rosen

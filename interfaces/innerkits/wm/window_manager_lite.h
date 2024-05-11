@@ -145,6 +145,15 @@ public:
      * @return WM_OK means get success, others means get failed.
      */
     WMError GetMainWindowInfos(int32_t topNum, std::vector<MainWindowInfo>& topNInfo);
+
+    /**
+     * @brief Get displayId by windowId.
+     *
+     * @param WindowId windowId.
+     * @return dispaly id which the window is.
+     */
+    DisplayId GetDisplayIdByWindowId(int32_t windowId) const;
+
 private:
     WindowManagerLite();
     ~WindowManagerLite();

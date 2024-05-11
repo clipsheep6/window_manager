@@ -567,6 +567,14 @@ public:
      * @return WM_OK means unregister success, others means unregister failed.
      */
     WMError UnregisterVisibleWindowNumChangedListener(const sptr<IVisibleWindowNumChangedListener>& listener);
+
+    /**
+     * @brief Get displayId by windowId.
+     *
+     * @param WindowId windowId.
+     * @return dispaly id which the window is.
+     */
+    DisplayId GetDisplayIdByWindowId(int32_t windowId) const;
     
 private:
     WindowManager();

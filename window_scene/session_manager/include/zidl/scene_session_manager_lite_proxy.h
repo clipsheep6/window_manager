@@ -62,6 +62,7 @@ public:
     WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) override;
     WMError GetWindowModeType(WindowModeType& windowModeType) override;
     WMError GetMainWindowInfos(int32_t topNum, std::vector<MainWindowInfo>& topNInfo) override;
+    WMError GetDisplayIdByWindowId(int32_t windowId, DisplayId& displayId) override;
 
 private:
     template<typename T>
