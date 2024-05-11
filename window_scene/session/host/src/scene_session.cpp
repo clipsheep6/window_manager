@@ -76,12 +76,14 @@ SceneSession::~SceneSession()
 
 WSError SceneSession::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
     const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
-    sptr<WindowSessionProperty> property, sptr<IRemoteObject> token, int32_t pid, int32_t uid)
+    sptr<WindowSessionProperty> property, sptr<IRemoteObject> token, int32_t pid, int32_t uid,
+    const std::string& identityToken)
 {
     // Get pid and uid before posting task.
     pid = pid == -1 ? IPCSkeleton::GetCallingRealPid() : pid;
     uid = uid == -1 ? IPCSkeleton::GetCallingUid() : uid;
-    auto task = [weakThis = wptr(this), sessionStage, eventChannel, surfaceNode, &systemConfig, property, token, pid, uid]() {
+    auto task = [weakThis = wptr(this), sessionStage, eventChannel, surfaceNode, &systemConfig, property, token, pid,
+        uid, identityToken]() {
         auto session = weakThis.promote();
         if (!session) {
             TLOGE(WmsLogTag::WMS_LIFE, "session is null");
@@ -89,6 +91,15 @@ WSError SceneSession::Connect(const sptr<ISessionStage>& sessionStage, const spt
         }
         if (property) {
             property->SetCollaboratorType(session->GetCollaboratorType());
+        }
+        if ((!identityToken.empty() && !session->clientIdentityToken_.empty()) &&
+            identityToken != session->clientIdentityToken_) {
+            TLOGW(WmsLogTag::WMS_LIFE,
+                "Identity Token vaildate failed, clientIdentityToken_: %{public}s, "
+                "identityToken: %{public}s, bundleName: %{public}s",
+                session->clientIdentityToken_.c_str(), identityToken.c_str(),
+                session->GetSessionInfo().bundleName_.c_str());
+            return WSError::WS_OK;
         }
         auto ret = session->Session::Connect(
             sessionStage, eventChannel, surfaceNode, systemConfig, property, token, pid, uid);
@@ -115,7 +126,7 @@ WSError SceneSession::Reconnect(const sptr<ISessionStage>& sessionStage, const s
     });
 }
 
-WSError SceneSession::Foreground(sptr<WindowSessionProperty> property)
+WSError SceneSession::Foreground(sptr<WindowSessionProperty> property, bool isFromClient)
 {
     // return when screen is locked and show without ShowWhenLocked flag
     if (false && GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW &&
@@ -125,6 +136,15 @@ WSError SceneSession::Foreground(sptr<WindowSessionProperty> property)
         TLOGW(WmsLogTag::WMS_LIFE, "failed: Screen is locked, session %{public}d show without ShowWhenLocked flag",
             GetPersistentId());
         return WSError::WS_ERROR_INVALID_SESSION;
+    }
+    if (isFromClient) {
+        int32_t callingPid = IPCSkeleton::GetCallingPid();
+        if (callingPid != -1 && callingPid != GetCallingPid()) {
+            TLOGW(WmsLogTag::WMS_LIFE,
+                "Foreground failed, callingPid_: %{public}d, callingPid: %{public}d, bundleName: %{public}s",
+                GetCallingPid(), callingPid, GetSessionInfo().bundleName_.c_str());
+            return WSError::WS_OK;
+        }
     }
 
     auto task = [weakThis = wptr(this), property]() {
@@ -161,8 +181,17 @@ WSError SceneSession::Foreground(sptr<WindowSessionProperty> property)
     return WSError::WS_OK;
 }
 
-WSError SceneSession::Background()
+WSError SceneSession::Background(bool isFromClient)
 {
+    if (isFromClient) {
+        int32_t callingPid = IPCSkeleton::GetCallingPid();
+        if (callingPid != -1 && callingPid != GetCallingPid()) {
+            TLOGW(WmsLogTag::WMS_LIFE,
+                "Background failed, callingPid_: %{public}d, callingPid: %{public}d, bundleName: %{public}s",
+                GetCallingPid(), callingPid, GetSessionInfo().bundleName_.c_str());
+            return WSError::WS_OK;
+        }
+    }
     return BackgroundTask(true);
 }
 
@@ -223,6 +252,15 @@ void SceneSession::ClearSpecificSessionCbMap()
 
 WSError SceneSession::Disconnect(bool isFromClient)
 {
+    if (isFromClient) {
+        int32_t callingPid = IPCSkeleton::GetCallingPid();
+        if (callingPid != -1 && callingPid != GetCallingPid()) {
+            TLOGW(WmsLogTag::WMS_LIFE,
+                "Disconnect failed, callingPid_: %{public}d, callingPid: %{public}d, bundleName: %{public}s",
+                GetCallingPid(), callingPid, GetSessionInfo().bundleName_.c_str());
+            return WSError::WS_OK;
+        }
+    }
     PostTask([weakThis = wptr(this), isFromClient]() {
         auto session = weakThis.promote();
         if (!session) {
@@ -1894,6 +1932,12 @@ bool SceneSession::IsAppSession() const
     return false;
 }
 
+void SceneSession::ResetSessionConnectState()
+{
+    Session::ResetSessionConnectState();
+    SetCallingPid(-1);
+}
+
 void SceneSession::NotifyIsCustomAnimationPlaying(bool isPlaying)
 {
     WLOGFI("id %{public}d %{public}u", GetPersistentId(), isPlaying);
@@ -2032,6 +2076,16 @@ void SceneSession::SetCollaboratorType(int32_t collaboratorType)
 {
     collaboratorType_ = collaboratorType;
     sessionInfo_.collaboratorType_ = collaboratorType;
+}
+
+std::string SceneSession::GetClientIdentityToken() const
+{
+    return clientIdentityToken_;
+}
+
+void SceneSession::SetClientIdentityToken(const std::string& iToken)
+{
+    clientIdentityToken_ = iToken;
 }
 
 void SceneSession::DumpSessionInfo(std::vector<std::string> &info) const
