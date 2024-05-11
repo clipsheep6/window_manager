@@ -1833,10 +1833,10 @@ void JsSceneSession::PendingSessionActivation(SessionInfo& info)
     }
     auto callerSession = SceneSessionManager::GetInstance().GetSceneSession(info.callerPersistentId_);
     if (callerSession != nullptr) {
-        bool isRealStartedBySeenFrom = info.callerToken_ == callerSession->GetAbilityToken();
+        bool isStartedRightly = info.callerToken_ == callerSession->GetAbilityToken();
         TLOGI(WmsLogTag::WMS_SCB,
-            "isRealStartedBySeenFrom result is: %{public}d", isRealStartedBySeenFrom);
-        info.isRealStartedBySeenFrom_ = isRealStartedBySeenFrom;
+            "isStartedRightly result is: %{public}d", isStartedRightly);
+        info.isStartedRightly_ = isStartedRightly;
     }
     std::shared_ptr<SessionInfo> sessionInfo = std::make_shared<SessionInfo>(info);
     auto task = [this, sessionInfo, &sceneSession]() {
