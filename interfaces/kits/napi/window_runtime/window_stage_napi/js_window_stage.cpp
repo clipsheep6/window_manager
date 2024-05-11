@@ -22,6 +22,7 @@
 #include "js_window_utils.h"
 #include "window_manager_hilog.h"
 #include "permission.h"
+#include "hitrace_meter.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -50,6 +51,7 @@ void JsWindowStage::Finalizer(napi_env env, void* data, void* hint)
 napi_value JsWindowStage::SetUIContent(napi_env env, napi_callback_info info)
 {
     WLOGFD("[NAPI]SetUIContent");
+    HITRACE_METER_NAME(HITRACE_TAG_ABILITY_MANAGER, "LQ::JsWindowStage::SetUIContent");
     JsWindowStage* me = CheckParamsAndGetThis<JsWindowStage>(env, info);
     return (me != nullptr) ? me->OnSetUIContent(env, info) : nullptr;
 }
@@ -147,6 +149,7 @@ napi_value JsWindowStage::SetDefaultDensityEnabled(napi_env env, napi_callback_i
 
 napi_value JsWindowStage::OnSetUIContent(napi_env env, napi_callback_info info)
 {
+    
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
@@ -174,7 +177,11 @@ napi_value JsWindowStage::OnSetUIContent(napi_env env, napi_callback_info info)
         WLOGFE("[NAPI]WindowScene is null or window is null");
         return NapiGetUndefined(env);
     }
-    weakScene->GetMainWindow()->NapiSetUIContent(contextUrl, env, argv[CONTENT_STORAGE_ARG]);
+    {
+        HITRACE_METER_NAME(HITRACE_TAG_ABILITY_MANAGER, "LQ::JsWindowStage::NapiSetUIContent");
+        weakScene->GetMainWindow()->NapiSetUIContent(contextUrl, env, argv[CONTENT_STORAGE_ARG]);
+    }
+    
     return NapiGetUndefined(env);
 }
 

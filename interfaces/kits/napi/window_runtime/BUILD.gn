@@ -170,6 +170,7 @@ ohos_shared_library("windowstage_kit") {
     "ability_runtime:runtime",
     "c_utils:utils",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "napi:ace_napi",
   ]
 
