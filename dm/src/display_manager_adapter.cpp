@@ -263,7 +263,8 @@ DMError ScreenManagerAdapter::IsScreenRotationLocked(bool& isLocked)
     return displayManagerServiceProxy_->IsScreenRotationLocked(isLocked);
 }
 
-bool ScreenManagerAdapter::SetSpecifiedScreenPower(ScreenId screenId, ScreenPowerState state, PowerStateChangeReason reason)
+bool ScreenManagerAdapter::SetSpecifiedScreenPower(ScreenId screenId, ScreenPowerState state,
+    PowerStateChangeReason reason)
 {
     INIT_PROXY_CHECK_RETURN(false);
     return displayManagerServiceProxy_->SetSpecifiedScreenPower(screenId, state, reason);

@@ -1241,7 +1241,8 @@ void ScreenSessionManager::NotifyScreenshot(DisplayId displayId)
     }
 }
 
-bool ScreenSessionManager::SetSpecifiedScreenPower(ScreenId screenId, ScreenPowerState state, PowerStateChangeReason reason)
+bool ScreenSessionManager::SetSpecifiedScreenPower(ScreenId screenId, ScreenPowerState state,
+    PowerStateChangeReason reason)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
         WLOGFE("SetSpecifiedScreenPower permission denied!");
