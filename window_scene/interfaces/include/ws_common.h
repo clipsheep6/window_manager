@@ -276,7 +276,7 @@ struct SessionInfo {
     bool isCastSession_ = false;
     uint32_t windowInputType_ = 0;
     std::string continueSessionId_ = "";
-    bool isRealStartedBySeenFrom_ = false;
+    bool isStartedRightly_ = false;
 };
 
 enum class SessionFlag : uint32_t {
