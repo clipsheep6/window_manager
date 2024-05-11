@@ -3611,7 +3611,8 @@ HWTEST_F(SceneSessionTest, SetTemporarilyShowWhenLocked, Function | SmallTest | 
  * @tc.desc:  * @tc.name: GetShowWhenLockedFlagValue
  * @tc.type: FUNC
  */
-HWTEST_F(SceneSessionTest, GetShowWhenLockedFlagValue, Function | SmallTest | Level2) {
+HWTEST_F(SceneSessionTest, GetShowWhenLockedFlagValue, Function | SmallTest | Level2)
+{
     SessionInfo info;
     info.abilityName_ = "GetShowWhenLockedFlagValue";
     info.bundleName_ = "GetShowWhenLockedFlagValue";
