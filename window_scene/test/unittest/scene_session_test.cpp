@@ -3638,4 +3638,3 @@ HWTEST_F(SceneSessionTest, GetShowWhenLockedFlagValue, Function | SmallTest | Le
 }
 }
 }
-}
