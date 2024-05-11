@@ -962,6 +962,7 @@ HWTEST_F(SceneSessionTest, IsShowWhenLocked, Function | SmallTest | Level2)
     scensession = new (std::nothrow) SceneSession(info, specificCallback_);
     EXPECT_NE(scensession, nullptr);
     sptr<WindowSessionProperty> property = new WindowSessionProperty();
+    EXPECT_NE(property, nullptr);
     property->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
     property->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
     ASSERT_EQ(scensession->IsShowWhenLocked(), false);
@@ -973,6 +974,9 @@ HWTEST_F(SceneSessionTest, IsShowWhenLocked, Function | SmallTest | Level2)
     ASSERT_EQ(scensession->IsShowWhenLocked(), true);
     scensession->SetTemporarilyShowWhenLocked(true);
     ASSERT_EQ(scensession->IsShowWhenLocked(), true);
+    delete specificCallback_;
+    delete scensession;
+    delete property;
 }
 
 /**
@@ -3599,6 +3603,7 @@ HWTEST_F(SceneSessionTest, SetTemporarilyShowWhenLocked, Function | SmallTest | 
     sceneSession->SetTemporarilyShowWhenLocked(false);
     isTemporarilyShowWhenLocked = sceneSession->IsTemporarilyShowWhenLocked();
     ASSERT_EQ(isTemporarilyShowWhenLocked, false);
+    delete sceneSession;
 }
 
 /**
@@ -3619,12 +3624,17 @@ HWTEST_F(SceneSessionTest, GetShowWhenLockedFlagValue, Function | SmallTest | Le
     scensession = new (std::nothrow) SceneSession(info, specificCallback_);
     EXPECT_NE(scensession, nullptr);
     sptr<WindowSessionProperty> property = new WindowSessionProperty();
+    EXPECT_NE(property, nullptr);
     property->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
     property->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
     ASSERT_EQ(scensession->GetShowWhenLockedFlagValue(), false);
     scensession->property_ = property;
     property->SetWindowFlags(4);
     ASSERT_EQ(scensession->GetShowWhenLockedFlagValue(), true);
+    delete specificCallback_;
+    delete scensession;
+    delete property;
+}
 }
 }
 }
