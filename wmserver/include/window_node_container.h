@@ -187,7 +187,8 @@ private:
         const std::unordered_map<WindowType, SystemBarProperty>& systemBarPropInfo) const;
 
     bool IsWindowFollowParent(WindowType type);
-    bool RemoveNodeFromRSTreeAnimate(sptr<WindowNode>& node, bool animationPlayed, const PropertyCallback& updateRSTreeFunc);
+    bool RemoveNodeFromRSTreeAnimate(sptr<WindowNode>& node, bool animationPlayed,
+        const PropertyCallback& updateRSTreeFunc);
 
     float displayBrightness_ = UNDEFINED_BRIGHTNESS;
     uint32_t brightnessWindow_ = INVALID_WINDOW_ID;
