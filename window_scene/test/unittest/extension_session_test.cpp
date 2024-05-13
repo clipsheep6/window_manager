@@ -52,6 +52,7 @@ void NotifyRemoteReadyTest()
 
 void NotifySyncOnTest()
 {
+    int test = 0;
 }
 
 void NotifyAsyncOnTest()
