@@ -52,7 +52,7 @@ void NotifyRemoteReadyTest()
 
 void NotifySyncOnTest()
 {
-    int test = 0;
+
 }
 
 void NotifyAsyncOnTest()
@@ -546,6 +546,193 @@ HWTEST_F(ExtensionSessionTest, UpdateAvoidArea, Function | SmallTest | Level1)
     ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, res);
 }
 
+/**
+ * @tc.name: TransferComponentDataSync
+ * @tc.desc: test function : TransferComponentDataSync
+ * @tc.type: FUNC
+ */
+HWTEST_F(ExtensionSessionTest, TransferComponentDataSync, Function | SmallTest | Level1)
+{
+    SessionInfo info;
+    info.abilityName_ = "abilitytest";
+    info.bundleName_ = "bundletest";
+    sptr<ExtensionSession> extensionSession = new (std::nothrow) ExtensionSession(info);
+    ASSERT_NE(extensionSession, nullptr);
+    if (extensionSession == nullptr) {
+        return;
+    }
+    AAFwk::WantParams wantParams;
+    AAFwk::WantParams reWantParams;
+    auto result = extensionSession->TransferComponentDataSync(wantParams, reWantParams);
+    ASSERT_EQ(result, WSErrorCode::WS_ERROR_TRANSFER_DATA_FAILED);
+}
+
+/**
+ * @tc.name: TransferComponentDataSync02
+ * @tc.desc: test function : TransferComponentDataSync
+ * @tc.type: FUNC
+ */
+HWTEST_F(ExtensionSessionTest, TransferComponentDataSync02, Function | SmallTest | Level1)
+{
+    SessionInfo info;
+    info.abilityName_ = "abilitytest";
+    info.bundleName_ = "bundletest";
+    sptr<ExtensionSession> extensionSession = new (std::nothrow) ExtensionSession(info);
+    ASSERT_NE(extensionSession, nullptr);
+    if (extensionSession == nullptr) {
+        return;
+    }
+    sptr <Session> session = new (std::nothrow) Session(info);
+    if (session == nullptr) {
+        return;
+    }
+    session->state_ = SessionState::STATE_CONNECT;
+    AAFwk::WantParams wantParams;
+    AAFwk::WantParams reWantParams;
+    auto result = extensionSession->TransferComponentDataSync(wantParams, reWantParams);
+    ASSERT_EQ(result, WSErrorCode::WS_OK);
+}
+
+/**
+ * @tc.name: TransferComponentData02
+ * @tc.desc: test function : TransferComponentData
+ * @tc.type: FUNC
+ */
+HWTEST_F(ExtensionSessionTest, TransferComponentData02, Function | SmallTest | Level1)
+{
+    SessionInfo info;
+    info.abilityName_ = "abilitytest";
+    info.bundleName_ = "bundletest";
+    info.isSystem_ = true;
+    sptr<ExtensionSession> extensionSession = new (std::nothrow) ExtensionSession(info);
+    ASSERT_NE(extensionSession, nullptr);
+    if (extensionSession == nullptr) {
+        return;
+    }
+    sptr <Session> session = new (std::nothrow) Session(info);
+    if (session == nullptr) {
+        return;
+    }
+    session->state_ = SessionState::STATE_CONNECT;
+    AAFwk::WantParams wantParams;
+    WSError result = extensionSession->TransferComponentData(wantParams);
+    ASSERT_EQ(result, WSError::WS_OK);
+}
+
+/**
+ * @tc.name: NotifySyncOn02
+ * @tc.desc: test function : NotifySyncOn
+ * @tc.type: FUNC
+ */
+HWTEST_F(ExtensionSessionTest, NotifySyncOn02, Function | SmallTest | Level1)
+{
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    sptr<ExtensionSession> extensionSession = new (std::nothrow) ExtensionSession(info);
+    ASSERT_NE(extensionSession, nullptr);
+    if (extensionSession == nullptr) {
+        return;
+    }
+    extSessionEventCallback->notifyAsyncOnFunc_ = nullptr;
+    extensionSession->RegisterExtensionSessionEventCallback(extSessionEventCallback);
+    extensionSession->NotifySyncOn();
+}
+
+/**
+ * @tc.name: NotifySyncOn03
+ * @tc.desc: test function : NotifySyncOn
+ * @tc.type: FUNC
+ */
+HWTEST_F(ExtensionSessionTest, NotifySyncOn03, Function | SmallTest | Level1)
+{
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    sptr<ExtensionSession> extensionSession = new (std::nothrow) ExtensionSession(info);
+    ASSERT_NE(extensionSession, nullptr);
+    if (extensionSession == nullptr) {
+        return;
+    }
+    extSessionEventCallback->notifyAsyncOnFunc_ = NotifySyncOnTest;
+    extensionSession->NotifySyncOn();
+}
+
+/**
+ * @tc.name: TransferKeyEventForConsumed05
+ * @tc.desc: TransferKeyEventForConsumed channelListener_ nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(ExtensionSessionTest, TransferKeyEventForConsumed05, Function | SmallTest | Level1)
+{
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    sptr<ExtensionSession> extensionSession = new (std::nothrow) ExtensionSession(info);
+    ASSERT_NE(extensionSession, nullptr);
+    if (extensionSession == nullptr) {
+        return;
+    }
+    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    sptr<WindowEventChannelMocker> mockEventChannel = new (std::nothrow) WindowEventChannelMocker(mockSessionStage);
+    extensionSession->windowEventChannel_ = mockEventChannel;
+
+    auto keyEvent = MMI::KeyEvent::Create();
+    ASSERT_NE(keyEvent, nullptr);
+
+    extensionSession->channelListener_ = nullptr;
+    bool isConsumed = false;
+    bool isTimeout = false;
+    bool isPreImeEvent = false;
+    WSError result = extensionSession->TransferKeyEventForConsumed(keyEvent, isConsumed, isTimeout, isPreImeEvent);
+    ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
+}
+
+/**
+ * @tc.name: TransferKeyEventAsync02
+ * @tc.desc: TransferKeyEventAsync windowEventChannel_ nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(ExtensionSessionTest, TransferKeyEventAsync02, Function | SmallTest | Level1)
+{
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    sptr<ExtensionSession> extensionSession = new (std::nothrow) ExtensionSession(info);
+    ASSERT_NE(extensionSession, nullptr);
+    if (extensionSession == nullptr) {
+        return;
+    }
+    auto keyEvent = MMI::KeyEvent::Create();
+    ASSERT_NE(keyEvent, nullptr);
+    bool isPreImeEvent = true;
+    extensionSession->windowEventChannel_ = nullptr;
+    auto result = extensionSession->TransferKeyEventAsync(keyEvent, isPreImeEvent);
+    ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
+}
+
+/**
+ * @tc.name: TransferKeyEventAsync03
+ * @tc.desc: TransferKeyEventAsync keyEvent nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(ExtensionSessionTest, TransferKeyEventAsync03, Function | SmallTest | Level1)
+{
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    sptr<ExtensionSession> extensionSession = new (std::nothrow) ExtensionSession(info);
+    ASSERT_NE(extensionSession, nullptr);
+    if (extensionSession == nullptr) {
+        return;
+    }
+    bool isPreImeEvent = true;
+    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    sptr<WindowEventChannelMocker> mockEventChannel = new (std::nothrow) WindowEventChannelMocker(mockSessionStage);
+    extensionSession->windowEventChannel_ = mockEventChannel;
+    auto result = extensionSession->TransferKeyEventAsync(nullptr, isPreImeEvent);
+    ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
+}
 }
 }
 }
