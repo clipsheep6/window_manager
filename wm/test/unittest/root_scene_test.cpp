@@ -65,6 +65,7 @@ namespace {
 HWTEST_F(RootSceneTest, LoadContent01, Function | SmallTest | Level3)
 {
     RootScene rootScene;
+    // 测试蓝区提交流程
     rootScene.LoadContent("a", nullptr, nullptr, nullptr);
     ASSERT_EQ(1, rootScene.GetWindowId());
 }
