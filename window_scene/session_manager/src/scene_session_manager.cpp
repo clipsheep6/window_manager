@@ -6000,6 +6000,54 @@ WMError SceneSessionManager::GetAccessibilityWindowInfo(std::vector<sptr<Accessi
     return taskScheduler_->PostSyncTask(task, "GetAccessibilityWindowInfo");
 }
 
+WMError SceneSessionManager::GetUntouchableUnreliableWindowInfo(int32_t windowId,
+    std::vector<sptr<UntouchableUnreliableWindowInfo>>& infos)
+{
+    WLOGFD("GetUntouchableUnreliableWindowInfo Called.");
+    if (!SessionPermission::IsSystemServiceCalling()) {
+        WLOGFE("GetUntouchableUnreliableWindowInfo only support for system service.");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
+    auto task = [this, windowId, &infos]() {
+        std::map<int32_t, sptr<SceneSession>>::iterator iter;
+        std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+        for (iter = sceneSessionMap_.begin(); iter != sceneSessionMap_.end(); iter++) {
+            sptr<SceneSession> sceneSession = iter->second;
+            if (sceneSession == nullptr) {
+                WLOGFW("null scene session");
+                continue;
+            }
+            if (iter->first == windowId) {
+                WLOGFI("persistentId: %{public}d is parameter chosen", iter->first);
+                FillUntouchableUnreliableWindowInfo(infos, iter->second);
+                continue;
+            }
+            if (sceneSession->GetTouchable()) {
+                WLOGFD("persistentId: %{public}d is touchable", iter->first);
+                continue;
+            }
+            if (!sceneSession->IsVisible()) {
+                WLOGFD("persistentId: %{public}d is not visible", iter->first);
+                continue;
+            }
+            WLOGFD("name = %{public}s, isSystem = %{public}d, persistentId = %{public}d, winType = %{public}d, "
+                "state = %{public}d, visible = %{public}d", sceneSession->GetWindowName().c_str(),
+                sceneSession->GetSessionInfo().isSystem_, iter->first, sceneSession->GetWindowType(),
+                sceneSession->GetSessionState(), sceneSession->IsVisible());
+            if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_SUB_WINDOW ||
+                sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_FLOAT ||
+                sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT ||
+                sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_TOAST) {
+                WLOGFI("GetUntouchableUnreliableWindowInfo, persistentId = %{public}d, WindowType = %{public}d",
+                    iter->first, sceneSession->GetWindowType());
+                FillUntouchableUnreliableWindowInfo(infos, iter->second);
+            }
+        }
+        return WMError::WM_OK;
+    };
+    return taskScheduler_->PostSyncTask(task, "GetUntouchableUnreliableWindowInfo");
+}
+
 void SceneSessionManager::NotifyWindowInfoChange(int32_t persistentId, WindowUpdateType type)
 {
     WLOGFD("NotifyWindowInfoChange, persistentId = %{public}d, updateType = %{public}d", persistentId, type);
@@ -6073,6 +6121,40 @@ bool SceneSessionManager::FillWindowInfo(std::vector<sptr<AccessibilityWindowInf
     infos.emplace_back(info);
     TLOGD(WmsLogTag::WMS_MAIN, "wid = %{public}d, inWid = %{public}d, uiNId = %{public}d, bundleName = %{public}s",
         info->wid_, info->innerWid_, info->uiNodeId_, info->bundleName_.c_str());
+    return true;
+}
+
+bool SceneSessionManager::FillUntouchableUnreliableWindowInfo(
+    std::vector<sptr<UntouchableUnreliableWindowInfo>>& infos, const sptr<SceneSession>& sceneSession)
+{
+    if (sceneSession == nullptr) {
+        WLOGFW("null scene session.");
+        return false;
+    }
+    if (sceneSession->GetSessionInfo().bundleName_.find("SCBGestureBack") != std::string::npos
+        || sceneSession->GetSessionInfo().bundleName_.find("SCBGestureNavBar") != std::string::npos
+        || sceneSession->GetSessionInfo().bundleName_.find("SCBGestureTopBar") != std::string::npos) {
+        WLOGFD("filter gesture window.");
+        return false;
+    }
+    sptr<UntouchableUnreliableWindowInfo> info = new (std::nothrow) UntouchableUnreliableWindowInfo();
+    if (info == nullptr) {
+        WLOGFE("null info.");
+        return false;
+    }
+    if (sceneSession->GetSessionInfo().isSystem_) {
+        info->wid_ = 1;
+    } else {
+        info->wid_ = static_cast<int32_t>(sceneSession->GetPersistentId());
+    }
+    WSRect wsrect = sceneSession->GetSessionRect();
+    info->windowRect_ = {wsrect.posX_, wsrect.posY_, wsrect.width_, wsrect.height_ };
+    info->layer_ = sceneSession->GetZOrder();
+    info->scaleVal_ = sceneSession->GetFloatingScale();
+    info->scaleX_ = sceneSession->GetScaleX();
+    info->scaleY_ = sceneSession->GetScaleY();
+    infos.emplace_back(info);
+    TLOGD(WmsLogTag::WMS_MAIN, "FillUntouchableUnreliableWindowInfo, wid = %{public}d", info->wid_);
     return true;
 }
 

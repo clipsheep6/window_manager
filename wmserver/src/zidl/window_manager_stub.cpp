@@ -171,6 +171,17 @@ int32_t WindowManagerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, M
             reply.WriteInt32(static_cast<int32_t>(errCode));
             break;
         }
+        case WindowManagerMessage::TRANS_ID_GET_UNTOUCHABLE_UNRELIABLE_WINDOW_INFO_ID: {
+            std::vector<sptr<UntouchableUnreliableWindowInfo>> infos;
+            int32_t windowId = data.ReadInt32();
+            WMError errCode = GetUntouchableUnreliableWindowInfo(windowId, infos);
+            if (!MarshallingHelper::MarshallingVectorParcelableObj<UntouchableUnreliableWindowInfo>(reply, infos)) {
+                WLOGFE("Write untouchable unreliable window infos failed");
+                return -1;
+            }
+            reply.WriteInt32(static_cast<int32_t>(errCode));
+            break;
+        }
         case WindowManagerMessage::TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID: {
             std::vector<sptr<WindowVisibilityInfo>> infos;
             WMError errCode = GetVisibilityWindowInfo(infos);

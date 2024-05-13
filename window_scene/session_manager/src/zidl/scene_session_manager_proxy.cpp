@@ -711,6 +711,36 @@ WMError SceneSessionManagerProxy::GetAccessibilityWindowInfo(std::vector<sptr<Ac
     return static_cast<WMError>(reply.ReadUint32());
 }
 
+WMError SceneSessionManagerProxy::GetUntouchableUnreliableWindowInfo(int32_t windowId,
+    std::vector<sptr<UntouchableUnreliableWindowInfo>>& infos)
+{
+    MessageOption option;
+    MessageParcel reply;
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("Write InterfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    if (!data.WriteInt32(windowId)) {
+        WLOGFE("Write windowId failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+        SceneSessionManagerMessage::TRANS_ID_GET_UNTOUCHABLE_UNRELIABLE_WINDOW_INFO),
+        data, reply, option) != ERR_NONE) {
+        WLOGFE("SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+
+    if (!MarshallingHelper::UnmarshallingVectorParcelableObj<UntouchableUnreliableWindowInfo>(reply, infos)) {
+        WLOGFE("read window info failed.");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    return static_cast<WMError>(reply.ReadUint32());
+}
+
 WSError SceneSessionManagerProxy::PendingSessionToForeground(const sptr<IRemoteObject> &token)
 {
     WLOGFI("run SceneSessionManagerProxy::PendingSessionToForeground");
