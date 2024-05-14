@@ -1448,40 +1448,9 @@ WmErrorCode WindowSceneSessionImpl::RaiseAboveTarget(int32_t subWindowId)
     return WM_JS_TO_ERROR_CODE_MAP.at(static_cast<WMError>(ret));
 }
 
-bool WindowSceneSessionImpl::CheckGetAvoidAreaAvailable(AvoidAreaType type)
-{
-    WindowMode mode = GetMode();
-    WindowType winType = GetType();
-
-    if (type == AvoidAreaType::TYPE_KEYBOARD) {
-        return true;
-    }
-    if (WindowHelper::IsMainWindow(winType)) {
-        if (mode != WindowMode::WINDOW_MODE_FLOATING ||
-            system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
-            system::GetParameter("const.product.devicetype", "unknown") == "tablet") {
-            return true;
-        }
-    }
-    if (WindowHelper::IsSubWindow(winType)) {
-        auto parentSessoin = FindParentSessionByParentId(property_->GetParentId());
-        if (parentSessoin->GetRect() == GetRect()) {
-            return true;
-        }
-    }
-    TLOGI(WmsLogTag::WMS_IMMS, "Window [%{public}u, %{public}s] type %{public}d "
-        "avoidAreaType %{public}u windowMode %{public}u, return default avoid area.",
-        GetWindowId(), GetWindowName().c_str(), static_cast<uint32_t>(winType),
-        static_cast<uint32_t>(type), static_cast<uint32_t>(mode));
-    return false;
-}
-
 WMError WindowSceneSessionImpl::GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea)
 {
     uint32_t windowId = GetWindowId();
-    if (!CheckGetAvoidAreaAvailable(type)) {
-        return WMError::WM_OK;
-    }
     if (hostSession_ == nullptr) {
         TLOGE(WmsLogTag::WMS_IMMS, "hostSession_ is null");
         return WMError::WM_ERROR_NULLPTR;
@@ -1524,6 +1493,7 @@ WMError WindowSceneSessionImpl::SetLayoutFullScreenByApiVersion(bool status)
         version = context_->GetApplicationInfo()->apiCompatibleVersion;
     }
     isIgnoreSafeArea_ = status;
+    isIgnoreSafeAreaNeedNotify_ = true;
     // 10 ArkUI new framework support after API10
     if (version >= 10) {
         TLOGI(WmsLogTag::WMS_IMMS, "SetIgnoreViewSafeArea winId:%{public}u status:%{public}d",
@@ -1531,7 +1501,6 @@ WMError WindowSceneSessionImpl::SetLayoutFullScreenByApiVersion(bool status)
         if (uiContent_ != nullptr) {
             uiContent_->SetIgnoreViewSafeArea(status);
         }
-        isIgnoreSafeAreaNeedNotify_ = true;
     } else {
         TLOGI(WmsLogTag::WMS_IMMS, "SetWindowNeedAvoidFlag winId:%{public}u status:%{public}d",
             GetWindowId(), static_cast<int32_t>(status));
@@ -1601,7 +1570,14 @@ WMError WindowSceneSessionImpl::SetLayoutFullScreen(bool status)
 
 bool WindowSceneSessionImpl::IsLayoutFullScreen() const
 {
-    return isIgnoreSafeArea_;
+    WindowType winType = property_->GetWindowType();
+    if (WindowHelper::IsMainWindow(winType)) {
+        WindowMode mode = GetMode();
+        return (mode == WindowMode::WINDOW_MODE_FULLSCREEN && isIgnoreSafeArea_);
+    }
+    if (WindowHelper::IsSubWindow(winType)) {
+        return isIgnoreSafeAreaNeedNotify_ && isIgnoreSafeArea_;
+    }
 }
 
 SystemBarProperty WindowSceneSessionImpl::GetSystemBarPropertyByType(WindowType type) const
