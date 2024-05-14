@@ -52,7 +52,6 @@ void NotifyRemoteReadyTest()
 
 void NotifySyncOnTest()
 {
-
 }
 
 void NotifyAsyncOnTest()
