@@ -327,6 +327,10 @@ private:
     void FixKeyboardPositionByKeyboardPanel(sptr<SceneSession> panelSession, sptr<SceneSession> keyboardSession);
     void UpdateSessionRectInner(const WSRect& rect, const SizeChangeReason& reason);
     bool CheckGetAvoidAreaAvailable(AvoidAreaType type);
+    WSError ValidateAspectRatioParameters(const wptr<SceneSession> session, const WindowLimits& limits,
+        float vpr, float ratio);
+    bool TransferFloatingWindowPointerEvent(sptr<WindowSessionProperty> property, WSError& result,
+        const std::shared_ptr<MMI::PointerEvent>& pointerEvent, bool needNotifyClient, bool isPointDown);
 
     NotifySessionRectChangeFunc sessionRectChangeFunc_;
     static wptr<SceneSession> enterSession_;
