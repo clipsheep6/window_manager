@@ -22,7 +22,8 @@
 #include "pointer_event.h"
 #include "key_event.h"
 
-#include "accessibility_event_info_parcel.h"
+#include "parcel/accessibility_event_info_parcel.h"
+#include "process_options.h"
 #include "session/host/include/zidl/session_ipc_interface_code.h"
 #include "window_manager_hilog.h"
 
@@ -47,6 +48,8 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
         &SessionStub::HandleShow),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_HIDE),
         &SessionStub::HandleHide),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_RECTCHANGE_LISTENER_REGISTERED),
+        &SessionStub::HandleUpdateRectChangeListenerRegistered),
 
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_ACTIVE_STATUS),
         &SessionStub::HandleUpdateActivateStatus),
@@ -76,10 +79,14 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
         &SessionStub::HandleSetWindowAnimationFlag),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_CUSTOM_ANIMATION),
         &SessionStub::HandleUpdateWindowSceneAfterCustomAnimation),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_LANDSCAPE_MULTI_WINDOW),
+                   &SessionStub::HandleSetLandscapeMultiWindow),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_RAISE_ABOVE_TARGET),
         &SessionStub::HandleRaiseAboveTarget),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_RAISE_APP_MAIN_WINDOW),
         &SessionStub::HandleRaiseAppMainWindowToTop),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_CHANGE_SESSION_VISIBILITY_WITH_STATUS_BAR),
+        &SessionStub::HandleChangeSessionVisibilityWithStatusBar),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_ACTIVE_PENDING_SESSION),
         &SessionStub::HandlePendingSessionActivation),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TERMINATE),
@@ -90,6 +97,14 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
         &SessionStub::HandleProcessPointDownSession),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SEND_POINTEREVENT_FOR_MOVE_DRAG),
         &SessionStub::HandleSendPointerEvenForMoveDrag),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_KEYBOARD_SESSION_GRAVITY),
+        &SessionStub::HandleSetKeyboardSessionGravity),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_CALLING_SESSION_ID),
+        &SessionStub::HandleSetCallingSessionId),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_CUSTOM_DECOR_HEIGHT),
+        &SessionStub::HandleSetCustomDecorHeight),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_ADJUST_KEYBOARD_LAYOUT),
+        &SessionStub::HandleAdjustKeyboardLayout),
 
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TRANSFER_ABILITY_RESULT),
         &SessionStub::HandleTransferAbilityResult),
@@ -103,6 +118,8 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
         &SessionStub::HandleNotifySyncOn),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_EXTENSION_DIED),
         &SessionStub::HandleNotifyExtensionDied),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_EXTENSION_TIMEOUT),
+        &SessionStub::HandleNotifyExtensionTimeout),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TRIGGER_BIND_MODAL_UI_EXTENSION),
         &SessionStub::HandleTriggerBindModalUIExtension),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_REPORT_ACCESSIBILITY_EVENT),
@@ -111,8 +128,6 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
         &SessionStub::HandleNotifyPiPWindowPrepareClose),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_PIP_RECT),
         &SessionStub::HandleUpdatePiPRect),
-    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_RECOVERY_PULL_PIP_MAIN_WINDOW),
-        &SessionStub::HandleRecoveryPullPiPMainWindow)
 };
 
 int SessionStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -151,7 +166,8 @@ int SessionStub::HandleForeground(MessageParcel& data, MessageParcel& reply)
         WLOGFW("[WMSCom] Property not exist!");
         property = new WindowSessionProperty();
     }
-    const WSError& errCode = Foreground(property);
+    bool isFromClient = data.ReadBool();
+    const WSError errCode = Foreground(property, isFromClient);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -159,7 +175,8 @@ int SessionStub::HandleForeground(MessageParcel& data, MessageParcel& reply)
 int SessionStub::HandleBackground(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("[WMSCom] Background!");
-    const WSError& errCode = Background();
+    bool isFromClient = data.ReadBool();
+    const WSError errCode = Background(isFromClient);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -222,17 +239,27 @@ int SessionStub::HandleConnect(MessageParcel& data, MessageParcel& reply)
     } else {
         WLOGI("accept token is nullptr");
     }
+    std::string identityToken = data.ReadString();
     SystemSessionConfig systemConfig;
-    WSError errCode = Connect(sessionStage, eventChannel, surfaceNode, systemConfig, property, token);
+    WSError errCode = Connect(sessionStage, eventChannel, surfaceNode, systemConfig, property, token,
+        -1, -1, identityToken);
     reply.WriteParcelable(&systemConfig);
     if (property) {
         reply.WriteInt32(property->GetPersistentId());
+        reply.WriteUint64(property->GetDisplayId());
         bool needUpdate = property->GetIsNeedUpdateWindowMode();
         reply.WriteBool(needUpdate);
         if (needUpdate) {
             reply.WriteUint32(static_cast<uint32_t>(property->GetWindowMode()));
         }
         property->SetIsNeedUpdateWindowMode(false);
+
+        Rect winRect = property->GetWindowRect();
+        reply.WriteInt32(winRect.posX_);
+        reply.WriteInt32(winRect.posY_);
+        reply.WriteUint32(winRect.width_);
+        reply.WriteUint32(winRect.height_);
+        reply.WriteInt32(property->GetCollaboratorType());
     }
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
@@ -280,6 +307,32 @@ int SessionStub::HandleSessionException(MessageParcel& data, MessageParcel& repl
     return ERR_NONE;
 }
 
+int SessionStub::HandleChangeSessionVisibilityWithStatusBar(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("HandleChangeSessionVisibilityWithStatusBar");
+    sptr<AAFwk::SessionInfo> abilitySessionInfo(new AAFwk::SessionInfo());
+    sptr<AAFwk::Want> localWant = data.ReadParcelable<AAFwk::Want>();
+    abilitySessionInfo->want = *localWant;
+    abilitySessionInfo->requestCode = data.ReadInt32();
+    abilitySessionInfo->persistentId = data.ReadInt32();
+    abilitySessionInfo->state = static_cast<AAFwk::CallToState>(data.ReadInt32());
+    abilitySessionInfo->uiAbilityId = data.ReadInt64();
+    abilitySessionInfo->callingTokenId = data.ReadUint32();
+    abilitySessionInfo->reuse = data.ReadBool();
+    abilitySessionInfo->processOptions =
+        std::shared_ptr<AAFwk::ProcessOptions>(data.ReadParcelable<AAFwk::ProcessOptions>());
+    if (data.ReadBool()) {
+        abilitySessionInfo->callerToken = data.ReadRemoteObject();
+    }
+    if (data.ReadBool()) {
+        abilitySessionInfo->startSetting.reset(data.ReadParcelable<AAFwk::AbilityStartSetting>());
+    }
+    bool visible = data.ReadBool();
+    const WSError& errCode = ChangeSessionVisibilityWithStatusBar(abilitySessionInfo, visible);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
 int SessionStub::HandlePendingSessionActivation(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("PendingSessionActivation!");
@@ -292,6 +345,8 @@ int SessionStub::HandlePendingSessionActivation(MessageParcel& data, MessageParc
     abilitySessionInfo->uiAbilityId = data.ReadInt64();
     abilitySessionInfo->callingTokenId = data.ReadUint32();
     abilitySessionInfo->reuse = data.ReadBool();
+    abilitySessionInfo->processOptions.reset(data.ReadParcelable<AAFwk::ProcessOptions>());
+    abilitySessionInfo->hasContinuousTask = data.ReadBool();
     if (data.ReadBool()) {
         abilitySessionInfo->callerToken = data.ReadRemoteObject();
     }
@@ -443,6 +498,15 @@ int SessionStub::HandleUpdateWindowSceneAfterCustomAnimation(MessageParcel& data
     return ERR_NONE;
 }
 
+int SessionStub::HandleSetLandscapeMultiWindow(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGD("HandleSetLandscapeMultiWindow!");
+    bool isLandscapeMultiWindow = data.ReadBool();
+    const WSError errCode = SetLandscapeMultiWindow(isLandscapeMultiWindow);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
 int SessionStub::HandleTransferAbilityResult(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("HandleTransferAbilityResult!");
@@ -496,6 +560,17 @@ int SessionStub::HandleNotifyExtensionDied(MessageParcel& data, MessageParcel& r
     return ERR_NONE;
 }
 
+int SessionStub::HandleNotifyExtensionTimeout(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t errorCode = 0;
+    if (!data.ReadInt32(errorCode)) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "Read eventId from parcel failed!");
+        return ERR_INVALID_DATA;
+    }
+    NotifyExtensionTimeout(errorCode);
+    return ERR_NONE;
+}
+
 int SessionStub::HandleTriggerBindModalUIExtension(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("called");
@@ -518,32 +593,17 @@ int SessionStub::HandleTransferAccessibilityEvent(MessageParcel& data, MessagePa
 
 int SessionStub::HandleNotifyPiPWindowPrepareClose(MessageParcel& data, MessageParcel& reply)
 {
-    WLOGFD("HandleNotifyPiPWindowPrepareClose");
+    TLOGD(WmsLogTag::WMS_PIP, "HandleNotifyPiPWindowPrepareClose");
     NotifyPiPWindowPrepareClose();
     return ERR_NONE;
 }
 
 int SessionStub::HandleUpdatePiPRect(MessageParcel& data, MessageParcel& reply)
 {
-    WLOGFD("HandleUpdatePiPRect!");
-    uint32_t width = data.ReadUint32();
-    uint32_t height = data.ReadUint32();
-    auto reason = static_cast<PiPRectUpdateReason>(data.ReadInt32());
-    WSError errCode = UpdatePiPRect(width, height, reason);
-    reply.WriteUint32(static_cast<uint32_t>(errCode));
-    return ERR_NONE;
-}
-
-int SessionStub::HandleRecoveryPullPiPMainWindow(MessageParcel& data, MessageParcel& reply)
-{
-    WLOGFD("HandleNotifyRecoveryPullPiPMainWindow");
-    int32_t persistentId = 0;
-    if (!data.ReadInt32(persistentId)) {
-        WLOGFE("Read eventId from parcel failed!");
-        return ERR_INVALID_DATA;
-    }
+    TLOGD(WmsLogTag::WMS_PIP, "HandleUpdatePiPRect!");
     Rect rect = {data.ReadInt32(), data.ReadInt32(), data.ReadUint32(), data.ReadUint32()};
-    WSError errCode = RecoveryPullPiPMainWindow(persistentId, rect);
+    auto reason = static_cast<SizeChangeReason>(data.ReadInt32());
+    WSError errCode = UpdatePiPRect(rect, reason);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -551,8 +611,8 @@ int SessionStub::HandleRecoveryPullPiPMainWindow(MessageParcel& data, MessagePar
 int SessionStub::HandleProcessPointDownSession(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("HandleProcessPointDownSession!");
-    uint32_t posX = data.ReadInt32();
-    uint32_t posY = data.ReadInt32();
+    int32_t posX = data.ReadInt32();
+    int32_t posY = data.ReadInt32();
     WSError errCode = ProcessPointDownSession(posX, posY);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
@@ -568,6 +628,55 @@ int SessionStub::HandleSendPointerEvenForMoveDrag(MessageParcel& data, MessagePa
     }
     WSError errCode = SendPointEventForMoveDrag(pointerEvent);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleUpdateRectChangeListenerRegistered(MessageParcel& data, MessageParcel& reply)
+{
+    bool isRegister = data.ReadBool();
+    WSError errCode = UpdateRectChangeListenerRegistered(isRegister);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleSetKeyboardSessionGravity(MessageParcel &data, MessageParcel &reply)
+{
+    TLOGD(WmsLogTag::WMS_KEYBOARD, "run HandleSetKeyboardSessionGravity!");
+    SessionGravity gravity = static_cast<SessionGravity>(data.ReadUint32());
+    uint32_t percent = data.ReadUint32();
+    WSError ret = SetKeyboardSessionGravity(gravity, percent);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleSetCallingSessionId(MessageParcel& data, MessageParcel& reply)
+{
+    TLOGD(WmsLogTag::WMS_KEYBOARD, "run HandleSetCallingSessionId!");
+    uint32_t callingSessionId = data.ReadUint32();
+
+    SetCallingSessionId(callingSessionId);
+    reply.WriteInt32(static_cast<int32_t>(WSError::WS_OK));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleSetCustomDecorHeight(MessageParcel& data, MessageParcel& reply)
+{
+    TLOGD(WmsLogTag::WMS_LAYOUT, "run HandleSetCustomDecorHeight!");
+    int32_t height = data.ReadInt32();
+    SetCustomDecorHeight(height);
+    return ERR_NONE;
+}
+
+int SessionStub::HandleAdjustKeyboardLayout(MessageParcel& data, MessageParcel& reply)
+{
+    TLOGD(WmsLogTag::WMS_KEYBOARD, "run HandleAdjustKeyboardLayout!");
+    sptr<KeyboardLayoutParams> keyboardLayoutParams = data.ReadParcelable<KeyboardLayoutParams>();
+    if (keyboardLayoutParams == nullptr) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "keyboardLayoutParams is nullptr.");
+        return ERR_INVALID_DATA;
+    }
+    WSError ret = AdjustKeyboardLayout(*keyboardLayoutParams);
+    reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

@@ -63,9 +63,10 @@ enum class PowerStateChangeReason : uint32_t {
     STATE_CHANGE_REASON_COLLABORATION = 24,
     STATE_CHANGE_REASON_SWITCH = 25,
     STATE_CHANGE_REASON_PRE_BRIGHT = 26,
-    STATE_CHANGE_REASON_PRE_BRIGHT_ATUH_SUCCESS = 27,
-    STATE_CHANGE_REASON_PRE_BRIGHT_ATUH_FAIL_SCREEN_ON = 28,
-    STATE_CHANGE_REASON_PRE_BRIGHT_ATUH_FAIL_SCREEN_OFF = 29,
+    STATE_CHANGE_REASON_PRE_BRIGHT_AUTH_SUCCESS = 27,
+    STATE_CHANGE_REASON_PRE_BRIGHT_AUTH_FAIL_SCREEN_ON = 28,
+    STATE_CHANGE_REASON_PRE_BRIGHT_AUTH_FAIL_SCREEN_OFF = 29,
+    STATE_CHANGE_REASON_AOD_SLIDING = 40,
     STATE_CHANGE_REASON_REMOTE = 100,
     STATE_CHANGE_REASON_UNKNOWN = 1000,
 };
@@ -204,6 +205,7 @@ enum class ScreenChangeEvent : uint32_t {
     UPDATE_ROTATION,
     CHANGE_MODE,
     VIRTUAL_PIXEL_RATIO_CHANGED,
+    SCREEN_SWITCH_CHANGE,
 };
 
 /**
@@ -213,25 +215,6 @@ enum class ScreenGroupChangeEvent : uint32_t {
     ADD_TO_GROUP,
     REMOVE_FROM_GROUP,
     CHANGE_GROUP,
-};
-
-/**
- * @brief Enumerates refreshrate modes.
- */
-enum class RefreshRateMode : int32_t {
-    SMART = -1,
-    NORMAL = 1,
-    MIDDLE = 2,
-    HIGH = 3,
-};
-
-/**
- * @brief Enumerates refreshrates.
- */
-enum class RefreshRate : uint32_t {
-    NORMAL = 60,
-    MIDDLE = 90,
-    HIGH = 120,
 };
 
 /**
@@ -261,7 +244,14 @@ enum class Orientation : uint32_t {
     AUTO_ROTATION_PORTRAIT_RESTRICTED = 9,
     AUTO_ROTATION_LANDSCAPE_RESTRICTED = 10,
     LOCKED = 11,
-    END = LOCKED,
+    FOLLOW_RECENT = 12,
+    AUTO_ROTATION_UNSPECIFIED = 13,
+    USER_ROTATION_PORTRAIT = 14,
+    USER_ROTATION_LANDSCAPE = 15,
+    USER_ROTATION_PORTRAIT_INVERTED = 16,
+    USER_ROTATION_LANDSCAPE_INVERTED = 17,
+    FOLLOW_DESKTOP = 18,
+    END = FOLLOW_DESKTOP,
 };
 
 /**
@@ -316,6 +306,7 @@ enum class ScreenSourceMode: uint32_t {
     SCREEN_MIRROR = 1,
     SCREEN_EXTEND = 2,
     SCREEN_ALONE = 3,
+    SCREEN_UNIQUE = 4,
 };
 
 /**

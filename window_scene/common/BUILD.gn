@@ -32,6 +32,7 @@ ohos_shared_library("window_scene_common") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   sources = [
@@ -51,6 +52,7 @@ ohos_shared_library("window_scene_common") {
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
+    "image_framework:image_native",
     "imf:inputmethod_client",
     "input:libmmi-client",
     "ipc:ipc_single",

@@ -39,6 +39,12 @@ struct VirtualScreenOption {
     std::vector<uint64_t> missionIds_ {};
 };
 
+enum class VirtualScreenFlag : uint32_t {
+    DEFAULT = 0,
+    CAST = 1,
+    MAX = 2,
+};
+
 class Screen : public RefBase {
 friend class ScreenManager;
 public:
@@ -159,6 +165,14 @@ public:
     DMError SetDensityDpi(uint32_t dpi) const;
 
     /**
+     * @brief Set the density dpi of the screen system window.
+     *
+     * @param dpi Density dpi of the screen.
+     * @return DM_OK means set success, others means set failed.
+     */
+    DMError SetDensityDpiSystem(uint32_t dpi) const;
+
+    /**
      * @brief Get the screen info.
      *
      * @return Screen info.
@@ -238,7 +252,7 @@ public:
     DMError GetPixelFormat(GraphicPixelFormat& pixelFormat) const;
 
     /**
-     * @brief Set the color gamut of the screen.
+     * @brief Set the pixel format of the screen.
      *
      * @return DM_OK means set success, others means set failed.
      */

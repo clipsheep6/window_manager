@@ -22,8 +22,8 @@ group("unittest") {
     ":utils_all_test",
     ":utils_cutout_info_test",
     ":utils_display_info_test",
+    ":utils_dms_reporter_test",
     ":utils_perform_reporter_test",
-    ":utils_pip_util_test",
     ":utils_screen_group_info_test",
     ":utils_screen_info_test",
     ":utils_string_test",
@@ -54,6 +54,19 @@ ohos_unittest("utils_display_info_test") {
   module_out_path = module_out_path
 
   sources = [ "display_info_test.cpp" ]
+
+  deps = [ ":utils_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("utils_dms_reporter_test") {
+  module_out_path = module_out_path
+
+  sources = [ "dms_reporter_test.cpp" ]
 
   deps = [ ":utils_unittest_common" ]
 
@@ -114,6 +127,7 @@ ohos_unittest("utils_window_property_test") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "input:libmmi-client",
   ]
 }
 
@@ -236,19 +250,6 @@ ohos_unittest("utils_window_transition_info_test") {
   ]
 }
 
-ohos_unittest("utils_pip_util_test") {
-  module_out_path = module_out_path
-
-  sources = [ "pip_util_test.cpp" ]
-
-  deps = [ ":utils_unittest_common" ]
-
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-  ]
-}
-
 ## Build dm_unittest_common.a {{{
 config("utils_unittest_common_public_config") {
   include_dirs = [
@@ -276,6 +277,7 @@ ohos_static_library("utils_unittest_common") {
   public_deps = [
     "${window_base_path}/dm:libdm",
     "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/utils:libwmutil_base",
     "${window_base_path}/wm:libwm",
     "//commonlibrary/c_utils/base:utils",
     "//foundation/graphic/graphic_2d/rosen/modules/2d_graphics:2d_graphics",

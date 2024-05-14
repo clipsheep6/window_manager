@@ -34,7 +34,7 @@ constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "Window"
 
 static sptr<Window> CreateWindowWithSession(sptr<WindowOption>& option,
     const std::shared_ptr<OHOS::AbilityRuntime::Context>& context, WMError& errCode,
-    sptr<ISession> iSession = nullptr)
+    sptr<ISession> iSession = nullptr, const std::string& identityToken = "")
 {
     WLOGFD("CreateWindowWithSession");
     sptr<WindowSessionImpl> windowSessionImpl = nullptr;
@@ -52,7 +52,7 @@ static sptr<Window> CreateWindowWithSession(sptr<WindowOption>& option,
     }
 
     windowSessionImpl->SetWindowType(option->GetWindowType());
-    WMError error = windowSessionImpl->Create(context, iSession);
+    WMError error = windowSessionImpl->Create(context, iSession, identityToken);
     if (error != WMError::WM_OK) {
         errCode = error;
         WLOGFD("CreateWindowWithSession, error: %{public}u", static_cast<uint32_t>(errCode));
@@ -110,7 +110,7 @@ sptr<Window> Window::Create(const std::string& windowName, sptr<WindowOption>& o
 }
 
 sptr<Window> Window::Create(sptr<WindowOption>& option, const std::shared_ptr<OHOS::AbilityRuntime::Context>& context,
-    const sptr<IRemoteObject>& iSession, WMError& errCode)
+    const sptr<IRemoteObject>& iSession, WMError& errCode, const std::string& identityToken)
 {
     // create from ability mgr service
     if (!iSession || !option) {
@@ -136,7 +136,43 @@ sptr<Window> Window::Create(sptr<WindowOption>& option, const std::shared_ptr<OH
         WLOGFE("window type is invalid %{public}d", type);
         return nullptr;
     }
-    return CreateWindowWithSession(option, context, errCode, iface_cast<Rosen::ISession>(iSession));
+    return CreateWindowWithSession(option, context, errCode,
+        iface_cast<Rosen::ISession>(iSession), identityToken);
+}
+
+sptr<Window> Window::CreatePiP(sptr<WindowOption>& option, const PiPTemplateInfo& pipTemplateInfo,
+    const std::shared_ptr<OHOS::AbilityRuntime::Context>& context, WMError& errCode)
+{
+    if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
+        return nullptr;
+    }
+    if (!option) {
+        TLOGE(WmsLogTag::WMS_PIP, "option is null.");
+        return nullptr;
+    }
+    if (option->GetWindowName().empty()) {
+        TLOGE(WmsLogTag::WMS_PIP, "the window name of option is empty.");
+        return nullptr;
+    }
+    if (!WindowHelper::IsPipWindow(option->GetWindowType())) {
+        TLOGE(WmsLogTag::WMS_PIP, "window type is not pip window.");
+        return nullptr;
+    }
+    sptr<WindowSessionImpl> windowSessionImpl = new(std::nothrow) WindowSceneSessionImpl(option);
+    if (windowSessionImpl == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "malloc windowSessionImpl failed.");
+        return nullptr;
+    }
+    if (windowSessionImpl->GetProperty() != nullptr) {
+        windowSessionImpl->GetProperty()->SetPiPTemplateInfo(pipTemplateInfo);
+    }
+    WMError error = windowSessionImpl->Create(context, nullptr);
+    if (error != WMError::WM_OK) {
+        errCode = error;
+        TLOGW(WmsLogTag::WMS_PIP, "Create pip window with session, error: %{public}u", static_cast<uint32_t>(errCode));
+        return nullptr;
+    }
+    return windowSessionImpl;
 }
 
 sptr<Window> Window::Find(const std::string& windowName)
@@ -163,6 +199,24 @@ sptr<Window> Window::GetTopWindowWithId(uint32_t mainWinId)
         return WindowSceneSessionImpl::GetTopWindowWithId(mainWinId);
     } else {
         return WindowImpl::GetTopWindowWithId(mainWinId);
+    }
+}
+
+sptr<Window> Window::GetMainWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context)
+{
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        return WindowSceneSessionImpl::GetMainWindowWithContext(context);
+    } else {
+        return nullptr;
+    }
+}
+
+sptr<Window> Window::GetWindowWithId(uint32_t windId)
+{
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        return WindowSceneSessionImpl::GetWindowWithId(windId);
+    } else {
+        return WindowImpl::GetWindowWithId(windId);
     }
 }
 

@@ -18,6 +18,7 @@
 #include <input_method_controller.h>
 #endif // IMF_ENABLE
 #include "window_manager_hilog.h"
+#include "window_helper.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -54,7 +55,8 @@ void WindowInputChannel::DispatchKeyEventCallback(std::shared_ptr<MMI::KeyEvent>
     }
 }
 
-void WindowInputChannel::HandleKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
+__attribute__((no_sanitize("cfi"))) void WindowInputChannel::HandleKeyEvent(
+    std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
     if (keyEvent == nullptr) {
         WLOGFE("keyEvent is nullptr");
@@ -73,7 +75,12 @@ void WindowInputChannel::HandleKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent
             return;
         }
     }
-
+    bool isConsumed = window_->PreNotifyKeyEvent(keyEvent);
+    if (isConsumed) {
+        TLOGI(WmsLogTag::WMS_EVENT, "PreNotifyKeyEvent id:%{public}d isConsumed:%{public}d",
+            keyEvent->GetId(), static_cast<int>(isConsumed));
+        return;
+    }
 #ifdef IMF_ENABLE
     bool isKeyboardEvent = IsKeyboardEvent(keyEvent);
     if (isKeyboardEvent) {
@@ -90,7 +97,7 @@ void WindowInputChannel::HandleKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent
         auto ret = MiscServices::InputMethodController::GetInstance()->DispatchKeyEvent(keyEvent, callback);
         if (ret != 0) {
             WLOGFE("DispatchKeyEvent failed, ret:%{public}d, id:%{public}d", ret, keyEvent->GetId());
-            keyEvent->MarkProcessed();
+            DispatchKeyEventCallback(keyEvent, false);
         }
         return;
     }
@@ -102,10 +109,14 @@ void WindowInputChannel::HandleKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent
 void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
     if (pointerEvent == nullptr) {
-        WLOGFE("pointerEvent is nullptr");
+        TLOGE(WmsLogTag::WMS_EVENT, "pointerEvent is nullptr");
         return;
     }
-    WLOGFD("Receive pointer event, Id: %{public}u, action: %{public}d",
+    if (window_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_EVENT, "window_ is nullptr");
+        return;
+    }
+    TLOGD(WmsLogTag::WMS_EVENT, "Receive pointer event, Id: %{public}u, action: %{public}d",
         window_->GetWindowId(), pointerEvent->GetPointerAction());
     if ((window_->GetType() == WindowType::WINDOW_TYPE_DIALOG) &&
         (pointerEvent->GetAgentWindowId() != pointerEvent->GetTargetWindowId())) {
@@ -119,7 +130,27 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
         pointerEvent->MarkProcessed();
         return;
     }
-    WLOGFD("Dispatch move event, windowId: %{public}u, action: %{public}d",
+
+    bool isModal = window_->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_IS_MODAL);
+    bool isSubWindow = WindowHelper::IsSubWindow(window_->GetType());
+    if (isModal && isSubWindow) {
+        MMI::PointerEvent::PointerItem pointerItem;
+        bool validPointItem = pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem);
+        bool outsideWindow = !WindowHelper::IsPointInTargetRectWithBound(pointerItem.GetDisplayX(),
+            pointerItem.GetDisplayY(), window_->GetRect());
+        auto action = pointerEvent->GetPointerAction();
+        bool isTargetAction = (action == MMI::PointerEvent::POINTER_ACTION_DOWN ||
+            action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN);
+        bool isInterceptAction = isTargetAction || action == MMI::PointerEvent::POINTER_ACTION_MOVE;
+        if (validPointItem && outsideWindow && isInterceptAction) {
+            if (isTargetAction) {
+                window_->NotifyTouchDialogTarget(pointerItem.GetDisplayX(), pointerItem.GetDisplayY());
+            }
+            pointerEvent->MarkProcessed();
+            return;
+        }
+    }
+    TLOGD(WmsLogTag::WMS_EVENT, "Dispatch move event, windowId: %{public}u, action: %{public}d",
         window_->GetWindowId(), pointerEvent->GetPointerAction());
     window_->ConsumePointerEvent(pointerEvent);
 }
@@ -129,6 +160,14 @@ void WindowInputChannel::Destroy()
     std::lock_guard<std::mutex> lock(mtx_);
     WLOGI("Destroy WindowInputChannel, windowId:%{public}u", window_->GetWindowId());
     isAvailable_ = false;
+}
+
+Rect WindowInputChannel::GetWindowRect()
+{
+    if (window_ == nullptr) {
+        return { 0, 0, 0, 0 };
+    }
+    return window_->GetRect();
 }
 
 bool WindowInputChannel::IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const

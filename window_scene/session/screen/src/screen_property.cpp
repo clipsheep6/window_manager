@@ -180,6 +180,16 @@ Orientation ScreenProperty::GetOrientation() const
     return orientation_;
 }
 
+void ScreenProperty::SetDisplayState(DisplayState displayState)
+{
+    displayState_ = displayState;
+}
+
+DisplayState ScreenProperty::GetDisplayState() const
+{
+    return displayState_;
+}
+
 void ScreenProperty::SetDisplayOrientation(DisplayOrientation displayOrientation)
 {
     displayOrientation_ = displayOrientation;
@@ -296,5 +306,15 @@ void ScreenProperty::SetScreenRequestedOrientation(Orientation orientation)
 Orientation ScreenProperty::GetScreenRequestedOrientation() const
 {
     return screenRequestedOrientation_;
+}
+
+void ScreenProperty::SetDefaultDeviceRotationOffset(uint32_t defaultRotationOffset)
+{
+    defaultDeviceRotationOffset_ = defaultRotationOffset;
+}
+
+uint32_t ScreenProperty::GetDefaultDeviceRotationOffset() const
+{
+    return defaultDeviceRotationOffset_;
 }
 } // namespace OHOS::Rosen

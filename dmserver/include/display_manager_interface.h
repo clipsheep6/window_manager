@@ -65,6 +65,7 @@ public:
         TRANS_ID_GET_ALL_SCREEN_INFOS,
         TRANS_ID_SET_ORIENTATION,
         TRANS_ID_SET_VIRTUAL_PIXEL_RATIO,
+        TRANS_ID_SET_VIRTUAL_PIXEL_RATIO_SYSTEM,
         TRANS_ID_SET_RESOLUTION,
         TRANS_ID_GET_DENSITY_IN_CURRENT_RESOLUTION,
         TRANS_ID_SCREENGROUP_BASE = 1100,
@@ -115,24 +116,45 @@ public:
         TRANS_ID_GET_PHY_SCREEN_PROPERTY,
         TRANS_ID_NOTIFY_DISPLAY_CHANGE_INFO,
         TRANS_ID_SET_SCREEN_PRIVACY_STATE,
+        TRANS_ID_SET_SCREENID_PRIVACY_STATE,
+        TRANS_ID_SET_SCREEN_PRIVACY_WINDOW_LIST,
         TRANS_ID_RESIZE_VIRTUAL_SCREEN,
         TRANS_ID_GET_AVAILABLE_AREA,
         TRANS_ID_NOTIFY_FOLD_TO_EXPAND_COMPLETION,
+        TRANS_ID_CONVERT_SCREENID_TO_RSSCREENID,
+        TRANS_ID_GET_VIRTUAL_SCREEN_FLAG,
+        TRANS_ID_SET_VIRTUAL_SCREEN_FLAG,
+        TRANS_ID_SET_VIRTUAL_SCREEN_SCALE_MODE,
+        TRANS_ID_GET_DEVICE_SCREEN_CONFIG,
+        TRANS_ID_SET_VIRTUAL_SCREEN_REFRESH_RATE,
+        TRANS_ID_DEVICE_IS_CAPTURE,
+        TRANS_ID_GET_SNAPSHOT_BY_PICKER,
+        TRANS_ID_SWITCH_USER,
     };
 
     virtual sptr<DisplayInfo> GetDefaultDisplayInfo() = 0;
     virtual sptr<DisplayInfo> GetDisplayInfoById(DisplayId displayId) = 0;
     virtual sptr<DisplayInfo> GetDisplayInfoByScreen(ScreenId screenId) = 0;
     virtual DMError HasPrivateWindow(DisplayId displayId, bool& hasPrivateWindow) = 0;
+    virtual bool ConvertScreenIdToRsScreenId(ScreenId screenId, ScreenId& rsScreenId) { return false; };
 
     virtual ScreenId CreateVirtualScreen(VirtualScreenOption option,
         const sptr<IRemoteObject>& displayManagerAgent) = 0;
     virtual DMError DestroyVirtualScreen(ScreenId screenId) = 0;
     virtual DMError SetVirtualScreenSurface(ScreenId screenId, sptr<IBufferProducer> surface) = 0;
     virtual DMError SetVirtualMirrorScreenCanvasRotation(ScreenId screenId, bool rotate) { return DMError::DM_OK; }
+    virtual DMError SetVirtualMirrorScreenScaleMode(ScreenId screenId, ScreenScaleMode scaleMode)
+    {
+        return DMError::DM_ERROR_DEVICE_NOT_SUPPORT;
+    }
     virtual DMError SetOrientation(ScreenId screenId, Orientation orientation) = 0;
     virtual std::shared_ptr<Media::PixelMap> GetDisplaySnapshot(DisplayId displayId,
         DmErrorCode* errorCode = nullptr) = 0;
+    virtual std::shared_ptr<Media::PixelMap> GetSnapshotByPicker(Media::Rect &rect, DmErrorCode* errorCode = nullptr)
+    {
+        *errorCode = DmErrorCode::DM_ERROR_DEVICE_NOT_SUPPORT;
+        return nullptr;
+    }
     virtual DMError SetScreenRotationLocked(bool isLocked) = 0;
     virtual DMError IsScreenRotationLocked(bool& isLocked) = 0;
 
@@ -209,6 +231,10 @@ public:
     virtual void RemoveVirtualScreenFromGroup(std::vector<ScreenId> screens) = 0;
     virtual DMError SetScreenActiveMode(ScreenId screenId, uint32_t modeId) = 0;
     virtual DMError SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio) = 0;
+    virtual DMError SetVirtualPixelRatioSystem(ScreenId screenId, float virtualPixelRatio)
+    {
+        return DMError::DM_ERROR_DEVICE_NOT_SUPPORT;
+    }
     virtual DMError SetResolution(ScreenId screenId, uint32_t width, uint32_t height, float virtualPixelRatio) = 0;
     virtual DMError GetDensityInCurResolution(ScreenId screenId, float& virtualPixelRatio) = 0;
     virtual DMError ResizeVirtualScreen(ScreenId screenId, uint32_t width, uint32_t height) { return DMError::DM_OK; }
@@ -218,6 +244,7 @@ public:
         std::shared_ptr<class RSSurfaceNode>& surfaceNode) = 0;
     virtual DMError GetAvailableArea(DisplayId displayId, DMRect& area) { return DMError::DM_ERROR_DEVICE_NOT_SUPPORT; }
     virtual bool IsFoldable() { return false; }
+    virtual bool IsCaptured() { return false; }
 
     virtual FoldStatus GetFoldStatus() { return FoldStatus::UNKNOWN; }
 
@@ -233,6 +260,19 @@ public:
 
     // unique screen
     virtual DMError MakeUniqueScreen(const std::vector<ScreenId>& screenIds) { return DMError::DM_OK; }
+
+    virtual VirtualScreenFlag GetVirtualScreenFlag(ScreenId screenId)
+    {
+        return VirtualScreenFlag::DEFAULT;
+    }
+    virtual DMError SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag screenFlag)
+    {
+        return DMError::DM_ERROR_DEVICE_NOT_SUPPORT;
+    }
+    virtual DMError SetVirtualScreenRefreshRate(ScreenId screenId, uint32_t refreshInterval)
+    {
+        return DMError::DM_OK;
+    }
 };
 } // namespace OHOS::Rosen
 

@@ -25,6 +25,7 @@
 #include "display_change_info.h"
 #include "dm_common.h"
 #include "session/screen/include/screen_session.h"
+#include "interfaces/include/ws_common.h"
 #include "wm_single_instance.h"
 #include "zidl/screen_session_manager_client_stub.h"
 #include "zidl/screen_session_manager_interface.h"
@@ -46,13 +47,15 @@ public:
     void RegisterDisplayChangeListener(const sptr<IDisplayChangeListener>& listener);
 
     sptr<ScreenSession> GetScreenSession(ScreenId screenId) const;
-    std::unordered_map<ScreenId, ScreenProperty> GetAllScreensProperties() const;
+    std::map<ScreenId, ScreenProperty> GetAllScreensProperties() const;
     FoldDisplayMode GetFoldDisplayMode() const;
 
     void UpdateScreenRotationProperty(ScreenId screenId, const RRect& bounds, float rotation);
     uint32_t GetCurvedCompressionArea();
     ScreenProperty GetPhyScreenProperty(ScreenId screenId);
     void SetScreenPrivacyState(bool hasPrivate);
+    void SetPrivacyStateByDisplayId(DisplayId id, bool hasPrivate);
+    void SetScreenPrivacyWindowList(DisplayId id, std::vector<std::string> privacyWindowList);
     void NotifyDisplayChangeInfoChanged(const sptr<DisplayChangeInfo>& info);
     void OnDisplayStateChanged(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type) override;
@@ -60,11 +63,20 @@ public:
     void OnImmersiveStateChanged(bool& immersive) override;
     void OnGetSurfaceNodeIdsFromMissionIdsChanged(std::vector<uint64_t>& missionIds,
         std::vector<uint64_t>& surfaceNodeIds) override;
+    void OnUpdateFoldDisplayMode(FoldDisplayMode displayMode) override;
     void UpdateAvailableArea(ScreenId screenId, DMRect area);
     void NotifyFoldToExpandCompletion(bool foldToExpand);
     FoldStatus GetFoldStatus();
     std::shared_ptr<Media::PixelMap> GetScreenSnapshot(ScreenId screenId, float scaleX, float scaleY);
+    DeviceScreenConfig GetDeviceScreenConfig();
     sptr<ScreenSession> GetScreenSessionById(const ScreenId id);
+    ScreenId GetDefaultScreenId();
+    bool IsFoldable();
+    void SetVirtualPixelRatioSystem(ScreenId screenId, float virtualPixelRatio) override;
+
+    void RegisterSwitchingToAnotherUserFunction(std::function<void()> && func);
+    void SwitchingCurrentUser();
+    void SwitchUserCallback() override;
 
 protected:
     ScreenSessionManagerClient() = default;
@@ -72,7 +84,7 @@ protected:
 
 private:
     void ConnectToServer();
-    bool CheckIfNeedCennectScreen(ScreenId screenId, ScreenId rsId, const std::string& name);
+    bool CheckIfNeedConnectScreen(ScreenId screenId, ScreenId rsId, const std::string& name);
     void OnScreenConnectionChanged(ScreenId screenId, ScreenEvent screenEvent,
         ScreenId rsId, const std::string& name) override;
     void OnPropertyChanged(ScreenId screenId,
@@ -87,11 +99,16 @@ private:
 
     mutable std::mutex screenSessionMapMutex_;
     std::map<ScreenId, sptr<ScreenSession>> screenSessionMap_;
+    std::function<void()> switchingToAnotherUserFunc_ = nullptr;
+
+    mutable std::mutex displayNodeChildrenMapMutex_;
+    std::map<ScreenId, std::vector<std::shared_ptr<RSBaseNode>>> displayNodeChildrenMap_;
 
     sptr<IScreenSessionManager> screenSessionManager_;
 
     IScreenConnectionListener* screenConnectionListener_;
     sptr<IDisplayChangeListener> displayChangeListener_;
+    FoldDisplayMode displayMode_ = FoldDisplayMode::UNKNOWN;
 };
 } // namespace OHOS::Rosen
 

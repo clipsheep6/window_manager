@@ -70,6 +70,28 @@ public:
         virtual void OnPrivateWindow([[maybe_unused]]bool hasPrivate) {}
     };
 
+    class IPrivateWindowListChangeListener : public virtual RefBase {
+    public:
+        /**
+         * @brief Monitor whether the existence of privacy window list has changed.
+         *
+         * @param displayId Id of the target display.
+         *
+         * @param privacyWindowList privacywindow bundlename list of the target display.
+         */
+        virtual void OnPrivateWindowListChange([[maybe_unused]]DisplayId displayId,
+            [[maybe_unused]]std::vector<std::string> privacyWindowList) {}
+
+        /**
+         * @brief only for UT to compare privacy window list.
+         *
+         * @param callback callback.
+         */
+        virtual void setCallback([[maybe_unused]]std::function<void(std::vector<std::string>)> callback) {}
+    private:
+        std::function<void(std::vector<std::string>)> callback_;
+    };
+
     class IFoldStatusListener : public virtual RefBase {
     public:
         /**
@@ -78,6 +100,26 @@ public:
          * @param foldStatus Screen foldStatus.
          */
         virtual void OnFoldStatusChanged([[maybe_unused]]FoldStatus foldStatus) {}
+    };
+
+    class IFoldAngleListener : public virtual RefBase {
+    public:
+        /**
+         * @brief Notify listeners when screen fold angles changed.
+         *
+         * @param foldAngles Screen fold angles array.
+         */
+        virtual void OnFoldAngleChanged([[maybe_unused]]std::vector<float> foldAngles) {}
+    };
+
+    class ICaptureStatusListener : public virtual RefBase {
+    public:
+        /**
+         * @brief Notify listeners when screen capture status changed.
+         *
+         * @param isCapture Screen capture status.
+         */
+        virtual void OnCaptureStatusChanged([[maybe_unused]]bool isCapture) {}
     };
 
     class IDisplayUpdateListener : public virtual RefBase {
@@ -178,6 +220,16 @@ public:
      * @return PixelMap object of screenshot.
      */
     std::shared_ptr<Media::PixelMap> GetScreenshot(DisplayId displayId, DmErrorCode* errorCode = nullptr);
+
+    /**
+     * @brief Get screenshot by user select area.
+     *
+     * @param rect user select area.
+     * @param errorCode error code.
+     * @return PixelMap object of screenshot.
+     */
+    std::shared_ptr<Media::PixelMap> GetSnapshotByPicker(Media::Rect &rect, DmErrorCode* errorCode = nullptr);
+
     /**
      * @brief Get screenshot of the target display.
      *
@@ -343,6 +395,22 @@ public:
     DMError UnregisterPrivateWindowListener(sptr<IPrivateWindowListener> listener);
 
     /**
+     * @brief Register a listener for the event of private window.
+     *
+     * @param listener IPrivateWindowListChangeListener.
+     * @return DM_OK means register success, others means register failed.
+     */
+    DMError RegisterPrivateWindowListChangeListener(sptr<IPrivateWindowListChangeListener> listener);
+
+    /**
+     * @brief Unregister an existed listener for the event of private window.
+     *
+     * @param listener IPrivateWindowListChangeListener.
+     * @return DM_OK means unregister success, others means unregister failed.
+     */
+    DMError UnregisterPrivateWindowListChangeListener(sptr<IPrivateWindowListChangeListener> listener);
+
+    /**
      * @brief Register a listener for the event of screen fold status changed.
      *
      * @param listener IFoldStatusListener.
@@ -357,6 +425,38 @@ public:
      * @return DM_OK means unregister success, others means unregister failed.
      */
     DMError UnregisterFoldStatusListener(sptr<IFoldStatusListener> listener);
+
+    /**
+     * @brief Register a listener for the event of screen fold angle changed.
+     *
+     * @param listener IFoldAngleListener.
+     * @return DM_OK means register success, others means register failed.
+     */
+    DMError RegisterFoldAngleListener(sptr<IFoldAngleListener> listener);
+
+    /**
+     * @brief Unregister an existed listener for the event of screen fold angle changed.
+     *
+     * @param listener IFoldAngleListener.
+     * @return DM_OK means unregister success, others means unregister failed.
+     */
+    DMError UnregisterFoldAngleListener(sptr<IFoldAngleListener> listener);
+
+    /**
+     * @brief Register a listener for the event of screen capture status changed.
+     *
+     * @param listener ICaptureStatusListener.
+     * @return DM_OK means register success, others means register failed.
+     */
+    DMError RegisterCaptureStatusListener(sptr<ICaptureStatusListener> listener);
+
+    /**
+     * @brief Unregister an existed listener for the event of screen capture status changed.
+     *
+     * @param listener ICaptureStatusListener.
+     * @return DM_OK means unregister success, others means unregister failed.
+     */
+    DMError UnregisterCaptureStatusListener(sptr<ICaptureStatusListener> listener);
 
     /**
      * @brief Register an listener when session changed.
@@ -432,6 +532,13 @@ public:
     bool IsFoldable();
 
     /**
+     * @brief Check whether the device is capture.
+     *
+     * @return true means the device is capture.
+     */
+    bool IsCaptured();
+
+    /**
      * @brief Get the current fold status of the foldable device.
      *
      * @return fold status of device.
@@ -466,6 +573,16 @@ public:
      */
     sptr<FoldCreaseRegion> GetCurrentFoldCreaseRegion();
 
+    /**
+     * @brief convert screenId to RsScreenId.
+     *
+     * @param screenId screenId used in DisplayManager.
+     * @param rsScreenId screenId used in RenderService.
+     *
+     * @return convert success or not.
+     */
+    bool ConvertScreenIdToRsScreenId(ScreenId screenId, ScreenId& rsScreenId);
+
     constexpr static int32_t MAX_RESOLUTION_SIZE_SCREENSHOT = 3840; // max resolution, 4K
 
 private:
@@ -475,7 +592,6 @@ private:
 
     class Impl;
     std::recursive_mutex mutex_;
-    bool destroyed_ = false;
     sptr<Impl> pImpl_;
 };
 } // namespace OHOS::Rosen

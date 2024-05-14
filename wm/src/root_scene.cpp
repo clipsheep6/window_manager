@@ -23,21 +23,22 @@
 #include <viewport_config.h>
 
 #include "app_mgr_client.h"
+#include "fold_screen_state_internel.h"
 #include "input_transfer_station.h"
 #include "singleton.h"
 #include "singleton_container.h"
 
 #include "anr_manager.h"
 #include "intention_event_manager.h"
-#include "vsync_station.h"
 #include "window_manager_hilog.h"
-#include "window_rate_manager.h"
 
 namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "RootScene" };
 const std::string INPUT_AND_VSYNC_THREAD = "InputAndVsyncThread";
+const uint32_t LEM_SUB_WIDTH = 340;
+const uint32_t LEM_SUB_HEIGHT = 340;
 
 class BundleStatusCallback : public IRemoteStub<AppExecFwk::IBundleStatusCallback> {
 public:
@@ -65,6 +66,7 @@ private:
 } // namespace
 
 sptr<RootScene> RootScene::staticRootScene_;
+std::function<void(const std::shared_ptr<AppExecFwk::Configuration>&)> RootScene::configurationUpdatedCallback_;
 
 RootScene::RootScene()
 {
@@ -72,6 +74,9 @@ RootScene::RootScene()
     if (!launcherService_->RegisterCallback(new BundleStatusCallback(this))) {
         WLOGFE("Failed to register bundle status callback.");
     }
+
+    NodeId nodeId = 0;
+    vsyncStation_ = std::make_shared<VsyncStation>(nodeId);
 }
 
 RootScene::~RootScene()
@@ -121,16 +126,28 @@ void RootScene::LoadContent(const std::string& contentUrl, napi_env env, napi_va
         });
 }
 
+void RootScene::SetDisplayOrientation(int32_t orientation)
+{
+    orientation_ = orientation;
+}
+
 void RootScene::UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason reason)
 {
     if (uiContent_ == nullptr) {
         WLOGFE("uiContent_ is nullptr!");
         return;
     }
+    // Arkui is not adapted to multi-display, which constantly refreshes the internal screen dpi.
+    // Currently, the system is temporarily isolated and needs to be formally rectified in the future
+    if (rect.width_ == LEM_SUB_WIDTH && rect.height_ == LEM_SUB_HEIGHT
+        && FoldScreenStateInternel::IsDualDisplayFoldDevice()) {
+        return;
+    }
     Ace::ViewportConfig config;
     config.SetSize(rect.width_, rect.height_);
     config.SetPosition(rect.posX_, rect.posY_);
     config.SetDensity(density_);
+    config.SetOrientation(orientation_);
     uiContent_->UpdateViewportConfig(config, reason);
 }
 
@@ -147,6 +164,9 @@ void RootScene::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Conf
     WLOGD("notify root scene ace for all");
     if (staticRootScene_) {
         staticRootScene_->UpdateConfiguration(configuration);
+        if (configurationUpdatedCallback_) {
+            configurationUpdatedCallback_(configuration);
+        }
     }
 }
 
@@ -163,8 +183,6 @@ void RootScene::RegisterInputEventListener()
             eventHandler_ =
                 std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::Create(INPUT_AND_VSYNC_THREAD));
         }
-        VsyncStation::GetInstance().SetIsMainHandlerAvailable(false);
-        VsyncStation::GetInstance().SetVsyncEventHandler(eventHandler_);
     }
     if (!(DelayedSingleton<IntentionEventManager>::GetInstance()->EnableInputEventListener(
         uiContent_.get(), eventHandler_))) {
@@ -176,19 +194,31 @@ void RootScene::RegisterInputEventListener()
 void RootScene::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    VsyncStation::GetInstance().RequestVsync(vsyncCallback);
+    if (vsyncStation_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_MAIN, "Receive vsync request failed, vsyncStation is nullptr");
+        return;
+    }
+    vsyncStation_->RequestVsync(vsyncCallback);
 }
 
 int64_t RootScene::GetVSyncPeriod()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    return VsyncStation::GetInstance().GetVSyncPeriod();
+    if (vsyncStation_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_MAIN, "Get vsync period failed, vsyncStation is nullptr");
+        return 0;
+    }
+    return vsyncStation_->GetVSyncPeriod();
 }
 
-void RootScene::FlushFrameRate(uint32_t rate)
+void RootScene::FlushFrameRate(uint32_t rate, bool isAnimatorStopped)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    WindowRateManager::GetInstance().FlushFrameRateForRootWindow(rate);
+    if (vsyncStation_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_MAIN, "FlushFrameRate failed, vsyncStation is nullptr");
+        return;
+    }
+    vsyncStation_->FlushFrameRate(rate, isAnimatorStopped);
 }
 
 void RootScene::OnBundleUpdated(const std::string& bundleName)
@@ -199,13 +229,19 @@ void RootScene::OnBundleUpdated(const std::string& bundleName)
     }
 }
 
+void RootScene::SetOnConfigurationUpdatedCallback(
+    const std::function<void(const std::shared_ptr<AppExecFwk::Configuration>&)>& callback)
+{
+    configurationUpdatedCallback_ = callback;
+}
+
 void RootScene::SetFrameLayoutFinishCallback(std::function<void()>&& callback)
 {
     frameLayoutFinishCb_ = callback;
     if (uiContent_) {
         uiContent_->SetFrameLayoutFinishCallback(std::move(frameLayoutFinishCb_));
     }
-    WLOGFI("[WMSLayout] SetFrameLayoutFinishCallback end");
+    TLOGI(WmsLogTag::WMS_LAYOUT, "SetFrameLayoutFinishCallback end");
 }
 } // namespace Rosen
 } // namespace OHOS

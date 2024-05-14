@@ -87,7 +87,9 @@ void WindowLayoutPolicy::UpdateDisplayGroupRect()
     for (auto& elem : DisplayGroupInfo::GetInstance().GetAllDisplayRects()) {
         newDisplayGroupRect.posX_ = std::min(displayGroupRect_.posX_, elem.second.posX_);
         newDisplayGroupRect.posY_ = std::min(displayGroupRect_.posY_, elem.second.posY_);
-        newDisplayGroupRect.width_ += elem.second.width_;
+        int32_t right = std::max(newDisplayGroupRect.posX_ + static_cast<int32_t>(newDisplayGroupRect.width_),
+                                 elem.second.posX_+ static_cast<int32_t>(elem.second.width_));
+        newDisplayGroupRect.width_ = right - newDisplayGroupRect.posX_;
         int32_t maxHeight = std::max(newDisplayGroupRect.posY_ + static_cast<int32_t>(newDisplayGroupRect.height_),
                                      elem.second.posY_+ static_cast<int32_t>(elem.second.height_));
         newDisplayGroupRect.height_ = maxHeight - newDisplayGroupRect.posY_;
@@ -778,7 +780,6 @@ void WindowLayoutPolicy::FixWindowRectWithinDisplay(const sptr<WindowNode>& node
 {
     auto displayId = node->GetDisplayId();
     const Rect& displayRect = DisplayGroupInfo::GetInstance().GetDisplayRect(displayId);
-    auto displayInfo = DisplayGroupInfo::GetInstance().GetDisplayInfo(displayId);
     auto type = node->GetWindowType();
     Rect rect = node->GetRequestRect();
     switch (type) {
@@ -790,6 +791,11 @@ void WindowLayoutPolicy::FixWindowRectWithinDisplay(const sptr<WindowNode>& node
                 static_cast<int32_t>(rect.height_);
             break;
         default:
+            auto displayInfo = DisplayGroupInfo::GetInstance().GetDisplayInfo(displayId);
+            if (displayInfo == nullptr) {
+                WLOGE("displayInfo is nullptr");
+                return;
+            }
             if (!displayInfo->GetWaterfallDisplayCompressionStatus()) {
                 return;
             }

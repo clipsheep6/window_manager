@@ -15,6 +15,7 @@
 
 #include "screen_cutout_controller.h"
 
+#include <functional>
 #include "screen_scene_config.h"
 #include "screen_session_manager.h"
 #include "window_manager_hilog.h"
@@ -27,7 +28,50 @@ constexpr std::vector<int>::size_type RIGHT = 2;
 constexpr std::vector<int>::size_type BOTTOM = 3;
 constexpr uint8_t HALF_SCREEN = 2;
 constexpr uint8_t QUARTER_SCREEN = 4;
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "ScreenCutoutController" };
+
+DMRect TransferRectByRotation90(const DMRect& rect, uint32_t width, uint32_t height)
+{
+    return DMRect { .posX_ = width - rect.posY_ - rect.height_,
+                    .posY_ = rect.posX_,
+                    .width_ = rect.height_,
+                    .height_ = rect.width_ };
+}
+
+DMRect TransferRectByRotation180(const DMRect& rect, uint32_t width, uint32_t height)
+{
+    return DMRect { width - rect.posX_ - rect.width_,
+                    height - rect.posY_ - rect.height_, rect.width_, rect.height_ };
+}
+
+DMRect TransferRectByRotation270(const DMRect& rect, uint32_t width, uint32_t height)
+{
+    return DMRect { rect.posY_, height - rect.posX_ - rect.width_,
+                    rect.height_, rect.width_ };
+}
+
+using TransferRectByRotationFunc = std::function<DMRect(const DMRect&, uint32_t, uint32_t)>;
+TransferRectByRotationFunc SelectTransferRectByRotationFunc(Rotation currentRotation)
+{
+    TransferRectByRotationFunc func;
+    switch (currentRotation) {
+        case Rotation::ROTATION_90: {
+            func = &TransferRectByRotation90;
+            break;
+        }
+        case Rotation::ROTATION_180: {
+            func = &TransferRectByRotation180;
+            break;
+        }
+        case Rotation::ROTATION_270: {
+            func = &TransferRectByRotation270;
+            break;
+        }
+        default: {
+        }
+    }
+    return func;
+}
+
 }
 
 uint32_t ScreenCutoutController::defaultDeviceRotation_ = 0;
@@ -35,9 +79,9 @@ std::map<DeviceRotationValue, Rotation> ScreenCutoutController::deviceToDisplayR
 
 sptr<CutoutInfo> ScreenCutoutController::GetScreenCutoutInfo(DisplayId displayId)
 {
-    WLOGFD("get screen cutout info.");
+    TLOGD(WmsLogTag::DMS, "get screen cutout info.");
     std::vector<DMRect> boundaryRects;
-    if (!ScreenSceneConfig::GetCutoutBoundaryRect().empty()) {
+    if (!ScreenSceneConfig::GetCutoutBoundaryRect(displayId).empty()) {
         ConvertBoundaryRectsByRotation(boundaryRects, displayId);
     }
 
@@ -46,67 +90,52 @@ sptr<CutoutInfo> ScreenCutoutController::GetScreenCutoutInfo(DisplayId displayId
     return cutoutInfo;
 }
 
+std::vector<DMRect> ScreenCutoutController::GetBoundaryRects(sptr<DisplayInfo> displayInfo, DisplayId displayId)
+{
+    std::vector<DMRect> displayBoundaryRects;
+    if (ScreenSessionManager::GetInstance().IsFoldable() &&
+        (ScreenSessionManager::GetInstance().GetFoldStatus() == FoldStatus::FOLDED)) {
+        displayBoundaryRects = ScreenSceneConfig::GetSubCutoutBoundaryRect();
+    } else {
+        displayBoundaryRects = ScreenSceneConfig::GetCutoutBoundaryRect(displayId);
+    }
+    CheckBoundaryRects(displayBoundaryRects, displayInfo);
+
+    return displayBoundaryRects;
+}
+
 void ScreenCutoutController::ConvertBoundaryRectsByRotation(std::vector<DMRect>& boundaryRects, DisplayId displayId)
 {
-    std::vector<DMRect> finalVector;
+    boundaryRects.clear();
     sptr<DisplayInfo> displayInfo = ScreenSessionManager::GetInstance().GetDisplayInfoById(displayId);
     if (!displayInfo) {
-        WLOGFE("displayInfo invalid");
-        boundaryRects = finalVector;
+        TLOGE(WmsLogTag::DMS, "displayInfo invalid");
         return;
     }
 
     Rotation currentRotation = displayInfo->GetRotation();
-    std::vector<DMRect> displayBoundaryRects;
-    if (ScreenSessionManager::GetInstance().IsFoldable() &&
-        (ScreenSessionManager::GetInstance().GetFoldStatus() == FoldStatus::FOLDED)) {
-        displayBoundaryRects = {{ 507, 18, 66, 66}}; // x:507, y:18, w:66, h:66
-    } else {
-        displayBoundaryRects = ScreenSceneConfig::GetCutoutBoundaryRect();
-    }
-    CheckBoundaryRects(displayBoundaryRects, displayInfo);
+    std::vector<DMRect> displayBoundaryRects = GetBoundaryRects(displayInfo, displayId);
     if (currentRotation == Rotation::ROTATION_0) {
-        boundaryRects = displayBoundaryRects;
+        boundaryRects = std::move(displayBoundaryRects);
         return;
     }
 
     uint32_t displayWidth = static_cast<uint32_t>(displayInfo->GetWidth());
     uint32_t displayHeight = static_cast<uint32_t>(displayInfo->GetHeight());
-    switch (currentRotation) {
-        case Rotation::ROTATION_90: {
-            for (DMRect rect : displayBoundaryRects) {
-                finalVector.emplace_back(DMRect {
-                    .posX_ = displayWidth - rect.posY_ - rect.height_,
-                    .posY_ = rect.posX_,
-                    .width_ = rect.height_,
-                    .height_ = rect.width_ });
-            }
-            break;
-        }
-        case Rotation::ROTATION_180: {
-            for (DMRect rect : displayBoundaryRects) {
-                finalVector.emplace_back(DMRect { displayWidth - rect.posX_ - rect.width_,
-                    displayHeight - rect.posY_ - rect.height_, rect.width_, rect.height_ });
-            }
-            break;
-        }
-        case Rotation::ROTATION_270: {
-            for (DMRect rect : displayBoundaryRects) {
-                finalVector.emplace_back(
-                    DMRect { rect.posY_, displayHeight - rect.posX_ - rect.width_, rect.height_, rect.width_ });
-            }
-            break;
-        }
-        default:
-            break;
+    TransferRectByRotationFunc transferFunc = SelectTransferRectByRotationFunc(currentRotation);
+    if (!transferFunc) {
+        return;
     }
-    boundaryRects = finalVector;
+
+    for (const DMRect& rect : displayBoundaryRects) {
+        boundaryRects.emplace_back(transferFunc(rect, displayHeight, displayWidth));
+    }
 }
 
 void ScreenCutoutController::CheckBoundaryRects(std::vector<DMRect>& boundaryRects, sptr<DisplayInfo> displayInfo)
 {
     if (!displayInfo) {
-        WLOGFE("displayInfo invalid");
+        TLOGE(WmsLogTag::DMS, "displayInfo invalid");
         return;
     }
 
@@ -119,7 +148,7 @@ void ScreenCutoutController::CheckBoundaryRects(std::vector<DMRect>& boundaryRec
             static_cast<int32_t>(boundaryRect.height_) + boundaryRect.posY_ > static_cast<int32_t>(displayHeight) ||
             boundaryRect.width_ > displayWidth || boundaryRect.height_ > displayHeight ||
             boundaryRect.IsUninitializedRect()) {
-            WLOGFE("boundaryRect boundary is invalid");
+            TLOGE(WmsLogTag::DMS, "boundaryRect boundary is invalid");
             iter = boundaryRects.erase(iter);
         } else {
             iter++;
@@ -131,14 +160,14 @@ void ScreenCutoutController::CalcWaterfallRects(DisplayId displayId)
 {
     WaterfallDisplayAreaRects emptyRects = {};
     if (!ScreenSceneConfig::IsWaterfallDisplay()) {
-        WLOGFE("not waterfall display");
+        TLOGE(WmsLogTag::DMS, "not waterfall display");
         waterfallDisplayAreaRects_ = emptyRects;
         return;
     }
 
     std::vector<int> numberVec = ScreenSceneConfig::GetCurvedScreenBoundaryConfig();
     if (numberVec.empty()) {
-        WLOGFI("curved screen boundary is empty");
+        TLOGI(WmsLogTag::DMS, "curved screen boundary is empty");
         waterfallDisplayAreaRects_ = emptyRects;
         return;
     }
@@ -156,7 +185,7 @@ void ScreenCutoutController::CalcWaterfallRects(DisplayId displayId)
 
     sptr<DisplayInfo> displayInfo = ScreenSessionManager::GetInstance().GetDisplayInfoById(displayId);
     if (!displayInfo) {
-        WLOGFE("displayInfo invalid");
+        TLOGE(WmsLogTag::DMS, "displayInfo invalid");
         return;
     }
 
@@ -164,7 +193,7 @@ void ScreenCutoutController::CalcWaterfallRects(DisplayId displayId)
     uint32_t displayHeight = static_cast<uint32_t>(displayInfo->GetHeight());
     if ((realNumVec[LEFT] > displayWidth / HALF_SCREEN) || (realNumVec[RIGHT] > displayWidth / HALF_SCREEN) ||
         (realNumVec[TOP] > displayHeight / HALF_SCREEN) || (realNumVec[BOTTOM] > displayHeight / HALF_SCREEN)) {
-        WLOGFE("curved screen boundary data is not correct");
+        TLOGE(WmsLogTag::DMS, "curved screen boundary data is not correct");
         waterfallDisplayAreaRects_ = emptyRects;
         return;
     }
@@ -228,12 +257,12 @@ DMRect ScreenCutoutController::CreateWaterfallRect(uint32_t left, uint32_t top, 
 
 RectF ScreenCutoutController::CalculateCurvedCompression(const ScreenProperty& screenProperty)
 {
-    WLOGFI("calculate curved compression");
+    TLOGI(WmsLogTag::DMS, "calculate curved compression");
     RectF finalRect = RectF(0, 0, 0, 0);
     sptr<DisplayInfo> displayInfo = ScreenSessionManager::GetInstance().GetDefaultDisplayInfo();
     uint32_t iCurvedSize = 0;
     if (!displayInfo || iCurvedSize == 0) {
-        WLOGFE("display Info. invalid or curved area config value is zero");
+        TLOGE(WmsLogTag::DMS, "display Info. invalid or curved area config value is zero");
         return finalRect;
     }
 
@@ -241,12 +270,12 @@ RectF ScreenCutoutController::CalculateCurvedCompression(const ScreenProperty& s
     uint32_t screenHeight = static_cast<uint32_t>(displayInfo->GetHeight());
     uint32_t realWidth = static_cast<uint32_t>(iCurvedSize * screenProperty.GetVirtualPixelRatio());
     if (realWidth >= screenHeight / QUARTER_SCREEN || realWidth >= screenWidth / QUARTER_SCREEN) {
-        WLOGFW("curved area is beyond the edge limit");
+        TLOGW(WmsLogTag::DMS, "curved area is beyond the edge limit");
         return finalRect;
     }
 
     Rotation rotation = displayInfo->GetRotation();
-    WLOGFI("realWidth : %{public}u rotation : %{public}u", realWidth, rotation);
+    TLOGI(WmsLogTag::DMS, "realWidth : %{public}u rotation : %{public}u", realWidth, rotation);
     bool isLandscape = screenHeight < screenWidth ? true : false;
     uint32_t totalCompressedSize = realWidth * HALF_SCREEN; // *2 for both sides.
     uint32_t displayHeightAfter =
@@ -291,7 +320,7 @@ Rotation ScreenCutoutController::GetCurrentDisplayRotation(DisplayId displayId)
 {
     sptr<DisplayInfo> displayInfo = ScreenSessionManager::GetInstance().GetDisplayInfoById(displayId);
     if (!displayInfo) {
-        WLOGFE("Cannot get default display info");
+        TLOGE(WmsLogTag::DMS, "Cannot get default display info");
         return defaultDeviceRotation_ == 0 ? ConvertDeviceToDisplayRotation(DeviceRotationValue::ROTATION_PORTRAIT) :
             ConvertDeviceToDisplayRotation(DeviceRotationValue::ROTATION_LANDSCAPE);
     }
@@ -303,7 +332,9 @@ void ScreenCutoutController::ProcessRotationMapping()
     sptr<DisplayInfo> displayInfo = ScreenSessionManager::GetInstance().GetDefaultDisplayInfo();
     // 0 means PORTRAIT, 1 means LANDSCAPE.
     defaultDeviceRotation_ =
-        (!displayInfo || (displayInfo && (displayInfo->GetWidth() < displayInfo->GetHeight()))) ? 0 : 1;
+        (!displayInfo || (displayInfo->GetWidth() < displayInfo->GetHeight())) ? 0 : 1;
+    TLOGI(WmsLogTag::DMS, "defaultDeviceRotation: %{public}u", defaultDeviceRotation_);
+
     if (deviceToDisplayRotationMap_.empty()) {
         deviceToDisplayRotationMap_ = {
             { DeviceRotationValue::ROTATION_PORTRAIT,

@@ -111,6 +111,7 @@ public:
     static sptr<Window> Find(const std::string& id);
     static sptr<Window> GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context = nullptr);
     static sptr<Window> GetTopWindowWithId(uint32_t mainWinId);
+    static sptr<Window> GetWindowWithId(uint32_t winId);
     static std::vector<sptr<Window>> GetSubWindow(uint32_t parantId);
     static void UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration);
     virtual std::shared_ptr<RSSurfaceNode> GetSurfaceNode() const override;
@@ -202,6 +203,8 @@ public:
     virtual void StartMove() override;
     virtual WMError SetGlobalMaximizeMode(MaximizeMode mode) override;
     virtual MaximizeMode GetGlobalMaximizeMode() const override;
+    virtual WMError SetImmersiveModeEnabledState(bool enable) override;
+    virtual bool GetImmersiveModeEnabledState() const override;
 
     virtual WMError RequestFocus() const override;
     virtual void SetInputEventConsumer(const std::shared_ptr<IInputEventConsumer>& inputEventConsumer) override;
@@ -262,7 +265,7 @@ public:
     void UpdateZoomTransform(const Transform& trans, bool isDisplayZoomOn);
     void PerformBack() override;
     void NotifyForegroundInteractiveStatus(bool interactive);
-
+    virtual bool PreNotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
     virtual WMError NapiSetUIContent(const std::string& contentInfo, napi_env env,
         napi_value storage, bool isdistributed, sptr<IRemoteObject> token, AppExecFwk::Ability* ability) override;
     virtual WMError SetUIContentByName(const std::string& contentInfo, napi_env env, napi_value storage,
@@ -272,6 +275,7 @@ public:
     virtual std::string GetContentInfo() override;
     virtual const std::shared_ptr<AbilityRuntime::Context> GetContext() const override;
     virtual Ace::UIContent* GetUIContent() const override;
+    virtual Ace::UIContent* GetUIContentWithId(uint32_t winId) const override;
     virtual void OnNewWant(const AAFwk::Want& want) override;
     virtual void SetRequestedOrientation(Orientation) override;
     virtual Orientation GetRequestedOrientation() override;
@@ -516,6 +520,7 @@ private:
             reason == WindowSizeChangeReason::DRAG_START || reason == WindowSizeChangeReason::RECOVER ||
             reason == WindowSizeChangeReason::MOVE || reason == WindowSizeChangeReason::UNDEFINED;
     }
+    void InitWindowProperty(const sptr<WindowOption>& option);
     void ClearListenersById(uint32_t winId);
     void NotifySizeChange(Rect rect, WindowSizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
@@ -528,6 +533,7 @@ private:
     void DestroyDialogWindow();
     void DestroyFloatingWindow();
     void DestroySubWindow();
+    void ClearVsyncStation();
     void SetDefaultOption(); // for api7
     bool IsWindowValid() const;
     static sptr<Window> FindWindowById(uint32_t WinId);
@@ -597,6 +603,7 @@ private:
     static std::map<uint32_t, std::vector<sptr<WindowImpl>>> subWindowMap_;
     static std::map<uint32_t, std::vector<sptr<WindowImpl>>> appFloatingWindowMap_;
     static std::map<uint32_t, std::vector<sptr<WindowImpl>>> appDialogWindowMap_;
+    static bool enableImmersiveMode_;
     sptr<WindowProperty> property_;
     WindowState state_ { WindowState::STATE_INITIAL };
     WindowState subWindowState_ {WindowState::STATE_INITIAL};
@@ -653,6 +660,7 @@ private:
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     bool needNotifyFocusLater_ = false;
     bool escKeyEventTriggered_ = false;
+    std::shared_ptr<VsyncStation> vsyncStation_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

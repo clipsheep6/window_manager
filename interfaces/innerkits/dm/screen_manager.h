@@ -188,15 +188,6 @@ public:
     DMError ResizeVirtualScreen(ScreenId screenId, uint32_t width, uint32_t height);
 
     /**
-     * @brief Set virtual screen refresh rate.
-     *
-     * @param screenId screen id.
-     * @param refreshRate the new refresh rate.
-     * @return DM_OK means set success, others means set failed.
-     */
-    DMError SetVirtualScreenRefreshRate(ScreenId screenId, uint32_t refreshRate);
-
-    /**
      * @brief Set buffer auto rotate
      *
      * @param screenId Screen id.
@@ -204,6 +195,15 @@ public:
      * @return DM_OK means set success, others means set failed.
      */
     DMError SetVirtualMirrorScreenCanvasRotation(ScreenId screenId, bool canvasRotation);
+
+    /**
+     * @brief Set virtual screen scale mode
+     *
+     * @param screenId Screen id.
+     * @param scaleMode scale mode
+     * @return DM_OK means set success, others means set failed.
+     */
+    DMError SetVirtualMirrorScreenScaleMode(ScreenId screenId, ScreenScaleMode scaleMode);
 
     /**
      * @brief Set the screen power state on the specified screen.
@@ -295,6 +295,34 @@ public:
      * @return DM_OK means unregister success, others means unregister failed.
      */
     DMError UnregisterVirtualScreenGroupListener(sptr<IVirtualScreenGroupListener> listener);
+
+    /**
+     * @brief Get virtual screen flag.
+     *
+     * @param screenId virtual screen id.
+     * @return virtual screen flag
+     */
+    VirtualScreenFlag GetVirtualScreenFlag(ScreenId screenId);
+
+    /**
+     * @brief Set virtual screen flag.
+     *
+     * @param screenId virtual screen id.
+     * @param screenFlag virtual screen flag.
+     * @return DM_OK means set success, others means failed.
+     */
+    DMError SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag screenFlag);
+
+    /**
+     * @brief Set virtual screen refresh rate with a refresh interval relative to the main screen.
+     *
+     * @param screenId virtual screen id.
+     * @param refreshInterval refresh interval: range [1, main screen max refresh rate]. 2 indicates that
+     *     the virtual screen refreshes 1 frame when the main screen refreshes 2 frames, 5 indicates that
+     *     the virtual screen refreshes 1 frame when the main screen refreshes 5 frames, and so on.
+     * @return DM_OK means set success, others means failed.
+     */
+    DMError SetVirtualScreenRefreshRate(ScreenId screenId, uint32_t refreshInterval);
 private:
     ScreenManager();
     ~ScreenManager();

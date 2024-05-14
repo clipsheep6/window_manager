@@ -21,8 +21,10 @@
 #include <native_engine/native_value.h>
 #include <pointer_event.h>
 
+#include "configuration.h"
 #include "dm_common.h"
 #include "interfaces/include/ws_common.h"
+#include "common/include/window_session_property.h"
 #include "wm_common.h"
 #include "hitrace_meter.h"
 
@@ -59,23 +61,10 @@ enum class JsSessionType : uint32_t {
     TYPE_PIP,
     TYPE_THEME_EDITOR,
     TYPE_NAVIGATION_INDICATOR,
-};
-
-// should same with bundlemanager ability info
-enum class JsSessionOrientation : uint32_t {
-    UNSPECIFIED = 0,
-    LANDSCAPE,
-    PORTRAIT,
-    FOLLOWRECENT,
-    LANDSCAPE_INVERTED,
-    PORTRAIT_INVERTED,
-    AUTO_ROTATION,
-    AUTO_ROTATION_LANDSCAPE,
-    AUTO_ROTATION_PORTRAIT,
-    AUTO_ROTATION_RESTRICTED,
-    AUTO_ROTATION_LANDSCAPE_RESTRICTED,
-    AUTO_ROTATION_PORTRAIT_RESTRICTED,
-    LOCKED,
+    TYPE_SEARCHING_BAR,
+    TYPE_SYSTEM_SUB_WINDOW,
+    TYPE_HANDWRITE,
+    TYPE_KEYBOARD_PANEL,
 };
 
 const std::map<WindowType, JsSessionType> WINDOW_TO_JS_SESSION_TYPE_MAP {
@@ -109,6 +98,10 @@ const std::map<WindowType, JsSessionType> WINDOW_TO_JS_SESSION_TYPE_MAP {
     { WindowType::WINDOW_TYPE_PIP,                      JsSessionType::TYPE_PIP                     },
     { WindowType::WINDOW_TYPE_THEME_EDITOR,             JsSessionType::TYPE_THEME_EDITOR            },
     { WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR,     JsSessionType::TYPE_NAVIGATION_INDICATOR    },
+    { WindowType::WINDOW_TYPE_SEARCHING_BAR,            JsSessionType::TYPE_SEARCHING_BAR           },
+    { WindowType::WINDOW_TYPE_SYSTEM_SUB_WINDOW,        JsSessionType::TYPE_SYSTEM_SUB_WINDOW       },
+    { WindowType::WINDOW_TYPE_HANDWRITE,                JsSessionType::TYPE_HANDWRITE               },
+    { WindowType::WINDOW_TYPE_KEYBOARD_PANEL,           JsSessionType::TYPE_KEYBOARD_PANEL          },
 };
 
 const std::map<JsSessionType, WindowType> JS_SESSION_TO_WINDOW_TYPE_MAP {
@@ -142,39 +135,41 @@ const std::map<JsSessionType, WindowType> JS_SESSION_TO_WINDOW_TYPE_MAP {
     { JsSessionType::TYPE_PIP,                      WindowType::WINDOW_TYPE_PIP,                    },
     { JsSessionType::TYPE_THEME_EDITOR,             WindowType::WINDOW_TYPE_THEME_EDITOR            },
     { JsSessionType::TYPE_NAVIGATION_INDICATOR,     WindowType::WINDOW_TYPE_NAVIGATION_INDICATOR    },
-};
-
-const std::map<Orientation, JsSessionOrientation> WINDOW_ORIENTATION_TO_JS_SESSION_MAP {
-    {Orientation::UNSPECIFIED,                        JsSessionOrientation::UNSPECIFIED             },
-    {Orientation::VERTICAL,                           JsSessionOrientation::PORTRAIT                },
-    {Orientation::HORIZONTAL,                         JsSessionOrientation::LANDSCAPE               },
-    {Orientation::REVERSE_VERTICAL,                   JsSessionOrientation::PORTRAIT_INVERTED       },
-    {Orientation::REVERSE_HORIZONTAL,                 JsSessionOrientation::LANDSCAPE_INVERTED      },
-    {Orientation::SENSOR,                             JsSessionOrientation::AUTO_ROTATION           },
-    {Orientation::SENSOR_VERTICAL,                    JsSessionOrientation::AUTO_ROTATION_PORTRAIT  },
-    {Orientation::SENSOR_HORIZONTAL,                  JsSessionOrientation::AUTO_ROTATION_LANDSCAPE },
-    {Orientation::AUTO_ROTATION_RESTRICTED,           JsSessionOrientation::AUTO_ROTATION_RESTRICTED},
-    {Orientation::AUTO_ROTATION_PORTRAIT_RESTRICTED,
-        JsSessionOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED},
-    {Orientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED,
-        JsSessionOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED},
-    {Orientation::LOCKED,                             JsSessionOrientation::LOCKED                  },
+    { JsSessionType::TYPE_SEARCHING_BAR,            WindowType::WINDOW_TYPE_SEARCHING_BAR           },
+    { JsSessionType::TYPE_SYSTEM_SUB_WINDOW,        WindowType::WINDOW_TYPE_SYSTEM_SUB_WINDOW       },
+    { JsSessionType::TYPE_HANDWRITE,                WindowType::WINDOW_TYPE_HANDWRITE               },
+    { JsSessionType::TYPE_KEYBOARD_PANEL,           WindowType::WINDOW_TYPE_KEYBOARD_PANEL          },
 };
 
 JsSessionType GetApiType(WindowType type);
 bool ConvertSessionInfoFromJs(napi_env env, napi_value jsObject, SessionInfo& sessionInfo);
+bool ConvertConfigurationFromJs(napi_env env, napi_value jsObject, AppExecFwk::Configuration& config);
 bool ConvertSessionInfoName(napi_env env, napi_value jsObject, SessionInfo& sessionInfo);
 bool ConvertSessionInfoState(napi_env env, napi_value jsObject, SessionInfo& sessionInfo);
 bool ConvertPointerEventFromJs(napi_env env, napi_value jsObject, MMI::PointerEvent& pointerEvent);
 bool ConvertInt32ArrayFromJs(napi_env env, napi_value jsObject, std::vector<int32_t>& intList);
+bool ConvertProcessOptionFromJs(napi_env env, napi_value jsObject,
+    std::shared_ptr<AAFwk::ProcessOptions> processOptions);
+bool ConvertStringMapFromJs(napi_env env, napi_value value, std::unordered_map<std::string, std::string> &stringMap);
+bool ParseArrayStringValue(napi_env env, napi_value array, std::vector<std::string> &vector);
 napi_value CreateJsSessionInfo(napi_env env, const SessionInfo& sessionInfo);
+napi_value CreateJsSessionRecoverInfo(
+    napi_env env, const SessionInfo &sessionInfo, const sptr<WindowSessionProperty> property);
+void SetJsSessionInfoByWant(napi_env env, const SessionInfo& sessionInfo, napi_value objValue);
+napi_value CreateJsProcessOption(napi_env env, std::shared_ptr<AAFwk::ProcessOptions> processOptions);
+napi_value CreateJsSessionStartupVisibility(napi_env env);
+napi_value CreateJsSessionProcessMode(napi_env env);
 napi_value GetWindowRectIntValue(napi_env env, int val);
 napi_value CreateJsSessionState(napi_env env);
 napi_value CreateJsSessionSizeChangeReason(napi_env env);
-napi_value CreateJsSessionRect(napi_env env, const WSRect& rect);
+template<typename T>
+napi_value CreateJsSessionRect(napi_env env, const T& rect);
+napi_value CreateJsSessionEventParam(napi_env env, const SessionEventParam& param);
 napi_value CreateJsSystemBarPropertyArrayObject(
     napi_env env, const std::unordered_map<WindowType, SystemBarProperty>& propertyMap);
+napi_value CreateJsKeyboardLayoutParams(napi_env env, const KeyboardLayoutParams& params);
 napi_value SessionTypeInit(napi_env env);
+napi_value KeyboardGravityInit(napi_env env);
 napi_value NapiGetUndefined(napi_env env);
 napi_valuetype GetType(napi_env env, napi_value value);
 bool NapiIsCallable(napi_env env, napi_value value);

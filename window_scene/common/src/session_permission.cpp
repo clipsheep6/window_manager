@@ -108,17 +108,33 @@ bool SessionPermission::IsSACalling()
         WLOGFW("SA Called, tokenId: %{public}u, flag: %{public}u", tokenId, flag);
         return true;
     }
-    WLOGFD("Not SA called");
+    WLOGFI("Not SA called, tokenId:%{public}u, flag:%{public}u", tokenId, flag);
     return false;
 }
 
 bool SessionPermission::VerifyCallingPermission(const std::string& permissionName)
 {
-    WLOGFI("VerifyCallingPermission permission %{public}s", permissionName.c_str());
     auto callerToken = IPCSkeleton::GetCallingTokenID();
+    WLOGFI("VerifyCallingPermission permission %{public}s, callingTokenID:%{public}u",
+        permissionName.c_str(), callerToken);
     int32_t ret = Security::AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
     if (ret != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
-        WLOGFE("permission %{public}s: PERMISSION_DENIED", permissionName.c_str());
+        WLOGFE("permission %{public}s: PERMISSION_DENIED, CallingTokenID:%{public}u, ret:%{public}d",
+            permissionName.c_str(), callerToken, ret);
+        return false;
+    }
+    WLOGFI("verify AccessToken success");
+    return true;
+}
+
+bool SessionPermission::VerifyPermissionByCallerToken(const uint32_t callerToken, const std::string& permissionName)
+{
+    WLOGFI("VerifyCallingPermission permission %{public}s, callingTokenID:%{public}u",
+        permissionName.c_str(), callerToken);
+    int32_t ret = Security::AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
+    if (ret != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+        WLOGFE("permission %{public}s: PERMISSION_DENIED, CallingTokenID:%{public}u, ret:%{public}d",
+            permissionName.c_str(), callerToken, ret);
         return false;
     }
     WLOGFI("verify AccessToken success");
@@ -156,7 +172,7 @@ bool SessionPermission::IsShellCall()
         WLOGFI("caller tokenType is shell, verify success");
         return true;
     }
-    WLOGFI("Not shell called.");
+    WLOGFI("Not shell called. tokenId:%{public}u, flag:%{public}u", callerToken, tokenType);
     return false;
 }
 
@@ -233,6 +249,38 @@ bool SessionPermission::IsSameBundleNameAsCalling(const std::string& bundleName)
             callingBundleName.c_str(), bundleName.c_str());
         return false;
     }
+}
+
+bool SessionPermission::IsStartedByUIExtension()
+{
+    auto bundleManagerServiceProxy = GetBundleManagerProxy();
+    if (!bundleManagerServiceProxy) {
+        WLOGFE("failed to get BundleManagerServiceProxy");
+        return false;
+    }
+
+    int uid = IPCSkeleton::GetCallingUid();
+    // reset ipc identity
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    std::string bundleName;
+    bundleManagerServiceProxy->GetNameForUid(uid, bundleName);
+    AppExecFwk::BundleInfo bundleInfo;
+    int userId = uid / 200000; // 200000 use uid to caculate userId
+    bool result = bundleManagerServiceProxy->GetBundleInfo(bundleName,
+        AppExecFwk::BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO, bundleInfo, userId);
+    // set ipc identity to raw
+    IPCSkeleton::SetCallingIdentity(identity);
+    if (!result) {
+        WLOGFE("failed to query extension ability info, bundleName:%{public}s, userId:%{public}d",
+               bundleName.c_str(), userId);
+        return false;
+    }
+
+    auto extensionInfo = std::find_if(bundleInfo.extensionInfos.begin(), bundleInfo.extensionInfos.end(),
+        [](AppExecFwk::ExtensionAbilityInfo extensionInfo) {
+            return (extensionInfo.type == AppExecFwk::ExtensionAbilityType::SYS_COMMON_UI);
+        });
+    return extensionInfo != bundleInfo.extensionInfos.end();
 }
 } // namespace Rosen
 } // namespace OHOS

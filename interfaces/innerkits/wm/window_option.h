@@ -231,6 +231,27 @@ public:
     void SetOnlySupportSceneBoard(bool onlySupportSceneBoard);
 
     /**
+     * @brief Set ExtensionSubWindow tag.
+     *
+     * @param isExtensionTag ExtensionSubWindow tag.
+     */
+    void SetExtensionTag(bool isExtensionTag);
+
+    /**
+     * @brief Set Dialog Decor Enable Or Not.
+     *
+     * @param decorEnable true means enable, default disabled.
+     */
+    void SetDialogDecorEnable(bool decorEnable);
+
+    /**
+     * @brief Set Dialog title.
+     *
+     * @param dialogTitle true means enable, default disabled.
+     */
+    void SetDialogTitle(const std::string& dialogTitle);
+
+    /**
      * @brief Get window rect.
      *
      * @return The rect of window.
@@ -377,6 +398,27 @@ public:
     */
     bool GetOnlySupportSceneBoard() const;
 
+    /**
+     * @brief Get only sceneboard supported
+     *
+     * @return Return ExtensionTag of subwindow.
+    */
+    bool GetExtensionTag() const;
+
+    /**
+     * @brief Get dialog decor enable
+     *
+     * @return true means the dialog decor is enabled, otherwise not.
+    */
+    bool GetDialogDecorEnable() const;
+
+    /**
+     * @brief Get dialog title
+     *
+     * @return Return the dialog title
+    */
+    std::string GetDialogTitle() const;
+
 private:
     Rect windowRect_ { 0, 0, 0, 0 };
     WindowType type_ { WindowType::WINDOW_TYPE_APP_MAIN_WINDOW };
@@ -404,6 +446,9 @@ private:
     std::string subWindowTitle_ = { "" };
     bool subWindowDecorEnable_ = false;
     bool onlySupportSceneBoard_ = false;
+    bool isExtensionTag_ = false;
+    bool dialogDecorEnable_ = false;
+    std::string dialogTitle_ = { "" };
 };
 } // namespace Rosen
 } // namespace OHOS

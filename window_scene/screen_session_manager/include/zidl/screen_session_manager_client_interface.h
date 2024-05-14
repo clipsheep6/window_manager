@@ -39,8 +39,12 @@ public:
         TRANS_ID_ON_IMMERSIVE_STATE_CHANGED,
         TRANS_ID_SET_DISPLAY_NODE_SCREEN_ID,
         TRANS_ID_GET_SURFACENODEID_FROM_MISSIONID,
+        TRANS_ID_SET_FOLD_DISPLAY_MODE,
+        TRANS_ID_ON_REMOVE_ALL_DISPLAY_NODE_CHILDREN,
+        TRANS_ID_SET_VIRTUAL_PIXEL_RATIO_SYSTEM,
     };
 
+    virtual void SwitchUserCallback() = 0;
     virtual void OnScreenConnectionChanged(ScreenId screenId, ScreenEvent screenEvent,
         ScreenId rsId, const std::string& name) = 0;
     virtual void OnPropertyChanged(ScreenId screenId,
@@ -58,6 +62,8 @@ public:
     virtual void SetDisplayNodeScreenId(ScreenId screenId, ScreenId displayNodeScreenId) = 0;
     virtual void OnGetSurfaceNodeIdsFromMissionIdsChanged(std::vector<uint64_t>& missionIds,
         std::vector<uint64_t>& surfaceNodeIds) = 0;
+    virtual void OnUpdateFoldDisplayMode(FoldDisplayMode displayMode) = 0;
+    virtual void SetVirtualPixelRatioSystem(ScreenId screenId, float virtualPixelRatio) = 0;
 };
 } // namespace OHOS::Rosen
 

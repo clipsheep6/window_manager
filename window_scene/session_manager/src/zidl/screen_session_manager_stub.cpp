@@ -27,6 +27,7 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DMS_SCREEN_SESSION_MANAGER,
                                           "ScreenSessionManagerStub" };
 const static uint32_t MAX_SCREEN_SIZE = 32;
+const static int32_t ERR_INVALID_DATA = -1;
 }
 
 int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply,
@@ -35,7 +36,7 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
     WLOGFD("OnRemoteRequest code is %{public}u", code);
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         WLOGFE("InterfaceToken check failed");
-        return -1;
+        return ERR_INVALID_DATA;
     }
     DisplayManagerMessage msgId = static_cast<DisplayManagerMessage>(code);
     switch (msgId) {
@@ -46,6 +47,9 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
         }
         case DisplayManagerMessage::TRANS_ID_REGISTER_DISPLAY_MANAGER_AGENT: {
             auto agent = iface_cast<IDisplayManagerAgent>(data.ReadRemoteObject());
+            if (agent == nullptr) {
+                return ERR_INVALID_DATA;
+            }
             auto type = static_cast<DisplayManagerAgentType>(data.ReadUint32());
             DMError ret = RegisterDisplayManagerAgent(agent, type);
             reply.WriteInt32(static_cast<int32_t>(ret));
@@ -53,6 +57,9 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
         }
         case DisplayManagerMessage::TRANS_ID_UNREGISTER_DISPLAY_MANAGER_AGENT: {
             auto agent = iface_cast<IDisplayManagerAgent>(data.ReadRemoteObject());
+            if (agent == nullptr) {
+                return ERR_INVALID_DATA;
+            }
             auto type = static_cast<DisplayManagerAgentType>(data.ReadUint32());
             DMError ret = UnregisterDisplayManagerAgent(agent, type);
             reply.WriteInt32(static_cast<int32_t>(ret));
@@ -108,7 +115,7 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             ScreenId dmsScreenId;
             if (!data.ReadUint64(dmsScreenId)) {
                 WLOGFE("fail to read dmsScreenId.");
-                return -1;
+                return ERR_INVALID_DATA;
             }
             reply.WriteUint32(static_cast<uint32_t>(GetScreenPower(dmsScreenId)));
             break;
@@ -210,6 +217,13 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             reply.WriteInt32(static_cast<int32_t>(result));
             break;
         }
+        case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_SCREEN_SCALE_MODE: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            ScreenScaleMode scaleMode = static_cast<ScreenScaleMode>(data.ReadUint32());
+            DMError result = SetVirtualMirrorScreenScaleMode(screenId, scaleMode);
+            reply.WriteInt32(static_cast<int32_t>(result));
+            break;
+        }
         case DisplayManagerMessage::TRANS_ID_DESTROY_VIRTUAL_SCREEN: {
             ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
             DMError result = DestroyVirtualScreen(screenId);
@@ -294,6 +308,10 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             reply.WriteParcelable(displaySnapshot == nullptr ? nullptr : displaySnapshot.get());
             break;
         }
+        case DisplayManagerMessage::TRANS_ID_GET_SNAPSHOT_BY_PICKER: {
+            ProcGetSnapshotByPicker(reply);
+            break;
+        }
         case DisplayManagerMessage::TRANS_ID_SET_SCREEN_ACTIVE_MODE: {
             ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
             uint32_t modeId = data.ReadUint32();
@@ -305,6 +323,13 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
             float virtualPixelRatio = data.ReadFloat();
             DMError ret = SetVirtualPixelRatio(screenId, virtualPixelRatio);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_PIXEL_RATIO_SYSTEM: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            float virtualPixelRatio = data.ReadFloat();
+            DMError ret = SetVirtualPixelRatioSystem(screenId, virtualPixelRatio);
             reply.WriteInt32(static_cast<int32_t>(ret));
             break;
         }
@@ -485,6 +510,14 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             reply.WriteBool(hasPrivateWindow);
             break;
         }
+        case DisplayManagerMessage::TRANS_ID_CONVERT_SCREENID_TO_RSSCREENID: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            ScreenId rsId = SCREEN_ID_INVALID;
+            bool ret = ConvertScreenIdToRsScreenId(screenId, rsId);
+            reply.WriteBool(ret);
+            reply.WriteUint64(rsId);
+            break;
+        }
         case DisplayManagerMessage::TRANS_ID_HAS_IMMERSIVE_WINDOW: {
             bool immersive = false;
             DMError ret = HasImmersiveWindow(immersive);
@@ -503,6 +536,10 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             std::string dumpInfo;
             DumpSpecialScreenInfo(screenId, dumpInfo);
             reply.WriteString(dumpInfo);
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_DEVICE_IS_CAPTURE: {
+            reply.WriteBool(IsCaptured());
             break;
         }
         //Fold Screen
@@ -551,7 +588,7 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
         case DisplayManagerMessage::TRANS_ID_SET_CLIENT: {
             auto remoteObject = data.ReadRemoteObject();
             auto clientProxy = iface_cast<IScreenSessionManagerClient>(remoteObject);
-            if (!clientProxy) {
+            if (clientProxy == nullptr) {
                 WLOGFE("clientProxy is null");
                 break;
             }
@@ -600,7 +637,7 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             sptr<DisplayChangeInfo> info = DisplayChangeInfo::Unmarshalling(data);
             if (!info) {
                 WLOGFE("Read DisplayChangeInfo failed");
-                return -1;
+                return ERR_INVALID_DATA;
             }
             NotifyDisplayChangeInfoChanged(info);
             break;
@@ -608,6 +645,19 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
         case DisplayManagerMessage::TRANS_ID_SET_SCREEN_PRIVACY_STATE: {
             auto hasPrivate = data.ReadBool();
             SetScreenPrivacyState(hasPrivate);
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SET_SCREENID_PRIVACY_STATE: {
+            DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
+            auto hasPrivate = data.ReadBool();
+            SetPrivacyStateByDisplayId(displayId, hasPrivate);
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SET_SCREEN_PRIVACY_WINDOW_LIST: {
+            DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
+            std::vector<std::string> privacyWindowList;
+            data.ReadStringVector(&privacyWindowList);
+            SetScreenPrivacyWindowList(displayId, privacyWindowList);
             break;
         }
         case DisplayManagerMessage::TRANS_ID_RESIZE_VIRTUAL_SCREEN: {
@@ -629,14 +679,7 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             break;
         }
         case DisplayManagerMessage::TRANS_ID_GET_AVAILABLE_AREA: {
-            DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
-            DMRect area;
-            DMError ret = GetAvailableArea(displayId, area);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            reply.WriteInt32(area.posX_);
-            reply.WriteInt32(area.posY_);
-            reply.WriteUint32(area.width_);
-            reply.WriteUint32(area.height_);
+            ProcGetAvailableArea(data, reply);
             break;
         }
         case DisplayManagerMessage::TRANS_ID_NOTIFY_FOLD_TO_EXPAND_COMPLETION: {
@@ -644,10 +687,75 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             NotifyFoldToExpandCompletion(foldToExpand);
             break;
         }
+        case DisplayManagerMessage::TRANS_ID_GET_VIRTUAL_SCREEN_FLAG: {
+            ProcGetVirtualScreenFlag(data, reply);
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_SCREEN_FLAG: {
+            ProcSetVirtualScreenFlag(data, reply);
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_GET_DEVICE_SCREEN_CONFIG: {
+            if (!RSMarshallingHelper::Marshalling(reply, GetDeviceScreenConfig())) {
+                TLOGE(WmsLogTag::DMS, "Write deviceScreenConfig failed");
+            }
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_SCREEN_REFRESH_RATE: {
+            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+            uint32_t refreshInterval = data.ReadUint32();
+            DMError ret = SetVirtualScreenRefreshRate(screenId, refreshInterval);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_SWITCH_USER: {
+            SwitchUser();
+            break;
+        }
         default:
             WLOGFW("unknown transaction code");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     return 0;
+}
+
+void ScreenSessionManagerStub::ProcGetAvailableArea(MessageParcel& data, MessageParcel& reply)
+{
+    DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
+    DMRect area;
+    DMError ret = GetAvailableArea(displayId, area);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    reply.WriteInt32(area.posX_);
+    reply.WriteInt32(area.posY_);
+    reply.WriteUint32(area.width_);
+    reply.WriteUint32(area.height_);
+}
+
+void ScreenSessionManagerStub::ProcGetSnapshotByPicker(MessageParcel& reply)
+{
+    DmErrorCode errCode = DmErrorCode::DM_OK;
+    Media::Rect imgRect { 0, 0, 0, 0 };
+    std::shared_ptr<Media::PixelMap> snapshot = GetSnapshotByPicker(imgRect, &errCode);
+    reply.WriteParcelable(snapshot == nullptr ? nullptr : snapshot.get());
+    reply.WriteInt32(static_cast<int32_t>(errCode));
+    reply.WriteInt32(imgRect.left);
+    reply.WriteInt32(imgRect.top);
+    reply.WriteInt32(imgRect.width);
+    reply.WriteInt32(imgRect.height);
+}
+
+void ScreenSessionManagerStub::ProcSetVirtualScreenFlag(MessageParcel& data, MessageParcel& reply)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    VirtualScreenFlag screenFlag = static_cast<VirtualScreenFlag>(data.ReadUint32());
+    DMError setRet = SetVirtualScreenFlag(screenId, screenFlag);
+    reply.WriteInt32(static_cast<int32_t>(setRet));
+}
+
+void ScreenSessionManagerStub::ProcGetVirtualScreenFlag(MessageParcel& data, MessageParcel& reply)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    VirtualScreenFlag screenFlag = GetVirtualScreenFlag(screenId);
+    reply.WriteUint32(static_cast<uint32_t>(screenFlag));
 }
 } // namespace OHOS::Rosen

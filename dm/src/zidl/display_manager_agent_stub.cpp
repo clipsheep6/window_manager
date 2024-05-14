@@ -70,6 +70,9 @@ int32_t DisplayManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& d
         case TRANS_ID_ON_PRIVATE_WINDOW: {
             return ProcPrivateWindow(data);
         }
+        case TRANS_ID_ON_PRIVATE_WINDOW_LIST: {
+            return ProcPrivateWindowList(data);
+        }
         case TRANS_ID_ON_FOLD_STATUS_CHANGED: {
             return ProcFoldStatusChanged(data);
         }
@@ -82,11 +85,35 @@ int32_t DisplayManagerAgentStub::OnRemoteRequest(uint32_t code, MessageParcel& d
         case TRANS_ID_ON_AVAILABLE_AREA_CHANGED: {
             return ProcAvailableAreaChanged(data);
         }
+        case TRANS_ID_ON_FOLD_ANGLE_CHANGED: {
+            return ProcFoldAngleChanged(data);
+        }
+        case TRANS_ID_ON_CAPTURE_STATUS_CHANGED: {
+            return ProcCaptureStatusChanged(data);
+        }
         default: {
             WLOGFW("unknown transaction code %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
         }
     }
+    return 0;
+}
+
+int32_t DisplayManagerAgentStub::ProcFoldAngleChanged(MessageParcel& data)
+{
+    std::vector<float> foldAngles;
+    if (!data.ReadFloatVector(&foldAngles)) {
+        WLOGFE("Read foldAngles failed");
+        return -1;
+    }
+    NotifyFoldAngleChanged(foldAngles);
+    return 0;
+}
+
+int32_t DisplayManagerAgentStub::ProcCaptureStatusChanged(MessageParcel& data)
+{
+    bool isCapture = data.ReadBool();
+    NotifyCaptureStatusChanged(isCapture);
     return 0;
 }
 
@@ -198,6 +225,15 @@ int32_t DisplayManagerAgentStub::ProcPrivateWindow(MessageParcel& data)
 {
     bool hasPrivate = data.ReadBool();
     NotifyPrivateWindowStateChanged(hasPrivate);
+    return 0;
+}
+
+int32_t DisplayManagerAgentStub::ProcPrivateWindowList(MessageParcel& data)
+{
+    DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
+    std::vector<std::string> privacyWindowList;
+    data.ReadStringVector(&privacyWindowList);
+    NotifyPrivateStateWindowListChanged(displayId, privacyWindowList);
     return 0;
 }
 

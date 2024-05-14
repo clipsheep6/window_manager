@@ -277,6 +277,28 @@ HWTEST_F(SessionStageProxyTest, NotifyWindowVisibility, Function | SmallTest | L
     ASSERT_TRUE((sessionStage_ != nullptr));
     sessionStage_->NotifyWindowVisibility(true);
 }
+
+/**
+ * @tc.name: NotifyDensityFollowHost
+ * @tc.desc: test function : NotifyDensityFollowHost
+ * @tc.type: FUNC
+ */
+HWTEST_F(SessionStageProxyTest, NotifyDensityFollowHost, Function | SmallTest | Level1)
+{
+    ASSERT_TRUE((sessionStage_ != nullptr));
+    ASSERT_EQ(WSError::WS_OK, sessionStage_->NotifyDensityFollowHost(true, 1.0f));
+}
+
+/**
+ * @tc.name: SetPipActionEvent
+ * @tc.desc: test function : SetPipActionEvent
+ * @tc.type: FUNC
+ */
+HWTEST_F(SessionStageProxyTest, SetPipActionEvent, Function | SmallTest | Level1)
+{
+    ASSERT_TRUE((sessionStage_ != nullptr));
+    sessionStage_->SetPipActionEvent("close", 0);
+}
 }
 }
 }

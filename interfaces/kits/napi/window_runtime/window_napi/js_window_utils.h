@@ -33,6 +33,7 @@ namespace OHOS {
 namespace Rosen {
 constexpr int32_t RGB_LENGTH = 6;
 constexpr int32_t RGBA_LENGTH = 8;
+constexpr int32_t WINDOW_MAX_WIDTH = 1920;
 
 #define CHECK_NAPI_RETCODE(errCode, code, call)                                           \
     do {                                                                                  \
@@ -66,6 +67,7 @@ enum class ApiWindowType : uint32_t {
     TYPE_SYSTEM_TOAST,
     TYPE_DIVIDER,
     TYPE_GLOBAL_SEARCH,
+    TYPE_HANDWRITE,
     TYPE_END
 };
 
@@ -101,6 +103,7 @@ const std::map<WindowType, ApiWindowType> NATIVE_JS_TO_WINDOW_TYPE_MAP {
     { WindowType::WINDOW_TYPE_SYSTEM_TOAST,        ApiWindowType::TYPE_SYSTEM_TOAST      },
     { WindowType::WINDOW_TYPE_DOCK_SLICE,          ApiWindowType::TYPE_DIVIDER           },
     { WindowType::WINDOW_TYPE_GLOBAL_SEARCH,       ApiWindowType::TYPE_GLOBAL_SEARCH     },
+    { WindowType::WINDOW_TYPE_HANDWRITE,           ApiWindowType::TYPE_HANDWRITE         },
 };
 
 const std::map<ApiWindowType, WindowType> JS_TO_NATIVE_WINDOW_TYPE_MAP {
@@ -125,6 +128,7 @@ const std::map<ApiWindowType, WindowType> JS_TO_NATIVE_WINDOW_TYPE_MAP {
     { ApiWindowType::TYPE_SYSTEM_TOAST,        WindowType::WINDOW_TYPE_SYSTEM_TOAST        },
     { ApiWindowType::TYPE_DIVIDER,             WindowType::WINDOW_TYPE_DOCK_SLICE          },
     { ApiWindowType::TYPE_GLOBAL_SEARCH,       WindowType::WINDOW_TYPE_GLOBAL_SEARCH       },
+    { ApiWindowType::TYPE_HANDWRITE,           WindowType::WINDOW_TYPE_HANDWRITE           },
 };
 
 enum class ApiWindowMode : uint32_t {
@@ -153,7 +157,8 @@ const std::map<ApiWindowMode, WindowMode> JS_TO_NATIVE_WINDOW_MODE_MAP {
 };
 
 enum class ApiOrientation : uint32_t {
-    UNSPECIFIED = 0,
+    BEGIN = 0,
+    UNSPECIFIED = BEGIN,
     PORTRAIT = 1,
     LANDSCAPE = 2,
     PORTRAIT_INVERTED = 3,
@@ -165,6 +170,13 @@ enum class ApiOrientation : uint32_t {
     AUTO_ROTATION_PORTRAIT_RESTRICTED = 9,
     AUTO_ROTATION_LANDSCAPE_RESTRICTED = 10,
     LOCKED = 11,
+    AUTO_ROTATION_UNSPECIFIED = 12,
+    USER_ROTATION_PORTRAIT = 13,
+    USER_ROTATION_LANDSCAPE = 14,
+    USER_ROTATION_PORTRAIT_INVERTED = 15,
+    USER_ROTATION_LANDSCAPE_INVERTED = 16,
+    FOLLOW_DESKTOP = 17,
+    END = FOLLOW_DESKTOP,
 };
 
 const std::map<ApiOrientation, Orientation> JS_TO_NATIVE_ORIENTATION_MAP {
@@ -180,23 +192,87 @@ const std::map<ApiOrientation, Orientation> JS_TO_NATIVE_ORIENTATION_MAP {
     {ApiOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED,     Orientation::AUTO_ROTATION_PORTRAIT_RESTRICTED  },
     {ApiOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED,    Orientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED },
     {ApiOrientation::LOCKED,                                Orientation::LOCKED                             },
+    {ApiOrientation::AUTO_ROTATION_UNSPECIFIED,             Orientation::AUTO_ROTATION_UNSPECIFIED          },
+    {ApiOrientation::USER_ROTATION_PORTRAIT,                Orientation::USER_ROTATION_PORTRAIT             },
+    {ApiOrientation::USER_ROTATION_LANDSCAPE,               Orientation::USER_ROTATION_LANDSCAPE            },
+    {ApiOrientation::USER_ROTATION_PORTRAIT_INVERTED,       Orientation::USER_ROTATION_PORTRAIT_INVERTED    },
+    {ApiOrientation::USER_ROTATION_LANDSCAPE_INVERTED,      Orientation::USER_ROTATION_LANDSCAPE_INVERTED   },
+    {ApiOrientation::FOLLOW_DESKTOP,                        Orientation::FOLLOW_DESKTOP                     },
+};
+
+const std::map<Orientation, ApiOrientation> NATIVE_TO_JS_ORIENTATION_MAP {
+    {Orientation::UNSPECIFIED,                           ApiOrientation::UNSPECIFIED                        },
+    {Orientation::VERTICAL,                              ApiOrientation::PORTRAIT                           },
+    {Orientation::HORIZONTAL,                            ApiOrientation::LANDSCAPE                          },
+    {Orientation::REVERSE_VERTICAL,                      ApiOrientation::PORTRAIT_INVERTED                  },
+    {Orientation::REVERSE_HORIZONTAL,                    ApiOrientation::LANDSCAPE_INVERTED                 },
+    {Orientation::SENSOR,                                ApiOrientation::AUTO_ROTATION                      },
+    {Orientation::SENSOR_VERTICAL,                       ApiOrientation::AUTO_ROTATION_PORTRAIT             },
+    {Orientation::SENSOR_HORIZONTAL,                     ApiOrientation::AUTO_ROTATION_LANDSCAPE            },
+    {Orientation::AUTO_ROTATION_RESTRICTED,              ApiOrientation::AUTO_ROTATION_RESTRICTED           },
+    {Orientation::AUTO_ROTATION_PORTRAIT_RESTRICTED,     ApiOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED  },
+    {Orientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED,    ApiOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED },
+    {Orientation::LOCKED,                                ApiOrientation::LOCKED                             },
+    {Orientation::FOLLOW_RECENT,                         ApiOrientation::UNSPECIFIED                        },
+    {Orientation::AUTO_ROTATION_UNSPECIFIED,             ApiOrientation::AUTO_ROTATION_UNSPECIFIED          },
+    {Orientation::USER_ROTATION_PORTRAIT,                ApiOrientation::USER_ROTATION_PORTRAIT             },
+    {Orientation::USER_ROTATION_LANDSCAPE,               ApiOrientation::USER_ROTATION_LANDSCAPE            },
+    {Orientation::USER_ROTATION_PORTRAIT_INVERTED,       ApiOrientation::USER_ROTATION_PORTRAIT_INVERTED    },
+    {Orientation::USER_ROTATION_LANDSCAPE_INVERTED,      ApiOrientation::USER_ROTATION_LANDSCAPE_INVERTED   },
+    {Orientation::FOLLOW_DESKTOP,                        ApiOrientation::FOLLOW_DESKTOP                     },
+};
+
+enum class RectChangeReason : uint32_t {
+    UNDEFINED = 0,
+    MAXIMIZE,
+    RECOVER,
+    MOVE,
+    DRAG,
+    DRAG_START,
+    DRAG_END,
+};
+
+const std::map<WindowSizeChangeReason, RectChangeReason> JS_SIZE_CHANGE_REASON {
+    { WindowSizeChangeReason::UNDEFINED,             RectChangeReason::UNDEFINED  },
+    { WindowSizeChangeReason::MAXIMIZE,              RectChangeReason::MAXIMIZE   },
+    { WindowSizeChangeReason::RECOVER,               RectChangeReason::RECOVER    },
+    { WindowSizeChangeReason::ROTATION,              RectChangeReason::UNDEFINED  },
+    { WindowSizeChangeReason::DRAG,                  RectChangeReason::DRAG       },
+    { WindowSizeChangeReason::DRAG_START,            RectChangeReason::DRAG_START },
+    { WindowSizeChangeReason::DRAG_END,              RectChangeReason::DRAG_END   },
+    { WindowSizeChangeReason::RESIZE,                RectChangeReason::UNDEFINED  },
+    { WindowSizeChangeReason::MOVE,                  RectChangeReason::MOVE       },
+    { WindowSizeChangeReason::HIDE,                  RectChangeReason::UNDEFINED  },
+    { WindowSizeChangeReason::TRANSFORM,             RectChangeReason::UNDEFINED  },
+    { WindowSizeChangeReason::CUSTOM_ANIMATION_SHOW, RectChangeReason::UNDEFINED  },
+    { WindowSizeChangeReason::FULL_TO_SPLIT,         RectChangeReason::UNDEFINED  },
+    { WindowSizeChangeReason::SPLIT_TO_FULL,         RectChangeReason::UNDEFINED  },
+    { WindowSizeChangeReason::FULL_TO_FLOATING,      RectChangeReason::UNDEFINED  },
+    { WindowSizeChangeReason::FLOATING_TO_FULL,      RectChangeReason::UNDEFINED  },
+    { WindowSizeChangeReason::END,                   RectChangeReason::UNDEFINED  },
 };
 
 struct SystemBarPropertyFlag {
     bool enableFlag;
     bool backgroundColorFlag;
     bool contentColorFlag;
-    SystemBarPropertyFlag() : enableFlag(false), backgroundColorFlag(false), contentColorFlag(false) {}
+    bool enableAnimationFlag;
+    SystemBarPropertyFlag() : enableFlag(false), backgroundColorFlag(false), contentColorFlag(false),
+        enableAnimationFlag(false) {}
 };
 
     napi_value GetRectAndConvertToJsValue(napi_env env, const Rect& rect);
     napi_value CreateJsWindowPropertiesObject(napi_env env, sptr<Window>& window, const Rect& drawableRect);
+    napi_value CreateJsSystemBarPropertiesObject(napi_env env, sptr<Window>& window);
     bool SetSystemBarPropertiesFromJs(napi_env env, napi_value jsObject,
         std::map<WindowType, SystemBarProperty>& properties, std::map<WindowType, SystemBarPropertyFlag>& propertyFlags,
         sptr<Window>& window);
     bool GetSystemBarStatus(std::map<WindowType, SystemBarProperty>& systemBarProperties,
         std::map<WindowType, SystemBarPropertyFlag>& systemBarpropertyFlags,
         napi_env env, napi_callback_info info, sptr<Window>& window);
+    bool ParseAndCheckRect(napi_env env, napi_value jsObject, const Rect& windowRect, Rect& touchableRect);
+    WmErrorCode ParseTouchableAreas(napi_env env, napi_callback_info info, const Rect& windowRect,
+        std::vector<Rect>& touchableAreas);
     bool GetSpecificBarStatus(std::map<WindowType, SystemBarProperty>& systemBarProperties,
         napi_env env, napi_callback_info info, sptr<Window>& window);
     napi_value CreateJsSystemBarRegionTintArrayObject(napi_env env,
@@ -218,6 +294,7 @@ struct SystemBarPropertyFlag {
     napi_value GetWindowLimitsAndConvertToJsValue(napi_env env, const WindowLimits& windowLimits);
     napi_value ConvertTitleButtonAreaToJsValue(napi_env env, const TitleButtonRect& titleButtonRect);
     bool GetAPI7Ability(napi_env env, AppExecFwk::Ability* &ability);
+    bool GetWindowMaskFromJsValue(napi_env env, napi_value jsObject, std::vector<std::vector<uint32_t>>& windowMask);
     template<class T>
     bool ParseJsValue(napi_value jsObject, napi_env env, const std::string& name, T& data)
     {

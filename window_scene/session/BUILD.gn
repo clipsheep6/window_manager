@@ -21,6 +21,7 @@ config("session_public_config") {
     "${window_base_path}/window_scene/intention_event/framework/anr_handler/include",
     "${window_base_path}/window_scene/intention_event/utils/include",
     "${window_base_path}/interfaces/innerkits/dm",
+    "${window_base_path}/wm/include/zidl",
 
     # for window_manager_hilog
     "${window_base_path}/utils/include",
@@ -28,13 +29,6 @@ config("session_public_config") {
 
     # for WMError Code
     "${window_base_path}/interfaces/innerkits/wm",
-
-    # for mouse style
-    "${multimodalinput_path}/input/util/common/include",
-
-    #for element
-    "${accessibility_path}/common/interface/include/parcel",
-    "${accessibility_path}/interfaces/innerkits/common/include",
   ]
 }
 
@@ -43,6 +37,7 @@ ohos_shared_library("scene_session") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   sources = [
@@ -52,6 +47,7 @@ ohos_shared_library("scene_session") {
     "container/src/zidl/window_event_channel_proxy.cpp",
     "container/src/zidl/window_event_channel_stub.cpp",
     "host/src/extension_session.cpp",
+    "host/src/keyboard_session.cpp",
     "host/src/main_session.cpp",
     "host/src/move_drag_controller.cpp",
     "host/src/root_scene_session.cpp",
@@ -71,19 +67,20 @@ ohos_shared_library("scene_session") {
   deps = [
     "${window_base_path}/dm:libdm",
     "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/utils:libwmutil_base",
     "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/intention_event/service:intention_event_anr_manager",
+    "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",
+    "${window_base_path}/window_scene/screen_session_manager:screen_session_manager_client",
+    "${window_base_path}/window_scene/session:screen_session",
   ]
-
-  public_deps =
-      [ "${window_base_path}/window_scene/interfaces/innerkits:libwsutils" ]
 
   external_deps = [
     "ability_base:base",
     "ability_base:session_info",
     "ability_base:want",
     "ability_runtime:ability_start_setting",
-    "accessibility:accessibility_interface",
+    "ability_runtime:process_options",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "graphic_2d:librender_service_client",
@@ -96,7 +93,11 @@ ohos_shared_library("scene_session") {
     "ipc:ipc_single",
     "preferences:native_preferences",
   ]
-
+  public_external_deps = [
+    "accessibility:accessibility_common",
+    "accessibility:accessibility_interface",
+    "input:libmmi-util",
+  ]
   defines = []
 
   if (defined(global_parts_info) &&
@@ -138,6 +139,7 @@ ohos_shared_library("screen_session") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   sources = [
@@ -147,7 +149,10 @@ ohos_shared_library("screen_session") {
 
   public_configs = [ ":session_public_config" ]
 
-  deps = [ "${window_base_path}/utils:libwmutil" ]
+  deps = [
+    "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/utils:libwmutil_base",
+  ]
 
   external_deps = [
     "c_utils:utils",
@@ -155,6 +160,10 @@ ohos_shared_library("screen_session") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+  ]
+  public_external_deps = [
+    "accessibility:accessibility_common",
+    "input:libmmi-util",
   ]
 
   innerapi_tags = [ "platformsdk" ]

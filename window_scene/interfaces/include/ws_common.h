@@ -27,6 +27,7 @@
 
 namespace OHOS::AAFwk {
 class AbilityStartSetting;
+class ProcessOptions;
 }
 namespace OHOS::AppExecFwk {
 struct AbilityInfo;
@@ -157,6 +158,77 @@ enum class ManagerState : uint32_t {
     MANAGER_STATE_SCREEN_LOCKED = 0,
 };
 
+enum class FocusChangeReason {
+    /**
+     * default focus change reason
+     */
+    DEFAULT = 0,
+    /**
+     * focus change for move up
+     */
+    MOVE_UP,
+    /**
+     * focus change for click
+     */
+    CLICK,
+    /**
+     * focus change for foreground
+     */
+    FOREGROUND,
+    /**
+     * focus change for background
+     */
+    BACKGROUND,
+    /**
+     * focus change for split screen.5
+     */
+    SPLIT_SCREEN,
+    /**
+     * focus change for full screen
+     */
+    FULL_SCREEN,
+    /**
+     * focus change for global search
+     */
+    SCB_SESSION_REQUEST,
+    /**
+     * focus change for floating scene
+     */
+    FLOATING_SCENE,
+    /**
+     * focus change for losing focus
+     */
+    SCB_SESSION_REQUEST_UNFOCUS,
+    /**
+     * focus change for client requerst.10
+     */
+    CLIENT_REQUEST,
+    /**
+     * focus change for wind
+     */
+    WIND,
+    /**
+     * focus change for app foreground
+     */
+    APP_FOREGROUND,
+    /**
+     * focus change for app background
+     */
+    APP_BACKGROUND,
+    /**
+     * focus change for recent,Multitasking
+     */
+    RECENT,
+    /**
+     * focus change for inner app.
+     */
+    SCB_START_APP,
+    /**
+     * focus change max.
+     */
+    MAX,
+};
+
 struct SessionInfo {
     std::string bundleName_ = "";
     std::string moduleName_ = "";
@@ -172,6 +244,7 @@ struct SessionInfo {
     mutable std::shared_ptr<AAFwk::Want> want; // want for ability start
     std::shared_ptr<AAFwk::Want> closeAbilityWant;
     std::shared_ptr<AAFwk::AbilityStartSetting> startSetting = nullptr;
+    std::shared_ptr<AAFwk::ProcessOptions> processOptions = nullptr;
     mutable std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo = nullptr;
     int32_t resultCode = -1;
     int32_t requestCode;
@@ -179,6 +252,8 @@ struct SessionInfo {
     std::string errorReason;
     int32_t persistentId_ = INVALID_SESSION_ID;
     int32_t callerPersistentId_ = INVALID_SESSION_ID;
+    std::string callerBundleName_ = "";
+    std::string callerAbilityName_ = "";
     uint32_t callState_ = 0;
     uint32_t callingTokenId_ = 0;
     bool reuse = false;
@@ -197,6 +272,11 @@ struct SessionInfo {
     bool isRotable_ = false;
     bool isSystemInput_ = false;
     bool isAsyncModalBinding_ = false;
+    bool isSetPointerAreas_ = false;
+    bool isCastSession_ = false;
+    uint32_t windowInputType_ = 0;
+    std::string continueSessionId_ = "";
+    bool isCalledRightlyByCallerId_ = false;
 };
 
 enum class SessionFlag : uint32_t {
@@ -225,6 +305,9 @@ enum class SizeChangeReason : uint32_t {
     SPLIT_TO_FULL,
     FULL_TO_FLOATING,
     FLOATING_TO_FULL,
+    PIP_START,
+    PIP_SHOW,
+    PIP_RATIO_CHANGE,
     END,
 };
 
@@ -368,12 +451,25 @@ struct WindowAnimationConfig {
     float opacity_ = 0;
 };
 
+struct StartingWindowInfo {
+    int32_t startingWindowBackgroundId_;
+    int32_t startingWindowIconId_;
+    uint32_t startingWindowBackgroundColor_;
+    std::string startingWindowIconPath_;
+};
+
 struct StartingWindowAnimationConfig {
     bool enabled_ = true;
     int duration_ = 200;
     std::string curve_ = "linear";
     float opacityStart_ = 1;
     float opacityEnd_ = 0;
+};
+
+struct SystemUIStatusBarConfig {
+    bool showInLandscapeMode_ = false;
+    std::string immersiveStatusBarBgColor_ = "#4c000000";
+    std::string immersiveStatusBarContentColor_ = "#ffffff";
 };
 
 struct AppWindowSceneConfig {
@@ -385,6 +481,17 @@ struct AppWindowSceneConfig {
     KeyboardSceneAnimationConfig keyboardAnimationOut_;
     WindowAnimationConfig windowAnimation_;
     StartingWindowAnimationConfig startingWindowAnimationConfig_;
+    SystemUIStatusBarConfig systemUIStatusBarConfig_;
+};
+
+struct DeviceScreenConfig {
+    std::string rotationPolicy_ = "11"; // default use phone policy
+    bool isRightPowerButton_ = true;
+};
+
+struct SessionEventParam {
+    int32_t pointerX_ = 0;
+    int32_t pointerY_ = 0;
 };
 
 /**

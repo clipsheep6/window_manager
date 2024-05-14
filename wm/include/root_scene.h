@@ -18,6 +18,7 @@
 
 #include <mutex>
 
+#include "vsync_station.h"
 #include "window.h"
 typedef struct napi_env__* napi_env;
 typedef struct napi_value__* napi_value;
@@ -45,15 +46,19 @@ public:
 
     void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback) override;
     int64_t GetVSyncPeriod() override;
-    void FlushFrameRate(uint32_t rate) override;
+    void FlushFrameRate(uint32_t rate, bool isAnimatorStopped) override;
 
     void OnBundleUpdated(const std::string& bundleName);
+    static void SetOnConfigurationUpdatedCallback(
+        const std::function<void(const std::shared_ptr<AppExecFwk::Configuration>&)>& callback);
     void SetFrameLayoutFinishCallback(std::function<void()>&& callback);
 
     void SetDisplayDensity(float density)
     {
         density_ = density;
     }
+
+    void SetDisplayOrientation(int32_t orientation);
 
     float GetDisplayDensity()
     {
@@ -86,6 +91,7 @@ public:
     }
 
     static sptr<RootScene> staticRootScene_;
+
 private:
     void RegisterInputEventListener();
 
@@ -94,9 +100,13 @@ private:
     std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
     sptr<AppExecFwk::LauncherService> launcherService_;
     float density_ = 1.0f;
+    int32_t orientation_ = 0;
     WindowType type_ = WindowType::WINDOW_TYPE_SCENE_BOARD;
     std::string name_ = "EntryView";
+
+    static std::function<void(const std::shared_ptr<AppExecFwk::Configuration>&)> configurationUpdatedCallback_;
     std::function<void()> frameLayoutFinishCb_ = nullptr;
+    std::shared_ptr<VsyncStation> vsyncStation_ = nullptr;
 };
 } // namespace Rosen
 } // namespace OHOS

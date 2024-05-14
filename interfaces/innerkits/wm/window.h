@@ -62,6 +62,7 @@ namespace Rosen {
 using NotifyNativeWinDestroyFunc = std::function<void(std::string windowName)>;
 using NotifyTransferComponentDataFunc = std::function<void(const AAFwk::WantParams& wantParams)>;
 using NotifyTransferComponentDataForResultFunc = std::function<AAFwk::WantParams(const AAFwk::WantParams& wantParams)>;
+using KeyEventFilterFunc = std::function<bool(MMI::KeyEvent&)>;
 class RSSurfaceNode;
 class RSTransaction;
 class ISession;
@@ -387,6 +388,34 @@ public:
 using IWindowVisibilityListenerSptr = sptr<IWindowVisibilityChangedListener>;
 
 /**
+ * @class IWindowNoInteractionListenerSptr
+ *
+ * @brief Listener to observe no interaction event for a long time of window.
+*/
+class IWindowNoInteractionListener : virtual public RefBase {
+public:
+    /**
+     * @brief Observe event when no interaction for a long time.
+     */
+    virtual void OnWindowNoInteractionCallback() {};
+
+    /**
+     * @brief Set timeout of the listener.
+     *
+     * @param timeout.
+     */
+    virtual void SetTimeout(int64_t timeout) {};
+
+    /**
+     * @brief get timeout of the listener.
+     *
+     * @return timeout.
+     */
+    virtual int64_t GetTimeout() const { return 0;};
+};
+using IWindowNoInteractionListenerSptr = sptr<IWindowNoInteractionListener>;
+
+/**
  * @class IWindowTitleButtonRectChangedListener
  *
  * @brief Listener to observe event when window size or the height of title bar changed.
@@ -398,6 +427,37 @@ public:
      * @param titleButtonRect An area of title buttons relative to the upper right corner of the window.
      */
     virtual void OnWindowTitleButtonRectChanged(const TitleButtonRect& titleButtonRect) {}
+};
+
+/**
+ * @class IWindowRectChangeListener
+ *
+ * @brief IWindowRectChangeListener is used to observe the window rect and its changing reason when window changed.
+ */
+class IWindowRectChangeListener : virtual public RefBase {
+public:
+    /**
+     * @brief Notify caller when window rect changed.
+     *
+     * @param Rect Rect of the current window.
+     * @param reason Reason for window size change.
+     */
+    virtual void OnRectChange(Rect rect, WindowSizeChangeReason reason) {}
+};
+
+/**
+ * @class IKeyboardPanelInfoChangeListener
+ *
+ * @brief IKeyboardPanelInfoChangeListener is used to observe the keyboard panel info.
+ */
+class IKeyboardPanelInfoChangeListener : virtual public RefBase {
+public:
+    /**
+     * @brief Notify caller when keyboard info changed.
+     *
+     * @param KeyboardPanelInfo keyboardPanelInfo of the keyboard panel;
+     */
+    virtual void OnKeyboardPanelInfoChanged(const KeyboardPanelInfo& keyboardPanelInfo) {}
 };
 
 static WMError DefaultCreateErrCode = WMError::WM_OK;
@@ -422,10 +482,24 @@ public:
      * @param context ability context
      * @param iSession session token of window session
      * @param errCode error code of create window
+     * @param identityToken identity token of sceneSession
      * @return sptr<Window> If create window success, return window instance; Otherwise, return nullptr
      */
     static sptr<Window> Create(sptr<WindowOption>& option, const std::shared_ptr<AbilityRuntime::Context>& context,
-        const sptr<IRemoteObject>& iSession, WMError& errCode = DefaultCreateErrCode);
+        const sptr<IRemoteObject>& iSession, WMError& errCode = DefaultCreateErrCode,
+        const std::string& identityToken = "");
+
+    /**
+     * @brief create pip window with session
+     *
+     * @param option window propertion
+     * @param pipTemplateInfo pipTemplateInfo
+     * @param context ability context
+     * @param errCode error code of create pip window
+     * @return sptr<Window> If create pip window success, return window instance; Otherwise, return nullptr
+     */
+    static sptr<Window> CreatePiP(sptr<WindowOption>& option, const PiPTemplateInfo& pipTemplateInfo,
+        const std::shared_ptr<OHOS::AbilityRuntime::Context>& context, WMError& errCode = DefaultCreateErrCode);
 
     /**
      * @brief find window by windowName
@@ -448,6 +522,13 @@ public:
      * @return sptr<Window>
      */
     static sptr<Window> GetTopWindowWithId(uint32_t mainWinId);
+    /**
+     * @brief Get the main window by context.
+     *
+     * @param context Indicates the context on which the window depends
+     * @return sptr<Window>
+     */
+    static sptr<Window> GetMainWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context = nullptr);
     /**
      * @brief Get the all sub windows by parent
      *
@@ -593,6 +674,19 @@ public:
      * @return WMError
      */
     virtual WMError SetWindowMode(WindowMode mode) { return WMError::WM_OK; }
+    /**
+     * @brief Set whether the window is topmost
+     *
+     * @param topmost whether window is topmost
+     * @return WMError
+     */
+    virtual WMError SetTopmost(bool topmost) { return WMError::WM_OK; }
+    /**
+     * @brief Get whether window is topmost
+     *
+     * @return True means window is topmost
+     */
+    virtual bool IsTopmost() const { return false; }
     /**
      * @brief Set alpha of window.
      *
@@ -915,6 +1009,12 @@ public:
      */
     virtual void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent) {}
     /**
+     * @brief Notify KeyEvent to arkui.
+     *
+     * @param inputEvent Keyboard input event
+     */
+    virtual bool PreNotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) {return false;}
+    /**
      * @brief Consume PointerEvent from MMI.
      *
      * @param inputEvent Pointer input event
@@ -937,7 +1037,7 @@ public:
      *
      * @param rate frame rate.
      */
-    virtual void FlushFrameRate(uint32_t rate) {}
+    virtual void FlushFrameRate(uint32_t rate, bool isAnimatorStopped) {}
     /**
      * @brief Update Configuration.
      *
@@ -1193,6 +1293,14 @@ public:
      */
     virtual Ace::UIContent* GetUIContent() const { return nullptr; }
     /**
+     * @brief Get ui content object.
+     *
+     * @param winId window id.
+     *
+     * @return UIContent object of ACE.
+     */
+    virtual Ace::UIContent* GetUIContentWithId(uint32_t winId) const { return nullptr; }
+    /**
      * @brief Window handle new want.
      *
      * @param want Want object of AAFwk.
@@ -1273,6 +1381,15 @@ public:
      * @return WMError
      */
     virtual WMError Maximize() { return WMError::WM_OK; }
+
+    /**
+     * @brief maximize window with layoutOption.
+     *
+     * @param option UI layout param.
+     * @return WM_OK means maximize window ok, others means failed.
+     */
+    virtual WMError Maximize(MaximizeLayoutOption option) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
+
     /**
      * @brief maximize the main window according to MaximizeMode. called by ACE when maximize button is clicked.
      *
@@ -1487,15 +1604,7 @@ public:
      * @param height width of pip window.
      * @param reason reason of update.
      */
-    virtual void UpdatePiPRect(const uint32_t width, const uint32_t height, PiPRectUpdateReason reason) {}
-
-    /**
-     * @brief Recovery pip main window.
-     *
-     * @param Rect of window.
-     * @return Errorcode of window.
-     */
-    virtual WMError RecoveryPullPiPMainWindow(const Rect& rect) { return WMError::WM_OK; }
+    virtual void UpdatePiPRect(const Rect& rect, WindowSizeChangeReason reason) {}
 
     /**
      * @brief When get focused, keep the keyboard created by other windows, support system window and app subwindow.
@@ -1539,6 +1648,28 @@ public:
      * @return WM_OK means unregister success, others means unregister failed.
      */
     virtual WMError UnregisterWindowVisibilityChangeListener(const IWindowVisibilityListenerSptr& listener)
+    {
+        return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+    }
+
+    /**
+     * @brief Register listener, if timeout(seconds) pass with no interaction, the listener will be executed.
+     *
+     * @param listener IWindowNoInteractionListenerSptr.
+     * @return WM_OK means unregister success, others means unregister failed.
+     */
+    virtual WMError RegisterWindowNoInteractionListener(const IWindowNoInteractionListenerSptr& listener)
+    {
+        return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+    }
+
+    /**
+     * @brief Unregister window no interaction listener.
+     *
+     * @param listener IWindowNoInteractionListenerSptr.
+     * @return WM_OK means unregister success, others means unregister failed.
+     */
+    virtual WMError UnregisterWindowNoInteractionListener(const IWindowNoInteractionListenerSptr& listener)
     {
         return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
     }
@@ -1593,6 +1724,19 @@ public:
     virtual WMError SetDecorVisible(bool isVisible) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
 
     /**
+     * @brief Set whether to display the maximize, minimize, split buttons of main window.
+     *
+     * @param isMaximizeVisible Display maximize button if true, or hide maximize button if false.
+     * @param isMinimizeVisible Display minimize button if true, or hide minimize button if false.
+     * @param isSplitVisible Display split button if true, or hide split button if false.
+     * @return Errorcode of window.
+     */
+    virtual WMError SetTitleButtonVisible(bool isMaximizeVisible, bool isMinimizeVisible, bool isSplitVisible)
+    {
+        return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+    }
+
+    /**
      * @brief Set decor height of window.
      *
      * @param decorHeight Decor height of window
@@ -1643,6 +1787,21 @@ public:
     }
 
     /**
+     * @brief Set whether to use default density.
+     *
+     * @param enabled bool.
+     * @return WM_OK means set success, others means failed.
+     */
+    virtual WMError SetDefaultDensityEnabled(bool enabled) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
+
+    /**
+     * @brief Get whether to use default density.
+     *
+     * @return True means use default density, window's layout not follow to system change, false means the opposite.
+     */
+    virtual bool GetDefaultDensityEnabled() { return false; }
+
+    /**
      * @brief Hide None Secure Windows.
      *
      * @param shouldHide bool.
@@ -1654,12 +1813,182 @@ public:
     }
 
     /**
+     * @brief Set water mark flag.
+     *
+     * @param isEnable bool.
+     * @return WMError
+     */
+    virtual WMError SetWaterMarkFlag(bool isEnable)
+    {
+        return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+    }
+
+    /**
+     * @brief Set the modality of window.
+     *
+     * @param isModal bool.
+     * @return WMError
+     */
+    virtual WMError SetSubWindowModal(bool isModal)
+    {
+        return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+    }
+
+    /**
      * @brief recovery the main window by function overloading. It is called by JsWindow.
      *
      * @param reason reason of update.
      * @return WMError
      */
     virtual WMError Recover(uint32_t reason) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
+
+    /**
+     * @brief Make multi-window become landscape or not.
+     *
+     * @param isLandscapeMultiWindow means whether multi-window's scale is landscape.
+     * @return WMError WM_OK means set success, others means failed.
+     */
+    virtual WMError SetLandscapeMultiWindow(bool isLandscapeMultiWindow)
+    {
+        return WMError::WM_OK;
+    }
+
+    /**
+     * @brief Register window rect change listener.
+     *
+     * @param listener IWindowRectChangeListener.
+     * @return WM_OK means register success, others means register failed.
+     */
+    virtual WMError RegisterWindowRectChangeListener(const sptr<IWindowRectChangeListener>& listener)
+    {
+        return WMError::WM_OK;
+    }
+
+    /**
+     * @brief Unregister window rect change listener.
+     *
+     * @param listener IWindowRectChangeListener.
+     * @return WM_OK means unregister success, others means unregister failed.
+     */
+    virtual WMError UnregisterWindowRectChangeListener(const sptr<IWindowRectChangeListener>& listener)
+    {
+        return WMError::WM_OK;
+    }
+
+    /**
+     * @brief Get the rect of host window.
+     *
+     * @param hostWindowId window Id of the host window.
+     * @return Rect of window.
+     */
+    virtual Rect GetHostWindowRect(int32_t hostWindowId) { return {}; }
+    
+    /**
+     * @brief Set Shaped Window Mask.
+     *
+     * @param windowMask Mask of the shaped window.
+     * @return WM_OK means set success, others means failed.
+     */
+    virtual WMError SetWindowMask(const std::vector<std::vector<uint32_t>>& windowMask)
+    {
+        return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+    }
+
+    /**
+     * @brief Register keyboard panel info change listener.
+     *
+     * @param listener IKeyboardPanelInfoChangeListener.
+     * @return WM_OK means register success, others means register failed.
+     */
+    virtual WMError RegisterKeyboardPanelInfoChangeListener(const sptr<IKeyboardPanelInfoChangeListener>& listener)
+    {
+        return WMError::WM_OK;
+    }
+
+    /**
+     * @brief Unregister keyboard panel info change listener.
+     *
+     * @param listener IKeyboardPanelInfoChangeListener.
+     * @return WM_OK means unregister success, others means unregister failed.
+     */
+    virtual WMError UnregisterKeyboardPanelInfoChangeListener(const sptr<IKeyboardPanelInfoChangeListener>& listener)
+    {
+        return WMError::WM_OK;
+    }
+
+    /**
+     * @brief Get window by id
+     *
+     * @param windId window id
+     * @return sptr<Window>
+     */
+    static sptr<Window> GetWindowWithId(uint32_t windId);
+
+    /**
+     * @brief register keyEvent filter.
+     *
+     * @param KeyEventFilterFunc callback func when window recieve keyEvent
+     * @return WMError
+     */
+    virtual WMError SetKeyEventFilter(KeyEventFilterFunc KeyEventFilterFunc)
+    {
+        return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+    }
+
+    /**
+     * @brief clear keyEvent filter.
+     *
+     * @return WMError
+    */
+    virtual WMError ClearKeyEventFilter() { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;}
+
+    /**
+     * @brief get callingWindow windowStatus.
+     * @param windowStatus
+     * @return WM_OK means set success, others means set Failed.
+     */
+    virtual WMError GetCallingWindowWindowStatus(WindowStatus& windowStatus) const
+    {
+        return WMError::WM_OK;
+    }
+
+    /**
+     * @brief get callingWindow windowStatus
+     * @param rect.
+     * @return WM_OK means set success, others means set failed
+     */
+    virtual WMError GetCallingWindowRect(Rect& rect) const
+    {
+        return WMError::WM_OK;
+    }
+
+    /**
+     * @brief Set gray scale of window
+     * @param grayScale gray scale of window.
+     * @return WM_OK means set success, others means set failed.
+     */
+    virtual WMError SetGrayScale(float grayScale) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
+
+    /**
+     * @brief adjust keyboard layout
+     * @param params
+     * @return WM_OK means set success, others means set failed
+     */
+    virtual WMError AdjustKeyboardLayout(const KeyboardLayoutParams& params) { return WMError::WM_OK; }
+
+    /**
+     * @brief Set whether to enable immersive mode.
+     * @param enable the value true means to enable immersive mode, and false means the opposite.
+     * @return WM_OK means set success, others means set failed.
+     */
+    virtual WMError SetImmersiveModeEnabledState(bool enable) { return WMError::WM_OK; }
+
+    /**
+     * @brief Get whether the immersive mode is enabled or not.
+     *
+     * @return true means the immersive mode is enabled, and false means the opposite.
+     */
+    virtual bool GetImmersiveModeEnabledState() const { return true; }
 };
 }
 }

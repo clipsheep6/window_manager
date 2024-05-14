@@ -25,7 +25,6 @@
 #include "singleton_delegator.h"
 #include "window_manager_hilog.h"
 
-
 namespace OHOS::Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DMS_DM, "ScreenManager"};
@@ -35,6 +34,7 @@ class ScreenManager::Impl : public RefBase {
 public:
     Impl() = default;
     ~Impl();
+    
     static inline SingletonDelegator<ScreenManager> delegator;
     ScreenId CreateVirtualScreen(VirtualScreenOption option);
     sptr<Screen> GetScreen(ScreenId screenId);
@@ -56,6 +56,7 @@ private:
     void NotifyScreenChange(const sptr<ScreenInfo>& screenInfo);
     void NotifyScreenChange(const std::vector<sptr<ScreenInfo>>& screenInfos);
     bool UpdateScreenInfoLocked(sptr<ScreenInfo>);
+    std::string GetScreenInfoSrting(sptr<ScreenInfo> screenInfo);
 
     bool isAllListenersRemoved() const;
 
@@ -159,7 +160,7 @@ private:
     {
         // check for invalid scene
         if (pImpl_->virtualScreenGroupListeners_.size() <= 0) {
-            WLOGFW("no virtual screnn group listeners");
+            WLOGFW("no virtual screen group listeners");
             return;
         }
         if (screenInfo->GetType() != ScreenType::VIRTUAL) {
@@ -429,7 +430,7 @@ DMError ScreenManager::Impl::UnregisterDisplayManagerAgent()
 
 DMError ScreenManager::MakeExpand(const std::vector<ExpandOption>& options, ScreenId& screenGroupId)
 {
-    WLOGFI("Make expand");
+    WLOGFD("Make expand");
     if (options.empty()) {
         return DMError::DM_ERROR_INVALID_PARAM;
     }
@@ -448,16 +449,16 @@ DMError ScreenManager::MakeExpand(const std::vector<ExpandOption>& options, Scre
     }
     DMError ret = SingletonContainer::Get<ScreenManagerAdapter>().MakeExpand(screenIds, startPoints, screenGroupId);
     if (screenGroupId == SCREEN_ID_INVALID) {
-        WLOGFI("Make expand failed");
+        WLOGFE("Make expand failed");
     }
     return ret;
 }
 
 DMError ScreenManager::MakeUniqueScreen(const std::vector<ScreenId>& screenIds)
 {
-    WLOGFI("start Make UniqueScreen");
+    WLOGFD("start Make UniqueScreen");
     if (screenIds.empty()) {
-        WLOGFI("screenIds is null");
+        WLOGFE("screenIds is null");
         return DMError::DM_ERROR_INVALID_PARAM;
     }
     if (screenIds.size() > MAX_SCREEN_SIZE) {
@@ -478,14 +479,14 @@ DMError ScreenManager::MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> m
     DMError ret = SingletonContainer::Get<ScreenManagerAdapter>().MakeMirror(mainScreenId, mirrorScreenId,
                                                                              screenGroupId);
     if (screenGroupId == SCREEN_ID_INVALID) {
-        WLOGFI("create mirror failed");
+        WLOGFE("create mirror failed");
     }
     return ret;
 }
 
 DMError ScreenManager::StopExpand(const std::vector<ScreenId>& expandScreenIds)
 {
-    WLOGFI("Stop expand");
+    WLOGFD("Stop expand");
     if (expandScreenIds.empty()) {
         return DMError::DM_OK;
     }
@@ -494,7 +495,7 @@ DMError ScreenManager::StopExpand(const std::vector<ScreenId>& expandScreenIds)
 
 DMError ScreenManager::StopMirror(const std::vector<ScreenId>& mirrorScreenIds)
 {
-    WLOGFI("Stop mirror");
+    WLOGFD("Stop mirror");
     if (mirrorScreenIds.empty()) {
         return DMError::DM_OK;
     }
@@ -551,16 +552,29 @@ DMError ScreenManager::ResizeVirtualScreen(ScreenId screenId, uint32_t width, ui
     return SingletonContainer::Get<ScreenManagerAdapter>().ResizeVirtualScreen(screenId, width, height);
 }
 
-DMError ScreenManager::SetVirtualScreenRefreshRate(ScreenId screenId, uint32_t refreshRate)
-{
-    WLOGFI("SetVirtualScreenRefreshRate, screenId: %{public}" PRIu64", refreshRate: %{public}u.",
-        screenId, refreshRate);
-    return DMError::DM_OK;
-}
-
 DMError ScreenManager::SetVirtualMirrorScreenCanvasRotation(ScreenId screenId, bool rotation)
 {
     return SingletonContainer::Get<ScreenManagerAdapter>().SetVirtualMirrorScreenCanvasRotation(screenId, rotation);
+}
+
+DMError ScreenManager::SetVirtualMirrorScreenScaleMode(ScreenId screenId, ScreenScaleMode scaleMode)
+{
+    return SingletonContainer::Get<ScreenManagerAdapter>().SetVirtualMirrorScreenScaleMode(screenId, scaleMode);
+}
+
+VirtualScreenFlag ScreenManager::GetVirtualScreenFlag(ScreenId screenId)
+{
+    return SingletonContainer::Get<ScreenManagerAdapter>().GetVirtualScreenFlag(screenId);
+}
+
+DMError ScreenManager::SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag screenFlag)
+{
+    return SingletonContainer::Get<ScreenManagerAdapter>().SetVirtualScreenFlag(screenId, screenFlag);
+}
+
+DMError ScreenManager::SetVirtualScreenRefreshRate(ScreenId screenId, uint32_t refreshInterval)
+{
+    return SingletonContainer::Get<ScreenManagerAdapter>().SetVirtualScreenRefreshRate(screenId, refreshInterval);
 }
 
 bool ScreenManager::SetSpecifiedScreenPower(ScreenId screenId, ScreenPowerState state, PowerStateChangeReason reason)
@@ -624,20 +638,37 @@ bool ScreenManager::Impl::UpdateScreenInfoLocked(sptr<ScreenInfo> screenInfo)
         return false;
     }
     ScreenId screenId = screenInfo->GetScreenId();
-    WLOGFI("screenId:%{public}" PRIu64".", screenId);
+    WLOGFD("screenId:%{public}" PRIu64".", screenId);
     if (screenId == SCREEN_ID_INVALID) {
         WLOGFE("displayId is invalid.");
         return false;
     }
     auto iter = screenMap_.find(screenId);
     if (iter != screenMap_.end() && iter->second != nullptr) {
-        WLOGFI("get screen in screen map");
+        WLOGFD("Screen Info Updated: %{public}s",
+            GetScreenInfoSrting(screenInfo).c_str());
         iter->second->UpdateScreenInfo(screenInfo);
         return true;
     }
     sptr<Screen> screen = new Screen(screenInfo);
     screenMap_[screenId] = screen;
     return true;
+}
+
+std::string ScreenManager::Impl::GetScreenInfoSrting(sptr<ScreenInfo> screenInfo)
+{
+    if (screenInfo == nullptr) {
+        WLOGFE("screenInfo nullptr.");
+        return "";
+    }
+    std::ostringstream oss;
+    oss <<  "Screen ID: " << screenInfo->GetScreenId() << ", ";
+    oss <<  "Name: " << screenInfo->GetName() << ", ";
+    oss <<  "VirtualWidth: " << screenInfo->GetVirtualWidth() << ", ";
+    oss <<  "VirtualHeight: " << screenInfo->GetVirtualHeight() << ", ";
+    oss <<  "VirtualPixelRatio: " << screenInfo->GetVirtualPixelRatio() << ", ";
+    oss <<  "Rotation: " << static_cast<int32_t>(screenInfo->GetRotation());
+    return oss.str();
 }
 
 bool ScreenManager::Impl::isAllListenersRemoved() const
@@ -647,7 +678,7 @@ bool ScreenManager::Impl::isAllListenersRemoved() const
 
 void ScreenManager::Impl::OnRemoteDied()
 {
-    WLOGFI("dms is died");
+    WLOGFD("dms is died");
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     screenManagerListener_ = nullptr;
     virtualScreenAgent_ = nullptr;

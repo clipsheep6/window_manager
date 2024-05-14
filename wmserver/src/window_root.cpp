@@ -194,6 +194,18 @@ void WindowRoot::GetBackgroundNodesByScreenId(ScreenId screenGroupId, std::vecto
     }
 }
 
+void WindowRoot::GetForegroundNodes(std::vector<sptr<WindowNode>>& windowNodes)
+{
+    for (const auto& it : windowNodeMap_) {
+        if (it.second == nullptr) {
+            continue;
+        }
+        if (it.second->currentVisibility_) {
+            windowNodes.push_back(it.second);
+        }
+    }
+}
+
 sptr<WindowNode> WindowRoot::FindWindowNodeWithToken(const sptr<IRemoteObject>& token) const
 {
     if (token == nullptr) {
@@ -385,10 +397,12 @@ std::vector<std::pair<uint64_t, WindowVisibilityState>> WindowRoot::GetWindowVis
             visibilityChangeInfo.emplace_back(lastVisibleData_[i].first, WINDOW_VISIBILITY_STATE_TOTALLY_OCCUSION);
             i++;
         } else if (lastVisibleData_[i].first > currVisibleData[j].first) {
-            visibilityChangeInfo.emplace_back(currVisibleData[j].first, currVisibleData[i].second);
+            visibilityChangeInfo.emplace_back(currVisibleData[j].first, currVisibleData[j].second);
             j++;
         } else {
-            visibilityChangeInfo.emplace_back(currVisibleData[j].first, currVisibleData[i].second);
+            if (lastVisibleData_[i].second != currVisibleData[j].second) {
+                visibilityChangeInfo.emplace_back(currVisibleData[j].first, currVisibleData[j].second);
+            }
             i++;
             j++;
         }
@@ -904,8 +918,20 @@ void WindowRoot::SetBrightness(uint32_t windowId, float brightness)
         WLOGW("Only app window support set brightness");
         return;
     }
-    if (windowId == container->GetActiveWindow()) {
-        if (container->GetDisplayBrightness() != brightness) {
+    if (windowId != container->GetActiveWindow()) {
+        WLOGE("Window is not active with windowId:%{public}d", windowId);
+        return;
+    }
+    if (std::fabs(brightness - UNDEFINED_BRIGHTNESS) <= std::numeric_limits<float>::min()) {
+        if (std::fabs(container->GetDisplayBrightness() - brightness) > std::numeric_limits<float>::min()) {
+            WLOGFI("value: %{public}f to restore brightness", brightness);
+#ifdef POWERMGR_DISPLAY_MANAGER_ENABLE
+            DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().RestoreBrightness();
+#endif
+            container->SetDisplayBrightness(brightness);
+        }
+    } else {
+        if (std::fabs(container->GetDisplayBrightness() - brightness) > std::numeric_limits<float>::min()) {
             WLOGFI("value: %{public}u", container->ToOverrideBrightness(brightness));
 #ifdef POWERMGR_DISPLAY_MANAGER_ENABLE
             DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().OverrideBrightness(
@@ -913,8 +939,8 @@ void WindowRoot::SetBrightness(uint32_t windowId, float brightness)
 #endif
             container->SetDisplayBrightness(brightness);
         }
-        container->SetBrightnessWindow(windowId);
     }
+    container->SetBrightnessWindow(windowId);
 }
 
 void WindowRoot::HandleKeepScreenOn(uint32_t windowId, bool requireLock)
@@ -1702,7 +1728,7 @@ void WindowRoot::SetSplitRatios(const std::vector<float>& splitRatioNumbers)
 
 void WindowRoot::SetExitSplitRatios(const std::vector<float>& exitSplitRatios)
 {
-    if (exitSplitRatios.size() != 2) {
+    if (exitSplitRatios.size() != 2) { // 2 is size of vector.
         return;
     }
     if (exitSplitRatios[0] > 0 && exitSplitRatios[0] < DEFAULT_SPLIT_RATIO) {

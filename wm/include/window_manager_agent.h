@@ -31,11 +31,14 @@ public:
     void NotifyAccessibilityWindowInfo(const std::vector<sptr<AccessibilityWindowInfo>>& infos,
         WindowUpdateType type) override;
     void UpdateWindowVisibilityInfo(const std::vector<sptr<WindowVisibilityInfo>>& visibilityInfos) override;
+    void UpdateWindowModeTypeInfo(WindowModeType type) override;
     void UpdateWindowDrawingContentInfo(
         const std::vector<sptr<WindowDrawingContentInfo>>& windowDrawingContentInfos) override;
     void UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing) override;
     void NotifyWaterMarkFlagChangedResult(bool showWaterMark) override;
+    void UpdateVisibleWindowNum(const std::vector<VisibleWindowNumInfo>& visibleWindowNumInfo) override;
     void NotifyGestureNavigationEnabledResult(bool enable) override;
+    void UpdateCameraWindowStatus(uint32_t accessTokenId, bool isShowing) override {};
 };
 } // namespace Rosen
 } // namespace OHOS

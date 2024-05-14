@@ -21,6 +21,8 @@
 #include "window_manager_hilog.h"
 
 #include "js_scene_utils.h"
+#include "singleton_container.h"
+#include "dms_reporter.h"
 
 namespace OHOS::Rosen {
 using namespace AbilityRuntime;
@@ -211,26 +213,28 @@ void JsRootSceneSession::PendingSessionActivationInner(std::shared_ptr<SessionIn
 {
     auto iter = jsCbMap_.find(PENDING_SCENE_CB);
     if (iter == jsCbMap_.end()) {
+        WLOGFE("[NAPI]PendingSessionActivationInner find callback failed.");
         return;
     }
     auto jsCallBack = iter->second;
     napi_env& env_ref = env_;
     auto task = [sessionInfo, jsCallBack, env_ref]() {
         if (!jsCallBack) {
-            WLOGFE("[NAPI]jsCallBack is nullptr");
+            TLOGE(WmsLogTag::WMS_LIFE, "[NAPI]jsCallBack is nullptr");
             return;
         }
         if (sessionInfo == nullptr) {
-            WLOGFE("[NAPI]sessionInfo is nullptr");
+            TLOGE(WmsLogTag::WMS_LIFE, "[NAPI]sessionInfo is nullptr");
             return;
         }
         napi_value jsSessionInfo = CreateJsSessionInfo(env_ref, *sessionInfo);
         if (jsSessionInfo == nullptr) {
-            WLOGFE("[NAPI]this target session info is nullptr");
+            TLOGE(WmsLogTag::WMS_LIFE, "[NAPI]jsSessionInfo is nullptr");
             return;
         }
         napi_value argv[] = {jsSessionInfo};
-        WLOGFI("[NAPI]PendingSessionActivationInner task success.");
+        TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]PendingSessionActivationInner task success, id: %{public}d",
+            sessionInfo->persistentId_);
         napi_call_function(env_ref, NapiGetUndefined(env_ref),
             jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
@@ -239,39 +243,71 @@ void JsRootSceneSession::PendingSessionActivationInner(std::shared_ptr<SessionIn
 
 void JsRootSceneSession::PendingSessionActivation(SessionInfo& info)
 {
-    WLOGI("[NAPI]pending session activation: bundleName %{public}s, moduleName %{public}s, abilityName %{public}s, \
-        appIndex %{public}d, reuse %{public}d", info.bundleName_.c_str(), info.moduleName_.c_str(),
+    TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]bundleName %{public}s, moduleName %{public}s, abilityName %{public}s, "
+        "appIndex %{public}d, reuse %{public}d", info.bundleName_.c_str(), info.moduleName_.c_str(),
         info.abilityName_.c_str(), info.appIndex_, info.reuse);
     sptr<SceneSession> sceneSession = GenSceneSession(info);
     if (sceneSession == nullptr) {
-        WLOGFE("RequestSceneSession return nullptr");
+        TLOGE(WmsLogTag::WMS_LIFE, "sceneSession is nullptr");
         return;
     }
-    
+
     if (info.want != nullptr) {
         bool isNeedBackToOther = info.want->GetBoolParam(AAFwk::Want::PARAM_BACK_TO_OTHER_MISSION_STACK, false);
-        WLOGFI("[NAPI]isNeedBackToOther: %{public}d", isNeedBackToOther);
+        TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]session: %{public}d isNeedBackToOther: %{public}d",
+            sceneSession->GetPersistentId(), isNeedBackToOther);
         if (isNeedBackToOther) {
-            int32_t realCallerSessionId = SceneSessionManager::GetInstance().GetFocusedSession();
+            int32_t realCallerSessionId = SceneSessionManager::GetInstance().GetFocusedSessionId();
             if (realCallerSessionId == sceneSession->GetPersistentId()) {
-                WLOGFI("[NAPI]caller is self, need back to self caller.");
+                TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]caller is self, switch to self caller.");
                 auto scnSession = SceneSessionManager::GetInstance().GetSceneSession(realCallerSessionId);
                 if (scnSession != nullptr) {
                     realCallerSessionId = scnSession->GetSessionInfo().callerPersistentId_;
                 }
             }
-            WLOGFI("[NAPI]need to back to other session: %{public}d.", realCallerSessionId);
+            TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]caller session: %{public}d.", realCallerSessionId);
             info.callerPersistentId_ = realCallerSessionId;
+            VerifyCallerToken(info);
         } else {
             info.callerPersistentId_ = 0;
         }
+
+        auto focusedOnShow = info.want->GetBoolParam(AAFwk::Want::PARAM_RESV_WINDOW_FOCUSED, true);
+        sceneSession->SetFocusedOnShow(focusedOnShow);
+
+        std::string continueSessionId = info.want->GetStringParam(Rosen::PARAM_KEY::PARAM_DMS_CONTINUE_SESSION_ID_KEY);
+        if (!continueSessionId.empty()) {
+            info.continueSessionId_ = continueSessionId;
+            TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]continueSessionId from ability manager: %{public}s",
+                continueSessionId.c_str());
+        }
+
+        // app continue report for distributed scheduled service
+        if (info.want->GetIntParam(Rosen::PARAM_KEY::PARAM_DMS_PERSISTENT_ID_KEY, 0) > 0) {
+            TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]continue app with persistentId: %{public}d", info.persistentId_);
+            SingletonContainer::Get<DmsReporter>().ReportContinueApp(true, static_cast<int32_t>(WSError::WS_OK));
+        }
+    } else {
+        sceneSession->SetFocusedOnShow(true);
     }
+
     sceneSession->SetSessionInfo(info);
     std::shared_ptr<SessionInfo> sessionInfo = std::make_shared<SessionInfo>(info);
     auto task = [this, sessionInfo]() {
         PendingSessionActivationInner(sessionInfo);
     };
     sceneSession->PostLifeCycleTask(task, "PendingSessionActivation", LifeCycleTaskType::START);
+}
+
+void JsRootSceneSession::VerifyCallerToken(SessionInfo& info)
+{
+    auto callerSession = SceneSessionManager::GetInstance().GetSceneSession(info.callerPersistentId_);
+    if (callerSession != nullptr) {
+        bool isCalledRightlyByCallerId = info.callerToken_ == callerSession->GetAbilityToken();
+        TLOGI(WmsLogTag::WMS_SCB,
+            "root isCalledRightlyByCallerId result is: %{public}d", isCalledRightlyByCallerId);
+        info.isCalledRightlyByCallerId_ = isCalledRightlyByCallerId;
+    }
 }
 
 sptr<SceneSession> JsRootSceneSession::GenSceneSession(SessionInfo& info)
@@ -307,7 +343,13 @@ sptr<SceneSession> JsRootSceneSession::GenSceneSession(SessionInfo& info)
         sceneSession = SceneSessionManager::GetInstance().GetSceneSession(info.persistentId_);
         if (sceneSession == nullptr) {
             WLOGFE("GetSceneSession return nullptr");
-            return sceneSession;
+            sceneSession = SceneSessionManager::GetInstance().RequestSceneSession(info);
+            if (sceneSession == nullptr) {
+                WLOGFE("retry RequestSceneSession return nullptr");
+                return sceneSession;
+            }
+            info.persistentId_ = sceneSession->GetPersistentId();
+            sceneSession->SetSessionInfoPersistentId(sceneSession->GetPersistentId());
         }
     }
     return sceneSession;

@@ -25,6 +25,13 @@ class MockWindowAdapterLite : public WindowAdapterLite {
 public:
     MOCK_METHOD(void, GetFocusWindowInfo, (FocusChangeInfo& focusInfo));
     MOCK_METHOD(void, ClearWindowAdapter, ());
+    MOCK_METHOD2(RegisterWindowManagerAgent, WMError(WindowManagerAgentType type,
+        const sptr<IWindowManagerAgent>& windowManagerAgent));
+    MOCK_METHOD2(UnregisterWindowManagerAgent, WMError(WindowManagerAgentType type,
+        const sptr<IWindowManagerAgent>& windowManagerAgent));
+    MOCK_METHOD1(GetWindowModeType, WMError(WindowModeType& windowModeType));
+    MOCK_METHOD2(GetMainWindowInfos, WMError(int32_t topNum,
+        std::vector<MainWindowInfo>& topNInfo));
 };
 }
 } // namespace OHOS

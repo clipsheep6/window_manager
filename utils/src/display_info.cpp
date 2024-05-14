@@ -26,14 +26,17 @@ bool DisplayInfo::Marshalling(Parcel &parcel) const
         parcel.WriteInt32(width_) && parcel.WriteInt32(height_) &&
         parcel.WriteInt32(physicalWidth_) && parcel.WriteInt32(physicalHeight_) &&
         parcel.WriteUint32(refreshRate_) && parcel.WriteUint64(screenId_) &&
-        parcel.WriteFloat(virtualPixelRatio_) && parcel.WriteFloat(xDpi_) && parcel.WriteFloat(yDpi_) &&
+        parcel.WriteFloat(virtualPixelRatio_) && parcel.WriteFloat(densityInCurResolution_) &&
+        parcel.WriteFloat(defaultVirtualPixelRatio_) &&
+        parcel.WriteFloat(xDpi_) && parcel.WriteFloat(yDpi_) &&
         parcel.WriteUint32(static_cast<uint32_t>(rotation_)) &&
         parcel.WriteUint32(static_cast<uint32_t>(orientation_)) &&
         parcel.WriteInt32(offsetX_) && parcel.WriteInt32(offsetY_) &&
         parcel.WriteUint32(static_cast<uint32_t>(displayState_)) &&
         parcel.WriteBool(waterfallDisplayCompressionStatus_) &&
         parcel.WriteInt32(dpi_) && parcel.WriteUint32(static_cast<uint32_t>(displayOrientation_)) &&
-        parcel.WriteUInt32Vector(colorSpaces_) && parcel.WriteUInt32Vector(hdrFormats_);
+        parcel.WriteUInt32Vector(colorSpaces_) && parcel.WriteUInt32Vector(hdrFormats_) &&
+        parcel.WriteUint32(defaultDeviceRotationOffset_);
 }
 
 DisplayInfo *DisplayInfo::Unmarshalling(Parcel &parcel)
@@ -52,13 +55,16 @@ DisplayInfo *DisplayInfo::Unmarshalling(Parcel &parcel)
         parcel.ReadInt32(displayInfo->width_) && parcel.ReadInt32(displayInfo->height_) &&
         parcel.ReadInt32(displayInfo->physicalWidth_) && parcel.ReadInt32(displayInfo->physicalHeight_) &&
         parcel.ReadUint32(displayInfo->refreshRate_) && parcel.ReadUint64(displayInfo->screenId_) &&
-        parcel.ReadFloat(displayInfo->virtualPixelRatio_) &&
+        parcel.ReadFloat(displayInfo->virtualPixelRatio_) && parcel.ReadFloat(displayInfo->densityInCurResolution_) &&
+        parcel.ReadFloat(displayInfo->defaultVirtualPixelRatio_) &&
         parcel.ReadFloat(displayInfo->xDpi_) && parcel.ReadFloat(displayInfo->yDpi_) &&
         parcel.ReadUint32(rotation) && parcel.ReadUint32(orientation) &&
         parcel.ReadInt32(displayInfo->offsetX_) && parcel.ReadInt32(displayInfo->offsetY_) &&
         parcel.ReadUint32(displayState) && parcel.ReadBool(displayInfo->waterfallDisplayCompressionStatus_) &&
         parcel.ReadInt32(displayInfo->dpi_) && parcel.ReadUint32(displayOrientation) &&
-        parcel.ReadUInt32Vector(&(displayInfo->colorSpaces_)) && parcel.ReadUInt32Vector(&(displayInfo->hdrFormats_));
+        parcel.ReadUInt32Vector(&(displayInfo->colorSpaces_)) &&
+        parcel.ReadUInt32Vector(&(displayInfo->hdrFormats_)) &&
+        parcel.ReadUint32(displayInfo->defaultDeviceRotationOffset_);
     if (!res) {
         delete displayInfo;
         return nullptr;

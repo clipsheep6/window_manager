@@ -31,6 +31,7 @@ ohos_shared_library("libdms") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   sources = [
@@ -59,9 +60,9 @@ ohos_shared_library("libdms") {
   public_configs = [ ":libdms_public_config" ]
 
   deps = [
+    "${window_base_path}/utils:libwmutil_base",
     "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",
     "../utils:libwmutil",
-    "//third_party/libxml2:libxml2",
   ]
 
   external_deps = [
@@ -73,13 +74,12 @@ ohos_shared_library("libdms") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_single",
+    "libxml2:libxml2",
     "safwk:system_ability_fwk",
   ]
 
   if (defined(use_new_skia) && use_new_skia) {
-    include_dirs = [ "//third_party/skia/src" ]
-  } else {
-    include_dirs = [ "//third_party/flutter/skia/src" ]
+    include_dirs = [ "../../../../third_party/skia/src" ]
   }
 
   defines = []

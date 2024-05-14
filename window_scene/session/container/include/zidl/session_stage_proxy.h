@@ -52,9 +52,15 @@ public:
     WSError UpdateMaximizeMode(MaximizeMode mode) override;
     void NotifySessionForeground(uint32_t reason, bool withAnimation) override;
     void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
+    WSError NotifyDensityFollowHost(bool isFollowHost, float densityValue) override;
     WSError UpdateTitleInTargetPos(bool isShow, int32_t height) override;
     void NotifyTransformChange(const Transform& transform) override;
     WSError NotifyDialogStateChange(bool isForeground) override;
+    WSError SetPipActionEvent(const std::string& action, int32_t status) override;
+    WSError UpdateDisplayId(uint64_t displayId) override;
+    void NotifyDisplayMove(DisplayId from, DisplayId to) override;
+    WSError SwitchFreeMultiWindow(bool enable) override;
+    void NotifyKeyboardPanelInfoChange(const KeyboardPanelInfo& keyboardPanelInfo) override;
 
 private:
     static inline BrokerDelegator<SessionStageProxy> delegator_;

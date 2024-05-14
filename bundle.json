@@ -37,6 +37,7 @@
           "hisysevent",
           "ability_runtime",
           "napi",
+          "node",
           "common_event_service",
           "hilog",
           "access_token",
@@ -67,15 +68,15 @@
           "frame_aware_sched_override",
           "imf",
           "frame_aware_sched",
-          "memmgr_plugin",
+          "memmgr_override",
           "data_share",
           "accessibility",
-          "security_component_manager"
-        ],
-        "third_party": [
+          "security_component_manager",
           "libjpeg-turbo",
           "libxml2",
           "bounds_checking_function"
+        ],
+        "third_party": [
         ]
       },
       "build": {
@@ -83,9 +84,11 @@
           "base_group": [
             "//foundation/window/window_manager/snapshot:snapshot_display",
             "//foundation/window/window_manager/setresolution:setresolution_screen",
+            "//foundation/window/window_manager/interfaces/kits/napi/embeddable_window_stage:embeddablewindowstage",
             "//foundation/window/window_manager/interfaces/kits/napi/extension_window:extensionwindow",
             "//foundation/window/window_manager/interfaces/kits/napi/window_runtime/window_stage_napi:windowstage",
             "//foundation/window/window_manager/interfaces/kits/napi:napi_packages",
+            "//foundation/window/window_manager/interfaces/kits/cj:ffi_packages",
             "//foundation/window/window_manager/resources:window_resources",
             "//foundation/window/window_manager/window_scene/interfaces/kits/napi:window_scene_napi_packages"
           ],
@@ -98,6 +101,7 @@
             "//foundation/window/window_manager/extension/window_extension:window_extension_module",
             "//foundation/window/window_manager/wm:libwm",
             "//foundation/window/window_manager/wm:libwm_lite",
+            "//foundation/window/window_manager/wm:libwm_ndk",
             "//foundation/window/window_manager/utils:libwmutil",
             "//foundation/window/window_manager/utils:libwmutil_base",
             "//foundation/window/window_manager/window_scene/common:window_scene_common"
@@ -132,6 +136,7 @@
               "header_files": [
                 "window_accessibility_controller.h",
                 "window_manager.h",
+                "window_manager_lite.h",
                 "window_option.h",
                 "wm_common.h",
                 "occupied_area_change_info.h"
@@ -152,6 +157,14 @@
           {
             "type": "so",
             "name": "//foundation/window/window_manager/utils:libwmutil_base",
+            "header": {
+              "header_files": [
+              ],
+              "header_base": "//foundation/window/window_manager/utils/include"
+            }
+          },
+          {
+            "name": "//foundation/window/window_manager/utils:libwmutil_static",
             "header": {
               "header_files": [
               ],
@@ -300,10 +313,38 @@
           },
           {
             "type": "so",
+            "name": "//foundation/window/window_manager/wmserver:libwms",
+            "header": {
+              "header_files": [
+              ],
+              "header_base": "//foundation/window/window_manager/wmserver/include"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/window/window_manager/dmserver:libdms",
+            "header": {
+              "header_files": [
+              ],
+              "header_base": "//foundation/window/window_manager/dmserver/include"
+            }
+          },
+          {
+            "type": "so",
             "name": "//foundation/window/window_manager/previewer:previewer_window_napi",
             "header": {
               "header_files": [],
               "header_base": "//foundation/window/window_manager/previewer/include"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/window/window_manager/interfaces/kits/napi/embeddable_window_stage:embeddablewindowstage_kit",
+            "header": {
+              "header_files": [
+                "js_embeddable_window_stage.h"
+              ],
+              "header_base": "//foundation/window/window_manager/interfaces/kits/napi/embeddable_window_stage"
             }
           },
           {
@@ -332,6 +373,15 @@
               "header_files": [
               ],
               "header_base": "//foundation/window/window_manager/interfaces/kits/napi/window_runtime"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/window/window_manager/interfaces/kits/cj/window_runtime:cj_window_ffi",
+            "header": {
+              "header_files": [
+              ],
+              "header_base": "//foundation/window/window_manager/interfaces/kits/cj/window_runtime"
             }
           }
         ],

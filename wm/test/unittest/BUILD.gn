@@ -20,11 +20,17 @@ group("unittest") {
 
   deps = [
     ":wm_extension_window_impl_test",
+    ":wm_gtx_input_event_sender_test",
     ":wm_input_transfer_station_test",
+    ":wm_pattern_detach_callback_proxy_test",
+    ":wm_pattern_detach_callback_test",
     ":wm_picture_in_picture_controller_test",
     ":wm_picture_in_picture_manager_test",
     ":wm_picture_in_picture_option_test",
     ":wm_root_scene_test",
+    ":wm_screen_scene_test",
+    ":wm_vsync_station_test",
+    ":wm_window_adapter_test",
     ":wm_window_agent_test",
     ":wm_window_effect_test",
     ":wm_window_extension_session_impl_test",
@@ -61,6 +67,7 @@ ohos_unittest("wm_window_manager_test") {
 
   external_deps = [
     "c_utils:utils",
+    "ffrt:libffrt",
     "hilog:libhilog",
   ]
 
@@ -116,6 +123,19 @@ ohos_unittest("wm_window_scene_effect_test") {
   ]
 }
 
+ohos_unittest("wm_vsync_station_test") {
+  module_out_path = module_out_path
+
+  sources = [ "vsync_station_test.cpp" ]
+
+  deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
 ohos_unittest("wm_window_session_impl_test") {
   module_out_path = module_out_path
 
@@ -126,6 +146,7 @@ ohos_unittest("wm_window_session_impl_test") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "init:libbegetutil",
   ]
 }
 
@@ -133,6 +154,19 @@ ohos_unittest("wm_window_effect_test") {
   module_out_path = module_out_path
 
   sources = [ "window_effect_test.cpp" ]
+
+  deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("wm_gtx_input_event_sender_test") {
+  module_out_path = module_out_path
+
+  sources = [ "gtx_input_event_sender_test.cpp" ]
 
   deps = [ ":wm_unittest_common" ]
 
@@ -200,7 +234,10 @@ ohos_unittest("wm_window_test") {
 
   sources = [ "window_test.cpp" ]
 
-  deps = [ ":wm_unittest_common" ]
+  deps = [
+    ":wm_unittest_common",
+    "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",
+  ]
 
   external_deps = [
     "c_utils:utils",
@@ -259,6 +296,7 @@ ohos_unittest("wm_window_scene_session_impl_test") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "init:libbegetutil",
   ]
 }
 
@@ -327,6 +365,19 @@ ohos_unittest("wm_root_scene_test") {
   ]
 }
 
+ohos_unittest("wm_screen_scene_test") {
+  module_out_path = module_out_path
+
+  sources = [ "screen_scene_test.cpp" ]
+
+  deps = [ ":wm_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
 ohos_unittest("wm_picture_in_picture_controller_test") {
   module_out_path = module_out_path
 
@@ -335,8 +386,11 @@ ohos_unittest("wm_picture_in_picture_controller_test") {
   deps = [ ":wm_unittest_common" ]
 
   external_deps = [
+    "ability_base:zuri",
     "ace_engine:ace_xcomponent_controller",
     "c_utils:utils",
+    "data_share:datashare_common",
+    "data_share:datashare_consumer",
     "hilog:libhilog",
   ]
 }
@@ -389,6 +443,36 @@ ohos_unittest("wm_window_manager_agent_proxy_test") {
   external_deps = [ "c_utils:utils" ]
 }
 
+ohos_unittest("wm_window_adapter_test") {
+  module_out_path = module_out_path
+
+  sources = [ "window_adapter_test.cpp" ]
+
+  deps = [ ":wm_unittest_common" ]
+
+  external_deps = [ "c_utils:utils" ]
+}
+
+ohos_unittest("wm_pattern_detach_callback_test") {
+  module_out_path = module_out_path
+
+  sources = [ "pattern_detach_callback_test.cpp" ]
+
+  deps = [ ":wm_unittest_common" ]
+
+  external_deps = [ "c_utils:utils" ]
+}
+
+ohos_unittest("wm_pattern_detach_callback_proxy_test") {
+  module_out_path = module_out_path
+
+  sources = [ "pattern_detach_callback_proxy_test.cpp" ]
+
+  deps = [ ":wm_unittest_common" ]
+
+  external_deps = [ "c_utils:utils" ]
+}
+
 ## Build wm_unittest_common.a {{{
 config("wm_unittest_common_public_config") {
   include_dirs = [
@@ -403,6 +487,7 @@ config("wm_unittest_common_public_config") {
     "${window_base_path}/utils/include",
     "${window_base_path}/window_scene",
     "${window_base_path}/window_scene/test/mock",
+    "${window_base_path}/window_scene/session/host/include/zidl",
     "//commonlibrary/c_utils/base/include",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits/include",
@@ -437,8 +522,10 @@ ohos_static_library("wm_unittest_common") {
     "${window_base_path}/dm:libdm",
     "${window_base_path}/dmserver:libdms",
     "${window_base_path}/utils:libwmutil",
+    "${window_base_path}/utils:libwmutil_base",
     "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/session:scene_session",
+    "${window_base_path}/window_scene/session_manager:scene_session_manager",
     "${window_base_path}/wm:libwm",
     "${window_base_path}/wmserver:libwms",
     "//commonlibrary/c_utils/base:utils",

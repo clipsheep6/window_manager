@@ -19,6 +19,8 @@
 #include <parcel.h>
 #include <map>
 #include <float.h>
+#include <sstream>
+#include <string>
 
 namespace OHOS {
 namespace Rosen {
@@ -78,6 +80,7 @@ enum class WindowType : uint32_t {
     WINDOW_TYPE_PIP,
     WINDOW_TYPE_THEME_EDITOR,
     WINDOW_TYPE_NAVIGATION_INDICATOR,
+    WINDOW_TYPE_HANDWRITE,
     ABOVE_APP_SYSTEM_WINDOW_END,
 
     SYSTEM_SUB_WINDOW_BASE = 2500,
@@ -87,7 +90,8 @@ enum class WindowType : uint32_t {
     SYSTEM_WINDOW_END = SYSTEM_SUB_WINDOW_END,
 
     WINDOW_TYPE_UI_EXTENSION = 3000,
-    WINDOW_TYPE_SCENE_BOARD
+    WINDOW_TYPE_SCENE_BOARD,
+    WINDOW_TYPE_KEYBOARD_PANEL
 };
 
 /**
@@ -100,6 +104,18 @@ enum class WindowMode : uint32_t {
     WINDOW_MODE_SPLIT_SECONDARY,
     WINDOW_MODE_FLOATING,
     WINDOW_MODE_PIP
+};
+
+/**
+ * @brief Enumerates modeType of window.
+ */
+enum class WindowModeType : uint8_t {
+    WINDOW_MODE_SPLIT_FLOATING = 0,
+    WINDOW_MODE_SPLIT = 1,
+    WINDOW_MODE_FLOATING = 2,
+    WINDOW_MODE_FULLSCREEN = 3,
+    WINDOW_MODE_FULLSCREEN_FLOATING = 4,
+    WINDOW_MODE_OTHER = 5
 };
 
 /**
@@ -218,6 +234,15 @@ enum class WindowStatus : uint32_t {
     WINDOW_STATUS_SPLITSCREEN
 };
 
+/**
+ * @brief Enumerates setting flag of systemStatusBar
+ */
+enum class SystemBarSettingFlag : uint32_t {
+    DEFAULT_SETTING = 0,
+    COLOR_SETTING = 1,
+    ENABLE_SETTING = 1 << 1,
+    ALL_SETTING = 0b11
+};
 
 /**
  * @brief Used to map from WMError to WmErrorCode.
@@ -262,7 +287,31 @@ enum class WindowFlag : uint32_t {
     WINDOW_FLAG_SHOW_WHEN_LOCKED = 1 << 2,
     WINDOW_FLAG_FORBID_SPLIT_MOVE = 1 << 3,
     WINDOW_FLAG_WATER_MARK = 1 << 4,
-    WINDOW_FLAG_END = 1 << 5,
+    WINDOW_FLAG_IS_MODAL = 1 << 5,
+    WINDOW_FLAG_HANDWRITING = 1 << 6,
+    WINDOW_FLAG_END = 1 << 7,
+};
+
+/**
+ * @brief Flag of uiextension window.
+ */
+union ExtensionWindowFlags {
+    uint32_t bitData;
+    struct {
+        // Each flag should be false default, true when active
+        bool hideNonSecureWindowsFlag : 1;
+        bool waterMarkFlag : 1;
+        bool privacyModeFlag : 1;
+    };
+    ExtensionWindowFlags() : bitData(0) {}
+    ExtensionWindowFlags(uint32_t bits) : bitData(bits) {}
+    ~ExtensionWindowFlags() {}
+    void SetAllActive()
+    {
+        hideNonSecureWindowsFlag = true;
+        waterMarkFlag = true;
+        privacyModeFlag = true;
+    }
 };
 
 /**
@@ -285,6 +334,10 @@ enum class WindowSizeChangeReason : uint32_t {
     SPLIT_TO_FULL,
     FULL_TO_FLOATING,
     FLOATING_TO_FULL,
+    PIP_START,
+    PIP_SHOW,
+    PIP_RATIO_CHANGE,
+    UPDATE_DPI_SYNC,
     END,
 };
 
@@ -331,6 +384,7 @@ enum class WindowSessionType : uint32_t {
 enum class WindowGravity : uint32_t {
     WINDOW_GRAVITY_FLOAT = 0,
     WINDOW_GRAVITY_BOTTOM,
+    WINDOW_GRAVITY_DEFAULT,
 };
 
 /**
@@ -353,6 +407,37 @@ struct PointInfo {
     int32_t y;
 };
 
+/**
+ * @struct MainWindowInfo.
+ *
+ * @brief topN main window info.
+ */
+struct MainWindowInfo : public Parcelable {
+    virtual bool Marshalling(Parcel &parcel) const override
+    {
+        if (!parcel.WriteInt32(pid_)) {
+            return false;
+        }
+
+        if (!parcel.WriteString(bundleName_)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    static MainWindowInfo* Unmarshalling(Parcel& parcel)
+    {
+        MainWindowInfo* mainWindowInfo = new MainWindowInfo;
+        mainWindowInfo->pid_ = parcel.ReadInt32();
+        mainWindowInfo->bundleName_ = parcel.ReadString();
+        return mainWindowInfo;
+    }
+
+    int32_t pid_ = 0;
+    std::string bundleName_ = "";
+};
+
 namespace {
     constexpr uint32_t SYSTEM_COLOR_WHITE = 0xE5FFFFFF;
     constexpr uint32_t SYSTEM_COLOR_BLACK = 0x66000000;
@@ -362,6 +447,15 @@ namespace {
     constexpr float MAXIMUM_BRIGHTNESS = 1.0f;
     constexpr int32_t INVALID_PID = -1;
     constexpr int32_t INVALID_UID = -1;
+    constexpr int32_t INVALID_USER_ID = -1;
+    constexpr int32_t SYSTEM_USERID = 0;
+    constexpr int32_t BASE_USER_RANGE = 200000;
+    constexpr int32_t DEFAULT_SCREEN_ID = 0;
+}
+
+inline int32_t GetUserIdByUid(int32_t uid)
+{
+    return uid / BASE_USER_RANGE;
 }
 
 /**
@@ -453,12 +547,24 @@ struct SystemBarProperty {
     bool enable_;
     uint32_t backgroundColor_;
     uint32_t contentColor_;
-    SystemBarProperty() : enable_(true), backgroundColor_(SYSTEM_COLOR_BLACK), contentColor_(SYSTEM_COLOR_WHITE) {}
+    bool enableAnimation_;
+    SystemBarSettingFlag settingFlag_;
+    SystemBarProperty() : enable_(true), backgroundColor_(SYSTEM_COLOR_BLACK), contentColor_(SYSTEM_COLOR_WHITE),
+                          enableAnimation_(false), settingFlag_(SystemBarSettingFlag::DEFAULT_SETTING) {}
     SystemBarProperty(bool enable, uint32_t background, uint32_t content)
-        : enable_(enable), backgroundColor_(background), contentColor_(content) {}
+        : enable_(enable), backgroundColor_(background), contentColor_(content), enableAnimation_(false),
+          settingFlag_(SystemBarSettingFlag::DEFAULT_SETTING) {}
+    SystemBarProperty(bool enable, uint32_t background, uint32_t content, bool enableAnimation)
+        : enable_(enable), backgroundColor_(background), contentColor_(content), enableAnimation_(enableAnimation),
+          settingFlag_(SystemBarSettingFlag::DEFAULT_SETTING) {}
+    SystemBarProperty(bool enable, uint32_t background, uint32_t content,
+                      bool enableAnimation, SystemBarSettingFlag settingFlag)
+        : enable_(enable), backgroundColor_(background), contentColor_(content), enableAnimation_(enableAnimation),
+          settingFlag_(settingFlag) {}
     bool operator == (const SystemBarProperty& a) const
     {
-        return (enable_ == a.enable_ && backgroundColor_ == a.backgroundColor_ && contentColor_ == a.contentColor_);
+        return (enable_ == a.enable_ && backgroundColor_ == a.backgroundColor_ && contentColor_ == a.contentColor_ &&
+            enableAnimation_ == a.enableAnimation_);
     }
 };
 
@@ -492,6 +598,51 @@ struct Rect {
     {
         return (posX_ >= a.posX_ && posY_ >= a.posY_ &&
             posX_ + width_ <= a.posX_ + a.width_ && posY_ + height_ <= a.posY_ + a.height_);
+    }
+
+    inline std::string ToString() const
+    {
+        std::stringstream ss;
+        ss << "[" << posX_ << " " << posY_ << " " << width_ << " " << height_ << "]";
+        return ss.str();
+    }
+};
+
+/**
+ * @struct KeyboardPanelInfo
+ *
+ * @brief Info of keyboard panel
+ */
+struct KeyboardPanelInfo : public Parcelable {
+    Rect rect_ = {0, 0, 0, 0};
+    WindowGravity gravity_ = WindowGravity::WINDOW_GRAVITY_BOTTOM;
+    bool isShowing_ = false;
+
+    bool Marshalling(Parcel& parcel) const
+    {
+        return parcel.WriteInt32(rect_.posX_) && parcel.WriteInt32(rect_.posY_) &&
+               parcel.WriteUint32(rect_.width_) && parcel.WriteUint32(rect_.height_) &&
+               parcel.WriteUint32(static_cast<uint32_t>(gravity_)) &&
+               parcel.WriteBool(isShowing_);
+    }
+
+    static KeyboardPanelInfo* Unmarshalling(Parcel& parcel)
+    {
+        KeyboardPanelInfo* keyboardPanelInfo = new(std::nothrow)KeyboardPanelInfo;
+        if (keyboardPanelInfo == nullptr) {
+            return nullptr;
+        }
+        bool res = parcel.ReadInt32(keyboardPanelInfo->rect_.posX_) &&
+            parcel.ReadInt32(keyboardPanelInfo->rect_.posY_) && parcel.ReadUint32(keyboardPanelInfo->rect_.width_) &&
+            parcel.ReadUint32(keyboardPanelInfo->rect_.height_);
+        if (!res) {
+            delete keyboardPanelInfo;
+            return nullptr;
+        }
+        keyboardPanelInfo->gravity_ = static_cast<WindowGravity>(parcel.ReadUint32());
+        keyboardPanelInfo->isShowing_ = parcel.ReadBool();
+
+        return keyboardPanelInfo;
     }
 };
 
@@ -612,12 +763,13 @@ enum class WindowUpdateType : int32_t {
     WINDOW_UPDATE_BOUNDS,
     WINDOW_UPDATE_ACTIVE,
     WINDOW_UPDATE_PROPERTY,
+    WINDOW_UPDATE_ALL,
 };
 
 /**
  * @brief Enumerates picture in picture window state.
  */
-enum class PipWindowState : uint32_t {
+enum class PiPWindowState : uint32_t {
     STATE_UNDEFINED = 0,
     STATE_STARTING = 1,
     STATE_STARTED = 2,
@@ -628,17 +780,41 @@ enum class PipWindowState : uint32_t {
 /**
  * @brief Enumerates picture in picture template type.
  */
-enum class PipTemplateType : uint32_t {
+enum class PiPTemplateType : uint32_t {
     VIDEO_PLAY = 0,
     VIDEO_CALL = 1,
     VIDEO_MEETING = 2,
     VIDEO_LIVE = 3,
+    END,
+};
+
+/**
+ * @brief Enumerates picture in picture control group.
+ */
+enum class PiPControlGroup : uint32_t {
+    VIDEO_PLAY_START = 100,
+    VIDEO_PREVIOUS_NEXT = 101,
+    FAST_FORWARD_BACKWARD = 102,
+    VIDEO_PLAY_END,
+
+    VIDEO_CALL_START = 200,
+    VIDEO_CALL_MICROPHONE_SWITCH = 201,
+    VIDEO_CALL_HANG_UP_BUTTON = 202,
+    VIDEO_CALL_CAMERA_SWITCH = 203,
+    VIDEO_CALL_END,
+
+    VIDEO_MEETING_START = 300,
+    VIDEO_MEETING_HANG_UP_BUTTON = 301,
+    VIDEO_MEETING_CAMERA_SWITCH = 302,
+    VIDEO_MEETING_MUTE_SWITCH = 303,
+    VIDEO_MEETING_END,
+    END,
 };
 
 /**
  * @brief Enumerates picture in picture state.
  */
-enum class PipState : int32_t {
+enum class PiPState : int32_t {
     ABOUT_TO_START = 1,
     STARTED = 2,
     ABOUT_TO_STOP = 3,
@@ -647,46 +823,10 @@ enum class PipState : int32_t {
     ERROR = 6,
 };
 
-/**
- * @brief Enumerates pip window rect update reason.
- */
-enum class PiPRectUpdateReason : int32_t {
-    REASON_PIP_START_WINDOW,
-    REASON_PIP_MOVE,
-    REASON_PIP_VIDEO_RATIO_CHANGE,
-    REASON_PIP_SCALE_CHANGE,
-    REASON_PIP_DESTROY_WINDOW,
-    REASON_DISPLAY_ROTATION_CHANGE,
-};
-
-/**
- * @brief Enumerates picture in picture scale level.
- */
-enum class PiPScaleLevel : int32_t {
-    PIP_SCALE_LEVEL_SMALLEST = 0,
-    PIP_SCALE_LEVEL_BIGGEST = 1,
-    COUNT = 2,
-};
-
-/**
- * @brief Enumerates picture in picture scale pivot.
- */
-enum class PiPScalePivot : int32_t {
-    UNDEFINED = 0,
-    START,
-    MIDDLE,
-    END,
-};
-
-/**
- * @brief Structure of picture in picture rect info.
- */
-struct PiPRectInfo {
-    PiPScalePivot xPivot_;
-    PiPScalePivot yPivot_;
-    uint32_t originWidth_;
-    uint32_t originHeight_;
-    PiPScaleLevel level_;
+struct PiPTemplateInfo {
+    uint32_t pipTemplateType;
+    uint32_t priority;
+    std::vector<uint32_t> controlGroup;
 };
 
 using OnCallback = std::function<void(int64_t)>;
@@ -803,6 +943,97 @@ public:
         config->durationIn_ = parcel.ReadUint32();
         config->durationOut_ = parcel.ReadUint32();
         return config;
+    }
+};
+
+enum class CaseType {
+    CASE_WINDOW_MANAGER = 0,
+    CASE_WINDOW,
+    CASE_STAGE
+};
+
+/**
+ * maximize layout show type
+ */
+enum ShowType : int32_t {
+    SHOW, // normally show
+    HIDE, // show when hover, but hide normally
+    FORBIDDEN // hide always
+};
+
+struct MaximizeLayoutOption {
+    ShowType decor = ShowType::HIDE;
+    ShowType dock = ShowType::HIDE;
+};
+
+/**
+ * @class KeyboardLayoutParams
+ *
+ * @brief Keyboard need adjust layout
+ */
+class KeyboardLayoutParams : public Parcelable {
+public:
+    WindowGravity gravity_ = WindowGravity::WINDOW_GRAVITY_BOTTOM;
+    Rect LandscapeKeyboardRect_ { 0, 0, 0, 0 };
+    Rect PortraitKeyboardRect_ { 0, 0, 0, 0 };
+    Rect LandscapePanelRect_ { 0, 0, 0, 0 };
+    Rect PortraitPanelRect_ { 0, 0, 0, 0 };
+
+    bool operator==(const KeyboardLayoutParams& params) const
+    {
+        return (gravity_ == params.gravity_ && LandscapeKeyboardRect_ == params.LandscapeKeyboardRect_ &&
+            PortraitKeyboardRect_ == params.PortraitKeyboardRect_ &&
+            LandscapePanelRect_ == params.LandscapePanelRect_ &&
+            PortraitPanelRect_ == params.PortraitPanelRect_);
+    }
+
+    bool operator!=(const KeyboardLayoutParams& params) const
+    {
+        return !this->operator==(params);
+    }
+
+    bool isEmpty() const
+    {
+        return LandscapeKeyboardRect_.IsUninitializedRect() && PortraitKeyboardRect_.IsUninitializedRect() &&
+            LandscapePanelRect_.IsUninitializedRect() && PortraitPanelRect_.IsUninitializedRect();
+    }
+
+    static inline bool WriteParcel(Parcel& parcel, const Rect& rect)
+    {
+        return parcel.WriteInt32(rect.posX_) && parcel.WriteInt32(rect.posY_) &&
+            parcel.WriteUint32(rect.width_) && parcel.WriteUint32(rect.height_);
+    }
+
+    static inline bool ReadParcel(Parcel& parcel, Rect& rect)
+    {
+        return parcel.ReadInt32(rect.posX_) && parcel.ReadInt32(rect.posY_) &&
+            parcel.ReadUint32(rect.width_) && parcel.ReadUint32(rect.height_);
+    }
+
+    virtual bool Marshalling(Parcel& parcel) const override
+    {
+        return (parcel.WriteUint32(static_cast<uint32_t>(gravity_)) &&
+            WriteParcel(parcel, LandscapeKeyboardRect_) &&
+            WriteParcel(parcel, PortraitKeyboardRect_) &&
+            WriteParcel(parcel, LandscapePanelRect_) &&
+            WriteParcel(parcel, PortraitPanelRect_));
+    }
+
+    static KeyboardLayoutParams* Unmarshalling(Parcel& parcel)
+    {
+        KeyboardLayoutParams *params = new(std::nothrow) KeyboardLayoutParams();
+        if (params == nullptr) {
+            return nullptr;
+        }
+        params->gravity_ = static_cast<WindowGravity>(parcel.ReadUint32());
+        if (ReadParcel(parcel, params->LandscapeKeyboardRect_) &&
+            ReadParcel(parcel, params->PortraitKeyboardRect_) &&
+            ReadParcel(parcel, params->LandscapePanelRect_) &&
+            ReadParcel(parcel, params->PortraitPanelRect_)) {
+            return params;
+        }
+        delete params;
+        return nullptr;
     }
 };
 }

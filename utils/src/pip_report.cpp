@@ -21,7 +21,6 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "PictureInPictureReport"};
     const std::string PNAMEID = "windowManager";
     const std::string PVERSION = "1.0";
 }
@@ -32,9 +31,11 @@ static std::map<std::string, int32_t> CONTROL_ACTION_MAP = {
     {"nextVideo", 1},
     {"previousVideo", 2},
     {"hangUp", 3},
-    {"microphoneStateChanged", 4},
-    {"cameraStateChanged", 5},
-    {"videoStateChanged", 6}
+    {"micStateChanged", 4},
+    {"videoStateChanged", 5},
+    {"voiceStateChanged", 6},
+    {"fastForward", 7},
+    {"fastBackward", 8}
 };
 constexpr char EVENT_KEY_SOURCE[] = "SOURCE";
 constexpr char EVENT_KEY_TEMPLATE_TYPE[] = "TEMPLATE_TYPE";
@@ -46,7 +47,6 @@ constexpr char EVENT_KEY_OPERATION_PACKAGE_NAME[] = "OPERATION_PACKAGE_NAME";
 constexpr char EVENT_KEY_OPERATION_CODE[] = "OPERATION_CODE";
 constexpr char EVENT_KEY_OPERATION_ERROR_REASON[] = "OPERATION_ERROR_REASON";
 constexpr char EVENT_KEY_ACTION_EVENT[] = "ACTION_EVENT";
-constexpr char EVENT_KEY_SCALE_LEVEL[] = "SCALE_LEVEL";
 constexpr char EVENT_KEY_WINDOW_WIDTH[] = "WINDOW_WIDTH";
 constexpr char EVENT_KEY_WINDOW_HEIGHT[] = "WINDOW_HEIGHT";
 
@@ -58,9 +58,9 @@ void PiPReporter::SetCurrentPackageName(const std::string &packageName)
 void PiPReporter::ReportPiPStartWindow(int32_t source, int32_t templateType,
                                        int32_t isSuccess, const std::string& errorReason)
 {
-    WLOGI("Report start pip widow");
+    TLOGI(WmsLogTag::WMS_PIP, "Report start pip widow");
     if (source == 0) {
-        WLOGI("need not report start pip widow");
+        TLOGI(WmsLogTag::WMS_PIP, "need not report start pip widow");
         return;
     }
     std::string eventName = "START_PIP";
@@ -75,16 +75,16 @@ void PiPReporter::ReportPiPStartWindow(int32_t source, int32_t templateType,
         EVENT_KEY_OPERATION_CODE, isSuccess,
         EVENT_KEY_OPERATION_ERROR_REASON, errorReason);
     if (ret != 0) {
-        WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
+        TLOGE(WmsLogTag::WMS_PIP, "Write HiSysEvent error, ret:%{public}d", ret);
     }
 }
 
 void PiPReporter::ReportPiPStopWindow(int32_t source, int32_t templateType,
                                       int32_t isSuccess, const std::string& errorReason)
 {
-    WLOGI("Report stop pip widow");
+    TLOGI(WmsLogTag::WMS_PIP, "Report stop pip widow");
     if (source == 0) {
-        WLOGI("need not report stop pip widow");
+        TLOGI(WmsLogTag::WMS_PIP, "need not report stop pip widow");
         return;
     }
     std::string eventName = "STOP_PIP";
@@ -99,13 +99,13 @@ void PiPReporter::ReportPiPStopWindow(int32_t source, int32_t templateType,
         EVENT_KEY_OPERATION_CODE, isSuccess,
         EVENT_KEY_OPERATION_ERROR_REASON, errorReason);
     if (ret != 0) {
-        WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
+        TLOGE(WmsLogTag::WMS_PIP, "Write HiSysEvent error, ret:%{public}d", ret);
     }
 }
 
 void PiPReporter::ReportPiPActionEvent(int32_t templateType, const std::string &actionEvent)
 {
-    WLOGI("Report pip widow action event");
+    TLOGI(WmsLogTag::WMS_PIP, "Report pip widow action event");
     std::string eventName = "CONTROL_PANNEL_ACTION_EVENT";
     int32_t currentAction = CONTROL_ACTION_MAP[actionEvent];
     int32_t ret = HiSysEventWrite(
@@ -117,32 +117,13 @@ void PiPReporter::ReportPiPActionEvent(int32_t templateType, const std::string &
         EVENT_KEY_ACTION_EVENT, currentAction,
         EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
     if (ret != 0) {
-        WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
-    }
-}
-
-void PiPReporter::ReportPiPResize(int32_t scaleLevel, int32_t windowWidth, int32_t windowHeight)
-{
-    WLOGI("Report pip widow resize");
-    std::string eventName = "RESIZE_PIP_SIZE";
-    int32_t currentScaleLevel = scaleLevel + 1;
-    int32_t ret = HiSysEventWrite(
-        OHOS::HiviewDFX::HiSysEvent::Domain::MULTIWINDOW_UE, eventName,
-        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        EVENT_KEY_PNAMEID, PNAMEID,
-        EVENT_KEY_PVERSION, PVERSION,
-        EVENT_KEY_SCALE_LEVEL, currentScaleLevel,
-        EVENT_KEY_WINDOW_WIDTH, windowWidth,
-        EVENT_KEY_WINDOW_HEIGHT, windowHeight,
-        EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
-    if (ret != 0) {
-        WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
+        TLOGE(WmsLogTag::WMS_PIP, "Write HiSysEvent error, ret:%{public}d", ret);
     }
 }
 
 void PiPReporter::ReportPiPRatio(int32_t windowWidth, int32_t windowHeight)
 {
-    WLOGI("Report pip widow ratio");
+    TLOGI(WmsLogTag::WMS_PIP, "Report pip widow ratio");
     std::string eventName = "UPDATE_PIP_RATIO";
     int32_t ret = HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::MULTIWINDOW_UE, eventName,
@@ -153,13 +134,13 @@ void PiPReporter::ReportPiPRatio(int32_t windowWidth, int32_t windowHeight)
         EVENT_KEY_WINDOW_HEIGHT, windowHeight,
         EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
     if (ret != 0) {
-        WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
+        TLOGE(WmsLogTag::WMS_PIP, "Write HiSysEvent error, ret:%{public}d", ret);
     }
 }
 
 void PiPReporter::ReportPiPRestore()
 {
-    WLOGI("Report pip widow restore");
+    TLOGI(WmsLogTag::WMS_PIP, "Report pip widow restore");
     std::string eventName = "RESOTRE_PIP";
     int32_t ret = HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::MULTIWINDOW_UE, eventName,
@@ -168,22 +149,7 @@ void PiPReporter::ReportPiPRestore()
         EVENT_KEY_PVERSION, PVERSION,
         EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
     if (ret != 0) {
-        WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
-    }
-}
-
-void PiPReporter::ReportPiPMove()
-{
-    WLOGI("Report pip widow move");
-    std::string eventName = "MOVE_PIP";
-    int32_t ret = HiSysEventWrite(
-        OHOS::HiviewDFX::HiSysEvent::Domain::MULTIWINDOW_UE, eventName,
-        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        EVENT_KEY_PNAMEID, PNAMEID,
-        EVENT_KEY_PVERSION, PVERSION,
-        EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
-    if (ret != 0) {
-        WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
+        TLOGE(WmsLogTag::WMS_PIP, "Write HiSysEvent error, ret:%{public}d", ret);
     }
 }
 } // namespace Rosen

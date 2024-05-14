@@ -26,10 +26,15 @@ namespace OHOS {
 namespace Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "VsyncStation"};
-    const std::string VSYNC_TIME_OUT_TASK = "vsync_time_out_task";
+    const std::string VSYNC_TIME_OUT_TASK = "vsync_time_out_task_";
     constexpr int64_t VSYNC_TIME_OUT_MILLISECONDS = 600;
 }
-WM_IMPLEMENT_SINGLE_INSTANCE(VsyncStation)
+
+VsyncStation::VsyncStation(NodeId nodeId) : nodeId_(nodeId)
+{
+    vsyncTimeoutTaskName_ = VSYNC_TIME_OUT_TASK + std::to_string(nodeId_);
+    TLOGI(WmsLogTag::WMS_MAIN, "Vsync Constructor");
+}
 
 void VsyncStation::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback)
 {
@@ -46,8 +51,8 @@ void VsyncStation::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallb
         }
         hasRequestedVsync_ = true;
         if (vsyncHandler_) {
-            vsyncHandler_->RemoveTask(VSYNC_TIME_OUT_TASK);
-            vsyncHandler_->PostTask(vsyncTimeoutCallback_, VSYNC_TIME_OUT_TASK, VSYNC_TIME_OUT_MILLISECONDS);
+            vsyncHandler_->RemoveTask(vsyncTimeoutTaskName_);
+            vsyncHandler_->PostTask(vsyncTimeoutCallback_, vsyncTimeoutTaskName_, VSYNC_TIME_OUT_MILLISECONDS);
         }
     }
     WindowFrameTraceImpl::GetInstance()->VsyncStartFrameTrace();
@@ -67,16 +72,34 @@ int64_t VsyncStation::GetVSyncPeriod()
     return period;
 }
 
-void VsyncStation::FlushFrameRate(uint32_t rate, bool immediate)
+FrameRateLinkerId VsyncStation::GetFrameRateLinkerId()
 {
     if (frameRateLinker_) {
-        WLOGD("VsyncStation::FlushFrameRate %{public}d", rate);
+        return frameRateLinker_->GetId();
+    }
+    return 0;
+}
+
+void VsyncStation::FlushFrameRate(uint32_t rate, bool isAnimatorStopped)
+{
+    if (frameRateLinker_ && frameRateLinker_->IsEnable()) {
+        WLOGD("VsyncStation::FlushFrameRate %{public}d, linkerID = %{public}" PRIu64, rate, frameRateLinker_->GetId());
         FrameRateRange range = {0, RANGE_MAX_REFRESHRATE, rate};
-        if (immediate) {
-            frameRateLinker_->UpdateFrameRateRangeImme(range);
-        } else {
-            frameRateLinker_->UpdateFrameRateRange(range);
+        frameRateLinker_->UpdateFrameRateRange(range, isAnimatorStopped);
+    }
+}
+
+void VsyncStation::SetFrameRateLinkerEnable(bool enabled)
+{
+    if (frameRateLinker_) {
+        if (!enabled) {
+            FrameRateRange range = {0, RANGE_MAX_REFRESHRATE, 0};
+            WLOGI("VsyncStation::FlushFrameRateImme %{public}d, linkerID = %{public}" PRIu64,
+                range.preferred_, frameRateLinker_->GetId());
+            frameRateLinker_->UpdateFrameRateRange(range, true);
+            frameRateLinker_->UpdateFrameRateRangeImme(range, true);
         }
+        frameRateLinker_->SetEnable(enabled);
     }
 }
 
@@ -98,7 +121,8 @@ void VsyncStation::Init()
         frameRateLinker_ = OHOS::Rosen::RSFrameRateLinker::Create();
         while (receiver_ == nullptr) {
             receiver_ = rsClient.CreateVSyncReceiver("WM_" + std::to_string(::getprocpid()), frameRateLinker_->GetId(),
-                vsyncHandler_);
+                vsyncHandler_, nodeId_);
+            TLOGI(WmsLogTag::WMS_MAIN, "Create vsync receiver for nodeId:%{public}" PRIu64"", nodeId_);
         }
         receiver_->Init();
         hasInitVsyncReceiver_ = true;
@@ -120,7 +144,7 @@ void VsyncStation::VsyncCallbackInner(int64_t timestamp)
         hasRequestedVsync_ = false;
         vsyncCallbacks = vsyncCallbacks_;
         vsyncCallbacks_.clear();
-        vsyncHandler_->RemoveTask(VSYNC_TIME_OUT_TASK);
+        vsyncHandler_->RemoveTask(vsyncTimeoutTaskName_);
     }
     for (const auto& callback: vsyncCallbacks) {
         if (callback && callback->onCallback) {

@@ -76,7 +76,7 @@ public:
         void OnRestoreUserInterface() override;
 
     private:
-        void OnPipListenerCallback(PipState state, int32_t errorCode);
+        void OnPipListenerCallback(PiPState state, int32_t errorCode);
         napi_env engine_ = nullptr;
         std::shared_ptr<NativeReference> jsCallBack_ = nullptr;
         std::mutex mtx_;
@@ -87,7 +87,7 @@ public:
         PiPActionObserverImpl(napi_env env, std::shared_ptr<NativeReference> callback)
             : engine_(env), jsCallBack_(callback) {}
         ~PiPActionObserverImpl() {}
-        void OnActionEvent(const std::string& actionEvent) override;
+        void OnActionEvent(const std::string& actionEvent, int32_t statusCode) override;
     private:
         napi_env engine_ = nullptr;
         std::shared_ptr<NativeReference> jsCallBack_ = nullptr;

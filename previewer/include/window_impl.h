@@ -21,6 +21,7 @@
 #include <ui_content.h>
 #include "context.h"
 #include "ui/rs_surface_node.h"
+#include "vsync_station.h"
 #include "window.h"
 
 namespace OHOS::AbilityRuntime {
@@ -165,7 +166,7 @@ public:
     virtual void ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& inputEvent) override;
     virtual void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback) override;
     virtual int64_t GetVSyncPeriod() override;
-    virtual void FlushFrameRate(uint32_t rate) override;
+    virtual void FlushFrameRate(uint32_t rate, bool isAnimatorStopped) override;
     virtual void UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration) override;
     void NotifyTouchDialogTarget(int32_t posX = 0, int32_t posY = 0) override;
 
@@ -215,11 +216,16 @@ public:
     virtual WMError UnregisterWindowVisibilityChangeListener(const WindowVisibilityListenerSptr& listener) override;
     virtual WmErrorCode KeepKeyboardOnFocus(bool keepKeyboardFlag) override;
     virtual WMError SetSingleFrameComposerEnabled(bool enable) override;
+    virtual WMError SetLandscapeMultiWindow(bool isLandscapeMultiWindow) override;
+    virtual WMError SetImmersiveModeEnabledState(bool enable) override;
+    virtual bool GetImmersiveModeEnabledState() const override;
+
 private:
     static std::map<std::string, std::pair<uint32_t, sptr<Window>>> windowMap_;
     static std::map<uint32_t, std::vector<sptr<WindowImpl>>> subWindowMap_;
     WindowState state_ { WindowState::STATE_INITIAL };
     std::shared_ptr<RSSurfaceNode> surfaceNode_;
+    std::shared_ptr<VsyncStation> vsyncStation_ = nullptr;
     std::shared_ptr<AbilityRuntime::Context> context_;
     std::string name_;
     std::unique_ptr<Ace::UIContent> uiContent_;

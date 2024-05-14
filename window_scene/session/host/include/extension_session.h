@@ -15,12 +15,37 @@
 
 #ifndef OHOS_ROSEN_WINDOW_SCENE_EXTENSION_SESSION_H
 #define OHOS_ROSEN_WINDOW_SCENE_EXTENSION_SESSION_H
+#include <future>
 
+#include "key_event.h"
 #include "want.h"
 
 #include "session/host/include/session.h"
 
 namespace OHOS::Rosen {
+class WindowEventChannelListener : public IRemoteStub<IWindowEventChannelListener> {
+public:
+    explicit WindowEventChannelListener() = default;
+    void SetTransferKeyEventForConsumedParams(const std::shared_ptr<std::promise<bool>>& isConsumedPromise,
+        const std::shared_ptr<WSError>& retCode);
+    void ResetTransferKeyEventForConsumedParams();
+    void OnTransferKeyEventForConsumed(bool isConsumed, WSError retCode) override;
+    int32_t OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option) override;
+
+private:
+    std::mutex transferKeyEventForConsumedMutex_;
+    std::shared_ptr<std::promise<bool>> isConsumedPromise_ = nullptr;
+    std::shared_ptr<WSError> retCode_ = nullptr;
+};
+
+class ChannelDeathRecipient : public IRemoteObject::DeathRecipient {
+public:
+    explicit ChannelDeathRecipient(const sptr<WindowEventChannelListener>& listener): listener_(listener) {}
+    virtual void OnRemoteDied(const wptr<IRemoteObject>& wptrDeath) override;
+private:
+    sptr<WindowEventChannelListener> listener_ = nullptr;
+};
+
 using NotifyTransferAbilityResultFunc = std::function<void(uint32_t resultCode, const AAFwk::Want& want)>;
 using NotifyTransferExtensionDataFunc = std::function<void(const AAFwk::WantParams& wantParams)>;
 using NotifyRemoteReadyFunc = std::function<void()>;
@@ -41,11 +66,12 @@ public:
     };
 
     explicit ExtensionSession(const SessionInfo& info);
-    virtual ~ExtensionSession() = default;
+    virtual ~ExtensionSession();
 
     WSError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
-        sptr<WindowSessionProperty> property, sptr<IRemoteObject> token, int32_t pid, int32_t uid) override;
+        sptr<WindowSessionProperty> property, sptr<IRemoteObject> token, int32_t pid, int32_t uid,
+        const std::string& identityToken = "") override;
 
     AvoidArea GetAvoidAreaByType(AvoidAreaType type) override;
 
@@ -60,14 +86,20 @@ public:
     void NotifyRemoteReady() override;
     void NotifySyncOn() override;
     void NotifyAsyncOn() override;
+    WSError NotifyDensityFollowHost(bool isFollowHost, float densityValue = 1.0f);
     void TriggerBindModalUIExtension() override;
     void RegisterExtensionSessionEventCallback(const sptr<ExtensionSessionEventCallback>& extSessionEventCallback);
+    WSError TransferKeyEventForConsumed(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed,
+        bool& isTimeOut, bool isPreImeEvent = false);
+    WSError TransferKeyEventAsync(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool isPreImeEvent = false);
     sptr<ExtensionSessionEventCallback> GetExtensionSessionEventCallback();
-    WSError Background() override;
+    WSError Background(bool isFromClient = false) override;
 
 private:
     sptr<ExtensionSessionEventCallback> extSessionEventCallback_ = nullptr;
     bool isFirstTriggerBindModal_ = true;
+    sptr<ChannelDeathRecipient> channelDeath_ = nullptr;
+    sptr<WindowEventChannelListener> channelListener_ = nullptr;
 };
 } // namespace OHOS::Rosen
 

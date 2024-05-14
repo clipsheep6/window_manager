@@ -87,6 +87,78 @@ std::string DumpRect(const std::vector<MMI::Rect>& rects)
     return rectStr;
 }
 
+bool operator!=(const MMI::Rect& a, const MMI::Rect& b)
+{
+    if (a.x != b.x || a.y != b.y || a.width != b.width || a.height != b.height) {
+        return true;
+    }
+    return false;
+}
+
+bool operator==(const MMI::DisplayInfo& a, const MMI::DisplayInfo& b)
+{
+    if (a.id != b.id || a.x != b.x || a.y != b.y || a.width != b.width ||
+        a.height != b.height || a.dpi != b.dpi || a.name != b.name || a.uniq != b.uniq ||
+        static_cast<int32_t>(a.direction) != static_cast<int32_t>(b.direction) ||
+        static_cast<int32_t>(a.displayDirection) != static_cast<int32_t>(b.displayDirection) ||
+        static_cast<int32_t>(a.displayMode) != static_cast<int32_t>(b.displayMode)) {
+        return false;
+    }
+    return true;
+}
+
+bool operator!=(const std::vector<float>& a, const std::vector<float>& b)
+{
+    if (a.size() != b.size()) {
+        return true;
+    }
+    int sizeOfA = static_cast<int>(a.size());
+    for (int index = 0; index < sizeOfA; index++) {
+        if (a[index] != b[index]) {
+            return true;
+        }
+    }
+    return false;
+}
+bool operator==(const MMI::WindowInfo& a, const MMI::WindowInfo& b)
+{
+    if (a.id != b.id || a.pid != b.pid || a.uid != b.uid || a.agentWindowId != b.agentWindowId || a.flags != b.flags ||
+        a.displayId != b.displayId || a.zOrder != b.zOrder) {
+        return false;
+    }
+
+    if (a.area != b.area || a.defaultHotAreas.size() != b.defaultHotAreas.size() ||
+        a.pointerHotAreas.size() != b.pointerHotAreas.size() ||
+        a.pointerChangeAreas.size() != b.pointerChangeAreas.size() || a.transform.size() != b.transform.size()) {
+        return false;
+    }
+
+    int sizeOfDefaultHotAreas = static_cast<int>(a.defaultHotAreas.size());
+    for (int index = 0; index < sizeOfDefaultHotAreas; index++) {
+        if (a.defaultHotAreas[index] != b.defaultHotAreas[index]) {
+            return false;
+        }
+    }
+    int sizeOfPointerHotAreas = static_cast<int>(a.pointerHotAreas.size());
+    for (int index = 0; index < sizeOfPointerHotAreas; index++) {
+        if (a.pointerHotAreas[index] != b.pointerHotAreas[index]) {
+            return false;
+        }
+    }
+    int sizeOfPointerChangeAreas = static_cast<int>(a.pointerChangeAreas.size());
+    for (int index = 0; index < sizeOfPointerChangeAreas; index++) {
+        if (a.pointerChangeAreas[index] != b.pointerChangeAreas[index]) {
+            return false;
+        }
+    }
+
+    if (a.transform != b.transform) {
+        return false;
+    }
+
+    return true;
+}
+
 std::string DumpWindowInfo(const MMI::WindowInfo& info)
 {
     std::string infoStr = "windowInfo:";
@@ -137,7 +209,7 @@ void SceneInputManager::Init()
 
 void SceneInputManager::ConstructDisplayInfos(std::vector<MMI::DisplayInfo>& displayInfos)
 {
-    std::unordered_map<ScreenId, ScreenProperty> screensProperties =
+    std::map<ScreenId, ScreenProperty> screensProperties =
         Rosen::ScreenSessionManagerClient::GetInstance().GetAllScreensProperties();
     auto displayMode = Rosen::ScreenSessionManagerClient::GetInstance().GetFoldDisplayMode();
     for (auto& iter: screensProperties) {
@@ -170,10 +242,9 @@ void SceneInputManager::ConstructDisplayInfos(std::vector<MMI::DisplayInfo>& dis
     }
 }
 
-void SceneInputManager::FlushFullInfoToMMI(const std::vector<MMI::WindowInfo>& windowInfoList)
+void SceneInputManager::FlushFullInfoToMMI(const std::vector<MMI::DisplayInfo>& displayInfos,
+    const std::vector<MMI::WindowInfo>& windowInfoList)
 {
-    std::vector<MMI::DisplayInfo> displayInfos;
-    ConstructDisplayInfos(displayInfos);
     int mainScreenWidth = 0; 
     int mainScreenHeight = 0;
     if (!displayInfos.empty()) {
@@ -181,23 +252,26 @@ void SceneInputManager::FlushFullInfoToMMI(const std::vector<MMI::WindowInfo>& w
         mainScreenHeight = displayInfos[0].height;
     }
     if (sceneSessionDirty_ == nullptr) {
-        WLOG_E("scene session dirty is null");
+        WLOGFE("scene session dirty is null");
         return;
     }
 
-    int32_t focusId = Rosen::SceneSessionManager::GetInstance().GetFocusedSession();
+    int32_t focusId = Rosen::SceneSessionManager::GetInstance().GetFocusedSessionId();
     MMI::DisplayGroupInfo displayGroupInfo = {
         .width = mainScreenWidth,
         .height = mainScreenHeight,
         .focusWindowId = focusId,
+        .currentUserId = currentUserId_,
         .windowsInfo = windowInfoList,
         .displaysInfo = displayInfos};
-        for (const auto& displayInfo : displayGroupInfo.displaysInfo) {
-            WLOG_D("[EventDispatch] - %s", DumpDisplayInfo(displayInfo).c_str());
-        }
-        for (const auto& windowInfo : displayGroupInfo.windowsInfo) {
-            WLOG_D("[EventDispatch] - %s", DumpWindowInfo(windowInfo).c_str());
-        }
+    for (const auto& displayInfo : displayGroupInfo.displaysInfo) {
+        TLOGD(WmsLogTag::WMS_EVENT, "[EventDispatch] - %{public}s", DumpDisplayInfo(displayInfo).c_str());
+    }
+    std::string windowinfolst = "windowinfo  ";
+    for (const auto& windowInfo : displayGroupInfo.windowsInfo) {
+        windowinfolst.append(DumpWindowInfo(windowInfo).append("  ||  "));
+    }
+    TLOGD(WmsLogTag::WMS_EVENT, "[EventDispatch] - %{public}s", windowinfolst.c_str());
     MMI::InputManager::GetInstance()->UpdateDisplayInfo(displayGroupInfo);
 } 
 
@@ -232,41 +306,126 @@ void SceneInputManager::FlushChangeInfoToMMI(const std::map<uint64_t, std::vecto
     for (auto& iter : screenId2Windows) {
         auto displayId = iter.first;
         auto& windowInfos = iter.second;
+        std::string windowinfolst = "windowinfo  ";
         for (auto& windowInfo : windowInfos) {
-            WLOG_D("[EventDispatch] --- %s", DumpWindowInfo(windowInfo).c_str());
+            windowinfolst.append(DumpWindowInfo(windowInfo).append("  ||  "));
         }
-
-        int32_t focusId = Rosen::SceneSessionManager::GetInstance().GetFocusedSession();
+        TLOGD(WmsLogTag::WMS_EVENT, "[EventDispatch] --- %{public}s", windowinfolst.c_str());
+        int32_t focusId = Rosen::SceneSessionManager::GetInstance().GetFocusedSessionId();
         MMI::WindowGroupInfo windowGroup = {focusId, displayId, windowInfos};
         MMI::InputManager::GetInstance()->UpdateWindowInfo(windowGroup);
     }
 }
 
-void SceneInputManager::FlushDisplayInfoToMMI()
+bool SceneInputManager::CheckNeedUpdate(const std::vector<MMI::DisplayInfo>& displayInfos,
+    const std::vector<MMI::WindowInfo>& windowInfoList)
 {
-    auto task = [this]() {
+    int32_t focusId = Rosen::SceneSessionManager::GetInstance().GetFocusedSessionId();
+    if (focusId != lastFocusId_) {
+        lastFocusId_ = focusId;
+        lastDisplayInfos_ = displayInfos;
+        lastWindowInfoList_ = windowInfoList;
+        return true;
+    }
+
+    if (displayInfos.size() != lastDisplayInfos_.size() || windowInfoList.size() != lastWindowInfoList_.size()) {
+        lastDisplayInfos_ = displayInfos;
+        lastWindowInfoList_ = windowInfoList;
+        return true;
+    }
+
+    int sizeOfDisplayInfos = static_cast<int>(displayInfos.size());
+    for (int index = 0; index < sizeOfDisplayInfos; index++) {
+        if (!(displayInfos[index] == lastDisplayInfos_[index])) {
+            lastDisplayInfos_ = displayInfos;
+            lastWindowInfoList_ = windowInfoList;
+            return true;
+        }
+    }
+
+    int sizeOfWindowInfoList = static_cast<int>(windowInfoList.size());
+    for (int index = 0; index < sizeOfWindowInfoList; index++) {
+        if (!(windowInfoList[index] == lastWindowInfoList_[index])) {
+            lastWindowInfoList_ = windowInfoList;
+            return true;
+        }
+    }
+    return false;
+}
+
+void SceneInputManager::PrintWindowInfo(const std::vector<MMI::WindowInfo>& windowInfoList)
+{
+    int windowListSize = static_cast<int>(windowInfoList.size());
+    std::string idList;
+    static std::string lastIdList;
+    static uint32_t windowEventID = 0;
+    if (windowEventID == UINT32_MAX) {
+        windowEventID = 0;
+    }
+    for (auto& e : windowInfoList) {
+        idList += std::to_string(e.id) + "|" + std::to_string(e.flags) + "|" +
+            std::to_string(static_cast<int>(e.zOrder)) + " ";
+    }
+    if (lastIdList != idList) {
+        windowEventID++;
+        TLOGI(WmsLogTag::WMS_EVENT, "EventID:%{public}d ListSize:%{public}d idList:%{public}s",
+            windowEventID, windowListSize, idList.c_str());
+        lastIdList = idList;
+    }
+}
+
+void SceneInputManager::SetUserBackground(bool userBackground)
+{
+    TLOGI(WmsLogTag::WMS_MULTI_USER, "userBackground = %{public}d", userBackground);
+    isUserBackground_ = userBackground;
+}
+
+bool SceneInputManager::IsUserBackground()
+{
+    return isUserBackground_;
+}
+
+void SceneInputManager::SetCurrentUserId(int32_t userId)
+{
+    TLOGI(WmsLogTag::WMS_MULTI_USER, "Current userId = %{public}d", userId);
+    currentUserId_ = userId;
+    MMI::InputManager::GetInstance()->SetCurrentUser(userId);
+}
+
+void SceneInputManager::FlushDisplayInfoToMMI(const bool forceFlush)
+{
+    auto task = [this, forceFlush]() {
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "FlushDisplayInfoToMMI");
+        if (isUserBackground_) {
+            TLOGD(WmsLogTag::WMS_MULTI_USER, "User in background, no need to flush display info");
+            return;
+        }
         if (sceneSessionDirty_ == nullptr) {
             return;
         }
         sceneSessionDirty_->ResetSessionDirty();
-
+        std::vector<MMI::DisplayInfo> displayInfos;
+        ConstructDisplayInfos(displayInfos);
         std::vector<MMI::WindowInfo> windowInfoList = sceneSessionDirty_->GetFullWindowInfoList();
-        WLOG_D("[EventDispatch] - windowInfo:windowList = %{public}d", static_cast<int>(windowInfoList.size()));
-        if (windowInfoList.size() == 0) {
-            FlushFullInfoToMMI(windowInfoList);
+        if (!forceFlush && !CheckNeedUpdate(displayInfos, windowInfoList)) {
             return;
         }
+        PrintWindowInfo(windowInfoList);
+        if (windowInfoList.size() == 0) {
+            FlushFullInfoToMMI(displayInfos, windowInfoList);
+            return;
+        }
+
         windowInfoList.back().action = MMI::WINDOW_UPDATE_ACTION::ADD_END;
         if (windowInfoList.size() <= MAX_WINDOWINFO_NUM) {
-            FlushFullInfoToMMI(windowInfoList);
+            FlushFullInfoToMMI(displayInfos, windowInfoList);
             return;
         }
 
         auto iterBegin = windowInfoList.begin();
         auto iterEnd = windowInfoList.end();
         auto iterNext = std::next(iterBegin, MAX_WINDOWINFO_NUM);
-        FlushFullInfoToMMI(std::vector<MMI::WindowInfo>(iterBegin, iterNext));
+        FlushFullInfoToMMI(displayInfos, std::vector<MMI::WindowInfo>(iterBegin, iterNext));
         while (iterNext != iterEnd) {
             auto iterNewBegin = iterNext;
             if (std::distance(iterNewBegin, iterEnd) <= MAX_WINDOWINFO_NUM) {

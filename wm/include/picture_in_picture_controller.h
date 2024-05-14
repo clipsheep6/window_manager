@@ -30,6 +30,7 @@
 #include "pip_report.h"
 #include "navigation_controller.h"
 #include "display_manager.h"
+#include "errors.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -51,27 +52,25 @@ enum class StopPipType : uint32_t {
 using namespace Ace;
 class PictureInPictureController : virtual public RefBase {
 public:
-    constexpr static int32_t DEFAULT_TIME_DELAY = 400;
     PictureInPictureController(sptr<PipOption> pipOption, sptr<Window> mainWindow, uint32_t mainWindowId, napi_env env);
     ~PictureInPictureController();
     WMError StartPictureInPicture(StartPipType startType);
-    WMError StopPictureInPicture(bool destroyWindow, bool needAnim, StopPipType stopPipType);
-    sptr<Window> GetPipWindow();
+    WMError StopPictureInPicture(bool destroyWindow, StopPipType stopPipType);
+    WMError StopPictureInPictureFromClient();
+    sptr<Window> GetPipWindow() const;
     uint32_t GetMainWindowId();
     void SetPipWindow(sptr<Window> window);
     void SetAutoStartEnabled(bool enable);
     void IsAutoStartEnabled(bool& enable) const;
     void UpdateContentSize(int32_t width, int32_t height);
-    void StartMove();
-    void DoScale();
-    void DoActionEvent(std::string& actionName);
+    void DoActionEvent(const std::string& actionName, int32_t status);
     void RestorePictureInPictureWindow();
     void SetPictureInPictureLifecycle(sptr<IPiPLifeCycle> listener);
     void SetPictureInPictureActionObserver(sptr<IPiPActionObserver> listener);
     sptr<IPiPLifeCycle> GetPictureInPictureLifecycle() const;
     sptr<IPiPActionObserver> GetPictureInPictureActionObserver() const;
     WMError SetXComponentController(std::shared_ptr<XComponentController> xComponentController);
-    PipWindowState GetControllerState();
+    PiPWindowState GetControllerState();
     std::string GetPiPNavigationId();
 
     class PipMainWindowLifeCycleImpl : public Rosen::IWindowLifeCycle {
@@ -87,26 +86,13 @@ public:
         std::string navigationId_ = "";
     };
 
-    class PipDisplayListener : public OHOS::Rosen::DisplayManager::IDisplayListener {
-    public:
-        PipDisplayListener(wptr<PictureInPictureController> pipController)
-        {
-            pipController_ = pipController;
-            preRotation_ = Rosen::DisplayManager::GetInstance().GetDefaultDisplay()->GetRotation();
-        }
-        void OnCreate(DisplayId displayId) override;
-        void OnDestroy(DisplayId displayId) override;
-        void OnChange(DisplayId displayId) override;
-    private:
-        wptr<PictureInPictureController> pipController_;
-        Rotation preRotation_;
-    };
-
 private:
+    static sptr<IRemoteObject> remoteObj_;
+    static ErrCode getSettingsAutoStartStatus(const std::string& key, std::string& value);
     WMError CreatePictureInPictureWindow();
     WMError ShowPictureInPictureWindow(StartPipType startType);
     WMError StartPictureInPictureInner(StartPipType startType);
-    WMError StopPictureInPictureInner(bool needAnim, StopPipType stopType);
+    WMError StopPictureInPictureInner(StopPipType stopType);
     void UpdateXComponentPositionAndSize();
     void ResetExtController();
     bool IsPullPiPAndHandleNavigation();
@@ -119,14 +105,13 @@ private:
     uint32_t mainWindowId_;
     Rect windowRect_ = {0, 0, 0, 0};
     bool isAutoStartEnabled_ = false;
-    PipWindowState curState_ = PipWindowState::STATE_UNDEFINED;
+    PiPWindowState curState_ = PiPWindowState::STATE_UNDEFINED;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
     std::shared_ptr<XComponentController> pipXComponentController_;
     std::shared_ptr<XComponentController> mainWindowXComponentController_;
     napi_env env_;
     std::mutex mutex_;
     int32_t handleId_ = -1;
-    sptr<PictureInPictureController::PipDisplayListener> pipDisplayListener_;
 };
 } // namespace Rosen
 } // namespace OHOS

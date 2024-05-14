@@ -36,7 +36,7 @@ SessionManagerService::~SessionManagerService()
     if (g_sessionManagerService != nullptr) {
         g_sessionManagerService = nullptr;
     }
-    WLOGFI("[WMSRecover] ~SessionManagerService");
+    WLOGFI("~SessionManagerService");
 }
 
 SessionManagerService* SessionManagerService::GetInstance()
@@ -44,7 +44,7 @@ SessionManagerService* SessionManagerService::GetInstance()
     if (g_sessionManagerService == nullptr) {
         std::lock_guard<std::mutex> lock(g_instanceMutex);
         if (g_sessionManagerService == nullptr) {
-            WLOGFI("[WMSRecover] new SessionManagerService");
+            WLOGFI("new SessionManagerService");
             g_sessionManagerService = new SessionManagerService();
         }
     }
@@ -61,19 +61,19 @@ void SessionManagerService::NotifySceneBoardAvailable()
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (!systemAbilityManager) {
-        WLOGFE("[WMSRecover] Failed to get system ability manager.");
+        TLOGE(WmsLogTag::WMS_RECOVER, "Failed to get system ability manager.");
         return;
     }
 
     sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(WINDOW_MANAGER_SERVICE_ID);
     if (!remoteObject) {
-        WLOGFE("[WMSRecover] Get window manager service failed, remote object is nullptr");
+        TLOGE(WmsLogTag::WMS_RECOVER, "Get window manager service failed, remote object is nullptr");
         return;
     }
 
     auto mockSessionManagerServiceProxy = iface_cast<IMockSessionManagerInterface>(remoteObject);
     if (!mockSessionManagerServiceProxy) {
-        WLOGFE("[WMSRecover] Get mock session manager service proxy failed, nullptr");
+        TLOGE(WmsLogTag::WMS_RECOVER, "Get mock session manager service proxy failed, nullptr");
         return;
     }
     mockSessionManagerServiceProxy->NotifySceneBoardAvailable();

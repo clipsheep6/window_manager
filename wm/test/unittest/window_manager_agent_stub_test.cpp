@@ -232,6 +232,89 @@ HWTEST_F(WindowManagerAgentStubTest, OnRemoteRequest10, Function | SmallTest | L
     int res = stub_->OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(res, 0);
 }
+
+/**
+ * @tc.name: OnRemoteRequest11
+ * @tc.desc: test InterfaceToken check failed
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerAgentStubTest, OnRemoteRequest11, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(u"error.GetDescriptor");
+    
+    uint32_t code = static_cast<uint32_t>(
+        IWindowManagerAgent::WindowManagerAgentMsg::TRANS_ID_UPDATE_WINDOW_MODE_TYPE);
+    int res = stub_->OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, -1);
+}
+
+/**
+ * @tc.name: OnRemoteRequest12
+ * @tc.desc: test TRANS_ID_UPDATE_WINDOW_MODE_TYPE
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerAgentStubTest, OnRemoteRequest12, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(WindowManagerAgentStub::GetDescriptor());
+    data.WriteUint8(static_cast<uint8_t>(WindowModeType::WINDOW_MODE_FLOATING));
+    uint32_t code = static_cast<uint32_t>(
+        IWindowManagerAgent::WindowManagerAgentMsg::TRANS_ID_UPDATE_WINDOW_MODE_TYPE);
+    int res = stub_->OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.name: OnRemoteRequest13
+ * @tc.desc: test TRANS_ID_UPDATE_WINDOW_MODE_TYPE success
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerAgentStubTest, OnRemoteRequest13, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(WindowManagerAgentStub::GetDescriptor());
+    
+    uint32_t code = static_cast<uint32_t>(
+        IWindowManagerAgent::WindowManagerAgentMsg::TRANS_ID_UPDATE_WINDOW_MODE_TYPE);
+    int res = stub_->OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+HWTEST_F(WindowManagerAgentStubTest, OnRemoteRequest14, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    data.WriteInterfaceToken(WindowManagerAgentStub::GetDescriptor());
+
+    VisibleWindowNumInfo oneNum;
+    oneNum.displayId = 0;
+    oneNum.visibleWindowNum = 3;
+    std::vector<VisibleWindowNumInfo> visibleWindowNumInfo;
+    visibleWindowNumInfo.push_back(oneNum);
+    MarshallingHelper::MarshallingVectorObj<VisibleWindowNumInfo>(data, visibleWindowNumInfo,
+        [](Parcel& parcel, const VisibleWindowNumInfo& num) {
+            return parcel.WriteUint32(num.displayId) && parcel.WriteUint32(num.visibleWindowNum);
+        }
+    );
+
+    uint32_t code = static_cast<uint32_t>(
+        IWindowManagerAgent::WindowManagerAgentMsg::TRANS_ID_UPDATE_VISIBLE_WINDOW_NUM);
+
+    int res = stub_->OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, 0);
+}
 }
 }
 }

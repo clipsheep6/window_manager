@@ -25,6 +25,7 @@
 #include "wm_common.h"
 #include "dm_common.h"
 #include <cfloat>
+#include "pixel_map.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -62,19 +63,29 @@ public:
     void SetMaximizeMode(MaximizeMode mode);
     void SetWindowMode(WindowMode mode);
     void SetWindowLimits(const WindowLimits& windowLimits);
+    void SetUserWindowLimits(const WindowLimits& windowLimits);
+    void SetConfigWindowLimitsVP(const WindowLimits& windowLimitsVP);
+    void SetLastLimitsVpr(float vpr);
     void SetSystemBarProperty(WindowType type, const SystemBarProperty& property);
-    void SetSessionGravity(SessionGravity gravity_, uint32_t percent);
+    void SetKeyboardSessionGravity(SessionGravity gravity_, uint32_t percent);
+    void SetKeyboardLayoutParams(const KeyboardLayoutParams& params);
     void SetDecorEnable(bool isDecorEnable);
     void SetAnimationFlag(uint32_t animationFlag);
     void SetTransform(const Transform& trans);
     void SetWindowFlags(uint32_t flags);
+    void SetTopmost(bool topmost);
+    bool IsTopmost() const;
     void AddWindowFlag(WindowFlag flag);
     void SetModeSupportInfo(uint32_t modeSupportInfo);
     void SetFloatingWindowAppType(bool isAppType);
     void SetTouchHotAreas(const std::vector<Rect>& rects);
     void KeepKeyboardOnFocus(bool keepKeyboardFlag);
     void SetIsNeedUpdateWindowMode(bool isNeedUpdateWindowMode);
-    void SetCallingWindow(uint32_t windowId);
+    void SetCallingSessionId(uint32_t sessionId);
+    void SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo);
+    void SetExtensionFlag(bool isExtensionFlag);
+    void SetWindowMask(const sptr<Media::PixelMap>& windowMask);
+    void SetIsShaped(bool isShaped);
 
     bool GetIsNeedUpdateWindowMode() const;
     const std::string& GetWindowName() const;
@@ -105,6 +116,9 @@ public:
     MaximizeMode GetMaximizeMode() const;
     WindowMode GetWindowMode() const;
     WindowLimits GetWindowLimits() const;
+    WindowLimits GetUserWindowLimits() const;
+    WindowLimits GetConfigWindowLimitsVP() const;
+    float GetLastLimitsVpr() const;
     uint32_t GetModeSupportInfo() const;
     std::unordered_map<WindowType, SystemBarProperty> GetSystemBarProperty() const;
     void GetSessionGravity(SessionGravity& gravity, uint32_t& percent);
@@ -114,14 +128,23 @@ public:
     bool IsFloatingWindowAppType() const;
     void GetTouchHotAreas(std::vector<Rect>& rects) const;
     bool GetKeepKeyboardFlag() const;
-    uint32_t GetCallingWindow() const;
+    uint32_t GetCallingSessionId() const;
+    PiPTemplateInfo GetPiPTemplateInfo() const;
+    bool GetExtensionFlag() const;
+    sptr<Media::PixelMap> GetWindowMask() const;
+    bool GetIsShaped() const;
+    KeyboardLayoutParams GetKeyboardLayoutParams() const;
 
     bool MarshallingWindowLimits(Parcel& parcel) const;
     static void UnmarshallingWindowLimits(Parcel& parcel, WindowSessionProperty* property);
     bool MarshallingSystemBarMap(Parcel& parcel) const;
     static void UnMarshallingSystemBarMap(Parcel& parcel, WindowSessionProperty* property);
+    bool MarshallingPiPTemplateInfo(Parcel& parcel) const;
+    static void UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowSessionProperty* property);
     bool Marshalling(Parcel& parcel) const override;
     static WindowSessionProperty* Unmarshalling(Parcel& parcel);
+    bool MarshallingWindowMask(Parcel& parcel) const;
+    static void UnmarshallingWindowMask(Parcel& parcel, WindowSessionProperty* property);
 
     void SetTextFieldPositionY(double textFieldPositionY);
     void SetTextFieldHeight(double textFieldHeight);
@@ -135,6 +158,10 @@ public:
     void SetSessionPropertyChangeCallback(std::function<void()>&& callback);
     bool IsLayoutFullScreen() const;
     void SetIsLayoutFullScreen(bool isLayoutFullScreen);
+    int32_t GetCollaboratorType() const;
+    void SetCollaboratorType(int32_t collaboratorType);
+    bool Write(Parcel& parcel, WSPropertyChangeAction action);
+    void Read(Parcel& parcel, WSPropertyChangeAction action);
 
 private:
     bool MarshallingTouchHotAreas(Parcel& parcel) const;
@@ -152,6 +179,7 @@ private:
     bool tokenState_ { false };
     bool turnScreenOn_ = false;
     bool keepScreenOn_ = false;
+    bool topmost_ = false;
     Orientation requestedOrientation_ = Orientation::UNSPECIFIED;
     bool isPrivacyMode_ { false };
     bool isSystemPrivacyMode_ { false };
@@ -166,7 +194,12 @@ private:
     WindowMode windowMode_ = WindowMode::WINDOW_MODE_FULLSCREEN;
     WindowState windowState_ = WindowState::STATE_INITIAL;
     WindowLimits limits_;
+    WindowLimits userLimits_;
+    WindowLimits configLimitsVP_;
+    float lastVpr_ = 0.0f;
+    PiPTemplateInfo pipTemplateInfo_ = {0, 0, {}};
     SessionGravity sessionGravity_ = SessionGravity::SESSION_GRAVITY_DEFAULT;
+    KeyboardLayoutParams keyboardLayoutParams_;
     uint32_t sessionGravitySizePercent_ = 0;
     uint32_t modeSupportInfo_ {WindowModeSupport::WINDOW_MODE_SUPPORT_ALL};
     std::unordered_map<WindowType, SystemBarProperty> sysBarPropMap_ {
@@ -183,13 +216,52 @@ private:
     bool hideNonSystemFloatingWindows_ = false;
     bool forceHide_ = false;
     bool keepKeyboardFlag_ = false;
-    uint32_t callingWindowId_ = INVALID_WINDOW_ID;
+    uint32_t callingSessionId_ = INVALID_SESSION_ID;
 
     double textFieldPositionY_ = 0.0;
     double textFieldHeight_ = 0.0;
     bool isNeedUpdateWindowMode_ = false;
     std::function<void()> touchHotAreasChangeCallback_;
     bool isLayoutFullScreen_ = false;
+    bool isExtensionFlag_ = false;
+
+    bool isShaped_ = false;
+    sptr<Media::PixelMap> windowMask_ = nullptr;
+    int32_t collaboratorType_ = CollaboratorType::DEFAULT_TYPE;
+};
+
+struct FreeMultiWindowConfig : public Parcelable {
+    bool isSystemDecorEnable_ = true;
+    uint32_t decorModeSupportInfo_ = WindowModeSupport::WINDOW_MODE_SUPPORT_ALL;
+    WindowMode defaultWindowMode_ = WindowMode::WINDOW_MODE_FULLSCREEN;
+    uint32_t maxMainFloatingWindowNumber_ = 0;
+
+    virtual bool Marshalling(Parcel& parcel) const override
+    {
+        if (!parcel.WriteBool(isSystemDecorEnable_) ||
+            !parcel.WriteUint32(decorModeSupportInfo_)) {
+            return false;
+        }
+
+        if (!parcel.WriteUint32(static_cast<uint32_t>(defaultWindowMode_)) ||
+            !parcel.WriteUint32(maxMainFloatingWindowNumber_)) {
+            return false;
+        }
+        return true;
+    }
+
+    static FreeMultiWindowConfig* Unmarshalling(Parcel& parcel)
+    {
+        FreeMultiWindowConfig* config = new (std::nothrow) FreeMultiWindowConfig();
+        if (config == nullptr) {
+            return nullptr;
+        }
+        config->isSystemDecorEnable_ = parcel.ReadBool();
+        config->decorModeSupportInfo_ = parcel.ReadUint32();
+        config->defaultWindowMode_ = static_cast<WindowMode>(parcel.ReadUint32());
+        config->maxMainFloatingWindowNumber_ = parcel.ReadUint32();
+        return config;
+    }
 };
 
 struct SystemSessionConfig : public Parcelable {
@@ -198,12 +270,20 @@ struct SystemSessionConfig : public Parcelable {
     bool isStretchable_ = false;
     WindowMode defaultWindowMode_ = WindowMode::WINDOW_MODE_FULLSCREEN;
     KeyboardAnimationConfig keyboardAnimationConfig_;
-    uint32_t maxFloatingWindowSize_ = UINT32_MAX;
-    uint32_t miniWidthOfMainWindow_ = 0;
-    uint32_t miniHeightOfMainWindow_ = 0;
-    uint32_t miniWidthOfSubWindow_ = 0;
-    uint32_t miniHeightOfSubWindow_ = 0;
+    // 1920: default max window size
+    uint32_t maxFloatingWindowSize_ = 1920;
+    // 320: default minWidth main window size
+    uint32_t miniWidthOfMainWindow_ = 320;
+    // 240: default minHeight main window size
+    uint32_t miniHeightOfMainWindow_ = 240;
+    // 320: default minWidth sub window size
+    uint32_t miniWidthOfSubWindow_ = 320;
+    // 240: default minHeight sub window size
+    uint32_t miniHeightOfSubWindow_ = 240;
     bool backgroundswitch = false;
+    bool freeMultiWindowEnable_ = false;
+    bool freeMultiWindowSupport_ = false;
+    FreeMultiWindowConfig freeMultiWindowConfig_;
 
     virtual bool Marshalling(Parcel& parcel) const override
     {
@@ -224,6 +304,17 @@ struct SystemSessionConfig : public Parcelable {
         }
 
         if (!parcel.WriteBool(backgroundswitch)) {
+            return false;
+        }
+        
+        if (!parcel.WriteBool(freeMultiWindowEnable_)) {
+            return false;
+        }
+        
+        if (!parcel.WriteBool(freeMultiWindowSupport_)) {
+            return false;
+        }
+        if (!parcel.WriteParcelable(&freeMultiWindowConfig_)) {
             return false;
         }
         return true;
@@ -247,6 +338,9 @@ struct SystemSessionConfig : public Parcelable {
         config->miniWidthOfSubWindow_ = parcel.ReadUint32();
         config->miniHeightOfSubWindow_ = parcel.ReadUint32();
         config->backgroundswitch = parcel.ReadBool();
+        config->freeMultiWindowEnable_ = parcel.ReadBool();
+        config->freeMultiWindowSupport_ = parcel.ReadBool();
+        config->freeMultiWindowConfig_ = *parcel.ReadParcelable<FreeMultiWindowConfig>();
         return config;
     }
 };

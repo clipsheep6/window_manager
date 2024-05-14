@@ -17,12 +17,14 @@
 #define OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_LITE_INTERFACE_H
 
 #include <iremote_broker.h>
-#include "interfaces/include/ws_common.h"
-#include "session_info.h"
-#include "mission_listener_interface.h"
-#include "mission_info.h"
-#include "mission_snapshot.h"
+#include "common/include/window_session_property.h"
 #include "iability_manager_collaborator.h"
+#include "interfaces/include/ws_common.h"
+#include "interfaces/include/ws_common_inner.h"
+#include "mission_info.h"
+#include "mission_listener_interface.h"
+#include "mission_snapshot.h"
+#include "session_info.h"
 #include "zidl/window_manager_lite_interface.h"
 namespace OHOS::Media {
 class PixelMap;
@@ -43,10 +45,12 @@ public:
         TRANS_ID_PENDING_SESSION_TO_FOREGROUND,
         TRANS_ID_PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR,
         TRANS_ID_GET_FOCUS_SESSION_TOKEN,
+        TRANS_ID_GET_FOCUS_SESSION_ELEMENT,
         TRANS_ID_REGISTER_SESSION_LISTENER,
         TRANS_ID_UNREGISTER_SESSION_LISTENER,
         TRANS_ID_GET_MISSION_INFOS,
         TRANS_ID_GET_MISSION_INFO_BY_ID,
+        TRANS_ID_GET_SESSION_INFO_BY_CONTINUE_SESSION_ID,
         TRANS_ID_TERMINATE_SESSION_NEW,
         TRANS_ID_GET_SESSION_SNAPSHOT,
         TRANS_ID_SET_SESSION_CONTINUE_STATE,
@@ -58,6 +62,13 @@ public:
         TRANS_ID_MOVE_MISSIONS_TO_BACKGROUND,
         //window manager message
         TRANS_ID_GET_FOCUS_SESSION_INFO,
+        TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT,
+        TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT,
+        TRANS_ID_GET_WINDOW_INFO,
+        TRANS_ID_CHECK_WINDOW_ID,
+        TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID,
+        TRANS_ID_GET_WINDOW_MODE_TYPE,
+        TRANS_ID_GET_TOPN_MAIN_WINDOW_INFO,
     };
 
     virtual WSError SetSessionLabel(const sptr<IRemoteObject>& token, const std::string& label) = 0;
@@ -66,13 +77,17 @@ public:
     virtual WSError PendingSessionToForeground(const sptr<IRemoteObject>& token) = 0;
     virtual WSError PendingSessionToBackgroundForDelegator(const sptr<IRemoteObject>& token) = 0;
     virtual WSError GetFocusSessionToken(sptr<IRemoteObject>& token) = 0;
+    virtual WSError GetFocusSessionElement(AppExecFwk::ElementName& element) = 0;
     virtual WSError RegisterSessionListener(const sptr<ISessionListener>& listener) = 0;
     virtual WSError UnRegisterSessionListener(const sptr<ISessionListener>& listener) = 0;
     virtual WSError GetSessionInfos(const std::string& deviceId,
                                     int32_t numMax, std::vector<SessionInfoBean>& sessionInfos) = 0;
     virtual WSError GetSessionInfo(const std::string& deviceId, int32_t persistentId, SessionInfoBean& sessionInfo) = 0;
+    virtual WSError GetSessionInfoByContinueSessionId(const std::string& continueSessionId,
+        SessionInfoBean& sessionInfo) = 0;
     virtual WSError SetSessionContinueState(const sptr<IRemoteObject>& token, const ContinueState& continueState) = 0;
-    virtual WSError TerminateSessionNew(const sptr<AAFwk::SessionInfo> info, bool needStartCaller) = 0;
+    virtual WSError TerminateSessionNew(
+        const sptr<AAFwk::SessionInfo> info, bool needStartCaller, bool isFromBroker = false) = 0;
     virtual WSError GetSessionSnapshot(const std::string& deviceId, int32_t persistentId,
                                        SessionSnapshot& snapshot, bool isLowResolution) = 0;
     virtual WSError ClearSession(int32_t persistentId) = 0;

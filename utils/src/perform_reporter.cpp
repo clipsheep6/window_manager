@@ -297,5 +297,35 @@ void WindowInfoReporter::ClearRecordedInfos()
     windowDestoryReportInfos_.clear();
     windowNavigationBarReportInfos_.clear();
 }
+
+int32_t WindowInfoReporter::ReportWindowProfileInfo(const WindowProfileInfo& windowProfileInfo)
+{
+    std::string eventName = "WINDOW_PROFILE_INFORMATION";
+    int32_t ret = HiSysEventWrite(
+        OHOS::HiviewDFX::HiSysEvent::Domain::WINDOW_MANAGER, eventName,
+        OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
+        "BUNDLE_NAME", windowProfileInfo.bundleName,
+        "WINDOW_VISIBLE_STATE", windowProfileInfo.windowVisibleState,
+        "WINDOW_LOCATED_SCREEN", windowProfileInfo.windowLocatedScreen,
+        "WINDOW_SCENE_MODE", windowProfileInfo.windowSceneMode);
+    if (ret != 0) {
+        WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
+    }
+    return ret;
+}
+
+void WindowInfoReporter::ReportWindowException(int32_t detectionType, int32_t pid, const std::string& windowInfo)
+{
+    std::string eventName = "WINDOW_EXCEPTION_DETECTION";
+    int32_t ret = HiSysEventWrite(
+        OHOS::HiviewDFX::HiSysEvent::Domain::WINDOW_MANAGER, eventName,
+        OHOS::HiviewDFX::HiSysEvent::EventType::FAULT,
+        "DETECTION_TYPE", detectionType,
+        "PID", pid,
+        "MSG", windowInfo);
+    if (ret != 0) {
+        WLOGFE("Write HiSysEvent error, ret:%{public}d", ret);
+    }
+}
 }
 }

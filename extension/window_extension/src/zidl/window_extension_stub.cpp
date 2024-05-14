@@ -52,6 +52,9 @@ int WindowExtensionStub::OnRemoteRequest(uint32_t code, MessageParcel& data,
         case TRANS_ID_CONNECT_TO_EXTENSION: {
             sptr<IRemoteObject> object = data.ReadRemoteObject();
             sptr<IWindowExtensionClient> token = iface_cast<IWindowExtensionClient>(object);
+            if (token == nullptr) {
+                return -1;
+            }
             GetExtensionWindow(token);
             break;
         }

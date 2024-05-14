@@ -25,6 +25,11 @@ void WindowManagerAgent::UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focu
     SingletonContainer::Get<WindowManager>().UpdateFocusChangeInfo(focusChangeInfo, focused);
 }
 
+void WindowManagerAgent::UpdateWindowModeTypeInfo(WindowModeType type)
+{
+    SingletonContainer::Get<WindowManager>().UpdateWindowModeTypeInfo(type);
+}
+
 void WindowManagerAgent::UpdateSystemBarRegionTints(DisplayId displayId, const SystemBarRegionTints& tints)
 {
     SingletonContainer::Get<WindowManager>().UpdateSystemBarRegionTints(displayId, tints);
@@ -57,9 +62,16 @@ void WindowManagerAgent::NotifyWaterMarkFlagChangedResult(bool showWaterMark)
     SingletonContainer::Get<WindowManager>().NotifyWaterMarkFlagChangedResult(showWaterMark);
 }
 
+void WindowManagerAgent::UpdateVisibleWindowNum(
+    const std::vector<VisibleWindowNumInfo>& visibleWindowNumInfo)
+{
+    SingletonContainer::Get<WindowManager>().UpdateVisibleWindowNum(visibleWindowNumInfo);
+}
+
 void WindowManagerAgent::NotifyGestureNavigationEnabledResult(bool enable)
 {
     SingletonContainer::Get<WindowManager>().NotifyGestureNavigationEnabledResult(enable);
 }
+
 } // namespace Rosen
 } // namespace OHOS

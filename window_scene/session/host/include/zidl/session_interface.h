@@ -35,9 +35,9 @@ public:
     virtual WSError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
         sptr<WindowSessionProperty> property = nullptr, sptr<IRemoteObject> token = nullptr,
-        int32_t pid = -1, int32_t uid = -1) = 0;
-    virtual WSError Foreground(sptr<WindowSessionProperty> property) = 0;
-    virtual WSError Background() = 0;
+        int32_t pid = -1, int32_t uid = -1, const std::string& identityToken = "") = 0;
+    virtual WSError Foreground(sptr<WindowSessionProperty> property, bool isFromClient = false) = 0;
+    virtual WSError Background(bool isFromClient = false) = 0;
     virtual WSError Disconnect(bool isFromClient = false) = 0;
     virtual WSError Show(sptr<WindowSessionProperty> property) = 0;
     virtual WSError Hide() = 0;
@@ -62,9 +62,11 @@ public:
     virtual WSError PendingSessionActivation(const sptr<AAFwk::SessionInfo> abilitySessionInfo)
         { return WSError::WS_OK; }
     virtual WSError TerminateSession(const sptr<AAFwk::SessionInfo> abilitySessionInfo) { return WSError::WS_OK; }
+    virtual WSError SetLandscapeMultiWindow(bool isLandscapeMultiWindow) { return WSError::WS_OK; }
+    virtual WSError ChangeSessionVisibilityWithStatusBar(const sptr<AAFwk::SessionInfo> abilitySessionInfo,
+        bool isShow) { return WSError::WS_OK; }
     virtual WSError NotifySessionException(
         const sptr<AAFwk::SessionInfo> abilitySessionInfo, bool needRemoveSession = false) { return WSError::WS_OK; }
-    virtual WSError SetTextFieldAvoidInfo(double textFieldPositionY, double textFieldHeight) { return WSError::WS_OK; }
 
     // extension session
     virtual WSError TransferAbilityResult(uint32_t resultCode, const AAFwk::Want& want) { return WSError::WS_OK; }
@@ -76,6 +78,7 @@ public:
     }
     virtual void NotifyRemoteReady() {}
     virtual void NotifyExtensionDied() {}
+    virtual void NotifyExtensionTimeout(int32_t errorCode) {}
     virtual void TriggerBindModalUIExtension() {}
     virtual void NotifySyncOn() {}
     virtual void NotifyAsyncOn() {}
@@ -84,14 +87,24 @@ public:
 
     // PictureInPicture
     virtual void NotifyPiPWindowPrepareClose() {}
-    virtual WSError UpdatePiPRect(uint32_t width, uint32_t height, PiPRectUpdateReason reason)
+    virtual WSError UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
         { return WSError::WS_OK; }
-    virtual WSError RecoveryPullPiPMainWindow(int32_t persistentId, const Rect& rect) { return WSError::WS_OK; }
     virtual WSError ProcessPointDownSession(int32_t posX, int32_t posY) { return WSError::WS_OK; }
     virtual WSError SendPointEventForMoveDrag(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
     {
         return WSError::WS_OK;
     }
+    virtual WSError UpdateRectChangeListenerRegistered(bool isRegister)
+    {
+        return WSError::WS_OK;
+    }
+    virtual WSError SetKeyboardSessionGravity(SessionGravity gravity, uint32_t percent)
+    {
+        return WSError::WS_OK;
+    }
+    virtual void SetCallingSessionId(uint32_t callingSessionId) {};
+    virtual void SetCustomDecorHeight(int32_t height) {};
+    virtual WSError AdjustKeyboardLayout(const KeyboardLayoutParams& params) { return WSError::WS_OK; }
 };
 } // namespace OHOS::Rosen
 

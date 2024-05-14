@@ -34,7 +34,9 @@ public:
     static bool IsStartedByInputMethod();
     static bool IsSACalling();
     static bool VerifyCallingPermission(const std::string& permissionName);
+    static bool VerifyPermissionByCallerToken(const uint32_t callerToken, const std::string& permissionName);
     static bool IsSameBundleNameAsCalling(const std::string& bundleName);
+    static bool IsStartedByUIExtension();
 };
 } // Rosen
 } // OHOS

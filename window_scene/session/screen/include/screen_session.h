@@ -34,6 +34,9 @@
 #include "session_manager/include/screen_rotation_property.h"
 
 namespace OHOS::Rosen {
+using SetScreenSceneDpiFunc = std::function<void(float density)>;
+using DestroyScreenSceneFunc = std::function<void()>;
+
 class IScreenChangeListener {
 public:
     virtual void OnConnect(ScreenId screenId) = 0;
@@ -53,9 +56,28 @@ enum class ScreenState : int32_t {
     DISCONNECTION,
 };
 
+struct ScreenSessionConfig {
+    ScreenId screenId {0};
+    ScreenId rsId {0};
+    ScreenId defaultScreenId {0};
+    ScreenId mirrorNodeId {0};
+    std::string name = "UNKNOWN";
+    ScreenProperty property;
+    std::shared_ptr<RSDisplayNode> displayNode;
+};
+
+enum class ScreenSessionReason : int32_t {
+    CREATE_SESSION_FOR_CLIENT,
+    CREATE_SESSION_FOR_VIRTUAL,
+    CREATE_SESSION_FOR_MIRROR,
+    CREATE_SESSION_FOR_REAL,
+    INVALID,
+};
+
 class ScreenSession : public RefBase {
 public:
     ScreenSession() = default;
+    ScreenSession(const ScreenSessionConfig& config, ScreenSessionReason reason);
     ScreenSession(ScreenId screenId, ScreenId rsId, const std::string& name,
         const ScreenProperty& property, const std::shared_ptr<RSDisplayNode>& displayNode);
     ScreenSession(ScreenId screenId, const ScreenProperty& property, ScreenId defaultScreenId);
@@ -63,6 +85,7 @@ public:
     ScreenSession(const std::string& name, ScreenId smsId, ScreenId rsId, ScreenId defaultScreenId);
     virtual ~ScreenSession() = default;
 
+    void CreateDisplayNode(const Rosen::RSDisplayNodeConfig& config);
     void SetDisplayNodeScreenId(ScreenId screenId);
     void RegisterScreenChangeListener(IScreenChangeListener* screenChangeListener);
     void UnregisterScreenChangeListener(IScreenChangeListener* screenChangeListener);
@@ -83,7 +106,13 @@ public:
     void SetUpdateToInputManagerCallback(std::function<void(float)> updateToInputManagerCallback);
 
     void SetVirtualPixelRatio(float virtualPixelRatio);
+    void SetScreenSceneDpiChangeListener(const SetScreenSceneDpiFunc& func);
+    void SetScreenSceneDpi(float density);
+    void SetDensityInCurResolution(float densityInCurResolution);
     void SetScreenType(ScreenType type);
+
+    void SetScreenSceneDestroyListener(const DestroyScreenSceneFunc& func);
+    void DestroyScreenScene();
 
     std::string GetName();
     ScreenId GetScreenId();
@@ -114,10 +143,8 @@ public:
     DMError GetScreenColorSpace(GraphicCM_ColorSpaceType& colorSpace);
     DMError SetScreenColorSpace(GraphicCM_ColorSpaceType colorSpace);
 
-    void SetSensorRotation(DeviceRotation sensorRotation);
-    DeviceRotation GetSensorRotation();
+    void HandleSensorRotation(float sensorRotation);
     float ConvertRotationToFloat(Rotation sensorRotation);
-    float GetCurrentSensorRotation();
 
     bool HasPrivateSessionForeground() const;
     void SetPrivateSessionForeground(bool hasPrivate);
@@ -128,15 +155,19 @@ public:
 
     void UpdateToInputManager(RRect bounds, int rotation, FoldDisplayMode foldDisplayMode);
     void UpdatePropertyAfterRotation(RRect bounds, int rotation, FoldDisplayMode foldDisplayMode);
-    void UpdateAfterFoldExpand(bool foldToExpand);
     void UpdatePropertyByFoldControl(RRect bounds, RRect phyBounds);
+    void UpdateDisplayState(DisplayState displayState);
     void UpdateRefreshRate(uint32_t refreshRate);
-    void UpdatePropertyByResolution(uint32_t width, uint32_t height, float virtualPixelRatio);
+    uint32_t GetRefreshRate();
+    void UpdatePropertyByResolution(uint32_t width, uint32_t height);
     void SetName(std::string name);
     void Resize(uint32_t width, uint32_t height);
 
     void SetHdrFormats(std::vector<uint32_t>&& hdrFormats);
     void SetColorSpaces(std::vector<uint32_t>&& colorSpaces);
+
+    VirtualScreenFlag GetVirtualScreenFlag();
+    void SetVirtualScreenFlag(VirtualScreenFlag screenFlag);
 
     std::string name_ { "UNKNOW" };
     ScreenId screenId_ {};
@@ -166,6 +197,7 @@ public:
     void SetAvailableArea(DMRect area);
     bool UpdateAvailableArea(DMRect area);
     void SetFoldScreen(bool isFold);
+    void UpdateRotationAfterBoot(bool foldToExpand);
     std::shared_ptr<Media::PixelMap> GetScreenSnapshot(float scaleX, float scaleY);
 
 private:
@@ -175,14 +207,16 @@ private:
     ScreenState screenState_ { ScreenState::INIT };
     std::vector<IScreenChangeListener*> screenChangeListenerList_;
     ScreenCombination combination_ { ScreenCombination::SCREEN_ALONE };
+    VirtualScreenFlag screenFlag_ { VirtualScreenFlag::DEFAULT };
     bool hasPrivateWindowForeground_ = false;
     std::recursive_mutex mutex_;
     std::function<void(float)> updateToInputManagerCallback_ = nullptr;
     bool isFold_ = false;
+    float currentSensorRotation_ { 0.0f };
     std::vector<uint32_t> hdrFormats_;
     std::vector<uint32_t> colorSpaces_;
-    DeviceRotation sensorRotation_ = DeviceRotation::INVALID;
-    float currentSensorRotation_ { 0.0f };
+    SetScreenSceneDpiFunc SetScreenSceneDpiCallback_ = nullptr;
+    DestroyScreenSceneFunc destroyScreenSceneCallback_ = nullptr;
 };
 
 class ScreenSessionGroup : public ScreenSession {

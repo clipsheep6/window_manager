@@ -22,6 +22,7 @@
 #include <climits>
 
 #include "fold_screen_controller.h"
+#include "fold_screen_controller/sensor_fold_state_manager/sensor_fold_state_manager.h"
 #include "refbase.h"
 #include "wm_single_instance.h"
 #include "sensor_agent.h"
@@ -34,18 +35,33 @@ class FoldScreenSensorManager : public RefBase {
     WM_DECLARE_SINGLE_INSTANCE_BASE(FoldScreenSensorManager);
 
 public:
+    void RegisterPostureCallback();
+
+    void RegisterApplicationStateObserver();
+
+    void RegisterHallCallback();
+
     void UnRegisterPostureCallback();
 
     void UnRegisterHallCallback();
 
     void SetFoldScreenPolicy(sptr<FoldScreenPolicy> foldScreenPolicy);
 
+    void SetSensorFoldStateManager(sptr<SensorFoldStateManager> sensorFoldStateManager);
+
     void HandlePostureData(const SensorEvent * const event);
 
     void HandleHallData(const SensorEvent * const event);
 
+    void TriggerDisplaySwitch();
+
+protected:
+    FoldStatus GetCurrentState();
+
 private:
     sptr<FoldScreenPolicy> foldScreenPolicy_;
+
+    sptr<SensorFoldStateManager> sensorFoldStateManager_;
 
     std::recursive_mutex mutex_;
 
@@ -55,19 +71,7 @@ private:
 
     SensorUser hallUser;
 
-    int allowUseSensorForAlta = 0;
-
-    void RegisterPostureCallback();
-
-    void RegisterHallCallback();
-
-    void HandleSensorData(float, int);
-
-    void UpdateSwitchScreenBoundaryForAlta(float, int);
-
-    FoldStatus TransferAngleToScreenState(float, int);
-
-    void ReportNotifyFoldStatusChange(int32_t currentStatus, int32_t nextStatus, float postureAngle);
+    void notifyFoldAngleChanged(float foldAngle);
 
     FoldScreenSensorManager();
 

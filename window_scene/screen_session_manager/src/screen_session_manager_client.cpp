@@ -17,6 +17,9 @@
 
 #include <iservice_registry.h>
 #include <system_ability_definition.h>
+#include <transaction/rs_transaction.h>
+
+#include "pipeline/rs_node_map.h"
 #include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
@@ -38,6 +41,7 @@ ScreenSessionManagerClient& ScreenSessionManagerClient::GetInstance()
 void ScreenSessionManagerClient::ConnectToServer()
 {
     if (screenSessionManager_) {
+        WLOGFI("Success to get screen session manager proxy");
         return;
     }
     auto systemAbilityMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -69,17 +73,18 @@ void ScreenSessionManagerClient::RegisterScreenConnectionListener(IScreenConnect
 
     screenConnectionListener_ = listener;
     ConnectToServer();
+    WLOGFI("Success to register screen connection listener");
 }
 
-bool ScreenSessionManagerClient::CheckIfNeedCennectScreen(ScreenId screenId, ScreenId rsId, const std::string& name)
+bool ScreenSessionManagerClient::CheckIfNeedConnectScreen(ScreenId screenId, ScreenId rsId, const std::string& name)
 {
     if (rsId == SCREEN_ID_INVALID) {
         WLOGFE("rsId is invalid");
         return false;
     }
     if (screenSessionManager_->GetScreenProperty(screenId).GetScreenType() == ScreenType::VIRTUAL) {
-        if (name == "HiCar" || name == "SuperLauncher") {
-            WLOGFI("HiCar or SuperLauncher, need to connect the screen");
+        if (name == "HiCar" || name == "SuperLauncher" || name == "CastEngine") {
+            WLOGFI("HiCar or SuperLauncher or CastEngine, need to connect the screen");
             return true;
         } else {
             WLOGFE("ScreenType is virtual, no need to connect the screen");
@@ -95,13 +100,18 @@ void ScreenSessionManagerClient::OnScreenConnectionChanged(ScreenId screenId, Sc
     WLOGFI("screenId: %{public}" PRIu64 " screenEvent: %{public}d rsId: %{public}" PRIu64 " name: %{public}s",
         screenId, static_cast<int>(screenEvent), rsId, name.c_str());
     if (screenEvent == ScreenEvent::CONNECTED) {
-        if (!CheckIfNeedCennectScreen(screenId, rsId, name)) {
+        if (!CheckIfNeedConnectScreen(screenId, rsId, name)) {
             WLOGFE("There is no need to connect the screen");
             return;
         }
-        auto screenProperty = screenSessionManager_->GetScreenProperty(screenId);
-        auto displayNode = screenSessionManager_->GetDisplayNode(screenId);
-        sptr<ScreenSession> screenSession = new ScreenSession(screenId, rsId, name, screenProperty, displayNode);
+        ScreenSessionConfig config = {
+            .screenId = screenId,
+            .rsId = rsId,
+            .name = name,
+        };
+        config.property = screenSessionManager_->GetScreenProperty(screenId);
+        config.displayNode = screenSessionManager_->GetDisplayNode(screenId);
+        sptr<ScreenSession> screenSession = new ScreenSession(config, ScreenSessionReason::CREATE_SESSION_FOR_CLIENT);
         {
             std::lock_guard<std::mutex> lock(screenSessionMapMutex_);
             screenSessionMap_.emplace(screenId, screenSession);
@@ -118,6 +128,7 @@ void ScreenSessionManagerClient::OnScreenConnectionChanged(ScreenId screenId, Sc
             WLOGFE("screenSession is null");
             return;
         }
+        screenSession->DestroyScreenScene();
         if (screenConnectionListener_) {
             screenConnectionListener_->OnScreenDisconnected(screenSession);
         }
@@ -133,7 +144,7 @@ sptr<ScreenSession> ScreenSessionManagerClient::GetScreenSession(ScreenId screen
     std::lock_guard<std::mutex> lock(screenSessionMapMutex_);
     auto iter = screenSessionMap_.find(screenId);
     if (iter == screenSessionMap_.end()) {
-        WLOGFD("Error found screen session with id: %{public}" PRIu64, screenId);
+        WLOGFE("Error found screen session with id: %{public}" PRIu64, screenId);
         return nullptr;
     }
     return iter->second;
@@ -194,12 +205,22 @@ void ScreenSessionManagerClient::RegisterDisplayChangeListener(const sptr<IDispl
     displayChangeListener_ = listener;
 }
 
+void ScreenSessionManagerClient::RegisterSwitchingToAnotherUserFunction(std::function<void()>&& func)
+{
+    switchingToAnotherUserFunc_ = func;
+}
+
 void ScreenSessionManagerClient::OnDisplayStateChanged(DisplayId defaultDisplayId, sptr<DisplayInfo> displayInfo,
     const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type)
 {
     if (displayChangeListener_) {
         displayChangeListener_->OnDisplayStateChange(defaultDisplayId, displayInfo, displayInfoMap, type);
     }
+}
+
+void ScreenSessionManagerClient::OnUpdateFoldDisplayMode(FoldDisplayMode displayMode)
+{
+    displayMode_ = displayMode;
 }
 
 void ScreenSessionManagerClient::OnGetSurfaceNodeIdsFromMissionIdsChanged(std::vector<uint64_t>& missionIds,
@@ -224,10 +245,10 @@ void ScreenSessionManagerClient::OnImmersiveStateChanged(bool& immersive)
     }
 }
 
-std::unordered_map<ScreenId, ScreenProperty> ScreenSessionManagerClient::GetAllScreensProperties() const
+std::map<ScreenId, ScreenProperty> ScreenSessionManagerClient::GetAllScreensProperties() const
 {
     std::lock_guard<std::mutex> lock(screenSessionMapMutex_);
-    std::unordered_map<ScreenId, ScreenProperty> screensProperties;
+    std::map<ScreenId, ScreenProperty> screensProperties;
     for (const auto& iter: screenSessionMap_) {
         auto session = iter.second;
         if (session == nullptr) {
@@ -240,11 +261,7 @@ std::unordered_map<ScreenId, ScreenProperty> ScreenSessionManagerClient::GetAllS
 
 FoldDisplayMode ScreenSessionManagerClient::GetFoldDisplayMode() const
 {
-    if (screenSessionManager_ == nullptr) {
-        WLOGFE("screenSessionManager_ is null while get displayMode");
-        return FoldDisplayMode::UNKNOWN;
-    }
-    return screenSessionManager_->GetFoldDisplayMode();
+    return displayMode_;
 }
 
 void ScreenSessionManagerClient::UpdateScreenRotationProperty(ScreenId screenId, const RRect& bounds, float rotation)
@@ -292,8 +309,8 @@ ScreenProperty ScreenSessionManagerClient::GetPhyScreenProperty(ScreenId screenI
     return screenSessionManager_->GetPhyScreenProperty(screenId);
 }
 
-__attribute__((no_sanitize("cfi")))
-void ScreenSessionManagerClient::NotifyDisplayChangeInfoChanged(const sptr<DisplayChangeInfo>& info)
+__attribute__((no_sanitize("cfi"))) void ScreenSessionManagerClient::NotifyDisplayChangeInfoChanged(
+    const sptr<DisplayChangeInfo>& info)
 {
     if (!screenSessionManager_) {
         WLOGFE("screenSessionManager_ is null");
@@ -308,7 +325,31 @@ void ScreenSessionManagerClient::SetScreenPrivacyState(bool hasPrivate)
         WLOGFE("screenSessionManager_ is null");
         return;
     }
+    WLOGFD("Begin calling the SetScreenPrivacyState() of screenSessionManager_, hasPrivate: %{public}d", hasPrivate);
     screenSessionManager_->SetScreenPrivacyState(hasPrivate);
+    WLOGFD("End calling the SetScreenPrivacyState() of screenSessionManager_");
+}
+
+void ScreenSessionManagerClient::SetPrivacyStateByDisplayId(DisplayId id, bool hasPrivate)
+{
+    if (!screenSessionManager_) {
+        WLOGFE("screenSessionManager_ is null");
+        return;
+    }
+    WLOGFD("Begin calling the SetPrivacyStateByDisplayId, hasPrivate: %{public}d", hasPrivate);
+    screenSessionManager_->SetPrivacyStateByDisplayId(id, hasPrivate);
+    WLOGFD("End calling the SetPrivacyStateByDisplayId");
+}
+
+void ScreenSessionManagerClient::SetScreenPrivacyWindowList(DisplayId id, std::vector<std::string> privacyWindowList)
+{
+    if (!screenSessionManager_) {
+        WLOGFE("screenSessionManager_ is null");
+        return;
+    }
+    WLOGFD("Begin calling the SetScreenPrivacyWindowList(), id: %{public}" PRIu64, id);
+    screenSessionManager_->SetScreenPrivacyWindowList(id, privacyWindowList);
+    WLOGFD("End calling the SetScreenPrivacyWindowList()");
 }
 
 void ScreenSessionManagerClient::UpdateAvailableArea(ScreenId screenId, DMRect area)
@@ -327,6 +368,72 @@ void ScreenSessionManagerClient::NotifyFoldToExpandCompletion(bool foldToExpand)
         return;
     }
     screenSessionManager_->NotifyFoldToExpandCompletion(foldToExpand);
+}
+
+void ScreenSessionManagerClient::SwitchUserCallback()
+{
+    if (screenSessionManager_ == nullptr) {
+        WLOGFE("screenSessionManager_ is null");
+        return;
+    }
+    if (switchingToAnotherUserFunc_ != nullptr) {
+        WLOGFE("switch to another user");
+        switchingToAnotherUserFunc_();
+    }
+    WLOGFI("remove display node start");
+    std::lock_guard<std::mutex> lock(displayNodeChildrenMapMutex_);
+    displayNodeChildrenMap_.clear();
+    for (const auto& iter : screenSessionMap_) {
+        auto screenSession = GetScreenSession(iter.first);
+        if (screenSession == nullptr) {
+            WLOGFI("screenSession is null");
+            continue;
+        }
+        auto displayNode = screenSessionManager_->GetDisplayNode(iter.first);
+        if (displayNode == nullptr) {
+            WLOGFI("display node is null");
+            continue;
+        }
+        auto nodeChildren = displayNode->GetChildren();
+        std::vector<std::shared_ptr<RSBaseNode>> childrenList;
+        for (auto child : nodeChildren) {
+            auto childNode = RSNodeMap::Instance().GetNode(child);
+            if (childNode != nullptr) {
+                childrenList.push_back(childNode);
+                displayNode->RemoveChild(childNode);
+            }
+        }
+        RSTransaction::FlushImplicitTransaction();
+        displayNodeChildrenMap_.emplace(iter.first, childrenList);
+    }
+    WLOGFI("remove display node finish");
+}
+
+void ScreenSessionManagerClient::SwitchingCurrentUser()
+{
+    if (screenSessionManager_ == nullptr) {
+        WLOGFE("screenSessionManager_ is null");
+        return;
+    }
+    screenSessionManager_->SwitchUser();
+    std::lock_guard<std::mutex> lock(displayNodeChildrenMapMutex_);
+    for (const auto& iter : displayNodeChildrenMap_) {
+        auto screenSession = GetScreenSession(iter.first);
+        if (screenSession == nullptr) {
+            WLOGFI("screenSession is null");
+            continue;
+        }
+        auto displayNode = screenSessionManager_->GetDisplayNode(iter.first);
+        if (displayNode == nullptr) {
+            WLOGFI("display node is null");
+            continue;
+        }
+        for (auto child : iter.second) {
+            displayNode->AddChild(child);
+        }
+        RSTransaction::FlushImplicitTransaction();
+    }
+    WLOGFI("recover display node finish");
 }
 
 FoldStatus ScreenSessionManagerClient::GetFoldStatus()
@@ -349,6 +456,15 @@ std::shared_ptr<Media::PixelMap> ScreenSessionManagerClient::GetScreenSnapshot(S
     return screenSession->GetScreenSnapshot(scaleX, scaleY);
 }
 
+DeviceScreenConfig ScreenSessionManagerClient::GetDeviceScreenConfig()
+{
+    if (!screenSessionManager_) {
+        TLOGE(WmsLogTag::DMS, "screenSessionManager_ is null");
+        return {};
+    }
+    return screenSessionManager_->GetDeviceScreenConfig();
+}
+
 sptr<ScreenSession> ScreenSessionManagerClient::GetScreenSessionById(const ScreenId id)
 {
     auto iter = screenSessionMap_.find(id);
@@ -356,5 +472,37 @@ sptr<ScreenSession> ScreenSessionManagerClient::GetScreenSessionById(const Scree
         return nullptr;
     }
     return iter->second;
+}
+
+ScreenId ScreenSessionManagerClient::GetDefaultScreenId()
+{
+    auto iter = screenSessionMap_.begin();
+    if (iter != screenSessionMap_.end()) {
+        return iter->first;
+    }
+    return SCREEN_ID_INVALID;
+}
+
+bool ScreenSessionManagerClient::IsFoldable()
+{
+    if (!screenSessionManager_) {
+        WLOGFE("screenSessionManager_ is null");
+        return false;
+    }
+    return screenSessionManager_->IsFoldable();
+}
+
+void ScreenSessionManagerClient::SetVirtualPixelRatioSystem(ScreenId screenId, float virtualPixelRatio)
+{
+    sptr<ScreenSession> screenSession = GetScreenSession(screenId);
+    if (!screenSession) {
+        WLOGFE("screen session is null");
+        return;
+    }
+    if (screenSession->isScreenGroup_) {
+        WLOGFE("cannot set virtual pixel ratio to the combination. screen: %{public}" PRIu64, screenId);
+        return;
+    }
+    screenSession->SetScreenSceneDpi(virtualPixelRatio);
 }
 } // namespace OHOS::Rosen

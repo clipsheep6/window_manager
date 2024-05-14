@@ -97,6 +97,12 @@ static napi_value IsFoldable(napi_env env, napi_callback_info info)
     return (me != nullptr) ? me->OnIsFoldable(env, info) : nullptr;
 }
 
+static napi_value IsCaptured(napi_env env, napi_callback_info info)
+{
+    auto* me = CheckParamsAndGetThis<JsDisplayManager>(env, info);
+    return (me != nullptr) ? me->OnIsCaptured(env, info) : nullptr;
+}
+
 static napi_value GetFoldStatus(napi_env env, napi_callback_info info)
 {
     auto* me = CheckParamsAndGetThis<JsDisplayManager>(env, info);
@@ -282,6 +288,10 @@ DMError RegisterDisplayListenerWithType(napi_env env, const std::string& type, n
         ret = SingletonContainer::Get<DisplayManager>().RegisterDisplayModeListener(displayListener);
     } else if (type == EVENT_AVAILABLE_AREA_CHANGED) {
         ret = SingletonContainer::Get<DisplayManager>().RegisterAvailableAreaListener(displayListener);
+    } else if (type == EVENT_FOLD_ANGLE_CHANGED) {
+        ret = SingletonContainer::Get<DisplayManager>().RegisterFoldAngleListener(displayListener);
+    } else if (type == EVENT_CAPTURE_STATUS_CHANGED) {
+        ret = SingletonContainer::Get<DisplayManager>().RegisterCaptureStatusListener(displayListener);
     } else {
         WLOGFE("RegisterDisplayListenerWithType failed, %{public}s not support", type.c_str());
         return DMError::DM_ERROR_INVALID_PARAM;
@@ -318,7 +328,7 @@ DMError UnregisterAllDisplayListenerWithType(const std::string& type)
     if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
         WLOGI("UnregisterAllDisplayListenerWithType methodName %{public}s not registered!",
             type.c_str());
-        return DMError::DM_ERROR_INVALID_PARAM;
+        return DMError::DM_OK;
     }
     DMError ret = DMError::DM_OK;
     for (auto it = jsCbMap_[type].begin(); it != jsCbMap_[type].end();) {
@@ -341,9 +351,8 @@ DMError UnregisterAllDisplayListenerWithType(const std::string& type)
 DMError UnRegisterDisplayListenerWithType(napi_env env, const std::string& type, napi_value value)
 {
     if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
-        WLOGI("UnRegisterDisplayListenerWithType methodName %{public}s not registered!",
-            type.c_str());
-        return DMError::DM_ERROR_INVALID_PARAM;
+        WLOGI("UnRegisterDisplayListenerWithType methodName %{public}s not registered!", type.c_str());
+        return DMError::DM_OK;
     }
     DMError ret = DMError::DM_OK;
     for (auto it = jsCbMap_[type].begin(); it != jsCbMap_[type].end();) {
@@ -354,28 +363,29 @@ DMError UnRegisterDisplayListenerWithType(napi_env env, const std::string& type,
             if (type == EVENT_ADD || type == EVENT_REMOVE || type == EVENT_CHANGE) {
                 sptr<DisplayManager::IDisplayListener> thisListener(it->second);
                 ret = SingletonContainer::Get<DisplayManager>().UnregisterDisplayListener(thisListener);
-                WLOGFD("unregister displayListener, type: %{public}s ret: %{public}u", type.c_str(), ret);
             } else if (type == EVENT_PRIVATE_MODE_CHANGE) {
                 sptr<DisplayManager::IPrivateWindowListener> thisListener(it->second);
                 ret = SingletonContainer::Get<DisplayManager>().UnregisterPrivateWindowListener(thisListener);
-                WLOGFD("unregister privateWindowListener, ret: %{public}u", ret);
             } else if (type == EVENT_AVAILABLE_AREA_CHANGED) {
                 sptr<DisplayManager::IAvailableAreaListener> thisListener(it->second);
                 ret = SingletonContainer::Get<DisplayManager>().UnregisterAvailableAreaListener(thisListener);
-                WLOGFD("unregister IAvailableAreaListener, ret: %{public}u", ret);
             } else if (type == EVENT_FOLD_STATUS_CHANGED) {
                 sptr<DisplayManager::IFoldStatusListener> thisListener(it->second);
                 ret = SingletonContainer::Get<DisplayManager>().UnregisterFoldStatusListener(thisListener);
-                WLOGFD("unregister IFoldStatusListener, ret: %{public}u", ret);
             } else if (type == EVENT_DISPLAY_MODE_CHANGED) {
                 sptr<DisplayManager::IDisplayModeListener> thisListener(it->second);
                 ret = SingletonContainer::Get<DisplayManager>().UnregisterDisplayModeListener(thisListener);
-                WLOGFD("unregister IDisplayModeListener, ret: %{public}u", ret);
+            } else if (type == EVENT_FOLD_ANGLE_CHANGED) {
+                sptr<DisplayManager::IFoldAngleListener> thisListener(it->second);
+                ret = SingletonContainer::Get<DisplayManager>().UnregisterFoldAngleListener(thisListener);
+            } else if (type == EVENT_CAPTURE_STATUS_CHANGED) {
+                sptr<DisplayManager::ICaptureStatusListener> thisListener(it->second);
+                ret = SingletonContainer::Get<DisplayManager>().UnregisterCaptureStatusListener(thisListener);
             } else {
                 ret = DMError::DM_ERROR_INVALID_PARAM;
-                WLOGFE("unregister displaylistener with type failed, %{public}s not matched", type.c_str());
             }
             jsCbMap_[type].erase(it++);
+            WLOGFI("unregister display listener with type %{public}s  ret: %{public}u", type.c_str(), ret);
             break;
         } else {
             it++;
@@ -399,34 +409,40 @@ napi_value OnRegisterDisplayManagerCallback(napi_env env, napi_callback_info inf
     WLOGD("OnRegisterDisplayManagerCallback is called");
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
+    std::string errMsg = "";
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc < ARGC_TWO) {
         WLOGFE("JsDisplayManager Params not match: %{public}zu", argc);
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
+        errMsg = "Invalid args count, need 2 args";
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
     std::string cbType;
     if (!ConvertFromJsValue(env, argv[0], cbType)) {
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
+        errMsg = "Failed to convert parameter to callbackType";
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         WLOGFE("Failed to convert parameter to callbackType");
         return NapiGetUndefined(env);
     }
     napi_value value = argv[INDEX_ONE];
     if (value == nullptr) {
         WLOGI("OnRegisterDisplayManagerCallback info->argv[1] is nullptr");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
+        errMsg = "OnRegisterDisplayManagerCallback is nullptr";
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
     if (!NapiIsCallable(env, value)) {
         WLOGI("OnRegisterDisplayManagerCallback info->argv[1] is not callable");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
+        errMsg = "OnRegisterDisplayManagerCallback is not callable";
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
     std::lock_guard<std::mutex> lock(mtx_);
     DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(RegisterDisplayListenerWithType(env, cbType, value));
     if (ret != DmErrorCode::DM_OK) {
         WLOGFE("Failed to register display listener with type");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
+        errMsg = "Failed to register display listener with type";
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
     return NapiGetUndefined(env);
@@ -437,16 +453,19 @@ napi_value OnUnregisterDisplayManagerCallback(napi_env env, napi_callback_info i
     WLOGI("OnUnregisterDisplayCallback is called");
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
+    std::string errMsg = "";
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc < ARGC_ONE) {
         WLOGFE("JsDisplayManager Params not match %{public}zu", argc);
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
+        errMsg = "Invalid args count, need one arg at least!";
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
     std::string cbType;
     if (!ConvertFromJsValue(env, argv[0], cbType)) {
         WLOGFE("Failed to convert parameter to callbackType");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
+        errMsg = "Failed to convert parameter to string";
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
     std::lock_guard<std::mutex> lock(mtx_);
@@ -463,7 +482,8 @@ napi_value OnUnregisterDisplayManagerCallback(napi_env env, napi_callback_info i
     }
     if (ret != DmErrorCode::DM_OK) {
         WLOGFW("failed to unregister display listener with type");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
+        errMsg = "failed to unregister display listener with type";
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
     return NapiGetUndefined(env);
@@ -474,19 +494,23 @@ napi_value OnHasPrivateWindow(napi_env env, napi_callback_info info)
     bool hasPrivateWindow = false;
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
+    std::string errMsg = "";
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc < ARGC_ONE) {
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
+        errMsg = "Invalid args count, need one arg";
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
     int64_t displayId = static_cast<int64_t>(DISPLAY_ID_INVALID);
     if (!ConvertFromJsValue(env, argv[0], displayId)) {
         WLOGFE("[NAPI]Failed to convert parameter to displayId");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
+        errMsg = "Failed to convert parameter to displayId";
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
     if (displayId < 0) {
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
+        errMsg = "displayid is invalid, less than 0";
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
     DmErrorCode errCode = DM_JS_TO_ERROR_CODE_MAP.at(
@@ -537,6 +561,22 @@ napi_value OnIsFoldable(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value OnIsCaptured(napi_env env, napi_callback_info info)
+{
+    size_t argc = 4;  // default arg length
+    napi_value argv[4] = { nullptr };  // default arg length
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc >= ARGC_ONE) {
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
+        return NapiGetUndefined(env);
+    }
+    bool isCapture = SingletonContainer::Get<DisplayManager>().IsCaptured();
+    WLOGD("[NAPI]" PRIu64", IsCaptured = %{public}u", isCapture);
+    napi_value result;
+    napi_get_boolean(env, isCapture, &result);
+    return result;
+}
+
 napi_value OnGetFoldStatus(napi_env env, napi_callback_info info)
 {
     size_t argc = 4;
@@ -569,15 +609,18 @@ napi_value OnSetFoldDisplayMode(napi_env env, napi_callback_info info)
 {
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
+    std::string errMsg = "";
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc < ARGC_ONE) {
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
+        errMsg = "Invalid args count, need one arg";
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
     FoldDisplayMode mode = FoldDisplayMode::UNKNOWN;
     if (!ConvertFromJsValue(env, argv[0], mode)) {
         WLOGFE("[NAPI]Failed to convert parameter to FoldDisplayMode");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
+        errMsg = "Failed to convert parameter to FoldDisplayMode";
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
     SingletonContainer::Get<DisplayManager>().SetFoldDisplayMode(mode);
@@ -589,15 +632,18 @@ napi_value OnSetFoldStatusLocked(napi_env env, napi_callback_info info)
 {
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
+    std::string errMsg = "";
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc < ARGC_ONE) {
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
+        errMsg = "Invalid args count, need one arg";
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
     bool locked = false;
     if (!ConvertFromJsValue(env, argv[0], locked)) {
         WLOGFE("[NAPI]Failed to convert parameter to SetFoldStatusLocked");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM)));
+        errMsg = "Failed to convert parameter to SetFoldStatusLocked";
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
     SingletonContainer::Get<DisplayManager>().SetFoldStatusLocked(locked);
@@ -953,6 +999,7 @@ napi_value JsDisplayManagerInit(napi_env env, napi_value exportObj)
     BindNativeFunction(env, exportObj, "getAllDisplays", moduleName, JsDisplayManager::GetAllDisplays);
     BindNativeFunction(env, exportObj, "hasPrivateWindow", moduleName, JsDisplayManager::HasPrivateWindow);
     BindNativeFunction(env, exportObj, "isFoldable", moduleName, JsDisplayManager::IsFoldable);
+    BindNativeFunction(env, exportObj, "isCaptured", moduleName, JsDisplayManager::IsCaptured);
     BindNativeFunction(env, exportObj, "getFoldStatus", moduleName, JsDisplayManager::GetFoldStatus);
     BindNativeFunction(env, exportObj, "getFoldDisplayMode", moduleName, JsDisplayManager::GetFoldDisplayMode);
     BindNativeFunction(env, exportObj, "setFoldDisplayMode", moduleName, JsDisplayManager::SetFoldDisplayMode);

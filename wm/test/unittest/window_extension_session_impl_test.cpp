@@ -14,8 +14,10 @@
  */
 
 #include <gtest/gtest.h>
+#include "session_proxy.h"
 
 #include <transaction/rs_transaction.h>
+#include "display_info.h"
 #include "accessibility_event_info.h"
 #include "window_manager_hilog.h"
 #include "window_impl.h"
@@ -269,13 +271,13 @@ HWTEST_F(WindowExtensionSessionImplTest, NotifyFindFocusedElementInfo01, Functio
 {
     sptr<WindowOption> option = new WindowOption();
     WindowExtensionSessionImpl windowExtensionSessionImpl(option);
-    windowExtensionSessionImpl.uiContent_ = std::make_unique<Ace::UIContentMocker>();
+    std::unique_ptr<Ace::UIContent> uiContent_ = std::make_unique<Ace::UIContentMocker>();
     int64_t elementId = 0;
     int32_t focusType = 0;
     int64_t baseParent = 0;
     AccessibilityElementInfo info;
 
-    ASSERT_EQ(WSError::WS_OK,
+    ASSERT_EQ(WSError::WS_ERROR_NO_UI_CONTENT_ERROR,
         windowExtensionSessionImpl.NotifyFindFocusedElementInfo(elementId, focusType, baseParent, info));
 }
 
@@ -343,12 +345,12 @@ HWTEST_F(WindowExtensionSessionImplTest, NotifyExecuteAction01, Function | Small
 {
     sptr<WindowOption> option = new WindowOption();
     WindowExtensionSessionImpl windowExtensionSessionImpl(option);
-    windowExtensionSessionImpl.uiContent_ = std::make_unique<Ace::UIContentMocker>();
+    std::unique_ptr<Ace::UIContent> uiContent_ = std::make_unique<Ace::UIContentMocker>();
     int64_t elementId = 0;
     std::map<std::string, std::string> actionAguments;
     int32_t action = 0;
     int64_t baseParent = 0;
-    ASSERT_EQ(WSError::WS_ERROR_INTERNAL_ERROR,
+    ASSERT_EQ(WSError::WS_ERROR_NO_UI_CONTENT_ERROR,
         windowExtensionSessionImpl.NotifyExecuteAction(elementId, actionAguments, action, baseParent));
 }
 
@@ -409,6 +411,234 @@ HWTEST_F(WindowExtensionSessionImplTest, UnregisterAvoidAreaChangeListener, Func
     WindowExtensionSessionImpl windowExtensionSessionImpl(option);
     sptr<IAvoidAreaChangedListener> listener = nullptr;
     ASSERT_EQ(WMError::WM_ERROR_NULLPTR, windowExtensionSessionImpl.UnregisterAvoidAreaChangeListener(listener));
+}
+
+/**
+ * @tc.name: HideNonSecureWindows
+ * @tc.desc: HideNonSecureWindows Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, HideNonSecureWindows, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    WindowExtensionSessionImpl windowExtensionSessionImpl(option);
+    windowExtensionSessionImpl.state_ = WindowState::STATE_HIDDEN;
+    ASSERT_EQ(WMError::WM_OK, windowExtensionSessionImpl.HideNonSecureWindows(true));
+    windowExtensionSessionImpl.state_ = WindowState::STATE_SHOWN;
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, windowExtensionSessionImpl.HideNonSecureWindows(false));
+}
+
+/**
+ * @tc.name: SetWaterMarkFlag
+ * @tc.desc: SetWaterMarkFlag Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, SetWaterMarkFlag, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    WindowExtensionSessionImpl windowExtensionSessionImpl(option);
+    windowExtensionSessionImpl.state_ = WindowState::STATE_HIDDEN;
+    ASSERT_EQ(WMError::WM_OK, windowExtensionSessionImpl.SetWaterMarkFlag(true));
+    windowExtensionSessionImpl.state_ = WindowState::STATE_SHOWN;
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, windowExtensionSessionImpl.SetWaterMarkFlag(false));
+}
+
+/**
+ * @tc.name: UpdateExtWindowFlags
+ * @tc.desc: UpdateExtWindowFlags Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, UpdateExtWindowFlags, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    WindowExtensionSessionImpl windowExtensionSessionImpl(option);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, windowExtensionSessionImpl.UpdateExtWindowFlags(ExtensionWindowFlags(7),
+        ExtensionWindowFlags(7)));
+}
+
+/**
+ * @tc.name: NotifyDensityFollowHost01
+ * @tc.desc: test isFollowHost is true
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, NotifyDensityFollowHost01, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("WindowSessionCreateCheck");
+    sptr<WindowExtensionSessionImpl> window = new (std::nothrow) WindowExtensionSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+
+    DisplayId displayId = 0;
+    window->property_->SetDisplayId(displayId);
+
+    auto isFollowHost = true;
+    auto densityValue = 0.1f;
+
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+    Ace::UIContentMocker* content = reinterpret_cast<Ace::UIContentMocker*>(window->uiContent_.get());
+    EXPECT_CALL(*content, UpdateViewportConfig(Field(&Ace::ViewportConfig::density_, densityValue), _, _));
+
+    ASSERT_EQ(window->NotifyDensityFollowHost(isFollowHost, densityValue), WSError::WS_OK);
+}
+
+/**
+ * @tc.name: NotifyDensityFollowHost02
+ * @tc.desc: test isFollowHost is true -> false
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, NotifyDensityFollowHost02, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("WindowSessionCreateCheck");
+    sptr<WindowExtensionSessionImpl> window = new (std::nothrow) WindowExtensionSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+
+    DisplayId displayId = 0;
+    window->property_->SetDisplayId(displayId);
+
+    auto isFollowHost = false;
+    auto densityValue = 0.1f;
+
+    auto display = SingletonContainer::Get<DisplayManager>().GetDisplayById(window->property_->GetDisplayId());
+    ASSERT_NE(display, nullptr);
+    ASSERT_NE(display->GetDisplayInfo(), nullptr);
+    auto vpr = display->GetDisplayInfo()->GetVirtualPixelRatio();
+
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+    Ace::UIContentMocker* content = reinterpret_cast<Ace::UIContentMocker*>(window->uiContent_.get());
+    EXPECT_CALL(*content, UpdateViewportConfig(Field(&Ace::ViewportConfig::density_, vpr), _, _));
+
+    window->isDensityFollowHost_ = true;
+    ASSERT_EQ(window->NotifyDensityFollowHost(isFollowHost, densityValue), WSError::WS_OK);
+}
+
+/**
+ * @tc.name: NotifyDensityFollowHost03
+ * @tc.desc: test isFollowHost not change
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, NotifyDensityFollowHost03, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("WindowSessionCreateCheck");
+    sptr<WindowExtensionSessionImpl> window = new (std::nothrow) WindowExtensionSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+
+    DisplayId displayId = 0;
+    window->property_->SetDisplayId(displayId);
+
+    auto isFollowHost = false;
+    auto densityValue = 0.1f;
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+    Ace::UIContentMocker* content = reinterpret_cast<Ace::UIContentMocker*>(window->uiContent_.get());
+    EXPECT_CALL(*content, UpdateViewportConfig(_, _, _)).Times(0);
+
+    ASSERT_EQ(window->NotifyDensityFollowHost(isFollowHost, densityValue), WSError::WS_OK);
+}
+
+/**
+ * @tc.name: NotifyDensityFollowHost04
+ * @tc.desc: test densityValue invalid
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, NotifyDensityFollowHost04, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("WindowSessionCreateCheck");
+    sptr<WindowExtensionSessionImpl> window = new (std::nothrow) WindowExtensionSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+
+    DisplayId displayId = 0;
+    window->property_->SetDisplayId(displayId);
+
+    auto isFollowHost = true;
+    auto densityValue = 0.0f;
+    ASSERT_EQ(window->NotifyDensityFollowHost(isFollowHost, densityValue), WSError::WS_ERROR_INVALID_PARAM);
+    densityValue = -0.1f;
+    ASSERT_EQ(window->NotifyDensityFollowHost(isFollowHost, densityValue), WSError::WS_ERROR_INVALID_PARAM);
+}
+
+/**
+ * @tc.name: NotifyDensityFollowHost05
+ * @tc.desc: test densityValue not change
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, NotifyDensityFollowHost05, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("WindowSessionCreateCheck");
+    sptr<WindowExtensionSessionImpl> window = new (std::nothrow) WindowExtensionSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+
+    DisplayId displayId = 0;
+    window->property_->SetDisplayId(displayId);
+
+    auto isFollowHost = true;
+    auto densityValue = 0.1f;
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+    Ace::UIContentMocker* content = reinterpret_cast<Ace::UIContentMocker*>(window->uiContent_.get());
+    EXPECT_CALL(*content, UpdateViewportConfig(_, _, _)).Times(0);
+
+    window->hostDensityValue_ = densityValue;
+    ASSERT_EQ(window->NotifyDensityFollowHost(isFollowHost, densityValue), WSError::WS_OK);
+}
+
+/**
+ * @tc.name: GetVirtualPixelRatio01
+ * @tc.desc: follow host density value
+ * @tc.type: FUNC
+*/
+HWTEST_F(WindowExtensionSessionImplTest, GetVirtualPixelRatio01, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("WindowSessionCreateCheck");
+    sptr<WindowExtensionSessionImpl> window = new (std::nothrow) WindowExtensionSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+
+    sptr<DisplayInfo> displayInfo = new DisplayInfo();
+    displayInfo->SetVirtualPixelRatio(3.25f);
+    window->isDensityFollowHost_ = true;
+    window->hostDensityValue_ = 2.0f;
+    ASSERT_EQ(window->hostDensityValue_, window->GetVirtualPixelRatio(displayInfo));
+}
+
+/**
+ * @tc.name: GetVirtualPixelRatio02
+ * @tc.desc: follow system density value
+ * @tc.type: FUNC
+*/
+HWTEST_F(WindowExtensionSessionImplTest, GetVirtualPixelRatio02, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("WindowSessionCreateCheck");
+    sptr<WindowExtensionSessionImpl> window = new (std::nothrow) WindowExtensionSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+
+    auto systemDensity = 3.25;
+    sptr<DisplayInfo> displayInfo = new DisplayInfo();
+    displayInfo->SetVirtualPixelRatio(systemDensity);
+    window->isDensityFollowHost_ = false;
+    window->hostDensityValue_ = 2.0f;
+    ASSERT_EQ(systemDensity, window->GetVirtualPixelRatio(displayInfo));
+}
+
+/**
+ * @tc.name: GetVirtualPixelRatio03
+ * @tc.desc: hostDensityValue_ is nullptr
+ * @tc.type: FUNC
+*/
+HWTEST_F(WindowExtensionSessionImplTest, GetVirtualPixelRatio03, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("WindowSessionCreateCheck");
+    sptr<WindowExtensionSessionImpl> window = new (std::nothrow) WindowExtensionSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+
+    auto systemDensity = 3.25;
+    sptr<DisplayInfo> displayInfo = new DisplayInfo();
+    displayInfo->SetVirtualPixelRatio(systemDensity);
+    window->isDensityFollowHost_ = true;
+    ASSERT_EQ(systemDensity, window->GetVirtualPixelRatio(displayInfo));
 }
 
 /**
@@ -564,6 +794,138 @@ HWTEST_F(WindowExtensionSessionImplTest, RegisterTransferComponentDataForResultL
         res = 1;
     };
     ASSERT_EQ(0, res);
+}
+
+/**
+ * @tc.name: UpdateConfiguration02
+ * @tc.desc: UpdateConfiguration Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, UpdateConfiguration02, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    WindowExtensionSessionImpl windowExtensionSessionImpl(option);
+    windowExtensionSessionImpl.uiContent_ = std::make_unique<Ace::UIContentMocker>();
+
+    std::shared_ptr<AppExecFwk::Configuration> configuration;
+    windowExtensionSessionImpl.UpdateConfiguration(configuration);
+    ASSERT_NE(nullptr, windowExtensionSessionImpl.uiContent_);
+}
+
+/**
+ * @tc.name: RegisterTransferComponentDataForResultListener02
+ * @tc.desc: RegisterTransferComponentDataForResultListener02 Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, RegisterTransferComponentDataForResultListener02,
+         Function | SmallTest | Level3)
+{
+    NotifyTransferComponentDataForResultFunc func;
+    sptr<WindowOption> option = new WindowOption();
+    WindowExtensionSessionImpl windowExtensionSessionImpl(option);
+
+    windowExtensionSessionImpl.RegisterTransferComponentDataForResultListener(func);
+    ASSERT_EQ(true, windowExtensionSessionImpl.IsWindowSessionInvalid());
+}
+
+/**
+ * @tc.name: TriggerBindModalUIExtension
+ * @tc.desc: TriggerBindModalUIExtension Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, TriggerBindModalUIExtension, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    WindowExtensionSessionImpl windowExtensionSessionImpl(option);
+
+    windowExtensionSessionImpl.hostSession_ = nullptr;
+
+    auto res = 0;
+    std::function<void()> func1 = [&]()
+    {
+        windowExtensionSessionImpl.TriggerBindModalUIExtension();
+        res = 1;
+    };
+    ASSERT_EQ(0, res);
+}
+
+/**
+ * @tc.name: Destroy01
+ * @tc.desc: Destroy Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, Destroy01, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new WindowOption();
+    WindowExtensionSessionImpl windowExtensionSessionImpl(option);
+    bool needNotifyServer = true;
+    bool needClearListener = true;
+
+    sptr<IRemoteObject> impl;
+    windowExtensionSessionImpl.hostSession_ = new OHOS::Rosen::SessionProxy(impl);
+    windowExtensionSessionImpl.Destroy(needNotifyServer, needClearListener);
+
+    ASSERT_NE(nullptr, windowExtensionSessionImpl.hostSession_);
+}
+
+/**
+ * @tc.name: SetPrivacyMode02
+ * @tc.desc: SetPrivacyMod
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, SetPrivacyMod02, Function | SmallTest | Level3)
+{
+    bool isPrivacyMode = true;
+    sptr<WindowOption> option = new WindowOption();
+    WindowExtensionSessionImpl windowExtensionSessionImpl(option);
+    windowExtensionSessionImpl.surfaceNode_ = nullptr;
+    auto ret = windowExtensionSessionImpl.SetPrivacyMode(isPrivacyMode);
+
+    struct RSSurfaceNodeConfig config;
+
+    if (ret == WMError::WM_ERROR_NULLPTR)
+    {
+        windowExtensionSessionImpl.surfaceNode_ = RSSurfaceNode::Create(config);
+    }
+    ASSERT_NE(WMError::WM_OK, ret);
+}
+
+/**
+ * @tc.name: NotifyBackpressedEvent
+ * @tc.desc: NotifyBackpressedEvent
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, NotifyBackpressedEvent, Function | SmallTest | Level3)
+{
+    bool isPrivacyMode = true;
+    bool isConsumed = true;
+    sptr<WindowOption> option = new WindowOption();
+    WindowExtensionSessionImpl windowExtensionSessionImpl(option);
+    windowExtensionSessionImpl.uiContent_ = std::make_unique<Ace::UIContentMocker>();
+    windowExtensionSessionImpl.NotifyBackpressedEvent(isConsumed);
+
+    auto ret = windowExtensionSessionImpl.SetPrivacyMode(isPrivacyMode);
+    ASSERT_EQ(WMError::WM_OK, ret);
+}
+
+/**
+ * @tc.name: NotifyKeyEvent
+ * @tc.desc: NotifyKeyEvent
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowExtensionSessionImplTest, NotifyKeyEvent, Function | SmallTest | Level3)
+{
+    std::shared_ptr<MMI::KeyEvent> keyEvent = nullptr;
+    bool isConsumed = true;
+    bool notifyInputMethod = true;
+    bool isPrivacyMode = true;
+
+    sptr<WindowOption> option = new WindowOption();
+    WindowExtensionSessionImpl windowExtensionSessionImpl(option);
+    windowExtensionSessionImpl.NotifyKeyEvent(keyEvent, isConsumed, notifyInputMethod);
+
+    auto ret = windowExtensionSessionImpl.SetPrivacyMode(isPrivacyMode);
+    ASSERT_EQ(WMError::WM_OK, ret);
 }
 }
 } // namespace Rosen

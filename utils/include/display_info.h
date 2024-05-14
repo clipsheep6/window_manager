@@ -47,6 +47,8 @@ public:
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(ScreenId, ScreenId, screenId, SCREEN_ID_INVALID);
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(ScreenId, ScreenGroupId, screenGroupId, SCREEN_ID_INVALID);
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(float, VirtualPixelRatio, virtualPixelRatio, 1.0f);
+    DEFINE_VAR_DEFAULT_FUNC_GET_SET(float, DensityInCurResolution, densityInCurResolution, 1.0f);
+    DEFINE_VAR_DEFAULT_FUNC_GET_SET(float, DefaultVirtualPixelRatio, defaultVirtualPixelRatio, 1.0f);
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(float, XDpi, xDpi, 0.0f);
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(float, YDpi, yDpi, 0.0f);
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(int32_t, Dpi, dpi, 320);
@@ -54,7 +56,7 @@ public:
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(Orientation, Orientation, orientation, Orientation::UNSPECIFIED);
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(int32_t, OffsetX, offsetX, 0);
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(int32_t, OffsetY, offsetY, 0);
-    DEFINE_VAR_DEFAULT_FUNC_GET(DisplayState, DisplayState, displayState, DisplayState::UNKNOWN);
+    DEFINE_VAR_DEFAULT_FUNC_GET_SET(DisplayState, DisplayState, displayState, DisplayState::UNKNOWN);
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(bool, WaterfallDisplayCompressionStatus, waterfallDisplayCompressionStatus, false);
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(DisplayOrientation, DisplayOrientation, displayOrientation,
         DisplayOrientation::UNKNOWN);
@@ -64,6 +66,7 @@ public:
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(bool, AliveStatus, alive, true);
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(std::vector<uint32_t>, ColorSpaces, colorSpaces, std::vector<uint32_t>());
     DEFINE_VAR_DEFAULT_FUNC_GET_SET(std::vector<uint32_t>, HdrFormats, hdrFormats, std::vector<uint32_t>());
+    DEFINE_VAR_DEFAULT_FUNC_GET_SET(uint32_t, DefaultDeviceRotationOffset, defaultDeviceRotationOffset, 0);
 };
 } // namespace OHOS::Rosen
 #endif // FOUNDATION_DMSERVER_DISPLAY_INFO_H

@@ -20,6 +20,7 @@
 #include "display_manager_proxy.h"
 #include "future.h"
 #include "screen.h"
+#include "scene_board_judgement.h"
 #include "surface_draw.h"
 #include "virtual_screen_group_change_listener_future.h"
 #include "window.h"
@@ -70,6 +71,9 @@ public:
     const uint32_t resizeScreenHeightTestTwo_ = 1;
     const uint32_t resizeScreenWidthTestThree_ = 720;
     const uint32_t resizeScreenHeightTestThree_ = 1280;
+    const uint32_t refreshIntervalZero_ = 0;
+    const uint32_t refreshIntervalTwo_ = 2;
+    const uint32_t refreshIntervalMax_ = 10000;
     static constexpr uint32_t TEST_SLEEP_S = 1; // test sleep time
     static constexpr uint32_t TEST_SLEEP_S_LONG = 10; // test sleep for 10 seconds
     static constexpr long TIME_OUT = 1000;
@@ -1066,9 +1070,13 @@ HWTEST_F(ScreenManagerTest, ResizeVirtualScreen01, Function | MediumTest | Level
 
     auto screen = ScreenManager::GetInstance().GetScreenById(virtualScreenId);
     ASSERT_TRUE(screen);
-    ASSERT_EQ(resizeScreenWidthTestOne_, screen->GetWidth());
-    ASSERT_EQ(resizeScreenHeightTestOne_, screen->GetHeight());
-
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(resizeScreenWidthTestOne_, screen->GetWidth());
+        ASSERT_EQ(resizeScreenHeightTestOne_, screen->GetHeight());
+    } else {
+        ASSERT_EQ(resizeScreenWidthTestThree_, screen->GetWidth());
+        ASSERT_EQ(resizeScreenHeightTestThree_, screen->GetHeight());
+    }
     ScreenManager::GetInstance().DestroyVirtualScreen(virtualScreenId);
 }
 
@@ -1101,9 +1109,13 @@ HWTEST_F(ScreenManagerTest, ResizeVirtualScreen02, Function | MediumTest | Level
 
     auto screen = ScreenManager::GetInstance().GetScreenById(virtualScreenId);
     ASSERT_TRUE(screen);
-    ASSERT_EQ(resizeScreenWidthTestTwo_, screen->GetWidth());
-    ASSERT_EQ(resizeScreenHeightTestTwo_, screen->GetHeight());
-
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(resizeScreenWidthTestTwo_, screen->GetWidth());
+        ASSERT_EQ(resizeScreenHeightTestTwo_, screen->GetHeight());
+    } else {
+        ASSERT_EQ(resizeScreenWidthTestThree_, screen->GetWidth());
+        ASSERT_EQ(resizeScreenHeightTestThree_, screen->GetHeight());
+    }
     ScreenManager::GetInstance().DestroyVirtualScreen(virtualScreenId);
 }
 
@@ -1132,9 +1144,109 @@ HWTEST_F(ScreenManagerTest, ResizeVirtualScreen03, Function | MediumTest | Level
     DMError res = ScreenManager::GetInstance().ResizeVirtualScreen(virtualScreenId + 1,
         resizeScreenWidthTestOne_, resizeScreenHeightTestOne_);
     sleep(TEST_SLEEP_S);
+    if (SceneBoardJudgement::IsSceneBoardEnabled()) {
+        ASSERT_EQ(DMError::DM_ERROR_INVALID_PARAM, res);
+    } else {
+        ASSERT_EQ(DMError::DM_OK, res);
+    }
+    ScreenManager::GetInstance().DestroyVirtualScreen(virtualScreenId);
+}
+
+HWTEST_F(ScreenManagerTest, SetVirtualScreenRefreshRate01, Function | MediumTest | Level1)
+{
+    DisplayTestUtils utils;
+    ASSERT_TRUE(utils.CreateSurface());
+    defaultOption_.surface_ = utils.psurface_;
+    defaultOption_.isForShot_ = true;
+
+    CHECK_TEST_INIT_SCREEN_STATE
+    if (group == nullptr) {
+        return;
+    }
+    ScreenId virtualScreenId = ScreenManager::GetInstance().CreateVirtualScreen(defaultOption_);
+    sleep(TEST_SLEEP_S);
+
+    CHECK_SCREEN_STATE_AFTER_CREATE_VIRTUAL_SCREEN
+    CheckScreenStateInGroup(false, group, groupId, virtualScreen, virtualScreenId);
+    sleep(TEST_SLEEP_S);
+
+    std::vector<ScreenId> screenIds;
+    screenIds.push_back(virtualScreenId);
+    ScreenManager::GetInstance().MakeUniqueScreen(screenIds);
+    sleep(TEST_SLEEP_S);
+
+    DMError res = ScreenManager::GetInstance().SetVirtualScreenRefreshRate(virtualScreenId, refreshIntervalTwo_);
+    sleep(TEST_SLEEP_S);
+    ASSERT_EQ(DMError::DM_OK, res);
+
+    ScreenManager::GetInstance().DestroyVirtualScreen(virtualScreenId);
+}
+
+HWTEST_F(ScreenManagerTest, SetVirtualScreenRefreshRate02, Function | MediumTest | Level1)
+{
+    DisplayTestUtils utils;
+    ASSERT_TRUE(utils.CreateSurface());
+    defaultOption_.surface_ = utils.psurface_;
+    defaultOption_.isForShot_ = true;
+
+    CHECK_TEST_INIT_SCREEN_STATE
+    if (group == nullptr) {
+        return;
+    }
+    ScreenId virtualScreenId = ScreenManager::GetInstance().CreateVirtualScreen(defaultOption_);
+    sleep(TEST_SLEEP_S);
+
+    CHECK_SCREEN_STATE_AFTER_CREATE_VIRTUAL_SCREEN
+    CheckScreenStateInGroup(false, group, groupId, virtualScreen, virtualScreenId);
+    sleep(TEST_SLEEP_S);
+
+    std::vector<ScreenId> screenIds;
+    screenIds.push_back(virtualScreenId);
+    ScreenManager::GetInstance().MakeUniqueScreen(screenIds);
+    sleep(TEST_SLEEP_S);
+
+    DMError res = ScreenManager::GetInstance().SetVirtualScreenRefreshRate(virtualScreenId, refreshIntervalZero_);
+    sleep(TEST_SLEEP_S);
     ASSERT_EQ(DMError::DM_ERROR_INVALID_PARAM, res);
 
     ScreenManager::GetInstance().DestroyVirtualScreen(virtualScreenId);
+}
+
+HWTEST_F(ScreenManagerTest, SetVirtualScreenRefreshRate03, Function | MediumTest | Level1)
+{
+    DisplayTestUtils utils;
+    ASSERT_TRUE(utils.CreateSurface());
+    defaultOption_.surface_ = utils.psurface_;
+    defaultOption_.isForShot_ = true;
+
+    CHECK_TEST_INIT_SCREEN_STATE
+    if (group == nullptr) {
+        return;
+    }
+    ScreenId virtualScreenId = ScreenManager::GetInstance().CreateVirtualScreen(defaultOption_);
+    sleep(TEST_SLEEP_S);
+
+    CHECK_SCREEN_STATE_AFTER_CREATE_VIRTUAL_SCREEN
+    CheckScreenStateInGroup(false, group, groupId, virtualScreen, virtualScreenId);
+    sleep(TEST_SLEEP_S);
+
+    std::vector<ScreenId> screenIds;
+    screenIds.push_back(virtualScreenId);
+    ScreenManager::GetInstance().MakeUniqueScreen(screenIds);
+    sleep(TEST_SLEEP_S);
+
+    DMError res = ScreenManager::GetInstance().SetVirtualScreenRefreshRate(virtualScreenId, refreshIntervalMax_);
+    sleep(TEST_SLEEP_S);
+    ASSERT_EQ(DMError::DM_ERROR_INVALID_PARAM, res);
+
+    ScreenManager::GetInstance().DestroyVirtualScreen(virtualScreenId);
+}
+
+HWTEST_F(ScreenManagerTest, SetVirtualScreenRefreshRate04, Function | MediumTest | Level1)
+{
+    DMError res = ScreenManager::GetInstance().SetVirtualScreenRefreshRate(defaultScreenId_, refreshIntervalTwo_);
+    sleep(TEST_SLEEP_S);
+    ASSERT_EQ(DMError::DM_ERROR_INVALID_PARAM, res);
 }
 }
 } // namespace Rosen

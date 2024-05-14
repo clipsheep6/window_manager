@@ -18,12 +18,42 @@
 #include "iremote_object_mocker.h"
 #include "screen_session_manager_client.h"
 #include "zidl/screen_session_manager_proxy.h"
+#include "display_manager.h"
+#include "window_manager_hilog.h"
 
 using namespace testing;
 using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "ScreenSessionManagerClientTest"};
+}
+class DmPrivateWindowListener : public DisplayManager::IPrivateWindowListener {
+public:
+    void OnPrivateWindow(bool hasPrivate) {WLOGFI("IPrivateWindowListener hasPrivatewindow: %{public}u", hasPrivate);}
+};
+class DmPrivateWindowListChangeListener : public DisplayManager::IPrivateWindowListChangeListener {
+public:
+    void OnPrivateWindowListChange(DisplayId displayId, std::vector<std::string> privacyWindowList)
+    {
+        WLOGFI("IPrivateWindowListChangeListener displayId: %{public}" PRIu64".", displayId);
+        std::string concatenatedString;
+        std::vector<std::string> result = privacyWindowList;
+        for (const auto& window : result) {
+            concatenatedString.append(window);
+            concatenatedString.append("  ");
+        }
+        WLOGFI("privacyWindowList: %{public}s", concatenatedString.c_str());
+        callback_(privacyWindowList);
+    }
+    void setCallback(std::function<void(std::vector<std::string>)> callback)
+    {
+        callback_ = callback;
+    }
+private:
+    std::function<void(std::vector<std::string>)> callback_;
+};
 class ScreenSessionManagerClientTest : public testing::Test {
 public:
     void SetUp() override;
@@ -116,11 +146,11 @@ HWTEST_F(ScreenSessionManagerClientTest, OnScreenConnectionChanged02, Function |
 }
 
 /**
- * @tc.name: CheckIfNeedCennectScreen01
- * @tc.desc: CheckIfNeedCennectScreen test
+ * @tc.name: CheckIfNeedConnectScreen01
+ * @tc.desc: CheckIfNeedConnectScreen test
  * @tc.type: FUNC
  */
-HWTEST_F(ScreenSessionManagerClientTest, CheckIfNeedCennectScreen01, Function | SmallTest | Level2)
+HWTEST_F(ScreenSessionManagerClientTest, CheckIfNeedConnectScreen01, Function | SmallTest | Level2)
 {
     EXPECT_NE(screenSessionManagerClient_->screenSessionManager_, nullptr);
 
@@ -128,16 +158,16 @@ HWTEST_F(ScreenSessionManagerClientTest, CheckIfNeedCennectScreen01, Function | 
     ScreenId rsId = 0;
     std::string name = "HiCar";
     screenSessionManagerClient_->screenSessionManager_->GetScreenProperty(screenId).SetScreenType(ScreenType::VIRTUAL);
-    bool result = screenSessionManagerClient_->CheckIfNeedCennectScreen(screenId, rsId, name);
+    bool result = screenSessionManagerClient_->CheckIfNeedConnectScreen(screenId, rsId, name);
     EXPECT_EQ(result, true);
 }
 
 /**
- * @tc.name: CheckIfNeedCennectScreen02
- * @tc.desc: CheckIfNeedCennectScreen test
+ * @tc.name: CheckIfNeedConnectScreen02
+ * @tc.desc: CheckIfNeedConnectScreen test
  * @tc.type: FUNC
  */
-HWTEST_F(ScreenSessionManagerClientTest, CheckIfNeedCennectScreen02, Function | SmallTest | Level2)
+HWTEST_F(ScreenSessionManagerClientTest, CheckIfNeedConnectScreen02, Function | SmallTest | Level2)
 {
     EXPECT_NE(screenSessionManagerClient_->screenSessionManager_, nullptr);
 
@@ -145,16 +175,16 @@ HWTEST_F(ScreenSessionManagerClientTest, CheckIfNeedCennectScreen02, Function | 
     ScreenId rsId = SCREEN_ID_INVALID;
     std::string name;
     screenSessionManagerClient_->screenSessionManager_->GetScreenProperty(screenId).SetScreenType(ScreenType::VIRTUAL);
-    bool result = screenSessionManagerClient_->CheckIfNeedCennectScreen(screenId, rsId, name);
+    bool result = screenSessionManagerClient_->CheckIfNeedConnectScreen(screenId, rsId, name);
     EXPECT_EQ(result, false);
 }
 
 /**
- * @tc.name: CheckIfNeedCennectScreen03
- * @tc.desc: CheckIfNeedCennectScreen test
+ * @tc.name: CheckIfNeedConnectScreen03
+ * @tc.desc: CheckIfNeedConnectScreen test
  * @tc.type: FUNC
  */
-HWTEST_F(ScreenSessionManagerClientTest, CheckIfNeedCennectScreen03, Function | SmallTest | Level2)
+HWTEST_F(ScreenSessionManagerClientTest, CheckIfNeedConnectScreen03, Function | SmallTest | Level2)
 {
     EXPECT_NE(screenSessionManagerClient_->screenSessionManager_, nullptr);
 
@@ -162,7 +192,7 @@ HWTEST_F(ScreenSessionManagerClientTest, CheckIfNeedCennectScreen03, Function | 
     ScreenId rsId = 0;
     std::string name;
     screenSessionManagerClient_->screenSessionManager_->GetScreenProperty(screenId).SetScreenType(ScreenType::REAL);
-    bool result = screenSessionManagerClient_->CheckIfNeedCennectScreen(screenId, rsId, name);
+    bool result = screenSessionManagerClient_->CheckIfNeedConnectScreen(screenId, rsId, name);
     EXPECT_EQ(result, true);
 }
 
@@ -198,6 +228,74 @@ HWTEST_F(ScreenSessionManagerClientTest, GetAllScreensProperties, Function | Sma
     sptr<ScreenSession> screenSession = new ScreenSession(screenId, ScreenProperty(), 0);
     screenSessionManagerClient_->screenSessionMap_.emplace(screenId, screenSession);
     EXPECT_EQ(1, screenSessionManagerClient_->GetAllScreensProperties().size());
+}
+
+/**
+ * @tc.name: SetPrivacyStateByDisplayId01
+ * @tc.desc: SetPrivacyStateByDisplayId01 test
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerClientTest, SetPrivacyStateByDisplayId01, Function | SmallTest | Level2)
+{
+    EXPECT_NE(screenSessionManagerClient_->screenSessionManager_, nullptr);
+    screenSessionManagerClient_->screenSessionManager_ = nullptr;
+    EXPECT_EQ(screenSessionManagerClient_->screenSessionManager_, nullptr);
+    screenSessionManagerClient_->ConnectToServer();
+    EXPECT_NE(screenSessionManagerClient_->screenSessionManager_, nullptr);
+
+    sptr<DisplayManager::IPrivateWindowListener> displayListener_ = new DmPrivateWindowListener();
+    DisplayManager::GetInstance().RegisterPrivateWindowListener(displayListener_);
+    
+    DisplayId id = 0;
+    bool hasPrivate = true;
+    screenSessionManagerClient_->SetPrivacyStateByDisplayId(id, hasPrivate);
+
+    bool result = false;
+    screenSessionManagerClient_->screenSessionManager_->HasPrivateWindow(id, result);
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.name: SetPrivacyStateByDisplayId02
+ * @tc.desc: SetPrivacyStateByDisplayId02 test
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerClientTest, SetPrivacyStateByDisplayId02, Function | SmallTest | Level2)
+{
+    EXPECT_NE(screenSessionManagerClient_->screenSessionManager_, nullptr);
+    DisplayId id = 0;
+    bool hasPrivate = false;
+    screenSessionManagerClient_->SetPrivacyStateByDisplayId(id, hasPrivate);
+    bool result = true;
+    screenSessionManagerClient_->screenSessionManager_->HasPrivateWindow(id, result);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.name: SetScreenPrivacyWindowList
+ * @tc.desc: SetScreenPrivacyWindowList test
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerClientTest, SetScreenPrivacyWindowList, Function | SmallTest | Level2)
+{
+    screenSessionManagerClient_->screenSessionManager_ = nullptr;
+    EXPECT_EQ(screenSessionManagerClient_->screenSessionManager_, nullptr);
+    screenSessionManagerClient_->ConnectToServer();
+    EXPECT_NE(screenSessionManagerClient_->screenSessionManager_, nullptr);
+
+    DisplayId id = 0;
+    std::vector<std::string> privacyWindowList{"win0", "win1"};
+    std::vector<std::string> privacyWindowList2{"win0"};
+    sptr<DisplayManager::IPrivateWindowListChangeListener> listener_ = new DmPrivateWindowListChangeListener();
+    listener_->setCallback([privacyWindowList, privacyWindowList2](std::vector<std::string> windowList)
+    {
+        EXPECT_EQ(windowList, privacyWindowList);
+        EXPECT_NE(windowList, privacyWindowList2);
+    });
+    DisplayManager::GetInstance().RegisterPrivateWindowListChangeListener(listener_);
+
+    screenSessionManagerClient_->SetScreenPrivacyWindowList(id, privacyWindowList);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
 /**
@@ -281,6 +379,17 @@ HWTEST_F(ScreenSessionManagerClientTest, GetScreenSnapshot, Function | SmallTest
     screenSessionManagerClient_->SetDisplayNodeScreenId(screenId, displayNodeScreenId);
     std::shared_ptr<Media::PixelMap> res = screenSessionManagerClient_->GetScreenSnapshot(screenId, scaleX, scaleY);
     EXPECT_EQ(nullptr, res);
+}
+
+/**
+ * @tc.name: GetDeviceScreenConfig
+ * @tc.desc: GetDeviceScreenConfig test
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerClientTest, GetDeviceScreenConfig, Function | SmallTest | Level2)
+{
+    DeviceScreenConfig deviceScreenConfig = screenSessionManagerClient_->GetDeviceScreenConfig();
+    EXPECT_FALSE(deviceScreenConfig.rotationPolicy_.empty());
 }
 } // namespace Rosen
 } // namespace OHOS

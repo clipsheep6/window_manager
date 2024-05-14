@@ -120,6 +120,9 @@ private:
     void NotifyScreenGroupChanged(const std::vector<sptr<ScreenInfo>>& screenInfo, ScreenGroupChangeEvent event) const;
     void OpenRotationSyncTransaction();
     void CloseRotationSyncTransaction();
+    void UpdateScreenGroupLayout(sptr<AbstractScreenGroup> screenGroup);
+    void SetDisplayNode(Rotation rotationAfter, const std::shared_ptr<RSDisplayNode>& displayNode,
+        struct ScreenRect srect);
 
     class ScreenIdManager {
     public:
@@ -154,5 +157,13 @@ private:
     bool isExpandCombination_ = false;
     ScreenPowerState powerState_ { ScreenPowerState::INVALID_STATE };
 };
+
+struct ScreenRect {
+    float w;
+    float h;
+    float x;
+    float y;
+};
+
 } // namespace OHOS::Rosen
 #endif // FOUNDATION_DMSERVER_ABSTRACT_SCREEN_CONTROLLER_H

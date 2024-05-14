@@ -72,8 +72,9 @@ std::map<uint32_t, std::vector<sptr<IAvoidAreaChangedListener>>> WindowImpl::avo
 std::map<uint32_t, std::vector<sptr<IOccupiedAreaChangeListener>>> WindowImpl::occupiedAreaChangeListeners_;
 std::map<uint32_t, sptr<IDialogDeathRecipientListener>> WindowImpl::dialogDeathRecipientListener_;
 std::recursive_mutex WindowImpl::globalMutex_;
-int constructorCnt = 0;
-int deConstructorCnt = 0;
+int g_constructorCnt = 0;
+int g_deConstructorCnt = 0;
+bool WindowImpl::enableImmersiveMode_ = true;
 WindowImpl::WindowImpl(const sptr<WindowOption>& option)
 {
     property_ = new (std::nothrow) WindowProperty();
@@ -81,27 +82,10 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
         WLOGFE("Property is null");
         return;
     }
-    property_->SetWindowName(option->GetWindowName());
-    property_->SetRequestRect(option->GetWindowRect());
-    property_->SetWindowType(option->GetWindowType());
-    if (WindowHelper::IsAppFloatingWindow(option->GetWindowType())) {
-        property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
-    } else {
-        property_->SetWindowMode(option->GetWindowMode());
-    }
-    property_->SetFullScreen(option->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN);
-    property_->SetFocusable(option->GetFocusable());
-    property_->SetTouchable(option->GetTouchable());
-    property_->SetDisplayId(option->GetDisplayId());
-    property_->SetCallingWindow(option->GetCallingWindow());
-    property_->SetWindowFlags(option->GetWindowFlags());
-    property_->SetHitOffset(option->GetHitOffset());
-    property_->SetRequestedOrientation(option->GetRequestedOrientation());
+    InitWindowProperty(option);
+
     windowTag_ = option->GetWindowTag();
     isMainHandlerAvailable_ = option->GetMainHandlerAvailable();
-    property_->SetTurnScreenOn(option->IsTurnScreenOn());
-    property_->SetKeepScreenOn(option->IsKeepScreenOn());
-    property_->SetBrightness(option->GetBrightness());
     AdjustWindowAnimationFlag();
     UpdateDecorEnable();
     auto& sysBarPropMap = option->GetSystemBarProperty();
@@ -118,13 +102,39 @@ WindowImpl::WindowImpl(const sptr<WindowOption>& option)
     }
     WLOGFD("surfaceNodeName: %{public}s", surfaceNodeName.c_str());
     surfaceNode_ = CreateSurfaceNode(surfaceNodeName, option->GetWindowType());
+    if (surfaceNode_ != nullptr) {
+        vsyncStation_ = std::make_shared<VsyncStation>(surfaceNode_->GetId());
+    }
 
     moveDragProperty_ = new (std::nothrow) MoveDragProperty();
     if (moveDragProperty_ == nullptr) {
         WLOGFE("MoveDragProperty is null");
     }
-    WLOGFD("constructorCnt: %{public}d name: %{public}s",
-        ++constructorCnt, property_->GetWindowName().c_str());
+    WLOGFD("g_constructorCnt: %{public}d name: %{public}s",
+        ++g_constructorCnt, property_->GetWindowName().c_str());
+}
+
+void WindowImpl::InitWindowProperty(const sptr<WindowOption>& option)
+{
+    property_->SetWindowName(option->GetWindowName());
+    property_->SetRequestRect(option->GetWindowRect());
+    property_->SetWindowType(option->GetWindowType());
+    if (WindowHelper::IsAppFloatingWindow(option->GetWindowType())) {
+        property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+    } else {
+        property_->SetWindowMode(option->GetWindowMode());
+    }
+    property_->SetFullScreen(option->GetWindowMode() == WindowMode::WINDOW_MODE_FULLSCREEN);
+    property_->SetFocusable(option->GetFocusable());
+    property_->SetTouchable(option->GetTouchable());
+    property_->SetDisplayId(option->GetDisplayId());
+    property_->SetCallingWindow(option->GetCallingWindow());
+    property_->SetWindowFlags(option->GetWindowFlags());
+    property_->SetHitOffset(option->GetHitOffset());
+    property_->SetRequestedOrientation(option->GetRequestedOrientation());
+    property_->SetTurnScreenOn(option->IsTurnScreenOn());
+    property_->SetKeepScreenOn(option->IsKeepScreenOn());
+    property_->SetBrightness(option->GetBrightness());
 }
 
 RSSurfaceNode::SharedPtr WindowImpl::CreateSurfaceNode(std::string name, WindowType type)
@@ -154,8 +164,8 @@ RSSurfaceNode::SharedPtr WindowImpl::CreateSurfaceNode(std::string name, WindowT
 
 WindowImpl::~WindowImpl()
 {
-    WLOGI("windowName: %{public}s, windowId: %{public}d, deConstructorCnt: %{public}d, surfaceNode:%{public}d",
-        GetWindowName().c_str(), GetWindowId(), ++deConstructorCnt, static_cast<uint32_t>(surfaceNode_.use_count()));
+    WLOGI("windowName: %{public}s, windowId: %{public}d, g_deConstructorCnt: %{public}d, surfaceNode:%{public}d",
+        GetWindowName().c_str(), GetWindowId(), ++g_deConstructorCnt, static_cast<uint32_t>(surfaceNode_.use_count()));
     Destroy(true, false);
 }
 
@@ -198,6 +208,11 @@ sptr<Window> WindowImpl::GetTopWindowWithId(uint32_t mainWinId)
         return nullptr;
     }
     return FindWindowById(topWinId);
+}
+
+sptr<Window> WindowImpl::GetWindowWithId(uint32_t WinId)
+{
+    return FindWindowById(WinId);
 }
 
 sptr<Window> WindowImpl::GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context)
@@ -644,8 +659,8 @@ std::shared_ptr<std::vector<uint8_t>> WindowImpl::GetAbcContent(const std::strin
     begin = file.tellg();
     file.seekg(0, std::ios::end);
     end = file.tellg();
-    size_t len = end - begin;
-    WLOGFD("abc file: %{public}s, size: %{public}u", abcPath.c_str(), static_cast<uint32_t>(len));
+    int len = end - begin;
+    WLOGFD("abc file: %{public}s, size: %{public}d", abcPath.c_str(), len);
 
     if (len <= 0) {
         WLOGFE("abc file size is 0");
@@ -660,6 +675,11 @@ std::shared_ptr<std::vector<uint8_t>> WindowImpl::GetAbcContent(const std::strin
 Ace::UIContent* WindowImpl::GetUIContent() const
 {
     return uiContent_.get();
+}
+
+Ace::UIContent* WindowImpl::GetUIContentWithId(uint32_t winId) const
+{
+    return nullptr;
 }
 
 std::string WindowImpl::GetContentInfo()
@@ -853,6 +873,7 @@ WMError WindowImpl::SetLayoutFullScreen(bool status)
             }
         }
     }
+    enableImmersiveMode_ = status;
     return ret;
 }
 
@@ -920,8 +941,12 @@ WMError WindowImpl::SetAspectRatio(float ratio)
         WLOGFD("window is hidden or created! id: %{public}u, ratio: %{public}f ", property_->GetWindowId(), ratio);
         return WMError::WM_OK;
     }
-    UpdateProperty(PropertyChangeAction::ACTION_UPDATE_ASPECT_RATIO);
-    return WMError::WM_OK;
+    auto ret = UpdateProperty(PropertyChangeAction::ACTION_UPDATE_ASPECT_RATIO);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("Set AspectRatio failed. errorCode: %{public}u", ret);
+        return ret;
+    }
+    return ret;
 }
 
 WMError WindowImpl::ResetAspectRatio()
@@ -946,6 +971,7 @@ void WindowImpl::MapFloatingWindowToAppIfNeeded()
         return;
     }
 
+    WLOGFI("MapFloatingWindowToAppIfNeeded: enter this");
     for (const auto& winPair : windowMap_) {
         auto win = winPair.second.second;
         if (win->GetType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW &&
@@ -1230,6 +1256,14 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
     return ret;
 }
 
+bool WindowImpl::PreNotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
+{
+    if (uiContent_ != nullptr) {
+        return uiContent_->ProcessKeyEvent(keyEvent, true);
+    }
+    return false;
+}
+
 void WindowImpl::InitAbilityInfo()
 {
     AbilityInfo info;
@@ -1301,6 +1335,7 @@ void WindowImpl::DestroyDialogWindow()
 void WindowImpl::DestroyFloatingWindow()
 {
     // remove from appFloatingWindowMap_
+    WLOGFI("DestroyFloatingWindow:remove from appFloatingWindowMap_");
     for (auto& floatingWindows: appFloatingWindowMap_) {
         for (auto iter = floatingWindows.second.begin(); iter != floatingWindows.second.end(); ++iter) {
             if ((*iter) == nullptr) {
@@ -1314,6 +1349,7 @@ void WindowImpl::DestroyFloatingWindow()
     }
 
     // Destroy app floating window if exist
+    WLOGFI("DestroyFloatingWindow:Destroy app floating window if exist");
     if (appFloatingWindowMap_.count(GetWindowId()) > 0) {
         auto& floatingWindows = appFloatingWindowMap_.at(GetWindowId());
         for (auto iter = floatingWindows.begin(); iter != floatingWindows.end(); iter = floatingWindows.begin()) {
@@ -1353,6 +1389,14 @@ void WindowImpl::DestroySubWindow()
         }
         subWindowMap_[GetWindowId()].clear();
         subWindowMap_.erase(GetWindowId());
+    }
+}
+
+void WindowImpl::ClearVsyncStation()
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (vsyncStation_ != nullptr) {
+        vsyncStation_.reset();
     }
 }
 
@@ -1398,6 +1442,7 @@ WMError WindowImpl::Destroy(bool needNotifyServer, bool needClearListener)
     DestroySubWindow();
     DestroyFloatingWindow();
     DestroyDialogWindow();
+    ClearVsyncStation();
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         state_ = WindowState::STATE_DESTROYED;
@@ -1777,7 +1822,9 @@ WMError WindowImpl::SetBrightness(float brightness)
     if (!IsWindowValid()) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    if (brightness < MINIMUM_BRIGHTNESS || brightness > MAXIMUM_BRIGHTNESS) {
+    if ((brightness < MINIMUM_BRIGHTNESS &&
+         std::fabs(brightness - UNDEFINED_BRIGHTNESS) >= std::numeric_limits<float>::min()) ||
+         brightness > MAXIMUM_BRIGHTNESS) {
         WLOGFE("invalid brightness value: %{public}f", brightness);
         return WMError::WM_ERROR_INVALID_PARAM;
     }
@@ -1976,6 +2023,34 @@ WMError WindowImpl::SetGlobalMaximizeMode(MaximizeMode mode)
 MaximizeMode WindowImpl::GetGlobalMaximizeMode() const
 {
     return SingletonContainer::Get<WindowAdapter>().GetMaximizeMode();
+}
+
+WMError WindowImpl::SetImmersiveModeEnabledState(bool enable)
+{
+    TLOGD(WmsLogTag::WMS_IMMS, "WindowImpl id: %{public}u SetImmersiveModeEnabledState: %{public}u",
+        property_->GetWindowId(), static_cast<uint32_t>(enable));
+    if (!IsWindowValid() ||
+        !WindowHelper::IsWindowModeSupported(GetModeSupportInfo(), WindowMode::WINDOW_MODE_FULLSCREEN)) {
+        TLOGE(WmsLogTag::WMS_IMMS, "invalid window or fullscreen mode is not be supported, winId:%{public}u",
+            property_->GetWindowId());
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    const WindowType curWindowType = GetType();
+    if (!WindowHelper::IsMainWindow(curWindowType) && !WindowHelper::IsSubWindow(curWindowType)) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+
+    enableImmersiveMode_ = enable;
+    const WindowMode mode = GetMode();
+    if (mode == WindowMode::WINDOW_MODE_FULLSCREEN) {
+        return SetLayoutFullScreen(enableImmersiveMode_);
+    }
+    return WMError::WM_OK;
+}
+
+bool WindowImpl::GetImmersiveModeEnabledState() const
+{
+    return enableImmersiveMode_;
 }
 
 WMError WindowImpl::NotifyWindowTransition(TransitionReason reason)
@@ -2869,9 +2944,8 @@ void WindowImpl::HandlePointerStyle(const std::shared_ptr<MMI::PointerEvent>& po
     } else if (GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
         newStyleID = (GetRect().width_ > GetRect().height_) ?
             MMI::MOUSE_ICON::NORTH_SOUTH : MMI::MOUSE_ICON::WEST_EAST;
-        // when receive up event, set default style
         if (action == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP) {
-            newStyleID = MMI::MOUSE_ICON::DEFAULT;
+            newStyleID = MMI::MOUSE_ICON::DEFAULT; // when receive up event, set default style
         }
     }
     WLOGD("winId : %{public}u, Mouse posX : %{public}u, posY %{public}u, Pointer action : %{public}u, "
@@ -2981,16 +3055,17 @@ void WindowImpl::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallbac
         WLOGFE("[WM] Receive Vsync Request failed, window is destroyed");
         return;
     }
-    if (!SingletonContainer::IsDestroyed()) {
-        VsyncStation::GetInstance().RequestVsync(vsyncCallback);
+
+    if (!SingletonContainer::IsDestroyed() && vsyncStation_ != nullptr) {
+        vsyncStation_->RequestVsync(vsyncCallback);
     }
 }
 
 int64_t WindowImpl::GetVSyncPeriod()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (!SingletonContainer::IsDestroyed()) {
-        return VsyncStation::GetInstance().GetVSyncPeriod();
+    if (!SingletonContainer::IsDestroyed() && vsyncStation_ != nullptr) {
+        return vsyncStation_->GetVSyncPeriod();
     }
     return 0;
 }
@@ -3803,6 +3878,7 @@ WMError WindowImpl::SetTextFieldAvoidInfo(double textFieldPositionY, double text
 {
     property_->SetTextFieldPositionY(textFieldPositionY);
     property_->SetTextFieldHeight(textFieldHeight);
+    UpdateProperty(PropertyChangeAction::ACTION_UPDATE_TEXTFIELD_AVOID_INFO);
     return WMError::WM_OK;
 }
 } // namespace Rosen

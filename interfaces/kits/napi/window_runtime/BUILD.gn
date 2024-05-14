@@ -33,12 +33,10 @@ config("window_native_kit_config") {
   include_dirs = [
     "window_napi",
     "../../../innerkits/wm",
+    "../../../innerkits/dm",
     "../../../../utils/include",
     "../../../../wm/include",
     "../../../../wmserver/include",
-
-    # because of pixle_map.h
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
   ]
 }
 
@@ -47,6 +45,7 @@ ohos_shared_library("window_native_kit") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   sources = [
@@ -64,6 +63,7 @@ ohos_shared_library("window_native_kit") {
 
   deps = [
     "../../../../utils:libwmutil",
+    "../../../../utils:libwmutil_base",
     "../../../../wm:libwm",
   ]
 
@@ -103,6 +103,7 @@ ohos_shared_library("window_napi") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   sources = [
@@ -119,6 +120,7 @@ ohos_shared_library("window_napi") {
     ":window_native_kit",
     "../../../../dm:libdm",
     "../../../../utils:libwmutil",
+    "../../../../utils:libwmutil_base",
     "../../../../wm:libwm",
   ]
 
@@ -146,6 +148,7 @@ ohos_shared_library("windowstage_kit") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   sources = [ "window_stage_napi/js_window_stage.cpp" ]
@@ -159,6 +162,7 @@ ohos_shared_library("windowstage_kit") {
   deps = [
     ":window_native_kit",
     "../../../../utils:libwmutil",
+    "../../../../utils:libwmutil_base",
     "../../../../wm:libwm",
   ]
 

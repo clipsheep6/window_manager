@@ -14,8 +14,13 @@
  */
 
 #include "session/host/include/sub_session.h"
+#include "screen_session_manager/include/screen_session_manager_client.h"
 
+#include "key_event.h"
+#include "parameters.h"
+#include "pointer_event.h"
 #include "window_manager_hilog.h"
+
 
 namespace OHOS::Rosen {
 namespace {
@@ -26,13 +31,17 @@ SubSession::SubSession(const SessionInfo& info, const sptr<SpecificSessionCallba
     : SceneSession(info, specificCallback)
 {
     moveDragController_ = new (std::nothrow) MoveDragController(GetPersistentId());
+    if (moveDragController_  != nullptr && specificCallback != nullptr &&
+        specificCallback->onWindowInputPidChangeCallback_ != nullptr) {
+        moveDragController_->SetNotifyWindowPidChangeCallback(specificCallback->onWindowInputPidChangeCallback_);
+    }
     SetMoveDragCallback();
-    WLOGFD("[WMSLife] Create SubSession");
+    TLOGD(WmsLogTag::WMS_LIFE, "Create SubSession");
 }
 
 SubSession::~SubSession()
 {
-    WLOGD("[WMSLife] ~SubSession, id: %{public}d", GetPersistentId());
+    TLOGD(WmsLogTag::WMS_LIFE, " ~SubSession, id: %{public}d", GetPersistentId());
 }
 
 WSError SubSession::Show(sptr<WindowSessionProperty> property)
@@ -40,10 +49,10 @@ WSError SubSession::Show(sptr<WindowSessionProperty> property)
     auto task = [weakThis = wptr(this), property]() {
         auto session = weakThis.promote();
         if (!session) {
-            WLOGFE("[WMSSub] session is null");
+            TLOGE(WmsLogTag::WMS_SUB, "session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
-        WLOGFI("[WMSLife] Show session, id: %{public}d", session->GetPersistentId());
+        TLOGI(WmsLogTag::WMS_LIFE, "Show session, id: %{public}d", session->GetPersistentId());
 
         // use property from client
         if (property && property->GetAnimationFlag() == static_cast<uint32_t>(WindowAnimation::CUSTOM)) {
@@ -62,10 +71,10 @@ WSError SubSession::Hide()
     auto task = [weakThis = wptr(this)]() {
         auto session = weakThis.promote();
         if (!session) {
-            WLOGFE("[WMSSub] session is null");
+            TLOGE(WmsLogTag::WMS_SUB, "session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
-        WLOGFI("[WMSLife] Hide session, id: %{public}d", session->GetPersistentId());
+        TLOGI(WmsLogTag::WMS_LIFE, "Hide session, id: %{public}d", session->GetPersistentId());
         auto ret = session->SetActive(false);
         if (ret != WSError::WS_OK) {
             return ret;
@@ -84,11 +93,31 @@ WSError SubSession::Hide()
     return WSError::WS_OK;
 }
 
+WSError SubSession::Reconnect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
+    const std::shared_ptr<RSSurfaceNode>& surfaceNode, sptr<WindowSessionProperty> property, sptr<IRemoteObject> token,
+    int32_t pid, int32_t uid)
+{
+    return PostSyncTask([weakThis = wptr(this), sessionStage, eventChannel, surfaceNode, property, token, pid, uid]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGFE("session is null");
+            return WSError::WS_ERROR_DESTROYED_OBJECT;
+        }
+        WSError ret = session->Session::Reconnect(sessionStage, eventChannel, surfaceNode, property, token, pid, uid);
+        if (ret == WSError::WS_OK) {
+            session->isActive_ = true;
+            session->UpdateSessionState(SessionState::STATE_FOREGROUND);
+        }
+        return ret;
+    });
+}
+
 WSError SubSession::ProcessPointDownSession(int32_t posX, int32_t posY)
 {
     const auto& id = GetPersistentId();
     WLOGFI("id: %{public}d, type: %{public}d", id, GetWindowType());
-    if (parentSession_ && parentSession_->CheckDialogOnForeground()) {
+    auto parentSession = GetParentSession();
+    if (parentSession && parentSession->CheckDialogOnForeground()) {
         WLOGFI("Has dialog foreground, id: %{public}d, type: %{public}d", id, GetWindowType());
         return WSError::WS_OK;
     }
@@ -97,5 +126,62 @@ WSError SubSession::ProcessPointDownSession(int32_t posX, int32_t posY)
     }
     PresentFocusIfPointDown();
     return SceneSession::ProcessPointDownSession(posX, posY);
+}
+
+WSError SubSession::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
+{
+    if (!IsSessionValid()) {
+        return WSError::WS_ERROR_INVALID_SESSION;
+    }
+    if (keyEvent == nullptr) {
+        WLOGFE("KeyEvent is nullptr");
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    auto parentSession = GetParentSession();
+    if (parentSession && parentSession->CheckDialogOnForeground()) {
+        TLOGD(WmsLogTag::WMS_DIALOG, "Its main window has dialog on foreground, not transfer pointer event");
+        return WSError::WS_ERROR_INVALID_PERMISSION;
+    }
+
+    WSError ret = Session::TransferKeyEvent(keyEvent);
+    return ret;
+}
+
+int32_t SubSession::GetMissionId() const
+{
+    auto parentSession = GetParentSession();
+    return parentSession != nullptr ? parentSession->GetPersistentId() : SceneSession::GetMissionId();
+}
+
+void SubSession::UpdatePointerArea(const WSRect& rect)
+{
+    auto property = GetSessionProperty();
+    if (!(property->IsDecorEnable() && GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING)) {
+        return;
+    }
+    Session::UpdatePointerArea(rect);
+}
+
+bool SubSession::CheckPointerEventDispatch(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) const
+{
+    auto sessionState = GetSessionState();
+    int32_t action = pointerEvent->GetPointerAction();
+    auto isPC = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
+    if (isPC && sessionState != SessionState::STATE_FOREGROUND &&
+        sessionState != SessionState::STATE_ACTIVE &&
+        action != MMI::PointerEvent::POINTER_ACTION_LEAVE_WINDOW) {
+        WLOGFW("Current Session Info: [persistentId: %{public}d, "
+            "state: %{public}d, action:%{public}d]", GetPersistentId(), GetSessionState(), action);
+        return false;
+    }
+    return true;
+}
+
+void SubSession::RectCheck(uint32_t curWidth, uint32_t curHeight)
+{
+    uint32_t minWidth = GetSystemConfig().miniWidthOfSubWindow_;
+    uint32_t minHeight = GetSystemConfig().miniHeightOfSubWindow_;
+    uint32_t maxFloatingWindowSize = GetSystemConfig().maxFloatingWindowSize_;
+    RectSizeCheckProcess(curWidth, curHeight, minWidth, minHeight, maxFloatingWindowSize);
 }
 } // namespace OHOS::Rosen

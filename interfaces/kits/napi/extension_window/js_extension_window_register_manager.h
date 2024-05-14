@@ -27,11 +27,6 @@
 
 namespace OHOS {
 namespace Rosen {
-enum class CaseType {
-    CASE_WINDOW_MANAGER = 0,
-    CASE_WINDOW,
-    CASE_STAGE
-};
 class JsExtensionWindowRegisterManager {
 public:
     JsExtensionWindowRegisterManager();
@@ -49,6 +44,8 @@ private:
         sptr<Window> window, bool isRegister);
     using Func = WmErrorCode(JsExtensionWindowRegisterManager::*)(sptr<JsExtensionWindowListener>,
         sptr<Window> window, bool);
+    WmErrorCode ProcessLifeCycleEventRegister(sptr<JsExtensionWindowListener> listener,
+        sptr<Window> window, bool isRegister);
     std::map<std::string, std::map<std::shared_ptr<NativeReference>, sptr<JsExtensionWindowListener>>> jsCbMap_;
     std::mutex mtx_;
     std::map<CaseType, std::map<std::string, Func>> listenerProcess_;
