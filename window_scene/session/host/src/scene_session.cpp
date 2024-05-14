@@ -1089,8 +1089,9 @@ bool SceneSession::CheckGetAvoidAreaAvailable(AvoidAreaType type)
         }
     }
     if (WindowHelper::IsSubWindow(winType)) {
-        if (GetParentSession() && GetParentSession()->GetSessionRect() == GetSessionRect()) {
-            return true;
+        auto parentSession = GetParentSession();
+        if (parentSession != nullptr && parentSession->GetSessionRect() == GetSessionRect()) {
+            return parentSession->CheckGetAvoidAreaAvailable(type);
         }
     }
     TLOGI(WmsLogTag::WMS_IMMS, "Window [%{public}u, %{public}s] type %{public}d "
