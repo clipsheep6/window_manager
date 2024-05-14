@@ -87,6 +87,8 @@ const std::map<uint32_t, SceneSessionManagerLiteStubFunc> SceneSessionManagerLit
         &SceneSessionManagerLiteStub::HandleGetWindowModeType),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerLiteMessage::TRANS_ID_GET_TOPN_MAIN_WINDOW_INFO),
         &SceneSessionManagerLiteStub::HandleGetMainWinodowInfo),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerLiteMessage::TRANS_ID_GET_DISPLAY_ID_BY_WINDOW_ID),
+        &SceneSessionManagerLiteStub::HandleGetDisplayIdByWindowId),
 };
 
 int SceneSessionManagerLiteStub::OnRemoteRequest(uint32_t code,
@@ -460,6 +462,16 @@ int SceneSessionManagerLiteStub::HandleGetMainWinodowInfo(MessageParcel &data, M
         return ERR_INVALID_DATA;
     }
 
+    return ERR_NONE;
+}
+
+int SceneSessionManagerLiteStub::HandleGetDisplayIdByWindowId(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t windowId = data.ReadInt32();
+    DisplayId displayId;
+    const WMError& ret = GetDisplayIdByWindowId(windowId, displayId);
+    reply.WriteUint64(displayId);
+    reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

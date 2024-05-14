@@ -151,6 +151,8 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandleGetCallingWindowRect),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_MODE_TYPE),
         &SceneSessionManagerStub::HandleGetWindowModeType),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_DISPLAY_ID_BY_WINDOW_ID),
+        &SceneSessionManagerStub::HandleGetDisplayIdByWindowId),
 };
 
 int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
@@ -950,6 +952,16 @@ int SceneSessionManagerStub::HandleGetWindowModeType(MessageParcel &data, Messag
         return ERR_INVALID_DATA;
     }
     reply.WriteInt32(static_cast<int32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleGetDisplayIdByWindowId(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t windowId = data.ReadInt32();
+    DisplayId displayId;
+    const WMError& ret = GetDisplayIdByWindowId(windowId, displayId);
+    reply.WriteUint64(displayId);
+    reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }
 } // namespace OHOS::Rosen

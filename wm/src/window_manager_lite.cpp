@@ -546,5 +546,15 @@ WMError WindowManagerLite::GetMainWindowInfos(int32_t topNum, std::vector<MainWi
     TLOGI(WmsLogTag::WMS_MAIN, "Get main window info lite");
     return SingletonContainer::Get<WindowAdapterLite>().GetMainWindowInfos(topNum, topNInfo);
 }
+
+DisplayId WindowManagerLite::GetDisplayIdByWindowId(int32_t windowId) const
+{
+    DisplayId displayId = DISPLAY_ID_INVALID;
+    WMError ret = SingletonContainer::Get<WindowAdapterLite>().GetDisplayIdByWindowId(windowId, displayId);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("get display id by window id failed");
+    }
+    return displayId;
+}
 } // namespace Rosen
 } // namespace OHOS

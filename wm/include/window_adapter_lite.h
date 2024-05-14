@@ -45,6 +45,7 @@ public:
     virtual void ClearWindowAdapter();
     virtual WMError GetWindowModeType(WindowModeType& windowModeType);
     virtual WMError GetMainWindowInfos(int32_t topNum, std::vector<MainWindowInfo>& topNInfo);
+    virtual WMError GetDisplayIdByWindowId(int32_t windowId, DisplayId& displayId);
 
 private:
     static inline SingletonDelegator<WindowAdapterLite> delegator;

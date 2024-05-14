@@ -69,6 +69,7 @@ public:
         TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID,
         TRANS_ID_GET_WINDOW_MODE_TYPE,
         TRANS_ID_GET_TOPN_MAIN_WINDOW_INFO,
+        TRANS_ID_GET_DISPLAY_ID_BY_WINDOW_ID,
     };
 
     virtual WSError SetSessionLabel(const sptr<IRemoteObject>& token, const std::string& label) = 0;
@@ -97,6 +98,7 @@ public:
     virtual WSError MoveSessionsToForeground(const std::vector<std::int32_t>& sessionIds, int32_t topSessionId) = 0;
     virtual WSError MoveSessionsToBackground(const std::vector<std::int32_t>& sessionIds,
         std::vector<std::int32_t>& result) = 0;
+    WMError GetDisplayIdByWindowId(int32_t windowId, DisplayId& displayId) override { return WMError::WM_OK; }
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_LITE_INTERFACE_H

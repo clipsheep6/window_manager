@@ -107,6 +107,7 @@ public:
     WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus) override;
     WMError GetCallingWindowRect(int32_t persistentId, Rect& rect) override;
     WMError GetWindowModeType(WindowModeType& windowModeType) override;
+    WMError GetDisplayIdByWindowId(int32_t windowId, DisplayId& displayId) override;
 
 private:
     template<typename T>

@@ -63,6 +63,7 @@ public:
     WSError UpdateWindowMode(int32_t persistentId, int32_t windowMode);
     WMError GetWindowModeType(WindowModeType& windowModeType) override;
     WMError GetMainWindowInfos(int32_t topNum, std::vector<MainWindowInfo>& topNInfo) override;
+    WMError GetDisplayIdByWindowId(int32_t windowId, DisplayId& displayId) override;
 
 protected:
     SceneSessionManagerLite() = default;

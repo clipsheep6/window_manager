@@ -660,5 +660,11 @@ WMError WindowAdapter::GetWindowModeType(WindowModeType& windowModeType)
     WLOGFD("get window mode type");
     return windowManagerServiceProxy_->GetWindowModeType(windowModeType);
 }
+
+WMError WindowAdapter::GetDisplayIdByWindowId(int32_t windowId, DisplayId& displayId)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
+    return static_cast<WMError>(windowManagerServiceProxy_->GetDisplayIdByWindowId(windowId, displayId));
+}
 } // namespace Rosen
 } // namespace OHOS

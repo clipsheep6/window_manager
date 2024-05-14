@@ -209,4 +209,9 @@ WMError SceneSessionManagerLite::GetMainWindowInfos(int32_t topNum, std::vector<
 {
     return SceneSessionManager::GetInstance().GetMainWindowInfos(topNum, topNInfo);
 }
+
+WMError SceneSessionManagerLite::GetDisplayIdByWindowId(int32_t windowId, DisplayId& displayId)
+{
+    return SceneSessionManager::GetInstance().GetDisplayIdByWindowId(windowId, displayId);
+}
 } // namespace OHOS::Rosen

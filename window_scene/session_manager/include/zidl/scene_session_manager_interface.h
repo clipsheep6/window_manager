@@ -105,6 +105,7 @@ public:
         TRANS_ID_GET_WINDOW_STATUS,
         TRANS_ID_GET_WINDOW_RECT,
         TRANS_ID_GET_WINDOW_MODE_TYPE,
+        TRANS_ID_GET_DISPLAY_ID_BY_WINDOW_ID,
     };
 
     virtual WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) = 0;
@@ -238,6 +239,7 @@ public:
         return WMError::WM_OK;
     }
     WMError GetWindowModeType(WindowModeType& windowModeType) override { return WMError::WM_OK; }
+    WMError GetDisplayIdByWindowId(int32_t windowId, DisplayId& displayId) override { return WMError::WM_OK; }
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_INTERFACE_H

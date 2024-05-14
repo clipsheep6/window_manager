@@ -125,6 +125,7 @@ public:
     virtual WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus);
     virtual WMError GetCallingWindowRect(int32_t persistentId, Rect& rect);
     virtual WMError GetWindowModeType(WindowModeType& windowModeType);
+    virtual WMError GetDisplayIdByWindowId(int32_t windowId, DisplayId& displayId);
     
 private:
     static inline SingletonDelegator<WindowAdapter> delegator;

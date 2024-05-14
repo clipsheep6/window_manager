@@ -1091,5 +1091,15 @@ void WindowManager::UpdateVisibleWindowNum(const std::vector<VisibleWindowNumInf
 {
     pImpl_->NotifyVisibleWindowNumChanged(visibleWindowNumInfo);
 }
+
+DisplayId WindowManager::GetDisplayIdByWindowId(int32_t windowId) const
+{
+    DisplayId displayId = DISPLAY_ID_INVALID;
+    WMError ret = SingletonContainer::Get<WindowAdapter>().GetDisplayIdByWindowId(windowId, displayId);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("get display id by window id failed");
+    }
+    return displayId;
+}
 } // namespace Rosen
 } // namespace OHOS

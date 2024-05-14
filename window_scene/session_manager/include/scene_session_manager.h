@@ -329,6 +329,7 @@ public:
     const SystemSessionConfig& GetSystemSessionConfig() const;
     int32_t GetCustomDecorHeight(int32_t persistentId);
     WMError GetMainWindowInfos(int32_t topNum, std::vector<MainWindowInfo>& topNInfo);
+    WMError GetDisplayIdByWindowId(int32_t windowId, DisplayId& displayId) override;
 
 protected:
     SceneSessionManager();

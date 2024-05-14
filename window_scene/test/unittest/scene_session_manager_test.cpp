@@ -4238,6 +4238,44 @@ HWTEST_F(SceneSessionManagerTest, GetMainWindowInfos, Function | SmallTest | Lev
     ASSERT_EQ(result, WMError::WM_ERROR_INVALID_PERMISSION);
 }
 
+/**
+ * @tc.name: GetDisplayIdByWindowId
+ * @tc.desc: SceneSesionManager get display id by window id;
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, GetDisplayIdByWindowId, Function | SmallTest | Level3)
+{
+    SessionInfo info;
+    info.bundleName_ = "GetDisplayIdByWindowId01";
+    info.abilityName_ = "GetDisplayIdByWindowId01";
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    if (ssm_ == nullptr) {
+        ssm_ = new SceneSessionManager();
+    }
+    ssm_->sceneSessionMap_.insert({ 11, sceneSession});
+    sptr<WindowSessionProperty> property = sceneSession->GetSessionProperty();
+    if (property == nullptr) {
+        property = new WindowSessionProperty();
+        sceneSession->SetSessionProperty(property);
+    }
+    property->SetDisplayId(2);
+
+    uint64_t displayId = -1ULL;
+    WMError ret01 = ssm_->GetDisplayIdByWindowId(11, displayId);
+    ASSERT_EQ(ret01, WMError::WM_OK);
+    EXPECT_EQ(displayId, 2);
+
+    displayId = -1ULL;
+    WMError ret02 = ssm_->GetDisplayIdByWindowId(12, displayId);
+    ASSERT_EQ(ret02, WMError::WM_ERROR_INVALID_WINDOW);
+    EXPECT_EQ(displayId, -1ULL);
+
+    sceneSession = nullptr;
+    property = nullptr;
+    delete sceneSession;
+    delete property;
+}
+
 }
 } // namespace Rosen
 } // namespace OHOS
