@@ -2472,11 +2472,19 @@ void Session::CreateWindowStateDetectTask(bool isAttach, WindowMode windowMode)
 
 void Session::SetBufferAvailable(bool bufferAvailable)
 {
-    WLOGFI("SetBufferAvailable: %{public}d", bufferAvailable);
-    if (bufferAvailableChangeFunc_) {
-        bufferAvailableChangeFunc_(bufferAvailable);
-    }
-    bufferAvailable_ = bufferAvailable;
+    auto task = [weakThis = wptr(this), bufferAvailable]() {
+        auto session = weakThis.promote();
+        if (session == nullptr) {
+            TLOGE(WmsLogTag::DEFAULT, "session is null");
+            return;
+        }
+        TLOGI(WmsLogTag::DEFAULT, "SetBufferAvailable: %{public}d", bufferAvailable);
+        if (session->bufferAvailableChangeFunc_) {
+            session->bufferAvailableChangeFunc_(bufferAvailable);
+        }
+        session->bufferAvailable_ = bufferAvailable;
+    };
+    PostTask(task, "SetBufferAvailable");
 }
 
 bool Session::GetBufferAvailable() const
