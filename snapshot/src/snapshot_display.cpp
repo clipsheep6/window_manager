@@ -23,10 +23,17 @@
 
 #include "display_manager.h"
 #include "snapshot_utils.h"
+#include "parameters.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
 using namespace OHOS::Rosen;
+using OHOS::system::GetParameter;
+
+// developermode
+static const std::string DEVELOPERMODE_STATE_ON_DEFAULT = "false";
+static const std::string DEVELOPERMODE_PARAMETER = "const.security.developermode.state";
+const bool DEVELOPERMODE_MODE = GetParameter(DEVELOPERMODE_PARAMETER, DEVELOPERMODE_STATE_ON_DEFAULT);
 
 int main(int argc, char *argv[])
 {
@@ -34,6 +41,11 @@ int main(int argc, char *argv[])
     cmdArgments.fileName = "";
 
     if (!SnapShotUtils::ProcessArgs(argc, argv, cmdArgments)) {
+        return 0;
+    }
+
+    if (!("true" == DEVELOPERMODE_MODE)) {
+        std::cout << "current mode is not developermode, just return." << std::endl;
         return 0;
     }
 
