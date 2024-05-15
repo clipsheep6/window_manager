@@ -319,9 +319,6 @@ int SceneSessionManagerStub::HandleUpdateProperty(MessageParcel &data, MessagePa
     }
     const WMError& ret = UpdateSessionProperty(property, action);
     reply.WriteInt32(static_cast<int32_t>(ret));
-    if (property != nullptr) {
-        delete property;
-    }
     return ERR_NONE;
 }
 
