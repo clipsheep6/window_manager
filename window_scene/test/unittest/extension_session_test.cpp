@@ -732,6 +732,51 @@ HWTEST_F(ExtensionSessionTest, TransferKeyEventAsync03, Function | SmallTest | L
     auto result = extensionSession->TransferKeyEventAsync(nullptr, isPreImeEvent);
     ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
 }
+
+/**
+ * @tc.name: Background
+ * @tc.desc: Background
+ * @tc.type: FUNC
+ */
+HWTEST_F(ExtensionSessionTest, Background, Function | SmallTest | Level1)
+{
+    SessionInfo info;
+    info.abilityName_ = "abilitytest";
+    info.bundleName_ = "bundletest";
+    sptr<ExtensionSession> extensionSession = new (std::nothrow) ExtensionSession(info);
+    ASSERT_NE(extensionSession, nullptr);
+    if (extensionSession == nullptr) {
+        return;
+    }
+    sptr <Session> session = new (std::nothrow) Session(info);
+    if (session == nullptr) {
+        return;
+    }
+    session->state_ = SessionState::STATE_ACTIVE;
+    sptr<WindowSessionProperty> wsProperty = new (std::nothrow) WindowSessionProperty();
+    wsProperty->type_ = WindowType::WINDOW_TYPE_UI_EXTENSION;
+    auto result = extensionSession->Background();
+    ASSERT_EQ(result, WSError::WS_OK);
+}
+
+/**
+ * @tc.name: Background02
+ * @tc.desc: Background
+ * @tc.type: FUNC
+ */
+HWTEST_F(ExtensionSessionTest, Background02, Function | SmallTest | Level1)
+{
+    SessionInfo info;
+    info.abilityName_ = "abilitytest";
+    info.bundleName_ = "bundletest";
+    sptr<ExtensionSession> extensionSession = new (std::nothrow) ExtensionSession(info);
+    ASSERT_NE(extensionSession, nullptr);
+    if (extensionSession == nullptr) {
+        return;
+    }
+    auto result = extensionSession->Background();
+    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);
+}
 }
 }
 }
