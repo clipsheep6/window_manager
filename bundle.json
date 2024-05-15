@@ -123,6 +123,7 @@
                 "window_manager.h",
                 "window_option.h",
                 "window_scene.h",
+                "wm_common_enum.h",
                 "wm_common.h",
                 "occupied_area_change_info.h"
               ],
