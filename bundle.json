@@ -139,6 +139,7 @@
                 "window_manager.h",
                 "window_manager_lite.h",
                 "window_option.h",
+                "wm_common_enum.h",
                 "wm_common.h",
                 "occupied_area_change_info.h"
               ],
