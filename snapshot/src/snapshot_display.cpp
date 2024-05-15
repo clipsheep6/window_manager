@@ -23,29 +23,36 @@
 
 #include "display_manager.h"
 #include "snapshot_utils.h"
+#include "parameters.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
 using namespace OHOS::Rosen;
+using OHOS::system::GetParameter;
+
+// developermode
+static const std::string DEVELOPERMODE_STATE_ON_DEFAULT = "false";
+static const std::string DEVELOPERMODE_PARAMETER = "const.security.developermode.state";
+const std::string DEVELOPERMODE_MODE = GetParameter(DEVELOPERMODE_PARAMETER, DEVELOPERMODE_STATE_ON_DEFAULT);
 
 int main(int argc, char *argv[])
 {
     CmdArgments cmdArgments;
     cmdArgments.fileName = "";
-
     if (!SnapShotUtils::ProcessArgs(argc, argv, cmdArgments)) {
         return 0;
     }
-
+    if ((DEVELOPERMODE_STATE_ON_DEFAULT == DEVELOPERMODE_MODE)) {
+        std::cout << "current mode is not developermode, just return." << std::endl;
+        return 0;
+    }
     auto display = DisplayManager::GetInstance().GetDisplayById(cmdArgments.displayId);
     if (display == nullptr) {
         std::cout << "error: GetDisplayById " << cmdArgments.displayId << " error!" << std::endl;
         return -1;
     }
-
     std::cout << "process: display " << cmdArgments.displayId <<
         ": width " << display->GetWidth() << ", height " << display->GetHeight() << std::endl;
-
     // get PixelMap from DisplayManager API
     std::shared_ptr<OHOS::Media::PixelMap> pixelMap = nullptr;
     if (!cmdArgments.isWidthSet && !cmdArgments.isHeightSet) {
@@ -69,7 +76,6 @@ int main(int argc, char *argv[])
         constexpr int rotation = 0;
         pixelMap = DisplayManager::GetInstance().GetScreenshot(cmdArgments.displayId, rect, size, rotation);
     }
-
     bool ret = false;
     if (pixelMap != nullptr) {
         ret = SnapShotUtils::WriteToJpegWithPixelMap(cmdArgments.fileName, *pixelMap);
@@ -79,7 +85,6 @@ int main(int argc, char *argv[])
             ", write to " << cmdArgments.fileName.c_str() << " as jpeg failed!" << std::endl;
         return -1;
     }
-
     std::cout << "\nsuccess: snapshot display " << cmdArgments.displayId << " , write to " <<
         cmdArgments.fileName.c_str() << " as jpeg, width " << pixelMap->GetWidth() <<
         ", height " << pixelMap->GetHeight() << std::endl;
