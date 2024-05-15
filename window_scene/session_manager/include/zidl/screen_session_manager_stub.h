@@ -35,6 +35,29 @@ private:
     void ProcSetVirtualScreenFlag(MessageParcel& data, MessageParcel& reply);
     void ProcGetVirtualScreenFlag(MessageParcel& data, MessageParcel& reply);
     void ProcGetAvailableArea(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSetVirtualScreenSurface(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSetVirtualScreenCanvasRotation(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSetVirtualScreenScaleMode(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcDestoryVitrualScreen(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenMakeMirror(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenStopMirror(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenDisableMirror(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenMakeExpand(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenStopExpand(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcGetScreenGroupInfoById(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcRemoveVirtualScreenFromScreenGroup(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcGetDisplaySnapshot(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcGetSnapshotByPicker(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSetScreenActiveMode(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSetVirtualPixelRatio(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSetVirtualPixelRatioSystem(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSetResolution(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcGetDensityInCurrentResolution(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenGetColorGamut(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenSetColorGamut(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenGetGamutMap(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenSetGamutMap(MessageParcel& data, MessageParcel& reply);
+    int32_t ProScreenSetColorTransform(MessageParcel& data, MessageParcel& reply);
 };
 } // namespace Rosen
 } // namespace OHOS
