@@ -6808,6 +6808,7 @@ void SceneSessionManager::ProcessUpdateRotationChange(DisplayId defaultDisplayId
             }
             if (scnSession->GetSessionState() == SessionState::STATE_FOREGROUND ||
                 scnSession->GetSessionState() == SessionState::STATE_ACTIVE) {
+                scnSession->UpdateOrientation();
                 scnSession->UpdateRotationAvoidArea();
                 WLOGFD("UpdateRotationAvoidArea name=%{public}s, persistentId=%{public}d, winType=%{public}d, "
                     "state=%{public}d, visible-%{public}d", scnSession->GetWindowName().c_str(), item.first,

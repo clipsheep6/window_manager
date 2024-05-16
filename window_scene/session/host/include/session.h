@@ -210,6 +210,7 @@ public:
     virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
     WSError UpdateDensity();
+    WSError UpdateOrientation();
 
     void SetShowRecent(bool showRecent);
     void SetSystemActive(bool systemActive);

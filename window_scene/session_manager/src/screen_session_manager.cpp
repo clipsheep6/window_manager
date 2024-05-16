@@ -1567,8 +1567,7 @@ void ScreenSessionManager::UpdateScreenRotationProperty(ScreenId screenId, const
         return;
     }
     bool needNotifyAvoidArea = false;
-    if (screenSession->GetScreenProperty().GetBounds() == bounds &&
-        screenSession->GetScreenProperty().GetRotation() != static_cast<float>(rotation)) {
+    if (screenSession->GetScreenProperty().GetRotation() != static_cast<float>(rotation)) {
         needNotifyAvoidArea = true;
     }
     screenSession->UpdatePropertyAfterRotation(bounds, rotation, GetFoldDisplayMode());

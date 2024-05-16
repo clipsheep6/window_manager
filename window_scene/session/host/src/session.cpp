@@ -818,6 +818,22 @@ WSError Session::UpdateDensity()
     return WSError::WS_OK;
 }
 
+WSError Session::UpdateOrientation()
+{
+    TLOGD(WmsLogTag::DMS, "update orientation: id: %{public}d.", GetPersistentId());
+    if (!IsSessionValid()) {
+        TLOGE(WmsLogTag::DMS, "update orientation failed because of session is invalid,id = %{public}d.",
+            GetPersistentId());
+        return WSError::WS_ERROR_INVALID_SESSION;
+    }
+    if (sessionStage_ == nullptr) {
+        TLOGE(WmsLogTag::DMS, "update orientation failed because of sessionStage_is nullptr,id = %{public}d.",
+              GetPersistentId());
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    return sessionStage_->UpdateOrientation();
+}
+
 __attribute__((no_sanitize("cfi"))) WSError Session::Connect(const sptr<ISessionStage>& sessionStage,
     const sptr<IWindowEventChannel>& eventChannel,
     const std::shared_ptr<RSSurfaceNode>& surfaceNode,
