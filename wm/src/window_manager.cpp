@@ -901,6 +901,16 @@ WMError WindowManager::GetAccessibilityWindowInfo(std::vector<sptr<Accessibility
     return ret;
 }
 
+WMError WindowManager::GetUntouchableUnreliableWindowInfo(int32_t windowId,
+    std::vector<sptr<UntouchableUnreliableWindowInfo>>& infos) const
+{
+    WMError ret = SingletonContainer::Get<WindowAdapter>().GetUntouchableUnreliableWindowInfo(windowId, infos);
+    if (ret != WMError::WM_OK) {
+        WLOGFE("get untouchable unreliable window info failed");
+    }
+    return ret;
+}
+
 WMError WindowManager::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) const
 {
     WMError ret = SingletonContainer::Get<WindowAdapter>().GetVisibilityWindowInfo(infos);

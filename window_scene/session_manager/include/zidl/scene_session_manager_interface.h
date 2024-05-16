@@ -105,6 +105,7 @@ public:
         TRANS_ID_GET_WINDOW_STATUS,
         TRANS_ID_GET_WINDOW_RECT,
         TRANS_ID_GET_WINDOW_MODE_TYPE,
+        TRANS_ID_GET_UNTOUCHABLE_UNRELIABLE_WINDOW_INFO,
     };
 
     virtual WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) = 0;
@@ -179,6 +180,11 @@ public:
     WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override { return WMError::WM_OK; }
     WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) override
+    {
+        return WMError::WM_OK;
+    }
+    WMError GetUntouchableUnreliableWindowInfo(int32_t windowId,
+        std::vector<sptr<UntouchableUnreliableWindowInfo>>& infos) override
     {
         return WMError::WM_OK;
     }
