@@ -65,7 +65,7 @@ namespace AncoConsts {
 }
 struct SCBAbilityInfo {
     AppExecFwk::AbilityInfo abilityInfo_;
-    int32_t sdkVersion_;
+    uint32_t sdkVersion_;
 };
 class SceneSession;
 class AccessibilityWindowInfo;
@@ -91,7 +91,6 @@ using NotifySCBAfterUpdateFocusFunc = std::function<void()>;
 using ProcessCallingSessionIdChangeFunc = std::function<void(uint32_t callingSessionId)>;
 using FlushWindowInfoTask = std::function<void()>;
 using ProcessVirtualPixelRatioChangeFunc = std::function<void(float density, const Rect& rect)>;
-using ProcessSwitchingToAnotherUserFunc = std::function<void()>;
 
 class AppAnrListener : public IRemoteStub<AppExecFwk::IAppDebugListener> {
 public:
@@ -163,7 +162,6 @@ public:
     void SetSCBFocusedListener(const NotifySCBAfterUpdateFocusFunc& func);
     void SetSCBUnfocusedListener(const NotifySCBAfterUpdateFocusFunc& func);
     void SetCallingSessionIdSessionListenser(const ProcessCallingSessionIdChangeFunc& func);
-    void SetSwitchingToAnotherUserListener(const ProcessSwitchingToAnotherUserFunc& func);
     const AppWindowSceneConfig& GetWindowSceneConfig() const;
     WSError ProcessBackEvent();
     WSError BindDialogSessionTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken) override;
@@ -193,8 +191,7 @@ public:
     WSError RaiseWindowToTop(int32_t persistentId) override;
 
     WSError InitUserInfo(int32_t userId, std::string &fileDir);
-    void HandleSwitchingToAnotherUser();
-    void NotifySwitchingToCurrentUser();
+    void NotifySwitchingUser(const bool isUserActive);
     int32_t GetCurrentUserId() const;
     void StartWindowInfoReportLoop();
     void GetFocusWindowInfo(FocusChangeInfo& focusInfo) override;
@@ -281,7 +278,6 @@ public:
     void AddWindowDragHotArea(uint32_t type, WSRect& area);
     WSError UpdateMaximizeMode(int32_t persistentId, bool isMaximize);
     WSError UpdateSessionDisplayId(int32_t persistentId, uint64_t screenId);
-    WSError UpdateConfig(const SessionInfo& sessionInfo, AppExecFwk::Configuration config, bool informAllAPP);
     void NotifySessionUpdate(const SessionInfo& sessionInfo, ActionType type,
         ScreenId fromScreenId = SCREEN_ID_INVALID);
     WSError NotifyAINavigationBarShowStatus(bool isVisible, WSRect barArea, uint64_t displayId);
@@ -329,13 +325,15 @@ public:
     const SystemSessionConfig& GetSystemSessionConfig() const;
     int32_t GetCustomDecorHeight(int32_t persistentId);
     WMError GetMainWindowInfos(int32_t topNum, std::vector<MainWindowInfo>& topNInfo);
-
+    WSError NotifyEnterRecentTask(bool enterRecent);
+    
 protected:
     SceneSessionManager();
     virtual ~SceneSessionManager() = default;
 
 private:
     bool isKeyboardPanelEnabled_ = false;
+    std::atomic<bool> enterRecent_ { false };
     void Init();
     void InitScheduleUtils();
     void RegisterAppListener();
@@ -405,14 +403,12 @@ private:
     void NotifyMMIWindowPidChange(int32_t windowId, bool startMoving);
 
     sptr<AppExecFwk::IBundleMgr> GetBundleManager();
-    static sptr<AppExecFwk::IAppMgr> GetAppManager();
     std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(const AppExecFwk::AbilityInfo& abilityInfo);
     bool GetStartupPageFromResource(const AppExecFwk::AbilityInfo& abilityInfo, std::string& path, uint32_t& bgColor);
     bool GetStartingWindowInfoFromCache(const SessionInfo& sessionInfo, std::string& path, uint32_t& bgColor);
     void CacheStartingWindowInfo(
         const AppExecFwk::AbilityInfo& abilityInfo, const std::string& path, const uint32_t& bgColor);
 
-    bool CheckAppIsInDisplay(const sptr<SceneSession>& scnSession, DisplayId displayId);
     bool CheckIsRemote(const std::string& deviceId);
     bool GetLocalDeviceId(std::string& localDeviceId);
     std::string AnonymizeDeviceId(const std::string& deviceId);
@@ -512,7 +508,6 @@ private:
     NotifySCBAfterUpdateFocusFunc notifySCBAfterFocusedFunc_;
     NotifySCBAfterUpdateFocusFunc notifySCBAfterUnfocusedFunc_;
     ProcessCallingSessionIdChangeFunc callingSessionIdChangeFunc_;
-    ProcessSwitchingToAnotherUserFunc switchingToAnotherUserFunc_ = nullptr;
     ProcessStartUIAbilityErrorFunc startUIAbilityErrorFunc_;
     ProcessVirtualPixelRatioChangeFunc processVirtualPixelRatioChangeFunc_ = nullptr;
     AppWindowSceneConfig appWindowSceneConfig_;
@@ -613,6 +608,7 @@ private:
     void NotifySessionUnfocusedToClient(int32_t persistentId);
     void NotifyCreateSpecificSession(sptr<SceneSession> session,
         sptr<WindowSessionProperty> property, const WindowType& type);
+    void OnSCBSystemSessionBufferAvailable(const WindowType type);
     sptr<SceneSession> CreateSceneSession(const SessionInfo& sessionInfo, sptr<WindowSessionProperty> property);
     void CreateKeyboardPanelSession(sptr<SceneSession> keyboardSession);
     bool GetPreWindowDrawingState(uint64_t windowId, int32_t& pid, bool currentDrawingContentState);

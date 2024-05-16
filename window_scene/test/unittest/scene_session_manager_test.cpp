@@ -1925,6 +1925,16 @@ HWTEST_F(SceneSessionManagerTest, CheckWindowId, Function | SmallTest | Level3)
 }
 
 /**
+ * @tc.name: OnSCBSystemSessionBufferAvailable
+ * @tc.desc: OnSCBSystemSessionBufferAvailable
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest, OnSCBSystemSessionBufferAvailable, Function | SmallTest | Level3)
+{
+    ssm_->OnSCBSystemSessionBufferAvailable(WindowType::WINDOW_TYPE_KEYGUARD);
+}
+
+/**
  * @tc.name: CreateSceneSession
  * @tc.desc: CreateSceneSession
  * @tc.type: FUNC
@@ -1978,62 +1988,6 @@ HWTEST_F(SceneSessionManagerTest, CreateSceneSession, Function | SmallTest | Lev
 }
 
 /**
- * @tc.name: CheckAppIsInDisplay
- * @tc.desc: CheckAppIsInDisplay
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest, CheckAppIsInDisplay, Function | SmallTest | Level3)
-{
-    int ret = 0;
-    sptr<SceneSession> sceneSession;
-    ssm_->CheckAppIsInDisplay(sceneSession, 1);
-    ssm_->RequestSceneSessionActivation(sceneSession, true);
-    SessionInfo info;
-    ret++;
-    sptr<AAFwk::SessionInfo> abilitySessionInfo;
-    ssm_->DestroyDialogWithMainWindow(sceneSession);
-    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    ssm_->DestroyDialogWithMainWindow(sceneSession);
-    ssm_->CheckAppIsInDisplay(sceneSession, 1);
-    ssm_->DestroySubSession(sceneSession);
-    sptr<WindowSessionProperty> property = new WindowSessionProperty();
-    sceneSession->SetSessionProperty(property);
-    property->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
-    ssm_->CheckAppIsInDisplay(sceneSession, 1);
-    property->SetWindowType(WindowType::WINDOW_TYPE_DESKTOP);
-    ssm_->CheckAppIsInDisplay(sceneSession, 1);
-    AppExecFwk::Configuration config;
-    ssm_->UpdateConfig(info, config, true);
-    ssm_->UpdateConfig(info, config, false);
-    ssm_->SetAbilitySessionInfo(sceneSession);
-    bool res = true;
-    ssm_->PrepareTerminate(1, res);
-    ssm_->isPrepareTerminateEnable_ = true;
-    ssm_->PrepareTerminate(1, res);
-    ssm_->isPrepareTerminateEnable_ = false;
-    ssm_->PrepareTerminate(1, res);
-    ssm_->StartUIAbilityBySCB(sceneSession);
-    ssm_->sceneSessionMap_.insert({1, nullptr});
-    ssm_->IsKeyboardForeground();
-    ssm_->sceneSessionMap_.insert({1, sceneSession});
-    ssm_->NotifyForegroundInteractiveStatus(sceneSession, true);
-    ssm_->NotifyForegroundInteractiveStatus(sceneSession, false);
-    property->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
-    ssm_->IsKeyboardForeground();
-    ssm_->IsKeyboardForeground();
-    ssm_->StartUIAbilityBySCB(sceneSession);
-    ssm_->PrepareTerminate(1, res);
-    property->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
-    ssm_->DestroyDialogWithMainWindow(sceneSession);
-    ssm_->sceneSessionMap_.erase(1);
-    abilitySessionInfo = new (std::nothrow) AAFwk::SessionInfo();
-    ssm_->StartUIAbilityBySCB(abilitySessionInfo);
-    ssm_->DestroySubSession(sceneSession);
-    ssm_->EraseSceneSessionMapById(2);
-    ASSERT_EQ(ret, 1);
-}
-
-/**
  * @tc.name: RequestSceneSessionBackground
  * @tc.desc: RequestSceneSessionBackground
  * @tc.type: FUNC
@@ -2042,7 +1996,6 @@ HWTEST_F(SceneSessionManagerTest, RequestSceneSessionBackground, Function | Smal
 {
     int ret = 0;
     sptr<SceneSession> sceneSession;
-    ssm_->CheckAppIsInDisplay(sceneSession, 1);
     ssm_->RequestSceneSessionActivation(sceneSession, true);
     SessionInfo info;
     ret++;
@@ -2428,26 +2381,15 @@ HWTEST_F(SceneSessionManagerTest, InitUserInfo, Function | SmallTest | Level3)
 }
 
 /**
- * @tc.name: HandleSwitchingToAnotherUser
- * @tc.desc: SceneSesionManager handle switching to another user
+ * @tc.name: NotifySwitchingUser
+ * @tc.desc: SceneSesionManager notify switching user
  * @tc.type: FUNC
 */
-HWTEST_F(SceneSessionManagerTest, HandleSwitchingToAnotherUser, Function | SmallTest | Level3)
+HWTEST_F(SceneSessionManagerTest, NotifySwitchingUser, Function | SmallTest | Level3)
 {
     int ret = 0;
-    ssm_->HandleSwitchingToAnotherUser();
-    ASSERT_EQ(ret, 0);
-}
- 
-/**
- * @tc.name: NotifySwitchingToCurrentUser
- * @tc.desc: SceneSesionManager notify switching to current user
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest, NotifySwitchingToCurrentUser, Function | SmallTest | Level3)
-{
-    int ret = 0;
-    ssm_->NotifySwitchingToCurrentUser();
+    ssm_->NotifySwitchingUser(true);
+    ssm_->NotifySwitchingUser(false);
     ASSERT_EQ(ret, 0);
 }
 
@@ -4236,6 +4178,21 @@ HWTEST_F(SceneSessionManagerTest, GetMainWindowInfos, Function | SmallTest | Lev
     topNInfos.push_back(info);
     result = ssm_->GetMainWindowInfos(topNum, topNInfos);
     ASSERT_EQ(result, WMError::WM_ERROR_INVALID_PERMISSION);
+}
+
+/**
+ * @tc.name: TestNotifyEnterRecentTask
+ * @tc.desc: Test whether the enterRecent_ is set correctly;
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, TestNotifyEnterRecentTask, Function | SmallTest | Level3)
+{
+    GTEST_LOG_(INFO) << "SceneSessionManagerTest: TestNotifyEnterRecentTask start";
+    sptr<SceneSessionManager> sceneSessionManager = new SceneSessionManager();
+    ASSERT_NE(nullptr, sceneSessionManager);
+    
+    ASSERT_EQ(sceneSessionManager->NotifyEnterRecentTask(true), WSError::WS_OK);
+    ASSERT_EQ(sceneSessionManager->enterRecent_.load(), true);
 }
 
 }
