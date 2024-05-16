@@ -157,6 +157,13 @@ HWTEST_F(SCBSystemSessionTest, BindKeyboardSession, Function | SmallTest | Level
     scbSystemSession_->PresentFoucusIfNeed(8);
     scbSystemSession_->keyboardSession_ = nullptr;
     ASSERT_EQ(nullptr, scbSystemSession_->GetKeyboardSession());
+ * @tc.name: RegisterBufferAvailableCallback
+ * @tc.desc: check func RegisterBufferAvailableCallback
+ * @tc.type: FUNC
+ */
+HWTEST_F(SCBSystemSessionTest, RegisterBufferAvailableCallback, Function | SmallTest | Level3)
+{
+    scbSystemSession_->RegisterBufferAvailableCallback([]() {});
 }
 }
 }

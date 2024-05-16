@@ -306,6 +306,12 @@ union ExtensionWindowFlags {
     ExtensionWindowFlags() : bitData(0) {}
     ExtensionWindowFlags(uint32_t bits) : bitData(bits) {}
     ~ExtensionWindowFlags() {}
+    void SetAllActive()
+    {
+        hideNonSecureWindowsFlag = true;
+        waterMarkFlag = true;
+        privacyModeFlag = true;
+    }
 };
 
 /**
@@ -331,6 +337,7 @@ enum class WindowSizeChangeReason : uint32_t {
     PIP_START,
     PIP_SHOW,
     PIP_RATIO_CHANGE,
+    UPDATE_DPI_SYNC,
     END,
 };
 
@@ -768,6 +775,7 @@ enum class PiPWindowState : uint32_t {
     STATE_STARTED = 2,
     STATE_STOPPING = 3,
     STATE_STOPPED = 4,
+    STATE_RESTORING = 5,
 };
 
 /**

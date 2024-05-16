@@ -640,7 +640,7 @@ int64_t WindowImpl::GetVSyncPeriod()
     return 0;
 }
 
-void WindowImpl::FlushFrameRate(uint32_t rate)
+void WindowImpl::FlushFrameRate(uint32_t rate, bool isAnimatorStopped)
 {
     return;
 }
@@ -899,6 +899,16 @@ WMError WindowImpl::SetSingleFrameComposerEnabled(bool enable)
 WMError WindowImpl::SetLandscapeMultiWindow(bool isLandscapeMultiWindow)
 {
     return WMError::WM_OK;
+}
+
+WMError WindowImpl::SetImmersiveModeEnabledState(bool enable)
+{
+    return WMError::WM_OK;
+}
+
+bool WindowImpl::GetImmersiveModeEnabledState() const
+{
+    return true;
 }
 } // namespace Rosen
 } // namespace OHOS

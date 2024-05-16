@@ -76,16 +76,27 @@ SceneSession::~SceneSession()
 
 WSError SceneSession::Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
     const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
-    sptr<WindowSessionProperty> property, sptr<IRemoteObject> token, int32_t pid, int32_t uid)
+    sptr<WindowSessionProperty> property, sptr<IRemoteObject> token, int32_t pid, int32_t uid,
+    const std::string& identityToken)
 {
     // Get pid and uid before posting task.
     pid = pid == -1 ? IPCSkeleton::GetCallingRealPid() : pid;
     uid = uid == -1 ? IPCSkeleton::GetCallingUid() : uid;
-    auto task = [weakThis = wptr(this), sessionStage, eventChannel, surfaceNode, &systemConfig, property, token, pid, uid]() {
+    auto task = [weakThis = wptr(this), sessionStage, eventChannel, surfaceNode, &systemConfig, property, token, pid,
+        uid, identityToken]() {
         auto session = weakThis.promote();
         if (!session) {
             TLOGE(WmsLogTag::WMS_LIFE, "session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
+        }
+        if (SessionHelper::IsMainWindow(session->GetWindowType()) && !identityToken.empty() &&
+            !session->clientIdentityToken_.empty() && identityToken != session->clientIdentityToken_) {
+            TLOGW(WmsLogTag::WMS_LIFE,
+                "Identity Token vaildate failed, clientIdentityToken_: %{public}s, "
+                "identityToken: %{public}s, bundleName: %{public}s",
+                session->clientIdentityToken_.c_str(), identityToken.c_str(),
+                session->GetSessionInfo().bundleName_.c_str());
+            return WSError::WS_OK;
         }
         if (property) {
             property->SetCollaboratorType(session->GetCollaboratorType());
@@ -115,7 +126,7 @@ WSError SceneSession::Reconnect(const sptr<ISessionStage>& sessionStage, const s
     });
 }
 
-WSError SceneSession::Foreground(sptr<WindowSessionProperty> property)
+WSError SceneSession::Foreground(sptr<WindowSessionProperty> property, bool isFromClient)
 {
     // return when screen is locked and show without ShowWhenLocked flag
     if (false && GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW &&
@@ -125,6 +136,15 @@ WSError SceneSession::Foreground(sptr<WindowSessionProperty> property)
         TLOGW(WmsLogTag::WMS_LIFE, "failed: Screen is locked, session %{public}d show without ShowWhenLocked flag",
             GetPersistentId());
         return WSError::WS_ERROR_INVALID_SESSION;
+    }
+    if (isFromClient && SessionHelper::IsMainWindow(GetWindowType())) {
+        int32_t callingPid = IPCSkeleton::GetCallingPid();
+        if (callingPid != -1 && callingPid != GetCallingPid()) {
+            TLOGW(WmsLogTag::WMS_LIFE,
+                "Foreground failed, callingPid_: %{public}d, callingPid: %{public}d, bundleName: %{public}s",
+                GetCallingPid(), callingPid, GetSessionInfo().bundleName_.c_str());
+            return WSError::WS_OK;
+        }
     }
 
     auto task = [weakThis = wptr(this), property]() {
@@ -161,8 +181,17 @@ WSError SceneSession::Foreground(sptr<WindowSessionProperty> property)
     return WSError::WS_OK;
 }
 
-WSError SceneSession::Background()
+WSError SceneSession::Background(bool isFromClient)
 {
+    if (isFromClient && SessionHelper::IsMainWindow(GetWindowType())) {
+        int32_t callingPid = IPCSkeleton::GetCallingPid();
+        if (callingPid != -1 && callingPid != GetCallingPid()) {
+            TLOGW(WmsLogTag::WMS_LIFE,
+                "Background failed, callingPid_: %{public}d, callingPid: %{public}d, bundleName: %{public}s",
+                GetCallingPid(), callingPid, GetSessionInfo().bundleName_.c_str());
+            return WSError::WS_OK;
+        }
+    }
     return BackgroundTask(true);
 }
 
@@ -223,6 +252,15 @@ void SceneSession::ClearSpecificSessionCbMap()
 
 WSError SceneSession::Disconnect(bool isFromClient)
 {
+    if (isFromClient && SessionHelper::IsMainWindow(GetWindowType())) {
+        int32_t callingPid = IPCSkeleton::GetCallingPid();
+        if (callingPid != -1 && callingPid != GetCallingPid()) {
+            TLOGW(WmsLogTag::WMS_LIFE,
+                "Disconnect failed, callingPid_: %{public}d, callingPid: %{public}d, bundleName: %{public}s",
+                GetCallingPid(), callingPid, GetSessionInfo().bundleName_.c_str());
+            return WSError::WS_OK;
+        }
+    }
     PostTask([weakThis = wptr(this), isFromClient]() {
         auto session = weakThis.promote();
         if (!session) {
@@ -797,7 +835,7 @@ void SceneSession::NotifyPropertyWhenConnect()
     }
     NotifySessionFocusableChange(property->GetFocusable());
     NotifySessionTouchableChange(property->GetTouchable());
-    OnShowWhenLocked(IsShowWhenLocked());
+    OnShowWhenLocked(GetShowWhenLockedFlagValue());
 }
 
 WSError SceneSession::RaiseAppMainWindowToTop()
@@ -847,6 +885,12 @@ WSError SceneSession::OnShowWhenLocked(bool showWhenLocked)
 }
 
 bool SceneSession::IsShowWhenLocked() const
+{
+    return (GetSessionProperty()->GetWindowFlags() &
+        static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED)) || IsTemporarilyShowWhenLocked();
+}
+
+bool SceneSession::GetShowWhenLockedFlagValue() const
 {
     return GetSessionProperty()->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_SHOW_WHEN_LOCKED);
 }
@@ -1029,33 +1073,6 @@ void SceneSession::GetAINavigationBarArea(WSRect rect, AvoidArea& avoidArea)
     CalculateAvoidAreaRect(rect, barArea, avoidArea);
 }
 
-bool SceneSession::CheckGetAvoidAreaAvailable(AvoidAreaType type)
-{
-    WindowMode mode = GetWindowMode();
-    WindowType winType = GetWindowType();
-
-    if (type == AvoidAreaType::TYPE_KEYBOARD) {
-        return true;
-    }
-    if (WindowHelper::IsMainWindow(winType)) {
-        if (mode != WindowMode::WINDOW_MODE_FLOATING ||
-            system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
-            system::GetParameter("const.product.devicetype", "unknown") == "tablet") {
-            return true;
-        }
-    }
-    if (WindowHelper::IsSubWindow(winType)) {
-        if (GetParentSession() && GetParentSession()->GetSessionRect() == GetSessionRect()) {
-            return true;
-        }
-    }
-    TLOGI(WmsLogTag::WMS_IMMS, "Window [%{public}u, %{public}s] type %{public}d "
-        "avoidAreaType %{public}u windowMode %{public}u, return default avoid area.",
-        GetPersistentId(), GetWindowName().c_str(), static_cast<uint32_t>(winType),
-        static_cast<uint32_t>(type), static_cast<uint32_t>(mode));
-    return false;
-}
-
 AvoidArea SceneSession::GetAvoidAreaByType(AvoidAreaType type)
 {
     auto task = [weakThis = wptr(this), type]() -> AvoidArea {
@@ -1065,7 +1082,15 @@ AvoidArea SceneSession::GetAvoidAreaByType(AvoidAreaType type)
             return {};
         }
 
-        if (!session->CheckGetAvoidAreaAvailable(type)) {
+        WindowMode mode = session->GetWindowMode();
+        WindowType winType = session->GetWindowType();
+        if (type != AvoidAreaType::TYPE_KEYBOARD && mode == WindowMode::WINDOW_MODE_FLOATING &&
+            (!WindowHelper::IsMainWindow(winType) ||
+            (system::GetParameter("const.product.devicetype", "unknown") != "phone" &&
+            system::GetParameter("const.product.devicetype", "unknown") != "tablet"))) {
+            TLOGI(WmsLogTag::WMS_IMMS,
+                "Id: %{public}d, avoidAreaType:%{public}u, windowMode:%{public}u, return default avoid area.",
+                session->GetPersistentId(), static_cast<uint32_t>(type), static_cast<uint32_t>(mode));
             return {};
         }
 
@@ -1767,26 +1792,35 @@ std::string SceneSession::GetUpdatedIconPath() const
 
 void SceneSession::UpdateNativeVisibility(bool visible)
 {
-    WLOGFI("[WMSSCB] name: %{public}s, id: %{public}u, visible: %{public}u",
-        sessionInfo_.bundleName_.c_str(), GetPersistentId(), visible);
-    isVisible_ = visible;
-    if (specificCallback_ == nullptr) {
-        WLOGFW("specific callback is null.");
-        return;
-    }
+    auto task = [weakThis = wptr(this), visible]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            TLOGE(WmsLogTag::WMS_LIFE, "session is null");
+            return;
+        }
+        int32_t persistentId = session->GetPersistentId();
+        WLOGFI("[WMSSCB] name: %{public}s, id: %{public}u, visible: %{public}u",
+            session->sessionInfo_.bundleName_.c_str(), persistentId, visible);
+        session->isVisible_ = visible;
+        if (session->specificCallback_ == nullptr) {
+            WLOGFW("specific callback is null.");
+            return;
+        }
 
-    if (visible) {
-        specificCallback_->onWindowInfoUpdate_(GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_ADDED);
-    } else {
-        specificCallback_->onWindowInfoUpdate_(GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_REMOVED);
-    }
-    NotifyAccessibilityVisibilityChange();
-    specificCallback_->onUpdateAvoidArea_(GetPersistentId());
-    // update private state
-    if (!GetSessionProperty()) {
-        WLOGFE("UpdateNativeVisibility property is null");
-        return;
-    }
+        if (visible) {
+            session->specificCallback_->onWindowInfoUpdate_(persistentId, WindowUpdateType::WINDOW_UPDATE_ADDED);
+        } else {
+            session->specificCallback_->onWindowInfoUpdate_(persistentId, WindowUpdateType::WINDOW_UPDATE_REMOVED);
+        }
+        session->NotifyAccessibilityVisibilityChange();
+        session->specificCallback_->onUpdateAvoidArea_(persistentId);
+        // update private state
+        if (!session->GetSessionProperty()) {
+            WLOGFE("UpdateNativeVisibility property is null");
+            return;
+        }
+    };
+    PostTask(task, "UpdateNativeVisibility");
 }
 
 bool SceneSession::IsVisible() const
@@ -2034,6 +2068,16 @@ void SceneSession::SetCollaboratorType(int32_t collaboratorType)
     sessionInfo_.collaboratorType_ = collaboratorType;
 }
 
+std::string SceneSession::GetClientIdentityToken() const
+{
+    return clientIdentityToken_;
+}
+
+void SceneSession::SetClientIdentityToken(const std::string& clientIdentityToken)
+{
+    clientIdentityToken_ = clientIdentityToken;
+}
+
 void SceneSession::DumpSessionInfo(std::vector<std::string> &info) const
 {
     std::string dumpInfo = "      Session ID #" + std::to_string(persistentId_);
@@ -2214,7 +2258,7 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
                 SessionPermission::VerifyPermissionByCallerToken(callingTokenId,
                 "ohos.permission.START_ABILIIES_FROM_BACKGROUND");
             auto sessionState = session->GetSessionState();
-            if (sessionState != SessionState::STATE_ACTIVE &&
+            if (sessionState != SessionState::STATE_FOREGROUND && sessionState != SessionState::STATE_ACTIVE &&
                 !(startAbilityBackground || abilitySessionInfo->hasContinuousTask)) {
                 TLOGW(WmsLogTag::WMS_LIFE, "start ability invalid, window state:%{public}d, "
                     "startAbilityBackground:%{public}u, hasContinuousTask:%{public}u",
@@ -2655,6 +2699,7 @@ void SceneSession::SetShouldHideNonSecureWindows(bool shouldHide)
 void SceneSession::CalculateCombinedExtWindowFlags()
 {
     // Only correct when each flag is true when active, and once a uiextension is active, the host is active
+    std::unique_lock<std::shared_mutex> lock(combinedExtWindowFlagsMutex_);
     combinedExtWindowFlags_.bitData = 0;
     for (const auto& iter: extWindowFlagsMap_) {
         combinedExtWindowFlags_.bitData |= iter.second.bitData;
@@ -2677,8 +2722,9 @@ void SceneSession::UpdateExtWindowFlags(int32_t extPersistentId, const Extension
     CalculateCombinedExtWindowFlags();
 }
 
-ExtensionWindowFlags SceneSession::GetCombinedExtWindowFlags() const
+ExtensionWindowFlags SceneSession::GetCombinedExtWindowFlags()
 {
+    std::shared_lock<std::shared_mutex> lock(combinedExtWindowFlagsMutex_);
     auto combinedExtWindowFlags = combinedExtWindowFlags_;
     combinedExtWindowFlags.hideNonSecureWindowsFlag = IsSessionForeground() &&
         (combinedExtWindowFlags.hideNonSecureWindowsFlag || shouldHideNonSecureWindows_.load());
@@ -2702,6 +2748,7 @@ void SceneSession::RemoveExtWindowFlags(int32_t extPersistentId)
 
 void SceneSession::ClearExtWindowFlags()
 {
+    std::unique_lock<std::shared_mutex> lock(combinedExtWindowFlagsMutex_);
     extWindowFlagsMap_.clear();
     combinedExtWindowFlags_.bitData = 0;
 }
@@ -2740,5 +2787,20 @@ void SceneSession::SetIsDisplayStatusBarTemporarily(bool isTemporary)
 bool SceneSession::GetIsDisplayStatusBarTemporarily() const
 {
     return isDisplayStatusBarTemporarily_.load();
+}
+
+void SceneSession::SetTemporarilyShowWhenLocked(bool isTemporarilyShowWhenLocked)
+{
+    if (isTemporarilyShowWhenLocked_.load() == isTemporarilyShowWhenLocked) {
+        return;
+    }
+    isTemporarilyShowWhenLocked_.store(isTemporarilyShowWhenLocked);
+    TLOGI(WmsLogTag::WMS_SCB, "SetTemporarilyShowWhenLocked successfully, target:%{public}u",
+        isTemporarilyShowWhenLocked);
+}
+
+bool SceneSession::IsTemporarilyShowWhenLocked() const
+{
+    return isTemporarilyShowWhenLocked_.load();
 }
 } // namespace OHOS::Rosen
