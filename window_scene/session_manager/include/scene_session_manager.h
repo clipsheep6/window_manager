@@ -376,7 +376,7 @@ private:
     std::shared_ptr<SessionListenerController> listenerController_;
     std::map<sptr<IRemoteObject>, int32_t> remoteObjectMap_;
     std::map<sptr<IRemoteObject>,  std::pair<int32_t, int32_t>> remoteExtSessionMap_;
-    std::set<int32_t> avoidAreaListenerSessionSet_, touchOutsideListenerSessionSet_, windowVisibilityListenerSessionSet_;
+    std::set<int32_t> avoidAreaListenerSessionSet_,touchOutsideListenerSessionSet_,windowVisibilityListenerSessionSet_;
     ExtensionWindowFlags combinedExtWindowFlags_ { 0 };
     std::map<int32_t, ExtensionWindowFlags> extWindowFlagsMap_;
     std::set<int32_t> failRecoveredPersistentIdSet_;
