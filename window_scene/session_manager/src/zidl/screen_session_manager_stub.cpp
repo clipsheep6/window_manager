@@ -571,127 +571,53 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             break;
         }
         case DisplayManagerMessage::TRANS_ID_SCENE_BOARD_MAKE_UNIQUE_SCREEN: {
-            std::vector<ScreenId> uniqueScreenIds;
-            uint32_t size = data.ReadUint32();
-            if (size > MAX_SCREEN_SIZE) {
-                WLOGFE("screenIds size is bigger than %{public}u", MAX_SCREEN_SIZE);
-                break;
-            }
-            if (!data.ReadUInt64Vector(&uniqueScreenIds)) {
-                WLOGFE("failed to receive unique screens in stub");
-                break;
-            }
-            DMError ret = MakeUniqueScreen(uniqueScreenIds);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
+            return ProcSceneBoardMakeUniqueScreen(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SET_CLIENT: {
-            auto remoteObject = data.ReadRemoteObject();
-            auto clientProxy = iface_cast<IScreenSessionManagerClient>(remoteObject);
-            if (clientProxy == nullptr) {
-                WLOGFE("clientProxy is null");
-                break;
-            }
-            SetClient(clientProxy);
-            break;
+            return ProcSetClient(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_GET_SCREEN_PROPERTY: {
-            auto screenId = static_cast<ScreenId>(data.ReadUint64());
-            if (!RSMarshallingHelper::Marshalling(reply, GetScreenProperty(screenId))) {
-                WLOGFE("Write screenProperty failed");
-            }
-            break;
+            return ProcGetScreenProperty(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_GET_DISPLAY_NODE: {
-            auto screenId = static_cast<ScreenId>(data.ReadUint64());
-            auto displayNode = GetDisplayNode(screenId);
-            if (!displayNode || !displayNode->Marshalling(reply)) {
-                WLOGFE("Write displayNode failed");
-            }
-            break;
+            return ProcGetDisplayNode(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_UPDATE_SCREEN_ROTATION_PROPERTY: {
-            auto screenId = static_cast<ScreenId>(data.ReadUint64());
-            RRect bounds;
-            if (!RSMarshallingHelper::Unmarshalling(data, bounds)) {
-                WLOGFE("Read bounds failed");
-                break;
-            }
-            auto rotation = data.ReadFloat();
-            UpdateScreenRotationProperty(screenId, bounds, rotation);
-            break;
+            return ProcUpdateScreenRotationProperty(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_GET_CURVED_SCREEN_COMPRESSION_AREA: {
-            auto area = GetCurvedCompressionArea();
-            reply.WriteUint32(area);
-            break;
+            return ProcGetCurvedScreenCompressionArea(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_GET_PHY_SCREEN_PROPERTY: {
-            auto screenId = static_cast<ScreenId>(data.ReadUint64());
-            if (!RSMarshallingHelper::Marshalling(reply, GetPhyScreenProperty(screenId))) {
-                WLOGFE("Write screenProperty failed");
-            }
-            break;
+            return ProcGetPhyScreenProperty(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_NOTIFY_DISPLAY_CHANGE_INFO: {
-            sptr<DisplayChangeInfo> info = DisplayChangeInfo::Unmarshalling(data);
-            if (!info) {
-                WLOGFE("Read DisplayChangeInfo failed");
-                return ERR_INVALID_DATA;
-            }
-            NotifyDisplayChangeInfoChanged(info);
-            break;
+            return ProcNotifyDisplayChangeInfo(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SET_SCREEN_PRIVACY_STATE: {
-            auto hasPrivate = data.ReadBool();
-            SetScreenPrivacyState(hasPrivate);
-            break;
+            return ProcSetScreenPrivacyState(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SET_SCREENID_PRIVACY_STATE: {
-            DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
-            auto hasPrivate = data.ReadBool();
-            SetPrivacyStateByDisplayId(displayId, hasPrivate);
-            break;
+            return ProcSecScreenIdPrivacyState(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SET_SCREEN_PRIVACY_WINDOW_LIST: {
-            DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
-            std::vector<std::string> privacyWindowList;
-            data.ReadStringVector(&privacyWindowList);
-            SetScreenPrivacyWindowList(displayId, privacyWindowList);
-            break;
+            return ProcSetScreenPrivacyWindowList(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_RESIZE_VIRTUAL_SCREEN: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            uint32_t width = data.ReadUint32();
-            uint32_t height = data.ReadUint32();
-            DMError ret = ResizeVirtualScreen(screenId, width, height);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
+            return ProcResizeVirtualScreen(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_UPDATE_AVAILABLE_AREA: {
-            auto screenId = static_cast<ScreenId>(data.ReadUint64());
-            int32_t posX = data.ReadInt32();
-            int32_t posY = data.ReadInt32();
-            uint32_t width = data.ReadUint32();
-            uint32_t height = data.ReadUint32();
-            DMRect area = {posX, posY, width, height};
-            UpdateAvailableArea(screenId, area);
-            break;
+            return ProcUpdateAvailableArea(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SET_SCREEN_OFF_DELAY_TIME: {
-            int32_t delay = data.ReadInt32();
-            int32_t ret = SetScreenOffDelayTime(delay);
-            reply.WriteInt32(ret);
-            break;
+            return ProcSetScreenOffDelayTime(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_GET_AVAILABLE_AREA: {
             ProcGetAvailableArea(data, reply);
             break;
         }
         case DisplayManagerMessage::TRANS_ID_NOTIFY_FOLD_TO_EXPAND_COMPLETION: {
-            bool foldToExpand = data.ReadBool();
-            NotifyFoldToExpandCompletion(foldToExpand);
-            break;
+            return ProcNotifyFoldToExpandCompletion(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_GET_VIRTUAL_SCREEN_FLAG: {
             ProcGetVirtualScreenFlag(data, reply);
@@ -702,21 +628,13 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             break;
         }
         case DisplayManagerMessage::TRANS_ID_GET_DEVICE_SCREEN_CONFIG: {
-            if (!RSMarshallingHelper::Marshalling(reply, GetDeviceScreenConfig())) {
-                TLOGE(WmsLogTag::DMS, "Write deviceScreenConfig failed");
-            }
-            break;
+            return ProcGetDeviceScreenConfig(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_SCREEN_REFRESH_RATE: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            uint32_t refreshInterval = data.ReadUint32();
-            DMError ret = SetVirtualScreenRefreshRate(screenId, refreshInterval);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
+            return ProcSetVirtualScreenRefreshRate(data, reply);
         }
         case DisplayManagerMessage::TRANS_ID_SWITCH_USER: {
-            SwitchUser();
-            break;
+            return ProcSwitchUser(data, reply);
         }
         default:
             WLOGFW("unknown transaction code");
@@ -763,5 +681,177 @@ void ScreenSessionManagerStub::ProcGetVirtualScreenFlag(MessageParcel& data, Mes
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
     VirtualScreenFlag screenFlag = GetVirtualScreenFlag(screenId);
     reply.WriteUint32(static_cast<uint32_t>(screenFlag));
+}
+
+int32_t ScreenSessionManagerStub::ProcSceneBoardMakeUniqueScreen(MessageParcel& data, MessageParcel& reply)
+{
+    std::vector<ScreenId> uniqueScreenIds;
+    uint32_t size = data.ReadUint32();
+    if (size > MAX_SCREEN_SIZE) {
+        WLOGFE("screenIds size is bigger than %{public}u", MAX_SCREEN_SIZE);
+        return 0;
+    }
+    if (!data.ReadUInt64Vector(&uniqueScreenIds)) {
+        WLOGFE("failed to receive unique screens in stub");
+        return 0;
+    }
+    DMError ret = MakeUniqueScreen(uniqueScreenIds);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcSetClient(MessageParcel& data, MessageParcel& reply)
+{
+    auto remoteObject = data.ReadRemoteObject();
+    auto clientProxy = iface_cast<IScreenSessionManagerClient>(remoteObject);
+    if (clientProxy == nullptr) {
+        WLOGFE("clientProxy is null");
+        return 0;
+    }
+    SetClient(clientProxy);
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcGetScreenProperty(MessageParcel& data, MessageParcel& reply)
+{
+    auto screenId = static_cast<ScreenId>(data.ReadUint64());
+    if (!RSMarshallingHelper::Marshalling(reply, GetScreenProperty(screenId))) {
+        WLOGFE("Write screenProperty failed");
+    }
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcGetDisplayNode(MessageParcel& data, MessageParcel& reply)
+{
+    auto screenId = static_cast<ScreenId>(data.ReadUint64());
+    auto displayNode = GetDisplayNode(screenId);
+    if (!displayNode || !displayNode->Marshalling(reply)) {
+        WLOGFE("Write displayNode failed");
+    }
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcUpdateScreenRotationProperty(MessageParcel& data, MessageParcel& reply)
+{
+    auto screenId = static_cast<ScreenId>(data.ReadUint64());
+    RRect bounds;
+    if (!RSMarshallingHelper::Unmarshalling(data, bounds)) {
+        WLOGFE("Read bounds failed");
+        return 0;
+    }
+    auto rotation = data.ReadFloat();
+    UpdateScreenRotationProperty(screenId, bounds, rotation);
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcGetCurvedScreenCompressionArea(MessageParcel& data, MessageParcel& reply)
+{
+    auto area = GetCurvedCompressionArea();
+    reply.WriteUint32(area);
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcGetPhyScreenProperty(MessageParcel& data, MessageParcel& reply)
+{
+    auto screenId = static_cast<ScreenId>(data.ReadUint64());
+    if (!RSMarshallingHelper::Marshalling(reply, GetPhyScreenProperty(screenId))) {
+        WLOGFE("Write screenProperty failed");
+    }
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcNotifyDisplayChangeInfo(MessageParcel& data, MessageParcel& reply)
+{
+    sptr<DisplayChangeInfo> info = DisplayChangeInfo::Unmarshalling(data);
+    if (!info) {
+        WLOGFE("Read DisplayChangeInfo failed");
+        return ERR_INVALID_DATA;
+    }
+    NotifyDisplayChangeInfoChanged(info);
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcSetScreenPrivacyState(MessageParcel& data, MessageParcel& reply)
+{
+    auto hasPrivate = data.ReadBool();
+    SetScreenPrivacyState(hasPrivate);
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcSecScreenIdPrivacyState(MessageParcel& data, MessageParcel& reply)
+{
+    DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
+    auto hasPrivate = data.ReadBool();
+    SetPrivacyStateByDisplayId(displayId, hasPrivate);
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcSetScreenPrivacyWindowList(MessageParcel& data, MessageParcel& reply)
+{
+    DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
+    std::vector<std::string> privacyWindowList;
+    data.ReadStringVector(&privacyWindowList);
+    SetScreenPrivacyWindowList(displayId, privacyWindowList);
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcResizeVirtualScreen(MessageParcel& data, MessageParcel& reply)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    uint32_t width = data.ReadUint32();
+    uint32_t height = data.ReadUint32();
+    DMError ret = ResizeVirtualScreen(screenId, width, height);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcUpdateAvailableArea(MessageParcel& data, MessageParcel& reply)
+{
+    auto screenId = static_cast<ScreenId>(data.ReadUint64());
+    int32_t posX = data.ReadInt32();
+    int32_t posY = data.ReadInt32();
+    uint32_t width = data.ReadUint32();
+    uint32_t height = data.ReadUint32();
+    DMRect area = {posX, posY, width, height};
+    UpdateAvailableArea(screenId, area);
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcSetScreenOffDelayTime(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t delay = data.ReadInt32();
+    int32_t ret = SetScreenOffDelayTime(delay);
+    reply.WriteInt32(ret);
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcNotifyFoldToExpandCompletion(MessageParcel& data, MessageParcel& reply)
+{
+    bool foldToExpand = data.ReadBool();
+    NotifyFoldToExpandCompletion(foldToExpand);
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcGetDeviceScreenConfig(MessageParcel& data, MessageParcel& reply)
+{
+    if (!RSMarshallingHelper::Marshalling(reply, GetDeviceScreenConfig())) {
+        TLOGE(WmsLogTag::DMS, "Write deviceScreenConfig failed");
+    }
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcSetVirtualScreenRefreshRate(MessageParcel& data, MessageParcel& reply)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    uint32_t refreshInterval = data.ReadUint32();
+    DMError ret = SetVirtualScreenRefreshRate(screenId, refreshInterval);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return 0;
+}
+
+int32_t ScreenSessionManagerStub::ProcSwitchUser(MessageParcel& data, MessageParcel& reply)
+{
+    SwitchUser();
+    return 0;
 }
 } // namespace OHOS::Rosen
