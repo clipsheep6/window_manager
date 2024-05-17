@@ -203,19 +203,19 @@ ErrCode SettingProvider::GetStringValue(const std::string& key, std::string& val
     resultSet->GetRowCount(count);
     if (count == 0) {
         WLOGFW("not found value, key=%{public}s, count=%{public}d", key.c_str(), count);
+        resultSet->Close();
         IPCSkeleton::SetCallingIdentity(callingIdentity);
         return ERR_NAME_NOT_FOUND;
     }
     const int32_t INDEX = 0;
     resultSet->GoToRow(INDEX);
     int32_t ret = resultSet->GetString(INDEX, value);
-    if (ret != NativeRdb::E_OK) {
-        WLOGFW("resultSet->GetString return not ok, ret=%{public}d", ret);
-        IPCSkeleton::SetCallingIdentity(callingIdentity);
-        return ERR_INVALID_VALUE;
-    }
     resultSet->Close();
     IPCSkeleton::SetCallingIdentity(callingIdentity);
+    if (ret != NativeRdb::E_OK) {
+        WLOGFW("resultSet->GetString return not ok, ret=%{public}d", ret);
+        return ERR_INVALID_VALUE;
+    }
     return ERR_OK;
 }
 
@@ -235,10 +235,19 @@ ErrCode SettingProvider::PutStringValue(const std::string& key, const std::strin
     DataShare::DataSharePredicates predicates;
     predicates.EqualTo(SETTING_COLUMN_KEYWORD, key);
     Uri uri(AssembleUri(key));
-    if (helper->Update(uri, predicates, bucket) <= 0) {
-        WLOGFD("no data exist, insert one row");
-        helper->Insert(uri, bucket);
+    auto [status, errCode] = helper->Update(uri, predicates, bucket);
+    if (errCode == 0) {
+        WLOGFD("data exist, helper updata success, status = %{public}d", status);
+    } else {
+        WLOGFW("helper updata fail, errcode = %{public}d, no data exist, insert one row", errCode);
+        auto [result, errRet] = helper->Insert(uri, bucket);
+        if (errRet == 0) {
+            WLOGFD("helper insert success, status = %{public}d", result);
+        } else {
+            WLOGFE("helper insert fail, errcode = %{public}d", errRet);
+        }
     }
+
     if (needNotify) {
         helper->NotifyChange(AssembleUri(key));
     }
