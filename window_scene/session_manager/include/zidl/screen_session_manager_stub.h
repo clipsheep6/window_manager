@@ -35,6 +35,30 @@ private:
     void ProcSetVirtualScreenFlag(MessageParcel& data, MessageParcel& reply);
     void ProcGetVirtualScreenFlag(MessageParcel& data, MessageParcel& reply);
     void ProcGetAvailableArea(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenGetPixelFormat(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenSetPixelFormat(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenGetSupportedHDRFormats(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenGetHDRFormat(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenSetHDRFormat(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenGetSupprtedColorSpace(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenGetColorSpace(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcScreenSetColorSpace(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSetOrientation(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSetScreenRotationLocked(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcIsScreenRotationLocked(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcGetCutoutInfo(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcHasPrivateWindow(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcConvertScreenIdToRsScreenId(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcHasImmersiveWindow(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSceneBoardDumpAllScreen(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSceneBoardDumpSpecialScreen(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcDeviceIsCapture(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSceneBoardSetFoldDisplayMode(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSceneBoardLockFoldDisplayStatus(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSceneBoardGetFoldDisplayMode(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSceneBoardIsFoldable(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSceneBoardGetFoldStatus(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSceneBoardGetCurrentFoldCreaseRegion(MessageParcel& data, MessageParcel& reply);
 };
 } // namespace Rosen
 } // namespace OHOS
