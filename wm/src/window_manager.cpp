@@ -25,6 +25,7 @@
 #include "window_adapter.h"
 #include "window_manager_agent.h"
 #include "window_manager_hilog.h"
+#include "window_display_change_adapter.h"
 #include "wm_common.h"
 
 namespace OHOS {
@@ -61,6 +62,8 @@ public:
     void NotifyWaterMarkFlagChangedResult(bool showWaterMark);
     void NotifyVisibleWindowNumChanged(const std::vector<VisibleWindowNumInfo>& visibleWindowNumInfo);
     void NotifyGestureNavigationEnabledResult(bool enable);
+    void NotifyDisplayInfoChanged(const sptr<IRemoteObject>& token, DisplayId displayId,
+        float density, DisplayOrientation orientation);
 
     static inline SingletonDelegator<WindowManager> delegator_;
 
@@ -86,6 +89,8 @@ public:
     sptr<WindowManagerAgent> gestureNavigationEnabledAgent_;
     std::vector<sptr<IVisibleWindowNumChangedListener>> visibleWindowNumChangedListeners_;
     sptr<WindowManagerAgent> visibleWindowNumChangedListenerAgent_;
+    std::map<sptr<IRemoteObject>,
+        std::vector<sptr<WindowDisplayChangeAdapter>>> displayInfoChangedListeners_;
 };
 
 void WindowManager::Impl::NotifyWMSConnected(int32_t userId, int32_t screenId)
@@ -288,6 +293,25 @@ void WindowManager::Impl::NotifyVisibleWindowNumChanged(
             continue;
         }
         listener->OnVisibleWindowNumChange(visibleWindowNumInfo);
+    }
+}
+
+void WindowManager::Impl::NotifyDisplayInfoChanged(const sptr<IRemoteObject>& token, DisplayId displayId,
+    float density, DisplayOrientation orientation)
+{
+    auto iter = displayInfoChangedListeners_.end();
+    std::vector<sptr<WindowDisplayChangeAdapter>> displayInfoChangedListeners;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        iter = displayInfoChangedListeners_.find(token);
+        if (iter == displayInfoChangedListeners_.end()) {
+            TLOGI(WmsLogTag::DMS, "can not find token in listener list, need not notify the change of display info");
+            return;
+        }
+        displayInfoChangedListeners = iter->second;
+    }
+    for (auto& listener : displayInfoChangedListeners) {
+        listener->OnDisplayInfoChange(token, displayId, density, orientation);
     }
 }
 
@@ -823,6 +847,91 @@ WMError WindowManager::UnregisterGestureNavigationEnabledChangedListener(
     WLOGFD("Try to unregisterGestureNavigationEnabledChangedListener and result is %{public}u",
         static_cast<uint32_t>(ret));
     return ret;
+}
+
+WMError WindowManager::RegisterDisplayInfoChangedListener(const sptr<IRemoteObject>& listener,
+    const sptr<IDisplayInfoChangedListener>& listener)
+{
+    if (token == nullptr) {
+        TLOGE(WmsLogTag::DMS, "ability token could not be null");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    if (listener == nullptr) {
+        TLOGE(WmsLogTag::DMS, "listener could not be null");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    sptr<WindowDisplayChangeAdapter> listenerAdapter = new (std::nothrow) WindowDisplayChangeAdapter(listener);
+    if (listenerAdapter == nullptr) {
+        TLOGE(WmsLogTag::DMS, "create listener adapter failed.");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    std::lock_guard<std::recursive_mutex> lock(pImpl_->mutex_);
+    auto iter == pImpl_->displayInfoChangedListeners_.find(token);
+    if (iter == pImpl_->displayInfoChangedListeners_.end()) {
+        pImpl_->displayInfoChangedListeners.insert({token,{listenerAdapter}});
+    } else {
+        auto listenerIter = std::find_if(iter->second.begin(), iter->second.end(),
+            [&listener])(const sptr<WindowDisplayChangeAdapter>& item) {
+                return listener == item->GetListener();
+            });
+        if (listenerIter != iter->second.end()) {
+            TLOGW(WmsLogTag::DMS, "Listener is already registered.");
+        } else {
+            iter->second.push_back(listenerAdapter);
+        }
+    }
+    TLOGD(WmsLogTag::DMS, "Try to registerDisplayInfoChangedListener success");
+    return WMError::WM_OK;
+}
+
+WMError WindowManager::UnregisterDisplayInfoChangedListener(const sptr<IRemoteObject>& listener,
+    const sptr<IDisplayInfoChangedListener>& listener)
+{
+    if (token == nullptr) {
+        TLOGE(WmsLogTag::DMS, "ability token could not be null");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    if (listener == nullptr) {
+        TLOGE(WmsLogTag::DMS, "listener could not be null");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    std::lock_guard<std::recursive_mutex> lock(pImpl_->mutex_);
+    auto iter == pImpl_->displayInfoChangedListeners_.find(token);
+    if (iter == pImpl_->displayInfoChangedListeners_.end()) {
+        TLOGW(WmsLogTag::DMS, "could not find ability token");
+    } else {
+        auto listenerIter = std::find_if(iter->second.begin(), iter->second.end(),
+        [&listener])(const sptr<WindowDisplayChangeAdapter>& item) {
+            return listener == item->GetListener();
+        });
+        if (listenerIter != iter->second.end()) {
+            TLOGW(WmsLogTag::DMS, "can not find the listener.");
+        } else {
+            iter->second.erase(listenerIter);
+            if (iter->second.empty()) {
+                pImpl_->displayInfoChangedListeners_.erase(iter);
+            }
+        }
+    }
+    TLOGD(WmsLogTag::DMS, "Try to unregisterDisplayInfoChangedListener success");
+    return WMError::WM_OK;
+}
+
+WMError WindowManager::NotifyDisplayInfoChanged(const sptr<IRemoteObject>& token, DisplayId displayId,
+    float density, DisplayOrientation orientation) {
+    TLOGD(WmsLogTag::DMS, "notify DisplayInfoChanged, displayId = %{public}" PRIu64", density=%{public}f,"\
+    "orientation=%{public}d", displayId, density, orientation);
+    if (token == nullptr) {
+        TLOGE(WmsLogTag::DMS, "notify display info change failed, token is nullptr");
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    pImpl_->NotifyDisplayInfoChanged(token, displayId, density, orientation);
+    return WMError::WM_OK;
 }
 
 void WindowManager::GetFocusWindowInfo(FocusChangeInfo& focusInfo)

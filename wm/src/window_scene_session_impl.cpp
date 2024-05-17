@@ -830,6 +830,8 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
 
+    NotifyDisplayInfoChange();
+
     auto isDecorEnable = IsDecorEnable();
     UpdateDecorEnableToAce(isDecorEnable);
     property_->SetDecorEnable(isDecorEnable);
@@ -893,6 +895,7 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
             static_cast<int32_t>(ret), property_->GetWindowName().c_str(), GetPersistentId());
     }
     NotifyWindowStatusChange(GetMode());
+    NotifyDisplayInfoChange();
     return ret;
 }
 
@@ -3273,10 +3276,47 @@ void WindowSceneSessionImpl::UpdateDensity()
         }
     }
 
+    NotifyDisplayInfoChange();
+
     auto preRect = GetRect();
     UpdateViewportConfig(preRect, WindowSizeChangeReason::UNDEFINED);
     WLOGFI("WindowSceneSessionImpl::UpdateDensity [%{public}d, %{public}d, %{public}u, %{public}u]",
         preRect.posX_, preRect.posY_, preRect.width_, preRect.height_);
+}
+
+WSError WindowSceneSessionImpl::UpdateDisplayId(uint64_t displayId)
+{
+    property_->SetDisplayId(displayId);
+    NotifyDisplayInfoChange();
+    return WSError::WS_OK;
+}
+
+WSError WindowSceneSessionImpl::UpdateOrientation()
+{
+    TLOGD(WmsLogTag::DMS, "UpdateOrientation, id: %{public}u", GetPersistentId());
+    NotifyDisplayInfoChange();
+    return WSError::WS_OK;
+}
+
+void WindowSceneSessionImpl::NotifyDisplayInfoChange()
+{
+    TLOGD(WmsLogTag::DMS, "NotifyDisplayInfoChange,wid: %{public}d", GetPersistentId());
+    auto displayId = property_->GetDisplayId();
+    auto display = SingletonContainer::Get<DisplayManager>().GetDisplayById(displayId);
+    if (display == nullptr) {
+        TLOGE(WmsLogTag::DMS, "get display by displayId %{public}" PRIu64 " failed.", displayId);
+        return;
+    }
+    float density = GetVirtualPixelRatio(displayInfo);
+    DisplayOrientation orientation = displayInfo->GetDisplayOrientation();
+
+    auto abilityContext = AbilityRuntime::Context::ConvertTo<AbilityRuntime::AbilityContext>(context_);
+    if (abilityContext == nullptr) {
+        TLOGE(WmsLogTag::DMS, "get abilityContext failed of window:%{public}d", GetPersistentId());
+        return;
+    }
+    auto token = abilityContext->GetToken();
+    SingletonContainer::Get<WindowManager>().NotifyDisplayInfoChange(token, displayId, density, orientation);
 }
 
 WMError WindowSceneSessionImpl::AdjustKeyboardLayout(const KeyboardLayoutParams& params)

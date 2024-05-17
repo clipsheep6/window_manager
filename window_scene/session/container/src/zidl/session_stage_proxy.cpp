@@ -137,6 +137,28 @@ void SessionStageProxy::UpdateDensity()
     }
 }
 
+WSError SessionStageProxy::UpdateOrientation()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        TLOGE(WmsLogTad::DMS, "WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DENSITY_CHANGE),
+                              data, reply, option) != ERR_NONE) {
+        TLOGE(WmsLogTad::DMS, "SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    WSError ret = static_cast<WSError>(reply.ReadInt32());
+    if (ret != WSError::WS_OK) {
+        TLOGE(WmsLogTad::DMS, "update orientation by ipc failed with error %{public}d.", ret);
+    }
+    return ret;
+}
+
 WSError SessionStageProxy::HandleBackEvent()
 {
     MessageParcel data;
