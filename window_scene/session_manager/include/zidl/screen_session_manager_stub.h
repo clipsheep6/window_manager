@@ -35,6 +35,24 @@ private:
     void ProcSetVirtualScreenFlag(MessageParcel& data, MessageParcel& reply);
     void ProcGetVirtualScreenFlag(MessageParcel& data, MessageParcel& reply);
     void ProcGetAvailableArea(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSceneBoardMakeUniqueScreen(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSetClient(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcGetScreenProperty(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcGetDisplayNode(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcUpdateScreenRotationProperty(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcGetCurvedScreenCompressionArea(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcGetPhyScreenProperty(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcNotifyDisplayChangeInfo(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSetScreenPrivacyState(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSecScreenIdPrivacyState(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSetScreenPrivacyWindowList(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcResizeVirtualScreen(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcUpdateAvailableArea(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSetScreenOffDelayTime(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcNotifyFoldToExpandCompletion(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcGetDeviceScreenConfig(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSetVirtualScreenRefreshRate(MessageParcel& data, MessageParcel& reply);
+    int32_t ProcSwitchUser(MessageParcel& data, MessageParcel& reply);
 };
 } // namespace Rosen
 } // namespace OHOS
