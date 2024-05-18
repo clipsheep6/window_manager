@@ -5828,7 +5828,7 @@ WMError SceneSessionManager::RegisterWindowManagerAgent(WindowManagerAgentType t
         WLOGFE("windowManagerAgent is null");
         return WMError::WM_ERROR_NULLPTR;
     }
-    const auto &callingPid = IPCSkeleton::GetCallingRealPid();
+    const auto callingPid = IPCSkeleton::GetCallingRealPid();
     std::shared_lock<std::share_mutex> lock(windowManagerAgentSetMutex_)
     if (windowManagerAgentSet_.find(callingPid) != windowManagerAgentSet_.end()) {
         TLOGE(WmsLogTag::WMS_MAIN, "pid = %{public}d is already registered", callingPid);
