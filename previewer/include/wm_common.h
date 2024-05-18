@@ -615,7 +615,7 @@ public:
     }
 };
 
-using OnCallback = std::function<void(int64_t)>;
+using OnCallback = std::function<void(int64_t, int64_t)>;
 
 /**
  * @struct VsyncCallback
