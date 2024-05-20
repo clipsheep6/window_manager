@@ -5857,7 +5857,7 @@ WMError SceneSessionManager::UnregisterWindowManagerAgent(WindowManagerAgentType
         return WMError::WM_ERROR_NULLPTR;
     }
     const auto callingPid = IPCSkeleton::GetCallingRealPid();
-    windowManagerAgentSet_.earse(callingPid);
+    windowManagerAgentSet_.erase(callingPid);
     auto task = [this, &windowManagerAgent, type]() {
         return SessionManagerAgentController::GetInstance().UnregisterWindowManagerAgent(windowManagerAgent, type);
     };
