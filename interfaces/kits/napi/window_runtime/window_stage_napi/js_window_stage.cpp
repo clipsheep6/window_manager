@@ -703,6 +703,97 @@ bool JsWindowStage::ParseSubWindowOptions(napi_env env, napi_value jsObject, Win
     return true;
 }
 
+napi_value JsWindowStage::GetContentInfo(napi_env env, napi_callback_info info)
+{
+    WLOGFD("[NAPI]GetContentInfo");
+    JsWindowStage* me = CheckParamsAndGetThis<JsWindowStage>(env, info);
+    return (me != nullptr) ? me->OnGetContentInfo(env, info) : nullptr;
+}
+
+napi_value JsWindowStage::Restore(napi_env env, napi_callback_info info)
+{
+    WLOGFD("[NAPI]Restore");
+    JsWindowStage* me = CheckParamsAndGetThis<JsWindowStage>(env, info);
+    return (me != nullptr) ? me->OnRestore(env, info) : nullptr;
+}
+
+napi_value JsWindowStage::OnGetContentInfo(napi_env env, napi_callback_info info)
+{
+    NapiAsyncTask::CompleteCallback complete =
+    [weak = windowScene_](napi_env env, NapiAsyncTask& task, int32_t status) {
+        auto weakScene = weak.lock();
+        if (weakScene == nullptr) {
+            task.Reject(env, CreateJsError(env,
+                static_cast<int32_t>(WmErrorCode::WM_ERROR_STAGE_ABNORMALLY)));
+            WLOGFE("[NAPI]WindowScene_ is nullptr!");
+            return;
+        }
+        auto window = weakScene->GetMainWindow();
+        if (window == nullptr) {
+            task.Reject(env, CreateJsError(env,
+                static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY),
+                "Get main window failed."));
+            return;
+        }
+        std::string contentInfo = window->GetContentInfo(BackupAndRestoreType::APP_RECOVERY);
+        napi_value content = nullptr;
+        napi_create_string_utf8(env, contentInfo.c_str(), contentInfo.length(), &content);
+        task.Resolve(env, content);
+        WLOGI("[NAPI]Window [%{public}u, %{public}s] GetContentInfo end, <%{public}s>",
+            window->GetWindowId(), window->GetWindowName().c_str(), contentInfo.c_str());
+    };
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    napi_value callback = (argv[0] != nullptr && GetType(env, argv[0]) == napi_function) ?
+        argv[0] : nullptr;
+    napi_value result = nullptr;
+    NapiAsyncTask::Schedule("JsWindowStage::OnGetContentInfo",
+        env, CreateAsyncTaskWithLastParam(env, callback, nullptr, std::move(complete), &result));
+    return result;
+}
+
+napi_value JsWindowStage::OnRestore(napi_env env, napi_callback_info info)
+{
+    std::string contentInfo;
+    size_t argc = 2;
+    napi_value argv[2] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (!ConvertFromJsValue(env, argv[0], contentInfo)) {
+        WLOGFE("[NAPI]Failed to convert parameter to contentInfo");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
+        return NapiGetUndefined(env);
+    }
+    napi_value callBack = nullptr;
+    if (GetType(env, argv[1]) == napi_function) {
+        callBack = argv[1];
+    }
+
+    NapiAsyncTask::CompleteCallback complete =
+        [weak = windowScene_, contentInfo](
+            napi_env env, NapiAsyncTask& task, int32_t status) {
+            auto weakScene = weak.lock();
+            sptr<Window> window = weakScene ? weakScene->GetMainWindow() : nullptr;
+            if (window == nullptr) {
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
+                WLOGFE("[NAPI]Get window failed");
+                return;
+            }
+            WMError ret = window->NapiSetUIContent(contentInfo, env, nullptr, BackupAndRestoreType::APP_RECOVERY);
+            if (ret == WMError::WM_OK) {
+                task.Resolve(env, NapiGetUndefined(env));
+            } else {
+                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret), "Window load content failed"));
+            }
+            WLOGI("[NAPI]Window [%{public}u, %{public}s] restore<%{public}s> end, ret = %{public}d",
+                window->GetWindowId(), window->GetWindowName().c_str(), contentInfo.c_str(), ret);
+        };
+    napi_value result = nullptr;
+    NapiAsyncTask::Schedule("JsWindowStage::OnRestore",
+        env, CreateAsyncTaskWithLastParam(env, callBack, nullptr, std::move(complete), &result));
+    return result;
+}
+
 napi_value CreateJsWindowStage(napi_env env, std::shared_ptr<Rosen::WindowScene> windowScene)
 {
     WLOGFD("[NAPI]CreateJsWindowStage");
@@ -739,6 +830,10 @@ napi_value CreateJsWindowStage(napi_env env, std::shared_ptr<Rosen::WindowScene>
         objValue, "disableWindowDecor", moduleName, JsWindowStage::DisableWindowDecor);
     BindNativeFunction(env,
         objValue, "setDefaultDensityEnabled", moduleName, JsWindowStage::SetDefaultDensityEnabled);
+    BindNativeFunction(env,
+        objValue, "getContentInfo", moduleName, JsWindowStage::GetContentInfo);
+    BindNativeFunction(env,
+        objValue, "restore", moduleName, JsWindowStage::Restore);
 
     return objValue;
 }

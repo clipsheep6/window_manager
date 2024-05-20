@@ -49,6 +49,8 @@ public:
     static napi_value SetShowOnLockScreen(napi_env env, napi_callback_info info);
     static napi_value DisableWindowDecor(napi_env env, napi_callback_info info);
     static napi_value SetDefaultDensityEnabled(napi_env env, napi_callback_info info);
+    static napi_value GetContentInfo(napi_env env, napi_callback_info info);
+    static napi_value Restore(napi_env env, napi_callback_info info);
 
 private:
     napi_value OnSetUIContent(napi_env env, napi_callback_info info);
@@ -64,6 +66,8 @@ private:
     napi_value OnSetShowOnLockScreen(napi_env env, napi_callback_info info);
     napi_value OnDisableWindowDecor(napi_env env, napi_callback_info info);
     napi_value OnSetDefaultDensityEnabled(napi_env env, napi_callback_info info);
+    napi_value OnGetContentInfo(napi_env env, napi_callback_info info);
+    napi_value OnRestore(napi_env env, napi_callback_info info);
 
     bool ParseSubWindowOptions(napi_env env, napi_value jsObject, WindowOption& option);
 
