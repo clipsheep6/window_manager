@@ -22,6 +22,7 @@
 #include "window_property.h"
 #include "window_root.h"
 #include "wm_common.h"
+#include "mock/mock_iremote_object.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -42,6 +43,9 @@ public:
 
 void MockSessionManagerServiceTest::SetUpTestCase()
 {
+    MockSessionManagerService::GetInstance();
+    MockSessionManagerService::GetInstance().screenSessionManager_.clear();
+    MockSessionManagerService::GetInstance().sessionManagerServiceMap_.clear();
 }
 
 void MockSessionManagerServiceTest::TearDownTestCase()
@@ -167,6 +171,104 @@ HWTEST_F(MockSessionManagerServiceTest, SetSessionManagerService2, Function | Sm
     sptr<IRemoteObject> sessionManagerService = nullptr;
     ASSERT_EQ(false, MockSessionManagerService::GetInstance().SetSessionManagerService(sessionManagerService));
 }
+
+/**
+ * @tc.name: SetSessionManagerService
+ * @tc.desc: SetSessionManagerService
+ * @tc.type: FUNC
+ */
+HWTEST_F(MockSessionManagerServiceTest, SetSessionManagerService3, Function | SmallTest | Level2)
+{
+    WLOGI("test SetSessionManagerService3 start");
+    int32_t uid = 0;
+    auto mockService = new (std::nothrow) IRemoteObjectMocker();
+    sptr<IRemoteObject> sessionManagerService = mockService;
+    ASSERT_NE(sessionManagerService, nullptr);
+    EXPECT_CALL(mockService, IsProxyObject().WillRepeatedly(testing::Return(false)));
+
+    MockSessionManagerService::GetInstance().smsDeathRecipientMap_.clear();
+    ASSERT_EQ(true, MockSessionManagerService::GetInstance().SetSessionManagerService(sessionManagerService));
+
+    auto recipient = new (std::nothrow) SMSDeathRecipient(uid);
+    ASSERT_NE(sessionManagerService, nullptr);
+    MockSessionManagerService::GetInstance().smsDeathRecipientMap_.insert({uid, recipient});
+    ASSERT_EQ(true, MockSessionManagerService::GetInstance().SetSessionManagerService(sessionManagerService));
+
+    EXPECT_CALL(mockService, IsProxyObject().WillOnce(testing::Return(true)));
+    EXPECT_CALL(mockService, AddDeathRecipient(testing::_).WillOnce(testing::Return(true)));
+    ASSERT_EQ(true, MockSessionManagerService::GetInstance().SetSessionManagerService(sessionManagerService));
+
+    EXPECT_CALL(mockService, IsProxyObject().WillOnce(testing::Return(true)));
+    EXPECT_CALL(mockService, AddDeathRecipient(testing::_).WillOnce(testing::Return(false)));
+    ASSERT_EQ(false, MockSessionManagerService::GetInstance().SetSessionManagerService(sessionManagerService));
+    WLOGI("test SetSessionManagerService3 end");
+}
+
+/**
+ * @tc.name: NotifySceneBoardAvailable
+ * @tc.desc: NotifySceneBoardAvailable
+ * @tc.type: FUNC
+ */
+HWTEST_F(MockSessionManagerServiceTest, NotifySceneBoardAvailable, Function | SmallTest | Level2)
+{
+    WLOGI("test NotifySceneBoardAvailable start");
+    int ret = 0;
+    MockSessionManagerService::GetInstance().NotifySceneBoardAvailable()
+    ASSERT_EQ(ret, 0);
+    WLOGI("test NotifySceneBoardAvailable end");
+}
+
+/**
+ * @tc.name: GetScreenSessionManagerLite
+ * @tc.desc: GetScreenSessionManagerLite
+ * @tc.type: FUNC
+ */
+HWTEST_F(MockSessionManagerServiceTest, GetScreenSessionManagerLite, Function | SmallTest | Level2)
+{
+    WLOGI("test GetScreenSessionManagerLite start");
+    int ret = 0;
+
+    MockSessionManagerService::GetInstance().screenSessionManager_ = nullptr;
+    auto lite1 = MockSessionManagerService::GetInstance().GetScreenSessionManagerLite();
+    ASSERT_NE(lite1, nullptr);
+
+    auto lite2 = MockSessionManagerService::GetInstance().GetScreenSessionManagerLite();
+    ASSERT_NE(lite2, nullptr);
+
+    ASSERT_EQ(ret, 0);
+    WLOGI("test GetScreenSessionManagerLite end");
+}
+
+/**
+ * @tc.name: GetSceneSessionManager
+ * @tc.desc: GetSceneSessionManager
+ * @tc.type: FUNC
+ */
+HWTEST_F(MockSessionManagerServiceTest, GetSceneSessionManager, Function | SmallTest | Level2)
+{
+    WLOGI("test GetSceneSessionManager start");
+
+    MockSessionManagerService::GetInstance().sessionManagerServiceMap_.insert({0, nullptr});
+    auto manager1 = MockSessionManagerService::GetInstance().GetSceneSessionManager();
+    ASSERT_EQ(manager1, nullptr);
+    MockSessionManagerService::GetInstance().sessionManagerServiceMap_.clear();
+
+
+    auto mockService = new (std::nothrow) IRemoteObjectMocker();
+    EXPECT_CALL(mockService, SendRequest(testing::_, testing::_, testing::_, testing::_).WillOnce(testing::Return(0)));
+    sptr<IRemoteObject> sessionManagerService = mockService;
+    MockSessionManagerService::GetInstance().sessionManagerServiceMap_.insert({0, sessionManagerService});
+    auto manager2 = MockSessionManagerService::GetInstance().GetSceneSessionManager();
+    ASSERT_EQ(manager2, nullptr);
+
+
+    EXPECT_CALL(mockService, SendRequest(testing::_, testing::_, testing::_, testing::_).WillOnce(testing::Return(1)));
+    auto manager3 = MockSessionManagerService::GetInstance().GetSceneSessionManager();
+    ASSERT_NE(manager3, nullptr);
+
+    WLOGI("test GetSceneSessionManager end");
+}
+
 }
 }
 }
