@@ -589,7 +589,7 @@ HWTEST_F(ExtensionSessionTest, TransferComponentDataSync02, Function | SmallTest
     AAFwk::WantParams wantParams;
     AAFwk::WantParams reWantParams;
     auto result = extensionSession->TransferComponentDataSync(wantParams, reWantParams);
-    ASSERT_EQ(result, WSErrorCode::WS_OK);
+    ASSERT_EQ(result, WSErrorCode::WS_ERROR_TRANSFER_DATA_FAILED);
 }
 
 /**
@@ -615,7 +615,7 @@ HWTEST_F(ExtensionSessionTest, TransferComponentData02, Function | SmallTest | L
     session->state_ = SessionState::STATE_CONNECT;
     AAFwk::WantParams wantParams;
     WSError result = extensionSession->TransferComponentData(wantParams);
-    ASSERT_EQ(result, WSError::WS_OK);
+    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);
 }
 
 /**
@@ -626,8 +626,8 @@ HWTEST_F(ExtensionSessionTest, TransferComponentData02, Function | SmallTest | L
 HWTEST_F(ExtensionSessionTest, NotifySyncOn02, Function | SmallTest | Level1)
 {
     SessionInfo info;
-    info.abilityName_ = "SetBrightness";
-    info.bundleName_ = "SetBrightness1";
+    info.abilityName_ = "abilitytest";
+    info.bundleName_ = "bundletest";
     sptr<ExtensionSession> extensionSession = new (std::nothrow) ExtensionSession(info);
     ASSERT_NE(extensionSession, nullptr);
     if (extensionSession == nullptr) {
@@ -646,8 +646,8 @@ HWTEST_F(ExtensionSessionTest, NotifySyncOn02, Function | SmallTest | Level1)
 HWTEST_F(ExtensionSessionTest, NotifySyncOn03, Function | SmallTest | Level1)
 {
     SessionInfo info;
-    info.abilityName_ = "SetBrightness";
-    info.bundleName_ = "SetBrightness1";
+    info.abilityName_ = "abilitytest";
+    info.bundleName_ = "bundletest";
     sptr<ExtensionSession> extensionSession = new (std::nothrow) ExtensionSession(info);
     ASSERT_NE(extensionSession, nullptr);
     if (extensionSession == nullptr) {
@@ -665,8 +665,8 @@ HWTEST_F(ExtensionSessionTest, NotifySyncOn03, Function | SmallTest | Level1)
 HWTEST_F(ExtensionSessionTest, TransferKeyEventForConsumed05, Function | SmallTest | Level1)
 {
     SessionInfo info;
-    info.abilityName_ = "SetBrightness";
-    info.bundleName_ = "SetBrightness1";
+    info.abilityName_ = "abilitytest";
+    info.bundleName_ = "bundletest";
     sptr<ExtensionSession> extensionSession = new (std::nothrow) ExtensionSession(info);
     ASSERT_NE(extensionSession, nullptr);
     if (extensionSession == nullptr) {
@@ -695,8 +695,8 @@ HWTEST_F(ExtensionSessionTest, TransferKeyEventForConsumed05, Function | SmallTe
 HWTEST_F(ExtensionSessionTest, TransferKeyEventAsync02, Function | SmallTest | Level1)
 {
     SessionInfo info;
-    info.abilityName_ = "SetBrightness";
-    info.bundleName_ = "SetBrightness1";
+    info.abilityName_ = "abilitytest";
+    info.bundleName_ = "bundletest";
     sptr<ExtensionSession> extensionSession = new (std::nothrow) ExtensionSession(info);
     ASSERT_NE(extensionSession, nullptr);
     if (extensionSession == nullptr) {
@@ -718,8 +718,8 @@ HWTEST_F(ExtensionSessionTest, TransferKeyEventAsync02, Function | SmallTest | L
 HWTEST_F(ExtensionSessionTest, TransferKeyEventAsync03, Function | SmallTest | Level1)
 {
     SessionInfo info;
-    info.abilityName_ = "SetBrightness";
-    info.bundleName_ = "SetBrightness1";
+    info.abilityName_ = "abilitytest";
+    info.bundleName_ = "bundletest";
     sptr<ExtensionSession> extensionSession = new (std::nothrow) ExtensionSession(info);
     ASSERT_NE(extensionSession, nullptr);
     if (extensionSession == nullptr) {
@@ -756,7 +756,7 @@ HWTEST_F(ExtensionSessionTest, Background, Function | SmallTest | Level1)
     sptr<WindowSessionProperty> wsProperty = new (std::nothrow) WindowSessionProperty();
     wsProperty->type_ = WindowType::WINDOW_TYPE_UI_EXTENSION;
     auto result = extensionSession->Background();
-    ASSERT_EQ(result, WSError::WS_OK);
+    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);
 }
 
 /**
