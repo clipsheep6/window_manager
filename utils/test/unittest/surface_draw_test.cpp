@@ -198,7 +198,7 @@ HWTEST_F(SurfaceDrawTest, DoDrawImageRect01, Function | SmallTest | Level1)
     sptr<OHOS::Surface> layer = SurfaceDraw::GetLayer(surfaceNode);
     ASSERT_NE(layer, nullptr);
     sptr<OHOS::SurfaceBuffer> buffer = SurfaceDraw::GetSurfaceBuffer(layer, rect.width_, rect.height_);
-        if (buffer == nullptr) {
+    if (buffer == nullptr) {
         return;
     }
 
