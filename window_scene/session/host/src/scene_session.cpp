@@ -1073,33 +1073,6 @@ void SceneSession::GetAINavigationBarArea(WSRect rect, AvoidArea& avoidArea)
     CalculateAvoidAreaRect(rect, barArea, avoidArea);
 }
 
-bool SceneSession::CheckGetAvoidAreaAvailable(AvoidAreaType type)
-{
-    WindowMode mode = GetWindowMode();
-    WindowType winType = GetWindowType();
-
-    if (type == AvoidAreaType::TYPE_KEYBOARD) {
-        return true;
-    }
-    if (WindowHelper::IsMainWindow(winType)) {
-        if (mode != WindowMode::WINDOW_MODE_FLOATING ||
-            system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
-            system::GetParameter("const.product.devicetype", "unknown") == "tablet") {
-            return true;
-        }
-    }
-    if (WindowHelper::IsSubWindow(winType)) {
-        if (GetParentSession() && GetParentSession()->GetSessionRect() == GetSessionRect()) {
-            return true;
-        }
-    }
-    TLOGI(WmsLogTag::WMS_IMMS, "Window [%{public}u, %{public}s] type %{public}d "
-        "avoidAreaType %{public}u windowMode %{public}u, return default avoid area.",
-        GetPersistentId(), GetWindowName().c_str(), static_cast<uint32_t>(winType),
-        static_cast<uint32_t>(type), static_cast<uint32_t>(mode));
-    return false;
-}
-
 AvoidArea SceneSession::GetAvoidAreaByType(AvoidAreaType type)
 {
     auto task = [weakThis = wptr(this), type]() -> AvoidArea {
@@ -1109,7 +1082,15 @@ AvoidArea SceneSession::GetAvoidAreaByType(AvoidAreaType type)
             return {};
         }
 
-        if (!session->CheckGetAvoidAreaAvailable(type)) {
+        WindowMode mode = session->GetWindowMode();
+        WindowType winType = session->GetWindowType();
+        if (type != AvoidAreaType::TYPE_KEYBOARD && mode == WindowMode::WINDOW_MODE_FLOATING &&
+            (!WindowHelper::IsMainWindow(winType) ||
+            (system::GetParameter("const.product.devicetype", "unknown") != "phone" &&
+            system::GetParameter("const.product.devicetype", "unknown") != "tablet"))) {
+            TLOGI(WmsLogTag::WMS_IMMS,
+                "Id: %{public}d, avoidAreaType:%{public}u, windowMode:%{public}u, return default avoid area.",
+                session->GetPersistentId(), static_cast<uint32_t>(type), static_cast<uint32_t>(mode));
             return {};
         }
 
@@ -2709,6 +2690,7 @@ void SceneSession::SetShouldHideNonSecureWindows(bool shouldHide)
 void SceneSession::CalculateCombinedExtWindowFlags()
 {
     // Only correct when each flag is true when active, and once a uiextension is active, the host is active
+    std::unique_lock<std::shared_mutex> lock(combinedExtWindowFlagsMutex_);
     combinedExtWindowFlags_.bitData = 0;
     for (const auto& iter: extWindowFlagsMap_) {
         combinedExtWindowFlags_.bitData |= iter.second.bitData;
@@ -2731,8 +2713,9 @@ void SceneSession::UpdateExtWindowFlags(int32_t extPersistentId, const Extension
     CalculateCombinedExtWindowFlags();
 }
 
-ExtensionWindowFlags SceneSession::GetCombinedExtWindowFlags() const
+ExtensionWindowFlags SceneSession::GetCombinedExtWindowFlags()
 {
+    std::shared_lock<std::shared_mutex> lock(combinedExtWindowFlagsMutex_);
     auto combinedExtWindowFlags = combinedExtWindowFlags_;
     combinedExtWindowFlags.hideNonSecureWindowsFlag = IsSessionForeground() &&
         (combinedExtWindowFlags.hideNonSecureWindowsFlag || shouldHideNonSecureWindows_.load());
@@ -2756,6 +2739,7 @@ void SceneSession::RemoveExtWindowFlags(int32_t extPersistentId)
 
 void SceneSession::ClearExtWindowFlags()
 {
+    std::unique_lock<std::shared_mutex> lock(combinedExtWindowFlagsMutex_);
     extWindowFlagsMap_.clear();
     combinedExtWindowFlags_.bitData = 0;
 }
