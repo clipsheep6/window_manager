@@ -5828,6 +5828,13 @@ WMError SceneSessionManager::RegisterWindowManagerAgent(WindowManagerAgentType t
         WLOGFE("windowManagerAgent is null");
         return WMError::WM_ERROR_NULLPTR;
     }
+    const auto callingPid = IPCSkeleton::GetCallingRealPid();
+    if (windowManagerAgentSet_.find(callingPid) != windowManagerAgentSet_.end()) {
+        TLOGE(WmsLogTag::WMS_MAIN, "pid = %{public}d is already registered", callingPid);
+        return WMError::WM_OK;
+    } else {
+        windowManagerAgentSet_.insert(callingPid);
+    }
     auto task = [this, &windowManagerAgent, type]() {
         return SessionManagerAgentController::GetInstance().RegisterWindowManagerAgent(windowManagerAgent, type);
     };
@@ -5849,6 +5856,8 @@ WMError SceneSessionManager::UnregisterWindowManagerAgent(WindowManagerAgentType
         WLOGFE("windowManagerAgent is null");
         return WMError::WM_ERROR_NULLPTR;
     }
+    const auto callingPid = IPCSkeleton::GetCallingRealPid();
+    windowManagerAgentSet_.earse(callingPid);
     auto task = [this, &windowManagerAgent, type]() {
         return SessionManagerAgentController::GetInstance().UnregisterWindowManagerAgent(windowManagerAgent, type);
     };
