@@ -5942,6 +5942,16 @@ WMError SceneSessionManager::RegisterWindowManagerAgent(WindowManagerAgentType t
         WLOGFE("windowManagerAgent is null");
         return WMError::WM_ERROR_NULLPTR;
     }
+    const auto callingPid = IPCSkeleton::GetCallingRealPid();
+    std::shared_lock<std::share_mutex> lock(windowManagerAgentSetMutex_)
+    if (windowManagerAgentSet_.find(callingPid) != windowManagerAgentSet_.end()) {
+        TLOGE(WmsLogTag::WMS_MAIN, "pid = %{public}d is already registered", callingPid);
+        return WMError::WM_OK;
+    }
+    {
+        std::unique_lock<std::shared_mutex> lock(windowManagerAgentSetMutex_);
+        windowManagerAgentSet_.insert(callingPid);
+    }
     auto task = [this, &windowManagerAgent, type]() {
         return SessionManagerAgentController::GetInstance().RegisterWindowManagerAgent(windowManagerAgent, type);
     };
@@ -5962,6 +5972,10 @@ WMError SceneSessionManager::UnregisterWindowManagerAgent(WindowManagerAgentType
     if ((windowManagerAgent == nullptr) || (windowManagerAgent->AsObject() == nullptr)) {
         WLOGFE("windowManagerAgent is null");
         return WMError::WM_ERROR_NULLPTR;
+    }
+    {
+        std::unique_lock<std::shared_mutex> lock(windowManagerAgentSetMutex_);
+        windowManagerAgentSet_.earse(callingPid);
     }
     auto task = [this, &windowManagerAgent, type]() {
         return SessionManagerAgentController::GetInstance().UnregisterWindowManagerAgent(windowManagerAgent, type);
