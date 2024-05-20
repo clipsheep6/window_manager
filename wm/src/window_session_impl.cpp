@@ -1853,7 +1853,6 @@ void WindowSessionImpl::NotifyAfterUnfocused(bool needNotifyUiContent)
                 shouldReNotifyFocus_ = true;
             }
         }
-        CALL_UI_CONTENT(UnFocus);
     }
 }
 
@@ -2138,7 +2137,6 @@ WMError WindowSessionImpl::RegisterAvoidAreaChangeListener(sptr<IAvoidAreaChange
         TLOGE(WmsLogTag::WMS_IMMS, "listener is nullptr");
         return WMError::WM_ERROR_NULLPTR;
     }
-
     {
         std::lock_guard<std::recursive_mutex> lockListener(avoidAreaChangeListenerMutex_);
         ret = RegisterListener(avoidAreaChangeListeners_[persistentId], listener);
