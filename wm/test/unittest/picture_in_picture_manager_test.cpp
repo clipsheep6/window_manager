@@ -242,6 +242,29 @@ HWTEST_F(PictureInPictureManagerTest, DoRestore, Function | SmallTest | Level2)
     PictureInPictureManager::DoActionEvent(ACTION_RESTORE, 0);
     ASSERT_EQ(result, 1);
 }
+
+/**
+ * @tc.name: AutoStartPipWindow
+ * @tc.desc: AutoStartPipWindow
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureManagerTest, AutoStartPipWindow, Function | SmallTest | Level2)
+{
+    int result = 0;
+    std::string navId = "";
+    PictureInPictureManager::autoStartController_ = nullptr;
+    ASSERT_EQ(nullptr, PictureInPictureManager::autoStartController_);
+    PictureInPictureManager::AutoStartPipWindow(navId);
+    ASSERT_EQ(result, 0);
+
+    sptr<pipOption> option = new (std::nothrow) pipOption();
+    sptr<PictureInPictureController> pipController = new (std::nothrow) PictureInPictureController(option, nullptr, 100, nullptr);
+    PictureInPictureManager::autoStartController_ = pipController;
+    ASSERT_NE(PictureInPictureManager::autoStartController_, nullptr);
+    ASSERT_EQ(navId, "");
+    PictureInPictureManager::AutoStartPipWindow(navId);
+    ASSERT_EQ(result, 0);
+}
 }
 }
 }
