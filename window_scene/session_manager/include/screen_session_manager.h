@@ -240,6 +240,7 @@ public:
     void SetPrivacyStateByDisplayId(DisplayId id, bool hasPrivate) override;
     void SetScreenPrivacyWindowList(DisplayId id, std::vector<std::string> privacyWindowList) override;
     void UpdateAvailableArea(ScreenId screenId, DMRect area) override;
+    int32_t SetScreenOffDelayTime(int32_t delay) override;
     DMError GetAvailableArea(DisplayId displayId, DMRect& area) override;
     void NotifyAvailableAreaChanged(DMRect area);
     void NotifyFoldToExpandCompletion(bool foldToExpand) override;
@@ -329,6 +330,8 @@ private:
     std::shared_ptr<TaskScheduler> screenPowerTaskScheduler_;
 
     int32_t currentUserId_ { 0 };
+    int32_t currentScbPId_ { -1 };
+    std::vector<int32_t> oldScbPids_ {};
     mutable std::mutex currentUserIdMutex_;
     mutable std::mutex displayNodeChildrenMapMutex_;
     std::map<int32_t, sptr<IScreenSessionManagerClient>> clientProxyMap_;
@@ -380,6 +383,7 @@ private:
     std::condition_variable screenOnCV_;
     std::mutex screenOffMutex_;
     std::condition_variable screenOffCV_;
+    int32_t screenOffDelay_ {0};
 
     std::atomic<PowerStateChangeReason> prePowerStateChangeReason_ =
         PowerStateChangeReason::STATE_CHANGE_REASON_UNKNOWN;

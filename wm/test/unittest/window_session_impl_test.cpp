@@ -626,6 +626,8 @@ HWTEST_F(WindowSessionImplTest, RequestVsyncSucc, Function | SmallTest | Level2)
     sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
     ASSERT_NE(window, nullptr);
     std::shared_ptr<VsyncCallback> vsyncCallback = std::make_shared<VsyncCallback>();
+    window->state_ = WindowState::STATE_DESTROYED;
+    ASSERT_EQ(WindowState::STATE_DESTROYED, window->GetWindowState());
     window->RequestVsync(vsyncCallback);
 }
 
@@ -642,8 +644,28 @@ HWTEST_F(WindowSessionImplTest, RequestVsyncErr, Function | SmallTest | Level2)
     sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
     ASSERT_NE(window, nullptr);
     std::shared_ptr<VsyncCallback> vsyncCallback = std::make_shared<VsyncCallback>();
+    window->state_ = WindowState::STATE_DESTROYED;
+    ASSERT_EQ(WindowState::STATE_DESTROYED, window->GetWindowState());
     window->vsyncStation_ = nullptr;
     window->RequestVsync(vsyncCallback);
+}
+
+/**
+ * @tc.name: ClearVsync
+ * @tc.desc: Clear vsync test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTest, ClearVsync, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new WindowOption();
+    ASSERT_NE(option, nullptr);
+    option->SetWindowName("ClearVsync");
+    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+    window->ClearVsyncStation();
+    ASSERT_EQ(window->vsyncStation_, nullptr);
+    delete window;
+    delete option;
 }
 
 /**
@@ -676,6 +698,7 @@ HWTEST_F(WindowSessionImplTest, SetFocusable, Function | SmallTest | Level2)
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
     res = window->SetFocusable(false);
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetFocusable end";
 }
 
@@ -701,7 +724,7 @@ HWTEST_F(WindowSessionImplTest, SetTouchable, Function | SmallTest | Level2)
     WMError res = window->SetTouchable(true);
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     // session is null
     window = new WindowSessionImpl(option);
     ASSERT_EQ(WMError::WM_OK, window->Create(abilityContext_, nullptr));
@@ -709,6 +732,7 @@ HWTEST_F(WindowSessionImplTest, SetTouchable, Function | SmallTest | Level2)
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
     res = window->SetTouchable(false);
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetTouchable end";
 }
 
@@ -741,6 +765,7 @@ HWTEST_F(WindowSessionImplTest, SetBrightness01, Function | SmallTest | Level2)
     brightness = 0.5;
     res = window->SetBrightness(brightness);
     ASSERT_EQ(res, WMError::WM_OK);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetBrightness01 end";
 }
 
@@ -767,6 +792,7 @@ HWTEST_F(WindowSessionImplTest, SetBrightness02, Function | SmallTest | Level2)
 
     WMError res = window->SetBrightness(brightness);
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_TYPE);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetBrightness02 end";
 }
 
@@ -816,7 +842,7 @@ HWTEST_F(WindowSessionImplTest, SetRequestedOrientation, Function | SmallTest | 
     window->SetRequestedOrientation(Orientation::FOLLOW_DESKTOP);
     Orientation ret6 = window->GetRequestedOrientation();
     ASSERT_EQ(ret6, Orientation::FOLLOW_DESKTOP);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetRequestedOrientation end";
 }
 
@@ -888,6 +914,7 @@ HWTEST_F(WindowSessionImplTest, GetContentInfo, Function | SmallTest | Level2)
     window->uiContent_ = nullptr;
     res = window->GetContentInfo();
     ASSERT_EQ(res, "");
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: GetContentInfo end";
 }
 
@@ -915,6 +942,7 @@ HWTEST_F(WindowSessionImplTest, OnNewWant, Function | SmallTest | Level2)
     window->uiContent_ = nullptr;
     window->OnNewWant(want);
     ASSERT_EQ(res, 0);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: OnNewWant end";
 }
 
@@ -939,7 +967,7 @@ HWTEST_F(WindowSessionImplTest, SetAPPWindowLabel, Function | SmallTest | Level2
     std::string label = "label";
     WMError res = window->SetAPPWindowLabel(label);
     ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetAPPWindowLabel end";
 }
 
@@ -1004,7 +1032,7 @@ HWTEST_F(WindowSessionImplTest, RegisterListener01, Function | SmallTest | Level
     sptr<IWindowRectChangeListener> listener7 = nullptr;
     res = window->RegisterWindowRectChangeListener(listener7);
     ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: RegisterListener01 end";
 }
 
@@ -1055,7 +1083,7 @@ HWTEST_F(WindowSessionImplTest, RegisterListener02, Function | SmallTest | Level
     ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
     res = window->UnregisterWindowTitleButtonRectChangeListener(listener9);
     ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: RegisterListener02 end";
 }
 
@@ -1082,7 +1110,7 @@ HWTEST_F(WindowSessionImplTest, NotifyDisplayMove, Function | SmallTest | Level2
     DisplayId to = 2;
     window->NotifyDisplayMove(from, to);
     ASSERT_EQ(res, 0);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: NotifyDisplayMove end";
 }
 
@@ -1108,7 +1136,7 @@ HWTEST_F(WindowSessionImplTest, NotifyAfterForeground, Function | SmallTest | Le
     window->NotifyAfterForeground(true, true);
     window->NotifyAfterForeground(false, false);
     ASSERT_EQ(res, 0);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: NotifyAfterForeground end";
 }
 
@@ -1134,7 +1162,7 @@ HWTEST_F(WindowSessionImplTest, NotifyAfterBackground, Function | SmallTest | Le
     window->NotifyAfterBackground(true, true);
     window->NotifyAfterBackground(false, false);
     ASSERT_EQ(res, 0);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: NotifyAfterBackground end";
 }
 
@@ -1160,7 +1188,7 @@ HWTEST_F(WindowSessionImplTest, NotifyAfterUnfocused, Function | SmallTest | Lev
     window->NotifyAfterUnfocused(true);
     window->NotifyAfterUnfocused(false);
     ASSERT_EQ(res, 0);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: NotifyAfterUnfocused end";
 }
 
@@ -1211,7 +1239,7 @@ HWTEST_F(WindowSessionImplTest, NotifyBeforeDestroy, Function | SmallTest | Leve
     window->handler_ = nullptr;
     window->NotifyBeforeDestroy(windowName);
     ASSERT_EQ(res, 0);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: NotifyBeforeDestroy end";
 }
 
@@ -1239,7 +1267,7 @@ HWTEST_F(WindowSessionImplTest, MarkProcessed, Function | SmallTest | Level2)
     window->hostSession_ = nullptr;
     res = window->MarkProcessed(eventId);
     ASSERT_EQ(res, WSError::WS_DO_NOTHING);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: MarkProcessed end";
 }
 
@@ -1265,7 +1293,7 @@ HWTEST_F(WindowSessionImplTest, Notify01, Function | SmallTest | Level2)
     window->NotifyScreenshot();
     WSError res = window->NotifyDestroy();
     ASSERT_EQ(res, WSError::WS_OK);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: Notify01 end";
 }
 
@@ -1294,7 +1322,7 @@ HWTEST_F(WindowSessionImplTest, NotifyKeyEvent, Function | SmallTest | Level2)
     keyEvent = nullptr;
     window->NotifyKeyEvent(keyEvent, isConsumed);
     ASSERT_EQ(res, 0);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: NotifyKeyEvent end";
 }
 
@@ -1318,12 +1346,13 @@ HWTEST_F(WindowSessionImplTest, UpdateProperty, Function | SmallTest | Level2)
 
     WMError res = window->UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_RECT);
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     // session is null
     window = new WindowSessionImpl(option);
     ASSERT_EQ(WMError::WM_OK, window->Create(abilityContext_, nullptr));
     res = window->UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_RECT);
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: UpdateProperty end";
 }
 
@@ -1352,6 +1381,7 @@ HWTEST_F(WindowSessionImplTest, Find, Function | SmallTest | Level2)
     name = "111";
     res = window->Find(name);
     ASSERT_EQ(res, nullptr);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: Find end";
 }
 
@@ -1380,13 +1410,13 @@ HWTEST_F(WindowSessionImplTest, SetBackgroundColor01, Function | SmallTest | Lev
     color = "111";
     res = window->SetBackgroundColor(color);
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     // session is null
     window = new WindowSessionImpl(option);
     ASSERT_EQ(WMError::WM_OK, window->Create(abilityContext_, nullptr));
     res = window->SetBackgroundColor(color);
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetBackgroundColor01 end";
 }
 
@@ -1412,7 +1442,7 @@ HWTEST_F(WindowSessionImplTest, SetBackgroundColor02, Function | SmallTest | Lev
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_OPERATION);
     uint32_t ret = window->GetBackgroundColor();
     ASSERT_EQ(ret, 0xffffffff);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetBackgroundColor02 end";
 }
 
@@ -1450,6 +1480,7 @@ HWTEST_F(WindowSessionImplTest, SetAPPWindowIcon, Function | SmallTest | Level2)
     ASSERT_NE(pixelMapPtr.get(), nullptr);
     res = window->SetAPPWindowIcon(std::shared_ptr<Media::PixelMap>(pixelMapPtr.release()));
     ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetAPPWindowIcon end";
 }
 
@@ -1486,7 +1517,7 @@ HWTEST_F(WindowSessionImplTest, Notify02, Function | SmallTest | Level2)
 
     res = window->NotifyWindowVisibility(true);
     ASSERT_EQ(res, WSError::WS_OK);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: Notify02 end";
 }
 
@@ -1514,7 +1545,7 @@ HWTEST_F(WindowSessionImplTest, SetAceAbilityHandler, Function | SmallTest | Lev
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetAceAbilityHandler 111";
     window->SetAceAbilityHandler(handler);
     ASSERT_EQ(res, 0);
-
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetAceAbilityHandler end";
 }
 
@@ -1930,15 +1961,9 @@ HWTEST_F(WindowSessionImplTest, SetUIContentInner, Function | SmallTest | Level2
     ASSERT_NE(window, nullptr);
     window->property_->SetPersistentId(1);
     std::string url = "";
-    WMError res1 = window->SetUIContentInner(url, nullptr, nullptr, WindowSetUIContentType::DEFAULT, nullptr);
+    WMError res1 = window->SetUIContentInner(url, nullptr, nullptr, WindowSetUIContentType::DEFAULT,
+        BackupAndRestoreType::NONE, nullptr);
     ASSERT_EQ(res1, WMError::WM_ERROR_INVALID_WINDOW);
-
-    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
-    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
-    ASSERT_NE(nullptr, session);
-    window->hostSession_ = session;
-    WMError res2 = window->SetUIContentInner(url, nullptr, nullptr, WindowSetUIContentType::DEFAULT, nullptr);
-    ASSERT_EQ(res2, WMError::WM_ERROR_INVALID_PARAM);
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetUIContentInner end";
 }
 
@@ -1962,8 +1987,9 @@ HWTEST_F(WindowSessionImplTest, TestGetUIContentWithId, Function | SmallTest | L
     ASSERT_NE(nullptr, session);
     ASSERT_EQ(WMError::WM_OK, window->Create(nullptr, session));
     window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
-    
+
     ASSERT_EQ(nullptr, window->GetUIContentWithId(102));
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: TestGetUIContentWithId end";
 }
 
@@ -2149,6 +2175,7 @@ HWTEST_F(WindowSessionImplTest, IsFocused, Function | SmallTest | Level2)
     ASSERT_NE(nullptr, session);
     ASSERT_EQ(WMError::WM_OK, window->Create(nullptr, session));
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->RequestFocus());
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
 }
 
 /**
@@ -2170,7 +2197,8 @@ HWTEST_F(WindowSessionImplTest, NapiSetUIContent, Function | SmallTest | Level2)
 
     window->SetUIContentByName(url, nullptr, nullptr, nullptr);
     window->SetUIContentByAbc(url, nullptr, nullptr, nullptr);
-    WMError res1 = window->NapiSetUIContent(url, nullptr, nullptr, true, nullptr, ability);
+    WMError res1 = window->NapiSetUIContent(url, nullptr, nullptr, BackupAndRestoreType::CONTINUATION,
+        nullptr, ability);
     ASSERT_EQ(res1, WMError::WM_ERROR_INVALID_WINDOW);
 }
 
@@ -2189,7 +2217,8 @@ HWTEST_F(WindowSessionImplTest, GetAbcContent, Function | SmallTest | Level2)
     ASSERT_NE(window, nullptr);
     window->property_->SetPersistentId(1);
     std::string url = "";
-    WMError res = window->SetUIContentInner(url, nullptr, nullptr, WindowSetUIContentType::BY_ABC, nullptr);
+    WMError res = window->SetUIContentInner(url, nullptr, nullptr, WindowSetUIContentType::BY_ABC,
+        BackupAndRestoreType::NONE, nullptr);
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
 }
 
@@ -2257,6 +2286,7 @@ HWTEST_F(WindowSessionImplTest, Notify03, Function | SmallTest | Level2)
     AAFwk::WantParams wantParams;
     WSError ret = window->NotifyTransferComponentData(wantParams);
     ASSERT_EQ(ret, WSError::WS_OK);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
 }
 
 /**

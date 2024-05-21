@@ -482,6 +482,10 @@ WSError Session::SetTouchable(bool touchable)
     if (!IsSessionValid()) {
         return WSError::WS_ERROR_INVALID_SESSION;
     }
+    if (touchable !=  GetSessionProperty()->GetTouchable()) {
+        TLOGI(WmsLogTag::WMS_EVENT, "id:%{public}d touchable:%{public}d", GetPersistentId(),
+            static_cast<int>(touchable));
+    }
     UpdateSessionTouchable(touchable);
     return WSError::WS_OK;
 }
@@ -508,13 +512,19 @@ bool Session::GetTouchable() const
 
 void Session::SetForceTouchable(bool forceTouchable)
 {
+    if (forceTouchable != forceTouchable_) {
+        TLOGI(WmsLogTag::WMS_EVENT, "id:%{public}d forceTouchable:%{public}d", GetPersistentId(),
+            static_cast<int>(forceTouchable));
+    }
     forceTouchable_ = forceTouchable;
 }
 
 void Session::SetSystemTouchable(bool touchable)
 {
-    WLOGFD("SetSystemTouchable id: %{public}d, systemtouchable: %{public}d, propertytouchable: %{public}d",
-        GetPersistentId(), touchable, GetTouchable());
+    if (touchable != systemTouchable_) {
+        TLOGI(WmsLogTag::WMS_EVENT, "id:%{public}d systemTouchable_:%{public}d", GetPersistentId(),
+            static_cast<int>(touchable));
+    }
     systemTouchable_ = touchable;
     NotifySessionInfoChange();
 }
@@ -818,6 +828,22 @@ WSError Session::UpdateDensity()
     return WSError::WS_OK;
 }
 
+WSError Session::UpdateOrientation()
+{
+    TLOGD(WmsLogTag::DMS, "update orientation: id: %{public}d.", GetPersistentId());
+    if (!IsSessionValid()) {
+        TLOGE(WmsLogTag::DMS, "update orientation failed because of session is invalid, id = %{public}d.",
+            GetPersistentId());
+        return WSError::WS_ERROR_INVALID_SESSION;
+    }
+    if (sessionStage_ == nullptr) {
+        TLOGE(WmsLogTag::DMS, "update orientation failed because of sessionStage_ is nullptr, id = %{public}d.",
+            GetPersistentId());
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    return sessionStage_->UpdateOrientation();
+}
+
 __attribute__((no_sanitize("cfi"))) WSError Session::Connect(const sptr<ISessionStage>& sessionStage,
     const sptr<IWindowEventChannel>& eventChannel,
     const std::shared_ptr<RSSurfaceNode>& surfaceNode,
@@ -1070,6 +1096,10 @@ void Session::NotifyForegroundInteractiveStatus(bool interactive)
 
 void Session::SetForegroundInteractiveStatus(bool interactive)
 {
+    if (interactive !=  foregroundInteractiveStatus_) {
+        TLOGI(WmsLogTag::WMS_EVENT, "id:%{public}d interactive:%{public}d", GetPersistentId(),
+            static_cast<int>(interactive));
+    }
     foregroundInteractiveStatus_.store(interactive);
     NotifySessionInfoChange();
 }
@@ -2572,6 +2602,16 @@ WSRectF Session::GetBounds()
     return bounds_;
 }
 
+void Session::SetRotation(Rotation rotation)
+{
+    rotation_ = rotation;
+}
+
+Rotation Session::GetRotation() const
+{
+    return rotation_;
+}
+
 WSError Session::TransferSearchElementInfo(int64_t elementId, int32_t mode, int64_t baseParent,
     std::list<Accessibility::AccessibilityElementInfo>& infos)
 {
@@ -2720,7 +2760,16 @@ void Session::SetTouchHotAreas(const std::vector<Rect>& touchHotAreas)
     if (property == nullptr) {
         return;
     }
-
+    std::vector<Rect> lastTouchHotAreas;
+    property->GetTouchHotAreas(lastTouchHotAreas);
+    if (touchHotAreas != lastTouchHotAreas) {
+        std::string rectStr = "";
+        for (const auto& rect : touchHotAreas) {
+            rectStr = rectStr + " hot : [ " + std::to_string(rect.posX_) +" , " + std::to_string(rect.posY_) +
+            " , " + std::to_string(rect.width_) + " , " + std::to_string(rect.height_) + "]";
+        }
+        TLOGI(WmsLogTag::WMS_EVENT, "id:%{public}d rects:%{public}s", GetPersistentId(), rectStr.c_str());
+    }
     property->SetTouchHotAreas(touchHotAreas);
 }
 
