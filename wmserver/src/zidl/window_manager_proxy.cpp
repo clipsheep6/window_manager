@@ -890,7 +890,7 @@ std::shared_ptr<Media::PixelMap> WindowManagerProxy::GetSnapshot(int32_t windowI
     return map;
 }
 
-WMError WindowManagerProxy::SetGestureNavigaionEnabled(bool enable)
+WMError WindowManagerProxy::SetGestureNavigationEnabled(bool enable)
 {
     MessageParcel data;
     MessageParcel reply;

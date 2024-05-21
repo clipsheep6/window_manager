@@ -3427,7 +3427,7 @@ float SceneSessionManager::GetDisplayBrightness() const
     return displayBrightness_;
 }
 
-WMError SceneSessionManager::SetGestureNavigaionEnabled(bool enable)
+WMError SceneSessionManager::SetGestureNavigationEnabled(bool enable)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
         WLOGFE("SetGestureNavigationEnabled permission denied!");
@@ -3448,7 +3448,7 @@ WMError SceneSessionManager::SetGestureNavigaionEnabled(bool enable)
         }
         return WMError::WM_OK;
     };
-    return taskScheduler_->PostSyncTask(task, "SetGestureNavigaionEnabled");
+    return taskScheduler_->PostSyncTask(task, "SetGestureNavigationEnabled");
 }
 
 WSError SceneSessionManager::SetFocusedSessionId(int32_t persistentId)

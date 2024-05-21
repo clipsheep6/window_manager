@@ -1038,9 +1038,9 @@ WMError WindowManager::DumpSessionWithId(int32_t persistentId, std::vector<std::
     return ret;
 }
 
-WMError WindowManager::SetGestureNavigaionEnabled(bool enable) const
+WMError WindowManager::SetGestureNavigationEnabled(bool enable) const
 {
-    WMError ret = SingletonContainer::Get<WindowAdapter>().SetGestureNavigaionEnabled(enable);
+    WMError ret = SingletonContainer::Get<WindowAdapter>().SetGestureNavigationEnabled(enable);
     if (ret != WMError::WM_OK) {
         WLOGFE("set gesture navigaion enabled failed");
     }
