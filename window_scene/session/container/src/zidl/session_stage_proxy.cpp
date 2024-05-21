@@ -137,6 +137,29 @@ void SessionStageProxy::UpdateDensity()
     }
 }
 
+WSError SessionStageProxy::UpdateOrientation()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        TLOGE(WmsLogTag::DMS, "WriteInterfaceToken failed.");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_ORIENTATION_CHANGE),
+        data, reply, option) != ERR_NONE) {
+        TLOGE(WmsLogTag::DMS, "SendRequest failed.");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    WSError ret = static_cast<WSError>(reply.ReadInt32());
+    if (ret != WSError::WS_OK) {
+        TLOGE(WmsLogTag::DMS, "update orientation by ipc failed with error: %{public}d.", ret);
+    }
+    return ret;
+}
+
 WSError SessionStageProxy::HandleBackEvent()
 {
     MessageParcel data;
@@ -601,6 +624,35 @@ void SessionStageProxy::NotifyTransformChange(const Transform& transform)
         data, reply, option) != ERR_NONE) {
         WLOGFE("Send NotifyTransformChange Requset failed");
     }
+}
+
+WSError SessionStageProxy::NotifyDensityFollowHost(bool isFollowHost, float densityValue)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (!data.WriteBool(isFollowHost)) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "Write isFollowHost failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (!data.WriteFloat(densityValue)) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "Write densityValue failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DENSITY_FOLLOW_HOST),
+        data, reply, option) != ERR_NONE) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    return WSError::WS_OK;
 }
 
 WSError SessionStageProxy::NotifyDialogStateChange(bool isForeground)

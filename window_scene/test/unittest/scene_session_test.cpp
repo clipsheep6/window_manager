@@ -143,38 +143,38 @@ HWTEST_F(SceneSessionTest, BackgroundTask01, Function | SmallTest | Level2)
     SessionInfo info;
     info.abilityName_ = "BackgroundTask01";
     info.bundleName_ = "BackgroundTask01";
-    sptr<Rosen::ISession> session_;
-    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
+    sptr<SceneSession::SpecificSessionCallback> specificCallback =
         new (std::nothrow) SceneSession::SpecificSessionCallback();
-    EXPECT_NE(specificCallback_, nullptr);
+    EXPECT_NE(specificCallback, nullptr);
     int resultValue = 0;
-    sptr<SceneSession> scensession;
+    sptr<SceneSession> sceneSession;
 
-    scensession = new (std::nothrow) SceneSession(info, nullptr);
-    EXPECT_NE(scensession, nullptr);
-    scensession->isActive_ = true;
-    auto result = scensession->BackgroundTask();
+    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(sceneSession, nullptr);
+    sceneSession->isActive_ = true;
+    auto result = sceneSession->BackgroundTask();
     ASSERT_EQ(result, WSError::WS_OK);
-    scensession->isActive_ = true;
-    result = scensession->BackgroundTask(false);
+    sceneSession->isActive_ = true;
+    result = sceneSession->BackgroundTask(false);
     ASSERT_EQ(result, WSError::WS_OK);
-    specificCallback_->onCreate_ = [&resultValue, specificCallback_](const SessionInfo &info,
-                                                            sptr<WindowSessionProperty> property) -> sptr<SceneSession>
+    specificCallback->onCreate_ =
+        [&resultValue, specificCallback](const SessionInfo& info,
+        sptr<WindowSessionProperty> property) -> sptr<SceneSession>
     {
-        sptr<SceneSession> scensessionreturn = new (std::nothrow) SceneSession(info, specificCallback_);
-        EXPECT_NE(scensessionreturn, nullptr);
+        sptr<SceneSession> sceneSessionReturn = new (std::nothrow) SceneSession(info, specificCallback);
+        EXPECT_NE(sceneSessionReturn, nullptr);
         resultValue = 1;
-        return scensessionreturn;
+        return sceneSessionReturn;
     };
-    scensession = new (std::nothrow) SceneSession(info, specificCallback_);
-    EXPECT_NE(scensession, nullptr);
-    scensession->UpdateSessionState(SessionState::STATE_CONNECT);
-    scensession->isActive_ = true;
-    result = scensession->BackgroundTask();
+    sceneSession = new (std::nothrow) SceneSession(info, specificCallback);
+    EXPECT_NE(sceneSession, nullptr);
+    sceneSession->UpdateSessionState(SessionState::STATE_CONNECT);
+    sceneSession->isActive_ = true;
+    result = sceneSession->BackgroundTask();
     ASSERT_EQ(result, WSError::WS_OK);
-    scensession->UpdateSessionState(SessionState::STATE_CONNECT);
-    scensession->isActive_ = true;
-    result = scensession->BackgroundTask(false);
+    sceneSession->UpdateSessionState(SessionState::STATE_CONNECT);
+    sceneSession->isActive_ = true;
+    result = sceneSession->BackgroundTask(false);
     ASSERT_EQ(result, WSError::WS_OK);
 }
 
@@ -962,11 +962,17 @@ HWTEST_F(SceneSessionTest, IsShowWhenLocked, Function | SmallTest | Level2)
     scensession = new (std::nothrow) SceneSession(info, specificCallback_);
     EXPECT_NE(scensession, nullptr);
     sptr<WindowSessionProperty> property = new WindowSessionProperty();
+    EXPECT_NE(property, nullptr);
     property->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
     property->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
     ASSERT_EQ(scensession->IsShowWhenLocked(), false);
     scensession->property_ = property;
+    scensession->SetTemporarilyShowWhenLocked(true);
+    ASSERT_EQ(scensession->IsShowWhenLocked(), true);
     property->SetWindowFlags(4);
+    scensession->SetTemporarilyShowWhenLocked(false);
+    ASSERT_EQ(scensession->IsShowWhenLocked(), true);
+    scensession->SetTemporarilyShowWhenLocked(true);
     ASSERT_EQ(scensession->IsShowWhenLocked(), true);
 }
 
@@ -1340,21 +1346,19 @@ HWTEST_F(SceneSessionTest, BackgroundTask02, Function | SmallTest | Level2)
     SessionInfo info;
     info.abilityName_ = "BackgroundTask02";
     info.bundleName_ = "BackgroundTask02";
-    sptr<Rosen::ISession> session_;
-    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
+    sptr<SceneSession::SpecificSessionCallback> specificCallback =
         new (std::nothrow) SceneSession::SpecificSessionCallback();
-    EXPECT_NE(specificCallback_, nullptr);
-    sptr<SceneSession> scensession = new (std::nothrow) SceneSession(info, nullptr);
-    EXPECT_NE(scensession, nullptr);
-
+    EXPECT_NE(specificCallback, nullptr);
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(sceneSession, nullptr);
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     property->SetAnimationFlag(static_cast<uint32_t>(WindowAnimation::CUSTOM));
-    scensession->SetSessionProperty(property);
-    scensession->isActive_ = true;
-    auto result = scensession->BackgroundTask();
+    sceneSession->SetSessionProperty(property);
+    sceneSession->isActive_ = true;
+    auto result = sceneSession->BackgroundTask();
     ASSERT_EQ(result, WSError::WS_OK);
-    scensession->isActive_ = true;
-    result = scensession->BackgroundTask(false);
+    sceneSession->isActive_ = true;
+    result = sceneSession->BackgroundTask(false);
     ASSERT_EQ(result, WSError::WS_OK);
 }
 
@@ -3576,6 +3580,72 @@ HWTEST_F(SceneSessionTest, IsStartMoving, Function | SmallTest | Level2)
     sceneSession->ClearExtWindowFlags();
     bool isRegister = true;
     sceneSession->UpdateRectChangeListenerRegistered(isRegister);
+}
+
+/**
+ * @tc.name: SetTemporarilyShowWhenLocked
+ * @tc.desc:  * @tc.name: SetTemporarilyShowWhenLocked
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, SetTemporarilyShowWhenLocked, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "SetTemporarilyShowWhenLocked";
+    info.bundleName_ = "SetTemporarilyShowWhenLocked";
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(sceneSession, nullptr);
+    bool isTemporarilyShowWhenLocked = sceneSession->IsTemporarilyShowWhenLocked();
+    ASSERT_EQ(isTemporarilyShowWhenLocked, false);
+    sceneSession->SetTemporarilyShowWhenLocked(true);
+    isTemporarilyShowWhenLocked = sceneSession->IsTemporarilyShowWhenLocked();
+    ASSERT_EQ(isTemporarilyShowWhenLocked, true);
+    sceneSession->SetTemporarilyShowWhenLocked(false);
+    isTemporarilyShowWhenLocked = sceneSession->IsTemporarilyShowWhenLocked();
+    ASSERT_EQ(isTemporarilyShowWhenLocked, false);
+}
+
+/**
+ * @tc.name: GetShowWhenLockedFlagValue
+ * @tc.desc:  * @tc.name: GetShowWhenLockedFlagValue
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, GetShowWhenLockedFlagValue, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "GetShowWhenLockedFlagValue";
+    info.bundleName_ = "GetShowWhenLockedFlagValue";
+    info.windowType_ = 1;
+    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(specificCallback_, nullptr);
+    sptr<SceneSession> scensession;
+    scensession = new (std::nothrow) SceneSession(info, specificCallback_);
+    EXPECT_NE(scensession, nullptr);
+    sptr<WindowSessionProperty> property = new WindowSessionProperty();
+    EXPECT_NE(property, nullptr);
+    property->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+    property->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
+    ASSERT_EQ(scensession->GetShowWhenLockedFlagValue(), false);
+    scensession->property_ = property;
+    property->SetWindowFlags(4);
+    ASSERT_EQ(scensession->GetShowWhenLockedFlagValue(), true);
+}
+
+/**
+ * @tc.name: SetClientIdentityToken
+ * @tc.desc: SetClientIdentityToken
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest, SetClientIdentityToken, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "SetClientIdentityToken";
+    info.bundleName_ = "SetClientIdentityToken";
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(sceneSession, nullptr);
+    std::string token = "testToken";
+    sceneSession->SetClientIdentityToken(token);
+    ASSERT_EQ(sceneSession->GetClientIdentityToken(), token);
 }
 }
 }

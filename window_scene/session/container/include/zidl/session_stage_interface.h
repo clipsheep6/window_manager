@@ -44,6 +44,7 @@ public:
     virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) = 0;
     virtual void UpdateDensity() = 0;
+    virtual WSError UpdateOrientation() = 0;
     virtual WSError HandleBackEvent() = 0;
     virtual WSError MarkProcessed(int32_t eventId) = 0;
     virtual WSError UpdateFocus(bool isFocused) = 0;
@@ -82,6 +83,10 @@ public:
     virtual int32_t GetPersistentId() const
     {
         return -1;
+    }
+    virtual WSError NotifyDensityFollowHost(bool isFollowHost, float densityValue)
+    {
+        return WSError::WS_OK;
     }
     virtual WSError NotifySearchElementInfoByAccessibilityId(int64_t elementId, int32_t mode, int64_t baseParent,
         std::list<Accessibility::AccessibilityElementInfo>& infos)
