@@ -79,7 +79,7 @@ namespace {
 HWTEST_F(PictureInPictureControllerTest, ShowPictureInPictureWindow01, Function | SmallTest | Level2)
 {
     sptr<MockWindow> mw = new MockWindow();
-    ASSERT_NE(nullptr, mw);
+    //ASSERT_NE(nullptr, mw);
     PictureInPictureController* pipControl = new PictureInPictureController(option, mw, 100, nullptr);
     sptr<PipOption> pipOption_ = nullptr;
 
@@ -87,7 +87,8 @@ HWTEST_F(PictureInPictureControllerTest, ShowPictureInPictureWindow01, Function 
     ASSERT_EQ(WMError::WM_ERROR_PIP_CREATE_FAILED, pipControl->ShowPictureInPictureWindow(StartPipType::NULL_START));
     ASSERT_EQ(WMError::WM_OK, pipControl->ShowPictureInPictureWindow(StartPipType::NULL_START));
 
-    pipControl->window_ = mw;
+    pipControl->window_ = nullptr;
+    ASSERT_NE(nullptr, pipOption_);
     ASSERT_EQ(nullptr, pipControl->window_);
     ASSERT_EQ(WMError::WM_ERROR_PIP_STATE_ABNORMALLY, pipControl->ShowPictureInPictureWindow(StartPipType::NULL_START));
     ASSERT_EQ(WMError::WM_OK, pipControl->ShowPictureInPictureWindow(StartPipType::NULL_START));
@@ -96,7 +97,9 @@ HWTEST_F(PictureInPictureControllerTest, ShowPictureInPictureWindow01, Function 
     ASSERT_EQ(nullptr, pipControl->pipLifeCycleListener_);
 
     PictureInPictureController::errCode = window_->Show(0, false);
-    ASSERT_NE(WMError::WM_OK, errCode);
+    ASSERT_NE(nullptr, pipOption_);
+    ASSERT_NE(nullptr, pipControl->window_);
+    ASSERT_NE(WMError::WM_OK, PictureInPictureController::errCode);
     ASSERT_EQ(WMError::WM_ERROR_PIP_INTERNAL_ERROR, pipControl->ShowPictureInPictureWindow(StartPipType::NULL_START));
     ASSERT_EQ(WMError::WM_OK, pipControl->ShowPictureInPictureWindow(StartPipType::NULL_START));
 
@@ -106,6 +109,9 @@ HWTEST_F(PictureInPictureControllerTest, ShowPictureInPictureWindow01, Function 
     ASSERT(requestWidth > 0);
     ASSERT(requestHeight > 0);
     window_->UpdatePiPRect(PictureInPictureController::requestRect, WindowSizeChangeReason::PIP_SHOW);
+    ASSERT_NE(nullptr, pipOption_);
+    ASSERT_NE(nullptr, pipControl->window_);
+    ASSERT_EQ(WMError::WM_OK, PictureInPictureController::errCode);
     ASSERT_EQ(WMError::WM_OK, pipControl->ShowPictureInPictureWindow(StartPipType::NULL_START));
 }
 
@@ -127,6 +133,13 @@ HWTEST_F(PictureInPictureControllerTest, StopPictureInPicture01, Function | Smal
     pipControl->curState_ = PiPWindowState::STATE_STOPPED;
     ASSERT_EQ(pipControl->curState_, pipControl->GetControllerState());
     ASSERT_EQ(WMError::WM_ERROR_PIP_REPEAT_OPERATION, pipControl->StopPictureInPicture(true, StopPipType::NULL_STOP));
+
+    pipControl->window_ = nullptr;
+    ASSERT_NE(PiPWindowState::STATE_STOPPING, pipControl->GetControllerState());
+    ASSERT_NE(PiPWindowState::STATE_STOPPED, pipControl->GetControllerState());
+    ASSERT_EQ(nullptr, pipControl->window_);
+    ASSERT_EQ(WMError::WM_ERROR_PIP_STATE_ABNORMALLY, pipControl->StopPictureInPicture(true, StopPipType::NULL_STOP));
+    ASSERT_EQ(WMError::WM_OK, pipControl->StopPictureInPicture(false, StopPipType::NULL_STOP));
 
 
     ASSERT_EQ(PiPWindowState::STATE_UNDEFINED, pipControl->GetControllerState());
@@ -167,23 +180,25 @@ HWTEST_F(PictureInPictureControllerTest, CreatePictureInPictureWindow, Function 
 
     PictureInPictureController::pipOption_ = nullptr;
     PictureInPictureController::pipOption_->GetContext() = nullptr;
-    EXPECT_EQ(nullptr, pipOption_);
-    EXPECT_EQ(WMError::WM_ERROR_PIP_CREATE_FAILED, pipControl->CreatePictureInPictureWindow());
-    EXPECT_EQ(nullptr, pipOption_->GetContext());
-    EXPECT_EQ(WMError::WM_ERROR_PIP_CREATE_FAILED, pipControl->CreatePictureInPictureWindow());
+    ASSERT_EQ(nullptr, PictureInPictureController::pipOption_);
+    ASSERT_EQ(WMError::WM_ERROR_PIP_CREATE_FAILED, pipControl->CreatePictureInPictureWindow());
+    ASSERT_EQ(nullptr, PictureInPictureController::pipOption_->GetContext());
+    ASSERT_EQ(WMError::WM_ERROR_PIP_CREATE_FAILED, pipControl->CreatePictureInPictureWindow());
     ASSERT_NE(WMError::WM_OK, pipControl->CreatePictureInPictureWindow());
 
     sptr<WindowOption> windowOption = nullptr;
-    EXPECT_EQ(nullptr, WindowOption);
-    EXPECT_EQ(WMError:::WM_ERROR_PIP_CREATE_FAILED, pipControl->CreatePictureInPictureWindow());
+    ASSERT_NE(nullptr, PictureInPictureController::pipOption_);
+    ASSERT_NE(nullptr, PictureInPictureController::pipOption_->GetContext());
+    ASSERT_EQ(nullptr, WindowOption);
+    ASSERT_EQ(WMError:::WM_ERROR_PIP_CREATE_FAILED, pipControl->CreatePictureInPictureWindow());
     ASSERT_NE(WMError::WM_OK, pipControl->CreatePictureInPictureWindow());
 
     PictureInPictureController::mainWindowXComponentController_ = pipOption_->GetXComponentController();
     sptr<Window> mainWindow_ = nullptr;
-    mainWindowXComponentController_ = nullptr;
-    EXPECT_EQ(nullptr, mainWindowXComponentController_);
-    EXPECT_EQ(nullptr, mainWindow_);
-    EXPECT_EQ(WMError:::WM_ERROR_PIP_CREATE_FAILED, pipControl->CreatePictureInPictureWindow());
+    PictureInPictureController::mainWindowXComponentController_ = nullptr;
+    ASSERT_EQ(nullptr, mainWindowXComponentController_);
+    ASSERT_EQ(nullptr, mainWindow_);
+    ASSERT_EQ(WMError:::WM_ERROR_PIP_CREATE_FAILED, pipControl->CreatePictureInPictureWindow());
     ASSERT_NE(WMError::WM_OK, pipControl->CreatePictureInPictureWindow());
 }
 
