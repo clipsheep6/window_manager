@@ -85,12 +85,12 @@ HWTEST_F(GestureNavigationEnabledTest, SetGestureNavigationEnabled, Function | M
     ASSERT_NE(lisenter_, nullptr);
 
     auto& windowManager =  WindowManager::GetInstance();
-    windowManager.SetGestureNavigaionEnabled(false);
+    windowManager.SetGestureNavigationEnabled(false);
     sleep(WAIT_SLEEP_TIME);
 
     windowManager.RegisterGestureNavigationEnabledChangedListener(lisenter_);
     sleep(WAIT_SLEEP_TIME);
-    windowManager.SetGestureNavigaionEnabled(true);
+    windowManager.SetGestureNavigationEnabled(true);
     auto result = lisenter_->future_.GetResult(WAIT_FUTURE_RESULT);
    
     if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
@@ -99,7 +99,7 @@ HWTEST_F(GestureNavigationEnabledTest, SetGestureNavigationEnabled, Function | M
         ASSERT_EQ(result, false);
     }
     lisenter_->future_.Reset(true);
-    windowManager.SetGestureNavigaionEnabled(false);
+    windowManager.SetGestureNavigationEnabled(false);
     result = lisenter_->future_.GetResult(WAIT_FUTURE_RESULT);
     if (!SceneBoardJudgement::IsSceneBoardEnabled()) {
         ASSERT_EQ(result, false);

@@ -448,10 +448,10 @@ std::shared_ptr<Media::PixelMap> WindowAdapter::GetSnapshot(int32_t windowId)
     return windowManagerServiceProxy_->GetSnapshot(windowId);
 }
 
-WMError WindowAdapter::SetGestureNavigaionEnabled(bool enable)
+WMError WindowAdapter::SetGestureNavigationEnabled(bool enable)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
-    return windowManagerServiceProxy_->SetGestureNavigaionEnabled(enable);
+    return windowManagerServiceProxy_->SetGestureNavigationEnabled(enable);
 }
 
 void WindowAdapter::DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event)

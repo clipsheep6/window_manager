@@ -161,30 +161,30 @@ HWTEST_F(SceneSessionManagerTest, SetBrightness, Function | SmallTest | Level3)
 }
 
 /**
- * @tc.name: SetGestureNavigaionEnabled
+ * @tc.name: SetGestureNavigationEnabled
  * @tc.desc: SceneSessionManager set gesture navigation enabled
  * @tc.type: FUNC
  */
-HWTEST_F(SceneSessionManagerTest, SetGestureNavigaionEnabled, Function | SmallTest | Level3)
+HWTEST_F(SceneSessionManagerTest, SetGestureNavigationEnabled, Function | SmallTest | Level3)
 {
     ASSERT_NE(callbackFunc_, nullptr);
 
-    WMError result00 = ssm_->SetGestureNavigaionEnabled(true);
+    WMError result00 = ssm_->SetGestureNavigationEnabled(true);
     ASSERT_EQ(result00, WMError::WM_DO_NOTHING);
 
     ssm_->SetGestureNavigationEnabledChangeListener(callbackFunc_);
-    WMError result01 = ssm_->SetGestureNavigaionEnabled(true);
+    WMError result01 = ssm_->SetGestureNavigationEnabled(true);
     ASSERT_EQ(result01, WMError::WM_OK);
     sleep(WAIT_SLEEP_TIME);
     ASSERT_EQ(gestureNavigationEnabled_, true);
 
-    WMError result02 = ssm_->SetGestureNavigaionEnabled(false);
+    WMError result02 = ssm_->SetGestureNavigationEnabled(false);
     ASSERT_EQ(result02, WMError::WM_OK);
     sleep(WAIT_SLEEP_TIME);
     ASSERT_EQ(gestureNavigationEnabled_, false);
 
     ssm_->SetGestureNavigationEnabledChangeListener(nullptr);
-    WMError result03 = ssm_->SetGestureNavigaionEnabled(true);
+    WMError result03 = ssm_->SetGestureNavigationEnabled(true);
     ASSERT_EQ(result03, WMError::WM_DO_NOTHING);
 }
 
@@ -198,22 +198,22 @@ HWTEST_F(SceneSessionManagerTest, SetStatusBarEnabled, Function | SmallTest | Le
     ASSERT_NE(statusBarEnabledCallbackFunc_, nullptr);
     ssm_->SetStatusBarEnabledChangeListener(nullptr);
 
-    WMError result00 = ssm_->SetGestureNavigaionEnabled(true);
+    WMError result00 = ssm_->SetGestureNavigationEnabled(true);
     ASSERT_EQ(result00, WMError::WM_DO_NOTHING);
 
     ssm_->SetStatusBarEnabledChangeListener(statusBarEnabledCallbackFunc_);
-    WMError result01 = ssm_->SetGestureNavigaionEnabled(true);
+    WMError result01 = ssm_->SetGestureNavigationEnabled(true);
     ASSERT_EQ(result01, WMError::WM_OK);
     sleep(WAIT_SLEEP_TIME);
     ASSERT_EQ(statusBarEnabled_, true);
 
-    WMError result02 = ssm_->SetGestureNavigaionEnabled(false);
+    WMError result02 = ssm_->SetGestureNavigationEnabled(false);
     ASSERT_EQ(result02, WMError::WM_OK);
     sleep(WAIT_SLEEP_TIME);
     ASSERT_EQ(statusBarEnabled_, false);
 
     ssm_->SetStatusBarEnabledChangeListener(nullptr);
-    WMError result03 = ssm_->SetGestureNavigaionEnabled(true);
+    WMError result03 = ssm_->SetGestureNavigationEnabled(true);
     ASSERT_EQ(result03, WMError::WM_DO_NOTHING);
 }
 
@@ -2825,22 +2825,22 @@ HWTEST_F(SceneSessionManagerTest, SetDisplayBrightness, Function | SmallTest | L
 }
 
 /**
- * @tc.name: SetGestureNavigaionEnabled02
+ * @tc.name: SetGestureNavigationEnabled02
  * @tc.desc: SceneSesionManager set gesture navigaion enable
  * @tc.type: FUNC
 */
-HWTEST_F(SceneSessionManagerTest, SetGestureNavigaionEnabled02, Function | SmallTest | Level3)
+HWTEST_F(SceneSessionManagerTest, SetGestureNavigationEnabled02, Function | SmallTest | Level3)
 {
     bool enable = true;
-    WMError result01 = ssm_->SetGestureNavigaionEnabled(enable);
+    WMError result01 = ssm_->SetGestureNavigationEnabled(enable);
     EXPECT_EQ(result01, WMError::WM_DO_NOTHING);
     ProcessGestureNavigationEnabledChangeFunc funcGesture_ = SceneSessionManagerTest::callbackFunc_;
     ssm_->SetGestureNavigationEnabledChangeListener(funcGesture_);
-    WMError result02 = ssm_->SetGestureNavigaionEnabled(enable);
+    WMError result02 = ssm_->SetGestureNavigationEnabled(enable);
     EXPECT_EQ(result02, WMError::WM_OK);
     ProcessStatusBarEnabledChangeFunc funcStatus_ = ProcessStatusBarEnabledChangeFuncTest;
     ssm_->SetStatusBarEnabledChangeListener(funcStatus_);
-    WMError result03 = ssm_->SetGestureNavigaionEnabled(enable);
+    WMError result03 = ssm_->SetGestureNavigationEnabled(enable);
     ASSERT_EQ(result03, WMError::WM_OK);
 }
 

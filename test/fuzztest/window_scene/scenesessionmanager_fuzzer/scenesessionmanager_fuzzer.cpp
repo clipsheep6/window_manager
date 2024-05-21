@@ -251,7 +251,7 @@ void ProxyInterfaceFuzzTestPart1(const uint8_t* data, size_t size)
     proxy->CheckWindowId(windowId, pid);
 
     bool enable = source.GetObject<bool>();
-    proxy->SetGestureNavigaionEnabled(enable);
+    proxy->SetGestureNavigationEnabled(enable);
 
     std::vector<sptr<AccessibilityWindowInfo>> windowInfos{
         UnmarshallingDataTo<AccessibilityWindowInfo>(data, size)
