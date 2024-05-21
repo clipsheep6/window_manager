@@ -277,6 +277,7 @@ HWTEST_F(MainSessionTest, TransferKeyEvent03, Function | SmallTest | Level1)
 HWTEST_F(MainSessionTest, ProcessPointDownSession, Function | SmallTest | Level1)
 {
     WSRect rect;
+    ASSERT_NE(mainSession_, nullptr);
     mainSession_->UpdatePointerArea(rect);
     ASSERT_EQ(WSError::WS_OK, mainSession_->ProcessPointDownSession(50, 100));
 }
