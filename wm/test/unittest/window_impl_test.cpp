@@ -4154,6 +4154,191 @@ HWTEST_F(WindowImplTest, GetSubWindow03, Function | SmallTest | Level3)
 
     ASSERT_EQ(std::vector<sptr<Window>>(), window->GetSubWindow(parentId));
 }
+
+/**
+ * @tc.name: CreateSurfaceNode
+ * @tc.desc: CreateSurfaceNode
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, CreateSurfaceNode, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    ASSERT_NE(nullptr, option);
+    option->SetWindowName("CreateSurfaceNode");
+    sptr<WindowImpl> window = new (std::nothrow) WindowImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->surfaceNode_ = nullptr;
+    Transform trans;
+    window->TransformSurfaceNode(trans);
+    std::string name = "CreateSurfaceNode";
+    auto ret = window->CreateSurfaceNode(name, WindowType::WINDOW_TYPE_POINTER);
+    ASSERT_NE(nullptr, ret);
+    ret = window->CreateSurfaceNode(name, WindowType::WINDOW_TYPE_UI_EXTENSION);
+    ASSERT_NE(nullptr, ret);
+}
+
+/**
+ * @tc.name: SetDefaultOption
+ * @tc.desc: SetDefaultOption
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, SetDefaultOption, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    ASSERT_NE(nullptr, option);
+    option->SetWindowName("SetDefaultOption");
+    sptr<WindowImpl> window = new (std::nothrow) WindowImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_STATUS_BAR);
+    window->SetDefaultOption();
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW);
+    window->SetDefaultOption();
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_KEYGUARD);
+    window->SetDefaultOption();
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_DRAGGING_EFFECT);
+    window->SetDefaultOption();
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_COMPONENT);
+    window->SetDefaultOption();
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_DIALOG);
+    window->SetDefaultOption();
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_POINTER);
+    window->SetDefaultOption();
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_DOCK_SLICE);
+    window->SetDefaultOption();
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_SYSTEM_TOAST);
+    window->SetDefaultOption();
+    Transform trans;
+    ASSERT_EQ(trans, window->GetZoomTransform());
+}
+
+/**
+ * @tc.name: SetTextFieldAvoidInfo
+ * @tc.desc: SetTextFieldAvoidInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, SetTextFieldAvoidInfo, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    ASSERT_NE(nullptr, option);
+    option->SetWindowName("SetTextFieldAvoidInfo");
+    sptr<WindowImpl> window = new (std::nothrow) WindowImpl(option);
+    ASSERT_NE(nullptr, window);
+    ASSERT_EQ(true, window->IsAllowHaveSystemSubWindow());
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_DIALOG);
+    ASSERT_EQ(false, window->IsAllowHaveSystemSubWindow());
+    window->SetNeedDefaultAnimation(true);
+    ASSERT_EQ(true, window->needDefaultAnimation_);
+    window->SetNeedDefaultAnimation(false);
+    ASSERT_EQ(false, window->needDefaultAnimation_);
+    ASSERT_EQ(WMError::WM_OK, window->SetTextFieldAvoidInfo(1.0, 1.0));
+    auto ret = window->CheckCameraFloatingWindowMultiCreated(WindowType::WINDOW_TYPE_FLOAT_CAMERA);
+    ASSERT_EQ(false, ret);
+}
+
+/**
+ * @tc.name: SetSpecificBarProperty
+ * @tc.desc: SetSpecificBarProperty
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, SetSpecificBarProperty, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    ASSERT_NE(nullptr, option);
+    option->SetWindowName("SetSpecificBarProperty");
+    sptr<WindowImpl> window = new (std::nothrow) WindowImpl(option);
+    ASSERT_NE(nullptr, window);
+    SystemBarProperty property;
+    auto ret = window->SetSpecificBarProperty(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW, property);
+    ASSERT_EQ(WMError::WM_OK, ret);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->UpdateSystemBarProperty(true));
+    window->state_ = WindowState::STATE_CREATED;
+    ASSERT_EQ(WMError::WM_OK, window->UpdateSystemBarProperty(true));
+    ASSERT_EQ(WMError::WM_OK, window->UpdateSystemBarProperty(false));
+}
+
+/**
+ * @tc.name: NeedToStopShowing
+ * @tc.desc: NeedToStopShowing
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, NeedToStopShowing, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    ASSERT_NE(nullptr, option);
+    option->SetWindowName("SetSpecificBarProperty");
+    sptr<WindowImpl> window = new (std::nothrow) WindowImpl(option);
+    ASSERT_NE(nullptr, window);
+    ASSERT_EQ(true, window->NeedToStopShowing());
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_END);
+    ASSERT_EQ(false, window->NeedToStopShowing());
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
+    window->property_->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    ASSERT_EQ(false, window->NeedToStopShowing());
+}
+
+/**
+ * @tc.name: SetWindowGravity
+ * @tc.desc: SetWindowGravity
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, SetWindowGravity, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    ASSERT_NE(nullptr, option);
+    option->SetWindowName("SetSpecificBarProperty");
+    sptr<WindowImpl> window = new (std::nothrow) WindowImpl(option);
+    ASSERT_NE(nullptr, window);
+    WindowGravity gravity = WindowGravity::WINDOW_GRAVITY_FLOAT;
+    ASSERT_EQ(WMError::WM_OK, window->SetWindowGravity(gravity, 0));
+}
+
+/**
+ * @tc.name: SetGlobalMaximizeMode
+ * @tc.desc: SetGlobalMaximizeMode
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, SetGlobalMaximizeMode, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    ASSERT_NE(nullptr, option);
+    option->SetWindowName("SetGlobalMaximizeMode");
+    sptr<WindowImpl> window = new (std::nothrow) WindowImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->state_ = WindowState::STATE_INITIAL;
+    MaximizeMode mode = MaximizeMode::MODE_AVOID_SYSTEM_BAR;
+    auto ret = window->SetGlobalMaximizeMode(mode);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, ret);
+    window->state_ = WindowState::STATE_CREATED;
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
+    ret = window->SetGlobalMaximizeMode(mode);
+    ASSERT_EQ(WMError::WM_OK, ret);
+    ASSERT_EQ(mode, window->GetGlobalMaximizeMode());
+    window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_END);
+    ret = window->SetGlobalMaximizeMode(mode);
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_PARAM, ret);
+}
+
+/**
+ * @tc.name: PendingClose
+ * @tc.desc: PendingClose
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, PendingClose, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    ASSERT_NE(nullptr, option);
+    option->SetWindowName("PendingClose");
+    sptr<WindowImpl> window = new (std::nothrow) WindowImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->DoPrepareTerminate();
+    window->PendingClose();
+    std::shared_ptr<IInputEventConsumer> inputEventConsumer = nullptr;
+    window->SetInputEventConsumer(inputEventConsumer);
+    window->SetRequestModeSupportInfo(0);
+    window->PerformBack();
+    window->UpdateWindowStateUnfrozen();
+    ASSERT_EQ(0, window->GetVSyncPeriod());
+}
 }
 } // namespace Rosen
 } // namespace OHOS
