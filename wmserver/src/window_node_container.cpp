@@ -2519,6 +2519,7 @@ WMError WindowNodeContainer::SetWindowMode(sptr<WindowNode>& node, WindowMode ds
 
     if (node->GetWindowToken() != nullptr) {
         node->GetWindowToken()->UpdateWindowMode(node->GetWindowMode());
+        WLOGFI("Set window mode successed, update node successed");
     }
     res = UpdateWindowNode(node, WindowUpdateReason::UPDATE_MODE);
     if (res != WMError::WM_OK) {
