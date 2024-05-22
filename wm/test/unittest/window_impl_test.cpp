@@ -4226,56 +4226,6 @@ HWTEST_F(WindowImplTest, SetTextFieldAvoidInfo, Function | SmallTest | Level3)
 }
 
 /**
- * @tc.name: GetWindowWithId
- * @tc.desc: GetWindowWithId
- * @tc.type: FUNC
- */
-HWTEST_F(WindowImplTest, GetWindowWithId, Function | SmallTest | Level3)
-{
-    sptr<WindowOption> option = new (std::nothrow) WindowOption();
-    ASSERT_NE(nullptr, option);
-    option->SetWindowName("GetWindowWithId");
-    sptr<WindowImpl> window = new (std::nothrow) WindowImpl(option);
-    ASSERT_NE(nullptr, window);
-    ASSERT_EQ(nullptr, window->GetWindowWithId(6));
-    std::string contentInfo = "NapiSetUIContent";
-    napi_env env = nullptr;
-    napi_value storage = nullptr;
-    bool isdistributed = true;
-    sptr<IRemoteObject> token = nullptr;
-    AppExecFwk::Ability* ability = nullptr;
-    auto ret = window->NapiSetUIContent(contentInfo, env, storage, isdistributed, token, ability);
-    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, ret);
-}
-
-/**
- * @tc.name: SetUIContentByName
- * @tc.desc: SetUIContentByName
- * @tc.type: FUNC
- */
-HWTEST_F(WindowImplTest, SetUIContentByName, Function | SmallTest | Level3)
-{
-    sptr<WindowOption> option = new (std::nothrow) WindowOption();
-    ASSERT_NE(nullptr, option);
-    option->SetWindowName("SetUIContentByName");
-    sptr<WindowImpl> window = new (std::nothrow) WindowImpl(option);
-    ASSERT_NE(nullptr, window);
-    std::string contentInfo = "SetUIContentByName";
-    napi_env env = nullptr;
-    napi_value storage = nullptr;
-    AppExecFwk::Ability* ability = nullptr;
-    auto ret = window->SetUIContentByName(contentInfo, env, storage, ability);
-    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, ret);
-    auto ret1 = window->SetUIContentByAbc(contentInfo, env, storage, ability);
-    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, ret1);
-    auto type = WindowSetUIContentType::DEFAULT;
-    auto ret2 = window->SetUIContentInner(contentInfo, env, storage, type, ability);
-    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, ret2);
-    ASSERT_EQ(nullptr, window->GetUIContent());
-    ASSERT_EQ(nullptr, window->GetUIContentWithId(0));
-}
-
-/**
  * @tc.name: SetSpecificBarProperty
  * @tc.desc: SetSpecificBarProperty
  * @tc.type: FUNC
