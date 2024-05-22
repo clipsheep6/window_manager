@@ -6047,6 +6047,56 @@ WMError SceneSessionManager::GetAccessibilityWindowInfo(std::vector<sptr<Accessi
     return taskScheduler_->PostSyncTask(task, "GetAccessibilityWindowInfo");
 }
 
+bool SceneSessionManager::CheckUnreliableWindowType(WindowType windowType)
+{
+    if (windowType == WindowType::WINDOW_TYPE_APP_SUB_WINDOW ||
+        windowType == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT ||
+        windowType == WindowType::WINDOW_TYPE_TOAST) {
+        return true;
+    }
+    TLOGI(WmsLogTag::DEFAULT, "CheckUnreliableWindowType false, WindowType = %{public}d", windowType);
+    return false;
+}
+
+WMError SceneSessionManager::GetUnreliableWindowInfo(int32_t windowId,
+    std::vector<sptr<UnreliableWindowInfo>>& infos)
+{
+    TLOGD(WmsLogTag::DEFAULT, "GetUnreliableWindowInfo Called.");
+    if (!SessionPermission::IsSystemServiceCalling()) {
+        TLOGE(WmsLogTag::DEFAULT, "GetUnreliableWindowInfo only support for system service.");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
+    auto task = [this, windowId, &infos]() {
+        std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+        for (const auto& [curWindowId, sceneSession] : sceneSessionMap_) {
+            if (sceneSession == nullptr) {
+                TLOGW(WmsLogTag::DEFAULT, "null scene session");
+                continue;
+            }
+            if (curWindowId == windowId) {
+                TLOGI(WmsLogTag::DEFAULT, "persistentId: %{public}d is parameter chosen", curWindowId);
+                FillUnreliableWindowInfo(infos, sceneSession);
+                continue;
+            }
+            if (!sceneSession->GetVisible()) {
+                TLOGD(WmsLogTag::DEFAULT, "persistentId: %{public}d is not visible", curWindowId);
+                continue;
+            }
+            TLOGD(WmsLogTag::DEFAULT, "name = %{public}s, isSystem = %{public}d, "
+                "persistentId = %{public}d, winType = %{public}d, state = %{public}d, visible = %{public}d",
+                sceneSession->GetWindowName().c_str(), sceneSession->GetSessionInfo().isSystem_, curWindowId,
+                sceneSession->GetWindowType(), sceneSession->GetSessionState(), sceneSession->GetVisible());
+            if (CheckUnreliableWindowType(sceneSession->GetWindowType())) {
+                TLOGI(WmsLogTag::DEFAULT, "GetUnreliableWindowInfo, persistentId = %{public}d, "
+                    "WindowType = %{public}d", curWindowId, sceneSession->GetWindowType());
+                FillUnreliableWindowInfo(infos, sceneSession);
+            }
+        }
+        return WMError::WM_OK;
+    };
+    return taskScheduler_->PostSyncTask(task, "GetUnreliableWindowInfo");
+}
+
 void SceneSessionManager::NotifyWindowInfoChange(int32_t persistentId, WindowUpdateType type)
 {
     WLOGFD("NotifyWindowInfoChange, persistentId = %{public}d, updateType = %{public}d", persistentId, type);
@@ -6121,6 +6171,35 @@ bool SceneSessionManager::FillWindowInfo(std::vector<sptr<AccessibilityWindowInf
     TLOGD(WmsLogTag::WMS_MAIN, "wid = %{public}d, inWid = %{public}d, uiNId = %{public}d, bundleName = %{public}s",
         info->wid_, info->innerWid_, info->uiNodeId_, info->bundleName_.c_str());
     return true;
+}
+
+void SceneSessionManager::FillUnreliableWindowInfo(
+    std::vector<sptr<UnreliableWindowInfo>>& infos, const sptr<SceneSession>& sceneSession)
+{
+    if (sceneSession == nullptr) {
+        TLOGW(WmsLogTag::DEFAULT, "null scene session.");
+        return;
+    }
+    if (sceneSession->GetSessionInfo().bundleName_.find("SCBGestureBack") != std::string::npos
+        || sceneSession->GetSessionInfo().bundleName_.find("SCBGestureNavBar") != std::string::npos
+        || sceneSession->GetSessionInfo().bundleName_.find("SCBGestureTopBar") != std::string::npos) {
+        TLOGD(WmsLogTag::DEFAULT, "filter gesture window.");
+        return;
+    }
+    sptr<UnreliableWindowInfo> info = new (std::nothrow) UnreliableWindowInfo();
+    if (info == nullptr) {
+        TLOGE(WmsLogTag::DEFAULT, "null info.");
+        return;
+    }
+    info->wid_ = static_cast<int32_t>(sceneSession->GetPersistentId());
+    WSRect wsRect = sceneSession->GetSessionRect();
+    info->windowRect_ = { wsRect.posX_, wsRect.posY_, wsRect.width_, wsRect.height_ };
+    info->layer_ = sceneSession->GetZOrder();
+    info->scaleVal_ = sceneSession->GetFloatingScale();
+    info->scaleX_ = sceneSession->GetScaleX();
+    info->scaleY_ = sceneSession->GetScaleY();
+    infos.emplace_back(info);
+    TLOGD(WmsLogTag::WMS_MAIN, "FillUnreliableWindowInfo, wid = %{public}d", info->wid_);
 }
 
 std::string SceneSessionManager::GetSessionSnapshotFilePath(int32_t persistentId)

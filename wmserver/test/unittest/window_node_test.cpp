@@ -164,6 +164,25 @@ RSSurfaceNode::SharedPtr CreateRSSurfaceNode(std::string windowNode)
 }
 namespace {
 /**
+ * @tc.name: GetTouchable01
+ * @tc.desc: SetTouchable & GetTouchable
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowNodeTest, GetTouchable01, Function | SmallTest | Level1)
+{
+    std::string windowName = "WindowNode33";
+    auto property = CreateWindowProperty(33, windowName);
+    ASSERT_NE(nullptr, property);
+    sptr<WindowNode> windowNode = new WindowNode(property);
+    ASSERT_NE(nullptr, windowNode);
+
+    windowNode->SetTouchable(false);
+    ASSERT_EQ(false, windowNode->GetTouchable());
+    windowNode->SetTouchable(true);
+    ASSERT_EQ(true, windowNode->GetTouchable());
+}
+
+/**
  * @tc.name: NewWindowNode01
  * @tc.desc: new window node with WindowProperty
  * @tc.type: FUNC
