@@ -79,6 +79,94 @@ void WindowControllerTest::TearDown()
 
 namespace {
 /**
+ * @tc.name: GetUntouchableUnreliableWindowInfo
+ * @tc.desc: Window controller window is untouchable unreliable window
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowControllerTest, GetUntouchableUnreliableWindowInfo1, Function | SmallTest | Level3)
+{
+    std::vector<sptr<UntouchableUnreliableWindowInfo>> infos;
+    windowRoot_->windowNodeMap_.clear();
+    sptr<IWindow> window;
+    sptr<WindowProperty> property = new WindowProperty();
+    property->SetWindowType(WindowType::WINDOW_TYPE_TOAST);
+    sptr<WindowNode> windowNode = new WindowNode(property);
+    windowNode->SetTouchable(false);
+    windowNode->currentVisibility_ = true;
+    windowRoot_->windowNodeMap_.insert(std::make_pair(windowNode->GetWindowId(), windowNode));
+    ASSERT_EQ(WMError::WM_OK, windowController_->GetUntouchableUnreliableWindowInfo(0, infos));
+    EXPECT_EQ(1, infos.size());
+
+    sptr<WindowProperty> property2 = new WindowProperty();
+    property2->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
+    sptr<WindowNode> windowNode2 = new WindowNode(property2);
+    windowNode2->SetTouchable(false);
+    windowNode2->currentVisibility_ = true;
+    windowRoot_->windowNodeMap_.insert(std::make_pair(windowNode2->GetWindowId(), windowNode2));
+    ASSERT_EQ(WMError::WM_OK, windowController_->GetUntouchableUnreliableWindowInfo(0, infos));
+    EXPECT_EQ(2, infos.size());
+
+    sptr<WindowProperty> property3 = new WindowProperty();
+    property3->SetParentId(windowNode->GetWindowId());
+    property3->SetWindowType(WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
+    sptr<WindowNode> windowNode3 = new WindowNode(property3);
+    windowNode3->SetTouchable(false);
+    windowNode3->currentVisibility_ = true;
+    windowRoot_->windowNodeMap_.insert(std::make_pair(windowNode3->GetWindowId(), windowNode3));
+    ASSERT_EQ(WMError::WM_OK, windowController_->GetUntouchableUnreliableWindowInfo(0, infos));
+    EXPECT_EQ(3, infos.size());
+}
+
+/**
+ * @tc.name: GetUntouchableUnreliableWindowInfo
+ * @tc.desc: Window controller windowId is equal to the parameter
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowControllerTest, GetUntouchableUnreliableWindowInfo2, Function | SmallTest | Level3)
+{
+    std::vector<sptr<UntouchableUnreliableWindowInfo>> infos;
+    windowRoot_->windowNodeMap_.clear();
+    sptr<IWindow> window;
+    sptr<WindowProperty> property = new WindowProperty();
+    sptr<WindowNode> windowNode = new WindowNode(property);
+    windowRoot_->windowNodeMap_.insert(std::make_pair(1, windowNode));
+    ASSERT_EQ(WMError::WM_OK, windowController_->GetUntouchableUnreliableWindowInfo(1, infos));
+    ASSERT_EQ(false, infos.empty());
+}
+
+/**
+ * @tc.name: GetUntouchableUnreliableWindowInfo
+ * @tc.desc: Window controller window type is not correct, window is invisible, window is touchable
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowControllerTest, GetUntouchableUnreliableWindowInfo3, Function | SmallTest | Level3)
+{
+    std::vector<sptr<UntouchableUnreliableWindowInfo>> infos;
+    windowRoot_->windowNodeMap_.clear();
+    sptr<IWindow> window;
+    sptr<WindowProperty> property = new WindowProperty();
+    property->SetWindowType(WindowType::WINDOW_TYPE_DIALOG);
+    sptr<WindowNode> windowNode = new WindowNode(property);
+    windowNode->SetTouchable(false);
+    windowNode->currentVisibility_ = true;
+    windowRoot_->windowNodeMap_.insert(std::make_pair(1, windowNode));
+    ASSERT_EQ(WMError::WM_OK, windowController_->GetUntouchableUnreliableWindowInfo(0, infos));
+    ASSERT_EQ(true, infos.empty());
+
+    windowRoot_->windowNodeMap_.clear();
+    windowNode->currentVisibility_ = false;
+    windowRoot_->windowNodeMap_.insert(std::make_pair(1, windowNode));
+    ASSERT_EQ(WMError::WM_OK, windowController_->GetUntouchableUnreliableWindowInfo(0, infos));
+    ASSERT_EQ(true, infos.empty());
+
+    windowRoot_->windowNodeMap_.clear();
+    windowNode->SetTouchable(true);
+    windowRoot_->windowNodeMap_.insert(std::make_pair(1, windowNode));
+    ASSERT_EQ(WMError::WM_OK, windowController_->GetUntouchableUnreliableWindowInfo(0, infos));
+    ASSERT_EQ(true, infos.empty());
+}
+
+/**
  * @tc.name: StartingWindow
  * @tc.desc: Window controller starting window
  * @tc.type: FUNC

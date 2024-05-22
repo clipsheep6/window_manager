@@ -92,6 +92,11 @@ WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& i
 {
     return WMError::WM_OK;
 };
+WMError GetUntouchableUnreliableWindowInfo(int32_t windowId,
+    std::vector<sptr<UntouchableUnreliableWindowInfo>>& infos)
+{
+    return WMError::WM_OK;
+};
 WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos)
 {
     return WMError::WM_OK;

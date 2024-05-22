@@ -359,6 +359,73 @@ void WindowRoot::AddSurfaceNodeIdWindowNodePair(uint64_t surfaceNodeId, sptr<Win
     surfaceIdWindowNodeMap_.insert(std::make_pair(surfaceNodeId, node));
 }
 
+void WindowRoot::FillUntouchableUnreliableWindowInfo(std::vector<sptr<UntouchableUnreliableWindowInfo>>& infos,
+    const sptr<WindowNode>& windowNode) const
+{
+    if (windowNode == nullptr) {
+        WLOGFW("null window node.");
+        return;
+    }
+    sptr<UntouchableUnreliableWindowInfo> info = new (std::nothrow) UntouchableUnreliableWindowInfo();
+    if (info == nullptr) {
+        WLOGFE("null info.");
+        return;
+    }
+    info->wid_ = static_cast<int32_t>(windowNode->GetWindowId());
+    info->windowRect_ = windowNode->GetWindowRect();
+    info->layer_ = windowNode->zOrder_;
+    infos.emplace_back(info);
+    WLOGFI("FillUntouchableUnreliableWindowInfo, wid = %{public}d", info->wid_);
+}
+
+bool WindowRoot::CheckUnreliableWindowType(WindowType windowType) const
+{
+    if (windowType == WindowType::WINDOW_TYPE_APP_SUB_WINDOW ||
+        windowType == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT ||
+        windowType == WindowType::WINDOW_TYPE_TOAST) {
+        return true;
+    }
+    WLOGFI("CheckUnreliableWindowType false, WindowType = %{public}d", windowType);
+    return false;
+}
+
+void WindowRoot::GetUntouchableUnreliableWindowInfo(int32_t windowId,
+    std::vector<sptr<UntouchableUnreliableWindowInfo>>& infos) const
+{
+    WLOGFD("GetUntouchableUnreliableWindowInfo Called.");
+    if (!Permission::IsSystemCalling()) {
+        WLOGFE("GetUntouchableUnreliableWindowInfo only support for system service.");
+    }
+    for (const auto& [winId, windowNode] : windowNodeMap_) {
+        if (windowNode == nullptr) {
+            WLOGFW("null window node");
+            continue;
+        }
+        int32_t curWindowId = static_cast<int32_t>(winId);
+        if (curWindowId == windowId) {
+            WLOGFI("windowId: %{public}d is parameter chosen", curWindowId);
+            FillUntouchableUnreliableWindowInfo(infos, windowNode);
+            continue;
+        }
+        if (windowNode->GetTouchable()) {
+            WLOGFD("windowId: %{public}d is touchable", curWindowId);
+            continue;
+        }
+        if (!windowNode->currentVisibility_) {
+            WLOGFD("windowId: %{public}d is not visible", curWindowId);
+            continue;
+        }
+        WLOGFD("name = %{public}s, windowId = %{public}d, winType = %{public}d, "
+            "visible = %{public}d", windowNode->GetWindowName().c_str(),
+            curWindowId, windowNode->GetWindowType(), windowNode->currentVisibility_);
+        if (CheckUnreliableWindowType(windowNode->GetWindowType())) {
+            WLOGFI("GetUntouchableUnreliableWindowInfo, windowId = %{public}d, WindowType = %{public}d",
+                curWindowId, windowNode->GetWindowType());
+            FillUntouchableUnreliableWindowInfo(infos, windowNode);
+        }
+    }
+}
+
 void WindowRoot::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) const
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {

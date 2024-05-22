@@ -69,6 +69,7 @@ struct SCBAbilityInfo {
 };
 class SceneSession;
 class AccessibilityWindowInfo;
+class UntouchableUnreliableWindowInfo;
 using NotifyCreateSystemSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 using NotifyCreateKeyboardSessionFunc = std::function<void(const sptr<SceneSession>& keyboardSession,
     const sptr<SceneSession>& panelSession)>;
@@ -246,6 +247,9 @@ public:
     void NotifySessionTouchOutside(int32_t persistentId);
 
     WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) override;
+    bool CheckUnreliableWindowType(WindowType windowType);
+    WMError GetUntouchableUnreliableWindowInfo(int32_t windowId,
+        std::vector<sptr<UntouchableUnreliableWindowInfo>>& infos) override;
     WSError SetWindowFlags(const sptr<SceneSession>& sceneSession, const sptr<WindowSessionProperty>& property);
 
     void OnScreenshot(DisplayId displayId);
@@ -439,6 +443,8 @@ private:
     void NotifyWindowInfoChange(int32_t persistentId, WindowUpdateType type);
     void NotifyWindowInfoChangeFromSession(int32_t persistentid);
     bool FillWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos,
+        const sptr<SceneSession>& sceneSession);
+    void FillUntouchableUnreliableWindowInfo(std::vector<sptr<UntouchableUnreliableWindowInfo>>& infos,
         const sptr<SceneSession>& sceneSession);
     std::vector<std::pair<uint64_t, WindowVisibilityState>> GetWindowVisibilityChangeInfo(
         std::vector<std::pair<uint64_t, WindowVisibilityState>>& currVisibleData);

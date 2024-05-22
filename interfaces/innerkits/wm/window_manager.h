@@ -219,6 +219,45 @@ public:
 };
 
 /**
+ * @class UntouchableUnreliableWindowInfo
+ *
+ * @brief Untouchable Unreliable Window Info.
+ */
+class UntouchableUnreliableWindowInfo : public Parcelable {
+public:
+    /**
+     * @brief Default construct of UntouchableUnreliableWindowInfo.
+     */
+    UntouchableUnreliableWindowInfo() = default;
+    /**
+     * @brief Default deconstruct of UntouchableUnreliableWindowInfo.
+     */
+    ~UntouchableUnreliableWindowInfo() = default;
+
+    /**
+     * @brief Marshalling UntouchableUnreliableWindowInfo.
+     *
+     * @param parcel Package of UntouchableUnreliableWindowInfo.
+     * @return True means marshall success, false means marshall failed.
+     */
+    virtual bool Marshalling(Parcel& parcel) const override;
+    /**
+     * @brief Unmarshalling UntouchableUnreliableWindowInfo.
+     *
+     * @param parcel Package of UntouchableUnreliableWindowInfo.
+     * @return UntouchableUnreliableWindowInfo object.
+     */
+    static UntouchableUnreliableWindowInfo* Unmarshalling(Parcel& parcel);
+
+    int32_t wid_ { 1 };
+    Rect windowRect_;
+    uint32_t layer_ { 0 };
+    float scaleVal_ { 1.0f };
+    float scaleX_ { 1.0f };
+    float scaleY_ { 1.0f };
+};
+
+/**
  * @class IWindowUpdateListener
  *
  * @brief Listener to observe window update.
@@ -542,6 +581,14 @@ public:
      * @return WM_OK means get success, others means get failed.
      */
     WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) const;
+    /**
+     * @brief Get untouchable unreliable window info.
+     *
+     * @param infos Untouchable Unreliable Window Info.
+     * @return WM_OK means get success, others means get failed.
+     */
+    WMError GetUntouchableUnreliableWindowInfo(int32_t windowId,
+        std::vector<sptr<UntouchableUnreliableWindowInfo>>& infos) const;
     /**
      * @brief Get visibility window info.
      *
