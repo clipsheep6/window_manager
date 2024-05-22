@@ -1673,6 +1673,13 @@ WMError WindowController::GetAccessibilityWindowInfo(std::vector<sptr<Accessibil
     return WMError::WM_OK;
 }
 
+WMError WindowController::GetUntouchableUnreliableWindowInfo(int32_t windowId,
+    std::vector<sptr<UntouchableUnreliableWindowInfo>>& infos) const
+{
+    windowRoot_->GetUntouchableUnreliableWindowInfo(windowId, infos);
+    return WMError::WM_OK;
+}
+
 WMError WindowController::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) const
 {
     windowRoot_->GetVisibilityWindowInfo(infos);

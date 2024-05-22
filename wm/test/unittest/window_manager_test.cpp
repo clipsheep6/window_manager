@@ -163,6 +163,21 @@ HWTEST_F(WindowManagerTest, GetAccessibilityWindowInfo01, Function | SmallTest |
 }
 
 /**
+ * @tc.name: GetUntouchableUnreliableWindowInfo
+ * @tc.desc: GetUntouchableUnreliableWindowInfo ok
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerTest, GetUntouchableUnreliableWindowInfo, Function | SmallTest | Level2)
+{
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    int32_t windowId = 0;
+    std::vector<sptr<UntouchableUnreliableWindowInfo>> infos;
+    infos.clear();
+    EXPECT_CALL(m->Mock(), GetUntouchableUnreliableWindowInfo(_, _)).Times(1).WillOnce(Return(WMError::WM_OK));
+    ASSERT_EQ(WMError::WM_OK, WindowManager::GetInstance().GetUntouchableUnreliableWindowInfo(windowId, infos));
+}
+
+/**
  * @tc.name: RegisterCameraFloatWindowChangedListener01
  * @tc.desc: check RegisterCameraFloatWindowChangedListener
  * @tc.type: FUNC

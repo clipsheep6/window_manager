@@ -61,6 +61,37 @@ void WindowRootTest::TearDown()
 
 namespace {
 /**
+ * @tc.name: FillUntouchableUnreliableWindowInfo
+ * @tc.desc: test WindowRoot FillUntouchableUnreliableWindowInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowRootTest, FillUntouchableUnreliableWindowInfo, Function | SmallTest | Level2)
+{
+    std::vector<sptr<UntouchableUnreliableWindowInfo>> infos;
+    sptr<WindowNode> windowNode = new WindowNode();
+    ASSERT_NE(windowRoot_, nullptr);
+    windowRoot_->FillUntouchableUnreliableWindowInfo(infos, windowNode);
+    ASSERT_NE(windowRoot_, nullptr);
+    windowRoot_->FillUntouchableUnreliableWindowInfo(infos, nullptr);
+}
+
+/**
+ * @tc.name: GetUntouchableUnreliableWindowInfo
+ * @tc.desc: test WindowRoot GetUntouchableUnreliableWindowInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowRootTest, GetUntouchableUnreliableWindowInfo, Function | SmallTest | Level2)
+{
+    int32_t windowId = 0;
+    std::vector<sptr<UntouchableUnreliableWindowInfo>> infos;
+    sptr<WindowNode> windowNode = new WindowNode();
+    windowId = windowNode->GetWindowId();
+    windowRoot_->windowNodeMap_.insert(std::make_pair(windowId, windowNode));
+    ASSERT_NE(windowRoot_, nullptr);
+    windowRoot_->GetUntouchableUnreliableWindowInfo(windowId, infos);
+}
+
+/**
  * @tc.name: WindowRootTest01
  * @tc.desc: test WindowRoot GetTotalWindowNum
  * @tc.type: FUNC

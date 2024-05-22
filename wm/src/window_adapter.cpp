@@ -132,6 +132,13 @@ WMError WindowAdapter::GetAccessibilityWindowInfo(std::vector<sptr<Accessibility
     return windowManagerServiceProxy_->GetAccessibilityWindowInfo(infos);
 }
 
+WMError WindowAdapter::GetUntouchableUnreliableWindowInfo(int32_t windowId,
+    std::vector<sptr<UntouchableUnreliableWindowInfo>>& infos)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    return windowManagerServiceProxy_->GetUntouchableUnreliableWindowInfo(windowId, infos);
+}
+
 WMError WindowAdapter::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);

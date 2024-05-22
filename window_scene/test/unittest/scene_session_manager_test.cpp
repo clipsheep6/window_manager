@@ -3235,6 +3235,19 @@ HWTEST_F(SceneSessionManagerTest, GetSessionInfos, Function | SmallTest | Level3
 }
 
 /**
+ * @tc.name: GetUntouchableUnreliableWindowInfo
+ * @tc.desc: SceneSesionManager get untouchable unreliable window info
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, GetUntouchableUnreliableWindowInfo, Function | SmallTest | Level3)
+{
+    int32_t windowId = 0;
+    std::vector<sptr<UntouchableUnreliableWindowInfo>> infos;
+    WMError result = ssm_->GetUntouchableUnreliableWindowInfo(windowId, infos);
+    EXPECT_EQ(WMError::WM_OK, result);
+}
+
+/**
  * @tc.name: CheckIsRemote
  * @tc.desc: SceneSesionManager check is remote
  * @tc.type: FUNC

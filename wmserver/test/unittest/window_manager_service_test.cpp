@@ -91,6 +91,19 @@ void WindowManagerServiceTest::TearDown()
 
 namespace {
 /**
+ * @tc.name: GetUntouchableUnreliableWindowInfo
+ * @tc.desc: GetUntouchableUnreliableWindowInfo test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerServiceTest, GetUntouchableUnreliableWindowInfo, Function | SmallTest | Level2)
+{
+    std::vector<sptr<UntouchableUnreliableWindowInfo>> infos;
+    int32_t windowId = 0;
+    WMError res = wms->GetUntouchableUnreliableWindowInfo(windowId, infos);
+    ASSERT_EQ(WMError::WM_OK, res);
+}
+
+/**
  * @tc.name: OnAddSystemAbility
  * @tc.desc: OnAddSystemAbility test
  * @tc.type: FUNC

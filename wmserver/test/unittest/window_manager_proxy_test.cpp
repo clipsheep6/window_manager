@@ -222,6 +222,19 @@ HWTEST_F(WindowManagerProxyTest, GetVisibilityWindowInfo01, Function | SmallTest
 }
 
 /**
+ * @tc.name: GetUntouchableUnreliableWindowInfo01
+ * @tc.desc: test success
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerProxyTest, GetUntouchableUnreliableWindowInfo01, Function | SmallTest | Level2)
+{
+    std::vector<sptr<UntouchableUnreliableWindowInfo>> infos;
+    int32_t windowId = 0;
+    WMError err = windowManagerProxy_->GetUntouchableUnreliableWindowInfo(windowId, infos);
+    ASSERT_EQ(err, WMError::WM_OK);
+}
+
+/**
  * @tc.name: GetWindowAnimationTargets01
  * @tc.desc: test success
  * @tc.type: FUNC

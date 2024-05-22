@@ -545,6 +545,32 @@ WMError WindowManagerProxy::GetAccessibilityWindowInfo(std::vector<sptr<Accessib
     return static_cast<WMError>(reply.ReadInt32());
 }
 
+WMError WindowManagerProxy::GetUntouchableUnreliableWindowInfo(int32_t windowId,
+    std::vector<sptr<UntouchableUnreliableWindowInfo>>& infos)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("WriteInterfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteInt32(windowId)) {
+        WLOGFE("Write windowId failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(
+        static_cast<uint32_t>(WindowManagerMessage::TRANS_ID_GET_UNTOUCHABLE_UNRELIABLE_WINDOW_INFO_ID),
+        data, reply, option) != ERR_NONE) {
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (!MarshallingHelper::UnmarshallingVectorParcelableObj<UntouchableUnreliableWindowInfo>(reply, infos)) {
+        WLOGFE("read untouchable unreliable window infos failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    return static_cast<WMError>(reply.ReadInt32());
+}
+
 WMError WindowManagerProxy::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos)
 {
     MessageParcel data;
