@@ -386,9 +386,12 @@ bool KeyboardSession::CheckIfNeedRaiseCallingSession(sptr<SceneSession> callingS
     bool isMainOrParentFloating = WindowHelper::IsMainWindow(callingSession->GetWindowType()) ||
         (WindowHelper::IsSubWindow(callingSession->GetWindowType()) && callingSession->GetParentSession() != nullptr &&
          callingSession->GetParentSession()->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING);
+    bool isFreeMultiWindowSupportDevices = systemConfig_.freeMultiWindowSupport_ &&
+        systemConfig_.freeMultiWindowEnable_;
     if (isCallingSessionFloating && isMainOrParentFloating &&
         (system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
-         system::GetParameter("const.product.devicetype", "unknown") == "tablet")) {
+         (system::GetParameter("const.product.devicetype", "unknown") == "tablet" &&
+         !isFreeMultiWindowSupportDevices)) {
         TLOGI(WmsLogTag::WMS_KEYBOARD, "No need to raise calling session in float window.");
         return false;
     }
