@@ -60,6 +60,34 @@ AnimationConfig StartingWindow::animationConfig_;
 
 sptr<WindowNode> StartingWindow::CreateWindowNode(const sptr<WindowTransitionInfo>& info, uint32_t winId)
 {
+    sptr<WindowProperty> property = CreateWindowProperty(info, winId);
+    if (property == nullptr) {
+        return nullptr;
+    }
+
+    sptr<WindowNode> node = new(std::nothrow) WindowNode(property);
+    if (node == nullptr) {
+        return nullptr;
+    }
+    // test
+    node->stateMachine_.SetWindowId(winId);
+    node->abilityToken_ = info->GetAbilityToken();
+    node->SetWindowSizeLimits(info->GetWindowSizeLimits());
+    node->abilityInfo_.missionId_ = info->GetMissionId();
+    node->abilityInfo_.bundleName_ = info->GetBundleName();
+    node->abilityInfo_.abilityName_ = info->GetAbilityName();
+    uint32_t modeSupportInfo = WindowHelper::ConvertSupportModesToSupportInfo(info->GetWindowSupportModes());
+    node->SetModeSupportInfo(modeSupportInfo);
+
+    if (CreateLeashAndStartingSurfaceNode(node) != WMError::WM_OK) {
+        return nullptr;
+    }
+    node->stateMachine_.TransitionTo(WindowNodeState::STARTING_CREATED);
+    return node;
+}
+
+sptr<WindowProperty> StartingWindow::CreateWindowProperty(const sptr<WindowTransitionInfo>& info, uint32_t winId)
+{
     sptr<WindowProperty> property = new(std::nothrow) WindowProperty();
     if (property == nullptr || info == nullptr) {
         return nullptr;
@@ -82,8 +110,8 @@ sptr<WindowNode> StartingWindow::CreateWindowNode(const sptr<WindowTransitionInf
         WLOGFE("Set orientation from ability failed");
         return nullptr;
     }
-    property->SetRequestedOrientation(orientation);
 
+    property->SetRequestedOrientation(orientation);
     property->SetDisplayId(info->GetDisplayId());
     property->SetWindowType(info->GetWindowType());
 
@@ -97,25 +125,7 @@ sptr<WindowNode> StartingWindow::CreateWindowNode(const sptr<WindowTransitionInf
         }
     }
     property->SetWindowId(winId);
-    sptr<WindowNode> node = new(std::nothrow) WindowNode(property);
-    if (node == nullptr) {
-        return nullptr;
-    }
-    // test
-    node->stateMachine_.SetWindowId(winId);
-    node->abilityToken_ = info->GetAbilityToken();
-    node->SetWindowSizeLimits(info->GetWindowSizeLimits());
-    node->abilityInfo_.missionId_ = info->GetMissionId();
-    node->abilityInfo_.bundleName_ = info->GetBundleName();
-    node->abilityInfo_.abilityName_ = info->GetAbilityName();
-    uint32_t modeSupportInfo = WindowHelper::ConvertSupportModesToSupportInfo(info->GetWindowSupportModes());
-    node->SetModeSupportInfo(modeSupportInfo);
-
-    if (CreateLeashAndStartingSurfaceNode(node) != WMError::WM_OK) {
-        return nullptr;
-    }
-    node->stateMachine_.TransitionTo(WindowNodeState::STARTING_CREATED);
-    return node;
+    return property;
 }
 
 void StartingWindow::ChangePropertyByApiVersion(const sptr<WindowTransitionInfo>& info,
@@ -326,11 +336,8 @@ void StartingWindow::AddNodeOnRSTree(sptr<WindowNode>& node, bool isMultiDisplay
         } else { // hot start
             const auto& displayIdVec = node->GetShowingDisplays();
             for (auto& shownDisplayId : displayIdVec) {
-                if (node->leashWinSurfaceNode_) { // to app
-                    dms.UpdateRSTree(shownDisplayId, shownDisplayId, node->leashWinSurfaceNode_, true, isMultiDisplay);
-                } else { // to launcher
-                    dms.UpdateRSTree(shownDisplayId, shownDisplayId, node->surfaceNode_, true, isMultiDisplay);
-                }
+                dms.UpdateRSTree(shownDisplayId, shownDisplayId,
+                    node->leashWinSurfaceNode_ ? node->leashWinSurfaceNode_ : node->surfaceNode_, true, isMultiDisplay);
                 for (auto& child : node->children_) {
                     if (IsWindowFollowParent(child->GetWindowType())) {
                         continue;
@@ -343,6 +350,7 @@ void StartingWindow::AddNodeOnRSTree(sptr<WindowNode>& node, bool isMultiDisplay
             WLOGFD("Update RsTree with hot start");
         }
     };
+    
     wptr<WindowNode> weakNode = node;
     auto finishCallBack = [weakNode]() {
         auto weak = weakNode.promote();
@@ -358,6 +366,7 @@ void StartingWindow::AddNodeOnRSTree(sptr<WindowNode>& node, bool isMultiDisplay
         }
         RSTransaction::FlushImplicitTransaction();
     };
+
     if (!RemoteAnimation::CheckAnimationController()) {
         RSNode::Animate(animationConfig_.windowAnimationConfig_.animationTiming_.timingProtocol_,
             animationConfig_.windowAnimationConfig_.animationTiming_.timingCurve_,

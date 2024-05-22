@@ -47,6 +47,7 @@ public:
 private:
     static WMError CreateLeashAndStartingSurfaceNode(sptr<WindowNode>& node);
     static WMError SetStartingWindowAnimation(wptr<WindowNode> weak);
+    static sptr<WindowProperty> CreateWindowProperty(const sptr<WindowTransitionInfo>& info, uint32_t winId);
     static void ChangePropertyByApiVersion(const sptr<WindowTransitionInfo>& info,
         const Orientation orientation, sptr<WindowProperty>& property);
     static std::recursive_mutex mutex_;
