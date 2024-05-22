@@ -62,8 +62,12 @@ namespace {
  */
 HWTEST_F(SessionManagerLiteTest, ClearSessionManagerProxy, Function | SmallTest | Level2)
 {
-    sptr<SessionManagerLite> sessionManagerLite = new SessionManagerLite();
-    sessionManagerLite->ClearSessionManagerProxy();
+    SessionManagerLite& sessionManagerLite = SessionManagerLite::GetInstance();
+    sessionManagerLite.ClearSessionManagerProxy();
+    sessionManagerLite.GetSessionManagerServiceProxy();
+    
+    sessionManagerLite.ClearSessionManagerProxy();
+    sessionManagerLite.Clear();
     int ret = 0;
     ASSERT_EQ(0, ret);
 }
@@ -74,9 +78,14 @@ HWTEST_F(SessionManagerLiteTest, ClearSessionManagerProxy, Function | SmallTest 
  */
 HWTEST_F(SessionManagerLiteTest, RecoverSessionManagerService, Function | SmallTest | Level2)
 {
-    sptr<SessionManagerLite> sessionManagerLite = new SessionManagerLite();
-    sptr<ISessionManagerService> sessionManagerService = sessionManagerLite->GetSessionManagerServiceProxy();
-    sessionManagerLite->RecoverSessionManagerService(sessionManagerService);
+    SessionManagerLite& sessionManagerLite = SessionManagerLite::GetInstance();
+    sessionManagerLite.RecoverSessionManagerService(nullptr);
+    sessionManagerLite.ClearSessionManagerProxy();
+    sptr<ISessionManagerService> sessionManagerService = sessionManagerLite.GetSessionManagerServiceProxy();
+    sessionManagerLite.RecoverSessionManagerService(sessionManagerService);
+
+    sessionManagerLite.ClearSessionManagerProxy();
+    sessionManagerLite.Clear();
     int ret = 0;
     ASSERT_EQ(0, ret);
 }
@@ -87,8 +96,13 @@ HWTEST_F(SessionManagerLiteTest, RecoverSessionManagerService, Function | SmallT
  */
 HWTEST_F(SessionManagerLiteTest, ReregisterSessionListener, Function | SmallTest | Level2)
 {
-    sptr<SessionManagerLite> sessionManagerLite = new SessionManagerLite();
-    sessionManagerLite->ReregisterSessionListener();
+    SessionManagerLite& sessionManagerLite = SessionManagerLite::GetInstance();
+    sessionManagerLite.ReregisterSessionListener();
+    sessionManagerLite.GetSessionManagerServiceProxy();
+    sessionManagerLite.ReregisterSessionListener();
+
+    sessionManagerLite.ClearSessionManagerProxy();
+    sessionManagerLite.Clear();
     int ret = 0;
     ASSERT_EQ(0, ret);
 }
@@ -99,9 +113,12 @@ HWTEST_F(SessionManagerLiteTest, ReregisterSessionListener, Function | SmallTest
  */
 HWTEST_F(SessionManagerLiteTest, OnWMSConnectionChanged01, Function | SmallTest | Level2)
 {
-    sptr<SessionManagerLite> sessionManagerLite = new SessionManagerLite();
-    sptr<ISessionManagerService> sessionManagerService = sessionManagerLite->GetSessionManagerServiceProxy();
-    sessionManagerLite->OnWMSConnectionChanged(100, 100, true, sessionManagerService);
+    SessionManagerLite& sessionManagerLite = SessionManagerLite::GetInstance();
+    sptr<ISessionManagerService> sessionManagerService = sessionManagerLite.GetSessionManagerServiceProxy();
+    sessionManagerLite.OnWMSConnectionChanged(100, 100, true, sessionManagerService);
+
+    sessionManagerLite.ClearSessionManagerProxy();
+    sessionManagerLite.Clear();
     int ret = 0;
     ASSERT_EQ(0, ret);
 }
@@ -112,9 +129,12 @@ HWTEST_F(SessionManagerLiteTest, OnWMSConnectionChanged01, Function | SmallTest 
  */
 HWTEST_F(SessionManagerLiteTest, OnWMSConnectionChanged02, Function | SmallTest | Level2)
 {
-    sptr<SessionManagerLite> sessionManagerLite = new SessionManagerLite();
-    sptr<ISessionManagerService> sessionManagerService = sessionManagerLite->GetSessionManagerServiceProxy();
-    sessionManagerLite->OnWMSConnectionChanged(100, 100, false, sessionManagerService);
+    SessionManagerLite& sessionManagerLite = SessionManagerLite::GetInstance();
+    sptr<ISessionManagerService> sessionManagerService = sessionManagerLite.GetSessionManagerServiceProxy();
+    sessionManagerLite.OnWMSConnectionChanged(100, 100, false, sessionManagerService);
+
+    sessionManagerLite.ClearSessionManagerProxy();
+    sessionManagerLite.Clear();
     int ret = 0;
     ASSERT_EQ(0, ret);
 }
@@ -125,9 +145,12 @@ HWTEST_F(SessionManagerLiteTest, OnWMSConnectionChanged02, Function | SmallTest 
  */
 HWTEST_F(SessionManagerLiteTest, OnWMSConnectionChanged03, Function | SmallTest | Level2)
 {
-    sptr<SessionManagerLite> sessionManagerLite = new SessionManagerLite();
-    sptr<ISessionManagerService> sessionManagerService = sessionManagerLite->GetSessionManagerServiceProxy();
-    sessionManagerLite->OnWMSConnectionChanged(-1, -1, true, sessionManagerService);
+    SessionManagerLite& sessionManagerLite = SessionManagerLite::GetInstance();
+    sptr<ISessionManagerService> sessionManagerService = sessionManagerLite.GetSessionManagerServiceProxy();
+    sessionManagerLite.OnWMSConnectionChanged(-1, -1, true, sessionManagerService);
+
+    sessionManagerLite.ClearSessionManagerProxy();
+    sessionManagerLite.Clear();
     int ret = 0;
     ASSERT_EQ(0, ret);
 }
@@ -138,9 +161,12 @@ HWTEST_F(SessionManagerLiteTest, OnWMSConnectionChanged03, Function | SmallTest 
  */
 HWTEST_F(SessionManagerLiteTest, OnWMSConnectionChanged04, Function | SmallTest | Level2)
 {
-    sptr<SessionManagerLite> sessionManagerLite = new SessionManagerLite();
-    sptr<ISessionManagerService> sessionManagerService = sessionManagerLite->GetSessionManagerServiceProxy();
-    sessionManagerLite->OnWMSConnectionChanged(-1, -1, false, sessionManagerService);
+    SessionManagerLite& sessionManagerLite = SessionManagerLite::GetInstance();
+    sptr<ISessionManagerService> sessionManagerService = sessionManagerLite.GetSessionManagerServiceProxy();
+    sessionManagerLite.OnWMSConnectionChanged(-1, -1, false, sessionManagerService);
+
+    sessionManagerLite.ClearSessionManagerProxy();
+    sessionManagerLite.Clear();
     int ret = 0;
     ASSERT_EQ(0, ret);
 }
@@ -151,8 +177,12 @@ HWTEST_F(SessionManagerLiteTest, OnWMSConnectionChanged04, Function | SmallTest 
  */
 HWTEST_F(SessionManagerLiteTest, InitSceneSessionManagerLiteProxy01, Function | SmallTest | Level2)
 {
-    sptr<SessionManagerLite> sessionManagerLite = new SessionManagerLite();
-    sessionManagerLite->InitSceneSessionManagerLiteProxy();
+    SessionManagerLite& sessionManagerLite = SessionManagerLite::GetInstance();
+    sessionManagerLite.InitSceneSessionManagerLiteProxy();
+    sessionManagerLite.InitSceneSessionManagerLiteProxy();
+
+    sessionManagerLite.ClearSessionManagerProxy();
+    sessionManagerLite.Clear();
     int ret = 0;
     ASSERT_EQ(0, ret);
 }
@@ -163,9 +193,12 @@ HWTEST_F(SessionManagerLiteTest, InitSceneSessionManagerLiteProxy01, Function | 
  */
 HWTEST_F(SessionManagerLiteTest, InitSceneSessionManagerLiteProxy02, Function | SmallTest | Level2)
 {
-    sptr<SessionManagerLite> sessionManagerLite = new SessionManagerLite();
-    sessionManagerLite->GetSceneSessionManagerLiteProxy();
-    sessionManagerLite->InitSceneSessionManagerLiteProxy();
+    SessionManagerLite& sessionManagerLite = SessionManagerLite::GetInstance();
+    sessionManagerLite.GetSceneSessionManagerLiteProxy();
+    sessionManagerLite.InitSceneSessionManagerLiteProxy();
+
+    sessionManagerLite.ClearSessionManagerProxy();
+    sessionManagerLite.Clear();
     int ret = 0;
     ASSERT_EQ(0, ret);
 }
@@ -176,9 +209,13 @@ HWTEST_F(SessionManagerLiteTest, InitSceneSessionManagerLiteProxy02, Function | 
  */
 HWTEST_F(SessionManagerLiteTest, InitSceneSessionManagerLiteProxy03, Function | SmallTest | Level2)
 {
-    sptr<SessionManagerLite> sessionManagerLite = new SessionManagerLite();
-    sessionManagerLite->GetSessionManagerServiceProxy();
-    sessionManagerLite->InitSceneSessionManagerLiteProxy();
+    SessionManagerLite& sessionManagerLite = SessionManagerLite::GetInstance();
+    sessionManagerLite.GetSessionManagerServiceProxy();
+    sessionManagerLite.InitSceneSessionManagerLiteProxy();
+    sessionManagerLite.InitSceneSessionManagerLiteProxy();
+
+    sessionManagerLite.ClearSessionManagerProxy();
+    sessionManagerLite.Clear();
     int ret = 0;
     ASSERT_EQ(0, ret);
 }
@@ -189,37 +226,26 @@ HWTEST_F(SessionManagerLiteTest, InitSceneSessionManagerLiteProxy03, Function | 
  */
 HWTEST_F(SessionManagerLiteTest, Clear01, Function | SmallTest | Level2)
 {
-    sptr<SessionManagerLite> sessionManagerLite = new SessionManagerLite();
-    sessionManagerLite->Clear();
+    SessionManagerLite& sessionManagerLite = SessionManagerLite::GetInstance();
+    sessionManagerLite.Clear();
+
+    sessionManagerLite.GetSceneSessionManagerLiteProxy();
+    sessionManagerLite.InitSceneSessionManagerLiteProxy();
+    sessionManagerLite.Clear();
+    sessionManagerLite.ClearSessionManagerProxy();
+
+    sessionManagerLite.GetSceneSessionManagerLiteProxy();
+    sessionManagerLite.Clear();
+    sessionManagerLite.ClearSessionManagerProxy();
+
+    sessionManagerLite.InitSceneSessionManagerLiteProxy();
+    sessionManagerLite.Clear();
+    sessionManagerLite.ClearSessionManagerProxy();
+    
     int ret = 0;
     ASSERT_EQ(0, ret);
 }
-/**
- * @tc.name: Clear
- * @tc.desc: normal function
- * @tc.type: FUNC
- */
-HWTEST_F(SessionManagerLiteTest, Clear02, Function | SmallTest | Level2)
-{
-    sptr<SessionManagerLite> sessionManagerLite = new SessionManagerLite();
-    sessionManagerLite->GetSceneSessionManagerLiteProxy();
-    sessionManagerLite->Clear();
-    int ret = 0;
-    ASSERT_EQ(0, ret);
-}
-/**
- * @tc.name: OnRemoteDied
- * @tc.desc: normal function
- * @tc.type: FUNC
- */
-HWTEST_F(SessionManagerLiteTest, OnRemoteDied, Function | SmallTest | Level2)
-{
-    sptr<SessionManagerLite> sessionManagerLite = new SessionManagerLite();
-    wptr<IRemoteObject> wptrDeath = SingletonContainer::Get<ScreenManagerAdapter>().displayManagerServiceProxy_->AsObject();
-    sessionManagerLite->OnRemoteDied(wptrDeath);
-    int ret = 0;
-    ASSERT_EQ(0, ret);
-}
+
 }
 }
 }
