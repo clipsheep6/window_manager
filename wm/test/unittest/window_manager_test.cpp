@@ -1029,6 +1029,78 @@ HWTEST_F(WindowManagerTest, NotifyDisplayInfoChanged, Function | SmallTest | Lev
     // no repeated notification is sent if parameters do not change
     windowManager.pImpl_->NotifyDisplayInfoChanged(targetToken, displayId, density, orientation);
 }
+
+/**
+ * @tc.name: NotifyWMSConnected
+ * @tc.desc: NotifyWMSConnected
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerTest, NotifyWMSConnected, Function | SmallTest | Level2)
+{
+    MiscServices::ChangeHandler handler;
+    std::recursive_mutex mutex;
+    WindowManager::Impl impl(mutex);
+    impl.wmsConnectionChangedListener_ = new MiscServices::WmsConnectionObserver(handler);
+    impl.NotifyWMSConnected(0, 0);
+
+    impl.NotifyWMSDisconnected(0, 0);
+
+    WindowModeType type = WindowModeType::WINDOW_MODE_FLOATING;
+    impl.NotifyWindowModeChange(type);
+    bool isBackHome = true;
+    impl.NotifyWindowBackHomeStatus(isBackHome);
+
+    SystemBarRegionTint systemBarRegionTint;
+    OHOS::Rosen::SystemBarRegionTints{systemBarRegionTint};
+    SystemBarRegionTints tints;
+    DisplayId displayId = 0;
+    impl.NotifySystemBarChanged(displayId, tints);
+
+    WindowUpdateType type1 = WindowUpdateType::WINDOW_UPDATE_ACTIVE;
+    std::vector<sptr<AccessibilityWindowInfo>> infos;
+    impl.NotifyAccessibilityWindowInfo(infos, type1);
+
+    std::vector<sptr<WindowDrawingContentInfo>> windowDrawingContentInfos;
+    impl.NotifyWindowDrawingContentInfoChanged(windowDrawingContentInfos);
+
+    sptr<IWMSConnectionChangedListener> listener = nullptr;
+    GetUserIdByUid(200002);
+    WindowManager windowManager;
+    windowManager.RegisterWMSConnectionChangedListener(listener);
+    GetUserIdByUid(2000);
+    listener = new MiscServices::WmsConnectionObserver(handler);
+    auto ret = windowManager.RegisterWMSConnectionChangedListener(listener);
+    ASSERT_NE(WMError::WM_OK, ret);
+}
+
+/**
+ * @tc.name: UnregisterFocusChangedListener
+ * @tc.desc: UnregisterFocusChangedListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerTest, UnregisterFocusChangedListener, Function | SmallTest | Level2)
+{
+    sptr<IFocusChangedListener> listener = new OHOS::ResourceSchedule::WindowStateObserver();
+    WindowManager windowManager;
+    windowManager.UnregisterFocusChangedListener(listener);
+    listener = nullptr;
+    auto ret = windowManager.UnregisterFocusChangedListener(listener);
+    ASSERT_NE(WMError::WM_OK, ret);
+
+    windowManager.OnWMSConnectionChanged(0, 0, true);
+    windowManager.UpdateWindowBackHomeStatus(true);
+
+    std::vector<sptr<WindowDrawingContentInfo>> windowDrawingContentInfos;
+    windowManager.UpdateWindowDrawingContentInfo(windowDrawingContentInfos);
+
+    sptr<IDrawingContentChangedListener> listener1 = nullptr;
+    windowManager.UnregisterDrawingContentChangedListener(listener1);
+
+    listener1 = new ResourceSchedule::WindowDrawingContentObserver();
+    std::recursive_mutex mutex;
+    WindowManager::Impl impl(mutex);
+    impl.windowDrawingContentListenerAgent_ = nullptr;
+}
 }
 } // namespace Rosen
 } // namespace OHOS

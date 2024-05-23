@@ -28,6 +28,7 @@ multimedia_path = "//foundation/multimedia/image_framework"
 multimodalinput_path = "//foundation/multimodalinput"
 sensor_path = "//base/sensors/sensor"
 accessibility_path = "//foundation/barrierfree/accessibility"
+inputmethod_path = "//base/inputmethod/imf"
 
 declare_args() {
   efficiency_manager_enable = true
