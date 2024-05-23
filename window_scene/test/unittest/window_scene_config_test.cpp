@@ -155,24 +155,24 @@ void WindowSceneConfigTest::TearDown()
 
 ConfigItem WindowSceneConfigTest::ReadConfig(const std::string& xmlStr)
 {
-    ConfigItem cfgItem;
+    ConfigItem config;
     xmlDocPtr docPtr = xmlParseMemory(xmlStr.c_str(), xmlStr.length() + 1);
     if (docPtr == nullptr) {
-        return cfgItem;
+        return config;
     }
 
     xmlNodePtr rootPtr = xmlDocGetRootElement(docPtr);
     if (rootPtr == nullptr || rootPtr->name == nullptr ||
         xmlStrcmp(rootPtr->name, reinterpret_cast<const xmlChar*>("Configs"))) {
         xmlFreeDoc(docPtr);
-        return cfgItem;
+        return config;
     }
 
     std::map<std::string, ConfigItem> configMap;
-    cfgItem.SetValue(configMap);
-    WindowSceneConfig::ReadConfig(rootPtr, *cfgItem.mapValue_);
+    config.SetValue(configMap);
+    WindowSceneConfig::ReadConfig(rootPtr, *config.mapValue_);
     xmlFreeDoc(docPtr);
-    return cfgItem;
+    return config;
 }
 namespace {
 /**
@@ -309,10 +309,10 @@ HWTEST_F(WindowSceneConfigTest, DecorConfig02, Function | SmallTest | Level2)
         "</Configs>";
     WindowSceneConfig::config_ = ReadConfig(xmlStr);
     WindowSceneConfig::ConfigItem item = WindowSceneConfig::config_["decor"]["supportedMode"];
-    ASSERT_EQ(true, item.IsStrings());
-    ASSERT_EQ(1, item.stringsValue_->size());
     ASSERT_EQ(false, item.IsMap());
     ASSERT_EQ(false, item.IsString());
+    ASSERT_EQ(true, item.IsStrings());
+    ASSERT_EQ(1, item.stringsValue_->size());
     std::vector<std::string> supportedModes;
     supportedModes = *item.stringsValue_;
     ASSERT_EQ("fullscreen", supportedModes[0]);

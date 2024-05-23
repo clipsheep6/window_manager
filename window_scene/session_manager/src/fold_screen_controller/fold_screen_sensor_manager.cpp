@@ -94,6 +94,7 @@ void FoldScreenSensorManager::UnRegisterPostureCallback()
         deactivateRet, unsubscribeRet);
     if (deactivateRet == SENSOR_SUCCESS && unsubscribeRet == SENSOR_SUCCESS) {
         TLOGI(WmsLogTag::DMS, "FoldScreenSensorManager.UnRegisterPostureCallback success.");
+        sensorFoldStateManager_->ClearState(foldScreenPolicy_);
     }
 }
 
