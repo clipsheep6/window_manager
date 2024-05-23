@@ -2820,7 +2820,7 @@ napi_value JsWindow::OnSetPreferredOrientation(napi_env env, napi_callback_info 
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    WmErrorCode errCode = CheckPreferredOrientation(env, argc, argv, requestedOrientation);   
+    WmErrorCode errCode = CheckPreferredOrientation(env, argc, argv, requestedOrientation);
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }

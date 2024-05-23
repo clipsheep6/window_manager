@@ -44,21 +44,21 @@ constexpr int32_t WINDOW_MAX_WIDTH = 1920;
         }                                                                                 \
     } while (0)
 
-#define CHECK_NAPI_ENV_RETURN_IF_FAIL(env)                \
-    do {                                                  \
-        if ((env) == nullptr) {                           \
-            TLOGFE(WmsLogTag::DEFAULT, "env is invalid"); \
-            return nullptr;                               \
-        }                                                 \
+#define CHECK_NAPI_ENV_RETURN_IF_FAIL(env)               \
+    do {                                                 \
+        if ((env) == nullptr) {                          \
+            TLOGE(WmsLogTag::DEFAULT, "env is invalid"); \
+            return nullptr;                              \
+        }                                                \
     } while (0)
 
-#define CHECK_NAPI_OBJECT_VALUE_RETURN_IF_FAIL(env, objValue)   \
-    do {                                                        \
-        napi_create_object((env), &(objValue));                 \
-        if ((objValue) == nullptr) {                            \
-            TLOGFE(WmsLogTag::DEFAULT, "Failed to get object"); \
-            return nullptr;                                     \
-        }                                                       \
+#define CHECK_NAPI_OBJECT_VALUE_RETURN_IF_FAIL(env, objValue)  \
+    do {                                                       \
+        napi_create_object((env), &(objValue));                \
+        if ((objValue) == nullptr) {                           \
+            TLOGE(WmsLogTag::DEFAULT, "Failed to get object"); \
+            return nullptr;                                    \
+        }                                                      \
     } while (0)
 
 enum class ApiWindowType : uint32_t {

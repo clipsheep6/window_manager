@@ -2171,7 +2171,7 @@ void JsSceneSession::OnReuqestedOrientationChange(uint32_t orientation)
     std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(REQUESTED_ORIENTATION_CHANGE_CB);
     if (jsCallBack == nullptr) {
         return;
-    }    
+    }
 
     auto task = [jsCallBack, rotation = orientation, env = env_]() {
         napi_value jsSessionRotationObj = CreateJsValue(env, rotation);
@@ -2713,6 +2713,6 @@ std::shared_ptr<NativeReference> JsSceneSession::GetJSCallback(const std::string
     if (iter != jsCbMap_.end()) {
         jsCallBack = iter->second;
     }
-    return jsCallBack
+    return jsCallBack;
 }
 } // namespace OHOS::Rosen
