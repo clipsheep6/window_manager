@@ -69,7 +69,9 @@ sptr<Window> Window::GetTopWindowWithContext(const std::shared_ptr<AbilityRuntim
 
 void Window::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
+    WLOGFI("Window UpdateConfigurationForAll previewer before");
     return WindowImpl::UpdateConfigurationForAll(configuration);
+    WLOGFI("Window UpdateConfigurationForAll previewer after");
 }
 
 bool OccupiedAreaChangeInfo::Marshalling(Parcel& parcel) const
