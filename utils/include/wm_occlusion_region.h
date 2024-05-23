@@ -34,6 +34,11 @@ public:
     Rect() : left_(0), top_(0), right_(0), bottom_(0) {}
     Rect(int l, int t, int r, int b) : left_(l), top_(t), right_(r), bottom_(b) {}
 
+    bool IsEmpty() const
+    {
+        return left_ >= right_ || top_ >= bottom_;
+    }
+
     std::string GetRectInfo() const
     {
         return std::string("[" +
@@ -41,11 +46,6 @@ public:
             std::to_string(top_) + ", " +
             std::to_string(right_ - left_) + ", " +
             std::to_string(bottom_ - top_) + "]");
-    }
-
-    bool IsEmpty() const
-    {
-        return left_ >= right_ || top_ >= bottom_;
     }
 };
 
@@ -58,7 +58,7 @@ std::ostream& operator<<(std::ostream& os, const Rect& r);
 */
 class Event {
 public:
-    // Use different value to differentiate lhs and rhs ranges.
+    // Use different value to differentiate lhs and rhs ranges
     enum Type { OPEN = 1, CLOSE = -1, VOID_OPEN = 2, VOID_CLOSE = -2 };
     int y_ = 0;
     Type type_ = Type::OPEN;
@@ -67,14 +67,13 @@ public:
 
     Event(int y, Type type, int l, int r) : y_(y), type_(type), left_(l), right_(r) {}
 };
-
 bool EventSortByY(const Event& e1, const Event& e2);
 
 class Range {
 public:
     int start_ = 0;
     int end_ = 0;
-    Range(int start, int end) : start_(start), end_(end) {}
+    Range(int s, int e) : start_(s), end_(e) {}
     bool operator==(const Range& r)
     {
         return start_ == r.start_ && end_ == r.end_;
@@ -86,27 +85,22 @@ public:
     int start_ = 0;
     int end_ = 0;
     int mid_ = 0;
-    Node* left_ = nullptr;
-    Node* right_ = nullptr;
     int positive_count_ = 0; // used for counting current lhs ranges
     int negative_count_ = 0; // used for counting current rhs ranges
+    Node* left_ = nullptr;
+    Node* right_ = nullptr;
 
     Node(int s, int e) : start_(s), end_(e), mid_((s + e) >> 1) {}
     ~Node()
     {
-        if (right_ != nullptr) {
-            delete right_;
-            right_ = nullptr;
-        }
         if (left_ != nullptr) {
             delete left_;
             left_ = nullptr;
         }
-    }
-
-    inline bool IsLeaf()
-    {
-        return left_ == nullptr && right_ == nullptr;
+        if (right_ != nullptr) {
+            delete right_;
+            right_ = nullptr;
+        }
     }
 
     // push current node [start, end] into range result, merge last range if possible
@@ -120,16 +114,21 @@ public:
         }
     }
 
+    inline bool IsLeaf()
+    {
+        return left_ == nullptr && right_ == nullptr;
+    }
+
     // update segment tree
     void Update(int updateStart, int updateEnd, Event::Type type);
-    // get ranges where positive_count_ or negtive_count_ is positive
-    void GetOrRange(std::vector<Range>& res, bool isParentNodePos, bool isParentNodeNeg);
     // get ranges where positive_count_ and negtive_count_ are both positive
     void GetAndRange(std::vector<Range>& res, bool isParentNodePos, bool isParentNodeNeg);
-    // get ranges where positive_count_ is positive and negtive_count_ not
-    void GetSubRange(std::vector<Range>& res, bool isParentNodePos, bool isParentNodeNeg);
+    // get ranges where positive_count_ or negtive_count_ is positive
+    void GetOrRange(std::vector<Range>& res, bool isParentNodePos, bool isParentNodeNeg);
     // get ranges where either positive_count_ and negtive_count_ are both positive
     void GetXOrRange(std::vector<Range>& res, bool isParentNodePos, bool isParentNodeNeg);
+    // get ranges where positive_count_ is positive and negtive_count_ not
+    void GetSubRange(std::vector<Range>& res, bool isParentNodePos, bool isParentNodeNeg);
 };
 
 class Region {
@@ -145,34 +144,29 @@ public:
     };
 
     Region() = default;
-    explicit Region(Rect& rect)
+    explicit Region(Rect& r)
     {
-        rects_.push_back(rect);
-        bound_ = Rect { rect };
+        rects_.push_back(r);
+        bound_ = Rect { r };
     }
 
-    Region(const Region& region) : rects_(region.rects_), bound_(region.bound_) {}
-    Region& operator=(const Region& region)
+    Region(const Region& reg) : rects_(reg.rects_), bound_(reg.bound_) {}
+    Region& operator=(const Region& reg)
     {
-        rects_ = region.rects_;
-        bound_ = region.bound_;
+        rects_ = reg.rects_;
+        bound_ = reg.bound_;
         return *this;
     }
     ~Region() {}
-
-    std::vector<Rect>& GetRegionRects()
-    {
-        return rects_;
-    }
 
     std::vector<Rect> GetRegionRects() const
     {
         return rects_;
     }
 
-    bool IsEmpty() const
+    std::vector<Rect>& GetRegionRects()
     {
-        return rects_.size() == 0;
+        return rects_;
     }
 
     int GetSize() const
@@ -180,29 +174,29 @@ public:
         return rects_.size();
     }
 
-    Rect& GetBoundRef()
-    {
-        return bound_;
-    }
-
     Rect GetBound() const
     {
         return bound_;
     }
 
+    Rect& GetBoundRef()
+    {
+        return bound_;
+    }
+
+    bool IsEmpty() const
+    {
+        return rects_.size() == 0;
+    }
+
     std::string GetRegionInfo() const
     {
         std::string info = "{ Region Size " + std::to_string(rects_.size()) + ": ";
-        for (auto& rect : rects_) {
-            info.append(rect.GetRectInfo());
+        for (auto& r : rects_) {
+            info.append(r.GetRectInfo());
         }
         info.append(" }");
         return info;
-    }
-
-    inline size_t Size() const
-    {
-        return rects_.size();
     }
 
     inline std::vector<Rect>::const_iterator CBegin() const
@@ -210,14 +204,14 @@ public:
         return rects_.cbegin();
     }
 
-    inline std::vector<Rect>::iterator Begin()
-    {
-        return rects_.begin();
-    }
-
     inline std::vector<Rect>::const_iterator CEnd() const
     {
         return rects_.cend();
+    }
+
+    inline std::vector<Rect>::iterator Begin()
+    {
+        return rects_.begin();
     }
 
     inline std::vector<Rect>::const_iterator End()
@@ -225,45 +219,50 @@ public:
         return rects_.end();
     }
 
+    inline size_t Size() const
+    {
+        return rects_.size();
+    }
+
+    // bound of all region rects
+    void MakeBound();
     /* core Region logic operation function, the return region's rects is guaranteed no-intersection
         (rect in rects_ do not intersect with each other)
     */
     void RegionOp(Region& r1, Region& r2, Region& res, Region::OP op);
     void RegionOpLocal(Region& r1, Region& r2, Region& res, Region::OP op);
-    // bound of all region rects
-    void MakeBound();
-
-    // return merge region
-    Region Or(Region& r);
-    // return intersection region
-    Region And(Region& r);
-    // return region belongs to Region(lhs) but not Region(rhs)
-    Region Sub(Region& r);
-    // return merge region subtract intersection region
-    Region Xor(Region& r);
 
     Region& OperationSelf(Region& r, Region::OP op);
-    // replace region with or result
-    Region& OrSelf(Region& r);
     // replace region with and result
     Region& AndSelf(Region& r);
-    // replace region with sub result
-    Region& SubSelf(Region& r);
+    // replace region with or result
+    Region& OrSelf(Region& r);
     // replace region with xor result
     Region& XOrSelf(Region& r);
+    // replace region with sub result
+    Region& SubSelf(Region& r);
+
+    // return intersection region
+    Region And(Region& r);
+    // return merge region
+    Region Or(Region& r);
+    // return merge region subtract intersection region
+    Region Xor(Region& r);
+    // return region belongs to Region(lhs) but not Region(rhs)
+    Region Sub(Region& r);
 
 private:
     class Rects {
     public:
-        int preY = 0;
-        int curY = 0;
         std::vector<Rect> preRects;
         std::vector<Rect> curRects;
+        int preY = 0;
+        int curY = 0;
     };
-    // update tmp rects and region according to current ranges
-    void UpdateRects(Rects& r, std::vector<Range>& ranges, std::vector<int>& indexAt, Region& res);
     // get ranges from segmentTree node according to logical operation type
     void getRange(std::vector<Range>& ranges, Node& node, OP op);
+    // update tmp rects and region according to current ranges
+    void UpdateRects(Rects& r, std::vector<Range>& ranges, std::vector<int>& indexAt, Region& res);
 
 private:
     std::vector<Rect> rects_;

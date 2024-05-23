@@ -59,8 +59,8 @@ group("unittest") {
     ":ws_session_display_power_controller_test",
     ":ws_session_listener_controller_test",
     ":ws_session_manager_agent_controller_test",
-    ":ws_session_manager_service_recover_proxy_test",
     ":ws_session_manager_test",
+    ":ws_session_manager_lite_test",
     ":ws_session_permission_test",
     ":ws_session_proxy_mock_test",
     ":ws_session_proxy_test",
@@ -607,6 +607,19 @@ ohos_unittest("ws_session_manager_test") {
   ]
 }
 
+ohos_unittest("ws_session_manager_lite_test") {
+  module_out_path = module_out_path
+
+  sources = [ "session_manager_lite_test.cpp" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
 ohos_unittest("ws_scene_session_manager_stub_test") {
   module_out_path = module_out_path
 
@@ -1017,27 +1030,6 @@ ohos_unittest("ws_scene_session_manager_lite_stub_test") {
   ]
 }
 
-ohos_unittest("ws_session_manager_service_recover_proxy_test") {
-  module_out_path = module_out_path
-
-  include_dirs = [ "../mock" ]
-
-  sources = [
-    "../mock/mock_message_parcel.cpp",
-    "session_manager_service_recover_proxy_test.cpp",
-  ]
-
-  deps = [
-    ":ws_unittest_common",
-    "${window_base_path}/wmserver:sms",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-  ]
-}
-
 ## Build ws_unittest_common.a {{{
 config("ws_unittest_common_public_config") {
   include_dirs = [
@@ -1110,6 +1102,7 @@ ohos_static_library("ws_unittest_common") {
     "${window_base_path}/window_scene/session_manager:scene_session_manager",
     "${window_base_path}/window_scene/session_manager:screen_session_manager",
     "${window_base_path}/window_scene/session_manager:session_manager",
+    "${window_base_path}/window_scene/session_manager:session_manager_lite",
     "${window_base_path}/wm:libwm",
     "//third_party/googletest:gmock",
     "//third_party/googletest:gtest_main",

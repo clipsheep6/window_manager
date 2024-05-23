@@ -29,7 +29,7 @@ using namespace OHOS::Rosen;
 
 namespace OHOS {
 namespace {
-constexpr size_t DATA_MIN_SIZE = 2;
+    constexpr size_t DATA_MIN_SIZE = 2;
 }
 
 template<class T>
@@ -55,15 +55,9 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     parcel.WriteInterfaceToken(Rosen::WindowManagerAgentStub::GetDescriptor());
     parcel.WriteBuffer(data, size);
     parcel.RewindRead(0);
-    sptr<WindowManagerAgent> wmStub = new (std::nothrow) WindowManagerAgent();
-    if (wmStub == nullptr) {
-        return false;
-    }
+    std::shared_ptr<WindowManagerAgent> wmStub = std::make_shared<WindowManagerAgent>();
     wmStub->OnRemoteRequest(
         static_cast<uint32_t>(Rosen::IWindowManagerAgent::WindowManagerAgentMsg::TRANS_ID_UPDATE_SYSTEM_BAR_PROPS),
-        parcel, reply, option);
-    wmStub->OnRemoteRequest(
-        static_cast<uint32_t>(Rosen::IWindowManagerAgent::WindowManagerAgentMsg::TRANS_ID_UPDATE_CAMERA_FLOAT),
         parcel, reply, option);
     return true;
 }

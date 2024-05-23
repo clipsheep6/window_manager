@@ -19,7 +19,6 @@ namespace Rosen {
 class MockMessageParcel {
 public:
     static void ClearAllErrorFlag();
-    static void SetWriteBoolErrorFlag(bool flag);
     static void SetWriteInt32ErrorFlag(bool flag);
     static void SetWriteInt64ErrorFlag(bool flag);
     static void SetWriteParcelableErrorFlag(bool flag);

@@ -30,7 +30,7 @@ using namespace OHOS::Rosen;
 
 namespace OHOS {
 namespace {
-constexpr size_t DATA_MIN_SIZE = 2;
+    constexpr size_t DATA_MIN_SIZE = 2;
 }
 
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
@@ -47,27 +47,12 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     parcel.WriteBuffer(data, size);
     parcel.RewindRead(0);
 
-    sptr<WindowEventChannel> eventStub = new (std::nothrow) WindowEventChannel(nullptr);
-    if (eventStub == nullptr) {
-        return false;
-    }
+    std::shared_ptr<WindowEventChannel> eventStub = std::make_shared<WindowEventChannel>(nullptr);
     eventStub->OnRemoteRequest(
-        static_cast<uint32_t>(Rosen::WindowEventInterfaceCode::TRANS_ID_TRANSFER_FOCUS_ACTIVE_EVENT),
+        static_cast<uint32_t>(Rosen::WindowEventInterfaceCode::TRANS_ID_TRANSFER_POINTER_EVENT),
         parcel, reply, option);
     eventStub->OnRemoteRequest(
-        static_cast<uint32_t>(Rosen::WindowEventInterfaceCode::TRANS_ID_TRANSFER_FOCUS_WINDOW_ID_EVENT),
-        parcel, reply, option);
-    eventStub->OnRemoteRequest(
-        static_cast<uint32_t>(Rosen::WindowEventInterfaceCode::TRANS_ID_TRANSFER_FOCUS_STATE_EVENT),
-        parcel, reply, option);
-    eventStub->OnRemoteRequest(
-        static_cast<uint32_t>(Rosen::WindowEventInterfaceCode::TRANS_ID_TRANSFER_FOCUS_MOVE_SEARCH),
-        parcel, reply, option);
-    eventStub->OnRemoteRequest(
-        static_cast<uint32_t>(Rosen::WindowEventInterfaceCode::TRANS_ID_TRANSFER_FIND_FOCUSED_ELEMENT_INFO),
-        parcel, reply, option);
-    eventStub->OnRemoteRequest(
-        static_cast<uint32_t>(Rosen::WindowEventInterfaceCode::TRANS_ID_TRANSFER_CLEAR_FOCUS),
+        static_cast<uint32_t>(Rosen::WindowEventInterfaceCode::TRANS_ID_TRANSFER_KEY_EVENT_ASYNC),
         parcel, reply, option);
     return true;
 }

@@ -238,7 +238,8 @@ HWTEST_F(WindowSessionImplTest, SetResizeByDragEnabled01, Function | SmallTest |
     ASSERT_NE(nullptr, session);
     window->hostSession_ = session;
     window->state_ = WindowState::STATE_CREATED;
-    window->SetResizeByDragEnabled(true);
+    retCode = window->SetResizeByDragEnabled(true);
+    ASSERT_NE(retCode, WMError::WM_OK);
 }
 
 /**
@@ -1590,7 +1591,8 @@ HWTEST_F(WindowSessionImplTest, HideNonSystemFloatingWindows01, Function | Small
     ASSERT_NE(nullptr, session);
     window->hostSession_ = session;
     window->state_ = WindowState::STATE_CREATED;
-    window->HideNonSystemFloatingWindows(false);
+    retCode = window->HideNonSystemFloatingWindows(false);
+    ASSERT_NE(retCode, WMError::WM_OK);
 }
 
 /**
@@ -1825,7 +1827,8 @@ HWTEST_F(WindowSessionImplTest, SetSubWindowModal, Function | SmallTest | Level2
     sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
     ASSERT_NE(window, nullptr);
     bool isModal = true;
-    window->SetSubWindowModal(isModal);
+    WMError res = window->SetSubWindowModal(isModal);
+    ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetSubWindowModaltest01 end";
 }
 
@@ -1958,8 +1961,7 @@ HWTEST_F(WindowSessionImplTest, SetUIContentInner, Function | SmallTest | Level2
     ASSERT_NE(window, nullptr);
     window->property_->SetPersistentId(1);
     std::string url = "";
-    WMError res1 = window->SetUIContentInner(url, nullptr, nullptr, WindowSetUIContentType::DEFAULT,
-        BackupAndRestoreType::NONE, nullptr);
+    WMError res1 = window->SetUIContentInner(url, nullptr, nullptr, WindowSetUIContentType::DEFAULT, nullptr);
     ASSERT_EQ(res1, WMError::WM_ERROR_INVALID_WINDOW);
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetUIContentInner end";
 }
@@ -1984,7 +1986,7 @@ HWTEST_F(WindowSessionImplTest, TestGetUIContentWithId, Function | SmallTest | L
     ASSERT_NE(nullptr, session);
     ASSERT_EQ(WMError::WM_OK, window->Create(nullptr, session));
     window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
-
+    
     ASSERT_EQ(nullptr, window->GetUIContentWithId(102));
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: TestGetUIContentWithId end";
@@ -2010,7 +2012,8 @@ HWTEST_F(WindowSessionImplTest, GetCallingWindowRect, Function | SmallTest | Lev
     ASSERT_NE(nullptr, session);
     window->hostSession_ = session;
     window->state_ = WindowState::STATE_CREATED;
-    window->GetCallingWindowRect(rect);
+    retCode = window->GetCallingWindowRect(rect);
+    ASSERT_NE(retCode, WMError::WM_OK);
 }
 
 /**
@@ -2033,7 +2036,8 @@ HWTEST_F(WindowSessionImplTest, GetCallingWindowWindowStatus, Function | SmallTe
     ASSERT_NE(nullptr, session);
     window->hostSession_ = session;
     window->state_ = WindowState::STATE_CREATED;
-    window->GetCallingWindowWindowStatus(windowStatus);
+    retCode = window->GetCallingWindowWindowStatus(windowStatus);
+    ASSERT_NE(retCode, WMError::WM_OK);
 }
 
 /**
@@ -2192,8 +2196,7 @@ HWTEST_F(WindowSessionImplTest, NapiSetUIContent, Function | SmallTest | Level2)
 
     window->SetUIContentByName(url, nullptr, nullptr, nullptr);
     window->SetUIContentByAbc(url, nullptr, nullptr, nullptr);
-    WMError res1 = window->NapiSetUIContent(url, nullptr, nullptr, BackupAndRestoreType::CONTINUATION,
-        nullptr, ability);
+    WMError res1 = window->NapiSetUIContent(url, nullptr, nullptr, true, nullptr, ability);
     ASSERT_EQ(res1, WMError::WM_ERROR_INVALID_WINDOW);
 }
 
@@ -2212,8 +2215,7 @@ HWTEST_F(WindowSessionImplTest, GetAbcContent, Function | SmallTest | Level2)
     ASSERT_NE(window, nullptr);
     window->property_->SetPersistentId(1);
     std::string url = "";
-    WMError res = window->SetUIContentInner(url, nullptr, nullptr, WindowSetUIContentType::BY_ABC,
-        BackupAndRestoreType::NONE, nullptr);
+    WMError res = window->SetUIContentInner(url, nullptr, nullptr, WindowSetUIContentType::BY_ABC, nullptr);
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
 }
 
@@ -2303,23 +2305,6 @@ HWTEST_F(WindowSessionImplTest, Filter, Function | SmallTest | Level2)
     auto ret = window->ClearKeyEventFilter();
     ASSERT_EQ(ret, WMError::WM_OK);
 }
-
-/**
- * @tc.name: UpdateOrientation
- * @tc.desc: UpdateOrientation
- * @tc.type: FUNC
- */
-HWTEST_F(WindowSessionImplTest, UpdateOrientation, Function | SmallTest | Level2)
-{
-    sptr<WindowOption> option = new WindowOption();
-    ASSERT_NE(option, nullptr);
-    option->SetWindowName("UpdateOrientation");
-    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
-    ASSERT_NE(window, nullptr);
-    auto ret = window->UpdateOrientation();
-    ASSERT_EQ(WSError::WS_OK, ret);
-}
-
 }
 } // namespace Rosen
 } // namespace OHOS

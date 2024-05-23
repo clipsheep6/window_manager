@@ -539,9 +539,6 @@ void ScreenSession::SetScreenRequestedOrientation(Orientation orientation)
 
 void ScreenSession::SetScreenRotationLocked(bool isLocked)
 {
-    if (isScreenLocked_ == isLocked) {
-        return;
-    }
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         isScreenLocked_ = isLocked;
