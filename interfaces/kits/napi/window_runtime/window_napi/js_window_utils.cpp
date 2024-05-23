@@ -823,8 +823,8 @@ bool SetSystemBarPropertiesFromJs(napi_env env, napi_value jsObject,
         jsObject, "navigationBarColor", navProperty.backgroundColor_,
         propertyFlags[WindowType::WINDOW_TYPE_NAVIGATION_BAR].backgroundColorFlag);
 
-    if (!SetWindowStatusBarContentColor(env, object, properties, propertyFlags) ||
-        !SetWindowNavigationBarContentColor(env, object, properties, propertyFlags)) {
+    if (!SetWindowStatusBarContentColor(env, jsObject, properties, propertyFlags) ||
+        !SetWindowNavigationBarContentColor(env, jsObject, properties, propertyFlags)) {
         return false;
     }
 
