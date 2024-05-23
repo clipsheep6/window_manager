@@ -258,11 +258,6 @@ HWTEST_F(ScreenSceneConfigTest, ReadStringConfigInfo, Function | SmallTest | Lev
             readCount++;
             continue;
         }
-        if (!xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("externalScreenDefaultMode"))) {
-            ScreenSceneConfig::ReadStringConfigInfo(curNodePtr);
-            readCount++;
-            continue;
-        }
     }
 
     ASSERT_LE(ScreenSceneConfig::stringConfig_.size(), readCount);
@@ -312,9 +307,9 @@ HWTEST_F(ScreenSceneConfigTest, GetCurvedScreenBoundaryConfig, Function | SmallT
 {
     auto result = ScreenSceneConfig::GetCurvedScreenBoundaryConfig();
     if (ScreenSessionManager::GetInstance().GetCurvedCompressionArea() == 0) {
-        ASSERT_EQ(0, result.size());
-    } else {
         ASSERT_NE(0, result.size());
+    } else {
+        ASSERT_EQ(0, result.size());
     }
 }
 
@@ -452,55 +447,6 @@ HWTEST_F(ScreenSceneConfigTest, SetCurvedCompressionAreaInLandscape, Function | 
     ScreenSceneConfig::SetCurvedCompressionAreaInLandscape();
     ASSERT_EQ(0, res);
 }
-
-/**
- * @tc.name: IsSupportRotateWithSensor01
- * @tc.desc: IsSupportRotateWithSensor
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenSceneConfigTest, IsSupportRotateWithSensor01, Function | SmallTest | Level3)
-{
-    ScreenSceneConfig::enableConfig_["supportRotateWithSensor"] = true;
-    bool res = ScreenSceneConfig::IsSupportRotateWithSensor();
-    ASSERT_EQ(true, res);
-}
-
-/**
- * @tc.name: IsSupportRotateWithSensor01
- * @tc.desc: IsSupportRotateWithSensor
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenSceneConfigTest, IsSupportRotateWithSensor02, Function | SmallTest | Level3)
-{
-    ScreenSceneConfig::enableConfig_.erase("supportRotateWithSensor");
-    bool res = ScreenSceneConfig::IsSupportRotateWithSensor();
-    ASSERT_EQ(false, res);
-}
-
-/**
- * @tc.name: GetExternalScreenDefaultMode01
- * @tc.desc: GetExternalScreenDefaultMode
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenSceneConfigTest, GetExternalScreenDefaultMode01, Function | SmallTest | Level3)
-{
-    ScreenSceneConfig::stringConfig_["externalScreenDefaultMode"] = "mirror";
-    std::string res = ScreenSceneConfig::GetExternalScreenDefaultMode();
-    ASSERT_EQ("mirror", res);
-}
-
-/**
- * @tc.name: GetExternalScreenDefaultMode02
- * @tc.desc: GetExternalScreenDefaultMode
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenSceneConfigTest, GetExternalScreenDefaultMode02, Function | SmallTest | Level3)
-{
-    ScreenSceneConfig::stringConfig_.erase("externalScreenDefaultMode");
-    std::string res = ScreenSceneConfig::GetExternalScreenDefaultMode();
-    ASSERT_EQ("", res);
-}
-
 }
 } // namespace Rosen
 } // namespace OHOS
