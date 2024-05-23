@@ -258,7 +258,6 @@ public:
      */
     void SetWindowStageAttribute(WindowStageAttribute windowStageAttribute);
 
-
     /**
      * @brief Get window rect.
      *

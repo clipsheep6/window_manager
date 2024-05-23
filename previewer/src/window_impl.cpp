@@ -15,6 +15,7 @@
 
 #include "window_impl.h"
 
+#include "constants.h"
 #include "window_manager_hilog.h"
 #include "window_helper.h"
 #include "window_option.h"
