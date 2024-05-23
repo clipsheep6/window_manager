@@ -77,6 +77,7 @@ constexpr float MAX_GRAY_SCALE = 1.0f;
 }
 uint32_t WindowSceneSessionImpl::maxFloatingWindowSize_ = 1920;
 std::mutex WindowSceneSessionImpl::keyboardPanelInfoChangeListenerMutex_;
+bool WindowSceneSessionImpl::enableImmersiveMode_ = true;
 
 WindowSceneSessionImpl::WindowSceneSessionImpl(const sptr<WindowOption>& option) : WindowSessionImpl(option)
 {
@@ -544,8 +545,11 @@ void WindowSceneSessionImpl::ConsumePointerEvent(const std::shared_ptr<MMI::Poin
 bool WindowSceneSessionImpl::PreNotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
     bool ret = false;
-    if (uiContent_ != nullptr) {
-        ret = uiContent_->ProcessKeyEvent(keyEvent, true);
+    {
+        std::shared_lock<std::shared_mutex> lock(uiContentMutex_);
+        if (uiContent_ != nullptr) {
+            ret = uiContent_->ProcessKeyEvent(keyEvent, true);
+        }
     }
     RefreshNoInteractionTimeoutMonitor();
     return ret;
@@ -1174,6 +1178,7 @@ WMError WindowSceneSessionImpl::Destroy(bool needNotifyServer, bool needClearLis
     if (context_) {
         context_.reset();
     }
+    ClearVsyncStation();
     TLOGI(WmsLogTag::WMS_LIFE, "Destroy success, id: %{public}d", property_->GetPersistentId());
     return WMError::WM_OK;
 }
@@ -1446,40 +1451,9 @@ WmErrorCode WindowSceneSessionImpl::RaiseAboveTarget(int32_t subWindowId)
     return WM_JS_TO_ERROR_CODE_MAP.at(static_cast<WMError>(ret));
 }
 
-bool WindowSceneSessionImpl::CheckGetAvoidAreaAvailable(AvoidAreaType type)
-{
-    WindowMode mode = GetMode();
-    WindowType winType = GetType();
-
-    if (type == AvoidAreaType::TYPE_KEYBOARD) {
-        return true;
-    }
-    if (WindowHelper::IsMainWindow(winType)) {
-        if (mode != WindowMode::WINDOW_MODE_FLOATING ||
-            system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
-            system::GetParameter("const.product.devicetype", "unknown") == "tablet") {
-            return true;
-        }
-    }
-    if (WindowHelper::IsSubWindow(winType)) {
-        auto parentSessoin = FindParentSessionByParentId(property_->GetParentId());
-        if (parentSessoin->GetRect() == GetRect()) {
-            return true;
-        }
-    }
-    TLOGI(WmsLogTag::WMS_IMMS, "Window [%{public}u, %{public}s] type %{public}d "
-        "avoidAreaType %{public}u windowMode %{public}u, return default avoid area.",
-        GetWindowId(), GetWindowName().c_str(), static_cast<uint32_t>(winType),
-        static_cast<uint32_t>(type), static_cast<uint32_t>(mode));
-    return false;
-}
-
 WMError WindowSceneSessionImpl::GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea)
 {
     uint32_t windowId = GetWindowId();
-    if (!CheckGetAvoidAreaAvailable(type)) {
-        return WMError::WM_OK;
-    }
     if (hostSession_ == nullptr) {
         TLOGE(WmsLogTag::WMS_IMMS, "hostSession_ is null");
         return WMError::WM_ERROR_NULLPTR;
@@ -1522,14 +1496,15 @@ WMError WindowSceneSessionImpl::SetLayoutFullScreenByApiVersion(bool status)
         version = context_->GetApplicationInfo()->apiCompatibleVersion;
     }
     isIgnoreSafeArea_ = status;
+    isIgnoreSafeAreaNeedNotify_ = true;
     // 10 ArkUI new framework support after API10
     if (version >= 10) {
         TLOGI(WmsLogTag::WMS_IMMS, "SetIgnoreViewSafeArea winId:%{public}u status:%{public}d",
             GetWindowId(), static_cast<int32_t>(status));
+        std::shared_lock<std::shared_mutex> lock(uiContentMutex_);
         if (uiContent_ != nullptr) {
             uiContent_->SetIgnoreViewSafeArea(status);
         }
-        isIgnoreSafeAreaNeedNotify_ = true;
     } else {
         TLOGI(WmsLogTag::WMS_IMMS, "SetWindowNeedAvoidFlag winId:%{public}u status:%{public}d",
             GetWindowId(), static_cast<int32_t>(status));
@@ -1567,9 +1542,11 @@ WMError WindowSceneSessionImpl::SetLayoutFullScreen(bool status)
         TLOGI(WmsLogTag::WMS_IMMS, "system window is not supported");
         return WMError::WM_OK;
     }
-    
     bool preStatus = property_->IsLayoutFullScreen();
-    property_->SetIsLayoutFullScreen(status);
+    property_->SetIsLayoutFullScreen(true);
+    if (hostSession_ != nullptr) {
+        hostSession_->OnLayoutFullScreenChange(status);
+    }
     UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE);
 
     if (WindowHelper::IsMainWindow(GetType()) &&
@@ -1593,13 +1570,20 @@ WMError WindowSceneSessionImpl::SetLayoutFullScreen(bool status)
         TLOGE(WmsLogTag::WMS_IMMS, "SetLayoutFullScreenByApiVersion errCode:%{public}d winId:%{public}u",
             static_cast<int32_t>(ret), GetWindowId());
     }
-
+    enableImmersiveMode_ = status;
     return ret;
 }
 
 bool WindowSceneSessionImpl::IsLayoutFullScreen() const
 {
-    return isIgnoreSafeArea_;
+    WindowType winType = property_->GetWindowType();
+    if (WindowHelper::IsMainWindow(winType)) {
+        return (GetMode() == WindowMode::WINDOW_MODE_FULLSCREEN && isIgnoreSafeArea_);
+    }
+    if (WindowHelper::IsSubWindow(winType)) {
+        return (isIgnoreSafeAreaNeedNotify_ && isIgnoreSafeArea_);
+    }
+    return false;
 }
 
 SystemBarProperty WindowSceneSessionImpl::GetSystemBarPropertyByType(WindowType type) const
@@ -1783,7 +1767,7 @@ WMError WindowSceneSessionImpl::Maximize()
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (WindowHelper::IsMainWindow(GetType())) {
-        SetFullScreen(true);
+        SetLayoutFullScreen(enableImmersiveMode_);
     }
     return WMError::WM_OK;
 }
@@ -1801,8 +1785,7 @@ WMError WindowSceneSessionImpl::Maximize(MaximizeLayoutOption option)
     if (!WindowHelper::IsWindowModeSupported(property_->GetModeSupportInfo(), WindowMode::WINDOW_MODE_FULLSCREEN)) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    property_->SetIsLayoutFullScreen(option.decor == ShowType::HIDE);
-    return SetFullScreen(true);
+    return SetLayoutFullScreen(enableImmersiveMode_);
 }
 
 WMError WindowSceneSessionImpl::MaximizeFloating()
@@ -1821,7 +1804,7 @@ WMError WindowSceneSessionImpl::MaximizeFloating()
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     if (GetGlobalMaximizeMode() != MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
-        SetFullScreen(true);
+        SetLayoutFullScreen(enableImmersiveMode_);
         property_->SetMaximizeMode(MaximizeMode::MODE_FULL_FILL);
     } else {
         hostSession_->OnSessionEvent(SessionEvent::EVENT_MAXIMIZE_FLOATING);
@@ -1993,6 +1976,7 @@ WSError WindowSceneSessionImpl::HandleBackEvent()
         backKeyEvent->SetKeyAction(MMI::KeyEvent::KEY_ACTION_UP);
         isConsumed = inputEventConsumer->OnInputEvent(backKeyEvent);
     } else {
+        std::shared_lock<std::shared_mutex> lock(uiContentMutex_);
         if (uiContent_ != nullptr) {
             WLOGFD("Transfer back event to uiContent");
             isConsumed = uiContent_->ProcessBackPressed();
@@ -2110,13 +2094,12 @@ WMError WindowSceneSessionImpl::SetGrayScale(float grayScale)
         WLOGFE("invalid grayScale value: %{public}f", grayScale);
         return WMError::WM_ERROR_INVALID_PARAM;
     }
+    std::shared_lock<std::shared_mutex> lock(uiContentMutex_);
     if (uiContent_ == nullptr) {
         WLOGFE("uicontent is empty");
         return WMError::WM_ERROR_NULLPTR;
     }
-
     uiContent_->SetContentNodeGrayScale(grayScale);
-
     WLOGI("Set window gray scale success, grayScale: %{public}f", grayScale);
     return WMError::WM_OK;
 }
@@ -2204,9 +2187,12 @@ uint32_t WindowSceneSessionImpl::GetWindowFlags() const
 
 void WindowSceneSessionImpl::UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
-    if (uiContent_ != nullptr) {
-        WLOGFD("notify ace winId:%{public}u", GetWindowId());
-        uiContent_->UpdateConfiguration(configuration);
+    {
+        std::shared_lock<std::shared_mutex> lock(uiContentMutex_);
+        if (uiContent_ != nullptr) {
+            WLOGFD("notify ace winId:%{public}u", GetWindowId());
+            uiContent_->UpdateConfiguration(configuration);
+        }
     }
     if (subWindowSessionMap_.count(GetPersistentId()) == 0) {
         return;
@@ -2219,7 +2205,7 @@ void WindowSceneSessionImpl::UpdateConfiguration(const std::shared_ptr<AppExecFw
 void WindowSceneSessionImpl::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
     WLOGD("notify scene ace update config");
-    std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
+    std::shared_lock<std::shared_mutex> lock(windowSessionMutex_);
     for (const auto& winPair : windowSessionMap_) {
         auto window = winPair.second.second;
         window->UpdateConfiguration(configuration);
@@ -2228,7 +2214,7 @@ void WindowSceneSessionImpl::UpdateConfigurationForAll(const std::shared_ptr<App
 
 sptr<Window> WindowSceneSessionImpl::GetTopWindowWithContext(const std::shared_ptr<AbilityRuntime::Context>& context)
 {
-    std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
+    std::shared_lock<std::shared_mutex> lock(windowSessionMutex_);
     if (windowSessionMap_.empty()) {
         WLOGFE("[GetTopWin] Please create mainWindow First!");
         return nullptr;
@@ -2288,7 +2274,7 @@ sptr<Window> WindowSceneSessionImpl::GetMainWindowWithContext(const std::shared_
 
 sptr<WindowSessionImpl> WindowSceneSessionImpl::GetMainWindowWithId(uint32_t mainWinId)
 {
-    std::unique_lock<std::shared_mutex> lock(windowSessionMutex_);
+    std::shared_lock<std::shared_mutex> lock(windowSessionMutex_);
     if (windowSessionMap_.empty()) {
         WLOGFE("Please create mainWindow First!");
         return nullptr;
@@ -2541,7 +2527,7 @@ std::shared_ptr<Media::PixelMap> WindowSceneSessionImpl::Snapshot()
 WMError WindowSceneSessionImpl::NotifyMemoryLevel(int32_t level)
 {
     WLOGFD("id: %{public}u, notify memory level: %{public}d", GetWindowId(), level);
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    std::shared_lock<std::shared_mutex> lock(uiContentMutex_);
     if (uiContent_ == nullptr) {
         WLOGFE("Window %{public}s notify memory level failed, ace is null.", GetWindowName().c_str());
         return WMError::WM_ERROR_NULLPTR;
@@ -2634,6 +2620,8 @@ WMError WindowSceneSessionImpl::RegisterAnimationTransitionController(
     animationTransitionController_ = listener;
     wptr<WindowSessionProperty> propertyToken(property_);
     wptr<IAnimationTransitionController> animationTransitionControllerToken(animationTransitionController_);
+
+    std::shared_lock<std::shared_mutex> lock(uiContentMutex_);
     if (uiContent_) {
         uiContent_->SetNextFrameLayoutCallback([propertyToken, animationTransitionControllerToken]() {
             auto property = propertyToken.promote();
@@ -2795,10 +2783,12 @@ void WindowSceneSessionImpl::DumpSessionElementInfo(const std::vector<std::strin
         return;
     }
     WLOGFD("ArkUI:DumpInfo");
-    if (uiContent_ != nullptr) {
-        uiContent_->DumpInfo(params, info);
+    {
+        std::shared_lock<std::shared_mutex> lock(uiContentMutex_);
+        if (uiContent_ != nullptr) {
+            uiContent_->DumpInfo(params, info);
+        }
     }
-
     for (auto iter = info.begin(); iter != info.end();) {
         if ((*iter).size() == 0) {
             iter = info.erase(iter);
@@ -2890,12 +2880,13 @@ WMError WindowSceneSessionImpl::UpdateWindowModeImmediately(WindowMode mode)
 WSError WindowSceneSessionImpl::UpdateMaximizeMode(MaximizeMode mode)
 {
     WLOGFI("UpdateMaximizeMode %{public}u mode %{public}u", GetWindowId(), static_cast<uint32_t>(mode));
+    std::shared_lock<std::shared_mutex> lock(uiContentMutex_);
     if (uiContent_ == nullptr) {
         WLOGFE("UpdateMaximizeMode uiContent_ is null");
         return WSError::WS_ERROR_INVALID_PARAM;
     }
-    property_->SetMaximizeMode(mode);
     uiContent_->UpdateMaximizeMode(mode);
+    property_->SetMaximizeMode(mode);
     return WSError::WS_OK;
 }
 
@@ -2917,6 +2908,7 @@ WSError WindowSceneSessionImpl::UpdateTitleInTargetPos(bool isShow, int32_t heig
     if (IsWindowSessionInvalid()) {
         return WSError::WS_ERROR_INVALID_WINDOW;
     }
+    std::shared_lock<std::shared_mutex> lock(uiContentMutex_);
     if (uiContent_ == nullptr) {
         WLOGFE("UpdateTitleInTargetPos uiContent_ is null");
         return WSError::WS_ERROR_INVALID_PARAM;
@@ -2936,7 +2928,7 @@ WSError WindowSceneSessionImpl::SwitchFreeMultiWindow(bool enable)
 
 WMError WindowSceneSessionImpl::NotifyPrepareClosePiPWindow()
 {
-    TLOGD(WmsLogTag::WMS_PIP, "NotifyPrepareClosePiPWindow type: %{public}u", GetType());
+    TLOGI(WmsLogTag::WMS_PIP, "NotifyPrepareClosePiPWindow type: %{public}u", GetType());
     if (!WindowHelper::IsPipWindow(GetType())) {
         return WMError::WM_DO_NOTHING;
     }
@@ -3315,6 +3307,35 @@ WMError WindowSceneSessionImpl::AdjustKeyboardLayout(const KeyboardLayoutParams&
         return static_cast<WMError>(hostSession_->AdjustKeyboardLayout(params));
     }
     return WMError::WM_OK;
+}
+
+WMError WindowSceneSessionImpl::SetImmersiveModeEnabledState(bool enable)
+{
+    TLOGD(WmsLogTag::WMS_IMMS, "id: %{public}u, SetImmersiveModeEnabledState: %{public}u", GetWindowId(), enable);
+    if (hostSession_ == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    if (!WindowHelper::IsWindowModeSupported(property_->GetModeSupportInfo(), WindowMode::WINDOW_MODE_FULLSCREEN)) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    const WindowType curWindowType = GetType();
+    if (!WindowHelper::IsMainWindow(curWindowType) && !WindowHelper::IsSubWindow(curWindowType)) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+
+    enableImmersiveMode_ = enable;
+    WindowMode mode = GetMode();
+    if (mode == WindowMode::WINDOW_MODE_FULLSCREEN) {
+        return SetLayoutFullScreen(enableImmersiveMode_);
+    }
+    return WMError::WM_OK;
+}
+
+bool WindowSceneSessionImpl::GetImmersiveModeEnabledState() const
+{
+    TLOGD(WmsLogTag::WMS_IMMS, "id: %{public}u， GetImmersiveModeEnabledState = %{public}u",
+        GetWindowId(), enableImmersiveMode_);
+    return enableImmersiveMode_;
 }
 } // namespace Rosen
 } // namespace OHOS
