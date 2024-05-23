@@ -31,7 +31,7 @@ using namespace OHOS::Rosen;
 
 namespace OHOS {
 namespace {
-constexpr size_t DATA_MIN_SIZE = 2;
+    constexpr size_t DATA_MIN_SIZE = 2;
 }
 
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
@@ -48,11 +48,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     parcel.WriteBuffer(data, size);
     parcel.RewindRead(0);
     sptr<IWindowExtensionCallback> componentCallback;
-    sptr<WindowExtensionClientStubImpl> extensionStubClient =
-        new (std::nothrow) WindowExtensionClientStubImpl(componentCallback);
-    if (extensionStubClient == nullptr) {
-        return false;
-    }
+    std::shared_ptr<WindowExtensionClientStubImpl> extensionStubClient =
+        std::make_shared<WindowExtensionClientStubImpl>(componentCallback);
     extensionStubClient->OnRemoteRequest(
         static_cast<uint32_t>(IWindowExtensionClient::TRANS_ID_ON_WINDOW_READY),
         parcel, reply, option);

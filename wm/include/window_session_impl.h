@@ -68,8 +68,8 @@ public:
     WMError Hide(uint32_t reason = 0, bool withAnimation = false, bool isFromInnerkits = true) override;
     WMError Destroy() override;
     virtual WMError Destroy(bool needNotifyServer, bool needClearListener = true);
-    WMError NapiSetUIContent(const std::string& contentInfo, napi_env env, napi_value storage,
-        BackupAndRestoreType type, sptr<IRemoteObject> token, AppExecFwk::Ability* ability) override;
+    WMError NapiSetUIContent(const std::string& contentInfo, napi_env env,
+        napi_value storage, bool isdistributed, sptr<IRemoteObject> token, AppExecFwk::Ability* ability) override;
     WMError SetUIContentByName(const std::string& contentInfo, napi_env env, napi_value storage,
         AppExecFwk::Ability* ability) override;
     WMError SetUIContentByAbc(const std::string& abcPath, napi_env env, napi_value storage,
@@ -98,7 +98,7 @@ public:
     uint32_t GetWindowId() const override;
     Rect GetRect() const override;
     bool GetFocusable() const override;
-    std::string GetContentInfo(BackupAndRestoreType type = BackupAndRestoreType::CONTINUATION) override;
+    std::string GetContentInfo() override;
     Ace::UIContent* GetUIContent() const override;
     Ace::UIContent* GetUIContentWithId(uint32_t winId) const override;
     void OnNewWant(const AAFwk::Want& want) override;
@@ -112,7 +112,6 @@ public:
     WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override;
     void UpdateDensity() override;
-    WSError UpdateOrientation() override;
     WSError UpdateDisplayId(uint64_t displayId) override;
     WSError UpdateFocus(bool focus) override;
     bool IsFocused() const override;
@@ -223,7 +222,7 @@ public:
     WMError UnregisterWindowRectChangeListener(const sptr<IWindowRectChangeListener>& listener) override;
     virtual WMError GetCallingWindowWindowStatus(WindowStatus& windowStatus) const override;
     virtual WMError GetCallingWindowRect(Rect& rect) const override;
-
+    
 protected:
     WMError Connect();
     bool IsWindowSessionInvalid() const;
@@ -335,10 +334,9 @@ private:
     void NotifyAfterPaused();
 
     WMError InitUIContent(const std::string& contentInfo, napi_env env, napi_value storage,
-        WindowSetUIContentType setUIContentType, BackupAndRestoreType restoreType, AppExecFwk::Ability* ability,
-        OHOS::Ace::UIContentErrorCode& aceRet);
+        WindowSetUIContentType type, AppExecFwk::Ability* ability, OHOS::Ace::UIContentErrorCode& aceRet);
     WMError SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
-        WindowSetUIContentType setUIContentType, BackupAndRestoreType restoreType, AppExecFwk::Ability* ability);
+        WindowSetUIContentType type, AppExecFwk::Ability* ability);
     std::shared_ptr<std::vector<uint8_t>> GetAbcContent(const std::string& abcPath);
 
     void UpdateRectForRotation(const Rect& wmRect, const Rect& preRect, WindowSizeChangeReason wmReason,

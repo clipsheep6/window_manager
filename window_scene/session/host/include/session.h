@@ -210,7 +210,6 @@ public:
     virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
     WSError UpdateDensity();
-    WSError UpdateOrientation();
 
     void SetShowRecent(bool showRecent);
     void SetSystemActive(bool systemActive);
@@ -220,8 +219,6 @@ public:
     float GetOffsetY() const;
     void SetBounds(const WSRectF& bounds);
     WSRectF GetBounds();
-    void SetRotation(Rotation rotation);
-    Rotation GetRotation() const;
     void SetBufferAvailable(bool bufferAvailable);
     bool GetBufferAvailable() const;
     void SetNeedSnapshot(bool needSnapshot);
@@ -416,7 +413,6 @@ public:
     {
         return 0;
     };
-    virtual bool CheckGetAvoidAreaAvailable(AvoidAreaType type) { return true; }
 
 protected:
     class SessionLifeCycleTask : public virtual RefBase {
@@ -477,7 +473,6 @@ protected:
     bool isSystemActive_ = false;
     WSRect winRect_;
     WSRectF bounds_;
-    Rotation rotation_;
     float offsetX_ = 0.0f;
     float offsetY_ = 0.0f;
     bool isVisible_ = false;

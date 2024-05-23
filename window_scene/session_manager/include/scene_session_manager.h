@@ -374,13 +374,9 @@ private:
     WSError RequestSessionUnfocus(int32_t persistentId, FocusChangeReason reason = FocusChangeReason::DEFAULT);
     WSError RequestAllAppSessionUnfocusInner();
     WSError RequestFocusBasicCheck(int32_t persistentId);
-    WSError RequestFocusSpecificCheck(sptr<SceneSession>& sceneSession, bool byForeground,
-        FocusChangeReason reason = FocusChangeReason::DEFAULT);
-    bool CheckFocusIsDownThroughBlockingType(sptr<SceneSession>& requestSceneSession,
-        sptr<SceneSession>& focusedSession, bool includingAppSession);
+    WSError RequestFocusSpecificCheck(sptr<SceneSession>& sceneSession, bool byForeground);
 
     sptr<SceneSession> GetNextFocusableSession(int32_t persistentId);
-    sptr<SceneSession> GetTopNearestBlockingFocusSession(uint32_t zOrder, bool includingAppSession);
     sptr<SceneSession> GetTopFocusableNonAppSession();
     WSError ShiftFocus(sptr<SceneSession>& nextSession, FocusChangeReason reason = FocusChangeReason::DEFAULT);
     void UpdateFocusStatus(sptr<SceneSession>& sceneSession, bool isFocused);
@@ -390,7 +386,6 @@ private:
     std::string GetAllSessionFocusInfo();
     void RegisterRequestFocusStatusNotifyManagerFunc(sptr<SceneSession>& sceneSession);
     void RegisterGetStateFromManagerFunc(sptr<SceneSession>& sceneSession);
-    void RegisterSessionChangeByActionNotifyManagerFunc(sptr<SceneSession>& sceneSession);
 
     sptr<AAFwk::SessionInfo> SetAbilitySessionInfo(const sptr<SceneSession>& scnSession);
     WSError DestroyDialogWithMainWindow(const sptr<SceneSession>& scnSession);
@@ -432,7 +427,7 @@ private:
         const sptr<SceneSession>& sceneSession);
     WMError HandleUpdateProperty(const sptr<WindowSessionProperty>& property, WSPropertyChangeAction action,
         const sptr<SceneSession>& sceneSession);
-    void HandleHideNonSystemFloatingWindows(const sptr<WindowSessionProperty>& property,
+    void UpdateHideNonSystemFloatingWindows(const sptr<WindowSessionProperty>& property,
         const sptr<SceneSession>& sceneSession);
     void UpdateForceHideState(const sptr<SceneSession>& sceneSession, const sptr<WindowSessionProperty>& property,
         bool add);
