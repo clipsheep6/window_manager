@@ -213,6 +213,7 @@ public:
     virtual int32_t GetMissionId() const { return persistentId_; };
     Orientation GetRequestedOrientation() const;
     std::vector<sptr<SceneSession>> GetSubSession() const;
+    std::vector<sptr<SceneSession>> GetToastSession() const;
     std::shared_ptr<AppExecFwk::AbilityInfo> GetAbilityInfo() const;
     std::string GetWindowNameAllType() const;
     PiPTemplateInfo GetPiPTemplateInfo() const;
@@ -248,6 +249,8 @@ public:
     void DumpSessionInfo(std::vector<std::string> &info) const;
     bool AddSubSession(const sptr<SceneSession>& subSession);
     bool RemoveSubSession(int32_t persistentId);
+    bool AddToastSession(const sptr<SceneSession>& toastSession);
+    bool RemoveToastSession(int32_t persistentId);
     void NotifySessionForeground(uint32_t reason, bool withAnimation);
     void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits);
     void RegisterSessionChangeCallback(const sptr<SceneSession::SessionChangeCallback>& sessionChangeCallback);
@@ -406,9 +409,10 @@ private:
     mutable std::mutex sessionChangeCbMutex_;
     int32_t collaboratorType_ = CollaboratorType::DEFAULT_TYPE;
     mutable std::shared_mutex selfTokenMutex_;
-    sptr<IRemoteObject> selfToken_ = nullptr;
+    wptr<IRemoteObject> selfToken_ = nullptr;
     WSRect lastSafeRect = { 0, 0, 0, 0 };
     std::vector<sptr<SceneSession>> subSession_;
+    std::vector<sptr<SceneSession>> toastSession_;
     bool needDefaultAnimationFlag_ = true;
     PiPTemplateInfo pipTemplateInfo_ = {0, 0, {}};
     SessionEventParam sessionEventParam_ = { 0, 0 };

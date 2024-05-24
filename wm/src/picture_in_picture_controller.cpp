@@ -166,11 +166,15 @@ WMError PictureInPictureController::ShowPictureInPictureWindow(StartPipType star
     uint32_t requestWidth = 0;
     uint32_t requestHeight = 0;
     pipOption_->GetContentSize(requestWidth, requestHeight);
+    WindowSizeChangeReason reason = WindowSizeChangeReason::PIP_SHOW;
+    if (startType == StartPipType::AUTO_START) {
+        reason = WindowSizeChangeReason::PIP_AUTO_START;
+    }
     if (requestWidth > 0 && requestHeight > 0) {
         Rect requestRect = {0, 0, requestWidth, requestHeight};
-        window_->UpdatePiPRect(requestRect, WindowSizeChangeReason::PIP_SHOW);
+        window_->UpdatePiPRect(requestRect, reason);
     } else {
-        window_->UpdatePiPRect(windowRect_, WindowSizeChangeReason::PIP_SHOW);
+        window_->UpdatePiPRect(windowRect_, reason);
     }
     PictureInPictureManager::SetActiveController(this);
     SingletonContainer::Get<PiPReporter>().ReportPiPStartWindow(static_cast<int32_t>(startType),
@@ -423,6 +427,7 @@ void PictureInPictureController::UpdateContentSize(int32_t width, int32_t height
         TLOGE(WmsLogTag::WMS_PIP, "invalid size");
         return;
     }
+    pipOption_->SetContentSize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
     if (curState_ != PiPWindowState::STATE_STARTED) {
         TLOGD(WmsLogTag::WMS_PIP, "UpdateContentSize is disabled when state: %{public}u", curState_);
         return;
@@ -447,7 +452,6 @@ void PictureInPictureController::UpdateContentSize(int32_t width, int32_t height
     }
     TLOGI(WmsLogTag::WMS_PIP, "UpdateContentSize window: %{public}u width:%{public}u height:%{public}u",
         window_->GetWindowId(), width, height);
-    pipOption_->SetContentSize(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
     Rect rect = {0, 0, width, height};
     window_->UpdatePiPRect(rect, WindowSizeChangeReason::PIP_RATIO_CHANGE);
     SingletonContainer::Get<PiPReporter>().ReportPiPRatio(width, height);
@@ -525,7 +529,6 @@ void PictureInPictureController::RestorePictureInPictureWindow()
         curState_ = PiPWindowState::STATE_RESTORING;
         auto stopTask = [weakThis = wptr(this)]() {
             auto controller = weakThis.promote();
-            controller->curState_ = PiPWindowState::STATE_UNDEFINED;
             if (!controller) {
                 TLOGE(WmsLogTag::WMS_PIP, "controller is nullptr");
                 return;
@@ -680,6 +683,14 @@ bool PictureInPictureController::IsPullPiPAndHandleNavigation()
 
 ErrCode PictureInPictureController::getSettingsAutoStartStatus(const std::string& key, std::string& value)
 {
+    if (remoteObj_ == nullptr) {
+        auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (systemAbilityManager == nullptr) {
+            TLOGE(WmsLogTag::WMS_PIP, "failed to get registry");
+            return ERR_NO_INIT;
+        }
+        remoteObj_ = systemAbilityManager->GetSystemAbility(WINDOW_MANAGER_SERVICE_ID);
+    }
     auto helper = DataShare::DataShareHelper::Creator(remoteObj_, SETTING_URI_PROXY, SETTINGS_DATA_EXT_URI);
     if (helper == nullptr) {
         TLOGE(WmsLogTag::WMS_PIP, "create helper is nullptr");

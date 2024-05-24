@@ -190,6 +190,10 @@ void WindowManager::Impl::NotifyAccessibilityWindowInfo(const std::vector<sptr<A
         return;
     }
     for (auto& info : infos) {
+        if (info == nullptr) {
+            TLOGD(WmsLogTag::WMS_MAIN, "info is nullptr");
+            continue;
+        }
         TLOGD(WmsLogTag::WMS_MAIN, "NotifyAccessibilityWindowInfo: wid[%{public}u], innerWid_[%{public}u]," \
             "uiNodeId_[%{public}u], rect[%{public}d %{public}d %{public}d %{public}d]," \
             "isFocused[%{public}d], isDecorEnable[%{public}d], displayId[%{public}" PRIu64"], layer[%{public}u]," \
@@ -1007,6 +1011,16 @@ WMError WindowManager::GetAccessibilityWindowInfo(std::vector<sptr<Accessibility
     WMError ret = SingletonContainer::Get<WindowAdapter>().GetAccessibilityWindowInfo(infos);
     if (ret != WMError::WM_OK) {
         WLOGFE("get window info failed");
+    }
+    return ret;
+}
+
+WMError WindowManager::GetUnreliableWindowInfo(int32_t windowId,
+    std::vector<sptr<UnreliableWindowInfo>>& infos) const
+{
+    WMError ret = SingletonContainer::Get<WindowAdapter>().GetUnreliableWindowInfo(windowId, infos);
+    if (ret != WMError::WM_OK) {
+        TLOGE(WmsLogTag::DEFAULT, "get unreliable window info failed");
     }
     return ret;
 }

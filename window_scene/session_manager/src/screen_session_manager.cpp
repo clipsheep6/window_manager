@@ -133,7 +133,7 @@ void ScreenSessionManager::HandleFoldScreenPowerInit()
             #ifdef TP_FEATURE_ENABLE
             rsInterface_.SetTpFeatureConfig(tpType, mainTpChange.c_str());
             #endif
-            rsInterface_.SetScreenPowerStatus(SCREEN_ID_FULL, ScreenPowerStatus::POWER_STATUS_OFF);
+            rsInterface_.SetScreenPowerStatus(SCREEN_ID_FULL, ScreenPowerStatus::POWER_STATUS_OFF_FAKE);
             rsInterface_.SetScreenPowerStatus(SCREEN_ID_MAIN, ScreenPowerStatus::POWER_STATUS_ON);
             std::this_thread::sleep_for(std::chrono::milliseconds(timeStamp));
             TLOGI(WmsLogTag::DMS, "ScreenSessionManager Fold Screen Power Full animation Init 2.");
@@ -147,7 +147,7 @@ void ScreenSessionManager::HandleFoldScreenPowerInit()
             #ifdef TP_FEATURE_ENABLE
             rsInterface_.SetTpFeatureConfig(tpType, fullTpChange.c_str());
             #endif
-            rsInterface_.SetScreenPowerStatus(SCREEN_ID_MAIN, ScreenPowerStatus::POWER_STATUS_OFF);
+            rsInterface_.SetScreenPowerStatus(SCREEN_ID_MAIN, ScreenPowerStatus::POWER_STATUS_OFF_FAKE);
             rsInterface_.SetScreenPowerStatus(SCREEN_ID_FULL, ScreenPowerStatus::POWER_STATUS_ON);
             std::this_thread::sleep_for(std::chrono::milliseconds(timeStamp));
 
@@ -181,9 +181,7 @@ void ScreenSessionManager::Init()
     }
 
     RegisterScreenChangeListener();
-
-    bool isPcDevice = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
-    if (isPcDevice) {
+    if (!ScreenSceneConfig::IsSupportRotateWithSensor()) {
         TLOGI(WmsLogTag::DMS, "Current device type not support SetSensorSubscriptionEnabled.");
     } else {
         SetSensorSubscriptionEnabled();
@@ -208,6 +206,7 @@ void ScreenSessionManager::OnStart()
 DMError ScreenSessionManager::RegisterDisplayManagerAgent(
     const sptr<IDisplayManagerAgent>& displayManagerAgent, DisplayManagerAgentType type)
 {
+    TLOGI(WmsLogTag::DMS, "RegisterScreenshotListener is called");
     if (type == DisplayManagerAgentType::SCREEN_EVENT_LISTENER && !SessionPermission::IsSystemCalling()
         && !SessionPermission::IsStartByHdcd()) {
         TLOGE(WmsLogTag::DMS, "register display manager agent permission denied!");
@@ -229,6 +228,7 @@ DMError ScreenSessionManager::RegisterDisplayManagerAgent(
 DMError ScreenSessionManager::UnregisterDisplayManagerAgent(
     const sptr<IDisplayManagerAgent>& displayManagerAgent, DisplayManagerAgentType type)
 {
+    TLOGI(WmsLogTag::DMS, "UnregisterDisplayListener is called");
     if (type == DisplayManagerAgentType::SCREEN_EVENT_LISTENER && !SessionPermission::IsSystemCalling()
         && !SessionPermission::IsStartByHdcd()) {
         TLOGE(WmsLogTag::DMS, "unregister display manager agent permission denied!");
@@ -403,7 +403,7 @@ void ScreenSessionManager::OnVirtualScreenChange(ScreenId screenId, ScreenEvent 
 
 void ScreenSessionManager::FreeDisplayMirrorNodeInner(const sptr<ScreenSession> mirrorSession)
 {
-    bool phyMirrorEnable = system::GetParameter("const.product.devicetype", "unknown") == "phone";
+    bool phyMirrorEnable = ScreenSceneConfig::GetExternalScreenDefaultMode() == "mirror";
     if (mirrorSession == nullptr || !phyMirrorEnable) {
         return;
     }
@@ -411,7 +411,7 @@ void ScreenSessionManager::FreeDisplayMirrorNodeInner(const sptr<ScreenSession> 
     if (displayNode == nullptr) {
         return;
     }
-    isHdmiScreen_ = false;
+    hdmiScreenCount_ = hdmiScreenCount_ > 0 ? hdmiScreenCount_ - 1 : 0;
     NotifyCaptureStatusChanged();
     displayNode->RemoveFromTree();
     auto transactionProxy = RSTransactionProxy::GetInstance();
@@ -444,7 +444,7 @@ void ScreenSessionManager::OnScreenChange(ScreenId screenId, ScreenEvent screenE
 void ScreenSessionManager::HandleScreenEvent(sptr<ScreenSession> screenSession,
     ScreenId screenId, ScreenEvent screenEvent)
 {
-    bool phyMirrorEnable = system::GetParameter("const.product.devicetype", "unknown") == "phone";
+    bool phyMirrorEnable = ScreenSceneConfig::GetExternalScreenDefaultMode() == "mirror";
     if (screenEvent == ScreenEvent::CONNECTED) {
         if (foldScreenController_ != nullptr) {
             if (screenId == 0 && clientProxy_) {
@@ -860,7 +860,7 @@ DMError ScreenSessionManager::SetScreenColorTransform(ScreenId screenId)
 
 sptr<ScreenSession> ScreenSessionManager::GetScreenSessionInner(ScreenId screenId, ScreenProperty property)
 {
-    bool phyMirrorEnable = system::GetParameter("const.product.devicetype", "unknown") == "phone";
+    bool phyMirrorEnable = ScreenSceneConfig::GetExternalScreenDefaultMode() == "mirror";
     sptr<ScreenSession> session = nullptr;
     ScreenId defScreenId = GetDefaultScreenId();
     TLOGI(WmsLogTag::DMS, "GetScreenSessionInner: screenId:%{public}" PRIu64 "", screenId);
@@ -883,7 +883,7 @@ sptr<ScreenSession> ScreenSessionManager::GetScreenSessionInner(ScreenId screenI
         session->SetName("CastEngine");
         session->SetScreenCombination(ScreenCombination::SCREEN_MIRROR);
         NotifyScreenChanged(session->ConvertToScreenInfo(), ScreenChangeEvent::SCREEN_SWITCH_CHANGE);
-        isHdmiScreen_ = true;
+        hdmiScreenCount_ = hdmiScreenCount_ + 1;
         NotifyCaptureStatusChanged();
     } else {
         std::string screenName = "UNKNOWN";
@@ -1380,9 +1380,7 @@ void ScreenSessionManager::SetKeyguardDrawnDoneFlag(bool flag)
 
 void ScreenSessionManager::HandlerSensor(ScreenPowerStatus status, PowerStateChangeReason reason)
 {
-    auto isPhone = system::GetParameter("const.product.devicetype", "unknown") == "phone";
-    auto isTablet = system::GetParameter("const.product.devicetype", "unknown") == "tablet";
-    if (isPhone || isTablet) {
+    if (ScreenSceneConfig::IsSupportRotateWithSensor()) {
         if (status == ScreenPowerStatus::POWER_STATUS_ON) {
             TLOGI(WmsLogTag::DMS, "subscribe rotation and posture sensor when phone turn on");
             ScreenSensorConnector::SubscribeRotationSensor();
@@ -1916,6 +1914,23 @@ DMError ScreenSessionManager::SetScreenColorSpace(ScreenId screenId, GraphicCM_C
     return screenSession->SetScreenColorSpace(colorSpace);
 }
 
+void ScreenSessionManager::AddVirtualScreenDeathRecipient(const sptr<IRemoteObject>& displayManagerAgent,
+    ScreenId smsScreenId)
+{
+    if (deathRecipient_ == nullptr) {
+        TLOGI(WmsLogTag::DMS, "CreateVirtualScreen Create deathRecipient");
+        deathRecipient_ =
+            new(std::nothrow) AgentDeathRecipient([this](const sptr<IRemoteObject>& agent) { OnRemoteDied(agent); });
+    }
+    if (deathRecipient_ != nullptr) {
+        auto agIter = screenAgentMap_.find(displayManagerAgent);
+        if (agIter == screenAgentMap_.end()) {
+            displayManagerAgent->AddDeathRecipient(deathRecipient_);
+        }
+    }
+    screenAgentMap_[displayManagerAgent].emplace_back(smsScreenId);
+}
+
 ScreenId ScreenSessionManager::CreateVirtualScreen(VirtualScreenOption option,
                                                    const sptr<IRemoteObject>& displayManagerAgent)
 {
@@ -1935,11 +1950,11 @@ ScreenId ScreenSessionManager::CreateVirtualScreen(VirtualScreenOption option,
     }
     ScreenId rsId = rsInterface_.CreateVirtualScreen(option.name_, option.width_,
         option.height_, option.surface_, SCREEN_ID_INVALID, option.flags_);
-    TLOGI(WmsLogTag::DMS, "CreateVirtualScreen rsid: %{public}" PRIu64"", rsId);
     if (rsId == SCREEN_ID_INVALID) {
-        TLOGI(WmsLogTag::DMS, "CreateVirtualScreen rsid is invalid");
+        TLOGI(WmsLogTag::DMS, "CreateVirtualScreen rsId is invalid");
         return SCREEN_ID_INVALID;
     }
+    TLOGI(WmsLogTag::DMS, "CreateVirtualScreen rsId: %{public}" PRIu64"", rsId);
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:CreateVirtualScreen(%s)", option.name_.c_str());
     std::lock_guard<std::recursive_mutex> lock(screenSessionMapMutex_);
     ScreenId smsScreenId = SCREEN_ID_INVALID;
@@ -1954,26 +1969,18 @@ ScreenId ScreenSessionManager::CreateVirtualScreen(VirtualScreenOption option,
         }
         screenSession->SetName(option.name_);
         screenSessionMap_.insert(std::make_pair(smsScreenId, screenSession));
-        NotifyScreenConnected(screenSession->ConvertToScreenInfo());
-        if (deathRecipient_ == nullptr) {
-            TLOGI(WmsLogTag::DMS, "CreateVirtualScreen Create deathRecipient");
-            deathRecipient_ =
-                new AgentDeathRecipient([this](const sptr<IRemoteObject>& agent) { OnRemoteDied(agent); });
+        if (option.name_ == "CastEngine") {
+            screenSession->SetVirtualScreenFlag(VirtualScreenFlag::CAST);
         }
+        NotifyScreenConnected(screenSession->ConvertToScreenInfo());
         if (displayManagerAgent == nullptr) {
-            isVirtualScreen_ = true;
+            virtualScreenCount_ = virtualScreenCount_ + 1;
             NotifyCaptureStatusChanged();
             return smsScreenId;
         }
-        auto agIter = screenAgentMap_.find(displayManagerAgent);
-        if (agIter == screenAgentMap_.end()) {
-            displayManagerAgent->AddDeathRecipient(deathRecipient_);
-        }
-        screenAgentMap_[displayManagerAgent].emplace_back(smsScreenId);
-    } else {
-        TLOGI(WmsLogTag::DMS, "CreateVirtualScreen id: %{public}" PRIu64" in screenIdManager_", rsId);
+        AddVirtualScreenDeathRecipient(displayManagerAgent, smsScreenId);
     }
-    isVirtualScreen_ = true;
+    virtualScreenCount_ = virtualScreenCount_ + 1;
     NotifyCaptureStatusChanged();
     return smsScreenId;
 }
@@ -2121,7 +2128,7 @@ DMError ScreenSessionManager::DestroyVirtualScreen(ScreenId screenId)
         return DMError::DM_ERROR_INVALID_PARAM;
     }
     rsInterface_.RemoveVirtualScreen(rsScreenId);
-    isVirtualScreen_ = false;
+    virtualScreenCount_ = virtualScreenCount_ > 0 ? virtualScreenCount_ - 1 : 0;
     NotifyCaptureStatusChanged();
     return DMError::DM_OK;
 }
@@ -3626,7 +3633,7 @@ bool ScreenSessionManager::IsFoldable()
 
 bool ScreenSessionManager::IsCaptured()
 {
-    return isScreenShot_ || isVirtualScreen_ || isHdmiScreen_;
+    return isScreenShot_ || virtualScreenCount_ > 0 || hdmiScreenCount_ > 0;
 }
 
 bool ScreenSessionManager::IsMultiScreenCollaboration()
