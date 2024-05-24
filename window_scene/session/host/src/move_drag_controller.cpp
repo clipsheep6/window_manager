@@ -182,7 +182,7 @@ bool MoveDragController::ConsumeMoveEvent(const std::shared_ptr<MMI::PointerEven
         WLOGFD("No need to move action id: %{public}d", action);
         return false;
     }
-    return GetRetForConsumeMoveEvent(pointerEvent, pointerEvent, action);
+    return GetRetForConsumeMoveEvent(pointerEvent, originalRect, action);
 }
 
 bool MoveDragController::GetRetForConsumeMoveEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
