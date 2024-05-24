@@ -242,6 +242,100 @@ HWTEST_F(SceneInputManagerTest, NotifyMMIWindowPidChange, Function | SmallTest |
     GTEST_LOG_(INFO) << "SceneInputManagerTest: NotifyMMIWindowPidChange end";
 }
 
+/**
+ * @tc.name: FlushDisplayInfoToMMI02
+ * @tc.desc: check func FlushDisplayInfoToMMI02
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneInputManagerTest, FlushDisplayInfoToMMI02, Function | SmallTest | Level1)
+{
+    GTEST_LOG_(INFO) << "SceneInputManagerTest: FlushDisplayInfoToMMI02 start";
+    int ret = 0;
+    SceneInputManager::GetInstance().FlushDisplayInfoToMMI(true);
+    // sceneSessionDirty_ = nullptr
+    auto oldDirty = SceneInputManager::GetInstance().sceneSessionDirty_;
+    SceneInputManager::GetInstance().sceneSessionDirty_ = nullptr;
+    SceneInputManager::GetInstance().FlushDisplayInfoToMMI();
+    SceneInputManager::GetInstance().sceneSessionDirty_ = oldDirty;
+
+    // NotNeedUpdate
+    SceneInputManager::GetInstance().FlushDisplayInfoToMMI();
+    SceneInputManager::GetInstance().isUserBackground_ = false;
+    SceneInputManager::GetInstance().FlushDisplayInfoToMMI();
+
+    CheckNeedUpdateTest();
+    WindowInfoListZeroTest(ssm_);
+    MaxWindowInfoTest(ssm_);
+
+    ASSERT_EQ(ret, 0);
+    GTEST_LOG_(INFO) << "SceneInputManagerTest: FlushDisplayInfoToMMI02 end";
+}
+
+/**
+ * @tc.name: Init
+ * @tc.desc: Init
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneInputManagerTest, Init, Function | SmallTest | Level1)
+{
+    GTEST_LOG_(INFO) << "SceneInputManagerTest: Init start";
+    int ret = 0;
+    SceneInputManager::GetInstance().Init();
+    // sceneSessionDirty_ = nullptr
+    auto oldDirty = SceneInputManager::GetInstance().sceneSessionDirty_;
+    SceneInputManager::GetInstance().sceneSessionDirty_ = nullptr;
+    SceneInputManager::GetInstance().Init();
+    SceneInputManager::GetInstance().sceneSessionDirty_ = oldDirty;
+
+    ASSERT_EQ(ret, 0);
+    GTEST_LOG_(INFO) << "SceneInputManagerTest: Init end";
+}
+
+/**
+* @tc.name: NotifyWindowInfoChange02
+* @tc.desc: check func NotifyWindowInfoChange02
+* @tc.type: FUNC
+*/
+HWTEST_F(SceneInputManagerTest, NotifyWindowInfoChange02, Function | SmallTest | Level1)
+{
+    GTEST_LOG_(INFO) << "SceneInputManagerTest: NotifyWindowInfoChange02 start";
+    SessionInfo info;
+    info.abilityName_ = "NotifyWindowInfoChange02";
+    info.bundleName_ = "NotifyWindowInfoChange02";
+    info.appIndex_ = 10;
+    sptr<SceneSession::SpecificSessionCallback> specificCallback_
+            = new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(specificCallback_, nullptr);
+    sptr<SceneSession> sceneSession = new SceneSession(info, specificCallback_);
+    SceneInputManager::GetInstance()
+        .NotifyWindowInfoChange(sceneSession, WindowUpdateType::WINDOW_UPDATE_ADDED);
+
+    // sceneSessionDirty_ = nullptr
+    auto oldDirty = SceneInputManager::GetInstance().sceneSessionDirty_;
+    SceneInputManager::GetInstance().sceneSessionDirty_ = nullptr;
+    SceneInputManager::GetInstance()
+        .NotifyWindowInfoChange(sceneSession, WindowUpdateType::WINDOW_UPDATE_ADDED);
+    GTEST_LOG_(INFO) << "SceneInputManagerTest: NotifyWindowInfoChange02 end";
+}
+
+/**
+ * @tc.name: CheckNeedUpdate
+ * @tc.desc: Check Need Update
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneInputManagerTest, CheckNeedUpdate, Function | SmallTest | Level1)
+{
+    GTEST_LOG_(INFO) << "SceneInputManagerTest: CheckNeedUpdate start";
+    std::vector<MMI::DisplayInfo> displayInfos;
+    std::vector<MMI::WindowInfo> windowInfoList;
+    SceneInputManager::GetInstance().CheckNeedUpdate(displayInfos, windowInfoList);
+
+    CheckNeedUpdateTest();
+    SceneInputManager::GetInstance().SetCurrentUserId(1);
+    ASSERT_EQ(true,
+        SceneInputManager::GetInstance().CheckNeedUpdate(displayInfos, windowInfoList));
+    GTEST_LOG_(INFO) << "SceneInputManagerTest: CheckNeedUpdate end";
+}
 }
 }
 }
