@@ -87,6 +87,7 @@ public:
     WMError UpdateSizeChangeReason(uint32_t windowId, WindowSizeChangeReason reason);
     void SetBrightness(uint32_t windowId, float brightness);
     void HandleKeepScreenOn(uint32_t windowId, bool requireLock);
+    void HandleKeepScreenOnRecursive(sptr<WindowNode>& node, bool force, bool requireLock);
     void UpdateFocusableProperty(uint32_t windowId);
     void SetMaxAppWindowNumber(uint32_t windowNum);
     WMError GetModeChangeHotZones(DisplayId displayId,
@@ -135,6 +136,7 @@ private:
     std::map<DisplayId, Rect> GetAllDisplayRectsByDisplayInfo(
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap);
     void MoveNotShowingWindowToDefaultDisplay(DisplayId defaultDisplayId, DisplayId displayId);
+    void ValidateFocus(sptr<WindowNode>& node, sptr<WindowNodeContainer>& container);
     WMError PostProcessAddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode,
         sptr<WindowNodeContainer>& container);
     std::vector<std::pair<uint64_t, WindowVisibilityState>> GetWindowVisibilityChangeInfo(
@@ -150,7 +152,7 @@ private:
     std::map<ScreenId, sptr<WindowNodeContainer>> windowNodeContainerMap_;
     std::map<ScreenId, std::vector<DisplayId>> displayIdMap_;
     bool lastWaterMarkShowStates_ { false };
-    bool needCheckFocusWindow = false;
+    bool needCheckFocusWindow_ = false;
     bool lastGestureNativeEnabled_ { true };
 
     std::map<WindowManagerAgentType, std::vector<sptr<IWindowManagerAgent>>> windowManagerAgents_;

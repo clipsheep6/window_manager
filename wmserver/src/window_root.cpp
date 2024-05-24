@@ -548,6 +548,35 @@ void WindowRoot::DestroyLeakStartingWindow()
     }
 }
 
+void WindowRoot::ValidateFocus(sptr<WindowNode>& node, sptr<WindowNodeContainer>& container)
+{
+    if (node && container && node->GetWindowProperty()->GetFocusable()) {
+        // when launcher reboot, the focus window should not change with showing a full screen window.
+        auto focusWin = GetWindowNode(container->GetFocusWindow());
+        if (focusWin == nullptr ||
+            !(WindowHelper::IsFullScreenWindow(focusWin->GetWindowMode()) && focusWin->zOrder_ > node->zOrder_)) {
+            WLOGFI("set focus window on id:%{public}d", node->GetWindowId());
+            container->SetFocusWindow(node->GetWindowId());
+            container->DumpScreenWindowTree();
+            needCheckFocusWindow_ = true;
+        }
+    }
+}
+
+void WindowRoot::HandleKeepScreenOnRecursive(sptr<WindowNode>& node, bool force, bool requireLock)
+{
+    if (!node) {
+        return;
+    }
+    for (auto& child : node->children_) {
+        if (child == nullptr || !child->currentVisibility_) {
+            break;
+        }
+        HandleKeepScreenOn(child->GetWindowId(), force?requireLock:child->IsKeepScreenOn());
+    }
+    HandleKeepScreenOn(node->GetWindowId(), force?requireLock:node->IsKeepScreenOn());
+}
+
 WMError WindowRoot::PostProcessAddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode,
     sptr<WindowNodeContainer>& container)
 {
@@ -563,28 +592,11 @@ WMError WindowRoot::PostProcessAddWindowNode(sptr<WindowNode>& node, sptr<Window
         sptr<WindowNode> parent = nullptr;
         container->RaiseZOrderForAppWindow(parentNode, parent);
     }
-    if (node->GetWindowProperty()->GetFocusable()) {
-        // when launcher reboot, the focus window should not change with showing a full screen window.
-        sptr<WindowNode> focusWin = GetWindowNode(container->GetFocusWindow());
-        if (focusWin == nullptr ||
-            !(WindowHelper::IsFullScreenWindow(focusWin->GetWindowMode()) && focusWin->zOrder_ > node->zOrder_)) {
-            WLOGFI("set focus window on id:%{public}d", node->GetWindowId());
-            container->SetFocusWindow(node->GetWindowId());
-            container->DumpScreenWindowTree();
-            needCheckFocusWindow = true;
-        }
-    }
+    ValidateFocus(node, container);
     if (!WindowHelper::IsSystemBarWindow(node->GetWindowType())) {
         container->SetActiveWindow(node->GetWindowId(), false);
     }
-
-    for (auto& child : node->children_) {
-        if (child == nullptr || !child->currentVisibility_) {
-            break;
-        }
-        HandleKeepScreenOn(child->GetWindowId(), child->IsKeepScreenOn());
-    }
-    HandleKeepScreenOn(node->GetWindowId(), node->IsKeepScreenOn());
+    HandleKeepScreenOnRecursive(node, false, false);
     WLOGFD("windowId:%{public}u, name:%{public}s, orientation:%{public}u, type:%{public}u, isMainWindow:%{public}d",
         node->GetWindowId(), node->GetWindowName().c_str(), static_cast<uint32_t>(node->GetRequestedOrientation()),
         node->GetWindowType(), WindowHelper::IsMainWindow(node->GetWindowType()));
@@ -812,13 +824,7 @@ WMError WindowRoot::RemoveWindowNode(uint32_t windowId, bool fromAnimation)
     UpdateBrightnessWithWindowRemoved(windowId, container);
     WMError res = container->RemoveWindowNode(node, fromAnimation);
     if (res == WMError::WM_OK) {
-        for (auto& child : node->children_) {
-            if (child == nullptr) {
-                break;
-            }
-            HandleKeepScreenOn(child->GetWindowId(), false);
-        }
-        HandleKeepScreenOn(windowId, false);
+        HandleKeepScreenOnRecursive(node, true, false);
     }
 
     if (node->GetWindowType() == WindowType::WINDOW_TYPE_LAUNCHER_RECENT) {
@@ -1473,7 +1479,7 @@ std::string WindowRoot::GenAllWindowsLogInfo() const
 
 void WindowRoot::FocusFaultDetection() const
 {
-    if (!needCheckFocusWindow) {
+    if (!needCheckFocusWindow_) {
         return;
     }
     bool needReport = true;
