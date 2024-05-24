@@ -1406,7 +1406,12 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
     if (specificCallback_ != nullptr && specificCallback_->onSessionTouchOutside_ != nullptr && isPointDown) {
         specificCallback_->onSessionTouchOutside_(GetPersistentId());
     }
+    return TransferPointerEventExecute(pointerEvent, needNotifyClient, action, isPointDown);
+}
 
+WSError SceneSession::TransferPointerEventExecute(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
+    bool needNotifyClient, int32_t action, bool isPointDown)
+{
     auto property = GetSessionProperty();
     if (property == nullptr) {
         return Session::TransferPointerEvent(pointerEvent, needNotifyClient);

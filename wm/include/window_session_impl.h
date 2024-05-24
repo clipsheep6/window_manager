@@ -333,6 +333,7 @@ private:
     void NotifyAfterFocused();
     void NotifyAfterResumed();
     void NotifyAfterPaused();
+    void SetAPPWindowLabel();
 
     WMError InitUIContent(const std::string& contentInfo, napi_env env, napi_value storage,
         WindowSetUIContentType setUIContentType, BackupAndRestoreType restoreType, AppExecFwk::Ability* ability,

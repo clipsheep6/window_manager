@@ -480,6 +480,7 @@ private:
     void FilterSceneSessionCovered(std::vector<sptr<SceneSession>>& sceneSessionList);
     void NotifyAllAccessibilityInfo();
     void removeFailRecoveredSession();
+    WSError PreCreateAndConnectSpecificSession(sptr<WindowSessionProperty> property, sptr<IRemoteObject> token);
 
     sptr<RootSceneSession> rootSceneSession_;
     std::weak_ptr<AbilityRuntime::Context> rootSceneContextWeak_;
