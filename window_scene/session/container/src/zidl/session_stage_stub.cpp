@@ -138,15 +138,18 @@ int SessionStageStub::HandleUpdateRect(MessageParcel& data, MessageParcel& reply
 
 int SessionStageStub::HandleUpdateDensity(MessageParcel& data, MessageParcel& reply)
 {
-    WLOGFD("UpdateDensity!");
-    UpdateDensity();
+    TLOGD(WmsLogTag::DMS, "UpdateDensity!");
+    float density = data.ReadFloat();
+    WSError errCode = UpdateDensity(density);
+    reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
 }
 
 int SessionStageStub::HandleUpdateOrientation(MessageParcel& data, MessageParcel& reply)
 {
     TLOGD(WmsLogTag::DMS, "HandleUpdateOrientation!");
-    WSError errCode = UpdateOrientation();
+    DisplayOrientation orientation = static_cast<DisplayOrientation>(data.ReadUint32());
+    WSError errCode = UpdateOrientation(orientation);
     reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
 }

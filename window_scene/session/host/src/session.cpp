@@ -813,22 +813,21 @@ WSError Session::UpdateRect(const WSRect& rect, SizeChangeReason reason,
     return WSError::WS_OK;
 }
 
-WSError Session::UpdateDensity()
+WSError Session::UpdateDensity(float density)
 {
-    WLOGFI("session update density: id: %{public}d.", GetPersistentId());
+    TLOGI(WmsLogTag::DMS, "session update density: id: %{public}d, density: %{public}f.", GetPersistentId(), density);
     if (!IsSessionValid()) {
         return WSError::WS_ERROR_INVALID_SESSION;
     }
     if (sessionStage_ != nullptr) {
-        sessionStage_->UpdateDensity();
+        return sessionStage_->UpdateDensity(density);
     } else {
         WLOGFE("Session::UpdateDensity sessionStage_ is nullptr");
         return WSError::WS_ERROR_NULLPTR;
     }
-    return WSError::WS_OK;
 }
 
-WSError Session::UpdateOrientation()
+WSError Session::UpdateOrientation(DisplayOrientation orientation)
 {
     TLOGD(WmsLogTag::DMS, "update orientation: id: %{public}d.", GetPersistentId());
     if (!IsSessionValid()) {
@@ -841,7 +840,7 @@ WSError Session::UpdateOrientation()
             GetPersistentId());
         return WSError::WS_ERROR_NULLPTR;
     }
-    return sessionStage_->UpdateOrientation();
+    return sessionStage_->UpdateOrientation(orientation);
 }
 
 __attribute__((no_sanitize("cfi"))) WSError Session::Connect(const sptr<ISessionStage>& sessionStage,

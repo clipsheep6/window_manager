@@ -856,7 +856,7 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
     float density = GetVirtualPixelRatio(displayInfo);
     if (!MathHelper::NearZero(virtualPixelRatio_ - density) ||
         !MathHelper::NearZero(property_->GetLastLimitsVpr() - density)) {
-        UpdateDensity();
+        UpdateDensity(density);
     }
 
     if (hostSession_ == nullptr) {
@@ -881,6 +881,7 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
         // update sub window state if this is main window
         if (WindowHelper::IsMainWindow(type)) {
             UpdateSubWindowStateAndNotify(GetPersistentId(), WindowState::STATE_SHOWN);
+            NotifyDisplayInfoChange();
         }
         state_ = WindowState::STATE_SHOWN;
         requestState_ = WindowState::STATE_SHOWN;
@@ -894,7 +895,6 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
             static_cast<int32_t>(ret), property_->GetWindowName().c_str(), GetPersistentId());
     }
     NotifyWindowStatusChange(GetMode());
-    NotifyDisplayInfoChange();
     return ret;
 }
 
@@ -3105,6 +3105,20 @@ WMError WindowSceneSessionImpl::SetDefaultDensityEnabled(bool enabled)
     }
     isDefaultDensityEnabled_ = enabled;
 
+    auto displayId = property_->GetDisplayId();
+    auto display = SingletonContainer::IsDestroyed() ? nullptr :
+        SingletonContainer::Get<DisplayManager>().GetDisplayById(displayId);
+    if (display == nullptr) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, "get display by displayId %{public}" PRIu64 " failed.", displayId);
+        return WMError::WM_ERROR_INVALID_DISPLAY;
+    }
+    auto displayInfo = display->GetDisplayInfo();
+    if (displayInfo == nullptr) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, "get display info %{public}" PRIu64 " failed.", displayId);
+        return WMError::WM_ERROR_INVALID_DISPLAY;
+    }
+    float density = displayInfo->GetDefaultVirtualPixelRatio();
+
     std::shared_lock<std::shared_mutex> lock(windowSessionMutex_);
     for (const auto& winPair : windowSessionMap_) {
         auto window = winPair.second.second;
@@ -3113,7 +3127,7 @@ WMError WindowSceneSessionImpl::SetDefaultDensityEnabled(bool enabled)
             continue;
         }
         TLOGD(WmsLogTag::WMS_LAYOUT, "windowId=%{public}d UpdateDensity", window->GetWindowId());
-        window->UpdateDensity();
+        window->UpdateDensity(density);
     }
     return WMError::WM_OK;
 }
@@ -3273,7 +3287,7 @@ void WindowSceneSessionImpl::NotifyKeyboardPanelInfoChange(const KeyboardPanelIn
     }
 }
 
-void WindowSceneSessionImpl::UpdateDensity()
+WSError WindowSceneSessionImpl::UpdateDensity(float density)
 {
     if (!userLimitsSet_) {
         UpdateWindowSizeLimits();
@@ -3281,16 +3295,20 @@ void WindowSceneSessionImpl::UpdateDensity()
         WMError ret = UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_WINDOW_LIMITS);
         if (ret != WMError::WM_OK) {
             WLOGFE("update window proeprty failed! id: %{public}u.", GetWindowId());
-            return;
+            return WSError::WS_ERROR_INTERNAL_ERROR;
         }
     }
 
-    NotifyDisplayInfoChange();
+    if (!isDefaultDensityEnabled_) {
+        density_ = density;
+        NotifyDisplayInfoChange();
+    }
 
     auto preRect = GetRect();
     UpdateViewportConfig(preRect, WindowSizeChangeReason::UNDEFINED);
     WLOGFI("WindowSceneSessionImpl::UpdateDensity [%{public}d, %{public}d, %{public}u, %{public}u]",
         preRect.posX_, preRect.posY_, preRect.width_, preRect.height_);
+    return  WSError::WS_OK;
 }
 
 WSError WindowSceneSessionImpl::UpdateDisplayId(uint64_t displayId)
@@ -3300,9 +3318,11 @@ WSError WindowSceneSessionImpl::UpdateDisplayId(uint64_t displayId)
     return WSError::WS_OK;
 }
 
-WSError WindowSceneSessionImpl::UpdateOrientation()
+WSError WindowSceneSessionImpl::UpdateOrientation(DisplayOrientation orientation)
 {
-    TLOGD(WmsLogTag::DMS, "UpdateOrientation, wid: %{public}d", GetPersistentId());
+    TLOGD(WmsLogTag::DMS, "update orientation, wid: %{public}d, orientation: %{public}u",
+        GetPersistentId(), orientation);
+    orientation_ = orientation;
     NotifyDisplayInfoChange();
     return WSError::WS_OK;
 }
@@ -3310,21 +3330,6 @@ WSError WindowSceneSessionImpl::UpdateOrientation()
 void WindowSceneSessionImpl::NotifyDisplayInfoChange()
 {
     TLOGD(WmsLogTag::DMS, "NotifyDisplayInfoChange, wid: %{public}d", GetPersistentId());
-    auto displayId = property_->GetDisplayId();
-    auto display = SingletonContainer::IsDestroyed() ? nullptr :
-        SingletonContainer::Get<DisplayManager>().GetDisplayById(displayId);
-    if (display == nullptr) {
-        TLOGE(WmsLogTag::DMS, "get display by displayId %{public}" PRIu64 " failed.", displayId);
-        return;
-    }
-    auto displayInfo = display->GetDisplayInfo();
-    if (displayInfo == nullptr) {
-        TLOGE(WmsLogTag::DMS, "get display info %{public}" PRIu64 " failed.", displayId);
-        return;
-    }
-    float density = GetVirtualPixelRatio(displayInfo);
-    DisplayOrientation orientation = displayInfo->GetDisplayOrientation();
-
     if (context_ == nullptr) {
         TLOGE(WmsLogTag::DMS, "get token of window:%{public}d failed because of context is null.", GetPersistentId());
         return;
@@ -3334,7 +3339,8 @@ void WindowSceneSessionImpl::NotifyDisplayInfoChange()
         TLOGE(WmsLogTag::DMS, "get token of window:%{public}d failed.", GetPersistentId());
         return;
     }
-    SingletonContainer::Get<WindowManager>().NotifyDisplayInfoChange(token, displayId, density, orientation);
+    auto displayId = property_->GetDisplayId();
+    SingletonContainer::Get<WindowManager>().NotifyDisplayInfoChange(token, displayId, density_, orientation_);
 }
 
 WMError WindowSceneSessionImpl::AdjustKeyboardLayout(const KeyboardLayoutParams& params)

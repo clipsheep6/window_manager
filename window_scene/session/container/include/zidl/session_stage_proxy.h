@@ -32,8 +32,8 @@ public:
     WSError SetActive(bool active) override;
     WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override;
-    void UpdateDensity() override;
-    WSError UpdateOrientation() override;
+    WSError UpdateDensity(float density) override;
+    WSError UpdateOrientation(DisplayOrientation orientation) override;
     WSError HandleBackEvent() override;
     WSError MarkProcessed(int32_t eventId) override;
     WSError UpdateFocus(bool isFocused) override;

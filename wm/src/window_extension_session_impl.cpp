@@ -624,7 +624,7 @@ WMError WindowExtensionSessionImpl::Show(uint32_t reason, bool withAnimation)
     auto displayInfo = display->GetDisplayInfo();
     float density = GetVirtualPixelRatio(displayInfo);
     if (virtualPixelRatio_ != density) {
-        UpdateDensity();
+        UpdateDensity(density);
     }
 
     return this->WindowSessionImpl::Show(reason, withAnimation);

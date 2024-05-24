@@ -209,8 +209,8 @@ public:
     SizeChangeReason GetSizeChangeReason() const { return reason_; }
     virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
-    WSError UpdateDensity();
-    WSError UpdateOrientation();
+    WSError UpdateDensity(float density);
+    WSError UpdateOrientation(DisplayOrientation orientation);
 
     void SetShowRecent(bool showRecent);
     void SetSystemActive(bool systemActive);

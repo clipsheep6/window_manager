@@ -1692,7 +1692,7 @@ HWTEST_F(WindowSessionImplTest, UpdateDensity, Function | SmallTest | Level2)
     sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
     ASSERT_NE(window, nullptr);
     int ret = 0;
-    window->UpdateDensity();
+    window->UpdateDensity(2.5f);
     ASSERT_EQ(ret, 0);
     GTEST_LOG_(INFO) << "WindowSessionImplTest: UpdateDensitytest01 end";
 }
@@ -2381,7 +2381,7 @@ HWTEST_F(WindowSessionImplTest, UpdateOrientation, Function | SmallTest | Level2
     option->SetWindowName("UpdateOrientation");
     sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
     ASSERT_NE(window, nullptr);
-    auto ret = window->UpdateOrientation();
+    auto ret = window->UpdateOrientation(DisplayOrientation::LANDSCAPE);
     ASSERT_EQ(WSError::WS_OK, ret);
 }
 

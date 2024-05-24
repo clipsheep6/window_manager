@@ -588,17 +588,19 @@ void WindowSessionImpl::GetTitleButtonVisible(bool isPC, bool &hideMaximizeButto
     hideSplitButton = hideSplitButton || (!windowTitleVisibleFlags_.isSplitVisible);
 }
 
-void WindowSessionImpl::UpdateDensity()
+WSError WindowSessionImpl::UpdateDensity(float density)
 {
     auto preRect = GetRect();
     UpdateViewportConfig(preRect, WindowSizeChangeReason::UNDEFINED);
-    WLOGFI("WindowSessionImpl::UpdateDensity [%{public}d, %{public}d, %{public}u, %{public}u]",
-        preRect.posX_, preRect.posY_, preRect.width_, preRect.height_);
+    TLOGD(WmsLogTag::DMS, "update density, preRect = [%{public}d, %{public}d, %{public}u, %{public}u], "
+        "density:%{public}f", preRect.posX_, preRect.posY_, preRect.width_, preRect.height_, density);
+    return WSError::WS_OK;
 }
 
-WSError WindowSessionImpl::UpdateOrientation()
+WSError WindowSessionImpl::UpdateOrientation(DisplayOrientation orientation)
 {
-    TLOGD(WmsLogTag::DMS, "UpdateOrientation, wid: %{public}d", GetPersistentId());
+    TLOGD(WmsLogTag::DMS, "update orientation, wid: %{public}d, orientation: %{public}u",
+        GetPersistentId(), orientation);
     return WSError::WS_OK;
 }
 

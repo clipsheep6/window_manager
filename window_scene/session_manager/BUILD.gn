@@ -91,6 +91,7 @@ ohos_shared_library("scene_session_manager") {
 
   deps = [
     "${window_base_path}/dm:libdm",
+    "${window_base_path}/dmserver:libdms",
     "${window_base_path}/utils:libwmutil",
     "${window_base_path}/utils:libwmutil_base",
     "${window_base_path}/window_scene/common:window_scene_common",

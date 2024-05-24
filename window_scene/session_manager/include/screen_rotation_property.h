@@ -28,14 +28,6 @@
 
 namespace OHOS {
 namespace Rosen {
-enum class DeviceRotation: int32_t {
-    INVALID = -1,
-    ROTATION_PORTRAIT = 0,
-    ROTATION_LANDSCAPE,
-    ROTATION_PORTRAIT_INVERTED,
-    ROTATION_LANDSCAPE_INVERTED,
-};
-
 class ScreenRotationProperty : public RefBase {
 public:
     ScreenRotationProperty() = delete;

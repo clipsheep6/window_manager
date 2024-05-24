@@ -120,30 +120,46 @@ WSError SessionStageProxy::UpdateRect(const WSRect& rect, SizeChangeReason reaso
     return static_cast<WSError>(ret);
 }
 
-void SessionStageProxy::UpdateDensity()
+WSError SessionStageProxy::UpdateDensity(float density)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
-        return;
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (!data.WriteFloat(density)) {
+        TLOGE(WmsLogTag::DMS, "write density failed.");
+        return WSError::WS_ERROR_IPC_FAILED;
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DENSITY_CHANGE),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
-        return;
+        return WSError::WS_ERROR_IPC_FAILED;
     }
+
+    WSError ret = static_cast<WSError>(reply.ReadInt32());
+    if (ret != WSError::WS_OK) {
+        TLOGE(WmsLogTag::DMS, "update density by ipc failed with error: %{public}d.", ret);
+    }
+    return ret;
 }
 
-WSError SessionStageProxy::UpdateOrientation()
+WSError SessionStageProxy::UpdateOrientation(DisplayOrientation orientation)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         TLOGE(WmsLogTag::DMS, "WriteInterfaceToken failed.");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (!data.WriteUint32(static_cast<uint32_t>(orientation))) {
+        TLOGE(WmsLogTag::DMS, "write orientation failed.");
         return WSError::WS_ERROR_IPC_FAILED;
     }
 
