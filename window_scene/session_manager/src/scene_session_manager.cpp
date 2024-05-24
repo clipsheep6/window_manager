@@ -1941,7 +1941,8 @@ void SceneSessionManager::DestroyExtensionSession(const sptr<IRemoteObject>& rem
     taskScheduler_->PostAsyncTask(task, "DestroyExtensionSession");
 }
 
-WSError SceneSessionManager::PreCreateAndConnectSpecificSession(sptr<WindowSessionProperty> property, sptr<IRemoteObject> token)
+WSError SceneSessionManager::PreCreateAndConnectSpecificSession(sptr<WindowSessionProperty> property,
+    sptr<IRemoteObject> token)
 {
     if (property == nullptr) {
         WLOGFE("property is nullptr");

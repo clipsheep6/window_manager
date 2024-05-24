@@ -86,7 +86,7 @@ napi_value JsSceneSessionManager::Init(napi_env env, napi_value exportObj)
     return NapiGetUndefined(env);
 }
 
-void JsSceneSessionManager::BindGetFunction(napi_env env, napi_value exportObj, const char* modeleName)
+void JsSceneSessionManager::BindGetFunction(napi_env env, napi_value exportObj, const char* moduleName)
 {
     BindNativeFunction(env, exportObj, "getRootSceneSession", moduleName, JsSceneSessionManager::GetRootSceneSession);
     BindNativeFunction(env, exportObj, "requestSceneSession", moduleName, JsSceneSessionManager::RequestSceneSession);
@@ -120,7 +120,7 @@ void JsSceneSessionManager::BindGetFunction(napi_env env, napi_value exportObj, 
     BindNativeFunction(env, exportObj, "getCustomDecorHeight", moduleName, JsSceneSessionManager::GetCustomDecorHeight);
 }
 
-void JsSceneSessionManager::BindSetFunction(napi_env env, napi_value exportObj, const char* modeleName)
+void JsSceneSessionManager::BindSetFunction(napi_env env, napi_value exportObj, const char* moduleName)
 {
     BindNativeFunction(env, exportObj, "updateSceneSessionWant",
         moduleName, JsSceneSessionManager::UpdateSceneSessionWant);
@@ -155,7 +155,8 @@ void JsSceneSessionManager::BindSetFunction(napi_env env, napi_value exportObj, 
         JsSceneSessionManager::NotifySessionRecoverStatus);
     BindNativeFunction(env, exportObj, "notifyAINavigationBarShowStatus", moduleName,
         JsSceneSessionManager::NotifyAINavigationBarShowStatus);
-    BindNativeFunction(env, exportObj, "updateTitleInTargetPos", moduleName, JsSceneSessionManager::UpdateTitleInTargetPos);
+    BindNativeFunction(env, exportObj, "updateTitleInTargetPos", moduleName,
+        JsSceneSessionManager::UpdateTitleInTargetPos);
     BindNativeFunction(env, exportObj, "setSystemAnimatedScenes", moduleName,
         JsSceneSessionManager::SetSystemAnimatedScenes);
     BindNativeFunction(env, exportObj, "switchFreeMultiWindow", moduleName,
