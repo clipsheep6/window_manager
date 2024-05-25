@@ -932,8 +932,11 @@ void ScreenSessionManager::CreateScreenProperty(ScreenId screenId, ScreenPropert
         property.UpdateVirtualPixelRatio(screenBounds);
     }
     property.SetRefreshRate(screenRefreshRate);
-    property.SetDefaultDeviceRotationOffset(defaultDeviceRotationOffset_);
-
+    if (screenId == SCREEN_ID_FULL) {
+        property.SetDefaultDeviceRotationOffset(defaultDeviceRotationOffset_);
+    } else {
+        property.SetDefaultDeviceRotationOffset(0);
+    }
     if (foldScreenController_ != nullptr && screenId == 0
         && (g_screenRotationOffSet == ROTATION_90 || g_screenRotationOffSet == ROTATION_270)) {
         screenBounds = RRect({ 0, 0, screenMode.GetScreenHeight(), screenMode.GetScreenWidth() }, 0.0f, 0.0f);
