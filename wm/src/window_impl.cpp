@@ -2463,6 +2463,12 @@ void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSize
             property_->SetOriginRect(rect);
         }
     }
+    ScheduleUpdateTask(rectToAce, lastOriRect, reason, rsTransaction, display);
+}
+
+void WindowImpl::ScheduleUpdateTask(const Rect& rectToAce, const Rect& lastOriRect, WindowSizeChangeReason reason,
+    const std::shared_ptr<RSTransaction>& rsTransaction, const sptr<class Display>& display)
+{
     auto task = [this, reason, rsTransaction, rectToAce, lastOriRect, display]() mutable {
         if (rsTransaction) {
             RSTransaction::FlushImplicitTransaction();
@@ -2926,39 +2932,21 @@ void WindowImpl::HandlePointerStyle(const std::shared_ptr<MMI::PointerEvent>& po
     }
     auto action = pointerEvent->GetPointerAction();
     uint32_t windowId = pointerEvent->GetAgentWindowId();
-    int32_t mousePointX = pointerItem.GetDisplayX();
-    int32_t mousePointY = pointerItem.GetDisplayY();
-    int32_t sourceType = pointerEvent->GetSourceType();
     uint32_t oldStyleID = mouseStyleID_;
     uint32_t newStyleID = 0;
     if (WindowHelper::IsMainFloatingWindow(GetType(), GetMode())) {
-        auto display = SingletonContainer::IsDestroyed() ? nullptr :
-            SingletonContainer::Get<DisplayManager>().GetDisplayById(pointerEvent->GetTargetDisplayId());
-        if (display == nullptr || display->GetDisplayInfo() == nullptr) {
-            WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u",
-                property_->GetDisplayId(), property_->GetWindowId());
+        WMError ret = HandleFloatingWindowStyle(pointerEvent, pointerItem, newStyleID);
+        if (ret != WMError::WM_OK) {
             return;
         }
-        float vpr = display->GetVirtualPixelRatio();
-        CalculateStartRectExceptHotZone(vpr);
-        if (IsPointInDragHotZone(mousePointX, mousePointY, sourceType) &&
-            property_->GetMaximizeMode() != MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
-            newStyleID = CalculatePointerDirection(mousePointX, mousePointY);
-        } else if (action == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP) {
-            newStyleID = MMI::MOUSE_ICON::DEFAULT;
-        }
     } else if (GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE) {
-        newStyleID = (GetRect().width_ > GetRect().height_) ?
-            MMI::MOUSE_ICON::NORTH_SOUTH : MMI::MOUSE_ICON::WEST_EAST;
-        if (action == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP) {
-            newStyleID = MMI::MOUSE_ICON::DEFAULT; // when receive up event, set default style
-        }
+        HandleDockSliceWindowStyle(action, newStyleID);
     }
     WLOGD("winId : %{public}u, Mouse posX : %{public}u, posY %{public}u, Pointer action : %{public}u, "
-           "winRect posX : %{public}u, posY : %{public}u, W : %{public}u, H : %{public}u, "
-           "newStyle : %{public}u, oldStyle : %{public}u",
-           windowId, mousePointX, mousePointY, action, GetRect().posX_,
-           GetRect().posY_, GetRect().width_, GetRect().height_, newStyleID, oldStyleID);
+          "winRect posX : %{public}u, posY : %{public}u, W : %{public}u, H : %{public}u, "
+          "newStyle : %{public}u, oldStyle : %{public}u",
+          windowId, pointerItem.GetDisplayX(), pointerItem.GetDisplayY(), action, GetRect().posX_,
+          GetRect().posY_, GetRect().width_, GetRect().height_, newStyleID, oldStyleID);
     if (oldStyleID != newStyleID) {
         MMI::PointerStyle pointerStyle;
         pointerStyle.id = newStyleID;
@@ -2968,6 +2956,41 @@ void WindowImpl::HandlePointerStyle(const std::shared_ptr<MMI::PointerEvent>& po
             return;
         }
         mouseStyleID_ = newStyleID;
+    }
+}
+
+WMError WindowImpl::HandleFloatingWindowStyle(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
+    const MMI::PointerEvent::PointerItem& pointerItem, uint32_t& newStyleID)
+{
+    auto action = pointerEvent->GetPointerAction();
+    int32_t mousePointX = pointerItem.GetDisplayX();
+    int32_t mousePointY = pointerItem.GetDisplayY();
+    int32_t sourceType = pointerEvent->GetSourceType();
+
+    auto display = SingletonContainer::IsDestroyed() ? nullptr :
+        SingletonContainer::Get<DisplayManager>().GetDisplayById(pointerEvent->GetTargetDisplayId());
+    if (display == nullptr || display->GetDisplayInfo() == nullptr) {
+        WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u",
+                property_->GetDisplayId(), property_->GetWindowId());
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    float vpr = display->GetVirtualPixelRatio();
+    CalculateStartRectExceptHotZone(vpr);
+    if (IsPointInDragHotZone(mousePointX, mousePointY, sourceType) &&
+        property_->GetMaximizeMode() != MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
+        newStyleID = CalculatePointerDirection(mousePointX, mousePointY);
+    } else if (action == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP) {
+        newStyleID = MMI::MOUSE_ICON::DEFAULT;
+    }
+    return WMError::WM_OK;
+}
+
+void WindowImpl::HandleDockSliceWindowStyle(uint32_t action, uint32_t& newStyleID)
+{
+    newStyleID = (GetRect().width_ > GetRect().height_) ?
+        MMI::MOUSE_ICON::NORTH_SOUTH : MMI::MOUSE_ICON::WEST_EAST;
+    if (action == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP) {
+        newStyleID = MMI::MOUSE_ICON::DEFAULT; // when receive up event, set default style
     }
 }
 
