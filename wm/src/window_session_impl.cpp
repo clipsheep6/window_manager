@@ -2997,7 +2997,7 @@ void WindowSessionImpl::SetUiDvsyncSwitch(bool dvsyncSwitch)
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (vsyncStation_ == nullptr) {
         TLOGE(WmsLogTag::WMS_MAIN, "Set Ui-Dvsync switch failed, vsyncStation is nullptr");
-        return 0;
+        return;
     }
     return vsyncStation_->SetUiDvsyncSwitch(dvsyncSwitch);
 }

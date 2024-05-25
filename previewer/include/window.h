@@ -348,6 +348,8 @@ public:
     virtual WMError SetImmersiveModeEnabledState(bool enable) { return WMError::WM_OK; }
 
     virtual bool GetImmersiveModeEnabledState() const { return true; }
+
+    virtual void SetUiDvsyncSwitch(bool dvsyncSwitch) {}
 };
 }
 }
