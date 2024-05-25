@@ -473,7 +473,7 @@ MMI::WindowInfo SceneSessionDirtyManager::GetWindowInfo(const sptr<SceneSession>
     return windowInfo;
 }
 
-void SceneSessionDirtyManager::UpdatePointerAreasForWindowInfo(sptr<SceneSession>& sceneSession,
+void SceneSessionDirtyManager::UpdatePointerAreasForWindowInfo(const sptr<SceneSession>& sceneSession,
     std::vector<int32_t>& pointerChangeAreas) const
 {
     auto windowMode = windowSessionProperty->GetWindowMode();
