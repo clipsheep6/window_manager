@@ -4154,6 +4154,182 @@ HWTEST_F(WindowImplTest, GetSubWindow03, Function | SmallTest | Level3)
 
     ASSERT_EQ(std::vector<sptr<Window>>(), window->GetSubWindow(parentId));
 }
+
+/**
+ * @tc.name: RegisterAvoidAreaChangeListener
+ * @tc.desc: RegisterAvoidAreaChangeListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, RegisterAvoidAreaChangeListener, Function | SmallTest | Level3)
+{
+    sptr<IAvoidAreaChangedListener> listener;
+    sptr<WindowOption> option = new WindowOption();
+
+    option->SetWindowName("RegisterAvoidAreaChangeListener");
+    sptr<WindowImpl> window = new WindowImpl(option);
+
+    ASSERT_NE(WMError::WM_OK, window->RegisterAvoidAreaChangeListener(listener));
+}
+
+/**
+ * @tc.name: UnregisterAvoidAreaChangeListener
+ * @tc.desc: UnregisterAvoidAreaChangeListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, UnregisterAvoidAreaChangeListener, Function | SmallTest | Level3)
+{
+    sptr<IAvoidAreaChangedListener> listener;
+
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("UnregisterAvoidAreaChangeListener");
+    sptr<WindowImpl> window = new WindowImpl(option);
+
+    ASSERT_NE(WMError::WM_OK, window->UnregisterAvoidAreaChangeListener(listener));
+}
+
+/**
+ * @tc.name: RegisterDragListener
+ * @tc.desc: RegisterDragListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, RegisterDragListener, Function | SmallTest | Level3)
+{
+    sptr<IWindowDragListener> listener;
+    sptr<WindowOption> option = new WindowOption();
+
+    option->SetWindowName("RegisterDragListener");
+    sptr<WindowImpl> window = new WindowImpl(option);
+    ASSERT_NE(WMError::WM_OK, window->RegisterDragListener(listener));
+}
+
+/**
+ * @tc.name: UnregisterDragListener
+ * @tc.desc: UnregisterDragListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, UnregisterDragListener, Function | SmallTest | Level3)
+{
+    sptr<IWindowDragListener> listener;
+
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("UnregisterDragListener");
+    sptr<WindowImpl> window = new WindowImpl(option);
+
+    ASSERT_NE(WMError::WM_OK, window->UnregisterDragListener(listener));
+}
+
+/**
+ * @tc.name: RegisterDisplayMoveListener
+ * @tc.desc: RegisterDisplayMoveListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, RegisterDisplayMoveListener, Function | SmallTest | Level3)
+{
+    sptr<IDisplayMoveListener> listener;
+    sptr<WindowOption> option = new WindowOption();
+
+    option->SetWindowName("RegisterDisplayMoveListener");
+    sptr<WindowImpl> window = new WindowImpl(option);
+
+    ASSERT_NE(WMError::WM_OK, window->RegisterDisplayMoveListener(listener));
+}
+
+/**
+ * @tc.name: UnregisterDisplayMoveListener
+ * @tc.desc: UnregisterDisplayMoveListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, UnregisterDisplayMoveListener, Function | SmallTest | Level3)
+{
+    sptr<IDisplayMoveListener> listener;
+
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("UnregisterDisplayMoveListener");
+    sptr<WindowImpl> window = new WindowImpl(option);
+
+    ASSERT_NE(WMError::WM_OK, window->UnregisterDisplayMoveListener(listener));
+}
+
+/**
+ * @tc.name: RegisterOccupiedAreaChangeListener
+ * @tc.desc: RegisterOccupiedAreaChangeListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, RegisterOccupiedAreaChangeListener, Function | SmallTest | Level3)
+{
+    sptr<IOccupiedAreaChangeListener> listener;
+    sptr<WindowOption> option = new WindowOption();
+
+    option->SetWindowName("RegisterOccupiedAreaChangeListener");
+    sptr<WindowImpl> window = new WindowImpl(option);
+
+    ASSERT_NE(WMError::WM_OK, window->RegisterOccupiedAreaChangeListener(listener));
+}
+
+/**
+ * @tc.name: RegisterTouchOutsideListener
+ * @tc.desc: RegisterTouchOutsideListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, RegisterTouchOutsideListener, Function | SmallTest | Level3)
+{
+    sptr<ITouchOutsideListener> listener;
+    sptr<WindowOption> option = new WindowOption();
+
+    option->SetWindowName("RegisterTouchOutsideListener");
+    sptr<WindowImpl> window = new WindowImpl(option);
+    ASSERT_NE(WMError::WM_OK, window->RegisterTouchOutsideListener(listener));
+}
+
+/**
+ * @tc.name: UnregisterTouchOutsideListener
+ * @tc.desc: UnregisterTouchOutsideListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, UnregisterTouchOutsideListener, Function | SmallTest | Level3)
+{
+    sptr<ITouchOutsideListener> listener;
+
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("UnregisterTouchOutsideListener");
+    sptr<WindowImpl> window = new WindowImpl(option);
+
+    ASSERT_NE(WMError::WM_OK, window->UnregisterTouchOutsideListener(listener));
+}
+
+/**
+ * @tc.name: RegisterAnimationTransitionController01
+ * @tc.desc: RegisterAnimationTransitionController
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, RegisterAnimationTransitionController01, Function | SmallTest | Level3)
+{
+    sptr<IAnimationTransitionController> listener = new IAnimationTransitionController();
+
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("RegisterAnimationTransitionController");
+    sptr<WindowImpl> window = new WindowImpl(option);
+
+    ASSERT_EQ(WMError::WM_OK, window->RegisterAnimationTransitionController(listener));
+    listener = nullptr;
+    ASSERT_NE(WMError::WM_ERROR_NULLPTR, window->RegisterAnimationTransitionController(listener));
+}
+
+/**
+ * @tc.name: RegisterScreenshotListener
+ * @tc.desc: RegisterScreenshotListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowImplTest, RegisterScreenshotListener, Function | SmallTest | Level3)
+{
+    sptr<IScreenshotListener> listener;
+
+    sptr<WindowOption> option = new WindowOption();
+    option->SetWindowName("RegisterScreenshotListener");
+    sptr<WindowImpl> window = new WindowImpl(option);
+
+    ASSERT_NE(WMError::WM_ERROR_NULLPTR, window->RegisterScreenshotListener(listener));
+}
 }
 } // namespace Rosen
 } // namespace OHOS
