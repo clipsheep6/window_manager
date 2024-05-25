@@ -66,7 +66,7 @@ private:
         std::vector<MMI::Rect>& pointerHotAreas) const;
     void UpdatePointerAreas(sptr<SceneSession> sceneSession, std::vector<int32_t>& pointerChangeAreas) const;
     void UpdatePointerAreasForWindowInfo(const sptr<SceneSession>& sceneSession,
-        std::vector<int32_t>& pointerChangeAreas) const;
+        std::vector<int32_t>& pointerChangeAreas, const sptr<WindowSessionProperty>& windowSessionProperty) const
     void UpdateWindowFlags(DisplayId displayId, const sptr<SceneSession> sceneSession,
         MMI::WindowInfo& windowInfo) const;
 

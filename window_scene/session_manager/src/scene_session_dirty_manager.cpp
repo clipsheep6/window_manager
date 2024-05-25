@@ -442,7 +442,7 @@ MMI::WindowInfo SceneSessionDirtyManager::GetWindowInfo(const sptr<SceneSession>
     auto agentWindowId = sceneSession->GetWindowId();
     auto zOrder = sceneSession->GetZOrder();
     std::vector<int32_t> pointerChangeAreas(POINTER_CHANGE_AREA_COUNT, 0);
-    UpdatePointerAreasForWindowInfo(sceneSession, pointerChangeAreas);
+    UpdatePointerAreasForWindowInfo(sceneSession, pointerChangeAreas, windowSessionProperty);
     std::vector<MMI::Rect> touchHotAreas;
     std::vector<MMI::Rect> pointerHotAreas;
     UpdateHotAreas(sceneSession, touchHotAreas, pointerHotAreas);
@@ -474,7 +474,7 @@ MMI::WindowInfo SceneSessionDirtyManager::GetWindowInfo(const sptr<SceneSession>
 }
 
 void SceneSessionDirtyManager::UpdatePointerAreasForWindowInfo(const sptr<SceneSession>& sceneSession,
-    std::vector<int32_t>& pointerChangeAreas) const
+    std::vector<int32_t>& pointerChangeAreas, const sptr<WindowSessionProperty>& windowSessionProperty) const
 {
     auto windowMode = windowSessionProperty->GetWindowMode();
     auto maxMode = windowSessionProperty->GetMaximizeMode();
