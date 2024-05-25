@@ -159,8 +159,13 @@ public:
 
     WMError Create(uint32_t parentId,
         const std::shared_ptr<AbilityRuntime::Context>& context = nullptr);
+    WMError InitializeWindow(const std::shared_ptr<AbilityRuntime::Context>& context,
+        sptr<WindowImpl>& window);
+    void FinalizeWindowCreation(uint32_t parentId, const sptr<WindowImpl>& window);
     virtual WMError Destroy() override;
     virtual WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
+    WMError HandleAlreadyShownWindow();
+    WMError PerformShow(uint32_t reason, bool withAnimation);
     virtual WMError Hide(uint32_t reason = 0, bool withAnimation = false, bool isFromInnerkits = true) override;
     virtual WMError MoveTo(int32_t x, int32_t y) override;
     virtual WMError Resize(uint32_t width, uint32_t height) override;
