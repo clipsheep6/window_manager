@@ -58,8 +58,6 @@ WM_IMPLEMENT_SINGLE_INSTANCE(FoldScreenSensorManager);
 
 FoldScreenSensorManager::FoldScreenSensorManager()
 {
-    RegisterPostureCallback();
-    RegisterHallCallback();
 }
 
 void FoldScreenSensorManager::SetFoldScreenPolicy(sptr<FoldScreenPolicy> foldScreenPolicy)
@@ -96,7 +94,6 @@ void FoldScreenSensorManager::UnRegisterPostureCallback()
         deactivateRet, unsubscribeRet);
     if (deactivateRet == SENSOR_SUCCESS && unsubscribeRet == SENSOR_SUCCESS) {
         TLOGI(WmsLogTag::DMS, "FoldScreenSensorManager.UnRegisterPostureCallback success.");
-        sensorFoldStateManager_->ClearState(foldScreenPolicy_);
     }
 }
 

@@ -88,6 +88,7 @@
             "//foundation/window/window_manager/interfaces/kits/napi/extension_window:extensionwindow",
             "//foundation/window/window_manager/interfaces/kits/napi/window_runtime/window_stage_napi:windowstage",
             "//foundation/window/window_manager/interfaces/kits/napi:napi_packages",
+            "//foundation/window/window_manager/interfaces/kits/cj:ffi_packages",
             "//foundation/window/window_manager/resources:window_resources",
             "//foundation/window/window_manager/window_scene/interfaces/kits/napi:window_scene_napi_packages"
           ],
@@ -372,6 +373,17 @@
               "header_files": [
               ],
               "header_base": "//foundation/window/window_manager/interfaces/kits/napi/window_runtime"
+            }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/window/window_manager/interfaces/kits/cj/window_runtime:cj_window_ffi",
+            "header": {
+              "header_files": [
+                "window_impl.h",
+                "window_stage_impl.h"
+              ],
+              "header_base": "//foundation/window/window_manager/interfaces/kits/cj/window_runtime"
             }
           }
         ],

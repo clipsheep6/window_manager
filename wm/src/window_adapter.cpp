@@ -132,6 +132,13 @@ WMError WindowAdapter::GetAccessibilityWindowInfo(std::vector<sptr<Accessibility
     return windowManagerServiceProxy_->GetAccessibilityWindowInfo(infos);
 }
 
+WMError WindowAdapter::GetUnreliableWindowInfo(int32_t windowId,
+    std::vector<sptr<UnreliableWindowInfo>>& infos)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    return windowManagerServiceProxy_->GetUnreliableWindowInfo(windowId, infos);
+}
+
 WMError WindowAdapter::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
@@ -234,7 +241,7 @@ bool WindowAdapter::InitWMSProxy()
 void WindowAdapter::RegisterSessionRecoverCallbackFunc(
     int32_t persistentId, const SessionRecoverCallbackFunc& callbackFunc)
 {
-    WLOGFI("[WMSRecover] RegisterSessionRecoverCallbackFunc persistentId = %{public}d", persistentId);
+    TLOGI(WmsLogTag::WMS_RECOVER, "RegisterSessionRecoverCallbackFunc persistentId = %{public}d", persistentId);
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     sessionRecoverCallbackFuncMap_[persistentId] = callbackFunc;
 }
@@ -258,7 +265,7 @@ void WindowAdapter::WindowManagerAndSessionRecover()
 {
     ClearWindowAdapter();
     if (!InitSSMProxy()) {
-        WLOGFE("[WMSRecover] InitSSMProxy failed");
+        TLOGE(WmsLogTag::WMS_RECOVER, "InitSSMProxy failed");
         return;
     }
 
@@ -266,8 +273,13 @@ void WindowAdapter::WindowManagerAndSessionRecover()
 
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     for (const auto& it : sessionRecoverCallbackFuncMap_) {
-        WLOGFD("[WMSRecover] Session recover callback, persistentId = %{public}" PRId32, it.first);
-        it.second();
+        TLOGD(WmsLogTag::WMS_RECOVER, "Session recover callback, persistentId = %{public}" PRId32, it.first);
+        auto ret = it.second();
+        if (ret != WMError::WM_OK) {
+            TLOGE(WmsLogTag::WMS_RECOVER, "Session recover callback, persistentId = %{public}" PRId32 " is error",
+                it.first);
+            return;
+        }
     }
 }
 
@@ -293,6 +305,7 @@ void WindowAdapter::OnUserSwitch()
 {
     TLOGI(WmsLogTag::WMS_MULTI_USER, "User switched");
     ClearWindowAdapter();
+    windowManagerServiceProxy_ = nullptr;
     InitSSMProxy();
     ReregisterWindowManagerAgent();
 }

@@ -37,7 +37,7 @@ public:
 class WindowAdapter {
 WM_DECLARE_SINGLE_INSTANCE(WindowAdapter);
 public:
-    using SessionRecoverCallbackFunc = std::function<void()>;
+    using SessionRecoverCallbackFunc = std::function<WMError()>;
     using WMSConnectionChangedCallbackFunc = std::function<void(int32_t, int32_t, bool)>;
     virtual WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& windowProperty,
         std::shared_ptr<RSSurfaceNode> surfaceNode, uint32_t& windowId, const sptr<IRemoteObject>& token);
@@ -72,6 +72,7 @@ public:
     virtual void ClearWindowAdapter();
 
     virtual WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos);
+    virtual WMError GetUnreliableWindowInfo(int32_t windowId, std::vector<sptr<UnreliableWindowInfo>>& infos);
     virtual WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos);
     virtual void MinimizeWindowsByLauncher(std::vector<uint32_t> windowIds, bool isAnimated,
         sptr<RSIWindowAnimationFinishedCallback>& finishCallback);

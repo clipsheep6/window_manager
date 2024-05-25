@@ -76,6 +76,8 @@ const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::s
         &SceneSessionManagerStub::HandleSetGestureNavigationEnabled),
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_INFO),
         &SceneSessionManagerStub::HandleGetAccessibilityWindowInfo),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_UNRELIABLE_WINDOW_INFO),
+        &SceneSessionManagerStub::HandleGetUnreliableWindowInfo),
 
     std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REGISTER_SESSION_LISTENER),
         &SceneSessionManagerStub::HandleRegisterSessionListener),
@@ -215,14 +217,14 @@ int SceneSessionManagerStub::HandleCreateAndConnectSpecificSession(MessageParcel
 
 int SceneSessionManagerStub::HandleRecoverAndConnectSpecificSession(MessageParcel &data, MessageParcel &reply)
 {
-    WLOGFI("[WMSRecover] run HandleCreateAndConnectSpecificSession!");
+    TLOGI(WmsLogTag::WMS_RECOVER, "run!");
     sptr<IRemoteObject> sessionStageObject = data.ReadRemoteObject();
     sptr<ISessionStage> sessionStage = iface_cast<ISessionStage>(sessionStageObject);
     sptr<IRemoteObject> eventChannelObject = data.ReadRemoteObject();
     sptr<IWindowEventChannel> eventChannel = iface_cast<IWindowEventChannel>(eventChannelObject);
     std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
     if (sessionStage == nullptr || eventChannel == nullptr || surfaceNode == nullptr) {
-        WLOGFE("[WMSRecover] Failed to read scene session stage object or event channel object!");
+        TLOGE(WmsLogTag::WMS_RECOVER, "Failed to read scene session stage object or event channel object!");
         return ERR_INVALID_DATA;
     }
 
@@ -309,13 +311,16 @@ int SceneSessionManagerStub::HandleDestroyAndDisconnectSpcificSessionWithDetachC
 
 int SceneSessionManagerStub::HandleUpdateProperty(MessageParcel &data, MessageParcel &reply)
 {
-    WLOGFD("run HandleUpdateProperty!");
     auto action = static_cast<WSPropertyChangeAction>(data.ReadUint32());
+    TLOGD(WmsLogTag::DEFAULT, "action:%{public}u", action);
     sptr<WindowSessionProperty> property = nullptr;
     if (data.ReadBool()) {
-        property = data.ReadStrongParcelable<WindowSessionProperty>();
+        property = new (std::nothrow) WindowSessionProperty();
+        if (property != nullptr) {
+            property->Read(data, action);
+        }
     } else {
-        WLOGFW("Property not exist!");
+        TLOGW(WmsLogTag::DEFAULT, "Property not exist!");
     }
     const WMError& ret = UpdateSessionProperty(property, action);
     reply.WriteInt32(static_cast<int32_t>(ret));
@@ -400,7 +405,8 @@ int SceneSessionManagerStub::HandleRegisterSessionChangeListener(MessageParcel &
     WLOGFI("run HandleRegisterSessionChangeListener!");
     sptr<ISessionChangeListener> listener = iface_cast<ISessionChangeListener>(data.ReadRemoteObject());
     if (listener == nullptr) {
-        return ERR_INVALID_DATA;
+        reply.WriteInt32(static_cast<int32_t>(WSError::WS_ERROR_INVALID_SESSION_LISTENER));
+        return ERR_NONE;
     }
     WSError errCode = RegisterSessionListener(listener);
     reply.WriteInt32(static_cast<int32_t>(errCode));
@@ -437,7 +443,8 @@ int SceneSessionManagerStub::HandleRegisterSessionListener(MessageParcel& data, 
     WLOGFI("run HandleRegisterSessionListener!");
     sptr<ISessionListener> listener = iface_cast<ISessionListener>(data.ReadRemoteObject());
     if (listener == nullptr) {
-        return ERR_INVALID_DATA;
+        reply.WriteInt32(static_cast<int32_t>(WSError::WS_ERROR_INVALID_PARAM));
+        return ERR_NONE;
     }
     WSError errCode = RegisterSessionListener(listener);
     reply.WriteInt32(static_cast<int32_t>(errCode));
@@ -449,7 +456,8 @@ int SceneSessionManagerStub::HandleUnRegisterSessionListener(MessageParcel& data
     WLOGFI("run HandleUnRegisterSessionListener!");
     sptr<ISessionListener> listener = iface_cast<ISessionListener>(data.ReadRemoteObject());
     if (listener == nullptr) {
-        return ERR_INVALID_DATA;
+        reply.WriteInt32(static_cast<int32_t>(WSError::WS_OK));
+        return ERR_NONE;
     }
     WSError errCode = UnRegisterSessionListener(listener);
     reply.WriteInt32(static_cast<int32_t>(errCode));
@@ -616,6 +624,24 @@ int SceneSessionManagerStub::HandleGetAccessibilityWindowInfo(MessageParcel &dat
     WMError errCode = GetAccessibilityWindowInfo(infos);
     if (!MarshallingHelper::MarshallingVectorParcelableObj<AccessibilityWindowInfo>(reply, infos)) {
         WLOGFE("Write window infos failed.");
+        return ERR_TRANSACTION_FAILED;
+    }
+    reply.WriteInt32(static_cast<int32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleGetUnreliableWindowInfo(MessageParcel& data, MessageParcel& reply)
+{
+    TLOGD(WmsLogTag::DEFAULT, "run!");
+    std::vector<sptr<UnreliableWindowInfo>> infos;
+    int32_t windowId = INVALID_WINDOW_ID;
+    if (!data.ReadInt32(windowId)) {
+        TLOGE(WmsLogTag::DEFAULT, "Failed to readInt32 windowId");
+        return ERR_INVALID_DATA;
+    }
+    WMError errCode = GetUnreliableWindowInfo(windowId, infos);
+    if (!MarshallingHelper::MarshallingVectorParcelableObj<UnreliableWindowInfo>(reply, infos)) {
+        TLOGE(WmsLogTag::DEFAULT, "Write unreliable window infos failed.");
         return ERR_TRANSACTION_FAILED;
     }
     reply.WriteInt32(static_cast<int32_t>(errCode));

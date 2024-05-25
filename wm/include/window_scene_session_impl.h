@@ -46,7 +46,7 @@ public:
     explicit WindowSceneSessionImpl(const sptr<WindowOption>& option);
     ~WindowSceneSessionImpl();
     WMError Create(const std::shared_ptr<AbilityRuntime::Context>& context,
-        const sptr<Rosen::ISession>& iSession) override;
+        const sptr<Rosen::ISession>& iSession, const std::string& identityToken = "") override;
     WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
     WMError Hide(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
     WMError Destroy(bool needNotifyServer, bool needClearListener = true) override;
@@ -150,7 +150,11 @@ public:
     WSError SwitchFreeMultiWindow(bool enable) override;
     void NotifyKeyboardPanelInfoChange(const KeyboardPanelInfo& keyboardPanelInfo) override;
     void UpdateDensity() override;
+    WSError UpdateOrientation() override;
+    WSError UpdateDisplayId(uint64_t displayId) override;
     WMError AdjustKeyboardLayout(const KeyboardLayoutParams& params) override;
+    virtual WMError SetImmersiveModeEnabledState(bool enable) override;
+    virtual bool GetImmersiveModeEnabledState() const override;
 
 protected:
     void DestroySubWindow();
@@ -197,12 +201,14 @@ private:
     void CalculateNewLimitsByLimits(
         WindowLimits& newLimits, WindowLimits& customizedLimits, float& virtualPixelRatio);
     void CalculateNewLimitsByRatio(WindowLimits& newLimits, WindowLimits& customizedLimits);
+    void NotifyDisplayInfoChange();
     bool userLimitsSet_ = false;
     bool enableDefaultAnimation_ = true;
     sptr<IAnimationTransitionController> animationTransitionController_;
     uint32_t setSameSystembarPropertyCnt_ = 0;
     std::atomic<bool> isDefaultDensityEnabled_ = false;
     uint32_t getAvoidAreaCnt_ = 0;
+    bool enableImmersiveMode_ = false;
 
     WMError RegisterKeyboardPanelInfoChangeListener(const sptr<IKeyboardPanelInfoChangeListener>& listener) override;
     WMError UnregisterKeyboardPanelInfoChangeListener(const sptr<IKeyboardPanelInfoChangeListener>& listener) override;

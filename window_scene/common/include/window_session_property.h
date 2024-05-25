@@ -84,7 +84,7 @@ public:
     void SetCallingSessionId(uint32_t sessionId);
     void SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo);
     void SetExtensionFlag(bool isExtensionFlag);
-    void SetWindowMask(const sptr<Media::PixelMap>& windowMask);
+    void SetWindowMask(const std::shared_ptr<Media::PixelMap>& windowMask);
     void SetIsShaped(bool isShaped);
 
     bool GetIsNeedUpdateWindowMode() const;
@@ -131,7 +131,7 @@ public:
     uint32_t GetCallingSessionId() const;
     PiPTemplateInfo GetPiPTemplateInfo() const;
     bool GetExtensionFlag() const;
-    sptr<Media::PixelMap> GetWindowMask() const;
+    std::shared_ptr<Media::PixelMap> GetWindowMask() const;
     bool GetIsShaped() const;
     KeyboardLayoutParams GetKeyboardLayoutParams() const;
 
@@ -160,6 +160,8 @@ public:
     void SetIsLayoutFullScreen(bool isLayoutFullScreen);
     int32_t GetCollaboratorType() const;
     void SetCollaboratorType(int32_t collaboratorType);
+    bool Write(Parcel& parcel, WSPropertyChangeAction action);
+    void Read(Parcel& parcel, WSPropertyChangeAction action);
 
 private:
     bool MarshallingTouchHotAreas(Parcel& parcel) const;
@@ -224,7 +226,7 @@ private:
     bool isExtensionFlag_ = false;
 
     bool isShaped_ = false;
-    sptr<Media::PixelMap> windowMask_ = nullptr;
+    std::shared_ptr<Media::PixelMap> windowMask_ = nullptr;
     int32_t collaboratorType_ = CollaboratorType::DEFAULT_TYPE;
 };
 
@@ -282,6 +284,8 @@ struct SystemSessionConfig : public Parcelable {
     bool freeMultiWindowEnable_ = false;
     bool freeMultiWindowSupport_ = false;
     FreeMultiWindowConfig freeMultiWindowConfig_;
+    std::string uiType_;
+    bool supportTypeFloatWindow_ = false;
 
     virtual bool Marshalling(Parcel& parcel) const override
     {
@@ -315,6 +319,12 @@ struct SystemSessionConfig : public Parcelable {
         if (!parcel.WriteParcelable(&freeMultiWindowConfig_)) {
             return false;
         }
+        if (!parcel.WriteString(uiType_)) {
+            return false;
+        }
+        if (!parcel.WriteBool(supportTypeFloatWindow_)) {
+            return false;
+        }
         return true;
     }
 
@@ -329,6 +339,10 @@ struct SystemSessionConfig : public Parcelable {
         config->decorModeSupportInfo_ = parcel.ReadUint32();
         config->defaultWindowMode_ = static_cast<WindowMode>(parcel.ReadUint32());
         sptr<KeyboardAnimationConfig> keyboardConfig = parcel.ReadParcelable<KeyboardAnimationConfig>();
+        if (keyboardConfig == nullptr) {
+            delete config;
+            return nullptr;
+        }
         config->keyboardAnimationConfig_ = *keyboardConfig;
         config->maxFloatingWindowSize_ = parcel.ReadUint32();
         config->miniWidthOfMainWindow_ = parcel.ReadUint32();
@@ -338,7 +352,14 @@ struct SystemSessionConfig : public Parcelable {
         config->backgroundswitch = parcel.ReadBool();
         config->freeMultiWindowEnable_ = parcel.ReadBool();
         config->freeMultiWindowSupport_ = parcel.ReadBool();
-        config->freeMultiWindowConfig_ = *parcel.ReadParcelable<FreeMultiWindowConfig>();
+        sptr<FreeMultiWindowConfig> freeMultiWindowConfig = parcel.ReadParcelable<FreeMultiWindowConfig>();
+        if (freeMultiWindowConfig == nullptr) {
+            delete config;
+            return nullptr;
+        }
+        config->freeMultiWindowConfig_ = *freeMultiWindowConfig;
+        config->uiType_ = parcel.ReadString();
+        config->supportTypeFloatWindow_ = parcel.ReadBool();
         return config;
     }
 };

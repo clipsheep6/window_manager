@@ -33,6 +33,8 @@ const std::map<uint32_t, SessionStageStubFunc> SessionStageStub::stubFuncMap_{
         &SessionStageStub::HandleUpdateRect),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DENSITY_CHANGE),
         &SessionStageStub::HandleUpdateDensity),
+    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_ORIENTATION_CHANGE),
+        &SessionStageStub::HandleUpdateOrientation),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_HANDLE_BACK_EVENT),
         &SessionStageStub::HandleBackEventInner),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DESTROY),
@@ -67,6 +69,8 @@ const std::map<uint32_t, SessionStageStubFunc> SessionStageStub::stubFuncMap_{
         &SessionStageStub::HandleNotifySessionBackground),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TITLE_POSITION_CHANGE),
         &SessionStageStub::HandleUpdateTitleInTargetPos),
+    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DENSITY_FOLLOW_HOST),
+        &SessionStageStub::HandleNotifyDensityFollowHost),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_WINDOW_VISIBILITY_CHANGE),
         &SessionStageStub::HandleNotifyWindowVisibilityChange),
     std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TRANSFORM_CHANGE),
@@ -136,6 +140,14 @@ int SessionStageStub::HandleUpdateDensity(MessageParcel& data, MessageParcel& re
 {
     WLOGFD("UpdateDensity!");
     UpdateDensity();
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleUpdateOrientation(MessageParcel& data, MessageParcel& reply)
+{
+    TLOGD(WmsLogTag::DMS, "HandleUpdateOrientation!");
+    WSError errCode = UpdateOrientation();
+    reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
 }
 
@@ -327,6 +339,15 @@ int SessionStageStub::HandleNotifyTransformChange(MessageParcel& data, MessagePa
     Transform transform;
     transform.Unmarshalling(data);
     NotifyTransformChange(transform);
+    return ERR_NONE;
+}
+
+int SessionStageStub::HandleNotifyDensityFollowHost(MessageParcel& data, MessageParcel& reply)
+{
+    TLOGD(WmsLogTag::WMS_UIEXT, "HandleNotifyDensityFollowHost");
+    bool isFollowHost = data.ReadBool();
+    float densityValue = data.ReadFloat();
+    NotifyDensityFollowHost(isFollowHost, densityValue);
     return ERR_NONE;
 }
 

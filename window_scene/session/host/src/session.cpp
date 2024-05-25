@@ -476,16 +476,6 @@ bool Session::NeedNotify() const
     return needNotify_;
 }
 
-WSError Session::SetTouchable(bool touchable)
-{
-    SetSystemTouchable(touchable);
-    if (!IsSessionValid()) {
-        return WSError::WS_ERROR_INVALID_SESSION;
-    }
-    UpdateSessionTouchable(touchable);
-    return WSError::WS_OK;
-}
-
 void Session::SetFocusedOnShow(bool focusedOnShow)
 {
     if (focusedOnShow == focusedOnShow_) {
@@ -501,6 +491,20 @@ bool Session::IsFocusedOnShow() const
     return focusedOnShow_;
 }
 
+WSError Session::SetTouchable(bool touchable)
+{
+    SetSystemTouchable(touchable);
+    if (!IsSessionValid()) {
+        return WSError::WS_ERROR_INVALID_SESSION;
+    }
+    if (touchable != GetSessionProperty()->GetTouchable()) {
+        TLOGI(WmsLogTag::WMS_EVENT, "id:%{public}d touchable:%{public}d", GetPersistentId(),
+            static_cast<int>(touchable));
+    }
+    UpdateSessionTouchable(touchable);
+    return WSError::WS_OK;
+}
+
 bool Session::GetTouchable() const
 {
     return GetSessionProperty()->GetTouchable();
@@ -508,13 +512,19 @@ bool Session::GetTouchable() const
 
 void Session::SetForceTouchable(bool forceTouchable)
 {
+    if (forceTouchable != forceTouchable_) {
+        TLOGI(WmsLogTag::WMS_EVENT, "id:%{public}d forceTouchable:%{public}d", GetPersistentId(),
+            static_cast<int>(forceTouchable));
+    }
     forceTouchable_ = forceTouchable;
 }
 
 void Session::SetSystemTouchable(bool touchable)
 {
-    WLOGFD("SetSystemTouchable id: %{public}d, systemtouchable: %{public}d, propertytouchable: %{public}d",
-        GetPersistentId(), touchable, GetTouchable());
+    if (touchable != systemTouchable_) {
+        TLOGI(WmsLogTag::WMS_EVENT, "id:%{public}d systemTouchable_:%{public}d", GetPersistentId(),
+            static_cast<int>(touchable));
+    }
     systemTouchable_ = touchable;
     NotifySessionInfoChange();
 }
@@ -786,7 +796,7 @@ WSError Session::UpdateSizeChangeReason(SizeChangeReason reason)
 WSError Session::UpdateRect(const WSRect& rect, SizeChangeReason reason,
     const std::shared_ptr<RSTransaction>& rsTransaction)
 {
-    WLOGFD("session update rect: id: %{public}d, rect[%{public}d, %{public}d, %{public}u, %{public}u], "\
+    WLOGFD("session update rect: id: %{public}d, rect[%{public}d, %{public}d, %{public}u, %{public}u], "
         "reason:%{public}u", GetPersistentId(), rect.posX_, rect.posY_, rect.width_, rect.height_, reason);
     if (!IsSessionValid()) {
         winRect_ = rect;
@@ -818,11 +828,27 @@ WSError Session::UpdateDensity()
     return WSError::WS_OK;
 }
 
+WSError Session::UpdateOrientation()
+{
+    TLOGD(WmsLogTag::DMS, "update orientation: id: %{public}d.", GetPersistentId());
+    if (!IsSessionValid()) {
+        TLOGE(WmsLogTag::DMS, "update orientation failed because of session is invalid, id = %{public}d.",
+            GetPersistentId());
+        return WSError::WS_ERROR_INVALID_SESSION;
+    }
+    if (sessionStage_ == nullptr) {
+        TLOGE(WmsLogTag::DMS, "update orientation failed because of sessionStage_ is nullptr, id = %{public}d.",
+            GetPersistentId());
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    return sessionStage_->UpdateOrientation();
+}
+
 __attribute__((no_sanitize("cfi"))) WSError Session::Connect(const sptr<ISessionStage>& sessionStage,
     const sptr<IWindowEventChannel>& eventChannel,
     const std::shared_ptr<RSSurfaceNode>& surfaceNode,
     SystemSessionConfig& systemConfig, sptr<WindowSessionProperty> property,
-    sptr<IRemoteObject> token, int32_t pid, int32_t uid)
+    sptr<IRemoteObject> token, int32_t pid, int32_t uid, const std::string& identityToken)
 {
     TLOGI(WmsLogTag::WMS_LIFE, "Connect session, id: %{public}d, state: %{public}u,"
         "isTerminating:%{public}d, callingPid:%{public}d", GetPersistentId(),
@@ -879,14 +905,14 @@ WSError Session::Reconnect(const sptr<ISessionStage>& sessionStage, const sptr<I
     int32_t pid, int32_t uid)
 {
     if (property == nullptr) {
-        WLOGFE("[WMSRecover] property is nullptr");
+        TLOGE(WmsLogTag::WMS_RECOVER, "property is nullptr");
         return WSError::WS_ERROR_NULLPTR;
     }
-    WLOGFI("[WMSRecover] Reconnect session with: persistentId=%{public}d, windowState=%{public}u"
+    TLOGI(WmsLogTag::WMS_RECOVER, "Reconnect session with: persistentId=%{public}d, windowState=%{public}u"
         " callingPid:%{public}d", property->GetPersistentId(),
         static_cast<uint32_t>(property->GetWindowState()), pid);
     if (sessionStage == nullptr || eventChannel == nullptr) {
-        WLOGFE("[WMSRecover] session stage or eventChannel is nullptr");
+        TLOGE(WmsLogTag::WMS_RECOVER, "session stage or eventChannel is nullptr");
         return WSError::WS_ERROR_NULLPTR;
     }
     sessionStage_ = sessionStage;
@@ -901,7 +927,7 @@ WSError Session::Reconnect(const sptr<ISessionStage>& sessionStage, const sptr<I
     return WSError::WS_OK;
 }
 
-WSError Session::Foreground(sptr<WindowSessionProperty> property)
+WSError Session::Foreground(sptr<WindowSessionProperty> property, bool isFromClient)
 {
     HandleDialogForeground();
     SessionState state = GetSessionState();
@@ -978,11 +1004,11 @@ void Session::HandleDialogForeground()
     }
 }
 
-WSError Session::Background()
+WSError Session::Background(bool isFromClient)
 {
     HandleDialogBackground();
     SessionState state = GetSessionState();
-    TLOGI(WmsLogTag::WMS_LIFE, "Background session, id: %{public}d, state: %{public}" PRIu32"", GetPersistentId(),
+    TLOGI(WmsLogTag::WMS_LIFE, "Background session, id: %{public}d, state: %{public}" PRIu32, GetPersistentId(),
         static_cast<uint32_t>(state));
     if ((state == SessionState::STATE_ACTIVE || state == SessionState::STATE_FOREGROUND) &&
         GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
@@ -999,6 +1025,14 @@ WSError Session::Background()
     NotifyBackground();
     DelayedSingleton<ANRManager>::GetInstance()->OnBackground(persistentId_);
     return WSError::WS_OK;
+}
+
+void Session::ResetSessionConnectState()
+{
+    TLOGI(WmsLogTag::WMS_LIFE, "ResetSessionState, id: %{public}d, state: %{public}u",
+        GetPersistentId(), GetSessionState());
+    SetSessionState(SessionState::STATE_DISCONNECT);
+    SetCallingPid(-1);
 }
 
 WSError Session::Disconnect(bool isFromClient)
@@ -1033,7 +1067,7 @@ WSError Session::Hide()
 WSError Session::SetActive(bool active)
 {
     SessionState state = GetSessionState();
-    TLOGI(WmsLogTag::WMS_LIFE, "isActive: %{public}d, id: %{public}d, state: %{public}" PRIu32"",
+    TLOGI(WmsLogTag::WMS_LIFE, "new active: %{public}d, id: %{public}d, state: %{public}" PRIu32,
         active, GetPersistentId(), static_cast<uint32_t>(state));
     if (!IsSessionValid()) {
         return WSError::WS_ERROR_INVALID_SESSION;
@@ -1062,6 +1096,10 @@ void Session::NotifyForegroundInteractiveStatus(bool interactive)
 
 void Session::SetForegroundInteractiveStatus(bool interactive)
 {
+    if (interactive !=  foregroundInteractiveStatus_) {
+        TLOGI(WmsLogTag::WMS_EVENT, "id:%{public}d interactive:%{public}d", GetPersistentId(),
+            static_cast<int>(interactive));
+    }
     foregroundInteractiveStatus_.store(interactive);
     NotifySessionInfoChange();
 }
@@ -1765,18 +1803,26 @@ std::shared_ptr<Media::PixelMap> Session::Snapshot(const float scaleParam) const
 
 void Session::SetSessionStateChangeListenser(const NotifySessionStateChangeFunc& func)
 {
-    sessionStateChangeFunc_ = func;
-    auto changedState = GetSessionState();
-    if (changedState == SessionState::STATE_ACTIVE) {
-        changedState = SessionState::STATE_FOREGROUND;
-    } else if (changedState == SessionState::STATE_INACTIVE) {
-        changedState = SessionState::STATE_BACKGROUND;
-    } else if (changedState == SessionState::STATE_DISCONNECT) {
-        return;
-    }
-    NotifySessionStateChange(changedState);
-    WLOGFD("SetSessionStateChangeListenser, id: %{public}d, state_: %{public}d, changedState: %{public}d",
-        GetPersistentId(), GetSessionState(), changedState);
+    auto task = [weakThis = wptr(this), func]() {
+        auto session = weakThis.promote();
+        if (session == nullptr) {
+            WLOGFE("session is null");
+            return;
+        }
+        session->sessionStateChangeFunc_ = func;
+        auto changedState = session->GetSessionState(); // read and write state should in one thread
+        if (changedState == SessionState::STATE_ACTIVE) {
+            changedState = SessionState::STATE_FOREGROUND;
+        } else if (changedState == SessionState::STATE_INACTIVE) {
+            changedState = SessionState::STATE_BACKGROUND;
+        } else if (changedState == SessionState::STATE_DISCONNECT) {
+            return;
+        }
+        session->NotifySessionStateChange(changedState);
+        TLOGI(WmsLogTag::DEFAULT, "id: %{public}d, state_: %{public}d, changedState: %{public}d",
+            session->GetPersistentId(), session->GetSessionState(), changedState);
+    };
+    PostTask(task, "SetSessionStateChangeListenser");
 }
 
 void Session::SetBufferAvailableChangeListener(const NotifyBufferAvailableChangeFunc& func)
@@ -1803,6 +1849,19 @@ void Session::UnregisterSessionChangeListeners()
         session->jsSceneSessionExceptionFunc_ = nullptr;
         session->sessionExceptionFunc_ = nullptr;
         session->terminateSessionFunc_ = nullptr;
+        session->pendingSessionActivationFunc_ = nullptr;
+        session->changeSessionVisibilityWithStatusBarFunc_ = nullptr;
+        session->bufferAvailableChangeFunc_ = nullptr;
+        session->backPressedFunc_ = nullptr;
+        session->terminateSessionFuncNew_ = nullptr;
+        session->terminateSessionFuncTotal_ = nullptr;
+        session->updateSessionLabelFunc_ = nullptr;
+        session->updateSessionIconFunc_ = nullptr;
+        session->pendingSessionToForegroundFunc_ = nullptr;
+        session->pendingSessionToBackgroundForDelegatorFunc_ = nullptr;
+        session->raiseToTopForPointDownFunc_ = nullptr;
+        session->sessionInfoLockedStateChangeFunc_ = nullptr;
+        session->contextTransparentFunc_ = nullptr;
         WLOGFD("UnregisterSessionChangeListenser, id: %{public}d", session->GetPersistentId());
     };
     PostTask(task, "UnregisterSessionChangeListeners");
@@ -1944,13 +2003,6 @@ void Session::NotifyUILostFocus()
     std::shared_lock<std::shared_mutex> lock(uiLostFocusMutex_);
     if (lostFocusFunc_) {
         lostFocusFunc_();
-    }
-}
-
-void Session::RegisterWindowModeChangedCallback(const std::function<void()>& callback)
-{
-    if (callback != nullptr) {
-        windowModeCallback_ = callback;
     }
 }
 
@@ -2563,6 +2615,16 @@ WSRectF Session::GetBounds()
     return bounds_;
 }
 
+void Session::SetRotation(Rotation rotation)
+{
+    rotation_ = rotation;
+}
+
+Rotation Session::GetRotation() const
+{
+    return rotation_;
+}
+
 WSError Session::TransferSearchElementInfo(int64_t elementId, int32_t mode, int64_t baseParent,
     std::list<Accessibility::AccessibilityElementInfo>& infos)
 {
@@ -2649,10 +2711,8 @@ WSError Session::UpdateTitleInTargetPos(bool isShow, int32_t height)
 WSError Session::SwitchFreeMultiWindow(bool enable)
 {
     TLOGD(WmsLogTag::WMS_LAYOUT, "windowId:%{public}d enable: %{public}d", GetPersistentId(), enable);
+    systemConfig_.freeMultiWindowEnable_ = enable;
     if (!IsSessionValid()) {
-        if (state_ == SessionState::STATE_DISCONNECT) {
-            systemConfig_.freeMultiWindowEnable_ = enable;
-        }
         return WSError::WS_ERROR_INVALID_SESSION;
     }
     return sessionStage_->SwitchFreeMultiWindow(enable);
@@ -2713,7 +2773,16 @@ void Session::SetTouchHotAreas(const std::vector<Rect>& touchHotAreas)
     if (property == nullptr) {
         return;
     }
-
+    std::vector<Rect> lastTouchHotAreas;
+    property->GetTouchHotAreas(lastTouchHotAreas);
+    if (touchHotAreas != lastTouchHotAreas) {
+        std::string rectStr = "";
+        for (const auto& rect : touchHotAreas) {
+            rectStr = rectStr + " hot : [ " + std::to_string(rect.posX_) +" , " + std::to_string(rect.posY_) +
+            " , " + std::to_string(rect.width_) + " , " + std::to_string(rect.height_) + "]";
+        }
+        TLOGI(WmsLogTag::WMS_EVENT, "id:%{public}d rects:%{public}s", GetPersistentId(), rectStr.c_str());
+    }
     property->SetTouchHotAreas(touchHotAreas);
 }
 

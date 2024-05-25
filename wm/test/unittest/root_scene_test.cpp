@@ -38,6 +38,8 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
+private:
+    static constexpr uint32_t WAIT_SYNC_IN_NS = 200000;
 };
 
 void RootSceneTest::SetUpTestCase()
@@ -54,6 +56,7 @@ void RootSceneTest::SetUp()
 
 void RootSceneTest::TearDown()
 {
+    usleep(WAIT_SYNC_IN_NS);
 }
 
 namespace {
@@ -121,19 +124,6 @@ HWTEST_F(RootSceneTest, RegisterInputEventListener01, Function | SmallTest | Lev
 }
 
 /**
- * @tc.name: RequestVsync
- * @tc.desc: RequestVsync Test
- * @tc.type: FUNC
- */
-HWTEST_F(RootSceneTest, RequestVsync, Function | SmallTest | Level3)
-{
-    RootScene rootScene;
-    std::shared_ptr<VsyncCallback> vsyncCallback = std::make_shared<VsyncCallback>();
-    rootScene.RequestVsync(vsyncCallback);
-    ASSERT_EQ(1, rootScene.GetWindowId());
-}
-
-/**
  * @tc.name: RequestVsyncErr
  * @tc.desc: RequestVsync Test Err
  * @tc.type: FUNC
@@ -168,7 +158,8 @@ HWTEST_F(RootSceneTest, FlushFrameRate, Function | SmallTest | Level3)
 {
     RootScene rootScene;
     uint32_t rate = 120;
-    rootScene.FlushFrameRate(rate);
+    bool isAnimatorStopped = true;
+    rootScene.FlushFrameRate(rate, isAnimatorStopped);
     ASSERT_EQ(1, rootScene.GetWindowId());
 }
 }

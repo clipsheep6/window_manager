@@ -32,7 +32,7 @@ ohos_static_library("libwmutil_static") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
-    cfi_vcal_icall_only = true
+    cfi_vcall_icall_only = true
     debug = false
     integer_overflow = true
     ubsan = true
@@ -60,6 +60,7 @@ ohos_static_library("libwmutil_static") {
     "src/surface_reader.cpp",
     "src/surface_reader_handler_impl.cpp",
     "src/sys_cap_util.cpp",
+    "src/unreliable_window_info.cpp",
     "src/window_drawing_content_info.cpp",
     "src/window_property.cpp",
     "src/window_transition_info.cpp",
@@ -108,7 +109,7 @@ ohos_shared_library("libwmutil_base") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
-    cfi_vcal_icall_only = true
+    cfi_vcall_icall_only = true
     debug = false
   }
   sources = [
@@ -124,6 +125,7 @@ ohos_shared_library("libwmutil_base") {
     "src/screenshot_info.cpp",
     "src/singleton_container.cpp",
     "src/string_util.cpp",
+    "src/unreliable_window_info.cpp",
     "src/window_drawing_content_info.cpp",
     "src/window_visibility_info.cpp",
     "src/wm_math.cpp",

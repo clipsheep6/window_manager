@@ -23,6 +23,7 @@
 #include <iremote_object.h>
 #include "wm_single_instance.h"
 #include "wm_common.h"
+#include "dm_common.h"
 #include "focus_change_info.h"
 #include "window_visibility_info.h"
 #include "window_drawing_content_info.h"
@@ -218,6 +219,45 @@ public:
 };
 
 /**
+ * @class UnreliableWindowInfo
+ *
+ * @brief Unreliable Window Info.
+ */
+class UnreliableWindowInfo : public Parcelable {
+public:
+    /**
+     * @brief Default construct of UnreliableWindowInfo.
+     */
+    UnreliableWindowInfo() = default;
+    /**
+     * @brief Default deconstruct of UnreliableWindowInfo.
+     */
+    ~UnreliableWindowInfo() = default;
+
+    /**
+     * @brief Marshalling UnreliableWindowInfo.
+     *
+     * @param parcel Package of UnreliableWindowInfo.
+     * @return True means marshall success, false means marshall failed.
+     */
+    virtual bool Marshalling(Parcel& parcel) const override;
+    /**
+     * @brief Unmarshalling UnreliableWindowInfo.
+     *
+     * @param parcel Package of UnreliableWindowInfo.
+     * @return UnreliableWindowInfo object.
+     */
+    static UnreliableWindowInfo* Unmarshalling(Parcel& parcel);
+
+    int32_t windowId_ { 0 };
+    Rect windowRect_;
+    uint32_t zOrder_ { 0 };
+    float floatingScale_ { 1.0f };
+    float scaleX_ { 1.0f };
+    float scaleY_ { 1.0f };
+};
+
+/**
  * @class IWindowUpdateListener
  *
  * @brief Listener to observe window update.
@@ -293,6 +333,25 @@ public:
      * @param isShowing True means camera is shown, false means the opposite.
      */
     virtual void OnCameraWindowChange(uint32_t accessTokenId, bool isShowing) = 0;
+};
+
+/**
+ * @class IDisplayInfoChangedListener
+ *
+ * @brief Listener to observe display information changed.
+ */
+class IDisplayInfoChangedListener : virtual public RefBase {
+public:
+    /**
+     * @brief Notify caller when display information changed.
+     *
+     * @param token token of ability.
+     * @param displayId ID of the display where the main window of the ability is located.
+     * @param density density of the display where the main window of the ability is located.
+     * @param orientation orientation of the display where the main window of the ability is located.
+     */
+    virtual void OnDisplayInfoChange(const sptr<IRemoteObject>& token,
+        DisplayId displayId, float density, DisplayOrientation orientation) = 0;
 };
 
 /**
@@ -460,6 +519,41 @@ public:
      */
     WMError UnregisterGestureNavigationEnabledChangedListener(
         const sptr<IGestureNavigationEnabledChangedListener>& listener);
+
+    /**
+     * @brief register display information changed listener.
+     *
+     * @param token token of ability.
+     * @param listener IDisplayInfoChangedListener.
+     * @return WM_OK means register success, others means register failed.
+     */
+    WMError RegisterDisplayInfoChangedListener(const sptr<IRemoteObject>& token,
+        const sptr<IDisplayInfoChangedListener>& listener);
+
+    /**
+     * @brief unregister display info changed listener.Before the ability is destroyed, the
+     * UnregisterDisplayInfoChangedListener interface must be invoked.
+     * Otherwise, the sptr token may be destroyed abnormally.
+     *
+     * @param token token of ability.
+     * @param listener IDisplayInfoChangedListener.
+     * @return WM_OK means unregister success, others means unregister failed.
+     */
+    WMError UnregisterDisplayInfoChangedListener(const sptr<IRemoteObject>& token,
+        const sptr<IDisplayInfoChangedListener>& listener);
+
+    /**
+     * @brief notify display information change.
+     *
+     * @param token ability token.
+     * @param displayid ID of the display where the main window of the ability is located
+     * @param density density of the display where the main window of the ability is located.
+     * @param orientation orientation of the display where the main window of the ability is located.
+     * @return WM_OK means notify success, others means notify failed.
+    */
+    WMError NotifyDisplayInfoChange(const sptr<IRemoteObject>& token, DisplayId displayId,
+        float density, DisplayOrientation orientation);
+
     /**
      * @brief Minimize all app window.
      *
@@ -487,6 +581,14 @@ public:
      * @return WM_OK means get success, others means get failed.
      */
     WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) const;
+    /**
+     * @brief Get unreliable window info.
+     *
+     * @param infos Unreliable Window Info.
+     * @return WM_OK means get success, others means get failed.
+     */
+    WMError GetUnreliableWindowInfo(int32_t windowId,
+        std::vector<sptr<UnreliableWindowInfo>>& infos) const;
     /**
      * @brief Get visibility window info.
      *

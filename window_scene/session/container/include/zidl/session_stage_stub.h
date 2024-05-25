@@ -40,6 +40,7 @@ private:
     int HandleSetActive(MessageParcel& data, MessageParcel& reply);
     int HandleUpdateRect(MessageParcel& data, MessageParcel& reply);
     int HandleUpdateDensity(MessageParcel& data, MessageParcel& reply);
+    int HandleUpdateOrientation(MessageParcel& data, MessageParcel& reply);
     int HandleBackEventInner(MessageParcel& data, MessageParcel& reply);
     int HandleNotifyDestroy(MessageParcel& data, MessageParcel& reply);
     int HandleUpdateFocus(MessageParcel& date, MessageParcel& reply);
@@ -57,6 +58,7 @@ private:
     int HandleNotifySessionForeground(MessageParcel& data, MessageParcel& reply);
     int HandleNotifySessionBackground(MessageParcel& data, MessageParcel& reply);
     int HandleUpdateTitleInTargetPos(MessageParcel& data, MessageParcel& reply);
+    int HandleNotifyDensityFollowHost(MessageParcel& data, MessageParcel& reply);
     int HandleNotifyWindowVisibilityChange(MessageParcel& data, MessageParcel& reply);
     int HandleNotifyTransformChange(MessageParcel& data, MessageParcel& reply);
     int HandleNotifyDialogStateChange(MessageParcel& data, MessageParcel& reply);

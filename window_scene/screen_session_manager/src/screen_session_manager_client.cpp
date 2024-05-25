@@ -17,6 +17,9 @@
 
 #include <iservice_registry.h>
 #include <system_ability_definition.h>
+#include <transaction/rs_transaction.h>
+
+#include "pipeline/rs_node_map.h"
 #include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
@@ -125,6 +128,7 @@ void ScreenSessionManagerClient::OnScreenConnectionChanged(ScreenId screenId, Sc
             WLOGFE("screenSession is null");
             return;
         }
+        screenSession->DestroyScreenScene();
         if (screenConnectionListener_) {
             screenConnectionListener_->OnScreenDisconnected(screenSession);
         }
@@ -357,6 +361,15 @@ void ScreenSessionManagerClient::UpdateAvailableArea(ScreenId screenId, DMRect a
     screenSessionManager_->UpdateAvailableArea(screenId, area);
 }
 
+int32_t ScreenSessionManagerClient::SetScreenOffDelayTime(int32_t delay)
+{
+    if (!screenSessionManager_) {
+        WLOGFE("screenSessionManager_ is null");
+        return 0;
+    }
+    return screenSessionManager_->SetScreenOffDelayTime(delay);
+}
+
 void ScreenSessionManagerClient::NotifyFoldToExpandCompletion(bool foldToExpand)
 {
     if (!screenSessionManager_) {
@@ -366,12 +379,25 @@ void ScreenSessionManagerClient::NotifyFoldToExpandCompletion(bool foldToExpand)
     screenSessionManager_->NotifyFoldToExpandCompletion(foldToExpand);
 }
 
-void ScreenSessionManagerClient::SwitchUserCallback()
+void ScreenSessionManagerClient::SwitchUserCallback(std::vector<int32_t> oldScbPids, int32_t currentScbPid)
 {
-    if (switchingToAnotherUserFunc_ != nullptr) {
-        WLOGFE("switch to another user");
-        switchingToAnotherUserFunc_();
+    if (screenSessionManager_ == nullptr) {
+        WLOGFE("screenSessionManager_ is null");
+        return;
     }
+    if (oldScbPids.size() == 0) {
+        WLOGFI("oldScbPids size 0");
+        return;
+    }
+    for (const auto& iter : screenSessionMap_) {
+        auto displayNode = screenSessionManager_->GetDisplayNode(iter.first);
+        if (displayNode == nullptr) {
+            WLOGFI("display node is null");
+            continue;
+        }
+        displayNode->SetScbNodePid(oldScbPids, currentScbPid);
+    }
+    WLOGFI("switch user callback end");
 }
 
 void ScreenSessionManagerClient::SwitchingCurrentUser()
@@ -381,6 +407,7 @@ void ScreenSessionManagerClient::SwitchingCurrentUser()
         return;
     }
     screenSessionManager_->SwitchUser();
+    WLOGFI("switch to current user end");
 }
 
 FoldStatus ScreenSessionManagerClient::GetFoldStatus()

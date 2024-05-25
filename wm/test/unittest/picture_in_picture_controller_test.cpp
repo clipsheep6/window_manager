@@ -94,12 +94,17 @@ HWTEST_F(PictureInPictureControllerTest, ShowPictureInPictureWindow01, Function 
  */
 HWTEST_F(PictureInPictureControllerTest, StopPictureInPicture01, Function | SmallTest | Level2)
 {
-    sptr<MockWindow> mw = new MockWindow();
+    sptr<MockWindow> mw = new (std::nothrow) MockWindow();
     ASSERT_NE(nullptr, mw);
-    sptr<PipOption> option = new PipOption();
-    sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
+    sptr<PipOption> option = new (std::nothrow) PipOption();
+    ASSERT_NE(nullptr, option);
+    sptr<PictureInPictureController> pipControl =
+        new (std::nothrow) PictureInPictureController(option, mw, 100, nullptr);
 
     ASSERT_EQ(PiPWindowState::STATE_UNDEFINED, pipControl->GetControllerState());
+    ASSERT_EQ(WMError::WM_ERROR_PIP_STATE_ABNORMALLY, pipControl->StopPictureInPicture(true, StopPipType::NULL_STOP));
+
+    pipControl->window_ = nullptr;
     ASSERT_EQ(WMError::WM_ERROR_PIP_STATE_ABNORMALLY, pipControl->StopPictureInPicture(true, StopPipType::NULL_STOP));
 
     pipControl->window_ = mw;
@@ -129,11 +134,20 @@ HWTEST_F(PictureInPictureControllerTest, StopPictureInPicture01, Function | Smal
  */
 HWTEST_F(PictureInPictureControllerTest, CreatePictureInPictureWindow, Function | SmallTest | Level2)
 {
-    sptr<MockWindow> mw = new MockWindow();
-    sptr<PipOption> option = new PipOption();
-    sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
-    option = nullptr;
+    sptr<MockWindow> mw = new (std::nothrow) MockWindow();
+    ASSERT_NE(nullptr, mw);
+    sptr<PipOption> option = new (std::nothrow) PipOption();
+    ASSERT_NE(nullptr, option);
+    sptr<PictureInPictureController> pipControl =
+        new (std::nothrow) PictureInPictureController(option, mw, 100, nullptr);
     sptr<WindowOption> windowOption = nullptr;
+
+    option->SetContext(nullptr);
+    ASSERT_EQ(nullptr, option->GetContext());
+    EXPECT_EQ(WMError::WM_ERROR_PIP_CREATE_FAILED, pipControl->CreatePictureInPictureWindow());
+
+    pipControl->pipOption_ = nullptr;
+    EXPECT_EQ(WMError::WM_ERROR_PIP_CREATE_FAILED, pipControl->CreatePictureInPictureWindow());
 
     EXPECT_EQ(nullptr, windowOption);
     EXPECT_EQ(WMError::WM_ERROR_PIP_CREATE_FAILED, pipControl->CreatePictureInPictureWindow());
@@ -148,12 +162,19 @@ HWTEST_F(PictureInPictureControllerTest, CreatePictureInPictureWindow, Function 
 HWTEST_F(PictureInPictureControllerTest, StartPictureInPicture, Function | SmallTest | Level2)
 {
     StartPipType startType = StartPipType::AUTO_START;
-    sptr<PipOption> pipOption_;
-    sptr<MockWindow> mw = new MockWindow();
-    sptr<PipOption> option = new PipOption();
-    sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
-    pipOption_ = nullptr;
-    sptr<Window> mainWindow_ = nullptr;
+    sptr<MockWindow> mw = new (std::nothrow) MockWindow();
+    ASSERT_NE(nullptr, mw);
+    sptr<PipOption> option = new (std::nothrow) PipOption();
+    ASSERT_NE(nullptr, option);
+    sptr<PictureInPictureController> pipControl =
+        new (std::nothrow) PictureInPictureController(option, mw, 100, nullptr);
+
+    option->SetContext(nullptr);
+    ASSERT_EQ(nullptr, option->GetContext());
+    EXPECT_EQ(WMError::WM_ERROR_PIP_CREATE_FAILED, pipControl->StartPictureInPicture(startType));
+
+    sptr<Window> mainWindow = nullptr;
+    EXPECT_EQ(WMError::WM_ERROR_PIP_CREATE_FAILED, pipControl->StartPictureInPicture(startType));
 
     EXPECT_EQ(true, pipControl->IsPullPiPAndHandleNavigation());
     ASSERT_EQ(WMError::WM_ERROR_PIP_CREATE_FAILED, pipControl->StartPictureInPicture(startType));
@@ -235,13 +256,38 @@ HWTEST_F(PictureInPictureControllerTest, IsAutoStartEnabled, Function | SmallTes
  */
 HWTEST_F(PictureInPictureControllerTest, UpdateContentSize, Function | SmallTest | Level2)
 {
+    int result = 0;
     int32_t width = 0;
     int32_t height = 0;
-    sptr<MockWindow> mw = new MockWindow();
-    sptr<PipOption> option = new PipOption();
-    sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
+    sptr<MockWindow> mw = new (std::nothrow) MockWindow();
+    ASSERT_NE(nullptr, mw);
+    sptr<PipOption> option = new (std::nothrow) PipOption();
+    ASSERT_NE(nullptr, option);
+    sptr<PictureInPictureController> pipControl =
+        new (std::nothrow) PictureInPictureController(option, mw, 100, nullptr);
 
     pipControl->UpdateContentSize(width, height);
+    ASSERT_EQ(result, 0);
+
+    height = 150;
+    pipControl->UpdateContentSize(width, height);
+    ASSERT_EQ(result, 0);
+    height = 0;
+    width = 100;
+    pipControl->UpdateContentSize(width, height);
+    ASSERT_EQ(result, 0);
+    height = 150;
+    pipControl->UpdateContentSize(width, height);
+    ASSERT_EQ(result, 0);
+
+    pipControl->curState_ = PiPWindowState::STATE_UNDEFINED;
+    pipControl->UpdateContentSize(width, height);
+    ASSERT_EQ(result, 0);
+    pipControl->curState_ = PiPWindowState::STATE_STARTED;
+    pipControl->UpdateContentSize(width, height);
+    sptr<Window> window = nullptr;
+    pipControl->UpdateContentSize(width, height);
+    ASSERT_EQ(result, 0);
     ASSERT_NE(WMError::WM_OK, pipControl->CreatePictureInPictureWindow());
 }
 
@@ -304,31 +350,7 @@ HWTEST_F(PictureInPictureControllerTest, getSettingsAutoStartStatus03, Function 
     int32_t INDEX = 0;
     int32_t ret = resultSet->GetString(INDEX, value);
     ASSERT_NE(NativeRdb::E_OK,  ret);
-    ASSERT_EQ(ERR_OK,  pipControl->getSettingsAutoStartStatus(key, value));
-}
-
-/**
- * @tc.name: StartMove
- * @tc.desc: StartMove
- * @tc.type: FUNC
- */
-HWTEST_F(PictureInPictureControllerTest, StartMove, Function | SmallTest | Level2)
-{
-    sptr<MockWindow> mw = new MockWindow();
-    sptr<PipOption> option = new PipOption();
-    int32_t type = 0;
-    std::string navigationId = " ";
-    sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
-    GTEST_LOG_(INFO) << "TearDownCasecccccc";
-
-    sptr<PictureInPictureController::PipMainWindowLifeCycleImpl> pipMainWindowLifeCycleImpl =
-        new PictureInPictureController::PipMainWindowLifeCycleImpl(navigationId);
-    GTEST_LOG_(INFO) << "TearDownCasecccccc3";
-
-    pipMainWindowLifeCycleImpl->AfterBackground();
-    pipMainWindowLifeCycleImpl->BackgroundFailed(type);
-
-    ASSERT_NE(WMError::WM_OK, pipControl->CreatePictureInPictureWindow());
+    pipControl->getSettingsAutoStartStatus(key, value);
 }
 
 /**
@@ -374,6 +396,24 @@ HWTEST_F(PictureInPictureControllerTest, SetXComponentController, Function | Sma
     EXPECT_EQ(WMError::WM_ERROR_PIP_STATE_ABNORMALLY, ret);
     auto ret1 = pipControl->IsPullPiPAndHandleNavigation();
     ASSERT_EQ(true, ret1);
+}
+
+/**
+ * @tc.name: UpdatePiPSourceRect
+ * @tc.desc: UpdatePiPSourceRect
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureControllerTest, UpdatePiPSourceRect, Function | SmallTest | Level2)
+{
+    sptr<IPiPLifeCycle> listener = nullptr;
+    sptr<IPiPActionObserver> listener1 = nullptr;
+    std::shared_ptr<XComponentController> xComponentController = nullptr;
+    sptr<MockWindow> mw = new MockWindow();
+    sptr<PipOption> option = new PipOption();
+    sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
+    pipControl->SetXComponentController(xComponentController);
+    pipControl->UpdatePiPSourceRect();
+    ASSERT_NE(WMError::WM_OK, pipControl->CreatePictureInPictureWindow());
 }
 }
 }

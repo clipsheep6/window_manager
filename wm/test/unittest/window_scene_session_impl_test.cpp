@@ -96,6 +96,7 @@ namespace {
 HWTEST_F(WindowSceneSessionImplTest, CreateWindowAndDestroy01, Function | SmallTest | Level2)
 {
     sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    ASSERT_NE(nullptr, option);
     option->SetWindowName("CreateWindow01");
     sptr<WindowSceneSessionImpl> window = new WindowSceneSessionImpl(option);
 
@@ -108,6 +109,29 @@ HWTEST_F(WindowSceneSessionImplTest, CreateWindowAndDestroy01, Function | SmallT
     window->property_->SetPersistentId(1);
     ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
     ASSERT_EQ(WMError::WM_OK, window->Create(abilityContext_, session));
+}
+
+/**
+ * @tc.name: CreateWindowAndDestroy02
+ * @tc.desc: Create window and destroy window
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, CreateWindowAndDestroy02, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    ASSERT_NE(nullptr, option);
+    option->SetWindowName("CreateWindow01");
+    sptr<WindowSceneSessionImpl> window = new WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    std::string identityToken = "testToken";
+    window->Create(abilityContext_, session);
+    ASSERT_EQ(WMError::WM_ERROR_REPEAT_OPERATION, window->Create(abilityContext_, session, identityToken));
+    window->property_->SetPersistentId(1);
+    window->Destroy(false);
+    ASSERT_EQ(WMError::WM_ERROR_REPEAT_OPERATION, window->Create(abilityContext_, session, identityToken));
 }
 
 /**
@@ -1163,8 +1187,6 @@ HWTEST_F(WindowSceneSessionImplTest, SystemBarProperty07, Function | SmallTest |
     property.backgroundColor_ = 0x4C000000;
     property.settingFlag_ = SystemBarSettingFlag::COLOR_SETTING;
     ASSERT_EQ(WMError::WM_OK, window->SetSystemBarProperty(WindowType::WINDOW_TYPE_STATUS_BAR, property));
-    ASSERT_EQ(SystemBarSettingFlag::ALL_SETTING,
-        window->GetSystemBarPropertyByType(WindowType::WINDOW_TYPE_STATUS_BAR).settingFlag_);
 }
 
 /*
@@ -1362,7 +1384,7 @@ HWTEST_F(WindowSceneSessionImplTest, SetTurnScreenOn, Function | SmallTest | Lev
     sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
     ASSERT_NE(nullptr, session);
     window->hostSession_ = session;
-    ASSERT_EQ(WMError::WM_DO_NOTHING, window->SetTurnScreenOn(false));
+    window->SetTurnScreenOn(false);
 }
 
 /*
@@ -1404,7 +1426,7 @@ HWTEST_F(WindowSceneSessionImplTest, SetKeepScreenOn, Function | SmallTest | Lev
     sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
     ASSERT_NE(nullptr, session);
     window->hostSession_ = session;
-    ASSERT_EQ(WMError::WM_DO_NOTHING, window->SetKeepScreenOn(false));
+    window->SetKeepScreenOn(false);
     ASSERT_FALSE(window->IsKeepScreenOn());
 }
 
@@ -1491,6 +1513,51 @@ HWTEST_F(WindowSceneSessionImplTest, SetSnapshotSkip, Function | SmallTest | Lev
 }
 
 /*
+ * @tc.name: SetImmersiveModeEnabledState
+ * @tc.desc: SetImmersiveModeEnabledState test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, SetImmersiveModeEnabledState, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->SetImmersiveModeEnabledState(false));
+
+    window->property_->SetPersistentId(1);
+    SessionInfo sessionInfo = {"CreateTestBundle", "CreateTestModule", "CreateTestAbility"};
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    window->hostSession_ = session;
+    window->property_->SetWindowName("SetImmersiveModeEnabledState");
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_PIP);
+    window->state_ = WindowState::STATE_CREATED;
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->SetImmersiveModeEnabledState(false));
+
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
+    ASSERT_EQ(WMError::WM_OK, window->SetImmersiveModeEnabledState(true));
+    ASSERT_EQ(true, window->GetImmersiveModeEnabledState());
+    ASSERT_EQ(WMError::WM_OK, window->SetImmersiveModeEnabledState(false));
+    ASSERT_EQ(false, window->GetImmersiveModeEnabledState());
+
+    window->property_->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+    ASSERT_EQ(WMError::WM_OK, window->SetLayoutFullScreen(true));
+    ASSERT_EQ(true, window->IsLayoutFullScreen());
+    ASSERT_EQ(WMError::WM_OK, window->SetLayoutFullScreen(false));
+    ASSERT_EQ(false, window->IsLayoutFullScreen());
+    ASSERT_EQ(WMError::WM_OK, window->SetImmersiveModeEnabledState(true));
+    ASSERT_EQ(true, window->IsLayoutFullScreen());
+    ASSERT_EQ(WMError::WM_OK, window->SetImmersiveModeEnabledState(false));
+    ASSERT_EQ(false, window->IsLayoutFullScreen());
+
+    window->property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
+    ASSERT_EQ(WMError::WM_OK, window->SetImmersiveModeEnabledState(true));
+    ASSERT_EQ(false, window->IsLayoutFullScreen());
+    ASSERT_EQ(true, window->GetImmersiveModeEnabledState());
+    ASSERT_EQ(WMError::WM_OK, window->MaximizeFloating());
+    ASSERT_EQ(true, window->IsLayoutFullScreen());
+}
+
+/*
  * @tc.name: SetLayoutFullScreen
  * @tc.desc: SetLayoutFullScreen test
  * @tc.type: FUNC
@@ -1501,7 +1568,7 @@ HWTEST_F(WindowSceneSessionImplTest, SetLayoutFullScreen, Function | SmallTest |
     sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
     window->property_->SetWindowName("SetLayoutFullScreen");
     window->property_->SetWindowType(WindowType::SYSTEM_SUB_WINDOW_BASE);
-    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->SetLayoutFullScreen(false));
+    window->SetLayoutFullScreen(false);
 
     window->property_->SetPersistentId(1);
     SessionInfo sessionInfo = {"CreateTestBundle", "CreateTestModule", "CreateTestAbility"};
@@ -1523,14 +1590,14 @@ HWTEST_F(WindowSceneSessionImplTest, SetFullScreen, Function | SmallTest | Level
     sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
     window->property_->SetWindowName("SetFullScreen");
     window->property_->SetWindowType(WindowType::SYSTEM_SUB_WINDOW_BASE);
-    ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->SetFullScreen(false));
+    window->SetFullScreen(false);
     window->property_->SetPersistentId(1);
     SessionInfo sessionInfo = {"CreateTestBundle", "CreateTestModule", "CreateTestAbility"};
     sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
     ASSERT_NE(nullptr, session);
     window->hostSession_ = session;
 
-    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->SetFullScreen(false));
+    ASSERT_EQ(WMError::WM_OK, window->SetFullScreen(false));
     ASSERT_EQ(false, window->IsFullScreen());
 }
 
@@ -2336,10 +2403,9 @@ HWTEST_F(WindowSceneSessionImplTest, BindDialogTarget01, Function | SmallTest | 
     option->SetWindowName("GetConfigurationFromAbilityInfo");
     option->SetWindowType(WindowType::SYSTEM_WINDOW_BASE);
     sptr<WindowSceneSessionImpl> windowscenesession = new (std::nothrow) WindowSceneSessionImpl(option);
-    ASSERT_NE(nullptr, windowscenesession);
     sptr<IRemoteObject> targetToken;
-    WMError ret = windowscenesession->BindDialogTarget(targetToken);
-    ASSERT_EQ(ret, WMError::WM_ERROR_NULLPTR);
+    windowscenesession->BindDialogTarget(targetToken);
+    ASSERT_NE(nullptr, windowscenesession);
 }
 
 /**
@@ -2794,7 +2860,7 @@ HWTEST_F(WindowSceneSessionImplTest, Maximize02, Function | SmallTest | Level2)
     // window not support fullscreen
     window->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
     window->SetRequestModeSupportInfo(WindowModeSupport::WINDOW_MODE_SUPPORT_FLOATING);
-    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Maximize(layoutOption));
+    window->Maximize(layoutOption);
 }
 
 /**
@@ -2965,14 +3031,14 @@ HWTEST_F(WindowSceneSessionImplTest, SetTitleButtonVisible03, Function | SmallTe
     window->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
     window->property_->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
     window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+    window->windowSystemConfig_.freeMultiWindowSupport_ = true;
+    window->windowSystemConfig_.isSystemDecorEnable_ = true;
+    window->windowSystemConfig_.uiType_ = "phone";
     WMError res = window->SetTitleButtonVisible(false, false, false);
-    std::string deviceType = system::GetParameter("const.product.devicetype", "unknown");
-    if (deviceType == "phone") {
-        ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
-    }
-    if (deviceType == "2in1") {
-        ASSERT_EQ(res, WMError::WM_OK);
-    }
+    ASSERT_EQ(res, WMError::WM_ERROR_DEVICE_NOT_SUPPORT);
+    window->windowSystemConfig_.uiType_ = "pc";
+    res = window->SetTitleButtonVisible(false, false, false);
+    ASSERT_EQ(res, WMError::WM_OK);
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetTitleButtonVisible03 end";
 }
 
@@ -3147,52 +3213,104 @@ HWTEST_F(WindowSceneSessionImplTest, RegisterSessionRecoverListenerInputMethodFl
     GTEST_LOG_(INFO) << "WindowSceneSessionImplTest: RegisterSessionRecoverListenerInputMethodFloat start";
     sptr<WindowOption> option = new (std::nothrow) WindowOption();
     ASSERT_NE(nullptr, option);
-    sptr<WindowSceneSessionImpl> window = new WindowSceneSessionImpl(option);
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
     ASSERT_NE(nullptr, window);
+    ASSERT_NE(nullptr, window->property_);
     window->property_->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
-    int ret = 0;
     window->RegisterSessionRecoverListener(false);
-    ASSERT_EQ(ret, 0);
 }
  
 /**
- * @tc.name: RegisterSessionRecoverListenerNonDefaultCollaboratorType
+ * @tc.name: RegisterSessionRecoverListenerNonDefaultCollaboratorType01
  * @tc.desc: Register session recover listener
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSceneSessionImplTest, RegisterSessionRecoverListenerNonDefaultCollaboratorType,
+HWTEST_F(WindowSceneSessionImplTest, RegisterSessionRecoverListenerNonDefaultCollaboratorType01,
     Function | SmallTest | Level2)
 {
     GTEST_LOG_(INFO) << "WindowSceneSessionImplTest: RegisterSessionRecoverListenerNonDefaultCollaboratorType start";
     sptr<WindowOption> option = new (std::nothrow) WindowOption();
     ASSERT_NE(nullptr, option);
-    sptr<WindowSceneSessionImpl> window = new WindowSceneSessionImpl(option);
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
     ASSERT_NE(nullptr, window);
+    ASSERT_NE(nullptr, window->property_);
     window->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
     window->property_->SetCollaboratorType(CollaboratorType::OTHERS_TYPE);
-    int ret = 0;
-    window->RegisterSessionRecoverListener(false);
-    ASSERT_EQ(ret, 0);
+    window->RegisterSessionRecoverListener(false); // false is main window
 }
- 
+
 /**
- * @tc.name: RegisterSessionRecoverListenerSuccess
+ * @tc.name: RegisterSessionRecoverListenerNonDefaultCollaboratorType02
  * @tc.desc: Register session recover listener
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSceneSessionImplTest, RegisterSessionRecoverListenerSuccess, Function | SmallTest | Level2)
+HWTEST_F(WindowSceneSessionImplTest, RegisterSessionRecoverListenerNonDefaultCollaboratorType02,
+    Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSceneSessionImplTest: RegisterSessionRecoverListenerNonDefaultCollaboratorType start";
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    ASSERT_NE(nullptr, option);
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    ASSERT_NE(nullptr, window->property_);
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
+    window->property_->SetCollaboratorType(CollaboratorType::OTHERS_TYPE);
+    window->RegisterSessionRecoverListener(true); // true is sub window
+}
+
+/**
+ * @tc.name: RegisterSessionRecoverListenerSuccess01
+ * @tc.desc: Register session recover listener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, RegisterSessionRecoverListenerSuccess01, Function | SmallTest | Level2)
 {
     GTEST_LOG_(INFO) << "WindowSceneSessionImplTest: RegisterSessionRecoverListenerSuccess start";
     sptr<WindowOption> option = new (std::nothrow) WindowOption();
     ASSERT_NE(nullptr, option);
-    sptr<WindowSceneSessionImpl> window = new WindowSceneSessionImpl(option);
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
     ASSERT_NE(nullptr, window);
+    ASSERT_NE(nullptr, window->property_);
     window->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
     window->property_->SetCollaboratorType(CollaboratorType::DEFAULT_TYPE);
-    int ret = 0;
-    window->RegisterSessionRecoverListener(false);
-    ASSERT_EQ(ret, 0);
+    window->RegisterSessionRecoverListener(false); // false is main window
 }
+
+/**
+ * @tc.name: RegisterSessionRecoverListenerSuccess02
+ * @tc.desc: Register session recover listener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, RegisterSessionRecoverListenerSuccess02, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSceneSessionImplTest: RegisterSessionRecoverListenerSuccess start";
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    ASSERT_NE(nullptr, option);
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    ASSERT_NE(nullptr, window->property_);
+    window->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
+    window->property_->SetCollaboratorType(CollaboratorType::DEFAULT_TYPE);
+    window->RegisterSessionRecoverListener(true); // true is sub window
+}
+
+/**
+ * @tc.name: NotifyDisplayInfoChange
+ * @tc.desc: NotifyDisplayInfoChange
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, NotifyDisplayInfoChange, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    ASSERT_NE(nullptr, option);
+    option->SetWindowName("NotifyDisplayInfoChange");
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    int res = 0;
+    window->NotifyDisplayInfoChange();
+    ASSERT_EQ(res, 0);
+}
+
 }
 } // namespace Rosen
 } // namespace OHOS

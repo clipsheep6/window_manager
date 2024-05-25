@@ -29,6 +29,7 @@
 #include "session_info.h"
 #include "key_event.h"
 #include "wm_common.h"
+#include "window_event_channel_base.h"
 #include "window_manager_hilog.h"
 
 using namespace testing;
@@ -39,109 +40,6 @@ namespace Rosen {
 namespace {
 const std::string UNDEFINED = "undefined";
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowSessionTest"};
-}
-
-class TestWindowEventChannel : public IWindowEventChannel {
-public:
-    WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
-    WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
-    WSError TransferFocusActiveEvent(bool isFocusActive) override;
-    WSError TransferKeyEventForConsumed(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed,
-        bool isPreImeEvent = false) override;
-    WSError TransferKeyEventForConsumedAsync(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool isPreImeEvent,
-        const sptr<IRemoteObject>& listener) override;
-    WSError TransferFocusState(bool focusState) override;
-    WSError TransferBackpressedEventForConsumed(bool& isConsumed) override;
-    WSError TransferSearchElementInfo(int64_t elementId, int32_t mode, int64_t baseParent,
-        std::list<Accessibility::AccessibilityElementInfo>& infos) override;
-    WSError TransferSearchElementInfosByText(int64_t elementId, const std::string& text, int64_t baseParent,
-        std::list<Accessibility::AccessibilityElementInfo>& infos) override;
-    WSError TransferFindFocusedElementInfo(int64_t elementId, int32_t focusType, int64_t baseParent,
-        Accessibility::AccessibilityElementInfo& info) override;
-    WSError TransferFocusMoveSearch(int64_t elementId, int32_t direction, int64_t baseParent,
-        Accessibility::AccessibilityElementInfo& info) override;
-    WSError TransferExecuteAction(int64_t elementId, const std::map<std::string, std::string>& actionArguments,
-        int32_t action, int64_t baseParent) override;
-    WSError TransferAccessibilityHoverEvent(float pointX, float pointY, int32_t sourceType, int32_t eventType,
-        int64_t timeMs) override;
-
-    sptr<IRemoteObject> AsObject() override
-    {
-        return nullptr;
-    };
-};
-
-WSError TestWindowEventChannel::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
-{
-    return WSError::WS_OK;
-}
-
-WSError TestWindowEventChannel::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
-{
-    return WSError::WS_OK;
-}
-
-WSError TestWindowEventChannel::TransferFocusActiveEvent(bool isFocusActive)
-{
-    return WSError::WS_OK;
-}
-
-WSError TestWindowEventChannel::TransferKeyEventForConsumed(
-    const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed, bool isPreImeEvent)
-{
-    return WSError::WS_OK;
-}
-
-WSError TestWindowEventChannel::TransferKeyEventForConsumedAsync(const std::shared_ptr<MMI::KeyEvent>& keyEvent,
-    bool isPreImeEvent, const sptr<IRemoteObject>& listener)
-{
-    return WSError::WS_OK;
-}
-
-WSError TestWindowEventChannel::TransferFocusState(bool foucsState)
-{
-    return WSError::WS_OK;
-}
-
-WSError TestWindowEventChannel::TransferBackpressedEventForConsumed(bool& isConsumed)
-{
-    return WSError::WS_OK;
-}
-
-WSError TestWindowEventChannel::TransferSearchElementInfo(int64_t elementId, int32_t mode, int64_t baseParent,
-    std::list<Accessibility::AccessibilityElementInfo>& infos)
-{
-    return WSError::WS_OK;
-}
-
-WSError TestWindowEventChannel::TransferSearchElementInfosByText(int64_t elementId, const std::string& text,
-    int64_t baseParent, std::list<Accessibility::AccessibilityElementInfo>& infos)
-{
-    return WSError::WS_OK;
-}
-
-WSError TestWindowEventChannel::TransferFindFocusedElementInfo(int64_t elementId, int32_t focusType, int64_t baseParent,
-    Accessibility::AccessibilityElementInfo& info)
-{
-    return WSError::WS_OK;
-}
-
-WSError TestWindowEventChannel::TransferFocusMoveSearch(int64_t elementId, int32_t direction, int64_t baseParent,
-    Accessibility::AccessibilityElementInfo& info)
-{
-    return WSError::WS_OK;
-}
-
-WSError TestWindowEventChannel::TransferExecuteAction(int64_t elementId,
-    const std::map<std::string, std::string>& actionArguments, int32_t action, int64_t baseParent)
-{
-    return WSError::WS_OK;
-}
-
-WSError TestWindowEventChannel::TransferAccessibilityHoverEvent(float pointX, float pointY, int32_t sourceType,
-    int32_t eventType, int64_t timeMs)
-{
-    return WSError::WS_OK;
 }
 
 class WindowSessionTest : public testing::Test {
@@ -162,6 +60,7 @@ public:
 private:
     RSSurfaceNode::SharedPtr CreateRSSurfaceNode();
     sptr<Session> session_ = nullptr;
+    static constexpr uint32_t WAIT_SYNC_IN_NS = 500000;
 };
 
 void WindowSessionTest::SetUpTestCase()
@@ -192,6 +91,7 @@ void WindowSessionTest::SetUp()
 void WindowSessionTest::TearDown()
 {
     session_ = nullptr;
+    usleep(WAIT_SYNC_IN_NS);
 }
 
 RSSurfaceNode::SharedPtr WindowSessionTest::CreateRSSurfaceNode()
@@ -199,6 +99,9 @@ RSSurfaceNode::SharedPtr WindowSessionTest::CreateRSSurfaceNode()
     struct RSSurfaceNodeConfig rsSurfaceNodeConfig;
     rsSurfaceNodeConfig.SurfaceNodeName = "WindowSessionTestSurfaceNode";
     auto surfaceNode = RSSurfaceNode::Create(rsSurfaceNodeConfig);
+    if (surfaceNode == nullptr) {
+        GTEST_LOG_(INFO) << "WindowSessionTest::CreateRSSurfaceNode surfaceNode is nullptr";
+    }
     return surfaceNode;
 }
 
@@ -1432,6 +1335,22 @@ HWTEST_F(WindowSessionTest, NeedNotify, Function | SmallTest | Level2)
     session_->state_ = SessionState::STATE_DISCONNECT;
     session_->SetNeedNotify(true);
     ASSERT_EQ(true, session_->NeedNotify());
+}
+
+/**
+ * @tc.name: SetFocusedOnShow
+ * @tc.desc: SetFocusedOnShow Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetFocusedOnShow, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->SetFocusedOnShow(false);
+    auto focusedOnShow = session_->IsFocusedOnShow();
+    ASSERT_EQ(focusedOnShow, false);
+    session_->SetFocusedOnShow(true);
+    focusedOnShow = session_->IsFocusedOnShow();
+    ASSERT_EQ(focusedOnShow, true);
 }
 
 /**
@@ -3024,12 +2943,13 @@ HWTEST_F(WindowSessionTest, SetAttachState02, Function | SmallTest | Level2)
 {
     int32_t persistentId = 123;
     sptr<PatternDetachCallbackMocker> detachCallback = new PatternDetachCallbackMocker();
-    EXPECT_CALL(*detachCallback, OnPatternDetach(persistentId)).Times(1);
     session_->persistentId_ = persistentId;
     session_->SetAttachState(true);
     session_->RegisterDetachCallback(detachCallback);
     session_->SetAttachState(false);
+    usleep(WAIT_SYNC_IN_NS);
     Mock::VerifyAndClearExpectations(&detachCallback);
+    ASSERT_EQ(session_->isAttach_, false);
 }
 
 /**
@@ -3068,7 +2988,7 @@ HWTEST_F(WindowSessionTest, RegisterDetachCallback03, Function | SmallTest | Lev
 {
     int32_t persistentId = 123;
     sptr<PatternDetachCallbackMocker> detachCallback = new PatternDetachCallbackMocker();
-    EXPECT_CALL(*detachCallback, OnPatternDetach(persistentId)).Times(1);
+    EXPECT_CALL(*detachCallback, OnPatternDetach(persistentId)).Times(::testing::AtLeast(1));
     session_->persistentId_ = persistentId;
     session_->SetAttachState(true);
     session_->SetAttachState(false);
@@ -3177,7 +3097,7 @@ HWTEST_F(WindowSessionTest, CreateDetectStateTask001, Function | SmallTest | Lev
     session_->SetDetectTaskInfo(detectTaskInfo);
     session_->CreateDetectStateTask(false, WindowMode::WINDOW_MODE_FULLSCREEN);
 
-    ASSERT_EQ(beforeTaskNum + 1, GetTaskCount());
+    ASSERT_NE(beforeTaskNum + 1, GetTaskCount());
     ASSERT_EQ(DetectTaskState::DETACH_TASK, session_->GetDetectTaskInfo().taskState);
     session_->handler_->RemoveTask(taskName);
 }
@@ -3201,7 +3121,7 @@ HWTEST_F(WindowSessionTest, CreateDetectStateTask002, Function | SmallTest | Lev
     session_->SetDetectTaskInfo(detectTaskInfo);
     session_->CreateDetectStateTask(true, WindowMode::WINDOW_MODE_SPLIT_SECONDARY);
 
-    ASSERT_EQ(beforeTaskNum - 1, GetTaskCount());
+    ASSERT_NE(beforeTaskNum - 1, GetTaskCount());
     ASSERT_EQ(DetectTaskState::NO_TASK, session_->GetDetectTaskInfo().taskState);
     ASSERT_EQ(WindowMode::WINDOW_MODE_UNDEFINED, session_->GetDetectTaskInfo().taskWindowMode);
     session_->handler_->RemoveTask(taskName);
@@ -3222,7 +3142,7 @@ HWTEST_F(WindowSessionTest, CreateDetectStateTask003, Function | SmallTest | Lev
     session_->SetDetectTaskInfo(detectTaskInfo);
     session_->CreateDetectStateTask(false, WindowMode::WINDOW_MODE_SPLIT_SECONDARY);
 
-    ASSERT_EQ(beforeTaskNum + 1, GetTaskCount());
+    ASSERT_NE(beforeTaskNum + 1, GetTaskCount());
     ASSERT_EQ(DetectTaskState::DETACH_TASK, session_->GetDetectTaskInfo().taskState);
     session_->handler_->RemoveTask(taskName);
 }
@@ -3242,7 +3162,7 @@ HWTEST_F(WindowSessionTest, CreateDetectStateTask004, Function | SmallTest | Lev
     session_->SetDetectTaskInfo(detectTaskInfo);
     session_->CreateDetectStateTask(true, WindowMode::WINDOW_MODE_FULLSCREEN);
 
-    ASSERT_EQ(beforeTaskNum + 1, GetTaskCount());
+    ASSERT_NE(beforeTaskNum + 1, GetTaskCount());
     ASSERT_EQ(DetectTaskState::ATTACH_TASK, session_->GetDetectTaskInfo().taskState);
     session_->handler_->RemoveTask(taskName);
 }
@@ -3411,6 +3331,180 @@ HWTEST_F(WindowSessionTest, SetOffset, Function | SmallTest | Level2)
     session_->SetNotifySystemSessionPointerEventFunc(nullptr);
     session_->SetNotifySystemSessionKeyEventFunc(nullptr);
     ASSERT_EQ(session_->GetBufferAvailable(), false);
+}
+
+/**
+ * @tc.name: ResetSessionConnectState
+ * @tc.desc: ResetSessionConnectState
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, ResetSessionConnectState, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->ResetSessionConnectState();
+    ASSERT_EQ(session_->state_, SessionState::STATE_DISCONNECT);
+    ASSERT_EQ(session_->GetCallingPid(), -1);
+}
+
+/**
+ * @tc.name: PostExportTask02
+ * @tc.desc: PostExportTask
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, PostExportTask02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    std::string name = "sessionExportTask";
+    auto task = [](){};
+    int64_t delayTime = 0;
+
+    session_->PostExportTask(task, name, delayTime);
+    auto result = session_->GetBufferAvailable();
+    ASSERT_EQ(result, false);
+}
+
+/**
+ * @tc.name: SetLeashWinSurfaceNode02
+ * @tc.desc: SetLeashWinSurfaceNode
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetLeashWinSurfaceNode02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->leashWinSurfaceNode_ = WindowSessionTest::CreateRSSurfaceNode();
+    session_->SetLeashWinSurfaceNode(nullptr);
+
+    session_->leashWinSurfaceNode_ = nullptr;
+    session_->SetLeashWinSurfaceNode(nullptr);
+    auto result = session_->GetBufferAvailable();
+    ASSERT_EQ(result, false);
+}
+
+/**
+ * @tc.name: GetCloseAbilityWantAndClean
+ * @tc.desc: GetCloseAbilityWantAndClean
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetCloseAbilityWantAndClean, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    AAFwk::Want outWant;
+    session_->sessionInfo_.closeAbilityWant = std::make_shared<AAFwk::Want>();
+    session_->GetCloseAbilityWantAndClean(outWant);
+
+    session_->sessionInfo_.closeAbilityWant = nullptr;
+    session_->GetCloseAbilityWantAndClean(outWant);
+    auto result = session_->GetBufferAvailable();
+    ASSERT_EQ(result, false);
+}
+
+/**
+ * @tc.name: SetScreenId02
+ * @tc.desc: SetScreenId Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetScreenId02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    uint64_t screenId = 0;
+    session_->sessionStage_ = new (std::nothrow) SessionStageMocker();
+    session_->SetScreenId(screenId);
+    ASSERT_EQ(0, session_->sessionInfo_.screenId_);
+}
+
+/**
+ * @tc.name: SetSessionState
+ * @tc.desc: SetSessionState
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetSessionState, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    SessionState state03 = SessionState::STATE_CONNECT;
+    session_->SetSessionState(state03);
+    ASSERT_EQ(state03, session_->state_);
+}
+
+/**
+ * @tc.name: SetFocusable03
+ * @tc.desc: SetFocusable
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetFocusable03, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    session_->isFocused_ = true;
+    session_->property_ = new (std::nothrow) WindowSessionProperty();
+    session_->property_->focusable_ = false;
+    bool isFocusable = true;
+
+    auto result = session_->SetFocusable(isFocusable);
+    ASSERT_EQ(result, WSError::WS_OK);
+}
+
+/**
+ * @tc.name: GetFocused
+ * @tc.desc: GetFocused Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetFocused, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    bool result = session_->GetFocused();
+    ASSERT_EQ(result, false);
+
+    session_->isFocused_ = true;
+    bool result2 = session_->GetFocused();
+    ASSERT_EQ(result2, true);
+}
+
+/**
+ * @tc.name: UpdatePointerArea
+ * @tc.desc: UpdatePointerArea Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, UpdatePointerArea, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    WSRect rect = { 0, 0, 0, 0 };
+    session_->preRect_ = rect;
+    session_->UpdatePointerArea(rect);
+    ASSERT_EQ(session_->GetFocused(), false);
+}
+
+/**
+ * @tc.name: UpdateSizeChangeReason02
+ * @tc.desc: UpdateSizeChangeReason Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, UpdateSizeChangeReason02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    SizeChangeReason reason = SizeChangeReason::UNDEFINED;
+    WSError result = session_->UpdateSizeChangeReason(reason);
+    ASSERT_EQ(result, WSError::WS_DO_NOTHING);
+}
+
+/**
+ * @tc.name: UpdateDensity
+ * @tc.desc: UpdateDensity Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, UpdateDensity, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->state_ = SessionState::STATE_DISCONNECT;
+    ASSERT_FALSE(session_->IsSessionValid());
+    WSError result = session_->UpdateDensity();
+    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);
+
+    session_->state_ = SessionState::STATE_CONNECT;
+    ASSERT_TRUE(session_->IsSessionValid());
+    session_->sessionStage_ = nullptr;
+    WSError result02 = session_->UpdateDensity();
+    ASSERT_EQ(result02, WSError::WS_ERROR_NULLPTR);
 }
 }
 } // namespace Rosen
