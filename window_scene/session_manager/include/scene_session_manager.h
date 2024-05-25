@@ -499,6 +499,7 @@ private:
     std::set<int32_t> avoidAreaListenerSessionSet_;
     std::set<int32_t> touchOutsideListenerSessionSet_;
     std::set<int32_t> windowVisibilityListenerSessionSet_;
+    std::set<int32_t> windowManagerAgentSet_;
     ExtensionWindowFlags combinedExtWindowFlags_ { 0 };
     std::map<int32_t, ExtensionWindowFlags> extWindowFlagsMap_;
     std::set<int32_t> failRecoveredPersistentIdSet_;
