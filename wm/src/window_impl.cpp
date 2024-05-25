@@ -1219,9 +1219,20 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
     if (ret != WMError::WM_OK) {
         return ret;
     }
+    sptr<WindowImpl> window(this);
+    ret = InitializeWindow(context, window);
+    if (ret != WMError::WM_OK) {
+        return ret;
+    }
+    FinalizeWindowCreation(parentId, window);
+    return WMError::WM_OK;
+}
+
+WMError WindowImpl::InitializeWindow(const std::shared_ptr<AbilityRuntime::Context>& context,
+    sptr<WindowImpl>& window)
+{
     SetDefaultDisplayIdIfNeed();
     context_ = context;
-    sptr<WindowImpl> window(this);
     sptr<IWindow> windowAgent(new WindowAgent(window));
     static std::atomic<uint32_t> tempWindowId = 0;
     uint32_t windowId = tempWindowId++; // for test
@@ -1243,7 +1254,7 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
         surfaceNode_->SetFrameGravity(Gravity::TOP_LEFT);
     }
 
-    ret = SingletonContainer::Get<WindowAdapter>().CreateWindow(windowAgent, property_, surfaceNode_,
+    WMError ret = SingletonContainer::Get<WindowAdapter>().CreateWindow(windowAgent, property_, surfaceNode_,
         windowId, token);
     RecordLifeCycleExceptionEvent(LifeCycleEvent::CREATE_EVENT, ret);
     if (ret != WMError::WM_OK) {
@@ -1254,8 +1265,13 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
     if (surfaceNode_) {
         surfaceNode_->SetWindowId(windowId);
     }
+    return WMError::WM_OK;
+}
+
+void WindowImpl::FinalizeWindowCreation(uint32_t parentId, const sptr<WindowImpl>& window)
+{
     sptr<Window> self(this);
-    windowMap_.insert(std::make_pair(name_, std::pair<uint32_t, sptr<Window>>(windowId, self)));
+    windowMap_.insert(std::make_pair(name_, std::pair<uint32_t, sptr<Window>>(property_->GetWindowId(), self)));
     if (parentId != INVALID_WINDOW_ID) {
         subWindowMap_[property_->GetParentId()].push_back(window);
     }
@@ -1267,7 +1283,6 @@ WMError WindowImpl::Create(uint32_t parentId, const std::shared_ptr<AbilityRunti
     state_ = WindowState::STATE_CREATED;
     InputTransferStation::GetInstance().AddInputWindow(self);
     needRemoveWindowInputChannel_ = true;
-    return ret;
 }
 
 bool WindowImpl::PreNotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
@@ -1561,22 +1576,32 @@ WMError WindowImpl::Show(uint32_t reason, bool withAnimation)
         return WMError::WM_OK;
     }
     if (state_ == WindowState::STATE_SHOWN) {
-        if (property_->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
-            SingletonContainer::Get<WindowAdapter>().MinimizeAllAppWindows(property_->GetDisplayId());
-        } else {
-            WLOGI("window is already shown id: %{public}u", property_->GetWindowId());
-            SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(), false);
-        }
-        // when show sub window, check its parent state
-        sptr<Window> parent = FindWindowById(property_->GetParentId());
-        if (parent != nullptr && parent->GetWindowState() == WindowState::STATE_HIDDEN) {
-            WLOGFD("sub window can not show, because main window hide");
-            return WMError::WM_OK;
-        } else {
-            NotifyAfterForeground(true, false);
-        }
-        return WMError::WM_OK;
+        return HandleAlreadyShownWindow();
     }
+    return PerformShow(reason, withAnimation);
+}
+
+WMError WindowImpl::HandleAlreadyShownWindow()
+{
+    if (property_->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
+        SingletonContainer::Get<WindowAdapter>().MinimizeAllAppWindows(property_->GetDisplayId());
+    } else {
+        WLOGI("window is already shown id: %{public}u", property_->GetWindowId());
+        SingletonContainer::Get<WindowAdapter>().ProcessPointDown(property_->GetWindowId(), false);
+    }
+    // when show sub window, check its parent state
+    sptr<Window> parent = FindWindowById(property_->GetParentId());
+    if (parent != nullptr && parent->GetWindowState() == WindowState::STATE_HIDDEN) {
+        WLOGFD("sub window can not show, because main window hide");
+        return WMError::WM_OK;
+    } else {
+        NotifyAfterForeground(true, false);
+    }
+    return WMError::WM_OK;
+}
+
+WMError WindowImpl::PerformShow(uint32_t reason, bool withAnimation)
+{
     WMError ret = PreProcessShow(reason, withAnimation);
     if (ret != WMError::WM_OK) {
         NotifyForegroundFailed(ret);
