@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "snapshot_utils.h"
+
 #include <cerrno>
 #include <climits>
 #include <cstdio>
@@ -29,7 +31,6 @@
 #include <string>
 #include <sys/time.h>
 
-#include "snapshot_utils.h"
 #include "image_packer.h"
 #include "jpeglib.h"
 

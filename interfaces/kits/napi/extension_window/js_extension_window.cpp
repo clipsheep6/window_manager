@@ -866,7 +866,7 @@ napi_value JsExtensionWindow::OnCreateSubWindowWithOptions(napi_env env, napi_ca
     }
     WindowOption option;
     if (!ParseSubWindowOptions(env, argv[1], option)) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Get invalid options param");
+        TLOGE(WmsLogTag::WMS_SUB, "[NAPI]Get invalid options param");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
         return NapiGetUndefined(env);
     }
@@ -910,22 +910,22 @@ void JsExtensionWindow::SetWindowOption(sptr<Rosen::WindowOption> windowOption)
 bool JsExtensionWindow::ParseSubWindowOptions(napi_env env, napi_value jsObject, WindowOption& option)
 {
     if (jsObject == nullptr) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "jsObject is null");
+        TLOGE(WmsLogTag::WMS_SUB, "jsObject is null");
         return false;
     }
     std::string title;
     if (!ParseJsValue(jsObject, env, "title", title)) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "Failed to convert parameter to title");
+        TLOGE(WmsLogTag::WMS_SUB, "Failed to convert parameter to title");
         return false;
     }
-    bool decorEnabled;
+    bool decorEnabled = false;
     if (!ParseJsValue(jsObject, env, "decorEnabled", decorEnabled)) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "Failed to convert parameter to decorEnabled");
+        TLOGE(WmsLogTag::WMS_SUB, "Failed to convert parameter to decorEnabled");
         return false;
     }
     bool isModal = false;
     if (ParseJsValue(jsObject, env, "isModal", isModal)) {
-        TLOGI(WmsLogTag::WMS_UIEXT, "isModal:%{public}d", isModal);
+        TLOGI(WmsLogTag::WMS_SUB, "isModal:%{public}d", isModal);
         if (isModal) {
             option.AddWindowFlag(WindowFlag::WINDOW_FLAG_IS_MODAL);
         }

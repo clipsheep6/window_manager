@@ -37,10 +37,12 @@ public:
     }
     void AddInputWindow(const sptr<Window>& window);
     void RemoveInputWindow(uint32_t windowId);
+
     void MarkRegisterToMMI()
     {
         isRegisteredMMI_ = true;
     }
+
 protected:
     InputTransferStation() = default;
     ~InputTransferStation();
