@@ -47,6 +47,7 @@
 #include "screen_session_dumper.h"
 #include "mock_session_manager_service.h"
 #include "screen_snapshot_picker.h"
+#include "screen_session_publish.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -189,6 +190,8 @@ void ScreenSessionManager::Init()
     } else {
         SetSensorSubscriptionEnabled();
     }
+    // publish init
+    ScreenSessionPublish::GetInstance().InitPublishEvents();
     screenEventTracker_.RecordEvent(TrackSupportEvent::DMS_ONSTART, "Dms init end.");
 }
 
@@ -463,12 +466,14 @@ void ScreenSessionManager::HandleScreenEvent(sptr<ScreenSession> screenSession,
         }
         if (screenSession->GetVirtualScreenFlag() == VirtualScreenFlag::CAST) {
             NotifyScreenConnected(screenSession->ConvertToScreenInfo());
+            ScreenSessionPublish::GetInstance().PublishCastPlugInEvent();
         }
         return;
     }
     if (screenEvent == ScreenEvent::DISCONNECTED) {
         if (screenSession->GetVirtualScreenFlag() == VirtualScreenFlag::CAST) {
             NotifyScreenDisconnected(screenSession->GetScreenId());
+            ScreenSessionPublish::GetInstance().PublishCastPlugOutEvent();
         }
         if (phyMirrorEnable) {
             FreeDisplayMirrorNodeInner(screenSession);
