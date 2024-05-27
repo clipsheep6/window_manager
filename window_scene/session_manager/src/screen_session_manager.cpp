@@ -212,7 +212,8 @@ DMError ScreenSessionManager::RegisterDisplayManagerAgent(
     TLOGI(WmsLogTag::DMS, "RegisterScreenshotListener is called");
     if (type == DisplayManagerAgentType::SCREEN_EVENT_LISTENER && !SessionPermission::IsSystemCalling()
         && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "register display manager agent permission denied!");
+        TLOGE(WmsLogTag::DMS, "register display manager agent permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     if (type < DisplayManagerAgentType::DISPLAY_POWER_EVENT_LISTENER
@@ -235,7 +236,8 @@ DMError ScreenSessionManager::UnregisterDisplayManagerAgent(
     TLOGI(WmsLogTag::DMS, "UnregisterDisplayListener is called");
     if (type == DisplayManagerAgentType::SCREEN_EVENT_LISTENER && !SessionPermission::IsSystemCalling()
         && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "unregister display manager agent permission denied!");
+        TLOGE(WmsLogTag::DMS, "unregister display manager agent permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     if ((displayManagerAgent == nullptr) || (displayManagerAgent->AsObject() == nullptr)) {
@@ -616,7 +618,8 @@ std::vector<DisplayId> ScreenSessionManager::GetAllDisplayIds()
 sptr<ScreenInfo> ScreenSessionManager::GetScreenInfoById(ScreenId screenId)
 {
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::DMS, "GetScreenInfoById permission denied!");
+        TLOGE(WmsLogTag::DMS, "GetScreenInfoById permission denied,calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return nullptr;
     }
     auto screenSession = GetScreenSession(screenId);
@@ -631,7 +634,8 @@ DMError ScreenSessionManager::SetScreenActiveMode(ScreenId screenId, uint32_t mo
 {
     TLOGI(WmsLogTag::DMS, "SetScreenActiveMode: ScreenId: %{public}" PRIu64", modeId: %{public}u", screenId, modeId);
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "set screen active permission denied!");
+        TLOGE(WmsLogTag::DMS, "set screen active permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     if (screenId == SCREEN_ID_INVALID) {
@@ -688,7 +692,8 @@ void ScreenSessionManager::NotifyScreenChanged(sptr<ScreenInfo> screenInfo, Scre
 DMError ScreenSessionManager::SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "set virtual pixel permission denied!");
+        TLOGE(WmsLogTag::DMS, "set virtual pixel permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
 
@@ -722,7 +727,8 @@ DMError ScreenSessionManager::SetVirtualPixelRatio(ScreenId screenId, float virt
 DMError ScreenSessionManager::SetVirtualPixelRatioSystem(ScreenId screenId, float virtualPixelRatio)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "set virtual pixel permission denied!");
+        TLOGE(WmsLogTag::DMS, "set virtual pixel permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
 
@@ -738,7 +744,8 @@ DMError ScreenSessionManager::SetResolution(ScreenId screenId, uint32_t width, u
         "SetResolution ScreenId: %{public}" PRIu64 ", w: %{public}u, h: %{public}u, virtualPixelRatio: %{public}f",
         screenId, width, height, virtualPixelRatio);
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "SetResolution permission denied!");
+        TLOGE(WmsLogTag::DMS, "SetResolution permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     if (screenId == SCREEN_ID_INVALID) {
@@ -1040,7 +1047,8 @@ bool ScreenSessionManager::WakeUpBegin(PowerStateChangeReason reason)
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "[UL_POWER]ssm:WakeUpBegin(%u)", reason);
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "WakeUpBegin permission denied!");
+        TLOGE(WmsLogTag::DMS, "WakeUpBegin permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return false;
     }
     currentWakeUpReason_ = reason;
@@ -1068,7 +1076,8 @@ bool ScreenSessionManager::WakeUpEnd()
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "[UL_POWER]ssm:WakeUpEnd");
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "WakeUpEnd permission denied!");
+        TLOGE(WmsLogTag::DMS, "WakeUpEnd permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return false;
     }
     TLOGI(WmsLogTag::DMS, "[UL_POWER]WakeUpEnd enter");
@@ -1087,7 +1096,8 @@ bool ScreenSessionManager::SuspendBegin(PowerStateChangeReason reason)
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "[UL_POWER]ssm:SuspendBegin(%u)", reason);
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "SuspendBegin permission denied!");
+        TLOGE(WmsLogTag::DMS, "SuspendBegin permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return false;
     }
     TLOGI(WmsLogTag::DMS, "[UL_POWER]SuspendBegin  reason: %{public}u", static_cast<uint32_t>(reason));
@@ -1111,7 +1121,8 @@ bool ScreenSessionManager::SuspendBegin(PowerStateChangeReason reason)
 bool ScreenSessionManager::SuspendEnd()
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "SuspendEnd permission denied!");
+        TLOGE(WmsLogTag::DMS, "SuspendEnd permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return false;
     }
     TLOGI(WmsLogTag::DMS, "[UL_POWER]SuspendEnd enter");
@@ -1141,7 +1152,8 @@ bool ScreenSessionManager::BlockSetDisplayState(void)
 bool ScreenSessionManager::SetDisplayState(DisplayState state)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "SetDisplayState permission denied!");
+        TLOGE(WmsLogTag::DMS, "SetDisplayState permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return false;
     }
     TLOGI(WmsLogTag::DMS, "[UL_POWER]SetDisplayState enter");
@@ -1252,7 +1264,8 @@ void ScreenSessionManager::NotifyScreenshot(DisplayId displayId)
 bool ScreenSessionManager::SetSpecifiedScreenPower(ScreenId screenId, ScreenPowerState state, PowerStateChangeReason reason)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "SetSpecifiedScreenPower permission denied!");
+        TLOGE(WmsLogTag::DMS, "SetSpecifiedScreenPower permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return false;
     }
     TLOGI(WmsLogTag::DMS, "[UL_POWER]SetSpecifiedScreenPower: screen id:%{public}" PRIu64 ", state:%{public}u",
@@ -1285,7 +1298,8 @@ bool ScreenSessionManager::SetSpecifiedScreenPower(ScreenId screenId, ScreenPowe
 bool ScreenSessionManager::SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "SetScreenPowerForAll permission denied!");
+        TLOGE(WmsLogTag::DMS, "SetScreenPowerForAll permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return false;
     }
     TLOGI(WmsLogTag::DMS, "[UL_POWER]state: %{public}u, reason: %{public}u",
@@ -1480,7 +1494,8 @@ void ScreenSessionManager::NotifyDisplayEvent(DisplayEvent event)
 {
     TLOGI(WmsLogTag::DMS, "[UL_POWER]NotifyDisplayEvent receive keyguardDrawnDone");
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGI(WmsLogTag::DMS, "NotifyDisplayEvent permission denied!");
+        TLOGI(WmsLogTag::DMS, "NotifyDisplayEvent permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return;
     }
     sessionDisplayPowerController_->NotifyDisplayEvent(event);
@@ -1525,7 +1540,8 @@ void ScreenSessionManager::NotifyDisplayEvent(DisplayEvent event)
 ScreenPowerState ScreenSessionManager::GetScreenPower(ScreenId screenId)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "GetScreenPower permission denied!");
+        TLOGE(WmsLogTag::DMS, "GetScreenPower permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return ScreenPowerState::INVALID_STATE;
     }
     auto state = static_cast<ScreenPowerState>(RSInterfaces::GetInstance().GetScreenPowerStatus(screenId));
@@ -1536,7 +1552,8 @@ ScreenPowerState ScreenSessionManager::GetScreenPower(ScreenId screenId)
 DMError ScreenSessionManager::IsScreenRotationLocked(bool& isLocked)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "screen rotation locked permission denied!");
+        TLOGE(WmsLogTag::DMS, "screen rotation locked permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     sptr<ScreenSession> screenSession = GetDefaultScreenSession();
@@ -1552,7 +1569,8 @@ DMError ScreenSessionManager::IsScreenRotationLocked(bool& isLocked)
 DMError ScreenSessionManager::SetScreenRotationLocked(bool isLocked)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "set screen rotation locked permission denied!");
+        TLOGE(WmsLogTag::DMS, "set screen rotation locked permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     sptr<ScreenSession> screenSession = GetDefaultScreenSession();
@@ -1610,7 +1628,8 @@ void ScreenSessionManager::NotifyDisplayChanged(sptr<DisplayInfo> displayInfo, D
 DMError ScreenSessionManager::SetOrientation(ScreenId screenId, Orientation orientation)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "set orientation permission denied!");
+        TLOGE(WmsLogTag::DMS, "set orientation permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     if (orientation < Orientation::UNSPECIFIED || orientation > Orientation::REVERSE_HORIZONTAL) {
@@ -1773,7 +1792,8 @@ bool ScreenSessionManager::NotifyDisplayStateChanged(DisplayId id, DisplayState 
 DMError ScreenSessionManager::GetAllScreenInfos(std::vector<sptr<ScreenInfo>>& screenInfos)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "GetAllScreenInfos get all screen infos permission denied!");
+        TLOGE(WmsLogTag::DMS, "GetAllScreenInfos permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     std::vector<ScreenId> screenIds = GetAllScreenIds();
@@ -1803,7 +1823,8 @@ DMError ScreenSessionManager::GetScreenSupportedColorGamuts(ScreenId screenId,
 {
     TLOGI(WmsLogTag::DMS, "GetScreenSupportedColorGamuts ENTER");
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::DMS, "GetScreenSupportedColorGamuts permission denied!");
+        TLOGE(WmsLogTag::DMS, "GetScreenSupportedColorGamuts permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     sptr<ScreenSession> screen = GetScreenSession(screenId);
@@ -1946,7 +1967,8 @@ ScreenId ScreenSessionManager::CreateVirtualScreen(VirtualScreenOption option,
 {
     if (!(Permission::IsSystemCalling() && Permission::CheckCallingPermission(SCREEN_CAPTURE_PERMISSION)) &&
         !SessionPermission::IsShellCall()) {
-        TLOGE(WmsLogTag::DMS, "create virtual screen permission denied!");
+        TLOGE(WmsLogTag::DMS, "create virtual screen permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return SCREEN_ID_INVALID;
     }
     TLOGI(WmsLogTag::DMS, "CreateVirtualScreen ENTER");
@@ -1999,7 +2021,8 @@ DMError ScreenSessionManager::SetVirtualScreenSurface(ScreenId screenId, sptr<IB
 {
     if (!(Permission::IsSystemCalling() && Permission::CheckCallingPermission(SCREEN_CAPTURE_PERMISSION)) &&
         !SessionPermission::IsShellCall()) {
-        TLOGE(WmsLogTag::DMS, "set virtual screenSurface permission denied!");
+        TLOGE(WmsLogTag::DMS, "set virtual screenSurface permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     TLOGI(WmsLogTag::DMS, "SetVirtualScreenSurface ENTER");
@@ -2019,7 +2042,8 @@ DMError ScreenSessionManager::SetVirtualScreenSurface(ScreenId screenId, sptr<IB
 DMError ScreenSessionManager::SetVirtualMirrorScreenScaleMode(ScreenId screenId, ScreenScaleMode scaleMode)
 {
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::DMS, "permission denied!");
+        TLOGE(WmsLogTag::DMS, "permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     ScreenId rsScreenId;
@@ -2061,7 +2085,8 @@ DMError ScreenSessionManager::SetVirtualMirrorScreenCanvasRotation(ScreenId scre
 DMError ScreenSessionManager::ResizeVirtualScreen(ScreenId screenId, uint32_t width, uint32_t height)
 {
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::DMS, "ResizeVirtualScreen permission denied!");
+        TLOGE(WmsLogTag::DMS, "ResizeVirtualScreen permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     TLOGI(WmsLogTag::DMS, "ResizeVirtualScreen, screenId: %{public}" PRIu64", width: %{public}u, height: %{public}u.",
@@ -2086,7 +2111,8 @@ DMError ScreenSessionManager::ResizeVirtualScreen(ScreenId screenId, uint32_t wi
 DMError ScreenSessionManager::DestroyVirtualScreen(ScreenId screenId)
 {
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::DMS, "destroy virtual screen permission denied!");
+        TLOGE(WmsLogTag::DMS, "destroy virtual screen permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
 
@@ -2147,7 +2173,8 @@ DMError ScreenSessionManager::DisableMirror(bool disableOrNot)
 {
     TLOGI(WmsLogTag::DMS, "DisableMirror %{public}d", disableOrNot);
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGI(WmsLogTag::DMS, "DisableMirror permission denied!");
+        TLOGI(WmsLogTag::DMS, "DisableMirror permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     TLOGI(WmsLogTag::DMS, "DisableMirror enter %{public}d", disableOrNot);
@@ -2179,7 +2206,8 @@ DMError ScreenSessionManager::MakeMirror(ScreenId mainScreenId, std::vector<Scre
 {
     TLOGI(WmsLogTag::DMS, "MakeMirror enter!");
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "MakeMirror permission denied!");
+        TLOGE(WmsLogTag::DMS, "MakeMirror permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     if (system::GetBoolParameter("persist.edm.disallow_mirror", false)) {
@@ -2228,7 +2256,8 @@ DMError ScreenSessionManager::MakeMirror(ScreenId mainScreenId, std::vector<Scre
 DMError ScreenSessionManager::StopMirror(const std::vector<ScreenId>& mirrorScreenIds)
 {
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::DMS, "StopMirror permission denied!");
+        TLOGE(WmsLogTag::DMS, "StopMirror permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     auto allMirrorScreenIds = GetAllValidScreenIds(mirrorScreenIds);
@@ -2282,7 +2311,8 @@ DMError ScreenSessionManager::StopScreens(const std::vector<ScreenId>& screenIds
 VirtualScreenFlag ScreenSessionManager::GetVirtualScreenFlag(ScreenId screenId)
 {
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::DMS, "permission denied!");
+        TLOGE(WmsLogTag::DMS, "permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return VirtualScreenFlag::DEFAULT;
     }
     auto screen = GetScreenSession(screenId);
@@ -2296,7 +2326,8 @@ VirtualScreenFlag ScreenSessionManager::GetVirtualScreenFlag(ScreenId screenId)
 DMError ScreenSessionManager::SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag screenFlag)
 {
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::DMS, "permission denied!");
+        TLOGE(WmsLogTag::DMS, "permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     if (screenFlag < VirtualScreenFlag::DEFAULT || screenFlag >= VirtualScreenFlag::MAX) {
@@ -2315,7 +2346,8 @@ DMError ScreenSessionManager::SetVirtualScreenFlag(ScreenId screenId, VirtualScr
 DMError ScreenSessionManager::SetVirtualScreenRefreshRate(ScreenId screenId, uint32_t refreshInterval)
 {
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::DMS, "SetVirtualScreenRefreshRate, permission denied!");
+        TLOGE(WmsLogTag::DMS, "SetVirtualScreenRefreshRate, permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     TLOGI(WmsLogTag::DMS, "SetVirtualScreenRefreshRate, screenId: %{public}" PRIu64", refreshInterval:  %{public}u",
@@ -2394,7 +2426,8 @@ DMError ScreenSessionManager::MirrorUniqueSwitch(const std::vector<ScreenId>& sc
 DMError ScreenSessionManager::MakeUniqueScreen(const std::vector<ScreenId>& screenIds)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "MakeUniqueScreen permission denied!");
+        TLOGE(WmsLogTag::DMS, "MakeUniqueScreen permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     TLOGI(WmsLogTag::DMS, "MakeUniqueScreen enter!");
@@ -2439,7 +2472,7 @@ DMError ScreenSessionManager::MakeExpand(std::vector<ScreenId> screenId,
 {
     TLOGI(WmsLogTag::DMS, "MakeExpand enter!");
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "MakeExpand permission denied!");
+        TLOGE(WmsLogTag::DMS, "permission denied, calling pid: %{public}d", IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     if (screenId.empty() || startPoint.empty() || screenId.size() != startPoint.size()) {
@@ -2514,7 +2547,8 @@ bool ScreenSessionManager::OnMakeExpand(std::vector<ScreenId> screenId, std::vec
 DMError ScreenSessionManager::StopExpand(const std::vector<ScreenId>& expandScreenIds)
 {
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::DMS, "StopExpand permission denied!");
+        TLOGE(WmsLogTag::DMS, "StopExpand permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     auto allExpandScreenIds = GetAllValidScreenIds(expandScreenIds);
@@ -2957,7 +2991,8 @@ void ScreenSessionManager::RemoveVirtualScreenFromGroup(std::vector<ScreenId> sc
 {
     TLOGI(WmsLogTag::DMS, "RemoveVirtualScreenFromGroup enter!");
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::DMS, "RemoveVirtualScreenFromGroup permission denied!");
+        TLOGE(WmsLogTag::DMS, "RemoveVirtualScreenFromGroup permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return;
     }
     if (screens.empty()) {
@@ -3166,7 +3201,8 @@ std::vector<ScreenId> ScreenSessionManager::GetAllValidScreenIds(const std::vect
 sptr<ScreenGroupInfo> ScreenSessionManager::GetScreenGroupInfoById(ScreenId screenId)
 {
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::DMS, "GetScreenGroupInfoById permission denied!");
+        TLOGE(WmsLogTag::DMS, "GetScreenGroupInfoById permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return nullptr;
     }
     auto screenSessionGroup = GetAbstractScreenGroup(screenId);
@@ -3276,7 +3312,8 @@ void ScreenSessionManager::NotifyPrivateSessionStateChanged(bool hasPrivate)
 void ScreenSessionManager::SetScreenPrivacyState(bool hasPrivate)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "SetScreenPrivacyState permission denied!");
+        TLOGE(WmsLogTag::DMS, "SetScreenPrivacyState permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return;
     }
     TLOGI(WmsLogTag::DMS, "SetScreenPrivacyState enter, hasPrivate: %{public}d", hasPrivate);
@@ -3293,7 +3330,8 @@ void ScreenSessionManager::SetScreenPrivacyState(bool hasPrivate)
 void ScreenSessionManager::SetPrivacyStateByDisplayId(DisplayId id, bool hasPrivate)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "SetPrivacyStateByDisplayId permission denied!");
+        TLOGE(WmsLogTag::DMS, "SetPrivacyStateByDisplayId permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return;
     }
     TLOGI(WmsLogTag::DMS, "SetPrivacyStateByDisplayId enter, hasPrivate: %{public}d", hasPrivate);
@@ -3315,7 +3353,8 @@ void ScreenSessionManager::SetPrivacyStateByDisplayId(DisplayId id, bool hasPriv
 void ScreenSessionManager::SetScreenPrivacyWindowList(DisplayId id, std::vector<std::string> privacyWindowList)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "SetScreenPrivacyWindowList permission denied!");
+        TLOGE(WmsLogTag::DMS, "SetScreenPrivacyWindowList permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return;
     }
     TLOGI(WmsLogTag::DMS, "SetScreenPrivacyWindowList enter");
@@ -3348,7 +3387,8 @@ void ScreenSessionManager::NotifyPrivateWindowListChanged(DisplayId id, std::vec
 DMError ScreenSessionManager::HasPrivateWindow(DisplayId id, bool& hasPrivateWindow)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "HasPrivateWindow permission denied!");
+        TLOGE(WmsLogTag::DMS, "HasPrivateWindow permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     std::vector<ScreenId> screenIds = GetAllScreenIds();
@@ -3491,7 +3531,8 @@ std::string ScreenSessionManager::TransferTypeToString(ScreenType type) const
 void ScreenSessionManager::DumpAllScreensInfo(std::string& dumpInfo)
 {
     if (!(SessionPermission::IsSACalling() || SessionPermission::IsStartByHdcd())) {
-        TLOGE(WmsLogTag::DMS, "DumpAllScreensInfo permission denied!");
+        TLOGE(WmsLogTag::DMS, "DumpAllScreensInfo permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return;
     }
     std::ostringstream oss;
@@ -3535,7 +3576,8 @@ void ScreenSessionManager::DumpAllScreensInfo(std::string& dumpInfo)
 void ScreenSessionManager::DumpSpecialScreenInfo(ScreenId id, std::string& dumpInfo)
 {
     if (!(SessionPermission::IsSACalling() || SessionPermission::IsStartByHdcd())) {
-        TLOGE(WmsLogTag::DMS, "DumpSpecialScreenInfo permission denied!");
+        TLOGE(WmsLogTag::DMS, "DumpSpecialScreenInfo permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return;
     }
     std::ostringstream oss;
@@ -3583,7 +3625,8 @@ ScreenProperty ScreenSessionManager::GetPhyScreenProperty(ScreenId screenId)
 void ScreenSessionManager::SetFoldDisplayMode(const FoldDisplayMode displayMode)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "SetFoldDisplayMode permission denied!");
+        TLOGE(WmsLogTag::DMS, "SetFoldDisplayMode permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return;
     }
     if (!g_foldScreenFlag) {
@@ -3594,7 +3637,8 @@ void ScreenSessionManager::SetFoldDisplayMode(const FoldDisplayMode displayMode)
         return;
     }
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::DMS, "SetFoldDisplayMode permission denied!");
+        TLOGE(WmsLogTag::DMS, "SetFoldDisplayMode permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return;
     }
     foldScreenController_->SetDisplayMode(displayMode);
@@ -3611,7 +3655,8 @@ void ScreenSessionManager::SetFoldStatusLocked(bool locked)
         return;
     }
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::DMS, "SetFoldStatusLocked permission denied!");
+        TLOGE(WmsLogTag::DMS, "SetFoldStatusLocked permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return;
     }
     foldScreenController_->LockDisplayStatus(locked);
@@ -3840,7 +3885,8 @@ bool ScreenSessionManager::GetNotifyLockOrNot()
 void ScreenSessionManager::SwitchUser()
 {
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::DMS, "permission denied");
+        TLOGE(WmsLogTag::DMS, "permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return;
     }
     auto userId = GetUserIdByCallingUid();
@@ -3873,7 +3919,8 @@ void ScreenSessionManager::SwitchUser()
 void ScreenSessionManager::SetClient(const sptr<IScreenSessionManagerClient>& client)
 {
     if (!SessionPermission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::DMS, "permission denied");
+        TLOGE(WmsLogTag::DMS, "permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return;
     }
     if (!client) {
@@ -4169,7 +4216,8 @@ bool ScreenSessionManager::IsValidDisplayModeCommand(std::string command)
 int ScreenSessionManager::SetFoldDisplayMode(const std::string& modeParam)
 {
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "SetFoldDisplayMode permission denied!");
+        TLOGE(WmsLogTag::DMS, "SetFoldDisplayMode permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return -1;
     }
     if (modeParam.empty()) {
@@ -4285,7 +4333,8 @@ void ScreenSessionManager::NotifyFoldToExpandCompletion(bool foldToExpand)
 {
     TLOGI(WmsLogTag::DMS, "NotifyFoldToExpandCompletion ENTER");
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::DMS, "notify permission denied");
+        TLOGE(WmsLogTag::DMS, "notify permission denied, calling pid: %{public}d",
+              IPCSkeleton::GetCallingPid());
         return;
     }
     if (FoldScreenStateInternel::IsSingleDisplayFoldDevice()) {
