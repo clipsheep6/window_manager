@@ -2129,7 +2129,7 @@ HWTEST_F(SceneSessionTest, BindDialogSessionTarget2, Function | SmallTest | Leve
     sceneSession1->sessionChangeCallback_ = new (std::nothrow) MainSession::SessionChangeCallback();
     ASSERT_NE(sceneSession1->sessionChangeCallback_, nullptr);
     sceneSession1->sessionChangeCallback_->onBindDialogTarget_ = [](const sptr<SceneSession>&) {};
-    result->scensession->BindDialogSessionTarget(sceneSession1);
+    result = scensession->BindDialogSessionTarget(sceneSession1);
     ASSERT_EQ(result, WSError::WS_OK);
 }
 
@@ -3190,7 +3190,7 @@ HWTEST_F(SceneSessionTest, ClearSpecificSessionCbMap1, Function | SmallTest | Le
     EXPECT_NE(nullptr, scensession);
     scensession->ClearSpecificSessionCbMap();
 
-    sprt<MainSession::SessionChangeCallback> sessionChangeCallback = 
+    sptr<MainSession::SessionChangeCallback> sessionChangeCallback = 
         new (std::nothrow) MainSession::SessionChangeCallback();
     sessionChangeCallback->clearCallbackFunc_ = [](bool, int32_t) {};
     scensession->sessionChangeCallback_ = sessionChangeCallback;
