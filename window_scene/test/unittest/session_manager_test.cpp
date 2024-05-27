@@ -55,6 +55,9 @@ void SessionManagerTest::TearDown()
 }
 
 namespace {
+constexpr int32_t MOCK_USER_ID_ZERO = 0;
+constexpr int32_t MOCK_SCREEN_ID_ZERO = 0;
+
 /**
  * @tc.name: OnRemoteRequest
  * @tc.desc: normal function
@@ -172,11 +175,11 @@ HWTEST_F(SessionManagerTest, RecoverSessionManagerService, Function | SmallTest 
     sessionManager.RecoverSessionManagerService(nullptr);
     ASSERT_EQ(funcInvoked, false);
 
-    sessionManager.windowManagerRecoverFunc_ = [&]（） {
+    sessionManager.windowManagerRecoverFunc_ = [&]()  {
             funcInvoked = true;
     };
     sessionManager.RecoverSessionManagerService(nullptr);
-    ASSERT_EQ(funcInvoked. true);
+    ASSERT_EQ(funcInvoked, true);
 }
 
 /**
