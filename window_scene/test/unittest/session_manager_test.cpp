@@ -133,7 +133,7 @@ HWTEST_F(SessionManagerTest, OnWMSConnectionChanged, Function | SmallTest | Leve
     sessionManager.currentWMSUserId_ = INVALID_UID + 100;
     sessionManager.OnWMSConnectionChanged(MOCK_USER_ID_ZERO, MOCK_SCREEN_ID_ZERO, true, sessionManagerService);
 
-    ASSERT_NE(sessionManager, nullptr);
+    ASSERT_NE(sessionManager.currentWMSUserId_, INVALID_UID);
 }
 
 /**
