@@ -89,7 +89,7 @@ HWTEST_F(RootSceneTest, UpdateViewportConfig01, Function | SmallTest | Level3)
     rootScene.UpdateViewportConfig(rect, WindowSizeChangeReason::UNDEFINED);
 
     auto uiContent = Ace::UIContent::Create(nullptr, nullptr);
-    rootScene.uiContent = std::move(uiContent);
+    rootScene.uiContent_ = std::move(uiContent);
     rootScene.UpdateViewportConfig(rect, WindowSizeChangeReason::UNDEFINED);
 
     rect.width_ =MOCK_LEM_SUB_WIDTH;
