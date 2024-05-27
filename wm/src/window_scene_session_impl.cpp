@@ -615,8 +615,10 @@ void WindowSceneSessionImpl::GetConfigurationFromAbilityInfo()
         }
         WLOGFI("winId: %{public}u, modeSupportInfo: %{public}u", GetWindowId(), modeSupportInfo);
         property_->SetModeSupportInfo(modeSupportInfo);
-        auto isPhone = windowSystemConfig_.uiType_ == "phone";
-        auto isPad = windowSystemConfig_.uiType_ == "pad";
+        std::string deviceType = windowSystemConfig_.uiType_;
+        TLOGI(WmsLogTag::WMS_LAYOUT, "device: %{public}s, deviceType.c_str");
+        auto isPhone = deviceType == "phone";
+        auto isPad = deviceType == "pad";
         if (modeSupportInfo == WindowModeSupport::WINDOW_MODE_SUPPORT_FULLSCREEN && !isPhone && !isPad) {
             SetFullScreen(true);
         }
