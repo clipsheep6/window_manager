@@ -154,7 +154,8 @@ void DisplayManagerService::RegisterWindowInfoQueriedListener(const sptr<IWindow
 DMError DisplayManagerService::HasPrivateWindow(DisplayId displayId, bool& hasPrivateWindow)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("check has private window permission denied!");
+        WLOGFE("check has private window permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     std::vector<DisplayId> displayIds = GetAllDisplayIds();
@@ -229,7 +230,7 @@ ScreenId DisplayManagerService::CreateVirtualScreen(VirtualScreenOption option,
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:CreateVirtualScreen(%s)", option.name_.c_str());
     if (option.surface_ != nullptr && !Permission::CheckCallingPermission(SCREEN_CAPTURE_PERMISSION) &&
         !Permission::IsStartByHdcd()) {
-        WLOGFE("permission denied");
+        WLOGFE("permission denied, calling pid: %{public}d" PRI64"", IPCSkeleton::GetCallingPid());
         return SCREEN_ID_INVALID;
     }
     ScreenId screenId = abstractScreenController_->CreateVirtualScreen(option, displayManagerAgent);
@@ -241,7 +242,8 @@ ScreenId DisplayManagerService::CreateVirtualScreen(VirtualScreenOption option,
 DMError DisplayManagerService::DestroyVirtualScreen(ScreenId screenId)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("destory virtual screen permission denied!");
+        WLOGFE("destory virtual screen permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     if (!accessTokenIdMaps_.isExistAndRemove(screenId, IPCSkeleton::GetCallingTokenID())) {
@@ -264,14 +266,15 @@ DMError DisplayManagerService::SetVirtualScreenSurface(ScreenId screenId, sptr<I
         sptr<Surface> pPurface = Surface::CreateSurfaceAsProducer(surface);
         return abstractScreenController_->SetVirtualScreenSurface(screenId, pPurface);
     }
-    WLOGFE("permission denied");
+    WLOGFE("permission denied, calling pid: %{public}d" PRI64"", IPCSkeleton::GetCallingPid());
     return DMError::DM_ERROR_INVALID_CALLING;
 }
 
 DMError DisplayManagerService::SetOrientation(ScreenId screenId, Orientation orientation)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("set orientation permission denied!");
+        WLOGFE("set orientation permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     if (orientation < Orientation::UNSPECIFIED || orientation > Orientation::REVERSE_HORIZONTAL) {
@@ -364,7 +367,8 @@ DMError DisplayManagerService::RegisterDisplayManagerAgent(const sptr<IDisplayMa
 {
     if (type == DisplayManagerAgentType::SCREEN_EVENT_LISTENER && !Permission::IsSystemCalling()
         && !Permission::IsStartByHdcd()) {
-        WLOGFE("register display manager agent permission denied!");
+        WLOGFE("register display manager agent permission denied!, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     if ((displayManagerAgent == nullptr) || (displayManagerAgent->AsObject() == nullptr)) {
@@ -379,7 +383,8 @@ DMError DisplayManagerService::UnregisterDisplayManagerAgent(const sptr<IDisplay
 {
     if (type == DisplayManagerAgentType::SCREEN_EVENT_LISTENER && !Permission::IsSystemCalling()
         && !Permission::IsStartByHdcd()) {
-        WLOGFE("unregister display manager agent permission denied!");
+        WLOGFE("unregister display manager agent permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     if ((displayManagerAgent == nullptr) || (displayManagerAgent->AsObject() == nullptr)) {
@@ -393,7 +398,8 @@ bool DisplayManagerService::WakeUpBegin(PowerStateChangeReason reason)
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "[UL_POWER]dms:WakeUpBegin(%u)", reason);
     if (!Permission::IsSystemServiceCalling()) {
-        WLOGFE("[UL_POWER]wake up begin permission denied!");
+        WLOGFE("[UL_POWER]wake up begin permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return false;
     }
     return DisplayManagerAgentController::GetInstance().NotifyDisplayPowerEvent(DisplayPowerEvent::WAKE_UP,
@@ -404,7 +410,8 @@ bool DisplayManagerService::WakeUpEnd()
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "[UL_POWER]dms:WakeUpEnd");
     if (!Permission::IsSystemServiceCalling()) {
-        WLOGFE("[UL_POWER]wake up end permission denied!");
+        WLOGFE("[UL_POWER]wake up end permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return false;
     }
     return DisplayManagerAgentController::GetInstance().NotifyDisplayPowerEvent(DisplayPowerEvent::WAKE_UP,
@@ -415,7 +422,8 @@ bool DisplayManagerService::SuspendBegin(PowerStateChangeReason reason)
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "[UL_POWER]dms:SuspendBegin(%u)", reason);
     if (!Permission::IsSystemServiceCalling()) {
-        WLOGFE("[UL_POWER]suspend begin permission denied!");
+        WLOGFE("[UL_POWER]suspend begin permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return false;
     }
     displayPowerController_->SuspendBegin(reason);
@@ -427,7 +435,8 @@ bool DisplayManagerService::SuspendEnd()
 {
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "[UL_POWER]dms:SuspendEnd");
     if (!Permission::IsSystemServiceCalling()) {
-        WLOGFE("[UL_POWER]suspend end permission denied!");
+        WLOGFE("[UL_POWER]suspend end permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return false;
     }
     return DisplayManagerAgentController::GetInstance().NotifyDisplayPowerEvent(DisplayPowerEvent::SLEEP,
@@ -445,7 +454,8 @@ bool DisplayManagerService::SetScreenPowerForAll(ScreenPowerState state, PowerSt
 {
     WLOGFI("[UL_POWER]SetScreenPowerForAll");
     if (!Permission::IsSystemServiceCalling()) {
-        WLOGFE("[UL_POWER]set screen power for all permission denied!");
+        WLOGFE("[UL_POWER]set screen power for all permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return false;
     }
     return abstractScreenController_->SetScreenPowerForAll(state, reason);
@@ -459,7 +469,8 @@ ScreenPowerState DisplayManagerService::GetScreenPower(ScreenId dmsScreenId)
 bool DisplayManagerService::SetDisplayState(DisplayState state)
 {
     if (!Permission::IsSystemServiceCalling()) {
-        WLOGFE("[UL_POWER]set display state permission denied!");
+        WLOGFE("[UL_POWER]set display state permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return false;
     }
     ScreenId dmsScreenId = abstractScreenController_->GetDefaultAbstractScreenId();
@@ -489,7 +500,8 @@ DisplayState DisplayManagerService::GetDisplayState(DisplayId displayId)
 void DisplayManagerService::NotifyDisplayEvent(DisplayEvent event)
 {
     if (!Permission::IsSystemServiceCalling()) {
-        WLOGFE("[UL_POWER]notify display event permission denied!");
+        WLOGFE("[UL_POWER]notify display event permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return;
     }
     displayPowerController_->NotifyDisplayEvent(event);
@@ -498,7 +510,8 @@ void DisplayManagerService::NotifyDisplayEvent(DisplayEvent event)
 bool DisplayManagerService::SetFreeze(std::vector<DisplayId> displayIds, bool isFreeze)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("set freeze permission denied!");
+        WLOGFE("set freeze permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return false;
     }
     abstractDisplayController_->SetFreeze(displayIds, isFreeze);
@@ -509,7 +522,8 @@ DMError DisplayManagerService::MakeMirror(ScreenId mainScreenId, std::vector<Scr
                                           ScreenId& screenGroupId)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("make mirror permission denied!");
+        WLOGFE("make mirror permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     WLOGFI("MakeMirror. mainScreenId :%{public}" PRIu64"", mainScreenId);
@@ -541,7 +555,8 @@ DMError DisplayManagerService::MakeMirror(ScreenId mainScreenId, std::vector<Scr
 DMError DisplayManagerService::StopMirror(const std::vector<ScreenId>& mirrorScreenIds)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("stop mirror permission denied!");
+        WLOGFE("stop mirror permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
 
@@ -639,7 +654,8 @@ std::vector<DisplayId> DisplayManagerService::GetAllDisplayIds()
 DMError DisplayManagerService::GetAllScreenInfos(std::vector<sptr<ScreenInfo>>& screenInfos)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("get all screen infos permission denied!");
+        WLOGFE("get all screen infos permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     std::vector<ScreenId> screenIds = abstractScreenController_->GetAllScreenIds();
@@ -658,7 +674,8 @@ DMError DisplayManagerService::MakeExpand(std::vector<ScreenId> expandScreenIds,
                                           ScreenId& screenGroupId)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("make expand permission denied!");
+        WLOGFE("make expand permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     if (expandScreenIds.empty() || startPoints.empty() || expandScreenIds.size() != startPoints.size()) {
@@ -713,7 +730,8 @@ DMError DisplayManagerService::MakeExpand(std::vector<ScreenId> expandScreenIds,
 DMError DisplayManagerService::StopExpand(const std::vector<ScreenId>& expandScreenIds)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("stop expand permission denied!");
+        WLOGFE("stop expand permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     auto allExpandScreenIds = abstractScreenController_->GetAllValidScreenIds(expandScreenIds);
@@ -734,7 +752,8 @@ DMError DisplayManagerService::StopExpand(const std::vector<ScreenId>& expandScr
 DMError DisplayManagerService::SetScreenActiveMode(ScreenId screenId, uint32_t modeId)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("set screen active permission denied!");
+        WLOGFE("set screen active permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SetScreenActiveMode(%" PRIu64", %u)", screenId, modeId);
@@ -744,7 +763,8 @@ DMError DisplayManagerService::SetScreenActiveMode(ScreenId screenId, uint32_t m
 DMError DisplayManagerService::SetVirtualPixelRatio(ScreenId screenId, float virtualPixelRatio)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("set virtual pixel permission denied!");
+        WLOGFE("set virtual pixel permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:SetVirtualPixelRatio(%" PRIu64", %f)", screenId,
@@ -755,7 +775,8 @@ DMError DisplayManagerService::SetVirtualPixelRatio(ScreenId screenId, float vir
 DMError DisplayManagerService::IsScreenRotationLocked(bool& isLocked)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("is screen rotation locked permission denied!");
+        WLOGFE("is screen rotation locked permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     isLocked = ScreenRotationController::IsScreenRotationLocked();
@@ -765,7 +786,8 @@ DMError DisplayManagerService::IsScreenRotationLocked(bool& isLocked)
 DMError DisplayManagerService::SetScreenRotationLocked(bool isLocked)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("set screen rotation locked permission denied!");
+        WLOGFE("set screen rotation locked permission denied, calling pid: %{public}d" PRI64"",
+                IPCSkeleton::GetCallingPid());
         return DMError::DM_ERROR_NOT_SYSTEM_APP;
     }
     return ScreenRotationController::SetScreenRotationLocked(isLocked);
