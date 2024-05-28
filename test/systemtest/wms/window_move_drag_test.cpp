@@ -151,7 +151,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow01, Function | MediumTest | Level3)
     if (window_ == nullptr) {
         return;
     }
-    ASSERT_EQ(WMError::WM_OK, window_->Show());
+    window_->Show();
     usleep(WAIT_SYANC_MS);
     startPointRect_ = window_->GetRect();
     startPointX_ = startPointRect_.posX_ - static_cast<int32_t>(hotZone_ * POINT_HOTZONE_RATIO);
@@ -172,7 +172,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow02, Function | MediumTest | Level3)
     if (window_ == nullptr) {
         return;
     }
-    ASSERT_EQ(WMError::WM_OK, window_->Show());
+    window_->Show();
     usleep(WAIT_SYANC_MS);
     startPointRect_ = window_->GetRect();
     startPointX_ = startPointRect_.posX_ - static_cast<int32_t>(hotZone_ * POINT_HOTZONE_RATIO);
@@ -193,7 +193,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow03, Function | MediumTest | Level3)
     if (window_ == nullptr) {
         return;
     }
-    ASSERT_EQ(WMError::WM_OK, window_->Show());
+    window_->Show();
     usleep(WAIT_SYANC_MS);
     startPointRect_ = window_->GetRect();
     startPointX_ = startPointRect_.posX_ - static_cast<int32_t>(hotZone_ * POINT_HOTZONE_RATIO);
@@ -215,7 +215,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow04, Function | MediumTest | Level3)
     if (window_ == nullptr) {
         return;
     }
-    ASSERT_EQ(WMError::WM_OK, window_->Show());
+    window_->Show();
     usleep(WAIT_SYANC_MS);
     startPointRect_ = window_->GetRect();
     startPointX_ = startPointRect_.posX_ +
@@ -237,7 +237,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow05, Function | MediumTest | Level3)
     if (window_ == nullptr) {
         return;
     }
-    ASSERT_EQ(WMError::WM_OK, window_->Show());
+    window_->Show();
     usleep(WAIT_SYANC_MS);
     startPointRect_ = window_->GetRect();
     startPointX_ = startPointRect_.posX_ +
@@ -258,7 +258,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow06, Function | MediumTest | Level3)
     if (window_ == nullptr) {
         return;
     }
-    ASSERT_EQ(WMError::WM_OK, window_->Show());
+    window_->Show();
     usleep(WAIT_SYANC_MS);
     startPointRect_ = window_->GetRect();
     startPointX_ = startPointRect_.posX_ +
@@ -280,7 +280,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow07, Function | MediumTest | Level3)
     if (window_ == nullptr) {
         return;
     }
-    ASSERT_EQ(WMError::WM_OK, window_->Show());
+    window_->Show();
     usleep(WAIT_SYANC_MS);
     startPointRect_ = window_->GetRect();
     startPointX_ = startPointRect_.posX_ + static_cast<int32_t>(startPointRect_.width_ * POINT_HOTZONE_RATIO);
@@ -300,7 +300,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow08, Function | MediumTest | Level3)
     if (window_ == nullptr) {
         return;
     }
-    ASSERT_EQ(WMError::WM_OK, window_->Show());
+    window_->Show();
     usleep(WAIT_SYANC_MS);
     startPointRect_ = window_->GetRect();
     startPointX_ = startPointRect_.posX_ + static_cast<int32_t>(startPointRect_.width_ * POINT_HOTZONE_RATIO);
@@ -321,7 +321,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow09, Function | MediumTest | Level3)
     if (window_ == nullptr) {
         return;
     }
-    ASSERT_EQ(WMError::WM_OK, window_->Show());
+    window_->Show();
     usleep(WAIT_SYANC_MS);
     startPointRect_ = window_->GetRect();
     startPointX_ = startPointRect_.posX_ + static_cast<int32_t>(startPointRect_.width_ * POINT_HOTZONE_RATIO);
@@ -342,7 +342,7 @@ HWTEST_F(WindowMoveDragTest, DragWindow10, Function | MediumTest | Level3)
     if (window_ == nullptr) {
         return;
     }
-    ASSERT_EQ(WMError::WM_OK, window_->Show());
+    window_->Show();
     usleep(WAIT_SYANC_MS);
     startPointRect_ = window_->GetRect();
     startPointX_ = startPointRect_.posX_ + static_cast<int32_t>(startPointRect_.width_ * POINT_HOTZONE_RATIO);

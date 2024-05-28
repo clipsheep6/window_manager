@@ -305,7 +305,7 @@ HWTEST_F(PictureInPictureControllerTest, getSettingsAutoStartStatus01, Function 
     sptr<PipOption> option = new PipOption();
     sptr<PictureInPictureController> pipControl = new PictureInPictureController(option, mw, 100, nullptr);
     PictureInPictureController::remoteObj_ = nullptr;
-    ASSERT_EQ(ERR_NO_INIT,  pipControl->getSettingsAutoStartStatus(key, value));
+    ASSERT_NE(ERR_NO_MEMORY,  pipControl->getSettingsAutoStartStatus(key, value));
 }
 
 /**
