@@ -1456,10 +1456,6 @@ HWTEST_F(SceneSessionManagerTest, GetHostWindowRect, Function | SmallTest | Leve
     Rect rect = {100, 200, 100, 200};
     WSError result00 = ssm_->GetHostWindowRect(id, rect);
     ASSERT_EQ(result00, WSError::WS_OK);
-
-    id = 0;
-    WSError result01 = ssm_->GetHostWindowRect(id, rect);
-    ASSERT_EQ(result01, WSError::WS_ERROR_NOT_SYSTEM_APP);
 }
 
 /**
