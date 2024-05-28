@@ -1376,7 +1376,7 @@ HWTEST_F(SceneSessionManagerTest, UpdateTitleInTargetPos, Function | SmallTest |
     SessionInfo sessionInfo;
     sessionInfo.abilityName_ = "SceneSessionManagerTest";
     sessionInfo.bundleName_ = "UpdateTitleInTargetPos";
-    sptr<SceneSession> sceneSession = ssm_->CreateSceneSession(sessionifo, nullptr);
+    sptr<SceneSession> sceneSession = ssm_->CreateSceneSession(sessionInfo, nullptr);
     ssm_->sceneSessionMap_.clear();
     WSError result00 = ssm_->UpdateTitleInTargetPos(persistentId, isShow, height);
     ASSERT_EQ(result00, WSError::WS_ERROR_INVALID_WINDOW);
@@ -1392,7 +1392,7 @@ HWTEST_F(SceneSessionManagerTest, UnregisterCreateSubSessionListener, Function |
     int32_t persistentId = 0;
     ssm_->UnregisterCreateSubSessionListener(persistentId);
     ssm_->sceneSessionMap_.clear();
-    sptr<SceneSession> sceneSessionManager = new (std::nothrow) SceneSesionManager();
+    sptr<SceneSesionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
     ASSERT_NE(nullptr, sceneSessionManager);
 }
 
@@ -1415,7 +1415,7 @@ HWTEST_F(SceneSessionManagerTest, SwitchFreeMultiWindow, Function | SmallTest | 
 HWTEST_F(SceneSessionManagerTest, GetWindowModeType, Function | SmallTest | Level3)
 {
     WindowModeType type = WindowModeType::WINDOW_MODE_OTHER;
-    WMError result00 = ssm_->GetWindowModeType(true);
+    WMError result00 = ssm_->GetWindowModeType(type);
     ASSERT_EQ(result00, WMError::WM_ERROR_INVALID_PERMISSION);
 }
 
@@ -1473,7 +1473,7 @@ HWTEST_F(SceneSessionManagerTest, AddExtensionWindowStageToSCB, Function | Small
     int32_t parentId = 1234;
     sptr<ISessionStage> sessionStage;
     ssm_->AddExtensionWindowStageToSCB(sessionStage, persistentId, parentId);
-    sptr<SceneSession> sceneSessionManager = new (std::nothrow) SceneSesionManager();
+    sptr<SceneSesionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
     ASSERT_NE(nullptr, sceneSessionManager);
 
     sessionStage = nullptr;
@@ -1488,7 +1488,7 @@ HWTEST_F(SceneSessionManagerTest, AddExtensionWindowStageToSCB, Function | Small
 */
 HWTEST_F(SceneSessionManagerTest, FlushWindowInfoToMMI, Function | SmallTest | Level3)
 {
-    sptr<SceneSession> sceneSessionManager = new (std::nothrow) SceneSesionManager();
+    sptr<SceneSesionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
     ssm_->FlushWindowInfoToMMI(true);
     ASSERT_NE(nullptr, sceneSessionManager);
 
@@ -1504,7 +1504,7 @@ HWTEST_F(SceneSessionManagerTest, FlushWindowInfoToMMI, Function | SmallTest | L
 HWTEST_F(SceneSessionManagerTest, RequestInputMethodCloseKeyboard, Function | SmallTest | Level3)
 {
     int32_t persistentId = 12345;
-    sptr<SceneSession> sceneSessionManager = new (std::nothrow) SceneSesionManager();
+    sptr<SceneSesionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
     ssm_->RequestInputMethodCloseKeyboard(persistentId);
     ASSERT_NE(nullptr, sceneSessionManager);
 }
@@ -1517,7 +1517,7 @@ HWTEST_F(SceneSessionManagerTest, RequestInputMethodCloseKeyboard, Function | Sm
 HWTEST_F(SceneSessionManagerTest, DealwithDrawingContentChange, Function | SmallTest | Level3)
 {
     std::vector<std::pair<uint64_t, bool>> drawingContentChangeInfo;
-    sptr<SceneSession> sceneSessionManager = new (std::nothrow) SceneSesionManager();
+    sptr<SceneSesionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
     ssm_->DealwithDrawingContentChange(drawingContentChangeInfo);
     ASSERT_NE(nullptr, sceneSessionManager);
 }
