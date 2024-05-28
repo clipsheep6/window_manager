@@ -89,7 +89,7 @@ HWTEST_F(GetVsyncPeriodTest, GetVsyncPeriod, Function | SmallTest | Level3)
     NodeId nodeId0 = 0;
     std::shared_ptr<VsyncStation> vsyncStation0 = std::make_shared<VsyncStation>(nodeId0);
     vsyncStation0->receiver_ = nullptr;
-    ASSERT_EQ(0,vsyncStation0->GetVsyncPeriod());
+    ASSERT_EQ(0, vsyncStation0->GetVsyncPeriod());
 }
 
 /**
@@ -109,7 +109,7 @@ HWTEST_F(VsyncStationTest, GetFrameRateLinkerId, Function | SmallTest | Level3)
     ASSERT_NE(-1, vsyncStation1->GetFrameRateLinkerId());
     std::shared_ptr<RSFrameRateLinker> frameRateLinker = OHOS::Rosen:RSFrameRateLinker::Create();
     vsyncStation0->frameRateLinker_ = frameRateLinker;
-    ASSERT_NE(0,vsyncStation0->GetFrameRateLinkerId());
+    ASSERT_NE(0, vsyncStation0->GetFrameRateLinkerId());
 }
 
 /**
@@ -132,14 +132,14 @@ HWTEST_F(VsyncStationTest, FlushFrameRate, Function | SmallTest | Level3)
     uint32_t rate1 = 120;
     vsyncStation1->FlushFrameRate(rate1, isAnimatorStopped);
     std::shared_ptr<RSFrameRateLinker> frameRateLinker = OHOS::Rosen::RSFrameRateLinker::Create();
-    ASSERT_NE(frameRateLinker,nullptr);
+    ASSERT_NE(frameRateLinker, nullptr);
     frameRateLinker->SetEnable(true);
     vsyncStation1->frameRateLinker_ = frameRateLinker;
     vsyncStation1->FlushFrameRate(rate1,isAnimatorStopped) 
     ASSERT_EQ(res, 0);
     frameRateLinker->SetEnable(false);
     vsyncStation1->frameRateLinker_ = frameRateLinker;
-    vsyncStation1->FlushFrameRate(rate1,isAnimatorStopped) 
+    vsyncStation1->FlushFrameRate(rate1, isAnimatorStopped) 
     ASSERT_EQ(res, 0);
     vsyncStation1->frameRateLinker_ = nullptr;
     vsyncStation1->FlushFrameRate(rate1,isAnimatorStopped) 
@@ -176,7 +176,7 @@ HWTEST_F(VsyncStationTest, SetFrameRateLinkerEnable, Function | SmallTest | Leve
  * @tc.desc: Init Test
  * @tc.type: FUNC
  */
-HWTEST_F(VsyncStationTest,Init, Function | SmallTest | Level3)
+HWTEST_F(VsyncStationTest, Init, Function | SmallTest | Level3)
 {
     NodeId nodeId0 = 0;
     int res = 0;
@@ -201,6 +201,8 @@ HWTEST_F(VsyncStationTest,Init, Function | SmallTest | Level3)
     vsyncStation1->SetIsMainHandlerAvailable(false);
     vsyncStation1->Init;
     ASSERT_EQ(res, 0);
+}
+
 }
 } // namespace Rosen
 } // namespace OHOS
