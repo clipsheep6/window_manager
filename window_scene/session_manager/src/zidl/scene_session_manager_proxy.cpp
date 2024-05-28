@@ -96,21 +96,9 @@ WSError SceneSessionManagerProxy::RecoverAndConnectSpecificSession(const sptr<IS
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("Write InterfaceToken failed!");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteRemoteObject(sessionStage->AsObject())) {
-        WLOGFE("Write ISessionStage failed!");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteRemoteObject(eventChannel->AsObject())) {
-        WLOGFE("Write IWindowEventChannel failed!");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!surfaceNode->Marshalling(data)) {
-        WLOGFE("Write surfaceNode failed");
-        return WSError::WS_ERROR_IPC_FAILED;
+    WSError result = WriteDataToParcel(data, sessionStage, eventChannel, surfaceNode);
+    if (result != WSError::WS_OK) {
+        return result;
     }
 
     if (property) {
@@ -143,13 +131,10 @@ WSError SceneSessionManagerProxy::RecoverAndConnectSpecificSession(const sptr<IS
     int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
 }
-WSError SceneSessionManagerProxy::RecoverAndReconnectSceneSession(const sptr<ISessionStage>& sessionStage,
-    const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-    sptr<ISession>& session, sptr<WindowSessionProperty> property, sptr<IRemoteObject> token)
+
+WSError SceneSessionManagerProxy::WriteDataToParcel(MessageParcel& data, const sptr<ISessionStage>& sessionStage,
+    const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode)
 {
-    MessageOption option(MessageOption::TF_SYNC);
-    MessageParcel data;
-    MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("Write InterfaceToken failed!");
         return WSError::WS_ERROR_IPC_FAILED;
@@ -165,6 +150,20 @@ WSError SceneSessionManagerProxy::RecoverAndReconnectSceneSession(const sptr<ISe
     if (!surfaceNode->Marshalling(data)) {
         WLOGFE("Write surfaceNode failed");
         return WSError::WS_ERROR_IPC_FAILED;
+    }
+    return WSError::WS_OK;
+}
+
+WSError SceneSessionManagerProxy::RecoverAndReconnectSceneSession(const sptr<ISessionStage>& sessionStage,
+    const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
+    sptr<ISession>& session, sptr<WindowSessionProperty> property, sptr<IRemoteObject> token)
+{
+    MessageOption option(MessageOption::TF_SYNC);
+    MessageParcel data;
+    MessageParcel reply;
+    WSError result = WriteDataToParcel(data, sessionStage, eventChannel, surfaceNode);
+    if (result != WSError::WS_OK) {
+        return result;
     }
 
     if (property) {

@@ -578,7 +578,6 @@ WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, napi_env e
         WLOGFD("interrupt set uicontent because window is invalid! window state: %{public}d", state_);
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
-    WLOGFD("NapiSetUIContent: %{public}s", contentInfo.c_str());
     if (uiContent_) {
         uiContent_->Destroy();
     }
@@ -592,7 +591,6 @@ WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, napi_env e
         WLOGFE("fail to NapiSetUIContent id: %{public}u", property_->GetWindowId());
         return WMError::WM_ERROR_NULLPTR;
     }
-
     OHOS::Ace::UIContentErrorCode aceRet = OHOS::Ace::UIContentErrorCode::NO_ERRORS;
     switch (setUIContentType) {
         default:
@@ -611,12 +609,25 @@ WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, napi_env e
             aceRet = uiContent->Initialize(this, abcContent, storage);
             break;
     }
+    WMError res = UpdateUIContent(uiContent);
+    if (res != WMError::WM_OK) {
+        return res;
+    }
+    if (aceRet != OHOS::Ace::UIContentErrorCode::NO_ERRORS) {
+        WLOGFE("failed to init or restore uicontent with file %{public}s. errorCode: %{public}d",
+            contentInfo.c_str(), static_cast<uint16_t>(aceRet));
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    return WMError::WM_OK;
+}
+
+WMError WindowImpl::UpdateUIContent(std::unique_ptr<Ace::UIContent>& uiContent)
+{
     // make uiContent available after Initialize/Restore
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         uiContent_ = std::move(uiContent);
     }
-
     if (isIgnoreSafeAreaNeedNotify_) {
         uiContent_->SetIgnoreViewSafeArea(isIgnoreSafeArea_);
     }
@@ -633,20 +644,15 @@ WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, napi_env e
         auto display = SingletonContainer::IsDestroyed() ? nullptr :
             SingletonContainer::Get<DisplayManager>().GetDisplayById(property_->GetDisplayId());
         if (display == nullptr) {
-            WLOGFE("get display failed displayId:%{public}" PRIu64", window id:%{public}u", property_->GetDisplayId(),
-                property_->GetWindowId());
+            TLOGE(WmsLogTag::WMS_MAIN, "get display failed displayId:%{public}" PRIu64", window id:%{public}u",
+                property_->GetDisplayId(), property_->GetWindowId());
             return WMError::WM_ERROR_NULLPTR;
         }
         float virtualPixelRatio = display->GetVirtualPixelRatio();
         config.SetDensity(virtualPixelRatio);
         config.SetOrientation(static_cast<int32_t>(display->GetOrientation()));
         uiContent_->UpdateViewportConfig(config, WindowSizeChangeReason::UNDEFINED, nullptr);
-        WLOGFD("notify uiContent window size change end");
-    }
-    if (aceRet != OHOS::Ace::UIContentErrorCode::NO_ERRORS) {
-        WLOGFE("failed to init or restore uicontent with file %{public}s. errorCode: %{public}d",
-            contentInfo.c_str(), static_cast<uint16_t>(aceRet));
-        return WMError::WM_ERROR_INVALID_PARAM;
+        TLOGD(WmsLogTag::WMS_MAIN, "notify uiContent window size change end");
     }
     return WMError::WM_OK;
 }

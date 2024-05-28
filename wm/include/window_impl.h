@@ -565,6 +565,7 @@ private:
     bool CheckCameraFloatingWindowMultiCreated(WindowType type);
     void GetConfigurationFromAbilityInfo();
     void UpdateTitleButtonVisibility();
+    WMError UpdateUIContent(std::unique_ptr<Ace::UIContent>& uiContent);
     void SetModeSupportInfo(uint32_t modeSupportInfo);
     uint32_t GetModeSupportInfo() const;
     WMError PreProcessShow(uint32_t reason, bool withAnimation);
