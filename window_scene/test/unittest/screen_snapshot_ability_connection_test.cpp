@@ -31,6 +31,7 @@ namespace Rosen {
 constexpr int32_t DEFAULT_VALUE = -1;
 constexpr uint32_t EXTENSION_CONNECT_OUT_TIME = 300; // ms
 constexpr uint32_t TRANS_CMD_SEND_SNAPSHOT_RECT = 2;
+constexpr uint32_t SLEEP_TIME_IN_US = 100000; // 100ms
 
 class ScreenSnapshotAbilityConnectionTest : public testing::Test {
 public:
@@ -59,6 +60,7 @@ void ScreenSnapshotAbilityConnectionTest::SetUp()
 
 void ScreenSnapshotAbilityConnectionTest::TearDown()
 {
+    usleep(SLEEP_TIME_IN_US);
 }
 
 namespace {

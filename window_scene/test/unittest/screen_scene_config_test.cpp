@@ -28,6 +28,9 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr uint32_t SLEEP_TIME_IN_US = 100000; // 100ms
+}
 class ScreenSceneConfigTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -50,6 +53,7 @@ void ScreenSceneConfigTest::SetUp()
 
 void ScreenSceneConfigTest::TearDown()
 {
+    usleep(SLEEP_TIME_IN_US);
 }
 
 namespace {

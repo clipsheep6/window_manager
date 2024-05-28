@@ -24,6 +24,9 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr uint32_t SLEEP_TIME_IN_US = 100000; // 100ms
+}
 class DualDisplayDevicePolicyTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -49,6 +52,7 @@ void DualDisplayDevicePolicyTest::SetUp()
 
 void DualDisplayDevicePolicyTest::TearDown()
 {
+    usleep(SLEEP_TIME_IN_US);
 }
 
 namespace {

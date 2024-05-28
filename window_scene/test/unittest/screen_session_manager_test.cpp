@@ -28,6 +28,7 @@ namespace Rosen {
 namespace {
 const int32_t CV_WAIT_SCREENOFF_MS = 1500;
 const int32_t CV_WAIT_SCREENOFF_MS_MAX = 3000;
+constexpr uint32_t SLEEP_TIME_IN_US = 100000; // 100ms
 }
 class ScreenSessionManagerTest : public testing::Test {
 public:
@@ -61,6 +62,7 @@ void ScreenSessionManagerTest::SetUp()
 
 void ScreenSessionManagerTest::TearDown()
 {
+    usleep(SLEEP_TIME_IN_US);
 }
 
 namespace {
