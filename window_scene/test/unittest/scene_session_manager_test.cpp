@@ -1534,6 +1534,19 @@ HWTEST_F(SceneSessionManagerTest, GetSurfaceNodeIdsFromMissionIds, Function | Sm
     WMError result00 = ssm_->GetSurfaceNodeIdsFromMissionIds(missionIds, surfaceNodeIds);
     ASSERT_NE(result00, WMError::WM_OK);
 }
+
+/**
+ * @tc.name: GetSurfaceNodeIdsFromMissionIds
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, GetSurfaceNodeIdsFromMissionIds, Function | SmallTest | Level3)
+{
+    std::vector<uint64_t> missionIds;
+    std::vector<uint64_t> surfaceNodeIds;
+    WMError result00 = ssm_->GetSurfaceNodeIdsFromMissionIds(missionIds, surfaceNodeIds);
+    ASSERT_NE(result00, WMError::WM_OK);
+}
 }
 } // namespace Rosen
 } // namespace OHOS
