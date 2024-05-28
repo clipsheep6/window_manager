@@ -1392,7 +1392,7 @@ HWTEST_F(SceneSessionManagerTest, UnregisterCreateSubSessionListener, Function |
     int32_t persistentId = 0;
     ssm_->UnregisterCreateSubSessionListener(persistentId);
     ssm_->sceneSessionMap_.clear();
-    sptr<SceneSesionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
+    sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
     ASSERT_NE(nullptr, sceneSessionManager);
 }
 
@@ -1473,7 +1473,7 @@ HWTEST_F(SceneSessionManagerTest, AddExtensionWindowStageToSCB, Function | Small
     int32_t parentId = 1234;
     sptr<ISessionStage> sessionStage;
     ssm_->AddExtensionWindowStageToSCB(sessionStage, persistentId, parentId);
-    sptr<SceneSesionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
+    sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
     ASSERT_NE(nullptr, sceneSessionManager);
 
     sessionStage = nullptr;
@@ -1488,7 +1488,7 @@ HWTEST_F(SceneSessionManagerTest, AddExtensionWindowStageToSCB, Function | Small
 */
 HWTEST_F(SceneSessionManagerTest, FlushWindowInfoToMMI, Function | SmallTest | Level3)
 {
-    sptr<SceneSesionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
+    sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
     ssm_->FlushWindowInfoToMMI(true);
     ASSERT_NE(nullptr, sceneSessionManager);
 
@@ -1504,7 +1504,7 @@ HWTEST_F(SceneSessionManagerTest, FlushWindowInfoToMMI, Function | SmallTest | L
 HWTEST_F(SceneSessionManagerTest, RequestInputMethodCloseKeyboard, Function | SmallTest | Level3)
 {
     int32_t persistentId = 12345;
-    sptr<SceneSesionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
+    sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
     ssm_->RequestInputMethodCloseKeyboard(persistentId);
     ASSERT_NE(nullptr, sceneSessionManager);
 }
@@ -1517,7 +1517,7 @@ HWTEST_F(SceneSessionManagerTest, RequestInputMethodCloseKeyboard, Function | Sm
 HWTEST_F(SceneSessionManagerTest, DealwithDrawingContentChange, Function | SmallTest | Level3)
 {
     std::vector<std::pair<uint64_t, bool>> drawingContentChangeInfo;
-    sptr<SceneSesionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
+    sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
     ssm_->DealwithDrawingContentChange(drawingContentChangeInfo);
     ASSERT_NE(nullptr, sceneSessionManager);
 }
