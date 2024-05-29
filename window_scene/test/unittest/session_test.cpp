@@ -1761,7 +1761,7 @@ HWTEST_F(WindowSessionTest, CreateDetectStateTask002, Function | SmallTest | Lev
 
     ASSERT_NE(beforeTaskNum - 1, GetTaskCount());
     ASSERT_NE(DetectTaskState::ATTACH_TASK, session_->GetDetectTaskInfo().taskState);
-    ASSERT_EQ(WindowMode::WINDOW_MODE_UNDEFINED, session_->GetDetectTaskInfo().taskWindowMode);
+    ASSERT_EQ(WindowMode::WINDOW_MODE_FULLSCREEN, session_->GetDetectTaskInfo().taskWindowMode);
     session_->handler_->RemoveTask(taskName);
 }
 
