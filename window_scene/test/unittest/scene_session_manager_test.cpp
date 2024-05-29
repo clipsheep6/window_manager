@@ -1541,11 +1541,11 @@ HWTEST_F(SceneSessionManagerTest, UpdateMaximizeMode, Function | SmallTest | Lev
     int32_t persistentId = 12345;
     bool isMaximize = true;
     WSError result00 = ssm_->UpdateMaximizeMode(persistentId, isMaximize);
-    ASSERT_EQ(result00, WSError::WM_OK);
+    ASSERT_EQ(result00, WSError::WS_OK);
 
     isMaximize = false;
     WSError result01 = ssm_->UpdateMaximizeMode(persistentId, isMaximize);
-    ASSERT_EQ(result01, WSError::WM_OK);
+    ASSERT_EQ(result01, WSError::WS_OK);
 }
 
 /**
@@ -1559,7 +1559,7 @@ HWTEST_F(SceneSessionManagerTest, PreloadInLakeApp, Function | SmallTest | Level
     info.abilityName_ = "SceneSessionManagerTest";
     info.bundleName_ = "PreloadInLakeApp";
     sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
-    ssm_->UpdateMaximizeMode(info.bundleName_);
+    ssm_->PreloadInLakeApp(info.bundleName_);
     ASSERT_NE(nullptr, sceneSessionManager);
 }
 
@@ -1575,8 +1575,8 @@ HWTEST_F(SceneSessionManagerTest, GetSceneSessionPrivacyModeBundles, Function | 
     SessionInfo info;
     info.abilityName_ = "SceneSessionManagerTest1";
     info.bundleName_ = "GetSceneSessionPrivacyModeBundles";
-    DisplayId displayId = sceneSession->GetSessionProperty()->GetDisplayId();
     sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    DisplayId displayId = sceneSession->GetSessionProperty()->GetDisplayId();
     ssm_->GetSceneSessionPrivacyModeBundles(displayId, privacyBundles);
     ASSERT_NE(nullptr, sceneSessionManager);
 
