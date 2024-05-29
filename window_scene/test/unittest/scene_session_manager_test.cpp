@@ -1570,16 +1570,16 @@ HWTEST_F(SceneSessionManagerTest, PreloadInLakeApp, Function | SmallTest | Level
 */
 HWTEST_F(SceneSessionManagerTest, GetSceneSessionPrivacyModeBundles, Function | SmallTest | Level3)
 {
-    auto displayId = ssm_->GetDisplayId();
-    std::vector<std::string> privacyBundles = "SceneSessionManagerTest";
+    std::vector<std::string> privacyBundles = {"SceneSessionManagerTest"};
     sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
-    ssm_->GetSceneSessionPrivacyModeBundles(displayId, privacyBundles);
-    ASSERT_NE(nullptr, sceneSessionManager);
-
     SessionInfo info;
     info.abilityName_ = "SceneSessionManagerTest1";
     info.bundleName_ = "GetSceneSessionPrivacyModeBundles";
+    DisplayId displayId = sceneSession->GetSessionProperty()->GetDisplayId();
     sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    ssm_->GetSceneSessionPrivacyModeBundles(displayId, privacyBundles);
+    ASSERT_NE(nullptr, sceneSessionManager);
+
     ssm_->sceneSessionMap_.insert({100, sceneSession});
     ssm_->GetSceneSessionPrivacyModeBundles(displayId, privacyBundles);
     ASSERT_NE(nullptr, sceneSessionManager);
@@ -1606,22 +1606,22 @@ HWTEST_F(SceneSessionManagerTest, ProcessUpdateRotationChange, Function | SmallT
 {
     sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
     sptr<DisplayInfo> displayInfo = nullptr;
-    DisplayId displayId = ssm_->GetSessionProperty()->GetDisplayId();
-    std::map<DisplayId, sptr<DisplayInfo>> displayInfoMap = {displayId, displayInfo};
-    DisplayStateChangeType type = DisplayStateChangeType::UPDATE_ROTATION;
-    ssm_->ProcessUpdateRotationChange(displayId, displayInfo, displayInfoMap, type);
-    ASSERT_NE(nullptr, sceneSessionManager);
-
     SessionInfo info;
     info.abilityName_ = "SceneSessionManagerTest";
     info.bundleName_ = "ProcessUpdateRotationChange";
     sptr<SceneSession::SpecificSessionCallback> specific = new SceneSession::SpecificSessionCallback();
     sptr<SceneSession> sceneSession1 = new (std::nothrow) SceneSession(info, specific);
+    DisplayId displayId = sceneSession1->GetSessionProperty()->GetDisplayId();
+    std::map<DisplayId, sptr<DisplayInfo>> displayInfoMap;
+    DisplayStateChangeType type = DisplayStateChangeType::UPDATE_ROTATION;
+    ssm_->ProcessUpdateRotationChange(displayId, displayInfo, displayInfoMap, type);
+    ASSERT_NE(nullptr, sceneSessionManager);
+
     ssm_->sceneSessionMap_.insert({100, sceneSession1});
     ssm_->ProcessUpdateRotationChange(displayId, displayInfo, displayInfoMap, type);
     ASSERT_NE(nullptr, sceneSessionManager);
 
-    sceneSessionMap_.clear();
+    ssm_->sceneSessionMap_.clear();
     sptr<SceneSession> sceneSession2 = new (std::nothrow) SceneSession(info, nullptr);
     ssm_->sceneSessionMap_.insert({100, sceneSession2});
     displayInfo->GetWidth();
