@@ -1503,6 +1503,14 @@ HWTEST_F(SceneSessionManagerTest, RequestInputMethodCloseKeyboard, Function | Sm
     sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
     ssm_->RequestInputMethodCloseKeyboard(persistentId);
     ASSERT_NE(nullptr, sceneSessionManager);
+
+    SessionInfo info;
+    info.abilityName_ = "SceneSessionManagerTest1";
+    info.bundleName_ = "GetSceneSessionPrivacyModeBundles";
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    ssm_->sceneSessionMap_.insert({sceneSession, 12345});
+    ssm_->RequestInputMethodCloseKeyboard(persistentId);
+    ASSERT_NE(nullptr, sceneSessionManager);
 }
 
 /**
@@ -1515,6 +1523,15 @@ HWTEST_F(SceneSessionManagerTest, DealwithDrawingContentChange, Function | Small
     std::vector<std::pair<uint64_t, bool>> drawingContentChangeInfo;
     sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
     ssm_->DealwithDrawingContentChange(drawingContentChangeInfo);
+    ASSERT_NE(nullptr, sceneSessionManager);
+
+    SessionInfo info;
+    info.abilityName_ = "SceneSessionManagerTest1";
+    info.bundleName_ = "GetSceneSessionPrivacyModeBundles";
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    ssm_->sceneSessionMap_.insert({100, sceneSession});
+    ssm_->DealwithDrawingContentChange(drawingContentChangeInfo);
+    ssm_->sceneSessionMap_.clear();
     ASSERT_NE(nullptr, sceneSessionManager);
 }
 
@@ -1582,6 +1599,7 @@ HWTEST_F(SceneSessionManagerTest, GetSceneSessionPrivacyModeBundles, Function | 
 
     ssm_->sceneSessionMap_.insert({100, sceneSession});
     ssm_->GetSceneSessionPrivacyModeBundles(displayId, privacyBundles);
+    ssm_->sceneSessionMap_.clear();
     ASSERT_NE(nullptr, sceneSessionManager);
 }
 
@@ -1628,6 +1646,7 @@ HWTEST_F(SceneSessionManagerTest, ProcessUpdateRotationChange, Function | SmallT
     displayInfo->GetHeight();
     displayInfo->GetRotation();
     ssm_->ProcessUpdateRotationChange(displayId, displayInfo, displayInfoMap, type);
+    ssm_->sceneSessionMap_.clear();
     ASSERT_NE(nullptr, sceneSessionManager);
 }
 }
