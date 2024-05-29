@@ -701,6 +701,7 @@ HWTEST_F(SceneSessionManagerTest3, RequestSceneSessionBackground, Function | Sma
     ssm_->NotifyCollaboratorAfterStart(sceneSession, abilitySessionInfo);
     ssm_->DestroyDialogWithMainWindow(sceneSession);
     ssm_->DestroySubSession(sceneSession);
+    ssm_->DestroyToastSession(sceneSession);
     ssm_->SetAbilitySessionInfo(sceneSession);
     ssm_->RequestSceneSessionActivation(sceneSession, true);
     ssm_->RequestInputMethodCloseKeyboard(1);
@@ -713,6 +714,7 @@ HWTEST_F(SceneSessionManagerTest3, RequestSceneSessionBackground, Function | Sma
     abilitySessionInfo = new (std::nothrow) AAFwk::SessionInfo();
     ssm_->NotifyCollaboratorAfterStart(sceneSession, abilitySessionInfo);
     ssm_->DestroySubSession(sceneSession);
+    ssm_->DestroyToastSession(sceneSession);
     ssm_->EraseSceneSessionMapById(2);
     ASSERT_EQ(ret, 1);
 }
