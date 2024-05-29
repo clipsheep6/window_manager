@@ -195,7 +195,7 @@ public:
     virtual std::shared_ptr<Media::PixelMap> Snapshot() override;
     virtual WMError NotifyMemoryLevel(int32_t level) override;
     virtual bool IsAllowHaveSystemSubWindow() override;
-    WmErrorCode RaiseToAppTop() override;
+    WMError RaiseToAppTop() override;
     virtual WMError SetAspectRatio(float ratio) override;
     virtual WMError ResetAspectRatio() override;
     virtual KeyboardAnimationConfig GetKeyboardAnimationConfig() override;

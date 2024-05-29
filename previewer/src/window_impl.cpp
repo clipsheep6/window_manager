@@ -985,9 +985,9 @@ bool WindowImpl::IsAllowHaveSystemSubWindow()
     return true;
 }
 
-WmErrorCode WindowImpl::RaiseToAppTop()
+WMError WindowImpl::RaiseToAppTop()
 {
-    return WmErrorCode::WM_OK;
+    return WMError::WM_OK;
 }
 
 WMError WindowImpl::SetAspectRatio(float ratio)

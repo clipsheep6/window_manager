@@ -570,18 +570,21 @@ HWTEST_F(WindowSceneSessionImplTest, RaiseToAppTop01, Function | SmallTest | Lev
     windowscenesession->property_->SetPersistentId(6);
     windowscenesession->property_->SetParentPersistentId(6);
     windowscenesession->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
-    ASSERT_EQ(WmErrorCode::WM_ERROR_INVALID_CALLING, windowscenesession->RaiseToAppTop());
+    ASSERT_EQ(WmErrorCode::WM_ERROR_INVALID_CALLING,
+        WM_JS_TO_ERROR_CODE_MAP.at(windowscenesession->RaiseToAppTop()));
 
     windowscenesession->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
     windowscenesession->state_ = WindowState::STATE_HIDDEN;
-    ASSERT_EQ(WmErrorCode::WM_ERROR_STATE_ABNORMALLY, windowscenesession->RaiseToAppTop());
+    ASSERT_EQ(WmErrorCode::WM_ERROR_STATE_ABNORMALLY,
+        WM_JS_TO_ERROR_CODE_MAP.at(windowscenesession->RaiseToAppTop()));
 
     windowscenesession->state_ = WindowState::STATE_SHOWN;
     SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
     sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
     ASSERT_NE(nullptr, session);
     windowscenesession->hostSession_ = session;
-    ASSERT_EQ(WmErrorCode::WM_OK, windowscenesession->RaiseToAppTop());
+    ASSERT_EQ(WmErrorCode::WM_OK,
+        WM_JS_TO_ERROR_CODE_MAP.at(windowscenesession->RaiseToAppTop()));
 }
 
 /**

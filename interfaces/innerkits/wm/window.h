@@ -909,7 +909,7 @@ public:
      *
      * @return WM_OK means raise success, others means raise failed.
      */
-    virtual WmErrorCode RaiseToAppTop() { return WmErrorCode::WM_OK; }
+    virtual WMError RaiseToAppTop() { return WMError::WM_OK; }
     /**
      * @brief Set skip flag of snapshot.
      *

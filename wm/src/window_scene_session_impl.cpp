@@ -1390,29 +1390,29 @@ WMError WindowSceneSessionImpl::ResetAspectRatio()
     return static_cast<WMError>(hostSession_->SetAspectRatio(0.0f));
 }
 
-WmErrorCode WindowSceneSessionImpl::RaiseToAppTop()
+WMError WindowSceneSessionImpl::RaiseToAppTop()
 {
     WLOGFI("[WMSCom] id: %{public}d", GetPersistentId());
     auto parentId = GetParentId();
     if (parentId == INVALID_SESSION_ID) {
         WLOGFE("Only the children of the main window can be raised!");
-        return WmErrorCode::WM_ERROR_INVALID_PARENT;
+        return WMError::WM_ERROR_INVALID_PARENT;
     }
 
     if (!WindowHelper::IsSubWindow(GetType())) {
         WLOGFE("Must be app sub window window!");
-        return WmErrorCode::WM_ERROR_INVALID_CALLING;
+        return WMError::WM_ERROR_INVALID_CALLING;
     }
 
     if (state_ != WindowState::STATE_SHOWN) {
         WLOGFE("The sub window must be shown!");
-        return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
+        return WMError::WM_DO_NOTHING;
     }
     if (!hostSession_) {
-        return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
+        return WMError::WM_DO_NOTHING;
     }
     const WSError& ret = hostSession_->RaiseToAppTop();
-    return static_cast<WmErrorCode>(ret);
+    return static_cast<WMError>(ret);
 }
 
 WmErrorCode WindowSceneSessionImpl::RaiseAboveTarget(int32_t subWindowId)
