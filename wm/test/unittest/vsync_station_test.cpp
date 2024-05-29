@@ -194,12 +194,12 @@ HWTEST_F(VsyncStationTest, Init, Function | SmallTest | Level3)
     vsyncStation1->hasInitVsyncReceiver_ = true;
     vsyncStation1->vsyncHandler_ = nullptr;
     vsyncStation1->SetIsMainHandlerAvailable(true);
-    vsyncStation1->Init;
+    vsyncStation1->Init();
     ASSERT_EQ(res, 0);
     vsyncStation1->hasInitVsyncReceiver_ = true;
     vsyncStation1->vsyncHandler_ = nullptr;
     vsyncStation1->SetIsMainHandlerAvailable(false);
-    vsyncStation1->Init;
+    vsyncStation1->Init();
     ASSERT_EQ(res, 0);
 }
 
