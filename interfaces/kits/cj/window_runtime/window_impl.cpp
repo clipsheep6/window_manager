@@ -744,7 +744,7 @@ int32_t CJWindowImpl::RaiseToAppTop()
         return result.ret;
     }
     sptr<Window> weakWindow = result.weakWindow;
-    WmErrorCode ret = weakWindow->RaiseToAppTop();
+    WMError ret = weakWindow->RaiseToAppTop();
     TLOGI(WmsLogTag::WMS_DIALOG, "Window [%{public}u, %{public}s] zorder raise success",
         weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str());
     return static_cast<int32_t>(ret);

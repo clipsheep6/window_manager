@@ -1,4 +1,12 @@
 /*
+ * @Author: zhangkai zhangkai324@huawei.com
+ * @Date: 2024-05-28 15:27:52
+ * @LastEditors: zhangkai zhangkai324@huawei.com
+ * @LastEditTime: 2024-05-29 19:48:07
+ * @FilePath: /foundation/window/window_manager/wmserver/include/zidl/window_manager_proxy.h
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
+/*
  * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,7 +77,7 @@ public:
     void SetAnchorAndScale(int32_t x, int32_t y, float scale) override;
     void SetAnchorOffset(int32_t deltaX, int32_t deltaY) override;
     void OffWindowZoom() override;
-    WmErrorCode RaiseToAppTop(uint32_t windowId) override;
+    WMError RaiseToAppTop(uint32_t windowId) override;
     std::shared_ptr<Media::PixelMap> GetSnapshot(int32_t windowId) override;
     WMError SetGestureNavigaionEnabled(bool enable) override;
     void DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event) override;
