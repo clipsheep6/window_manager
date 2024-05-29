@@ -400,6 +400,8 @@ private:
         const sptr<WindowSessionProperty>& property);
     void NotifySessionChangeByActionNotifyManager(const sptr<SceneSession>& sceneSession,
         const sptr<WindowSessionProperty>& property, WSPropertyChangeAction action);
+    WSError TransferPointerEventExecute(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
+        bool needNotifyClient, int32_t action, bool isPointDown);
 
     NotifySessionRectChangeFunc sessionRectChangeFunc_;
     static wptr<SceneSession> enterSession_;

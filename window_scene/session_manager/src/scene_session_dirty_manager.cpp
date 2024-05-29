@@ -442,16 +442,7 @@ MMI::WindowInfo SceneSessionDirtyManager::GetWindowInfo(const sptr<SceneSession>
     auto agentWindowId = sceneSession->GetWindowId();
     auto zOrder = sceneSession->GetZOrder();
     std::vector<int32_t> pointerChangeAreas(POINTER_CHANGE_AREA_COUNT, 0);
-    auto windowMode = windowSessionProperty->GetWindowMode();
-    auto maxMode = windowSessionProperty->GetMaximizeMode();
-    WindowType windowType = windowSessionProperty->GetWindowType();
-    bool isMainWindow = Rosen::WindowHelper::IsMainWindow(windowType);
-    bool isDecorDialog = Rosen::WindowHelper::IsDialogWindow(windowType) && windowSessionProperty->IsDecorEnable();
-    if ((windowMode == Rosen::WindowMode::WINDOW_MODE_FLOATING &&
-        (isMainWindow || isDecorDialog) &&
-        maxMode != Rosen::MaximizeMode::MODE_AVOID_SYSTEM_BAR) || (sceneSession->GetSessionInfo().isSetPointerAreas_)) {
-            UpdatePointerAreas(sceneSession, pointerChangeAreas);
-    }
+    UpdatePointerAreasForWindowInfo(sceneSession, pointerChangeAreas, windowSessionProperty);
     std::vector<MMI::Rect> touchHotAreas;
     std::vector<MMI::Rect> pointerHotAreas;
     UpdateHotAreas(sceneSession, touchHotAreas, pointerHotAreas);
@@ -480,6 +471,21 @@ MMI::WindowInfo SceneSessionDirtyManager::GetWindowInfo(const sptr<SceneSession>
     }
     UpdatePrivacyMode(sceneSession, windowInfo);
     return windowInfo;
+}
+
+void SceneSessionDirtyManager::UpdatePointerAreasForWindowInfo(const sptr<SceneSession>& sceneSession,
+    std::vector<int32_t>& pointerChangeAreas, const sptr<WindowSessionProperty>& windowSessionProperty) const
+{
+    auto windowMode = windowSessionProperty->GetWindowMode();
+    auto maxMode = windowSessionProperty->GetMaximizeMode();
+    WindowType windowType = windowSessionProperty->GetWindowType();
+    bool isMainWindow = Rosen::WindowHelper::IsMainWindow(windowType);
+    bool isDecorDialog = Rosen::WindowHelper::IsDialogWindow(windowType) && windowSessionProperty->IsDecorEnable();
+    if ((windowMode == Rosen::WindowMode::WINDOW_MODE_FLOATING &&
+        (isMainWindow || isDecorDialog) &&
+        maxMode != Rosen::MaximizeMode::MODE_AVOID_SYSTEM_BAR) || (sceneSession->GetSessionInfo().isSetPointerAreas_)) {
+            UpdatePointerAreas(sceneSession, pointerChangeAreas);
+    }
 }
 
 void SceneSessionDirtyManager::RegisterFlushWindowInfoCallback(const FlushWindowInfoCallback &&callback)

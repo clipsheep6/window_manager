@@ -2045,10 +2045,8 @@ void SceneSessionManager::DestroyExtensionSession(const sptr<IRemoteObject>& rem
     taskScheduler_->PostAsyncTask(task, "DestroyExtensionSession");
 }
 
-WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
-    const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-    sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session,
-    SystemSessionConfig& systemConfig, sptr<IRemoteObject> token)
+WSError SceneSessionManager::PreCreateAndConnectSpecificSession(sptr<WindowSessionProperty> property,
+    sptr<IRemoteObject> token)
 {
     if (property == nullptr) {
         WLOGFE("property is nullptr");
@@ -2100,6 +2098,18 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
     if (property->GetWindowType() == WindowType::WINDOW_TYPE_PIP && !isEnablePiPCreate(property)) {
         WLOGFE("pip window is not enable to create.");
         return WSError::WS_DO_NOTHING;
+    }
+    return WSError::WS_OK;
+}
+
+WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
+    const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
+    sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session,
+    SystemSessionConfig& systemConfig, sptr<IRemoteObject> token)
+{
+    auto preErrCode = PreCreateAndConnectSpecificSession(property, token);
+    if (preErrCode != WSError::WS_OK) {
+        return preErrCode;
     }
     TLOGI(WmsLogTag::WMS_LIFE, "create specific start, name: %{public}s, type: %{public}d",
         property->GetWindowName().c_str(), property->GetWindowType());
@@ -8323,10 +8333,12 @@ void SceneSessionManager::CacVisibleWindowNum()
     std::vector<VisibleWindowNumInfo> visibleWindowNumInfo;
     for (const auto& elem : sceneSessionMapCopy) {
         auto curSession = elem.second;
+        if (curSession == nullptr) {
+            continue;
+        }
         bool isTargetWindow = (WindowHelper::IsMainWindow(curSession->GetWindowType()) ||
             curSession->GetWindowType() == WindowType::WINDOW_TYPE_WALLPAPER);
-        if (curSession == nullptr || !isTargetWindow ||
-            curSession->GetSessionState() == SessionState::STATE_BACKGROUND) {
+        if (!isTargetWindow || curSession->GetSessionState() == SessionState::STATE_BACKGROUND) {
             continue;
         }
 

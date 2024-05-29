@@ -831,6 +831,20 @@ WMError WindowSessionImpl::InitUIContent(const std::string& contentInfo, napi_en
     return WMError::WM_OK;
 }
 
+void WindowSessionImpl::SetAPPWindowLabel()
+{
+    WindowType winType = GetType();
+    bool isSubWindow = WindowHelper::IsSubWindow(winType);
+    bool isDialogWindow = WindowHelper::IsDialogWindow(winType);
+    if (IsDecorEnable()) {
+        if (isSubWindow) {
+            SetAPPWindowLabel(subWindowTitle_);
+        } else if (isDialogWindow) {
+            SetAPPWindowLabel(dialogTitle_);
+        }
+    }
+}
+
 WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
     WindowSetUIContentType setUIContentType, BackupAndRestoreType restoreType, AppExecFwk::Ability* ability)
 {
@@ -845,16 +859,7 @@ WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, nap
     if (initUIContentRet != WMError::WM_OK) {
         return initUIContentRet;
     }
-    WindowType winType = GetType();
-    bool isSubWindow = WindowHelper::IsSubWindow(winType);
-    bool isDialogWindow = WindowHelper::IsDialogWindow(winType);
-    if (IsDecorEnable()) {
-        if (isSubWindow) {
-            SetAPPWindowLabel(subWindowTitle_);
-        } else if (isDialogWindow) {
-            SetAPPWindowLabel(dialogTitle_);
-        }
-    }
+    SetAPPWindowLabel();
 
     uint32_t version = 0;
     if ((context_ != nullptr) && (context_->GetApplicationInfo() != nullptr)) {

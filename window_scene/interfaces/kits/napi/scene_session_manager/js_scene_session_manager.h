@@ -84,6 +84,9 @@ public:
     static napi_value NotifyEnterRecentTask(napi_env env, napi_callback_info info);
 
 private:
+    static void BindGetFunction(napi_env env, napi_value exportObj, const char* moduleName);
+    static void BindSetFunction(napi_env env, napi_value exportObj, const char* moduleName);
+
     napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
     napi_value OnGetRootSceneSession(napi_env env, napi_callback_info info);
     napi_value OnRequestSceneSession(napi_env env, napi_callback_info info);
