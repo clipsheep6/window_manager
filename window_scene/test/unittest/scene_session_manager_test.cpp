@@ -1530,6 +1530,106 @@ HWTEST_F(SceneSessionManagerTest, GetSurfaceNodeIdsFromMissionIds, Function | Sm
     WMError result00 = ssm_->GetSurfaceNodeIdsFromMissionIds(missionIds, surfaceNodeIds);
     ASSERT_NE(result00, WMError::WM_OK);
 }
+
+/**
+ * @tc.name: UpdateMaximizeMode
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, UpdateMaximizeMode, Function | SmallTest | Level3)
+{
+    int32_t persistentId = 12345;
+    bool isMaximize = true;
+    WSError result00 = ssm_->UpdateMaximizeMode(persistentId, isMaximize);
+    ASSERT_EQ(result00, WSError::WM_OK);
+
+    isMaximize = false;
+    WSError result01 = ssm_->UpdateMaximizeMode(persistentId, isMaximize);
+    ASSERT_EQ(result01, WSError::WM_OK);
+}
+
+/**
+ * @tc.name: PreloadInLakeApp
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, PreloadInLakeApp, Function | SmallTest | Level3)
+{
+    SessionInfo info;
+    info.abilityName_ = "SceneSessionManagerTest";
+    info.bundleName_ = "PreloadInLakeApp";
+    sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
+    ssm_->UpdateMaximizeMode(info.bundleName_);
+    ASSERT_NE(nullptr, sceneSessionManager);
+}
+
+/**
+ * @tc.name: GetSceneSessionPrivacyModeBundles
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, GetSceneSessionPrivacyModeBundles, Function | SmallTest | Level3)
+{
+    auto displayId = ssm_->GetDisplayId();
+    std::vector<std::string> privacyBundles = "SceneSessionManagerTest";
+    sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
+    ssm_->GetSceneSessionPrivacyModeBundles(displayId, privacyBundles);
+    ASSERT_NE(nullptr, sceneSessionManager);
+
+    SessionInfo info;
+    info.abilityName_ = "SceneSessionManagerTest1";
+    info.bundleName_ = "GetSceneSessionPrivacyModeBundles";
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    ssm_->sceneSessionMap_.insert({100, sceneSession});
+    ssm_->GetSceneSessionPrivacyModeBundles(displayId, privacyBundles);
+    ASSERT_NE(nullptr, sceneSessionManager);
+}
+
+/**
+ * @tc.name: UnregisterIAbilityManagerCollaborator
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, UnregisterIAbilityManagerCollaborator, Function | SmallTest | Level3)
+{
+    int32_t type = 1;
+    WSError result00 = ssm_->UnregisterIAbilityManagerCollaborator(type);
+    ASSERT_EQ(result00, WSError::WS_ERROR_INVALID_PERMISSION);
+}
+
+/**
+ * @tc.name: ProcessUpdateRotationChange
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, ProcessUpdateRotationChange, Function | SmallTest | Level3)
+{
+    sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
+    sptr<DisplayInfo> displayInfo = nullptr;
+    DisplayId displayId = ssm_->GetSessionProperty()->GetDisplayId();
+    std::map<DisplayId, sptr<DisplayInfo>> displayInfoMap = {displayId, displayInfo};
+    DisplayStateChangeType type = DisplayStateChangeType::UPDATE_ROTATION;
+    ssm_->ProcessUpdateRotationChange(displayId, displayInfo, displayInfoMap, type);
+    ASSERT_NE(nullptr, sceneSessionManager);
+
+    SessionInfo info;
+    info.abilityName_ = "SceneSessionManagerTest";
+    info.bundleName_ = "ProcessUpdateRotationChange";
+    sptr<SceneSession::SpecificSessionCallback> specific = new SceneSession::SpecificSessionCallback();
+    sptr<SceneSession> sceneSession1 = new (std::nothrow) SceneSession(info, specific);
+    ssm_->sceneSessionMap_.insert({100, sceneSession1});
+    ssm_->ProcessUpdateRotationChange(displayId, displayInfo, displayInfoMap, type);
+    ASSERT_NE(nullptr, sceneSessionManager);
+
+    sceneSessionMap_.clear();
+    sptr<SceneSession> sceneSession2 = new (std::nothrow) SceneSession(info, nullptr);
+    ssm_->sceneSessionMap_.insert({100, sceneSession2});
+    displayInfo->GetWidth();
+    displayInfo->GetHeight();
+    displayInfo->GetRotation();
+    ssm_->ProcessUpdateRotationChange(displayId, displayInfo, displayInfoMap, type);
+    ASSERT_NE(nullptr, sceneSessionManager);
+}
 }
 } // namespace Rosen
 } // namespace OHOS
