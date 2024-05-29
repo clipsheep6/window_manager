@@ -1412,7 +1412,7 @@ WmErrorCode WindowSceneSessionImpl::RaiseToAppTop()
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
     const WSError& ret = hostSession_->RaiseToAppTop();
-    return static_cast<WmErrorCode>(ret);
+    return WM_JS_TO_ERROR_CODE_MAP.at(static_cast<WMError>(ret));
 }
 
 WmErrorCode WindowSceneSessionImpl::RaiseAboveTarget(int32_t subWindowId)
