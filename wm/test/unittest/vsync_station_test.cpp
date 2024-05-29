@@ -135,7 +135,7 @@ HWTEST_F(VsyncStationTest, FlushFrameRate, Function | SmallTest | Level3)
     ASSERT_NE(frameRateLinker, nullptr);
     frameRateLinker->SetEnable(true);
     vsyncStation1->frameRateLinker_ = frameRateLinker;
-    vsyncStation1->FlushFrameRate(rate1,isAnimatorStopped) 
+    vsyncStation1->FlushFrameRate(rate1,isAnimatorStopped)；
     ASSERT_EQ(res, 0);
     frameRateLinker->SetEnable(false);
     vsyncStation1->frameRateLinker_ = frameRateLinker;
