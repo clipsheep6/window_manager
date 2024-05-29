@@ -449,9 +449,9 @@ void WindowAdapter::OffWindowZoom()
     windowManagerServiceProxy_->OffWindowZoom();
 }
 
-WmErrorCode WindowAdapter::RaiseToAppTop(uint32_t windowId)
+WMError WindowAdapter::RaiseToAppTop(uint32_t windowId)
 {
-    INIT_PROXY_CHECK_RETURN(WmErrorCode::WM_ERROR_SYSTEM_ABNORMALLY);
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
     return windowManagerServiceProxy_->RaiseToAppTop(windowId);
 }
 

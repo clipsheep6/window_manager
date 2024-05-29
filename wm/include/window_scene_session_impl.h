@@ -66,7 +66,7 @@ public:
     WindowMode GetMode() const override;
     WMError MoveTo(int32_t x, int32_t y) override;
     WMError Resize(uint32_t width, uint32_t height) override;
-    WmErrorCode RaiseToAppTop() override;
+    WMError RaiseToAppTop() override;
     WmErrorCode RaiseAboveTarget(int32_t subWindowId) override;
     WSError HandleBackEvent() override;
     void PerformBack() override;

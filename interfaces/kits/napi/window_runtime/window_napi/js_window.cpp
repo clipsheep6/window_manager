@@ -4465,7 +4465,7 @@ napi_value JsWindow::OnRaiseToAppTop(napi_env env, napi_callback_info info)
                 return;
             }
 
-            WmErrorCode errCode = window->RaiseToAppTop();
+            WmErrorCode errCode = WM_JS_TO_ERROR_CODE_MAP.at(window->RaiseToAppTop());
             if (errCode != WmErrorCode::WM_OK) {
                 WLOGFE("raise window zorder failed");
                 task.Reject(env, JsErrUtils::CreateJsError(env, errCode));
