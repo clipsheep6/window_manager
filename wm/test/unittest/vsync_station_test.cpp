@@ -15,6 +15,13 @@
 
 #include <vsync_station.h>
 #include <gtest/gtest.h>
+#include<ui/rs_frame_rate_linker.h>
+#include<window_frame_trace.h>
+#include<transaction/rs_interfaces.h>
+#include<window_manager_hilog.h>
+
+
+
 
 using namespace testing;
 using namespace testing::ext;
@@ -120,7 +127,6 @@ HWTEST_F(VsyncStationTest, GetFrameRateLinkerId, Function | SmallTest | Level3)
 HWTEST_F(VsyncStationTest, FlushFrameRate, Function | SmallTest | Level3)
 {
     NodeId nodeId0 = 0;
-    int res = 0;
     std::shared_ptr<VsyncStation> vsyncStation0 = std::make_shared<VsyncStation>(nodeId0);
     ASSERT_NE(vsyncStation0, nullptr);
     uint32_t rate0 = 60;
@@ -136,14 +142,12 @@ HWTEST_F(VsyncStationTest, FlushFrameRate, Function | SmallTest | Level3)
     frameRateLinker->SetEnable(true);
     vsyncStation1->frameRateLinker_ = frameRateLinker;
     vsyncStation1->FlushFrameRate(rate1, isAnimatorStopped)；
-    ASSERT_EQ(res, 0);
+    ASSERT_NE(nullptr,vsyncStation1);
     frameRateLinker->SetEnable(false);
     vsyncStation1->frameRateLinker_ = frameRateLinker;
     vsyncStation1->FlushFrameRate(rate1, isAnimatorStopped);
-    ASSERT_EQ(res, 0);
     vsyncStation1->frameRateLinker_ = nullptr;
     vsyncStation1->FlushFrameRate(rate1, isAnimatorStopped);
-    ASSERT_EQ(res, 0);
 }
 
 /**
@@ -154,7 +158,6 @@ HWTEST_F(VsyncStationTest, FlushFrameRate, Function | SmallTest | Level3)
 HWTEST_F(VsyncStationTest, SetFrameRateLinkerEnable, Function | SmallTest | Level3)
 {
     NodeId nodeId0 = 0;
-    int res = 0;
     std::shared_ptr<VsyncStation> vsyncStation0 = std::make_shared<VsyncStation>(nodeId0);
     ASSERT_NE(vsyncStation0, nullptr);
     bool enable0 = false;
@@ -168,7 +171,6 @@ HWTEST_F(VsyncStationTest, SetFrameRateLinkerEnable, Function | SmallTest | Leve
     vsyncStation1->frameRateLinker_ = frameRateLinker;
     vsyncStation1->frameRateLinker_ = frameRateLinker;
     vsyncStation1->SetFrameRateLinkerEnable(false);
-    ASSERT_EQ(0, res);
 }
 
 /**
@@ -179,28 +181,24 @@ HWTEST_F(VsyncStationTest, SetFrameRateLinkerEnable, Function | SmallTest | Leve
 HWTEST_F(VsyncStationTest, Init, Function | SmallTest | Level3)
 {
     NodeId nodeId0 = 0;
-    int res = 0;
     std::shared_ptr<VsyncStation> vsyncStation0 = std::make_shared<VsyncStation>(nodeId0);
+    ASSERT_NE(nullptr, vsyncStation0);
     vsyncStation0->hasInitVsyncReceiver_ = false;
-    vsyncStation1->SetIsMainHandlerAvailable(true);
+    vsyncStation0->SetIsMainHandlerAvailable(true);
     vsyncStation0->Init();
-    ASSERT_EQ(res, 0);
     vsyncStation0->hasInitVsyncReceiver_ = false;
     vsyncStation0->SetIsMainHandlerAvailable(false);
     vsyncStation0->Init();
-    ASSERT_EQ(res, 0);
     std::shared_ptr<VsyncStation> vsyncStation1 = std::make_shared<VsyncStation>(nodeId0);
     ASSERT_NE(nullptr, vsyncStation1);
     vsyncStation1->hasInitVsyncReceiver_ = true;
     vsyncStation1->vsyncHandler_ = nullptr;
     vsyncStation1->SetIsMainHandlerAvailable(true);
     vsyncStation1->Init();
-    ASSERT_EQ(res, 0);
     vsyncStation1->hasInitVsyncReceiver_ = true;
     vsyncStation1->vsyncHandler_ = nullptr;
     vsyncStation1->SetIsMainHandlerAvailable(false);
     vsyncStation1->Init();
-    ASSERT_EQ(res, 0);
 }
 
 }
