@@ -1508,7 +1508,7 @@ HWTEST_F(SceneSessionManagerTest, RequestInputMethodCloseKeyboard, Function | Sm
     info.abilityName_ = "SceneSessionManagerTest1";
     info.bundleName_ = "GetSceneSessionPrivacyModeBundles";
     sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    ssm_->sceneSessionMap_.insert({sceneSession, 12345});
+    ssm_->sceneSessionMap_.insert({12345, sceneSession});
     ssm_->RequestInputMethodCloseKeyboard(persistentId);
     ASSERT_NE(nullptr, sceneSessionManager);
 }
@@ -1528,6 +1528,7 @@ HWTEST_F(SceneSessionManagerTest, DealwithDrawingContentChange, Function | Small
     SessionInfo info;
     info.abilityName_ = "SceneSessionManagerTest1";
     info.bundleName_ = "GetSceneSessionPrivacyModeBundles";
+    info.persistentId = 100;
     sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
     ssm_->sceneSessionMap_.insert({100, sceneSession});
     ssm_->DealwithDrawingContentChange(drawingContentChangeInfo);
@@ -1592,6 +1593,7 @@ HWTEST_F(SceneSessionManagerTest, GetSceneSessionPrivacyModeBundles, Function | 
     SessionInfo info;
     info.abilityName_ = "SceneSessionManagerTest1";
     info.bundleName_ = "GetSceneSessionPrivacyModeBundles";
+    info.persistentId = 100;
     sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
     DisplayId displayId = sceneSession->GetSessionProperty()->GetDisplayId();
     ssm_->GetSceneSessionPrivacyModeBundles(displayId, privacyBundles);
@@ -1627,6 +1629,7 @@ HWTEST_F(SceneSessionManagerTest, ProcessUpdateRotationChange, Function | SmallT
     SessionInfo info;
     info.abilityName_ = "SceneSessionManagerTest";
     info.bundleName_ = "ProcessUpdateRotationChange";
+    info.persistentId_ = 100;
     sptr<SceneSession::SpecificSessionCallback> specific = new SceneSession::SpecificSessionCallback();
     sptr<SceneSession> sceneSession1 = new (std::nothrow) SceneSession(info, specific);
     DisplayId displayId = sceneSession1->GetSessionProperty()->GetDisplayId();
