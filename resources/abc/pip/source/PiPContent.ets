@@ -14,6 +14,7 @@
  */
 
 import pip from '@ohos.pip';
+import { NodeContent } from '@ohos.arkui.node'
 
 const TAG: string = 'PiPContent';
 
@@ -21,8 +22,13 @@ const TAG: string = 'PiPContent';
 @Component
 export struct PiPContent {
   private xComponentController: XComponentController = new XComponentController();
+  private nodeContent: NodeContent | null = null;
   xComponentId: string = 'pipContent';
   xComponentType: string = 'surface';
+
+  aboutToAppear(): void {
+    this.nodeContent = pip.getCustomUIController();
+  }
 
   build() {
     Stack() {
@@ -32,6 +38,9 @@ export struct PiPContent {
           console.debug(TAG, 'XComponent onLoad done');
         })
         .size({ width: '100%', height: '100%' });
+      if (this.nodeContent !== null) {
+        ContentSlot(this.nodeContent);
+      }
     }
     .size({ width: '100%', height: '100%' });
   }

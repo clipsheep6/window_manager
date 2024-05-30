@@ -126,6 +126,8 @@ static int32_t GetPictureInPictureOptionFromJs(napi_env env, napi_value optionOb
     napi_value heightValue = nullptr;
     napi_value xComponentControllerValue = nullptr;
     napi_value controlGroup = nullptr;
+    napi_value nodeContent = nullptr;
+    napi_ref nodeContentRef = nullptr;
     void* contextPtr = nullptr;
     std::string navigationId = "";
     uint32_t templateType = static_cast<uint32_t>(PiPTemplateType::VIDEO_PLAY);
@@ -140,6 +142,8 @@ static int32_t GetPictureInPictureOptionFromJs(napi_env env, napi_value optionOb
     napi_get_named_property(env, optionObject, "contentHeight", &heightValue);
     napi_get_named_property(env, optionObject, "componentController", &xComponentControllerValue);
     napi_get_named_property(env, optionObject, "controlGroups", &controlGroup);
+    napi_get_named_property(env, optionObject, "nodeContent", &nodeContent);
+    napi_create_reference(env, nodeContent, 1, &nodeContentRef);
     napi_unwrap(env, contextPtrValue, &contextPtr);
     ConvertFromJsValue(env, navigationIdValue, navigationId);
     ConvertFromJsValue(env, templateTypeValue, templateType);
@@ -154,6 +158,7 @@ static int32_t GetPictureInPictureOptionFromJs(napi_env env, napi_value optionOb
     option.SetContentSize(width, height);
     option.SetControlGroup(controls);
     option.SetXComponentController(xComponentControllerResult);
+    option.SetNodeContentRef(nodeContentRef);
     return checkOptionParams(option);
 }
 
