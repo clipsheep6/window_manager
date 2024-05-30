@@ -20,9 +20,6 @@
 #include<transaction/rs_interfaces.h>
 #include<window_manager_hilog.h>
 
-
-
-
 using namespace testing;
 using namespace testing::ext;
 
@@ -142,7 +139,7 @@ HWTEST_F(VsyncStationTest, FlushFrameRate, Function | SmallTest | Level3)
     frameRateLinker->SetEnable(true);
     vsyncStation1->frameRateLinker_ = frameRateLinker;
     vsyncStation1->FlushFrameRate(rate1, isAnimatorStopped)；
-    ASSERT_NE(nullptr,vsyncStation1);
+    ASSERT_NE(nullptr, vsyncStation1);
     frameRateLinker->SetEnable(false);
     vsyncStation1->frameRateLinker_ = frameRateLinker;
     vsyncStation1->FlushFrameRate(rate1, isAnimatorStopped);
