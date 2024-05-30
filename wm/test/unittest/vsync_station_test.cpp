@@ -88,7 +88,7 @@ HWTEST_F(VsyncStationTest, RequestVsyncMultiWindow, Function | SmallTest | Level
  * @tc.desc: GetVsyncPeriod Test
  * @tc.type: FUNC
  */
-HWTEST_F(GetVsyncPeriodTest, GetVsyncPeriod, Function | SmallTest | Level3)
+HWTEST_F(VsyncStationTest, GetVsyncPeriod, Function | SmallTest | Level3)
 {
     NodeId nodeId0 = 0;
     std::shared_ptr<VsyncStation> vsyncStation0 = std::make_shared<VsyncStation>(nodeId0);
