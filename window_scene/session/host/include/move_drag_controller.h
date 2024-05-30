@@ -125,6 +125,8 @@ private:
         const sptr<WindowSessionProperty> property);
     void NotifyWindowInputPidChange(bool isServerPid);
     void PerfRequest(int32_t cmdId, bool onOffTag);
+    void ProcessPointDownEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
+    bool ProcessPointDragEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent, SizeChangeReason& reason);
 
     bool isStartMove_ = false;
     bool isStartDrag_ = false;

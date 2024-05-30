@@ -131,6 +131,53 @@ WSRect MoveDragController::GetFullScreenToFloatingRect(const WSRect& originalRec
     return targetRect;
 }
 
+void MoveDragController::ProcessPointDownEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
+    int32_t action = pointerEvent->GetPointerAction();
+    if (action == MMI::PointerEvent::POINTER_ACTION_DOWN ||
+        action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
+        TLOGD(OHOS::Rosen::WmsLogTag::DEFAULT, "Move event hasPointDown");
+        hasPointDown_ = true;
+    } else if (action == MMI::PointerEvent::POINTER_ACTION_UP ||
+        action == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP ||
+        action == MMI::PointerEvent::POINTER_ACTION_CANCEL) {
+        TLOGD(OHOS::Rosen::WmsLogTag::DEFAULT, "Reset hasPointDown_ when point up or cancel");
+        hasPointDown_ = false;
+    }
+}
+
+bool MoveDragController::ProcessPointDragEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
+    SizeChangeReason& reason)
+{
+    int32_t action = pointerEvent->GetPointerAction();
+    bool ret = true;
+    switch (action) {
+        case MMI::PointerEvent::POINTER_ACTION_MOVE: {
+            reason = SizeChangeReason::MOVE;
+            uint32_t oldWindowDragHotAreaType = windowDragHotAreaType_;
+            UpdateHotAreaType(pointerEvent);
+            ProcessWindowDragHotAreaFunc(oldWindowDragHotAreaType != windowDragHotAreaType_, reason);
+            break;
+        }
+        case MMI::PointerEvent::POINTER_ACTION_UP:
+        case MMI::PointerEvent::POINTER_ACTION_BUTTON_UP:
+        case MMI::PointerEvent::POINTER_ACTION_CANCEL:
+        case MMI::PointerEvent::POINTER_ACTION_DOWN:
+        case MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN: {
+            reason = SizeChangeReason::DRAG_END;
+            SetStartMoveFlag(false);
+            hasPointDown_ = false;
+            ProcessWindowDragHotAreaFunc(windowDragHotAreaType_ != WINDOW_HOT_AREA_TYPE_UNDEFINED, reason);
+            // The Pointer up event sent to the ArkUI.
+            ret = false;
+            break;
+        }
+        default:
+            break;
+    }
+    return ret;
+}
+
 void MoveDragController::SetAspectRatio(float ratio)
 {
     aspectRatio_ = ratio;
@@ -169,46 +216,13 @@ bool MoveDragController::ConsumeMoveEvent(const std::shared_ptr<MMI::PointerEven
 
     int32_t action = pointerEvent->GetPointerAction();
     if (!GetStartMoveFlag()) {
-        if (action == MMI::PointerEvent::POINTER_ACTION_DOWN ||
-            action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
-            WLOGFD("Move event hasPointDown");
-            hasPointDown_ = true;
-        } else if (action == MMI::PointerEvent::POINTER_ACTION_UP ||
-            action == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP ||
-            action == MMI::PointerEvent::POINTER_ACTION_CANCEL) {
-            WLOGFD("Reset hasPointDown_ when point up or cancel");
-            hasPointDown_ = false;
-        }
-        WLOGFD("No need to move action id: %{public}d", action);
+        ProcessPointDownEvent(pointerEvent);
+        TLOGD(OHOS::Rosen::WmsLogTag::DEFAULT, "No need to move action id: %{public}d", action);
         return false;
     }
 
     SizeChangeReason reason = SizeChangeReason::MOVE;
-    bool ret = true;
-    switch (action) {
-        case MMI::PointerEvent::POINTER_ACTION_MOVE: {
-            reason = SizeChangeReason::MOVE;
-            uint32_t oldWindowDragHotAreaType = windowDragHotAreaType_;
-            UpdateHotAreaType(pointerEvent);
-            ProcessWindowDragHotAreaFunc(oldWindowDragHotAreaType != windowDragHotAreaType_, reason);
-            break;
-        }
-        case MMI::PointerEvent::POINTER_ACTION_UP:
-        case MMI::PointerEvent::POINTER_ACTION_BUTTON_UP:
-        case MMI::PointerEvent::POINTER_ACTION_CANCEL:
-        case MMI::PointerEvent::POINTER_ACTION_DOWN:
-        case MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN: {
-            reason = SizeChangeReason::DRAG_END;
-            SetStartMoveFlag(false);
-            hasPointDown_ = false;
-            ProcessWindowDragHotAreaFunc(windowDragHotAreaType_ != WINDOW_HOT_AREA_TYPE_UNDEFINED, reason);
-            // The Pointer up event sent to the ArkUI.
-            ret = false;
-            break;
-        }
-        default:
-            break;
-    }
+    bool ret = ProcessPointDragEvent(pointEvent, reason);
     if (CalcMoveTargetRect(pointerEvent, originalRect)) {
         ProcessSessionRectChange(reason);
     }

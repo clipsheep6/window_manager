@@ -2999,6 +2999,19 @@ void WindowImpl::PerfLauncherHotAreaIfNeed(const std::shared_ptr<MMI::PointerEve
 #endif
 }
 
+bool WindowImpl::IsPointEventStart(int32_t action)
+{
+    return action == MMI::PointerEvent::POINTER_ACTION_DOWN ||
+    action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN;
+}
+
+bool WindowImpl::IsPointEventFinish(int32_t action)
+{
+    return action == MMI::PointerEvent::POINTER_ACTION_UP ||
+    action == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP ||
+    action == MMI::PointerEvent::POINTER_ACTION_CANCEL;
+}
+
 void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
     // If windowRect transformed, transform event back to its origin position
@@ -3006,12 +3019,10 @@ void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& p
         property_->UpdatePointerEvent(pointerEvent);
     }
     int32_t action = pointerEvent->GetPointerAction();
-    if (action == MMI::PointerEvent::POINTER_ACTION_MOVE || action == MMI::PointerEvent::POINTER_ACTION_DOWN ||
-        action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
+    if (IsPointEventStart(action) || action == MMI::PointerEvent::POINTER_ACTION_MOVE) {
         ResSchedReport::GetInstance().TrigSlide(GetType(), true);
     }
-    if (action == MMI::PointerEvent::POINTER_ACTION_UP || action == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP ||
-        action == MMI::PointerEvent::POINTER_ACTION_CANCEL) {
+    if (IsPointEventFinish(action)) {
         ResSchedReport::GetInstance().TrigSlide(GetType(), false);
     }
     if ((action == MMI::PointerEvent::POINTER_ACTION_MOVE || action == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP) &&
@@ -3019,7 +3030,7 @@ void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& p
         HandlePointerStyle(pointerEvent);
     }
     PerfLauncherHotAreaIfNeed(pointerEvent);
-    if (action == MMI::PointerEvent::POINTER_ACTION_DOWN || action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
+    if (IsPointEventStart(action)) {
         WLOGFD("WMS process point down, id:%{public}u, action: %{public}d", GetWindowId(), action);
         if (GetType() == WindowType::WINDOW_TYPE_LAUNCHER_RECENT) {
             MMI::PointerEvent::PointerItem pointerItem;
@@ -3041,8 +3052,7 @@ void WindowImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& p
 
     // If point event type is up, should reset start move flag
     if (WindowHelper::IsMainFloatingWindow(GetType(), GetMode()) || GetType() == WindowType::WINDOW_TYPE_DOCK_SLICE ||
-        (action == MMI::PointerEvent::POINTER_ACTION_UP || action == MMI::PointerEvent::POINTER_ACTION_BUTTON_UP ||
-        action == MMI::PointerEvent::POINTER_ACTION_CANCEL)) {
+        IsPointEventStart(action)) {
         ConsumeMoveOrDragEvent(pointerEvent);
     }
 

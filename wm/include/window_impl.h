@@ -595,6 +595,8 @@ private:
     static const ColorSpaceConvertMap colorSpaceConvertMap[];
     static ColorSpace GetColorSpaceFromSurfaceGamut(GraphicColorGamut colorGamut);
     static GraphicColorGamut GetSurfaceGamutFromColorSpace(ColorSpace colorSpace);
+    bool IsPointEventStart(int32_t action);
+    bool IsPointEventFinish(int32_t action);
     void ChangePropertyByApiVersion();
     void PerfLauncherHotAreaIfNeed(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
     void SetDefaultDisplayIdIfNeed();
