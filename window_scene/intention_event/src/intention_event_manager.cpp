@@ -275,19 +275,9 @@ void IntentionEventManager::InputEventListener::DispatchKeyEventCallback(
 
 void IntentionEventManager::InputEventListener::OnInputEvent(std::shared_ptr<MMI::KeyEvent> keyEvent) const
 {
-    if (keyEvent == nullptr) {
-        TLOGE(WmsLogTag::WMS_EVENT, "The key event is nullptr");
-        return;
-    }
-    if (!SceneSessionManager::GetInstance().IsInputEventEnabled()) {
-        TLOGD(WmsLogTag::WMS_EVENT, "OnInputEvent is disabled temporarily");
-        keyEvent->MarkProcessed();
-        return;
-    }
     auto focusedSessionId = SceneSessionManager::GetInstance().GetFocusedSessionId();
-    if (focusedSessionId == INVALID_SESSION_ID) {
-        TLOGE(WmsLogTag::WMS_EVENT, "focusedSessionId is invalid");
-        keyEvent->MarkProcessed();
+    bool checkOnInputEventRes = CheckOnInputEvent(keyEvent, focusedSessionId);
+    if (!checkOnInputEventRes) {
         return;
     }
     auto focusedSceneSession = SceneSessionManager::GetInstance().GetSceneSession(focusedSessionId);
@@ -296,17 +286,8 @@ void IntentionEventManager::InputEventListener::OnInputEvent(std::shared_ptr<MMI
         keyEvent->MarkProcessed();
         return;
     }
-    auto isSystem = focusedSceneSession->GetSessionInfo().isSystem_;
-    static uint32_t eventId = 0;
-    TLOGI(WmsLogTag::WMS_EVENT, "eventId:%{public}d, InputTracking id:%{public}d, wid:%{public}u "
-        "focusedSessionId:%{public}d, isSystem:%{public}d",
-        eventId++, keyEvent->GetId(), keyEvent->GetTargetWindowId(), focusedSessionId, isSystem);
-    if (!isSystem) {
-        WSError ret = focusedSceneSession->TransferKeyEvent(keyEvent);
-        if ((ret != WSError::WS_OK || static_cast<int32_t>(getprocpid()) != focusedSceneSession->GetCallingPid()) &&
-            keyEvent != nullptr) {
-            keyEvent->MarkProcessed();
-        }
+    bool transferKeyEventRes = TransferKeyEvent(keyEvent, focusedSessionId);
+    if (!transferKeyEventRes) {
         return;
     }
     bool isConsumed = focusedSceneSession->SendKeyEventToUI(keyEvent, true);
@@ -338,6 +319,46 @@ void IntentionEventManager::InputEventListener::OnInputEvent(std::shared_ptr<MMI
         return;
     }
     focusedSceneSession->SendKeyEventToUI(keyEvent);
+}
+
+bool IntentionEventManager::InputEventListener::CheckOnInputEvent(
+    std::shared_ptr<MMI::KeyEvent>& keyEvent, int32_t focusedSessionId) const
+{
+    if (keyEvent == nullptr) {
+        TLOGE(WmsLogTag::WMS_EVENT, "The key event is nullptr");
+        return false;
+    }
+    if (!SceneSessionManager::GetInstance().IsInputEventEnabled()) {
+        TLOGD(WmsLogTag::WMS_EVENT, "OnInputEvent is disabled temporarily");
+        keyEvent->MarkProcessed();
+        return false;
+    }
+    if (focusedSessionId == INVALID_SESSION_ID) {
+        TLOGE(WmsLogTag::WMS_EVENT, "focusedSessionId is invalid");
+        keyEvent->MarkProcessed();
+        return false;
+    }
+    return true;
+}
+
+bool IntentionEventManager::InputEventListener::TransferKeyEvent(
+    std::shared_ptr<MMI::KeyEvent>& keyEvent, int32_t focusedSessionId) const
+{
+    auto focusedSceneSession = SceneSessionManager::GetInstance().GetSceneSession(focusedSessionId);
+    auto isSystem = focusedSceneSession->GetSessionInfo().isSystem_;
+    static uint32_t eventId = 0;
+    TLOGI(WmsLogTag::WMS_EVENT, "eventId:%{public}d, InputTracking id:%{public}d, wid:%{public}u "
+        "focusedSessionId:%{public}d, isSystem:%{public}d",
+        eventId++, keyEvent->GetId(), keyEvent->GetTargetWindowId(), focusedSessionId, isSystem);
+    if (!isSystem) {
+        WSError ret = focusedSceneSession->TransferKeyEvent(keyEvent);
+        if ((ret != WSError::WS_OK || static_cast<int32_t>(getprocpid()) != focusedSceneSession->GetCallingPid()) &&
+            keyEvent != nullptr) {
+            keyEvent->MarkProcessed();
+        }
+        return false;
+    }
+    return true;
 }
 
 bool IntentionEventManager::InputEventListener::IsKeyboardEvent(

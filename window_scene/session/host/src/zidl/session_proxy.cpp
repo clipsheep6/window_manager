@@ -214,6 +214,12 @@ WSError SessionProxy::Connect(const sptr<ISessionStage>& sessionStage, const spt
         WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
+    return HandleConnectResult(reply, systemConfig, property);
+}
+
+WSError SessionProxy::HandleConnectResult(MessageParcel& reply, SystemSessionConfig& systemConfig,
+        sptr<WindowSessionProperty> property)
+{
     sptr<SystemSessionConfig> config = reply.ReadParcelable<SystemSessionConfig>();
     if (config) {
         systemConfig = *config;

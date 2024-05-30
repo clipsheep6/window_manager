@@ -26,6 +26,14 @@
 namespace OHOS {
 namespace Rosen {
 napi_value JsWindowManagerInit(napi_env env, napi_value exportObj);
+
+struct TopWindowInfoList {
+    sptr<Window> window = nullptr;
+    AppExecFwk::Ability* ability = nullptr;
+    int32_t errorCode = 0;
+    std::string errMsg = "";
+};
+
 class JsWindowManager {
 public:
     JsWindowManager();
@@ -46,6 +54,9 @@ public:
     static napi_value SetGestureNavigationEnabled(napi_env env, napi_callback_info info);
     static napi_value SetWaterMarkImage(napi_env env, napi_callback_info info);
     static napi_value ShiftAppWindowFocus(napi_env env, napi_callback_info info);
+    static bool IsCompleteCallbackError(std::shared_ptr<TopWindowInfoList> lists,
+        napi_env env, AbilityRuntime::NapiAsyncTask& task, bool newApi);
+
 private:
     static napi_value OnCreate(napi_env env, napi_callback_info info);
     static napi_value OnCreateWindow(napi_env env, napi_callback_info info);

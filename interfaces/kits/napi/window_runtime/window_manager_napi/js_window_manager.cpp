@@ -833,12 +833,7 @@ napi_value JsWindowManager::OnUnregisterWindowManagerCallback(napi_env env, napi
 
 static napi_value GetTopWindowTask(void* contextPtr, napi_env env, napi_value callback, bool newApi)
 {
-    struct TopWindowInfoList {
-        sptr<Window> window = nullptr;
-        AppExecFwk::Ability* ability = nullptr;
-        int32_t errorCode = 0;
-        std::string errMsg = "";
-    };
+    
     std::shared_ptr<TopWindowInfoList> lists = std::make_shared<TopWindowInfoList>();
     bool isOldApi = GetAPI7Ability(env, lists->ability);
     NapiAsyncTask::ExecuteCallback execute = [lists, isOldApi, newApi, contextPtr]() {
@@ -865,34 +860,8 @@ static napi_value GetTopWindowTask(void* contextPtr, napi_env env, napi_value ca
         }
     };
     NapiAsyncTask::CompleteCallback complete = [lists, newApi](napi_env env, NapiAsyncTask& task, int32_t status) {
-        if (lists == nullptr) {
-            if (newApi) {
-                task.Reject(env, JsErrUtils::CreateJsError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY,
-                    "napi abnormal"));
-            } else {
-                task.Reject(env, JsErrUtils::CreateJsError(env, WMError::WM_ERROR_NULLPTR, "napi abnormal"));
-            }
-            return;
-        }
-        if (lists->errorCode != 0) {
-            if (newApi) {
-                task.Reject(env, JsErrUtils::CreateJsError(env, static_cast<WmErrorCode>(lists->errorCode),
-                    lists->errMsg));
-            } else {
-                task.Reject(env, JsErrUtils::CreateJsError(env, static_cast<WMError>(lists->errorCode),
-                    lists->errMsg));
-            }
-            WLOGFE("%{public}s", lists->errMsg.c_str());
-            return;
-        }
-        if (lists->window == nullptr) {
-            if (newApi) {
-                task.Reject(env, JsErrUtils::CreateJsError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY,
-                    "Get top window failed"));
-            } else {
-                task.Reject(env, JsErrUtils::CreateJsError(env, WMError::WM_ERROR_NULLPTR,
-                    "Get top window failed"));
-            }
+        bool isCompleteCallbackError = JsWindowManager::IsCompleteCallbackError(lists, env, task, newApi);
+        if (isCompleteCallbackError) {
             return;
         }
         task.Resolve(env, CreateJsWindowObject(env, lists->window));
@@ -902,6 +871,42 @@ static napi_value GetTopWindowTask(void* contextPtr, napi_env env, napi_value ca
     NapiAsyncTask::Schedule("JsWindowManager::OnGetTopWindow",
         env, CreateAsyncTaskWithLastParam(env, callback, std::move(execute), std::move(complete), &result));
     return result;
+}
+
+bool JsWindowManager::IsCompleteCallbackError(std::shared_ptr<TopWindowInfoList> lists,
+        napi_env env, NapiAsyncTask& task, bool newApi)
+{
+    if (lists == nullptr) {
+        if (newApi) {
+            task.Reject(env, JsErrUtils::CreateJsError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY,
+                "napi abnormal"));
+        } else {
+            task.Reject(env, JsErrUtils::CreateJsError(env, WMError::WM_ERROR_NULLPTR, "napi abnormal"));
+        }
+        return true;
+    }
+    if (lists->errorCode != 0) {
+        if (newApi) {
+            task.Reject(env, JsErrUtils::CreateJsError(env, static_cast<WmErrorCode>(lists->errorCode),
+                lists->errMsg));
+        } else {
+            task.Reject(env, JsErrUtils::CreateJsError(env, static_cast<WMError>(lists->errorCode),
+                lists->errMsg));
+        }
+        WLOGFE("%{public}s", lists->errMsg.c_str());
+        return true;
+    }
+    if (lists->window == nullptr) {
+        if (newApi) {
+            task.Reject(env, JsErrUtils::CreateJsError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY,
+                "Get top window failed"));
+        } else {
+            task.Reject(env, JsErrUtils::CreateJsError(env, WMError::WM_ERROR_NULLPTR,
+                "Get top window failed"));
+        }
+        return true;
+    }
+    return false;
 }
 
 napi_value JsWindowManager::OnGetTopWindow(napi_env env, napi_callback_info info)

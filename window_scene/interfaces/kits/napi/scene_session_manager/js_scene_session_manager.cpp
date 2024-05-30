@@ -1333,17 +1333,8 @@ napi_value JsSceneSessionManager::OnRequestSceneSessionBackground(napi_env env, 
             }
         }
     }
-    if (sceneSession == nullptr) {
-        TLOGE(WmsLogTag::WMS_LIFE, "[NAPI]sceneSession is nullptr");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_SYSTEM_ABNORMALLY),
-            "sceneSession is nullptr"));
-        return NapiGetUndefined(env);
-    }
-
-    if (errCode == WSErrorCode::WS_ERROR_INVALID_PARAM) {
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
-            "Input parameter is missing or invalid"));
-        return NapiGetUndefined(env);
+    if (sceneSession == nullptr || errCode == WSErrorCode::WS_ERROR_INVALID_PARAM) {
+        return RequestSceneSessionAbnormal(sceneSession, env, errorCode);
     }
 
     bool isDelegator = false;
@@ -1407,18 +1398,9 @@ napi_value JsSceneSessionManager::OnRequestSceneSessionDestruction(napi_env env,
             }
         }
     }
-    if (sceneSession == nullptr) {
-        TLOGE(WmsLogTag::WMS_LIFE, "[NAPI]sceneSession is nullptr");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_SYSTEM_ABNORMALLY),
-            "sceneSession is nullptr"));
-        return NapiGetUndefined(env);
+    if (sceneSession == nullptr || errCode == WSErrorCode::WS_ERROR_INVALID_PARAM) {
+        return RequestSceneSessionAbnormal(sceneSession, env, errorCode);
     }
-    if (errCode == WSErrorCode::WS_ERROR_INVALID_PARAM) {
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
-            "Input parameter is missing or invalid"));
-        return NapiGetUndefined(env);
-    }
-
     SceneSessionManager::GetInstance().RequestSceneSessionDestruction(sceneSession, needRemoveSession);
     auto localScheduler = SceneSessionManager::GetInstance().GetTaskScheduler();
     auto clearTask = [jsSceneSession, needRemoveSession, persistentId = sceneSession->GetPersistentId()]() {
@@ -1427,6 +1409,22 @@ napi_value JsSceneSessionManager::OnRequestSceneSessionDestruction(napi_env env,
         }
     };
     localScheduler->PostAsyncTask(clearTask, "Clear callback Map");
+    return NapiGetUndefined(env);
+}
+
+napi_value JsSceneSessionManager::RequestSceneSessionAbnormal(sptr<SceneSession>& sceneSession,
+        napi_env env, WSErrorCode errorCode)
+{
+    if (sceneSession == nullptr) {
+        TLOGE(WmsLogTag::WMS_LIFE, "[NAPI]sceneSession is nullptr");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_SYSTEM_ABNORMALLY),
+            "sceneSession is nullptr"));
+        
+    } else if (errCode == WSErrorCode::WS_ERROR_INVALID_PARAM) {
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        
+    }
     return NapiGetUndefined(env);
 }
 

@@ -927,25 +927,7 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
         TLOGE(WmsLogTag::WMS_LIFE, "UpdateProperty failed with errCode:%{public}d", static_cast<int32_t>(res));
         return res;
     }
-
-    /*
-     * main window no need to notify host, since host knows hide first
-     * main window notify host temporarily, since host background may failed
-     * need to SetActive(false) for host session before background
-     */
-
-    if (WindowHelper::IsMainWindow(type)) {
-        res = static_cast<WMError>(SetActive(false));
-        if (res != WMError::WM_OK) {
-            return res;
-        }
-        res = static_cast<WMError>(hostSession_->Background(true));
-    } else if (WindowHelper::IsSubWindow(type) || WindowHelper::IsSystemWindow(type)) {
-        res = static_cast<WMError>(hostSession_->Hide());
-    } else {
-        res = WMError::WM_ERROR_INVALID_WINDOW;
-    }
-
+    res = WindowHide(type);
     if (res == WMError::WM_OK) {
         // update sub window state if this is main window
         UpdateSubWindowState(type);
@@ -961,6 +943,28 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
     escKeyEventTriggered_ = false;
     TLOGI(WmsLogTag::WMS_LIFE, "Window hide success [id:%{public}d, type: %{public}d",
         property_->GetPersistentId(), type);
+    return res;
+}
+
+WMError WindowSceneSessionImpl::WindowHide(const WindowType& type)
+{
+    /*
+     * main window no need to notify host, since host knows hide first
+     * main window notify host temporarily, since host background may failed
+     * need to SetActive(false) for host session before background
+     */
+    WMError res;
+    if (WindowHelper::IsMainWindow(type)) {
+        res = static_cast<WMError>(SetActive(false));
+        if (res != WMError::WM_OK) {
+            return res;
+        }
+        res = static_cast<WMError>(hostSession_->Background(true));
+    } else if (WindowHelper::IsSubWindow(type) || WindowHelper::IsSystemWindow(type)) {
+        res = static_cast<WMError>(hostSession_->Hide());
+    } else {
+        res = WMError::WM_ERROR_INVALID_WINDOW;
+    }
     return res;
 }
 

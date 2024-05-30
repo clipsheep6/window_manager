@@ -43,6 +43,8 @@ public:
     static napi_value RequestSceneSessionActivation(napi_env env, napi_callback_info info);
     static napi_value RequestSceneSessionBackground(napi_env env, napi_callback_info info);
     static napi_value RequestSceneSessionDestruction(napi_env env, napi_callback_info info);
+    static napi_value RequestSceneSessionAbnormal(sptr<SceneSession>& sceneSession,
+        napi_env env, WSErrorCode errorCode);
     static napi_value NotifyForegroundInteractiveStatus(napi_env env, napi_callback_info info);
     static napi_value IsSceneSessionValid(napi_env env, napi_callback_info info);
     static napi_value RequestSceneSessionByCall(napi_env env, napi_callback_info info);
