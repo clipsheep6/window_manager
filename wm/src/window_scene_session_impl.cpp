@@ -582,17 +582,11 @@ void WindowSceneSessionImpl::ConsumePointerEvent(const std::shared_ptr<MMI::Poin
 bool WindowSceneSessionImpl::PreNotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
     bool ret = false;
-<<<<<<< HEAD
-    std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
-    if (uiContent != nullptr) {
-        ret = uiContent->ProcessKeyEvent(keyEvent, true);
-=======
     {
         std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
         if (uiContent != nullptr) {
             ret = uiContent->ProcessKeyEvent(keyEvent, true);
         }
->>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
     }
     RefreshNoInteractionTimeoutMonitor();
     return ret;
@@ -2248,19 +2242,12 @@ uint32_t WindowSceneSessionImpl::GetWindowFlags() const
 
 void WindowSceneSessionImpl::UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
-<<<<<<< HEAD
-    std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
-    if (uiContent != nullptr) {
-        WLOGFD("notify ace winId:%{public}u", GetWindowId());
-        uiContent->UpdateConfiguration(configuration);
-=======
     {
         std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
         if (uiContent != nullptr) {
             WLOGFD("notify ace winId:%{public}u", GetWindowId());
             uiContent->UpdateConfiguration(configuration);
         }
->>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
     }
     if (subWindowSessionMap_.count(GetPersistentId()) == 0) {
         return;
@@ -2851,17 +2838,11 @@ void WindowSceneSessionImpl::DumpSessionElementInfo(const std::vector<std::strin
         return;
     }
     WLOGFD("ArkUI:DumpInfo");
-<<<<<<< HEAD
-    std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
-    if (uiContent != nullptr) {
-        uiContent->DumpInfo(params, info);
-=======
     {
         std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
         if (uiContent != nullptr) {
             uiContent->DumpInfo(params, info);
         }
->>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
     }
     for (auto iter = info.begin(); iter != info.end();) {
         if ((*iter).size() == 0) {
