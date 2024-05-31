@@ -30,6 +30,7 @@ const std::string SESSION_STATE_CHANGE_CB = "sessionStateChange";
 const std::string BUFFER_AVAILABLE_CHANGE_CB = "bufferAvailableChange";
 const std::string SESSION_EVENT_CB = "sessionEvent";
 const std::string SESSION_RECT_CHANGE_CB = "sessionRectChange";
+const std::string SESSION_CONTENT_STATUS_CHANGE_CB = "sessionContentStatusChange";
 const std::string CREATE_SUB_SESSION_CB = "createSpecificSession";
 const std::string BIND_DIALOG_TARGET_CB = "bindDialogTarget";
 const std::string RAISE_TO_TOP_CB = "raiseToTop";
@@ -195,6 +196,7 @@ void JsSceneSession::InitListenerFuncs()
         { BUFFER_AVAILABLE_CHANGE_CB,            &JsSceneSession::ProcessBufferAvailableChangeRegister},
         { SESSION_EVENT_CB,                      &JsSceneSession::ProcessSessionEventRegister },
         { SESSION_RECT_CHANGE_CB,                &JsSceneSession::ProcessSessionRectChangeRegister },
+        { SESSION_CONTENT_STATUS_CHANGE_CB,      &JsSceneSession::ProcessSessionContentStatusChangeRegister },
         { CREATE_SUB_SESSION_CB,                 &JsSceneSession::ProcessCreateSubSessionRegister },
         { BIND_DIALOG_TARGET_CB,                 &JsSceneSession::ProcessBindDialogTargetRegister },
         { RAISE_TO_TOP_CB,                       &JsSceneSession::ProcessRaiseToTopRegister },
@@ -623,7 +625,7 @@ void JsSceneSession::ProcessBindDialogTargetRegister()
 
 void JsSceneSession::ProcessSessionRectChangeRegister()
 {
-    NotifySessionRectChangeFunc func = [this](const WSRect& rect, const SizeChangeReason& reason) {
+    NotifySessionRectChangeFunc func = [this](const std::string& cbType, int32_t status) {
         this->OnSessionRectChange(rect, reason);
     };
     auto session = weakSession_.promote();
@@ -633,6 +635,20 @@ void JsSceneSession::ProcessSessionRectChangeRegister()
     }
     session->SetSessionRectChangeCallback(func);
     WLOGFD("ProcessSessionRectChangeRegister success");
+}
+
+void JsSceneSession::ProcessSessionContentStatusChangeRegister()
+{
+    NotifySessionContentStatusFunc func = [this](const std:string& cbType, const int32_t& status) {
+        this->OnSessionRectChange(rect, reason);
+    };
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        WLOGFE("session is nullptr");
+        return;
+    }
+    session->SetSessionContentStatusChangeCallback(func);
+    WLOGFD("ProcessSessionContentStatusChangeRegister success");
 }
 
 void JsSceneSession::ProcessRaiseToTopRegister()
@@ -1576,6 +1592,8 @@ void JsSceneSession::OnSessionRectChange(const WSRect& rect, const SizeChangeRea
         + "], [" + std::to_string(rect.width_) + ", " + std::to_string(rect.height_);
     taskScheduler_->PostMainThreadTask(task, rectInfo);
 }
+
+// TODO
 
 void JsSceneSession::OnRaiseToTop()
 {

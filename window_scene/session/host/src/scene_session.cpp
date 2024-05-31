@@ -757,6 +757,29 @@ void SceneSession::SetSessionRectChangeCallback(const NotifySessionRectChangeFun
     PostTask(task, "SetSessionRectChangeCallback");
 }
 
+void SceneSession::SetSessionContentStatusChangeCallback(const NotifySessionContentStatusFunc& func)
+{
+    auto task = [weakThis = wptr(this), func]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGFE("session is null");
+            return WSError::WS_ERROR_DESTROYED_OBJECT;
+        }
+        session->sessionContentStatusChangeFunc_ = func;
+        if (session->sessionContentStatusChangeFunc_ && session->GetWindowType() != WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+            // TODO
+            auto reason = SizeChangeReason::UNDEFINED;
+            auto rect = session->GetSessionRequestRect();
+            if (rect.width_ == 0 && rect.height_ == 0) {
+                reason = SizeChangeReason::MOVE;
+            }
+            session->sessionRectChangeFunc_(session->GetSessionRequestRect(), reason);
+        }
+        return WSError::WS_OK;
+    };
+    PostTask(task, "SetSessionContentStatusChangeCallback");
+}
+
 void SceneSession::UpdateSessionRectInner(const WSRect& rect, const SizeChangeReason& reason)
 {
     auto newWinRect = winRect_;
@@ -1544,6 +1567,23 @@ void SceneSession::NotifySessionRectChange(const WSRect& rect, const SizeChangeR
     };
     PostTask(task, "NotifySessionRectChange" + GetRectInfo(rect));
 }
+
+void SceneSession::NotifySessionContentStatusChange(const std::string& cbType, int32_t status)
+{
+    auto task = [weakThis = wptr(this), cbType, status]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGFE("session is null");
+            return;
+        }
+        if (session->sessionContentStatusChangeFunc_) {
+            HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SceneSession::NotifySessionRectChange");
+            session->sessionContentStatusChangeFunc_(cbType, status);
+        }
+    };
+    PostTask(task, "NotifySessionContentStatusChange");
+}
+
 
 bool SceneSession::IsDecorEnable() const
 {
@@ -3049,6 +3089,24 @@ WSError SceneSession::UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
         return WSError::WS_OK;
     };
     PostTask(task, "UpdatePiPRect");
+    return WSError::WS_OK;
+}
+
+WSError SceneSession::UpdateContentStatus(const std::string& cbType, int32_t status)
+{
+    if (!WindowHelper::IsPipWindow(GetWindowType())) {
+        return WSError::WS_DO_NOTHING;
+    }
+    auto task = [weakThis = wptr(this), cbType, status]() {
+        auto session = weakThis.promote();
+        if (!session || session->isTerminating) {
+            TLOGE(WmsLogTag::WMS_PIP, "SceneSession::UpdateContentStatus session is null or is terminating");
+            return WSError::WS_ERROR_INVALID_OPERATION;
+        }
+        session->NotifySessionContentStatusChange(cbType, status);
+        return WSError::WS_OK;
+    };
+    PostTask(task, "UpdateContentStatus");
     return WSError::WS_OK;
 }
 

@@ -2880,6 +2880,15 @@ void WindowSessionImpl::UpdatePiPRect(const Rect& rect, WindowSizeChangeReason r
     hostSession_->UpdatePiPRect(rect, wsReason);
 }
 
+void WindowSessionImpl::UpdateContentStatus(const std::string& cbType, int32_t status)
+{
+    if (IsWindowSessionInvalid()) {
+        WLOGFE("HostSession is invalid");
+        return;
+    }
+    hostSession_->UpdateContentStatus(rect, wsReason);
+}
+
 void WindowSessionImpl::NotifyWindowStatusChange(WindowMode mode)
 {
     WLOGFD("NotifyWindowStatusChange");
