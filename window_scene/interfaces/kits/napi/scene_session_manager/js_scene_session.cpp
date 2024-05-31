@@ -625,7 +625,7 @@ void JsSceneSession::ProcessBindDialogTargetRegister()
 
 void JsSceneSession::ProcessSessionRectChangeRegister()
 {
-    NotifySessionRectChangeFunc func = [this](const std::string& cbType, int32_t status) {
+    NotifySessionRectChangeFunc func = [this](const WSRect& rect, const SizeChangeReason& reason) {
         this->OnSessionRectChange(rect, reason);
     };
     auto session = weakSession_.promote();
