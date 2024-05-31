@@ -64,6 +64,7 @@ public:
     void SetAutoStartEnabled(bool enable);
     void IsAutoStartEnabled(bool& enable) const;
     void UpdateContentSize(int32_t width, int32_t height);
+    void UpdateContentStatus(std::string cbType, int32_t status);
     bool IsContentSizeChanged(float width, float height, float posX, float posY);
     void DoActionEvent(const std::string& actionName, int32_t status);
     void RestorePictureInPictureWindow();

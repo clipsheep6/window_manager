@@ -202,6 +202,7 @@ public:
     WSRect GetSessionRect() const;
     void SetSessionRequestRect(const WSRect& rect);
     WSRect GetSessionRequestRect() const;
+    WSRect GetSessionContentStatus() const;
     std::string GetWindowName() const;
 
     virtual WSError SetActive(bool active);

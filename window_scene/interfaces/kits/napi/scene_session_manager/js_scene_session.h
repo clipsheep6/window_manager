@@ -143,6 +143,7 @@ private:
     void OnCreateSubSession(const sptr<SceneSession>& sceneSession);
     void OnBindDialogTarget(const sptr<SceneSession>& sceneSession);
     void OnSessionRectChange(const WSRect& rect, const SizeChangeReason& reason = SizeChangeReason::UNDEFINED);
+    void OnSessionContentStatusChange(const std:string& cbType, const int32_t& status)
     void OnRaiseToTop();
     void OnRaiseToTopForPointDown();
     void OnRaiseAboveTarget(int32_t subWindowId);

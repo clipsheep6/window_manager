@@ -127,6 +127,8 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
         &SessionStub::HandleNotifyPiPWindowPrepareClose),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_PIP_RECT),
         &SessionStub::HandleUpdatePiPRect),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_PIP_CONTENT_STATUS),
+        &SessionStub::HandleUpdateContentStatus),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_LAYOUT_FULL_SCREEN_CHANGE),
         &SessionStub::HandleLayoutFullScreenChange),
 };
@@ -621,6 +623,16 @@ int SessionStub::HandleUpdatePiPRect(MessageParcel& data, MessageParcel& reply)
     Rect rect = {data.ReadInt32(), data.ReadInt32(), data.ReadUint32(), data.ReadUint32()};
     auto reason = static_cast<SizeChangeReason>(data.ReadInt32());
     WSError errCode = UpdatePiPRect(rect, reason);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleUpdateContentStatus(MessageParcel& data, MessageParcel& reply)
+{
+    TLOGD(WmsLogTag::WMS_PIP, "HandleUpdateContentStatus!");
+    std:string cbType =  {data.ReadString()};
+    int32_t status =  {data.ReadInt32()};
+    WSError errCode = UpdateContentStatus(cbType, status);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
