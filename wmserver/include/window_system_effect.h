@@ -63,6 +63,8 @@ private:
         constexpr float BlurSigmaScale = 0.57735f;
         return radius > 0.0f ? BlurSigmaScale * radius + SK_ScalarHalf : 0.0f;
     }
+    static void SetSurfaceNode(const sptr<WindowNode>& node, std::shared_ptr<RSSurfaceNode> surfaceNode,
+        WindowShadowParameters& shadow, uint32_t colorValue);
     static bool IsAppMainOrSubOrFloatingWindow(const sptr<WindowNode>& node);
     static AppWindowEffectConfig windowSystemEffectConfig_;
     static wptr<WindowRoot> windowRoot_;

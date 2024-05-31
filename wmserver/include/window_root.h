@@ -136,6 +136,7 @@ private:
     std::map<DisplayId, Rect> GetAllDisplayRectsByDisplayInfo(
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap);
     void MoveNotShowingWindowToDefaultDisplay(DisplayId defaultDisplayId, DisplayId displayId);
+    void AddWindowNodeNotifyForeground(sptr<WindowNode>& node, sptr<WindowNodeContainer>& container);
     WMError PostProcessAddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode,
         sptr<WindowNodeContainer>& container);
     std::vector<std::pair<uint64_t, WindowVisibilityState>> GetWindowVisibilityChangeInfo(

@@ -1239,6 +1239,41 @@ WMError WindowManagerService::MinimizeAllAppWindows(DisplayId displayId)
     return WMError::WM_OK;
 }
 
+WMError WindowManagerService::CheckPropertyInvalid(sptr<WindowProperty>& windowProperty, PropertyChangeAction action)
+{
+    if (windowProperty == nullptr) {
+        WLOGFE("windowProperty is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    if ((windowProperty->GetWindowFlags() == static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_FORBID_SPLIT_MOVE) ||
+        action == PropertyChangeAction::ACTION_UPDATE_TRANSFORM_PROPERTY) &&
+        !Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("SetForbidSplitMove or SetShowWhenLocked or SetTranform or SetTurnScreenOn permission denied!");
+        return WMError::WM_ERROR_INVALID_PERMISSION;
+    }
+
+    WindowType type = windowProperty->GetWindowType();
+    if (type == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT ||
+        type == WindowType::WINDOW_TYPE_INPUT_METHOD_STATUS_BAR) {
+        if (!Permission::IsStartByInputMethod()) {
+            WLOGI("Keyboard only hide by input method it'self, operation rejected.");
+            return WMError::WM_ERROR_INVALID_OPERATION;
+        }
+    } else if (!accessTokenIdMaps_.isExist(windowProperty->GetWindowId(), IPCSkeleton::GetCallingTokenID()) &&
+        !Permission::IsSystemCalling()) {
+        WLOGI("Operation rejected");
+        return WMError::WM_ERROR_INVALID_OPERATION;
+    }
+
+    if (action == PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE &&
+        !Permission::CheckCallingPermission("ohos.permission.PRIVACY_WINDOW")) {
+        WLOGFE("Set privacy mode permission denied!");
+        return WMError::WM_ERROR_INVALID_PERMISSION;
+    }
+    return WMError::WM_OK;
+}
+
 WMError WindowManagerService::ToggleShownStateForAllAppWindows()
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
@@ -1278,35 +1313,9 @@ WMError WindowManagerService::SetWindowLayoutMode(WindowLayoutMode mode)
 WMError WindowManagerService::UpdateProperty(sptr<WindowProperty>& windowProperty, PropertyChangeAction action,
     bool isAsyncTask)
 {
-    if (windowProperty == nullptr) {
-        WLOGFE("windowProperty is nullptr");
-        return WMError::WM_ERROR_NULLPTR;
-    }
-
-    if ((windowProperty->GetWindowFlags() == static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_FORBID_SPLIT_MOVE) ||
-        action == PropertyChangeAction::ACTION_UPDATE_TRANSFORM_PROPERTY) &&
-        !Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("SetForbidSplitMove or SetShowWhenLocked or SetTranform or SetTurnScreenOn permission denied!");
-        return WMError::WM_ERROR_INVALID_PERMISSION;
-    }
-
-    WindowType type = windowProperty->GetWindowType();
-    if (type == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT ||
-        type == WindowType::WINDOW_TYPE_INPUT_METHOD_STATUS_BAR) {
-        if (!Permission::IsStartByInputMethod()) {
-            WLOGI("Keyboard only hide by input method it'self, operation rejected.");
-            return WMError::WM_ERROR_INVALID_OPERATION;
-        }
-    } else if (!accessTokenIdMaps_.isExist(windowProperty->GetWindowId(), IPCSkeleton::GetCallingTokenID()) &&
-        !Permission::IsSystemCalling()) {
-        WLOGI("Operation rejected");
-        return WMError::WM_ERROR_INVALID_OPERATION;
-    }
-
-    if (action == PropertyChangeAction::ACTION_UPDATE_PRIVACY_MODE && 
-        !Permission::CheckCallingPermission("ohos.permission.PRIVACY_WINDOW")) {
-        WLOGFE("Set privacy mode permission denied!");
-        return WMError::WM_ERROR_INVALID_PERMISSION;
+    WMError wmInvalidError = CheckPropertyInvalid(windowProperty, action);
+    if (wmInvalidError != WMError::WM_OK) {
+        return wmInvalidError;
     }
 
     windowProperty->isSystemCalling_ = Permission::IsSystemCalling();
