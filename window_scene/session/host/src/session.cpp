@@ -2835,4 +2835,117 @@ std::shared_ptr<Media::PixelMap> Session::GetSnapshotPixelMap(const float oriSca
     }
     return nullptr;
 }
+
+void Session::DumpSystemConfigList(std::ostringstream& oss)
+{
+    oss << "SystemConfig { SystemDecor DecorSupportMode Stretchable DefaultMode KeyboardAnimationConfig[]"
+        << std::endl;
+    oss << "FloatingWindowSizeLimit[] BackgroundSwitch MultiWindowEnable MultiWindowSupport MultiWindowConfig[]"
+        << std::endl;
+    oss << "}"
+        << std::endl << std::endl;
+}
+
+void Session::DumpSystemConfig(std::ostringstream& oss)
+{
+    oss << "{ " << systemConfig_.isSystemDecorEnable_ << "|" << systemConfig_.decorModeSupportInfo_ << "|"
+        << systemConfig_.isStretchable_ << "|" << static_cast<uint32_t>(systemConfig_.defaultWindowMode_) << "|"
+        << "[" << systemConfig_.keyboardAnimationConfig_.curveType_ << " "
+        << systemConfig_.keyboardAnimationConfig_.durationIn_ << " "
+        << systemConfig_.keyboardAnimationConfig_.durationOut_ << "]|"
+        << "[" << systemConfig_.maxFloatingWindowSize_ << " " << systemConfig_.miniWidthOfMainWindow_ << " "
+        << systemConfig_.miniHeightOfMainWindow_ << " " << systemConfig_.miniWidthOfSubWindow_ << " "
+        << systemConfig_.miniHeightOfSubWindow_ << "]|" << systemConfig_.backgroundswitch << "|"
+        << systemConfig_.freeMultiWindowEnable_ << "|" << systemConfig_.freeMultiWindowSupport_ << "|"
+        << "[" << systemConfig_.freeMultiWindowConfig_.isSystemDecorEnable_ << " "
+        << systemConfig_.freeMultiWindowConfig_.decorModeSupportInfo_ << " "
+        << static_cast<uint32_t>(systemConfig_.freeMultiWindowConfig_.defaultWindowMode_) << " "
+        << systemConfig_.freeMultiWindowConfig_.maxMainFloatingWindowNumber_ << "]" << std::endl;
+    oss << "}" << std::endl;
+}
+
+void Session::DumpSessionInfoList(std::ostringstream& oss)
+{
+    oss << "SessionInfo { Bundle Module Ability AppIndex IsSystem Type ScreenId PersistentRecover"
+        << std::endl;
+    oss << "ResultCode RequestCode ErrorCode ErrorReason Id CallerId CallerBundle CallerAbility CallState CallTokenId"
+        << std::endl;
+    oss << "reuse Mode StartMethod LockedState Time ContinueState AbilityId AncoSceneState ClearSession"
+        << std::endl;
+    oss << "SessionAffinity CollaboratorType SessionState RequestOrientation ContinueSessionId"
+        << std::endl;
+    oss << "Rotable SystemInput AsyncModalBinding SetPointerAreas CastSession WindowInputType CalledRightlyByCallerId"
+        << std::endl;
+    oss << "}"
+        << std::endl << std::endl;
+}
+
+void Session::DumpSessionInfo(std::ostringstream& oss)
+{
+    oss << "{ " << sessionInfo_.bundleName_ << "|" << sessionInfo_.moduleName_ << "|"
+        << sessionInfo_.abilityName_ << "|" << sessionInfo_.appIndex_ << "|"
+        << sessionInfo_.isSystem_ << "|" << sessionInfo_.windowType_ << "|"
+        << sessionInfo_.screenId_ << "|" << sessionInfo_.isPersistentRecover_ << "|"
+        << sessionInfo_.resultCode << "|" << sessionInfo_.requestCode << "|" << sessionInfo_.errorCode << std::endl;
+    oss << sessionInfo_.errorReason << "|" << sessionInfo_.persistentId_ << "|"
+        << sessionInfo_.callerPersistentId_ << "|" << sessionInfo_.callerBundleName_ << "|"
+        << sessionInfo_.callerAbilityName_ << "|" << sessionInfo_.callState_ << "|"
+        << sessionInfo_.callingTokenId_ << "|"
+        << sessionInfo_.reuse << "|" << sessionInfo_.windowMode << "|"
+        << static_cast<uint32_t>(sessionInfo_.startMethod) << "|" << sessionInfo_.lockedState << "|"
+        << sessionInfo_.time << "|" << sessionInfo_.continueState << "|"
+        << sessionInfo_.uiAbilityId_ << "|" << sessionInfo_.ancoSceneState << "|"
+        << sessionInfo_.isClearSession << "|"
+        << sessionInfo_.sessionAffinity << "|" << sessionInfo_.collaboratorType_ << "|"
+        << static_cast<uint32_t>(sessionInfo_.sessionState_) << "|" << sessionInfo_.requestOrientation_ << "|"
+        << sessionInfo_.continueSessionId_ << "|"
+        << sessionInfo_.isRotable_ << "|" << sessionInfo_.isSystemInput_ << "|"
+        << sessionInfo_.isAsyncModalBinding_ << "|" << sessionInfo_.isSetPointerAreas_ << "|"
+        << sessionInfo_.isCastSession_ << "|" << sessionInfo_.windowInputType_ << "|"
+        << sessionInfo_.isCalledRightlyByCallerId_ << std::endl;
+    oss << "}" << std::endl;
+}
+
+void Session::DumpSessionParamList(std::ostringstream& oss)
+{
+    oss << "Id State Active SystemActive WinRect[] Bounds[] ratation OffsetX OffsetY Visible Reason"
+        << std::endl;
+    oss << "NeedSnapshot SnapshotScale ZOrder NodeId Focused BlockingFocus AspectRatio Terminating FloatingScale Dirty"
+        << std::endl;
+    oss << "ScaleX ScaleY PivotX PivotY KeepKeyboard RectChangeListener FocusedOnShow ShowRecent BufferAvailable"
+        << std::endl;
+    oss << "PreRect[] Pid Uid Index RSVisible VisibilityState NeedNotify RSDrawing vpr"
+        << std::endl;
+    oss << "CallingBundleName ForceTouchable SystemTouchable InteractiveStatus Attach"
+        << std::endl << std::endl;
+    DumpSystemConfigList(oss);
+    DumpSessionInfoList(oss);
+    WindowSessionProperty::DumpPropertyParamList(oss);
+}
+
+void Session::DumpSessionParam(std::ostringstream& oss)
+{
+    SessionState state = state_;
+    oss << persistentId_ << "|" << static_cast<uint32_t>(state) << "|"
+        << isActive_ << "|" << isSystemActive_ << "|"
+        << "[" << winRect_.posX_ << " " << winRect_.posY_ << " " << winRect_.width_ << " " << winRect_.height_ << "]|"
+        << "[" << bounds_.posX_ << " " << bounds_.posY_ << " " << bounds_.width_ << " " << bounds_.height_ << "]|"
+        << static_cast<uint32_t>(rotation_) << "|" << offsetX_ << "|" << offsetY_ << "|" << isVisible_ << "|"
+        << static_cast<uint32_t>(reason_) << "|"
+        << needSnapshot_ << "|" << snapshotScale_ << "|" << zOrder_ << "|" << uiNodeId_ << "|" << isFocused_ << "|"
+        << blockingFocus_ << "|" << aspectRatio_ << "|" << isTerminating << "|"
+        << floatingScale_ << "|" << isDirty_ << "|"
+        << scaleX_ << "|" << scaleY_ << "|" << pivotX_ << "|" << pivotY_ << "|" << scbKeepKeyboardFlag_ << "|"
+        << rectChangeListenerRegistered_ << "|" << focusedOnShow_ << "|"
+        << showRecent_ << "|" << bufferAvailable_ << "|"
+        << "[" << preRect_.posX_ << " " << preRect_.posY_ << " " << preRect_.width_ << " " << preRect_.height_ << "]|"
+        << callingPid_ << "|" << callingUid_ << "|" << appIndex_ << "|" << isRSVisible_<< "|"
+        << static_cast<uint32_t>(visibilityState_) << "|" << needNotify_ << "|"
+        << isRSDrawing_ << "|" << vpr_ << "|"
+        << callingBundleName_ << "|" << forceTouchable_ << "|" << systemTouchable_ << "|"
+        << foregroundInteractiveStatus_ << "|" << isAttach_ << std::endl;
+    DumpSystemConfig(oss);
+    DumpSessionInfo(oss);
+    property_->DumpPropertyParam(oss);
+}
 } // namespace OHOS::Rosen
