@@ -48,17 +48,17 @@ public:
     void OnBundleStateChanged(const uint8_t installType,
         const int32_t resultCode, const std::string& resultMsg, const std::string& bundleName) override {}
 
-    void OnBundleAdded(const std::string& bundleName, const int userId) override
+    void OnBundleAdded(const std::string& bundleName, const int userId, const int32_t appIndex) override
     {
         rootScene_->OnBundleUpdated(bundleName);
     }
 
-    void OnBundleUpdated(const std::string& bundleName, const int userId) override
+    void OnBundleUpdated(const std::string& bundleName, const int userId, const int32_t appIndex) override
     {
         rootScene_->OnBundleUpdated(bundleName);
     }
 
-    void OnBundleRemoved(const std::string& bundleName, const int userId) override {}
+    void OnBundleRemoved(const std::string& bundleName, const int userId, const int32_t appIndex) override {}
 
 private:
     RootScene* rootScene_;
