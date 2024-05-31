@@ -34,6 +34,7 @@ public:
     static napi_value StopPictureInPicture(napi_env env, napi_callback_info info);
     static napi_value SetAutoStartEnabled(napi_env env, napi_callback_info info);
     static napi_value UpdateContentSize(napi_env env, napi_callback_info info);
+    static napi_value UpdateContentStatus(napi_env env, napi_callback_info info);
     static napi_value RegisterCallback(napi_env env, napi_callback_info info);
     static napi_value UnregisterCallback(napi_env env, napi_callback_info info);
 private:
@@ -41,6 +42,7 @@ private:
     napi_value OnStopPictureInPicture(napi_env env, napi_callback_info info);
     napi_value OnSetAutoStartEnabled(napi_env env, napi_callback_info info);
     napi_value OnUpdateContentSize(napi_env env, napi_callback_info info);
+    napi_value OnUpdateContentStatus(napi_env env, napi_callback_info info);
     napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
     napi_value OnUnregisterCallback(napi_env env, napi_callback_info info);
 

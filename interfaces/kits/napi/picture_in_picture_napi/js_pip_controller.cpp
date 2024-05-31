@@ -236,12 +236,12 @@ napi_value JsPipController::OnUpdateContentSize(napi_env env, napi_callback_info
 napi_value JsPipController::UpdateContentStatus(napi_env env, napi_callback_info info)
 {
     JsPipController* me = CheckParamsAndGetThis<JsPipController>(env, info);
-    return (me != nullptr) ? me->OnUpdateContentSize(env, info) : nullptr;
+    return (me != nullptr) ? me->OnUpdateContentStatus(env, info) : nullptr;
 }
 
 napi_value JsPipController::OnUpdateContentStatus(napi_env env, napi_callback_info info)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "OnUpdateContentSize is called");
+    TLOGI(WmsLogTag::WMS_PIP, "OnUpdateContentStatus is called");
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
