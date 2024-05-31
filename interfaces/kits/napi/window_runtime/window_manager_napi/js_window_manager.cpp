@@ -833,7 +833,6 @@ napi_value JsWindowManager::OnUnregisterWindowManagerCallback(napi_env env, napi
 
 static napi_value GetTopWindowTask(void* contextPtr, napi_env env, napi_value callback, bool newApi)
 {
-    
     std::shared_ptr<TopWindowInfoList> lists = std::make_shared<TopWindowInfoList>();
     bool isOldApi = GetAPI7Ability(env, lists->ability);
     NapiAsyncTask::ExecuteCallback execute = [lists, isOldApi, newApi, contextPtr]() {
@@ -874,7 +873,7 @@ static napi_value GetTopWindowTask(void* contextPtr, napi_env env, napi_value ca
 }
 
 bool JsWindowManager::IsCompleteCallbackError(std::shared_ptr<TopWindowInfoList> lists,
-        napi_env env, NapiAsyncTask& task, bool newApi)
+    napi_env env, NapiAsyncTask& task, bool newApi)
 {
     if (lists == nullptr) {
         if (newApi) {

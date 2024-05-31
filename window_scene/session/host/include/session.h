@@ -550,8 +550,8 @@ private:
 
     template<typename T>
     bool RegisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener);
-    void RecordTransferPointEventLog(int32_t pointAction, const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
-    WSError HandleInvalidPermission(int32_t pointAction);
+    void RecordTransferPointEventLog(int32_t pointerAction, const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
+    WSError HandleInvalidPermission(int32_t pointerAction);
     template<typename T>
     bool UnregisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener);
     bool IsStateMatch(bool isAttach) const;

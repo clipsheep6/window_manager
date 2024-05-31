@@ -401,7 +401,7 @@ private:
     void NotifySessionChangeByActionNotifyManager(const sptr<SceneSession>& sceneSession,
         const sptr<WindowSessionProperty>& property, WSPropertyChangeAction action);
     SessionInfo MakeSessionInfo(const sptr<AAFwk::SessionInfo> abilitySessionInfo, int32_t persistentId);
-    WSError CheckParamValid(const sptr<SceneSession>& sceneSession,float ratio, float vpr);
+    WSError CheckParamValid(const sptr<SceneSession>& sceneSession, float ratio, float vpr);
 
     NotifySessionRectChangeFunc sessionRectChangeFunc_;
     static wptr<SceneSession> enterSession_;

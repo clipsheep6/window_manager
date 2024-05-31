@@ -533,7 +533,7 @@ WSError SceneSession::SetAspectRatio(float ratio)
     return PostSyncTask(task, "SetAspectRatio");
 }
 
-WSError ceneSession::CheckParamValid(const sptr<SceneSession>& sceneSession, float ratio, float vpr)
+WSError SceneSession::CheckParamValid(const sptr<SceneSession>& session, float ratio, float vpr)
 {
     if (!MathHelper::NearZero(ratio)) {
         auto limits = session->GetSessionProperty()->GetWindowLimits();

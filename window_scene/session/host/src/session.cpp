@@ -1644,7 +1644,7 @@ WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& 
     }
     auto pointerAction = pointerEvent->GetPointerAction();
     NotifyPointerEventToRs(pointerAction);
-    WSError res = HandleInvalidPermission(pointAction);
+    WSError res = HandleInvalidPermission(pointerAction);
     if (res != WSError::WS_OK) {
         return res;
     }
@@ -1672,11 +1672,11 @@ WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& 
     } else {
         pointerEvent->MarkProcessed();
     }
-    RecordTransferPointEventLog(pointAction, pointerEvent);
+    RecordTransferPointEventLog(pointerAction, pointerEvent);
     return WSError::WS_OK;
 }
 
-WSError Session::HandleInvalidPermission(int32_t pointAction)
+WSError Session::HandleInvalidPermission(int32_t pointerAction)
 {
     bool isPointDown = (pointerAction == MMI::PointerEvent::POINTER_ACTION_DOWN) ||
         (pointerAction == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN);
@@ -1701,10 +1701,10 @@ WSError Session::HandleInvalidPermission(int32_t pointAction)
             }
         }
     }
-     return WSError::WS_OK;
+    return WSError::WS_OK;
 }
 
-void Session::RecordTransferPointEventLog(int32_t pointAction,
+void Session::RecordTransferPointEventLog(int32_t pointerAction,
     const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
     if (pointerAction == MMI::PointerEvent::POINTER_ACTION_MOVE ||

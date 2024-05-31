@@ -218,7 +218,7 @@ WSError SessionProxy::Connect(const sptr<ISessionStage>& sessionStage, const spt
 }
 
 WSError SessionProxy::HandleConnectResult(MessageParcel& reply, SystemSessionConfig& systemConfig,
-        sptr<WindowSessionProperty> property)
+    sptr<WindowSessionProperty> property)
 {
     sptr<SystemSessionConfig> config = reply.ReadParcelable<SystemSessionConfig>();
     if (config) {

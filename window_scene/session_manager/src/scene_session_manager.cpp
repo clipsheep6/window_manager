@@ -1344,6 +1344,19 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
             TLOGE(WmsLogTag::WMS_LIFE, "sceneSession is nullptr!");
             return sceneSession;
         }
+        auto callerSession = GetSceneSession(sessionInfo.callerPersistentId_);
+        DisplayId curDisplayId = DISPLAY_ID_INVALID;
+        if (sessionInfo.screenId_ != SCREEN_ID_INVALID) {
+            curDisplayId = sessionInfo.screenId_;
+        } else if (callerSession && callerSession->GetSessionProperty()) {
+            curDisplayId = callerSession->GetSessionProperty()->GetDisplayId();
+        }
+        if (sceneSession->GetSessionProperty()) {
+            sceneSession->GetSessionProperty()->SetDisplayId(curDisplayId);
+            sceneSession->SetScreenId(curDisplayId);
+            TLOGD(WmsLogTag::WMS_LIFE, "RequestSceneSession, synchronous screenId with displayid %{public}" PRIu64"",
+                curDisplayId);
+        }
         RequestSceneSessionInner(sessionInfo, sceneSession, property);
         return sceneSession;
     };
@@ -1353,19 +1366,6 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
 void SceneSessionManager::RequestSceneSessionInner(const SessionInfo& sessionInfo,
     sptr<SceneSession> sceneSession, sptr<WindowSessionProperty> property)
 {
-    auto callerSession = GetSceneSession(sessionInfo.callerPersistentId_);
-    DisplayId curDisplayId = DISPLAY_ID_INVALID;
-    if (sessionInfo.screenId_ != SCREEN_ID_INVALID) {
-        curDisplayId = sessionInfo.screenId_;
-    } else if (callerSession && callerSession->GetSessionProperty()) {
-        curDisplayId = callerSession->GetSessionProperty()->GetDisplayId();
-    }
-    if (sceneSession->GetSessionProperty()) {
-        sceneSession->GetSessionProperty()->SetDisplayId(curDisplayId);
-        sceneSession->SetScreenId(curDisplayId);
-        TLOGD(WmsLogTag::WMS_LIFE, "RequestSceneSession, synchronous screenId with displayid %{public}" PRIu64"",
-            curDisplayId);
-    }
     sceneSession->SetEventHandler(taskScheduler_->GetEventHandler(), eventHandler_);
     auto isScreenLockedCallback = [this]() {
         return IsScreenLocked();
@@ -1678,7 +1678,7 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
     return WSError::WS_OK;
 }
 
-int32_t SceneSessionManager::InvokeStartUIAbilityBySCB(sptr<SceneSession>& sceneSession, bool isNewActive
+int32_t SceneSessionManager::InvokeStartUIAbilityBySCB(sptr<SceneSession>& scnSession, bool isNewActive,
         sptr<AAFwk::SessionInfo> scnSessionInfo, bool isColdStart)
 {
     auto persistentId = scnSession->GetPersistentId();
@@ -1734,7 +1734,7 @@ WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSessi
             TLOGE(WmsLogTag::WMS_MAIN, "session is nullptr");
             return WSError::WS_ERROR_NULLPTR;
         }
-        return HandleSceneSessionBackground(sceneSession, isDelegator, isToDesktop, isSaveSnapshot);
+        return HandleSceneSessionBackground(scnSession, isDelegator, isToDesktop, isSaveSnapshot);
     };
     std::string taskName = "RequestSceneSessionBackground:PID:" +
         (sceneSession != nullptr ? std::to_string(sceneSession->GetPersistentId()):"nullptr");

@@ -649,7 +649,7 @@ private:
     void DeleteStateDetectTask();
     WSError HandleSceneSessionBackground(const sptr<SceneSession>& sceneSession,
         const bool isDelegator, const bool isToDesktop, const bool isSaveSnapshot);
-    int32_t InvokeStartUIAbilityBySCB(sptr<SceneSession>& sceneSession, bool isNewActive
+    int32_t InvokeStartUIAbilityBySCB(sptr<SceneSession>& sceneSession, bool isNewActive,
         sptr<AAFwk::SessionInfo> scnSessionInfo, bool isColdStart);
     void RequestSceneSessionInner(const SessionInfo& sessionInfo,
         sptr<SceneSession> sceneSession, sptr<WindowSessionProperty> property);
