@@ -1413,7 +1413,7 @@ napi_value JsSceneSessionManager::OnRequestSceneSessionDestruction(napi_env env,
 }
 
 napi_value JsSceneSessionManager::RequestSceneSessionAbnormal(sptr<SceneSession>& sceneSession,
-    napi_env env, WSErrorCode errorCode)
+    napi_env env, WSErrorCode errCode)
 {
     if (sceneSession == nullptr) {
         TLOGE(WmsLogTag::WMS_LIFE, "[NAPI]sceneSession is nullptr");
