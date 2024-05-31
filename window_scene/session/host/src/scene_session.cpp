@@ -2414,7 +2414,7 @@ SessionInfo SceneSession::MakeSessionInfo(const sptr<AAFwk::SessionInfo> ability
     int32_t appCloneIndex = abilitySessionInfo->want.GetIntParam(APP_CLONE_INDEX, 0);
     info.appIndex_ = appCloneIndex == 0 ? abilitySessionInfo->want.GetIntParam(DLP_INDEX, 0) : appCloneIndex;
     info.persistentId_ = abilitySessionInfo->persistentId;
-    info.callerPersistentId_ = session->GetPersistentId();
+    info.callerPersistentId_ = persistentId;
     info.callerBundleName_ = abilitySessionInfo->want.GetStringParam(AAFwk::Want::PARAM_RESV_CALLER_BUNDLE_NAME);
     info.callerAbilityName_ = abilitySessionInfo->want.GetStringParam(AAFwk::Want::PARAM_RESV_CALLER_ABILITY_NAME);
     info.callState_ = static_cast<uint32_t>(abilitySessionInfo->state);

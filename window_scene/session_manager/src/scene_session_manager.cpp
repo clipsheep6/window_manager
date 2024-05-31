@@ -1679,7 +1679,7 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
 }
 
 int32_t SceneSessionManager::InvokeStartUIAbilityBySCB(sptr<SceneSession>& scnSession, bool isNewActive,
-        sptr<AAFwk::SessionInfo> scnSessionInfo, bool isColdStart)
+    sptr<AAFwk::SessionInfo> scnSessionInfo, bool isColdStart)
 {
     auto persistentId = scnSession->GetPersistentId();
     TLOGI(WmsLogTag::WMS_LIFE, "id %{public}d want-ability: %{public}s, bundle: %{public}s, "
@@ -1742,7 +1742,7 @@ WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSessi
     return WSError::WS_OK;
 }
 
-WSError SceneSessionManager::HandleSceneSessionBackground(const sptr<SceneSession>& sceneSession,
+WSError SceneSessionManager::HandleSceneSessionBackground(const sptr<SceneSession>& scnSession,
     const bool isDelegator, const bool isToDesktop, const bool isSaveSnapshot)
 {
     auto persistentId = scnSession->GetPersistentId();

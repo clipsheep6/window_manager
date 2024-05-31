@@ -1419,7 +1419,6 @@ napi_value JsSceneSessionManager::RequestSceneSessionAbnormal(sptr<SceneSession>
         TLOGE(WmsLogTag::WMS_LIFE, "[NAPI]sceneSession is nullptr");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_SYSTEM_ABNORMALLY),
             "sceneSession is nullptr"));
-        
     } else if (errCode == WSErrorCode::WS_ERROR_INVALID_PARAM) {
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
             "Input parameter is missing or invalid"));
