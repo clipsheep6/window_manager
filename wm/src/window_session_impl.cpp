@@ -58,6 +58,8 @@ namespace Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowSessionImpl"};
 constexpr int32_t ANIMATION_TIME = 400;
+constexpr int32_t FULL_CIRCLE_DEGREE = 360;
+constexpr int32_t ONE_FOURTH_FULL_CIRCLE_DEGREE = 90;
 }
 
 std::map<int32_t, std::vector<sptr<IWindowLifeCycle>>> WindowSessionImpl::lifecycleListeners_;
@@ -115,8 +117,13 @@ bool WindowSessionImpl::isUIExtensionAbilityProcess_ = false;
 #define CALL_UI_CONTENT(uiContentCb)                                           \
     do {                                                                       \
         std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();   \
+<<<<<<< HEAD
         if (uiContent != nullptr) {                                           \
             uiContent->uiContentCb();                                         \
+=======
+        if (uiContent != nullptr) {                                            \
+            uiContent->uiContentCb();                                          \
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
         }                                                                      \
     } while (0)
 
@@ -158,7 +165,9 @@ WindowSessionImpl::WindowSessionImpl(const sptr<WindowOption>& option)
 void WindowSessionImpl::MakeSubOrDialogWindowDragableAndMoveble()
 {
     auto isPC = windowSystemConfig_.uiType_ == "pc";
-    if (isPC && windowOption_ != nullptr) {
+    bool isFreeMutiWindowMode = windowSystemConfig_.freeMultiWindowSupport_ &&
+        windowSystemConfig_.freeMultiWindowEnable_;
+    if ((isPC || isFreeMutiWindowMode) && windowOption_ != nullptr) {
         if (WindowHelper::IsSubWindow(property_->GetWindowType())) {
             WLOGFD("create subwindow, title: %{public}s, decorEnable: %{public}d",
                 windowOption_->GetSubWindowTitle().c_str(), windowOption_->GetSubWindowDecorEnable());
@@ -564,6 +573,10 @@ void WindowSessionImpl::NotifyRotationAnimationEnd()
 {
     std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (uiContent == nullptr) {
+<<<<<<< HEAD
+=======
+        WLOGFW("uiContent is null!");
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
         return;
     }
     uiContent->NotifyRotationAnimationEnd();
@@ -678,20 +691,36 @@ void WindowSessionImpl::UpdateViewportConfig(const Rect& rect, WindowSizeChangeR
         return;
     }
     auto displayInfo = display->GetDisplayInfo();
+    auto rotation =  ONE_FOURTH_FULL_CIRCLE_DEGREE * static_cast<uint32_t>(displayInfo->GetRotation());
+    auto deviceRotation = static_cast<uint32_t>(displayInfo->GetDefaultDeviceRotationOffset());
+    uint32_t transformHint = (rotation + deviceRotation) % FULL_CIRCLE_DEGREE;
     float density = GetVirtualPixelRatio(displayInfo);
     int32_t orientation = static_cast<int32_t>(displayInfo->GetDisplayOrientation());
+    
     virtualPixelRatio_ = density;
-
+    TLOGI(WmsLogTag::WMS_LAYOUT, "[rotation, deviceRotation, transformHint]: [%{public}u, %{public}u, %{public}u]",
+        rotation, deviceRotation, transformHint);
     Ace::ViewportConfig config;
     config.SetSize(rect.width_, rect.height_);
     config.SetPosition(rect.posX_, rect.posY_);
     config.SetDensity(density);
     config.SetOrientation(orientation);
+<<<<<<< HEAD
 
     std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (uiContent == nullptr) {
         WLOGFW("uiContent is null!");
         return;
+=======
+    config.SetTransformHint(transformHint);
+    {
+        std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
+        if (uiContent == nullptr) {
+            WLOGFW("uiContent is null!");
+            return;
+        }
+        uiContent->UpdateViewportConfig(config, reason, rsTransaction);
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
     }
     uiContent->UpdateViewportConfig(config, reason, rsTransaction);
 
@@ -736,10 +765,12 @@ void WindowSessionImpl::UpdateTitleButtonVisibility()
         return;
     }
     auto isPC = windowSystemConfig_.uiType_ == "pc";
+    bool isFreeMutiWindowMode = windowSystemConfig_.freeMultiWindowSupport_ &&
+        windowSystemConfig_.freeMultiWindowEnable_;
     WindowType windowType = GetType();
     bool isSubWindow = WindowHelper::IsSubWindow(windowType);
     bool isDialogWindow = WindowHelper::IsDialogWindow(windowType);
-    if (isPC && (isSubWindow || isDialogWindow)) {
+    if ((isPC || isFreeMutiWindowMode) && (isSubWindow || isDialogWindow)) {
         WLOGFD("hide other buttons except close");
         uiContent->HideWindowTitleButton(true, true, true);
         return;
@@ -784,10 +815,18 @@ WMError WindowSessionImpl::InitUIContent(const std::string& contentInfo, napi_en
     WindowSetUIContentType setUIContentType, BackupAndRestoreType restoreType, AppExecFwk::Ability* ability,
     OHOS::Ace::UIContentErrorCode& aceRet)
 {
+<<<<<<< HEAD
     //tag:这个函数的修改也不太清楚
     std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (uiContent) {
         uiContent->Destroy();
+=======
+    {
+        std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
+        if (uiContent) {
+            uiContent->Destroy();
+        }
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
     }
     if (ability != nullptr) {
         uiContent = std::shared_ptr<Ace::UIContent>(Ace::UIContent::Create(ability).release());
@@ -872,9 +911,17 @@ WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, nap
     UpdateDecorEnable(true);
     if (state_ == WindowState::STATE_SHOWN) {
         // UIContent may be nullptr when show window, need to notify again when window is shown
+<<<<<<< HEAD
         std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
         if (uiContent != nullptr) {
             uiContent->Foreground();
+=======
+        {
+            std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
+            if (uiContent != nullptr) {
+                uiContent->Foreground();
+            }
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
         }
         UpdateTitleButtonVisibility();
     }
@@ -931,6 +978,7 @@ std::shared_ptr<std::vector<uint8_t>> WindowSessionImpl::GetAbcContent(const std
 
 void WindowSessionImpl::UpdateDecorEnableToAce(bool isDecorEnable)
 {
+<<<<<<< HEAD
     std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (uiContent != nullptr) {
         WindowMode mode = GetMode();
@@ -943,6 +991,22 @@ void WindowSessionImpl::UpdateDecorEnableToAce(bool isDecorEnable)
         }
         uiContent->UpdateDecorVisible(decorVisible, isDecorEnable);
         return;
+=======
+    {
+        std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
+        if (uiContent != nullptr) {
+            WindowMode mode = GetMode();
+            bool decorVisible = mode == WindowMode::WINDOW_MODE_FLOATING ||
+                mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY || mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY ||
+                (mode == WindowMode::WINDOW_MODE_FULLSCREEN && !property_->IsLayoutFullScreen());
+            WLOGFD("[WSLayout]Notify uiContent window mode change end,decorVisible:%{public}d", decorVisible);
+            if (windowSystemConfig_.freeMultiWindowSupport_) {
+                decorVisible = decorVisible && windowSystemConfig_.freeMultiWindowEnable_;
+            }
+            uiContent->UpdateDecorVisible(decorVisible, isDecorEnable);
+            return;
+        }
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
     }
     std::lock_guard<std::recursive_mutex> lockListener(windowChangeListenerMutex_);
     auto windowChangeListeners = GetListeners<IWindowChangeListener>();
@@ -1223,7 +1287,10 @@ std::string WindowSessionImpl::GetContentInfo(BackupAndRestoreType type)
         WLOGFE("Invalid type %{public}d", type);
         return "";
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
     std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (uiContent == nullptr) {
         WLOGFE("fail to GetContentInfo id: %{public}d", GetPersistentId());
@@ -1239,9 +1306,15 @@ Ace::UIContent* WindowSessionImpl::GetUIContent() const
     return uiContent_.get();
 }
 
+<<<<<<< HEAD
 std::shared_ptr<Ace::UIContent> WindowSessionImpl::GetUIContentSharedPtr()
 {
     std::unique_lock<std::shared_mutex> lock(uiContentMutex_);
+=======
+std::shared_ptr<Ace::UIContent> WindowSessionImpl::GetUIContentSharedPtr() const
+{
+    std::shared_lock<std::shared_mutex> lock(uiContentMutex_);
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
     return uiContent_;
 }
 
@@ -1259,7 +1332,10 @@ void WindowSessionImpl::OnNewWant(const AAFwk::Want& want)
 {
     WLOGFI("Window [name:%{public}s, id:%{public}d]",
         property_->GetWindowName().c_str(), GetPersistentId());
+<<<<<<< HEAD
 
+=======
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
     std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (uiContent != nullptr) {
         uiContent->OnNewWant(want);
@@ -1391,11 +1467,21 @@ WMError WindowSessionImpl::SetDecorHeight(int32_t decorHeight)
     }
     float vpr = GetVirtualPixelRatio(display->GetDisplayInfo());
     int32_t decorHeightWithPx = static_cast<int32_t>(decorHeight * vpr);
+<<<<<<< HEAD
 
     std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (uiContent == nullptr) {
         WLOGFE("uicontent is empty");
         return WMError::WM_ERROR_NULLPTR;
+=======
+    {
+        std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
+        if (uiContent == nullptr) {
+            WLOGFE("uicontent is empty");
+            return WMError::WM_ERROR_NULLPTR;
+        }
+        uiContent->SetContainerModalTitleHeight(decorHeightWithPx);
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
     }
     uiContent->SetContainerModalTitleHeight(decorHeightWithPx);
 
@@ -1408,10 +1494,20 @@ WMError WindowSessionImpl::SetDecorHeight(int32_t decorHeight)
 
 WMError WindowSessionImpl::GetDecorHeight(int32_t& height)
 {
+<<<<<<< HEAD
     std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (uiContent == nullptr) {
         WLOGFE("uiContent is nullptr, windowId: %{public}u", GetWindowId());
         return WMError::WM_ERROR_NULLPTR;
+=======
+    {
+        std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
+        if (uiContent == nullptr) {
+            WLOGFE("uiContent is nullptr, windowId: %{public}u", GetWindowId());
+            return WMError::WM_ERROR_NULLPTR;
+        }
+        height = uiContent->GetContainerModalTitleHeight();
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
     }
     height = uiContent->GetContainerModalTitleHeight();
     if (height == -1) {
@@ -1442,7 +1538,19 @@ WMError WindowSessionImpl::GetTitleButtonArea(TitleButtonRect& titleButtonRect)
     }
     Rect decorRect;
     Rect titleButtonLeftRect;
+<<<<<<< HEAD
     bool res = uiContent->GetContainerModalButtonsRect(decorRect, titleButtonLeftRect);
+=======
+    bool res = false;
+    {
+        std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
+        if (uiContent == nullptr) {
+            WLOGFE("uicontent is empty");
+            return WMError::WM_ERROR_NULLPTR;
+        }
+        res = uiContent->GetContainerModalButtonsRect(decorRect, titleButtonLeftRect);
+    }
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
     if (!res) {
         WLOGFE("get window title buttons area failed");
         titleButtonRect.IsUninitializedRect();
@@ -1750,12 +1858,18 @@ WMError WindowSessionImpl::SetTitleButtonVisible(bool isMaximizeVisible, bool is
     if (!WindowHelper::IsMainWindow(GetType())) {
         return WMError::WM_ERROR_INVALID_CALLING;
     }
+<<<<<<< HEAD
     std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (uiContent == nullptr || !IsDecorEnable()) {
+=======
+    if (GetUIContentSharedPtr() == nullptr || !IsDecorEnable()) {
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     auto isPC = windowSystemConfig_.uiType_ == "pc";
-    if (!isPC) {
+    bool isFreeMutiWindowMode = windowSystemConfig_.freeMultiWindowSupport_ &&
+        windowSystemConfig_.freeMultiWindowEnable_;
+    if (!(isPC || isFreeMutiWindowMode)) {
         return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
     }
     windowTitleVisibleFlags_ = { isMaximizeVisible, isMinimizeVisible, isSplitVisible };
@@ -1777,9 +1891,14 @@ void WindowSessionImpl::NotifyAfterForeground(bool needNotifyListeners, bool nee
         TLOGE(WmsLogTag::WMS_MAIN, "SetFrameRateLinkerEnable ture failed, vsyncStation is nullptr");
         return;
     }
-    TLOGD(WmsLogTag::WMS_MAIN, "SetFrameRateLinkerEnable: ture, linkerId = %{public}" PRIu64,
+    TLOGD(WmsLogTag::WMS_MAIN, "SetFrameRateLinkerEnable: true, linkerId = %{public}" PRIu64,
         vsyncStation_->GetFrameRateLinkerId());
     vsyncStation_->SetFrameRateLinkerEnable(true);
+    if (WindowHelper::IsMainWindow(GetType())) {
+        TLOGD(WmsLogTag::WMS_MAIN, "IsMainWindow: %{public}d, WindowType: %{public}d",
+            WindowHelper::IsMainWindow(GetType()), GetType());
+        vsyncStation_->SetDisplaySoloistFrameRateLinkerEnable(true);
+    }
 }
 
 void WindowSessionImpl::NotifyAfterBackground(bool needNotifyListeners, bool needNotifyUiContent)
@@ -1799,6 +1918,11 @@ void WindowSessionImpl::NotifyAfterBackground(bool needNotifyListeners, bool nee
     TLOGD(WmsLogTag::WMS_MAIN, "SetFrameRateLinkerEnable: false, linkerId = %{public}" PRIu64,
         vsyncStation_->GetFrameRateLinkerId());
     vsyncStation_->SetFrameRateLinkerEnable(false);
+    if (WindowHelper::IsMainWindow(GetType())) {
+        TLOGD(WmsLogTag::WMS_MAIN, "IsMainWindow: %{public}d, WindowType: %{public}d",
+            WindowHelper::IsMainWindow(GetType()), GetType());
+        vsyncStation_->SetDisplaySoloistFrameRateLinkerEnable(false);
+    }
 }
 
 static void RequestInputMethodCloseKeyboard(bool isNeedKeyboard, bool keepKeyboardFlag)
@@ -1828,10 +1952,19 @@ void WindowSessionImpl::NotifyUIContentFocusStatus()
             return;
         }
         bool isNeedKeyboard = false;
+<<<<<<< HEAD
         std::shared_ptr<Ace::UIContent> uiContent = window->GetUIContentSharedPtr();
         if (uiContent != nullptr) {
             // isNeedKeyboard is set by arkui and indicates whether the window needs a keyboard or not.
             isNeedKeyboard = uiContent->NeedSoftKeyboard();
+=======
+        {
+            std::shared_ptr<Ace::UIContent> uiContent = window->GetUIContentSharedPtr();
+            if (uiContent != nullptr) {
+                // isNeedKeyboard is set by arkui and indicates whether the window needs a keyboard or not.
+                isNeedKeyboard = uiContent->NeedSoftKeyboard();
+            }
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
         }
         // whether keep the keyboard created by other windows, support system window and app subwindow.
         bool keepKeyboardFlag = (window->property_) ? window->property_->GetKeepKeyboardFlag() : false;
@@ -1848,8 +1981,12 @@ void WindowSessionImpl::NotifyUIContentFocusStatus()
 void WindowSessionImpl::NotifyAfterFocused()
 {
     NotifyWindowAfterFocused();
+<<<<<<< HEAD
     std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (uiContent != nullptr) {
+=======
+    if (GetUIContentSharedPtr() != nullptr) {
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
         NotifyUIContentFocusStatus();
     } else {
         shouldReNotifyFocus_ = true;
@@ -1861,7 +1998,11 @@ void WindowSessionImpl::NotifyAfterUnfocused(bool needNotifyUiContent)
     NotifyWindowAfterUnfocused();
     std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (needNotifyUiContent) {
+<<<<<<< HEAD
         if (uiContent == nullptr) {
+=======
+        if (GetUIContentSharedPtr() == nullptr) {
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
             shouldReNotifyFocus_ = true;
         } else {
             CALL_UI_CONTENT(UnFocus);
@@ -1886,6 +2027,7 @@ void WindowSessionImpl::NotifyWindowAfterUnfocused()
 
 void WindowSessionImpl::NotifyBeforeDestroy(std::string windowName)
 {
+<<<<<<< HEAD
     //tag:这个函数不是很确定该怎么改
     std::shared_ptr<Ace::UIContent> uiContent;
     {
@@ -1895,8 +2037,15 @@ void WindowSessionImpl::NotifyBeforeDestroy(std::string windowName)
     auto task = [uiContent, persistentId = GetPersistentId()]() {
         if (uiContent != nullptr) {
             uiContent->Destroy();
+=======
+    auto task = [this]() {
+        std::unique_lock<std::shared_mutex> lock(uiContentMutex_);
+        if (uiContent_ != nullptr) {
+            uiContent_->Destroy();
+            uiContent_ = nullptr;
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
             TLOGD(WmsLogTag::WMS_LIFE, "NotifyBeforeDestroy: uiContent destroy success, persistentId:%{public}d",
-                persistentId);
+                GetPersistentId());
         }
     };
     if (handler_) {
@@ -1904,7 +2053,10 @@ void WindowSessionImpl::NotifyBeforeDestroy(std::string windowName)
     } else {
         task();
     }
+<<<<<<< HEAD
     ResetUIContentSharedPtr();
+=======
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
     if (notifyNativeFunc_) {
         notifyNativeFunc_(windowName);
     }
@@ -2725,11 +2877,20 @@ WMError WindowSessionImpl::SetBackgroundColor(uint32_t color)
         auto& reportInstance = SingletonContainer::Get<WindowInfoReporter>();
         reportInstance.ReportZeroOpacityInfoImmediately(bundleName, abilityName);
     }
+<<<<<<< HEAD
 
     std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (uiContent != nullptr) {
         uiContent->SetBackgroundColor(color);
         return WMError::WM_OK;
+=======
+    {
+        std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
+        if (uiContent != nullptr) {
+            uiContent->SetBackgroundColor(color);
+            return WMError::WM_OK;
+        }
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
     }
 
     if (aceAbilityHandler_ != nullptr) {
@@ -2768,9 +2929,17 @@ std::vector<sptr<Window>> WindowSessionImpl::GetSubWindow(int parentId)
 
 uint32_t WindowSessionImpl::GetBackgroundColor() const
 {
+<<<<<<< HEAD
     std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (uiContent != nullptr) {
         return uiContent->GetBackgroundColor();
+=======
+    {
+        std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
+        if (uiContent != nullptr) {
+            return uiContent->GetBackgroundColor();
+        }
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
     }
 
     WLOGD("uiContent is nullptr, windowId: %{public}u, use FA mode", GetWindowId());
@@ -2897,7 +3066,7 @@ void WindowSessionImpl::NotifyWindowStatusChange(WindowMode mode)
     if (mode == WindowMode::WINDOW_MODE_FLOATING) {
         WindowStatus = WindowStatus::WINDOW_STATUS_FLOATING;
         if (property_->GetMaximizeMode() == MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
-            WindowStatus = WindowStatus::WINDOW_STATUS_MAXMIZE;
+            WindowStatus = WindowStatus::WINDOW_STATUS_MAXIMIZE;
         }
     } else if (mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY || mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
         WindowStatus = WindowStatus::WINDOW_STATUS_SPLITSCREEN;

@@ -621,7 +621,7 @@ void SceneSession::FixKeyboardPositionByKeyboardPanel(sptr<SceneSession> panelSe
         const auto& screenSession = ScreenSessionManagerClient::GetInstance().GetScreenSession(
             keyboardSession->GetSessionProperty()->GetDisplayId());
         Rotation rotation = (screenSession != nullptr) ? screenSession->GetRotation() : Rotation::ROTATION_0;
-        bool isKeyboardNeedLeftOffset = (isPhone && (!isFoldable || (isFoldable && isFolded)) &&
+        bool isKeyboardNeedLeftOffset = (isPhone && (!isFoldable || (isFolded)) &&
             (rotation == Rotation::ROTATION_90 || rotation == Rotation::ROTATION_270));
         if (isKeyboardNeedLeftOffset) {
             keyboardSession->winRect_.posX_ += panelSession->winRect_.posX_;
@@ -667,6 +667,9 @@ WSError SceneSession::NotifyClientToUpdateRectTask(
             FixKeyboardPositionByKeyboardPanel(session, keyboardSession);
             if (keyboardSession != nullptr) {
                 ret = keyboardSession->Session::UpdateRect(keyboardSession->winRect_, session->reason_, rsTransaction);
+            }
+            if (ret != WSError::WS_OK) {
+                return ret;
             }
         }
         if (session->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
@@ -916,7 +919,8 @@ WSError SceneSession::RaiseAppMainWindowToTop()
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
         if (session->IsFocusedOnShow()) {
-            session->NotifyRequestFocusStatusNotifyManager(true, true);
+            FocusChangeReason reason = FocusChangeReason::MOVE_UP;
+            session->NotifyRequestFocusStatusNotifyManager(true, true, reason);
             session->NotifyClick();
         } else {
             session->SetFocusedOnShow(true);
@@ -1032,6 +1036,7 @@ void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
         return;
     }
     if (isDisplayStatusBarTemporarily_.load()) {
+        TLOGI(WmsLogTag::WMS_IMMS, "temporary show status bar, no need to avoid");
         return;
     }
     std::vector<sptr<SceneSession>> statusBarVector;
@@ -1125,6 +1130,7 @@ void SceneSession::GetCutoutAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 void SceneSession::GetAINavigationBarArea(WSRect rect, AvoidArea& avoidArea)
 {
     if (isDisplayStatusBarTemporarily_.load()) {
+        TLOGI(WmsLogTag::WMS_IMMS, "temporary show navigation bar, no need to avoid");
         return;
     }
     if (Session::GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING ||
@@ -2353,7 +2359,10 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
             return WSError::WS_ERROR_NULLPTR;
         }
         auto isPC = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
-        if (!isPC && (session->GetAbilityInfo() != nullptr) && WindowHelper::IsMainWindow(session->GetWindowType())) {
+        bool isFreeMutiWindowMode = session->systemConfig_.freeMultiWindowSupport_ &&
+            session->systemConfig_.freeMultiWindowEnable_;
+        if (!(isPC || isFreeMutiWindowMode) &&
+            (session->GetAbilityInfo() != nullptr) && WindowHelper::IsMainWindow(session->GetWindowType())) {
             if (!(session->GetForegroundInteractiveStatus())) {
                 TLOGW(WmsLogTag::WMS_LIFE, "start ability invalid, ForegroundInteractiveStatus: %{public}u",
                     session->GetForegroundInteractiveStatus());

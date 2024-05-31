@@ -100,7 +100,11 @@ public:
     bool GetFocusable() const override;
     std::string GetContentInfo(BackupAndRestoreType type = BackupAndRestoreType::CONTINUATION) override;
     Ace::UIContent* GetUIContent() const override;
+<<<<<<< HEAD
     std::shared_ptr<Ace::UIContent> GetUIContentSharedPtr();
+=======
+    std::shared_ptr<Ace::UIContent> GetUIContentSharedPtr() const;
+>>>>>>> 21ce7c0a596739d0429dd52c64b6d043f0684f05
     Ace::UIContent* GetUIContentWithId(uint32_t winId) const override;
     void OnNewWant(const AAFwk::Want& want) override;
     WMError SetAPPWindowLabel(const std::string& label) override;

@@ -74,6 +74,7 @@ enum class WSError : int32_t {
     WS_ERROR_START_UI_EXTENSION_ABILITY_FAILED,
     WS_ERROR_MIN_UI_EXTENSION_ABILITY_FAILED,
     WS_ERROR_TERMINATE_UI_EXTENSION_ABILITY_FAILED,
+    WS_ERROR_PRE_HANDLE_COLLABORATOR_FAILED,
 
     WS_ERROR_EDM_CONTROLLED = 2097215, // enterprise limit
 };
@@ -223,6 +224,10 @@ enum class FocusChangeReason {
      * focus change for inner app.
      */
     SCB_START_APP,
+    /**
+     *focus for setting focuable.
+     */
+    FOCUSABLE,
     /**
      * focus change max.
      */
