@@ -650,6 +650,12 @@ private:
     WindowStatus GetWindowStatus(WindowMode mode, SessionState sessionState,
         const sptr<WindowSessionProperty>& property);
     void DeleteStateDetectTask();
+    WSError HandleSceneSessionBackground(const sptr<SceneSession>& sceneSession,
+        const bool isDelegator, const bool isToDesktop, const bool isSaveSnapshot);
+    int32_t InvokeStartUIAbilityBySCB(sptr<SceneSession>& sceneSession, bool isNewActive,
+        sptr<AAFwk::SessionInfo> scnSessionInfo, bool isColdStart);
+    void RequestSceneSessionInner(const SessionInfo& sessionInfo,
+        sptr<SceneSession> sceneSession, sptr<WindowSessionProperty> property);
 };
 } // namespace OHOS::Rosen
 

@@ -1644,28 +1644,9 @@ WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& 
     }
     auto pointerAction = pointerEvent->GetPointerAction();
     NotifyPointerEventToRs(pointerAction);
-    bool isPointDown = (pointerAction == MMI::PointerEvent::POINTER_ACTION_DOWN) ||
-        (pointerAction == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN);
-    if (GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
-        if (CheckDialogOnForeground() && isPointDown) {
-            HandlePointDownDialog();
-            return WSError::WS_ERROR_INVALID_PERMISSION;
-        }
-    } else if (GetWindowType() == WindowType::WINDOW_TYPE_APP_SUB_WINDOW) {
-        WSError ret = HandleSubWindowClick(pointerAction);
-        if (ret != WSError::WS_OK) {
-            return ret;
-        }
-    } else if (GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
-        auto parentSession = GetParentSession();
-        if (parentSession && parentSession->CheckDialogOnForeground() && isPointDown) {
-            parentSession->HandlePointDownDialog();
-            if (!IsTopDialog()) {
-                TLOGI(WmsLogTag::WMS_DIALOG, "There is at least one active dialog upon this dialog, id: %{public}d",
-                    GetPersistentId());
-                return WSError::WS_ERROR_INVALID_PERMISSION;
-            }
-        }
+    WSError res = HandleInvalidPermission(pointerAction);
+    if (res != WSError::WS_OK) {
+        return res;
     }
     if (DelayedSingleton<ANRManager>::GetInstance()->IsANRTriggered(persistentId_)) {
         WLOGFW("InputTracking id:%{public}d, The pointerEvent does not report normally,"
@@ -1691,7 +1672,41 @@ WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& 
     } else {
         pointerEvent->MarkProcessed();
     }
+    RecordTransferPointEventLog(pointerAction, pointerEvent);
+    return WSError::WS_OK;
+}
 
+WSError Session::HandleInvalidPermission(int32_t pointerAction)
+{
+    bool isPointDown = (pointerAction == MMI::PointerEvent::POINTER_ACTION_DOWN) ||
+        (pointerAction == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN);
+    if (GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        if (CheckDialogOnForeground() && isPointDown) {
+            HandlePointDownDialog();
+            return WSError::WS_ERROR_INVALID_PERMISSION;
+        }
+    } else if (GetWindowType() == WindowType::WINDOW_TYPE_APP_SUB_WINDOW) {
+        WSError ret = HandleSubWindowClick(pointerAction);
+        if (ret != WSError::WS_OK) {
+            return ret;
+        }
+    } else if (GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
+        auto parentSession = GetParentSession();
+        if (parentSession && parentSession->CheckDialogOnForeground() && isPointDown) {
+            parentSession->HandlePointDownDialog();
+            if (!IsTopDialog()) {
+                TLOGI(WmsLogTag::WMS_DIALOG, "There is at least one active dialog upon this dialog, id: %{public}d",
+                    GetPersistentId());
+                return WSError::WS_ERROR_INVALID_PERMISSION;
+            }
+        }
+    }
+    return WSError::WS_OK;
+}
+
+void Session::RecordTransferPointEventLog(int32_t pointerAction,
+    const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
     if (pointerAction == MMI::PointerEvent::POINTER_ACTION_MOVE ||
         pointerAction == MMI::PointerEvent::POINTER_ACTION_PULL_MOVE) {
         WLOGFD("Session TransferPointEvent, eventId:%{public}d, action:%{public}s, persistentId:%{public}d, "
@@ -1709,8 +1724,8 @@ WSError Session::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& 
         WLOGFD("Action:%{public}s, eventId:%{public}d, report without timer",
             pointerEvent->DumpPointerAction(), pointerEvent->GetId());
     }
-    return WSError::WS_OK;
 }
+
 
 WSError Session::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {

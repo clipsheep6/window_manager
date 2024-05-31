@@ -84,6 +84,8 @@ public:
         WSPropertyChangeAction action) override;
 private:
     static inline BrokerDelegator<SessionProxy> delegator_;
+    WSError HandleConnectResult(MessageParcel& reply, SystemSessionConfig& systemConfig,
+        sptr<WindowSessionProperty> property);
 };
 } // namespace OHOS::Rosen
 

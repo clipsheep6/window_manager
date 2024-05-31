@@ -1359,50 +1359,56 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
             TLOGD(WmsLogTag::WMS_LIFE, "RequestSceneSession, synchronous screenId with displayid %{public}" PRIu64"",
                 curDisplayId);
         }
-        sceneSession->SetEventHandler(taskScheduler_->GetEventHandler(), eventHandler_);
-        auto isScreenLockedCallback = [this]() {
-            return IsScreenLocked();
-        };
-        sceneSession->RegisterIsScreenLockedCallback(isScreenLockedCallback);
-        if (sessionInfo.isSystem_) {
-            sceneSession->SetCallingPid(IPCSkeleton::GetCallingRealPid());
-            sceneSession->SetCallingUid(IPCSkeleton::GetCallingUid());
-            auto rootContext = rootSceneContextWeak_.lock();
-            sceneSession->SetAbilityToken(rootContext != nullptr ? rootContext->GetToken() : nullptr);
-        } else {
-            TLOGD(WmsLogTag::WMS_LIFE, "RequestSceneSession id: %{public}d, bundleName: %{public}s, "
-                "moduleName: %{public}s, abilityName: %{public}s want:%{public}s", sceneSession->GetPersistentId(),
-                sessionInfo.bundleName_.c_str(), sessionInfo.moduleName_.c_str(), sessionInfo.abilityName_.c_str(),
-                sessionInfo.want == nullptr ? "nullptr" : sessionInfo.want->ToString().c_str());
-        }
-        RegisterSessionExceptionFunc(sceneSession);
-        FillSessionInfo(sceneSession);
-        auto persistentId = sceneSession->GetPersistentId();
-        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSession(%d )", persistentId);
-        if (WindowHelper::IsMainWindow(sceneSession->GetWindowType())) {
-            WindowInfoReporter::GetInstance().InsertCreateReportInfo(sessionInfo.bundleName_);
-        }
-        if (property != nullptr && WindowHelper::IsPipWindow(property->GetWindowType())) {
-            sceneSession->SetPiPTemplateInfo(property->GetPiPTemplateInfo());
-        }
-        sceneSession->SetSystemConfig(systemConfig_);
-        sceneSession->SetSnapshotScale(snapshotScale_);
-        UpdateParentSessionForDialog(sceneSession, property);
-        if (CheckCollaboratorType(sceneSession->GetCollaboratorType())) {
-            WLOGFI("ancoSceneState: %{public}d", sceneSession->GetSessionInfo().ancoSceneState);
-            PreHandleCollaborator(sceneSession);
-        }
-        {
-            std::unique_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
-            sceneSessionMap_.insert({ persistentId, sceneSession });
-        }
-        PerformRegisterInRequestSceneSession(sceneSession);
-        NotifySessionUpdate(sessionInfo, ActionType::SINGLE_START);
-        TLOGI(WmsLogTag::WMS_LIFE, "RequestSceneSession id: %{public}d, type: %{public}d",
-            persistentId, sceneSession->GetWindowType());
+        RequestSceneSessionInner(sessionInfo, sceneSession, property);
         return sceneSession;
     };
     return taskScheduler_->PostSyncTask(task, "RequestSceneSession:PID" + std::to_string(sessionInfo.persistentId_));
+}
+
+void SceneSessionManager::RequestSceneSessionInner(const SessionInfo& sessionInfo,
+    sptr<SceneSession> sceneSession, sptr<WindowSessionProperty> property)
+{
+    sceneSession->SetEventHandler(taskScheduler_->GetEventHandler(), eventHandler_);
+    auto isScreenLockedCallback = [this]() {
+        return IsScreenLocked();
+    };
+    sceneSession->RegisterIsScreenLockedCallback(isScreenLockedCallback);
+    if (sessionInfo.isSystem_) {
+        sceneSession->SetCallingPid(IPCSkeleton::GetCallingRealPid());
+        sceneSession->SetCallingUid(IPCSkeleton::GetCallingUid());
+        auto rootContext = rootSceneContextWeak_.lock();
+        sceneSession->SetAbilityToken(rootContext != nullptr ? rootContext->GetToken() : nullptr);
+    } else {
+        TLOGD(WmsLogTag::WMS_LIFE, "RequestSceneSession id: %{public}d, bundleName: %{public}s, "
+            "moduleName: %{public}s, abilityName: %{public}s want:%{public}s", sceneSession->GetPersistentId(),
+            sessionInfo.bundleName_.c_str(), sessionInfo.moduleName_.c_str(), sessionInfo.abilityName_.c_str(),
+            sessionInfo.want == nullptr ? "nullptr" : sessionInfo.want->ToString().c_str());
+    }
+    RegisterSessionExceptionFunc(sceneSession);
+    FillSessionInfo(sceneSession);
+    auto persistentId = sceneSession->GetPersistentId();
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSession(%d )", persistentId);
+    if (WindowHelper::IsMainWindow(sceneSession->GetWindowType())) {
+        WindowInfoReporter::GetInstance().InsertCreateReportInfo(sessionInfo.bundleName_);
+    }
+    if (property != nullptr && WindowHelper::IsPipWindow(property->GetWindowType())) {
+        sceneSession->SetPiPTemplateInfo(property->GetPiPTemplateInfo());
+    }
+    sceneSession->SetSystemConfig(systemConfig_);
+    sceneSession->SetSnapshotScale(snapshotScale_);
+    UpdateParentSessionForDialog(sceneSession, property);
+    if (CheckCollaboratorType(sceneSession->GetCollaboratorType())) {
+        WLOGFI("ancoSceneState: %{public}d", sceneSession->GetSessionInfo().ancoSceneState);
+        PreHandleCollaborator(sceneSession);
+    }
+    {
+        std::unique_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+        sceneSessionMap_.insert({ persistentId, sceneSession });
+    }
+    PerformRegisterInRequestSceneSession(sceneSession);
+    NotifySessionUpdate(sessionInfo, ActionType::SINGLE_START);
+    TLOGI(WmsLogTag::WMS_LIFE, "RequestSceneSession id: %{public}d, type: %{public}d",
+        persistentId, sceneSession->GetWindowType());
 }
 
 void SceneSessionManager::NotifySessionUpdate(const SessionInfo& sessionInfo, ActionType action, ScreenId fromScreenId)
@@ -1652,6 +1658,35 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
         scnSessionInfo->want.SetParam(AncoConsts::ANCO_MISSION_ID, scnSessionInfo->persistentId);
         scnSessionInfo->collaboratorType = scnSession->GetCollaboratorType();
     }
+    bool isColdStart = false;
+    int32_t errCode = InvokeStartUIAbilityBySCB(scnSession, isNewActive, scnSessionInfo, isColdStart);
+    auto sessionInfo = scnSession->GetSessionInfo();
+    if (WindowHelper::IsMainWindow(scnSession->GetWindowType())) {
+        WindowInfoReporter::GetInstance().InsertShowReportInfo(sessionInfo.bundleName_);
+    }
+    NotifyCollaboratorAfterStart(scnSession, scnSessionInfo);
+    promise->set_value(static_cast<int32_t>(errCode));
+    if (errCode != ERR_OK) {
+        TLOGI(WmsLogTag::WMS_MAIN, "failed! errCode: %{public}d", errCode);
+        scnSession->NotifySessionException(scnSessionInfo, true);
+        if (startUIAbilityErrorFunc_ && static_cast<WSError>(errCode) == WSError::WS_ERROR_EDM_CONTROLLED) {
+            startUIAbilityErrorFunc_(
+                static_cast<uint32_t>(WS_JS_TO_ERROR_CODE_MAP.at(WSError::WS_ERROR_EDM_CONTROLLED)));
+        }
+    }
+    if (isColdStart) {
+        TLOGI(WmsLogTag::WMS_LIFE, "ColdStart, identityToken:%{public}s, bundleName:%{public}s",
+            scnSessionInfo->identityToken.c_str(), sessionInfo.bundleName_.c_str());
+        scnSession->SetClientIdentityToken(scnSessionInfo->identityToken);
+        scnSession->ResetSessionConnectState();
+    }
+    return WSError::WS_OK;
+}
+
+int32_t SceneSessionManager::InvokeStartUIAbilityBySCB(sptr<SceneSession>& scnSession, bool isNewActive,
+    sptr<AAFwk::SessionInfo> scnSessionInfo, bool isColdStart)
+{
+    auto persistentId = scnSession->GetPersistentId();
     TLOGI(WmsLogTag::WMS_LIFE, "id %{public}d want-ability: %{public}s, bundle: %{public}s, "
         "module: %{public}s, uri: %{public}s.", persistentId,
         scnSessionInfo->want.GetElement().GetAbilityName().c_str(),
@@ -1659,7 +1694,6 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
         scnSessionInfo->want.GetElement().GetModuleName().c_str(),
         scnSessionInfo->want.GetElement().GetURI().c_str());
     int32_t errCode = ERR_OK;
-    bool isColdStart = false;
     if (systemConfig_.backgroundswitch == false) {
         TLOGI(WmsLogTag::WMS_MAIN, "Begin StartUIAbility: %{public}d system: %{public}u", persistentId,
             static_cast<uint32_t>(scnSession->GetSessionInfo().isSystem_));
@@ -1677,28 +1711,7 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
             scnSession->NotifySessionForeground(1, true);
         }
     }
-    auto sessionInfo = scnSession->GetSessionInfo();
-    if (WindowHelper::IsMainWindow(scnSession->GetWindowType())) {
-        WindowInfoReporter::GetInstance().InsertShowReportInfo(sessionInfo.bundleName_);
-    }
-    NotifyCollaboratorAfterStart(scnSession, scnSessionInfo);
-    promise->set_value(static_cast<int32_t>(errCode));
-
-    if (errCode != ERR_OK) {
-        TLOGI(WmsLogTag::WMS_MAIN, "failed! errCode: %{public}d", errCode);
-        scnSession->NotifySessionException(scnSessionInfo, true);
-        if (startUIAbilityErrorFunc_ && static_cast<WSError>(errCode) == WSError::WS_ERROR_EDM_CONTROLLED) {
-            startUIAbilityErrorFunc_(
-                static_cast<uint32_t>(WS_JS_TO_ERROR_CODE_MAP.at(WSError::WS_ERROR_EDM_CONTROLLED)));
-        }
-    }
-    if (isColdStart) {
-        TLOGI(WmsLogTag::WMS_LIFE, "ColdStart, identityToken:%{public}s, bundleName:%{public}s",
-            scnSessionInfo->identityToken.c_str(), sessionInfo.bundleName_.c_str());
-        scnSession->SetClientIdentityToken(scnSessionInfo->identityToken);
-        scnSession->ResetSessionConnectState();
-    }
-    return WSError::WS_OK;
+    return errCode;
 }
 
 void SceneSessionManager::NotifyCollaboratorAfterStart(sptr<SceneSession>& scnSession,
@@ -1726,57 +1739,64 @@ WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSessi
             TLOGE(WmsLogTag::WMS_MAIN, "session is nullptr");
             return WSError::WS_ERROR_NULLPTR;
         }
-        auto persistentId = scnSession->GetPersistentId();
-        TLOGI(WmsLogTag::WMS_MAIN, "Request background id:%{public}d isDelegator:%{public}d "
-            "isToDesktop:%{public}d isSaveSnapshot:%{public}d",
-            persistentId, isDelegator, isToDesktop, isSaveSnapshot);
-        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSessionBackground (%d )", persistentId);
-        scnSession->SetActive(false);
-
-        if (isToDesktop) {
-            auto info = scnSession->GetSessionInfo();
-            info.callerToken_ = nullptr;
-            info.callingTokenId_ = 0;
-            scnSession->SetSessionInfo(info);
-        }
-
-        scnSession->BackgroundTask(isSaveSnapshot);
-        if (!GetSceneSession(persistentId)) {
-            TLOGE(WmsLogTag::WMS_MAIN, "Request background session invalid by %{public}d", persistentId);
-            return WSError::WS_ERROR_INVALID_SESSION;
-        }
-        if (persistentId == brightnessSessionId_) {
-            UpdateBrightness(focusedSessionId_);
-        }
-        auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
-        if (!scnSessionInfo) {
-            TLOGE(WmsLogTag::WMS_MAIN, "Create Ability info failed, id %{public}d", persistentId);
-            return WSError::WS_ERROR_NULLPTR;
-        }
-        if (systemConfig_.backgroundswitch) {
-            TLOGI(WmsLogTag::WMS_MAIN, "NotifySessionBackground: %{public}d", persistentId);
-            scnSession->NotifySessionBackground(1, true, true);
-        } else {
-            TLOGI(WmsLogTag::WMS_MAIN, "begin MinimzeUIAbility: %{public}d system: %{public}u",
-                persistentId, static_cast<uint32_t>(scnSession->GetSessionInfo().isSystem_));
-            if (!isDelegator) {
-                AAFwk::AbilityManagerClient::GetInstance()->MinimizeUIAbilityBySCB(scnSessionInfo);
-            } else {
-                AAFwk::AbilityManagerClient::GetInstance()->MinimizeUIAbilityBySCB(scnSessionInfo, true);
-            }
-        }
-
-        if (WindowHelper::IsMainWindow(scnSession->GetWindowType())) {
-            auto sessionInfo = scnSession->GetSessionInfo();
-            WindowInfoReporter::GetInstance().InsertHideReportInfo(sessionInfo.bundleName_);
-        }
-        return WSError::WS_OK;
+        return HandleSceneSessionBackground(scnSession, isDelegator, isToDesktop, isSaveSnapshot);
     };
     std::string taskName = "RequestSceneSessionBackground:PID:" +
         (sceneSession != nullptr ? std::to_string(sceneSession->GetPersistentId()):"nullptr");
     taskScheduler_->PostAsyncTask(task, taskName);
     return WSError::WS_OK;
 }
+
+WSError SceneSessionManager::HandleSceneSessionBackground(const sptr<SceneSession>& scnSession,
+    const bool isDelegator, const bool isToDesktop, const bool isSaveSnapshot)
+{
+    auto persistentId = scnSession->GetPersistentId();
+    TLOGI(WmsLogTag::WMS_MAIN, "Request background id:%{public}d isDelegator:%{public}d "
+        "isToDesktop:%{public}d isSaveSnapshot:%{public}d",
+        persistentId, isDelegator, isToDesktop, isSaveSnapshot);
+    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:RequestSceneSessionBackground (%d )", persistentId);
+    scnSession->SetActive(false);
+
+    if (isToDesktop) {
+        auto info = scnSession->GetSessionInfo();
+        info.callerToken_ = nullptr;
+        info.callingTokenId_ = 0;
+        scnSession->SetSessionInfo(info);
+    }
+
+    scnSession->BackgroundTask(isSaveSnapshot);
+    if (!GetSceneSession(persistentId)) {
+        TLOGE(WmsLogTag::WMS_MAIN, "Request background session invalid by %{public}d", persistentId);
+        return WSError::WS_ERROR_INVALID_SESSION;
+    }
+    if (persistentId == brightnessSessionId_) {
+        UpdateBrightness(focusedSessionId_);
+    }
+    auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
+    if (!scnSessionInfo) {
+        TLOGE(WmsLogTag::WMS_MAIN, "Create Ability info failed, id %{public}d", persistentId);
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    if (systemConfig_.backgroundswitch) {
+        TLOGI(WmsLogTag::WMS_MAIN, "NotifySessionBackground: %{public}d", persistentId);
+        scnSession->NotifySessionBackground(1, true, true);
+    } else {
+        TLOGI(WmsLogTag::WMS_MAIN, "begin MinimzeUIAbility: %{public}d system: %{public}u",
+            persistentId, static_cast<uint32_t>(scnSession->GetSessionInfo().isSystem_));
+        if (!isDelegator) {
+            AAFwk::AbilityManagerClient::GetInstance()->MinimizeUIAbilityBySCB(scnSessionInfo);
+        } else {
+            AAFwk::AbilityManagerClient::GetInstance()->MinimizeUIAbilityBySCB(scnSessionInfo, true);
+        }
+    }
+
+    if (WindowHelper::IsMainWindow(scnSession->GetWindowType())) {
+        auto sessionInfo = scnSession->GetSessionInfo();
+        WindowInfoReporter::GetInstance().InsertHideReportInfo(sessionInfo.bundleName_);
+    }
+    return WSError::WS_OK;
+}
+
 
 void SceneSessionManager::NotifyForegroundInteractiveStatus(const sptr<SceneSession>& sceneSession, bool interactive)
 {
