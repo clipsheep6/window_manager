@@ -134,10 +134,7 @@ public:
     virtual uint32_t GetWindowFlags() const override;
     uint32_t GetRequestModeSupportInfo() const override;
     bool IsMainHandlerAvailable() const override;
-    inline NotifyNativeWinDestroyFunc GetNativeDestroyCallback()
-    {
-        return notifyNativefunc_;
-    }
+    NotifyNativeWinDestroyFunc GetNativeDestroyCallback();
     virtual SystemBarProperty GetSystemBarPropertyByType(WindowType type) const override;
     virtual bool IsFullScreen() const override;
     virtual bool IsLayoutFullScreen() const override;
@@ -155,10 +152,7 @@ public:
     virtual const Transform& GetTransform() const override;
     virtual const Transform& GetZoomTransform() const;
     virtual WMError UpdateSurfaceNodeAfterCustomAnimation(bool isAdd) override;
-    inline void SetWindowState(WindowState state)
-    {
-        state_ = state;
-    }
+    void SetWindowState(WindowState state);
     virtual WMError GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea) override;
 
     WMError Create(uint32_t parentId,
@@ -345,7 +339,6 @@ private:
     void NotifyForegroundFailed(WMError ret);
     void NotifyBackgroundFailed(WMError ret);
     bool IsStretchableReason(WindowSizeChangeReason reason);
-
     void InitWindowProperty(const sptr<WindowOption>& option);
     void ClearListenersById(uint32_t winId);
     void NotifySizeChange(Rect rect, WindowSizeChangeReason reason,
@@ -499,4 +492,7 @@ private:
 };
 } // namespace Rosen
 } // namespace OHOS
+
+#include "window_impl.inl"
+
 #endif // OHOS_ROSEN_WINDOW_IMPL_H

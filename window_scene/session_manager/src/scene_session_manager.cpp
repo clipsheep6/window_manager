@@ -2972,6 +2972,7 @@ bool SceneSessionManager::GetStartingWindowInfoFromCache(
     return true;
 }
 
+const size_t MAX_CACHE_COUNT = 100;
 void SceneSessionManager::CacheStartingWindowInfo(
     const AppExecFwk::AbilityInfo& abilityInfo, const std::string& path, const uint32_t& bgColor)
 {
@@ -7489,6 +7490,9 @@ bool SceneSessionManager::IsSessionClearable(sptr<SceneSession> scnSession)
 
     return true;
 }
+
+const int32_t BROKER_UID = 5557;
+const int32_t BROKER_RESERVE_UID = 5005;
 
 WSError SceneSessionManager::RegisterIAbilityManagerCollaborator(int32_t type,
     const sptr<AAFwk::IAbilityManagerCollaborator> &impl)
