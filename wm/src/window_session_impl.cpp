@@ -1267,6 +1267,7 @@ std::string WindowSessionImpl::GetContentInfo(BackupAndRestoreType type)
 
 Ace::UIContent* WindowSessionImpl::GetUIContent() const
 {
+    //这边在shared_ptr里用了get()函数了，会不会有重复回收的风险
     return uiContent_.get();
 }
 
@@ -1429,6 +1430,8 @@ WMError WindowSessionImpl::SetDecorHeight(int32_t decorHeight)
         }
         uiContent->SetContainerModalTitleHeight(decorHeightWithPx);
     }
+    uiContent->SetContainerModalTitleHeight(decorHeightWithPx);
+
     if (hostSession_ != nullptr) {
         hostSession_->SetCustomDecorHeight(decorHeight);
     }
@@ -1446,6 +1449,7 @@ WMError WindowSessionImpl::GetDecorHeight(int32_t& height)
         }
         height = uiContent->GetContainerModalTitleHeight();
     }
+    height = uiContent->GetContainerModalTitleHeight();
     if (height == -1) {
         WLOGFE("Get app window decor height failed");
         return WMError::WM_DO_NOTHING;
@@ -1467,6 +1471,11 @@ WMError WindowSessionImpl::GetDecorHeight(int32_t& height)
 
 WMError WindowSessionImpl::GetTitleButtonArea(TitleButtonRect& titleButtonRect)
 {
+    std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
+    if (uiContent == nullptr) {
+        WLOGFE("uicontent is empty");
+        return WMError::WM_ERROR_NULLPTR;
+    }
     Rect decorRect;
     Rect titleButtonLeftRect;
     bool res = false;
@@ -1948,6 +1957,7 @@ void WindowSessionImpl::NotifyAfterFocused()
 void WindowSessionImpl::NotifyAfterUnfocused(bool needNotifyUiContent)
 {
     NotifyWindowAfterUnfocused();
+    std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (needNotifyUiContent) {
         if (GetUIContentSharedPtr() == nullptr) {
             shouldReNotifyFocus_ = true;
@@ -2825,6 +2835,7 @@ WMError WindowSessionImpl::SetBackgroundColor(uint32_t color)
             return WMError::WM_OK;
         }
     }
+
     if (aceAbilityHandler_ != nullptr) {
         aceAbilityHandler_->SetBackgroundColor(color);
         return WMError::WM_OK;
@@ -2867,6 +2878,7 @@ uint32_t WindowSessionImpl::GetBackgroundColor() const
             return uiContent->GetBackgroundColor();
         }
     }
+
     WLOGD("uiContent is nullptr, windowId: %{public}u, use FA mode", GetWindowId());
     if (aceAbilityHandler_ != nullptr) {
         return aceAbilityHandler_->GetBackgroundColor();
