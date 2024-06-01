@@ -589,6 +589,15 @@ struct SystemBarProperty {
     }
 };
 
+struct SystemBarPropertyFlag {
+    bool enableFlag;
+    bool backgroundColorFlag;
+    bool contentColorFlag;
+    bool enableAnimationFlag;
+    SystemBarPropertyFlag() : enableFlag(false),
+        backgroundColorFlag(false), contentColorFlag(false), enableAnimationFlag(false) {}
+};
+
 /**
  * @struct Rect
  *
