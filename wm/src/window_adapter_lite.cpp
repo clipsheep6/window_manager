@@ -211,5 +211,11 @@ WMError WindowAdapterLite::ClearMainSessions(const std::vector<int32_t>& persist
     TLOGD(WmsLogTag::WMS_MAIN, "clear main sessions with failed ids.");
     return windowManagerServiceProxy_->ClearMainSessions(persistentIds, clearFailedIds);
 }
+
+WMError WindowAdapterLite::RegisterWMSConnectionChangedListener(const WMSConnectionChangedCallbackFunc& callbackFunc)
+{
+    WLOGFI("RegisterWMSConnectionChangedListener in");
+    return SessionManagerLite::GetInstance().RegisterWMSConnectionChangedListener(callbackFunc);
+}
 } // namespace Rosen
 } // namespace OHOS
