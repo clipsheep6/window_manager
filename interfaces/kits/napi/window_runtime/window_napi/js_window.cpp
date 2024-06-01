@@ -1135,14 +1135,19 @@ napi_value JsWindow::OnDestroyWindow(napi_env env, napi_callback_info info)
 
 napi_value JsWindow::OnHide(napi_env env, napi_callback_info info)
 {
-    return HideWindowFunction(env, info);
+    return HideWindowFunction(env, info, WmErrorCode::WM_OK);
 }
 
-napi_value JsWindow::HideWindowFunction(napi_env env, napi_callback_info info)
+napi_value JsWindow::HideWindowFunction(napi_env env, napi_callback_info info, WmErrorCode paramCheck)
 {
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
-        [weakToken](napi_env env, NapiAsyncTask& task, int32_t status) {
+        [weakToken, paramCheck](napi_env env, NapiAsyncTask& task, int32_t status) {
+            if (paramCheck != WmErrorCode::WM_OK) {
+                task.Reject(env, JsErrUtils::CreateJsError(env, paramCheck, "parameter check failed."));
+                WLOGFE("parameter check failed.");
+                return;
+            }
             auto weakWindow = weakToken.promote();
             if (weakWindow == nullptr) {
                 WLOGFE("window is nullptr or get invalid param");
@@ -5251,7 +5256,6 @@ napi_value JsWindow::OnResetAspectRatio(napi_env env, napi_callback_info info)
 napi_value JsWindow::OnMinimize(napi_env env, napi_callback_info info)
 {
     WmErrorCode errCode = WmErrorCode::WM_OK;
-    errCode = (windowToken_ == nullptr) ? WmErrorCode::WM_ERROR_STATE_ABNORMALLY : WmErrorCode::WM_OK;
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
@@ -5260,17 +5264,18 @@ napi_value JsWindow::OnMinimize(napi_env env, napi_callback_info info)
         errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
     }
 
-    if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
-        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
-    }
-    if (errCode == WmErrorCode::WM_OK && WindowHelper::IsSubWindow(windowToken_->GetType())) {
-        WLOGFE("subWindow hide");
-        return HideWindowFunction(env, info);
+    if (WindowHelper::IsSubWindow(windowToken_->GetType())) {
+        WLOGFI("subWindow hide");
+        return HideWindowFunction(env, info, errCode);
     }
 
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
         [weakToken, errCode](napi_env env, NapiAsyncTask& task, int32_t status) mutable {
+            if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
+                task.Reject(env, JsErrUtils::CreateJsError(env, errCode, "minimize invalid parameter."));
+                return;
+            }
             auto weakWindow = weakToken.promote();
             errCode = (weakWindow == nullptr) ? WmErrorCode::WM_ERROR_STATE_ABNORMALLY : errCode;
             if (errCode != WmErrorCode::WM_OK) {
