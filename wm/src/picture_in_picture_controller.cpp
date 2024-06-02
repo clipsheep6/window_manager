@@ -475,25 +475,22 @@ void PictureInPictureController::UpdateContentSize(int32_t width, int32_t height
     SingletonContainer::Get<PiPReporter>().ReportPiPRatio(width, height);
 }
 
+
+void PictureInPictureController::UpdateContentStatus(std:string cbType, int32_t status)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "UpdateContentStatus %{public}s : %{public}u", cbType.c_str(), status);
+    if (window_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "pipWindow not exist");
+    return;
+    }
+    window_->UpdateContentStatus(cbType, status);
+}
+
 bool PictureInPictureController::IsContentSizeChanged(float width, float height, float posX, float posY)
 {
     return windowRect_.width_ != static_cast<uint32_t>(width) ||
         windowRect_.height_ != static_cast<uint32_t>(height) ||
         windowRect_.posX_ != static_cast<int32_t>(posX) || windowRect_.posY_ != static_cast<int32_t>(posY);
-}
-
-void PictureInPictureController::UpdateContentStatus(std:string cbType, int32_t status)
-{
-    TLOGI(WmsLogTag::WMS_PIP, "UpdateContentStatus %{public}s : %{public}u", errMsg.c_str(), status);
-    if (curState_ != PiPWindowState::STATE_STARTED) {
-        TLOGD(WmsLogTag::WMS_PIP, "UpdateContentStatus is disabled when state: %{public}u", curState_);
-        return;
-    }
-    if (window_ == nullptr) {
-        TLOGE(WmsLogTag::WMS_PIP, "pipWindow not exist");
-        return;
-    }
-    window_->UpdateContentStatus(rect, WindowSizeChangeReason::PIP_RATIO_CHANGE);
 }
 
 void PictureInPictureController::PipMainWindowLifeCycleImpl::AfterBackground()

@@ -612,7 +612,7 @@ void JsSceneSession::ProcessSessionRectChangeRegister()
 void JsSceneSession::ProcessSessionContentStatusChangeRegister()
 {
     NotifySessionContentStatusFunc func = [this](const std:string& cbType, const int32_t& status) {
-        this->OnSessionRectChange(rect, reason);
+        this->OnSessionContentStatusChange(cbType, status);
     };
     auto session = weakSession_.promote();
     if (session == nullptr) {
@@ -1536,7 +1536,7 @@ void JsSceneSession::OnSessionContentStatusChange(const std:string& cbType, cons
         return;
     }
 
-    auto task = [rect, reason, jsCallBack, env = env_]() {
+    auto task = [cbType, status, jsCallBack, env = env_]() {
         if (!jsCallBack) {
             WLOGFE("[NAPI]jsCallBack is nullptr");
             return;

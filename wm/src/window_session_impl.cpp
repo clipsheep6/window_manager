@@ -2918,7 +2918,7 @@ void WindowSessionImpl::UpdateContentStatus(const std::string& cbType, int32_t s
         WLOGFE("HostSession is invalid");
         return;
     }
-    hostSession_->UpdateContentStatus(rect, wsReason);
+    hostSession_->UpdateContentStatus(cbType, status);
 }
 
 void WindowSessionImpl::NotifyWindowStatusChange(WindowMode mode)
