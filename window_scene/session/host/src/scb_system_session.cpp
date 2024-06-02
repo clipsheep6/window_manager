@@ -192,4 +192,9 @@ void SCBSystemSession::UpdatePointerArea(const WSRect& rect)
 {
     return;
 }
+
+bool SCBSystemSession::IsUIForeground() const
+{
+    return isVisible_;
+}
 } // namespace OHOS::Rosen

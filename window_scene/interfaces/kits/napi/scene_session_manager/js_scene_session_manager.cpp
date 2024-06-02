@@ -75,6 +75,7 @@ napi_value JsSceneSessionManager::Init(napi_env env, napi_value exportObj)
 
     napi_set_named_property(env, exportObj, "SessionState", CreateJsSessionState(env));
     napi_set_named_property(env, exportObj, "SessionType", SessionTypeInit(env));
+    napi_set_named_property(env, exportObj, "SceneType", SceneTypeInit(env));
     napi_set_named_property(env, exportObj, "KeyboardGravity", KeyboardGravityInit(env));
     napi_set_named_property(env, exportObj, "SessionSizeChangeReason", CreateJsSessionSizeChangeReason(env));
     napi_set_named_property(env, exportObj, "StartupVisibility", CreateJsSessionStartupVisibility(env));
@@ -564,6 +565,9 @@ napi_value JsSceneSessionManager::RequestSceneSessionDestruction(napi_env env, n
 
 napi_value JsSceneSessionManager::NotifyForegroundInteractiveStatus(napi_env env, napi_callback_info info)
 {
+    if (Session::IsScbCoreEnabled()) {
+        return nullptr;
+    }
     WLOGFD("[NAPI]");
     JsSceneSessionManager* me = CheckParamsAndGetThis<JsSceneSessionManager>(env, info);
     return (me != nullptr) ? me->OnNotifyForegroundInteractiveStatus(env, info) : nullptr;
@@ -1117,6 +1121,9 @@ napi_value JsSceneSessionManager::OnGetRootSceneSession(napi_env env, napi_callb
             SceneSessionManager::GetInstance().InitPersistentStorage();
         });
     rootScene_->SetFrameLayoutFinishCallback([]() {
+        if (Session::IsScbCoreEnabled()) {
+            return;
+        }
         SceneSessionManager::GetInstance().NotifyUpdateRectAfterLayout();
         SceneSessionManager::GetInstance().FlushWindowInfoToMMI();
     });
@@ -1167,8 +1174,9 @@ napi_value JsSceneSessionManager::OnRequestSceneSession(napi_env env, napi_callb
         sessionInfo.want = std::make_shared<AAFwk::Want>(want);
     }
 
-    WLOGFI("[NAPI][%{public}s, %{public}s, %{public}s], errCode=%{public}d",
-        sessionInfo.bundleName_.c_str(), sessionInfo.moduleName_.c_str(), sessionInfo.abilityName_.c_str(), errCode);
+    WLOGFI("[NAPI][%{public}s, %{public}s, %{public}s], sceneType: %{public}d, errCode=%{public}d",
+        sessionInfo.bundleName_.c_str(), sessionInfo.moduleName_.c_str(), sessionInfo.abilityName_.c_str(),
+        static_cast<uint32_t>(sessionInfo.sceneType_), errCode);
     sptr<SceneSession> sceneSession = SceneSessionManager::GetInstance().RequestSceneSession(sessionInfo);
     if (sceneSession == nullptr) {
         napi_throw(env,
@@ -2058,8 +2066,11 @@ napi_value JsSceneSessionManager::OnRequestFocusStatus(napi_env env, napi_callba
     }
     TLOGI(WmsLogTag::WMS_FOCUS, "[NAPI]OnRequestFocusStatus persistentId: %{public}d, isFocused: %{public}d, "
         "byForeground: %{public}d, reason: %{public}d", persistentId, isFocused, byForeground, reason);
-
-    SceneSessionManager::GetInstance().RequestFocusStatus(persistentId, isFocused, byForeground, reason);
+    if (Session::IsScbCoreEnabled()) {
+        SceneSessionManager::GetInstance().RequestFocusStatusBySCB(persistentId, isFocused, byForeground, reason);
+    } else {
+        SceneSessionManager::GetInstance().RequestFocusStatus(persistentId, isFocused, byForeground, reason);
+    }
     return NapiGetUndefined(env);
 }
 

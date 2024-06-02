@@ -421,6 +421,8 @@ public:
     };
     virtual bool CheckGetAvoidAreaAvailable(AvoidAreaType type) { return true; }
 
+    virtual bool IsUIForeground() const;
+    static bool IsScbCoreEnabled();
 protected:
     class SessionLifeCycleTask : public virtual RefBase {
     public:

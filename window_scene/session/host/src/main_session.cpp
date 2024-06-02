@@ -187,4 +187,17 @@ void MainSession::RectCheck(uint32_t curWidth, uint32_t curHeight)
     uint32_t maxFloatingWindowSize = GetSystemConfig().maxFloatingWindowSize_;
     RectSizeCheckProcess(curWidth, curHeight, minWidth, minHeight, maxFloatingWindowSize);
 }
+
+void MainSession::NotifyClientToUpdateInteractive(const bool interactive)
+{
+    if (!sessionStage_) {
+        return;
+    }
+    const auto& state = GetSessionState();
+    if (IsVisible() || state == SessionState::STATE_ACTIVE || state == SessionState::STATE_FOREGROUND) {
+        WLOGFI("NotifyForegroundInteractiveStatus %{public}d", interactive);
+        sessionStage_->NotifyForegroundInteractiveStatus(interactive);
+    }
+    return;
+}
 } // namespace OHOS::Rosen
