@@ -630,7 +630,7 @@ int SessionStub::HandleUpdatePiPRect(MessageParcel& data, MessageParcel& reply)
 int SessionStub::HandleUpdateContentStatus(MessageParcel& data, MessageParcel& reply)
 {
     TLOGD(WmsLogTag::WMS_PIP, "HandleUpdateContentStatus!");
-    std:string cbType =  {data.ReadString()};
+    std::string cbType =  {data.ReadString()};
     int32_t status =  {data.ReadInt32()};
     WSError errCode = UpdateContentStatus(cbType, status);
     reply.WriteUint32(static_cast<uint32_t>(errCode));

@@ -764,7 +764,7 @@ void SceneSession::SetSessionRectChangeCallback(const NotifySessionRectChangeFun
     PostTask(task, "SetSessionRectChangeCallback");
 }
 
-void SceneSession::SetSessionContentStatusChangeCallback(const NotifySessionContentStatusFunc& func)
+    void SceneSession::SetSessionContentStatusChangeCallback(const NotifySessionContentStatusFunc& func)
 {
     sessionContentStatusChangeFunc_ = func;
 }

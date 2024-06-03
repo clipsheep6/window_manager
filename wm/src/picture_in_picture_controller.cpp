@@ -476,7 +476,7 @@ void PictureInPictureController::UpdateContentSize(int32_t width, int32_t height
 }
 
 
-void PictureInPictureController::UpdateContentStatus(std:string cbType, int32_t status)
+void PictureInPictureController::UpdateContentStatus(std::string cbType, int32_t status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "UpdateContentStatus %{public}s : %{public}u", cbType.c_str(), status);
     if (window_ == nullptr) {

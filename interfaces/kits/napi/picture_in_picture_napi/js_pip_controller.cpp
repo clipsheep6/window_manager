@@ -40,7 +40,7 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "startPiP", moduleName, JsPipController::StartPictureInPicture);
     BindNativeFunction(env, object, "stopPiP", moduleName, JsPipController::StopPictureInPicture);
     BindNativeFunction(env, object, "updateContentSize", moduleName, JsPipController::UpdateContentSize);
-    BindNativeFunction(env, object, "updateContentStatus", moduleName, JsPipController::UpdateContentSize);
+    BindNativeFunction(env, object, "updateContentStatus", moduleName, JsPipController::UpdateContentStatus);
     BindNativeFunction(env, object, "setAutoStartEnabled", moduleName, JsPipController::SetAutoStartEnabled);
     BindNativeFunction(env, object, "on", moduleName, JsPipController::RegisterCallback);
     BindNativeFunction(env, object, "off", moduleName, JsPipController::UnregisterCallback);
@@ -249,15 +249,15 @@ napi_value JsPipController::OnUpdateContentStatus(napi_env env, napi_callback_in
         TLOGE(WmsLogTag::WMS_PIP, "Invalid args count, need 2 args but received: %{public}zu", argc);
         return NapiThrowInvalidParam(env, "Invalid args count, 2 args is needed.");
     }
-    std:string cbType;
+    std::string cbType = "";
     std::string errMsg = "";
     if (!ConvertFromJsValue(env, argv[0], cbType)) {
-        errMsg = "Failed to convert parameter to callbackType;
+        errMsg = "Failed to convert parameter to callbackType";
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
         return NapiThrowInvalidParam(env, errMsg);
     }
     int32_t status = 0;
-    if (!ConvertFromJsValue(env, argv[1], status) || status <= 0) {
+    if (!ConvertFromJsValue(env, argv[1], status)) {
         errMsg = "Failed to convert parameter to int or status <= 0";
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
         return NapiThrowInvalidParam(env, errMsg);
@@ -268,7 +268,7 @@ napi_value JsPipController::OnUpdateContentStatus(napi_env env, napi_callback_in
         return NapiThrowInvalidParam(env, errMsg);
     }
     std::lock_guard<std::mutex> lock(mtx_);
-    pipController_->UpdateContentStatus(width, height);
+    pipController_->UpdateContentStatus(cbType, status);
     return NapiGetUndefined(env);
 }
 

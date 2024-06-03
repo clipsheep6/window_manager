@@ -46,6 +46,7 @@ using GetAINavigationBarArea = std::function<WSRect(uint64_t displayId)>;
 using RecoveryCallback = std::function<void(int32_t persistentId, Rect rect)>;
 using NotifyBindDialogSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 using NotifySessionRectChangeFunc = std::function<void(const WSRect& rect, const SizeChangeReason& reason)>;
+using NotifySessionContentStatusFunc = std::function<void(const std::string& cbType, const int32_t& status)>;
 using NotifySessionEventFunc = std::function<void(int32_t eventId, SessionEventParam param)>;
 using NotifySessionTopmostChangeFunc = std::function<void(const bool topmost)>;
 using NotifyRaiseToTopFunc = std::function<void()>;
@@ -334,6 +335,7 @@ private:
     WSError HandlePointerStyle(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
 
     void NotifySessionRectChange(const WSRect& rect, const SizeChangeReason& reason = SizeChangeReason::UNDEFINED);
+    void NotifySessionContentStatusChange(const std::string& cbType, int32_t status);
     void OnMoveDragCallback(const SizeChangeReason& reason);
     void FixRectByLimits(WindowLimits limits, WSRect& rect, float ratio, bool isDecor, float vpr);
     bool FixRectByAspectRatio(WSRect& rect);

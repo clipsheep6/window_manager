@@ -611,7 +611,7 @@ void JsSceneSession::ProcessSessionRectChangeRegister()
 
 void JsSceneSession::ProcessSessionContentStatusChangeRegister()
 {
-    NotifySessionContentStatusFunc func = [this](const std:string& cbType, const int32_t& status) {
+    NotifySessionContentStatusFunc func = [this](const std::string& cbType, const int32_t& status) {
         this->OnSessionContentStatusChange(cbType, status);
     };
     auto session = weakSession_.promote();
@@ -1528,7 +1528,7 @@ void JsSceneSession::OnSessionRectChange(const WSRect& rect, const SizeChangeRea
     taskScheduler_->PostMainThreadTask(task, rectInfo);
 }
 
-void JsSceneSession::OnSessionContentStatusChange(const std:string& cbType, const int32_t& status)
+void JsSceneSession::OnSessionContentStatusChange(const std::string& cbType, const int32_t& status)
 {
     WLOGFI("[NAPI]OnSessionContentStatusChange");
     std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(SESSION_CONTENT_STATUS_CHANGE_CB);
