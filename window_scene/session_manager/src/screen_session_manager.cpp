@@ -3865,6 +3865,7 @@ void ScreenSessionManager::NotifyClientProxyUpdateFoldDisplayMode(FoldDisplayMod
     }
 }
 
+void ScreenSessionManager::SetClient(const sptr<ScreenSessionManagerClientInterface>& client)
 void ScreenSessionManager::SetNotifyLockOrNot(bool notifyLockOrNot)
 {
     notifyLockOrNot_ = notifyLockOrNot;

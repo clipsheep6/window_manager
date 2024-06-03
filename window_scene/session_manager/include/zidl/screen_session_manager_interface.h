@@ -138,6 +138,7 @@ public:
 
     virtual DMError MakeUniqueScreen(const std::vector<ScreenId>& screenIds) override { return DMError::DM_OK; };
 
+    virtual void SetClient(const sptr<ScreenSessionManagerClientInterface>& client) {}
     virtual void SetClient(const sptr<IScreenSessionManagerClient>& client) {}
     virtual void SwitchUser() {}
     virtual ScreenProperty GetScreenProperty(ScreenId screenId) { return ScreenProperty(); }

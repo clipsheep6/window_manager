@@ -230,6 +230,8 @@ public:
 
     void SetHdrFormats(ScreenId screenId, sptr<ScreenSession>& session);
     void SetColorSpaces(ScreenId screenId, sptr<ScreenSession>& session);
+
+    void SetClient(const sptr<ScreenSessionManagerClientInterface>& client) override;
     void SwitchUser() override;
     void SetClient(const sptr<IScreenSessionManagerClient>& client) override;
     ScreenProperty GetScreenProperty(ScreenId screenId) override;
@@ -333,6 +335,7 @@ private:
     RSInterfaces& rsInterface_;
     std::shared_ptr<TaskScheduler> taskScheduler_;
     std::shared_ptr<TaskScheduler> screenPowerTaskScheduler_;
+    sptr<ScreenSessionManagerClientInterface> clientProxy_;
 
     int32_t currentUserId_ { 0 };
     int32_t currentScbPId_ { -1 };
