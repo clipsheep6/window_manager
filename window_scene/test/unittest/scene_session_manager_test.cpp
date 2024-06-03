@@ -1356,8 +1356,8 @@ HWTEST_F(SceneSessionManagerTest, ClearMainSessions, Function | SmallTest | Leve
 */
 HWTEST_F(SceneSessionManagerTest, UpdateSessionDisplayId, Function | SmallTest | Level3)
 {
-    int32_t persistentId = 12345;
-    uint64_t screenId = 54321;
+    const int32_t persistentId = 12345;
+    const uint64_t screenId = 54321;
     ssm_->sceneSessionMap_.clear();
     WSError result00 = ssm_->UpdateSessionDisplayId(persistentId, screenId);
     ASSERT_EQ(result00, WSError::WS_ERROR_INVALID_WINDOW);
@@ -1370,9 +1370,9 @@ HWTEST_F(SceneSessionManagerTest, UpdateSessionDisplayId, Function | SmallTest |
 */
 HWTEST_F(SceneSessionManagerTest, UpdateTitleInTargetPos, Function | SmallTest | Level3)
 {
-    int32_t persistentId = 12345;
-    bool isShow = true;
-    int32_t height = 1;
+    const int32_t persistentId = 12345;
+    const bool isShow = true;
+    const int32_t height = 1;
     SessionInfo sessionInfo;
     sessionInfo.abilityName_ = "SceneSessionManagerTest";
     sessionInfo.bundleName_ = "UpdateTitleInTargetPos";
@@ -1389,7 +1389,7 @@ HWTEST_F(SceneSessionManagerTest, UpdateTitleInTargetPos, Function | SmallTest |
 */
 HWTEST_F(SceneSessionManagerTest, UnregisterCreateSubSessionListener, Function | SmallTest | Level3)
 {
-    int32_t persistentId = 0;
+    const int32_t persistentId = 0;
     ssm_->UnregisterCreateSubSessionListener(persistentId);
     ssm_->sceneSessionMap_.clear();
     sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
@@ -1426,7 +1426,7 @@ HWTEST_F(SceneSessionManagerTest, GetWindowModeType, Function | SmallTest | Leve
 */
 HWTEST_F(SceneSessionManagerTest, GetCallingWindowRect, Function | SmallTest | Level3)
 {
-    int32_t id = 0;
+    const int32_t id = 0;
     Rect rect = {100, 200, 100, 200};
     WMError result00 = ssm_->GetCallingWindowRect(id, rect);
     ASSERT_EQ(result00, WMError::WM_ERROR_INVALID_PERMISSION);
@@ -1439,7 +1439,7 @@ HWTEST_F(SceneSessionManagerTest, GetCallingWindowRect, Function | SmallTest | L
 */
 HWTEST_F(SceneSessionManagerTest, GetCallingWindowWindowStatus, Function | SmallTest | Level3)
 {
-    int32_t id = 0;
+    const int32_t id = 0;
     auto windowStatus = WindowStatus::WINDOW_STATUS_UNDEFINED;
     WMError result00 = ssm_->GetCallingWindowWindowStatus(id, windowStatus);
     ASSERT_EQ(result00, WMError::WM_ERROR_INVALID_PERMISSION);
@@ -1452,7 +1452,7 @@ HWTEST_F(SceneSessionManagerTest, GetCallingWindowWindowStatus, Function | Small
 */
 HWTEST_F(SceneSessionManagerTest, GetHostWindowRect, Function | SmallTest | Level3)
 {
-    int32_t id = 32;
+    const int32_t id = 32;
     Rect rect = {100, 200, 100, 200};
     WSError result00 = ssm_->GetHostWindowRect(id, rect);
     ASSERT_EQ(result00, WSError::WS_OK);
@@ -1465,8 +1465,8 @@ HWTEST_F(SceneSessionManagerTest, GetHostWindowRect, Function | SmallTest | Leve
 */
 HWTEST_F(SceneSessionManagerTest, AddExtensionWindowStageToSCB, Function | SmallTest | Level3)
 {
-    int32_t persistentId = 12345;
-    int32_t parentId = 1234;
+    const int32_t persistentId = 12345;
+    const int32_t parentId = 1234;
     sptr<ISessionStage> sessionStage;
     ssm_->AddExtensionWindowStageToSCB(sessionStage, persistentId, parentId);
     sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
@@ -1499,7 +1499,7 @@ HWTEST_F(SceneSessionManagerTest, FlushWindowInfoToMMI, Function | SmallTest | L
 */
 HWTEST_F(SceneSessionManagerTest, RequestInputMethodCloseKeyboard, Function | SmallTest | Level3)
 {
-    int32_t persistentId = 12345;
+    const int32_t persistentId = 12345;
     sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
     ssm_->RequestInputMethodCloseKeyboard(persistentId);
     ASSERT_NE(nullptr, sceneSessionManager);
