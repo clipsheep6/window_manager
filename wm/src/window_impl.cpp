@@ -2587,6 +2587,12 @@ void WindowImpl::UpdateRect(const struct Rect& rect, bool decoStatus, WindowSize
             property_->SetOriginRect(rect);
         }
     }
+    ScheduleUpdateRectTask(rectToAce, lastOriRect, reason, rsTransaction, display);
+}
+
+void WindowImpl::ScheduleUpdateRectTask(const Rect& rectToAce, const Rect& lastOriRect, WindowSizeChangeReason reason,
+    const std::shared_ptr<RSTransaction>& rsTransaction, const sptr<class Display>& display)
+{
     auto task = [this, reason, rsTransaction, rectToAce, lastOriRect, display]() mutable {
         if (rsTransaction) {
             RSTransaction::FlushImplicitTransaction();
