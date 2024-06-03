@@ -1814,6 +1814,22 @@ HWTEST_F(WindowSessionTest, TransferKeyEventForConsumed03, Function | SmallTest 
     bool isConsumed = false;
     ASSERT_EQ(WSError::WS_OK, session_->TransferKeyEventForConsumed(keyEvent, isConsumed));
 }
+
+/**
+ * @tc.name: TransferKeyEventForConsumed03
+ * @tc.desc: windowEventChannel_ is not nullptr, keyEvent is not nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferKeyEventForConsumed03, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->windowEventChannel_ = new TestWindowEventChannel();
+
+    std::shared_ptr<MMI::KeyEvent> keyEvent = MMI::KeyEvent::Create();
+    bool isConsumed = false;
+    ASSERT_EQ(WSError::WS_OK, session_->TransferKeyEventForConsumed(keyEvent, isConsumed));
+}
 }
 } // namespace Rosen
 } // namespace OHOS
