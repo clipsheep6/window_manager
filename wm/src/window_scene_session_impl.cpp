@@ -74,6 +74,28 @@ constexpr int32_t WINDOW_DETACH_TIMEOUT = 300;
 const std::string PARAM_DUMP_HELP = "-h";
 constexpr float MIN_GRAY_SCALE = 0.0f;
 constexpr float MAX_GRAY_SCALE = 1.0f;
+const std::unordered_set<WindowType> ValidSystemWindowType = {
+    WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW,
+    WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT,
+    WindowType::WINDOW_TYPE_FLOAT_CAMERA,
+    WindowType::WINDOW_TYPE_DIALOG,
+    WindowType::WINDOW_TYPE_FLOAT,
+    WindowType::WINDOW_TYPE_SCREENSHOT,
+    WindowType::WINDOW_TYPE_VOICE_INTERACTION,
+    WindowType::WINDOW_TYPE_POINTER,
+    WindowType::WINDOW_TYPE_TOAST,
+    WindowType::WINDOW_TYPE_DRAGGING_EFFECT,
+    WindowType::WINDOW_TYPE_SEARCHING_BAR,
+    WindowType::WINDOW_TYPE_PANEL,
+    WindowType::WINDOW_TYPE_VOLUME_OVERLAY,
+    WindowType::WINDOW_TYPE_INPUT_METHOD_STATUS_BAR,
+    WindowType::WINDOW_TYPE_SYSTEM_TOAST,
+    WindowType::WINDOW_TYPE_SYSTEM_FLOAT,
+    WindowType::WINDOW_TYPE_PIP,
+    WindowType::WINDOW_TYPE_GLOBAL_SEARCH,
+    WindowType::WINDOW_TYPE_SYSTEM_SUB_WINDOW,
+    WindowType::WINDOW_TYPE_HANDWRITE
+};
 }
 uint32_t WindowSceneSessionImpl::maxFloatingWindowSize_ = 1920;
 std::mutex WindowSceneSessionImpl::keyboardPanelInfoChangeListenerMutex_;
@@ -90,16 +112,7 @@ WindowSceneSessionImpl::~WindowSceneSessionImpl()
 
 bool WindowSceneSessionImpl::IsValidSystemWindowType(const WindowType& type)
 {
-    if (!(type == WindowType::WINDOW_TYPE_SYSTEM_ALARM_WINDOW || type == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT ||
-        type == WindowType::WINDOW_TYPE_FLOAT_CAMERA || type == WindowType::WINDOW_TYPE_DIALOG ||
-        type == WindowType::WINDOW_TYPE_FLOAT || type == WindowType::WINDOW_TYPE_SCREENSHOT ||
-        type == WindowType::WINDOW_TYPE_VOICE_INTERACTION || type == WindowType::WINDOW_TYPE_POINTER ||
-        type == WindowType::WINDOW_TYPE_TOAST || type == WindowType::WINDOW_TYPE_DRAGGING_EFFECT ||
-        type == WindowType::WINDOW_TYPE_SEARCHING_BAR || type == WindowType::WINDOW_TYPE_PANEL ||
-        type == WindowType::WINDOW_TYPE_VOLUME_OVERLAY || type == WindowType::WINDOW_TYPE_INPUT_METHOD_STATUS_BAR ||
-        type == WindowType::WINDOW_TYPE_SYSTEM_TOAST || type == WindowType::WINDOW_TYPE_SYSTEM_FLOAT ||
-        type == WindowType::WINDOW_TYPE_PIP || type == WindowType::WINDOW_TYPE_GLOBAL_SEARCH ||
-        type == WindowType::WINDOW_TYPE_SYSTEM_SUB_WINDOW || type == WindowType::WINDOW_TYPE_HANDWRITE)) {
+    if (ValidSystemWindowType.find(type) == ValidSystemWindowType.end()) {
         TLOGI(WmsLogTag::WMS_SYSTEM, "Invalid type: %{public}u", type);
         return false;
     }
