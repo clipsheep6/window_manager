@@ -231,6 +231,11 @@ std::vector<sptr<Window>> Window::GetSubWindow(uint32_t parentId)
 
 void Window::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
+    constexpr const char* APPLICATION_FONT = "ohos.application.font";
+    TLOGI(WmsLogTag::WMS_MAIN, "recv ability Update display config font: %{public}s for all windows.",
+        configuration->GetItem(APPLICATION_FONT).c_str());
+    TLOGI(WmsLogTag::WMS_MAIN, "recv ability Update display config: %{public}s for all windows.",
+        configuration->GetName().c_str());
     TLOGI(WmsLogTag::WMS_MAIN, "recv ability Update display config: %{public}s for all windows.",
         configuration->GetName().c_str());
     if (SceneBoardJudgement::IsSceneBoardEnabled()) {
