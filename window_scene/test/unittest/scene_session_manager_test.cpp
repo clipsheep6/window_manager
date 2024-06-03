@@ -1359,8 +1359,8 @@ HWTEST_F(SceneSessionManagerTest, UpdateSessionDisplayId, Function | SmallTest |
     const int32_t persistentId = 12345;
     const uint64_t screenId = 54321;
     ssm_->sceneSessionMap_.clear();
-    WSError result00 = ssm_->UpdateSessionDisplayId(persistentId, screenId);
-    ASSERT_EQ(result00, WSError::WS_ERROR_INVALID_WINDOW);
+    WSError result = ssm_->UpdateSessionDisplayId(persistentId, screenId);
+    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_WINDOW);
 }
 
 /**
@@ -1378,8 +1378,8 @@ HWTEST_F(SceneSessionManagerTest, UpdateTitleInTargetPos, Function | SmallTest |
     sessionInfo.bundleName_ = "UpdateTitleInTargetPos";
     sptr<SceneSession> sceneSession = ssm_->CreateSceneSession(sessionInfo, nullptr);
     ssm_->sceneSessionMap_.clear();
-    WSError result00 = ssm_->UpdateTitleInTargetPos(persistentId, isShow, height);
-    ASSERT_EQ(result00, WSError::WS_ERROR_INVALID_WINDOW);
+    WSError result = ssm_->UpdateTitleInTargetPos(persistentId, isShow, height);
+    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_WINDOW);
 }
 
 /**
@@ -1403,8 +1403,8 @@ HWTEST_F(SceneSessionManagerTest, UnregisterCreateSubSessionListener, Function |
 */
 HWTEST_F(SceneSessionManagerTest, SwitchFreeMultiWindow, Function | SmallTest | Level3)
 {
-    WSError result00 = ssm_->SwitchFreeMultiWindow(true);
-    ASSERT_EQ(result00, WSError::WS_ERROR_DEVICE_NOT_SUPPORT);
+    WSError result = ssm_->SwitchFreeMultiWindow(true);
+    ASSERT_EQ(result, WSError::WS_ERROR_DEVICE_NOT_SUPPORT);
 }
 
 /**
@@ -1415,8 +1415,8 @@ HWTEST_F(SceneSessionManagerTest, SwitchFreeMultiWindow, Function | SmallTest | 
 HWTEST_F(SceneSessionManagerTest, GetWindowModeType, Function | SmallTest | Level3)
 {
     WindowModeType type = WindowModeType::WINDOW_MODE_OTHER;
-    WMError result00 = ssm_->GetWindowModeType(type);
-    ASSERT_EQ(result00, WMError::WM_ERROR_INVALID_PERMISSION);
+    WMError result = ssm_->GetWindowModeType(type);
+    ASSERT_EQ(result, WMError::WM_ERROR_INVALID_PERMISSION);
 }
 
 /**
@@ -1428,8 +1428,8 @@ HWTEST_F(SceneSessionManagerTest, GetCallingWindowRect, Function | SmallTest | L
 {
     const int32_t id = 0;
     Rect rect = {100, 200, 100, 200};
-    WMError result00 = ssm_->GetCallingWindowRect(id, rect);
-    ASSERT_EQ(result00, WMError::WM_ERROR_INVALID_PERMISSION);
+    WMError result = ssm_->GetCallingWindowRect(id, rect);
+    ASSERT_EQ(result, WMError::WM_ERROR_INVALID_PERMISSION);
 }
 
 /**
@@ -1441,8 +1441,8 @@ HWTEST_F(SceneSessionManagerTest, GetCallingWindowWindowStatus, Function | Small
 {
     const int32_t id = 0;
     auto windowStatus = WindowStatus::WINDOW_STATUS_UNDEFINED;
-    WMError result00 = ssm_->GetCallingWindowWindowStatus(id, windowStatus);
-    ASSERT_EQ(result00, WMError::WM_ERROR_INVALID_PERMISSION);
+    WMError result = ssm_->GetCallingWindowWindowStatus(id, windowStatus);
+    ASSERT_EQ(result, WMError::WM_ERROR_INVALID_PERMISSION);
 }
 
 /**
@@ -1454,8 +1454,8 @@ HWTEST_F(SceneSessionManagerTest, GetHostWindowRect, Function | SmallTest | Leve
 {
     const int32_t id = 32;
     Rect rect = {100, 200, 100, 200};
-    WSError result00 = ssm_->GetHostWindowRect(id, rect);
-    ASSERT_EQ(result00, WSError::WS_OK);
+    WSError result = ssm_->GetHostWindowRect(id, rect);
+    ASSERT_EQ(result, WSError::WS_OK);
 }
 
 /**
@@ -1527,8 +1527,8 @@ HWTEST_F(SceneSessionManagerTest, GetSurfaceNodeIdsFromMissionIds, Function | Sm
 {
     std::vector<uint64_t> missionIds;
     std::vector<uint64_t> surfaceNodeIds;
-    WMError result00 = ssm_->GetSurfaceNodeIdsFromMissionIds(missionIds, surfaceNodeIds);
-    ASSERT_NE(result00, WMError::WM_OK);
+    WMError result = ssm_->GetSurfaceNodeIdsFromMissionIds(missionIds, surfaceNodeIds);
+    ASSERT_NE(result, WMError::WM_OK);
 }
 }
 } // namespace Rosen
