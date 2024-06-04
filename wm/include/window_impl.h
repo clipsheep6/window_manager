@@ -240,6 +240,8 @@ public:
     virtual void SetRequestModeSupportInfo(uint32_t modeSupportInfo) override;
     void UpdateRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
+    void ScheduleUpdateTask(const Rect& rectToAce, const Rect& lastOriRect, WindowSizeChangeReason reason,
+        const std::shared_ptr<RSTransaction>& rsTransaction, const sptr<class Display>& display);
     void UpdateMode(WindowMode mode);
     void UpdateModeSupportInfo(uint32_t modeSupportInfo);
     virtual void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent) override;
@@ -403,6 +405,9 @@ private:
     WMError WindowCreateCheck(uint32_t parentId);
     uint32_t CalculatePointerDirection(int32_t pointerX, int32_t pointerY);
     void HandlePointerStyle(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
+    WMError HandleFloatingWindowStyle(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
+        const MMI::PointerEvent::PointerItem& pointerItem, uint32_t& newStyleID);
+    void HandleDockSliceWindowStyle(uint32_t action, uint32_t& newStyleID);
     RSSurfaceNode::SharedPtr CreateSurfaceNode(std::string name, WindowType type);
     void UpdateWindowStateUnfrozen();
     void UpdateViewportConfig(const Rect& rect, const sptr<class Display>& display, WindowSizeChangeReason reason,
