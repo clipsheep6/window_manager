@@ -2203,17 +2203,17 @@ WSRect Session::GetSessionRect() const
     return winRect_;
 }
 
-void Session::SetSessionOldRect(const WSRect& rect)
+void Session::SetSessionLastRect(const WSRect& rect)
 {
-    if (oldWinRect_ == rect) {
+    if (lastWinRect_ == rect) {
         return;
     }
-    oldWinRect_ = rect;
+    lastWinRect_ = rect;
 }
 
-WSRect Session::GetSessionOldRect() const
+WSRect Session::GetSessionLastRect() const
 {
-    return oldWinRect_;
+    return lastWinRect_;
 }
 
 void Session::SetSessionRequestRect(const WSRect& rect)
@@ -2454,6 +2454,8 @@ bool Session::IsSupportDetectWindow(bool isAttach)
     }
     // Only detecting cold start scenarios on PC
     if (isPc && (!isAttach || state_ != SessionState::STATE_DISCONNECT)) {
+        TLOGI(WmsLogTag::WMS_LIFE, "Window state detect not support: Only support cold start on pc, "
+            "persistentId:%{public}d", persistentId_);
         RemoveWindowDetectTask();
         return false;
     }
@@ -2739,6 +2741,15 @@ WSError Session::SwitchFreeMultiWindow(bool enable)
         return WSError::WS_ERROR_INVALID_SESSION;
     }
     return sessionStage_->SwitchFreeMultiWindow(enable);
+}
+
+WSError Session::GetUIContentRemoteObj(sptr<IRemoteObject>& uiContentRemoteObj)
+{
+    if (!IsSessionValid()) {
+        TLOGE(WmsLogTag::DEFAULT, "session %{public}d is invalid. Failed to get UIContentRemoteObj", GetPersistentId());
+        return WSError::WS_ERROR_INVALID_SESSION;
+    }
+    return sessionStage_->GetUIContentRemoteObj(uiContentRemoteObj);
 }
 
 void Session::SetNotifySystemSessionPointerEventFunc(const NotifySystemSessionPointerEventFunc& func)

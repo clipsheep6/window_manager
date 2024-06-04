@@ -252,10 +252,6 @@ WMError WindowController::CreateWindow(sptr<IWindow>& window, sptr<WindowPropert
         return WMError::WM_ERROR_INVALID_PARENT;
     }
 
-    if (windowRoot_->CheckMultiDialogWindows(property->GetWindowType(), token)) {
-        return WMError::WM_ERROR_INVALID_WINDOW;
-    }
-
     if (!surfaceNode) {
         return WMError::WM_ERROR_NULLPTR;
     }
@@ -1861,9 +1857,6 @@ WMError WindowController::BindDialogTarget(uint32_t& windowId, sptr<IRemoteObjec
     if (node == nullptr) {
         WLOGFE("could not find window");
         return WMError::WM_ERROR_NULLPTR;
-    }
-    if (windowRoot_->CheckMultiDialogWindows(node->GetWindowType(), targetToken)) {
-        return WMError::WM_ERROR_INVALID_WINDOW;
     }
 
     node->dialogTargetToken_ = targetToken;

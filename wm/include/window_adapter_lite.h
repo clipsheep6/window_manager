@@ -50,6 +50,7 @@ public:
     virtual WMError ClearMainSessions(const std::vector<int32_t>& persistentIds);
     virtual WMError ClearMainSessions(const std::vector<int32_t>& persistentIds, std::vector<int32_t>& clearFailedIds);
     WMError RegisterWMSConnectionChangedListener(const WMSConnectionChangedCallbackFunc& callbackFunc);
+    virtual WMError RaiseWindowToTop(int32_t persistentId);
 
 private:
     static inline SingletonDelegator<WindowAdapterLite> delegator;

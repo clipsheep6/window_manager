@@ -217,5 +217,11 @@ WMError WindowAdapterLite::RegisterWMSConnectionChangedListener(const WMSConnect
     WLOGFI("RegisterWMSConnectionChangedListener in");
     return SessionManagerLite::GetInstance().RegisterWMSConnectionChangedListener(callbackFunc);
 }
+
+WMError WindowAdapterLite::RaiseWindowToTop(int32_t persistentId)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    return static_cast<WMError>(windowManagerServiceProxy_->RaiseWindowToTop(persistentId));
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -649,5 +649,14 @@ void WindowManagerLite::OnWMSConnectionChanged(int32_t userId, int32_t screenId,
         pImpl_->NotifyWMSDisconnected(userId, screenId);
     }
 }
+
+WMError WindowManagerLite::RaiseWindowToTop(int32_t persistentId)
+{
+    WMError ret = SingletonContainer::Get<WindowAdapterLite>().RaiseWindowToTop(persistentId);
+    if (ret != WMError::WM_OK) {
+        TLOGE(WmsLogTag::WMS_SYSTEM, "raise window to top failed.");
+    }
+    return ret;
+}
 } // namespace Rosen
 } // namespace OHOS

@@ -188,6 +188,13 @@ public:
      * @return WM_OK means unregister success, others means unregister failed.
      */
     WMError UnregisterWMSConnectionChangedListener();
+    /**
+     * @brief raise window to top by windowId
+     *
+     * @param persistentId this window to raise
+     * @return WM_OK if raise success
+     */
+    WMError RaiseWindowToTop(int32_t persistentId);
 
 private:
     WindowManagerLite();
