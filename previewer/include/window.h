@@ -329,6 +329,14 @@ public:
     }
 
     virtual WMError SetGrayScale(float grayScale) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
+    
+    /**
+     * @brief Set the Dvsync object
+     *
+     * @param dvsyncSwitch bool.
+     * @return * void
+    */
+    virtual void SetUiDvsyncSwitch(bool dvsyncSwitch) {}
 };
 }
 }
