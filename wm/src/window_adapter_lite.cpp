@@ -212,6 +212,12 @@ WMError WindowAdapterLite::ClearMainSessions(const std::vector<int32_t>& persist
     return windowManagerServiceProxy_->ClearMainSessions(persistentIds, clearFailedIds);
 }
 
+WMError WindowAdapterLite::RegisterWMSConnectionChangedListener(const WMSConnectionChangedCallbackFunc& callbackFunc)
+{
+    WLOGFI("RegisterWMSConnectionChangedListener in");
+    return SessionManagerLite::GetInstance().RegisterWMSConnectionChangedListener(callbackFunc);
+}
+
 WMError WindowAdapterLite::RaiseWindowToTop(int32_t persistentId)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);

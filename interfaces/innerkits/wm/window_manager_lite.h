@@ -172,6 +172,23 @@ public:
     WMError ClearMainSessions(const std::vector<int32_t>& persistentIds, std::vector<int32_t>& clearFailedIds);
 
     /**
+     * @brief Register WMS connection status changed listener.
+     * @attention Callable only by u0 system user. A process only supports successful registration once.
+     * When the foundation service restarts, you need to re-register the listener.
+     * If you want to re-register, please call UnregisterWMSConnectionChangedListener first.
+     *
+     * @param listener IWMSConnectionChangedListener.
+     * @return WM_OK means register success, others means register failed.
+     */
+    WMError RegisterWMSConnectionChangedListener(const sptr<IWMSConnectionChangedListener>& listener);
+    /**
+     * @brief Unregister WMS connection status changed listener.
+     * @attention Callable only by u0 system user.
+     *
+     * @return WM_OK means unregister success, others means unregister failed.
+     */
+    WMError UnregisterWMSConnectionChangedListener();
+    /**
      * @brief raise window to top by windowId
      *
      * @param persistentId this window to raise
@@ -197,6 +214,7 @@ private:
     void UpdateWindowModeTypeInfo(WindowModeType type) const;
     void UpdateCameraWindowStatus(uint32_t accessTokenId, bool isShowing) const;
     void OnRemoteDied();
+    void OnWMSConnectionChanged(int32_t userId, int32_t screenId, bool isConnected) const;
 };
 } // namespace Rosen
 } // namespace OHOS
