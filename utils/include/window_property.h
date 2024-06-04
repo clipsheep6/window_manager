@@ -154,6 +154,7 @@ public:
     double GetTextFieldPositionY() const;
     double GetTextFieldHeight() const;
 private:
+    bool MarshallingRequestRect(Parcel& parcel) const;
     bool MapMarshalling(Parcel& parcel) const;
     static void MapUnmarshalling(Parcel& parcel, WindowProperty* property);
     bool MarshallingTouchHotAreas(Parcel& parcel) const;
@@ -162,6 +163,7 @@ private:
     static void UnmarshallingTransform(Parcel& parcel, WindowProperty* property);
     bool MarshallingWindowSizeLimits(Parcel& parcel) const;
     static void UnmarshallingWindowSizeLimits(Parcel& parcel, WindowProperty* property);
+    static void UnmarshallingZoomTransform(Parcel& parcel, WindowProperty* property);
     void HandleComputeTransform(const Transform& trans);
 
     std::string windowName_;
