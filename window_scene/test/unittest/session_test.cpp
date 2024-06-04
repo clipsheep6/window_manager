@@ -1832,6 +1832,106 @@ HWTEST_F(WindowSessionTest, TransferKeyEventForConsumed03, Function | SmallTest 
     bool isConsumed = false;
     ASSERT_EQ(WSError::WS_OK, session_->TransferKeyEventForConsumed(keyEvent, isConsumed));
 }
+
+/**
+ * @tc.name: SetBackPressedListenser
+ * @tc.desc: SetBackPressedListenser Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest2, SetBackPressedListenser, Function | SmallTest | Level2)
+{
+    int ret = 0;
+    WLOGFI("SetBackPressedListenser begin!");
+
+    session_->SetBackPressedListenser(session_->backPressedFunc_);
+
+    WLOGFI("SetBackPressedListenser end!");
+    ASSERT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name: SetUpdateSessionIconListener
+ * @tc.desc: SetUpdateSessionIconListener Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest2, SetUpdateSessionIconListener, Function | SmallTest | Level2)
+{
+    int ret = 0;
+    WLOGFI("SetUpdateSessionIconListener begin!");
+
+    session_->SetUpdateSessionIconListener(session_->updateSessionIconFunc_);
+
+    WLOGFI("SetUpdateSessionIconListener end!");
+    ASSERT_EQ(ret, 0);
+}
+
+/**
+ * @tc.name: ResetSnapshot
+ * @tc.desc: ResetSnapshot Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest2, ResetSnapshot, Function | SmallTest | Level2)
+{
+    WLOGFI("ResetSnapshot begin!");
+    int ret = 0;
+
+    if (session_->snapshot_ == nullptr) {
+        session_->snapshot_ = std::make_shared<Media::PixelMap>();
+    }
+    session_->ResetSnapshot();
+
+    ASSERT_EQ(ret, 0);
+    WLOGFI("ResetSnapshot end!");
+}
+
+/**
+ * @tc.name: NotifyContextTransparent
+ * @tc.desc: NotifyContextTransparent Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest2, NotifyContextTransparent, Function | SmallTest | Level2)
+{
+    WLOGFI("NotifyContextTransparent begin!");
+    int ret = 0;
+
+    NotifyContextTransparentFunc contextTransparentFunc = session_->contextTransparentFunc_;
+    if (contextTransparentFunc == nullptr) {
+        contextTransparentFunc = []() {};
+    }
+    session_->contextTransparentFunc_ = nullptr;
+    session_->NotifyContextTransparent();
+
+    session_->SetContextTransparentFunc(contextTransparentFunc);
+    session_->NotifyContextTransparent();
+
+    ASSERT_EQ(ret, 0);
+    WLOGFI("NotifyContextTransparent end!");
+}
+
+/**
+ * @tc.name: NotifySessionInfoLockedStateChange
+ * @tc.desc: NotifySessionInfoLockedStateChange Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest2, NotifySessionInfoLockedStateChange, Function | SmallTest | Level2)
+{
+    WLOGFI("NotifySessionInfoLockedStateChange begin!");
+    int ret = 0;
+
+    NotifySessionInfoLockedStateChangeFunc sessionInfoLockedStateChangeFunc =
+        session_->sessionInfoLockedStateChangeFunc_;
+    if (sessionInfoLockedStateChangeFunc == nullptr) {
+        sessionInfoLockedStateChangeFunc = [](const bool lockedState) {};
+    }
+    session_->sessionInfoLockedStateChangeFunc_ = nullptr;
+    session_->NotifySessionInfoLockedStateChange(true);
+
+    session_->SetSessionInfoLockedStateChangeListener(sessionInfoLockedStateChangeFunc);
+    session_->NotifySessionInfoLockedStateChange(true);
+
+    ASSERT_EQ(ret, 0);
+    WLOGFI("NotifySessionInfoLockedStateChange end!");
+}
 }
 } // namespace Rosen
 } // namespace OHOS
