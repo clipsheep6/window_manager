@@ -357,8 +357,8 @@ napi_value WindowStatusTypeInit(napi_env env)
         static_cast<int32_t>(WindowStatus::WINDOW_STATUS_UNDEFINED)));
     napi_set_named_property(env, objValue, "FULL_SCREEN", CreateJsValue(env,
         static_cast<int32_t>(WindowStatus::WINDOW_STATUS_FULLSCREEN)));
-    napi_set_named_property(env, objValue, "MAXMIZE", CreateJsValue(env,
-        static_cast<int32_t>(WindowStatus::WINDOW_STATUS_MAXMIZE)));
+    napi_set_named_property(env, objValue, "MAXIMIZE", CreateJsValue(env,
+        static_cast<int32_t>(WindowStatus::WINDOW_STATUS_MAXIMIZE)));
     napi_set_named_property(env, objValue, "MINIMIZE", CreateJsValue(env,
         static_cast<int32_t>(WindowStatus::WINDOW_STATUS_MINIMIZE)));
     napi_set_named_property(env, objValue, "FLOATING", CreateJsValue(env,
@@ -824,6 +824,15 @@ bool SetSystemBarPropertiesFromJs(napi_env env, napi_value jsObject,
         propertyFlags[WindowType::WINDOW_TYPE_NAVIGATION_BAR].enableAnimationFlag = true;
     }
     return true;
+}
+
+void ConvertJSSystemBarStyleToSystemBarProperties(napi_env env, napi_value jsObject,
+    std::map<WindowType, SystemBarProperty>& properties, std::map<WindowType, SystemBarPropertyFlag>& propertyFlags)
+{
+    properties[WindowType::WINDOW_TYPE_STATUS_BAR].contentColor_ = GetColorFromJs(env,
+        jsObject, "statusBarContentColor",
+        properties[WindowType::WINDOW_TYPE_STATUS_BAR].contentColor_,
+        propertyFlags[WindowType::WINDOW_TYPE_STATUS_BAR].contentColorFlag);
 }
 
 napi_value ConvertAvoidAreaToJsValue(napi_env env, const AvoidArea& avoidArea, AvoidAreaType type)

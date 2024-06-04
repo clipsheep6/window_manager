@@ -1532,6 +1532,30 @@ HWTEST_F(SceneSessionManagerTest3, GetTopNearestBlockingFocusSession, Function |
     ASSERT_NE(session, nullptr);
 }
 
+/**
+ * @tc.name: CheckFocusIsDownThroughBlockingType
+ * @tc.desc: SceneSesionManager test focus switch.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest3, CheckFocusIsDownThroughBlockingType, Function | SmallTest | Level3)
+{
+    SessionInfo requestInfo;
+    requestInfo.abilityName_ = "testInfo1a";
+    requestInfo.bundleName_ = "testInfo1b";
+    sptr<SceneSession> sessionRequest = new(std::nothrow) SceneSession(requestInfo, nullptr);
+    EXPECT_NE(sessionRequest, nullptr);
+    sessionRequest->SetZOrder(20);
+
+    SessionInfo focusedInfo;
+    focusedInfo.abilityName_ = "testInfo2a";
+    focusedInfo.bundleName_ = "testInfo2b";
+    sptr<SceneSession> sessionFocused = new(std::nothrow) SceneSession(focusedInfo, nullptr);
+    EXPECT_NE(sessionFocused, nullptr);
+    sessionFocused->SetZOrder(19);
+
+    bool ret = ssm_->CheckFocusIsDownThroughBlockingType(sessionRequest, sessionFocused, false);
+    ASSERT_FALSE(ret);
+}
 
 /**
  * @tc.name: RaiseWindowToTop
@@ -1737,7 +1761,26 @@ HWTEST_F(SceneSessionManagerTest3, UpdatePrivateStateAndNotify, Function | Small
     ssm_->RegisterSessionStateChangeNotifyManagerFunc(scensession);
     ssm_->UpdatePrivateStateAndNotify(persistentId);
     auto displayId = scensession->GetSessionProperty()->GetDisplayId();
-    std::vector<string> privacyBundleList;
+    std::unordered_set<string> privacyBundleList;
+    ssm_->GetSceneSessionPrivacyModeBundles(displayId, privacyBundleList);
+    EXPECT_EQ(privacyBundleList.size(), 0);
+}
+
+/**
+ * @tc.name: UpdatePrivateStateAndNotifyForAllScreens
+ * @tc.desc: SceneSesionManager update private state and notify for all screens
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest3, UpdatePrivateStateAndNotifyForAllScreens, Function | SmallTest | Level3)
+{
+    SessionInfo info;
+    info.bundleName_ = "bundleName";
+    sptr<SceneSession> sceneSession = sptr<SceneSession>::MakeSptr(info, nullptr);
+    ASSERT_NE(sceneSession, nullptr);
+
+    ssm_->UpdatePrivateStateAndNotifyForAllScreens();
+    auto displayId = sceneSession->GetSessionProperty()->GetDisplayId();
+    std::unordered_set<std::string> privacyBundleList;
     ssm_->GetSceneSessionPrivacyModeBundles(displayId, privacyBundleList);
     EXPECT_EQ(privacyBundleList.size(), 0);
 }
@@ -1760,7 +1803,7 @@ HWTEST_F(SceneSessionManagerTest3, GerPrivacyBundleListOneWindow, Function | Sma
     sceneSession->state_ = SessionState::STATE_FOREGROUND;
     ssm_->sceneSessionMap_.insert({sceneSession->GetPersistentId(), sceneSession});
 
-    std::vector<std::string> privacyBundleList;
+    std::unordered_set<std::string> privacyBundleList;
     sceneSession->GetSessionProperty()->isPrivacyMode_ = false;
     privacyBundleList.clear();
     ssm_->GetSceneSessionPrivacyModeBundles(0, privacyBundleList);
@@ -1777,7 +1820,6 @@ HWTEST_F(SceneSessionManagerTest3, GerPrivacyBundleListOneWindow, Function | Sma
     privacyBundleList.clear();
     ssm_->GetSceneSessionPrivacyModeBundles(0, privacyBundleList);
     EXPECT_EQ(privacyBundleList.size(), 1);
-    EXPECT_EQ(privacyBundleList.at(0), sessionInfo.bundleName_);
 
     privacyBundleList.clear();
     ssm_->GetSceneSessionPrivacyModeBundles(1, privacyBundleList);
