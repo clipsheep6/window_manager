@@ -84,8 +84,8 @@ HWTEST_F(VsyncStationTest, RequestVsyncMultiWindow, Function | SmallTest | Level
 }
 
 /**
- * @tc.name: GetVsyncPeriod
- * @tc.desc: GetVsyncPeriod Test
+ * @tc.name: GetVSyncPeriod
+ * @tc.desc: GetVSyncPeriod Test
  * @tc.type: FUNC
  */
 HWTEST_F(VsyncStationTest, GetVSyncPeriod, Function | SmallTest | Level3)
@@ -93,7 +93,7 @@ HWTEST_F(VsyncStationTest, GetVSyncPeriod, Function | SmallTest | Level3)
     NodeId nodeId0 = 0;
     std::shared_ptr<VsyncStation> vsyncStation0 = std::make_shared<VsyncStation>(nodeId0);
     vsyncStation0->receiver_ = nullptr;
-    ASSERT_EQ(0, vsyncStation0->GetVsyncPeriod());
+    ASSERT_EQ(0, vsyncStation0->GetVSyncPeriod());
 }
 
 /**
