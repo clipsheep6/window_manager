@@ -1413,8 +1413,8 @@ HWTEST_F(SceneSessionManagerTest, GetSceneSessionPrivacyModeBundles, Function | 
 HWTEST_F(SceneSessionManagerTest, UnregisterIAbilityManagerCollaborator, Function | SmallTest | Level3)
 {
     int32_t type = 1;
-    WSError result00 = ssm_->UnregisterIAbilityManagerCollaborator(type);
-    ASSERT_EQ(result00, WSError::WS_ERROR_INVALID_PERMISSION);
+    WSError result = ssm_->UnregisterIAbilityManagerCollaborator(type);
+    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_PERMISSION);
 }
 
 /**
