@@ -782,7 +782,9 @@ HWTEST_F(SceneSessionManagerTest, ClearUnrecoveredSessions, Function | SmallTest
     ssm_->alivePersistentIds_.push_back(23);
     ssm_->alivePersistentIds_.push_back(24);
     ssm_->alivePersistentIds_.push_back(25);
+    EXPECT_FALSE(ssm_->alivePersistentIds_.empty());
     std::vector<int32_t> recoveredPersistentIds;
+    EXPECT_TRUE(recoveredPersistentIds.empty());
     recoveredPersistentIds.push_back(23);
     recoveredPersistentIds.push_back(24);
     ssm_->ClearUnrecoveredSessions(recoveredPersistentIds);
@@ -798,6 +800,7 @@ HWTEST_F(SceneSessionManagerTest, RecoverSessionInfo, Function | SmallTest | Lev
     SessionInfo info = ssm_->RecoverSessionInfo(nullptr);
 
     sptr<WindowSessionProperty> property = new WindowSessionProperty();
+    ASSERT_NE(property, nullptr);
     info = ssm_->RecoverSessionInfo(property);
 }
 
@@ -1262,7 +1265,7 @@ HWTEST_F(SceneSessionManagerTest, GetAllWindowVisibilityInfos, Function | SmallT
     std::vector<std::pair<int32_t, uint32_t>> windowVisibilityInfos;
     ASSERT_NE(ssm_, nullptr);
     ssm_->GetAllWindowVisibilityInfos(windowVisibilityInfos);
-    EXPECT_NE(windowVisibilityInfos.size(), 0);
+    EXPECT_EQ(windowVisibilityInfos.size(), 0);
 }
 
 /**

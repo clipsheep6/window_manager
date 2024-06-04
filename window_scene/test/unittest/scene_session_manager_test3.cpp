@@ -1369,6 +1369,8 @@ HWTEST_F(SceneSessionManagerTest3, HandleUpdateProperty03, Function | SmallTest 
     ssm_->HandleUpdateProperty(property, action, scensession);
     action = WSPropertyChangeAction::ACTION_UPDATE_NAVIGATION_INDICATOR_PROPS;
     ssm_->HandleUpdateProperty(property, action, scensession);
+    WMError result = ssm_->UpdateSessionProperty(property, action);
+    EXPECT_EQ(result, WMError::WM_DO_NOTHING);
 }
 
 /**
