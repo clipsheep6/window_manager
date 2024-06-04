@@ -301,6 +301,11 @@ private:
      */
     int32_t GetSplitRatioPoint(float ratio, const Rect& displayRect);
 
+    /**
+     * @brief Calculate window pair status
+     */
+    WindowPairStatus CalcWindowPairStatus();
+
 private:
     float ratio_ = DEFAULT_SPLIT_RATIO;
     DisplayId displayId_;

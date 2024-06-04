@@ -402,27 +402,34 @@ void WindowPair::UpdateIfSplitRelated(sptr<WindowNode>& node)
     }
 }
 
+WindowPairStatus WindowPair::CalcWindowPairStatus()
+{
+    if (divider_ == nullptr) {
+        if (primary_ != nullptr && secondary_ != nullptr) {
+            status_ = WindowPairStatus::PRIMARY_AND_SECONDARY;
+        } else if (primary_ != nullptr && secondary_ == nullptr) {
+            status_ = WindowPairStatus::SINGLE_PRIMARY;
+        } else if (primary_ == nullptr && secondary_ != nullptr) {
+            status_ = WindowPairStatus::SINGLE_SECONDARY;
+        }
+    } else {
+        if (primary_ != nullptr && secondary_ != nullptr) {
+            status_ = WindowPairStatus::PAIRED_DONE;
+        } else if (primary_ != nullptr && secondary_ == nullptr) {
+            status_ = WindowPairStatus::PRIMARY_AND_DIVIDER;
+        } else if (primary_ == nullptr && secondary_ != nullptr) {
+            status_ = WindowPairStatus::SECONDARY_AND_DIVIDER;
+        } else {
+            status_ = WindowPairStatus::SINGLE_SPLIT;
+        }
+    }
+}
+
 void WindowPair::UpdateWindowPairStatus()
 {
     WLOGI("Update window pair status.");
     WindowPairStatus prevStatus = status_;
-    if (primary_ != nullptr && secondary_ != nullptr && divider_ != nullptr) {
-        status_ = WindowPairStatus::PAIRED_DONE;
-    } else if (primary_ != nullptr && secondary_ != nullptr && divider_ == nullptr) {
-        status_ = WindowPairStatus::PRIMARY_AND_SECONDARY;
-    } else if (primary_ != nullptr && secondary_ == nullptr && divider_ == nullptr) {
-        status_ = WindowPairStatus::SINGLE_PRIMARY;
-    } else if (primary_ != nullptr && secondary_ == nullptr && divider_ != nullptr) {
-        status_ = WindowPairStatus::PRIMARY_AND_DIVIDER;
-    } else if (primary_ == nullptr && secondary_ != nullptr && divider_ == nullptr) {
-        status_ = WindowPairStatus::SINGLE_SECONDARY;
-    } else if (primary_ == nullptr && secondary_ != nullptr && divider_ != nullptr) {
-        status_ = WindowPairStatus::SECONDARY_AND_DIVIDER;
-    } else if (primary_ == nullptr && secondary_ == nullptr && divider_ != nullptr) {
-        status_ = WindowPairStatus::SINGLE_SPLIT;
-    } else {
-        status_ = WindowPairStatus::EMPTY;
-    }
+    status_ = CalcWindowPairStatus();
     if ((prevStatus == WindowPairStatus::SINGLE_PRIMARY ||
         prevStatus == WindowPairStatus::SINGLE_SECONDARY || prevStatus == WindowPairStatus::EMPTY) &&
         status_ == WindowPairStatus::PRIMARY_AND_SECONDARY) {
