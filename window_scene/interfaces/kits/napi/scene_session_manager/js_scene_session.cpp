@@ -611,6 +611,7 @@ void JsSceneSession::ProcessSessionRectChangeRegister()
 
 void JsSceneSession::ProcessSessionContentStatusChangeRegister()
 {
+    TLOGI(WmsLogTag::WMS_PIP, "ProcessSessionContentStatusChangeRegister success");
     NotifySessionContentStatusFunc func = [this](const std::string& cbType, const int32_t& status) {
         this->OnSessionContentStatusChange(cbType, status);
     };
@@ -620,7 +621,6 @@ void JsSceneSession::ProcessSessionContentStatusChangeRegister()
         return;
     }
     session->SetSessionContentStatusChangeCallback(func);
-    WLOGFD("ProcessSessionContentStatusChangeRegister success");
 }
 
 void JsSceneSession::ProcessRaiseToTopRegister()
@@ -1530,7 +1530,7 @@ void JsSceneSession::OnSessionRectChange(const WSRect& rect, const SizeChangeRea
 
 void JsSceneSession::OnSessionContentStatusChange(const std::string& cbType, const int32_t& status)
 {
-    WLOGFI("[NAPI]OnSessionContentStatusChange");
+    TLOGI(WmsLogTag::WMS_PIP, "OnSessionContentStatusChange");
     std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(SESSION_CONTENT_STATUS_CHANGE_CB);
     if (jsCallBack == nullptr) {
         return;

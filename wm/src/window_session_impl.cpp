@@ -2914,6 +2914,7 @@ void WindowSessionImpl::UpdatePiPRect(const Rect& rect, WindowSizeChangeReason r
 
 void WindowSessionImpl::UpdateContentStatus(const std::string& cbType, int32_t status)
 {
+    TLOGI(WmsLogTag::WMS_PIP, "OnUpdateContentStatus is called");
     if (IsWindowSessionInvalid()) {
         WLOGFE("HostSession is invalid");
         return;

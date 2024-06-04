@@ -1562,6 +1562,7 @@ void SceneSession::NotifySessionRectChange(const WSRect& rect, const SizeChangeR
 
 void SceneSession::NotifySessionContentStatusChange(const std::string& cbType, int32_t status)
 {
+    TLOGI(WmsLogTag::WMS_PIP, "NotifySessionContentStatusChange!");
     auto task = [weakThis = wptr(this), cbType, status]() {
         auto session = weakThis.promote();
         if (!session) {
@@ -3143,6 +3144,7 @@ WSError SceneSession::UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
 
 WSError SceneSession::UpdateContentStatus(const std::string& cbType, int32_t status)
 {
+    TLOGI(WmsLogTag::WMS_PIP, "UpdateContentStatus!");
     if (!WindowHelper::IsPipWindow(GetWindowType())) {
         return WSError::WS_DO_NOTHING;
     }
