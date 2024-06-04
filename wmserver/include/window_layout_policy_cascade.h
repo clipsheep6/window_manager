@@ -62,6 +62,10 @@ private:
     void LayoutDivider(const sptr<WindowNode>& node, WindowUpdateType type);
     void LayoutSplitNodes(DisplayId displayId, WindowUpdateType type, bool layoutByDivider = false);
     void UpdateLayoutRect(const sptr<WindowNode>& node) override;
+    void UpdateFullscreenMode(const sptr<WindowNode>& node, Rect& winRect, DisplayId displayId,
+        const sptr<WindowProperty>& property);
+    void UpdateFloatingMode(const sptr<WindowNode>& node, Rect& winRect,
+        const sptr<WindowProperty>& property);
     void ComputeDecoratedRequestRect(const sptr<WindowNode>& node) const;
     void ApplyWindowRectConstraints(const sptr<WindowNode>& node, Rect& winRect) const;
     void ComputeRectByAspectRatio(const sptr<WindowNode>& node) const;

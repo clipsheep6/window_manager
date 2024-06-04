@@ -446,35 +446,11 @@ void WindowLayoutPolicyCascade::UpdateLayoutRect(const sptr<WindowNode>& node)
             winRect = cascadeRectsMap_[displayId].secondaryRect_;
             break;
         case WindowMode::WINDOW_MODE_FULLSCREEN: {
-            UpdateWindowSizeLimits(node);
-            bool needAvoid = (node->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID));
-            winRect = needAvoid ? limitRectMap_[displayId] : DisplayGroupInfo::GetInstance().GetDisplayRect(displayId);
-            auto displayInfo = DisplayGroupInfo::GetInstance().GetDisplayInfo(displayId);
-            if (displayInfo && WmsUtils::IsExpectedRotatableWindow(node->GetRequestedOrientation(),
-                displayInfo->GetDisplayOrientation(), node->GetWindowFlags())) {
-                WLOGFD("[FixOrientation] the window is expected rotatable, pre-calculated");
-                winRect = {winRect.posX_, winRect.posY_, winRect.height_, winRect.width_};
-            }
-            if (property->GetMaximizeMode() == MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
-                // restore the origin rect so when recover from fullscreen we can use
-                node->SetRequestRect(node->GetOriginRect());
-                property->SetMaximizeMode(MaximizeMode::MODE_FULL_FILL);
-            }
+            UpdateFullscreenMode(node, winRect, displayId, property);
             break;
         }
         case WindowMode::WINDOW_MODE_FLOATING: {
-            if (node->GetWindowType() == WindowType::WINDOW_TYPE_APP_COMPONENT) {
-                break;
-            }
-            UpdateWindowSizeLimits(node);
-            winRect = property->GetRequestRect();
-            ApplyWindowRectConstraints(node, winRect);
-
-            if (property->GetMaximizeMode() == MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
-                GetMaximizeRect(node, winRect);
-                WLOGFI("[In CascadeLayout] winId: %{public}u, maxRect: %{public}d, %{public}d, %{public}u, %{public}u",
-                    node->GetWindowId(), winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
-            }
+            UpdateFloatingMode(node, winRect, property);
             break;
         }
         default:
@@ -491,6 +467,42 @@ void WindowLayoutPolicyCascade::UpdateLayoutRect(const sptr<WindowNode>& node)
     CalcAndSetNodeHotZone(winRect, node);
     UpdateSurfaceBounds(node, winRect, lastWinRect);
     NotifyClientAndAnimation(node, winRect, node->GetWindowSizeChangeReason());
+}
+
+void WindowLayoutPolicyCascade::UpdateFullscreenMode(const sptr<WindowNode>& node, Rect& winRect,
+    DisplayId displayId, const sptr<WindowProperty>& property)
+{
+    UpdateWindowSizeLimits(node);
+    bool needAvoid = (node->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID));
+    winRect = needAvoid ? limitRectMap_[displayId] : DisplayGroupInfo::GetInstance().GetDisplayRect(displayId);
+    auto displayInfo = DisplayGroupInfo::GetInstance().GetDisplayInfo(displayId);
+    if (displayInfo && WmsUtils::IsExpectedRotatableWindow(node->GetRequestedOrientation(),
+        displayInfo->GetDisplayOrientation(), node->GetWindowFlags())) {
+        TLOGD(WmsLogTag::WMS_MAIN, "[FixOrientation] the window is expected rotatable, pre-calculated");
+        winRect = {winRect.posX_, winRect.posY_, winRect.height_, winRect.width_};
+    }
+    if (property->GetMaximizeMode() == MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
+        // restore the origin rect so when recover from fullscreen we can use
+        node->SetRequestRect(node->GetOriginRect());
+        property->SetMaximizeMode(MaximizeMode::MODE_FULL_FILL);
+    }
+}
+
+void WindowLayoutPolicyCascade::UpdateFloatingMode(const sptr<WindowNode>& node, Rect& winRect,
+    const sptr<WindowProperty>& property)
+{
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_APP_COMPONENT) {
+        return;
+    }
+    UpdateWindowSizeLimits(node);
+    winRect = property->GetRequestRect();
+    ApplyWindowRectConstraints(node, winRect);
+
+    if (property->GetMaximizeMode() == MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
+        GetMaximizeRect(node, winRect);
+        TLOGI(WmsLogTag::WMS_MAIN, "[In CascadeLayout] winId: %{public}u, maxRect: %{public}d, %{public}d, %{public}u,"
+            "%{public}u", node->GetWindowId(), winRect.posX_, winRect.posY_, winRect.width_, winRect.height_);
+    }
 }
 
 void WindowLayoutPolicyCascade::LimitDividerPositionBySplitRatio(DisplayId displayId, Rect& winRect) const
