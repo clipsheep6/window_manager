@@ -29,6 +29,9 @@
 #include "proxy/include/window_info.h"
 
 #include "common/include/session_permission.h"
+#ifdef DEVICE_STATUS_ENABLE
+#include "interaction_manager.h"
+#endif // DEVICE_STATUS_ENABLE
 #include "interfaces/include/ws_common.h"
 #include "pixel_map.h"
 #include "session/screen/include/screen_session.h"
@@ -621,7 +624,7 @@ void SceneSession::FixKeyboardPositionByKeyboardPanel(sptr<SceneSession> panelSe
         const auto& screenSession = ScreenSessionManagerClient::GetInstance().GetScreenSession(
             keyboardSession->GetSessionProperty()->GetDisplayId());
         Rotation rotation = (screenSession != nullptr) ? screenSession->GetRotation() : Rotation::ROTATION_0;
-        bool isKeyboardNeedLeftOffset = (isPhone && (!isFoldable || (isFoldable && isFolded)) &&
+        bool isKeyboardNeedLeftOffset = (isPhone && (!isFoldable || (isFolded)) &&
             (rotation == Rotation::ROTATION_90 || rotation == Rotation::ROTATION_270));
         if (isKeyboardNeedLeftOffset) {
             keyboardSession->winRect_.posX_ += panelSession->winRect_.posX_;
@@ -668,6 +671,9 @@ WSError SceneSession::NotifyClientToUpdateRectTask(
             if (keyboardSession != nullptr) {
                 ret = keyboardSession->Session::UpdateRect(keyboardSession->winRect_, session->reason_, rsTransaction);
             }
+            if (ret != WSError::WS_OK) {
+                return ret;
+            }
         }
         if (session->GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT) {
             FixKeyboardPositionByKeyboardPanel(session->GetKeyboardPanelSession(), session);
@@ -682,6 +688,12 @@ WSError SceneSession::NotifyClientToUpdateRectTask(
         ret = session->Session::UpdateRect(session->winRect_, session->reason_, nullptr);
     } else {
         ret = session->Session::UpdateRect(session->winRect_, session->reason_, rsTransaction);
+#ifdef DEVICE_STATUS_ENABLE
+        // When the drag is in progress, the drag window needs to be notified to rotate.
+        if (rsTransaction != nullptr) {
+            RotateDragWindow(rsTransaction);
+        }
+#endif // DEVICE_STATUS_ENABLE
     }
 
     return ret;
@@ -1033,6 +1045,7 @@ void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
         return;
     }
     if (isDisplayStatusBarTemporarily_.load()) {
+        TLOGI(WmsLogTag::WMS_IMMS, "temporary show status bar, no need to avoid");
         return;
     }
     std::vector<sptr<SceneSession>> statusBarVector;
@@ -1126,6 +1139,7 @@ void SceneSession::GetCutoutAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 void SceneSession::GetAINavigationBarArea(WSRect rect, AvoidArea& avoidArea)
 {
     if (isDisplayStatusBarTemporarily_.load()) {
+        TLOGI(WmsLogTag::WMS_IMMS, "temporary show navigation bar, no need to avoid");
         return;
     }
     if (Session::GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING ||
@@ -1533,6 +1547,17 @@ void SceneSession::ClearEnterWindow()
     std::lock_guard<std::mutex> guard(enterSessionMutex_);
     enterSession_ = nullptr;
 }
+
+#ifdef DEVICE_STATUS_ENABLE
+void SceneSession::RotateDragWindow(std::shared_ptr<RSTransaction> rsTransaction)
+{
+    Msdp::DeviceStatus::DragState state = Msdp::DeviceStatus::DragState::STOP;
+    Msdp::DeviceStatus::InteractionManager::GetInstance()->GetDragState(state);
+    if (state == Msdp::DeviceStatus::DragState::START) {
+        Msdp::DeviceStatus::InteractionManager::GetInstance()->RotateDragWindowSync(rsTransaction);
+    }
+}
+#endif // DEVICE_STATUS_ENABLE
 
 void SceneSession::NotifySessionRectChange(const WSRect& rect, const SizeChangeReason& reason)
 {
@@ -2565,7 +2590,7 @@ WMError SceneSession::HandleActionUpdateSetBrightness(const sptr<WindowSessionPr
     float brightness = property->GetBrightness();
     if (std::abs(brightness - sceneSession->GetBrightness()) < std::numeric_limits<float>::epsilon()) {
         TLOGD(WmsLogTag::DEFAULT, "Session brightness do not change: [%{public}f]", brightness);
-        return WMError::WM_DO_NOTHING;
+        return WMError::WM_OK;
     }
     sceneSession->SetBrightness(brightness);
     sceneSession->NotifySessionChangeByActionNotifyManager(sceneSession, property, action);
@@ -3351,5 +3376,19 @@ void SceneSession::SetTemporarilyShowWhenLocked(bool isTemporarilyShowWhenLocked
 bool SceneSession::IsTemporarilyShowWhenLocked() const
 {
     return isTemporarilyShowWhenLocked_.load();
+}
+
+void SceneSession::SetSkipDraw(bool skip)
+{
+    if (!surfaceNode_) {
+        WLOGFE("surfaceNode_ is null");
+        return;
+    }
+    surfaceNode_->SetSkipDraw(skip);
+    auto leashWinSurfaceNode = GetLeashWinSurfaceNode();
+    if (leashWinSurfaceNode != nullptr) {
+        leashWinSurfaceNode->SetSkipDraw(skip);
+    }
+    RSTransaction::FlushImplicitTransaction();
 }
 } // namespace OHOS::Rosen

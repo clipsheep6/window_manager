@@ -50,8 +50,11 @@ public:
                 int32_t userId = data.ReadInt32();
                 int32_t screenId = data.ReadInt32();
                 bool isConnected = data.ReadBool();
-                auto sessionManagerService = data.ReadRemoteObject();
-                OnWMSConnectionChanged(userId, screenId, isConnected, sessionManagerService);
+                if (isConnected) {
+                    OnWMSConnectionChanged(userId, screenId, isConnected, data.ReadRemoteObject());
+                } else {
+                    OnWMSConnectionChanged(userId, screenId, isConnected, nullptr);
+                }
                 break;
             }
             default:
@@ -73,8 +76,6 @@ public:
     void OnWMSConnectionChanged(
         int32_t userId, int32_t screenId, bool isConnected, const sptr<IRemoteObject>& sessionManagerService) override
     {
-        TLOGI(WmsLogTag::WMS_MULTI_USER, "lite: userId=%{public}d, screenId=%{public}d, isConnected=%{public}d", userId,
-            screenId, isConnected);
         auto sms = iface_cast<ISessionManagerService>(sessionManagerService);
         SessionManagerLite::GetInstance().OnWMSConnectionChanged(userId, screenId, isConnected, sms);
     }
@@ -226,11 +227,15 @@ void SessionManagerLite::RegisterUserSwitchListener(const UserSwitchCallbackFunc
 void SessionManagerLite::OnWMSConnectionChanged(
     int32_t userId, int32_t screenId, bool isConnected, const sptr<ISessionManagerService>& sessionManagerService)
 {
-    TLOGD(WmsLogTag::WMS_MULTI_USER, "WMS connection changed Lite enter");
-    if (isConnected && currentWMSUserId_ > INVALID_UID && currentWMSUserId_ != userId) {
-        OnUserSwitch(sessionManagerService);
+    TLOGI(WmsLogTag::WMS_MULTI_USER,
+        "Lite: curUserId=%{public}d, oldUserId=%{public}d, screenId=%{public}d, isConnected=%{public}d", userId,
+        currentWMSUserId_, screenId, isConnected);
+    if (isConnected) {
+        if (currentWMSUserId_ > INVALID_UID && currentWMSUserId_ != userId) {
+            OnUserSwitch(sessionManagerService);
+        }
+        currentWMSUserId_ = userId;
     }
-    currentWMSUserId_ = userId;
 }
 
 void SessionManagerLite::OnUserSwitch(const sptr<ISessionManagerService> &sessionManagerService)

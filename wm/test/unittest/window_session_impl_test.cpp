@@ -19,6 +19,7 @@
 #include "mock_session.h"
 #include "window_session_impl.h"
 #include "mock_uicontent.h"
+#include "mock_window.h"
 #include "parameters.h"
 
 using namespace testing;
@@ -26,26 +27,6 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
-
-class MockWindowChangeListener : public IWindowChangeListener {
-public:
-    MOCK_METHOD3(OnSizeChange, void(Rect rect, WindowSizeChangeReason reason,
-        const std::shared_ptr<RSTransaction>& rsTransaction));
-};
-
-class MockWindowLifeCycleListener : public IWindowLifeCycle {
-public:
-    MOCK_METHOD0(AfterForeground, void(void));
-    MOCK_METHOD0(AfterBackground, void(void));
-    MOCK_METHOD0(AfterFocused, void(void));
-    MOCK_METHOD0(AfterUnfocused, void(void));
-    MOCK_METHOD1(ForegroundFailed, void(int32_t));
-    MOCK_METHOD0(AfterActive, void(void));
-    MOCK_METHOD0(AfterInactive, void(void));
-    MOCK_METHOD0(AfterResumed, void(void));
-    MOCK_METHOD0(AfterPaused, void(void));
-};
-
 class WindowSessionImplTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -1148,6 +1129,12 @@ HWTEST_F(WindowSessionImplTest, RegisterListener02, Function | SmallTest | Level
     ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
     res = window->UnregisterWindowTitleButtonRectChangeListener(listener9);
     ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
+
+    sptr<ISubWindowCloseListener> listener10 = nullptr;
+    res = window->RegisterSubWindowCloseListeners(listener10);
+    ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
+    res = window->UnregisterSubWindowCloseListeners(listener10);
+    ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: RegisterListener02 end";
 }
@@ -1383,9 +1370,18 @@ HWTEST_F(WindowSessionImplTest, NotifyKeyEvent, Function | SmallTest | Level2)
     int res = 0;
     std::shared_ptr<MMI::KeyEvent> keyEvent = MMI::KeyEvent::Create();
     bool isConsumed = false;
-    window->NotifyKeyEvent(keyEvent, isConsumed);
+    bool notifyInputMethod = false;
+    keyEvent->SetKeyCode(MMI::KeyEvent::KEYCODE_VIRTUAL_MULTITASK);
+    window->NotifyKeyEvent(keyEvent, isConsumed, notifyInputMethod);
+
+    keyEvent->SetKeyCode(MMI::KeyEvent::KEYCODE_BACK);
+    window->NotifyKeyEvent(keyEvent, isConsumed, notifyInputMethod);
+
+    notifyInputMethod = true;
+    window->NotifyKeyEvent(keyEvent, isConsumed, notifyInputMethod);
+
     keyEvent = nullptr;
-    window->NotifyKeyEvent(keyEvent, isConsumed);
+    window->NotifyKeyEvent(keyEvent, isConsumed, notifyInputMethod);
     ASSERT_EQ(res, 0);
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: NotifyKeyEvent end";
@@ -1582,6 +1578,10 @@ HWTEST_F(WindowSessionImplTest, Notify02, Function | SmallTest | Level2)
 
     res = window->NotifyWindowVisibility(true);
     ASSERT_EQ(res, WSError::WS_OK);
+    bool terminateCloseProcess = false;
+    window->NotifySubWindowClose(terminateCloseProcess);
+    ASSERT_EQ(terminateCloseProcess, false);
+
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: Notify02 end";
 }
@@ -1887,10 +1887,11 @@ HWTEST_F(WindowSessionImplTest, SetSubWindowModal, Function | SmallTest | Level2
     sptr<WindowOption> option = new WindowOption();
     ASSERT_NE(option, nullptr);
     option->SetWindowName("SetSubWindowModal");
+    option->SetWindowType(WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
     sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
     ASSERT_NE(window, nullptr);
-    bool isModal = true;
-    window->SetSubWindowModal(isModal);
+    WMError res = window->SetSubWindowModal(true);
+    ASSERT_EQ(res, WMError::WM_OK);
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetSubWindowModaltest01 end";
 }
 

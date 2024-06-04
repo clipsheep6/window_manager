@@ -249,6 +249,16 @@ void ScreenSession::SetName(std::string name)
     name_ = name;
 }
 
+void ScreenSession::SetMirrorScreenType(MirrorScreenType mirrorType)
+{
+    mirrorScreenType_ = mirrorType;
+}
+
+MirrorScreenType ScreenSession::GetMirrorScreenType()
+{
+    return mirrorScreenType_;
+}
+
 ScreenId ScreenSession::GetScreenId()
 {
     return screenId_;
@@ -564,9 +574,6 @@ void ScreenSession::SetScreenRequestedOrientation(Orientation orientation)
 
 void ScreenSession::SetScreenRotationLocked(bool isLocked)
 {
-    if (isScreenLocked_ == isLocked) {
-        return;
-    }
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         isScreenLocked_ = isLocked;

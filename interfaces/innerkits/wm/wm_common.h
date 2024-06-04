@@ -228,7 +228,7 @@ enum class WmErrorCode : int32_t {
 enum class WindowStatus : uint32_t {
     WINDOW_STATUS_UNDEFINED = 0,
     WINDOW_STATUS_FULLSCREEN = 1,
-    WINDOW_STATUS_MAXMIZE,
+    WINDOW_STATUS_MAXIMIZE,
     WINDOW_STATUS_MINIMIZE,
     WINDOW_STATUS_FLOATING,
     WINDOW_STATUS_SPLITSCREEN
@@ -587,6 +587,18 @@ struct SystemBarProperty {
         return (enable_ == a.enable_ && backgroundColor_ == a.backgroundColor_ && contentColor_ == a.contentColor_ &&
             enableAnimation_ == a.enableAnimation_);
     }
+};
+
+/**
+ * @struct SystemBarPropertyFlag
+ *
+ * @brief Flag of system bar
+ */
+struct SystemBarPropertyFlag {
+    bool enableFlag = false;
+    bool backgroundColorFlag = false;
+    bool contentColorFlag = false;
+    bool enableAnimationFlag = false;
 };
 
 /**

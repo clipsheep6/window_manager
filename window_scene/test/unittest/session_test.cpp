@@ -610,6 +610,32 @@ HWTEST_F(WindowSessionTest, GetSessionRect, Function | SmallTest | Level2)
 }
 
 /**
+ * @tc.name: SetSessionOldRect
+ * @tc.desc: check func SetSessionOldRect
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetSessionOldRect, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    WSRect rect = { 0, 0, 320, 240 }; // width: 320, height: 240
+    session_->SetSessionOldRect(rect);
+    ASSERT_EQ(rect, session_->oldWinRect_);
+}
+
+/**
+ * @tc.name: GetSessionOldRect
+ * @tc.desc: check func GetSessionOldRect
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetSessionOldRect, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    WSRect rect = { 0, 0, 320, 240 }; // width: 320, height: 240
+    session_->SetSessionOldRect(rect);
+    ASSERT_EQ(rect, session_->GetSessionOldRect());
+}
+
+/**
  * @tc.name: CheckDialogOnForeground
  * @tc.desc: check func CheckDialogOnForeground
  * @tc.type: FUNC
@@ -1647,54 +1673,6 @@ HWTEST_F(WindowSessionTest, TransferBackPressedEventForConsumed02, Function | Sm
 }
 
 /**
- * @tc.name: TransferKeyEventForConsumed01
- * @tc.desc: windowEventChannel_ is nullptr
- * @tc.type: FUNC
- */
-HWTEST_F(WindowSessionTest, TransferKeyEventForConsumed01, Function | SmallTest | Level2)
-{
-    ASSERT_NE(session_, nullptr);
-
-    session_->windowEventChannel_ = nullptr;
-
-    auto keyEvent = MMI::KeyEvent::Create();
-    bool isConsumed = false;
-    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, session_->TransferKeyEventForConsumed(keyEvent, isConsumed));
-}
-
-/**
- * @tc.name: TransferKeyEventForConsumed02
- * @tc.desc: windowEventChannel_ is not nullptr, keyEvent is nullptr
- * @tc.type: FUNC
- */
-HWTEST_F(WindowSessionTest, TransferKeyEventForConsumed02, Function | SmallTest | Level2)
-{
-    ASSERT_NE(session_, nullptr);
-
-    session_->windowEventChannel_ = new TestWindowEventChannel();
-
-    std::shared_ptr<MMI::KeyEvent> keyEvent = nullptr;
-    bool isConsumed = false;
-    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, session_->TransferKeyEventForConsumed(keyEvent, isConsumed));
-}
-
-/**
- * @tc.name: TransferKeyEventForConsumed03
- * @tc.desc: windowEventChannel_ is not nullptr, keyEvent is not nullptr
- * @tc.type: FUNC
- */
-HWTEST_F(WindowSessionTest, TransferKeyEventForConsumed03, Function | SmallTest | Level2)
-{
-    ASSERT_NE(session_, nullptr);
-
-    session_->windowEventChannel_ = new TestWindowEventChannel();
-
-    std::shared_ptr<MMI::KeyEvent> keyEvent = MMI::KeyEvent::Create();
-    bool isConsumed = false;
-    ASSERT_EQ(WSError::WS_OK, session_->TransferKeyEventForConsumed(keyEvent, isConsumed));
-}
-
-/**
  * @tc.name: TransferFocusActiveEvent02
  * @tc.desc: windowEventChannel_ is not nullptr
  * @tc.type: FUNC
@@ -1803,6 +1781,38 @@ HWTEST_F(WindowSessionTest, CreateDetectStateTask004, Function | SmallTest | Lev
     ASSERT_NE(beforeTaskNum + 1, GetTaskCount());
     ASSERT_EQ(DetectTaskState::ATTACH_TASK, session_->GetDetectTaskInfo().taskState);
     session_->handler_->RemoveTask(taskName);
+}
+
+/**
+ * @tc.name: TransferKeyEventForConsumed02
+ * @tc.desc: windowEventChannel_ is not nullptr, keyEvent is nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferKeyEventForConsumed02, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->windowEventChannel_ = new TestWindowEventChannel();
+
+    std::shared_ptr<MMI::KeyEvent> keyEvent = nullptr;
+    bool isConsumed = false;
+    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, session_->TransferKeyEventForConsumed(keyEvent, isConsumed));
+}
+
+/**
+ * @tc.name: TransferKeyEventForConsumed03
+ * @tc.desc: windowEventChannel_ is not nullptr, keyEvent is not nullptr
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, TransferKeyEventForConsumed03, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+
+    session_->windowEventChannel_ = new TestWindowEventChannel();
+
+    std::shared_ptr<MMI::KeyEvent> keyEvent = MMI::KeyEvent::Create();
+    bool isConsumed = false;
+    ASSERT_EQ(WSError::WS_OK, session_->TransferKeyEventForConsumed(keyEvent, isConsumed));
 }
 }
 } // namespace Rosen
