@@ -919,6 +919,15 @@ WMError WindowSceneSessionImpl::ShowWithValidDisplay(const sptr<Display>& displa
     if (WindowHelper::IsMainWindow(type)) {
         ret = static_cast<WMError>(hostSession_->Foreground(property_, true));
     } else if (WindowHelper::IsSubWindow(type) || WindowHelper::IsSystemWindow(type)) {
+        const auto& requestRect = GetRequestRect();
+        if ((requestRect.width_ != 0) && (requestRect.height_ != 0)) {
+            UpdateViewportConfig(GetRequestRect(), WindowSizeChangeReason::RESIZE);
+            std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
+            if (uiContent != nullptr) {
+                uiContent->Foreground();
+                uiContent->Prelayout();
+            }
+        }
         ret = static_cast<WMError>(hostSession_->Show(property_));
     } else {
         ret = WMError::WM_ERROR_INVALID_WINDOW;
@@ -935,10 +944,10 @@ WMError WindowSceneSessionImpl::HandleShowResult(WMError ret, WindowType type)
         // update sub window state if this is main window
         if (WindowHelper::IsMainWindow(type)) {
             UpdateSubWindowStateAndNotify(GetPersistentId(), WindowState::STATE_SHOWN);
+            NotifyAfterForeground();
         }
         state_ = WindowState::STATE_SHOWN;
         requestState_ = WindowState::STATE_SHOWN;
-        NotifyAfterForeground();
         RefreshNoInteractionTimeoutMonitor();
         TLOGI(WmsLogTag::WMS_LIFE, "Window show success [name:%{public}s, id:%{public}d, type:%{public}u]",
             property_->GetWindowName().c_str(), GetPersistentId(), type);
