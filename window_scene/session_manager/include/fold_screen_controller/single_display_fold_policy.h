@@ -23,11 +23,11 @@
 #include "session/screen/include/screen_session.h"
 
 namespace OHOS::Rosen {
-class DualDisplayDevicePolicy : public FoldScreenPolicy {
+class SingleDisplayFoldPolicy : public FoldScreenPolicy {
 public:
-    DualDisplayDevicePolicy(std::recursive_mutex& displayInfoMutex,
+    SingleDisplayFoldPolicy(std::recursive_mutex& displayInfoMutex,
         std::shared_ptr<TaskScheduler> screenPowerTaskScheduler);
-    ~DualDisplayDevicePolicy() = default;
+    ~SingleDisplayFoldPolicy() = default;
     void ChangeScreenDisplayMode(FoldDisplayMode displayMode) override;
     void SendSensorResult(FoldStatus foldStatus) override;
     sptr<FoldCreaseRegion> GetCurrentFoldCreaseRegion() override;
