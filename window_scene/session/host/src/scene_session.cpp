@@ -3053,10 +3053,17 @@ bool SceneSession::RemoveToastSession(int32_t persistentId)
 void SceneSession::NotifyPiPWindowPrepareClose()
 {
     TLOGD(WmsLogTag::WMS_PIP, "NotifyPiPWindowPrepareClose");
-    auto task = [weakThis = wptr(this)]() {
+    int32_t callingPid = IPCSkeleton::GetCallingPid();
+    auto task = [weakThis = wptr(this), callingPid]() {
         auto session = weakThis.promote();
         if (!session) {
             TLOGE(WmsLogTag::WMS_PIP, "session is null");
+            return;
+        }
+        if (callingPid != -1 && callingPid != GetCallingPid()) {
+            TLOGW(WmsLogTag::WMS_PIP,
+                "Disconnect failed, callingPid_: %{public}d, callingPid: %{public}d, bundleName: %{public}s",
+                GetCallingPid(), callingPid, GetSessionInfo().bundleName_.c_str());
             return;
         }
         if (session->sessionChangeCallback_ && session->sessionChangeCallback_->onPrepareClosePiPSession_) {
@@ -3139,11 +3146,16 @@ WSError SceneSession::UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
     if (!WindowHelper::IsPipWindow(GetWindowType())) {
         return WSError::WS_DO_NOTHING;
     }
-    auto task = [weakThis = wptr(this), rect, reason]() {
+    const auto& callingPid = IPCSkeleton::GetCallingPid();
+    auto task = [weakThis = wptr(this), rect, reason, callingPid]() {
         auto session = weakThis.promote();
         if (!session || session->isTerminating) {
             TLOGE(WmsLogTag::WMS_PIP, "SceneSession::UpdatePiPRect session is null or is terminating");
             return WSError::WS_ERROR_INVALID_OPERATION;
+        }
+        if (callingPid != session->GetCallingPid()) {
+            TLOGW(WmsLogTag::WMS_PIP, "premission denied, not call by the same process");
+            return WSError::WS_ERROR_INVALID_PERMISSION;
         }
         WSRect wsRect = SessionHelper::TransferToWSRect(rect);
         if (reason == SizeChangeReason::PIP_START) {

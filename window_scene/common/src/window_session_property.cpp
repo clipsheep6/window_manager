@@ -708,8 +708,13 @@ void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowS
     if (size > MAX_SIZE_PIP_CONTROL_GROUP) {
         return;
     }
+    uint32_t tmp = 0;
     for (uint32_t i = 0; i < size; i++) {
-        pipTemplateInfo.controlGroup.push_back(parcel.ReadUint32());
+        if (parcel.ReadUint32(tmp)) {
+            pipTemplateInfo.controlGroup.push_back(tmp);
+        } else {
+            return;
+        }
     }
     property->SetPiPTemplateInfo(pipTemplateInfo);
 }
