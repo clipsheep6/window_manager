@@ -226,6 +226,7 @@ private:
         const sptr<IWindowEventChannel>& eventChannel, int32_t& persistentId, sptr<Rosen::ISession>& session);
     WMError InitializeCreate(const std::shared_ptr<AbilityRuntime::Context>& context,
         const sptr<Rosen::ISession>& iSession, const std::string& identityToken);
+    void PreLayout(const WindowType& type);
 };
 } // namespace Rosen
 } // namespace OHOS
