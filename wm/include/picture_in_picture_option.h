@@ -29,18 +29,21 @@ public:
     void SetContext(void* contextPtr);
     void SetNavigationId(const std::string& navigationId);
     void SetPipTemplate(uint32_t templateType);
+    void SetIsPlay(uint32_t isPlay);
     void SetContentSize(uint32_t width, uint32_t height);
     void SetXComponentController(std::shared_ptr<XComponentController> xComponentController);
     void SetControlGroup(std::vector<std::uint32_t> controlGroup);
     void* GetContext() const;
     std::string GetNavigationId() const;
     uint32_t GetPipTemplate();
+    uint32_t GetIsPlay();
     std::vector<std::uint32_t> GetControlGroup();
     void GetContentSize(uint32_t& width, uint32_t& height);
     std::shared_ptr<XComponentController> GetXComponentController();
 private:
     void* contextPtr_ = nullptr;
     uint32_t templateType_  = 0;
+    uint32_t isPlay_ = 1;
     std::string navigationId_ = "";
     uint32_t contentWidth_ = 0;
     uint32_t contentHeight_ = 0;

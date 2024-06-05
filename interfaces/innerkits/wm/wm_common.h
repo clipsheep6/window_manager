@@ -849,6 +849,7 @@ struct PiPTemplateInfo {
     uint32_t pipTemplateType;
     uint32_t priority;
     std::vector<uint32_t> controlGroup;
+    uint32_t isPlay;
 };
 
 using OnCallback = std::function<void(int64_t, int64_t)>;

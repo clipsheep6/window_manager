@@ -36,6 +36,16 @@ void PipOption::SetPipTemplate(uint32_t templateType)
     templateType_ = templateType;
 }
 
+uint32_t PipOption::GetIsPlay()
+{
+    return isPlay_;
+}
+
+uint32_t PipOption::SetIsPlay(uint32_t isPlay)
+{
+    isPlay_ = isPlay;
+}
+
 void PipOption::SetContentSize(uint32_t width, uint32_t height)
 {
     contentWidth_ = width;

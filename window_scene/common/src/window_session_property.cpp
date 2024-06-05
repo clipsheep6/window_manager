@@ -681,6 +681,9 @@ bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const
     if (!parcel.WriteUint32(pipTemplateInfo_.priority)) {
         return false;
     }
+    if (!parcel.WriteUint32(pipTemplateInfo_.isPlay)) {
+        return false;
+    }
     auto size = pipTemplateInfo_.controlGroup.size();
     if (size > MAX_SIZE_PIP_CONTROL_GROUP) {
         return false;
@@ -704,6 +707,8 @@ void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowS
     PiPTemplateInfo pipTemplateInfo;
     pipTemplateInfo.pipTemplateType = parcel.ReadUint32();
     pipTemplateInfo.priority = parcel.ReadUint32();
+    pipTemplateInfo.isPlay = parcel.ReadUint32();
+    TLOGI(WmsLogTag::WMS_PIP, "UnmarshallingPiPTemplateInfo isPlay %{public}u", pipTemplateInfo.isPlay);
     auto size = parcel.ReadUint32();
     if (size > MAX_SIZE_PIP_CONTROL_GROUP) {
         return;

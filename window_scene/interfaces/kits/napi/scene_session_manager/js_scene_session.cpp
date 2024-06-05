@@ -82,6 +82,8 @@ static napi_value CreatePipTemplateInfo(napi_env env, const sptr<SceneSession>& 
         CreateJsValue(env, session->GetPiPTemplateInfo().pipTemplateType));
     napi_set_named_property(env, pipTemplateInfoValue, "priority",
         CreateJsValue(env, session->GetPiPTemplateInfo().priority));
+    napi_set_named_property(env, pipTemplateInfoValue, "isPlay",
+        CreateJsValue(env, session->GetPiPTemplateInfo().isPlay));
     napi_value controlArrayValue = nullptr;
     std::vector<std::uint32_t> controlGroups = session->GetPiPTemplateInfo().controlGroup;
     napi_create_array_with_length(env, controlGroups.size(), &controlArrayValue);

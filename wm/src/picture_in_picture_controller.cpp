@@ -124,6 +124,7 @@ WMError PictureInPictureController::CreatePictureInPictureWindow()
     pipTemplateInfo.pipTemplateType = pipOption_->GetPipTemplate();
     pipTemplateInfo.controlGroup = pipOption_->GetControlGroup();
     pipTemplateInfo.priority = GetPipPriority(pipOption_->GetPipTemplate());
+    pipTemplateInfo.isPlay = GetPipPriority(pipOption_->GetIsPlay());
     sptr<Window> window = Window::CreatePiP(windowOption, pipTemplateInfo, context->lock(), errCode);
     if (window == nullptr || errCode != WMError::WM_OK) {
         TLOGW(WmsLogTag::WMS_PIP, "Window create failed, reason: %{public}d", errCode);
@@ -480,8 +481,9 @@ void PictureInPictureController::UpdateContentStatus(std::string cbType, int32_t
 {
     TLOGI(WmsLogTag::WMS_PIP, "UpdateContentStatus %{public}s : %{public}u", cbType.c_str(), status);
     if (window_ == nullptr) {
-        TLOGE(WmsLogTag::WMS_PIP, "pipWindow not exist");
-    return;
+        pipOption_->SetIsPlay(status);
+        TLOGI(WmsLogTag::WMS_PIP, "pipWindow not exist");
+        return;
     }
     window_->UpdateContentStatus(cbType, status);
 }
