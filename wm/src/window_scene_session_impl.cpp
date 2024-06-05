@@ -925,7 +925,7 @@ WMError WindowSceneSessionImpl::ShowWithValidDisplay(const sptr<Display>& displa
             std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
             if (uiContent != nullptr) {
                 uiContent->Foreground();
-                uiContent->Prelayout();
+                uiContent->PreLayout();
             }
         }
         ret = static_cast<WMError>(hostSession_->Show(property_));
