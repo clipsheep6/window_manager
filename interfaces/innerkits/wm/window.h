@@ -2054,6 +2054,12 @@ public:
      * @return true means the immersive mode is enabled, and false means the opposite.
      */
     virtual bool GetImmersiveModeEnabledState() const { return true; }
+    
+    /**
+     * @brief set ui dvsync switch
+     * @param dvsyncSwitch 1/0 to enable/disable ui-dvsync
+     */
+    virtual void SetUiDvsyncSwitch(bool dvsyncSwitch) {}
 };
 }
 }

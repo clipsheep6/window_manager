@@ -216,6 +216,33 @@ HWTEST_F(RootSceneTest, SetFrameLayoutFinishCallback, Function | SmallTest | Lev
     rootScene.SetFrameLayoutFinishCallback(nullptr);
     ASSERT_EQ(1, rootScene.GetWindowId());
 }
+
+/**
+ * @tc.name: SetUiDvsyncSwitch
+ * @tc.desc: SetUiDvsyncSwitch Succ Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RootSceneTest, SetUiDvsyncSwitchSucc, Function | SmallTest | Level3)
+{
+    RootScene rootScene;
+    rootScene.SetUiDvsyncSwitch(true);
+    rootScene.SetUiDvsyncSwitch(false);
+    ASSERT_EQ(1, rootScene.GetWindowId());
+}
+
+/**
+ * @tc.name: SetUiDvsyncSwitch
+ * @tc.desc: SetUiDvsyncSwitch Err Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(RootSceneTest, SetUiDvsyncSwitchErr, Function | SmallTest | Level3)
+{
+    RootScene rootScene;
+    rootScene.vsyncStation_ = nullptr;
+    rootScene.SetUiDvsyncSwitch(true);
+    rootScene.SetUiDvsyncSwitch(false);
+    ASSERT_EQ(1, rootScene.GetWindowId());
+}
 }
 } // namespace Rosen
 } // namespace OHOS
