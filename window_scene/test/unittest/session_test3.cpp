@@ -142,12 +142,12 @@ HWTEST_F(WindowSessionTest3, Foreground02, Function | SmallTest | Level2)
 {
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     ASSERT_NE(nullptr, property);
-    session_->state_ = SessionState::STATE_BACKGROUND;//1
+    session_->SetSessionState(SessionState::STATE_BACKGROUND);//1
     session_->isActive_ = true;
     auto result = session_->Foreground(property);
     ASSERT_EQ(result, WSError::WS_OK);
 
-    session_->state_ = SessionState::STATE_INACTIVE;//2
+    session_->SetSessionState(SessionState::STATE_INACTIVE);//2
     session_->isActive_ = false;//3
     auto result02 = session_->Foreground(property);
     ASSERT_EQ(result02, WSError::WS_OK);
@@ -163,7 +163,7 @@ HWTEST_F(WindowSessionTest3, Foreground03, Function | SmallTest | Level2)
 {
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     ASSERT_NE(nullptr, property);
-    session_->state_ = SessionState::STATE_BACKGROUND;
+    session_->SetSessionState(SessionState::STATE_BACKGROUND);
     session_->isActive_ = true;
 
     property->type_ = WindowType::WINDOW_TYPE_DIALOG;//4 5
@@ -211,7 +211,7 @@ HWTEST_F(WindowSessionTest3, SetFocusable04, Function | SmallTest | Level2)
 HWTEST_F(WindowSessionTest3, SetTouchable03, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
-    session_->state_ = SessionState::STATE_FOREGROUND;
+    session_->SetSessionState(SessionState::STATE_FOREGROUND);
     session_->sessionInfo_.isSystem_ = false;
     EXPECT_EQ(WSError::WS_OK, session_->SetTouchable(true));
 }
@@ -242,7 +242,7 @@ HWTEST_F(WindowSessionTest3, GetTouchable02, Function | SmallTest | Level2)
  */
 HWTEST_F(WindowSessionTest3, UpdateDensity02, Function | SmallTest | Level2)
 {
-    session_->state_ = SessionState::STATE_FOREGROUND;
+    session_->SetSessionState(SessionState::STATE_FOREGROUND);
     sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
     EXPECT_NE(nullptr, mockSessionStage);
     session_->sessionStage_ = mockSessionStage;
@@ -263,7 +263,7 @@ HWTEST_F(WindowSessionTest3, UpdateOrientation, Function | SmallTest | Level2)
     EXPECT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);// 1
 
     session_->sessionInfo_.isSystem_ = false;
-    session_->state_ = SessionState::STATE_FOREGROUND;// 1
+    session_->SetSessionState(SessionState::STATE_FOREGROUND);// 1
     auto result02 = session_->UpdateOrientation();// 1
     EXPECT_EQ(result02, WSError::WS_ERROR_NULLPTR);
 
@@ -283,10 +283,10 @@ HWTEST_F(WindowSessionTest3, UpdateOrientation, Function | SmallTest | Level2)
 HWTEST_F(WindowSessionTest3, HandleDialogBackground, Function | SmallTest | Level2)
 {
     session_->property_ = new (std::nothrow) WindowSessionProperty();
-    session_->property_->type_ = WindowType::APP_MAIN_WINDOW_END;
+    session_->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_END);
     session_->HandleDialogBackground();// 1
 
-    session_->property_->type_ = WindowType::WINDOW_TYPE_APP_MAIN_WINDOW;
+    session_->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
     sptr<Session> session01 = nullptr;// 1
 
     SessionInfo info;
@@ -312,6 +312,143 @@ HWTEST_F(WindowSessionTest3, HandleDialogBackground, Function | SmallTest | Leve
     EXPECT_EQ(WSError::WS_OK, session_->PendingSessionToBackgroundForDelegator());
 }
 // 5
+
+/**
+ * @tc.name: HandleDialogForeground
+ * @tc.desc: HandleDialogForeground Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest3, HandleDialogForeground, Function | SmallTest | Level2)
+{
+    session_->property_ = new (std::nothrow) WindowSessionProperty();
+    session_->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_END);
+    session_->HandleDialogForeground();// 1
+
+    session_->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);// 1
+    sptr<Session> session01 = nullptr;// 1
+
+    SessionInfo info;
+    info.abilityName_ = "testSession1";
+    info.moduleName_ = "testSession2";
+    info.bundleName_ = "testSession3";
+    sptr<Session> session02 = new (std::nothrow) Session(info);// 1
+    sptr<Session> session03 = new (std::nothrow) Session(info);//
+    EXPECT_NE(session02, nullptr);
+    EXPECT_NE(session03, nullptr);
+
+    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    EXPECT_NE(nullptr, mockSessionStage);
+    session02->sessionStage_ = mockSessionStage;
+    session03->sessionStage_ = nullptr;
+
+    session_->dialogVec_.push_back(session01);
+    session_->dialogVec_.push_back(session02);// 2
+    session_->dialogVec_.push_back(session03);
+    session_->HandleDialogForeground();
+    session_->SetPendingSessionToBackgroundForDelegatorListener(nullptr);
+    EXPECT_EQ(WSError::WS_OK, session_->PendingSessionToBackgroundForDelegator());
+}
+//  5
+
+/**
+ * @tc.name: Background
+ * @tc.desc: Background Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest3, Background, Function | SmallTest | Level2)
+{
+    session_->SetSessionState(SessionState::STATE_ACTIVE);
+    session_->Background();// 2
+    auto result = session_->Background();// 1
+    session_->SetSessionSnapshotListener(nullptr);// 1
+    EXPECT_EQ(result, WSError::WS_OK);
+}
+//  4
+
+/**
+ * @tc.name: Background02
+ * @tc.desc: Background Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest3, Background02, Function | SmallTest | Level2)
+{
+    session_->SetSessionState(SessionState::STATE_ACTIVE);
+    session_->property_ = new (std::nothrow) WindowSessionProperty();
+    EXPECT_NE(session_->property_, nullptr);
+    session_->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_END);
+    auto result = session_->Background();
+    EXPECT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);
+}
+//  2
+
+/**
+ * @tc.name: SetActive
+ * @tc.desc: SetActive Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest3, SetActive, Function | SmallTest | Level2)
+{
+    session_->SetSessionState(SessionState::STATE_CONNECT);// 1
+    auto result = session_->SetActive(false);// 1
+    EXPECT_EQ(result, WSError::WS_DO_NOTHING);
+}
+// 2
+
+/**
+ * @tc.name: SetActive02
+ * @tc.desc: SetActive Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest3, SetActive02, Function | SmallTest | Level2)
+{
+    session_->SetSessionState(SessionState::STATE_FOREGROUND);
+    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    EXPECT_NE(nullptr, mockSessionStage);
+    session_->sessionStage_ = mockSessionStage;
+    auto result = session_->SetActive(true);// 3
+    EXPECT_EQ(result, WSError::WS_OK);
+}
+//  4
+
+/**
+ * @tc.name: SetActive03
+ * @tc.desc: SetActive Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest3, SetActive03, Function | SmallTest | Level2)
+{
+    session_->SetSessionState(SessionState::STATE_CONNECT);// 1
+    auto result = session_->SetActive(true);
+    EXPECT_EQ(result, WSError::WS_OK);
+
+    session_->isActive_ = true;
+    auto result02 = session_->SetActive(false);
+    EXPECT_EQ(result02, WSError::WS_OK);
+
+    session_->SetSessionState(SessionState::STATE_ACTIVE);
+    session_->isActive_ = true;
+    auto result03 = session_->SetActive(false);
+    EXPECT_EQ(result03, WSError::WS_OK);
+}
+//  4
+
+/**
+ * @tc.name: NotifyCloseExistPipWindow02
+ * @tc.desc: NotifyCloseExistPipWindow Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest3, NotifyCloseExistPipWindow02, Function | SmallTest | Level2)
+{
+    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    EXPECT_NE(nullptr, mockSessionStage);
+    session_->sessionStage_ = mockSessionStage;
+    EXPECT_CALL(*(mockSessionStage), NotifyCloseExistPipWindow()).Times(::testing::AtLeast(1)).WillOnce(Return(WSError::WS_OK));
+
+    session_->sessionStage_ = nullptr;
+    auto result = session_->NotifyCloseExistPipWindow();
+    EXPECT_EQ(result, WSError::WS_ERROR_NULLPTR);
+}
+// 2
 }
 } // namespace Rosen
 } // namespace OHOS
