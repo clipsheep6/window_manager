@@ -1148,6 +1148,11 @@ public:
      */
     virtual void RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func) {}
     /**
+     * @brief Register window destroyed listener.
+     *
+     */
+    virtual void UnregisterWindowDestroyedListener() {}
+    /**
      * @brief Register Occupied Area Change listener.
      *
      * @param listener IOccupiedAreaChangeListener.
@@ -1721,6 +1726,30 @@ public:
      * @return WMError
      */
     virtual WMError SetSpecificBarProperty(WindowType type, const SystemBarProperty& property)
+    {
+        return WMError::WM_OK;
+    }
+
+    /**
+     * @brief Set System Bar(include status bar and nav bar) Properties
+     *
+     * @param properties system bar properties
+     * @param propertyFlags flags of system bar property
+     * @return WMError
+     */
+    virtual WMError SetSystemBarProperties(const std::map<WindowType, SystemBarProperty>& properties,
+        const std::map<WindowType, SystemBarPropertyFlag>& propertyFlags)
+    {
+        return WMError::WM_OK;
+    }
+    
+    /**
+     * @brief Get System Bar(include status bar and nav bar) Properties
+     *
+     * @param properties system bar properties got
+     * @return WMError
+     */
+    virtual WMError GetSystemBarProperties(std::map<WindowType, SystemBarProperty>& properties)
     {
         return WMError::WM_OK;
     }

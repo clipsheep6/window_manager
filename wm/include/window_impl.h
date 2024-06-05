@@ -224,6 +224,7 @@ public:
     virtual WMError RegisterDisplayMoveListener(sptr<IDisplayMoveListener>& listener) override;
     virtual WMError UnregisterDisplayMoveListener(sptr<IDisplayMoveListener>& listener) override;
     virtual void RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func) override;
+    virtual void UnregisterWindowDestroyedListener() override { notifyNativefunc_ = nullptr; }
     virtual WMError RegisterOccupiedAreaChangeListener(const sptr<IOccupiedAreaChangeListener>& listener) override;
     virtual WMError UnregisterOccupiedAreaChangeListener(const sptr<IOccupiedAreaChangeListener>& listener) override;
     virtual WMError RegisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener) override;
@@ -240,6 +241,8 @@ public:
     virtual void SetRequestModeSupportInfo(uint32_t modeSupportInfo) override;
     void UpdateRect(const struct Rect& rect, bool decoStatus, WindowSizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
+    void ScheduleUpdateRectTask(const Rect& rectToAce, const Rect& lastOriRect, WindowSizeChangeReason reason,
+        const std::shared_ptr<RSTransaction>& rsTransaction, const sptr<class Display>& display);
     void UpdateMode(WindowMode mode);
     void UpdateModeSupportInfo(uint32_t modeSupportInfo);
     virtual void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent) override;
@@ -487,15 +490,6 @@ private:
     bool needNotifyFocusLater_ = false;
     bool escKeyEventTriggered_ = false;
     std::shared_ptr<VsyncStation> vsyncStation_ = nullptr;
-    void HandleFloatingWindowTypes();
-    void HandleSystemAlarmWindow();
-    void HandleKeyguardWindow();
-    void HandleDraggingEffectWindow();
-    void HandleAppComponentWindow();
-    void HandleCommonFloatingWindows();
-    void HandleNonFocusableWindows();
-    void HandleDockSliceWindow();
-    void HandleSystemToastWindow();
 };
 } // namespace Rosen
 } // namespace OHOS
