@@ -3053,17 +3053,15 @@ bool SceneSession::RemoveToastSession(int32_t persistentId)
 void SceneSession::NotifyPiPWindowPrepareClose()
 {
     TLOGD(WmsLogTag::WMS_PIP, "NotifyPiPWindowPrepareClose");
-    int32_t callingPid = IPCSkeleton::GetCallingPid();
+    const auto& callingPid = IPCSkeleton::GetCallingPid();
     auto task = [weakThis = wptr(this), callingPid]() {
         auto session = weakThis.promote();
         if (!session) {
             TLOGE(WmsLogTag::WMS_PIP, "session is null");
             return;
         }
-        if (callingPid != -1 && callingPid != GetCallingPid()) {
-            TLOGW(WmsLogTag::WMS_PIP,
-                "Disconnect failed, callingPid_: %{public}d, callingPid: %{public}d, bundleName: %{public}s",
-                GetCallingPid(), callingPid, GetSessionInfo().bundleName_.c_str());
+        if (callingPid != session->GetCallingPid()) {
+            TLOGW(WmsLogTag::WMS_PIP, "premission denied, not call by the same process");
             return;
         }
         if (session->sessionChangeCallback_ && session->sessionChangeCallback_->onPrepareClosePiPSession_) {
