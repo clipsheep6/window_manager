@@ -101,6 +101,7 @@ ohos_static_library("window_extension_unittest_common") {
     "//foundation/multimodalinput/input/frameworks/proxy:libmmi-client",
     "//third_party/googletest:gmock",
     "//third_party/googletest:gtest_main",
+    "${window_base_path}/wm:libwm",
   ]
 
   deps = [
