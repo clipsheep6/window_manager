@@ -301,6 +301,41 @@ private:
      */
     int32_t GetSplitRatioPoint(float ratio, const Rect& displayRect);
 
+    /**
+     * @brief Utils, evaluate overall status based on pair and divider
+     */
+    bool IsDone();
+
+    /**
+     * @brief Utils, evaluate overall status based on pair and divider
+     */
+    bool IsPrimaryAndSecondary();
+
+    /**
+     * @brief Utils, evaluate overall status based on pair and divider
+     */
+    bool IsSinglePrimary();
+
+    /**
+     * @brief Utils, evaluate overall status based on pair and divider
+     */
+    bool IsPrimaryWithDivider();
+
+    /**
+     * @brief Utils, evaluate overall status based on pair and divider
+     */
+    bool IsSingleSecondary();
+
+    /**
+     * @brief Utils, evaluate overall status based on pair and divider
+     */
+    bool IsSecondaryWithDivider();
+
+    /**
+     * @brief Utils, evaluate overall status based on pair and divider
+     */
+    bool IsSingleSplit();
+
 private:
     float ratio_ = DEFAULT_SPLIT_RATIO;
     DisplayId displayId_;
