@@ -2506,11 +2506,17 @@ WMError SceneSession::UpdateSessionPropertyByAction(const sptr<WindowSessionProp
     bool isSystemCalling = SessionPermission::IsSystemCalling() || SessionPermission::IsStartByHdcd();
     property->SetSystemCalling(isSystemCalling);
     wptr<SceneSession> weak = this;
-    auto task = [weak, property, action]() -> WMError {
+    const auto callingPid = IPCSkeleton::GetCallingRealPid();
+    auto task = [weak, property, action, callingPid]() -> WMError {
         auto sceneSession = weak.promote();
         if (sceneSession == nullptr) {
             TLOGE(WmsLogTag::DEFAULT, "the session is nullptr");
             return WMError::WM_DO_NOTHING;
+        }
+        if (callingPid != sceneSession->GetCallingPid()) {
+            TLOGE(WmsLogTag::WMS_EVENT, "Permission denied callingPid:%{public}d sessionPid:%{public}d",
+                callingPid, sceneSession->GetCallingPid());
+            return WMError::WM_ERROR_INVALID_PERMISSION;
         }
         TLOGD(WmsLogTag::DEFAULT, "Id: %{public}d, action: %{public}u", sceneSession->GetPersistentId(), action);
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SceneSession:UpdateProperty");
