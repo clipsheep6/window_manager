@@ -1975,6 +1975,14 @@ public:
      * @return WM_OK means set success, others means set failed
      */
     virtual WMError AdjustKeyboardLayout(const KeyboardLayoutParams& params) { return WMError::WM_OK; }
+
+    /*
+     * @brief Set the Dvsync Switch
+     *
+     * @param dvsyncSwitch bool.
+     * @return * void
+     */
+    virtual void SetUiDvsyncSwitch(bool dvsyncSwitch) {}
 };
 }
 }
