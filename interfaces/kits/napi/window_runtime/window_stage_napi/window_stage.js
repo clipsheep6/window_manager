@@ -73,6 +73,14 @@ class WindowStage {
   setDefaultDensityEnabled(enabled) {
     return this.__window_stage__.setDefaultDensityEnabled(enabled);
   }
+
+  getContentInfo(asyncCallback) {
+    return this.__window_stage__.getContentInfo(asyncCallback);
+  }
+
+  restore(contentInfo, asyncCallback) {
+    return this.__window_stage__.restore(contentInfo, asyncCallback);
+  }
 }
 
 export default WindowStage;
