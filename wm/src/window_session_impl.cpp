@@ -2184,6 +2184,7 @@ WSError WindowSessionImpl::NotifyCloseExistPipWindow()
 {
     TLOGI(WmsLogTag::WMS_PIP, "WindowSessionImpl::NotifyCloseExistPipWindow");
     PictureInPictureManager::DoClose(true, true);
+    PictureInPictureManager::DoDestroy();
     return WSError::WS_OK;
 }
 
