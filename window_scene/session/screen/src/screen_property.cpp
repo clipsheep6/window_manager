@@ -40,8 +40,6 @@ float ScreenProperty::GetRotation() const
 void ScreenProperty::SetBounds(const RRect& bounds)
 {
     bounds_ = bounds;
-    UpdateXDpi();
-    UpdateYDpi();
 }
 
 RRect ScreenProperty::GetBounds() const
@@ -102,6 +100,14 @@ void ScreenProperty::SetPhyHeight(uint32_t phyHeight)
 int32_t ScreenProperty::GetPhyHeight() const
 {
     return phyHeight_;
+}
+
+void ScreenProperty::SetDpiPhyProperty(int32_t phyWidth, int32_t phyHeight)
+{
+    xdpiPhyWidth_ = phyWidth;
+    ydpiPhyHeight_ = phyHeight;
+    UpdateXDpi();
+    UpdateYDpi();
 }
 
 void ScreenProperty::SetRefreshRate(uint32_t refreshRate)
@@ -205,7 +211,7 @@ void ScreenProperty::UpdateXDpi()
 {
     if (phyWidth_ != UINT32_MAX) {
         int32_t width = phyBounds_.rect_.width_;
-        xDpi_ = width * INCH_2_MM / phyWidth_;
+        xDpi_ = width * INCH_2_MM / xdpiPhyWidth_;
         xDpi_ = std::floor(xDpi_ * TRUNCATE_THREE_DECIMALS) / TRUNCATE_THREE_DECIMALS;
     }
 }
@@ -214,7 +220,7 @@ void ScreenProperty::UpdateYDpi()
 {
     if (phyHeight_ != UINT32_MAX) {
         int32_t height_ = phyBounds_.rect_.height_;
-        yDpi_ = height_ * INCH_2_MM / phyHeight_;
+        yDpi_ = height_ * INCH_2_MM / ydpiPhyHeight_;
         yDpi_ = std::floor(yDpi_ * TRUNCATE_THREE_DECIMALS) / TRUNCATE_THREE_DECIMALS;
     }
 }
