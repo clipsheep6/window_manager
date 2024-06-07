@@ -60,6 +60,8 @@ public:
     void SetPhyHeight(uint32_t phyHeight);
     int32_t GetPhyHeight() const;
 
+    void SetDpiPhyProperty(int phyWidth, int phyHeight);
+
     void SetRefreshRate(uint32_t refreshRate);
     uint32_t GetRefreshRate() const;
 
@@ -121,6 +123,9 @@ private:
 
     uint32_t phyWidth_ { UINT32_MAX };
     uint32_t phyHeight_ { UINT32_MAX };
+
+    int32_t xdpiPhyWidth_ { INT32_MAX };
+    int32_t ydpiPhyHeight_ { INT32_MAX };
 
     uint32_t refreshRate_ { 0 };
     uint32_t defaultDeviceRotationOffset_ { 0 };
