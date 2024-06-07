@@ -737,7 +737,11 @@ void WindowSessionProperty::UnmarshallingWindowMask(Parcel& parcel, WindowSessio
     bool isShaped = parcel.ReadBool();
     property->SetIsShaped(isShaped);
     if (isShaped) {
-        property->SetWindowMask(std::shared_ptr<Media::PixelMap>(Media::PixelMap::Unmarshalling(parcel)));
+       auto mask = parcel.ReadParcelable<Media::PixelMap>();
+        if ( mask == nullptr){
+            return;
+        }
+        property->SetWindowMask(mask);
     }
 }
 
