@@ -47,7 +47,9 @@
 #include "screen_setting_helper.h"
 #include "screen_session_dumper.h"
 #include "mock_session_manager_service.h"
-#include "screen_snapshot_picker.h"
+#include "connection/screen_snapshot_picker_connection.h"
+#include "connection/screen_cast_connection.h"
+#include "publish/screen_session_publish.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -191,6 +193,8 @@ void ScreenSessionManager::Init()
     } else {
         SetSensorSubscriptionEnabled();
     }
+    // publish init
+    ScreenSessionPublish::GetInstance().InitPublishEvents();
     screenEventTracker_.RecordEvent("Dms init end.");
 }
 
@@ -347,14 +351,14 @@ void ScreenSessionManager::ConfigureScreenSnapshotParams()
     }
     std::string screenSnapshotBundleName = static_cast<std::string>(stringConfig["screenSnapshotBundleName"]);
     TLOGD(WmsLogTag::DMS, "screenSnapshotBundleName = %{public}s.", screenSnapshotBundleName.c_str());
-    ScreenSnapshotPicker::GetInstance().SetScreenSnapshotBundleName(screenSnapshotBundleName);
+    ScreenSnapshotPickerConnection::GetInstance().SetBundleName(screenSnapshotBundleName);
     if (stringConfig.count("screenSnapshotAbilityName") == 0) {
         TLOGE(WmsLogTag::DMS, "not find screen snapshot ability in config xml");
         return;
     }
     std::string screenSnapshotAbilityName = static_cast<std::string>(stringConfig["screenSnapshotAbilityName"]);
     TLOGD(WmsLogTag::DMS, "screenSnapshotAbilityName = %{public}s.", screenSnapshotAbilityName.c_str());
-    ScreenSnapshotPicker::GetInstance().SetScreenSnapshotAbilityName(screenSnapshotAbilityName);
+    ScreenSnapshotPickerConnection::GetInstance().SetAbilityName(screenSnapshotAbilityName);
 }
 
 void ScreenSessionManager::RegisterScreenChangeListener()
@@ -451,6 +455,24 @@ void ScreenSessionManager::OnScreenChange(ScreenId screenId, ScreenEvent screenE
     HandleScreenEvent(screenSession, screenId, screenEvent);
 }
 
+void ScreenSessionManager::PublishCastEvent(const bool &isPlugIn)
+{
+    if (!ScreenCastConnection::GetInstance().CastConnectExtension()) {
+        TLOGE(WmsLogTag::DMS, "CastConnectionExtension failed");
+        return;
+    }
+    if (!ScreenCastConnection::GetInstance().IsConnectedSync()) {
+        TLOGE(WmsLogTag::DMS, "CastConnectionExtension connected failed");
+        ScreenCastConnection::GetInstance().CastDisconnectExtension();
+    }
+    if (isPlugIn) {
+        ScreenSessionPublish::GetInstance().PublishCastPlugInEvent();
+    } else {
+        ScreenSessionPublish::GetInstance().PublishCastPlugOutEvent();
+    }
+    ScreenCastConnection::GetInstance().CastDisconnectExtension();
+}
+
 void ScreenSessionManager::HandleScreenEvent(sptr<ScreenSession> screenSession,
     ScreenId screenId, ScreenEvent screenEvent)
 {
@@ -470,12 +492,14 @@ void ScreenSessionManager::HandleScreenEvent(sptr<ScreenSession> screenSession,
         }
         if (screenSession->GetVirtualScreenFlag() == VirtualScreenFlag::CAST) {
             NotifyScreenConnected(screenSession->ConvertToScreenInfo());
+            PublishCastEvent(true);
         }
         return;
     }
     if (screenEvent == ScreenEvent::DISCONNECTED) {
         if (screenSession->GetVirtualScreenFlag() == VirtualScreenFlag::CAST) {
             NotifyScreenDisconnected(screenSession->GetScreenId());
+            PublishCastEvent(false);
         }
         if (phyMirrorEnable) {
             FreeDisplayMirrorNodeInner(screenSession);
@@ -1617,6 +1641,8 @@ void ScreenSessionManager::UpdateScreenRotationProperty(ScreenId screenId, const
     std::map<DisplayId, sptr<DisplayInfo>> emptyMap;
     NotifyDisplayStateChange(GetDefaultScreenId(), screenSession->ConvertToDisplayInfo(),
         emptyMap, DisplayStateChangeType::UPDATE_ROTATION);
+    ScreenSessionPublish::GetInstance().PublishDisplayRotationEvent(
+        displayInfo->GetScreenId(), displayInfo->GetRotation());
 }
 
 void ScreenSessionManager::NotifyDisplayChanged(sptr<DisplayInfo> displayInfo, DisplayChangeEvent event)
@@ -3112,14 +3138,14 @@ std::shared_ptr<Media::PixelMap> ScreenSessionManager::GetSnapshotByPicker(Media
     ScreenId screenId = SCREEN_ID_INVALID;
     // get snapshot area frome Screenshot extension
     ConfigureScreenSnapshotParams();
-    if (ScreenSnapshotPicker::GetInstance().SnapshotPickerConnectExtension()) {
-        if (ScreenSnapshotPicker::GetInstance().GetScreenSnapshotInfo(rect, screenId) != 0) {
+    if (ScreenSnapshotPickerConnection::GetInstance().SnapshotPickerConnectExtension()) {
+        if (ScreenSnapshotPickerConnection::GetInstance().GetScreenSnapshotInfo(rect, screenId) != 0) {
             TLOGE(WmsLogTag::DMS, "GetScreenSnapshotInfo failed");
-            ScreenSnapshotPicker::GetInstance().SnapshotPickerDisconnectExtension();
+            ScreenSnapshotPickerConnection::GetInstance().SnapshotPickerDisconnectExtension();
             *errorCode = DmErrorCode::DM_ERROR_DEVICE_NOT_SUPPORT;
             return nullptr;
         }
-        ScreenSnapshotPicker::GetInstance().SnapshotPickerDisconnectExtension();
+        ScreenSnapshotPickerConnection::GetInstance().SnapshotPickerDisconnectExtension();
     } else {
         *errorCode = DmErrorCode::DM_ERROR_DEVICE_NOT_SUPPORT;
         TLOGE(WmsLogTag::DMS, "SnapshotPickerConnectExtension failed");
