@@ -144,6 +144,7 @@ private:
     void NotifyIfAvoidAreaChanged(const sptr<WindowNode>& node, const AvoidControlType avoidType) const;
     void NotifyIfSystemBarTintChanged(DisplayId displayId) const;
     void NotifyIfSystemBarRegionChanged(DisplayId displayId) const;
+    bool CheckWindowTypeMatches(const sptr<WindowNode>& node, sptr<WindowNode>& callingWindow) const;
     void NotifyIfKeyboardRegionChanged(const sptr<WindowNode>& node, const AvoidControlType avoidType) const;
     void TraverseAndUpdateWindowState(WindowState state, int32_t topPriority);
     void UpdateWindowTree(sptr<WindowNode>& node);
@@ -164,7 +165,6 @@ private:
     void ReZOrderShowWhenLockedWindowIfNeeded(const sptr<WindowNode>& node);
     void RaiseShowWhenLockedWindowIfNeeded(const sptr<WindowNode>& node);
     void ReZOrderShowWhenLockedWindows(bool up);
-
     WMError AddWindowNodeOnWindowTree(sptr<WindowNode>& node, const sptr<WindowNode>& parentNode);
     void RemoveWindowNodeFromWindowTree(sptr<WindowNode>& node);
     void UpdateRSTreeWhenShowingDisplaysChange(sptr<WindowNode>& node,
@@ -174,6 +174,11 @@ private:
     void RemoveFromRsTreeWhenRemoveWindowNode(sptr<WindowNode>& node, bool fromAnimation);
     void UpdateSizeChangeReason(sptr<WindowNode>& node, WindowMode srcMode, WindowMode dstMode);
     void UpdatePrivateWindowCount();
+    void UpdateRSTreeFunc(const sptr<WindowNode>& node, DisplayId displayId, DisplayId parentDisplayId, bool add);
+    WMError ValidateWindow(sptr<WindowNode>& node, const WindowMode& dstMode, WindowMode& srcMode,
+        sptr<WindowPair>& windowPair);
+    WMError ResetPair(sptr<WindowNode>& node);
+    void HandleTypeSpecifics(sptr<WindowNode>& node);
     uint32_t GetAppWindowNum();
     void ResetMainFloatingWindowPriorityIfNeeded(sptr<WindowNode>& node);
     void ResetWindowZOrderPriorityWhenSetMode(sptr<WindowNode>& node,
