@@ -36,6 +36,7 @@ public:
     static napi_value UpdateContentSize(napi_env env, napi_callback_info info);
     static napi_value RegisterCallback(napi_env env, napi_callback_info info);
     static napi_value UnregisterCallback(napi_env env, napi_callback_info info);
+    static napi_value UpdateXComponentController(napi_env env, napi_callback_info info);
 private:
     napi_value OnStartPictureInPicture(napi_env env, napi_callback_info info);
     napi_value OnStopPictureInPicture(napi_env env, napi_callback_info info);
@@ -43,6 +44,7 @@ private:
     napi_value OnUpdateContentSize(napi_env env, napi_callback_info info);
     napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
     napi_value OnUnregisterCallback(napi_env env, napi_callback_info info);
+    napi_value OnUpdateXComponentController(napi_env env, napi_callback_info info);
 
     bool IfCallbackRegistered(napi_env env, const std::string& type, napi_value jsListenerObject);
     WmErrorCode RegisterListenerWithType(napi_env env, const std::string& type, napi_value value);

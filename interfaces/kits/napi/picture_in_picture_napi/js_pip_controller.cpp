@@ -23,6 +23,7 @@
 #include "window_manager_hilog.h"
 #include "wm_common.h"
 #include "picture_in_picture_interface.h"
+#include "xcomponent_controller.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -43,6 +44,8 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "setAutoStartEnabled", moduleName, JsPipController::SetAutoStartEnabled);
     BindNativeFunction(env, object, "on", moduleName, JsPipController::RegisterCallback);
     BindNativeFunction(env, object, "off", moduleName, JsPipController::UnregisterCallback);
+    BindNativeFunction(
+        env, object, "updateXComponentController", moduleName, JsPipController::UpdateXComponentController);
 }
 
 napi_value CreateJsPipControllerObject(napi_env env, sptr<PictureInPictureController>& pipController)
@@ -229,6 +232,37 @@ napi_value JsPipController::OnUpdateContentSize(napi_env env, napi_callback_info
     }
     std::lock_guard<std::mutex> lock(mtx_);
     pipController_->UpdateContentSize(width, height);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsPipController::UpdateXComponentController(napi_env env, napi_callback_info info)
+{
+    JsPipController* me = CheckParamsAndGetThis<JsPipController>(env, info);
+    return (me != nullptr) ? me->OnUpdateXComponentController(env, info) : nullptr;
+}
+
+napi_value JsPipController::OnUpdateXComponentController(napi_env env, napi_callback_info info)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "OnUpdateXComponentController is called");
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc != 1) {
+        LOGE(WmsLogTag::WMS_PIP, "Argc count is invalid: %{public}zu", argc);
+        return NapiThrowInvalidParam(env);
+    }
+    napi_value xComponentControllerValue = argv[0];
+    std::shared_ptr<XComponentController> xComponentController =
+        XComponentController::GetXComponentControllerFromNapiValue(xComponentControllerValue);
+    if (pipController_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "[NAPI]OnUpdateXComponentController error, controller is nullptr");
+        return NapiGetUndefined(env);
+    }
+    std::lock_guard<std::mutex> lock(mtx_);
+    WMError errCode = pipController_->UpdateXComponentController(xComponentController);
+    if (errCode != WMError::WM_OK) {
+        TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Failed to update xComponentController");
+    }
     return NapiGetUndefined(env);
 }
 
