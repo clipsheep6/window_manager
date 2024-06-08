@@ -48,6 +48,7 @@
 #include "screen.h"
 #include "singleton_container.h"
 #include "screen_session_manager/include/screen_session_manager_client.h"
+#include <transaction/rs_interfaces.h>
 
 #ifdef POWER_MANAGER_ENABLE
 #include <power_mgr_client.h>
@@ -3423,6 +3424,28 @@ void SceneSession::SetSkipDraw(bool skip)
     if (leashWinSurfaceNode != nullptr) {
         leashWinSurfaceNode->SetSkipDraw(skip);
     }
+    RSTransaction::FlushImplicitTransaction();
+}
+
+void SceneSession::SetSkipSelfWhenShowOnVirtualScreen(bool isSkip)
+{
+    auto property = GetSessionProperty();
+    if (!property) {
+        WLOGFE("SetSkipSelfWhenShowOnVirtualScreen property is null");
+        return;
+    }
+    if (!surfaceNode_) {
+        WLOGFE("surfaceNode_ is null");
+        return;
+    }
+    if (!isSkip) {
+        WLOGFW("SetSkipSelfWhenShowOnVirtualScreen false, do nothing");
+        return;
+    }
+    WLOGFI("SetSkipSelfWhenShowOnVirtualScreen true");
+    std::vector<uint64_t> surfaceNodeIds;
+    surfaceNodeIds.push_back(surfaceNode_->GetId());
+    RSInterfaces::GetInstance().SetVirtualScreenBlackList(-1, surfaceNodeIds);
     RSTransaction::FlushImplicitTransaction();
 }
 } // namespace OHOS::Rosen

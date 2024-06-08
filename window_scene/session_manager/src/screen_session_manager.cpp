@@ -2260,9 +2260,29 @@ DMError ScreenSessionManager::MakeMirror(ScreenId mainScreenId, std::vector<Scre
     for (ScreenId screenId : allMirrorScreenIds) {
         MirrorSwitchNotify(screenId);
     }
+    mirrorScreenIds_ = mirrorScreenIds;
+    TLOGI(WmsLogTag::DMS, "Register Setting cast Observer");
+    SettingObserver::UpdateFunc updateFunc = [&](const std::string& key) { SetCastFromSettingData(); };
+    ScreenSettingHelper::RegisterSettingCastObserver(updateFunc);
     TLOGI(WmsLogTag::DMS, "make mirror notify scb end makeResult=%{public}d", makeResult);
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:MakeMirror end");
     return makeResult;
+}
+
+void ScreenSessionManager::SetCastFromSettingData()
+{
+    bool enable;
+    bool ret = ScreenSettingHelper::GetSettingCast(enable);
+    if (!ret) {
+        TLOGW(WmsLogTag::DMS, "get setting cast failed,use default dpi");
+        enable = true;
+    } else {
+        TLOGI(WmsLogTag::DMS, "get setting cast success, enable: %{public}u", enable);
+    }
+    auto allMirrorScreenIds = GetAllValidScreenIds(mirrorScreenIds_);
+    for (ScreenId screenId : allMirrorScreenIds) {
+        rsInterface_.SetCastScreenEnableSkipWindow(screenId, enable);
+    }
 }
 
 DMError ScreenSessionManager::StopMirror(const std::vector<ScreenId>& mirrorScreenIds)
