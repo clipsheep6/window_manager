@@ -47,6 +47,7 @@
 #include "transaction/rs_sync_transaction_controller.h"
 #include "screen_manager.h"
 #include "screen.h"
+#include "screen_rotation_controller.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkRegion.h"
 
@@ -7094,10 +7095,12 @@ void SceneSessionManager::ProcessVirtualPixelRatioChange(DisplayId defaultDispla
             }
             if (scnSession->GetSessionState() == SessionState::STATE_FOREGROUND ||
                 scnSession->GetSessionState() == SessionState::STATE_ACTIVE) {
-                scnSession->UpdateDensity();
-                WLOGFD("UpdateDensity name=%{public}s, persistentId=%{public}d, winType=%{public}d, "
-                    "state=%{public}d, visible-%{public}d", scnSession->GetWindowName().c_str(), item.first,
-                    scnSession->GetWindowType(), scnSession->GetSessionState(), scnSession->IsVisible());
+                auto density = displayInfo->GetVirtualPixelRatio();
+                scnSession->UpdateDensity(density);
+                TLOGD(WmsLogTag::DMS, "window update density, name=%{public}s, id=%{public}d, winType=%{public}d, "
+                    "state=%{public}d, visible=%{public}d, density=%{public}f", scnSession->GetWindowName().c_str(),
+                    item.first, scnSession->GetWindowType(), scnSession->GetSessionState(), scnSession->IsVisible(),
+                    density);
             }
         }
         UpdateDisplayRegion(displayInfo);
@@ -7133,8 +7136,10 @@ void SceneSessionManager::ProcessUpdateRotationChange(DisplayId defaultDisplayId
                     "winType=%{public}d, state=%{public}d, visible-%{public}d", scnSession->GetWindowName().c_str(),
                     item.first, scnSession->GetWindowType(), scnSession->GetSessionState(), scnSession->IsVisible());
             }
-            scnSession->SetRotation(displayInfo->GetRotation());
-            scnSession->UpdateOrientation();
+            auto rotation = displayInfo->GetRotation();
+            scnSession->SetRotation(rotation);
+            auto orientation = ScreenRotationController::ConvertRotationToDisplayOrientation(rotation);
+            scnSession->UpdateOrientation(orientation);
         }
         UpdateDisplayRegion(displayInfo);
         return WSError::WS_OK;
@@ -7678,8 +7683,19 @@ WSError SceneSessionManager::UpdateSessionDisplayId(int32_t persistentId, uint64
     WLOGFD("Session move display %{public}" PRIu64 " from %{public}" PRIu64, screenId, fromScreenId);
     NotifySessionUpdate(scnSession->GetSessionInfo(), ActionType::MOVE_DISPLAY, fromScreenId);
     scnSession->NotifyDisplayMove(fromScreenId, screenId);
-    scnSession->UpdateDensity();
-    return WSError::WS_OK;
+
+    auto display = DisplayManager::GetInstance().GetDisplayById(screenId);
+    if (display == nullptr) {
+        TLOGE(WmsLogTag::DMS, "get display by displayId %{public}" PRIu64 " failed.", screenId);
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    auto displayInfo = display->GetDisplayInfo();
+    if (displayInfo == nullptr) {
+        TLOGE(WmsLogTag::DMS, "get display info %{public}" PRIu64 " failed.", screenId);
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    auto density = displayInfo->GetVirtualPixelRatio();
+    return scnSession->UpdateDensity(density);
 }
 
 void DisplayChangeListener::OnImmersiveStateChange(bool& immersive)

@@ -29,8 +29,8 @@ public:
     MOCK_METHOD1(SetActive, WSError(bool active));
     MOCK_METHOD3(UpdateRect, WSError(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction));
-    MOCK_METHOD0(UpdateDensity, void(void));
-    MOCK_METHOD0(UpdateOrientation, WSError(void));
+    MOCK_METHOD1(UpdateDensity, WSError(float density));
+    MOCK_METHOD1(UpdateOrientation, WSError(DisplayOrientation orientation));
     MOCK_METHOD0(HandleBackEvent, WSError(void));
     MOCK_METHOD0(NotifyDestroy, WSError(void));
     MOCK_METHOD1(UpdateFocus, WSError(bool isFocused));

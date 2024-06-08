@@ -152,8 +152,8 @@ public:
     virtual WMError SetWindowMask(const std::vector<std::vector<uint32_t>>& windowMask) override;
     WSError SwitchFreeMultiWindow(bool enable) override;
     void NotifyKeyboardPanelInfoChange(const KeyboardPanelInfo& keyboardPanelInfo) override;
-    void UpdateDensity() override;
-    WSError UpdateOrientation() override;
+    WSError UpdateDensity(float density) override;
+    WSError UpdateOrientation(DisplayOrientation orientation) override;
     WSError UpdateDisplayId(uint64_t displayId) override;
     WMError AdjustKeyboardLayout(const KeyboardLayoutParams& params) override;
     virtual WMError SetImmersiveModeEnabledState(bool enable) override;
@@ -212,6 +212,8 @@ private:
     std::atomic<bool> isDefaultDensityEnabled_ = false;
     uint32_t getAvoidAreaCnt_ = 0;
     bool enableImmersiveMode_ = false;
+    float density_ = 0.0f;
+    DisplayOrientation orientation_ = DisplayOrientation::UNKNOWN;
 
     WMError RegisterKeyboardPanelInfoChangeListener(const sptr<IKeyboardPanelInfoChangeListener>& listener) override;
     WMError UnregisterKeyboardPanelInfoChangeListener(const sptr<IKeyboardPanelInfoChangeListener>& listener) override;

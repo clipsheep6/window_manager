@@ -346,6 +346,14 @@ enum class ScreenCombination : uint32_t {
     SCREEN_UNIQUE,
 };
 
+enum class DeviceRotation: int32_t {
+    INVALID = -1,
+    ROTATION_PORTRAIT = 0,
+    ROTATION_LANDSCAPE,
+    ROTATION_PORTRAIT_INVERTED,
+    ROTATION_LANDSCAPE_INVERTED,
+};
+
 struct Point {
     int32_t posX_;
     int32_t posY_;

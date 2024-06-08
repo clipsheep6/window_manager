@@ -34,6 +34,7 @@ class AccessibilityElementInfo;
 }
 namespace OHOS::Rosen {
 class RSTransaction;
+enum class DisplayOrientation : uint32_t;
 
 class ISessionStage : public IRemoteBroker {
 public:
@@ -43,8 +44,8 @@ public:
     virtual WSError SetActive(bool active) = 0;
     virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) = 0;
-    virtual void UpdateDensity() = 0;
-    virtual WSError UpdateOrientation() = 0;
+    virtual WSError UpdateDensity(float density) = 0;
+    virtual WSError UpdateOrientation(DisplayOrientation orientation) = 0;
     virtual WSError HandleBackEvent() = 0;
     virtual WSError MarkProcessed(int32_t eventId) = 0;
     virtual WSError UpdateFocus(bool isFocused) = 0;
