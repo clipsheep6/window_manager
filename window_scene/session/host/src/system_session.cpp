@@ -354,4 +354,8 @@ void SystemSession::RectCheck(uint32_t curWidth, uint32_t curHeight)
     uint32_t maxFloatingWindowSize = GetSystemConfig().maxFloatingWindowSize_;
     RectSizeCheckProcess(curWidth, curHeight, minWidth, minHeight, maxFloatingWindowSize);
 }
+
+void SystemSession::SetSkipSelfWhenShowOnVirtualScreen(bool isSkip) {
+    SceneSession::SetSkipSelfWhenShowOnVirtualScreen(isSkip);
+}
 } // namespace OHOS::Rosen
