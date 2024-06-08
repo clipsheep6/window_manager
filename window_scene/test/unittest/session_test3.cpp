@@ -828,7 +828,6 @@ HWTEST_F(WindowSessionTest3, NotifyRequestFocusStatusNotifyManager, Function | S
         resultValue = 1;
     };
     session_->SetRequestFocusStatusNotifyManagerListener(func);
-    // FocusChangeReason reason;
     FocusChangeReason reason = FocusChangeReason::SCB_SESSION_REQUEST;
     session_->NotifyRequestFocusStatusNotifyManager(true, false, reason);
     EXPECT_EQ(resultValue, 1);
