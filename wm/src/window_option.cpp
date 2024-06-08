@@ -264,6 +264,11 @@ void WindowOption::SetOnlySupportSceneBoard(bool onlySupportSceneBoard)
     onlySupportSceneBoard_ = onlySupportSceneBoard;
 }
 
+void WindowOption::SetWindowStageAttribute(WindowStageAttribute windowStageAttribute)
+{
+    windStageAttribute_ = windowStageAttribute;
+}
+
 bool WindowOption::GetOnlySupportSceneBoard() const
 {
     return onlySupportSceneBoard_;

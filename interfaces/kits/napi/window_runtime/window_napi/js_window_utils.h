@@ -300,6 +300,7 @@ const std::map<WindowSizeChangeReason, RectChangeReason> JS_SIZE_CHANGE_REASON {
     napi_value OrientationInit(napi_env env);
     napi_value WindowStageEventTypeInit(napi_env env);
     napi_value WindowEventTypeInit(napi_env env);
+    napi_value WindowStageAttributeInit(napi_env env);
     napi_value WindowLayoutModeInit(napi_env env);
     napi_value BlurStyleInit(napi_env env);
     napi_value WindowErrorCodeInit(napi_env env);
