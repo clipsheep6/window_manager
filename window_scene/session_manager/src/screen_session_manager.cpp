@@ -2158,39 +2158,10 @@ DMError ScreenSessionManager::DestroyVirtualScreen(ScreenId screenId)
     ScreenId rsScreenId = SCREEN_ID_INVALID;
     screenIdManager_.ConvertToRsScreenId(screenId, rsScreenId);
 
-    bool agentFound = false;
-    for (auto &agentIter : screenAgentMap_) {
-        for (auto iter = agentIter.second.begin(); iter != agentIter.second.end(); iter++) {
-            if (*iter == screenId) {
-                iter = agentIter.second.erase(iter);
-                agentFound = true;
-                break;
-            }
-        }
-        if (agentFound) {
-            if (agentIter.first != nullptr && agentIter.second.empty()) {
-                screenAgentMap_.erase(agentIter.first);
-            }
-            break;
-        }
-    }
+    RemoveScreenAgent(screenId);
     HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "ssm:DestroyVirtualScreen(%" PRIu64")", screenId);
     if (rsScreenId != SCREEN_ID_INVALID && GetScreenSession(screenId) != nullptr) {
-        auto screen = GetScreenSession(screenId);
-        if (CheckScreenInScreenGroup(screen)) {
-            NotifyDisplayDestroy(screenId);
-        }
-        auto smsScreenMapIter = screenSessionMap_.find(screenId);
-        if (smsScreenMapIter != screenSessionMap_.end()) {
-            auto screenGroup = RemoveFromGroupLocked(smsScreenMapIter->second);
-            if (screenGroup != nullptr) {
-                NotifyScreenGroupChanged(
-                    smsScreenMapIter->second->ConvertToScreenInfo(), ScreenGroupChangeEvent::REMOVE_FROM_GROUP);
-            }
-            screenSessionMap_.erase(smsScreenMapIter);
-            NotifyScreenDisconnected(screenId);
-            TLOGI(WmsLogTag::DMS, "DestroyVirtualScreen success, id: %{public}" PRIu64"", screenId);
-        }
+        HandleScreenSession(screenId);
     }
     screenIdManager_.DeleteScreenId(screenId);
     if (rsScreenId == SCREEN_ID_INVALID) {
@@ -2201,6 +2172,40 @@ DMError ScreenSessionManager::DestroyVirtualScreen(ScreenId screenId)
     virtualScreenCount_ = virtualScreenCount_ > 0 ? virtualScreenCount_ - 1 : 0;
     NotifyCaptureStatusChanged();
     return DMError::DM_OK;
+}
+
+void ScreenSessionManager::RemoveScreenAgent(ScreenId screenId)
+{
+    for (auto agentIter = screenAgentMap_.begin(); agentIter != screenAgentMap_.end(); ++agentIter) {
+        auto& screenList = agentIter->second;
+        auto iter = std::find(screenList.begin(), screenList.end(), screenId);
+        if (iter != screenList.end()) {
+            screenList.erase(iter);
+            if (screenList.empty()) {
+                screenAgentMap_.erase(agentIter);
+            }
+            break;
+        }
+    }
+}
+
+void ScreenSessionManager::HandleScreenSession(ScreenId screenId)
+{
+    auto screenSession = GetScreenSession(screenId);
+    if (CheckScreenInScreenGroup(screenSession)) {
+        NotifyDisplayDestroy(screenId);
+    }
+    auto smsScreenMapIter = screenSessionMap_.find(screenId);
+    if (smsScreenMapIter != screenSessionMap_.end()) {
+        auto screenGroup = RemoveFromGroupLocked(smsScreenMapIter->second);
+        if (screenGroup != nullptr) {
+            NotifyScreenGroupChanged(
+                smsScreenMapIter->second->ConvertToScreenInfo(), ScreenGroupChangeEvent::REMOVE_FROM_GROUP);
+        }
+        screenSessionMap_.erase(smsScreenMapIter);
+        NotifyScreenDisconnected(screenId);
+        TLOGI(WmsLogTag::DMS, "DestroyVirtualScreen success id: %{public}" PRIu64"", screenId);
+    }
 }
 
 DMError ScreenSessionManager::DisableMirror(bool disableOrNot)
