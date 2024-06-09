@@ -2502,6 +2502,16 @@ WMError SceneSession::UpdateSessionPropertyByAction(const sptr<WindowSessionProp
             return WMError::WM_ERROR_INVALID_PERMISSION;
         }
     }
+    if (action == WSPropertyChangeAction::ACTION_UPDATE_TURN_SCREEN_ON) {
+        if (!SessionPermission::IsSystemCalling()) {
+            return WMError::WM_ERROR_INVALID_PERMISSION;
+        }
+    }
+    if (action == WSPropertyChangeAction::ACTION_UPDATE_SYSTEM_PRIVACY_MODE) {
+        if (!SessionPermission::IsSystemServiceCalling()) {
+            return WMError::WM_ERROR_INVALID_PERMISSION;
+        }
+    }
 
     bool isSystemCalling = SessionPermission::IsSystemCalling() || SessionPermission::IsStartByHdcd();
     property->SetSystemCalling(isSystemCalling);
