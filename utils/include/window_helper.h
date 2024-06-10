@@ -98,6 +98,16 @@ public:
         return (type == WindowType::WINDOW_TYPE_UI_EXTENSION);
     }
 
+    static inline bool IsSceneBoardWindow(WindowType type)
+    {
+        return (type == WindowType::WINDOW_TYPE_SCENE_BOARD);
+    }
+
+    static inline bool IsKeyBoardPanelWindow(WindowType type)
+    {
+        return (type == WindowType::WINDOW_TYPE_KEYBOARD_PANEL);
+    }
+
     static inline bool IsAppComponentWindow(WindowType type)
     {
         return (type == WindowType::WINDOW_TYPE_APP_COMPONENT);

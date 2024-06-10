@@ -572,7 +572,8 @@ private:
     RSInterfaces& rsInterface_;
     void ClearUnrecoveredSessions(const std::vector<int32_t>& recoveredPersistentIds);
     SessionInfo RecoverSessionInfo(const sptr<WindowSessionProperty>& property);
-    bool isNeedRecover(const int32_t persistentId);
+    bool IsNeedRecover(const int32_t persistentId);
+    WSError CheckSessionPropertyOnRecovery(const sptr<WindowSessionProperty>& property);
     void RegisterSessionStateChangeNotifyManagerFunc(sptr<SceneSession>& sceneSession);
     void RegisterSessionInfoChangeNotifyManagerFunc(sptr<SceneSession>& sceneSession);
     void OnSessionStateChange(int32_t persistentId, const SessionState& state);
