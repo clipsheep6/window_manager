@@ -402,9 +402,10 @@ enum class WindowSetUIContentType: uint32_t {
  * @brief Enumerates restore type.
  */
 enum class BackupAndRestoreType: int32_t {
-    NONE = 0,           // no backup and restore
-    CONTINUATION = 1,   // distribute
-    APP_RECOVERY = 2,   // app recovery
+    NONE = 0,                       // no backup and restore
+    CONTINUATION = 1,               // distribute
+    APP_RECOVERY = 2,               // app recovery
+    RESOURCESCHEDULE_RECOVERY = 3,  // app is killed due to resource schedule
 };
 
 /**
@@ -436,7 +437,7 @@ struct MainWindowInfo : public Parcelable {
         if (!parcel.WriteInt32(persistentId_)) {
             return false;
         }
-        
+
         if (!parcel.WriteInt32(bundleType_)) {
             return false;
         }
@@ -587,6 +588,18 @@ struct SystemBarProperty {
         return (enable_ == a.enable_ && backgroundColor_ == a.backgroundColor_ && contentColor_ == a.contentColor_ &&
             enableAnimation_ == a.enableAnimation_);
     }
+};
+
+/**
+ * @struct SystemBarPropertyFlag
+ *
+ * @brief Flag of system bar
+ */
+struct SystemBarPropertyFlag {
+    bool enableFlag = false;
+    bool backgroundColorFlag = false;
+    bool contentColorFlag = false;
+    bool enableAnimationFlag = false;
 };
 
 /**

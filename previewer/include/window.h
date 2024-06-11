@@ -157,6 +157,9 @@ public:
     virtual WMError GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea) = 0;
     virtual WMError SetSystemBarProperty(WindowType type, const SystemBarProperty& property) = 0;
     virtual WMError SetSpecificBarProperty(WindowType type, const SystemBarProperty& property) = 0;
+    virtual WMError SetSystemBarProperties(const std::map<WindowType, SystemBarProperty>& properties,
+        const std::map<WindowType, SystemBarPropertyFlag>& propertyFlags) = 0;
+    virtual WMError GetSystemBarProperties(std::map<WindowType, SystemBarProperty>& properties) = 0;
     virtual WMError SetFullScreen(bool status) = 0;
     virtual WMError SetLayoutFullScreen(bool status) = 0;
     virtual WMError Destroy() = 0;
@@ -210,6 +213,7 @@ public:
     virtual WMError RegisterDisplayMoveListener(sptr<IDisplayMoveListener>& listener) = 0;
     virtual WMError UnregisterDisplayMoveListener(sptr<IDisplayMoveListener>& listener) = 0;
     virtual void RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func) = 0;
+    virtual void UnregisterWindowDestroyedListener() {}
     virtual WMError RegisterOccupiedAreaChangeListener(const sptr<IOccupiedAreaChangeListener>& listener) = 0;
     virtual WMError UnregisterOccupiedAreaChangeListener(const sptr<IOccupiedAreaChangeListener>& listener) = 0;
     virtual WMError RegisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener) = 0;
@@ -344,6 +348,14 @@ public:
     }
 
     virtual WMError SetGrayScale(float grayScale) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
+    
+    /**
+     * @brief Set the Dvsync object
+     *
+     * @param dvsyncSwitch bool.
+     * @return * void
+    */
+    virtual void SetUiDvsyncSwitch(bool dvsyncSwitch) {}
 
     virtual WMError SetImmersiveModeEnabledState(bool enable) { return WMError::WM_OK; }
 

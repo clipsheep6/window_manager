@@ -446,6 +446,18 @@ private:
 };
 
 /**
+ * @struct SystemBarPropertyFlag
+ *
+ * @brief Flag of system bar
+ */
+struct SystemBarPropertyFlag {
+    bool enableFlag = false;
+    bool backgroundColorFlag = false;
+    bool contentColorFlag = false;
+    bool enableAnimationFlag = false;
+};
+
+/**
  * @struct Rect
  *
  * @brief Window Rect.
@@ -742,9 +754,10 @@ struct MaximizeLayoutOption {
 };
 
 enum class BackupAndRestoreType: int32_t {
-    NONE = 0,           // no backup and restore
-    CONTINUATION = 1,   // distribute
-    APP_RECOVERY = 2,   // app recovery
+    NONE = 0,                       // no backup and restore
+    CONTINUATION = 1,               // distribute
+    APP_RECOVERY = 2,               // app recovery
+    RESOURCESCHEDULE_RECOVERY = 3,  // app is killed due to resource schedule
 };
 }
 }

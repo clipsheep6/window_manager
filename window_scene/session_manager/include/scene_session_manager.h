@@ -150,7 +150,6 @@ public:
     WSError DestroyAndDisconnectSpecificSession(const int32_t persistentId) override;
     WSError DestroyAndDisconnectSpecificSessionWithDetachCallback(const int32_t persistentId,
         const sptr<IRemoteObject>& callback) override;
-    WMError UpdateSessionProperty(const sptr<WindowSessionProperty>& property, WSPropertyChangeAction action) override;
     void SetCreateSystemSessionListener(const NotifyCreateSystemSessionFunc& func);
     void SetCreateKeyboardSessionListener(const NotifyCreateKeyboardSessionFunc& func);
     void SetStatusBarEnabledChangeListener(const ProcessStatusBarEnabledChangeFunc& func);
@@ -230,6 +229,7 @@ public:
     WSError GetSessionSnapshot(const std::string& deviceId, int32_t persistentId,
                                SessionSnapshot& snapshot, bool isLowResolution) override;
     WMError GetSessionSnapshotById(int32_t persistentId, SessionSnapshot& snapshot) override;
+    WSError GetUIContentRemoteObj(int32_t persistentId, sptr<IRemoteObject>& uiContentRemoteObj) override;
     WSError SetSessionContinueState(const sptr<IRemoteObject> &token, const ContinueState& continueState) override;
     WSError ClearSession(int32_t persistentId) override;
     WSError ClearAllSessions() override;
@@ -440,8 +440,6 @@ private:
     float GetDisplayBrightness() const;
     void HandleSpecificSystemBarProperty(WindowType type, const sptr<WindowSessionProperty>& property,
         const sptr<SceneSession>& sceneSession);
-    WMError HandleUpdateProperty(const sptr<WindowSessionProperty>& property, WSPropertyChangeAction action,
-        const sptr<SceneSession>& sceneSession);
     void HandleHideNonSystemFloatingWindows(const sptr<WindowSessionProperty>& property,
         const sptr<SceneSession>& sceneSession);
     void UpdateForceHideState(const sptr<SceneSession>& sceneSession, const sptr<WindowSessionProperty>& property,
@@ -621,6 +619,7 @@ private:
     void NotifyCollaboratorAfterStart(sptr<SceneSession>& scnSession, sptr<AAFwk::SessionInfo>& scnSessionInfo);
     void UpdateCollaboratorSessionWant(sptr<SceneSession>& session, int32_t persistentId = 0);
     bool CheckSystemWindowPermission(const sptr<WindowSessionProperty>& property);
+    bool CheckModalSubWindowPermission(const sptr<WindowSessionProperty>& property);
     bool CheckPiPPriority(const PiPTemplateInfo& pipTemplateInfo);
     bool isEnablePiPCreate(const sptr<WindowSessionProperty>& property);
     void DestroySubSession(const sptr<SceneSession>& sceneSession);

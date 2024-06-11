@@ -1148,6 +1148,11 @@ public:
      */
     virtual void RegisterWindowDestroyedListener(const NotifyNativeWinDestroyFunc& func) {}
     /**
+     * @brief Register window destroyed listener.
+     *
+     */
+    virtual void UnregisterWindowDestroyedListener() {}
+    /**
      * @brief Register Occupied Area Change listener.
      *
      * @param listener IOccupiedAreaChangeListener.
@@ -1303,6 +1308,15 @@ public:
     virtual std::string GetContentInfo(BackupAndRestoreType type = BackupAndRestoreType::CONTINUATION)
     {
         return std::string();
+    }
+    /**
+     * @brief Set uiability restored router stack.
+     *
+     * @return WMError.
+     */
+    virtual WMError SetRestoredRouterStack(std::string& routerStack)
+    {
+        return WMError::WM_OK;
     }
     /**
      * @brief Get ui content object.
@@ -1726,6 +1740,30 @@ public:
     }
 
     /**
+     * @brief Set System Bar(include status bar and nav bar) Properties
+     *
+     * @param properties system bar properties
+     * @param propertyFlags flags of system bar property
+     * @return WMError
+     */
+    virtual WMError SetSystemBarProperties(const std::map<WindowType, SystemBarProperty>& properties,
+        const std::map<WindowType, SystemBarPropertyFlag>& propertyFlags)
+    {
+        return WMError::WM_OK;
+    }
+    
+    /**
+     * @brief Get System Bar(include status bar and nav bar) Properties
+     *
+     * @param properties system bar properties got
+     * @return WMError
+     */
+    virtual WMError GetSystemBarProperties(std::map<WindowType, SystemBarProperty>& properties)
+    {
+        return WMError::WM_OK;
+    }
+
+    /**
      * @brief Set the single frame composer enabled flag of a window.
      *
      * @param enable true means the single frame composer is enabled, otherwise means the opposite.
@@ -2012,6 +2050,14 @@ public:
      */
     virtual WMError AdjustKeyboardLayout(const KeyboardLayoutParams& params) { return WMError::WM_OK; }
 
+    /*
+     * @brief Set the Dvsync Switch
+     *
+     * @param dvsyncSwitch bool.
+     * @return * void
+     */
+
+    virtual void SetUiDvsyncSwitch(bool dvsyncSwitch) {}
     /**
      * @brief Set whether to enable immersive mode.
      * @param enable the value true means to enable immersive mode, and false means the opposite.
