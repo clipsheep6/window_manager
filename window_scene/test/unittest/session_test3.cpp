@@ -936,7 +936,7 @@ HWTEST_F(WindowSessionTest3, UpdateWindowMode, Function | SmallTest | Level2)
     result = session_->UpdateWindowMode(WindowMode::WINDOW_MODE_SPLIT_SECONDARY);
     EXPECT_EQ(session_->property_->windowMode_, WindowMode::WINDOW_MODE_SPLIT_SECONDARY);
     EXPECT_EQ(session_->property_->maximizeMode_, MaximizeMode::MODE_RECOVER);
-    EXPECT_EQ(result, WSError::WS_OK); 
+    EXPECT_EQ(result, WSError::WS_OK);
 
     session_->state_ = SessionState::STATE_CONNECT;
     result = session_->UpdateWindowMode(WindowMode::WINDOW_MODE_SPLIT_PRIMARY);
