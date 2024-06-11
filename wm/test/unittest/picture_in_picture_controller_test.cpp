@@ -653,7 +653,7 @@ HWTEST_F(PictureInPictureControllerTest, UpdateXComponentController, Function | 
             new (std::nothrow) PictureInPictureController(option, mw, 100, nullptr);
     ASSERT_EQ(WMError::WM_ERROR_PIP_INTERNAL_ERROR, pipControl->UpdateXComponentController(nullptr));
 
-    XComponentController> controller;
+    XComponentController controller;
     std::shared_ptr<XComponentController> xComponentController = std::make_shared<XComponentController>(controller);
     ASSERT_NE(nullptr, xComponentController);
     ASSERT_EQ(WMError::WM_ERROR_PIP_INTERNAL_ERROR, pipControl->UpdateXComponentController(nullptr));
