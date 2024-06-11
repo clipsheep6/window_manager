@@ -902,10 +902,10 @@ HWTEST_F(WindowSceneSessionImplTest, Show02, Function | SmallTest | Level2)
     ASSERT_EQ(WMError::WM_OK, window->Show(2, false));
     window->property_->SetWindowType(WindowType::SYSTEM_WINDOW_BASE);
     ASSERT_EQ(WMError::WM_OK, window->Show(2, false));
-    requestRect =  = { 100, 100, 0, 100 };
+    requestRect = { 100, 100, 0, 100 };
     window->property_->SetRequestRect(requestRect);
     ASSERT_EQ(WMError::WM_OK, window->Show(2, false));
-    requestRect =  = { 100, 100, 100, 0 };
+    requestRect = { 100, 100, 100, 0 };
     window->property_->SetRequestRect(requestRect);
     ASSERT_EQ(WMError::WM_OK, window->Show(2, false));
     ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
