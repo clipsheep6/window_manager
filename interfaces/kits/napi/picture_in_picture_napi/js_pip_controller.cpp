@@ -40,7 +40,7 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "startPiP", moduleName, JsPipController::StartPictureInPicture);
     BindNativeFunction(env, object, "stopPiP", moduleName, JsPipController::StopPictureInPicture);
     BindNativeFunction(env, object, "updateContentSize", moduleName, JsPipController::UpdateContentSize);
-    BindNativeFunction(env, object, "updateContentStatus", moduleName, JsPipController::UpdateContentStatus);
+    BindNativeFunction(env, object, "updateControlStatus", moduleName, JsPipController::UpdateControlStatus);
     BindNativeFunction(env, object, "setAutoStartEnabled", moduleName, JsPipController::SetAutoStartEnabled);
     BindNativeFunction(env, object, "on", moduleName, JsPipController::RegisterCallback);
     BindNativeFunction(env, object, "off", moduleName, JsPipController::UnregisterCallback);
@@ -233,15 +233,15 @@ napi_value JsPipController::OnUpdateContentSize(napi_env env, napi_callback_info
     return NapiGetUndefined(env);
 }
 
-napi_value JsPipController::UpdateContentStatus(napi_env env, napi_callback_info info)
+napi_value JsPipController::UpdateControlStatus(napi_env env, napi_callback_info info)
 {
     JsPipController* me = CheckParamsAndGetThis<JsPipController>(env, info);
-    return (me != nullptr) ? me->OnUpdateContentStatus(env, info) : nullptr;
+    return (me != nullptr) ? me->OnUpdateControlStatus(env, info) : nullptr;
 }
 
-napi_value JsPipController::OnUpdateContentStatus(napi_env env, napi_callback_info info)
+napi_value JsPipController::OnUpdateControlStatus(napi_env env, napi_callback_info info)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "OnUpdateContentStatus is called");
+    TLOGI(WmsLogTag::WMS_PIP, "OnUpdateControlStatus is called");
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
@@ -263,12 +263,12 @@ napi_value JsPipController::OnUpdateContentStatus(napi_env env, napi_callback_in
         return NapiThrowInvalidParam(env, errMsg);
     }
     if (pipController_ == nullptr) {
-        errMsg = "OnUpdateContentStatus error, controller is nullptr";
+        errMsg = "OnUpdateControlStatus error, controller is nullptr";
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
         return NapiThrowInvalidParam(env, errMsg);
     }
     std::lock_guard<std::mutex> lock(mtx_);
-    pipController_->UpdateContentStatus(cbType, status);
+    pipController_->UpdateControlStatus(cbType, status);
     return NapiGetUndefined(env);
 }
 

@@ -30,7 +30,7 @@ const std::string SESSION_STATE_CHANGE_CB = "sessionStateChange";
 const std::string BUFFER_AVAILABLE_CHANGE_CB = "bufferAvailableChange";
 const std::string SESSION_EVENT_CB = "sessionEvent";
 const std::string SESSION_RECT_CHANGE_CB = "sessionRectChange";
-const std::string SESSION_CONTENT_STATUS_CHANGE_CB = "sessionContentStatusChange";
+const std::string SESSION_CONTENT_STATUS_CHANGE_CB = "sessionControlStatusChange";
 const std::string CREATE_SUB_SESSION_CB = "createSpecificSession";
 const std::string BIND_DIALOG_TARGET_CB = "bindDialogTarget";
 const std::string RAISE_TO_TOP_CB = "raiseToTop";
@@ -76,14 +76,13 @@ std::map<int32_t, napi_ref> JsSceneSession::jsSceneSessionMap_;
 
 static napi_value CreatePipTemplateInfo(napi_env env, const sptr<SceneSession>& session)
 {
+    TLOGI(WmsLogTag::WMS_PIP, "CreatePipTemplateInfo is called");
     napi_value pipTemplateInfoValue = nullptr;
     napi_create_object(env, &pipTemplateInfoValue);
     napi_set_named_property(env, pipTemplateInfoValue, "pipTemplateType",
         CreateJsValue(env, session->GetPiPTemplateInfo().pipTemplateType));
     napi_set_named_property(env, pipTemplateInfoValue, "priority",
         CreateJsValue(env, session->GetPiPTemplateInfo().priority));
-    napi_set_named_property(env, pipTemplateInfoValue, "isPlay",
-        CreateJsValue(env, session->GetPiPTemplateInfo().isPlay));
     napi_value controlArrayValue = nullptr;
     std::vector<std::uint32_t> controlGroups = session->GetPiPTemplateInfo().controlGroup;
     napi_create_array_with_length(env, controlGroups.size(), &controlArrayValue);
@@ -92,7 +91,31 @@ static napi_value CreatePipTemplateInfo(napi_env env, const sptr<SceneSession>& 
         napi_set_element(env, controlArrayValue, index++, CreateJsValue(env, controlGroup));
     }
     napi_set_named_property(env, pipTemplateInfoValue, "controlGroup", controlArrayValue);
+    napi_value controlStatusArrayValue = nullptr;
+    std::vector<PiPControlStatus> controlsStatus = session->GetPiPTemplateInfo().pipControlStatus;
+    napi_create_array_with_length(env, controlsStatus.size(), &controlStatusArrayValue);
+    auto indexControlsStatus = 0;
+    for (const auto& controlStatus : controlsStatus) {
+        napi_set_element(env, controlArrayValue, indexControlsStatus++, CreateJsPiPControlStatusObject(env, controlStatus));
+    }
+    napi_set_named_property(env, pipTemplateInfoValue, "controlStatus", controlStatusArrayValue);
     return pipTemplateInfoValue;
+}
+
+napi_value CreateJsPiPControlStatusObject(napi_env, PiPControlStatus controlStatus)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "CreateJsPiPControlStatusObject is called");
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue == nullptr) {
+        TLOGI(WmsLogTag::WMS_PIP, "CreateJsPiPControlStatusObject is called");
+        return NapiGetUndefined;
+    }
+    std::string controlName = controlStatus.controlName;
+    uint32_t status = controlStatus.status;
+    napi_set_named_property(env, objValue, "controlName", CreateJsValue(env, controlName));
+    napi_set_named_property(env, objValue, "status", CreateJsValue(env, status));
+    return objValue;
 }
 
 napi_value JsSceneSession::Create(napi_env env, const sptr<SceneSession>& session)
@@ -198,7 +221,7 @@ void JsSceneSession::InitListenerFuncs()
         { BUFFER_AVAILABLE_CHANGE_CB,            &JsSceneSession::ProcessBufferAvailableChangeRegister},
         { SESSION_EVENT_CB,                      &JsSceneSession::ProcessSessionEventRegister },
         { SESSION_RECT_CHANGE_CB,                &JsSceneSession::ProcessSessionRectChangeRegister },
-        { SESSION_CONTENT_STATUS_CHANGE_CB,      &JsSceneSession::ProcessSessionContentStatusChangeRegister },
+        { SESSION_CONTENT_STATUS_CHANGE_CB,      &JsSceneSession::ProcessSessionControlStatusChangeRegister },
         { CREATE_SUB_SESSION_CB,                 &JsSceneSession::ProcessCreateSubSessionRegister },
         { BIND_DIALOG_TARGET_CB,                 &JsSceneSession::ProcessBindDialogTargetRegister },
         { RAISE_TO_TOP_CB,                       &JsSceneSession::ProcessRaiseToTopRegister },
@@ -611,18 +634,18 @@ void JsSceneSession::ProcessSessionRectChangeRegister()
     WLOGFD("ProcessSessionRectChangeRegister success");
 }
 
-void JsSceneSession::ProcessSessionContentStatusChangeRegister()
+void JsSceneSession::ProcessSessionControlStatusChangeRegister()
 {
-    TLOGI(WmsLogTag::WMS_PIP, "ProcessSessionContentStatusChangeRegister success");
-    NotifySessionContentStatusFunc func = [this](const std::string& cbType, const int32_t& status) {
-        this->OnSessionContentStatusChange(cbType, status);
+    TLOGI(WmsLogTag::WMS_PIP, "ProcessSessionControlStatusChangeRegister success");
+    NotifySessionControlStatusFunc func = [this](const std::string& cbType, const int32_t& status) {
+        this->OnSessionControlStatusChange(cbType, status);
     };
     auto session = weakSession_.promote();
     if (session == nullptr) {
         WLOGFE("session is nullptr");
         return;
     }
-    session->SetSessionContentStatusChangeCallback(func);
+    session->SetSessionControlStatusChangeCallback(func);
 }
 
 void JsSceneSession::ProcessRaiseToTopRegister()
@@ -1530,9 +1553,9 @@ void JsSceneSession::OnSessionRectChange(const WSRect& rect, const SizeChangeRea
     taskScheduler_->PostMainThreadTask(task, rectInfo);
 }
 
-void JsSceneSession::OnSessionContentStatusChange(const std::string& cbType, const int32_t& status)
+void JsSceneSession::OnSessionControlStatusChange(const std::string& cbType, const int32_t& status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "OnSessionContentStatusChange");
+    TLOGI(WmsLogTag::WMS_PIP, "OnSessionControlStatusChange");
     std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(SESSION_CONTENT_STATUS_CHANGE_CB);
     if (jsCallBack == nullptr) {
         return;
@@ -1548,7 +1571,7 @@ void JsSceneSession::OnSessionContentStatusChange(const std::string& cbType, con
         napi_value argv[] = {statusChangeType, statusChangeValue};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    std::string statusChangeInfo = "OnSessionContentStatusChange";
+    std::string statusChangeInfo = "OnSessionControlStatusChange";
     taskScheduler_->PostMainThreadTask(task, statusChangeInfo);
 }
 

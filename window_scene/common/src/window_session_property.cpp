@@ -678,10 +678,19 @@ bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const
     if (!parcel.WriteUint32(pipTemplateInfo_.pipTemplateType)) {
         return false;
     }
-    if (!parcel.WriteUint32(pipTemplateInfo_.priority)) {
+    auto controlStatusSize = pipTemplateInfo_.pipControlStatus.size();
+    if (!parcel.WriteUint32(static_cast<uint32_t>(controlStatusSize))) {
         return false;
     }
-    if (!parcel.WriteUint32(pipTemplateInfo_.isPlay)) {
+    for (uint32_t i = 0; i < controlStatusSize; i++) {
+        if (!parcel.WriteString(pipTemplateInfo_.pipControlStatus[i].controlName)) {
+            return false;
+        }
+        if (!parcel.WriteUint32(pipTemplateInfo_.pipControlStatus[i].status)) {
+            return false;
+        }
+    }
+    if (!parcel.WriteUint32(pipTemplateInfo_.priority)) {
         return false;
     }
     auto size = pipTemplateInfo_.controlGroup.size();
@@ -706,9 +715,14 @@ void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowS
     }
     PiPTemplateInfo pipTemplateInfo;
     pipTemplateInfo.pipTemplateType = parcel.ReadUint32();
+    auto controlStatusSize = parcel.ReadUint32();
+    for (uint32_t i = 0; i < controlStatusSize; i++) {
+        PiPControlStatus pipControlStatus;
+        pipControlStatus.controlName = pacel.ReadString();
+        pipControlStatus.status = pacel.ReadUint32();
+        pipTemplateInfo.pipControlStatus.push_back(pipControlStatus);
+    }
     pipTemplateInfo.priority = parcel.ReadUint32();
-    pipTemplateInfo.isPlay = parcel.ReadUint32();
-    TLOGI(WmsLogTag::WMS_PIP, "UnmarshallingPiPTemplateInfo isPlay %{public}u", pipTemplateInfo.isPlay);
     auto size = parcel.ReadUint32();
     if (size > MAX_SIZE_PIP_CONTROL_GROUP) {
         return;

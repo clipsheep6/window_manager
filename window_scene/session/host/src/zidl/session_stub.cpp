@@ -128,7 +128,7 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_PIP_RECT),
         &SessionStub::HandleUpdatePiPRect),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_PIP_CONTENT_STATUS),
-        &SessionStub::HandleUpdateContentStatus),
+        &SessionStub::HandleUpdateControlStatus),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_LAYOUT_FULL_SCREEN_CHANGE),
         &SessionStub::HandleLayoutFullScreenChange),
 };
@@ -627,12 +627,12 @@ int SessionStub::HandleUpdatePiPRect(MessageParcel& data, MessageParcel& reply)
     return ERR_NONE;
 }
 
-int SessionStub::HandleUpdateContentStatus(MessageParcel& data, MessageParcel& reply)
+int SessionStub::HandleUpdateControlStatus(MessageParcel& data, MessageParcel& reply)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "HandleUpdateContentStatus!");
+    TLOGI(WmsLogTag::WMS_PIP, "HandleUpdateControlStatus!");
     std::string cbType =  {data.ReadString()};
     int32_t status =  {data.ReadInt32()};
-    WSError errCode = UpdateContentStatus(cbType, status);
+    WSError errCode = UpdateControlStatus(cbType, status);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }

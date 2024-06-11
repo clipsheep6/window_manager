@@ -27,6 +27,7 @@
 #include "session/host/include/scene_session.h"
 #include "js_scene_utils.h"
 #include "task_scheduler.h"
+#include "wm_common.h"
 
 namespace OHOS::Rosen {
 class SceneSession;
@@ -66,6 +67,7 @@ private:
     static void BindNativeMethod(napi_env env, napi_value objValue, const char* moduleName);
 
     napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
+    napi_value CreateJsPiPControlStatusObject(napi_env env, PiPControlStatus controlStatus);
     napi_value OnUpdateNativeVisibility(napi_env env, napi_callback_info info);
     napi_value OnSetShowRecent(napi_env env, napi_callback_info info);
     napi_value OnSetZOrder(napi_env env, napi_callback_info info);
@@ -99,7 +101,7 @@ private:
     void ProcessCreateSubSessionRegister();
     void ProcessBindDialogTargetRegister();
     void ProcessSessionRectChangeRegister();
-    void ProcessSessionContentStatusChangeRegister();
+    void ProcessSessionControlStatusChangeRegister();
     void ProcessRaiseToTopRegister();
     void ProcessRaiseToTopForPointDownRegister();
     void ProcessBackPressedRegister();
@@ -144,7 +146,7 @@ private:
     void OnCreateSubSession(const sptr<SceneSession>& sceneSession);
     void OnBindDialogTarget(const sptr<SceneSession>& sceneSession);
     void OnSessionRectChange(const WSRect& rect, const SizeChangeReason& reason = SizeChangeReason::UNDEFINED);
-    void OnSessionContentStatusChange(const std::string& cbType, const int32_t& status);
+    void OnSessionControlStatusChange(const std::string& cbType, const int32_t& status);
     void OnRaiseToTop();
     void OnRaiseToTopForPointDown();
     void OnRaiseAboveTarget(int32_t subWindowId);

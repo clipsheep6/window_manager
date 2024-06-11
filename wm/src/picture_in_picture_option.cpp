@@ -14,6 +14,7 @@
  */
 
 #include "picture_in_picture_option.h"
+#include "window_manager_hilog.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -36,14 +37,26 @@ void PipOption::SetPipTemplate(uint32_t templateType)
     templateType_ = templateType;
 }
 
-uint32_t PipOption::GetIsPlay()
+std::vector<PiPControlStatus> PipOption::GetControlStatus()
 {
-    return isPlay_;
+    return pipControlStatus_;
 }
 
-uint32_t PipOption::SetIsPlay(uint32_t isPlay)
+void PipOption::SetControlStatus(std::string actionType, uint32_t status)
 {
-    isPlay_ = isPlay;
+    TLOGI(WmsLogTag::WMS_PIP, "controlStatus %{public}s : %{public}u", actionType.c_str(), status);
+    PiPControlStatus newPipControlStatus;
+    newPipControlStatus.controlName = actionType;
+    newPipControlStatus.status = status;
+    for (auto&controlStatus : pipControlStatus_) {
+        TLOGI(WmsLogTag::WMS_PIP, "controlStatus %{public}s : %{public}u",
+              controlStatus.controlName.c_str(), controlStatus.status);
+        if (actionType == controlStatus.controlName) {
+            controlStatus = newPipControlStatus;
+            return
+        }
+    }
+    pipControlStatus_.push_back(newPipControlStatus);
 }
 
 void PipOption::SetContentSize(uint32_t width, uint32_t height)

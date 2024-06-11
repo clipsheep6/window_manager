@@ -477,15 +477,15 @@ void PictureInPictureController::UpdateContentSize(int32_t width, int32_t height
 }
 
 
-void PictureInPictureController::UpdateContentStatus(std::string cbType, int32_t status)
+void PictureInPictureController::UpdateControlStatus(std::string cbType, int32_t status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "UpdateContentStatus %{public}s : %{public}u", cbType.c_str(), status);
+    TLOGI(WmsLogTag::WMS_PIP, "UpdateControlStatus %{public}s : %{public}u", cbType.c_str(), status);
+    pipOption_->SetControlStatus(cbType, status);
     if (window_ == nullptr) {
-        pipOption_->SetIsPlay(status);
         TLOGI(WmsLogTag::WMS_PIP, "pipWindow not exist");
         return;
     }
-    window_->UpdateContentStatus(cbType, status);
+    window_->UpdateControlStatus(cbType, status);
 }
 
 bool PictureInPictureController::IsContentSizeChanged(float width, float height, float posX, float posY)

@@ -845,11 +845,17 @@ enum class PiPState : int32_t {
     ERROR = 6,
 };
 
+struct PiPControlStatus
+{
+    std::string controlName;
+    uint32_t status;
+};
+
 struct PiPTemplateInfo {
     uint32_t pipTemplateType;
     uint32_t priority;
     std::vector<uint32_t> controlGroup;
-    uint32_t isPlay;
+    std::vector<PiPControlStatus> pipControlStatus;
 };
 
 using OnCallback = std::function<void(int64_t, int64_t)>;

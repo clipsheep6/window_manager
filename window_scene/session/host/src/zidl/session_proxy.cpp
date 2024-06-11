@@ -1054,9 +1054,9 @@ WSError SessionProxy::UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
     return static_cast<WSError>(ret);
 }
 
-WSError SessionProxy::UpdateContentStatus(const std::string& cbType, int32_t status)
+WSError SessionProxy::UpdateControlStatus(const std::string& cbType, int32_t status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "UpdateContentStatus is success");
+    TLOGI(WmsLogTag::WMS_PIP, "UpdateControlStatus is success");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
