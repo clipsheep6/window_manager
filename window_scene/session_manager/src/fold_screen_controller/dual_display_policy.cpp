@@ -259,8 +259,8 @@ void DualDisplayPolicy::ChangeScreenDisplayModeInner(sptr<ScreenSession> screenS
         TLOGI(WmsLogTag::DMS, "ChangeScreenDisplayMode: off screenId: %{public}" PRIu64 "", offScreenId);
         screenId_ = offScreenId;
         ScreenSessionManager::GetInstance().SetKeyguardDrawnDoneFlag(false);
-        ScreenSessionManager::GetInstance().SetScreenPower(ScreenPowerStatus::POWER_STATUS_OFF,
-            PowerStateChangeReason::STATE_CHANGE_REASON_DISPLAY_SWITCH);
+        rsInterface_.SetScreenPowerStatus(foldScreenController_->GetCurrentScreenId(),
+            ScreenPowerStatus::POWER_STATUS_OFF);
     };
     screenPowerTaskScheduler_->PostAsyncTask(taskScreenOff, "screenOffTask");
     AddOrRemoveDisplayNodeToTree(offScreenId, REMOVE_DISPLAY_NODE);
@@ -270,8 +270,8 @@ void DualDisplayPolicy::ChangeScreenDisplayModeInner(sptr<ScreenSession> screenS
         screenId_ = onScreenId;
         if (isScreenOn) {
             ScreenSessionManager::GetInstance().SetKeyguardDrawnDoneFlag(false);
-            ScreenSessionManager::GetInstance().SetScreenPower(ScreenPowerStatus::POWER_STATUS_ON,
-                PowerStateChangeReason::STATE_CHANGE_REASON_DISPLAY_SWITCH);
+            rsInterface_.SetScreenPowerStatus(foldScreenController_->GetCurrentScreenId(),
+                ScreenPowerStatus::POWER_STATUS_ON);
             PowerMgr::PowerMgrClient::GetInstance().RefreshActivity();
         } else {
             PowerMgr::PowerMgrClient::GetInstance().WakeupDevice();
