@@ -520,7 +520,8 @@ void JsSceneSession::OnDefaultAnimationFlagChange(bool isNeedDefaultAnimationFla
         return;
     }
 
-    auto task = [isNeedDefaultAnimationFlag, jsCallBack = GetJSCallback(NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB), env = env_]() {
+    auto task = [isNeedDefaultAnimationFlag,
+        jsCallBack = GetJSCallback(NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB), env = env_]() {
         napi_value jsSessionDefaultAnimationFlagObj = CreateJsValue(env, isNeedDefaultAnimationFlag);
         napi_value argv[] = {jsSessionDefaultAnimationFlagObj};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
