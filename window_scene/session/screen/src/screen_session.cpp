@@ -705,6 +705,12 @@ DisplayOrientation ScreenSession::CalcDisplayOrientation(Rotation rotation, Fold
         WLOGD("foldDisplay is verticalScreen when width is greater than height");
         isVerticalScreen = property_.GetPhyWidth() > property_.GetPhyHeight();
     }
+    // isVerticalScreen 应该始终为true, 待稳定后删除上面的判断语句
+    if (!isVerticalScreen) {
+        WLOGE("isVerticalScreen is invalid. width: %{public}d, height: %{public}d, displayMode: %{public}u.",
+            property_.GetPhyWidth(), property_.GetPhyHeight(), static_cast<uint32_t>(foldDisplayMode));
+        isVerticalScreen = true;
+    }
     switch (rotation) {
         case Rotation::ROTATION_0: {
             return isVerticalScreen ? DisplayOrientation::PORTRAIT : DisplayOrientation::LANDSCAPE;
