@@ -6401,6 +6401,86 @@ void SceneSessionManager::GetWindowLayerChangeInfo(std::shared_ptr<RSOcclusionDa
     }
 }
 
+void SceneSessionManager::UpdateSubWindowVisibility(const sptr<SceneSession>& session,
+    const WindowVisibilityState visibleState,
+    const std::vector<std::pair<uint64_t, WindowVisibilityState>>& visibilityChangeInfo,
+    std::string& visibilityInfo)
+{
+    bool isVisible = visibleState < WINDOW_VISIBILITY_STATE_TOTALLY_OCCUSION;
+    if (WindowHelper::IsMainWindow(session->GetWindowType()) && isVisible) {
+        auto subSession = GetSubSceneSession(session->GetWindowId());
+        if (subSession == nullptr) {
+            return;
+        }
+
+        if (IsWindowInVisibilityChangeVector(subSession->GetWindowId(), visibilityChangeInfo)) {
+            return;
+        }
+
+        if ((session->GetCallingPid() != subSession->GetCallingPid()) && subSession->IsSessionForeground()) {
+            TLOGI(WmsLogTag::DEFAULT, "Update subwindow visibility for winId: %{public}d", subSession->GetWindowId());
+            SetSessionVisibilityInfo(subSession, visibleState, windowVisibilityInfos, visibilityInfo);
+        }
+    }
+}
+
+void SceneSessionManager::SetSessionVisibilityInfo(const sptr<SceneSession>& session,
+    const WindowVisibilityState visibleState, std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos,
+    std::string& visibilityInfo)
+{
+    if (session == nullptr) {
+        TLOGE(WmsLogTag::DEFAULT, "Set session visibility info failed, session is invalied!");
+        return;
+    }
+    bool isVisible = visibleState < WINDOW_VISIBILITY_STATE_TOTALLY_OCCUSION;
+    session->SetVisible(isVisible);
+    session->SetVisibilityState(visibleState);
+    int32_t windowId = session->GetWindowId();
+    if (windowVisibilityListenerSessionSet_.find(windowId) != windowVisibilityListenerSessionSet_.end()) {
+        session->NotifyWindowVisibility();
+    }
+    windowVisibilityInfos.emplace_back(new WindowVisibilityInfo(
+        windowId, session->GetCallingPid(), session->GetCallingUid(), visibleState, session->GetWindowType()));
+
+    visibilityInfo +=
+        "[" + session->GetWindowName() + ", " + std::to_string(windowId) + ", " + std::to_string(visibleState) + "], ";
+}
+
+bool SceneSessionManager::IsWindowInVisibilityChangeVector(
+        int32_t windowId, const std::vector<std::pair<uint64_t, WindowVisibilityState>>& visibilityChangeInfo)
+{
+    for (const auto &elem : visibilityChangeInfo) {
+        uint64_t surfaceId = elem.first;
+        sptr<SceneSession> session = SelectSesssionFromMap(surfaceId);
+        if (session == nullptr) {
+            continue;
+        }
+
+        WindowVisibilityState visibleState = elem.second;
+        bool isVisible = visibleState < WINDOW_VISIBILITY_STATE_TOTALLY_OCCUSION;
+        if (isVisible && windowId == session->GetWindowId()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+sptr<SceneSession> SceneSessionManager::GetSubSceneSession(int32_t parentWindowId)
+{
+    std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
+    for (const auto &iter : sceneSessionMap_) {
+        auto sceneSession = iter.second;
+        if (sceneSession == nullptr) {
+            continue;
+        }
+        if (sceneSession->GetParentSession() != nullptr &&
+            sceneSession->GetParentSession()->GetWindowId() == parentWindowId) {
+            return sceneSession;
+        }
+    }
+    return nullptr;
+}
+
 std::vector<std::pair<uint64_t, WindowVisibilityState>> SceneSessionManager::GetWindowVisibilityChangeInfo(
     std::vector<std::pair<uint64_t, WindowVisibilityState>>& currVisibleData)
 {
@@ -6457,20 +6537,12 @@ void SceneSessionManager::DealwithVisibilityChange(const std::vector<std::pair<u
                     continue;
                 }
         }
-        session->SetVisible(isVisible);
-        session->SetVisibilityState(visibleState);
-        int32_t windowId = session->GetWindowId();
-        if (windowVisibilityListenerSessionSet_.find(windowId) != windowVisibilityListenerSessionSet_.end()) {
-            session->NotifyWindowVisibility();
-        }
-        windowVisibilityInfos.emplace_back(new WindowVisibilityInfo(windowId, session->GetCallingPid(),
-            session->GetCallingUid(), visibleState, session->GetWindowType()));
+        SetSessionVisibilityInfo(session, visibleState, windowVisibilityInfos, visibilityInfo);
+        UpdateSubWindowVisibility(session, visibleState, windowVisibilityInfos, visibilityInfo);
 #ifdef MEMMGR_WINDOW_ENABLE
     memMgrWindowInfos.emplace_back(new Memory::MemMgrWindowInfo(session->GetWindowId(), session->GetCallingPid(),
             session->GetCallingUid(), isVisible));
 #endif
-        visibilityInfo += "[" + session->GetWindowName() + ", " + std::to_string(windowId) + ", " +
-            std::to_string(visibleState) + "], ";
         CheckAndNotifyWaterMarkChangedResult();
     }
     if (windowVisibilityInfos.size() != 0) {
