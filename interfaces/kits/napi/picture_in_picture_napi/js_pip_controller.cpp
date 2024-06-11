@@ -248,7 +248,7 @@ napi_value JsPipController::OnUpdateXComponentController(napi_env env, napi_call
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc != 1) {
-        LOGE(WmsLogTag::WMS_PIP, "Argc count is invalid: %{public}zu", argc);
+        TLOGE(WmsLogTag::WMS_PIP, "Argc count is invalid: %{public}zu", argc);
         return NapiThrowInvalidParam(env);
     }
     napi_value xComponentControllerValue = argv[0];

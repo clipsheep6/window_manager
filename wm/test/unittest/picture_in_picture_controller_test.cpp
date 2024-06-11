@@ -637,6 +637,27 @@ HWTEST_F(PictureInPictureControllerTest, DestroyPictureInPictureWindow, Function
     EXPECT_CALL(*(mw), Destroy()).Times(1).WillOnce(Return(WMError::WM_DO_NOTHING));
     ASSERT_EQ(WMError::WM_ERROR_PIP_DESTROY_FAILED, pipControl->DestroyPictureInPictureWindow());
 }
+
+/**
+ * @tc.name: UpdateXComponentController
+ * @tc.desc: UpdateXComponentController
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureControllerTest, UpdateXComponentController, Function | SmallTest | Level2)
+{
+    sptr<MockWindow> mw = new (std::nothrow) MockWindow();
+    ASSERT_NE(nullptr, mw);
+    sptr<PipOption> option = new (std::nothrow) PipOption();
+    ASSERT_NE(nullptr, option);
+    sptr<PictureInPictureController> pipControl =
+            new (std::nothrow) PictureInPictureController(option, mw, 100, nullptr);
+    ASSERT_EQ(WMError::WM_ERROR_PIP_INTERNAL_ERROR, pipControl->UpdateXComponentController(nullptr));
+
+    XComponentController> controller;
+    std::shared_ptr<XComponentController> xComponentController = std::make_shared<XComponentController>(controller);
+    ASSERT_NE(nullptr, xComponentController);
+    ASSERT_EQ(WMError::WM_ERROR_PIP_INTERNAL_ERROR, pipControl->UpdateXComponentController(nullptr));
+}
 }
 }
 }
