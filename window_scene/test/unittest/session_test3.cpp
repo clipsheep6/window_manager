@@ -24,8 +24,8 @@
 #include "session/host/include/extension_session.h"
 #include "session/host/include/move_drag_controller.h"
 #include "session/host/include/scene_session.h"
-#include "session_manager/include/scene_session_manager.h"
 #include "session/host/include/session.h"
+#include "session_manager/include/scene_session_manager.h"
 #include "session_info.h"
 #include "key_event.h"
 #include "wm_common.h"
@@ -70,7 +70,7 @@ void WindowSessionTest3::SetUp()
     info.abilityName_ = "testSession1";
     info.moduleName_ = "testSession2";
     info.bundleName_ = "testSession3";
-    session_ = new (std::nothrow) Session(info);
+    session_ = sptr<Session>::MakeSptr(info);
     session_->surfaceNode_ = CreateRSSurfaceNode();
     EXPECT_NE(nullptr, session_);
     ssm_ = new SceneSessionManager();
@@ -141,7 +141,7 @@ HWTEST_F(WindowSessionTest3, NotifyContextTransparent, Function | SmallTest | Le
 HWTEST_F(WindowSessionTest3, Foreground02, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
-    sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
+    sptr<WindowSessionProperty> property = sptr<WindowSessionProperty>::MakeSptr();
     ASSERT_NE(nullptr, property);
     session_->SetSessionState(SessionState::STATE_BACKGROUND);
     session_->isActive_ = true;
@@ -150,11 +150,11 @@ HWTEST_F(WindowSessionTest3, Foreground02, Function | SmallTest | Level2)
 
     session_->SetSessionState(SessionState::STATE_INACTIVE);
     session_->isActive_ = false;
-    sptr<SessionStageMocker> mockSessionStage = new(std::nothrow) SessionStageMocker();
+    sptr<SessionStageMocker> mockSessionStage = sptr<SessionStageMocker>::MakeSptr();
     ASSERT_NE(mockSessionStage, nullptr);
     session_->sessionStage_ = mockSessionStage;
-    auto result02 = session_->Foreground(property);
-    ASSERT_EQ(result02, WSError::WS_OK);
+    result = session_->Foreground(property);
+    ASSERT_EQ(result, WSError::WS_OK);
 }
 
 /**
@@ -165,7 +165,7 @@ HWTEST_F(WindowSessionTest3, Foreground02, Function | SmallTest | Level2)
 HWTEST_F(WindowSessionTest3, Foreground03, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
-    sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
+    sptr<WindowSessionProperty> property = sptr<WindowSessionProperty>::MakeSptr();
     ASSERT_NE(nullptr, property);
     session_->SetSessionState(SessionState::STATE_BACKGROUND);
     session_->isActive_ = true;
@@ -178,11 +178,11 @@ HWTEST_F(WindowSessionTest3, Foreground03, Function | SmallTest | Level2)
     parentInfo.abilityName_ = "testSession1";
     parentInfo.moduleName_ = "testSession2";
     parentInfo.bundleName_ = "testSession3";
-    sptr<Session> parentSession = new (std::nothrow) Session(parentInfo);
+    sptr<Session> parentSession = sptr<Session>::MakeSptr(parentInfo);
     session_->SetParentSession(parentSession);
     session_->SetSessionState(SessionState::STATE_INACTIVE);
-    auto result02 = session_->Foreground(property);
-    ASSERT_EQ(result02, WSError::WS_OK);
+    result = session_->Foreground(property);
+    ASSERT_EQ(result, WSError::WS_OK);
 }
 
 /**
@@ -202,8 +202,8 @@ HWTEST_F(WindowSessionTest3, SetFocusable04, Function | SmallTest | Level2)
     EXPECT_NE(session_->property_, nullptr);
     session_->property_->SetFocusable(false);
 
-    auto result02 = session_->SetFocusable(false);
-    EXPECT_EQ(result02, WSError::WS_OK);
+    result = session_->SetFocusable(false);
+    EXPECT_EQ(result, WSError::WS_OK);
 }
 
 /**
@@ -245,7 +245,7 @@ HWTEST_F(WindowSessionTest3, UpdateDensity02, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->SetSessionState(SessionState::STATE_FOREGROUND);
-    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    sptr<SessionStageMocker> mockSessionStage = sptr<SessionStageMocker>::MakeSptr();
     EXPECT_NE(nullptr, mockSessionStage);
     session_->sessionStage_ = mockSessionStage;
     auto result = session_->UpdateDensity();
@@ -266,14 +266,14 @@ HWTEST_F(WindowSessionTest3, UpdateOrientation, Function | SmallTest | Level2)
 
     session_->sessionInfo_.isSystem_ = false;
     session_->SetSessionState(SessionState::STATE_FOREGROUND);
-    auto result02 = session_->UpdateOrientation();
-    EXPECT_EQ(result02, WSError::WS_ERROR_NULLPTR);
+    result = session_->UpdateOrientation();
+    EXPECT_EQ(result, WSError::WS_ERROR_NULLPTR);
 
-    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    sptr<SessionStageMocker> mockSessionStage = sptr<SessionStageMocker>::MakeSptr();
     EXPECT_NE(nullptr, mockSessionStage);
     session_->sessionStage_ = mockSessionStage;
-    auto result03 = session_->UpdateOrientation();
-    EXPECT_EQ(result03, WSError::WS_OK);
+    result = session_->UpdateOrientation();
+    EXPECT_EQ(result, WSError::WS_OK);
 }
 
 /**
@@ -295,12 +295,12 @@ HWTEST_F(WindowSessionTest3, HandleDialogBackground, Function | SmallTest | Leve
     info.abilityName_ = "testSession1";
     info.moduleName_ = "testSession2";
     info.bundleName_ = "testSession3";
-    sptr<Session> session02 = new (std::nothrow) Session(info);
-    sptr<Session> session03 = new (std::nothrow) Session(info);
+    sptr<Session> session02 = sptr<Session>::MakeSptr(info);
+    sptr<Session> session03 = sptr<Session>::MakeSptr(info);
     EXPECT_NE(session02, nullptr);
     EXPECT_NE(session03, nullptr);
 
-    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    sptr<SessionStageMocker> mockSessionStage = sptr<SessionStageMocker>::MakeSptr();
     EXPECT_NE(nullptr, mockSessionStage);
     session02->sessionStage_ = mockSessionStage;
     session03->sessionStage_ = nullptr;
@@ -332,12 +332,12 @@ HWTEST_F(WindowSessionTest3, HandleDialogForeground, Function | SmallTest | Leve
     info.abilityName_ = "testSession1";
     info.moduleName_ = "testSession2";
     info.bundleName_ = "testSession3";
-    sptr<Session> session02 = new (std::nothrow) Session(info);
-    sptr<Session> session03 = new (std::nothrow) Session(info);
+    sptr<Session> session02 = sptr<Session>::MakeSptr(info);
+    sptr<Session> session03 = sptr<Session>::MakeSptr(info);
     EXPECT_NE(session02, nullptr);
     EXPECT_NE(session03, nullptr);
 
-    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    sptr<SessionStageMocker> mockSessionStage = sptr<SessionStageMocker>::MakeSptr();
     EXPECT_NE(nullptr, mockSessionStage);
     session02->sessionStage_ = mockSessionStage;
     session03->sessionStage_ = nullptr;
@@ -401,7 +401,7 @@ HWTEST_F(WindowSessionTest3, SetActive02, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->SetSessionState(SessionState::STATE_FOREGROUND);
-    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    sptr<SessionStageMocker> mockSessionStage = sptr<SessionStageMocker>::MakeSptr();
     EXPECT_NE(nullptr, mockSessionStage);
     session_->sessionStage_ = mockSessionStage;
     auto result = session_->SetActive(true);
@@ -416,7 +416,7 @@ HWTEST_F(WindowSessionTest3, SetActive02, Function | SmallTest | Level2)
 HWTEST_F(WindowSessionTest3, SetActive03, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
-    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    sptr<SessionStageMocker> mockSessionStage = sptr<SessionStageMocker>::MakeSptr();
     EXPECT_NE(nullptr, mockSessionStage);
     session_->sessionStage_ = mockSessionStage;
 
@@ -425,13 +425,13 @@ HWTEST_F(WindowSessionTest3, SetActive03, Function | SmallTest | Level2)
     EXPECT_EQ(result, WSError::WS_OK);
 
     session_->isActive_ = true;
-    auto result02 = session_->SetActive(false);
-    EXPECT_EQ(result02, WSError::WS_OK);
+    result = session_->SetActive(false);
+    EXPECT_EQ(result, WSError::WS_OK);
 
     session_->SetSessionState(SessionState::STATE_ACTIVE);
     session_->isActive_ = true;
-    auto result03 = session_->SetActive(false);
-    EXPECT_EQ(result03, WSError::WS_OK);
+    result = session_->SetActive(false);
+    EXPECT_EQ(result, WSError::WS_OK);
 }
 
 /**
@@ -449,7 +449,7 @@ HWTEST_F(WindowSessionTest3, IsTopDialog02, Function | SmallTest | Level2)
     info.abilityName_ = "testSession1";
     info.moduleName_ = "testSession2";
     info.bundleName_ = "testSession3";
-    sptr<Session> parentSession = new (std::nothrow) Session(info);
+    sptr<Session> parentSession = sptr<Session>::MakeSptr(info);
     ASSERT_NE(parentSession, nullptr);
     parentSession->dialogVec_.clear();
     session_->SetParentSession(parentSession);
@@ -470,8 +470,8 @@ HWTEST_F(WindowSessionTest3, IsTopDialog03, Function | SmallTest | Level2)
     info.abilityName_ = "testSession1";
     info.moduleName_ = "testSession2";
     info.bundleName_ = "testSession3";
-    sptr<Session> dialogSession1 = new (std::nothrow) Session(info);
-    sptr<Session> dialogSession2 = new (std::nothrow) Session(info);
+    sptr<Session> dialogSession1 = sptr<Session>::MakeSptr(info);
+    sptr<Session> dialogSession2 = sptr<Session>::MakeSptr(info);
     ASSERT_NE(dialogSession1, nullptr);
     ASSERT_NE(dialogSession2, nullptr);
     dialogSession1->SetParentSession(session_);
@@ -515,9 +515,9 @@ HWTEST_F(WindowSessionTest3, HandlePointDownDialog, Function | SmallTest | Level
     info.abilityName_ = "testSession1";
     info.moduleName_ = "testSession2";
     info.bundleName_ = "testSession3";
-    sptr<Session> dialogSession1 = new (std::nothrow) Session(info);
-    sptr<Session> dialogSession2 = new (std::nothrow) Session(info);
-    sptr<Session> dialogSession3 = new (std::nothrow) Session(info);
+    sptr<Session> dialogSession1 = sptr<Session>::MakeSptr(info);
+    sptr<Session> dialogSession2 = sptr<Session>::MakeSptr(info);
+    sptr<Session> dialogSession3 = sptr<Session>::MakeSptr(info);
     sptr<Session> dialogSession4 = nullptr;
     ASSERT_NE(dialogSession1, nullptr);
     ASSERT_NE(dialogSession2, nullptr);
@@ -558,7 +558,7 @@ HWTEST_F(WindowSessionTest3, HandleSubWindowClick03, Function | SmallTest | Leve
     info.abilityName_ = "testSession1";
     info.moduleName_ = "testSession2";
     info.bundleName_ = "testSession3";
-    sptr<Session> dialogSession = new (std::nothrow) Session(info);
+    sptr<Session> dialogSession = sptr<Session>::MakeSptr(info);
     ASSERT_NE(dialogSession, nullptr);
     session_->SetParentSession(dialogSession);
 
@@ -568,8 +568,8 @@ HWTEST_F(WindowSessionTest3, HandleSubWindowClick03, Function | SmallTest | Leve
     auto result = session_->HandleSubWindowClick(MMI::PointerEvent::POINTER_ACTION_DOWN);
     EXPECT_EQ(result, WSError::WS_OK);
 
-    auto result02 = session_->HandleSubWindowClick(MMI::PointerEvent::POINTER_ACTION_MOVE);
-    EXPECT_EQ(result02, WSError::WS_OK);
+    result = session_->HandleSubWindowClick(MMI::PointerEvent::POINTER_ACTION_MOVE);
+    EXPECT_EQ(result, WSError::WS_OK);
 }
 
 /**
@@ -588,7 +588,7 @@ HWTEST_F(WindowSessionTest3, TransferPointerEvent06, Function | SmallTest | Leve
     info.abilityName_ = "testSession1";
     info.moduleName_ = "testSession2";
     info.bundleName_ = "testSession3";
-    sptr<Session> dialogSession = new (std::nothrow) Session(info);
+    sptr<Session> dialogSession = sptr<Session>::MakeSptr(info);
     ASSERT_NE(dialogSession, nullptr);
     dialogSession->SetSessionState(SessionState::STATE_ACTIVE);
     session_->dialogVec_.push_back(dialogSession);
@@ -636,7 +636,7 @@ HWTEST_F(WindowSessionTest3, TransferPointerEvent08, Function | SmallTest | Leve
     info.abilityName_ = "testSession1";
     info.moduleName_ = "testSession2";
     info.bundleName_ = "testSession3";
-    sptr<Session> dialogSession = new (std::nothrow) Session(info);
+    sptr<Session> dialogSession = sptr<Session>::MakeSptr(info);
     ASSERT_NE(dialogSession, nullptr);
 
     session_->SetParentSession(dialogSession);
@@ -664,7 +664,7 @@ HWTEST_F(WindowSessionTest3, TransferPointerEvent09, Function | SmallTest | Leve
     info.abilityName_ = "testSession1";
     info.moduleName_ = "testSession2";
     info.bundleName_ = "testSession3";
-    sptr<Session> dialogSession = new (std::nothrow) Session(info);
+    sptr<Session> dialogSession = sptr<Session>::MakeSptr(info);
     ASSERT_NE(dialogSession, nullptr);
 
     session_->SetParentSession(dialogSession);
@@ -695,9 +695,9 @@ HWTEST_F(WindowSessionTest3, TransferPointerEvent10, Function | SmallTest | Leve
     info.abilityName_ = "testSession1";
     info.moduleName_ = "testSession2";
     info.bundleName_ = "testSession3";
-    sptr<Session> dialogSession = new (std::nothrow) Session(info);
-    sptr<Session> dialogSession2 = new (std::nothrow) Session(info);
-    sptr<Session> dialogSession3 = new (std::nothrow) Session(info);
+    sptr<Session> dialogSession = sptr<Session>::MakeSptr(info);
+    sptr<Session> dialogSession2 = sptr<Session>::MakeSptr(info);
+    sptr<Session> dialogSession3 = sptr<Session>::MakeSptr(info);
     ASSERT_NE(dialogSession, nullptr);
     ASSERT_NE(dialogSession2, nullptr);
     ASSERT_NE(dialogSession3, nullptr);
@@ -904,9 +904,9 @@ HWTEST_F(WindowSessionTest3, NotifyFocusStatus, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
     session_->state_ = SessionState::STATE_CONNECT;
-    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    sptr<SessionStageMocker> mockSessionStage = sptr<SessionStageMocker>::MakeSptr();
     EXPECT_NE(nullptr, mockSessionStage);
-    session_->sessionStage_ = mockSessionStage;
+    session_->sessionStage_ = mockSessionStage; 
     EXPECT_EQ(WSError::WS_OK, session_->NotifyFocusStatus(true));
 }
 
@@ -927,20 +927,20 @@ HWTEST_F(WindowSessionTest3, UpdateWindowMode, Function | SmallTest | Level2)
     EXPECT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);
 
     session_->state_ = SessionState::STATE_DISCONNECT;
-    auto result2 = session_->UpdateWindowMode(WindowMode::WINDOW_MODE_UNDEFINED);
+    result = session_->UpdateWindowMode(WindowMode::WINDOW_MODE_UNDEFINED);
     EXPECT_EQ(session_->property_->windowMode_, WindowMode::WINDOW_MODE_UNDEFINED);
     EXPECT_EQ(session_->property_->isNeedUpdateWindowMode_, true);
-    EXPECT_EQ(result2, WSError::WS_OK);
+    EXPECT_EQ(result, WSError::WS_OK);
 
     session_->state_ = SessionState::STATE_CONNECT;
-    auto result3 = session_->UpdateWindowMode(WindowMode::WINDOW_MODE_SPLIT_SECONDARY);
+    result = session_->UpdateWindowMode(WindowMode::WINDOW_MODE_SPLIT_SECONDARY);
     EXPECT_EQ(session_->property_->windowMode_, WindowMode::WINDOW_MODE_SPLIT_SECONDARY);
     EXPECT_EQ(session_->property_->maximizeMode_, MaximizeMode::MODE_RECOVER);
-    EXPECT_EQ(result3, WSError::WS_OK);
+    EXPECT_EQ(result, WSError::WS_OK); 
 
     session_->state_ = SessionState::STATE_CONNECT;
-    auto result4 = session_->UpdateWindowMode(WindowMode::WINDOW_MODE_SPLIT_PRIMARY);
-    EXPECT_EQ(result4, WSError::WS_OK);
+    result = session_->UpdateWindowMode(WindowMode::WINDOW_MODE_SPLIT_PRIMARY);
+    EXPECT_EQ(result, WSError::WS_OK); 
 }
 
 /**
