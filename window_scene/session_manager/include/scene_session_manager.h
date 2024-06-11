@@ -272,6 +272,14 @@ public:
     void SetAlivePersistentIds(const std::vector<int32_t>& alivePersistentIds);
     void NotifyRecoveringFinished();
 
+    sptr<SceneSession> GetSubSceneSession(int32_t parentWindowId);
+    bool IsWindowInVisibilityChangeVector(int32_t windowId,
+        const std::vector<std::pair<uint64_t, WindowVisibilityState>>& visibilityChangeInfo);
+    void UpdateSubWindowVisibility(const sptr<SceneSession>& session, const WindowVisibilityState visibleState,
+        std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos, std::string& visibilityInfo);
+    void SetSessionVisibilityInfo(const sptr<SceneSession>& session, const WindowVisibilityState visibleState,
+        std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos, std::string& visibilityInfo);
+
     WMError CheckWindowId(int32_t windowId, int32_t &pid) override;
     void GetSceneSessionPrivacyModeBundles(DisplayId displayId, std::unordered_set<std::string>& privacyBundles);
     BrokerStates CheckIfReuseSession(SessionInfo& sessionInfo);
