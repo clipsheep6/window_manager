@@ -906,7 +906,7 @@ HWTEST_F(WindowSessionTest3, NotifyFocusStatus, Function | SmallTest | Level2)
     session_->state_ = SessionState::STATE_CONNECT;
     sptr<SessionStageMocker> mockSessionStage = sptr<SessionStageMocker>::MakeSptr();
     EXPECT_NE(nullptr, mockSessionStage);
-    session_->sessionStage_ = mockSessionStage; 
+    session_->sessionStage_ = mockSessionStage;
     EXPECT_EQ(WSError::WS_OK, session_->NotifyFocusStatus(true));
 }
 
@@ -940,7 +940,7 @@ HWTEST_F(WindowSessionTest3, UpdateWindowMode, Function | SmallTest | Level2)
 
     session_->state_ = SessionState::STATE_CONNECT;
     result = session_->UpdateWindowMode(WindowMode::WINDOW_MODE_SPLIT_PRIMARY);
-    EXPECT_EQ(result, WSError::WS_OK); 
+    EXPECT_EQ(result, WSError::WS_OK);
 }
 
 /**
