@@ -906,7 +906,7 @@ HWTEST_F(WindowSessionTest3, NotifyFocusStatus, Function | SmallTest | Level2)
     session_->state_ = SessionState::STATE_CONNECT;
     sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
     EXPECT_NE(nullptr, mockSessionStage);
-    session_->sessionStage_ = mockSessionStage; 
+    session_->sessionStage_ = mockSessionStage;
     EXPECT_EQ(WSError::WS_OK, session_->NotifyFocusStatus(true));
 }
 
@@ -922,8 +922,8 @@ HWTEST_F(WindowSessionTest3, UpdateWindowMode, Function | SmallTest | Level2)
     EXPECT_NE(nullptr, mockSessionStage);
     session_->sessionStage_ = mockSessionStage;
 
-    session_->state_ = SessionState::STATE_END;// 1
-    auto result = session_->UpdateWindowMode(WindowMode::WINDOW_MODE_UNDEFINED);// 1
+    session_->state_ = SessionState::STATE_END;
+    auto result = session_->UpdateWindowMode(WindowMode::WINDOW_MODE_UNDEFINED);
     EXPECT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);
 
     session_->state_ = SessionState::STATE_DISCONNECT;
@@ -936,11 +936,11 @@ HWTEST_F(WindowSessionTest3, UpdateWindowMode, Function | SmallTest | Level2)
     auto result3 = session_->UpdateWindowMode(WindowMode::WINDOW_MODE_SPLIT_SECONDARY);
     EXPECT_EQ(session_->property_->windowMode_, WindowMode::WINDOW_MODE_SPLIT_SECONDARY);
     EXPECT_EQ(session_->property_->maximizeMode_, MaximizeMode::MODE_RECOVER);
-    EXPECT_EQ(result3, WSError::WS_OK); 
+    EXPECT_EQ(result3, WSError::WS_OK);
 
     session_->state_ = SessionState::STATE_CONNECT;
     auto result4 = session_->UpdateWindowMode(WindowMode::WINDOW_MODE_SPLIT_PRIMARY);
-    EXPECT_EQ(result4, WSError::WS_OK); 
+    EXPECT_EQ(result4, WSError::WS_OK);
 }
 
 /**
