@@ -660,6 +660,7 @@ private:
         const sptr<WindowSessionProperty>& property);
     void DeleteStateDetectTask();
     bool JudgeNeedNotifyPrivacyInfo(DisplayId displayId, const std::unordered_set<std::string>& privacyBundles);
+    int32_t dumpSessionPid_ = INVALID_SESSION_ID;
 };
 } // namespace OHOS::Rosen
 

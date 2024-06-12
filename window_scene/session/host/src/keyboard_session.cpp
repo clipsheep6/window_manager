@@ -177,6 +177,20 @@ void KeyboardSession::OnKeyboardPanelUpdated()
 
 WSError KeyboardSession::SetKeyboardSessionGravity(SessionGravity gravity, uint32_t percent)
 {
+    if (!SessionPermission::IsStartedByInputMethod()) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Set keyboard session gravity permission is not allowed");
+        return WSError::WS_ERROR_INVALID_PERMISSION;
+    }
+    if (gravity != SessionGravity::SESSION_GRAVITY_DEFAULT &&
+        gravity != SessionGravity::SESSION_GRAVITY_BOTTOM &&
+        gravity != SessionGravity::SESSION_GRAVITY_FLOAT) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Invalid keyboard session gravity: %{public}d", gravity);
+        return WSError::WS_ERROR_INVALID_PARAM; 
+    }
+    if (percent < 0 || percent > 70u) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Invalid keyboard percent: %{public}d", percent);
+        return WSError::WS_ERROR_INVALID_PARAM;
+    }
     auto task = [weakThis = wptr(this), gravity, percent]() -> WSError {
         auto session = weakThis.promote();
         if (!session) {
@@ -212,6 +226,10 @@ WSError KeyboardSession::SetKeyboardSessionGravity(SessionGravity gravity, uint3
 
 void KeyboardSession::SetCallingSessionId(uint32_t callingSessionId)
 {
+    if (!SessionPermission::IsStartedByInputMethod()) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Set calling session id permission denied , id: %{public}d", callingSessionId);
+        return;
+    }
     TLOGI(WmsLogTag::WMS_KEYBOARD, "Calling session id: %{public}d", callingSessionId);
     UpdateCallingSessionIdAndPosition(callingSessionId);
     if (keyboardCallback_ == nullptr || keyboardCallback_->onCallingSessionIdChange_ == nullptr) {
@@ -231,8 +249,68 @@ uint32_t KeyboardSession::GetCallingSessionId()
     return GetSessionProperty()->GetCallingSessionId();
 }
 
+bool KeyboardSession::IsKeyboardLayoutRectValid(const Rect& rect, uint32_t screenWidth, uint32_t screenHeight)
+{
+    if (rect.width_ <= 0 || rect.width_ > screenWidth || rect.height_ <= 0 || rect.height_ > screenHeight * 0.7f) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Invalid keyboard layout size");
+        return false;
+    }
+    int minRemain = 20;
+    if (rect.posX_ + (int)rect.width_ < minRemain || rect.posX_ > (int)screenWidth - minRemain) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Keyboard horizontal remain at screen is too small");
+        return false;
+    }
+    if (rect.posY_ + (int)rect.height_ < minRemain || rect.posY_ > (int)screenHeight - minRemain) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Keyboard vertically remain at screen is too small");
+        return false;
+    }
+    return true;
+}
+
+WSError KeyboardSession::CheckAdjustKeyboardLayoutParam(const KeyboardLayoutParams& params)
+{
+    if (params.gravity_ != WindowGravity::WINDOW_GRAVITY_FLOAT &&
+        params.gravity_ != WindowGravity::WINDOW_GRAVITY_BOTTOM) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Invalid keyboard session gravity: %{public}u", params.gravity_);
+        return WSError::WS_ERROR_INVALID_PARAM;
+    }
+    if (params.gravity_ == WindowGravity::WINDOW_GRAVITY_FLOAT) {
+        auto displayId = GetSessionProperty()->GetDisplayId();
+        auto screenSession = ScreenSessionManagerClient::GetInstance().GetScreenSession(displayId);
+        if (screenSession == nullptr) {
+            // just check param,session is null will process at follow
+            return WSError::WS_OK;
+        }
+        int32_t phyHeight = screenSession->GetScreenProperty().GetPhyHeight();
+        int32_t phyWidth = screenSession->GetScreenProperty().GetPhyWidth();
+        Rotation rotation = screenSession->GetRotation();
+        bool rectValidation = false;
+        if (rotation == Rotation::ROTATION_0 || rotation == Rotation::ROTATION_180) {
+            rectValidation = IsKeyboardLayoutRectValid(params.PortraitKeyboardRect_, phyHeight, phyWidth) &&
+            IsKeyboardLayoutRectValid(params.PortraitPanelRect_, phyHeight, phyWidth);
+        } else if (rotation == Rotation::ROTATION_90 || rotation == Rotation::ROTATION_270) {
+            rectValidation = IsKeyboardLayoutRectValid(params.LandscapeKeyboardRect_, phyWidth, phyHeight) &&
+            IsKeyboardLayoutRectValid(params.LandscapePanelRect_, phyWidth, phyHeight);
+        }
+        if (!rectValidation) {
+            TLOGE(WmsLogTag::WMS_KEYBOARD, "Invalid keyboard layout rectangle: %{public}lu", displayId);
+            return WSError::WS_ERROR_INVALID_PARAM;
+        }
+    }
+    return WSError::WS_OK;
+}
+
 WSError KeyboardSession::AdjustKeyboardLayout(const KeyboardLayoutParams& params)
 {
+    if (!SessionPermission::IsStartedByInputMethod()) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Set keyboard session gravity permission is not allowed");
+        return WSError::WS_ERROR_INVALID_PERMISSION;
+    }
+    WSError check = CheckAdjustKeyboardLayoutParam(params);
+        if (check != WSError::WS_OK) {
+        return check;
+    }
+
     auto task = [weakThis = wptr(this), params]() -> WSError {
         auto session = weakThis.promote();
         if (!session) {
