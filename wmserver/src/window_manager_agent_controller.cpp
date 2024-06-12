@@ -20,22 +20,20 @@
 namespace OHOS {
 namespace Rosen {
 namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowManagerAgentController"};
+constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowManagerAgentController"};
 }
 WM_IMPLEMENT_SINGLE_INSTANCE(WindowManagerAgentController)
 
 WMError WindowManagerAgentController::RegisterWindowManagerAgent(const sptr<IWindowManagerAgent>& windowManagerAgent,
-    WindowManagerAgentType type)
+                                                                 WindowManagerAgentType type)
 {
-    return wmAgentContainer_.RegisterAgent(
-        windowManagerAgent, type) ? WMError::WM_OK : WMError::WM_ERROR_NULLPTR;
+    return wmAgentContainer_.RegisterAgent(windowManagerAgent, type) ? WMError::WM_OK : WMError::WM_ERROR_NULLPTR;
 }
 
 WMError WindowManagerAgentController::UnregisterWindowManagerAgent(const sptr<IWindowManagerAgent>& windowManagerAgent,
-    WindowManagerAgentType type)
+                                                                   WindowManagerAgentType type)
 {
-    return wmAgentContainer_.UnregisterAgent(
-        windowManagerAgent, type) ? WMError::WM_OK : WMError::WM_ERROR_NULLPTR;
+    return wmAgentContainer_.UnregisterAgent(windowManagerAgent, type) ? WMError::WM_OK : WMError::WM_ERROR_NULLPTR;
 }
 
 void WindowManagerAgentController::UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChangeInfo, bool focused)
@@ -47,8 +45,8 @@ void WindowManagerAgentController::UpdateFocusChangeInfo(const sptr<FocusChangeI
 
 void WindowManagerAgentController::UpdateWindowModeTypeInfo(WindowModeType type)
 {
-    for (auto& agent : wmAgentContainer_.GetAgentsByType(
-        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_MODE)) {
+    for (auto& agent :
+         wmAgentContainer_.GetAgentsByType(WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_MODE)) {
         agent->UpdateWindowModeTypeInfo(type);
     }
 }
@@ -59,18 +57,19 @@ void WindowManagerAgentController::UpdateSystemBarRegionTints(DisplayId displayI
     if (tints.empty()) {
         return;
     }
-    for (auto& agent : wmAgentContainer_.GetAgentsByType(
-        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_SYSTEM_BAR)) {
+    for (auto& agent :
+         wmAgentContainer_.GetAgentsByType(WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_SYSTEM_BAR)) {
         agent->UpdateSystemBarRegionTints(displayId, tints);
     }
 }
 
 void WindowManagerAgentController::NotifyAccessibilityWindowInfo(
-    const std::vector<sptr<AccessibilityWindowInfo>>& infos, WindowUpdateType type)
+    const std::vector<sptr<AccessibilityWindowInfo>>& infos,
+    WindowUpdateType type)
 {
     WLOGD("NotifyAccessibilityWindowInfo");
-    for (auto& agent : wmAgentContainer_.GetAgentsByType(
-        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_UPDATE)) {
+    for (auto& agent :
+         wmAgentContainer_.GetAgentsByType(WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_UPDATE)) {
         agent->NotifyAccessibilityWindowInfo(infos, type);
     }
 }
@@ -79,16 +78,16 @@ void WindowManagerAgentController::UpdateWindowVisibilityInfo(
     const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfos)
 {
     WLOGFD("Size:%{public}zu", windowVisibilityInfos.size());
-    for (auto& agent : wmAgentContainer_.GetAgentsByType(
-        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_VISIBILITY)) {
+    for (auto& agent :
+         wmAgentContainer_.GetAgentsByType(WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_VISIBILITY)) {
         agent->UpdateWindowVisibilityInfo(windowVisibilityInfos);
     }
 }
 
 void WindowManagerAgentController::UpdateCameraFloatWindowStatus(uint32_t accessTokenId, bool isShowing)
 {
-    for (auto& agent : wmAgentContainer_.GetAgentsByType(
-        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_CAMERA_FLOAT)) {
+    for (auto& agent :
+         wmAgentContainer_.GetAgentsByType(WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_CAMERA_FLOAT)) {
         agent->UpdateCameraFloatWindowStatus(accessTokenId, isShowing);
     }
 }
@@ -96,8 +95,8 @@ void WindowManagerAgentController::UpdateCameraFloatWindowStatus(uint32_t access
 void WindowManagerAgentController::NotifyWaterMarkFlagChangedResult(bool showWaterMark)
 {
     WLOGFD("NotifyWaterMarkFlagChanged with result:%{public}d", showWaterMark);
-    for (auto& agent : wmAgentContainer_.GetAgentsByType(
-        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WATER_MARK_FLAG)) {
+    for (auto& agent :
+         wmAgentContainer_.GetAgentsByType(WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WATER_MARK_FLAG)) {
         agent->NotifyWaterMarkFlagChangedResult(showWaterMark);
     }
 }
@@ -106,7 +105,7 @@ void WindowManagerAgentController::NotifyGestureNavigationEnabledResult(bool ena
 {
     WLOGFD("NotifyGestureNavigationEnabledResult with result:%{public}d", enable);
     for (auto& agent : wmAgentContainer_.GetAgentsByType(
-        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_GESTURE_NAVIGATION_ENABLED)) {
+             WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_GESTURE_NAVIGATION_ENABLED)) {
         agent->NotifyGestureNavigationEnabledResult(enable);
     }
 }
