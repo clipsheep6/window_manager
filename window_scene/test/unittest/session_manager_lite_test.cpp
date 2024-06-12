@@ -78,11 +78,10 @@ HWTEST_F(SessionManagerLiteTest, SaveSessionListener, Function | SmallTest | Lev
  */
 HWTEST_F(SessionManagerLiteTest, InitScreenSessionManagerLiteProxy, Function | SmallTest | Level2)
 {
-    std::shared_ptr<SessionManagerLite> sessionManagerLite =
-        std::make_shared<SessionManagerLite>();
+    std::shared_ptr<SessionManagerLite> sessionManagerLite = std::make_shared<SessionManagerLite>();
     ASSERT_NE(nullptr, sessionManagerLite);
 
-    sptr<IRemoteObject> remoteObject = sessionManagerLite->mockSessionManagerServiceProxy_->GetScreenSessionManagerLite();
+    sptr<IRemoteObject> remoteObject = nullptr;
     sessionManagerLite->screenSessionManagerLiteProxy_ = iface_cast<IScreenSessionManagerLite>(remoteObject);
     sessionManagerLite->InitScreenSessionManagerLiteProxy();
     sessionManagerLite->Clear();
