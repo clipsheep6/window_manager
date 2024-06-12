@@ -3441,7 +3441,7 @@ WMError SceneSessionManager::SetGestureNavigaionEnabled(bool enable)
     auto task = [this, enable]() {
         if (!gestureNavigationEnabledChangeFunc_ && !statusBarEnabledChangeFunc_) {
             WLOGFE("callback func is null");
-            return WMError::WM_DO_NOTHING;
+            return WMError::WM_OK;
         }
         if (gestureNavigationEnabledChangeFunc_) {
             gestureNavigationEnabledChangeFunc_(enable);
