@@ -63,7 +63,8 @@ private:
     void NotifyKeyboardPanelInfoChange(WSRect rect, bool isKeyboardPanelShow);
     bool CheckIfNeedRaiseCallingSession(sptr<SceneSession> callingSession, bool isCallingSessionFloating);
     WSError AdjustKeyboardLayout(const KeyboardLayoutParams& params) override;
-
+    WSError CheckAdjustKeyboardLayoutParam(const KeyboardLayoutParams &params);
+    bool IsKeyboardLayoutRectValid(const Rect& rect, uint32_t screenWidth, uint32_t screenHeight);
     sptr<KeyboardSessionCallback> keyboardCallback_ = nullptr;
 };
 } // namespace OHOS::Rosen

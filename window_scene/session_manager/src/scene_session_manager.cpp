@@ -3780,6 +3780,7 @@ void SceneSessionManager::DumpSessionElementInfo(const sptr<SceneSession>& sessi
     if (!session->GetSessionInfo().isSystem_) {
         WLOGFI("Dump normal session, not system");
         dumpInfoFuture_.ResetLock({});
+        dumpSessionPid_ = session->GetCallingPid();
         session->DumpSessionElementInfo(resetParams);
         std::vector<std::string> infos = dumpInfoFuture_.GetResult(2000); // 2000: wait for 2000ms
         for (auto& info: infos) {
@@ -3843,6 +3844,15 @@ WSError SceneSessionManager::GetSpecifiedSessionDumpInfo(std::string& dumpInfo, 
 
 void SceneSessionManager::NotifyDumpInfoResult(const std::vector<std::string>& info)
 {
+    if (dumpSessionPid_ == INVALID_SESSION_ID) {
+        WLOGFD("NotifyDumpInfoResult failed,session pid invalid");
+        return;
+    }
+    pid_t callingPid = IPCSkeleton::GetCallingRealPid();
+    if (dumpSessionPid_ != callingPid) {
+        WLOGFE("Invalid calling");
+        return;
+    }
     dumpInfoFuture_.SetValue(info);
     WLOGFD("NotifyDumpInfoResult");
 }
@@ -6027,13 +6037,9 @@ WMError SceneSessionManager::GetSurfaceNodeIdsFromMissionIds(std::vector<uint64_
 WMError SceneSessionManager::RegisterWindowManagerAgent(WindowManagerAgentType type,
     const sptr<IWindowManagerAgent>& windowManagerAgent)
 {
-    if (type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_SYSTEM_BAR ||
-        type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_GESTURE_NAVIGATION_ENABLED ||
-        type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WATER_MARK_FLAG) {
-        if (!SessionPermission::IsSystemCalling()) {
-            WLOGFE("RegisterWindowManagerAgent permission denied!");
-            return WMError::WM_ERROR_NOT_SYSTEM_APP;
-        }
+    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
+        WLOGFE("Register windowManager agent permission denied!");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     if ((windowManagerAgent == nullptr) || (windowManagerAgent->AsObject() == nullptr)) {
         WLOGFE("windowManagerAgent is null");
