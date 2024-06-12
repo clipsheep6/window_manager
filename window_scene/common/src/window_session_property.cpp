@@ -718,8 +718,8 @@ void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowS
     auto controlStatusSize = parcel.ReadUint32();
     for (uint32_t i = 0; i < controlStatusSize; i++) {
         PiPControlStatus pipControlStatus;
-        pipControlStatus.controlName = pacel.ReadString();
-        pipControlStatus.status = pacel.ReadUint32();
+        pipControlStatus.controlName = parcel.ReadString();
+        pipControlStatus.status = parcel.ReadUint32();
         pipTemplateInfo.pipControlStatus.push_back(pipControlStatus);
     }
     pipTemplateInfo.priority = parcel.ReadUint32();

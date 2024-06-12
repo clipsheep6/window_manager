@@ -1559,7 +1559,7 @@ void SceneSession::NotifySessionRectChange(const WSRect& rect, const SizeChangeR
     };
     PostTask(task, "NotifySessionRectChange" + GetRectInfo(rect));
 }
-    ControlControlStatusChange(const std::string& cbType, int32_t status)
+void SceneSession::NotifySessionControlStatusChange(const std::string& cbType, int32_t status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "NotifySessionControlStatusChange!");
     auto task = [weakThis = wptr(this), cbType, status]() {

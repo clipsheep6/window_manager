@@ -53,7 +53,7 @@ void PipOption::SetControlStatus(std::string actionType, uint32_t status)
               controlStatus.controlName.c_str(), controlStatus.status);
         if (actionType == controlStatus.controlName) {
             controlStatus = newPipControlStatus;
-            return
+            return;
         }
     }
     pipControlStatus_.push_back(newPipControlStatus);

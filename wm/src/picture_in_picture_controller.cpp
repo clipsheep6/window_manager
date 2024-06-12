@@ -124,7 +124,6 @@ WMError PictureInPictureController::CreatePictureInPictureWindow()
     pipTemplateInfo.pipTemplateType = pipOption_->GetPipTemplate();
     pipTemplateInfo.controlGroup = pipOption_->GetControlGroup();
     pipTemplateInfo.priority = GetPipPriority(pipOption_->GetPipTemplate());
-    pipTemplateInfo.isPlay = GetPipPriority(pipOption_->GetIsPlay());
     sptr<Window> window = Window::CreatePiP(windowOption, pipTemplateInfo, context->lock(), errCode);
     if (window == nullptr || errCode != WMError::WM_OK) {
         TLOGW(WmsLogTag::WMS_PIP, "Window create failed, reason: %{public}d", errCode);

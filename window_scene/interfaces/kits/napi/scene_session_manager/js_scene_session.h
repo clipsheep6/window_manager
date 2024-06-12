@@ -67,7 +67,6 @@ private:
     static void BindNativeMethod(napi_env env, napi_value objValue, const char* moduleName);
 
     napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
-    napi_value CreateJsPiPControlStatusObject(napi_env env, PiPControlStatus controlStatus);
     napi_value OnUpdateNativeVisibility(napi_env env, napi_callback_info info);
     napi_value OnSetShowRecent(napi_env env, napi_callback_info info);
     napi_value OnSetZOrder(napi_env env, napi_callback_info info);

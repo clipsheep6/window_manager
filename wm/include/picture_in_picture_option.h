@@ -30,8 +30,8 @@ public:
     void SetContext(void* contextPtr);
     void SetNavigationId(const std::string& navigationId);
     void SetPipTemplate(uint32_t templateType);
-    void SetControlSize(uint32_t width, uint32_t height);
-    void SetContentSize(std::string actionType, uint32_t status);
+    void SetContentSize(uint32_t width, uint32_t height);
+    void SetControlStatus     (std::string actionType, uint32_t status);
     void SetXComponentController(std::shared_ptr<XComponentController> xComponentController);
     void SetControlGroup(std::vector<std::uint32_t> controlGroup);
     void* GetContext() const;

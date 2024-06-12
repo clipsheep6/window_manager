@@ -74,6 +74,22 @@ constexpr int ARG_INDEX_3 = 3;
 
 std::map<int32_t, napi_ref> JsSceneSession::jsSceneSessionMap_;
 
+napi_value CreateJsPiPControlStatusObject(napi_env env, PiPControlStatus controlStatus)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "CreateJsPiPControlStatusObject is called");
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue == nullptr) {
+        TLOGI(WmsLogTag::WMS_PIP, "CreateJsPiPControlStatusObject is called");
+        return NapiGetUndefined(env);
+    }
+    std::string controlName = controlStatus.controlName;
+    uint32_t status = controlStatus.status;
+    napi_set_named_property(env, objValue, "controlName", CreateJsValue          (env, controlName));
+    napi_set_named_property(env, objValue, "status", CreateJsValue(env, status));
+    return objValue;
+}
+
 static napi_value CreatePipTemplateInfo(napi_env env, const sptr<SceneSession>& session)
 {
     TLOGI(WmsLogTag::WMS_PIP, "CreatePipTemplateInfo is called");
@@ -100,22 +116,6 @@ static napi_value CreatePipTemplateInfo(napi_env env, const sptr<SceneSession>& 
     }
     napi_set_named_property(env, pipTemplateInfoValue, "controlStatus", controlStatusArrayValue);
     return pipTemplateInfoValue;
-}
-
-napi_value CreateJsPiPControlStatusObject(napi_env, PiPControlStatus controlStatus)
-{
-    TLOGI(WmsLogTag::WMS_PIP, "CreateJsPiPControlStatusObject is called");
-    napi_value objValue = nullptr;
-    napi_create_object(env, &objValue);
-    if (objValue == nullptr) {
-        TLOGI(WmsLogTag::WMS_PIP, "CreateJsPiPControlStatusObject is called");
-        return NapiGetUndefined;
-    }
-    std::string controlName = controlStatus.controlName;
-    uint32_t status = controlStatus.status;
-    napi_set_named_property(env, objValue, "controlName", CreateJsValue(env, controlName));
-    napi_set_named_property(env, objValue, "status", CreateJsValue(env, status));
-    return objValue;
 }
 
 napi_value JsSceneSession::Create(napi_env env, const sptr<SceneSession>& session)
