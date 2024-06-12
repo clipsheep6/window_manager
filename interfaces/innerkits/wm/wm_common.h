@@ -830,6 +830,14 @@ enum class PiPControlGroup : uint32_t {
     VIDEO_MEETING_CAMERA_SWITCH = 302,
     VIDEO_MEETING_MUTE_SWITCH = 303,
     VIDEO_MEETING_END,
+
+    PLAY = 1,
+    PAUSE = 0,
+    OPEN = 1,
+    CLOSE = 0,
+    ENABLE = -2,
+    DISABLE = -3,
+
     END,
 };
 
@@ -845,8 +853,7 @@ enum class PiPState : int32_t {
     ERROR = 6,
 };
 
-struct PiPControlStatus
-{
+struct PiPControlStatus {
     std::string controlName;
     uint32_t status;
 };

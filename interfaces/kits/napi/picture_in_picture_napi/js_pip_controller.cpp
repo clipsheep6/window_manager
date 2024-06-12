@@ -258,7 +258,7 @@ napi_value JsPipController::OnUpdateControlStatus(napi_env env, napi_callback_in
     }
     int32_t status = 0;
     if (!ConvertFromJsValue(env, argv[1], status)) {
-        errMsg = "Failed to convert parameter to int or";
+        errMsg = "Failed to convert parameter to int";
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
         return NapiThrowInvalidParam(env, errMsg);
     }

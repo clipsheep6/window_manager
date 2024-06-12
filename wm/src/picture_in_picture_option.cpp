@@ -48,7 +48,7 @@ void PipOption::SetControlStatus(std::string actionType, uint32_t status)
     PiPControlStatus newPipControlStatus;
     newPipControlStatus.controlName = actionType;
     newPipControlStatus.status = status;
-    for (auto&controlStatus : pipControlStatus_) {
+    for (auto& controlStatus : pipControlStatus_) {
         TLOGI(WmsLogTag::WMS_PIP, "controlStatus %{public}s : %{public}u",
               controlStatus.controlName.c_str(), controlStatus.status);
         if (actionType == controlStatus.controlName) {

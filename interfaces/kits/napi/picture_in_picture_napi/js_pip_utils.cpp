@@ -127,6 +127,26 @@ static napi_value ExportVideoMeetingControlGroup(napi_env env)
     return result;
 }
 
+static napi_value ExportControlStatus(napi_env env)
+{
+    napi_value result = nullptr;
+    napi_create_object(env, &result);
+    (void)SetNamedProperty(env, result, "PLAY",
+                           static_cast<uint32_t>(PiPControlGroup::PLAY));
+    (void)SetNamedProperty(env, result, "PAUSE",
+                           static_cast<uint32_t>(PiPControlGroup::PAUSE));
+    (void)SetNamedProperty(env, result, "OPEN",
+                           static_cast<uint32_t>(PiPControlGroup::OPEN));
+    (void)SetNamedProperty(env, result, "CLOSE",
+                           static_cast<uint32_t>(PiPControlGroup::CLOSE));
+    (void)SetNamedProperty(env, result, "ENABLE",
+                           static_cast<uint32_t>(PiPControlGroup::ENABLE));
+    (void)SetNamedProperty(env, result, "DISABLE",
+                           static_cast<uint32_t>(PiPControlGroup::DISABLE));
+    napi_object_freeze(env, result);
+    return result;
+}
+
 napi_status InitEnums(napi_env env, napi_value exports)
 {
     const napi_property_descriptor properties[] = {
@@ -135,6 +155,7 @@ napi_status InitEnums(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("VideoPlayControlGroup", ExportVideoPlayControlGroup(env)),
         DECLARE_NAPI_PROPERTY("VideoCallControlGroup", ExportVideoCallControlGroup(env)),
         DECLARE_NAPI_PROPERTY("VideoMeetingControlGroup", ExportVideoMeetingControlGroup(env)),
+        DECLARE_NAPI_PROPERTY("ControlStatus", ExportControlStatus(env)),
     };
     size_t count = sizeof(properties) / sizeof(napi_property_descriptor);
     return napi_define_properties(env, exports, count, properties);

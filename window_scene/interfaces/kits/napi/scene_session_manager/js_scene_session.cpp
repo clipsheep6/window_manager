@@ -112,7 +112,8 @@ static napi_value CreatePipTemplateInfo(napi_env env, const sptr<SceneSession>& 
     napi_create_array_with_length(env, controlsStatus.size(), &controlStatusArrayValue);
     auto indexControlsStatus = 0;
     for (const auto& controlStatus : controlsStatus) {
-        napi_set_element(env, controlArrayValue, indexControlsStatus++, CreateJsPiPControlStatusObject(env, controlStatus));
+        napi_set_element(env, controlArrayValue, indexControlsStatus++,
+            CreateJsPiPControlStatusObject(env, controlStatus));
     }
     napi_set_named_property(env, pipTemplateInfoValue, "controlStatus", controlStatusArrayValue);
     return pipTemplateInfoValue;
