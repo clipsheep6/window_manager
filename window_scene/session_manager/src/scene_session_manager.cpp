@@ -1355,6 +1355,22 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
             TLOGD(WmsLogTag::WMS_LIFE, "get exist session persistentId: %{public}d", sessionInfo.persistentId_);
             return session;
         }
+        if (WindowHelper::IsMainWindow(static_cast<WindowType>(sessionInfo.windowType_))) {
+            TLOGD(WmsLogTag::WMS_LIFE, "mainWindow bundleName: %{public}s, moduleName: %{public}s, "
+                "abilityName: %{public}s, appIndex: %{public}d",
+                sessionInfo.bundleName_.c_str(), sessionInfo.moduleName_.c_str(),
+                sessionInfo.abilityName_.c_str(), sessionInfo.appIndex_);
+            auto sceneSession = GetSceneSessionByName(sessionInfo.bundleName_,
+                sessionInfo.moduleName_, sessionInfo.abilityName_, sessionInfo.appIndex_);
+            bool isSingleStart = sceneSession && sceneSession->GetAbilityInfo() &&
+                sceneSession->GetAbilityInfo()->launchMode == AppExecFwk::LaunchMode::SINGLETON;
+            if (isSingleStart) {
+                NotifySessionUpdate(sessionInfo, ActionType::SINGLE_START);
+                TLOGD(WmsLogTag::WMS_LIFE, "get exist singleton session persistentId: %{public}d",
+                    sessionInfo.persistentId_);
+                return sceneSession;
+            }
+        }
     }
 
     auto task = [this, sessionInfo, property]() {
@@ -2327,7 +2343,8 @@ bool SceneSessionManager::IsNeedRecover(const int32_t persistentId)
     return true;
 }
 
-WSError SceneSessionManager::CheckSessionPropertyOnRecovery(const sptr<WindowSessionProperty>& property)
+WSError SceneSessionManager::CheckSessionPropertyOnRecovery(const sptr<WindowSessionProperty>& property,
+    bool isSpecificSession)
 {
     if (property == nullptr) {
         TLOGE(WmsLogTag::WMS_RECOVER, "property is nullptr");
@@ -2337,7 +2354,8 @@ WSError SceneSessionManager::CheckSessionPropertyOnRecovery(const sptr<WindowSes
         TLOGE(WmsLogTag::WMS_RECOVER, "create system window permission denied!");
         return WSError::WS_ERROR_NOT_SYSTEM_APP;
     }
-    if (!IsNeedRecover(property->GetParentPersistentId())) {
+    auto persistentId = isSpecificSession ? property->GetParentPersistentId() : property->GetPersistentId();
+    if (!IsNeedRecover(persistentId)) {
         TLOGE(WmsLogTag::WMS_RECOVER, "no need to recover.");
         return WSError::WS_ERROR_INVALID_PARAM;
     }
@@ -2348,7 +2366,7 @@ WSError SceneSessionManager::RecoverAndConnectSpecificSession(const sptr<ISessio
     const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
     sptr<WindowSessionProperty> property, sptr<ISession>& session, sptr<IRemoteObject> token)
 {
-    auto propCheckRet = CheckSessionPropertyOnRecovery(property);
+    auto propCheckRet = CheckSessionPropertyOnRecovery(property, true);
     if (propCheckRet != WSError::WS_OK) {
         return propCheckRet;
     }
@@ -2465,7 +2483,7 @@ WSError SceneSessionManager::RecoverAndReconnectSceneSession(const sptr<ISession
     const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
     sptr<ISession>& session, sptr<WindowSessionProperty> property, sptr<IRemoteObject> token)
 {
-    auto propCheckRet = CheckSessionPropertyOnRecovery(property);
+    auto propCheckRet = CheckSessionPropertyOnRecovery(property, false);
     if (propCheckRet != WSError::WS_OK) {
         return propCheckRet;
     }
@@ -3438,7 +3456,13 @@ WMError SceneSessionManager::SetGestureNavigaionEnabled(bool enable)
     }
     WLOGFD("SetGestureNavigationEnabled, enable: %{public}d", enable);
     gestureNavigationEnabled_ = enable;
+    if (lastGestureNativeEnabled_ == enable) {
+        WLOGFW("Do not set gesture navigation too much times as same value and the value is %{public}d", enable);
+        return WMError::WM_DO_NOTHING;
+    }
     auto task = [this, enable]() {
+        SessionManagerAgentController::GetInstance().NotifyGestureNavigationEnabledResult(enable);
+        lastGestureNativeEnabled_ = enable;
         if (!gestureNavigationEnabledChangeFunc_ && !statusBarEnabledChangeFunc_) {
             WLOGFE("callback func is null");
             return WMError::WM_OK;
@@ -3650,12 +3674,6 @@ bool SceneSessionManager::IsSessionVisible(const sptr<SceneSession>& session)
         }
         WLOGFD("Sub window is at background, id: %{public}d", session->GetPersistentId());
         return false;
-    }
-
-    if (WindowHelper::IsMainWindow(session->GetWindowType()) && !session->GetShowRecent() &&
-        state < SessionState::STATE_FOREGROUND && session->GetAttachState()) {
-        TLOGD(WmsLogTag::WMS_FOCUS, "MainWindow is at foreground, id: %{public}d", session->GetPersistentId());
-        return true;
     }
 
     if (session->IsVisible() || state == SessionState::STATE_ACTIVE || state == SessionState::STATE_FOREGROUND) {
@@ -4005,7 +4023,7 @@ WMError SceneSessionManager::RequestFocusStatus(int32_t persistentId, bool isFoc
         }
     };
     taskScheduler_->PostAsyncTask(task, "RequestFocusStatus" + std::to_string(persistentId));
-    changeReason_ = reason;
+    focusChangeReason_ = reason;
     return WMError::WM_OK;
 }
 
@@ -4386,11 +4404,6 @@ WSError SceneSessionManager::ShiftFocus(sptr<SceneSession>& nextSession, FocusCh
     TLOGI(WmsLogTag::WMS_FOCUS, "focusedId: %{public}d, nextId: %{public}d, reason: %{public}d",
         focusedId, nextId, reason);
     return WSError::WS_OK;
-}
-
-FocusChangeReason SceneSessionManager::GetFocusChangeReason() const
-{
-    return changeReason_;
 }
 
 void SceneSessionManager::UpdateFocusStatus(sptr<SceneSession>& sceneSession, bool isFocused)
@@ -7904,6 +7917,13 @@ const std::map<int32_t, sptr<SceneSession>> SceneSessionManager::GetSceneSession
         } else if (pair.second->IsSystemSession() && pair.second->IsVisible() && pair.second->IsSystemActive()) {
             return false;
         }
+
+        if (WindowHelper::IsMainWindow(pair.second->GetWindowType()) && !pair.second->GetShowRecent() &&
+            pair.second->GetSessionState() < SessionState::STATE_FOREGROUND && pair.second->GetAttachState()) {
+            TLOGD(WmsLogTag::WMS_FOCUS, "MainWindow is at foreground, id: %{public}d", pair.second->GetPersistentId());
+            return false;
+        }
+
         if (!Rosen::SceneSessionManager::GetInstance().IsSessionVisible(pair.second)) {
             return true;
         }
