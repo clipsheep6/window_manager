@@ -15,6 +15,10 @@
 
 #include <vsync_station.h>
 #include <gtest/gtest.h>
+#include<ui/rs_frame_rate_linker.h>
+#include<window_frame_trace.h>
+#include<transaction/rs_interfaces.h>
+#include<window_manager_hilog.h>
 
 using namespace testing;
 using namespace testing::ext;
@@ -80,6 +84,19 @@ HWTEST_F(VsyncStationTest, RequestVsyncMultiWindow, Function | SmallTest | Level
 }
 
 /**
+ * @tc.name: GetVSyncPeriod
+ * @tc.desc: GetVSyncPeriod Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(VsyncStationTest, GetVSyncPeriod, Function | SmallTest | Level3)
+{
+    NodeId nodeId0 = 0;
+    std::shared_ptr<VsyncStation> vsyncStation0 = std::make_shared<VsyncStation>(nodeId0);
+    vsyncStation0->receiver_ = nullptr;
+    ASSERT_EQ(0, vsyncStation0->GetVSyncPeriod());
+}
+
+/**
  * @tc.name: GetFrameRateLinkerId
  * @tc.desc: GetFrameRateLinkerId Test
  * @tc.type: FUNC
@@ -94,6 +111,9 @@ HWTEST_F(VsyncStationTest, GetFrameRateLinkerId, Function | SmallTest | Level3)
     std::shared_ptr<VsyncStation> vsyncStation1 = std::make_shared<VsyncStation>(nodeId1);
     ASSERT_NE(vsyncStation1, nullptr);
     ASSERT_NE(-1, vsyncStation1->GetFrameRateLinkerId());
+    std::shared_ptr<RSFrameRateLinker> frameRateLinker = OHOS::Rosen::RSFrameRateLinker::Create();
+    vsyncStation0->frameRateLinker_ = frameRateLinker;
+    ASSERT_NE(0, vsyncStation0->GetFrameRateLinkerId());
 }
 
 /**
@@ -114,6 +134,17 @@ HWTEST_F(VsyncStationTest, FlushFrameRate, Function | SmallTest | Level3)
     ASSERT_NE(vsyncStation1, nullptr);
     uint32_t rate1 = 120;
     vsyncStation1->FlushFrameRate(rate1, isAnimatorStopped);
+    std::shared_ptr<RSFrameRateLinker> frameRateLinker = OHOS::Rosen::RSFrameRateLinker::Create();
+    ASSERT_NE(frameRateLinker, nullptr);
+    frameRateLinker->SetEnable(true);
+    vsyncStation1->frameRateLinker_ = frameRateLinker;
+    vsyncStation1->FlushFrameRate(rate1, isAnimatorStopped);
+    ASSERT_NE(nullptr, vsyncStation1);
+    frameRateLinker->SetEnable(false);
+    vsyncStation1->frameRateLinker_ = frameRateLinker;
+    vsyncStation1->FlushFrameRate(rate1, isAnimatorStopped);
+    vsyncStation1->frameRateLinker_ = nullptr;
+    vsyncStation1->FlushFrameRate(rate1, isAnimatorStopped);
 }
 
 /**
@@ -133,7 +164,40 @@ HWTEST_F(VsyncStationTest, SetFrameRateLinkerEnable, Function | SmallTest | Leve
     ASSERT_NE(vsyncStation1, nullptr);
     bool enable1 = true;
     vsyncStation1->SetFrameRateLinkerEnable(enable1);
+    std::shared_ptr<RSFrameRateLinker> frameRateLinker = OHOS::Rosen::RSFrameRateLinker::Create();
+    vsyncStation1->frameRateLinker_ = frameRateLinker;
+    vsyncStation1->frameRateLinker_ = frameRateLinker;
+    vsyncStation1->SetFrameRateLinkerEnable(false);
 }
+
+/**
+ * @tc.name:Init
+ * @tc.desc: Init Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(VsyncStationTest, Init, Function | SmallTest | Level3)
+{
+    NodeId nodeId0 = 0;
+    std::shared_ptr<VsyncStation> vsyncStation0 = std::make_shared<VsyncStation>(nodeId0);
+    ASSERT_NE(nullptr, vsyncStation0);
+    vsyncStation0->hasInitVsyncReceiver_ = false;
+    vsyncStation0->SetIsMainHandlerAvailable(true);
+    vsyncStation0->Init();
+    vsyncStation0->hasInitVsyncReceiver_ = false;
+    vsyncStation0->SetIsMainHandlerAvailable(false);
+    vsyncStation0->Init();
+    std::shared_ptr<VsyncStation> vsyncStation1 = std::make_shared<VsyncStation>(nodeId0);
+    ASSERT_NE(nullptr, vsyncStation1);
+    vsyncStation1->hasInitVsyncReceiver_ = true;
+    vsyncStation1->vsyncHandler_ = nullptr;
+    vsyncStation1->SetIsMainHandlerAvailable(true);
+    vsyncStation1->Init();
+    vsyncStation1->hasInitVsyncReceiver_ = true;
+    vsyncStation1->vsyncHandler_ = nullptr;
+    vsyncStation1->SetIsMainHandlerAvailable(false);
+    vsyncStation1->Init();
+}
+
 }
 } // namespace Rosen
 } // namespace OHOS
