@@ -17,6 +17,7 @@
 #include <iservice_registry.h>
 #include <system_ability_definition.h>
 #include <ipc_skeleton.h>
+#include "iremote_object_mocker.h"
 
 #include "session_manager.h"
 #include "session_manager_lite.h"
