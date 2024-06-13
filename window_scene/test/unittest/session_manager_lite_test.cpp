@@ -137,8 +137,7 @@ HWTEST_F(SessionManagerLiteTest, InitScreenSessionManagerLiteProxy, Function | S
     ASSERT_NE(nullptr, sessionManagerLite);
 
     sptr<IRemoteObject> remoteObject = nullptr;
-    sessionManagerLite->screenSessionManagerLiteProxy_ = 
-        iface_cast<IScreenSessionManagerLite>(remoteObject);
+    sessionManagerLite->screenSessionManagerLiteProxy_ = iface_cast<IScreenSessionManagerLite>(remoteObject);
     sessionManagerLite->InitScreenSessionManagerLiteProxy();
     sessionManagerLite->Clear();
 }
