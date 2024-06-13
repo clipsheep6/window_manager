@@ -81,6 +81,8 @@ enum class WindowType : uint32_t {
     WINDOW_TYPE_THEME_EDITOR,
     WINDOW_TYPE_NAVIGATION_INDICATOR,
     WINDOW_TYPE_HANDWRITE,
+    WINDOW_TYPE_SCENE_BOARD,
+    WINDOW_TYPE_KEYBOARD_PANEL,
     ABOVE_APP_SYSTEM_WINDOW_END,
 
     SYSTEM_SUB_WINDOW_BASE = 2500,
@@ -89,9 +91,7 @@ enum class WindowType : uint32_t {
 
     SYSTEM_WINDOW_END = SYSTEM_SUB_WINDOW_END,
 
-    WINDOW_TYPE_UI_EXTENSION = 3000,
-    WINDOW_TYPE_SCENE_BOARD,
-    WINDOW_TYPE_KEYBOARD_PANEL
+    WINDOW_TYPE_UI_EXTENSION = 3000
 };
 
 /**
@@ -402,9 +402,10 @@ enum class WindowSetUIContentType: uint32_t {
  * @brief Enumerates restore type.
  */
 enum class BackupAndRestoreType: int32_t {
-    NONE = 0,           // no backup and restore
-    CONTINUATION = 1,   // distribute
-    APP_RECOVERY = 2,   // app recovery
+    NONE = 0,                       // no backup and restore
+    CONTINUATION = 1,               // distribute
+    APP_RECOVERY = 2,               // app recovery
+    RESOURCESCHEDULE_RECOVERY = 3,  // app is killed due to resource schedule
 };
 
 /**
@@ -436,7 +437,7 @@ struct MainWindowInfo : public Parcelable {
         if (!parcel.WriteInt32(persistentId_)) {
             return false;
         }
-        
+
         if (!parcel.WriteInt32(bundleType_)) {
             return false;
         }
@@ -587,6 +588,18 @@ struct SystemBarProperty {
         return (enable_ == a.enable_ && backgroundColor_ == a.backgroundColor_ && contentColor_ == a.contentColor_ &&
             enableAnimation_ == a.enableAnimation_);
     }
+};
+
+/**
+ * @struct SystemBarPropertyFlag
+ *
+ * @brief Flag of system bar
+ */
+struct SystemBarPropertyFlag {
+    bool enableFlag = false;
+    bool backgroundColorFlag = false;
+    bool contentColorFlag = false;
+    bool enableAnimationFlag = false;
 };
 
 /**

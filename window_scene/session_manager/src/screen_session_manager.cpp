@@ -48,6 +48,9 @@
 #include "screen_session_dumper.h"
 #include "mock_session_manager_service.h"
 #include "screen_snapshot_picker.h"
+#include "xcollie/xcollie.h"
+#include "xcollie/xcollie_define.h"
+#include "publish/screen_session_publish.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -84,6 +87,7 @@ static bool g_foldScreenFlag = system::GetParameter("const.window.foldscreen.typ
 static const int32_t g_screenRotationOffSet = system::GetIntParameter<int32_t>("const.fold.screen_rotation.offset", 0);
 static const int32_t ROTATION_90 = 1;
 static const int32_t ROTATION_270 = 3;
+const unsigned int XCOLLIE_TIMEOUT_S = 10;
 
 // based on the bundle_util
 inline int32_t GetUserIdByCallingUid()
@@ -191,6 +195,8 @@ void ScreenSessionManager::Init()
     } else {
         SetSensorSubscriptionEnabled();
     }
+    // publish init
+    ScreenSessionPublish::GetInstance().InitPublishEvents();
     screenEventTracker_.RecordEvent("Dms init end.");
 }
 
@@ -211,7 +217,7 @@ void ScreenSessionManager::OnStart()
 DMError ScreenSessionManager::RegisterDisplayManagerAgent(
     const sptr<IDisplayManagerAgent>& displayManagerAgent, DisplayManagerAgentType type)
 {
-    TLOGI(WmsLogTag::DMS, "RegisterScreenshotListener is called");
+    TLOGI(WmsLogTag::DMS, " called type: %{public}u", type);
     if (type == DisplayManagerAgentType::SCREEN_EVENT_LISTENER && !SessionPermission::IsSystemCalling()
         && !SessionPermission::IsStartByHdcd()) {
         TLOGE(WmsLogTag::DMS, "register display manager agent permission denied!");
@@ -234,7 +240,7 @@ DMError ScreenSessionManager::RegisterDisplayManagerAgent(
 DMError ScreenSessionManager::UnregisterDisplayManagerAgent(
     const sptr<IDisplayManagerAgent>& displayManagerAgent, DisplayManagerAgentType type)
 {
-    TLOGI(WmsLogTag::DMS, "UnregisterDisplayListener is called");
+    TLOGI(WmsLogTag::DMS, " called type: %{public}u", type);
     if (type == DisplayManagerAgentType::SCREEN_EVENT_LISTENER && !SessionPermission::IsSystemCalling()
         && !SessionPermission::IsStartByHdcd()) {
         TLOGE(WmsLogTag::DMS, "unregister display manager agent permission denied!");
@@ -927,10 +933,13 @@ sptr<ScreenSession> ScreenSessionManager::GetScreenSessionInner(ScreenId screenI
 
 void ScreenSessionManager::CreateScreenProperty(ScreenId screenId, ScreenProperty& property)
 {
+    int id = HiviewDFX::XCollie::GetInstance().SetTimer("CreateScreenPropertyCallRS", XCOLLIE_TIMEOUT_S, nullptr,
+        nullptr, HiviewDFX::XCOLLIE_FLAG_LOG);
     auto screenMode = rsInterface_.GetScreenActiveMode(screenId);
     auto screenBounds = RRect({ 0, 0, screenMode.GetScreenWidth(), screenMode.GetScreenHeight() }, 0.0f, 0.0f);
     auto screenRefreshRate = screenMode.GetScreenRefreshRate();
     auto screenCapability = rsInterface_.GetScreenCapability(screenId);
+    HiviewDFX::XCollie::GetInstance().CancelTimer(id);
     TLOGI(WmsLogTag::DMS, "Call RS interface end, create ScreenProperty begin");
     property.SetRotation(0.0f);
     property.SetPhyWidth(screenCapability.GetPhyWidth());
@@ -1404,6 +1413,11 @@ bool ScreenSessionManager::SetScreenPower(ScreenPowerStatus status, PowerStateCh
         DisplayPowerEvent::DISPLAY_OFF, EventStatus::END, reason);
 }
 
+void ScreenSessionManager::SetScreenPowerForFold(ScreenPowerStatus status)
+{
+    rsInterface_.SetScreenPowerStatus(foldScreenController_->GetCurrentScreenId(), status);
+}
+
 void ScreenSessionManager::SetKeyguardDrawnDoneFlag(bool flag)
 {
     keyguardDrawnDone_ = flag;
@@ -1617,6 +1631,8 @@ void ScreenSessionManager::UpdateScreenRotationProperty(ScreenId screenId, const
     std::map<DisplayId, sptr<DisplayInfo>> emptyMap;
     NotifyDisplayStateChange(GetDefaultScreenId(), screenSession->ConvertToDisplayInfo(),
         emptyMap, DisplayStateChangeType::UPDATE_ROTATION);
+    ScreenSessionPublish::GetInstance().PublishDisplayRotationEvent(
+        displayInfo->GetScreenId(), displayInfo->GetRotation());
 }
 
 void ScreenSessionManager::NotifyDisplayChanged(sptr<DisplayInfo> displayInfo, DisplayChangeEvent event)
@@ -2152,16 +2168,10 @@ DMError ScreenSessionManager::DestroyVirtualScreen(ScreenId screenId)
     ScreenId rsScreenId = SCREEN_ID_INVALID;
     screenIdManager_.ConvertToRsScreenId(screenId, rsScreenId);
 
-    bool agentFound = false;
     for (auto &agentIter : screenAgentMap_) {
-        for (auto iter = agentIter.second.begin(); iter != agentIter.second.end(); iter++) {
-            if (*iter == screenId) {
-                iter = agentIter.second.erase(iter);
-                agentFound = true;
-                break;
-            }
-        }
-        if (agentFound) {
+        auto iter = std::find(agentIter.second.begin(), agentIter.second.end(), screenId);
+        if (iter != agentIter.second.end()) {
+            iter = agentIter.second.erase(iter);
             if (agentIter.first != nullptr && agentIter.second.empty()) {
                 screenAgentMap_.erase(agentIter.first);
             }
@@ -3849,6 +3859,30 @@ void ScreenSessionManager::NotifyClientProxyUpdateFoldDisplayMode(FoldDisplayMod
     }
 }
 
+void ScreenSessionManager::ScbClientDeathCallback(int32_t deathScbPid)
+{
+    if (oldScbPids_.empty()) {
+        return;
+    }
+    TLOGI(WmsLogTag::DMS, "old scb: %{public}d death", deathScbPid);
+    oldScbPids_.erase(std::remove(oldScbPids_.begin(), oldScbPids_.end(), deathScbPid), oldScbPids_.end());
+}
+
+void ScreenSessionManager::AddScbClientDeathRecipient(const sptr<IScreenSessionManagerClient>& scbClient,
+    int32_t scbPid)
+{
+    sptr<ScbClientListenerDeathRecipient> scbClientDeathListener =
+        new (std::nothrow) ScbClientListenerDeathRecipient(scbPid);
+    if (scbClientDeathListener == nullptr) {
+        TLOGE(WmsLogTag::DMS, "add scb: %{public}d death listener failed", scbPid);
+        return;
+    }
+    if (scbClient != nullptr && scbClient->AsObject() != nullptr) {
+        TLOGI(WmsLogTag::DMS, "add scb: %{public}d death listener", scbPid);
+        scbClient->AsObject()->AddDeathRecipient(scbClientDeathListener);
+    }
+}
+
 void ScreenSessionManager::SwitchUser()
 {
     if (!SessionPermission::IsSystemCalling()) {
@@ -3864,18 +3898,20 @@ void ScreenSessionManager::SwitchUser()
             TLOGI(WmsLogTag::DMS, "switch user not change");
             return;
         }
-        auto pidIter = std::find(oldScbPids_.begin(), oldScbPids_.end(), currentScbPId_);
-        if (pidIter == oldScbPids_.end() && currentScbPId_ > 0) {
-            oldScbPids_.emplace_back(currentScbPId_);
+        if (clientProxy_) {
+            auto pidIter = std::find(oldScbPids_.begin(), oldScbPids_.end(), currentScbPId_);
+            if (pidIter == oldScbPids_.end() && currentScbPId_ > 0) {
+                oldScbPids_.emplace_back(currentScbPId_);
+            }
+            oldScbPids_.erase(std::remove(oldScbPids_.begin(), oldScbPids_.end(), newScbPid), oldScbPids_.end());
         }
-        oldScbPids_.erase(std::remove(oldScbPids_.begin(), oldScbPids_.end(), newScbPid), oldScbPids_.end());
         currentUserId_ = userId;
         currentScbPId_ = newScbPid;
         auto it = clientProxyMap_.find(currentUserId_);
         if (it != clientProxyMap_.end()) {
             clientProxy_ = it->second;
         }
-        if (clientProxy_ != nullptr) {
+        if (clientProxy_) {
             clientProxy_->SwitchUserCallback(oldScbPids_, newScbPid);
         }
     }
@@ -3902,85 +3938,23 @@ void ScreenSessionManager::SetClient(const sptr<IScreenSessionManagerClient>& cl
     screenEventTracker_.RecordEvent(oss.str());
     {
         std::lock_guard<std::mutex> lock(currentUserIdMutex_);
-        if (userId != currentUserId_ && currentUserId_ > 0) {
+        if (clientProxy_ != nullptr && userId != currentUserId_ && currentUserId_ > 0) {
             auto pidIter = std::find(oldScbPids_.begin(), oldScbPids_.end(), currentScbPId_);
             if (pidIter == oldScbPids_.end() && currentScbPId_ > 0) {
                 oldScbPids_.emplace_back(currentScbPId_);
             }
             oldScbPids_.erase(std::remove(oldScbPids_.begin(), oldScbPids_.end(), newScbPid), oldScbPids_.end());
+            clientProxy_->SwitchUserCallback(oldScbPids_, newScbPid);
         }
         currentUserId_ = userId;
         currentScbPId_ = newScbPid;
         clientProxy_ = client;
         clientProxyMap_[currentUserId_] = client;
-        clientProxy_->SwitchUserCallback(oldScbPids_, newScbPid);
     }
     MockSessionManagerService::GetInstance().NotifyWMSConnected(userId, GetDefaultScreenId(), true);
     NotifyClientProxyUpdateFoldDisplayMode(GetFoldDisplayMode());
     SetClientInner();
-}
-
-void ScreenSessionManager::RemoveAllDisplayNodeChildrenInner(int32_t userId)
-{
-    std::lock_guard<std::mutex> lock(displayNodeChildrenMapMutex_);
-    std::map<ScreenId, std::vector<std::shared_ptr<RSBaseNode>>> displayNodeChildrenMap;
-    auto userDisplayNodeIter = userDisplayNodeChildrenMap_.find(userId);
-    if (userDisplayNodeIter != userDisplayNodeChildrenMap_.end()) {
-        userDisplayNodeChildrenMap_.erase(userDisplayNodeIter);
-    }
-    TLOGI(WmsLogTag::DMS, "remove displayNode start");
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:RemoveAllDisplayNode start");
-    for (const auto& iter : screenSessionMap_) {
-        auto displayNode = GetDisplayNode(iter.first);
-        if (displayNode == nullptr) {
-            TLOGE(WmsLogTag::DMS, "display node is null");
-            continue;
-        }
-        auto nodeChildren = displayNode->GetChildren();
-        std::vector<std::shared_ptr<RSBaseNode>> childrenList;
-        for (auto child : nodeChildren) {
-            auto childNode = RSNodeMap::Instance().GetNode(child);
-            if (childNode != nullptr) {
-                childrenList.push_back(childNode);
-                displayNode->RemoveChild(childNode);
-            }
-        }
-        displayNodeChildrenMap.emplace(iter.first, childrenList);
-    }
-    auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->FlushImplicitTransaction();
-    }
-    userDisplayNodeChildrenMap_.emplace(userId, displayNodeChildrenMap);
-    TLOGI(WmsLogTag::DMS, "remove displayNode end");
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:RemoveAllDisplayNode end");
-}
-
-void ScreenSessionManager::RecoverAllDisplayNodeChildrenInner()
-{
-    std::lock_guard<std::mutex> lock(displayNodeChildrenMapMutex_);
-    auto userDisplayNodeIter = userDisplayNodeChildrenMap_.find(currentUserId_);
-    if (userDisplayNodeIter == userDisplayNodeChildrenMap_.end()) {
-        return;
-    }
-    TLOGI(WmsLogTag::DMS, "recover displayNode start");
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:RecoverAllDisplayNode start");
-    std::map<ScreenId, std::vector<std::shared_ptr<RSBaseNode>>> displayNodeChildrenMap = userDisplayNodeIter->second;
-    for (const auto& iter : displayNodeChildrenMap) {
-        auto displayNode = GetDisplayNode(iter.first);
-        if (displayNode == nullptr) {
-            continue;
-        }
-        for (auto child : iter.second) {
-            displayNode->AddChild(child);
-        }
-    }
-    auto transactionProxy = RSTransactionProxy::GetInstance();
-    if (transactionProxy != nullptr) {
-        transactionProxy->FlushImplicitTransaction();
-    }
-    TLOGI(WmsLogTag::DMS, "recover displayNode end");
-    HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "dms:RecoverAllDisplayNode end");
+    AddScbClientDeathRecipient(client, newScbPid);
 }
 
 void ScreenSessionManager::SetClientInner()
@@ -4360,5 +4334,16 @@ void ScreenSessionManager::SetVirtualScreenBlackList(ScreenId screenId, std::vec
     std::vector<uint64_t> surfaceNodeIds;
     clientProxy_->OnGetSurfaceNodeIdsFromMissionIdsChanged(windowIdList, surfaceNodeIds);
     rsInterface_.SetVirtualScreenBlackList(rsScreenId, surfaceNodeIds);
+}
+
+void ScreenSessionManager::DisablePowerOffRenderControl(ScreenId screenId)
+{
+    TLOGI(WmsLogTag::DMS, "Enter, screenId: %{public}" PRIu64, screenId);
+    ScreenId rsScreenId = SCREEN_ID_INVALID;
+    if (!ConvertScreenIdToRsScreenId(screenId, rsScreenId)) {
+        TLOGE(WmsLogTag::DMS, "No corresponding rsId");
+        return;
+    }
+    rsInterface_.DisablePowerOffRenderControl(rsScreenId);
 }
 } // namespace OHOS::Rosen
