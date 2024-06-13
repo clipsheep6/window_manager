@@ -1172,20 +1172,6 @@ ohos_unittest("ws_session_manager_service_recover_proxy_test") {
   ]
 }
 
-ohos_unittest("ws_session_manager_lite_test") {
-  module_out_path = module_out_path
-
-  sources = [ "session_manager_lite_test.cpp" ]
-
-  deps = [ ":ws_unittest_common" ]
-
-  external_deps = [
-    "c_utils:utils",
-    "hilog:libhilog",
-    "init:libbegetutil",
-  ]
-}
-
 ## Build ws_unittest_common.a {{{
 config("ws_unittest_common_public_config") {
   include_dirs = [
