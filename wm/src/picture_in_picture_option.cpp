@@ -44,13 +44,13 @@ std::vector<PiPControlStatusInfo> PipOption::GetControlStatus()
 
 void PipOption::SetControlStatus(uint32_t controlType, uint32_t status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "controlStatus %{public}u : %{public}u", controlType.c_str(), status);
+    TLOGI(WmsLogTag::WMS_PIP, "controlStatus %{public}u : %{public}u", controlType, status);
     PiPControlStatusInfo newPipControlStatusInfo;
     newPipControlStatusInfo.controlType = controlType;
     newPipControlStatusInfo.status = status;
-    for (auto& controlStatusInfo : pipControlStatus_) {
+    for (auto& controlStatusInfo : pipControlStatusInfoList_) {
         TLOGI(WmsLogTag::WMS_PIP, "controlStatus %{public}u : %{public}u",
-              controlStatusInfo.controlName.c_str(), controlStatusInfo.status);
+              controlStatusInfo.controlType, controlStatusInfo.status);
         if (controlType == controlStatusInfo.controlType) {
             controlStatusInfo = newPipControlStatusInfo;
             return;

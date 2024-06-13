@@ -148,23 +148,23 @@ static napi_value ExportControlType(napi_env env)
     napi_value result = nullptr;
     napi_create_object(env, &result);
     (void)SetNamedProperty(env, result, "PLAY_BACK",
-        static_cast<uint32_t>(PiPControl::PLAY_BACK));
+        static_cast<uint32_t>(PiPControlType::PLAY_BACK));
     (void)SetNamedProperty(env, result, "VIDEO_PREVIOUS",
-        static_cast<uint32_t>(PiPControl::VIDEO_PREVIOUS));
+        static_cast<uint32_t>(PiPControlType::VIDEO_PREVIOUS));
     (void)SetNamedProperty(env, result, "VIDEO_NEXT",
-        static_cast<uint32_t>(PiPControl::VIDEO_NEXT));
+        static_cast<uint32_t>(PiPControlType::VIDEO_NEXT));
     (void)SetNamedProperty(env, result, "FAST_FORWARD",
-        static_cast<uint32_t>(PiPControl::FAST_FORWARD));
+        static_cast<uint32_t>(PiPControlType::FAST_FORWARD));
     (void)SetNamedProperty(env, result, "FAST_BACKWARD",
-        static_cast<uint32_t>(PiPControl::FAST_BACKWARD));
+        static_cast<uint32_t>(PiPControlType::FAST_BACKWARD));
     (void)SetNamedProperty(env, result, "HANG_UP",
-        static_cast<uint32_t>(PiPControl::HANG_UP));
+        static_cast<uint32_t>(PiPControlType::HANG_UP));
     (void)SetNamedProperty(env, result, "MICROPHONE_SWITCH",
-        static_cast<uint32_t>(PiPControl::FAST_FORWARD));
+        static_cast<uint32_t>(PiPControlType::FAST_FORWARD));
     (void)SetNamedProperty(env, result, "CAMERA_SWITCH",
-        static_cast<uint32_t>(PiPControl::FAST_BACKWARD));
+        static_cast<uint32_t>(PiPControlType::FAST_BACKWARD));
     (void)SetNamedProperty(env, result, "MUTE_SWITCH",
-        static_cast<uint32_t>(PiPControl::HANG_UP));
+        static_cast<uint32_t>(PiPControlType::MUTE_SWITCH));
     napi_object_freeze(env, result);
     return result;
 }
@@ -177,7 +177,7 @@ napi_status InitEnums(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("VideoPlayControlGroup", ExportVideoPlayControlGroup(env)),
         DECLARE_NAPI_PROPERTY("VideoCallControlGroup", ExportVideoCallControlGroup(env)),
         DECLARE_NAPI_PROPERTY("VideoMeetingControlGroup", ExportVideoMeetingControlGroup(env)),
-        DECLARE_NAPI_PROPERTY("PiPControlType", ExportControlStatus(env)),
+        DECLARE_NAPI_PROPERTY("PiPControlType", ExportControlType(env)),
         DECLARE_NAPI_PROPERTY("PiPControlStatus", ExportControlStatus(env)),
     };
     size_t count = sizeof(properties) / sizeof(napi_property_descriptor);

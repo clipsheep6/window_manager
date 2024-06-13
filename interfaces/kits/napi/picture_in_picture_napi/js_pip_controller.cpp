@@ -249,7 +249,7 @@ napi_value JsPipController::OnUpdateControlStatus(napi_env env, napi_callback_in
         TLOGE(WmsLogTag::WMS_PIP, "Invalid args count, need 2 args but received: %{public}zu", argc);
         return NapiThrowInvalidParam(env, "Invalid args count, 2 args is needed.");
     }
-    std::string controlType = "";
+    int32_t controlType = 0;
     std::string errMsg = "";
     if (!ConvertFromJsValue(env, argv[0], controlType)) {
         errMsg = "Failed to convert parameter to int";

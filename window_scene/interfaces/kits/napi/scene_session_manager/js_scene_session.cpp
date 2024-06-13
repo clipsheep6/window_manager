@@ -83,8 +83,8 @@ napi_value CreateJsPiPControlStatusObject(napi_env env, PiPControlStatusInfo con
         TLOGI(WmsLogTag::WMS_PIP, "CreateJsPiPControlStatusObject is called");
         return NapiGetUndefined(env);
     }
-    std::string controlType = controlStatusInfo.controlType;
-    uint32_t status = PiPControlStatusInfo.status;
+    uint32_t controlType = controlStatusInfo.controlType;
+    uint32_t status = controlStatusInfo.status;
     napi_set_named_property(env, objValue, "controlType", CreateJsValue(env, controlType));
     napi_set_named_property(env, objValue, "status", CreateJsValue(env, status));
     return objValue;
