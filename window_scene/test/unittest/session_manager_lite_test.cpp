@@ -17,7 +17,6 @@
 #include <iservice_registry.h>
 #include <system_ability_definition.h>
 #include <ipc_skeleton.h>
-#include "iremote_object_mocker.h"
 
 #include "session_manager.h"
 #include "session_manager_lite.h"
@@ -32,10 +31,10 @@ namespace OHOS {
 namespace Rosen {
 class SessionManagerLiteTest : public testing::Test {
 public:
-    static void SetUpTestCase();
-    static void TearDownTestCase();
-    void SetUp() override;
-    void TearDown() override;
+  static void SetUpTestCase();
+  static void TearDownTestCase();
+  void SetUp() override;
+  void TearDown() override;
 };
 
 void SessionManagerLiteTest::SetUpTestCase()
@@ -54,46 +53,6 @@ void SessionManagerLiteTest::TearDown()
 {
 }
 
-namespace {
-/**
- * @tc.name: SaveSessionListener
- * @tc.desc:  SaveSessionListener
- * @tc.type: FUNC
- */
-HWTEST_F(SessionManagerLiteTest, SaveSessionListener, Function | SmallTest | Level2)
-{
-    std::shared_ptr<SessionManagerLite> sessionManagerLite =
-        std::make_shared<SessionManagerLite>();
-    ASSERT_NE(nullptr, sessionManagerLite);
-    sessionManagerLite->ClearSessionManagerProxy();
-    sessionManagerLite->destroyed_ = true;
-    sessionManagerLite->ClearSessionManagerProxy();
-
-    sessionManagerLite->GetScreenSessionManagerLiteProxy();
-    sptr<ISessionManagerService> sessionManagerService = nullptr;
-    sessionManagerLite->RecoverSessionManagerService(sessionManagerService);
-
-    sessionManagerLite->ReregisterSessionListener();
-    sessionManagerLite->OnWMSConnectionChanged(0, 0, true, sessionManagerService);
-    sessionManagerLite->currentWMSUserId_ = BASE_USER_RANGE;
-
-    sessionManagerLite->OnUserSwitch(sessionManagerService);
-}
-/**
- * @tc.name: InitScreenSessionManagerLiteProxy
- * @tc.desc:  InitScreenSessionManagerLiteProxy
- * @tc.type: FUNC
- */
-HWTEST_F(SessionManagerLiteTest, InitScreenSessionManagerLiteProxy, Function | SmallTest | Level2)
-{
-    std::shared_ptr<SessionManagerLite> sessionManagerLite = std::make_shared<SessionManagerLite>();
-    ASSERT_NE(nullptr, sessionManagerLite);
-
-    sptr<IRemoteObject> remoteObject = nullptr;
-    sessionManagerLite->screenSessionManagerLiteProxy_ = iface_cast<IScreenSessionManagerLite>(remoteObject);
-    sessionManagerLite->InitScreenSessionManagerLiteProxy();
-    sessionManagerLite->Clear();
-}
 /**
  * @tc.name: OnWMSConnectionChangedCallback
  * @tc.desc: normal function
@@ -146,6 +105,41 @@ HWTEST_F(SessionManagerLiteTest, RegisterWMSConnectionChangedListener, Function 
     auto ret = sessionManagerLite.RegisterWMSConnectionChangedListener(callbackFunc);
     ASSERT_EQ(WMError::WM_OK, ret);
 }
+
+HWTEST_F(SessionManagerLiteTest, SaveSessionListener, Function | SmallTest | Level2)
+{
+    std::shared_ptr<SessionManagerLite> sessionManagerLite =
+        std::make_shared<SessionManagerLite>();
+    ASSERT_NE(nullptr, sessionManagerLite);
+    sessionManagerLite->ClearSessionManagerProxy();
+    sessionManagerLite->destroyed_ = true;
+    sessionManagerLite->ClearSessionManagerProxy();
+
+    sessionManagerLite->GetScreenSessionManagerLiteProxy();
+    sptr<ISessionManagerService> sessionManagerService = nullptr;
+    sessionManagerLite->RecoverSessionManagerService(sessionManagerService);
+
+    sessionManagerLite->ReregisterSessionListener();
+    sessionManagerLite->OnWMSConnectionChanged(0, 0, true, sessionManagerService);
+    sessionManagerLite->currentWMSUserId_ = BASE_USER_RANGE;
+
+    sessionManagerLite->OnUserSwitch(sessionManagerService);
+}
+/**
+ * @tc.name: InitScreenSessionManagerLiteProxy
+ * @tc.desc:  InitScreenSessionManagerLiteProxy
+ * @tc.type: FUNC
+ */
+HWTEST_F(SessionManagerLiteTest, InitScreenSessionManagerLiteProxy, Function | SmallTest | Level2)
+{
+    std::shared_ptr<SessionManagerLite> sessionManagerLite =
+        std::make_shared<SessionManagerLite>();
+    ASSERT_NE(nullptr, sessionManagerLite);
+
+    sptr<IRemoteObject> remoteObject = sessionManagerLite->mockSessionManagerServiceProxy_->GetScreenSessionManagerLite();
+    sessionManagerLite->screenSessionManagerLiteProxy_ = iface_cast<IScreenSessionManagerLite>(remoteObject);
+    sessionManagerLite->InitScreenSessionManagerLiteProxy();
+    sessionManagerLite->Clear();
 }
 }
 }
