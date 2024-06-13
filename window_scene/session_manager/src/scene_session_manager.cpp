@@ -1355,6 +1355,22 @@ sptr<SceneSession> SceneSessionManager::RequestSceneSession(const SessionInfo& s
             TLOGD(WmsLogTag::WMS_LIFE, "get exist session persistentId: %{public}d", sessionInfo.persistentId_);
             return session;
         }
+        if (WindowHelper::IsMainWindow(static_cast<WindowType>(sessionInfo.windowType_))) {
+            TLOGD(WmsLogTag::WMS_LIFE, "mainWindow bundleName: %{public}s, moduleName: %{public}s, "
+                "abilityName: %{public}s, appIndex: %{public}d",
+                sessionInfo.bundleName_.c_str(), sessionInfo.moduleName_.c_str(),
+                sessionInfo.abilityName_.c_str(), sessionInfo.appIndex_);
+            auto sceneSession = GetSceneSessionByName(sessionInfo.bundleName_,
+                sessionInfo.moduleName_, sessionInfo.abilityName_, sessionInfo.appIndex_);
+            bool isSingleStart = sceneSession && sceneSession->GetAbilityInfo() &&
+                sceneSession->GetAbilityInfo()->launchMode == AppExecFwk::LaunchMode::SINGLETON;
+            if (isSingleStart) {
+                NotifySessionUpdate(sessionInfo, ActionType::SINGLE_START);
+                TLOGD(WmsLogTag::WMS_LIFE, "get exist singleton session persistentId: %{public}d",
+                    sessionInfo.persistentId_);
+                return sceneSession;
+            }
+        }
     }
 
     auto task = [this, sessionInfo, property]() {
@@ -2250,6 +2266,10 @@ bool SceneSessionManager::CheckModalSubWindowPermission(const sptr<WindowSession
 bool SceneSessionManager::CheckSystemWindowPermission(const sptr<WindowSessionProperty>& property)
 {
     WindowType type = property->GetWindowType();
+    if (WindowHelper::IsUIExtensionWindow(type)) {
+        // UIExtension window disallowed.
+        return false;
+    }
     if (!WindowHelper::IsSystemWindow(type)) {
         // type is not system
         return true;
@@ -2313,7 +2333,7 @@ void SceneSessionManager::SetAlivePersistentIds(const std::vector<int32_t>& aliv
     alivePersistentIds_ = alivePersistentIds;
 }
 
-bool SceneSessionManager::isNeedRecover(const int32_t persistentId)
+bool SceneSessionManager::IsNeedRecover(const int32_t persistentId)
 {
     auto it = std::find(alivePersistentIds_.begin(), alivePersistentIds_.end(), persistentId);
     if (it == alivePersistentIds_.end()) {
@@ -2323,16 +2343,30 @@ bool SceneSessionManager::isNeedRecover(const int32_t persistentId)
     return true;
 }
 
-WSError SceneSessionManager::RecoverAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
-    const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
-    sptr<WindowSessionProperty> property, sptr<ISession>& session, sptr<IRemoteObject> token)
+WSError SceneSessionManager::CheckSessionPropertyOnRecovery(const sptr<WindowSessionProperty>& property)
 {
     if (property == nullptr) {
         TLOGE(WmsLogTag::WMS_RECOVER, "property is nullptr");
         return WSError::WS_ERROR_NULLPTR;
     }
-    if (property->GetParentPersistentId() > 0 && !isNeedRecover(property->GetParentPersistentId())) {
+    if (!CheckSystemWindowPermission(property)) {
+        TLOGE(WmsLogTag::WMS_RECOVER, "create system window permission denied!");
+        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    }
+    if (!IsNeedRecover(property->GetParentPersistentId())) {
+        TLOGE(WmsLogTag::WMS_RECOVER, "no need to recover.");
         return WSError::WS_ERROR_INVALID_PARAM;
+    }
+    return WSError::WS_OK;
+}
+
+WSError SceneSessionManager::RecoverAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
+    const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
+    sptr<WindowSessionProperty> property, sptr<ISession>& session, sptr<IRemoteObject> token)
+{
+    auto propCheckRet = CheckSessionPropertyOnRecovery(property);
+    if (propCheckRet != WSError::WS_OK) {
+        return propCheckRet;
     }
     auto pid = IPCSkeleton::GetCallingRealPid();
     auto uid = IPCSkeleton::GetCallingUid();
@@ -2447,12 +2481,9 @@ WSError SceneSessionManager::RecoverAndReconnectSceneSession(const sptr<ISession
     const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
     sptr<ISession>& session, sptr<WindowSessionProperty> property, sptr<IRemoteObject> token)
 {
-    if (property == nullptr) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "property is nullptr!");
-        return WSError::WS_ERROR_NULLPTR;
-    }
-    if (!isNeedRecover(property->GetPersistentId())) {
-        return WSError::WS_ERROR_INVALID_PARAM;
+    auto propCheckRet = CheckSessionPropertyOnRecovery(property);
+    if (propCheckRet != WSError::WS_OK) {
+        return propCheckRet;
     }
     auto pid = IPCSkeleton::GetCallingRealPid();
     auto uid = IPCSkeleton::GetCallingUid();
@@ -3635,12 +3666,6 @@ bool SceneSessionManager::IsSessionVisible(const sptr<SceneSession>& session)
         }
         WLOGFD("Sub window is at background, id: %{public}d", session->GetPersistentId());
         return false;
-    }
-
-    if (WindowHelper::IsMainWindow(session->GetWindowType()) && !session->GetShowRecent() &&
-        state < SessionState::STATE_FOREGROUND && session->GetAttachState()) {
-        TLOGD(WmsLogTag::WMS_FOCUS, "MainWindow is at foreground, id: %{public}d", session->GetPersistentId());
-        return true;
     }
 
     if (session->IsVisible() || state == SessionState::STATE_ACTIVE || state == SessionState::STATE_FOREGROUND) {
@@ -7889,6 +7914,13 @@ const std::map<int32_t, sptr<SceneSession>> SceneSessionManager::GetSceneSession
         } else if (pair.second->IsSystemSession() && pair.second->IsVisible() && pair.second->IsSystemActive()) {
             return false;
         }
+
+        if (WindowHelper::IsMainWindow(pair.second->GetWindowType()) && !pair.second->GetShowRecent() &&
+            pair.second->GetSessionState() < SessionState::STATE_FOREGROUND && pair.second->GetAttachState()) {
+            TLOGD(WmsLogTag::WMS_FOCUS, "MainWindow is at foreground, id: %{public}d", pair.second->GetPersistentId());
+            return false;
+        }
+
         if (!Rosen::SceneSessionManager::GetInstance().IsSessionVisible(pair.second)) {
             return true;
         }
