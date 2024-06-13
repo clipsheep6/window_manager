@@ -31,7 +31,7 @@ public:
     void SetNavigationId(const std::string& navigationId);
     void SetPipTemplate(uint32_t templateType);
     void SetContentSize(uint32_t width, uint32_t height);
-    void SetControlStatus     (std::string actionType, uint32_t status);
+    void SetControlStatus(uint32_t controlType, uint32_t status);
     void SetXComponentController(std::shared_ptr<XComponentController> xComponentController);
     void SetControlGroup(std::vector<std::uint32_t> controlGroup);
     void* GetContext() const;
@@ -39,7 +39,7 @@ public:
     uint32_t GetPipTemplate();
     uint32_t GetIsPlay();
     std::vector<std::uint32_t> GetControlGroup();
-    std::vector<PiPControlStatus> GetControlStatus();
+    std::vector<PiPControlStatusInfo> GetControlStatus();
     void GetContentSize(uint32_t& width, uint32_t& height);
     std::shared_ptr<XComponentController> GetXComponentController();
 private:
@@ -50,7 +50,7 @@ private:
     uint32_t contentHeight_ = 0;
     std::shared_ptr<XComponentController> xComponentController_;
     std::vector<std::uint32_t> controlGroup_;
-    std::vector<PiPControlStatus> pipControlStatus_ = {};
+    std::vector<PiPControlStatusInfo> pipControlStatusInfoList_ = {};
 };
 }
 }

@@ -249,10 +249,10 @@ napi_value JsPipController::OnUpdateControlStatus(napi_env env, napi_callback_in
         TLOGE(WmsLogTag::WMS_PIP, "Invalid args count, need 2 args but received: %{public}zu", argc);
         return NapiThrowInvalidParam(env, "Invalid args count, 2 args is needed.");
     }
-    std::string cbType = "";
+    std::string controlType = "";
     std::string errMsg = "";
-    if (!ConvertFromJsValue(env, argv[0], cbType)) {
-        errMsg = "Failed to convert parameter to callbackType";
+    if (!ConvertFromJsValue(env, argv[0], controlType)) {
+        errMsg = "Failed to convert parameter to int";
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
         return NapiThrowInvalidParam(env, errMsg);
     }
@@ -268,7 +268,7 @@ napi_value JsPipController::OnUpdateControlStatus(napi_env env, napi_callback_in
         return NapiThrowInvalidParam(env, errMsg);
     }
     std::lock_guard<std::mutex> lock(mtx_);
-    pipController_->UpdateControlStatus(cbType, status);
+    pipController_->UpdateControlStatus(controlType, status);
     return NapiGetUndefined(env);
 }
 

@@ -203,7 +203,7 @@ public:
     WSError SetPipActionEvent(const std::string& action, int32_t status) override;
 
     void UpdatePiPRect(const Rect& rect, WindowSizeChangeReason reason) override;
-    void UpdateControlStatus(const std::string& cbType, int32_t status) override;
+    void UpdateControlStatus(int32_t controlType, int32_t status) override;
     void SetDrawingContentState(bool drawingContentState);
     WMError RegisterWindowStatusChangeListener(const sptr<IWindowStatusChangeListener>& listener) override;
     WMError UnregisterWindowStatusChangeListener(const sptr<IWindowStatusChangeListener>& listener) override;

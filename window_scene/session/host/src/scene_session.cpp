@@ -764,7 +764,7 @@ void SceneSession::SetSessionRectChangeCallback(const NotifySessionRectChangeFun
     PostTask(task, "SetSessionRectChangeCallback");
 }
 
-    void SceneSession::SetSessionControlStatusChangeCallback(const NotifySessionControlStatusFunc& func)
+void SceneSession::SetSessionControlStatusChangeCallback(const NotifySessionControlStatusFunc& func)
 {
     sessionControlStatusChangeFunc_ = func;
 }
@@ -1559,10 +1559,10 @@ void SceneSession::NotifySessionRectChange(const WSRect& rect, const SizeChangeR
     };
     PostTask(task, "NotifySessionRectChange" + GetRectInfo(rect));
 }
-void SceneSession::NotifySessionControlStatusChange(const std::string& cbType, int32_t status)
+void SceneSession::NotifySessionControlStatusChange(int32_t controlType, int32_t status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "NotifySessionControlStatusChange!");
-    auto task = [weakThis = wptr(this), cbType, status]() {
+    auto task = [weakThis = wptr(this), controlType, status]() {
         auto session = weakThis.promote();
         if (!session) {
             WLOGFE("session is null");
@@ -1570,7 +1570,7 @@ void SceneSession::NotifySessionControlStatusChange(const std::string& cbType, i
         }
         if (session->sessionControlStatusChangeFunc_) {
             HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SceneSession::NotifySessionRectChange");
-            session->sessionControlStatusChangeFunc_(cbType, status);
+            session->sessionControlStatusChangeFunc_(controlType, status);
         }
     };
     PostTask(task, "NotifySessionControlStatusChange");
@@ -3141,19 +3141,19 @@ WSError SceneSession::UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
     return WSError::WS_OK;
 }
 
-WSError SceneSession::UpdateControlStatus(const std::string& cbType, int32_t status)
+WSError SceneSession::UpdateControlStatus(int32_t controlType, int32_t status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "UpdateControlStatus!");
     if (!WindowHelper::IsPipWindow(GetWindowType())) {
         return WSError::WS_DO_NOTHING;
     }
-    auto task = [weakThis = wptr(this), cbType, status]() {
+    auto task = [weakThis = wptr(this), controlType, status]() {
         auto session = weakThis.promote();
         if (!session || session->isTerminating) {
             TLOGE(WmsLogTag::WMS_PIP, "SceneSession::UpdateControlStatus session is null or is terminating");
             return WSError::WS_ERROR_INVALID_OPERATION;
         }
-        session->NotifySessionControlStatusChange(cbType, status);
+        session->NotifySessionControlStatusChange(controlType, status);
         return WSError::WS_OK;
     };
     PostTask(task, "UpdateControlStatus");

@@ -800,17 +800,6 @@ enum class PiPWindowState : uint32_t {
 };
 
 /**
- * @brief Enumerates picture in picture template type.
- */
-enum class PiPTemplateType : uint32_t {
-    VIDEO_PLAY = 0,
-    VIDEO_CALL = 1,
-    VIDEO_MEETING = 2,
-    VIDEO_LIVE = 3,
-    END,
-};
-
-/**
  * @brief Enumerates picture in picture control group.
  */
 enum class PiPControlGroup : uint32_t {
@@ -831,13 +820,6 @@ enum class PiPControlGroup : uint32_t {
     VIDEO_MEETING_MUTE_SWITCH = 303,
     VIDEO_MEETING_END,
 
-    PLAY = 1,
-    PAUSE = 0,
-    OPEN = 1,
-    CLOSE = 0,
-    ENABLE = -2,
-    DISABLE = -3,
-
     END,
 };
 
@@ -853,8 +835,8 @@ enum class PiPState : int32_t {
     ERROR = 6,
 };
 
-struct PiPControlStatus {
-    std::string controlName;
+struct PiPControlStatusInfo {
+    uint32_t controlType;
     uint32_t status;
 };
 
@@ -862,7 +844,33 @@ struct PiPTemplateInfo {
     uint32_t pipTemplateType;
     uint32_t priority;
     std::vector<uint32_t> controlGroup;
-    std::vector<PiPControlStatus> pipControlStatus;
+    std::vector<PiPControlStatusInfo> pipControlStatusInfoList;
+};
+
+/**
+ * @brief Enumerates picture in picture control status.
+ */
+enum class PiPControlStatus : uint32_t {
+    PLAY = 1,
+    PAUSE = 0,
+    OPEN = 1,
+    CLOSE = 0,
+    END,
+};
+/**
+ * @brief Enumerates picture in picture control type.
+ */
+enum class PiPControlType : uint32_t {
+    PLAY_BACK = 0,
+    VIDEO_PREVIOUS = 1,
+    VIDEO_NEXT = 2,
+    FAST_FORWARD = 3,
+    FAST_BACKWARD = 4,
+    HANG_UP = 5,
+    MICROPHONE_SWITCH = 6,
+    CAMERA_SWITCH = 7,
+    MUTE_SWITCH = 8,
+    END,
 };
 
 using OnCallback = std::function<void(int64_t, int64_t)>;

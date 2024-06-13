@@ -678,15 +678,15 @@ bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const
     if (!parcel.WriteUint32(pipTemplateInfo_.pipTemplateType)) {
         return false;
     }
-    auto controlStatusSize = pipTemplateInfo_.pipControlStatus.size();
+    auto controlStatusSize = pipTemplateInfo_.pipControlStatusInfoList.size();
     if (!parcel.WriteUint32(static_cast<uint32_t>(controlStatusSize))) {
         return false;
     }
     for (uint32_t i = 0; i < controlStatusSize; i++) {
-        if (!parcel.WriteString(pipTemplateInfo_.pipControlStatus[i].controlName)) {
+        if (!parcel.WriteUint32(pipTemplateInfo_.pipControlStatusInfoList[i].controlType)) {
             return false;
         }
-        if (!parcel.WriteUint32(pipTemplateInfo_.pipControlStatus[i].status)) {
+        if (!parcel.WriteUint32(pipTemplateInfo_.pipControlStatusInfoList[i].status)) {
             return false;
         }
     }
@@ -717,10 +717,10 @@ void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowS
     pipTemplateInfo.pipTemplateType = parcel.ReadUint32();
     auto controlStatusSize = parcel.ReadUint32();
     for (uint32_t i = 0; i < controlStatusSize; i++) {
-        PiPControlStatus pipControlStatus;
-        pipControlStatus.controlName = parcel.ReadString();
-        pipControlStatus.status = parcel.ReadUint32();
-        pipTemplateInfo.pipControlStatus.push_back(pipControlStatus);
+        PiPControlStatusInfo pipControlStatusInfo;
+        pipControlStatusInfo.controlType = parcel.ReadUint32();
+        pipControlStatusInfo.status = parcel.ReadUint32();
+        pipTemplateInfo.pipControlStatusInfoList.push_back(pipControlStatusInfo);
     }
     pipTemplateInfo.priority = parcel.ReadUint32();
     auto size = parcel.ReadUint32();

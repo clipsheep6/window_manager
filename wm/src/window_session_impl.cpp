@@ -2912,14 +2912,14 @@ void WindowSessionImpl::UpdatePiPRect(const Rect& rect, WindowSizeChangeReason r
     hostSession_->UpdatePiPRect(rect, wsReason);
 }
 
-void WindowSessionImpl::UpdateControlStatus(const std::string& cbType, int32_t status)
+void WindowSessionImpl::UpdateControlStatus(int32_t controlType, int32_t status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "OnUpdateControlStatus is called");
     if (IsWindowSessionInvalid()) {
         WLOGFE("HostSession is invalid");
         return;
     }
-    hostSession_->UpdateControlStatus(cbType, status);
+    hostSession_->UpdateControlStatus(controlType, status);
 }
 
 void WindowSessionImpl::NotifyWindowStatusChange(WindowMode mode)

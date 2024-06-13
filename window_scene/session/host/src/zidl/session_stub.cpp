@@ -630,9 +630,9 @@ int SessionStub::HandleUpdatePiPRect(MessageParcel& data, MessageParcel& reply)
 int SessionStub::HandleUpdateControlStatus(MessageParcel& data, MessageParcel& reply)
 {
     TLOGI(WmsLogTag::WMS_PIP, "HandleUpdateControlStatus!");
-    std::string cbType =  {data.ReadString()};
+    int32_t controlType =  {data.ReadInt32()};
     int32_t status =  {data.ReadInt32()};
-    WSError errCode = UpdateControlStatus(cbType, status);
+    WSError errCode = UpdateControlStatus(controlType, status);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }

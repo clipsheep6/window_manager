@@ -132,17 +132,39 @@ static napi_value ExportControlStatus(napi_env env)
     napi_value result = nullptr;
     napi_create_object(env, &result);
     (void)SetNamedProperty(env, result, "PLAY",
-                           static_cast<uint32_t>(PiPControlGroup::PLAY));
+        static_cast<uint32_t>(PiPControlStatus::PLAY));
     (void)SetNamedProperty(env, result, "PAUSE",
-                           static_cast<uint32_t>(PiPControlGroup::PAUSE));
+        static_cast<uint32_t>(PiPControlStatus::PAUSE));
     (void)SetNamedProperty(env, result, "OPEN",
-                           static_cast<uint32_t>(PiPControlGroup::OPEN));
+        static_cast<uint32_t>(PiPControlStatus::OPEN));
     (void)SetNamedProperty(env, result, "CLOSE",
-                           static_cast<uint32_t>(PiPControlGroup::CLOSE));
-    (void)SetNamedProperty(env, result, "ENABLE",
-                           static_cast<uint32_t>(PiPControlGroup::ENABLE));
-    (void)SetNamedProperty(env, result, "DISABLE",
-                           static_cast<uint32_t>(PiPControlGroup::DISABLE));
+        static_cast<uint32_t>(PiPControlStatus::CLOSE));
+    napi_object_freeze(env, result);
+    return result;
+}
+
+static napi_value ExportControlType(napi_env env)
+{
+    napi_value result = nullptr;
+    napi_create_object(env, &result);
+    (void)SetNamedProperty(env, result, "PLAY_BACK",
+        static_cast<uint32_t>(PiPControl::PLAY_BACK));
+    (void)SetNamedProperty(env, result, "VIDEO_PREVIOUS",
+        static_cast<uint32_t>(PiPControl::VIDEO_PREVIOUS));
+    (void)SetNamedProperty(env, result, "VIDEO_NEXT",
+        static_cast<uint32_t>(PiPControl::VIDEO_NEXT));
+    (void)SetNamedProperty(env, result, "FAST_FORWARD",
+        static_cast<uint32_t>(PiPControl::FAST_FORWARD));
+    (void)SetNamedProperty(env, result, "FAST_BACKWARD",
+        static_cast<uint32_t>(PiPControl::FAST_BACKWARD));
+    (void)SetNamedProperty(env, result, "HANG_UP",
+        static_cast<uint32_t>(PiPControl::HANG_UP));
+    (void)SetNamedProperty(env, result, "MICROPHONE_SWITCH",
+        static_cast<uint32_t>(PiPControl::FAST_FORWARD));
+    (void)SetNamedProperty(env, result, "CAMERA_SWITCH",
+        static_cast<uint32_t>(PiPControl::FAST_BACKWARD));
+    (void)SetNamedProperty(env, result, "MUTE_SWITCH",
+        static_cast<uint32_t>(PiPControl::HANG_UP));
     napi_object_freeze(env, result);
     return result;
 }
@@ -155,7 +177,8 @@ napi_status InitEnums(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("VideoPlayControlGroup", ExportVideoPlayControlGroup(env)),
         DECLARE_NAPI_PROPERTY("VideoCallControlGroup", ExportVideoCallControlGroup(env)),
         DECLARE_NAPI_PROPERTY("VideoMeetingControlGroup", ExportVideoMeetingControlGroup(env)),
-        DECLARE_NAPI_PROPERTY("ControlStatus", ExportControlStatus(env)),
+        DECLARE_NAPI_PROPERTY("PiPControlType", ExportControlStatus(env)),
+        DECLARE_NAPI_PROPERTY("PiPControlStatus", ExportControlStatus(env)),
     };
     size_t count = sizeof(properties) / sizeof(napi_property_descriptor);
     return napi_define_properties(env, exports, count, properties);

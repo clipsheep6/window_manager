@@ -1609,7 +1609,7 @@ public:
      */
     virtual void UpdatePiPRect(const Rect& rect, WindowSizeChangeReason reason) {}
 
-    virtual void UpdateControlStatus(const std::string& cbType, int32_t status) {}
+    virtual void UpdateControlStatus(int32_t controlType, int32_t status) {}
 
     /**
      * @brief When get focused, keep the keyboard created by other windows, support system window and app subwindow.

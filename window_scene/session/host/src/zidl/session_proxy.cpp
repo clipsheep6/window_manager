@@ -1054,7 +1054,7 @@ WSError SessionProxy::UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
     return static_cast<WSError>(ret);
 }
 
-WSError SessionProxy::UpdateControlStatus(const std::string& cbType, int32_t status)
+WSError SessionProxy::UpdateControlStatus(int32_t controlType, int32_t status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "UpdateControlStatus is success");
     MessageParcel data;
@@ -1064,8 +1064,8 @@ WSError SessionProxy::UpdateControlStatus(const std::string& cbType, int32_t sta
         WLOGFE("writeInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (!data.WriteString(cbType)) {
-        TLOGE(WmsLogTag::WMS_LIFE, "Write cbType failed");
+    if (!data.WriteInt32(controlType)) {
+        TLOGE(WmsLogTag::WMS_LIFE, "Write controlType failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (!data.WriteInt32(status)) {

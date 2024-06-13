@@ -37,26 +37,26 @@ void PipOption::SetPipTemplate(uint32_t templateType)
     templateType_ = templateType;
 }
 
-std::vector<PiPControlStatus> PipOption::GetControlStatus()
+std::vector<PiPControlStatusInfo> PipOption::GetControlStatus()
 {
-    return pipControlStatus_;
+    return pipControlStatusInfoList_;
 }
 
-void PipOption::SetControlStatus(std::string actionType, uint32_t status)
+void PipOption::SetControlStatus(uint32_t controlType, uint32_t status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "controlStatus %{public}s : %{public}u", actionType.c_str(), status);
-    PiPControlStatus newPipControlStatus;
-    newPipControlStatus.controlName = actionType;
-    newPipControlStatus.status = status;
-    for (auto& controlStatus : pipControlStatus_) {
-        TLOGI(WmsLogTag::WMS_PIP, "controlStatus %{public}s : %{public}u",
-              controlStatus.controlName.c_str(), controlStatus.status);
-        if (actionType == controlStatus.controlName) {
-            controlStatus = newPipControlStatus;
+    TLOGI(WmsLogTag::WMS_PIP, "controlStatus %{public}u : %{public}u", controlType.c_str(), status);
+    PiPControlStatusInfo newPipControlStatusInfo;
+    newPipControlStatusInfo.controlType = controlType;
+    newPipControlStatusInfo.status = status;
+    for (auto& controlStatusInfo : pipControlStatus_) {
+        TLOGI(WmsLogTag::WMS_PIP, "controlStatus %{public}u : %{public}u",
+              controlStatusInfo.controlName.c_str(), controlStatusInfo.status);
+        if (controlType == controlStatusInfo.controlType) {
+            controlStatusInfo = newPipControlStatusInfo;
             return;
         }
     }
-    pipControlStatus_.push_back(newPipControlStatus);
+    pipControlStatusInfoList_.push_back(newPipControlStatusInfo);
 }
 
 void PipOption::SetContentSize(uint32_t width, uint32_t height)
