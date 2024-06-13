@@ -800,6 +800,17 @@ enum class PiPWindowState : uint32_t {
 };
 
 /**
+ * @brief Enumerates picture in picture template type.
+ */
+enum class PiPTemplateType : uint32_t {
+    VIDEO_PLAY = 0,
+    VIDEO_CALL = 1,
+    VIDEO_MEETING = 2,
+    VIDEO_LIVE = 3,
+    END,
+};
+
+/**
  * @brief Enumerates picture in picture control group.
  */
 enum class PiPControlGroup : uint32_t {
