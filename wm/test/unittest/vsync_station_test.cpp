@@ -12,12 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include <vsync_station.h>
 #include <gtest/gtest.h>
-#include<ui/rs_frame_rate_linker.h>
-#include<window_frame_trace.h>
 #include<transaction/rs_interfaces.h>
+#include<ui/rs_frame_rate_linker.h>
+#include <vsync_station.h>
+#include<window_frame_trace.h>
 #include<window_manager_hilog.h>
 
 using namespace testing;
