@@ -37,11 +37,6 @@ void PipOption::SetPipTemplate(uint32_t templateType)
     templateType_ = templateType;
 }
 
-std::vector<PiPControlStatusInfo> PipOption::GetControlStatus()
-{
-    return pipControlStatusInfoList_;
-}
-
 void PipOption::SetControlStatus(uint32_t controlType, uint32_t status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "controlStatus %{public}u : %{public}u", controlType, status);
@@ -57,6 +52,23 @@ void PipOption::SetControlStatus(uint32_t controlType, uint32_t status)
         }
     }
     pipControlStatusInfoList_.push_back(newPipControlStatusInfo);
+}
+
+void PipOption::SetControlEnable(uint32_t controlType, bool isEnable)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "SetControlEnable %{public}u : %{public}u", controlType, isEnable);
+    PiPControlEnableInfo newPipControlEnableInfo;
+    newPipControlEnableInfo.controlType = controlType;
+    newPipControlEnableInfo.isEnable = isEnable;
+    for (auto& controlEnableInfo : pipControlEnableInfoList_) {
+        TLOGI(WmsLogTag::WMS_PIP, "controlStatus %{public}u : %{public}u",
+              controlEnableInfo.controlType, controlEnableInfo.isEnable);
+        if (controlType == controlEnableInfo.controlType) {
+            controlEnableInfo = newPipControlEnableInfo;
+            return;
+        }
+    }
+    pipControlStatusInfoList_.push_back(newPipControlEnableInfo);
 }
 
 void PipOption::SetContentSize(uint32_t width, uint32_t height)
@@ -94,6 +106,16 @@ void PipOption::GetContentSize(uint32_t& width, uint32_t& height)
 std::vector<std::uint32_t> PipOption::GetControlGroup()
 {
     return controlGroup_;
+}
+
+std::vector<PiPControlStatusInfo> PipOption::GetControlStatus()
+{
+    return pipControlStatusInfoList_;
+}
+
+std::vector<PiPControlEnableInfo> PipOption::GetControlEnable()
+{
+    return pipControlEnableInfoList_;
 }
 
 void PipOption::SetXComponentController(std::shared_ptr<XComponentController> xComponentController)

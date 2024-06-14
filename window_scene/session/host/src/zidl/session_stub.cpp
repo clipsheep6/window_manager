@@ -127,8 +127,10 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
         &SessionStub::HandleNotifyPiPWindowPrepareClose),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_PIP_RECT),
         &SessionStub::HandleUpdatePiPRect),
-    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_PIP_CONTENT_STATUS),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_PIP_CONTROL_STATUS),
         &SessionStub::HandleUpdateControlStatus),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_PIP_CONTROL_ENABLE),
+        &SessionStub::HandleSetPiPControlEnable),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_LAYOUT_FULL_SCREEN_CHANGE),
         &SessionStub::HandleLayoutFullScreenChange),
 };
@@ -633,6 +635,16 @@ int SessionStub::HandleUpdateControlStatus(MessageParcel& data, MessageParcel& r
     int32_t controlType =  {data.ReadInt32()};
     int32_t status =  {data.ReadInt32()};
     WSError errCode = UpdateControlStatus(controlType, status);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleSetPiPControlEnable(MessageParcel& data, MessageParcel& reply)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "HandleUpdateControlStatus!");
+    int32_t controlType =  {data.ReadInt32()};
+    int32_t isEnable =  {data.ReadInt32()};
+    WSError errCode = UpdateControlStatus(controlType, isEnable);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }

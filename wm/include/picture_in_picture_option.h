@@ -32,6 +32,7 @@ public:
     void SetPipTemplate(uint32_t templateType);
     void SetContentSize(uint32_t width, uint32_t height);
     void SetControlStatus(uint32_t controlType, uint32_t status);
+    void SetPiPControlEnable(uint32_t controlType, bool isEnable);
     void SetXComponentController(std::shared_ptr<XComponentController> xComponentController);
     void SetControlGroup(std::vector<std::uint32_t> controlGroup);
     void* GetContext() const;
@@ -40,6 +41,7 @@ public:
     uint32_t GetIsPlay();
     std::vector<std::uint32_t> GetControlGroup();
     std::vector<PiPControlStatusInfo> GetControlStatus();
+    std::vector<PiPControlEnableInfo> GetControlEnable();
     void GetContentSize(uint32_t& width, uint32_t& height);
     std::shared_ptr<XComponentController> GetXComponentController();
 private:
@@ -51,6 +53,7 @@ private:
     std::shared_ptr<XComponentController> xComponentController_;
     std::vector<std::uint32_t> controlGroup_;
     std::vector<PiPControlStatusInfo> pipControlStatusInfoList_ = {};
+    std::vector<PiPControlEnableInfo> pipControlEnableInfoList_ = {};
 };
 }
 }

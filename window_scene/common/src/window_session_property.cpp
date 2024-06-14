@@ -678,18 +678,6 @@ bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const
     if (!parcel.WriteUint32(pipTemplateInfo_.pipTemplateType)) {
         return false;
     }
-    auto controlStatusSize = pipTemplateInfo_.pipControlStatusInfoList.size();
-    if (!parcel.WriteUint32(static_cast<uint32_t>(controlStatusSize))) {
-        return false;
-    }
-    for (uint32_t i = 0; i < controlStatusSize; i++) {
-        if (!parcel.WriteUint32(pipTemplateInfo_.pipControlStatusInfoList[i].controlType)) {
-            return false;
-        }
-        if (!parcel.WriteUint32(pipTemplateInfo_.pipControlStatusInfoList[i].status)) {
-            return false;
-        }
-    }
     if (!parcel.WriteUint32(pipTemplateInfo_.priority)) {
         return false;
     }
@@ -705,6 +693,30 @@ bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const
             return false;
         }
     }
+    auto controlStatusSize = pipTemplateInfo_.pipControlStatusInfoList.size();
+    if (!parcel.WriteUint32(static_cast<uint32_t>(controlStatusSize))) {
+        return false;
+    }
+    for (uint32_t i = 0; i < controlStatusSize; i++) {
+        if (!parcel.WriteUint32(pipTemplateInfo_.pipControlStatusInfoList[i].controlType)) {
+            return false;
+        }
+        if (!parcel.WriteUint32(pipTemplateInfo_.pipControlStatusInfoList[i].status)) {
+            return false;
+        }
+    }
+    auto controlEnableSize = pipTemplateInfo_.pipControlEnableInfoList.size();
+    if (!parcel.WriteUint32(static_cast<uint32_t>(controlEnableSize))) {
+        return false;
+    }
+    for (uint32_t i = 0; i < controlEnableSize; i++) {
+        if (!parcel.WriteUint32(pipTemplateInfo_.pipControlEnableInfoList[i].controlType)) {
+            return false;
+        }
+        if (!parcel.WriteUint32(pipTemplateInfo_.pipControlEnableInfoList[i].isEnable)) {
+            return false;
+        }
+    }
     return true;
 }
 
@@ -715,13 +727,6 @@ void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowS
     }
     PiPTemplateInfo pipTemplateInfo;
     pipTemplateInfo.pipTemplateType = parcel.ReadUint32();
-    auto controlStatusSize = parcel.ReadUint32();
-    for (uint32_t i = 0; i < controlStatusSize; i++) {
-        PiPControlStatusInfo pipControlStatusInfo;
-        pipControlStatusInfo.controlType = parcel.ReadUint32();
-        pipControlStatusInfo.status = parcel.ReadUint32();
-        pipTemplateInfo.pipControlStatusInfoList.push_back(pipControlStatusInfo);
-    }
     pipTemplateInfo.priority = parcel.ReadUint32();
     auto size = parcel.ReadUint32();
     if (size > MAX_SIZE_PIP_CONTROL_GROUP) {
@@ -729,6 +734,20 @@ void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowS
     }
     for (uint32_t i = 0; i < size; i++) {
         pipTemplateInfo.controlGroup.push_back(parcel.ReadUint32());
+    }
+    auto controlStatusSize = parcel.ReadUint32();
+    for (uint32_t i = 0; i < controlStatusSize; i++) {
+        PiPControlStatusInfo pipControlStatusInfo;
+        pipControlStatusInfo.controlType = parcel.ReadUint32();
+        pipControlStatusInfo.status = parcel.ReadUint32();
+        pipTemplateInfo.pipControlStatusInfoList.push_back(pipControlStatusInfo);
+    }
+    auto controlEnableSize = parcel.ReadUint32();
+    for (uint32_t i = 0; i < controlEnableSize; i++) {
+        PiPControlEnableInfo pipControlEnableInfo;
+        pipControlEnableInfo.controlType = parcel.ReadUint32();
+        pipControlEnableInfo.isEnable = parcel.ReadUint32();
+        pipTemplateInfo.pipControlEnableInfoList.push_back(pipControlEnableInfo);
     }
     property->SetPiPTemplateInfo(pipTemplateInfo);
 }

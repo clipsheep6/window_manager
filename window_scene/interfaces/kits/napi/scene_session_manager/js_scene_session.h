@@ -101,6 +101,7 @@ private:
     void ProcessBindDialogTargetRegister();
     void ProcessSessionRectChangeRegister();
     void ProcessSessionControlStatusChangeRegister();
+    void ProcessSessionPiPControlEnableChangeRegister();
     void ProcessRaiseToTopRegister();
     void ProcessRaiseToTopForPointDownRegister();
     void ProcessBackPressedRegister();
@@ -146,6 +147,7 @@ private:
     void OnBindDialogTarget(const sptr<SceneSession>& sceneSession);
     void OnSessionRectChange(const WSRect& rect, const SizeChangeReason& reason = SizeChangeReason::UNDEFINED);
     void OnSessionControlStatusChange(const int32_t& controlType, const int32_t& status);
+    void OnSessionPiPControlEnableChange(const int32_t& controlType, bool& isEnable);
     void OnRaiseToTop();
     void OnRaiseToTopForPointDown();
     void OnRaiseAboveTarget(int32_t subWindowId);

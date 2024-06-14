@@ -2922,6 +2922,16 @@ void WindowSessionImpl::UpdateControlStatus(int32_t controlType, int32_t status)
     hostSession_->UpdateControlStatus(controlType, status);
 }
 
+void WindowSessionImpl::SetPiPControlEnable(int32_t controlType, bool isEnable)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnable is called");
+    if (IsWindowSessionInvalid()) {
+        WLOGFE("HostSession is invalid");
+        return;
+    }
+    hostSession_->SetPiPControlEnable(controlType, isEnable);
+}
+
 void WindowSessionImpl::NotifyWindowStatusChange(WindowMode mode)
 {
     WLOGFD("NotifyWindowStatusChange");

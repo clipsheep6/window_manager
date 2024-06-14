@@ -204,6 +204,7 @@ public:
 
     void UpdatePiPRect(const Rect& rect, WindowSizeChangeReason reason) override;
     void UpdateControlStatus(int32_t controlType, int32_t status) override;
+    void SetPiPControlEnable(int32_t controlType, bool isEnable) override;
     void SetDrawingContentState(bool drawingContentState);
     WMError RegisterWindowStatusChangeListener(const sptr<IWindowStatusChangeListener>& listener) override;
     WMError UnregisterWindowStatusChangeListener(const sptr<IWindowStatusChangeListener>& listener) override;

@@ -1611,6 +1611,8 @@ public:
 
     virtual void UpdateControlStatus(int32_t controlType, int32_t status) {}
 
+    virtual void SetPiPControlEnable(int32_t controlType, bool isEnable) {}
+
     /**
      * @brief When get focused, keep the keyboard created by other windows, support system window and app subwindow.
      *

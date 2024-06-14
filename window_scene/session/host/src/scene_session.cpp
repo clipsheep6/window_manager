@@ -769,6 +769,11 @@ void SceneSession::SetSessionControlStatusChangeCallback(const NotifySessionCont
     sessionControlStatusChangeFunc_ = func;
 }
 
+void SceneSession::SetSessionPiPControlEnableChangeCallback(const NotifySessionPiPControlEnableChangeFunc& func);
+{
+    sessionPiPControlEnableChangeFunc_ = func;
+}
+
 void SceneSession::UpdateSessionRectInner(const WSRect& rect, const SizeChangeReason& reason)
 {
     auto newWinRect = winRect_;
@@ -1569,8 +1574,25 @@ void SceneSession::NotifySessionControlStatusChange(int32_t controlType, int32_t
             return;
         }
         if (session->sessionControlStatusChangeFunc_) {
-            HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SceneSession::NotifySessionRectChange");
+            HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SceneSession::NotifySessionControlStatusChange");
             session->sessionControlStatusChangeFunc_(controlType, status);
+        }
+    };
+    PostTask(task, "NotifySessionControlStatusChange");
+}
+
+void SceneSession::NotifySessionPiPControlEnableChange(int32_t controlType, bool isEnable)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "NotifySessionPiPControlEnableChange!");
+    auto task = [weakThis = wptr(this), controlType, isEnable]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGFE("session is null");
+            return;
+        }
+        if (session->sessionPiPControlEnableChangeFunc_) {
+            HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SceneSession::NotifySessionPiPControlEnableChange");
+            session->sessionPiPControlEnableChangeFunc_(controlType, isEnable);
         }
     };
     PostTask(task, "NotifySessionControlStatusChange");
@@ -3157,6 +3179,25 @@ WSError SceneSession::UpdateControlStatus(int32_t controlType, int32_t status)
         return WSError::WS_OK;
     };
     PostTask(task, "UpdateControlStatus");
+    return WSError::WS_OK;
+}
+
+WSError SceneSession::SetPiPControlEnable(int32_t controlType, bool isEnable)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnable is called");
+    if (!WindowHelper::IsPipWindow(GetWindowType())) {
+        return WSError::WS_DO_NOTHING;
+    }
+    auto task = [weakThis = wptr(this), controlType, isEnable]() {
+        auto session = weakThis.promote();
+        if (!session || session->isTerminating) {
+            TLOGE(WmsLogTag::WMS_PIP, "SceneSession::SetPiPControlEnable session is null or is terminating");
+            return WSError::WS_ERROR_INVALID_OPERATION;
+        }
+        session->NotifySessionPiPControlEnableChange(controlType, isEnable);
+        return WSError::WS_OK;
+    };
+    PostTask(task, "SetPiPControlEnable");
     return WSError::WS_OK;
 }
 

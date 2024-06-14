@@ -91,6 +91,8 @@ public:
         { return WSError::WS_OK; }
     virtual WSError UpdateControlStatus(int32_t controlType, int32_t status)
     { return WSError::WS_OK; }
+    virtual WSError SetPiPControlEnable(int32_t controlType, bool isEnable)
+    { return WSError::WS_OK; }
     virtual WSError ProcessPointDownSession(int32_t posX, int32_t posY) { return WSError::WS_OK; }
     virtual WSError SendPointEventForMoveDrag(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
     {

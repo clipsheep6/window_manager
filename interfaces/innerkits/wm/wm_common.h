@@ -851,11 +851,17 @@ struct PiPControlStatusInfo {
     uint32_t status;
 };
 
+struct PiPControlEnableInfo {
+    uint32_t controlType;
+    bool isEnable;
+};
+
 struct PiPTemplateInfo {
     uint32_t pipTemplateType;
     uint32_t priority;
     std::vector<uint32_t> controlGroup;
     std::vector<PiPControlStatusInfo> pipControlStatusInfoList;
+    std::vector<PiPControlEnableInfo> pipControlEnableInfoList;
 };
 
 /**
