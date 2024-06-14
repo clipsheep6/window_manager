@@ -139,7 +139,7 @@ static napi_value CreatePipTemplateInfo(napi_env env, const sptr<SceneSession>& 
     auto indexControlEnable = 0;
     for (const auto& controlEnableInfo : controlEnableInfoList) {
         napi_set_element(env, controlArrayValue, indexControlEnable++,
-        CreateJsPiPControlEnableObject(env, controlEnableInfo));
+            CreateJsPiPControlEnableObject(env, controlEnableInfo));
     }
     napi_set_named_property(env, pipTemplateInfoValue, "controlEnableInfoList", controlEnableArrayValue);
     return pipTemplateInfoValue;

@@ -641,10 +641,10 @@ int SessionStub::HandleUpdateControlStatus(MessageParcel& data, MessageParcel& r
 
 int SessionStub::HandleSetPiPControlEnable(MessageParcel& data, MessageParcel& reply)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "HandleUpdateControlStatus!");
+    TLOGI(WmsLogTag::WMS_PIP, "HandleSetPiPControlEnable is called");
     int32_t controlType =  {data.ReadInt32()};
     int32_t isEnable =  {data.ReadInt32()};
-    WSError errCode = UpdateControlStatus(controlType, isEnable);
+    WSError errCode = SetPiPControlEnable(controlType, isEnable);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
