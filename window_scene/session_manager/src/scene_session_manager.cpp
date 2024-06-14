@@ -3455,14 +3455,13 @@ WMError SceneSessionManager::SetGestureNavigaionEnabled(bool enable)
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     WLOGFD("SetGestureNavigationEnabled, enable: %{public}d", enable);
-    gestureNavigationEnabled_ = enable;
-    if (lastGestureNativeEnabled_ == enable) {
+    if (gestureNavigationEnabled_ == enable) {
         WLOGFW("Do not set gesture navigation too much times as same value and the value is %{public}d", enable);
         return WMError::WM_DO_NOTHING;
     }
+    gestureNavigationEnabled_ = enable;
     auto task = [this, enable]() {
         SessionManagerAgentController::GetInstance().NotifyGestureNavigationEnabledResult(enable);
-        lastGestureNativeEnabled_ = enable;
         if (!gestureNavigationEnabledChangeFunc_ && !statusBarEnabledChangeFunc_) {
             WLOGFE("callback func is null");
             return WMError::WM_OK;

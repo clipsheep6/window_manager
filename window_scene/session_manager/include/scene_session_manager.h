@@ -670,7 +670,6 @@ private:
     bool JudgeNeedNotifyPrivacyInfo(DisplayId displayId, const std::unordered_set<std::string>& privacyBundles);
     WSError CheckSessionPropertyOnRecovery(const sptr<WindowSessionProperty>& property, bool isSpecificSession);
     int32_t dumpingSessionPid_ = INVALID_SESSION_ID;
-    bool lastGestureNativeEnabled_ { true };
 };
 } // namespace OHOS::Rosen
 
