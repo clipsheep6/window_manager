@@ -134,12 +134,12 @@ static napi_value CreatePipTemplateInfo(napi_env env, const sptr<SceneSession>& 
     }
     napi_set_named_property(env, pipTemplateInfoValue, "controlStatusInfoList", controlStatusArrayValue);
     napi_value controlEnableArrayValue = nullptr;
-    std::vector<PiPControlStatusInfo> controlEnableInfoList = session->GetPiPTemplateInfo().pipControlEnableInfoList;
+    std::vector<PiPControlEnableInfo> controlEnableInfoList = session->GetPiPTemplateInfo().pipControlEnableInfoList;
     napi_create_array_with_length(env, controlEnableInfoList.size(), &controlEnableArrayValue);
     auto indexControlEnable = 0;
     for (const auto& controlEnableInfo : controlEnableInfoList) {
         napi_set_element(env, controlArrayValue, indexControlEnable++,
-                         CreateJsPiPControlStatusObject(env, controlEnableInfo));
+        CreateJsPiPControlEnableObject(env, controlEnableInfo));
     }
     napi_set_named_property(env, pipTemplateInfoValue, "controlEnableInfoList", controlEnableArrayValue);
     return pipTemplateInfoValue;
@@ -679,7 +679,7 @@ void JsSceneSession::ProcessSessionControlStatusChangeRegister()
 void JsSceneSession::ProcessSessionPiPControlEnableChangeRegister()
 {
     TLOGI(WmsLogTag::WMS_PIP, "ProcessSessionPiPControlEnableChangeRegister success");
-    NotifySessionControlStatusFunc func = [this](const int32_t& controlType, bool& isEnable) {
+    NotifySessionPiPControlEnableFunc func = [this](const int32_t& controlType, const bool& isEnable) {
         this->OnSessionPiPControlEnableChange(controlType, isEnable);
     };
     auto session = weakSession_.promote();
@@ -687,7 +687,7 @@ void JsSceneSession::ProcessSessionPiPControlEnableChangeRegister()
         WLOGFE("session is nullptr");
         return;
     }
-    session->SetSessionControlEnableChangeCallback(func);
+    session->SetSessionPiPControlEnableChangeCallback(func);
 }
 
 void JsSceneSession::ProcessRaiseToTopRegister()
@@ -1617,7 +1617,7 @@ void JsSceneSession::OnSessionControlStatusChange(const int32_t& controlType, co
     taskScheduler_->PostMainThreadTask(task, statusChangeInfo);
 }
 
-void JsSceneSession::OnSessionPiPControlEnableChange(const int32_t& controlType, bool& isEnable)
+void JsSceneSession::OnSessionPiPControlEnableChange(const int32_t& controlType, const bool& isEnable)
 {
     TLOGI(WmsLogTag::WMS_PIP, "OnSessionPiPControlEnableChange is called");
     std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(SESSION_CONTROL_ENABLE_CHANGE_CB);

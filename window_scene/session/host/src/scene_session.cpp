@@ -769,7 +769,7 @@ void SceneSession::SetSessionControlStatusChangeCallback(const NotifySessionCont
     sessionControlStatusChangeFunc_ = func;
 }
 
-void SceneSession::SetSessionPiPControlEnableChangeCallback(const NotifySessionPiPControlEnableChangeFunc& func);
+void SceneSession::SetSessionPiPControlEnableChangeCallback(const NotifySessionPiPControlEnableChangeFunc& func)
 {
     sessionPiPControlEnableChangeFunc_ = func;
 }

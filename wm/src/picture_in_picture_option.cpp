@@ -54,7 +54,7 @@ void PipOption::SetControlStatus(uint32_t controlType, uint32_t status)
     pipControlStatusInfoList_.push_back(newPipControlStatusInfo);
 }
 
-void PipOption::SetControlEnable(uint32_t controlType, bool isEnable)
+void PipOption::SetPiPControlEnable(uint32_t controlType, bool isEnable)
 {
     TLOGI(WmsLogTag::WMS_PIP, "SetControlEnable %{public}u : %{public}u", controlType, isEnable);
     PiPControlEnableInfo newPipControlEnableInfo;
@@ -68,7 +68,7 @@ void PipOption::SetControlEnable(uint32_t controlType, bool isEnable)
             return;
         }
     }
-    pipControlStatusInfoList_.push_back(newPipControlEnableInfo);
+    pipControlEnableInfoList_.push_back(newPipControlEnableInfo);
 }
 
 void PipOption::SetContentSize(uint32_t width, uint32_t height)
