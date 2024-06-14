@@ -433,7 +433,7 @@ WMError WindowSceneSessionImpl::Create(const std::shared_ptr<AbilityRuntime::Con
         if (WindowHelper::IsSystemWindow(type)) {
             // Not valid system window type for session should return WMError::WM_OK;
             if (!IsValidSystemWindowType(type)) {
-                return WMError::WM_OK;
+                return WMError::WM_ERROR_INVALID_TYPE;
             }
         } else if (!WindowHelper::IsSubWindow(type)) {
             TLOGI(WmsLogTag::WMS_LIFE, "create failed not system or sub type, type: %{public}d", type);
