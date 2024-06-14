@@ -389,6 +389,7 @@ private:
     std::mutex screenOffMutex_;
     std::condition_variable screenOffCV_;
     int32_t screenOffDelay_ {0};
+    std::vector<ScreenId> mirrorScreenIds_;
 
     std::mutex freezedPidListMutex_;
     std::set<int32_t> freezedPidList_;
@@ -413,6 +414,7 @@ private:
     void RegisterApplicationStateObserver();
     void SetPostureAndHallSensorEnabled();
     bool IsValidDisplayModeCommand(std::string command);
+    void SetCastFromSettingData();
 
 private:
     class ScbClientListenerDeathRecipient : public IRemoteObject::DeathRecipient {
