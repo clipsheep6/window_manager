@@ -51,6 +51,7 @@ public:
     void RegisterWindowInfoQueriedListener(const sptr<IWindowInfoQueriedListener>& listener);
     sptr<CutoutInfo> GetCutoutInfo(DisplayId displayId) const;
     void NotifyPrivateWindowStateChanged(bool hasPrivate);
+    Rotation GetTargetDisplayRotation(Orientation orientation);
 };
 } // namespace OHOS::Rosen
 
