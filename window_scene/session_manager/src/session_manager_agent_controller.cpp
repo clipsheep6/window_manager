@@ -197,5 +197,14 @@ void SessionManagerAgentController::DoAfterAgentDeath(const sptr<IRemoteObject>&
         windowManagerAgentPairMap_.erase(remoteObject);
     }
 }
+
+void SessionManagerAgentController::NotifyGestureNavigationEnabledResult(bool enable)
+{
+    WLOGFD("NotifyGestureNavigationEnabledResult with result:%{public}d", enable);
+    for (auto& agent : smAgentContainer_.GetAgentsByType(
+        WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_GESTURE_NAVIGATION_ENABLED)) {
+        agent->NotifyGestureNavigationEnabledResult(enable);
+    }
+}
 } // namespace Rosen
 } // namespace OHOS
