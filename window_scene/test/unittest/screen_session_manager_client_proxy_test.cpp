@@ -23,6 +23,9 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr uint32_t SLEEP_TIME_IN_US = 100000; // 100ms
+}
 class ScreenSessionManagerClientProxyTest : public testing::Test {
 public:
     void SetUp() override;
@@ -40,6 +43,7 @@ void ScreenSessionManagerClientProxyTest::SetUp()
 void ScreenSessionManagerClientProxyTest::TearDown()
 {
     screenSessionManagerClientProxy_ = nullptr;
+    usleep(SLEEP_TIME_IN_US);
 }
 
 /**

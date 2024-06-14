@@ -29,6 +29,9 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr uint32_t SLEEP_TIME_IN_US = 100000; // 100ms
+}
 class FoldScreenStateMachineTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -51,6 +54,7 @@ void FoldScreenStateMachineTest::SetUp()
 
 void FoldScreenStateMachineTest::TearDown()
 {
+    usleep(SLEEP_TIME_IN_US);
 }
 
 namespace {

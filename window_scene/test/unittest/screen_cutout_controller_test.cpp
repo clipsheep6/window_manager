@@ -28,6 +28,9 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr uint32_t SLEEP_TIME_IN_US = 500000; // 500ms
+}
 class ScreenCutoutControllerTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -50,6 +53,7 @@ void ScreenCutoutControllerTest::SetUp()
 
 void ScreenCutoutControllerTest::TearDown()
 {
+    usleep(SLEEP_TIME_IN_US);
 }
 
 namespace {
