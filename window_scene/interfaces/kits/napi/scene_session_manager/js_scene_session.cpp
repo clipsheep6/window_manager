@@ -679,7 +679,7 @@ void JsSceneSession::ProcessSessionControlStatusChangeRegister()
 void JsSceneSession::ProcessSessionPiPControlEnableChangeRegister()
 {
     TLOGI(WmsLogTag::WMS_PIP, "ProcessSessionPiPControlEnableChangeRegister success");
-    NotifySessionPiPControlEnableFunc func = [this](const int32_t& controlType, const bool& isEnable) {
+    NotifySessionPiPControlEnableChangeFunc func = [this](const int32_t& controlType, const bool& isEnable) {
         this->OnSessionPiPControlEnableChange(controlType, isEnable);
     };
     auto session = weakSession_.promote();
