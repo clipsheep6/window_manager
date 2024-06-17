@@ -71,6 +71,8 @@ enum class SessionInterfaceCode {
     //PictureInPicture
     TRANS_ID_NOTIFY_PIP_WINDOW_PREPARE_CLOSE = 800,
     TRANS_ID_UPDATE_PIP_RECT,
+    TRANS_ID_UPDATE_PIP_CONTROL_STATUS,
+    TRANS_ID_SET_PIP_CONTROL_ENABLE,
 };
 } // namespace Rosen
 } // namespace OHOS

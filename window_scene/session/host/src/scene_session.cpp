@@ -775,6 +775,16 @@ void SceneSession::SetSessionRectChangeCallback(const NotifySessionRectChangeFun
     PostTask(task, "SetSessionRectChangeCallback");
 }
 
+void SceneSession::SetSessionControlStatusChangeCallback(const NotifySessionControlStatusFunc& func)
+{
+    sessionControlStatusChangeFunc_ = func;
+}
+
+void SceneSession::SetSessionPiPControlEnableChangeCallback(const NotifySessionPiPControlEnableChangeFunc& func)
+{
+    sessionPiPControlEnableChangeFunc_ = func;
+}
+
 void SceneSession::UpdateSessionRectInner(const WSRect& rect, const SizeChangeReason& reason)
 {
     auto newWinRect = winRect_;
@@ -1585,6 +1595,39 @@ void SceneSession::NotifySessionRectChange(const WSRect& rect, const SizeChangeR
         }
     };
     PostTask(task, "NotifySessionRectChange" + GetRectInfo(rect));
+}
+void SceneSession::NotifySessionControlStatusChange(int32_t controlType, int32_t status)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "NotifySessionControlStatusChange!");
+    auto task = [weakThis = wptr(this), controlType, status]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGFE("session is null");
+            return;
+        }
+        if (session->sessionControlStatusChangeFunc_) {
+            HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SceneSession::NotifySessionControlStatusChange");
+            session->sessionControlStatusChangeFunc_(controlType, status);
+        }
+    };
+    PostTask(task, "NotifySessionControlStatusChange");
+}
+
+void SceneSession::NotifySessionPiPControlEnableChange(int32_t controlType, bool isEnable)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "NotifySessionPiPControlEnableChange!");
+    auto task = [weakThis = wptr(this), controlType, isEnable]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGFE("session is null");
+            return;
+        }
+        if (session->sessionPiPControlEnableChangeFunc_) {
+            HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SceneSession::NotifySessionPiPControlEnableChange");
+            session->sessionPiPControlEnableChangeFunc_(controlType, isEnable);
+        }
+    };
+    PostTask(task, "NotifySessionControlStatusChange");
 }
 
 bool SceneSession::IsDecorEnable() const
@@ -3218,6 +3261,44 @@ WSError SceneSession::UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
         return WSError::WS_OK;
     };
     PostTask(task, "UpdatePiPRect");
+    return WSError::WS_OK;
+}
+
+WSError SceneSession::UpdateControlStatus(int32_t controlType, int32_t status)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "UpdateControlStatus!");
+    if (!WindowHelper::IsPipWindow(GetWindowType())) {
+        return WSError::WS_DO_NOTHING;
+    }
+    auto task = [weakThis = wptr(this), controlType, status]() {
+        auto session = weakThis.promote();
+        if (!session || session->isTerminating) {
+            TLOGE(WmsLogTag::WMS_PIP, "SceneSession::UpdateControlStatus session is null or is terminating");
+            return WSError::WS_ERROR_INVALID_OPERATION;
+        }
+        session->NotifySessionControlStatusChange(controlType, status);
+        return WSError::WS_OK;
+    };
+    PostTask(task, "UpdateControlStatus");
+    return WSError::WS_OK;
+}
+
+WSError SceneSession::SetPiPControlEnable(int32_t controlType, bool isEnable)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnable is called");
+    if (!WindowHelper::IsPipWindow(GetWindowType())) {
+        return WSError::WS_DO_NOTHING;
+    }
+    auto task = [weakThis = wptr(this), controlType, isEnable]() {
+        auto session = weakThis.promote();
+        if (!session || session->isTerminating) {
+            TLOGE(WmsLogTag::WMS_PIP, "SceneSession::SetPiPControlEnable session is null or is terminating");
+            return WSError::WS_ERROR_INVALID_OPERATION;
+        }
+        session->NotifySessionPiPControlEnableChange(controlType, isEnable);
+        return WSError::WS_OK;
+    };
+    PostTask(task, "SetPiPControlEnable");
     return WSError::WS_OK;
 }
 

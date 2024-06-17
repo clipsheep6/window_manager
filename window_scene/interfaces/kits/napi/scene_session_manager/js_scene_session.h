@@ -27,6 +27,7 @@
 #include "session/host/include/scene_session.h"
 #include "js_scene_utils.h"
 #include "task_scheduler.h"
+#include "wm_common.h"
 
 namespace OHOS::Rosen {
 class SceneSession;
@@ -101,6 +102,8 @@ private:
     void ProcessCreateSubSessionRegister();
     void ProcessBindDialogTargetRegister();
     void ProcessSessionRectChangeRegister();
+    void ProcessSessionControlStatusChangeRegister();
+    void ProcessSessionPiPControlEnableChangeRegister();
     void ProcessRaiseToTopRegister();
     void ProcessRaiseToTopForPointDownRegister();
     void ProcessBackPressedRegister();
@@ -145,6 +148,8 @@ private:
     void OnCreateSubSession(const sptr<SceneSession>& sceneSession);
     void OnBindDialogTarget(const sptr<SceneSession>& sceneSession);
     void OnSessionRectChange(const WSRect& rect, const SizeChangeReason& reason = SizeChangeReason::UNDEFINED);
+    void OnSessionControlStatusChange(const int32_t& controlType, const int32_t& status);
+    void OnSessionPiPControlEnableChange(const int32_t& controlType, const bool& isEnable);
     void OnRaiseToTop();
     void OnRaiseToTopForPointDown();
     void OnRaiseAboveTarget(int32_t subWindowId);
