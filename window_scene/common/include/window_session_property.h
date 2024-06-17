@@ -167,6 +167,8 @@ public:
     void SetCollaboratorType(int32_t collaboratorType);
     bool Write(Parcel& parcel, WSPropertyChangeAction action);
     void Read(Parcel& parcel, WSPropertyChangeAction action);
+    static void DumpPropertyParamList(std::ostringstream& oss);
+    void DumpPropertyParam(std::ostringstream& oss);
 
 private:
     bool MarshallingTouchHotAreas(Parcel& parcel) const;
@@ -215,6 +217,8 @@ private:
     void ReadActionUpdateTextfieldAvoidInfo(Parcel& parcel);
     void ReadActionUpdateWindowMask(Parcel& parcel);
     void ReadActionUpdateTopmost(Parcel& parcel);
+    static void DumpKeyboardLayoutParamsList(std::ostringstream& oss);
+    void DumpKeyboardLayoutParams(std::ostringstream& oss);
     std::string windowName_;
     SessionInfo sessionInfo_;
     Rect requestRect_ { 0, 0, 0, 0 }; // window rect requested by the client (without decoration size)

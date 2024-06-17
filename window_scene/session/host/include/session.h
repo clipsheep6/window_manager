@@ -447,6 +447,8 @@ protected:
     virtual bool CheckPointerEventDispatch(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) const;
     bool IsTopDialog() const;
     void HandlePointDownDialog(int32_t pointAction);
+    static void DumpSessionParamList(std::ostringstream& oss);
+    void DumpSessionParam(std::ostringstream& oss);
 
     void PostTask(Task&& task, const std::string& name = "sessionTask", int64_t delayTime = 0);
     void PostExportTask(Task&& task, const std::string& name = "sessionExportTask", int64_t delayTime = 0);
@@ -562,6 +564,10 @@ private:
     bool ShouldCreateDetectTask(bool isAttach, WindowMode windowMode) const;
     bool ShouldCreateDetectTaskInRecent(bool newShowRecent, bool oldShowRecent, bool isAttach) const;
     void CreateDetectStateTask(bool isAttach, WindowMode windowMode);
+    static void DumpSystemConfigList(std::ostringstream& oss);
+    void DumpSystemConfig(std::ostringstream& oss);
+    static void DumpSessionInfoList(std::ostringstream& oss);
+    void DumpSessionInfo(std::ostringstream& oss);
     template<typename T1, typename T2, typename Ret>
     using EnableIfSame = typename std::enable_if<std::is_same_v<T1, T2>, Ret>::type;
     template<typename T>

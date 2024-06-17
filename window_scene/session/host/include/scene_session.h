@@ -309,6 +309,9 @@ public:
 
     bool CheckGetAvoidAreaAvailable(AvoidAreaType type) override;
 
+    static void DumpSceneSessionParamList(std::ostringstream& oss);
+    void DumpSceneSessionParam(std::ostringstream& oss);
+
 protected:
     void NotifyIsCustomAnimationPlaying(bool isPlaying);
     void SetMoveDragCallback();

@@ -3474,4 +3474,31 @@ void SceneSession::SetSkipDraw(bool skip)
     }
     RSTransaction::FlushImplicitTransaction();
 }
+
+void SceneSession::DumpSceneSessionParamList(std::ostringstream& oss)
+{
+    Session::DumpSessionParamList(oss);
+    oss << "CollaboratorType DefaultAnimation LastSafeRect[] PipInfo[] EventParam[]"
+        << std::endl;
+    oss << "StartMoving AccessibilityVisible DisplayStatusBar HideNonSecureWindow CombinedExtWindowFlag DecorHeight"
+        << std::endl;
+    oss << "ClientIdentity HideState ShowWhenLocked RestoringKeyboardRect[]"
+        << std::endl << std::endl;
+}
+
+void SceneSession::DumpSceneSessionParam(std::ostringstream& oss)
+{
+    DumpSessionParam(oss);
+    oss << collaboratorType_ << "|" << needDefaultAnimationFlag_ << "|"
+        << "[" << lastSafeRect.posX_ << " " << lastSafeRect.posY_ << " "
+        << lastSafeRect.width_ << " " << lastSafeRect.height_ << "]|"
+        << "[" << pipTemplateInfo_.pipTemplateType << " " << pipTemplateInfo_.priority << "]|"
+        << "[" << sessionEventParam_.pointerX_ << " " << sessionEventParam_.pointerY_ << "]|"
+        << isStartMoving_ << "|" << isVisibleForAccessibility_ << "|" << isDisplayStatusBarTemporarily_ << "|"
+        << shouldHideNonSecureWindows_ << "|" << combinedExtWindowFlags_.bitData << "|" << customDecorHeight_ << "|"
+        << clientIdentityToken_ << "|" << forceHideState_ << "|" << isTemporarilyShowWhenLocked_ << "|"
+        << "[" << restoringRectForKeyboard_.posX_ << " " << restoringRectForKeyboard_.posY_ << " "
+        << restoringRectForKeyboard_.width_ << " " << restoringRectForKeyboard_.height_ << "]"
+        << std::endl << std::endl;
+}
 } // namespace OHOS::Rosen

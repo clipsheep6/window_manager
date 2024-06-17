@@ -1263,5 +1263,97 @@ float WindowSessionProperty::GetLastLimitsVpr() const
 {
     return lastVpr_;
 }
+
+void WindowSessionProperty::DumpKeyboardLayoutParamsList(std::ostringstream& oss)
+{
+    oss << "LayoutParam { Gravity LandscapeKeyboard[] PortraitKeyboard[] LandscapePanel[] PortraitPanel[]"
+        << std::endl;
+    oss << "}"
+        << std::endl;
+}
+
+void WindowSessionProperty::DumpKeyboardLayoutParams(std::ostringstream& oss)
+{
+    oss << "{ " << static_cast<uint32_t>(keyboardLayoutParams_.gravity_) << "|"
+        << "[" << keyboardLayoutParams_.LandscapeKeyboardRect_.posX_ << " "
+        << keyboardLayoutParams_.LandscapeKeyboardRect_.posY_ << " "
+        << keyboardLayoutParams_.LandscapeKeyboardRect_.width_ << " "
+        << keyboardLayoutParams_.LandscapeKeyboardRect_.height_ << "]|"
+        << "[" << keyboardLayoutParams_.PortraitKeyboardRect_.posX_ << " "
+        << keyboardLayoutParams_.PortraitKeyboardRect_.posY_ << " "
+        << keyboardLayoutParams_.PortraitKeyboardRect_.width_ << " "
+        << keyboardLayoutParams_.PortraitKeyboardRect_.height_ << "]|"
+        << "[" << keyboardLayoutParams_.LandscapePanelRect_.posX_ << " "
+        << keyboardLayoutParams_.LandscapePanelRect_.posY_ << " "
+        << keyboardLayoutParams_.LandscapePanelRect_.width_ << " "
+        << keyboardLayoutParams_.LandscapePanelRect_.height_ << "]|"
+        << "[" << keyboardLayoutParams_.PortraitPanelRect_.posX_ << " "
+        << keyboardLayoutParams_.PortraitPanelRect_.posY_ << " "
+        << keyboardLayoutParams_.PortraitPanelRect_.width_ << " "
+        << keyboardLayoutParams_.PortraitPanelRect_.height_ << "]" << std::endl;
+    oss << "}" << std::endl;
+}
+
+void WindowSessionProperty::DumpPropertyParamList(std::ostringstream& oss)
+{
+    oss << "Property { WindowName RequestRect[] WindowRect[] Type Focusable Touchable DragEnabled RaiseEnabled"
+        << std::endl;
+    oss << "SystemCalling TokenState TurnOn KeepOn Topmost RequestedOrientation IsPrivacy IsSystemPrivacy Brightness"
+        << std::endl;
+    oss << "DisplayId ParentId Flags Id ParentId AccessTokenId MaximizeMode WindowMode WindowState"
+        << std::endl;
+    oss << "Limits[] UserLimits[] ConfigLimitsVP[] PipInfo[] LastVpr SessionGravity"
+        << std::endl;
+    oss << "GravityPercent ModeSupport DecorEnable AnimationFlag FloatingType HideNonSystem ForceHide KeepKeyboardFlag"
+        << std::endl;
+    oss << "Trans[]"
+        << std::endl;
+    oss << "CallingId FieldY FieldH NeedUpdateMode LayoutFullScreen ExtensionFlag Shaped CollaboratorType"
+        << std::endl << std::endl;
+    DumpKeyboardLayoutParamsList(oss);
+    oss << "}"
+        << std::endl;
+}
+
+void WindowSessionProperty::DumpPropertyParam(std::ostringstream& oss)
+{
+    oss << "{ " << windowName_ << "|"
+        << "[" << requestRect_.posX_ << " " << requestRect_.posY_ << " "
+        << requestRect_.width_ << " " << requestRect_.height_ << "]|"
+        << "[" << windowRect_.posX_ << " " << windowRect_.posY_ << " "
+        << windowRect_.width_ << " " << windowRect_.height_ << "]|"
+        << static_cast<uint32_t>(type_) << "|" << focusable_ << "|" << touchable_ << "|"
+        << dragEnabled_ << "|" << raiseEnabled_ << "|" << isSystemCalling_ << "|" << tokenState_ << "|"
+        << turnScreenOn_ << "|" << keepScreenOn_ << "|" << topmost_ << "|"
+        << static_cast<uint32_t>(requestedOrientation_) << "|" << isPrivacyMode_ << "|" << isSystemPrivacyMode_ << "|"
+        << brightness_ << "|" << displayId_ << "|" << parentId_ << "|" << flags_ << "|"
+        << persistentId_ << "|" << parentPersistentId_ << "|" << accessTokenId_ << "|"
+        << static_cast<uint32_t>(maximizeMode_) << "|" << static_cast<uint32_t>(windowMode_) << "|"
+        << static_cast<uint32_t>(windowState_) << std::endl;
+    oss << "[" << limits_.maxWidth_ << " " << limits_.maxHeight_ << " "
+        << limits_.minWidth_ << " " << limits_.minHeight_ << " "
+        << limits_.maxRatio_ << " " << limits_.minRatio_ << "]|"
+        << "[" << userLimits_.maxWidth_ << " " << userLimits_.maxHeight_ << " "
+        << userLimits_.minWidth_ << " " << userLimits_.minHeight_ << " "
+        << userLimits_.maxRatio_ << " " << userLimits_.minRatio_ << "]|"
+        << "[" << configLimitsVP_.maxWidth_ << " " << configLimitsVP_.maxHeight_ << " "
+        << configLimitsVP_.minWidth_ << " " << configLimitsVP_.minHeight_ << " "
+        << configLimitsVP_.maxRatio_ << " " << configLimitsVP_.minRatio_ << "]|"
+        << "[" << pipTemplateInfo_.pipTemplateType << " " << pipTemplateInfo_.priority << "]|"
+        << lastVpr_ << "|" << static_cast<uint32_t>(sessionGravity_) << std::endl;
+    oss << sessionGravitySizePercent_ << "|" << modeSupportInfo_ << "|"
+        << isDecorEnable_ << "|" << animationFlag_ << "|"
+        << isFloatingWindowAppType_ << "|" << hideNonSystemFloatingWindows_ << "|"
+        << forceHide_ << "|" << keepKeyboardFlag_ << "|"
+        << "[" << trans_.pivotX_ << " " << trans_.pivotY_ << " " << trans_.scaleX_ << " "
+        << trans_.scaleY_ << " " << trans_.scaleZ_ << " " << trans_.rotationX_ << " "
+        << trans_.rotationY_ << " " << trans_.rotationZ_ << " "
+        << trans_.translateX_ << " " << trans_.translateY_ << " "
+        << trans_.translateZ_ << "]|" << callingSessionId_ << "|" << callingSessionId_ << "|" << textFieldHeight_ << "|"
+        << isNeedUpdateWindowMode_ << "|" << isLayoutFullScreen_ << "|" << isExtensionFlag_ << "|"
+        << isShaped_ << "|" << collaboratorType_ << std::endl;
+    DumpKeyboardLayoutParams(oss);
+    oss << "}" << std::endl;
+}
 } // namespace Rosen
 } // namespace OHOS
