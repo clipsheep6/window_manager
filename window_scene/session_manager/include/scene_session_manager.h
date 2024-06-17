@@ -174,7 +174,7 @@ public:
 
     WSError SetFocusedSessionId(int32_t persistentId);
     int32_t GetFocusedSessionId() const;
-    FocusChangeReason GetFocusChangeReason() const;
+    FocusChangeReason GetFocusChangeReason() const {return focusChangeReason_;};
     WSError GetAllSessionDumpInfo(std::string& info);
     WSError GetSpecifiedSessionDumpInfo(std::string& dumpInfo, const std::vector<std::string>& params,
         const std::string& strId);
@@ -394,6 +394,8 @@ private:
     WSError RequestFocusBasicCheck(int32_t persistentId);
     WSError RequestFocusSpecificCheck(sptr<SceneSession>& sceneSession, bool byForeground,
         FocusChangeReason reason = FocusChangeReason::DEFAULT);
+    bool CheckTopmostWindowFocus(sptr<SceneSession>& focusedSession, sptr<SceneSession>& sceneSession);
+    bool CheckRequestFocusImmdediately(sptr<SceneSession>& sceneSession);
     bool CheckFocusIsDownThroughBlockingType(sptr<SceneSession>& requestSceneSession,
         sptr<SceneSession>& focusedSession, bool includingAppSession);
 
@@ -533,7 +535,7 @@ private:
     ProcessVirtualPixelRatioChangeFunc processVirtualPixelRatioChangeFunc_ = nullptr;
     AppWindowSceneConfig appWindowSceneConfig_;
     SystemSessionConfig systemConfig_;
-    FocusChangeReason changeReason_ = FocusChangeReason::DEFAULT;
+    FocusChangeReason focusChangeReason_ = FocusChangeReason::DEFAULT;
     float snapshotScale_ = 0.5;
     int32_t focusedSessionId_ = INVALID_SESSION_ID;
     int32_t lastFocusedSessionId_ = INVALID_SESSION_ID;
@@ -587,6 +589,7 @@ private:
     void ProcessSubSessionForeground(sptr<SceneSession>& sceneSession);
     void ProcessSubSessionBackground(sptr<SceneSession>& sceneSession);
     WSError ProcessDialogRequestFocusImmdediately(sptr<SceneSession>& sceneSession);
+    WSError ProcessModalTopmostRequestFocusImmdediately(sptr<SceneSession>& sceneSession);
     sptr<ISessionChangeListener> sessionListener_;
     sptr<SceneSession> FindSessionByToken(const sptr<IRemoteObject> &token);
 
@@ -668,7 +671,8 @@ private:
         const sptr<WindowSessionProperty>& property);
     void DeleteStateDetectTask();
     bool JudgeNeedNotifyPrivacyInfo(DisplayId displayId, const std::unordered_set<std::string>& privacyBundles);
-    WSError CheckSessionPropertyOnRecovery(const sptr<WindowSessionProperty>& property);
+    WSError CheckSessionPropertyOnRecovery(const sptr<WindowSessionProperty>& property, bool isSpecificSession);
+    int32_t dumpingSessionPid_ = INVALID_SESSION_ID;
 };
 } // namespace OHOS::Rosen
 

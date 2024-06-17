@@ -121,9 +121,7 @@
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneSessionManager" };
-#ifdef RES_SCHED_ENABLE
 const std::string SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
-#endif
 const std::string SCENE_SESSION_MANAGER_THREAD = "OS_SceneSessionManager";
 const std::string WINDOW_INFO_REPORT_THREAD = "OS_WindowInfoReportThread";
 constexpr const char* PREPARE_TERMINATE_ENABLE_PARAMETER = "persist.sys.prepare_terminate";
@@ -2343,7 +2341,8 @@ bool SceneSessionManager::IsNeedRecover(const int32_t persistentId)
     return true;
 }
 
-WSError SceneSessionManager::CheckSessionPropertyOnRecovery(const sptr<WindowSessionProperty>& property)
+WSError SceneSessionManager::CheckSessionPropertyOnRecovery(const sptr<WindowSessionProperty>& property,
+    bool isSpecificSession)
 {
     if (property == nullptr) {
         TLOGE(WmsLogTag::WMS_RECOVER, "property is nullptr");
@@ -2353,9 +2352,16 @@ WSError SceneSessionManager::CheckSessionPropertyOnRecovery(const sptr<WindowSes
         TLOGE(WmsLogTag::WMS_RECOVER, "create system window permission denied!");
         return WSError::WS_ERROR_NOT_SYSTEM_APP;
     }
-    if (!IsNeedRecover(property->GetParentPersistentId())) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "no need to recover.");
-        return WSError::WS_ERROR_INVALID_PARAM;
+    if (isSpecificSession) {
+        if (property->GetParentPersistentId() > 0 && !IsNeedRecover(property->GetParentPersistentId())) {
+            TLOGE(WmsLogTag::WMS_RECOVER, "no need to recover.");
+            return WSError::WS_ERROR_INVALID_PARAM;
+        }
+    } else {
+        if (!IsNeedRecover(property->GetPersistentId())) {
+            TLOGE(WmsLogTag::WMS_RECOVER, "no need to recover.");
+            return WSError::WS_ERROR_INVALID_PARAM;
+        }
     }
     return WSError::WS_OK;
 }
@@ -2364,7 +2370,7 @@ WSError SceneSessionManager::RecoverAndConnectSpecificSession(const sptr<ISessio
     const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
     sptr<WindowSessionProperty> property, sptr<ISession>& session, sptr<IRemoteObject> token)
 {
-    auto propCheckRet = CheckSessionPropertyOnRecovery(property);
+    auto propCheckRet = CheckSessionPropertyOnRecovery(property, true);
     if (propCheckRet != WSError::WS_OK) {
         return propCheckRet;
     }
@@ -2481,7 +2487,7 @@ WSError SceneSessionManager::RecoverAndReconnectSceneSession(const sptr<ISession
     const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
     sptr<ISession>& session, sptr<WindowSessionProperty> property, sptr<IRemoteObject> token)
 {
-    auto propCheckRet = CheckSessionPropertyOnRecovery(property);
+    auto propCheckRet = CheckSessionPropertyOnRecovery(property, false);
     if (propCheckRet != WSError::WS_OK) {
         return propCheckRet;
     }
@@ -3827,6 +3833,7 @@ void SceneSessionManager::DumpSessionElementInfo(const sptr<SceneSession>& sessi
     if (!session->GetSessionInfo().isSystem_) {
         WLOGFI("Dump normal session, not system");
         dumpInfoFuture_.ResetLock({});
+        dumpingSessionPid_ = session->GetCallingPid();
         session->DumpSessionElementInfo(resetParams);
         std::vector<std::string> infos = dumpInfoFuture_.GetResult(2000); // 2000: wait for 2000ms
         for (auto& info: infos) {
@@ -3890,6 +3897,15 @@ WSError SceneSessionManager::GetSpecifiedSessionDumpInfo(std::string& dumpInfo, 
 
 void SceneSessionManager::NotifyDumpInfoResult(const std::vector<std::string>& info)
 {
+    if (dumpingSessionPid_ == INVALID_SESSION_ID) {
+        TLOGD(WmsLogTag::DEFAULT, "session pid invalid");
+        return;
+    }
+    pid_t callingPid = IPCSkeleton::GetCallingRealPid();
+    if (dumpingSessionPid_ != callingPid) {
+        TLOGD(WmsLogTag::DEFAULT, "invalid calling");
+        return;
+    }
     dumpInfoFuture_.SetValue(info);
     WLOGFD("NotifyDumpInfoResult");
 }
@@ -4007,6 +4023,17 @@ WMError SceneSessionManager::RequestFocusStatus(int32_t persistentId, bool isFoc
     FocusChangeReason reason)
 {
     TLOGI(WmsLogTag::WMS_FOCUS, "id: %{public}d, reason: %{public}d", persistentId, reason);
+    auto sceneSession = GetSceneSession(persistentId);
+    if (sceneSession == nullptr) {
+        TLOGE(WmsLogTag::WMS_FOCUS, "sceneSession is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    int32_t callingPid = IPCSkeleton::GetCallingPid();
+    bool isSameBundleName = SessionPermission::IsSameBundleNameAsCalling(SCENE_BOARD_BUNDLE_NAME);
+    if (!isSameBundleName && (callingPid != sceneSession->GetCallingPid())) {
+        TLOGE(WmsLogTag::WMS_FOCUS, "permission denied, not call by the same process");
+        return WMError::WM_ERROR_INVALID_CALLING;
+    }
     auto task = [this, persistentId, isFocused, byForeground, reason]() {
         if (isFocused) {
             RequestSessionFocus(persistentId, byForeground, reason);
@@ -4015,7 +4042,7 @@ WMError SceneSessionManager::RequestFocusStatus(int32_t persistentId, bool isFoc
         }
     };
     taskScheduler_->PostAsyncTask(task, "RequestFocusStatus" + std::to_string(persistentId));
-    changeReason_ = reason;
+    focusChangeReason_ = reason;
     return WMError::WM_OK;
 }
 
@@ -4204,27 +4231,50 @@ bool SceneSessionManager::CheckFocusIsDownThroughBlockingType(sptr<SceneSession>
     return false;
 }
 
+bool SceneSessionManager::CheckTopmostWindowFocus(sptr<SceneSession>& focusedSession, sptr<SceneSession>& sceneSession)
+{
+    bool isFocusedMainSessionTopmost =
+        focusedSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW && focusedSession->IsTopmost();
+    auto parentSession = GetSceneSession(focusedSession->GetParentPersistentId());
+    bool isFocusedSessionParentTopmost = parentSession &&
+        parentSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW && parentSession->IsTopmost();
+    if ((isFocusedMainSessionTopmost || isFocusedSessionParentTopmost) && sceneSession->IsAppSession() &&
+        (sceneSession->GetMissionId() != focusedSession->GetMissionId())) {
+        return true;
+    }
+    return false;
+}
+
+bool SceneSessionManager::CheckRequestFocusImmdediately(sptr<SceneSession>& sceneSession)
+{
+    if ((sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW ||
+        (SessionHelper::IsSubWindow(sceneSession->GetWindowType()) && !sceneSession->IsTopmost())) &&
+        (ProcessModalTopmostRequestFocusImmdediately(sceneSession) == WSError::WS_OK ||
+        ProcessDialogRequestFocusImmdediately(sceneSession) == WSError::WS_OK)) {
+            TLOGD(WmsLogTag::WMS_FOCUS, "dialog or modal topmost subwindow get focused");
+            return true;
+    }
+    return false;
+}
+
 WSError SceneSessionManager::RequestFocusSpecificCheck(sptr<SceneSession>& sceneSession, bool byForeground,
     FocusChangeReason reason)
 {
     TLOGD(WmsLogTag::WMS_FOCUS, "FocusChangeReason: %{public}d", reason);
     int32_t persistentId = sceneSession->GetPersistentId();
     // dialog get focus
-    if ((sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW ||
-        SessionHelper::IsSubWindow(sceneSession->GetWindowType())) &&
-        ProcessDialogRequestFocusImmdediately(sceneSession) == WSError::WS_OK) {
-            TLOGD(WmsLogTag::WMS_FOCUS, "dialog get focused");
-            return WSError::WS_DO_NOTHING;
+    if (CheckRequestFocusImmdediately(sceneSession)) {
+        return WSError::WS_DO_NOTHING;
     }
     // blocking-type session will block lower zOrder request focus
     auto focusedSession = GetSceneSession(focusedSessionId_);
     if (focusedSession) {
-        if (focusedSession->IsTopmost() && sceneSession->IsAppSession()) {
+        TLOGD(WmsLogTag::WMS_FOCUS, "reason: %{public}d, byForeground: %{public}d",  reason,
+            byForeground);
+        if (CheckTopmostWindowFocus(focusedSession, sceneSession)) {
             // return ok if focused session is topmost
             return WSError::WS_OK;
         }
-        TLOGD(WmsLogTag::WMS_FOCUS, "reason: %{public}d, byForeground: %{public}d",  reason,
-            byForeground);
         if (byForeground && CheckFocusIsDownThroughBlockingType(sceneSession,  focusedSession,  true))  {
             TLOGD(WmsLogTag::WMS_FOCUS, "check, need to be intercepted");
             return WSError::WS_DO_NOTHING;
@@ -4396,11 +4446,6 @@ WSError SceneSessionManager::ShiftFocus(sptr<SceneSession>& nextSession, FocusCh
     TLOGI(WmsLogTag::WMS_FOCUS, "focusedId: %{public}d, nextId: %{public}d, reason: %{public}d",
         focusedId, nextId, reason);
     return WSError::WS_OK;
-}
-
-FocusChangeReason SceneSessionManager::GetFocusChangeReason() const
-{
-    return changeReason_;
 }
 
 void SceneSessionManager::UpdateFocusStatus(sptr<SceneSession>& sceneSession, bool isFocused)
@@ -5051,6 +5096,45 @@ void SceneSessionManager::ProcessSubSessionForeground(sptr<SceneSession>& sceneS
         }
         HandleKeepScreenOn(dialogSession, dialogSession->IsKeepScreenOn());
     }
+}
+
+WSError SceneSessionManager::ProcessModalTopmostRequestFocusImmdediately(sptr<SceneSession>& sceneSession)
+{
+    // focus must on modal topmost subwindow when APP_MAIN_WINDOW or sub winodw request focus
+    sptr<SceneSession> mainSession = nullptr;
+    if (sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW) {
+        mainSession = sceneSession;
+    } else if (SessionHelper::IsSubWindow(sceneSession->GetWindowType())) {
+        mainSession = GetSceneSession(sceneSession->GetParentPersistentId());
+    }
+    if (mainSession == nullptr) {
+        TLOGD(WmsLogTag::WMS_FOCUS, "main window is nullptr");
+        return WSError::WS_DO_NOTHING;
+    }
+
+    std::vector<sptr<SceneSession>> topmostVec;
+    for (auto subSession : mainSession->GetSubSession()) {
+        if (subSession && subSession->IsTopmost()) {
+            topmostVec.push_back(subSession);
+        }
+    }
+    if (std::find_if(topmostVec.begin(), topmostVec.end(),
+        [this](sptr<SceneSession>& iter) { return iter && iter->GetPersistentId() == focusedSessionId_; })
+        != topmostVec.end()) {
+            TLOGD(WmsLogTag::WMS_SUB, "modal topmost subwindow id: %{public}d has been focused!", focusedSessionId_);
+            return WSError::WS_OK;
+    }
+    WSError ret = WSError::WS_DO_NOTHING;
+    for (auto topmostSession : topmostVec) {
+        if (topmostSession == nullptr) {
+            continue;
+        }
+        // no need to consider order, since rule of zOrder
+        if (RequestSessionFocusImmediately(topmostSession->GetPersistentId()) == WSError::WS_OK) {
+            ret = WSError::WS_OK;
+        }
+    }
+    return ret;
 }
 
 WSError SceneSessionManager::ProcessDialogRequestFocusImmdediately(sptr<SceneSession>& sceneSession)
@@ -6074,17 +6158,9 @@ WMError SceneSessionManager::GetSurfaceNodeIdsFromMissionIds(std::vector<uint64_
 WMError SceneSessionManager::RegisterWindowManagerAgent(WindowManagerAgentType type,
     const sptr<IWindowManagerAgent>& windowManagerAgent)
 {
-    if (type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_SYSTEM_BAR ||
-        type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_GESTURE_NAVIGATION_ENABLED ||
-        type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WATER_MARK_FLAG) {
-        if (!SessionPermission::IsSystemCalling()) {
-            WLOGFE("RegisterWindowManagerAgent permission denied!");
-            return WMError::WM_ERROR_NOT_SYSTEM_APP;
-        }
-    } else if (type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_UPDATE) {
-        if (!SessionPermission::IsSystemServiceCalling()) {
-            return WMError::WM_ERROR_INVALID_PERMISSION;
-        }
+    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
+        TLOGD(WmsLogTag::DEFAULT, "permission denied");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     if ((windowManagerAgent == nullptr) || (windowManagerAgent->AsObject() == nullptr)) {
         WLOGFE("windowManagerAgent is null");
@@ -7915,12 +7991,6 @@ const std::map<int32_t, sptr<SceneSession>> SceneSessionManager::GetSceneSession
             return false;
         }
 
-        if (WindowHelper::IsMainWindow(pair.second->GetWindowType()) && !pair.second->GetShowRecent() &&
-            pair.second->GetSessionState() < SessionState::STATE_FOREGROUND && pair.second->GetAttachState()) {
-            TLOGD(WmsLogTag::WMS_FOCUS, "MainWindow is at foreground, id: %{public}d", pair.second->GetPersistentId());
-            return false;
-        }
-
         if (!Rosen::SceneSessionManager::GetInstance().IsSessionVisible(pair.second)) {
             return true;
         }
@@ -8020,6 +8090,11 @@ WSError SceneSessionManager::ShiftAppWindowFocus(int32_t sourcePersistentId, int
         return WSError::WS_ERROR_INVALID_CALLING;
     }
     if (!SessionPermission::IsSameBundleNameAsCalling(targetSession->GetSessionInfo().bundleName_)) {
+        return WSError::WS_ERROR_INVALID_CALLING;
+    }
+    int32_t callingPid = IPCSkeleton::GetCallingPid();
+    if (callingPid != targetSession->GetCallingPid()) {
+        TLOGE(WmsLogTag::WMS_FOCUS, "permission denied, not call by the same process");
         return WSError::WS_ERROR_INVALID_CALLING;
     }
     targetSession->NotifyClick();

@@ -83,6 +83,8 @@ const std::map<uint32_t, HandleUpdatePropertyFunc> SceneSession::sessionFuncMap_
         &SceneSession::HandleActionUpdatePrivacyMode),
     std::make_pair(static_cast<uint32_t>(WSPropertyChangeAction::ACTION_UPDATE_SYSTEM_PRIVACY_MODE),
         &SceneSession::HandleActionUpdatePrivacyMode),
+    std::make_pair(static_cast<uint32_t>(WSPropertyChangeAction::ACTION_UPDATE_SNAPSHOT_SKIP),
+        &SceneSession::HandleActionUpdateSnapshotSkip),
     std::make_pair(static_cast<uint32_t>(WSPropertyChangeAction::ACTION_UPDATE_MAXIMIZE_STATE),
         &SceneSession::HandleActionUpdateMaximizeState),
     std::make_pair(static_cast<uint32_t>(WSPropertyChangeAction::ACTION_UPDATE_OTHER_PROPS),
@@ -275,13 +277,7 @@ WSError SceneSession::BackgroundTask(const bool isSaveSnapshot)
             return ret;
         }
         if (WindowHelper::IsMainWindow(session->GetWindowType()) && isSaveSnapshot) {
-            session->snapshot_ = session->Snapshot();
-            if (session->scenePersistence_ && session->snapshot_) {
-                const std::function<void()> func = std::bind(&Session::ResetSnapshot, session);
-                session->scenePersistence_->SaveSnapshot(session->snapshot_, func);
-            } else {
-                session->snapshot_.reset();
-            }
+            session->SaveSnapshot(true);
         }
         if (session->specificCallback_ != nullptr) {
             session->specificCallback_->onUpdateAvoidArea_(session->GetPersistentId());
@@ -339,13 +335,7 @@ WSError SceneSession::Disconnect(bool isFromClient)
         auto state = session->GetSessionState();
         auto isMainWindow = SessionHelper::IsMainWindow(session->GetWindowType());
         if (session->needSnapshot_ || (state == SessionState::STATE_ACTIVE && isMainWindow)) {
-            session->snapshot_ = session->Snapshot();
-            if (session->scenePersistence_ && session->snapshot_) {
-                const std::function<void()> func = std::bind(&Session::ResetSnapshot, session);
-                session->scenePersistence_->SaveSnapshot(session->snapshot_, func);
-            } else {
-                session->snapshot_.reset();
-            }
+            session->SaveSnapshot(false);
         }
         session->Session::Disconnect(isFromClient);
         session->isTerminating = false;
@@ -832,6 +822,7 @@ WSError SceneSession::UpdateSessionRect(const WSRect& rect, const SizeChangeReas
         GetWindowType() == WindowType::WINDOW_TYPE_PIP) {
         return WSError::WS_DO_NOTHING;
     }
+    Session::RectCheckProcess();
     auto task = [weakThis = wptr(this), rect, reason]() {
         auto session = weakThis.promote();
         if (!session) {
@@ -871,6 +862,15 @@ WSError SceneSession::RaiseAboveTarget(int32_t subWindowId)
     if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
         WLOGFE("RaiseAboveTarget permission denied!");
         return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    }
+    auto subSession = std::find_if(subSession_.begin(), subSession_.end(), [subWindowId](sptr<SceneSession> session) {
+        bool res = (session != nullptr && session->GetWindowId() == subWindowId) ? true : false;
+        return res;
+    });
+    int32_t callingPid = IPCSkeleton::GetCallingPid();
+    if (subSession != subSession_.end() && callingPid != (*subSession)->GetCallingPid()) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, "permission denied! id: %{public}d", subWindowId);
+        return WSError::WS_ERROR_INVALID_CALLING;
     }
     auto task = [weakThis = wptr(this), subWindowId]() {
         auto session = weakThis.promote();
@@ -1991,6 +1991,32 @@ void SceneSession::SetPrivacyMode(bool isPrivacy)
     RSTransaction::FlushImplicitTransaction();
 }
 
+void SceneSession::SetSnapshotSkip(bool isSkip)
+{
+    auto property = GetSessionProperty();
+    if (!property) {
+        TLOGE(WmsLogTag::DEFAULT, "property is null");
+        return;
+    }
+    if (!surfaceNode_) {
+        TLOGE(WmsLogTag::DEFAULT, "surfaceNode_ is null");
+        return;
+    }
+    bool lastSnapshotSkip = property->GetSnapshotSkip();
+    if (lastSnapshotSkip == isSkip) {
+        TLOGW(WmsLogTag::DEFAULT, "Snapshot skip does not change, do nothing, isSkip: %{public}d, "
+            "id: %{public}d", isSkip, GetPersistentId());
+        return;
+    }
+    property->SetSnapshotSkip(isSkip);
+    surfaceNode_->SetSkipLayer(isSkip);
+    auto leashWinSurfaceNode = GetLeashWinSurfaceNode();
+    if (leashWinSurfaceNode != nullptr) {
+        leashWinSurfaceNode->SetSkipLayer(isSkip);
+    }
+    RSTransaction::FlushImplicitTransaction();
+}
+
 void SceneSession::SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo)
 {
     pipTemplateInfo_ = pipTemplateInfo;
@@ -2642,6 +2668,13 @@ WMError SceneSession::HandleActionUpdatePrivacyMode(const sptr<WindowSessionProp
     return WMError::WM_OK;
 }
 
+WMError SceneSession::HandleActionUpdateSnapshotSkip(const sptr<WindowSessionProperty>& property,
+    const sptr<SceneSession>& sceneSession, WSPropertyChangeAction action)
+{
+    sceneSession->SetSnapshotSkip(property->GetSnapshotSkip());
+    return WMError::WM_OK;
+}
+
 WMError SceneSession::HandleActionUpdateMaximizeState(const sptr<WindowSessionProperty>& property,
     const sptr<SceneSession>& sceneSession, WSPropertyChangeAction action)
 {
@@ -2699,7 +2732,7 @@ WMError SceneSession::HandleActionUpdateMode(const sptr<WindowSessionProperty>& 
     const sptr<SceneSession>& sceneSession, WSPropertyChangeAction action)
 {
     if (!property->GetSystemCalling()) {
-        TLOGE(WmsLogTag::DEFAULT, "update mode permission denied!");
+        TLOGE(WmsLogTag::DEFAULT, "update mode permission denied! id: %{public}d", sceneSession->GetPersistentId());
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     if (sceneSession->GetSessionProperty() != nullptr) {
