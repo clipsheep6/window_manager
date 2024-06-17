@@ -563,7 +563,6 @@ void PictureInPictureController::PreRestorePictureInPicture()
 
 void PictureInPictureController::DoControlEvent(int32_t controlType, int32_t status)
 {
-    // TODO 日志整改不能打印数字，开发者看不懂
     TLOGD(WmsLogTag::WMS_PIP, "controlType: %{public}u", controlType);
     if (pipControlActionObserver_ == nullptr) {
         TLOGE(WmsLogTag::WMS_PIP, "pipControlActionObserver is not registered");

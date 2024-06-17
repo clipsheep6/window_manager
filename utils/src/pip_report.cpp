@@ -126,13 +126,13 @@ void PiPReporter::ReportPiPControlEvent(int32_t templateType, int32_t controlTyp
     TLOGI(WmsLogTag::WMS_PIP, "Report pip widow control event");
     std::string eventName = "CONTROL_CONTROL_EVENT";
     int32_t ret = HiSysEventWrite(
-            OHOS::HiviewDFX::HiSysEvent::Domain::MULTIWINDOW_UE, eventName,
-            OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-            EVENT_KEY_PNAMEID, PNAMEID,
-            EVENT_KEY_PVERSION, PVERSION,
-            EVENT_KEY_TEMPLATE_TYPE, templateType,
-            EVENT_KEY_ACTION_EVENT, controlType,
-            EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
+        OHOS::HiviewDFX::HiSysEvent::Domain::MULTIWINDOW_UE, eventName,
+        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+        EVENT_KEY_PNAMEID, PNAMEID,
+        EVENT_KEY_PVERSION, PVERSION,
+        EVENT_KEY_TEMPLATE_TYPE, templateType,
+        EVENT_KEY_ACTION_EVENT, controlType,
+        EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
     if (ret != 0) {
         TLOGE(WmsLogTag::WMS_PIP, "Write HiSysEvent error, ret:%{public}d", ret);
     }

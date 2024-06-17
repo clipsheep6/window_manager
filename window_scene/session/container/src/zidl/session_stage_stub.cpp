@@ -379,7 +379,7 @@ int SessionStageStub::HandleSetPipActionEvent(MessageParcel& data, MessageParcel
     return ERR_NONE;
 }
 
-int SessionStageStub::HandleSetPipControlEvent(MessageParcel& data, MessageParcel& reply)
+int SessionStageStub::HandleSetPiPControlEvent(MessageParcel& data, MessageParcel& reply)
 {
     TLOGD(WmsLogTag::WMS_PIP, "HandleSetPiPControlEvent");
     int32_t controlType;

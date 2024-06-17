@@ -2806,7 +2806,7 @@ napi_value JsSceneSession::OnSetPiPControlEvent(napi_env env, napi_callback_info
         TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Session is nullptr");
         return NapiGetUndefined(env);
     }
-    session->SetPipActionEvent(controlType, status);
+    session->SetPiPControlEvent(controlType, status);
     return NapiGetUndefined(env);
 }
 
