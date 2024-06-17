@@ -42,6 +42,16 @@ class IPiPActionObserver : virtual public RefBase {
 public:
     virtual void OnActionEvent(const std::string& name, int32_t status) {}
 };
+
+/**
+ * @class IPiPControlObserver
+ *
+ * @brief Pip control observer.
+ */
+    class IPiPControlObserver : virtual public RefBase {
+    public:
+        virtual void OnControlEvent(int32_t controlType, int32_t status) {}
+    };
 } // namespace Rosen
 } // namespace OHOS
 #endif //OHOS_PICTURE_IN_PICTURE_INTERFACE_H

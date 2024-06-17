@@ -1251,6 +1251,18 @@ WSError SceneSession::SetPipActionEvent(const std::string& action, int32_t statu
     return sessionStage_->SetPipActionEvent(action, status);
 }
 
+WSError SceneSession::SetPipControlEvent(int32_t controlType, int32_t status)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "action: %{public}u, status: %{public}d", controlType, status);
+    if (GetWindowType() != WindowType::WINDOW_TYPE_PIP || GetWindowMode() != WindowMode::WINDOW_MODE_PIP) {
+        return WSError::WS_ERROR_INVALID_TYPE;
+    }
+    if (!sessionStage_) {
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    return sessionStage_->SetPipActionEvent(controlType, status);
+}
+
 void SceneSession::HandleStyleEvent(MMI::WindowArea area)
 {
     static std::pair<int32_t, MMI::WindowArea> preWindowArea =

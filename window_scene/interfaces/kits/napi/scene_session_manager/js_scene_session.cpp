@@ -202,6 +202,7 @@ void JsSceneSession::BindNativeMethod(napi_env env, napi_value objValue, const c
     BindNativeFunction(env, objValue, "setOffset", moduleName, JsSceneSession::SetOffset);
     BindNativeFunction(env, objValue, "setWaterMarkFlag", moduleName, JsSceneSession::SetWaterMarkFlag);
     BindNativeFunction(env, objValue, "setPipActionEvent", moduleName, JsSceneSession::SetPipActionEvent);
+    BindNativeFunction(env, objValue, "setPipControlEvent", moduleName, JsSceneSession::SetPiPControlEvent);
     BindNativeFunction(env, objValue, "notifyDisplayStatusBarTemporarily", moduleName,
         JsSceneSession::NotifyDisplayStatusBarTemporarily);
     BindNativeFunction(env, objValue, "setTemporarilyShowWhenLocked", moduleName,
@@ -1176,6 +1177,13 @@ napi_value JsSceneSession::SetPipActionEvent(napi_env env, napi_callback_info in
     TLOGI(WmsLogTag::WMS_PIP, "[NAPI]SetPipActionEvent");
     JsSceneSession *me = CheckParamsAndGetThis<JsSceneSession>(env, info);
     return (me != nullptr) ? me->OnSetPipActionEvent(env, info) : nullptr;
+}
+
+napi_value JsSceneSession::SetPiPControlEvent(napi_env env, napi_callback_info info)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "[NAPI]SetPiPControlEvent");
+    JsSceneSession *me = CheckParamsAndGetThis<JsSceneSession>(env, info);
+    return (me != nullptr) ? me->SetPiPControlEvent(env, info) : nullptr;
 }
 
 napi_value JsSceneSession::NotifyDisplayStatusBarTemporarily(napi_env env, napi_callback_info info)
@@ -2765,6 +2773,43 @@ napi_value JsSceneSession::OnSetPipActionEvent(napi_env env, napi_callback_info 
         return NapiGetUndefined(env);
     }
     session->SetPipActionEvent(action, status);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsSceneSession::SetPiPControlEvent(napi_env env, napi_callback_info info)
+{
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc < 1) {
+        TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Argc count is invalid: %{public}zu", argc);
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+                                      "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    int32_t controlType;
+    if (!ConvertFromJsValue(env, argv[0], controlType)) {
+        TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Failed to convert parameter to int");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    int32_t status = -1;
+    if (argc > 1) {
+        if (!ConvertFromJsValue(env, argv[1], status)) {
+            TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Failed to convert parameter to int");
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+                "Input parameter is missing or invalid"));
+            return NapiGetUndefined(env);
+        }
+    }
+
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Session is nullptr");
+        return NapiGetUndefined(env);
+    }
+    session->SetPipActionEvent(controlType, status);
     return NapiGetUndefined(env);
 }
 

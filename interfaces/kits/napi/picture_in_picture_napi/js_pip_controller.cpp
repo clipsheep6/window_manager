@@ -31,6 +31,7 @@ namespace {
     constexpr int32_t NUMBER_TWO = 2;
     const std::string STATE_CHANGE_CB = "stateChange";
     const std::string CONTROL_PANEL_ACTION_EVENT_CB = "controlPanelActionEvent";
+    const std::string CONTROL_ACTION_EVENT_CB = "controlActionEvent";
 }
 
 std::mutex JsPipController::pipMutex_;
@@ -66,10 +67,12 @@ JsPipController::JsPipController(const sptr<PictureInPictureController>& pipCont
     registerFunc_ = {
         { STATE_CHANGE_CB, &JsPipController::ProcessStateChangeRegister},
         { CONTROL_PANEL_ACTION_EVENT_CB, &JsPipController::ProcessActionEventRegister},
+        { CONTROL_ACTION_EVENT_CB, &JsPipController::ProcessControlEventRegister},
     };
     unRegisterFunc_ = {
         { STATE_CHANGE_CB, &JsPipController::ProcessStateChangeUnRegister},
         { CONTROL_PANEL_ACTION_EVENT_CB, &JsPipController::ProcessActionEventUnRegister},
+        { CONTROL_ACTION_EVENT_CB, &JsPipController::ProcessControlEventUnRegister},
     };
 }
 
@@ -409,6 +412,21 @@ void JsPipController::ProcessActionEventRegister()
     pipController_->SetPictureInPictureActionObserver(actionObserver);
 }
 
+void JsPipController::ProcessControlEventRegister()
+{
+    if (jsCbMap_.empty() || jsCbMap_.find(CONTROL_PANEL_ACTION_EVENT_CB) == jsCbMap_.end()) {
+        TLOGE(WmsLogTag::WMS_PIP, "Register control event error");
+        return;
+    }
+    if (pipController_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "controller is nullptr");
+        return;
+    }
+    sptr<IPiPControlObserver> controlObserver =
+        new JsPipController::PiPControlObserverImpl(env_, jsCbMap_[CONTROL_ACTION_EVENT_CB]);
+    pipController_->SetPictureInPictureControlActionObserver(controlObserver);
+}
+
 void JsPipController::ProcessStateChangeUnRegister()
 {
     if (pipController_ == nullptr) {
@@ -425,6 +443,15 @@ void JsPipController::ProcessActionEventUnRegister()
         return;
     }
     pipController_->SetPictureInPictureActionObserver(nullptr);
+}
+
+void JsPipController::ProcessControlEventUnRegister()
+{
+    if (pipController_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "controller is nullptr");
+        return;
+    }
+    pipController_->SetPictureInPictureControlActionObserver(nullptr);
 }
 
 napi_value JsPipController::UnregisterCallback(napi_env env, napi_callback_info info)
@@ -543,6 +570,24 @@ void JsPipController::PiPActionObserverImpl::OnActionEvent(const std::string& ac
     napi_ref callback = nullptr;
     std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
     NapiAsyncTask::Schedule("JsPipController::PiPActionObserverImpl::OnActionEvent",
+        engine_, std::make_unique<NapiAsyncTask>(callback, std::move(execute), std::move(complete)));
+}
+
+void JsPipController::PiPControlObserverImpl::OnControlEvent(int32_t controlType, int32_t statusCode)
+{
+    std::lock_guard<std::mutex> lock(mtx_);
+    TLOGI(WmsLogTag::WMS_PIP, "OnActionEvent is called, controlType: %{public}u", controlType);
+    auto jsCallback = jsCallBack_;
+    std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback> (
+            [jsCallback, controlType, statusCode] (napi_env env, NapiAsyncTask &task, int32_t status) {
+                napi_value argv[2] = {CreateJsValue(env, controlType), CreateJsValue(env, statusCode)};
+                CallJsMethod(env, jsCallback->GetNapiValue(), argv, ArraySize(argv));
+            }
+    );
+
+    napi_ref callback = nullptr;
+    std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
+    NapiAsyncTask::Schedule("JsPipController::PiPControlObserverImpl::OnControlEvent",
         engine_, std::make_unique<NapiAsyncTask>(callback, std::move(execute), std::move(complete)));
 }
 } // namespace Rosen

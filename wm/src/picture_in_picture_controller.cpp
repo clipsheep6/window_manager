@@ -552,6 +552,18 @@ void PictureInPictureController::DoActionEvent(const std::string& actionName, in
     pipActionObserver_->OnActionEvent(actionName, status);
 }
 
+void PictureInPictureController::DoControlEvent(int32_t controlType, int32_t status)
+{
+    // TODO 日志整改不能打印数字，开发者看不懂
+    TLOGD(WmsLogTag::WMS_PIP, "controlType: %{public}u", controlType);
+    if (pipControlActionObserver_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "pipControlActionObserver is not registered");
+        return;
+    }
+    SingletonContainer::Get<PiPReporter>().ReportPiPControlEvent(pipOption_->GetPipTemplate(), controlType);
+    pipControlActionObserver_->OnControlEvent(controlType, status);
+}
+
 void PictureInPictureController::RestorePictureInPictureWindow()
 {
     if (pipLifeCycleListener_) {
@@ -685,6 +697,11 @@ void PictureInPictureController::SetPictureInPictureActionObserver(sptr<IPiPActi
     pipActionObserver_ = listener;
 }
 
+void PictureInPictureController::SetPictureInPictureControlActionObserver(sptr<IPiPControlObserver> listener)
+{
+    pipControlActionObserver_ = listener;
+}
+
 sptr<IPiPLifeCycle> PictureInPictureController::GetPictureInPictureLifecycle() const
 {
     return pipLifeCycleListener_;
@@ -693,6 +710,11 @@ sptr<IPiPLifeCycle> PictureInPictureController::GetPictureInPictureLifecycle() c
 sptr<IPiPActionObserver> PictureInPictureController::GetPictureInPictureActionObserver() const
 {
     return pipActionObserver_;
+}
+
+sptr<IPiPControlObserver> PictureInPictureController::GetPictureInPictureControlActionObserver() const
+{
+    return pipControlActionObserver_;
 }
 
 bool PictureInPictureController::IsPullPiPAndHandleNavigation()

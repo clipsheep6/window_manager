@@ -2284,6 +2284,16 @@ WSError WindowSessionImpl::SetPipActionEvent(const std::string& action, int32_t 
     return WSError::WS_OK;
 }
 
+WSError WindowSessionImpl::SetPipControlEvent(int32_t controlType, int32_t status)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "action: %{public}u, status: %{public}d", controlType, status);
+    auto task = [controlType, status]() {
+        PictureInPictureManager::DoControlEvent(controlType, status);
+    };
+    handler_->PostTask(task, "WMS_WindowSessionImpl_SetPipControlEvent");
+    return WSError::WS_OK;
+}
+
 WMError WindowSessionImpl::RegisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener)
 {
     bool isUpdate = false;
