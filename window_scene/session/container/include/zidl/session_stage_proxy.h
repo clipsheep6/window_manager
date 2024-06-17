@@ -58,7 +58,7 @@ public:
     void NotifyTransformChange(const Transform& transform) override;
     WSError NotifyDialogStateChange(bool isForeground) override;
     WSError SetPipActionEvent(const std::string& action, int32_t status) override;
-    WSError SetPipControlEvent(int32_t controlType, int32_t status) override;
+    WSError SetPiPControlEvent(int32_t controlType, int32_t status) override;
     WSError UpdateDisplayId(uint64_t displayId) override;
     void NotifyDisplayMove(DisplayId from, DisplayId to) override;
     WSError SwitchFreeMultiWindow(bool enable) override;

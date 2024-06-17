@@ -202,7 +202,7 @@ void JsSceneSession::BindNativeMethod(napi_env env, napi_value objValue, const c
     BindNativeFunction(env, objValue, "setOffset", moduleName, JsSceneSession::SetOffset);
     BindNativeFunction(env, objValue, "setWaterMarkFlag", moduleName, JsSceneSession::SetWaterMarkFlag);
     BindNativeFunction(env, objValue, "setPipActionEvent", moduleName, JsSceneSession::SetPipActionEvent);
-    BindNativeFunction(env, objValue, "setPipControlEvent", moduleName, JsSceneSession::SetPiPControlEvent);
+    BindNativeFunction(env, objValue, "setPiPControlEvent", moduleName, JsSceneSession::SetPiPControlEvent);
     BindNativeFunction(env, objValue, "notifyDisplayStatusBarTemporarily", moduleName,
         JsSceneSession::NotifyDisplayStatusBarTemporarily);
     BindNativeFunction(env, objValue, "setTemporarilyShowWhenLocked", moduleName,
@@ -1183,7 +1183,7 @@ napi_value JsSceneSession::SetPiPControlEvent(napi_env env, napi_callback_info i
 {
     TLOGI(WmsLogTag::WMS_PIP, "[NAPI]SetPiPControlEvent");
     JsSceneSession *me = CheckParamsAndGetThis<JsSceneSession>(env, info);
-    return (me != nullptr) ? me->SetPiPControlEvent(env, info) : nullptr;
+    return (me != nullptr) ? me->OnSetPiPControlEvent(env, info) : nullptr;
 }
 
 napi_value JsSceneSession::NotifyDisplayStatusBarTemporarily(napi_env env, napi_callback_info info)
@@ -2776,7 +2776,7 @@ napi_value JsSceneSession::OnSetPipActionEvent(napi_env env, napi_callback_info 
     return NapiGetUndefined(env);
 }
 
-napi_value JsSceneSession::SetPiPControlEvent(napi_env env, napi_callback_info info)
+napi_value JsSceneSession::OnSetPiPControlEvent(napi_env env, napi_callback_info info)
 {
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
