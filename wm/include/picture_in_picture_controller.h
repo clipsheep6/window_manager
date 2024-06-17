@@ -64,14 +64,19 @@ public:
     void SetAutoStartEnabled(bool enable);
     void IsAutoStartEnabled(bool& enable) const;
     void UpdateContentSize(int32_t width, int32_t height);
+    void UpdateControlStatus(int32_t controlType, int32_t status);
+    void SetPiPControlEnable(int32_t controlType, bool isEnable);
     bool IsContentSizeChanged(float width, float height, float posX, float posY);
     void DoActionEvent(const std::string& actionName, int32_t status);
+    void DoControlEvent(int32_t controlType, int32_t status);
     void PreRestorePictureInPicture();
     void RestorePictureInPictureWindow();
     void SetPictureInPictureLifecycle(sptr<IPiPLifeCycle> listener);
     void SetPictureInPictureActionObserver(sptr<IPiPActionObserver> listener);
+    void SetPictureInPictureControlActionObserver(sptr<IPiPControlObserver> listener);
     sptr<IPiPLifeCycle> GetPictureInPictureLifecycle() const;
     sptr<IPiPActionObserver> GetPictureInPictureActionObserver() const;
+    sptr<IPiPControlObserver> GetPictureInPictureControlActionObserver() const;
     WMError SetXComponentController(std::shared_ptr<XComponentController> xComponentController);
     PiPWindowState GetControllerState();
     std::string GetPiPNavigationId();
@@ -133,6 +138,7 @@ private:
     sptr<PipOption> pipOption_;
     sptr<IPiPLifeCycle> pipLifeCycleListener_;
     sptr<IPiPActionObserver> pipActionObserver_;
+    sptr<IPiPControlObserver> pipControlActionObserver_;
     sptr<Window> window_;
     sptr<Window> mainWindow_;
     uint32_t mainWindowId_;
