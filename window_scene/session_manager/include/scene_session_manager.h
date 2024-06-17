@@ -616,7 +616,7 @@ private:
     const int32_t BROKER_RESERVE_UID = 5005;
     std::shared_mutex collaboratorMapLock_;
     std::unordered_map<int32_t, sptr<AAFwk::IAbilityManagerCollaborator>> collaboratorMap_;
-    std::atomic<int64_t> containerStartAbilityTime { 0 };
+    std::atomic<int64_t> containerStartAbilityTime_ { 0 };
 
     BrokerStates NotifyStartAbility(
         int32_t collaboratorType, const SessionInfo& sessionInfo, int32_t persistentId = 0);
