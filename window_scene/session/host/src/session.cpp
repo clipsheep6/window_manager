@@ -407,6 +407,21 @@ void Session::NotifyTransferAccessibilityEvent(const Accessibility::Accessibilit
     }
 }
 
+void Session::NotifyDrawingCompleted()
+{
+    if (!SessionPermission::IsSameBundleNameAsCalling("com.huawei.shell_assistant")) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "permission denied!");
+        return;
+    }
+    auto lifecycleListeners = GetListeners<ILifecycleListener>();
+    std::lock_guard<std::recursive_mutex> lock(lifecycleListenersMutex_);
+    for (auto& listener : lifecycleListeners) {
+        if (!listener.expired()) {
+            listener.lock()->OnDrawingCompleted();
+        }
+    }
+}
+
 float Session::GetAspectRatio() const
 {
     return aspectRatio_;
@@ -1072,6 +1087,13 @@ WSError Session::Show(sptr<WindowSessionProperty> property)
 WSError Session::Hide()
 {
     TLOGD(WmsLogTag::WMS_LIFE, "Hide session, id: %{public}d", GetPersistentId());
+    return WSError::WS_OK;
+}
+
+WSError Session::DrawingCompleted()
+{
+    TLOGD(WmsLogTag::WMS_LIFE, "DrawingCompleted session, id: %{public}d", GetPersistentId());
+    NotifyDrawingCompleted();
     return WSError::WS_OK;
 }
 

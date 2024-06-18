@@ -49,6 +49,7 @@ public:
         const sptr<Rosen::ISession>& iSession, const std::string& identityToken = "") override;
     WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
     WMError Hide(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
+    WMError NotifyDrawingCompleted() override;
     WMError Destroy(bool needNotifyServer, bool needClearListener = true) override;
     WMError SetTextFieldAvoidInfo(double textFieldPositionY, double textFieldHeight) override;
     void PreProcessCreate();

@@ -48,6 +48,8 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
         &SessionStub::HandleShow),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_HIDE),
         &SessionStub::HandleHide),
+    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_DRAWING_COMPLETED),
+        &SessionStub::HandleDrawingCompleted),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_RECTCHANGE_LISTENER_REGISTERED),
         &SessionStub::HandleUpdateRectChangeListenerRegistered),
 
@@ -208,6 +210,14 @@ int SessionStub::HandleHide(MessageParcel& data, MessageParcel& reply)
 {
     WLOGFD("Hide!");
     const WSError& errCode = Hide();
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleDrawingCompleted(MessageParcel& data, MessageParcel& reply)
+{
+    WLOGFD("DrawingCompleted!");
+    const WSError& errCode = DrawingCompleted();
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }

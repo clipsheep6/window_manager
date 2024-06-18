@@ -1004,6 +1004,39 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
     return res;
 }
 
+WMError WindowSceneSessionImpl::NotifyDrawingCompleted()
+{
+    if (property_ == nullptr || hostSession_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_LIFE,
+            "Window NotifyDrawingCompleted failed, because of nullptr, property: %{public}d, id: %{public}d",
+            property_ == nullptr, GetPersistentId());
+        return WMError::WM_ERROR_NULLPTR;
+    }
+
+    const auto& type = GetType();
+    TLOGI(WmsLogTag::WMS_LIFE, "Window NotifyDrawingCompleted [id:%{public}d, type: %{public}d, reason:%{public}u, state:%{public}u, "
+        "requestState:%{public}u", GetPersistentId(), type, reason, state_, requestState_);
+    if (IsWindowSessionInvalid()) {
+        TLOGI(WmsLogTag::WMS_LIFE, "session is invalid, id:%{public}d", GetPersistentId());
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    WMError res;
+    if (WindowHelper::IsMainWindow(type)) {
+        res = static_cast<WMError>(hostSession_->NotifyDrawingCompleted());
+    } else {
+        res = WMError::WM_ERROR_INVALID_WINDOW;
+    }
+
+    if (res == WMError::WM_OK) {
+        // update sub window state if this is main window
+        UpdateSubWindowState(type);
+    }
+    NotifyWindowStatusChange(GetMode());
+    TLOGI(WmsLogTag::WMS_LIFE, "Window NotifyDrawingCompleted success [id:%{public}d, type: %{public}d",
+        property_->GetPersistentId(), type);
+    return res;
+}
+
 void WindowSceneSessionImpl::UpdateSubWindowState(const WindowType& type)
 {
     if (WindowHelper::IsMainWindow(type)) {

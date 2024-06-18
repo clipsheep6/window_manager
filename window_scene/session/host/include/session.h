@@ -86,6 +86,7 @@ public:
     virtual void OnForeground() = 0;
     virtual void OnBackground() = 0;
     virtual void OnDisconnect() = 0;
+    virtual void OnDrawingCompleted() {}
     virtual void OnExtensionDied() = 0;
     virtual void OnExtensionTimeout(int32_t errorCode) = 0;
     virtual void OnAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
@@ -129,6 +130,7 @@ public:
     WSError Disconnect(bool isFromClient = false) override;
     WSError Show(sptr<WindowSessionProperty> property) override;
     WSError Hide() override;
+    WSError DrawingCompleted() override;
     void ResetSessionConnectState();
     
     bool RegisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
@@ -139,6 +141,7 @@ public:
     void NotifyForeground();
     void NotifyBackground();
     void NotifyDisconnect();
+    void NotifyDrawingCompleted();
     void NotifyExtensionDied() override;
     void NotifyExtensionTimeout(int32_t errorCode) override;
     void NotifyTransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
@@ -325,6 +328,7 @@ public:
     bool IsSystemSession() const;
     bool IsTerminated() const;
     bool IsSessionForeground() const;
+    virtual bool IsAnco() const { return false; }
 
     sptr<IRemoteObject> dialogTargetToken_ = nullptr;
     int32_t GetWindowId() const;
