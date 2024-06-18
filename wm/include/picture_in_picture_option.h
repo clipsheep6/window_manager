@@ -38,7 +38,6 @@ public:
     void* GetContext() const;
     std::string GetNavigationId() const;
     uint32_t GetPipTemplate();
-    uint32_t GetIsPlay();
     std::vector<std::uint32_t> GetControlGroup();
     std::vector<PiPControlStatusInfo> GetControlStatus();
     std::vector<PiPControlEnableInfo> GetControlEnable();
