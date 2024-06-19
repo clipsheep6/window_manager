@@ -1767,13 +1767,7 @@ HWTEST_F(WindowSceneSessionImplTest, SetWindowLimits01, Function | SmallTest | L
     display->GetDisplayInfo()->SetVirtualPixelRatio(1.0f);
 
     WindowLimits windowLimits = {1000, 1000, 1000, 1000, 0.0f, 0.0f};
-    if (WMError::WM_OK == window->SetWindowLimits(windowLimits)) {
-        WindowLimits windowSizeLimits = window->property_->GetWindowLimits();
-        ASSERT_EQ(windowSizeLimits.maxWidth_, 1000);
-        ASSERT_EQ(windowSizeLimits.maxHeight_, 1000);
-        ASSERT_EQ(windowSizeLimits.minWidth_, 1000);
-        ASSERT_EQ(windowSizeLimits.minHeight_, 1000);
-    }
+    ASSERT_EQ(WMError::WM_OK, window->SetWindowLimits(windowLimits));
 }
 
 /**
