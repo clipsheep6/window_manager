@@ -20,6 +20,7 @@
 #include <transaction/rs_transaction.h>
 
 #include "window_manager_hilog.h"
+#include "wm_common.h"
 
 namespace OHOS::Rosen {
 namespace {
@@ -382,12 +383,12 @@ int SessionStageStub::HandleSetPipActionEvent(MessageParcel& data, MessageParcel
 int SessionStageStub::HandleSetPiPControlEvent(MessageParcel& data, MessageParcel& reply)
 {
     TLOGD(WmsLogTag::WMS_PIP, "HandleSetPiPControlEvent");
-    int32_t controlType;
-    if (!data.ReadInt32(controlType)) {
+    PiPControlType controlType;
+    if (!data.ReadUint32(controlType)) {
         return ERR_INVALID_VALUE;
     }
-    int32_t status;
-    if (!data.ReadInt32(status)) {
+    PiPControlType status;
+    if (!data.ReadUint32(status)) {
         return ERR_INVALID_VALUE;
     }
     SetPiPControlEvent(controlType, status);

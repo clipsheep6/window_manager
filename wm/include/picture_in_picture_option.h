@@ -31,8 +31,8 @@ public:
     void SetNavigationId(const std::string& navigationId);
     void SetPipTemplate(uint32_t templateType);
     void SetContentSize(uint32_t width, uint32_t height);
-    void SetControlStatus(uint32_t controlType, uint32_t status);
-    void SetPiPControlEnable(uint32_t controlType, bool isEnable);
+    void SetPiPControlStatus(PiPControlType controlType, PiPControlStatus status);
+    void SetPiPControlEnable(PiPControlType controlType, bool isEnable);
     void SetXComponentController(std::shared_ptr<XComponentController> xComponentController);
     void SetControlGroup(std::vector<std::uint32_t> controlGroup);
     void* GetContext() const;

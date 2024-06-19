@@ -37,7 +37,7 @@ void PipOption::SetPipTemplate(uint32_t templateType)
     templateType_ = templateType;
 }
 
-void PipOption::SetControlStatus(uint32_t controlType, uint32_t status)
+void PipOption::SetPiPControlStatus(PiPControlType controlType, PiPControlStatus status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "controlStatus %{public}u : %{public}u", controlType, status);
     PiPControlStatusInfo newPipControlStatusInfo;
@@ -54,7 +54,7 @@ void PipOption::SetControlStatus(uint32_t controlType, uint32_t status)
     pipControlStatusInfoList_.push_back(newPipControlStatusInfo);
 }
 
-void PipOption::SetPiPControlEnable(uint32_t controlType, bool isEnable)
+void PipOption::SetPiPControlEnable(PiPControlType controlType, bool isEnable)
 {
     TLOGI(WmsLogTag::WMS_PIP, "SetControlEnable %{public}u : %{public}u", controlType, isEnable);
     PiPControlEnableInfo newPipControlEnableInfo;

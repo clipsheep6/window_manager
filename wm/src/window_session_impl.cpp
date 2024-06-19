@@ -3096,17 +3096,17 @@ void WindowSessionImpl::UpdatePiPRect(const Rect& rect, WindowSizeChangeReason r
     hostSession_->UpdatePiPRect(rect, wsReason);
 }
 
-void WindowSessionImpl::UpdateControlStatus(int32_t controlType, int32_t status)
+void WindowSessionImpl::UpdatePiPControlStatus(ControlType controlType, ControlStatus status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "OnUpdateControlStatus is called");
+    TLOGI(WmsLogTag::WMS_PIP, "OnUpdatePiPControlStatus is called");
     if (IsWindowSessionInvalid()) {
         WLOGFE("HostSession is invalid");
         return;
     }
-    hostSession_->UpdateControlStatus(controlType, status);
+    hostSession_->UpdatePiPControlStatus(controlType, status);
 }
 
-void WindowSessionImpl::SetPiPControlEnable(int32_t controlType, bool isEnable)
+void WindowSessionImpl::SetPiPControlEnable(ControlType controlType, bool isEnable)
 {
     TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnable is called");
     if (IsWindowSessionInvalid()) {

@@ -1038,9 +1038,9 @@ WSError SessionProxy::UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
     return static_cast<WSError>(ret);
 }
 
-WSError SessionProxy::UpdateControlStatus(int32_t controlType, int32_t status)
+WSError SessionProxy::UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "UpdateControlStatus is success");
+    TLOGI(WmsLogTag::WMS_PIP, "UpdatePiPControlStatus is called");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -1048,11 +1048,11 @@ WSError SessionProxy::UpdateControlStatus(int32_t controlType, int32_t status)
         WLOGFE("writeInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (!data.WriteInt32(controlType)) {
+    if (!data.WriteUint32(controlType)) {
         TLOGE(WmsLogTag::WMS_LIFE, "Write controlType failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (!data.WriteInt32(status)) {
+    if (!data.WriteUint32(status)) {
         WLOGFE("write status failed.");
         return WSError::WS_ERROR_IPC_FAILED;
     }
@@ -1065,7 +1065,7 @@ WSError SessionProxy::UpdateControlStatus(int32_t controlType, int32_t status)
     return static_cast<WSError>(ret);
 }
 
-WSError SessionProxy::SetPiPControlEnable(int32_t controlType, bool isEnable)
+WSError SessionProxy::SetPiPControlEnable(PiPControlType controlType, bool isEnable)
 {
     TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnable is success");
     MessageParcel data;
@@ -1075,7 +1075,7 @@ WSError SessionProxy::SetPiPControlEnable(int32_t controlType, bool isEnable)
         WLOGFE("writeInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (!data.WriteInt32(controlType)) {
+    if (!data.WriteUint32(controlType)) {
         TLOGE(WmsLogTag::WMS_LIFE, "Write controlType failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }

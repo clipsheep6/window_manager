@@ -476,18 +476,18 @@ void PictureInPictureController::UpdateContentSize(int32_t width, int32_t height
 }
 
 
-void PictureInPictureController::UpdateControlStatus(int32_t controlType, int32_t status)
+void PictureInPictureController::UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "UpdateControlStatus %{public}u : %{public}u", controlType, status);
-    pipOption_->SetControlStatus(controlType, status);
+    TLOGI(WmsLogTag::WMS_PIP, "UpdatePiPControlStatus %{public}u : %{public}u", controlType, status);
+    pipOption_->SetPiPControlStatus(controlType, status);
     if (window_ == nullptr) {
         TLOGI(WmsLogTag::WMS_PIP, "pipWindow not exist");
         return;
     }
-    window_->UpdateControlStatus(controlType, status);
+    window_->UpdatePiPControlStatus(controlType, status);
 }
 
-void PictureInPictureController::SetPiPControlEnable(int32_t controlType, bool isEnable)
+void PictureInPictureController::SetPiPControlEnable(PiPControlType controlType, bool isEnable)
 {
     TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnable %{public}u : %{public}u", controlType, isEnable);
     pipOption_->SetPiPControlEnable(controlType, isEnable);
@@ -561,15 +561,15 @@ void PictureInPictureController::PreRestorePictureInPicture()
     }
 }
 
-void PictureInPictureController::DoControlEvent(int32_t controlType, int32_t status)
+void PictureInPictureController::DoControlEvent(PiPControlType controlType, PiPControlStatus status)
 {
     TLOGD(WmsLogTag::WMS_PIP, "controlType: %{public}u", controlType);
-    if (pipControlActionObserver_ == nullptr) {
-        TLOGE(WmsLogTag::WMS_PIP, "pipControlActionObserver is not registered");
+    if (pipControlObserver_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "pipControlObserver is not registered");
         return;
     }
     SingletonContainer::Get<PiPReporter>().ReportPiPControlEvent(pipOption_->GetPipTemplate(), controlType);
-    pipControlActionObserver_->OnControlEvent(controlType, status);
+    pipControlObserver_->OnControlEvent(controlType, status);
 }
 
 void PictureInPictureController::RestorePictureInPictureWindow()
@@ -701,9 +701,9 @@ void PictureInPictureController::SetPictureInPictureActionObserver(sptr<IPiPActi
     pipActionObserver_ = listener;
 }
 
-void PictureInPictureController::SetPictureInPictureControlActionObserver(sptr<IPiPControlObserver> listener)
+void PictureInPictureController::SetPictureInPictureControlObserver(sptr<IPiPControlObserver> listener)
 {
-    pipControlActionObserver_ = listener;
+    pipControlObserver_ = listener;
 }
 
 sptr<IPiPLifeCycle> PictureInPictureController::GetPictureInPictureLifecycle() const
@@ -716,9 +716,9 @@ sptr<IPiPActionObserver> PictureInPictureController::GetPictureInPictureActionOb
     return pipActionObserver_;
 }
 
-sptr<IPiPControlObserver> PictureInPictureController::GetPictureInPictureControlActionObserver() const
+sptr<IPiPControlObserver> PictureInPictureController::GetPictureInPictureControlObserver() const
 {
-    return pipControlActionObserver_;
+    return pipControlObserver_;
 }
 
 bool PictureInPictureController::IsPullPiPAndHandleNavigation()

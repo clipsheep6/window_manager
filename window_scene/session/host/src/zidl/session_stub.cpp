@@ -27,6 +27,8 @@
 #include "session/host/include/zidl/session_ipc_interface_code.h"
 #include "window_manager_hilog.h"
 
+#include "wm_common.h"
+
 namespace OHOS::Accessibility {
 class AccessibilityEventInfo;
 }
@@ -126,7 +128,7 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_PIP_RECT),
         &SessionStub::HandleUpdatePiPRect),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_PIP_CONTROL_STATUS),
-        &SessionStub::HandleUpdateControlStatus),
+        &SessionStub::HandleUpdatePiPControlStatus),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_PIP_CONTROL_ENABLE),
         &SessionStub::HandleSetPiPControlEnable),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_LAYOUT_FULL_SCREEN_CHANGE),
@@ -620,12 +622,12 @@ int SessionStub::HandleUpdatePiPRect(MessageParcel& data, MessageParcel& reply)
     return ERR_NONE;
 }
 
-int SessionStub::HandleUpdateControlStatus(MessageParcel& data, MessageParcel& reply)
+int SessionStub::HandleUpdatePiPControlStatus(MessageParcel& data, MessageParcel& reply)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "HandleUpdateControlStatus!");
-    int32_t controlType =  {data.ReadInt32()};
-    int32_t status =  {data.ReadInt32()};
-    WSError errCode = UpdateControlStatus(controlType, status);
+    TLOGI(WmsLogTag::WMS_PIP, "HandleUpdatePiPControlStatus is called");
+    PiPControlType controlType =  {data.ReadUint32()};
+    PiPControlStatus status =  {data.ReadUint32()};
+    WSError errCode = UpdatePiPControlStatus(controlType, status);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -633,8 +635,8 @@ int SessionStub::HandleUpdateControlStatus(MessageParcel& data, MessageParcel& r
 int SessionStub::HandleSetPiPControlEnable(MessageParcel& data, MessageParcel& reply)
 {
     TLOGI(WmsLogTag::WMS_PIP, "HandleSetPiPControlEnable is called");
-    int32_t controlType =  {data.ReadInt32()};
-    int32_t isEnable =  {data.ReadInt32()};
+    PiPControlType controlType =  {data.ReadUint32()};
+    PiPControlStatus isEnable =  {data.ReadUint32()};
     WSError errCode = SetPiPControlEnable(controlType, isEnable);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;

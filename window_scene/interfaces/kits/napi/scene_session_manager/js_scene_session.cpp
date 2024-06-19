@@ -30,8 +30,8 @@ const std::string SESSION_STATE_CHANGE_CB = "sessionStateChange";
 const std::string BUFFER_AVAILABLE_CHANGE_CB = "bufferAvailableChange";
 const std::string SESSION_EVENT_CB = "sessionEvent";
 const std::string SESSION_RECT_CHANGE_CB = "sessionRectChange";
-const std::string SESSION_CONTROL_STATUS_CHANGE_CB = "sessionControlStatusChange";
-const std::string SESSION_CONTROL_ENABLE_CHANGE_CB = "sessionControlEnableChange";
+const std::string SESSION_PIP_CONTROL_STATUS_CHANGE_CB = "sessionPiPControlStatusChange";
+const std::string SESSION_PIP_CONTROL_ENABLE_CHANGE_CB = "sessionPiPControlEnableChange";
 const std::string CREATE_SUB_SESSION_CB = "createSpecificSession";
 const std::string BIND_DIALOG_TARGET_CB = "bindDialogTarget";
 const std::string RAISE_TO_TOP_CB = "raiseToTop";
@@ -84,8 +84,8 @@ napi_value CreateJsPiPControlStatusObject(napi_env env, PiPControlStatusInfo con
         TLOGE(WmsLogTag::WMS_PIP, "CreateJsPiPControlStatusObject is called objValue == nullptr");
         return NapiGetUndefined(env);
     }
-    uint32_t controlType = controlStatusInfo.controlType;
-    uint32_t status = controlStatusInfo.status;
+    PiPControlType controlType = controlStatusInfo.controlType;
+    PiPControlStatus status = controlStatusInfo.status;
     napi_set_named_property(env, objValue, "controlType", CreateJsValue(env, controlType));
     napi_set_named_property(env, objValue, "status", CreateJsValue(env, status));
     return objValue;
@@ -100,7 +100,7 @@ napi_value CreateJsPiPControlEnableObject(napi_env env, PiPControlEnableInfo con
         TLOGE(WmsLogTag::WMS_PIP, "CreateJsPiPControlEnableObject is called objValue == nullptr");
         return NapiGetUndefined(env);
     }
-    uint32_t controlType = controlEnableInfo.controlType;
+    PiPControlType controlType = controlEnableInfo.controlType;
     bool isEnable = controlEnableInfo.isEnable;
     napi_set_named_property(env, objValue, "controlType", CreateJsValue(env, controlType));
     napi_set_named_property(env, objValue, "isEnable", CreateJsValue(env, isEnable));
@@ -253,7 +253,7 @@ void JsSceneSession::InitListenerFuncs()
         { BUFFER_AVAILABLE_CHANGE_CB,            &JsSceneSession::ProcessBufferAvailableChangeRegister},
         { SESSION_EVENT_CB,                      &JsSceneSession::ProcessSessionEventRegister },
         { SESSION_RECT_CHANGE_CB,                &JsSceneSession::ProcessSessionRectChangeRegister },
-        { SESSION_CONTROL_STATUS_CHANGE_CB,      &JsSceneSession::ProcessSessionControlStatusChangeRegister },
+        { SESSION_PIP_CONTROL_STATUS_CHANGE_CB,  &JsSceneSession::ProcessSessioPiPControlStatusChangeRegister },
         { SESSION_CONTROL_ENABLE_CHANGE_CB,      &JsSceneSession::ProcessSessionPiPControlEnableChangeRegister },
         { CREATE_SUB_SESSION_CB,                 &JsSceneSession::ProcessCreateSubSessionRegister },
         { BIND_DIALOG_TARGET_CB,                 &JsSceneSession::ProcessBindDialogTargetRegister },
@@ -667,24 +667,24 @@ void JsSceneSession::ProcessSessionRectChangeRegister()
     WLOGFD("ProcessSessionRectChangeRegister success");
 }
 
-void JsSceneSession::ProcessSessionControlStatusChangeRegister()
+void JsSceneSession::ProcessSessionPiPControlStatusChangeRegister()
 {
-    TLOGI(WmsLogTag::WMS_PIP, "ProcessSessionControlStatusChangeRegister success");
-    NotifySessionControlStatusFunc func = [this](const int32_t& controlType, const int32_t& status) {
-        this->OnSessionControlStatusChange(controlType, status);
+    TLOGI(WmsLogTag::WMS_PIP, "ProcessSessionPiPControlStatusChangeRegister success");
+    NotifySessionPiPControlStatusChangeFunc func = [this](PiPControlType controlType, PiPControlStatus status) {
+        this->OnSessionPiPControlStatusChange(controlType, status);
     };
     auto session = weakSession_.promote();
     if (session == nullptr) {
         WLOGFE("session is nullptr");
         return;
     }
-    session->SetSessionControlStatusChangeCallback(func);
+    session->SetSessionPiPControlStatusChangeCallback(func);
 }
 
 void JsSceneSession::ProcessSessionPiPControlEnableChangeRegister()
 {
     TLOGI(WmsLogTag::WMS_PIP, "ProcessSessionPiPControlEnableChangeRegister success");
-    NotifySessionPiPControlEnableChangeFunc func = [this](const int32_t& controlType, const bool& isEnable) {
+    NotifySessionPiPControlEnableChangeFunc func = [this](PiPControlType controlType, bool isEnable) {
         this->OnSessionPiPControlEnableChange(controlType, isEnable);
     };
     auto session = weakSession_.promote();
@@ -1600,10 +1600,10 @@ void JsSceneSession::OnSessionRectChange(const WSRect& rect, const SizeChangeRea
     taskScheduler_->PostMainThreadTask(task, rectInfo);
 }
 
-void JsSceneSession::OnSessionControlStatusChange(const int32_t& controlType, const int32_t& status)
+void JsSceneSession::OnSessionPiPControlStatusChange(PiPControlType controlType, PiPControlStatus status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "OnSessionControlStatusChange");
-    std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(SESSION_CONTROL_STATUS_CHANGE_CB);
+    TLOGI(WmsLogTag::WMS_PIP, "OnSessionPiPControlStatusChange");
+    std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(SESSION_PIP_CONTROL_STATUS_CHANGE_CB);
     if (jsCallBack == nullptr) {
         return;
     }
@@ -1618,11 +1618,11 @@ void JsSceneSession::OnSessionControlStatusChange(const int32_t& controlType, co
         napi_value argv[] = {statusChangeType, statusChangeValue};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    std::string statusChangeInfo = "OnSessionControlStatusChange";
+    std::string statusChangeInfo = "OnSessionPiPControlStatusChange";
     taskScheduler_->PostMainThreadTask(task, statusChangeInfo);
 }
 
-void JsSceneSession::OnSessionPiPControlEnableChange(const int32_t& controlType, const bool& isEnable)
+void JsSceneSession::OnSessionPiPControlEnableChange(PiPControlType controlType, bool isEnable)
 {
     TLOGI(WmsLogTag::WMS_PIP, "OnSessionPiPControlEnableChange is called");
     std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(SESSION_CONTROL_ENABLE_CHANGE_CB);

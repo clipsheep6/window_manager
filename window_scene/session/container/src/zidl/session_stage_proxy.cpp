@@ -729,7 +729,7 @@ WSError SessionStageProxy::SetPipActionEvent(const std::string& action, int32_t 
     return WSError::WS_OK;
 }
 
-WSError SessionStageProxy::SetPiPControlEvent(int32_t controlType, int32_t status)
+WSError SessionStageProxy::SetPiPControlEvent(PiPControlType controlType, PiPControlStatus status)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -739,12 +739,12 @@ WSError SessionStageProxy::SetPiPControlEvent(int32_t controlType, int32_t statu
         return WSError::WS_ERROR_IPC_FAILED;
     }
 
-    if (!data.WriteInt32(controlType)) {
+    if (!data.WriteUint32(controlType)) {
         WLOGFE("Write params failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
 
-    if (!data.WriteInt32(status)) {
+    if (!data.WriteUint32(status)) {
         WLOGFE("Write status failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }

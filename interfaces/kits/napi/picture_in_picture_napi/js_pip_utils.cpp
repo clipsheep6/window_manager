@@ -147,8 +147,8 @@ static napi_value ExportControlType(napi_env env)
 {
     napi_value result = nullptr;
     napi_create_object(env, &result);
-    (void)SetNamedProperty(env, result, "PLAY_BACK",
-        static_cast<uint32_t>(PiPControlType::PLAY_BACK));
+    (void)SetNamedProperty(env, result, "VIDEO_PLAY_PAUSE",
+        static_cast<uint32_t>(PiPControlType::VIDEO_PLAY_PAUSE));
     (void)SetNamedProperty(env, result, "VIDEO_PREVIOUS",
         static_cast<uint32_t>(PiPControlType::VIDEO_PREVIOUS));
     (void)SetNamedProperty(env, result, "VIDEO_NEXT",

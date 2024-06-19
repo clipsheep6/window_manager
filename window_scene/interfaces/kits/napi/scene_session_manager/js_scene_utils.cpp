@@ -900,8 +900,8 @@ napi_value CreateJsSessionPiPControlType(napi_env env)
         return NapiGetUndefined(env);
     }
 
-    napi_set_named_property(env, objValue, "PLAY_BACK", CreateJsValue(env,
-        static_cast<int32_t>(PiPControlType::PLAY_BACK)));
+    napi_set_named_property(env, objValue, "VIDEO_PLAY_PAUSE", CreateJsValue(env,
+        static_cast<int32_t>(PiPControlType::VIDEO_PLAY_PAUSE)));
     napi_set_named_property(env, objValue, "VIDEO_PREVIOUS", CreateJsValue(env,
         static_cast<int32_t>(PiPControlType::VIDEO_PREVIOUS)));
     napi_set_named_property(env, objValue, "VIDEO_NEXT", CreateJsValue(env,

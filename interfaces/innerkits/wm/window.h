@@ -1640,9 +1640,21 @@ public:
      */
     virtual void UpdatePiPRect(const Rect& rect, WindowSizeChangeReason reason) {}
 
-    virtual void UpdateControlStatus(int32_t controlType, int32_t status) {}
+    /**
+     * @brief update the pip control status.
+     *
+     * @param controlType pip control type.
+     * @param status pip control status.
+     */
+    virtual void UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status) {}
 
-    virtual void SetPiPControlEnable(int32_t controlType, bool isEnable) {}
+    /**
+     * @brief update the pip control enable status.
+     *
+     * @param controlType pip control type.
+     * @param isEnable pip control enable status.
+     */
+    virtual void SetPiPControlEnable(PiPControlType controlType, bool isEnable) {}
 
     /**
      * @brief When get focused, keep the keyboard created by other windows, support system window and app subwindow.

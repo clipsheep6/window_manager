@@ -50,8 +50,8 @@ using GetAINavigationBarArea = std::function<WSRect(uint64_t displayId)>;
 using RecoveryCallback = std::function<void(int32_t persistentId, Rect rect)>;
 using NotifyBindDialogSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 using NotifySessionRectChangeFunc = std::function<void(const WSRect& rect, const SizeChangeReason& reason)>;
-using NotifySessionControlStatusFunc = std::function<void(const int32_t& controlType, const int32_t& status)>;
-using NotifySessionPiPControlEnableChangeFunc = std::function<void(const int32_t& controlType, const bool& isEnable)>;
+using NotifySessionPiPControlStatusChangeFunc = std::function<void(PiPControlType controlType, PiPControlStatus status)>;
+using NotifySessionPiPControlEnableChangeFunc = std::function<void(PiPControlType controlType, bool isEnable)>;
 using NotifySessionEventFunc = std::function<void(int32_t eventId, SessionEventParam param)>;
 using NotifySessionTopmostChangeFunc = std::function<void(const bool topmost)>;
 using NotifyRaiseToTopFunc = std::function<void()>;
@@ -181,8 +181,8 @@ public:
     void SetFloatingScale(float floatingScale) override;
     WSError RaiseAboveTarget(int32_t subWindowId) override;
     WSError UpdatePiPRect(const Rect& rect, SizeChangeReason reason) override;
-    WSError UpdateControlStatus(int32_t controlType, int32_t status) override;
-    WSError SetPiPControlEnable(int32_t controlType, bool isEnable) override;
+    WSError UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status) override;
+    WSError SetPiPControlEnable(PiPControlType controlType, bool isEnable) override;
     void NotifyPiPWindowPrepareClose() override;
     void SetScale(float scaleX, float scaleY, float pivotX, float pivotY) override;
     void RequestHideKeyboard(bool isAppColdStart = false);
@@ -211,7 +211,7 @@ public:
     void SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFunc& func);
     void SetSessionEventParam(SessionEventParam param);
     void SetSessionRectChangeCallback(const NotifySessionRectChangeFunc& func);
-    void SetSessionControlStatusChangeCallback(const NotifySessionControlStatusFunc& func);
+    void SetSessionPiPControlStatusChangeCallback(const NotifySessionPiPControlStatusChangeFunc& func);
     void SetSessionPiPControlEnableChangeCallback(const NotifySessionPiPControlEnableChangeFunc& func);
     void SetIsDisplayStatusBarTemporarily(bool isTemporary);
     void SetRestoringRectForKeyboard(WSRect rect);
@@ -275,7 +275,7 @@ public:
     void SetIsStartMoving(const bool startMoving);
     void SetShouldHideNonSecureWindows(bool shouldHide);
     WSError SetPipActionEvent(const std::string& action, int32_t status);
-    WSError SetPiPControlEvent(int32_t controlType, int32_t status);
+    WSError SetPiPControlEvent(PiPControlType controlType, PiPControlStatus status);
     void UpdateExtWindowFlags(int32_t extPersistentId, const ExtensionWindowFlags& extWindowFlags,
         const ExtensionWindowFlags& extWindowActions);
     ExtensionWindowFlags GetCombinedExtWindowFlags();
@@ -351,8 +351,8 @@ private:
     void RotateDragWindow(std::shared_ptr<RSTransaction> rsTransaction);
 #endif // DEVICE_STATUS_ENABLE
     void NotifySessionRectChange(const WSRect& rect, const SizeChangeReason& reason = SizeChangeReason::UNDEFINED);
-    void NotifySessionControlStatusChange(int32_t controlType, int32_t status);
-    void NotifySessionPiPControlEnableChange(int32_t controlType, bool isEnable);
+    void NotifySessionPiPControlStatusChange(PiPControlType controlType, PiPControlStatus status);
+    void NotifySessionPiPControlEnableChange(PiPControlType controlType, bool isEnable);
     void OnMoveDragCallback(const SizeChangeReason& reason);
     void FixRectByLimits(WindowLimits limits, WSRect& rect, float ratio, bool isDecor, float vpr);
     bool FixRectByAspectRatio(WSRect& rect);
@@ -427,7 +427,7 @@ private:
         const sptr<WindowSessionProperty>& property, WSPropertyChangeAction action);
 
     NotifySessionRectChangeFunc sessionRectChangeFunc_;
-    NotifySessionControlStatusFunc sessionControlStatusChangeFunc_;
+    NotifySessionPiPControlStatusChangeFunc sessionPiPControlStatusChangeFunc_;
     NotifySessionPiPControlEnableChangeFunc sessionPiPControlEnableChangeFunc_;
     static wptr<SceneSession> enterSession_;
     static std::mutex enterSessionMutex_;

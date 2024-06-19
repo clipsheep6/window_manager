@@ -892,7 +892,7 @@ enum class PiPControlStatus : uint32_t {
  * @brief Enumerates picture in picture control type.
  */
 enum class PiPControlType : uint32_t {
-    PLAY_BACK = 0,
+    VIDEO_PLAY_PAUSE = 0,
     VIDEO_PREVIOUS = 1,
     VIDEO_NEXT = 2,
     FAST_FORWARD = 3,
