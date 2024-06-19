@@ -75,6 +75,7 @@ public:
     WMError SetXComponentController(std::shared_ptr<XComponentController> xComponentController);
     PiPWindowState GetControllerState();
     std::string GetPiPNavigationId();
+    WMError UpdateXComponentController(std::shared_ptr<XComponentController> xComponentController);
 
     class PiPMainWindowListenerImpl : public Rosen::IWindowChangeListener {
     public:

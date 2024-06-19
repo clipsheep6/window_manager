@@ -657,6 +657,25 @@ WMError PictureInPictureController::SetXComponentController(std::shared_ptr<XCom
     return WMError::WM_OK;
 }
 
+WMError PictureInPictureController::UpdateXComponentController(
+        std::shared_ptr<XComponentController> xComponentController)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "UpdateXComponentController is called");
+    if (xComponentController == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "UpdateXComponentController failed, xComponentController is null");
+        return WMError::WM_ERROR_PIP_INTERNAL_ERROR;
+    }
+    ResetExtController();
+    mainWindowXComponentController_ = xComponentController;
+    XComponentControllerErrorCode errorCode =
+            mainWindowXComponentController_->SetExtController(pipXComponentController_);
+    if (errorCode != XComponentControllerErrorCode::XCOMPONENT_CONTROLLER_NO_ERROR) {
+        TLOGE(WmsLogTag::WMS_PIP, "swap xComponent failed, errCode: %{public}u", errorCode);
+        return WMError::WM_ERROR_PIP_INTERNAL_ERROR;
+    }
+    return WMError::WM_OK;
+}
+
 void PictureInPictureController::SetPictureInPictureLifecycle(sptr<IPiPLifeCycle> listener)
 {
     pipLifeCycleListener_ = listener;
