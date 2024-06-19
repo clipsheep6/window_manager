@@ -1022,7 +1022,7 @@ WMError WindowSceneSessionImpl::NotifyDrawingCompleted()
     }
     WMError res;
     if (WindowHelper::IsMainWindow(type)) {
-        res = static_cast<WMError>(hostSession_->NotifyDrawingCompleted());
+        res = static_cast<WMError>(hostSession_->DrawingCompleted());
     } else {
         res = WMError::WM_ERROR_INVALID_WINDOW;
     }
