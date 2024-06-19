@@ -86,11 +86,11 @@ public:
     virtual void OnForeground() = 0;
     virtual void OnBackground() = 0;
     virtual void OnDisconnect() = 0;
-    virtual void OnDrawingCompleted() {}
     virtual void OnExtensionDied() = 0;
     virtual void OnExtensionTimeout(int32_t errorCode) = 0;
     virtual void OnAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
         int64_t uiExtensionIdLevel) = 0;
+    virtual void OnDrawingCompleted() {}
 };
 
 enum class LifeCycleTaskType : uint32_t {
@@ -141,7 +141,6 @@ public:
     void NotifyForeground();
     void NotifyBackground();
     void NotifyDisconnect();
-    void NotifyDrawingCompleted();
     void NotifyExtensionDied() override;
     void NotifyExtensionTimeout(int32_t errorCode) override;
     void NotifyTransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
