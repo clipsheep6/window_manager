@@ -131,7 +131,7 @@ void PiPReporter::ReportPiPControlEvent(int32_t templateType, PiPControlType con
         EVENT_KEY_PNAMEID, PNAMEID,
         EVENT_KEY_PVERSION, PVERSION,
         EVENT_KEY_TEMPLATE_TYPE, templateType,
-        EVENT_KEY_ACTION_EVENT, static_cast<uint32_t>controlType,
+        EVENT_KEY_ACTION_EVENT, static_cast<uint32_t>(controlType)   ,
         EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
     if (ret != 0) {
         TLOGE(WmsLogTag::WMS_PIP, "Write HiSysEvent error, ret:%{public}d", ret);

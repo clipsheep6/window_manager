@@ -84,7 +84,7 @@ napi_value CreateJsPiPControlStatusObject(napi_env env, PiPControlStatusInfo con
         TLOGE(WmsLogTag::WMS_PIP, "CreateJsPiPControlStatusObject is called objValue == nullptr");
         return NapiGetUndefined(env);
     }
-       uint32_t controlType = static_cast<uint32_t>(controlStatusInfo.controlType);
+    uint32_t controlType = static_cast<uint32_t>(controlStatusInfo.controlType);
     uint32_t status = static_cast<uint32_t>(controlStatusInfo.status);
     napi_set_named_property(env, objValue, "controlType", CreateJsValue(env, controlType));
     napi_set_named_property(env, objValue, "status", CreateJsValue(env, status));
@@ -100,7 +100,7 @@ napi_value CreateJsPiPControlEnableObject(napi_env env, PiPControlEnableInfo con
         TLOGE(WmsLogTag::WMS_PIP, "CreateJsPiPControlEnableObject is called objValue == nullptr");
         return NapiGetUndefined(env);
     }
-    uint32_t controlType = static_cast<uint32_t>(controlStatusInfo.controlType);
+    uint32_t controlType = static_cast<uint32_t>(controlEnableInfo.controlType);
     bool isEnable = controlEnableInfo.isEnable;
     napi_set_named_property(env, objValue, "controlType", CreateJsValue(env, controlType));
     napi_set_named_property(env, objValue, "isEnable", CreateJsValue(env, isEnable));
