@@ -258,7 +258,7 @@ void PictureInPictureManager::DoActionEvent(const std::string& actionName, int32
     func->second();
 }
 
-void PictureInPictureManager::DoControlEvent(int32_t controlType, int32_t status)
+void PictureInPictureManager::DoControlEvent(PiPControlType controlType, PiPControlStatus status)
 {
     TLOGD(WmsLogTag::WMS_PIP, "DoControlEvent is called");
     if (!HasActiveController()) {

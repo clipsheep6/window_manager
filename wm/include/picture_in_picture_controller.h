@@ -68,7 +68,7 @@ public:
     void SetPiPControlEnable(PiPControlType controlType, bool isEnable);
     bool IsContentSizeChanged(float width, float height, float posX, float posY);
     void DoActionEvent(const std::string& actionName, int32_t status);
-    void DoControlEvent(int32_t controlType, int32_t status);
+    void DoControlEvent(PiPControlType controlType, PiPControlStatus status);
     void PreRestorePictureInPicture();
     void RestorePictureInPictureWindow();
     void SetPictureInPictureLifecycle(sptr<IPiPLifeCycle> listener);

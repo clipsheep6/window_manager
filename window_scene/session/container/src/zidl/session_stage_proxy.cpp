@@ -739,12 +739,12 @@ WSError SessionStageProxy::SetPiPControlEvent(PiPControlType controlType, PiPCon
         return WSError::WS_ERROR_IPC_FAILED;
     }
 
-    if (!data.WriteUint32(controlType)) {
+    if (!data.WriteUint32(static_cast<uint32_t>(controlType))) {
         WLOGFE("Write params failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
 
-    if (!data.WriteUint32(status)) {
+    if (!data.WriteUint32(static_cast<uint32_t>(status))) {
         WLOGFE("Write status failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }

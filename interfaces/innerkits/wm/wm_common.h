@@ -860,24 +860,6 @@ enum class PiPState : int32_t {
     ERROR = 6,
 };
 
-struct PiPControlStatusInfo {
-    uint32_t controlType;
-    uint32_t status;
-};
-
-struct PiPControlEnableInfo {
-    uint32_t controlType;
-    bool isEnable;
-};
-
-struct PiPTemplateInfo {
-    uint32_t pipTemplateType;
-    uint32_t priority;
-    std::vector<uint32_t> controlGroup;
-    std::vector<PiPControlStatusInfo> pipControlStatusInfoList;
-    std::vector<PiPControlEnableInfo> pipControlEnableInfoList;
-};
-
 /**
  * @brief Enumerates picture in picture control status.
  */
@@ -888,10 +870,11 @@ enum class PiPControlStatus : uint32_t {
     CLOSE = 0,
     END,
 };
+
 /**
  * @brief Enumerates picture in picture control type.
  */
-enum class PiPControlType : uint32_t {
+enum class   PiPControlType : uint32_t {
     VIDEO_PLAY_PAUSE = 0,
     VIDEO_PREVIOUS = 1,
     VIDEO_NEXT = 2,
@@ -902,6 +885,24 @@ enum class PiPControlType : uint32_t {
     CAMERA_SWITCH = 7,
     MUTE_SWITCH = 8,
     END,
+};
+
+struct PiPControlStatusInfo {
+    PiPControlType controlType;
+    PiPControlStatus status;
+};
+
+struct PiPControlEnableInfo {
+    PiPControlType controlType;
+    bool isEnable;
+};
+
+struct PiPTemplateInfo {
+    uint32_t pipTemplateType;
+    uint32_t priority;
+    std::vector<uint32_t> controlGroup;
+    std::vector<PiPControlStatusInfo> pipControlStatusInfoList;
+    std::vector<PiPControlEnableInfo> pipControlEnableInfoList;
 };
 
 using OnCallback = std::function<void(int64_t, int64_t)>;

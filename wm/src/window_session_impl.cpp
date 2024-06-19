@@ -2447,7 +2447,7 @@ WSError WindowSessionImpl::SetPipActionEvent(const std::string& action, int32_t 
     return WSError::WS_OK;
 }
 
-WSError WindowSessionImpl::SetPiPControlEvent(int32_t controlType, int32_t status)
+WSError WindowSessionImpl::SetPiPControlEvent(PiPControlType controlType, PiPControlStatus status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "action: %{public}u, status: %{public}d", controlType, status);
     auto task = [controlType, status]() {
@@ -3096,7 +3096,7 @@ void WindowSessionImpl::UpdatePiPRect(const Rect& rect, WindowSizeChangeReason r
     hostSession_->UpdatePiPRect(rect, wsReason);
 }
 
-void WindowSessionImpl::UpdatePiPControlStatus(ControlType controlType, ControlStatus status)
+void WindowSessionImpl::UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "OnUpdatePiPControlStatus is called");
     if (IsWindowSessionInvalid()) {
@@ -3106,7 +3106,7 @@ void WindowSessionImpl::UpdatePiPControlStatus(ControlType controlType, ControlS
     hostSession_->UpdatePiPControlStatus(controlType, status);
 }
 
-void WindowSessionImpl::SetPiPControlEnable(ControlType controlType, bool isEnable)
+void WindowSessionImpl::SetPiPControlEnable(PiPControlType controlType, bool isEnable)
 {
     TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnable is called");
     if (IsWindowSessionInvalid()) {

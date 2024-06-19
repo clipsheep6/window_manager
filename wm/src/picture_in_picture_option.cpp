@@ -45,7 +45,7 @@ void PipOption::SetPiPControlStatus(PiPControlType controlType, PiPControlStatus
     newPipControlStatusInfo.status = status;
     for (auto& controlStatusInfo : pipControlStatusInfoList_) {
         TLOGI(WmsLogTag::WMS_PIP, "controlStatus %{public}u : %{public}u",
-              controlStatusInfo.controlType, controlStatusInfo.status);
+            controlStatusInfo.controlType, controlStatusInfo.status);
         if (controlType == controlStatusInfo.controlType) {
             controlStatusInfo = newPipControlStatusInfo;
             return;
@@ -62,7 +62,7 @@ void PipOption::SetPiPControlEnable(PiPControlType controlType, bool isEnable)
     newPipControlEnableInfo.isEnable = isEnable;
     for (auto& controlEnableInfo : pipControlEnableInfoList_) {
         TLOGI(WmsLogTag::WMS_PIP, "controlEnable %{public}u : %{public}u",
-              controlEnableInfo.controlType, controlEnableInfo.isEnable);
+            controlEnableInfo.controlType, controlEnableInfo.isEnable);
         if (controlType == controlEnableInfo.controlType) {
             controlEnableInfo = newPipControlEnableInfo;
             return;

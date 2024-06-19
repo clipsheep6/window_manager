@@ -41,7 +41,7 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "startPiP", moduleName, JsPipController::StartPictureInPicture);
     BindNativeFunction(env, object, "stopPiP", moduleName, JsPipController::StopPictureInPicture);
     BindNativeFunction(env, object, "updateContentSize", moduleName, JsPipController::UpdateContentSize);
-    BindNativeFunction(env, object, "updatePiPControlStatus", moduleName, JsPipController::updatePiPControlStatus);
+    BindNativeFunction(env, object, "updatePiPControlStatus", moduleName, JsPipController::UpdatePiPControlStatus);
     BindNativeFunction(env, object, "setAutoStartEnabled", moduleName, JsPipController::SetAutoStartEnabled);
     BindNativeFunction(env, object, "setPiPControlEnable", moduleName, JsPipController::SetPiPControlEnable);
     BindNativeFunction(env, object, "on", moduleName, JsPipController::RegisterCallback);
@@ -237,7 +237,7 @@ napi_value JsPipController::OnUpdateContentSize(napi_env env, napi_callback_info
     return NapiGetUndefined(env);
 }
 
-napi_value JsPipController::updatePiPControlStatus(napi_env env, napi_callback_info info)
+napi_value JsPipController::UpdatePiPControlStatus(napi_env env, napi_callback_info info)
 {
     JsPipController* me = CheckParamsAndGetThis<JsPipController>(env, info);
     return (me != nullptr) ? me->OnUpdatePiPControlStatus(env, info) : nullptr;
@@ -253,14 +253,14 @@ napi_value JsPipController::OnUpdatePiPControlStatus(napi_env env, napi_callback
         TLOGE(WmsLogTag::WMS_PIP, "Invalid args count, need 2 args but received: %{public}zu", argc);
         return NapiThrowInvalidParam(env, "Invalid args count, 2 args is needed.");
     }
-    PiPControlType controlType = PiPControlType::VIDEO_PLAY_PAUSE;
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     std::string errMsg = "";
     if (!ConvertFromJsValue(env, argv[0], controlType)) {
         errMsg = "Failed to convert parameter to int";
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
         return NapiThrowInvalidParam(env, errMsg);
     }
-    PiPControlStatus status = PiPControlStatus.PLAY;
+    auto status = PiPControlStatus::PLAY;
     if (!ConvertFromJsValue(env, argv[1], status)) {
         errMsg = "Failed to convert parameter to int";
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
@@ -292,7 +292,7 @@ napi_value JsPipController::OnSetPiPControlEnable(napi_env env, napi_callback_in
         TLOGE(WmsLogTag::WMS_PIP, "Invalid args count, need 2 args but received: %{public}zu", argc);
         return NapiThrowInvalidParam(env, "Invalid args count, 2 args is needed.");
     }
-    int32_t controlType = 0;
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     std::string errMsg = "";
     if (!ConvertFromJsValue(env, argv[0], controlType)) {
         errMsg = "Failed to convert parameter to int";

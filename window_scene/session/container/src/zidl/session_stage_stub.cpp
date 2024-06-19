@@ -382,16 +382,17 @@ int SessionStageStub::HandleSetPipActionEvent(MessageParcel& data, MessageParcel
 
 int SessionStageStub::HandleSetPiPControlEvent(MessageParcel& data, MessageParcel& reply)
 {
-    TLOGD(WmsLogTag::WMS_PIP, "HandleSetPiPControlEvent");
-    PiPControlType controlType;
+    TLOGD(WmsLogTag::WMS_PIP, "HandleSetPiPControlEvent is called");
+    uint32_t controlType;
     if (!data.ReadUint32(controlType)) {
         return ERR_INVALID_VALUE;
     }
-    PiPControlType status;
+    uint32_t status;
     if (!data.ReadUint32(status)) {
         return ERR_INVALID_VALUE;
     }
-    SetPiPControlEvent(controlType, status);
+    // TODO PiPControlStatus的这个类型转换会出问题，可能是play/open
+    SetPiPControlEvent(static_cast<PiPControlType>(controlType), static_cast<PiPControlStatus>(status));
     return ERR_NONE;
 }
 

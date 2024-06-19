@@ -1272,9 +1272,9 @@ WSError SceneSession::SetPipActionEvent(const std::string& action, int32_t statu
     return sessionStage_->SetPipActionEvent(action, status);
 }
 
-WSError SceneSession::SetPiPControlEvent(int32_t controlType, int32_t status)
+WSError SceneSession::SetPiPControlEvent(PiPControlType controlType, PiPControlStatus status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "controlType: %{public}u, status: %{public}d", controlType, status);
+    TLOGI(WmsLogTag::WMS_PIP, "controlType: %{public}u, status: %{public}u", controlType, status);
     if (GetWindowType() != WindowType::WINDOW_TYPE_PIP || GetWindowMode() != WindowMode::WINDOW_MODE_PIP) {
         return WSError::WS_ERROR_INVALID_TYPE;
     }
@@ -1608,7 +1608,7 @@ void SceneSession::NotifySessionRectChange(const WSRect& rect, const SizeChangeR
     };
     PostTask(task, "NotifySessionRectChange" + GetRectInfo(rect));
 }
-void SceneSession::NotifySessionPiPControlStatusChange(int32_t controlType, int32_t status)
+void SceneSession::NotifySessionPiPControlStatusChange(PiPControlType controlType, PiPControlStatus status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "NotifySessionPiPControlStatusChange!");
     auto task = [weakThis = wptr(this), controlType, status]() {
@@ -1625,7 +1625,7 @@ void SceneSession::NotifySessionPiPControlStatusChange(int32_t controlType, int3
     PostTask(task, "NotifySessionPiPControlStatusChange");
 }
 
-void SceneSession::NotifySessionPiPControlEnableChange(int32_t controlType, bool isEnable)
+void SceneSession::NotifySessionPiPControlEnableChange(PiPControlType controlType, bool isEnable)
 {
     TLOGI(WmsLogTag::WMS_PIP, "NotifySessionPiPControlEnableChange!");
     auto task = [weakThis = wptr(this), controlType, isEnable]() {
@@ -1639,7 +1639,7 @@ void SceneSession::NotifySessionPiPControlEnableChange(int32_t controlType, bool
             session->sessionPiPControlEnableChangeFunc_(controlType, isEnable);
         }
     };
-    PostTask(task, "NotifySessionControlStatusChange");
+    PostTask(task, "NotifySessionPiPControlStatusChange");
 }
 
 bool SceneSession::IsDecorEnable() const
@@ -3288,14 +3288,14 @@ WSError SceneSession::UpdatePiPControlStatus(PiPControlType controlType, PiPCont
             TLOGE(WmsLogTag::WMS_PIP, "SceneSession::UpdatePiPControlStatus session is null or is terminating");
             return WSError::WS_ERROR_INVALID_OPERATION;
         }
-        session->NotifySessionControlStatusChange(controlType, status);
+        session->NotifySessionPiPControlStatusChange(controlType, status);
         return WSError::WS_OK;
     };
     PostTask(task, "UpdatePiPControlStatus");
     return WSError::WS_OK;
 }
 
-WSError SceneSession::SetPiPControlEnable(int32_t controlType, bool isEnable)
+WSError SceneSession::SetPiPControlEnable(PiPControlType controlType, bool isEnable)
 {
     TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnable is called");
     if (!WindowHelper::IsPipWindow(GetWindowType())) {

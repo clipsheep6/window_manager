@@ -84,8 +84,8 @@ napi_value CreateJsPiPControlStatusObject(napi_env env, PiPControlStatusInfo con
         TLOGE(WmsLogTag::WMS_PIP, "CreateJsPiPControlStatusObject is called objValue == nullptr");
         return NapiGetUndefined(env);
     }
-    PiPControlType controlType = controlStatusInfo.controlType;
-    PiPControlStatus status = controlStatusInfo.status;
+       uint32_t controlType = static_cast<uint32_t>(controlStatusInfo.controlType);
+    uint32_t status = static_cast<uint32_t>(controlStatusInfo.status);
     napi_set_named_property(env, objValue, "controlType", CreateJsValue(env, controlType));
     napi_set_named_property(env, objValue, "status", CreateJsValue(env, status));
     return objValue;
@@ -100,7 +100,7 @@ napi_value CreateJsPiPControlEnableObject(napi_env env, PiPControlEnableInfo con
         TLOGE(WmsLogTag::WMS_PIP, "CreateJsPiPControlEnableObject is called objValue == nullptr");
         return NapiGetUndefined(env);
     }
-    PiPControlType controlType = controlEnableInfo.controlType;
+    uint32_t controlType = static_cast<uint32_t>(controlStatusInfo.controlType);
     bool isEnable = controlEnableInfo.isEnable;
     napi_set_named_property(env, objValue, "controlType", CreateJsValue(env, controlType));
     napi_set_named_property(env, objValue, "isEnable", CreateJsValue(env, isEnable));
@@ -253,8 +253,8 @@ void JsSceneSession::InitListenerFuncs()
         { BUFFER_AVAILABLE_CHANGE_CB,            &JsSceneSession::ProcessBufferAvailableChangeRegister},
         { SESSION_EVENT_CB,                      &JsSceneSession::ProcessSessionEventRegister },
         { SESSION_RECT_CHANGE_CB,                &JsSceneSession::ProcessSessionRectChangeRegister },
-        { SESSION_PIP_CONTROL_STATUS_CHANGE_CB,  &JsSceneSession::ProcessSessioPiPControlStatusChangeRegister },
-        { SESSION_CONTROL_ENABLE_CHANGE_CB,      &JsSceneSession::ProcessSessionPiPControlEnableChangeRegister },
+        { SESSION_PIP_CONTROL_STATUS_CHANGE_CB,  &JsSceneSession::ProcessSessionPiPControlStatusChangeRegister },
+        { SESSION_PIP_CONTROL_ENABLE_CHANGE_CB,   &JsSceneSession::ProcessSessionPiPControlEnableChangeRegister },
         { CREATE_SUB_SESSION_CB,                 &JsSceneSession::ProcessCreateSubSessionRegister },
         { BIND_DIALOG_TARGET_CB,                 &JsSceneSession::ProcessBindDialogTargetRegister },
         { RAISE_TO_TOP_CB,                       &JsSceneSession::ProcessRaiseToTopRegister },
@@ -1625,7 +1625,7 @@ void JsSceneSession::OnSessionPiPControlStatusChange(PiPControlType controlType,
 void JsSceneSession::OnSessionPiPControlEnableChange(PiPControlType controlType, bool isEnable)
 {
     TLOGI(WmsLogTag::WMS_PIP, "OnSessionPiPControlEnableChange is called");
-    std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(SESSION_CONTROL_ENABLE_CHANGE_CB);
+    std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(SESSION_PIP_CONTROL_ENABLE_CHANGE_CB);
     if (jsCallBack == nullptr) {
         return;
     }
@@ -2784,14 +2784,14 @@ napi_value JsSceneSession::OnSetPiPControlEvent(napi_env env, napi_callback_info
                                       "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
-    int32_t controlType;
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     if (!ConvertFromJsValue(env, argv[0], controlType)) {
         TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Failed to convert parameter to int");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
             "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
-    int32_t status = -1;
+    auto status = PiPControlStatus::PLAY;
     if (argc > 1) {
         if (!ConvertFromJsValue(env, argv[1], status)) {
             TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Failed to convert parameter to int");

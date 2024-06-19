@@ -18,6 +18,7 @@
 
 #include <map>
 #include "wm_single_instance.h"
+#include "wm_common.h"
 
 namespace OHOS::Rosen {
 class PiPReporter {

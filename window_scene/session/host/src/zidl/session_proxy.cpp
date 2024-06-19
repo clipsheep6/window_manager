@@ -1048,11 +1048,11 @@ WSError SessionProxy::UpdatePiPControlStatus(PiPControlType controlType, PiPCont
         WLOGFE("writeInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (!data.WriteUint32(controlType)) {
+    if (!data.WriteUint32(static_cast<uint32_t>(controlType))) {
         TLOGE(WmsLogTag::WMS_LIFE, "Write controlType failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (!data.WriteUint32(status)) {
+    if (!data.WriteUint32(static_cast<uint32_t>(status))) {
         WLOGFE("write status failed.");
         return WSError::WS_ERROR_IPC_FAILED;
     }
@@ -1075,7 +1075,7 @@ WSError SessionProxy::SetPiPControlEnable(PiPControlType controlType, bool isEna
         WLOGFE("writeInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (!data.WriteUint32(controlType)) {
+    if (!data.WriteUint32(static_cast<uint32_t>(controlType))) {
         TLOGE(WmsLogTag::WMS_LIFE, "Write controlType failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
