@@ -1080,7 +1080,7 @@ WSError Session::DrawingCompleted()
     TLOGD(WmsLogTag::WMS_LIFE, "id: %{public}d", GetPersistentId());
     if (!SessionPermission::IsSameBundleNameAsCalling("com.huawei.shell_assistant")) {
         TLOGE(WmsLogTag::WMS_LIFE, "permission denied!");
-        return;
+        return WSError::WS_ERROR_INVALID_PERMISSION;
     }
     auto lifecycleListeners = GetListeners<ILifecycleListener>();
     for (auto& listener : lifecycleListeners) {
