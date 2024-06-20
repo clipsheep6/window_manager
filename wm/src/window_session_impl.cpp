@@ -371,7 +371,7 @@ WMError WindowSessionImpl::Connect()
     }
     auto ret = hostSession_->Connect(
         iSessionStage, iWindowEventChannel, surfaceNode_, windowSystemConfig_, property_,
-        token, -1, -1, identityToken_);
+        token, identityToken_);
     TLOGI(WmsLogTag::WMS_LIFE, "Window Connect [name:%{public}s, id:%{public}d, type:%{public}u], ret:%{public}u",
         property_->GetWindowName().c_str(), GetPersistentId(), property_->GetWindowType(), ret);
     return static_cast<WMError>(ret);
@@ -1172,9 +1172,10 @@ WMError WindowSessionImpl::HideNonSystemFloatingWindows(bool shouldHide)
 
 WMError WindowSessionImpl::SetLandscapeMultiWindow(bool isLandscapeMultiWindow)
 {
-    TLOGI(WmsLogTag::DEFAULT, "SetLandscapeMultiWindow, isLandscapeMultiWindow:%{public}d", isLandscapeMultiWindow);
+    TLOGI(WmsLogTag::WMS_MULTI_WINDOW, "SetLandscapeMultiWindow, isLandscapeMultiWindow:%{public}d",
+        isLandscapeMultiWindow);
     if (IsWindowSessionInvalid()) {
-        TLOGE(WmsLogTag::DEFAULT, "Session is invalid");
+        TLOGE(WmsLogTag::WMS_MULTI_WINDOW, "Session is invalid");
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     hostSession_->SetLandscapeMultiWindow(isLandscapeMultiWindow);
@@ -1711,13 +1712,13 @@ EnableIfSame<T, ISubWindowCloseListener, sptr<ISubWindowCloseListener>> WindowSe
 
 WMError WindowSessionImpl::RegisterSubWindowCloseListeners(const sptr<ISubWindowCloseListener>& listener)
 {
-    if (!WindowHelper::IsSubWindow(GetType()) && !WindowHelper::IsSystemSubWindow(GetType())) {
-        WLOGFE("window type is not supported");
-        return WMError::WM_ERROR_INVALID_TYPE;
-    }
     if (listener == nullptr) {
         WLOGFE("listener is nullptr");
         return WMError::WM_ERROR_NULLPTR;
+    }
+    if (!WindowHelper::IsSubWindow(GetType()) && !WindowHelper::IsSystemSubWindow(GetType())) {
+        WLOGFE("window type is not supported");
+        return WMError::WM_ERROR_INVALID_CALLING;
     }
     std::lock_guard<std::mutex> lockListener(subWindowCloseListenersMutex_);
     subWindowCloseListeners_[GetPersistentId()] = listener;
@@ -1726,13 +1727,13 @@ WMError WindowSessionImpl::RegisterSubWindowCloseListeners(const sptr<ISubWindow
 
 WMError WindowSessionImpl::UnregisterSubWindowCloseListeners(const sptr<ISubWindowCloseListener>& listener)
 {
-    if (!WindowHelper::IsSubWindow(GetType()) && !WindowHelper::IsSystemSubWindow(GetType())) {
-        WLOGFE("window type is not supported");
-        return WMError::WM_ERROR_INVALID_TYPE;
-    }
     if (listener == nullptr) {
         WLOGFE("listener could not be null");
         return WMError::WM_ERROR_NULLPTR;
+    }
+    if (!WindowHelper::IsSubWindow(GetType()) && !WindowHelper::IsSystemSubWindow(GetType())) {
+        WLOGFE("window type is not supported");
+        return WMError::WM_ERROR_INVALID_CALLING;
     }
     std::lock_guard<std::mutex> lockListener(subWindowCloseListenersMutex_);
     subWindowCloseListeners_[GetPersistentId()] = nullptr;
@@ -2259,7 +2260,6 @@ WSError WindowSessionImpl::NotifyCloseExistPipWindow()
 {
     TLOGI(WmsLogTag::WMS_PIP, "WindowSessionImpl::NotifyCloseExistPipWindow");
     PictureInPictureManager::DoClose(true, true);
-    PictureInPictureManager::DoDestroy();
     return WSError::WS_OK;
 }
 
