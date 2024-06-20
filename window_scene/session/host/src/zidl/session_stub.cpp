@@ -218,7 +218,7 @@ int SessionStub::HandleDrawingCompleted(MessageParcel& data, MessageParcel& repl
 {
     WLOGFD("DrawingCompleted!");
     const WSError& errCode = DrawingCompleted();
-    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
 }
 
