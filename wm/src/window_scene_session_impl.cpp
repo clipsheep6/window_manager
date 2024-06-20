@@ -1013,7 +1013,7 @@ WMError WindowSceneSessionImpl::NotifyDrawingCompleted()
         return WMError::WM_ERROR_NULLPTR;
     }
 
-    const auto& type = GetType();
+    const auto type = GetType();
     TLOGI(WmsLogTag::WMS_LIFE, "id:%{public}d, type:%{public}d, state:%{public}u, "
         "requestState:%{public}u", GetPersistentId(), type, state_, requestState_);
     if (IsWindowSessionInvalid()) {
