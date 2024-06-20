@@ -407,21 +407,6 @@ void Session::NotifyTransferAccessibilityEvent(const Accessibility::Accessibilit
     }
 }
 
-void Session::NotifyDrawingCompleted()
-{
-    if (!SessionPermission::IsSameBundleNameAsCalling("com.huawei.shell_assistant")) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "permission denied!");
-        return;
-    }
-    auto lifecycleListeners = GetListeners<ILifecycleListener>();
-    std::lock_guard<std::recursive_mutex> lock(lifecycleListenersMutex_);
-    for (auto& listener : lifecycleListeners) {
-        if (!listener.expired()) {
-            listener.lock()->OnDrawingCompleted();
-        }
-    }
-}
-
 float Session::GetAspectRatio() const
 {
     return aspectRatio_;
@@ -1092,8 +1077,20 @@ WSError Session::Hide()
 
 WSError Session::DrawingCompleted()
 {
-    TLOGD(WmsLogTag::WMS_LIFE, "DrawingCompleted session, id: %{public}d", GetPersistentId());
-    NotifyDrawingCompleted();
+    TLOGD(WmsLogTag::WMS_LIFE, "id: %{public}d", GetPersistentId());
+    if (!SessionPermission::IsSameBundleNameAsCalling("com.huawei.shell_assistant")) {
+        TLOGE(WmsLogTag::WMS_MAIN, "permission denied!");
+        return;
+    }
+    auto lifecycleListeners = GetListeners<ILifecycleListener>();
+    std::lock_guard<std::recursive_mutex> lock(lifecycleListenersMutex_);
+    for (auto& listener : lifecycleListeners) {
+        if (!listener.expired()) {
+            if (listener.lock() != nullptr) {
+                listener.lock()->OnDrawingCompleted();
+            }
+        }
+    }
     return WSError::WS_OK;
 }
 
