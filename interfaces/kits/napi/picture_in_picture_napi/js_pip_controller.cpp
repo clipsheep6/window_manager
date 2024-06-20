@@ -299,7 +299,7 @@ napi_value JsPipController::OnSetPiPControlEnable(napi_env env, napi_callback_in
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
         return NapiThrowInvalidParam(env, errMsg);
     }
-    bool isEnable = 0;
+    bool isEnable = true;
     if (!ConvertFromJsValue(env, argv[1], isEnable)) {
         errMsg = "Failed to convert parameter to int";
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
