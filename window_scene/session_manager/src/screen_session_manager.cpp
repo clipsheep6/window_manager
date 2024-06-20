@@ -3936,6 +3936,10 @@ FoldStatus ScreenSessionManager::GetFoldStatus()
         TLOGI(WmsLogTag::DMS, "foldScreenController_ is null");
         return FoldStatus::UNKNOWN;
     }
+    if(FoldScreenStateInternel::IsSingleDisplayPocketFoldDevice()) {
+        // will be delete after desktop layout adaptation
+        return FoldStatus::FOLDED;
+    }
     return foldScreenController_->GetFoldStatus();
 }
 
@@ -3958,6 +3962,10 @@ uint32_t ScreenSessionManager::GetCurvedCompressionArea()
 
 void ScreenSessionManager::NotifyFoldStatusChanged(FoldStatus foldStatus)
 {
+    if(FoldScreenStateInternel::IsSingleDisplayPocketFoldDevice()) {
+        // will be delete after desktop layout adaptation
+        foldStatus = FoldStatus::FOLDED;
+    }
     TLOGI(WmsLogTag::DMS, "NotifyFoldStatusChanged foldStatus:%{public}d", foldStatus);
     sptr<ScreenSession> screenSession = GetDefaultScreenSession();
     if (screenSession != nullptr) {
