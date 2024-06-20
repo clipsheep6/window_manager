@@ -551,6 +551,29 @@ HWTEST_F(SceneSessionTest5, OnLayoutFullScreenChange, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.name: SetSnapshotSkip
+ * @tc.desc: SetSnapshotSkip function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest5, SetSnapshotSkip, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "SetSnapshotSkip";
+    info.bundleName_ = "SetSnapshotSkip";
+    info.windowType_ = 1;
+    sptr<Rosen::ISession> session_;
+    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(specificCallback_, nullptr);
+    sptr<SceneSession> scensession;
+    scensession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(scensession, nullptr);
+    int ret = 0;
+    scensession->SetSnapshotSkip(true);
+    ASSERT_EQ(0, ret);
+}
+
+/**
  * @tc.name: UpdateSessionPropertyByAction
  * @tc.desc: UpdateSessionPropertyByAction function01
  * @tc.type: FUNC
