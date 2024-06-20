@@ -1079,11 +1079,10 @@ WSError Session::DrawingCompleted()
 {
     TLOGD(WmsLogTag::WMS_LIFE, "id: %{public}d", GetPersistentId());
     if (!SessionPermission::IsSameBundleNameAsCalling("com.huawei.shell_assistant")) {
-        TLOGE(WmsLogTag::WMS_MAIN, "permission denied!");
+        TLOGE(WmsLogTag::WMS_LIFE, "permission denied!");
         return;
     }
     auto lifecycleListeners = GetListeners<ILifecycleListener>();
-    std::lock_guard<std::recursive_mutex> lock(lifecycleListenersMutex_);
     for (auto& listener : lifecycleListeners) {
         if (!listener.expired()) {
             if (listener.lock() != nullptr) {
