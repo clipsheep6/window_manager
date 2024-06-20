@@ -132,7 +132,7 @@ static napi_value CreatePipTemplateInfo(napi_env env, const sptr<SceneSession>& 
         napi_set_element(env, controlArrayValue, indexControlStatus++,
             CreateJsPiPControlStatusObject(env, controlStatus));
     }
-    napi_set_named_property(env, pipTemplateInfoValue, "controlStatusInfoList", controlStatusArrayValue);
+    napi_set_named_property(env, pipTemplateInfoValue, "pipControlStatusInfoList", controlStatusArrayValue);
     napi_value controlEnableArrayValue = nullptr;
     std::vector<PiPControlEnableInfo> controlEnableInfoList = session->GetPiPTemplateInfo().pipControlEnableInfoList;
     napi_create_array_with_length(env, controlEnableInfoList.size(), &controlEnableArrayValue);
@@ -141,7 +141,7 @@ static napi_value CreatePipTemplateInfo(napi_env env, const sptr<SceneSession>& 
         napi_set_element(env, controlArrayValue, indexControlEnable++,
             CreateJsPiPControlEnableObject(env, controlEnableInfo));
     }
-    napi_set_named_property(env, pipTemplateInfoValue, "controlEnableInfoList", controlEnableArrayValue);
+    napi_set_named_property(env, pipTemplateInfoValue, "pipControlEnableInfoList", controlEnableArrayValue);
     return pipTemplateInfoValue;
 }
 
