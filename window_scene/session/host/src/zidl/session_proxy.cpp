@@ -144,6 +144,7 @@ WSError SessionProxy::DrawingCompleted()
 {
     MessageParcel data;
     MessageParcel reply;
+    MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
