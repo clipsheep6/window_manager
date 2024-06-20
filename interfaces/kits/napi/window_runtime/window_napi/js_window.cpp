@@ -56,7 +56,7 @@ namespace {
 }
 
 static thread_local std::map<std::string, std::shared_ptr<NativeReference>> g_jsWindowMap;
-std::recursive_mutex g_mutex;
+static std::mutex g_mutex;
 static int g_ctorCnt = 0;
 static int g_dtorCnt = 0;
 static int g_finalizerCnt = 0;
@@ -69,11 +69,13 @@ static bool g_isSceneEnabled = false;
 JsWindow::JsWindow(const sptr<Window>& window)
     : windowToken_(window), registerManager_(std::make_unique<JsWindowRegisterManager>())
 {
-    NotifyNativeWinDestroyFunc func = [this](std::string windowName) {
-        std::lock_guard<std::recursive_mutex> lock(g_mutex);
-        if (windowName.empty() || g_jsWindowMap.count(windowName) == 0) {
-            WLOGFE("Can not find window %{public}s ", windowName.c_str());
-            return;
+    NotifyNativeWinDestroyFunc func = [this](const std::string& windowName) {
+        {
+            std::lock_guard<std::mutex> lock(g_mutex);
+            if (windowName.empty() || g_jsWindowMap.count(windowName) == 0) {
+                WLOGFE("Can not find window %{public}s ", windowName.c_str());
+                return;
+            }
         }
         g_jsWindowMap.erase(windowName);
         windowToken_ = nullptr;
@@ -109,7 +111,7 @@ void JsWindow::Finalizer(napi_env env, void* data, void* hint)
         return;
     }
     std::string windowName = jsWin->GetWindowName();
-    std::lock_guard<std::recursive_mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(g_mutex);
     g_jsWindowMap.erase(windowName);
     WLOGI("Remove window %{public}s from g_jsWindowMap", windowName.c_str());
 }
@@ -5349,10 +5351,10 @@ napi_value JsWindow::OnMaximize(napi_env env, napi_callback_info info)
     return result;
 }
 
-std::shared_ptr<NativeReference> FindJsWindowObject(std::string windowName)
+std::shared_ptr<NativeReference> FindJsWindowObject(const std::string& windowName)
 {
     WLOGFD("Try to find window %{public}s in g_jsWindowMap", windowName.c_str());
-    std::lock_guard<std::recursive_mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(g_mutex);
     if (g_jsWindowMap.find(windowName) == g_jsWindowMap.end()) {
         WLOGFD("Can not find window %{public}s in g_jsWindowMap", windowName.c_str());
         return nullptr;
@@ -5383,7 +5385,7 @@ __attribute__((no_sanitize("cfi")))
     napi_ref result = nullptr;
     napi_create_reference(env, objValue, 1, &result);
     jsWindowRef.reset(reinterpret_cast<NativeReference*>(result));
-    std::lock_guard<std::recursive_mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(g_mutex);
     g_jsWindowMap[windowName] = jsWindowRef;
     return objValue;
 }
