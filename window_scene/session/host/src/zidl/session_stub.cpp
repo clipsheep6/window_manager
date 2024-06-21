@@ -216,7 +216,7 @@ int SessionStub::HandleHide(MessageParcel& data, MessageParcel& reply)
 
 int SessionStub::HandleDrawingCompleted(MessageParcel& data, MessageParcel& reply)
 {
-    WLOGFD("Called!");
+    TLOGD(WmsLogTag::WMS_LIFE, "Called!");
     const WSError errCode = DrawingCompleted();
     reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
