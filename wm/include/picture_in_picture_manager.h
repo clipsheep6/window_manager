@@ -51,6 +51,7 @@ public:
     static void DoActionClose();
     static void DoDestroy();
     static void DoActionEvent(const std::string& actionName, int32_t status);
+    static void DoControlEvent(PiPControlType controlType, PiPControlStatus status);
     static void AutoStartPipWindow(std::string navigationId);
 private:
     // controller in use

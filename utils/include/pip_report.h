@@ -18,6 +18,7 @@
 
 #include <map>
 #include "wm_single_instance.h"
+#include "wm_common.h"
 
 namespace OHOS::Rosen {
 class PiPReporter {
@@ -28,6 +29,7 @@ public:
     void ReportPiPStartWindow(int32_t source, int32_t templateType, int32_t isSuccess, const std::string &errorReason);
     void ReportPiPStopWindow(int32_t source, int32_t templateType, int32_t isSuccess, const std::string &errorReason);
     void ReportPiPActionEvent(int32_t templateType, const std::string &actionEvent);
+    void ReportPiPControlEvent(int32_t templateType, PiPControlType controlType);
     void ReportPiPRatio(int32_t windowWidth, int32_t windowHeight);
     void ReportPiPRestore();
 private:
