@@ -259,6 +259,16 @@ void PictureInPictureManager::DoActionEvent(const std::string& actionName, int32
     func->second();
 }
 
+void PictureInPictureManager::DoControlEvent(PiPControlType controlType, PiPControlStatus status)
+{
+    TLOGD(WmsLogTag::WMS_PIP, "DoControlEvent is called");
+    if (!HasActiveController()) {
+        return;
+    }
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    activeController_->DoControlEvent(controlType, status);
+}
+
 void PictureInPictureManager::AutoStartPipWindow(std::string navigationId)
 {
     TLOGD(WmsLogTag::WMS_PIP, "AutoStartPipWindow is called, navId: %{public}s", navigationId.c_str());

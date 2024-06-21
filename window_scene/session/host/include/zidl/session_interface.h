@@ -23,6 +23,8 @@
 #include "common/include/window_session_property.h"
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/container/include/zidl/window_event_channel_interface.h"
+#include "wm_common.h"
+
 namespace OHOS::Accessibility {
 class AccessibilityEventInfo;
 }
@@ -88,6 +90,14 @@ public:
     virtual void NotifyPiPWindowPrepareClose() {}
     virtual WSError UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
         { return WSError::WS_OK; }
+    virtual WSError UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status)
+    {
+        return WSError::WS_OK;
+    }
+    virtual WSError SetPiPControlEnable(PiPControlType controlType, bool isEnable)
+    {
+        return WSError::WS_OK;
+    }
     virtual WSError ProcessPointDownSession(int32_t posX, int32_t posY) { return WSError::WS_OK; }
     virtual WSError SendPointEventForMoveDrag(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
     {

@@ -482,6 +482,29 @@ void PictureInPictureController::UpdateContentSize(int32_t width, int32_t height
     SingletonContainer::Get<PiPReporter>().ReportPiPRatio(width, height);
 }
 
+
+void PictureInPictureController::UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "UpdatePiPControlStatus %{public}u : %{public}u", controlType, status);
+    pipOption_->SetPiPControlStatus(controlType, status);
+    if (window_ == nullptr) {
+        TLOGI(WmsLogTag::WMS_PIP, "pipWindow not exist");
+        return;
+    }
+    window_->UpdatePiPControlStatus(controlType, status);
+}
+
+void PictureInPictureController::SetPiPControlEnable(PiPControlType controlType, bool isEnable)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnable %{public}u : %{public}u", controlType, isEnable);
+    pipOption_->SetPiPControlEnable(controlType, isEnable);
+    if (window_ == nullptr) {
+        TLOGI(WmsLogTag::WMS_PIP, "pipWindow not exist");
+        return;
+    }
+    window_->SetPiPControlEnable(controlType, isEnable);
+}
+
 bool PictureInPictureController::IsContentSizeChanged(float width, float height, float posX, float posY)
 {
     return windowRect_.width_ != static_cast<uint32_t>(width) ||
@@ -543,6 +566,17 @@ void PictureInPictureController::PreRestorePictureInPicture()
     if (pipLifeCycleListener_) {
         pipLifeCycleListener_->OnRestoreUserInterface();
     }
+}
+
+void PictureInPictureController::DoControlEvent(PiPControlType controlType, PiPControlStatus status)
+{
+    TLOGD(WmsLogTag::WMS_PIP, "controlType: %{public}u", controlType);
+    if (pipControlObserver_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "pipControlObserver is not registered");
+        return;
+    }
+    SingletonContainer::Get<PiPReporter>().ReportPiPControlEvent(pipOption_->GetPipTemplate(), controlType);
+    pipControlObserver_->OnControlEvent(controlType, status);
 }
 
 void PictureInPictureController::RestorePictureInPictureWindow()
@@ -666,6 +700,11 @@ void PictureInPictureController::SetPictureInPictureActionObserver(sptr<IPiPActi
     pipActionObserver_ = listener;
 }
 
+void PictureInPictureController::SetPictureInPictureControlObserver(sptr<IPiPControlObserver> listener)
+{
+    pipControlObserver_ = listener;
+}
+
 sptr<IPiPLifeCycle> PictureInPictureController::GetPictureInPictureLifecycle() const
 {
     return pipLifeCycleListener_;
@@ -674,6 +713,11 @@ sptr<IPiPLifeCycle> PictureInPictureController::GetPictureInPictureLifecycle() c
 sptr<IPiPActionObserver> PictureInPictureController::GetPictureInPictureActionObserver() const
 {
     return pipActionObserver_;
+}
+
+sptr<IPiPControlObserver> PictureInPictureController::GetPictureInPictureControlObserver() const
+{
+    return pipControlObserver_;
 }
 
 bool PictureInPictureController::IsPullPiPAndHandleNavigation()
