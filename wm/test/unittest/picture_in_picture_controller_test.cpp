@@ -207,6 +207,8 @@ HWTEST_F(PictureInPictureControllerTest, CreatePictureInPictureWindow, Function 
     WMError errorCode = WMError::WM_ERROR_PIP_CREATE_FAILED;
     ASSERT_NE(WMError::WM_OK, errorCode);
     EXPECT_EQ(WMError::WM_ERROR_PIP_CREATE_FAILED, pipControl->CreatePictureInPictureWindow());
+    ASSERT_EQ(nullptr, option->GetNodeControllerRef());
+    ASSERT_EQ(nullptr, pipControl->GetCustomNodeController());
 }
 
 /**
@@ -764,6 +766,23 @@ HWTEST_F(PictureInPictureControllerTest, DestroyPictureInPictureWindow, Function
     pipControl->window_ = mw;
     EXPECT_CALL(*(mw), Destroy()).Times(1).WillOnce(Return(WMError::WM_DO_NOTHING));
     ASSERT_EQ(WMError::WM_ERROR_PIP_DESTROY_FAILED, pipControl->DestroyPictureInPictureWindow());
+}
+
+/**
+ * @tc.name: LocateSource
+ * @tc.desc: LocateSource
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureControllerTest, LocateSource, Function | SmallTest | Level2)
+{
+    auto mw = sptr<MockWindow>::MakeSptr();
+    ASSERT_NE(nullptr, mw);
+    auto option = sptr<PipOption>::MakeSptr();
+    ASSERT_NE(nullptr, option);
+    auto pipControl = sptr<PictureInPictureController>::MakeSptr(option, mw, 100, nullptr);
+    pipControl->LocateSource();
+    pipControl->window_ = nullptr;
+    pipControl->LocateSource();
 }
 }
 }

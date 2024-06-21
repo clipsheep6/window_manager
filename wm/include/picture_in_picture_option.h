@@ -19,6 +19,7 @@
 #include <string>
 #include "xcomponent_controller.h"
 #include "wm_common.h"
+#include "napi/native_api.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -43,6 +44,8 @@ public:
     std::vector<PiPControlEnableInfo> GetControlEnable();
     void GetContentSize(uint32_t& width, uint32_t& height);
     std::shared_ptr<XComponentController> GetXComponentController();
+    void SetNodeControllerRef(napi_ref ref);
+    napi_ref GetNodeControllerRef() const;
 private:
     void* contextPtr_ = nullptr;
     uint32_t templateType_  = 0;
@@ -53,6 +56,7 @@ private:
     std::vector<std::uint32_t> controlGroup_;
     std::vector<PiPControlStatusInfo> pipControlStatusInfoList_ = {};
     std::vector<PiPControlEnableInfo> pipControlEnableInfoList_ = {};
+    napi_ref customNodeController_;
 };
 }
 }

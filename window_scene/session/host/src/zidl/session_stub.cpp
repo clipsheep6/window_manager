@@ -167,6 +167,9 @@ int SessionStub::HandleForeground(MessageParcel& data, MessageParcel& reply)
     sptr<WindowSessionProperty> property = nullptr;
     if (data.ReadBool()) {
         property = data.ReadStrongParcelable<WindowSessionProperty>();
+        if (property == nullptr) {
+            return ERR_INVALID_DATA;
+        }
     } else {
         WLOGFW("[WMSCom] Property not exist!");
         property = new WindowSessionProperty();
@@ -201,6 +204,9 @@ int SessionStub::HandleShow(MessageParcel& data, MessageParcel& reply)
     sptr<WindowSessionProperty> property = nullptr;
     if (data.ReadBool()) {
         property = data.ReadStrongParcelable<WindowSessionProperty>();
+        if (property == nullptr) {
+            return ERR_INVALID_DATA;
+        }
     } else {
         WLOGFW("Property not exist!");
         property = new WindowSessionProperty();
@@ -234,6 +240,9 @@ int SessionStub::HandleConnect(MessageParcel& data, MessageParcel& reply)
     sptr<WindowSessionProperty> property = nullptr;
     if (data.ReadBool()) {
         property = data.ReadStrongParcelable<WindowSessionProperty>();
+        if (property == nullptr) {
+            return ERR_INVALID_DATA;
+        }
     } else {
         WLOGFW("Property not exist!");
     }
@@ -241,13 +250,16 @@ int SessionStub::HandleConnect(MessageParcel& data, MessageParcel& reply)
     sptr<IRemoteObject> token = nullptr;
     if (property && property->GetTokenState()) {
         token = data.ReadRemoteObject();
+        if (token == nullptr) {
+            return ERR_INVALID_DATA;
+        }
     } else {
         WLOGI("accept token is nullptr");
     }
     std::string identityToken = data.ReadString();
     SystemSessionConfig systemConfig;
     WSError errCode = Connect(sessionStage, eventChannel, surfaceNode, systemConfig, property, token,
-        -1, -1, identityToken);
+        identityToken);
     reply.WriteParcelable(&systemConfig);
     if (property) {
         reply.WriteInt32(property->GetPersistentId());
@@ -521,7 +533,7 @@ int SessionStub::HandleUpdateWindowSceneAfterCustomAnimation(MessageParcel& data
 
 int SessionStub::HandleSetLandscapeMultiWindow(MessageParcel& data, MessageParcel& reply)
 {
-    WLOGD("HandleSetLandscapeMultiWindow!");
+    TLOGD(WmsLogTag::WMS_MULTI_WINDOW, "HandleSetLandscapeMultiWindow!");
     bool isLandscapeMultiWindow = data.ReadBool();
     const WSError errCode = SetLandscapeMultiWindow(isLandscapeMultiWindow);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
@@ -596,6 +608,9 @@ int SessionStub::HandleTransferAccessibilityEvent(MessageParcel& data, MessagePa
 {
     sptr<Accessibility::AccessibilityEventInfoParcel> infoPtr =
         data.ReadStrongParcelable<Accessibility::AccessibilityEventInfoParcel>();
+    if (infoPtr == nullptr) {
+        return ERR_INVALID_DATA;
+    }
     int64_t uiExtensionIdLevel = 0;
     if (!data.ReadInt64(uiExtensionIdLevel)) {
         WLOGFE("read uiExtensionIdLevel error");
