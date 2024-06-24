@@ -3777,40 +3777,6 @@ void SceneSessionManager::DumpSessionInfo(const sptr<SceneSession>& session, std
         << std::endl;
 }
 
-void SceneSessionManager::DumpAllAppSessionInfo(std::ostringstream& oss,
-    const std::map<int32_t, sptr<SceneSession>>& sceneSessionMap)
-{
-    oss << std::endl << "Current mission lists:" << std::endl;
-    oss << " MissionList Type #NORMAL" << std::endl;
-    for (const auto& elem : sceneSessionMap) {
-        auto curSession = elem.second;
-        if (curSession == nullptr) {
-            WLOGFW("curSession is nullptr");
-            continue;
-        }
-        if (curSession->GetSessionInfo().isSystem_ ||
-            curSession->GetWindowType() < WindowType::APP_MAIN_WINDOW_BASE ||
-            curSession->GetWindowType() >= WindowType::APP_MAIN_WINDOW_END) {
-            WLOGFW("No need to dump, id: %{public}d, system: %{public}d, windowType: %{public}d",
-                curSession->GetPersistentId(), curSession->GetSessionInfo().isSystem_, curSession->GetWindowType());
-            continue;
-        }
-
-        const auto& sessionInfo = curSession->GetSessionInfo();
-        std::string isActive = curSession->IsActive() ? "FOREGROUND" : "BACKGROUND";
-        oss << "    Mission ID #" << curSession->GetPersistentId() << "  mission name #" << "[#"
-            << sessionInfo.bundleName_ << ":" << sessionInfo.moduleName_ << ":" << sessionInfo.abilityName_
-            << "]" << "    lockedState #0" << std::endl;
-        oss << "    app name [" << sessionInfo.bundleName_ << "]" << std::endl;
-        oss << "    main name [" << sessionInfo.abilityName_ << "]" << std::endl;
-        oss << "    bundle name [" << sessionInfo.bundleName_ << "]" << std::endl;
-        oss << "    ability type [PAGE]" << std::endl;
-        oss << "    state #" << isActive.c_str() << std::endl;
-        oss << "    app state #" << isActive.c_str() << std::endl;
-        oss << "    callee connections:" << std::endl;
-    }
-}
-
 WSError SceneSessionManager::GetAllSessionDumpInfo(std::string& dumpInfo)
 {
     int32_t screenGroupId = 0;
@@ -3854,7 +3820,6 @@ WSError SceneSessionManager::GetAllSessionDumpInfo(std::string& dumpInfo)
     }
     oss << "Focus window: " << GetFocusedSessionId() << std::endl;
     oss << "Total window num: " << sceneSessionMapCopy.size() << std::endl;
-    DumpAllAppSessionInfo(oss, sceneSessionMapCopy);
     dumpInfo.append(oss.str());
     return WSError::WS_OK;
 }
@@ -5097,26 +5062,8 @@ void SceneSessionManager::NotifyRSSWindowModeTypeUpdate()
     SessionManagerAgentController::GetInstance().UpdateWindowModeTypeInfo(type);
 }
 
-void SceneSessionManager::ProcessSubSessionForeground(sptr<SceneSession>& sceneSession)
+void SceneSessionManager::ProcessModalSessionForeground(sptr<SceneSession>& sceneSession)
 {
-    if (sceneSession == nullptr) {
-        WLOGFD("session is nullptr");
-        return;
-    }
-    for (const auto& subSession : sceneSession->GetSubSession()) {
-        if (subSession == nullptr) {
-            WLOGFD("sub session is nullptr");
-            continue;
-        }
-        const auto& state = subSession->GetSessionState();
-        if (state != SessionState::STATE_FOREGROUND && state != SessionState::STATE_ACTIVE) {
-            WLOGFD("sub session is not active");
-            continue;
-        }
-        RequestSessionFocus(subSession->GetPersistentId(), true);
-        NotifyWindowInfoChange(subSession->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_ADDED);
-        HandleKeepScreenOn(subSession, subSession->IsKeepScreenOn());
-    }
     std::vector<sptr<Session>> dialogVec = sceneSession->GetDialogVector();
     for (const auto& dialog : dialogVec) {
         if (dialog == nullptr) {
@@ -5141,6 +5088,59 @@ void SceneSessionManager::ProcessSubSessionForeground(sptr<SceneSession>& sceneS
         }
         HandleKeepScreenOn(dialogSession, dialogSession->IsKeepScreenOn());
     }
+
+    std::vector<sptr<SceneSession>> topmostVec;
+    for (const auto& subSession : sceneSession->GetSubSession()) {
+        if (subSession && subSession->IsTopmost()) {
+            topmostVec.push_back(subSession);
+        }
+    }
+    for (auto& topmostSession : topmostVec) {
+        if (topmostSession == nullptr) {
+            TLOGD(WmsLogTag::WMS_SUB, "topmost modal sub window is nullptr");
+            continue;
+        }
+        const auto& state = topmostSession->GetSessionState();
+        if (state != SessionState::STATE_FOREGROUND && state != SessionState::STATE_ACTIVE) {
+            TLOGD(WmsLogTag::WMS_SUB, "topmost modal sub window is not active");
+            continue;
+        }
+        NotifyWindowInfoChange(topmostSession->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_ADDED);
+        if (topmostSession->GetPersistentId() == focusedSessionId_ && needBlockNotifyFocusStatusUntilForeground_) {
+            needBlockNotifyUnfocusStatus_ = false;
+            needBlockNotifyFocusStatusUntilForeground_ = false;
+            NotifyFocusStatus(topmostSession, true);
+        }
+        HandleKeepScreenOn(topmostSession, topmostSession->IsKeepScreenOn());
+    }
+}
+
+void SceneSessionManager::ProcessSubSessionForeground(sptr<SceneSession>& sceneSession)
+{
+    if (sceneSession == nullptr) {
+        WLOGFD("session is nullptr");
+        return;
+    }
+    for (const auto& subSession : sceneSession->GetSubSession()) {
+        if (subSession == nullptr) {
+            WLOGFD("sub session is nullptr");
+            continue;
+        }
+        if (subSession->IsTopmost()) {
+            TLOGD(WmsLogTag::WMS_SUB, "sub session is topmost modal sub window");
+            continue;
+        }
+        const auto& state = subSession->GetSessionState();
+        if (state != SessionState::STATE_FOREGROUND && state != SessionState::STATE_ACTIVE) {
+            WLOGFD("sub session is not active");
+            continue;
+        }
+        RequestSessionFocus(subSession->GetPersistentId(), true);
+        NotifyWindowInfoChange(subSession->GetPersistentId(), WindowUpdateType::WINDOW_UPDATE_ADDED);
+        HandleKeepScreenOn(subSession, subSession->IsKeepScreenOn());
+    }
+
+    ProcessModalSessionForeground(sceneSession);
 }
 
 WSError SceneSessionManager::ProcessModalTopmostRequestFocusImmdediately(sptr<SceneSession>& sceneSession)
@@ -7056,13 +7056,6 @@ bool SceneSessionManager::UpdateSessionAvoidAreaIfNeed(const int32_t& persistent
                 needUpdate = false;
                 return needUpdate;
             }
-        }
-    } else {
-        if (avoidArea.isEmptyAvoidArea()) {
-            TLOGI(WmsLogTag::WMS_IMMS, "update avoid area is empty persistentId=%{public}d avoidAreaType=%{public}d",
-                persistentId, avoidAreaType);
-            needUpdate = false;
-            return needUpdate;
         }
     }
     if (needUpdate ||

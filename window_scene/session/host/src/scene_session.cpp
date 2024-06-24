@@ -2278,6 +2278,11 @@ Orientation SceneSession::GetRequestedOrientation() const
     return GetSessionProperty()->GetRequestedOrientation();
 }
 
+bool SceneSession::IsAnco() const
+{
+    return collaboratorType_ != static_cast<int32_t>(CollaboratorType::DEFAULT_TYPE);
+}
+
 int32_t SceneSession::GetCollaboratorType() const
 {
     return collaboratorType_;
@@ -3177,7 +3182,7 @@ void SceneSession::NotifyPiPWindowPrepareClose()
             return;
         }
         if (callingPid != session->GetCallingPid()) {
-            TLOGW(WmsLogTag::WMS_PIP, "premission denied, not call by the same process");
+            TLOGW(WmsLogTag::WMS_PIP, "permission denied, not call by the same process");
             return;
         }
         if (session->sessionChangeCallback_ && session->sessionChangeCallback_->onPrepareClosePiPSession_) {
@@ -3273,7 +3278,7 @@ WSError SceneSession::UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
             return WSError::WS_ERROR_INVALID_OPERATION;
         }
         if (callingPid != session->GetCallingPid()) {
-            TLOGW(WmsLogTag::WMS_PIP, "premission denied, not call by the same process");
+            TLOGW(WmsLogTag::WMS_PIP, "permission denied, not call by the same process");
             return WSError::WS_ERROR_INVALID_PERMISSION;
         }
         WSRect wsRect = SessionHelper::TransferToWSRect(rect);
