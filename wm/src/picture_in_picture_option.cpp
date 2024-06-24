@@ -14,6 +14,7 @@
  */
 
 #include "picture_in_picture_option.h"
+#include "window_manager_hilog.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -34,6 +35,38 @@ void PipOption::SetNavigationId(const std::string& navigationId)
 void PipOption::SetPipTemplate(uint32_t templateType)
 {
     templateType_ = templateType;
+}
+
+void PipOption::SetPiPControlStatus(PiPControlType controlType, PiPControlStatus status)
+{
+    PiPControlStatusInfo newPipControlStatusInfo;
+    newPipControlStatusInfo.controlType = controlType;
+    newPipControlStatusInfo.status = status;
+    for (auto& controlStatusInfo : pipControlStatusInfoList_) {
+        TLOGI(WmsLogTag::WMS_PIP, "controlStatus %{public}u : %{public}u",
+            controlStatusInfo.controlType, controlStatusInfo.status);
+        if (controlType == controlStatusInfo.controlType) {
+            controlStatusInfo = newPipControlStatusInfo;
+            return;
+        }
+    }
+    pipControlStatusInfoList_.push_back(newPipControlStatusInfo);
+}
+
+void PipOption::SetPiPControlEnable(PiPControlType controlType, bool isEnable)
+{
+    PiPControlEnableInfo newPipControlEnableInfo;
+    newPipControlEnableInfo.controlType = controlType;
+    newPipControlEnableInfo.isEnable = isEnable;
+    for (auto& controlEnableInfo : pipControlEnableInfoList_) {
+        TLOGI(WmsLogTag::WMS_PIP, "controlEnable %{public}u : %{public}u",
+            controlEnableInfo.controlType, controlEnableInfo.isEnable);
+        if (controlType == controlEnableInfo.controlType) {
+            controlEnableInfo = newPipControlEnableInfo;
+            return;
+        }
+    }
+    pipControlEnableInfoList_.push_back(newPipControlEnableInfo);
 }
 
 void PipOption::SetContentSize(uint32_t width, uint32_t height)
@@ -81,6 +114,16 @@ void PipOption::GetContentSize(uint32_t& width, uint32_t& height)
 std::vector<std::uint32_t> PipOption::GetControlGroup()
 {
     return controlGroup_;
+}
+
+std::vector<PiPControlStatusInfo> PipOption::GetControlStatus()
+{
+    return pipControlStatusInfoList_;
+}
+
+std::vector<PiPControlEnableInfo> PipOption::GetControlEnable()
+{
+    return pipControlEnableInfoList_;
 }
 
 void PipOption::SetXComponentController(std::shared_ptr<XComponentController> xComponentController)

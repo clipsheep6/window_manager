@@ -205,8 +205,11 @@ public:
     WSError NotifyDialogStateChange(bool isForeground) override;
     bool IsMainHandlerAvailable() const override;
     WSError SetPipActionEvent(const std::string& action, int32_t status) override;
+    WSError SetPiPControlEvent(PiPControlType controlType, PiPControlStatus status) override;
 
     void UpdatePiPRect(const Rect& rect, WindowSizeChangeReason reason) override;
+    void UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status) override;
+    void SetPiPControlEnable(PiPControlType controlType, bool isEnable) override;
     void SetDrawingContentState(bool drawingContentState);
     WMError RegisterWindowStatusChangeListener(const sptr<IWindowStatusChangeListener>& listener) override;
     WMError UnregisterWindowStatusChangeListener(const sptr<IWindowStatusChangeListener>& listener) override;

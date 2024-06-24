@@ -2486,6 +2486,16 @@ WSError WindowSessionImpl::SetPipActionEvent(const std::string& action, int32_t 
     return WSError::WS_OK;
 }
 
+WSError WindowSessionImpl::SetPiPControlEvent(PiPControlType controlType, PiPControlStatus status)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "action: %{public}u, status: %{public}u", controlType, status);
+    auto task = [controlType, status]() {
+        PictureInPictureManager::DoControlEvent(controlType, status);
+    };
+    handler_->PostTask(task, "WMS_WindowSessionImpl_SetPiPControlEvent");
+    return WSError::WS_OK;
+}
+
 WMError WindowSessionImpl::RegisterTouchOutsideListener(const sptr<ITouchOutsideListener>& listener)
 {
     bool isUpdate = false;
@@ -3138,6 +3148,26 @@ void WindowSessionImpl::UpdatePiPRect(const Rect& rect, WindowSizeChangeReason r
     auto hostSession = GetHostSession();
     CHECK_HOST_SESSION_RETURN_IF_NULL(hostSession);
     hostSession->UpdatePiPRect(rect, static_cast<SizeChangeReason>(reason));
+}
+
+void WindowSessionImpl::UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "UpdatePiPControlStatus is called");
+    if (IsWindowSessionInvalid()) {
+        WLOGFE("HostSession is invalid");
+        return;
+    }
+    hostSession_->UpdatePiPControlStatus(controlType, status);
+}
+
+void WindowSessionImpl::SetPiPControlEnable(PiPControlType controlType, bool isEnable)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnable is called");
+    if (IsWindowSessionInvalid()) {
+        WLOGFE("HostSession is invalid");
+        return;
+    }
+    hostSession_->SetPiPControlEnable(controlType, isEnable);
 }
 
 void WindowSessionImpl::NotifyWindowStatusChange(WindowMode mode)
