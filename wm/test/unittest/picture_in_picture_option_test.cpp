@@ -82,8 +82,7 @@ HWTEST_F(PictureInPictureOptionTest, PiPControlStatus, Function | SmallTest | Le
     auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
     auto status = PiPControlStatus.PLAY;
     option->SetPiPControlStatus(controlType, status);
-    std::vector<PiPControlStatusInfo> pipControlStatusInfoList_ = {};
-    ASSERT_EQ(pipControlStatusInfoList_, option->GetControlStatus());
+    ASSERT_NE(0, option->GetControlStatus().size());
 }
 
 /**
@@ -97,8 +96,7 @@ HWTEST_F(PictureInPictureOptionTest, PiPControlEnable, Function | SmallTest | Le
     auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
     bool enabled = true;
     option->SetPiPControlEnabled(controlType, enabled);
-    std::vector<PiPControlEnableInfo> pipControlEnableInfoList_ = {};
-    ASSERT_EQ(pipControlStatusInfoList_, option->GetControlEnable());
+    ASSERT_NE(0, option->GetControlEnable().size());
 }
 
 /**

@@ -828,9 +828,9 @@ HWTEST_F(SceneSessionTest, NotifySessionPiPControlStatusChange, Function | Small
     sptr<SceneSession> sceneSession;
     sceneSession = new (std::nothrow) SceneSession(info, nullptr);
     EXPECT_NE(sceneSession, nullptr);
-    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     auto status = PiPControlStatus.PLAY;
-    scensession->NotifySessionPiPControlEnableChangeFunc(controlType, status);
+    sceneSession->NotifySessionPiPControlStatusChange(controlType, status);
 }
 
 /**
@@ -851,9 +851,9 @@ HWTEST_F(SceneSessionTest, NotifySessionPiPControlEnableChange, Function | Small
     sptr<SceneSession> sceneSession;
     sceneSession = new (std::nothrow) SceneSession(info, nullptr);
     EXPECT_NE(sceneSession, nullptr);
-    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     bool enabled = true;
-    scensession->NotifySessionPiPControlEnableChange(controlType, enabled);
+    sceneSession->NotifySessionPiPControlEnableChange(controlType, enabled);
 }
 
 /**

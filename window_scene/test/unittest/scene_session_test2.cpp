@@ -842,13 +842,13 @@ HWTEST_F(SceneSessionTest2, UpdatePiPControlStatus, Function | SmallTest | Level
     sptr<SceneSession> sceneSession;
     sceneSession = new (std::nothrow) SceneSession(info, nullptr);
     EXPECT_NE(sceneSession, nullptr);
-    scenesession->isActive_ = true;
+    sceneSession->isActive_ = true;
 
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::WINDOW_TYPE_PIP);
     scenesession->SetSessionProperty(property);
 
-    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     auto status = PiPControlStatus.PLAY;
     WSError result = scenesession->UpdatePiPControlStatus(controlType, status);
     ASSERT_EQ(result, WSError::WS_OK);
@@ -871,13 +871,13 @@ HWTEST_F(SceneSessionTest2, SetPiPControlEnabled, Function | SmallTest | Level2)
     sptr<SceneSession> sceneSession;
     sceneSession = new (std::nothrow) SceneSession(info, nullptr);
     EXPECT_NE(sceneSession, nullptr);
-    scenesession->isActive_ = true;
+    sceneSession->isActive_ = true;
 
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::WINDOW_TYPE_PIP);
     scenesession->SetSessionProperty(property);
 
-    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     bool enabled = true;
     WSError result = scenesession->SetPiPControlEnabled(controlType, enabled);
     ASSERT_EQ(result, WSError::WS_OK);
@@ -1311,20 +1311,20 @@ HWTEST_F(SceneSessionTest2, SetPipActionEvent, Function | SmallTest | Level2)
     SessionInfo info;
     info.abilityName_ = "SetPipActionEvent";
     info.bundleName_ = "SetPipActionEvent";
-    sptr<SceneSession> scensession = new (std::nothrow) SceneSession(info, nullptr);
-    EXPECT_NE(scensession, nullptr);
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(sceneSession, nullptr);
 
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
-    scensession->SetSessionProperty(property);
-    WSError res = scensession->SetPipActionEvent("close", 0);
+    sceneSession->SetSessionProperty(property);
+    WSError res = sceneSession->SetPipActionEvent("close", 0);
     ASSERT_EQ(res, WSError::WS_ERROR_INVALID_TYPE);
 
     property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::WINDOW_TYPE_PIP);
     property->SetWindowMode(WindowMode::WINDOW_MODE_PIP);
-    scensession->SetSessionProperty(property);
-    res = scensession->SetPipActionEvent("close", 0);
+    sceneSession->SetSessionProperty(property);
+    res = sceneSession->SetPipActionEvent("close", 0);
     ASSERT_EQ(res, WSError::WS_ERROR_NULLPTR);
 }
 
@@ -1338,22 +1338,22 @@ HWTEST_F(SceneSessionTest2, SetPiPControlEvent, Function | SmallTest | Level2)
     SessionInfo info;
     info.abilityName_ = "SetPiPControlEvent";
     info.bundleName_ = "SetPiPControlEvent";
-    sptr<SceneSession> scensession = new (std::nothrow) SceneSession(info, nullptr);
-    EXPECT_NE(scensession, nullptr);
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(sceneSession, nullptr);
 
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
-    scensession->SetSessionProperty(property);
-    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    sceneSession->SetSessionProperty(property);
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     auto status = PiPControlStatus.PLAY;
-    WSError res = scensession->SetPiPControlEvent(controlType, status);
+    WSError res = sceneSession->SetPiPControlEvent(controlType, status);
     ASSERT_EQ(res, WSError::WS_ERROR_INVALID_TYPE);
 
     property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::WINDOW_TYPE_PIP);
     property->SetWindowMode(WindowMode::WINDOW_MODE_PIP);
-    scensession->SetSessionProperty(property);
-    WSError res = scensession->SetPiPControlEvent(controlType, status);
+    sceneSession->SetSessionProperty(property);
+    res = sceneSession->SetPiPControlEvent(controlType, status);
     ASSERT_EQ(res, WSError::WS_ERROR_NULLPTR);
 }
 
@@ -1685,7 +1685,7 @@ HWTEST_F(SceneSessionTest2, SetSessionPiPControlEnableChangeCallback, Function |
     info.bundleName_ = "SetSessionPiPControlStatusChangeCallback";
     sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
     EXPECT_NE(sceneSession, nullptr);
-    NotifySessionPiPControlStatusChangeFunc func;
+    NotifySessionPiPControlEnableChangeFunc func;
     sceneSession->SetSessionPiPControlEnableChangeCallback(func);
 }
 

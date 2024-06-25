@@ -1309,7 +1309,7 @@ WSError SceneSession::SetPiPControlEvent(PiPControlType controlType, PiPControlS
     if (!sessionStage_) {
         return WSError::WS_ERROR_NULLPTR;
     }
-    retur   n sessionStage_->SetPiPControlEvent(controlType, status);
+    return sessionStage_->SetPiPControlEvent(controlType, status);
 }
 
 void SceneSession::HandleStyleEvent(MMI::WindowArea area)
