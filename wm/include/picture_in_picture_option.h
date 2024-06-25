@@ -56,7 +56,7 @@ private:
     std::vector<std::uint32_t> controlGroup_;
     std::vector<PiPControlStatusInfo> pipControlStatusInfoList_ = {};
     std::vector<PiPControlEnableInfo> pipControlEnableInfoList_ = {};
-    napi_ref customNodeController_;
+    napi_ref customNodeController_ = nullptr;
 };
 }
 }
