@@ -834,6 +834,39 @@ HWTEST_F(WindowSceneSessionImplTest, Show01, Function | SmallTest | Level2)
 }
 
 /**
+ * @tc.name: Show02
+ * @tc.desc: Show session
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, Show02, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("Show02");
+    option->SetDisplayId(0);
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, window);
+    window->property_->SetPersistentId(1);
+
+    SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    window->hostSession_ = session;
+    window->state_ = WindowState::STATE_CREATED;
+    window->property_->SetWindowType(WindowType::APP_SUB_WINDOW_BASE);
+    Rect requestRect = { 100, 100, 100, 100 };
+    window->property_->SetRequestRect(requestRect);
+    ASSERT_EQ(WMError::WM_OK, window->Show(2, false));
+    window->property_->SetWindowType(WindowType::SYSTEM_WINDOW_BASE);
+    ASSERT_EQ(WMError::WM_OK, window->Show(2, false));
+    requestRect = { 100, 100, 0, 100 };
+    window->property_->SetRequestRect(requestRect);
+    ASSERT_EQ(WMError::WM_OK, window->Show(2, false));
+    requestRect = { 100, 100, 100, 0 };
+    window->property_->SetRequestRect(requestRect);
+    ASSERT_EQ(WMError::WM_OK, window->Show(2, false));
+    ASSERT_EQ(WMError::WM_OK, window->Destroy(false));
+}
+
+/**
  * @tc.name: SetBackgroundColor01
  * @tc.desc: test SetBackgroundColor withow uiContent
  * @tc.type: FUNC
