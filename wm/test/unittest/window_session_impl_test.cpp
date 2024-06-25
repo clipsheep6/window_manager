@@ -18,6 +18,7 @@
 #include "accessibility_event_info.h"
 #include "mock_session.h"
 #include "window_session_impl.h"
+#include "wm_common.h"
 #include "mock_uicontent.h"
 #include "mock_window.h"
 #include "parameters.h"
@@ -2030,6 +2031,26 @@ HWTEST_F(WindowSessionImplTest, SetPipActionEvent, Function | SmallTest | Level2
     WSError res = window->SetPipActionEvent("close", 0);
     ASSERT_EQ(res, WSError::WS_OK);
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetPipActionEvent end";
+}
+
+/**
+ * @tc.name: SetPiPControlEvent
+ * @tc.desc: SetPiPControlEvent Test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTest, SetPiPControlEvent, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTest: SetPiPControlEvent start";
+    sptr<WindowOption> option = new WindowOption();
+    ASSERT_NE(option, nullptr);
+    option->SetWindowName("GetTitleButtonArea");
+    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    auto status = PiPControlStatus.PLAY;
+    WSError res = window->SetPiPControlEvent(controlType, status);
+    ASSERT_EQ(res, WSError::WS_OK);
+    GTEST_LOG_(INFO) << "WindowSessionImplTest: SetPiPControlEvent end";
 }
 
 /**

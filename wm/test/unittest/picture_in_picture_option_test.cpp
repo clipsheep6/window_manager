@@ -72,6 +72,36 @@ HWTEST_F(PictureInPictureOptionTest, PipTemplate, Function | SmallTest | Level2)
 }
 
 /**
+ * @tc.name: PipTemplate
+ * @tc.desc: SetPiPControlStatus/GetControlStatus
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureOptionTest, PiPControlStatus, Function | SmallTest | Level2)
+{
+    sptr<PipOption> option = new PipOption();
+    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    auto status = PiPControlStatus.PLAY;
+    option->SetPiPControlStatus(controlType, status);
+    std::vector<PiPControlStatusInfo> pipControlStatusInfoList_ = {};
+    ASSERT_EQ(pipControlStatusInfoList_, option->GetControlStatus());
+}
+
+/**
+ * @tc.name: PipTemplate
+ * @tc.desc: SetPiPControlEnabled/GetControlEnable
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureOptionTest, PiPControlEnable, Function | SmallTest | Level2)
+{
+    sptr<PipOption> option = new PipOption();
+    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    bool enabled = true;
+    option->SetPiPControlEnabled(controlType, enabled);
+    std::vector<PiPControlEnableInfo> pipControlEnableInfoList_ = {};
+    ASSERT_EQ(pipControlStatusInfoList_, option->GetControlEnable());
+}
+
+/**
  * @tc.name: NavigationId
  * @tc.desc: SetNavigationId/GetNavigationId
  * @tc.type: FUNC

@@ -23,6 +23,8 @@
 #include "parcel/accessibility_event_info_parcel.h"
 #include "session/host/include/zidl/session_ipc_interface_code.h"
 #include "want.h"
+#include "wm_common.h"
+
 using namespace testing;
 using namespace testing::ext;
 
@@ -233,6 +235,42 @@ HWTEST_F(SessionStubTest, HandleUpdatePiPRect004, Function | SmallTest | Level2)
     data.WriteBool(true);
     sptr<IRemoteObjectMocker> iRemoteObjectMocker = new IRemoteObjectMocker();
     auto res = session_->HandleUpdatePiPRect(data, reply);
+    ASSERT_EQ(0, res);
+}
+
+/**
+ * @tc.name: UpdatePiPControlStatus
+ * @tc.desc: sessionStub sessionStubTest
+ * @tc.type: FUNC
+ * @tc.require: #I6JLSI
+ */
+HWTEST_F(SessionStubTest, UpdatePiPControlStatus, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    auto status = PiPControlStatus.PLAY;
+    data.WriteUint32(controlType);
+    data.WriteInt32(status);
+    auto res = session_->UpdatePiPControlStatus(controlType, status);
+    ASSERT_EQ(0, res);
+}
+
+/**
+ * @tc.name: HandleSetPiPControlEnabled
+ * @tc.desc: sessionStub HandleSetPiPControlEnabled
+ * @tc.type: FUNC
+ * @tc.require: #I6JLSI
+ */
+HWTEST_F(SessionStubTest, HandleSetPiPControlEnabled, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    bool enabled = true;
+    data.WriteUint32(controlType);
+    data.WriteBool(enabled);
+    auto res = session_->UpdatePiPControlStatus(controlType, enabled);
     ASSERT_EQ(0, res);
 }
 

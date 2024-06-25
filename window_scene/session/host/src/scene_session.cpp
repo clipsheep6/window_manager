@@ -785,12 +785,30 @@ void SceneSession::SetSessionRectChangeCallback(const NotifySessionRectChangeFun
 
 void SceneSession::SetSessionPiPControlStatusChangeCallback(const NotifySessionPiPControlStatusChangeFunc& func)
 {
-    sessionPiPControlStatusChangeFunc_ = func;
+    auto task = [weakThis = wptr(this), func]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGFE("session is null");
+            return WSError::WS_ERROR_DESTROYED_OBJECT;
+        }
+        session->sessionPiPControlStatusChangeFunc_ = func;
+        return WSError::WS_OK;
+    };
+    PostTask(task, "SetSessionPiPControlStatusChangeCallback");
 }
 
 void SceneSession::SetSessionPiPControlEnableChangeCallback(const NotifySessionPiPControlEnableChangeFunc& func)
 {
-    sessionPiPControlEnableChangeFunc_ = func;
+    auto task = [weakThis = wptr(this), func]() {
+        auto session = weakThis.promote();
+        if (!session) {
+            WLOGFE("session is null");
+            return WSError::WS_ERROR_DESTROYED_OBJECT;
+        }
+        session->sessionPiPControlEnableChangeFunc_ = func;
+        return WSError::WS_OK;
+    };
+    PostTask(task, "SetSessionPiPControlEnableChangeCallback");
 }
 
 void SceneSession::UpdateSessionRectInner(const WSRect& rect, const SizeChangeReason& reason)
@@ -1291,7 +1309,7 @@ WSError SceneSession::SetPiPControlEvent(PiPControlType controlType, PiPControlS
     if (!sessionStage_) {
         return WSError::WS_ERROR_NULLPTR;
     }
-    return sessionStage_->SetPiPControlEvent(controlType, status);
+    retur   n sessionStage_->SetPiPControlEvent(controlType, status);
 }
 
 void SceneSession::HandleStyleEvent(MMI::WindowArea area)
@@ -1618,6 +1636,7 @@ void SceneSession::NotifySessionRectChange(const WSRect& rect, const SizeChangeR
     };
     PostTask(task, "NotifySessionRectChange" + GetRectInfo(rect));
 }
+
 void SceneSession::NotifySessionPiPControlStatusChange(PiPControlType controlType, PiPControlStatus status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "NotifySessionPiPControlStatusChange is called");

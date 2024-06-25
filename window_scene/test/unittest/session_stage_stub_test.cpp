@@ -28,6 +28,7 @@
 #include "session_manager/include/zidl/scene_session_manager_interface.h"
 #include "window_manager.h"
 #include "window_manager_agent.h"
+#include "wm_common.h"
 #include "zidl/window_manager_agent_interface.h"
 #include "window_manager_hilog.h"
 
@@ -432,6 +433,23 @@ HWTEST_F(SessionStageStubTest, HandleSetPipActionEvent, Function | SmallTest | L
     data.WriteInt32(1);
     ASSERT_TRUE((sessionStageStub_ != nullptr));
     ASSERT_EQ(0, sessionStageStub_->HandleSetPipActionEvent(data, reply));
+}
+
+/**
+ * @tc.name: HandleSetPiPControlEvent
+ * @tc.desc: test function : HandleSetPiPControlEvent
+ * @tc.type: FUNC
+ */
+HWTEST_F(SessionStageStubTest, HandleSetPiPControlEvent, Function | SmallTest | Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    auto status = PiPControlStatus.PLAY;
+    data.WriteUint32(controlType);
+    data.WriteInt32(status);
+    ASSERT_TRUE((sessionStageStub_ != nullptr));
+    ASSERT_EQ(0, sessionStageStub_->HandleSetPiPControlEvent(controlType, status));
 }
 }
 }

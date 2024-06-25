@@ -16,6 +16,8 @@
 #include "iremote_object_mocker.h"
 #include <gtest/gtest.h>
 #include "accessibility_event_info.h"
+#include "wm_common.h"
+
 // using namespace FRAME_TRACE;
 using namespace testing;
 using namespace testing::ext;
@@ -499,6 +501,40 @@ HWTEST_F(SessionProxyTest, TransferAccessibilityEvent, Function | SmallTest | Le
     ASSERT_EQ(res, WSError::WS_OK);
 
     GTEST_LOG_(INFO) << "SessionProxyTest: TransferAccessibilityEvent end";
+}
+
+/**
+ * @tc.name: UpdatePiPControlStatus
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SessionProxyTest, UpdatePiPControlStatus, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "SessionProxyTest: UpdatePiPControlStatus start";
+    sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
+    SessionProxy* sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
+    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    auto status = PiPControlStatus.PLAY;
+    WSError res = sProxy->UpdatePiPControlStatus(controlType, status);
+    ASSERT_EQ(res, WSError::WS_OK);
+    GTEST_LOG_(INFO) << "SessionProxyTest: UpdatePiPControlStatus end";
+}
+
+/**
+ * @tc.name: SetPiPControlEnabled
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SessionProxyTest, SetPiPControlEnabled, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "SessionProxyTest: SetPiPControlEnabled start";
+    sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
+    SessionProxy* sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
+    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    bool enabled = true;
+    WSError res = sProxy->SetPiPControlEnabled(controlType, enabled);
+    ASSERT_EQ(res, WSError::WS_OK);
+    GTEST_LOG_(INFO) << "SessionProxyTest: SetPiPControlEnabled end";
 }
 } // namespace
 } // namespace Rosen

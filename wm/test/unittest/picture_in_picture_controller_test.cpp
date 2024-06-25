@@ -22,6 +22,7 @@
 #include "picture_in_picture_controller.h"
 #include "picture_in_picture_manager.h"
 #include "window.h"
+#include "wm_common.h"
 #include "xcomponent_controller.h"
 #include "result_set.h"
 #include "system_ability_definition.h"
@@ -452,6 +453,36 @@ HWTEST_F(PictureInPictureControllerTest, UpdateContentSize02, Function | SmallTe
 }
 
 /**
+ * @tc.name: UpdatePiPControlStatus
+ * @tc.desc: UpdatePiPControlStatus
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureControllerTest, UpdatePiPControlStatus, Function | SmallTest | Level2)
+{
+    auto mw = sptr<MockWindow>::MakeSptr();
+    ASSERT_NE(nullptr, mw);
+    auto pipControl = sptr<PictureInPictureController>::MakeSptr(option, mw, 100, nullptr);
+    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    auto status = PiPControlStatus.PLAY;
+    pipControl->UpdatePiPControlStatus(controlType, status);
+}
+
+/**
+ * @tc.name: SetPiPControlEnabled
+ * @tc.desc: SetPiPControlEnabled
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureControllerTest, SetPiPControlEnabled, Function | SmallTest | Level2)
+{
+    auto mw = sptr<MockWindow>::MakeSptr();
+    ASSERT_NE(nullptr, mw);
+    auto pipControl = sptr<PictureInPictureController>::MakeSptr(option, mw, 100, nullptr);
+    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    bool enabled = true;
+    pipControl->SetPiPControlEnabled(controlType, enabled);
+}
+
+/**
  * @tc.name: IsContentSizeChanged
  * @tc.desc: IsContentSizeChanged
  * @tc.type: FUNC
@@ -563,6 +594,26 @@ HWTEST_F(PictureInPictureControllerTest, DoActionEvent, Function | SmallTest | L
     pipControl->DoActionEvent(actionName, status);
     pipControl->SetPictureInPictureActionObserver(listener);
     pipControl->DoActionEvent(actionName, status);
+}
+
+/**
+ * @tc.name: DoControlEvent
+ * @tc.desc: DoControlEvent
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureControllerTest, DoControlEvent, Function | SmallTest | Level2)
+{
+    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    auto status = PiPControlStatus.PLAY;
+    auto mw = sptr<MockWindow>::MakeSptr();
+    auto option = sptr<PipOption>::MakeSptr();
+    auto pipControl = sptr<PictureInPictureController>::MakeSptr(option, mw, 100, nullptr);
+    sptr<IPiPControlObserver> listener = nullptr;
+
+    pipControl->pipControlObserver_ = nullptr;
+    pipControl->DoControlEvent(controlType, status);
+    pipControl->SetPictureInPictureControlObserver(listener);
+    pipControl->DoControlEvent(controlType, status);
 }
 
 /**
