@@ -157,7 +157,7 @@ private:
     void OnBindDialogTarget(const sptr<SceneSession>& sceneSession);
     void OnSessionRectChange(const WSRect& rect, const SizeChangeReason& reason = SizeChangeReason::UNDEFINED);
     void OnSessionPiPControlStatusChange(PiPControlType controlType, PiPControlStatus status);
-    void OnSessionPiPControlEnableChange(PiPControlType controlType, bool isEnable);
+    void OnSessionPiPControlEnableChange(PiPControlType controlType, bool enabled);
     void OnRaiseToTop();
     void OnRaiseToTopForPointDown();
     void OnRaiseAboveTarget(int32_t subWindowId);

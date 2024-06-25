@@ -496,15 +496,15 @@ void PictureInPictureController::UpdatePiPControlStatus(PiPControlType controlTy
     window_->UpdatePiPControlStatus(controlType, status);
 }
 
-void PictureInPictureController::SetPiPControlEnabled(PiPControlType controlType, bool isEnable)
+void PictureInPictureController::SetPiPControlEnabled(PiPControlType controlType, bool enabled)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnabled %{public}u : %{public}u", controlType, isEnable);
-    pipOption_->SetPiPControlEnabled(controlType, isEnable);
+    TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnabled %{public}u : %{public}u", controlType, enabled);
+    pipOption_->SetPiPControlEnabled(controlType, enabled);
     if (window_ == nullptr) {
         TLOGI(WmsLogTag::WMS_PIP, "pipWindow not exist");
         return;
     }
-    window_->SetPiPControlEnabled(controlType, isEnable);
+    window_->SetPiPControlEnabled(controlType, enabled);
 }
 
 bool PictureInPictureController::IsContentSizeChanged(float width, float height, float posX, float posY)

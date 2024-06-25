@@ -299,8 +299,8 @@ napi_value JsPipController::OnSetPiPControlEnabled(napi_env env, napi_callback_i
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
         return NapiThrowInvalidParam(env, errMsg);
     }
-    bool isEnable = true;
-    if (!ConvertFromJsValue(env, argv[1], isEnable)) {
+    bool enabled = true;
+    if (!ConvertFromJsValue(env, argv[1], enabled)) {
         errMsg = "Failed to convert parameter to int";
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
         return NapiThrowInvalidParam(env, errMsg);
@@ -311,7 +311,7 @@ napi_value JsPipController::OnSetPiPControlEnabled(napi_env env, napi_callback_i
         return NapiThrowInvalidParam(env, errMsg);
     }
     std::lock_guard<std::mutex> lock(mtx_);
-    pipController_->SetPiPControlEnabled(controlType, isEnable);
+    pipController_->SetPiPControlEnabled(controlType, enabled);
     return NapiGetUndefined(env);
 }
 

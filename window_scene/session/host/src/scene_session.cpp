@@ -1635,10 +1635,10 @@ void SceneSession::NotifySessionPiPControlStatusChange(PiPControlType controlTyp
     PostTask(task, "NotifySessionPiPControlStatusChange");
 }
 
-void SceneSession::NotifySessionPiPControlEnableChange(PiPControlType controlType, bool isEnable)
+void SceneSession::NotifySessionPiPControlEnableChange(PiPControlType controlType, bool enabled)
 {
     TLOGI(WmsLogTag::WMS_PIP, "NotifySessionPiPControlEnableChange is called");
-    auto task = [weakThis = wptr(this), controlType, isEnable]() {
+    auto task = [weakThis = wptr(this), controlType, enabled]() {
         auto session = weakThis.promote();
         if (!session) {
             WLOGFE("session is null");
@@ -1646,7 +1646,7 @@ void SceneSession::NotifySessionPiPControlEnableChange(PiPControlType controlTyp
         }
         if (session->sessionPiPControlEnableChangeFunc_) {
             HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SceneSession::NotifySessionPiPControlEnableChange");
-            session->sessionPiPControlEnableChangeFunc_(controlType, isEnable);
+            session->sessionPiPControlEnableChangeFunc_(controlType, enabled);
         }
     };
     PostTask(task, "NotifySessionPiPControlEnableChange");
@@ -3311,19 +3311,19 @@ WSError SceneSession::UpdatePiPControlStatus(PiPControlType controlType, PiPCont
     return WSError::WS_OK;
 }
 
-WSError SceneSession::SetPiPControlEnabled(PiPControlType controlType, bool isEnable)
+WSError SceneSession::SetPiPControlEnabled(PiPControlType controlType, bool enabled)
 {
     TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnabled is called");
     if (!WindowHelper::IsPipWindow(GetWindowType())) {
         return WSError::WS_DO_NOTHING;
     }
-    auto task = [weakThis = wptr(this), controlType, isEnable]() {
+    auto task = [weakThis = wptr(this), controlType, enabled]() {
         auto session = weakThis.promote();
         if (!session || session->isTerminating) {
             TLOGE(WmsLogTag::WMS_PIP, "SceneSession::SetPiPControlEnabled session is null or is terminating");
             return WSError::WS_ERROR_INVALID_OPERATION;
         }
-        session->NotifySessionPiPControlEnableChange(controlType, isEnable);
+        session->NotifySessionPiPControlEnableChange(controlType, enabled);
         return WSError::WS_OK;
     };
     PostTask(task, "SetPiPControlEnabled");

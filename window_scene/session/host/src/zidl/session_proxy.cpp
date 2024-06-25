@@ -1083,7 +1083,7 @@ WSError SessionProxy::UpdatePiPControlStatus(PiPControlType controlType, PiPCont
     return static_cast<WSError>(ret);
 }
 
-WSError SessionProxy::SetPiPControlEnabled(PiPControlType controlType, bool isEnable)
+WSError SessionProxy::SetPiPControlEnabled(PiPControlType controlType, bool enabled)
 {
     TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnabled is called");
     MessageParcel data;
@@ -1097,8 +1097,8 @@ WSError SessionProxy::SetPiPControlEnabled(PiPControlType controlType, bool isEn
         TLOGE(WmsLogTag::WMS_LIFE, "Write controlType failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (!data.WriteBool(isEnable)) {
-        WLOGFE("write isEnable failed.");
+    if (!data.WriteBool(enabled)) {
+        WLOGFE("write enabled failed.");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_PIP_CONTROL_ENABLE),

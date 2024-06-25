@@ -53,14 +53,14 @@ void PipOption::SetPiPControlStatus(PiPControlType controlType, PiPControlStatus
     pipControlStatusInfoList_.push_back(newPipControlStatusInfo);
 }
 
-void PipOption::SetPiPControlEnabled(PiPControlType controlType, bool isEnable)
+void PipOption::SetPiPControlEnabled(PiPControlType controlType, bool enabled)
 {
     PiPControlEnableInfo newPipControlEnableInfo;
     newPipControlEnableInfo.controlType = controlType;
-    newPipControlEnableInfo.isEnable = isEnable;
+    newPipControlEnableInfo.enabled = enabled;
     for (auto& controlEnableInfo : pipControlEnableInfoList_) {
         TLOGI(WmsLogTag::WMS_PIP, "controlEnable %{public}u : %{public}u",
-            controlEnableInfo.controlType, controlEnableInfo.isEnable);
+            controlEnableInfo.controlType, controlEnableInfo.enabled);
         if (controlType == controlEnableInfo.controlType) {
             controlEnableInfo = newPipControlEnableInfo;
             return;

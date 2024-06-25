@@ -727,7 +727,7 @@ bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const
         if (!parcel.WriteUint32(static_cast<uint32_t>(pipTemplateInfo_.pipControlEnableInfoList[i].controlType))) {
             return false;
         }
-        if (!parcel.WriteBool(pipTemplateInfo_.pipControlEnableInfoList[i].isEnable)) {
+        if (!parcel.WriteBool(pipTemplateInfo_.pipControlEnableInfoList[i].enabled)) {
             return false;
         }
     }
@@ -765,7 +765,7 @@ void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowS
     for (uint32_t i = 0; i < controlEnableSize; i++) {
         PiPControlEnableInfo pipControlEnableInfo;
         pipControlEnableInfo.controlType = static_cast<PiPControlType>(parcel.ReadUint32());
-        pipControlEnableInfo.isEnable = parcel.ReadBool();
+        pipControlEnableInfo.enabled = parcel.ReadBool();
         pipTemplateInfo.pipControlEnableInfoList.push_back(pipControlEnableInfo);
     }
     property->SetPiPTemplateInfo(pipTemplateInfo);

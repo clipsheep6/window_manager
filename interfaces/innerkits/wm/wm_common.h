@@ -900,7 +900,7 @@ struct PiPControlStatusInfo {
 
 struct PiPControlEnableInfo {
     PiPControlType controlType;
-    bool isEnable;
+    bool enabled;
 };
 
 struct PiPTemplateInfo {

@@ -95,7 +95,7 @@ public:
     {
         return WSError::WS_OK;
     }
-    virtual WSError SetPiPControlEnabled(PiPControlType controlType, bool isEnable)
+    virtual WSError SetPiPControlEnabled(PiPControlType controlType, bool enabled)
     {
         return WSError::WS_OK;
     }

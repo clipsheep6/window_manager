@@ -33,7 +33,7 @@ public:
     void SetPipTemplate(uint32_t templateType);
     void SetContentSize(uint32_t width, uint32_t height);
     void SetPiPControlStatus(PiPControlType controlType, PiPControlStatus status);
-    void SetPiPControlEnabled(PiPControlType controlType, bool isEnable);
+    void SetPiPControlEnabled(PiPControlType controlType, bool enabled);
     void SetXComponentController(std::shared_ptr<XComponentController> xComponentController);
     void SetControlGroup(std::vector<std::uint32_t> controlGroup);
     void* GetContext() const;

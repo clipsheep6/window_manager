@@ -3160,14 +3160,14 @@ void WindowSessionImpl::UpdatePiPControlStatus(PiPControlType controlType, PiPCo
     hostSession_->UpdatePiPControlStatus(controlType, status);
 }
 
-void WindowSessionImpl::SetPiPControlEnabled(PiPControlType controlType, bool isEnable)
+void WindowSessionImpl::SetPiPControlEnabled(PiPControlType controlType, bool enabled)
 {
     TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnabled is called");
     if (IsWindowSessionInvalid()) {
         WLOGFE("HostSession is invalid");
         return;
     }
-    hostSession_->SetPiPControlEnabled(controlType, isEnable);
+    hostSession_->SetPiPControlEnabled(controlType, enabled);
 }
 
 void WindowSessionImpl::NotifyWindowStatusChange(WindowMode mode)

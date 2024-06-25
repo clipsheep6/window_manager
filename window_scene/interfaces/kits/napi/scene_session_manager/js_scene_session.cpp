@@ -101,9 +101,9 @@ napi_value CreateJsPiPControlEnableObject(napi_env env, PiPControlEnableInfo con
         return NapiGetUndefined(env);
     }
     uint32_t controlType = static_cast<uint32_t>(controlEnableInfo.controlType);
-    bool isEnable = controlEnableInfo.isEnable;
+    bool enabled = controlEnableInfo.enabled;
     napi_set_named_property(env, objValue, "controlType", CreateJsValue(env, controlType));
-    napi_set_named_property(env, objValue, "isEnable", CreateJsValue(env, isEnable));
+    napi_set_named_property(env, objValue, "enabled", CreateJsValue(env, enabled));
     return objValue;
 }
 
@@ -691,8 +691,8 @@ void JsSceneSession::ProcessSessionPiPControlStatusChangeRegister()
 void JsSceneSession::ProcessSessionPiPControlEnableChangeRegister()
 {
     TLOGI(WmsLogTag::WMS_PIP, "ProcessSessionPiPControlEnableChangeRegister success");
-    NotifySessionPiPControlEnableChangeFunc func = [this](PiPControlType controlType, bool isEnable) {
-        this->OnSessionPiPControlEnableChange(controlType, isEnable);
+    NotifySessionPiPControlEnableChangeFunc func = [this](PiPControlType controlType, bool enabled) {
+        this->OnSessionPiPControlEnableChange(controlType, enabled);
     };
     auto session = weakSession_.promote();
     if (session == nullptr) {
@@ -1711,7 +1711,7 @@ void JsSceneSession::OnSessionPiPControlStatusChange(PiPControlType controlType,
     taskScheduler_->PostMainThreadTask(task, statusChangeInfo);
 }
 
-void JsSceneSession::OnSessionPiPControlEnableChange(PiPControlType controlType, bool isEnable)
+void JsSceneSession::OnSessionPiPControlEnableChange(PiPControlType controlType, bool enabled)
 {
     TLOGI(WmsLogTag::WMS_PIP, "OnSessionPiPControlEnableChange is called");
     std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(SESSION_PIP_CONTROL_ENABLE_CHANGE_CB);
@@ -1719,13 +1719,13 @@ void JsSceneSession::OnSessionPiPControlEnableChange(PiPControlType controlType,
         return;
     }
 
-    auto task = [controlType, isEnable, jsCallBack, env = env_]() {
+    auto task = [controlType, enabled, jsCallBack, env = env_]() {
         if (!jsCallBack) {
             WLOGFE("[NAPI]jsCallBack is nullptr");
             return;
         }
         napi_value enableChangeType = CreateJsValue(env, controlType);
-        napi_value enableChangeValue = CreateJsValue(env, isEnable);
+        napi_value enableChangeValue = CreateJsValue(env, enabled);
         napi_value argv[] = {enableChangeType, enableChangeValue};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };

@@ -1658,9 +1658,9 @@ public:
      * @brief update the pip control enable status.
      *
      * @param controlType pip control type.
-     * @param isEnable pip control enable status.
+     * @param enabled pip control enable status.
      */
-    virtual void SetPiPControlEnabled(PiPControlType controlType, bool isEnable) {}
+    virtual void SetPiPControlEnabled(PiPControlType controlType, bool enabled) {}
 
     /**
      * @brief When get focused, keep the keyboard created by other windows, support system window and app subwindow.

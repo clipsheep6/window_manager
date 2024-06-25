@@ -661,8 +661,8 @@ int SessionStub::HandleSetPiPControlEnabled(MessageParcel& data, MessageParcel& 
 {
     TLOGI(WmsLogTag::WMS_PIP, "HandleSetPiPControlEnabled is called");
     auto controlType =  static_cast<PiPControlType>(data.ReadUint32());
-    bool isEnable =  data.ReadBool();
-    WSError errCode = SetPiPControlEnabled(controlType, isEnable);
+    bool enabled =  data.ReadBool();
+    WSError errCode = SetPiPControlEnabled(controlType, enabled);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
