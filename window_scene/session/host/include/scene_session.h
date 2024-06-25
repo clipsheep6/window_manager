@@ -50,7 +50,8 @@ using GetAINavigationBarArea = std::function<WSRect(uint64_t displayId)>;
 using RecoveryCallback = std::function<void(int32_t persistentId, Rect rect)>;
 using NotifyBindDialogSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 using NotifySessionRectChangeFunc = std::function<void(const WSRect& rect, const SizeChangeReason& reason)>;
-using NotifySessionPiPControlStatusChangeFunc = std::function<void(PiPControlType controlType, PiPControlStatus status)>;
+using NotifySessionPiPControlStatusChangeFunc = std::function<void(PiPControlType controlType,
+    PiPControlStatus status)>;
 using NotifySessionPiPControlEnableChangeFunc = std::function<void(PiPControlType controlType, bool isEnable)>;
 using NotifySessionEventFunc = std::function<void(int32_t eventId, SessionEventParam param)>;
 using NotifySessionTopmostChangeFunc = std::function<void(const bool topmost)>;

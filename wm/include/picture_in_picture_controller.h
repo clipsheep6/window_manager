@@ -49,7 +49,7 @@ enum class StopPipType : uint32_t {
     PACKAGE_STOP = 3,
 };
 
-static std::map<std::string, uint32_t> CONTROL_TYPE_MAP = {
+static std::map<std::string, PiPControlType> CONTROL_TYPE_MAP = {
     {"playbackStateChanged", PiPControlType::VIDEO_PLAY_PAUSE},
     {"nextVideo", PiPControlType::VIDEO_NEXT},
     {"previousVideo", PiPControlType::VIDEO_PREVIOUS},
